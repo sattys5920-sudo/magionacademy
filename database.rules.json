@@ -37,6 +37,24 @@
           ".validate": "!newData.exists() || (newData.child('uid').isString() && newData.child('text').isString() && newData.child('text').val().length <= 40 && newData.child('at').isNumber())"
         }
       }
+    },
+    "events": {
+      ".read": "auth != null",
+      "star": {
+        "$key": {
+          "$sid": {
+            ".write": "auth != null && !data.exists() && newData.val() === auth.uid"
+          }
+        }
+      },
+      "dragon": {
+        "$key": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999"
+          }
+        }
+      }
     }
   }
 }
