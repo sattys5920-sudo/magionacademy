@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#140D1E">
+<title>별빛고등학교 · 걸어 다니는 학교 시안</title>
+<style>
+@font-face{font-family:'G11B';src:url(fonts/Galmuri11-Bold.woff2) format('woff2')}
+@font-face{font-family:'G7';src:url(fonts/Galmuri7.woff2) format('woff2')}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#0E0916;color:#F2EAD8;-webkit-font-smoothing:none;-webkit-tap-highlight-color:transparent}
+#app{position:relative;max-width:430px;height:100dvh;margin:0 auto;background:#140D1E;display:flex;flex-direction:column;overflow:hidden;font-family:'G7',monospace}
+#world{position:relative;width:100%;flex:1;min-height:0;overflow:hidden;touch-action:manipulation}
+canvas{position:absolute;left:0;top:0;width:100%;height:100%;image-rendering:pixelated;cursor:pointer}
+.hud{position:absolute;left:10px;top:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:3}
+.chip{background:rgba(20,13,30,.85);padding:6px 10px;font-size:14px;line-height:16px;box-shadow:0 0 0 2px #3A2860;white-space:nowrap}
+.chip b{font-family:'G11B',monospace;font-size:15px;color:#FFD866;display:block}
+.tag{position:absolute;transform:translate(-50%,-100%);font-size:12px;line-height:12px;padding:2px 4px;background:rgba(20,13,30,.75);white-space:nowrap;pointer-events:none;z-index:2}
+.tag.me{color:#FFD866}
+.bubble{position:absolute;transform:translate(-50%,-100%);background:#FAF1E2;color:#3A2860;padding:8px 10px;font-size:14px;line-height:18px;box-shadow:0 0 0 3px #22183F;white-space:nowrap;text-align:center;z-index:4}
+.bubble button{display:block;margin:6px auto 0;font-family:'G11B',monospace;font-size:14px;background:#8CE6B0;border:2px solid #22183F;padding:4px 10px;color:#1E3A2A}
+#fade{position:absolute;inset:0;background:#0E0916;opacity:0;pointer-events:none;transition:opacity .35s;z-index:5;display:flex;align-items:center;justify-content:center;font-family:'G11B',monospace;font-size:18px;color:#FFD866}
+.fab{position:absolute;right:10px;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px;z-index:6}
+.fab button{width:58px;height:44px;background:rgba(20,13,30,.88);border:0;box-shadow:0 0 0 2px #3A2860;color:#FFD866;font-family:'G11B',monospace;font-size:14px}
+#mapv{position:absolute;inset:0;background:rgba(14,9,22,.94);z-index:8;display:none;flex-direction:column;padding:14px 12px calc(14px + env(safe-area-inset-bottom))}
+#mapv.on{display:flex}
+.mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.mhead b{font-family:'G11B',monospace;font-size:17px;color:#FFD866}
+.mhead button{background:#3A2860;border:0;color:#F2EAD8;font-family:'G11B',monospace;font-size:14px;padding:6px 12px}
+#mwrap{flex:1;position:relative;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
+#minner{position:relative;margin:auto}
+#mcv{image-rendering:pixelated;flex-shrink:0}
+.mlabel{position:absolute;transform:translate(-50%,-100%);font-size:12px;line-height:12px;padding:3px 5px;background:#FAF1E2;color:#3A2860;white-space:nowrap;pointer-events:none;box-shadow:0 0 0 2px #22183F}
+.mlabel.me{background:#FFD866}
+.mhint{text-align:center;font-size:14px;color:#C8B8FF;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="world"><canvas id="cv"></canvas>
+    <div class="hud"><div class="chip"><b id="place">별빛고등학교</b><span id="sub">바닥을 눌러 걸어요</span></div><div class="chip" id="clock"></div></div>
+    <div id="fade"></div>
+  </div>
+  <div class="fab"><button id="tMap">지도</button><button id="tZoom">넓게</button><button id="tDay">낮/밤</button></div>
+  <div id="mapv"><div class="mhead"><b>별빛고등학교 지도</b><button id="mClose">닫기</button></div><div id="mwrap"><div id="minner"><canvas id="mcv"></canvas></div></div><div class="mhint">가고 싶은 곳을 누르면 걸어가요</div></div>
+</div>
+<script>
+const MAPS = __MAPS__;
+let sc;
+let VW = 170, baseVW = 170;
+const cv = document.getElementById('cv'), out = cv.getContext('2d');
+const world = document.getElementById('world'), fadeEl = document.getElementById('fade');
+let VH = 220;
+function resize(){ VH = Math.round(VW * world.clientHeight / world.clientWidth); cv.width = VW; cv.height = VH; out.imageSmoothingEnabled = false; }
+addEventListener('resize', resize);
+const img = s => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = s; });
+let map, M, blocked, objOrder;
+const P = (tx, ty) => [M.OX + (tx - ty) * 8, M.OY + (tx + ty) * 4];
+const free = (x, y) => x >= 0 && y >= 0 && x < M.NX && y < M.NY && !blocked.has(x + ',' + y);
+function path(sx, sy, gx, gy){
+  if (!free(gx, gy)) return null;
+  const prev = new Map([[sx + ',' + sy, null]]), q = [[sx, sy]];
+  for (let i = 0; i < q.length; i++){
+    const [x, y] = q[i]; if (x === gx && y === gy) break;
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const k = (x + dx) + ',' + (y + dy); if (free(x + dx, y + dy) && !prev.has(k)){ prev.set(k, [x, y]); q.push([x + dx, y + dy]); } }
+  }
+  if (!prev.has(gx + ',' + gy)) return null;
+  const r = []; let c = [gx, gy]; while (c && !(c[0] === sx && c[1] === sy)){ r.unshift(c); c = prev.get(c[0] + ',' + c[1]); } return r;
+}
+// a가 b보다 뒤(먼저 그림)인가: 발판 상자로 판단
+const behind = (a, b) => (a[2] <= b[0] && a[1] < b[3] && b[1] < a[3]) || (a[3] <= b[1] && a[0] < b[2] && b[0] < a[2]) || ((a[2] <= b[0] || a[3] <= b[1]) && !(b[2] <= a[0] || b[3] <= a[1]));
+const sOver = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+function orderObjs(objs){   // 한 번만: 겹치는 것끼리 위상 정렬
+  const n = objs.length, after = objs.map(() => []), indeg = new Array(n).fill(0);
+  const R = o => ({ x: o.x, y: o.y, w: o.sw, h: o.sh });
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (i !== j && sOver(R(objs[i]), R(objs[j])) && behind(objs[i].box, objs[j].box)){ after[i].push(j); indeg[j]++; }
+  const key = o => o.box[2] + o.box[3];
+  const ready = objs.map((o, i) => i).filter(i => !indeg[i]), outL = [];
+  while (ready.length){ ready.sort((a, b) => key(objs[b]) - key(objs[a])); const i = ready.pop(); outL.push(i); after[i].forEach(j => { if (!--indeg[j]) ready.push(j); }); }
+  objs.forEach((o, i) => { if (!outL.includes(i)) outL.push(i); });
+  return outL.map(i => objs[i]);
+}
+const people = [];
+const NAMES = ['루나', '도토리', '해랑', '별이', '모모', '하늘', '솔', '나비', '초코', '보리', '라온'];
+const mk = (name, look, x, y, me) => ({ name, look, x, y, path: [], back: false, flip: false, me, t: 0, idle: Math.random() * 3 });
+const me = mk('나', 1, 0, 0, true);
+let crowd = {};
+function setMap(id, spawn){
+  map = id; M = MAPS[id].meta; VW = M.vw || baseVW; resize();
+  blocked = new Set(); M.objs.forEach(o => { if (o.solid !== false) for (let x = Math.floor(o.box[0]); x < Math.ceil(o.box[2]); x++) for (let y = Math.floor(o.box[1]); y < Math.ceil(o.box[3]); y++) blocked.add(x + ',' + y); });
+  objOrder = MAPS[id].order || (MAPS[id].order = orderObjs(M.objs));
+  me.x = spawn[0]; me.y = spawn[1]; me.path = []; me.back = false; me.flip = false;
+  if (!crowd[id]){ crowd[id] = []; const n = id === 'campus' ? 9 : 2; for (let i = 0; i < n; i++){ for (let k = 0; k < 50; k++){ const x = Math.floor(Math.random() * M.NX), y = Math.floor(Math.random() * M.NY); if (free(x, y)){ crowd[id].push(mk(NAMES[(i + (id === 'lab' ? 3 : 0)) % NAMES.length], (i * 3 + 2) % 8, x, y, false)); break; } } } }
+  people.length = 0; people.push(me, ...crowd[id]);
+  tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'tag' + (p.me ? ' me' : ''); d.textContent = p.name; world.appendChild(d); return d; });
+  document.getElementById('place').textContent = M.title; document.getElementById('sub').textContent = M.sub;
+  camX = camY = null; hideBubble();
+}
+let tags = [], bubble = null, pending = null, busy = false, camX = null, camY = null, forceNight = null;
+function showBubble(o, text, btn, fn){
+  hideBubble();
+  const b = document.createElement('div'); b.className = 'bubble'; b.innerHTML = text + (btn ? `<button>${btn}</button>` : '');
+  if (btn) b.querySelector('button').onclick = e => { e.stopPropagation(); fn ? fn() : (b.innerHTML = `<b>${btn}</b><br>실제 게임에서는 여기서<br>지금의 그 화면이 열려요`); };
+  world.appendChild(b); bubble = { el: b, o };
+}
+function hideBubble(){ bubble?.el.remove(); bubble = null; }
+const ACTS = {}; const ACTS_OLD = { cauldron: ['부글부글 끓는 솥이에요', '물약 끓이기'], desk: ['레시피 노트가 펼쳐져 있어요', '도감 보기'], table: ['수정구 속에 무언가 보여요', '오늘의 운세'], armchair: ['푹신한 안락의자', '앉아서 쉬기'], barrels: ['재료가 가득한 통', '재료함 열기'], stall: ['친구들이 물건을 파는 가판대', '시장 보기'], fountain: ['동전을 던지면 소원이 이뤄진대요', '소원 빌기'] };
+function goDoor(door, o){
+  if (!door.to){ showBubble(o, `<b>${door.label}</b><br>이 건물은 다음 시안에서 열려요`); return; }
+  busy = true; fadeEl.textContent = door.label; fadeEl.style.opacity = 1;
+  setTimeout(() => { setMap(door.to, door.spawn); setTimeout(() => { fadeEl.style.opacity = 0; busy = false; }, 150); }, 380);
+}
+function goto(p, gx, gy){ const r = path(Math.round(p.x), Math.round(p.y), gx, gy); if (r){ p.path = r; return true; } return false; }
+function near(tiles){ const c = []; tiles.forEach(([a, b]) => [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx, dy]) => free(a + dx, b + dy) && c.push([a + dx, b + dy]))); return c.sort((p1, p2) => Math.hypot(p1[0] - me.x, p1[1] - me.y) - Math.hypot(p2[0] - me.x, p2[1] - me.y)); }
+cv.addEventListener('pointerdown', e => {
+  if (busy) return;
+  const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) * VW / r.width + Math.round(camX), y = (e.clientY - r.top) * VH / r.height + Math.round(camY);
+  hideBubble(); pending = null;
+  const hit = [...objOrder].reverse().find(o => (o.door || o.act || ACTS[o.name]) && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && (() => { const px = MAPS[map].px; const d = px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data; return d[3] > 0; })());
+  if (hit){
+    if (hit.door){ const [dx, dy] = hit.door.tile; if (Math.round(me.x) === dx && Math.round(me.y) === dy) return goDoor(hit.door, hit); if (goto(me, dx, dy)) pending = { door: hit.door, o: hit }; return; }
+    const tiles = []; for (let a = Math.floor(hit.box[0]); a < Math.ceil(hit.box[2]); a++) for (let b = Math.floor(hit.box[1]); b < Math.ceil(hit.box[3]); b++) tiles.push([a, b]);
+    for (const c of near(tiles)) if (goto(me, c[0], c[1])){ pending = { act: hit }; return; }
+    return;
+  }
+  const tx = Math.floor(((x - M.OX) / 8 + (y - M.OY) / 4) / 2), ty = Math.floor(((y - M.OY) / 4 - (x - M.OX) / 8) / 2);
+  const door = M.objs.find(o => o.door && o.door.tile[0] === tx && o.door.tile[1] === ty);
+  if (goto(me, tx, ty) && door) pending = { door: door.door, o: door };
+});
+const SPEED = 3.4;
+function step(p, dt){
+  if (!p.path.length){
+    if (p.me && pending){ const pd = pending; pending = null; if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1]); } }
+    if (!p.me && (p.idle -= dt) < 0){ p.idle = 2 + Math.random() * 5; for (let i = 0; i < 20; i++){ const gx = Math.round(p.x) + Math.floor(Math.random() * 13) - 6, gy = Math.round(p.y) + Math.floor(Math.random() * 13) - 6; if (goto(p, gx, gy)) break; } }
+    p.t = 0; return;
+  }
+  const [gx, gy] = p.path[0], dx = gx - p.x, dy = gy - p.y, d = Math.hypot(dx, dy);
+  if (Math.abs(dx) > Math.abs(dy)){ p.back = dx < 0; p.flip = dx < 0; } else if (d > 0){ p.back = dy < 0; p.flip = dy > 0; }
+  const mv = SPEED * dt; if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
+}
+const glowCache = {};
+function glow(r, c){ const k = r + c.join(); if (glowCache[k]) return glowCache[k]; const g = document.createElement('canvas'); g.width = g.height = r * 2; const x = g.getContext('2d'); const gr = x.createRadialGradient(r, r, 0, r, r, r); gr.addColorStop(0, `rgba(${c},1)`); gr.addColorStop(.35, `rgba(${c},.45)`); gr.addColorStop(1, `rgba(${c},0)`); x.fillStyle = gr; x.fillRect(0, 0, r * 2, r * 2); return glowCache[k] = g; }
+function phase(){ if (forceNight !== null) return forceNight; const h = new Date().getHours(); return h >= 19 || h < 6 ? 'night' : h >= 17 ? 'dusk' : 'day'; }
+const fx = [];
+let ST, last = performance.now();
+function drawPerson(p){ const cx = out;
+  const [sx, sy] = P(p.x + .5, p.y + .5);
+  cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 5, 2, 0, 0, Math.PI * 2); cx.fill();
+  const f = p.path.length ? 1 + Math.floor(p.t * 8) % 2 : 0, col = (p.back ? 3 : 0) + f, X = Math.round(sx), Y = Math.round(sy) - 23;
+  if (p.flip){ cx.save(); cx.translate(X + 7, Y); cx.scale(-1, 1); cx.drawImage(ST, col * 14, p.look * 24, 14, 24, 0, 0, 14, 24); cx.restore(); } else cx.drawImage(ST, col * 14, p.look * 24, 14, 24, X - 7, Y, 14, 24);
+}
+function frame(now){
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  people.forEach(p => step(p, dt));
+  const A = MAPS[map];
+  // 카메라 먼저: 맵이 화면보다 작으면 가운데에, 크면 내 캐릭터를 따라가요
+  { const [mx, my] = P(me.x + .5, me.y + .5);
+    const tx = M.W <= VW ? (M.W - VW) / 2 : Math.max(0, Math.min(M.W - VW, mx - VW / 2));
+    const ty = M.H <= VH ? (M.H - VH) / 2 - 10 : Math.max(0, Math.min(M.H - VH, my - 14 - VH / 2));
+    if (camX === null){ camX = tx; camY = ty; } camX += (tx - camX) * Math.min(1, dt * 5); camY += (ty - camY) * Math.min(1, dt * 5); }
+  const ix = Math.round(camX), iy = Math.round(camY);
+  const view = { x: ix - 4, y: iy - 4, w: VW + 8, h: VH + 8 };
+  out.setTransform(1, 0, 0, 1, 0, 0); out.fillStyle = M.fill || (M.indoor ? '#0C0715' : '#1E2A1C'); out.fillRect(0, 0, VW, VH);
+  out.setTransform(1, 0, 0, 1, -ix, -iy);
+  const cx = out;
+  cx.drawImage(A.bg, Math.max(0, ix), Math.max(0, iy), VW, VH, Math.max(0, ix), Math.max(0, iy), VW, VH);
+  // 물결 반짝임
+  if (M.water) for (let i = 0; i < 6; i++){ const w = M.water[(Math.random() * M.water.length) | 0]; const [wx, wy] = P(w[0] + Math.random(), w[1] + Math.random()); if (wx > view.x && wx < view.x + view.w && wy > view.y && wy < view.y + view.h) fx.push({ x: wx, y: wy, v: 0, life: .5, c: '#DFF2FF' }); }
+  // 문 표시 (반짝이는 발판)
+  const pulse = .5 + .5 * Math.sin(now / 300);
+  M.objs.forEach(o => { if (!o.door) return; const [x, y] = P(o.door.tile[0] + .5, o.door.tile[1] + .5); cx.fillStyle = `rgba(255,216,102,${.25 + .35 * pulse})`; cx.beginPath(); cx.moveTo(x, y - 4); cx.lineTo(x + 8, y); cx.lineTo(x, y + 4); cx.lineTo(x - 8, y); cx.fill(); });
+  // 사람을 정렬된 물건 사이에 끼워 넣기
+  const R = o => ({ x: o.x, y: o.y, w: o.sw, h: o.sh });
+  const list = objOrder.filter(o => sOver(R(o), view)).map(o => ({ o }));
+  [...people].sort((a, b) => (a.x + a.y) - (b.x + b.y)).forEach(p => {
+    const [sx, sy] = P(p.x + .5, p.y + .5), pr = { x: sx - 7, y: sy - 24, w: 14, h: 25 }, pb = [p.x + .15, p.y + .15, p.x + .85, p.y + .85];
+    let idx = 0; list.forEach((it, i) => { if (it.o && sOver(R(it.o), pr) && behind(it.o.box, pb)) idx = i + 1; });
+    list.splice(idx, 0, { p });
+  });
+  list.forEach(it => it.o ? cx.drawImage(A.obj, it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.sw, it.o.sh) : drawPerson(it.p));
+  // 효과: 연구실 솥 거품, 분수 물방울
+  const src = M.objs.find(o => o.name === 'cauldron' || o.name === 'fountain');
+  if (src && Math.random() < .2){ const bx = src.x + src.sw / 2, by = src.y + (src.name === 'fountain' ? 4 : 10); fx.push({ x: bx - 5 + Math.random() * 10, y: by, v: 8 + Math.random() * 8, life: 1.2, c: src.name === 'fountain' ? '#C8EEFF' : '#9CFFD0' }); }
+  fx.forEach(b => { b.y -= b.v * dt; b.life -= dt; }); while (fx.length && fx[0].life <= 0) fx.shift();
+  fx.forEach(b => { cx.fillStyle = b.c; cx.fillRect(Math.round(b.x), Math.round(b.y), 1, 1); });
+  // 빛: 실내는 늘 어둑, 바깥은 시간대에 따라
+  const ph = M.indoor ? 'night' : phase();
+  if (ph !== 'day'){
+    cx.globalCompositeOperation = 'multiply'; cx.fillStyle = M.indoor ? 'rgb(150,130,175)' : ph === 'night' ? 'rgb(90,90,150)' : 'rgb(255,190,160)'; cx.fillRect(ix, iy, VW, VH);
+    cx.globalCompositeOperation = 'lighter';
+    M.lights.forEach((L, i) => { if (L.p[0] + L.r < view.x || L.p[0] - L.r > view.x + view.w || L.p[1] + L.dy + L.r < view.y || L.p[1] + L.dy - L.r > view.y + view.h) return; const fl = L.f ? .85 + .15 * Math.sin(now / 130 + i * 1.7) * Math.sin(now / 370 + i) : 1; cx.globalAlpha = L.a * fl * (ph === 'dusk' ? .5 : 1); cx.drawImage(glow(L.r, L.c), L.p[0] - L.r, L.p[1] + L.dy - L.r); });
+    cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
+  }
+  out.setTransform(1, 0, 0, 1, 0, 0);
+  const k = cv.clientWidth / VW;
+  people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); tags[i].style.left = (sx - ix) * k + 'px'; tags[i].style.top = (sy - 25 - iy) * k + 'px'; });
+  if (bubble){ const o = bubble.o; bubble.el.style.left = Math.max(90, Math.min(cv.clientWidth - 90, (o.x + o.sw / 2 - ix) * k)) + 'px'; bubble.el.style.top = Math.max(70, (o.y - 2 - iy) * k) + 'px'; }
+  const d = new Date(); document.getElementById('clock').textContent = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${{ day: '낮', dusk: '노을', night: '밤' }[phase()]}`;
+  requestAnimationFrame(frame);
+}
+document.getElementById('tDay').onclick = () => { const order = ['day', 'dusk', 'night']; forceNight = order[(order.indexOf(phase()) + 1) % 3]; };
+document.getElementById('tZoom').onclick = e => { baseVW = baseVW === 170 ? 260 : 170; e.target.textContent = baseVW === 170 ? '넓게' : '가깝게'; VW = M.vw ? (baseVW === 170 ? M.vw : M.W + 20) : baseVW; resize(); camX = null; };
+// 지도: 캠퍼스 전체를 작게 그려서 보여 주고, 누르면 그곳으로 걸어가요
+const mapv = document.getElementById('mapv'), mcv = document.getElementById('mcv');
+let mapImg = null;
+function openMap(){
+  if (map !== 'campus'){ showBubble({ x: 0, y: 0, sw: 0 }, '지도는 바깥에서 볼 수 있어요'); return; }
+  const C = MAPS.campus, m = C.meta;
+  if (!mapImg){ mapImg = document.createElement('canvas'); mapImg.width = m.W; mapImg.height = m.H; const g = mapImg.getContext('2d'); g.drawImage(C.bg, 0, 0); C.order.forEach(o => g.drawImage(C.obj, o.sx, o.sy, o.sw, o.sh, o.x, o.y, o.sw, o.sh)); }
+  mcv.width = m.W; mcv.height = m.H; const g = mcv.getContext('2d'); g.drawImage(mapImg, 0, 0);
+  mapv.classList.add('on'); document.querySelectorAll('.mlabel').forEach(e => e.remove());
+  requestAnimationFrame(() => {
+    // 화면 높이에 맞춰 크게 그리고, 옆으로 밀어서 봐요
+    const wrap = document.getElementById('mwrap'), inner = document.getElementById('minner'), k = Math.min(wrap.clientHeight / m.H, 1.2);
+    const w = Math.floor(m.W * k), h = Math.floor(m.H * k);
+    mcv.style.width = w + 'px'; mcv.style.height = h + 'px'; inner.style.width = w + 'px'; inner.style.height = h + 'px';
+    const lab = (t, txt, cls) => { const [x, y] = P(t[0] + .5, t[1] + .5); const d = document.createElement('div'); d.className = 'mlabel' + (cls ? ' ' + cls : ''); d.textContent = txt; d.style.left = x * k + 'px'; d.style.top = (y * k - 4) + 'px'; inner.appendChild(d); };
+    m.areas.forEach(a => lab(a.t, a.n)); lab([me.x, me.y], '나', 'me');
+    const [px_, py_] = P(me.x + .5, me.y + .5); wrap.scrollLeft = px_ * k - wrap.clientWidth / 2; wrap.scrollTop = py_ * k - wrap.clientHeight / 2;
+  });
+}
+mcv.addEventListener('click', e => {   // 탭할 때만 (밀어서 볼 때는 안 움직여요)
+  const m = MAPS.campus.meta, r = mcv.getBoundingClientRect(), x = (e.clientX - r.left) * m.W / r.width, y = (e.clientY - r.top) * m.H / r.height;
+  // 가장 가까운 장소로, 없으면 누른 곳 근처 빈칸으로
+  let best = null, bd = 1e9; m.areas.forEach(a => { const [ax, ay] = P(a.t[0] + .5, a.t[1] + .5), d = Math.hypot(ax - x, ay - y); if (d < bd){ bd = d; best = a.t; } });
+  let tgt = bd < 30 ? best : [Math.floor(((x - m.OX) / 8 + (y - m.OY) / 4) / 2), Math.floor(((y - m.OY) / 4 - (x - m.OX) / 8) / 2)];
+  for (let rr = 0; rr < 6 && !free(tgt[0], tgt[1]); rr++) for (const [dx, dy] of [[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,-1]]) if (free(tgt[0] + dx * rr, tgt[1] + dy * rr)){ tgt = [tgt[0] + dx * rr, tgt[1] + dy * rr]; break; }
+  mapv.classList.remove('on'); hideBubble(); pending = null;
+  const door = m.objs.find(o => o.door && o.door.tile[0] === tgt[0] && o.door.tile[1] === tgt[1]);
+  if (goto(me, tgt[0], tgt[1]) && door) pending = { door: door.door, o: door };
+});
+document.getElementById('tMap').onclick = openMap;
+document.getElementById('mClose').onclick = () => mapv.classList.remove('on');
+(async () => {
+  resize();
+  ST = await img('art/iso/students.png');
+  for (const [id, m] of Object.entries(MAPS)){
+    const [bg, obj] = await Promise.all([img(m.meta.bgSrc), img(m.meta.objSrc)]);
+    m.bg = bg; m.obj = obj;
+    const pc = document.createElement('canvas'); pc.width = obj.width; pc.height = obj.height; m.px = pc.getContext('2d', { willReadFrequently: true }); m.px.drawImage(obj, 0, 0);
+  }
+  setMap('campus', MAPS.campus.meta.start);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
