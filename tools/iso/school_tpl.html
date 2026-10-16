@@ -12,7 +12,7 @@
 html,body{margin:0;height:100%;background:#0E0916;color:#F2EAD8;-webkit-font-smoothing:none;-webkit-tap-highlight-color:transparent}
 #app{position:relative;max-width:430px;height:100dvh;margin:0 auto;background:#140D1E;display:flex;flex-direction:column;overflow:hidden;font-family:'G7',monospace}
 #world{position:relative;width:100%;flex:1;min-height:0;overflow:hidden;touch-action:manipulation}
-canvas{position:absolute;left:0;top:0;width:100%;height:100%;image-rendering:pixelated;cursor:pointer}
+canvas{position:absolute;left:0;top:0;image-rendering:pixelated;image-rendering:crisp-edges;cursor:pointer}
 .hud{position:absolute;left:10px;top:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:3}
 .chip{background:rgba(20,13,30,.85);padding:6px 10px;font-size:14px;line-height:16px;box-shadow:0 0 0 2px #3A2860;white-space:nowrap}
 .chip b{font-family:'G11B',monospace;font-size:15px;color:#FFD866;display:block}
@@ -42,17 +42,27 @@ canvas{position:absolute;left:0;top:0;width:100%;height:100%;image-rendering:pix
     <div class="hud"><div class="chip"><b id="place">별빛고등학교</b><span id="sub">바닥을 눌러 걸어요</span></div><div class="chip" id="clock"></div></div>
     <div id="fade"></div>
   </div>
-  <div class="fab"><button id="tMap">지도</button><button id="tZoom">넓게</button><button id="tDay">낮/밤</button></div>
+  <div class="fab"><button id="tMap">지도</button><button id="tZoom">멀리</button><button id="tDay">낮/밤</button></div>
   <div id="mapv"><div class="mhead"><b>별빛고등학교 지도</b><button id="mClose">닫기</button></div><div id="mwrap"><div id="minner"><canvas id="mcv"></canvas></div></div><div class="mhint">가고 싶은 곳을 누르면 걸어가요</div></div>
 </div>
 <script>
 const MAPS = __MAPS__;
 let sc;
-let VW = 170, baseVW = 170;
+// 배율: 그림 1픽셀 = 화면 실제 픽셀의 정수배(k)로 그려서 선명하게. 목표 가로 픽셀 수에 가장 가까운 k를 골라요.
+const ZOOMS = [['보통', 300], ['멀리', 420], ['가까이', 210]];
+let zi = 0, VW = 300, KPX = 1;
 const cv = document.getElementById('cv'), out = cv.getContext('2d');
 const world = document.getElementById('world'), fadeEl = document.getElementById('fade');
 let VH = 220;
-function resize(){ VH = Math.round(VW * world.clientHeight / world.clientWidth); cv.width = VW; cv.height = VH; out.imageSmoothingEnabled = false; }
+function resize(){
+  const dpr = window.devicePixelRatio || 1, dw = world.clientWidth * dpr, dh = world.clientHeight * dpr;
+  const target = (M && M.vw && zi !== 1) ? M.vw : ZOOMS[zi][1];
+  KPX = Math.max(1, Math.round(dw / target));
+  VW = Math.ceil(dw / KPX); VH = Math.ceil(dh / KPX);
+  cv.width = VW; cv.height = VH;
+  cv.style.width = (VW * KPX / dpr) + 'px'; cv.style.height = (VH * KPX / dpr) + 'px';
+  out.imageSmoothingEnabled = false;
+}
 addEventListener('resize', resize);
 const img = s => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = s; });
 let map, M, blocked, objOrder;
@@ -87,7 +97,7 @@ const mk = (name, look, x, y, me) => ({ name, look, x, y, path: [], back: false,
 const me = mk('나', 1, 0, 0, true);
 let crowd = {};
 function setMap(id, spawn){
-  map = id; M = MAPS[id].meta; VW = M.vw || baseVW; resize();
+  map = id; M = MAPS[id].meta; resize();
   blocked = new Set(); M.objs.forEach(o => { if (o.solid !== false) for (let x = Math.floor(o.box[0]); x < Math.ceil(o.box[2]); x++) for (let y = Math.floor(o.box[1]); y < Math.ceil(o.box[3]); y++) blocked.add(x + ',' + y); });
   objOrder = MAPS[id].order || (MAPS[id].order = orderObjs(M.objs));
   me.x = spawn[0]; me.y = spawn[1]; me.path = []; me.back = false; me.flip = false;
@@ -200,7 +210,7 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 document.getElementById('tDay').onclick = () => { const order = ['day', 'dusk', 'night']; forceNight = order[(order.indexOf(phase()) + 1) % 3]; };
-document.getElementById('tZoom').onclick = e => { baseVW = baseVW === 170 ? 260 : 170; e.target.textContent = baseVW === 170 ? '넓게' : '가깝게'; VW = M.vw ? (baseVW === 170 ? M.vw : M.W + 20) : baseVW; resize(); camX = null; };
+document.getElementById('tZoom').onclick = e => { zi = (zi + 1) % ZOOMS.length; e.target.textContent = ZOOMS[(zi + 1) % ZOOMS.length][0]; resize(); camX = null; };
 // 지도: 캠퍼스 전체를 작게 그려서 보여 주고, 누르면 그곳으로 걸어가요
 const mapv = document.getElementById('mapv'), mcv = document.getElementById('mcv');
 let mapImg = null;
