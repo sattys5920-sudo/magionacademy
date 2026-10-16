@@ -79,7 +79,7 @@ input{font-family:'G9',monospace;font-size:16px;color:var(--ink)}
 button.cell:not(:disabled){border-color:var(--ink);box-shadow:inset 0 -3px 0 var(--line)}
 .cell.sel{border:3px solid #6A4AC8;background:#fff;box-shadow:none}
 .cell .n{position:absolute;right:4px;top:2px;font-family:'G11B',monospace;font-size:13px;line-height:13px;color:#6A4AC8}
-.cell .s{white-space:nowrap}
+.cell .s{white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .slot{border:3px dashed #CDBDE8;background:var(--soft);min-height:76px}
 .slot.on{border-style:solid;border-color:#6A4AC8;background:#fff}
 .bar{display:grid;gap:2px;background:var(--ink);padding:2px;flex:1}
@@ -129,14 +129,83 @@ const app = $('#app');
 // ===== 데이터 =====
 const ICONS = ['coin','mana','p_red','p_blue','p_green','p_purple','herb','mush','wool','uhair','scale','egg','heart','book','cauldron','clock','bag','owl','star','drop','seed','sprout','can','candle','bed','rune',
   'p_grow','p_vigor','p_fluff','p_dragon','p_dawn','p_sun','p_dusk','p_moon','mist','sun','pollen','stardust'];
-const ic = (k, extra='') => { const P = POTION_INFO[k];
+const ic = (k, extra='') => { const P = POTION_INFO[k], G = !ICONS.includes(k) && typeof SEED_INFO !== 'undefined' && SEED_INFO[k];
+  if (G) return `<i class="ic" style="background-image:url(art/plants.png);background-position:${-32 * (G.ic % 10)}px ${-32 * Math.floor(G.ic / 10)}px;${extra}"></i>`;
   return P ? `<i class="ic" style="background-image:url(art/potions.png);background-position:${-32 * (P.ic % 10)}px ${-32 * Math.floor(P.ic / 10)}px;${extra}"></i>`
     : `<i class="ic" style="background-position:${-32 * ICONS.indexOf(k)}px 0;${extra}"></i>`; };
 const ITEM = {
   herb:'약초', drop:'달빛 이슬', mush:'보라 버섯', mana:'마력석', wool:'구름양 털', scale:'불도마뱀 비늘', uhair:'유니콘 갈기', egg:'용 알 껍질',
 };
 const SHORT = { herb:'약초', drop:'이슬', mush:'버섯', mana:'마력석', wool:'털', scale:'비늘', uhair:'갈기', egg:'알 껍질' };
-const MATS = ['herb','drop','mush','mana','wool','scale','uhair','egg'];
+// 씨앗 60종: 심으면 같은 id의 식물 재료가 나와요. know 지식이 이만큼 있어야 심을 수 있어요, days 자라는 날, price 씨앗 값
+// 아이콘은 art/plants.png (10×6칸, 이 표의 순서대로). 약초·이슬·버섯·마력석은 원래 아이콘을 써요.
+const SEED_LIST = [
+  { id:'herb', mat:'약초', seed:'약초', tier:0, know:0, days:3, yield:3, price:0, col:'#E26F36' },
+  { id:'drop', mat:'달빛 이슬', seed:'월광초', tier:0, know:0, days:3, yield:3, price:0, col:'#6FE0B6' },
+  { id:'mush', mat:'보라 버섯', seed:'보라 버섯', tier:0, know:0, days:3, yield:3, price:0, col:'#BF16CE' },
+  { id:'g_dandel', mat:'민들레 솜털', seed:'민들레', tier:0, know:0, days:1, yield:3, price:10, col:'#D1E198' },
+  { id:'g_clover', mat:'네잎클로버', seed:'클로버', tier:0, know:0, days:1, yield:3, price:15, col:'#26609B' },
+  { id:'g_mint', mat:'박하 잎', seed:'박하', tier:0, know:0, days:1, yield:3, price:15, col:'#E23659' },
+  { id:'g_straw', mat:'딸기', seed:'딸기', tier:0, know:0, days:1, yield:3, price:5, col:'#6FE079' },
+  { id:'g_carrot', mat:'당근', seed:'당근', tier:0, know:0, days:1, yield:3, price:5, col:'#5B16CE' },
+  { id:'g_chamo', mat:'카모마일', seed:'카모마일', tier:0, know:0, days:1, yield:3, price:15, col:'#E1C898' },
+  { id:'mana', mat:'마력석', seed:'마력 수정초', tier:1, know:10, days:2, yield:3, price:20, col:'#269B96' },
+  { id:'g_lav', mat:'라벤더', seed:'라벤더', tier:1, know:10, days:2, yield:3, price:25, col:'#E236B7' },
+  { id:'g_rose', mat:'들장미 꽃잎', seed:'들장미', tier:1, know:10, days:2, yield:3, price:25, col:'#A3E06F' },
+  { id:'g_sunf', mat:'해바라기 씨', seed:'해바라기', tier:1, know:10, days:2, yield:3, price:15, col:'#1635CE' },
+  { id:'g_moss', mat:'이끼', seed:'이끼', tier:1, know:10, days:2, yield:3, price:15, col:'#E1A198' },
+  { id:'g_blueb', mat:'블루베리', seed:'블루베리', tier:1, know:10, days:2, yield:3, price:20, col:'#269B57' },
+  { id:'g_ginger', mat:'생강', seed:'생강', tier:1, know:10, days:2, yield:3, price:20, col:'#B036E2' },
+  { id:'g_wheat', mat:'밀 이삭', seed:'밀', tier:1, know:10, days:2, yield:3, price:15, col:'#E0E06F' },
+  { id:'g_pea', mat:'완두콩', seed:'완두콩', tier:1, know:10, days:2, yield:3, price:15, col:'#1698CE' },
+  { id:'g_cotton', mat:'목화솜', seed:'목화', tier:2, know:30, days:2, yield:3, price:40, col:'#E198B6' },
+  { id:'g_bamboo', mat:'대나무 잎', seed:'대나무', tier:2, know:30, days:2, yield:3, price:40, col:'#359B26' },
+  { id:'g_pine', mat:'솔잎', seed:'소나무', tier:2, know:30, days:2, yield:3, price:40, col:'#5336E2' },
+  { id:'g_maple', mat:'단풍잎', seed:'단풍나무', tier:2, know:30, days:2, yield:3, price:30, col:'#E0A36F' },
+  { id:'g_acorn', mat:'도토리', seed:'참나무', tier:2, know:30, days:2, yield:3, price:40, col:'#16CEA1' },
+  { id:'g_tomato', mat:'토마토', seed:'토마토', tier:2, know:30, days:2, yield:3, price:35, col:'#E198DD' },
+  { id:'g_pepper', mat:'고추', seed:'고추', tier:2, know:30, days:2, yield:3, price:35, col:'#739B26' },
+  { id:'g_corn', mat:'옥수수', seed:'옥수수', tier:2, know:30, days:2, yield:3, price:40, col:'#3676E2' },
+  { id:'g_lily', mat:'은방울꽃', seed:'은방울꽃', tier:3, know:60, days:3, yield:3, price:60, col:'#E06F78' },
+  { id:'g_lotus', mat:'연꽃 씨', seed:'연꽃', tier:3, know:60, days:3, yield:3, price:60, col:'#16CE3D' },
+  { id:'g_cactus', mat:'선인장 즙', seed:'선인장', tier:3, know:60, days:3, yield:3, price:60, col:'#BC98E1' },
+  { id:'g_aloe', mat:'알로에', seed:'알로에', tier:3, know:60, days:3, yield:3, price:50, col:'#9B8326' },
+  { id:'g_tulip', mat:'튤립 구근', seed:'튤립', tier:3, know:60, days:3, yield:3, price:60, col:'#36D3E2' },
+  { id:'g_morning', mat:'나팔꽃', seed:'나팔꽃', tier:3, know:60, days:3, yield:3, price:50, col:'#E06FB5' },
+  { id:'g_ginseng', mat:'인삼', seed:'인삼', tier:3, know:60, days:3, yield:3, price:60, col:'#53CE16' },
+  { id:'g_redcap', mat:'광대버섯', seed:'광대버섯', tier:3, know:60, days:3, yield:3, price:50, col:'#989AE1' },
+  { id:'g_firefly', mat:'반딧불 꽃가루', seed:'반딧불꽃', tier:4, know:100, days:3, yield:2, price:80, col:'#9B4426' },
+  { id:'g_snow', mat:'눈송이 꽃', seed:'눈송이꽃', tier:4, know:100, days:3, yield:2, price:80, col:'#36E294' },
+  { id:'g_cloud', mat:'구름 목화', seed:'구름목화', tier:4, know:100, days:3, yield:2, price:80, col:'#CE6FE0' },
+  { id:'g_evening', mat:'달맞이꽃', seed:'달맞이꽃', tier:4, know:100, days:3, yield:2, price:80, col:'#B6CE16' },
+  { id:'g_fairy', mat:'요정 버섯', seed:'요정버섯', tier:4, know:100, days:3, yield:2, price:90, col:'#98C2E1' },
+  { id:'g_bell', mat:'노래하는 종꽃', seed:'종꽃', tier:4, know:100, days:3, yield:2, price:80, col:'#9B2648' },
+  { id:'g_whisper', mat:'속삭임 덩굴', seed:'속삭임덩굴', tier:4, know:100, days:3, yield:2, price:85, col:'#36E237' },
+  { id:'g_glass', mat:'유리 열매', seed:'유리나무', tier:4, know:100, days:3, yield:2, price:85, col:'#916FE0' },
+  { id:'g_star', mat:'별사과', seed:'별사과나무', tier:5, know:140, days:4, yield:2, price:125, col:'#CE8316' },
+  { id:'g_dragonp', mat:'화룡초', seed:'화룡초', tier:5, know:140, days:4, yield:2, price:130, col:'#98E1D8' },
+  { id:'g_dream', mat:'꿈꽃', seed:'꿈꽃', tier:5, know:140, days:4, yield:2, price:120, col:'#9B2686' },
+  { id:'g_mirror', mat:'거울 잎', seed:'거울풀', tier:5, know:140, days:4, yield:2, price:130, col:'#92E236' },
+  { id:'g_shadow', mat:'그림자 버섯', seed:'그림자버섯', tier:5, know:140, days:4, yield:2, price:120, col:'#6F8BE0' },
+  { id:'g_thunder', mat:'번개 콩', seed:'번개콩', tier:5, know:140, days:4, yield:2, price:130, col:'#CE1F16' },
+  { id:'g_frost', mat:'서리 딸기', seed:'서리딸기', tier:5, know:140, days:4, yield:2, price:125, col:'#98E1B1' },
+  { id:'g_ocean', mat:'바다 포도', seed:'바다포도', tier:5, know:140, days:4, yield:2, price:125, col:'#70269B' },
+  { id:'g_aurora', mat:'오로라 꽃잎', seed:'오로라꽃', tier:6, know:180, days:4, yield:2, price:180, col:'#E2D536' },
+  { id:'g_comet', mat:'혜성 씨앗', seed:'혜성초', tier:6, know:180, days:4, yield:2, price:190, col:'#6FC8E0' },
+  { id:'g_moonf', mat:'월하향', seed:'월하향', tier:6, know:180, days:4, yield:2, price:180, col:'#CE1671' },
+  { id:'g_sung', mat:'해님 호박', seed:'해님호박', tier:6, know:180, days:4, yield:2, price:185, col:'#A6E198' },
+  { id:'g_gold', mat:'황금 버섯', seed:'황금버섯', tier:6, know:180, days:4, yield:2, price:190, col:'#31269B' },
+  { id:'g_crystal', mat:'수정 장미', seed:'수정장미', tier:6, know:180, days:4, yield:2, price:185, col:'#E27736' },
+  { id:'g_rainbow', mat:'무지개 콩', seed:'무지개콩', tier:6, know:180, days:4, yield:2, price:185, col:'#6FE0BB' },
+  { id:'g_time', mat:'시간의 꽃', seed:'시간꽃', tier:6, know:180, days:4, yield:2, price:190, col:'#C816CE' },
+  { id:'g_soul', mat:'영혼 연꽃', seed:'영혼연꽃', tier:6, know:180, days:4, yield:2, price:180, col:'#CEE198' },
+  { id:'g_wish', mat:'소원 민들레', seed:'소원민들레', tier:6, know:180, days:4, yield:2, price:190, col:'#265B9B' },
+];
+const SEED_INFO = Object.fromEntries(SEED_LIST.map((x, i) => [x.id, { ...x, ic: i }]));
+const SEED_TIERS = [...new Set(SEED_LIST.map(x => x.know))];
+SEED_LIST.forEach(x => { ITEM[x.id] = x.mat; });
+const CREATURE_MATS = ['wool','scale','uhair','egg'];
+const MATS = [...SEED_LIST.map(x => x.id), ...CREATURE_MATS];
 // 물약 도감 100종: r 재료 3개, pay 주문 보상, col 물약 색, use 마시면 생기는 일, time 그 기숙사 시간에만 끓어요
 // 아이콘은 art/potions.png (10×10칸, 이 표의 순서대로)
 const POTION_LIST = [
@@ -152,94 +221,94 @@ const POTION_LIST = [
   { id:'p_sun', name:'한낮의 물약', r:["scale", "scale", "herb"], pay:160, col:'#FFC81E', time:"ember", desc:"한낮의 열기로 끓여요" },
   { id:'p_dusk', name:'노을 물약', r:["uhair", "uhair", "wool"], pay:180, col:'#FF7A5C', time:"dusk", desc:"해 질 녘에만 색이 바뀌어요" },
   { id:'p_moon', name:'달그림자 물약', r:["mana", "mana", "drop"], pay:180, col:'#5548B8', time:"moon", desc:"달이 뜬 밤에만 굳어요" },
-  { id:'pt013', name:'속삭임 물약', r:["herb", "herb", "mush"], pay:55, col:'#127AE2' },
-  { id:'pt014', name:'투명 물약', r:["herb", "herb", "mana"], pay:60, col:'#E69DAC' },
-  { id:'pt015', name:'깃털 물약', r:["drop", "drop", "mush"], pay:60, col:'#23A82E' },
-  { id:'pt016', name:'거품 물약', r:["drop", "mush", "mush"], pay:65, col:'#7E3EE9' },
-  { id:'pt017', name:'무지개 물약', r:["herb", "herb", "wool"], pay:65, col:'#E6C074' },
-  { id:'pt018', name:'기억 물약', r:["drop", "drop", "mana"], pay:65, col:'#12E2DA' },
-  { id:'pt019', name:'망각 물약', r:["herb", "mush", "mana"], pay:65, col:'#E69DD3' },
-  { id:'pt020', name:'웃음 물약', r:["drop", "mush", "mana"], pay:70, col:'#60A823' },
-  { id:'pt021', name:'눈물 물약', r:["herb", "drop", "wool"], pay:70, col:'#3E5AE9' },
-  { id:'pt022', name:'행운 물약', r:["herb", "mana", "mana"], pay:75, col:'#E68274' },
-  { id:'pt023', name:'번개 물약', r:["drop", "drop", "wool"], pay:75, col:'#12E269' },
-  { id:'pt024', name:'얼음 물약', r:["herb", "herb", "scale"], pay:75, col:'#D19DE6' },
-  { id:'pt025', name:'바람 물약', r:["mush", "mush", "mana"], pay:75, col:'#A7A823' },
-  { id:'pt026', name:'구름 물약', r:["drop", "mush", "wool"], pay:75, col:'#3EB7E9' },
-  { id:'pt027', name:'안개 물약', r:["drop", "drop", "scale"], pay:80, col:'#E674A3' },
-  { id:'pt028', name:'꿈결 물약', r:["mush", "mana", "mana"], pay:80, col:'#2BE212' },
-  { id:'pt029', name:'수다 물약', r:["herb", "mush", "scale"], pay:80, col:'#A99DE6' },
-  { id:'pt030', name:'침묵 물약', r:["herb", "mana", "wool"], pay:80, col:'#A86023' },
-  { id:'pt031', name:'변신 물약', r:["mush", "mush", "wool"], pay:80, col:'#3EE9BF' },
-  { id:'pt032', name:'축소 물약', r:["herb", "wool", "wool"], pay:85, col:'#E674E1' },
-  { id:'pt033', name:'거대화 물약', r:["mush", "mana", "wool"], pay:85, col:'#9CE212' },
-  { id:'pt034', name:'부유 물약', r:["mush", "mush", "scale"], pay:85, col:'#9DB8E6' },
-  { id:'pt035', name:'야광 물약', r:["drop", "mana", "scale"], pay:90, col:'#A8232E' },
-  { id:'pt036', name:'그림자 물약', r:["herb", "wool", "scale"], pay:95, col:'#3EE962' },
-  { id:'pt037', name:'거울 물약', r:["mush", "mana", "scale"], pay:95, col:'#AD74E6' },
-  { id:'pt038', name:'메아리 물약', r:["mush", "wool", "wool"], pay:95, col:'#E2B812' },
-  { id:'pt039', name:'노래 물약', r:["mana", "mana", "wool"], pay:95, col:'#9DE0E6' },
-  { id:'pt040', name:'춤 물약', r:["drop", "wool", "scale"], pay:95, col:'#A82375' },
-  { id:'pt041', name:'딸꾹질 물약', r:["herb", "herb", "uhair"], pay:95, col:'#76E93E' },
-  { id:'pt042', name:'재채기 물약', r:["mana", "mana", "scale"], pay:100, col:'#7478E6' },
-  { id:'pt043', name:'꽃향기 물약', r:["mana", "wool", "wool"], pay:100, col:'#E24712' },
-  { id:'pt044', name:'비눗방울 물약', r:["mush", "wool", "scale"], pay:100, col:'#9DE6C5' },
-  { id:'pt045', name:'솜사탕 물약', r:["drop", "drop", "uhair"], pay:100, col:'#9223A8' },
-  { id:'pt046', name:'박하 물약', r:["herb", "mush", "uhair"], pay:100, col:'#D3E93E' },
-  { id:'pt047', name:'초콜릿 물약', r:["drop", "mush", "uhair"], pay:105, col:'#74B6E6' },
-  { id:'pt048', name:'사과 물약', r:["mush", "scale", "scale"], pay:105, col:'#E2124D' },
-  { id:'pt049', name:'꿀 물약', r:["mana", "wool", "scale"], pay:105, col:'#9DE69D' },
-  { id:'pt050', name:'계피 물약', r:["herb", "mana", "uhair"], pay:110, col:'#4B23A8' },
-  { id:'pt051', name:'레몬 물약', r:["mush", "mush", "uhair"], pay:110, col:'#E9A33E' },
-  { id:'pt052', name:'체리 물약', r:["mana", "scale", "scale"], pay:110, col:'#74E6D9' },
-  { id:'pt053', name:'복숭아 물약', r:["wool", "wool", "scale"], pay:110, col:'#E212BE' },
-  { id:'pt054', name:'포도 물약', r:["herb", "wool", "uhair"], pay:115, col:'#C4E69D' },
-  { id:'pt055', name:'바닐라 물약', r:["mush", "mana", "uhair"], pay:115, col:'#2343A8' },
-  { id:'pt056', name:'생강 물약', r:["drop", "wool", "uhair"], pay:120, col:'#E9463E' },
-  { id:'pt057', name:'해바라기 물약', r:["wool", "scale", "scale"], pay:120, col:'#74E69B' },
-  { id:'pt058', name:'장미 물약', r:["herb", "scale", "uhair"], pay:120, col:'#9512E2' },
-  { id:'pt059', name:'라벤더 물약', r:["drop", "scale", "uhair"], pay:125, col:'#E6E09D' },
-  { id:'pt060', name:'클로버 물약', r:["mana", "wool", "uhair"], pay:130, col:'#238BA8' },
-  { id:'pt061', name:'이끼 물약', r:["mush", "scale", "uhair"], pay:130, col:'#E93E92' },
-  { id:'pt062', name:'도토리 물약', r:["herb", "herb", "egg"], pay:130, col:'#8BE674' },
-  { id:'pt063', name:'솔방울 물약', r:["herb", "drop", "egg"], pay:130, col:'#2512E2' },
-  { id:'pt064', name:'단풍 물약', r:["mana", "scale", "uhair"], pay:135, col:'#E6B99D' },
-  { id:'pt065', name:'눈꽃 물약', r:["drop", "drop", "egg"], pay:135, col:'#23A87D' },
-  { id:'pt066', name:'봄비 물약', r:["wool", "wool", "uhair"], pay:135, col:'#E33EE9' },
-  { id:'pt067', name:'소나기 물약', r:["herb", "mush", "egg"], pay:135, col:'#C8E674' },
-  { id:'pt068', name:'천둥 물약', r:["drop", "mush", "egg"], pay:140, col:'#126FE2' },
-  { id:'pt069', name:'오로라 물약', r:["mush", "mush", "egg"], pay:140, col:'#E69DA8' },
-  { id:'pt070', name:'혜성 물약', r:["wool", "scale", "uhair"], pay:140, col:'#23A835' },
-  { id:'pt071', name:'은하수 물약', r:["herb", "uhair", "uhair"], pay:145, col:'#873EE9' },
-  { id:'pt072', name:'일식 물약', r:["drop", "mana", "egg"], pay:145, col:'#E6C674' },
-  { id:'pt073', name:'별자리 물약', r:["scale", "scale", "uhair"], pay:145, col:'#12E0E2' },
-  { id:'pt074', name:'나침반 물약', r:["mush", "mana", "egg"], pay:145, col:'#E69DD0' },
-  { id:'pt075', name:'모래시계 물약', r:["drop", "uhair", "uhair"], pay:145, col:'#59A823' },
-  { id:'pt076', name:'열쇠 물약', r:["herb", "wool", "egg"], pay:145, col:'#3E51E9' },
-  { id:'pt077', name:'풍선 물약', r:["mush", "uhair", "uhair"], pay:150, col:'#E68874' },
-  { id:'pt078', name:'종이학 물약', r:["drop", "wool", "egg"], pay:150, col:'#12E273' },
-  { id:'pt079', name:'잉크 물약', r:["herb", "scale", "egg"], pay:155, col:'#D49DE6' },
-  { id:'pt080', name:'등불 물약', r:["mush", "wool", "egg"], pay:155, col:'#A1A823' },
-  { id:'pt081', name:'반딧불 물약', r:["mana", "mana", "egg"], pay:155, col:'#3EAEE9' },
-  { id:'pt082', name:'고양이 물약', r:["mana", "uhair", "uhair"], pay:155, col:'#E6749D' },
-  { id:'pt083', name:'부엉이 물약', r:["drop", "scale", "egg"], pay:155, col:'#21E212' },
-  { id:'pt084', name:'토끼 물약', r:["mana", "wool", "egg"], pay:160, col:'#AD9DE6' },
-  { id:'pt085', name:'여우 물약', r:["wool", "wool", "egg"], pay:165, col:'#A86723' },
-  { id:'pt086', name:'거북 물약', r:["scale", "uhair", "uhair"], pay:170, col:'#3EE9C7' },
-  { id:'pt087', name:'해파리 물약', r:["wool", "scale", "egg"], pay:175, col:'#E674DB' },
-  { id:'pt088', name:'고래 물약', r:["herb", "uhair", "egg"], pay:175, col:'#91E212' },
-  { id:'pt089', name:'산호 물약', r:["scale", "scale", "egg"], pay:180, col:'#9DB4E6' },
-  { id:'pt090', name:'진주 물약', r:["mush", "uhair", "egg"], pay:180, col:'#A82327' },
-  { id:'pt091', name:'수정 물약', r:["wool", "uhair", "egg"], pay:195, col:'#3EE96B' },
-  { id:'pt092', name:'호박빛 물약', r:["scale", "uhair", "egg"], pay:200, col:'#B374E6' },
-  { id:'pt093', name:'금박 물약', r:["herb", "egg", "egg"], pay:210, col:'#E2C212' },
-  { id:'pt094', name:'용암 물약', r:["drop", "egg", "egg"], pay:210, col:'#9DDCE6' },
-  { id:'pt095', name:'간지럼 물약', r:["mush", "egg", "egg"], pay:215, col:'#A8236F' },
-  { id:'pt096', name:'집중 물약', r:["mana", "egg", "egg"], pay:220, col:'#6EE93E' },
-  { id:'pt097', name:'영감 물약', r:["uhair", "uhair", "egg"], pay:225, col:'#7574E6' },
-  { id:'pt098', name:'우정 물약', r:["wool", "egg", "egg"], pay:225, col:'#E25112' },
-  { id:'pt099', name:'첫사랑 물약', r:["scale", "egg", "egg"], pay:235, col:'#9DE6C8' },
-  { id:'pt100', name:'별빛 물약', r:["uhair", "egg", "egg"], pay:400, col:'#9923A8', desc:"별빛 아카데미의 전설. 도감 100번째 물약" },
+  { id:'pt013', name:'속삭임 물약', r:["g_clover", "g_mint", "g_dandel"], pay:45, col:'#127AE2' },
+  { id:'pt014', name:'투명 물약', r:["g_carrot", "g_clover", "herb"], pay:45, col:'#E69DAC' },
+  { id:'pt015', name:'깃털 물약', r:["drop", "drop", "g_straw"], pay:45, col:'#23A82E' },
+  { id:'pt016', name:'거품 물약', r:["mush", "g_clover", "g_straw"], pay:45, col:'#7E3EE9' },
+  { id:'pt017', name:'무지개 물약', r:["g_chamo", "herb", "herb"], pay:45, col:'#E6C074' },
+  { id:'pt018', name:'기억 물약', r:["g_dandel", "g_dandel", "herb"], pay:45, col:'#12E2DA' },
+  { id:'pt019', name:'망각 물약', r:["g_carrot", "g_straw", "g_straw"], pay:45, col:'#E69DD3' },
+  { id:'pt020', name:'웃음 물약', r:["g_straw", "drop", "g_dandel"], pay:45, col:'#60A823' },
+  { id:'pt021', name:'눈물 물약', r:["g_clover", "g_mint", "drop"], pay:45, col:'#3E5AE9' },
+  { id:'pt022', name:'행운 물약', r:["g_clover", "g_mint", "herb"], pay:45, col:'#E68274' },
+  { id:'pt023', name:'번개 물약', r:["g_straw", "drop", "mush"], pay:45, col:'#12E269' },
+  { id:'pt024', name:'얼음 물약', r:["g_dandel", "drop", "herb"], pay:45, col:'#D19DE6' },
+  { id:'pt025', name:'바람 물약', r:["herb", "g_carrot", "g_carrot"], pay:45, col:'#A7A823' },
+  { id:'pt026', name:'구름 물약', r:["g_rose", "g_pea", "g_straw"], pay:70, col:'#3EB7E9' },
+  { id:'pt027', name:'안개 물약', r:["g_moss", "g_wheat", "g_straw"], pay:70, col:'#E674A3' },
+  { id:'pt028', name:'꿈결 물약', r:["g_lav", "g_moss", "g_sunf"], pay:85, col:'#2BE212' },
+  { id:'pt029', name:'수다 물약', r:["mana", "g_sunf", "g_moss"], pay:85, col:'#A99DE6' },
+  { id:'pt030', name:'침묵 물약', r:["g_blueb", "herb", "g_chamo"], pay:60, col:'#A86023' },
+  { id:'pt031', name:'변신 물약', r:["g_ginger", "herb", "g_straw"], pay:60, col:'#3EE9BF' },
+  { id:'pt032', name:'축소 물약', r:["g_rose", "g_sunf", "g_dandel"], pay:70, col:'#E674E1' },
+  { id:'pt033', name:'거대화 물약', r:["mana", "g_clover", "g_straw"], pay:60, col:'#9CE212' },
+  { id:'pt034', name:'부유 물약', r:["g_wheat", "g_chamo", "herb"], pay:60, col:'#9DB8E6' },
+  { id:'pt035', name:'야광 물약', r:["g_blueb", "mana", "g_sunf"], pay:85, col:'#A8232E' },
+  { id:'pt036', name:'그림자 물약', r:["g_lav", "mush", "mush"], pay:60, col:'#3EE962' },
+  { id:'pt037', name:'거울 물약', r:["g_sunf", "g_carrot", "herb"], pay:60, col:'#AD74E6' },
+  { id:'pt038', name:'메아리 물약', r:["g_blueb", "g_rose", "g_blueb"], pay:85, col:'#E2B812' },
+  { id:'pt039', name:'노래 물약', r:["g_pine", "g_cotton", "g_cotton"], pay:125, col:'#9DE0E6' },
+  { id:'pt040', name:'춤 물약', r:["g_maple", "g_sunf", "g_clover"], pay:85, col:'#A82375' },
+  { id:'pt041', name:'딸꾹질 물약', r:["g_tomato", "g_carrot", "g_carrot"], pay:70, col:'#76E93E' },
+  { id:'pt042', name:'재채기 물약', r:["g_acorn", "g_mint", "g_pea"], pay:85, col:'#7478E6' },
+  { id:'pt043', name:'꽃향기 물약', r:["g_bamboo", "g_maple", "g_ginger"], pay:110, col:'#E24712' },
+  { id:'pt044', name:'비눗방울 물약', r:["g_pepper", "g_moss", "g_dandel"], pay:85, col:'#9DE6C5' },
+  { id:'pt045', name:'솜사탕 물약', r:["g_corn", "g_wheat", "g_carrot"], pay:85, col:'#9223A8' },
+  { id:'pt046', name:'박하 물약', r:["g_pepper", "g_chamo", "g_bamboo"], pay:100, col:'#D3E93E' },
+  { id:'pt047', name:'초콜릿 물약', r:["g_corn", "mana", "g_tomato"], pay:110, col:'#74B6E6' },
+  { id:'pt048', name:'사과 물약', r:["g_bamboo", "g_clover", "g_pea"], pay:85, col:'#E2124D' },
+  { id:'pt049', name:'꿀 물약', r:["g_bamboo", "g_chamo", "egg"], pay:145, col:'#9DE69D' },
+  { id:'pt050', name:'계피 물약', r:["g_maple", "g_tomato", "g_chamo"], pay:100, col:'#4B23A8' },
+  { id:'pt051', name:'레몬 물약', r:["g_pepper", "g_blueb", "drop"], pay:85, col:'#E9A33E' },
+  { id:'pt052', name:'체리 물약', r:["g_cactus", "g_cotton", "g_chamo"], pay:110, col:'#74E6D9' },
+  { id:'pt053', name:'복숭아 물약', r:["g_lily", "g_tomato", "g_cactus"], pay:155, col:'#E212BE' },
+  { id:'pt054', name:'포도 물약', r:["g_tulip", "g_redcap", "g_chamo"], pay:125, col:'#C4E69D' },
+  { id:'pt055', name:'바닐라 물약', r:["g_lotus", "drop", "g_acorn"], pay:110, col:'#2343A8' },
+  { id:'pt056', name:'생강 물약', r:["g_ginseng", "g_bamboo", "drop"], pay:110, col:'#E9463E' },
+  { id:'pt057', name:'해바라기 물약', r:["g_aloe", "g_tulip", "g_bamboo"], pay:155, col:'#74E69B' },
+  { id:'pt058', name:'장미 물약', r:["g_morning", "g_chamo", "g_clover"], pay:85, col:'#9512E2' },
+  { id:'pt059', name:'라벤더 물약', r:["g_redcap", "g_tomato", "g_chamo"], pay:110, col:'#E6E09D' },
+  { id:'pt060', name:'클로버 물약', r:["g_morning", "g_acorn", "g_tulip"], pay:155, col:'#238BA8' },
+  { id:'pt061', name:'이끼 물약', r:["g_lotus", "g_lily", "drop"], pay:125, col:'#E93E92' },
+  { id:'pt062', name:'도토리 물약', r:["g_redcap", "herb", "g_pepper"], pay:110, col:'#8BE674' },
+  { id:'pt063', name:'솔방울 물약', r:["g_ginseng", "herb", "g_mint"], pay:85, col:'#2512E2' },
+  { id:'pt064', name:'단풍 물약', r:["g_lotus", "g_carrot", "g_lily"], pay:125, col:'#E6B99D' },
+  { id:'pt065', name:'눈꽃 물약', r:["g_bell", "g_pepper", "g_evening"], pay:180, col:'#23A87D' },
+  { id:'pt066', name:'봄비 물약', r:["g_fairy", "g_cactus", "g_firefly"], pay:195, col:'#E33EE9' },
+  { id:'pt067', name:'소나기 물약', r:["g_snow", "g_redcap", "drop"], pay:140, col:'#C8E674' },
+  { id:'pt068', name:'천둥 물약', r:["g_whisper", "g_fairy", "drop"], pay:155, col:'#126FE2' },
+  { id:'pt069', name:'오로라 물약', r:["g_cloud", "g_carrot", "g_bell"], pay:155, col:'#E69DA8' },
+  { id:'pt070', name:'혜성 물약', r:["g_glass", "g_wheat", "g_tomato"], pay:140, col:'#23A835' },
+  { id:'pt071', name:'은하수 물약', r:["g_fairy", "mana", "g_sunf"], pay:125, col:'#873EE9' },
+  { id:'pt072', name:'일식 물약', r:["g_cloud", "g_maple", "g_cactus"], pay:165, col:'#E6C674' },
+  { id:'pt073', name:'별자리 물약', r:["g_glass", "g_ginger", "wool"], pay:130, col:'#12E0E2' },
+  { id:'pt074', name:'나침반 물약', r:["g_fairy", "g_sunf", "g_sunf"], pay:125, col:'#E69DD0' },
+  { id:'pt075', name:'모래시계 물약', r:["g_evening", "g_pepper", "g_pine"], pay:155, col:'#59A823' },
+  { id:'pt076', name:'열쇠 물약', r:["g_evening", "g_chamo", "g_acorn"], pay:125, col:'#3E51E9' },
+  { id:'pt077', name:'풍선 물약', r:["g_firefly", "g_clover", "g_pea"], pay:110, col:'#E68874' },
+  { id:'pt078', name:'종이학 물약', r:["g_dream", "g_carrot", "g_pea"], pay:125, col:'#12E273' },
+  { id:'pt079', name:'잉크 물약', r:["g_dragonp", "g_lily", "g_redcap"], pay:195, col:'#D49DE6' },
+  { id:'pt080', name:'등불 물약', r:["g_thunder", "g_dragonp", "egg"], pay:255, col:'#A1A823' },
+  { id:'pt081', name:'반딧불 물약', r:["g_ocean", "g_cactus", "egg"], pay:230, col:'#3EAEE9' },
+  { id:'pt082', name:'고양이 물약', r:["g_star", "g_pea", "mush"], pay:125, col:'#E6749D' },
+  { id:'pt083', name:'부엉이 물약', r:["g_frost", "g_mirror", "g_acorn"], pay:205, col:'#21E212' },
+  { id:'pt084', name:'토끼 물약', r:["g_shadow", "g_glass", "drop"], pay:165, col:'#AD9DE6' },
+  { id:'pt085', name:'여우 물약', r:["g_dream", "g_corn", "drop"], pay:140, col:'#A86723' },
+  { id:'pt086', name:'거북 물약', r:["g_shadow", "g_ginger", "g_dandel"], pay:125, col:'#3EE9C7' },
+  { id:'pt087', name:'해파리 물약', r:["g_dragonp", "g_cactus", "g_firefly"], pay:205, col:'#E674DB' },
+  { id:'pt088', name:'고래 물약', r:["g_thunder", "g_clover", "g_sunf"], pay:125, col:'#91E212' },
+  { id:'pt089', name:'산호 물약', r:["g_ocean", "g_wheat", "herb"], pay:125, col:'#9DB4E6' },
+  { id:'pt090', name:'진주 물약', r:["g_ocean", "g_firefly", "g_rose"], pay:180, col:'#A82327' },
+  { id:'pt091', name:'수정 물약', r:["g_sung", "g_pea", "g_firefly"], pay:195, col:'#3EE96B' },
+  { id:'pt092', name:'호박빛 물약', r:["g_wish", "g_ginseng", "g_frost"], pay:235, col:'#B374E6' },
+  { id:'pt093', name:'금박 물약', r:["g_moonf", "g_corn", "g_dream"], pay:220, col:'#E2C212' },
+  { id:'pt094', name:'용암 물약', r:["g_comet", "g_mint", "g_time"], pay:205, col:'#9DDCE6' },
+  { id:'pt095', name:'간지럼 물약', r:["g_rainbow", "g_chamo", "g_sunf"], pay:140, col:'#A8236F' },
+  { id:'pt096', name:'집중 물약', r:["g_aurora", "g_pepper", "g_glass"], pay:205, col:'#6EE93E' },
+  { id:'pt097', name:'영감 물약', r:["g_soul", "g_aurora", "g_maple"], pay:235, col:'#7574E6' },
+  { id:'pt098', name:'우정 물약', r:["g_crystal", "g_pine", "g_moss"], pay:165, col:'#E25112' },
+  { id:'pt099', name:'첫사랑 물약', r:["g_gold", "g_shadow", "g_comet"], pay:275, col:'#9DE6C8' },
+  { id:'pt100', name:'별빛 물약', r:["g_wish", "g_soul", "egg"], pay:400, col:'#9923A8', desc:"별빛 아카데미의 전설. 도감 100번째 물약" },
 ];
 const POTION_INFO = Object.fromEntries(POTION_LIST.map((x, i) => [x.id, { ...x, ic: i }]));
 POTION_LIST.forEach(x => { ITEM[x.id] = x.name; });
@@ -253,7 +322,6 @@ const HINT_ORDER = ['p_green','p_blue','p_grow','p_vigor','p_fluff','p_purple','
 const KNOW_PER_HINT = 3;
 const RANKS = [[100,'별빛 연금술사'],[60,'대연금술사'],[30,'숙련 연금술사'],[10,'연금술사'],[0,'견습 연금술사']];
 const rankOf = n => RANKS.find(([k]) => n >= k)[1];
-const SEEDS = { herb:'약초', drop:'월광초', mush:'보라 버섯' };
 // 생물 종류 (그림은 creatures.png의 같은 칸). baby → adult 이름이 바뀌어요.
 const CREATURES = [
   { name:'뭉게', kind:'구름양', baby:'아기 구름양', food:'약초 주기', mat:'wool', bg:'#E6F0FF', names:['몽실','솜사탕','구름이','포실','뭉치'] },
@@ -346,7 +414,7 @@ function normalize(p){
 function usePotion(p){
   if (!POTION_INFO[p].use || me.inv[p] < 1) return '';
   me.inv[p]--;
-  if (p === 'p_grow'){ let n = 0; me.plots.forEach(x => { if (x.st >= 1 && x.st < 4){ x.st++; n++; } }); save(); return n ? `화단 ${n}칸이 쑥 자랐어요!` : '자랄 식물이 없어서 물약이 땅으로 스며들었어요.'; }
+  if (p === 'p_grow'){ let n = 0; me.plots.forEach(x => { if (x.st >= 1 && !plotReady(x)){ x.st++; n++; } }); save(); return n ? `화단 ${n}칸이 쑥 자랐어요!` : '자랄 식물이 없어서 물약이 땅으로 스며들었어요.'; }
   if (p === 'p_vigor'){ me.mana += 15; save(); return '기운이 솟아요! 마력 +15'; }
   if (p === 'p_fluff'){ me.cr.filter(c => crStage(c) !== 'egg').forEach(c => { c.love = Math.min(5, c.love + 1); }); save(); return '사육장에 포근한 향이 퍼졌어요. 모두 애정 +1'; }
   return '';
@@ -511,7 +579,7 @@ function renderClass(){
 // ===== 연구실 =====
 let slots = [], brewMsg = null;
 const shortName = k => SHORT[k] || ITEM[k].replace(' 물약', '');
-let dexSel = null, dexPage = 0;
+let dexSel = null, dexPage = 0, matAll = false;
 const DEX_PAGE = 20;
 function renderLab(){
   const n = me.found.length, sel = dexSel && POTION_INFO[dexSel];
@@ -525,9 +593,10 @@ function renderLab(){
       ${hint(brewMsg, '아래 재료를 눌러 솥에 넣어요. 넣은 재료를 누르면 다시 빼요.')}
     </section>
     <section class="sec">
-      ${secH('재료함')}
+      <div class="sec-h"><h3>재료함</h3><button class="btn ghost" id="matAll">${matAll ? '가진 것만 보기' : `전부 보기 (${MATS.length}종)`}</button></div>
       <div class="grid" style="grid-template-columns:repeat(4,1fr)">
-        ${MATS.map(k => { const left = me.inv[k] - slots.filter(s => s === k).length; return `<button class="cell" data-add="${k}" ${left > 0 && slots.length < 3 ? '' : 'disabled'}>${ic(k)}<span class="s">${shortName(k)}</span><span class="n">${left}</span></button>`; }).join('')}
+        ${(() => { const l = MATS.filter(k => matAll || me.inv[k] > 0 || slots.includes(k)); return l.length ? '' : '<div class="hint" style="grid-column:1/-1">재료가 없어요. 온실과 사육장에서 모아 와요.</div>'; })()}
+        ${MATS.filter(k => matAll || me.inv[k] > 0 || slots.includes(k)).map(k => { const left = me.inv[k] - slots.filter(s => s === k).length; return `<button class="cell" data-add="${k}" ${left > 0 && slots.length < 3 ? '' : 'disabled'}>${ic(k)}<span class="s">${shortName(k)}</span><span class="n">${left}</span></button>`; }).join('')}
       </div>
     </section>
     <section class="sec">
@@ -551,6 +620,7 @@ function renderLab(){
   on('[data-add]', b => { slots.push(b.dataset.add); brewMsg = null; renderLab(); });
   on('[data-take]', b => { slots.splice(+b.dataset.take, 1); renderLab(); });
   on('[data-dex]', b => { dexSel = dexSel === b.dataset.dex ? null : b.dataset.dex; renderLab(); });
+  $('#matAll').onclick = () => { matAll = !matAll; renderLab(); };
   on('[data-dexpage]', b => { dexPage = +b.dataset.dexpage; dexSel = null; renderLab(); });
   const dk = $('#drink'); if (dk) dk.onclick = () => { brewMsg = usePotion(dexSel); renderLab(); };
   $('#brew').onclick = () => {
@@ -579,33 +649,53 @@ function renderLab(){
 }
 
 // ===== 온실 =====
-let seedPick = 'herb', greenMsg = '';
+// 화단 칸: st 0 빈 칸, 1부터 자라는 중, 씨앗의 days+1이 되면 수확
+const plotReady = p => p.st >= 1 && p.k && p.st >= (SEED_INFO[p.k]?.days || 3) + 1;
+const PLOT_MAX = 9, PLOT_PRICE = 300;
+let seedPick = 'herb', greenMsg = '', seedTier = 0;
 function renderGreen(){
-  const ready = me.plots.filter(p => p.st === 4).length;
-  frame('green', '약초 온실', ready ? `수확할 칸 ${ready}개` : '물 준 식물은 자고 나면 자라요', `
-    <section class="sec">
-      ${secH('심을 씨앗')}
-      <div class="seg px" style="grid-template-columns:repeat(3,1fr)">${Object.entries(SEEDS).map(([k, n]) => `<button class="${seedPick === k ? 'on' : ''}" data-seed="${k}">${n}</button>`).join('')}</div>
-    </section>
+  const ready = me.plots.filter(plotReady).length, know = me.know || 0;
+  const tierKnow = SEED_TIERS[seedTier], list = SEED_LIST.filter(x => x.know === tierKnow);
+  const P = SEED_INFO[seedPick] || SEED_INFO.herb;
+  frame('green', '약초 온실', ready ? `수확할 칸 ${ready}개` : `심을 수 있는 씨앗 ${SEED_LIST.filter(x => x.know <= know).length} / ${SEED_LIST.length}종`, `
     <section class="sec">
       ${secH('화단', waterCost() ? '물 주기 마력 1' : '물 주기 무료')}
       <div class="grid" style="grid-template-columns:repeat(3,1fr)">
         ${me.plots.map((p, i) => {
-          const icon = p.st === 0 ? 'seed' : p.st === 4 ? p.k : ['seed', 'seed', 'sprout', 'herb'][p.st];
-          const label = p.st === 0 ? '심기' : p.st === 4 ? '수확!' : p.w ? '물 줬어요' : '물 주기';
-          const bg = p.st === 4 ? '#E2FBEA' : p.w ? '#E4F1FF' : p.st === 0 ? 'var(--card)' : '#F6EBDB';
-          return `<button class="cell" data-plot="${i}" style="min-height:100px;background:${bg};${p.st === 4 ? 'border-color:var(--mint2)' : ''}">
-            ${ic(icon, p.st === 0 ? 'opacity:.3' : '')}<span class="s">${p.k ? SEEDS[p.k] : '빈 칸'}</span><span class="s ${p.st === 4 ? 'b' : 'sub'}" style="${p.st === 4 ? 'color:var(--mint2)' : ''}">${label}</span>
-            <div style="width:60px;display:flex">${segs(p.st, 4, '#7BD88F')}</div></button>`;
+          const G = p.k && SEED_INFO[p.k], rd = plotReady(p);
+          const icon = p.st === 0 ? 'seed' : rd ? p.k : p.st <= 1 ? 'seed' : p.st < G.days ? 'sprout' : p.k;
+          const label = p.st === 0 ? '심기' : rd ? '수확!' : p.w ? '물 줬어요' : '물 주기';
+          const bg = rd ? '#E2FBEA' : p.w ? '#E4F1FF' : p.st === 0 ? 'var(--card)' : '#F6EBDB';
+          return `<button class="cell" data-plot="${i}" style="min-height:96px;background:${bg};${rd ? 'border-color:var(--mint2)' : ''}">
+            ${ic(icon, p.st === 0 ? 'opacity:.3' : !rd && p.st >= 1 && icon === p.k ? 'opacity:.7' : '')}<span class="s">${G ? G.seed : '빈 칸'}</span><span class="s ${rd ? 'b' : 'sub'}" style="${rd ? 'color:var(--mint2)' : ''}">${label}</span>
+            ${G ? `<div style="width:60px;display:flex">${segs(Math.min(p.st - 1, G.days), G.days, '#7BD88F')}</div>` : ''}</button>`;
         }).join('')}
       </div>
-      ${hint(greenMsg, '빈 칸에 씨앗을 심고 물을 줘요. 기숙사에서 자고 나면 한 단계씩 자라요.')}
+      ${me.plots.length < PLOT_MAX ? `<button class="btn ghost" id="morePlot" style="align-self:center">화단 한 칸 늘리기 · ${PLOT_PRICE}G (${me.plots.length} / ${PLOT_MAX})</button>` : ''}
+      ${hint(greenMsg, '씨앗을 고르고 빈 칸을 눌러 심어요. 물 준 식물은 자고 나면 하루씩 자라요.')}
+    </section>
+    <section class="sec">
+      ${secH('씨앗 고르기', `지식 ${know}`)}
+      <div class="seg px" style="grid-template-columns:repeat(${SEED_TIERS.length},1fr)">${SEED_TIERS.map((k, i) => `<button class="${seedTier === i ? 'on' : ''}" data-stier="${i}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:13px;min-height:42px;${know < k ? 'opacity:.55' : ''}">${i + 1}단계<span class="s" style="font-size:11px">${k ? '지식' + k : '기본'}</span></button>`).join('')}</div>
+      <div class="grid" style="grid-template-columns:repeat(4,1fr)">${list.map(x => { const lock = know < x.know; return `<button class="cell ${seedPick === x.id ? 'sel' : ''}" data-seed="${x.id}" ${lock ? 'disabled' : ''}>${ic(x.id, lock ? 'filter:grayscale(1);opacity:.4' : '')}<span class="s">${x.seed}</span><span class="s ${x.price ? '' : 'sub'}" style="${x.price ? 'color:var(--gold2)' : ''}">${lock ? '🔒' : x.price ? x.price + 'G' : '무료'}</span>${me.inv[x.id] ? `<span class="n">${me.inv[x.id]}</span>` : ''}</button>`; }).join('')}</div>
+      <div class="box px" style="padding:10px 12px;display:flex;align-items:center;gap:10px">${ic(P.id)}
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span class="b" style="font-size:15px">${P.seed} 씨앗</span><span class="s sub">${P.days}일 자라서 「${P.mat}」 ${P.yield}개 · 씨앗 값 ${P.price ? P.price + 'G' : '무료'}</span></div>
+      </div>
     </section>`);
-  on('[data-seed]', b => { seedPick = b.dataset.seed; renderGreen(); });
+  on('[data-stier]', b => { seedTier = +b.dataset.stier; renderGreen(); });
+  on('[data-seed]', b => { seedPick = b.dataset.seed; greenMsg = ''; renderGreen(); });
+  const mp = $('#morePlot'); if (mp) mp.onclick = () => {
+    if (me.coin < PLOT_PRICE){ greenMsg = '골드가 부족해요.'; return renderGreen(); }
+    me.coin -= PLOT_PRICE; me.plots.push({ k: null, st: 0, w: false }); greenMsg = '화단이 한 칸 늘었어요!'; save(); renderGreen();
+  };
   on('[data-plot]', b => {
-    const p = me.plots[+b.dataset.plot];
-    if (p.st === 0){ Object.assign(p, { k: seedPick, st: 1, w: false }); greenMsg = SEEDS[seedPick] + ' 씨앗을 심었어요.'; }
-    else if (p.st === 4){ const got = p.k, n = 3 + (me.house === 'dew' && myTime() ? 1 : 0); me.inv[got] += n; Object.assign(p, { k: null, st: 0, w: false }); greenMsg = `${SEEDS[got]} 수확! ${ITEM[got]} +${n}${n > 3 ? ' (Dewmorn의 새벽 보너스)' : ''}`; }
+    const p = me.plots[+b.dataset.plot], G = SEED_INFO[seedPick];
+    if (p.st === 0){
+      if ((me.know || 0) < G.know) greenMsg = `지식 ${G.know}부터 심을 수 있어요.`;
+      else if (me.coin < G.price) greenMsg = `씨앗 값 ${G.price}G가 부족해요.`;
+      else { me.coin -= G.price; Object.assign(p, { k: seedPick, st: 1, w: false }); greenMsg = `${G.seed} 씨앗을 심었어요.${G.price ? ` -${G.price}G` : ''}`; }
+    }
+    else if (plotReady(p)){ const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0); me.inv[p.k] += n; Object.assign(p, { k: null, st: 0, w: false }); greenMsg = `${g.seed} 수확! ${g.mat} +${n}${n > g.yield ? ' (Dewmorn의 새벽 보너스)' : ''}`; }
     else if (p.w) greenMsg = '오늘은 이미 물을 줬어요. 자고 나면 자라요.';
     else if (me.mana < waterCost()) greenMsg = '마력이 부족해요. 기숙사에서 자고 오세요.';
     else { p.w = true; me.mana -= waterCost(); greenMsg = '물을 줬어요. 내일 아침이면 쑥 자라 있을 거예요.'; }
@@ -721,7 +811,7 @@ function sleep(){
   me.lastSleepAt = Date.now();
   me.day++;
   me.mana = Math.min(50 + cozy * 2 + guests * 3, me.mana + gain);
-  me.plots.forEach(p => { if (p.st >= 1 && p.st < 4 && p.w) p.st++; p.w = false; });
+  me.plots.forEach(p => { if (p.st >= 1 && !plotReady(p) && p.w) p.st++; p.w = false; });
   const news = [];
   me.cr.forEach(c => {
     if (c.hatch > 0){ c.hatch--; if (!c.hatch) news.push(`${c.name}(${CREATURES[c.k].baby})가 알에서 나왔어요!`); return; }
