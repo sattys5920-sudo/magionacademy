@@ -132,16 +132,13 @@ const ICONS = ['coin','mana','p_red','p_blue','p_green','p_purple','herb','mush'
 const ic = (k, extra='') => `<i class="ic" style="background-position:${-32 * ICONS.indexOf(k)}px 0;${extra}"></i>`;
 const ITEM = {
   herb:'약초', drop:'달빛 이슬', mush:'보라 버섯', mana:'마력석', wool:'구름양 털', scale:'불도마뱀 비늘', uhair:'유니콘 갈기', egg:'용 알 껍질',
-  mist:'아침 안개', sun:'햇살 조각', pollen:'노을 꽃가루', stardust:'별가루',
   p_red:'치유 물약', p_green:'화염 저항 물약', p_blue:'잠꾸러기 물약', p_purple:'반짝 물약',
   p_grow:'성장 물약', p_vigor:'활력 물약', p_fluff:'포근 물약', p_dragon:'용기의 물약',
   p_dawn:'새벽빛 물약', p_sun:'한낮의 물약', p_dusk:'노을 물약', p_moon:'달그림자 물약',
 };
-const SHORT = { herb:'약초', drop:'이슬', mush:'버섯', mana:'마력석', wool:'털', scale:'비늘', uhair:'갈기', egg:'알 껍질', mist:'안개', sun:'햇살', pollen:'꽃가루', stardust:'별가루',
+const SHORT = { herb:'약초', drop:'이슬', mush:'버섯', mana:'마력석', wool:'털', scale:'비늘', uhair:'갈기', egg:'알 껍질',
   p_red:'치유', p_green:'화염 저항', p_blue:'잠꾸러기', p_purple:'반짝', p_grow:'성장', p_vigor:'활력', p_fluff:'포근', p_dragon:'용기', p_dawn:'새벽빛', p_sun:'한낮', p_dusk:'노을', p_moon:'달그림자' };
-const MATS = ['herb','drop','mush','mana','wool','scale','uhair','egg','mist','sun','pollen','stardust'];
-// 기숙사 시간대마다 한 번 주울 수 있는 재료
-const TIME_MAT = { dew:'mist', ember:'sun', dusk:'pollen', moon:'stardust' };
+const MATS = ['herb','drop','mush','mana','wool','scale','uhair','egg'];
 // 물약 도감: r 재료 3개, pay 주문 보상, use 마시면 생기는 일, time 그 기숙사 시간에만 끓어요
 const POTION_INFO = {
   p_red:    { r:['herb','herb','drop'],        pay:60,  desc:'양호실에서 늘 찾는 기본 물약' },
@@ -152,10 +149,10 @@ const POTION_INFO = {
   p_fluff:  { r:['wool','wool','drop'],        pay:90,  use:'사육장 생물 모두 애정 +1' },
   p_purple: { r:['herb','drop','uhair'],       pay:280, desc:'반 공동 의뢰에 쓰여요' },
   p_dragon: { r:['egg','scale','mana'],        pay:320, desc:'아기 용이 준 껍질로만 만들 수 있어요' },
-  p_dawn:   { r:['mist','drop','herb'],        pay:160, time:'dew',   desc:'새벽에만 맑게 끓어요' },
-  p_sun:    { r:['sun','herb','scale'],        pay:160, time:'ember', desc:'한낮의 열기로 끓여요' },
-  p_dusk:   { r:['pollen','wool','uhair'],     pay:180, time:'dusk',  desc:'해 질 녘에만 색이 바뀌어요' },
-  p_moon:   { r:['stardust','drop','mana'],    pay:180, time:'moon',  desc:'달이 뜬 밤에만 굳어요' },
+  p_dawn:   { r:['drop','drop','herb'],        pay:160, time:'dew',   desc:'새벽에만 맑게 끓어요' },
+  p_sun:    { r:['scale','scale','herb'],        pay:160, time:'ember', desc:'한낮의 열기로 끓여요' },
+  p_dusk:   { r:['uhair','uhair','wool'],     pay:180, time:'dusk',  desc:'해 질 녘에만 색이 바뀌어요' },
+  p_moon:   { r:['mana','mana','drop'],    pay:180, time:'moon',  desc:'달이 뜬 밤에만 굳어요' },
 };
 const POTIONS = Object.keys(POTION_INFO);
 const RECIPES = Object.fromEntries(POTIONS.map(p => [POTION_INFO[p].r.slice().sort().join(','), p]));
@@ -231,7 +228,7 @@ function freshPlayer(nick, look, house){
     plots:[{k:'herb',st:2,w:false},{k:'drop',st:1,w:false},{k:null,st:0,w:false},{k:null,st:0,w:false},{k:null,st:0,w:false},{k:null,st:0,w:false}],
     cr:CREATURES.map((d, k) => ({ k, v:0, name:d.name, age:1, hatch:0, full:3, love:2 })),
     furn:{ candle:{own:1,on:1}, bed:{own:1,on:1}, owl:{own:1,on:1} },
-    orders:makeOrders(1, ['p_red'], []), classDay:0, gathered:'',
+    orders:makeOrders(1, ['p_red'], []), classDay:0,
   };
 }
 // 주문은 내가 레시피를 아는 물약만 와요. 시간대 물약은 한 번 만들어 본 뒤부터.
@@ -250,13 +247,11 @@ function makeOrders(day, hints, found){
 function normalize(p){
   p.inv = p.inv || {}; Object.keys(ITEM).forEach(k => { p.inv[k] = p.inv[k] || 0; });
   p.found = p.found || []; p.hints = p.hints || ['p_red']; p.furn = p.furn || {};
-  p.orders = p.orders || []; p.gathered = p.gathered || '';
+  p.orders = p.orders || [];
   // 예전 생물(종류 정보 없음)은 그 자리의 종류로, 이미 키우던 아이들이라 어른으로 쳐요
   p.cr = (p.cr || []).map((c, i) => c.k === undefined ? { k: i, v: 0, name: CREATURES[i]?.name || '친구', age: ADULT_AGE, hatch: 0, full: c.full ?? 3, love: c.love ?? 2 } : { hatch: 0, age: 0, v: 0, ...c });
   return p;
 }
-// 기숙사 시간대 하나 = 채집 한 번. 자정을 넘는 밤 시간은 시작한 날로 쳐요.
-const windowKey = () => { const d = new Date(); if (d.getHours() < 5) d.setDate(d.getDate() - 1); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}-${houseNow()}`; };
 function usePotion(p){
   if (!POTION_INFO[p].use || me.inv[p] < 1) return '';
   me.inv[p]--;
@@ -327,8 +322,6 @@ function render(){
 function renderHome(){
   const left = me.orders.filter(o => !o.done).length;
   const H = HOUSES[me.house], nowK = houseNow(), N = HOUSES[nowK], mine = nowK === me.house;
-  const onlineN = Object.keys(onlineList).length;
-  const roster = HOUSE_KEYS.map(k => [k, Object.entries(playersList).filter(([, p]) => p && p.house === k)]);
   const classDone = me.classDay === me.day;
   frame('island', dayLabel(), `1학년 · ${H.name}`, `
     <div id="evBanner" style="display:contents">${eventBannerHTML()}</div>
@@ -341,26 +334,11 @@ function renderHome(){
           ${o.done ? '<span class="tag">완료</span>' : `<button class="btn sm ${have ? 'go' : ''}" data-deliver="${i}" ${have ? '' : 'disabled'}>${ic('coin', 'transform:scale(.7);margin:0 -6px')}${payOf(o)}</button>`}</div>`;
       }).join('')}</div>
     </section>
-    <section class="sec">
-      ${secH('채집', `${N.name}의 시간 재료`)}
-      <div class="box px"><div class="li">${ic(TIME_MAT[nowK])}
-        <div class="main"><span class="t">${ITEM[TIME_MAT[nowK]]}</span><span class="d">${me.gathered === windowKey() ? `주웠어요 · 다음은 ${HOUSES[HOUSE_KEYS[(HOUSE_KEYS.indexOf(nowK) + 1) % 4]].from}시부터` : `${hoursText(N)}에만 주울 수 있어요${mine ? ' · 내 기숙사 +1' : ''}`}</span></div>
-        <button class="btn sm ${me.gathered === windowKey() ? '' : 'go'}" id="gather" ${me.gathered === windowKey() ? 'disabled' : ''}>${me.gathered === windowKey() ? '완료' : `줍기 ×${mine ? 3 : 2}`}</button>
-      </div></div>
-    </section>
     <div class="tiles">
       <button class="tile px" id="goClass">${ic('book')}<span class="main"><span class="b">${classDone ? '수업 끝' : '수업 듣기'}</span><span class="s ${examStarted() ? 'sub' : ''}" style="${examStarted() ? '' : 'color:#C2385E'}">${!examStarted() ? '쪽지시험 있음!' : classDone ? '내일 또 와요' : '레시피 힌트 얻기'}</span></span></button>
       <button class="tile px" id="goDorm">${ic('bed')}<span class="main"><span class="b">내 방</span><span class="s sub">${H.name} ${roomNo(me.house, uid || me.nick)}호</span></span></button>
     </div>
-    ${solo ? `<div class="hint">혼자 해 보기 모드예요. 로그인하면 친구들 방에 놀러 갈 수 있어요.</div>` : `
-    <section class="sec">
-      ${secH('학생 명부', `지금 ${onlineN}명 접속`)}
-      <div class="box px">${roster.map(([k, list]) => `<div class="li" style="align-items:flex-start">
-        <div style="width:92px;flex-shrink:0;display:flex;flex-direction:column;gap:2px;padding-top:2px"><span class="b" style="font-size:14px;color:${HOUSES[k].col}">${HOUSES[k].name}</span><span class="s sub">${list.length} / ${HOUSE_CAP}명</span></div>
-        <div class="pal" style="flex:1">${list.map(([id, p]) => `<button class="who" data-visit="${id}" ${id === uid ? 'disabled' : ''}>${face(p.look, 30, !!onlineList[id])}${esc(p.nick)}</button>`).join('') || '<span class="s sub" style="padding-top:8px">빈 방이에요</span>'}</div>
-      </div>`).join('')}</div>
-      <div class="hint">이름을 누르면 그 친구 방에 놀러 가요</div>
-    </section>`}`, {
+`, {
     ribbon: `<div class="ribbon px" style="background:${mine ? N.col : 'rgba(34,24,63,.88)'}">${ic(N.icon)}${N.name}의 시간 · ${mine ? '내 보너스 중!' : hoursText(N)}</div>`,
   });
   on('[data-deliver]', b => {
@@ -370,14 +348,7 @@ function renderHome(){
     me.inv[o.p] -= o.n; me.coin += pay; o.done = true; save();
     toast(`${o.from}에게 ${ITEM[o.p]}을(를) 전했어요. +${pay}G`); render();
   });
-  on('[data-visit]', b => openVisit(b.dataset.visit));
   bindEventBanner();
-  $('#gather').onclick = () => {
-    if (me.gathered === windowKey()) return;
-    const k = TIME_MAT[houseNow()], n = myTime() ? 3 : 2;
-    me.inv[k] += n; me.gathered = windowKey(); save();
-    toast(`${ITEM[k]} ${n}개를 주웠어요!`); render();
-  };
   $('#goClass').onclick = () => { sub = 'class'; render(); };
   $('#goDorm').onclick = () => { sub = 'dorm'; render(); };
 }
@@ -442,7 +413,7 @@ function renderLab(){
       ${hint(brewMsg, '아래 재료를 눌러 솥에 넣어요. 넣은 재료를 누르면 다시 빼요.')}
     </section>
     <section class="sec">
-      ${secH('재료함', '시간대 재료는 홈에서 주워요')}
+      ${secH('재료함')}
       <div class="grid" style="grid-template-columns:repeat(4,1fr)">
         ${MATS.map(k => { const left = me.inv[k] - slots.filter(s => s === k).length; return `<button class="cell" data-add="${k}" ${left > 0 && slots.length < 3 ? '' : 'disabled'}>${ic(k)}<span class="s">${shortName(k)}</span><span class="n">${left}</span></button>`; }).join('')}
       </div>
@@ -610,7 +581,7 @@ function renderDorm(){
     </section>
     ${solo ? '' : `<section class="sec">
       ${secH('내 방명록', '손님 1명당 내일 마력 +3')}
-      ${guest.length ? `<div class="box px">${guest.map(([id, g]) => guestRow(id, g, true)).join('')}</div>` : '<div class="hint">아직 다녀간 친구가 없어요. 학생 명부에서 먼저 놀러 가 볼까요?</div>'}
+      ${guest.length ? `<div class="box px">${guest.map(([id, g]) => guestRow(id, g, true)).join('')}</div>` : '<div class="hint">아직 다녀간 친구가 없어요. 시장에서 친구 이름을 누르면 그 친구 방에 놀러 갈 수 있어요.</div>'}
     </section>`}`, { tint: H.col });
   on('[data-claim]', async b => {
     const g = myGuest[b.dataset.claim]; if (!g || !g.gift || g.claimed) return;
@@ -627,6 +598,7 @@ function renderDorm(){
   });
   $('#back').onclick = () => { sub = null; tab = 'home'; render(); };
   $('#sleep').onclick = () => sleep();
+  if (!solo) on('[data-visit]', b => openVisit(b.dataset.visit));
 }
 function sleep(){
   const since = me.lastSleepAt || 0;
@@ -657,7 +629,7 @@ let visitUid = null, visitGuest = {}, visitOff = null, giftPick = null, vMine = 
 function guestRow(id, g, mine){
   const H = HOUSES[g.house];
   return `<div class="li" style="align-items:flex-start">${face(g.look, 34)}
-    <div class="main"><span class="s"><b class="b" style="color:${H ? H.col : 'var(--ink)'}">${esc(g.nick)}</b> <span class="sub">${new Date(g.at).toLocaleDateString('ko-KR', { month:'numeric', day:'numeric' })}</span></span>
+    <div class="main"><span class="s"><b class="b" ${g.uid !== uid ? `data-visit="${g.uid}" style="cursor:pointer;text-decoration:underline;color:${H ? H.col : 'var(--ink)'}"` : `style="color:${H ? H.col : 'var(--ink)'}"`}>${esc(g.nick)}</b> <span class="sub">${new Date(g.at).toLocaleDateString('ko-KR', { month:'numeric', day:'numeric' })}</span></span>
     ${g.text ? `<span style="word-break:break-all">${esc(g.text)}</span>` : ''}
     ${g.gift ? `<span class="d" style="display:flex;align-items:center;gap:2px">${ic(g.gift, 'transform:scale(.6);margin:-6px')}선물 · ${ITEM[g.gift]}${g.claimed ? ' (받음)' : ''}</span>` : ''}</div>
     ${mine && g.gift && !g.claimed ? `<button class="btn sm go" data-claim="${id}">받기</button>` : ''}</div>`;
@@ -739,6 +711,7 @@ function renderVisit(){
     </section>`, { tint: H.col });
   $('#back').onclick = leaveVisit;
   bindBreed(p);
+  on('[data-visit]', b => openVisit(b.dataset.visit));
   on('[data-gift]', b => { const t = $('#gtext')?.value || ''; giftPick = giftPick === b.dataset.gift ? null : b.dataset.gift; renderVisit(); $('#gtext').value = t; });
   const send = $('#gsend');
   if (send) send.onclick = async () => {
@@ -777,7 +750,6 @@ function makeExam(){
   HOUSE_KEYS.forEach(k => {
     q4('house', `「${HOUSES[k].name}」 기숙사의 시간은?`, hoursText(HOUSES[k]), HOUSE_KEYS.filter(x => x !== k).map(x => hoursText(HOUSES[x])));
     q4('house', `「${HOUSES[k].perk}」 보너스를 받는 기숙사는?`, HOUSES[k].name, HOUSE_KEYS.filter(x => x !== k).map(x => HOUSES[x].name));
-    q4('time', `「${ITEM[TIME_MAT[k]]}」${josa(ITEM[TIME_MAT[k]], '을', '를')} 주울 수 있는 시간은?`, hoursText(HOUSES[k]), HOUSE_KEYS.filter(x => x !== k).map(x => hoursText(HOUSES[x])));
   });
   CREATURES.forEach((c, i) => q4('ranch', `사육장의 「${c.kind}」${josa(c.kind, '이', '가')} 주는 재료는?`, ITEM[c.mat], CREATURES.filter((_, j) => j !== i).map(x => ITEM[x.mat])));
   POTIONS.filter(p => POTION_INFO[p].time).forEach(p => q4('time', `「${ITEM[p]}」${josa(ITEM[p], '을', '를')} 끓일 수 있는 시간은?`, hoursText(HOUSES[POTION_INFO[p].time]), HOUSE_KEYS.filter(x => x !== POTION_INFO[p].time).map(x => hoursText(HOUSES[x]))));
@@ -840,7 +812,7 @@ function finishExam(){
   me.exam = { week: coopWeek(), score: Math.round(s), done: true };
   const r = [];
   if (s >= 60){ const g = Math.round(s * 2); me.coin += g; r.push(`장학금 ${g}G`); }
-  if (s >= 80){ const k = TIME_MAT[HOUSE_KEYS[Math.floor(Math.random() * 4)]]; me.inv[k] += 2; r.push(`${ITEM[k]} ×2`); }
+  if (s >= 80){ const k = ['uhair','scale','wool'][Math.floor(Math.random() * 3)]; me.inv[k] += 2; r.push(`${ITEM[k]} ×2`); }
   if (s >= 100){ me.inv.egg += 1; r.push('용 알 껍질 ×1'); }
   me.exam.reward = r.join(' · ') || '다음 주엔 장학금을 노려 봐요';
   save();
@@ -863,7 +835,7 @@ function renderExamResult(){
     <section class="sec">
       ${secH('기숙사 평균', `${Object.keys(board).length}명 응시`)}
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">${HOUSE_KEYS.map(k => { const a = avg(k); return `<div style="background:${HOUSES[k].bg};border-top:3px solid ${HOUSES[k].col};padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:2px"><span class="s" style="color:${HOUSES[k].col}">${HOUSES[k].name}</span><span class="s" style="color:var(--gold2);letter-spacing:-1px">${a === null ? '·' : '★'.repeat(Math.max(1, Math.round(a / 20)))}</span><span class="b">${a === null ? '-' : a + '점'}</span></div>`; }).join('')}</div>
-      <div class="hint">새 시험은 다음 주에 열려요 · 60점부터 장학금, 80점부터 시간대 재료, 100점이면 용 알 껍질</div>
+      <div class="hint">새 시험은 다음 주에 열려요 · 60점부터 장학금, 80점부터 귀한 재료, 100점이면 용 알 껍질</div>
     </section>
     <button class="btn ghost" id="back" style="align-self:center">‹ 홈으로</button>`);
   $('#back').onclick = () => { examOff?.(); examOff = null; sub = null; tab = 'home'; render(); };
@@ -1014,7 +986,7 @@ function renderMarket(){
     <section class="sec">
       ${secH('친구들이 올린 물건', others.length + '개')}
       ${others.length ? `<div class="box px">${others.map(([id, l]) => `<div class="li">${ic(l.item)}
-        <div class="main"><span class="t">${ITEM[l.item]}${l.qty > 1 ? ' ×' + l.qty : ''}${l.moon ? ' <span class="tag" style="background:#3A2E78;color:#FFE58A">달빛</span>' : ''}</span><span class="d">${esc(l.nick)}의 가게</span></div>
+        <div class="main"><span class="t">${ITEM[l.item]}${l.qty > 1 ? ' ×' + l.qty : ''}${l.moon ? ' <span class="tag" style="background:#3A2E78;color:#FFE58A">달빛</span>' : ''}</span><span class="d" data-visit="${l.uid}" style="cursor:pointer;text-decoration:underline">${esc(l.nick)}의 가게 · 방 구경</span></div>
         <button class="btn sm go" data-buy="${id}" ${me.coin >= l.price ? '' : 'disabled'}>${ic('coin', 'transform:scale(.7);margin:0 -6px')}${l.price}</button></div>`).join('')}</div>` : '<div class="hint">지금은 올라온 물건이 없어요</div>'}
     </section>
     <section class="sec">
@@ -1038,6 +1010,7 @@ function renderMarket(){
       </div>
     </section>`);
   on('[data-pick]', b => { sellPick = b.dataset.pick; renderMarket(); });
+  on('[data-visit]', b => openVisit(b.dataset.visit));
   const lb = $('#list');
   if (lb) lb.onclick = async () => {
     const price = Math.max(1, Math.min(9999, Math.floor(+$('#price').value || 0)));
