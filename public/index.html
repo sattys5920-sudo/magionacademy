@@ -129,38 +129,129 @@ const app = $('#app');
 // ===== 데이터 =====
 const ICONS = ['coin','mana','p_red','p_blue','p_green','p_purple','herb','mush','wool','uhair','scale','egg','heart','book','cauldron','clock','bag','owl','star','drop','seed','sprout','can','candle','bed','rune',
   'p_grow','p_vigor','p_fluff','p_dragon','p_dawn','p_sun','p_dusk','p_moon','mist','sun','pollen','stardust'];
-const ic = (k, extra='') => `<i class="ic" style="background-position:${-32 * ICONS.indexOf(k)}px 0;${extra}"></i>`;
+const ic = (k, extra='') => { const P = POTION_INFO[k];
+  return P ? `<i class="ic" style="background-image:url(art/potions.png);background-position:${-32 * (P.ic % 10)}px ${-32 * Math.floor(P.ic / 10)}px;${extra}"></i>`
+    : `<i class="ic" style="background-position:${-32 * ICONS.indexOf(k)}px 0;${extra}"></i>`; };
 const ITEM = {
   herb:'약초', drop:'달빛 이슬', mush:'보라 버섯', mana:'마력석', wool:'구름양 털', scale:'불도마뱀 비늘', uhair:'유니콘 갈기', egg:'용 알 껍질',
-  p_red:'치유 물약', p_green:'화염 저항 물약', p_blue:'잠꾸러기 물약', p_purple:'반짝 물약',
-  p_grow:'성장 물약', p_vigor:'활력 물약', p_fluff:'포근 물약', p_dragon:'용기의 물약',
-  p_dawn:'새벽빛 물약', p_sun:'한낮의 물약', p_dusk:'노을 물약', p_moon:'달그림자 물약',
 };
-const SHORT = { herb:'약초', drop:'이슬', mush:'버섯', mana:'마력석', wool:'털', scale:'비늘', uhair:'갈기', egg:'알 껍질',
-  p_red:'치유', p_green:'화염 저항', p_blue:'잠꾸러기', p_purple:'반짝', p_grow:'성장', p_vigor:'활력', p_fluff:'포근', p_dragon:'용기', p_dawn:'새벽빛', p_sun:'한낮', p_dusk:'노을', p_moon:'달그림자' };
+const SHORT = { herb:'약초', drop:'이슬', mush:'버섯', mana:'마력석', wool:'털', scale:'비늘', uhair:'갈기', egg:'알 껍질' };
 const MATS = ['herb','drop','mush','mana','wool','scale','uhair','egg'];
-// 물약 도감: r 재료 3개, pay 주문 보상, use 마시면 생기는 일, time 그 기숙사 시간에만 끓어요
-const POTION_INFO = {
-  p_red:    { r:['herb','herb','drop'],        pay:60,  desc:'양호실에서 늘 찾는 기본 물약' },
-  p_green:  { r:['mush','scale','drop'],       pay:90,  desc:'솥가마 근처에선 필수품' },
-  p_blue:   { r:['wool','mana','drop'],        pay:70,  desc:'한 모금이면 꿀잠' },
-  p_grow:   { r:['herb','mush','mush'],        pay:80,  use:'온실에서 자라는 식물이 모두 한 단계 자라요' },
-  p_vigor:  { r:['mana','scale','herb'],       pay:100, use:'마력 +15' },
-  p_fluff:  { r:['wool','wool','drop'],        pay:90,  use:'사육장 생물 모두 애정 +1' },
-  p_purple: { r:['herb','drop','uhair'],       pay:280, desc:'반 공동 의뢰에 쓰여요' },
-  p_dragon: { r:['egg','scale','mana'],        pay:320, desc:'아기 용이 준 껍질로만 만들 수 있어요' },
-  p_dawn:   { r:['drop','drop','herb'],        pay:160, time:'dew',   desc:'새벽에만 맑게 끓어요' },
-  p_sun:    { r:['scale','scale','herb'],        pay:160, time:'ember', desc:'한낮의 열기로 끓여요' },
-  p_dusk:   { r:['uhair','uhair','wool'],     pay:180, time:'dusk',  desc:'해 질 녘에만 색이 바뀌어요' },
-  p_moon:   { r:['mana','mana','drop'],    pay:180, time:'moon',  desc:'달이 뜬 밤에만 굳어요' },
-};
+// 물약 도감 100종: r 재료 3개, pay 주문 보상, col 물약 색, use 마시면 생기는 일, time 그 기숙사 시간에만 끓어요
+// 아이콘은 art/potions.png (10×10칸, 이 표의 순서대로)
+const POTION_LIST = [
+  { id:'p_red', name:'치유 물약', r:["herb", "herb", "drop"], pay:60, col:'#FF5A7A', desc:"양호실에서 늘 찾는 기본 물약" },
+  { id:'p_green', name:'화염 저항 물약', r:["mush", "scale", "drop"], pay:90, col:'#5ED67A', desc:"솥가마 근처에선 필수품" },
+  { id:'p_blue', name:'잠꾸러기 물약', r:["wool", "mana", "drop"], pay:70, col:'#5AA8FF', desc:"한 모금이면 꿀잠" },
+  { id:'p_grow', name:'성장 물약', r:["herb", "mush", "mush"], pay:80, col:'#86D14A', use:"온실에서 자라는 식물이 모두 한 단계 자라요" },
+  { id:'p_vigor', name:'활력 물약', r:["mana", "scale", "herb"], pay:100, col:'#FF9A2E', use:"마력 +15" },
+  { id:'p_fluff', name:'포근 물약', r:["wool", "wool", "drop"], pay:90, col:'#FFB8D2', use:"사육장 생물 모두 애정 +1" },
+  { id:'p_purple', name:'반짝 물약', r:["herb", "drop", "uhair"], pay:280, col:'#B47AFF', desc:"반 공동 의뢰에 쓰여요" },
+  { id:'p_dragon', name:'용기의 물약', r:["egg", "scale", "mana"], pay:320, col:'#C8323C', desc:"아기 용이 준 껍질로만 만들 수 있어요" },
+  { id:'p_dawn', name:'새벽빛 물약', r:["drop", "drop", "herb"], pay:160, col:'#FFEFA0', time:"dew", desc:"새벽에만 맑게 끓어요" },
+  { id:'p_sun', name:'한낮의 물약', r:["scale", "scale", "herb"], pay:160, col:'#FFC81E', time:"ember", desc:"한낮의 열기로 끓여요" },
+  { id:'p_dusk', name:'노을 물약', r:["uhair", "uhair", "wool"], pay:180, col:'#FF7A5C', time:"dusk", desc:"해 질 녘에만 색이 바뀌어요" },
+  { id:'p_moon', name:'달그림자 물약', r:["mana", "mana", "drop"], pay:180, col:'#5548B8', time:"moon", desc:"달이 뜬 밤에만 굳어요" },
+  { id:'pt013', name:'속삭임 물약', r:["herb", "herb", "mush"], pay:55, col:'#127AE2' },
+  { id:'pt014', name:'투명 물약', r:["herb", "herb", "mana"], pay:60, col:'#E69DAC' },
+  { id:'pt015', name:'깃털 물약', r:["drop", "drop", "mush"], pay:60, col:'#23A82E' },
+  { id:'pt016', name:'거품 물약', r:["drop", "mush", "mush"], pay:65, col:'#7E3EE9' },
+  { id:'pt017', name:'무지개 물약', r:["herb", "herb", "wool"], pay:65, col:'#E6C074' },
+  { id:'pt018', name:'기억 물약', r:["drop", "drop", "mana"], pay:65, col:'#12E2DA' },
+  { id:'pt019', name:'망각 물약', r:["herb", "mush", "mana"], pay:65, col:'#E69DD3' },
+  { id:'pt020', name:'웃음 물약', r:["drop", "mush", "mana"], pay:70, col:'#60A823' },
+  { id:'pt021', name:'눈물 물약', r:["herb", "drop", "wool"], pay:70, col:'#3E5AE9' },
+  { id:'pt022', name:'행운 물약', r:["herb", "mana", "mana"], pay:75, col:'#E68274' },
+  { id:'pt023', name:'번개 물약', r:["drop", "drop", "wool"], pay:75, col:'#12E269' },
+  { id:'pt024', name:'얼음 물약', r:["herb", "herb", "scale"], pay:75, col:'#D19DE6' },
+  { id:'pt025', name:'바람 물약', r:["mush", "mush", "mana"], pay:75, col:'#A7A823' },
+  { id:'pt026', name:'구름 물약', r:["drop", "mush", "wool"], pay:75, col:'#3EB7E9' },
+  { id:'pt027', name:'안개 물약', r:["drop", "drop", "scale"], pay:80, col:'#E674A3' },
+  { id:'pt028', name:'꿈결 물약', r:["mush", "mana", "mana"], pay:80, col:'#2BE212' },
+  { id:'pt029', name:'수다 물약', r:["herb", "mush", "scale"], pay:80, col:'#A99DE6' },
+  { id:'pt030', name:'침묵 물약', r:["herb", "mana", "wool"], pay:80, col:'#A86023' },
+  { id:'pt031', name:'변신 물약', r:["mush", "mush", "wool"], pay:80, col:'#3EE9BF' },
+  { id:'pt032', name:'축소 물약', r:["herb", "wool", "wool"], pay:85, col:'#E674E1' },
+  { id:'pt033', name:'거대화 물약', r:["mush", "mana", "wool"], pay:85, col:'#9CE212' },
+  { id:'pt034', name:'부유 물약', r:["mush", "mush", "scale"], pay:85, col:'#9DB8E6' },
+  { id:'pt035', name:'야광 물약', r:["drop", "mana", "scale"], pay:90, col:'#A8232E' },
+  { id:'pt036', name:'그림자 물약', r:["herb", "wool", "scale"], pay:95, col:'#3EE962' },
+  { id:'pt037', name:'거울 물약', r:["mush", "mana", "scale"], pay:95, col:'#AD74E6' },
+  { id:'pt038', name:'메아리 물약', r:["mush", "wool", "wool"], pay:95, col:'#E2B812' },
+  { id:'pt039', name:'노래 물약', r:["mana", "mana", "wool"], pay:95, col:'#9DE0E6' },
+  { id:'pt040', name:'춤 물약', r:["drop", "wool", "scale"], pay:95, col:'#A82375' },
+  { id:'pt041', name:'딸꾹질 물약', r:["herb", "herb", "uhair"], pay:95, col:'#76E93E' },
+  { id:'pt042', name:'재채기 물약', r:["mana", "mana", "scale"], pay:100, col:'#7478E6' },
+  { id:'pt043', name:'꽃향기 물약', r:["mana", "wool", "wool"], pay:100, col:'#E24712' },
+  { id:'pt044', name:'비눗방울 물약', r:["mush", "wool", "scale"], pay:100, col:'#9DE6C5' },
+  { id:'pt045', name:'솜사탕 물약', r:["drop", "drop", "uhair"], pay:100, col:'#9223A8' },
+  { id:'pt046', name:'박하 물약', r:["herb", "mush", "uhair"], pay:100, col:'#D3E93E' },
+  { id:'pt047', name:'초콜릿 물약', r:["drop", "mush", "uhair"], pay:105, col:'#74B6E6' },
+  { id:'pt048', name:'사과 물약', r:["mush", "scale", "scale"], pay:105, col:'#E2124D' },
+  { id:'pt049', name:'꿀 물약', r:["mana", "wool", "scale"], pay:105, col:'#9DE69D' },
+  { id:'pt050', name:'계피 물약', r:["herb", "mana", "uhair"], pay:110, col:'#4B23A8' },
+  { id:'pt051', name:'레몬 물약', r:["mush", "mush", "uhair"], pay:110, col:'#E9A33E' },
+  { id:'pt052', name:'체리 물약', r:["mana", "scale", "scale"], pay:110, col:'#74E6D9' },
+  { id:'pt053', name:'복숭아 물약', r:["wool", "wool", "scale"], pay:110, col:'#E212BE' },
+  { id:'pt054', name:'포도 물약', r:["herb", "wool", "uhair"], pay:115, col:'#C4E69D' },
+  { id:'pt055', name:'바닐라 물약', r:["mush", "mana", "uhair"], pay:115, col:'#2343A8' },
+  { id:'pt056', name:'생강 물약', r:["drop", "wool", "uhair"], pay:120, col:'#E9463E' },
+  { id:'pt057', name:'해바라기 물약', r:["wool", "scale", "scale"], pay:120, col:'#74E69B' },
+  { id:'pt058', name:'장미 물약', r:["herb", "scale", "uhair"], pay:120, col:'#9512E2' },
+  { id:'pt059', name:'라벤더 물약', r:["drop", "scale", "uhair"], pay:125, col:'#E6E09D' },
+  { id:'pt060', name:'클로버 물약', r:["mana", "wool", "uhair"], pay:130, col:'#238BA8' },
+  { id:'pt061', name:'이끼 물약', r:["mush", "scale", "uhair"], pay:130, col:'#E93E92' },
+  { id:'pt062', name:'도토리 물약', r:["herb", "herb", "egg"], pay:130, col:'#8BE674' },
+  { id:'pt063', name:'솔방울 물약', r:["herb", "drop", "egg"], pay:130, col:'#2512E2' },
+  { id:'pt064', name:'단풍 물약', r:["mana", "scale", "uhair"], pay:135, col:'#E6B99D' },
+  { id:'pt065', name:'눈꽃 물약', r:["drop", "drop", "egg"], pay:135, col:'#23A87D' },
+  { id:'pt066', name:'봄비 물약', r:["wool", "wool", "uhair"], pay:135, col:'#E33EE9' },
+  { id:'pt067', name:'소나기 물약', r:["herb", "mush", "egg"], pay:135, col:'#C8E674' },
+  { id:'pt068', name:'천둥 물약', r:["drop", "mush", "egg"], pay:140, col:'#126FE2' },
+  { id:'pt069', name:'오로라 물약', r:["mush", "mush", "egg"], pay:140, col:'#E69DA8' },
+  { id:'pt070', name:'혜성 물약', r:["wool", "scale", "uhair"], pay:140, col:'#23A835' },
+  { id:'pt071', name:'은하수 물약', r:["herb", "uhair", "uhair"], pay:145, col:'#873EE9' },
+  { id:'pt072', name:'일식 물약', r:["drop", "mana", "egg"], pay:145, col:'#E6C674' },
+  { id:'pt073', name:'별자리 물약', r:["scale", "scale", "uhair"], pay:145, col:'#12E0E2' },
+  { id:'pt074', name:'나침반 물약', r:["mush", "mana", "egg"], pay:145, col:'#E69DD0' },
+  { id:'pt075', name:'모래시계 물약', r:["drop", "uhair", "uhair"], pay:145, col:'#59A823' },
+  { id:'pt076', name:'열쇠 물약', r:["herb", "wool", "egg"], pay:145, col:'#3E51E9' },
+  { id:'pt077', name:'풍선 물약', r:["mush", "uhair", "uhair"], pay:150, col:'#E68874' },
+  { id:'pt078', name:'종이학 물약', r:["drop", "wool", "egg"], pay:150, col:'#12E273' },
+  { id:'pt079', name:'잉크 물약', r:["herb", "scale", "egg"], pay:155, col:'#D49DE6' },
+  { id:'pt080', name:'등불 물약', r:["mush", "wool", "egg"], pay:155, col:'#A1A823' },
+  { id:'pt081', name:'반딧불 물약', r:["mana", "mana", "egg"], pay:155, col:'#3EAEE9' },
+  { id:'pt082', name:'고양이 물약', r:["mana", "uhair", "uhair"], pay:155, col:'#E6749D' },
+  { id:'pt083', name:'부엉이 물약', r:["drop", "scale", "egg"], pay:155, col:'#21E212' },
+  { id:'pt084', name:'토끼 물약', r:["mana", "wool", "egg"], pay:160, col:'#AD9DE6' },
+  { id:'pt085', name:'여우 물약', r:["wool", "wool", "egg"], pay:165, col:'#A86723' },
+  { id:'pt086', name:'거북 물약', r:["scale", "uhair", "uhair"], pay:170, col:'#3EE9C7' },
+  { id:'pt087', name:'해파리 물약', r:["wool", "scale", "egg"], pay:175, col:'#E674DB' },
+  { id:'pt088', name:'고래 물약', r:["herb", "uhair", "egg"], pay:175, col:'#91E212' },
+  { id:'pt089', name:'산호 물약', r:["scale", "scale", "egg"], pay:180, col:'#9DB4E6' },
+  { id:'pt090', name:'진주 물약', r:["mush", "uhair", "egg"], pay:180, col:'#A82327' },
+  { id:'pt091', name:'수정 물약', r:["wool", "uhair", "egg"], pay:195, col:'#3EE96B' },
+  { id:'pt092', name:'호박빛 물약', r:["scale", "uhair", "egg"], pay:200, col:'#B374E6' },
+  { id:'pt093', name:'금박 물약', r:["herb", "egg", "egg"], pay:210, col:'#E2C212' },
+  { id:'pt094', name:'용암 물약', r:["drop", "egg", "egg"], pay:210, col:'#9DDCE6' },
+  { id:'pt095', name:'간지럼 물약', r:["mush", "egg", "egg"], pay:215, col:'#A8236F' },
+  { id:'pt096', name:'집중 물약', r:["mana", "egg", "egg"], pay:220, col:'#6EE93E' },
+  { id:'pt097', name:'영감 물약', r:["uhair", "uhair", "egg"], pay:225, col:'#7574E6' },
+  { id:'pt098', name:'우정 물약', r:["wool", "egg", "egg"], pay:225, col:'#E25112' },
+  { id:'pt099', name:'첫사랑 물약', r:["scale", "egg", "egg"], pay:235, col:'#9DE6C8' },
+  { id:'pt100', name:'별빛 물약', r:["uhair", "egg", "egg"], pay:400, col:'#9923A8', desc:"별빛 아카데미의 전설. 도감 100번째 물약" },
+];
+const POTION_INFO = Object.fromEntries(POTION_LIST.map((x, i) => [x.id, { ...x, ic: i }]));
+POTION_LIST.forEach(x => { ITEM[x.id] = x.name; });
 const POTIONS = Object.keys(POTION_INFO);
 const RECIPES = Object.fromEntries(POTIONS.map(p => [POTION_INFO[p].r.slice().sort().join(','), p]));
 const PAY = Object.fromEntries(POTIONS.map(p => [p, POTION_INFO[p].pay]));
 const recipeText = p => { const c = {}; POTION_INFO[p].r.forEach(k => c[k] = (c[k] || 0) + 1); return Object.entries(c).map(([k, n]) => ITEM[k] + (n > 1 ? ' ×' + n : '')).join(' + '); };
 const HINTS = Object.fromEntries(POTIONS.map(p => [p, `${ITEM[p]} = ${recipeText(p)}`]));
-const HINT_ORDER = ['p_green','p_blue','p_grow','p_vigor','p_fluff','p_purple','p_dawn','p_sun','p_dusk','p_moon','p_dragon'];
-const RANKS = [[12,'별빛 연금술사'],[8,'숙련 연금술사'],[4,'연금술사'],[0,'견습 연금술사']];
+// 지식이 오를 때 열리는 레시피 힌트 순서: 기존 12종 다음, 표 순서(쉬운 것부터)
+const HINT_ORDER = ['p_green','p_blue','p_grow','p_vigor','p_fluff','p_purple','p_dawn','p_sun','p_dusk','p_moon','p_dragon', ...POTION_LIST.slice(12).map(x => x.id)];
+const KNOW_PER_HINT = 3;
+const RANKS = [[100,'별빛 연금술사'],[60,'대연금술사'],[30,'숙련 연금술사'],[10,'연금술사'],[0,'견습 연금술사']];
 const rankOf = n => RANKS.find(([k]) => n >= k)[1];
 const SEEDS = { herb:'약초', drop:'월광초', mush:'보라 버섯' };
 // 생물 종류 (그림은 creatures.png의 같은 칸). baby → adult 이름이 바뀌어요.
@@ -247,7 +338,7 @@ function makeOrders(day, hints, found){
 function normalize(p){
   p.inv = p.inv || {}; Object.keys(ITEM).forEach(k => { p.inv[k] = p.inv[k] || 0; });
   p.found = p.found || []; p.hints = p.hints || ['p_red']; p.furn = p.furn || {};
-  p.orders = p.orders || [];
+  p.orders = p.orders || []; p.know = p.know || 0;
   // 예전 생물(종류 정보 없음)은 그 자리의 종류로, 이미 키우던 아이들이라 어른으로 쳐요
   p.cr = (p.cr || []).map((c, i) => c.k === undefined ? { k: i, v: 0, name: CREATURES[i]?.name || '친구', age: ADULT_AGE, hatch: 0, full: c.full ?? 3, love: c.love ?? 2 } : { hatch: 0, age: 0, v: 0, ...c });
   return p;
@@ -322,7 +413,6 @@ function render(){
 function renderHome(){
   const left = me.orders.filter(o => !o.done).length;
   const H = HOUSES[me.house], nowK = houseNow(), N = HOUSES[nowK], mine = nowK === me.house;
-  const classDone = me.classDay === me.day;
   frame('island', dayLabel(), `1학년 · ${H.name}`, `
     <div id="evBanner" style="display:contents">${eventBannerHTML()}</div>
     <section class="sec">
@@ -335,7 +425,7 @@ function renderHome(){
       }).join('')}</div>
     </section>
     <div class="tiles">
-      <button class="tile px" id="goClass">${ic('book')}<span class="main"><span class="b">${classDone ? '수업 끝' : '수업 듣기'}</span><span class="s ${examStarted() ? 'sub' : ''}" style="${examStarted() ? '' : 'color:#C2385E'}">${!examStarted() ? '쪽지시험 있음!' : classDone ? '내일 또 와요' : '레시피 힌트 얻기'}</span></span></button>
+      <button class="tile px" id="goClass">${ic('book')}<span class="main"><span class="b">수업 ${classLeft()} / ${CLASS_MAX}</span><span class="s ${examStarted() ? 'sub' : ''}" style="${examStarted() ? '' : 'color:#C2385E'}">${!examStarted() ? '쪽지시험 있음!' : `지식 ${me.know || 0}`}</span></span></button>
       <button class="tile px" id="goDorm">${ic('bed')}<span class="main"><span class="b">내 방</span><span class="s sub">${H.name} ${roomNo(me.house, uid || me.nick)}호</span></span></button>
     </div>
 `, {
@@ -353,27 +443,58 @@ function renderHome(){
   $('#goDorm').onclick = () => { sub = 'dorm'; render(); };
 }
 
-// ===== 수업: 문양 따라 그리기 =====
-let classInput = [];
+// ===== 수업: 칠판 문양 외우기 (하루 10번, 맞히면 지식 +1) =====
+const CLASS_MAX = 10, RUNES = ['star','drop','herb','scale'], RUNE_KO = { star:'별', drop:'물', herb:'잎', scale:'불' };
+const classLeft = () => me.classDay === me.day ? Math.max(0, CLASS_MAX - (me.classCnt || 0)) : CLASS_MAX;
+const runeLen = () => 4 + Math.min(3, Math.floor((me.know || 0) / 30));   // 지식 30마다 문양이 하나씩 길어져요
+const knowToNext = () => KNOW_PER_HINT - ((me.know || 0) % KNOW_PER_HINT);
+let lesson = null, lessonTimer = 0;   // { seq, phase: 'show'|'input'|'ok'|'fail', input: [] }
+function startLesson(){
+  if (classLeft() < 1) return;
+  if (me.classDay !== me.day){ me.classDay = me.day; me.classCnt = 0; }
+  me.classCnt++; save();
+  const n = runeLen();
+  lesson = { seq: Array.from({ length: n }, () => RUNES[Math.floor(Math.random() * 4)]), phase: 'show', input: [] };
+  clearTimeout(lessonTimer);
+  lessonTimer = setTimeout(() => { if (lesson?.phase === 'show'){ lesson.phase = 'input'; if (sub === 'class') renderClass(); } }, 1200 + n * 450);
+  renderClass();
+}
+function lessonTap(k){
+  if (!lesson || lesson.phase !== 'input') return;
+  lesson.input.push(k);
+  const i = lesson.input.length - 1;
+  if (lesson.input[i] !== lesson.seq[i]){ lesson.phase = 'fail'; return renderClass(); }
+  if (lesson.input.length === lesson.seq.length){
+    lesson.phase = 'ok';
+    me.know = (me.know || 0) + 1;
+    let msg = `정답! 지식 +1 (지식 ${me.know})`;
+    if (me.know % KNOW_PER_HINT === 0){
+      const next = HINT_ORDER.find(p => !me.hints.includes(p));
+      if (next){ me.hints.push(next); msg += ` · 새 레시피: ${HINTS[next]}`; }
+      else { me.coin += 30; msg += ' · 모든 레시피를 알아요. 장학금 +30G'; }
+    }
+    lesson.msg = msg; save();
+  }
+  renderClass();
+}
 function renderClass(){
-  const done = me.classDay === me.day;
-  const pool = ['star','drop','herb','scale'];
-  const seq = [0, 1, 2, 3].map(i => pool[(me.day * 5 + i * 3 + (i * i)) % 4]);
-  const wrong = classInput.some((v, i) => v !== seq[i]);
-  const ok = !wrong && classInput.length === seq.length;
-  const next = HINT_ORDER.find(p => !me.hints.includes(p));
-  frame('class', '3교시 · 문양학', done && !ok ? '오늘 수업은 끝났어요' : '칠판을 보고 따라 그려요', `
+  const left = classLeft(), L = lesson;
+  const showRunes = L && L.phase !== 'input';
+  const board = L ? L.seq.map((k, i) => {
+      const got = L.input.length > i, bad = L.phase === 'fail' && i === L.input.length - 1;
+      const bg = bad ? '#C2385E' : got || L.phase === 'ok' ? '#8CE6B0' : '#3E625A';
+      return `<div style="width:42px;height:46px;display:flex;align-items:center;justify-content:center;background:${bg};border:2px solid ${got ? '#fff' : '#5E8A80'}">${showRunes || got ? ic(L.phase === 'fail' && bad ? L.input[i] : k) : '<span class="b" style="color:#8CB8AE;font-size:20px">?</span>'}</div>`;
+    }).join('') : `<span class="s" style="color:#CDE8E0">${left ? '수업 시작을 누르면 문양이 잠깐 나타나요' : '오늘 수업은 모두 끝났어요'}</span>`;
+  frame('class', '3교시 · 문양학', `오늘 남은 수업 ${left} / ${CLASS_MAX} · 지식 ${me.know || 0}`, `
     <section class="sec">
-      <div class="sec-h"><h3>칠판의 문양을 순서대로</h3>${backBtn}</div>
-      <div class="px" style="background:#2E4A44;border:3px solid var(--ink2);padding:12px;display:flex;justify-content:center;gap:8px">
-        ${seq.map((k, i) => `<div style="width:54px;height:54px;display:flex;align-items:center;justify-content:center;background:${i < classInput.length && !wrong ? '#8CE6B0' : '#3E625A'};border:2px solid ${i < classInput.length && !wrong ? '#fff' : '#5E8A80'}">${ic(k)}</div>`).join('')}
-      </div>
+      <div class="sec-h"><h3>${!L ? '칠판의 문양을 외워요' : L.phase === 'show' ? '잘 봐요!' : L.phase === 'input' ? '본 순서대로 눌러요' : L.phase === 'ok' ? '정답!' : '아쉬워요'}</h3>${backBtn}</div>
+      <div class="px" style="background:#2E4A44;border:3px solid var(--ink2);padding:12px 8px;display:flex;justify-content:center;gap:5px;min-height:76px;align-items:center;flex-wrap:wrap">${board}</div>
     </section>
     <div class="grid" style="grid-template-columns:repeat(4,1fr)">
-      ${pool.map(k => `<button class="cell" data-rune="${k}" ${done || wrong || ok ? 'disabled' : ''}>${ic(k)}<span class="s">${({star:'별',drop:'물',herb:'잎',scale:'불'})[k]}</span></button>`).join('')}
+      ${RUNES.map(k => `<button class="cell" data-rune="${k}" ${L?.phase === 'input' ? '' : 'disabled'}>${ic(k)}<span class="s">${RUNE_KO[k]}</span></button>`).join('')}
     </div>
-    ${hint(wrong ? '앗, 문양이 흐트러졌어요. 다시 해 볼까요?' : ok ? '성공! 연구실 레시피 노트에 새 힌트가 적혔어요.' : done ? '오늘 수업은 이미 들었어요. 내일 또 와요.' : '', `수업을 잘 들으면 물약 레시피 힌트를 얻어요 · ${classInput.length} / 4`)}
-    ${wrong ? '<button class="btn" id="retry">다시 하기</button>' : ''}
+    ${hint(L?.phase === 'ok' ? L.msg : L?.phase === 'fail' ? '문양이 흐트러졌어요. 이번 수업은 지식을 얻지 못했어요.' : '', `맞히면 지식 +1 · 다음 레시피 힌트까지 지식 ${knowToNext()}`)}
+    ${!L || L.phase === 'ok' || L.phase === 'fail' ? `<button class="btn ${left ? 'go' : ''} px" id="lesson" ${left ? '' : 'disabled'}>${ic('book')}${left ? (L ? '다음 수업' : '수업 시작') + ` (${left}번 남음)` : '내일 또 와요'}</button>` : ''}
     <section class="sec">
       ${secH('이번 주 쪽지시험', examDone() ? `${me.exam.score}점 · ${gradeOf(me.exam.score)}` : examStarted() ? '응시함' : '아직 안 봤어요')}
       <div class="box px" style="padding:10px 12px;display:flex;align-items:center;gap:10px">${ic('rune')}
@@ -382,25 +503,16 @@ function renderClass(){
       </div>
     </section>`);
   $('#goExam').onclick = () => { if (examStarted()){ exam = null; sub = 'exam'; render(); } else if (confirm('쪽지시험은 일주일에 한 번만 볼 수 있어요. 지금 볼까요?')) startExam(); };
-  on('[data-rune]', b => {
-    classInput.push(b.dataset.rune);
-    const w = classInput.some((v, i) => v !== seq[i]);
-    if (!w && classInput.length === seq.length){
-      me.classDay = me.day;
-      if (next){ me.hints.push(next); toast('레시피 힌트를 얻었어요: ' + HINTS[next]); }
-      else { me.coin += 30; toast('모든 힌트를 알고 있어요. 장학금 +30G'); }
-      save();
-    }
-    renderClass();
-  });
-  $('#back').onclick = () => { classInput = []; sub = null; tab = 'home'; render(); };
-  const r = $('#retry'); if (r) r.onclick = () => { classInput = []; renderClass(); };
+  on('[data-rune]', b => lessonTap(b.dataset.rune));
+  const ls = $('#lesson'); if (ls) ls.onclick = startLesson;
+  $('#back').onclick = () => { if (lesson?.phase === 'show' || lesson?.phase === 'input') lesson = null; sub = null; tab = 'home'; render(); };
 }
 
 // ===== 연구실 =====
 let slots = [], brewMsg = null;
-const shortName = k => SHORT[k] || ITEM[k];
-let dexSel = null;
+const shortName = k => SHORT[k] || ITEM[k].replace(' 물약', '');
+let dexSel = null, dexPage = 0;
+const DEX_PAGE = 20;
 function renderLab(){
   const n = me.found.length, sel = dexSel && POTION_INFO[dexSel];
   frame('lab', '물약 연구실', `${rankOf(n)} · 도감 ${n} / ${POTIONS.length}`, `
@@ -420,10 +532,11 @@ function renderLab(){
     </section>
     <section class="sec">
       ${secH('물약 도감', `${n} / ${POTIONS.length} 발견`)}
+      <div class="seg px" style="grid-template-columns:repeat(5,1fr)">${[0, 1, 2, 3, 4].map(i => { const got = POTIONS.slice(i * DEX_PAGE, (i + 1) * DEX_PAGE).filter(p => me.found.includes(p)).length; return `<button class="${dexPage === i ? 'on' : ''}" data-dexpage="${i}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:14px;min-height:42px">${i * DEX_PAGE + 1}~${(i + 1) * DEX_PAGE}<span class="s" style="font-size:12px">${got}/${DEX_PAGE}</span></button>`; }).join('')}</div>
       <div class="grid" style="grid-template-columns:repeat(4,1fr)">
-        ${POTIONS.map(p => {
+        ${POTIONS.slice(dexPage * DEX_PAGE, (dexPage + 1) * DEX_PAGE).map(p => {
           const got = me.found.includes(p), known = me.hints.includes(p), T = POTION_INFO[p].time;
-          return `<button class="cell ${dexSel === p ? 'sel' : ''}" data-dex="${p}" style="${T ? `background:${HOUSES[T].bg}` : ''}">
+          return `<button class="cell ${dexSel === p ? 'sel' : ''}" data-dex="${p}" style="${T ? `background:${HOUSES[T].bg}` : ''}"><span style="position:absolute;left:3px;top:2px;font-family:'G7',monospace;font-size:11px;line-height:11px;color:var(--sub)">${POTIONS.indexOf(p) + 1}</span>
             ${ic(p, got ? '' : known ? 'opacity:.45' : 'filter:brightness(0);opacity:.18')}<span class="s ${got ? '' : 'sub'}">${got || known ? shortName(p) : '???'}</span>${me.inv[p] ? `<span class="n">${me.inv[p]}</span>` : ''}</button>`;
         }).join('')}
       </div>
@@ -438,6 +551,7 @@ function renderLab(){
   on('[data-add]', b => { slots.push(b.dataset.add); brewMsg = null; renderLab(); });
   on('[data-take]', b => { slots.splice(+b.dataset.take, 1); renderLab(); });
   on('[data-dex]', b => { dexSel = dexSel === b.dataset.dex ? null : b.dataset.dex; renderLab(); });
+  on('[data-dexpage]', b => { dexPage = +b.dataset.dexpage; dexSel = null; renderLab(); });
   const dk = $('#drink'); if (dk) dk.onclick = () => { brewMsg = usePotion(dexSel); renderLab(); };
   $('#brew').onclick = () => {
     const key = slots.slice().sort().join(',');
@@ -455,7 +569,7 @@ function renderLab(){
       if (!me.hints.includes(p)) me.hints.push(p);
       const rankUp = isNew && rankOf(me.found.length) !== rankOf(me.found.length - 1);
       brewMsg = `${ITEM[p]} 완성!${isNew ? ' 도감에 새로 적었어요.' : ''}${rankUp ? ` 이제 「${rankOf(me.found.length)}」이에요!` : ''}`;
-      dexSel = p;
+      dexSel = p; dexPage = Math.floor(POTIONS.indexOf(p) / DEX_PAGE);
     } else if (me.house === 'ember' && myTime()){
       const back = slots[Math.floor(Math.random() * 3)]; me.inv[back]++;
       brewMsg = `보라색 연기만 피어올랐어요... 그래도 Emberkiln의 낮이라 ${ITEM[back]}을(를) 건졌어요.`;
@@ -618,7 +732,7 @@ function sleep(){
   });
   if (news.length) setTimeout(() => toast(news.join(' ')), 600);
   me.orders = makeOrders(me.day, me.hints, me.found);
-  classInput = [];
+  lesson = null;
   save();
   dormMsg = `푹 잤어요! 봄 학기 ${me.day}일 아침 · 마력 +${gain} (아늑함 +${cozy * 3}${guests ? `, 손님 ${guests}명 +${guests * 3}` : ''})`;
   renderDorm();
@@ -848,7 +962,7 @@ const EVENTS = {
             blurb:'화난 드래곤에게 다 같이 물약을 바쳐 달래요' },
 };
 const AFTER_MIN = 60;
-const DRAGON_PTS = p => p === 'p_dragon' ? 6 : p === 'p_purple' ? 4 : POTION_INFO[p].time ? 3 : ['p_red','p_green','p_blue'].includes(p) ? 1 : 2;
+const DRAGON_PTS = p => p === 'p_dragon' ? 6 : p === 'p_purple' ? 4 : POTION_INFO[p].time ? 3 : Math.max(1, Math.min(6, Math.round(POTION_INFO[p].pay / 60)));
 const dragonGoal = () => solo ? 8 : 40;
 // 미리보기: 주소 뒤에 ?event=dragon 을 붙이면 지금 바로 열려요 (기록은 test 칸에 따로 쌓여요)
 const PREVIEW = (() => { const k = new URLSearchParams(location.search).get('event'); return EVENTS[k] ? { id: k, start: Date.now() } : null; })();
@@ -947,7 +1061,7 @@ function paintEvent(){
       <div class="box px" style="padding:10px 12px;display:flex;flex-direction:column;gap:8px">
         <div class="sec-h"><h3>${done ? '드래곤이 진정했어요!' : '드래곤의 기분'}</h3><span class="meta">${total} / ${goal}</span></div>
         <div style="height:14px;background:var(--ink);padding:2px"><div style="width:${Math.min(100, total / goal * 100)}%;height:100%;background:${done ? 'var(--mint)' : 'linear-gradient(90deg,#FF7A5A,#FFC24A)'}"></div></div>
-        <span class="s sub">기본 물약 1점 · 마시는 물약 2점 · 시간대 물약 3점 · 반짝 4점 · 용기의 물약 6점</span>
+        <span class="s sub">비싼 물약일수록 점수가 높아요 (1~6점) · 시간대 물약 3점 · 반짝 4점 · 용기의 물약 6점</span>
       </div>
       ${hint(evMsg, done ? '' : live ? '가방의 물약을 눌러 드래곤에게 바쳐요' : '시간 안에 달래지 못했어요. 다음 주말에 다시 와요.')}
       ${done ? (mine ? `<button class="btn go px" id="claim" ${claimed ? 'disabled' : ''}>${claimed ? '보상을 받았어요' : '보상 받기 · 용 알 껍질 ×2 + 150G'}</button>` : '<div class="hint">물약을 바친 학생만 보상을 받아요</div>')
