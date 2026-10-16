@@ -1,0 +1,33 @@
+{
+  "rules": {
+    "players": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['nick', 'look']) && newData.child('nick').isString() && newData.child('nick').val().length >= 1 && newData.child('nick').val().length <= 8 && newData.child('look').isNumber()"
+      }
+    },
+    "online": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "market": {
+      ".read": "auth != null",
+      "$id": {
+        ".write": "auth != null && ((!data.exists() && newData.child('uid').val() === auth.uid) || (data.exists() && data.child('uid').val() === auth.uid) || (data.exists() && !data.child('buyer').exists() && newData.exists() && newData.child('buyer').val() === auth.uid && newData.child('uid').val() === data.child('uid').val() && newData.child('item').val() === data.child('item').val() && newData.child('qty').val() === data.child('qty').val() && newData.child('price').val() === data.child('price').val()))",
+        ".validate": "!newData.exists() || (newData.child('item').isString() && newData.child('qty').isNumber() && newData.child('qty').val() >= 1 && newData.child('qty').val() <= 99 && newData.child('price').isNumber() && newData.child('price').val() >= 1 && newData.child('price').val() <= 9999)"
+      }
+    },
+    "coop": {
+      ".read": "auth != null",
+      "$week": {
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999"
+        }
+      }
+    }
+  }
+}

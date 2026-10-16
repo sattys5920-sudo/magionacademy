@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3A2860">
+<title>별빛 아카데미</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+@font-face{font-family:'G11B';src:url(fonts/Galmuri11-Bold.woff2) format('woff2');font-display:swap}
+@font-face{font-family:'G9';src:url(fonts/Galmuri9.woff2) format('woff2');font-display:swap}
+@font-face{font-family:'G7';src:url(fonts/Galmuri7.woff2) format('woff2');font-display:swap}
+:root{--ink:#3A2860;--ink2:#1E1438;--paper:#FFF4E0;--sub:#8A70B8;--line:#E2D2F0;--gold:#FFD866;--mint:#8CF0B4;--pink:#FF7FA3}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#1E1438;-webkit-font-smoothing:none;-webkit-tap-highlight-color:transparent}
+body{font-family:'G9',monospace;font-size:16px;color:var(--ink)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{opacity:.45;cursor:default}
+#app{position:relative;max-width:430px;height:100dvh;margin:0 auto;background:var(--paper);display:flex;flex-direction:column;overflow:hidden}
+.px{clip-path:polygon(0 4px,4px 4px,4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px))}
+.ic{display:inline-block;width:32px;height:32px;flex-shrink:0;background:url(art/icons.png) no-repeat;image-rendering:pixelated;vertical-align:middle}
+.fc{width:60px;height:66px;background:url(art/faces.png) no-repeat;image-rendering:pixelated}
+.cr{width:120px;height:102px;background:url(art/creatures.png) no-repeat;image-rendering:pixelated}
+.b{font-family:'G11B',monospace}.s{font-family:'G7',monospace;font-size:14px;line-height:18px}.sub{color:var(--sub)}
+/* 장면 + 상단 바 */
+.scene{position:relative;flex-shrink:0;width:100%;aspect-ratio:390/360;overflow:hidden;background:#3A2E78}
+.scene img{position:absolute;left:0;bottom:0;width:100%;image-rendering:pixelated}
+.top{position:absolute;left:10px;right:10px;top:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:6px;z-index:2}
+.chip{background:var(--paper);border:4px solid var(--ink2);padding:2px 8px 2px 2px;display:flex;align-items:center;gap:2px;font-family:'G11B',monospace;font-size:14px}
+.title{background:var(--ink);border:4px solid var(--ink2);color:#fff;padding:6px 10px;display:flex;flex-direction:column;gap:2px}
+.title .b{font-size:16px;line-height:16px}.title .s{color:var(--gold);line-height:14px}
+/* 본문 */
+.panel{flex:1;overflow-y:auto;border-top:4px solid var(--ink);box-shadow:inset 0 4px 0 #fff;padding:12px 14px 16px;display:flex;flex-direction:column;gap:10px}
+.h{font-family:'G11B',monospace;font-size:20px;line-height:22px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.row{display:flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);padding:5px 8px}
+.row .grow{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.btn{min-height:44px;border:4px solid var(--ink);background:#fff;box-shadow:inset 0 -5px 0 var(--line);font-family:'G11B',monospace;font-size:15px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 10px}
+.btn.go{background:var(--mint);box-shadow:inset 0 -5px 0 #4CC488;color:#1E3A2A}
+.btn.dark{background:var(--ink);color:var(--gold);border-color:var(--ink2);box-shadow:inset 0 -5px 0 #24184A}
+.btn.sm{min-height:34px;border-width:2px;font-size:14px;box-shadow:none;padding:0 8px}
+.grid{display:grid;gap:8px}
+.cell{border:2px solid var(--ink);background:#fff;box-shadow:inset 0 -4px 0 var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 2px;position:relative;min-height:58px}
+.cell .n{position:absolute;right:4px;top:1px;font-family:'G11B',monospace;font-size:14px;color:#6A4AC8}
+.slot{border:4px dashed #C8B8E8;background:#F6EEFF}
+.slot.on{border-color:#6A4AC8;background:#fff}
+.bar{display:grid;gap:2px;background:var(--ink);padding:2px;flex:1}
+.bar i{display:block;height:10px;background:#fff}
+.msg{background:#fff;border:2px solid var(--ink);padding:6px 10px;font-family:'G7',monospace;font-size:14px;line-height:18px;min-height:40px}
+/* 탭 */
+.tabs{flex-shrink:0;height:72px;background:var(--ink);border-top:4px solid var(--ink2);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom)}
+.tabs button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:'G7',monospace;font-size:14px;color:#C8B8FF}
+.tabs button.on{background:#5A44A0;color:var(--gold)}
+/* 로그인·시작 */
+.cover{flex:1;overflow-y:auto;background:url(art/tile.png) repeat;background-size:64px 64px;image-rendering:pixelated;padding:28px 18px;display:flex;flex-direction:column;gap:14px;color:#fff}
+.card{background:var(--paper);color:var(--ink);border:4px solid var(--ink2);padding:16px;display:flex;flex-direction:column;gap:10px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field input{height:44px;border:2px solid var(--ink);background:#fff;padding:0 10px;font-family:'G9',monospace;font-size:16px;color:var(--ink)}
+.err{color:#C2385E;font-family:'G7',monospace;font-size:14px;min-height:18px;margin:0}
+.toast{position:absolute;left:50%;bottom:86px;transform:translateX(-50%);background:var(--ink);color:#fff;border:4px solid var(--ink2);padding:8px 14px;font-family:'G7',monospace;font-size:14px;z-index:9;max-width:90%;text-align:center}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { firebaseConfig } from './firebase-config.js';
+const FB = 'https://www.gstatic.com/firebasejs/10.12.2/';
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const app = $('#app');
+
+// ===== 데이터 =====
+const ICONS = ['coin','mana','p_red','p_blue','p_green','p_purple','herb','mush','wool','uhair','scale','egg','heart','book','cauldron','clock','bag','owl','star','drop','seed','sprout','can','candle','bed','rune'];
+const ic = (k, extra='') => `<i class="ic" style="background-position:${-32 * ICONS.indexOf(k)}px 0;${extra}"></i>`;
+const ITEM = {
+  herb:'약초', drop:'달빛 이슬', mush:'보라 버섯', mana:'마력석', wool:'구름양 털', scale:'불도마뱀 비늘', uhair:'유니콘 갈기', egg:'용 알 껍질',
+  p_red:'치유 물약', p_green:'화염 저항 물약', p_blue:'잠꾸러기 물약', p_purple:'반짝 물약',
+};
+const MATS = ['herb','drop','mush','mana','wool','scale','uhair','egg'];
+const POTIONS = ['p_red','p_green','p_blue','p_purple'];
+const RECIPES = { 'drop,herb,herb':'p_red', 'drop,mush,scale':'p_green', 'drop,mana,wool':'p_blue', 'drop,herb,uhair':'p_purple' };
+const HINTS = {
+  p_red: '치유 물약 = 약초 두 줌 + 달빛 이슬',
+  p_green: '화염 저항 물약 = 보라 버섯 + 불도마뱀 비늘 + 달빛 이슬',
+  p_blue: '잠꾸러기 물약 = 구름양 털 + 마력석 + 달빛 이슬',
+  p_purple: '반짝 물약 = 약초 + 달빛 이슬 + 반짝이는 갈기',
+};
+const SEEDS = { herb:'약초', drop:'월광초', mush:'보라 버섯' };
+const CREATURES = [
+  { name:'뭉게', kind:'구름양', food:'약초 주기', mat:'wool' },
+  { name:'별사탕', kind:'아기 유니콘', food:'각설탕 주기', mat:'uhair' },
+  { name:'불씨', kind:'불도마뱀', food:'숯 주기', mat:'scale' },
+  { name:'초롱', kind:'아기 용', food:'고기 주기', mat:'egg' },
+];
+const FURN = [
+  { id:'candle', name:'촛대', icon:'candle', pts:1, price:0 },
+  { id:'bed', name:'퀼트 이불', icon:'bed', pts:2, price:0 },
+  { id:'owl', name:'부엉이 횃대', icon:'owl', pts:1, price:0 },
+  { id:'plant', name:'화분', icon:'sprout', pts:1, price:80 },
+  { id:'shelf', name:'마법서 선반', icon:'book', pts:2, price:150 },
+  { id:'rug', name:'별자리 러그', icon:'rune', pts:3, price:300 },
+];
+const ORDER_FROM = ['양호 선생님', '교장실', '같은 반 친구', '사육장 관리인', '도서관 사서', '천문탑'];
+const PAY = { p_red:60, p_green:90, p_blue:70, p_purple:280 };
+
+function freshPlayer(nick, look){
+  return {
+    nick, look, coin:300, mana:40, day:1,
+    inv:{ herb:6, drop:4, mush:2, mana:3, wool:1, scale:1, uhair:0, egg:0, p_red:0, p_green:0, p_blue:0, p_purple:0 },
+    found:[], hints:['p_red'],
+    plots:[{k:'herb',st:2,w:false},{k:'drop',st:1,w:false},{k:null,st:0,w:false},{k:null,st:0,w:false},{k:null,st:0,w:false},{k:null,st:0,w:false}],
+    cr:[{full:3,love:3},{full:2,love:2},{full:3,love:2},{full:2,love:1}],
+    furn:{ candle:{own:1,on:1}, bed:{own:1,on:1}, owl:{own:1,on:1} },
+    orders:makeOrders(1), classDay:0,
+  };
+}
+function makeOrders(day){
+  const out = [];
+  for (let i = 0; i < 3; i++){
+    const p = POTIONS[(day * 7 + i * 3) % (day < 4 ? 3 : 4)];
+    out.push({ p, n: 1 + ((day + i) % 2), pay: PAY[p], from: ORDER_FROM[(day + i * 2) % ORDER_FROM.length], done:false });
+  }
+  return out;
+}
+const cozyOf = me => FURN.reduce((a, f) => a + (me.furn[f.id]?.on ? f.pts : 0), 0);
+
+// ===== 저장: 온라인이면 Firebase, 혼자 모드면 이 기기 =====
+let F = null, auth = null, db = null, uid = null, solo = false, me = null, saveTimer = 0;
+let onlineList = {}, marketList = {}, coop = {};
+const coopWeek = () => 'w' + Math.floor(Date.now() / 604800000);
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    if (solo) { try { localStorage.setItem('magion-solo', JSON.stringify(me)); } catch(e){} return; }
+    F.set(F.ref(db, 'players/' + uid), me).catch(e => toast('저장에 실패했어요: ' + (e.code || e.message)));
+  }, 300);
+}
+let toastTimer = 0;
+function toast(t){
+  document.querySelector('.toast')?.remove();
+  app.insertAdjacentHTML('beforeend', `<div class="toast">${esc(t)}</div>`);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => document.querySelector('.toast')?.remove(), 2400);
+}
+
+// ===== 화면 틀 =====
+let tab = 'home', sub = null;
+const TABS = [['home','홈','star'],['lab','연구실','cauldron'],['green','온실','sprout'],['ranch','사육장','egg'],['market','시장','bag']];
+function frame(scene, title, subtitle, body){
+  app.innerHTML = `
+    <div class="scene">${scene ? `<img src="art/${scene}.png" alt="">` : ''}
+      <div class="top">
+        <div class="title px"><span class="b">${title}</span><span class="s">${subtitle}</span></div>
+        <div style="display:flex;gap:4px">
+          <div class="chip px">${ic('coin')}${me.coin.toLocaleString()}</div>
+          <div class="chip px">${ic('mana')}${me.mana}</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">${body}</div>
+    <nav class="tabs">${TABS.map(([k, l, i]) => `<button data-tab="${k}" class="${tab === k && !sub ? 'on' : ''}">${ic(i)}${l}</button>`).join('')}</nav>`;
+  app.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; sub = null; render(); });
+}
+const segs = (n, max, col) => `<div class="bar" style="grid-template-columns:repeat(${max},1fr)">${Array.from({length:max}, (_, i) => `<i style="${i < n ? 'background:' + col : ''}"></i>`).join('')}</div>`;
+const dayLabel = () => `봄 학기 ${me.day}일`;
+function on(sel, fn){ app.querySelectorAll(sel).forEach(el => el.onclick = () => fn(el)); }
+
+function render(){
+  if (sub === 'class') return renderClass();
+  if (sub === 'dorm') return renderDorm();
+  ({ home:renderHome, lab:renderLab, green:renderGreen, ranch:renderRanch, market:renderMarket })[tab]();
+}
+
+// ===== 홈 =====
+function renderHome(){
+  const left = me.orders.filter(o => !o.done).length;
+  const friends = Object.entries(onlineList).filter(([k]) => k !== uid).slice(0, 8);
+  frame('island', dayLabel(), '1학년 · 별빛 기숙사', `
+    <div class="h"><span>오늘의 주문</span><span class="s sub">${left} / ${me.orders.length} 남음</span></div>
+    ${me.orders.map((o, i) => {
+      const have = me.inv[o.p] >= o.n;
+      return `<div class="row" style="${o.done ? 'background:#F0EAF8' : ''}">${ic(o.p)}
+        <div class="grow"><span style="${o.done ? 'color:#A894B8' : ''}">${ITEM[o.p]} ×${o.n}</span><span class="s sub">${o.from} · 가진 것 ${me.inv[o.p]}</span></div>
+        ${o.done ? '<span class="s b">완료</span>' : `<button class="btn sm ${have ? 'go' : ''}" data-deliver="${i}" ${have ? '' : 'disabled'}>${o.pay}G 받기</button>`}</div>`;
+    }).join('')}
+    <div style="display:flex;gap:8px">
+      <button class="btn dark px" style="flex:1" id="goClass">${ic('book')}${me.classDay === me.day ? '오늘 수업 끝' : '수업 듣기'}</button>
+      <button class="btn px" style="flex:1" id="goDorm">${ic('bed')}기숙사 방</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span class="s sub" style="white-space:nowrap">${solo ? '혼자 해 보기 모드' : '지금 접속 ' + (friends.length + 1) + '명'}</span>
+      <div style="display:flex;gap:4px;overflow:hidden">${friends.map(([, f]) => `<div title="${esc(f.nick)}" style="width:36px;height:36px;overflow:hidden;background:#E8DDF8;border:2px solid #8E7CD8;display:flex;justify-content:center;flex-shrink:0"><div class="fc" style="background-position:${-60 * (f.look || 0)}px 0;transform:scale(.6);transform-origin:top center"></div></div>`).join('')}</div>
+    </div>`);
+  on('[data-deliver]', b => {
+    const o = me.orders[+b.dataset.deliver];
+    if (me.inv[o.p] < o.n) return;
+    me.inv[o.p] -= o.n; me.coin += o.pay; o.done = true; save();
+    toast(`${o.from}에게 ${ITEM[o.p]}을(를) 전했어요. +${o.pay}G`); render();
+  });
+  $('#goClass').onclick = () => { sub = 'class'; render(); };
+  $('#goDorm').onclick = () => { sub = 'dorm'; render(); };
+}
+
+// ===== 수업: 문양 따라 그리기 =====
+let classInput = [];
+function renderClass(){
+  const done = me.classDay === me.day;
+  const pool = ['star','drop','herb','scale'];
+  const seq = [0, 1, 2, 3].map(i => pool[(me.day * 5 + i * 3 + (i * i)) % 4]);
+  const wrong = classInput.some((v, i) => v !== seq[i]);
+  const ok = !wrong && classInput.length === seq.length;
+  const next = POTIONS.find(p => !me.hints.includes(p));
+  frame('class', '3교시 · 문양학', done && !ok ? '오늘 수업은 끝났어요' : '칠판을 보고 따라 그려요', `
+    <div class="h"><span>칠판의 문양을 순서대로</span><button class="btn sm" id="back">홈으로</button></div>
+    <div class="px" style="background:#2E4A44;border:4px solid var(--ink2);padding:10px;display:flex;justify-content:center;gap:8px">
+      ${seq.map((k, i) => `<div style="width:52px;height:52px;display:flex;align-items:center;justify-content:center;background:${i < classInput.length && !wrong ? '#8CF0B4' : '#3E625A'};border:2px solid ${i < classInput.length && !wrong ? '#fff' : '#5E8A80'}">${ic(k)}</div>`).join('')}
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(4,1fr)">
+      ${pool.map(k => `<button class="cell" data-rune="${k}" ${done || wrong || ok ? 'disabled' : ''}>${ic(k)}<span class="s">${({star:'별',drop:'물',herb:'잎',scale:'불'})[k]}</span></button>`).join('')}
+    </div>
+    <div class="msg">${wrong ? '앗, 문양이 흐트러졌어요. 다시 해 볼까요?' : ok ? '성공! 연구실에 새 힌트가 적혔어요.' : done ? '오늘 수업은 이미 들었어요. 내일 또 와요.' : '수업을 잘 들으면 물약 레시피 힌트를 얻어요 (' + classInput.length + '/4)'}</div>
+    ${wrong ? '<button class="btn" id="retry">다시 하기</button>' : ''}`);
+  on('[data-rune]', b => {
+    classInput.push(b.dataset.rune);
+    const w = classInput.some((v, i) => v !== seq[i]);
+    if (!w && classInput.length === seq.length){
+      me.classDay = me.day;
+      if (next){ me.hints.push(next); toast('레시피 힌트를 얻었어요: ' + HINTS[next]); }
+      else { me.coin += 30; toast('모든 힌트를 알고 있어요. 장학금 +30G'); }
+      save();
+    }
+    renderClass();
+  });
+  $('#back').onclick = () => { classInput = []; sub = null; tab = 'home'; render(); };
+  const r = $('#retry'); if (r) r.onclick = () => { classInput = []; renderClass(); };
+}
+
+// ===== 연구실 =====
+let slots = [], brewMsg = null;
+function renderLab(){
+  frame('lab', '물약 연구실', `도감 ${me.found.length} / 4`, `
+    <div style="display:flex;gap:8px;justify-content:center">
+      ${[0, 1, 2].map(i => slots[i] ? `<button class="cell slot on" style="width:96px;height:70px" data-take="${i}">${ic(slots[i])}<span class="s">${ITEM[slots[i]]}</span></button>` : `<div class="cell slot" style="width:96px;height:70px"><span class="s sub">빈 칸</span></div>`).join('')}
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(4,1fr)">
+      ${MATS.map(k => { const left = me.inv[k] - slots.filter(s => s === k).length; return `<button class="cell" data-add="${k}" ${left > 0 && slots.length < 3 ? '' : 'disabled'}>${ic(k)}<span class="s">${ITEM[k].replace('불도마뱀 ', '').replace('유니콘 ', '').replace('구름양 ', '').replace('용 알 ', '알 ')}</span><span class="n">${left}</span></button>`; }).join('')}
+    </div>
+    <button class="btn go px" id="brew" ${slots.length === 3 && me.mana >= 5 ? '' : 'disabled'}>${ic('cauldron')}끓이기 · 마력 5</button>
+    <div class="msg">${brewMsg || '레시피 힌트: ' + me.hints.map(h => HINTS[h]).join(' / ')}</div>
+    <div class="h" style="font-size:16px"><span>내 물약</span></div>
+    <div class="grid" style="grid-template-columns:repeat(4,1fr)">${POTIONS.map(p => `<div class="cell">${ic(p, me.inv[p] ? '' : 'opacity:.3')}<span class="s">${ITEM[p].replace(' 물약', '')}</span><span class="n">${me.inv[p]}</span></div>`).join('')}</div>`);
+  on('[data-add]', b => { slots.push(b.dataset.add); brewMsg = null; renderLab(); });
+  on('[data-take]', b => { slots.splice(+b.dataset.take, 1); renderLab(); });
+  $('#brew').onclick = () => {
+    const key = slots.slice().sort().join(',');
+    slots.forEach(k => me.inv[k]--);
+    me.mana -= 5;
+    const p = RECIPES[key];
+    if (p){
+      me.inv[p]++;
+      const isNew = !me.found.includes(p);
+      if (isNew) me.found.push(p);
+      if (!me.hints.includes(p)) me.hints.push(p);
+      brewMsg = `${ITEM[p]} 완성!${isNew ? ' 새 레시피를 도감에 적었어요.' : ''}`;
+    } else brewMsg = '보라색 연기만 피어올랐어요... 재료는 사라졌어요.';
+    slots = []; save(); renderLab();
+  };
+}
+
+// ===== 온실 =====
+let seedPick = 'herb', greenMsg = '';
+function renderGreen(){
+  frame('green', '약초 온실', '물 준 식물은 자고 나면 자라요', `
+    <div style="display:flex;align-items:center;gap:6px">
+      <span class="s sub" style="white-space:nowrap">심을 씨앗</span>
+      ${Object.entries(SEEDS).map(([k, n]) => `<button class="btn sm" style="flex:1;${seedPick === k ? 'border-color:#6A4AC8;background:#fff' : 'background:#F0E8FA'}" data-seed="${k}">${n}</button>`).join('')}
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+      ${me.plots.map((p, i) => {
+        const icon = p.st === 0 ? 'seed' : p.st === 4 ? p.k : ['seed', 'seed', 'sprout', 'herb'][p.st];
+        const label = p.st === 0 ? '빈 칸 · 심기' : p.st === 4 ? '수확하기!' : (p.w ? '물 줬어요' : '물 주기 · 마력 1');
+        return `<button class="cell" data-plot="${i}" style="min-height:92px;border-width:4px;${p.st === 4 ? 'background:#E0FFEA;border-color:#2E9E57' : p.w ? 'background:#E0F0FF' : p.st === 0 ? 'background:#F6EEFF' : 'background:#F2E2CC'}">
+          ${ic(icon, p.st === 0 ? 'opacity:.3' : '')}<span class="s">${p.k ? SEEDS[p.k] : ''}</span><span class="s sub">${label}</span>
+          <div style="width:64px;display:flex">${segs(p.st, 4, '#7BD88F')}</div></button>`;
+      }).join('')}
+    </div>
+    <div class="msg">${greenMsg || '빈 칸을 눌러 씨앗을 심고, 자라는 칸에 물을 줘요. 기숙사에서 자고 나면 한 단계씩 자라요.'}</div>`);
+  on('[data-seed]', b => { seedPick = b.dataset.seed; renderGreen(); });
+  on('[data-plot]', b => {
+    const p = me.plots[+b.dataset.plot];
+    if (p.st === 0){ Object.assign(p, { k: seedPick, st: 1, w: false }); greenMsg = SEEDS[seedPick] + ' 씨앗을 심었어요.'; }
+    else if (p.st === 4){ const got = p.k; me.inv[got] += 3; Object.assign(p, { k: null, st: 0, w: false }); greenMsg = `${SEEDS[got]} 수확! ${ITEM[got]} +3`; }
+    else if (p.w) greenMsg = '오늘은 이미 물을 줬어요. 자고 나면 자라요.';
+    else if (me.mana < 1) greenMsg = '마력이 부족해요. 기숙사에서 자고 오세요.';
+    else { p.w = true; me.mana -= 1; greenMsg = '물을 줬어요. 내일 아침이면 쑥 자라 있을 거예요.'; }
+    save(); renderGreen();
+  });
+}
+
+// ===== 사육장 =====
+let crSel = 0, ranchMsg = '';
+function renderRanch(){
+  const c = me.cr[crSel], d = CREATURES[crSel], ready = c.love >= 5;
+  frame('ranch', '생물 사육장', '애정이 가득 차면 재료를 줘요', `
+    <div class="grid" style="grid-template-columns:repeat(4,1fr);gap:6px">
+      ${me.cr.map((x, i) => `<button data-cr="${i}" style="height:72px;padding:0;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;background:${['#E6F0FF','#F6E6FF','#FFE8D8','#E2F6E6'][i]};border:4px solid ${i === crSel ? '#6A4AC8' : 'var(--line)'}"><div class="cr" style="background-position:${-120 * i}px 0;transform:scale(.62);flex-shrink:0"></div>${x.love >= 5 ? '<span style="position:absolute;right:2px;top:2px;width:10px;height:10px;background:#E0507E;border:2px solid #fff"></span>' : ''}</button>`).join('')}
+    </div>
+    <div class="px" style="background:#fff;border:4px solid var(--ink);padding:10px 12px;display:flex;flex-direction:column;gap:8px">
+      <div class="h"><span>${d.name}</span><span class="s sub">${d.kind}</span></div>
+      <div style="display:flex;align-items:center;gap:8px"><span class="s" style="width:48px">배부름</span>${segs(c.full, 5, '#FFC24A')}</div>
+      <div style="display:flex;align-items:center;gap:8px"><span class="s" style="width:48px">애정</span>${segs(c.love, 5, '#FF7FA3')}</div>
+      <div class="s sub" style="display:flex;align-items:center;gap:6px">${ic(d.mat)}애정이 가득 차면 「${ITEM[d.mat]}」을 줘요</div>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+      <button class="btn" id="feed" style="background:#FFE58A">${d.food}</button>
+      <button class="btn" id="pat" style="background:#FFD0E0">쓰다듬기</button>
+      <button class="btn ${ready ? 'go' : ''}" id="harvest">재료 얻기</button>
+    </div>
+    <div class="msg">${ranchMsg || '하루에 한 번씩 배가 고파져요. 밥을 주고 쓰다듬어 주세요.'}</div>`);
+  on('[data-cr]', b => { crSel = +b.dataset.cr; ranchMsg = ''; renderRanch(); });
+  $('#feed').onclick = () => { c.full = Math.min(5, c.full + 2); ranchMsg = `${d.name}이(가) 맛있게 먹었어요. 배부름 +2`; save(); renderRanch(); };
+  $('#pat').onclick = () => {
+    if (c.full < 2) ranchMsg = `${d.name}이(가) 배고파서 칭얼거려요. 먼저 밥을 주세요.`;
+    else { c.love = Math.min(5, c.love + 1); ranchMsg = `${d.name}이(가) 기분 좋아해요. 애정 +1`; save(); }
+    renderRanch();
+  };
+  $('#harvest').onclick = () => {
+    if (!ready) ranchMsg = `애정이 5칸이 되어야 ${ITEM[d.mat]}을(를) 얻을 수 있어요.`;
+    else { me.inv[d.mat]++; c.love = 3; c.full = Math.max(0, c.full - 1); ranchMsg = `${ITEM[d.mat]} 1개를 얻었어요! 연구실 재료함에 들어갔어요.`; save(); }
+    renderRanch();
+  };
+}
+
+// ===== 기숙사 =====
+let dormMsg = '';
+function renderDorm(){
+  const cozy = cozyOf(me);
+  frame('dorm', '별빛 기숙사 304호', `아늑함 ${cozy} / 10`, `
+    <div class="h"><span>방 꾸미기</span><button class="btn sm" id="back">홈으로</button></div>
+    <div style="display:flex;align-items:center;gap:8px">${ic('heart')}<span class="b" style="white-space:nowrap">아늑함</span>${segs(cozy, 10, '#FF9DBA')}</div>
+    <span class="s sub">아늑할수록 자고 일어났을 때 마력이 더 많이 차요</span>
+    <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+      ${FURN.map(f => { const st = me.furn[f.id] || {}; return `<button class="cell" data-f="${f.id}" style="min-height:80px;border-width:4px;${st.on ? 'border-color:#6A4AC8' : st.own ? 'background:#F6EEFF;border-color:#C8B8E8' : 'background:#F2E8DA;border-color:#C8B8E8'}">${ic(f.icon)}<span class="s">${f.name}</span><span class="s b" style="color:${!st.own ? '#C88A10' : st.on ? '#2E9E57' : '#8A70B8'}">${!st.own ? f.price + 'G' : st.on ? '놓음 ✓' : '보관 중'}</span></button>`; }).join('')}
+    </div>
+    <button class="btn dark px" id="sleep">${ic('star')}잠자고 내일로</button>
+    <div class="msg">${dormMsg || '가구를 눌러 사거나, 놓거나, 치울 수 있어요.'}</div>`);
+  on('[data-f]', b => {
+    const f = FURN.find(x => x.id === b.dataset.f), st = me.furn[f.id] || (me.furn[f.id] = { own:0, on:0 });
+    if (!st.own){
+      if (me.coin < f.price){ dormMsg = '갈레온이 부족해요. 물약을 팔고 다시 와요.'; return renderDorm(); }
+      me.coin -= f.price; st.own = 1; st.on = 1; dormMsg = `${f.name}을(를) 사서 방에 놓았어요! 아늑함 +${f.pts}`;
+    } else { st.on = st.on ? 0 : 1; dormMsg = st.on ? `${f.name}을(를) 다시 놓았어요.` : `${f.name}을(를) 상자에 넣었어요.`; }
+    save(); renderDorm();
+  });
+  $('#back').onclick = () => { sub = null; tab = 'home'; render(); };
+  $('#sleep').onclick = () => sleep();
+}
+function sleep(){
+  const cozy = cozyOf(me), gain = 20 + cozy * 3;
+  me.day++;
+  me.mana = Math.min(50 + cozy * 2, me.mana + gain);
+  me.plots.forEach(p => { if (p.st >= 1 && p.st < 4 && p.w) p.st++; p.w = false; });
+  me.cr.forEach(c => { c.full = Math.max(0, c.full - 1); });
+  me.orders = makeOrders(me.day);
+  classInput = [];
+  save();
+  dormMsg = `푹 잤어요! 봄 학기 ${me.day}일 아침 · 마력 +${gain} (아늑함 보너스 +${cozy * 3})`;
+  renderDorm();
+}
+
+// ===== 시장 (온라인 전용) =====
+let sellPick = null;
+function renderMarket(){
+  if (solo){
+    frame(null, '마법 시장', '친구들과 거래하는 곳', `<div class="msg">혼자 해 보기 모드에서는 시장이 열리지 않아요. Firebase를 연결하고 로그인하면 12명이 함께 거래할 수 있어요.</div>`);
+    return;
+  }
+  const items = Object.entries(marketList);
+  const mine = items.filter(([, l]) => l.uid === uid);
+  const others = items.filter(([, l]) => l.uid !== uid && !l.buyer);
+  const week = coop[coopWeek()] || {};
+  const coopTotal = Object.values(week).reduce((a, b) => a + (+b || 0), 0);
+  const sellable = [...POTIONS, ...MATS].filter(k => me.inv[k] > 0);
+  frame(null, '마법 시장', `친구 가게 ${new Set(others.map(([, l]) => l.uid)).size}곳 영업 중`, `
+    <div class="h" style="font-size:16px"><span>내 가판대</span><span class="s sub">${mine.length} / 4</span></div>
+    ${mine.map(([id, l]) => `<div class="row">${ic(l.item)}<div class="grow"><span>${ITEM[l.item]} ×${l.qty}</span><span class="s sub">${l.buyer ? esc(l.buyerNick || '친구') + ' 님이 샀어요!' : '판매 중'}</span></div>
+      ${l.buyer ? `<button class="btn sm go" data-collect="${id}">${l.price}G 받기</button>` : `<button class="btn sm" data-cancel="${id}">내리기</button>`}</div>`).join('') || '<div class="s sub">아직 올린 물건이 없어요.</div>'}
+    ${mine.length < 4 ? `<div class="px" style="background:#fff;border:4px solid var(--ink);padding:8px;display:flex;flex-direction:column;gap:6px">
+      <span class="s sub">팔 물건을 고르고 가격을 정해요</span>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">${sellable.map(k => `<button class="cell" style="width:52px;min-height:52px;${sellPick === k ? 'border-color:#6A4AC8;border-width:4px' : ''}" data-pick="${k}">${ic(k)}<span class="n">${me.inv[k]}</span></button>`).join('') || '<span class="s sub">팔 수 있는 물건이 없어요.</span>'}</div>
+      ${sellPick ? `<div style="display:flex;gap:6px;align-items:center"><span class="s">${ITEM[sellPick]} 1개</span><input id="price" type="number" min="1" max="9999" value="${PAY[sellPick] || 20}" style="width:90px;height:36px;border:2px solid var(--ink);font-family:'G9',monospace;font-size:16px;padding:0 6px">G<button class="btn sm go" id="list">올리기</button></div>` : ''}
+    </div>` : ''}
+    <div class="h" style="font-size:16px"><span>친구들이 올린 물건</span></div>
+    ${others.map(([id, l]) => `<div class="row"><div style="width:34px;height:34px;overflow:hidden;background:#E8DDF8;border:2px solid var(--ink);display:flex;justify-content:center;flex-shrink:0"><div class="fc" style="background-position:${-60 * (l.look || 0)}px 0;transform:scale(.56);transform-origin:top center"></div></div>${ic(l.item)}
+      <div class="grow"><span>${ITEM[l.item]} ×${l.qty}</span><span class="s sub">${esc(l.nick)}</span></div>
+      <span class="b" style="font-size:14px;color:#C88A10">${l.price}G</span><button class="btn sm go" data-buy="${id}" ${me.coin >= l.price ? '' : 'disabled'}>사기</button></div>`).join('') || '<div class="s sub">지금은 올라온 물건이 없어요.</div>'}
+    <div class="px" style="background:var(--ink);color:#fff;border:4px solid var(--ink2);padding:10px 12px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:6px">${ic('star')}<span class="b" style="font-size:14px">반 공동 의뢰 · 반짝 물약 50병</span></div>
+      <div style="height:14px;background:var(--ink2);border:2px solid #8E7CD8"><div style="width:${Math.min(100, coopTotal * 2)}%;height:100%;background:var(--gold)"></div></div>
+      <div class="s" style="display:flex;justify-content:space-between;color:#C8B8FF"><span>${coopTotal} / 50 · ${Object.keys(week).length}명 참여</span><span>내가 낸 것 ${week[uid] || 0}</span></div>
+      <button class="btn sm go" id="donate" ${me.inv.p_purple > 0 ? '' : 'disabled'}>반짝 물약 1병 내기</button>
+    </div>`);
+  on('[data-pick]', b => { sellPick = b.dataset.pick; renderMarket(); });
+  const lb = $('#list');
+  if (lb) lb.onclick = async () => {
+    const price = Math.max(1, Math.min(9999, Math.floor(+$('#price').value || 0)));
+    if (me.inv[sellPick] < 1) return;
+    me.inv[sellPick]--; save();
+    await F.push(F.ref(db, 'market'), { uid, nick: me.nick, look: me.look, item: sellPick, qty: 1, price, at: Date.now() });
+    toast(`${ITEM[sellPick]}을(를) ${price}G에 올렸어요.`); sellPick = null;
+  };
+  on('[data-cancel]', async b => {
+    const l = marketList[b.dataset.cancel]; if (!l || l.buyer) return;
+    await F.remove(F.ref(db, 'market/' + b.dataset.cancel));
+    me.inv[l.item] += l.qty; save(); toast('가판대에서 내렸어요.');
+  });
+  on('[data-collect]', async b => {
+    const l = marketList[b.dataset.collect]; if (!l || !l.buyer) return;
+    await F.remove(F.ref(db, 'market/' + b.dataset.collect));
+    me.coin += l.price; save(); toast(`판매 대금 ${l.price}G를 받았어요.`);
+  });
+  on('[data-buy]', async b => {
+    const id = b.dataset.buy, l = marketList[id];
+    if (!l || me.coin < l.price) return;
+    const res = await F.runTransaction(F.ref(db, 'market/' + id), cur => {
+      if (!cur || cur.buyer) return;
+      return { ...cur, buyer: uid, buyerNick: me.nick };
+    });
+    if (!res.committed) return toast('한발 늦었어요. 다른 친구가 먼저 샀어요.');
+    me.coin -= l.price; me.inv[l.item] += l.qty; save();
+    toast(`${ITEM[l.item]}을(를) 샀어요! -${l.price}G`);
+  });
+  $('#donate').onclick = async () => {
+    if (me.inv.p_purple < 1) return;
+    me.inv.p_purple--; save();
+    await F.set(F.ref(db, `coop/${coopWeek()}/${uid}`), (week[uid] || 0) + 1);
+    toast('반짝 물약을 냈어요. 고마워요!');
+  };
+}
+
+// ===== 시작: 로그인 · 캐릭터 만들기 =====
+const ID_RE = /^[a-zA-Z][a-zA-Z0-9_]{2,15}$/;
+const idEmail = id => `${id.toLowerCase()}@magionacademy.app`;
+const pwPad = pw => pw + '·magion';
+const AUTH_MSG = {
+  'auth/operation-not-allowed': 'Firebase 콘솔 > Authentication > 로그인 방법에서 "이메일/비밀번호"를 켜 주세요.',
+  'auth/email-already-in-use': '이미 있는 아이디예요. 로그인하거나 다른 아이디를 골라 주세요.',
+  'auth/invalid-credential': '아이디 또는 비밀번호가 맞지 않아요.', 'auth/wrong-password': '비밀번호가 맞지 않아요.', 'auth/user-not-found': '없는 아이디예요.',
+  'auth/too-many-requests': '너무 여러 번 시도했어요. 잠시 뒤 다시 해 주세요.', 'auth/network-request-failed': '인터넷 연결을 확인해 주세요.',
+};
+const configured = !!(firebaseConfig.apiKey && firebaseConfig.databaseURL);
+function cover(inner){ app.innerHTML = `<div class="cover"><div style="text-align:center;display:flex;flex-direction:column;gap:6px;margin:10px 0"><span class="b" style="font-size:33px;line-height:36px">별빛 아카데미</span><span class="s" style="color:#C8B8FF">마법학교 학생 생활 타이쿤</span></div>${inner}</div>`; }
+function showLogin(mode = 'login'){
+  const signup = mode === 'signup';
+  let saved = ''; try { saved = localStorage.getItem('magion-id') || ''; } catch(e){}
+  cover(`<div class="card px">
+    ${configured ? `<div style="display:flex;gap:6px"><button class="btn sm" style="flex:1;${signup ? '' : 'background:var(--gold)'}" id="mLogin">로그인</button><button class="btn sm" style="flex:1;${signup ? 'background:var(--gold)' : ''}" id="mSignup">가입하기</button></div>
+    <form id="lf" style="display:flex;flex-direction:column;gap:10px">
+      <label class="field"><span class="s">아이디</span><input id="lid" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="16" placeholder="영어 3~16 자" value="${esc(saved)}"></label>
+      <label class="field"><span class="s">비밀번호</span><input id="lpw" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}" maxlength="40" placeholder="5 자 이상"></label>
+      ${signup ? '<label class="field"><span class="s">비밀번호 확인</span><input id="lpw2" type="password" autocomplete="new-password" maxlength="40"></label>' : ''}
+      <p class="err" id="err"></p>
+      <button class="btn go" type="submit" id="lgo">${signup ? '가입하고 입학하기' : '등교하기'}</button>
+    </form>` : `<span class="s">아직 Firebase가 연결되지 않았어요. public/firebase-config.js에 설정을 넣으면 친구들과 함께할 수 있어요.</span>`}
+    <button class="btn" id="soloGo" type="button">혼자 해 보기 (이 기기에만 저장)</button>
+  </div>`);
+  $('#soloGo').onclick = startSolo;
+  if (!configured) return;
+  $('#mLogin').onclick = () => showLogin('login');
+  $('#mSignup').onclick = () => showLogin('signup');
+  $('#lf').onsubmit = async e => {
+    e.preventDefault();
+    const id = $('#lid').value.trim(), pw = $('#lpw').value, err = $('#err');
+    if (!ID_RE.test(id)) return err.textContent = '아이디는 영어로 시작하고, 영어·숫자·_ 3~16 자여야 해요.';
+    if (pw.length < 5) return err.textContent = '비밀번호는 5 자 이상이어야 해요.';
+    if (signup && pw !== $('#lpw2').value) return err.textContent = '비밀번호 확인이 달라요.';
+    $('#lgo').disabled = true; err.textContent = '잠깐만요...';
+    try {
+      if (signup) await F.createUserWithEmailAndPassword(auth, idEmail(id), pwPad(pw));
+      else await F.signInWithEmailAndPassword(auth, idEmail(id), pwPad(pw));
+      try { localStorage.setItem('magion-id', id); } catch(e){}
+    } catch(ex){
+      $('#lgo').disabled = false;
+      err.textContent = AUTH_MSG[ex.code] || `실패했어요. (${ex.code || ex.message})`;
+    }
+  };
+}
+function showCreate(done){
+  let look = 0;
+  const draw = () => cover(`<div class="card px">
+    <span class="b" style="font-size:20px">입학 원서</span>
+    <label class="field"><span class="s">이름 (1~8 자)</span><input id="nick" maxlength="8" placeholder="예: 별이"></label>
+    <span class="s">모습 고르기</span>
+    <div class="grid" style="grid-template-columns:repeat(4,1fr)">${Array.from({length:8}, (_, i) => `<button data-look="${i}" style="height:76px;padding:0;overflow:hidden;display:flex;justify-content:center;align-items:flex-start;background:${look === i ? '#fff' : '#E8DDF8'};border:4px solid ${look === i ? '#6A4AC8' : 'var(--line)'}"><div class="fc"></div></button>`).join('')}</div>
+    <p class="err" id="err"></p>
+    <button class="btn go" id="enroll">입학하기</button>
+  </div>`);
+  draw();
+  const bind = () => {
+    app.querySelectorAll('[data-look]').forEach((b, i) => { b.querySelector('.fc').style.backgroundPosition = `${-60 * i}px 0`; b.onclick = () => { const n = $('#nick').value; look = i; draw(); bind(); $('#nick').value = n; }; });
+    $('#enroll').onclick = () => {
+      const nick = $('#nick').value.trim();
+      if (nick.length < 1 || nick.length > 8) return $('#err').textContent = '이름을 1~8 자로 정해 주세요.';
+      done(freshPlayer(nick, look));
+    };
+  };
+  bind();
+}
+function startSolo(){
+  solo = true;
+  let saved = null; try { saved = JSON.parse(localStorage.getItem('magion-solo') || 'null'); } catch(e){}
+  if (saved) { me = saved; render(); return; }
+  showCreate(p => { me = p; save(); render(); });
+}
+async function boot(){
+  if (!configured) return showLogin();
+  cover('<div class="card px"><span class="s">학교로 가는 중...</span></div>');
+  const [A, Au, D] = await Promise.all([import(FB + 'firebase-app.js'), import(FB + 'firebase-auth.js'), import(FB + 'firebase-database.js')]);
+  F = { ...A, ...Au, ...D };
+  const fapp = F.initializeApp(firebaseConfig);
+  auth = F.getAuth(fapp); db = F.getDatabase(fapp);
+  F.onAuthStateChanged(auth, async user => {
+    if (!user) { uid = null; return showLogin(); }
+    uid = user.uid;
+    const snap = await F.get(F.ref(db, 'players/' + uid));
+    const enter = () => {
+      const oref = F.ref(db, 'online/' + uid);
+      F.set(oref, { nick: me.nick, look: me.look, at: Date.now() });
+      F.onDisconnect(oref).remove();
+      F.onValue(F.ref(db, 'online'), s => { onlineList = s.val() || {}; if (tab === 'home' && !sub) render(); });
+      F.onValue(F.ref(db, 'market'), s => { marketList = s.val() || {}; if (tab === 'market') render(); });
+      F.onValue(F.ref(db, 'coop'), s => { coop = s.val() || {}; if (tab === 'market') render(); });
+      render();
+    };
+    if (snap.exists()) { me = snap.val(); enter(); }
+    else showCreate(p => { me = p; save(); enter(); });
+  });
+}
+boot();
+</script>
+</body>
+</html>
