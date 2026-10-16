@@ -1,12 +1,10 @@
-// Firebase 콘솔 > 프로젝트 설정 > 내 앱 > 웹 앱의 firebaseConfig 값을 여기에 붙여 넣어요.
-// (이 값들은 공개되어도 괜찮아요. 데이터 보호는 database.rules.json 규칙이 맡아요.)
-// 비어 있는 동안에는 "혼자 해 보기" 모드로만 들어갈 수 있어요 (이 기기에만 저장).
+// Firebase 웹 앱 설정 (공개되어도 괜찮은 값이에요. 데이터 보호는 database.rules.json 규칙이 맡아요.)
 export const firebaseConfig = {
-  apiKey: "",
-  authDomain: "",
-  databaseURL: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: "",
+  apiKey: "AIzaSyBwlMwalATFymA7opySanPMSHify2qeEEk",
+  authDomain: "magionacademy.firebaseapp.com",
+  databaseURL: "https://magionacademy-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "magionacademy",
+  storageBucket: "magionacademy.firebasestorage.app",
+  messagingSenderId: "580691236498",
+  appId: "1:580691236498:web:5e61375516050fe87df84b",
 };
