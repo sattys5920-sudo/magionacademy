@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#140D1E">
+<title>별빛 아카데미 · 걸어 다니는 학교 시안</title>
+<style>
+@font-face{font-family:'G11B';src:url(fonts/Galmuri11-Bold.woff2) format('woff2')}
+@font-face{font-family:'G7';src:url(fonts/Galmuri7.woff2) format('woff2')}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#0E0916;color:#F2EAD8;-webkit-font-smoothing:none;-webkit-tap-highlight-color:transparent}
+#app{position:relative;max-width:430px;height:100dvh;margin:0 auto;background:#140D1E;display:flex;flex-direction:column;overflow:hidden;font-family:'G7',monospace}
+#world{position:relative;width:100%;flex-shrink:0;touch-action:manipulation}
+canvas{display:block;width:100%;image-rendering:pixelated;cursor:pointer}
+.hud{position:absolute;left:10px;top:10px;right:10px;display:flex;justify-content:space-between;pointer-events:none}
+.chip{background:rgba(20,13,30,.85);padding:6px 10px;font-size:14px;line-height:16px;box-shadow:0 0 0 2px #3A2860}
+.chip b{font-family:'G11B',monospace;font-size:15px;color:#FFD866;display:block}
+.tag{position:absolute;transform:translate(-50%,-100%);font-size:12px;line-height:12px;padding:2px 4px;background:rgba(20,13,30,.75);white-space:nowrap;pointer-events:none}
+.tag.me{color:#FFD866}
+.bubble{position:absolute;transform:translate(-50%,-100%);background:#FAF1E2;color:#3A2860;padding:8px 10px;font-size:14px;line-height:18px;box-shadow:0 0 0 3px #22183F;white-space:nowrap;text-align:center}
+.bubble button{display:block;margin:6px auto 0;font-family:'G11B',monospace;font-size:14px;background:#8CE6B0;border:2px solid #22183F;padding:4px 10px;color:#1E3A2A}
+.panel{flex:1;overflow-y:auto;padding:14px 16px 24px;display:flex;flex-direction:column;gap:10px;background:#FAF1E2;color:#3A2860;border-top:4px solid #22183F}
+.panel h3{margin:0;font-family:'G11B',monospace;font-size:16px;font-weight:normal}
+.panel p{margin:0;font-size:14px;line-height:20px}
+.rooms{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.rooms div{background:#fff;border:2px solid #E8DCF0;padding:8px 4px;text-align:center;font-size:14px}
+.rooms div.on{border:3px solid #3A2860;background:#FFF6D8}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="world"><canvas id="cv"></canvas>
+    <div class="hud"><div class="chip"><b>물약 연구실</b>지하 1층 · 바닥을 눌러 걸어요</div><div class="chip" id="who">지금 4명</div></div>
+  </div>
+  <div class="panel">
+    <h3>걸어 다니는 학교 · 시안</h3>
+    <p>바닥을 누르면 그 자리로 걸어가요. 솥이나 책상, 수정구를 누르면 그 앞으로 가서 할 수 있는 일이 떠요. 다른 학생들은 실제 게임에서는 지금 접속한 친구들이에요.</p>
+    <div class="rooms"><div class="on">물약 연구실</div><div>약초 온실</div><div>생물 사육장</div><div>기숙사 방</div><div>대강당</div><div>마법 시장</div></div>
+    <p style="color:#9480B4">마음에 들면 이 느낌으로 방을 하나씩 만들고, 문으로 이어서 학교 전체를 걸어 다니게 할게요.</p>
+  </div>
+</div>
+<script>
+const M = {"W": 195, "H": 184, "N": 10, "OX": 97, "OY": 66, "objs": [{"name": "cauldron", "tiles": [[4, 2], [5, 2], [4, 3], [5, 3]], "sx": 0, "sw": 29, "sh": 39, "x": 99, "y": 72, "key": 8}, {"name": "desk", "tiles": [[1, 4], [1, 5]], "sx": 30, "sw": 27, "sh": 28, "x": 56, "y": 72, "key": 6}, {"name": "chair", "tiles": [[2, 5]], "sx": 58, "sw": 14, "sh": 21, "x": 68, "y": 81, "key": 7}, {"name": "table", "tiles": [[7, 5], [8, 5]], "sx": 73, "sw": 21, "sh": 26, "x": 107, "y": 98, "key": 13}, {"name": "armchair", "tiles": [[7, 8]], "sx": 95, "sw": 18, "sh": 26, "x": 81, "y": 109, "key": 15}, {"name": "lamp", "tiles": [[8, 1]], "sx": 114, "sw": 14, "sh": 35, "x": 147, "y": 75, "key": 9}, {"name": "plant", "tiles": [[0, 8]], "sx": 129, "sw": 18, "sh": 26, "x": 25, "y": 78, "key": 8}, {"name": "barrels", "tiles": [[9, 7], [9, 8]], "sx": 148, "sw": 22, "sh": 23, "x": 98, "y": 117, "key": 17}, {"name": "books", "tiles": [[1, 1]], "sx": 171, "sw": 12, "sh": 15, "x": 91, "y": 65, "key": 2}], "lights": [{"p": [113, 98], "dy": -8, "r": 46, "c": [90, 255, 160], "a": 0.55, "f": 1}, {"p": [153.0, 106.0], "dy": -26, "r": 34, "c": [255, 200, 120], "a": 0.5, "f": 0}, {"p": [67.4, 91.2], "dy": -18, "r": 22, "c": [255, 190, 100], "a": 0.55, "f": 1}, {"p": [117.0, 120.0], "dy": -17, "r": 18, "c": [140, 180, 255], "a": 0.45, "f": 0}, {"p": [62, 45.5], "dy": 0, "r": 20, "c": [255, 190, 110], "a": 0.5, "f": 1}, {"p": [88, 32.5], "dy": 0, "r": 20, "c": [255, 190, 110], "a": 0.5, "f": 1}, {"p": [136, 47.5], "dy": 0, "r": 20, "c": [255, 190, 110], "a": 0.5, "f": 1}, {"p": [160, 59.5], "dy": 0, "r": 20, "c": [255, 190, 110], "a": 0.5, "f": 1}, {"p": [149, 52.0], "dy": 0, "r": 26, "c": [110, 150, 255], "a": 0.28, "f": 0}, {"p": [75, 37.0], "dy": 0, "r": 26, "c": [110, 150, 255], "a": 0.28, "f": 0}]};
+// 장면 전체는 숨은 캔버스(sc)에 그리고, 화면(cv)에는 내 캐릭터를 따라가는 카메라 부분만 크게 보여 줘요
+const VW = 140, VH = 150;
+const cv = document.getElementById('cv'), out = cv.getContext('2d');
+cv.width = VW; cv.height = VH;
+const sc = document.createElement('canvas'); sc.width = M.W; sc.height = M.H; const cx = sc.getContext('2d');
+let camX = 0, camY = 0;
+const world = document.getElementById('world');
+const img = s => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = s; });
+const P = (tx, ty) => [M.OX + (tx - ty) * 8, M.OY + (tx + ty) * 4];
+const blocked = new Set(M.objs.flatMap(o => o.tiles.map(([a, b]) => a + ',' + b)));
+const free = (x, y) => x >= 0 && y >= 0 && x < M.N && y < M.N && !blocked.has(x + ',' + y);
+function path(sx, sy, gx, gy){
+  if (!free(gx, gy)) return null;
+  const prev = new Map([[sx + ',' + sy, null]]), q = [[sx, sy]];
+  while (q.length){
+    const [x, y] = q.shift();
+    if (x === gx && y === gy) break;
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const k = (x + dx) + ',' + (y + dy);
+      if (free(x + dx, y + dy) && !prev.has(k)){ prev.set(k, [x, y]); q.push([x + dx, y + dy]); }
+    }
+  }
+  if (!prev.has(gx + ',' + gy)) return null;
+  const out = []; let c = [gx, gy];
+  while (c && !(c[0] === sx && c[1] === sy)){ out.unshift(c); c = prev.get(c[0] + ',' + c[1]); }
+  return out;
+}
+// 학생: 위치(소수), 가는 길, 방향(앞/뒤, 좌우 뒤집기)
+const mk = (name, look, x, y, me) => ({ name, look, x, y, path: [], back: false, flip: false, me, t: 0, idle: 0 });
+const people = [mk('나', 1, 5, 8, true), mk('루나', 0, 2, 2, false), mk('도토리', 3, 8, 3, false), mk('해랑', 2, 4, 6, false)];
+const me = people[0];
+document.getElementById('who').textContent = `지금 ${people.length}명`;
+const tags = people.map(p => { const d = document.createElement('div'); d.className = 'tag' + (p.me ? ' me' : ''); d.textContent = p.name; world.appendChild(d); return d; });
+const ACTS = {
+  cauldron: { text: '부글부글 끓는 솥이에요', btn: '물약 끓이기' },
+  desk: { text: '레시피 노트가 펼쳐져 있어요', btn: '도감 보기' },
+  table: { text: '수정구 속에 무언가 보여요', btn: '오늘의 운세' },
+  armchair: { text: '푹신한 안락의자', btn: '앉아서 쉬기' },
+  barrels: { text: '재료가 가득한 통', btn: '재료함 열기' },
+};
+let bubble = null, pendingAct = null;
+function showBubble(o){
+  hideBubble();
+  const a = ACTS[o.name]; if (!a) return;
+  const b = document.createElement('div'); b.className = 'bubble';
+  b.innerHTML = `${a.text}<button>${a.btn}</button>`;
+  b.querySelector('button').onclick = e => { e.stopPropagation(); b.innerHTML = `<b>${a.btn}</b><br>실제 게임에서는 여기서<br>지금의 그 화면이 열려요`; };
+  world.appendChild(b); bubble = { el: b, o };
+}
+function hideBubble(){ bubble?.el.remove(); bubble = null; }
+function goTo(p, gx, gy){
+  const sx = Math.round(p.x), sy = Math.round(p.y);
+  const r = path(sx, sy, gx, gy); if (!r) return false;
+  p.path = r; return true;
+}
+function objAt(x, y){
+  return M.objs.filter(o => ACTS[o.name] && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh).sort((a, b) => b.key - a.key)[0];
+}
+cv.addEventListener('pointerdown', e => {
+  const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) * VW / r.width + camX, y = (e.clientY - r.top) * VH / r.height + camY;
+  const o = objAt(x, y);
+  if (o){
+    // 물건 옆 빈칸 중 가장 가까운 곳으로
+    const cand = []; o.tiles.forEach(([a, b]) => [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx, dy]) => free(a + dx, b + dy) && cand.push([a + dx, b + dy])));
+    cand.sort((p1, p2) => Math.hypot(p1[0] - me.x, p1[1] - me.y) - Math.hypot(p2[0] - me.x, p2[1] - me.y));
+    hideBubble();
+    for (const c of cand) if (goTo(me, c[0], c[1])){ pendingAct = o; return; }
+    return;
+  }
+  const tx = Math.floor(((x - M.OX) / 8 + (y - M.OY) / 4) / 2), ty = Math.floor(((y - M.OY) / 4 - (x - M.OX) / 8) / 2);
+  hideBubble(); pendingAct = null;
+  goTo(me, tx, ty);
+});
+const SPEED = 3.2;   // 타일/초
+function step(p, dt){
+  if (!p.path.length){
+    if (p.me && pendingAct){ showBubble(pendingAct); pendingAct = null; }
+    if (!p.me && (p.idle -= dt) < 0){
+      p.idle = 2 + Math.random() * 4;
+      for (let i = 0; i < 20; i++){ const gx = Math.floor(Math.random() * M.N), gy = Math.floor(Math.random() * M.N); if (goTo(p, gx, gy)) break; }
+    }
+    p.t = 0; return;
+  }
+  const [gx, gy] = p.path[0], dx = gx - p.x, dy = gy - p.y, d = Math.hypot(dx, dy);
+  // 방향: +x 오른쪽 아래(앞), +y 왼쪽 아래(앞, 뒤집기), -x 왼쪽 위(뒤), -y 오른쪽 위(뒤, 뒤집기)
+  if (Math.abs(dx) > Math.abs(dy)){ p.back = dx < 0; p.flip = dx < 0; } else if (d > 0){ p.back = dy < 0; p.flip = dy > 0; }
+  const mv = SPEED * dt;
+  if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; }
+  p.t += dt;
+}
+let A = {};
+const glowCache = {};
+function glow(r, c){
+  const k = r + c.join(); if (glowCache[k]) return glowCache[k];
+  const g = document.createElement('canvas'); g.width = g.height = r * 2; const x = g.getContext('2d');
+  const gr = x.createRadialGradient(r, r, 0, r, r, r); gr.addColorStop(0, `rgba(${c},1)`); gr.addColorStop(.35, `rgba(${c},.45)`); gr.addColorStop(1, `rgba(${c},0)`);
+  x.fillStyle = gr; x.fillRect(0, 0, r * 2, r * 2); return glowCache[k] = g;
+}
+const bubbles = [];
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  people.forEach(p => step(p, dt));
+  cx.clearRect(0, 0, M.W, M.H);
+  cx.drawImage(A.bg, 0, 0);
+  // 깊이 정렬: 물건은 발판 타일 합, 사람은 현재 위치 합
+  const items = M.objs.map(o => ({ k: o.key, draw: () => cx.drawImage(A.obj, o.sx, 0, o.sw, o.sh, o.x, o.y, o.sw, o.sh) }));
+  people.forEach((p, i) => {
+    const [sx, sy] = P(p.x + .5, p.y + .5);
+    items.push({ k: p.x + p.y + .6, draw: () => {
+      cx.fillStyle = 'rgba(10,5,20,.35)'; cx.beginPath(); cx.ellipse(sx, sy, 5, 2, 0, 0, Math.PI * 2); cx.fill();
+      const moving = p.path.length > 0, f = moving ? 1 + Math.floor(p.t * 8) % 2 : 0;
+      const col = (p.back ? 3 : 0) + f;
+      const X = Math.round(sx), Y = Math.round(sy) - 23;
+      if (p.flip){ cx.save(); cx.translate(X + 7, Y); cx.scale(-1, 1); cx.drawImage(A.st, col * 14, p.look * 24, 14, 24, 0, 0, 14, 24); cx.restore(); }
+      else cx.drawImage(A.st, col * 14, p.look * 24, 14, 24, X - 7, Y, 14, 24);
+    }});
+  });
+  items.sort((a, b) => a.k - b.k).forEach(it => it.draw());
+  // 솥 거품
+  if (Math.random() < .15){ const [bx, by] = P(5, 3); bubbles.push({ x: bx - 6 + Math.random() * 12, y: by - 10, v: 8 + Math.random() * 8, life: 1.4 }); }
+  bubbles.forEach(b => { b.y -= b.v * dt; b.life -= dt; }); while (bubbles.length && bubbles[0].life <= 0) bubbles.shift();
+  cx.fillStyle = '#9CFFD0'; bubbles.forEach(b => cx.fillRect(Math.round(b.x), Math.round(b.y), 1 + (b.life > .8 ? 1 : 0), 1 + (b.life > .8 ? 1 : 0)));
+  // 어둠 + 불빛
+  cx.globalCompositeOperation = 'multiply'; cx.fillStyle = 'rgb(150,130,175)'; cx.fillRect(0, 0, M.W, M.H);
+  cx.globalCompositeOperation = 'lighter';
+  M.lights.forEach((L, i) => {
+    const fl = L.f ? .85 + .15 * Math.sin(now / 130 + i * 1.7) * Math.sin(now / 370 + i) : 1;
+    cx.globalAlpha = L.a * fl; const g = glow(L.r, L.c); cx.drawImage(g, L.p[0] - L.r, L.p[1] + L.dy - L.r);
+  });
+  cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
+  // 카메라: 내 캐릭터를 부드럽게 따라가요
+  const [mx, my] = P(me.x + .5, me.y + .5);
+  const tx = Math.max(0, Math.min(M.W - VW, mx - VW / 2)), ty = Math.max(0, Math.min(158 - VH, my - 12 - VH / 2));
+  camX += (tx - camX) * Math.min(1, dt * 5); camY += (ty - camY) * Math.min(1, dt * 5);
+  const ix = Math.round(camX), iy = Math.round(camY);
+  out.fillStyle = '#140D1E'; out.fillRect(0, 0, VW, VH);
+  out.drawImage(sc, ix, iy, VW, VH, 0, 0, VW, VH);
+  // 이름표·말풍선 (화면 좌표)
+  const k = cv.getBoundingClientRect().width / VW;
+  people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); tags[i].style.left = (sx - ix) * k + 'px'; tags[i].style.top = (sy - 25 - iy) * k + 'px'; });
+  if (bubble){ const o = bubble.o; bubble.el.style.left = Math.max(80, Math.min(cv.clientWidth - 80, (o.x + o.sw / 2 - ix) * k)) + 'px'; bubble.el.style.top = (o.y - 2 - iy) * k + 'px'; }
+  requestAnimationFrame(frame);
+}
+Promise.all([img('art/iso/lab_bg.png'), img('art/iso/lab_obj.png'), img('art/iso/students.png')]).then(([bg, obj, st]) => { A = { bg, obj, st }; requestAnimationFrame(frame); });
+</script>
+</body>
+</html>
