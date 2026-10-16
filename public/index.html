@@ -305,6 +305,7 @@ function render(){
   if (sub === 'dorm') return renderDorm();
   if (sub === 'visit') return renderVisit();
   if (sub === 'event') return renderEvent();
+  if (sub === 'exam') return renderExam();
   ({ home:renderHome, lab:renderLab, green:renderGreen, ranch:renderRanch, market:renderMarket })[tab]();
 }
 
@@ -334,7 +335,7 @@ function renderHome(){
       </div></div>
     </section>
     <div class="tiles">
-      <button class="tile px" id="goClass">${ic('book')}<span class="main"><span class="b">${classDone ? '수업 끝' : '수업 듣기'}</span><span class="s sub">${classDone ? '내일 또 와요' : '레시피 힌트 얻기'}</span></span></button>
+      <button class="tile px" id="goClass">${ic('book')}<span class="main"><span class="b">${classDone ? '수업 끝' : '수업 듣기'}</span><span class="s ${examStarted() ? 'sub' : ''}" style="${examStarted() ? '' : 'color:#C2385E'}">${!examStarted() ? '쪽지시험 있음!' : classDone ? '내일 또 와요' : '레시피 힌트 얻기'}</span></span></button>
       <button class="tile px" id="goDorm">${ic('bed')}<span class="main"><span class="b">내 방</span><span class="s sub">${H.name} ${roomNo(me.house, uid || me.nick)}호</span></span></button>
     </div>
     ${solo ? `<div class="hint">혼자 해 보기 모드예요. 로그인하면 친구들 방에 놀러 갈 수 있어요.</div>` : `
@@ -387,7 +388,15 @@ function renderClass(){
       ${pool.map(k => `<button class="cell" data-rune="${k}" ${done || wrong || ok ? 'disabled' : ''}>${ic(k)}<span class="s">${({star:'별',drop:'물',herb:'잎',scale:'불'})[k]}</span></button>`).join('')}
     </div>
     ${hint(wrong ? '앗, 문양이 흐트러졌어요. 다시 해 볼까요?' : ok ? '성공! 연구실 레시피 노트에 새 힌트가 적혔어요.' : done ? '오늘 수업은 이미 들었어요. 내일 또 와요.' : '', `수업을 잘 들으면 물약 레시피 힌트를 얻어요 · ${classInput.length} / 4`)}
-    ${wrong ? '<button class="btn" id="retry">다시 하기</button>' : ''}`);
+    ${wrong ? '<button class="btn" id="retry">다시 하기</button>' : ''}
+    <section class="sec">
+      ${secH('이번 주 쪽지시험', examDone() ? `${me.exam.score}점 · ${gradeOf(me.exam.score)}` : examStarted() ? '응시함' : '아직 안 봤어요')}
+      <div class="box px" style="padding:10px 12px;display:flex;align-items:center;gap:10px">${ic('rune')}
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span class="s">배운 레시피·기숙사·생물에서 10문제</span><span class="s sub">한 번만 볼 수 있어요 · 문제당 20초</span></div>
+        <button class="btn sm ${examStarted() ? '' : 'go'}" id="goExam">${examStarted() ? '결과' : '시험 보기'}</button>
+      </div>
+    </section>`);
+  $('#goExam').onclick = () => { if (examStarted()){ exam = null; sub = 'exam'; render(); } else if (confirm('쪽지시험은 일주일에 한 번만 볼 수 있어요. 지금 볼까요?')) startExam(); };
   on('[data-rune]', b => {
     classInput.push(b.dataset.rune);
     const w = classInput.some((v, i) => v !== seq[i]);
@@ -660,6 +669,119 @@ function renderVisit(){
     me.wrote[visitUid] = todayKey(); giftPick = null; save();
     toast('방명록을 남겼어요!'); renderVisit();
   };
+}
+
+// ===== 주간 쪽지시험: 일주일에 한 번, 10문제 =====
+const EXAM_N = 10, EXAM_SEC = 20;
+const examDone = () => me.exam?.week === coopWeek() && me.exam.done;
+const examStarted = () => me.exam?.week === coopWeek();
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = (a, n, not = []) => shuffle(a.filter(x => !not.includes(x))).slice(0, n);
+// 받침에 맞춰 조사 고르기: josa('물약', '을', '를') → '을'
+const josa = (w, a, b, ro) => { const c = String(w).charCodeAt(String(w).length - 1); if (c < 0xAC00 || c > 0xD7A3) return b; const jong = (c - 0xAC00) % 28; return ro ? (jong === 0 || jong === 8 ? b : a) : jong ? a : b; };
+const gradeOf = s => s >= 100 ? 'A+' : s >= 90 ? 'A' : s >= 80 ? 'B+' : s >= 70 ? 'B' : s >= 60 ? 'C' : 'D';
+// 문제 만들기: 내가 레시피를 아는 물약 + 누구나 아는 학교 상식
+function makeExam(){
+  const known = POTIONS.filter(p => me.hints.includes(p) || me.found.includes(p));
+  const Q = [];
+  const q4 = (t, q, a, wrong) => Q.push({ t, q, a, choices: shuffle([a, ...wrong.slice(0, 3)]) });
+  known.forEach(p => {
+    q4('recipe', `「${recipeText(p)}」${josa(recipeText(p), '으로', '로', true)} 만드는 물약은?`, ITEM[p], pick(POTIONS, 3, [p]).map(x => ITEM[x]));
+    q4('recipe', `「${ITEM[p]}」의 레시피는?`, recipeText(p), pick(POTIONS, 3, [p]).map(recipeText));
+  });
+  HOUSE_KEYS.forEach(k => {
+    q4('house', `「${HOUSES[k].name}」 기숙사의 시간은?`, hoursText(HOUSES[k]), HOUSE_KEYS.filter(x => x !== k).map(x => hoursText(HOUSES[x])));
+    q4('house', `「${HOUSES[k].perk}」 보너스를 받는 기숙사는?`, HOUSES[k].name, HOUSE_KEYS.filter(x => x !== k).map(x => HOUSES[x].name));
+    q4('time', `「${ITEM[TIME_MAT[k]]}」${josa(ITEM[TIME_MAT[k]], '을', '를')} 주울 수 있는 시간은?`, hoursText(HOUSES[k]), HOUSE_KEYS.filter(x => x !== k).map(x => hoursText(HOUSES[x])));
+  });
+  CREATURES.forEach((c, i) => q4('ranch', `사육장의 「${c.kind}」${josa(c.kind, '이', '가')} 주는 재료는?`, ITEM[c.mat], CREATURES.filter((_, j) => j !== i).map(x => ITEM[x.mat])));
+  POTIONS.filter(p => POTION_INFO[p].time).forEach(p => q4('time', `「${ITEM[p]}」${josa(ITEM[p], '을', '를')} 끓일 수 있는 시간은?`, hoursText(HOUSES[POTION_INFO[p].time]), HOUSE_KEYS.filter(x => x !== POTION_INFO[p].time).map(x => hoursText(HOUSES[x]))));
+  known.filter(p => POTION_INFO[p].use).forEach(p => q4('use', `「${POTION_INFO[p].use}」 효과가 있는 물약은?`, ITEM[p], pick(POTIONS, 3, [p]).map(x => ITEM[x])));
+  // 레시피 문제는 최대 절반, 나머지는 섞어서
+  const recipeQs = shuffle(Q.filter(x => x.t === 'recipe')).slice(0, EXAM_N / 2);
+  const rest = shuffle(Q.filter(x => x.t !== 'recipe'));
+  return shuffle([...recipeQs, ...rest].slice(0, EXAM_N));
+}
+let exam = null;   // { qs, i, right, picked, t0 }
+function startExam(){
+  if (examStarted()) return;
+  me.exam = { week: coopWeek(), score: 0, done: false }; save();   // 도중에 나가도 한 번 본 걸로 쳐요
+  exam = { qs: makeExam(), i: 0, right: 0, picked: null, t0: Date.now() };
+  sub = 'exam'; render();
+}
+let examTick = 0;
+function renderExam(){
+  clearInterval(examTick);
+  if (!exam){ return renderExamResult(); }
+  const Qn = exam.qs[exam.i];
+  frame('class', '쪽지시험', `${exam.i + 1} / ${exam.qs.length}번 문제`, `
+    <section class="sec">
+      <div class="sec-h"><h3>${exam.i + 1}번</h3><span class="meta" id="exLeft"></span></div>
+      <div style="height:8px;background:var(--line)"><div id="exBar" style="height:100%;background:#6A4AC8;width:100%"></div></div>
+      <div class="box px" style="padding:14px 12px;min-height:72px;display:flex;align-items:center"><span style="line-height:22px">${Qn.q}</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px">${Qn.choices.map((c, j) => {
+        const shown = exam.picked !== null, isA = c === Qn.a, mine = exam.picked === j;
+        return `<button class="btn" data-ans="${j}" ${shown ? 'disabled' : ''} style="justify-content:flex-start;text-align:left;white-space:normal;min-height:48px;padding:6px 12px;${shown && isA ? 'background:var(--mint);opacity:1' : shown && mine ? 'background:#FFD0DA;opacity:1' : ''}"><span class="b" style="color:var(--sub);width:20px;flex-shrink:0">${'ABCD'[j]}</span><span style="font-family:'G9',monospace">${c}</span></button>`;
+      }).join('')}</div>
+      <div class="hint">맞힌 문제 ${exam.right}개 · 한 문제에 ${EXAM_SEC}초</div>
+    </section>`);
+  on('[data-ans]', b => answer(+b.dataset.ans));
+  if (exam.picked === null){
+    const tick = () => {
+      const left = EXAM_SEC - (Date.now() - exam.t0) / 1000;
+      const el = $('#exBar'); if (!el || sub !== 'exam') return clearInterval(examTick);
+      el.style.width = Math.max(0, left / EXAM_SEC * 100) + '%'; $('#exLeft').textContent = Math.ceil(Math.max(0, left)) + '초';
+      if (left <= 0) answer(-1);
+    };
+    tick(); examTick = setInterval(tick, 200);
+  }
+}
+function answer(j){
+  if (!exam || exam.picked !== null) return;
+  clearInterval(examTick);
+  exam.picked = j;
+  if (j >= 0 && exam.qs[exam.i].choices[j] === exam.qs[exam.i].a) exam.right++;
+  me.exam.score = exam.right * 10; save();
+  renderExam();
+  setTimeout(() => {
+    if (sub !== 'exam' || !exam) return;
+    exam.i++; exam.picked = null; exam.t0 = Date.now();
+    if (exam.i >= exam.qs.length) finishExam(); else renderExam();
+  }, 900);
+}
+function finishExam(){
+  const s = exam.right * 100 / exam.qs.length;
+  exam = null;
+  me.exam = { week: coopWeek(), score: Math.round(s), done: true };
+  const r = [];
+  if (s >= 60){ const g = Math.round(s * 2); me.coin += g; r.push(`장학금 ${g}G`); }
+  if (s >= 80){ const k = TIME_MAT[HOUSE_KEYS[Math.floor(Math.random() * 4)]]; me.inv[k] += 2; r.push(`${ITEM[k]} ×2`); }
+  if (s >= 100){ me.inv.egg += 1; r.push('용 알 껍질 ×1'); }
+  me.exam.reward = r.join(' · ') || '다음 주엔 장학금을 노려 봐요';
+  save();
+  if (!solo) F.set(F.ref(db, `exam/${coopWeek()}/${uid}`), me.exam.score).catch(() => {});
+  renderExamResult();
+}
+let examBoard = {}, examOff = null;
+function renderExamResult(){
+  const ex = me.exam || {};
+  if (!solo && !examOff) examOff = F.onValue(F.ref(db, `exam/${coopWeek()}`), s => { examBoard = s.val() || {}; if (sub === 'exam' && !exam) renderExamResult(); });
+  const board = solo ? { me: ex.score } : examBoard;
+  const avg = k => { const v = Object.entries(board).filter(([u]) => (solo ? me.house : playersList[u]?.house) === k).map(([, n]) => +n || 0); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
+  frame('class', '쪽지시험 결과', '이번 주 시험 끝!', `
+    <section class="sec">
+      <div class="box px" style="padding:16px;display:flex;align-items:center;gap:16px">
+        <div class="b" style="width:72px;height:72px;flex-shrink:0;border:4px solid #C2385E;color:#C2385E;display:flex;align-items:center;justify-content:center;font-size:30px;transform:rotate(-8deg)">${gradeOf(ex.score || 0)}</div>
+        <div style="display:flex;flex-direction:column;gap:4px"><span class="b" style="font-size:22px">${ex.score || 0}점</span><span class="s sub">${ex.reward || ''}</span></div>
+      </div>
+    </section>
+    <section class="sec">
+      ${secH('기숙사 평균', `${Object.keys(board).length}명 응시`)}
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">${HOUSE_KEYS.map(k => { const a = avg(k); return `<div style="background:${HOUSES[k].bg};border-top:3px solid ${HOUSES[k].col};padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:2px"><span class="s" style="color:${HOUSES[k].col}">${HOUSES[k].name}</span><span class="s" style="color:var(--gold2);letter-spacing:-1px">${a === null ? '·' : '★'.repeat(Math.max(1, Math.round(a / 20)))}</span><span class="b">${a === null ? '-' : a + '점'}</span></div>`; }).join('')}</div>
+      <div class="hint">새 시험은 다음 주에 열려요 · 60점부터 장학금, 80점부터 시간대 재료, 100점이면 용 알 껍질</div>
+    </section>
+    <button class="btn ghost" id="back" style="align-self:center">‹ 홈으로</button>`);
+  $('#back').onclick = () => { examOff?.(); examOff = null; sub = null; tab = 'home'; render(); };
 }
 
 // ===== 학교 행사: 정해진 시간에 다 같이 모이는 실시간 이벤트 =====
