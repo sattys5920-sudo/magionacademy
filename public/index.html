@@ -119,21 +119,44 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 const app = $('#app');
 
 // ===== 데이터 =====
-const ICONS = ['coin','mana','p_red','p_blue','p_green','p_purple','herb','mush','wool','uhair','scale','egg','heart','book','cauldron','clock','bag','owl','star','drop','seed','sprout','can','candle','bed','rune'];
+const ICONS = ['coin','mana','p_red','p_blue','p_green','p_purple','herb','mush','wool','uhair','scale','egg','heart','book','cauldron','clock','bag','owl','star','drop','seed','sprout','can','candle','bed','rune',
+  'p_grow','p_vigor','p_fluff','p_dragon','p_dawn','p_sun','p_dusk','p_moon','mist','sun','pollen','stardust'];
 const ic = (k, extra='') => `<i class="ic" style="background-position:${-32 * ICONS.indexOf(k)}px 0;${extra}"></i>`;
 const ITEM = {
   herb:'약초', drop:'달빛 이슬', mush:'보라 버섯', mana:'마력석', wool:'구름양 털', scale:'불도마뱀 비늘', uhair:'유니콘 갈기', egg:'용 알 껍질',
+  mist:'아침 안개', sun:'햇살 조각', pollen:'노을 꽃가루', stardust:'별가루',
   p_red:'치유 물약', p_green:'화염 저항 물약', p_blue:'잠꾸러기 물약', p_purple:'반짝 물약',
+  p_grow:'성장 물약', p_vigor:'활력 물약', p_fluff:'포근 물약', p_dragon:'용기의 물약',
+  p_dawn:'새벽빛 물약', p_sun:'한낮의 물약', p_dusk:'노을 물약', p_moon:'달그림자 물약',
 };
-const MATS = ['herb','drop','mush','mana','wool','scale','uhair','egg'];
-const POTIONS = ['p_red','p_green','p_blue','p_purple'];
-const RECIPES = { 'drop,herb,herb':'p_red', 'drop,mush,scale':'p_green', 'drop,mana,wool':'p_blue', 'drop,herb,uhair':'p_purple' };
-const HINTS = {
-  p_red: '치유 물약 = 약초 두 줌 + 달빛 이슬',
-  p_green: '화염 저항 물약 = 보라 버섯 + 불도마뱀 비늘 + 달빛 이슬',
-  p_blue: '잠꾸러기 물약 = 구름양 털 + 마력석 + 달빛 이슬',
-  p_purple: '반짝 물약 = 약초 + 달빛 이슬 + 반짝이는 갈기',
+const SHORT = { herb:'약초', drop:'이슬', mush:'버섯', mana:'마력석', wool:'털', scale:'비늘', uhair:'갈기', egg:'알 껍질', mist:'안개', sun:'햇살', pollen:'꽃가루', stardust:'별가루',
+  p_red:'치유', p_green:'화염 저항', p_blue:'잠꾸러기', p_purple:'반짝', p_grow:'성장', p_vigor:'활력', p_fluff:'포근', p_dragon:'용기', p_dawn:'새벽빛', p_sun:'한낮', p_dusk:'노을', p_moon:'달그림자' };
+const MATS = ['herb','drop','mush','mana','wool','scale','uhair','egg','mist','sun','pollen','stardust'];
+// 기숙사 시간대마다 한 번 주울 수 있는 재료
+const TIME_MAT = { dew:'mist', ember:'sun', dusk:'pollen', moon:'stardust' };
+// 물약 도감: r 재료 3개, pay 주문 보상, use 마시면 생기는 일, time 그 기숙사 시간에만 끓어요
+const POTION_INFO = {
+  p_red:    { r:['herb','herb','drop'],        pay:60,  desc:'양호실에서 늘 찾는 기본 물약' },
+  p_green:  { r:['mush','scale','drop'],       pay:90,  desc:'솥가마 근처에선 필수품' },
+  p_blue:   { r:['wool','mana','drop'],        pay:70,  desc:'한 모금이면 꿀잠' },
+  p_grow:   { r:['herb','mush','mush'],        pay:80,  use:'온실에서 자라는 식물이 모두 한 단계 자라요' },
+  p_vigor:  { r:['mana','scale','herb'],       pay:100, use:'마력 +15' },
+  p_fluff:  { r:['wool','wool','drop'],        pay:90,  use:'사육장 생물 모두 애정 +1' },
+  p_purple: { r:['herb','drop','uhair'],       pay:280, desc:'반 공동 의뢰에 쓰여요' },
+  p_dragon: { r:['egg','scale','mana'],        pay:320, desc:'아기 용이 준 껍질로만 만들 수 있어요' },
+  p_dawn:   { r:['mist','drop','herb'],        pay:160, time:'dew',   desc:'새벽에만 맑게 끓어요' },
+  p_sun:    { r:['sun','herb','scale'],        pay:160, time:'ember', desc:'한낮의 열기로 끓여요' },
+  p_dusk:   { r:['pollen','wool','uhair'],     pay:180, time:'dusk',  desc:'해 질 녘에만 색이 바뀌어요' },
+  p_moon:   { r:['stardust','drop','mana'],    pay:180, time:'moon',  desc:'달이 뜬 밤에만 굳어요' },
 };
+const POTIONS = Object.keys(POTION_INFO);
+const RECIPES = Object.fromEntries(POTIONS.map(p => [POTION_INFO[p].r.slice().sort().join(','), p]));
+const PAY = Object.fromEntries(POTIONS.map(p => [p, POTION_INFO[p].pay]));
+const recipeText = p => { const c = {}; POTION_INFO[p].r.forEach(k => c[k] = (c[k] || 0) + 1); return Object.entries(c).map(([k, n]) => ITEM[k] + (n > 1 ? ' ×' + n : '')).join(' + '); };
+const HINTS = Object.fromEntries(POTIONS.map(p => [p, `${ITEM[p]} = ${recipeText(p)}`]));
+const HINT_ORDER = ['p_green','p_blue','p_grow','p_vigor','p_fluff','p_purple','p_dawn','p_sun','p_dusk','p_moon','p_dragon'];
+const RANKS = [[12,'별빛 연금술사'],[8,'숙련 연금술사'],[4,'연금술사'],[0,'견습 연금술사']];
+const rankOf = n => RANKS.find(([k]) => n >= k)[1];
 const SEEDS = { herb:'약초', drop:'월광초', mush:'보라 버섯' };
 const CREATURES = [
   { name:'뭉게', kind:'구름양', food:'약초 주기', mat:'wool' },
@@ -172,7 +195,6 @@ const waterCost = () => me.house === 'dew' ? 0 : 1;
 const payOf = o => me.house === 'moon' ? Math.round(o.pay * 1.1) : o.pay;
 
 const ORDER_FROM =['양호 선생님', '교장실', '같은 반 친구', '사육장 관리인', '도서관 사서', '천문탑'];
-const PAY = { p_red:60, p_green:90, p_blue:70, p_purple:280 };
 
 function freshPlayer(nick, look, house){
   return {
@@ -182,16 +204,37 @@ function freshPlayer(nick, look, house){
     plots:[{k:'herb',st:2,w:false},{k:'drop',st:1,w:false},{k:null,st:0,w:false},{k:null,st:0,w:false},{k:null,st:0,w:false},{k:null,st:0,w:false}],
     cr:[{full:3,love:3},{full:2,love:2},{full:3,love:2},{full:2,love:1}],
     furn:{ candle:{own:1,on:1}, bed:{own:1,on:1}, owl:{own:1,on:1} },
-    orders:makeOrders(1), classDay:0,
+    orders:makeOrders(1, ['p_red'], []), classDay:0, gathered:'',
   };
 }
-function makeOrders(day){
+// 주문은 내가 레시피를 아는 물약만 와요. 시간대 물약은 한 번 만들어 본 뒤부터.
+function makeOrders(day, hints, found){
+  const pool = POTIONS.filter(p => POTION_INFO[p].time ? found.includes(p) : hints.includes(p));
+  if (!pool.length) pool.push('p_red');
   const out = [];
   for (let i = 0; i < 3; i++){
-    const p = POTIONS[(day * 7 + i * 3) % (day < 4 ? 3 : 4)];
-    out.push({ p, n: 1 + ((day + i) % 2), pay: PAY[p], from: ORDER_FROM[(day + i * 2) % ORDER_FROM.length], done:false });
+    let p = pool[(day * 7 + i * 5) % pool.length];
+    if (POTION_INFO[p].time && out.some(o => POTION_INFO[o.p].time)) p = pool.find(x => !POTION_INFO[x].time) || p;  // 시간대 물약 주문은 하루 하나까지
+    out.push({ p, n: POTION_INFO[p].time || PAY[p] >= 280 ? 1 : 1 + ((day + i) % 2), pay: PAY[p], from: ORDER_FROM[(day + i * 2) % ORDER_FROM.length], done:false });
   }
   return out;
+}
+// 저장된 데이터에서 빠진 칸을 채워요 (Firebase는 빈 배열과 빈 객체를 저장하지 않아요)
+function normalize(p){
+  p.inv = p.inv || {}; Object.keys(ITEM).forEach(k => { p.inv[k] = p.inv[k] || 0; });
+  p.found = p.found || []; p.hints = p.hints || ['p_red']; p.furn = p.furn || {};
+  p.orders = p.orders || []; p.gathered = p.gathered || '';
+  return p;
+}
+// 기숙사 시간대 하나 = 채집 한 번. 자정을 넘는 밤 시간은 시작한 날로 쳐요.
+const windowKey = () => { const d = new Date(); if (d.getHours() < 5) d.setDate(d.getDate() - 1); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}-${houseNow()}`; };
+function usePotion(p){
+  if (!POTION_INFO[p].use || me.inv[p] < 1) return '';
+  me.inv[p]--;
+  if (p === 'p_grow'){ let n = 0; me.plots.forEach(x => { if (x.st >= 1 && x.st < 4){ x.st++; n++; } }); save(); return n ? `화단 ${n}칸이 쑥 자랐어요!` : '자랄 식물이 없어서 물약이 땅으로 스며들었어요.'; }
+  if (p === 'p_vigor'){ me.mana += 15; save(); return '기운이 솟아요! 마력 +15'; }
+  if (p === 'p_fluff'){ me.cr.forEach(c => { c.love = Math.min(5, c.love + 1); }); save(); return '사육장에 포근한 향이 퍼졌어요. 모두 애정 +1'; }
+  return '';
 }
 const cozyOf = me => FURN.reduce((a, f) => a + (me.furn[f.id]?.on ? f.pts : 0), 0);
 
@@ -266,6 +309,13 @@ function renderHome(){
           ${o.done ? '<span class="tag">완료</span>' : `<button class="btn sm ${have ? 'go' : ''}" data-deliver="${i}" ${have ? '' : 'disabled'}>${ic('coin', 'transform:scale(.7);margin:0 -6px')}${payOf(o)}</button>`}</div>`;
       }).join('')}</div>
     </section>
+    <section class="sec">
+      ${secH('채집', `${N.name}의 시간 재료`)}
+      <div class="box px"><div class="li">${ic(TIME_MAT[nowK])}
+        <div class="main"><span class="t">${ITEM[TIME_MAT[nowK]]}</span><span class="d">${me.gathered === windowKey() ? `주웠어요 · 다음은 ${HOUSES[HOUSE_KEYS[(HOUSE_KEYS.indexOf(nowK) + 1) % 4]].from}시부터` : `${hoursText(N)}에만 주울 수 있어요${mine ? ' · 내 기숙사 +1' : ''}`}</span></div>
+        <button class="btn sm ${me.gathered === windowKey() ? '' : 'go'}" id="gather" ${me.gathered === windowKey() ? 'disabled' : ''}>${me.gathered === windowKey() ? '완료' : `줍기 ×${mine ? 3 : 2}`}</button>
+      </div></div>
+    </section>
     <div class="tiles">
       <button class="tile px" id="goClass">${ic('book')}<span class="main"><span class="b">${classDone ? '수업 끝' : '수업 듣기'}</span><span class="s sub">${classDone ? '내일 또 와요' : '레시피 힌트 얻기'}</span></span></button>
       <button class="tile px" id="goDorm">${ic('bed')}<span class="main"><span class="b">내 방</span><span class="s sub">${H.name} ${roomNo(me.house, uid || me.nick)}호</span></span></button>
@@ -289,6 +339,12 @@ function renderHome(){
     toast(`${o.from}에게 ${ITEM[o.p]}을(를) 전했어요. +${pay}G`); render();
   });
   on('[data-visit]', b => openVisit(b.dataset.visit));
+  $('#gather').onclick = () => {
+    if (me.gathered === windowKey()) return;
+    const k = TIME_MAT[houseNow()], n = myTime() ? 3 : 2;
+    me.inv[k] += n; me.gathered = windowKey(); save();
+    toast(`${ITEM[k]} ${n}개를 주웠어요!`); render();
+  };
   $('#goClass').onclick = () => { sub = 'class'; render(); };
   $('#goDorm').onclick = () => { sub = 'dorm'; render(); };
 }
@@ -301,7 +357,7 @@ function renderClass(){
   const seq = [0, 1, 2, 3].map(i => pool[(me.day * 5 + i * 3 + (i * i)) % 4]);
   const wrong = classInput.some((v, i) => v !== seq[i]);
   const ok = !wrong && classInput.length === seq.length;
-  const next = POTIONS.find(p => !me.hints.includes(p));
+  const next = HINT_ORDER.find(p => !me.hints.includes(p));
   frame('class', '3교시 · 문양학', done && !ok ? '오늘 수업은 끝났어요' : '칠판을 보고 따라 그려요', `
     <section class="sec">
       <div class="sec-h"><h3>칠판의 문양을 순서대로</h3>${backBtn}</div>
@@ -331,9 +387,11 @@ function renderClass(){
 
 // ===== 연구실 =====
 let slots = [], brewMsg = null;
-const shortName = k => ITEM[k].replace('불도마뱀 ', '').replace('유니콘 ', '').replace('구름양 ', '').replace('용 알 ', '알 ').replace(' 물약', '');
+const shortName = k => SHORT[k] || ITEM[k];
+let dexSel = null;
 function renderLab(){
-  frame('lab', '물약 연구실', `도감 ${me.found.length} / ${POTIONS.length}`, `
+  const n = me.found.length, sel = dexSel && POTION_INFO[dexSel];
+  frame('lab', '물약 연구실', `${rankOf(n)} · 도감 ${n} / ${POTIONS.length}`, `
     <section class="sec">
       ${secH('솥', `재료 3개 · 마력 ${brewCost()}`)}
       <div class="grid" style="grid-template-columns:repeat(3,1fr)">
@@ -343,29 +401,49 @@ function renderLab(){
       ${hint(brewMsg, '아래 재료를 눌러 솥에 넣어요. 넣은 재료를 누르면 다시 빼요.')}
     </section>
     <section class="sec">
-      ${secH('재료함')}
+      ${secH('재료함', '시간대 재료는 홈에서 주워요')}
       <div class="grid" style="grid-template-columns:repeat(4,1fr)">
         ${MATS.map(k => { const left = me.inv[k] - slots.filter(s => s === k).length; return `<button class="cell" data-add="${k}" ${left > 0 && slots.length < 3 ? '' : 'disabled'}>${ic(k)}<span class="s">${shortName(k)}</span><span class="n">${left}</span></button>`; }).join('')}
       </div>
     </section>
     <section class="sec">
-      ${secH('레시피 노트', `${me.hints.length}개 알아냄`)}
-      <div class="box px">${me.hints.map(h => `<div class="li">${ic(h)}<div class="main"><span class="t">${ITEM[h]}${me.found.includes(h) ? '' : ' <span class="tag">아직 못 만듦</span>'}</span><span class="d">${HINTS[h].split('= ')[1]}</span></div><span class="b" style="color:#6A4AC8">${me.inv[h]}병</span></div>`).join('')}</div>
-      <div class="hint">수업을 들으면 노트에 새 레시피가 적혀요</div>
+      ${secH('물약 도감', `${n} / ${POTIONS.length} 발견`)}
+      <div class="grid" style="grid-template-columns:repeat(4,1fr)">
+        ${POTIONS.map(p => {
+          const got = me.found.includes(p), known = me.hints.includes(p), T = POTION_INFO[p].time;
+          return `<button class="cell ${dexSel === p ? 'sel' : ''}" data-dex="${p}" style="${T ? `background:${HOUSES[T].bg}` : ''}">
+            ${ic(p, got ? '' : known ? 'opacity:.45' : 'filter:brightness(0);opacity:.18')}<span class="s ${got ? '' : 'sub'}">${got || known ? shortName(p) : '???'}</span>${me.inv[p] ? `<span class="n">${me.inv[p]}</span>` : ''}</button>`;
+        }).join('')}
+      </div>
+      ${sel ? `<div class="box px" style="padding:10px 12px;display:flex;flex-direction:column;gap:6px">
+        <div class="sec-h"><h3>${me.found.includes(dexSel) || me.hints.includes(dexSel) ? ITEM[dexSel] : '아직 모르는 물약'}</h3>${sel.time ? houseTag(sel.time) : `<span class="meta">주문 ${sel.pay}G</span>`}</div>
+        ${sel.time ? `<span class="s" style="color:${HOUSES[sel.time].col}">${HOUSES[sel.time].name}의 시간(${hoursText(HOUSES[sel.time])})에만 끓어요 · 주문 ${sel.pay}G</span>` : ''}
+        <span class="s">${me.hints.includes(dexSel) || me.found.includes(dexSel) ? '레시피 · ' + recipeText(dexSel) : '수업을 듣거나, 재료를 섞어 보며 찾아봐요.'}</span>
+        ${sel.use ? `<span class="s sub">마시면 · ${sel.use}</span>` : sel.desc ? `<span class="s sub">${sel.desc}</span>` : ''}
+        ${sel.use ? `<button class="btn sm go" id="drink" ${me.inv[dexSel] ? '' : 'disabled'}>마시기 (${me.inv[dexSel]}병)</button>` : ''}
+      </div>` : '<div class="hint">물약을 누르면 레시피와 쓰임새를 볼 수 있어요</div>'}
     </section>`);
   on('[data-add]', b => { slots.push(b.dataset.add); brewMsg = null; renderLab(); });
   on('[data-take]', b => { slots.splice(+b.dataset.take, 1); renderLab(); });
+  on('[data-dex]', b => { dexSel = dexSel === b.dataset.dex ? null : b.dataset.dex; renderLab(); });
+  const dk = $('#drink'); if (dk) dk.onclick = () => { brewMsg = usePotion(dexSel); renderLab(); };
   $('#brew').onclick = () => {
     const key = slots.slice().sort().join(',');
+    const p = RECIPES[key], T = p && POTION_INFO[p].time;
+    if (T && houseNow() !== T){
+      brewMsg = `솥이 잠잠해요... 이 조합은 ${HOUSES[T].name}의 시간(${hoursText(HOUSES[T])})에만 끓어요. 재료는 그대로 있어요.`;
+      return renderLab();
+    }
     slots.forEach(k => me.inv[k]--);
     me.mana -= brewCost();
-    const p = RECIPES[key];
     if (p){
       me.inv[p]++;
       const isNew = !me.found.includes(p);
       if (isNew) me.found.push(p);
       if (!me.hints.includes(p)) me.hints.push(p);
-      brewMsg = `${ITEM[p]} 완성!${isNew ? ' 새 레시피를 도감에 적었어요.' : ''}`;
+      const rankUp = isNew && rankOf(me.found.length) !== rankOf(me.found.length - 1);
+      brewMsg = `${ITEM[p]} 완성!${isNew ? ' 도감에 새로 적었어요.' : ''}${rankUp ? ` 이제 「${rankOf(me.found.length)}」이에요!` : ''}`;
+      dexSel = p;
     } else if (me.house === 'ember' && myTime()){
       const back = slots[Math.floor(Math.random() * 3)]; me.inv[back]++;
       brewMsg = `보라색 연기만 피어올랐어요... 그래도 Emberkiln의 낮이라 ${ITEM[back]}을(를) 건졌어요.`;
@@ -489,7 +567,7 @@ function sleep(){
   me.mana = Math.min(50 + cozy * 2 + guests * 3, me.mana + gain);
   me.plots.forEach(p => { if (p.st >= 1 && p.st < 4 && p.w) p.st++; p.w = false; });
   me.cr.forEach(c => { c.full = Math.max(0, c.full - 1); });
-  me.orders = makeOrders(me.day);
+  me.orders = makeOrders(me.day, me.hints, me.found);
   classInput = [];
   save();
   dormMsg = `푹 잤어요! 봄 학기 ${me.day}일 아침 · 마력 +${gain} (아늑함 +${cozy * 3}${guests ? `, 손님 ${guests}명 +${guests * 3}` : ''})`;
@@ -748,7 +826,7 @@ function showHousePick(counts, done){
 function startSolo(){
   solo = true;
   let saved = null; try { saved = JSON.parse(localStorage.getItem('magion-solo') || 'null'); } catch(e){}
-  if (saved) { me = saved; if (!me.house) return showHousePick({}, render); render(); return; }
+  if (saved) { me = normalize(saved); if (!me.house) return showHousePick({}, render); render(); return; }
   showCreate(p => { me = p; save(); render(); });
 }
 async function boot(){
@@ -773,7 +851,7 @@ async function boot(){
       F.onValue(F.query(F.ref(db, 'guest/' + uid), F.limitToLast(20)), s => { myGuest = s.val() || {}; if (sub === 'dorm') render(); });
       render();
     };
-    if (snap.exists()) { me = snap.val(); if (!me.house) showHousePick(await houseCounts(), enter); else enter(); }
+    if (snap.exists()) { me = normalize(snap.val()); if (!me.house) showHousePick(await houseCounts(), enter); else enter(); }
     else showCreate(p => { me = p; save(); enter(); }, await houseCounts());
   });
 }
