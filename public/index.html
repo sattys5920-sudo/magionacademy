@@ -93,13 +93,6 @@ button.cell:not(:disabled){border-color:var(--ink);box-shadow:inset 0 -3px 0 var
 button.who:not(:disabled){border-color:var(--ink)}
 
 /* 행사 */
-.fstar{position:absolute;transform:translate(-50%,-50%);width:52px;height:52px;padding:0;border:0;background:radial-gradient(circle,rgba(255,240,170,.55) 0 30%,transparent 62%);display:flex;align-items:center;justify-content:center;animation:twinkle .5s steps(2) infinite}
-.fstar .ic{transform:scale(1.1)}
-.fstar.gold{width:64px;height:64px;background:radial-gradient(circle,rgba(255,200,60,.8) 0 34%,transparent 66%)}
-.fstar.gold .ic{transform:scale(1.5);filter:saturate(1.6) brightness(1.1)}
-@keyframes twinkle{50%{filter:brightness(1.35)}}
-.streaks i{position:absolute;top:-10%;width:3px;height:46px;background:linear-gradient(transparent,#FFF6C8);transform:rotate(35deg);animation:streak 3.9s linear infinite;opacity:0}
-@keyframes streak{0%{opacity:0;translate:0 0}10%{opacity:1}40%{opacity:0;translate:-120px 200px}100%{opacity:0;translate:-120px 200px}}
 .dragon{transform:translate(-50%,-50%) scale(2.2);animation:stomp .6s steps(2) infinite}
 .dragon.calm-d{animation:bob 1.6s steps(2) infinite;filter:saturate(1.2)}
 @keyframes stomp{50%{transform:translate(-50%,-52%) scale(2.25) rotate(-3deg)}}
@@ -787,15 +780,13 @@ function renderExamResult(){
 // ===== 학교 행사: 정해진 시간에 다 같이 모이는 실시간 이벤트 =====
 // days: 요일(0=일), 시각은 각자 기기 시계 기준. 끝난 뒤 60분 동안은 결과·보상을 볼 수 있어요.
 const EVENTS = {
-  star:   { name:'별똥별 축제', icon:'star', days:[0,1,2,3,4,5,6], hour:21, min:0, dur:10,
-            blurb:'하늘에서 떨어지는 별을 먼저 누르는 사람이 가져가요' },
   dragon: { name:'드래곤의 방문', icon:'egg', days:[6,0], hour:20, min:0, dur:20,
             blurb:'화난 드래곤에게 다 같이 물약을 바쳐 달래요' },
 };
 const AFTER_MIN = 60;
 const DRAGON_PTS = p => p === 'p_dragon' ? 6 : p === 'p_purple' ? 4 : POTION_INFO[p].time ? 3 : ['p_red','p_green','p_blue'].includes(p) ? 1 : 2;
 const dragonGoal = () => solo ? 8 : 40;
-// 미리보기: 주소 뒤에 ?event=star 또는 ?event=dragon 을 붙이면 지금 바로 열려요 (기록은 test 칸에 따로 쌓여요)
+// 미리보기: 주소 뒤에 ?event=dragon 을 붙이면 지금 바로 열려요 (기록은 test 칸에 따로 쌓여요)
 const PREVIEW = (() => { const k = new URLSearchParams(location.search).get('event'); return EVENTS[k] ? { id: k, start: Date.now() } : null; })();
 const ymd = d => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 function eventAt(now = Date.now()){
@@ -853,10 +844,8 @@ function renderEvent(){
   const ev = eventAt();
   if (!ev){ toast('지금은 열린 행사가 없어요.'); return leaveEvent(); }
   watchEvent(ev);
-  const isStar = ev.id === 'star';
   const overlay = `<div style="position:absolute;inset:0;background:rgba(20,10,50,.45);pointer-events:none"></div>
-    ${isStar ? `<div class="streaks">${[0, 1, 2].map(i => `<i style="animation-delay:${i * 1.3}s;left:${20 + i * 27}%"></i>`).join('')}</div><div id="stars" style="position:absolute;inset:0;z-index:1"></div>`
-      : `<div class="cr dragon" style="position:absolute;left:50%;top:52%;background-position:-360px 0"></div><div id="dragonFx" style="position:absolute;inset:0;z-index:1;pointer-events:none"></div>`}`;
+    <div class="cr dragon" style="position:absolute;left:50%;top:52%;background-position:-360px 0"></div><div id="dragonFx" style="position:absolute;inset:0;z-index:1;pointer-events:none"></div>`;
   frame('island', ev.E.name, `<span id="evClock"></span>`, `
     <section class="sec">
       <div class="hint">${ev.E.blurb}</div>
@@ -864,54 +853,14 @@ function renderEvent(){
     </section>
     <button class="btn ghost" id="back" style="align-self:center">‹ 홈으로</button>`, { overlay });
   $('#back').onclick = leaveEvent;
-  if (isStar) $('#stars').onpointerdown = e => { const t = e.target.closest('[data-star]'); if (t) catchStar(ev, t.dataset.star, t.dataset.gold === '1'); };
   paintEvent();
-  clearInterval(evTimer); evTimer = setInterval(() => { if (sub !== 'event') return stopEvent(); paintStarsAndClock(); }, 250);
+  clearInterval(evTimer); evTimer = setInterval(() => { if (sub !== 'event') return stopEvent(); tickEvent(); }, 250);
 }
-// 별: 1.5초마다 하나, 9초 동안 떠 있어요. 모두 같은 시각·자리에 같은 별을 봐요.
-const STAR_TICK = 1500, STAR_LIFE = 6;
-const rnd = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
-function starsNow(ev){
-  const now = Date.now(); if (now >= ev.end) return [];
-  const cur = Math.floor((now - ev.start) / STAR_TICK), out = [];
-  for (let t = Math.max(0, cur - STAR_LIFE + 1); t <= cur; t++){
-    const id = 's' + t; if (evData[id] || evPending[id]) continue;
-    const age = (now - ev.start - t * STAR_TICK) / (STAR_TICK * STAR_LIFE);
-    out.push({ id, gold: rnd(t + 7) > 0.9, x: 8 + rnd(t) * 80, y: 14 + rnd(t + 3) * 56 + age * 10, fade: age > .8 });
-  }
-  return out;
-}
-function paintStarsAndClock(){
+function tickEvent(){
   const ev = eventAt(); if (!ev) return leaveEvent();
   const now = Date.now(), live = now < ev.end;
   const c = $('#evClock'); if (c) c.textContent = live ? `${Math.floor((ev.end - now) / 60000)}:${String(Math.floor((ev.end - now) / 1000) % 60).padStart(2, '0')} 남음` : '행사가 끝났어요';
-  const box = $('#stars');
-  if (box){
-    const list = starsNow(ev), sig = list.map(s => s.id + (s.fade ? 'f' : '')).join();
-    if (box.dataset.sig !== sig){
-      box.dataset.sig = sig;
-      box.innerHTML = list.map(s => `<button data-star="${s.id}" data-gold="${s.gold ? 1 : 0}" class="fstar ${s.gold ? 'gold' : ''}" style="left:${s.x}%;top:${s.y}%;opacity:${s.fade ? .45 : 1}">${ic('star')}</button>`).join('');
-    }
-  }
   if (!live && $('#evBody')?.dataset.live === '1') paintEvent();
-}
-async function catchStar(ev, id, gold){
-  if (Date.now() >= ev.end || evData[id] || evPending[id]) return;
-  evPending[id] = 1; paintStarsAndClock();
-  let ok = true;
-  if (solo){ evData[id] = 'me'; soloSaveEv(); }
-  else {
-    try { const r = await F.runTransaction(F.ref(db, `events/star/${ev.key}/${id}`), cur => cur ? undefined : uid); ok = r.committed; }
-    catch(e){ ok = false; }
-  }
-  delete evPending[id];
-  if (!ok){ evMsg = '아깝다! 다른 친구가 먼저 잡았어요.'; return paintEvent(); }
-  const roll = rnd(Date.now() % 100000);
-  if (gold){ me.coin += 80; me.inv.stardust += 2; evMsg = '황금 별똥별! 골드 +80 · 별가루 +2'; }
-  else if (roll < .45){ me.inv.stardust += 1; evMsg = '별가루 +1'; }
-  else if (roll < .8){ me.coin += 20; evMsg = '골드 +20'; }
-  else { const k = ['herb','drop','mush','mana'][Math.floor(roll * 40) % 4]; me.inv[k] += 2; evMsg = `${ITEM[k]} +2`; }
-  save(); paintEvent();
 }
 function paintEvent(){
   const ev = eventAt(), body = $('#evBody'); if (!ev || !body) return;
@@ -922,18 +871,7 @@ function paintEvent(){
   const houseOf = id => id === me_ ? me.house : playersList[id]?.house;
   const nickOf = id => id === me_ ? me.nick : playersList[id]?.nick || '친구';
   const lookOf = id => id === me_ ? me.look : playersList[id]?.look;
-  if (ev.id === 'star'){
-    const counts = {}; Object.values(evData).forEach(u => { counts[u] = (counts[u] || 0) + 1; });
-    const byHouse = HOUSE_KEYS.map(k => [k, Object.entries(counts).filter(([u]) => houseOf(u) === k).reduce((t, [, n]) => t + n, 0)]);
-    const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
-    body.innerHTML = `
-      ${hint(evMsg, live ? '하늘의 별을 톡! 금색 별은 보상이 커요' : '축제가 끝났어요. 잡은 보상은 이미 가방에 들어갔어요.')}
-      <div class="box px" style="padding:10px 12px;display:flex;flex-direction:column;gap:8px">
-        <div class="sec-h"><h3>내가 잡은 별</h3><span class="b" style="font-size:20px;color:#6A4AC8">${counts[me_] || 0}</span></div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">${byHouse.map(([k, n]) => `<div style="background:${HOUSES[k].bg};border-top:3px solid ${HOUSES[k].col};padding:4px 2px;display:flex;flex-direction:column;align-items:center"><span class="s" style="color:${HOUSES[k].col}">${HOUSES[k].name}</span><span class="b">${n}</span></div>`).join('')}</div>
-      </div>
-      ${top.length ? `<div class="box px">${top.map(([u, n], i) => `<div class="li"><span class="b" style="width:18px;color:${['#D9A020','#9AA4B8','#C07850'][i]}">${i + 1}</span>${face(lookOf(u), 30)}<div class="main"><span class="t">${esc(nickOf(u))}</span><span class="d">${HOUSES[houseOf(u)]?.name || ''}</span></div><span class="b">${n}개</span></div>`).join('')}</div>` : ''}`;
-  } else {
+  {
     const total = Object.values(evData).reduce((t, v) => t + (+v || 0), 0), goal = dragonGoal(), done = total >= goal;
     const mine = +evData[me_] || 0;
     me.evClaimed = me.evClaimed || {};
