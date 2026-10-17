@@ -1,52 +1,8 @@
-<!doctype html>
-<html lang="ko">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#140D1E">
-<title>호박달 마녀학교 · 걸어 다니는 학교 시안</title>
-<style>
-@font-face{font-family:'G11B';src:url(fonts/Galmuri11-Bold.woff2) format('woff2')}
-@font-face{font-family:'G7';src:url(fonts/Galmuri7.woff2) format('woff2')}
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;background:#0E0916;color:#F2EAD8;-webkit-font-smoothing:none;-webkit-tap-highlight-color:transparent}
-#app{position:relative;max-width:430px;height:100dvh;margin:0 auto;background:#140D1E;display:flex;flex-direction:column;overflow:hidden;font-family:'G7',monospace}
-#world{position:relative;width:100%;flex:1;min-height:0;overflow:hidden;touch-action:manipulation}
-canvas{position:absolute;left:0;top:0;image-rendering:pixelated;image-rendering:crisp-edges;cursor:pointer}
-.hud{position:absolute;left:10px;top:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:3}
-.chip{background:rgba(20,13,30,.85);padding:6px 10px;font-size:14px;line-height:16px;box-shadow:0 0 0 2px #3A2860;white-space:nowrap}
-.chip b{font-family:'G11B',monospace;font-size:15px;color:#FFD866;display:block}
-.tag{position:absolute;transform:translate(-50%,-100%);font-size:12px;line-height:12px;padding:2px 4px;background:rgba(20,13,30,.75);white-space:nowrap;pointer-events:none;z-index:2}
-.tag.me{color:#FFD866}
-.bubble{position:absolute;transform:translate(-50%,-100%);background:#FAF1E2;color:#3A2860;padding:8px 10px;font-size:14px;line-height:18px;box-shadow:0 0 0 3px #22183F;white-space:nowrap;text-align:center;z-index:4}
-.bubble button{display:block;margin:6px auto 0;font-family:'G11B',monospace;font-size:14px;background:#8CE6B0;border:2px solid #22183F;padding:4px 10px;color:#1E3A2A}
-#fade{position:absolute;inset:0;background:#0E0916;opacity:0;pointer-events:none;transition:opacity .35s;z-index:5;display:flex;align-items:center;justify-content:center;font-family:'G11B',monospace;font-size:18px;color:#FFD866}
-.fab{position:absolute;right:10px;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px;z-index:6}
-.fab button{width:58px;height:44px;background:rgba(20,13,30,.88);border:0;box-shadow:0 0 0 2px #3A2860;color:#FFD866;font-family:'G11B',monospace;font-size:14px}
-#mapv{position:absolute;inset:0;background:rgba(14,9,22,.94);z-index:8;display:none;flex-direction:column;padding:14px 12px calc(14px + env(safe-area-inset-bottom))}
-#mapv.on{display:flex}
-.mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.mhead b{font-family:'G11B',monospace;font-size:17px;color:#FFD866}
-.mhead button{background:#3A2860;border:0;color:#F2EAD8;font-family:'G11B',monospace;font-size:14px;padding:6px 12px}
-#mwrap{flex:1;position:relative;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
-#minner{position:relative;margin:auto}
-#mcv{image-rendering:pixelated;flex-shrink:0}
-.mlabel{position:absolute;transform:translate(-50%,-100%);font-size:12px;line-height:12px;padding:3px 5px;background:#FAF1E2;color:#3A2860;white-space:nowrap;pointer-events:none;box-shadow:0 0 0 2px #22183F}
-.mlabel.me{background:#FFD866}
-.mhint{text-align:center;font-size:14px;color:#C8B8FF;margin-top:8px}
-</style>
-</head>
-<body>
-<div id="app">
-  <div id="world"><canvas id="cv"></canvas>
-    <div class="hud"><div class="chip"><b id="place">호박달 마녀학교</b><span id="sub">바닥을 눌러 걸어요</span></div><div class="chip" id="clock"></div></div>
-    <div id="fade"></div>
-  </div>
-  <div class="fab"><button id="tMap">지도</button><button id="tZoom">멀리</button><button id="tDay">밝게</button></div>
-  <div id="mapv"><div class="mhead"><b>호박달 마녀학교 · 몬스터 마을 지도</b><button id="mClose">닫기</button></div><div id="mwrap"><div id="minner"><canvas id="mcv"></canvas></div></div><div class="mhint">가고 싶은 곳을 누르면 걸어가요</div></div>
-</div>
-<script>
+
+// 걸어 다니는 세계 (tools/iso/build_halloween.py가 MAPS를 채워서 public/world.js로 써요)
+// 게임(index.html)과는 window.World로 이어져요: World.start / setPlayer / teleport / onAct
 const MAPS = __MAPS__;
+const World = window.World = { onAct: null, onMove: null };
 let sc;
 // 배율: 그림 1픽셀 = 화면 실제 픽셀의 정수배(k)로 그려서 선명하게. 목표 가로 픽셀 수에 가장 가까운 k를 골라요.
 const ZOOMS = [['보통', 300], ['멀리', 420], ['가까이', 210]];
@@ -95,6 +51,7 @@ const people = [];
 const NAMES = ['루나', '블러드', '울피', '부우', '마리', '호박이', '라벤', '드라코', '미라', '젤리', '스푸키'];
 const mk = (name, look, x, y, me) => ({ name, look, x, y, path: [], back: false, flip: false, me, t: 0, idle: Math.random() * 3 });
 const me = mk('나', 1, 0, 0, true);
+let started = false;
 let crowd = {};
 function setMap(id, spawn){
   map = id; M = MAPS[id].meta; resize();
@@ -103,7 +60,7 @@ function setMap(id, spawn){
   me.x = spawn[0]; me.y = spawn[1]; me.path = []; me.back = false; me.flip = false;
   if (!crowd[id]){ crowd[id] = []; const n = id === 'campus' ? 9 : 2; for (let i = 0; i < n; i++){ for (let k = 0; k < 50; k++){ const x = Math.floor(Math.random() * M.NX), y = Math.floor(Math.random() * M.NY); if (free(x, y)){ crowd[id].push(mk(NAMES[(i + (id === 'lab' ? 3 : 0)) % NAMES.length], (i * 3 + 2) % 8, x, y, false)); break; } } } }
   people.length = 0; people.push(me, ...crowd[id]);
-  tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'tag' + (p.me ? ' me' : ''); d.textContent = p.name; world.appendChild(d); return d; });
+  tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : ''); d.textContent = p.name; world.appendChild(d); return d; });
   document.getElementById('place').textContent = M.title; document.getElementById('sub').textContent = M.sub;
   camX = camY = null; hideBubble();
 }
@@ -111,13 +68,18 @@ let tags = [], bubble = null, pending = null, busy = false, camX = null, camY = 
 function showBubble(o, text, btn, fn){
   hideBubble();
   const b = document.createElement('div'); b.className = 'bubble'; b.innerHTML = text + (btn ? `<button>${btn}</button>` : '');
-  if (btn) b.querySelector('button').onclick = e => { e.stopPropagation(); fn ? fn() : (b.innerHTML = `<b>${btn}</b><br>실제 게임에서는 여기서<br>지금의 그 화면이 열려요`); };
+  if (btn) b.querySelector('button').onclick = e => { e.stopPropagation(); fn && fn(); };
   world.appendChild(b); bubble = { el: b, o };
 }
 function hideBubble(){ bubble?.el.remove(); bubble = null; }
-const ACTS = {}; const ACTS_OLD = { cauldron: ['부글부글 끓는 솥이에요', '물약 끓이기'], desk: ['레시피 노트가 펼쳐져 있어요', '도감 보기'], table: ['수정구 속에 무언가 보여요', '오늘의 운세'], armchair: ['푹신한 안락의자', '앉아서 쉬기'], barrels: ['재료가 가득한 통', '재료함 열기'], stall: ['친구들이 물건을 파는 가판대', '시장 보기'], fountain: ['동전을 던지면 소원이 이뤄진대요', '소원 빌기'] };
+const ACTS = {};
+// 물건을 쓰면 게임에 물어봐요: 글을 돌려주면 말풍선에 보여 주고, 아니면 (화면이 열렸으니) 말풍선을 닫아요
+function useObj(o, a){
+  const r = World.onAct ? World.onAct(map, o, a) : null;
+  if (typeof r === 'string' && bubble){ bubble.el.innerHTML = r; } else hideBubble();
+}
 function goDoor(door, o){
-  if (!door.to){ showBubble(o, `<b>${door.label}</b><br>이 건물은 다음 시안에서 열려요`); return; }
+  if (!door.to){ showBubble(o, `<b>${door.label}</b><br>아직 문이 잠겨 있어요 · 곧 열려요`); return; }
   busy = true; fadeEl.textContent = door.label; fadeEl.style.opacity = 1;
   setTimeout(() => { setMap(door.to, door.spawn); setTimeout(() => { fadeEl.style.opacity = 0; busy = false; }, 150); }, 380);
 }
@@ -141,7 +103,7 @@ cv.addEventListener('pointerdown', e => {
 const SPEED = 6.5, RUN = 10;   // 타일/초. 멀리 갈 때(남은 길 10칸 넘게)는 달려요
 function step(p, dt){
   if (!p.path.length){
-    if (p.me && pending){ const pd = pending; pending = null; if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1]); } }
+    if (p.me && pending){ const pd = pending; pending = null; if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1], () => useObj(pd.act, a)); } }
     if (!p.me && (p.idle -= dt) < 0){ p.idle = 2 + Math.random() * 5; for (let i = 0; i < 20; i++){ const gx = Math.round(p.x) + Math.floor(Math.random() * 13) - 6, gy = Math.round(p.y) + Math.floor(Math.random() * 13) - 6; if (goto(p, gx, gy)) break; } }
     p.t = 0; return;
   }
@@ -275,17 +237,30 @@ mcv.addEventListener('click', e => {   // 탭할 때만 (밀어서 볼 때는 �
 });
 document.getElementById('tMap').onclick = openMap;
 document.getElementById('mClose').onclick = () => mapv.classList.remove('on');
-(async () => {
-  resize();
+World.ready = (async () => {
   ST = await img('art/iso/students.png');
   for (const [id, m] of Object.entries(MAPS)){
     const [bg, obj] = await Promise.all([img(m.meta.bgSrc), img(m.meta.objSrc)]);
     m.bg = bg; m.obj = obj;
     const pc = document.createElement('canvas'); pc.width = obj.width; pc.height = obj.height; m.px = pc.getContext('2d', { willReadFrequently: true }); m.px.drawImage(obj, 0, 0);
   }
-  setMap('campus', MAPS.campus.meta.start);
-  requestAnimationFrame(frame);
 })();
-</script>
-</body>
-</html>
+World.start = async (id = 'campus', spawn) => {
+  await World.ready; if (started) return; started = true;
+  resize(); setMap(id, spawn || MAPS[id].meta.start || MAPS[id].meta.spawnIn);
+  requestAnimationFrame(frame);
+};
+World.setPlayer = (name, look) => { me.name = name; me.look = ((look || 0) % 8 + 8) % 8; if (tags[0]) tags[0].textContent = name; };
+World.resize = () => { if (started){ resize(); camX = null; } };
+World.where = () => map;
+// 그 방의 물건 옆으로 순간 이동 (홈 화면의 바로 가기)
+World.teleport = (id, objName, then) => {
+  if (!started || busy) return;
+  busy = true; fadeEl.textContent = MAPS[id].meta.title; fadeEl.style.opacity = 1;
+  setTimeout(() => {
+    if (map !== id) setMap(id, MAPS[id].meta.start || MAPS[id].meta.spawnIn);
+    const o = M.objs.find(x => x.name === objName);
+    if (o){ const tiles = []; for (let a = Math.floor(o.box[0]); a < Math.ceil(o.box[2]); a++) for (let b = Math.floor(o.box[1]); b < Math.ceil(o.box[3]); b++) tiles.push([a, b]); const c = near(tiles)[0]; if (c){ me.x = c[0]; me.y = c[1]; me.path = []; camX = null; } }
+    setTimeout(() => { fadeEl.style.opacity = 0; busy = false; then && then(); }, 150);
+  }, 380);
+};

@@ -7,7 +7,7 @@ python3 halloween.py   # 학교 + 몬스터 마을(84×72, 늘 밤): out/hw_bg.p
 python3 potion_class.py   # 넓은 물약 교실(18×14): out/pclass_bg.png, out/pclass_obj.png, out/pclass.json
 python3 interiors.py      # 과자·공예 교실, 기숙사 4개, 독초 온실: out/{candy,craft,dorm_*,toxic}_bg.png·_obj.png·.json
 python3 chars2.py && python3 chars3.py   # 몬스터 학생: out/students3.png (→ public/art/iso/students.png)
-python3 build_halloween.py ../../public/walk.html
+python3 build_halloween.py ../../public/world.js   # 지도 + world_tpl.js → public/world.js (index.html이 불러요)
 ```
 만든 png는 `public/art/iso/`에 복사해요.
 
