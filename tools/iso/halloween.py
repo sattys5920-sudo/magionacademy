@@ -109,7 +109,7 @@ def turret(tx, ty, height, wall, roof, win='#FFC86A'):
     return f
 # 본관 (물약 교실)
 unique('main', [12, 13, 28, 24], combo(building(12, 13, 28, 24, 72, hexc('#5E586E'), hexc('#3A3448'), hexc('#3A2A5E'), 38, wins_g(rows=((14, 18), (42, 16), (62, 6))), doors=[('L', 58, 14)]), turret(12.4, 23.6, 96, '#5E586E', '#3A2A5E'), turret(27.6, 13.4, 96, '#5E586E', '#3A2A5E')),
-       door=dict(tile=[19, 24], to='lab', label='본관 · 물약 교실', spawn=[5, 8]))
+       door=dict(tile=[19, 24], to='lab', label='본관 · 물약 교실', spawn=[9, 12]))
 unique('candy', [3, 30, 11, 37], combo(building(3, 30, 11, 37, 40, hexc('#8A5A4E'), hexc('#4A2E2A'), hexc('#C8642A'), 22, wins_g(14, ((12, 12),)), doors=[('L', 24, 12)]), chimney(9, 32, 40, 22, '#6A4A42')),
        door=dict(tile=[6, 37], to=None, label='과자 교실'))
 unique('craft', [26, 30, 34, 37], building(26, 30, 34, 37, 40, hexc('#6A5440'), hexc('#3A2A1E'), hexc('#4A3A5A'), 22, wins_g(14, ((12, 12),)), doors=[('L', 24, 12)]),

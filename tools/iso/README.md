@@ -4,7 +4,7 @@ Python 3 + Pillow. `halloween.py`·`school.py`는 `world.py`의 그리기 도구
 
 ```
 python3 halloween.py   # 학교 + 몬스터 마을(84×72, 늘 밤): out/hw_bg.png, out/hw_obj.png, out/hw.json
-python3 room.py        # 물약 교실(실내): out/lab_bg.png, out/lab_obj.png, out/lab.json
+python3 potion_class.py   # 넓은 물약 교실(18×14): out/pclass_bg.png, out/pclass_obj.png, out/pclass.json
 python3 chars2.py && python3 chars3.py   # 몬스터 학생: out/students3.png (→ public/art/iso/students.png)
 python3 build_halloween.py ../../public/walk.html
 ```
