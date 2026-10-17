@@ -109,15 +109,15 @@ def turret(tx, ty, height, wall, roof, win='#FFC86A'):
     return f
 # 본관 (물약 교실)
 unique('main', [12, 13, 28, 24], combo(building(12, 13, 28, 24, 72, hexc('#5E586E'), hexc('#3A3448'), hexc('#3A2A5E'), 38, wins_g(rows=((14, 18), (42, 16), (62, 6))), doors=[('L', 58, 14)]), turret(12.4, 23.6, 96, '#5E586E', '#3A2A5E'), turret(27.6, 13.4, 96, '#5E586E', '#3A2A5E')),
-       door=dict(tile=[19, 24], to='lab', label='본관 · 물약 교실', spawn=[9, 12]))
+       door=dict(tile=[19, 24], to='lab', label='본관 · 물약 교실', spawn=[13, 18]))
 unique('candy', [3, 30, 11, 37], combo(building(3, 30, 11, 37, 40, hexc('#8A5A4E'), hexc('#4A2E2A'), hexc('#C8642A'), 22, wins_g(14, ((12, 12),)), doors=[('L', 24, 12)]), chimney(9, 32, 40, 22, '#6A4A42')),
-       door=dict(tile=[6, 37], to='candy', label='과자 교실', spawn=[8, 10]))
+       door=dict(tile=[6, 37], to='candy', label='과자 교실', spawn=[12, 16]))
 unique('craft', [26, 30, 34, 37], building(26, 30, 34, 37, 40, hexc('#6A5440'), hexc('#3A2A1E'), hexc('#4A3A5A'), 22, wins_g(14, ((12, 12),)), doors=[('L', 24, 12)]),
-       door=dict(tile=[29, 37], to='craft', label='공예 교실', spawn=[8, 10]))
+       door=dict(tile=[29, 37], to='craft', label='공예 교실', spawn=[12, 16]))
 for i, (x0, wall, roof, nm) in enumerate(((3, '#6A5A8A', '#3A2A5E', '마녀 기숙사'), (11, '#5A3A44', '#8A2A3A', '뱀파이어 기숙사'), (19, '#6A5A48', '#4A3A2A', '늑대인간 기숙사'), (27, '#8A98A8', '#5A6A8A', '유령 기숙사'))):
     dk = ('dorm_witch', 'dorm_vamp', 'dorm_wolf', 'dorm_ghost')[i]
     unique('dorm', [x0, 42, x0 + 6, 48], building(x0, 42, x0 + 6, 48, 44, hexc(wall), hexc('#2A2230'), hexc(roof), 26, wins_g(14, ((10, 10), (28, 10))), doors=[('L', 20, 10)]),
-           door=dict(tile=[x0 + 2, 48], to=dk, label=nm, spawn=[7, 10]))
+           door=dict(tile=[x0 + 2, 48], to=dk, label=nm, spawn=[11, 14]))
 def toxic_house(img):
     x0, y0, x1, y1, h = 18, 56, 26, 63, 30
     glass, glass2, fr = hexc('#4A8A6A', 200), hexc('#6AC88A', 220), hexc('#2A2A32')
@@ -133,7 +133,7 @@ def toxic_house(img):
     r1, r2 = up(P(x0, (y0 + y1) / 2), h + 18), up(P(x1, (y0 + y1) / 2), h + 18)
     poly(d, [Tt, R, r2, r1], hexc('#3A6A5A', 215)); poly(d, [L, B, r2, r1], hexc('#5A9A7A', 230)); poly(d, [R, B, r2], hexc('#4A8A6A', 220))
     for k in range(0, 9): d.line([up(P(x0 + k, y1), h), up(P(x0 + k, (y0 + y1) / 2), h + 18)], fill=fr)
-unique('toxic', [18, 56, 26, 63], toxic_house, door=dict(tile=[22, 63], to='toxic', label='독초 온실', spawn=[8, 10]))
+unique('toxic', [18, 56, 26, 63], toxic_house, door=dict(tile=[22, 63], to='toxic', label='독초 온실', spawn=[12, 16]))
 # 마을: 뱀파이어 저택
 unique('manor', [57, 3, 71, 12], building(57, 3, 71, 12, 70, hexc('#3E3446'), hexc('#1E1824'), hexc('#2A1E30'), 40, lambda s, l: [(u, v, 8, 18) for u in range(10, int(l) - 8, 14) for v in (12, 42) if not (s == 'L' and abs(u - 44) < 10)],
        doors=[('L', 48, 14)]), door=dict(tile=[63, 12], to=None, label='뱀파이어 저택'))

@@ -20,5 +20,11 @@ for k, (house, name, hall) in DORM.items():
         if o['door'] and o['door']['to'] == k: o['door']['label'] = name
 for a in camp['areas']:
     if a['n'] == '기숙사': a['n'] = '기숙사 네 동'
-t = open(I + '/world_tpl.js').read().replace('__MAPS__', json.dumps(MAPS, ensure_ascii=False))
+AV = json.load(open(I + '/out/avatar_parts.json'))   # chars4.py
+# png는 1년 동안 캐시돼요 → 내용이 바뀌면 주소도 바뀌게 ?v=해시 를 붙여요
+import hashlib
+def ver(src): return src + '?v=' + hashlib.md5(open(I + '/out/' + src.split('/')[-1], 'rb').read()).hexdigest()[:8]
+for m in MAPS.values(): m['meta']['bgSrc'] = ver(m['meta']['bgSrc']); m['meta']['objSrc'] = ver(m['meta']['objSrc'])
+AV['src'] = ver(AV['src'])
+t = open(I + '/world_tpl.js').read().replace('__MAPS__', json.dumps(MAPS, ensure_ascii=False)).replace('__AVATAR__', json.dumps(AV, ensure_ascii=False))
 open(OUT, 'w').write(t); print('wrote', OUT, len(t))

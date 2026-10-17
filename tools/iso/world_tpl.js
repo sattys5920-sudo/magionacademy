@@ -3,6 +3,72 @@
 // 게임(index.html)과는 window.World로 이어져요: World.start / setPlayer / teleport / onAct
 const MAPS = __MAPS__;
 const World = window.World = { onAct: null, onMove: null };
+// ---------- 캐릭터 조합 (tools/iso/chars4.py 부품) ----------
+// av = { eyes, hair, hat, top, bottom, shoes, acc: 부품 번호, skinC, eyeC, hairC, topC, bottomC, shoesC, hatC, accC: 색 번호 }
+const AVM = __AVATAR__;
+World.Avatar = (() => {
+  const FW = AVM.fw, FH = AVM.fh, CATS = ['eyes', 'hair', 'hat', 'top', 'bottom', 'shoes', 'acc'];
+  const COLOR = { skin: 'skinC', eye: 'eyeC', hair: 'hairC', top: 'topC', bottom: 'bottomC', shoes: 'shoesC', hat: 'hatC', acc: 'accC' };
+  const palOf = slot => AVM.pal[slot] || AVM.pal.cloth;
+  const KEY = { 240: 0, 200: 1, 150: 2, 100: 3 };
+  let data = null; const cache = new Map(), heads = new Map();
+  const ready = new Promise(r => { const i = new Image(); i.onload = () => { const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; const g = c.getContext('2d'); g.drawImage(i, 0, 0); data = g.getImageData(0, 0, i.width, i.height); r(); }; i.src = AVM.src; });
+  const rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  const ramps = {}; const rampOf = (slot, n) => { const p = palOf(slot), k = slot + (n % p.length); return ramps[k] || (ramps[k] = p[n % p.length].map(rgb)); };
+  const rnd = (seed => () => (seed = (seed * 16807) % 2147483647) / 2147483647);
+  function fix(av){
+    const a = Object.assign({}, av || {});
+    CATS.forEach(c => { const n = AVM.parts[c].length; a[c] = ((a[c] | 0) % n + n) % n; });
+    Object.values(COLOR).forEach(k => { a[k] = Math.max(0, a[k] | 0); });
+    return a;
+  }
+  // 옛 캐릭터(look 번호)는 그 번호로 정해진 조합을 줘요
+  function fromLook(look){
+    const r = rnd(((look | 0) + 7) * 9973 + 1), pick = n => Math.floor(r() * n), a = {};
+    CATS.forEach(c => { a[c] = pick(AVM.parts[c].length); });
+    if (r() < .5) a.hat = 0; if (r() < .5) a.acc = 0;
+    a.skinC = pick(4); a.eyeC = pick(AVM.pal.eye.length); a.hairC = pick(AVM.pal.hair.length);
+    ['topC', 'bottomC', 'shoesC', 'hatC', 'accC'].forEach(k => { a[k] = pick(AVM.pal.cloth.length); });
+    return a;
+  }
+  const random = () => fromLook(Math.floor(Math.random() * 1e6));
+  function compose(av){
+    av = fix(av); const key = JSON.stringify(av); if (cache.has(key)) return cache.get(key);
+    const W = FW * 6, out = new ImageData(W, FH), o = out.data, src = data.data, SW = data.width;
+    const P = { body: AVM.parts.body[0] }; CATS.forEach(c => { P[c] = AVM.parts[c][av[c]]; });
+    const hide = new Set(); Object.values(P).forEach(p => (p.hide || []).forEach(h => hide.add(h)));
+    const layers = [];
+    ['hair', 'acc', 'hat'].forEach(c => P[c].u !== undefined && layers.push([P[c].u, P[c].slot]));
+    ['body', 'bottom', 'shoes', 'top', 'eyes'].forEach(c => { if (hide.has(c)) return; ['u', 'o'].forEach(k => P[c][k] !== undefined && layers.push([P[c][k], P[c].slot])); });
+    ['acc', 'hair', 'hat'].forEach(c => P[c].o !== undefined && layers.push([P[c].o, P[c].slot]));
+    layers.forEach(([row, slot]) => {
+      const ramp = slot ? rampOf(slot, av[COLOR[slot]]) : null;
+      for (let y = 0; y < FH; y++) for (let x = 0; x < W; x++){
+        const s = ((row * FH + y) * SW + x) * 4; if (!src[s + 3]) continue;
+        const d = (y * W + x) * 4, r = src[s], g = src[s + 1], b = src[s + 2], k = r === g && g === b ? KEY[r] : undefined;
+        if (ramp && k !== undefined){ const c = ramp[k]; o[d] = c[0]; o[d + 1] = c[1]; o[d + 2] = c[2]; } else { o[d] = r; o[d + 1] = g; o[d + 2] = b; }
+        o[d + 3] = 255;
+      }
+    });
+    // 바깥 테두리
+    const edge = [];
+    for (let y = 0; y < FH; y++) for (let x = 0; x < W; x++){
+      if (o[(y * W + x) * 4 + 3]) continue; const fx = x % FW;
+      if ((fx > 0 && o[(y * W + x - 1) * 4 + 3]) || (fx < FW - 1 && o[(y * W + x + 1) * 4 + 3]) || (y > 0 && o[((y - 1) * W + x) * 4 + 3]) || (y < FH - 1 && o[((y + 1) * W + x) * 4 + 3])) edge.push((y * W + x) * 4);
+    }
+    edge.forEach(d => { o[d] = 42; o[d + 1] = 24; o[d + 2] = 48; o[d + 3] = 255; });
+    const c = document.createElement('canvas'); c.width = W; c.height = FH; c.getContext('2d').putImageData(out, 0, 0);
+    cache.set(key, c); return c;
+  }
+  // 얼굴 동그라미용 (첫 프레임 윗부분)
+  function head(av){
+    if (!data) return '';
+    const key = JSON.stringify(fix(av)); if (heads.has(key)) return heads.get(key);
+    const c = document.createElement('canvas'); c.width = FW; c.height = FW; c.getContext('2d').drawImage(compose(av), 0, 1, FW, FW, 0, 0, FW, FW);
+    const u = c.toDataURL(); heads.set(key, u); return u;
+  }
+  return { ready, compose, head, fix, fromLook, random, meta: AVM, FW, FH, CATS, COLOR, palOf, get loaded(){ return !!data; } };
+})();
 let sc;
 // 배율: 그림 1픽셀 = 화면 실제 픽셀의 정수배(k)로 그려서 선명하게. 목표 가로 픽셀 수에 가장 가까운 k를 골라요.
 const ZOOMS = [['보통', 300], ['멀리', 420], ['가까이', 210]];
@@ -49,8 +115,8 @@ function orderObjs(objs){   // 한 번만: 겹치는 것끼리 위상 정렬
 }
 const people = [];
 const NAMES = ['루나', '블러드', '울피', '부우', '마리', '호박이', '라벤', '드라코', '미라', '젤리', '스푸키'];
-const mk = (name, look, x, y, me) => ({ name, look, x, y, path: [], back: false, flip: false, me, t: 0, idle: Math.random() * 3 });
-const me = mk('나', 1, 0, 0, true);
+const mk = (name, av, x, y, me) => ({ name, av, x, y, path: [], back: false, flip: false, me, t: 0, idle: Math.random() * 3 });
+const me = mk('나', null, 0, 0, true);
 let started = false;
 let crowd = {};
 function setMap(id, spawn){
@@ -58,7 +124,7 @@ function setMap(id, spawn){
   blocked = new Set(); M.objs.forEach(o => { if (o.solid !== false) for (let x = Math.floor(o.box[0]); x < Math.ceil(o.box[2]); x++) for (let y = Math.floor(o.box[1]); y < Math.ceil(o.box[3]); y++) blocked.add(x + ',' + y); });
   objOrder = MAPS[id].order || (MAPS[id].order = orderObjs(M.objs));
   me.x = spawn[0]; me.y = spawn[1]; me.path = []; me.back = false; me.flip = false;
-  if (!crowd[id]){ crowd[id] = []; const n = id === 'campus' ? 9 : 2; for (let i = 0; i < n; i++){ for (let k = 0; k < 50; k++){ const x = Math.floor(Math.random() * M.NX), y = Math.floor(Math.random() * M.NY); if (free(x, y)){ crowd[id].push(mk(NAMES[(i + (id === 'lab' ? 3 : 0)) % NAMES.length], (i * 3 + 2) % 8, x, y, false)); break; } } } }
+  if (!crowd[id]){ crowd[id] = []; const n = id === 'campus' ? 9 : 2; for (let i = 0; i < n; i++){ for (let k = 0; k < 50; k++){ const x = Math.floor(Math.random() * M.NX), y = Math.floor(Math.random() * M.NY); if (free(x, y)){ crowd[id].push(mk(NAMES[(i + (id === 'lab' ? 3 : 0)) % NAMES.length], World.Avatar.random(), x, y, false)); break; } } } }
   people.length = 0; people.push(me, ...crowd[id]);
   tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : ''); d.textContent = p.name; world.appendChild(d); return d; });
   document.getElementById('place').textContent = M.title; document.getElementById('sub').textContent = M.sub;
@@ -147,12 +213,13 @@ function glow(r, c){ const k = r + c.join(); if (glowCache[k]) return glowCache[
 let bright = 0; const BRIGHT = [[160, 140, 200], [205, 190, 230], [120, 100, 165]], BRIGHT_NEXT = ['밝게', '어둡게', '보통'];
 function phase(){ return 'night'; }
 const fx = [];
-let ST, last = performance.now();
+let last = performance.now();
 function drawPerson(p){ const cx = out;
   const [sx, sy] = P(p.x + .5, p.y + .5);
   cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 5, 2, 0, 0, Math.PI * 2); cx.fill();
-  const f = p.path.length ? 1 + Math.floor(p.t * (p.me ? 12 : 8)) % 2 : 0, col = (p.back ? 3 : 0) + f, X = Math.round(sx), Y = Math.round(sy) - 23;
-  if (p.flip){ cx.save(); cx.translate(X + 7, Y); cx.scale(-1, 1); cx.drawImage(ST, col * 14, p.look * 24, 14, 24, 0, 0, 14, 24); cx.restore(); } else cx.drawImage(ST, col * 14, p.look * 24, 14, 24, X - 7, Y, 14, 24);
+  const f = p.path.length ? 1 + Math.floor(p.t * (p.me ? 12 : 8)) % 2 : 0, col = (p.back ? 3 : 0) + f, X = Math.round(sx), Y = Math.round(sy) - 34;
+  const S = World.Avatar.compose(p.av), FW = World.Avatar.FW, FH = World.Avatar.FH;
+  if (p.flip){ cx.save(); cx.translate(X + 11, Y); cx.scale(-1, 1); cx.drawImage(S, col * FW, 0, FW, FH, 0, 0, FW, FH); cx.restore(); } else cx.drawImage(S, col * FW, 0, FW, FH, X - 11, Y, FW, FH);
 }
 function frame(now){
   const dt = Math.min(.05, (now - last) / 1000); last = now;
@@ -178,7 +245,7 @@ function frame(now){
   const R = o => ({ x: o.x, y: o.y, w: o.sw, h: o.sh });
   const list = objOrder.filter(o => sOver(R(o), view)).map(o => ({ o }));
   [...people].sort((a, b) => (a.x + a.y) - (b.x + b.y)).forEach(p => {
-    const [sx, sy] = P(p.x + .5, p.y + .5), pr = { x: sx - 7, y: sy - 24, w: 14, h: 25 }, pb = [p.x + .15, p.y + .15, p.x + .85, p.y + .85];
+    const [sx, sy] = P(p.x + .5, p.y + .5), pr = { x: sx - 11, y: sy - 35, w: 22, h: 36 }, pb = [p.x + .15, p.y + .15, p.x + .85, p.y + .85];
     let idx = 0; list.forEach((it, i) => { if (it.o && sOver(R(it.o), pr) && behind(it.o.box, pb)) idx = i + 1; });
     list.splice(idx, 0, { p });
   });
@@ -199,7 +266,7 @@ function frame(now){
   if (!M.indoor) spooky(now, dt, view);
   out.setTransform(1, 0, 0, 1, 0, 0);
   const k = cv.clientWidth / VW;
-  people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); tags[i].style.left = (sx - ix) * k + 'px'; tags[i].style.top = (sy - 25 - iy) * k + 'px'; });
+  people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); tags[i].style.left = (sx - ix) * k + 'px'; tags[i].style.top = (sy - 36 - iy) * k + 'px'; });
   if (bubble){ const o = bubble.o; bubble.el.style.left = Math.max(90, Math.min(cv.clientWidth - 90, (o.x + o.sw / 2 - ix) * k)) + 'px'; bubble.el.style.top = Math.max(70, (o.y - 2 - iy) * k) + 'px'; }
   const d = new Date(); document.getElementById('clock').textContent = `🌕 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · 보름밤`;
   requestAnimationFrame(frame);
@@ -238,7 +305,7 @@ mcv.addEventListener('click', e => {   // 탭할 때만 (밀어서 볼 때는 �
 document.getElementById('tMap').onclick = openMap;
 document.getElementById('mClose').onclick = () => mapv.classList.remove('on');
 World.ready = (async () => {
-  ST = await img('art/iso/students.png');
+  await World.Avatar.ready;
   for (const [id, m] of Object.entries(MAPS)){
     const [bg, obj] = await Promise.all([img(m.meta.bgSrc), img(m.meta.objSrc)]);
     m.bg = bg; m.obj = obj;
@@ -250,7 +317,7 @@ World.start = async (id = 'campus', spawn) => {
   resize(); setMap(id, spawn || MAPS[id].meta.start || MAPS[id].meta.spawnIn);
   requestAnimationFrame(frame);
 };
-World.setPlayer = (name, look) => { me.name = name; me.look = ((look || 0) % 8 + 8) % 8; if (tags[0]) tags[0].textContent = name; };
+World.setPlayer = (name, av) => { me.name = name; me.av = av; if (tags[0]) tags[0].textContent = name; };
 World.resize = () => { if (started){ resize(); camX = null; } };
 World.where = () => map;
 // 그 방의 물건 옆으로 순간 이동 (홈 화면의 바로 가기)

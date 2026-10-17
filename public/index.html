@@ -140,6 +140,17 @@ button.who:not(:disabled){border-color:var(--ink)}
 @keyframes bob2{50%{translate:0 -8px}}
 
 /* 탭 */
+.avwrap{display:flex;flex-direction:column;gap:12px}
+.avstage{position:relative;height:200px;background:radial-gradient(circle at 50% 70%,#4A3A7A,#22183F);display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px}
+.avstage canvas{width:110px;height:180px;image-rendering:pixelated}
+.avstage .btn{position:absolute;right:8px;top:8px}
+.avopts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.avo{border:2px solid var(--line);background:#F3EAFB;padding:4px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:0;min-height:72px}
+.avo img{width:44px;height:44px;image-rendering:pixelated;object-fit:contain;object-position:center bottom}
+.avo .s{font-size:12px;line-height:14px;white-space:nowrap}
+.avo.on{border:3px solid #6A4AC8;background:#fff}
+.sw{width:30px;height:30px;border:2px solid var(--ink);padding:0}
+.sw.on{box-shadow:0 0 0 3px #fff,0 0 0 5px #6A4AC8}
 .tabs{flex-shrink:0;height:70px;background:var(--ink2);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom)}
 .tabs button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;font-family:'G7',monospace;font-size:14px;color:#9C8CC8;position:relative}
 .tabs button .ic{opacity:.55}
@@ -426,9 +437,9 @@ const payOf = o => me.house === 'moon' ? Math.round(o.pay * 1.1) : o.pay;
 
 const ORDER_FROM =['양호 선생님', '교장실', '같은 반 친구', '사육장 관리인', '도서관 사서', '천문탑'];
 
-function freshPlayer(nick, look, house){
+function freshPlayer(nick, look, house, av){
   return {
-    nick, look, house, coin:300, mana:40, day:1,
+    nick, look, house, av, coin:300, mana:40, day:1,
     inv:{ herb:6, drop:4, mush:2, mana:3, wool:1, scale:1, uhair:0, egg:0, p_red:0, p_green:0, p_blue:0, p_purple:0 },
     found:[], hints:['p_red'],
     plots:[{k:'herb',st:2,w:false},{k:'drop',st:1,w:false},{k:null,st:0,w:false},{k:null,st:0,w:false},{k:null,st:0,w:false},{k:null,st:0,w:false}],
@@ -454,6 +465,7 @@ function normalize(p){
   p.inv = p.inv || {}; Object.keys(ITEM).forEach(k => { p.inv[k] = p.inv[k] || 0; });
   p.found = p.found || []; p.hints = p.hints || ['p_red']; p.furn = p.furn || {};
   p.orders = p.orders || []; p.know = p.know || 0;
+  p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look));
   // 예전 생물(종류 정보 없음)은 그 자리의 종류로, 이미 키우던 아이들이라 어른으로 쳐요
   p.cr = (p.cr || []).map((c, i) => c.k === undefined ? { k: i, v: 0, name: CREATURES[i]?.name || '친구', age: ADULT_AGE, hatch: 0, full: c.full ?? 3, love: c.love ?? 2 } : { hatch: 0, age: 0, v: 0, ...c });
   return p;
@@ -506,7 +518,10 @@ const dayLabel = () => `봄 학기 ${me.day}일`;
 const secH = (title, meta = '') => `<div class="sec-h"><h3>${title}</h3>${meta ? `<span class="meta">${meta}</span>` : ''}</div>`;
 const hint = (msg, fallback) => `<div class="hint ${msg ? 'on px' : ''}">${msg || fallback}</div>`;
 const backBtn = '<button class="btn ghost" id="back">닫기</button>';
-const face = (look, size = 32, online) => `<div class="face" style="width:${size}px;height:${size}px"><div class="fc" style="background-position:${-60 * (look || 0)}px 0;transform:scale(${(size / 54).toFixed(2)});transform-origin:top center;margin-top:-1px"></div>${online === undefined ? '' : `<span class="dot" style="background:${online ? '#3CCB6E' : '#C8B8E8'}"></span>`}</div>`;
+// who: 플레이어 정보(av가 있으면 그 조합) 또는 옛 look 번호
+const avOf = who => who && typeof who === 'object' ? (who.av || World.Avatar.fromLook(who.look)) : World.Avatar.fromLook(who);
+const face = (who, size = 32, online) => { const src = World.Avatar.head(avOf(who)); return `<div class="face" style="width:${size}px;height:${size}px">${src ? `<img src="${src}" alt="" style="width:100%;height:100%;image-rendering:pixelated">` : ''}${online === undefined ? '' : `<span class="dot" style="background:${online ? '#3CCB6E' : '#C8B8E8'}"></span>`}</div>`; };
+World.Avatar.ready.then(() => { if (typeof sheetOn !== 'undefined' && sheetOn) render(); });
 const houseTag = k => HOUSES[k] ? `<span class="tag" style="background:${HOUSES[k].bg};color:${HOUSES[k].col}">${HOUSES[k].name}</span>` : '';
 function on(sel, fn){ app.querySelectorAll(sel).forEach(el => el.onclick = () => fn(el)); }
 
@@ -530,7 +545,7 @@ function hud(){
 }
 function enterWorld(){
   document.body.classList.add('inworld'); app.innerHTML = ''; sheetOn = false; app.classList.remove('open');
-  World.setPlayer(me.nick, me.look); World.start(); World.resize();
+  World.setPlayer(me.nick, me.av); World.start(); World.resize();
   hud();
 }
 // 바로 가기: 그 장소로 순간 이동한 다음 화면을 열어요
@@ -576,6 +591,7 @@ addEventListener('resize', () => World.resize());
 function render(){
   hud();
   if (!sheetOn) return;
+  if (sub === 'avatar') return renderAvatar();
   if (sub === 'class') return renderClass();
   if (sub === 'dorm') return renderDorm();
   if (sub === 'visit') return renderVisit();
@@ -603,6 +619,7 @@ function renderHome(){
       <button class="tile px" id="goClass">${ic('book')}<span class="main"><span class="b">수업 ${classLeft()} / ${CLASS_MAX}</span><span class="s ${examStarted() ? 'sub' : ''}" style="${examStarted() ? '' : 'color:#C2385E'}">${!examStarted() ? '쪽지시험 있음!' : `지식 ${me.know || 0}`}</span></span></button>
       <button class="tile px" id="goDorm">${ic('bed')}<span class="main"><span class="b">내 방</span><span class="s sub">${H.name} ${roomNo(me.house, uid || me.nick)}호</span></span></button>
     </div>
+    <button class="tile px" id="goAvatar" style="width:100%"><div class="face" style="width:40px;height:40px;background:#E8DDF8">${World.Avatar.loaded ? `<img src="${World.Avatar.head(me.av)}" alt="" style="width:100%;height:100%;image-rendering:pixelated">` : ''}</div><span class="main" style="flex:1"><span class="b">캐릭터 꾸미기</span><span class="s sub">머리·눈·옷·신발·소품을 바꿔요</span></span></button>
     <section class="sec">
       ${secH('바로 가기', '누르면 그곳으로 가요')}
       <div class="tiles">${[['lab', 'cauldron', 'lab', 'cauldron', '물약 교실', '물약 끓이기·도감'], ['toxic', 'bed', 'green', 'sprout', '독초 온실', '씨앗 심고 수확'], ['campus', 'blackcat', 'ranch', 'egg', '사육장', '생물 돌보기'], ['campus', 'stall', 'market', 'bag', '등불 시장', '사고팔기·친구']]
@@ -621,6 +638,7 @@ function renderHome(){
   bindEventBanner();
   $('#goClass').onclick = () => goPlace('lab', 'skull', 'home', 'class');
   $('#goDorm').onclick = () => goPlace(HOUSE_DORM[me.house], 'sofa', 'home', 'dorm');
+  $('#goAvatar').onclick = () => { avDraft = null; openSheet('home', 'avatar'); };
   on('[data-go]', b => { const [m, o, t] = b.dataset.go.split(','); goPlace(m, o, t); });
 }
 
@@ -944,7 +962,7 @@ function sleep(){
 let visitUid = null, visitGuest = {}, visitOff = null, giftPick = null, vMine = null, vTheirs = null;
 function guestRow(id, g, mine){
   const H = HOUSES[g.house];
-  return `<div class="li" style="align-items:flex-start">${face(g.look, 34)}
+  return `<div class="li" style="align-items:flex-start">${face(g, 34)}
     <div class="main"><span class="s"><b class="b" ${g.uid !== uid ? `data-visit="${g.uid}" style="cursor:pointer;text-decoration:underline;color:${H ? H.col : 'var(--ink)'}"` : `style="color:${H ? H.col : 'var(--ink)'}"`}>${esc(g.nick)}</b> <span class="sub">${new Date(g.at).toLocaleDateString('ko-KR', { month:'numeric', day:'numeric' })}</span></span>
     ${g.text ? `<span style="word-break:break-all">${esc(g.text)}</span>` : ''}
     ${g.gift ? `<span class="d" style="display:flex;align-items:center;gap:2px">${ic(g.gift, 'transform:scale(.6);margin:-6px')}선물 · ${ITEM[g.gift]}${g.claimed ? ' (받음)' : ''}</span>` : ''}</div>
@@ -990,7 +1008,7 @@ function bindBreed(p){
     btn.disabled = true;
     const egg = makeEgg(mineC, theirs);
     me.cr.push(egg); me.mana -= BREED_MANA; me.bredWith[visitUid] = todayKey(); save();
-    F.push(F.ref(db, 'guest/' + visitUid), { uid, nick: me.nick, look: me.look, house: me.house, text: `${mineC.name}${josa(mineC.name, '과', '와')} ${theirs.name}${josa(theirs.name, '이', '가')} 짝꿍이 됐어요!`, at: Date.now() }).catch(() => {});
+    F.push(F.ref(db, 'guest/' + visitUid), { uid, nick: me.nick, look: me.look, av: me.av, house: me.house, text: `${mineC.name}${josa(mineC.name, '과', '와')} ${theirs.name}${josa(theirs.name, '이', '가')} 짝꿍이 됐어요!`, at: Date.now() }).catch(() => {});
     toast(`${mineC.name} ♥ ${theirs.name} · 알이 내 사육장으로 갔어요!`);
     vMine = vTheirs = null; renderVisit();
   };
@@ -1035,7 +1053,7 @@ function renderVisit(){
     if (!text && !giftPick) return toast('한 줄이라도 남겨 주세요.');
     if (giftPick && me.inv[giftPick] < 1) return;
     send.disabled = true;
-    const entry = { uid, nick: me.nick, look: me.look, house: me.house, text, at: Date.now() };
+    const entry = { uid, nick: me.nick, look: me.look, av: me.av, house: me.house, text, at: Date.now() };
     if (giftPick) entry.gift = giftPick;
     try { await F.push(F.ref(db, 'guest/' + visitUid), entry); }
     catch(e){ send.disabled = false; return toast('방명록을 남기지 못했어요: ' + (e.code || e.message)); }
@@ -1251,7 +1269,7 @@ function paintEvent(){
   const me_ = solo ? 'me' : uid;
   const houseOf = id => id === me_ ? me.house : playersList[id]?.house;
   const nickOf = id => id === me_ ? me.nick : playersList[id]?.nick || '친구';
-  const lookOf = id => id === me_ ? me.look : playersList[id]?.look;
+  const lookOf = id => id === me_ ? me : playersList[id];
   {
     const total = Object.values(evData).reduce((t, v) => t + (+v || 0), 0), goal = dragonGoal(), done = total >= goal;
     const mine = +evData[me_] || 0;
@@ -1426,27 +1444,84 @@ async function houseCounts(){
   try { const snap = await F.get(F.ref(db, 'players')); Object.entries(snap.val() || {}).forEach(([id, p]) => { if (id !== uid && p?.house) c[p.house] = (c[p.house] || 0) + 1; }); } catch(e){}
   return c;
 }
+// ===== 캐릭터 꾸미기: 머리부터 발끝까지 =====
+const AV_TABS = [
+  ['face', '얼굴', [['피부', null, 'skinC'], ['눈', 'eyes', 'eyeC']]],
+  ['hair', '머리', [['머리 모양', 'hair', 'hairC']]],
+  ['hat', '머리 장식', [['장식', 'hat', 'hatC']]],
+  ['top', '옷', [['윗옷', 'top', 'topC'], ['아래옷', 'bottom', 'bottomC']]],
+  ['shoes', '신발', [['신발', 'shoes', 'shoesC']]],
+  ['acc', '소품', [['등·손 소품', 'acc', 'accC']]],
+];
+let avTab = 'face', avBack = false, avTimer = 0;
+const avThumb = (av, head) => { const A = World.Avatar; if (!A.loaded) return ''; const c = document.createElement('canvas'), w = A.FW, h = head ? A.FW : A.FH; c.width = w; c.height = h; c.getContext('2d').drawImage(A.compose(av), 0, head ? 1 : 0, w, h, 0, 0, w, h); return c.toDataURL(); };
+function avatarUI(av){
+  const A = World.Avatar, M = A.meta, [, , rows] = AV_TABS.find(t => t[0] === avTab);
+  const hidden = new Set(['eyes', 'hair', 'hat', 'top', 'bottom', 'shoes', 'acc'].flatMap(c => M.parts[c][av[c]]?.hide || []));
+  const swatch = (slot, key) => `<div class="pal">${A.palOf(slot).map((r, i) => `<button class="sw ${av[key] === i ? 'on' : ''}" data-avc="${key},${i}" style="background:${r[1]}" aria-label="색 ${i + 1}"></button>`).join('')}</div>`;
+  return `
+    <div class="avwrap">
+      <div class="avstage px"><canvas id="avCv" width="${A.FW}" height="${A.FH}"></canvas><button class="btn sm" id="avTurn">${avBack ? '앞모습' : '뒷모습'}</button></div>
+      <div class="seg" style="grid-template-columns:repeat(3,1fr)">${AV_TABS.map(([k, l]) => `<button data-avt="${k}" class="${avTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+      ${rows.map(([label, cat, key]) => {
+        if (cat && hidden.has(cat)) return `<div class="hint">${label}: 지금 고른 옷이 덮고 있어요</div>`;
+        const slot = cat ? M.parts[cat][av[cat]].slot : 'skin';
+        return `<section class="sec">${secH(label, cat ? M.parts[cat][av[cat]].n : '')}
+          ${cat ? `<div class="avopts">${M.parts[cat].map((p, i) => `<button class="avo ${av[cat] === i ? 'on' : ''}" data-avp="${cat},${i}"><img src="${avThumb({ ...av, [cat]: i }, ['eyes', 'hair', 'hat'].includes(cat))}" alt=""><span class="s">${p.n}</span></button>`).join('')}</div>` : ''}
+          ${slot ? swatch(slot === 'skin' ? 'skin' : slot, A.COLOR[slot] || key) : ''}</section>`;
+      }).join('')}
+      <button class="btn sm" id="avRand" style="align-self:center">🎲 아무거나</button>
+    </div>`;
+}
+function bindAvatarUI(av, redraw){
+  const A = World.Avatar, cv = $('#avCv'); if (!cv) return;
+  clearInterval(avTimer); let t = 0;
+  const paint = () => { if (!document.body.contains(cv)) return clearInterval(avTimer); const g = cv.getContext('2d'), fr = (avBack ? 3 : 0) + [0, 1, 0, 2][t++ % 4]; g.clearRect(0, 0, A.FW, A.FH); g.drawImage(A.compose(av), fr * A.FW, 0, A.FW, A.FH, 0, 0, A.FW, A.FH); };
+  paint(); avTimer = setInterval(paint, 220);
+  on('[data-avt]', b => { avTab = b.dataset.avt; redraw(); });
+  on('[data-avp]', b => { const [c, i] = b.dataset.avp.split(','); av[c] = +i; redraw(); });
+  on('[data-avc]', b => { const [k, i] = b.dataset.avc.split(','); av[k] = +i; redraw(); });
+  $('#avTurn').onclick = () => { avBack = !avBack; redraw(); };
+  $('#avRand').onclick = () => { Object.assign(av, A.random()); redraw(); };
+}
+// 시트: 나중에 다시 꾸미기
+let avDraft = null;
+function renderAvatar(){
+  if (!avDraft) avDraft = { ...me.av };
+  frame(null, '캐릭터 꾸미기', '머리부터 발끝까지 골라요', `
+    ${avatarUI(avDraft)}
+    <div style="display:flex;gap:8px"><button class="btn px" id="avCancel" style="flex:1">그만두기</button><button class="btn go px" id="avSave" style="flex:2">이 모습으로!</button></div>`);
+  bindAvatarUI(avDraft, () => { const p = app.querySelector('.panel'), y = p.scrollTop; renderAvatar(); app.querySelector('.panel').scrollTop = y; });
+  $('#avCancel').onclick = () => { avDraft = null; closeSheet(); };
+  $('#avSave').onclick = () => {
+    me.av = World.Avatar.fix(avDraft); avDraft = null; save(); World.setPlayer(me.nick, me.av);
+    if (!solo) F.update(F.ref(db, 'online/' + uid), { av: me.av }).catch(() => {});
+    toast('새 모습이 마음에 들어요!'); closeSheet();
+  };
+}
 function showCreate(done, counts = {}){
-  let look = 0, house = null, nick = '';
+  let look = Math.floor(Math.random() * 8), house = null, nick = '';
+  const av = World.Avatar.fromLook(Math.floor(Math.random() * 1e6));
   const draw = () => {
     cover(`<div class="card px">
       <span class="b" style="font-size:20px">입학 원서</span>
       <label class="field"><span class="s">이름 (1~8 자)</span><input id="nick" maxlength="8" placeholder="예: 별이" value="${esc(nick)}"></label>
-      <span class="s">모습 고르기</span>
-      <div class="grid" style="grid-template-columns:repeat(4,1fr)">${Array.from({length:8}, (_, i) => `<button data-look="${i}" style="height:76px;padding:0;overflow:hidden;display:flex;justify-content:center;align-items:flex-start;background:${look === i ? '#fff' : '#E8DDF8'};border:4px solid ${look === i ? '#6A4AC8' : 'var(--line)'}"><div class="fc" style="background-position:${-60 * i}px 0"></div></button>`).join('')}</div>
+      <span class="s">내 캐릭터 만들기</span>
+      ${World.Avatar.loaded ? avatarUI(av) : '<div class="hint">그림을 불러오는 중...</div>'}
       <span class="s">기숙사 고르기 · 언제 깨어 있는 사람인가요? (기숙사마다 ${HOUSE_CAP}명)</span>
       ${houseCards(house, counts)}
       <p class="err" id="err"></p>
       <button class="btn go" id="enroll">입학하기</button>
     </div>`);
     const keep = () => { nick = $('#nick').value; };
-    app.querySelectorAll('[data-look]').forEach(b => b.onclick = () => { keep(); look = +b.dataset.look; draw(); });
+    if (!World.Avatar.loaded) World.Avatar.ready.then(() => { keep(); draw(); });
+    else bindAvatarUI(av, () => { keep(); const y = app.querySelector('.cover').scrollTop; draw(); app.querySelector('.cover').scrollTop = y; });
     app.querySelectorAll('[data-house]').forEach(b => b.onclick = () => { keep(); house = b.dataset.house; draw(); });
     $('#enroll').onclick = () => {
       keep(); const n = nick.trim();
       if (n.length < 1 || n.length > 8) return $('#err').textContent = '이름을 1~8 자로 정해 주세요.';
       if (!house) return $('#err').textContent = '기숙사를 골라 주세요.';
-      done(freshPlayer(n, look, house));
+      done(freshPlayer(n, look, house, World.Avatar.fix(av)));
     };
   };
   draw();
@@ -1485,7 +1560,7 @@ async function boot(){
     const snap = await F.get(F.ref(db, 'players/' + uid));
     const enter = () => {
       const oref = F.ref(db, 'online/' + uid);
-      F.set(oref, { nick: me.nick, look: me.look, house: me.house, at: Date.now() });
+      F.set(oref, { nick: me.nick, look: me.look, av: me.av, house: me.house, at: Date.now() });
       F.onDisconnect(oref).remove();
       F.onValue(F.ref(db, 'online'), s => { onlineList = s.val() || {}; if (tab === 'home' && !sub) render(); });
       F.onValue(F.ref(db, 'market'), s => { marketList = s.val() || {}; if (tab === 'market') render(); });
