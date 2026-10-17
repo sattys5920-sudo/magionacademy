@@ -320,8 +320,6 @@ const HINTS = Object.fromEntries(POTIONS.map(p => [p, `${ITEM[p]} = ${recipeText
 // 지식이 오를 때 열리는 레시피 힌트 순서: 기존 12종 다음, 표 순서(쉬운 것부터)
 const HINT_ORDER = ['p_green','p_blue','p_grow','p_vigor','p_fluff','p_purple','p_dawn','p_sun','p_dusk','p_moon','p_dragon', ...POTION_LIST.slice(12).map(x => x.id)];
 const KNOW_PER_HINT = 3;
-const RANKS = [[100,'별빛 연금술사'],[60,'대연금술사'],[30,'숙련 연금술사'],[10,'연금술사'],[0,'견습 연금술사']];
-const rankOf = n => RANKS.find(([k]) => n >= k)[1];
 // 생물 종류 (그림은 creatures.png의 같은 칸). baby → adult 이름이 바뀌어요.
 const CREATURES = [
   { name:'뭉게', kind:'구름양', baby:'아기 구름양', food:'약초 주기', mat:'wool', bg:'#E6F0FF', names:['몽실','솜사탕','구름이','포실','뭉치'] },
@@ -583,7 +581,7 @@ let dexSel = null, dexPage = 0, matAll = false;
 const DEX_PAGE = 20;
 function renderLab(){
   const n = me.found.length, sel = dexSel && POTION_INFO[dexSel];
-  frame('lab', '물약 연구실', `${rankOf(n)} · 도감 ${n} / ${POTIONS.length}`, `
+  frame('lab', '물약 연구실', `물약 도감 ${n} / ${POTIONS.length}`, `
     <section class="sec">
       ${secH('솥', `재료 3개 · 마력 ${brewCost()}`)}
       <div class="grid" style="grid-template-columns:repeat(3,1fr)">
@@ -637,8 +635,7 @@ function renderLab(){
       const isNew = !me.found.includes(p);
       if (isNew) me.found.push(p);
       if (!me.hints.includes(p)) me.hints.push(p);
-      const rankUp = isNew && rankOf(me.found.length) !== rankOf(me.found.length - 1);
-      brewMsg = `${ITEM[p]} 완성!${isNew ? ' 도감에 새로 적었어요.' : ''}${rankUp ? ` 이제 「${rankOf(me.found.length)}」이에요!` : ''}`;
+      brewMsg = `${ITEM[p]} 완성!${isNew ? ' 도감에 새로 적었어요.' : ''}`;
       dexSel = p; dexPage = Math.floor(POTIONS.indexOf(p) / DEX_PAGE);
     } else if (me.house === 'ember' && myTime()){
       const back = slots[Math.floor(Math.random() * 3)]; me.inv[back]++;
