@@ -142,12 +142,12 @@ button.who:not(:disabled){border-color:var(--ink)}
 /* 탭 */
 .avwrap{display:flex;flex-direction:column;gap:12px}
 .avstage{position:relative;height:236px;background:radial-gradient(circle at 50% 70%,#4A3A7A,#22183F);display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px}
-.avstage canvas{width:138px;height:210px;image-rendering:pixelated}
+.avstage canvas{width:132px;height:192px;image-rendering:pixelated}
 .avstage .btn{position:absolute;right:8px;top:8px}
-.avopts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.avopts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .avo{border:2px solid var(--line);background:#F3EAFB;padding:4px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:0;min-height:72px}
 .avo img{width:44px;height:44px;image-rendering:pixelated;object-fit:contain;object-position:center bottom}
-.avo .s{font-size:12px;line-height:14px;white-space:nowrap}
+.avo .s{font-size:12px;line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .avo.on{border:3px solid #6A4AC8;background:#fff}
 .sw{width:30px;height:30px;border:2px solid var(--ink);padding:0}
 .sw.on{box-shadow:0 0 0 3px #fff,0 0 0 5px #6A4AC8}
@@ -1897,37 +1897,61 @@ async function houseCounts(){
 // ===== 캐릭터 꾸미기: 머리부터 발끝까지 =====
 // [탭, 이름, [[제목, 부품(없으면 색만), 색 키, 팔레트]]]
 const AV_TABS = [
-  ['face', '얼굴', [['피부색', null, 'skinC', 'skin'], ['눈 모양', 'eyes', 'eyeC', 'eye'], ['입 모양', 'mouth', null, null]]],
+  ['face', '얼굴', [['체형', 'body', null, null], ['피부색', null, 'skinC', 'skin'], ['표정', 'face', 'eyeC', 'eye']]],
   ['hair', '머리', [['머리 모양', 'hair', 'hairC', 'hair']]],
-  ['uni', '교복', [['교복', 'uni', null, null], ['신발 색', null, 'shoeC', 'shoes']]],
+  ['uni', '옷', [['상의', 'top', null, null], ['하의', 'legs', 'legsC', 'cloth'], ['신발', 'feet', 'feetC', 'cloth']]],
+  ['acc', '소품', [['모자', 'hat', 'hatC', 'cloth'], ['망토', 'cape', null, null], ['목 장식', 'neck', 'neckC', 'cloth']]],
 ];
+const AV_BODIES = [{ n: '여자' }, { n: '남자' }];
+const AV_HEADTHUMB = { face: 1, hair: 1, hat: 1 };
 let avTab = 'face', avView = 0, avTimer = 0;   // 미리보기 방향: 0 앞, 1 옆, 2 뒤
-const AV_VIEWS = [[0, '앞모습'], [6, '옆모습'], [3, '뒷모습']];
+const AV_VIEWS = [['down', '앞모습'], ['left', '옆모습'], ['up', '뒷모습']];
+const avLoaded = new Set();
 const avThumb = (av, head) => { const A = World.Avatar; if (!A.loaded) return ''; const c = document.createElement('canvas'), b = A.headBox, [x, y, w, h] = head ? [b.x, b.y, b.s, b.s] : [0, 0, A.FW, A.FH]; c.width = w; c.height = h; c.getContext('2d').drawImage(A.compose(av), x, y, w, h, 0, 0, w, h); return c.toDataURL(); };
 function avatarUI(av){
-  const A = World.Avatar, M = A.meta, [, , rows] = AV_TABS.find(t => t[0] === avTab);
-  const swatch = (pal, key) => `<div class="pal">${M.pal[pal].map((r, i) => `<button class="sw ${av[key] === i ? 'on' : ''}" data-avc="${key},${i}" style="background:${r[1]}" aria-label="색 ${i + 1}"></button>`).join('')}</div>`;
+  const A = World.Avatar, M = A.meta, [, , rows] = AV_TABS.find(t => t[0] === avTab), body = M.bodies[av.body || 0];
+  av = A.fix(av);
+  const swatch = (pal, key) => `<div class="pal">${M.colors[pal].map((nm, i) => `<button class="sw ${av[key] === i ? 'on' : ''}" data-avc="${key},${i}" style="background:${M.pal[pal][nm][Math.min(3, M.pal[pal][nm].length - 1)]}" aria-label="색 ${i + 1}"></button>`).join('')}</div>`;
+  const list = cat => cat === 'body' ? AV_BODIES.map((p, i) => [p, i]) : M.parts[cat].map((p, i) => [p, i]).filter(([p]) => p.f === null || p.L[body]);
+  const cur = cat => cat === 'body' ? AV_BODIES[av.body || 0].n : M.parts[cat][av[cat]].n;
   return `
     <div class="avwrap">
       <div class="avstage px"><canvas id="avCv" width="${A.FW}" height="${A.FH}"></canvas><button class="btn sm" id="avTurn">↻ ${AV_VIEWS[(avView + 1) % AV_VIEWS.length][1]}</button></div>
       <div class="seg" style="grid-template-columns:repeat(${AV_TABS.length},1fr)">${AV_TABS.map(([k, l]) => `<button data-avt="${k}" class="${avTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
-      ${rows.map(([label, cat, key, pal]) => `<section class="sec">${secH(label, cat ? M.parts[cat][av[cat]].n : `${av[key] + 1} / ${M.pal[pal].length}`)}
-          ${cat ? `<div class="avopts">${M.parts[cat].map((p, i) => `<button class="avo ${av[cat] === i ? 'on' : ''}" data-avp="${cat},${i}"><img src="${avThumb({ ...av, [cat]: i }, cat !== 'uni')}" alt=""><span class="s">${p.n}</span></button>`).join('')}</div>` : ''}
+      ${rows.map(([label, cat, key, pal]) => `<section class="sec">${secH(label, cat ? cur(cat) : `${av[key] + 1} / ${M.colors[pal].length}`)}
+          ${cat ? `<div class="avopts">${list(cat).map(([p, i]) => `<button class="avo ${av[cat] === i ? 'on' : ''}" data-avp="${cat},${i}"><img src="${avThumb({ ...av, [cat]: i }, !!AV_HEADTHUMB[cat])}" alt=""><span class="s">${p.n}</span></button>`).join('')}</div>` : ''}
           ${key ? swatch(pal, key) : ''}</section>`).join('')}
-      ${avTab === 'uni' ? `<div class="hint">교복 색은 기숙사 색이에요${av.house ? ` · ${HOUSES[av.house].name}` : ''}</div>` : ''}
+      ${avTab === 'uni' || avTab === 'acc' ? `<div class="hint">상의와 망토 색은 기숙사 색이에요${av.house ? ` · ${HOUSES[av.house].name}` : ''}</div>` : ''}
       <button class="btn sm" id="avRand" style="align-self:center">🎲 아무거나</button>
+      <button class="btn sm" id="avCredits" style="align-self:center">그림 만든 사람들 (LPC 크레딧)</button>
     </div>`;
 }
 function bindAvatarUI(av, redraw){
   const A = World.Avatar, cv = $('#avCv'); if (!cv) return;
   clearInterval(avTimer); let t = 0;
-  const paint = () => { if (!document.body.contains(cv)) return clearInterval(avTimer); const g = cv.getContext('2d'), fr = AV_VIEWS[avView][0] + [0, 1, 0, 2][t++ % 4]; g.clearRect(0, 0, A.FW, A.FH); g.drawImage(A.compose(av), fr * A.FW, 0, A.FW, A.FH, 0, 0, A.FW, A.FH); };
-  paint(); avTimer = setInterval(paint, 220);
+  const paint = () => { if (!document.body.contains(cv)) return clearInterval(avTimer); const g = cv.getContext('2d'), W = A.meta.walk, fr = A.meta.dirs[AV_VIEWS[avView][0]] + W[t++ % W.length]; g.clearRect(0, 0, A.FW, A.FH); g.drawImage(A.compose(av), fr * A.FW, 0, A.FW, A.FH, 0, 0, A.FW, A.FH); };
+  paint(); avTimer = setInterval(paint, 160);
+  // 이 탭 부품 그림을 다 불러온 뒤 썸네일을 다시 그려요
+  if (!avLoaded.has(avTab)){ const tab = avTab, cats = AV_TABS.find(t => t[0] === tab)[2].map(r => r[1]).filter(c => c && c !== 'body'); A.preload(cats).then(() => { avLoaded.add(tab); if (avTab === tab && document.body.contains(cv)) redraw(); }); }
+  const cr = $('#avCredits'); if (cr) cr.onclick = showCredits;
   on('[data-avt]', b => { avTab = b.dataset.avt; redraw(); });
-  on('[data-avp]', b => { const [c, i] = b.dataset.avp.split(','); av[c] = +i; redraw(); });
+  on('[data-avp]', b => { const [c, i] = b.dataset.avp.split(','); av[c] = +i; Object.assign(av, A.fix(av), { house: av.house }); redraw(); });
   on('[data-avc]', b => { const [k, i] = b.dataset.avc.split(','); av[k] = +i; redraw(); });
   $('#avTurn').onclick = () => { avView = (avView + 1) % AV_VIEWS.length; redraw(); };
   $('#avRand').onclick = () => { Object.assign(av, A.random(), { house: av.house }); redraw(); };
+}
+// LPC 그림 크레딧 (CC-BY-SA / GPL / OGA-BY: 작가 표기가 필요해요)
+async function showCredits(){
+  let list = [];
+  try { list = await (await fetch('credits.json')).json(); } catch (e) {}
+  const by = {}; list.forEach(c => (c.authors || []).forEach(a => { by[a] = by[a] || new Set(); (c.licenses || []).forEach(l => by[a].add(l)); }));
+  const names = Object.keys(by).sort((a, b) => a.localeCompare(b));
+  const d = document.createElement('div'); d.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(20,14,30,.75);display:flex;align-items:center;justify-content:center;padding:16px';
+  d.innerHTML = `<div class="card px" style="max-height:80vh;overflow:auto"><span class="b" style="font-size:18px">그림 만든 사람들</span>
+    <p class="s">캐릭터 그림은 Liberated Pixel Cup(LPC) 작가들의 그림을 썼어요. Universal LPC Spritesheet Character Generator (github.com/LiberatedPixelCup). 라이선스: CC-BY-SA 3.0 / GPL 3.0 / OGA-BY 3.0 등.</p>
+    <p class="s" style="line-height:1.6">${names.map(n => esc(n)).join(' · ')}</p>
+    <button class="btn" id="crClose">닫기</button></div>`;
+  document.body.appendChild(d); d.querySelector('#crClose').onclick = () => d.remove();
 }
 // 시트: 나중에 다시 꾸미기
 let avDraft = null;

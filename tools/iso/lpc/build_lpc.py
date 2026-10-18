@@ -1,0 +1,213 @@
+# LPC(Universal LPC Spritesheet Character Generator) 파츠 → 게임 캐릭터 부품
+# python3 build_lpc.py <LPC 저장소 경로>
+#   - 고른 파츠의 walk.png만 받아요 (sparse checkout)
+#   - 4방향(아래·위·왼쪽·오른쪽) × 5프레임(서기 + 걷기 4)을 잘라 부품마다 PNG 하나 (public/art/lpc/)
+#   - 색은 LPC 팔레트 그대로: 층마다 (칸, 원래 팔레트)를 적어 두면 게임이 고른 팔레트로 바꿔 칠해요
+#   - 쓴 파츠 작가·라이선스는 크레딧으로 (../out/lpc_meta.json 의 credits)
+import sys, os, json, glob, subprocess, re
+import numpy as np
+from PIL import Image
+HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.join(HERE, '..', '..', '..')
+LPC = sys.argv[1]; SHEETS = os.path.join(LPC, 'spritesheets'); DEFS = os.path.join(LPC, 'sheet_definitions')
+OUTP = os.path.join(ROOT, 'public', 'art', 'lpc'); OUTM = os.path.join(HERE, '..', 'out', 'lpc_meta.json')
+BODIES = ['female', 'male']
+ROWS = {'down': 2, 'up': 0, 'left': 1, 'right': 3}; DIRS = ['down', 'up', 'left', 'right']
+COLS = [0, 1, 3, 5, 7]                       # 서기 + 걷기 4
+FILES = set(l.strip() for l in open(os.path.join(LPC, '..', 'lpc_files.txt')))
+PAL = {m: json.load(open(os.path.join(LPC, 'palette_definitions', m, f'{m}_ulpc.json'))) for m in ('body', 'hair', 'eye', 'cloth')}
+BASE = {'body': 'light', 'hair': 'orange', 'eye': 'blue', 'cloth': 'white'}
+def jd(p): return json.load(open(os.path.join(DEFS, p)))
+def defs(pattern): return sorted(glob.glob(os.path.join(DEFS, pattern), recursive=True))
+# ---------- 고르기 ----------
+def ok(d): return 'walk' in d.get('animations', ['walk'])
+SEL = {}
+SEL['body'] = [('body/body.json', None)]
+SEL['face'] = [(os.path.relpath(f, DEFS), None) for f in defs('head/faces/face_*.json')]
+SEL['hair'] = [(os.path.relpath(f, DEFS), None) for f in defs('hair/**/*.json')
+               if not os.path.basename(f).startswith('meta') and jd(os.path.relpath(f, DEFS)).get('type_name') == 'hair']
+def pick(globs, skip=()):
+    out = []
+    for g in globs:
+        for f in defs(g):
+            b = os.path.basename(f)
+            if b.startswith('meta') or any(s in b for s in skip): continue
+            out.append((os.path.relpath(f, DEFS), None))
+    return out
+SEL['top'] = pick(['torso/shirts/**/*.json', 'torso/dresses/**/*.json', 'torso/jacket/*.json', 'torso/vest/*.json'], skip=('child', 'santa', 'sleeves'))
+SEL['legs'] = pick(['legs/**/*.json'], skip=('armour',))
+SEL['feet'] = pick(['feet/shoes/*.json', 'feet/boots/*.json', 'feet/feet_sandals.json', 'feet/feet_slippers.json'])
+SEL['hat'] = pick(['headwear/hats/magic/*.json', 'headwear/hats/formal/*.json', 'headwear/hats/caps/*.json', 'headwear/hats/holiday/*.json', 'headwear/coverings/**/*hood*.json'])
+SEL['cape'] = pick(['torso/cape/cape_solid.json', 'torso/cape/cape_tattered.json'])
+SEL['neck'] = pick(['headwear/neck/*.json'])
+SLOT = {'body': 'skin', 'face': 'skin', 'hair': 'hair', 'top': 'top', 'legs': 'legs', 'feet': 'feet', 'hat': 'hat', 'cape': 'top', 'neck': 'neck'}
+HEAD = {'female': 'head/heads/human/female/', 'male': 'head/heads/human/male/'}
+DROP = {'face': ('Looking Left', 'Looking Right', 'Closing Eyes'),
+        'hat': ('Second Color', 'Belt', 'Buckle', 'feather', 'Feather', 'Trim'),
+        'top': ('Trim', 'Sleeves'), 'neck': ('Cape Clip', 'Cape Tie')}
+KO = {  # 이름 (게임 화면)
+ 'Afro': '아프로', 'Cornrows': '콘로', 'Dreadlocks long': '긴 드레드', 'Dreadlocks short': '짧은 드레드', 'Flat top fade': '플랫탑 페이드', 'Flat top straight': '플랫탑',
+ 'Natural': '내추럴', 'Twists fade': '트위스트 페이드', 'Twists straight': '트위스트', 'Balding': '대머리 직전', 'Buzzcut': '까까머리', 'High and tight': '하이앤타이트',
+ 'Longhawk': '긴 모히칸', 'Shorthawk': '짧은 모히칸', 'Bob': '단발', 'Bob side part': '옆 가르마 단발', 'Lob': '긴 단발', 'Relm Short': '렐름 숏', 'Bangs bun': '앞머리 똥머리',
+ 'Braid': '땋은 머리', 'Braid2': '땋은 머리 2', 'Half up': '반묶음', 'High ponytail': '높은 포니테일', 'Long tied': '길게 묶음', 'Ponytail': '포니테일', 'Ponytail2': '포니테일 2',
+ 'Relm w/Ponytail': '렐름 포니테일', 'Relm XLong': '렐름 아주 긴 머리', 'Shoulderl': '왼쪽 어깨 머리', 'Shoulderr': '오른쪽 어깨 머리', 'Long Topknot': '긴 정수리 묶음',
+ 'Long Topknot 2': '긴 정수리 묶음 2', 'Short Topknot': '짧은 정수리 묶음', 'Short Topknot 2': '짧은 정수리 묶음 2', 'Large Curls': '큰 웨이브', 'Large Curls XLong': '아주 긴 웨이브',
+ 'Curly long': '긴 곱슬', 'Curly short': '짧은 곱슬', 'Curly short 2': '짧은 곱슬 2', 'Jewfro': '복슬 곱슬', 'Bangslong': '긴 앞머리', 'Bangslong2': '긴 앞머리 2',
+ 'Curtains long': '긴 커튼 앞머리', 'Long': '긴 머리', 'Long center part': '가운데 가르마 긴 머리', 'Long messy': '부스스 긴 머리', 'Long messy2': '부스스 긴 머리 2',
+ 'Long straight': '긴 생머리', 'Loose': '풀어 내린 머리', 'Wavy': '웨이브', 'Bunches': '양갈래 묶음', 'Pigtails': '양갈래', 'Pigtails bangs': '앞머리 양갈래', 'Bangs': '앞머리',
+ 'Bangsshort': '짧은 앞머리', 'Bedhead': '까치집', 'Cowlick': '삐친 머리', 'Cowlick tall': '높이 삐친 머리', 'Curtains': '커튼 앞머리', 'Idol': '아이돌', 'Messy1': '헝클어진 머리',
+ 'Messy2': '헝클어진 머리 2', 'Messy3': '헝클어진 머리 3', 'Mop': '바가지 머리', 'Page': '페이지보이', 'Page2': '페이지보이 2', 'Parted': '가르마', 'Parted 2': '가르마 2',
+ 'Parted 3': '가르마 3', 'Side Parted w/Bangs': '옆 가르마 앞머리', 'Side Parted w/Bangs 2': '옆 가르마 앞머리 2', 'Pixie': '픽시컷', 'Plain': '단정한 머리', 'Single': '한 갈래',
+ 'Swoop': '쓸어 넘긴 머리', 'Side Swoop': '옆으로 쓸어 넘김', 'Unkempt': '덥수룩', 'Halfmessy': '반쯤 헝클어짐', 'Spiked': '삐죽 머리', 'Spiked2': '삐죽 머리 2',
+ 'Spiked beehive': '삐죽 벌집 머리', 'Spiked liberty': '리버티 스파이크', 'Spiked liberty2': '리버티 스파이크 2', 'Spiked porcupine': '고슴도치 머리', 'Long band': '머리띠 긴 머리',
+ 'Princess': '공주 머리', 'Sara': '사라 머리', 'Xlong': '아주 긴 머리', 'XLong Wavy': '아주 긴 웨이브 머리',
+ 'Angry': '화남', 'Angry Alt': '화남 2', 'Blush': '부끄', 'Closed Eyes': '눈 감음', 'Rolling Eyes': '흥', 'Happy': '웃음', 'Happy Alt': '웃음 2', 'Neutral': '무표정',
+ 'Sad': '슬픔', 'Sad Alt': '슬픔 2', 'Shame': '민망', 'Shock': '깜짝', 'Tears': '눈물',
+ 'Longsleeve': '긴팔', 'Longsleeve 2': '긴팔 2', 'Longsleeve 2 Buttoned': '단추 긴팔', 'Cardigan': '카디건', 'Longsleeve Polo': '긴팔 폴로', 'Longsleeve 2 Scoop': '라운드 긴팔',
+ 'Longsleeve 2 VNeck': '브이넥 긴팔', 'Collared/Formal Longsleeve': '셔츠', 'Striped Collared/Formal Longsleeve': '줄무늬 셔츠', 'Longsleeve laced': '끈 긴팔', 'Scoop': '라운드',
+ 'Shortsleeve': '반팔', 'Shortsleeve Cardigan': '반팔 카디건', 'Shortsleeve Polo': '반팔 폴로', 'TShirt': '티셔츠', 'TShirt Buttoned': '단추 티셔츠', 'TShirt Scoop': '라운드 티셔츠',
+ 'TShirt VNeck': '브이넥 티셔츠', 'Sleeveless': '민소매', 'Original Sleeveless': '민소매 2', 'Sleeveless 2': '민소매 3', 'Sleeveless 2 Buttoned': '단추 민소매',
+ 'Sleeveless 2 Cardigan': '민소매 카디건', 'Sleeveless 2 Polo': '민소매 폴로', 'Sleeveless 2 Scoop': '라운드 민소매', 'Sleeveless 2 VNeck': '브이넥 민소매', 'Sleeveless laced': '끈 민소매',
+ 'Sleeveless striped': '줄무늬 민소매', 'Tanktop': '나시', 'Blouse': '블라우스', 'Longsleeve blouse': '긴팔 블라우스', 'Corset': '코르셋', 'Robe': '로브', 'Tunic': '튜닉', 'Sara Tunic': '사라 튜닉',
+ 'Bodice': '보디스 드레스', 'Sash dress': '띠 드레스', 'Slit dress': '트임 드레스', 'Kimono': '기모노', 'Kimono Oversized Sleeves': '큰 소매 기모노', 'Split Kimono': '트임 기모노',
+ 'Collared coat': '깃 코트', 'Frock coat': '프록코트', 'Iverness cloak': '케이프 코트', 'Tabard': '타바드', 'Trench coat': '트렌치코트', 'Vest': '조끼', 'Vest open': '열린 조끼',
+ 'Hose': '스타킹', 'Leggings': '레깅스', 'Leggings 2': '레깅스 2', 'Cuffed Pants': '롤업 바지', 'Formal Pants': '정장 바지', 'Striped Formal Pants': '줄무늬 바지', 'Pantaloons': '판탈롱',
+ 'Pants': '바지', 'Long Pants': '긴 바지', 'Shorts': '반바지', 'Short Shorts': '짧은 반바지', 'Belle skirt': '벨 치마', 'Overskirt': '덧치마', 'Straight skirt': '일자 치마',
+ 'Legion skirt': '조각 치마', 'Plain skirt': '치마', 'Slit skirt': '트임 치마',
+ 'Basic Shoes': '구두', 'Ghillies': '끈 구두', 'Revised Shoes': '구두 2', 'Sara Shoes': '사라 구두', 'Basic Boots': '부츠', 'Folded Rim Boots': '접은 부츠', 'Revised Boots': '부츠 2',
+ 'Rimmed Boots': '테 부츠', 'Sandals': '샌들', 'Slippers': '슬리퍼',
+ 'Celestial Wizard Hat': '별빛 마법사 모자', 'Celestial Wizard Moon Hat': '달빛 마법사 모자', 'Large Hat': '큰 마녀 모자', 'Wizard Hat Base': '마법사 모자', 'Formal Bowler Hat': '중절모',
+ 'Crown': '왕관', 'Tiara': '티아라', 'Formal Tophat': '실크햇', 'Bonnie': '보닛', 'Bonnie Alt Tilt': '기울인 보닛', 'Cavalier': '기사 모자', 'Leather Cap': '가죽 모자',
+ 'Christmas Hat': '산타 모자', 'Elf Trim': '요정 모자', 'Hood': '후드', 'Hijab': '히잡', 'Sack Cloth Hood': '자루 두건',
+ 'Bowtie': '나비넥타이', 'Bowtie 2': '나비넥타이 2', 'Cravat': '크라바트', 'Jabot': '자보', 'Necklace': '목걸이', 'Large Beaded Necklace': '큰 구슬 목걸이',
+ 'Small Beaded Necklace': '작은 구슬 목걸이', 'Chain Necklace': '체인 목걸이', 'Simple Necklace': '심플 목걸이', 'Necktie': '넥타이', 'Scarf': '목도리', 'Solid': '망토', 'Tattered': '해진 망토'}
+# ---------- 파일 찾기 ----------
+def walk_file(path, d):
+    """층 경로 → (파일, 원래 팔레트 [(칸, 재질, 팔레트)])"""
+    base = 'spritesheets/' + path
+    rec = d.get('recolors')
+    if base + 'walk.png' in FILES:
+        mat = None
+        if isinstance(rec, dict): mat = rec.get('material') or (rec.get('color_1') or {}).get('material')
+        if mat is None: mat = {'hair': 'hair'}.get(d.get('type_name'), 'cloth')
+        return base + 'walk.png', mat, BASE.get(mat, 'white')
+    variants = d.get('variants') or []
+    order = ['white', 'gray', 'light gray'] + [v for v in variants]
+    for v in order:
+        f = base + f'walk/{v}.png'
+        if f in FILES and v.replace(' ', '') in PAL['cloth'] or (f in FILES and v in PAL['cloth']):
+            return f, 'cloth', v
+    for v in variants:
+        f = base + f'walk/{v}.png'
+        if f in FILES: return f, None, v
+    return None, None, None
+def layers_of(d, body):
+    out = []
+    for k in sorted([k for k in d if k.startswith('layer_')]):
+        L = d[k]; p = L.get(body)
+        if not p: continue
+        out.append((L.get('zPos', 50), p))
+    return out
+# ---------- 모으기 ----------
+items = {c: [] for c in SEL}; need = set(); credits = []
+for cat, lst in SEL.items():
+    for rel, _ in lst:
+        d = jd(rel)
+        if not ok(d): continue
+        if any(w in d.get('name', '') for w in DROP.get(cat, ())): continue
+        entry = dict(id=os.path.basename(rel)[:-5], name=d.get('name', ''), L={})
+        for body in BODIES:
+            Ls = []
+            for z, p in layers_of(d, body):
+                if '${head}' in p: p = p.replace('${head}', body)
+                f, mat, src = walk_file(p, d)
+                if not f: continue
+                Ls.append((z, f, mat, src))
+            if Ls: entry['L'][body] = Ls
+        if not entry['L']: continue
+        items[cat].append(entry); credits += d.get('credits', [])
+        for body, Ls in entry['L'].items():
+            for z, f, mat, src in Ls: need.add(f)
+for body in BODIES:
+    f = 'spritesheets/' + HEAD[body] + 'walk.png'; need.add(f)
+print({c: len(v) for c, v in items.items()}, 'files', len(need))
+# 받기
+missing = [f for f in need if not os.path.exists(os.path.join(LPC, f))]
+if missing:
+    subprocess.run(['git', '-C', LPC, 'sparse-checkout', 'add', '--no-cone'] + ['/' + f for f in missing], check=True, capture_output=True)
+    subprocess.run(['git', '-C', LPC, 'checkout'], check=True, capture_output=True)
+# ---------- 자르기 ----------
+def load(f):
+    im = Image.open(os.path.join(LPC, f)).convert('RGBA'); a = np.array(im)
+    if a.shape[:2] != (256, 576): print('size?', f, a.shape); return None
+    return a
+IMG = {f: load(f) for f in sorted(need)}
+u = np.zeros((64, 64), bool)
+for f, a in IMG.items():
+    if a is None: continue
+    for d in DIRS:
+        for c in COLS: u |= a[ROWS[d] * 64:(ROWS[d] + 1) * 64, c * 64:(c + 1) * 64, 3] > 0
+ys, xs = np.nonzero(u); X0, X1, Y0, Y1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
+FW, FH = int(X1 - X0), int(Y1 - Y0); NF = len(DIRS) * len(COLS)
+print('frame', FW, FH, 'crop', X0, Y0)
+def strip(a):
+    o = np.zeros((FH, FW * NF, 4), np.uint8); k = 0
+    for d in DIRS:
+        for c in COLS:
+            o[:, k * FW:(k + 1) * FW] = a[ROWS[d] * 64 + Y0:ROWS[d] * 64 + Y1, c * 64 + X0:c * 64 + X1]; k += 1
+    return o
+os.makedirs(OUTP, exist_ok=True)
+for old in glob.glob(os.path.join(OUTP, '*.png')): os.remove(old)
+def hexrgb(h): return np.array([int(h[i:i + 2], 16) for i in (1, 3, 5)])
+def hit(a, pal):
+    m = a[..., 3] > 0; c = a[..., :3][m].astype(int)
+    if not len(c): return 0
+    P = np.stack([hexrgb(h) for h in pal]); d = np.abs(c[:, None, :] - P[None]).max(-1).min(-1)
+    return float((d <= 1).mean())
+def maps_of(cat, f, mat, src):
+    """층 그림이 실제로 어느 팔레트로 그려졌는지 맞춰 봐요 (안 맞으면 색 그대로)"""
+    a = IMG[f]
+    if cat in ('body', 'face'): return [['skin', 'light'], ['eye', 'blue']]
+    slot = SLOT[cat]; m = {'hair': 'hair'}.get(mat, 'hair' if cat == 'hair' else 'cloth')
+    cands = [src] if src in PAL[m] else []
+    cands += [k for k in PAL[m] if k not in cands]
+    best = max(cands, key=lambda k: hit(a, PAL[m][k]))
+    return [[slot, best]] if hit(a, PAL[m][best]) >= .5 else []
+meta = dict(fw=FW, fh=FH, frames=NF, dirs={d: i * len(COLS) for i, d in enumerate(DIRS)}, walk=list(range(1, len(COLS))), bodies=BODIES, parts={})
+def write(cat, idx, entry, extra=None):
+    rows, rowmap, L = [], {}, {}
+    for body, Ls in entry['L'].items():
+        L[body] = []
+        for z, f, mat, src in Ls:
+            if IMG.get(f) is None: continue
+            if f not in rowmap: rowmap[f] = len(rows); rows.append(strip(IMG[f]))
+            L[body].append([rowmap[f], z, maps_of(cat, f, mat, src)])
+    if not rows: return None
+    name = f'{cat}_{idx:03d}.png'; Image.fromarray(np.concatenate(rows, 0)).save(os.path.join(OUTP, name), optimize=True)
+    return dict(id=entry['id'], n=KO.get(entry['name'], entry['name']), f='art/lpc/' + name, L=L)
+# 몸 = 몸통 + 머리 (체형마다)
+body_entry = dict(id='body', name='body', L={b: [(10, 'spritesheets/body/bodies/' + b + '/walk.png', 'body', 'light'), (100, 'spritesheets/' + HEAD[b] + 'walk.png', 'body', 'light')] for b in BODIES})
+meta['parts']['body'] = [write('body', 0, body_entry)]
+for cat in [c for c in SEL if c != 'body']:
+    meta['parts'][cat] = [p for p in (write(cat, i, e) for i, e in enumerate(items[cat])) if p]
+for cat, nm in (('face', '기본'), ('hat', '없음'), ('cape', '없음'), ('neck', '없음')):
+    meta['parts'][cat].insert(0, dict(id='none', n=nm, f=None, L={b: [] for b in BODIES}))
+meta['pal'] = {'skin': PAL['body'], 'hair': PAL['hair'], 'eye': PAL['eye'], 'cloth': PAL['cloth']}
+# 고를 수 있는 색 (순서 = 색 번호). 피부는 사람 피부 7 + 판타지 몇 가지
+meta['colors'] = {'skin': ['light', 'amber', 'olive', 'taupe', 'bronze', 'brown', 'black', 'lavender', 'blue', 'pale_green', 'zombie_green'],
+                  'hair': list(PAL['hair']), 'eye': list(PAL['eye']), 'cloth': list(PAL['cloth'])}
+meta['house'] = {'dew': 'forest', 'ember': 'orange', 'dusk': 'rose', 'moon': 'purple'}   # 기숙사 → 상의·망토 색
+# 얼굴 동그라미: 정면 서기 프레임의 머리 상자 (정사각형)
+ha = strip(IMG['spritesheets/' + HEAD['female'] + 'walk.png'])[:, :FW, 3] > 0; ys, xs = np.nonzero(ha)
+hs = int(max(xs.max() - xs.min(), ys.max() - ys.min()) + 5); hcx = (xs.min() + xs.max()) / 2
+meta['head'] = dict(x=int(round(hcx - hs / 2)), y=int(max(0, ys.min() - 3)), s=hs)
+meta['scale'] = .75
+# 크레딧 (같은 파일은 한 번)
+seen, cr = set(), []
+for c in credits:
+    k = c.get('file')
+    if k in seen: continue
+    seen.add(k); cr.append(dict(file=k, authors=c.get('authors', []), licenses=c.get('licenses', []), urls=c.get('urls', [])))
+json.dump(cr, open(os.path.join(ROOT, 'public', 'credits.json'), 'w'), ensure_ascii=False, indent=0)   # 게임 크레딧 화면이 읽어요
+json.dump(meta, open(OUTM, 'w'), ensure_ascii=False)
+tot = sum(os.path.getsize(p) for p in glob.glob(os.path.join(OUTP, '*.png')))
+print({c: len(v) for c, v in meta['parts'].items()}, 'png', len(glob.glob(os.path.join(OUTP, '*.png'))), 'KB', tot // 1024, 'credits', len(cr))

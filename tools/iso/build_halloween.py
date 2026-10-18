@@ -23,12 +23,15 @@ for k, (house, name, hall) in DORM.items():
         if o['door'] and o['door']['to'] == k: o['door']['label'] = name
 for a in camp['areas']:
     if a['n'] == '기숙사': a['n'] = '기숙사 네 동'
-AV = json.load(open(I + '/out/avatar_parts.json'))   # avatar_gen/assemble.py (생성 그림 부품)
+AV = json.load(open(I + '/out/lpc_meta.json'))   # lpc/build_lpc.py (LPC 캐릭터 부품)
 # png는 1년 동안 캐시돼요 → 내용이 바뀌면 주소도 바뀌게 ?v=해시 를 붙여요
 import hashlib
 def ver(src): return src + '?v=' + hashlib.md5(open(I + '/out/' + src.split('/')[-1], 'rb').read()).hexdigest()[:8]
 for m in MAPS.values(): m['meta']['bgSrc'] = ver(m['meta']['bgSrc']); m['meta']['objSrc'] = ver(m['meta']['objSrc'])
-AV['src'] = ver(AV['src'])
+_PUBD = os.path.join(I, '..', '..', 'public')
+for ps in AV['parts'].values():                 # LPC 부품 그림 (public/art/lpc)
+    for q in ps:
+        if q.get('f'): q['f'] += '?v=' + hashlib.md5(open(os.path.join(_PUBD, q['f']), 'rb').read()).hexdigest()[:8]
 FURN = dict(src=ver('art/iso/furn.png'), items=json.load(open(I + '/out/furn.json')))   # furniture.py
 PUB = os.path.dirname(os.path.abspath(OUT))
 CR = 'art/iso/creatures_w.png'; CR += '?v=' + hashlib.md5(open(os.path.join(PUB, CR), 'rb').read()).hexdigest()[:8]

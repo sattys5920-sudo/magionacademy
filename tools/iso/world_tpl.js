@@ -3,81 +3,97 @@
 // 게임(index.html)과는 window.World로 이어져요: World.start / setPlayer / teleport / onAct
 const MAPS = __MAPS__;
 const World = window.World = { onAct: null, onMove: null };
-// ---------- 캐릭터 조합 (tools/iso/chars5.py 부품) ----------
-// av = { hair, eyes, mouth, uni: 부품 번호, skinC, eyeC, hairC, shoeC: 색 번호, house: 교복 색이 될 기숙사 }
+// ---------- 캐릭터 조합 (LPC 부품: tools/iso/lpc/build_lpc.py) ----------
+// av = { body: 체형(0 여·1 남), hair, face, top, legs, feet, hat, cape, neck: 부품 번호,
+//        skinC, hairC, eyeC, legsC, feetC, hatC, neckC: 색 번호, house: 상의·망토 색이 될 기숙사 }
+// 부품 그림은 필요할 때 불러와요 (art/lpc/*.png). 색은 LPC 팔레트를 바꿔 칠해요
 const AVM = __AVATAR__;
 const ASC = AVM.scale || .5;   // 캐릭터 그림 1픽셀 = 세계 픽셀의 몇 배
 World.Avatar = (() => {
-  const FW = AVM.fw, FH = AVM.fh, CATS = ['hair', 'eyes', 'mouth', 'uni'], HOUSES = Object.keys(AVM.pal.house);
-  const COLORS = { skinC: 'skin', eyeC: 'eye', hairC: 'hair', shoeC: 'shoes' };
-  let data = null; const cache = new Map(), heads = new Map();
-  const ready = new Promise(r => { const i = new Image(); i.onload = () => { const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; const g = c.getContext('2d'); g.drawImage(i, 0, 0); data = g.getImageData(0, 0, i.width, i.height); r(); }; i.src = AVM.src; });
-  const rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
-  // 회색 밝기 → 색: 팔레트 4색을 기준 밝기(stops)에 놓고 사이는 이어서 칠해요 (원래 음영을 그대로 살려요)
-  const luts = {};
-  function lutOf(slot, colors){
-    const k = slot + colors.join(); if (luts[k]) return luts[k];
-    const st = AVM.stops[slot], cs = colors.map(rgb), T = new Uint8ClampedArray(256 * 3);
-    for (let v = 0; v < 256; v++){
-      let c;
-      if (v >= st[0]){ const t = (v - st[0]) / Math.max(1, 255 - st[0]) * .6; c = cs[0].map(a => a + (255 - a) * t); }
-      else if (v <= st[3]){ const t = v / Math.max(1, st[3]); c = cs[3].map(a => a * (.55 + .45 * t)); }
-      else { let i = 0; while (!(st[i + 1] <= v && v <= st[i])) i++; const t = (st[i] - v) / Math.max(1, st[i] - st[i + 1]); c = cs[i].map((a, j) => a + (cs[i + 1][j] - a) * t); }
-      T[v * 3] = c[0]; T[v * 3 + 1] = c[1]; T[v * 3 + 2] = c[2];
-    }
-    return luts[k] = T;
+  const FW = AVM.fw, FH = AVM.fh, NF = AVM.frames, CATS = ['hair', 'face', 'top', 'legs', 'feet', 'hat', 'cape', 'neck'], HOUSES = Object.keys(AVM.house);
+  const COLORS = { skinC: 'skin', hairC: 'hair', eyeC: 'eye', legsC: 'cloth', feetC: 'cloth', hatC: 'cloth', neckC: 'cloth' };
+  const SLOTC = { skin: 'skinC', hair: 'hairC', eye: 'eyeC', legs: 'legsC', feet: 'feetC', hat: 'hatC', neck: 'neckC' };
+  const MAT = { skin: 'skin', eye: 'eye', hair: 'hair', top: 'cloth', legs: 'cloth', feet: 'cloth', hat: 'cloth', neck: 'cloth' };
+  const imgs = {}, cache = new Map(), heads = new Map(), maps = new Map(), subs = [];
+  const bodyName = av => AVM.bodies[av.body] || AVM.bodies[0];
+  function load(f){
+    if (!f) return Promise.resolve();
+    if (imgs[f]) return imgs[f].p;
+    const e = imgs[f] = { data: null };
+    e.p = new Promise(r => { const i = new Image(); i.onload = () => { const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; const g = c.getContext('2d'); g.drawImage(i, 0, 0); e.data = g.getImageData(0, 0, i.width, i.height); cache.clear(); heads.clear(); subs.forEach(fn => fn()); r(); }; i.onerror = () => r(); i.src = f; });
+    return e.p;
   }
-  const rnd = seed => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const ready = load(AVM.parts.body[0].f);
   const mod = (v, n) => ((v | 0) % n + n) % n;
+  const has = (cat, i, body) => { const p = AVM.parts[cat][i]; return p && (p.f === null || !!p.L[body]); };
   function fix(av){
     const a = Object.assign({}, av || {});
-    CATS.forEach(c => { a[c] = mod(a[c], AVM.parts[c].length); });
-    Object.entries(COLORS).forEach(([k, p]) => { a[k] = mod(a[k], AVM.pal[p].length); });
+    if (a.face === undefined && a.eyes !== undefined) a.face = a.eyes;   // 옛 캐릭터 (눈 번호 → 표정)
+    a.body = mod(a.body, AVM.bodies.length); const body = AVM.bodies[a.body];
+    CATS.forEach(c => { const n = AVM.parts[c].length; let i = mod(a[c], n); for (let k = 0; k < n && !has(c, i, body); k++) i = (i + 1) % n; a[c] = i; });
+    Object.entries(COLORS).forEach(([k, p]) => { a[k] = mod(a[k], AVM.colors[p].length); });
     if (!HOUSES.includes(a.house)) delete a.house;
+    delete a.eyes; delete a.mouth; delete a.uni; delete a.shoeC;
     return a;
   }
-  // 옛 캐릭터(look 번호)도 그 번호로 정해진 조합을 줘요
+  const rnd = seed => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   function fromLook(look){
-    const r = rnd(((look | 0) + 7) * 9973 + 1), a = {};
+    const r = rnd(((look | 0) + 7) * 9973 + 1), a = { body: Math.floor(r() * 2) };
     CATS.forEach(c => { a[c] = Math.floor(r() * AVM.parts[c].length); });
-    Object.entries(COLORS).forEach(([k, p]) => { a[k] = Math.floor(r() * AVM.pal[p].length); });
-    return a;
+    a.hat = r() < .7 ? 0 : a.hat; a.cape = r() < .75 ? 0 : a.cape; a.neck = r() < .7 ? 0 : a.neck; a.face = r() < .6 ? 0 : a.face;
+    Object.entries(COLORS).forEach(([k, p]) => { a[k] = Math.floor(r() * AVM.colors[p].length); });
+    a.skinC = Math.floor(r() * 7);
+    return fix(a);
   }
   const random = () => ({ ...fromLook(Math.floor(Math.random() * 1e6)), house: HOUSES[Math.floor(Math.random() * HOUSES.length)] });
+  const hexn = h => parseInt(h.slice(1), 16);
+  function colorMap(slot, src, av){
+    const mat = MAT[slot] || 'cloth';
+    const tgtName = slot === 'top' ? AVM.house[HOUSES.includes(av.house) ? av.house : 'moon'] : AVM.colors[mat][av[SLOTC[slot]] || 0];
+    const k = slot + '|' + src + '|' + tgtName; if (maps.has(k)) return maps.get(k);
+    const P = AVM.pal[mat], S = P[src] || [], T = P[tgtName] || S, m = new Map();
+    S.forEach((h, i) => { const t = hexn(T[Math.min(i, T.length - 1)]); m.set(hexn(h), [t >> 16, (t >> 8) & 255, t & 255]); });
+    maps.set(k, m); return m;
+  }
+  function layersOf(av){
+    const body = bodyName(av), out = [];
+    ['body', ...CATS].forEach(c => { const p = AVM.parts[c][c === 'body' ? 0 : av[c]]; if (p && p.f) (p.L[body] || []).forEach(([row, z, mp]) => out.push({ f: p.f, row, z, mp })); });
+    return out.sort((a, b) => a.z - b.z);
+  }
+  // 부품 그림이 다 오면 resolve (캐릭터 꾸미기 화면 썸네일 전에)
+  const need = av => Promise.all(layersOf(fix(av)).map(l => load(l.f)));
+  const preload = cats => Promise.all(cats.flatMap(c => (AVM.parts[c] || []).map(p => load(p.f))));
   function compose(av){
     av = fix(av); const key = JSON.stringify(av); if (cache.has(key)) return cache.get(key);
-    const W = FW * (AVM.frames || 6), out = new ImageData(W, FH), o = out.data, src = data.data, SW = data.width;
-    const P = AVM.pal, ramp = { skin: lutOf('skin', P.skin[av.skinC]), eye: lutOf('eye', P.eye[av.eyeC]), hair: lutOf('hair', P.hair[av.hairC]), shoes: lutOf('shoes', P.shoes[av.shoeC]), cloth: lutOf('cloth', P.cloth[0]), house: lutOf('house', P.house[HOUSES.includes(av.house) ? av.house : 'moon']) };
-    const layers = AVM.base.concat(...CATS.map(c => AVM.parts[c][av[c]].L)).sort((a, b) => AVM.z.indexOf(a[2]) - AVM.z.indexOf(b[2]));
-    layers.forEach(([row, slot]) => {
-      const rp = slot ? ramp[slot] : null;
+    const W = FW * NF, out = new ImageData(W, FH), o = out.data; let done = true;
+    layersOf(av).forEach(L => {
+      const e = imgs[L.f]; if (!e || !e.data){ load(L.f); done = false; return; }
+      const src = e.data.data, SW = e.data.width, ms = L.mp.map(([slot, sp]) => colorMap(slot, sp, av));
       for (let y = 0; y < FH; y++) for (let x = 0; x < W; x++){
-        const s = ((row * FH + y) * SW + x) * 4; if (!src[s + 3]) continue;
-        const d = (y * W + x) * 4, r = src[s], g = src[s + 1], b = src[s + 2];
-        if (rp && r === g && g === b){ o[d] = rp[r * 3]; o[d + 1] = rp[r * 3 + 1]; o[d + 2] = rp[r * 3 + 2]; } else { o[d] = r; o[d + 1] = g; o[d + 2] = b; }
-        o[d + 3] = 255;
+        const s = ((L.row * FH + y) * SW + x) * 4, a = src[s + 3]; if (!a) continue;
+        let r = src[s], g = src[s + 1], b = src[s + 2];
+        const kk = (r << 16) | (g << 8) | b;
+        for (const m of ms){ const t = m.get(kk); if (t){ [r, g, b] = t; break; } }
+        const d = (y * W + x) * 4;
+        if (a < 255 && o[d + 3]){ const t = a / 255; o[d] += (r - o[d]) * t; o[d + 1] += (g - o[d + 1]) * t; o[d + 2] += (b - o[d + 2]) * t; continue; }
+        o[d] = r; o[d + 1] = g; o[d + 2] = b; o[d + 3] = 255;
       }
     });
-    if (AVM.outline){   // 다 합친 뒤 바깥 테두리
-      const edge = [];
-      for (let y = 0; y < FH; y++) for (let x = 0; x < W; x++){
-        if (o[(y * W + x) * 4 + 3]) continue; const fx = x % FW;
-        if ((fx > 0 && o[(y * W + x - 1) * 4 + 3]) || (fx < FW - 1 && o[(y * W + x + 1) * 4 + 3]) || (y > 0 && o[((y - 1) * W + x) * 4 + 3]) || (y < FH - 1 && o[((y + 1) * W + x) * 4 + 3])) edge.push((y * W + x) * 4);
-      }
-      edge.forEach(d => { o[d] = 42; o[d + 1] = 24; o[d + 2] = 48; o[d + 3] = 255; });
-    }
     const c = document.createElement('canvas'); c.width = W; c.height = FH; c.getContext('2d').putImageData(out, 0, 0);
-    cache.set(key, c); return c;
+    if (done) cache.set(key, c);
+    return c;
   }
-  // 얼굴 동그라미용 (앞모습 머리 부분을 정사각형으로)
-  const HB = AVM.head, HS = HB.b - HB.t, HX = Math.round((FW - HS) / 2);
+  // 얼굴 동그라미용 (정면 서기 프레임의 머리 부분)
+  const HB = AVM.head;
   function head(av){
-    if (!data) return '';
+    if (!imgs[AVM.parts.body[0].f] || !imgs[AVM.parts.body[0].f].data) return '';
     const key = JSON.stringify(fix(av)); if (heads.has(key)) return heads.get(key);
-    const c = document.createElement('canvas'); c.width = HS; c.height = HS; c.getContext('2d').drawImage(compose(av), HX, HB.t, HS, HS, 0, 0, HS, HS);
-    const u = c.toDataURL(); heads.set(key, u); return u;
+    const S = compose(av), c = document.createElement('canvas'); c.width = HB.s; c.height = HB.s; c.getContext('2d').drawImage(S, HB.x, HB.y, HB.s, HB.s, 0, 0, HB.s, HB.s);
+    const u = c.toDataURL(); if (cache.has(JSON.stringify(fix(av)))) heads.set(key, u); return u;
   }
-  return { ready, compose, head, fix, fromLook, random, meta: AVM, FW, FH, CATS, HOUSES, headBox: { x: HX, y: HB.t, s: HS }, get loaded(){ return !!data; } };
+  const onLoad = fn => subs.push(fn);
+  return { ready, compose, head, fix, fromLook, random, need, preload, onLoad, meta: AVM, FW, FH, CATS, HOUSES, headBox: { x: HB.x, y: HB.y, s: HB.s },
+           get loaded(){ return !!(imgs[AVM.parts.body[0].f] && imgs[AVM.parts.body[0].f].data); } };
 })();
 let sc;
 // 배율: 그림 1픽셀 = 화면 실제 픽셀의 정수배(k)로 그려서 선명하게. 목표 가로 픽셀 수에 가장 가까운 k를 골라요.
@@ -326,10 +342,10 @@ function step(p, dt){
   }
   const [gx, gy] = p.path[0], dx = gx - p.x, dy = gy - p.y, d = Math.hypot(dx, dy);
   // 쿼터뷰 네 방향: x+ (오른쪽 아래) 오른쪽 옆, x- (왼쪽 위) 왼쪽 옆, y+ (왼쪽 아래) 앞, y- (오른쪽 위) 뒤
-  // view: 0 앞, 3 뒤, 6 옆(왼쪽 보기). 옆 그림이 없는 옛 부품이면 앞·뒤로 대신해요
-  const hasSide = (World.Avatar.meta.frames || 6) >= 9;
-  if (Math.abs(dx) > Math.abs(dy)){ if (hasSide){ p.view = 6; p.flip = dx > 0; } else { p.view = dx < 0 ? 3 : 0; p.flip = dx < 0; } }
-  else if (d > 0){ p.view = dy < 0 ? 3 : 0; p.flip = false; }
+  // view: 프레임 첫 칸 (아래·위·왼쪽·오른쪽 보기). LPC 부품은 네 방향 그림이 다 있어서 뒤집지 않아요
+  const DV = World.Avatar.meta.dirs;
+  if (Math.abs(dx) > Math.abs(dy)){ p.view = dx > 0 ? DV.right : DV.left; p.flip = false; }
+  else if (d > 0){ p.view = dy < 0 ? DV.up : DV.down; p.flip = false; }
   if (p.pet && d > 0) p.flip = dx - dy > 0;   // 생물은 화면에서 오른쪽으로 가면 뒤집어요
   const mv = (p.me && p.path.length > 10 ? RUN : p.me ? SPEED : SPEED * .6) * dt; if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
 }
@@ -374,7 +390,7 @@ function drawPerson(p){ const cx = out;
   if (p.pet) return drawPet(p);
   const [sx, sy] = P(p.x + .5, p.y + .5);
   cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 6, 2.5, 0, 0, Math.PI * 2); cx.fill();
-  const f = p.path.length ? 1 + Math.floor(p.t * (p.me ? 12 : 8)) % 2 : 0, col = (p.view || 0) + f;
+  const WK = World.Avatar.meta.walk, f = p.path.length ? WK[Math.floor(p.t * (p.me ? 10 : 7)) % WK.length] : 0, col = (p.view || 0) + f;
   const A = World.Avatar, S = A.compose(p.av), cp = KPX * ASC, w = A.FW * cp, h = A.FH * cp;
   const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - (A.FH - 1.5) * cp);
   cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0);
