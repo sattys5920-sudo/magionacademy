@@ -252,7 +252,7 @@ def fx_emblem(a):
         cl = a[2 * 64:3 * 64, c * 64:(c + 1) * 64]; m = cl[..., 3] > 0
         if not m.any(): continue
         dy = np.nonzero(m.any(1))[0].min() - 34; oc = o[2 * 64:3 * 64, c * 64:(c + 1) * 64]
-        for (yy, xx), i in {(0, 0): 5, (0, 1): 4, (1, 0): 4, (1, 1): 3}.items(): setc(oc, 40 + dy + yy, 37 + xx, i)
+        for (yy, xx), i in {(0, 0): 5, (0, 1): 4, (1, 0): 4, (1, 1): 3}.items(): setc(oc, 40 + dy + yy, 38 + xx, i)
     return o
 FXF = {'blazer': fx_blazer, 'emblem': fx_emblem, 'pleat': fx_pleat, 'short': lambda a: fx_pleat(a, pleat=False)}
 for f in sorted(FXN):
@@ -266,22 +266,23 @@ ys, xs = np.nonzero(u); X0, X1, Y0, Y1 = xs.min(), xs.max() + 1, ys.min(), ys.ma
 FW, FH = int(X1 - X0), int(Y1 - Y0); NF = len(DIRS) * len(COLS)
 print('frame', FW, FH, 'crop', X0, Y0)
 # 더 날씬하게: 목 아래(64칸 기준 y≥36)에서 몸통·다리 사이 세로줄 2개를 빼고 양쪽을 1칸씩 안으로 (모든 부품 똑같이)
-# 1) 목 아래(y≥36) 몸통·다리 사이 세로줄 2개  2) 다리(y≥52)만 세로줄 2개 더 → 다리가 가늘게
-SLIM = [(36, {'down': (28, 35), 'up': (28, 35), 'left': (29, 34), 'right': (29, 34)}),
-        (52, {'down': (27, 36), 'up': (27, 36), 'left': (30, 35), 'right': (28, 33)})]
-def slim(cell, d):
-    o = cell
-    for y0, cols in SLIM:
-        lo, hi = cols[d]; b = o[y0:].copy(); o = o.copy(); o[y0:] = 0
-        o[y0:, 1:lo + 1] = b[:, :lo]                  # 왼쪽: 1칸 오른쪽으로
-        o[y0:, lo + 1:hi] = b[:, lo + 1:hi]           # 가운데 그대로
-        o[y0:, hi:63] = b[:, hi + 1:]                 # 오른쪽: 1칸 왼쪽으로
+# 날씬하게: 줄마다 빼는 세로줄 (원래 64칸 좌표). 뺀 만큼 양쪽에서 안으로 당겨 가운데는 그대로
+#   어깨·몸통·팔(y 33~51): 가슴 6줄 + 팔뚝 양쪽 2줄씩 / 다리(y≥52): 4줄
+_FB1, _FB2 = {20, 22, 26, 27, 28, 35, 36, 37, 41, 43}, {26, 28, 35, 37}
+SLIM = [(33, 52, {'down': _FB1, 'up': _FB1, 'left': {29, 31, 33, 34, 38}, 'right': {25, 29, 30, 32, 34}}),
+        (52, 64, {'down': _FB2, 'up': _FB2, 'left': {29, 30, 34, 36}, 'right': {27, 29, 33, 34}})]
+def slim(cell, d, neck=True):
+    o = cell.copy()
+    for y0, y1, cols in SLIM:
+        if not neck: y0 = max(y0, 36)        # 머리카락·머리: 어깨 줄(33~35)은 그대로 (안 그러면 머리카락이 얼굴로 파고들어요)
+        C = cols[d]; keep = [x for x in range(64) if x not in C]; nl = sum(1 for c in C if c < 32)
+        b = cell[y0:y1][:, keep]; o[y0:y1] = 0; o[y0:y1, nl:nl + len(keep)] = b
     return o
-def strip(a):
+def strip(a, neck=True):
     o = np.zeros((FH, FW * NF, 4), np.uint8); k = 0
     for d in DIRS:
         for c in COLS:
-            o[:, k * FW:(k + 1) * FW] = slim(a[ROWS[d] * 64:(ROWS[d] + 1) * 64, c * 64:(c + 1) * 64], d)[Y0:Y1, X0:X1]; k += 1
+            o[:, k * FW:(k + 1) * FW] = slim(a[ROWS[d] * 64:(ROWS[d] + 1) * 64, c * 64:(c + 1) * 64], d, neck)[Y0:Y1, X0:X1]; k += 1
     return o
 os.makedirs(OUTP, exist_ok=True)
 for old in glob.glob(os.path.join(OUTP, '*.png')): os.remove(old)
@@ -308,7 +309,7 @@ def write(cat, idx, entry, extra=None):
         L[body] = []
         for z, f, mat, src, sl in Ls:
             if IMG.get(f) is None: continue
-            if f not in rowmap: rowmap[f] = len(rows); rows.append(strip(IMG[f]))
+            if f not in rowmap: rowmap[f] = len(rows); rows.append(strip(IMG[f], cat != 'hair' and 'heads/' not in f))
             L[body].append([rowmap[f], z, maps_of(cat, f, mat, src, sl)])
     if not rows: return None
     name = f'{cat}_{idx:03d}.png'; Image.fromarray(np.concatenate(rows, 0)).save(os.path.join(OUTP, name), optimize=True)
