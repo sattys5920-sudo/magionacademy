@@ -210,7 +210,7 @@ def side_nx(a, ch, k):
     fl = face_left(a, ch, k); _, nx = chin_neck(a)
     return (nx if fl is None else fl - SIDE_REF['ref']) - SIDE_HEAD_DX
 SIDE_HEAD_DX, SIDE_DY = 5, 1   # 옆모습 머리를 몸 위로·위로 (생성 그림 그대로면 머리가 몸보다 앞으로 나와 거북목처럼 보여요)
-SIDE_FIX = {0: 0, 6: 0, 3: 2, 25: 2, 26: 2, 28: -1, 7: -1}   # 얼굴 앞 윤곽을 모든 머리에서 같은 x(15)에: 나머지 머리는 1
+SIDE_FIX = {0: 0, 6: 0, 3: 2, 25: 2, 26: 2, 28: -1}   # 얼굴 앞 윤곽을 모든 머리에서 같은 x(15)에: 나머지 머리는 1
 def hair_layers(n):
     O, U, S = Lay(), Lay(), Lay()
     views = []
@@ -218,7 +218,7 @@ def hair_layers(n):
     b = head_cell(BACK[n]) if n in BACK and n not in (20, 28, 29) else synth_back(f); views.append(b)
     # 옆 시트는 오른쪽을 봐요 → 뒤집어 왼쪽으로. 7번은 원래 왼쪽을 봐요.
     # 8번 옆모습은 거의 뒷모습이라 얼굴이 안 보여서, 3/4로 돌아간 앞모습 칸을 뒤집어 써요
-    if n == 7: s = head_cell(FRONT[n])[:, ::-1]
+    if n == 7: s = head_cell(FRONT[n])          # 앞 칸이 이미 왼쪽을 보는 3/4 (뒤집으면 포니테일이 얼굴 앞으로 가요)
     else:
         s = head_cell(SIDE[n], reduce_f=.55, band=True)
         if n not in SIDE_KEEP: s = s[:, ::-1]
