@@ -209,8 +209,8 @@ def side_nx(a, ch, k):
         SIDE_REF['ref'] = face_left(b, bch, kinds(b[..., :3])) - bnx
     fl = face_left(a, ch, k); _, nx = chin_neck(a)
     return (nx if fl is None else fl - SIDE_REF['ref']) - SIDE_HEAD_DX
-SIDE_HEAD_DX, SIDE_DY = 7, 1   # 옆모습 머리를 몸 위로·위로 (생성 그림 그대로면 머리가 몸보다 앞으로 나와 거북목처럼 보여요)
-SIDE_FIX = {3: 1, 26: 1, 7: -2, 25: 1}   # 머리마다 얼굴 앞 윤곽이 조금 달라서 눈이 얼굴 밖으로 안 나가게 맞춤
+SIDE_HEAD_DX, SIDE_DY = 5, 1   # 옆모습 머리를 몸 위로·위로 (생성 그림 그대로면 머리가 몸보다 앞으로 나와 거북목처럼 보여요)
+SIDE_FIX = {0: 0, 6: 0, 3: 2, 25: 2, 26: 2, 28: -1, 7: -1}   # 얼굴 앞 윤곽을 모든 머리에서 같은 x(15)에: 나머지 머리는 1
 def hair_layers(n):
     O, U, S = Lay(), Lay(), Lay()
     views = []
@@ -229,7 +229,7 @@ def hair_layers(n):
         if cn is None:   # 뒷모습(피부가 안 보임): 앞모습의 머리 위→턱 높이, 가로는 가운데
             ys, xs = np.nonzero(a[..., 3]); cn = (ys.min() + (fch - ftop), (xs.min() + xs.max()) / 2)
         ch, nx = cn; k = kinds(a[..., :3])
-        if vi == 2: nx = side_nx(a, ch, k) + SIDE_FIX.get(n, 0)   # 옆얼굴: 얼굴 앞 윤곽을 모든 머리에서 같은 x에
+        if vi == 2: nx = NECKX - np.floor(NECKX - side_nx(a, ch, k) + .5) + SIDE_FIX.get(n, 1)   # 옆얼굴: 얼굴 앞 윤곽을 모든 머리에서 같은 x에, 정수 자리로 (round의 .5 짝수 맞춤 때문에 2칸씩 튀지 않게)
         head = a.copy(); head[ch + 2:, :, 3] = 0                   # 목은 몸 것을 써요
         skin_m = k['skin']; hair_m = ~k['skin']
         under = np.zeros(a.shape[:2], bool); under[ch + 1:] = True    # 턱 아래 머리카락은 몸 뒤로 (앞모습만)
