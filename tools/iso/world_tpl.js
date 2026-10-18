@@ -133,11 +133,64 @@ function setMap(id, spawn){
   blocked = new Set(); M.objs.forEach(o => { if (o.solid !== false) for (let x = Math.floor(o.box[0]); x < Math.ceil(o.box[2]); x++) for (let y = Math.floor(o.box[1]); y < Math.ceil(o.box[3]); y++) blocked.add(x + ',' + y); });
   objOrder = MAPS[id].order || (MAPS[id].order = orderObjs(M.objs));
   me.x = spawn[0]; me.y = spawn[1]; me.path = []; me.view = 0; me.flip = false;
-  if (!crowd[id]){ crowd[id] = []; const n = id === 'campus' ? 9 : 2; for (let i = 0; i < n; i++){ for (let k = 0; k < 50; k++){ const x = Math.floor(Math.random() * M.NX), y = Math.floor(Math.random() * M.NY); if (free(x, y)){ crowd[id].push(mk(NAMES[(i + (id === 'lab' ? 3 : 0)) % NAMES.length], World.Avatar.random(), x, y, false)); break; } } } }
+  if (!crowd[id]){ crowd[id] = []; const n = id === 'campus' ? 9 : (id === 'barn' || id === 'pen') ? 0 : 2; for (let i = 0; i < n; i++){ for (let k = 0; k < 50; k++){ const x = Math.floor(Math.random() * M.NX), y = Math.floor(Math.random() * M.NY); if (free(x, y)){ crowd[id].push(mk(NAMES[(i + (id === 'lab' ? 3 : 0)) % NAMES.length], World.Avatar.random(), x, y, false)); break; } } } }
   people.length = 0; people.push(me, ...crowd[id]);
-  tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : ''); d.textContent = p.name; world.appendChild(d); return d; });
+  if (M.pets) people.push(...spawnPets());
+  tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : ''); d.textContent = p.name; if (p.pet) d.style.display = 'none'; world.appendChild(d); return d; });
+  penTags.forEach(t => t.remove()); penTags = [];
+  if (M.pens) penTags = M.pens.map(pn => { const d = document.createElement('div'); d.className = 'ntag' + (pn.i === myPen ? ' me' : ''); d.textContent = penNames[pn.i] || '빈 우리'; world.appendChild(d); return d; });
   document.getElementById('place').textContent = M.title; document.getElementById('sub').textContent = M.sub;
   camX = camY = null; hideBubble();
+}
+// ---------- 사육장: 우리 문 · 이름표 · 내 생물 ----------
+const CR_SRC = __CRSRC__, CR_W = 40, CR_H = 34;
+let CR_IMG = null, penNames = [], myPen = 0, petData = [], penTags = [];
+const petPos = {};
+World.onPenDoor = null;   // (우리 번호) → true면 들어가요, 글이면 말풍선
+World.onPet = null;       // (생물 id) 생물을 눌렀을 때
+World.setPenLabels = (names, mine) => { penNames = names; myPen = mine; penTags.forEach((t, i) => { t.textContent = names[M.pens[i].i] || '빈 우리'; t.className = 'ntag' + (M.pens[i].i === mine ? ' me' : ''); }); };
+World.setPenExit = spawn => { const ex = MAPS.pen && MAPS.pen.meta.objs.find(o => o.name === 'exit'); if (ex) ex.door.spawn = spawn; };
+World.setPets = list => {
+  petData = list;
+  if (!M || !M.pets) return;
+  const keep = people.filter(p => !p.pet), add = spawnPets();
+  people.length = 0; people.push(...keep, ...add);
+  tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : ''); d.textContent = p.name; if (p.pet) d.style.display = 'none'; world.appendChild(d); return d; });
+};
+function spawnPets(){
+  return petData.map(d => {
+    let pos = petPos[d.id];
+    if (!pos || !free(Math.round(pos.x), Math.round(pos.y))){ for (let k = 0; k < 80; k++){ const x = 2 + Math.floor(Math.random() * (M.NX - 4)), y = 6 + Math.floor(Math.random() * (M.NY - 9)); if (free(x, y)){ pos = { x, y }; break; } } }
+    const p = mk(d.name || '', null, pos ? pos.x : 10, pos ? pos.y : 10, false); p.pet = d; petPos[d.id] = p; p.idle = Math.random() * 4; return p;
+  });
+}
+// 생물 색: CSS filter(sepia·saturate·hue-rotate·brightness)와 같은 계산으로 픽셀을 물들여요
+function colorMatrix(c){
+  if (!c || c.p === undefined) return null;
+  const mul = (A, B) => A.map((_, i) => { const r = Math.floor(i / 3), k = i % 3; return A[r * 3] * B[k] + A[r * 3 + 1] * B[3 + k] + A[r * 3 + 2] * B[6 + k]; });
+  const q = 1 - c.p, sep = [.393 + .607 * q, .769 - .769 * q, .189 - .189 * q, .349 - .349 * q, .686 + .314 * q, .168 - .168 * q, .272 - .272 * q, .534 - .534 * q, .131 + .869 * q];
+  const s = c.s, sat = [.213 + .787 * s, .715 - .715 * s, .072 - .072 * s, .213 - .213 * s, .715 + .285 * s, .072 - .072 * s, .213 - .213 * s, .715 - .715 * s, .072 + .928 * s];
+  const a = c.h * Math.PI / 180, co = Math.cos(a), si = Math.sin(a);
+  const hue = [.213 + co * .787 - si * .213, .715 - co * .715 - si * .715, .072 - co * .072 + si * .928, .213 - co * .213 + si * .143, .715 + co * .285 + si * .140, .072 - co * .072 - si * .283, .213 - co * .213 - si * .787, .715 - co * .715 + si * .715, .072 + co * .928 + si * .072];
+  return mul(mul(hue, sat), sep).map(v => v * c.b);
+}
+const petSprites = {};
+function petSprite(k, col){
+  const key = k + JSON.stringify(col || {}); if (petSprites[key]) return petSprites[key];
+  const c = document.createElement('canvas'); c.width = CR_W; c.height = CR_H; const g = c.getContext('2d'); g.drawImage(CR_IMG, k * CR_W, 0, CR_W, CR_H, 0, 0, CR_W, CR_H);
+  const m = colorMatrix(col);
+  if (m){ const d = g.getImageData(0, 0, CR_W, CR_H), a = d.data; for (let i = 0; i < a.length; i += 4){ if (!a[i + 3]) continue; const r = a[i], gg = a[i + 1], b = a[i + 2]; a[i] = m[0] * r + m[1] * gg + m[2] * b; a[i + 1] = m[3] * r + m[4] * gg + m[5] * b; a[i + 2] = m[6] * r + m[7] * gg + m[8] * b; } g.putImageData(d, 0, 0); }
+  return petSprites[key] = c;
+}
+function drawPet(p){
+  const cx = out, [sx, sy] = P(p.x + .5, p.y + .5), d = p.pet, sc = d.adult ? 1 : .7;
+  cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 7 * sc, 2.5 * sc, 0, 0, Math.PI * 2); cx.fill();
+  const S = petSprite(d.k, d.col), cp = KPX / 2 * sc, w = CR_W * cp, h = CR_H * cp;
+  const bob = p.path.length ? Math.round(Math.abs(Math.sin(p.t * 10)) * 2 * cp) : 0;
+  const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - h + cp) - bob;
+  cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0);
+  if (p.flip){ cx.translate(dx, dy); cx.scale(-1, 1); cx.drawImage(S, -w / 2, 0, w, h); } else cx.drawImage(S, Math.round(dx - w / 2), dy, w, h);
+  cx.restore();
 }
 let tags = [], bubble = null, pending = null, busy = false, camX = null, camY = null, forceNight = null;
 function showBubble(o, text, btn, fn){
@@ -154,6 +207,10 @@ function useObj(o, a){
   if (typeof r === 'string' && bubble){ bubble.el.innerHTML = r; } else hideBubble();
 }
 function goDoor(door, o){
+  if (door.pen !== undefined && World.onPenDoor){   // 사육장 우리: 주인만 들어가요
+    const r = World.onPenDoor(door.pen);
+    if (r !== true){ const [bx, by] = P(door.tile[0] + .5, door.tile[1] + .5); showBubble({ x: bx, y: by - 26, sw: 0 }, r); return; }
+  }
   if (!door.to){ showBubble(o, `<b>${door.label}</b><br>아직 문이 잠겨 있어요 · 곧 열려요`); return; }
   busy = true; fadeEl.textContent = door.label; fadeEl.style.opacity = 1;
   setTimeout(() => { setMap(door.to, door.spawn); setTimeout(() => { fadeEl.style.opacity = 0; busy = false; }, 150); }, 380);
@@ -164,6 +221,9 @@ cv.addEventListener('pointerdown', e => {
   if (busy) return;
   const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) * VW / r.width + Math.round(camX), y = (e.clientY - r.top) * VH / r.height + Math.round(camY);
   hideBubble(); pending = null;
+  // 우리 안의 생물을 누르면 돌보기 화면
+  const pet = people.find(p => p.pet && (() => { const [sx, sy] = P(p.x + .5, p.y + .5), w = p.pet.adult ? 11 : 8, h = p.pet.adult ? 18 : 13; return x >= sx - w && x <= sx + w && y >= sy - h && y <= sy + 2; })());
+  if (pet && World.onPet){ World.onPet(pet.pet.id); return; }
   const hit = [...objOrder].reverse().find(o => (o.door || o.act || ACTS[o.name]) && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && (() => { const px = MAPS[map].px; const d = px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data; return d[3] > 0; })());
   if (hit){
     if (hit.door){ const [dx, dy] = hit.door.tile; if (Math.round(me.x) === dx && Math.round(me.y) === dy) return goDoor(hit.door, hit); if (goto(me, dx, dy)) pending = { door: hit.door, o: hit }; return; }
@@ -188,6 +248,7 @@ function step(p, dt){
   const hasSide = (World.Avatar.meta.frames || 6) >= 9;
   if (Math.abs(dx) > Math.abs(dy)){ if (hasSide){ p.view = 6; p.flip = dx > 0; } else { p.view = dx < 0 ? 3 : 0; p.flip = dx < 0; } }
   else if (d > 0){ p.view = dy < 0 ? 3 : 0; p.flip = false; }
+  if (p.pet && d > 0) p.flip = dx - dy > 0;   // 생물은 화면에서 오른쪽으로 가면 뒤집어요
   const mv = (p.me && p.path.length > 10 ? RUN : p.me ? SPEED : SPEED * .6) * dt; if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
 }
 // 할로윈 효과: 박쥐 떼, 보라 안개, 도깨비불
@@ -228,6 +289,7 @@ function phase(){ return 'night'; }
 const fx = [];
 let last = performance.now(), camIX = 0, camIY = 0;
 function drawPerson(p){ const cx = out;
+  if (p.pet) return drawPet(p);
   const [sx, sy] = P(p.x + .5, p.y + .5);
   cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 6, 2.5, 0, 0, Math.PI * 2); cx.fill();
   const f = p.path.length ? 1 + Math.floor(p.t * (p.me ? 12 : 8)) % 2 : 0, col = (p.view || 0) + f;
@@ -283,6 +345,7 @@ function frame(now){
   if (!M.indoor) spooky(now, dt, view);
   out.setTransform(1, 0, 0, 1, 0, 0);
   const k = cv.clientWidth / VW;
+  if (M.pens) M.pens.forEach((pn, i) => { const [sx, sy] = P(pn.sign[0] + .5, pn.sign[1] + .5); penTags[i].style.left = (sx - ix) * k + 'px'; penTags[i].style.top = (sy - 20 - iy) * k + 'px'; });
   people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); tags[i].style.left = (sx - ix) * k + 'px'; tags[i].style.top = (sy - World.Avatar.FH / 2 + 2 - iy) * k + 'px'; });
   if (bubble){ const o = bubble.o; bubble.el.style.left = Math.max(90, Math.min(cv.clientWidth - 90, (o.x + o.sw / 2 - ix) * k)) + 'px'; bubble.el.style.top = Math.max(70, (o.y - 2 - iy) * k) + 'px'; }
   const d = new Date(); document.getElementById('clock').textContent = `🌕 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · 보름밤`;
@@ -323,6 +386,7 @@ document.getElementById('tMap').onclick = openMap;
 document.getElementById('mClose').onclick = () => mapv.classList.remove('on');
 World.ready = (async () => {
   await World.Avatar.ready;
+  CR_IMG = await img(CR_SRC);
   for (const [id, m] of Object.entries(MAPS)){
     const [bg, obj] = await Promise.all([img(m.meta.bgSrc), img(m.meta.objSrc)]);
     m.bg = bg; m.obj = obj;
@@ -337,6 +401,7 @@ World.start = async (id = 'campus', spawn) => {
 World.setPlayer = (name, av) => { me.name = name; me.av = av; if (tags[0]) tags[0].textContent = name; };
 World.resize = () => { if (started){ resize(); camX = null; } };
 World.where = () => map;
+World.meta = id => MAPS[id] && MAPS[id].meta;
 // 그 방의 물건 옆으로 순간 이동 (홈 화면의 바로 가기)
 World.teleport = (id, objName, then) => {
   if (!started || busy) return;

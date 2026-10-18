@@ -58,9 +58,9 @@ body:not(.inworld) .fab,body:not(.inworld) .hud{display:none}
 .mlabel.me{background:#FFD866}
 .mhint{text-align:center;font-size:14px;color:#C8B8FF;margin-top:8px}
 .px{clip-path:polygon(0 3px,3px 3px,3px 0,calc(100% - 3px) 0,calc(100% - 3px) 3px,100% 3px,100% calc(100% - 3px),calc(100% - 3px) calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,3px calc(100% - 3px),0 calc(100% - 3px))}
-.ic{display:inline-block;width:32px;height:32px;flex-shrink:0;background:url(art/icons.png) no-repeat;image-rendering:pixelated;vertical-align:middle}
+.ic{display:inline-block;width:32px;height:32px;flex-shrink:0;background:url(art/icons.png?v=2) no-repeat;image-rendering:pixelated;vertical-align:middle}
 .fc{width:60px;height:66px;flex-shrink:0;background:url(art/faces.png) no-repeat;image-rendering:pixelated}
-.cr{width:120px;height:102px;background:url(art/creatures.png) no-repeat;image-rendering:pixelated}
+.cr{width:120px;height:102px;background:url(art/creatures.png?v=10) no-repeat;image-rendering:pixelated}
 .b{font-family:'G11B',monospace}.s{font-family:'G7',monospace;font-size:14px;line-height:18px}.sub{color:var(--sub)}
 
 /* 장면과 상단 바 */
@@ -188,13 +188,14 @@ const app = $('#app');
 
 // ===== 데이터 =====
 const ICONS = ['coin','mana','p_red','p_blue','p_green','p_purple','herb','mush','wool','uhair','scale','egg','heart','book','cauldron','clock','bag','owl','star','drop','seed','sprout','can','candle','bed','rune',
-  'p_grow','p_vigor','p_fluff','p_dragon','p_dawn','p_sun','p_dusk','p_moon','mist','sun','pollen','stardust'];
+  'p_grow','p_vigor','p_fluff','p_dragon','p_dawn','p_sun','p_dusk','p_moon','mist','sun','pollen','stardust','whisker','batdust','ecto','silk','feather','pseed'];
 const ic = (k, extra='') => { const P = POTION_INFO[k], G = !ICONS.includes(k) && typeof SEED_INFO !== 'undefined' && SEED_INFO[k];
   if (G) return `<i class="ic" style="background-image:url(art/plants.png);background-position:${-32 * (G.ic % 10)}px ${-32 * Math.floor(G.ic / 10)}px;${extra}"></i>`;
   return P ? `<i class="ic" style="background-image:url(art/potions.png);background-position:${-32 * (P.ic % 10)}px ${-32 * Math.floor(P.ic / 10)}px;${extra}"></i>`
     : `<i class="ic" style="background-position:${-32 * ICONS.indexOf(k)}px 0;${extra}"></i>`; };
 const ITEM = {
   herb:'약초', drop:'달빛 이슬', mush:'보라 버섯', mana:'마력석', wool:'구름양 털', scale:'불도마뱀 비늘', uhair:'유니콘 갈기', egg:'용 알 껍질',
+  whisker:'고양이 수염', batdust:'박쥐 날개 가루', ecto:'유령 젤리', silk:'거미줄 실', feather:'부엉이 깃털', pseed:'호박씨',
 };
 const SHORT = { herb:'약초', drop:'이슬', mush:'버섯', mana:'마력석', wool:'털', scale:'비늘', uhair:'갈기', egg:'알 껍질' };
 // 씨앗 60종: 심으면 같은 id의 식물 재료가 나와요. know 지식이 이만큼 있어야 심을 수 있어요, price 씨앗 값 (자라는 시간은 아래 GROW_RANGE)
@@ -274,7 +275,7 @@ const growMins = (() => {
 const SEED_INFO = Object.fromEntries(SEED_LIST.map((x, i) => [x.id, { ...x, ic: i, mins: growMins[x.id] }]));
 const SEED_TIERS = [...new Set(SEED_LIST.map(x => x.know))];
 SEED_LIST.forEach(x => { ITEM[x.id] = x.mat; });
-const CREATURE_MATS = ['wool','scale','uhair','egg'];
+const CREATURE_MATS = ['wool','scale','uhair','egg','whisker','batdust','ecto','silk','feather','pseed'];
 const MATS = [...SEED_LIST.map(x => x.id), ...CREATURE_MATS];
 // 물약 도감 100종: r 재료 3개, pay 주문 보상, col 물약 색, use 마시면 생기는 일, time 그 기숙사 시간에만 끓어요
 // 아이콘은 art/potions.png (10×10칸, 이 표의 순서대로)
@@ -390,30 +391,82 @@ const HINTS = Object.fromEntries(POTIONS.map(p => [p, `${ITEM[p]} = ${recipeText
 // 지식이 오를 때 열리는 레시피 힌트 순서: 기존 12종 다음, 표 순서(쉬운 것부터)
 const HINT_ORDER = ['p_green','p_blue','p_grow','p_vigor','p_fluff','p_purple','p_dawn','p_sun','p_dusk','p_moon','p_dragon', ...POTION_LIST.slice(12).map(x => x.id)];
 const KNOW_PER_HINT = 3;
-// 생물 종류 (그림은 creatures.png의 같은 칸). baby → adult 이름이 바뀌어요.
+// ===== 생물: 10종 · 내 사육장 최대 20마리 · 애정 20 (5마다 보상 단계) · 부화실 · 색 섞기 =====
+// 그림은 creatures.png의 같은 칸 (10번째 칸 다음이 알). prod: 재료가 생기는 간격, hatch: 알이 깨는 시간, grow: 어른이 되는 시간 (모두 분)
 const CREATURES = [
-  { name:'뭉게', kind:'구름양', baby:'아기 구름양', food:'약초 주기', mat:'wool', bg:'#E6F0FF', names:['몽실','솜사탕','구름이','포실','뭉치'] },
-  { name:'별사탕', kind:'유니콘', baby:'아기 유니콘', food:'각설탕 주기', mat:'uhair', bg:'#F6E6FF', names:['반짝이','무지개','설탕','별빛','은하'] },
-  { name:'불씨', kind:'불도마뱀', baby:'아기 불도마뱀', food:'숯 주기', mat:'scale', bg:'#FFE8D8', names:['모닥','숯돌이','불꽃','화롯','따끈'] },
-  { name:'초롱', kind:'용', baby:'아기 용', food:'고기 주기', mat:'egg', bg:'#E2F6E6', names:['비늘','용용','초록','쿵쿵','미르'] },
+  { name:'뭉게', kind:'구름양', baby:'아기 구름양', food:'약초', mat:'wool', bg:'#E6F0FF', prod:30, hatch:20, grow:60, egg:60, names:['몽실','솜사탕','구름이','포실','뭉치'] },
+  { name:'별사탕', kind:'유니콘', baby:'아기 유니콘', food:'각설탕', mat:'uhair', bg:'#F6E6FF', prod:120, hatch:60, grow:240, egg:300, names:['반짝이','무지개','설탕','별빛','은하'] },
+  { name:'불씨', kind:'불도마뱀', baby:'아기 불도마뱀', food:'숯', mat:'scale', bg:'#FFE8D8', prod:60, hatch:40, grow:120, egg:150, names:['모닥','숯돌이','불꽃','화롯','따끈'] },
+  { name:'초롱', kind:'용', baby:'아기 용', food:'고기', mat:'egg', bg:'#E2F6E6', prod:360, hatch:180, grow:720, egg:800, names:['비늘','용용','초록','쿵쿵','미르'] },
+  { name:'먹물', kind:'검은 고양이', baby:'아기 고양이', food:'생선', mat:'whisker', bg:'#ECE6F6', prod:45, hatch:30, grow:90, egg:100, names:['까망','나비','밤톨','야옹','깜지'] },
+  { name:'박박', kind:'박쥐', baby:'아기 박쥐', food:'과일', mat:'batdust', bg:'#E8E2F2', prod:60, hatch:30, grow:120, egg:120, names:['파닥','밤비','쪼꼬','콩콩','날개'] },
+  { name:'부우', kind:'꼬마 유령', baby:'아기 유령', food:'달빛 사탕', mat:'ecto', bg:'#EEF4FF', prod:180, hatch:90, grow:360, egg:400, names:['살랑','몽글','하양','둥실','쉿쉿'] },
+  { name:'줄줄', kind:'거미', baby:'아기 거미', food:'벌레 젤리', mat:'silk', bg:'#F0E6F4', prod:40, hatch:25, grow:90, egg:90, names:['실뭉치','여덟','폭신','거미줄','보송'] },
+  { name:'부엉', kind:'부엉이', baby:'아기 부엉이', food:'씨앗', mat:'feather', bg:'#F6EEE2', prod:120, hatch:60, grow:240, egg:250, names:['깃털','동글','부엉','도토리','책벌레'] },
+  { name:'잭잭', kind:'호박 정령', baby:'아기 호박 정령', food:'퇴비', mat:'pseed', bg:'#FFF0DE', prod:90, hatch:45, grow:180, egg:200, names:['호박이','주황','잭','통통','덩굴'] },
 ];
-// 색 변종 (같은 그림에 색만 바꿔요). 변종은 재료를 1개 더 줘요.
-const VARIANTS = [null,
-  { name:'노을빛', f:'sepia(.75) saturate(2.6) hue-rotate(-35deg)' },
-  { name:'바다빛', f:'sepia(.7) saturate(2.4) hue-rotate(155deg)' },
-  { name:'황금빛', f:'sepia(1) saturate(3.2) hue-rotate(-12deg) brightness(1.08)' }];
-const PEN_MAX = 6, ADULT_AGE = 3, HATCH_DAYS = 2, BREED_MANA = 10;
-const crStage = c => c.hatch > 0 ? 'egg' : (c.age || 0) >= ADULT_AGE ? 'adult' : 'baby';
-const crKind = c => { const d = CREATURES[c.k]; return crStage(c) === 'adult' ? d.kind : d.baby; };
-const crSprite = (c, scale) => crStage(c) === 'egg'
-  ? `<div style="transform:scale(${scale * 2.4});display:flex">${ic('egg')}</div>`
-  : `<div class="cr" style="background-position:${-120 * c.k}px 0;transform:scale(${crStage(c) === 'baby' ? scale * .72 : scale});flex-shrink:0;${VARIANTS[c.v] ? 'filter:' + VARIANTS[c.v].f : ''}"></div>`;
-function makeEgg(a, b){
-  const k = Math.random() < .5 ? a.k : b.k;
-  const pv = [a.v, b.v].filter(Boolean);
-  const v = pv.length && Math.random() < .5 ? pv[Math.floor(Math.random() * pv.length)] : Math.random() < (a.k === b.k ? .3 : .15) ? 1 + Math.floor(Math.random() * 3) : 0;
-  const names = CREATURES[k].names;
-  return { k, v, name: names[Math.floor(Math.random() * names.length)], age: 0, hatch: HATCH_DAYS, full: 3, love: 1 };
+const EGG_CELL = 10;
+// 색 15가지 (같은 그림에 색만 입혀요). p 세피아, s 채도, h 색상 회전, b 밝기
+const CR_COLORS = [
+  { n:'기본' },
+  { n:'노을빛', p:.75, s:2.6, h:-35, b:1 }, { n:'바다빛', p:.7, s:2.4, h:155, b:1 }, { n:'황금빛', p:1, s:3.2, h:-12, b:1.08 },
+  { n:'장밋빛', p:.8, s:2.4, h:-60, b:1.02 }, { n:'숲빛', p:.8, s:2.2, h:60, b:.95 }, { n:'라벤더', p:.7, s:1.8, h:220, b:1.04 },
+  { n:'하늘빛', p:.7, s:2, h:170, b:1.1 }, { n:'호박빛', p:1, s:3.4, h:-25, b:1 }, { n:'밤빛', p:.6, s:1.2, h:210, b:.62 },
+  { n:'눈빛', p:.3, s:.4, h:0, b:1.25 }, { n:'민트', p:.7, s:2, h:110, b:1.08 }, { n:'체리', p:.9, s:3.5, h:-50, b:.9 },
+  { n:'모래빛', p:.9, s:1.2, h:-5, b:1.05 }, { n:'보랏빛', p:.8, s:2.4, h:240, b:.92 },
+];
+const NEW_COLOR_WORDS = ['새벽', '별', '꿈', '안개', '오로라', '은하', '이슬', '유리', '물결', '서리', '솜', '무지개', '달무리', '요정', '노래'];
+const colorFilter = c => c && c.p !== undefined ? `sepia(${c.p}) saturate(${c.s}) hue-rotate(${c.h}deg) brightness(${c.b})` : '';
+const randColor = () => ({ ...CR_COLORS[Math.floor(Math.random() * CR_COLORS.length)] });
+// 짝꿍의 색: 35% 두 색을 섞은 새 색 (원래 없던 색일 수도), 50% 엄마·아빠 중 하나, 15% 아무 색
+function mixColor(a, b){
+  const r = Math.random();
+  if (r < .35){
+    const A = a.p === undefined ? { p:0, s:1, h:0, b:1 } : a, B = b.p === undefined ? { p:0, s:1, h:0, b:1 } : b;
+    const rad = x => x * Math.PI / 180, hm = Math.atan2((Math.sin(rad(A.h)) + Math.sin(rad(B.h))) / 2, (Math.cos(rad(A.h)) + Math.cos(rad(B.h))) / 2) * 180 / Math.PI;
+    const c = { p: +Math.max(.4, (A.p + B.p) / 2 + .15).toFixed(2), s: +((A.s + B.s) / 2 * (.9 + Math.random() * .4)).toFixed(2), h: Math.round(hm + (Math.random() * 50 - 25)), b: +((A.b + B.b) / 2 + (Math.random() * .1 - .05)).toFixed(2) };
+    // 기존 색과 거의 같으면 그 색 이름, 아니면 새 이름
+    const near = CR_COLORS.find(x => x.p !== undefined && Math.abs(((x.h - c.h + 540) % 360) - 180) < 12 && Math.abs(x.s - c.s) < .35 && Math.abs(x.b - c.b) < .08);
+    return near ? { ...near } : { ...c, n: NEW_COLOR_WORDS[Math.floor(Math.random() * NEW_COLOR_WORDS.length)] + '빛', rare: true };
+  }
+  if (r < .85) return { ...(Math.random() < .5 ? a : b) };
+  return randColor();
+}
+const PEN_MAX = 20, LOVE_MAX = 20, HATCH_MAX = 4, BREED_MANA = 10, BREED_LOVE = 10;
+const FEED_CD = 2 * 36e5, PET_CD = 30 * 6e4, BREED_CD = 6 * 36e5;
+// 애정 단계: 5마다 보상이 달라져요
+const LOVE_TIERS = [
+  { n:'낯가림', mat:0, coin:0, d:'아직 경계해요 · 애정 5부터 재료를 줘요' },
+  { n:'친해짐', mat:1, coin:0, d:'재료 1개' },
+  { n:'단짝', mat:2, coin:0, d:'재료 2개 · 짝꿍 맺기 가능' },
+  { n:'찰떡', mat:3, coin:20, d:'재료 3개 + 20G' },
+  { n:'영원한 친구', mat:5, coin:50, d:'재료 5개 + 50G' },
+];
+const loveTier = c => Math.min(4, Math.floor((c.love || 0) / 5));
+const crAdult = c => Date.now() - c.bornAt >= CREATURES[c.k].grow * 6e4;
+const crKind = c => crAdult(c) ? CREATURES[c.k].kind : CREATURES[c.k].baby;
+const prodLeft = c => Math.max(0, (c.prodAt || 0) + CREATURES[c.k].prod * 6e4 - Date.now());
+const eggLeft = e => Math.max(0, e.at + CREATURES[e.k].hatch * 6e4 - Date.now());
+const crSprite = (c, scale, egg) => `<div class="cr" style="background-position:${-120 * (egg ? EGG_CELL : c.k)}px 0;transform:scale(${egg ? scale * .9 : !crAdult(c) ? scale * .72 : scale});flex-shrink:0;${colorFilter(c.col) ? 'filter:' + colorFilter(c.col) : ''}"></div>`;
+const crId = () => Math.random().toString(36).slice(2, 9);
+function newCreature(k, col, name, adult){
+  const d = CREATURES[k], now = Date.now();
+  return { id: crId(), k, col: col || randColor(), name: name || d.names[Math.floor(Math.random() * d.names.length)], love: 0, bornAt: adult ? now - d.grow * 6e4 : now, prodAt: now, fedAt: 0, petAt: 0, bredAt: 0 };
+}
+function makeEgg(a, b){ return { id: crId(), k: a.k, col: mixColor(a.col || {}, b.col || {}), at: Date.now() }; }
+// 옛 생물(4종·하루 단위)을 새 방식으로: 알은 부화실로, 애정 5칸 → 20
+const OLD_VARIANT = [null, '노을빛', '바다빛', '황금빛'];
+function migrateCreatures(p){
+  p.eggs = p.eggs || [];
+  p.cr = (p.cr || []).flatMap((c, i) => {
+    if (c.bornAt !== undefined) return [c];
+    const k = c.k ?? i, d = CREATURES[k] || CREATURES[0];
+    const col = OLD_VARIANT[c.v] ? { ...CR_COLORS.find(x => x.n === OLD_VARIANT[c.v]) } : { n:'기본' };
+    if (c.hatch > 0){ p.eggs.push({ id: crId(), k, col, at: Date.now() - (2 - c.hatch) / 2 * d.hatch * 6e4 }); return []; }
+    const age = c.k === undefined ? 3 : (c.age || 0);
+    return [{ id: crId(), k, col, name: c.name || d.name, love: Math.min(LOVE_MAX, (c.love || 0) * 4), bornAt: Date.now() - Math.min(1, age / 3) * d.grow * 6e4, prodAt: 0, fedAt: 0, petAt: 0, bredAt: 0 }];
+  });
+  p.eggs = p.eggs.slice(0, HATCH_MAX);
 }
 const FURN = [
   { id:'candle', name:'촛대', icon:'candle', pts:1, price:0 },
@@ -453,7 +506,7 @@ function freshPlayer(nick, look, house, av){
     inv:{ herb:6, drop:4, mush:2, mana:3, wool:1, scale:1, uhair:0, egg:0, p_red:0, p_green:0, p_blue:0, p_purple:0 },
     found:[], hints:['p_red'],
     plots:[{k:'herb',at:Date.now() - 6e5,w:false},{k:'drop',at:Date.now(),w:false},{k:null},{k:null},{k:null},{k:null}],
-    cr:CREATURES.map((d, k) => ({ k, v:0, name:d.name, age:1, hatch:0, full:3, love:2 })),
+    cr:[0, 4, 7, 2].map(k => ({ ...newCreature(k, null, CREATURES[k].name, true), love: 3 })), eggs:[],
     furn:{ candle:{own:1,on:1}, bed:{own:1,on:1}, owl:{own:1,on:1} },
     orders:makeOrders(1, ['p_red'], []), classDay:0,
   };
@@ -482,8 +535,7 @@ function normalize(p){
     const G = SEED_INFO[x.k], done = Math.max(0, Math.min(1, ((x.st || 1) - 1) / (G.days || 3)));
     return { k: x.k, at: Date.now() - done * G.mins * 6e4, w: false };
   });
-  // 예전 생물(종류 정보 없음)은 그 자리의 종류로, 이미 키우던 아이들이라 어른으로 쳐요
-  p.cr = (p.cr || []).map((c, i) => c.k === undefined ? { k: i, v: 0, name: CREATURES[i]?.name || '친구', age: ADULT_AGE, hatch: 0, full: c.full ?? 3, love: c.love ?? 2 } : { hatch: 0, age: 0, v: 0, ...c });
+  migrateCreatures(p);
   return p;
 }
 function usePotion(p){
@@ -491,7 +543,7 @@ function usePotion(p){
   me.inv[p]--;
   if (p === 'p_grow'){ let n = 0; me.plots.forEach(x => { if (x.k && !plotReady(x)){ x.at -= plotLeft(x) / 2; n++; } }); save(); return n ? `화단 ${n}칸이 쑥 자랐어요!` : '자랄 식물이 없어서 물약이 땅으로 스며들었어요.'; }
   if (p === 'p_vigor'){ me.mana += 15; save(); return '기운이 솟아요! 마력 +15'; }
-  if (p === 'p_fluff'){ me.cr.filter(c => crStage(c) !== 'egg').forEach(c => { c.love = Math.min(5, c.love + 1); }); save(); return '사육장에 포근한 향이 퍼졌어요. 모두 애정 +1'; }
+  if (p === 'p_fluff'){ me.cr.forEach(c => { c.love = Math.min(LOVE_MAX, (c.love || 0) + 1); }); save(); return '사육장에 포근한 향이 퍼졌어요. 모두 애정 +1'; }
   return '';
 }
 const cozyOf = me => FURN.reduce((a, f) => a + (me.furn[f.id]?.on ? f.pts : 0), 0);
@@ -555,14 +607,26 @@ function closeSheet(){
 }
 function hud(){
   if (!me || !document.body.classList.contains('inworld')) return;
+  World.setPets(me.cr.map(c => ({ id: c.id, k: c.k, col: c.col, adult: crAdult(c), name: c.name })));
   $('#wallet').innerHTML = `${me.coin.toLocaleString()}G · 마력 ${me.mana}`;
   const ev = eventAt(), live = ev && Date.now() < ev.end, c = $('#evChip');
   c.hidden = !live; if (live) c.textContent = `${ev.E.name} 진행 중!`;
 }
+// 사육장 우리: 학생마다 한 칸 (가입 순서대로 12칸). 혼자 모드는 1번 칸
+const PEN_SLOTS = 12;
+const penOwners = () => solo ? ['me'] : Object.keys({ ...playersList, [uid]: me }).sort().slice(0, PEN_SLOTS);
+const myPenIdx = () => solo ? 0 : penOwners().indexOf(uid);
+const penNameList = () => penOwners().map(id => id === 'me' || id === uid ? me.nick : playersList[id]?.nick || '친구');
+function syncPens(){
+  const i = myPenIdx(), names = penNameList(); World.setPenLabels(names, i);
+  const pn = World.meta('barn')?.pens?.find(p => p.i === i); if (pn) World.setPenExit([pn.gate[0], pn.gate[1] + 1]);
+}
+World.onPenDoor = i => i === myPenIdx() ? true : `<b>${esc(penNameList()[i] || '빈 우리')}</b><br>${penNameList()[i] ? '주인만 들어갈 수 있어요' : '아직 주인이 없어요'}`;
+World.onPet = id => { const i = me.cr.findIndex(c => c.id === id); if (i < 0) return; crSel = i; ranchTab = 'pen'; partner = null; ranchMsg = ''; openSheet('ranch'); };
 function enterWorld(){
   document.body.classList.add('inworld'); app.innerHTML = ''; sheetOn = false; app.classList.remove('open');
   World.setPlayer(me.nick, avOf(me)); World.start(); World.resize();
-  hud();
+  syncPens(); hud();
 }
 // 바로 가기: 그 장소로 순간 이동한 다음 화면을 열어요
 const goPlace = (mapId, obj, t, s) => { closeSheet(); World.teleport(mapId, obj, () => openSheet(t, s)); };
@@ -594,6 +658,7 @@ World.onAct = (mapId, o, a) => {
   }
   if (label === '말 걸기' || label === '오늘의 실습 보기') return openSheet('home', 'class');
   if (label === '쓰다듬기' && o.name === 'blackcat') return openSheet('ranch');
+  if (mapId === 'pen'){ ranchTab = label === '부화실 보기' ? 'hatch' : 'pen'; ranchMsg = ''; return openSheet('ranch'); }
   if (label === '소원 빌기'){ const ev = eventAt(); if (ev && Date.now() < ev.end) return openSheet('home', 'event'); }
   if (ACT_GO[label]) return openSheet(ACT_GO[label]);
   if (SOON.includes(label)) return `<b>${a[0]}</b><br>${label}는 곧 열려요!`;
@@ -638,7 +703,7 @@ function renderHome(){
     <button class="tile px" id="goAvatar" style="width:100%"><div class="face" style="width:40px;height:40px;background:#E8DDF8">${World.Avatar.loaded ? `<img src="${World.Avatar.head(avOf(me))}" alt="" style="width:100%;height:100%;image-rendering:pixelated">` : ''}</div><span class="main" style="flex:1"><span class="b">캐릭터 꾸미기</span><span class="s sub">머리·눈·옷·신발·소품을 바꿔요</span></span></button>
     <section class="sec">
       ${secH('바로 가기', '누르면 그곳으로 가요')}
-      <div class="tiles">${[['lab', 'cauldron', 'lab', 'cauldron', '물약 교실', '물약 끓이기·도감'], ['toxic', 'bed', 'green', 'sprout', '독초 온실', '씨앗 심고 수확'], ['campus', 'blackcat', 'ranch', 'egg', '사육장', '생물 돌보기'], ['campus', 'stall', 'market', 'bag', '등불 시장', '사고팔기·친구']]
+      <div class="tiles">${[['lab', 'cauldron', 'lab', 'cauldron', '물약 교실', '물약 끓이기·도감'], ['toxic', 'bed', 'green', 'sprout', '독초 온실', '씨앗 심고 수확'], ['pen', 'trough', 'ranch', 'egg', '내 사육장', '생물 돌보기·부화실'], ['campus', 'stall', 'market', 'bag', '등불 시장', '사고팔기·친구']]
         .map(([m, o, t, i, n, d]) => `<button class="tile px" data-go="${m},${o},${t}">${ic(i)}<span class="main"><span class="b">${n}</span><span class="s sub">${d}</span></span></button>`).join('')}</div>
     </section>
 `, {
@@ -861,69 +926,120 @@ function renderGreen(){
 let greenTick = 0;
 
 // ===== 사육장 =====
-let crSel = 0, ranchMsg = '', pair = [];
+// ===== 내 사육장 (사육장 건물의 내 우리) =====
+let crSel = 0, ranchMsg = '', ranchTab = 'pen', partner = null, placing = null, ranchTick = 0;
+const cdText = ms => ms <= 0 ? '지금' : timeText(ms);
+function hatchToPen(i){
+  const e = me.eggs[i]; if (!e || eggLeft(e) > 0) return;
+  if (me.cr.length >= PEN_MAX){ placing = i; ranchMsg = `사육장이 꽉 찼어요 (${PEN_MAX}마리). 입양 보낼 아이를 한 마리 골라 주세요.`; return; }
+  const c = newCreature(e.k, e.col); me.cr.push(c); me.eggs.splice(i, 1);
+  ranchMsg = `${c.name}(${CREATURES[c.k].baby})이(가) 사육장에 들어왔어요!${c.col.rare ? ` 처음 보는 색 「${c.col.n}」이에요!` : ''}`;
+  crSel = me.cr.length - 1; ranchTab = 'pen'; placing = null; save();
+}
+function adoptOut(i){
+  const c = me.cr[i], d = CREATURES[c.k];
+  me.cr.splice(i, 1); me.inv[d.mat] = (me.inv[d.mat] || 0) + 1; me.coin += 30;
+  if (crSel >= me.cr.length) crSel = Math.max(0, me.cr.length - 1);
+  return `${c.name}이(가) 새 가족을 찾아 떠났어요. 고맙다며 ${ITEM[d.mat]} +1 · 30G를 남겼어요.`;
+}
 function renderRanch(){
   if (crSel >= me.cr.length) crSel = 0;
-  const c = me.cr[crSel], d = CREATURES[c.k], stage = crStage(c), ready = stage !== 'egg' && c.love >= 5;
-  const adults = me.cr.map((x, i) => [x, i]).filter(([x]) => crStage(x) === 'adult');
-  pair = pair.filter(i => me.cr[i] && crStage(me.cr[i]) === 'adult');
-  const bredToday = me.bredDay === me.day, full = me.cr.length >= PEN_MAX;
-  const V = VARIANTS[c.v];
-  frame('ranch', '생물 사육장', `우리 ${me.cr.length} / ${PEN_MAX}칸`, `
-    <div class="grid" style="grid-template-columns:repeat(${Math.min(Math.max(me.cr.length, 4), 6) > 4 ? 6 : 4},1fr)">
-      ${me.cr.map((x, i) => `<button data-cr="${i}" class="px" style="height:64px;padding:0;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;background:${CREATURES[x.k].bg};border:3px solid ${i === crSel ? 'var(--ink)' : 'transparent'}">${crSprite(x, me.cr.length > 4 ? .42 : .56)}${crStage(x) !== 'egg' && x.love >= 5 ? '<span style="position:absolute;right:3px;top:3px;width:9px;height:9px;background:#E0507E;border:2px solid #fff"></span>' : ''}</button>`).join('')}
+  const c = me.cr[crSel], d = c && CREATURES[c.k], now = Date.now();
+  const ready = me.eggs.filter(e => eggLeft(e) <= 0).length;
+  const tabs = `<div class="seg" style="grid-template-columns:repeat(3,1fr)">${[['pen', `사육장 ${me.cr.length}/${PEN_MAX}`], ['hatch', `부화실 ${me.eggs.length}/${HATCH_MAX}${ready ? ' ●' : ''}`], ['shop', '알 가게']].map(([k, l]) => `<button data-rtab="${k}" class="${ranchTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  let body = '';
+  if (placing !== null){
+    body = `<section class="sec">${secH('입양 보낼 아이 고르기', '한 마리를 보내야 새 아기가 들어와요')}
+      <div class="grid" style="grid-template-columns:repeat(5,1fr)">${me.cr.map((x, i) => `<button class="cell" data-adopt="${i}" style="height:70px;padding:0;overflow:hidden;background:${CREATURES[x.k].bg}">${crSprite(x, .42)}<span class="s" style="position:absolute;left:0;right:0;bottom:1px;font-size:11px">${esc(x.name)}</span></button>`).join('')}</div>
+      <button class="btn ghost" id="adoptCancel" style="align-self:center">그만두기</button></section>`;
+  } else if (ranchTab === 'pen'){
+    const adult = c && crAdult(c), tier = c ? loveTier(c) : 0, T = LOVE_TIERS[tier];
+    const fedLeft = c ? Math.max(0, (c.fedAt || 0) + FEED_CD - now) : 0, petLeft = c ? Math.max(0, (c.petAt || 0) + PET_CD - now) : 0;
+    const mates = c ? me.cr.map((x, i) => [x, i]).filter(([x, i]) => i !== crSel && x.k === c.k && crAdult(x) && x.love >= BREED_LOVE) : [];
+    body = `
+    <div class="grid" style="grid-template-columns:repeat(5,1fr)">
+      ${me.cr.map((x, i) => `<button data-cr="${i}" class="px" style="height:62px;padding:0;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;background:${CREATURES[x.k].bg};border:3px solid ${i === crSel ? 'var(--ink)' : 'transparent'}">${crSprite(x, .42)}${crAdult(x) && loveTier(x) && prodLeft(x) <= 0 ? '<span class="dot" style="background:var(--mint2);right:3px;top:3px;bottom:auto"></span>' : ''}<span class="s" style="position:absolute;right:3px;bottom:1px;font-size:11px;line-height:11px;color:#C2385E">♥${x.love}</span></button>`).join('') || '<div class="hint" style="grid-column:1/-1">아직 생물이 없어요. 알 가게에서 알을 사 보세요.</div>'}
     </div>
-    <section class="sec">
-      <div class="box px" style="padding:12px;display:flex;flex-direction:column;gap:10px">
-        <div class="sec-h"><h3>${esc(c.name)}</h3><span style="display:flex;gap:4px">${V ? `<span class="tag" style="background:#FFF2C8;color:#B07A10">${V.name}</span>` : ''}<span class="tag">${stage === 'egg' ? '알' : crKind(c)}</span></span></div>
-        ${stage === 'egg' ? `<span class="s">따뜻한 짚 위에서 쉬고 있어요. <b class="b">${c.hatch}일</b> 자고 나면 깨어나요.</span><span class="s sub">무슨 색 아기일지는 깨어나 봐야 알아요</span>` : `
-        <div class="meter"><span class="s">배부름</span>${segs(c.full, 5, '#FFC24A')}</div>
-        <div class="meter"><span class="s">애정</span>${segs(c.love, 5, '#FF8FAF')}</div>
-        <div class="meter"><span class="s">성장</span>${segs(Math.min(c.age || 0, ADULT_AGE), ADULT_AGE, '#7BD88F')}</div>
-        <div class="s sub" style="display:flex;align-items:center;gap:4px">${ic(d.mat, 'transform:scale(.8)')}${stage === 'adult' ? `애정이 가득 차면 「${ITEM[d.mat]}」 ${2 + (c.v ? 1 : 0)}개` : `어른까지 ${ADULT_AGE - (c.age || 0)}일 · 배불리 먹고 자야 자라요`}</div>`}
+    ${c ? `<section class="sec">
+      <div class="box px" style="padding:12px;display:flex;flex-direction:column;gap:8px">
+        <div class="sec-h"><h3>${esc(c.name)}</h3><span style="display:flex;gap:4px"><span class="tag" style="${c.col.rare ? 'background:#FFF2C8;color:#B07A10' : ''}">${esc(c.col.n)}${c.col.rare ? ' ✨' : ''}</span><span class="tag">${crKind(c)}</span></span></div>
+        <div class="meter"><span class="s">애정</span>${segs(c.love, LOVE_MAX, '#FF8FAF')}<span class="s b">${c.love}</span></div>
+        <span class="s" style="color:#C2385E">${T.n} · ${T.d}${tier < 4 ? ` <span class="sub">(다음 단계까지 ♥${(tier + 1) * 5 - c.love})</span>` : ''}</span>
+        <div class="s sub" style="display:flex;align-items:center;gap:4px">${ic(d.mat, 'transform:scale(.8);margin:-6px')}${!adult ? `어른까지 <b data-cd="${c.bornAt + d.grow * 6e4}">${cdText(c.bornAt + d.grow * 6e4 - now)}</b> · 어른이 되면 「${ITEM[d.mat]}」을 줘요` : !tier ? `애정 5부터 「${ITEM[d.mat]}」을 줘요` : prodLeft(c) > 0 ? `「${ITEM[d.mat]}」 생기기까지 <b data-cd="${c.prodAt + d.prod * 6e4}">${cdText(prodLeft(c))}</b>` : `「${ITEM[d.mat]}」이 생겼어요!`}</div>
       </div>
-      ${stage === 'egg' ? '' : `<div class="grid" style="grid-template-columns:repeat(3,1fr)">
-        <button class="btn gold" id="feed">${d.food.replace(' 주기', '')}</button>
-        <button class="btn" id="pat">쓰다듬기</button>
-        <button class="btn ${ready ? 'go' : ''}" id="harvest">재료 얻기</button>
-      </div>`}
-      ${hint(ranchMsg, '하루에 한 번씩 배가 고파져요. 밥을 주고 쓰다듬어 주세요.')}
-      ${stage === 'adult' && me.cr.length > 1 ? '<button class="btn ghost" id="bye" style="align-self:center">이 아이와 작별하기</button>' : ''}
+      <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+        <button class="btn gold" id="feed" ${fedLeft ? 'disabled' : ''}>${fedLeft ? `<span data-cd="${c.fedAt + FEED_CD}">${cdText(fedLeft)}</span>` : `${d.food} 주기`}</button>
+        <button class="btn" id="pat" ${petLeft ? 'disabled' : ''}>${petLeft ? `<span data-cd="${c.petAt + PET_CD}">${cdText(petLeft)}</span>` : '쓰다듬기'}</button>
+        <button class="btn ${adult && tier && prodLeft(c) <= 0 ? 'go' : ''}" id="harvest" ${adult && tier && prodLeft(c) <= 0 ? '' : 'disabled'}>재료 받기</button>
+      </div>
+      ${hint(ranchMsg, `먹이 ♥+2 (2시간마다) · 쓰다듬기 ♥+1 (30분마다) · ${CREATURES[c.k].prod}분마다 재료가 생겨요`)}
     </section>
     <section class="sec">
-      ${secH('짝꿍 맺기', bredToday ? '오늘은 맺었어요' : `하루 한 번 · 마력 ${BREED_MANA}`)}
-      ${adults.length < 2 ? '<div class="hint">어른 생물이 둘 있어야 짝꿍을 맺을 수 있어요. 친구 방에서 친구 생물과도 맺을 수 있어요.</div>' : `
-      <div class="pal">${adults.map(([x, i]) => `<button class="cell ${pair.includes(i) ? 'sel' : ''}" data-pair="${i}" style="width:62px;height:66px;min-height:0;padding:0 0 14px;overflow:hidden;background:${CREATURES[x.k].bg}">${crSprite(x, .4)}<span class="s" style="position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,.85);text-align:center;line-height:16px">${esc(x.name)}</span></button>`).join('')}</div>
-      <button class="btn sm go" id="breed" style="min-height:40px" ${pair.length === 2 && !bredToday && !full && me.mana >= BREED_MANA ? '' : 'disabled'}>${full ? '우리가 꽉 찼어요' : pair.length === 2 ? `${esc(me.cr[pair[0]].name)} ♥ ${esc(me.cr[pair[1]].name)} 짝꿍 맺기` : '어른 둘을 골라요'}</button>
-      <div class="hint">알이 하나 생겨요. 가끔 색이 다른 아기가 태어나요</div>`}
-    </section>`);
-  on('[data-cr]', b => { crSel = +b.dataset.cr; ranchMsg = ''; renderRanch(); });
-  on('[data-pair]', b => { const i = +b.dataset.pair; pair = pair.includes(i) ? pair.filter(x => x !== i) : [...pair, i].slice(-2); renderRanch(); });
+      ${secH('짝꿍 맺기', `같은 종 어른 · 애정 ${BREED_LOVE} 이상 · 마력 ${BREED_MANA}`)}
+      ${!adult || c.love < BREED_LOVE ? `<div class="hint">${esc(c.name)}이(가) 어른이 되고 애정 ${BREED_LOVE} 이상이어야 해요</div>`
+        : (c.bredAt || 0) + BREED_CD > now ? `<div class="hint">${esc(c.name)}은(는) 쉬는 중이에요 · <span data-cd="${c.bredAt + BREED_CD}">${cdText(c.bredAt + BREED_CD - now)}</span> 뒤에 다시</div>`
+        : !mates.length ? `<div class="hint">짝꿍이 될 ${d.kind}(어른, 애정 ${BREED_LOVE} 이상)가 없어요 · 친구 방에서 친구 생물과도 맺을 수 있어요</div>`
+        : `<div class="pal">${mates.map(([x, i]) => `<button class="cell ${partner === i ? 'sel' : ''}" data-mate="${i}" style="width:62px;height:66px;min-height:0;padding:0 0 14px;overflow:hidden;background:${CREATURES[x.k].bg}">${crSprite(x, .4)}<span class="s" style="position:absolute;left:0;right:0;bottom:1px;font-size:11px">${esc(x.name)}</span></button>`).join('')}</div>
+          <button class="btn sm go" id="breed" style="min-height:40px" ${partner !== null && me.eggs.length < HATCH_MAX && me.mana >= BREED_MANA ? '' : 'disabled'}>${me.eggs.length >= HATCH_MAX ? '부화실이 꽉 찼어요' : '짝꿍 맺고 알 받기'}</button>
+          <div class="hint">알은 부화실로 가요 · 엄마·아빠 색을 닮거나, 섞여서 처음 보는 색이 나오기도 해요</div>`}
+    </section>
+    <button class="btn ghost" id="adopt" style="align-self:center">${esc(c.name)} 입양 보내기</button>` : ''}`;
+  } else if (ranchTab === 'hatch'){
+    body = `<section class="sec">${secH('부화실', `알 ${me.eggs.length} / ${HATCH_MAX}`)}
+      <div class="grid" style="grid-template-columns:repeat(2,1fr)">${[...Array(HATCH_MAX)].map((_, i) => { const e = me.eggs[i]; if (!e) return '<div class="cell slot" style="min-height:120px"><span class="s sub">빈 둥지</span></div>';
+        const left = eggLeft(e); return `<div class="cell" style="min-height:120px;gap:4px;background:${CREATURES[e.k].bg}"><div style="height:52px;display:flex;align-items:center;justify-content:center;overflow:visible">${crSprite(e, .55, true)}</div>
+          <span class="s">${CREATURES[e.k].kind}의 알</span>${left > 0 ? `<span class="s sub">깨어나기까지 <b data-cd="${e.at + CREATURES[e.k].hatch * 6e4}">${cdText(left)}</b></span>` : `<button class="btn sm go" data-hatch="${i}">깨어났어요! 사육장에 넣기</button>`}</div>`; }).join('')}</div>
+      ${hint(ranchMsg, '알은 따뜻한 부화실에서 깨어나요. 깨어나면 사육장에 넣어 주세요.')}</section>`;
+  } else {
+    body = `<section class="sec">${secH('알 가게', `부화실 빈 둥지 ${HATCH_MAX - me.eggs.length}개`)}
+      <div class="box px">${CREATURES.map((x, k) => `<div class="li"><div style="width:44px;height:40px;display:flex;align-items:center;justify-content:center;overflow:visible">${crSprite({ k, col: {}, bornAt: 0 }, .36)}</div>
+        <div class="main"><span class="t">${x.kind}의 알</span><span class="d">${timeText(x.hatch * 6e4)} 뒤 부화 · 어른까지 ${timeText(x.grow * 6e4)} · 「${ITEM[x.mat]}」</span></div>
+        <button class="btn sm ${me.coin >= x.egg && me.eggs.length < HATCH_MAX ? 'go' : ''}" data-buyegg="${k}" ${me.coin >= x.egg && me.eggs.length < HATCH_MAX ? '' : 'disabled'}>${ic('coin', 'transform:scale(.7);margin:0 -6px')}${x.egg}</button></div>`).join('')}</div>
+      ${hint(ranchMsg, '알을 사면 부화실로 가요 · 무슨 색이 나올지는 깨어나 봐야 알아요 (15가지)')}</section>`;
+  }
+  frame('ranch', '내 사육장', `${me.cr.length} / ${PEN_MAX}마리 · 부화실 ${me.eggs.length} / ${HATCH_MAX}`, tabs + body);
+  const redraw = () => { const pn = app.querySelector('.panel'), y = pn?.scrollTop; renderRanch(); if (pn) app.querySelector('.panel').scrollTop = y; };
+  on('[data-rtab]', b => { ranchTab = b.dataset.rtab; ranchMsg = ''; placing = null; redraw(); });
+  on('[data-cr]', b => { crSel = +b.dataset.cr; partner = null; ranchMsg = ''; redraw(); });
+  on('[data-mate]', b => { partner = +b.dataset.mate; redraw(); });
+  on('[data-hatch]', b => { hatchToPen(+b.dataset.hatch); redraw(); });
+  on('[data-adopt]', b => {
+    const x = me.cr[+b.dataset.adopt]; if (!confirm(`${x.name}을(를) 입양 보낼까요? 돌아오지 않아요.`)) return;
+    const msg = adoptOut(+b.dataset.adopt), i = placing; placing = null; hatchToPen(i); ranchMsg = msg + ' ' + ranchMsg; save(); redraw();
+  });
+  on('[data-buyegg]', b => {
+    const k = +b.dataset.buyegg, x = CREATURES[k];
+    if (me.coin < x.egg || me.eggs.length >= HATCH_MAX) return;
+    me.coin -= x.egg; me.eggs.push({ id: crId(), k, col: randColor(), at: Date.now() }); ranchMsg = `${x.kind}의 알을 샀어요! 부화실에서 ${timeText(x.hatch * 6e4)} 뒤에 깨어나요.`; save(); redraw();
+  });
+  const ac = $('#adoptCancel'); if (ac) ac.onclick = () => { placing = null; ranchMsg = ''; redraw(); };
+  const ad = $('#adopt'); if (ad) ad.onclick = () => { if (!confirm(`${c.name}을(를) 입양 보낼까요? 돌아오지 않아요.`)) return; ranchMsg = adoptOut(crSel); save(); redraw(); };
+  const fd = $('#feed'); if (fd) fd.onclick = () => {
+    const n = 2 + (me.house === 'dusk' && myTime() ? 1 : 0); c.love = Math.min(LOVE_MAX, c.love + n); c.fedAt = Date.now();
+    ranchMsg = `${c.name}이(가) ${d.food}을(를) 맛있게 먹었어요. 애정 +${n}`; save(); redraw();
+  };
+  const pt = $('#pat'); if (pt) pt.onclick = () => {
+    const n = me.house === 'dusk' ? 2 : 1; c.love = Math.min(LOVE_MAX, c.love + n); c.petAt = Date.now();
+    ranchMsg = `${c.name}이(가) 기분 좋아해요. 애정 +${n}`; save(); redraw();
+  };
+  const hv = $('#harvest'); if (hv) hv.onclick = () => {
+    const T = LOVE_TIERS[loveTier(c)]; if (!T.mat || prodLeft(c) > 0 || !crAdult(c)) return;
+    me.inv[d.mat] = (me.inv[d.mat] || 0) + T.mat; me.coin += T.coin; c.prodAt = Date.now();
+    ranchMsg = `「${ITEM[d.mat]}」 ${T.mat}개${T.coin ? ` · ${T.coin}G` : ''}를 받았어요! (${T.n})`; save(); redraw();
+  };
   const br = $('#breed'); if (br) br.onclick = () => {
-    if (pair.length !== 2 || bredToday || full || me.mana < BREED_MANA) return;
-    const egg = makeEgg(me.cr[pair[0]], me.cr[pair[1]]);
-    me.cr.push(egg); me.mana -= BREED_MANA; me.bredDay = me.day;
-    ranchMsg = `${me.cr[pair[0]].name}${josa(me.cr[pair[0]].name, '과', '와')} ${me.cr[pair[1]].name}의 알이 생겼어요! ${HATCH_DAYS}일 뒤에 깨어나요.`;
-    crSel = me.cr.length - 1; pair = []; save(); renderRanch();
+    const m = me.cr[partner]; if (!m || me.eggs.length >= HATCH_MAX || me.mana < BREED_MANA) return;
+    me.eggs.push(makeEgg(c, m)); me.mana -= BREED_MANA; c.bredAt = m.bredAt = Date.now();
+    ranchMsg = `${c.name} ♥ ${m.name} · 알이 부화실로 갔어요! ${timeText(d.hatch * 6e4)} 뒤에 깨어나요.`; partner = null; save(); redraw();
   };
-  const by = $('#bye'); if (by) by.onclick = () => {
-    if (!confirm(`${c.name}을(를) 숲으로 돌려보낼까요? 돌아오지 않아요.`)) return;
-    me.cr.splice(crSel, 1); me.inv[d.mat] += 1; me.coin += 30;
-    ranchMsg = `${c.name}이(가) 꼬리를 흔들며 숲으로 돌아갔어요. ${ITEM[d.mat]} +1 · 골드 +30`;
-    crSel = 0; pair = []; save(); renderRanch();
-  };
-  if (stage === 'egg') return;
-  $('#feed').onclick = () => { const n = me.house === 'dusk' && myTime() ? 3 : 2; c.full = Math.min(5, c.full + n); ranchMsg = `${c.name}이(가) 맛있게 먹었어요. 배부름 +${n}`; save(); renderRanch(); };
-  $('#pat').onclick = () => {
-    if (c.full < 2) ranchMsg = `${c.name}이(가) 배고파서 칭얼거려요. 먼저 밥을 주세요.`;
-    else { const n = me.house === 'dusk' ? 2 : 1; c.love = Math.min(5, c.love + n); ranchMsg = `${c.name}이(가) 기분 좋아해요. 애정 +${n}`; save(); }
-    renderRanch();
-  };
-  $('#harvest').onclick = () => {
-    if (!ready) ranchMsg = `애정이 5칸이 되어야 ${ITEM[d.mat]}을(를) 얻을 수 있어요.`;
-    else { const n = (stage === 'adult' ? 2 : 1) + (c.v ? 1 : 0); me.inv[d.mat] += n; c.love = 3; c.full = Math.max(0, c.full - 1); ranchMsg = `${ITEM[d.mat]} ${n}개를 얻었어요! 연구실 재료함에 들어갔어요.`; save(); }
-    renderRanch();
-  };
+  // 남은 시간 표시를 1초마다, 무언가 끝나면 다시 그려요
+  clearInterval(ranchTick);
+  ranchTick = setInterval(() => {
+    if (!sheetOn || tab !== 'ranch' || sub) return clearInterval(ranchTick);
+    let done = false;
+    app.querySelectorAll('[data-cd]').forEach(el => { const left = +el.dataset.cd - Date.now(); if (left <= 0) done = true; else el.textContent = timeText(left); });
+    if (done) redraw();
+  }, 1000);
 }
 
 // ===== 기숙사 =====
@@ -968,15 +1084,6 @@ function sleep(){
   me.lastSleepAt = Date.now();
   me.day++;
   me.mana = Math.min(50 + cozy * 2 + guests * 3, me.mana + gain);
-  const news = [];
-  me.cr.forEach(c => {
-    if (c.hatch > 0){ c.hatch--; if (!c.hatch) news.push(`${c.name}(${CREATURES[c.k].baby})가 알에서 나왔어요!`); return; }
-    const wasAdult = crStage(c) === 'adult';
-    if (c.full >= 2) c.age = (c.age || 0) + 1;   // 배불리 먹고 잔 날만 자라요
-    if (!wasAdult && crStage(c) === 'adult') news.push(`${c.name}이(가) 어른 ${CREATURES[c.k].kind}이(가) 됐어요!`);
-    c.full = Math.max(0, c.full - 1);
-  });
-  if (news.length) setTimeout(() => toast(news.join(' ')), 600);
   me.orders = makeOrders(me.day, me.hints, me.found);
   lesson = null;
   save();
@@ -1010,32 +1117,33 @@ function leaveVisit(){ visitOff?.(); visitOff = null; visitUid = null; closeShee
 // 친구 생물과 짝꿍 맺기: 친구마다 하루 한 번, 알은 나만 받아요 (친구 방명록에 소식이 남아요)
 const friendCr = p => normalize({ cr: JSON.parse(JSON.stringify(p.cr || [])), inv: {} }).cr;
 function breedSection(p){
-  const theirs = friendCr(p).map((x, i) => [x, i]).filter(([x]) => crStage(x) === 'adult');
-  const mine = me.cr.map((x, i) => [x, i]).filter(([x]) => crStage(x) === 'adult');
+  const theirs = friendCr(p).map((x, i) => [x, i]).filter(([x]) => crAdult(x));
+  const pickT = vTheirs !== null && friendCr(p)[vTheirs];
+  const mine = me.cr.map((x, i) => [x, i]).filter(([x]) => crAdult(x) && x.love >= BREED_LOVE && (!pickT || x.k === pickT.k));
   me.bredWith = me.bredWith || {};
-  const done = me.bredWith[visitUid] === todayKey(), full = me.cr.length >= PEN_MAX;
+  const done = me.bredWith[visitUid] === todayKey(), full = me.eggs.length >= HATCH_MAX;
   const tile = (x, attr, on_) => `<button class="cell ${on_ ? 'sel' : ''}" ${attr} style="width:62px;height:66px;min-height:0;padding:0 0 14px;overflow:hidden;background:${CREATURES[x.k].bg}">${crSprite(x, .4)}<span class="s" style="position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,.85);text-align:center;line-height:16px">${esc(x.name)}</span></button>`;
   return `<section class="sec">
-    ${secH(`${esc(p.nick)}의 생물과 짝꿍 맺기`, done ? '오늘은 맺었어요' : `하루 한 번 · 마력 ${BREED_MANA}`)}
-    ${!theirs.length ? '<div class="hint">아직 어른 생물이 없어요</div>' : !mine.length ? '<div class="hint">내 사육장에 어른 생물이 있어야 해요</div>' : done ? '' : `
+    ${secH(`${esc(p.nick)}의 생물과 짝꿍 맺기`, done ? '오늘은 맺었어요' : `하루 한 번 · 같은 종 · 마력 ${BREED_MANA}`)}
+    ${!theirs.length ? '<div class="hint">아직 어른 생물이 없어요</div>' : !mine.length ? `<div class="hint">${pickT ? `같은 종(${CREATURES[pickT.k].kind})이고 ` : ''}애정 ${BREED_LOVE} 이상인 내 어른 생물이 있어야 해요</div>${pickT ? '' : ''}` : done ? '' : `
     <span class="s sub">${esc(p.nick)}의 생물</span><div class="pal">${theirs.map(([x, i]) => tile(x, `data-vt="${i}"`, vTheirs === i)).join('')}</div>
     <span class="s sub">내 생물</span><div class="pal">${mine.map(([x, i]) => tile(x, `data-vm="${i}"`, vMine === i)).join('')}</div>
-    <button class="btn sm go" id="vbreed" style="min-height:40px" ${vMine !== null && vTheirs !== null && !full && me.mana >= BREED_MANA ? '' : 'disabled'}>${full ? '내 우리가 꽉 찼어요' : '짝꿍 맺고 알 받기'}</button>`}
+    <button class="btn sm go" id="vbreed" style="min-height:40px" ${vMine !== null && vTheirs !== null && !full && me.mana >= BREED_MANA ? '' : 'disabled'}>${full ? '내 부화실이 꽉 찼어요' : '짝꿍 맺고 알 받기'}</button>`}
   </section>`;
 }
 function bindBreed(p){
   const t = $('#gtext')?.value;
   const keep = () => { renderVisit(); if (t !== undefined && $('#gtext')) $('#gtext').value = t; };
-  on('[data-vt]', b => { vTheirs = +b.dataset.vt; keep(); });
+  on('[data-vt]', b => { vTheirs = +b.dataset.vt; vMine = null; keep(); });
   on('[data-vm]', b => { vMine = +b.dataset.vm; keep(); });
   const btn = $('#vbreed'); if (btn) btn.onclick = async () => {
     const theirs = friendCr(p)[vTheirs], mineC = me.cr[vMine];
-    if (!theirs || !mineC || me.cr.length >= PEN_MAX || me.mana < BREED_MANA || me.bredWith[visitUid] === todayKey()) return;
+    if (!theirs || !mineC || theirs.k !== mineC.k || me.eggs.length >= HATCH_MAX || me.mana < BREED_MANA || me.bredWith[visitUid] === todayKey()) return;
     btn.disabled = true;
     const egg = makeEgg(mineC, theirs);
-    me.cr.push(egg); me.mana -= BREED_MANA; me.bredWith[visitUid] = todayKey(); save();
+    me.eggs.push(egg); me.mana -= BREED_MANA; me.bredWith[visitUid] = todayKey(); save();
     F.push(F.ref(db, 'guest/' + visitUid), { uid, nick: me.nick, look: me.look, av: me.av, house: me.house, text: `${mineC.name}${josa(mineC.name, '과', '와')} ${theirs.name}${josa(theirs.name, '이', '가')} 짝꿍이 됐어요!`, at: Date.now() }).catch(() => {});
-    toast(`${mineC.name} ♥ ${theirs.name} · 알이 내 사육장으로 갔어요!`);
+    toast(`${mineC.name} ♥ ${theirs.name} · 알이 내 부화실로 갔어요!`);
     vMine = vTheirs = null; renderVisit();
   };
 }
@@ -1586,7 +1694,7 @@ async function boot(){
       F.onValue(F.ref(db, 'online'), s => { onlineList = s.val() || {}; if (tab === 'home' && !sub) render(); });
       F.onValue(F.ref(db, 'market'), s => { marketList = s.val() || {}; if (tab === 'market') render(); });
       F.onValue(F.ref(db, 'coop'), s => { coop = s.val() || {}; if (tab === 'market') render(); });
-      F.onValue(F.ref(db, 'players'), s => { playersList = s.val() || {}; if (tab === 'home' && !sub) render(); });
+      F.onValue(F.ref(db, 'players'), s => { playersList = s.val() || {}; syncPens(); if (tab === 'home' && !sub) render(); });
       F.onValue(F.query(F.ref(db, 'guest/' + uid), F.limitToLast(20)), s => { myGuest = s.val() || {}; if (sub === 'dorm') render(); });
       enterWorld();
     };

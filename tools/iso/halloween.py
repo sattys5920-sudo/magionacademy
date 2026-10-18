@@ -134,6 +134,9 @@ def toxic_house(img):
     poly(d, [Tt, R, r2, r1], hexc('#3A6A5A', 215)); poly(d, [L, B, r2, r1], hexc('#5A9A7A', 230)); poly(d, [R, B, r2], hexc('#4A8A6A', 220))
     for k in range(0, 9): d.line([up(P(x0 + k, y1), h), up(P(x0 + k, (y0 + y1) / 2), h + 18)], fill=fr)
 unique('toxic', [18, 56, 26, 63], toxic_house, door=dict(tile=[22, 63], to='toxic', label='독초 온실', spawn=[12, 16]))
+# 사육장 건물: 안에 학생 12명의 우리가 있어요
+unique('barn', [29, 57, 36, 63], combo(building(29, 57, 36, 63, 44, hexc('#8A4A3A'), hexc('#4A2A22'), hexc('#5A3A2E'), 26, wins_g(14, ((10, 12), (34, 12))), doors=[('L', 20, 16)])),
+       door=dict(tile=[32, 63], to='barn', label='사육장', spawn=[16, 25]))
 # 마을: 뱀파이어 저택
 unique('manor', [57, 3, 71, 12], building(57, 3, 71, 12, 70, hexc('#3E3446'), hexc('#1E1824'), hexc('#2A1E30'), 40, lambda s, l: [(u, v, 8, 18) for u in range(10, int(l) - 8, 14) for v in (12, 42) if not (s == 'L' and abs(u - 44) < 10)],
        doors=[('L', 48, 14)]), door=dict(tile=[63, 12], to=None, label='뱀파이어 저택'))
@@ -314,9 +317,8 @@ FN = set((x, 56) for x in range(28, 38)) | set((x, 68) for x in range(28, 38)) |
 FN -= {(28, 61), (28, 62)}
 for (x, y) in sorted(FN):
     if (x, y) not in occupied: put('fence', f'iron{int((x + 1, y) in FN)}{int((x, y + 1) in FN)}', x, y)
-put('bathouse', 'bathouse', 31, 59, act=('박쥐집', '박쥐 돌보기')); put('bathouse', 'bathouse', 34, 64, act=('박쥐집', '박쥐 돌보기'))
-for (x, y) in [(33, 60), (30, 65)]: put('blackcat', 'blackcat', x, y, solid=False, act=('사육부 검은 고양이', '쓰다듬기'))
-for (x, y) in [(35, 59), (32, 66)]: put('crow', 'crow', x, y, act=('사육부 까마귀', '모이 주기'))
+put('blackcat', 'blackcat', 30, 66, solid=False, act=('사육부 검은 고양이', '쓰다듬기'))
+put('crow', 'crow', 35, 66, act=('사육부 까마귀', '모이 주기'))
 # 묘지
 GF = set((x, 39) for x in range(46, 57)) | set((x, 50) for x in range(46, 57)) | set((46, y) for y in range(39, 51)) | set((56, y) for y in range(39, 51))
 GF -= {(51, 50), (52, 50)}

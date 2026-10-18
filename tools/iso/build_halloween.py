@@ -7,7 +7,7 @@ camp.update(bgSrc='art/iso/hw_bg.png', objSrc='art/iso/hw_obj.png', title='호�
 L = json.load(open(I + '/out/pclass.json'))
 L.update(indoor=True, spawnIn=[9, 12], vw=185, fill='#0C0715', bgSrc='art/iso/pclass_bg.png', objSrc='art/iso/pclass_obj.png', title='물약 교실', sub='본관 1층 · 반짝이는 곳으로 나가요')
 MAPS = {'campus': {'meta': camp}, 'lab': {'meta': L}}
-for k in ('candy', 'craft', 'dorm_witch', 'dorm_vamp', 'dorm_wolf', 'dorm_ghost', 'toxic'):
+for k in ('candy', 'craft', 'dorm_witch', 'dorm_vamp', 'dorm_wolf', 'dorm_ghost', 'toxic', 'barn', 'pen'):
     MAPS[k] = {'meta': json.load(open(I + '/out/%s.json' % k))}
 # 기숙사 건물 = 게임의 네 기숙사 (마녀관 Emberkiln, 뱀파이어관 Moonhollow, 늑대관 Duskfold, 유령관 Dewmorn)
 DORM = {'dorm_witch': ('ember', 'Emberkiln 기숙사', '마녀관'), 'dorm_vamp': ('moon', 'Moonhollow 기숙사', '뱀파이어관'),
@@ -26,5 +26,7 @@ import hashlib
 def ver(src): return src + '?v=' + hashlib.md5(open(I + '/out/' + src.split('/')[-1], 'rb').read()).hexdigest()[:8]
 for m in MAPS.values(): m['meta']['bgSrc'] = ver(m['meta']['bgSrc']); m['meta']['objSrc'] = ver(m['meta']['objSrc'])
 AV['src'] = ver(AV['src'])
-t = open(I + '/world_tpl.js').read().replace('__MAPS__', json.dumps(MAPS, ensure_ascii=False)).replace('__AVATAR__', json.dumps(AV, ensure_ascii=False))
+PUB = os.path.dirname(os.path.abspath(OUT))
+CR = 'art/iso/creatures_w.png'; CR += '?v=' + hashlib.md5(open(os.path.join(PUB, CR), 'rb').read()).hexdigest()[:8]
+t = open(I + '/world_tpl.js').read().replace('__MAPS__', json.dumps(MAPS, ensure_ascii=False)).replace('__AVATAR__', json.dumps(AV, ensure_ascii=False)).replace('__CRSRC__', json.dumps(CR))
 open(OUT, 'w').write(t); print('wrote', OUT, len(t))
