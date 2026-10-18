@@ -1,4 +1,4 @@
-# 실내 방들 (크게): 물약 교실, 과자 교실, 공예 교실, 기숙사 휴게실 4종, 독초 온실
+# 실내 방들 (크게): 물약 교실, 과자 교실, 공예 교실, 독초 온실, 사육장 (기숙사는 dorms.py)
 import json, math, random
 from PIL import Image, ImageDraw
 def hexc(h, a=255): return tuple(int(h[i:i+2], 16) for i in (1, 3, 5)) + (a,)
@@ -491,95 +491,6 @@ DORMS = {
   'wolf':  dict(name='늑대인간 기숙사', paper='#3A4A2E', paper2='#4A5E3A', wain='#5A3A24', rug='#7A5232', spawn=[21, 49]),
   'ghost': dict(name='유령 기숙사', paper='#5A6A8A', paper2='#6E80A0', wain='#4A5A6A', rug='#8AA0C8', spawn=[29, 49]),
 }
-def dorm_room(kind):
-    D = DORMS[kind]; R = Room(22, 16)
-    R.floor(rug(planks(['#6E412B', '#5F3624', '#7A4A31', '#663C28']), 4, 6, 13, 13, D['rug']))
-    R.walls(D['paper'], D['paper2'], D['wain'])
-    fire = {'ghost': ('#6AB8FF', '#C8E8FF'), 'witch': ('#C86AE8', '#F2B8FF')}.get(kind, ('#FF8A3A', '#FFE07A'))
-    def fireplace(u, v):
-        uu = u - 60
-        if not (0 <= uu < 28 and 0 <= v < 40): return None
-        if v >= 34: return hexc('#6A6470') if v < 38 else hexc('#8A8490')
-        if uu < 3 or uu >= 25: return hexc('#5A5460')
-        if v < 3: return hexc('#3A3440')
-        if v < 20 and 5 <= uu < 23:
-            fl = (uu * 7 + v * 3) % 5
-            return hexc(fire[0]) if v < 6 + fl else hexc(fire[1]) if v < 9 + fl // 2 and 9 <= uu < 19 else hexc('#1A1420')
-        return hexc('#1A1420')
-    R.wall_fill('R', fireplace); x, y = R.wall_px('R', 74, 10); R.lights.append(dict(p=(x, y), dy=0, r=42, c={'ghost': [120, 180, 255], 'witch': [200, 120, 255]}.get(kind, [255, 150, 60]), a=.55, f=1))
-    R.window('R', 14); R.window('R', 34); R.window('R', 108); R.window('R', 150)
-    bookshelf(R, 'L', 6); bookshelf(R, 'L', 96)
-    if kind == 'wolf': R.window('L', 50, w=26, h=38, glass=('#2A3A5E', '#3A4E78', '#F2E8B0'))
-    else: R.window('L', 54)
-    garland(R, 'R', 56, 92, 66, (D['rug'], '#E07A1E', '#2A2030'))
-    for side, u in (('R', 54), ('R', 94), ('R', 132), ('R', 172), ('L', 36), ('L', 86), ('L', 124)): R.sconce(side, u)
-    def bed(tx, ty, sheet):
-        def f(img, d):
-            R.box(img, tx, ty, 1, 2, 7, sheet, '#4A2A1C', '#5E3826'); R.box(img, tx, ty, 1, .5, 9, '#F2EEE4', '#C8C4BC', '#E0DCD4')
-            R.box(img, tx - .05, ty - .05, .15, 2.1, 16, '#5E3826', '#4A2A1C', '#5E3826')
-        return f
-    for (x, y) in ((20, 1), (20, 4), (20, 7), (20, 10), (17, 1), (17, 4)):
-        R.obj('bed', [(x, y), (x, y + 1)], bed(x, y, D['rug']), act=('내 침대', '잠자고 내일로'))
-    rd = hexc(D['rug'])
-    def sofa(tx, ty, n=3):
-        def f(img, d):
-            R.box(img, tx, ty + .2, n, .8, 6, rd, shade(rd, .6), shade(rd, .8)); R.box(img, tx, ty + .75, n, .25, 13, shade(rd, 1.1), shade(rd, .6), shade(rd, .8))
-        return f
-    R.obj('sofa', [(6, 13), (7, 13), (8, 13)], sofa(6, 13), act=('푹신한 소파', '앉아서 쉬기'))
-    R.obj('sofa', [(10, 13), (11, 13)], sofa(10, 13, 2), act=('푹신한 소파', '앉아서 쉬기'))
-    R.obj('table', [(8, 9)], table_draw(R, 8, 9, '#8A5636', ('cup', 'cake')), act=('티 테이블', '차 마시기'))
-    R.obj('chair', [(6, 9)], chair_draw(R, 6, 9, D['rug'])); R.obj('chair', [(10, 9)], chair_draw(R, 10, 9, D['rug']))
-    def desk(tx, ty):
-        def f(img, d):
-            R.box(img, tx, ty + .2, 2, .7, 11, '#7A4A2E', '#4A2A1C', '#5E3826')
-            x, y = R.P(tx + .6, ty + .5); d.rectangle([x - 3, y - 14, x + 2, y - 12], fill=hexc('#E8DCC8')); d.rectangle([x + 5, y - 16, x + 6, y - 11], fill=hexc('#F2E6C8')); d.point((x + 5, y - 17), fill=hexc('#FFD27A'))
-        return f
-    R.obj('desk', [(14, 12), (15, 12)], desk(14, 12), act=('공부 책상', '공부하기')); R.light(15, 12.5, -16, 20, [255, 200, 120], .5)
-    R.obj('chair', [(14, 13)], chair_draw(R, 14, 13, D['rug']))
-    if kind == 'witch':
-        def ball(img, d):
-            cx, cy = R.P(2.5, 2.5); d.rectangle([cx - 4, cy - 4, cx + 4, cy], fill=hexc('#3E2216')); d.ellipse([cx - 5, cy - 14, cx + 5, cy - 4], fill=hexc('#B88AFF')); d.ellipse([cx - 3, cy - 12, cx, cy - 9], fill=hexc('#F2E8FF'))
-        R.obj('ball', [(2, 2)], ball, act=('수정구', '미래 엿보기')); R.light(2.5, 2.5, -9, 22, [190, 140, 255], .5)
-        def broom(img, d):
-            cx, cy = R.P(1.5, 7.5); d.line([(cx - 6, cy - 20), (cx + 2, cy - 2)], fill=hexc('#8A5A3A'), width=2); d.polygon([(cx, cy - 6), (cx + 6, cy + 1), (cx + 1, cy + 2), (cx - 3, cy - 3)], fill=hexc('#C8A84A'))
-        R.obj('broom', [(1, 7)], broom, act=('빗자루', '타 보기'))
-        R.obj('cauldron', [(2, 11)], cauldron_draw(R, 2, 11, '#C08AFF'), act=('방 솥', '들여다보기')); R.light(2.5, 11.5, -8, 22, [190, 140, 255], .45)
-    elif kind == 'vamp':
-        def coffin(img, d):
-            R.box(img, 1.2, 2, .9, 2.2, 8, '#3A1E2A', '#2A1218', '#341820')
-            cx, cy = R.P(1.65, 3.1); cy -= 8; d.line([(cx, cy - 4), (cx, cy + 3)], fill=hexc('#C49446')); d.line([(cx - 2, cy - 1), (cx + 2, cy - 1)], fill=hexc('#C49446'))
-        R.obj('coffin', [(1, 2), (1, 3), (1, 4)], coffin, act=('관 침대', '들어가 보기'))
-        def candelabra(tx, ty):
-            def f(img, d):
-                cx, cy = R.P(tx + .5, ty + .5); d.rectangle([cx - 1, cy - 18, cx, cy], fill=hexc('#C49446')); d.line([(cx - 5, cy - 18), (cx + 5, cy - 18)], fill=hexc('#C49446'))
-                for dx in (-5, 0, 5): d.rectangle([cx + dx - 1, cy - 24, cx + dx, cy - 18], fill=hexc('#F2E6C8')); d.point((cx + dx, cy - 25), fill=hexc('#FFD27A'))
-            return f
-        for (x, y) in ((2, 8), (2, 12)): R.obj('candelabra', [(x, y)], candelabra(x, y), act=('촛대', '불 켜기')); R.light(x + .5, y + .5, -24, 26, [255, 180, 100], .55)
-    elif kind == 'wolf':
-        def bone(img, d):
-            cx, cy = R.P(2.5, 3.5); d.ellipse([cx - 8, cy - 5, cx + 8, cy + 3], fill=hexc('#7A5232'))
-            d.line([(cx - 4, cy - 2), (cx + 4, cy - 2)], fill=hexc('#F2EEE4'), width=2); [d.ellipse([cx + dx - 2, cy - 4, cx + dx, cy - 1], fill=hexc('#F2EEE4')) for dx in (-5, 5)]
-        R.obj('bone', [(2, 3)], bone, act=('늑대 방석과 뼈다귀', '뒹굴기'))
-        def logpile(tx, ty):
-            def f(img, d):
-                cx, cy = R.P(tx + .5, ty + .5)
-                for k in range(3): d.ellipse([cx - 8 + k * 5, cy - 6 - (k == 1) * 4, cx - 2 + k * 5, cy - (k == 1) * 4], fill=hexc('#7A5232')); d.ellipse([cx - 6 + k * 5, cy - 5 - (k == 1) * 4, cx - 4 + k * 5, cy - 2 - (k == 1) * 4], fill=hexc('#C8A878'))
-            return f
-        for (x, y) in ((1, 8), (1, 12)): R.obj('logs', [(x, y)], logpile(x, y), act=('장작더미', '장작 넣기'))
-    else:
-        def mirror(img, d):
-            cx, cy = R.P(1.5, 3.5); d.rectangle([cx - 6, cy - 26, cx + 6, cy], fill=hexc('#C49446')); d.rectangle([cx - 4, cy - 24, cx + 4, cy - 2], fill=hexc('#A8C8E8')); d.line([(cx - 2, cy - 20), (cx + 2, cy - 16)], fill=hexc('#E8F4FF'))
-        R.obj('mirror', [(1, 3)], mirror, act=('거울 (아무도 안 비쳐요)', '들여다보기'))
-        def chains(img, d):
-            for k, (tx, ty) in enumerate(((5, 4), (12, 4))):
-                cx, cy = R.P(tx + .5, ty + .5)
-                for j in range(5): d.ellipse([cx - 2 + (j % 2), cy - 50 + j * 4, cx + 1 + (j % 2), cy - 46 + j * 4], outline=hexc('#B8C8E8'))
-        R.obj('chains', [(5, 4)], chains, solid=False)
-        R.light(8.5, 8.5, -20, 60, [140, 190, 255], .3, 0)
-    R.obj('pumpkins', [(13, 2)], pumpkin_pile(R, 13, 2))
-    for (x, y) in ((0, 15), (21, 15), (21, 13)): R.obj('plant', [(x, y)], plant_draw(R, x, y))
-    for (x, y) in ((5, 5), (12, 7), (16, 10), (4, 12)): float_candle(R, x, y)
-    R.save('dorm_' + kind, D['name'], '종족 휴게실 · 침대에서 자요', D['spawn'])
 # ================= 독초 온실 (24×18) =================
 def toxic_room():
     R = Room(24, 18, wall=64)
@@ -734,7 +645,9 @@ def pen_room():
     R.exit_to, R.exit_label = 'barn', '사육장'
     R.extra = dict(vw=230, pets=True)
     R.save('pen', '내 사육장', '생물을 누르면 돌볼 수 있어요', [4, 7])
-potion_room(); candy_room(); craft_room()
-for k in DORMS: dorm_room(k)
-toxic_room()
-barn_room(); pen_room()
+if __name__ == '__main__':
+    potion_room(); candy_room(); craft_room()
+    toxic_room()
+    barn_room(); pen_room()
+    import dorms; dorms.main()   # 기숙사 휴게실 4곳 × 6단계 + 개인 방 (dorms.py)
+    import furniture; furniture.main()   # 개인 방 가구 50종

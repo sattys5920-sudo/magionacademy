@@ -96,7 +96,20 @@ function resize(){
 }
 addEventListener('resize', resize);
 const img = s => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = s; });
-let map, M, blocked, objOrder;
+let map, M, blocked, objOrder, rmap;
+// 기숙사 휴게실은 단계마다 다른 방이에요: 'dorm_witch' → 'dorm_witch_3' 처럼 바꿔 보여 줘요
+const ALIAS = {}; Object.keys(MAPS).forEach(k => { const m = k.match(/^(dorm_\w+?)_1$/); if (m) ALIAS[m[1]] = k; });
+const real = id => ALIAS[id] || id;
+// 휴게실·개인 방 그림은 들어갈 때 불러와요 (처음 열 때 빠르게)
+async function ensureMap(id){
+  const m = MAPS[real(id)]; if (m.bg) return;
+  if (!m.loading) m.loading = (async () => {
+    const [bg, obj] = await Promise.all([img(m.meta.bgSrc), img(m.meta.objSrc)]);
+    const pc = document.createElement('canvas'); pc.width = obj.width; pc.height = obj.height; const px = pc.getContext('2d', { willReadFrequently: true }); px.drawImage(obj, 0, 0);
+    m.px = px; m.obj = obj; m.bg = bg;
+  })();
+  return m.loading;
+}
 const P = (tx, ty) => [M.OX + (tx - ty) * 8, M.OY + (tx + ty) * 4];
 const free = (x, y) => x >= 0 && y >= 0 && x < M.NX && y < M.NY && !blocked.has(x + ',' + y);
 function path(sx, sy, gx, gy){
@@ -128,12 +141,18 @@ const mk = (name, av, x, y, me) => ({ name, av, x, y, path: [], view: 0, flip: f
 const me = mk('나', null, 0, 0, true);
 let started = false;
 let crowd = {};
+function rebuildObjs(){   // 지도 물건 + (개인 방이면) 놓은 가구
+  const fo = M.furn ? furnObjs() : [];
+  blocked = new Set(); [...M.objs, ...fo].forEach(o => { if (o.solid !== false) for (let x = Math.floor(o.box[0]); x < Math.ceil(o.box[2]); x++) for (let y = Math.floor(o.box[1]); y < Math.ceil(o.box[3]); y++) blocked.add(x + ',' + y); });
+  flats = fo.filter(o => o.flat);
+  objOrder = fo.length ? orderObjs([...M.objs, ...fo.filter(o => !o.flat)]) : (MAPS[rmap].order || (MAPS[rmap].order = orderObjs(M.objs)));
+}
 function setMap(id, spawn){
-  map = id; M = MAPS[id].meta; resize();
-  blocked = new Set(); M.objs.forEach(o => { if (o.solid !== false) for (let x = Math.floor(o.box[0]); x < Math.ceil(o.box[2]); x++) for (let y = Math.floor(o.box[1]); y < Math.ceil(o.box[3]); y++) blocked.add(x + ',' + y); });
-  objOrder = MAPS[id].order || (MAPS[id].order = orderObjs(M.objs));
+  map = id; rmap = real(id); M = MAPS[rmap].meta; resize(); placing = null;
+  rebuildObjs();
+  if (!spawn || !free(spawn[0], spawn[1])) spawn = M.spawnIn || M.start || spawn;
   me.x = spawn[0]; me.y = spawn[1]; me.path = []; me.view = 0; me.flip = false;
-  if (!crowd[id]){ crowd[id] = []; const n = id === 'campus' ? 9 : (id === 'barn' || id === 'pen') ? 0 : 2; for (let i = 0; i < n; i++){ for (let k = 0; k < 50; k++){ const x = Math.floor(Math.random() * M.NX), y = Math.floor(Math.random() * M.NY); if (free(x, y)){ crowd[id].push(mk(NAMES[(i + (id === 'lab' ? 3 : 0)) % NAMES.length], World.Avatar.random(), x, y, false)); break; } } } }
+  if (!crowd[id]){ crowd[id] = []; const n = id === 'campus' ? 9 : (id === 'barn' || id === 'pen' || M.furn) ? 0 : 2; for (let i = 0; i < n; i++){ for (let k = 0; k < 50; k++){ const x = Math.floor(Math.random() * M.NX), y = Math.floor(Math.random() * M.NY); if (free(x, y)){ crowd[id].push(mk(NAMES[(i + (id === 'lab' ? 3 : 0)) % NAMES.length], World.Avatar.random(), x, y, false)); break; } } } }
   people.length = 0; people.push(me, ...crowd[id]);
   if (M.pets) people.push(...spawnPets());
   tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : ''); d.textContent = p.name; if (p.pet) d.style.display = 'none'; world.appendChild(d); return d; });
@@ -142,6 +161,30 @@ function setMap(id, spawn){
   document.getElementById('place').textContent = M.title; document.getElementById('sub').textContent = M.sub;
   camX = camY = null; hideBubble();
 }
+// ---------- 개인 방 가구 (tools/iso/furniture.py) ----------
+const FURN = __FURN__; World.FURN = FURN;
+let FURN_IMG = null, FURN_PX = null, furnData = [], flats = [], placing = null;
+World.onFurn = null;      // (가구 id) 놓은 가구를 눌렀을 때 → 글이면 말풍선, {text, btn, fn}이면 버튼 말풍선
+World.onPlaced = null;
+function furnObjs(){
+  return furnData.map(f => { const it = FURN.items[f.k]; if (!it) return null; const [px, py] = P(f.x, f.y);
+    return { name: 'furn', fid: f.id, furn: it, box: [f.x, f.y, f.x + it.w, f.y + it.d], x: px - it.ax, y: py - it.ay, sx: it.sx, sy: 0, sw: it.sw, sh: it.sh, solid: !!it.solid, flat: !!it.flat }; }).filter(Boolean);
+}
+World.setFurniture = list => { furnData = list || []; if (M && M.furn){ rebuildObjs(); } };
+// 놓을 수 있나: 방 안, 막힌 곳·문·나 있는 칸이 아니어야 해요 (바닥 러그끼리는 겹치지 않게)
+function canPlace(k, x, y, skip){
+  const it = FURN.items[k]; if (!it) return false;
+  const taken = new Set(); M.objs.forEach(o => { if (o.door || o.solid !== false) for (let a = Math.floor(o.box[0]); a < Math.ceil(o.box[2]); a++) for (let b = Math.floor(o.box[1]); b < Math.ceil(o.box[3]); b++) taken.add(a + ',' + b); });
+  furnObjs().forEach(o => { if (o.fid === skip || (!!o.flat !== !!it.flat)) return; for (let a = o.box[0]; a < o.box[2]; a++) for (let b = o.box[1]; b < o.box[3]; b++) taken.add(a + ',' + b); });
+  for (let a = x; a < x + it.w; a++) for (let b = y; b < y + it.d; b++){
+    if (a < 0 || b < 0 || a >= M.NX || b >= M.NY - 1 || taken.has(a + ',' + b)) return false;
+    if (it.solid && Math.round(me.x) === a && Math.round(me.y) === b) return false;
+  }
+  return true;
+}
+// 가구 놓기: 바닥을 누르면 그 자리에 미리 보여 주고, [여기 놓기]를 누르면 놓아요
+World.place = (k, cb) => { placing = { k, at: null, cb }; hideBubble(); showBubble({ x: P(me.x + .5, me.y + .5)[0], y: P(me.x + .5, me.y + .5)[1] - 30, sw: 0 }, `<b>${FURN.items[k].name}</b><br>놓을 곳을 눌러요`, '그만두기', () => { placing = null; hideBubble(); }); };
+World.cancelPlace = () => { placing = null; hideBubble(); };
 // ---------- 사육장: 우리 문 · 이름표 · 내 생물 ----------
 const CR_SRC = __CRSRC__, CR_W = 40, CR_H = 34;
 let CR_IMG = null, penNames = [], myPen = 0, petData = [], penTags = [];
@@ -192,7 +235,7 @@ function drawPet(p){
   if (p.flip){ cx.translate(dx, dy); cx.scale(-1, 1); cx.drawImage(S, -w / 2, 0, w, h); } else cx.drawImage(S, Math.round(dx - w / 2), dy, w, h);
   cx.restore();
 }
-let tags = [], bubble = null, pending = null, busy = false, camX = null, camY = null, forceNight = null;
+let tags = [], bubble = null, pending = null, busy = false, camX = null, camY = null, forceNight = null, backTo = null;
 function showBubble(o, text, btn, fn){
   hideBubble();
   const b = document.createElement('div'); b.className = 'bubble'; b.innerHTML = text + (btn ? `<button>${btn}</button>` : '');
@@ -211,27 +254,47 @@ function goDoor(door, o){
     const r = World.onPenDoor(door.pen);
     if (r !== true){ const [bx, by] = P(door.tile[0] + .5, door.tile[1] + .5); showBubble({ x: bx, y: by - 26, sw: 0 }, r); return; }
   }
+  if (door.house && World.onHouseDoor){   // 개인 방: 우리 기숙사 학생만
+    const r = World.onHouseDoor(door.house);
+    if (r !== true){ const [bx, by] = P(door.tile[0] + .5, door.tile[1] + .5); showBubble({ x: bx, y: by - 26, sw: 0 }, r); return; }
+  }
   if (!door.to){ showBubble(o, `<b>${door.label}</b><br>아직 문이 잠겨 있어요 · 곧 열려요`); return; }
+  let to = door.to, spawn = door.spawn;
+  if (to === '@back'){ to = backTo ? backTo.map : 'dorm_' + rmap.split('_')[1]; spawn = backTo ? backTo.pos : null; }
+  else if (door.house) backTo = { map, pos: [Math.round(me.x), Math.round(me.y)] };
   busy = true; fadeEl.textContent = door.label; fadeEl.style.opacity = 1;
-  setTimeout(() => { setMap(door.to, door.spawn); setTimeout(() => { fadeEl.style.opacity = 0; busy = false; }, 150); }, 380);
+  const t0 = Date.now(); ensureMap(to).then(() => setTimeout(() => { setMap(to, spawn); setTimeout(() => { fadeEl.style.opacity = 0; busy = false; }, 150); }, Math.max(0, 380 - (Date.now() - t0))));
 }
 function goto(p, gx, gy){ const r = path(Math.round(p.x), Math.round(p.y), gx, gy); if (r){ p.path = r; return true; } return false; }
 function near(tiles){ const c = []; tiles.forEach(([a, b]) => [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx, dy]) => free(a + dx, b + dy) && c.push([a + dx, b + dy]))); return c.sort((p1, p2) => Math.hypot(p1[0] - me.x, p1[1] - me.y) - Math.hypot(p2[0] - me.x, p2[1] - me.y)); }
 cv.addEventListener('pointerdown', e => {
   if (busy) return;
   const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) * VW / r.width + Math.round(camX), y = (e.clientY - r.top) * VH / r.height + Math.round(camY);
+  const tileAt = () => [Math.floor(((x - M.OX) / 8 + (y - M.OY) / 4) / 2), Math.floor(((y - M.OY) / 4 - (x - M.OX) / 8) / 2)];
+  if (placing){
+    const [tx, ty] = tileAt(), it = FURN.items[placing.k], gx = tx - Math.floor((it.w - 1) / 2), gy = ty - Math.floor((it.d - 1) / 2);
+    placing.at = [gx, gy]; const ok = canPlace(placing.k, gx, gy);
+    const [bx, by] = P(gx + it.w / 2, gy + it.d / 2), pl = placing;
+    hideBubble(); showBubble({ x: bx, y: by - it.ay - 6, sw: 0 }, `<b>${it.name}</b><br>${ok ? '여기에 놓을까요?' : '여기엔 놓을 수 없어요'}`, ok ? '여기 놓기' : '그만두기', () => { placing = null; hideBubble(); if (ok && pl.cb) pl.cb(gx, gy); });
+    return;
+  }
   hideBubble(); pending = null;
   // 우리 안의 생물을 누르면 돌보기 화면
   const pet = people.find(p => p.pet && (() => { const [sx, sy] = P(p.x + .5, p.y + .5), w = p.pet.adult ? 11 : 8, h = p.pet.adult ? 18 : 13; return x >= sx - w && x <= sx + w && y >= sy - h && y <= sy + 2; })());
   if (pet && World.onPet){ World.onPet(pet.pet.id); return; }
-  const hit = [...objOrder].reverse().find(o => (o.door || o.act || ACTS[o.name]) && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && (() => { const px = MAPS[map].px; const d = px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data; return d[3] > 0; })());
+  const hit = [...objOrder, ...flats.slice().reverse()].reverse().find(o => (o.door || o.act || o.furn || ACTS[o.name]) && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && (() => { const px = o.furn ? FURN_PX : MAPS[rmap].px; const d = px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data; return d[3] > 0; })());
+  if (hit && hit.furn){   // 놓은 가구
+    const r = World.onFurn ? World.onFurn(hit.fid) : null;
+    if (r) showBubble(hit, typeof r === 'string' ? r : r.text, r.btn, r.fn);
+    return;
+  }
   if (hit){
     if (hit.door){ const [dx, dy] = hit.door.tile; if (Math.round(me.x) === dx && Math.round(me.y) === dy) return goDoor(hit.door, hit); if (goto(me, dx, dy)) pending = { door: hit.door, o: hit }; return; }
     const tiles = []; for (let a = Math.floor(hit.box[0]); a < Math.ceil(hit.box[2]); a++) for (let b = Math.floor(hit.box[1]); b < Math.ceil(hit.box[3]); b++) tiles.push([a, b]);
     for (const c of near(tiles)) if (goto(me, c[0], c[1])){ pending = { act: hit }; return; }
     return;
   }
-  const tx = Math.floor(((x - M.OX) / 8 + (y - M.OY) / 4) / 2), ty = Math.floor(((y - M.OY) / 4 - (x - M.OX) / 8) / 2);
+  const [tx, ty] = tileAt();
   const door = M.objs.find(o => o.door && o.door.tile[0] === tx && o.door.tile[1] === ty);
   if (goto(me, tx, ty) && door) pending = { door: door.door, o: door };
 });
@@ -303,7 +366,7 @@ function drawPerson(p){ const cx = out;
 function frame(now){
   const dt = Math.min(.05, (now - last) / 1000); last = now;
   people.forEach(p => step(p, dt));
-  const A = MAPS[map];
+  const A = MAPS[rmap];
   // 카메라 먼저: 맵이 화면보다 작으면 가운데에, 크면 내 캐릭터를 따라가요
   { const [mx, my] = P(me.x + .5, me.y + .5);
     const tx = M.W <= VW ? (M.W - VW) / 2 : Math.max(0, Math.min(M.W - VW, mx - VW / 2));
@@ -320,6 +383,8 @@ function frame(now){
   // 문 표시 (반짝이는 발판)
   const pulse = .5 + .5 * Math.sin(now / 300);
   M.objs.forEach(o => { if (!o.door) return; const [x, y] = P(o.door.tile[0] + .5, o.door.tile[1] + .5); cx.fillStyle = `rgba(255,216,102,${.25 + .35 * pulse})`; cx.beginPath(); cx.moveTo(x, y - 4); cx.lineTo(x + 8, y); cx.lineTo(x, y + 4); cx.lineTo(x - 8, y); cx.fill(); });
+  // 바닥에 깔린 가구 (러그)
+  flats.forEach(o => cx.drawImage(FURN_IMG, o.sx, 0, o.sw, o.sh, o.x, o.y, o.sw, o.sh));
   // 사람을 정렬된 물건 사이에 끼워 넣기
   const R = o => ({ x: o.x, y: o.y, w: o.sw, h: o.sh });
   const list = objOrder.filter(o => sOver(R(o), view)).map(o => ({ o }));
@@ -328,7 +393,12 @@ function frame(now){
     let idx = 0; list.forEach((it, i) => { if (it.o && sOver(R(it.o), pr) && behind(it.o.box, pb)) idx = i + 1; });
     list.splice(idx, 0, { p });
   });
-  list.forEach(it => it.o ? cx.drawImage(A.obj, it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.sw, it.o.sh) : drawPerson(it.p));
+  list.forEach(it => it.o ? cx.drawImage(it.o.furn ? FURN_IMG : A.obj, it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.sw, it.o.sh) : drawPerson(it.p));
+  // 가구 놓기: 고른 자리에 반투명하게 미리 보여 줘요
+  if (placing && placing.at){ const it = FURN.items[placing.k], [gx, gy] = placing.at, ok = canPlace(placing.k, gx, gy), [px, py] = P(gx, gy);
+    cx.fillStyle = ok ? 'rgba(140,230,176,.45)' : 'rgba(230,90,110,.45)';
+    for (let a = gx; a < gx + it.w; a++) for (let b = gy; b < gy + it.d; b++){ const [qx, qy] = P(a, b); cx.beginPath(); cx.moveTo(qx, qy); cx.lineTo(qx + 8, qy + 4); cx.lineTo(qx, qy + 8); cx.lineTo(qx - 8, qy + 4); cx.fill(); }
+    cx.globalAlpha = .75; cx.drawImage(FURN_IMG, it.sx, 0, it.sw, it.sh, px - it.ax, py - it.ay, it.sw, it.sh); cx.globalAlpha = 1; }
   // 효과: 연구실 솥 거품, 분수 물방울
   const src = M.objs.find(o => o.name === 'cauldron' || o.name === 'fountain');
   if (src && Math.random() < .2){ const bx = src.x + src.sw / 2, by = src.y + (src.name === 'fountain' ? 4 : 10); fx.push({ x: bx - 5 + Math.random() * 10, y: by, v: 8 + Math.random() * 8, life: 1.2, c: src.name === 'fountain' ? '#C8EEFF' : '#9CFFD0' }); }
@@ -387,29 +457,32 @@ document.getElementById('mClose').onclick = () => mapv.classList.remove('on');
 World.ready = (async () => {
   await World.Avatar.ready;
   CR_IMG = await img(CR_SRC);
-  for (const [id, m] of Object.entries(MAPS)){
-    const [bg, obj] = await Promise.all([img(m.meta.bgSrc), img(m.meta.objSrc)]);
-    m.bg = bg; m.obj = obj;
-    const pc = document.createElement('canvas'); pc.width = obj.width; pc.height = obj.height; m.px = pc.getContext('2d', { willReadFrequently: true }); m.px.drawImage(obj, 0, 0);
-  }
+  FURN_IMG = await img(FURN.src); { const pc = document.createElement('canvas'); pc.width = FURN_IMG.width; pc.height = FURN_IMG.height; FURN_PX = pc.getContext('2d', { willReadFrequently: true }); FURN_PX.drawImage(FURN_IMG, 0, 0); }
+  await Promise.all(Object.keys(MAPS).filter(id => !MAPS[id].meta.lazy).map(ensureMap));
 })();
 World.start = async (id = 'campus', spawn) => {
   await World.ready; if (started) return; started = true;
-  resize(); setMap(id, spawn || MAPS[id].meta.start || MAPS[id].meta.spawnIn);
+  await ensureMap(id); resize(); setMap(id, spawn || MAPS[real(id)].meta.start || MAPS[real(id)].meta.spawnIn);
   requestAnimationFrame(frame);
 };
 World.setPlayer = (name, av) => { me.name = name; me.av = av; if (tags[0]) tags[0].textContent = name; };
 World.resize = () => { if (started){ resize(); camX = null; } };
 World.where = () => map;
-World.meta = id => MAPS[id] && MAPS[id].meta;
+World.meta = id => MAPS[real(id)] && MAPS[real(id)].meta;
+// 휴게실 단계: 그 기숙사 휴게실을 n단계 방으로 (지금 그 방에 있으면 바로 바꿔요)
+World.setStage = async (base, n) => {
+  const id = base + '_' + Math.max(1, Math.min(6, n)); if (!MAPS[id] || ALIAS[base] === id) return;
+  ALIAS[base] = id; delete crowd[base];
+  if (started && map === base){ const p = [Math.round(me.x), Math.round(me.y)]; await ensureMap(base); setMap(base, p); }
+};
 // 그 방의 물건 옆으로 순간 이동 (홈 화면의 바로 가기)
 World.teleport = (id, objName, then) => {
   if (!started || busy) return;
-  busy = true; fadeEl.textContent = MAPS[id].meta.title; fadeEl.style.opacity = 1;
-  setTimeout(() => {
-    if (map !== id) setMap(id, MAPS[id].meta.start || MAPS[id].meta.spawnIn);
+  busy = true; fadeEl.textContent = MAPS[real(id)].meta.title; fadeEl.style.opacity = 1;
+  ensureMap(id).then(() => setTimeout(() => {
+    if (map !== id){ if (MAPS[real(id)].meta.furn && map.startsWith('dorm_')) backTo = { map, pos: [Math.round(me.x), Math.round(me.y)] }; setMap(id, MAPS[real(id)].meta.start || MAPS[real(id)].meta.spawnIn); }
     const o = M.objs.find(x => x.name === objName);
     if (o){ const tiles = []; for (let a = Math.floor(o.box[0]); a < Math.ceil(o.box[2]); a++) for (let b = Math.floor(o.box[1]); b < Math.ceil(o.box[3]); b++) tiles.push([a, b]); const c = near(tiles)[0]; if (c){ me.x = c[0]; me.y = c[1]; me.path = []; camX = null; } }
     setTimeout(() => { fadeEl.style.opacity = 0; busy = false; then && then(); }, 150);
-  }, 380);
+  }, 380));
 };

@@ -57,6 +57,13 @@
           ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
         }
       }
+    },
+    "houses": {
+      ".read": "auth != null",
+      "$house": {
+        ".write": "auth != null && root.child('players/' + auth.uid + '/house').val() === $house",
+        ".validate": "newData.child('stage').isNumber() && newData.child('stage').val() >= 1 && newData.child('stage').val() <= 6 && (!data.exists() || newData.child('stage').val() >= data.child('stage').val())"
+      }
     }
   }
 }

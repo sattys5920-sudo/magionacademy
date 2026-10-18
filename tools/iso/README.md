@@ -4,7 +4,9 @@ Python 3 + Pillow. `halloween.py`·`school.py`는 `world.py`의 그리기 도구
 
 ```
 python3 halloween.py   # 학교 + 몬스터 마을(84×72, 늘 밤): out/hw_bg.png, out/hw_obj.png, out/hw.json
-python3 interiors.py      # 물약·과자·공예 교실, 기숙사 4개, 독초 온실 (크게), 사육장(우리 12칸)·내 우리: out/{pclass,candy,craft,dorm_*,toxic,barn,pen}_bg.png·_obj.png·.json
+python3 interiors.py      # 물약·과자·공예 교실, 독초 온실, 사육장(우리 12칸)·내 우리 + 아래 두 개도 함께: out/*_bg.png·_obj.png·.json
+python3 -c "import dorms; dorms.main()"   # 기숙사 휴게실 4곳 × 6단계(dorm_{witch,vamp,wolf,ghost}_{1..6}) + 개인 방(myroom_*) · 기숙사마다 분위기가 달라요
+python3 furniture.py      # 개인 방 가구 50종: out/furn.png + furn.json (게임에서 놓는 가구)
 python3 ../creatures.py   # 생물 10종 + 알 + 이벤트 용 그림 (양·도마뱀·용은 tools/creature_base.png에서): public/art/iso/creatures_w.png, public/art/creatures.png, 재료 아이콘을 icons.png에 덧붙임
 python3 chars6.py         # 귀여운 2등신 캐릭터 부품 (앞·뒤·옆 9프레임): out/avatar_parts.png + .json (머리 40·눈 15·입 10·교복 5)
 python3 prev6.py hair     # 미리보기 (hair / face / rand)

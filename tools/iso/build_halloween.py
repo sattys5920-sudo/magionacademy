@@ -1,4 +1,4 @@
-# 걸어 다니는 세계: hw.json(학교+마을) + pclass.json(물약 교실) + interiors.py 방들 + world_tpl.js → public/world.js
+# 걸어 다니는 세계: hw.json(학교+마을) + pclass.json(물약 교실) + interiors.py·dorms.py 방들 + furniture.py 가구 + world_tpl.js → public/world.js
 # 게임 화면은 public/index.html에 있고, 세계와는 window.World로 이어져요.
 import json, sys, os
 I = os.path.dirname(os.path.abspath(__file__)); OUT = sys.argv[1] if len(sys.argv) > 1 else 'public/world.js'
@@ -7,15 +7,18 @@ camp.update(bgSrc='art/iso/hw_bg.png', objSrc='art/iso/hw_obj.png', title='호�
 L = json.load(open(I + '/out/pclass.json'))
 L.update(indoor=True, spawnIn=[9, 12], vw=185, fill='#0C0715', bgSrc='art/iso/pclass_bg.png', objSrc='art/iso/pclass_obj.png', title='물약 교실', sub='본관 1층 · 반짝이는 곳으로 나가요')
 MAPS = {'campus': {'meta': camp}, 'lab': {'meta': L}}
-for k in ('candy', 'craft', 'dorm_witch', 'dorm_vamp', 'dorm_wolf', 'dorm_ghost', 'toxic', 'barn', 'pen'):
+for k in ('candy', 'craft', 'toxic', 'barn', 'pen'):
     MAPS[k] = {'meta': json.load(open(I + '/out/%s.json' % k))}
+# 기숙사 휴게실 (dorms.py): 4곳 × 6단계, 개인 방 4개. 들어갈 때 불러와요 (lazy)
+DK = ('witch', 'vamp', 'wolf', 'ghost')
+for kd in DK:
+    for n in range(1, 7): MAPS['dorm_%s_%d' % (kd, n)] = {'meta': dict(json.load(open(I + '/out/dorm_%s_%d.json' % (kd, n))), lazy=True)}
+    MAPS['myroom_' + kd] = {'meta': dict(json.load(open(I + '/out/myroom_%s.json' % kd)), lazy=True)}
 # 기숙사 건물 = 게임의 네 기숙사 (마녀관 Emberkiln, 뱀파이어관 Moonhollow, 늑대관 Duskfold, 유령관 Dewmorn)
 DORM = {'dorm_witch': ('ember', 'Emberkiln 기숙사', '마녀관'), 'dorm_vamp': ('moon', 'Moonhollow 기숙사', '뱀파이어관'),
         'dorm_wolf': ('dusk', 'Duskfold 기숙사', '늑대관'), 'dorm_ghost': ('dew', 'Dewmorn 기숙사', '유령관')}
 for k, (house, name, hall) in DORM.items():
-    MAPS[k]['meta'].update(title=name, sub=hall + ' · 침대에서 자고 내일로', house=house)
-    for o in MAPS[k]['meta']['objs']:
-        if o['act'] and o['act'][1] == '잠자고 내일로': o['act'][0] = '기숙사 침대'
+    for n in range(1, 7): MAPS['%s_%d' % (k, n)]['meta'].update(title=name.replace('기숙사', '휴게실'), sub='%s · %d단계 · 게시판에서 함께 꾸며요' % (hall, n))
     for o in camp['objs']:
         if o['door'] and o['door']['to'] == k: o['door']['label'] = name
 for a in camp['areas']:
@@ -26,7 +29,8 @@ import hashlib
 def ver(src): return src + '?v=' + hashlib.md5(open(I + '/out/' + src.split('/')[-1], 'rb').read()).hexdigest()[:8]
 for m in MAPS.values(): m['meta']['bgSrc'] = ver(m['meta']['bgSrc']); m['meta']['objSrc'] = ver(m['meta']['objSrc'])
 AV['src'] = ver(AV['src'])
+FURN = dict(src=ver('art/iso/furn.png'), items=json.load(open(I + '/out/furn.json')))   # furniture.py
 PUB = os.path.dirname(os.path.abspath(OUT))
 CR = 'art/iso/creatures_w.png'; CR += '?v=' + hashlib.md5(open(os.path.join(PUB, CR), 'rb').read()).hexdigest()[:8]
-t = open(I + '/world_tpl.js').read().replace('__MAPS__', json.dumps(MAPS, ensure_ascii=False)).replace('__AVATAR__', json.dumps(AV, ensure_ascii=False)).replace('__CRSRC__', json.dumps(CR))
+t = open(I + '/world_tpl.js').read().replace('__MAPS__', json.dumps(MAPS, ensure_ascii=False)).replace('__AVATAR__', json.dumps(AV, ensure_ascii=False)).replace('__CRSRC__', json.dumps(CR)).replace('__FURN__', json.dumps(FURN, ensure_ascii=False))
 open(OUT, 'w').write(t); print('wrote', OUT, len(t))

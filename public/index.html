@@ -470,14 +470,14 @@ function migrateCreatures(p){
   });
   p.eggs = p.eggs.slice(0, HATCH_MAX);
 }
-const FURN = [
-  { id:'candle', name:'촛대', icon:'candle', pts:1, price:0 },
-  { id:'bed', name:'퀼트 이불', icon:'bed', pts:2, price:0 },
-  { id:'owl', name:'부엉이 횃대', icon:'owl', pts:1, price:0 },
-  { id:'plant', name:'화분', icon:'sprout', pts:1, price:80 },
-  { id:'shelf', name:'마법서 선반', icon:'book', pts:2, price:150 },
-  { id:'rug', name:'별자리 러그', icon:'rune', pts:3, price:300 },
-];
+// 개인 방 가구 50종 (그림·이름·값은 tools/iso/furniture.py → world.js의 World.FURN)
+const FURN = World.FURN.items, FIDX = Object.fromEntries(FURN.map((x, i) => [x.id, i])), FURN_BY = Object.fromEntries(FURN.map(x => [x.id, x]));
+const FURN_CATS = ['전체', ...new Set(FURN.map(x => x.cat))];
+const FURN_W = Math.max(...FURN.map(x => x.sx + x.sw)), FURN_H = Math.max(...FURN.map(x => x.sh));
+// 가구 그림 칸: 가로·세로 box 안에 맞춰 크게
+const furnPic = (fid, box = 48) => { const x = FURN_BY[fid], k = Math.min(2, box / Math.max(x.sw, x.sh)); return `<i style="display:block;width:${Math.round(x.sw * k)}px;height:${Math.round(x.sh * k)}px;background:url(${World.FURN.src}) ${-x.sx * k}px 0 / ${FURN_W * k}px ${FURN_H * k}px no-repeat;image-rendering:pixelated"></i>`; };
+// 옛 가구 6종 → 새 가구
+const OLD_FURN = { candle:'candle', bed:'cushions', owl:'owldoll', plant:'monstera', shelf:'bookcase', rug:'rug_star' };
 // 기숙사: 하루 중 깨어 있는 시간대로 나눠요. 기숙사마다 3명까지.
 const HOUSES = {
   dew:   { name:'Dewmorn',    ko:'듀모른',     from:5,  to:10, col:'#5CCB8E', bg:'#E2F8EA', icon:'sprout', where:'유령관 · 안개 낀 푸른 기숙사', who:'부지런한 정원사들',
@@ -509,7 +509,7 @@ function freshPlayer(nick, look, house, av){
     found:[], hints:['p_red'],
     plots:[{k:'herb',at:Date.now() - 6e5,w:false},{k:'drop',at:Date.now(),w:false},{k:null},{k:null},{k:null},{k:null}],
     cr:[0, 4, 7, 2].map(k => ({ ...newCreature(k, null, CREATURES[k].name, true), love: 3 })), eggs:[],
-    furn:{ candle:{own:1,on:1}, bed:{own:1,on:1}, owl:{own:1,on:1} },
+    fbag:{ candle:1, cushions:1, owldoll:1 }, room:[],
     orders:makeOrders(1, ['p_red'], []), classDay:0,
   };
 }
@@ -528,7 +528,9 @@ function makeOrders(day, hints, found){
 // 저장된 데이터에서 빠진 칸을 채워요 (Firebase는 빈 배열과 빈 객체를 저장하지 않아요)
 function normalize(p){
   p.inv = p.inv || {}; Object.keys(ITEM).forEach(k => { p.inv[k] = p.inv[k] || 0; });
-  p.found = p.found || []; p.hints = p.hints || ['p_red']; p.furn = p.furn || {};
+  p.found = p.found || []; p.hints = p.hints || ['p_red'];
+  if (p.furn){ p.fbag = p.fbag || {}; Object.entries(p.furn).forEach(([k, st]) => { if (st?.own && OLD_FURN[k]) p.fbag[OLD_FURN[k]] = (p.fbag[OLD_FURN[k]] || 0) + 1; }); delete p.furn; }
+  p.fbag = p.fbag || {}; p.room = (p.room || []).filter(r => FURN_BY[r.f]); p.common = p.common || { stage: 1, pool: {} }; p.common.pool = p.common.pool || {};
   p.orders = p.orders || []; p.know = p.know || 0;
   p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look));
   p.plots = (p.plots || []).map(x => {
@@ -548,7 +550,8 @@ function usePotion(p){
   if (p === 'p_fluff'){ me.cr.forEach(c => { c.love = Math.min(LOVE_MAX, (c.love || 0) + 1); }); save(); return '사육장에 포근한 향이 퍼졌어요. 모두 애정 +1'; }
   return '';
 }
-const cozyOf = me => FURN.reduce((a, f) => a + (me.furn[f.id]?.on ? f.pts : 0), 0);
+const cozyOf = p => (p.room || []).reduce((a, r) => a + (FURN_BY[r.f]?.pts || 0), 0);
+const COZY_MAX = 30;   // 자고 나서 마력에 쳐 주는 아늑함은 30까지
 
 // ===== 저장: 온라인이면 Firebase, 혼자 모드면 이 기기 =====
 let F = null, auth = null, db = null, uid = null, solo = false, me = null, saveTimer = 0;
@@ -628,7 +631,7 @@ World.onPet = id => { const i = me.cr.findIndex(c => c.id === id); if (i < 0) re
 function enterWorld(){
   document.body.classList.add('inworld'); app.innerHTML = ''; sheetOn = false; app.classList.remove('open');
   World.setPlayer(me.nick, avOf(me)); World.start(); World.resize();
-  syncPens(); hud();
+  syncPens(); syncRoom(); syncHalls(); hud();
 }
 // 바로 가기: 그 장소로 순간 이동한 다음 화면을 열어요
 const goPlace = (mapId, obj, t, s) => { closeSheet(); World.teleport(mapId, obj, () => openSheet(t, s)); };
@@ -638,6 +641,7 @@ const FLAVOR = {
   '수확하기': ['축제 장식용 호박이래요. 따면 혼나요!', '호박 속에서 똑똑, 누가 노크했어요'],
   '읽어 보기': ['"여기 잠들다… 숙제를 미룬 학생"', '"내일 일어날게요" — 300년째', '"물약 맛은 보지 마시오"', '"고양이 밥 주는 걸 잊지 마"'],
   '앉아서 쉬기': ['잠깐 쉬었어요. 밤바람이 시원해요'],
+  '차 마시기': ['따끈한 호박차를 한 모금… 포근해요', '찻잔에서 김이 모락모락'],
   '들여다보기': ['초록 연기 속에서 누가 키득거려요', '아무도 안 비쳐요… 나도요!'],
   '쓰다듬기': ['골골골… 기분이 좋은가 봐요'],
   '먹이 주기': ['쩝쩝이가 파리를 꿀꺽 삼켰어요'],
@@ -654,9 +658,10 @@ const FLAVOR = {
 World.onAct = (mapId, o, a) => {
   if (!me) return;
   const label = a[1], dh = Object.keys(HOUSE_DORM).find(k => HOUSE_DORM[k] === mapId);
-  if (dh && (label === '잠자고 내일로' || label === '앉아서 쉬기' || label === '차 마시기')){
-    if (dh !== me.house) return `<b>${HOUSES[dh].name} 기숙사</b><br>내 방은 ${HOUSES[me.house].name} 기숙사에 있어요`;
-    openSheet('home', 'dorm'); if (label === '잠자고 내일로') sleep(); return;
+  if (label === '잠자고 내일로'){ openSheet('home', 'dorm'); sleep(); return; }
+  if (label === '휴게실 꾸미기'){
+    if (dh && dh !== me.house) return `<b>${HOUSES[dh].name} 휴게실 게시판</b><br>${commonStage(dh)}단계 「${HALL_NAMES[dh][commonStage(dh) - 1]}」 · 이 기숙사 학생들이 꾸며요`;
+    return openSheet('home', 'common');
   }
   if (label === '말 걸기' || label === '오늘의 실습 보기') return openSheet('home', 'class');
   if (label === '쓰다듬기' && o.name === 'blackcat') return openSheet('ranch');
@@ -677,6 +682,7 @@ function render(){
   if (sub === 'avatar') return renderAvatar();
   if (sub === 'class') return renderClass();
   if (sub === 'dorm') return renderDorm();
+  if (sub === 'common') return renderCommon();
   if (sub === 'visit') return renderVisit();
   if (sub === 'event') return renderEvent();
   if (sub === 'exam') return renderExam();
@@ -720,7 +726,7 @@ function renderHome(){
   });
   bindEventBanner();
   $('#goClass').onclick = () => goPlace('lab', 'skull', 'home', 'class');
-  $('#goDorm').onclick = () => goPlace(HOUSE_DORM[me.house], 'sofa', 'home', 'dorm');
+  $('#goDorm').onclick = () => goPlace(myRoomId(), 'bed', 'home', 'dorm');
   $('#goAvatar').onclick = () => { avDraft = null; openSheet('home', 'avatar'); };
   on('[data-go]', b => { const [m, o, t] = b.dataset.go.split(','); goPlace(m, o, t); });
 }
@@ -1223,19 +1229,54 @@ function renderRanch(){
   }, 1000);
 }
 
-// ===== 기숙사 =====
-let dormMsg = '';
-const furnCell = (f, st, clickable) => `<${clickable ? 'button' : 'div'} class="cell ${st.on ? 'sel' : ''}" ${clickable ? `data-f="${f.id}"` : ''} style="min-height:84px;${!st.own ? 'background:var(--soft)' : ''}">${ic(f.icon, st.own ? '' : 'opacity:.5')}<span class="s">${f.name}</span>${clickable ? `<span class="s b" style="color:${!st.own ? 'var(--gold2)' : st.on ? 'var(--mint2)' : 'var(--sub)'}">${!st.own ? f.price + 'G' : st.on ? '놓음' : '보관 중'}</span>` : ''}</${clickable ? 'button' : 'div'}>`;
+// ===== 기숙사: 내 방 (가구 놓기) · 휴게실 (기숙사생이 함께 꾸미기) =====
+let dormMsg = '', furnCat = '전체';
+const myRoomId = () => HOUSE_DORM[me.house].replace('dorm_', 'myroom_');
+const inMyRoom = () => World.where() === myRoomId();
+function syncRoom(){ World.setFurniture((me.room || []).map(r => ({ id: r.id, k: FIDX[r.f], x: r.x, y: r.y }))); }
+// 가구 놓기: 내 방이 아니면 먼저 내 방으로 가요
+function placeFurn(fid){
+  if (!(me.fbag[fid] > 0)) return;
+  const go = () => World.place(FIDX[fid], (x, y) => {
+    if (!(me.fbag[fid] > 0)) return;
+    me.fbag[fid]--; me.room.push({ id: crId(), f: fid, x, y }); save(); syncRoom();
+    toast(`${FURN_BY[fid].name}을(를) 놓았어요! 아늑함 ${cozyOf(me)}`);
+  });
+  closeSheet();
+  if (inMyRoom()) go(); else World.teleport(myRoomId(), 'bed', go);
+}
+World.onFurn = id => {
+  const r = me.room.find(x => x.id === id); if (!r) return null; const F_ = FURN_BY[r.f];
+  return { text: `<b>${F_.name}</b><br>아늑함 +${F_.pts}`, btn: '가방에 넣기', fn: () => {
+    me.room = me.room.filter(x => x.id !== id); me.fbag[r.f] = (me.fbag[r.f] || 0) + 1; save(); syncRoom(); World.cancelPlace();
+    toast(`${F_.name}을(를) 가방에 넣었어요`);
+  } };
+};
+World.onHouseDoor = h => h === me.house ? true : `<b>${HOUSES[h].name} 기숙사</b><br>이 기숙사 학생만 들어갈 수 있어요`;
 function renderDorm(){
   const cozy = cozyOf(me), H = HOUSES[me.house];
   const guest = Object.entries(myGuest).sort((a, b) => b[1].at - a[1].at);
-  frame('dorm', `${H.name} ${roomNo(me.house, uid || me.nick)}호`, `아늑함 ${cozy} / 10`, `
+  const bag = Object.entries(me.fbag).filter(([, n]) => n > 0);
+  const shop = FURN.filter(x => furnCat === '전체' || x.cat === furnCat);
+  frame('dorm', `${H.name} ${roomNo(me.house, uid || me.nick)}호`, `아늑함 ${cozy} · 놓은 가구 ${me.room.length}개`, `
     <section class="sec">
-      <div class="sec-h"><h3>방 꾸미기</h3>${backBtn}</div>
-      <div class="meter">${ic('heart', 'transform:scale(.8);margin:-4px')}${segs(cozy, 10, '#FF9DBA')}<span class="s b">${cozy}</span></div>
-      <div class="grid" style="grid-template-columns:repeat(3,1fr)">${FURN.map(f => furnCell(f, me.furn[f.id] || {}, true)).join('')}</div>
-      ${hint(dormMsg, '가구를 눌러 사거나 놓거나 치워요. 아늑할수록 자고 나서 마력이 더 차요.')}
-      <button class="btn dark px" id="sleep">${ic('star')}잠자고 내일로</button>
+      <div class="sec-h"><h3>내 방</h3>${backBtn}</div>
+      <div class="meter">${ic('heart', 'transform:scale(.8);margin:-4px')}${segs(Math.min(cozy, COZY_MAX), COZY_MAX, '#FF9DBA')}<span class="s b">${cozy}</span></div>
+      ${hint(dormMsg, `가구를 놓을수록 아늑해져요 · 자고 나면 마력이 아늑함 ×2만큼 더 차요 (${COZY_MAX}까지)`)}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        ${inMyRoom() ? '' : `<button class="btn px" id="goRoom">${ic('bed')}내 방으로</button>`}
+        <button class="btn dark px" id="sleep" style="${inMyRoom() ? 'grid-column:1/-1' : ''}">${ic('star')}잠자고 내일로</button>
+      </div>
+    </section>
+    <section class="sec">
+      ${secH('가구 가방', bag.length ? '눌러서 방에 놓아요' : '')}
+      ${bag.length ? `<div class="grid" style="grid-template-columns:repeat(4,1fr)">${bag.map(([fid, n]) => `<button class="cell" data-place="${fid}" style="min-height:84px">${furnPic(fid, 40)}<span class="s">${FURN_BY[fid].name}</span><span class="n">${n}</span></button>`).join('')}</div>`
+        : '<div class="hint">가방이 비었어요. 아래 가게에서 사거나, 방에 놓은 가구를 눌러 가방에 넣을 수 있어요.</div>'}
+    </section>
+    <section class="sec">
+      ${secH('가구 가게', `${FURN.length}종`)}
+      <div class="seg" style="grid-template-columns:repeat(4,1fr);margin-bottom:8px">${FURN_CATS.map(c => `<button data-fcat="${c}" class="${furnCat === c ? 'on' : ''}">${c}</button>`).join('')}</div>
+      <div class="grid" style="grid-template-columns:repeat(3,1fr)">${shop.map(x => `<button class="cell" data-buyf="${x.id}" ${me.coin >= x.price ? '' : 'disabled'} style="min-height:96px">${furnPic(x.id, 44)}<span class="s">${x.name}</span><span class="s b" style="color:var(--gold2)">${x.price}G · ♥${x.pts}</span></button>`).join('')}</div>
     </section>
     ${solo ? '' : `<section class="sec">
       ${secH('내 방명록', '손님 1명당 내일 마력 +3')}
@@ -1246,30 +1287,106 @@ function renderDorm(){
     await F.update(F.ref(db, `guest/${uid}/${b.dataset.claim}`), { claimed: true });
     me.inv[g.gift] = (me.inv[g.gift] || 0) + 1; save(); toast(`${g.nick}의 선물 ${ITEM[g.gift]}을(를) 받았어요!`);
   });
-  on('[data-f]', b => {
-    const f = FURN.find(x => x.id === b.dataset.f), st = me.furn[f.id] || (me.furn[f.id] = { own:0, on:0 });
-    if (!st.own){
-      if (me.coin < f.price){ dormMsg = '골드가 부족해요. 물약을 팔고 다시 와요.'; return renderDorm(); }
-      me.coin -= f.price; st.own = 1; st.on = 1; dormMsg = `${f.name}을(를) 사서 방에 놓았어요! 아늑함 +${f.pts}`;
-    } else { st.on = st.on ? 0 : 1; dormMsg = st.on ? `${f.name}을(를) 다시 놓았어요.` : `${f.name}을(를) 상자에 넣었어요.`; }
-    save(); renderDorm();
+  const redraw = () => { const pn = app.querySelector('.panel'), y = pn?.scrollTop; renderDorm(); if (pn) app.querySelector('.panel').scrollTop = y; };
+  on('[data-fcat]', b => { furnCat = b.dataset.fcat; redraw(); });
+  on('[data-buyf]', b => {
+    const x = FURN_BY[b.dataset.buyf]; if (me.coin < x.price) return;
+    me.coin -= x.price; me.fbag[x.id] = (me.fbag[x.id] || 0) + 1; save();
+    dormMsg = `${x.name}을(를) 샀어요! 가구 가방에서 눌러 방에 놓아요.`; redraw();
   });
+  on('[data-place]', b => placeFurn(b.dataset.place));
   $('#back').onclick = () => { closeSheet(); };
   $('#sleep').onclick = () => sleep();
+  const gr = $('#goRoom'); if (gr) gr.onclick = () => goPlace(myRoomId(), 'bed', 'home', 'dorm');
   if (!solo) on('[data-visit]', b => openVisit(b.dataset.visit));
 }
 function sleep(){
   const since = me.lastSleepAt || 0;
   const guests = Math.min(3, new Set(Object.values(myGuest).filter(g => g.at > since).map(g => g.uid)).size);
-  const cozy = cozyOf(me), gain = 20 + cozy * 3 + guests * 3;
+  const cozy = Math.min(COZY_MAX, cozyOf(me)), hall = (commonStage(me.house) - 1) * 2, gain = 20 + cozy * 2 + guests * 3 + hall;
   me.lastSleepAt = Date.now();
   me.day++;
-  me.mana = Math.min(50 + cozy * 2 + guests * 3, me.mana + gain);
+  me.mana = Math.min(50 + cozy * 2 + guests * 3 + hall, me.mana + gain);
   me.orders = makeOrders(me.day, me.hints, me.found);
   endLesson();
   save();
-  dormMsg = `푹 잤어요! 봄 학기 ${me.day}일 아침 · 마력 +${gain} (아늑함 +${cozy * 3}${guests ? `, 손님 ${guests}명 +${guests * 3}` : ''})`;
+  dormMsg = `푹 잤어요! 봄 학기 ${me.day}일 아침 · 마력 +${gain} (아늑함 +${cozy * 2}${hall ? `, 휴게실 +${hall}` : ''}${guests ? `, 손님 ${guests}명 +${guests * 3}` : ''})`;
   renderDorm();
+}
+
+// ---- 휴게실: 같은 기숙사 학생들이 재료를 모아 6단계까지 꾸미고 넓혀요 ----
+// 기숙사마다 분위기에 맞는 재료를 모아요 (단계 2~6). coin은 골드
+const HALL_COST = {
+  ember: [{ herb:10, p_red:3, coin:1000 }, { p_blue:5, p_green:5, coin:2500 }, { p_purple:4, scale:10, coin:5000 }, { p_vigor:5, p_grow:5, coin:8000 }, { p_dragon:2, egg:3, coin:15000 }],
+  moon:  [{ mush:10, coin:2000 }, { silk:10, whisker:5, coin:4000 }, { hegg:15, feather:8, coin:7000 }, { p_moon:3, p_dusk:3, coin:11000 }, { egg:3, g_star:5, coin:20000 }],
+  dusk:  [{ wool:10, herb:10, coin:800 }, { uhair:10, hegg:10, coin:2000 }, { milk:10, honey:10, coin:4000 }, { whisker:10, feather:10, slime:10, coin:7000 }, { wool:30, honey:20, egg:3, coin:12000 }],
+  dew:   [{ herb:15, drop:10, coin:800 }, { g_mint:10, g_clover:10, coin:2000 }, { g_lily:8, g_lotus:8, coin:4000 }, { g_firefly:6, g_snow:6, coin:7000 }, { g_aurora:4, g_moonf:4, egg:2, coin:12000 }],
+};
+const HALL_NAMES = {
+  ember: ['먼지 쌓인 창고', '불 붙은 벽난로', '물약 선반', '수정구와 빗자루', '불타는 가마', '전설의 실험실'],
+  moon:  ['낡은 관이 있는 방', '붉은 커튼', '벨벳 살롱', '금화 상자', '달빛 피아노', '밤의 왕좌'],
+  dusk:  ['장작 창고', '돌 벽난로', '숲 냄새 나는 방', '반려동물 방석', '큰 달 창문', '전설의 오두막'],
+  dew:   ['쇠사슬 소리', '푸른 도깨비불', '첫 화분', '떠다니는 도깨비불', '안개 분수', '전설의 유리 정원'],
+};
+let halls = {};   // 온라인: houses/{기숙사} = { stage, pool, who: { uid: { nick, n } }, last: [...] }
+const hallOf = h => solo ? (h === me.house ? me.common : { stage: 1, pool: {} }) : (halls[h] || { stage: 1, pool: {} });
+const commonStage = h => Math.max(1, Math.min(6, hallOf(h).stage || 1));
+const hallNeed = h => HALL_COST[h][commonStage(h) - 1] || null;
+const hallLeft = (h, k) => { const need = hallNeed(h); return need ? Math.max(0, (need[k] || 0) - (hallOf(h).pool?.[k] || 0)) : 0; };
+function syncHalls(){ HOUSE_KEYS.forEach(h => World.setStage(HOUSE_DORM[h], commonStage(h))); }
+// 재료 넣기: 넣은 만큼 가방에서 빠지고, 다 모이면 바로 다음 단계가 돼요
+async function donate(k, want){
+  const h = me.house, have = k === 'coin' ? me.coin : (me.inv[k] || 0), n = Math.min(want, have, hallLeft(h, k));
+  if (n <= 0) return;
+  let gave = 0, up = 0;
+  const apply = cur => {
+    cur = cur || { stage: 1, pool: {} }; cur.pool = cur.pool || {}; const st = cur.stage || 1, need = HALL_COST[h][st - 1];
+    if (!need) return undefined;
+    gave = Math.min(n, Math.max(0, (need[k] || 0) - (cur.pool[k] || 0))); if (gave <= 0) return undefined;
+    cur.pool[k] = (cur.pool[k] || 0) + gave;
+    cur.who = cur.who || {}; const w = cur.who[uid || 'me'] || { nick: me.nick, n: 0 }; w.nick = me.nick; w.n += k === 'coin' ? Math.ceil(gave / 100) : gave; cur.who[uid || 'me'] = w;
+    if (Object.entries(need).every(([kk, v]) => (cur.pool[kk] || 0) >= v)){ cur.stage = st + 1; cur.pool = {}; up = cur.stage; }
+    return cur;
+  };
+  if (solo){ me.common = apply(me.common) || me.common; }
+  else {
+    const r = await F.runTransaction(F.ref(db, 'houses/' + h), apply).catch(e => { toast('넣지 못했어요: ' + (e.code || e.message)); return null; });
+    if (!r || !r.committed) return;
+  }
+  if (!gave) return;
+  if (k === 'coin') me.coin -= gave; else me.inv[k] -= gave;
+  save(); syncHalls();
+  toast(up ? `휴게실이 ${up}단계 「${HALL_NAMES[h][up - 1]}」가 됐어요!` : `${k === 'coin' ? gave + 'G' : ITEM[k] + ' ' + gave + '개'}를 넣었어요`);
+  if (sub === 'common') renderCommon();
+}
+function renderCommon(){
+  const h = me.house, H = HOUSES[h], st = commonStage(h), need = hallNeed(h), hall = hallOf(h);
+  const who = Object.values(hall.who || {}).sort((a, b) => b.n - a.n).slice(0, 6);
+  const row = (k, v) => {
+    const got = hall.pool?.[k] || 0, have = k === 'coin' ? me.coin : (me.inv[k] || 0), left = Math.max(0, v - got), done = left === 0;
+    const steps = k === 'coin' ? [[100, '+100G'], [1000, '+1000G']] : [[1, '+1'], [10, '+10']];
+    return `<div class="li">${ic(k === 'coin' ? 'coin' : k)}<div class="main"><span class="t">${k === 'coin' ? '골드' : ITEM[k]} <span class="sub">${got.toLocaleString()} / ${v.toLocaleString()}</span></span>
+      <div style="height:6px;background:var(--line);margin-top:3px"><div style="height:100%;width:${Math.min(100, got / v * 100)}%;background:${done ? 'var(--mint2,#5CCB8E)' : H.col}"></div></div>
+      <span class="d">가진 것 ${have.toLocaleString()}</span></div>
+      ${done ? '<span class="tag">다 모았어요</span>' : steps.map(([n, l]) => `<button class="btn sm ${have > 0 ? 'go' : ''}" data-don="${k},${n}" ${have > 0 ? '' : 'disabled'}>${l}</button>`).join('')}</div>`;
+  };
+  frame('dorm', `${H.name} 휴게실`, `${st}단계 · ${HALL_NAMES[h][st - 1]}`, `
+    <section class="sec">
+      <div class="sec-h"><h3>함께 꾸미는 휴게실</h3>${backBtn}</div>
+      <div class="box px" style="padding:10px 12px;display:grid;grid-template-columns:repeat(6,1fr);gap:4px;text-align:center">
+        ${HALL_NAMES[h].map((nm, i) => `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span class="b" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:2px solid var(--ink2);background:${i < st ? H.col : 'var(--soft)'};color:${i < st ? '#fff' : 'var(--sub)'}">${i + 1}</span><span class="s" style="font-size:11px;line-height:1.2;color:${i === st - 1 ? 'var(--ink)' : 'var(--sub)'}">${nm}</span></div>`).join('')}
+      </div>
+      ${hint('', `${solo ? '혼자 모드에서는 혼자 모아요' : `${H.name} 학생들이 함께 재료를 모아요`} · 단계마다 방이 넓어지고, 자고 나면 마력 +2씩 더 (지금 +${(st - 1) * 2})`)}
+    </section>
+    ${need ? `<section class="sec">
+      ${secH(`다음: ${st + 1}단계 「${HALL_NAMES[h][st]}」`, '다 모이면 바로 꾸며져요')}
+      <div class="box px">${Object.entries(need).map(([k, v]) => row(k, v)).join('')}</div>
+    </section>` : `<section class="sec"><div class="hint on px">전설의 휴게실을 완성했어요! 🎉</div></section>`}
+    ${who.length ? `<section class="sec">${secH('많이 도와준 친구', '')}<div class="box px">${who.map((w, i) => `<div class="li"><span class="b" style="width:22px">${i + 1}</span><div class="main"><span class="t">${esc(w.nick)}</span></div><span class="tag">${w.n}</span></div>`).join('')}</div></section>` : ''}
+    <button class="btn px" id="goRoom">${ic('bed')}내 방으로</button>`, { tint: H.col });
+  on('[data-don]', b => { const [k, n] = b.dataset.don.split(','); donate(k, +n); });
+  $('#back').onclick = closeSheet;
+  $('#goRoom').onclick = () => goPlace(myRoomId(), 'bed', 'home', 'dorm');
 }
 
 // ===== 친구 방 놀러 가기 =====
@@ -1331,8 +1448,8 @@ function bindBreed(p){
 function renderVisit(){
   const p = playersList[visitUid];
   if (!p) return leaveVisit();
-  const H = HOUSES[p.house] || HOUSES.dew, cozy = cozyOf({ furn: p.furn || {} });
-  const placed = FURN.filter(f => p.furn?.[f.id]?.on);
+  const H = HOUSES[p.house] || HOUSES.dew, cozy = cozyOf(p);
+  const placed = Object.entries((p.room || []).reduce((a, r) => (FURN_BY[r.f] && (a[r.f] = (a[r.f] || 0) + 1), a), {}));
   const guest = Object.entries(visitGuest).sort((a, b) => b[1].at - a[1].at);
   me.wrote = me.wrote || {};
   const wrote = me.wrote[visitUid] === todayKey();
@@ -1340,8 +1457,8 @@ function renderVisit(){
   frame('dorm', `${esc(p.nick)}의 방`, `${H.name} ${roomNo(p.house, visitUid)}호 · ${onlineList[visitUid] ? '접속 중' : '외출 중'}`, `
     <section class="sec">
       <div class="sec-h"><h3>${esc(p.nick)}의 방 구경</h3>${backBtn}</div>
-      <div class="meter">${ic('heart', 'transform:scale(.8);margin:-4px')}${segs(cozy, 10, '#FF9DBA')}<span class="s b">${cozy}</span></div>
-      ${placed.length ? `<div class="grid" style="grid-template-columns:repeat(4,1fr)">${placed.map(f => furnCell(f, { own: 1 }, false)).join('')}</div>` : '<div class="hint">아직 가구가 없는 휑한 방이에요</div>'}
+      <div class="meter">${ic('heart', 'transform:scale(.8);margin:-4px')}${segs(Math.min(cozy, COZY_MAX), COZY_MAX, '#FF9DBA')}<span class="s b">${cozy}</span></div>
+      ${placed.length ? `<div class="grid" style="grid-template-columns:repeat(4,1fr)">${placed.map(([fid, n]) => `<div class="cell" style="min-height:80px">${furnPic(fid, 40)}<span class="s">${FURN_BY[fid].name}</span>${n > 1 ? `<span class="n">${n}</span>` : ''}</div>`).join('')}</div>` : '<div class="hint">아직 가구가 없는 휑한 방이에요</div>'}
     </section>
     ${breedSection(p)}
     <section class="sec">
@@ -1877,6 +1994,7 @@ async function boot(){
       F.onValue(F.ref(db, 'coop'), s => { coop = s.val() || {}; if (tab === 'market') render(); });
       F.onValue(F.ref(db, 'players'), s => { playersList = s.val() || {}; syncPens(); if (tab === 'home' && !sub) render(); });
       F.onValue(F.query(F.ref(db, 'guest/' + uid), F.limitToLast(20)), s => { myGuest = s.val() || {}; if (sub === 'dorm') render(); });
+      F.onValue(F.ref(db, 'houses'), s => { const old = commonStage(me.house); halls = s.val() || {}; syncHalls(); if (commonStage(me.house) > old) toast(`우리 휴게실이 ${commonStage(me.house)}단계가 됐어요!`); if (sub === 'common') render(); });
       enterWorld();
     };
     if (snap.exists()) { me = normalize(snap.val()); if (!me.house) showHousePick(await houseCounts(), enter); else enter(); }
