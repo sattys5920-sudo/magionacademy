@@ -197,7 +197,7 @@ const ITEM = {
   herb:'약초', drop:'달빛 이슬', mush:'보라 버섯', mana:'마력석', wool:'구름양 털', scale:'불도마뱀 비늘', uhair:'유니콘 갈기', egg:'용 알 껍질',
 };
 const SHORT = { herb:'약초', drop:'이슬', mush:'버섯', mana:'마력석', wool:'털', scale:'비늘', uhair:'갈기', egg:'알 껍질' };
-// 씨앗 60종: 심으면 같은 id의 식물 재료가 나와요. know 지식이 이만큼 있어야 심을 수 있어요, days 자라는 날, price 씨앗 값
+// 씨앗 60종: 심으면 같은 id의 식물 재료가 나와요. know 지식이 이만큼 있어야 심을 수 있어요, price 씨앗 값 (자라는 시간은 아래 GROW_RANGE)
 // 아이콘은 art/plants.png (10×6칸, 이 표의 순서대로). 약초·이슬·버섯·마력석은 원래 아이콘을 써요.
 const SEED_LIST = [
   { id:'herb', mat:'약초', seed:'약초', tier:0, know:0, days:3, yield:3, price:0, col:'#E26F36' },
@@ -261,7 +261,17 @@ const SEED_LIST = [
   { id:'g_soul', mat:'영혼 연꽃', seed:'영혼연꽃', tier:6, know:180, days:4, yield:2, price:180, col:'#CEE198' },
   { id:'g_wish', mat:'소원 민들레', seed:'소원민들레', tier:6, know:180, days:4, yield:2, price:190, col:'#265B9B' },
 ];
-const SEED_INFO = Object.fromEntries(SEED_LIST.map((x, i) => [x.id, { ...x, ic: i }]));
+const GROW_RANGE = [[5, 15], [15, 40], [40, 90], [90, 180], [180, 300], [300, 480], [480, 720]];   // 등급별 자라는 시간(분)
+const growMins = (() => {
+  const out = {};
+  [...new Set(SEED_LIST.map(x => x.tier))].forEach(t => {
+    const list = SEED_LIST.filter(x => x.tier === t).map((x, i) => [x, i]).sort((a, b) => a[0].price - b[0].price || a[1] - b[1]);
+    const [lo, hi] = GROW_RANGE[Math.min(t, GROW_RANGE.length - 1)];
+    list.forEach(([x], i) => { out[x.id] = Math.round((lo + (hi - lo) * (list.length > 1 ? i / (list.length - 1) : 0)) / 5) * 5; });
+  });
+  return out;
+})();
+const SEED_INFO = Object.fromEntries(SEED_LIST.map((x, i) => [x.id, { ...x, ic: i, mins: growMins[x.id] }]));
 const SEED_TIERS = [...new Set(SEED_LIST.map(x => x.know))];
 SEED_LIST.forEach(x => { ITEM[x.id] = x.mat; });
 const CREATURE_MATS = ['wool','scale','uhair','egg'];
@@ -272,7 +282,7 @@ const POTION_LIST = [
   { id:'p_red', name:'치유 물약', r:["herb", "herb", "drop"], pay:60, col:'#FF5A7A', desc:"양호실에서 늘 찾는 기본 물약" },
   { id:'p_green', name:'화염 저항 물약', r:["mush", "scale", "drop"], pay:90, col:'#5ED67A', desc:"솥가마 근처에선 필수품" },
   { id:'p_blue', name:'잠꾸러기 물약', r:["wool", "mana", "drop"], pay:70, col:'#5AA8FF', desc:"한 모금이면 꿀잠" },
-  { id:'p_grow', name:'성장 물약', r:["herb", "mush", "mush"], pay:80, col:'#86D14A', use:"온실에서 자라는 식물이 모두 한 단계 자라요" },
+  { id:'p_grow', name:'성장 물약', r:["herb", "mush", "mush"], pay:80, col:'#86D14A', use:"온실에서 자라는 식물의 남은 시간이 절반으로 줄어요" },
   { id:'p_vigor', name:'활력 물약', r:["mana", "scale", "herb"], pay:100, col:'#FF9A2E', use:"마력 +15" },
   { id:'p_fluff', name:'포근 물약', r:["wool", "wool", "drop"], pay:90, col:'#FFB8D2', use:"사육장 생물 모두 애정 +1" },
   { id:'p_purple', name:'반짝 물약', r:["herb", "drop", "uhair"], pay:280, col:'#B47AFF', desc:"반 공동 의뢰에 쓰여요" },
@@ -442,7 +452,7 @@ function freshPlayer(nick, look, house, av){
     nick, look, house, av, coin:300, mana:40, day:1,
     inv:{ herb:6, drop:4, mush:2, mana:3, wool:1, scale:1, uhair:0, egg:0, p_red:0, p_green:0, p_blue:0, p_purple:0 },
     found:[], hints:['p_red'],
-    plots:[{k:'herb',st:2,w:false},{k:'drop',st:1,w:false},{k:null,st:0,w:false},{k:null,st:0,w:false},{k:null,st:0,w:false},{k:null,st:0,w:false}],
+    plots:[{k:'herb',at:Date.now() - 6e5,w:false},{k:'drop',at:Date.now(),w:false},{k:null},{k:null},{k:null},{k:null}],
     cr:CREATURES.map((d, k) => ({ k, v:0, name:d.name, age:1, hatch:0, full:3, love:2 })),
     furn:{ candle:{own:1,on:1}, bed:{own:1,on:1}, owl:{own:1,on:1} },
     orders:makeOrders(1, ['p_red'], []), classDay:0,
@@ -466,6 +476,12 @@ function normalize(p){
   p.found = p.found || []; p.hints = p.hints || ['p_red']; p.furn = p.furn || {};
   p.orders = p.orders || []; p.know = p.know || 0;
   p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look));
+  p.plots = (p.plots || []).map(x => {
+    if (!x.k || !SEED_INFO[x.k]) return { k: null };
+    if (x.at) return x;
+    const G = SEED_INFO[x.k], done = Math.max(0, Math.min(1, ((x.st || 1) - 1) / (G.days || 3)));
+    return { k: x.k, at: Date.now() - done * G.mins * 6e4, w: false };
+  });
   // 예전 생물(종류 정보 없음)은 그 자리의 종류로, 이미 키우던 아이들이라 어른으로 쳐요
   p.cr = (p.cr || []).map((c, i) => c.k === undefined ? { k: i, v: 0, name: CREATURES[i]?.name || '친구', age: ADULT_AGE, hatch: 0, full: c.full ?? 3, love: c.love ?? 2 } : { hatch: 0, age: 0, v: 0, ...c });
   return p;
@@ -473,7 +489,7 @@ function normalize(p){
 function usePotion(p){
   if (!POTION_INFO[p].use || me.inv[p] < 1) return '';
   me.inv[p]--;
-  if (p === 'p_grow'){ let n = 0; me.plots.forEach(x => { if (x.st >= 1 && !plotReady(x)){ x.st++; n++; } }); save(); return n ? `화단 ${n}칸이 쑥 자랐어요!` : '자랄 식물이 없어서 물약이 땅으로 스며들었어요.'; }
+  if (p === 'p_grow'){ let n = 0; me.plots.forEach(x => { if (x.k && !plotReady(x)){ x.at -= plotLeft(x) / 2; n++; } }); save(); return n ? `화단 ${n}칸이 쑥 자랐어요!` : '자랄 식물이 없어서 물약이 땅으로 스며들었어요.'; }
   if (p === 'p_vigor'){ me.mana += 15; save(); return '기운이 솟아요! 마력 +15'; }
   if (p === 'p_fluff'){ me.cr.filter(c => crStage(c) !== 'egg').forEach(c => { c.love = Math.min(5, c.love + 1); }); save(); return '사육장에 포근한 향이 퍼졌어요. 모두 애정 +1'; }
   return '';
@@ -779,8 +795,12 @@ function renderLab(){
 }
 
 // ===== 온실 =====
-// 화단 칸: st 0 빈 칸, 1부터 자라는 중, 씨앗의 days+1이 되면 수확
-const plotReady = p => p.st >= 1 && p.k && p.st >= (SEED_INFO[p.k]?.days || 3) + 1;
+// 화단 칸: k 심은 씨앗(없으면 빈 칸), at 심은 시각, w 물 줬는지 (물을 주면 25% 빨리 자라요)
+const growMs = p => SEED_INFO[p.k].mins * 6e4 * (p.w ? .75 : 1);
+const plotLeft = p => p.k ? Math.max(0, p.at + growMs(p) - Date.now()) : 0;
+const plotReady = p => !!p.k && plotLeft(p) <= 0;
+const plotFrac = p => p.k ? Math.min(1, 1 - plotLeft(p) / growMs(p)) : 0;
+const timeText = ms => { const m = Math.ceil(ms / 6e4); return ms < 6e4 ? `${Math.ceil(ms / 1000)}초` : m < 60 ? `${m}분` : `${Math.floor(m / 60)}시간${m % 60 ? ` ${m % 60}분` : ''}`; };
 const PLOT_MAX = 9, PLOT_PRICE = 300;
 let seedPick = 'herb', greenMsg = '', seedTier = 0;
 function renderGreen(){
@@ -793,45 +813,52 @@ function renderGreen(){
       <div class="grid" style="grid-template-columns:repeat(3,1fr)">
         ${me.plots.map((p, i) => {
           const G = p.k && SEED_INFO[p.k], rd = plotReady(p);
-          const icon = p.st === 0 ? 'seed' : rd ? p.k : p.st <= 1 ? 'seed' : p.st < G.days ? 'sprout' : p.k;
-          const label = p.st === 0 ? '심기' : rd ? '수확!' : p.w ? '물 줬어요' : '물 주기';
-          const bg = rd ? '#E2FBEA' : p.w ? '#E4F1FF' : p.st === 0 ? 'var(--card)' : '#F6EBDB';
+          const fr = plotFrac(p), icon = !p.k ? 'seed' : rd ? p.k : fr < .34 ? 'seed' : fr < .8 ? 'sprout' : p.k;
+          const label = !p.k ? '심기' : rd ? '수확!' : `${timeText(plotLeft(p))} 남음`;
+          const bg = rd ? '#E2FBEA' : p.w ? '#E4F1FF' : !p.k ? 'var(--card)' : '#F6EBDB';
           return `<button class="cell" data-plot="${i}" style="min-height:96px;background:${bg};${rd ? 'border-color:var(--mint2)' : ''}">
-            ${ic(icon, p.st === 0 ? 'opacity:.3' : !rd && p.st >= 1 && icon === p.k ? 'opacity:.7' : '')}<span class="s">${G ? G.seed : '빈 칸'}</span><span class="s ${rd ? 'b' : 'sub'}" style="${rd ? 'color:var(--mint2)' : ''}">${label}</span>
-            ${G ? `<div style="width:60px;display:flex">${segs(Math.min(p.st - 1, G.days), G.days, '#7BD88F')}</div>` : ''}</button>`;
+            ${ic(icon, !p.k ? 'opacity:.3' : !rd && icon === p.k ? 'opacity:.7' : '')}<span class="s">${G ? G.seed : '빈 칸'}</span><span class="s ${rd ? 'b' : 'sub'}" style="${rd ? 'color:var(--mint2)' : ''}" ${p.k && !rd ? `data-left="${i}"` : ''}>${label}</span>
+            ${G ? `<div style="width:60px;display:flex">${segs(Math.round(fr * 10), 10, '#7BD88F')}</div>` : ''}${G && !rd && !p.w ? `<span class="s" style="font-size:11px;line-height:11px;color:#5A8AB0">물 주면 빨리 자라요</span>` : ''}</button>`;
         }).join('')}
       </div>
       ${me.plots.length < PLOT_MAX ? `<button class="btn ghost" id="morePlot" style="align-self:center">화단 한 칸 늘리기 · ${PLOT_PRICE}G (${me.plots.length} / ${PLOT_MAX})</button>` : ''}
-      ${hint(greenMsg, '씨앗을 고르고 빈 칸을 눌러 심어요. 물 준 식물은 자고 나면 하루씩 자라요.')}
+      ${hint(greenMsg, '씨앗을 고르고 빈 칸을 눌러 심어요. 시간이 지나면 자라요 · 물을 주면 25% 빨리 자라요.')}
     </section>
     <section class="sec">
       ${secH('씨앗 고르기', `지식 ${know}`)}
       <div class="seg px" style="grid-template-columns:repeat(${SEED_TIERS.length},1fr)">${SEED_TIERS.map((k, i) => `<button class="${seedTier === i ? 'on' : ''}" data-stier="${i}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:13px;min-height:42px;${know < k ? 'opacity:.55' : ''}">${i + 1}단계<span class="s" style="font-size:11px">${k ? '지식' + k : '기본'}</span></button>`).join('')}</div>
       <div class="grid" style="grid-template-columns:repeat(4,1fr)">${list.map(x => { const lock = know < x.know; return `<button class="cell ${seedPick === x.id ? 'sel' : ''}" data-seed="${x.id}" ${lock ? 'disabled' : ''}>${ic(x.id, lock ? 'filter:grayscale(1);opacity:.4' : '')}<span class="s">${x.seed}</span><span class="s ${x.price ? '' : 'sub'}" style="${x.price ? 'color:var(--gold2)' : ''}">${lock ? '🔒' : x.price ? x.price + 'G' : '무료'}</span>${me.inv[x.id] ? `<span class="n">${me.inv[x.id]}</span>` : ''}</button>`; }).join('')}</div>
       <div class="box px" style="padding:10px 12px;display:flex;align-items:center;gap:10px">${ic(P.id)}
-        <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span class="b" style="font-size:15px">${P.seed} 씨앗</span><span class="s sub">${P.days}일 자라서 「${P.mat}」 ${P.yield}개 · 씨앗 값 ${P.price ? P.price + 'G' : '무료'}</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span class="b" style="font-size:15px">${P.seed} 씨앗</span><span class="s sub">${timeText(P.mins * 6e4)} 자라서 「${P.mat}」 ${P.yield}개 · 씨앗 값 ${P.price ? P.price + 'G' : '무료'}</span></div>
       </div>
     </section>`);
   on('[data-stier]', b => { seedTier = +b.dataset.stier; renderGreen(); });
   on('[data-seed]', b => { seedPick = b.dataset.seed; greenMsg = ''; renderGreen(); });
   const mp = $('#morePlot'); if (mp) mp.onclick = () => {
     if (me.coin < PLOT_PRICE){ greenMsg = '골드가 부족해요.'; return renderGreen(); }
-    me.coin -= PLOT_PRICE; me.plots.push({ k: null, st: 0, w: false }); greenMsg = '화단이 한 칸 늘었어요!'; save(); renderGreen();
+    me.coin -= PLOT_PRICE; me.plots.push({ k: null }); greenMsg = '화단이 한 칸 늘었어요!'; save(); renderGreen();
   };
   on('[data-plot]', b => {
     const p = me.plots[+b.dataset.plot], G = SEED_INFO[seedPick];
-    if (p.st === 0){
+    if (!p.k){
       if ((me.know || 0) < G.know) greenMsg = `지식 ${G.know}부터 심을 수 있어요.`;
       else if (me.coin < G.price) greenMsg = `씨앗 값 ${G.price}G가 부족해요.`;
-      else { me.coin -= G.price; Object.assign(p, { k: seedPick, st: 1, w: false }); greenMsg = `${G.seed} 씨앗을 심었어요.${G.price ? ` -${G.price}G` : ''}`; }
+      else { me.coin -= G.price; Object.assign(p, { k: seedPick, at: Date.now(), w: false }); greenMsg = `${G.seed} 씨앗을 심었어요. ${timeText(G.mins * 6e4)} 뒤에 수확해요.${G.price ? ` -${G.price}G` : ''}`; }
     }
-    else if (plotReady(p)){ const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0); me.inv[p.k] += n; Object.assign(p, { k: null, st: 0, w: false }); greenMsg = `${g.seed} 수확! ${g.mat} +${n}${n > g.yield ? ' (Dewmorn의 새벽 보너스)' : ''}`; }
-    else if (p.w) greenMsg = '오늘은 이미 물을 줬어요. 자고 나면 자라요.';
+    else if (plotReady(p)){ const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0); me.inv[p.k] += n; me.plots[me.plots.indexOf(p)] = { k: null }; greenMsg = `${g.seed} 수확! ${g.mat} +${n}${n > g.yield ? ' (Dewmorn의 새벽 보너스)' : ''}`; }
+    else if (p.w) greenMsg = `이미 물을 줬어요. ${timeText(plotLeft(p))} 남았어요.`;
     else if (me.mana < waterCost()) greenMsg = '마력이 부족해요. 기숙사에서 자고 오세요.';
-    else { p.w = true; me.mana -= waterCost(); greenMsg = '물을 줬어요. 내일 아침이면 쑥 자라 있을 거예요.'; }
+    else { p.w = true; me.mana -= waterCost(); greenMsg = `물을 줬어요. 쑥쑥! ${timeText(plotLeft(p))} 남았어요.`; }
     save(); renderGreen();
   });
+  clearInterval(greenTick);
+  greenTick = setInterval(() => {
+    if (!sheetOn || tab !== 'green' || sub) return clearInterval(greenTick);
+    if (me.plots.some((p, i) => p.k && plotReady(p) && app.querySelector(`[data-left="${i}"]`))){ const pn = app.querySelector('.panel'), y = pn?.scrollTop; renderGreen(); if (pn) app.querySelector('.panel').scrollTop = y; return; }
+    app.querySelectorAll('[data-left]').forEach(el => { el.textContent = `${timeText(plotLeft(me.plots[+el.dataset.left]))} 남음`; });
+  }, 1000);
 }
+let greenTick = 0;
 
 // ===== 사육장 =====
 let crSel = 0, ranchMsg = '', pair = [];
@@ -941,7 +968,6 @@ function sleep(){
   me.lastSleepAt = Date.now();
   me.day++;
   me.mana = Math.min(50 + cozy * 2 + guests * 3, me.mana + gain);
-  me.plots.forEach(p => { if (p.st >= 1 && !plotReady(p) && p.w) p.st++; p.w = false; });
   const news = [];
   me.cr.forEach(c => {
     if (c.hatch > 0){ c.hatch--; if (!c.hatch) news.push(`${c.name}(${CREATURES[c.k].baby})가 알에서 나왔어요!`); return; }
