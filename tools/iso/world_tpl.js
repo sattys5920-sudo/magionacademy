@@ -3,7 +3,7 @@
 // 게임(index.html)과는 window.World로 이어져요: World.start / setPlayer / teleport / onAct
 const MAPS = __MAPS__;
 const World = window.World = { onAct: null, onMove: null };
-// ---------- 캐릭터 조합 (tools/iso/avatar_gen 부품, 생성 이미지에서 뽑았어요) ----------
+// ---------- 캐릭터 조합 (tools/iso/chars5.py 부품) ----------
 // av = { hair, eyes, mouth, uni: 부품 번호, skinC, eyeC, hairC, shoeC: 색 번호, house: 교복 색이 될 기숙사 }
 const AVM = __AVATAR__;
 World.Avatar = (() => {
@@ -57,6 +57,14 @@ World.Avatar = (() => {
         o[d + 3] = 255;
       }
     });
+    if (AVM.outline){   // 다 합친 뒤 바깥 테두리
+      const edge = [];
+      for (let y = 0; y < FH; y++) for (let x = 0; x < W; x++){
+        if (o[(y * W + x) * 4 + 3]) continue; const fx = x % FW;
+        if ((fx > 0 && o[(y * W + x - 1) * 4 + 3]) || (fx < FW - 1 && o[(y * W + x + 1) * 4 + 3]) || (y > 0 && o[((y - 1) * W + x) * 4 + 3]) || (y < FH - 1 && o[((y + 1) * W + x) * 4 + 3])) edge.push((y * W + x) * 4);
+      }
+      edge.forEach(d => { o[d] = 42; o[d + 1] = 24; o[d + 2] = 48; o[d + 3] = 255; });
+    }
     const c = document.createElement('canvas'); c.width = W; c.height = FH; c.getContext('2d').putImageData(out, 0, 0);
     cache.set(key, c); return c;
   }
