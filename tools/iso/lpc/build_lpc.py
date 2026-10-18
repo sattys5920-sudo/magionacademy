@@ -197,15 +197,50 @@ SHOP = {
          ('여우 잠옷', ONESIE([('raw_wolfears', 'cas', 131)], [('raw_foxtail', 'cas', None)]), 'pj', 260),
          ('잠옷 상의', [('torso_clothes_longsleeve2_buttoned', 'cas', None)], 'pj', 70),
          ('땡땡이 잠옷', [('torso_clothes_longsleeve2_buttoned', 'cas', None), ('fx_pj_dots', 'w', 36)], 'pj', 90),
-         ('잠옷 원피스', [('dress_sash', 'cas', None)], 'pj', 120)],
- 'legs': [('코트 셋업 치마', [('fx_mini', 'cas', None)], 'cas', 80), ('코트 셋업 바지', [('legs_pants', 'cas', None)], 'cas', 90),
+         ('잠옷 원피스', [('dress_sash', 'cas', None)], 'pj', 120),
+         ('줄무늬 잠옷', [('torso_clothes_longsleeve2_buttoned', 'cas', None), ('fx_pj_stripe', 'w', 36)], 'pj', 90),
+         ('져지 상의', [(L2, 'cas', None), ('fx_jersey', 'w', 36)], 'cas', 150), ('져지 반팔', [(TEE, 'cas', None), ('fx_tjersey', 'w', 36)], 'cas', 110),
+         ('야구 잠바', [('torso_clothes_longsleeve2_buttoned', 'cas', None), ('fx_varsity', 'w', 36)], 'cas', 200),
+         ('야구 잠바 (오픈)', [(TEE, 'w', None), ('torso_clothes_longsleeve2_cardigan', 'cas', 36), ('fx_varsity_o', 'w', 37)], 'cas', 200),
+         ('블루종', [(TEE, 'w', None), ('torso_clothes_longsleeve2_cardigan', 'cas', 36), ('fx_rib_cd', 'cas', 37)], 'cas', 180),
+         ('블루종 + 후드티', [(L2, 'w', None), ('fx_hoodie', 'w', 35), ('torso_clothes_longsleeve2_cardigan', 'cas', 36), ('fx_rib_cd', 'cas', 37)], 'cas', 220),
+         ('정비공 점프슈트', [('torso_clothes_longsleeve2_buttoned', 'cas', None), ('legs_pants', 'cas', 21), ('fx_mech', 'cas', 36), ('fx_mechpatch', 'w', 37)], 'cas', 220),
+         ('정비공 멜빵', [(TEE, 'w', None), ('torso_aprons_overalls', 'cas', None), ('fx_ovpocket', 'cas', 41)], 'cas', 170),
+         ('수트 재킷', [(SH, 'w', None), ('fx_blazer', 'cas', 36)], 'cas', 220),
+         ('더블 수트', [(SH, 'w', None), ('fx_blazer', 'cas', 36), ('fx_dbtn', 'cas', 37)], 'cas', 240),
+         ('수트 + 조끼', [(SH, 'w', None), ('torso_clothes_sleeveless2_vneck', 'cas', 36), ('fx_blazer', 'cas', 37)], 'cas', 260),
+         ('색 교복 블레이저', [(SH, 'w', None), ('fx_blazer', 'cas', 36), ('fx_emblem', 'top', 37)], 'cas', 200),
+         ('색 교복 니트 조끼', [(SH, 'w', None), ('torso_clothes_sleeveless2_vneck', 'cas', 36), ('fx_vest_cable', 'cas', 37)], 'cas', 150),
+         ('색 교복 카디건', [(SH, 'w', None), ('torso_clothes_longsleeve2_cardigan', 'cas', 36)], 'cas', 150),
+         ('세일러복', [(L2, 'w', None), ('fx_sailor', 'cas', 36), ('fx_sailorw', 'w', 37)], 'cas', 220),
+         ('세일러복 (하복)', [(TEE, 'w', None), ('fx_sailor_t', 'cas', 36), ('fx_sailorw_t', 'w', 37)], 'cas', 200),
+         ('가쿠란', [('torso_clothes_longsleeve2_buttoned', 'cas', None), ('fx_gaku', 'cas', 36), ('fx_gakubtn', 'w', 37)], 'cas', 220),
+         ('블라우스 + 니트 조끼', [('torso_clothes_blouse_longsleeve', 'w', None), ('torso_clothes_sleeveless2_vneck', 'cas', 36), ('fx_vest_cable', 'cas', 37)], 'cas', 150),
+         ('맨투맨', [(L2, 'cas', None), ('fx_rib_l2', 'cas', 36), ('fx_star', 'w', 37)], 'cas', 120),
+         ('곰돌이 맨투맨', [(L2, 'cas', None), ('fx_rib_l2', 'cas', 36), ('fx_bearprint', 'w', 37)], 'cas', 150),
+         ('집업 후드', [(L2, 'cas', None), ('fx_hoodie', 'cas', 36), ('fx_zip', 'w', 37)], 'cas', 160),
+         ('패딩 점퍼', [(L2, 'cas', None), ('fx_quilt', 'cas', 36), ('fx_zip', 'w', 37)], 'cas', 220),
+         ('긴팔 티 + 패딩 조끼', [(L2, 'w', None), ('torso_clothes_sleeveless2', 'cas', 36), ('fx_quilt_v', 'cas', 37)], 'cas', 180),
+         ('티 + 체크 셔츠', [(TEE, 'w', None), ('torso_clothes_longsleeve2_cardigan', 'cas', 36), ('fx_check_cd', 'cas', 37)], 'cas', 160),
+         ('데님 재킷', [(TEE, 'w', None), ('torso_clothes_longsleeve2_cardigan', 'cas', 36), ('fx_denim', 'cas', 37)], 'cas', 190),
+         ('레이어드 티', [(L2, 'w', None), (TEE, 'cas', 36)], 'cas', 110)],
+ 'legs': [('셋업 미니 치마', [('fx_mini', 'cas', None)], 'cas', 80), ('셋업 바지', [('legs_pants', 'cas', None)], 'cas', 90),
           ('미니 치마', [('fx_mini', None, None)], 'cas', 80), ('주름 미니 치마', [('fx_mini_pleat', None, None)], 'cas', 100),
           ('짧은 반바지', [('legs_shorts_short', None, None)], 'cas', 70), ('레깅스', [('legs_leggings', None, None)], 'cas', 70),
           ('롤업 바지', [('legs_cuffed', None, None)], 'cas', 100),
-          ('잠옷 바지', [('legs_pants2', 'cas', None)], 'pj', 60), ('땡땡이 잠옷 바지', [('legs_pants2', 'cas', None), ('fx_pants_dots', 'w', 21)], 'pj', 80)],
+          ('잠옷 바지', [('legs_pants2', 'cas', None)], 'pj', 60), ('땡땡이 잠옷 바지', [('legs_pants2', 'cas', None), ('fx_pants_dots', 'w', 21)], 'pj', 80),
+          ('줄무늬 잠옷 바지', [('legs_pants2', 'cas', None), ('fx_pants_stripe', 'w', 21)], 'pj', 80),
+          ('져지 바지', [('legs_pants2', 'cas', None), ('fx_pstripe', 'w', 21)], 'cas', 110), ('져지 반바지', [('legs_shorts', 'cas', None), ('fx_pstripe_s', 'w', 21)], 'cas', 90),
+          ('체크 미니 치마', [('fx_checkmini', None, None)], 'cas', 110), ('체크 바지', [('legs_pants2', None, None), ('fx_checkpants', 'legs', 21)], 'cas', 120),
+          ('세일러 주름 치마', [('fx_pleatlong', None, None)], 'cas', 110), ('테니스 치마', [('fx_mini_pleat', None, None), ('fx_tennis', 'w', 21)], 'cas', 110),
+          ('데님 미니 치마', [('fx_mini', None, None), ('fx_denimmini', 'legs', 21)], 'cas', 100),
+          ('청바지', [('legs_pants2', None, None), ('fx_jeans', 'legs', 21)], 'cas', 120),
+          ('카고 바지', [('legs_pants2', None, None), ('fx_cargo', 'legs', 21)], 'cas', 120), ('카고 반바지', [('legs_shorts', None, None), ('fx_cargo_s', 'legs', 21)], 'cas', 90),
+          ('반바지 + 레깅스', [('legs_leggings', 'fix:black', 19), ('legs_shorts_short', None, None)], 'cas', 100)],
  'feet': [('줄무늬 양말 + 구두', [SOCK, ('fx_sock_stripe', 'cas', 14.5), ('feet_shoes_revised', None, None)], 'cas', 90),
           ('흰 양말 + 리본 구두', [SOCK, ('feet_shoes_sara', None, None)], 'cas', 90),
           ('리본 구두', [('feet_shoes_sara', None, None)], 'cas', 80), ('테 부츠', [('feet_boots_rim', None, None)], 'cas', 120),
+          ('운동화', [('feet_shoes_basic', None, None), ('fx_sole', 'w', 16)], 'cas', 90), ('흰 양말 + 운동화', [SOCK, ('feet_shoes_basic', None, None), ('fx_sole', 'w', 16)], 'cas', 100),
           ('슬리퍼', [('feet_slippers', None, None)], 'pj', 40)],
  'hat': [('비니', [('fx_beanie', 'hat', None)], 'cas', 70), ('방울 비니', [('fx_beanie', 'hat', None), ('fx_pompom', 'w', 131)], 'cas', 90),
          ('곰 비니', [('fx_beanie', 'hat', None), ('fx_bearears_b', 'hat', 131)], 'cas', 110),
@@ -257,6 +292,16 @@ FXDRAW = {'fx_hoodie': (L2, 'hoodie'), 'fx_hoodstr': (L2, 'hoodstr'), 'fx_cable'
           'fx_vest_cable': ('torso_clothes_sleeveless2_vneck', 'cable'), 'fx_check': ('torso_clothes_longsleeve2_buttoned', 'check'),
           'fx_shirt_stripe': ('torso_clothes_longsleeve2_buttoned', 'stripe'), 'fx_coat': ('torso_clothes_longsleeve2_cardigan', 'coat'),
           'fx_puff': (L2, 'puff')}
+FXDRAW.update({'fx_pj_stripe': ('torso_clothes_longsleeve2_buttoned', 'stripe'), 'fx_jersey': (L2, 'jersey'), 'fx_tjersey': (TEE, 'tjersey'), 'fx_varsity': ('torso_clothes_longsleeve2_buttoned', 'varsity'),
+               'fx_varsity_o': ('torso_clothes_longsleeve2_cardigan', 'varsity'), 'fx_rib_cd': ('torso_clothes_longsleeve2_cardigan', 'rib'), 'fx_rib_l2': (L2, 'rib'), 'fx_mech': ('torso_clothes_longsleeve2_buttoned', 'mech'),
+               'fx_mechpatch': ('torso_clothes_longsleeve2_buttoned', 'mechpatch'), 'fx_ovpocket': ('torso_aprons_overalls', 'ovpocket'), 'fx_dbtn': ('torso_clothes_longsleeve2_cardigan', 'dbtn'),
+               'fx_sailor': (L2, 'sailor'), 'fx_sailorw': (L2, 'sailorw'), 'fx_sailor_t': (TEE, 'sailor'), 'fx_sailorw_t': (TEE, 'sailorw'),
+               'fx_gaku': ('torso_clothes_longsleeve2_buttoned', 'gaku'), 'fx_gakubtn': ('torso_clothes_longsleeve2_buttoned', 'gakubtn'), 'fx_star': (L2, 'star'), 'fx_bearprint': (L2, 'bearprint'),
+               'fx_zip': (L2, 'zip'), 'fx_quilt': (L2, 'quilt'), 'fx_quilt_v': ('torso_clothes_sleeveless2', 'quilt'), 'fx_check_cd': ('torso_clothes_longsleeve2_cardigan', 'check'),
+               'fx_denim': ('torso_clothes_longsleeve2_cardigan', 'denim'), 'fx_pants_stripe': ('legs_pants2', 'stripe'), 'fx_pstripe': ('legs_pants2', 'pstripe'),
+               'fx_pstripe_s': ('legs_shorts', 'pstripe'), 'fx_checkmini': ('legs_skirts_plain', 'checkmini'), 'fx_checkpants': ('legs_pants2', 'check'),
+               'fx_pleatlong': ('legs_skirts_plain', 'pleatlong'), 'fx_tennis': ('legs_skirts_plain', 'tennis'), 'fx_denimmini': ('legs_skirts_plain', 'denimmini'),
+               'fx_jeans': ('legs_pants2', 'jeans'), 'fx_cargo': ('legs_pants2', 'cargo'), 'fx_cargo_s': ('legs_shorts', 'cargo'), 'fx_sole': ('feet_shoes_basic', 'sole')})
 for k, (base, kind) in FXDRAW.items(): pool[k] = fxent(base, kind)
 for k, kind in (('fx_beanie', 'beanie'), ('fx_pompom', 'pompom'), ('fx_bearears', 'bearears'), ('fx_bunnyears', 'bunnyears'),
                 ('fx_bearears_b', 'bearearsb'), ('fx_bunnyears_b', 'bunnyearsb')):
@@ -507,6 +552,158 @@ def fx_hatdraw(a, kind):
                         elif ch == 'i': put(oc, y, x, rgb=(214, 120, 148))
                         else: put(oc, y, x, 1 if ch == '#' else 4)
     return each(a, f)
+def fx_more(a, kind):
+    """옷 가게 2차: 져지 줄·야구잠바 소매·고무단·정비공·세일러 깃·가쿠란·프린트·지퍼·패딩·데님·바지 무늬"""
+    if kind == 'checkmini': return fx_pleat(a, hem=49)
+    if kind == 'pleatlong': return fx_minipleat2(fx_pleat(a, pleat=False))
+    if kind in ('tennis', 'denimmini'): a = fx_pleat(a, hem=50, pleat=False)
+    GOLD, RED, RED2 = (236, 196, 84), (214, 58, 74), (150, 30, 50)
+    def f(cl, oc, r, m):
+        ys = np.nonzero(m.any(1))[0]; t, y1 = int(ys.min()), int(ys.max()); front, back, side = r == 2, r == 0, r in (1, 3)
+        I = lambda y, x: pidx(cl[y, x]) if m[y, x] else -1
+        def line(y, x, i): (m[y, x] and put(oc, y, x, i))
+        if kind in ('jersey', 'tjersey'):
+            if not side:
+                for y in range(t + 1, y1 if kind == 'jersey' else t + 5):
+                    for x in (22, 41): line(y, x, 5)
+                if front:
+                    for y in range(t + 2, y1): line(y, 32, 5)
+            else:
+                for y in range(t + 2, y1 - 1 if kind == 'jersey' else t + 5): line(y, span(m, y)[0] + 2 if r == 1 else span(m, y)[1] - 2, 5)
+        elif kind == 'varsity':
+            for y in range(t + 1, y1 + 1):
+                for x in range(64):
+                    if m[y, x] and (not side and (x <= 23 or x >= 40)) and I(y, x) > 0: put(oc, y, x, min(5, I(y, x) + 1))
+            for y in (y1 - 1, y1):
+                for x in range(64):
+                    if m[y, x] and (y == y1 - 1) and not (not side and (x <= 23 or x >= 40)): put(oc, y, x, 5)
+            if front:
+                for dy, row in enumerate(['##.', '#.#', '##.', '#.#']):
+                    for dx, ch in enumerate(row):
+                        if ch == '#': line(t + 4 + dy, 26 + dx, 5)
+        elif kind == 'rib':
+            for x in range(64):
+                for y in (y1 - 1, y1):
+                    if m[y, x] and x % 2 == 0 and I(y, x) > 1: put(oc, y, x, I(y, x) - 1)
+            for x in range(64):
+                if m[t, x] and I(t, x) > 1: put(oc, t, x, I(t, x) - 1)
+        elif kind == 'mech':
+            by = t + 10
+            for x in range(64):
+                if m[by, x] and (side or 24 <= x <= 39): put(oc, by, x, 1)
+            if front:
+                for y in range(t + 4, t + 7):
+                    for x in range(34, 38):
+                        if y == t + 4 or x in (34, 37) or y == t + 6: line(y, x, 1)
+        elif kind == 'mechpatch':
+            if front:
+                for x in range(26, 29): line(t + 5, x, 5)
+        elif kind == 'ovpocket':
+            if front:
+                for y in range(t + 2, t + 5):
+                    for x in range(30, 34):
+                        if y == t + 2 or x in (30, 33) or y == t + 4: line(y, x, 1)
+        elif kind == 'dbtn':
+            if front:
+                for y in (t + 8, t + 11):
+                    for x in (30, 34): line(y, x, 1)
+        elif kind in ('sailor', 'sailorw'):
+            w = kind == 'sailorw'
+            if front:
+                for dy in range(0, 6):
+                    for side_ in (-1, 1):
+                        x0, x1 = (24 + dy, 27 + dy) if side_ < 0 else (36 - dy, 39 - dy)
+                        for x in range(x0, x1 + 1):
+                            if not m[t + dy, x]: continue
+                            if w and x == (x0 + 1 if side_ < 0 else x1 - 1): put(oc, t + dy, x, 5)
+                            elif not w: put(oc, t + dy, x, 2 if x in (x0, x1) else 3)
+                if w:
+                    for dy, row in enumerate(['#.##.#', '.####.', '..##..', '.#..#.']):
+                        for dx, ch in enumerate(row):
+                            if ch == '#': put(oc, t + 5 + dy, 29 + dx, rgb=RED if dy < 2 else RED2)
+            elif back:
+                for y in range(t, t + 7):
+                    for x in range(24, 40):
+                        if not m[y, x]: continue
+                        edge = y == t + 6 or x in (24, 39)
+                        if w and (y == t + 5 or x in (25, 38)) and not edge: put(oc, y, x, 5)
+                        elif not w: put(oc, y, x, 1 if edge else 3)
+            else:
+                for y in range(t, t + 6):
+                    l, rr = span(m, y)
+                    for k in range(0, 3):
+                        x = rr - k if r == 1 else l + k
+                        if not w: put(oc, y, x, 1 if k == 0 or y == t + 5 else 3)
+                        elif k == 1 and y < t + 5: put(oc, y, x, 5)
+        elif kind == 'gaku':
+            for y in (t, t + 1):
+                for x in range(64):
+                    if m[y, x]: put(oc, y, x, 1)
+        elif kind == 'gakubtn':
+            if front:
+                for y in (t + 3, t + 6, t + 9): put(oc, y, 32, rgb=GOLD)
+        elif kind == 'star':
+            if front:
+                for dy, row in enumerate(['..#..', '#####', '.###.', '.#.#.']):
+                    for dx, ch in enumerate(row):
+                        if ch == '#': line(t + 5 + dy, 30 + dx, 5)
+        elif kind == 'bearprint':
+            if front:
+                BR, BK = (176, 120, 72), (60, 36, 24)
+                for dy, row in enumerate(['#...#', '#####', '#k#k#', '##n##', '.###.']):
+                    for dx, ch in enumerate(row):
+                        if ch != '.': put(oc, t + 4 + dy, 30 + dx, rgb=BK if ch in 'kn' else BR)
+        elif kind == 'zip':
+            if front:
+                for y in range(t + 2, y1): line(y, 32, 5)
+        elif kind == 'quilt':
+            for y in range(t + 2, y1):
+                if (y - t) % 3 == 2:
+                    for x in range(64):
+                        if inner(m, y, x) and I(y, x) > 1: put(oc, y, x, I(y, x) - 1)
+        elif kind == 'denim':
+            for y in range(t + 2, y1):
+                for x in ((27, 36) if not side else ()):
+                    if inner(m, y, x): put(oc, y, x, min(5, I(y, x) + 1))
+            for x in range(64):
+                if inner(m, t + 4, x): put(oc, t + 4, x, min(5, I(t + 4, x) + 1))
+        elif kind == 'pstripe':
+            for y in range(t + 1, y1 + 1):
+                if side: xs = [(span(m, y)[0] + span(m, y)[1]) // 2]
+                else: xs = [25, 38]
+                for x in xs: line(y, x, 5)
+        elif kind == 'tennis':
+            for x in range(64):
+                if m[y1 - 1, x]: put(oc, y1 - 1, x, 5)
+        elif kind == 'denimmini':
+            for x in range(64):
+                if inner(m, y1 - 1, x): put(oc, y1 - 1, x, min(5, I(y1 - 1, x) + 1))
+            if not side:
+                for y in range(t + 1, y1 - 1): (inner(m, y, 32) and put(oc, y, 32, min(5, I(y, 32) + 1)))
+        elif kind == 'jeans':
+            for y in range(t + 1, y1 + 1):
+                for x in ((25, 38) if not side else ((span(m, y)[0] + span(m, y)[1]) // 2,)):
+                    if m[y, x] and I(y, x) > 0: put(oc, y, x, min(5, I(y, x) + 1))
+            for x in range(64):
+                if m[y1, x] and I(y1, x) > 0: put(oc, y1, x, min(5, I(y1, x) + 1))
+        elif kind == 'cargo':
+            for xs in (((24, 27), (36, 39)) if not side else ((span(m, t + 5)[0] + 2, span(m, t + 5)[0] + 5),)):
+                for y in range(t + 4, t + 8):
+                    for x in range(xs[0], xs[1] + 1):
+                        if (y in (t + 4, t + 7) or x in xs) and m[y, x]: put(oc, y, x, 1)
+        elif kind == 'sole':
+            for x in range(64):
+                if m[y1, x]: put(oc, y1, x, 5)
+    return each(a, f)
+def fx_minipleat2(a):
+    a = a.copy()
+    for r, cl in cells(a):
+        m = cl[..., 3] > 0
+        for y in range(46, 51):
+            for x in range(1, 63):
+                if m[y, x] and m[y, x - 1] and m[y, x + 1] and x % 2 == 0:
+                    i = pidx(cl[y, x]); setc(cl, y, x, i - 1) if i > 1 else None
+    return a
 FXF = {'blazer': fx_blazer, 'emblem': fx_emblem, 'pleat': fx_pleat, 'short': lambda a: fx_pleat(a, pleat=False),
        'stripe': lambda a: fx_pattern(a, 'stripe'), 'dots': lambda a: fx_pattern(a, 'dots'),
        'dotsshort': lambda a: fx_pattern(fx_pleat(a, pleat=False), 'dots'),
@@ -514,6 +711,7 @@ FXF = {'blazer': fx_blazer, 'emblem': fx_emblem, 'pleat': fx_pleat, 'short': lam
        'tocloth': fx_tocloth, 'hoodie': fx_hoodie, 'hoodstr': fx_hoodstr, 'cable': lambda a: fx_knit(a, 'cable'), 'check': lambda a: fx_knit(a, 'check'),
        'nordic': lambda a: fx_knit(a, 'nordic'), 'heart': fx_heart, 'coat': fx_coat, 'puff': fx_puff, 'beanie': fx_beanie,
        'pompom': lambda a: fx_hatdraw(a, 'pompom'), 'bearears': lambda a: fx_hatdraw(a, 'bear'), 'bunnyears': lambda a: fx_hatdraw(a, 'bunny'),
+       **{k: (lambda kk: lambda a: fx_more(a, kk))(k) for k in ('jersey', 'tjersey', 'varsity', 'rib', 'mech', 'mechpatch', 'ovpocket', 'dbtn', 'sailor', 'sailorw', 'gaku', 'gakubtn', 'star', 'bearprint', 'zip', 'quilt', 'denim', 'pstripe', 'checkmini', 'pleatlong', 'tennis', 'denimmini', 'jeans', 'cargo', 'sole')},
        'bearearsb': lambda a: fx_hatdraw(a, 'bear'), 'bunnyearsb': lambda a: fx_hatdraw(a, 'bunny'), 'minipleat': lambda a: fx_minipleat(fx_pleat(a, hem=50, pleat=False))}
 def fx_minipleat(a):
     a = a.copy()                                              # 세로 주름 (2칸마다 어둡게)
