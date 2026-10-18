@@ -107,7 +107,7 @@ def walk_file(path, d):
 def layers_of(d, body):
     out = []
     for k in sorted([k for k in d if k.startswith('layer_')]):
-        L = d[k]; p = L.get(BODYKEY[body])
+        L = d[k]; p = L.get(BODYKEY[body]) or L.get('female')   # teen 그림이 없으면 여자 옷 (몸 모양이 거의 같아요)
         if not p: continue
         out.append((L.get('zPos', 50), p))
     return out
@@ -141,17 +141,16 @@ SOCK = ('feet_socks_high', 'sock', None)
 COMBO = {
  'top': [('블레이저', [(SH, 'w', None), ('fx_blazer', 'sch', 36), ('fx_emblem', 'top', 37)]),
          ('셔츠', [(SH, 'w', None)]),
+         ('블라우스', [('torso_clothes_blouse_longsleeve', 'w', None)]),
+         ('반팔 블라우스', [('torso_clothes_blouse', 'w', None)]),
+         ('교복 원피스', [(SH, 'w', None), ('fx_dress', 'sch', None)]),
+         ('띠 원피스', [('torso_clothes_blouse', 'w', None), ('fx_dress2', 'sch', None)]),
+         ('멜빵 원피스', [('torso_clothes_blouse_longsleeve', 'w', None), ('torso_clothes_corset', 'sch', None)]),
          ('반팔 셔츠', [('torso_clothes_shortsleeve_polo', 'w', None)]),
          ('니트 조끼', [(SH, 'w', None), ('torso_clothes_sleeveless2_vneck', 'sch', 36)]),
          ('카디건', [(SH, 'w', None), ('torso_clothes_longsleeve2_cardigan', 'sch', 36)]),
          ('반팔 카디건', [('torso_clothes_shortsleeve_polo', 'w', None), ('torso_clothes_shortsleeve_cardigan', 'sch', 36)]),
          ('스웨터', [(SH, 'w', None), ('torso_clothes_longsleeve2_vneck', 'sch', 36)]),
-         ('블라우스', [('torso_clothes_blouse_longsleeve', 'w', None)]),
-         ('반팔 블라우스', [('torso_clothes_blouse', 'w', None)]),
-         ('코르셋 교복', [('torso_clothes_blouse_longsleeve', 'w', None), ('torso_clothes_corset', 'sch', None)]),
-         ('조끼 교복', [(SH, 'w', None), ('torso_clothes_vest', 'sch', None)]),
-         ('교복 재킷', [(SH, 'w', None), ('torso_jacket_collared', 'sch', None)]),
-         ('긴 교복 코트', [(SH, 'w', None), ('torso_jacket_frock', 'sch', None)]),
          ('마법사 로브', [('torso_clothes_robe', 'w', None)])],
  'feet': [('로퍼 + 무릎 양말', [SOCK, ('feet_shoes_ghillies', None, None)]),
           ('구두 + 무릎 양말', [SOCK, ('feet_shoes_revised', None, None)]),
@@ -174,7 +173,9 @@ pool['fx_blazer'] = fxent('torso_clothes_longsleeve2_cardigan', 'blazer')
 pool['fx_emblem'] = fxent('torso_clothes_longsleeve2_cardigan', 'emblem')
 pool['fx_pleat'] = fxent('legs_skirts_plain', 'pleat')
 pool['fx_short'] = fxent('legs_skirt_straight', 'short')
-FXBASE = {'fx_blazer': 'torso_clothes_longsleeve2_cardigan', 'fx_emblem': 'torso_clothes_longsleeve2_cardigan', 'fx_pleat': 'legs_skirts_plain', 'fx_short': 'legs_skirt_straight'}
+pool['fx_dress'] = fxent('dress_bodice', 'short')
+pool['fx_dress2'] = fxent('dress_sash', 'short')
+FXBASE = {'fx_blazer': 'torso_clothes_longsleeve2_cardigan', 'fx_emblem': 'torso_clothes_longsleeve2_cardigan', 'fx_pleat': 'legs_skirts_plain', 'fx_short': 'legs_skirt_straight', 'fx_dress': 'dress_bodice', 'fx_dress2': 'dress_sash'}
 for cat, lst in COMBO.items():
     out = []
     for nm, comps in lst:
@@ -265,13 +266,16 @@ ys, xs = np.nonzero(u); X0, X1, Y0, Y1 = xs.min(), xs.max() + 1, ys.min(), ys.ma
 FW, FH = int(X1 - X0), int(Y1 - Y0); NF = len(DIRS) * len(COLS)
 print('frame', FW, FH, 'crop', X0, Y0)
 # 더 날씬하게: 목 아래(64칸 기준 y≥36)에서 몸통·다리 사이 세로줄 2개를 빼고 양쪽을 1칸씩 안으로 (모든 부품 똑같이)
-SLIM_Y = 36; SLIM = {'down': (28, 35), 'up': (28, 35), 'left': (29, 34), 'right': (29, 34)}
+# 1) 목 아래(y≥36) 몸통·다리 사이 세로줄 2개  2) 다리(y≥52)만 세로줄 2개 더 → 다리가 가늘게
+SLIM = [(36, {'down': (28, 35), 'up': (28, 35), 'left': (29, 34), 'right': (29, 34)}),
+        (52, {'down': (27, 36), 'up': (27, 36), 'left': (30, 35), 'right': (28, 33)})]
 def slim(cell, d):
-    o = cell.copy(); lo, hi = SLIM[d]; b = cell[SLIM_Y:]
-    o[SLIM_Y:] = 0
-    o[SLIM_Y:, 1:lo + 1] = b[:, :lo]                  # 왼쪽 반: 1칸 오른쪽으로
-    o[SLIM_Y:, lo + 1:hi] = b[:, lo + 1:hi]           # 가운데 그대로
-    o[SLIM_Y:, hi:63] = b[:, hi + 1:]                 # 오른쪽 반: 1칸 왼쪽으로
+    o = cell
+    for y0, cols in SLIM:
+        lo, hi = cols[d]; b = o[y0:].copy(); o = o.copy(); o[y0:] = 0
+        o[y0:, 1:lo + 1] = b[:, :lo]                  # 왼쪽: 1칸 오른쪽으로
+        o[y0:, lo + 1:hi] = b[:, lo + 1:hi]           # 가운데 그대로
+        o[y0:, hi:63] = b[:, hi + 1:]                 # 오른쪽: 1칸 왼쪽으로
     return o
 def strip(a):
     o = np.zeros((FH, FW * NF, 4), np.uint8); k = 0
