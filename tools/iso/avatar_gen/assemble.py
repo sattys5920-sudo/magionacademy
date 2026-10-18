@@ -208,8 +208,9 @@ def side_nx(a, ch, k):
         b = head_cell(SIDE[12], reduce_f=.55, band=True)[:, ::-1]; bch, bnx = chin_neck(b)
         SIDE_REF['ref'] = face_left(b, bch, kinds(b[..., :3])) - bnx
     fl = face_left(a, ch, k); _, nx = chin_neck(a)
-    return nx if fl is None else fl - SIDE_REF['ref']
-SIDE_FIX = {3: 1, 26: 1, 7: -1}   # 눈 높이에서 얼굴 앞이 살짝 들어간 머리: 더 왼쪽으로
+    return (nx if fl is None else fl - SIDE_REF['ref']) - SIDE_HEAD_DX
+SIDE_HEAD_DX = 3   # 옆모습 머리를 몸 위로 (생성 그림 그대로면 머리가 몸보다 앞으로 나와 거북목처럼 보여요)
+SIDE_FIX = {3: 1, 26: 1, 7: -2, 25: 1}   # 머리마다 얼굴 앞 윤곽이 조금 달라서 눈이 얼굴 밖으로 안 나가게 맞춤
 def hair_layers(n):
     O, U, S = Lay(), Lay(), Lay()
     views = []
@@ -243,9 +244,9 @@ def hair_layers(n):
     return O, U, S
 # ---------- 눈·입 (앞 얼굴 기준) ----------
 SIDE_KEEP = {6}            # 이미 왼쪽을 보는 옆모습 (7번)
-# 옆모습(왼쪽 보기, 3/4): 얼굴 앞 윤곽 = x 10, 귀 = x 22쯤. 얼굴 가운데 선이 보는 쪽(왼쪽)으로 치우쳐서
+# 옆모습(왼쪽 보기, 3/4): 얼굴 앞 윤곽 = x 13, 귀 = x 25쯤. 얼굴 가운데 선이 보는 쪽(왼쪽)으로 치우쳐서
 # 먼 눈은 앞 윤곽 바로 안쪽에 좁게(2칸), 가까운 눈은 가운데 선 오른쪽에 온전히, 입은 가운데 선 아래
-SIDE_FAR_X, SIDE_NEAR_X, SIDE_MID = 10, 16, 12
+SIDE_FAR_X, SIDE_NEAR_X, SIDE_MID = 13, 19, 15
 # ---------- 눈·코·입: 선명한 픽셀로, 생성 그림 얼굴 비율에 맞춰 같은 자리에 ----------
 # 얼굴 기준(앞모습): 가운데 x = NECKX, 턱 = CHIN. 눈은 턱 위 8~5줄, 코는 4줄 위 1점, 입은 3~1줄 위
 # 비율 기준 = 생성 그림 얼굴의 빈 눈 자리(연한 띠)와 입 위치
