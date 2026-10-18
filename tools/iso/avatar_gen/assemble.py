@@ -209,7 +209,7 @@ def side_nx(a, ch, k):
         SIDE_REF['ref'] = face_left(b, bch, kinds(b[..., :3])) - bnx
     fl = face_left(a, ch, k); _, nx = chin_neck(a)
     return (nx if fl is None else fl - SIDE_REF['ref']) - SIDE_HEAD_DX
-SIDE_HEAD_DX = 3   # 옆모습 머리를 몸 위로 (생성 그림 그대로면 머리가 몸보다 앞으로 나와 거북목처럼 보여요)
+SIDE_HEAD_DX, SIDE_DY = 7, 1   # 옆모습 머리를 몸 위로·위로 (생성 그림 그대로면 머리가 몸보다 앞으로 나와 거북목처럼 보여요)
 SIDE_FIX = {3: 1, 26: 1, 7: -2, 25: 1}   # 머리마다 얼굴 앞 윤곽이 조금 달라서 눈이 얼굴 밖으로 안 나가게 맞춤
 def hair_layers(n):
     O, U, S = Lay(), Lay(), Lay()
@@ -240,13 +240,14 @@ def hair_layers(n):
         else: hU[..., 3] = 0
         for j in range(3):
             fr = vi * 3 + j
-            place_head(S, fr, sk, ch, nx); place_head(O, fr, hO, ch, nx); place_head(U, fr, hU, ch, nx)
+            pc = ch + (SIDE_DY if vi == 2 else 0)
+            place_head(S, fr, sk, pc, nx); place_head(O, fr, hO, pc, nx); place_head(U, fr, hU, pc, nx)
     return O, U, S
 # ---------- 눈·입 (앞 얼굴 기준) ----------
 SIDE_KEEP = {6}            # 이미 왼쪽을 보는 옆모습 (7번)
 # 옆모습(왼쪽 보기, 3/4): 얼굴 앞 윤곽 = x 13, 귀 = x 25쯤. 얼굴 가운데 선이 보는 쪽(왼쪽)으로 치우쳐서
 # 먼 눈은 앞 윤곽 바로 안쪽에 좁게(2칸), 가까운 눈은 가운데 선 오른쪽에 온전히, 입은 가운데 선 아래
-SIDE_FAR_X, SIDE_NEAR_X, SIDE_MID = 13, 19, 15
+SIDE_FAR_X, SIDE_NEAR_X, SIDE_MID = 10 + SIDE_HEAD_DX, 16 + SIDE_HEAD_DX, 12 + SIDE_HEAD_DX
 # ---------- 눈·코·입: 선명한 픽셀로, 생성 그림 얼굴 비율에 맞춰 같은 자리에 ----------
 # 얼굴 기준(앞모습): 가운데 x = NECKX, 턱 = CHIN. 눈은 턱 위 8~5줄, 코는 4줄 위 1점, 입은 3~1줄 위
 # 비율 기준 = 생성 그림 얼굴의 빈 눈 자리(연한 띠)와 입 위치
@@ -310,16 +311,16 @@ def eye_layers(i, cells=None):
         E.paste(j, gl, lx, EYE_ROW); E.paste(j, gr, rx, EYE_ROW)
         # 옆(3/4, 왼쪽 보기): 가까운 눈은 그대로 왼쪽으로, 먼 눈은 안쪽 두 칸만 (돌아간 만큼 좁게)
         far = gl
-        E.paste(6 + j, gr, SIDE_NEAR_X, EYE_ROW); E.paste(6 + j, far, SIDE_FAR_X, EYE_ROW)
+        E.paste(6 + j, gr, SIDE_NEAR_X, EYE_ROW - SIDE_DY); E.paste(6 + j, far, SIDE_FAR_X, EYE_ROW - SIDE_DY)
     return E, B
 def mouth_layer(i):
     M = Lay(); g = pix(MOUTH_PIX[i]); w = g.shape[1]; x0 = NECKX - w // 2
     for j in range(3):
-        M.paste(j, g, x0, MOUTH_ROW); M.paste(6 + j, g, max(SIDE_MID - 1, SIDE_MID - w // 2), MOUTH_ROW)   # 넓은 입은 턱 윤곽 밖으로 안 나가게 오른쪽으로
+        M.paste(j, g, x0, MOUTH_ROW); M.paste(6 + j, g, max(SIDE_MID - 1, SIDE_MID - w // 2), MOUTH_ROW - SIDE_DY)   # 넓은 입은 턱 윤곽 밖으로 안 나가게 오른쪽으로
     return M
 def nose_layer():
     N = Lay(); n = np.array([[[0, 0, 0, 0]]], np.uint8); n[0, 0] = (186, 186, 186, 255)   # 피부색으로 칠해지는 옅은 그림자 (코)
-    for j in range(3): N.paste(j, n, NECKX + NOSE[0], NOSE[1]); N.paste(6 + j, n, SIDE_FAR_X - 1, NOSE[1])
+    for j in range(3): N.paste(j, n, NECKX + NOSE[0], NOSE[1]); N.paste(6 + j, n, SIDE_FAR_X - 1, NOSE[1] - SIDE_DY)
     return N
 
 # 눈은 앞머리 위에 그려요 (어느 머리든 까까머리처럼 눈이 보이게). 일부러 눈을 가리는 머리만 눈 위로
