@@ -252,7 +252,7 @@ def fx_emblem(a):
         cl = a[2 * 64:3 * 64, c * 64:(c + 1) * 64]; m = cl[..., 3] > 0
         if not m.any(): continue
         dy = np.nonzero(m.any(1))[0].min() - 34; oc = o[2 * 64:3 * 64, c * 64:(c + 1) * 64]
-        for (yy, xx), i in {(0, 0): 5, (0, 1): 4, (1, 0): 4, (1, 1): 3}.items(): setc(oc, 40 + dy + yy, 38 + xx, i)
+        for (yy, xx), i in {(0, 0): 5, (0, 1): 4, (1, 0): 4, (1, 1): 3}.items(): setc(oc, 40 + dy + yy, 37 + xx, i)
     return o
 FXF = {'blazer': fx_blazer, 'emblem': fx_emblem, 'pleat': fx_pleat, 'short': lambda a: fx_pleat(a, pleat=False)}
 for f in sorted(FXN):
@@ -266,11 +266,15 @@ ys, xs = np.nonzero(u); X0, X1, Y0, Y1 = xs.min(), xs.max() + 1, ys.min(), ys.ma
 FW, FH = int(X1 - X0), int(Y1 - Y0); NF = len(DIRS) * len(COLS)
 print('frame', FW, FH, 'crop', X0, Y0)
 # 더 날씬하게: 목 아래(64칸 기준 y≥36)에서 몸통·다리 사이 세로줄 2개를 빼고 양쪽을 1칸씩 안으로 (모든 부품 똑같이)
-# 날씬하게: 줄마다 빼는 세로줄 (원래 64칸 좌표). 뺀 만큼 양쪽에서 안으로 당겨 가운데는 그대로
-#   어깨·몸통·팔(y 33~51): 가슴 6줄 + 팔뚝 양쪽 2줄씩 / 다리(y≥52): 4줄
-_FB1, _FB2 = {20, 22, 26, 27, 28, 35, 36, 37, 41, 43}, {26, 28, 35, 37}
-SLIM = [(33, 52, {'down': _FB1, 'up': _FB1, 'left': {29, 31, 33, 34, 38}, 'right': {25, 29, 30, 32, 34}}),
-        (52, 64, {'down': _FB2, 'up': _FB2, 'left': {29, 30, 34, 36}, 'right': {27, 29, 33, 34}})]
+# 다리 모으기 + 날씬하게: 줄마다 빼는 세로줄 (원래 64칸 좌표). 뺀 만큼 양쪽에서 안으로 당겨 가운데는 그대로
+#   teen 몸은 다리 사이가 2칸 벌어져 있어요 → 다리 줄(y≥51)에서 가운데 2줄(31·32)을 빼서 다리를 붙여요
+_N = {'left': set(), 'right': set()}
+PRESET = {
+ 'legs':  [(51, 64, {'down': {31, 32}, 'up': {31, 32}, **_N})],
+ 'legs1': [(36, 51, {'down': {28, 35}, 'up': {28, 35}, **_N}), (51, 64, {'down': {28, 31, 32, 35}, 'up': {28, 31, 32, 35}, **_N})],
+ 'legs2': [(33, 51, {'down': {21, 28, 35, 42}, 'up': {21, 28, 35, 42}, **_N}), (51, 64, {'down': {28, 31, 32, 35}, 'up': {28, 31, 32, 35}, **_N})],
+}
+SLIM = PRESET[os.environ.get('LPC_BODY', 'legs1')]
 def slim(cell, d, neck=True):
     o = cell.copy()
     for y0, y1, cols in SLIM:
