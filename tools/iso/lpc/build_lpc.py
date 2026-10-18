@@ -780,19 +780,59 @@ def maps_of(cat, f, mat, src, sl=None):
     best = max(cands, key=lambda k: hit(a, PAL[m][k]))
     return [[slot, best]] if hit(a, PAL[m][best]) >= .5 else []
 meta = dict(fw=FW, fh=FH, frames=NF, dirs={d: i * len(COLS) for i, d in enumerate(DIRS)}, walk=list(range(1, len(COLS))), bodies=BODIES, parts={})
+# ---------- Y존 (다리 사이) ----------
+# 몸 그림에서 프레임마다 다리 가운데 1열과 가랑이 줄을 재요. 메우기·세로선은 게임이 합성한 그림에 해요 (world_tpl.js legFix)
+LEG_FR = list(range(0, 2 * len(COLS)))            # down 0~4, up 5~9
+def _lum(c): return 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]
+def leg_geo(body_strip):
+    """몸 그림에서 프레임마다 가랑이 줄, 줄마다 틈 칸 (x0, x1), 세로선 칸"""
+    out = {}
+    out_c = tuple(int(PAL['body']['light'][0][i:i + 2], 16) for i in (1, 3, 5))
+    for k in LEG_FR:
+        c = body_strip[:, k * FW:(k + 1) * FW]; m = c[..., 3] > 0
+        gap = lambda y, x: (not m[y, x]) or max(abs(int(c[y, x, j]) - out_c[j]) for j in range(3)) <= 3
+        rows, crotch, lc = {}, None, None
+        for y in range(40, FH):
+            xs = np.nonzero(m[y])[0]
+            if len(xs) < 4: continue
+            l, r = int(xs.min()), int(xs.max()); mid = (l + r) / 2; runs, x = [], l + 1
+            while x < r:
+                if gap(y, x):
+                    x0 = x
+                    while x < r and gap(y, x): x += 1
+                    if not gap(y, x0 - 1) and not gap(y, x): runs.append((x0, x - 1))
+                else: x += 1
+            runs = [g for g in runs if abs((g[0] + g[1]) / 2 - mid) <= 2 and g[1] - g[0] <= 3]
+            if not runs: continue
+            g = min(runs, key=lambda g: abs((g[0] + g[1]) / 2 - mid))
+            if crotch is None:
+                if y < 46: continue
+                crotch = y
+            rows[y] = g
+        if crotch is not None:
+            xs = [g[0] for g in rows.values()]
+            out[k] = dict(crotch=crotch, rows=rows, lc=max(set(xs), key=xs.count))   # 세로선 칸 = 다리 가운데 1열 (프레임마다 고정)
+    return out
+SKIRTF = ('skirt', 'fx:pleat:', 'fx:short:', 'fx:mini:', 'fx:minipleat:', 'fx:checkmini:', 'fx:pleatlong:', 'fx:tennis:', 'fx:denimmini:', 'fx:dotsshort:', 'dress', 'robe', 'kimono', 'tunic')   # 치마처럼 다리를 덮는 천
 def write(cat, idx, entry, extra=None):
     rows, rowmap, L = [], {}, {}
     for body, Ls in entry['L'].items():
         L[body] = []
         for z, f, mat, src, sl in Ls:
             if IMG.get(f) is None: continue
-            if f not in rowmap: rowmap[f] = len(rows); rows.append(strip(IMG[f], cat != 'hair' and 'heads/' not in f))
-            L[body].append([rowmap[f], z, maps_of(cat, f, mat, src, sl)])
+            mp = maps_of(cat, f, mat, src, sl)
+            if f not in rowmap:
+                rowmap[f] = len(rows); st = strip(IMG[f], cat != 'hair' and 'heads/' not in f)
+                rows.append(st)
+            L[body].append([rowmap[f], z, mp])
     if not rows: return None
     name = f'{cat}_{idx:03d}.png'; Image.fromarray(np.concatenate(rows, 0)).save(os.path.join(OUTP, name), optimize=True)
     out = dict(id=entry['id'], n=KO.get(entry['name'], entry['name']), f='art/lpc/' + name, L=L)
+    sk = sorted({z for Ls in entry['L'].values() for z, f, *_ in Ls if any(w in f for w in SKIRTF) and 'aprons' not in f})
+    if sk: out['sk'] = sk                                                # 치마·원피스·로브 천 층의 z (다리 세로선을 안 그려요)
     if entry.get('k'): out['k'] = entry['k']; out['p'] = entry['p']     # 종류 (uni 교복·cas 사복·pj 잠옷), 값
     return out
+LEGGEO = leg_geo(strip(IMG['spritesheets/body/bodies/' + BODYKEY['female'] + '/walk.png']))   # 두 체형 몸이 같아요 (teen)
 # 몸 = 몸통 + 머리 (체형마다)
 body_entry = dict(id='body', name='body', L={b: [(10, 'spritesheets/body/bodies/' + BODYKEY[b] + '/walk.png', 'body', 'light', None), (100, 'spritesheets/' + HEAD[b] + 'walk.png', 'body', 'light', None)] for b in BODIES})
 meta['parts']['body'] = [write('body', 0, body_entry)]
@@ -815,6 +855,9 @@ ha = strip(IMG['spritesheets/' + HEAD['female'] + 'walk.png'])[:, :FW, 3] > 0; y
 hs = int(max(xs.max() - xs.min(), ys.max() - ys.min()) + 5); hcx = (xs.min() + xs.max()) / 2
 meta['head'] = dict(x=int(round(hcx - hs / 2)), y=int(max(0, ys.min() - 3)), s=hs)
 meta['scale'] = .75
+# 다리 세로선 (프레임 → [세로선 칸, 가랑이 줄]). legline 2 = 신발 바로 위 3줄은 외곽선색 (게임이 그려요)
+meta['leg'] = {k: [g['lc'], g['crotch']] for k, g in LEGGEO.items()}
+meta['legline'] = int(os.environ.get('LPC_LEGLINE', '1'))
 # 크레딧 (같은 파일은 한 번)
 seen, cr = set(), []
 for c in credits:

@@ -14,6 +14,7 @@ World.Avatar = (() => {
   const COLORS = { skinC: 'skin', hairC: 'hair', eyeC: 'eye', legsC: 'bottom', feetC: 'shoe', topC: 'cloth', hatC: 'cloth' };   // topC: 사복·잠옷 색   // 색 키 → 고를 수 있는 색 목록
   const SLOTC = { skin: 'skinC', hair: 'hairC', eye: 'eyeC', legs: 'legsC', feet: 'feetC', cas: 'topC', hat: 'hatC' };
   const MAT = { skin: 'skin', eye: 'eye', hair: 'hair', top: 'cloth', legs: 'bottom', feet: 'shoe', hat: 'cloth' };
+  let lastOwn = null;   // 검증용 (tools/iso/lpc/verify_legs.js)
   const imgs = {}, cache = new Map(), heads = new Map(), maps = new Map(), subs = [];
   const bodyName = av => AVM.bodies[av.body] || AVM.bodies[0];
   function load(f){
@@ -58,8 +59,43 @@ World.Avatar = (() => {
   }
   function layersOf(av){
     const body = bodyName(av), out = [];
-    ['body', ...CATS].forEach(c => { const p = AVM.parts[c][c === 'body' ? 0 : av[c]]; if (p && p.f) (p.L[body] || []).forEach(([row, z, mp]) => out.push({ f: p.f, row, z, mp })); });
+    ['body', ...CATS].forEach(c => { const p = AVM.parts[c][c === 'body' ? 0 : av[c]]; if (p && p.f) (p.L[body] || []).forEach(([row, z, mp]) => out.push({ f: p.f, row, z, mp, shoe: c === 'feet' && z >= 15, sk: !!(p.sk && p.sk.includes(z)) })); });
     return out.sort((a, b) => a.z - b.z);
+  }
+  // 다리 Y존 (앞·뒤 모습): 두 다리 사이 진한 틈(외곽선·진한 그림자·빈칸)을 그 줄에서 가장 많이 쓰인 바지 색으로 메우고,
+  // 다리 가운데 1열(meta.leg)에 가랑이 2줄 아래부터 신발 바로 위까지 1px 세로선 = 그 픽셀 색 70% 밝기.
+  // 치마·원피스 천이 덮은 줄은 건너뛰어요 (선은 밑단 바로 아래 줄부터). legline 2면 신발 바로 위 3줄은 외곽선색
+  const LUM = (r, g, b) => .299 * r + .587 * g + .114 * b;
+  function legFix(o, own, W){
+    Object.entries(AVM.leg || {}).forEach(([k, [lc, crotch]]) => {
+      const X0 = +k * FW, xc = X0 + lc, P = (y, x) => (y * W + x) * 4;
+      let top = FH;
+      for (let y = crotch + 2; y < FH; y++) if (own[y * W + xc] === 1){ top = y; break; }
+      for (let y = crotch; y < top; y++){
+        const cnt = new Map();
+        for (let x = X0; x < X0 + FW; x++){ const d = P(y, x); if (!o[d + 3] || own[y * W + x]) continue; const l = LUM(o[d], o[d + 1], o[d + 2]); if (l < 45) continue; const key = (o[d] << 16) | (o[d + 1] << 8) | o[d + 2]; cnt.set(key, (cnt.get(key) || 0) + 1); }
+        if (!cnt.size) for (let x = X0; x < X0 + FW; x++){ const d = P(y, x); if (!o[d + 3] || own[y * W + x]) continue; const key = (o[d] << 16) | (o[d + 1] << 8) | o[d + 2]; cnt.set(key, (cnt.get(key) || 0) + 1); }   // 아주 진한 바지 (검정 등)
+        if (!cnt.size) continue;
+        const ls = []; cnt.forEach((n, key) => { for (let i = 0; i < n; i++) ls.push(LUM(key >> 16, (key >> 8) & 255, key & 255)); }); ls.sort((a, b) => a - b);
+        const med = ls[ls.length >> 1];   // 가장 많이 쓰인 색 (같으면 그 줄 가운데 밝기에 가까운 색)
+        let mode = 0, best = -1e9; cnt.forEach((n, key) => { const sc = n * 1000 - Math.abs(LUM(key >> 16, (key >> 8) & 255, key & 255) - med); if (sc > best){ best = sc; mode = key; } });
+        const mr = mode >> 16, mg = (mode >> 8) & 255, mb = mode & 255, ml = LUM(mr, mg, mb);
+        const dark = x => { const d = P(y, x); return !o[d + 3] || LUM(o[d], o[d + 1], o[d + 2]) < Math.max(45, ml * .65); };   // 외곽선·진한 그림자(그 줄 바지색의 65% 미만)·빈칸
+        // Y존: 다리 가운데의 진한 틈을 양옆 다리 픽셀 사이(가운데 ±4칸 안)만큼 메워요
+        const legAt = x => { const d = P(y, x); return o[d + 3] && !own[y * W + x] && !dark(x); };
+        if (!own[y * W + xc]){
+          let Lx = -1, Rx = -1;
+          for (let x = xc; x >= xc - 4; x--) if (legAt(x)){ Lx = x; break; }
+          for (let x = xc; x <= xc + 4; x++) if (legAt(x)){ Rx = x; break; }
+          if (Lx >= 0 && Rx >= 0 && Rx - Lx > 1) for (let x = Lx + 1; x < Rx; x++){ const d = P(y, x); o[d] = mr; o[d + 1] = mg; o[d + 2] = mb; o[d + 3] = 255; }
+        }
+        const d = P(y, xc);
+        if (y < crotch + 2 || own[y * W + xc] || !o[d + 3]) continue;
+        if (AVM.legline === 2 && top < FH && y >= top - 3){ o[d] = 40; o[d + 1] = 24; o[d + 2] = 32; continue; }
+        if (dark(xc)) continue;   // 밑단 외곽선 줄
+        o[d] = o[d] * .7; o[d + 1] = o[d + 1] * .7; o[d + 2] = o[d + 2] * .7;
+      }
+    });
   }
   // 부품 그림이 다 오면 resolve (캐릭터 꾸미기 화면 썸네일 전에)
   const need = av => Promise.all(layersOf(fix(av)).map(l => load(l.f)));
@@ -67,6 +103,7 @@ World.Avatar = (() => {
   function compose(av){
     av = fix(av); const key = JSON.stringify(av); if (cache.has(key)) return cache.get(key);
     const W = FW * NF, out = new ImageData(W, FH), o = out.data; let done = true;
+    const own = new Uint8Array(W * FH);   // 칸마다 맨 위 층: 1 신발, 2 치마·원피스 천 (다리 Y존·세로선용)
     layersOf(av).forEach(L => {
       const e = imgs[L.f]; if (!e || !e.data){ load(L.f); done = false; return; }
       const src = e.data.data, SW = e.data.width, ms = L.mp.map(([slot, sp]) => colorMap(slot, sp, av));
@@ -78,8 +115,10 @@ World.Avatar = (() => {
         const d = (y * W + x) * 4;
         if (a < 255 && o[d + 3]){ const t = a / 255; o[d] += (r - o[d]) * t; o[d + 1] += (g - o[d + 1]) * t; o[d + 2] += (b - o[d + 2]) * t; continue; }
         o[d] = r; o[d + 1] = g; o[d + 2] = b; o[d + 3] = 255;
+        own[y * W + x] = L.shoe ? 1 : L.sk ? 2 : 0;
       }
     });
+    legFix(o, own, W); lastOwn = own;
     const c = document.createElement('canvas'); c.width = W; c.height = FH; c.getContext('2d').putImageData(out, 0, 0);
     if (done) cache.set(key, c);
     return c;
@@ -93,7 +132,7 @@ World.Avatar = (() => {
     const u = c.toDataURL(); if (cache.has(JSON.stringify(fix(av)))) heads.set(key, u); return u;
   }
   const onLoad = fn => subs.push(fn);
-  return { ready, compose, head, fix, fromLook, random, need, preload, onLoad, meta: AVM, FW, FH, CATS, HOUSES, headBox: { x: HB.x, y: HB.y, s: HB.s },
+  return { ready, compose, debugOwn: () => lastOwn, clear: () => { cache.clear(); heads.clear(); }, head, fix, fromLook, random, need, preload, onLoad, meta: AVM, FW, FH, CATS, HOUSES, headBox: { x: HB.x, y: HB.y, s: HB.s },
            get loaded(){ return !!(imgs[AVM.parts.body[0].f] && imgs[AVM.parts.body[0].f].data); } };
 })();
 let sc;
