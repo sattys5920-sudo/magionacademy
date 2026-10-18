@@ -198,6 +198,19 @@ def place_head(lay, fr, a, chin=None, nx=None):
     if chin is None: chin, nx = chin_neck(a)
     lay.paste(fr, a, int(round(NECKX - nx)), CHIN - chin)
     return int(round(NECKX - nx)), CHIN - chin
+def face_left(a, ch, k):
+    """옆모습 얼굴 앞(왼쪽) 윤곽: 눈 높이 줄들에서 피부가 시작하는 x"""
+    xs = [np.nonzero(k['skin'][y])[0].min() for y in range(ch - 8, ch - 3) if k['skin'][y].any()]
+    return float(np.median(xs)) if xs else None
+SIDE_REF = {}
+def side_nx(a, ch, k):
+    """눈·입 밑그림(까까머리 13번)과 얼굴 앞 윤곽이 같은 자리에 오도록 목 x를 정해요"""
+    if 'ref' not in SIDE_REF:
+        b = head_cell(SIDE[12], reduce_f=.55, band=True)[:, ::-1]; bch, bnx = chin_neck(b)
+        SIDE_REF['ref'] = face_left(b, bch, kinds(b[..., :3])) - bnx
+    fl = face_left(a, ch, k); _, nx = chin_neck(a)
+    return nx if fl is None else fl - SIDE_REF['ref']
+SIDE_FIX = {3: 1, 26: 1, 30: 1, 20: 1, 5: 1, 14: 1}   # 눈 높이에서 얼굴이 살짝 들어간 머리: 1px 더 왼쪽으로
 def hair_layers(n):
     O, U, S = Lay(), Lay(), Lay()
     views = []
@@ -216,7 +229,7 @@ def hair_layers(n):
         if cn is None:   # 뒷모습(피부가 안 보임): 앞모습의 머리 위→턱 높이, 가로는 가운데
             ys, xs = np.nonzero(a[..., 3]); cn = (ys.min() + (fch - ftop), (xs.min() + xs.max()) / 2)
         ch, nx = cn; k = kinds(a[..., :3])
-        if vi == 2: nx += SIDE_SHIFT.get(n, 0)   # 옆얼굴 위치 맞추기
+        if vi == 2: nx = nx + 1 if n == 7 else side_nx(a, ch, k) + SIDE_FIX.get(n, 0)   # 옆얼굴: 얼굴 앞 윤곽을 밑그림 머리와 같은 자리에 (8번은 앞모습 칸이라 그대로)
         head = a.copy(); head[ch + 2:, :, 3] = 0                   # 목은 몸 것을 써요
         skin_m = k['skin']; hair_m = ~k['skin']
         under = np.zeros(a.shape[:2], bool); under[ch + 1:] = True    # 턱 아래 머리카락은 몸 뒤로 (앞모습만)
@@ -230,7 +243,6 @@ def hair_layers(n):
             place_head(S, fr, sk, ch, nx); place_head(O, fr, hO, ch, nx); place_head(U, fr, hU, ch, nx)
     return O, U, S
 # ---------- 눈·입 (앞 얼굴 기준) ----------
-SIDE_SHIFT = {9: 4, 7: 1, 33: 1, 3: 2, 25: 2, 26: 2, 38: 2, 36: 2, 0: 1}   # 옆얼굴 위치 맞추기 (눈이 얼굴 밖으로 나가지 않게)
 SIDE_KEEP = {6}            # 이미 왼쪽을 보는 옆모습 (7번)
 SIDE_DX, SIDE_IN = -2, 1   # 옆모습 눈: 왼쪽으로 옮김, 먼 눈은 안쪽으로
 # ---------- 눈·코·입: 선명한 픽셀로, 생성 그림 얼굴 비율에 맞춰 같은 자리에 ----------
@@ -286,13 +298,13 @@ def eye_layers(i, cells=None):
     """눈: 생성 시트(face.py)에서 뽑아 게임 얼굴 크기로"""
     E, B = Lay(), Lay()
     for side, base in ((False, 0), (True, 6)):
-        for g, x, y in face.eyes(i, side, NECKX, CHIN):
+        for g, x, y in face.eyes(i, side):
             for j in range(3): E.paste(base + j, g, x, y)
     return E, B
 def mouth_layer(i):
     M = Lay()
     for side, base in ((False, 0), (True, 6)):
-        for g, x, y in face.mouth(i, side, NECKX, CHIN):
+        for g, x, y in face.mouth(i, side):
             for j in range(3): M.paste(base + j, g, x, y)
     return M
 def nose_layer():
@@ -305,7 +317,7 @@ HAIR_N = ['단발', '긴 생머리', '높은 양갈래', '올림머리', '짧은
           '모히칸', '두 갈래 땋기', '반묶음', '드릴 컬', '짧은 곱슬', '올백', '정수리 묶음', '복슬 짧은 머리', '옆으로 넘김', '옆 포니테일',
           '바닥까지 긴 머리', '바가지 머리', '양쪽 경단', '콘로', '더듬이와 경단', '한쪽 눈 가림', '낮은 옆 포니테일', '마녀 산발', '단정한 앞머리', '별 모양 경단']
 EYE_N = ['반짝 동글', '큰 애니', '졸린 눈', '웃는 눈', '고양이 눈', '별 눈동자', '하트 눈동자', '윙크', '단호한 눈', '눈물 그렁', '빙글빙글', '점 눈', '뱀파이어 눈', '순정 반짝', '질끈 감은 눈']
-MOUTH_N = ['미소', '고양이 입', '시무룩', '송곳니 미소', '활짝 웃음', '놀란 입', '메롱', '일자 입', '이 드러낸 웃음', '울먹']
+MOUTH_N = ['미소', '고양이 입', '시무룩', '송곳니 미소', '활짝 웃음', '놀란 입', '메롱', '일자 입', '이 드러낸 웃음', '울먹', '씩 웃음', '뽀뽀', '깜짝 O', '이 악물기', '방긋']
 if __name__ == '__main__':
     rows, parts = [], dict(hair=[], eyes=[], mouth=[], uni=[])
     def add(lay): rows.append(lay.row()); return len(rows) - 1
@@ -316,7 +328,7 @@ if __name__ == '__main__':
         parts['hair'].append(dict(n=HAIR_N[n], L=[[add(O), 'hair', 'hairO'], [add(U), 'hair', 'hairU'], [add(S), 'skin', 'head']]))
     for i in range(15):
         E, B = eye_layers(i); parts['eyes'].append(dict(n=EYE_N[i], L=[[add(E), 'eye', 'face'], [add(B), None, 'face']]))
-    for i in range(10): parts['mouth'].append(dict(n=MOUTH_N[i], L=[[add(mouth_layer(i)), None, 'face']]))
+    for i in range(15): parts['mouth'].append(dict(n=MOUTH_N[i], L=[[add(mouth_layer(i)), None, 'face']]))
     nose_row = add(nose_layer())
     # 발이 그림 아래 끝에 닿게: 교복 층에서 가장 아래 줄을 찾아 전부 내려요 (위가 잘리지 않을 만큼)
     feet = max(int(np.nonzero(rows[r][..., 3].any(1))[0].max()) for p in parts['uni'] for r, sl, z in p['L'])
