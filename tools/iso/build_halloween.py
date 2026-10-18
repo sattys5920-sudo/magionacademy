@@ -9,11 +9,11 @@ L.update(indoor=True, spawnIn=[9, 12], vw=185, fill='#0C0715', bgSrc='art/iso/pc
 MAPS = {'campus': {'meta': camp}, 'lab': {'meta': L}}
 for k in ('candy', 'craft', 'toxic', 'barn', 'pen'):
     MAPS[k] = {'meta': json.load(open(I + '/out/%s.json' % k))}
-# 기숙사 휴게실 (dorms.py): 4곳 × 6단계, 개인 방 4개. 들어갈 때 불러와요 (lazy)
+# 기숙사 휴게실 (dorms.py): 4곳 × 6단계, 개인 방·복도 4개씩. 들어갈 때 불러와요 (lazy)
 DK = ('witch', 'vamp', 'wolf', 'ghost')
 for kd in DK:
     for n in range(1, 7): MAPS['dorm_%s_%d' % (kd, n)] = {'meta': dict(json.load(open(I + '/out/dorm_%s_%d.json' % (kd, n))), lazy=True)}
-    MAPS['myroom_' + kd] = {'meta': dict(json.load(open(I + '/out/myroom_%s.json' % kd)), lazy=True)}
+    for pre in ('myroom_', 'hall_'): MAPS[pre + kd] = {'meta': dict(json.load(open(I + '/out/%s%s.json' % (pre, kd))), lazy=True)}
 # 기숙사 건물 = 게임의 네 기숙사 (마녀관 Emberkiln, 뱀파이어관 Moonhollow, 늑대관 Duskfold, 유령관 Dewmorn)
 DORM = {'dorm_witch': ('ember', 'Emberkiln 기숙사', '마녀관'), 'dorm_vamp': ('moon', 'Moonhollow 기숙사', '뱀파이어관'),
         'dorm_wolf': ('dusk', 'Duskfold 기숙사', '늑대관'), 'dorm_ghost': ('dew', 'Dewmorn 기숙사', '유령관')}

@@ -631,7 +631,7 @@ World.onPet = id => { const i = me.cr.findIndex(c => c.id === id); if (i < 0) re
 function enterWorld(){
   document.body.classList.add('inworld'); app.innerHTML = ''; sheetOn = false; app.classList.remove('open');
   World.setPlayer(me.nick, avOf(me)); World.start(); World.resize();
-  syncPens(); syncRoom(); syncHalls(); hud();
+  syncPens(); syncRoom(); syncHalls(); syncHallNames(); hud();
 }
 // 바로 가기: 그 장소로 순간 이동한 다음 화면을 열어요
 const goPlace = (mapId, obj, t, s) => { closeSheet(); World.teleport(mapId, obj, () => openSheet(t, s)); };
@@ -658,7 +658,11 @@ const FLAVOR = {
 World.onAct = (mapId, o, a) => {
   if (!me) return;
   const label = a[1], dh = Object.keys(HOUSE_DORM).find(k => HOUSE_DORM[k] === mapId);
-  if (label === '잠자고 내일로'){ openSheet('home', 'dorm'); sleep(); return; }
+  if (label === '잠자고 내일로' || label === '방명록 보기'){
+    const v = World.roomOwner();
+    if (v && !v.own){ if (label === '방명록 보기'){ if (solo) return '<b>방명록</b><br>친구 방명록은 온라인에서 남길 수 있어요'; openSheet('home'); openVisit(v.uid); return; } return `<b>${esc(v.name)}의 침대</b><br>남의 침대에서는 잘 수 없어요`; }
+    openSheet('home', 'dorm'); if (label === '잠자고 내일로') sleep(); return;
+  }
   if (label === '휴게실 꾸미기'){
     if (dh && dh !== me.house) return `<b>${HOUSES[dh].name} 휴게실 게시판</b><br>${commonStage(dh)}단계 「${HALL_NAMES[dh][commonStage(dh) - 1]}」 · 이 기숙사 학생들이 꾸며요`;
     return openSheet('home', 'common');
@@ -1232,7 +1236,7 @@ function renderRanch(){
 // ===== 기숙사: 내 방 (가구 놓기) · 휴게실 (기숙사생이 함께 꾸미기) =====
 let dormMsg = '', furnCat = '전체';
 const myRoomId = () => HOUSE_DORM[me.house].replace('dorm_', 'myroom_');
-const inMyRoom = () => World.where() === myRoomId();
+const inMyRoom = () => World.where() === myRoomId() && !!World.roomOwner()?.own;
 function syncRoom(){ World.setFurniture((me.room || []).map(r => ({ id: r.id, k: FIDX[r.f], x: r.x, y: r.y }))); }
 // 가구 놓기: 내 방이 아니면 먼저 내 방으로 가요
 function placeFurn(fid){
@@ -1246,13 +1250,25 @@ function placeFurn(fid){
   if (inMyRoom()) go(); else World.teleport(myRoomId(), 'bed', go);
 }
 World.onFurn = id => {
+  const v = World.roomOwner();
+  if (v && !v.own){ const f = (v.furn || []).find(x => x.id === id), F_ = f && FURN[f.k]; return F_ ? `<b>${F_.name}</b><br>${esc(v.name)}의 가구 · 아늑함 +${F_.pts}` : null; }
   const r = me.room.find(x => x.id === id); if (!r) return null; const F_ = FURN_BY[r.f];
   return { text: `<b>${F_.name}</b><br>아늑함 +${F_.pts}`, btn: '가방에 넣기', fn: () => {
     me.room = me.room.filter(x => x.id !== id); me.fbag[r.f] = (me.fbag[r.f] || 0) + 1; save(); syncRoom(); World.cancelPlace();
     toast(`${F_.name}을(를) 가방에 넣었어요`);
   } };
 };
-World.onHouseDoor = h => h === me.house ? true : `<b>${HOUSES[h].name} 기숙사</b><br>이 기숙사 학생만 들어갈 수 있어요`;
+// 기숙사 복도: 기숙사마다 학생 3명의 방 (들어온 순서대로 문 번호)
+const houseMembers = h => solo ? (h === me.house ? ['me'] : []) : Object.keys({ ...playersList, [uid]: me }).filter(id => (id === uid ? me : playersList[id])?.house === h).sort().slice(0, HOUSE_CAP);
+const playerOf = id => id === 'me' || id === uid ? me : playersList[id];
+const roomFurn = p => (p.room || []).filter(r => FURN_BY[r.f]).map(r => ({ id: r.id, k: FIDX[r.f], x: r.x, y: r.y }));
+function syncHallNames(){ World.setHallNames(Object.fromEntries(HOUSE_KEYS.map(h => [h, houseMembers(h).map(id => playerOf(id)?.nick || '친구')]))); }
+World.onRoomDoor = (h, i) => {
+  const id = houseMembers(h)[i]; if (!id) return `<b>빈 방</b><br>아직 주인이 없어요`;
+  const p = playerOf(id), own = id === 'me' || id === uid;
+  return { own, uid: id, name: p.nick, furn: own ? null : roomFurn(p) };
+};
+const roomIdxOf = id => { const p = playerOf(id); return p ? houseMembers(p.house).indexOf(id) : -1; };
 function renderDorm(){
   const cozy = cozyOf(me), H = HOUSES[me.house];
   const guest = Object.entries(myGuest).sort((a, b) => b[1].at - a[1].at);
@@ -1457,6 +1473,7 @@ function renderVisit(){
   frame('dorm', `${esc(p.nick)}의 방`, `${H.name} ${roomNo(p.house, visitUid)}호 · ${onlineList[visitUid] ? '접속 중' : '외출 중'}`, `
     <section class="sec">
       <div class="sec-h"><h3>${esc(p.nick)}의 방 구경</h3>${backBtn}</div>
+      ${World.roomOwner()?.uid === visitUid ? '' : `<button class="btn go px" id="walkIn" style="margin-bottom:8px">${ic('bed')}${HOUSES[p.house]?.name || ''} 기숙사 복도로 걸어가기</button>`}
       <div class="meter">${ic('heart', 'transform:scale(.8);margin:-4px')}${segs(Math.min(cozy, COZY_MAX), COZY_MAX, '#FF9DBA')}<span class="s b">${cozy}</span></div>
       ${placed.length ? `<div class="grid" style="grid-template-columns:repeat(4,1fr)">${placed.map(([fid, n]) => `<div class="cell" style="min-height:80px">${furnPic(fid, 40)}<span class="s">${FURN_BY[fid].name}</span>${n > 1 ? `<span class="n">${n}</span>` : ''}</div>`).join('')}</div>` : '<div class="hint">아직 가구가 없는 휑한 방이에요</div>'}
     </section>
@@ -1476,6 +1493,7 @@ function renderVisit(){
       ${guest.length ? `<div class="box px">${guest.map(([id, g]) => guestRow(id, g, false)).join('')}</div>` : '<div class="hint">첫 번째 손님이 되어 주세요!</div>'}
     </section>`, { tint: H.col });
   $('#back').onclick = leaveVisit;
+  const wi = $('#walkIn'); if (wi) wi.onclick = () => { const i = roomIdxOf(visitUid), h = p.house; leaveVisit(); if (i >= 0) World.goRoom(h, i); };
   bindBreed(p);
   on('[data-visit]', b => openVisit(b.dataset.visit));
   on('[data-gift]', b => { const t = $('#gtext')?.value || ''; giftPick = giftPick === b.dataset.gift ? null : b.dataset.gift; renderVisit(); $('#gtext').value = t; });
@@ -1992,7 +2010,7 @@ async function boot(){
       F.onValue(F.ref(db, 'online'), s => { onlineList = s.val() || {}; if (tab === 'home' && !sub) render(); });
       F.onValue(F.ref(db, 'market'), s => { marketList = s.val() || {}; if (tab === 'market') render(); });
       F.onValue(F.ref(db, 'coop'), s => { coop = s.val() || {}; if (tab === 'market') render(); });
-      F.onValue(F.ref(db, 'players'), s => { playersList = s.val() || {}; syncPens(); if (tab === 'home' && !sub) render(); });
+      F.onValue(F.ref(db, 'players'), s => { playersList = s.val() || {}; syncPens(); syncHallNames(); if (tab === 'home' && !sub) render(); });
       F.onValue(F.query(F.ref(db, 'guest/' + uid), F.limitToLast(20)), s => { myGuest = s.val() || {}; if (sub === 'dorm') render(); });
       F.onValue(F.ref(db, 'houses'), s => { const old = commonStage(me.house); halls = s.val() || {}; syncHalls(); if (commonStage(me.house) > old) toast(`우리 휴게실이 ${commonStage(me.house)}단계가 됐어요!`); if (sub === 'common') render(); });
       enterWorld();

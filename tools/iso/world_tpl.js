@@ -152,25 +152,39 @@ function setMap(id, spawn){
   rebuildObjs();
   if (!spawn || !free(spawn[0], spawn[1])) spawn = M.spawnIn || M.start || spawn;
   me.x = spawn[0]; me.y = spawn[1]; me.path = []; me.view = 0; me.flip = false;
-  if (!crowd[id]){ crowd[id] = []; const n = id === 'campus' ? 9 : (id === 'barn' || id === 'pen' || M.furn) ? 0 : 2; for (let i = 0; i < n; i++){ for (let k = 0; k < 50; k++){ const x = Math.floor(Math.random() * M.NX), y = Math.floor(Math.random() * M.NY); if (free(x, y)){ crowd[id].push(mk(NAMES[(i + (id === 'lab' ? 3 : 0)) % NAMES.length], World.Avatar.random(), x, y, false)); break; } } } }
+  if (!crowd[id]){ crowd[id] = []; const n = id === 'campus' ? 9 : (id === 'barn' || id === 'pen' || M.furn || M.rooms) ? 0 : 2; for (let i = 0; i < n; i++){ for (let k = 0; k < 50; k++){ const x = Math.floor(Math.random() * M.NX), y = Math.floor(Math.random() * M.NY); if (free(x, y)){ crowd[id].push(mk(NAMES[(i + (id === 'lab' ? 3 : 0)) % NAMES.length], World.Avatar.random(), x, y, false)); break; } } } }
   people.length = 0; people.push(me, ...crowd[id]);
   if (M.pets) people.push(...spawnPets());
   tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : ''); d.textContent = p.name; if (p.pet) d.style.display = 'none'; world.appendChild(d); return d; });
   penTags.forEach(t => t.remove()); penTags = [];
+  roomTags.forEach(t => t.remove()); roomTags = [];
+  if (M.rooms) roomTags = M.rooms.map(rm => { const nm = (hallNames[M.house] || [])[rm.i]; const d = document.createElement('div'); d.className = 'ntag' + (nm && nm === me.name ? ' me' : ''); d.textContent = nm || '빈 방'; world.appendChild(d); return d; });
   if (M.pens) penTags = M.pens.map(pn => { const d = document.createElement('div'); d.className = 'ntag' + (pn.i === myPen ? ' me' : ''); d.textContent = penNames[pn.i] || '빈 우리'; world.appendChild(d); return d; });
   document.getElementById('place').textContent = M.title; document.getElementById('sub').textContent = M.sub;
+  if (M.furn){ document.getElementById('place').textContent = roomView.own ? '내 방' : (roomView.name || '친구') + '의 방'; document.getElementById('sub').textContent = roomView.own ? M.sub : '방명록에 한 줄 남겨 봐요'; }
   camX = camY = null; hideBubble();
 }
 // ---------- 개인 방 가구 (tools/iso/furniture.py) ----------
 const FURN = __FURN__; World.FURN = FURN;
-let FURN_IMG = null, FURN_PX = null, furnData = [], flats = [], placing = null;
+let FURN_IMG = null, FURN_PX = null, furnData = [], flats = [], placing = null, roomView = { own: true };
+const shownFurn = () => roomView.own ? furnData : (roomView.furn || []);
 World.onFurn = null;      // (가구 id) 놓은 가구를 눌렀을 때 → 글이면 말풍선, {text, btn, fn}이면 버튼 말풍선
 World.onPlaced = null;
 function furnObjs(){
-  return furnData.map(f => { const it = FURN.items[f.k]; if (!it) return null; const [px, py] = P(f.x, f.y);
+  return shownFurn().map(f => { const it = FURN.items[f.k]; if (!it) return null; const [px, py] = P(f.x, f.y);
     return { name: 'furn', fid: f.id, furn: it, box: [f.x, f.y, f.x + it.w, f.y + it.d], x: px - it.ax, y: py - it.ay, sx: it.sx, sy: 0, sw: it.sw, sh: it.sh, solid: !!it.solid, flat: !!it.flat }; }).filter(Boolean);
 }
-World.setFurniture = list => { furnData = list || []; if (M && M.furn){ rebuildObjs(); } };
+World.setFurniture = list => { furnData = list || []; if (M && M.furn && roomView.own){ rebuildObjs(); } };
+World.roomOwner = () => (M && M.furn) ? roomView : null;   // 지금 보고 있는 방 주인 { own, uid, name }
+World.onRoomDoor = null;   // (기숙사, 문 번호) → { own, uid, name, furn } 이면 들어가요, 글이면 말풍선
+let hallNames = {};
+World.setHallNames = names => { hallNames = names || {}; if (M && M.rooms) roomTags.forEach((t, i) => { t.textContent = (hallNames[M.house] || [])[M.rooms[i].i] || '빈 방'; }); };
+// 바로 가기: 그 기숙사 복도의 i번째 방으로
+World.goRoom = (house, i) => {
+  const hid = 'hall_' + ({ ember: 'witch', moon: 'vamp', dusk: 'wolf', dew: 'ghost' })[house]; if (!MAPS[hid]) return;
+  const d = MAPS[hid].meta.objs.find(o => o.door && o.door.room === i); if (!d) return;
+  World.teleport(hid, null, () => { me.x = d.door.tile[0]; me.y = d.door.tile[1] + 1; camX = null; goDoor(d.door, d); });
+};
 // 놓을 수 있나: 방 안, 막힌 곳·문·나 있는 칸이 아니어야 해요 (바닥 러그끼리는 겹치지 않게)
 function canPlace(k, x, y, skip){
   const it = FURN.items[k]; if (!it) return false;
@@ -183,11 +197,11 @@ function canPlace(k, x, y, skip){
   return true;
 }
 // 가구 놓기: 바닥을 누르면 그 자리에 미리 보여 주고, [여기 놓기]를 누르면 놓아요
-World.place = (k, cb) => { placing = { k, at: null, cb }; hideBubble(); showBubble({ x: P(me.x + .5, me.y + .5)[0], y: P(me.x + .5, me.y + .5)[1] - 30, sw: 0 }, `<b>${FURN.items[k].name}</b><br>놓을 곳을 눌러요`, '그만두기', () => { placing = null; hideBubble(); }); };
+World.place = (k, cb) => { if (!roomView.own) return; placing = { k, at: null, cb }; hideBubble(); showBubble({ x: P(me.x + .5, me.y + .5)[0], y: P(me.x + .5, me.y + .5)[1] - 30, sw: 0 }, `<b>${FURN.items[k].name}</b><br>놓을 곳을 눌러요`, '그만두기', () => { placing = null; hideBubble(); }); };
 World.cancelPlace = () => { placing = null; hideBubble(); };
 // ---------- 사육장: 우리 문 · 이름표 · 내 생물 ----------
 const CR_SRC = __CRSRC__, CR_W = 40, CR_H = 34;
-let CR_IMG = null, penNames = [], myPen = 0, petData = [], penTags = [];
+let CR_IMG = null, penNames = [], myPen = 0, petData = [], penTags = [], roomTags = [];
 const petPos = {};
 World.onPenDoor = null;   // (우리 번호) → true면 들어가요, 글이면 말풍선
 World.onPet = null;       // (생물 id) 생물을 눌렀을 때
@@ -235,7 +249,7 @@ function drawPet(p){
   if (p.flip){ cx.translate(dx, dy); cx.scale(-1, 1); cx.drawImage(S, -w / 2, 0, w, h); } else cx.drawImage(S, Math.round(dx - w / 2), dy, w, h);
   cx.restore();
 }
-let tags = [], bubble = null, pending = null, busy = false, camX = null, camY = null, forceNight = null, backTo = null;
+let tags = [], bubble = null, pending = null, busy = false, camX = null, camY = null, forceNight = null, backStack = [];
 function showBubble(o, text, btn, fn){
   hideBubble();
   const b = document.createElement('div'); b.className = 'bubble'; b.innerHTML = text + (btn ? `<button>${btn}</button>` : '');
@@ -254,15 +268,19 @@ function goDoor(door, o){
     const r = World.onPenDoor(door.pen);
     if (r !== true){ const [bx, by] = P(door.tile[0] + .5, door.tile[1] + .5); showBubble({ x: bx, y: by - 26, sw: 0 }, r); return; }
   }
-  if (door.house && World.onHouseDoor){   // 개인 방: 우리 기숙사 학생만
-    const r = World.onHouseDoor(door.house);
-    if (r !== true){ const [bx, by] = P(door.tile[0] + .5, door.tile[1] + .5); showBubble({ x: bx, y: by - 26, sw: 0 }, r); return; }
+  let label = door.label, view = null;
+  if (door.room !== undefined){   // 기숙사 복도의 학생 방 문
+    const r = World.onRoomDoor ? World.onRoomDoor(M.house, door.room) : null;
+    if (!r || typeof r === 'string'){ const [bx, by] = P(door.tile[0] + .5, door.tile[1] + .5); showBubble({ x: bx, y: by - 30, sw: 0 }, r || '<b>빈 방</b>'); return; }
+    view = r; label = r.own ? '내 방' : r.name + '의 방';
   }
   if (!door.to){ showBubble(o, `<b>${door.label}</b><br>아직 문이 잠겨 있어요 · 곧 열려요`); return; }
   let to = door.to, spawn = door.spawn;
-  if (to === '@back'){ to = backTo ? backTo.map : 'dorm_' + rmap.split('_')[1]; spawn = backTo ? backTo.pos : null; }
-  else if (door.house) backTo = { map, pos: [Math.round(me.x), Math.round(me.y)] };
-  busy = true; fadeEl.textContent = door.label; fadeEl.style.opacity = 1;
+  // 돌아가는 문: 들어온 순서를 거꾸로 (없으면 그 방의 바깥 방으로)
+  if (to === '@back'){ const b = backStack.pop(); to = b ? b.map : (M.backTo || 'campus'); spawn = b ? b.pos : null; label = (MAPS[real(to)] || MAPS.campus).meta.title; }
+  else if (door.back) backStack.push({ map, pos: [Math.round(me.x), Math.round(me.y + (door.tile[1] === 0 ? 1 : 0))] });
+  if (view) roomView = view;
+  busy = true; fadeEl.textContent = label; fadeEl.style.opacity = 1;
   const t0 = Date.now(); ensureMap(to).then(() => setTimeout(() => { setMap(to, spawn); setTimeout(() => { fadeEl.style.opacity = 0; busy = false; }, 150); }, Math.max(0, 380 - (Date.now() - t0))));
 }
 function goto(p, gx, gy){ const r = path(Math.round(p.x), Math.round(p.y), gx, gy); if (r){ p.path = r; return true; } return false; }
@@ -415,6 +433,7 @@ function frame(now){
   if (!M.indoor) spooky(now, dt, view);
   out.setTransform(1, 0, 0, 1, 0, 0);
   const k = cv.clientWidth / VW;
+  if (M.rooms) M.rooms.forEach((rm, i) => { const [sx, sy] = P(rm.door[0] + .5, rm.door[1] + .5); roomTags[i].style.left = (sx - ix) * k + 'px'; roomTags[i].style.top = (sy - 52 - iy) * k + 'px'; });
   if (M.pens) M.pens.forEach((pn, i) => { const [sx, sy] = P(pn.sign[0] + .5, pn.sign[1] + .5); penTags[i].style.left = (sx - ix) * k + 'px'; penTags[i].style.top = (sy - 20 - iy) * k + 'px'; });
   people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); tags[i].style.left = (sx - ix) * k + 'px'; tags[i].style.top = (sy - World.Avatar.FH / 2 + 2 - iy) * k + 'px'; });
   if (bubble){ const o = bubble.o; bubble.el.style.left = Math.max(90, Math.min(cv.clientWidth - 90, (o.x + o.sw / 2 - ix) * k)) + 'px'; bubble.el.style.top = Math.max(70, (o.y - 2 - iy) * k) + 'px'; }
@@ -480,7 +499,7 @@ World.teleport = (id, objName, then) => {
   if (!started || busy) return;
   busy = true; fadeEl.textContent = MAPS[real(id)].meta.title; fadeEl.style.opacity = 1;
   ensureMap(id).then(() => setTimeout(() => {
-    if (map !== id){ if (MAPS[real(id)].meta.furn && map.startsWith('dorm_')) backTo = { map, pos: [Math.round(me.x), Math.round(me.y)] }; setMap(id, MAPS[real(id)].meta.start || MAPS[real(id)].meta.spawnIn); }
+    if (map !== id || (MAPS[real(id)].meta.furn && !roomView.own)){ backStack = []; roomView = { own: true }; setMap(id, MAPS[real(id)].meta.start || MAPS[real(id)].meta.spawnIn); }
     const o = M.objs.find(x => x.name === objName);
     if (o){ const tiles = []; for (let a = Math.floor(o.box[0]); a < Math.ceil(o.box[2]); a++) for (let b = Math.floor(o.box[1]); b < Math.ceil(o.box[3]); b++) tiles.push([a, b]); const c = near(tiles)[0]; if (c){ me.x = c[0]; me.y = c[1]; me.path = []; camX = null; } }
     setTimeout(() => { fadeEl.style.opacity = 0; busy = false; then && then(); }, 150);

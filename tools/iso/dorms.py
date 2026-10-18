@@ -370,7 +370,7 @@ def common_room(key, n):
     noticeboard(R, NX - 1, NY - 3, T['HC'])
     for o in R.objs:
         if not o['act'] and o['name'] in ACTMAP: o['act'] = ACTMAP[o['name']]
-    R.doors.append(dict(tile=[1, NY - 1], to='myroom_' + kind, label='내 방', spawn=[6, 8], house=key))
+    R.doors.append(dict(tile=[1, NY - 1], to='hall_' + kind, label='기숙사 복도', spawn=[HALL_NX // 2, 4], back=True))
     if key == 'dew':   # 유령관: 바닥에 옅은 안개
         for y in range(R.H):
             for x in range(R.W):
@@ -395,11 +395,41 @@ def my_room(key):
         R.box(img, 9.9, .85, 1.8, .15, 20, '#8A5636', '#5E3826', '#7A4A2E')
         x, y = R.P(10.8, .9); d.ellipse([x - 3, y - 18, x + 3, y - 14], fill=hexc('#E8C060'))
     R.obj('bed', [(10, 1), (11, 1), (10, 2), (11, 2)], bed, act=('내 침대', '잠자고 내일로'))
-    R.exit_to, R.exit_label = '@back', '휴게실'
-    R.extra = dict(vw=180, house=key, furn=True, spawnIn=[6, 8])
+    def lectern(img, d):   # 방명록 받침대
+        R.box(img, 8.35, 8.35, .3, .3, 10, '#5E3826', '#3E2216', '#4A2A1C'); R.box(img, 8.1, 8.25, .8, .5, 3, '#8A5636', '#5E3826', '#7A4A2E', lift=10)
+        x, y = R.P(8.5, 8.5); d.rectangle([x - 4, y - 16, x + 3, y - 13], fill=hexc('#F2E6C8')); d.line([(x, y - 16), (x, y - 13)], fill=hexc('#C8B8A0'))
+    R.obj('gbook', [(8, 8)], lectern, act=('방명록', '방명록 보기'))
+    R.exit_to, R.exit_label = '@back', '기숙사 복도'
+    R.extra = dict(vw=180, house=key, furn=True, spawnIn=[6, 8], backTo='hall_' + kind)
     R.save('myroom_' + kind, '내 방', '침대에서 자요 · 가구를 놓아 꾸며요', [0, 0])
+HALL_NX, HALL_NY, HALL_DOORS = 17, 6, (3, 8, 13)
+def hall_room(key):
+    """기숙사 복도: 학생 방 문 3개 (기숙사마다 3명까지). 문 위 이름표는 게임에서 붙여요"""
+    T = TH[key]; kind = KIND[key]; R = Room(HALL_NX, HALL_NY, 74)
+    base = T['floor'](4) if key != 'dusk' else T['floor'](1)
+    R.floor(rug(base, 0, 2, HALL_NX, 4, T['rug'], border='#C49446')); walls_style(R, T, False)
+    for i, x in enumerate(HALL_DOORS):   # 오른쪽 벽(뒤쪽)에 문 그림
+        u0 = x * 8 - 2
+        def door(u, v, u0=u0, i=i):
+            uu = u - u0
+            if not (0 <= uu < 20 and 0 <= v < 44): return None
+            top = 44 - 10
+            if v > top and (uu - 9.5) ** 2 + (v - top) ** 2 > 100: return None
+            if uu < 2 or uu >= 18 or (v > top and (uu - 9.5) ** 2 + (v - top) ** 2 > 64): return hexc('#3A2116')
+            if uu in (9, 10): return hexc('#4A2A1C')
+            if uu == 14 and 18 <= v <= 20: return hexc('#E8C060')
+            return shade(hexc(T['wain'] if key != 'dusk' else '#8A6040'), .9 + .1 * ((v // 8) % 2))
+        R.wall_fill('R', door)
+        R.doors.append(dict(tile=[x, 0], to='myroom_' + kind, label='학생 방', spawn=[6, 8], room=i, back=True))
+    for u in (HALL_DOORS[0] * 8 + 26, HALL_DOORS[1] * 8 + 26): R.sconce('R', u)
+    R.window('L', 14, glass=T['glass']); R.sconce('L', 36)
+    banner(R, 'R', 2, T['HC'])
+    for (x, y) in ((0, HALL_NY - 1), (HALL_NX - 1, HALL_NY - 1)): R.obj('plant', [(x, y)], plant_draw(R, x, y))
+    R.exit_to, R.exit_label = '@back', '휴게실'
+    R.extra = dict(vw=200, house=key, rooms=[dict(i=i, door=[x, 0]) for i, x in enumerate(HALL_DOORS)], spawnIn=[HALL_NX // 2, HALL_NY - 2], backTo='dorm_' + kind)
+    R.save('hall_' + kind, T['title'].split(' · ')[0] + ' 기숙사 복도', '문을 누르면 그 학생 방에 놀러 가요', [0, 0])
 def main():
     for key in TH:
         for n in range(1, 7): common_room(key, n)
-        my_room(key)
+        my_room(key); hall_room(key)
 if __name__ == '__main__': main()
