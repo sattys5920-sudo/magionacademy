@@ -58,9 +58,9 @@ body:not(.inworld) .fab,body:not(.inworld) .hud{display:none}
 .mlabel.me{background:#FFD866}
 .mhint{text-align:center;font-size:14px;color:#C8B8FF;margin-top:8px}
 .px{clip-path:polygon(0 3px,3px 3px,3px 0,calc(100% - 3px) 0,calc(100% - 3px) 3px,100% 3px,100% calc(100% - 3px),calc(100% - 3px) calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,3px calc(100% - 3px),0 calc(100% - 3px))}
-.ic{display:inline-block;width:32px;height:32px;flex-shrink:0;background:url(art/icons.png?v=2) no-repeat;image-rendering:pixelated;vertical-align:middle}
+.ic{display:inline-block;width:32px;height:32px;flex-shrink:0;background:url(art/icons.png?v=3) no-repeat;image-rendering:pixelated;vertical-align:middle}
 .fc{width:60px;height:66px;flex-shrink:0;background:url(art/faces.png) no-repeat;image-rendering:pixelated}
-.cr{width:120px;height:102px;background:url(art/creatures.png?v=10) no-repeat;image-rendering:pixelated}
+.cr{width:120px;height:102px;background:url(art/creatures.png?v=11) no-repeat;image-rendering:pixelated}
 .b{font-family:'G11B',monospace}.s{font-family:'G7',monospace;font-size:14px;line-height:18px}.sub{color:var(--sub)}
 
 /* 장면과 상단 바 */
@@ -188,16 +188,16 @@ const app = $('#app');
 
 // ===== 데이터 =====
 const ICONS = ['coin','mana','p_red','p_blue','p_green','p_purple','herb','mush','wool','uhair','scale','egg','heart','book','cauldron','clock','bag','owl','star','drop','seed','sprout','can','candle','bed','rune',
-  'p_grow','p_vigor','p_fluff','p_dragon','p_dawn','p_sun','p_dusk','p_moon','mist','sun','pollen','stardust','whisker','batdust','ecto','silk','feather','pseed'];
+  'p_grow','p_vigor','p_fluff','p_dragon','p_dawn','p_sun','p_dusk','p_moon','mist','sun','pollen','stardust','whisker','slime','honey','silk','feather','milk','hegg'];
 const ic = (k, extra='') => { const P = POTION_INFO[k], G = !ICONS.includes(k) && typeof SEED_INFO !== 'undefined' && SEED_INFO[k];
   if (G) return `<i class="ic" style="background-image:url(art/plants.png);background-position:${-32 * (G.ic % 10)}px ${-32 * Math.floor(G.ic / 10)}px;${extra}"></i>`;
   return P ? `<i class="ic" style="background-image:url(art/potions.png);background-position:${-32 * (P.ic % 10)}px ${-32 * Math.floor(P.ic / 10)}px;${extra}"></i>`
     : `<i class="ic" style="background-position:${-32 * ICONS.indexOf(k)}px 0;${extra}"></i>`; };
 const ITEM = {
-  herb:'약초', drop:'달빛 이슬', mush:'보라 버섯', mana:'마력석', wool:'구름양 털', scale:'불도마뱀 비늘', uhair:'유니콘 갈기', egg:'용 알 껍질',
-  whisker:'고양이 수염', batdust:'박쥐 날개 가루', ecto:'유령 젤리', silk:'거미줄 실', feather:'부엉이 깃털', pseed:'호박씨',
+  herb:'약초', drop:'달빛 이슬', mush:'보라 버섯', mana:'마력석', wool:'양털', scale:'도마뱀 비늘', uhair:'토끼털', egg:'용 알 껍질',
+  whisker:'고양이 수염', slime:'두꺼비 점액', honey:'벌꿀', silk:'거미줄 실', feather:'부엉이 깃털', milk:'염소젖', hegg:'달걀',
 };
-const SHORT = { herb:'약초', drop:'이슬', mush:'버섯', mana:'마력석', wool:'털', scale:'비늘', uhair:'갈기', egg:'알 껍질' };
+const SHORT = { herb:'약초', drop:'이슬', mush:'버섯', mana:'마력석', wool:'털', scale:'비늘', uhair:'토끼털', egg:'알 껍질', hegg:'달걀', slime:'점액', milk:'염소젖' };
 // 씨앗 60종: 심으면 같은 id의 식물 재료가 나와요. know 지식이 이만큼 있어야 심을 수 있어요, price 씨앗 값 (자라는 시간은 아래 GROW_RANGE)
 // 아이콘은 art/plants.png (10×6칸, 이 표의 순서대로). 약초·이슬·버섯·마력석은 원래 아이콘을 써요.
 const SEED_LIST = [
@@ -275,7 +275,7 @@ const growMins = (() => {
 const SEED_INFO = Object.fromEntries(SEED_LIST.map((x, i) => [x.id, { ...x, ic: i, mins: growMins[x.id] }]));
 const SEED_TIERS = [...new Set(SEED_LIST.map(x => x.know))];
 SEED_LIST.forEach(x => { ITEM[x.id] = x.mat; });
-const CREATURE_MATS = ['wool','scale','uhair','egg','whisker','batdust','ecto','silk','feather','pseed'];
+const CREATURE_MATS = ['wool','uhair','scale','hegg','whisker','slime','honey','silk','feather','milk','egg'];
 const MATS = [...SEED_LIST.map(x => x.id), ...CREATURE_MATS];
 // 물약 도감 100종: r 재료 3개, pay 주문 보상, col 물약 색, use 마시면 생기는 일, time 그 기숙사 시간에만 끓어요
 // 아이콘은 art/potions.png (10×10칸, 이 표의 순서대로)
@@ -287,7 +287,7 @@ const POTION_LIST = [
   { id:'p_vigor', name:'활력 물약', r:["mana", "scale", "herb"], pay:100, col:'#FF9A2E', use:"마력 +15" },
   { id:'p_fluff', name:'포근 물약', r:["wool", "wool", "drop"], pay:90, col:'#FFB8D2', use:"사육장 생물 모두 애정 +1" },
   { id:'p_purple', name:'반짝 물약', r:["herb", "drop", "uhair"], pay:280, col:'#B47AFF', desc:"반 공동 의뢰에 쓰여요" },
-  { id:'p_dragon', name:'용기의 물약', r:["egg", "scale", "mana"], pay:320, col:'#C8323C', desc:"아기 용이 준 껍질로만 만들 수 있어요" },
+  { id:'p_dragon', name:'용기의 물약', r:["egg", "scale", "mana"], pay:320, col:'#C8323C', desc:"드래곤이 두고 간 알 껍질로만 만들 수 있어요" },
   { id:'p_dawn', name:'새벽빛 물약', r:["drop", "drop", "herb"], pay:160, col:'#FFEFA0', time:"dew", desc:"새벽에만 맑게 끓어요" },
   { id:'p_sun', name:'한낮의 물약', r:["scale", "scale", "herb"], pay:160, col:'#FFC81E', time:"ember", desc:"한낮의 열기로 끓여요" },
   { id:'p_dusk', name:'노을 물약', r:["uhair", "uhair", "wool"], pay:180, col:'#FF7A5C', time:"dusk", desc:"해 질 녘에만 색이 바뀌어요" },
@@ -394,16 +394,16 @@ const KNOW_PER_HINT = 3;
 // ===== 생물: 10종 · 내 사육장 최대 20마리 · 애정 20 (5마다 보상 단계) · 부화실 · 색 섞기 =====
 // 그림은 creatures.png의 같은 칸 (10번째 칸 다음이 알). prod: 재료가 생기는 간격, hatch: 알이 깨는 시간, grow: 어른이 되는 시간 (모두 분)
 const CREATURES = [
-  { name:'뭉게', kind:'구름양', baby:'아기 구름양', food:'약초', mat:'wool', bg:'#E6F0FF', prod:30, hatch:20, grow:60, egg:60, names:['몽실','솜사탕','구름이','포실','뭉치'] },
-  { name:'별사탕', kind:'유니콘', baby:'아기 유니콘', food:'각설탕', mat:'uhair', bg:'#F6E6FF', prod:120, hatch:60, grow:240, egg:300, names:['반짝이','무지개','설탕','별빛','은하'] },
-  { name:'불씨', kind:'불도마뱀', baby:'아기 불도마뱀', food:'숯', mat:'scale', bg:'#FFE8D8', prod:60, hatch:40, grow:120, egg:150, names:['모닥','숯돌이','불꽃','화롯','따끈'] },
-  { name:'초롱', kind:'용', baby:'아기 용', food:'고기', mat:'egg', bg:'#E2F6E6', prod:360, hatch:180, grow:720, egg:800, names:['비늘','용용','초록','쿵쿵','미르'] },
-  { name:'먹물', kind:'검은 고양이', baby:'아기 고양이', food:'생선', mat:'whisker', bg:'#ECE6F6', prod:45, hatch:30, grow:90, egg:100, names:['까망','나비','밤톨','야옹','깜지'] },
-  { name:'박박', kind:'박쥐', baby:'아기 박쥐', food:'과일', mat:'batdust', bg:'#E8E2F2', prod:60, hatch:30, grow:120, egg:120, names:['파닥','밤비','쪼꼬','콩콩','날개'] },
-  { name:'부우', kind:'꼬마 유령', baby:'아기 유령', food:'달빛 사탕', mat:'ecto', bg:'#EEF4FF', prod:180, hatch:90, grow:360, egg:400, names:['살랑','몽글','하양','둥실','쉿쉿'] },
-  { name:'줄줄', kind:'거미', baby:'아기 거미', food:'벌레 젤리', mat:'silk', bg:'#F0E6F4', prod:40, hatch:25, grow:90, egg:90, names:['실뭉치','여덟','폭신','거미줄','보송'] },
-  { name:'부엉', kind:'부엉이', baby:'아기 부엉이', food:'씨앗', mat:'feather', bg:'#F6EEE2', prod:120, hatch:60, grow:240, egg:250, names:['깃털','동글','부엉','도토리','책벌레'] },
-  { name:'잭잭', kind:'호박 정령', baby:'아기 호박 정령', food:'퇴비', mat:'pseed', bg:'#FFF0DE', prod:90, hatch:45, grow:180, egg:200, names:['호박이','주황','잭','통통','덩굴'] },
+  { name:'뭉게', kind:'양', baby:'아기 양', food:'건초', mat:'wool', bg:'#E6F0FF', prod:30, hatch:20, grow:60, egg:60, names:['몽실','솜사탕','구름이','포실','뭉치'] },
+  { name:'콩떡', kind:'토끼', baby:'아기 토끼', food:'당근', mat:'uhair', bg:'#F6E6FF', prod:60, hatch:30, grow:120, egg:120, names:['깡총','솜털','찹쌀','보송','토토'] },
+  { name:'초롱', kind:'도마뱀', baby:'아기 도마뱀', food:'귀뚜라미', mat:'scale', bg:'#FFE8D8', prod:90, hatch:45, grow:180, egg:180, names:['살금','모닥','꼬리','따끈','도롱'] },
+  { name:'꼬꼬', kind:'닭', baby:'병아리', food:'모이', mat:'hegg', bg:'#FFF6DC', prod:40, hatch:25, grow:90, egg:80, names:['삐약','꼬순','노랑','톡톡','꼬댁'] },
+  { name:'먹물', kind:'검은 고양이', baby:'아기 고양이', food:'생선', mat:'whisker', bg:'#ECE6F6', prod:120, hatch:60, grow:240, egg:250, names:['까망','나비','밤톨','야옹','깜지'] },
+  { name:'개굴', kind:'두꺼비', baby:'올챙이', food:'날벌레', mat:'slime', bg:'#E6F2DC', prod:90, hatch:40, grow:180, egg:160, names:['울퉁','풀잎','개구','퐁당','방울'] },
+  { name:'붕붕', kind:'꿀벌', baby:'아기 꿀벌', food:'꽃', mat:'honey', bg:'#FFF2D0', prod:60, hatch:30, grow:120, egg:140, names:['윙윙','꿀단지','호박엿','노랑','달콤'] },
+  { name:'줄줄', kind:'거미', baby:'아기 거미', food:'날벌레', mat:'silk', bg:'#F0E6F4', prod:45, hatch:25, grow:90, egg:100, names:['실뭉치','여덟','폭신','거미줄','보송'] },
+  { name:'부엉', kind:'부엉이', baby:'아기 부엉이', food:'고기 조각', mat:'feather', bg:'#F6EEE2', prod:180, hatch:90, grow:360, egg:400, names:['깃털','동글','부엉','도토리','책벌레'] },
+  { name:'매매', kind:'염소', baby:'아기 염소', food:'풀', mat:'milk', bg:'#F4EEE2', prod:60, hatch:35, grow:150, egg:150, names:['수염','뿔뿔','하양','음매','몽돌'] },
 ];
 const EGG_CELL = 10;
 // 색 15가지 (같은 그림에 색만 입혀요). p 세피아, s 채도, h 색상 회전, b 밝기
@@ -458,6 +458,8 @@ function makeEgg(a, b){ return { id: crId(), k: a.k, col: mixColor(a.col || {}, 
 const OLD_VARIANT = [null, '노을빛', '바다빛', '황금빛'];
 function migrateCreatures(p){
   p.eggs = p.eggs || [];
+  // 재료 이름을 바꿨어요 (박쥐·유령·호박 정령 → 두꺼비·꿀벌·염소)
+  if (p.inv) [['batdust','slime'],['ecto','honey'],['pseed','milk']].forEach(([a, b]) => { if (p.inv[a]) p.inv[b] = (p.inv[b] || 0) + p.inv[a]; delete p.inv[a]; });
   p.cr = (p.cr || []).flatMap((c, i) => {
     if (c.bornAt !== undefined) return [c];
     const k = c.k ?? i, d = CREATURES[k] || CREATURES[0];
@@ -965,7 +967,7 @@ function renderRanch(){
         <div class="sec-h"><h3>${esc(c.name)}</h3><span style="display:flex;gap:4px"><span class="tag" style="${c.col.rare ? 'background:#FFF2C8;color:#B07A10' : ''}">${esc(c.col.n)}${c.col.rare ? ' ✨' : ''}</span><span class="tag">${crKind(c)}</span></span></div>
         <div class="meter"><span class="s">애정</span>${segs(c.love, LOVE_MAX, '#FF8FAF')}<span class="s b">${c.love}</span></div>
         <span class="s" style="color:#C2385E">${T.n} · ${T.d}${tier < 4 ? ` <span class="sub">(다음 단계까지 ♥${(tier + 1) * 5 - c.love})</span>` : ''}</span>
-        <div class="s sub" style="display:flex;align-items:center;gap:4px">${ic(d.mat, 'transform:scale(.8);margin:-6px')}${!adult ? `어른까지 <b data-cd="${c.bornAt + d.grow * 6e4}">${cdText(c.bornAt + d.grow * 6e4 - now)}</b> · 어른이 되면 「${ITEM[d.mat]}」을 줘요` : !tier ? `애정 5부터 「${ITEM[d.mat]}」을 줘요` : prodLeft(c) > 0 ? `「${ITEM[d.mat]}」 생기기까지 <b data-cd="${c.prodAt + d.prod * 6e4}">${cdText(prodLeft(c))}</b>` : `「${ITEM[d.mat]}」이 생겼어요!`}</div>
+        <div class="s sub" style="display:flex;align-items:center;gap:4px">${ic(d.mat, 'transform:scale(.8);margin:-6px')}<span>${!adult ? `어른까지 <b data-cd="${c.bornAt + d.grow * 6e4}">${cdText(c.bornAt + d.grow * 6e4 - now)}</b> · 어른이 되면 「${ITEM[d.mat]}」을 줘요` : !tier ? `애정 5부터 「${ITEM[d.mat]}」을 줘요` : prodLeft(c) > 0 ? `「${ITEM[d.mat]}」 생기기까지 <b data-cd="${c.prodAt + d.prod * 6e4}">${cdText(prodLeft(c))}</b>` : `「${ITEM[d.mat]}」이 생겼어요!`}</span></div>
       </div>
       <div class="grid" style="grid-template-columns:repeat(3,1fr)">
         <button class="btn gold" id="feed" ${fedLeft ? 'disabled' : ''}>${fedLeft ? `<span data-cd="${c.fedAt + FEED_CD}">${cdText(fedLeft)}</span>` : `${d.food} 주기`}</button>
@@ -1378,7 +1380,7 @@ function renderEvent(){
   if (!ev){ toast('지금은 열린 행사가 없어요.'); return leaveEvent(); }
   watchEvent(ev);
   const overlay = `<div style="position:absolute;inset:0;background:rgba(20,10,50,.45);pointer-events:none"></div>
-    <div class="cr dragon" style="position:absolute;left:50%;top:52%;background-position:-360px 0"></div><div id="dragonFx" style="position:absolute;inset:0;z-index:1;pointer-events:none"></div>`;
+    <div class="cr dragon" style="position:absolute;left:50%;top:52%;background-position:-1320px 0"></div><div id="dragonFx" style="position:absolute;inset:0;z-index:1;pointer-events:none"></div>`;
   frame('island', ev.E.name, `<span id="evClock"></span>`, `
     <section class="sec">
       <div class="hint">${ev.E.blurb}</div>

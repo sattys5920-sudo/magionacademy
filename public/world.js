@@ -143,7 +143,7 @@ function setMap(id, spawn){
   camX = camY = null; hideBubble();
 }
 // ---------- 사육장: 우리 문 · 이름표 · 내 생물 ----------
-const CR_SRC = "art/iso/creatures_w.png?v=9c6831cd", CR_W = 40, CR_H = 34;
+const CR_SRC = "art/iso/creatures_w.png?v=5d726ff6", CR_W = 40, CR_H = 34;
 let CR_IMG = null, penNames = [], myPen = 0, petData = [], penTags = [];
 const petPos = {};
 World.onPenDoor = null;   // (우리 번호) → true면 들어가요, 글이면 말풍선

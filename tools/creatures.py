@@ -1,6 +1,6 @@
 # 생물 10종 + 알 그림: public/art/creatures.png (화면용, 3배) · public/art/iso/creatures_w.png (세계용, 원래 크기)
-# 기존 4종(구름양·유니콘·불도마뱀·용)은 지금 그림에서 그대로 가져오고, 6종을 같은 그림체로 새로 그려요.
-# 재료 아이콘 6개도 icons.png 끝에 덧붙여요.
+# 양·도마뱀(과 이벤트용 용)은 creature_base.png에서 가져오고, 나머지는 같은 그림체로 새로 그려요.
+# 재료 아이콘도 icons.png에 그려 넣어요.
 import os
 from PIL import Image, ImageDraw
 R = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'public', 'art')
@@ -29,29 +29,6 @@ def cat():          # 검은 고양이: 앉아 있는 통통한 고양이, 노�
     d.rectangle([14, 30, 18, 33], fill=hexc(B3)); d.rectangle([23, 30, 27, 33], fill=hexc(B3))
     for x in (13, 26): P(d, x, 15, '#F6A0B0')
     return im
-def bat():          # 박쥐: 둥근 몸, 큰 귀, 펼친 날개, 송곳니
-    im, d = new(); B, W, W2 = '#7A6A96', '#5E4E7A', '#9888B4'
-    for s in (-1, 1):
-        cx = 20 + s * 2
-        pts = [(cx, 14), (20 + s * 18, 6), (20 + s * 19, 16), (20 + s * 15, 14), (20 + s * 14, 20), (20 + s * 10, 17), (20 + s * 8, 23)]
-        d.polygon(pts, fill=hexc(W)); d.line([(cx, 14), (20 + s * 18, 6)], fill=hexc(W2))
-    d.ellipse([12, 9, 28, 29], fill=hexc(B)); d.ellipse([15, 18, 25, 28], fill=hexc('#B4A8CC'))
-    d.polygon([(13, 12), (14, 2), (19, 9)], fill=hexc(B)); d.polygon([(27, 12), (26, 2), (21, 9)], fill=hexc(B))
-    d.polygon([(14, 9), (15, 5), (17, 9)], fill=hexc('#F4A0B8')); d.polygon([(26, 9), (25, 5), (23, 9)], fill=hexc('#F4A0B8'))
-    for x in (16, 23): d.rectangle([x, 13, x + 1, 15], fill=hexc('#2A1830')); P(d, x, 13, '#FFFFFF')
-    P(d, 19, 18, '#FFFFFF'); P(d, 21, 18, '#FFFFFF'); P(d, 20, 17, '#442C50')
-    d.rectangle([16, 29, 17, 31], fill=hexc('#5E4E7A')); d.rectangle([23, 29, 24, 31], fill=hexc('#5E4E7A'))
-    return im
-def ghost():        # 꼬마 유령: 하얀 천, 물결 자락, 볼터치
-    im, d = new(); B, B2 = '#F6F4FC', '#D6D0EA'
-    d.ellipse([10, 4, 30, 24], fill=hexc(B)); d.rectangle([10, 14, 30, 28], fill=hexc(B))
-    for i, x in enumerate(range(10, 31, 5)): d.ellipse([x - 1, 25, x + 4, 31], fill=hexc(B))
-    d.rectangle([27, 12, 30, 28], fill=hexc(B2)); d.ellipse([12, 6, 17, 10], fill=hexc('#FFFFFF'))
-    for x in (15, 23): d.ellipse([x, 12, x + 2, 16], fill=hexc('#2A1830')); P(d, x, 12, '#FFFFFF')
-    d.ellipse([18, 17, 21, 20], fill=hexc('#442C50'))
-    for x in (12, 26): d.rectangle([x, 17, x + 2, 18], fill=hexc('#FFB0C4'))
-    d.line([(7, 18), (10, 16)], fill=hexc(B), width=2); d.line([(33, 18), (30, 16)], fill=hexc(B), width=2)
-    return im
 def spider():       # 거미: 보송한 둥근 몸, 다리 8개, 큰 눈
     im, d = new(); B, B2, L = '#8A6A9A', '#A688B4', '#6A4E7A'
     for s in (-1, 1):
@@ -73,17 +50,62 @@ def owl():          # 부엉이: 둥근 몸, 귀깃, 큰 눈, 배 무늬
     d.ellipse([7, 15, 13, 28], fill=hexc(B2)); d.ellipse([27, 15, 33, 28], fill=hexc(B2))
     for x in (16, 22): d.line([(x, 33), (x + 2, 33)], fill=hexc('#F0B040'))
     return im
-def pumpkin():      # 호박 정령: 호박 몸, 잎, 웃는 얼굴, 덩굴 팔
-    im, d = new(); O, O2, O3 = '#F08A30', '#D06A20', '#FFB060'
-    for cx, w in ((14, 8), (26, 8), (20, 9)): d.ellipse([cx - w, 9, cx + w, 31], fill=hexc(O))
-    for x in (13, 27): d.line([(x, 11), (x, 29)], fill=hexc(O2))
-    d.ellipse([15, 11, 20, 16], fill=hexc(O3))
-    d.rectangle([19, 4, 21, 9], fill=hexc('#4A7A2E')); d.ellipse([21, 3, 29, 8], fill=hexc('#6AAE4A'))
-    d.line([(9, 6), (12, 9)], fill=hexc('#6AAE4A'))
-    for x in (14, 23): d.polygon([(x, 17), (x + 3, 17), (x + 1, 14)], fill=hexc('#FFE07A'))
-    d.polygon([(15, 23), (25, 23), (23, 26), (17, 26)], fill=hexc('#FFE07A')); P(d, 18, 23, O); P(d, 22, 23, O)
-    d.line([(6, 22), (3, 18), (5, 15)], fill=hexc('#4A7A2E'), width=2); d.line([(34, 22), (37, 18), (35, 15)], fill=hexc('#4A7A2E'), width=2)
-    d.rectangle([15, 30, 18, 33], fill=hexc(O2)); d.rectangle([22, 30, 25, 33], fill=hexc(O2))
+def rabbit():       # 토끼: 옆모습, 긴 귀, 동그란 꼬리
+    im, d = new(); B, B2, B3 = '#F6F2EE', '#DCD2CC', '#FFFFFF'
+    d.ellipse([9, 15, 31, 32], fill=hexc(B)); d.ellipse([24, 22, 30, 32], fill=hexc(B2))
+    d.ellipse([4, 19, 11, 26], fill=hexc(B3))
+    d.ellipse([22, 8, 37, 23], fill=hexc(B))
+    d.ellipse([22, 0, 27, 14], fill=hexc(B)); d.ellipse([27, 0, 32, 13], fill=hexc(B2))
+    d.ellipse([23, 2, 26, 11], fill=hexc('#F4B0C4'))
+    d.rectangle([30, 13, 32, 16], fill=hexc('#2A1830')); P(d, 30, 13, '#FFFFFF')
+    P(d, 37, 17, '#F4A0B8'); P(d, 36, 18, '#F4A0B8'); P(d, 33, 18, '#FFB0C4'); P(d, 34, 18, '#FFB0C4')
+    d.rectangle([12, 30, 17, 33], fill=hexc(B2)); d.rectangle([26, 30, 30, 33], fill=hexc(B2))
+    return im
+def chicken():      # 닭: 통통한 몸, 빨간 볏, 노란 부리
+    im, d = new(); B, B2, B3 = '#FFF8EC', '#E8DCC8', '#FFFFFF'
+    d.polygon([(5, 12), (11, 16), (10, 24)], fill=hexc(B2)); d.polygon([(4, 18), (11, 18), (11, 25)], fill=hexc(B))
+    d.ellipse([7, 13, 31, 31], fill=hexc(B)); d.ellipse([20, 3, 33, 18], fill=hexc(B))
+    d.ellipse([11, 18, 22, 26], fill=hexc(B2)); d.line([(13, 20), (20, 24)], fill=hexc('#D0C2AC'))
+    for x, y in ((23, 1), (26, 0), (29, 1)): d.ellipse([x, y, x + 3, y + 4], fill=hexc('#E8484C'))
+    d.polygon([(32, 9), (37, 11), (32, 13)], fill=hexc('#F6B830'))
+    d.ellipse([30, 13, 33, 18], fill=hexc('#E8484C'))
+    d.rectangle([27, 8, 28, 9], fill=hexc('#2A1830')); P(d, 27, 8, '#FFFFFF')
+    P(d, 25, 12, '#FFB0C4'); P(d, 26, 12, '#FFB0C4')
+    for x in (16, 23): d.line([(x, 30), (x, 33)], fill=hexc('#F0A030'), width=2); d.line([(x - 1, 33), (x + 2, 33)], fill=hexc('#F0A030'))
+    return im
+def toad():         # 두꺼비: 납작하고 넓은 몸, 툭 튀어나온 눈, 오돌토돌 등
+    im, d = new(); B, B2, C = '#8AAE5A', '#6E9244', '#E8E4B0'
+    d.ellipse([5, 13, 35, 33], fill=hexc(B)); d.ellipse([11, 21, 29, 33], fill=hexc(C))
+    for x in (9, 24): d.ellipse([x, 7, x + 8, 16], fill=hexc(B)); d.ellipse([x + 1, 8, x + 7, 15], fill=hexc('#F6E070')); d.rectangle([x + 2, 10, x + 6, 12], fill=hexc('#2A1830')); P(d, x + 2, 9, '#FFFFFF')
+    for x, y in ((8, 19), (31, 18), (12, 16), (28, 23), (6, 25), (33, 26)): d.ellipse([x, y, x + 2, y + 2], fill=hexc(B2))
+    d.line([(14, 20), (20, 22), (26, 20)], fill=hexc('#4A3050'))
+    for x in (11, 27): P(d, x, 20, '#FFB0C4'); P(d, x + 1, 20, '#FFB0C4')
+    d.ellipse([2, 26, 11, 33], fill=hexc(B2)); d.ellipse([29, 26, 38, 33], fill=hexc(B2))
+    return im
+def bee():          # 꿀벌: 줄무늬 둥근 몸, 투명한 날개, 더듬이
+    im, d = new(); Y, K = '#F6C83A', '#4A3A44'
+    d.ellipse([7, 3, 19, 15], fill=hexc('#E4F2FF', 230)); d.ellipse([21, 3, 33, 15], fill=hexc('#E4F2FF', 230))
+    d.ellipse([9, 5, 13, 9], fill=hexc('#FFFFFF')); d.ellipse([23, 5, 27, 9], fill=hexc('#FFFFFF'))
+    d.ellipse([8, 11, 32, 32], fill=hexc(Y))
+    for y in (21, 26): d.rectangle([9, y, 31, y + 2], fill=hexc(K))
+    d.polygon([(18, 31), (22, 31), (20, 34)], fill=hexc(K))
+    d.line([(16, 12), (13, 6), (11, 5)], fill=hexc(K)); d.line([(24, 12), (27, 6), (29, 5)], fill=hexc(K))
+    d.ellipse([10, 4, 12, 6], fill=hexc(K)); d.ellipse([28, 4, 30, 6], fill=hexc(K))
+    for x in (14, 24): d.rectangle([x, 15, x + 2, 18], fill=hexc('#2A1830')); P(d, x, 15, '#FFFFFF')
+    d.line([(18, 19), (20, 20), (22, 19)], fill=hexc('#4A3050'))
+    for x in (11, 27): P(d, x, 19, '#F49A80'); P(d, x + 1, 19, '#F49A80')
+    return im
+def goat():         # 염소: 옆모습, 굽은 뿔, 턱수염
+    im, d = new(); B, B2, B3 = '#F2EADA', '#D8CCB6', '#FFFFFF'
+    d.ellipse([5, 13, 29, 28], fill=hexc(B)); d.polygon([(4, 14), (7, 12), (6, 18)], fill=hexc(B2))
+    d.ellipse([8, 15, 18, 21], fill=hexc(B3))
+    d.ellipse([24, 6, 36, 19], fill=hexc(B)); d.rectangle([24, 12, 29, 20], fill=hexc(B))
+    d.line([(26, 7), (24, 2), (21, 1), (19, 3)], fill=hexc('#A8906C'), width=2)
+    d.polygon([(23, 10), (18, 12), (23, 13)], fill=hexc(B2))
+    d.rectangle([31, 10, 32, 12], fill=hexc('#2A1830')); P(d, 31, 10, '#FFFFFF')
+    d.polygon([(32, 18), (35, 18), (34, 23)], fill=hexc(B2))
+    P(d, 36, 14, '#B89A88'); P(d, 29, 14, '#FFB0C4'); P(d, 30, 14, '#FFB0C4')
+    for x in (8, 13, 20, 25): d.rectangle([x, 26, x + 2, 33], fill=hexc(B2)); d.rectangle([x, 32, x + 2, 33], fill=hexc('#7A6A5A'))
     return im
 def egg():          # 알 (색은 게임에서 생물 색으로 물들여요)
     im, d = new()
@@ -92,37 +114,45 @@ def egg():          # 알 (색은 게임에서 생물 색으로 물들여요)
     for x, y in ((18, 22), (22, 14), (16, 27), (23, 26), (20, 18)): d.ellipse([x, y, x + 2, y + 2], fill=hexc('#E0B888'))
     return im
 
-old = Image.open(os.path.join(R, 'creatures.png')).convert('RGBA')
-old_n = old.resize((old.width // 3, old.height // 3), Image.NEAREST)
-cells = [old_n.crop((i * CW, 0, i * CW + CW, CH)) for i in range(4)]
-cells += [outline(f()) for f in (cat, bat, ghost, spider, owl, pumpkin)]
-cells.append(outline(egg()))
+base = Image.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'creature_base.png')).convert('RGBA')
+old = [base.crop((i * CW, 0, i * CW + CW, CH)) for i in range(4)]   # 0 양 · 1 (유니콘) · 2 도마뱀 · 3 (용)
+# 0 양 · 1 토끼 · 2 도마뱀 · 3 닭 · 4 고양이 · 5 두꺼비 · 6 꿀벌 · 7 거미 · 8 부엉이 · 9 염소 · 10 알 · 11 용(드래곤 방문 이벤트)
+L = lambda im: im.transpose(Image.FLIP_LEFT_RIGHT)   # 옆모습은 왼쪽을 보게 (양·도마뱀과 같이)
+cells = [old[0], L(outline(rabbit())), old[2], L(outline(chicken())), outline(cat()), outline(toad()), outline(bee()), outline(spider()), outline(owl()), L(outline(goat())), outline(egg()), old[3]]
 world = Image.new('RGBA', (CW * len(cells), CH), (0, 0, 0, 0))
 for i, c in enumerate(cells): world.paste(c, (i * CW, 0))
 world.save(os.path.join(R, 'iso', 'creatures_w.png'))
 world.resize((world.width * 3, world.height * 3), Image.NEAREST).save(os.path.join(R, 'creatures.png'))
 
-# ---- 재료 아이콘 6개 (16×16을 2배로) ----
+# ---- 재료 아이콘 (16×16을 2배로): 9번 토끼털은 덮어 그리고, 38번부터 생물 재료 ----
 def icon(fn):
     im = Image.new('RGBA', (16, 16), (0, 0, 0, 0)); d = ImageDraw.Draw(im); fn(d); return outline(im).resize((32, 32), Image.NEAREST)
+def i_rfur(d):      # 토끼털: 보송한 하얀 털뭉치
+    for x, y, r in ((3, 6, 4), (8, 4, 4), (6, 9, 4), (10, 8, 3)): d.ellipse([x - 1, y - 1, x + r, y + r], fill=hexc('#FAF6F2'))
+    d.ellipse([5, 5, 8, 8], fill=hexc('#FFFFFF')); d.point((11, 11), fill=hexc('#E4DAD4')); d.point((4, 11), fill=hexc('#E4DAD4'))
 def i_whisker(d):
     for y, c in ((5, '#F4F0FA'), (8, '#E4E0F0'), (11, '#F4F0FA')): d.line([(2, y + 1), (8, y), (13, y + 2)], fill=hexc(c))
     d.ellipse([6, 6, 9, 10], fill=hexc('#6A5E86'))
-def i_batdust(d):
-    d.polygon([(4, 5), (11, 5), (12, 13), (3, 13)], fill=hexc('#9888B4')); d.rectangle([5, 2, 10, 5], fill=hexc('#C8A070'))
-    for x, y in ((5, 8), (8, 10), (10, 7), (6, 11)): d.point((x, y), fill=hexc('#FFF0A8'))
-def i_ecto(d):
-    d.ellipse([3, 4, 13, 13], fill=hexc('#A8F0D8')); d.ellipse([5, 6, 8, 9], fill=hexc('#EFFFF8')); d.polygon([(3, 10), (2, 14), (6, 12)], fill=hexc('#A8F0D8'))
+def i_slime(d):     # 두꺼비 점액: 초록 물방울 병
+    d.rectangle([6, 2, 9, 4], fill=hexc('#C8A070')); d.ellipse([3, 4, 12, 14], fill=hexc('#9ED46A')); d.ellipse([5, 6, 8, 9], fill=hexc('#E4FFC8'))
+    d.point((9, 11), fill=hexc('#6EA840')); d.point((6, 12), fill=hexc('#6EA840'))
+def i_honey(d):     # 벌꿀: 꿀단지
+    d.ellipse([2, 5, 13, 14], fill=hexc('#F6B830')); d.rectangle([4, 3, 11, 6], fill=hexc('#E89A20')); d.rectangle([3, 2, 12, 3], fill=hexc('#C87A3A'))
+    d.ellipse([4, 7, 7, 10], fill=hexc('#FFE490')); d.polygon([(9, 5), (11, 5), (10, 9)], fill=hexc('#F6C840'))
 def i_silk(d):
     d.ellipse([3, 3, 13, 13], fill=hexc('#F4F2FA')); d.line([(4, 6), (12, 10)], fill=hexc('#D0CAE4')); d.line([(4, 10), (12, 6)], fill=hexc('#D0CAE4')); d.line([(8, 3), (8, 13)], fill=hexc('#D0CAE4'))
 def i_feather(d):
     d.polygon([(11, 2), (13, 4), (6, 13), (3, 14), (4, 11)], fill=hexc('#C89A6C')); d.line([(12, 3), (3, 14)], fill=hexc('#F2E2C4'))
-def i_pseed(d):
-    for x, y in ((3, 4), (8, 3), (5, 9), (10, 8)): d.ellipse([x, y, x + 4, y + 5], fill=hexc('#F6E6C0')); d.point((x + 1, y + 1), fill=hexc('#FFFFFF'))
+def i_milk(d):      # 염소젖: 우유병
+    d.rectangle([6, 1, 9, 3], fill=hexc('#7AB0E8')); d.polygon([(6, 4), (9, 4), (12, 7), (12, 14), (3, 14), (3, 7)], fill=hexc('#FFFFFF'))
+    d.rectangle([3, 9, 12, 11], fill=hexc('#BCD8F4')); d.point((5, 6), fill=hexc('#E4EEF8'))
+def i_hegg(d):      # 달걀
+    d.ellipse([4, 2, 12, 14], fill=hexc('#F8EAD2')); d.ellipse([5, 4, 7, 7], fill=hexc('#FFFFFF')); d.ellipse([9, 8, 11, 13], fill=hexc('#E8D4B4'))
 ic_old = Image.open(os.path.join(R, 'icons.png')).convert('RGBA')
-N0 = 38                                # 기존 아이콘 수 (ICONS 목록 길이)
-new_icons = [icon(f) for f in (i_whisker, i_batdust, i_ecto, i_silk, i_feather, i_pseed)]
+N0 = 38                                # 기존 아이콘 수 (ICONS 목록 앞부분)
+new_icons = [icon(f) for f in (i_whisker, i_slime, i_honey, i_silk, i_feather, i_milk, i_hegg)]
 ic_new = Image.new('RGBA', (32 * (N0 + len(new_icons)), 32), (0, 0, 0, 0)); ic_new.paste(ic_old.crop((0, 0, 32 * N0, 32)), (0, 0))
+ic_new.paste((0, 0, 0, 0), (32 * 9, 0, 32 * 10, 32)); ic_new.paste(icon(i_rfur), (32 * 9, 0))
 for i, im in enumerate(new_icons): ic_new.paste(im, (32 * (N0 + i), 0))
 ic_new.save(os.path.join(R, 'icons.png'))
 print('creatures', world.size, 'icons', ic_new.size)
