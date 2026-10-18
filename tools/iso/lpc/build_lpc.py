@@ -37,7 +37,8 @@ def pick(globs, skip=()):
 SEL['top'] = pick(['torso/shirts/**/*.json', 'torso/dresses/**/*.json', 'torso/jacket/*.json', 'torso/vest/*.json'], skip=('child', 'santa', 'sleeves'))
 SEL['legs'] = pick(['legs/**/*.json'], skip=('armour',))
 SEL['feet'] = pick(['feet/shoes/*.json', 'feet/boots/*.json', 'feet/feet_sandals.json', 'feet/feet_slippers.json'])
-SEL_HAT = (   # 모자는 안 써요
+SEL['hat'] = []   # 모자는 옷 가게 것만 (SHOP['hat'])
+SEL_HAT = (
     ['headwear/hats/magic/*.json', 'headwear/hats/formal/*.json', 'headwear/hats/caps/*.json', 'headwear/hats/holiday/*.json', 'headwear/coverings/**/*hood*.json'])
 SEL['cape'] = pick(['torso/cape/cape_solid.json', 'torso/cape/cape_tattered.json'])
 SEL['neck'] = pick(['headwear/neck/*.json'])
@@ -168,32 +169,54 @@ COMBO = {
 # ---------- 옷 가게 (사복 'cas'·잠옷 'pj') ----------
 # 교복 뒤에 붙여요 (부품 번호가 안 바뀌게). 칸 'cas' = 플레이어가 고른 옷 색 (topC)
 TEE = 'torso_clothes_tshirt'
+L2 = 'torso_clothes_longsleeve2'
+ONESIE = lambda ears, tail: [(L2, 'cas', None), ('legs_pants2', 'cas', 21), ('raw_hood', 'cas', None)] + ears + tail
 SHOP = {
- 'top': [('티셔츠', [(TEE, 'cas', None)], 'cas', 80), ('브이넥 티셔츠', [('torso_clothes_tshirt_vneck', 'cas', None)], 'cas', 80),
-         ('라운드 티셔츠', [('torso_clothes_tshirt_scoop', 'cas', None)], 'cas', 80), ('헨리 티셔츠', [('torso_clothes_tshirt_buttoned', 'cas', None)], 'cas', 90),
-         ('줄무늬 티', [(TEE, 'cas', None), ('fx_tee_stripe', 'w', 36)], 'cas', 110), ('땡땡이 티', [(TEE, 'cas', None), ('fx_tee_dots', 'w', 36)], 'cas', 110),
-         ('긴팔 티', [('torso_clothes_longsleeve2', 'cas', None)], 'cas', 100), ('줄무늬 긴팔', [('torso_clothes_longsleeve2', 'cas', None), ('fx_long_stripe', 'w', 36)], 'cas', 130),
-         ('폴로 셔츠', [('torso_clothes_longsleeve2_polo', 'cas', None)], 'cas', 120), ('민소매', [('torso_clothes_sleeveless2', 'cas', None)], 'cas', 70),
-         ('티 + 카디건', [(TEE, 'w', None), ('torso_clothes_longsleeve2_cardigan', 'cas', 36)], 'cas', 150),
-         ('줄무늬 티 + 카디건', [(TEE, 'w', None), ('fx_tee_stripe', 'cas', 35), ('torso_clothes_longsleeve2_cardigan', 'cas', 36)], 'cas', 170),
-         ('멜빵 반바지 + 티', [(TEE, 'w', None), ('fx_overall_short', 'cas', None)], 'cas', 160),
-         ('멜빵 반바지 + 줄무늬 티', [(TEE, 'w', None), ('fx_tee_stripe', 'cas', 35), ('fx_overall_short', 'cas', None)], 'cas', 180),
-         ('색 블라우스', [('torso_clothes_blouse_longsleeve', 'cas', None)], 'cas', 120), ('반팔 색 블라우스', [('torso_clothes_blouse', 'cas', None)], 'cas', 110),
-         ('미니 원피스', [('fx_dress_mini', 'cas', None)], 'cas', 160), ('땡땡이 미니 원피스', [('fx_dress_mini', 'cas', None), ('fx_dress_dots', 'w', 31)], 'cas', 190),
-         ('티 + 멜빵 원피스', [(TEE, 'w', None), ('fx_bodice_mini', 'cas', None)], 'cas', 170),
-         ('잠옷 상의', [('torso_clothes_longsleeve2_buttoned', 'cas', None)], 'pj', 70), ('반팔 잠옷', [('torso_clothes_tshirt_buttoned', 'cas', None)], 'pj', 60),
+ 'top': [('후드티', [(L2, 'cas', None), ('fx_hoodie', 'cas', 36), ('fx_hoodstr', 'w', 37)], 'cas', 140),
+         ('후드티 (모자 씀)', [(L2, 'cas', None), ('fx_hoodie', 'cas', 36), ('fx_hoodstr', 'w', 37), ('raw_hood', 'cas', None)], 'cas', 160),
+         ('고양이 후드티', [(L2, 'cas', None), ('fx_hoodie', 'cas', 36), ('fx_hoodstr', 'w', 37), ('raw_hood', 'cas', None), ('raw_catears', 'cas', 131)], 'cas', 200),
+         ('꽈배기 니트', [(L2, 'cas', None), ('fx_cable', 'cas', 36)], 'cas', 150),
+         ('노르딕 니트', [(L2, 'cas', None), ('fx_nordic', 'w', 36)], 'cas', 170),
+         ('하트 니트', [(L2, 'cas', None), ('fx_cable', 'cas', 36), ('fx_heart', 'w', 37)], 'cas', 180),
+         ('셔츠 + 니트 조끼', [(SH, 'w', None), ('torso_clothes_sleeveless2_vneck', 'cas', 36), ('fx_vest_cable', 'cas', 37)], 'cas', 150),
+         ('티 + 카디건', [(TEE, 'w', None), ('torso_clothes_longsleeve2_cardigan', 'cas', 36)], 'cas', 140),
+         ('색 셔츠', [('torso_clothes_longsleeve2_buttoned', 'cas', None)], 'cas', 110),
+         ('체크 셔츠', [('torso_clothes_longsleeve2_buttoned', 'cas', None), ('fx_check', 'cas', 36)], 'cas', 130),
+         ('줄무늬 셔츠', [('torso_clothes_longsleeve2_buttoned', 'cas', None), ('fx_shirt_stripe', 'w', 36)], 'cas', 130),
+         ('코트', [(SH, 'w', None), ('fx_coat', 'cas', 36)], 'cas', 220),
+         ('티셔츠', [(TEE, 'cas', None)], 'cas', 80), ('줄무늬 티', [(TEE, 'cas', None), ('fx_tee_stripe', 'w', 36)], 'cas', 100),
+         ('땡땡이 티', [(TEE, 'cas', None), ('fx_tee_dots', 'w', 36)], 'cas', 100),
+         ('멜빵 반바지 + 줄무늬 티', [(TEE, 'w', None), ('fx_tee_stripe', 'cas', 35), ('fx_overall_short', 'cas', None)], 'cas', 170),
+         ('땡땡이 미니 원피스', [('fx_dress_mini', 'cas', None), ('fx_dress_dots', 'w', 31)], 'cas', 180),
+         ('검은 로브', [('raw_robe_black', 'w', None)], 'cas', 200), ('보라 로브', [('raw_robe_purple', 'w', None)], 'cas', 200),
+         ('파란 로브', [('raw_robe_blue', 'w', None)], 'cas', 200), ('빨간 로브', [('raw_robe_red', 'w', None)], 'cas', 200),
+         ('후드 로브', [('raw_robe_black', 'w', None), ('raw_hood', 'fix:black', None)], 'cas', 240),
+         ('곰 잠옷', ONESIE([('fx_bearears', 'cas', 131)], [('fx_puff', 'cas', 125)]), 'pj', 220),
+         ('고양이 잠옷', ONESIE([('raw_catears', 'cas', 131)], [('raw_cattail', 'cas', None)]), 'pj', 240),
+         ('토끼 잠옷', ONESIE([('fx_bunnyears', 'cas', 131)], [('fx_puff', 'w', 125)]), 'pj', 240),
+         ('여우 잠옷', ONESIE([('raw_wolfears', 'cas', 131)], [('raw_foxtail', 'cas', None)]), 'pj', 260),
+         ('잠옷 상의', [('torso_clothes_longsleeve2_buttoned', 'cas', None)], 'pj', 70),
          ('땡땡이 잠옷', [('torso_clothes_longsleeve2_buttoned', 'cas', None), ('fx_pj_dots', 'w', 36)], 'pj', 90),
          ('잠옷 원피스', [('dress_sash', 'cas', None)], 'pj', 120)],
- 'legs': [('미니 치마', [('fx_mini', None, None)], 'cas', 80), ('주름 미니 치마', [('fx_mini_pleat', None, None)], 'cas', 100),
+ 'legs': [('코트 셋업 치마', [('fx_mini', 'cas', None)], 'cas', 80), ('코트 셋업 바지', [('legs_pants', 'cas', None)], 'cas', 90),
+          ('미니 치마', [('fx_mini', None, None)], 'cas', 80), ('주름 미니 치마', [('fx_mini_pleat', None, None)], 'cas', 100),
           ('짧은 반바지', [('legs_shorts_short', None, None)], 'cas', 70), ('레깅스', [('legs_leggings', None, None)], 'cas', 70),
           ('롤업 바지', [('legs_cuffed', None, None)], 'cas', 100),
-          ('잠옷 바지', [('legs_pants2', 'cas', None)], 'pj', 60), ('땡땡이 잠옷 바지', [('legs_pants2', 'cas', None), ('fx_pants_dots', 'w', 21)], 'pj', 80),
-          ('잠옷 반바지', [('legs_shorts', 'cas', None)], 'pj', 50)],
+          ('잠옷 바지', [('legs_pants2', 'cas', None)], 'pj', 60), ('땡땡이 잠옷 바지', [('legs_pants2', 'cas', None), ('fx_pants_dots', 'w', 21)], 'pj', 80)],
  'feet': [('줄무늬 양말 + 구두', [SOCK, ('fx_sock_stripe', 'cas', 14.5), ('feet_shoes_revised', None, None)], 'cas', 90),
           ('흰 양말 + 리본 구두', [SOCK, ('feet_shoes_sara', None, None)], 'cas', 90),
-          ('샌들', [('feet_sandals', None, None)], 'cas', 60), ('리본 구두', [('feet_shoes_sara', None, None)], 'cas', 80),
-          ('테 부츠', [('feet_boots_rim', None, None)], 'cas', 120),
-          ('슬리퍼', [('feet_slippers', None, None)], 'pj', 40)]}
+          ('리본 구두', [('feet_shoes_sara', None, None)], 'cas', 80), ('테 부츠', [('feet_boots_rim', None, None)], 'cas', 120),
+          ('슬리퍼', [('feet_slippers', None, None)], 'pj', 40)],
+ 'hat': [('비니', [('fx_beanie', 'hat', None)], 'cas', 70), ('방울 비니', [('fx_beanie', 'hat', None), ('fx_pompom', 'w', 131)], 'cas', 90),
+         ('곰 비니', [('fx_beanie', 'hat', None), ('fx_bearears_b', 'hat', 131)], 'cas', 110),
+         ('고양이 비니', [('fx_beanie', 'hat', None), ('raw_catears', 'hat', 131)], 'cas', 110),
+         ('토끼 비니', [('fx_beanie', 'hat', None), ('fx_bunnyears_b', 'hat', 131)], 'cas', 120),
+         ('고양이 귀', [('raw_catears', 'hat', None)], 'cas', 90), ('늑대 귀', [('raw_wolfears', 'hat', None)], 'cas', 90),
+         ('머리띠', [('raw_headband', 'hat', None)], 'cas', 50), ('두건', [('raw_bandana', 'hat', None)], 'cas', 60),
+         ('후드', [('raw_hood', 'hat', None)], 'cas', 80),
+         ('마녀 모자', [('raw_witch', None, None)], 'cas', 150), ('마법사 모자', [('raw_wizard', 'hat', None)], 'cas', 150),
+         ('별빛 모자', [('raw_celestial', 'hat', None)], 'cas', 170), ('산타 모자', [('raw_santa', None, None)], 'cas', 100)]}
+COMBO['hat'] = []
 for cat, lst in SHOP.items(): COMBO[cat] = [(n, c, 'uni', 0) for n, c in COMBO[cat]] + lst
 pool = {e['id']: e for es in items.values() for e in es}
 # 직접 손본 그림 (fx:종류:원본): 블레이저(카디건 + 깃·길이), 가슴 배지, 주름치마·짧은 치마 (무릎 위)
@@ -212,8 +235,33 @@ FXNEW = {'fx_tee_stripe': (TEE, 'stripe'), 'fx_tee_dots': (TEE, 'dots'), 'fx_lon
          'fx_mini': ('legs_skirts_plain', 'mini'), 'fx_mini_pleat': ('legs_skirts_plain', 'minipleat'), 'fx_pants_dots': ('legs_pants2', 'dots'),
          'fx_sock_stripe': ('feet_socks_high', 'stripe')}
 for k, (base, kind) in FXNEW.items(): pool[k] = fxent(base, kind)
+# LPC 파일 직접 (모자·귀·꼬리·로브). 털 그림(hair 팔레트)은 fx:tocloth 로 천 팔레트로 바꿔서 옷 색으로 칠해요
+SP_ = 'spritesheets/'
+RAW = {'raw_hood': [(130, 'hat/cloth/hood/adult/walk.png')], 'raw_headband': [(125, 'hat/headband/thick/adult/walk.png')],
+       'raw_bandana': [(120, 'hat/cloth/bandana/adult/walk.png')], 'raw_santa': [(130, 'hat/holiday/christmas/adult/walk/red.png')],
+       'raw_witch': [(130, 'hat/magic/large/adult/walk/brown.png')], 'raw_wizard': [(130, 'hat/magic/wizard/base/adult/walk.png')],
+       'raw_celestial': [(130, 'hat/magic/celestial/adult/walk.png')],
+       'raw_catears': [(130, 'fx:tocloth:' + SP_ + 'head/ears/cat/adult/fg/walk.png'), (8, 'fx:tocloth:' + SP_ + 'head/ears/cat/adult/bg/walk.png')],
+       'raw_wolfears': [(130, 'fx:tocloth:' + SP_ + 'head/ears/wolf/adult/fg/walk.png'), (8, 'fx:tocloth:' + SP_ + 'head/ears/wolf/adult/bg/walk.png')],
+       'raw_cattail': [(125, 'fx:tocloth:' + SP_ + 'body/tail/cat/adult/fg/walk/white.png'), (5, 'fx:tocloth:' + SP_ + 'body/tail/cat/adult/bg/walk/white.png')],
+       'raw_foxtail': [(125, 'fx:tocloth:' + SP_ + 'body/tail/fluffy/adult/fg/walk/white.png'), (5, 'fx:tocloth:' + SP_ + 'body/tail/fluffy/adult/bg/walk/white.png')]}
+for c in ('black', 'purple', 'blue', 'red'): RAW['raw_robe_' + c] = [(35, 'torso/clothes/robe/female/walk/%s.png' % c)]
+for k, Ls in RAW.items(): pool[k] = dict(L={b: [(z, f if f.startswith('fx:') else SP_ + f, 'cloth', 'white', None) for z, f in Ls] for b in BODIES})
+RAW_DEFS = ['headwear/coverings/hoods/hat_hood_cloth.json', 'headwear/coverings/headbands/hat_headband_thick.json', 'headwear/coverings/bandana/hat_bandana.json',
+            'headwear/hats/holiday/hat_holiday_christmas.json', 'headwear/hats/magic/hat_magic_large.json', 'headwear/hats/magic/hat_magic_wizard.json',
+            'headwear/hats/magic/hat_magic_celestial.json', 'head/furry_ears/top/head_ears_cat.json', 'head/furry_ears/top/head_ears_wolf.json',
+            'body/tails/tail_cat.json', 'body/tails/tail_wolf_fluffy.json', 'torso/shirts/torso_clothes_robe.json']
+# 그려 넣는 무늬·부품 (원본 그림을 보고 위치를 잡아요)
+HOODF = SP_ + 'hat/cloth/hood/adult/walk.png'
+FXDRAW = {'fx_hoodie': (L2, 'hoodie'), 'fx_hoodstr': (L2, 'hoodstr'), 'fx_cable': (L2, 'cable'), 'fx_nordic': (L2, 'nordic'), 'fx_heart': (L2, 'heart'),
+          'fx_vest_cable': ('torso_clothes_sleeveless2_vneck', 'cable'), 'fx_check': ('torso_clothes_longsleeve2_buttoned', 'check'),
+          'fx_shirt_stripe': ('torso_clothes_longsleeve2_buttoned', 'stripe'), 'fx_coat': ('torso_clothes_longsleeve2_cardigan', 'coat'),
+          'fx_puff': (L2, 'puff')}
+for k, (base, kind) in FXDRAW.items(): pool[k] = fxent(base, kind)
+for k, kind in (('fx_beanie', 'beanie'), ('fx_pompom', 'pompom'), ('fx_bearears', 'bearears'), ('fx_bunnyears', 'bunnyears'),
+                ('fx_bearears_b', 'bearearsb'), ('fx_bunnyears_b', 'bunnyearsb')):
+    pool[k] = dict(L={b: [(130, 'fx:%s:%s' % (kind, HOODF), 'cloth', 'white', None)] for b in BODIES})
 FXBASE0 = {'fx_blazer': 'torso_clothes_longsleeve2_cardigan', 'fx_emblem': 'torso_clothes_longsleeve2_cardigan', 'fx_pleat': 'legs_skirts_plain', 'fx_short': 'legs_skirt_straight', 'fx_dress': 'dress_bodice', 'fx_dress2': 'dress_sash'}
-FXBASE = {**FXBASE0, **{k: v[0] for k, v in FXNEW.items()}}
 for cat, lst in COMBO.items():
     out = []
     for row in lst:
@@ -228,14 +276,15 @@ for cat, lst in COMBO.items():
         if e['L']: out.append(e)
     items[cat] = out
 del items['x']
-KEEP = {'neck': ['neck_necktie', 'neck_bowtie', 'neck_bowtie2', 'neck_cravat']}
+KEEP = {'neck': ['neck_necktie', 'neck_bowtie', 'neck_bowtie2', 'neck_cravat', 'neck_scarf']}
 for cat, ids in KEEP.items():
     by = {e['id']: e for e in items[cat]}; items[cat] = [by[i] for i in ids if i in by]
 need = {f for es in items.values() for e in es for Ls in e['L'].values() for _, f, _, _, _ in Ls}
 for body in BODIES: need.add('spritesheets/' + HEAD[body] + 'walk.png')
 used = {e['id'] for es in items.values() for e in es} | {j for lst in COMBO.values() for row in lst for i, _, _ in row[1] for j in (i.values() if isinstance(i, dict) else [i])}
+FXBASE = {**FXBASE0, **{k: v[0] for k, v in FXNEW.items()}, **{k: v[0] for k, v in FXDRAW.items()}}
 used |= {FXBASE[i] for i in list(used) if i in FXBASE}
-credits = [c for cat, lst in SEL.items() for rel, _ in lst if os.path.basename(rel)[:-5] in used for c in jd(rel).get('credits', [])]
+credits = [c for cat, lst in SEL.items() for rel, _ in lst if os.path.basename(rel)[:-5] in used for c in jd(rel).get('credits', [])] + [c for rel in RAW_DEFS for c in jd(rel).get('credits', [])]
 print({c: len(v) for c, v in items.items()}, 'files', len(need))
 # 받기
 FXN = {f for f in need if f.startswith('fx:')}; need = (need - FXN) | {f.split(':', 2)[2] for f in FXN}
@@ -310,10 +359,162 @@ def fx_pattern(a, kind):
                     if kind == 'stripe' and (y - y0) % 3 == 1: setc(oc, y, x, min(5, i + 1))
                     if kind == 'dots' and (y - y0) % 4 == 1 and (x + 2 * (((y - y0) // 4) % 2)) % 4 == 0: setc(oc, y, x, 5)
     return o
+# ---------- 옷 가게용 그려 넣기 ----------
+HAIRC = {tuple(int(h[i:i + 2], 16) for i in (1, 3, 5)): k for pal in PAL['hair'].values() for k, h in enumerate(pal)}
+def fx_tocloth(a):
+    """털·귀 그림(hair 팔레트) → 천 흰 팔레트 (같은 칸 번호) : 옷 색으로 칠할 수 있게"""
+    a = a.copy(); m = a[..., 3] > 0
+    for y, x in zip(*np.nonzero(m)):
+        k = HAIRC.get(tuple(int(v) for v in a[y, x, :3]))
+        if k is not None: a[y, x, :3] = WHITE[k]
+    return a
+def each(a, fn, out=None):
+    """칸(방향 r, 프레임 c)마다 fn(원본 칸, 결과 칸, r, 마스크)"""
+    o = np.zeros_like(a) if out is None else out
+    for r in range(4):
+        for c in range(9):
+            cl = a[r * 64:(r + 1) * 64, c * 64:(c + 1) * 64]; m = cl[..., 3] > 0
+            if m.any(): fn(cl, o[r * 64:(r + 1) * 64, c * 64:(c + 1) * 64], r, m)
+    return o
+def put(oc, y, x, i=None, rgb=None):
+    if 0 <= y < 64 and 0 <= x < 64:
+        if rgb: oc[y, x, :3] = rgb; oc[y, x, 3] = 255
+        else: setc(oc, y, x, i)
+def inner(m, y, x): return 0 < y < 63 and 0 < x < 63 and m[y, x] and m[y - 1, x] and m[y + 1, x] and m[y, x - 1] and m[y, x + 1]
+def top_of(m): return int(np.nonzero(m.any(1))[0].min())
+def span(m, y): xs = np.nonzero(m[y])[0]; return (int(xs.min()), int(xs.max())) if len(xs) else (28, 35)
+def fx_hoodie(a):
+    def f(cl, oc, r, m):
+        t = top_of(m); l, rr = span(m, t + 1)
+        if r == 0:                                            # 뒤: 후드가 등에 늘어져요
+            for dy in range(0, 5):
+                w = [4, 5, 5, 4, 3][dy]
+                for x in range(31 - w, 33 + w):
+                    edge = x in (31 - w, 32 + w) or dy == 4
+                    put(oc, t + dy, x, 1 if edge else (3 if dy < 2 else 2))
+        elif r == 2:                                          # 앞: 목둘레 + 캥거루 주머니
+            for x in range(l + 3, rr - 2):
+                if m[t + 1, x]: put(oc, t + 1, x, 2)
+            py = t + 9
+            for x in range(27, 37):
+                if m[py, x]: put(oc, py, x, 1)
+            for y in range(py, py + 3):
+                for x in (27, 36):
+                    if m[y, x]: put(oc, y, x, 1)
+        else:                                                 # 옆: 등 쪽에 후드 혹
+            bx = rr if r == 1 else l
+            for dy in range(0, 4):
+                for k in range(0, 3 - dy // 2):
+                    x = bx - k if r == 1 else bx + k
+                    put(oc, t + dy, x, 1 if k == 0 or dy == 3 else 3)
+    return each(a, f)
+def fx_hoodstr(a):
+    def f(cl, oc, r, m):
+        if r != 2: return
+        t = top_of(m)
+        for x in (30, 33):
+            for y in (t + 3, t + 4, t + 5): put(oc, y, x, 5)
+    return each(a, f)
+def fx_knit(a, kind):
+    def f(cl, oc, r, m):
+        t = top_of(m); y1 = int(np.nonzero(m.any(1))[0].max())
+        for y in range(64):
+            for x in range(64):
+                if not inner(m, y, x): continue
+                i = pidx(cl[y, x])
+                if i <= 1: continue
+                if kind == 'cable':                           # 꽈배기: 세로 골 + 지그재그, 밑단 고무단
+                    if (x - 32) % 4 == 0 or ((x - 32) % 4 == 2 and (y - t) % 2 == 0) or y >= y1 - 2 and x % 2 == 0: put(oc, y, x, i - 1)
+                elif kind == 'check':
+                    a1, b1 = (x - 32) % 4 == 0, (y - t) % 4 == 2
+                    if a1 or b1: put(oc, y, x, max(1, i - (2 if a1 and b1 else 1)))
+                elif kind == 'nordic':                        # 가슴에 흰 무늬 띠
+                    yy = y - t
+                    if yy in (4, 8) or (yy in (5, 7) and (x - 32) % 2 == 0) or (yy == 6 and (x - 32) % 4 in (1, 2)): put(oc, y, x, min(5, i + 1))
+                elif kind == 'stripe':
+                    if (y - t) % 3 == 1: put(oc, y, x, min(5, i + 1))
+    return each(a, f)
+def fx_heart(a):
+    R, D = (226, 74, 110), (150, 34, 70)
+    shape = ['.#.#.', '#####', '.###.', '..#..']
+    def f(cl, oc, r, m):
+        if r != 2: return
+        t = top_of(m)
+        for dy, row in enumerate(shape):
+            for dx, ch in enumerate(row):
+                if ch == '#': put(oc, t + 6 + dy, 34 + dx, rgb=R if dy < 2 else D)
+    return each(a, f)
+def fx_coat(a):
+    a = a.copy()
+    def f(cl, oc, r, m):
+        ys = np.nonzero(m.any(1))[0]; t, y1 = int(ys.min()), int(ys.max())
+        src = cl[y1 - 1].copy(); msk = m[y1 - 1].copy()
+        for k in range(0, 6):                                 # 엉덩이 아래까지 길게
+            for x in range(64):
+                if msk[x]: cl[y1 + k, x] = src[x]
+        for x in range(64):
+            if msk[x]: setc(cl, y1 + 6, x, 0)
+        if r == 2:
+            for y in (t + 8, t + 11, t + 14): setc(cl, y, 33, 1)   # 단추
+            for y in range(t, t + 6):                          # 깃
+                for x in range(1, 63):
+                    if m[y, x] and not m[y, x + 1] and x < 32: setc(cl, y, x, 4)
+                    if m[y, x] and not m[y, x - 1] and x >= 32: setc(cl, y, x, 4)
+    each(a, f, out=a)
+    return a
+def fx_puff(a):
+    def f(cl, oc, r, m):
+        y1 = int(np.nonzero(m.any(1))[0].max())
+        if r == 2: return
+        cx = 32 if r == 0 else (span(m, y1 - 2)[1] + 1 if r == 1 else span(m, y1 - 2)[0] - 1)
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                edge = abs(dy) + abs(dx) == 2
+                if not edge: put(oc, y1 - 1 + dy, cx + dx, 5 if dy < 1 else 4)
+        for dy, dx in ((-2, 0), (2, 0), (0, -2), (0, 2)): put(oc, y1 - 1 + dy, cx + dx, 1)
+    return each(a, f)
+def fx_beanie(a, rows=7):
+    a = a.copy()
+    def f(cl, oc, r, m):
+        t = top_of(m); cl[t + rows + 1:] = 0
+        for x in range(64):
+            if cl[t + rows, x, 3]: setc(cl, t + rows, x, 1)
+            if cl[t + rows - 1, x, 3]: setc(cl, t + rows - 1, x, 3 if x % 2 else 2)
+    each(a, f, out=a)
+    return a
+def fx_hatdraw(a, kind):
+    def f(cl, oc, r, m):
+        t = top_of(m); l, rr = span(m, t + 1); cx = (l + rr) // 2
+        side = r in (1, 3)
+        if kind == 'pompom':
+            for dy in range(-3, 0):
+                for dx in (-1, 0, 1):
+                    if not (dy == -3 and dx) : put(oc, t + dy, cx + dx, 5 if dy > -3 else 4)
+            return
+        xs = [cx + (1 if r == 1 else -1)] if side else [cx - 5, cx + 5]
+        for ex in xs:
+            if kind == 'bear':                                # 동그란 곰 귀
+                for dy, row in enumerate(['.##.', '#oo#', '#oi#']):
+                    for dx, ch in enumerate(row):
+                        if ch != '.': put(oc, t - 2 + dy, ex - 2 + dx, {'#': 1, 'o': 4, 'i': 2}[ch])
+            else:                                             # 긴 토끼 귀 (속은 분홍)
+                rows = ['.##.', '#oo#', '#pi#', '#pi#', '#pi#', '#pi#', '#oo#', '#oo#']
+                for dy, row in enumerate(rows):
+                    for dx, ch in enumerate(row):
+                        if ch == '.': continue
+                        y, x = t - len(rows) + 1 + dy, ex - 2 + dx
+                        if ch == 'p': put(oc, y, x, rgb=(240, 160, 180))
+                        elif ch == 'i': put(oc, y, x, rgb=(214, 120, 148))
+                        else: put(oc, y, x, 1 if ch == '#' else 4)
+    return each(a, f)
 FXF = {'blazer': fx_blazer, 'emblem': fx_emblem, 'pleat': fx_pleat, 'short': lambda a: fx_pleat(a, pleat=False),
        'stripe': lambda a: fx_pattern(a, 'stripe'), 'dots': lambda a: fx_pattern(a, 'dots'),
        'dotsshort': lambda a: fx_pattern(fx_pleat(a, pleat=False), 'dots'),
-       'mini': lambda a: fx_pleat(a, hem=50, pleat=False), 'minipleat': lambda a: fx_minipleat(fx_pleat(a, hem=50, pleat=False))}
+       'mini': lambda a: fx_pleat(a, hem=50, pleat=False),
+       'tocloth': fx_tocloth, 'hoodie': fx_hoodie, 'hoodstr': fx_hoodstr, 'cable': lambda a: fx_knit(a, 'cable'), 'check': lambda a: fx_knit(a, 'check'),
+       'nordic': lambda a: fx_knit(a, 'nordic'), 'heart': fx_heart, 'coat': fx_coat, 'puff': fx_puff, 'beanie': fx_beanie,
+       'pompom': lambda a: fx_hatdraw(a, 'pompom'), 'bearears': lambda a: fx_hatdraw(a, 'bear'), 'bunnyears': lambda a: fx_hatdraw(a, 'bunny'),
+       'bearearsb': lambda a: fx_hatdraw(a, 'bear'), 'bunnyearsb': lambda a: fx_hatdraw(a, 'bunny'), 'minipleat': lambda a: fx_minipleat(fx_pleat(a, hem=50, pleat=False))}
 def fx_minipleat(a):
     a = a.copy()                                              # 세로 주름 (2칸마다 어둡게)
     for r, cl in cells(a):
@@ -374,6 +575,7 @@ def maps_of(cat, f, mat, src, sl=None):
     a = IMG[f]
     if cat in ('body', 'face'): return [['skin', 'light'], ['eye', 'blue']]
     if sl == 'w': return []
+    if sl and sl.startswith('fix:'): cat = 'top'   # 정해진 색 (예: 로브 후드)
     slot = sl or SLOT[cat]; m = {'hair': 'hair'}.get(mat, 'hair' if cat == 'hair' else 'cloth')
     cands = [src] if src in PAL[m] else []
     cands += [k for k in PAL[m] if k not in cands]
@@ -398,7 +600,7 @@ body_entry = dict(id='body', name='body', L={b: [(10, 'spritesheets/body/bodies/
 meta['parts']['body'] = [write('body', 0, body_entry)]
 for cat in [c for c in SEL if c not in ('body', 'x')]:
     meta['parts'][cat] = [p for p in (write(cat, i, e) for i, e in enumerate(items[cat])) if p]
-for cat, nm in (('face', '기본'), ('cape', '없음'), ('neck', '없음')):
+for cat, nm in (('face', '기본'), ('cape', '없음'), ('neck', '없음'), ('hat', '없음')):
     meta['parts'][cat].insert(0, dict(id='none', n=nm, f=None, L={b: [] for b in BODIES}))
 meta['pal'] = {'skin': PAL['body'], 'hair': PAL['hair'], 'eye': PAL['eye'], 'cloth': PAL['cloth']}
 meta['pal']['bottom'] = meta['pal']['shoe'] = PAL['cloth']   # 교복 하의·신발: 천 팔레트에서 몇 색만

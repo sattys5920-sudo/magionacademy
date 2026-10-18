@@ -11,14 +11,16 @@ def hx(h): return tuple(int(h[i:i + 2], 16) for i in (1, 3, 5))
 MAT = {'skin': 'skin', 'eye': 'eye', 'hair': 'hair', 'top': 'cloth', 'legs': 'cloth', 'feet': 'cloth', 'hat': 'cloth', 'neck': 'cloth'}
 def compose(av):
     body = M['bodies'][av.get('body', 0)]; layers = []
-    for cat in ('body', 'face', 'hair', 'top', 'legs', 'feet', 'cape', 'neck'):
+    for cat in ('body', 'face', 'hair', 'top', 'legs', 'feet', 'cape', 'neck', 'hat'):
         p = M['parts'][cat][av.get(cat, 0) % len(M['parts'][cat])]
         for row, z, maps in p['L'].get(body, []): layers.append((z, p['f'], row, maps))
     layers.sort(key=lambda t: t[0]); out = np.zeros((FH, FW * NF, 4), np.uint8)
     for z, f, row, maps in layers:
         a = img(f)[row * FH:(row + 1) * FH].copy(); m = a[..., 3] > 0
         for slot, src in maps:
-            pal = M['pal'][MAT[slot]]; tgt = pal[av.get(slot + 'C', src)] if isinstance(av.get(slot + 'C'), str) else pal[src]
+            pal = M['pal'][MAT.get(slot, 'cloth')]
+            tn = slot[4:] if slot.startswith('fix:') else (M['fixed'].get(slot) or av.get(slot + 'C'))
+            tgt = pal[tn] if isinstance(tn, str) and tn in pal else pal[src]
             for s, t in zip(pal[src], tgt):
                 sc = hx(s); hit = m & (np.abs(a[..., :3].astype(int) - sc).max(-1) <= 1); a[hit, :3] = hx(t)
         out[m] = a[m]

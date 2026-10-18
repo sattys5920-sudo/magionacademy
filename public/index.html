@@ -1901,10 +1901,10 @@ const AV_TABS = [
   ['face', '얼굴', [['체형', 'body', null, null], ['피부색', null, 'skinC', 'skin'], ['표정', 'face', 'eyeC', 'eye']]],
   ['hair', '머리', [['머리 모양', 'hair', 'hairC', 'hair']]],
   ['uni', '옷', [['상의', 'top', 'topC', 'cloth'], ['하의', 'legs', 'legsC', 'bottom'], ['신발', 'feet', 'feetC', 'shoe']]],
-  ['acc', '소품', [['넥타이·리본', 'neck', null, null], ['망토', 'cape', null, null]]],
+  ['acc', '소품', [['모자', 'hat', 'hatC', 'cloth'], ['넥타이·목도리', 'neck', null, null], ['망토', 'cape', null, null]]],
 ];
 const AV_BODIES = [{ n: '여자' }, { n: '남자' }];
-const AV_HEADTHUMB = { face: 1, hair: 1 };
+const AV_HEADTHUMB = { face: 1, hair: 1, hat: 1 };
 let avTab = 'face', avView = 0, avTimer = 0;   // 미리보기 방향: 0 앞, 1 옆, 2 뒤
 const AV_VIEWS = [['down', '앞모습'], ['left', '옆모습'], ['up', '뒷모습']];
 const avLoaded = new Set();
@@ -1976,7 +1976,7 @@ function renderAvatar(){
 }
 // 옷 가게 (마을의 옷 가게 문, 캐릭터 꾸미기에서도 열려요): 입어 보고 사서 입기
 let shopTry = null, shopKind = 'cas', shopMsg = '';
-const SHOP_CATS = [['top', '상의'], ['legs', '하의'], ['feet', '신발']];
+const SHOP_CATS = [['top', '상의'], ['hat', '모자'], ['legs', '하의'], ['feet', '신발']];
 World.onLockedDoor = label => { if (label !== '옷 가게' || !me) return false; shopTry = null; shopMsg = ''; openSheet('home', 'clothes'); return true; };
 function renderClothes(){
   const A = World.Avatar, M = A.meta, body = M.bodies[me.av.body || 0];
@@ -1988,8 +1988,8 @@ function renderClothes(){
       <div class="avstage px"><canvas id="shCv" width="${A.FW}" height="${A.FH}"></canvas><button class="btn sm" id="shTurn">↻ ${AV_VIEWS[(avView + 1) % AV_VIEWS.length][1]}</button></div>
       <div class="seg" style="grid-template-columns:1fr 1fr">${[['cas', '사복'], ['pj', '잠옷']].map(([k, l]) => `<button data-shk="${k}" class="${shopKind === k ? 'on' : ''}">${l}</button>`).join('')}</div>
       ${SHOP_CATS.map(([c, label]) => { const its = M.parts[c].map((p, i) => [p, i]).filter(([p]) => p.k === shopKind && p.L[body]); return its.length ? `<section class="sec">${secH(label, M.parts[c][shopTry[c]].n)}
-        <div class="avopts">${its.map(([p, i]) => `<button class="avo ${shopTry[c] === i ? 'on' : ''}" data-try="${c},${i}"><img src="${avThumb({ ...shopTry, [c]: i }, false)}" alt=""><span class="s">${p.n}</span><span class="s b" style="color:${ownCloth(c, i) ? 'var(--mint2)' : 'var(--gold2)'}">${ownCloth(c, i) ? '내 옷' : p.p + 'G'}</span></button>`).join('')}</div></section>` : ''; }).join('')}
-      <section class="sec">${secH('옷 색', '사복·잠옷')}${swatch('cloth', 'topC')}<div class="s" style="margin:6px 0 2px">하의 색</div>${swatch('bottom', 'legsC')}<div class="s" style="margin:6px 0 2px">신발 색</div>${swatch('shoe', 'feetC')}</section>
+        <div class="avopts">${its.map(([p, i]) => `<button class="avo ${shopTry[c] === i ? 'on' : ''}" data-try="${c},${i}"><img src="${avThumb({ ...shopTry, [c]: i }, c === 'hat')}" alt=""><span class="s">${p.n}</span><span class="s b" style="color:${ownCloth(c, i) ? 'var(--mint2)' : 'var(--gold2)'}">${ownCloth(c, i) ? '내 옷' : p.p + 'G'}</span></button>`).join('')}</div></section>` : ''; }).join('')}
+      <section class="sec">${secH('옷 색', '사복·잠옷')}${swatch('cloth', 'topC')}<div class="s" style="margin:6px 0 2px">모자 색</div>${swatch('cloth', 'hatC')}<div class="s" style="margin:6px 0 2px">하의 색</div>${swatch('bottom', 'legsC')}<div class="s" style="margin:6px 0 2px">신발 색</div>${swatch('shoe', 'feetC')}</section>
       ${hint(shopMsg, '옷을 누르면 입어 봐요 · 산 옷은 캐릭터 꾸미기 「옷」에서 언제든 갈아입어요')}
       <div style="display:flex;gap:8px"><button class="btn px" id="shCancel" style="flex:1">그만두기</button><button class="btn go px" id="shBuy" style="flex:2" ${me.coin >= cost ? '' : 'disabled'}>${cost ? `사서 입기 ${cost}G` : '이대로 입기'}</button></div>
     </div>`);
