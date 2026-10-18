@@ -54,6 +54,8 @@ World.Avatar = (() => {
       for (let y = 0; y < FH; y++) for (let x = 0; x < W; x++){
         const s = ((row * FH + y) * SW + x) * 4; if (!src[s + 3]) continue;
         const d = (y * W + x) * 4, r = src[s], g = src[s + 1], b = src[s + 2];
+        const a = src[s + 3];
+        if (a < 255 && o[d + 3]){ const t = a / 255; o[d] += (r - o[d]) * t; o[d + 1] += (g - o[d + 1]) * t; o[d + 2] += (b - o[d + 2]) * t; continue; }   // 반투명(볼터치): 아래 색에 섞어요
         if (rp && r === g && g === b){ o[d] = rp[r * 3]; o[d + 1] = rp[r * 3 + 1]; o[d + 2] = rp[r * 3 + 2]; } else { o[d] = r; o[d + 1] = g; o[d + 2] = b; }
         o[d + 3] = 255;
       }
