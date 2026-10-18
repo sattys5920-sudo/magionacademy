@@ -203,11 +203,20 @@ for f, a in IMG.items():
 ys, xs = np.nonzero(u); X0, X1, Y0, Y1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
 FW, FH = int(X1 - X0), int(Y1 - Y0); NF = len(DIRS) * len(COLS)
 print('frame', FW, FH, 'crop', X0, Y0)
+# 더 날씬하게: 목 아래(64칸 기준 y≥36)에서 몸통·다리 사이 세로줄 2개를 빼고 양쪽을 1칸씩 안으로 (모든 부품 똑같이)
+SLIM_Y = 36; SLIM = {'down': (28, 35), 'up': (28, 35), 'left': (29, 34), 'right': (29, 34)}
+def slim(cell, d):
+    o = cell.copy(); lo, hi = SLIM[d]; b = cell[SLIM_Y:]
+    o[SLIM_Y:] = 0
+    o[SLIM_Y:, 1:lo + 1] = b[:, :lo]                  # 왼쪽 반: 1칸 오른쪽으로
+    o[SLIM_Y:, lo + 1:hi] = b[:, lo + 1:hi]           # 가운데 그대로
+    o[SLIM_Y:, hi:63] = b[:, hi + 1:]                 # 오른쪽 반: 1칸 왼쪽으로
+    return o
 def strip(a):
     o = np.zeros((FH, FW * NF, 4), np.uint8); k = 0
     for d in DIRS:
         for c in COLS:
-            o[:, k * FW:(k + 1) * FW] = a[ROWS[d] * 64 + Y0:ROWS[d] * 64 + Y1, c * 64 + X0:c * 64 + X1]; k += 1
+            o[:, k * FW:(k + 1) * FW] = slim(a[ROWS[d] * 64:(ROWS[d] + 1) * 64, c * 64:(c + 1) * 64], d)[Y0:Y1, X0:X1]; k += 1
     return o
 os.makedirs(OUTP, exist_ok=True)
 for old in glob.glob(os.path.join(OUTP, '*.png')): os.remove(old)
