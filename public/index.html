@@ -601,7 +601,7 @@ let sheetOn = false;
 const HOUSE_DORM = { ember:'dorm_witch', moon:'dorm_vamp', dusk:'dorm_wolf', dew:'dorm_ghost' };
 function openSheet(t, s = null){ tab = t; sub = s; sheetOn = true; app.classList.add('open'); render(); app.querySelector('.panel')?.scrollTo(0, 0); }
 function closeSheet(){
-  if (lesson?.phase === 'show' || lesson?.phase === 'input') lesson = null;
+  endLesson();
   clearInterval(examTick); exam = null; examOff?.(); examOff = null;
   stopEvent();
   if (visitUid){ visitOff?.(); visitOff = null; visitUid = null; }
@@ -725,69 +725,248 @@ function renderHome(){
   on('[data-go]', b => { const [m, o, t] = b.dataset.go.split(','); goPlace(m, o, t); });
 }
 
-// ===== 수업: 칠판 문양 외우기 (하루 10번, 맞히면 지식 +1) =====
-const CLASS_MAX = 10, RUNES = ['star','drop','herb','scale'], RUNE_KO = { star:'별', drop:'물', herb:'잎', scale:'불' };
+// ===== 수업: 하루 5교시. 과목을 골라 라운드를 이어 가다가, 틀리면 그 교시가 끝나요 =====
+// goal 라운드까지 성공하면 지식 +1, 그 뒤로는 한 라운드 성공할 때마다 지식 +1
+const CLASS_MAX = 5;
+const SUBJECTS = [
+  { id:'rune',  name:'문양학',   icon:'rune',  goal:4, desc:'칠판 문양을 보고 순서대로 눌러요', rule:'4개부터 하나씩 늘어나요 · 7개까지 성공하면 지식 +1' },
+  { id:'herb',  name:'약초학',   icon:'herb',  goal:3, desc:'약초 그림을 보고 이름을 맞혀요', rule:'3문제 맞히면 지식 +1 · 그 뒤론 그림이 조금씩만 보여요' },
+  { id:'fly',   name:'비행학',   icon:'star',  goal:3, desc:'빗자루를 타고 묘비 사이를 날아요', rule:'화면을 누르면 떠올라요 · 묘비 5개가 한 라운드 · 3라운드 성공하면 지식 +1' },
+  { id:'beast', name:'마법생물학', icon:'heart', goal:3, desc:'뒤집힌 동물 카드의 짝을 찾아요', rule:'시간 안에 짝을 다 찾아요 · 3라운드 성공하면 지식 +1' },
+];
+const SUBJ = Object.fromEntries(SUBJECTS.map(x => [x.id, x]));
+const RUNES = ['star','drop','herb','scale'], RUNE_KO = { star:'별', drop:'물', herb:'잎', scale:'불' };
 const classLeft = () => me.classDay === me.day ? Math.max(0, CLASS_MAX - (me.classCnt || 0)) : CLASS_MAX;
-const runeLen = () => 4 + Math.min(3, Math.floor((me.know || 0) / 30));   // 지식 30마다 문양이 하나씩 길어져요
 const knowToNext = () => KNOW_PER_HINT - ((me.know || 0) % KNOW_PER_HINT);
-let lesson = null, lessonTimer = 0;   // { seq, phase: 'show'|'input'|'ok'|'fail', input: [] }
-function startLesson(){
+let lesson = null, lessonTimer = 0, lessonIv = 0, flyRaf = 0, flyKey = null;
+document.addEventListener('keydown', e => { if (flyKey && sub === 'class') flyKey(e); });
+function stopLesson(){ clearTimeout(lessonTimer); clearInterval(lessonIv); cancelAnimationFrame(flyRaf); flyKey = null; }
+function endLesson(){ stopLesson(); lesson = null; }
+function gainKnow(){
+  me.know = (me.know || 0) + 1;
+  let msg = `지식 +1 (지식 ${me.know})`;
+  if (me.know % KNOW_PER_HINT === 0){
+    const next = HINT_ORDER.find(p => !me.hints.includes(p));
+    if (next){ me.hints.push(next); msg += ` · 새 레시피: ${HINTS[next]}`; }
+    else { me.coin += 30; msg += ' · 모든 레시피를 알아요. 장학금 +30G'; }
+  }
+  save(); return msg;
+}
+function startSubject(id){
   if (classLeft() < 1) return;
   if (me.classDay !== me.day){ me.classDay = me.day; me.classCnt = 0; }
   me.classCnt++; save();
-  const n = runeLen();
-  lesson = { seq: Array.from({ length: n }, () => RUNES[Math.floor(Math.random() * 4)]), phase: 'show', input: [] };
-  clearTimeout(lessonTimer);
-  lessonTimer = setTimeout(() => { if (lesson?.phase === 'show'){ lesson.phase = 'input'; if (sub === 'class') renderClass(); } }, 1200 + n * 450);
-  renderClass();
+  stopLesson();
+  lesson = { s: id, round: 1, earned: 0, phase: 'play', msg: '', log: [] };
+  nextRound(true);
 }
-function lessonTap(k){
-  if (!lesson || lesson.phase !== 'input') return;
-  lesson.input.push(k);
-  const i = lesson.input.length - 1;
-  if (lesson.input[i] !== lesson.seq[i]){ lesson.phase = 'fail'; return renderClass(); }
-  if (lesson.input.length === lesson.seq.length){
-    lesson.phase = 'ok';
-    me.know = (me.know || 0) + 1;
-    let msg = `정답! 지식 +1 (지식 ${me.know})`;
-    if (me.know % KNOW_PER_HINT === 0){
-      const next = HINT_ORDER.find(p => !me.hints.includes(p));
-      if (next){ me.hints.push(next); msg += ` · 새 레시피: ${HINTS[next]}`; }
-      else { me.coin += 30; msg += ' · 모든 레시피를 알아요. 장학금 +30G'; }
-    }
-    lesson.msg = msg; save();
+// 라운드 성공: goal 라운드부터 지식 +1
+function roundWon(){
+  const L = lesson, g = SUBJ[L.s].goal;
+  if (L.round >= g){ L.earned++; L.msg = (L.round === g ? `${g}라운드 달성! ` : `${L.round}라운드 성공! `) + gainKnow(); }
+  else L.msg = `${L.round}라운드 성공! ${g}라운드까지 ${g - L.round}번 남았어요`;
+  L.round++; L.won = true;
+}
+function lessonOver(why){
+  const L = lesson; if (!L || L.phase === 'over') return;
+  stopLesson(); L.phase = 'over'; L.why = why; save();
+  if (sub === 'class') renderClass();
+}
+function nextRound(first){
+  const L = lesson; if (!L) return;
+  L.won = false;
+  if (L.s === 'rune'){
+    const n = Math.min(10, 3 + L.round);
+    L.seq = Array.from({ length: n }, () => RUNES[Math.floor(Math.random() * 4)]); L.input = []; L.step = 'show';
+    lessonTimer = setTimeout(() => { if (lesson === L && L.step === 'show'){ L.step = 'input'; if (sub === 'class') renderClass(); } }, 1200 + n * 450);
+  } else if (L.s === 'herb'){
+    const pool = SEED_LIST, ans = pool[Math.floor(Math.random() * pool.length)];
+    const same = pool.filter(x => x.id !== ans.id && (L.round <= 3 || x.tier === ans.tier));
+    const others = shuffle(same.length >= 3 ? same : pool.filter(x => x.id !== ans.id)).slice(0, 3);
+    L.ans = ans.id; L.opts = shuffle([ans, ...others]).map(x => x.id); L.pick = null;
+    // 4라운드부터 일부만: 보이는 창이 점점 작아져요
+    const w = L.round <= 3 ? 1 : Math.max(.26, .6 - (L.round - 4) * .06);
+    const x = w >= 1 ? 0 : .12 + Math.random() * (.76 - w), y = w >= 1 ? 0 : .12 + Math.random() * (.76 - w);
+    L.win = [x, y, w];
+  } else if (L.s === 'beast'){
+    const pairs = [3, 4, 6][L.round - 1] || 8;
+    const secs = L.round <= 3 ? pairs * 7 : Math.max(18, 44 - (L.round - 4) * 4);
+    const ks = shuffle(CREATURES.map((_, k) => k)).slice(0, pairs);
+    L.cards = shuffle([...ks, ...ks]).map(k => ({ k, open: false, done: false })); L.flip = []; L.busy = false;
+    L.end = Date.now() + secs * 1000; L.secs = secs;
+    clearInterval(lessonIv);
+    lessonIv = setInterval(() => {
+      if (lesson !== L){ clearInterval(lessonIv); return; }
+      const left = L.end - Date.now(), bar = $('#bTime');
+      if (bar){ bar.style.width = Math.max(0, left / (L.secs * 1000) * 100) + '%'; $('#bLeft').textContent = Math.ceil(Math.max(0, left) / 1000) + '초'; }
+      if (left <= 0) lessonOver('시간이 다 됐어요');
+    }, 200);
+  } else if (L.s === 'fly'){
+    if (first) L.fly = null;   // 캔버스가 그려진 뒤 flyStart
   }
   renderClass();
 }
+function runeTap(k){
+  const L = lesson; if (!L || L.step !== 'input') return;
+  L.input.push(k);
+  const i = L.input.length - 1;
+  if (L.input[i] !== L.seq[i]){ L.step = 'fail'; renderClass(); return lessonOver('문양 순서가 틀렸어요'); }
+  if (L.input.length === L.seq.length){
+    L.step = 'ok'; roundWon(); renderClass();
+    lessonTimer = setTimeout(() => { if (lesson === L) nextRound(); }, 1100);
+    return;
+  }
+  renderClass();
+}
+function herbPick(id){
+  const L = lesson; if (!L || L.pick) return;
+  L.pick = id;
+  if (id !== L.ans){ renderClass(); return lessonOver(`틀렸어요 · 정답: 「${ITEM[L.ans]}」`); }
+  roundWon(); renderClass();
+  lessonTimer = setTimeout(() => { if (lesson === L) nextRound(); }, 900);
+}
+function beastTap(i){
+  const L = lesson; if (!L || L.busy || L.phase !== 'play') return;
+  const c = L.cards[i]; if (c.open || c.done) return;
+  c.open = true; L.flip.push(i);
+  if (L.flip.length === 2){
+    const [a, b] = L.flip.map(j => L.cards[j]); L.flip = [];
+    if (a.k === b.k){
+      a.done = b.done = true;
+      if (L.cards.every(x => x.done)){
+        clearInterval(lessonIv); roundWon(); renderClass();
+        lessonTimer = setTimeout(() => { if (lesson === L) nextRound(); }, 1000);
+        return;
+      }
+    } else { L.busy = true; lessonTimer = setTimeout(() => { if (lesson !== L) return; a.open = b.open = false; L.busy = false; renderClass(); }, 650); }
+  }
+  renderClass();
+}
+// 비행학: 누르면 떠오르고, 묘비 기둥 사이 틈으로 지나가요
+const FW = 340, FH = 300;
+function flyStart(){
+  const L = lesson, cv = $('#flyCv'); if (!L || !cv) return;
+  const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+  const st = L.fly = L.fly || { y: FH / 2, vy: 0, cols: [], passed: 0, wait: true, t: 0, banner: '', bannerT: 0, stars: Array.from({ length: 26 }, () => [Math.random() * FW, Math.random() * FH * .7, Math.random()]) };
+  const speed = () => 110 + (L.round - 1) * 14, gap = () => Math.max(86, 128 - (L.round - 1) * 6);
+  const flap = e => { e?.preventDefault?.(); if (lesson !== L || L.phase !== 'play') return; st.wait = false; st.vy = -265; };
+  cv.onpointerdown = flap;
+  flyKey = e => { if (e.code === 'Space') flap(e); };
+  let last = performance.now(), nextCol = 0;
+  const step = now => {
+    if (lesson !== L || L.phase !== 'play' || !document.body.contains(cv)) return;
+    const dt = Math.min(.033, (now - last) / 1000); last = now; st.t += dt;
+    if (!st.wait){
+      st.vy += 820 * dt; st.y += st.vy * dt;
+      nextCol -= dt;
+      if (nextCol <= 0){ const gp = gap(); st.cols.push({ x: FW + 20, top: 40 + Math.random() * (FH - 80 - gp - 30), gp, done: false }); nextCol = 1.55; }
+      st.cols.forEach(c => { c.x -= speed() * dt; });
+      st.cols = st.cols.filter(c => c.x > -40);
+      for (const c of st.cols){
+        if (!c.done && c.x + 26 < 70){
+          c.done = true; st.passed++;
+          if (st.passed % 5 === 0){ roundWon(); st.banner = L.msg; st.bannerT = 2.2; const h = $('#flyMsg'); if (h) h.innerHTML = hint(L.msg, ''); }
+        }
+        if (80 + 9 > c.x && 80 - 9 < c.x + 26 && (st.y - 8 < c.top || st.y + 8 > c.top + c.gp)) return flyCrash();
+      }
+      if (st.y < 8 || st.y > FH - 24) return flyCrash();
+    } else st.y = FH / 2 + Math.sin(st.t * 3) * 6;
+    st.bannerT = Math.max(0, st.bannerT - dt);
+    flyDraw(g, st);
+    flyRaf = requestAnimationFrame(step);
+  };
+  const flyCrash = () => { flyDraw(g, st, true); lessonOver(`묘비에 부딪혔어요 · 묘비 ${st.passed}개 통과`); };
+  flyDraw(g, st); flyRaf = requestAnimationFrame(step);
+}
+function flyDraw(g, st, crash){
+  const L = lesson, R = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
+  const sky = g.createLinearGradient(0, 0, 0, FH); sky.addColorStop(0, '#1E1440'); sky.addColorStop(1, '#4A2E6A'); g.fillStyle = sky; g.fillRect(0, 0, FW, FH);
+  st.stars.forEach(([x, y, b]) => R((x - st.t * 8 * (1 + b)) % FW + (x - st.t * 8 * (1 + b) < 0 ? FW : 0), y, 2, 2, b > .6 ? '#FFF6C8' : '#9A8AC8'));
+  g.fillStyle = '#FFE9A8'; g.beginPath(); g.arc(282, 52, 22, 0, 7); g.fill(); g.fillStyle = '#2A1C4E'; g.beginPath(); g.arc(292, 46, 18, 0, 7); g.fill();
+  R(0, FH - 16, FW, 16, '#2A2040'); for (let x = -((st.t * 40) % 16); x < FW; x += 16) R(x, FH - 16, 8, 3, '#3E3060');
+  st.cols.forEach(c => {
+    // 위: 늘어진 덩굴, 아래: 묘비 기둥
+    R(c.x + 6, 0, 14, c.top, '#3E6A3A'); R(c.x + 2, c.top - 10, 22, 10, '#4E8A48'); R(c.x + 9, c.top - 4, 3, 6, '#E86A9A');
+    const by = c.top + c.gp; R(c.x, by, 26, FH - 16 - by, '#8A82A8'); R(c.x, by, 26, 4, '#B4AECC'); R(c.x + 3, by + 4, 3, FH - 20 - by, '#A49CC0');
+    R(c.x + 9, by + 12, 8, 2, '#5E5680'); R(c.x + 12, by + 9, 2, 8, '#5E5680');
+  });
+  // 빗자루 탄 마녀 (x=80)
+  const y = Math.round(st.y), tilt = Math.max(-3, Math.min(5, st.vy / 60));
+  R(60, y + 4 + tilt / 2, 34, 3, '#8A5A30'); R(54, y + 1 + tilt / 2, 8, 9, '#E8B84A'); R(52, y + 3 + tilt / 2, 3, 5, '#C8902A');
+  R(74, y - 6, 12, 11, crash ? '#C2385E' : '#6A4AA8'); R(76, y - 13, 9, 8, '#F2C6A0'); R(82, y - 11, 2, 2, '#2A1830');
+  R(72, y - 16, 15, 3, '#2A1C3E'); R(75, y - 22, 9, 6, '#2A1C3E'); R(78, y - 26, 4, 4, '#2A1C3E'); R(75, y - 16, 9, 1, '#E8B84A');
+  g.font = '14px G9, monospace'; g.textAlign = 'left'; g.fillStyle = '#FFF6E0';
+  g.fillText(`라운드 ${L.round}  ·  묘비 ${st.passed % 5} / 5`, 10, 22);
+  if (st.wait){ g.textAlign = 'center'; g.fillStyle = '#FFE07A'; g.fillText('화면을 누르면 출발!', FW / 2, FH / 2 + 46); }
+  if (st.bannerT > 0){ g.textAlign = 'center'; g.fillStyle = '#8CE6B0'; g.fillText(`${L.round - 1}라운드 성공!`, FW / 2, 56); }
+}
 function renderClass(){
   const left = classLeft(), L = lesson;
-  const showRunes = L && L.phase !== 'input';
-  const board = L ? L.seq.map((k, i) => {
-      const got = L.input.length > i, bad = L.phase === 'fail' && i === L.input.length - 1;
-      const bg = bad ? '#C2385E' : got || L.phase === 'ok' ? '#8CE6B0' : '#3E625A';
-      return `<div style="width:42px;height:46px;display:flex;align-items:center;justify-content:center;background:${bg};border:2px solid ${got ? '#fff' : '#5E8A80'}">${showRunes || got ? ic(L.phase === 'fail' && bad ? L.input[i] : k) : '<span class="b" style="color:#8CB8AE;font-size:20px">?</span>'}</div>`;
-    }).join('') : `<span class="s" style="color:#CDE8E0">${left ? '수업 시작을 누르면 문양이 잠깐 나타나요' : '오늘 수업은 모두 끝났어요'}</span>`;
-  frame('class', '3교시 · 문양학', `오늘 남은 수업 ${left} / ${CLASS_MAX} · 지식 ${me.know || 0}`, `
-    <section class="sec">
-      <div class="sec-h"><h3>${!L ? '칠판의 문양을 외워요' : L.phase === 'show' ? '잘 봐요!' : L.phase === 'input' ? '본 순서대로 눌러요' : L.phase === 'ok' ? '정답!' : '아쉬워요'}</h3>${backBtn}</div>
-      <div class="px" style="background:#2E4A44;border:3px solid var(--ink2);padding:12px 8px;display:flex;justify-content:center;gap:5px;min-height:76px;align-items:center;flex-wrap:wrap">${board}</div>
-    </section>
-    <div class="grid" style="grid-template-columns:repeat(4,1fr)">
-      ${RUNES.map(k => `<button class="cell" data-rune="${k}" ${L?.phase === 'input' ? '' : 'disabled'}>${ic(k)}<span class="s">${RUNE_KO[k]}</span></button>`).join('')}
-    </div>
-    ${hint(L?.phase === 'ok' ? L.msg : L?.phase === 'fail' ? '문양이 흐트러졌어요. 이번 수업은 지식을 얻지 못했어요.' : '', `맞히면 지식 +1 · 다음 레시피 힌트까지 지식 ${knowToNext()}`)}
-    ${!L || L.phase === 'ok' || L.phase === 'fail' ? `<button class="btn ${left ? 'go' : ''} px" id="lesson" ${left ? '' : 'disabled'}>${ic('book')}${left ? (L ? '다음 수업' : '수업 시작') + ` (${left}번 남음)` : '내일 또 와요'}</button>` : ''}
-    <section class="sec">
-      ${secH('이번 주 쪽지시험', examDone() ? `${me.exam.score}점 · ${gradeOf(me.exam.score)}` : examStarted() ? '응시함' : '아직 안 봤어요')}
-      <div class="box px" style="padding:10px 12px;display:flex;align-items:center;gap:10px">${ic('rune')}
-        <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span class="s">배운 레시피·기숙사·생물에서 10문제</span><span class="s sub">한 번만 볼 수 있어요 · 문제당 20초</span></div>
-        <button class="btn sm ${examStarted() ? '' : 'go'}" id="goExam">${examStarted() ? '결과' : '시험 보기'}</button>
-      </div>
-    </section>`);
-  $('#goExam').onclick = () => { if (examStarted()){ exam = null; sub = 'exam'; render(); } else if (confirm('쪽지시험은 일주일에 한 번만 볼 수 있어요. 지금 볼까요?')) startExam(); };
-  on('[data-rune]', b => lessonTap(b.dataset.rune));
-  const ls = $('#lesson'); if (ls) ls.onclick = startLesson;
-  $('#back').onclick = () => { if (lesson?.phase === 'show' || lesson?.phase === 'input') lesson = null; closeSheet(); };
+  if (!L){
+    frame('class', '수업', `오늘 남은 교시 ${left} / ${CLASS_MAX} · 지식 ${me.know || 0}`, `
+      <section class="sec">
+        <div class="sec-h"><h3>${left ? `${CLASS_MAX - left + 1}교시 · 과목을 골라요` : '오늘 수업은 모두 끝났어요'}</h3>${backBtn}</div>
+        <div class="box px">${SUBJECTS.map(x => `<div class="li">${ic(x.icon)}
+          <div class="main"><span class="t">${x.name}</span><span class="d" style="white-space:normal">${x.desc}<br>${x.rule}</span></div>
+          <button class="btn sm ${left ? 'go' : ''}" data-subj="${x.id}" ${left ? '' : 'disabled'}>듣기</button></div>`).join('')}</div>
+      </section>
+      ${hint('', `틀릴 때까지 라운드가 이어져요 · 다음 레시피 힌트까지 지식 ${knowToNext()}`)}
+      <section class="sec">
+        ${secH('이번 주 쪽지시험', examDone() ? `${me.exam.score}점 · ${gradeOf(me.exam.score)}` : examStarted() ? '응시함' : '아직 안 봤어요')}
+        <div class="box px" style="padding:10px 12px;display:flex;align-items:center;gap:10px">${ic('rune')}
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span class="s">배운 레시피·기숙사·생물에서 10문제</span><span class="s sub">한 번만 볼 수 있어요 · 문제당 20초</span></div>
+          <button class="btn sm ${examStarted() ? '' : 'go'}" id="goExam">${examStarted() ? '결과' : '시험 보기'}</button>
+        </div>
+      </section>`);
+    $('#goExam').onclick = () => { if (examStarted()){ exam = null; sub = 'exam'; render(); } else if (confirm('쪽지시험은 일주일에 한 번만 볼 수 있어요. 지금 볼까요?')) startExam(); };
+    on('[data-subj]', b => startSubject(b.dataset.subj));
+    $('#back').onclick = closeSheet;
+    return;
+  }
+  const S = SUBJ[L.s], over = L.phase === 'over', g = S.goal;
+  const rn = L.won && L.s !== 'fly' ? L.round - 1 : L.round, prog = rn <= g && !over ? `라운드 ${rn} / ${g}` : `라운드 ${rn}`;
+  let body = '';
+  if (L.s === 'rune'){
+    const showAll = L.step !== 'input';
+    const board = L.seq.map((k, i) => {
+      const got = L.input.length > i, bad = L.step === 'fail' && i === L.input.length - 1;
+      const bg = bad ? '#C2385E' : got || L.step === 'ok' ? '#8CE6B0' : '#3E625A';
+      return `<div style="width:38px;height:44px;display:flex;align-items:center;justify-content:center;background:${bg};border:2px solid ${got ? '#fff' : '#5E8A80'}">${showAll || got ? ic(bad ? L.input[i] : k) : '<span class="b" style="color:#8CB8AE;font-size:20px">?</span>'}</div>`;
+    }).join('');
+    body = `<section class="sec"><div class="sec-h"><h3>${over ? '수업 끝' : L.step === 'show' ? `잘 봐요! (문양 ${L.seq.length}개)` : L.step === 'input' ? '본 순서대로 눌러요' : '정답!'}</h3><span class="meta">${prog}</span></div>
+      <div class="px" style="background:#2E4A44;border:3px solid var(--ink2);padding:12px 6px;display:flex;justify-content:center;gap:4px;min-height:76px;align-items:center;flex-wrap:wrap">${board}</div></section>
+      <div class="grid" style="grid-template-columns:repeat(4,1fr)">${RUNES.map(k => `<button class="cell" data-rune="${k}" ${L.step === 'input' && !over ? '' : 'disabled'}>${ic(k)}<span class="s">${RUNE_KO[k]}</span></button>`).join('')}</div>`;
+  } else if (L.s === 'herb'){
+    const [x, y, w] = L.win, full = w >= 1 || L.pick;
+    const clip = full ? '' : `clip-path:inset(${(y * 100).toFixed(1)}% ${((1 - x - w) * 100).toFixed(1)}% ${((1 - y - w) * 100).toFixed(1)}% ${(x * 100).toFixed(1)}%);`;
+    body = `<section class="sec"><div class="sec-h"><h3>${over ? '수업 끝' : L.pick ? '정답!' : full ? '이 약초는 뭘까요?' : '일부만 보여요! 이 약초는?'}</h3><span class="meta">${prog}</span></div>
+      <div class="px" style="background:#2E4A44;border:3px solid var(--ink2);padding:14px;display:flex;justify-content:center">
+        <div style="width:160px;height:160px;background:repeating-linear-gradient(45deg,#24403A 0 8px,#2A4842 8px 16px);position:relative">
+          <div style="position:absolute;inset:0;${clip}">${ic(L.ans, 'transform:scale(5);transform-origin:0 0;image-rendering:pixelated')}</div></div></div></section>
+      <div class="grid" style="grid-template-columns:1fr 1fr">${L.opts.map(id => {
+        const st = L.pick && id === L.ans ? 'background:var(--mint)' : L.pick === id ? 'background:#FFD0DA' : '';
+        return `<button class="btn" data-herb="${id}" ${L.pick || over ? 'disabled' : ''} style="min-height:48px;white-space:normal;${st};opacity:1">${ITEM[id]}</button>`; }).join('')}</div>`;
+  } else if (L.s === 'beast'){
+    const cols = L.cards.length > 12 ? 4 : L.cards.length > 8 ? 4 : L.cards.length === 8 ? 4 : 3;
+    body = `<section class="sec"><div class="sec-h"><h3>${over ? '수업 끝' : L.cards.every(c => c.done) ? '모두 찾았어요!' : '같은 동물 짝을 찾아요'}</h3><span class="meta">${prog} · <span id="bLeft">${Math.ceil(Math.max(0, L.end - Date.now()) / 1000)}초</span></span></div>
+      <div style="height:8px;background:var(--line);margin-bottom:8px"><div id="bTime" style="height:100%;width:${Math.max(0, (L.end - Date.now()) / (L.secs * 1000) * 100)}%;background:var(--gold, #F6C83A)"></div></div>
+      <div class="grid" style="grid-template-columns:repeat(${cols},1fr)">${L.cards.map((c, i) => `<button class="cell" data-card="${i}" ${over ? 'disabled' : ''} style="height:72px;overflow:hidden;${c.done ? 'background:var(--mint)' : c.open ? '' : 'background:#4A3A6E'}">${c.open || c.done || over ? `<div style="width:120px;height:102px;transform:scale(.55);margin:-24px -30px">${crSprite({ k: c.k, col: { n: '기본' }, bornAt: 0 }, 1)}</div>` : '<span class="b" style="color:#B4A8D8;font-size:22px">?</span>'}</button>`).join('')}</div></section>`;
+  } else if (L.s === 'fly'){
+    body = `<section class="sec"><div class="sec-h"><h3>${over ? '수업 끝' : '묘비 사이로 날아요'}</h3><span class="meta">${prog}</span></div>
+      <canvas id="flyCv" width="${FW}" height="${FH}" class="px" style="width:100%;max-width:${FW * 1.2}px;display:block;margin:0 auto;border:3px solid var(--ink2);image-rendering:pixelated;touch-action:none"></canvas></section>`;
+  }
+  const g2 = L.earned ? `이번 교시에서 지식 +${L.earned}` : `${g}라운드까지 성공해야 지식을 받아요`;
+  frame('class', S.name, `${CLASS_MAX - left}교시 · 지식 ${me.know || 0}`, `
+    ${body}
+    <div id="flyMsg">${hint(over ? `${L.why} · ${g2}` : L.msg, S.rule)}</div>
+    ${over ? `<button class="btn go px" id="lessonDone">${ic('book')}교실로 (오늘 ${left}교시 남음)</button>` : `<button class="btn ghost" id="lessonQuit" style="width:100%">그만하기 · ${g2}</button>`}`);
+  on('[data-rune]', b => runeTap(b.dataset.rune));
+  on('[data-herb]', b => herbPick(b.dataset.herb));
+  on('[data-card]', b => beastTap(+b.dataset.card));
+  const d = $('#lessonDone'); if (d) d.onclick = () => { endLesson(); renderClass(); };
+  const q = $('#lessonQuit'); if (q) q.onclick = () => lessonOver('수업을 마쳤어요');
+  if (L.s === 'fly' && !over) flyStart();
+  else if (L.s === 'fly' && over && L.fly){ const cv = $('#flyCv'); if (cv) flyDraw(cv.getContext('2d'), L.fly, true); }
 }
 
 // ===== 연구실 =====
@@ -1087,7 +1266,7 @@ function sleep(){
   me.day++;
   me.mana = Math.min(50 + cozy * 2 + guests * 3, me.mana + gain);
   me.orders = makeOrders(me.day, me.hints, me.found);
-  lesson = null;
+  endLesson();
   save();
   dormMsg = `푹 잤어요! 봄 학기 ${me.day}일 아침 · 마력 +${gain} (아늑함 +${cozy * 3}${guests ? `, 손님 ${guests}명 +${guests * 3}` : ''})`;
   renderDorm();
