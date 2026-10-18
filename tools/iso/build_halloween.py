@@ -21,6 +21,8 @@ for k, (house, name, hall) in DORM.items():
     for n in range(1, 7): MAPS['%s_%d' % (k, n)]['meta'].update(title=name.replace('기숙사', '휴게실'), sub='%s · %d단계 · 게시판에서 함께 꾸며요' % (hall, n))
     for o in camp['objs']:
         if o['door'] and o['door']['to'] == k: o['door']['label'] = name
+for o in camp['objs']:                          # 마을 '가면 가게' = 옷 가게 (index.html World.onLockedDoor)
+    if o['door'] and o['door']['label'] == '가면 가게': o['door']['label'] = '옷 가게'
 for a in camp['areas']:
     if a['n'] == '기숙사': a['n'] = '기숙사 네 동'
 AV = json.load(open(I + '/out/lpc_meta.json'))   # lpc/build_lpc.py (LPC 캐릭터 부품)

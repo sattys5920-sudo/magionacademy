@@ -5,14 +5,14 @@ const MAPS = __MAPS__;
 const World = window.World = { onAct: null, onMove: null };
 // ---------- 캐릭터 조합 (LPC 부품: tools/iso/lpc/build_lpc.py) ----------
 // av = { body: 체형(0 여·1 남), hair, face, top, legs, feet, cape, neck: 부품 번호,
-//        skinC, hairC, eyeC, legsC, feetC: 색 번호, house: 넥타이·망토 안감 색이 될 기숙사 }
+//        skinC, hairC, eyeC, legsC, feetC, topC: 색 번호, house: 넥타이·망토 안감 색이 될 기숙사 }
 // 부품 그림은 필요할 때 불러와요 (art/lpc/*.png). 색은 LPC 팔레트를 바꿔 칠해요
 const AVM = __AVATAR__;
 const ASC = AVM.scale || .5;   // 캐릭터 그림 1픽셀 = 세계 픽셀의 몇 배
 World.Avatar = (() => {
   const FW = AVM.fw, FH = AVM.fh, NF = AVM.frames, CATS = ['hair', 'face', 'top', 'legs', 'feet', 'cape', 'neck'], HOUSES = Object.keys(AVM.house);
-  const COLORS = { skinC: 'skin', hairC: 'hair', eyeC: 'eye', legsC: 'bottom', feetC: 'shoe' };   // 색 키 → 고를 수 있는 색 목록
-  const SLOTC = { skin: 'skinC', hair: 'hairC', eye: 'eyeC', legs: 'legsC', feet: 'feetC' };
+  const COLORS = { skinC: 'skin', hairC: 'hair', eyeC: 'eye', legsC: 'bottom', feetC: 'shoe', topC: 'cloth' };   // topC: 사복·잠옷 색   // 색 키 → 고를 수 있는 색 목록
+  const SLOTC = { skin: 'skinC', hair: 'hairC', eye: 'eyeC', legs: 'legsC', feet: 'feetC', cas: 'topC' };
   const MAT = { skin: 'skin', eye: 'eye', hair: 'hair', top: 'cloth', legs: 'bottom', feet: 'shoe' };
   const imgs = {}, cache = new Map(), heads = new Map(), maps = new Map(), subs = [];
   const bodyName = av => AVM.bodies[av.body] || AVM.bodies[0];
@@ -39,7 +39,7 @@ World.Avatar = (() => {
   const rnd = seed => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   function fromLook(look){
     const r = rnd(((look | 0) + 7) * 9973 + 1), a = { body: Math.floor(r() * 2) };
-    CATS.forEach(c => { a[c] = Math.floor(r() * AVM.parts[c].length); });
+    CATS.forEach(c => { const ok = AVM.parts[c].map((p, i) => i).filter(i => !AVM.parts[c][i].k || AVM.parts[c][i].k === 'uni'); a[c] = ok[Math.floor(r() * ok.length)]; });   // 다른 학생은 교복
     a.cape = r() < .6 ? 0 : a.cape; a.neck = r() < .3 ? 0 : a.neck; a.face = r() < .6 ? 0 : a.face;
     Object.entries(COLORS).forEach(([k, p]) => { a[k] = Math.floor(r() * AVM.colors[p].length); });
     a.skinC = Math.floor(r() * 7);
@@ -292,7 +292,7 @@ function goDoor(door, o){
     if (!r || typeof r === 'string'){ const [bx, by] = P(door.tile[0] + .5, door.tile[1] + .5); showBubble({ x: bx, y: by - 30, sw: 0 }, r || '<b>빈 방</b>'); return; }
     view = r; label = r.own ? '내 방' : r.name + '의 방';
   }
-  if (!door.to){ showBubble(o, `<b>${door.label}</b><br>아직 문이 잠겨 있어요 · 곧 열려요`); return; }
+  if (!door.to){ if (World.onLockedDoor && World.onLockedDoor(door.label)) return; showBubble(o, `<b>${door.label}</b><br>아직 문이 잠겨 있어요 · 곧 열려요`); return; }
   let to = door.to, spawn = door.spawn;
   // 돌아가는 문: 들어온 순서를 거꾸로 (없으면 그 방의 바깥 방으로)
   if (to === '@back'){ const b = backStack.pop(); to = b ? b.map : (M.backTo || 'campus'); spawn = b ? b.pos : null; label = (MAPS[real(to)] || MAPS.campus).meta.title; }

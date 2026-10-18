@@ -532,7 +532,7 @@ function normalize(p){
   if (p.furn){ p.fbag = p.fbag || {}; Object.entries(p.furn).forEach(([k, st]) => { if (st?.own && OLD_FURN[k]) p.fbag[OLD_FURN[k]] = (p.fbag[OLD_FURN[k]] || 0) + 1; }); delete p.furn; }
   p.fbag = p.fbag || {}; p.room = (p.room || []).filter(r => FURN_BY[r.f]); p.common = p.common || { stage: 1, pool: {} }; p.common.pool = p.common.pool || {};
   p.orders = p.orders || []; p.know = p.know || 0;
-  p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look));
+  p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look)); p.closet = p.closet || {};   // closet: 옷 가게에서 산 옷 { '부위:부품id': 1 }
   p.plots = (p.plots || []).map(x => {
     if (!x.k || !SEED_INFO[x.k]) return { k: null };
     if (x.at) return x;
@@ -684,6 +684,7 @@ function render(){
   hud();
   if (!sheetOn) return;
   if (sub === 'avatar') return renderAvatar();
+  if (sub === 'clothes') return renderClothes();
   if (sub === 'class') return renderClass();
   if (sub === 'dorm') return renderDorm();
   if (sub === 'common') return renderCommon();
@@ -1899,7 +1900,7 @@ async function houseCounts(){
 const AV_TABS = [
   ['face', '얼굴', [['체형', 'body', null, null], ['피부색', null, 'skinC', 'skin'], ['표정', 'face', 'eyeC', 'eye']]],
   ['hair', '머리', [['머리 모양', 'hair', 'hairC', 'hair']]],
-  ['uni', '교복', [['상의', 'top', null, null], ['하의', 'legs', 'legsC', 'bottom'], ['신발', 'feet', 'feetC', 'shoe']]],
+  ['uni', '옷', [['상의', 'top', 'topC', 'cloth'], ['하의', 'legs', 'legsC', 'bottom'], ['신발', 'feet', 'feetC', 'shoe']]],
   ['acc', '소품', [['넥타이·리본', 'neck', null, null], ['망토', 'cape', null, null]]],
 ];
 const AV_BODIES = [{ n: '여자' }, { n: '남자' }];
@@ -1907,12 +1908,15 @@ const AV_HEADTHUMB = { face: 1, hair: 1 };
 let avTab = 'face', avView = 0, avTimer = 0;   // 미리보기 방향: 0 앞, 1 옆, 2 뒤
 const AV_VIEWS = [['down', '앞모습'], ['left', '옆모습'], ['up', '뒷모습']];
 const avLoaded = new Set();
+// 옷 가게: 교복(uni)은 처음부터 내 옷, 사복(cas)·잠옷(pj)은 사야 해요
+const ownCloth = (cat, i) => { const p = World.Avatar.meta.parts[cat]?.[i]; return !p || !p.k || p.k === 'uni' || !!me?.closet?.[cat + ':' + p.id]; };
+const casualOn = av => ['top', 'legs'].some(c => { const p = World.Avatar.meta.parts[c][av[c]]; return p && p.k && p.k !== 'uni'; });
 const avThumb = (av, head) => { const A = World.Avatar; if (!A.loaded) return ''; const c = document.createElement('canvas'), b = A.headBox, [x, y, w, h] = head ? [b.x, b.y, b.s, b.s] : [0, 0, A.FW, A.FH]; c.width = w; c.height = h; c.getContext('2d').drawImage(A.compose(av), x, y, w, h, 0, 0, w, h); return c.toDataURL(); };
 function avatarUI(av){
   const A = World.Avatar, M = A.meta, [, , rows] = AV_TABS.find(t => t[0] === avTab), body = M.bodies[av.body || 0];
   av = A.fix(av);
   const swatch = (pal, key) => `<div class="pal">${M.colors[pal].map((nm, i) => `<button class="sw ${av[key] === i ? 'on' : ''}" data-avc="${key},${i}" style="background:${M.pal[pal][nm][Math.min(3, M.pal[pal][nm].length - 1)]}" aria-label="색 ${i + 1}"></button>`).join('')}</div>`;
-  const list = cat => cat === 'body' ? AV_BODIES.map((p, i) => [p, i]) : M.parts[cat].map((p, i) => [p, i]).filter(([p]) => p.f === null || p.L[body]);
+  const list = cat => cat === 'body' ? AV_BODIES.map((p, i) => [p, i]) : M.parts[cat].map((p, i) => [p, i]).filter(([p, i]) => (p.f === null || p.L[body]) && ownCloth(cat, i));
   const cur = cat => cat === 'body' ? AV_BODIES[av.body || 0].n : M.parts[cat][av[cat]].n;
   return `
     <div class="avwrap">
@@ -1920,7 +1924,7 @@ function avatarUI(av){
       <div class="seg" style="grid-template-columns:repeat(${AV_TABS.length},1fr)">${AV_TABS.map(([k, l]) => `<button data-avt="${k}" class="${avTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
       ${rows.map(([label, cat, key, pal]) => `<section class="sec">${secH(label, cat ? cur(cat) : `${av[key] + 1} / ${M.colors[pal].length}`)}
           ${cat ? `<div class="avopts">${list(cat).map(([p, i]) => `<button class="avo ${av[cat] === i ? 'on' : ''}" data-avp="${cat},${i}"><img src="${avThumb({ ...av, [cat]: i }, !!AV_HEADTHUMB[cat])}" alt=""><span class="s">${p.n}</span></button>`).join('')}</div>` : ''}
-          ${key ? swatch(pal, key) : ''}</section>`).join('')}
+          ${key === 'topC' ? (casualOn(av) ? `<div class="s" style="margin:6px 0 2px">사복·잠옷 색</div>${swatch(pal, key)}` : '') : key ? swatch(pal, key) : ''}</section>`).join('')}
       ${avTab === 'uni' || avTab === 'acc' ? `<div class="hint">넥타이와 망토 안감은 기숙사 색이에요${av.house ? ` · ${HOUSES[av.house].name}` : ''}</div>` : ''}
       <button class="btn sm" id="avRand" style="align-self:center">🎲 아무거나</button>
       <button class="btn sm" id="avCredits" style="align-self:center">그림 만든 사람들 (LPC 크레딧)</button>
@@ -1959,13 +1963,52 @@ function renderAvatar(){
   if (!avDraft) avDraft = { ...me.av, house: me.house };
   frame(null, '캐릭터 꾸미기', '머리부터 발끝까지 골라요', `
     ${avatarUI(avDraft)}
+    <button class="btn sm" id="avShop" style="align-self:center">👗 옷 가게에서 사복·잠옷 사기</button>
     <div style="display:flex;gap:8px"><button class="btn px" id="avCancel" style="flex:1">그만두기</button><button class="btn go px" id="avSave" style="flex:2">이 모습으로!</button></div>`);
   bindAvatarUI(avDraft, () => { const p = app.querySelector('.panel'), y = p.scrollTop; renderAvatar(); app.querySelector('.panel').scrollTop = y; });
   $('#avCancel').onclick = () => { avDraft = null; closeSheet(); };
+  $('#avShop').onclick = () => { avDraft = null; shopTry = null; openSheet('home', 'clothes'); };
   $('#avSave').onclick = () => {
     me.av = World.Avatar.fix(avDraft); delete me.av.house; avDraft = null; save(); World.setPlayer(me.nick, avOf(me));
     if (!solo) F.update(F.ref(db, 'online/' + uid), { av: me.av }).catch(() => {});
     toast('새 모습이 마음에 들어요!'); closeSheet();
+  };
+}
+// 옷 가게 (마을의 옷 가게 문, 캐릭터 꾸미기에서도 열려요): 입어 보고 사서 입기
+let shopTry = null, shopKind = 'cas', shopMsg = '';
+const SHOP_CATS = [['top', '상의'], ['legs', '하의'], ['feet', '신발']];
+World.onLockedDoor = label => { if (label !== '옷 가게' || !me) return false; shopTry = null; shopMsg = ''; openSheet('home', 'clothes'); return true; };
+function renderClothes(){
+  const A = World.Avatar, M = A.meta, body = M.bodies[me.av.body || 0];
+  if (!shopTry) shopTry = { ...me.av, house: me.house };
+  const cost = SHOP_CATS.reduce((n, [c]) => n + (ownCloth(c, shopTry[c]) ? 0 : M.parts[c][shopTry[c]].p || 0), 0);
+  const swatch = (pal, key) => `<div class="pal">${M.colors[pal].map((nm, i) => `<button class="sw ${shopTry[key] === i ? 'on' : ''}" data-shc="${key},${i}" style="background:${M.pal[pal][nm][Math.min(3, M.pal[pal][nm].length - 1)]}" aria-label="색 ${i + 1}"></button>`).join('')}</div>`;
+  frame(null, '옷 가게', `내 돈 ${me.coin}G · 입어 보고 마음에 들면 사요`, `
+    <div class="avwrap">
+      <div class="avstage px"><canvas id="shCv" width="${A.FW}" height="${A.FH}"></canvas><button class="btn sm" id="shTurn">↻ ${AV_VIEWS[(avView + 1) % AV_VIEWS.length][1]}</button></div>
+      <div class="seg" style="grid-template-columns:1fr 1fr">${[['cas', '사복'], ['pj', '잠옷']].map(([k, l]) => `<button data-shk="${k}" class="${shopKind === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+      ${SHOP_CATS.map(([c, label]) => { const its = M.parts[c].map((p, i) => [p, i]).filter(([p]) => p.k === shopKind && p.L[body]); return its.length ? `<section class="sec">${secH(label, M.parts[c][shopTry[c]].n)}
+        <div class="avopts">${its.map(([p, i]) => `<button class="avo ${shopTry[c] === i ? 'on' : ''}" data-try="${c},${i}"><img src="${avThumb({ ...shopTry, [c]: i }, false)}" alt=""><span class="s">${p.n}</span><span class="s b" style="color:${ownCloth(c, i) ? 'var(--mint2)' : 'var(--gold2)'}">${ownCloth(c, i) ? '내 옷' : p.p + 'G'}</span></button>`).join('')}</div></section>` : ''; }).join('')}
+      <section class="sec">${secH('옷 색', '사복·잠옷')}${swatch('cloth', 'topC')}<div class="s" style="margin:6px 0 2px">하의 색</div>${swatch('bottom', 'legsC')}<div class="s" style="margin:6px 0 2px">신발 색</div>${swatch('shoe', 'feetC')}</section>
+      ${hint(shopMsg, '옷을 누르면 입어 봐요 · 산 옷은 캐릭터 꾸미기 「옷」에서 언제든 갈아입어요')}
+      <div style="display:flex;gap:8px"><button class="btn px" id="shCancel" style="flex:1">그만두기</button><button class="btn go px" id="shBuy" style="flex:2" ${me.coin >= cost ? '' : 'disabled'}>${cost ? `사서 입기 ${cost}G` : '이대로 입기'}</button></div>
+    </div>`);
+  const cv = $('#shCv'); clearInterval(avTimer); let t = 0;
+  const paint = () => { if (!document.body.contains(cv)) return clearInterval(avTimer); const g = cv.getContext('2d'), W = M.walk, fr = M.dirs[AV_VIEWS[avView][0]] + W[t++ % W.length]; g.clearRect(0, 0, A.FW, A.FH); g.drawImage(A.compose(shopTry), fr * A.FW, 0, A.FW, A.FH, 0, 0, A.FW, A.FH); };
+  paint(); avTimer = setInterval(paint, 160);
+  const redraw = () => { const pn = app.querySelector('.panel'), y = pn?.scrollTop; renderClothes(); if (pn) app.querySelector('.panel').scrollTop = y; };
+  if (!avLoaded.has('shop')) A.preload(SHOP_CATS.map(([c]) => c)).then(() => { avLoaded.add('shop'); if (sub === 'clothes' && document.body.contains(cv)) redraw(); });
+  on('[data-shk]', b => { shopKind = b.dataset.shk; redraw(); });
+  on('[data-try]', b => { const [c, i] = b.dataset.try.split(','); shopTry[c] = +i; shopMsg = ''; redraw(); });
+  on('[data-shc]', b => { const [k, i] = b.dataset.shc.split(','); shopTry[k] = +i; redraw(); });
+  $('#shTurn').onclick = () => { avView = (avView + 1) % AV_VIEWS.length; redraw(); };
+  $('#shCancel').onclick = () => { shopTry = null; closeSheet(); };
+  $('#shBuy').onclick = () => {
+    if (me.coin < cost) return;
+    const bought = SHOP_CATS.filter(([c]) => !ownCloth(c, shopTry[c])).map(([c]) => { me.closet[c + ':' + M.parts[c][shopTry[c]].id] = 1; return M.parts[c][shopTry[c]].n; });
+    me.coin -= cost; me.av = A.fix(shopTry); delete me.av.house; save(); World.setPlayer(me.nick, avOf(me));
+    if (!solo) F.update(F.ref(db, 'online/' + uid), { av: me.av }).catch(() => {});
+    shopMsg = bought.length ? `${bought.join(', ')}을(를) 샀어요! 잘 어울려요` : '갈아입었어요!'; shopTry = null; redraw(); hud();
   };
 }
 function showCreate(done, counts = {}){

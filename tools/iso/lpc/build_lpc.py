@@ -165,6 +165,33 @@ COMBO = {
           ('반바지', [('legs_shorts', None, None)])],
  'cape': [('교복 망토', [('cape_solid', ('sch', 'top'), None), ('cape_trim', 'top', None)]),
           ('기숙사 색 망토', [('cape_solid', 'top', None)])]}
+# ---------- 옷 가게 (사복 'cas'·잠옷 'pj') ----------
+# 교복 뒤에 붙여요 (부품 번호가 안 바뀌게). 칸 'cas' = 플레이어가 고른 옷 색 (topC)
+TEE = 'torso_clothes_tshirt'
+SHOP = {
+ 'top': [('티셔츠', [(TEE, 'cas', None)], 'cas', 80), ('브이넥 티셔츠', [('torso_clothes_tshirt_vneck', 'cas', None)], 'cas', 80),
+         ('라운드 티셔츠', [('torso_clothes_tshirt_scoop', 'cas', None)], 'cas', 80), ('헨리 티셔츠', [('torso_clothes_tshirt_buttoned', 'cas', None)], 'cas', 90),
+         ('긴팔 티', [('torso_clothes_longsleeve2', 'cas', None)], 'cas', 100), ('라운드 긴팔', [('torso_clothes_longsleeve2_scoop', 'cas', None)], 'cas', 100),
+         ('폴로 셔츠', [('torso_clothes_longsleeve2_polo', 'cas', None)], 'cas', 120), ('민소매', [('torso_clothes_sleeveless2', 'cas', None)], 'cas', 70),
+         ('티셔츠 + 카디건', [(TEE, 'w', None), ('torso_clothes_longsleeve2_cardigan', 'cas', 36)], 'cas', 160),
+         ('멜빵바지 + 티', [(TEE, 'w', None), ('torso_aprons_overalls', 'cas', None)], 'cas', 160),
+         ('셔츠 + 멜빵', [(SH, 'w', None), ('torso_aprons_suspenders', 'cas', None)], 'cas', 140),
+         ('색 블라우스', [('torso_clothes_blouse_longsleeve', 'cas', None)], 'cas', 130),
+         ('코르셋 드레스', [('torso_clothes_blouse_longsleeve', 'w', None), ('torso_clothes_corset', 'cas', None)], 'cas', 180),
+         ('긴 원피스', [('dress_sash', 'cas', None)], 'cas', 200), ('트임 원피스', [('dress_slit', 'cas', None)], 'cas', 200),
+         ('보디스 원피스', [('dress_bodice', 'cas', None)], 'cas', 220), ('기모노', [('dress_kimono', 'cas', None)], 'cas', 240),
+         ('튜닉', [('torso_clothes_tunic', 'cas', None)], 'cas', 150),
+         ('잠옷 상의', [('torso_clothes_longsleeve2_buttoned', 'cas', None)], 'pj', 70), ('반팔 잠옷', [('torso_clothes_tshirt_buttoned', 'cas', None)], 'pj', 60),
+         ('잠옷 원피스', [('dress_sash', 'cas', None)], 'pj', 120)],
+ 'legs': [('레깅스', [('legs_leggings', None, None)], 'cas', 70), ('롤업 바지', [('legs_cuffed', None, None)], 'cas', 100),
+          ('짧은 반바지', [('legs_shorts_short', None, None)], 'cas', 70), ('긴 치마', [('legs_skirts_plain', None, None)], 'cas', 110),
+          ('벨 치마', [('legs_skirt_belle', None, None)], 'cas', 130), ('덧치마', [('legs_skirt_overskirt', None, None)], 'cas', 130),
+          ('트임 치마', [('legs_skirts_slit', None, None)], 'cas', 120), ('판탈롱', [('legs_pantaloons', None, None)], 'cas', 120),
+          ('잠옷 바지', [('legs_pants2', 'cas', None)], 'pj', 60), ('잠옷 반바지', [('legs_shorts', 'cas', None)], 'pj', 50)],
+ 'feet': [('샌들', [('feet_sandals', None, None)], 'cas', 60), ('리본 구두', [('feet_shoes_sara', None, None)], 'cas', 90),
+          ('테 부츠', [('feet_boots_rim', None, None)], 'cas', 120), ('부츠 2', [('feet_boots_revised', None, None)], 'cas', 110),
+          ('슬리퍼', [('feet_slippers', None, None)], 'pj', 40)]}
+for cat, lst in SHOP.items(): COMBO[cat] = [(n, c, 'uni', 0) for n, c in COMBO[cat]] + lst
 pool = {e['id']: e for es in items.values() for e in es}
 # 직접 손본 그림 (fx:종류:원본): 블레이저(카디건 + 깃·길이), 가슴 배지, 주름치마·짧은 치마 (무릎 위)
 def fxent(base, kind, sl=None):
@@ -178,8 +205,10 @@ pool['fx_dress2'] = fxent('dress_sash', 'short')
 FXBASE = {'fx_blazer': 'torso_clothes_longsleeve2_cardigan', 'fx_emblem': 'torso_clothes_longsleeve2_cardigan', 'fx_pleat': 'legs_skirts_plain', 'fx_short': 'legs_skirt_straight', 'fx_dress': 'dress_bodice', 'fx_dress2': 'dress_sash'}
 for cat, lst in COMBO.items():
     out = []
-    for nm, comps in lst:
+    for row in lst:
+        nm, comps = row[:2]
         e = dict(id='%s_%d' % (cat, len(out)), name=nm, L={})
+        if len(row) > 2: e['k'], e['p'] = row[2], row[3]
         for body in BODIES:
             cs = [(i[body] if isinstance(i, dict) else i, sl, zz) for i, sl, zz in comps]
             if not all(i in pool and body in pool[i]['L'] for i, _, _ in cs): continue
@@ -193,7 +222,7 @@ for cat, ids in KEEP.items():
     by = {e['id']: e for e in items[cat]}; items[cat] = [by[i] for i in ids if i in by]
 need = {f for es in items.values() for e in es for Ls in e['L'].values() for _, f, _, _, _ in Ls}
 for body in BODIES: need.add('spritesheets/' + HEAD[body] + 'walk.png')
-used = {e['id'] for es in items.values() for e in es} | {j for lst in COMBO.values() for _, cs in lst for i, _, _ in cs for j in (i.values() if isinstance(i, dict) else [i])}
+used = {e['id'] for es in items.values() for e in es} | {j for lst in COMBO.values() for row in lst for i, _, _ in row[1] for j in (i.values() if isinstance(i, dict) else [i])}
 used |= {FXBASE[i] for i in list(used) if i in FXBASE}
 credits = [c for cat, lst in SEL.items() for rel, _ in lst if os.path.basename(rel)[:-5] in used for c in jd(rel).get('credits', [])]
 print({c: len(v) for c, v in items.items()}, 'files', len(need))
@@ -319,7 +348,9 @@ def write(cat, idx, entry, extra=None):
             L[body].append([rowmap[f], z, maps_of(cat, f, mat, src, sl)])
     if not rows: return None
     name = f'{cat}_{idx:03d}.png'; Image.fromarray(np.concatenate(rows, 0)).save(os.path.join(OUTP, name), optimize=True)
-    return dict(id=entry['id'], n=KO.get(entry['name'], entry['name']), f='art/lpc/' + name, L=L)
+    out = dict(id=entry['id'], n=KO.get(entry['name'], entry['name']), f='art/lpc/' + name, L=L)
+    if entry.get('k'): out['k'] = entry['k']; out['p'] = entry['p']     # 종류 (uni 교복·cas 사복·pj 잠옷), 값
+    return out
 # 몸 = 몸통 + 머리 (체형마다)
 body_entry = dict(id='body', name='body', L={b: [(10, 'spritesheets/body/bodies/' + BODYKEY[b] + '/walk.png', 'body', 'light', None), (100, 'spritesheets/' + HEAD[b] + 'walk.png', 'body', 'light', None)] for b in BODIES})
 meta['parts']['body'] = [write('body', 0, body_entry)]
@@ -332,7 +363,7 @@ meta['pal']['bottom'] = meta['pal']['shoe'] = PAL['cloth']   # 교복 하의·�
 # 고를 수 있는 색 (순서 = 색 번호). 피부는 사람 피부 7 + 판타지 몇 가지
 meta['colors'] = {'skin': ['light', 'amber', 'olive', 'taupe', 'bronze', 'brown', 'black', 'lavender', 'blue', 'pale_green', 'zombie_green'],
                   'hair': list(PAL['hair']), 'eye': list(PAL['eye']), 'cloth': list(PAL['cloth']),
-                  'bottom': ['gray', 'school', 'charcoal', 'black', 'navy', 'slate', 'bluegray', 'maroon', 'brown', 'tan'],
+                  'bottom': ['gray', 'school', 'charcoal', 'black', 'navy', 'slate', 'bluegray', 'maroon', 'brown', 'tan', 'blue', 'sky', 'forest', 'pink', 'lavender', 'white'],
                   'shoe': ['black', 'brown', 'walnut', 'leather', 'charcoal', 'maroon', 'navy', 'white']}
 PAL['cloth']['school'] = ['#0A0A14', '#121426', '#1A1F38', '#232B4C', '#2D3961', '#3A4A78']   # 교복 남색 (진하게)
 meta['fixed'] = {'sch': 'school', 'sock': 'white'}   # 학교 색 (교복 겉옷·망토), 양말
