@@ -321,6 +321,8 @@ def nose_layer():
     for j in range(3): N.paste(j, n, NECKX + NOSE[0], NOSE[1]); N.paste(6 + j, n, SIDE_FAR_X - 1, NOSE[1])
     return N
 
+# 눈은 앞머리 위에 그려요 (어느 머리든 까까머리처럼 눈이 보이게). 일부러 눈을 가리는 머리만 눈 위로
+COVER_EYES = {35}
 HAIR_N = ['단발', '긴 생머리', '높은 양갈래', '올림머리', '짧은 머리', '삐죽 짧은 머리', '소년 만화', '높은 포니테일', '아프로', '옆 땋은 머리',
           '히메컷', '울프컷', '까까머리', '부스스', '옆 가르마', '낮은 양갈래', '양쪽 똥머리', '긴 웨이브', '멀릿', '커튼 앞머리',
           '모히칸', '두 갈래 땋기', '반묶음', '드릴 컬', '짧은 곱슬', '올백', '정수리 묶음', '복슬 짧은 머리', '옆으로 넘김', '옆 포니테일',
@@ -334,9 +336,9 @@ if __name__ == '__main__':
         parts['uni'].append(dict(n=name, L=[[add(L['skin']), 'skin', 'skin'], [add(L['cloth']), 'cloth', 'cloth'], [add(L['house']), 'house', 'cloth'], [add(L['shoes']), 'shoes', 'cloth']]))
     for n in range(40):
         O, U, S = hair_layers(n)
-        parts['hair'].append(dict(n=HAIR_N[n], L=[[add(O), 'hair', 'hairO'], [add(U), 'hair', 'hairU'], [add(S), 'skin', 'head']]))
+        parts['hair'].append(dict(n=HAIR_N[n], L=[[add(O), 'hair', 'hairT' if n in COVER_EYES else 'hairO'], [add(U), 'hair', 'hairU'], [add(S), 'skin', 'head']]))
     for i in range(15):
-        E, B = eye_layers(i); parts['eyes'].append(dict(n=EYE_N[i], L=[[add(E), 'eye', 'face'], [add(B), None, 'face']]))
+        E, B = eye_layers(i); parts['eyes'].append(dict(n=EYE_N[i], L=[[add(E), 'eye', 'faceO'], [add(B), None, 'faceO']]))
     for i in range(len(MOUTH_PIX)): parts['mouth'].append(dict(n=MOUTH_N[i], L=[[add(mouth_layer(i)), None, 'face']]))
     nose_row = add(nose_layer())
     # 발이 그림 아래 끝에 닿게: 교복 층에서 가장 아래 줄을 찾아 전부 내려요 (위가 잘리지 않을 만큼)
@@ -353,6 +355,6 @@ if __name__ == '__main__':
         return [int(np.percentile(v, q)) for q in (90, 62, 35, 10)]
     stops = {s: stops_of(s) for s in ('hair', 'cloth', 'shoes', 'house')}; stops['eye'] = [205, 150, 105, 70]; stops['skin'] = [228, 206, 180, 146]; stops['house'] = [140, 116, 96, 74]
     pal = json.load(open(os.path.join(HERE, 'palette.json')))
-    json.dump(dict(fw=FW, fh=FH, frames=NF, src='art/iso/avatar_parts.png', z=['hairU', 'skin', 'cloth', 'head', 'face', 'hairO'], base=[[nose_row, 'skin', 'face']], parts=parts, outline=False,
+    json.dump(dict(fw=FW, fh=FH, frames=NF, src='art/iso/avatar_parts.png', z=['hairU', 'skin', 'cloth', 'head', 'face', 'hairO', 'faceO', 'hairT'], base=[[nose_row, 'skin', 'face']], parts=parts, outline=False,
                    stops=stops, pal=pal, head=dict(t=CHIN - 20 + dy, b=CHIN + 2 + dy), scale=.75), open(os.path.join(OUT, 'avatar_parts.json'), 'w'), ensure_ascii=False)
     print('rows', len(rows), sheet.shape)
