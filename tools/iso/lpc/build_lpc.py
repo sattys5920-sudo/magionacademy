@@ -252,7 +252,7 @@ def fx_emblem(a):
         cl = a[2 * 64:3 * 64, c * 64:(c + 1) * 64]; m = cl[..., 3] > 0
         if not m.any(): continue
         dy = np.nonzero(m.any(1))[0].min() - 34; oc = o[2 * 64:3 * 64, c * 64:(c + 1) * 64]
-        for (yy, xx), i in {(0, 0): 5, (0, 1): 4, (1, 0): 4, (1, 1): 3}.items(): setc(oc, 40 + dy + yy, 37 + xx, i)
+        for (yy, xx), i in {(0, 0): 5, (0, 1): 4, (1, 0): 4, (1, 1): 3}.items(): setc(oc, 40 + dy + yy, 38 + xx, i)
     return o
 FXF = {'blazer': fx_blazer, 'emblem': fx_emblem, 'pleat': fx_pleat, 'short': lambda a: fx_pleat(a, pleat=False)}
 for f in sorted(FXN):
@@ -272,9 +272,11 @@ _N = {'left': set(), 'right': set()}
 PRESET = {
  'legs':  [(51, 64, {'down': {31, 32}, 'up': {31, 32}, **_N})],
  'legs1': [(36, 51, {'down': {28, 35}, 'up': {28, 35}, **_N}), (51, 64, {'down': {28, 31, 32, 35}, 'up': {28, 31, 32, 35}, **_N})],
+ 'legs3': [(33, 51, {'down': {21, 26, 28, 35, 37, 42}, 'up': {21, 26, 28, 35, 37, 42}, 'left': {29, 34}, 'right': {29, 34}}),
+           (51, 64, {'down': {26, 28, 31, 32, 35, 37}, 'up': {26, 28, 31, 32, 35, 37}, **_N})],
  'legs2': [(33, 51, {'down': {21, 28, 35, 42}, 'up': {21, 28, 35, 42}, **_N}), (51, 64, {'down': {28, 31, 32, 35}, 'up': {28, 31, 32, 35}, **_N})],
 }
-SLIM = PRESET[os.environ.get('LPC_BODY', 'legs1')]
+SLIM = PRESET[os.environ.get('LPC_BODY', 'legs3')]
 def slim(cell, d, neck=True):
     o = cell.copy()
     for y0, y1, cols in SLIM:
