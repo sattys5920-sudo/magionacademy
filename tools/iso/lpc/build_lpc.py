@@ -813,6 +813,65 @@ def leg_geo(body_strip):
             xs = [g[0] for g in rows.values()]
             out[k] = dict(crotch=crotch, rows=rows, lc=max(set(xs), key=xs.count))   # 세로선 칸 = 다리 가운데 1열 (프레임마다 고정)
     return out
+# ---------- 박시하게 (몸에 붙는 느낌·근육 음영 줄이기) ----------
+# 1) 옷·맨몸 안쪽(테두리에서 1칸 이상 들어간 곳)의 진한 음영(팔레트 1·2번)을 한 단계 밝게 → 주름·근육 선이 덜 보여요
+# 2) 상의 밑단 두 줄을 허리 위 폭으로 일자로 펴요 → 허리가 잘록하지 않은 네모 실루엣
+LOOSE = {}
+BOXY = ('torso/clothes/', 'torso/aprons/')
+def loose(f, mp):
+    src = f.split(':')[-1]
+    if f.startswith('fx:') and not f.startswith(('fx:blazer:', 'fx:coat:', 'fx:short:', 'fx:pleat:', 'fx:mini', 'fx:checkmini:', 'fx:pleatlong:', 'fx:tennis:', 'fx:denimmini:', 'fx:dotsshort:', 'fx:tocloth:')):
+        return IMG[f]                                         # 무늬 층은 그대로
+    if not any(w in src for w in ('torso/', 'legs/', 'bodies/')): return IMG[f]
+    if f in LOOSE: return LOOSE[f]
+    a = IMG[f].copy()
+    if 'bodies/' in src: P = PAL['body']['light']
+    else: P = PAL['cloth'].get(mp[0][1] if mp else 'white') or PAL['cloth']['white']
+    P = [tuple(int(h[i:i + 2], 16) for i in (1, 3, 5)) for h in P]
+    m = a[..., 3] > 0
+    edge = np.zeros_like(m)
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1): edge |= ~np.roll(np.roll(m, dy, 0), dx, 1)
+    edge2 = edge.copy()                                       # 테두리에서 2칸 안쪽까지
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1): edge2 |= np.roll(np.roll(edge, dy, 0), dx, 1)
+    near = lambda k: m & (np.abs(a[..., :3].astype(int) - P[k]).max(-1) <= 2)
+    n1, n2 = near(1), near(2)
+    a[n1 & ~edge2, :3] = P[3]; a[n2 & ~edge2, :3] = P[3]      # 깊은 안쪽: 진한 음영 → 기본색
+    a[n1 & edge2 & ~edge, :3] = P[2]                          # 테두리 가까이: 한 단계만
+    if any(w in src for w in BOXY) and not 'robe' in src:
+        for r in range(4):                                    # 오버핏: 어깨 아래 양옆 1칸씩 넓게 + 밑단 1줄 길게
+            for c in range(9):
+                cl = a[r * 64:(r + 1) * 64, c * 64:(c + 1) * 64]; mm = cl[..., 3] > 0
+                if not mm.any(): continue
+                ys = np.nonzero(mm.any(1))[0]; t, y1 = int(ys.min()), int(ys.max())
+                src_ = cl.copy()
+                for y in range(t + 2, y1 + 1):
+                    xs = np.nonzero(mm[y])[0]
+                    if len(xs) < 3: continue
+                    L_, R_ = int(xs.min()), int(xs.max())
+                    sides = (L_, R_) if r in (0, 2) else ((R_,) if r == 1 else (L_,))
+                    for e in sides:
+                        o_ = e - 1 if e == L_ else e + 1
+                        if 0 < o_ < 63: cl[y, o_] = src_[y, e]
+                        inn = e + 1 if e == L_ else e - 1
+                        if mm[y, inn]: cl[y, e] = src_[y, inn]
+                cl[y1 + 1] = cl[y1]; cl[y1] = cl[y1 - 1]
+        for r in range(4):
+            for c in range(9):
+                cl = a[r * 64:(r + 1) * 64, c * 64:(c + 1) * 64]; mm = cl[..., 3] > 0
+                if not mm.any(): continue
+                y1 = int(np.nonzero(mm.any(1))[0].max()); yr = y1 - 2
+                lo, hi = (24, 39) if r in (0, 2) else (0, 63)
+                xs = [x for x in range(lo, hi + 1) if mm[yr, x]]
+                if len(xs) < 4: continue
+                L_, R_ = min(xs), max(xs)
+                for y in (y1 - 1, y1):
+                    for x in range(L_, R_ + 1):
+                        if not mm[y, x]: cl[y, x] = cl[yr, x]
+                for x in range(L_, R_ + 1): cl[y1, x, :3] = P[0]; cl[y1, x, 3] = 255
+    LOOSE[f] = a
+    return a
 SKIRTF = ('skirt', 'fx:pleat:', 'fx:short:', 'fx:mini:', 'fx:minipleat:', 'fx:checkmini:', 'fx:pleatlong:', 'fx:tennis:', 'fx:denimmini:', 'fx:dotsshort:', 'dress', 'robe', 'kimono', 'tunic')   # 치마처럼 다리를 덮는 천
 def write(cat, idx, entry, extra=None):
     rows, rowmap, L = [], {}, {}
@@ -822,7 +881,7 @@ def write(cat, idx, entry, extra=None):
             if IMG.get(f) is None: continue
             mp = maps_of(cat, f, mat, src, sl)
             if f not in rowmap:
-                rowmap[f] = len(rows); st = strip(IMG[f], cat != 'hair' and 'heads/' not in f)
+                rowmap[f] = len(rows); st = strip(loose(f, mp), cat != 'hair' and 'heads/' not in f)
                 rows.append(st)
             L[body].append([rowmap[f], z, mp])
     if not rows: return None
