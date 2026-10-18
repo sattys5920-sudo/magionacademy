@@ -7,6 +7,7 @@ from scipy import ndimage
 from reduce import reduce
 from picks import FRONT, BACK, SIDE
 import expr as EX
+import ears as EARS
 HERE = os.path.dirname(os.path.abspath(__file__))
 _Z = np.load(os.path.join(HERE, 'cells.npz')); D = {}
 for key in _Z.files:
@@ -346,6 +347,7 @@ if __name__ == '__main__':
         parts['uni'].append(dict(n=name, L=[[add(L['skin']), 'skin', 'skin'], [add(L['cloth']), 'cloth', 'cloth'], [add(L['house']), 'house', 'cloth'], [add(L['shoes']), 'shoes', 'cloth']]))
     for n in range(40):
         O, U, S = hair_layers(n)
+        EARS.fix_front_ears(O, S)
         if n in WIDEN_SIDE: widen_side_face(O, S)
         parts['hair'].append(dict(n=HAIR_N[n], L=[[add(O), 'hair', 'hairT' if n in COVER_EYES else 'hairO'], [add(U), 'hair', 'hairU'], [add(S), 'skin', 'head']]))
     # 표정: 생성기가 눈·입을 함께 그린 얼굴 (정면·옆). 입은 표정에 들어 있어서 입 부품은 빈 것 하나만

@@ -25,6 +25,22 @@ def face(e, fr):
     o = np.zeros_like(a)
     o[dark] = LINE; o[white] = WHITE; o[keep] = a[keep]; o[mouth] = a[mouth]
     gv = np.clip(70 + (L - 45) * 1.6, 70, 205).astype(np.uint8); o[gray, 0] = o[gray, 1] = o[gray, 2] = gv[gray]; o[gray, 3] = 255
+    if fr == 6: narrow_far(o, MOUTH_TOP[fr])
     fix = (keep | mouth) & (o[..., 0] == o[..., 1]) & (o[..., 1] == o[..., 2])   # 색 그대로 둘 칸이 회색이면 살짝 비틀어요
     o[fix, 2] = np.where(o[fix, 2] > 250, o[fix, 2] - 3, o[fix, 2] + 3)
     return o
+
+def eye_groups(o, top):
+    cols = (o[:top, :, 3] > 0).any(0); xs = np.nonzero(cols)[0]; gs = []; cur = []
+    for x in xs:
+        if cur and x > cur[-1] + 1: gs.append(cur); cur = []
+        cur.append(x)
+    if cur: gs.append(cur)
+    return gs
+def narrow_far(o, top):
+    """옆(3/4): 먼 쪽 눈(앞 윤곽 쪽, 왼쪽)은 가까운 눈보다 1칸 좁게 — 바깥 열부터 빼요"""
+    gs = [g for g in eye_groups(o, top) if len(g) >= 1]
+    if len(gs) < 2: return
+    far, near = gs[0], gs[-1]
+    cut = len(far) - (len(near) - 1)
+    for x in far[:max(0, cut)]: o[:top, x] = 0
