@@ -171,25 +171,28 @@ TEE = 'torso_clothes_tshirt'
 SHOP = {
  'top': [('티셔츠', [(TEE, 'cas', None)], 'cas', 80), ('브이넥 티셔츠', [('torso_clothes_tshirt_vneck', 'cas', None)], 'cas', 80),
          ('라운드 티셔츠', [('torso_clothes_tshirt_scoop', 'cas', None)], 'cas', 80), ('헨리 티셔츠', [('torso_clothes_tshirt_buttoned', 'cas', None)], 'cas', 90),
-         ('긴팔 티', [('torso_clothes_longsleeve2', 'cas', None)], 'cas', 100), ('라운드 긴팔', [('torso_clothes_longsleeve2_scoop', 'cas', None)], 'cas', 100),
+         ('줄무늬 티', [(TEE, 'cas', None), ('fx_tee_stripe', 'w', 36)], 'cas', 110), ('땡땡이 티', [(TEE, 'cas', None), ('fx_tee_dots', 'w', 36)], 'cas', 110),
+         ('긴팔 티', [('torso_clothes_longsleeve2', 'cas', None)], 'cas', 100), ('줄무늬 긴팔', [('torso_clothes_longsleeve2', 'cas', None), ('fx_long_stripe', 'w', 36)], 'cas', 130),
          ('폴로 셔츠', [('torso_clothes_longsleeve2_polo', 'cas', None)], 'cas', 120), ('민소매', [('torso_clothes_sleeveless2', 'cas', None)], 'cas', 70),
-         ('티셔츠 + 카디건', [(TEE, 'w', None), ('torso_clothes_longsleeve2_cardigan', 'cas', 36)], 'cas', 160),
-         ('멜빵바지 + 티', [(TEE, 'w', None), ('torso_aprons_overalls', 'cas', None)], 'cas', 160),
-         ('셔츠 + 멜빵', [(SH, 'w', None), ('torso_aprons_suspenders', 'cas', None)], 'cas', 140),
-         ('색 블라우스', [('torso_clothes_blouse_longsleeve', 'cas', None)], 'cas', 130),
-         ('코르셋 드레스', [('torso_clothes_blouse_longsleeve', 'w', None), ('torso_clothes_corset', 'cas', None)], 'cas', 180),
-         ('긴 원피스', [('dress_sash', 'cas', None)], 'cas', 200), ('트임 원피스', [('dress_slit', 'cas', None)], 'cas', 200),
-         ('보디스 원피스', [('dress_bodice', 'cas', None)], 'cas', 220), ('기모노', [('dress_kimono', 'cas', None)], 'cas', 240),
-         ('튜닉', [('torso_clothes_tunic', 'cas', None)], 'cas', 150),
+         ('티 + 카디건', [(TEE, 'w', None), ('torso_clothes_longsleeve2_cardigan', 'cas', 36)], 'cas', 150),
+         ('줄무늬 티 + 카디건', [(TEE, 'w', None), ('fx_tee_stripe', 'cas', 35), ('torso_clothes_longsleeve2_cardigan', 'cas', 36)], 'cas', 170),
+         ('멜빵 반바지 + 티', [(TEE, 'w', None), ('fx_overall_short', 'cas', None)], 'cas', 160),
+         ('멜빵 반바지 + 줄무늬 티', [(TEE, 'w', None), ('fx_tee_stripe', 'cas', 35), ('fx_overall_short', 'cas', None)], 'cas', 180),
+         ('색 블라우스', [('torso_clothes_blouse_longsleeve', 'cas', None)], 'cas', 120), ('반팔 색 블라우스', [('torso_clothes_blouse', 'cas', None)], 'cas', 110),
+         ('미니 원피스', [('fx_dress_mini', 'cas', None)], 'cas', 160), ('땡땡이 미니 원피스', [('fx_dress_mini', 'cas', None), ('fx_dress_dots', 'w', 31)], 'cas', 190),
+         ('티 + 멜빵 원피스', [(TEE, 'w', None), ('fx_bodice_mini', 'cas', None)], 'cas', 170),
          ('잠옷 상의', [('torso_clothes_longsleeve2_buttoned', 'cas', None)], 'pj', 70), ('반팔 잠옷', [('torso_clothes_tshirt_buttoned', 'cas', None)], 'pj', 60),
+         ('땡땡이 잠옷', [('torso_clothes_longsleeve2_buttoned', 'cas', None), ('fx_pj_dots', 'w', 36)], 'pj', 90),
          ('잠옷 원피스', [('dress_sash', 'cas', None)], 'pj', 120)],
- 'legs': [('레깅스', [('legs_leggings', None, None)], 'cas', 70), ('롤업 바지', [('legs_cuffed', None, None)], 'cas', 100),
-          ('짧은 반바지', [('legs_shorts_short', None, None)], 'cas', 70), ('긴 치마', [('legs_skirts_plain', None, None)], 'cas', 110),
-          ('벨 치마', [('legs_skirt_belle', None, None)], 'cas', 130), ('덧치마', [('legs_skirt_overskirt', None, None)], 'cas', 130),
-          ('트임 치마', [('legs_skirts_slit', None, None)], 'cas', 120), ('판탈롱', [('legs_pantaloons', None, None)], 'cas', 120),
-          ('잠옷 바지', [('legs_pants2', 'cas', None)], 'pj', 60), ('잠옷 반바지', [('legs_shorts', 'cas', None)], 'pj', 50)],
- 'feet': [('샌들', [('feet_sandals', None, None)], 'cas', 60), ('리본 구두', [('feet_shoes_sara', None, None)], 'cas', 90),
-          ('테 부츠', [('feet_boots_rim', None, None)], 'cas', 120), ('부츠 2', [('feet_boots_revised', None, None)], 'cas', 110),
+ 'legs': [('미니 치마', [('fx_mini', None, None)], 'cas', 80), ('주름 미니 치마', [('fx_mini_pleat', None, None)], 'cas', 100),
+          ('짧은 반바지', [('legs_shorts_short', None, None)], 'cas', 70), ('레깅스', [('legs_leggings', None, None)], 'cas', 70),
+          ('롤업 바지', [('legs_cuffed', None, None)], 'cas', 100),
+          ('잠옷 바지', [('legs_pants2', 'cas', None)], 'pj', 60), ('땡땡이 잠옷 바지', [('legs_pants2', 'cas', None), ('fx_pants_dots', 'w', 21)], 'pj', 80),
+          ('잠옷 반바지', [('legs_shorts', 'cas', None)], 'pj', 50)],
+ 'feet': [('줄무늬 양말 + 구두', [SOCK, ('fx_sock_stripe', 'cas', 14.5), ('feet_shoes_revised', None, None)], 'cas', 90),
+          ('흰 양말 + 리본 구두', [SOCK, ('feet_shoes_sara', None, None)], 'cas', 90),
+          ('샌들', [('feet_sandals', None, None)], 'cas', 60), ('리본 구두', [('feet_shoes_sara', None, None)], 'cas', 80),
+          ('테 부츠', [('feet_boots_rim', None, None)], 'cas', 120),
           ('슬리퍼', [('feet_slippers', None, None)], 'pj', 40)]}
 for cat, lst in SHOP.items(): COMBO[cat] = [(n, c, 'uni', 0) for n, c in COMBO[cat]] + lst
 pool = {e['id']: e for es in items.values() for e in es}
@@ -202,7 +205,15 @@ pool['fx_pleat'] = fxent('legs_skirts_plain', 'pleat')
 pool['fx_short'] = fxent('legs_skirt_straight', 'short')
 pool['fx_dress'] = fxent('dress_bodice', 'short')
 pool['fx_dress2'] = fxent('dress_sash', 'short')
-FXBASE = {'fx_blazer': 'torso_clothes_longsleeve2_cardigan', 'fx_emblem': 'torso_clothes_longsleeve2_cardigan', 'fx_pleat': 'legs_skirts_plain', 'fx_short': 'legs_skirt_straight', 'fx_dress': 'dress_bodice', 'fx_dress2': 'dress_sash'}
+# 옷 가게용: 줄무늬·땡땡이 무늬 (흰 무늬 층을 위에 겹쳐요), 미니 기장
+FXNEW = {'fx_tee_stripe': (TEE, 'stripe'), 'fx_tee_dots': (TEE, 'dots'), 'fx_long_stripe': ('torso_clothes_longsleeve2', 'stripe'),
+         'fx_overall_short': ('torso_aprons_overalls', 'short'), 'fx_dress_mini': ('dress_sash', 'short'), 'fx_dress_dots': ('dress_sash', 'dotsshort'),
+         'fx_bodice_mini': ('dress_bodice', 'short'), 'fx_pj_dots': ('torso_clothes_longsleeve2_buttoned', 'dots'),
+         'fx_mini': ('legs_skirts_plain', 'mini'), 'fx_mini_pleat': ('legs_skirts_plain', 'minipleat'), 'fx_pants_dots': ('legs_pants2', 'dots'),
+         'fx_sock_stripe': ('feet_socks_high', 'stripe')}
+for k, (base, kind) in FXNEW.items(): pool[k] = fxent(base, kind)
+FXBASE0 = {'fx_blazer': 'torso_clothes_longsleeve2_cardigan', 'fx_emblem': 'torso_clothes_longsleeve2_cardigan', 'fx_pleat': 'legs_skirts_plain', 'fx_short': 'legs_skirt_straight', 'fx_dress': 'dress_bodice', 'fx_dress2': 'dress_sash'}
+FXBASE = {**FXBASE0, **{k: v[0] for k, v in FXNEW.items()}}
 for cat, lst in COMBO.items():
     out = []
     for row in lst:
@@ -283,7 +294,35 @@ def fx_emblem(a):
         dy = np.nonzero(m.any(1))[0].min() - 34; oc = o[2 * 64:3 * 64, c * 64:(c + 1) * 64]
         for (yy, xx), i in {(0, 0): 5, (0, 1): 4, (1, 0): 4, (1, 1): 3}.items(): setc(oc, 40 + dy + yy, 38 + xx, i)
     return o
-FXF = {'blazer': fx_blazer, 'emblem': fx_emblem, 'pleat': fx_pleat, 'short': lambda a: fx_pleat(a, pleat=False)}
+def fx_pattern(a, kind):
+    """흰 무늬 층: 옷 안쪽 픽셀(테두리 빼고)에 줄무늬(3줄마다)나 땡땡이(4칸 격자)"""
+    o = np.zeros_like(a)
+    for r in range(4):
+        for c in range(9):
+            cl = a[r * 64:(r + 1) * 64, c * 64:(c + 1) * 64]; oc = o[r * 64:(r + 1) * 64, c * 64:(c + 1) * 64]; m = cl[..., 3] > 0
+            if not m.any(): continue
+            y0 = np.nonzero(m.any(1))[0].min()
+            for y in range(1, 63):
+                for x in range(1, 63):
+                    if not (m[y, x] and m[y - 1, x] and m[y + 1, x] and m[y, x - 1] and m[y, x + 1]): continue
+                    i = pidx(cl[y, x])
+                    if i <= 1: continue                               # 테두리·주름은 그대로
+                    if kind == 'stripe' and (y - y0) % 3 == 1: setc(oc, y, x, min(5, i + 1))
+                    if kind == 'dots' and (y - y0) % 4 == 1 and (x + 2 * (((y - y0) // 4) % 2)) % 4 == 0: setc(oc, y, x, 5)
+    return o
+FXF = {'blazer': fx_blazer, 'emblem': fx_emblem, 'pleat': fx_pleat, 'short': lambda a: fx_pleat(a, pleat=False),
+       'stripe': lambda a: fx_pattern(a, 'stripe'), 'dots': lambda a: fx_pattern(a, 'dots'),
+       'dotsshort': lambda a: fx_pattern(fx_pleat(a, pleat=False), 'dots'),
+       'mini': lambda a: fx_pleat(a, hem=50, pleat=False), 'minipleat': lambda a: fx_minipleat(fx_pleat(a, hem=50, pleat=False))}
+def fx_minipleat(a):
+    a = a.copy()                                              # 세로 주름 (2칸마다 어둡게)
+    for r, cl in cells(a):
+        m = cl[..., 3] > 0
+        for y in range(46, 50):
+            for x in range(1, 63):
+                if m[y, x] and m[y, x - 1] and m[y, x + 1] and x % 2 == 0:
+                    i = pidx(cl[y, x]); setc(cl, y, x, i - 1) if i > 1 else None
+    return a
 for f in sorted(FXN):
     _, kind, src = f.split(':', 2); IMG[f] = FXF[kind](IMG[src])
 u = np.zeros((64, 64), bool)
