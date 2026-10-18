@@ -151,10 +151,7 @@ def apply_face(n, O, S, F, G, PS, ear):
             if hit and o[t - 1, x, 3]: o[t - 1, x, :3] = (o[t - 1, x, :3] * HAIR_TIP).astype(np.uint8)
     t, b, l, r = G['safe']
     for j in range(6, 9):
-        o = O.f[j]; S.f[j] = PS
-        o[G['eye_top'] + 2, G['front']] = 0   # 코끝 자리
+        o = O.f[j]
         for x in range(l, r + 1):
             hit = o[t:b + 1, x, 3].any(); o[t:b + 1, x] = 0
             if hit and o[t - 1, x, 3]: o[t - 1, x, :3] = (o[t - 1, x, :3] * HAIR_TIP).astype(np.uint8)
-        # 옛 귀 자리에 머리카락이 없으면 뒷머리 색으로
-        m = ear & ~(o[..., 3] > 0); o[m] = g(140)

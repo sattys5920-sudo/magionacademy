@@ -43,8 +43,5 @@ for i, p in enumerate(J['parts']['mouth']):
     if len(ys) and G['B'] - (ys.max() - dy) < 2: bad.append(f'입 {i + 1} {p["n"]}: 옆 입 아래 턱 2줄 미만')
     for fr in range(3, 6):
         if alpha([r for r, sl, z in p['L']], fr).any(): bad.append(f'입 {i + 1} {p["n"]}: 뒷모습에 입 픽셀')
-ear = alpha([r for r, sl, z in J['base']], 6)
-if not ear.any(): bad.append('옆모습 귀 픽셀 없음')
-if alpha([r for r, sl, z in J['base']], 3).any(): bad.append('뒷모습에 귀 층 픽셀')
 print('위반', len(bad)); print('\n'.join(bad))
 sys.exit(1 if bad else 0)

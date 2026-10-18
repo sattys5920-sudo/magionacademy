@@ -7,6 +7,7 @@ from scipy import ndimage
 from reduce import reduce
 from picks import FRONT, BACK, SIDE
 import face_grid as FG
+import side_head as SH
 HERE = os.path.dirname(os.path.abspath(__file__))
 _Z = np.load(os.path.join(HERE, 'cells.npz')); D = {}
 for key in _Z.files:
@@ -337,23 +338,31 @@ HAIR_N = ['단발', '긴 생머리', '높은 양갈래', '올림머리', '짧은
           '바닥까지 긴 머리', '바가지 머리', '양쪽 경단', '콘로', '더듬이와 경단', '한쪽 눈 가림', '낮은 옆 포니테일', '마녀 산발', '단정한 앞머리', '별 모양 경단']
 EYE_N = ['반짝 동글', '큰 애니', '졸린 눈', '웃는 눈', '고양이 눈', '별 눈동자', '하트 눈동자', '윙크', '단호한 눈', '눈물 그렁', '빙글빙글', '점 눈', '뱀파이어 눈', '순정 반짝', '질끈 감은 눈']
 MOUTH_N = ['미소', '고양이 입', '시무룩', '송곳니 미소', '활짝 웃음', '놀란 입', '메롱', '일자 입', '이 드러낸 웃음', '울먹', '씩 웃음', '뽀뽀', '깜짝 O', '이 악물기', '방긋']
+def face_ctx():
+    """얼굴 그리드·옆 머리 기준 (까까머리에서 계산)"""
+    BO, _, BS = hair_layers(FG.BASE_HAIR); F, G = FG.grid(BS, BO)
+    SG = SH.side_geom(F, SIDE_DY); BB = SH.bases(BO, BS, F, SG)
+    return dict(F=F, G=G, SG=SG, BB=BB, H29=hair_layers(29))
+def build_hair(n, C):
+    O, U, S = hair_layers(n)
+    if n == 7:                                       # 높은 포니테일 앞·뒤 칸은 3/4 그림이라 옆 포니테일 앞·뒤 머리를 써요 (꼬리는 새로 그려요)
+        for L, M in zip((O, U, S), C['H29']): L.f[:6] = M.f[:6]
+    FG.apply_face(n, O, S, C['F'], C['G'], None, None)
+    SH.apply(n, O, U, S, C['F'], C['SG'], C['BB'])
+    return O, U, S
 if __name__ == '__main__':
     rows, parts = [], dict(hair=[], eyes=[], mouth=[], uni=[])
     def add(lay): rows.append(lay.row()); return len(rows) - 1
     for name, L in body_layers():
         parts['uni'].append(dict(n=name, L=[[add(L['skin']), 'skin', 'skin'], [add(L['cloth']), 'cloth', 'cloth'], [add(L['house']), 'house', 'cloth'], [add(L['shoes']), 'shoes', 'cloth']]))
-    BO, _, BS = hair_layers(FG.BASE_HAIR); F, G = FG.grid(BS, BO); FG.report(F, G)
-    PS, EAR = FG.profile_skin(BS, BO, G)
+    C = face_ctx(); F, G = C['F'], C['G']; FG.report(F, G); print('SIDE HEAD', C['SG'])
     for n in range(40):
-        O, U, S = hair_layers(n)
-        if n in WIDEN_SIDE: widen_side_face(O, S)
-        FG.apply_face(n, O, S, F, G, PS, EAR)
+        O, U, S = build_hair(n, C)
         parts['hair'].append(dict(n=HAIR_N[n], L=[[add(O), 'hair', 'hairO'], [add(U), 'hair', 'hairU'], [add(S), 'skin', 'head']]))
     for i in range(15):
         E, Br, Bl = FG.eye_layers(i, F, G, Lay)
         parts['eyes'].append(dict(n=EYE_N[i], L=[[add(E), 'eye', 'face'], [add(Br), 'hair', 'face'], [add(Bl), None, 'face']]))
     for i, (m, name) in enumerate(FG.MOUTHS): parts['mouth'].append(dict(n=name, L=[[add(FG.mouth_layer(i, F, G, Lay)), None, 'face']]))
-    ear_row = add(FG.ear_layer(G, Lay))
     # 발이 그림 아래 끝에 닿게: 교복 층에서 가장 아래 줄을 찾아 전부 내려요 (위가 잘리지 않을 만큼)
     feet = max(int(np.nonzero(rows[r][..., 3].any(1))[0].max()) for p in parts['uni'] for r, sl, z in p['L'])
     top = min(int(np.nonzero(rw[..., 3].any(1))[0].min()) for rw in rows if rw[..., 3].any())
@@ -368,6 +377,6 @@ if __name__ == '__main__':
         return [int(np.percentile(v, q)) for q in (90, 62, 35, 10)]
     stops = {s: stops_of(s) for s in ('hair', 'cloth', 'shoes', 'house')}; stops['eye'] = [205, 150, 105, 70]; stops['skin'] = [228, 206, 180, 146]; stops['house'] = [140, 116, 96, 74]
     pal = json.load(open(os.path.join(HERE, 'palette.json')))
-    json.dump(dict(fw=FW, fh=FH, frames=NF, src='art/iso/avatar_parts.png', z=['hairU', 'skin', 'cloth', 'head', 'face', 'hairO', 'faceO'], base=[[ear_row, 'skin', 'faceO']], parts=parts, outline=False,
+    json.dump(dict(fw=FW, fh=FH, frames=NF, src='art/iso/avatar_parts.png', z=['hairU', 'skin', 'cloth', 'head', 'face', 'hairO', 'faceO'], base=[], parts=parts, outline=False,
                    stops=stops, pal=pal, head=dict(t=CHIN - 20 + dy, b=CHIN + 2 + dy), scale=.75), open(os.path.join(OUT, 'avatar_parts.json'), 'w'), ensure_ascii=False)
     print('rows', len(rows), sheet.shape)
