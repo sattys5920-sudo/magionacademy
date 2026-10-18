@@ -141,8 +141,8 @@ button.who:not(:disabled){border-color:var(--ink)}
 
 /* 탭 */
 .avwrap{display:flex;flex-direction:column;gap:12px}
-.avstage{position:relative;height:200px;background:radial-gradient(circle at 50% 70%,#4A3A7A,#22183F);display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px}
-.avstage canvas{width:110px;height:180px;image-rendering:pixelated}
+.avstage{position:relative;height:236px;background:radial-gradient(circle at 50% 70%,#4A3A7A,#22183F);display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px}
+.avstage canvas{width:138px;height:210px;image-rendering:pixelated}
 .avstage .btn{position:absolute;right:8px;top:8px}
 .avopts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .avo{border:2px solid var(--line);background:#F3EAFB;padding:4px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:0;min-height:72px}
@@ -519,7 +519,7 @@ const secH = (title, meta = '') => `<div class="sec-h"><h3>${title}</h3>${meta ?
 const hint = (msg, fallback) => `<div class="hint ${msg ? 'on px' : ''}">${msg || fallback}</div>`;
 const backBtn = '<button class="btn ghost" id="back">닫기</button>';
 // who: 플레이어 정보(av가 있으면 그 조합) 또는 옛 look 번호
-const avOf = who => who && typeof who === 'object' ? (who.av || World.Avatar.fromLook(who.look)) : World.Avatar.fromLook(who);
+const avOf = who => who && typeof who === 'object' ? { ...(who.av || World.Avatar.fromLook(who.look)), house: who.house } : World.Avatar.fromLook(who);
 const face = (who, size = 32, online) => { const src = World.Avatar.head(avOf(who)); return `<div class="face" style="width:${size}px;height:${size}px">${src ? `<img src="${src}" alt="" style="width:100%;height:100%;image-rendering:pixelated">` : ''}${online === undefined ? '' : `<span class="dot" style="background:${online ? '#3CCB6E' : '#C8B8E8'}"></span>`}</div>`; };
 World.Avatar.ready.then(() => { if (typeof sheetOn !== 'undefined' && sheetOn) render(); });
 const houseTag = k => HOUSES[k] ? `<span class="tag" style="background:${HOUSES[k].bg};color:${HOUSES[k].col}">${HOUSES[k].name}</span>` : '';
@@ -545,7 +545,7 @@ function hud(){
 }
 function enterWorld(){
   document.body.classList.add('inworld'); app.innerHTML = ''; sheetOn = false; app.classList.remove('open');
-  World.setPlayer(me.nick, me.av); World.start(); World.resize();
+  World.setPlayer(me.nick, avOf(me)); World.start(); World.resize();
   hud();
 }
 // 바로 가기: 그 장소로 순간 이동한 다음 화면을 열어요
@@ -619,7 +619,7 @@ function renderHome(){
       <button class="tile px" id="goClass">${ic('book')}<span class="main"><span class="b">수업 ${classLeft()} / ${CLASS_MAX}</span><span class="s ${examStarted() ? 'sub' : ''}" style="${examStarted() ? '' : 'color:#C2385E'}">${!examStarted() ? '쪽지시험 있음!' : `지식 ${me.know || 0}`}</span></span></button>
       <button class="tile px" id="goDorm">${ic('bed')}<span class="main"><span class="b">내 방</span><span class="s sub">${H.name} ${roomNo(me.house, uid || me.nick)}호</span></span></button>
     </div>
-    <button class="tile px" id="goAvatar" style="width:100%"><div class="face" style="width:40px;height:40px;background:#E8DDF8">${World.Avatar.loaded ? `<img src="${World.Avatar.head(me.av)}" alt="" style="width:100%;height:100%;image-rendering:pixelated">` : ''}</div><span class="main" style="flex:1"><span class="b">캐릭터 꾸미기</span><span class="s sub">머리·눈·옷·신발·소품을 바꿔요</span></span></button>
+    <button class="tile px" id="goAvatar" style="width:100%"><div class="face" style="width:40px;height:40px;background:#E8DDF8">${World.Avatar.loaded ? `<img src="${World.Avatar.head(avOf(me))}" alt="" style="width:100%;height:100%;image-rendering:pixelated">` : ''}</div><span class="main" style="flex:1"><span class="b">캐릭터 꾸미기</span><span class="s sub">머리·눈·옷·신발·소품을 바꿔요</span></span></button>
     <section class="sec">
       ${secH('바로 가기', '누르면 그곳으로 가요')}
       <div class="tiles">${[['lab', 'cauldron', 'lab', 'cauldron', '물약 교실', '물약 끓이기·도감'], ['toxic', 'bed', 'green', 'sprout', '독초 온실', '씨앗 심고 수확'], ['campus', 'blackcat', 'ranch', 'egg', '사육장', '생물 돌보기'], ['campus', 'stall', 'market', 'bag', '등불 시장', '사고팔기·친구']]
@@ -1445,31 +1445,25 @@ async function houseCounts(){
   return c;
 }
 // ===== 캐릭터 꾸미기: 머리부터 발끝까지 =====
+// [탭, 이름, [[제목, 부품(없으면 색만), 색 키, 팔레트]]]
 const AV_TABS = [
-  ['face', '얼굴', [['피부', null, 'skinC'], ['눈', 'eyes', 'eyeC']]],
-  ['hair', '머리', [['머리 모양', 'hair', 'hairC']]],
-  ['hat', '머리 장식', [['장식', 'hat', 'hatC']]],
-  ['top', '옷', [['윗옷', 'top', 'topC'], ['아래옷', 'bottom', 'bottomC']]],
-  ['shoes', '신발', [['신발', 'shoes', 'shoesC']]],
-  ['acc', '소품', [['등·손 소품', 'acc', 'accC']]],
+  ['face', '얼굴', [['피부색', null, 'skinC', 'skin'], ['눈 모양', 'eyes', 'eyeC', 'eye'], ['입 모양', 'mouth', null, null]]],
+  ['hair', '머리', [['머리 모양', 'hair', 'hairC', 'hair']]],
+  ['uni', '교복', [['교복', 'uni', null, null], ['신발 색', null, 'shoeC', 'shoes']]],
 ];
 let avTab = 'face', avBack = false, avTimer = 0;
-const avThumb = (av, head) => { const A = World.Avatar; if (!A.loaded) return ''; const c = document.createElement('canvas'), w = A.FW, h = head ? A.FW : A.FH; c.width = w; c.height = h; c.getContext('2d').drawImage(A.compose(av), 0, head ? 1 : 0, w, h, 0, 0, w, h); return c.toDataURL(); };
+const avThumb = (av, head) => { const A = World.Avatar; if (!A.loaded) return ''; const c = document.createElement('canvas'), b = A.headBox, [x, y, w, h] = head ? [b.x, b.y, b.s, b.s] : [0, 0, A.FW, A.FH]; c.width = w; c.height = h; c.getContext('2d').drawImage(A.compose(av), x, y, w, h, 0, 0, w, h); return c.toDataURL(); };
 function avatarUI(av){
   const A = World.Avatar, M = A.meta, [, , rows] = AV_TABS.find(t => t[0] === avTab);
-  const hidden = new Set(['eyes', 'hair', 'hat', 'top', 'bottom', 'shoes', 'acc'].flatMap(c => M.parts[c][av[c]]?.hide || []));
-  const swatch = (slot, key) => `<div class="pal">${A.palOf(slot).map((r, i) => `<button class="sw ${av[key] === i ? 'on' : ''}" data-avc="${key},${i}" style="background:${r[1]}" aria-label="색 ${i + 1}"></button>`).join('')}</div>`;
+  const swatch = (pal, key) => `<div class="pal">${M.pal[pal].map((r, i) => `<button class="sw ${av[key] === i ? 'on' : ''}" data-avc="${key},${i}" style="background:${r[1]}" aria-label="색 ${i + 1}"></button>`).join('')}</div>`;
   return `
     <div class="avwrap">
       <div class="avstage px"><canvas id="avCv" width="${A.FW}" height="${A.FH}"></canvas><button class="btn sm" id="avTurn">${avBack ? '앞모습' : '뒷모습'}</button></div>
-      <div class="seg" style="grid-template-columns:repeat(3,1fr)">${AV_TABS.map(([k, l]) => `<button data-avt="${k}" class="${avTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
-      ${rows.map(([label, cat, key]) => {
-        if (cat && hidden.has(cat)) return `<div class="hint">${label}: 지금 고른 옷이 덮고 있어요</div>`;
-        const slot = cat ? M.parts[cat][av[cat]].slot : 'skin';
-        return `<section class="sec">${secH(label, cat ? M.parts[cat][av[cat]].n : '')}
-          ${cat ? `<div class="avopts">${M.parts[cat].map((p, i) => `<button class="avo ${av[cat] === i ? 'on' : ''}" data-avp="${cat},${i}"><img src="${avThumb({ ...av, [cat]: i }, ['eyes', 'hair', 'hat'].includes(cat))}" alt=""><span class="s">${p.n}</span></button>`).join('')}</div>` : ''}
-          ${slot ? swatch(slot === 'skin' ? 'skin' : slot, A.COLOR[slot] || key) : ''}</section>`;
-      }).join('')}
+      <div class="seg" style="grid-template-columns:repeat(${AV_TABS.length},1fr)">${AV_TABS.map(([k, l]) => `<button data-avt="${k}" class="${avTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+      ${rows.map(([label, cat, key, pal]) => `<section class="sec">${secH(label, cat ? M.parts[cat][av[cat]].n : `${av[key] + 1} / ${M.pal[pal].length}`)}
+          ${cat ? `<div class="avopts">${M.parts[cat].map((p, i) => `<button class="avo ${av[cat] === i ? 'on' : ''}" data-avp="${cat},${i}"><img src="${avThumb({ ...av, [cat]: i }, cat !== 'uni')}" alt=""><span class="s">${p.n}</span></button>`).join('')}</div>` : ''}
+          ${key ? swatch(pal, key) : ''}</section>`).join('')}
+      ${avTab === 'uni' ? `<div class="hint">교복 색은 기숙사 색이에요${av.house ? ` · ${HOUSES[av.house].name}` : ''}</div>` : ''}
       <button class="btn sm" id="avRand" style="align-self:center">🎲 아무거나</button>
     </div>`;
 }
@@ -1482,19 +1476,19 @@ function bindAvatarUI(av, redraw){
   on('[data-avp]', b => { const [c, i] = b.dataset.avp.split(','); av[c] = +i; redraw(); });
   on('[data-avc]', b => { const [k, i] = b.dataset.avc.split(','); av[k] = +i; redraw(); });
   $('#avTurn').onclick = () => { avBack = !avBack; redraw(); };
-  $('#avRand').onclick = () => { Object.assign(av, A.random()); redraw(); };
+  $('#avRand').onclick = () => { Object.assign(av, A.random(), { house: av.house }); redraw(); };
 }
 // 시트: 나중에 다시 꾸미기
 let avDraft = null;
 function renderAvatar(){
-  if (!avDraft) avDraft = { ...me.av };
+  if (!avDraft) avDraft = { ...me.av, house: me.house };
   frame(null, '캐릭터 꾸미기', '머리부터 발끝까지 골라요', `
     ${avatarUI(avDraft)}
     <div style="display:flex;gap:8px"><button class="btn px" id="avCancel" style="flex:1">그만두기</button><button class="btn go px" id="avSave" style="flex:2">이 모습으로!</button></div>`);
   bindAvatarUI(avDraft, () => { const p = app.querySelector('.panel'), y = p.scrollTop; renderAvatar(); app.querySelector('.panel').scrollTop = y; });
   $('#avCancel').onclick = () => { avDraft = null; closeSheet(); };
   $('#avSave').onclick = () => {
-    me.av = World.Avatar.fix(avDraft); avDraft = null; save(); World.setPlayer(me.nick, me.av);
+    me.av = World.Avatar.fix(avDraft); delete me.av.house; avDraft = null; save(); World.setPlayer(me.nick, avOf(me));
     if (!solo) F.update(F.ref(db, 'online/' + uid), { av: me.av }).catch(() => {});
     toast('새 모습이 마음에 들어요!'); closeSheet();
   };
@@ -1516,12 +1510,12 @@ function showCreate(done, counts = {}){
     const keep = () => { nick = $('#nick').value; };
     if (!World.Avatar.loaded) World.Avatar.ready.then(() => { keep(); draw(); });
     else bindAvatarUI(av, () => { keep(); const y = app.querySelector('.cover').scrollTop; draw(); app.querySelector('.cover').scrollTop = y; });
-    app.querySelectorAll('[data-house]').forEach(b => b.onclick = () => { keep(); house = b.dataset.house; draw(); });
+    app.querySelectorAll('[data-house]').forEach(b => b.onclick = () => { keep(); house = b.dataset.house; av.house = house; draw(); });
     $('#enroll').onclick = () => {
       keep(); const n = nick.trim();
       if (n.length < 1 || n.length > 8) return $('#err').textContent = '이름을 1~8 자로 정해 주세요.';
       if (!house) return $('#err').textContent = '기숙사를 골라 주세요.';
-      done(freshPlayer(n, look, house, World.Avatar.fix(av)));
+      const fav = World.Avatar.fix(av); delete fav.house; done(freshPlayer(n, look, house, fav));
     };
   };
   draw();
