@@ -6,6 +6,9 @@ from PIL import Image
 from collections import deque
 D = pickle.load(open('cells.pkl', 'rb'))
 KEY = [(240, 240, 240), (200, 200, 200), (150, 150, 150), (100, 100, 100)]
+def GL(l):   # 색 바꿀 픽셀은 원래 밝기 그대로 회색으로 저장해요 (음영이 뭉개지지 않게)
+    v = int(round(max(1, min(254, l)))); return (v, v, v)
+HAIR_SCALE = 1.25   # 머리 시트의 머리가 얼굴·교복 시트보다 작게 그려져 있어서 키워요
 OUTL = (42, 24, 48)
 def lv(lum, th): return 0 if lum >= th[0] else 1 if lum >= th[1] else 2 if lum >= th[2] else 3
 def dil(m, n=1, diag=False):
@@ -74,9 +77,9 @@ def uni_geom(cell):
     return dict(neck=neck, bot=bot, cx=(xs.min() + xs.max()) / 2, legtop=legtop)
 UG = [uni_geom(c) for c in D['uni']]
 print('uni', [(g['neck'], g['bot'], g['legtop']) for g in UG])
-FW = 46
+FW = 56
 HCX = (G0['l'] + G0['r']) / 2
-TOPPAD = 6
+TOPPAD = 10
 NECK = TOPPAD + (G0['b'] - G0['t']) + 1           # 머리 아래 끝 바로 다음 줄
 BODYH = max(g['bot'] - g['neck'] for g in UG) + 1
 FH = NECK + BODYH + 1
@@ -118,10 +121,10 @@ for y in range(C.shape[0]):
         if out[y, x]: continue
         X, Y = head_xy(x, y, G0)
         if outline0[y, x]: c = OUTL
-        elif C[y, x] == 'skin': c = KEY[lv(lum[y, x], SK_TH)]
-        else: c = KEY[1]                    # 이목구비·볼터치 자리는 피부로 메워요
+        elif C[y, x] == 'skin': c = GL(lum[y, x])
+        else: c = GL(200)                    # 이목구비·볼터치 자리는 피부로 메워요
         if x < G0['l'] + 3 or x > G0['r'] - 3:     # 귀 쪽 갈색 선은 진한 피부로
-            if C[y, x] not in ('skin',) and not outline0[y, x]: c = KEY[3]
+            if C[y, x] not in ('skin',) and not outline0[y, x]: c = GL(min(lum[y, x], 140))
         head.put(0, X, Y, c); head.put(3, X, Y, c)
 copy_frames(head)
 # 볼터치 (모든 얼굴에 공통, 얼굴 칸 0에서)
@@ -152,9 +155,9 @@ def face_parts(i):
         else: kind = 'eye'
         for y, x in pts:
             X, Y = head_xy(x, y, G); cl = C[y, x]; col = tuple(int(v) for v in rgb[y, x])
-            if kind == 'brow': brows.put(0, X, Y, KEY[min(3, lv(lum[y, x], HR_TH) + 1)])
+            if kind == 'brow': brows.put(0, X, Y, GL(lum[y, x] * .8))
             elif kind == 'eye':
-                if cl == 'grey': eyes.put(0, X, Y, KEY[lv(lum[y, x], EY_TH)])
+                if cl == 'grey': eyes.put(0, X, Y, GL(lum[y, x]))
                 elif cl == 'white': eyes.put(0, X, Y, (255, 255, 252))
                 elif cl == 'dark': eyes.put(0, X, Y, OUTL)
                 else: eyes.put(0, X, Y, col)
@@ -183,9 +186,9 @@ def hair_part(cell):
     allpix = []
     for y, x in zip(*np.nonzero(hm)):
         X, Y = head_xy(x, y, G)
-        c = OUTL if C[y, x] == 'dark' else KEY[lv(lum[y, x], HR_TH)]
+        c = OUTL if C[y, x] == 'dark' else GL(lum[y, x])
         allpix.append((X, Y, c))
-        if Y >= chinY - 1 and abs(X - CX) <= 10 and c != OUTL and lv(lum[y, x], HR_TH) >= 2: front_u.put(0, X, Y, c)
+        if Y >= chinY - 1 and abs(X - CX) <= 10 and c != OUTL and lum[y, x] < 140: front_u.put(0, X, Y, c)
         elif Y >= chinY + 1 and abs(X - CX) <= 10: front_u.put(0, X, Y, c)
         else: front_o.put(0, X, Y, c)
     # 뒷모습: 머리카락 + 머리 전체를 머리카락으로 덮어요 (목덜미 4줄은 남겨요)
@@ -203,10 +206,10 @@ def hair_part(cell):
     longhair = bm[chinY + 2:].any(axis=0).sum() >= 6        # 턱 아래로 내려오는 머리면 목덜미까지 덮어요
     for Y, X in zip(*np.nonzero(fill)):
         if Y >= chinY - 3 and not longhair: continue
-        bm[Y, X] = True; bc[(X, Y)] = KEY[0] if (Y - htop) in (2, 3) and abs(X - CX) < 7 else KEY[1] if Y < chinY - 7 else KEY[2]
+        bm[Y, X] = True; bc[(X, Y)] = GL(200) if (Y - htop) in (2, 3) and abs(X - CX) < 7 else GL(170) if Y < chinY - 7 else GL(120)
     # 안쪽 테두리 선은 지우고 새 바깥 테두리를 둘러요
     for (X, Y), c in list(bc.items()):
-        if c == OUTL and all(0 <= X + dx < FW and 0 <= Y + dy < FH and bm[Y + dy, X + dx] for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))): bc[(X, Y)] = KEY[2]
+        if c == OUTL and all(0 <= X + dx < FW and 0 <= Y + dy < FH and bm[Y + dy, X + dx] for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))): bc[(X, Y)] = GL(120)
     ring = dil(bm) & ~bm
     for Y, X in zip(*np.nonzero(ring)):
         if Y < chinY - 3 or not hd[Y, X] or longhair: bc[(X, Y)] = OUTL
@@ -239,14 +242,14 @@ def uni_part(k):
             if y < g['neck']: continue
             X, Y = int(x + CX - int(g['cx'])), int(y - g['neck'] + NECK)
             cl = C[y, x]
-            if cl == 'skin': Ls['skin'].put(base, X, Y, KEY[lv(lum[y, x], SK_TH)])
-            elif cl == 'mag': Ls['house'].put(base, X, Y, KEY[lv(lum[y, x], MG_TH)])
+            if cl == 'skin': Ls['skin'].put(base, X, Y, GL(lum[y, x]))
+            elif cl == 'mag': Ls['house'].put(base, X, Y, GL(lum[y, x]))
             elif cl == 'dark': Ls['cloth'].put(base, X, Y, OUTL)
             elif cl == 'white': Ls['cloth'].put(base, X, Y, (246, 244, 250))
             elif cl == 'grey':
                 tgt = 'shoes' if y >= g['bot'] - 2 else 'cloth'
-                Ls[tgt].put(base, X, Y, KEY[lv(lum[y, x], UN_TH)])
-            elif cl == 'blush': Ls['skin'].put(base, X, Y, KEY[2])
+                Ls[tgt].put(base, X, Y, GL(lum[y, x]))
+            elif cl == 'blush': Ls['skin'].put(base, X, Y, GL(160))
             else:
                 c = tuple(int(v) for v in rgb[y, x])
                 if c[1] > c[0] + 8 and c[1] > c[2] + 8: continue          # 배경 초록 번짐
@@ -272,6 +275,9 @@ for src in HAIR_SRC:
         a, b2 = D['hair2'][13]['rgb'], D['hair2'][19]['rgb']; w = min(a.shape[1], b2.shape[1])
         rgbm = np.concatenate([a[:, :w], b2[:, :w]], axis=0); Cm, lm = classify(rgbm)
         cell = dict(rgb=rgbm, C=Cm, lum=lm, out=outside(Cm))
+    from extract_lib import classify, outside
+    im = Image.fromarray(cell['rgb']); im = im.resize((round(im.width * HAIR_SCALE), round(im.height * HAIR_SCALE)), Image.NEAREST)
+    rgbs = np.array(im); Cs, ls_ = classify(rgbs); cell = dict(rgb=rgbs, C=Cs, lum=ls_, out=outside(Cs))
     o, u, bk = hair_part(cell)
     L = [[row_of(o), 'hair', 'hairO'], [row_of(bk), 'hair', 'hairO']]
     if not u.empty((0,)): L.append([row_of(u), 'hair', 'hairU'])
@@ -303,9 +309,11 @@ EYE = [ramp(h) for h in ['#7A5AE0', '#4AA8F0', '#2E7AD0', '#4AC878', '#2A9A54', 
 HAIR = [ramp(h, .3) for h in ['#3A2A4A', '#2A2A34', '#6A4028', '#8A5A3A', '#C09040', '#E8C870', '#F4E8C8', '#E8703E', '#C0402A', '#7A1A2A',
                                '#F49AC0', '#D8709E', '#B49AF2', '#6648A4', '#7ED8C0', '#2E8070', '#8EC4F2', '#3C6AA0', '#D8D8E8', '#8888A4']]
 SHOES = [ramp(h) for h in ['#3A2A3A', '#5A3A2A', '#8A5A3A', '#E8E4F0', '#B8303A', '#3A6AB8', '#3A8A4C', '#E8702A', '#7A4ABA', '#F0C850']]
-CLOTH = [['#D8D4E4', '#9C96B4', '#625C7E', '#3A3452']]
+CLOTH = [['#E6E6EC', '#A6A6B0', '#6C6C78', '#42424C']]
 HOUSE = {'dew': ramp('#5CCB8E'), 'ember': ramp('#F08A3C'), 'dusk': ramp('#E8709A'), 'moon': ramp('#7A66E0')}
-meta = dict(fw=int(FW), fh=int(FH), src='art/iso/avatar_parts.png', z=Z, base=base, parts=parts, pal=dict(skin=SKIN, eye=EYE, hair=HAIR, shoes=SHOES, cloth=CLOTH, house=HOUSE),
+def L_(h): r, g, b = [int(h[i:i + 2], 16) for i in (1, 3, 5)]; return round((r * 3 + g * 6 + b) / 10)
+STOPS = dict(skin=[L_(h) for h in SKIN0], hair=[205, 170, 110, 65], eye=[215, 175, 110, 70], cloth=[195, 145, 100, 65], shoes=[195, 145, 100, 65], house=[130, 102, 85, 65])
+meta = dict(stops=STOPS, fw=int(FW), fh=int(FH), src='art/iso/avatar_parts.png', z=Z, base=base, parts=parts, pal=dict(skin=SKIN, eye=EYE, hair=HAIR, shoes=SHOES, cloth=CLOTH, house=HOUSE),
             head=dict(t=int(TOPPAD - 2), b=int(NECK + 1)))
 json.dump(meta, open('out/avatar_parts.json', 'w'), ensure_ascii=False)
 print('rows', len(rows), {k: len(v) for k, v in parts.items()}, sheet.shape)

@@ -3,18 +3,28 @@ from PIL import Image
 M = json.load(open('out/avatar_parts.json')); S = Image.open('out/avatar_parts.png').convert('RGBA')
 FW, FH = M['fw'], M['fh']; KEYS = {240: 0, 200: 1, 150: 2, 100: 3}
 hx = lambda h: tuple(int(h[i:i + 2], 16) for i in (1, 3, 5)) + (255,)
+def lut(slot, ramp):
+    st = M['stops'][slot]; cs = [hx(h)[:3] for h in ramp]; T = []
+    for v in range(256):
+        if v >= st[0]: k = (v - st[0]) / max(1, 255 - st[0]); c = [c0 + (255 - c0) * k * .6 for c0 in cs[0]]
+        elif v <= st[3]: k = v / max(1, st[3]); c = [c3 * (.55 + .45 * k) for c3 in cs[3]]
+        else:
+            i = next(i for i in range(3) if st[i + 1] <= v <= st[i]); k = (st[i] - v) / max(1, st[i] - st[i + 1]); c = [a + (b_ - a) * k for a, b_ in zip(cs[i], cs[i + 1])]
+        T.append(tuple(int(round(x)) for x in c) + (255,))
+    return T
 def compose(av, fr):
-    pal = M['pal']; R = dict(skin=pal['skin'][av['skinC']], eye=pal['eye'][av['eyeC']], hair=pal['hair'][av['hairC']], shoes=pal['shoes'][av['shoeC']], cloth=pal['cloth'][0], house=pal['house'][av['house']])
+    pal = M['pal']; R = dict(skin=lut('skin', pal['skin'][av['skinC']]), eye=lut('eye', pal['eye'][av['eyeC']]), hair=lut('hair', pal['hair'][av['hairC']]), shoes=lut('shoes', pal['shoes'][av['shoeC']]), cloth=lut('cloth', pal['cloth'][0]), house=lut('house', pal['house'][av['house']]))
     L = list(M['base'])
     for c in ('hair', 'eyes', 'mouth', 'uni'): L += M['parts'][c][av[c]]['L']
     L.sort(key=lambda l: M['z'].index(l[2]))
     out = Image.new('RGBA', (FW, FH))
     for row, slot, z in L:
         im = S.crop((fr * FW, row * FH, fr * FW + FW, row * FH + FH)); px = im.load()
-        for y in range(FH):
-            for x in range(FW):
-                r, g, b, a = px[x, y]
-                if a and slot and r == g == b and r in KEYS: px[x, y] = hx(R[slot][KEYS[r]])
+        if slot:
+            for y in range(FH):
+                for x in range(FW):
+                    r, g, b, a = px[x, y]
+                    if a and r == g == b: px[x, y] = R[slot][r]
         out.alpha_composite(im)
     return out
 if __name__ == '__main__':

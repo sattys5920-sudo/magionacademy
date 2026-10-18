@@ -9,11 +9,23 @@ const AVM = __AVATAR__;
 World.Avatar = (() => {
   const FW = AVM.fw, FH = AVM.fh, CATS = ['hair', 'eyes', 'mouth', 'uni'], HOUSES = Object.keys(AVM.pal.house);
   const COLORS = { skinC: 'skin', eyeC: 'eye', hairC: 'hair', shoeC: 'shoes' };
-  const KEY = { 240: 0, 200: 1, 150: 2, 100: 3 };
   let data = null; const cache = new Map(), heads = new Map();
   const ready = new Promise(r => { const i = new Image(); i.onload = () => { const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; const g = c.getContext('2d'); g.drawImage(i, 0, 0); data = g.getImageData(0, 0, i.width, i.height); r(); }; i.src = AVM.src; });
   const rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
-  const ramps = {}; const rampOf = (pal, n) => { const k = pal + n; return ramps[k] || (ramps[k] = AVM.pal[pal][n].map(rgb)); };
+  // 회색 밝기 → 색: 팔레트 4색을 기준 밝기(stops)에 놓고 사이는 이어서 칠해요 (원래 음영을 그대로 살려요)
+  const luts = {};
+  function lutOf(slot, colors){
+    const k = slot + colors.join(); if (luts[k]) return luts[k];
+    const st = AVM.stops[slot], cs = colors.map(rgb), T = new Uint8ClampedArray(256 * 3);
+    for (let v = 0; v < 256; v++){
+      let c;
+      if (v >= st[0]){ const t = (v - st[0]) / Math.max(1, 255 - st[0]) * .6; c = cs[0].map(a => a + (255 - a) * t); }
+      else if (v <= st[3]){ const t = v / Math.max(1, st[3]); c = cs[3].map(a => a * (.55 + .45 * t)); }
+      else { let i = 0; while (!(st[i + 1] <= v && v <= st[i])) i++; const t = (st[i] - v) / Math.max(1, st[i] - st[i + 1]); c = cs[i].map((a, j) => a + (cs[i + 1][j] - a) * t); }
+      T[v * 3] = c[0]; T[v * 3 + 1] = c[1]; T[v * 3 + 2] = c[2];
+    }
+    return luts[k] = T;
+  }
   const rnd = seed => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const mod = (v, n) => ((v | 0) % n + n) % n;
   function fix(av){
@@ -34,21 +46,20 @@ World.Avatar = (() => {
   function compose(av){
     av = fix(av); const key = JSON.stringify(av); if (cache.has(key)) return cache.get(key);
     const W = FW * 6, out = new ImageData(W, FH), o = out.data, src = data.data, SW = data.width;
-    const ramp = { skin: rampOf('skin', av.skinC), eye: rampOf('eye', av.eyeC), hair: rampOf('hair', av.hairC), shoes: rampOf('shoes', av.shoeC), cloth: rampOf('cloth', 0), house: rgbHouse(av.house) };
+    const P = AVM.pal, ramp = { skin: lutOf('skin', P.skin[av.skinC]), eye: lutOf('eye', P.eye[av.eyeC]), hair: lutOf('hair', P.hair[av.hairC]), shoes: lutOf('shoes', P.shoes[av.shoeC]), cloth: lutOf('cloth', P.cloth[0]), house: lutOf('house', P.house[HOUSES.includes(av.house) ? av.house : 'moon']) };
     const layers = AVM.base.concat(...CATS.map(c => AVM.parts[c][av[c]].L)).sort((a, b) => AVM.z.indexOf(a[2]) - AVM.z.indexOf(b[2]));
     layers.forEach(([row, slot]) => {
       const rp = slot ? ramp[slot] : null;
       for (let y = 0; y < FH; y++) for (let x = 0; x < W; x++){
         const s = ((row * FH + y) * SW + x) * 4; if (!src[s + 3]) continue;
-        const d = (y * W + x) * 4, r = src[s], g = src[s + 1], b = src[s + 2], k = r === g && g === b ? KEY[r] : undefined;
-        if (rp && k !== undefined){ const c = rp[k]; o[d] = c[0]; o[d + 1] = c[1]; o[d + 2] = c[2]; } else { o[d] = r; o[d + 1] = g; o[d + 2] = b; }
+        const d = (y * W + x) * 4, r = src[s], g = src[s + 1], b = src[s + 2];
+        if (rp && r === g && g === b){ o[d] = rp[r * 3]; o[d + 1] = rp[r * 3 + 1]; o[d + 2] = rp[r * 3 + 2]; } else { o[d] = r; o[d + 1] = g; o[d + 2] = b; }
         o[d + 3] = 255;
       }
     });
     const c = document.createElement('canvas'); c.width = W; c.height = FH; c.getContext('2d').putImageData(out, 0, 0);
     cache.set(key, c); return c;
   }
-  const houseRamps = {}; function rgbHouse(h){ h = HOUSES.includes(h) ? h : 'moon'; return houseRamps[h] || (houseRamps[h] = AVM.pal.house[h].map(rgb)); }
   // 얼굴 동그라미용 (앞모습 머리 부분을 정사각형으로)
   const HB = AVM.head, HS = HB.b - HB.t, HX = Math.round((FW - HS) / 2);
   function head(av){
