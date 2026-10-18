@@ -6,6 +6,7 @@ const World = window.World = { onAct: null, onMove: null };
 // ---------- 캐릭터 조합 (tools/iso/chars5.py 부품) ----------
 // av = { hair, eyes, mouth, uni: 부품 번호, skinC, eyeC, hairC, shoeC: 색 번호, house: 교복 색이 될 기숙사 }
 const AVM = __AVATAR__;
+const ASC = AVM.scale || .5;   // 캐릭터 그림 1픽셀 = 세계 픽셀의 몇 배
 World.Avatar = (() => {
   const FW = AVM.fw, FH = AVM.fh, CATS = ['hair', 'eyes', 'mouth', 'uni'], HOUSES = Object.keys(AVM.pal.house);
   const COLORS = { skinC: 'skin', eyeC: 'eye', hairC: 'hair', shoeC: 'shoes' };
@@ -374,8 +375,7 @@ function drawPerson(p){ const cx = out;
   const [sx, sy] = P(p.x + .5, p.y + .5);
   cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 6, 2.5, 0, 0, Math.PI * 2); cx.fill();
   const f = p.path.length ? 1 + Math.floor(p.t * (p.me ? 12 : 8)) % 2 : 0, col = (p.view || 0) + f;
-  // 캐릭터 그림 1픽셀 = 세계 픽셀의 절반 (생성 그림의 세밀함을 살려요)
-  const A = World.Avatar, S = A.compose(p.av), cp = KPX / 2, w = A.FW * cp, h = A.FH * cp;
+  const A = World.Avatar, S = A.compose(p.av), cp = KPX * ASC, w = A.FW * cp, h = A.FH * cp;
   const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - (A.FH - 1.5) * cp);
   cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0);
   if (p.flip){ cx.translate(dx, dy); cx.scale(-1, 1); cx.drawImage(S, col * A.FW, 0, A.FW, A.FH, -w / 2, 0, w, h); } else cx.drawImage(S, col * A.FW, 0, A.FW, A.FH, Math.round(dx - w / 2), dy, w, h);
@@ -407,7 +407,7 @@ function frame(now){
   const R = o => ({ x: o.x, y: o.y, w: o.sw, h: o.sh });
   const list = objOrder.filter(o => sOver(R(o), view)).map(o => ({ o }));
   [...people].sort((a, b) => (a.x + a.y) - (b.x + b.y)).forEach(p => {
-    const [sx, sy] = P(p.x + .5, p.y + .5), pr = { x: sx - World.Avatar.FW / 4, y: sy - World.Avatar.FH / 2, w: World.Avatar.FW / 2, h: World.Avatar.FH / 2 + 1 }, pb = [p.x + .15, p.y + .15, p.x + .85, p.y + .85];
+    const [sx, sy] = P(p.x + .5, p.y + .5), pr = { x: sx - World.Avatar.FW * ASC / 2, y: sy - World.Avatar.FH * ASC, w: World.Avatar.FW * ASC, h: World.Avatar.FH * ASC + 1 }, pb = [p.x + .15, p.y + .15, p.x + .85, p.y + .85];
     let idx = 0; list.forEach((it, i) => { if (it.o && sOver(R(it.o), pr) && behind(it.o.box, pb)) idx = i + 1; });
     list.splice(idx, 0, { p });
   });
@@ -435,7 +435,7 @@ function frame(now){
   const k = cv.clientWidth / VW;
   if (M.rooms) M.rooms.forEach((rm, i) => { const [sx, sy] = P(rm.door[0] + .5, rm.door[1] + .5); roomTags[i].style.left = (sx - ix) * k + 'px'; roomTags[i].style.top = (sy - 52 - iy) * k + 'px'; });
   if (M.pens) M.pens.forEach((pn, i) => { const [sx, sy] = P(pn.sign[0] + .5, pn.sign[1] + .5); penTags[i].style.left = (sx - ix) * k + 'px'; penTags[i].style.top = (sy - 20 - iy) * k + 'px'; });
-  people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); tags[i].style.left = (sx - ix) * k + 'px'; tags[i].style.top = (sy - World.Avatar.FH / 2 + 2 - iy) * k + 'px'; });
+  people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); tags[i].style.left = (sx - ix) * k + 'px'; tags[i].style.top = (sy - World.Avatar.FH * ASC + 4 - iy) * k + 'px'; });
   if (bubble){ const o = bubble.o; bubble.el.style.left = Math.max(90, Math.min(cv.clientWidth - 90, (o.x + o.sw / 2 - ix) * k)) + 'px'; bubble.el.style.top = Math.max(70, (o.y - 2 - iy) * k) + 'px'; }
   const d = new Date(); document.getElementById('clock').textContent = `🌕 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · 보름밤`;
   requestAnimationFrame(frame);

@@ -8,7 +8,9 @@ python3 interiors.py      # 물약·과자·공예 교실, 독초 온실, 사육
 python3 -c "import dorms; dorms.main()"   # 기숙사 휴게실 4곳 × 6단계(dorm_{witch,vamp,wolf,ghost}_{1..6}) + 개인 방(myroom_*) · 기숙사마다 분위기가 달라요
 python3 furniture.py      # 개인 방 가구 50종: out/furn.png + furn.json (게임에서 놓는 가구)
 python3 ../creatures.py   # 생물 10종 + 알 + 이벤트 용 그림 (양·도마뱀·용은 tools/creature_base.png에서): public/art/iso/creatures_w.png, public/art/creatures.png, 재료 아이콘을 icons.png에 덧붙임
-python3 chars6.py         # 귀여운 2등신 캐릭터 부품 (앞·뒤·옆 9프레임): out/avatar_parts.png + .json (머리 40·눈 15·입 10·교복 5)
+python3 avatar_gen/assemble.py   # 캐릭터 부품: 이미지 생성기로 뽑은 시트(머리 40·눈 15·입 10·교복 5, 앞·뒤·옆)를 조립 → out/avatar_parts.png + .json
+                          # (avatar_gen/extract.py가 원본 시트에서 cells.npz를 뽑아요. 원본 시트는 저장소에 없어요)
+python3 chars6.py         # (예전) 직접 그린 2등신 캐릭터 부품 (앞·뒤·옆 9프레임): out/avatar_parts.png + .json (머리 40·눈 15·입 10·교복 5)
 python3 prev6.py hair     # 미리보기 (hair / face / rand)
 (chars3.py: 예전 고정 학생 8명, 이제 안 써요)
 python3 build_halloween.py ../../public/world.js   # 지도 + world_tpl.js → public/world.js (index.html이 불러요)
