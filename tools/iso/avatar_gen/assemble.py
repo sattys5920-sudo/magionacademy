@@ -227,85 +227,54 @@ def hair_layers(n):
         for j in range(3):
             fr = vi * 3 + j
             place_head(S, fr, sk, ch, nx); place_head(O, fr, hO, ch, nx); place_head(U, fr, hU, ch, nx)
-    open_face(O, S, (0, 1, 2), NECKX, FACE_RX); open_face(O, S, (6, 7, 8), SIDE_C, SIDE_RX)
     return O, U, S
-# ---------- 얼굴 비율 (모든 머리·표정이 같은 자리) ----------
-# 턱 = CHIN, 앞모습 얼굴 가운데 = NECKX. 얼굴은 둥글고 가로가 조금 더 넓어요 (너비 15 · 앞머리 아래~턱 11)
-#   이마  CHIN-10 ~ CHIN-9 : 늘 피부 (앞머리는 CHIN-11 까지만, 눈을 절대 가리지 않아요)
-#   눈    CHIN-8 ~ CHIN-6  : 3칸 너비, 두 눈 사이 5칸 (눈 너비의 약 1.7배), 같은 줄
-#   코    CHIN-5           : 옅은 점 하나
-#   입    CHIN-3           : 1줄 (벌린 입은 CHIN-4 ~ CHIN-3), 보통 2칸 · 크게 웃어도 4칸
-#   턱    CHIN-2 ~ CHIN-1 피부, CHIN 테두리
-# 옆(3/4, 왼쪽 보기): 얼굴 가운데가 SIDE_C, 먼 눈은 2칸으로 얼굴 왼쪽 끝 가까이
-EYE_TOP, EYE_W, EYE_GAP = CHIN - 8, 3, 5
-FACE_RX, FACE_CY, FACE_TOP = 7.5, CHIN - 7, CHIN - 10
-SIDE_C, SIDE_RX = NECKX - 2, 6.5
-MOUTH_ROW = CHIN - 3
-NOSE_ROW = CHIN - 5
-SKIN_FILL = 210
-OUTL = (42, 24, 48, 255)
-SIDE_SHIFT = {9: 4, 7: 1, 33: 1, 3: 1, 25: 2, 26: 1, 38: 1}   # 옆얼굴 위치 맞추기 (얼굴이 오른쪽에 치우친 그림들)
+# ---------- 눈·입 (앞 얼굴 기준) ----------
+SIDE_SHIFT = {9: 2, 7: 1, 33: 1}        # 옆얼굴 위치 맞추기 (10번은 좁아서, 8번은 앞모습 칸이라)
 SIDE_KEEP = {6}            # 이미 왼쪽을 보는 옆모습 (7번)
-def dil4(m):
-    o = m.copy(); o[1:] |= m[:-1]; o[:-1] |= m[1:]; o[:, 1:] |= m[:, :-1]; o[:, :-1] |= m[:, 1:]; return o
-def open_face(O, S, frames, cx, rx):
-    """얼굴 자리(둥근 영역)의 앞머리·옆머리를 걷어 내고 피부로 채운 다음 테두리를 다시 그어요"""
-    yy, xx = np.mgrid[0:FH, 0:FW]
-    reg = (((xx - cx) / rx) ** 2 + ((yy - FACE_CY) / 7.5) ** 2 <= 1) & (yy >= FACE_TOP) & (yy <= CHIN - 1)
-    for fr in frames:
-        o, sk = O.f[fr], S.f[fr]
-        head = (o[..., 3] > 0) | (sk[..., 3] > 0)
-        fill = reg & head
-        o[fill, 3] = 0
-        sk[fill] = (SKIN_FILL, SKIN_FILL, SKIN_FILL, 255)                 # 얼굴은 고른 피부 한 톤 (머리카락 그림자 자국 없이)
-        # 남은 머리카락이 얼굴과 닿는 곳은 어두운 선으로 (앞머리 끝·옆머리 안쪽)
-        edge_h = dil4(fill) & (o[..., 3] > 0) & ~fill
-        g = edge_h & (o[..., 0] == o[..., 1]) & (o[..., 1] == o[..., 2])
-        o[g, :3] = np.minimum(o[g, :3], 70)
-        # 얼굴 바깥이 빈 곳이면 자주 테두리
-        anyp = (o[..., 3] > 0) | (sk[..., 3] > 0)
-        edge_f = fill & dil4(~anyp)
-        o[edge_f] = OUTL; sk[edge_f, 3] = 0
-        # 둥근 느낌: 테두리·머리카락과 닿는 얼굴 가장자리 한 칸만 살짝 어둡게
-        fill2 = fill & ~edge_f; anyo = o[..., 3] > 0
-        rim = fill2 & dil4(anyo | ~((o[..., 3] > 0) | (sk[..., 3] > 0)))
-        sk[rim, :3] = SKIN_FILL - 14
-# 눈 (왼쪽 눈, 첫 칸이 바깥쪽. 오른쪽 눈은 좌우 뒤집기) — 모두 3×3
-# L 선(자주) · D/I/J 눈동자 어둠/중간/밝음(고른 눈 색) · W 흰 반짝 · P 동공 · K 하트 · T 눈물 · V 뱀파이어 빨강
+SIDE_DX, SIDE_IN = -2, 1   # 옆모습 눈: 왼쪽으로 옮김, 먼 눈은 안쪽으로
+# ---------- 눈·코·입: 선명한 픽셀로, 생성 그림 얼굴 비율에 맞춰 같은 자리에 ----------
+# 얼굴 기준(앞모습): 가운데 x = NECKX, 턱 = CHIN. 눈은 턱 위 8~5줄, 코는 4줄 위 1점, 입은 3~1줄 위
+# 비율 기준 = 생성 그림 얼굴의 빈 눈 자리(연한 띠)와 입 위치
+# 글자: L 속눈썹·선(자주) · D/I/J 눈동자 어둠/중간/밝음 (고른 눈 색) · W 흰 반짝 · P 동공 · K 하트 분홍 · T 눈물 · V 뱀파이어 빨강
+# 왼쪽 눈(첫 칸이 바깥쪽), 오른쪽 눈은 좌우로 뒤집어요
 EYE_PIX = [
-    ['LLL', 'WDD', 'DDJ'],      # 반짝 동글
-    ['LLL', 'WDD', 'DIJ'],      # 큰 애니
-    ['...', 'LLL', 'DDI'],      # 졸린 눈
-    ['.L.', 'L.L', '...'],      # 웃는 눈 ^ ^
-    ['LLL', 'JPJ', 'IPI'],      # 고양이 눈
-    ['LWL', 'WWW', 'LWL'],      # 별 눈동자
-    ['KLK', 'KKK', '.K.'],      # 하트 눈동자
-    ['LLL', 'WDD', 'DDJ'],      # 윙크 (오른쪽은 감은 눈)
-    ['L..', 'LLL', 'DDJ'],      # 단호한 눈
-    ['LLL', 'WDD', 'TDT'],      # 눈물 그렁
-    ['LLL', '..L', 'LLL'],      # 빙글빙글
-    ['...', '.L.', '.L.'],      # 점 눈
-    ['LL.', 'VPV', '.VV'],      # 뱀파이어 눈
-    ['LWL', 'WDD', 'DIJ'],      # 순정 반짝
-    ['L..', '.L.', 'L..'],      # 질끈 감은 눈 > <
+    ['LLL', 'WDD', 'DDI', 'DIJ'],          # 반짝 동글
+    ['LLLL', '.WDD', '.DDI', '.DIJ'],      # 큰 애니 (바깥 속눈썹)
+    ['...', 'LLL', 'DDI', '.I.'],          # 졸린 눈
+    ['...', '.L.', 'L.L', '...'],          # 웃는 눈 ^ ^
+    ['LLL', 'JPJ', 'IPI', '.I.'],          # 고양이 눈
+    ['LLL', 'DWD', 'WWW', 'DWD'],          # 별 눈동자
+    ['LLL', 'KDK', 'KKK', '.K.'],          # 하트 눈동자
+    ['LLL', 'WDD', 'DDI', 'DIJ'],          # 윙크 (오른쪽은 감은 눈)
+    ['LL.', '.LL', 'DDI', 'DIJ'],          # 단호한 눈
+    ['LLL', 'WDD', 'DDI', 'TTT'],          # 눈물 그렁
+    ['LLL', '..L', 'L.L', 'LLL'],          # 빙글빙글
+    ['...', '.L.', '.L.', '...'],          # 점 눈
+    ['LL.', '.LL', 'VVP', 'VVV'],          # 뱀파이어 눈
+    ['LLLL', '.WDW', '.DDI', '.WIJ'],      # 순정 반짝
+    ['...', 'L..', '.LL', 'L..'],          # 질끈 감은 눈 > <
 ]
-EYE_WINK_R = ['...', 'LLL', '...']
-# 입 (가운데 정렬): M 선 · R 입속 · N 혀 · W 이(1~2점). 2줄짜리는 위로 (CHIN-4 ~ CHIN-3)
+EYE_WINK_R = ['...', '.L.', 'L.L', '...']
+# 입 (가운데 정렬, 홀수 너비): M 선 · R 입속 · N 혀 · W 이
 MOUTH_PIX = [
-    ['M..M', '.MM.'],           # 미소
-    ['M.M', '.M.'],             # 고양이 입
-    ['.MM.', 'M..M'],           # 시무룩
-    ['MMM', 'W.W'],             # 송곳니 미소
-    ['MMMM', '.RR.'],           # 활짝 웃음
-    ['MM', 'MM'],               # 놀란 입
-    ['MMM', '.N.'],             # 메롱
-    ['MM'],                     # 일자 입
-    ['MMMM', 'MWWM'],           # 이 드러낸 웃음
-    ['M.M.', '.M.M'],           # 울먹
+    ['M.M', '.M.'],                        # 미소
+    ['M.M.M', '.M.M.'],                    # 고양이 입
+    ['.M.', 'M.M'],                        # 시무룩
+    ['MMM', 'W.W'],                        # 송곳니 미소
+    ['MMM', '.R.'],                        # 활짝 웃음
+    ['MM', 'MM'],                          # 놀란 입 (작은 o)
+    ['MMM', '.N.'],                        # 메롱
+    ['MMM'],                               # 일자 입
+    ['MMMMM', 'MWWWM'],                    # 이 드러낸 웃음
+    ['.M.M.', 'M.M.M'],                    # 울먹
 ]
 FACE_COL = dict(L=(42, 24, 48, 255), D=(70, 70, 70, 255), I=(145, 145, 145, 255), J=(205, 205, 205, 255), W=(255, 255, 250, 255),
                 P=(24, 12, 30, 255), K=(255, 118, 160, 255), T=(160, 214, 255, 255), V=(206, 40, 64, 255),
                 M=(120, 46, 66, 255), R=(196, 64, 86, 255), N=(244, 130, 156, 255))
+EYE_ROW = CHIN - 7          # 눈 맨 윗줄 (앞머리에 가리지 않게)
+EYE_IN = 2                  # 눈 안쪽 끝이 가운데에서 떨어진 칸 (두 눈 사이 = 2*EYE_IN - 1)
+MOUTH_ROW = CHIN - 2
+NOSE = (0, CHIN - 3)        # 가운데에서 x, y
 def pix(rows):
     h, w = len(rows), max(len(r) for r in rows); a = np.zeros((h, w, 4), np.uint8)
     for y, row in enumerate(rows):
@@ -315,20 +284,22 @@ def pix(rows):
 def eye_layers(i, cells=None):
     E, B = Lay(), Lay()
     gl = pix(EYE_PIX[i]); gr = pix(EYE_WINK_R) if i == 7 else gl[:, ::-1]
-    lx = NECKX - EYE_GAP // 2 - EYE_W; rx = NECKX + EYE_GAP // 2 + 1          # 두 눈 사이 EYE_GAP칸, 가운데 NECKX
-    slx = SIDE_C - EYE_GAP // 2 - 2; srx = SIDE_C + EYE_GAP // 2              # 옆: 먼 눈 2칸, 가까운 눈 3칸
+    w = gl.shape[1]; c = NECKX
+    lx, rx = c - EYE_IN - w + 1, c + EYE_IN                      # 왼눈 오른쪽 끝 = c-EYE_IN, 오른눈 왼쪽 끝 = c+EYE_IN
     for j in range(3):
-        E.paste(j, gl, lx, EYE_TOP); E.paste(j, gr, rx, EYE_TOP)
-        E.paste(6 + j, gl[:, -2:], slx, EYE_TOP); E.paste(6 + j, gr, srx, EYE_TOP)
+        E.paste(j, gl, lx, EYE_ROW); E.paste(j, gr, rx, EYE_ROW)
+        # 옆(3/4, 왼쪽 보기): 가까운 눈은 그대로 왼쪽으로, 먼 눈은 안쪽 두 칸만 (돌아간 만큼 좁게)
+        far = gl[:, -2:]
+        E.paste(6 + j, gr, rx + SIDE_DX, EYE_ROW); E.paste(6 + j, far, c - EYE_IN - 1 + SIDE_DX + SIDE_IN, EYE_ROW)
     return E, B
 def mouth_layer(i):
-    M = Lay(); g = pix(MOUTH_PIX[i]); h, w = g.shape[:2]; y0 = MOUTH_ROW - (h - 1)
+    M = Lay(); g = pix(MOUTH_PIX[i]); w = g.shape[1]; x0 = NECKX - w // 2
     for j in range(3):
-        M.paste(j, g, NECKX - w // 2, y0); M.paste(6 + j, g, SIDE_C - 1 - w // 2, y0)
+        M.paste(j, g, x0, MOUTH_ROW); M.paste(6 + j, g, x0 + SIDE_DX, MOUTH_ROW)
     return M
 def nose_layer():
-    N = Lay(); n = np.zeros((1, 1, 4), np.uint8); n[0, 0] = (186, 186, 186, 255)   # 피부색으로 칠해지는 옅은 그림자
-    for j in range(3): N.paste(j, n, NECKX, NOSE_ROW); N.paste(6 + j, n, SIDE_C - 3, NOSE_ROW)
+    N = Lay(); n = np.array([[[0, 0, 0, 0]]], np.uint8); n[0, 0] = (186, 186, 186, 255)   # 피부색으로 칠해지는 옅은 그림자 (코)
+    for j in range(3): N.paste(j, n, NECKX + NOSE[0], NOSE[1]); N.paste(6 + j, n, NECKX + NOSE[0] + SIDE_DX - 1, NOSE[1])
     return N
 
 HAIR_N = ['단발', '긴 생머리', '높은 양갈래', '올림머리', '짧은 머리', '삐죽 짧은 머리', '소년 만화', '높은 포니테일', '아프로', '옆 땋은 머리',
