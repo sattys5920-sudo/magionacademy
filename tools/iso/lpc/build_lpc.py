@@ -139,14 +139,13 @@ for body in BODIES:
 SH = 'torso_clothes_longsleeve2_buttoned'   # 흰 셔츠
 SOCK = ('feet_socks_high', 'sock', None)
 COMBO = {
- 'top': [('셔츠', [(SH, 'w', None)]),
+ 'top': [('블레이저', [(SH, 'w', None), ('fx_blazer', 'sch', 36), ('fx_emblem', 'top', 37)]),
+         ('셔츠', [(SH, 'w', None)]),
          ('반팔 셔츠', [('torso_clothes_shortsleeve_polo', 'w', None)]),
          ('니트 조끼', [(SH, 'w', None), ('torso_clothes_sleeveless2_vneck', 'sch', 36)]),
          ('카디건', [(SH, 'w', None), ('torso_clothes_longsleeve2_cardigan', 'sch', 36)]),
          ('반팔 카디건', [('torso_clothes_shortsleeve_polo', 'w', None), ('torso_clothes_shortsleeve_cardigan', 'sch', 36)]),
          ('스웨터', [(SH, 'w', None), ('torso_clothes_longsleeve2_vneck', 'sch', 36)]),
-         ('멜빵', [(SH, 'w', None), ('torso_aprons_suspenders', 'sch', None)]),
-         ('멜빵바지', [(SH, 'w', None), ('torso_aprons_overalls', 'sch', None)]),
          ('블라우스', [('torso_clothes_blouse_longsleeve', 'w', None)]),
          ('반팔 블라우스', [('torso_clothes_blouse', 'w', None)]),
          ('코르셋 교복', [('torso_clothes_blouse_longsleeve', 'w', None), ('torso_clothes_corset', 'sch', None)]),
@@ -154,15 +153,28 @@ COMBO = {
          ('교복 재킷', [(SH, 'w', None), ('torso_jacket_collared', 'sch', None)]),
          ('긴 교복 코트', [(SH, 'w', None), ('torso_jacket_frock', 'sch', None)]),
          ('마법사 로브', [('torso_clothes_robe', 'w', None)])],
- 'feet': [('구두 + 긴 양말', [SOCK, ('feet_shoes_basic', None, None)]),
-          ('끈 구두 + 긴 양말', [SOCK, ('feet_shoes_ghillies', None, None)]),
+ 'feet': [('로퍼 + 무릎 양말', [SOCK, ('feet_shoes_ghillies', None, None)]),
+          ('구두 + 무릎 양말', [SOCK, ('feet_shoes_revised', None, None)]),
+          ('로퍼', [('feet_shoes_ghillies', None, None)]),
           ('구두', [('feet_shoes_basic', None, None)]),
-          ('구두 2', [('feet_shoes_revised', None, None)]),
           ('부츠', [('feet_boots_basic', None, None)]),
           ('접은 부츠', [('feet_boots_fold', None, None)])],
+ 'legs': [('체크 치마', [('fx_pleat', None, None)]),
+          ('일자 치마', [('fx_short', None, None)]),
+          ('교복 바지', [('legs_pants', None, None)]),
+          ('긴 바지', [('legs_pants2', None, None)]),
+          ('반바지', [('legs_shorts', None, None)])],
  'cape': [('교복 망토', [('cape_solid', ('sch', 'top'), None), ('cape_trim', 'top', None)]),
           ('기숙사 색 망토', [('cape_solid', 'top', None)])]}
 pool = {e['id']: e for es in items.values() for e in es}
+# 직접 손본 그림 (fx:종류:원본): 블레이저(카디건 + 깃·길이), 가슴 배지, 주름치마·짧은 치마 (무릎 위)
+def fxent(base, kind, sl=None):
+    return dict(L={b: [(z, 'fx:%s:%s' % (kind, f), mat, src, sl) for z, f, mat, src, _ in Ls] for b, Ls in pool[base]['L'].items()})
+pool['fx_blazer'] = fxent('torso_clothes_longsleeve2_cardigan', 'blazer')
+pool['fx_emblem'] = fxent('torso_clothes_longsleeve2_cardigan', 'emblem')
+pool['fx_pleat'] = fxent('legs_skirts_plain', 'pleat')
+pool['fx_short'] = fxent('legs_skirt_straight', 'short')
+FXBASE = {'fx_blazer': 'torso_clothes_longsleeve2_cardigan', 'fx_emblem': 'torso_clothes_longsleeve2_cardigan', 'fx_pleat': 'legs_skirts_plain', 'fx_short': 'legs_skirt_straight'}
 for cat, lst in COMBO.items():
     out = []
     for nm, comps in lst:
@@ -175,16 +187,17 @@ for cat, lst in COMBO.items():
         if e['L']: out.append(e)
     items[cat] = out
 del items['x']
-KEEP = {'legs': ['legs_skirts_plain', 'legs_skirt_straight', 'legs_skirt_belle', 'legs_pants', 'legs_pants2', 'legs_shorts'],
-        'neck': ['neck_necktie', 'neck_bowtie', 'neck_bowtie2', 'neck_cravat']}
+KEEP = {'neck': ['neck_necktie', 'neck_bowtie', 'neck_bowtie2', 'neck_cravat']}
 for cat, ids in KEEP.items():
     by = {e['id']: e for e in items[cat]}; items[cat] = [by[i] for i in ids if i in by]
 need = {f for es in items.values() for e in es for Ls in e['L'].values() for _, f, _, _, _ in Ls}
 for body in BODIES: need.add('spritesheets/' + HEAD[body] + 'walk.png')
 used = {e['id'] for es in items.values() for e in es} | {j for lst in COMBO.values() for _, cs in lst for i, _, _ in cs for j in (i.values() if isinstance(i, dict) else [i])}
+used |= {FXBASE[i] for i in list(used) if i in FXBASE}
 credits = [c for cat, lst in SEL.items() for rel, _ in lst if os.path.basename(rel)[:-5] in used for c in jd(rel).get('credits', [])]
 print({c: len(v) for c, v in items.items()}, 'files', len(need))
 # 받기
+FXN = {f for f in need if f.startswith('fx:')}; need = (need - FXN) | {f.split(':', 2)[2] for f in FXN}
 missing = [f for f in need if not os.path.exists(os.path.join(LPC, f))]
 if missing:
     subprocess.run(['git', '-C', LPC, 'sparse-checkout', 'add', '--no-cone'] + ['/' + f for f in missing], check=True, capture_output=True)
@@ -195,6 +208,54 @@ def load(f):
     if a.shape[:2] != (256, 576): print('size?', f, a.shape); return None
     return a
 IMG = {f: load(f) for f in sorted(need)}
+# ---------- 손본 그림 ----------
+WHITE = [tuple(int(h[i:i + 2], 16) for i in (1, 3, 5)) for h in PAL['cloth']['white']]
+def pidx(c): return min(range(len(WHITE)), key=lambda i: sum(abs(int(c[j]) - WHITE[i][j]) for j in range(3)))
+def setc(a, y, x, i): a[y, x, :3] = WHITE[max(0, min(len(WHITE) - 1, i))]; a[y, x, 3] = 255
+def cells(a):
+    for r in range(4):
+        for c in range(9): yield r, a[r * 64:(r + 1) * 64, c * 64:(c + 1) * 64]
+def fx_pleat(a, hem=51, pleat=True):
+    a = a.copy()
+    for r, cl in cells(a):
+        m = cl[..., 3] > 0
+        cl[hem + 1:] = 0
+        for x in range(64):
+            if m[hem, x]: setc(cl, hem, x, 0)
+        if not pleat: continue
+        for y in range(46, hem):                              # 체크무늬 (2칸 격자) = 교복 치마
+            for x in range(64):
+                if m[y, x] and m[y, x - 1] and m[y, x + 1] and ((x // 2) + (y // 2)) % 2 == 0:
+                    i = pidx(cl[y, x]); setc(cl, y, x, i - 1) if i > 1 else None
+    return a
+def fx_blazer(a):
+    a = a.copy()
+    for r, cl in cells(a):
+        m = cl[..., 3] > 0
+        if not m.any(): continue
+        ys = np.nonzero(m.any(1))[0]; y1 = ys.max()
+        # 길이: 아래 두 줄 더 (엉덩이까지)
+        for x in range(64):
+            if m[y1, x]:
+                cl[y1 + 2, x] = cl[y1, x]; cl[y1, x] = cl[y1 - 1, x]; cl[y1 + 1, x] = cl[y1 - 1, x]
+        if r != 2: continue                                   # 깃은 앞모습만
+        y0 = ys.min()
+        for y in range(y0, y0 + 6):
+            for x in range(1, 63):
+                if m[y, x] and not m[y, x + 1] and x < 32: setc(cl, y, x, 4); m[y, x - 1] and setc(cl, y, x - 1, 1)
+                if m[y, x] and not m[y, x - 1] and x >= 32: setc(cl, y, x, 4); m[y, x + 1] and setc(cl, y, x + 1, 1)
+    return a
+def fx_emblem(a):
+    o = np.zeros_like(a)                                     # 앞모습 왼쪽 가슴 2×2 (기숙사 색)
+    for c in range(9):
+        cl = a[2 * 64:3 * 64, c * 64:(c + 1) * 64]; m = cl[..., 3] > 0
+        if not m.any(): continue
+        dy = np.nonzero(m.any(1))[0].min() - 34; oc = o[2 * 64:3 * 64, c * 64:(c + 1) * 64]
+        for (yy, xx), i in {(0, 0): 5, (0, 1): 4, (1, 0): 4, (1, 1): 3}.items(): setc(oc, 40 + dy + yy, 37 + xx, i)
+    return o
+FXF = {'blazer': fx_blazer, 'emblem': fx_emblem, 'pleat': fx_pleat, 'short': lambda a: fx_pleat(a, pleat=False)}
+for f in sorted(FXN):
+    _, kind, src = f.split(':', 2); IMG[f] = FXF[kind](IMG[src])
 u = np.zeros((64, 64), bool)
 for f, a in IMG.items():
     if a is None: continue
@@ -260,9 +321,10 @@ meta['pal']['bottom'] = meta['pal']['shoe'] = PAL['cloth']   # 교복 하의·�
 # 고를 수 있는 색 (순서 = 색 번호). 피부는 사람 피부 7 + 판타지 몇 가지
 meta['colors'] = {'skin': ['light', 'amber', 'olive', 'taupe', 'bronze', 'brown', 'black', 'lavender', 'blue', 'pale_green', 'zombie_green'],
                   'hair': list(PAL['hair']), 'eye': list(PAL['eye']), 'cloth': list(PAL['cloth']),
-                  'bottom': ['charcoal', 'black', 'navy', 'gray', 'slate', 'bluegray', 'maroon', 'brown', 'tan', 'white'],
+                  'bottom': ['gray', 'school', 'charcoal', 'black', 'navy', 'slate', 'bluegray', 'maroon', 'brown', 'tan'],
                   'shoe': ['black', 'brown', 'walnut', 'leather', 'charcoal', 'maroon', 'navy', 'white']}
-meta['fixed'] = {'sch': 'navy', 'sock': 'white'}   # 학교 색 (교복 겉옷·망토), 양말
+PAL['cloth']['school'] = ['#0A0A14', '#121426', '#1A1F38', '#232B4C', '#2D3961', '#3A4A78']   # 교복 남색 (진하게)
+meta['fixed'] = {'sch': 'school', 'sock': 'white'}   # 학교 색 (교복 겉옷·망토), 양말
 meta['house'] = {'dew': 'forest', 'ember': 'orange', 'dusk': 'rose', 'moon': 'purple'}   # 기숙사 → 교복 겉옷·망토·넥타이 색
 # 얼굴 동그라미: 정면 서기 프레임의 머리 상자 (정사각형)
 ha = strip(IMG['spritesheets/' + HEAD['female'] + 'walk.png'])[:, :FW, 3] > 0; ys, xs = np.nonzero(ha)
