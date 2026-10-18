@@ -11,6 +11,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.join(HERE, '..
 LPC = sys.argv[1]; SHEETS = os.path.join(LPC, 'spritesheets'); DEFS = os.path.join(LPC, 'sheet_definitions')
 OUTP = os.path.join(ROOT, 'public', 'art', 'lpc'); OUTM = os.path.join(HERE, '..', 'out', 'lpc_meta.json')
 BODIES = ['female', 'male']
+BODYKEY = {'female': 'teen', 'male': 'teen'}   # 몸은 둘 다 날씬한 LPC teen 체형, 머리(얼굴)만 여자·남자
 ROWS = {'down': 2, 'up': 0, 'left': 1, 'right': 3}; DIRS = ['down', 'up', 'left', 'right']
 COLS = [0, 1, 3, 5, 7]                       # 서기 + 걷기 4
 FILES = set(l.strip() for l in open(os.path.join(LPC, '..', 'lpc_files.txt')))
@@ -36,10 +37,11 @@ def pick(globs, skip=()):
 SEL['top'] = pick(['torso/shirts/**/*.json', 'torso/dresses/**/*.json', 'torso/jacket/*.json', 'torso/vest/*.json'], skip=('child', 'santa', 'sleeves'))
 SEL['legs'] = pick(['legs/**/*.json'], skip=('armour',))
 SEL['feet'] = pick(['feet/shoes/*.json', 'feet/boots/*.json', 'feet/feet_sandals.json', 'feet/feet_slippers.json'])
-SEL['hat'] = pick(['headwear/hats/magic/*.json', 'headwear/hats/formal/*.json', 'headwear/hats/caps/*.json', 'headwear/hats/holiday/*.json', 'headwear/coverings/**/*hood*.json'])
+SEL_HAT = (   # 모자는 안 써요
+    ['headwear/hats/magic/*.json', 'headwear/hats/formal/*.json', 'headwear/hats/caps/*.json', 'headwear/hats/holiday/*.json', 'headwear/coverings/**/*hood*.json'])
 SEL['cape'] = pick(['torso/cape/cape_solid.json', 'torso/cape/cape_tattered.json'])
 SEL['neck'] = pick(['headwear/neck/*.json'])
-SEL['x'] = pick(['feet/socks/feet_socks_high.json', 'torso/cape/cape_trim.json'])   # 교복 조합에만 써요
+SEL['x'] = pick(['feet/socks/feet_socks_high.json', 'torso/cape/cape_trim.json', 'torso/aprons/torso_aprons_suspenders.json', 'torso/aprons/torso_aprons_overalls.json'])   # 교복 조합에만 써요
 SLOT = {'body': 'skin', 'face': 'skin', 'hair': 'hair', 'top': 'top', 'legs': 'legs', 'feet': 'feet', 'hat': 'hat', 'cape': 'top', 'neck': 'top', 'x': 'top'}
 HEAD = {'female': 'head/heads/human/female/', 'male': 'head/heads/human/male/'}
 DROP = {'face': ('Looking Left', 'Looking Right', 'Closing Eyes'),
@@ -105,7 +107,7 @@ def walk_file(path, d):
 def layers_of(d, body):
     out = []
     for k in sorted([k for k in d if k.startswith('layer_')]):
-        L = d[k]; p = L.get(body)
+        L = d[k]; p = L.get(BODYKEY[body])
         if not p: continue
         out.append((L.get('zPos', 50), p))
     return out
@@ -134,7 +136,7 @@ for body in BODIES:
 # ---------- 교복 ----------
 # 옷은 교복만: 흰 셔츠·블라우스 + 학교 색(남색) 조끼·카디건·재킷 + 기숙사 색 넥타이·망토 안감
 #   (부품 id, 칸, z) 칸 (튜플이면 층마다), 'sch' = 학교 색, 'top' = 기숙사 색, 'sock' = 흰 양말, 'w' = 그대로, None = 부품 원래 칸, z None = 원래 z
-SH = {'male': 'torso_clothes_longsleeve_formal', 'female': 'torso_clothes_longsleeve2_buttoned'}   # 흰 셔츠 (체형마다 다른 그림)
+SH = 'torso_clothes_longsleeve2_buttoned'   # 흰 셔츠
 SOCK = ('feet_socks_high', 'sock', None)
 COMBO = {
  'top': [('셔츠', [(SH, 'w', None)]),
@@ -142,6 +144,9 @@ COMBO = {
          ('니트 조끼', [(SH, 'w', None), ('torso_clothes_sleeveless2_vneck', 'sch', 36)]),
          ('카디건', [(SH, 'w', None), ('torso_clothes_longsleeve2_cardigan', 'sch', 36)]),
          ('반팔 카디건', [('torso_clothes_shortsleeve_polo', 'w', None), ('torso_clothes_shortsleeve_cardigan', 'sch', 36)]),
+         ('스웨터', [(SH, 'w', None), ('torso_clothes_longsleeve2_vneck', 'sch', 36)]),
+         ('멜빵', [(SH, 'w', None), ('torso_aprons_suspenders', 'sch', None)]),
+         ('멜빵바지', [(SH, 'w', None), ('torso_aprons_overalls', 'sch', None)]),
          ('블라우스', [('torso_clothes_blouse_longsleeve', 'w', None)]),
          ('반팔 블라우스', [('torso_clothes_blouse', 'w', None)]),
          ('코르셋 교복', [('torso_clothes_blouse_longsleeve', 'w', None), ('torso_clothes_corset', 'sch', None)]),
@@ -164,15 +169,14 @@ for cat, lst in COMBO.items():
         e = dict(id='%s_%d' % (cat, len(out)), name=nm, L={})
         for body in BODIES:
             cs = [(i[body] if isinstance(i, dict) else i, sl, zz) for i, sl, zz in comps]
-            if not all(body in pool[i]['L'] for i, _, _ in cs): continue
+            if not all(i in pool and body in pool[i]['L'] for i, _, _ in cs): continue
             e['L'][body] = [(z if zz is None else zz, f, mat, src, sl if not isinstance(sl, tuple) else sl[k])
                             for i, sl, zz in cs for k, (z, f, mat, src, _) in enumerate(pool[i]['L'][body])]
         if e['L']: out.append(e)
     items[cat] = out
 del items['x']
 KEEP = {'legs': ['legs_skirts_plain', 'legs_skirt_straight', 'legs_skirt_belle', 'legs_pants', 'legs_pants2', 'legs_shorts'],
-        'neck': ['neck_necktie', 'neck_bowtie', 'neck_bowtie2', 'neck_cravat'],
-        'hat': ['hat_magic_large', 'hat_magic_wizard', 'hat_magic_celestial', 'hat_magic_celestial_moon', 'hat_hood_cloth', 'hat_cap_bonnie']}
+        'neck': ['neck_necktie', 'neck_bowtie', 'neck_bowtie2', 'neck_cravat']}
 for cat, ids in KEEP.items():
     by = {e['id']: e for e in items[cat]}; items[cat] = [by[i] for i in ids if i in by]
 need = {f for es in items.values() for e in es for Ls in e['L'].values() for _, f, _, _, _ in Ls}
@@ -236,11 +240,11 @@ def write(cat, idx, entry, extra=None):
     name = f'{cat}_{idx:03d}.png'; Image.fromarray(np.concatenate(rows, 0)).save(os.path.join(OUTP, name), optimize=True)
     return dict(id=entry['id'], n=KO.get(entry['name'], entry['name']), f='art/lpc/' + name, L=L)
 # 몸 = 몸통 + 머리 (체형마다)
-body_entry = dict(id='body', name='body', L={b: [(10, 'spritesheets/body/bodies/' + b + '/walk.png', 'body', 'light', None), (100, 'spritesheets/' + HEAD[b] + 'walk.png', 'body', 'light', None)] for b in BODIES})
+body_entry = dict(id='body', name='body', L={b: [(10, 'spritesheets/body/bodies/' + BODYKEY[b] + '/walk.png', 'body', 'light', None), (100, 'spritesheets/' + HEAD[b] + 'walk.png', 'body', 'light', None)] for b in BODIES})
 meta['parts']['body'] = [write('body', 0, body_entry)]
 for cat in [c for c in SEL if c not in ('body', 'x')]:
     meta['parts'][cat] = [p for p in (write(cat, i, e) for i, e in enumerate(items[cat])) if p]
-for cat, nm in (('face', '기본'), ('hat', '없음'), ('cape', '없음'), ('neck', '없음')):
+for cat, nm in (('face', '기본'), ('cape', '없음'), ('neck', '없음')):
     meta['parts'][cat].insert(0, dict(id='none', n=nm, f=None, L={b: [] for b in BODIES}))
 meta['pal'] = {'skin': PAL['body'], 'hair': PAL['hair'], 'eye': PAL['eye'], 'cloth': PAL['cloth']}
 meta['pal']['bottom'] = meta['pal']['shoe'] = PAL['cloth']   # 교복 하의·신발: 천 팔레트에서 몇 색만
