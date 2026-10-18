@@ -271,10 +271,10 @@ MOUTH_PIX = [
 FACE_COL = dict(L=(42, 24, 48, 255), D=(70, 70, 70, 255), I=(145, 145, 145, 255), J=(205, 205, 205, 255), W=(255, 255, 250, 255),
                 P=(24, 12, 30, 255), K=(255, 118, 160, 255), T=(160, 214, 255, 255), V=(206, 40, 64, 255),
                 M=(120, 46, 66, 255), R=(196, 64, 86, 255), N=(244, 130, 156, 255))
-EYE_ROW = CHIN - 8          # 눈 맨 윗줄
+EYE_ROW = CHIN - 7          # 눈 맨 윗줄 (앞머리에 가리지 않게)
 EYE_IN = 2                  # 눈 안쪽 끝이 가운데에서 떨어진 칸 (두 눈 사이 = 2*EYE_IN - 1)
-MOUTH_ROW = CHIN - 3
-NOSE = (0, CHIN - 4)        # 가운데에서 x, y
+MOUTH_ROW = CHIN - 2
+NOSE = (0, CHIN - 3)        # 가운데에서 x, y
 def pix(rows):
     h, w = len(rows), max(len(r) for r in rows); a = np.zeros((h, w, 4), np.uint8)
     for y, row in enumerate(rows):
