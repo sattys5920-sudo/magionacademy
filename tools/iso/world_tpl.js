@@ -5,15 +5,15 @@ const MAPS = __MAPS__;
 const World = window.World = { onAct: null, onMove: null };
 // ---------- 캐릭터 조합 (LPC 부품: tools/iso/lpc/build_lpc.py) ----------
 // av = { body: 체형(0 여·1 남), hair, face, top, legs, feet, hat, cape, neck: 부품 번호,
-//        skinC, hairC, eyeC, legsC, feetC, hatC, neckC: 색 번호, house: 상의·망토 색이 될 기숙사 }
+//        skinC, hairC, eyeC, legsC, feetC, hatC: 색 번호, house: 교복 겉옷·망토·넥타이 색이 될 기숙사 }
 // 부품 그림은 필요할 때 불러와요 (art/lpc/*.png). 색은 LPC 팔레트를 바꿔 칠해요
 const AVM = __AVATAR__;
 const ASC = AVM.scale || .5;   // 캐릭터 그림 1픽셀 = 세계 픽셀의 몇 배
 World.Avatar = (() => {
   const FW = AVM.fw, FH = AVM.fh, NF = AVM.frames, CATS = ['hair', 'face', 'top', 'legs', 'feet', 'hat', 'cape', 'neck'], HOUSES = Object.keys(AVM.house);
-  const COLORS = { skinC: 'skin', hairC: 'hair', eyeC: 'eye', legsC: 'cloth', feetC: 'cloth', hatC: 'cloth', neckC: 'cloth' };
-  const SLOTC = { skin: 'skinC', hair: 'hairC', eye: 'eyeC', legs: 'legsC', feet: 'feetC', hat: 'hatC', neck: 'neckC' };
-  const MAT = { skin: 'skin', eye: 'eye', hair: 'hair', top: 'cloth', legs: 'cloth', feet: 'cloth', hat: 'cloth', neck: 'cloth' };
+  const COLORS = { skinC: 'skin', hairC: 'hair', eyeC: 'eye', legsC: 'bottom', feetC: 'shoe', hatC: 'cloth' };   // 색 키 → 고를 수 있는 색 목록
+  const SLOTC = { skin: 'skinC', hair: 'hairC', eye: 'eyeC', legs: 'legsC', feet: 'feetC', hat: 'hatC' };
+  const MAT = { skin: 'skin', eye: 'eye', hair: 'hair', top: 'cloth', legs: 'bottom', feet: 'shoe', hat: 'cloth' };
   const imgs = {}, cache = new Map(), heads = new Map(), maps = new Map(), subs = [];
   const bodyName = av => AVM.bodies[av.body] || AVM.bodies[0];
   function load(f){
@@ -33,14 +33,14 @@ World.Avatar = (() => {
     CATS.forEach(c => { const n = AVM.parts[c].length; let i = mod(a[c], n); for (let k = 0; k < n && !has(c, i, body); k++) i = (i + 1) % n; a[c] = i; });
     Object.entries(COLORS).forEach(([k, p]) => { a[k] = mod(a[k], AVM.colors[p].length); });
     if (!HOUSES.includes(a.house)) delete a.house;
-    delete a.eyes; delete a.mouth; delete a.uni; delete a.shoeC;
+    delete a.eyes; delete a.mouth; delete a.uni; delete a.shoeC; delete a.neckC;
     return a;
   }
   const rnd = seed => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   function fromLook(look){
     const r = rnd(((look | 0) + 7) * 9973 + 1), a = { body: Math.floor(r() * 2) };
     CATS.forEach(c => { a[c] = Math.floor(r() * AVM.parts[c].length); });
-    a.hat = r() < .7 ? 0 : a.hat; a.cape = r() < .75 ? 0 : a.cape; a.neck = r() < .7 ? 0 : a.neck; a.face = r() < .6 ? 0 : a.face;
+    a.hat = r() < .7 ? 0 : a.hat; a.cape = r() < .6 ? 0 : a.cape; a.neck = r() < .3 ? 0 : a.neck; a.face = r() < .6 ? 0 : a.face;
     Object.entries(COLORS).forEach(([k, p]) => { a[k] = Math.floor(r() * AVM.colors[p].length); });
     a.skinC = Math.floor(r() * 7);
     return fix(a);

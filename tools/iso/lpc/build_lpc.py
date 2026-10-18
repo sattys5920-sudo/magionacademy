@@ -39,7 +39,7 @@ SEL['feet'] = pick(['feet/shoes/*.json', 'feet/boots/*.json', 'feet/feet_sandals
 SEL['hat'] = pick(['headwear/hats/magic/*.json', 'headwear/hats/formal/*.json', 'headwear/hats/caps/*.json', 'headwear/hats/holiday/*.json', 'headwear/coverings/**/*hood*.json'])
 SEL['cape'] = pick(['torso/cape/cape_solid.json', 'torso/cape/cape_tattered.json'])
 SEL['neck'] = pick(['headwear/neck/*.json'])
-SLOT = {'body': 'skin', 'face': 'skin', 'hair': 'hair', 'top': 'top', 'legs': 'legs', 'feet': 'feet', 'hat': 'hat', 'cape': 'top', 'neck': 'neck'}
+SLOT = {'body': 'skin', 'face': 'skin', 'hair': 'hair', 'top': 'top', 'legs': 'legs', 'feet': 'feet', 'hat': 'hat', 'cape': 'top', 'neck': 'top'}
 HEAD = {'female': 'head/heads/human/female/', 'male': 'head/heads/human/male/'}
 DROP = {'face': ('Looking Left', 'Looking Right', 'Closing Eyes'),
         'hat': ('Second Color', 'Belt', 'Buckle', 'feather', 'Feather', 'Trim'),
@@ -121,14 +121,52 @@ for cat, lst in SEL.items():
                 if '${head}' in p: p = p.replace('${head}', body)
                 f, mat, src = walk_file(p, d)
                 if not f: continue
-                Ls.append((z, f, mat, src))
+                Ls.append((z, f, mat, src, None))
             if Ls: entry['L'][body] = Ls
         if not entry['L']: continue
         items[cat].append(entry); credits += d.get('credits', [])
         for body, Ls in entry['L'].items():
-            for z, f, mat, src in Ls: need.add(f)
+            for z, f, mat, src, _ in Ls: need.add(f)
 for body in BODIES:
     f = 'spritesheets/' + HEAD[body] + 'walk.png'; need.add(f)
+# ---------- 교복 ----------
+# 옷은 교복만: 흰 셔츠·블라우스 위에 기숙사 색 조끼·카디건·재킷을 겹쳐 입어요
+#   (부품 id, 칸, z) 칸 'top' = 기숙사 색, 'w' = 그대로 (흰색), z None = 원래 z
+SH = {'male': 'torso_clothes_longsleeve_formal', 'female': 'torso_clothes_longsleeve2_buttoned'}   # 흰 셔츠 (체형마다 다른 그림)
+UNI = [('셔츠', [(SH, 'w', None)]),
+       ('반팔 셔츠', [('torso_clothes_shortsleeve_polo', 'w', None)]),
+       ('니트 조끼', [(SH, 'w', None), ('torso_clothes_sleeveless2_vneck', 'top', 36)]),
+       ('카디건', [(SH, 'w', None), ('torso_clothes_longsleeve2_cardigan', 'top', 36)]),
+       ('반팔 카디건', [('torso_clothes_shortsleeve_polo', 'w', None), ('torso_clothes_shortsleeve_cardigan', 'top', 36)]),
+       ('블라우스', [('torso_clothes_blouse_longsleeve', 'w', None)]),
+       ('반팔 블라우스', [('torso_clothes_blouse', 'w', None)]),
+       ('코르셋 교복', [('torso_clothes_blouse_longsleeve', 'w', None), ('torso_clothes_corset', 'top', None)]),
+       ('조끼 교복', [(SH, 'w', None), ('torso_clothes_vest', 'top', None)]),
+       ('열린 조끼', [(SH, 'w', None), ('torso_clothes_vest_open', 'top', None)]),
+       ('교복 재킷', [(SH, 'w', None), ('torso_jacket_collared', 'top', None)]),
+       ('긴 교복 코트', [(SH, 'w', None), ('torso_jacket_frock', 'top', None)]),
+       ('마법사 로브', [('torso_clothes_robe', 'w', None)])]
+byid = {e['id']: e for e in items['top']}
+uni = []
+for nm, comps in UNI:
+    e = dict(id='uni_%d' % len(uni), name=nm, L={})
+    for body in BODIES:
+        cs = [(i[body] if isinstance(i, dict) else i, sl, zz) for i, sl, zz in comps]
+        if not all(body in byid[i]['L'] for i, _, _ in cs): continue
+        e['L'][body] = [(z if zz is None else zz, f, mat, src, sl) for i, sl, zz in cs for z, f, mat, src, _ in byid[i]['L'][body]]
+    if e['L']: uni.append(e)
+items['top'] = uni
+KEEP = {'legs': ['legs_skirts_plain', 'legs_skirt_straight', 'legs_skirt_belle', 'legs_formal', 'legs_pants', 'legs_pants2', 'legs_shorts'],
+        'feet': ['feet_shoes_basic', 'feet_shoes_ghillies', 'feet_shoes_revised', 'feet_boots_basic', 'feet_boots_fold'],
+        'neck': ['neck_necktie', 'neck_bowtie', 'neck_bowtie2', 'neck_cravat'],
+        'cape': ['cape_solid'],
+        'hat': ['hat_magic_large', 'hat_magic_wizard', 'hat_magic_celestial', 'hat_magic_celestial_moon', 'hat_hood_cloth', 'hat_cap_bonnie']}
+for cat, ids in KEEP.items():
+    by = {e['id']: e for e in items[cat]}; items[cat] = [by[i] for i in ids if i in by]
+need = {f for es in items.values() for e in es for Ls in e['L'].values() for _, f, _, _, _ in Ls}
+for body in BODIES: need.add('spritesheets/' + HEAD[body] + 'walk.png')
+used = {e['id'] for es in items.values() for e in es} | {j for _, cs in UNI for i, _, _ in cs for j in (i.values() if isinstance(i, dict) else [i])}
+credits = [c for cat, lst in SEL.items() for rel, _ in lst if os.path.basename(rel)[:-5] in used for c in jd(rel).get('credits', [])]
 print({c: len(v) for c, v in items.items()}, 'files', len(need))
 # 받기
 missing = [f for f in need if not os.path.exists(os.path.join(LPC, f))]
@@ -163,11 +201,12 @@ def hit(a, pal):
     if not len(c): return 0
     P = np.stack([hexrgb(h) for h in pal]); d = np.abs(c[:, None, :] - P[None]).max(-1).min(-1)
     return float((d <= 1).mean())
-def maps_of(cat, f, mat, src):
+def maps_of(cat, f, mat, src, sl=None):
     """층 그림이 실제로 어느 팔레트로 그려졌는지 맞춰 봐요 (안 맞으면 색 그대로)"""
     a = IMG[f]
     if cat in ('body', 'face'): return [['skin', 'light'], ['eye', 'blue']]
-    slot = SLOT[cat]; m = {'hair': 'hair'}.get(mat, 'hair' if cat == 'hair' else 'cloth')
+    if sl == 'w': return []
+    slot = sl or SLOT[cat]; m = {'hair': 'hair'}.get(mat, 'hair' if cat == 'hair' else 'cloth')
     cands = [src] if src in PAL[m] else []
     cands += [k for k in PAL[m] if k not in cands]
     best = max(cands, key=lambda k: hit(a, PAL[m][k]))
@@ -177,25 +216,28 @@ def write(cat, idx, entry, extra=None):
     rows, rowmap, L = [], {}, {}
     for body, Ls in entry['L'].items():
         L[body] = []
-        for z, f, mat, src in Ls:
+        for z, f, mat, src, sl in Ls:
             if IMG.get(f) is None: continue
             if f not in rowmap: rowmap[f] = len(rows); rows.append(strip(IMG[f]))
-            L[body].append([rowmap[f], z, maps_of(cat, f, mat, src)])
+            L[body].append([rowmap[f], z, maps_of(cat, f, mat, src, sl)])
     if not rows: return None
     name = f'{cat}_{idx:03d}.png'; Image.fromarray(np.concatenate(rows, 0)).save(os.path.join(OUTP, name), optimize=True)
     return dict(id=entry['id'], n=KO.get(entry['name'], entry['name']), f='art/lpc/' + name, L=L)
 # 몸 = 몸통 + 머리 (체형마다)
-body_entry = dict(id='body', name='body', L={b: [(10, 'spritesheets/body/bodies/' + b + '/walk.png', 'body', 'light'), (100, 'spritesheets/' + HEAD[b] + 'walk.png', 'body', 'light')] for b in BODIES})
+body_entry = dict(id='body', name='body', L={b: [(10, 'spritesheets/body/bodies/' + b + '/walk.png', 'body', 'light', None), (100, 'spritesheets/' + HEAD[b] + 'walk.png', 'body', 'light', None)] for b in BODIES})
 meta['parts']['body'] = [write('body', 0, body_entry)]
 for cat in [c for c in SEL if c != 'body']:
     meta['parts'][cat] = [p for p in (write(cat, i, e) for i, e in enumerate(items[cat])) if p]
 for cat, nm in (('face', '기본'), ('hat', '없음'), ('cape', '없음'), ('neck', '없음')):
     meta['parts'][cat].insert(0, dict(id='none', n=nm, f=None, L={b: [] for b in BODIES}))
 meta['pal'] = {'skin': PAL['body'], 'hair': PAL['hair'], 'eye': PAL['eye'], 'cloth': PAL['cloth']}
+meta['pal']['bottom'] = meta['pal']['shoe'] = PAL['cloth']   # 교복 하의·신발: 천 팔레트에서 몇 색만
 # 고를 수 있는 색 (순서 = 색 번호). 피부는 사람 피부 7 + 판타지 몇 가지
 meta['colors'] = {'skin': ['light', 'amber', 'olive', 'taupe', 'bronze', 'brown', 'black', 'lavender', 'blue', 'pale_green', 'zombie_green'],
-                  'hair': list(PAL['hair']), 'eye': list(PAL['eye']), 'cloth': list(PAL['cloth'])}
-meta['house'] = {'dew': 'forest', 'ember': 'orange', 'dusk': 'rose', 'moon': 'purple'}   # 기숙사 → 상의·망토 색
+                  'hair': list(PAL['hair']), 'eye': list(PAL['eye']), 'cloth': list(PAL['cloth']),
+                  'bottom': ['charcoal', 'black', 'navy', 'gray', 'slate', 'bluegray', 'maroon', 'brown', 'tan', 'white'],
+                  'shoe': ['black', 'brown', 'walnut', 'leather', 'charcoal', 'maroon', 'navy', 'white']}
+meta['house'] = {'dew': 'forest', 'ember': 'orange', 'dusk': 'rose', 'moon': 'purple'}   # 기숙사 → 교복 겉옷·망토·넥타이 색
 # 얼굴 동그라미: 정면 서기 프레임의 머리 상자 (정사각형)
 ha = strip(IMG['spritesheets/' + HEAD['female'] + 'walk.png'])[:, :FW, 3] > 0; ys, xs = np.nonzero(ha)
 hs = int(max(xs.max() - xs.min(), ys.max() - ys.min()) + 5); hcx = (xs.min() + xs.max()) / 2
