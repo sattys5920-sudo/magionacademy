@@ -243,7 +243,7 @@ def hair_layers(n):
         sk = to_gray(head, skin_m, SKIN_T)
         hg = to_gray(a, hair_m & k['gray'], HAIR_T); hl = np.where(hg[..., 3:] > 0, hg, keep_color(a, hair_m & ~k['gray']))
         hO, hU = hl.copy(), hl.copy()
-        if vi == 0: hO[under, 3] = 0; hU[~under, 3] = 0
+        if vi in (0, 2): hO[under, 3] = 0; hU[~under, 3] = 0   # 앞·옆: 턱 아래 머리카락은 몸 뒤로 (옆에서 긴 머리가 가슴을 덮지 않게)
         else: hU[..., 3] = 0
         for j in range(3):
             fr = vi * 3 + j
