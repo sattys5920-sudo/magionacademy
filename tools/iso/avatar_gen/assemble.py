@@ -6,6 +6,7 @@ from PIL import Image
 from scipy import ndimage
 from reduce import reduce
 from picks import FRONT, BACK, SIDE
+import face
 HERE = os.path.dirname(os.path.abspath(__file__))
 _Z = np.load(os.path.join(HERE, 'cells.npz')); D = {}
 for key in _Z.files:
@@ -229,7 +230,7 @@ def hair_layers(n):
             place_head(S, fr, sk, ch, nx); place_head(O, fr, hO, ch, nx); place_head(U, fr, hU, ch, nx)
     return O, U, S
 # ---------- 눈·입 (앞 얼굴 기준) ----------
-SIDE_SHIFT = {9: 2, 7: 1, 33: 1}        # 옆얼굴 위치 맞추기 (10번은 좁아서, 8번은 앞모습 칸이라)
+SIDE_SHIFT = {9: 4, 7: 1, 33: 1, 3: 2, 25: 2, 26: 2, 38: 2, 36: 2, 0: 1}   # 옆얼굴 위치 맞추기 (눈이 얼굴 밖으로 나가지 않게)
 SIDE_KEEP = {6}            # 이미 왼쪽을 보는 옆모습 (7번)
 SIDE_DX, SIDE_IN = -2, 1   # 옆모습 눈: 왼쪽으로 옮김, 먼 눈은 안쪽으로
 # ---------- 눈·코·입: 선명한 픽셀로, 생성 그림 얼굴 비율에 맞춰 같은 자리에 ----------
@@ -282,20 +283,17 @@ def pix(rows):
             if ch != '.': a[y, x] = FACE_COL[ch]
     return a
 def eye_layers(i, cells=None):
+    """눈: 생성 시트(face.py)에서 뽑아 게임 얼굴 크기로"""
     E, B = Lay(), Lay()
-    gl = pix(EYE_PIX[i]); gr = pix(EYE_WINK_R) if i == 7 else gl[:, ::-1]
-    w = gl.shape[1]; c = NECKX
-    lx, rx = c - EYE_IN - w + 1, c + EYE_IN                      # 왼눈 오른쪽 끝 = c-EYE_IN, 오른눈 왼쪽 끝 = c+EYE_IN
-    for j in range(3):
-        E.paste(j, gl, lx, EYE_ROW); E.paste(j, gr, rx, EYE_ROW)
-        # 옆(3/4, 왼쪽 보기): 가까운 눈은 그대로 왼쪽으로, 먼 눈은 안쪽 두 칸만 (돌아간 만큼 좁게)
-        far = gl[:, -2:]
-        E.paste(6 + j, gr, rx + SIDE_DX, EYE_ROW); E.paste(6 + j, far, c - EYE_IN - 1 + SIDE_DX + SIDE_IN, EYE_ROW)
+    for side, base in ((False, 0), (True, 6)):
+        for g, x, y in face.eyes(i, side, NECKX, CHIN):
+            for j in range(3): E.paste(base + j, g, x, y)
     return E, B
 def mouth_layer(i):
-    M = Lay(); g = pix(MOUTH_PIX[i]); w = g.shape[1]; x0 = NECKX - w // 2
-    for j in range(3):
-        M.paste(j, g, x0, MOUTH_ROW); M.paste(6 + j, g, x0 + SIDE_DX, MOUTH_ROW)
+    M = Lay()
+    for side, base in ((False, 0), (True, 6)):
+        for g, x, y in face.mouth(i, side, NECKX, CHIN):
+            for j in range(3): M.paste(base + j, g, x, y)
     return M
 def nose_layer():
     N = Lay(); n = np.array([[[0, 0, 0, 0]]], np.uint8); n[0, 0] = (186, 186, 186, 255)   # 피부색으로 칠해지는 옅은 그림자 (코)
