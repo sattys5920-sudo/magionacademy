@@ -245,7 +245,7 @@ def hair_layers(n):
 SIDE_KEEP = {6}            # 이미 왼쪽을 보는 옆모습 (7번)
 # 옆모습(왼쪽 보기, 3/4): 얼굴 앞 윤곽 = x 10, 귀 = x 22쯤. 얼굴 가운데 선이 보는 쪽(왼쪽)으로 치우쳐서
 # 먼 눈은 앞 윤곽 바로 안쪽에 좁게(2칸), 가까운 눈은 가운데 선 오른쪽에 온전히, 입은 가운데 선 아래
-SIDE_FAR_X, SIDE_NEAR_X, SIDE_MID = 10, 16, 14
+SIDE_FAR_X, SIDE_NEAR_X, SIDE_MID = 10, 16, 12
 # ---------- 눈·코·입: 선명한 픽셀로, 생성 그림 얼굴 비율에 맞춰 같은 자리에 ----------
 # 얼굴 기준(앞모습): 가운데 x = NECKX, 턱 = CHIN. 눈은 턱 위 8~5줄, 코는 4줄 위 1점, 입은 3~1줄 위
 # 비율 기준 = 생성 그림 얼굴의 빈 눈 자리(연한 띠)와 입 위치
@@ -314,7 +314,7 @@ def eye_layers(i, cells=None):
 def mouth_layer(i):
     M = Lay(); g = pix(MOUTH_PIX[i]); w = g.shape[1]; x0 = NECKX - w // 2
     for j in range(3):
-        M.paste(j, g, x0, MOUTH_ROW); M.paste(6 + j, g, SIDE_MID - w // 2, MOUTH_ROW)
+        M.paste(j, g, x0, MOUTH_ROW); M.paste(6 + j, g, max(SIDE_MID - 1, SIDE_MID - w // 2), MOUTH_ROW)   # 넓은 입은 턱 윤곽 밖으로 안 나가게 오른쪽으로
     return M
 def nose_layer():
     N = Lay(); n = np.array([[[0, 0, 0, 0]]], np.uint8); n[0, 0] = (186, 186, 186, 255)   # 피부색으로 칠해지는 옅은 그림자 (코)
