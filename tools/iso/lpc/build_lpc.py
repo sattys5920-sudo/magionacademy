@@ -870,6 +870,24 @@ def loose(f, mp):
                     for x in range(L_, R_ + 1):
                         if not mm[y, x]: cl[y, x] = cl[yr, x]
                 for x in range(L_, R_ + 1): cl[y1, x, :3] = P[0]; cl[y1, x, 3] = 255
+    if 'legs/' in src and not any(w in src for w in ('skirt', 'leggings', 'hose')) and not f.startswith(('fx:mini', 'fx:pleat', 'fx:checkmini', 'fx:pleatlong', 'fx:tennis', 'fx:denimmini', 'fx:short')):
+        for r in range(4):                                    # 펑퍼짐한 바지: 바깥쪽 1칸 넓게, 밑단 3줄은 2칸 (와이드)
+            for c in range(9):
+                cl = a[r * 64:(r + 1) * 64, c * 64:(c + 1) * 64]; mm = cl[..., 3] > 0
+                if not mm.any(): continue
+                ys = np.nonzero(mm.any(1))[0]; t, y1 = int(ys.min()), int(ys.max()); src_ = cl.copy()
+                for y in range(t + 1, y1 + 1):
+                    xs = np.nonzero(mm[y])[0]
+                    if len(xs) < 2: continue
+                    L_, R_ = int(xs.min()), int(xs.max()); w = 2 if y >= y1 - 2 else 1
+                    for e, sgn in ((L_, -1), (R_, 1)):
+                        for k in range(w, 0, -1):
+                            o_ = e + sgn * k
+                            if 0 < o_ < 63: cl[y, o_] = src_[y, e]             # 바깥 테두리를 밖으로
+                        inn = e - sgn
+                        for k in range(0, w):
+                            x_ = e + sgn * k
+                            if 0 < x_ < 63 and mm[y, inn]: cl[y, x_] = src_[y, inn]   # 원래 테두리 자리는 천 색
     LOOSE[f] = a
     return a
 SKIRTF = ('skirt', 'fx:pleat:', 'fx:short:', 'fx:mini:', 'fx:minipleat:', 'fx:checkmini:', 'fx:pleatlong:', 'fx:tennis:', 'fx:denimmini:', 'fx:dotsshort:', 'dress', 'robe', 'kimono', 'tunic')   # 치마처럼 다리를 덮는 천
