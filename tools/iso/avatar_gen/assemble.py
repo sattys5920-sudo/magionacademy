@@ -202,8 +202,12 @@ def hair_layers(n):
     views = []
     f = head_cell(FRONT[n]); views.append(f)
     b = head_cell(BACK[n]) if n in BACK and n not in (20, 28, 29) else synth_back(f); views.append(b)
-    side_src = SIDE[n]; s = head_cell(side_src, reduce_f=.55, band=True)
-    if faces_right(s) or True: s = s[:, ::-1]     # 옆 시트는 오른쪽을 봐요 → 왼쪽으로
+    # 옆 시트는 오른쪽을 봐요 → 뒤집어 왼쪽으로. 7번은 원래 왼쪽을 봐요.
+    # 8번 옆모습은 거의 뒷모습이라 얼굴이 안 보여서, 3/4로 돌아간 앞모습 칸을 뒤집어 써요
+    if n == 7: s = head_cell(FRONT[n])[:, ::-1]
+    else:
+        s = head_cell(SIDE[n], reduce_f=.55, band=True)
+        if n not in SIDE_KEEP: s = s[:, ::-1]
     views.append(s)
     fch, fnx = chin_neck(f); fys, fxs = np.nonzero(f[..., 3]); ftop = fys.min()
     for vi, a in enumerate(views):
@@ -211,6 +215,7 @@ def hair_layers(n):
         if cn is None:   # 뒷모습(피부가 안 보임): 앞모습의 머리 위→턱 높이, 가로는 가운데
             ys, xs = np.nonzero(a[..., 3]); cn = (ys.min() + (fch - ftop), (xs.min() + xs.max()) / 2)
         ch, nx = cn; k = kinds(a[..., :3])
+        if vi == 2: nx += SIDE_SHIFT.get(n, 0)   # 옆얼굴 위치 맞추기
         head = a.copy(); head[ch + 2:, :, 3] = 0                   # 목은 몸 것을 써요
         skin_m = k['skin']; hair_m = ~k['skin']
         under = np.zeros(a.shape[:2], bool); under[ch + 1:] = True    # 턱 아래 머리카락은 몸 뒤로 (앞모습만)
@@ -233,7 +238,10 @@ def features(a, rows, half_w, shift=0):
     m &= (yy >= ch + rows[0]) & (yy <= ch + rows[1]) & (np.abs(xx - nx) <= half_w)
     return m, ch, nx
 EYE_PICK = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 5), (1, 0), (1, 1), (1, 2), (1, 4), (1, 5), (2, 0), (2, 1), (2, 3), (2, 4), (2, 5)]   # (줄, 칸): 7×5 격자, 앞모습은 위 3줄
-EYE_F = .74
+EYE_F = .55      # 눈 시트 → 얼굴 비율 (두 눈 너비가 얼굴 너비 안에 들어오게)
+SIDE_SHIFT = {9: 2, 7: 1}        # 옆얼굴 위치 맞추기 (10번은 좁아서, 8번은 앞모습 칸이라)
+SIDE_KEEP = {6}            # 이미 왼쪽을 보는 옆모습 (7번)
+SIDE_DX, SIDE_IN = -2, 2   # 옆모습 눈: 왼쪽으로 옮김, 먼 눈은 안쪽으로
 EYE_CY = CHIN - 6     # 눈 가운데 높이 (턱에서 6칸 위)
 def eye_cells(): return [c['rgb'] for c in D['eyecell']]
 def eye_layers(i, cells):
@@ -261,19 +269,23 @@ def eye_layers(i, cells):
     wh = (eg[..., 3] > 0) & (eg[..., 0] > 215); el[wh] = (255, 255, 250, 255)
     bl = np.where(keep_color(a, brow)[..., 3:] > 0, keep_color(a, brow), 0).astype(np.uint8)
     ey, ex = np.nonzero(eye); cyy = (ey.min() + ey.max()) / 2 if len(ey) else ecy
-    side_cut = np.ones(el.shape[:2], bool); side_cut[:, :int(round(cx)) - 6] = False
-    for vi, dx in ((0, 0), (2, -1)):
+    # 옆(3/4)모습: 얼굴이 목보다 왼쪽에 있고, 먼 쪽 눈(왼쪽)은 안쪽으로 붙여요
+    far = np.zeros(el.shape[:2], bool); far[:, :int(round(cx))] = True
+    for vi in (0, 2):
         for j in range(3):
-            fr = vi * 3 + j; ox, oy = int(round(NECKX - cx)) + dx, int(round(EYE_CY - cyy))
-            E.paste(fr, el, ox, oy, side_cut if vi == 2 else None); B.paste(fr, bl, ox, oy, side_cut if vi == 2 else None)
+            fr = vi * 3 + j; ox, oy = int(round(NECKX - cx)), int(round(EYE_CY - cyy))
+            if vi == 0: E.paste(fr, el, ox, oy); B.paste(fr, bl, ox, oy)
+            else:
+                E.paste(fr, el, ox + SIDE_DX, oy, ~far); E.paste(fr, el, ox + SIDE_DX + SIDE_IN, oy, far)
+                B.paste(fr, bl, ox + SIDE_DX, oy, ~far); B.paste(fr, bl, ox + SIDE_DX + SIDE_IN, oy, far)
     return E, B
 def mouth_layer(i):
     M = Lay()
     o, b, _ = reduce(D['mouth'][i]['rgb'], .49); a = np.dstack([o, np.where(b, 0, 255).astype(np.uint8)]); a = keep_main(a)
     m, ch, nx = features(a, (-5, 0), 5)
     ml = keep_color(a, m)
-    for vi, dx in ((0, 0), (2, -1)):
-        for j in range(3): M.paste(vi * 3 + j, ml, int(round(NECKX - nx)) + dx, CHIN - ch)
+    for vi, dx, dy in ((0, 0, 0), (2, SIDE_DX, -1)):   # 3/4 얼굴은 턱이 좁아서 입을 한 칸 위로
+        for j in range(3): M.paste(vi * 3 + j, ml, int(round(NECKX - nx)) + dx, CHIN - ch + dy)
     return M
 
 HAIR_N = ['단발', '긴 생머리', '높은 양갈래', '올림머리', '짧은 머리', '삐죽 짧은 머리', '소년 만화', '높은 포니테일', '아프로', '옆 땋은 머리',
