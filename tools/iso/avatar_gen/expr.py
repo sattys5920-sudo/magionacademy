@@ -14,6 +14,8 @@ def lum(c): return c[..., 0] * .3 + c[..., 1] * .59 + c[..., 2] * .11
 def face(e, fr):
     a = _Z[f'{e}/{fr}'].copy()
     if fr == 6: a[:, SIDE_MAX_X + 1:] = 0
+    a[:, :12] = 0                                            # 귀 자리 (밑그림 귀와 생성 귀 차이)
+    if fr == 0: a[:, 25:] = 0
     m = a[..., 3] > 0; c = a[..., :3].astype(float); L = lum(c); sat = c.max(2) - c.min(2)
     yy = np.arange(a.shape[0])[:, None] * np.ones(a.shape[:2])
     mouth = m & (yy >= MOUTH_TOP[fr])

@@ -10,7 +10,7 @@ FBOX = (8, 13)                 # 칸 머리 상자 왼쪽 위 = 프레임 (x, y)
 DY = 4
 VIEWS = (0, 6, 3)              # 칸 열 → 프레임 (앞, 옆, 뒤)
 FW, FH = 36, 58
-SKIP = {(6, 1): None, (6, 2): 22}   # 시트 6: 2줄에 반묶음(23번)이 그려졌어요 → 23번으로, 3줄(콘로 중복)은 버려요
+SKIP = {(6, 1): 22, (6, 2): None}   # 시트 6: 2줄에 반묶음(23번)이 그려졌어요 → 23번으로, 3줄(콘로 중복)은 버려요
 def load(p): return np.array(Image.open(p).convert('RGB')).astype(int)
 TPL = load(os.path.join(HERE, 'hair_heads_base.png'))
 def tpl_block(cx, cy):         # 밑그림 칸 블록 색

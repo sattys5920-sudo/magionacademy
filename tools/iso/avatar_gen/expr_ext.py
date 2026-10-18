@@ -33,7 +33,8 @@ def blocks(img, w, h):
             res[r, c] = img[ya:max(yb, ya + 1), xa:max(xb, xa + 1)].reshape(-1, 3)
     return res
 if __name__ == '__main__':
-    box, dy, FW, FH = head_boxes(); base = cells(os.path.join(HERE, 'expr_sheet_base10.png')); out = {}
+    box, dy, FW, FH = {0: (8, 16, 28, 33), 6: (13, 14, 30, 32)}, 4, 36, 58   # 밑그림 머리 상자 (민머리 밑그림을 만들 때 잰 값, 출력 시트 좌표)
+    base = cells(os.path.join(HERE, 'expr_sheet_base10.png')); out = {}
     for si, p in enumerate(sys.argv[1:3]):
         for k, img in enumerate(cells(p)):
             r, c = divmod(k, NC); fr = 0 if r % 2 == 0 else 6; e = si * 10 + (r // 2) * NC + c
@@ -49,6 +50,13 @@ if __name__ == '__main__':
                 o[y0 + rr - dy, x0 + cc, :3] = vals[np.argmax(cnt)]; o[y0 + rr - dy, x0 + cc, 3] = 255
             out[f'{e}/{fr}'] = o
     # 표정 5(시무룩) 옆모습은 시트에서 비어 나와서, 예전 16종 시트의 시무룩 옆모습을 써요 (같은 머리 자리)
-    old = np.load(os.path.join(HERE, 'expr_feats_16.npz'))
-    if not out['4/6'][..., 3].any(): out['4/6'] = old['4/6']
+    # → 미소(0) 옆모습의 눈에, 시무룩 정면의 입을 옆 입 자리로 옮겨서 만들어요
+    if True:   # 시트의 그 칸은 민머리 그대로라 늘 만들어요
+        def mouth_box(a):
+            m = a[..., 3] > 0; m[:25 if a is out['0/0'] or a is out['4/0'] else 22] = False; m[:, :12] = False; m[:, 26:] = False; ys, xs = np.nonzero(m); return ys, xs
+        s0 = out['0/6'].copy(); fy, fx = mouth_box(out['4/0']); sy, sx = mouth_box(out['0/6'])
+        s0[22:] = 0
+        dyy, dxx = sy.min() - fy.min(), int(round(sx.mean() - fx.mean()))
+        for y, x in zip(fy, fx): s0[y + dyy, x + dxx] = out['4/0'][y, x]
+        out['4/6'] = s0
     np.savez_compressed(os.path.join(HERE, 'expr_feats.npz'), **out); print(len(out), 'faces', 'dy', dy, box)

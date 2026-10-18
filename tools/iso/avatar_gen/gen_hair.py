@@ -5,6 +5,8 @@ from scipy import ndimage as nd
 HERE = os.path.dirname(os.path.abspath(__file__))
 _Z = np.load(os.path.join(HERE, 'hair_feats.npz'))
 HAIR_T, SK, SK_LINE = 140, 205, 70
+COVER_EYE = 35                                  # '한쪽 눈 가림'은 일부러 눈을 덮어요
+FACE = {0: (20, 29, 13, 23), 6: (18, 27, 13, 21)}  # 얼굴 칸 (행 위·아래, 열 왼·오른), 프레임 좌표
 def has(n): return f'{n}/0' in _Z.files
 def g(v): return np.array([v, v, v, 255], np.uint8)
 def bald_base(O12, S12, Lay):
@@ -21,7 +23,16 @@ def bald_base(O12, S12, Lay):
 def layers(n, base, Lay):
     O, U = Lay(), Lay()
     for v in (0, 6, 3):
-        a = _Z[f'{n}/{v}']; m = a[..., 3] > 0
+        a = _Z[f'{n}/{v}'].copy(); m = a[..., 3] > 0
+        near = nd.binary_dilation(base.f[v, ..., 3] > 0, iterations=3)     # 머리에 닿은 덩어리만 (이웃 칸에서 묻어 온 조각은 빼요)
+        lab, k = nd.label(m, structure=np.ones((3, 3)))
+        for i in range(1, k + 1):
+            if not (near & (lab == i)).any(): a[lab == i] = 0
+        if n != COVER_EYE:                                                   # 얼굴(눈 위 1줄부터 턱까지) 안 머리카락 점은 빼요
+            fy0, fy1, fx0, fx1 = FACE[v] if v in FACE else (0, -1, 0, -1)
+            face = np.zeros(m.shape, bool); face[fy0:fy1 + 1, fx0:fx1 + 1] = True; face &= base.f[v, ..., 3] > 0
+            a[face] = 0
+        m = a[..., 3] > 0
         c = a[..., :3].astype(float); L = c[..., 0] * .3 + c[..., 1] * .59 + c[..., 2] * .11
         pink = m & (c[..., 0] > 170) & (c[..., 1] < 130) & (c[..., 2] > 110)
         hm = m & ~pink
