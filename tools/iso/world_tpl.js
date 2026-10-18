@@ -5,7 +5,7 @@ const MAPS = __MAPS__;
 const World = window.World = { onAct: null, onMove: null };
 // ---------- 캐릭터 조합 (LPC 부품: tools/iso/lpc/build_lpc.py) ----------
 // av = { body: 체형(0 여·1 남), hair, face, top, legs, feet, hat, cape, neck: 부품 번호,
-//        skinC, hairC, eyeC, legsC, feetC, hatC: 색 번호, house: 교복 겉옷·망토·넥타이 색이 될 기숙사 }
+//        skinC, hairC, eyeC, legsC, feetC, hatC: 색 번호, house: 넥타이·망토 안감 색이 될 기숙사 }
 // 부품 그림은 필요할 때 불러와요 (art/lpc/*.png). 색은 LPC 팔레트를 바꿔 칠해요
 const AVM = __AVATAR__;
 const ASC = AVM.scale || .5;   // 캐릭터 그림 1픽셀 = 세계 픽셀의 몇 배
@@ -43,13 +43,14 @@ World.Avatar = (() => {
     a.hat = r() < .7 ? 0 : a.hat; a.cape = r() < .6 ? 0 : a.cape; a.neck = r() < .3 ? 0 : a.neck; a.face = r() < .6 ? 0 : a.face;
     Object.entries(COLORS).forEach(([k, p]) => { a[k] = Math.floor(r() * AVM.colors[p].length); });
     a.skinC = Math.floor(r() * 7);
+    a.legsC = Math.floor(r() * 3); a.feetC = Math.floor(r() * 2);   // 교복은 다들 비슷하게: 하의 차콜·검정·남색, 구두 검정·갈색
     return fix(a);
   }
   const random = () => ({ ...fromLook(Math.floor(Math.random() * 1e6)), house: HOUSES[Math.floor(Math.random() * HOUSES.length)] });
   const hexn = h => parseInt(h.slice(1), 16);
   function colorMap(slot, src, av){
     const mat = MAT[slot] || 'cloth';
-    const tgtName = slot === 'top' ? AVM.house[HOUSES.includes(av.house) ? av.house : 'moon'] : AVM.colors[mat][av[SLOTC[slot]] || 0];
+    const tgtName = slot === 'top' ? AVM.house[HOUSES.includes(av.house) ? av.house : 'moon'] : AVM.fixed[slot] || AVM.colors[mat][av[SLOTC[slot]] || 0];
     const k = slot + '|' + src + '|' + tgtName; if (maps.has(k)) return maps.get(k);
     const P = AVM.pal[mat], S = P[src] || [], T = P[tgtName] || S, m = new Map();
     S.forEach((h, i) => { const t = hexn(T[Math.min(i, T.length - 1)]); m.set(hexn(h), [t >> 16, (t >> 8) & 255, t & 255]); });
