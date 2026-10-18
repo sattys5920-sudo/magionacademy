@@ -211,6 +211,13 @@ def side_nx(a, ch, k):
     return (nx if fl is None else fl - SIDE_REF['ref']) - SIDE_HEAD_DX
 SIDE_HEAD_DX, SIDE_DY = 5, 1   # 옆모습 머리를 몸 위로·위로 (생성 그림 그대로면 머리가 몸보다 앞으로 나와 거북목처럼 보여요)
 SIDE_FIX = {0: 0, 6: 0, 3: 2, 25: 2, 26: 2, 28: -1}   # 얼굴 앞 윤곽을 모든 머리에서 같은 x(15)에: 나머지 머리는 1
+WIDEN_SIDE = {7}   # 3/4 앞 칸을 옆모습으로 쓰는 높은 포니테일: 얼굴이 좁고 납작해서 다른 머리와 같은 얼굴 폭으로
+def widen_side_face(O, S):
+    """옆 프레임 눈 높이부터 아래: 까까머리(13번) 옆얼굴 피부를 깔고 그 자리의 머리카락은 걷어요"""
+    _, _, B = hair_layers(12); y0 = EYE_ROW - SIDE_DY - 2
+    for fr in range(6, 9):
+        b = B.f[fr, y0:, :, 3] > 0
+        S.f[fr, y0:][b] = B.f[fr, y0:][b]; O.f[fr, y0:][b] = 0
 def hair_layers(n):
     O, U, S = Lay(), Lay(), Lay()
     views = []
@@ -338,6 +345,7 @@ if __name__ == '__main__':
         parts['uni'].append(dict(n=name, L=[[add(L['skin']), 'skin', 'skin'], [add(L['cloth']), 'cloth', 'cloth'], [add(L['house']), 'house', 'cloth'], [add(L['shoes']), 'shoes', 'cloth']]))
     for n in range(40):
         O, U, S = hair_layers(n)
+        if n in WIDEN_SIDE: widen_side_face(O, S)
         parts['hair'].append(dict(n=HAIR_N[n], L=[[add(O), 'hair', 'hairT' if n in COVER_EYES else 'hairO'], [add(U), 'hair', 'hairU'], [add(S), 'skin', 'head']]))
     for i in range(15):
         E, B = eye_layers(i); parts['eyes'].append(dict(n=EYE_N[i], L=[[add(E), 'eye', 'faceO'], [add(B), None, 'faceO']]))
