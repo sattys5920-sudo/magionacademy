@@ -8,6 +8,7 @@ from reduce import reduce
 from picks import FRONT, BACK, SIDE
 import expr as EX
 import ears as EARS
+import gen_hair as GH
 HERE = os.path.dirname(os.path.abspath(__file__))
 _Z = np.load(os.path.join(HERE, 'cells.npz')); D = {}
 for key in _Z.files:
@@ -345,11 +346,14 @@ if __name__ == '__main__':
     def add(lay): rows.append(lay.row()); return len(rows) - 1
     for name, L in body_layers():
         parts['uni'].append(dict(n=name, L=[[add(L['skin']), 'skin', 'skin'], [add(L['cloth']), 'cloth', 'cloth'], [add(L['house']), 'house', 'cloth'], [add(L['shoes']), 'shoes', 'cloth']]))
+    O12, _, S12 = hair_layers(12); EARS.fix_front_ears(O12, S12); BASE = GH.bald_base(O12, S12, Lay)
+    base_row = None
     for n in range(40):
-        O, U, S = hair_layers(n)
-        EARS.fix_front_ears(O, S)
-        if n in WIDEN_SIDE: widen_side_face(O, S)
-        parts['hair'].append(dict(n=HAIR_N[n], L=[[add(O), 'hair', 'hairT' if n in COVER_EYES else 'hairO'], [add(U), 'hair', 'hairU'], [add(S), 'skin', 'head']]))
+        if GH.has(n): O, U = GH.layers(n, BASE, Lay)        # 생성기가 민머리 밑그림 위에 그린 머리
+        else:                                              # 아직 안 받은 머리는 예전 그림
+            O, U, S = hair_layers(n); EARS.fix_front_ears(O, S)
+        if base_row is None: base_row = add(BASE)
+        parts['hair'].append(dict(n=HAIR_N[n], L=[[add(O), 'hair', 'hairO'], [add(U), 'hair', 'hairU'], [base_row, 'skin', 'head']]))
     # 표정: 생성기가 눈·입을 함께 그린 얼굴 (정면·옆). 입은 표정에 들어 있어서 입 부품은 빈 것 하나만
     dy0 = 0
     for e in range(EX.N):
@@ -357,7 +361,7 @@ if __name__ == '__main__':
         for fr0 in (0, 6):
             f = EX.face(e, fr0)
             for j in range(3): E.f[fr0 + j] = f
-        parts['eyes'].append(dict(n=EX.NAMES[e], L=[[add(E), 'eye', 'faceO']]))
+        parts['eyes'].append(dict(n=EX.NAMES[e], L=[[add(E), 'eye', 'face']]))   # 머리카락 아래 (생성 머리가 얼굴을 비워 둬요)
     parts['mouth'].append(dict(n='표정에 포함', L=[[add(Lay()), None, 'face']]))
     # 발이 그림 아래 끝에 닿게: 교복 층에서 가장 아래 줄을 찾아 전부 내려요 (위가 잘리지 않을 만큼)
     feet = max(int(np.nonzero(rows[r][..., 3].any(1))[0].max()) for p in parts['uni'] for r, sl, z in p['L'])
