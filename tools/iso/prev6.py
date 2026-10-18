@@ -37,11 +37,11 @@ def compose(av, fr):
 if __name__ == '__main__':
     mode = sys.argv[1] if len(sys.argv) > 1 else 'rand'
     if mode == 'hair':
-        n = len(M['parts']['hair']); sh = Image.new('RGBA', ((FW + 1) * 20, (FH // 2 + 22) * 4), (70, 54, 96, 255))
+        n = len(M['parts']['hair']); sh = Image.new('RGBA', ((FW + 1) * 30, (FH // 2 + 22) * 4), (70, 54, 96, 255))
         for i in range(n):
-            for k, f in enumerate((0, 3)):
+            for k, f in enumerate((0, 6, 3)):
                 av = dict(hair=i, eyes=0, mouth=0, uni=0, skinC=1, eyeC=1, hairC=(i * 3) % 20, shoeC=0, house='moon')
-                sh.alpha_composite(compose(av, f).crop((0, 0, FW, FH // 2 + 20)), (((i % 10) * 2 + k) * (FW + 1), (i // 10) * (FH // 2 + 22)))
+                sh.alpha_composite(compose(av, f).crop((0, 0, FW, FH // 2 + 20)), (((i % 10) * 3 + k) * (FW + 1), (i // 10) * (FH // 2 + 22)))
         sh.resize((sh.width * 2, sh.height * 2), Image.NEAREST).save('out/prev_hair.png')
     elif mode == 'face':
         sh = Image.new('RGBA', ((FW + 1) * 15, 46 * 2), (70, 54, 96, 255))
@@ -50,9 +50,9 @@ if __name__ == '__main__':
         sh.resize((sh.width * 3, sh.height * 3), Image.NEAREST).save('out/prev_face.png')
     else:
         random.seed(int(sys.argv[2]) if len(sys.argv) > 2 else 1); N = 5
-        sh = Image.new('RGBA', ((FW + 2) * 6, (FH + 2) * N), (70, 54, 96, 255))
+        sh = Image.new('RGBA', ((FW + 2) * 9, (FH + 2) * N), (70, 54, 96, 255))
         for n in range(N):
             av = dict(hair=random.randrange(40), eyes=random.randrange(15), mouth=random.randrange(10), uni=n, skinC=random.randrange(5), eyeC=random.randrange(20), hairC=random.randrange(20), shoeC=random.randrange(10), house=['dew', 'ember', 'dusk', 'moon', 'moon'][n])
             if n == 0: av.update(hair=0, eyes=0, mouth=0, skinC=1)
-            for f in range(6): sh.alpha_composite(compose(av, f), (f * (FW + 2) + 1, n * (FH + 2) + 1))
+            for f in range(9): sh.alpha_composite(compose(av, f), (f * (FW + 2) + 1, n * (FH + 2) + 1))
         sh.resize((sh.width * 3, sh.height * 3), Image.NEAREST).save('out/prev_rand.png')

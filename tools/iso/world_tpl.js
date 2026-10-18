@@ -45,7 +45,7 @@ World.Avatar = (() => {
   const random = () => ({ ...fromLook(Math.floor(Math.random() * 1e6)), house: HOUSES[Math.floor(Math.random() * HOUSES.length)] });
   function compose(av){
     av = fix(av); const key = JSON.stringify(av); if (cache.has(key)) return cache.get(key);
-    const W = FW * 6, out = new ImageData(W, FH), o = out.data, src = data.data, SW = data.width;
+    const W = FW * (AVM.frames || 6), out = new ImageData(W, FH), o = out.data, src = data.data, SW = data.width;
     const P = AVM.pal, ramp = { skin: lutOf('skin', P.skin[av.skinC]), eye: lutOf('eye', P.eye[av.eyeC]), hair: lutOf('hair', P.hair[av.hairC]), shoes: lutOf('shoes', P.shoes[av.shoeC]), cloth: lutOf('cloth', P.cloth[0]), house: lutOf('house', P.house[HOUSES.includes(av.house) ? av.house : 'moon']) };
     const layers = AVM.base.concat(...CATS.map(c => AVM.parts[c][av[c]].L)).sort((a, b) => AVM.z.indexOf(a[2]) - AVM.z.indexOf(b[2]));
     layers.forEach(([row, slot]) => {
@@ -124,7 +124,7 @@ function orderObjs(objs){   // 한 번만: 겹치는 것끼리 위상 정렬
 }
 const people = [];
 const NAMES = ['루나', '블러드', '울피', '부우', '마리', '호박이', '라벤', '드라코', '미라', '젤리', '스푸키'];
-const mk = (name, av, x, y, me) => ({ name, av, x, y, path: [], back: false, flip: false, me, t: 0, idle: Math.random() * 3 });
+const mk = (name, av, x, y, me) => ({ name, av, x, y, path: [], view: 0, flip: false, me, t: 0, idle: Math.random() * 3 });
 const me = mk('나', null, 0, 0, true);
 let started = false;
 let crowd = {};
@@ -132,7 +132,7 @@ function setMap(id, spawn){
   map = id; M = MAPS[id].meta; resize();
   blocked = new Set(); M.objs.forEach(o => { if (o.solid !== false) for (let x = Math.floor(o.box[0]); x < Math.ceil(o.box[2]); x++) for (let y = Math.floor(o.box[1]); y < Math.ceil(o.box[3]); y++) blocked.add(x + ',' + y); });
   objOrder = MAPS[id].order || (MAPS[id].order = orderObjs(M.objs));
-  me.x = spawn[0]; me.y = spawn[1]; me.path = []; me.back = false; me.flip = false;
+  me.x = spawn[0]; me.y = spawn[1]; me.path = []; me.view = 0; me.flip = false;
   if (!crowd[id]){ crowd[id] = []; const n = id === 'campus' ? 9 : 2; for (let i = 0; i < n; i++){ for (let k = 0; k < 50; k++){ const x = Math.floor(Math.random() * M.NX), y = Math.floor(Math.random() * M.NY); if (free(x, y)){ crowd[id].push(mk(NAMES[(i + (id === 'lab' ? 3 : 0)) % NAMES.length], World.Avatar.random(), x, y, false)); break; } } } }
   people.length = 0; people.push(me, ...crowd[id]);
   tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : ''); d.textContent = p.name; world.appendChild(d); return d; });
@@ -183,7 +183,11 @@ function step(p, dt){
     p.t = 0; return;
   }
   const [gx, gy] = p.path[0], dx = gx - p.x, dy = gy - p.y, d = Math.hypot(dx, dy);
-  if (Math.abs(dx) > Math.abs(dy)){ p.back = dx < 0; p.flip = dx < 0; } else if (d > 0){ p.back = dy < 0; p.flip = dy > 0; }
+  // 쿼터뷰 네 방향: x+ (오른쪽 아래) 오른쪽 옆, x- (왼쪽 위) 왼쪽 옆, y+ (왼쪽 아래) 앞, y- (오른쪽 위) 뒤
+  // view: 0 앞, 3 뒤, 6 옆(왼쪽 보기). 옆 그림이 없는 옛 부품이면 앞·뒤로 대신해요
+  const hasSide = (World.Avatar.meta.frames || 6) >= 9;
+  if (Math.abs(dx) > Math.abs(dy)){ if (hasSide){ p.view = 6; p.flip = dx > 0; } else { p.view = dx < 0 ? 3 : 0; p.flip = dx < 0; } }
+  else if (d > 0){ p.view = dy < 0 ? 3 : 0; p.flip = false; }
   const mv = (p.me && p.path.length > 10 ? RUN : p.me ? SPEED : SPEED * .6) * dt; if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
 }
 // 할로윈 효과: 박쥐 떼, 보라 안개, 도깨비불
@@ -226,7 +230,7 @@ let last = performance.now(), camIX = 0, camIY = 0;
 function drawPerson(p){ const cx = out;
   const [sx, sy] = P(p.x + .5, p.y + .5);
   cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 6, 2.5, 0, 0, Math.PI * 2); cx.fill();
-  const f = p.path.length ? 1 + Math.floor(p.t * (p.me ? 12 : 8)) % 2 : 0, col = (p.back ? 3 : 0) + f;
+  const f = p.path.length ? 1 + Math.floor(p.t * (p.me ? 12 : 8)) % 2 : 0, col = (p.view || 0) + f;
   // 캐릭터 그림 1픽셀 = 세계 픽셀의 절반 (생성 그림의 세밀함을 살려요)
   const A = World.Avatar, S = A.compose(p.av), cp = KPX / 2, w = A.FW * cp, h = A.FH * cp;
   const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - (A.FH - 1.5) * cp);
