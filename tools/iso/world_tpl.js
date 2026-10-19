@@ -157,13 +157,14 @@ World.Avatar = (() => {
 let sc;
 // 배율: 그림 1픽셀 = 화면 실제 픽셀의 정수배(k)로 그려서 선명하게. 목표 가로 픽셀 수에 가장 가까운 k를 골라요.
 const ZOOMS = [['보통', 300], ['멀리', 420], ['가까이', 210]];
-let zi = 0, VW = 300, KPX = 1;
+let zi = 0, VW = 300, KPX = 1, viewOverride = null;
+World.setView = vw => { viewOverride = vw || null; if (started){ resize(); camX = null; } };   // 요리처럼 가까이 볼 때 (null이면 원래대로)
 const cv = document.getElementById('cv'), out = cv.getContext('2d');
 const world = document.getElementById('world'), fadeEl = document.getElementById('fade');
 let VH = 220;
 function resize(){
   const dpr = window.devicePixelRatio || 1, dw = world.clientWidth * dpr, dh = world.clientHeight * dpr;
-  const target = (M && M.vw && zi !== 1) ? M.vw : ZOOMS[zi][1];
+  const target = viewOverride || ((M && M.vw && zi !== 1) ? M.vw : ZOOMS[zi][1]);
   // 캐릭터 그림은 세계의 ASC배: KPX × ASC 가 정수여야 픽셀이 고르게 보여요 (홀수 배면 줄이 두 겹씩 섞여 길쭉해 보여요)
   const step = Math.max(1, Math.round(1 / ASC)); KPX = Math.max(step, Math.round(dw / target / step) * step);
   VW = Math.ceil(dw / KPX); VH = Math.ceil(dh / KPX);
@@ -265,6 +266,10 @@ World.setBobber = b => { bobber = b; };   // { x, y, bite } 물 칸에 찌 (없�
 World.setSpots = (mapId, list) => { spotMap = mapId; spots = list || []; };
 World.getSpots = () => spotMap === map ? spots : [];   // [{ x, y, k }] k: 그림 칸(없으면 반짝이만)
 World.faceTo = (x, y) => { const DV = World.Avatar.meta.dirs, dx = x - me.x, dy = y - me.y; me.view = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? DV.right : DV.left) : (dy < 0 ? DV.up : DV.down); me.flip = false; };
+// 요리: 솥(물건 이름 + 칸) 위에 국물·김·거품·날아드는 재료·국자·불빛을 세계 픽셀 크기로 그려요
+let cook = null, cookImg = {};
+World.setCook = c => { cook = c; if (c && c.drop && c.drop.src && !cookImg[c.drop.src]){ const im = new Image(); im.src = c.drop.src; cookImg[c.drop.src] = im; } };
+World.cookPot = () => { const o = M && M.objs.find(o => o.name === 'cauldron' && Math.abs(o.box[0] - me.x) + Math.abs(o.box[1] - me.y) < 4); return o ? { x: o.box[0], y: o.box[1] } : null; };
 World.busyFish = false;   // 낚시하는 동안은 바닥을 눌러도 안 걸어가요
 World.isFree = (x, y) => !!M && free(x, y);
 World.freeNear = (x, y, r = 3) => { const out = []; for (let a = x - r; a <= x + r; a++) for (let b = y - r; b <= y + r; b++) if (free(a, b)) out.push([a, b]); return out; };
@@ -578,6 +583,26 @@ function frame(now){
     M.lights.forEach((L, i) => { if (L.p[0] + L.r < view.x || L.p[0] - L.r > view.x + view.w || L.p[1] + L.dy + L.r < view.y || L.p[1] + L.dy - L.r > view.y + view.h) return; const fl = L.f ? .85 + .15 * Math.sin(now / 130 + i * 1.7) * Math.sin(now / 370 + i) : 1; cx.globalAlpha = L.a * fl * (ph === 'dusk' ? .5 : 1); cx.drawImage(glow(L.r, L.c), L.p[0] - L.r, L.p[1] + L.dy - L.r); });
     cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
   }
+  if (cook){ const o = M.objs.find(q => q.name === 'cauldron' && q.box[0] === cook.x && q.box[1] === cook.y);
+    if (o){ const cxp = o.x + o.sw / 2, top = o.y + (cook.top ?? 6), t = now / 1000, X = Math.round(cxp);
+      // 불빛 (세기에 따라)
+      cx.globalCompositeOperation = 'lighter'; cx.globalAlpha = .25 + .45 * (cook.heat || 0); cx.drawImage(glow(18, [255, 140, 60]), X - 18, o.y + o.sh - 22); cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
+      // 국물 면 + 거품
+      cx.fillStyle = cook.soup || '#C8642A'; cx.beginPath(); cx.ellipse(cxp, top + 2, o.sw / 2 - 4, 2.5, 0, 0, Math.PI * 2); cx.fill();
+      cx.fillStyle = 'rgba(255,255,255,.55)'; const nb = 2 + Math.round((cook.heat || 0) * 4);
+      for (let i = 0; i < nb; i++){ const ph = (t * (1 + (cook.heat || 0) * 2) + i * .37) % 1, bx = X - 6 + ((i * 5) % 12); cx.fillRect(bx, top + 1, 1, 1); if (ph > .6) cx.fillRect(bx - 1, top, 3, 1); }
+      // 김
+      cx.fillStyle = 'rgba(255,255,255,.35)'; for (let i = 0; i < (cook.steam ?? 3); i++){ const ph = (t * .6 + i / 3) % 1, sx = X - 5 + i * 5 + Math.round(Math.sin(t * 2 + i) * 1.5), sy = top - 3 - ph * 14; cx.globalAlpha = 1 - ph; cx.fillRect(sx, Math.round(sy), 2, 1); cx.fillRect(sx + 1, Math.round(sy) - 1, 1, 1); } cx.globalAlpha = 1;
+      // 날아드는 재료 (그림 16px → 세계 8px: 캐릭터와 같은 픽셀 크기)
+      if (cook.drop){ const d = cook.drop, im = cookImg[d.src], k = Math.min(1, d.t), fx = cxp + 26 * (1 - k), fy = top - 6 - Math.sin(k * Math.PI) * 18 + k * 4;
+        if (im && im.complete) cx.drawImage(im, d.i * 16, 0, 16, 16, Math.round(fx * 2) / 2 - 4, Math.round(fy * 2) / 2 - 8, 8, 8); }
+      if (cook.splash){ cx.fillStyle = cook.splashC || '#FFD0A0'; [[-5, -3], [4, -4], [-2, -6], [6, -1], [-7, 0]].forEach(([dx, dy]) => cx.fillRect(X + dx, top + dy, 1, 1)); }
+      // 국자: 빙글빙글
+      if (cook.stir !== undefined && cook.stir !== null){ const a = cook.stir, lx = Math.round(cxp + Math.cos(a) * 5), ly = Math.round(top + 2 + Math.sin(a) * 1.5);
+        cx.fillStyle = '#22183F'; cx.fillRect(lx - 1, ly - 13, 3, 13); cx.fillStyle = '#B8875A'; cx.fillRect(lx, ly - 12, 1, 12); cx.fillStyle = '#22183F'; cx.fillRect(lx - 2, ly - 1, 5, 3); cx.fillStyle = '#B8875A'; cx.fillRect(lx - 1, ly, 3, 1); }
+      // 젓는 방향 안내 점선
+      if (cook.guide){ cx.fillStyle = '#FFE070'; for (let i = 0; i < 12; i++){ if ((i + Math.floor(t * 8)) % 3) continue; const a = i / 12 * Math.PI * 2; cx.fillRect(Math.round(cxp + Math.cos(a) * 12), Math.round(top + 2 + Math.sin(a) * 5), 1, 1); } }
+    } }
   // 채집 지점: 밤에도 잘 보이게 빛 다음에 그려요
   if (spotMap === map) spots.forEach((sp, i) => { const [x, y] = P(sp.x + .5, sp.y + .5), t = now / 260 + i * 1.3, a = .6 + .4 * Math.sin(t), sy = y - 7 - Math.round(Math.sin(t * .7) * 2);
     if (x < view.x || x > view.x + view.w || y < view.y || y > view.y + view.h) return;
