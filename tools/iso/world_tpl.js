@@ -309,6 +309,9 @@ World.say = (id, text, big) => {   // big: 이모티콘 번호(art/emo.png 칸)�
 };
 World.onPeer = null;   // (친구 uid) 친구를 눌렀을 때
 World.peerAt = id => { const p = peers[id]; if (!p) return null; return { get x(){ return P(p.x + .5, p.y + .5)[0]; }, get y(){ return P(p.x + .5, p.y + .5)[1] - World.Avatar.FH * ASC + 2; }, sw: 0 }; };   // 친구를 따라 움직여요
+// 칸으로 걸어가요 (같은 맵일 때). 목적지에 작은 표시가 떠요
+let dest = null;
+World.walkToTile = (x, y) => { if (!started || busy) return false; const c = free(x, y) ? [x, y] : near([[x, y]])[0]; if (!c) return false; if (goto(me, c[0], c[1])){ dest = { x: c[0], y: c[1], t0: performance.now() }; return true; } return false; };
 World.walkTo = id => { const p = peers[id]; if (!p) return; const c = near([[Math.round(p.x), Math.round(p.y)]])[0]; if (c) goto(me, c[0], c[1]); };
 World.bubble = (o, text, btn, fn) => showBubble(o, text, btn, fn);
 World.hideBubble = () => hideBubble();
@@ -658,6 +661,7 @@ function drawPerson(p){ const cx = out;
 function frame(now){
   const dt = Math.min(.05, (now - last) / 1000); last = now;
   people.forEach(p => step(p, dt));
+  if (dest && (!me.path.length || performance.now() - dest.t0 > 20000)) dest = null;
   if ((nearTick = (nearTick + 1) % 6) === 0) nearCheck();
   const A = MAPS[rmap];
   // 카메라 먼저: 맵이 화면보다 작으면 가운데에, 크면 내 캐릭터를 따라가요
@@ -673,6 +677,7 @@ function frame(now){
   cx.drawImage(A.bg, Math.max(0, ix), Math.max(0, iy), VW, VH, Math.max(0, ix), Math.max(0, iy), VW, VH);
   // 물결 반짝임
   if (M.water) for (let i = 0; i < 6; i++){ const w = M.water[(Math.random() * M.water.length) | 0]; const [wx, wy] = P(w[0] + Math.random(), w[1] + Math.random()); if (wx > view.x && wx < view.x + view.w && wy > view.y && wy < view.y + view.h) fx.push({ x: wx, y: wy, v: 0, life: .5, c: '#DFF2FF' }); }
+  if (dest){ const [dx, dy] = P(dest.x + .5, dest.y + .5), ph = (performance.now() / 500) % 1; cx.strokeStyle = `rgba(255,154,60,${1 - ph * .7})`; cx.lineWidth = 1; cx.beginPath(); cx.ellipse(dx, dy, 6 + ph * 5, 3 + ph * 2.5, 0, 0, Math.PI * 2); cx.stroke(); cx.fillStyle = '#FF9A3C'; cx.fillRect(dx - 1, dy - 9 - Math.round(ph * 3), 2, 6); }
   // 문 표시 (반짝이는 발판)
   const pulse = .5 + .5 * Math.sin(now / 300);
   M.objs.forEach(o => { if (!o.door) return; const [x, y] = P(o.door.tile[0] + .5, o.door.tile[1] + .5); cx.fillStyle = `rgba(255,216,102,${.25 + .35 * pulse})`; cx.beginPath(); cx.moveTo(x, y - 4); cx.lineTo(x + 8, y); cx.lineTo(x, y + 4); cx.lineTo(x - 8, y); cx.fill(); });
