@@ -132,6 +132,7 @@ npc_id: nabi, batri, kappa, aula, mandi, jipsin, sera, madeleine, stella, leo
 
 - 주인공은 `player`예요. 이름은 `{player}`. 주인공의 성별을 단정하지 마세요(외모를 꾸밀 수 있어요).
 - 사람 NPC 이름은 바뀔 수 있어요. 대사에서는 항상 변수로 쓰세요: `{npc.name}`(이벤트 주인 자기 이름), `{sera.name}`, `{madeleine.name}`, `{stella.name}`, `{leo.name}`, `{sera.husband}`(세라 이벤트 안에서는 `{npc.husband}`도 돼요). 동물 NPC 이름(나비, 배트리, 캇파, 아울라, 맨디, 짚신)은 그대로 써도 돼요.
+- **이름 뒤 조사는 함수로 써요.** 이름은 바뀔 수 있어서 받침 유무를 미리 알 수 없어요. `{player|이/가}`, `{npc.name|은/는}`, `{sera.husband|을/를}`처럼 **받침 있을 때/없을 때** 순서로 쓰면 엔진이 실제 이름을 보고 골라요. 쓸 수 있는 쌍: 이/가, 은/는, 을/를, 과/와, 아/야, 이랑/랑, 으로/로(ㄹ 받침은 '로'), 이에요/예요, 이야/야, 이나/나, 이라는/라는, 이라면/라면, 이다/다, 이었/였, 이구나/구나, 이요/요, 이네/네. 변수 바로 뒤에 조사를 그냥 붙이거나 "을(를)"처럼 병기하면 검증 스크립트가 잡아요. 의/도/만/에게/한테처럼 받침과 상관없는 조사는 그냥 붙여요.
 - 표에 없는 조연이 필요하면 `profile.json`의 `"cast"`에 추가하세요: `"cast": {"fish_wife": {"name": "생선 가게 안주인", "look": 201}}`. 사람은 `look`(아무 숫자, 생김새 씨앗), 동물은 `"cr": "sheep|rabbit|lizard|chicken|cat|toad|bee|spider|owl|goat"`, 목소리만 나오면 `"kind": "voice"`예요. 이름에 성별을 단정하는 말(아저씨 등)은 넣지 마세요.
 
 ## profile.json

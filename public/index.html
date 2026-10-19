@@ -853,7 +853,7 @@ function onOnline(){
     if (first || id === uid || s.m !== here) return;   // 들어오기 전에 한 말, 다른 곳에서 한 말은 안 보여요
     World.say(id, s.t, s.e ? s.e - 1 : null);
     if (!s.e) pushLog(o.nick, s.t);
-    if (s.to === uid) toast(`${o.nick}이(가) 나에게 인사했어요! 눌러서 인사해 줘요`);
+    if (s.to === uid) toast(`${withJosa(o.nick, '이', '가')} 나에게 인사했어요! 눌러서 인사해 줘요`);
   });
 }
 function speak(t, e, to){
@@ -1034,7 +1034,7 @@ World.onSpot = (si, spot) => {
   const isNew = dexAdd(it.id); me.fg.got.push(sp.i); if (isNew) me.mana += it.grade;
   save(); hud(); syncSpots();
   if (it.grade >= 3) speak(`✨ ${it.name} 찾았다!`);
-  toast(`${it.name}을(를) 주웠어요! ${STARS(it.grade)}${isNew ? ` · 새 채집물! 마력 +${it.grade}` : ''}`);
+  toast(`${withJosa(it.name, '을', '를')} 주웠어요! ${STARS(it.grade)}${isNew ? ` · 새 채집물! 마력 +${it.grade}` : ''}`);
 };
 // ---------- 낚시·채집 화면: 도감 · 생선 가게(팔기) · 낚싯대 ----------
 let fsTab = 'fish', fsMsg = '';
@@ -1063,7 +1063,7 @@ function renderFish(){
   on('[data-fsell]', b => { const g = sell(b.dataset.fsell, 1); fsMsg = `${ITEM[b.dataset.fsell]} 1개를 팔았어요. +${g}G`; save(); renderFish(); });
   on('[data-fsall]', b => { const k = b.dataset.fsall, n = me.inv[k], g = sell(k, n); fsMsg = `${ITEM[k]} ${n}개를 팔았어요. +${g}G`; save(); renderFish(); });
   $('#fsAll') && ($('#fsAll').onclick = () => { let g = 0, n = 0; CATCH.forEach(k => { n += me.inv[k] || 0; g += sell(k, me.inv[k] || 0); }); fsMsg = `${n}개를 팔았어요. +${g.toLocaleString()}G`; save(); renderFish(); });
-  on('[data-rod]', b => { const i = +b.dataset.rod, r = RODS[i]; if (me.coin < r.price || i !== rodLv() + 1) return; me.coin -= r.price; me.rod = i; fsMsg = `${r.name}을(를) 샀어요! ${r.desc}`; save(); renderFish(); });
+  on('[data-rod]', b => { const i = +b.dataset.rod, r = RODS[i]; if (me.coin < r.price || i !== rodLv() + 1) return; me.coin -= r.price; me.rod = i; fsMsg = `${withJosa(r.name, '을', '를')} 샀어요! ${r.desc}`; save(); renderFish(); });
 }
 // ===== 같이 하는 놀이: 등불 시장 「놀이 게시판」에서 방을 열고, 같은 곳 친구가 참가해요 =====
 // games/<방> = { g 놀이, host, hn 방장 이름, m 장소, st lobby·play·end, at, t0 시작 시각, seed, ord 참가 순서, p: { uid: { n, s 점수, d 끝남 } }, c 줍기·때리기 차지, co 협동 상태 }
@@ -1121,7 +1121,7 @@ function onRoom(v){
     const ps = Object.entries(v.p), host = v.host === myId(), ok = ps.length >= Gm.min;
     gameShow(`<div class="gpan px"><b class="gt">${Gm.ic} ${Gm.name}</b><span class="s">${Gm.desc}</span>
       <div class="gpl">${ps.map(([id, p], i) => `<span class="gpp" style="border-color:${PCOL[i % 8]}">${esc(p.n)}${id === v.host ? ' 👑' : ''}</span>`).join('')}</div>
-      <span class="s sub">${ps.length} / ${Gm.max}명 · ${Gm.coop ? `협동 · ${Gm.min}명부터` : '1명부터'} · ${host ? (ok ? '모이면 시작을 눌러요' : `${Gm.min - ps.length}명 더 와야 해요`) : `${esc(v.hn)}이(가) 시작하길 기다려요`}</span>
+      <span class="s sub">${ps.length} / ${Gm.max}명 · ${Gm.coop ? `협동 · ${Gm.min}명부터` : '1명부터'} · ${host ? (ok ? '모이면 시작을 눌러요' : `${Gm.min - ps.length}명 더 와야 해요`) : `${withJosa(esc(v.hn), '이', '가')} 시작하길 기다려요`}</span>
       <div class="frow">${host ? `<button class="btn sm go" data-gx="start" ${ok ? '' : 'disabled'}>시작!</button>` : ''}<button class="btn sm" data-gx="leave">나가기</button></div></div>`, 'lobby');
     return;
   }
@@ -1532,7 +1532,7 @@ function eatDish(k){
   if (d.e === 'love') me.cr.forEach(c => { c.love = Math.min(LOVE_MAX, (c.love || 0) + v); });
   if (d.e === 'grow') (me.plots || []).forEach(p => { if (p.k && p.at){ const G = SEED_INFO[p.k], end = p.at + G.mins * 6e4, left = end - Date.now(); if (left > 0) p.at -= left * v * .02; } });
   save(); hud(); syncBuffs(); speak(`🍳 ${d.name} 냠냠!`);
-  toast(`${d.best ? '✨' : ''}${d.name}을(를) 먹었어요! ${EFF[d.e](v)}`);
+  toast(`${d.best ? '✨' : ''}${withJosa(d.name, '을', '를')} 먹었어요! ${EFF[d.e](v)}`);
 }
 function syncBuffs(){
   const c = $('#buffChip'); if (!c || !me) return;
@@ -1623,7 +1623,7 @@ function cookDone(){
   cookShow(`${cookHead(C.d, 4)}<div class="ckres">${ic(k, 'transform:scale(1.5);margin:8px')}<div><b>${esc(C.d.name)}</b><span class="ckstar">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span>${best ? '<span class="ckbest">✨ 최고의 맛! 효과 2배</span>' : ''}${isNew ? '<span class="bad">새 요리! 지식 +1</span>' : ''}</div></div>
     <div class="ckef"><div><span>재료 · 불 · 젓기</span><span>+${C.sc[0]} · +${C.sc[1]} · +${C.sc[2]}</span></div><div><span>먹으면</span><span>${best ? `<s>${EFF[C.d.e](C.d.v)}</s> → ` : ''}<b>${effText(C.d, best)}</b></span></div></div>
     <div class="ckrow"><button class="ckbt w" id="ckbag">가방에 넣기</button><button class="ckbt go" id="ckeat">바로 먹기</button></div>`);
-  $('#ckbag').onclick = () => { cookEnd(); toast(`${ITEM[k]}을(를) 가방에 넣었어요`); };
+  $('#ckbag').onclick = () => { cookEnd(); toast(`${withJosa(ITEM[k], '을', '를')} 가방에 넣었어요`); };
   $('#ckeat').onclick = () => { cookEnd(); eatDish(k); };
 }
 // ---------- 요리책 화면 ----------
@@ -1833,21 +1833,23 @@ World.clockText = d => `${isFullMoon() ? '🌕' : { clear: '✨', rain: '☔', f
 function npcPortrait(n){ return n.av ? `<img src="${World.Avatar.head(npcAv(n))}" alt="">` : npcFace(n.spr); }
 const npcUI = () => $('#npcui');
 function npcClose(){ npcUI().classList.remove('on'); npcUI().innerHTML = ''; }
-// 이름 뒤 조사는 이름의 받침에 맞춰 고쳐요 (이름을 바꿔도 "세라가 / 루카스가 → 루카스가" 같은 실수가 없게)
-const JOSA = [['이에요', '예요'], ['이었', '였'], ['이랑', '랑'], ['이나', '나'], ['이야', '야'], ['으로', '로'], ['은', '는'], ['이', '가'], ['을', '를'], ['과', '와'], ['아', '야']];
-const josaFix = s => s.replace(/([^\uE000])\uE000(이에요|예요|이었|였|이랑|랑|이나|나|이야|으로|로|은|는|이|가|을|를|과|와|아|야)?(?=(.?))/g, (m, last, j, nx) => {
-  if (!j) return last; const c = last.charCodeAt(0); if (c < 0xAC00 || c > 0xD7A3) return last + j;
-  const jong = (c - 0xAC00) % 28, bat = jong > 0;
-  const pair = JOSA.find(p => p.includes(j)) || (j === '로' ? ['으로', '로'] : null); if (!pair) return last + j;
-  if (pair[0] === '으로') return last + (bat && jong !== 8 ? '으로' : '로');   // ㄹ 받침은 "로"
-  if ((j === '야' || j === '아') && /^[,!~\s]?$/.test(nx) && nx !== '' || j === '아') return last + (bat ? '아' : '야');   // 부르는 말: "하늘아," "세라야!"
-  if (j === '야' && !bat) return last + '야';
-  return last + (bat ? pair[0] : pair[1]); });
-const fillVars = (t, id) => josaFix(String(t || '').replace(/\{([a-z_]+)(?:\.([a-z_]+))?\}/g, (m, a, b) => {
-  if (a === 'player') return (me?.nick || '학생') + '\uE000';
-  const who = a === 'npc' ? id : a, n = npcGet(who);
-  if (!b) return m; if (b === 'name') return n ? nameVar(n) + '\uE000' : m;
-  const v = npcVars(who)[b]; return v !== undefined ? v + '\uE000' : m; }));
+// 이름 뒤 조사: {player|이/가}처럼 쓰면 이름의 마지막 글자 받침을 보고 골라요 (tools/josa.py와 같은 규칙)
+//   영문·숫자로 끝나면 한글로 읽은 소리로 판단 (L·M·N·R·0·1·3·6·7·8은 받침 있음, L·R·1·7·8은 ㄹ), 모르면 받침 없음
+const JOSA_AL = { L: 2, M: 1, N: 1, R: 2, 0: 1, 1: 2, 3: 1, 6: 1, 7: 2, 8: 2 };   // 1 받침, 2 ㄹ 받침
+function batchim(name){
+  const s = String(name || '');
+  for (let i = s.length - 1; i >= 0; i--){ const c = s.charCodeAt(i);
+    if (c >= 0xAC00 && c <= 0xD7A3){ const j = (c - 0xAC00) % 28; return [j > 0, j === 8]; }
+    const u = s[i].toUpperCase(); if (/[A-Z0-9]/.test(u)){ const v = JOSA_AL[u] || 0; return [v > 0, v === 2]; } }
+  return [false, false];
+}
+const josaPick = (name, a, b) => { const [bat, ri] = batchim(name); if (a === '으로' && b === '로') return !bat || ri ? '로' : '으로'; return bat ? a : b; };
+const withJosa = (name, a, b) => name + josaPick(name, a, b);   // 코드 안 문구용: withJosa(이름, '을', '를')
+const fillVars = (t, id) => String(t || '').replace(/\{([a-z_]+)(?:\.([a-z_]+))?(?:\|([^/{}]+)\/([^{}]+))?\}/g, (m, a, b, ja, jb) => {
+  let v;
+  if (a === 'player') v = me?.nick || '학생';
+  else { const who = a === 'npc' ? id : a, n = npcGet(who); if (!b) return m; v = b === 'name' ? (n ? nameVar(n) : undefined) : npcVars(who)[b]; if (v === undefined) return m; }
+  return ja !== undefined ? v + josaPick(v, ja, jb) : v; });
 function npcPanel(n, text, btns){
   const h = hearts(n.id);
   npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${npcPortrait(n)}</div><div><b>${esc(n.name)}</b><span class="s sub">${esc(n.title || '')}</span><span class="npchr">${heartBar(h)}</span></div><button class="sx" data-nx="close">✕</button></div>
@@ -2134,7 +2136,7 @@ async function evRun(ctx, sc){
     else if (c === 'fade_in') await evFadeTo(0, 400);
     else if (c === 'fade_out') await evFadeTo(1, 400);
     else if (!ctx.opt.replay){
-      if (c === 'give_item'){ me.inv[s.item] = (me.inv[s.item] || 0) + (s.n || 1); toast(`${ITEM[s.item] || s.item} ×${s.n || 1}을(를) 받았어요`); }
+      if (c === 'give_item'){ me.inv[s.item] = (me.inv[s.item] || 0) + (s.n || 1); toast(`${ITEM[s.item] || s.item} ×${s.n || 1} 받았어요`); }
       else if (c === 'take_item'){ me.inv[s.item] = Math.max(0, (me.inv[s.item] || 0) - (s.n || 1)); }
       else if (c === 'set_flag'){ me.nflag = me.nflag || {}; me.nflag[s.flag] = 1; }
       else if (c === 'affinity') ctx.sum += s.value || 0;
@@ -2161,7 +2163,7 @@ function evFinish(ctx){
     if (p === 'cake_recipe') me.inv.d_fairycake_s = (me.inv.d_fairycake_s || 0) + 3;
   });
   save(); hud(); npcSig = ''; syncNpcs();
-  toast(ctx.cold ? `${n.name}와(과) 조금 서먹해졌어요……` : `♥${k} 「${fillVars(ev.title, n.id)}」${got.length ? ' · ' + got.join(', ') : ''}`);
+  toast(ctx.cold ? `${withJosa(n.name, '과', '와')} 조금 서먹해졌어요……` : `♥${k} 「${fillVars(ev.title, n.id)}」${got.length ? ' · ' + got.join(', ') : ''}`);
 }
 document.addEventListener('click', e => { if (!evOn || !evUI().contains(e.target) || e.target.closest('.evo,.evskip')) return; evOn.tapR && evOn.tapR(); });
 document.addEventListener('keydown', e => { if (evOn && (e.key === ' ' || e.key === 'Enter')){ e.preventDefault(); evOn.tapR && evOn.tapR(); } });
@@ -2181,6 +2183,8 @@ function koCheck(t, human){
   KO_WRONG.forEach(b => { if (['구지', '바램', '되요'].includes(b) ? new RegExp('(?<![가-힣])' + b).test(s) : s.includes(b)) w.push(`틀린 표기 「${b}」`); });   // 「식구지」 같은 낱말 속 조각은 빼요
   KO_NAMES.forEach(b => { if (s.includes(b)) w.push(`사람 NPC 이름은 변수로 「${b}」 → {sera.name} 등`); });
   if (human){ const m = KO_GENDER.exec(s); if (m) w.push(`성별을 단정하는 말 「${m[1]}」`); }
+  const bare = /\{[a-z_]+(?:\.[a-z_]+)?\}(이에요|예요|이랑|랑|으로|로|이야|야|이나|나|이|가|은|는|을|를|과|와|아|라는|라면|구나|였)(?![가-힣])/.exec(s); if (bare) w.push(`변수 뒤 조사는 {player|이/가}처럼 써요 「${bare[0]}」`);
+  const par = /\((을|를|이|가|은|는|과|와|으|으로|아|야|이랑|랑|이에요|이야|이나)\)/.exec(s); if (par) w.push(`조사 병기 「${par[0]}」 대신 {변수|을/를}`);
   return w;
 }
 const koTexts = o => typeof o === 'string' ? [o] : Array.isArray(o) ? o.flatMap(koTexts) : o && typeof o === 'object' ? Object.entries(o).flatMap(([k, v]) => ['text', 'title'].includes(k) || typeof v === 'object' ? koTexts(v) : []) : [];
@@ -2514,7 +2518,7 @@ function adminStoryHTML(){
 }
 function adminStoryAct(v){
   const [a, n] = v.split(':'), c = +n, cur = (AD.story.ch || {})[c] || {}, S = STORY[c - 1];
-  if (a === 'live'){ if (c > 0 && !confirm(`${c}장 「${STORY[c - 1].name}」을(를) 모두에게 송출할까요?`)) return; F.set(F.ref(db, 'story/live'), { ch: c, at: Date.now() }); }
+  if (a === 'live'){ if (c > 0 && !confirm(`${c}장 「${STORY[c - 1].name}」 이야기를 모두에게 송출할까요?`)) return; F.set(F.ref(db, 'story/live'), { ch: c, at: Date.now() }); }
   if (a === 'next'){ const s2 = Math.min(S.steps.length, (cur.step || 0) + 1); F.update(F.ref(db, `story/ch/${c}`), { step: s2, done: s2 >= S.steps.length }); }
   if (a === 'prev') F.update(F.ref(db, `story/ch/${c}`), { step: Math.max(0, (cur.step || 0) - 1), done: false });
   if (a === 'reset' && confirm(`${c}장 진행을 처음으로 되돌릴까요? (기여 기록도 지워져요)`)) F.set(F.ref(db, `story/ch/${c}`), null);
@@ -2625,7 +2629,7 @@ function renderHome(){
     if (me.inv[o.p] < o.n) return;
     const pay = payOf(o);
     me.inv[o.p] -= o.n; me.coin += pay; o.done = true; save();
-    toast(`${o.from}에게 ${ITEM[o.p]}을(를) 전했어요. +${pay}G`); render();
+    toast(`${o.from}에게 ${withJosa(ITEM[o.p], '을', '를')} 전했어요. +${pay}G`); render();
   });
   bindEventBanner();
   $('#goClass').onclick = () => goPlace('lab', 'skull', 'home', 'class');
@@ -2946,7 +2950,7 @@ function renderLab(){
       dexSel = p; dexPage = Math.floor(POTIONS.indexOf(p) / DEX_PAGE);
     } else if (me.house === 'ember' && myTime()){
       const back = slots[Math.floor(Math.random() * 3)]; me.inv[back]++;
-      brewMsg = `보라색 연기만 피어올랐어요... 그래도 Emberkiln의 낮이라 ${ITEM[back]}을(를) 건졌어요.`;
+      brewMsg = `보라색 연기만 피어올랐어요... 그래도 Emberkiln의 낮이라 ${withJosa(ITEM[back], '을', '를')} 건졌어요.`;
     } else brewMsg = '보라색 연기만 피어올랐어요... 재료는 사라졌어요.';
     slots = []; save(); renderLab();
   };
@@ -3026,14 +3030,14 @@ function hatchToPen(i){
   const e = me.eggs[i]; if (!e || eggLeft(e) > 0) return;
   if (me.cr.length >= PEN_MAX){ placing = i; ranchMsg = `사육장이 꽉 찼어요 (${PEN_MAX}마리). 입양 보낼 아이를 한 마리 골라 주세요.`; return; }
   const c = newCreature(e.k, e.col); me.cr.push(c); me.eggs.splice(i, 1);
-  ranchMsg = `${c.name}(${CREATURES[c.k].baby})이(가) 사육장에 들어왔어요!${c.col.rare ? ` 처음 보는 색 「${c.col.n}」이에요!` : ''}`;
+  ranchMsg = `${c.name}(${withJosa(CREATURES[c.k].baby, '이', '가')}) 사육장에 들어왔어요!${c.col.rare ? ` 처음 보는 색 「${c.col.n}」이에요!` : ''}`;
   crSel = me.cr.length - 1; ranchTab = 'pen'; placing = null; save();
 }
 function adoptOut(i){
   const c = me.cr[i], d = CREATURES[c.k];
   me.cr.splice(i, 1); me.inv[d.mat] = (me.inv[d.mat] || 0) + 1; me.coin += 30;
   if (crSel >= me.cr.length) crSel = Math.max(0, me.cr.length - 1);
-  return `${c.name}이(가) 새 가족을 찾아 떠났어요. 고맙다며 ${ITEM[d.mat]} +1 · 30G를 남겼어요.`;
+  return `${withJosa(c.name, '이', '가')} 새 가족을 찾아 떠났어요. 고맙다며 ${ITEM[d.mat]} +1 · 30G를 남겼어요.`;
 }
 function renderRanch(){
   if (crSel >= me.cr.length) crSel = 0;
@@ -3069,8 +3073,8 @@ function renderRanch(){
     </section>
     <section class="sec">
       ${secH('짝꿍 맺기', `같은 종 어른 · 애정 ${BREED_LOVE} 이상 · 마력 ${BREED_MANA}`)}
-      ${!adult || c.love < BREED_LOVE ? `<div class="hint">${esc(c.name)}이(가) 어른이 되고 애정 ${BREED_LOVE} 이상이어야 해요</div>`
-        : (c.bredAt || 0) + BREED_CD > now ? `<div class="hint">${esc(c.name)}은(는) 쉬는 중이에요 · <span data-cd="${c.bredAt + BREED_CD}">${cdText(c.bredAt + BREED_CD - now)}</span> 뒤에 다시</div>`
+      ${!adult || c.love < BREED_LOVE ? `<div class="hint">${withJosa(esc(c.name), '이', '가')} 어른이 되고 애정 ${BREED_LOVE} 이상이어야 해요</div>`
+        : (c.bredAt || 0) + BREED_CD > now ? `<div class="hint">${withJosa(esc(c.name), '은', '는')} 쉬는 중이에요 · <span data-cd="${c.bredAt + BREED_CD}">${cdText(c.bredAt + BREED_CD - now)}</span> 뒤에 다시</div>`
         : !mates.length ? `<div class="hint">짝꿍이 될 ${d.kind}(어른, 애정 ${BREED_LOVE} 이상)가 없어요 · 친구 방에서 친구 생물과도 맺을 수 있어요</div>`
         : `<div class="pal">${mates.map(([x, i]) => `<button class="cell ${partner === i ? 'sel' : ''}" data-mate="${i}" style="width:62px;height:66px;min-height:0;padding:0 0 14px;overflow:hidden;background:${CREATURES[x.k].bg}">${crSprite(x, .4)}<span class="s" style="position:absolute;left:0;right:0;bottom:1px;font-size:12px">${esc(x.name)}</span></button>`).join('')}</div>
           <button class="btn sm go" id="breed" style="min-height:40px" ${partner !== null && me.eggs.length < HATCH_MAX && me.mana >= BREED_MANA ? '' : 'disabled'}>${me.eggs.length >= HATCH_MAX ? '부화실이 꽉 찼어요' : '짝꿍 맺고 알 받기'}</button>
@@ -3097,7 +3101,7 @@ function renderRanch(){
   on('[data-mate]', b => { partner = +b.dataset.mate; redraw(); });
   on('[data-hatch]', b => { hatchToPen(+b.dataset.hatch); redraw(); });
   on('[data-adopt]', b => {
-    const x = me.cr[+b.dataset.adopt]; if (!confirm(`${x.name}을(를) 입양 보낼까요? 돌아오지 않아요.`)) return;
+    const x = me.cr[+b.dataset.adopt]; if (!confirm(`${withJosa(x.name, '을', '를')} 입양 보낼까요? 돌아오지 않아요.`)) return;
     const msg = adoptOut(+b.dataset.adopt), i = placing; placing = null; hatchToPen(i); ranchMsg = msg + ' ' + ranchMsg; save(); redraw();
   });
   on('[data-buyegg]', b => {
@@ -3106,14 +3110,14 @@ function renderRanch(){
     me.coin -= x.egg; me.eggs.push({ id: crId(), k, col: randColor(), at: Date.now() }); ranchMsg = `${x.kind}의 알을 샀어요! 부화실에서 ${timeText(x.hatch * 6e4)} 뒤에 깨어나요.`; save(); redraw();
   });
   const ac = $('#adoptCancel'); if (ac) ac.onclick = () => { placing = null; ranchMsg = ''; redraw(); };
-  const ad = $('#adopt'); if (ad) ad.onclick = () => { if (!confirm(`${c.name}을(를) 입양 보낼까요? 돌아오지 않아요.`)) return; ranchMsg = adoptOut(crSel); save(); redraw(); };
+  const ad = $('#adopt'); if (ad) ad.onclick = () => { if (!confirm(`${withJosa(c.name, '을', '를')} 입양 보낼까요? 돌아오지 않아요.`)) return; ranchMsg = adoptOut(crSel); save(); redraw(); };
   const fd = $('#feed'); if (fd) fd.onclick = () => {
     const n = 2 + (me.house === 'dusk' && myTime() ? 1 : 0); c.love = Math.min(LOVE_MAX, c.love + n); c.fedAt = Date.now();
-    ranchMsg = `${c.name}이(가) ${d.food}을(를) 맛있게 먹었어요. 애정 +${n}`; save(); redraw();
+    ranchMsg = `${withJosa(c.name, '이', '가')} ${withJosa(d.food, '을', '를')} 맛있게 먹었어요. 애정 +${n}`; save(); redraw();
   };
   const pt = $('#pat'); if (pt) pt.onclick = () => {
     const n = me.house === 'dusk' ? 2 : 1; c.love = Math.min(LOVE_MAX, c.love + n); c.petAt = Date.now();
-    ranchMsg = `${c.name}이(가) 기분 좋아해요. 애정 +${n}`; save(); redraw();
+    ranchMsg = `${withJosa(c.name, '이', '가')} 기분 좋아해요. 애정 +${n}`; save(); redraw();
   };
   const hv = $('#harvest'); if (hv) hv.onclick = () => {
     const T = LOVE_TIERS[loveTier(c)]; if (!T.mat || prodLeft(c) > 0 || !crAdult(c)) return;
@@ -3146,7 +3150,7 @@ function placeFurn(fid){
   const go = () => World.place(FIDX[fid], (x, y) => {
     if (!(me.fbag[fid] > 0)) return;
     me.fbag[fid]--; me.room.push({ id: crId(), f: fid, x, y }); save(); syncRoom();
-    toast(`${FURN_BY[fid].name}을(를) 놓았어요! 아늑함 ${cozyOf(me)}`);
+    toast(`${withJosa(FURN_BY[fid].name, '을', '를')} 놓았어요! 아늑함 ${cozyOf(me)}`);
   });
   closeSheet();
   if (inMyRoom()) go(); else World.teleport(myRoomId(), 'bed', go);
@@ -3157,7 +3161,7 @@ World.onFurn = id => {
   const r = me.room.find(x => x.id === id); if (!r) return null; const F_ = FURN_BY[r.f];
   return { text: `<b>${F_.name}</b><br>아늑함 +${F_.pts}`, btn: '가방에 넣기', fn: () => {
     me.room = me.room.filter(x => x.id !== id); me.fbag[r.f] = (me.fbag[r.f] || 0) + 1; save(); syncRoom(); World.cancelPlace();
-    toast(`${F_.name}을(를) 가방에 넣었어요`);
+    toast(`${withJosa(F_.name, '을', '를')} 가방에 넣었어요`);
   } };
 };
 // 기숙사 복도: 기숙사마다 학생 3명의 방 (들어온 순서대로 문 번호)
@@ -3203,14 +3207,14 @@ function renderDorm(){
   on('[data-claim]', async b => {
     const g = myGuest[b.dataset.claim]; if (!g || !g.gift || g.claimed) return;
     await F.update(F.ref(db, `guest/${uid}/${b.dataset.claim}`), { claimed: true });
-    me.inv[g.gift] = (me.inv[g.gift] || 0) + 1; save(); toast(`${g.nick}의 선물 ${ITEM[g.gift]}을(를) 받았어요!`);
+    me.inv[g.gift] = (me.inv[g.gift] || 0) + 1; save(); toast(`${g.nick}의 선물 ${withJosa(ITEM[g.gift], '을', '를')} 받았어요!`);
   });
   const redraw = () => { const pn = app.querySelector('.panel'), y = pn?.scrollTop; renderDorm(); if (pn) app.querySelector('.panel').scrollTop = y; };
   on('[data-fcat]', b => { furnCat = b.dataset.fcat; redraw(); });
   on('[data-buyf]', b => {
     const x = FURN_BY[b.dataset.buyf]; if (me.coin < x.price) return;
     me.coin -= x.price; me.fbag[x.id] = (me.fbag[x.id] || 0) + 1; save();
-    dormMsg = `${x.name}을(를) 샀어요! 가구 가방에서 눌러 방에 놓아요.`; redraw();
+    dormMsg = `${withJosa(x.name, '을', '를')} 샀어요! 가구 가방에서 눌러 방에 놓아요.`; redraw();
   });
   on('[data-place]', b => placeFurn(b.dataset.place));
   $('#back').onclick = () => { closeSheet(); };
@@ -3676,7 +3680,7 @@ function paintEvent(){
       const p = b.dataset.offer; if (me.inv[p] < 1 || Date.now() >= ev.end) return;
       me.inv[p]--; save();
       const nv = (+evData[me_] || 0) + DRAGON_PTS(p);
-      evMsg = `${ITEM[p]}을(를) 바쳤어요. +${DRAGON_PTS(p)}점`;
+      evMsg = `${withJosa(ITEM[p], '을', '를')} 바쳤어요. +${DRAGON_PTS(p)}점`;
       if (solo){ evData[me_] = nv; soloSaveEv(); paintEvent(); }
       else await F.set(F.ref(db, `events/dragon/${ev.key}/${uid}`), nv).catch(e => toast('바치지 못했어요: ' + (e.code || e.message)));
     });
@@ -3736,7 +3740,7 @@ function renderMarket(){
     if (me.inv[sellPick] < 1) return;
     me.inv[sellPick]--; save();
     await F.push(F.ref(db, 'market'), { uid, nick: me.nick, look: me.look, item: sellPick, qty: 1, price, at: Date.now(), ...(me.house === 'moon' && myTime() ? { moon: true } : {}) });
-    toast(`${ITEM[sellPick]}을(를) ${price}G에 올렸어요.`); sellPick = null;
+    toast(`${withJosa(ITEM[sellPick], '을', '를')} ${price}G에 올렸어요.`); sellPick = null;
   };
   on('[data-cancel]', async b => {
     const l = marketList[b.dataset.cancel]; if (!l || l.buyer) return;
@@ -3757,7 +3761,7 @@ function renderMarket(){
     });
     if (!res.committed) return toast('한발 늦었어요. 다른 친구가 먼저 샀어요.');
     me.coin -= l.price; me.inv[l.item] += l.qty; save();
-    toast(`${ITEM[l.item]}을(를) 샀어요! -${l.price}G`);
+    toast(`${withJosa(ITEM[l.item], '을', '를')} 샀어요! -${l.price}G`);
   });
   $('#donate').onclick = async () => {
     if (me.inv.p_purple < 1) return;
@@ -3945,7 +3949,7 @@ function renderClothes(){
     const bought = SHOP_CATS.filter(([c]) => !ownCloth(c, shopTry[c])).map(([c]) => { me.closet[c + ':' + M.parts[c][shopTry[c]].id] = 1; return M.parts[c][shopTry[c]].n; });
     me.coin -= cost; me.av = A.fix(shopTry); delete me.av.house; save(); World.setPlayer(me.nick, avOf(me));
     if (!solo) F.update(F.ref(db, 'online/' + uid), { av: me.av }).catch(() => {});
-    shopMsg = bought.length ? `${bought.join(', ')}을(를) 샀어요! 잘 어울려요` : '갈아입었어요!'; shopTry = null; redraw(); hud();
+    shopMsg = bought.length ? `${withJosa(bought.join(', '), '을', '를')} 샀어요! 잘 어울려요` : '갈아입었어요!'; shopTry = null; redraw(); hud();
   };
 }
 function showCreate(done, counts = {}){

@@ -2,6 +2,8 @@
 #   public/data/npc/<id>/profile.json, events/heart_01~10.json 을 읽어서 규칙 위반을 출력해요 (0 건이면 통과)
 #   형식은 tools/npc_story_format.md
 import json, os, re, sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tools'))
+import josa
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 DATA = os.path.join(ROOT, 'public', 'data', 'npc')
 NPCS = ['nabi', 'batri', 'kappa', 'aula', 'mandi', 'jipsin', 'sera', 'madeleine', 'stella', 'leo']
@@ -31,7 +33,7 @@ GENDER = re.compile(r'(?<![가-힣])(그녀|그는|그가|그를|그의|아저�
 NAMES = ['세라', '루카스', '마들렌', '스텔라', '레오']
 AUTO = re.compile(r'[a-z]+_(h\d+|was_cold)')
 PERKS = {'cat_furniture', 'bait', 'free_post', 'rod_bonus', 'lord_hint', 'potion_hint', 'know_bonus', 'greenhouse_growth', 'pumpkin_race', 'scarecrow_hat', 'tasty_potion', 'cake_recipe', 'fortune', 'rare_egg'}
-VAR = re.compile(r'\{([a-z_]+)(?:\.([a-z_]+))?\}')
+VAR = re.compile(r'\{([a-z_]+)(?:\.([a-z_]+))?(?:\|([^{}]*))?\}')
 
 def texts_of(o):
     if isinstance(o, str): yield o
@@ -59,6 +61,13 @@ def korean(where, t, human_ctx, errs):
         a, b = m.group(1), m.group(2)
         ok = (a == 'player' and not b) or (a == 'npc' and b) or (a in NPCS and b)
         if not ok: errs.append(f'{where}: 모르는 변수 {m.group(0)}')
+        if m.group(3) is not None and not re.fullmatch(r'[가-힣]+/[가-힣]+', m.group(3)): errs.append(f'{where}: 조사 표기는 {{변수|받침O/받침X}} 「{m.group(0)}」')
+    for m in josa.BARE.finditer(t): errs.append(f'{where}: 변수 뒤 조사는 함수로 써요 (예: {{player|이/가}}) 「{m.group(0)}」 → {t[:40]}')
+    for m in josa.PAREN.finditer(t): errs.append(f'{where}: 조사 병기 「{m.group(0)}」 금지 → {t[:40]}')
+    for nm in ('하루', '민준', '하늘'):   # 받침 없음 · 받침 있음 · ㄹ 받침 이름으로 렌더링해서 조사 확인
+        vals = {'player': nm, 'npc.name': nm, 'npc.husband': nm, 'sera.husband': nm, **{f'{x}.name': nm for x in NPCS}}
+        out, marks = josa.render(t, vals)
+        for e in josa.check_rendered(out, marks): errs.append(f'{where}: 「{nm}」로 렌더링하면 조사 오류 {e} → {t[:40]}')
 
 def paths_info(script, errs, where):
     """라벨 위치, 경로별 대사 줄 수 (최소·최대). 순서대로 실행, choice/if는 라벨로 점프, goto로 합류"""
@@ -182,7 +191,7 @@ def check_event(npc, k, ev, flags_set, flags_used, prof_cast, errs):
         if c == 'if_flag' and not AUTO.fullmatch(n.get('flag') or ''): flags_used.setdefault(n.get('flag'), []).append(w)
         if c == 'if_flag' and not re.fullmatch(r'[a-z]+_[a-z0-9_]+', n.get('flag') or ''): errs.append(f'{w}: #{i} 플래그 이름 「{n.get("flag")}」')
         if c == 'if_heart' and (not isinstance(n.get('min'), int) or (n.get('npc') and n['npc'] not in NPCS)): errs.append(f'{w}: #{i} if_heart (min, npc)')
-    for t in texts_of({'title': ev.get('title'), 's': sc, 'c': cold}):
+    for t in texts_of({'title': ev.get('title'), 's': sc, 'c': cold, 'f': ev.get('fail') or []}):
         korean(w, t, npc in HUMAN, errs)
     return lo, hi, len(chs)
 

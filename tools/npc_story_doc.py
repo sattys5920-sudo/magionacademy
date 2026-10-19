@@ -1,5 +1,7 @@
 # NPC 하트 이벤트 대사·선택지 전문을 한 장짜리 HTML 문서로: python3 tools/npc_story_doc.py <출력.html>
 import json, os, sys, html, re
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from josa import VAR as JVAR, pick as jpick
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 D = os.path.join(ROOT, 'public', 'data', 'npc')
 NPCS = [('nabi', '나비', '매점 고양이'), ('batri', '배트리', '우체부 박쥐'), ('kappa', '캇파', '낚시꾼 갓파'), ('aula', '아울라', '사서 부엉이'), ('mandi', '맨디', '정원사 맨드레이크'),
@@ -10,7 +12,7 @@ CAST = json.load(open(os.path.join(D, 'cast.json')))
 ITEMS = json.load(open(os.path.join(ROOT, 'tools', 'npc_items.json')))
 T = {'morning': '아침', 'day': '낮', 'evening': '저녁', 'night': '밤'}
 W = {'clear': '맑음', 'rain': '비', 'fog': '안개', 'snow': '눈', 'storm': '폭풍우'}
-VARS = {'player': '주인공', 'sera.name': '세라', 'madeleine.name': '마들렌', 'stella.name': '스텔라', 'leo.name': '레오', 'sera.husband': '루카스', 'npc.husband': '루카스'}
+VARS = {'player': '민준', 'sera.name': '세라', 'madeleine.name': '마들렌', 'stella.name': '스텔라', 'leo.name': '레오', 'sera.husband': '루카스', 'npc.husband': '루카스'}
 e = lambda s: html.escape(str(s), quote=False)
 
 def fill(t, npc):
@@ -18,12 +20,13 @@ def fill(t, npc):
         k = m.group(1)
         if k == 'npc.name': k = npc + '.name'
         v = VARS.get(k, NAME.get(k.split('.')[0], k) if k.endswith('.name') else k)
-        return f'\x00{v}\x01'
-    s = e(re.sub(r'\{([a-z_.]+)\}', r, t))
+        j = jpick(v, m.group(2), m.group(3)) if m.group(2) is not None else ''
+        return f'\x00{v}\x01{j}'
+    s = e(JVAR.sub(r, t))
     return s.replace('\x00', '<b class="v">').replace('\x01', '</b>')
 
 def who_name(w, npc, cast):
-    if w == 'player': return '주인공'
+    if w == 'player': return '민준(주인공)'
     if w in NAME: return NAME[w]
     c = cast.get(w) or CAST.get(w) or {}
     return re.sub(r'<[^>]+>', '', fill(c.get('name', w), npc))
@@ -65,12 +68,12 @@ def render(sc, npc, cast):
         elif c == 'choice':
             ops = ''.join(f'<li>{aff(op.get("affinity", 0))}<span class="otx">{fill(op.get("text", ""), npc)}</span><span class="nx">→ {e(op.get("next", ""))}{f" · 플래그 <code>{e(op["flag"])}</code>" if op.get("flag") else ""}</span></li>' for op in n.get('options', []))
             o.append(f'<div class="ch"><div class="chh">선택지</div><ol>{ops}</ol></div>')
-        elif c == 'goto': o.append(f'<div class="sys">↪ {e(n.get("to"))}(으)로</div>')
+        elif c == 'goto': o.append(f'<div class="sys">↪ 「{e(n.get("to"))}」 장면으로</div>')
         elif c == 'if_flag': o.append(f'<div class="sys br">분기: 플래그 <code>{e(n["flag"])}</code> 있으면 → {e(n.get("then"))} / 없으면 → {e(n.get("else"))}</div>')
         elif c == 'if_heart': o.append(f'<div class="sys br">분기: {NAME.get(n.get("npc") or npc)} ♥{n.get("min")} 이상이면 → {e(n.get("then"))} / 아니면 → {e(n.get("else"))}</div>')
         elif c in ('move', 'follow'):
             extra = ' · '.join(x for x in [T.get(n.get('time'), ''), W.get(n.get('weather'), '')] if x)
-            lead = f'{who_name(n["who"], npc, cast)}을(를) 따라 ' if c == 'follow' else ''
+            wn = who_name(n.get("who", ""), npc, cast) if c == 'follow' else ''; lead = f'{wn}{jpick(wn, "을", "를")} 따라 ' if c == 'follow' else ''
             o.append(f'<div class="scene">📍 {lead}{e(place(n.get("to"), npc))}{f" ({extra})" if extra else ""}</div>')
         elif c == 'give_item': o.append(f'<div class="sys">🎁 {e(ITEMS.get(n.get("item"), n.get("item")))} ×{n.get("n", 1)} 받음</div>')
         elif c == 'take_item': o.append(f'<div class="sys">{e(ITEMS.get(n.get("item"), n.get("item")))} ×{n.get("n", 1)} 건넴</div>')
@@ -100,7 +103,7 @@ def main(out):
                        f'<dl class="meta"><div><dt>열리는 조건</dt><dd>{e(cond_text(ev.get("conditions", {}), npc))}</dd></div><div><dt>보상</dt><dd>{e(reward_text(ev.get("rewards") or {}))}</dd></div>'
                        f'{f"<div><dt>남기는 플래그</dt><dd>{chr(32).join(f"<code>{e(x)}</code>" for x in flags)}</dd></div>" if flags else ""}<div><dt>대사</dt><dd>{lines} 줄(모든 분기 포함)</dd></div></dl>'
                        f'<div class="script">{render(ev.get("script", []), npc, cast)}</div>')
-            if ev.get('cold'): sec.append(f'<div class="cold"><div class="ch2">서먹한 결말 (이벤트 안 호감도 합이 −30 이하면 「ending」부터 이걸로 끝나요)</div>{render(ev["cold"], npc, cast)}</div>')
+            if ev.get('cold'): sec.append(f'<div class="cold"><div class="ch2">서먹한 결말 (이벤트 안 호감도 합이 −30 이하면 「ending」부터 이 대사로 끝나요)</div>{render(ev["cold"], npc, cast)}</div>')
             if ev.get('fail'): sec.append(f'<div class="cold"><div class="ch2">찾지 못했을 때 (3 일 안에 못 찾으면)</div>{render(ev["fail"], npc, cast)}</div>')
             sec.append('</article>')
         if len(evs) < 10: sec.append(f'<p class="wip">아직 쓰는 중이에요 ({len(evs)}/10).</p>')
