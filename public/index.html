@@ -121,11 +121,9 @@ body:not(.inworld) #game{display:none}
 #rest.on{display:flex}
 .rbox{width:100%;max-width:320px;background:#FAF1E2;color:#22183F;box-shadow:0 0 0 3px #22183F;padding:16px;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
 .rbox .gt{font-family:'G11B',monospace;font-size:12px}
-.rbed{position:relative;width:216px;height:120px;margin:4px 0 6px;background:linear-gradient(#8A5A3A 0 0) 0 70px/100% 30px no-repeat,linear-gradient(#5A3A2A 0 0) 0 64px/14px 56px no-repeat,linear-gradient(#5A3A2A 0 0) 202px 76px/14px 44px no-repeat;image-rendering:pixelated}
-.rbed::before{content:'';position:absolute;left:14px;top:52px;width:52px;height:22px;background:#F2EAD8;box-shadow:0 0 0 2px #22183F}
-.rbed img{position:absolute;left:-30px;top:-22px;width:192px;height:192px;image-rendering:pixelated;transform:rotate(-90deg);transform-origin:50% 50%;clip-path:inset(0 0 0 0)}
-.rbed .blanket{position:absolute;left:66px;top:50px;width:136px;height:30px;background:#7A5AC8;box-shadow:0 0 0 2px #22183F,inset 0 6px 0 #9A7AE8}
-.zz{position:absolute;left:30px;top:-6px;font-family:'G11B',monospace;font-size:24px;color:#6A4AC8;animation:zz 2.4s infinite}
+.rbed{position:relative;width:288px;height:168px;margin:2px 0 4px}
+.rbed canvas{width:288px;height:168px;image-rendering:pixelated}
+.zz{position:absolute;left:54px;top:10px;font-family:'G11B',monospace;font-size:24px;color:#6A4AC8;animation:zz 2.4s infinite}
 .zz b{font-size:12px;margin-left:2px;animation:zz 2.4s .4s infinite;display:inline-block}
 @keyframes zz{0%{opacity:0;transform:translate(0,6px)}30%{opacity:1}100%{opacity:0;transform:translate(10px,-14px)}}
 #talk{position:absolute;left:10px;right:80px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;display:none;flex-direction:column;gap:6px;font-family:'G11',monospace}
@@ -1989,10 +1987,17 @@ function showRest(){
   const R = me.rest; if (!R) return;
   if (Date.now() >= R.until) return restEnd(false);
   const A = World.Avatar, fc = A.meta.parts.face.findIndex(p => p.id === 'face_closed'), av = { ...avOf(me), ...(fc >= 0 ? { face: fc } : {}) };
-  $('#rest').innerHTML = `<div class="rbox px"><div class="rbed"><img src="${avThumb(av)}" alt=""><i class="blanket"></i><span class="zz">Z<b>z</b><b>z</b></span></div>
+  $('#rest').innerHTML = `<div class="rbox px"><div class="rbed"><canvas id="rcv" width="96" height="56"></canvas><span class="zz">Z<b>z</b><b>z</b></span></div>
     <b class="gt">쉬고 있어요</b><span class="s" id="rleft"></span><span class="s sub">다 쉬면 마력 +${R.gain} (${R.why}) · 쉬는 동안은 아무것도 못 해요</span>
     <button class="btn sm" id="rwake">일찍 일어나기</button></div>`;
   $('#rest').classList.add('on');
+  // 픽셀 침대: 뒤판 → 누운 캐릭터(왼쪽으로 90도) → 이불 (tools/iso/rest_art.py)
+  const cv = $('#rcv'), g = cv.getContext('2d'), L = s => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = s; });
+  Promise.all([L('art/rest_bed.png?v=1'), L('art/rest_quilt.png?v=1'), A.preload(['face'])]).then(([bed, quilt]) => {   // 눈 감은 얼굴을 먼저 불러와요
+    g.imageSmoothingEnabled = false; g.clearRect(0, 0, 96, 56); g.drawImage(bed, 0, 0);
+    if (A.loaded){ g.save(); g.translate(-6, 61); g.rotate(-Math.PI / 2); g.drawImage(A.compose(av), 0, 0, A.FW, A.FH, 0, 0, A.FW, A.FH); g.restore(); }
+    g.drawImage(quilt, 0, 0);
+  });
   $('#rwake').onclick = () => restEnd(true);
   const tick = () => { if (!me.rest) return; const left = me.rest.until - Date.now(); if (left <= 0) return restEnd(false); const m = Math.floor(left / 6e4), sc = Math.floor(left / 1000) % 60, got = Math.floor(me.rest.gain * (Date.now() - me.rest.at) / (me.rest.until - me.rest.at)); $('#rleft').textContent = `남은 시간 ${m}:${String(sc).padStart(2, '0')} · 지금 일어나면 마력 +${got}`; };
   clearInterval(restTimer); tick(); restTimer = setInterval(tick, 1000);
