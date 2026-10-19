@@ -216,6 +216,44 @@ const NAMES = ['루나', '블러드', '울피', '부우', '마리', '호박이',
 const mk = (name, av, x, y, me) => ({ name, av, x, y, path: [], view: 0, flip: false, me, t: 0, idle: Math.random() * 3 });
 const me = mk('나', null, 0, 0, true);
 let started = false;
+// 같은 곳에 있는 친구들 (실시간 위치). 다른 사람 화면에서는 내가 이렇게 보여요
+const peers = {}; let peerList = [];
+function retag(){ tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : p.peer ? ' peer' : ''); d.textContent = p.name; if (p.pet) d.style.display = 'none'; world.appendChild(d); return d; }); }
+// 지금 있는 곳 열쇠: 개인 방은 방 주인마다 달라요
+const placeKey = () => map + (M && M.furn ? ':' + (roomView.own ? World.myUid : roomView.uid) : '');
+World.placeKey = () => started ? placeKey() : null;
+World.myPos = () => { const t = me.path.length ? me.path[me.path.length - 1] : [Math.round(me.x), Math.round(me.y)]; return { m: placeKey(), x: t[0], y: t[1] }; };
+World.setPeers = list => { peerList = list || []; if (started && M) syncPeers(); };
+const peerSpot = q => free(q.x, q.y) ? [q.x, q.y] : [Math.round(me.x), Math.round(me.y)];
+function addPeer(q){ const [x, y] = peerSpot(q), p = mk(q.name, q.av, x, y, false); p.peer = q.uid; peers[q.uid] = p; people.push(p); }
+function syncPeers(){
+  const key = placeKey(), here = peerList.filter(q => q.m === key && q.uid !== World.myUid);
+  let changed = false;
+  Object.keys(peers).forEach(id => { if (!here.find(q => q.uid === id)){ const i = people.indexOf(peers[id]); if (i >= 0) people.splice(i, 1); sayOff(peers[id]); delete peers[id]; changed = true; } });
+  here.forEach(q => {
+    const p = peers[q.uid];
+    if (!p){ addPeer(q); changed = true; return; }
+    if (p.name !== q.name){ p.name = q.name; changed = true; }
+    p.av = q.av;
+    const [tx, ty] = peerSpot(q), g = p.path.length ? p.path[p.path.length - 1] : [Math.round(p.x), Math.round(p.y)];
+    if (g[0] !== tx || g[1] !== ty){ if (Math.hypot(tx - p.x, ty - p.y) > 25 || !goto(p, tx, ty)){ p.x = tx; p.y = ty; p.path = []; } }
+  });
+  if (changed) retag();
+}
+// 머리 위 말풍선 (채팅·이모티콘). 몇 초 뒤에 사라져요
+const says = [];
+function sayOff(p){ if (p && p.say){ p.say.el.remove(); const i = says.indexOf(p); if (i >= 0) says.splice(i, 1); p.say = null; } }
+World.say = (id, text, big) => {
+  const p = id === World.myUid || id === 'me' ? me : peers[id]; if (!p || !text) return;
+  sayOff(p);
+  const d = document.createElement('div'); d.className = 'say' + (big ? ' emo' : ''); d.textContent = text; world.appendChild(d);
+  p.say = { el: d, until: performance.now() + (big ? 3500 : 5500) }; says.push(p);
+};
+World.onPeer = null;   // (친구 uid) 친구를 눌렀을 때
+World.peerAt = id => { const p = peers[id]; if (!p) return null; return { get x(){ return P(p.x + .5, p.y + .5)[0]; }, get y(){ return P(p.x + .5, p.y + .5)[1] - World.Avatar.FH * ASC + 2; }, sw: 0 }; };   // 친구를 따라 움직여요
+World.walkTo = id => { const p = peers[id]; if (!p) return; const c = near([[Math.round(p.x), Math.round(p.y)]])[0]; if (c) goto(me, c[0], c[1]); };
+World.bubble = (o, text, btn, fn) => showBubble(o, text, btn, fn);
+World.hideBubble = () => hideBubble();
 let crowd = {};
 function rebuildObjs(){   // 지도 물건 + (개인 방이면) 놓은 가구
   const fo = M.furn ? furnObjs() : [];
@@ -231,7 +269,9 @@ function setMap(id, spawn){
   if (!crowd[id]){ crowd[id] = []; const n = id === 'campus' ? 9 : (id === 'barn' || id === 'pen' || M.furn || M.rooms) ? 0 : 2; for (let i = 0; i < n; i++){ for (let k = 0; k < 50; k++){ const x = Math.floor(Math.random() * M.NX), y = Math.floor(Math.random() * M.NY); if (free(x, y)){ crowd[id].push(mk(NAMES[(i + (id === 'lab' ? 3 : 0)) % NAMES.length], World.Avatar.random(), x, y, false)); break; } } } }
   people.length = 0; people.push(me, ...crowd[id]);
   if (M.pets) people.push(...spawnPets());
-  tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : ''); d.textContent = p.name; if (p.pet) d.style.display = 'none'; world.appendChild(d); return d; });
+  Object.keys(peers).forEach(id => { sayOff(peers[id]); delete peers[id]; }); sayOff(me);
+  peerList.filter(q => q.m === placeKey() && q.uid !== World.myUid).forEach(addPeer);
+  retag();
   penTags.forEach(t => t.remove()); penTags = [];
   roomTags.forEach(t => t.remove()); roomTags = [];
   if (M.rooms) roomTags = M.rooms.map(rm => { const nm = (hallNames[M.house] || [])[rm.i]; const d = document.createElement('div'); d.className = 'ntag' + (nm && nm === me.name ? ' me' : ''); d.textContent = nm || '빈 방'; world.appendChild(d); return d; });
@@ -288,7 +328,7 @@ World.setPets = list => {
   if (!M || !M.pets) return;
   const keep = people.filter(p => !p.pet), add = spawnPets();
   people.length = 0; people.push(...keep, ...add);
-  tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : ''); d.textContent = p.name; if (p.pet) d.style.display = 'none'; world.appendChild(d); return d; });
+  retag();
 };
 function spawnPets(){
   return petData.map(d => {
@@ -376,6 +416,9 @@ cv.addEventListener('pointerdown', e => {
   // 우리 안의 생물을 누르면 돌보기 화면
   const pet = people.find(p => p.pet && (() => { const [sx, sy] = P(p.x + .5, p.y + .5), w = p.pet.adult ? 11 : 8, h = p.pet.adult ? 18 : 13; return x >= sx - w && x <= sx + w && y >= sy - h && y <= sy + 2; })());
   if (pet && World.onPet){ World.onPet(pet.pet.id); return; }
+  // 친구를 누르면 (겹치면 앞에 있는 사람)
+  const pr = people.filter(p => p.peer && (() => { const [sx, sy] = P(p.x + .5, p.y + .5); return x >= sx - 8 && x <= sx + 8 && y >= sy - World.Avatar.FH * ASC * .62 && y <= sy + 2; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
+  if (pr && World.onPeer){ World.onPeer(pr.peer); return; }
   const hit = [...objOrder, ...flats.slice().reverse()].reverse().find(o => (o.door || o.act || o.furn || ACTS[o.name]) && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && (() => { const px = o.furn ? FURN_PX : MAPS[rmap].px; const d = px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data; return d[3] > 0; })());
   if (hit && hit.furn){   // 놓은 가구
     const r = World.onFurn ? World.onFurn(hit.fid) : null;
@@ -396,7 +439,7 @@ const SPEED = 6.5, RUN = 10;   // 타일/초. 멀리 갈 때(남은 길 10칸 �
 function step(p, dt){
   if (!p.path.length){
     if (p.me && pending){ const pd = pending; pending = null; if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1], () => useObj(pd.act, a)); } }
-    if (!p.me && (p.idle -= dt) < 0){ p.idle = 2 + Math.random() * 5; for (let i = 0; i < 20; i++){ const gx = Math.round(p.x) + Math.floor(Math.random() * 13) - 6, gy = Math.round(p.y) + Math.floor(Math.random() * 13) - 6; if (goto(p, gx, gy)) break; } }
+    if (!p.me && !p.peer && (p.idle -= dt) < 0){ p.idle = 2 + Math.random() * 5; for (let i = 0; i < 20; i++){ const gx = Math.round(p.x) + Math.floor(Math.random() * 13) - 6, gy = Math.round(p.y) + Math.floor(Math.random() * 13) - 6; if (goto(p, gx, gy)) break; } }
     p.t = 0; return;
   }
   const [gx, gy] = p.path[0], dx = gx - p.x, dy = gy - p.y, d = Math.hypot(dx, dy);
@@ -406,7 +449,7 @@ function step(p, dt){
   if (Math.abs(dx) > Math.abs(dy)){ p.view = dx > 0 ? DV.right : DV.left; p.flip = false; }
   else if (d > 0){ p.view = dy < 0 ? DV.up : DV.down; p.flip = false; }
   if (p.pet && d > 0) p.flip = dx - dy > 0;   // 생물은 화면에서 오른쪽으로 가면 뒤집어요
-  const mv = (p.me && p.path.length > 10 ? RUN : p.me ? SPEED : SPEED * .6) * dt; if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
+  const mv = ((p.me || p.peer) && p.path.length > 10 ? RUN : (p.me || p.peer) ? SPEED : SPEED * .6) * dt; if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
 }
 // 할로윈 효과: 박쥐 떼, 보라 안개, 도깨비불
 const bats = Array.from({ length: 7 }, (_, i) => ({ x: 0, y: 0, vx: 0, vy: 0, ph: i, init: false }));
@@ -449,7 +492,7 @@ function drawPerson(p){ const cx = out;
   if (p.pet) return drawPet(p);
   const [sx, sy] = P(p.x + .5, p.y + .5);
   cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 6, 2.5, 0, 0, Math.PI * 2); cx.fill();
-  const WK = World.Avatar.meta.walk, f = p.path.length ? WK[Math.floor(p.t * (p.me ? 10 : 7)) % WK.length] : 0, col = (p.view || 0) + f;
+  const WK = World.Avatar.meta.walk, f = p.path.length ? WK[Math.floor(p.t * (p.me || p.peer ? 10 : 7)) % WK.length] : 0, col = (p.view || 0) + f;
   const A = World.Avatar, S = A.compose(p.av), cp = KPX * ASC, w = A.FW * cp, h = A.FH * cp;
   const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - (A.FH - 1.5) * cp);
   cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0);
@@ -511,6 +554,8 @@ function frame(now){
   if (M.rooms) M.rooms.forEach((rm, i) => { const [sx, sy] = P(rm.door[0] + .5, rm.door[1] + .5); roomTags[i].style.left = (sx - ix) * k + 'px'; roomTags[i].style.top = (sy - 52 - iy) * k + 'px'; });
   if (M.pens) M.pens.forEach((pn, i) => { const [sx, sy] = P(pn.sign[0] + .5, pn.sign[1] + .5); penTags[i].style.left = (sx - ix) * k + 'px'; penTags[i].style.top = (sy - 20 - iy) * k + 'px'; });
   people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); tags[i].style.left = (sx - ix) * k + 'px'; tags[i].style.top = (sy - World.Avatar.FH * ASC + 4 - iy) * k + 'px'; });
+  const tn = performance.now();
+  for (let i = says.length - 1; i >= 0; i--){ const p = says[i]; if (tn > p.say.until || (!p.me && !people.includes(p))){ sayOff(p); continue; } const [sx, sy] = P(p.x + .5, p.y + .5); p.say.el.style.left = (sx - ix) * k + 'px'; p.say.el.style.top = (sy - World.Avatar.FH * ASC - 2 - iy) * k + 'px'; }
   if (bubble){ const o = bubble.o; bubble.el.style.left = Math.max(90, Math.min(cv.clientWidth - 90, (o.x + o.sw / 2 - ix) * k)) + 'px'; bubble.el.style.top = Math.max(70, (o.y - 2 - iy) * k) + 'px'; }
   const d = new Date(); document.getElementById('clock').textContent = `🌕 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · 보름밤`;
   requestAnimationFrame(frame);

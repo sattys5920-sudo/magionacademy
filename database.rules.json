@@ -10,7 +10,19 @@
     "online": {
       ".read": "auth != null",
       "$uid": {
-        ".write": "auth != null && auth.uid === $uid"
+        ".write": "auth != null && auth.uid === $uid",
+        "m": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "x": {
+          ".validate": "newData.isNumber()"
+        },
+        "y": {
+          ".validate": "newData.isNumber()"
+        },
+        "s": {
+          ".validate": "newData.child('t').isString() && newData.child('t').val().length >= 1 && newData.child('t').val().length <= 40 && newData.child('at').isNumber()"
+        }
       }
     },
     "market": {

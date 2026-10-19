@@ -40,6 +40,29 @@ body:not(.inworld) .fab,body:not(.inworld) .hud{display:none}
 .chip.ev{pointer-events:auto;border:0;background:#FFD866;color:#3A2860;font-family:'G11B',monospace;box-shadow:0 0 0 2px #22183F}
 .ntag{position:absolute;transform:translate(-50%,-100%);font-size:12px;line-height:12px;padding:2px 4px;background:rgba(20,13,30,.75);white-space:nowrap;pointer-events:none;z-index:2}
 .ntag.me{color:#FFD866}
+.ntag.peer{color:#9CF0FF;box-shadow:0 0 0 1px #4FB8D8}
+.say{position:absolute;transform:translate(-50%,-100%);background:#FFFFFF;color:#22183F;padding:4px 7px;font-size:13px;line-height:15px;box-shadow:0 0 0 2px #22183F;max-width:180px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;text-align:center;pointer-events:none;z-index:3;margin-top:-16px}
+.say::after{content:'';position:absolute;left:50%;bottom:-6px;margin-left:-3px;border:3px solid transparent;border-top-color:#22183F}
+.say.emo{background:none;box-shadow:none;font-size:26px;line-height:28px;padding:0}
+.say.emo::after{display:none}
+.bubble .pm{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+.bubble .pm button{margin:0;padding:5px 6px;font-size:13px;white-space:nowrap}
+.bubble .pm.emo{grid-template-columns:repeat(4,1fr)}
+.bubble .pm.emo button{font-size:20px;padding:2px 4px;background:#FAF1E2}
+#talk{position:absolute;left:10px;right:80px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;display:none;flex-direction:column;gap:6px;font-family:'G7',monospace}
+#talk.on{display:flex}
+body:not(.inworld) #talk{display:none}
+#tlog{display:flex;flex-direction:column;gap:2px;pointer-events:none}
+#tlog div{align-self:flex-start;background:rgba(20,13,30,.78);color:#F2EAD8;font-size:13px;line-height:16px;padding:2px 6px;max-width:100%;overflow-wrap:anywhere}
+#tlog b{color:#9CF0FF;font-weight:normal;margin-right:4px}
+#tlog b.me{color:#FFD866}
+.temo{display:flex;gap:4px}
+.temo button{flex:1;min-width:0;height:34px;border:0;background:rgba(250,241,226,.95);box-shadow:0 0 0 2px #22183F;font-size:19px;padding:0}
+#tform{display:flex;gap:6px}
+#tin{flex:1;min-width:0;height:40px;border:0;box-shadow:0 0 0 2px #22183F;background:#FAF1E2;color:#22183F;font-family:'G7',monospace;font-size:16px;padding:0 10px}
+#tform button{height:40px;border:0;background:#8CE6B0;color:#1E3A2A;box-shadow:0 0 0 2px #22183F;font-family:'G11B',monospace;font-size:14px;padding:0 12px}
+.peerav{display:flex;justify-content:center;padding:6px 0 2px}
+.peerav img{width:192px;height:192px;image-rendering:pixelated}
 .bubble{position:absolute;transform:translate(-50%,-100%);background:#FAF1E2;color:#3A2860;padding:8px 10px;font-size:14px;line-height:18px;box-shadow:0 0 0 3px #22183F;white-space:nowrap;text-align:center;z-index:4}
 .bubble button{display:block;margin:6px auto 0;font-family:'G11B',monospace;font-size:14px;background:#8CE6B0;border:2px solid #22183F;padding:4px 10px;color:#1E3A2A}
 #fade{position:absolute;inset:0;background:#0E0916;opacity:0;pointer-events:none;transition:opacity .35s;z-index:5;display:flex;align-items:center;justify-content:center;font-family:'G11B',monospace;font-size:18px;color:#FFD866}
@@ -174,7 +197,8 @@ button.who:not(:disabled){border-color:var(--ink)}
       <div class="hudr"><div class="chip" id="clock"></div><div class="chip" id="wallet"></div><button class="chip ev" id="evChip" hidden></button></div></div>
     <div id="fade"></div>
   </div>
-  <div class="fab"><button id="tToday" class="main">오늘</button><button id="tMap">지도</button><button id="tZoom">멀리</button><button id="tDay">밝게</button></div>
+  <div class="fab"><button id="tToday" class="main">오늘</button><button id="tTalk">말하기</button><button id="tMap">지도</button><button id="tZoom">멀리</button><button id="tDay">밝게</button></div>
+  <div id="talk"><div id="tlog"></div><div class="temo" id="temo"></div><form id="tform" autocomplete="off"><input id="tin" maxlength="40" placeholder="말풍선으로 말해요 (40자)" enterkeyhint="send"><button>보내기</button></form></div>
   <div id="mapv"><div class="mhead"><b>호박달 마녀학교 · 몬스터 마을 지도</b><button id="mClose">닫기</button></div><div id="mwrap"><div id="minner"><canvas id="mcv"></canvas></div></div><div class="mhint">가고 싶은 곳을 누르면 걸어가요</div></div>
   <div id="app"></div>
 </div>
@@ -633,6 +657,79 @@ function enterWorld(){
   World.setPlayer(me.nick, avOf(me)); World.start(); World.resize();
   syncPens(); syncRoom(); syncHalls(); syncHallNames(); hud();
 }
+// ===== 학생끼리 어울리기: 같은 곳에 있는 친구가 걸어 다니고, 말풍선·이모티콘·인사를 주고받아요 =====
+// online/<uid> 에 지금 있는 곳(m: 장소 열쇠, x, y)과 마지막 한 말(s)을 올려요
+const EMOS = ['👋', '😊', '😂', '😍', '😮', '😢', '🎃', '✨'];
+let talkLog = [], lastPos = '', heard = {}, onlineKeys = '', peerUid = null, talkOn = false;
+const peersOf = () => Object.entries(onlineList).filter(([id, o]) => id !== uid && o && o.m).map(([id, o]) => ({ uid: id, name: o.nick, av: avOf(o), m: o.m, x: o.x | 0, y: o.y | 0 }));
+function pushLog(nick, t, mine){ talkLog.push({ nick, t, mine }); talkLog = talkLog.slice(-4); $('#tlog').innerHTML = talkLog.map(l => `<div><b class="${l.mine ? 'me' : ''}">${esc(l.nick)}</b>${esc(l.t)}</div>`).join(''); }
+function onOnline(){
+  World.setPeers(peersOf());
+  const here = World.placeKey();
+  Object.entries(onlineList).forEach(([id, o]) => {
+    const s = o && o.s, at = s && s.at || 0, first = heard[id] === undefined;
+    if (heard[id] === at) return; heard[id] = at;
+    if (!s || !at) return;
+    if (first || id === uid || s.m !== here) return;   // 들어오기 전에 한 말, 다른 곳에서 한 말은 안 보여요
+    World.say(id, s.t, !!s.e);
+    if (!s.e) pushLog(o.nick, s.t);
+    if (s.to === uid) toast(`${o.nick}이(가) 나에게 인사했어요! 눌러서 인사해 줘요`);
+  });
+}
+function speak(t, e, to){
+  t = String(t || '').trim().slice(0, 40); if (!t) return;
+  World.say('me', t, e); if (!e) pushLog(me.nick, t, true);
+  if (!solo) F.update(F.ref(db, 'online/' + uid), { s: { t, e: e ? 1 : 0, at: Date.now(), m: World.placeKey() || '', ...(to ? { to } : {}) } }).catch(() => {});
+}
+function presTick(){
+  if (solo || !uid) return;
+  const p = World.myPos(); if (!p.m) return;
+  const k = p.m + ',' + p.x + ',' + p.y; if (k === lastPos) return; lastPos = k;
+  F.update(F.ref(db, 'online/' + uid), { m: p.m, x: p.x, y: p.y }).catch(() => { lastPos = ''; });
+}
+// 친구를 누르면: 인사 · 이모티콘 · 코디 보기 · 방 놀러 가기
+World.onPeer = id => {
+  const o = onlineList[id], at = World.peerAt(id); if (!o || !at) return;
+  World.bubble(at, `<b>${esc(o.nick)}</b> ${HOUSES[o.house] ? `<span style="color:${HOUSES[o.house].col}">${HOUSES[o.house].name}</span>` : ''}<div class="pm"><button data-pm="hi">👋 인사</button><button data-pm="emo">😊 이모티콘</button><button data-pm="look">👗 코디 보기</button><button data-pm="room">🏠 방 구경</button></div>`);
+  document.querySelectorAll('.bubble [data-pm]').forEach(b => b.onclick = e => { e.stopPropagation(); peerAct(id, b.dataset.pm); });
+};
+function peerAct(id, act){
+  const o = onlineList[id]; if (!o) return World.hideBubble();
+  if (act === 'hi'){
+    World.hideBubble(); World.walkTo(id); speak(`${o.nick} 안녕!`, 0, id);
+    if (!me.greet || me.greet.d !== todayKey()) me.greet = { d: todayKey(), ids: {} };
+    if (!me.greet.ids[id]){ me.greet.ids[id] = 1; me.mana += 3; save(); hud(); toast(`${o.nick}에게 오늘 처음 인사했어요. 마력 +3`); }
+    return;
+  }
+  if (act === 'emo'){
+    World.bubble(World.peerAt(id), `<b>${esc(o.nick)}에게</b><div class="pm emo">${EMOS.map(x => `<button data-em="${x}">${x}</button>`).join('')}</div>`);
+    document.querySelectorAll('.bubble [data-em]').forEach(b => b.onclick = e => { e.stopPropagation(); World.hideBubble(); speak(b.dataset.em, 1, id); });
+    return;
+  }
+  World.hideBubble();
+  if (act === 'look'){ peerUid = id; openSheet('home', 'peer'); return; }
+  if (act === 'room'){ if (solo || !playersList[id]) return toast('아직 방이 없는 친구예요'); openSheet('home'); openVisit(id); }
+}
+// 코디 보기: 친구가 입은 옷과 소품
+const PEER_CATS = [['top', '상의'], ['legs', '하의'], ['feet', '신발'], ['hat', '모자'], ['acc', '액세서리'], ['neck', '목 장식'], ['cape', '망토']];
+function renderPeer(){
+  const o = onlineList[peerUid] || playersList[peerUid]; if (!o) return closeSheet();
+  const A = World.Avatar, av = A.fix(avOf(o)), P = A.meta.parts;
+  const rows = PEER_CATS.map(([c, l]) => { const p = P[c]?.[av[c]]; if (!p || p.id === 'none') return ''; const shop = p.k && p.k !== 'uni';
+    return `<div class="li"><div class="main"><span class="t">${esc(p.n)}</span><span class="d">${l}${shop ? (ownCloth(c, av[c]) ? ' · 나도 있어요' : ` · 옷 가게 ${p.p || ''}G`) : ' · 교복'}</span></div></div>`; }).join('');
+  frame(null, `${esc(o.nick)}의 코디`, `${HOUSES[o.house]?.name || ''} · ${onlineList[peerUid] ? '같이 노는 중' : '외출 중'}`, `
+    <div class="peerav"><img src="${avThumb(av)}" alt=""></div>
+    <section class="sec">${secH('입은 것')}<div class="box px">${rows || '<div class="li"><div class="main"><span class="t">교복 차림이에요</span></div></div>'}</div></section>
+    <div class="row" style="display:flex;gap:8px">${!solo && playersList[peerUid] ? '<button class="btn go" id="pVisit" style="flex:1">🏠 방 구경</button>' : ''}<button class="btn" id="pShop" style="flex:1">👗 옷 가게</button>${backBtn}</div>`);
+  $('#back').onclick = closeSheet;
+  $('#pVisit') && ($('#pVisit').onclick = () => openVisit(peerUid));
+  $('#pShop').onclick = () => { shopTry = null; shopMsg = ''; openSheet('home', 'clothes'); };
+}
+// 말하기 창: 이모티콘 한 번에, 글은 40자까지
+$('#temo').innerHTML = EMOS.map(x => `<button data-te="${x}">${x}</button>`).join('');
+document.querySelectorAll('[data-te]').forEach(b => b.onclick = () => speak(b.dataset.te, 1));
+$('#tform').onsubmit = e => { e.preventDefault(); speak($('#tin').value); $('#tin').value = ''; };
+$('#tTalk').onclick = () => { talkOn = !talkOn; $('#talk').classList.toggle('on', talkOn); $('#tTalk').textContent = talkOn ? '닫기' : '말하기'; if (talkOn && matchMedia('(pointer:fine)').matches) $('#tin').focus(); };
 // 바로 가기: 그 장소로 순간 이동한 다음 화면을 열어요
 const goPlace = (mapId, obj, t, s) => { closeSheet(); World.teleport(mapId, obj, () => openSheet(t, s)); };
 const ACT_GO = { '물약 끓이기':'lab', '재료함 열기':'lab', '재료 꺼내기':'lab', '레시피 노트 보기':'lab', '시장 보기':'market', '박쥐 돌보기':'ranch', '모이 주기':'ranch', '독초 돌보기':'green', '물 주기':'green' };
@@ -689,6 +786,7 @@ function render(){
   if (sub === 'dorm') return renderDorm();
   if (sub === 'common') return renderCommon();
   if (sub === 'visit') return renderVisit();
+  if (sub === 'peer') return renderPeer();
   if (sub === 'event') return renderEvent();
   if (sub === 'exam') return renderExam();
   ({ home:renderHome, lab:renderLab, green:renderGreen, ranch:renderRanch, market:renderMarket })[tab]();
@@ -2072,9 +2170,11 @@ async function boot(){
     const snap = await F.get(F.ref(db, 'players/' + uid));
     const enter = () => {
       const oref = F.ref(db, 'online/' + uid);
+      World.myUid = uid;
       F.set(oref, { nick: me.nick, look: me.look, av: me.av, house: me.house, at: Date.now() });
+      setInterval(presTick, 700);
       F.onDisconnect(oref).remove();
-      F.onValue(F.ref(db, 'online'), s => { onlineList = s.val() || {}; if (tab === 'home' && !sub) render(); });
+      F.onValue(F.ref(db, 'online'), s => { onlineList = s.val() || {}; onOnline(); const k = Object.keys(onlineList).sort().join(); if (k !== onlineKeys){ onlineKeys = k; if (tab === 'home' && !sub) render(); } });
       F.onValue(F.ref(db, 'market'), s => { marketList = s.val() || {}; if (tab === 'market') render(); });
       F.onValue(F.ref(db, 'coop'), s => { coop = s.val() || {}; if (tab === 'market') render(); });
       F.onValue(F.ref(db, 'players'), s => { playersList = s.val() || {}; syncPens(); syncHallNames(); if (tab === 'home' && !sub) render(); });
