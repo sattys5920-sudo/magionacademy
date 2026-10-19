@@ -14,9 +14,13 @@ def block_size(a):
         runs += list(np.diff(ch))
     runs = [r for r in runs if 3 <= r <= 16]
     return max(set(runs), key=runs.count) if runs else 8
-def cut(a):
+# 가장자리에서 안 닿는 갇힌 배경(볼트와 목 사이 등): 그 안의 한 점을 (가로, 세로) 비율로 적어 두면 거기서도 지워요
+HOLES = {'frankie': [(.324, .576), (.675, .576)]}
+def cut(a, pid=None):
     rgb = a[..., :3].astype(int); white = (rgb.min(-1) > 225) & (rgb.max(-1) - rgb.min(-1) < 25)
     reg = np.zeros_like(white); reg[0, :] = white[0, :]; reg[-1, :] = white[-1, :]; reg[:, 0] = white[:, 0]; reg[:, -1] = white[:, -1]
+    for fx, fy in HOLES.get(pid, []):
+        y, x = int(fy * a.shape[0]), int(fx * a.shape[1]); reg[y, x] = white[y, x]
     while True:
         n = reg.copy(); n[1:] |= reg[:-1]; n[:-1] |= reg[1:]; n[:, 1:] |= reg[:, :-1]; n[:, :-1] |= reg[:, 1:]; n &= white
         if (n == reg).all(): break
@@ -32,7 +36,7 @@ def build(pid):
     k = block_size(imgs[0]); H, W = imgs[0].shape[:2]; h, w = H // k, W // k
     cells = []
     for a in imgs:
-        a = cut(a)
+        a = cut(a, pid)
         # 오른쪽 아래 생성기 표시 지우기 (몸통 바깥 투명한 곳만이 아니라 표시 크기만큼)
         small = a[k // 2::k, k // 2::k][:h, :w].copy()
         for _ in range(3):   # 외곽의 흰 찌꺼기(배경과 맞닿은 밝은 점) 지우기
