@@ -9,6 +9,43 @@ const World = window.World = { onAct: null, onMove: null };
 // 부품 그림은 필요할 때 불러와요 (art/lpc/*.png). 색은 LPC 팔레트를 바꿔 칠해요
 const AVM = __AVATAR__;
 const ASC = AVM.scale || .5;   // 캐릭터 그림 1픽셀 = 세계 픽셀의 몇 배
+// 캐릭터 입 13종 (0 없음): 앞모습 6×3칸(x29~34, y32~34), 옆모습 3×3칸(왼쪽 보기 x25~27, 오른쪽은 거울)
+// # 입술선(피부색을 어둡게) r 입속 w 이 t 혀 d 침
+const MOUTHS = [
+  { n: '없음' },
+  { n: '미소', f: ['.#..#.', '..##..', '......'], s: ['#..', '.#.', '...'] },
+  { n: '활짝', f: ['.####.', '.#rr#.', '..##..'], s: ['##.', 'r#.', '...'] },
+  { n: '헤헤', f: ['.####.', '.#ww#.', '..##..'], s: ['##.', 'w#.', '...'] },
+  { n: '아', f: ['..##..', '.#rr#.', '..##..'], s: ['.#.', '#r.', '.#.'] },
+  { n: '오', f: ['......', '..##..', '..##..'], s: ['...', '.#.', '.#.'] },
+  { n: '고양이', f: ['...#..', '..#.#.', '......'], s: ['.#.', '#..', '...'] },
+  { n: '고양이 2', f: ['.#.#.#', '..#.#.', '......'], s: ['#.#', '.#.', '...'] },
+  { n: '뾰로통', f: ['..##..', '.#..#.', '......'], s: ['.#.', '#..', '...'] },
+  { n: '메롱', f: ['.####.', '...tt.', '...t..'], s: ['##.', 't..', 't..'] },
+  { n: '송곳니', f: ['.####.', '.w..w.', '......'], s: ['##.', 'w..', '...'] },
+  { n: '꾹', f: ['......', '.####.', '......'], s: ['...', '##.', '...'] },
+  { n: '씩', f: ['....#.', '.###..', '......'], s: ['.#.', '#..', '...'] },
+  { n: '당황', f: ['..#.#.', '.#.#..', '......'], s: ['.#.', '#.#', '...'] },
+  { n: '헤벌쭉', f: ['.#..#.', '..##..', '....d.'], s: ['#..', '.#.', 'd..'] },
+];
+const MOUTH_DY = [0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0];   // 걷기 칸마다 머리가 1px 내려가는 칸
+function drawMouth(o, W, FW, m){   // o: ImageData.data (가로 W = FW×20)
+  const M = MOUTHS[m]; if (!M || !M.f) return;
+  const P = (x, y) => (y * W + x) * 4;
+  const skinAt = (col, x, y) => { const d = P(col * FW + x, y); return o[d + 3] ? [o[d], o[d + 1], o[d + 2]] : null; };
+  for (let col = 0; col < 20; col++){
+    if (col >= 5 && col < 10) continue;   // 뒷모습
+    const dy = MOUTH_DY[col], side = col >= 10, right = col >= 15;
+    const sk = skinAt(col, side ? (right ? 36 : 27) : 31, 33 + dy) || skinAt(col, 31, 32 + dy); if (!sk) continue;
+    const C = { '#': [sk[0] * .5 + 8, sk[1] * .27, sk[2] * .3], r: [122, 34, 54], w: [255, 246, 236], t: [232, 112, 126], d: [150, 210, 255] };
+    const g = side ? M.s : M.f;
+    g.forEach((row, ry) => [...row].forEach((ch, rx) => {
+      if (ch === '.') return; const x = side ? (right ? 38 - rx : 25 + rx) : 29 + rx, y = 32 + ry + dy, d = P(col * FW + x, y);
+      if (!o[d + 3]) return;   // 얼굴 밖은 안 그려요
+      const c = C[ch]; o[d] = c[0]; o[d + 1] = c[1]; o[d + 2] = c[2];
+    }));
+  }
+}
 World.Avatar = (() => {
   const FW = AVM.fw, FH = AVM.fh, NF = AVM.frames, CATS = ['hair', 'face', 'top', 'legs', 'feet', 'cape', 'neck', 'hat', 'acc'], HOUSES = Object.keys(AVM.house);
   const COLORS = { skinC: 'skin', hairC: 'hair', eyeC: 'eye', legsC: 'bottom', feetC: 'shoe', topC: 'cloth', hatC: 'cloth', accC: 'cloth' };   // topC: 사복·잠옷 색   // 색 키 → 고를 수 있는 색 목록
@@ -25,6 +62,7 @@ World.Avatar = (() => {
     return e.p;
   }
   const ready = load(AVM.parts.body[0].f);
+  AVM.parts.lip = MOUTHS.map((M, i) => ({ id: 'lip' + i, n: M.n, f: null, L: {} }));   // 입: 그림 파일 없이 compose에서 그려요 (av.lip)
   const mod = (v, n) => ((v | 0) % n + n) % n;
   const has = (cat, i, body) => { const p = AVM.parts[cat][i]; return p && (p.f === null || !!p.L[body]); };
   function fix(av){
@@ -33,6 +71,7 @@ World.Avatar = (() => {
     a.body = mod(a.body, AVM.bodies.length); const body = AVM.bodies[a.body];
     CATS.forEach(c => { const n = AVM.parts[c].length; let i = mod(a[c], n); for (let k = 0; k < n && !has(c, i, body); k++) i = (i + 1) % n; a[c] = i; });
     Object.entries(COLORS).forEach(([k, p]) => { a[k] = mod(a[k], AVM.colors[p].length); });
+    a.lip = mod(a.lip, MOUTHS.length);   // 입 (예전 캐릭터는 0 = 없음)
     if (!HOUSES.includes(a.house)) delete a.house;
     delete a.eyes; delete a.mouth; delete a.uni; delete a.shoeC; delete a.neckC;
     return a;
@@ -44,6 +83,7 @@ World.Avatar = (() => {
     a.cape = r() < .6 ? 0 : a.cape; a.hat = 0; a.acc = 0; a.neck = r() < .3 ? 0 : a.neck; a.face = r() < .6 ? 0 : a.face;
     Object.entries(COLORS).forEach(([k, p]) => { a[k] = Math.floor(r() * AVM.colors[p].length); });
     a.skinC = Math.floor(r() * 7);
+    a.lip = r() < .5 ? 1 : 1 + Math.floor(r() * (MOUTHS.length - 1));   // 새 캐릭터·다른 학생은 입이 있어요 (반은 기본 미소)
     a.legsC = Math.floor(r() * 3); a.feetC = Math.floor(r() * 2);   // 교복은 다들 비슷하게: 하의 차콜·검정·남색, 구두 검정·갈색
     return fix(a);
   }
@@ -118,7 +158,7 @@ World.Avatar = (() => {
   }
   // 부품 그림이 다 오면 resolve (캐릭터 꾸미기 화면 썸네일 전에)
   const need = av => Promise.all(layersOf(fix(av)).map(l => load(l.f)));
-  const preload = cats => Promise.all(cats.flatMap(c => (AVM.parts[c] || []).map(p => load(p.f))));
+  const preload = cats => Promise.all(cats.flatMap(c => (AVM.parts[c] || []).filter(p => p.f).map(p => load(p.f))));
   function compose(av){
     av = fix(av); const key = JSON.stringify(av); if (cache.has(key)) return cache.get(key);
     const W = FW * NF, out = new ImageData(W, FH), o = out.data; let done = true;
@@ -137,7 +177,7 @@ World.Avatar = (() => {
         own[y * W + x] = L.shoe ? 1 : L.sk ? 2 : 0;
       }
     });
-    legFix(o, own, W); lastOwn = own;
+    legFix(o, own, W); drawMouth(o, W, FW, av.lip || 0); lastOwn = own;
     const c = document.createElement('canvas'); c.width = W; c.height = FH; c.getContext('2d').putImageData(out, 0, 0);
     if (done) cache.set(key, c);
     return c;

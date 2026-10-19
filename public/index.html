@@ -2203,7 +2203,7 @@ function adminNpcHTML(){
   if (adNpc && adNpcDraft){ const d = adNpcDraft, pr = d.prof || {}, stand = Object.values(NL.places).filter(p => p.stand);
     const subs = `<div class="adseg">${[['base', '기본'], ['routine', '루틴'], ['lines', '평소 대사'], ['events', '하트 이벤트']].map(([k, l]) => `<button data-adsub="${k}" class="${adSub === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
     let body = '';
-    if (adSub === 'base') body = `${d.av ? `<div class="adav"><img src="${avThumb(World.Avatar.fix(d.avData || World.Avatar.fromLook(d.look || 1)))}" alt=""><div class="adavc">${['body', 'skinC', 'hair', 'hairC', 'eyeC', 'face', 'top', 'topC', 'legs', 'legsC', 'feet', 'feetC', 'hat', 'hatC', 'acc', 'accC', 'neck', 'cape'].map(k => `<span>${k}<button data-adavk="${k}" data-adavd="-1">◀</button><button data-adavk="${k}" data-adavd="1">▶</button></span>`).join('')}<button data-adavrand="1">🎲 무작위</button></div></div>` : `<div class="s">🐾 그림 NPC는 생김새를 바꿀 수 없어요</div>`}
+    if (adSub === 'base') body = `${d.av ? `<div class="adav"><img src="${avThumb(World.Avatar.fix(d.avData || World.Avatar.fromLook(d.look || 1)))}" alt=""><div class="adavc">${['body', 'skinC', 'hair', 'hairC', 'eyeC', 'face', 'lip', 'top', 'topC', 'legs', 'legsC', 'feet', 'feetC', 'hat', 'hatC', 'acc', 'accC', 'neck', 'cape'].map(k => `<span>${k}<button data-adavk="${k}" data-adavd="-1">◀</button><button data-adavk="${k}" data-adavd="1">▶</button></span>`).join('')}<button data-adavrand="1">🎲 무작위</button></div></div>` : `<div class="s">🐾 그림 NPC는 생김새를 바꿀 수 없어요</div>`}
       <label>이름 <input data-adf="name" value="${esc(d.name || '')}"></label><label>직업 <input data-adf="title" value="${esc(d.title || '')}"></label>
       <label>좋아하는 것 (이름, 쉼표) <input data-adf="likes" value="${esc((d.likes || []).map(k => ITEM[k] || k).join(', '))}"></label>
       <label>싫어하는 것 <input data-adf="dislikes" value="${esc((d.dislikes || []).map(k => ITEM[k] || k).join(', '))}"></label>
@@ -3772,13 +3772,13 @@ async function houseCounts(){
 // ===== 캐릭터 꾸미기: 머리부터 발끝까지 =====
 // [탭, 이름, [[제목, 부품(없으면 색만), 색 키, 팔레트]]]
 const AV_TABS = [
-  ['face', '얼굴', [['체형', 'body', null, null], ['피부색', null, 'skinC', 'skin'], ['표정', 'face', 'eyeC', 'eye']]],
+  ['face', '얼굴', [['체형', 'body', null, null], ['피부색', null, 'skinC', 'skin'], ['표정', 'face', 'eyeC', 'eye'], ['입', 'lip', null, null]]],
   ['hair', '머리', [['머리 모양', 'hair', 'hairC', 'hair']]],
   ['uni', '옷', [['상의', 'top', 'topC', 'cloth'], ['하의', 'legs', 'legsC', 'bottom'], ['신발', 'feet', 'feetC', 'shoe']]],
   ['acc', '소품', [['모자', 'hat', 'hatC', 'cloth'], ['액세서리', 'acc', 'accC', 'cloth'], ['목 장식', 'neck', null, null], ['망토', 'cape', null, null]]],
 ];
 const AV_BODIES = [{ n: '여자' }, { n: '남자' }];
-const AV_HEADTHUMB = { face: 1, hair: 1, hat: 1, acc: 1 };
+const AV_HEADTHUMB = { face: 1, lip: 1, hair: 1, hat: 1, acc: 1 };
 let avTab = 'face', avView = 0, avTimer = 0;   // 미리보기 방향: 0 앞, 1 옆, 2 뒤
 const AV_VIEWS = [['down', '앞모습'], ['left', '옆모습'], ['up', '뒷모습']];
 const avLoaded = new Set();
@@ -3810,7 +3810,7 @@ function bindAvatarUI(av, redraw){
   const paint = () => { if (!document.body.contains(cv)) return clearInterval(avTimer); const g = cv.getContext('2d'), W = A.meta.walk, fr = A.meta.dirs[AV_VIEWS[avView][0]] + W[t++ % W.length]; g.clearRect(0, 0, A.FW, A.FH); g.drawImage(A.compose(av), fr * A.FW, 0, A.FW, A.FH, 0, 0, A.FW, A.FH); };
   paint(); avTimer = setInterval(paint, 160);
   // 이 탭 부품 그림을 다 불러온 뒤 썸네일을 다시 그려요
-  if (!avLoaded.has(avTab)){ const tab = avTab, cats = AV_TABS.find(t => t[0] === tab)[2].map(r => r[1]).filter(c => c && c !== 'body'); A.preload(cats).then(() => { avLoaded.add(tab); if (avTab === tab && document.body.contains(cv)) redraw(); }); }
+  if (!avLoaded.has(avTab)){ const tab = avTab, cats = AV_TABS.find(t => t[0] === tab)[2].map(r => r[1]).filter(c => c && c !== 'body' && c !== 'lip'); A.preload(cats).then(() => { avLoaded.add(tab); if (avTab === tab && document.body.contains(cv)) redraw(); }); }
   const cr = $('#avCredits'); if (cr) cr.onclick = showCredits;
   on('[data-avt]', b => { avTab = b.dataset.avt; redraw(); });
   on('[data-avp]', b => { const [c, i] = b.dataset.avp.split(','); av[c] = +i; Object.assign(av, A.fix(av), { house: av.house }); redraw(); });
