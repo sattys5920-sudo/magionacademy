@@ -30,6 +30,9 @@ AV = json.load(open(I + '/out/lpc_meta.json'))   # lpc/build_lpc.py (LPC 캐릭�
 # png는 1년 동안 캐시돼요 → 내용이 바뀌면 주소도 바뀌게 ?v=해시 를 붙여요
 import hashlib
 def ver(src): return src + '?v=' + hashlib.md5(open(I + '/out/' + src.split('/')[-1], 'rb').read()).hexdigest()[:8]
+for m in MAPS.values():   # 침대: 하루 넘기기 대신 30분 쉬기 (index.html rest)
+    for o in m['meta'].get('objs', []):
+        if o.get('act') and o['act'][1] == '잠자고 내일로': o['act'] = [o['act'][0], '쉬기']
 for m in MAPS.values(): m['meta']['bgSrc'] = ver(m['meta']['bgSrc']); m['meta']['objSrc'] = ver(m['meta']['objSrc'])
 _PUBD = os.path.join(I, '..', '..', 'public')
 for ps in AV['parts'].values():                 # LPC 부품 그림 (public/art/lpc)

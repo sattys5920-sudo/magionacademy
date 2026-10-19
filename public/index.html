@@ -116,6 +116,18 @@ body:not(.inworld) #game{display:none}
 .ghl button{border:3px solid;background:#fff;font-family:'G11',monospace;font-size:12px;padding:3px 6px}
 .ghl button.on{background:#FFE9A8}
 .ghl b{color:#C2385E}
+.rest-css{}
+#rest{position:absolute;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(10,6,20,.82);font-family:'G11',monospace}
+#rest.on{display:flex}
+.rbox{width:100%;max-width:320px;background:#FAF1E2;color:#22183F;box-shadow:0 0 0 3px #22183F;padding:16px;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
+.rbox .gt{font-family:'G11B',monospace;font-size:12px}
+.rbed{position:relative;width:216px;height:120px;margin:4px 0 6px;background:linear-gradient(#8A5A3A 0 0) 0 70px/100% 30px no-repeat,linear-gradient(#5A3A2A 0 0) 0 64px/14px 56px no-repeat,linear-gradient(#5A3A2A 0 0) 202px 76px/14px 44px no-repeat;image-rendering:pixelated}
+.rbed::before{content:'';position:absolute;left:14px;top:52px;width:52px;height:22px;background:#F2EAD8;box-shadow:0 0 0 2px #22183F}
+.rbed img{position:absolute;left:-30px;top:-22px;width:192px;height:192px;image-rendering:pixelated;transform:rotate(-90deg);transform-origin:50% 50%;clip-path:inset(0 0 0 0)}
+.rbed .blanket{position:absolute;left:66px;top:50px;width:136px;height:30px;background:#7A5AC8;box-shadow:0 0 0 2px #22183F,inset 0 6px 0 #9A7AE8}
+.zz{position:absolute;left:30px;top:-6px;font-family:'G11B',monospace;font-size:24px;color:#6A4AC8;animation:zz 2.4s infinite}
+.zz b{font-size:12px;margin-left:2px;animation:zz 2.4s .4s infinite;display:inline-block}
+@keyframes zz{0%{opacity:0;transform:translate(0,6px)}30%{opacity:1}100%{opacity:0;transform:translate(10px,-14px)}}
 #talk{position:absolute;left:10px;right:80px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;display:none;flex-direction:column;gap:6px;font-family:'G11',monospace}
 #talk.on{display:flex}
 body:not(.inworld) #talk{display:none}
@@ -265,6 +277,7 @@ button.who:not(:disabled){border-color:var(--ink)}
   <div class="fab"><button id="tToday" class="main">오늘</button><button id="tTalk">말하기</button><button id="tMap">지도</button><button id="tZoom">멀리</button><button id="tDay">밝게</button></div>
   <div id="fishui"></div>
   <div id="game"></div>
+  <div id="rest"></div>
   <div id="talk"><div id="tlog"></div><div class="temo" id="temo"></div><form id="tform" autocomplete="off"><input id="tin" maxlength="40" placeholder="말풍선으로 말해요 (40자)" enterkeyhint="send"><button>보내기</button></form></div>
   <div id="mapv"><div class="mhead"><b>호박달 마녀학교 · 몬스터 마을 지도</b><button id="mClose">닫기</button></div><div id="mwrap"><div id="minner"><canvas id="mcv"></canvas></div></div><div class="mhint">가고 싶은 곳을 누르면 걸어가요</div></div>
   <div id="app"></div>
@@ -643,7 +656,7 @@ function usePotion(p){
   return '';
 }
 const cozyOf = p => (p.room || []).reduce((a, r) => a + (FURN_BY[r.f]?.pts || 0), 0);
-const COZY_MAX = 30;   // 자고 나서 마력에 쳐 주는 아늑함은 30까지
+const COZY_MAX = 30;   // 쉬고 나서 마력에 쳐 주는 아늑함은 30까지
 
 // ===== 저장: 온라인이면 Firebase, 혼자 모드면 이 기기 =====
 let F = null, auth = null, db = null, uid = null, solo = false, me = null, saveTimer = 0;
@@ -723,8 +736,8 @@ World.onPet = id => { const i = me.cr.findIndex(c => c.id === id); if (i < 0) re
 function enterWorld(){
   document.body.classList.add('inworld'); app.innerHTML = ''; sheetOn = false; app.classList.remove('open');
   World.setPlayer(me.nick, avOf(me)); World.start(); World.resize();
-  syncPens(); syncRoom(); syncHalls(); syncHallNames(); syncSpots(); hud();
-  clearInterval(spotTimer); spotTimer = setInterval(syncSpots, 60000);   // 날이 바뀌면 채집 지점도 새로
+  syncPens(); syncRoom(); syncHalls(); syncHallNames(); syncSpots(); dayTick(); hud(); showRest();
+  clearInterval(spotTimer); spotTimer = setInterval(() => { syncSpots(); dayTick(); }, 60000);   // 날이 바뀌면 채집 지점도 새로
 }
 let spotTimer = 0;
 // ===== 학생끼리 어울리기: 같은 곳에 있는 친구가 걸어 다니고, 말풍선·이모티콘·인사를 주고받아요 =====
@@ -1285,10 +1298,10 @@ const FLAVOR = {
 World.onAct = (mapId, o, a) => {
   if (!me) return;
   const label = a[1], dh = Object.keys(HOUSE_DORM).find(k => HOUSE_DORM[k] === mapId);
-  if (label === '잠자고 내일로' || label === '방명록 보기'){
+  if (label === '쉬기' || label === '잠자고 내일로' || label === '방명록 보기'){
     const v = World.roomOwner();
     if (v && !v.own){ if (label === '방명록 보기'){ if (solo) return '<b>방명록</b><br>친구 방명록은 온라인에서 남길 수 있어요'; openSheet('home'); openVisit(v.uid); return; } return `<b>${esc(v.name)}의 침대</b><br>남의 침대에서는 잘 수 없어요`; }
-    openSheet('home', 'dorm'); if (label === '잠자고 내일로') sleep(); return;
+    if (label !== '방명록 보기') return rest(); openSheet('home', 'dorm'); return;
   }
   if (label === '휴게실 꾸미기'){
     if (dh && dh !== me.house) return `<b>${HOUSES[dh].name} 휴게실 게시판</b><br>${commonStage(dh)}단계 「${HALL_NAMES[dh][commonStage(dh) - 1]}」 · 이 기숙사 학생들이 꾸며요`;
@@ -1739,7 +1752,7 @@ function renderGreen(){
     }
     else if (plotReady(p)){ const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0); me.inv[p.k] += n; me.plots[me.plots.indexOf(p)] = { k: null }; greenMsg = `${g.seed} 수확! ${g.mat} +${n}${n > g.yield ? ' (Dewmorn의 새벽 보너스)' : ''}`; }
     else if (p.w) greenMsg = `이미 물을 줬어요. ${timeText(plotLeft(p))} 남았어요.`;
-    else if (me.mana < waterCost()) greenMsg = '마력이 부족해요. 기숙사에서 자고 오세요.';
+    else if (me.mana < waterCost()) greenMsg = '마력이 부족해요. 내 방 침대에서 쉬고 오세요.';
     else { p.w = true; me.mana -= waterCost(); greenMsg = `물을 줬어요. 쑥쑥! ${timeText(plotLeft(p))} 남았어요.`; }
     save(); renderGreen();
   });
@@ -1914,10 +1927,10 @@ function renderDorm(){
     <section class="sec">
       <div class="sec-h"><h3>내 방</h3>${backBtn}</div>
       <div class="meter">${ic('heart', 'transform:scale(.8);margin:-4px')}${segs(Math.min(cozy, COZY_MAX), COZY_MAX, '#FF9DBA')}<span class="s b">${cozy}</span></div>
-      ${hint(dormMsg, `가구를 놓을수록 아늑해져요 · 자고 나면 마력이 아늑함 ×2만큼 더 차요 (${COZY_MAX}까지)`)}
+      ${hint(dormMsg, `가구를 놓을수록 아늑해져요 · 쉬고 나면 마력이 아늑함 ×2만큼 더 차요 (${COZY_MAX}까지)`)}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         ${inMyRoom() ? '' : `<button class="btn px" id="goRoom">${ic('bed')}내 방으로</button>`}
-        <button class="btn dark px" id="sleep" style="${inMyRoom() ? 'grid-column:1/-1' : ''}">${ic('star')}잠자고 내일로</button>
+        <button class="btn dark px" id="sleep" style="${inMyRoom() ? 'grid-column:1/-1' : ''}">${ic('star')}침대에서 쉬기 (30분)</button>
       </div>
     </section>
     <section class="sec">
@@ -1948,22 +1961,46 @@ function renderDorm(){
   });
   on('[data-place]', b => placeFurn(b.dataset.place));
   $('#back').onclick = () => { closeSheet(); };
-  $('#sleep').onclick = () => sleep();
+  $('#sleep').onclick = () => rest();
   const gr = $('#goRoom'); if (gr) gr.onclick = () => goPlace(myRoomId(), 'bed', 'home', 'dorm');
   if (!solo) on('[data-visit]', b => openVisit(b.dataset.visit));
 }
-function sleep(){
+// 쉬기: 침대에서 30분 동안 쉬면 마력이 차요 (그동안은 아무것도 못 해요). 하루는 진짜 날짜로 넘어가요
+const REST_MS = 30 * 6e4;
+function rest(){
+  if (me.rest) return showRest();
   const since = me.lastSleepAt || 0;
   const guests = Math.min(3, new Set(Object.values(myGuest).filter(g => g.at > since).map(g => g.uid)).size);
   const cozy = Math.min(COZY_MAX, cozyOf(me)), hall = (commonStage(me.house) - 1) * 2, gain = 20 + cozy * 2 + guests * 3 + hall;
   me.lastSleepAt = Date.now();
-  me.day++;
-  me.mana = Math.min(50 + cozy * 2 + guests * 3 + hall, me.mana + gain);
-  me.orders = makeOrders(me.day, me.hints, me.found);
-  endLesson();
-  save();
-  dormMsg = `푹 잤어요! 봄 학기 ${me.day}일 아침 · 마력 +${gain} (아늑함 +${cozy * 2}${hall ? `, 휴게실 +${hall}` : ''}${guests ? `, 손님 ${guests}명 +${guests * 3}` : ''})`;
-  renderDorm();
+  me.rest = { at: Date.now(), until: Date.now() + REST_MS, gain, cap: 50 + cozy * 2 + guests * 3 + hall, why: `아늑함 +${cozy * 2}${hall ? `, 휴게실 +${hall}` : ''}${guests ? `, 손님 ${guests}명 +${guests * 3}` : ''}` };
+  endLesson(); save(); closeSheet(); speak('💤 쉬는 중이에요');
+  showRest();
+}
+function restEnd(early){
+  const R = me.rest; if (!R) return;
+  const k = early ? Math.max(0, Math.min(1, (Date.now() - R.at) / (R.until - R.at))) : 1, g = Math.floor(R.gain * k);
+  const before = me.mana; me.mana = Math.max(me.mana, Math.min(R.cap, me.mana + g)); me.rest = null; save(); hud();
+  clearInterval(restTimer); $('#rest').classList.remove('on'); $('#rest').innerHTML = '';
+  toast(early ? `일찍 일어났어요. 마력 +${me.mana - before}` : `푹 쉬었어요! 마력 +${me.mana - before} (${R.why})`);
+}
+let restTimer = 0;
+function showRest(){
+  const R = me.rest; if (!R) return;
+  if (Date.now() >= R.until) return restEnd(false);
+  const A = World.Avatar, fc = A.meta.parts.face.findIndex(p => p.id === 'face_closed'), av = { ...avOf(me), ...(fc >= 0 ? { face: fc } : {}) };
+  $('#rest').innerHTML = `<div class="rbox px"><div class="rbed"><img src="${avThumb(av)}" alt=""><i class="blanket"></i><span class="zz">Z<b>z</b><b>z</b></span></div>
+    <b class="gt">쉬고 있어요</b><span class="s" id="rleft"></span><span class="s sub">다 쉬면 마력 +${R.gain} (${R.why}) · 쉬는 동안은 아무것도 못 해요</span>
+    <button class="btn sm" id="rwake">일찍 일어나기</button></div>`;
+  $('#rest').classList.add('on');
+  $('#rwake').onclick = () => restEnd(true);
+  const tick = () => { if (!me.rest) return; const left = me.rest.until - Date.now(); if (left <= 0) return restEnd(false); const m = Math.floor(left / 6e4), sc = Math.floor(left / 1000) % 60, got = Math.floor(me.rest.gain * (Date.now() - me.rest.at) / (me.rest.until - me.rest.at)); $('#rleft').textContent = `남은 시간 ${m}:${String(sc).padStart(2, '0')} · 지금 일어나면 마력 +${got}`; };
+  clearInterval(restTimer); tick(); restTimer = setInterval(tick, 1000);
+}
+// 하루: 진짜 날짜가 바뀌면 학기 날짜가 하루 지나고 주문이 새로 와요
+function dayTick(){
+  if (!me) return;
+  if (me.dayKey !== todayKey()){ if (me.dayKey){ me.day++; me.orders = makeOrders(me.day, me.hints, me.found); toast(`봄 학기 ${me.day}일 아침이에요! 새 주문이 왔어요`); } me.dayKey = todayKey(); save(); if (sheetOn) render(); }
 }
 
 // ---- 휴게실: 같은 기숙사 학생들이 재료를 모아 6단계까지 꾸미고 넓혀요 ----
@@ -2028,7 +2065,7 @@ function renderCommon(){
       <div class="box px" style="padding:10px 12px;display:grid;grid-template-columns:repeat(6,1fr);gap:4px;text-align:center">
         ${HALL_NAMES[h].map((nm, i) => `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span class="b" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:2px solid var(--ink2);background:${i < st ? H.col : 'var(--soft)'};color:${i < st ? '#fff' : 'var(--sub)'}">${i + 1}</span><span class="s" style="font-size:12px;line-height:1.2;color:${i === st - 1 ? 'var(--ink)' : 'var(--sub)'}">${nm}</span></div>`).join('')}
       </div>
-      ${hint('', `${solo ? '혼자 모드에서는 혼자 모아요' : `${H.name} 학생들이 함께 재료를 모아요`} · 단계마다 방이 넓어지고, 자고 나면 마력 +2씩 더 (지금 +${(st - 1) * 2})`)}
+      ${hint('', `${solo ? '혼자 모드에서는 혼자 모아요' : `${H.name} 학생들이 함께 재료를 모아요`} · 단계마다 방이 넓어지고, 쉬고 나면 마력 +2씩 더 (지금 +${(st - 1) * 2})`)}
     </section>
     ${need ? `<section class="sec">
       ${secH(`다음: ${st + 1}단계 「${HALL_NAMES[h][st]}」`, '다 모이면 바로 꾸며져요')}
