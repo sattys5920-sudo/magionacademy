@@ -220,7 +220,7 @@ const me = mk('나', null, 0, 0, true);
 let started = false;
 // 같은 곳에 있는 친구들 (실시간 위치). 다른 사람 화면에서는 내가 이렇게 보여요
 const peers = {}; let peerList = [];
-function retag(){ tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : p.peer ? ' peer' : ''); d.textContent = p.name; if (p.pet) d.style.display = 'none'; world.appendChild(d); return d; }); }
+function retag(){ tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : p.peer ? ' peer' : p.npc ? ' npc' : ''); d.textContent = p.name; if (p.pet) d.style.display = 'none'; world.appendChild(d); return d; }); }
 // 지금 있는 곳 열쇠: 개인 방은 방 주인마다 달라요
 const placeKey = () => map + (M && M.furn ? ':' + (roomView.own ? World.myUid : roomView.uid) : '');
 World.placeKey = () => started ? placeKey() : null;
@@ -272,6 +272,19 @@ World.setCook = c => { cook = c; if (c && c.drop && c.drop.src && !cookImg[c.dro
 World.cookPot = () => { const o = M && M.objs.find(o => o.name === 'cauldron' && Math.abs(o.box[0] - me.x) + Math.abs(o.box[1] - me.y) < 4); return o ? { x: o.box[0], y: o.box[1] } : null; };
 World.setMe = (x, y) => { me.x = x; me.y = y; me.path = []; };
 let speedK = 1; World.setSpeedK = k => { speedK = k || 1; };   // 요리 효과: 빠른 걸음
+// ---------- 이야기 NPC: 한자리에 서 있어요. 사람은 아바타(av), 동물은 그림(spr: art 칸) ----------
+let npcList = [], NPC_IMG = null;
+World.onNpc = null;   // (npc id) 눌렀을 때
+World.setNpcs = (list, sprSrc) => { npcList = list || []; if (sprSrc && (!NPC_IMG || NPC_IMG.src.indexOf(sprSrc) < 0)){ NPC_IMG = new Image(); NPC_IMG.src = sprSrc; } if (started && M){ placeNpcs(); retag(); } };
+function placeNpcs(){
+  for (let i = people.length - 1; i >= 0; i--) if (people[i].npc) people.splice(i, 1);
+  npcList.filter(n => n.map === map || n.map === rmap).forEach(n => {
+    let x = n.x, y = n.y;
+    if (!free(x, y)){ outer: for (let r = 1; r < 4; r++) for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) if (free(x + dx, y + dy)){ x += dx; y += dy; break outer; } }
+    const p = mk(n.name, n.av || null, x, y, false); p.npc = n; p.view = World.Avatar.meta.dirs[n.dir || 'down'] || 0; people.push(p); blocked.add(x + ',' + y);
+  });
+}
+World.npcAt = id => { const p = people.find(q => q.npc && q.npc.id === id); if (!p) return null; return { get x(){ return P(p.x + .5, p.y + .5)[0]; }, get y(){ return P(p.x + .5, p.y + .5)[1] - (p.npc.spr !== undefined ? (p.npc.h || 24) : World.Avatar.FH * ASC) + 2; }, sw: 0 }; };
 World.busyFish = false;   // 낚시하는 동안은 바닥을 눌러도 안 걸어가요
 World.isFree = (x, y) => !!M && free(x, y);
 World.freeNear = (x, y, r = 3) => { const out = []; for (let a = x - r; a <= x + r; a++) for (let b = y - r; b <= y + r; b++) if (free(a, b)) out.push([a, b]); return out; };
@@ -287,10 +300,11 @@ function setMap(id, spawn){
   rebuildObjs();
   if (!spawn || !free(spawn[0], spawn[1])) spawn = M.spawnIn || M.start || spawn;
   me.x = spawn[0]; me.y = spawn[1]; me.path = []; me.view = 0; me.flip = false;
-  // 의미 없이 걸어 다니는 학생은 없어요 (이야기 NPC는 따로)
+  // 의미 없이 걸어 다니는 학생은 없어요 (이야기 NPC는 따로: World.setNpcs)
   if (!crowd[id]){ crowd[id] = []; const n = 0; for (let i = 0; i < n; i++){ for (let k = 0; k < 50; k++){ const x = Math.floor(Math.random() * M.NX), y = Math.floor(Math.random() * M.NY); if (free(x, y)){ crowd[id].push(mk(NAMES[(i + (id === 'lab' ? 3 : 0)) % NAMES.length], World.Avatar.random(), x, y, false)); break; } } } }
   people.length = 0; people.push(me, ...crowd[id]);
   if (M.pets) people.push(...spawnPets());
+  placeNpcs();
   Object.keys(peers).forEach(id => { sayOff(peers[id]); delete peers[id]; }); sayOff(me);
   peerList.filter(q => q.m === placeKey() && q.uid !== World.myUid).forEach(addPeer);
   retag();
@@ -438,6 +452,9 @@ cv.addEventListener('pointerdown', e => {
   // 우리 안의 생물을 누르면 돌보기 화면
   const pet = people.find(p => p.pet && (() => { const [sx, sy] = P(p.x + .5, p.y + .5), w = p.pet.adult ? 11 : 8, h = p.pet.adult ? 18 : 13; return x >= sx - w && x <= sx + w && y >= sy - h && y <= sy + 2; })());
   if (pet && World.onPet){ World.onPet(pet.pet.id); return; }
+  // 이야기 NPC를 누르면
+  const np = people.filter(p => p.npc && (() => { const [sx, sy] = P(p.x + .5, p.y + .5), h = p.npc.spr !== undefined ? (p.npc.h || 22) : World.Avatar.FH * ASC * .62; return x >= sx - 9 && x <= sx + 9 && y >= sy - h && y <= sy + 2; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
+  if (np && World.onNpc){ const n = np.npc, d = Math.abs(Math.round(me.x) - np.x) + Math.abs(Math.round(me.y) - np.y); if (d <= 1) World.onNpc(n.id); else { const c = near([[np.x, np.y]])[0]; if (c && goto(me, c[0], c[1])) pending = { npcTalk: n.id }; } return; }
   // 친구를 누르면 (겹치면 앞에 있는 사람)
   const pr = people.filter(p => p.peer && (() => { const [sx, sy] = P(p.x + .5, p.y + .5); return x >= sx - 8 && x <= sx + 8 && y >= sy - World.Avatar.FH * ASC * .62 && y <= sy + 2; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
   if (pr && World.onPeer){ World.onPeer(pr.peer); return; }
@@ -471,8 +488,8 @@ cv.addEventListener('pointerdown', e => {
 const SPEED = 6.5, RUN = 10;   // 타일/초. 멀리 갈 때(남은 길 10칸 넘게)는 달려요
 function step(p, dt){
   if (!p.path.length){
-    if (p.me && pending){ const pd = pending; pending = null; if (pd.water){ World.faceTo(pd.water[0], pd.water[1]); World.onWater && World.onWater(pd.water[0], pd.water[1]); } else if (pd.spot !== undefined){ World.onSpot && World.onSpot(pd.spot, pd.sp); } else if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1], () => useObj(pd.act, a)); } }
-    if (!p.me && !p.peer && (p.idle -= dt) < 0){ p.idle = 2 + Math.random() * 5; for (let i = 0; i < 20; i++){ const gx = Math.round(p.x) + Math.floor(Math.random() * 13) - 6, gy = Math.round(p.y) + Math.floor(Math.random() * 13) - 6; if (goto(p, gx, gy)) break; } }
+    if (p.me && pending){ const pd = pending; pending = null; if (pd.water){ World.faceTo(pd.water[0], pd.water[1]); World.onWater && World.onWater(pd.water[0], pd.water[1]); } else if (pd.npcTalk){ const np = people.find(q => q.npc && q.npc.id === pd.npcTalk); if (np) World.faceTo(np.x, np.y); World.onNpc && World.onNpc(pd.npcTalk); } else if (pd.spot !== undefined){ World.onSpot && World.onSpot(pd.spot, pd.sp); } else if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1], () => useObj(pd.act, a)); } }
+    if (!p.me && !p.peer && !p.npc && (p.idle -= dt) < 0){ p.idle = 2 + Math.random() * 5; for (let i = 0; i < 20; i++){ const gx = Math.round(p.x) + Math.floor(Math.random() * 13) - 6, gy = Math.round(p.y) + Math.floor(Math.random() * 13) - 6; if (goto(p, gx, gy)) break; } }
     p.t = 0; return;
   }
   const [gx, gy] = p.path[0], dx = gx - p.x, dy = gy - p.y, d = Math.hypot(dx, dy);
@@ -523,6 +540,12 @@ const fx = [];
 let last = performance.now(), camIX = 0, camIY = 0;
 function drawPerson(p){ const cx = out;
   if (p.pet) return drawPet(p);
+  if (p.npc && p.npc.spr !== undefined){   // 동물 NPC 그림: 48×48 한 칸, 세계에선 절반 크기(캐릭터와 같은 픽셀 크기)
+    const [sx, sy] = P(p.x + .5, p.y + .5); cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 6, 2.5, 0, 0, Math.PI * 2); cx.fill();
+    if (!NPC_IMG || !NPC_IMG.complete) return; const cp = KPX * ASC, w = 48 * cp, bob = Math.round(Math.sin(performance.now() / 500 + p.npc.spr) * 1) * cp;
+    const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - 46 * cp) + bob;
+    cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); if (p.npc.flip){ cx.translate(dx, dy); cx.scale(-1, 1); cx.drawImage(NPC_IMG, p.npc.spr * 48, 0, 48, 48, -w / 2, 0, w, w); } else cx.drawImage(NPC_IMG, p.npc.spr * 48, 0, 48, 48, Math.round(dx - w / 2), dy, w, w); cx.restore(); return;
+  }
   const [sx, sy] = P(p.x + .5, p.y + .5);
   cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 6, 2.5, 0, 0, Math.PI * 2); cx.fill();
   const WK = World.Avatar.meta.walk, f = p.path.length ? WK[Math.floor(p.t * (p.me || p.peer ? 10 : 7)) % WK.length] : 0, col = (p.view || 0) + f;
@@ -627,7 +650,7 @@ function frame(now){
   const k = cv.clientWidth / VW;
   if (M.rooms) M.rooms.forEach((rm, i) => { const [sx, sy] = P(rm.door[0] + .5, rm.door[1] + .5); roomTags[i].style.left = (sx - ix) * k + 'px'; roomTags[i].style.top = (sy - 52 - iy) * k + 'px'; });
   if (M.pens) M.pens.forEach((pn, i) => { const [sx, sy] = P(pn.sign[0] + .5, pn.sign[1] + .5); penTags[i].style.left = (sx - ix) * k + 'px'; penTags[i].style.top = (sy - 20 - iy) * k + 'px'; });
-  people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); tags[i].style.left = (sx - ix) * k + 'px'; tags[i].style.top = (sy - World.Avatar.FH * ASC + 4 - iy) * k + 'px'; });
+  people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); tags[i].style.left = (sx - ix) * k + 'px'; tags[i].style.top = (sy - (p.npc && p.npc.spr !== undefined ? (p.npc.h || 22) + 3 : World.Avatar.FH * ASC - 4) - iy) * k + 'px'; });
   const tn = performance.now();
   for (let i = says.length - 1; i >= 0; i--){ const p = says[i]; if (tn > p.say.until || (!p.me && !people.includes(p))){ sayOff(p); continue; } const [sx, sy] = P(p.x + .5, p.y + .5); p.say.el.style.left = (sx - ix) * k + 'px'; p.say.el.style.top = (sy - World.Avatar.FH * ASC - 2 - iy) * k + 'px'; }
   if (bubble){ const o = bubble.o; bubble.el.style.left = Math.max(90, Math.min(cv.clientWidth - 90, (o.x + o.sw / 2 - ix) * k)) + 'px'; bubble.el.style.top = Math.max(70, (o.y - 2 - iy) * k) + 'px'; }

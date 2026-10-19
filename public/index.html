@@ -167,6 +167,26 @@ body.admin .hud,body.admin .fab,body.admin #world{display:none}
 .ckef{background:#fff;box-shadow:0 0 0 2px #E8DCF0;padding:6px 8px;width:100%;box-sizing:border-box;text-align:left}.ckef div{display:flex;justify-content:space-between;gap:6px}.ckef s{color:var(--sub)}
 .ckrow{display:flex;gap:8px;width:100%}
 #buffChip{max-width:220px;white-space:normal;font-size:12px;line-height:14px}
+.npc-css{}
+.ntag.npc{color:#FFB8E0;box-shadow:0 0 0 1px #C86AA8}
+#npcui{position:absolute;left:0;right:0;bottom:0;z-index:8;display:none;justify-content:center;padding:0 10px calc(14px + env(safe-area-inset-bottom));font-family:'G11',monospace}
+#npcui.on{display:flex}
+body:not(.inworld) #npcui{display:none}
+.npcp{width:100%;max-width:370px;background:#FAF1E2;color:#22183F;box-shadow:0 0 0 3px #22183F;padding:10px;display:flex;flex-direction:column;gap:8px}
+.npch{display:flex;align-items:center;gap:8px}.npch>div:nth-child(2){flex:1;display:flex;flex-direction:column;line-height:16px}.npch b{font-family:'G11B',monospace}
+.npcf{width:48px;height:48px;background:#E8DDF8;box-shadow:0 0 0 2px #22183F;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.npcf img{width:48px;height:48px;image-rendering:pixelated}
+.npcspr{display:block;width:48px;height:48px;image-rendering:pixelated}
+.npchr{color:#E0508A;font-size:12px;letter-spacing:1px}
+.npct{background:#fff;box-shadow:0 0 0 2px #E8DCF0;padding:8px 10px;min-height:40px;line-height:18px}
+.npcsc{display:block;color:#9480B4;font-size:10px;font-family:'G9',monospace}
+.npcp .frow{display:flex;gap:6px;flex-wrap:wrap}.npcp .frow .btn{flex:1}
+.adtbl.npc>div{grid-template-columns:80px repeat(16,56px)}
+.adnpced label{display:flex;flex-direction:column;gap:2px;font-size:12px}
+.adnpced input,.adnpced textarea,.adnpced select{font-family:'G11',monospace;font-size:12px;border:2px solid #22183F;padding:4px;background:#fff}
+.adav{display:flex;gap:8px;align-items:flex-start}.adav img{width:128px;height:128px;image-rendering:pixelated;background:#3A2E5A;box-shadow:0 0 0 2px #22183F}
+.adavc{display:flex;flex-wrap:wrap;gap:4px}.adavc span{display:flex;align-items:center;gap:2px;font-size:10px;font-family:'G9',monospace;background:#F3EAFB;padding:1px 3px}
+.adavc button{border:1px solid #22183F;background:#fff;font-size:10px;padding:0 3px}
 #talk{position:absolute;left:10px;right:80px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;display:none;flex-direction:column;gap:6px;font-family:'G11',monospace}
 #talk.on{display:flex}
 body:not(.inworld) #talk{display:none}
@@ -315,6 +335,7 @@ button.who:not(:disabled){border-color:var(--ink)}
   </div>
   <div class="fab"><button id="tToday" class="main">오늘</button><button id="tTalk">말하기</button><button id="tMap">지도</button><button id="tZoom">멀리</button><button id="tDay">밝게</button></div>
   <div id="fishui"></div>
+  <div id="npcui"></div>
   <div id="game"></div>
   <div id="rest"></div>
   <div id="talk"><div id="tlog"></div><div class="temo" id="temo"></div><form id="tform" autocomplete="off"><input id="tin" maxlength="40" placeholder="말풍선으로 말해요 (40자)" enterkeyhint="send"><button>보내기</button></form></div>
@@ -677,7 +698,7 @@ function normalize(p){
   if (p.furn){ p.fbag = p.fbag || {}; Object.entries(p.furn).forEach(([k, st]) => { if (st?.own && OLD_FURN[k]) p.fbag[OLD_FURN[k]] = (p.fbag[OLD_FURN[k]] || 0) + 1; }); delete p.furn; }
   p.fbag = p.fbag || {}; p.room = (p.room || []).filter(r => FURN_BY[r.f]); p.common = p.common || { stage: 1, pool: {} }; p.common.pool = p.common.pool || {};
   p.orders = p.orders || []; p.know = p.know || 0;
-  p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look)); p.closet = p.closet || {}; p.rod = p.rod || 0; p.fdex = p.fdex || {}; p.buffs = p.buffs || {}; p.cdex = p.cdex || {};   // rod 낚싯대 단계, fdex 낚시·채집 도감 { id: { n, cm } }   // closet: 옷 가게에서 산 옷 { '부위:부품id': 1 }
+  p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look)); p.closet = p.closet || {}; p.rod = p.rod || 0; p.fdex = p.fdex || {}; p.buffs = p.buffs || {}; p.cdex = p.cdex || {}; p.npc = p.npc || {};   // rod 낚싯대 단계, fdex 낚시·채집 도감 { id: { n, cm } }   // closet: 옷 가게에서 산 옷 { '부위:부품id': 1 }
   p.plots = (p.plots || []).map(x => {
     if (!x.k || !SEED_INFO[x.k]) return { k: null };
     if (x.at) return x;
@@ -777,7 +798,7 @@ World.onPet = id => { const i = me.cr.findIndex(c => c.id === id); if (i < 0) re
 function enterWorld(){
   document.body.classList.add('inworld'); app.innerHTML = ''; sheetOn = false; app.classList.remove('open');
   World.setPlayer(me.nick, avOf(me)); World.start(); World.resize();
-  syncPens(); syncRoom(); syncHalls(); syncHallNames(); syncSpots(); dayTick(); hud(); showRest();
+  syncPens(); syncRoom(); syncHalls(); syncHallNames(); syncSpots(); syncNpcs(); dayTick(); hud(); showRest();
   clearInterval(spotTimer); spotTimer = setInterval(() => { syncSpots(); dayTick(); }, 60000);   // 날이 바뀌면 채집 지점도 새로
 }
 let spotTimer = 0;
@@ -1337,10 +1358,12 @@ function adminLogin(){
 function showAdmin(){
   document.body.classList.remove('inworld'); document.body.classList.add('admin'); app.classList.remove('open'); sheetOn = false;
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.day = AD.day || todayKey();
-  const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = s.val() || {}; adminRender(); }));
-  if (F && db){ L('online', 'online'); L('players', 'players'); L('houses', 'houses'); L('games', 'games'); L('story', 'story'); adminChat(); }
+  const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = s.val() || {}; if (adminTyping()) return; adminRender(); }));
+  World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('players', 'players'); L('houses', 'houses'); L('games', 'games'); L('story', 'story'); adminChat(); }
   adminRender();
 }
+const adminTyping = () => { const a = document.activeElement; return AD.tab === 'npc' && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
 function adminChat(){ if (!F || !db) return; AD.chatOff?.(); AD.chatOff = F.onValue(F.query(F.ref(db, 'chat/' + AD.day), F.limitToLast(300)), s => { AD.chat = s.val() || {}; if (AD.tab === 'chat') adminRender(); }); }
 const adName = id => esc(AD.players[id]?.nick || AD.online[id]?.nick || id.slice(0, 6));
 const adPlace = m => { if (!m) return '?'; const [id, owner] = m.split(':'), meta = World.meta(id); return esc((meta?.title || id) + (owner ? ` (${AD.players[owner]?.nick || '?'}의 방)` : '')); };
@@ -1589,6 +1612,169 @@ function renderCook(){
   on('[data-ckgo]', b => cookStart(b.dataset.ckgo, ckPot));
   on('[data-ckeat]', b => { eatDish(b.dataset.ckeat); renderCook(); });
 }
+// ===== 서브 NPC 10명: 하루 한 번 대화 ♥, 선물(좋아함 +3·보통 +1·싫어함 -1), ♥2·5·8·10마다 이야기 장면과 보상 =====
+// 동물은 art/npcs.png (tools/iso/npc_art.py) 그림, 사람은 아바타. 관리자 페이지에서 고친 내용(npcs/<id>)이 이 기본값 위에 덮여요
+// 호감도 점수 3점 = ♥1, ♥10까지. me.npc[id] = { p 점수, t 대화한 날, g 선물한 날, s 본 장면 [2,5,…] }
+const NPC_ART_V = 1;
+const NPC_DEF = [
+  { id: 'nabi', name: '나비', title: '매점 고양이', spr: 0, h: 22, map: 'campus', x: 61, y: 35, likes: ['f_crucian', 'd_minnowfry', 'g2_catnip'], dislikes: ['j_weed'],
+    greet: [['…뭘 봐? 생선 없으면 저리 가.', '냐. 오늘은 바람이 비린내가 안 나네.'], ['또 왔어? …딱히 기다린 건 아니야.', '생선 가게 아저씨가 오늘은 붕어가 싱싱하대.'], ['왔구나! 아니, 반가운 척한 거 아니거든.', '네 발소리는 이제 멀리서도 알아.'], ['우리 집사 왔다냥~ …방금 건 못 들은 걸로 해.', '오늘은 네 옆에서 낮잠 자도 돼?']],
+    story: { 2: ['호박 붕어 알아? 꼬리까지 바삭하게 구우면… 크흠.', '좋아하는 걸 말해 주는 건 너한테만이야.'], 5: ['이 방울? 옛날 주인이 달아 줬어.', '주인은 마녀였어. 어느 보름밤에 빗자루를 타고 나가서… 안 돌아왔어.', '그래서 난 시장에서 기다려. 여기선 모두가 지나가니까.'], 8: ['주인 방에서 쪽지를 찾았어. 같이 읽어 줄래?', '「나비야, 내가 늦으면 좋은 사람을 골라. 너는 고르는 눈이 있으니까.」', '…바보. 늦는 게 하루 이틀이야?'], 10: ['결정했어. 너를 새 주인으로 정할게.', '대신 생선은 매일이야. 그리고 쓰다듬는 건 하루 열 번까지만!', '…고마워, 기다리는 걸 덜 외롭게 해 줘서.'] },
+    reward: { 2: { coin: 50 }, 5: { items: { f_crucian: 2 } }, 8: { mana: 15 }, 10: { coin: 300, items: { d_minnowfry_s: 2 } } } },
+  { id: 'batri', name: '배트리', title: '우체부 박쥐', spr: 1, h: 24, map: 'campus', x: 66, y: 36, likes: ['g2_rasp', 'g2_blue', 'd_chestnut'], dislikes: ['g_pepper'],
+    greet: [['편지 왔어요~! 어, 이거 당신 거 아니네?', '우체국이 어디였더라… 아, 바로 뒤구나!'], ['오늘도 열 통 배달! 아홉 통은 엉뚱한 데 갔지만요!', '하늘에서 보면 마을이 호박 파이 같아요.'], ['당신 편지는 제일 먼저 배달할게요! 주소가 어디였죠?', '비밀인데요, 우체국장님 코 골아요.'], ['베프! 오늘 들은 소문 전부 알려 줄게요!', '당신 덕분에 요즘은 한 통도 안 틀려요!']],
+    story: { 2: ['어제 마녀 오두막에 갈 편지를 늑대인간 집에 넣었어요…', '늑대 아저씨가 연애편지인 줄 알고 얼굴이 빨개졌대요!'], 5: ['저기… 비밀 하나 말해도 돼요?', '박쥐인데요… 밤눈이 어두워요. 그래서 자꾸 길을 잃어요.', '안경을 쓰면 놀림받을까 봐 무서워요.'], 8: ['반딧불이를 모아서 길을 밝혀 주다니…!', '이제 밤길이 하나도 안 무서워요. 안경도… 한번 써 볼까요?'], 10: ['짠! 안경 쓴 배트리 어때요? 다들 멋지대요!', '이제 당신 편지는 제가 평생 무료로 배달할게요!'] },
+    reward: { 2: { coin: 40 }, 5: { items: { g2_firefly: 2 } }, 8: { mana: 15 }, 10: { coin: 250, know: 1 } } },
+  { id: 'kappa', name: '캇파', title: '낚시꾼 갓파', spr: 2, h: 26, map: 'campus', x: 57, y: 58, likes: ['g_pea', 'drop', 'd_rainbowsushi'], dislikes: ['j_can'],
+    greet: [['쉿. 물고기가 도망가.', '…느긋하게 기다리는 것도 낚시야.'], ['오, 왔나. 오늘 물이 좋아.', '찌가 흔들릴 땐 숨부터 참아.'], ['자네 낚시 실력이 꽤 늘었군.', '내 접시 물? 오늘은 찰랑찰랑하지.'], ['낚시 친구, 오늘도 한 마리 하세.', '자네랑 있으면 30년 기다림도 짧게 느껴져.']],
+    story: { 2: ['요령 하나 알려 주지. 입질 직후 반 박자만 참아.', '서두르면 놓치고, 늦으면 도망가지. 낚시는 마음이야.'], 5: ['머리 접시 물이 마르면 힘이 쭉 빠져… 이슬 좀 부어 주겠나?', '휴우… 살겠다. 자네는 은인이야.'], 8: ['30년 전 보름밤, 호수 한가운데가 금빛으로 빛났어.', '그게 「호수의 주인」이야. 난 그날부터 여기 앉아 있지.'], 10: ['자네에게만 알려 주지. 주인은 달이 가장 높을 때, 밤에만 나와.', '좋은 낚싯대와 끈기가 있으면… 자넨 해낼 거야.'] },
+    reward: { 2: { coin: 40 }, 5: { items: { drop: 3 } }, 8: { mana: 15 }, 10: { coin: 300, items: { d_moontrout_s: 1 } } } },
+  { id: 'aula', name: '아울라', title: '사서 부엉이', spr: 3, h: 24, map: 'lab', x: 15, y: 10, likes: ['feather', 'd_clovertea', 'd_starcookie'], dislikes: ['d_poisoncandy'],
+    greet: [['도서관에선 조용히… 여긴 교실이군요. 그래도 조용히.', '부우… 낮은 너무 졸려요.'], ['오늘 수업은 들었나요? 지식은 쌓일수록 무거워지지 않아요.', '물약 레시피는 순서가 생명이에요.'], ['당신은 질문을 잘하는 학생이군요. 좋은 습관이에요.', '오늘의 추천 책: 『호박과 달의 관계』.'], ['내 최고의 제자! 부우!', '당신에게는 금서 서가 열쇠도 맡길 수 있어요.']],
+    story: { 2: ['수업 시간에 졸면 안 돼요. 부엉이인 나도 참는걸요.', '…방금 하품은 못 본 걸로 해요.'], 5: ['도서관 깊은 곳에 『사라진 물약 100선』이란 금서가 있었어요.', '어느 날 통째로 사라졌죠. 몇 장만 남기고.'], 8: ['찢어진 페이지를 찾아 줬군요! 여기 적힌 건… 「호박달 물약」의 앞부분이에요.', '나머지는 아직 어딘가에 있어요.'], 10: ['당신 덕분에 금서의 반을 되찾았어요.', '이건 내가 아끼는 공부 비법이에요. 당신이라면 잘 쓸 거예요.'] },
+    reward: { 2: { know: 1 }, 5: { coin: 80 }, 8: { know: 2 }, 10: { know: 3, mana: 20 } } },
+  { id: 'mandi', name: '맨디', title: '정원사 맨드레이크', spr: 4, h: 20, map: 'toxic', x: 10, y: 12, likes: ['drop', 'g2_moss', 'g_mint'], dislikes: ['g2_mushred'],
+    greet: [['히익…! 아, 아무것도 아니에요…', '(화분 뒤에 숨었다)'], ['아, 안녕하세요… 오늘은 소리 안 질렀어요…', '이 화분, 제가 키웠어요… 헤헤.'], ['오늘은 먼저 인사하고 싶었어요! 아, 안녕!', '흙 냄새 좋죠? 저는 이 냄새가 제일 좋아요.'], ['당신이 오면 잎사귀가 쫑긋해져요!', '오늘은 비명 대신 노래를 불러 볼까요?']],
+    story: { 2: ['이 화분들… 다 제 친구예요. 말은 못 하지만요.', '당신도… 친구 해 줄래요? 아, 아니에요! 히익!'], 5: ['저는 놀라면 비명을 질러요. 듣는 사람이 기절할 만큼…', '그래서 다들 저를 피해요. 같이 참는 연습… 해 줄래요?'], 8: ['방금… 제가 웃었어요! 비명 말고, 웃음이요!', '처음이에요. 이렇게 크게 웃은 거.'], 10: ['이건 제 비밀 씨앗이에요. 제일 아끼는 거예요.', '친구한테 주는 첫 선물이에요. 잘 키워 줘요!'] },
+    reward: { 2: { coin: 40 }, 5: { items: { g_mint: 3 } }, 8: { mana: 15 }, 10: { coin: 200, items: { g_star: 2 } } } },
+  { id: 'jipsin', name: '짚신', title: '꼬마 허수아비', spr: 5, h: 26, map: 'campus', x: 10, y: 60, likes: ['g2_straw', 'g2_pseed', 'g2_sseed'], dislikes: ['g2_crowf'],
+    greet: [['까, 까마귀 아니지? 휴…', '나는 무서운 허수아비다! …무서웠어?'], ['오늘은 까마귀가 세 마리밖에 안 왔어!', '호박밭 지키는 건 힘들어.'], ['너랑 있으면 까마귀가 안 와. 신기하지?', '무서운 표정 연습 봐 줄래? 크앙!'], ['내 제일 친한 친구! 호박 하나 몰래 줄까?', '이젠 까마귀도 내 친구야. 너 덕분에!']],
+    story: { 2: ['나는 허수아비인데 까마귀가 무서워…', '오히려 까마귀들이 내 모자 위에서 놀아. 창피해.'], 5: ['무서운 표정을 연습했어. 봐 봐… 크아앙!', '…웃지 마! 진지하단 말이야!'], 8: ['오늘 까마귀한테 말을 걸어 봤어. 사실 걔들도 호박씨를 좋아한대.', '나눠 먹었더니 더 이상 놀리지 않아.'], 10: ['무서운 허수아비보다 친구 많은 허수아비가 더 좋은 것 같아.', '이 모자 너 줄게. 내 보물이야!'] },
+    reward: { 2: { coin: 40 }, 5: { items: { g2_pseed: 3 } }, 8: { mana: 15 }, 10: { coin: 250, items: { g2_gacorn: 1 } } } },
+  { id: 'sera', name: '세라 선생님', title: '양호 선생님', av: true, look: 7, map: 'lab', x: 8, y: 9, likes: ['g_chamo', 'p_red', 'd_seahorsetea'], dislikes: ['j_boot'],
+    greet: [['어디 다친 데는 없니? 물약 맛은 보장 못 하지만.', '손은 깨끗이 씻었지?'], ['오늘도 무사히 왔구나. 다행이야.', '피곤하면 침대에서 좀 쉬렴.'], ['네가 오면 양호실이 밝아져.', '오늘은 맛있는(!) 물약을 만들어 봤어.'], ['우리 학교 최고의 조수님 오셨네.', '너라면 언젠가 훌륭한 마녀가 될 거야.']],
+    story: { 2: ['내 물약이 맛없다는 소문? …사실이야.', '하지만 잘 듣는 건 확실해!'], 5: ['나도 학생 때 첫 물약을 망쳤어. 솥이 터져서 머리가 초록색이 됐지.', '그날 울면서 깨달았어. 실수는 레시피를 고치는 거라고.'], 8: ['이건 그때 만든 「위로의 레시피」야. 맛은… 조금 나아졌어.', '힘든 날 마셔. 너도 실수해도 괜찮아.'], 10: ['고마워. 네 덕분에 학생들한테 더 다정해질 수 있었어.', '이건 양호실 비상약이야. 꼭 필요할 때 써.'] },
+    reward: { 2: { coin: 40 }, 5: { mana: 10 }, 8: { items: { p_red: 3 } }, 10: { coin: 200, mana: 25 } } },
+  { id: 'madeleine', name: '마들렌', title: '과자 교실 제빵사', av: true, look: 11, map: 'candy', x: 12, y: 9, likes: ['g_wheat', 'honey', 'd_moonmochi'], dislikes: ['g2_poison'],
+    greet: [['어서 와! 손 씻고! 앞치마 입고!', '반죽은 사랑이야, 사랑!'], ['오늘 솥 냄새 좋지? 내 비법이야!', '설탕은 조금, 웃음은 많이!'], ['너 요리 실력 많이 늘었더라!', '맛보기 하나? 아, 이건 아직 실험작이야.'], ['우리 과자 교실의 자랑! 꼬옥 안아 주자!', '너라면 호박달 케이크도 만들 수 있어!']],
+    story: { 2: ['내 꿈은 전설의 「호박달 케이크」를 굽는 거야.', '보름달 아래서 구우면 먹은 사람이 하루 종일 웃는대!'], 5: ['레시피 반은 할머니 노트에 있었는데, 나머지가 없어.', '밀가루 얼룩이랑 「달이 노래할 때」라는 말만 남았어.'], 8: ['「달이 노래할 때」는 노래하는 종꽃을 말하는 거였어!', '네 덕분에 거의 다 찾았어. 이제 굽기만 하면 돼!'], 10: ['완성이야! 호박달 케이크!', '첫 조각은 너한테 줄게. 그리고 레시피도 같이 나누자.'] },
+    reward: { 2: { coin: 40 }, 5: { items: { honey: 3 } }, 8: { mana: 15 }, 10: { coin: 250, items: { d_fairycake_s: 1 } } } },
+  { id: 'stella', name: '스텔라', title: '점성술사', av: true, look: 3, map: 'campus', x: 74, y: 50, likes: ['g2_moonst', 'g2_starfall', 'd_auroraparfait'], dislikes: ['g2_pebble'],
+    greet: [['별이 말하길… 당신이 올 줄 알았대요.', '오두막이 어느 쪽이었더라… 아, 바로 뒤네요.'], ['오늘의 운세: 호수 쪽으로 가면 좋은 일이 있어요.', '별은 길을 알려 주는데 저는 길을 잃어요.'], ['당신의 별자리가 반짝이고 있어요.', '오늘은 특별히 무료로 점쳐 줄게요.'], ['운명의 친구여, 오늘도 별이 당신 편이에요.', '당신과 만난 건 별자리에도 쓰여 있었어요.']],
+    story: { 2: ['사실 저 길치예요. 별 보는 사람이 길을 잃다니, 웃기죠?', '그래도 하늘 길은 절대 안 헤매요.'], 5: ['요즘 별자리가 이상해요. 호박달 옆에 처음 보는 붉은 별이 떴어요.', '큰일이 시작되려는 징조예요. 학교에 손님들이 찾아올지도…'], 8: ['붉은 별은 「겁 많은 별」이래요. 무언가를 무서워하는 존재의 별.', '그 존재를 도와주는 게 우리 몫일지도 몰라요.'], 10: ['당신은 별의 아이예요. 앞으로 올 일들을 잘 헤쳐 나갈 거예요.', '이건 행운의 부적이에요. 별가루를 담았어요.'] },
+    reward: { 2: { coin: 40 }, 5: { mana: 10 }, 8: { items: { g2_stardust: 2 } }, 10: { coin: 250, know: 1, mana: 15 } } },
+  { id: 'leo', name: '레오', title: '사육장 관리인', av: true, look: 5, map: 'barn', x: 14, y: 22, likes: ['milk', 'hegg', 'd_loachsoup'], dislikes: ['d_poisoncandy'],
+    greet: [['…뭐. 볼일 있으면 말해.', '생물들 밥은 줬나.'], ['오늘 박쥐들 컨디션이 좋더군.', '…너, 생물 다루는 손이 나쁘지 않아.'], ['왔나. 차 한잔 하고 가.', '저 녀석이 너만 보면 꼬리를 흔들어.'], ['너라면 우리 사육장을 맡겨도 되겠어.', '…고맙다. 이 말 처음 해 본다.']],
+    story: { 2: ['생물들은 거짓말을 안 해. 그래서 사람보다 편해.', '…방금 건 혼잣말이다.'], 5: ['3년 전, 알 하나를 잃어버렸어. 아기 용 알이었지.', '폭풍이 치던 밤에 둥지에서 굴러떨어져서… 아직도 찾고 있어.'], 8: ['호수 근처에서 알 껍질 조각을 찾았다고? …용 비늘 무늬가 맞아.', '살아 있어. 어딘가에서 자라고 있을 거야.'], 10: ['네 덕분에 다시 희망이 생겼어.', '이건 우리 사육장에서 제일 귀한 알이야. 네가 키워 줘.'] },
+    reward: { 2: { coin: 40 }, 5: { items: { hegg: 3 } }, 8: { mana: 15 }, 10: { coin: 200, items: { egg: 1 } } } },
+];
+let npcOver = {};   // 관리자가 고친 내용 (npcs/<id>)
+const npcAll = () => { const ids = [...NPC_DEF.map(n => n.id), ...Object.keys(npcOver).filter(id => !NPC_DEF.find(n => n.id === id))];
+  return ids.map(id => ({ ...(NPC_DEF.find(n => n.id === id) || { id, av: true, look: 1, map: 'campus', x: 20, y: 31, likes: [], dislikes: [], greet: [[], [], [], []], story: {}, reward: {} }), ...(npcOver[id] || {}) })).filter(n => !n.off); };
+const npcGet = id => npcAll().find(n => n.id === id);
+const npcAv = n => n.av ? (n.avData ? World.Avatar.fix(n.avData) : World.Avatar.fromLook(n.look || 1)) : null;
+function syncNpcs(){ World.setNpcs(npcAll().map(n => ({ id: n.id, name: n.name, map: n.map, x: n.x, y: n.y, dir: n.dir || 'down', ...(n.av ? { av: npcAv(n) } : { spr: n.spr, h: n.h }) })), `art/npcs.png?v=${NPC_ART_V}`); }
+const npcSt = id => { me.npc = me.npc || {}; return me.npc[id] = me.npc[id] || { p: 0, s: [] }; };
+const hearts = id => Math.min(10, Math.floor((me.npc?.[id]?.p || 0) / 3));
+const heartBar = h => '♥'.repeat(h) + '♡'.repeat(10 - h);
+const STORY_AT = [2, 5, 8, 10];
+function npcPortrait(n){ return n.av ? `<img src="${World.Avatar.head(npcAv(n))}" alt="">` : `<i class="npcspr" style="background:url(art/npcs.png?v=${NPC_ART_V}) ${-48 * n.spr}px 0/${48 * 6}px 48px"></i>`; }
+const npcUI = () => $('#npcui');
+function npcClose(){ npcUI().classList.remove('on'); npcUI().innerHTML = ''; }
+function npcPanel(n, text, btns){
+  const h = hearts(n.id);
+  npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${npcPortrait(n)}</div><div><b>${esc(n.name)}</b><span class="s sub">${esc(n.title || '')}</span><span class="npchr">${heartBar(h)}</span></div><button class="sx" data-nx="close">✕</button></div>
+    <div class="npct">${text}</div><div class="frow">${btns}</div></div>`;
+  npcUI().classList.add('on');
+}
+World.onNpc = id => { const n = npcGet(id); if (!n || !me) return; World.hideBubble(); npcMenu(n); };
+function npcMenu(n, line){
+  const st = npcSt(n.id), h = hearts(n.id), lv = h >= 9 ? 3 : h >= 6 ? 2 : h >= 3 ? 1 : 0, g = (n.greet || [])[lv] || (n.greet || [])[0] || ['…'];
+  const talked = st.t === todayKey(), gifted = st.g === todayKey();
+  npcPanel(n, esc(line || g[(new Date().getDate() + n.id.length) % g.length] || '…'),
+    `<button class="btn sm ${talked ? '' : 'go'}" data-nx="talk">💬 대화${talked ? ' (오늘 함)' : ''}</button><button class="btn sm ${gifted ? '' : 'go'}" data-nx="gift">🎁 선물${gifted ? ' (오늘 줌)' : ''}</button><button class="btn sm" data-nx="story">📖 이야기</button>`);
+  npcUI().dataset.id = n.id;
+}
+function npcAddPts(n, d, why){
+  const st = npcSt(n.id), before = hearts(n.id); st.p = Math.max(0, st.p + d); const after = hearts(n.id);
+  save(); if (after > before) toast(`${n.name} ♥${after}!`);
+  const next = STORY_AT.find(k => after >= k && !st.s.includes(k));
+  if (next) return npcScene(n, next, 0, true);
+  npcMenu(n, why);
+}
+function npcScene(n, k, i, fresh){
+  const lines = (n.story || {})[k] || [], st = npcSt(n.id);
+  if (i >= lines.length){
+    if (fresh && !st.s.includes(k)){ st.s.push(k); const r = (n.reward || {})[k] || {}; const got = [];
+      if (r.coin){ me.coin += r.coin; got.push(`${r.coin}G`); } if (r.mana){ me.mana += r.mana; got.push(`마력 +${r.mana}`); } if (r.know){ me.know = (me.know || 0) + r.know; got.push(`지식 +${r.know}`); }
+      Object.entries(r.items || {}).forEach(([it, c]) => { me.inv[it] = (me.inv[it] || 0) + c; got.push(`${ITEM[it] || it} ×${c}`); });
+      save(); hud(); if (got.length) toast(`${n.name}의 선물: ${got.join(', ')}`); }
+    return npcMenu(n);
+  }
+  npcPanel(n, `<span class="npcsc">♥${k} 이야기 · ${i + 1}/${lines.length}</span>${esc(lines[i])}`, `<button class="btn sm go" data-nx="next" data-k="${k}" data-i="${i + 1}" data-f="${fresh ? 1 : 0}">다음 ▶</button>`);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-nx]'); if (!b || !npcUI().contains(b)) return;
+  const n = npcGet(npcUI().dataset.id); if (!n) return npcClose(); const st = npcSt(n.id), act = b.dataset.nx;
+  if (act === 'close') return npcClose();
+  if (act === 'talk'){ if (st.t === todayKey()) return npcMenu(n, '오늘은 이미 이야기 나눴어요. 내일 또 와요!'); st.t = todayKey(); return npcAddPts(n, 1, ((n.greet || [])[Math.min(3, Math.floor(hearts(n.id) / 3))] || ['…']).slice(-1)[0]); }
+  if (act === 'gift'){ npcClose(); npcGiftId = n.id; return openSheet('home', 'npcgift'); }
+  if (act === 'story'){ npcClose(); npcGiftId = n.id; return openSheet('home', 'npcstory'); }
+  if (act === 'next') return npcScene(n, +b.dataset.k, +b.dataset.i, b.dataset.f === '1');
+});
+let npcGiftId = null, npcMsg = '';
+function renderNpcGift(){
+  const n = npcGet(npcGiftId); if (!n) return closeSheet();
+  const st = npcSt(n.id), h = hearts(n.id), done = st.g === todayKey();
+  const items = [...POTIONS, ...MATS, ...CATCH, ...DISHES].filter(k => me.inv[k] > 0);
+  frame(null, `${esc(n.name)}에게 선물`, `${heartBar(h)} · 하루 한 번`, `${hint(npcMsg, done ? '오늘은 이미 선물했어요. 내일 또 줘요!' : '좋아하는 걸 주면 ♥가 쑥 올라요')}
+    ${h >= 2 ? `<div class="box px" style="padding:8px">좋아하는 것: ${n.likes.map(k => `${ic(k, 'transform:scale(.7);margin:-6px')} ${esc(ITEM[k] || k)}`).join(' · ')}</div>` : '<div class="hint">♥2가 되면 좋아하는 걸 알려 줘요</div>'}
+    <div class="pal">${items.map(k => `<button class="cell" style="width:52px;min-height:52px;padding:0" data-ngive="${k}" ${done ? 'disabled' : ''}>${ic(k)}<span class="n">${me.inv[k]}</span></button>`).join('') || '<div class="hint">줄 수 있는 물건이 없어요</div>'}</div>${backBtn}`);
+  $('#back').onclick = closeSheet;
+  on('[data-ngive]', b => { const k = b.dataset.ngive; if (done || !(me.inv[k] > 0)) return; me.inv[k]--; st.g = todayKey();
+    const d = n.likes.includes(k) ? 3 : n.dislikes.includes(k) ? -1 : 1, line = d === 3 ? '우와, 이거 정말 좋아해요! 고마워요!' : d < 0 ? '으… 이건 좀 별로예요.' : '고마워요, 잘 쓸게요.';
+    npcMsg = ''; closeSheet(); setTimeout(() => npcAddPts(n, d, line), 100); });
+}
+function renderNpcStory(){
+  const n = npcGet(npcGiftId); if (!n) return closeSheet();
+  const st = npcSt(n.id), h = hearts(n.id);
+  frame(null, `${esc(n.name)}의 이야기`, `${esc(n.title || '')} · ${heartBar(h)}`, `<div class="box px">${STORY_AT.map(k => { const open = st.s.includes(k); return `<div class="li"><span class="gic">${open ? '📖' : '🔒'}</span><div class="main"><span class="t">♥${k} 이야기</span><span class="d" style="white-space:normal">${open ? esc(((n.story || {})[k] || []).join(' ')) : `♥${k}가 되면 열려요`}</span></div>${open ? `<button class="btn sm" data-nre="${k}">다시 보기</button>` : ''}</div>`; }).join('')}</div>
+    <div class="box px" style="padding:8px">하루 한 번 대화 ♥ · 선물: 좋아하는 것 +3, 보통 +1, 싫어하는 것 -1 (점수 3 = ♥1)</div>${backBtn}`);
+  $('#back').onclick = closeSheet;
+  on('[data-nre]', b => { closeSheet(); npcScene(n, +b.dataset.nre, 0, false); });
+}
+// ---------- 관리자: NPC 호감도 표 · 사람 NPC 편집 ----------
+let adNpc = null, adNpcDraft = null;
+function adminNpcHTML(){
+  const P = AD.players, ids = Object.keys(P).filter(id => P[id]?.nick), all = npcAll();
+  const table = `<div class="adtbl npc"><div class="h"><span>학생</span>${all.map(n => `<span>${esc(n.name)}</span>`).join('')}</div>
+    ${ids.map(id => `<div><span><b>${esc(P[id].nick)}</b></span>${all.map(n => { const p = P[id].npc?.[n.id]?.p || 0; return `<span>♥${Math.min(10, Math.floor(p / 3))}</span>`; }).join('')}</div>`).join('')}</div>`;
+  const pick = `<div class="adseg">${all.map(n => `<button data-adnpc="${n.id}" class="${adNpc === n.id ? 'on' : ''}">${esc(n.name)}${n.av ? '' : ' 🐾'}</button>`).join('')}<button data-adnpc="__new">+ 사람 NPC</button></div>`;
+  let ed = '';
+  if (adNpc && adNpcDraft){ const d = adNpcDraft, maps = ['campus', 'lab', 'candy', 'craft', 'toxic', 'barn'];
+    ed = `<div class="adcard adnpced">
+      ${d.av ? `<div class="adav"><img src="${avThumb(World.Avatar.fix(d.avData || World.Avatar.fromLook(d.look || 1)))}" alt=""><div class="adavc">${['body', 'skinC', 'hair', 'hairC', 'eyeC', 'face', 'top', 'topC', 'legs', 'legsC', 'feet', 'feetC', 'hat', 'hatC', 'acc', 'accC', 'neck', 'cape'].map(k => `<span>${k}<button data-adavk="${k}" data-adavd="-1">◀</button><button data-adavk="${k}" data-adavd="1">▶</button></span>`).join('')}<button data-adavrand="1">🎲 무작위</button></div></div>` : `<div class="s">🐾 그림 NPC는 생김새를 바꿀 수 없어요 (이름·대사·장소·선물은 바꿀 수 있어요)</div>`}
+      <label>이름 <input data-adf="name" value="${esc(d.name || '')}"></label><label>직업 <input data-adf="title" value="${esc(d.title || '')}"></label>
+      <label>장소 <select data-adf="map">${maps.map(m => `<option value="${m}" ${d.map === m ? 'selected' : ''}>${esc(World.meta(m)?.title || m)}</option>`).join('')}</select></label>
+      <label>칸 x <input data-adf="x" type="number" value="${d.x}"></label><label>칸 y <input data-adf="y" type="number" value="${d.y}"></label>
+      <label>좋아하는 것 (이름, 쉼표) <input data-adf="likes" value="${esc((d.likes || []).map(k => ITEM[k] || k).join(', '))}"></label>
+      <label>싫어하는 것 <input data-adf="dislikes" value="${esc((d.dislikes || []).map(k => ITEM[k] || k).join(', '))}"></label>
+      ${[0, 1, 2, 3].map(i => `<label>인사말 ♥${[0, 3, 6, 9][i]}~ (한 줄에 하나) <textarea data-adg="${i}" rows="2">${esc(((d.greet || [])[i] || []).join('\n'))}</textarea></label>`).join('')}
+      ${STORY_AT.map(k => `<label>♥${k} 이야기 (한 줄 = 한 장면) <textarea data-ads="${k}" rows="3">${esc(((d.story || {})[k] || []).join('\n'))}</textarea></label>`).join('')}
+      <div class="frow"><button class="btn sm go" data-adnsave="1">저장하기</button>${d.av && !NPC_DEF.find(n => n.id === adNpc) ? '<button class="btn sm" data-adndel="1">삭제</button>' : ''}<button class="btn sm" data-adnreset="1">기본값으로</button></div></div>`; }
+  return `<div class="adcard"><b>학생 × NPC 호감도</b>${table}</div>${pick}${ed}`;
+}
+document.addEventListener('click', e => {
+  const t = e.target; if (!$('#adminv') || !$('#adminv').contains(t)) return;
+  const b = t.closest('[data-adnpc],[data-adavk],[data-adavrand],[data-adnsave],[data-adndel],[data-adnreset]'); if (!b) return;
+  if (b.dataset.adnpc){ const id = b.dataset.adnpc === '__new' ? 'h' + Date.now().toString(36) : b.dataset.adnpc; adNpc = id; const n = npcGet(id) || { id, name: '새 NPC', title: '', av: true, look: 1, map: 'campus', x: 20, y: 31, likes: [], dislikes: [], greet: [['안녕!'], [], [], []], story: {} }; adNpcDraft = JSON.parse(JSON.stringify(n)); if (n.av && !adNpcDraft.avData) adNpcDraft.avData = World.Avatar.fromLook(n.look || 1); return adminRender(); }
+  adminNpcRead();
+  const d = adNpcDraft; if (!d) return;
+  if (b.dataset.adavk){ const k = b.dataset.adavk, A = World.Avatar, Mt = A.meta, av = d.avData; const max = k === 'body' ? 2 : k.endsWith('C') ? (Mt.colors[{ skinC: 'skin', hairC: 'hair', eyeC: 'eye', topC: 'cloth', legsC: 'bottom', feetC: 'shoe', hatC: 'cloth', accC: 'cloth' }[k]] || []).length : (Mt.parts[k] || []).length; if (max) av[k] = ((av[k] || 0) + +b.dataset.adavd + max) % max; d.avData = A.fix(av); return adminRender(); }
+  if (b.dataset.adavrand){ d.avData = World.Avatar.random(); return adminRender(); }
+  if (b.dataset.adnsave){ const keep = { name: d.name, title: d.title, map: d.map, x: +d.x, y: +d.y, likes: d.likes, dislikes: d.dislikes, greet: d.greet, story: d.story, ...(d.av ? { av: true, avData: d.avData } : {}) };
+    F.set(F.ref(db, 'npcs/' + adNpc), keep).then(() => toast('저장했어요 · 모두에게 바로 반영돼요')).catch(ex => toast('저장 실패: ' + (ex.code || ex.message))); return; }
+  if (b.dataset.adndel){ F.set(F.ref(db, 'npcs/' + adNpc), null); adNpc = null; adNpcDraft = null; return adminRender(); }
+  if (b.dataset.adnreset){ F.set(F.ref(db, 'npcs/' + adNpc), null); adNpcDraft = JSON.parse(JSON.stringify(NPC_DEF.find(n => n.id === adNpc) || adNpcDraft)); return adminRender(); }
+});
+// 편집 칸의 글을 초안에 옮겨요 (이름으로 쓴 선물은 물건 id로)
+function adminNpcRead(){
+  const d = adNpcDraft, root = $('#adminv'); if (!d || !root) return;
+  const byName = s => s.split(',').map(x => x.trim()).filter(Boolean).map(x => Object.keys(ITEM).find(k => ITEM[k] === x) || x);
+  root.querySelectorAll('[data-adf]').forEach(el => { const k = el.dataset.adf; d[k] = (k === 'likes' || k === 'dislikes') ? byName(el.value) : el.value; });
+  root.querySelectorAll('[data-adg]').forEach(el => { d.greet = d.greet || [[], [], [], []]; d.greet[+el.dataset.adg] = el.value.split('\n').map(x => x.trim()).filter(Boolean); });
+  root.querySelectorAll('[data-ads]').forEach(el => { d.story = d.story || {}; d.story[el.dataset.ads] = el.value.split('\n').map(x => x.trim()).filter(Boolean); });
+}
 // 바로 가기: 그 장소로 순간 이동한 다음 화면을 열어요
 const goPlace = (mapId, obj, t, s) => { closeSheet(); World.teleport(mapId, obj, () => openSheet(t, s)); };
 const ACT_GO = { '물약 끓이기':'lab', '재료함 열기':'lab', '재료 꺼내기':'lab', '레시피 노트 보기':'lab', '시장 보기':'market', '박쥐 돌보기':'ranch', '모이 주기':'ranch', '독초 돌보기':'green', '물 주기':'green' };
@@ -1652,6 +1838,8 @@ function render(){
   if (sub === 'fish') return renderFish();
   if (sub === 'games') return renderGames();
   if (sub === 'cook') return renderCook();
+  if (sub === 'npcgift') return renderNpcGift();
+  if (sub === 'npcstory') return renderNpcStory();
   if (sub === 'event') return renderEvent();
   if (sub === 'exam') return renderExam();
   ({ home:renderHome, lab:renderLab, green:renderGreen, ranch:renderRanch, market:renderMarket })[tab]();
@@ -3083,6 +3271,7 @@ async function boot(){
       F.onDisconnect(oref).remove();
       F.onValue(F.ref(db, 'online'), s => { onlineList = s.val() || {}; onOnline(); const k = Object.keys(onlineList).sort().join(); if (k !== onlineKeys){ onlineKeys = k; if (tab === 'home' && !sub) render(); } });
       F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; });
+      F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; syncNpcs(); });
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); if (sub === 'games') render(); });
       Object.keys(GAMES).forEach(g => F.onValue(F.ref(db, `records/${g}/${weekKey()}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); }));
       setInterval(syncInvites, 3000);
