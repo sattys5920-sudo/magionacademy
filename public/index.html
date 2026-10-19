@@ -2459,11 +2459,11 @@ function storyReward(c){
   me.story.got[c] = 1; me.coin += coin; me.mana += mana; save(); hud(); toast(`${c}장 보상: ${coin}G · 마력 +${mana}${rank <= 3 ? ` (많이 도운 ${rank}등!)` : ''}`);
 }
 // 메인 주인공 초상화 (public/art/portraits/<id>.png, 5칸: 기본·웃음·화남·놀람·부끄러움 — tools/portraits.py)
-const PORTRAITS = { m_jack: ['jack', '128/171'], m_lucian: ['lucian', '224/300'] }, PORTRAIT_V = 2, PFACE = ['neutral', 'happy', 'angry', 'surprised', 'shy'];
+const PORTRAITS = { m_jack: ['jack', '128/171'], m_lucian: ['lucian', '224/300'], m_mirabel: ['mirabel', '224/300'] }, PORTRAIT_V = 3, PFACE = ['neutral', 'happy', 'angry', 'surprised', 'shy'];
 // 대사 내용으로 표정 고르기 (따로 표시가 없을 때)
 function faceOf(t){
   if (/\[(기본|웃음|화남|놀람|부끄러움)\]/.test(t)) return ['기본', '웃음', '화남', '놀람', '부끄러움'].indexOf(/\[(기본|웃음|화남|놀람|부끄러움)\]/.exec(t)[1]);
-  if (/헉|깜짝|으악|어\?|뭐\?|세상에|정말\?|진짜\?|!\?/.test(t)) return 3;
+  if (/헉|깜짝|으악|어\?|뭐\?|세상에|어머|큰일|이대로면|도와|정말\?|진짜\?|!\?/.test(t)) return 3;
   if (/부끄|저, 저|그, 그|미안|죄송|어쩌지|창피/.test(t)) return 4;
   if (/화나|흥|용서|가만두지|안 돼!|그만|짜증/.test(t)) return 2;
   if (/고마워|좋아|하하|헤헤|기뻐|최고|다행|와아|신난|!/.test(t)) return 1;
