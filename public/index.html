@@ -510,6 +510,19 @@ button.cell:not(:disabled):active{background:var(--line)}
 .ckneed{display:flex;flex-wrap:wrap;gap:6px}.ckneed span{display:inline-flex;align-items:center;gap:2px;min-height:32px;padding:0 10px 0 4px;border-radius:16px;background:var(--panel);border:1px solid var(--line2);font-size:var(--fs-s);line-height:1.3;font-variant-numeric:tabular-nums}.ckneed span.ok{border-color:var(--ok2);color:var(--ok)}.ckneed span.no{color:var(--sub)}.ckneed span.no .ic{opacity:.5}
 .ckbuff{display:flex;flex-wrap:wrap;gap:6px}.ckbuff span{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border-radius:18px;background:var(--soft);border:1px solid var(--line2);font-size:var(--fs-s);font-family:var(--f-pxb);color:var(--gold)}
 /* @css:clothes */
+.avstage.cmp{height:160px;padding-bottom:6px}
+.avstage.cmp canvas{width:128px;height:128px}
+.avstage .kind{position:absolute;left:8px;top:8px;grid-template-columns:1fr 1fr}
+.avstage .kind button{min-width:56px}
+.avwrap .seg button{min-height:44px}
+.avwrap .sec{gap:10px}
+.avopts.pg{grid-auto-rows:1fr}
+.avo{position:relative}.avo .p{position:absolute;right:3px;top:2px;font-family:var(--f-pxb);font-size:var(--fs-s);line-height:1;color:var(--gold);font-variant-numeric:tabular-nums}.avo .p.own{color:var(--ok)}
+.pager{display:flex;align-items:center;justify-content:center;gap:8px}
+.pager .btn{min-width:48px;padding:0}
+.pager .tog{margin-left:auto;padding:0 10px}
+.pager .s{min-width:56px;text-align:center;color:var(--sub)}
+.avbtns{display:flex;gap:8px}.avbtns .btn{flex:1;min-width:0;padding:0 8px}
 /* @css:room */
 /* @css:fish */
 .fdet{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:8px 12px;min-height:64px;text-align:left}.fdet .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.fdet .t{font-family:var(--f-pxb);line-height:1.3}.fdet .d{font-size:var(--fs-s);line-height:1.4;color:var(--sub);white-space:normal}
@@ -4715,15 +4728,64 @@ async function showCredits(){
     <button class="btn" id="crClose">닫기</button></div>`;
   document.body.appendChild(d); d.querySelector('#crClose').onclick = () => d.remove();
 }
-// 시트: 나중에 다시 꾸미기
+// 시트: 나중에 다시 꾸미기 (한 화면: 분류 탭 하나씩, 12개씩 넘겨 봐요)
 let avDraft = null;
+const AV_PAGE = 12;
+const AV_SHEET_CATS = AV_TABS.flatMap(([, , rows]) => rows);   // [제목, 부품(없으면 색만), 색 키, 팔레트]
+const SHOP_COLOR = { top: ['topC', 'cloth'], legs: ['legsC', 'bottom'], feet: ['feetC', 'shoe'], hat: ['hatC', 'cloth'], acc: ['accC', 'cloth'] };
+let avSel = 0, avMode = 'part', avPage = {}, shopCat = 'top', shopMode = 'part', shopPage = {};
+// 미리보기 걷기 애니메이션 (시트가 닫혀 캔버스가 사라지면 스스로 멈춰요)
+function avPlay(cv, av){
+  const A = World.Avatar, M = A.meta; clearInterval(avTimer); let t = 0;
+  const paint = () => { if (!document.body.contains(cv)) return clearInterval(avTimer); const g = cv.getContext('2d'), W = M.walk, fr = M.dirs[AV_VIEWS[avView][0]] + W[t++ % W.length]; g.clearRect(0, 0, A.FW, A.FH); g.drawImage(A.compose(av), fr * A.FW, 0, A.FW, A.FH, 0, 0, A.FW, A.FH); };
+  paint(); avTimer = setInterval(paint, 160);
+}
+const avTabShow = () => { const b = app.querySelector('.avwrap .seg.scroll button.on'), g = b?.parentElement; if (g) g.scrollLeft = b.offsetLeft - (g.clientWidth - b.offsetWidth) / 2; };   // 고른 분류 탭이 가운데 보이게
+const avStage = (id, turnId, extra = '') => `<div class="avstage cmp px"><canvas id="${id}" width="${World.Avatar.FW}" height="${World.Avatar.FH}"></canvas>${extra}<button class="btn sm" id="${turnId}">↻ ${AV_VIEWS[(avView + 1) % AV_VIEWS.length][1]}</button></div>`;
+// 12개씩 나눠요: 처음 열 때는 지금 고른 것이 있는 쪽을 펼쳐요
+const avSlice = (items, key, store, curIdx) => {
+  const pages = Math.max(1, Math.ceil(items.length / AV_PAGE));
+  if (store[key] === undefined){ const at = items.findIndex(([, i]) => i === curIdx); store[key] = at < 0 ? 0 : Math.floor(at / AV_PAGE); }
+  const p = store[key] = Math.min(Math.max(0, store[key]), pages - 1);
+  return { p, pages, items: items.slice(p * AV_PAGE, (p + 1) * AV_PAGE) };
+};
+// 쪽 넘기기(◀ 1/5 ▶)와 모양↔색 전환을 한 줄에: 색 전환 버튼은 색을 고를 수 있는 분류에만 있어요
+const avPager = (p, pages, attr, mode, modeAttr) => pages > 1 || modeAttr ? `<div class="pager">${pages > 1 && mode === 'part' ? `<button class="btn sm" data-${attr}="-1" ${p ? '' : 'disabled'} aria-label="이전 쪽">◀</button><span class="s num">${p + 1} / ${pages}</span><button class="btn sm" data-${attr}="1" ${p < pages - 1 ? '' : 'disabled'} aria-label="다음 쪽">▶</button>` : ''}${modeAttr ? `<button class="btn sm tog" data-${modeAttr}="${mode === 'part' ? 'color' : 'part'}">${mode === 'part' ? '🎨 색 고르기' : '◂ 모양 고르기'}</button>` : ''}</div>` : '';
+const avSwatch = (pal, key, cur, attr) => { const M = World.Avatar.meta; return `<div class="pal">${M.colors[pal].map((nm, i) => `<button class="sw ${cur === i ? 'on' : ''}" data-${attr}="${key},${i}" style="background:${M.pal[pal][nm][Math.min(3, M.pal[pal][nm].length - 1)]}" aria-label="색 ${i + 1}"></button>`).join('')}</div>`; };
 function renderAvatar(){
+  const A = World.Avatar, M = A.meta;
   if (!avDraft) avDraft = { ...me.av, house: me.house };
+  const av = avDraft = Object.assign(A.fix(avDraft), { house: avDraft.house }), body = M.bodies[av.body || 0];
+  const [label, cat, key0, pal] = AV_SHEET_CATS[avSel];
+  const key = key0 === 'topC' && !casualOn(av) ? null : key0;   // 교복 색은 정해져 있어요
+  const mode = !cat ? 'color' : !key ? 'part' : avMode;
+  const items = !cat ? [] : cat === 'body' ? AV_BODIES.map((p, i) => [p, i]) : M.parts[cat].map((p, i) => [p, i]).filter(([p, i]) => (p.f === null || p.L[body]) && ownCloth(cat, i));
+  const pg = avSlice(items, cat, avPage, cat ? av[cat] || 0 : 0);
+  const cur = !cat ? `${av[key] + 1} / ${M.colors[pal].length}` : cat === 'body' ? AV_BODIES[av.body || 0].n : M.parts[cat][av[cat]].n;
   frame(null, '캐릭터 꾸미기', '머리부터 발끝까지 골라요', `
-    ${avatarUI(avDraft)}
-    <button class="btn sm" id="avShop" style="align-self:center">👗 옷 가게에서 사복·잠옷 사기</button>
-    <div style="display:flex;gap:8px"><button class="btn px" id="avCancel" style="flex:1">그만두기</button><button class="btn go px" id="avSave" style="flex:2">이 모습으로!</button></div>`);
-  bindAvatarUI(avDraft, () => { const p = app.querySelector('.panel'), y = p.scrollTop; renderAvatar(); app.querySelector('.panel').scrollTop = y; });
+    <div class="avwrap">
+      ${avStage('avCv', 'avTurn')}
+      <div class="seg scroll">${AV_SHEET_CATS.map(([l], i) => `<button data-avs="${i}" class="${avSel === i ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <section class="sec">${secH(label, cur)}
+        ${mode === 'part' ? `<div class="avopts pg">${pg.items.map(([p, i]) => `<button class="avo ${av[cat] === i ? 'on' : ''}" data-avp="${cat},${i}"><img src="${avThumb({ ...av, [cat]: i }, !!AV_HEADTHUMB[cat])}" alt=""><span class="s">${p.n}</span></button>`).join('')}</div>` : avSwatch(pal, key, av[key], 'avc')}
+        ${cat ? avPager(pg.p, pg.pages, 'avpg', mode, key ? 'avm' : null) : ''}
+        ${cat === 'neck' || cat === 'cape' ? `<div class="hint">넥타이와 망토 안감은 기숙사 색이에요${av.house ? ` · ${HOUSES[av.house].name}` : ''}</div>` : key0 === 'topC' && !key ? '<div class="hint">교복 색은 정해져 있어요 · 사복·잠옷은 색을 고를 수 있어요</div>' : ''}
+      </section>
+      <div class="avbtns"><button class="btn sm" id="avRand">🎲 아무거나</button><button class="btn sm" id="avShop">👗 옷 가게</button><button class="btn sm ghost" id="avCredits">그림 크레딧</button></div>
+      <div class="avbtns"><button class="btn px" id="avCancel">그만두기</button><button class="btn go px" id="avSave" style="flex:2">이 모습으로!</button></div>
+    </div>`);
+  const cv = $('#avCv'); avPlay(cv, av); avTabShow();
+  const redraw = () => { const p = app.querySelector('.panel'), y = p.scrollTop; renderAvatar(); app.querySelector('.panel').scrollTop = y; };
+  // 이 분류 부품 그림을 다 불러온 뒤 썸네일을 다시 그려요
+  if (cat && cat !== 'body' && cat !== 'lip' && !avLoaded.has('av:' + cat)) A.preload([cat]).then(() => { avLoaded.add('av:' + cat); if (sub === 'avatar' && document.body.contains(cv)) redraw(); });
+  on('[data-avs]', b => { avSel = +b.dataset.avs; avMode = 'part'; redraw(); });
+  on('[data-avm]', b => { avMode = b.dataset.avm; redraw(); });
+  on('[data-avpg]', b => { avPage[cat] += +b.dataset.avpg; redraw(); });
+  on('[data-avp]', b => { const [c, i] = b.dataset.avp.split(','); av[c] = +i; Object.assign(av, A.fix(av), { house: av.house }); redraw(); });
+  on('[data-avc]', b => { const [k, i] = b.dataset.avc.split(','); av[k] = +i; redraw(); });
+  $('#avTurn').onclick = () => { avView = (avView + 1) % AV_VIEWS.length; redraw(); };
+  $('#avRand').onclick = () => { Object.assign(av, A.random(), { house: av.house }); avPage = {}; redraw(); };
+  $('#avCredits').onclick = showCredits;
   $('#avCancel').onclick = () => { avDraft = null; closeSheet(); };
   $('#avShop').onclick = () => { avDraft = null; shopTry = null; openSheet('home', 'clothes'); };
   $('#avSave').onclick = () => {
@@ -4741,23 +4803,29 @@ function renderClothes(){
   const A = World.Avatar, M = A.meta, body = M.bodies[me.av.body || 0];
   if (!shopTry) shopTry = { ...me.av, house: me.house };
   const cost = SHOP_CATS.reduce((n, [c]) => n + (ownCloth(c, shopTry[c]) ? 0 : M.parts[c][shopTry[c]].p || 0), 0);
-  const swatch = (pal, key) => `<div class="pal">${M.colors[pal].map((nm, i) => `<button class="sw ${shopTry[key] === i ? 'on' : ''}" data-shc="${key},${i}" style="background:${M.pal[pal][nm][Math.min(3, M.pal[pal][nm].length - 1)]}" aria-label="색 ${i + 1}"></button>`).join('')}</div>`;
+  const itemsOf = c => M.parts[c].map((p, i) => [p, i]).filter(([p]) => p.k === shopKind && p.L[body]);
+  const cats = SHOP_CATS.filter(([c]) => itemsOf(c).length);   // 잠옷은 상의·하의·신발만 있어요
+  if (!cats.some(([c]) => c === shopCat)) shopCat = cats[0][0];
+  const [, label] = cats.find(([c]) => c === shopCat), col = SHOP_COLOR[shopCat], mode = col ? shopMode : 'part';
+  const pg = avSlice(itemsOf(shopCat), shopKind + ':' + shopCat, shopPage, shopTry[shopCat]);
   frame(null, '옷 가게', `내 돈 ${me.coin}G · 입어 보고 마음에 들면 사요`, `
     <div class="avwrap">
-      <div class="avstage px"><canvas id="shCv" width="${A.FW}" height="${A.FH}"></canvas><button class="btn sm" id="shTurn">↻ ${AV_VIEWS[(avView + 1) % AV_VIEWS.length][1]}</button></div>
-      <div class="seg" style="grid-template-columns:1fr 1fr">${[['cas', '사복'], ['pj', '잠옷']].map(([k, l]) => `<button data-shk="${k}" class="${shopKind === k ? 'on' : ''}">${l}</button>`).join('')}</div>
-      ${SHOP_CATS.map(([c, label]) => { const its = M.parts[c].map((p, i) => [p, i]).filter(([p]) => p.k === shopKind && p.L[body]); return its.length ? `<section class="sec">${secH(label, M.parts[c][shopTry[c]].n)}
-        <div class="avopts">${its.map(([p, i]) => `<button class="avo ${shopTry[c] === i ? 'on' : ''}" data-try="${c},${i}"><img src="${avThumb({ ...shopTry, [c]: i }, c === 'hat' || c === 'acc')}" alt=""><span class="s">${p.n}</span><span class="s b" style="color:${ownCloth(c, i) ? 'var(--mint2)' : 'var(--gold2)'}">${ownCloth(c, i) ? '내 옷' : p.p + 'G'}</span></button>`).join('')}</div></section>` : ''; }).join('')}
-      <section class="sec">${secH('옷 색', '사복·잠옷')}${swatch('cloth', 'topC')}<div class="s" style="margin:6px 0 2px">모자 색</div>${swatch('cloth', 'hatC')}<div class="s" style="margin:6px 0 2px">액세서리 색</div>${swatch('cloth', 'accC')}<div class="s" style="margin:6px 0 2px">하의 색</div>${swatch('bottom', 'legsC')}<div class="s" style="margin:6px 0 2px">신발 색</div>${swatch('shoe', 'feetC')}</section>
+      ${avStage('shCv', 'shTurn', `<div class="seg kind">${[['cas', '사복'], ['pj', '잠옷']].map(([k, l]) => `<button data-shk="${k}" class="${shopKind === k ? 'on' : ''}">${l}</button>`).join('')}</div>`)}
+      <div class="seg scroll">${cats.map(([c, l]) => `<button data-shcat="${c}" class="${shopCat === c ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <section class="sec">${secH(label, M.parts[shopCat][shopTry[shopCat]].n)}
+        ${mode === 'part' ? `<div class="avopts pg">${pg.items.map(([p, i]) => `<button class="avo ${shopTry[shopCat] === i ? 'on' : ''}" data-try="${shopCat},${i}"><img src="${avThumb({ ...shopTry, [shopCat]: i }, shopCat === 'hat' || shopCat === 'acc')}" alt=""><span class="s">${p.n}</span><span class="p ${ownCloth(shopCat, i) ? 'own' : ''}">${ownCloth(shopCat, i) ? '내 옷' : p.p + 'G'}</span></button>`).join('')}</div>` : avSwatch(col[1], col[0], shopTry[col[0]], 'shc')}
+        ${avPager(pg.p, pg.pages, 'shpg', mode, col ? 'shm' : null)}
+      </section>
       ${hint(shopMsg, '옷을 누르면 입어 봐요 · 산 옷은 캐릭터 꾸미기 「옷」에서 언제든 갈아입어요')}
-      <div style="display:flex;gap:8px"><button class="btn px" id="shCancel" style="flex:1">그만두기</button><button class="btn go px" id="shBuy" style="flex:2" ${me.coin >= cost ? '' : 'disabled'}>${cost ? `사서 입기 ${cost}G` : '이대로 입기'}</button></div>
+      <div class="avbtns"><button class="btn px" id="shCancel">그만두기</button><button class="btn go px" id="shBuy" style="flex:2" ${me.coin >= cost ? '' : 'disabled'}>${cost ? `사서 입기 ${cost}G` : '이대로 입기'}</button></div>
     </div>`);
-  const cv = $('#shCv'); clearInterval(avTimer); let t = 0;
-  const paint = () => { if (!document.body.contains(cv)) return clearInterval(avTimer); const g = cv.getContext('2d'), W = M.walk, fr = M.dirs[AV_VIEWS[avView][0]] + W[t++ % W.length]; g.clearRect(0, 0, A.FW, A.FH); g.drawImage(A.compose(shopTry), fr * A.FW, 0, A.FW, A.FH, 0, 0, A.FW, A.FH); };
-  paint(); avTimer = setInterval(paint, 160);
+  const cv = $('#shCv'); avPlay(cv, shopTry); avTabShow();
   const redraw = () => { const pn = app.querySelector('.panel'), y = pn?.scrollTop; renderClothes(); if (pn) app.querySelector('.panel').scrollTop = y; };
   if (!avLoaded.has('shop')) A.preload(SHOP_CATS.map(([c]) => c)).then(() => { avLoaded.add('shop'); if (sub === 'clothes' && document.body.contains(cv)) redraw(); });
-  on('[data-shk]', b => { shopKind = b.dataset.shk; redraw(); });
+  on('[data-shk]', b => { shopKind = b.dataset.shk; shopMode = 'part'; redraw(); });
+  on('[data-shcat]', b => { shopCat = b.dataset.shcat; shopMode = 'part'; redraw(); });
+  on('[data-shm]', b => { shopMode = b.dataset.shm; redraw(); });
+  on('[data-shpg]', b => { shopPage[shopKind + ':' + shopCat] += +b.dataset.shpg; redraw(); });
   on('[data-try]', b => { const [c, i] = b.dataset.try.split(','); shopTry[c] = +i; shopMsg = ''; redraw(); });
   on('[data-shc]', b => { const [k, i] = b.dataset.shc.split(','); shopTry[k] = +i; redraw(); });
   $('#shTurn').onclick = () => { avView = (avView + 1) % AV_VIEWS.length; redraw(); };
