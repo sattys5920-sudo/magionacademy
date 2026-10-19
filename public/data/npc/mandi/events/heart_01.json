@@ -1,970 +1,198 @@
 {
- "id": "mandi_heart_01",
- "npc": "mandi",
- "heart": 1,
- "title": "비명",
- "conditions": {
-  "minHeart": 1,
-  "location": "poison_greenhouse",
-  "time": [
-   "morning"
+  "id": "mandi_heart_01", "npc": "mandi", "heart": 1, "title": "비명",
+  "conditions": {"minHeart": 1, "location": "poison_greenhouse", "time": ["morning"]},
+  "scene": {"weather": "fog"},
+  "rewards": {"coin": 30, "mana": 0, "know": 0, "items": {}, "flags": [], "perk": null},
+  "script": [
+    {"cmd": "fade_in"},
+    {"cmd": "bgm", "id": "calm"},
+    {"cmd": "hide", "who": "mandi"},
+    {"cmd": "narration", "text": "아침 안개가 독초 온실 유리에 뿌옇게 맺혀 있다."},
+    {"cmd": "narration", "text": "물약 수업 숙제는 「독초 관찰 일지」. 독초 온실에는 한 번도 와 본 적이 없다."},
+    {"cmd": "line", "who": "player", "text": "여기가 독초 온실이구나. 생각보다 조용하네."},
+    {"cmd": "narration", "text": "문 옆에 나무 팻말이 비스듬히 붙어 있다."},
+    {"cmd": "narration", "text": "「맨드레이크 있음. 귀마개 필수. 놀라게 하지 마시오.」"},
+    {"cmd": "line", "who": "player", "text": "맨드레이크? 뽑으면 소리를 지른다는 그 식물?"},
+    {"cmd": "line", "who": "player", "text": "에이, 설마. 그냥 겁주려고 붙여 둔 거겠지."},
+    {"cmd": "sfx", "id": "door"},
+    {"cmd": "narration", "text": "삐걱, 유리문이 열린다. 축축한 흙냄새와 쌉싸름한 풀 냄새가 훅 끼친다."},
+    {"cmd": "line", "who": "player", "text": "실례합니다. 관찰 일지 쓰러 왔는데요……"},
+    {"cmd": "narration", "text": "대답이 없다. 대신 구석의 커다란 토분 하나가 혼자 달그락 흔들린다."},
+    {"cmd": "line", "who": "player", "text": "……방금 저 화분, 움직였지?"},
+    {"cmd": "line", "who": "player", "text": "바람인가. 온실 안에 바람이 불 리가 없는데."},
+    {"cmd": "narration", "text": "살금살금 다가가 화분 안을 들여다본 순간."},
+    {"cmd": "show", "who": "mandi", "at": "center"},
+    {"cmd": "sfx", "id": "scream"},
+    {"cmd": "camera", "action": "shake"},
+    {"cmd": "emote", "who": "mandi", "icon": "exclaim"},
+    {"cmd": "line", "who": "mandi", "face": "scared", "text": "꺄아아아아아악!"},
+    {"cmd": "narration", "text": "유리창이 부르르 떨리고, 천장에 매달린 덩굴들이 일제히 움츠러든다."},
+    {"cmd": "choice", "id": "c1", "options": [{"text": "귀를 막고 문밖으로 도망친다.", "affinity": -15, "next": "c1_run"}, {"text": "귀가 멍하지만, 그대로 서서 기다린다.", "affinity": 30, "next": "c1_wait"}, {"text": "덩달아 같이 소리를 지른다. 으아아아악!", "affinity": 15, "next": "c1_shout", "flag": "mandi_scream_together"}]},
+    {"label": "c1_run"},
+    {"cmd": "walk", "who": "player", "to": "off_left"},
+    {"cmd": "narration", "text": "문을 박차고 나와 귀를 꽉 막는다. 심장이 쿵쾅거린다."},
+    {"cmd": "line", "who": "player", "text": "하아, 하아…… 진짜였어. 귀가 아직도 웅웅거려."},
+    {"cmd": "narration", "text": "한참 뒤, 문틈으로 조그만 목소리가 새어 나온다."},
+    {"cmd": "line", "who": "mandi", "face": "sad", "text": "……역, 역시…… 다들…… 도망가요."},
+    {"cmd": "walk", "who": "player", "to": "left"},
+    {"cmd": "line", "who": "player", "text": "아, 아니, 그게. 너무 놀라서 그랬어."},
+    {"cmd": "line", "who": "mandi", "face": "sad", "text": "……괜찮아요. 늘…… 그래요."},
+    {"cmd": "narration", "text": "괜찮다는 말과 달리, 이파리가 축 처져 있다."},
+    {"cmd": "line", "who": "player", "text": "……미안."},
+    {"cmd": "goto", "to": "j1"},
+    {"label": "c1_wait"},
+    {"cmd": "narration", "text": "귀가 멍하다. 그래도 발을 떼지 않는다."},
+    {"cmd": "narration", "text": "비명이 조금씩 잦아들더니, 딸꾹질처럼 뚝뚝 끊긴다."},
+    {"cmd": "line", "who": "mandi", "face": "scared", "text": "……히, 힉."},
+    {"cmd": "line", "who": "player", "text": "……괜찮아? 내가 놀라게 했지. 미안."},
+    {"cmd": "line", "who": "mandi", "face": "surprised", "text": "아, 안…… 도망가요?"},
+    {"cmd": "line", "who": "player", "text": "어디로? 숙제하러 왔는데."},
+    {"cmd": "line", "who": "mandi", "face": "shy", "text": "……이, 이상한 사람."},
+    {"cmd": "narration", "text": "작은 맨드레이크가 화분 가장자리를 붙잡고 눈만 빼꼼 내민다."},
+    {"cmd": "goto", "to": "j1"},
+    {"label": "c1_shout"},
+    {"cmd": "line", "who": "player", "text": "으아아아아아악!"},
+    {"cmd": "camera", "action": "shake"},
+    {"cmd": "narration", "text": "두 비명이 온실 안에서 메아리친다. 덩굴들이 아예 천장에 납작 붙어 버린다."},
+    {"cmd": "line", "who": "mandi", "face": "surprised", "text": "……어?"},
+    {"cmd": "line", "who": "player", "text": "……아, 미안. 나도 모르게 따라 했어."},
+    {"cmd": "narration", "text": "맨디의 입꼬리가 움찔거린다. 웃음을 참느라 이파리가 파르르 떤다."},
+    {"cmd": "line", "who": "mandi", "face": "shy", "text": "푸흡…… 아, 아니에요. 안 웃었어요."},
+    {"cmd": "line", "who": "player", "text": "방금 웃었잖아."},
+    {"cmd": "line", "who": "mandi", "face": "embarrassed", "text": "아, 안 웃었어요……"},
+    {"cmd": "goto", "to": "j1"},
+    {"label": "j1"},
+    {"cmd": "narration", "text": "작은 맨드레이크는 화분 뒤로 반쯤 몸을 숨긴 채 이쪽을 살핀다."},
+    {"cmd": "line", "who": "player", "text": "나는 {player}. 이번 학기에 들어온 신입생이야."},
+    {"cmd": "line", "who": "player", "text": "너는…… 여기서 일하는 거야?"},
+    {"cmd": "line", "who": "mandi", "face": "shy", "text": "……저, 저기…… 매, 맨디…… 예요."},
+    {"cmd": "line", "who": "mandi", "face": "shy", "text": "저, 정원사…… 예요. 온실…… 정원사."},
+    {"cmd": "line", "who": "player", "text": "맨디. 정원사구나. 그럼 여기 독초들 다 네가 키우는 거야?"},
+    {"cmd": "line", "who": "mandi", "face": "neutral", "text": "……네."},
+    {"cmd": "line", "who": "player", "text": "대단하다. 나 같으면 손가락 하나는 벌써 물렸겠다."},
+    {"cmd": "line", "who": "mandi", "face": "worried", "text": "무, 물려요. 저쪽 끈끈이는…… 손 넣지 마세요."},
+    {"cmd": "line", "who": "player", "text": "알았어. 근데 아까 그 비명, 어디서 나오는 거야? 몸집은 이렇게 작은데."},
+    {"cmd": "emote", "who": "mandi", "icon": "sweat"},
+    {"cmd": "line", "who": "mandi", "face": "embarrassed", "text": "……죄, 죄송해요. 놀라면…… 저절로…… 나와요."},
+    {"cmd": "line", "who": "mandi", "face": "sad", "text": "맨드레이크는…… 원래…… 그래요."},
+    {"cmd": "line", "who": "player", "text": "원래 그런 거면 사과할 일은 아니잖아."},
+    {"cmd": "line", "who": "mandi", "face": "surprised", "text": "……네?"},
+    {"cmd": "narration", "text": "맨디가 무슨 말인지 모르겠다는 듯 눈을 깜박인다."},
+    {"cmd": "narration", "text": "문 옆에 놓인 바구니가 눈에 들어온다. 털 귀마개가 수북하다."},
+    {"cmd": "line", "who": "player", "text": "저 바구니, 귀마개가 엄청 많네."},
+    {"cmd": "line", "who": "mandi", "face": "neutral", "text": "……오, 오는 사람들…… 다 끼고 와요."},
+    {"cmd": "line", "who": "mandi", "face": "sad", "text": "선생님들도…… 학생들도…… 다."},
+    {"cmd": "line", "who": "player", "text": "그럼 다들 귀마개를 끼고 너랑 이야기해?"},
+    {"cmd": "wait", "sec": 2},
+    {"cmd": "line", "who": "mandi", "face": "sad", "text": "……이야기, 안 해요."},
+    {"cmd": "line", "who": "mandi", "face": "sad", "text": "귀마개 끼면…… 제, 제 말…… 안 들리니까."},
+    {"cmd": "line", "who": "player", "text": "……그럼 너는 누구랑 이야기해?"},
+    {"cmd": "line", "who": "mandi", "text": "……화, 화분들이랑요. 다들…… 잘 들어 줘요.", "face": "neutral"},
+    {"cmd": "narration", "text": "맨디가 가장 가까운 화분의 잎을 손끝으로 톡 건드린다. 잎이 대답하듯 살랑 흔들린다."},
+    {"cmd": "narration", "text": "바구니 속 귀마개들은 하나같이 가지런하다. 누군가 쓰고 간 것을 매번 털어서 다시 넣어 둔 것처럼."},
+    {"cmd": "narration", "text": "털 사이사이에 작은 흙 손자국이 묻어 있다."},
+    {"cmd": "choice", "id": "c2", "options": [{"text": "귀마개를 바구니 속으로 더 깊이 밀어 넣는다.", "affinity": 30, "next": "c2_push"}, {"text": "혹시 모르니까 하나만 빌려서 목에 걸어 둔다.", "affinity": 0, "next": "c2_take"}, {"text": "목청이 그렇게 좋으면 노래를 해 보는 건 어때?", "affinity": -15, "next": "c2_sing"}]},
+    {"label": "c2_push"},
+    {"cmd": "narration", "text": "바구니의 귀마개들을 꾹꾹 눌러 담는다. 하나도 꺼내지 않는다."},
+    {"cmd": "line", "who": "mandi", "face": "surprised", "text": "……안, 안 껴요?"},
+    {"cmd": "line", "who": "player", "text": "응. 그거 끼면 네 말이 안 들린다며."},
+    {"cmd": "line", "who": "mandi", "face": "shy", "text": "……또, 또 소리 지를지도 몰라요."},
+    {"cmd": "line", "who": "player", "text": "그럼 또 기다리지, 뭐."},
+    {"cmd": "narration", "text": "맨디가 화분 뒤에서 한 뼘쯤 몸을 내민다."},
+    {"cmd": "goto", "to": "j2"},
+    {"label": "c2_take"},
+    {"cmd": "narration", "text": "귀마개 하나를 집어 목에 건다. 귀에 끼지는 않는다."},
+    {"cmd": "line", "who": "player", "text": "끼지는 않을게. 그냥 비상용이야."},
+    {"cmd": "line", "who": "mandi", "face": "neutral", "text": "……네. 그, 그게 맞아요."},
+    {"cmd": "line", "who": "mandi", "face": "neutral", "text": "다들…… 그렇게 해요."},
+    {"cmd": "narration", "text": "맨디가 고개를 끄덕인다. 서운한 기색은 없다. 아주 익숙한 얼굴이다."},
+    {"cmd": "narration", "text": "그게 오히려 조금 마음에 걸린다."},
+    {"cmd": "goto", "to": "j2"},
+    {"label": "c2_sing"},
+    {"cmd": "line", "who": "player", "text": "그렇게 소리가 크면, 노래하면 광장 끝까지 들리겠다."},
+    {"cmd": "emote", "who": "mandi", "icon": "sweat"},
+    {"cmd": "line", "who": "mandi", "face": "annoyed", "text": "노, 놀리지…… 마세요."},
+    {"cmd": "line", "who": "player", "text": "놀린 거 아닌데. 진짜로 하는 말인데."},
+    {"cmd": "line", "who": "mandi", "face": "sad", "text": "……맨드레이크 노래는…… 비명이에요. 다들 그래요."},
+    {"cmd": "narration", "text": "맨디가 화분 뒤로 쏙 숨어 버린다. 이파리 끝만 남는다."},
+    {"cmd": "line", "who": "player", "text": "……진짜로 한 말이었는데."},
+    {"cmd": "goto", "to": "j2"},
+    {"label": "j2"},
+    {"cmd": "line", "who": "player", "text": "아, 맞다. 숙제. 독초 관찰 일지를 써야 하거든. 뭘 보면 좋을까?"},
+    {"cmd": "line", "who": "mandi", "face": "thinking", "text": "……관찰…… 일지."},
+    {"cmd": "line", "who": "mandi", "face": "neutral", "text": "여, 여기 말고…… 뒤뜰에…… 순한 애들 있어요."},
+    {"cmd": "line", "who": "player", "text": "뒤뜰? 안내해 줄 수 있어?"},
+    {"cmd": "line", "who": "mandi", "face": "shy", "text": "……따, 따라…… 오세요."},
+    {"cmd": "follow", "who": "mandi", "to": "greenhouse_back"},
+    {"cmd": "narration", "text": "온실 뒤편의 작은 뜰. 낮은 선반에 손바닥만 한 화분들이 줄지어 놓여 있다."},
+    {"cmd": "narration", "text": "화분마다 나무 이름표가 꽂혀 있다. 삐뚤빼뚤한 글씨다."},
+    {"cmd": "line", "who": "player", "text": "「덩굴이. 잘 삐짐.」 「쐐기. 아침엔 순함.」 「주걱이. 노래 좋아함.」"},
+    {"cmd": "line", "who": "player", "text": "이거 네가 다 쓴 거야?"},
+    {"cmd": "line", "who": "mandi", "face": "shy", "text": "……네. 이, 이름 없으면…… 쓸쓸하니까요."},
+    {"cmd": "line", "who": "player", "text": "주걱이는 노래를 좋아해?"},
+    {"cmd": "line", "who": "mandi", "face": "neutral", "text": "콧노래…… 들려주면…… 입을 꼭 다물어요. 안 물어요."},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "덩굴이는…… 물 늦게 주면…… 삐져서…… 반대로 자라요."},
+    {"cmd": "narration", "text": "식물 이야기를 할 때만 맨디의 말이 조금 덜 끊긴다."},
+    {"cmd": "line", "who": "player", "text": "와, 진짜 다 성격이 있네."},
+    {"cmd": "line", "who": "mandi", "face": "smile", "text": "……다, 다들…… 착해요. 무섭게 생겼어도요."},
+    {"cmd": "narration", "text": "선반 맨 끝에 흙만 담긴 빈 화분 하나가 있다. 이름표 자리가 비어 있다."},
+    {"cmd": "narration", "text": "다른 화분보다 조금 크고, 맨디 몸집에 꼭 맞을 것 같은 크기다."},
+    {"cmd": "choice", "id": "c3", "options": [{"text": "그 빈 화분을 들어 올려 이리저리 살펴본다.", "affinity": -15, "next": "c3_lift"}, {"text": "모른 척하고, 주걱이부터 일지에 그린다.", "affinity": 15, "next": "c3_draw"}, {"text": "이 화분만 이름표가 없네. 내가 하나 써 줄까?", "affinity": 0, "next": "c3_offer", "flag": "mandi_tag_offer"}]},
+    {"label": "c3_lift"},
+    {"cmd": "narration", "text": "빈 화분을 번쩍 들어 올리자마자."},
+    {"cmd": "sfx", "id": "scream"},
+    {"cmd": "camera", "action": "shake"},
+    {"cmd": "line", "who": "mandi", "face": "scared", "text": "꺅! 그, 그거…… 내려놔 주세요."},
+    {"cmd": "line", "who": "player", "text": "앗, 미안. 깨질 뻔했다."},
+    {"cmd": "narration", "text": "화분을 조심조심 제자리에 내려놓는다."},
+    {"cmd": "line", "who": "mandi", "face": "sad", "text": "……그건…… 아, 아무것도 아니에요."},
+    {"cmd": "narration", "text": "맨디는 한참 동안 빈 화분 쪽을 쳐다보지 않는다."},
+    {"cmd": "line", "who": "player", "text": "……응. 안 건드릴게."},
+    {"cmd": "goto", "to": "ending"},
+    {"label": "c3_draw"},
+    {"cmd": "narration", "text": "빈 화분에서 눈을 떼고 주걱이 앞에 쪼그려 앉는다."},
+    {"cmd": "line", "who": "player", "text": "콧노래를 들려주면 안 문다고? 흠흠흠……"},
+    {"cmd": "narration", "text": "끈끈이주걱이 정말로 입을 꼭 다문다."},
+    {"cmd": "line", "who": "mandi", "face": "surprised", "text": "……어. 지, 진짜 다물었어요."},
+    {"cmd": "line", "who": "player", "text": "네가 그렇다며."},
+    {"cmd": "line", "who": "mandi", "face": "smile", "text": "……코, 콧노래…… 음이 조금…… 틀렸어요."},
+    {"cmd": "narration", "text": "처음으로 맨디가 먼저 농담 비슷한 말을 했다."},
+    {"cmd": "goto", "to": "ending"},
+    {"label": "c3_offer"},
+    {"cmd": "line", "who": "player", "text": "다른 애들은 다 이름표가 있는데, 이것만 없네. 내가 하나 써 줄까?"},
+    {"cmd": "emote", "who": "mandi", "icon": "exclaim"},
+    {"cmd": "line", "who": "mandi", "face": "scared", "text": "아, 아, 아니요. 괜찮아요."},
+    {"cmd": "line", "who": "mandi", "face": "worried", "text": "그, 그건…… 아직…… 쓸 게 없어요."},
+    {"cmd": "line", "who": "player", "text": "쓸 게 없다니?"},
+    {"cmd": "line", "who": "mandi", "face": "sad", "text": "……무슨 식물인지…… 저도 몰라서요."},
+    {"cmd": "narration", "text": "무슨 뜻인지 묻기도 전에, 맨디는 선반 뒤로 숨어 버린다."},
+    {"cmd": "goto", "to": "ending"},
+    {"label": "ending"},
+    {"cmd": "move", "to": "poison_greenhouse", "transition": "fade"},
+    {"cmd": "narration", "text": "일지 한 장을 겨우 채우고 나니, 햇살이 유리 지붕 위로 높이 올라와 있다."},
+    {"cmd": "line", "who": "player", "text": "덕분에 숙제 끝냈다. 고마워, 맨디."},
+    {"cmd": "line", "who": "mandi", "face": "shy", "text": "……아, 아니에요."},
+    {"cmd": "narration", "text": "맨디가 화분 뒤에서 무언가를 쭉 내민다. 박하 잎 한 장이다."},
+    {"cmd": "give_item", "item": "g_mint", "n": 1},
+    {"cmd": "line", "who": "mandi", "face": "shy", "text": "……이, 이거…… 냄새 맡으면…… 놀란 게…… 가라앉아요."},
+    {"cmd": "line", "who": "player", "text": "아까 놀란 거? 내가?"},
+    {"cmd": "line", "who": "mandi", "face": "embarrassed", "text": "……저, 저도요. 저도 자주 맡아요."},
+    {"cmd": "line", "who": "player", "text": "그럼 반씩 맡자."},
+    {"cmd": "narration", "text": "박하 잎을 반으로 찢어 하나를 건넨다. 맨디가 잠깐 망설이다 받아 든다."},
+    {"cmd": "narration", "text": "둘이 나란히 박하 잎 냄새를 맡는다. 코끝이 화하다."},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "……또, 또……"},
+    {"cmd": "line", "who": "player", "text": "응?"},
+    {"cmd": "line", "who": "mandi", "face": "shy", "text": "……또…… 와도…… 돼요. 귀, 귀마개 없이도요."},
+    {"cmd": "narration", "text": "말을 끝내자마자 맨디는 화분 속으로 쏙 숨어 버린다. 화분이 신난 듯 달그락거린다."},
+    {"cmd": "fade_out"}
+  ],
+  "cold": [
+    {"cmd": "narration", "text": "일지는 겨우 채웠지만, 온실 안 공기가 어색하다."},
+    {"cmd": "line", "who": "mandi", "face": "sad", "text": "……숙, 숙제…… 끝났으면…… 가 보세요."},
+    {"cmd": "line", "who": "player", "text": "아, 응. 저기, 아까는……"},
+    {"cmd": "line", "who": "mandi", "face": "sad", "text": "……괜찮아요. 다들 그래요."},
+    {"cmd": "narration", "text": "맨디는 화분 속으로 숨어 다시 나오지 않는다."},
+    {"cmd": "narration", "text": "문을 나서며 돌아보니, 귀마개 바구니만 가지런히 놓여 있다."},
+    {"cmd": "fade_out"}
   ]
- },
- "scene": {
-  "weather": "fog"
- },
- "rewards": {
-  "coin": 30,
-  "mana": 0,
-  "know": 0,
-  "items": {},
-  "flags": [],
-  "perk": null
- },
- "script": [
-  {
-   "cmd": "fade_in"
-  },
-  {
-   "cmd": "bgm",
-   "id": "calm"
-  },
-  {
-   "cmd": "hide",
-   "who": "mandi"
-  },
-  {
-   "cmd": "narration",
-   "text": "아침 안개가 독초 온실 유리에 뿌옇게 맺혀 있다."
-  },
-  {
-   "cmd": "narration",
-   "text": "물약 수업 숙제는 「독초 관찰 일지」. 독초 온실에는 한 번도 와 본 적이 없다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "여기가 독초 온실이구나. 생각보다 조용하네."
-  },
-  {
-   "cmd": "narration",
-   "text": "문 옆에 나무 팻말이 비스듬히 붙어 있다."
-  },
-  {
-   "cmd": "narration",
-   "text": "「맨드레이크 있음. 귀마개 필수. 놀라게 하지 마시오.」"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "맨드레이크? 뽑으면 소리를 지른다는 그 식물?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "에이, 설마. 그냥 겁주려고 붙여 둔 거겠지."
-  },
-  {
-   "cmd": "sfx",
-   "id": "door"
-  },
-  {
-   "cmd": "narration",
-   "text": "삐걱, 유리문이 열린다. 축축한 흙냄새와 쌉싸름한 풀 냄새가 훅 끼친다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "실례합니다. 관찰 일지 쓰러 왔는데요……"
-  },
-  {
-   "cmd": "narration",
-   "text": "대답이 없다. 대신 구석의 커다란 토분 하나가 혼자 달그락 흔들린다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……방금 저 화분, 움직였지?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "바람인가. 온실 안에 바람이 불 리가 없는데."
-  },
-  {
-   "cmd": "narration",
-   "text": "살금살금 다가가 화분 안을 들여다본 순간."
-  },
-  {
-   "cmd": "show",
-   "who": "mandi",
-   "at": "center"
-  },
-  {
-   "cmd": "sfx",
-   "id": "scream"
-  },
-  {
-   "cmd": "camera",
-   "action": "shake"
-  },
-  {
-   "cmd": "emote",
-   "who": "mandi",
-   "icon": "exclaim"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "scared",
-   "text": "꺄아아아아아악!"
-  },
-  {
-   "cmd": "narration",
-   "text": "유리창이 부르르 떨리고, 천장에 매달린 덩굴들이 일제히 움츠러든다."
-  },
-  {
-   "cmd": "choice",
-   "id": "c1",
-   "options": [
-    {
-     "text": "귀를 막고 문밖으로 도망친다.",
-     "affinity": -15,
-     "next": "c1_run"
-    },
-    {
-     "text": "귀가 멍하지만, 그대로 서서 기다린다.",
-     "affinity": 30,
-     "next": "c1_wait"
-    },
-    {
-     "text": "덩달아 같이 소리를 지른다. 으아아아악!",
-     "affinity": 15,
-     "next": "c1_shout",
-     "flag": "mandi_scream_together"
-    }
-   ]
-  },
-  {
-   "label": "c1_run"
-  },
-  {
-   "cmd": "walk",
-   "who": "player",
-   "to": "off_left"
-  },
-  {
-   "cmd": "narration",
-   "text": "문을 박차고 나와 귀를 꽉 막는다. 심장이 쿵쾅거린다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "하아, 하아…… 진짜였어. 귀가 아직도 웅웅거려."
-  },
-  {
-   "cmd": "narration",
-   "text": "한참 뒤, 문틈으로 조그만 목소리가 새어 나온다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "sad",
-   "text": "……역, 역시…… 다들…… 도망가요."
-  },
-  {
-   "cmd": "walk",
-   "who": "player",
-   "to": "left"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "아, 아니, 그게. 너무 놀라서 그랬어."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "sad",
-   "text": "……괜찮아요. 늘…… 그래요."
-  },
-  {
-   "cmd": "narration",
-   "text": "괜찮다는 말과 달리, 이파리가 축 처져 있다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……미안."
-  },
-  {
-   "cmd": "goto",
-   "to": "j1"
-  },
-  {
-   "label": "c1_wait"
-  },
-  {
-   "cmd": "narration",
-   "text": "귀가 멍하다. 그래도 발을 떼지 않는다."
-  },
-  {
-   "cmd": "narration",
-   "text": "비명이 조금씩 잦아들더니, 딸꾹질처럼 뚝뚝 끊긴다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "scared",
-   "text": "……히, 힉."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……괜찮아? 내가 놀라게 했지. 미안."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "surprised",
-   "text": "아, 안…… 도망가요?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "어디로? 숙제하러 왔는데."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "shy",
-   "text": "……이, 이상한 사람."
-  },
-  {
-   "cmd": "narration",
-   "text": "작은 맨드레이크가 화분 가장자리를 붙잡고 눈만 빼꼼 내민다."
-  },
-  {
-   "cmd": "goto",
-   "to": "j1"
-  },
-  {
-   "label": "c1_shout"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "으아아아아아악!"
-  },
-  {
-   "cmd": "camera",
-   "action": "shake"
-  },
-  {
-   "cmd": "narration",
-   "text": "두 비명이 온실 안에서 메아리친다. 덩굴들이 아예 천장에 납작 붙어 버린다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "surprised",
-   "text": "……어?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……아, 미안. 나도 모르게 따라 했어."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디의 입꼬리가 움찔거린다. 웃음을 참느라 이파리가 파르르 떤다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "shy",
-   "text": "푸흡…… 아, 아니에요. 안 웃었어요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "방금 웃었잖아."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "embarrassed",
-   "text": "아, 안 웃었어요……"
-  },
-  {
-   "cmd": "goto",
-   "to": "j1"
-  },
-  {
-   "label": "j1"
-  },
-  {
-   "cmd": "narration",
-   "text": "작은 맨드레이크는 화분 뒤로 반쯤 몸을 숨긴 채 이쪽을 살핀다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "나는 {player}. 이번 학기에 들어온 신입생이야."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "너는…… 여기서 일하는 거야?"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "shy",
-   "text": "……저, 저기…… 매, 맨디…… 예요."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "shy",
-   "text": "저, 정원사…… 예요. 온실…… 정원사."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "맨디. 정원사구나. 그럼 여기 독초들 다 네가 키우는 거야?"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "neutral",
-   "text": "……네."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "대단하다. 나 같으면 손가락 하나는 벌써 물렸겠다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "worried",
-   "text": "무, 물려요. 저쪽 끈끈이는…… 손 넣지 마세요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "알았어. 근데 아까 그 비명, 어디서 나오는 거야? 몸집은 이렇게 작은데."
-  },
-  {
-   "cmd": "emote",
-   "who": "mandi",
-   "icon": "sweat"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "embarrassed",
-   "text": "……죄, 죄송해요. 놀라면…… 저절로…… 나와요."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "sad",
-   "text": "맨드레이크는…… 원래…… 그래요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "원래 그런 거면 사과할 일은 아니잖아."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "surprised",
-   "text": "……네?"
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 무슨 말인지 모르겠다는 듯 눈을 깜박인다."
-  },
-  {
-   "cmd": "narration",
-   "text": "문 옆에 놓인 바구니가 눈에 들어온다. 털 귀마개가 수북하다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "저 바구니, 귀마개가 엄청 많네."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "neutral",
-   "text": "……오, 오는 사람들…… 다 끼고 와요."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "sad",
-   "text": "선생님들도…… 학생들도…… 다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그럼 다들 귀마개를 끼고 너랑 이야기해?"
-  },
-  {
-   "cmd": "wait",
-   "sec": 2
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "sad",
-   "text": "……이야기, 안 해요."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "sad",
-   "text": "귀마개 끼면…… 제, 제 말…… 안 들리니까."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……그럼 너는 누구랑 이야기해?"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "text": "……화, 화분들이랑요. 다들…… 잘 들어 줘요.",
-   "face": "neutral"
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 가장 가까운 화분의 잎을 손끝으로 톡 건드린다. 잎이 대답하듯 살랑 흔들린다."
-  },
-  {
-   "cmd": "narration",
-   "text": "바구니 속 귀마개들은 하나같이 가지런하다. 누군가 쓰고 간 것을 매번 털어서 다시 넣어 둔 것처럼."
-  },
-  {
-   "cmd": "narration",
-   "text": "털 사이사이에 작은 흙 손자국이 묻어 있다."
-  },
-  {
-   "cmd": "choice",
-   "id": "c2",
-   "options": [
-    {
-     "text": "귀마개를 바구니 속으로 더 깊이 밀어 넣는다.",
-     "affinity": 30,
-     "next": "c2_push"
-    },
-    {
-     "text": "혹시 모르니까 하나만 빌려서 목에 걸어 둔다.",
-     "affinity": 0,
-     "next": "c2_take"
-    },
-    {
-     "text": "목청이 그렇게 좋으면 노래를 해 보는 건 어때?",
-     "affinity": -15,
-     "next": "c2_sing"
-    }
-   ]
-  },
-  {
-   "label": "c2_push"
-  },
-  {
-   "cmd": "narration",
-   "text": "바구니의 귀마개들을 꾹꾹 눌러 담는다. 하나도 꺼내지 않는다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "surprised",
-   "text": "……안, 안 껴요?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "응. 그거 끼면 네 말이 안 들린다며."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "shy",
-   "text": "……또, 또 소리 지를지도 몰라요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그럼 또 기다리지, 뭐."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 화분 뒤에서 한 뼘쯤 몸을 내민다."
-  },
-  {
-   "cmd": "goto",
-   "to": "j2"
-  },
-  {
-   "label": "c2_take"
-  },
-  {
-   "cmd": "narration",
-   "text": "귀마개 하나를 집어 목에 건다. 귀에 끼지는 않는다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "끼지는 않을게. 그냥 비상용이야."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "neutral",
-   "text": "……네. 그, 그게 맞아요."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "neutral",
-   "text": "다들…… 그렇게 해요."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 고개를 끄덕인다. 서운한 기색은 없다. 아주 익숙한 얼굴이다."
-  },
-  {
-   "cmd": "narration",
-   "text": "그게 오히려 조금 마음에 걸린다."
-  },
-  {
-   "cmd": "goto",
-   "to": "j2"
-  },
-  {
-   "label": "c2_sing"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그렇게 소리가 크면, 노래하면 광장 끝까지 들리겠다."
-  },
-  {
-   "cmd": "emote",
-   "who": "mandi",
-   "icon": "sweat"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "annoyed",
-   "text": "노, 놀리지…… 마세요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "놀린 거 아닌데. 진짜로 하는 말인데."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "sad",
-   "text": "……맨드레이크 노래는…… 비명이에요. 다들 그래요."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 화분 뒤로 쏙 숨어 버린다. 이파리 끝만 남는다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……진짜로 한 말이었는데."
-  },
-  {
-   "cmd": "goto",
-   "to": "j2"
-  },
-  {
-   "label": "j2"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "아, 맞다. 숙제. 독초 관찰 일지를 써야 하거든. 뭘 보면 좋을까?"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "thinking",
-   "text": "……관찰…… 일지."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "neutral",
-   "text": "여, 여기 말고…… 뒤뜰에…… 순한 애들 있어요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "뒤뜰? 안내해 줄 수 있어?"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "shy",
-   "text": "……따, 따라…… 오세요."
-  },
-  {
-   "cmd": "follow",
-   "who": "mandi",
-   "to": "greenhouse_back"
-  },
-  {
-   "cmd": "narration",
-   "text": "온실 뒤편의 작은 뜰. 낮은 선반에 손바닥만 한 화분들이 줄지어 놓여 있다."
-  },
-  {
-   "cmd": "narration",
-   "text": "화분마다 나무 이름표가 꽂혀 있다. 삐뚤빼뚤한 글씨다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "「덩굴이. 잘 삐짐.」 「쐐기. 아침엔 순함.」 「주걱이. 노래 좋아함.」"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "이거 네가 다 쓴 거야?"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "shy",
-   "text": "……네. 이, 이름 없으면…… 쓸쓸하니까요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "주걱이는 노래를 좋아해?"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "neutral",
-   "text": "콧노래…… 들려주면…… 입을 꼭 다물어요. 안 물어요."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "덩굴이는…… 물 늦게 주면…… 삐져서…… 반대로 자라요."
-  },
-  {
-   "cmd": "narration",
-   "text": "식물 이야기를 할 때만 맨디의 말이 조금 덜 끊긴다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "와, 진짜 다 성격이 있네."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "smile",
-   "text": "……다, 다들…… 착해요. 무섭게 생겼어도요."
-  },
-  {
-   "cmd": "narration",
-   "text": "선반 맨 끝에 흙만 담긴 빈 화분 하나가 있다. 이름표 자리가 비어 있다."
-  },
-  {
-   "cmd": "narration",
-   "text": "다른 화분보다 조금 크고, 맨디 몸집에 꼭 맞을 것 같은 크기다."
-  },
-  {
-   "cmd": "choice",
-   "id": "c3",
-   "options": [
-    {
-     "text": "그 빈 화분을 들어 올려 이리저리 살펴본다.",
-     "affinity": -15,
-     "next": "c3_lift"
-    },
-    {
-     "text": "모른 척하고, 주걱이부터 일지에 그린다.",
-     "affinity": 15,
-     "next": "c3_draw"
-    },
-    {
-     "text": "이 화분만 이름표가 없네. 내가 하나 써 줄까?",
-     "affinity": 0,
-     "next": "c3_offer",
-     "flag": "mandi_tag_offer"
-    }
-   ]
-  },
-  {
-   "label": "c3_lift"
-  },
-  {
-   "cmd": "narration",
-   "text": "빈 화분을 번쩍 들어 올리자마자."
-  },
-  {
-   "cmd": "sfx",
-   "id": "scream"
-  },
-  {
-   "cmd": "camera",
-   "action": "shake"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "scared",
-   "text": "꺅! 그, 그거…… 내려놔 주세요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "앗, 미안. 깨질 뻔했다."
-  },
-  {
-   "cmd": "narration",
-   "text": "화분을 조심조심 제자리에 내려놓는다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "sad",
-   "text": "……그건…… 아, 아무것도 아니에요."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디는 한참 동안 빈 화분 쪽을 쳐다보지 않는다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……응. 안 건드릴게."
-  },
-  {
-   "cmd": "goto",
-   "to": "ending"
-  },
-  {
-   "label": "c3_draw"
-  },
-  {
-   "cmd": "narration",
-   "text": "빈 화분에서 눈을 떼고 주걱이 앞에 쪼그려 앉는다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "콧노래를 들려주면 안 문다고? 흠흠흠……"
-  },
-  {
-   "cmd": "narration",
-   "text": "끈끈이주걱이 정말로 입을 꼭 다문다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "surprised",
-   "text": "……어. 지, 진짜 다물었어요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "네가 그렇다며."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "smile",
-   "text": "……코, 콧노래…… 음이 조금…… 틀렸어요."
-  },
-  {
-   "cmd": "narration",
-   "text": "처음으로 맨디가 먼저 농담 비슷한 말을 했다."
-  },
-  {
-   "cmd": "goto",
-   "to": "ending"
-  },
-  {
-   "label": "c3_offer"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "다른 애들은 다 이름표가 있는데, 이것만 없네. 내가 하나 써 줄까?"
-  },
-  {
-   "cmd": "emote",
-   "who": "mandi",
-   "icon": "exclaim"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "scared",
-   "text": "아, 아, 아니요. 괜찮아요."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "worried",
-   "text": "그, 그건…… 아직…… 쓸 게 없어요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "쓸 게 없다니?"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "sad",
-   "text": "……무슨 식물인지…… 저도 몰라서요."
-  },
-  {
-   "cmd": "narration",
-   "text": "무슨 뜻인지 묻기도 전에, 맨디는 선반 뒤로 숨어 버린다."
-  },
-  {
-   "cmd": "goto",
-   "to": "ending"
-  },
-  {
-   "label": "ending"
-  },
-  {
-   "cmd": "move",
-   "to": "poison_greenhouse",
-   "transition": "fade"
-  },
-  {
-   "cmd": "narration",
-   "text": "일지 한 장을 겨우 채우고 나니, 햇살이 유리 지붕 위로 높이 올라와 있다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "덕분에 숙제 끝냈다. 고마워, 맨디."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "shy",
-   "text": "……아, 아니에요."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 화분 뒤에서 무언가를 쭉 내민다. 박하 잎 한 장이다."
-  },
-  {
-   "cmd": "give_item",
-   "item": "g_mint",
-   "n": 1
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "shy",
-   "text": "……이, 이거…… 냄새 맡으면…… 놀란 게…… 가라앉아요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "아까 놀란 거? 내가?"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "embarrassed",
-   "text": "……저, 저도요. 저도 자주 맡아요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그럼 반씩 맡자."
-  },
-  {
-   "cmd": "narration",
-   "text": "박하 잎을 반으로 찢어 하나를 건넨다. 맨디가 잠깐 망설이다 받아 든다."
-  },
-  {
-   "cmd": "narration",
-   "text": "둘이 나란히 박하 잎 냄새를 맡는다. 코끝이 화하다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "……또, 또……"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "응?"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "shy",
-   "text": "……또…… 와도…… 돼요. 귀, 귀마개 없이도요."
-  },
-  {
-   "cmd": "narration",
-   "text": "말을 끝내자마자 맨디는 화분 속으로 쏙 숨어 버린다. 화분이 신난 듯 달그락거린다."
-  },
-  {
-   "cmd": "fade_out"
-  }
- ],
- "cold": [
-  {
-   "cmd": "narration",
-   "text": "일지는 겨우 채웠지만, 온실 안 공기가 어색하다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "sad",
-   "text": "……숙, 숙제…… 끝났으면…… 가 보세요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "아, 응. 저기, 아까는……"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "sad",
-   "text": "……괜찮아요. 다들 그래요."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디는 화분 속으로 숨어 다시 나오지 않는다."
-  },
-  {
-   "cmd": "narration",
-   "text": "문을 나서며 돌아보니, 귀마개 바구니만 가지런히 놓여 있다."
-  },
-  {
-   "cmd": "fade_out"
-  }
- ]
 }

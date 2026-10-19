@@ -1,1159 +1,218 @@
 {
- "id": "jipsin_heart_07",
- "npc": "jipsin",
- "heart": 7,
- "title": "옷의 주인",
- "conditions": {
-  "minHeart": 7,
-  "location": "pumpkin_field",
-  "time": [
-   "evening"
+  "id": "jipsin_heart_07", "npc": "jipsin", "heart": 7, "title": "옷의 주인",
+  "conditions": {"minHeart": 7, "location": "pumpkin_field", "time": ["evening"]},
+  "rewards": {"coin": 70, "mana": 0, "know": 0, "items": {"g2_pseed": 3}, "flags": [], "perk": null},
+  "script": [
+    {"cmd": "fade_in"},
+    {"cmd": "bgm", "id": "calm"},
+    {"cmd": "narration", "text": "저녁 호박밭. 짚신은 새 말뚝에 단단히 묶여 서 있다. 허리에는 여전히 할머니의 주황색 목도리가 감겨 있다."},
+    {"cmd": "if_flag", "flag": "jipsin_was_cold", "then": "cold_open", "else": "warm_open"},
+    {"label": "cold_open"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……{player}. 그날, 내가 너무 차갑게 굴었지. 할머니 손만 생각하고 싶다고."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "나중에 생각해 봤어. {player} 말도. 아팠는데, 틀린 말은 아니었어. 그래서 더 아팠어."},
+    {"cmd": "line", "who": "player", "face": "soft", "text": "그래도 미안해. 그날은 다른 말을 했어야 했어."},
+    {"cmd": "goto", "to": "open_end"},
+    {"label": "warm_open"},
+    {"cmd": "line", "who": "jipsin", "face": "smile", "text": "……{player}. 왔구나. 오늘은 기다리고 있었어. 진짜로."},
+    {"cmd": "line", "who": "player", "face": "smile", "text": "진짜로? 무슨 일 있어?"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "응. 이번엔 내가 할 말이 있어. 처음이야, 할 말이 있는 거."},
+    {"cmd": "goto", "to": "open_end"},
+    {"label": "open_end"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "오늘 아침에 할머니가 그랬어. 저녁에 그 학생 오거든 집으로 보내라고. 밥 한 끼 먹이고 싶다고."},
+    {"cmd": "line", "who": "jipsin", "face": "proud", "text": "나한테 심부름을 시켰어. 할머니가. 처음이야. 나한테 뭘 맡긴 거."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "그래서 아까부터 발소리만 기다렸어. 지나가는 고양이 발소리에도 깜짝 놀랐어."},
+    {"cmd": "line", "who": "player", "face": "laugh", "text": "고양이한테도 할머니 집에 가라고 할 뻔했어?"},
+    {"cmd": "line", "who": "jipsin", "face": "smile", "text": "……응. 하마터면. 그 고양이는 생선 냄새가 나서 참았어."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "넘어진 날 이후로, 할머니가 아침마다 이 목도리를 한 번씩 다시 묶어 줘. 그리고 꼭 말해. 오늘도 잘 서 있자, 하고."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "예전엔 '서 있어 다오'였는데, 요즘은 '서 있자'야. 같이 하자는 말 같아서, 좀 좋아."},
+    {"cmd": "choice", "id": "c1", "options": [{"text": "너도 같이 갈 수 있으면 좋을 텐데.", "affinity": 15, "next": "c1_together"}, {"text": "할머니 밥이라니. 호박죽 또 나오려나? 바로 출발.", "affinity": 0, "next": "c1_food"}, {"text": "할머니 이야기 길어지시면 어떡하지. 숙제 많은데.", "affinity": -15, "next": "c1_busy"}]},
+    {"label": "c1_together"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……나는 여기서 할머니 집 굴뚝을 볼게. 연기가 두 줄 올라가면, {player|이/가} 도착한 거야."},
+    {"cmd": "line", "who": "player", "face": "surprised", "text": "두 줄?"},
+    {"cmd": "line", "who": "jipsin", "face": "smile", "text": "할머니는 손님 오면 국을 하나 더 끓여. 까마귀들이 그랬어. 그래서 연기도 하나 더 올라가."},
+    {"cmd": "line", "who": "player", "face": "smile", "text": "그럼 두 줄 올라가는 거 보면서 기다려 줘."},
+    {"cmd": "goto", "to": "c1_end"},
+    {"label": "c1_food"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……호박죽일지도 몰라. 할머니 집은 가을 내내 호박 냄새가 나."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "맛있게 먹고 와. 그리고 맛이 어땠는지 알려 줘. 나는 냄새만 아니까."},
+    {"cmd": "line", "who": "player", "face": "laugh", "text": "자세하게 보고할게. 숟가락 개수까지."},
+    {"cmd": "line", "who": "jipsin", "face": "smile", "text": "……숟가락은 하나면 돼. 할머니 숟가락이랑 {player} 숟가락. 아, 두 개네."},
+    {"cmd": "goto", "to": "c1_end"},
+    {"label": "c1_busy"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……길어져도, 들어 줘."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "할머니는 나한테 매일 이야기하지만, 대답해 주는 사람한테 하는 건 오랜만일 거야."},
+    {"cmd": "line", "who": "player", "face": "embarrassed", "text": "……농담이었어. 끝까지 들을게."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……알아. {player} 농담은 이제 조금 구분해. 목소리가 반 칸 올라가."},
+    {"cmd": "goto", "to": "c1_end"},
+    {"label": "c1_end"},
+    {"cmd": "move", "to": "grandma_house", "transition": "fade", "clear": true, "time": "evening"},
+    {"cmd": "show", "who": "player", "at": "left"},
+    {"cmd": "show", "who": "grandma", "at": "right"},
+    {"cmd": "bgm", "id": "warm"},
+    {"cmd": "narration", "text": "할머니 집 마루. 노을빛이 마루 끝까지 길게 들어와 있다. 작은 밥상 위에 호박전과 된장국, 그리고 호박죽이 놓여 있다."},
+    {"cmd": "line", "who": "grandma", "face": "smile", "text": "왔구나. 우리 짚신이가 심부름을 잘했네. 어서 앉아라."},
+    {"cmd": "line", "who": "player", "face": "happy", "text": "와, 이걸 다 하셨어요? 잘 먹겠습니다."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "그날 고마워서. 학생 아니었으면 할미 혼자 그 아이를 못 일으켰을 거야."},
+    {"cmd": "line", "who": "player", "face": "embarrassed", "text": "아니에요. 할머니가 다 하셨죠. 저는 흙만 팠어요."},
+    {"cmd": "line", "who": "grandma", "face": "laugh", "text": "흙을 파 준 손이 제일 귀한 손이란다. 자, 전부터 먹어. 식기 전에."},
+    {"cmd": "narration", "text": "할머니는 {player}의 밥그릇에 호박전을 한 장, 또 한 장 얹는다. 금세 밥이 안 보이게 됐다."},
+    {"cmd": "line", "who": "player", "face": "laugh", "text": "할머니, 밥이 전에 묻혔어요."},
+    {"cmd": "line", "who": "grandma", "face": "laugh", "text": "호호, 그럼 전을 밥이라고 생각하고 먹으렴. 학생들은 늘 배가 고프잖니."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "학교는 할 만하니? 마녀 공부는 어렵지 않고?"},
+    {"cmd": "line", "who": "player", "face": "smile", "text": "어려워요. 그래도 요즘은 수업 끝나면 밭에 들르는 게 낙이에요."},
+    {"cmd": "if_flag", "flag": "jipsin_let_rest", "then": "rest_yes", "else": "rest_no"},
+    {"label": "rest_yes"},
+    {"cmd": "line", "who": "grandma", "face": "laugh", "text": "그날 보니까 학생 등짝이 온통 진흙이더구나. 짚신이 옆에 같이 누워 있었니?"},
+    {"cmd": "line", "who": "player", "face": "embarrassed", "text": "아, 네…… 하늘이 넓다고 해서요. 아니, 넓어 보일 것 같아서요."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "그 사람도 그랬어. 밭일하다 힘들면 고랑에 벌러덩 누워서 하늘이 넓다고. 별난 사람끼리는 통하나 보다."},
+    {"cmd": "narration", "text": "할머니가 웃으며 국을 한 국자 더 떠 준다."},
+    {"cmd": "goto", "to": "rest_end"},
+    {"label": "rest_no"},
+    {"cmd": "if_flag", "flag": "jipsin_lifted", "then": "lift_yes", "else": "lift_no"},
+    {"label": "lift_yes"},
+    {"cmd": "line", "who": "grandma", "face": "worried", "text": "그날 보니까 학생 손바닥에 짚 가시가 잔뜩 박혔더구나. 혼자 그 아이를 세워 보려 했니?"},
+    {"cmd": "line", "who": "player", "face": "embarrassed", "text": "네…… 근데 땅이 물러서 계속 쓰러지더라고요."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "그 사람도 그랬어. 넘어진 건 뭐든 맨손으로 일으켜 세웠지. 고집 센 손끼리는 통하나 보다."},
+    {"cmd": "narration", "text": "할머니가 웃으며 국을 한 국자 더 떠 준다."},
+    {"cmd": "goto", "to": "rest_end"},
+    {"label": "lift_no"},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "그날 학생 얼굴이 많이 어둡더구나. 짚신이한테 무슨 말을 했는지는 몰라도."},
+    {"cmd": "line", "who": "player", "face": "sad", "text": "……제가 좀 모진 말을 했어요. 짚신이 먼저 한 말에 맞장구를 쳐 버렸어요."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "그 사람도 말이 서툴렀단다. 늘 말보다 손이 먼저였지. 말은 고치면 돼. 입이 있으니까."},
+    {"cmd": "narration", "text": "할머니가 국을 한 국자 더 떠 주며, 괜찮다는 듯 웃는다."},
+    {"cmd": "goto", "to": "rest_end"},
+    {"label": "rest_end"},
+    {"cmd": "narration", "text": "할머니는 숟가락을 내려놓고, 문설주의 못을 바라본다. 네모나게 색이 덜 바랜 벽지 자리."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "학생, 지난번에 물었지. 저 못에 뭐가 걸려 있었냐고."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "짚신이 입고 있는 옷 말이다. 학생은 그게 누구 옷 같으냐."},
+    {"cmd": "choice", "id": "c2", "options": [{"text": "(대답하지 않고, 할머니가 이야기할 때까지 기다린다.)", "affinity": 30, "next": "c2_wait"}, {"text": "혹시…… 할아버지 옷이에요?", "affinity": 15, "next": "c2_guess"}, {"text": "그냥 헌 옷 아니었어요? 허수아비는 보통 그렇잖아요.", "affinity": -15, "next": "c2_old"}]},
+    {"label": "c2_wait"},
+    {"cmd": "narration", "text": "{player|은/는} 아무 말 없이 할머니를 바라보았다. 마루 끝으로 노을이 조금씩 물러난다."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "……학생은 기다릴 줄 아는구나. 짚신이랑 닮았다."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "그래. 이야기해 주마. 할미가 아무한테도 안 한 이야기야."},
+    {"cmd": "narration", "text": "할머니는 무릎 위에 두 손을 가지런히 모은다. 손등에 그날의 긁힌 자국이 아직 희미하게 남아 있다."},
+    {"cmd": "goto", "to": "c2_end"},
+    {"label": "c2_guess"},
+    {"cmd": "line", "who": "grandma", "face": "surprised", "text": "……어떻게 알았니."},
+    {"cmd": "line", "who": "player", "face": "soft", "text": "까마귀들이 그랬어요. 밭에 할아버지가 있었다고. 그 모자를 쓰고요."},
+    {"cmd": "line", "who": "grandma", "face": "laugh", "text": "그놈의 까마귀들. 그 사람이 콩을 하도 줘서, 아직도 기억하는구나."},
+    {"cmd": "narration", "text": "할머니는 무릎 위에 두 손을 가지런히 모은다. 손등에 그날의 긁힌 자국이 아직 희미하게 남아 있다."},
+    {"cmd": "goto", "to": "c2_end"},
+    {"label": "c2_old"},
+    {"cmd": "line", "who": "grandma", "face": "neutral", "text": "……헌 옷."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "그래, 헌 옷이지. 서른 해를 넘게 입어서 소매가 다 해진, 아주 헌 옷이야."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "근데 학생, 헌 옷은 누군가 오래 입었다는 뜻이란다."},
+    {"cmd": "line", "who": "player", "face": "embarrassed", "text": "……죄송해요. 생각 없이 말했어요."},
+    {"cmd": "goto", "to": "c2_end"},
+    {"label": "c2_end"},
+    {"cmd": "bgm", "id": "sad"},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "그건 우리 영감 옷이야. 이 집에서 같이 마흔 해를 살았지."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "아침마다 저 못에서 저 옷을 꺼내 입고, 저 모자를 쓰고, 밭 한가운데 서서 기지개를 켰어."},
+    {"cmd": "line", "who": "grandma", "face": "smile", "text": "할미가 밭 끝에서 '여보, 밥 먹어요' 하고 부르면, 모자를 벗어서 크게 흔들었지. 대답 대신."},
+    {"cmd": "line", "who": "grandma", "face": "sad", "text": "그러다 재작년 겨울에 감기가 깊어져서…… 봄을 못 봤어."},
+    {"cmd": "wait", "sec": 2},
+    {"cmd": "line", "who": "grandma", "face": "sad", "text": "그 뒤로 할미는 밭에 못 나갔단다. 문을 열면 그 사람이 서 있던 자리가 비어 있으니까."},
+    {"cmd": "line", "who": "grandma", "face": "sad", "text": "호박은 다 썩어 가고, 까마귀들만 밭을 쪼아 댔어. 할미는 마루에 앉아서 저 못만 봤지."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "그러다 하루는, 저 옷을 내려서 짚을 채웠어. 소매를 접어 꿰매고, 얼굴을 바느질하고, 모자를 씌웠지."},
+    {"cmd": "line", "who": "grandma", "face": "smile", "text": "입을 꿰매는데 손이 떨려서 한 번에 휙 그었더니, 저렇게 웃는 얼굴이 됐어. 고치려다 말았단다. 그 사람도 늘 웃었거든."},
+    {"cmd": "line", "who": "grandma", "face": "cry", "text": "그 사람이 서 있던 자리에 짚신이를 세워 놓고 나니까……"},
+    {"cmd": "line", "who": "grandma", "face": "cry", "text": "다음 날 아침, 할미가 밭에 나갈 수 있었어."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "그 사람이 서 있던 자리에 네가 서 있어서, 아침에 밭에 나올 수 있어. ……할미는 매일 그 말을 짚신이한테 하고 싶었단다."},
+    {"cmd": "narration", "text": "할머니는 눈가를 손등으로 훔치고, 아무렇지 않은 듯 호박전을 {player}의 밥 위에 얹어 준다."},
+    {"cmd": "narration", "text": "{player|은/는} 마루 끝의 커다란 장화를 보았다. 먼지가 앉은 채로, 늘 그 자리에 가지런히 놓여 있던 장화."},
+    {"cmd": "line", "who": "player", "face": "soft", "text": "저 장화도…… 할아버지 거죠."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "그래. 저건 차마 짚신이한테 못 신겼어. 발이 하나라서. 호호, 그래서 거기 그대로 있단다."},
+    {"cmd": "line", "who": "grandma", "face": "smile", "text": "할미가 이상하지? 허수아비한테 매일 말 거는 늙은이."},
+    {"cmd": "choice", "id": "c3", "options": [{"text": "전혀요. 저도 매일 짚신한테 말 걸어요. 대답도 들어요.", "affinity": 15, "next": "c3_me_too"}, {"text": "할머니. 짚신은 할머니 이야기, 하나도 빠짐없이 다 듣고 있어요.", "affinity": 30, "next": "c3_listens"}, {"text": "음, 솔직히 처음엔 조금요. 지금은 아니에요.", "affinity": 0, "next": "c3_honest"}]},
+    {"label": "c3_me_too"},
+    {"cmd": "line", "who": "grandma", "face": "laugh", "text": "대답도 들어? 호호, 학생은 귀가 좋구나. 할미 귀엔 바람 소리뿐인데."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "그래도 그날, 짚신이를 일으켰을 때. 바람 소리가 꼭 '손 다쳐요' 하는 것 같았어."},
+    {"cmd": "line", "who": "player", "face": "soft", "text": "……바람이 아니었을지도 몰라요."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "……그럼 좋겠다. 정말 그럼 좋겠구나."},
+    {"cmd": "goto", "to": "c3_end"},
+    {"label": "c3_listens"},
+    {"cmd": "line", "who": "grandma", "face": "surprised", "text": "……다 듣고 있어?"},
+    {"cmd": "line", "who": "player", "face": "soft", "text": "날씨도, 셋째 고랑 호박도, 무릎 쑤시는 것도요. 할머니 일기 예보는 매일 맞는대요."},
+    {"cmd": "narration", "text": "할머니는 한참 동안 {player|을/를} 바라보다가, 웃는 것도 우는 것도 아닌 얼굴로 고개를 끄덕였다."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "……그래. 그럼 할미가 그동안 헛말을 한 게 아니었구나."},
+    {"cmd": "goto", "to": "c3_end"},
+    {"label": "c3_honest"},
+    {"cmd": "line", "who": "grandma", "face": "laugh", "text": "호호, 솔직해서 좋다. 할미도 처음엔 이상했어. 허수아비한테 날씨 이야기라니."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "근데 말을 안 하면, 그 사람한테 하던 말들이 갈 데가 없어서 말이야."},
+    {"cmd": "line", "who": "player", "face": "soft", "text": "……그래서 짚신이 거기 서 있는 거네요."},
+    {"cmd": "line", "who": "grandma", "face": "smile", "text": "그렇지. 학생은 똑똑하구나."},
+    {"cmd": "goto", "to": "c3_end"},
+    {"label": "c3_end"},
+    {"cmd": "line", "who": "grandma", "face": "smile", "text": "참, 그 사람 이야기를 하니 생각나네. 학교 과자 교실 {madeleine.name} 선생 알지?"},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "서른 해 전 흉년 겨울에, 그 선생 스승님이 마을 사람들한테 호박달 케이크를 구워 줬단다. 그때 호박을 가져간 게 나였지."},
+    {"cmd": "line", "who": "grandma", "face": "laugh", "text": "그 사람이 지게에 호박을 잔뜩 지고 눈길을 걷고, 할미는 옆에서 등불을 들었어. 그 케이크 맛은 지금도 혀끝에 있단다."},
+    {"cmd": "line", "who": "player", "face": "surprised", "text": "그 전설의 케이크요? 선생님이 아직도 레시피를 찾고 계시던데."},
+    {"cmd": "line", "who": "grandma", "face": "smile", "text": "그래? 그럼 찾아오거든 할미한테 보내라. 호박은 아직 이 밭에 얼마든지 있으니까."},
+    {"cmd": "line", "who": "grandma", "face": "laugh", "text": "이번엔 할미가 지게를 못 지니까, 학생이 져 줘야겠다. 호호."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "자, 밥 다 먹었으면 할미랑 밭에 좀 나가자. 오늘은 짚신이한테 이 이야기를 직접 해 주고 싶구나."},
+    {"cmd": "move", "to": "pumpkin_field", "transition": "fade", "clear": true, "time": "night"},
+    {"cmd": "show", "who": "jipsin", "at": "center"},
+    {"cmd": "show", "who": "player", "at": "left"},
+    {"cmd": "show", "who": "grandma", "at": "right"},
+    {"cmd": "bgm", "id": "night"},
+    {"cmd": "narration", "text": "밤의 호박밭. 할머니가 든 등불이 짚신의 웃는 얼굴을 노랗게 비춘다."},
+    {"cmd": "narration", "text": "할머니는 짚신의 해진 소매를 두 손으로 감싸 쥔다. 오래된 버릇처럼, 처음인 것처럼."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "짚신아. 네 옷은 우리 영감 옷이야. 네 모자도. 네가 서 있는 그 자리도."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "너는 그 사람 대신이 아니야. 그 사람이 서 있던 자리에, 네가 이어서 서 있는 거야."},
+    {"cmd": "line", "who": "grandma", "face": "smile", "text": "그래서 할미가 아침마다 나올 수 있어. 고맙다, 짚신아. 오늘은 그 말을 하러 왔단다."},
+    {"cmd": "line", "who": "jipsin", "face": "surprised", "text": "……"},
+    {"cmd": "narration", "text": "짚신은 아무 말도 하지 않았다. 대신 바람도 없는데, 해진 소매 끝이 할머니의 손 안에서 아주 조금 떨렸다."},
+    {"cmd": "line", "who": "jipsin", "face": "soft", "text": "……할머니."},
+    {"cmd": "narration", "text": "아주 작은 목소리였다. 할머니가 소매를 쥔 손에 힘을 주었다."},
+    {"cmd": "line", "who": "grandma", "face": "surprised", "text": "……오늘은 바람도 안 부는데, 또 바람이 말을 하는구나."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "그래, 할미 여기 있다. 내일 아침에도 있을 거야."},
+    {"cmd": "line", "who": "grandma", "face": "soft", "text": "학생, 할미는 먼저 들어가마. 우리 짚신이랑 조금만 더 있어 주렴."},
+    {"cmd": "walk", "who": "grandma", "to": "off_right"},
+    {"cmd": "wait", "sec": 2},
+    {"cmd": "line", "who": "jipsin", "face": "sad", "text": "……{player}. 나, 그 사람 대신이었어?"},
+    {"cmd": "line", "who": "jipsin", "face": "sad", "text": "할머니는 아니라고 했어. 근데 나는 그 사람 옷이고, 그 사람 모자고, 그 사람 자리야. 나만의 건 하나도 없어."},
+    {"cmd": "choice", "id": "c4", "options": [{"text": "웃는 얼굴은 네 거야. 할머니가 한 번에 꿰맨, 고치지 않은 얼굴.", "affinity": 30, "next": "c4_face"}, {"text": "대신이 아니라, 이어서 서 있는 거야. 할머니 말씀처럼.", "affinity": 15, "next": "c4_continue"}, {"text": "응. 어떻게 보면 대신인 셈이지. 그래도 괜찮잖아.", "affinity": -15, "next": "c4_yes"}]},
+    {"label": "c4_face"},
+    {"cmd": "line", "who": "jipsin", "face": "surprised", "text": "……얼굴."},
+    {"cmd": "line", "who": "jipsin", "face": "smile", "text": "무서워지려고 그렇게 애썼던 얼굴. 그게 내 거였구나. 하나는 있었네."},
+    {"cmd": "line", "who": "jipsin", "face": "smile", "text": "……다행이다. 무서운 얼굴 연습, 실패해서."},
+    {"cmd": "line", "who": "player", "face": "laugh", "text": "응. 그 연습은 실패해서 다행인 유일한 연습이야."},
+    {"cmd": "goto", "to": "c4_end"},
+    {"label": "c4_continue"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……이어서."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "그 사람이 아침에 기지개를 켜던 자리에서, 나는 아침에 까마귀를 세."},
+    {"cmd": "line", "who": "jipsin", "face": "smile", "text": "……하는 건 다르지만, 할머니가 보는 방향은 같구나."},
+    {"cmd": "line", "who": "player", "face": "soft", "text": "응. 그리고 할머니가 부르면 이제 네가 대답하는 거야."},
+    {"cmd": "goto", "to": "c4_end"},
+    {"label": "c4_yes"},
+    {"cmd": "line", "who": "jipsin", "face": "sad", "text": "……응. 괜찮아."},
+    {"cmd": "line", "who": "jipsin", "face": "sad", "text": "대신이라도, 할머니가 밭에 나오면 그걸로 된 거야. 그렇지."},
+    {"cmd": "narration", "text": "짚신은 괜찮다고 두 번 말했다. 한 번만 말했으면 믿었을지도 모른다."},
+    {"cmd": "line", "who": "player", "face": "sad", "text": "……내가 또 말을 서툴게 했네."},
+    {"cmd": "goto", "to": "c4_end"},
+    {"label": "c4_end"},
+    {"label": "ending"},
+    {"cmd": "narration", "text": "언덕 아래 할머니 집에 불이 켜진다. 잠시 뒤, 굴뚝에서 연기가 한 줄 올라간다."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……{player}. 할머니가 그러던데. 할아버지는 대답 대신 모자를 흔들었대."},
+    {"cmd": "line", "who": "jipsin", "face": "smile", "text": "나는 모자를 못 흔들어. 손이 없으니까. 근데 바람이 불면 소매는 흔들 수 있어."},
+    {"cmd": "line", "who": "jipsin", "face": "smile", "text": "내일 아침엔 할머니가 부르면, 바람한테 부탁해 볼게. 크게 흔들어 달라고."},
+    {"cmd": "line", "who": "player", "face": "soft", "text": "바람도 들어줄 거야. 오늘은 네 편 같으니까."},
+    {"cmd": "sfx", "id": "wind"},
+    {"cmd": "narration", "text": "때마침 밤바람이 밭을 쓸고 지나간다. 짚신의 너무 큰 소매가, 언덕 아래 불빛을 향해 크게 펄럭였다."},
+    {"cmd": "line", "who": "jipsin", "face": "smile", "text": "……봤어? 지금 건 연습이야."},
+    {"cmd": "line", "who": "player", "face": "laugh", "text": "연습인데 벌써 합격이야."},
+    {"cmd": "line", "who": "jipsin", "face": "smile", "text": "……{player}. 오늘 할머니 집 밥, 맛있었어?"},
+    {"cmd": "line", "who": "player", "face": "soft", "text": "응. 세상에서 제일 많이 담아 주는 밥이었어."},
+    {"cmd": "line", "who": "jipsin", "face": "smile", "text": "……다행이다. 그 호박, 할아버지 자리에서 내가 지킨 거야. 이제는 아마도가 아니야."},
+    {"cmd": "fade_out"}
+  ],
+  "cold": [
+    {"cmd": "narration", "text": "할머니가 떠난 밭에, 등불 그림자만 길게 남았다."},
+    {"cmd": "line", "who": "jipsin", "face": "sad", "text": "……{player}. 오늘은 그만 가 줄래."},
+    {"cmd": "line", "who": "jipsin", "face": "sad", "text": "할머니 이야기를 혼자 오래 생각하고 싶어. {player} 말까지 같이 생각하기엔, 짚이 너무 작아."},
+    {"cmd": "line", "who": "player", "face": "sad", "text": "……응. 내일 올게."},
+    {"cmd": "narration", "text": "돌아보니 짚신은 할머니 집 불빛만 바라보고 있었다. 바람이 불었지만, 소매는 흔들리지 않았다."},
+    {"cmd": "narration", "text": "목도리로 너무 단단히 묶여서인지, 아니면 흔들고 싶지 않아서인지 {player|은/는} 알 수 없었다."},
+    {"cmd": "fade_out"}
   ]
- },
- "rewards": {
-  "coin": 70,
-  "mana": 0,
-  "know": 0,
-  "items": {
-   "g2_pseed": 3
-  },
-  "flags": [],
-  "perk": null
- },
- "script": [
-  {
-   "cmd": "fade_in"
-  },
-  {
-   "cmd": "bgm",
-   "id": "calm"
-  },
-  {
-   "cmd": "narration",
-   "text": "저녁 호박밭. 짚신은 새 말뚝에 단단히 묶여 서 있다. 허리에는 여전히 할머니의 주황색 목도리가 감겨 있다."
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "jipsin_was_cold",
-   "then": "cold_open",
-   "else": "warm_open"
-  },
-  {
-   "label": "cold_open"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……{player}. 그날, 내가 너무 차갑게 굴었지. 할머니 손만 생각하고 싶다고."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "나중에 생각해 봤어. {player} 말도. 아팠는데, 틀린 말은 아니었어. 그래서 더 아팠어."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "soft",
-   "text": "그래도 미안해. 그날은 다른 말을 했어야 했어."
-  },
-  {
-   "cmd": "goto",
-   "to": "open_end"
-  },
-  {
-   "label": "warm_open"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "smile",
-   "text": "……{player}. 왔구나. 오늘은 기다리고 있었어. 진짜로."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "smile",
-   "text": "진짜로? 무슨 일 있어?"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "응. 이번엔 내가 할 말이 있어. 처음이야, 할 말이 있는 거."
-  },
-  {
-   "cmd": "goto",
-   "to": "open_end"
-  },
-  {
-   "label": "open_end"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "오늘 아침에 할머니가 그랬어. 저녁에 그 학생 오거든 집으로 보내라고. 밥 한 끼 먹이고 싶다고."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "proud",
-   "text": "나한테 심부름을 시켰어. 할머니가. 처음이야. 나한테 뭘 맡긴 거."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "그래서 아까부터 발소리만 기다렸어. 지나가는 고양이 발소리에도 깜짝 놀랐어."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "laugh",
-   "text": "고양이한테도 할머니 집에 가라고 할 뻔했어?"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "smile",
-   "text": "……응. 하마터면. 그 고양이는 생선 냄새가 나서 참았어."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "넘어진 날 이후로, 할머니가 아침마다 이 목도리를 한 번씩 다시 묶어 줘. 그리고 꼭 말해. 오늘도 잘 서 있자, 하고."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "예전엔 '서 있어 다오'였는데, 요즘은 '서 있자'야. 같이 하자는 말 같아서, 좀 좋아."
-  },
-  {
-   "cmd": "choice",
-   "id": "c1",
-   "options": [
-    {
-     "text": "너도 같이 갈 수 있으면 좋을 텐데.",
-     "affinity": 15,
-     "next": "c1_together"
-    },
-    {
-     "text": "할머니 밥이라니. 호박죽 또 나오려나? 바로 출발.",
-     "affinity": 0,
-     "next": "c1_food"
-    },
-    {
-     "text": "할머니 이야기 길어지시면 어떡하지. 숙제 많은데.",
-     "affinity": -15,
-     "next": "c1_busy"
-    }
-   ]
-  },
-  {
-   "label": "c1_together"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……나는 여기서 할머니 집 굴뚝을 볼게. 연기가 두 줄 올라가면, {player|이/가} 도착한 거야."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "surprised",
-   "text": "두 줄?"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "smile",
-   "text": "할머니는 손님 오면 국을 하나 더 끓여. 까마귀들이 그랬어. 그래서 연기도 하나 더 올라가."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "smile",
-   "text": "그럼 두 줄 올라가는 거 보면서 기다려 줘."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_end"
-  },
-  {
-   "label": "c1_food"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……호박죽일지도 몰라. 할머니 집은 가을 내내 호박 냄새가 나."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "맛있게 먹고 와. 그리고 맛이 어땠는지 알려 줘. 나는 냄새만 아니까."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "laugh",
-   "text": "자세하게 보고할게. 숟가락 개수까지."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "smile",
-   "text": "……숟가락은 하나면 돼. 할머니 숟가락이랑 {player} 숟가락. 아, 두 개네."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_end"
-  },
-  {
-   "label": "c1_busy"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……길어져도, 들어 줘."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "할머니는 나한테 매일 이야기하지만, 대답해 주는 사람한테 하는 건 오랜만일 거야."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "embarrassed",
-   "text": "……농담이었어. 끝까지 들을게."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……알아. {player} 농담은 이제 조금 구분해. 목소리가 반 칸 올라가."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_end"
-  },
-  {
-   "label": "c1_end"
-  },
-  {
-   "cmd": "move",
-   "to": "grandma_house",
-   "transition": "fade",
-   "clear": true,
-   "time": "evening"
-  },
-  {
-   "cmd": "show",
-   "who": "player",
-   "at": "left"
-  },
-  {
-   "cmd": "show",
-   "who": "grandma",
-   "at": "right"
-  },
-  {
-   "cmd": "bgm",
-   "id": "warm"
-  },
-  {
-   "cmd": "narration",
-   "text": "할머니 집 마루. 노을빛이 마루 끝까지 길게 들어와 있다. 작은 밥상 위에 호박전과 된장국, 그리고 호박죽이 놓여 있다."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "smile",
-   "text": "왔구나. 우리 짚신이가 심부름을 잘했네. 어서 앉아라."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "happy",
-   "text": "와, 이걸 다 하셨어요? 잘 먹겠습니다."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "그날 고마워서. 학생 아니었으면 할미 혼자 그 아이를 못 일으켰을 거야."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "embarrassed",
-   "text": "아니에요. 할머니가 다 하셨죠. 저는 흙만 팠어요."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "laugh",
-   "text": "흙을 파 준 손이 제일 귀한 손이란다. 자, 전부터 먹어. 식기 전에."
-  },
-  {
-   "cmd": "narration",
-   "text": "할머니는 {player}의 밥그릇에 호박전을 한 장, 또 한 장 얹는다. 금세 밥이 안 보이게 됐다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "laugh",
-   "text": "할머니, 밥이 전에 묻혔어요."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "laugh",
-   "text": "호호, 그럼 전을 밥이라고 생각하고 먹으렴. 학생들은 늘 배가 고프잖니."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "학교는 할 만하니? 마녀 공부는 어렵지 않고?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "smile",
-   "text": "어려워요. 그래도 요즘은 수업 끝나면 밭에 들르는 게 낙이에요."
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "jipsin_let_rest",
-   "then": "rest_yes",
-   "else": "rest_no"
-  },
-  {
-   "label": "rest_yes"
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "laugh",
-   "text": "그날 보니까 학생 등짝이 온통 진흙이더구나. 짚신이 옆에 같이 누워 있었니?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "embarrassed",
-   "text": "아, 네…… 하늘이 넓다고 해서요. 아니, 넓어 보일 것 같아서요."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "그 사람도 그랬어. 밭일하다 힘들면 고랑에 벌러덩 누워서 하늘이 넓다고. 별난 사람끼리는 통하나 보다."
-  },
-  {
-   "cmd": "narration",
-   "text": "할머니가 웃으며 국을 한 국자 더 떠 준다."
-  },
-  {
-   "cmd": "goto",
-   "to": "rest_end"
-  },
-  {
-   "label": "rest_no"
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "jipsin_lifted",
-   "then": "lift_yes",
-   "else": "lift_no"
-  },
-  {
-   "label": "lift_yes"
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "worried",
-   "text": "그날 보니까 학생 손바닥에 짚 가시가 잔뜩 박혔더구나. 혼자 그 아이를 세워 보려 했니?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "embarrassed",
-   "text": "네…… 근데 땅이 물러서 계속 쓰러지더라고요."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "그 사람도 그랬어. 넘어진 건 뭐든 맨손으로 일으켜 세웠지. 고집 센 손끼리는 통하나 보다."
-  },
-  {
-   "cmd": "narration",
-   "text": "할머니가 웃으며 국을 한 국자 더 떠 준다."
-  },
-  {
-   "cmd": "goto",
-   "to": "rest_end"
-  },
-  {
-   "label": "lift_no"
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "그날 학생 얼굴이 많이 어둡더구나. 짚신이한테 무슨 말을 했는지는 몰라도."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "sad",
-   "text": "……제가 좀 모진 말을 했어요. 짚신이 먼저 한 말에 맞장구를 쳐 버렸어요."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "그 사람도 말이 서툴렀단다. 늘 말보다 손이 먼저였지. 말은 고치면 돼. 입이 있으니까."
-  },
-  {
-   "cmd": "narration",
-   "text": "할머니가 국을 한 국자 더 떠 주며, 괜찮다는 듯 웃는다."
-  },
-  {
-   "cmd": "goto",
-   "to": "rest_end"
-  },
-  {
-   "label": "rest_end"
-  },
-  {
-   "cmd": "narration",
-   "text": "할머니는 숟가락을 내려놓고, 문설주의 못을 바라본다. 네모나게 색이 덜 바랜 벽지 자리."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "학생, 지난번에 물었지. 저 못에 뭐가 걸려 있었냐고."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "짚신이 입고 있는 옷 말이다. 학생은 그게 누구 옷 같으냐."
-  },
-  {
-   "cmd": "choice",
-   "id": "c2",
-   "options": [
-    {
-     "text": "(대답하지 않고, 할머니가 이야기할 때까지 기다린다.)",
-     "affinity": 30,
-     "next": "c2_wait"
-    },
-    {
-     "text": "혹시…… 할아버지 옷이에요?",
-     "affinity": 15,
-     "next": "c2_guess"
-    },
-    {
-     "text": "그냥 헌 옷 아니었어요? 허수아비는 보통 그렇잖아요.",
-     "affinity": -15,
-     "next": "c2_old"
-    }
-   ]
-  },
-  {
-   "label": "c2_wait"
-  },
-  {
-   "cmd": "narration",
-   "text": "{player|은/는} 아무 말 없이 할머니를 바라보았다. 마루 끝으로 노을이 조금씩 물러난다."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "……학생은 기다릴 줄 아는구나. 짚신이랑 닮았다."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "그래. 이야기해 주마. 할미가 아무한테도 안 한 이야기야."
-  },
-  {
-   "cmd": "narration",
-   "text": "할머니는 무릎 위에 두 손을 가지런히 모은다. 손등에 그날의 긁힌 자국이 아직 희미하게 남아 있다."
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_end"
-  },
-  {
-   "label": "c2_guess"
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "surprised",
-   "text": "……어떻게 알았니."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "soft",
-   "text": "까마귀들이 그랬어요. 밭에 할아버지가 있었다고. 그 모자를 쓰고요."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "laugh",
-   "text": "그놈의 까마귀들. 그 사람이 콩을 하도 줘서, 아직도 기억하는구나."
-  },
-  {
-   "cmd": "narration",
-   "text": "할머니는 무릎 위에 두 손을 가지런히 모은다. 손등에 그날의 긁힌 자국이 아직 희미하게 남아 있다."
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_end"
-  },
-  {
-   "label": "c2_old"
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "neutral",
-   "text": "……헌 옷."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "그래, 헌 옷이지. 서른 해를 넘게 입어서 소매가 다 해진, 아주 헌 옷이야."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "근데 학생, 헌 옷은 누군가 오래 입었다는 뜻이란다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "embarrassed",
-   "text": "……죄송해요. 생각 없이 말했어요."
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_end"
-  },
-  {
-   "label": "c2_end"
-  },
-  {
-   "cmd": "bgm",
-   "id": "sad"
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "그건 우리 영감 옷이야. 이 집에서 같이 마흔 해를 살았지."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "아침마다 저 못에서 저 옷을 꺼내 입고, 저 모자를 쓰고, 밭 한가운데 서서 기지개를 켰어."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "smile",
-   "text": "할미가 밭 끝에서 '여보, 밥 먹어요' 하고 부르면, 모자를 벗어서 크게 흔들었지. 대답 대신."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "sad",
-   "text": "그러다 재작년 겨울에 감기가 깊어져서…… 봄을 못 봤어."
-  },
-  {
-   "cmd": "wait",
-   "sec": 2
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "sad",
-   "text": "그 뒤로 할미는 밭에 못 나갔단다. 문을 열면 그 사람이 서 있던 자리가 비어 있으니까."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "sad",
-   "text": "호박은 다 썩어 가고, 까마귀들만 밭을 쪼아 댔어. 할미는 마루에 앉아서 저 못만 봤지."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "그러다 하루는, 저 옷을 내려서 짚을 채웠어. 소매를 접어 꿰매고, 얼굴을 바느질하고, 모자를 씌웠지."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "smile",
-   "text": "입을 꿰매는데 손이 떨려서 한 번에 휙 그었더니, 저렇게 웃는 얼굴이 됐어. 고치려다 말았단다. 그 사람도 늘 웃었거든."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "cry",
-   "text": "그 사람이 서 있던 자리에 짚신이를 세워 놓고 나니까……"
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "cry",
-   "text": "다음 날 아침, 할미가 밭에 나갈 수 있었어."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "그 사람이 서 있던 자리에 네가 서 있어서, 아침에 밭에 나올 수 있어. ……할미는 매일 그 말을 짚신이한테 하고 싶었단다."
-  },
-  {
-   "cmd": "narration",
-   "text": "할머니는 눈가를 손등으로 훔치고, 아무렇지 않은 듯 호박전을 {player}의 밥 위에 얹어 준다."
-  },
-  {
-   "cmd": "narration",
-   "text": "{player|은/는} 마루 끝의 커다란 장화를 보았다. 먼지가 앉은 채로, 늘 그 자리에 가지런히 놓여 있던 장화."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "soft",
-   "text": "저 장화도…… 할아버지 거죠."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "그래. 저건 차마 짚신이한테 못 신겼어. 발이 하나라서. 호호, 그래서 거기 그대로 있단다."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "smile",
-   "text": "할미가 이상하지? 허수아비한테 매일 말 거는 늙은이."
-  },
-  {
-   "cmd": "choice",
-   "id": "c3",
-   "options": [
-    {
-     "text": "전혀요. 저도 매일 짚신한테 말 걸어요. 대답도 들어요.",
-     "affinity": 15,
-     "next": "c3_me_too"
-    },
-    {
-     "text": "할머니. 짚신은 할머니 이야기, 하나도 빠짐없이 다 듣고 있어요.",
-     "affinity": 30,
-     "next": "c3_listens"
-    },
-    {
-     "text": "음, 솔직히 처음엔 조금요. 지금은 아니에요.",
-     "affinity": 0,
-     "next": "c3_honest"
-    }
-   ]
-  },
-  {
-   "label": "c3_me_too"
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "laugh",
-   "text": "대답도 들어? 호호, 학생은 귀가 좋구나. 할미 귀엔 바람 소리뿐인데."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "그래도 그날, 짚신이를 일으켰을 때. 바람 소리가 꼭 '손 다쳐요' 하는 것 같았어."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "soft",
-   "text": "……바람이 아니었을지도 몰라요."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "……그럼 좋겠다. 정말 그럼 좋겠구나."
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_end"
-  },
-  {
-   "label": "c3_listens"
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "surprised",
-   "text": "……다 듣고 있어?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "soft",
-   "text": "날씨도, 셋째 고랑 호박도, 무릎 쑤시는 것도요. 할머니 일기 예보는 매일 맞는대요."
-  },
-  {
-   "cmd": "narration",
-   "text": "할머니는 한참 동안 {player|을/를} 바라보다가, 웃는 것도 우는 것도 아닌 얼굴로 고개를 끄덕였다."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "……그래. 그럼 할미가 그동안 헛말을 한 게 아니었구나."
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_end"
-  },
-  {
-   "label": "c3_honest"
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "laugh",
-   "text": "호호, 솔직해서 좋다. 할미도 처음엔 이상했어. 허수아비한테 날씨 이야기라니."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "근데 말을 안 하면, 그 사람한테 하던 말들이 갈 데가 없어서 말이야."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "soft",
-   "text": "……그래서 짚신이 거기 서 있는 거네요."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "smile",
-   "text": "그렇지. 학생은 똑똑하구나."
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_end"
-  },
-  {
-   "label": "c3_end"
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "smile",
-   "text": "참, 그 사람 이야기를 하니 생각나네. 학교 과자 교실 {madeleine.name} 선생 알지?"
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "서른 해 전 흉년 겨울에, 그 선생 스승님이 마을 사람들한테 호박달 케이크를 구워 줬단다. 그때 호박을 가져간 게 나였지."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "laugh",
-   "text": "그 사람이 지게에 호박을 잔뜩 지고 눈길을 걷고, 할미는 옆에서 등불을 들었어. 그 케이크 맛은 지금도 혀끝에 있단다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "surprised",
-   "text": "그 전설의 케이크요? 선생님이 아직도 레시피를 찾고 계시던데."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "smile",
-   "text": "그래? 그럼 찾아오거든 할미한테 보내라. 호박은 아직 이 밭에 얼마든지 있으니까."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "laugh",
-   "text": "이번엔 할미가 지게를 못 지니까, 학생이 져 줘야겠다. 호호."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "자, 밥 다 먹었으면 할미랑 밭에 좀 나가자. 오늘은 짚신이한테 이 이야기를 직접 해 주고 싶구나."
-  },
-  {
-   "cmd": "move",
-   "to": "pumpkin_field",
-   "transition": "fade",
-   "clear": true,
-   "time": "night"
-  },
-  {
-   "cmd": "show",
-   "who": "jipsin",
-   "at": "center"
-  },
-  {
-   "cmd": "show",
-   "who": "player",
-   "at": "left"
-  },
-  {
-   "cmd": "show",
-   "who": "grandma",
-   "at": "right"
-  },
-  {
-   "cmd": "bgm",
-   "id": "night"
-  },
-  {
-   "cmd": "narration",
-   "text": "밤의 호박밭. 할머니가 든 등불이 짚신의 웃는 얼굴을 노랗게 비춘다."
-  },
-  {
-   "cmd": "narration",
-   "text": "할머니는 짚신의 해진 소매를 두 손으로 감싸 쥔다. 오래된 버릇처럼, 처음인 것처럼."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "짚신아. 네 옷은 우리 영감 옷이야. 네 모자도. 네가 서 있는 그 자리도."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "너는 그 사람 대신이 아니야. 그 사람이 서 있던 자리에, 네가 이어서 서 있는 거야."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "smile",
-   "text": "그래서 할미가 아침마다 나올 수 있어. 고맙다, 짚신아. 오늘은 그 말을 하러 왔단다."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "surprised",
-   "text": "……"
-  },
-  {
-   "cmd": "narration",
-   "text": "짚신은 아무 말도 하지 않았다. 대신 바람도 없는데, 해진 소매 끝이 할머니의 손 안에서 아주 조금 떨렸다."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "soft",
-   "text": "……할머니."
-  },
-  {
-   "cmd": "narration",
-   "text": "아주 작은 목소리였다. 할머니가 소매를 쥔 손에 힘을 주었다."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "surprised",
-   "text": "……오늘은 바람도 안 부는데, 또 바람이 말을 하는구나."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "그래, 할미 여기 있다. 내일 아침에도 있을 거야."
-  },
-  {
-   "cmd": "line",
-   "who": "grandma",
-   "face": "soft",
-   "text": "학생, 할미는 먼저 들어가마. 우리 짚신이랑 조금만 더 있어 주렴."
-  },
-  {
-   "cmd": "walk",
-   "who": "grandma",
-   "to": "off_right"
-  },
-  {
-   "cmd": "wait",
-   "sec": 2
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "sad",
-   "text": "……{player}. 나, 그 사람 대신이었어?"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "sad",
-   "text": "할머니는 아니라고 했어. 근데 나는 그 사람 옷이고, 그 사람 모자고, 그 사람 자리야. 나만의 건 하나도 없어."
-  },
-  {
-   "cmd": "choice",
-   "id": "c4",
-   "options": [
-    {
-     "text": "웃는 얼굴은 네 거야. 할머니가 한 번에 꿰맨, 고치지 않은 얼굴.",
-     "affinity": 30,
-     "next": "c4_face"
-    },
-    {
-     "text": "대신이 아니라, 이어서 서 있는 거야. 할머니 말씀처럼.",
-     "affinity": 15,
-     "next": "c4_continue"
-    },
-    {
-     "text": "응. 어떻게 보면 대신인 셈이지. 그래도 괜찮잖아.",
-     "affinity": -15,
-     "next": "c4_yes"
-    }
-   ]
-  },
-  {
-   "label": "c4_face"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "surprised",
-   "text": "……얼굴."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "smile",
-   "text": "무서워지려고 그렇게 애썼던 얼굴. 그게 내 거였구나. 하나는 있었네."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "smile",
-   "text": "……다행이다. 무서운 얼굴 연습, 실패해서."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "laugh",
-   "text": "응. 그 연습은 실패해서 다행인 유일한 연습이야."
-  },
-  {
-   "cmd": "goto",
-   "to": "c4_end"
-  },
-  {
-   "label": "c4_continue"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……이어서."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "그 사람이 아침에 기지개를 켜던 자리에서, 나는 아침에 까마귀를 세."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "smile",
-   "text": "……하는 건 다르지만, 할머니가 보는 방향은 같구나."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "soft",
-   "text": "응. 그리고 할머니가 부르면 이제 네가 대답하는 거야."
-  },
-  {
-   "cmd": "goto",
-   "to": "c4_end"
-  },
-  {
-   "label": "c4_yes"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "sad",
-   "text": "……응. 괜찮아."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "sad",
-   "text": "대신이라도, 할머니가 밭에 나오면 그걸로 된 거야. 그렇지."
-  },
-  {
-   "cmd": "narration",
-   "text": "짚신은 괜찮다고 두 번 말했다. 한 번만 말했으면 믿었을지도 모른다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "sad",
-   "text": "……내가 또 말을 서툴게 했네."
-  },
-  {
-   "cmd": "goto",
-   "to": "c4_end"
-  },
-  {
-   "label": "c4_end"
-  },
-  {
-   "label": "ending"
-  },
-  {
-   "cmd": "narration",
-   "text": "언덕 아래 할머니 집에 불이 켜진다. 잠시 뒤, 굴뚝에서 연기가 한 줄 올라간다."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……{player}. 할머니가 그러던데. 할아버지는 대답 대신 모자를 흔들었대."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "smile",
-   "text": "나는 모자를 못 흔들어. 손이 없으니까. 근데 바람이 불면 소매는 흔들 수 있어."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "smile",
-   "text": "내일 아침엔 할머니가 부르면, 바람한테 부탁해 볼게. 크게 흔들어 달라고."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "soft",
-   "text": "바람도 들어줄 거야. 오늘은 네 편 같으니까."
-  },
-  {
-   "cmd": "sfx",
-   "id": "wind"
-  },
-  {
-   "cmd": "narration",
-   "text": "때마침 밤바람이 밭을 쓸고 지나간다. 짚신의 너무 큰 소매가, 언덕 아래 불빛을 향해 크게 펄럭였다."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "smile",
-   "text": "……봤어? 지금 건 연습이야."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "laugh",
-   "text": "연습인데 벌써 합격이야."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "smile",
-   "text": "……{player}. 오늘 할머니 집 밥, 맛있었어?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "soft",
-   "text": "응. 세상에서 제일 많이 담아 주는 밥이었어."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "smile",
-   "text": "……다행이다. 그 호박, 할아버지 자리에서 내가 지킨 거야. 이제는 아마도가 아니야."
-  },
-  {
-   "cmd": "fade_out"
-  }
- ],
- "cold": [
-  {
-   "cmd": "narration",
-   "text": "할머니가 떠난 밭에, 등불 그림자만 길게 남았다."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "sad",
-   "text": "……{player}. 오늘은 그만 가 줄래."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "sad",
-   "text": "할머니 이야기를 혼자 오래 생각하고 싶어. {player} 말까지 같이 생각하기엔, 짚이 너무 작아."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "sad",
-   "text": "……응. 내일 올게."
-  },
-  {
-   "cmd": "narration",
-   "text": "돌아보니 짚신은 할머니 집 불빛만 바라보고 있었다. 바람이 불었지만, 소매는 흔들리지 않았다."
-  },
-  {
-   "cmd": "narration",
-   "text": "목도리로 너무 단단히 묶여서인지, 아니면 흔들고 싶지 않아서인지 {player|은/는} 알 수 없었다."
-  },
-  {
-   "cmd": "fade_out"
-  }
- ]
 }

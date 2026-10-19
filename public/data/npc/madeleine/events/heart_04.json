@@ -1,1002 +1,205 @@
 {
- "id": "madeleine_heart_04",
- "npc": "madeleine",
- "heart": 4,
- "title": "조용한 부엌",
- "conditions": {
-  "minHeart": 4,
-  "location": "candy_class",
-  "time": [
-   "night"
+  "id": "madeleine_heart_04", "npc": "madeleine", "heart": 4, "title": "조용한 부엌",
+  "conditions": {"minHeart": 4, "location": "candy_class", "time": ["night"]},
+  "rewards": {"coin": 40, "mana": 5, "know": 0, "items": {"g_wheat": 2}, "flags": [], "perk": null},
+  "script": [
+    {"cmd": "fade_in"},
+    {"cmd": "bgm", "id": "night"},
+    {"cmd": "sfx", "id": "wind"},
+    {"cmd": "narration", "text": "늦은 밤, 기숙사로 돌아가는 길. 과자 교실 앞을 지난다."},
+    {"cmd": "narration", "text": "이 시간이면 늘 창문에 불이 켜져 있고, 안에서 노랫소리와 냄비 부딪히는 소리가 났다."},
+    {"cmd": "narration", "text": "오늘은 창문이 까맣다. 아무 소리도 나지 않는다."},
+    {"cmd": "line", "who": "player", "text": "(……벌써 퇴근했나?)"},
+    {"cmd": "narration", "text": "그런데 문이 반쯤 열려 있다."},
+    {"cmd": "if_flag", "flag": "madeleine_was_cold", "then": "cold_open", "else": "warm_open"},
+    {"label": "cold_open"},
+    {"cmd": "narration", "text": "지난번 빵집에서 어색하게 헤어진 뒤로, 과자 교실 앞을 지날 때마다 걸음이 빨라졌다."},
+    {"cmd": "narration", "text": "오늘은 이상하게 발이 멈춘다."},
+    {"cmd": "line", "who": "player", "text": "(그냥 문만 닫아 주고 가자.)"},
+    {"cmd": "narration", "text": "문고리를 잡는데, 안에서 아주 작게 숨 쉬는 소리가 들린다."},
+    {"cmd": "goto", "to": "open_end"},
+    {"label": "warm_open"},
+    {"cmd": "line", "who": "player", "text": "(도둑이라도 든 건가.)"},
+    {"cmd": "narration", "text": "맛보기 담당으로서 과자 교실의 안전을 지켜야 한다. 아마도."},
+    {"cmd": "narration", "text": "살금살금 문 안으로 고개를 들이민다."},
+    {"cmd": "narration", "text": "어둠 속에서 아주 작게 숨 쉬는 소리가 들린다."},
+    {"cmd": "goto", "to": "open_end"},
+    {"label": "open_end"},
+    {"cmd": "sfx", "id": "creak"},
+    {"cmd": "sfx", "id": "clock"},
+    {"cmd": "narration", "text": "째깍, 째깍. 벽시계 소리가 유난히 크게 울린다."},
+    {"cmd": "narration", "text": "눈이 어둠에 익자, 오븐 앞 바닥에 웅크린 그림자 하나가 보인다."},
+    {"cmd": "narration", "text": "무릎을 끌어안고 오븐에 등을 기댄 채, 제빵사가 앉아 있다. 늘 걷어붙이던 소매가 손등까지 내려와 있다."},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "……{player}?"},
+    {"cmd": "narration", "text": "목소리가 작다. 처음 들어 보는 크기다."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "이 시간에 웬일이야. 길 잃었어?"},
+    {"cmd": "choice", "id": "c1", "options": [{"text": "(벽을 더듬어 불을 켠다.) 왜 이렇게 어둡게 있어요?", "affinity": -15, "next": "c1_light"}, {"text": "(불은 켜지 않고, 조용히 옆에 가서 앉는다.)", "affinity": 30, "next": "c1_sit", "flag": "madeleine_dark_kitchen"}, {"text": "으악, 귀신인 줄 알았잖아요. 심장 떨어질 뻔했어요.", "affinity": 15, "next": "c1_joke"}]},
+    {"label": "c1_light"},
+    {"cmd": "sfx", "id": "pop"},
+    {"cmd": "narration", "text": "등불이 탁 켜진다. 제빵사가 눈부신 듯 팔로 얼굴을 가린다."},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "앗, 눈부셔!"},
+    {"cmd": "narration", "text": "팔 아래로 보이는 눈가가 조금 붉다. 제빵사가 소매로 얼굴을 쓱 문지른다."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "하, 하하! 밀가루가 눈에 들어가서! 원래 불 끄고 앉아 있는 게 취미야, 내가!"},
+    {"cmd": "line", "who": "player", "text": "(거짓말이다.)"},
+    {"cmd": "line", "who": "madeleine", "face": "soft", "text": "……미안, 그냥 꺼 줄래? 오늘은 좀 어두운 게 좋아."},
+    {"cmd": "narration", "text": "불을 다시 끄고, 옆에 앉는다."},
+    {"cmd": "goto", "to": "c1_end"},
+    {"label": "c1_sit"},
+    {"cmd": "narration", "text": "아무 말 없이 오븐 옆 바닥에 앉는다. 등에 닿는 오븐 벽돌이 차갑다."},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "……"},
+    {"cmd": "narration", "text": "제빵사가 이쪽을 한 번 보고, 다시 무릎에 턱을 괸다."},
+    {"cmd": "line", "who": "madeleine", "face": "soft", "text": "안 물어보네. 왜 이러고 있냐고."},
+    {"cmd": "line", "who": "player", "text": "말하고 싶으면 하세요. 아니면 그냥 같이 앉아 있을게요."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "……이상한 학생이야, 너."},
+    {"cmd": "narration", "text": "시계 소리가 몇 번 지나간다. 제빵사의 어깨가 아주 조금 내려간다."},
+    {"cmd": "goto", "to": "c1_end"},
+    {"label": "c1_joke"},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "귀신?"},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "하하…… 귀신이라니. 과자 교실 귀신. 그거 좋다."},
+    {"cmd": "narration", "text": "웃음소리가 평소의 절반도 안 된다. 금세 사그라든다."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "귀신이면 밤마다 반죽이나 몰래 치대 줄 텐데."},
+    {"cmd": "line", "who": "player", "text": "그럼 저 매일 밤 맛보기하러 와야겠네요."},
+    {"cmd": "narration", "text": "그렇게 말하고 옆에 앉는다. 제빵사가 작게 코웃음을 친다."},
+    {"cmd": "goto", "to": "c1_end"},
+    {"label": "c1_end"},
+    {"cmd": "narration", "text": "째깍, 째깍."},
+    {"cmd": "line", "who": "madeleine", "face": "neutral", "text": "오븐이 꺼졌어."},
+    {"cmd": "line", "who": "player", "text": "오븐이요?"},
+    {"cmd": "line", "who": "madeleine", "text": "응. 저녁에 반죽 재워 놓고 보니까 불씨가 꺼져 있더라. 숯이 다 젖어서 다시 안 붙고."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "별일 아니야. 내일 아침에 새로 피우면 돼."},
+    {"cmd": "line", "who": "madeleine", "face": "soft", "text": "근데 불이 꺼지니까, 부엌이 너무 조용해서."},
+    {"cmd": "narration", "text": "제빵사가 벽시계를 올려다본다."},
+    {"cmd": "line", "who": "madeleine", "face": "soft", "text": "저 시계 소리, 평소엔 하나도 안 들려. 내가 떠드니까."},
+    {"cmd": "line", "who": "madeleine", "text": "스승님 장례 치른 다음 날 아침에 빵집에 갔거든. 해 뜨기 전에. 습관대로."},
+    {"cmd": "line", "who": "madeleine", "text": "문을 여는데, 아무 소리도 안 나는 거야. 콧노래도, 오븐 소리도, \"일어났냐, 꼬맹이.\" 하는 목소리도."},
+    {"cmd": "line", "who": "madeleine", "face": "sad", "text": "시계 소리만 났어. 째깍, 째깍. 그리고 내 숨소리."},
+    {"cmd": "narration", "text": "시계가 대답처럼 째깍 울린다."},
+    {"cmd": "line", "who": "madeleine", "face": "soft", "text": "그 소리가 너무 무서웠어. 세상에 나 혼자 남은 것 같아서."},
+    {"cmd": "line", "who": "madeleine", "text": "그래서 노래를 불렀어. 엄청 크게. 냄비도 두드리고, 혼잣말도 하고. 그러면 스승님이 옆방에서 반죽하고 있는 것 같거든."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "그게 3 년째야. 이젠 원래 시끄러운 사람이 돼 버렸지. 하하."},
+    {"cmd": "choice", "id": "c2", "options": [{"text": "그럼 오늘은 제가 대신 떠들어 드릴게요.", "affinity": 15, "next": "c2_chatter"}, {"text": "조용한 게 뭐가 무서워요. 그냥 시계 소리잖아요.", "affinity": -30, "next": "c2_scoff"}, {"text": "(말없이 같이 귀를 기울여 본다.)", "affinity": 0, "next": "c2_listen"}]},
+    {"label": "c2_chatter"},
+    {"cmd": "line", "who": "player", "text": "오늘 물약 교실에서요, 제 물약이 보라색이 돼야 하는데 초록색이 됐어요."},
+    {"cmd": "line", "who": "player", "text": "그래서 다시 넣었더니 갈색이 됐고요. 그래서 또 넣었더니……"},
+    {"cmd": "line", "who": "player", "text": "……음, 그다음엔."},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "벌써 끝났어? 30 초도 안 됐는데?"},
+    {"cmd": "line", "who": "player", "text": "떠드는 거 생각보다 어렵네요."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "하하하! 그렇지? 이거 아무나 하는 거 아니야!"},
+    {"cmd": "narration", "text": "이번 웃음은 조금 더 크다. 시계 소리가 그 아래로 묻힌다."},
+    {"cmd": "goto", "to": "c2_end"},
+    {"label": "c2_scoff"},
+    {"cmd": "line", "who": "madeleine", "face": "neutral", "text": "……그렇지. 그냥 시계 소리지."},
+    {"cmd": "narration", "text": "제빵사가 무릎을 더 꼭 끌어안는다."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "맞아. 별것도 아닌 걸로 이러고 있는 거, 나도 알아."},
+    {"cmd": "line", "who": "madeleine", "face": "soft", "text": "그러니까 아무한테도 말 안 했던 거고."},
+    {"cmd": "narration", "text": "째깍, 째깍. 시계 소리가 아까보다 더 크게 들린다."},
+    {"cmd": "line", "who": "player", "text": "(괜히 말했다.)"},
+    {"cmd": "goto", "to": "c2_end"},
+    {"label": "c2_listen"},
+    {"cmd": "narration", "text": "눈을 감고 귀를 기울인다. 시계 소리. 바람 소리. 창틀이 삐걱대는 소리."},
+    {"cmd": "narration", "text": "그리고 옆에서 들리는 숨소리. 처음엔 빠르다가, 조금씩 느려진다."},
+    {"cmd": "line", "who": "madeleine", "face": "soft", "text": "……뭐 들려?"},
+    {"cmd": "line", "who": "player", "text": "선생님 숨소리요. 아까보다 느려졌어요."},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "그런 걸 왜 들어. 하하."},
+    {"cmd": "line", "who": "madeleine", "face": "soft", "text": "스승님이 그랬어. 부엌이 조용하면 귀를 기울여 보라고. 반죽 숨 쉬는 소리가 들린다고. 나는 아직 한 번도 못 들었는데."},
+    {"cmd": "goto", "to": "c2_end"},
+    {"label": "c2_end"},
+    {"cmd": "narration", "text": "제빵사가 바닥을 짚고 일어선다. 무릎에서 뚝 소리가 난다."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "아이고, 무릎. 이게 다 반죽 탓이야."},
+    {"cmd": "line", "who": "madeleine", "face": "determined", "text": "안 되겠다. 오늘 불 붙인다. 아침까지 못 기다리겠어."},
+    {"cmd": "line", "who": "player", "text": "숯이 다 젖었다면서요."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "등불 시장에 가면 밤새 안 꺼지는 등불이 있어. 스승님도 불씨 꺼지면 거기서 얻어 왔어."},
+    {"cmd": "line", "who": "madeleine", "text": "같이 갈래? 혼자 가면 무서워서 노래 부르면서 갈 거야. 그럼 온 마을이 깨겠지."},
+    {"cmd": "follow", "who": "madeleine", "to": "lantern_market"},
+    {"cmd": "sfx", "id": "wind"},
+    {"cmd": "narration", "text": "깊은 밤의 등불 시장. 천막은 다 걷혔고, 길 양쪽의 등불만 고요하게 흔들린다."},
+    {"cmd": "narration", "text": "시장 한가운데 가장 오래된 등불 기둥 아래, 꾸벅꾸벅 조는 상인이 있다."},
+    {"cmd": "show", "who": "merchant", "at": "right"},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "저기요, 불씨 좀 얻으러 왔어요."},
+    {"cmd": "line", "who": "merchant", "face": "sleepy", "text": "으음…… 이 시간에 누구…… 아, 빵집 꼬맹이구먼."},
+    {"cmd": "line", "who": "merchant", "face": "smile", "text": "오븐이 꺼졌나? 너희 스승도 꼭 이런 밤에 불을 얻으러 왔지. 밀가루 범벅으로."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "저도 밀가루 범벅이에요."},
+    {"cmd": "narration", "text": "상인이 작은 손등불 안에 오래된 등불의 불꽃을 옮겨 담아 준다. 주황빛이 둘의 얼굴을 비춘다."},
+    {"cmd": "line", "who": "merchant", "face": "soft", "text": "그 사람, 불씨 받아 가면서 늘 그랬지. 우리 꼬맹이가 불 꺼진 부엌을 무서워해서 얼른 가야 한다고."},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "……스승님이요?"},
+    {"cmd": "line", "who": "merchant", "face": "smile", "text": "그래. 넌 몰랐나 보구먼. 조심히 가. 바람 막고."},
+    {"cmd": "hide", "who": "merchant"},
+    {"cmd": "narration", "text": "돌아오는 길. 제빵사가 손등불을 두 손으로 감싸 쥐고 천천히 걷는다."},
+    {"cmd": "narration", "text": "그러다 아주 작게 콧노래를 흥얼거린다. 크지도 않고, 음정도 엉망이다."},
+    {"cmd": "narration", "text": "손등불의 불꽃이 바람에 흔들릴 때마다 제빵사가 몸을 돌려 바람을 막는다. 꼭 작은 새를 품은 것처럼."},
+    {"cmd": "line", "who": "player", "text": "그렇게까지 안 하셔도 안 꺼질 것 같은데요."},
+    {"cmd": "line", "who": "madeleine", "face": "serious", "text": "안 돼. 이거 꺼지면 시장까지 다시 가야 해. 그리고 저 상인 또 깨워야 하고."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "두 번 깨우면 다음부턴 불씨 값 받을걸!"},
+    {"cmd": "line", "who": "player", "text": "그 노래, 처음 듣는 거예요."},
+    {"cmd": "line", "who": "madeleine", "face": "shy", "text": "……스승님이 반죽할 때 부르던 거야. 크게는 못 부르겠더라. 이 노래는."},
+    {"cmd": "choice", "id": "c3", "options": [{"text": "다음에 또 불 꺼지면 저 불러요. 몇 시든 올게요.", "affinity": 30, "next": "c3_call"}, {"text": "돌아가면 같이 뭐라도 구워요. 오븐 소리 나게요.", "affinity": 15, "next": "c3_bake"}, {"text": "불만 붙이고 얼른 주무세요. 너무 늦었어요.", "affinity": 0, "next": "c3_sleep"}]},
+    {"label": "c3_call"},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "몇 시든?"},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "새벽 세 시에 문 두드려도?"},
+    {"cmd": "line", "who": "player", "text": "……네. 아마도요."},
+    {"cmd": "line", "who": "madeleine", "face": "happy", "text": "아마도래! 하하, 좋아. 그 아마도, 내가 믿어 볼게."},
+    {"cmd": "goto", "to": "c3_end"},
+    {"label": "c3_bake"},
+    {"cmd": "line", "who": "madeleine", "face": "happy", "text": "오, 좋다! 반죽 재워 둔 게 있어. 아침에 구우려던 거지만, 지금 구워도 돼!"},
+    {"cmd": "line", "who": "player", "text": "이 시간에 빵 먹으면 살쪄요."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "맛보기 담당이 그런 걱정을 왜 해!"},
+    {"cmd": "narration", "text": "제빵사의 걸음이 조금 빨라진다."},
+    {"cmd": "goto", "to": "c3_end"},
+    {"label": "c3_sleep"},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "그래. 맞는 말이야."},
+    {"cmd": "line", "who": "madeleine", "text": "너도 얼른 자. 내일 수업 때 졸면 내 탓이라고 할 거잖아."},
+    {"cmd": "line", "who": "player", "text": "당연하죠."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "하하, 알았어."},
+    {"cmd": "goto", "to": "c3_end"},
+    {"label": "c3_end"},
+    {"cmd": "move", "to": "candy_class", "transition": "fade"},
+    {"cmd": "narration", "text": "과자 교실. 제빵사가 오븐 문을 열고 마른 장작 위에 손등불의 불꽃을 옮긴다."},
+    {"cmd": "sfx", "id": "fire"},
+    {"cmd": "narration", "text": "작은 불이 붙는다. 타닥, 타닥. 장작이 몸을 뒤척이는 소리가 교실을 채운다."},
+    {"cmd": "narration", "text": "시계 소리가 그 아래로 사라진다."},
+    {"cmd": "line", "who": "madeleine", "face": "soft", "text": "……이 소리야."},
+    {"cmd": "narration", "text": "제빵사가 벽에 걸린 천 주머니를 흘끗 본다. 그리고 자기 앞치마 끈을 풀었다가 다시 묶는다."},
+    {"cmd": "if_flag", "flag": "madeleine_apron_knot", "then": "knot_cb", "else": "noknot_cb"},
+    {"label": "knot_cb"},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "아, 맞다. 너 스승님 매듭 연습은 했어?"},
+    {"cmd": "line", "who": "player", "text": "했어요. 이렇게 한 번, 또 한 번, 고리 속으로 쏙."},
+    {"cmd": "narration", "text": "제빵사의 앞치마 끈을 잡고 리본을 두 번 감는다. 이번엔 풀리지 않는다."},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "……어, 됐네. 진짜 됐어."},
+    {"cmd": "line", "who": "madeleine", "face": "soft", "text": "스승님이 묶어 주던 거랑 똑같아. 꽉 조이지도 않고, 헐겁지도 않고."},
+    {"cmd": "goto", "to": "knot_end"},
+    {"label": "noknot_cb"},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "스승님은 불 붙이고 나면 꼭 앞치마 끈을 다시 묶었어. 리본을 두 번 감아서."},
+    {"cmd": "line", "who": "player", "text": "왜요?"},
+    {"cmd": "line", "who": "madeleine", "text": "이제부터 진짜 일 시작이라는 뜻이래. 나도 따라 하다 보니 습관이 됐어."},
+    {"cmd": "narration", "text": "리본이 두 번 감긴다. 손이 기억하는 매듭이다."},
+    {"cmd": "line", "who": "madeleine", "face": "soft", "text": "이렇게 묶고 나면, 스승님이 등 뒤에서 \"됐다.\" 하는 것 같아."},
+    {"cmd": "goto", "to": "knot_end"},
+    {"label": "knot_end"},
+    {"label": "ending"},
+    {"cmd": "bgm", "id": "warm"},
+    {"cmd": "narration", "text": "둘은 한동안 오븐 앞에 나란히 앉아 불을 본다. 아무도 말하지 않는데, 아까처럼 조용하지 않다."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "{player}."},
+    {"cmd": "line", "who": "player", "text": "네."},
+    {"cmd": "line", "who": "madeleine", "face": "shy", "text": "오늘 일은 비밀이다? 내가 불 꺼진 데서 쭈그리고 있었던 거."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "내 목소리가 작은 거 들키면 체면이 말이 아니거든!"},
+    {"cmd": "line", "who": "player", "text": "이미 크게 말하고 계신데요."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "하하! 그렇네!"},
+    {"cmd": "narration", "text": "웃음소리가 교실 천장에 부딪혀 돌아온다. 오븐 불이 그 소리에 맞춰 한 번 더 타닥 튄다."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "봐, 오븐도 웃잖아."},
+    {"cmd": "line", "who": "player", "text": "그냥 장작 소리 같은데요."},
+    {"cmd": "line", "who": "madeleine", "face": "proud", "text": "아니야. 저건 웃는 소리야. 내가 3 년 동안 들어서 알아."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "이거 가져가. 밀 이삭. 내일 반죽에 넣으려던 건데, 불씨 값이야."},
+    {"cmd": "give_item", "item": "g_wheat", "n": 2},
+    {"cmd": "narration", "text": "문을 나서는데, 등 뒤에서 오븐 불 소리와 함께 작은 콧노래가 들린다. 아까 그 노래다."},
+    {"cmd": "fade_out"}
+  ],
+  "cold": [
+    {"cmd": "line", "who": "madeleine", "face": "neutral", "text": "……됐어. 오늘은 여기까지 하자."},
+    {"cmd": "line", "who": "madeleine", "text": "불은 내가 알아서 붙일게. 원래 혼자 하던 거니까."},
+    {"cmd": "narration", "text": "제빵사가 손등불을 받아 들고 등을 돌린다."},
+    {"cmd": "narration", "text": "문이 닫히기 직전, 안에서 냄비 하나가 요란하게 바닥에 떨어지는 소리가 난다. 그리고 큰 노랫소리."},
+    {"cmd": "line", "who": "player", "text": "(……일부러 시끄럽게 하는 거다.)"},
+    {"cmd": "narration", "text": "노랫소리는 밤이 깊도록 그치지 않는다."},
+    {"cmd": "fade_out"}
   ]
- },
- "rewards": {
-  "coin": 40,
-  "mana": 5,
-  "know": 0,
-  "items": {
-   "g_wheat": 2
-  },
-  "flags": [],
-  "perk": null
- },
- "script": [
-  {
-   "cmd": "fade_in"
-  },
-  {
-   "cmd": "bgm",
-   "id": "night"
-  },
-  {
-   "cmd": "sfx",
-   "id": "wind"
-  },
-  {
-   "cmd": "narration",
-   "text": "늦은 밤, 기숙사로 돌아가는 길. 과자 교실 앞을 지난다."
-  },
-  {
-   "cmd": "narration",
-   "text": "이 시간이면 늘 창문에 불이 켜져 있고, 안에서 노랫소리와 냄비 부딪히는 소리가 났다."
-  },
-  {
-   "cmd": "narration",
-   "text": "오늘은 창문이 까맣다. 아무 소리도 나지 않는다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(……벌써 퇴근했나?)"
-  },
-  {
-   "cmd": "narration",
-   "text": "그런데 문이 반쯤 열려 있다."
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "madeleine_was_cold",
-   "then": "cold_open",
-   "else": "warm_open"
-  },
-  {
-   "label": "cold_open"
-  },
-  {
-   "cmd": "narration",
-   "text": "지난번 빵집에서 어색하게 헤어진 뒤로, 과자 교실 앞을 지날 때마다 걸음이 빨라졌다."
-  },
-  {
-   "cmd": "narration",
-   "text": "오늘은 이상하게 발이 멈춘다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(그냥 문만 닫아 주고 가자.)"
-  },
-  {
-   "cmd": "narration",
-   "text": "문고리를 잡는데, 안에서 아주 작게 숨 쉬는 소리가 들린다."
-  },
-  {
-   "cmd": "goto",
-   "to": "open_end"
-  },
-  {
-   "label": "warm_open"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(도둑이라도 든 건가.)"
-  },
-  {
-   "cmd": "narration",
-   "text": "맛보기 담당으로서 과자 교실의 안전을 지켜야 한다. 아마도."
-  },
-  {
-   "cmd": "narration",
-   "text": "살금살금 문 안으로 고개를 들이민다."
-  },
-  {
-   "cmd": "narration",
-   "text": "어둠 속에서 아주 작게 숨 쉬는 소리가 들린다."
-  },
-  {
-   "cmd": "goto",
-   "to": "open_end"
-  },
-  {
-   "label": "open_end"
-  },
-  {
-   "cmd": "sfx",
-   "id": "creak"
-  },
-  {
-   "cmd": "sfx",
-   "id": "clock"
-  },
-  {
-   "cmd": "narration",
-   "text": "째깍, 째깍. 벽시계 소리가 유난히 크게 울린다."
-  },
-  {
-   "cmd": "narration",
-   "text": "눈이 어둠에 익자, 오븐 앞 바닥에 웅크린 그림자 하나가 보인다."
-  },
-  {
-   "cmd": "narration",
-   "text": "무릎을 끌어안고 오븐에 등을 기댄 채, 제빵사가 앉아 있다. 늘 걷어붙이던 소매가 손등까지 내려와 있다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "……{player}?"
-  },
-  {
-   "cmd": "narration",
-   "text": "목소리가 작다. 처음 들어 보는 크기다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "이 시간에 웬일이야. 길 잃었어?"
-  },
-  {
-   "cmd": "choice",
-   "id": "c1",
-   "options": [
-    {
-     "text": "(벽을 더듬어 불을 켠다.) 왜 이렇게 어둡게 있어요?",
-     "affinity": -15,
-     "next": "c1_light"
-    },
-    {
-     "text": "(불은 켜지 않고, 조용히 옆에 가서 앉는다.)",
-     "affinity": 30,
-     "next": "c1_sit",
-     "flag": "madeleine_dark_kitchen"
-    },
-    {
-     "text": "으악, 귀신인 줄 알았잖아요. 심장 떨어질 뻔했어요.",
-     "affinity": 15,
-     "next": "c1_joke"
-    }
-   ]
-  },
-  {
-   "label": "c1_light"
-  },
-  {
-   "cmd": "sfx",
-   "id": "pop"
-  },
-  {
-   "cmd": "narration",
-   "text": "등불이 탁 켜진다. 제빵사가 눈부신 듯 팔로 얼굴을 가린다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "앗, 눈부셔!"
-  },
-  {
-   "cmd": "narration",
-   "text": "팔 아래로 보이는 눈가가 조금 붉다. 제빵사가 소매로 얼굴을 쓱 문지른다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "하, 하하! 밀가루가 눈에 들어가서! 원래 불 끄고 앉아 있는 게 취미야, 내가!"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(거짓말이다.)"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "soft",
-   "text": "……미안, 그냥 꺼 줄래? 오늘은 좀 어두운 게 좋아."
-  },
-  {
-   "cmd": "narration",
-   "text": "불을 다시 끄고, 옆에 앉는다."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_end"
-  },
-  {
-   "label": "c1_sit"
-  },
-  {
-   "cmd": "narration",
-   "text": "아무 말 없이 오븐 옆 바닥에 앉는다. 등에 닿는 오븐 벽돌이 차갑다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "……"
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 이쪽을 한 번 보고, 다시 무릎에 턱을 괸다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "soft",
-   "text": "안 물어보네. 왜 이러고 있냐고."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "말하고 싶으면 하세요. 아니면 그냥 같이 앉아 있을게요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "……이상한 학생이야, 너."
-  },
-  {
-   "cmd": "narration",
-   "text": "시계 소리가 몇 번 지나간다. 제빵사의 어깨가 아주 조금 내려간다."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_end"
-  },
-  {
-   "label": "c1_joke"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "귀신?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "하하…… 귀신이라니. 과자 교실 귀신. 그거 좋다."
-  },
-  {
-   "cmd": "narration",
-   "text": "웃음소리가 평소의 절반도 안 된다. 금세 사그라든다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "귀신이면 밤마다 반죽이나 몰래 치대 줄 텐데."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그럼 저 매일 밤 맛보기하러 와야겠네요."
-  },
-  {
-   "cmd": "narration",
-   "text": "그렇게 말하고 옆에 앉는다. 제빵사가 작게 코웃음을 친다."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_end"
-  },
-  {
-   "label": "c1_end"
-  },
-  {
-   "cmd": "narration",
-   "text": "째깍, 째깍."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "neutral",
-   "text": "오븐이 꺼졌어."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "오븐이요?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "text": "응. 저녁에 반죽 재워 놓고 보니까 불씨가 꺼져 있더라. 숯이 다 젖어서 다시 안 붙고."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "별일 아니야. 내일 아침에 새로 피우면 돼."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "soft",
-   "text": "근데 불이 꺼지니까, 부엌이 너무 조용해서."
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 벽시계를 올려다본다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "soft",
-   "text": "저 시계 소리, 평소엔 하나도 안 들려. 내가 떠드니까."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "text": "스승님 장례 치른 다음 날 아침에 빵집에 갔거든. 해 뜨기 전에. 습관대로."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "text": "문을 여는데, 아무 소리도 안 나는 거야. 콧노래도, 오븐 소리도, \"일어났냐, 꼬맹이.\" 하는 목소리도."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "sad",
-   "text": "시계 소리만 났어. 째깍, 째깍. 그리고 내 숨소리."
-  },
-  {
-   "cmd": "narration",
-   "text": "시계가 대답처럼 째깍 울린다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "soft",
-   "text": "그 소리가 너무 무서웠어. 세상에 나 혼자 남은 것 같아서."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "text": "그래서 노래를 불렀어. 엄청 크게. 냄비도 두드리고, 혼잣말도 하고. 그러면 스승님이 옆방에서 반죽하고 있는 것 같거든."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "그게 3 년째야. 이젠 원래 시끄러운 사람이 돼 버렸지. 하하."
-  },
-  {
-   "cmd": "choice",
-   "id": "c2",
-   "options": [
-    {
-     "text": "그럼 오늘은 제가 대신 떠들어 드릴게요.",
-     "affinity": 15,
-     "next": "c2_chatter"
-    },
-    {
-     "text": "조용한 게 뭐가 무서워요. 그냥 시계 소리잖아요.",
-     "affinity": -30,
-     "next": "c2_scoff"
-    },
-    {
-     "text": "(말없이 같이 귀를 기울여 본다.)",
-     "affinity": 0,
-     "next": "c2_listen"
-    }
-   ]
-  },
-  {
-   "label": "c2_chatter"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "오늘 물약 교실에서요, 제 물약이 보라색이 돼야 하는데 초록색이 됐어요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그래서 다시 넣었더니 갈색이 됐고요. 그래서 또 넣었더니……"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……음, 그다음엔."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "벌써 끝났어? 30 초도 안 됐는데?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "떠드는 거 생각보다 어렵네요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "하하하! 그렇지? 이거 아무나 하는 거 아니야!"
-  },
-  {
-   "cmd": "narration",
-   "text": "이번 웃음은 조금 더 크다. 시계 소리가 그 아래로 묻힌다."
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_end"
-  },
-  {
-   "label": "c2_scoff"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "neutral",
-   "text": "……그렇지. 그냥 시계 소리지."
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 무릎을 더 꼭 끌어안는다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "맞아. 별것도 아닌 걸로 이러고 있는 거, 나도 알아."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "soft",
-   "text": "그러니까 아무한테도 말 안 했던 거고."
-  },
-  {
-   "cmd": "narration",
-   "text": "째깍, 째깍. 시계 소리가 아까보다 더 크게 들린다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(괜히 말했다.)"
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_end"
-  },
-  {
-   "label": "c2_listen"
-  },
-  {
-   "cmd": "narration",
-   "text": "눈을 감고 귀를 기울인다. 시계 소리. 바람 소리. 창틀이 삐걱대는 소리."
-  },
-  {
-   "cmd": "narration",
-   "text": "그리고 옆에서 들리는 숨소리. 처음엔 빠르다가, 조금씩 느려진다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "soft",
-   "text": "……뭐 들려?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "선생님 숨소리요. 아까보다 느려졌어요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "그런 걸 왜 들어. 하하."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "soft",
-   "text": "스승님이 그랬어. 부엌이 조용하면 귀를 기울여 보라고. 반죽 숨 쉬는 소리가 들린다고. 나는 아직 한 번도 못 들었는데."
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_end"
-  },
-  {
-   "label": "c2_end"
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 바닥을 짚고 일어선다. 무릎에서 뚝 소리가 난다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "아이고, 무릎. 이게 다 반죽 탓이야."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "determined",
-   "text": "안 되겠다. 오늘 불 붙인다. 아침까지 못 기다리겠어."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "숯이 다 젖었다면서요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "등불 시장에 가면 밤새 안 꺼지는 등불이 있어. 스승님도 불씨 꺼지면 거기서 얻어 왔어."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "text": "같이 갈래? 혼자 가면 무서워서 노래 부르면서 갈 거야. 그럼 온 마을이 깨겠지."
-  },
-  {
-   "cmd": "follow",
-   "who": "madeleine",
-   "to": "lantern_market"
-  },
-  {
-   "cmd": "sfx",
-   "id": "wind"
-  },
-  {
-   "cmd": "narration",
-   "text": "깊은 밤의 등불 시장. 천막은 다 걷혔고, 길 양쪽의 등불만 고요하게 흔들린다."
-  },
-  {
-   "cmd": "narration",
-   "text": "시장 한가운데 가장 오래된 등불 기둥 아래, 꾸벅꾸벅 조는 상인이 있다."
-  },
-  {
-   "cmd": "show",
-   "who": "merchant",
-   "at": "right"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "저기요, 불씨 좀 얻으러 왔어요."
-  },
-  {
-   "cmd": "line",
-   "who": "merchant",
-   "face": "sleepy",
-   "text": "으음…… 이 시간에 누구…… 아, 빵집 꼬맹이구먼."
-  },
-  {
-   "cmd": "line",
-   "who": "merchant",
-   "face": "smile",
-   "text": "오븐이 꺼졌나? 너희 스승도 꼭 이런 밤에 불을 얻으러 왔지. 밀가루 범벅으로."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "저도 밀가루 범벅이에요."
-  },
-  {
-   "cmd": "narration",
-   "text": "상인이 작은 손등불 안에 오래된 등불의 불꽃을 옮겨 담아 준다. 주황빛이 둘의 얼굴을 비춘다."
-  },
-  {
-   "cmd": "line",
-   "who": "merchant",
-   "face": "soft",
-   "text": "그 사람, 불씨 받아 가면서 늘 그랬지. 우리 꼬맹이가 불 꺼진 부엌을 무서워해서 얼른 가야 한다고."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "……스승님이요?"
-  },
-  {
-   "cmd": "line",
-   "who": "merchant",
-   "face": "smile",
-   "text": "그래. 넌 몰랐나 보구먼. 조심히 가. 바람 막고."
-  },
-  {
-   "cmd": "hide",
-   "who": "merchant"
-  },
-  {
-   "cmd": "narration",
-   "text": "돌아오는 길. 제빵사가 손등불을 두 손으로 감싸 쥐고 천천히 걷는다."
-  },
-  {
-   "cmd": "narration",
-   "text": "그러다 아주 작게 콧노래를 흥얼거린다. 크지도 않고, 음정도 엉망이다."
-  },
-  {
-   "cmd": "narration",
-   "text": "손등불의 불꽃이 바람에 흔들릴 때마다 제빵사가 몸을 돌려 바람을 막는다. 꼭 작은 새를 품은 것처럼."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그렇게까지 안 하셔도 안 꺼질 것 같은데요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "serious",
-   "text": "안 돼. 이거 꺼지면 시장까지 다시 가야 해. 그리고 저 상인 또 깨워야 하고."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "두 번 깨우면 다음부턴 불씨 값 받을걸!"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그 노래, 처음 듣는 거예요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "shy",
-   "text": "……스승님이 반죽할 때 부르던 거야. 크게는 못 부르겠더라. 이 노래는."
-  },
-  {
-   "cmd": "choice",
-   "id": "c3",
-   "options": [
-    {
-     "text": "다음에 또 불 꺼지면 저 불러요. 몇 시든 올게요.",
-     "affinity": 30,
-     "next": "c3_call"
-    },
-    {
-     "text": "돌아가면 같이 뭐라도 구워요. 오븐 소리 나게요.",
-     "affinity": 15,
-     "next": "c3_bake"
-    },
-    {
-     "text": "불만 붙이고 얼른 주무세요. 너무 늦었어요.",
-     "affinity": 0,
-     "next": "c3_sleep"
-    }
-   ]
-  },
-  {
-   "label": "c3_call"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "몇 시든?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "새벽 세 시에 문 두드려도?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……네. 아마도요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "happy",
-   "text": "아마도래! 하하, 좋아. 그 아마도, 내가 믿어 볼게."
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_end"
-  },
-  {
-   "label": "c3_bake"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "happy",
-   "text": "오, 좋다! 반죽 재워 둔 게 있어. 아침에 구우려던 거지만, 지금 구워도 돼!"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "이 시간에 빵 먹으면 살쪄요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "맛보기 담당이 그런 걱정을 왜 해!"
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사의 걸음이 조금 빨라진다."
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_end"
-  },
-  {
-   "label": "c3_sleep"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "그래. 맞는 말이야."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "text": "너도 얼른 자. 내일 수업 때 졸면 내 탓이라고 할 거잖아."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "당연하죠."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "하하, 알았어."
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_end"
-  },
-  {
-   "label": "c3_end"
-  },
-  {
-   "cmd": "move",
-   "to": "candy_class",
-   "transition": "fade"
-  },
-  {
-   "cmd": "narration",
-   "text": "과자 교실. 제빵사가 오븐 문을 열고 마른 장작 위에 손등불의 불꽃을 옮긴다."
-  },
-  {
-   "cmd": "sfx",
-   "id": "fire"
-  },
-  {
-   "cmd": "narration",
-   "text": "작은 불이 붙는다. 타닥, 타닥. 장작이 몸을 뒤척이는 소리가 교실을 채운다."
-  },
-  {
-   "cmd": "narration",
-   "text": "시계 소리가 그 아래로 사라진다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "soft",
-   "text": "……이 소리야."
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 벽에 걸린 천 주머니를 흘끗 본다. 그리고 자기 앞치마 끈을 풀었다가 다시 묶는다."
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "madeleine_apron_knot",
-   "then": "knot_cb",
-   "else": "noknot_cb"
-  },
-  {
-   "label": "knot_cb"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "아, 맞다. 너 스승님 매듭 연습은 했어?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "했어요. 이렇게 한 번, 또 한 번, 고리 속으로 쏙."
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사의 앞치마 끈을 잡고 리본을 두 번 감는다. 이번엔 풀리지 않는다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "……어, 됐네. 진짜 됐어."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "soft",
-   "text": "스승님이 묶어 주던 거랑 똑같아. 꽉 조이지도 않고, 헐겁지도 않고."
-  },
-  {
-   "cmd": "goto",
-   "to": "knot_end"
-  },
-  {
-   "label": "noknot_cb"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "스승님은 불 붙이고 나면 꼭 앞치마 끈을 다시 묶었어. 리본을 두 번 감아서."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "왜요?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "text": "이제부터 진짜 일 시작이라는 뜻이래. 나도 따라 하다 보니 습관이 됐어."
-  },
-  {
-   "cmd": "narration",
-   "text": "리본이 두 번 감긴다. 손이 기억하는 매듭이다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "soft",
-   "text": "이렇게 묶고 나면, 스승님이 등 뒤에서 \"됐다.\" 하는 것 같아."
-  },
-  {
-   "cmd": "goto",
-   "to": "knot_end"
-  },
-  {
-   "label": "knot_end"
-  },
-  {
-   "label": "ending"
-  },
-  {
-   "cmd": "bgm",
-   "id": "warm"
-  },
-  {
-   "cmd": "narration",
-   "text": "둘은 한동안 오븐 앞에 나란히 앉아 불을 본다. 아무도 말하지 않는데, 아까처럼 조용하지 않다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "{player}."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "네."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "shy",
-   "text": "오늘 일은 비밀이다? 내가 불 꺼진 데서 쭈그리고 있었던 거."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "내 목소리가 작은 거 들키면 체면이 말이 아니거든!"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "이미 크게 말하고 계신데요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "하하! 그렇네!"
-  },
-  {
-   "cmd": "narration",
-   "text": "웃음소리가 교실 천장에 부딪혀 돌아온다. 오븐 불이 그 소리에 맞춰 한 번 더 타닥 튄다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "봐, 오븐도 웃잖아."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그냥 장작 소리 같은데요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "proud",
-   "text": "아니야. 저건 웃는 소리야. 내가 3 년 동안 들어서 알아."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "이거 가져가. 밀 이삭. 내일 반죽에 넣으려던 건데, 불씨 값이야."
-  },
-  {
-   "cmd": "give_item",
-   "item": "g_wheat",
-   "n": 2
-  },
-  {
-   "cmd": "narration",
-   "text": "문을 나서는데, 등 뒤에서 오븐 불 소리와 함께 작은 콧노래가 들린다. 아까 그 노래다."
-  },
-  {
-   "cmd": "fade_out"
-  }
- ],
- "cold": [
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "neutral",
-   "text": "……됐어. 오늘은 여기까지 하자."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "text": "불은 내가 알아서 붙일게. 원래 혼자 하던 거니까."
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 손등불을 받아 들고 등을 돌린다."
-  },
-  {
-   "cmd": "narration",
-   "text": "문이 닫히기 직전, 안에서 냄비 하나가 요란하게 바닥에 떨어지는 소리가 난다. 그리고 큰 노랫소리."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(……일부러 시끄럽게 하는 거다.)"
-  },
-  {
-   "cmd": "narration",
-   "text": "노랫소리는 밤이 깊도록 그치지 않는다."
-  },
-  {
-   "cmd": "fade_out"
-  }
- ]
 }

@@ -1,1267 +1,259 @@
 {
- "id": "mandi_heart_10",
- "npc": "mandi",
- "heart": 10,
- "title": "맨드레이크의 노래",
- "conditions": {
-  "minHeart": 10,
-  "location": "poison_greenhouse",
-  "time": [
-   "evening"
+  "id": "mandi_heart_10", "npc": "mandi", "heart": 10, "title": "맨드레이크의 노래",
+  "conditions": {"minHeart": 10, "location": "poison_greenhouse", "time": ["evening"], "afterDays": 1},
+  "rewards": {"coin": 200, "mana": 30, "know": 20, "items": {"g_crystal": 1, "g_wish": 1}, "flags": [], "perk": "greenhouse_growth"},
+  "script": [
+    {"cmd": "fade_in"},
+    {"cmd": "bgm", "id": "warm"},
+    {"cmd": "narration", "text": "노을빛 온실. 문 옆에 새 팻말이 걸려 있다. 「맨드레이크 있음. 놀라면 소리 지름. 그래도 들어오세요.」"},
+    {"cmd": "if_flag", "flag": "mandi_was_cold", "then": "cold_open", "else": "warm_open"},
+    {"label": "cold_open"},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "{player}. 와 줬구나. 이름표 쓰던 날, 내가 혼자 있겠다고 해서 서운했지."},
+    {"cmd": "line", "who": "player", "text": "아니. 그날은 내가 너무 앞서 갔어. 미안해."},
+    {"cmd": "line", "who": "mandi", "face": "smile", "text": "그럼 오늘은 딱 내 옆에만 있어 줘. 앞도 말고, 뒤도 말고."},
+    {"cmd": "line", "who": "player", "text": "알았어. 딱 옆에."},
+    {"cmd": "line", "who": "mandi", "face": "happy", "text": "좋아. 그럼 오늘이야. 오늘 광장 무대에 올라갈 거야."},
+    {"cmd": "goto", "to": "open_j"},
+    {"label": "warm_open"},
+    {"cmd": "line", "who": "mandi", "face": "happy", "text": "{player}, 왔다. 랄라, 딱 맞춰 왔어. 오늘이야."},
+    {"cmd": "line", "who": "player", "text": "오늘? 설마, 광장 무대?"},
+    {"cmd": "line", "who": "mandi", "face": "smug", "text": "응. 오늘 저녁 무대, 내 이름 적어 놓고 왔어. 「맨드레이크 맨디」. 이름표랑 똑같이."},
+    {"cmd": "line", "who": "player", "text": "대단하다. 근데 뭘 하는 건데?"},
+    {"cmd": "line", "who": "mandi", "face": "shy", "text": "그건…… 먼저 여기서 한 번만 들어 줄래? 연습한 거."},
+    {"cmd": "goto", "to": "open_j"},
+    {"label": "open_j"},
+    {"cmd": "narration", "text": "맨디가 주걱이 화분 앞에 선다. 끈끈이주걱이 입을 쩍 벌리고 있다. 배가 고픈 모양이다."},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "처음 만난 날 말했지. 주걱이는 노래를 들려주면 입을 꼭 다문다고. 그래서 몰래 주걱이 앞에서 연습했어."},
+    {"cmd": "line", "who": "mandi", "face": "embarrassed", "text": "처음엔 큰일 났었어. 노래하려고 숨을 들이쉬면 비명이 나오더라. 주걱이가 놀라서 오히려 입을 더 크게 벌렸어."},
+    {"cmd": "line", "who": "mandi", "face": "thinking", "text": "그래서 밤꽃 할멈한테 물어봤어. 할멈은 대답은 안 하는데, 밤마다 꽃잎을 아주 천천히 열거든. 소리 없이, 그래도 활짝."},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "그거 보고 알았어. 비명은 숨을 한꺼번에 터뜨리는 거고, 노래는 같은 숨을 천천히 여는 거더라. 같은 숨이야. 여는 속도만 달라."},
+    {"cmd": "line", "who": "player", "text": "같은 숨이라……"},
+    {"cmd": "line", "who": "mandi", "face": "determined", "text": "들어 봐. 아주 조금만."},
+    {"cmd": "wait", "sec": 1},
+    {"cmd": "sfx", "id": "sing"},
+    {"cmd": "emote", "who": "mandi", "icon": "music"},
+    {"cmd": "narration", "text": "맨디가 숨을 들이쉬고, 아주 천천히 내쉰다. 낮고 둥근 소리가 흘러나온다. 흙 속 깊은 데서 울려 올라오는 것 같은 소리다."},
+    {"cmd": "narration", "text": "온실 유리가 떨리지 않는다. 대신 화분 속 흙이 아주 조금 들썩인다. 새싹들이 고개를 쭉 내민다."},
+    {"cmd": "narration", "text": "주걱이가 입을 스르르 다문다. 덩굴이가 줄기를 살랑살랑 흔든다. 투덜이는 트림을 참는 듯 통을 꼭 닫고 있다."},
+    {"cmd": "line", "who": "mandi", "face": "shy", "text": "……어땠어? 솔직하게."},
+    {"cmd": "choice", "id": "c1", "options": [{"text": "진짜 좋다. 흙에서 나는 노래 같아.", "affinity": 15, "next": "c1_good"}, {"text": "솔직히, 처음 한 소절은 비명인 줄 알았어.", "affinity": 0, "next": "c1_honest"}, {"text": "광장 말고 여기서만 부르면 안 돼? 사람 많잖아.", "affinity": -15, "next": "c1_stay"}]},
+    {"label": "c1_good"},
+    {"cmd": "line", "who": "player", "text": "진짜 좋다. 흙에서 나는 노래 같아."},
+    {"cmd": "line", "who": "mandi", "face": "surprised", "text": "흙에서 나는 노래. 그거 좋다. 그거 노래 제목으로 할까."},
+    {"cmd": "line", "who": "mandi", "face": "laugh", "text": "아니다. 제목은 벌써 정해 놨어. 무대에서 알려 줄게. 헤헤."},
+    {"cmd": "line", "who": "player", "text": "치사하네."},
+    {"cmd": "goto", "to": "j1"},
+    {"label": "c1_honest"},
+    {"cmd": "line", "who": "player", "text": "솔직히, 처음 한 소절은 비명인 줄 알았어."},
+    {"cmd": "line", "who": "mandi", "face": "laugh", "text": "푸하. 맞아. 반은 비명이야. 처음 숨은 아직 잘 못 열어."},
+    {"cmd": "line", "who": "mandi", "face": "smile", "text": "근데 괜찮아. 비명도 내 소리니까, 노래 안에 조금 섞여 있어도 돼."},
+    {"cmd": "line", "who": "player", "text": "비명 섞인 노래라. 너답다."},
+    {"cmd": "goto", "to": "j1"},
+    {"label": "c1_stay"},
+    {"cmd": "line", "who": "player", "text": "광장 말고 여기서만 부르면 안 돼? 사람 많잖아. 혹시라도……"},
+    {"cmd": "line", "who": "mandi", "face": "thinking", "text": "……걱정해 주는 거 알아. 예전의 나였으면 좋다고 했을 거야."},
+    {"cmd": "line", "who": "mandi", "face": "determined", "text": "근데 나 이제 화분 뒤에서만 사는 거 그만하고 싶어. 이번엔 사람들 앞에서 해 볼래."},
+    {"cmd": "line", "who": "player", "text": "……그래. 미안. 네 무대지."},
+    {"cmd": "goto", "to": "j1"},
+    {"label": "j1"},
+    {"cmd": "narration", "text": "맨디가 앞치마를 탁탁 털고, 머리 이파리를 빗물 통에 비춰 보며 매만진다. 이파리가 자꾸 삐죽 선다."},
+    {"cmd": "line", "who": "mandi", "text": "{player}, 나 이상하지 않아? 이파리가 말을 안 들어. 오늘따라 덩굴이처럼 삐졌나 봐.", "face": "worried"},
+    {"cmd": "line", "who": "player", "text": "평소랑 똑같아. 평소처럼 귀여워."},
+    {"cmd": "line", "who": "mandi", "text": "평소처럼은 안 되는데. 오늘은 무대잖아. ……아, 아니다. 평소처럼이 맞아. 평소의 나로 올라가는 거니까.", "face": "embarrassed"},
+    {"cmd": "narration", "text": "맨디가 온실 식구들에게 차례로 손을 흔든다. 방울독초가 딸랑, 주걱이가 입을 꼭, 투덜이가 꾸르륵 대답한다."},
+    {"cmd": "line", "who": "mandi", "text": "다녀올게. 투덜이, 내가 없을 때 트림 참지 마. 몸에 안 좋아.", "face": "laugh"},
+    {"cmd": "line", "who": "mandi", "face": "determined", "text": "그럼 가자. 무대는 해 질 때 시작이야."},
+    {"cmd": "follow", "who": "mandi", "to": "village_square"},
+    {"cmd": "bgm", "id": "festival"},
+    {"cmd": "sfx", "id": "crowd"},
+    {"cmd": "narration", "text": "저녁의 마을 광장. 분수 옆에 나무 상자를 쌓아 만든 작은 무대가 있고, 등불이 줄줄이 걸려 있다."},
+    {"cmd": "narration", "text": "광장으로 오는 내내 맨디는 쉬지 않고 떠들었다. 노래 가사를 까먹으면 어떡하지, 벌들이 안 오면 어떡하지, 목이 또 쉬면 어떡하지."},
+    {"cmd": "line", "who": "player", "text": "오늘 맨디 말이 엄청 많다."},
+    {"cmd": "line", "who": "mandi", "text": "긴장하면 말이 많아지나 봐. 예전엔 긴장하면 숨기만 했는데. 이것도 바뀐 거야.", "face": "embarrassed"},
+    {"cmd": "narration", "text": "생각보다 사람이 많다. 아이들, 꽃집 주인, 장 보러 나온 마을 사람들, 퇴근길의 선생님들까지."},
+    {"cmd": "walk", "who": "kids", "to": "far_right"},
+    {"cmd": "line", "who": "kids", "text": "맨디다! 비명 영웅 나왔다! 오늘 폭풍용 해 줘!"},
+    {"cmd": "line", "who": "mandi", "face": "laugh", "text": "오늘은 폭풍용 아니야. 다른 거야. 잘 들어."},
+    {"cmd": "walk", "who": "florist", "to": "right"},
+    {"cmd": "line", "who": "florist", "text": "맨디 정원사, 이거 받아요. 무대 올라가는 사람한테는 꽃을 하나씩 주는 게 이 광장 규칙이에요."},
+    {"cmd": "narration", "text": "꽃집 주인이 건넨 건 장미가 아니다. 촉촉한 이끼 위에 박하 잎을 엮어 만든 작은 꽃다발이다."},
+    {"cmd": "line", "who": "mandi", "face": "surprised", "text": "……이끼랑 박하예요. 제가 좋아하는 거."},
+    {"cmd": "line", "who": "florist", "text": "장미보다 이게 더 맨디 같아서요. 꽃집 주인 눈은 정확하답니다."},
+    {"cmd": "hide", "who": "florist"},
+    {"cmd": "walk", "who": "husband", "to": "right"},
+    {"cmd": "narration", "text": "사람들 사이로 등불을 든 낯익은 얼굴이 보인다. 그 밤, 온실 문을 두드렸던 사람이다."},
+    {"cmd": "if_flag", "flag": "mandi_root_secret", "then": "secret_yes", "else": "secret_no"},
+    {"label": "secret_yes"},
+    {"cmd": "line", "who": "husband", "text": "……덕분에 거의 다 됐어요. 그 뿌리 조각, 아주 잘 자라고 있어요."},
+    {"cmd": "line", "who": "mandi", "face": "smug", "text": "(작게) 비밀은 지키고 있어요. {player} 씨, 아니 {player}하고 둘이서요. 아무한테도 말 안 했어요."},
+    {"cmd": "line", "who": "husband", "text": "알아요. 그래서 오늘 꼭 들으러 오고 싶었어요. 고마운 정원사의 노래니까."},
+    {"cmd": "goto", "to": "secret_j"},
+    {"label": "secret_no"},
+    {"cmd": "line", "who": "husband", "text": "그날 밤엔 정말 고마웠어요. 그 뿌리 조각, 아주 잘 쓰이고 있어요."},
+    {"cmd": "line", "who": "mandi", "face": "shy", "text": "다, 다행이에요. 어디에 쓰이는지는 아직 비밀이에요?"},
+    {"cmd": "line", "who": "husband", "text": "조금만 더요. 대신 오늘은 맨 앞에서 들을게요."},
+    {"cmd": "goto", "to": "secret_j"},
+    {"label": "secret_j"},
+    {"cmd": "hide", "who": "husband"},
+    {"cmd": "if_flag", "flag": "mandi_bee_apology", "then": "bee_yes", "else": "bee_no"},
+    {"label": "bee_yes"},
+    {"cmd": "sfx", "id": "wing"},
+    {"cmd": "show", "who": "bees", "at": "far_left"},
+    {"cmd": "narration", "text": "붕붕. 온실 쪽 하늘에서 벌 떼가 줄을 지어 날아온다. 라벤더 사건 날 같이 사과했던 그 벌들이다."},
+    {"cmd": "line", "who": "mandi", "face": "happy", "text": "벌들도 왔어. 그날 꿀 접시 내려놓고 사과한 거, 기억하나 봐."},
+    {"cmd": "goto", "to": "bee_j"},
+    {"label": "bee_no"},
+    {"cmd": "sfx", "id": "wing"},
+    {"cmd": "show", "who": "bees", "at": "far_left"},
+    {"cmd": "narration", "text": "붕붕. 온실 쪽 하늘에서 벌 몇 마리가 날아와 광장 끝 화단에 내려앉는다. 멀찍이서 이쪽을 지켜본다."},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "벌들도 왔네. 아직 조금 멀지만. 오늘 노래 들으면 조금 더 가까이 와 줄지도 몰라."},
+    {"cmd": "goto", "to": "bee_j"},
+    {"label": "bee_j"},
+    {"cmd": "narration", "text": "까마귀 한 마리가 등불 줄 위에 내려앉는다. 다리에 짚 한 가닥이 묶여 있다."},
+    {"cmd": "line", "who": "crow", "text": "까악. 허수아비가 전하래. 크게 불러 달래. 호박밭까지 들리게. 까악."},
+    {"cmd": "line", "who": "mandi", "text": "짚신이? 까마귀한테 심부름을 시켰다고?", "face": "surprised"},
+    {"cmd": "line", "who": "crow", "text": "까악. 요즘 그 모자가 앉기 편해서. 심부름 정도는 해 줘야지."},
+    {"cmd": "line", "who": "mandi", "text": "헤헤. 짚신 모자가 의자에서 쉼터가 됐구나.", "face": "laugh"},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "그리고 오늘은 짚신한테도 들리게 부를 거야. 호박밭까지. 짚신은 움직일 수 없으니까, 내 소리가 가면 돼."},
+    {"cmd": "line", "who": "mandi", "face": "smug", "text": "맨드레이크 목소리가 이렇게 쓸모 있을 줄 누가 알았겠어."},
+    {"cmd": "walk", "who": "aula", "to": "far_right"},
+    {"cmd": "line", "who": "aula", "text": "문 팻말, 봤어요. 「그래도 들어오세요.」 좋은 문구예요. 오늘은 귀마개 없이 맨 앞에서 듣겠어요.", "face": "neutral"},
+    {"cmd": "line", "who": "mandi", "text": "아, 아울라 선생님. 오늘은 잔소리 없이 들어 주세요.", "face": "shy"},
+    {"cmd": "line", "who": "aula", "text": "노래가 끝날 때까지는요.", "face": "smile"},
+    {"cmd": "hide", "who": "aula"},
+    {"cmd": "narration", "text": "사회를 보던 마을 어르신이 맨디의 이름을 부른다. 「다음 순서, 독초 온실 정원사, 맨드레이크 맨디.」"},
+    {"cmd": "narration", "text": "맨디가 나무 상자 계단을 하나, 둘 올라간다. 마지막 계단에서 발이 멈춘다."},
+    {"cmd": "narration", "text": "광장의 눈이 전부 맨디에게 쏠린다. 수십 개의 얼굴, 수십 개의 눈. 등불이 너무 밝다."},
+    {"cmd": "emote", "who": "mandi", "icon": "sweat"},
+    {"cmd": "line", "who": "mandi", "face": "scared", "text": "……{player}. 다리가 안 움직여. 숨이, 한꺼번에 터질 것 같아. 이대로면 노래 말고 비명이 나와."},
+    {"cmd": "choice", "id": "c2", "options": [{"text": "무대 맨 앞에서, 귀를 막지 않은 채 크게 손을 흔든다.", "affinity": 30, "next": "c2_wave"}, {"text": "같이 무대 위로 올라가 옆에 선다.", "affinity": 15, "next": "c2_climb"}, {"text": "주머니의 박하 잎을 무대 위로 던져 준다.", "affinity": 0, "next": "c2_mint"}, {"text": "괜찮아. 못 하겠으면 내려와도 돼.", "affinity": -15, "next": "c2_down"}]},
+    {"label": "c2_wave"},
+    {"cmd": "narration", "text": "사람들을 헤치고 무대 맨 앞에 선다. 두 손을 귀에서 멀리, 머리 위로 들어 크게 흔든다."},
+    {"cmd": "line", "who": "player", "text": "맨디! 나 귀 안 막았어! 처음 만난 날부터 한 번도!"},
+    {"cmd": "line", "who": "mandi", "face": "surprised", "text": "……그치. 한 번도."},
+    {"cmd": "narration", "text": "맨디가 마지막 계단을 올라선다."},
+    {"cmd": "goto", "to": "j2"},
+    {"label": "c2_climb"},
+    {"cmd": "narration", "text": "나무 상자를 밟고 무대 위로 올라가 맨디 옆에 선다. 사람들이 웅성거린다."},
+    {"cmd": "line", "who": "player", "text": "딱 옆에 있을게. 앞도 아니고 뒤도 아니고."},
+    {"cmd": "line", "who": "mandi", "face": "smile", "text": "……응. 딱 옆에. 근데 노래는 나 혼자 부를 거야. 너 음 틀리잖아."},
+    {"cmd": "narration", "text": "맨디가 마지막 계단을 올라선다. 그리고 옆에 선 등을 톡 떠밀어 무대 아래로 내려보낸다."},
+    {"cmd": "goto", "to": "j2"},
+    {"label": "c2_mint"},
+    {"cmd": "narration", "text": "주머니에서 박하 잎을 꺼내 무대 위로 던진다. 잎이 팔랑팔랑 맨디 발치에 떨어진다."},
+    {"cmd": "line", "who": "mandi", "face": "surprised", "text": "……박하."},
+    {"cmd": "narration", "text": "맨디가 박하 잎을 주워 코에 대고 깊이 숨을 들이쉰다. 어깨가 천천히 내려간다."},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "놀란 게 가라앉아. 처음 만난 날처럼."},
+    {"cmd": "goto", "to": "j2"},
+    {"label": "c2_down"},
+    {"cmd": "line", "who": "player", "text": "괜찮아. 못 하겠으면 내려와도 돼. 아무도 뭐라고 안 해."},
+    {"cmd": "line", "who": "mandi", "face": "sad", "text": "……내려가면, 나 또 화분 뒤에 숨는 거야. 이번엔 그러기 싫어."},
+    {"cmd": "narration", "text": "맨디가 혼자 이를 악물고 마지막 계단을 올라선다. 다리가 여전히 떨린다."},
+    {"cmd": "line", "who": "mandi", "face": "determined", "text": "……내려가라는 말보다, 듣고 싶다는 말이 듣고 싶었는데."},
+    {"cmd": "goto", "to": "j2"},
+    {"label": "j2"},
+    {"cmd": "if_flag", "flag": "mandi_held_hand", "then": "hand_yes", "else": "hand_no"},
+    {"label": "hand_yes"},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "폭풍 날, 빗물 통 위에서 네가 손 잡아 줬잖아. 지금도 그 손이 여기 있는 것 같아."},
+    {"cmd": "narration", "text": "맨디가 자기 손을 꼭 쥐었다가 편다. 그날 맞잡았던 손 모양 그대로."},
+    {"cmd": "goto", "to": "hand_j"},
+    {"label": "hand_no"},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "폭풍 날, 빗물 통 위에서도 무서웠어. 그래도 질렀잖아. 지금은 그때보다 덜 무서워."},
+    {"cmd": "narration", "text": "맨디가 자기 손을 꼭 쥐었다가 편다. 그날 빗물 통을 붙잡던 손 모양 그대로."},
+    {"cmd": "goto", "to": "hand_j"},
+    {"label": "hand_j"},
+    {"cmd": "bgm", "id": "none"},
+    {"cmd": "narration", "text": "맨디가 무대 한가운데에 선다. 등불 아래 작은 그림자가 나무 상자 위에 동그랗게 고인다."},
+    {"cmd": "line", "who": "mandi", "text": "……괜찮아. 같은 숨이야. 여는 속도만 다를 뿐이야.", "face": "soft"},
+    {"cmd": "narration", "text": "맨디가 이끼 꽃다발을 가슴에 꼭 안는다. 박하 향이 희미하게 올라온다."},
+    {"cmd": "narration", "text": "광장이 조용해진다. 분수 소리만 들린다."},
+    {"cmd": "line", "who": "mandi", "face": "shy", "text": "아, 안녕하세요. 독초 온실 정원사, 맨드레이크 맨디예요."},
+    {"cmd": "line", "who": "mandi", "face": "embarrassed", "text": "저는 놀라면 소리를 질러요. 아주 크게요. 폭풍 날 들으셨죠. 죄송…… 아니, 안 죄송해요."},
+    {"cmd": "narration", "text": "광장 어딘가에서 킥킥 웃음이 터진다. 맨디도 따라 웃는다. 어깨에서 힘이 빠진다."},
+    {"cmd": "line", "who": "mandi", "text": "오늘 노래는요, 제가 처음으로 저를 위해 만든 노래예요. 그리고 제 비명을 참아 준 사람들을 위한 노래이기도 해요.", "face": "soft"},
+    {"cmd": "line", "who": "mandi", "text": "시끄러워도, 끝까지 들어 주세요.", "face": "shy"},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "오늘은 같은 숨으로, 다른 소리를 내 볼게요. 노래 제목은 「뿌리의 노래」예요."},
+    {"cmd": "wait", "sec": 2},
+    {"cmd": "sfx", "id": "sing"},
+    {"cmd": "bgm", "id": "warm"},
+    {"cmd": "emote", "who": "mandi", "icon": "music"},
+    {"cmd": "narration", "text": "낮고 둥근 소리가 광장 바닥에서부터 차오른다. 흙냄새가 나는 노래다. 등불이 노래에 맞춰 아주 조금씩 흔들린다."},
+    {"cmd": "narration", "text": "「장미가 아니어도, 가시가 없어도.」"},
+    {"cmd": "narration", "text": "「라벤더가 아니어도, 향기가 없어도.」"},
+    {"cmd": "narration", "text": "「해바라기가 아니어도, 그늘 속에서도.」"},
+    {"cmd": "narration", "text": "「깊은 데 내린 뿌리는, 따뜻하대요.」"},
+    {"cmd": "narration", "text": "노래가 점점 커진다. 비명처럼 터지지 않고, 꽃잎이 열리듯 천천히. 광장을 지나 언덕을 넘어, 호박밭 쪽으로 퍼져 나간다."},
+    {"cmd": "narration", "text": "멀리 호박밭 쪽에서 까마귀 한 무리가 날아오른다. 도망가는 게 아니다. 노래가 오는 쪽을 향해 빙글빙글 원을 그린다."},
+    {"cmd": "narration", "text": "벌들이 무대 위로 날아와 맨디의 머리 이파리 둘레를 돈다. 붕붕거리는 날갯짓이 노래 밑에 낮은 화음을 깐다."},
+    {"cmd": "narration", "text": "마지막 소절에서, 맨디의 목소리가 한 번 크게 뻗는다. 반은 노래고 반은 비명이다. 그런데 아무도 귀를 막지 않는다."},
+    {"cmd": "line", "who": "mandi", "face": "happy", "text": "다른 꽃이 되지 않아도, 나는 꽤 괜찮은 맨드레이크예요."},
+    {"cmd": "wait", "sec": 2},
+    {"cmd": "sfx", "id": "crowd"},
+    {"cmd": "camera", "action": "zoom_out"},
+    {"cmd": "narration", "text": "잠깐의 정적. 그리고 광장이 박수 소리로 터진다. 아이들이 발을 구르고, 꽃집 주인이 휘파람을 분다. 맨 앞의 등불 든 손님이 누구보다 오래 손뼉을 친다."},
+    {"cmd": "narration", "text": "맨디가 무대 위에서 두 손으로 얼굴을 가린다. 숨는 게 아니다. 너무 좋아서 어쩔 줄 모르는 손이다."},
+    {"cmd": "narration", "text": "손가락 사이로 보이는 얼굴이 이파리 끝까지 새빨갛다."},
+    {"cmd": "line", "who": "mandi", "face": "surprised", "text": "……{player}. 다들 박수 쳐. 귀마개 아니고 박수야."},
+    {"cmd": "choice", "id": "c3", "options": [{"text": "최고였어. 세상에서 제일 큰 노래였어.", "affinity": 30, "next": "c3_best"}, {"text": "앙코르! 한 곡 더!", "affinity": 15, "next": "c3_encore"}, {"text": "마지막에 비명 한 번 섞였지?", "affinity": 0, "next": "c3_tease"}]},
+    {"label": "c3_best"},
+    {"cmd": "line", "who": "player", "text": "최고였어. 세상에서 제일 큰 노래였어."},
+    {"cmd": "line", "who": "mandi", "face": "cry", "text": "제일 큰 거는 원래 자신 있었어. 근데 제일 좋다는 말은, 오늘 처음 들어."},
+    {"cmd": "narration", "text": "맨디가 웃으면서 운다. 눈물이 이끼 꽃다발 위로 떨어진다."},
+    {"cmd": "goto", "to": "ending"},
+    {"label": "c3_encore"},
+    {"cmd": "line", "who": "player", "text": "앙코르! 한 곡 더!"},
+    {"cmd": "line", "who": "kids", "text": "앙코르! 앙코르! 폭풍용으로!"},
+    {"cmd": "line", "who": "mandi", "face": "laugh", "text": "폭풍용은 안 된다니까. 대신 내일도 부를게. 모레도. 온실에서, 매일."},
+    {"cmd": "goto", "to": "ending"},
+    {"label": "c3_tease"},
+    {"cmd": "line", "who": "player", "text": "마지막에 비명 한 번 섞였지?"},
+    {"cmd": "line", "who": "mandi", "face": "laugh", "text": "푸하. 들켰다. 응, 섞였어. 그것도 내 노래야. 내 노래니까 내 비명도 들어가야지."},
+    {"cmd": "line", "who": "player", "text": "그 부분이 제일 좋았어, 사실."},
+    {"cmd": "goto", "to": "ending"},
+    {"label": "ending"},
+    {"cmd": "move", "to": "greenhouse_back", "transition": "fade", "time": "night"},
+    {"cmd": "bgm", "id": "night"},
+    {"cmd": "narration", "text": "공연이 끝나고, 둘은 온실 뒤뜰로 돌아온다. 선반 끝 이름표 화분 위로 별이 총총하다."},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "있잖아, {player}. 오늘 무대에서 내려오는데, 맨 앞줄에 있던 어른 한 분이 그러더라. 몇 해 전에 우리 온실에 담력 시험 왔던 학생이었대."},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "그때 내 화분 흔들어서 미안했대. 그리고 오늘 노래 고마웠대. 동생한테도 들려주고 싶대."},
+    {"cmd": "line", "who": "mandi", "face": "happy", "text": "웃기지. 그렇게 오래 무서워했던 사람인데, 오늘은 고맙다고 하고 갔어."},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "처음 만난 날 기억나? 너 팻말 무시하고 들어와서, 내 비명 듣고도 그대로 서 있었잖아. 아니면 같이 질렀거나, 아니면 도망갔다 돌아왔거나."},
+    {"cmd": "line", "who": "mandi", "face": "laugh", "text": "어떤 날이었든 상관없어. 너는 결국 돌아왔으니까. 장미 때도, 라벤더 때도, 해바라기 때도, 폭풍 때도."},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "나 그동안 계속 다른 꽃이 되려고 했잖아. 근데 너는 한 번도 나보고 다른 꽃이 되라고 안 했어."},
+    {"cmd": "line", "who": "player", "text": "맨디는 맨디일 때가 제일 시끄럽고, 제일 좋으니까."},
+    {"cmd": "line", "who": "mandi", "face": "laugh", "text": "그거 이름표에 쓸 걸 그랬다. 「제일 시끄럽고 제일 좋음.」"},
+    {"cmd": "narration", "text": "맨디가 선반 밑에서 낡은 나무판 하나를 꺼낸다. 아울라 선생님이 떼어 간 줄 알았던 옛 팻말이다. 「놀라게 하지 마시오.」"},
+    {"cmd": "line", "who": "mandi", "text": "이거, 선생님한테 달라고 했어. 버리기엔 좀 아까워서. 이게 날 지켜 주려던 팻말이었다는 것도 진짜니까.", "face": "soft"},
+    {"cmd": "narration", "text": "맨디가 팻말을 뒤집는다. 뒷면에 새 글씨가 적혀 있다. 「놀라게 해도 괜찮음. 대신 오래 있어 주기.」"},
+    {"cmd": "line", "who": "player", "text": "이건 누구한테 하는 말이야?"},
+    {"cmd": "line", "who": "mandi", "text": "글쎄. 매일 온실 문 열고 들어오는 사람? 헤헤.", "face": "smug"},
+    {"cmd": "line", "who": "player", "text": "오래 있어 주기, 라. 그건 자신 있어."},
+    {"cmd": "line", "who": "mandi", "text": "진짜지? 그럼 이 팻말은 내 화분 옆에 둘래. 네가 약속한 증거로.", "face": "happy"},
+    {"cmd": "narration", "text": "맨디가 옛 팻말을 이름표 화분 옆에 나란히 세운다. 앞면이 아니라, 새로 쓴 뒷면이 보이게."},
+    {"cmd": "narration", "text": "맨디가 앞치마 주머니에서 작은 종이 봉투 두 개를 꺼낸다. 하나는 무지갯빛으로, 하나는 솜털처럼 하얗게 반짝인다."},
+    {"cmd": "give_item", "item": "g_crystal", "n": 1},
+    {"cmd": "give_item", "item": "g_wish", "n": 1},
+    {"cmd": "line", "who": "mandi", "face": "proud", "text": "수정 장미 씨앗이랑 소원 민들레 씨앗이야. 온실에서 제일 귀한 거. 밤꽃 할멈이 지켜 오던 거래."},
+    {"cmd": "line", "who": "mandi", "face": "smug", "text": "그리고 이제부터 네 밭에도 내 노래가 들릴 거야. 새싹들한테 노래 불러 주면 쑥쑥 크거든. 온실 애들이 증인이야."},
+    {"cmd": "line", "who": "player", "text": "그 귀한 걸 나한테 줘도 돼?"},
+    {"cmd": "line", "who": "mandi", "text": "응. 할멈이 그랬어. 씨앗은 제일 오래 있어 줄 사람한테 주는 거래. 그래서 너야.", "face": "happy"},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "수정 장미는 진짜 장미한테 맡기고, 나는 맨드레이크로 옆에서 노래해 줄게. 그게 제일 잘 어울려."},
+    {"cmd": "sfx", "id": "sing"},
+    {"cmd": "emote", "who": "mandi", "icon": "heart"},
+    {"cmd": "narration", "text": "맨디가 이름표 화분 안에서 작게 흥얼거린다. 「뿌리의 노래」의 첫 소절이다. 뒤뜰의 새싹들이 하나둘 고개를 든다."},
+    {"cmd": "line", "who": "mandi", "face": "happy", "text": "랄라. 내일도 와, {player}. 놀라면 소리 지를게. 그래도 들어와."},
+    {"cmd": "fade_out"}
   ],
-  "afterDays": 1
- },
- "rewards": {
-  "coin": 200,
-  "mana": 30,
-  "know": 20,
-  "items": {
-   "g_crystal": 1,
-   "g_wish": 1
-  },
-  "flags": [],
-  "perk": "greenhouse_growth"
- },
- "script": [
-  {
-   "cmd": "fade_in"
-  },
-  {
-   "cmd": "bgm",
-   "id": "warm"
-  },
-  {
-   "cmd": "narration",
-   "text": "노을빛 온실. 문 옆에 새 팻말이 걸려 있다. 「맨드레이크 있음. 놀라면 소리 지름. 그래도 들어오세요.」"
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "mandi_was_cold",
-   "then": "cold_open",
-   "else": "warm_open"
-  },
-  {
-   "label": "cold_open"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "{player}. 와 줬구나. 이름표 쓰던 날, 내가 혼자 있겠다고 해서 서운했지."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "아니. 그날은 내가 너무 앞서 갔어. 미안해."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "smile",
-   "text": "그럼 오늘은 딱 내 옆에만 있어 줘. 앞도 말고, 뒤도 말고."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "알았어. 딱 옆에."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "happy",
-   "text": "좋아. 그럼 오늘이야. 오늘 광장 무대에 올라갈 거야."
-  },
-  {
-   "cmd": "goto",
-   "to": "open_j"
-  },
-  {
-   "label": "warm_open"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "happy",
-   "text": "{player}, 왔다. 랄라, 딱 맞춰 왔어. 오늘이야."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "오늘? 설마, 광장 무대?"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "smug",
-   "text": "응. 오늘 저녁 무대, 내 이름 적어 놓고 왔어. 「맨드레이크 맨디」. 이름표랑 똑같이."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "대단하다. 근데 뭘 하는 건데?"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "shy",
-   "text": "그건…… 먼저 여기서 한 번만 들어 줄래? 연습한 거."
-  },
-  {
-   "cmd": "goto",
-   "to": "open_j"
-  },
-  {
-   "label": "open_j"
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 주걱이 화분 앞에 선다. 끈끈이주걱이 입을 쩍 벌리고 있다. 배가 고픈 모양이다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "처음 만난 날 말했지. 주걱이는 노래를 들려주면 입을 꼭 다문다고. 그래서 몰래 주걱이 앞에서 연습했어."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "embarrassed",
-   "text": "처음엔 큰일 났었어. 노래하려고 숨을 들이쉬면 비명이 나오더라. 주걱이가 놀라서 오히려 입을 더 크게 벌렸어."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "thinking",
-   "text": "그래서 밤꽃 할멈한테 물어봤어. 할멈은 대답은 안 하는데, 밤마다 꽃잎을 아주 천천히 열거든. 소리 없이, 그래도 활짝."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "그거 보고 알았어. 비명은 숨을 한꺼번에 터뜨리는 거고, 노래는 같은 숨을 천천히 여는 거더라. 같은 숨이야. 여는 속도만 달라."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "같은 숨이라……"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "determined",
-   "text": "들어 봐. 아주 조금만."
-  },
-  {
-   "cmd": "wait",
-   "sec": 1
-  },
-  {
-   "cmd": "sfx",
-   "id": "sing"
-  },
-  {
-   "cmd": "emote",
-   "who": "mandi",
-   "icon": "music"
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 숨을 들이쉬고, 아주 천천히 내쉰다. 낮고 둥근 소리가 흘러나온다. 흙 속 깊은 데서 울려 올라오는 것 같은 소리다."
-  },
-  {
-   "cmd": "narration",
-   "text": "온실 유리가 떨리지 않는다. 대신 화분 속 흙이 아주 조금 들썩인다. 새싹들이 고개를 쭉 내민다."
-  },
-  {
-   "cmd": "narration",
-   "text": "주걱이가 입을 스르르 다문다. 덩굴이가 줄기를 살랑살랑 흔든다. 투덜이는 트림을 참는 듯 통을 꼭 닫고 있다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "shy",
-   "text": "……어땠어? 솔직하게."
-  },
-  {
-   "cmd": "choice",
-   "id": "c1",
-   "options": [
-    {
-     "text": "진짜 좋다. 흙에서 나는 노래 같아.",
-     "affinity": 15,
-     "next": "c1_good"
-    },
-    {
-     "text": "솔직히, 처음 한 소절은 비명인 줄 알았어.",
-     "affinity": 0,
-     "next": "c1_honest"
-    },
-    {
-     "text": "광장 말고 여기서만 부르면 안 돼? 사람 많잖아.",
-     "affinity": -15,
-     "next": "c1_stay"
-    }
-   ]
-  },
-  {
-   "label": "c1_good"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "진짜 좋다. 흙에서 나는 노래 같아."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "surprised",
-   "text": "흙에서 나는 노래. 그거 좋다. 그거 노래 제목으로 할까."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "laugh",
-   "text": "아니다. 제목은 벌써 정해 놨어. 무대에서 알려 줄게. 헤헤."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "치사하네."
-  },
-  {
-   "cmd": "goto",
-   "to": "j1"
-  },
-  {
-   "label": "c1_honest"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "솔직히, 처음 한 소절은 비명인 줄 알았어."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "laugh",
-   "text": "푸하. 맞아. 반은 비명이야. 처음 숨은 아직 잘 못 열어."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "smile",
-   "text": "근데 괜찮아. 비명도 내 소리니까, 노래 안에 조금 섞여 있어도 돼."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "비명 섞인 노래라. 너답다."
-  },
-  {
-   "cmd": "goto",
-   "to": "j1"
-  },
-  {
-   "label": "c1_stay"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "광장 말고 여기서만 부르면 안 돼? 사람 많잖아. 혹시라도……"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "thinking",
-   "text": "……걱정해 주는 거 알아. 예전의 나였으면 좋다고 했을 거야."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "determined",
-   "text": "근데 나 이제 화분 뒤에서만 사는 거 그만하고 싶어. 이번엔 사람들 앞에서 해 볼래."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……그래. 미안. 네 무대지."
-  },
-  {
-   "cmd": "goto",
-   "to": "j1"
-  },
-  {
-   "label": "j1"
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 앞치마를 탁탁 털고, 머리 이파리를 빗물 통에 비춰 보며 매만진다. 이파리가 자꾸 삐죽 선다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "text": "{player}, 나 이상하지 않아? 이파리가 말을 안 들어. 오늘따라 덩굴이처럼 삐졌나 봐.",
-   "face": "worried"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "평소랑 똑같아. 평소처럼 귀여워."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "text": "평소처럼은 안 되는데. 오늘은 무대잖아. ……아, 아니다. 평소처럼이 맞아. 평소의 나로 올라가는 거니까.",
-   "face": "embarrassed"
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 온실 식구들에게 차례로 손을 흔든다. 방울독초가 딸랑, 주걱이가 입을 꼭, 투덜이가 꾸르륵 대답한다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "text": "다녀올게. 투덜이, 내가 없을 때 트림 참지 마. 몸에 안 좋아.",
-   "face": "laugh"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "determined",
-   "text": "그럼 가자. 무대는 해 질 때 시작이야."
-  },
-  {
-   "cmd": "follow",
-   "who": "mandi",
-   "to": "village_square"
-  },
-  {
-   "cmd": "bgm",
-   "id": "festival"
-  },
-  {
-   "cmd": "sfx",
-   "id": "crowd"
-  },
-  {
-   "cmd": "narration",
-   "text": "저녁의 마을 광장. 분수 옆에 나무 상자를 쌓아 만든 작은 무대가 있고, 등불이 줄줄이 걸려 있다."
-  },
-  {
-   "cmd": "narration",
-   "text": "광장으로 오는 내내 맨디는 쉬지 않고 떠들었다. 노래 가사를 까먹으면 어떡하지, 벌들이 안 오면 어떡하지, 목이 또 쉬면 어떡하지."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "오늘 맨디 말이 엄청 많다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "text": "긴장하면 말이 많아지나 봐. 예전엔 긴장하면 숨기만 했는데. 이것도 바뀐 거야.",
-   "face": "embarrassed"
-  },
-  {
-   "cmd": "narration",
-   "text": "생각보다 사람이 많다. 아이들, 꽃집 주인, 장 보러 나온 마을 사람들, 퇴근길의 선생님들까지."
-  },
-  {
-   "cmd": "walk",
-   "who": "kids",
-   "to": "far_right"
-  },
-  {
-   "cmd": "line",
-   "who": "kids",
-   "text": "맨디다! 비명 영웅 나왔다! 오늘 폭풍용 해 줘!"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "laugh",
-   "text": "오늘은 폭풍용 아니야. 다른 거야. 잘 들어."
-  },
-  {
-   "cmd": "walk",
-   "who": "florist",
-   "to": "right"
-  },
-  {
-   "cmd": "line",
-   "who": "florist",
-   "text": "맨디 정원사, 이거 받아요. 무대 올라가는 사람한테는 꽃을 하나씩 주는 게 이 광장 규칙이에요."
-  },
-  {
-   "cmd": "narration",
-   "text": "꽃집 주인이 건넨 건 장미가 아니다. 촉촉한 이끼 위에 박하 잎을 엮어 만든 작은 꽃다발이다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "surprised",
-   "text": "……이끼랑 박하예요. 제가 좋아하는 거."
-  },
-  {
-   "cmd": "line",
-   "who": "florist",
-   "text": "장미보다 이게 더 맨디 같아서요. 꽃집 주인 눈은 정확하답니다."
-  },
-  {
-   "cmd": "hide",
-   "who": "florist"
-  },
-  {
-   "cmd": "walk",
-   "who": "husband",
-   "to": "right"
-  },
-  {
-   "cmd": "narration",
-   "text": "사람들 사이로 등불을 든 낯익은 얼굴이 보인다. 그 밤, 온실 문을 두드렸던 사람이다."
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "mandi_root_secret",
-   "then": "secret_yes",
-   "else": "secret_no"
-  },
-  {
-   "label": "secret_yes"
-  },
-  {
-   "cmd": "line",
-   "who": "husband",
-   "text": "……덕분에 거의 다 됐어요. 그 뿌리 조각, 아주 잘 자라고 있어요."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "smug",
-   "text": "(작게) 비밀은 지키고 있어요. {player} 씨, 아니 {player}하고 둘이서요. 아무한테도 말 안 했어요."
-  },
-  {
-   "cmd": "line",
-   "who": "husband",
-   "text": "알아요. 그래서 오늘 꼭 들으러 오고 싶었어요. 고마운 정원사의 노래니까."
-  },
-  {
-   "cmd": "goto",
-   "to": "secret_j"
-  },
-  {
-   "label": "secret_no"
-  },
-  {
-   "cmd": "line",
-   "who": "husband",
-   "text": "그날 밤엔 정말 고마웠어요. 그 뿌리 조각, 아주 잘 쓰이고 있어요."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "shy",
-   "text": "다, 다행이에요. 어디에 쓰이는지는 아직 비밀이에요?"
-  },
-  {
-   "cmd": "line",
-   "who": "husband",
-   "text": "조금만 더요. 대신 오늘은 맨 앞에서 들을게요."
-  },
-  {
-   "cmd": "goto",
-   "to": "secret_j"
-  },
-  {
-   "label": "secret_j"
-  },
-  {
-   "cmd": "hide",
-   "who": "husband"
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "mandi_bee_apology",
-   "then": "bee_yes",
-   "else": "bee_no"
-  },
-  {
-   "label": "bee_yes"
-  },
-  {
-   "cmd": "sfx",
-   "id": "wing"
-  },
-  {
-   "cmd": "show",
-   "who": "bees",
-   "at": "far_left"
-  },
-  {
-   "cmd": "narration",
-   "text": "붕붕. 온실 쪽 하늘에서 벌 떼가 줄을 지어 날아온다. 라벤더 사건 날 같이 사과했던 그 벌들이다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "happy",
-   "text": "벌들도 왔어. 그날 꿀 접시 내려놓고 사과한 거, 기억하나 봐."
-  },
-  {
-   "cmd": "goto",
-   "to": "bee_j"
-  },
-  {
-   "label": "bee_no"
-  },
-  {
-   "cmd": "sfx",
-   "id": "wing"
-  },
-  {
-   "cmd": "show",
-   "who": "bees",
-   "at": "far_left"
-  },
-  {
-   "cmd": "narration",
-   "text": "붕붕. 온실 쪽 하늘에서 벌 몇 마리가 날아와 광장 끝 화단에 내려앉는다. 멀찍이서 이쪽을 지켜본다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "벌들도 왔네. 아직 조금 멀지만. 오늘 노래 들으면 조금 더 가까이 와 줄지도 몰라."
-  },
-  {
-   "cmd": "goto",
-   "to": "bee_j"
-  },
-  {
-   "label": "bee_j"
-  },
-  {
-   "cmd": "narration",
-   "text": "까마귀 한 마리가 등불 줄 위에 내려앉는다. 다리에 짚 한 가닥이 묶여 있다."
-  },
-  {
-   "cmd": "line",
-   "who": "crow",
-   "text": "까악. 허수아비가 전하래. 크게 불러 달래. 호박밭까지 들리게. 까악."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "text": "짚신이? 까마귀한테 심부름을 시켰다고?",
-   "face": "surprised"
-  },
-  {
-   "cmd": "line",
-   "who": "crow",
-   "text": "까악. 요즘 그 모자가 앉기 편해서. 심부름 정도는 해 줘야지."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "text": "헤헤. 짚신 모자가 의자에서 쉼터가 됐구나.",
-   "face": "laugh"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "그리고 오늘은 짚신한테도 들리게 부를 거야. 호박밭까지. 짚신은 움직일 수 없으니까, 내 소리가 가면 돼."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "smug",
-   "text": "맨드레이크 목소리가 이렇게 쓸모 있을 줄 누가 알았겠어."
-  },
-  {
-   "cmd": "walk",
-   "who": "aula",
-   "to": "far_right"
-  },
-  {
-   "cmd": "line",
-   "who": "aula",
-   "text": "문 팻말, 봤어요. 「그래도 들어오세요.」 좋은 문구예요. 오늘은 귀마개 없이 맨 앞에서 듣겠어요.",
-   "face": "neutral"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "text": "아, 아울라 선생님. 오늘은 잔소리 없이 들어 주세요.",
-   "face": "shy"
-  },
-  {
-   "cmd": "line",
-   "who": "aula",
-   "text": "노래가 끝날 때까지는요.",
-   "face": "smile"
-  },
-  {
-   "cmd": "hide",
-   "who": "aula"
-  },
-  {
-   "cmd": "narration",
-   "text": "사회를 보던 마을 어르신이 맨디의 이름을 부른다. 「다음 순서, 독초 온실 정원사, 맨드레이크 맨디.」"
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 나무 상자 계단을 하나, 둘 올라간다. 마지막 계단에서 발이 멈춘다."
-  },
-  {
-   "cmd": "narration",
-   "text": "광장의 눈이 전부 맨디에게 쏠린다. 수십 개의 얼굴, 수십 개의 눈. 등불이 너무 밝다."
-  },
-  {
-   "cmd": "emote",
-   "who": "mandi",
-   "icon": "sweat"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "scared",
-   "text": "……{player}. 다리가 안 움직여. 숨이, 한꺼번에 터질 것 같아. 이대로면 노래 말고 비명이 나와."
-  },
-  {
-   "cmd": "choice",
-   "id": "c2",
-   "options": [
-    {
-     "text": "무대 맨 앞에서, 귀를 막지 않은 채 크게 손을 흔든다.",
-     "affinity": 30,
-     "next": "c2_wave"
-    },
-    {
-     "text": "같이 무대 위로 올라가 옆에 선다.",
-     "affinity": 15,
-     "next": "c2_climb"
-    },
-    {
-     "text": "주머니의 박하 잎을 무대 위로 던져 준다.",
-     "affinity": 0,
-     "next": "c2_mint"
-    },
-    {
-     "text": "괜찮아. 못 하겠으면 내려와도 돼.",
-     "affinity": -15,
-     "next": "c2_down"
-    }
-   ]
-  },
-  {
-   "label": "c2_wave"
-  },
-  {
-   "cmd": "narration",
-   "text": "사람들을 헤치고 무대 맨 앞에 선다. 두 손을 귀에서 멀리, 머리 위로 들어 크게 흔든다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "맨디! 나 귀 안 막았어! 처음 만난 날부터 한 번도!"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "surprised",
-   "text": "……그치. 한 번도."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 마지막 계단을 올라선다."
-  },
-  {
-   "cmd": "goto",
-   "to": "j2"
-  },
-  {
-   "label": "c2_climb"
-  },
-  {
-   "cmd": "narration",
-   "text": "나무 상자를 밟고 무대 위로 올라가 맨디 옆에 선다. 사람들이 웅성거린다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "딱 옆에 있을게. 앞도 아니고 뒤도 아니고."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "smile",
-   "text": "……응. 딱 옆에. 근데 노래는 나 혼자 부를 거야. 너 음 틀리잖아."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 마지막 계단을 올라선다. 그리고 옆에 선 등을 톡 떠밀어 무대 아래로 내려보낸다."
-  },
-  {
-   "cmd": "goto",
-   "to": "j2"
-  },
-  {
-   "label": "c2_mint"
-  },
-  {
-   "cmd": "narration",
-   "text": "주머니에서 박하 잎을 꺼내 무대 위로 던진다. 잎이 팔랑팔랑 맨디 발치에 떨어진다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "surprised",
-   "text": "……박하."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 박하 잎을 주워 코에 대고 깊이 숨을 들이쉰다. 어깨가 천천히 내려간다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "놀란 게 가라앉아. 처음 만난 날처럼."
-  },
-  {
-   "cmd": "goto",
-   "to": "j2"
-  },
-  {
-   "label": "c2_down"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "괜찮아. 못 하겠으면 내려와도 돼. 아무도 뭐라고 안 해."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "sad",
-   "text": "……내려가면, 나 또 화분 뒤에 숨는 거야. 이번엔 그러기 싫어."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 혼자 이를 악물고 마지막 계단을 올라선다. 다리가 여전히 떨린다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "determined",
-   "text": "……내려가라는 말보다, 듣고 싶다는 말이 듣고 싶었는데."
-  },
-  {
-   "cmd": "goto",
-   "to": "j2"
-  },
-  {
-   "label": "j2"
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "mandi_held_hand",
-   "then": "hand_yes",
-   "else": "hand_no"
-  },
-  {
-   "label": "hand_yes"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "폭풍 날, 빗물 통 위에서 네가 손 잡아 줬잖아. 지금도 그 손이 여기 있는 것 같아."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 자기 손을 꼭 쥐었다가 편다. 그날 맞잡았던 손 모양 그대로."
-  },
-  {
-   "cmd": "goto",
-   "to": "hand_j"
-  },
-  {
-   "label": "hand_no"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "폭풍 날, 빗물 통 위에서도 무서웠어. 그래도 질렀잖아. 지금은 그때보다 덜 무서워."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 자기 손을 꼭 쥐었다가 편다. 그날 빗물 통을 붙잡던 손 모양 그대로."
-  },
-  {
-   "cmd": "goto",
-   "to": "hand_j"
-  },
-  {
-   "label": "hand_j"
-  },
-  {
-   "cmd": "bgm",
-   "id": "none"
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 무대 한가운데에 선다. 등불 아래 작은 그림자가 나무 상자 위에 동그랗게 고인다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "text": "……괜찮아. 같은 숨이야. 여는 속도만 다를 뿐이야.",
-   "face": "soft"
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 이끼 꽃다발을 가슴에 꼭 안는다. 박하 향이 희미하게 올라온다."
-  },
-  {
-   "cmd": "narration",
-   "text": "광장이 조용해진다. 분수 소리만 들린다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "shy",
-   "text": "아, 안녕하세요. 독초 온실 정원사, 맨드레이크 맨디예요."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "embarrassed",
-   "text": "저는 놀라면 소리를 질러요. 아주 크게요. 폭풍 날 들으셨죠. 죄송…… 아니, 안 죄송해요."
-  },
-  {
-   "cmd": "narration",
-   "text": "광장 어딘가에서 킥킥 웃음이 터진다. 맨디도 따라 웃는다. 어깨에서 힘이 빠진다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "text": "오늘 노래는요, 제가 처음으로 저를 위해 만든 노래예요. 그리고 제 비명을 참아 준 사람들을 위한 노래이기도 해요.",
-   "face": "soft"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "text": "시끄러워도, 끝까지 들어 주세요.",
-   "face": "shy"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "오늘은 같은 숨으로, 다른 소리를 내 볼게요. 노래 제목은 「뿌리의 노래」예요."
-  },
-  {
-   "cmd": "wait",
-   "sec": 2
-  },
-  {
-   "cmd": "sfx",
-   "id": "sing"
-  },
-  {
-   "cmd": "bgm",
-   "id": "warm"
-  },
-  {
-   "cmd": "emote",
-   "who": "mandi",
-   "icon": "music"
-  },
-  {
-   "cmd": "narration",
-   "text": "낮고 둥근 소리가 광장 바닥에서부터 차오른다. 흙냄새가 나는 노래다. 등불이 노래에 맞춰 아주 조금씩 흔들린다."
-  },
-  {
-   "cmd": "narration",
-   "text": "「장미가 아니어도, 가시가 없어도.」"
-  },
-  {
-   "cmd": "narration",
-   "text": "「라벤더가 아니어도, 향기가 없어도.」"
-  },
-  {
-   "cmd": "narration",
-   "text": "「해바라기가 아니어도, 그늘 속에서도.」"
-  },
-  {
-   "cmd": "narration",
-   "text": "「깊은 데 내린 뿌리는, 따뜻하대요.」"
-  },
-  {
-   "cmd": "narration",
-   "text": "노래가 점점 커진다. 비명처럼 터지지 않고, 꽃잎이 열리듯 천천히. 광장을 지나 언덕을 넘어, 호박밭 쪽으로 퍼져 나간다."
-  },
-  {
-   "cmd": "narration",
-   "text": "멀리 호박밭 쪽에서 까마귀 한 무리가 날아오른다. 도망가는 게 아니다. 노래가 오는 쪽을 향해 빙글빙글 원을 그린다."
-  },
-  {
-   "cmd": "narration",
-   "text": "벌들이 무대 위로 날아와 맨디의 머리 이파리 둘레를 돈다. 붕붕거리는 날갯짓이 노래 밑에 낮은 화음을 깐다."
-  },
-  {
-   "cmd": "narration",
-   "text": "마지막 소절에서, 맨디의 목소리가 한 번 크게 뻗는다. 반은 노래고 반은 비명이다. 그런데 아무도 귀를 막지 않는다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "happy",
-   "text": "다른 꽃이 되지 않아도, 나는 꽤 괜찮은 맨드레이크예요."
-  },
-  {
-   "cmd": "wait",
-   "sec": 2
-  },
-  {
-   "cmd": "sfx",
-   "id": "crowd"
-  },
-  {
-   "cmd": "camera",
-   "action": "zoom_out"
-  },
-  {
-   "cmd": "narration",
-   "text": "잠깐의 정적. 그리고 광장이 박수 소리로 터진다. 아이들이 발을 구르고, 꽃집 주인이 휘파람을 분다. 맨 앞의 등불 든 손님이 누구보다 오래 손뼉을 친다."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 무대 위에서 두 손으로 얼굴을 가린다. 숨는 게 아니다. 너무 좋아서 어쩔 줄 모르는 손이다."
-  },
-  {
-   "cmd": "narration",
-   "text": "손가락 사이로 보이는 얼굴이 이파리 끝까지 새빨갛다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "surprised",
-   "text": "……{player}. 다들 박수 쳐. 귀마개 아니고 박수야."
-  },
-  {
-   "cmd": "choice",
-   "id": "c3",
-   "options": [
-    {
-     "text": "최고였어. 세상에서 제일 큰 노래였어.",
-     "affinity": 30,
-     "next": "c3_best"
-    },
-    {
-     "text": "앙코르! 한 곡 더!",
-     "affinity": 15,
-     "next": "c3_encore"
-    },
-    {
-     "text": "마지막에 비명 한 번 섞였지?",
-     "affinity": 0,
-     "next": "c3_tease"
-    }
-   ]
-  },
-  {
-   "label": "c3_best"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "최고였어. 세상에서 제일 큰 노래였어."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "cry",
-   "text": "제일 큰 거는 원래 자신 있었어. 근데 제일 좋다는 말은, 오늘 처음 들어."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 웃으면서 운다. 눈물이 이끼 꽃다발 위로 떨어진다."
-  },
-  {
-   "cmd": "goto",
-   "to": "ending"
-  },
-  {
-   "label": "c3_encore"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "앙코르! 한 곡 더!"
-  },
-  {
-   "cmd": "line",
-   "who": "kids",
-   "text": "앙코르! 앙코르! 폭풍용으로!"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "laugh",
-   "text": "폭풍용은 안 된다니까. 대신 내일도 부를게. 모레도. 온실에서, 매일."
-  },
-  {
-   "cmd": "goto",
-   "to": "ending"
-  },
-  {
-   "label": "c3_tease"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "마지막에 비명 한 번 섞였지?"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "laugh",
-   "text": "푸하. 들켰다. 응, 섞였어. 그것도 내 노래야. 내 노래니까 내 비명도 들어가야지."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그 부분이 제일 좋았어, 사실."
-  },
-  {
-   "cmd": "goto",
-   "to": "ending"
-  },
-  {
-   "label": "ending"
-  },
-  {
-   "cmd": "move",
-   "to": "greenhouse_back",
-   "transition": "fade",
-   "time": "night"
-  },
-  {
-   "cmd": "bgm",
-   "id": "night"
-  },
-  {
-   "cmd": "narration",
-   "text": "공연이 끝나고, 둘은 온실 뒤뜰로 돌아온다. 선반 끝 이름표 화분 위로 별이 총총하다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "있잖아, {player}. 오늘 무대에서 내려오는데, 맨 앞줄에 있던 어른 한 분이 그러더라. 몇 해 전에 우리 온실에 담력 시험 왔던 학생이었대."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "그때 내 화분 흔들어서 미안했대. 그리고 오늘 노래 고마웠대. 동생한테도 들려주고 싶대."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "happy",
-   "text": "웃기지. 그렇게 오래 무서워했던 사람인데, 오늘은 고맙다고 하고 갔어."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "처음 만난 날 기억나? 너 팻말 무시하고 들어와서, 내 비명 듣고도 그대로 서 있었잖아. 아니면 같이 질렀거나, 아니면 도망갔다 돌아왔거나."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "laugh",
-   "text": "어떤 날이었든 상관없어. 너는 결국 돌아왔으니까. 장미 때도, 라벤더 때도, 해바라기 때도, 폭풍 때도."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "나 그동안 계속 다른 꽃이 되려고 했잖아. 근데 너는 한 번도 나보고 다른 꽃이 되라고 안 했어."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "맨디는 맨디일 때가 제일 시끄럽고, 제일 좋으니까."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "laugh",
-   "text": "그거 이름표에 쓸 걸 그랬다. 「제일 시끄럽고 제일 좋음.」"
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 선반 밑에서 낡은 나무판 하나를 꺼낸다. 아울라 선생님이 떼어 간 줄 알았던 옛 팻말이다. 「놀라게 하지 마시오.」"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "text": "이거, 선생님한테 달라고 했어. 버리기엔 좀 아까워서. 이게 날 지켜 주려던 팻말이었다는 것도 진짜니까.",
-   "face": "soft"
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 팻말을 뒤집는다. 뒷면에 새 글씨가 적혀 있다. 「놀라게 해도 괜찮음. 대신 오래 있어 주기.」"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "이건 누구한테 하는 말이야?"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "text": "글쎄. 매일 온실 문 열고 들어오는 사람? 헤헤.",
-   "face": "smug"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "오래 있어 주기, 라. 그건 자신 있어."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "text": "진짜지? 그럼 이 팻말은 내 화분 옆에 둘래. 네가 약속한 증거로.",
-   "face": "happy"
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 옛 팻말을 이름표 화분 옆에 나란히 세운다. 앞면이 아니라, 새로 쓴 뒷면이 보이게."
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 앞치마 주머니에서 작은 종이 봉투 두 개를 꺼낸다. 하나는 무지갯빛으로, 하나는 솜털처럼 하얗게 반짝인다."
-  },
-  {
-   "cmd": "give_item",
-   "item": "g_crystal",
-   "n": 1
-  },
-  {
-   "cmd": "give_item",
-   "item": "g_wish",
-   "n": 1
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "proud",
-   "text": "수정 장미 씨앗이랑 소원 민들레 씨앗이야. 온실에서 제일 귀한 거. 밤꽃 할멈이 지켜 오던 거래."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "smug",
-   "text": "그리고 이제부터 네 밭에도 내 노래가 들릴 거야. 새싹들한테 노래 불러 주면 쑥쑥 크거든. 온실 애들이 증인이야."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그 귀한 걸 나한테 줘도 돼?"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "text": "응. 할멈이 그랬어. 씨앗은 제일 오래 있어 줄 사람한테 주는 거래. 그래서 너야.",
-   "face": "happy"
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "수정 장미는 진짜 장미한테 맡기고, 나는 맨드레이크로 옆에서 노래해 줄게. 그게 제일 잘 어울려."
-  },
-  {
-   "cmd": "sfx",
-   "id": "sing"
-  },
-  {
-   "cmd": "emote",
-   "who": "mandi",
-   "icon": "heart"
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 이름표 화분 안에서 작게 흥얼거린다. 「뿌리의 노래」의 첫 소절이다. 뒤뜰의 새싹들이 하나둘 고개를 든다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "happy",
-   "text": "랄라. 내일도 와, {player}. 놀라면 소리 지를게. 그래도 들어와."
-  },
-  {
-   "cmd": "fade_out"
-  }
- ],
- "cold": [
-  {
-   "cmd": "move",
-   "to": "greenhouse_back",
-   "transition": "fade",
-   "time": "night"
-  },
-  {
-   "cmd": "narration",
-   "text": "공연은 끝났다. 박수도 받았다. 그런데 돌아오는 길, 맨디는 말이 없다."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "soft",
-   "text": "……노래는 다 불렀어. 다들 좋아해 줬어. 그건 진짜 기뻐."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "sad",
-   "text": "그런데 오늘은 네가 내 옆이 아니라, 조금 먼 데 있는 것 같았어."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……미안. 마음은 옆에 있었어."
-  },
-  {
-   "cmd": "line",
-   "who": "mandi",
-   "face": "smile",
-   "text": "응. 알아. 내일 다시 와 줘. 그때는 딱 옆에 있어 줘."
-  },
-  {
-   "cmd": "give_item",
-   "item": "g_crystal",
-   "n": 1
-  },
-  {
-   "cmd": "give_item",
-   "item": "g_wish",
-   "n": 1
-  },
-  {
-   "cmd": "narration",
-   "text": "맨디가 씨앗 봉투 두 개를 말없이 건넨다. 이름표 화분 위로 별이 총총하다."
-  },
-  {
-   "cmd": "fade_out"
-  }
- ]
+  "cold": [
+    {"cmd": "move", "to": "greenhouse_back", "transition": "fade", "time": "night"},
+    {"cmd": "narration", "text": "공연은 끝났다. 박수도 받았다. 그런데 돌아오는 길, 맨디는 말이 없다."},
+    {"cmd": "line", "who": "mandi", "face": "soft", "text": "……노래는 다 불렀어. 다들 좋아해 줬어. 그건 진짜 기뻐."},
+    {"cmd": "line", "who": "mandi", "face": "sad", "text": "그런데 오늘은 네가 내 옆이 아니라, 조금 먼 데 있는 것 같았어."},
+    {"cmd": "line", "who": "player", "text": "……미안. 마음은 옆에 있었어."},
+    {"cmd": "line", "who": "mandi", "face": "smile", "text": "응. 알아. 내일 다시 와 줘. 그때는 딱 옆에 있어 줘."},
+    {"cmd": "give_item", "item": "g_crystal", "n": 1},
+    {"cmd": "give_item", "item": "g_wish", "n": 1},
+    {"cmd": "narration", "text": "맨디가 씨앗 봉투 두 개를 말없이 건넨다. 이름표 화분 위로 별이 총총하다."},
+    {"cmd": "fade_out"}
+  ]
 }

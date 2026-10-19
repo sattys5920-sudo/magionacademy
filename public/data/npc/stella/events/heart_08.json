@@ -1,1241 +1,240 @@
 {
- "id": "stella_heart_08",
- "npc": "stella",
- "heart": 8,
- "title": "진짜 뜻",
- "conditions": {
-  "minHeart": 8,
-  "location": "hill_ruin",
-  "time": [
-   "night"
+  "id": "stella_heart_08", "npc": "stella", "heart": 8, "title": "진짜 뜻",
+  "conditions": {"minHeart": 8, "location": "hill_ruin", "time": ["night"], "weather": ["clear"]},
+  "rewards": {"coin": 100, "mana": 20, "know": 10, "items": {}, "flags": [], "perk": null},
+  "script": [
+    {"cmd": "fade_in"},
+    {"cmd": "bgm", "id": "night"},
+    {"cmd": "sfx", "id": "wind"},
+    {"cmd": "narration", "text": "밤, 언덕 위 무너진 오두막. 무너진 돌담에 {npc.name|이/가} 다리를 흔들며 앉아 있다."},
+    {"cmd": "narration", "text": "오늘은 월장석도, 별 지도도 들고 있지 않다. 빈손이다."},
+    {"cmd": "if_flag", "flag": "stella_was_cold", "then": "cold_open", "else": "warm_open"},
+    {"label": "cold_open"},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "……{player}. 오늘은 와 줄 거라고 생각했어요. 별이 그랬거든요. 이번엔 진짜로."},
+    {"cmd": "line", "who": "player", "text": "(오두막 창문 불빛 앞에서 그냥 돌아섰던 새벽이 떠오른다.)"},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "그날은 미안했어요. 계산이 다 끝났어요. 그래서 말해 주고 싶었어요."},
+    {"cmd": "goto", "to": "open_merge"},
+    {"label": "warm_open"},
+    {"cmd": "line", "who": "stella", "face": "happy", "text": "{player}. 왔다."},
+    {"cmd": "narration", "text": "돌담에서 폴짝 뛰어내린다. 새벽 언덕에서 어깨에 기대 잠들었던 사람이라고는 믿기지 않을 만큼 가볍다."},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "계산 다 끝났어요. 제일 먼저 말해 주고 싶었어요."},
+    {"cmd": "goto", "to": "open_merge"},
+    {"label": "open_merge"},
+    {"cmd": "line", "who": "player", "text": "그날 새벽 이후로 어떻게 지냈어요?"},
+    {"cmd": "line", "who": "stella", "face": "embarrassed", "text": "잤어요. 열네 시간이요. 일어나 보니까 다음 날 저녁이었어요."},
+    {"cmd": "line", "who": "stella", "face": "laugh", "text": "그리고 {madeleine.name} 님이 진짜로 그릇 찾으러 왔어요. 빈 그릇 가져가면서 꽉 찬 그릇을 두고 갔어요."},
+    {"cmd": "line", "who": "player", "text": "그건 그릇을 찾으러 온 게 아니잖아요."},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "그러니까요. 이제 그 그릇이 우리 집에 세 개예요. 돌려주러 가면 또 생길 거예요."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "배부르게 자고 일어나서, 맑은 머리로 마지막 계산을 했어요."},
+    {"cmd": "line", "who": "stella", "face": "happy", "text": "{player} 별, 아니래요."},
+    {"cmd": "line", "who": "stella", "face": "laugh", "text": "몇 번을 다시 해도요. 등불 끝 작은 별은 축제 날에도, 그다음 날에도, 그다음 해에도 멀쩡히 떠 있어요."},
+    {"cmd": "line", "who": "player", "text": "……진짜요?"},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "진짜요. 점성술사가 별에 대고 맹세할게요. 별에 대고 맹세하면 진짜 지켜야 하는 거 알죠."},
+    {"cmd": "narration", "text": "웃음이 너무 밝다. 눈 밑의 그늘까지 다 덮어 버릴 만큼."},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "그러니까 이제 지키기는 끝이에요. 냄비도, 가위도, 망치도. 축제 날엔 마음껏 놀아요."},
+    {"cmd": "choice", "id": "c1", "options": [{"text": "그럼 축제 날 같이 놀아요. 불꽃놀이도 같이 봐요.", "affinity": 30, "next": "c1_together"}, {"text": "……진짜 끝이에요?", "affinity": 0, "next": "c1_really"}, {"text": "휴. 이제 냄비 안 써도 되겠네요.", "affinity": -15, "next": "c1_relief"}]},
+    {"label": "c1_together"},
+    {"cmd": "line", "who": "stella", "face": "surprised", "text": "같이요."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "……좋아요. 같이 봐요. 불꽃놀이."},
+    {"cmd": "narration", "text": "대답하기 전에 아주 짧은 틈이 있었다. 숨을 한 번 고르는 만큼의."},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "축제 등불 아래서 {player|이랑/랑} 불꽃놀이라니. 별이 이것까지 알려 줬으면 좋았을 텐데."},
+    {"cmd": "goto", "to": "c1_merge"},
+    {"label": "c1_really"},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "진짜 끝이에요. 왜요, 아쉬워요?"},
+    {"cmd": "line", "who": "player", "text": "그런 건 아닌데."},
+    {"cmd": "line", "who": "stella", "face": "laugh", "text": "아쉬우면 냄비는 드릴게요. 기념으로."},
+    {"cmd": "narration", "text": "눈을 피하는 쪽은 {npc.name|이었/였}다. 웃으면서, 아주 자연스럽게."},
+    {"cmd": "goto", "to": "c1_merge"},
+    {"label": "c1_relief"},
+    {"cmd": "line", "who": "stella", "face": "laugh", "text": "그렇죠. 무거웠죠, 그 냄비."},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "미안해요. 그동안 귀찮게 해서."},
+    {"cmd": "narration", "text": "웃는 얼굴 그대로, {npc.name|이/가} 돌담 돌멩이 하나를 발끝으로 굴린다. 오래, 같은 자리에서."},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "이제 저도 좀 쉬어야겠어요."},
+    {"cmd": "goto", "to": "c1_merge"},
+    {"label": "c1_merge"},
+    {"cmd": "narration", "text": "{npc.name|이/가} 돌담에서 무언가를 집어 든다. 반쯤 탄 초 한 자루. 오두막에서 밤새 켜 두던 그 초다."},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "이제 이것도 필요 없어요. 밤새 계산할 일이 없으니까."},
+    {"cmd": "line", "who": "player", "text": "그럼 버려요?"},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "……아니요. 갖고 있을래요. 열심히 했던 밤들이니까."},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "마지막으로 한 번만 확인하러 가요. 별 보는 언덕. 같이 봐 줘요."},
+    {"cmd": "follow", "who": "stella", "to": "hill_top"},
+    {"cmd": "bgm", "id": "mystery"},
+    {"cmd": "narration", "text": "별 보는 언덕. 오늘은 길을 한 번도 잃지 않았다. 앞장선 {npc.name}의 걸음에 망설임이 없다."},
+    {"cmd": "line", "who": "player", "text": "오늘은 길 안 잃었네요."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "이 길은 이제 눈 감고도 와요. 이번 달에만 서른 번은 왔으니까요."},
+    {"cmd": "narration", "text": "풀밭에 나란히 눕는다. 등불자리가 머리 위에서 빛난다."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "처음 여기 같이 왔을 때, 쿠키 굴러간 거 기억나요."},
+    {"cmd": "line", "who": "player", "text": "개미들 운세 대길."},
+    {"cmd": "line", "who": "stella", "face": "laugh", "text": "그날 이후로 저 아래 개미굴이 엄청 커졌어요. 제 예언 덕분이에요."},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "봐요. 등불 끝 작은 별. {player} 별이요. 오늘도 엄청 또렷하죠."},
+    {"cmd": "line", "who": "player", "text": "네. 그런데……"},
+    {"cmd": "narration", "text": "그 옆에서 무언가 깜빡인다. 등불 끝이 아니다. 등불을 든 사람의 소맷자락 끝."},
+    {"cmd": "narration", "text": "언젠가 이 언덕에서 들었던 말이 떠오른다. 늘 흐려서, 어릴 땐 좀 서운했다던 별."},
+    {"cmd": "line", "who": "player", "text": "(소맷자락 끝. 흐린 별.)"},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "처음부터 해석이 틀렸던 거예요. 등불 끝 별 '바로 옆'이라고 생각했는데, 별자리를 사람 모양으로 이으면, 등불을 든 손이 바로 옆이거든요."},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "손 쪽 별은 아주 흐려서, 다들 별자리에 넣지도 않아요. 저만 늘 세었죠."},
+    {"cmd": "line", "who": "player", "text": "그럼 떨어지는 별은 누구 별이에요?"},
+    {"cmd": "line", "who": "stella", "face": "thinking", "text": "글쎄요. 길 가던 고양이 별일지도 모르고, 시장 상인 가위 별일지도 모르고."},
+    {"cmd": "line", "who": "stella", "face": "laugh", "text": "아무튼 {player} 별은 아니에요. 그게 제일 중요해요."},
+    {"cmd": "line", "who": "stella", "face": "thinking", "text": "언덕에서 해 준 옛날이야기 기억나요. 길 잃은 아이를 찾으러 등불 들고 걷던 사람."},
+    {"cmd": "line", "who": "player", "text": "아이를 찾았다는 쪽을 믿는다고 했잖아요."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "네. 찾았어요. 분명히."},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "그런데 그 사람이 아이를 찾고 나서 어떻게 됐는지는, 어느 이야기에도 안 나와요."},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "아마 별이 됐으니까 그걸로 됐다고 생각했나 봐요. 이야기를 지은 사람들이."},
+    {"cmd": "narration", "text": "웃는 옆얼굴을 본다. 웃는데, 눈은 웃지 않는다. 별빛을 받은 눈동자가 소맷자락 끝 별 하나에 꼭 붙어 있다."},
+    {"cmd": "choice", "id": "c2", "options": [{"text": "혹시…… 소맷자락 끝 별이에요? 당신 별이요.", "affinity": 0, "next": "c2_ask", "flag": "stella_asked_who"}, {"text": "말하기 싫으면 안 해도 돼요. 대신 혼자 두지는 않을게요.", "affinity": 30, "next": "c2_stay"}, {"text": "제 별이 아니면 됐네요. 다행이다.", "affinity": -30, "next": "c2_relief"}]},
+    {"label": "c2_ask"},
+    {"cmd": "wait", "sec": 2},
+    {"cmd": "line", "who": "stella", "face": "surprised", "text": "……."},
+    {"cmd": "narration", "text": "{npc.name}의 숨이 멈춘다. 풀벌레 소리마저 끊긴 것 같다."},
+    {"cmd": "line", "who": "stella", "face": "laugh", "text": "……{player}, 점성술사 다 됐네요. 언덕에서 한 번 들은 걸 다 기억하고."},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "그런데 틀렸어요. 제 별은 너무 흐려서, 떨어져도 아무도 모를 거예요. 그러니까 그 별은 아니에요."},
+    {"cmd": "line", "who": "player", "text": "(떨어져도 아무도 모를 거라는 말은, 아니라는 대답이 아니었다.)"},
+    {"cmd": "goto", "to": "c2_merge"},
+    {"label": "c2_stay"},
+    {"cmd": "line", "who": "stella", "face": "surprised", "text": "……."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "……혼자 두지 않는다."},
+    {"cmd": "narration", "text": "{npc.name|이/가} 팔로 눈을 덮는다. 한참 동안 그렇게 누워 있다."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "그 말, 반칙이에요. 예언에도 없던 말이에요."},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "고마워요. 정말로."},
+    {"cmd": "goto", "to": "c2_merge"},
+    {"label": "c2_relief"},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "……네."},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "다행이에요. 정말 다행이에요."},
+    {"cmd": "narration", "text": "{npc.name|이/가} 웃는다. 아까보다 더 환하게. 그리고 아주 천천히, 몸을 반대쪽으로 돌려 눕는다."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "저도 그 말이 듣고 싶었어요. 다행이라는 말. 그러니까 괜찮아요."},
+    {"cmd": "line", "who": "player", "text": "(괜찮다는 목소리가 풀잎처럼 떨렸다.)"},
+    {"cmd": "goto", "to": "c2_merge"},
+    {"label": "c2_merge"},
+    {"cmd": "bgm", "id": "night"},
+    {"cmd": "narration", "text": "별이 조금씩 자리를 옮긴다. 소맷자락 끝의 흐린 별은 또 한 번 깜빡이고, 다시 켜진다."},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "하나만 더 보여 주고 싶은 데가 있어요. 내려가요."},
+    {"cmd": "narration", "text": "언덕을 내려가는 길. 앞서 걷는 {npc.name|이/가} 노래 같은 걸 흥얼거린다. 처음 듣는 가락이다."},
+    {"cmd": "line", "who": "player", "text": "그거 무슨 노래예요?"},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "동생이 지은 노래예요. 별 이름 외우는 노래. 북쪽 별, 등불자리, 빗자루자리…… 박자가 엉망이에요."},
+    {"cmd": "line", "who": "stella", "face": "laugh", "text": "그런데 이상하게 이것만은 안 까먹어요. 길은 다 까먹는데."},
+    {"cmd": "move", "to": "village_square", "transition": "fade"},
+    {"cmd": "sfx", "id": "wind"},
+    {"cmd": "narration", "text": "밤의 마을 광장. 축제 준비가 거의 끝났다. 무대 기둥 네 개가 하늘을 찌르고 서 있고, 기둥과 기둥 사이, 시장에서 광장까지 등불 줄이 거미줄처럼 얽혀 있다."},
+    {"cmd": "narration", "text": "아직 불을 켜지 않은 주황색 등불 수백 개가 바람에 흔들린다. 어둠 속에서 고개를 까딱이는 호박들 같다."},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "마흔세 줄이에요. 오늘 세 번 셌어요. 한 번은 길을 잃은 채로."},
+    {"cmd": "sfx", "id": "wing"},
+    {"cmd": "show", "who": "batri", "at": "far_right"},
+    {"cmd": "line", "who": "batri", "face": "surprised", "text": "앗, 죄송해요. 거기 누구세요. 아, 점성술사님이랑 {player|이구나/구나}. 깜짝이야. 밤엔 사람이 다 등불 기둥처럼 보여서."},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "배트리 우체부. 이 시간까지 배달이에요?"},
+    {"cmd": "line", "who": "batri", "face": "happy", "text": "축제 초대장이요. 마을 전체에 돌려야 해서요. 축제 날에도 저 광장에서 축하 편지 배달해요. 무슨 일 있으면 불러 주세요. 길은 몰라도 사람은 다 알거든요."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "……기억해 둘게요. 꼭."},
+    {"cmd": "line", "who": "batri", "face": "smile", "text": "그럼 저 가요. 아, 양호실 {sera.name} 선생님한테도 초대장 갖다드려야 하는데, 양호실이 이쪽이었나."},
+    {"cmd": "line", "who": "player", "text": "반대쪽이에요."},
+    {"cmd": "line", "who": "batri", "face": "embarrassed", "text": "알고 있었어요. 확인한 거예요. 죄송해요."},
+    {"cmd": "hide", "who": "batri"},
+    {"cmd": "line", "who": "stella", "face": "laugh", "text": "저 말, 어디서 많이 들어 본 것 같네요."},
+    {"cmd": "line", "who": "player", "text": "맨날 들어요. 다른 사람한테서."},
+    {"cmd": "show", "who": "sera", "at": "right"},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "어라, 이 밤에 광장에서 뭐 해요. 점성술사님, 또 길 잃었어요?"},
+    {"cmd": "line", "who": "stella", "face": "embarrassed", "text": "오늘은 아니에요, {sera.name} 선생님. ……아마도요."},
+    {"cmd": "line", "who": "sera", "face": "neutral", "text": "찻집에서 오는 길이에요. 축제 날엔 양호실 밤새 열어 둘 거예요. 해마다 꼭 누가 넘어지거나 데거든요."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "밤새요."},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "네. 그러니까 다치지 말고 놀아요. 다치면 제 물약 먹어야 하니까. 맛있는데, 다들 싫어하더라고요."},
+    {"cmd": "hide", "who": "sera"},
+    {"cmd": "line", "who": "player", "text": "(양호실 물약이 지독하게 쓰다는 건 학교 전체가 아는 사실이었다.)"},
+    {"cmd": "line", "who": "stella", "face": "thinking", "text": "밤새 열어 둔대요. ……다행이네요."},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "축제 날엔 저 무대 앞이 제일 붐벼요. 등불 줄도 거기가 제일 많고요."},
+    {"cmd": "narration", "text": "{npc.name|이/가} 무대 기둥을 손바닥으로 쓸어 본다. 기둥 위쪽, 등불 줄이 모이는 쇠고리를 오래 올려다본다."},
+    {"cmd": "line", "who": "stella", "face": "thinking", "text": "별은 장소를 알려 주지 않아요. 언제, 누구만 알려 주죠. 그런데 이상하게, 여기 서 있으면 알 것 같아요."},
+    {"cmd": "if_flag", "flag": "stella_believe", "then": "believe_yes", "else": "believe_no"},
+    {"label": "believe_yes"},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "{player|은/는} 처음부터 믿어 줬잖아요. 언덕에서, 바로."},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "처음부터 믿어 준 사람한테는 거짓말을 못 하겠어요. 그러니까, 그냥 아무 말도 안 할게요."},
+    {"cmd": "line", "who": "player", "text": "(그건 거짓말을 하고 있다는 고백이었다.)"},
+    {"cmd": "goto", "to": "believe_merge"},
+    {"label": "believe_no"},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "{player|은/는} 별 이야기를 반쯤만 믿죠. 그게 지금은 좋아요."},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "반쯤만 믿는 사람한테는, 반쯤만 말해도 되니까요."},
+    {"cmd": "line", "who": "player", "text": "(나머지 반이 뭔지, 묻고 싶었다.)"},
+    {"cmd": "goto", "to": "believe_merge"},
+    {"label": "believe_merge"},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "축제 날 밤, 저는 여기 있을 거예요. 무대 앞에."},
+    {"cmd": "if_flag", "flag": "stella_stay_promise", "then": "promise_yes", "else": "promise_no"},
+    {"label": "promise_yes"},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "비 오던 밤에, 옆에 있겠다고 했죠. 고집쟁이처럼."},
+    {"cmd": "line", "who": "stella", "face": "worried", "text": "그 약속, 지금이라도 물러도 돼요. 아무도 뭐라고 안 해요. 별도 저도."},
+    {"cmd": "goto", "to": "promise_merge"},
+    {"label": "promise_no"},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "{player|은/는}요. 축제 날 어디 있을 거예요."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "어디든, 저 무대 앞만 아니면 돼요. 그거 하나만 부탁할게요."},
+    {"cmd": "goto", "to": "promise_merge"},
+    {"label": "promise_merge"},
+    {"cmd": "narration", "text": "{npc.name|이/가} 등불 줄 하나를 가만히 올려다본다. 바람이 불 때마다 쇠고리가 작게 삐걱인다."},
+    {"cmd": "choice", "id": "c3", "options": [{"text": "당신 옆이요. 무대 앞이든 어디든.", "affinity": 30, "next": "c3_side"}, {"text": "어디든요. 당신이 길 잃지 않게 따라다닐 거예요.", "affinity": 15, "next": "c3_guide"}, {"text": "친구들이랑 시계탑에서 불꽃놀이 볼 거예요.", "affinity": -15, "next": "c3_away"}]},
+    {"label": "c3_side"},
+    {"cmd": "line", "who": "stella", "face": "sad", "text": "……그럴 줄 알았어요."},
+    {"cmd": "line", "who": "stella", "face": "laugh", "text": "별을 몇 번을 다시 계산해도, {player|은/는} 늘 고집쟁이로 나와요."},
+    {"cmd": "line", "who": "stella", "face": "serious", "text": "그럼 하나만 약속해요. 제가 비키라고 하면, 그때는 아무것도 묻지 말고 비켜요."},
+    {"cmd": "line", "who": "player", "text": "(대답하기 전에, {npc.name|이/가} 먼저 새끼손가락을 내밀었다.)"},
+    {"cmd": "goto", "to": "c3_merge"},
+    {"label": "c3_guide"},
+    {"cmd": "line", "who": "stella", "face": "laugh", "text": "길치를 따라다니면 {player}도 길을 잃을 텐데요."},
+    {"cmd": "line", "who": "player", "text": "그럼 같이 잃죠."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "……같이 잃는 건, 혼자 잃는 거랑 완전히 다르네요."},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "그래도 무대 앞에서는, 조금만 떨어져 있어요. 아주 조금만."},
+    {"cmd": "goto", "to": "c3_merge"},
+    {"label": "c3_away"},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "시계탑. 좋아요. 거기 난간, 우리가 고쳤잖아요. 거기라면 안심이에요."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "거기서 보면 등불이 다 보일 거예요. 광장도, 무대도."},
+    {"cmd": "narration", "text": "안심했다는 말과 달리, {npc.name}의 손이 기둥을 꽉 붙잡는다."},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "……재밌게 봐요. 저도 여기서 볼게요."},
+    {"cmd": "goto", "to": "c3_merge"},
+    {"label": "c3_merge"},
+    {"cmd": "narration", "text": "광장 분수가 졸졸 흐른다. 처음 만난 날, {npc.name|이/가} 물에 비친 하늘에 손가락으로 등불자리를 찍던 그 분수다."},
+    {"cmd": "narration", "text": "그날은 분수 물에 비친 하늘이 낮이었다. 지금은 진짜 별이 물속에서 흔들린다."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "처음 만난 날 기억나요. 제가 거창하게 돌아섰다가 세 번 돌아온 날."},
+    {"cmd": "line", "who": "player", "text": "도깨비바늘 잔뜩 붙이고요."},
+    {"cmd": "line", "who": "stella", "face": "laugh", "text": "그날 집에 가서 그거 떼는 데 한 시간 걸렸어요. 그래도 그날이 좋았어요."},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "{player}. 이상한 거 하나 물어봐도 돼요."},
+    {"cmd": "line", "who": "stella", "face": "shy", "text": "……이제 말 놓아도 돼요. 예언체에서 '님'까지, '님'에서 이름까지 오는 데 한참 걸렸으니까, 이번엔 빨리 가 보고 싶어서요."},
+    {"cmd": "choice", "id": "c4", "options": [{"text": "좋아요. ……아니, 좋아.", "affinity": 30, "next": "c4_yes"}, {"text": "오두막까지 길 안 잃고 가면 놓아 줄게요.", "affinity": 15, "next": "c4_tease"}, {"text": "……갑자기요?", "affinity": 0, "next": "c4_awkward"}]},
+    {"label": "c4_yes"},
+    {"cmd": "line", "who": "stella", "face": "surprised", "text": "……."},
+    {"cmd": "line", "who": "stella", "face": "laugh", "text": "좋아, 래. {player|이/가} 먼저 놨네."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "그럼 나도. ……{player}. 고마워. 이 말은 존댓말로 하면 너무 멀어서, 놓고 싶었어."},
+    {"cmd": "goto", "to": "ending"},
+    {"label": "c4_tease"},
+    {"cmd": "line", "who": "stella", "face": "determined", "text": "오두막까지요. 좋아요. 별에 대고 맹세할게요."},
+    {"cmd": "narration", "text": "오두막까지 가는 길. 갈림길 두 번에 막다른 골목 한 번. 그래도 도착은 했다."},
+    {"cmd": "line", "who": "stella", "face": "proud", "text": "도착. 이제 놓을게. ……{player}."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "고마워. 이 말은 존댓말로 하면 너무 멀어서, 빨리 놓고 싶었어."},
+    {"cmd": "goto", "to": "ending"},
+    {"label": "c4_awkward"},
+    {"cmd": "line", "who": "stella", "face": "embarrassed", "text": "갑자기는 아닌데. 사흘 전부터 연습했는데."},
+    {"cmd": "line", "who": "stella", "face": "thinking", "text": "거울 보고요. '{player}, 안녕.' 이렇게. 열두 번."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "……그래도 이상하면, 천천히 할게요. 아니, 할게."},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "봐. 벌써 반은 놨어. 고마워, {player}."},
+    {"cmd": "goto", "to": "ending"},
+    {"label": "ending"},
+    {"cmd": "move", "to": "witch_hut", "transition": "fade"},
+    {"cmd": "bgm", "id": "sad"},
+    {"cmd": "narration", "text": "오두막 앞. {npc.name|이/가} 목에 걸고 있던 가는 끈을 풀어 건넨다. 끝에 작은 월장석이 매달려 있다."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "축제 날, 이거 꼭 걸고 와. 달빛을 머금은 돌이라서, 어두운 데서도 {player|이/가} 어디 있는지 보여."},
+    {"cmd": "line", "who": "player", "text": "이건 당신 거잖아요."},
+    {"cmd": "line", "who": "stella", "face": "smile", "text": "나는 별을 보면 돼. {player|은/는} 이걸 보면 되고. 그럼 서로 안 잃어버리지."},
+    {"cmd": "give_item", "item": "g2_moonst", "n": 1},
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "들어가. 이제 진짜 늦었어. 내일 수업 졸면 아울라 선생님한테 혼나."},
+    {"cmd": "narration", "text": "몇 걸음 걷다가 돌아본다. {npc.name|이/가} 오두막 앞에 선 채 하늘을 올려다보고 있다."},
+    {"cmd": "narration", "text": "소맷자락 끝의 흐린 별을 향해, 무언가 중얼거린다. 바람이 그 말을 아주 조금 실어 온다."},
+    {"cmd": "line", "who": "stella", "face": "soft", "text": "……이번엔, 내가 떨어질게."},
+    {"cmd": "line", "who": "player", "text": "(……방금, 뭐라고 했지.)"},
+    {"cmd": "narration", "text": "되묻기도 전에, {npc.name|이/가} 이쪽을 보고 손을 크게 흔든다. 아무 일도 없었다는 듯이."},
+    {"cmd": "line", "who": "stella", "face": "happy", "text": "잘 가, {player}. 축제 날 보자. 월장석 꼭 걸고 와."},
+    {"cmd": "line", "who": "player", "text": "(손을 흔들어 주었다. 목에 건 월장석이 가슴께에서 차갑게 흔들렸다.)"},
+    {"cmd": "narration", "text": "다시 돌아봤을 때, 오두막 문은 닫혀 있었다. 창문에 불이 켜지고, 오래도록 꺼지지 않았다."}
   ],
-  "weather": [
-   "clear"
+  "cold": [
+    {"cmd": "line", "who": "stella", "face": "neutral", "text": "……늦었어요. 이제 들어가요."},
+    {"cmd": "narration", "text": "{npc.name|이/가} 먼저 광장을 떠난다. 등불 줄 아래로 망토 자락이 사라진다."},
+    {"cmd": "line", "who": "stella", "face": "serious", "text": "별의 아이여. 축제 날엔, 무대 앞에는 오지 마세요."},
+    {"cmd": "line", "who": "player", "text": "(부탁이라기보다, 작별 인사처럼 들렸다.)"},
+    {"cmd": "narration", "text": "아무도 없는 광장에서 불 꺼진 등불 수백 개가 바람에 흔들렸다."},
+    {"cmd": "line", "who": "player", "text": "(소맷자락 끝의 흐린 별. 그게 정말 아무것도 아닐까.)"}
   ]
- },
- "rewards": {
-  "coin": 100,
-  "mana": 20,
-  "know": 10,
-  "items": {},
-  "flags": [],
-  "perk": null
- },
- "script": [
-  {
-   "cmd": "fade_in"
-  },
-  {
-   "cmd": "bgm",
-   "id": "night"
-  },
-  {
-   "cmd": "sfx",
-   "id": "wind"
-  },
-  {
-   "cmd": "narration",
-   "text": "밤, 언덕 위 무너진 오두막. 무너진 돌담에 {npc.name|이/가} 다리를 흔들며 앉아 있다."
-  },
-  {
-   "cmd": "narration",
-   "text": "오늘은 월장석도, 별 지도도 들고 있지 않다. 빈손이다."
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "stella_was_cold",
-   "then": "cold_open",
-   "else": "warm_open"
-  },
-  {
-   "label": "cold_open"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "……{player}. 오늘은 와 줄 거라고 생각했어요. 별이 그랬거든요. 이번엔 진짜로."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(오두막 창문 불빛 앞에서 그냥 돌아섰던 새벽이 떠오른다.)"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "그날은 미안했어요. 계산이 다 끝났어요. 그래서 말해 주고 싶었어요."
-  },
-  {
-   "cmd": "goto",
-   "to": "open_merge"
-  },
-  {
-   "label": "warm_open"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "happy",
-   "text": "{player}. 왔다."
-  },
-  {
-   "cmd": "narration",
-   "text": "돌담에서 폴짝 뛰어내린다. 새벽 언덕에서 어깨에 기대 잠들었던 사람이라고는 믿기지 않을 만큼 가볍다."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "계산 다 끝났어요. 제일 먼저 말해 주고 싶었어요."
-  },
-  {
-   "cmd": "goto",
-   "to": "open_merge"
-  },
-  {
-   "label": "open_merge"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그날 새벽 이후로 어떻게 지냈어요?"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "embarrassed",
-   "text": "잤어요. 열네 시간이요. 일어나 보니까 다음 날 저녁이었어요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "laugh",
-   "text": "그리고 {madeleine.name} 님이 진짜로 그릇 찾으러 왔어요. 빈 그릇 가져가면서 꽉 찬 그릇을 두고 갔어요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그건 그릇을 찾으러 온 게 아니잖아요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "그러니까요. 이제 그 그릇이 우리 집에 세 개예요. 돌려주러 가면 또 생길 거예요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "배부르게 자고 일어나서, 맑은 머리로 마지막 계산을 했어요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "happy",
-   "text": "{player} 별, 아니래요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "laugh",
-   "text": "몇 번을 다시 해도요. 등불 끝 작은 별은 축제 날에도, 그다음 날에도, 그다음 해에도 멀쩡히 떠 있어요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……진짜요?"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "진짜요. 점성술사가 별에 대고 맹세할게요. 별에 대고 맹세하면 진짜 지켜야 하는 거 알죠."
-  },
-  {
-   "cmd": "narration",
-   "text": "웃음이 너무 밝다. 눈 밑의 그늘까지 다 덮어 버릴 만큼."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "그러니까 이제 지키기는 끝이에요. 냄비도, 가위도, 망치도. 축제 날엔 마음껏 놀아요."
-  },
-  {
-   "cmd": "choice",
-   "id": "c1",
-   "options": [
-    {
-     "text": "그럼 축제 날 같이 놀아요. 불꽃놀이도 같이 봐요.",
-     "affinity": 30,
-     "next": "c1_together"
-    },
-    {
-     "text": "……진짜 끝이에요?",
-     "affinity": 0,
-     "next": "c1_really"
-    },
-    {
-     "text": "휴. 이제 냄비 안 써도 되겠네요.",
-     "affinity": -15,
-     "next": "c1_relief"
-    }
-   ]
-  },
-  {
-   "label": "c1_together"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "surprised",
-   "text": "같이요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "……좋아요. 같이 봐요. 불꽃놀이."
-  },
-  {
-   "cmd": "narration",
-   "text": "대답하기 전에 아주 짧은 틈이 있었다. 숨을 한 번 고르는 만큼의."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "축제 등불 아래서 {player|이랑/랑} 불꽃놀이라니. 별이 이것까지 알려 줬으면 좋았을 텐데."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_merge"
-  },
-  {
-   "label": "c1_really"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "진짜 끝이에요. 왜요, 아쉬워요?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그런 건 아닌데."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "laugh",
-   "text": "아쉬우면 냄비는 드릴게요. 기념으로."
-  },
-  {
-   "cmd": "narration",
-   "text": "눈을 피하는 쪽은 {npc.name|이었/였}다. 웃으면서, 아주 자연스럽게."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_merge"
-  },
-  {
-   "label": "c1_relief"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "laugh",
-   "text": "그렇죠. 무거웠죠, 그 냄비."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "미안해요. 그동안 귀찮게 해서."
-  },
-  {
-   "cmd": "narration",
-   "text": "웃는 얼굴 그대로, {npc.name|이/가} 돌담 돌멩이 하나를 발끝으로 굴린다. 오래, 같은 자리에서."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "이제 저도 좀 쉬어야겠어요."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_merge"
-  },
-  {
-   "label": "c1_merge"
-  },
-  {
-   "cmd": "narration",
-   "text": "{npc.name|이/가} 돌담에서 무언가를 집어 든다. 반쯤 탄 초 한 자루. 오두막에서 밤새 켜 두던 그 초다."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "이제 이것도 필요 없어요. 밤새 계산할 일이 없으니까."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그럼 버려요?"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "……아니요. 갖고 있을래요. 열심히 했던 밤들이니까."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "마지막으로 한 번만 확인하러 가요. 별 보는 언덕. 같이 봐 줘요."
-  },
-  {
-   "cmd": "follow",
-   "who": "stella",
-   "to": "hill_top"
-  },
-  {
-   "cmd": "bgm",
-   "id": "mystery"
-  },
-  {
-   "cmd": "narration",
-   "text": "별 보는 언덕. 오늘은 길을 한 번도 잃지 않았다. 앞장선 {npc.name}의 걸음에 망설임이 없다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "오늘은 길 안 잃었네요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "이 길은 이제 눈 감고도 와요. 이번 달에만 서른 번은 왔으니까요."
-  },
-  {
-   "cmd": "narration",
-   "text": "풀밭에 나란히 눕는다. 등불자리가 머리 위에서 빛난다."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "처음 여기 같이 왔을 때, 쿠키 굴러간 거 기억나요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "개미들 운세 대길."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "laugh",
-   "text": "그날 이후로 저 아래 개미굴이 엄청 커졌어요. 제 예언 덕분이에요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "봐요. 등불 끝 작은 별. {player} 별이요. 오늘도 엄청 또렷하죠."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "네. 그런데……"
-  },
-  {
-   "cmd": "narration",
-   "text": "그 옆에서 무언가 깜빡인다. 등불 끝이 아니다. 등불을 든 사람의 소맷자락 끝."
-  },
-  {
-   "cmd": "narration",
-   "text": "언젠가 이 언덕에서 들었던 말이 떠오른다. 늘 흐려서, 어릴 땐 좀 서운했다던 별."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(소맷자락 끝. 흐린 별.)"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "처음부터 해석이 틀렸던 거예요. 등불 끝 별 '바로 옆'이라고 생각했는데, 별자리를 사람 모양으로 이으면, 등불을 든 손이 바로 옆이거든요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "손 쪽 별은 아주 흐려서, 다들 별자리에 넣지도 않아요. 저만 늘 세었죠."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그럼 떨어지는 별은 누구 별이에요?"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "thinking",
-   "text": "글쎄요. 길 가던 고양이 별일지도 모르고, 시장 상인 가위 별일지도 모르고."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "laugh",
-   "text": "아무튼 {player} 별은 아니에요. 그게 제일 중요해요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "thinking",
-   "text": "언덕에서 해 준 옛날이야기 기억나요. 길 잃은 아이를 찾으러 등불 들고 걷던 사람."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "아이를 찾았다는 쪽을 믿는다고 했잖아요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "네. 찾았어요. 분명히."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "그런데 그 사람이 아이를 찾고 나서 어떻게 됐는지는, 어느 이야기에도 안 나와요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "아마 별이 됐으니까 그걸로 됐다고 생각했나 봐요. 이야기를 지은 사람들이."
-  },
-  {
-   "cmd": "narration",
-   "text": "웃는 옆얼굴을 본다. 웃는데, 눈은 웃지 않는다. 별빛을 받은 눈동자가 소맷자락 끝 별 하나에 꼭 붙어 있다."
-  },
-  {
-   "cmd": "choice",
-   "id": "c2",
-   "options": [
-    {
-     "text": "혹시…… 소맷자락 끝 별이에요? 당신 별이요.",
-     "affinity": 0,
-     "next": "c2_ask",
-     "flag": "stella_asked_who"
-    },
-    {
-     "text": "말하기 싫으면 안 해도 돼요. 대신 혼자 두지는 않을게요.",
-     "affinity": 30,
-     "next": "c2_stay"
-    },
-    {
-     "text": "제 별이 아니면 됐네요. 다행이다.",
-     "affinity": -30,
-     "next": "c2_relief"
-    }
-   ]
-  },
-  {
-   "label": "c2_ask"
-  },
-  {
-   "cmd": "wait",
-   "sec": 2
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "surprised",
-   "text": "……."
-  },
-  {
-   "cmd": "narration",
-   "text": "{npc.name}의 숨이 멈춘다. 풀벌레 소리마저 끊긴 것 같다."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "laugh",
-   "text": "……{player}, 점성술사 다 됐네요. 언덕에서 한 번 들은 걸 다 기억하고."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "그런데 틀렸어요. 제 별은 너무 흐려서, 떨어져도 아무도 모를 거예요. 그러니까 그 별은 아니에요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(떨어져도 아무도 모를 거라는 말은, 아니라는 대답이 아니었다.)"
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_merge"
-  },
-  {
-   "label": "c2_stay"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "surprised",
-   "text": "……."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "……혼자 두지 않는다."
-  },
-  {
-   "cmd": "narration",
-   "text": "{npc.name|이/가} 팔로 눈을 덮는다. 한참 동안 그렇게 누워 있다."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "그 말, 반칙이에요. 예언에도 없던 말이에요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "고마워요. 정말로."
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_merge"
-  },
-  {
-   "label": "c2_relief"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "……네."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "다행이에요. 정말 다행이에요."
-  },
-  {
-   "cmd": "narration",
-   "text": "{npc.name|이/가} 웃는다. 아까보다 더 환하게. 그리고 아주 천천히, 몸을 반대쪽으로 돌려 눕는다."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "저도 그 말이 듣고 싶었어요. 다행이라는 말. 그러니까 괜찮아요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(괜찮다는 목소리가 풀잎처럼 떨렸다.)"
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_merge"
-  },
-  {
-   "label": "c2_merge"
-  },
-  {
-   "cmd": "bgm",
-   "id": "night"
-  },
-  {
-   "cmd": "narration",
-   "text": "별이 조금씩 자리를 옮긴다. 소맷자락 끝의 흐린 별은 또 한 번 깜빡이고, 다시 켜진다."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "하나만 더 보여 주고 싶은 데가 있어요. 내려가요."
-  },
-  {
-   "cmd": "narration",
-   "text": "언덕을 내려가는 길. 앞서 걷는 {npc.name|이/가} 노래 같은 걸 흥얼거린다. 처음 듣는 가락이다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그거 무슨 노래예요?"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "동생이 지은 노래예요. 별 이름 외우는 노래. 북쪽 별, 등불자리, 빗자루자리…… 박자가 엉망이에요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "laugh",
-   "text": "그런데 이상하게 이것만은 안 까먹어요. 길은 다 까먹는데."
-  },
-  {
-   "cmd": "move",
-   "to": "village_square",
-   "transition": "fade"
-  },
-  {
-   "cmd": "sfx",
-   "id": "wind"
-  },
-  {
-   "cmd": "narration",
-   "text": "밤의 마을 광장. 축제 준비가 거의 끝났다. 무대 기둥 네 개가 하늘을 찌르고 서 있고, 기둥과 기둥 사이, 시장에서 광장까지 등불 줄이 거미줄처럼 얽혀 있다."
-  },
-  {
-   "cmd": "narration",
-   "text": "아직 불을 켜지 않은 주황색 등불 수백 개가 바람에 흔들린다. 어둠 속에서 고개를 까딱이는 호박들 같다."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "마흔세 줄이에요. 오늘 세 번 셌어요. 한 번은 길을 잃은 채로."
-  },
-  {
-   "cmd": "sfx",
-   "id": "wing"
-  },
-  {
-   "cmd": "show",
-   "who": "batri",
-   "at": "far_right"
-  },
-  {
-   "cmd": "line",
-   "who": "batri",
-   "face": "surprised",
-   "text": "앗, 죄송해요. 거기 누구세요. 아, 점성술사님이랑 {player|이구나/구나}. 깜짝이야. 밤엔 사람이 다 등불 기둥처럼 보여서."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "배트리 우체부. 이 시간까지 배달이에요?"
-  },
-  {
-   "cmd": "line",
-   "who": "batri",
-   "face": "happy",
-   "text": "축제 초대장이요. 마을 전체에 돌려야 해서요. 축제 날에도 저 광장에서 축하 편지 배달해요. 무슨 일 있으면 불러 주세요. 길은 몰라도 사람은 다 알거든요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "……기억해 둘게요. 꼭."
-  },
-  {
-   "cmd": "line",
-   "who": "batri",
-   "face": "smile",
-   "text": "그럼 저 가요. 아, 양호실 {sera.name} 선생님한테도 초대장 갖다드려야 하는데, 양호실이 이쪽이었나."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "반대쪽이에요."
-  },
-  {
-   "cmd": "line",
-   "who": "batri",
-   "face": "embarrassed",
-   "text": "알고 있었어요. 확인한 거예요. 죄송해요."
-  },
-  {
-   "cmd": "hide",
-   "who": "batri"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "laugh",
-   "text": "저 말, 어디서 많이 들어 본 것 같네요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "맨날 들어요. 다른 사람한테서."
-  },
-  {
-   "cmd": "show",
-   "who": "sera",
-   "at": "right"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "어라, 이 밤에 광장에서 뭐 해요. 점성술사님, 또 길 잃었어요?"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "embarrassed",
-   "text": "오늘은 아니에요, {sera.name} 선생님. ……아마도요."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "neutral",
-   "text": "찻집에서 오는 길이에요. 축제 날엔 양호실 밤새 열어 둘 거예요. 해마다 꼭 누가 넘어지거나 데거든요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "밤새요."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "네. 그러니까 다치지 말고 놀아요. 다치면 제 물약 먹어야 하니까. 맛있는데, 다들 싫어하더라고요."
-  },
-  {
-   "cmd": "hide",
-   "who": "sera"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(양호실 물약이 지독하게 쓰다는 건 학교 전체가 아는 사실이었다.)"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "thinking",
-   "text": "밤새 열어 둔대요. ……다행이네요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "축제 날엔 저 무대 앞이 제일 붐벼요. 등불 줄도 거기가 제일 많고요."
-  },
-  {
-   "cmd": "narration",
-   "text": "{npc.name|이/가} 무대 기둥을 손바닥으로 쓸어 본다. 기둥 위쪽, 등불 줄이 모이는 쇠고리를 오래 올려다본다."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "thinking",
-   "text": "별은 장소를 알려 주지 않아요. 언제, 누구만 알려 주죠. 그런데 이상하게, 여기 서 있으면 알 것 같아요."
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "stella_believe",
-   "then": "believe_yes",
-   "else": "believe_no"
-  },
-  {
-   "label": "believe_yes"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "{player|은/는} 처음부터 믿어 줬잖아요. 언덕에서, 바로."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "처음부터 믿어 준 사람한테는 거짓말을 못 하겠어요. 그러니까, 그냥 아무 말도 안 할게요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(그건 거짓말을 하고 있다는 고백이었다.)"
-  },
-  {
-   "cmd": "goto",
-   "to": "believe_merge"
-  },
-  {
-   "label": "believe_no"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "{player|은/는} 별 이야기를 반쯤만 믿죠. 그게 지금은 좋아요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "반쯤만 믿는 사람한테는, 반쯤만 말해도 되니까요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(나머지 반이 뭔지, 묻고 싶었다.)"
-  },
-  {
-   "cmd": "goto",
-   "to": "believe_merge"
-  },
-  {
-   "label": "believe_merge"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "축제 날 밤, 저는 여기 있을 거예요. 무대 앞에."
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "stella_stay_promise",
-   "then": "promise_yes",
-   "else": "promise_no"
-  },
-  {
-   "label": "promise_yes"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "비 오던 밤에, 옆에 있겠다고 했죠. 고집쟁이처럼."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "worried",
-   "text": "그 약속, 지금이라도 물러도 돼요. 아무도 뭐라고 안 해요. 별도 저도."
-  },
-  {
-   "cmd": "goto",
-   "to": "promise_merge"
-  },
-  {
-   "label": "promise_no"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "{player|은/는}요. 축제 날 어디 있을 거예요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "어디든, 저 무대 앞만 아니면 돼요. 그거 하나만 부탁할게요."
-  },
-  {
-   "cmd": "goto",
-   "to": "promise_merge"
-  },
-  {
-   "label": "promise_merge"
-  },
-  {
-   "cmd": "narration",
-   "text": "{npc.name|이/가} 등불 줄 하나를 가만히 올려다본다. 바람이 불 때마다 쇠고리가 작게 삐걱인다."
-  },
-  {
-   "cmd": "choice",
-   "id": "c3",
-   "options": [
-    {
-     "text": "당신 옆이요. 무대 앞이든 어디든.",
-     "affinity": 30,
-     "next": "c3_side"
-    },
-    {
-     "text": "어디든요. 당신이 길 잃지 않게 따라다닐 거예요.",
-     "affinity": 15,
-     "next": "c3_guide"
-    },
-    {
-     "text": "친구들이랑 시계탑에서 불꽃놀이 볼 거예요.",
-     "affinity": -15,
-     "next": "c3_away"
-    }
-   ]
-  },
-  {
-   "label": "c3_side"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "sad",
-   "text": "……그럴 줄 알았어요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "laugh",
-   "text": "별을 몇 번을 다시 계산해도, {player|은/는} 늘 고집쟁이로 나와요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "serious",
-   "text": "그럼 하나만 약속해요. 제가 비키라고 하면, 그때는 아무것도 묻지 말고 비켜요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(대답하기 전에, {npc.name|이/가} 먼저 새끼손가락을 내밀었다.)"
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_merge"
-  },
-  {
-   "label": "c3_guide"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "laugh",
-   "text": "길치를 따라다니면 {player}도 길을 잃을 텐데요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그럼 같이 잃죠."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "……같이 잃는 건, 혼자 잃는 거랑 완전히 다르네요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "그래도 무대 앞에서는, 조금만 떨어져 있어요. 아주 조금만."
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_merge"
-  },
-  {
-   "label": "c3_away"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "시계탑. 좋아요. 거기 난간, 우리가 고쳤잖아요. 거기라면 안심이에요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "거기서 보면 등불이 다 보일 거예요. 광장도, 무대도."
-  },
-  {
-   "cmd": "narration",
-   "text": "안심했다는 말과 달리, {npc.name}의 손이 기둥을 꽉 붙잡는다."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "……재밌게 봐요. 저도 여기서 볼게요."
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_merge"
-  },
-  {
-   "label": "c3_merge"
-  },
-  {
-   "cmd": "narration",
-   "text": "광장 분수가 졸졸 흐른다. 처음 만난 날, {npc.name|이/가} 물에 비친 하늘에 손가락으로 등불자리를 찍던 그 분수다."
-  },
-  {
-   "cmd": "narration",
-   "text": "그날은 분수 물에 비친 하늘이 낮이었다. 지금은 진짜 별이 물속에서 흔들린다."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "처음 만난 날 기억나요. 제가 거창하게 돌아섰다가 세 번 돌아온 날."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "도깨비바늘 잔뜩 붙이고요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "laugh",
-   "text": "그날 집에 가서 그거 떼는 데 한 시간 걸렸어요. 그래도 그날이 좋았어요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "{player}. 이상한 거 하나 물어봐도 돼요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "shy",
-   "text": "……이제 말 놓아도 돼요. 예언체에서 '님'까지, '님'에서 이름까지 오는 데 한참 걸렸으니까, 이번엔 빨리 가 보고 싶어서요."
-  },
-  {
-   "cmd": "choice",
-   "id": "c4",
-   "options": [
-    {
-     "text": "좋아요. ……아니, 좋아.",
-     "affinity": 30,
-     "next": "c4_yes"
-    },
-    {
-     "text": "오두막까지 길 안 잃고 가면 놓아 줄게요.",
-     "affinity": 15,
-     "next": "c4_tease"
-    },
-    {
-     "text": "……갑자기요?",
-     "affinity": 0,
-     "next": "c4_awkward"
-    }
-   ]
-  },
-  {
-   "label": "c4_yes"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "surprised",
-   "text": "……."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "laugh",
-   "text": "좋아, 래. {player|이/가} 먼저 놨네."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "그럼 나도. ……{player}. 고마워. 이 말은 존댓말로 하면 너무 멀어서, 놓고 싶었어."
-  },
-  {
-   "cmd": "goto",
-   "to": "ending"
-  },
-  {
-   "label": "c4_tease"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "determined",
-   "text": "오두막까지요. 좋아요. 별에 대고 맹세할게요."
-  },
-  {
-   "cmd": "narration",
-   "text": "오두막까지 가는 길. 갈림길 두 번에 막다른 골목 한 번. 그래도 도착은 했다."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "proud",
-   "text": "도착. 이제 놓을게. ……{player}."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "고마워. 이 말은 존댓말로 하면 너무 멀어서, 빨리 놓고 싶었어."
-  },
-  {
-   "cmd": "goto",
-   "to": "ending"
-  },
-  {
-   "label": "c4_awkward"
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "embarrassed",
-   "text": "갑자기는 아닌데. 사흘 전부터 연습했는데."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "thinking",
-   "text": "거울 보고요. '{player}, 안녕.' 이렇게. 열두 번."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "……그래도 이상하면, 천천히 할게요. 아니, 할게."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "봐. 벌써 반은 놨어. 고마워, {player}."
-  },
-  {
-   "cmd": "goto",
-   "to": "ending"
-  },
-  {
-   "label": "ending"
-  },
-  {
-   "cmd": "move",
-   "to": "witch_hut",
-   "transition": "fade"
-  },
-  {
-   "cmd": "bgm",
-   "id": "sad"
-  },
-  {
-   "cmd": "narration",
-   "text": "오두막 앞. {npc.name|이/가} 목에 걸고 있던 가는 끈을 풀어 건넨다. 끝에 작은 월장석이 매달려 있다."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "축제 날, 이거 꼭 걸고 와. 달빛을 머금은 돌이라서, 어두운 데서도 {player|이/가} 어디 있는지 보여."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "이건 당신 거잖아요."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "smile",
-   "text": "나는 별을 보면 돼. {player|은/는} 이걸 보면 되고. 그럼 서로 안 잃어버리지."
-  },
-  {
-   "cmd": "give_item",
-   "item": "g2_moonst",
-   "n": 1
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "들어가. 이제 진짜 늦었어. 내일 수업 졸면 아울라 선생님한테 혼나."
-  },
-  {
-   "cmd": "narration",
-   "text": "몇 걸음 걷다가 돌아본다. {npc.name|이/가} 오두막 앞에 선 채 하늘을 올려다보고 있다."
-  },
-  {
-   "cmd": "narration",
-   "text": "소맷자락 끝의 흐린 별을 향해, 무언가 중얼거린다. 바람이 그 말을 아주 조금 실어 온다."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "soft",
-   "text": "……이번엔, 내가 떨어질게."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(……방금, 뭐라고 했지.)"
-  },
-  {
-   "cmd": "narration",
-   "text": "되묻기도 전에, {npc.name|이/가} 이쪽을 보고 손을 크게 흔든다. 아무 일도 없었다는 듯이."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "happy",
-   "text": "잘 가, {player}. 축제 날 보자. 월장석 꼭 걸고 와."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(손을 흔들어 주었다. 목에 건 월장석이 가슴께에서 차갑게 흔들렸다.)"
-  },
-  {
-   "cmd": "narration",
-   "text": "다시 돌아봤을 때, 오두막 문은 닫혀 있었다. 창문에 불이 켜지고, 오래도록 꺼지지 않았다."
-  }
- ],
- "cold": [
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "neutral",
-   "text": "……늦었어요. 이제 들어가요."
-  },
-  {
-   "cmd": "narration",
-   "text": "{npc.name|이/가} 먼저 광장을 떠난다. 등불 줄 아래로 망토 자락이 사라진다."
-  },
-  {
-   "cmd": "line",
-   "who": "stella",
-   "face": "serious",
-   "text": "별의 아이여. 축제 날엔, 무대 앞에는 오지 마세요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(부탁이라기보다, 작별 인사처럼 들렸다.)"
-  },
-  {
-   "cmd": "narration",
-   "text": "아무도 없는 광장에서 불 꺼진 등불 수백 개가 바람에 흔들렸다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(소맷자락 끝의 흐린 별. 그게 정말 아무것도 아닐까.)"
-  }
- ]
 }

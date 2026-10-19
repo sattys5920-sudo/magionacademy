@@ -1,1053 +1,209 @@
 {
- "id": "madeleine_heart_02",
- "npc": "madeleine",
- "heart": 2,
- "title": "맛보기 담당",
- "conditions": {
-  "minHeart": 2,
-  "location": "bakery",
-  "time": [
-   "morning"
+  "id": "madeleine_heart_02", "npc": "madeleine", "heart": 2, "title": "맛보기 담당",
+  "conditions": {"minHeart": 2, "location": "bakery", "time": ["morning"]},
+  "rewards": {"coin": 30, "mana": 0, "know": 0, "items": {"honey": 1}, "flags": [], "perk": null},
+  "script": [
+    {"cmd": "fade_in"},
+    {"cmd": "bgm", "id": "calm"},
+    {"cmd": "sfx", "id": "bird"},
+    {"cmd": "narration", "text": "이른 아침, 호박 빵집 굴뚝에서 하얀 연기가 오른다. 마을은 아직 반쯤 잠들어 있다."},
+    {"cmd": "if_flag", "flag": "madeleine_was_cold", "then": "cold_open", "else": "warm_open"},
+    {"label": "cold_open"},
+    {"cmd": "narration", "text": "빵집 문 앞에서 잠깐 망설인다. 지난번엔 웃으며 헤어지지 못했다."},
+    {"cmd": "line", "who": "madeleine", "face": "neutral", "text": "……어, 학생."},
+    {"cmd": "narration", "text": "제빵사는 반죽에서 눈을 떼지 않는다. 노래도 들리지 않는다."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "마침 잘 왔네. 오늘은 부탁이 있어서. 그냥 들어와."},
+    {"cmd": "line", "who": "player", "text": "(목소리가 지난번보다 한 칸 작다.)"},
+    {"cmd": "goto", "to": "open_end"},
+    {"label": "warm_open"},
+    {"cmd": "emote", "who": "madeleine", "icon": "exclaim"},
+    {"cmd": "line", "who": "madeleine", "face": "happy", "text": "거기 학생! 아니지, {player}! 딱 맞춰 왔네!"},
+    {"cmd": "narration", "text": "밀가루 묻은 손이 문 밖까지 쑥 나와서 소매를 잡아끈다."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "오늘은 밀가루 안 터뜨려! 약속해!"},
+    {"cmd": "line", "who": "player", "text": "그 약속, 믿어도 돼요?"},
+    {"cmd": "goto", "to": "open_end"},
+    {"label": "open_end"},
+    {"cmd": "narration", "text": "빵집 작업대 위에는 쟁반이 줄지어 놓여 있다. 쿠키, 머핀, 파이, 그리고 정체를 알 수 없는 검은 덩어리."},
+    {"cmd": "line", "who": "madeleine", "face": "proud", "text": "자, 오늘부터 너는 맛보기 담당이야!"},
+    {"cmd": "sfx", "id": "bell"},
+    {"cmd": "narration", "text": "제빵사가 계산대 위의 작은 종을 땡 울린다. 무슨 임명식이라도 하는 것처럼."},
+    {"cmd": "line", "who": "player", "text": "저 아직 하겠다고 안 했는데요."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "종 울렸으니까 끝! 취소 불가!"},
+    {"cmd": "line", "who": "player", "text": "맛보기 담당이요?"},
+    {"cmd": "line", "who": "madeleine", "text": "내가 새 과자를 구우면, 네가 먹어 보고 맛을 말해 주는 거지!"},
+    {"cmd": "line", "who": "madeleine", "face": "smug", "text": "세상에서 제일 좋은 일이야. 먹기만 하면 되거든!"},
+    {"cmd": "line", "who": "player", "text": "저 검은 덩어리도요?"},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "그건 마지막! 맛있는 건 아껴 먹는 거야!"},
+    {"cmd": "line", "who": "player", "text": "맛있는 거라서 마지막이에요?"},
+    {"cmd": "line", "who": "madeleine", "text": "첫 번째! 호박씨 버터 쿠키. 자, 아."},
+    {"cmd": "narration", "text": "노릇노릇 잘 구워진 쿠키다. 모양만큼은 그림책에서 튀어나온 것 같다."},
+    {"cmd": "narration", "text": "한 입 깨문다."},
+    {"cmd": "wait", "sec": 1},
+    {"cmd": "narration", "text": "입안 가득 바다가 밀려온다."},
+    {"cmd": "line", "who": "player", "text": "(……짜다. 엄청나게 짜다.)"},
+    {"cmd": "line", "who": "madeleine", "face": "happy", "text": "어때? 어때? 맛있지?"},
+    {"cmd": "narration", "text": "제빵사의 눈이 별처럼 반짝인다. 대답을 기다리느라 숨도 안 쉬는 것 같다."},
+    {"cmd": "choice", "id": "c1", "options": [{"text": "……짜요. 엄청. 소금이랑 설탕 바꾸신 것 같아요.", "affinity": 30, "next": "c1_honest", "flag": "madeleine_honest_taster"}, {"text": "맛있어요! 정말 최고예요!", "affinity": -15, "next": "c1_praise"}, {"text": "(웃으면서 남은 쿠키를 몰래 주머니에 넣는다.)", "affinity": 0, "next": "c1_hide"}]},
+    {"label": "c1_honest"},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "짜?"},
+    {"cmd": "narration", "text": "제빵사가 쿠키 하나를 집어 와작 씹는다. 그리고 그대로 굳는다."},
+    {"cmd": "line", "who": "madeleine", "face": "pain", "text": "으악, 짜! 바다다, 바다!"},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "하하하! 진짜 바꿨네! 통이 똑같이 생겨서 그래!"},
+    {"cmd": "line", "who": "madeleine", "face": "happy", "text": "좋아, 너 합격! 맛보기 담당은 솔직해야 해!"},
+    {"cmd": "line", "who": "player", "text": "혼날 줄 알았는데요."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "혼내긴. 짠 걸 짜다고 해 주는 사람이 제일 귀해."},
+    {"cmd": "goto", "to": "c1_end"},
+    {"label": "c1_praise"},
+    {"cmd": "line", "who": "madeleine", "face": "happy", "text": "진짜? 최고야?"},
+    {"cmd": "narration", "text": "신이 난 제빵사가 쿠키를 하나 집어 크게 와작 씹는다. 그리고 그대로 굳는다."},
+    {"cmd": "line", "who": "madeleine", "face": "pain", "text": "……짜."},
+    {"cmd": "line", "who": "madeleine", "face": "annoyed", "text": "이게 최고라고? 너 혀가 바다에서 왔어?"},
+    {"cmd": "line", "who": "player", "text": "그, 그게……"},
+    {"cmd": "line", "who": "madeleine", "face": "serious", "text": "맛보기 담당이 거짓말하면, 나는 내일도 짠 쿠키를 구워. 모레도."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "……알았지? 다음부터는 짜면 짜다고 해."},
+    {"cmd": "goto", "to": "c1_end"},
+    {"label": "c1_hide"},
+    {"cmd": "narration", "text": "쿠키가 주머니 속으로 사라진다. 완벽한 손놀림이다."},
+    {"cmd": "line", "who": "madeleine", "face": "thinking", "text": "어? 벌써 다 먹었어? 하나 더 줄까?"},
+    {"cmd": "line", "who": "player", "text": "아, 아니요! 배불러서……"},
+    {"cmd": "narration", "text": "그 순간, 주머니에서 쿠키 부스러기가 후드득 떨어진다."},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "……주머니에서 쿠키가 왜 나와?"},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "하하! 너 버리려고 했구나! 맛없었지? 솔직히 말해!"},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "다음엔 주머니 말고 입으로 말해. 그게 더 빨라."},
+    {"cmd": "goto", "to": "c1_end"},
+    {"label": "c1_end"},
+    {"cmd": "line", "who": "madeleine", "text": "자, 두 번째! 꿀 호박 머핀!"},
+    {"cmd": "narration", "text": "겉보기엔 평범한 머핀이다. 들어 올리는데 손목이 휘청한다."},
+    {"cmd": "line", "who": "player", "text": "……무거운데요?"},
+    {"cmd": "line", "who": "madeleine", "face": "proud", "text": "속이 꽉 찼다는 뜻이지!"},
+    {"cmd": "narration", "text": "깨물어 본다. 딱. 이가 머핀 표면에서 미끄러진다."},
+    {"cmd": "sfx", "id": "knock"},
+    {"cmd": "narration", "text": "작업대에 톡 두드려 보니 맑은 소리가 난다. 그건 머핀에서 날 소리가 아니다."},
+    {"cmd": "choice", "id": "c2", "options": [{"text": "이거 머핀 말고 망치로 팔아요. 대박 날 거예요.", "affinity": 30, "next": "c2_joke"}, {"text": "이가 나갈 뻔했어요. 굽는 시간이 너무 길었나 봐요.", "affinity": 15, "next": "c2_tooth"}, {"text": "(말없이 머핀을 내려놓고 물만 마신다.)", "affinity": -15, "next": "c2_silent"}]},
+    {"label": "c2_joke"},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "망치?"},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "하하하! 망치! 그래, 못 박을 때 쓰면 되겠다!"},
+    {"cmd": "narration", "text": "제빵사가 머핀으로 작업대 위 삐져나온 못을 탕탕 두드린다. 못이 정말로 들어간다."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "들어갔어! 들어갔다고! 하하, 아이고 배야!"},
+    {"cmd": "goto", "to": "c2_end"},
+    {"label": "c2_tooth"},
+    {"cmd": "line", "who": "madeleine", "face": "worried", "text": "어, 이 괜찮아? 아 해 봐. 아."},
+    {"cmd": "line", "who": "player", "text": "아…… 괜찮아요."},
+    {"cmd": "line", "who": "madeleine", "face": "thinking", "text": "굽는 시간이라. 맞아, 오븐 앞에서 노래 한 곡 더 불렀거든."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "다음엔 짧은 노래로 할게!"},
+    {"cmd": "goto", "to": "c2_end"},
+    {"label": "c2_silent"},
+    {"cmd": "line", "who": "madeleine", "face": "worried", "text": "……말이 없네."},
+    {"cmd": "line", "who": "madeleine", "text": "그렇게 맛없어? 말이라도 해 주지."},
+    {"cmd": "line", "who": "player", "text": "아니, 그게, 이가 안 들어가서요."},
+    {"cmd": "line", "who": "madeleine", "face": "embarrassed", "text": "아, 하하…… 그렇구나. 그럼 말을 하지!"},
+    {"cmd": "goto", "to": "c2_end"},
+    {"label": "c2_end"},
+    {"cmd": "narration", "text": "마지막으로 검은 덩어리가 남았다. 아무도 그쪽을 쳐다보지 않는다."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "자, 대망의 마지막!"},
+    {"cmd": "line", "who": "player", "text": "그건 그냥 숯 아니에요?"},
+    {"cmd": "choice", "id": "c4", "options": [{"text": "눈 딱 감고 먹어 볼게요. 맛보기 담당이니까요.", "affinity": 15, "next": "c4_brave"}, {"text": "이건 원래 뭐였어요? 먹기 전에 알고 싶어요.", "affinity": 0, "next": "c4_ask"}, {"text": "이건 진짜 못 먹어요. 탄내부터 나요.", "affinity": -15, "next": "c4_refuse"}]},
+    {"label": "c4_brave"},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "오, 용감한데!"},
+    {"cmd": "line", "who": "player", "text": "대신 쓰러지면 책임지셔야 해요."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "쓰러지면 빵 이불 덮어 줄게! 잠깐, 그냥 깨물지 말고 이렇게 쪼개서!"},
+    {"cmd": "narration", "text": "제빵사가 덩어리를 두 손으로 비틀자, 까만 껍질이 쩍 갈라진다."},
+    {"cmd": "goto", "to": "c4_end"},
+    {"label": "c4_ask"},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "오, 궁금해? 맞혀 봐. 겉은 까맣고, 속은……"},
+    {"cmd": "line", "who": "player", "text": "속도 까맣죠?"},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "땡! 잘 봐!"},
+    {"cmd": "narration", "text": "제빵사가 덩어리를 두 손으로 비틀자, 까만 껍질이 쩍 갈라진다."},
+    {"cmd": "goto", "to": "c4_end"},
+    {"label": "c4_refuse"},
+    {"cmd": "line", "who": "madeleine", "face": "annoyed", "text": "탄내? 이건 향이야, 향!"},
+    {"cmd": "line", "who": "player", "text": "숯 향이요?"},
+    {"cmd": "line", "who": "madeleine", "face": "annoyed", "text": "……흥, 그럼 보기만 해."},
+    {"cmd": "narration", "text": "제빵사가 덩어리를 두 손으로 비틀자, 까만 껍질이 쩍 갈라진다."},
+    {"cmd": "goto", "to": "c4_end"},
+    {"label": "c4_end"},
+    {"cmd": "sfx", "id": "sparkle"},
+    {"cmd": "narration", "text": "안에서 하얀 김이 피어오른다. 그 속에 샛노란 호박 속살이 촉촉하게 들어 있다."},
+    {"cmd": "narration", "text": "달콤한 냄새가 빵집을 한 바퀴 돈다."},
+    {"cmd": "line", "who": "player", "text": "……어? 이거 맛있어요. 진짜 맛있어요."},
+    {"cmd": "line", "who": "madeleine", "face": "proud", "text": "그렇지? 겉은 일부러 까맣게 태우는 거야. 그래야 속이 촉촉해지거든."},
+    {"cmd": "line", "who": "player", "text": "그런데 이게 왜 실패작 쟁반에 있어요?"},
+    {"cmd": "line", "who": "madeleine", "face": "soft", "text": "……스승님이 굽던 거랑 맛이 달라서."},
+    {"cmd": "narration", "text": "제빵사는 갈라진 덩어리를 잠깐 내려다본다. 그리고 금세 손뼉을 짝 친다."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "뭐, 언젠가는 똑같이 구울 거야! 언젠가는!"},
+    {"cmd": "narration", "text": "쟁반 위 실패작들을 보며, 제빵사가 소매를 걷는다."},
+    {"cmd": "line", "who": "player", "text": "이거 다 버리시는 거예요?"},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "버려? 무슨 소리야!"},
+    {"cmd": "line", "who": "madeleine", "face": "serious", "text": "우리 스승님이 그랬어. 실패작도 버리지 마라, 누군가에겐 아침밥이다."},
+    {"cmd": "line", "who": "player", "text": "스승님이요?"},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "응. 이 빵집 원래 주인. 자, 이거 바구니에 담아! 시장 간다!"},
+    {"cmd": "follow", "who": "madeleine", "to": "lantern_market"},
+    {"cmd": "bgm", "id": "happy"},
+    {"cmd": "sfx", "id": "crowd"},
+    {"cmd": "narration", "text": "아침 등불 시장. 상인들이 하나둘 천막을 걷어 올리고 있다."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "좋은 아침! 오늘의 실패작 왔습니다!"},
+    {"cmd": "show", "who": "merchant", "at": "right"},
+    {"cmd": "line", "who": "merchant", "face": "laugh", "text": "또 실패작이야? 지난번 건 우리 집 개가 물고 도망갔어."},
+    {"cmd": "line", "who": "madeleine", "face": "proud", "text": "그만큼 맛있었다는 거지!"},
+    {"cmd": "line", "who": "merchant", "text": "아니, 너무 딱딱해서 뼈다귀인 줄 알았대."},
+    {"cmd": "narration", "text": "짠 쿠키는 생선 가게 앞에서 금세 팔려 나간다. 생선 굽는 데 소금 대신 쓴단다."},
+    {"cmd": "narration", "text": "망치 머핀은 아이들 손에 들려 간다. 공기놀이 돌로 딱이라며."},
+    {"cmd": "narration", "text": "제빵사는 바구니가 비어 갈수록 목소리가 커진다."},
+    {"cmd": "show", "who": "elder_b", "at": "far_right"},
+    {"cmd": "line", "who": "elder_b", "face": "smile", "text": "오늘은 호박 찜빵도 있구먼. 하나 주게."},
+    {"cmd": "narration", "text": "지팡이를 짚은 시장 노인이 까만 덩어리 하나를 받아 들고 한참 냄새를 맡는다."},
+    {"cmd": "line", "who": "elder_b", "face": "soft", "text": "……옛날 생각이 나네. 그 겨울 생각이."},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "네?"},
+    {"cmd": "line", "who": "elder_b", "face": "smile", "text": "아니, 늙은이 혼잣말이야. 잘 먹겠네."},
+    {"cmd": "hide", "who": "elder_b"},
+    {"cmd": "narration", "text": "제빵사는 노인이 사라진 쪽을 잠깐 바라보다가, 다시 크게 외친다."},
+    {"cmd": "line", "who": "merchant", "face": "smile", "text": "이번엔 학생까지 끌고 왔네. 학생, 이 친구 빵 어때?"},
+    {"cmd": "narration", "text": "제빵사가 바구니를 든 채 슬쩍 이쪽을 본다. 아닌 척하지만 귀가 쫑긋하다."},
+    {"cmd": "choice", "id": "c3", "options": [{"text": "실패작만 빼면 마을에서 제일 맛있어요.", "affinity": 30, "next": "c3_best"}, {"text": "아직 연습이 좀 필요한 것 같아요.", "affinity": 0, "next": "c3_practice"}, {"text": "솔직히 다른 빵집이 더 낫던데요.", "affinity": -30, "next": "c3_other"}]},
+    {"label": "c3_best"},
+    {"cmd": "line", "who": "merchant", "face": "laugh", "text": "실패작만 빼면! 하하, 그게 제일 어렵지!"},
+    {"cmd": "line", "who": "madeleine", "face": "happy", "text": "들었지? 마을에서 제일이래! 실패작만 빼면!"},
+    {"cmd": "narration", "text": "제빵사가 바구니를 머리 위로 번쩍 든다. 시장 사람들이 덩달아 박수를 친다."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "오늘 기분 최고다!"},
+    {"cmd": "goto", "to": "c3_end"},
+    {"label": "c3_practice"},
+    {"cmd": "line", "who": "merchant", "text": "하하, 정직한 학생이네."},
+    {"cmd": "line", "who": "madeleine", "face": "thinking", "text": "연습이라…… 맞는 말이지."},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "그래도 연습은 자신 있어. 매일 굽거든! 매일 실패하고!"},
+    {"cmd": "line", "who": "merchant", "face": "laugh", "text": "그건 자랑이 아니야!"},
+    {"cmd": "goto", "to": "c3_end"},
+    {"label": "c3_other"},
+    {"cmd": "line", "who": "madeleine", "face": "surprised", "text": "……어?"},
+    {"cmd": "line", "who": "merchant", "face": "worried", "text": "어, 어이쿠. 학생, 그건 좀……"},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "하, 하하! 그럴 수도 있지! 그 집 빵 맛있어!"},
+    {"cmd": "narration", "text": "제빵사는 웃었지만, 바구니를 든 손이 조금 내려간다."},
+    {"cmd": "goto", "to": "c3_end"},
+    {"label": "c3_end"},
+    {"cmd": "hide", "who": "merchant"},
+    {"label": "ending"},
+    {"cmd": "narration", "text": "바구니가 텅 비었다. 제빵사가 바구니를 거꾸로 들고 탈탈 털며 웃는다."},
+    {"cmd": "line", "who": "madeleine", "face": "happy", "text": "오늘도 하나도 안 남았다! 스승님이 보셨으면 잘했다고 했을 거야."},
+    {"cmd": "line", "who": "player", "text": "스승님은 어떤 분이었어요?"},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "음? 하하, 그건 다음에! 맛보기 담당 일은 오늘 끝!"},
+    {"cmd": "line", "who": "madeleine", "text": "자, 첫 출근 월급."},
+    {"cmd": "give_item", "item": "honey", "n": 1},
+    {"cmd": "line", "who": "player", "text": "벌꿀이네요?"},
+    {"cmd": "line", "who": "madeleine", "face": "proud", "text": "내가 제일 좋아하는 거야. 다음 출근 날엔 그거 넣고 구워 줄게!"},
+    {"cmd": "line", "who": "player", "text": "짠 쿠키는 빼고요."},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "짠 쿠키는 빼고! 하하!"},
+    {"cmd": "narration", "text": "제빵사가 소금 통과 설탕 통을 양손에 하나씩 들고 흔들어 보인다."},
+    {"cmd": "line", "who": "madeleine", "face": "smug", "text": "오늘 집에 가면 이름표부터 붙일 거야. 큼직하게!"},
+    {"cmd": "line", "who": "madeleine", "face": "laugh", "text": "맛보기 담당 {player}, 앞으로 잘 부탁해!"},
+    {"cmd": "narration", "text": "제빵사가 빈 바구니를 흔들며 앞장선다. 아침 햇살이 바구니 틈으로 쏟아진다."},
+    {"cmd": "fade_out"}
+  ],
+  "cold": [
+    {"cmd": "line", "who": "madeleine", "face": "neutral", "text": "……그래, 오늘은 고마웠어."},
+    {"cmd": "line", "who": "madeleine", "text": "맛보기 담당은, 음, 다음에 다시 생각해 볼게."},
+    {"cmd": "narration", "text": "제빵사는 빈 바구니를 옆구리에 끼고 시장 사람들에게 인사를 돌린다. 목소리는 여전히 크다."},
+    {"cmd": "narration", "text": "이쪽을 돌아보지는 않는다."},
+    {"cmd": "line", "who": "player", "text": "(괜히 말했나.)"},
+    {"cmd": "line", "who": "madeleine", "face": "smile", "text": "조심히 가. 학생."},
+    {"cmd": "fade_out"}
   ]
- },
- "rewards": {
-  "coin": 30,
-  "mana": 0,
-  "know": 0,
-  "items": {
-   "honey": 1
-  },
-  "flags": [],
-  "perk": null
- },
- "script": [
-  {
-   "cmd": "fade_in"
-  },
-  {
-   "cmd": "bgm",
-   "id": "calm"
-  },
-  {
-   "cmd": "sfx",
-   "id": "bird"
-  },
-  {
-   "cmd": "narration",
-   "text": "이른 아침, 호박 빵집 굴뚝에서 하얀 연기가 오른다. 마을은 아직 반쯤 잠들어 있다."
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "madeleine_was_cold",
-   "then": "cold_open",
-   "else": "warm_open"
-  },
-  {
-   "label": "cold_open"
-  },
-  {
-   "cmd": "narration",
-   "text": "빵집 문 앞에서 잠깐 망설인다. 지난번엔 웃으며 헤어지지 못했다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "neutral",
-   "text": "……어, 학생."
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사는 반죽에서 눈을 떼지 않는다. 노래도 들리지 않는다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "마침 잘 왔네. 오늘은 부탁이 있어서. 그냥 들어와."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(목소리가 지난번보다 한 칸 작다.)"
-  },
-  {
-   "cmd": "goto",
-   "to": "open_end"
-  },
-  {
-   "label": "warm_open"
-  },
-  {
-   "cmd": "emote",
-   "who": "madeleine",
-   "icon": "exclaim"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "happy",
-   "text": "거기 학생! 아니지, {player}! 딱 맞춰 왔네!"
-  },
-  {
-   "cmd": "narration",
-   "text": "밀가루 묻은 손이 문 밖까지 쑥 나와서 소매를 잡아끈다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "오늘은 밀가루 안 터뜨려! 약속해!"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그 약속, 믿어도 돼요?"
-  },
-  {
-   "cmd": "goto",
-   "to": "open_end"
-  },
-  {
-   "label": "open_end"
-  },
-  {
-   "cmd": "narration",
-   "text": "빵집 작업대 위에는 쟁반이 줄지어 놓여 있다. 쿠키, 머핀, 파이, 그리고 정체를 알 수 없는 검은 덩어리."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "proud",
-   "text": "자, 오늘부터 너는 맛보기 담당이야!"
-  },
-  {
-   "cmd": "sfx",
-   "id": "bell"
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 계산대 위의 작은 종을 땡 울린다. 무슨 임명식이라도 하는 것처럼."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "저 아직 하겠다고 안 했는데요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "종 울렸으니까 끝! 취소 불가!"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "맛보기 담당이요?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "text": "내가 새 과자를 구우면, 네가 먹어 보고 맛을 말해 주는 거지!"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smug",
-   "text": "세상에서 제일 좋은 일이야. 먹기만 하면 되거든!"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "저 검은 덩어리도요?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "그건 마지막! 맛있는 건 아껴 먹는 거야!"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "맛있는 거라서 마지막이에요?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "text": "첫 번째! 호박씨 버터 쿠키. 자, 아."
-  },
-  {
-   "cmd": "narration",
-   "text": "노릇노릇 잘 구워진 쿠키다. 모양만큼은 그림책에서 튀어나온 것 같다."
-  },
-  {
-   "cmd": "narration",
-   "text": "한 입 깨문다."
-  },
-  {
-   "cmd": "wait",
-   "sec": 1
-  },
-  {
-   "cmd": "narration",
-   "text": "입안 가득 바다가 밀려온다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(……짜다. 엄청나게 짜다.)"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "happy",
-   "text": "어때? 어때? 맛있지?"
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사의 눈이 별처럼 반짝인다. 대답을 기다리느라 숨도 안 쉬는 것 같다."
-  },
-  {
-   "cmd": "choice",
-   "id": "c1",
-   "options": [
-    {
-     "text": "……짜요. 엄청. 소금이랑 설탕 바꾸신 것 같아요.",
-     "affinity": 30,
-     "next": "c1_honest",
-     "flag": "madeleine_honest_taster"
-    },
-    {
-     "text": "맛있어요! 정말 최고예요!",
-     "affinity": -15,
-     "next": "c1_praise"
-    },
-    {
-     "text": "(웃으면서 남은 쿠키를 몰래 주머니에 넣는다.)",
-     "affinity": 0,
-     "next": "c1_hide"
-    }
-   ]
-  },
-  {
-   "label": "c1_honest"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "짜?"
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 쿠키 하나를 집어 와작 씹는다. 그리고 그대로 굳는다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "pain",
-   "text": "으악, 짜! 바다다, 바다!"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "하하하! 진짜 바꿨네! 통이 똑같이 생겨서 그래!"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "happy",
-   "text": "좋아, 너 합격! 맛보기 담당은 솔직해야 해!"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "혼날 줄 알았는데요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "혼내긴. 짠 걸 짜다고 해 주는 사람이 제일 귀해."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_end"
-  },
-  {
-   "label": "c1_praise"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "happy",
-   "text": "진짜? 최고야?"
-  },
-  {
-   "cmd": "narration",
-   "text": "신이 난 제빵사가 쿠키를 하나 집어 크게 와작 씹는다. 그리고 그대로 굳는다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "pain",
-   "text": "……짜."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "annoyed",
-   "text": "이게 최고라고? 너 혀가 바다에서 왔어?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그, 그게……"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "serious",
-   "text": "맛보기 담당이 거짓말하면, 나는 내일도 짠 쿠키를 구워. 모레도."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "……알았지? 다음부터는 짜면 짜다고 해."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_end"
-  },
-  {
-   "label": "c1_hide"
-  },
-  {
-   "cmd": "narration",
-   "text": "쿠키가 주머니 속으로 사라진다. 완벽한 손놀림이다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "thinking",
-   "text": "어? 벌써 다 먹었어? 하나 더 줄까?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "아, 아니요! 배불러서……"
-  },
-  {
-   "cmd": "narration",
-   "text": "그 순간, 주머니에서 쿠키 부스러기가 후드득 떨어진다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "……주머니에서 쿠키가 왜 나와?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "하하! 너 버리려고 했구나! 맛없었지? 솔직히 말해!"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "다음엔 주머니 말고 입으로 말해. 그게 더 빨라."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_end"
-  },
-  {
-   "label": "c1_end"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "text": "자, 두 번째! 꿀 호박 머핀!"
-  },
-  {
-   "cmd": "narration",
-   "text": "겉보기엔 평범한 머핀이다. 들어 올리는데 손목이 휘청한다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……무거운데요?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "proud",
-   "text": "속이 꽉 찼다는 뜻이지!"
-  },
-  {
-   "cmd": "narration",
-   "text": "깨물어 본다. 딱. 이가 머핀 표면에서 미끄러진다."
-  },
-  {
-   "cmd": "sfx",
-   "id": "knock"
-  },
-  {
-   "cmd": "narration",
-   "text": "작업대에 톡 두드려 보니 맑은 소리가 난다. 그건 머핀에서 날 소리가 아니다."
-  },
-  {
-   "cmd": "choice",
-   "id": "c2",
-   "options": [
-    {
-     "text": "이거 머핀 말고 망치로 팔아요. 대박 날 거예요.",
-     "affinity": 30,
-     "next": "c2_joke"
-    },
-    {
-     "text": "이가 나갈 뻔했어요. 굽는 시간이 너무 길었나 봐요.",
-     "affinity": 15,
-     "next": "c2_tooth"
-    },
-    {
-     "text": "(말없이 머핀을 내려놓고 물만 마신다.)",
-     "affinity": -15,
-     "next": "c2_silent"
-    }
-   ]
-  },
-  {
-   "label": "c2_joke"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "망치?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "하하하! 망치! 그래, 못 박을 때 쓰면 되겠다!"
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 머핀으로 작업대 위 삐져나온 못을 탕탕 두드린다. 못이 정말로 들어간다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "들어갔어! 들어갔다고! 하하, 아이고 배야!"
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_end"
-  },
-  {
-   "label": "c2_tooth"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "worried",
-   "text": "어, 이 괜찮아? 아 해 봐. 아."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "아…… 괜찮아요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "thinking",
-   "text": "굽는 시간이라. 맞아, 오븐 앞에서 노래 한 곡 더 불렀거든."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "다음엔 짧은 노래로 할게!"
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_end"
-  },
-  {
-   "label": "c2_silent"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "worried",
-   "text": "……말이 없네."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "text": "그렇게 맛없어? 말이라도 해 주지."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "아니, 그게, 이가 안 들어가서요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "embarrassed",
-   "text": "아, 하하…… 그렇구나. 그럼 말을 하지!"
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_end"
-  },
-  {
-   "label": "c2_end"
-  },
-  {
-   "cmd": "narration",
-   "text": "마지막으로 검은 덩어리가 남았다. 아무도 그쪽을 쳐다보지 않는다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "자, 대망의 마지막!"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그건 그냥 숯 아니에요?"
-  },
-  {
-   "cmd": "choice",
-   "id": "c4",
-   "options": [
-    {
-     "text": "눈 딱 감고 먹어 볼게요. 맛보기 담당이니까요.",
-     "affinity": 15,
-     "next": "c4_brave"
-    },
-    {
-     "text": "이건 원래 뭐였어요? 먹기 전에 알고 싶어요.",
-     "affinity": 0,
-     "next": "c4_ask"
-    },
-    {
-     "text": "이건 진짜 못 먹어요. 탄내부터 나요.",
-     "affinity": -15,
-     "next": "c4_refuse"
-    }
-   ]
-  },
-  {
-   "label": "c4_brave"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "오, 용감한데!"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "대신 쓰러지면 책임지셔야 해요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "쓰러지면 빵 이불 덮어 줄게! 잠깐, 그냥 깨물지 말고 이렇게 쪼개서!"
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 덩어리를 두 손으로 비틀자, 까만 껍질이 쩍 갈라진다."
-  },
-  {
-   "cmd": "goto",
-   "to": "c4_end"
-  },
-  {
-   "label": "c4_ask"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "오, 궁금해? 맞혀 봐. 겉은 까맣고, 속은……"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "속도 까맣죠?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "땡! 잘 봐!"
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 덩어리를 두 손으로 비틀자, 까만 껍질이 쩍 갈라진다."
-  },
-  {
-   "cmd": "goto",
-   "to": "c4_end"
-  },
-  {
-   "label": "c4_refuse"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "annoyed",
-   "text": "탄내? 이건 향이야, 향!"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "숯 향이요?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "annoyed",
-   "text": "……흥, 그럼 보기만 해."
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 덩어리를 두 손으로 비틀자, 까만 껍질이 쩍 갈라진다."
-  },
-  {
-   "cmd": "goto",
-   "to": "c4_end"
-  },
-  {
-   "label": "c4_end"
-  },
-  {
-   "cmd": "sfx",
-   "id": "sparkle"
-  },
-  {
-   "cmd": "narration",
-   "text": "안에서 하얀 김이 피어오른다. 그 속에 샛노란 호박 속살이 촉촉하게 들어 있다."
-  },
-  {
-   "cmd": "narration",
-   "text": "달콤한 냄새가 빵집을 한 바퀴 돈다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……어? 이거 맛있어요. 진짜 맛있어요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "proud",
-   "text": "그렇지? 겉은 일부러 까맣게 태우는 거야. 그래야 속이 촉촉해지거든."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그런데 이게 왜 실패작 쟁반에 있어요?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "soft",
-   "text": "……스승님이 굽던 거랑 맛이 달라서."
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사는 갈라진 덩어리를 잠깐 내려다본다. 그리고 금세 손뼉을 짝 친다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "뭐, 언젠가는 똑같이 구울 거야! 언젠가는!"
-  },
-  {
-   "cmd": "narration",
-   "text": "쟁반 위 실패작들을 보며, 제빵사가 소매를 걷는다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "이거 다 버리시는 거예요?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "버려? 무슨 소리야!"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "serious",
-   "text": "우리 스승님이 그랬어. 실패작도 버리지 마라, 누군가에겐 아침밥이다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "스승님이요?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "응. 이 빵집 원래 주인. 자, 이거 바구니에 담아! 시장 간다!"
-  },
-  {
-   "cmd": "follow",
-   "who": "madeleine",
-   "to": "lantern_market"
-  },
-  {
-   "cmd": "bgm",
-   "id": "happy"
-  },
-  {
-   "cmd": "sfx",
-   "id": "crowd"
-  },
-  {
-   "cmd": "narration",
-   "text": "아침 등불 시장. 상인들이 하나둘 천막을 걷어 올리고 있다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "좋은 아침! 오늘의 실패작 왔습니다!"
-  },
-  {
-   "cmd": "show",
-   "who": "merchant",
-   "at": "right"
-  },
-  {
-   "cmd": "line",
-   "who": "merchant",
-   "face": "laugh",
-   "text": "또 실패작이야? 지난번 건 우리 집 개가 물고 도망갔어."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "proud",
-   "text": "그만큼 맛있었다는 거지!"
-  },
-  {
-   "cmd": "line",
-   "who": "merchant",
-   "text": "아니, 너무 딱딱해서 뼈다귀인 줄 알았대."
-  },
-  {
-   "cmd": "narration",
-   "text": "짠 쿠키는 생선 가게 앞에서 금세 팔려 나간다. 생선 굽는 데 소금 대신 쓴단다."
-  },
-  {
-   "cmd": "narration",
-   "text": "망치 머핀은 아이들 손에 들려 간다. 공기놀이 돌로 딱이라며."
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사는 바구니가 비어 갈수록 목소리가 커진다."
-  },
-  {
-   "cmd": "show",
-   "who": "elder_b",
-   "at": "far_right"
-  },
-  {
-   "cmd": "line",
-   "who": "elder_b",
-   "face": "smile",
-   "text": "오늘은 호박 찜빵도 있구먼. 하나 주게."
-  },
-  {
-   "cmd": "narration",
-   "text": "지팡이를 짚은 시장 노인이 까만 덩어리 하나를 받아 들고 한참 냄새를 맡는다."
-  },
-  {
-   "cmd": "line",
-   "who": "elder_b",
-   "face": "soft",
-   "text": "……옛날 생각이 나네. 그 겨울 생각이."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "네?"
-  },
-  {
-   "cmd": "line",
-   "who": "elder_b",
-   "face": "smile",
-   "text": "아니, 늙은이 혼잣말이야. 잘 먹겠네."
-  },
-  {
-   "cmd": "hide",
-   "who": "elder_b"
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사는 노인이 사라진 쪽을 잠깐 바라보다가, 다시 크게 외친다."
-  },
-  {
-   "cmd": "line",
-   "who": "merchant",
-   "face": "smile",
-   "text": "이번엔 학생까지 끌고 왔네. 학생, 이 친구 빵 어때?"
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 바구니를 든 채 슬쩍 이쪽을 본다. 아닌 척하지만 귀가 쫑긋하다."
-  },
-  {
-   "cmd": "choice",
-   "id": "c3",
-   "options": [
-    {
-     "text": "실패작만 빼면 마을에서 제일 맛있어요.",
-     "affinity": 30,
-     "next": "c3_best"
-    },
-    {
-     "text": "아직 연습이 좀 필요한 것 같아요.",
-     "affinity": 0,
-     "next": "c3_practice"
-    },
-    {
-     "text": "솔직히 다른 빵집이 더 낫던데요.",
-     "affinity": -30,
-     "next": "c3_other"
-    }
-   ]
-  },
-  {
-   "label": "c3_best"
-  },
-  {
-   "cmd": "line",
-   "who": "merchant",
-   "face": "laugh",
-   "text": "실패작만 빼면! 하하, 그게 제일 어렵지!"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "happy",
-   "text": "들었지? 마을에서 제일이래! 실패작만 빼면!"
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 바구니를 머리 위로 번쩍 든다. 시장 사람들이 덩달아 박수를 친다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "오늘 기분 최고다!"
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_end"
-  },
-  {
-   "label": "c3_practice"
-  },
-  {
-   "cmd": "line",
-   "who": "merchant",
-   "text": "하하, 정직한 학생이네."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "thinking",
-   "text": "연습이라…… 맞는 말이지."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "그래도 연습은 자신 있어. 매일 굽거든! 매일 실패하고!"
-  },
-  {
-   "cmd": "line",
-   "who": "merchant",
-   "face": "laugh",
-   "text": "그건 자랑이 아니야!"
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_end"
-  },
-  {
-   "label": "c3_other"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "surprised",
-   "text": "……어?"
-  },
-  {
-   "cmd": "line",
-   "who": "merchant",
-   "face": "worried",
-   "text": "어, 어이쿠. 학생, 그건 좀……"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "하, 하하! 그럴 수도 있지! 그 집 빵 맛있어!"
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사는 웃었지만, 바구니를 든 손이 조금 내려간다."
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_end"
-  },
-  {
-   "label": "c3_end"
-  },
-  {
-   "cmd": "hide",
-   "who": "merchant"
-  },
-  {
-   "label": "ending"
-  },
-  {
-   "cmd": "narration",
-   "text": "바구니가 텅 비었다. 제빵사가 바구니를 거꾸로 들고 탈탈 털며 웃는다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "happy",
-   "text": "오늘도 하나도 안 남았다! 스승님이 보셨으면 잘했다고 했을 거야."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "스승님은 어떤 분이었어요?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "음? 하하, 그건 다음에! 맛보기 담당 일은 오늘 끝!"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "text": "자, 첫 출근 월급."
-  },
-  {
-   "cmd": "give_item",
-   "item": "honey",
-   "n": 1
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "벌꿀이네요?"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "proud",
-   "text": "내가 제일 좋아하는 거야. 다음 출근 날엔 그거 넣고 구워 줄게!"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "짠 쿠키는 빼고요."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "짠 쿠키는 빼고! 하하!"
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 소금 통과 설탕 통을 양손에 하나씩 들고 흔들어 보인다."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smug",
-   "text": "오늘 집에 가면 이름표부터 붙일 거야. 큼직하게!"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "laugh",
-   "text": "맛보기 담당 {player}, 앞으로 잘 부탁해!"
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사가 빈 바구니를 흔들며 앞장선다. 아침 햇살이 바구니 틈으로 쏟아진다."
-  },
-  {
-   "cmd": "fade_out"
-  }
- ],
- "cold": [
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "neutral",
-   "text": "……그래, 오늘은 고마웠어."
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "text": "맛보기 담당은, 음, 다음에 다시 생각해 볼게."
-  },
-  {
-   "cmd": "narration",
-   "text": "제빵사는 빈 바구니를 옆구리에 끼고 시장 사람들에게 인사를 돌린다. 목소리는 여전히 크다."
-  },
-  {
-   "cmd": "narration",
-   "text": "이쪽을 돌아보지는 않는다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "(괜히 말했나.)"
-  },
-  {
-   "cmd": "line",
-   "who": "madeleine",
-   "face": "smile",
-   "text": "조심히 가. 학생."
-  },
-  {
-   "cmd": "fade_out"
-  }
- ]
 }

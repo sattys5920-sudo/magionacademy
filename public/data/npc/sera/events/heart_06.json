@@ -1,1103 +1,221 @@
 {
- "id": "sera_heart_06",
- "npc": "sera",
- "heart": 6,
- "title": "첫 물약",
- "conditions": {
-  "minHeart": 6,
-  "location": "infirmary",
-  "time": [
-   "day",
-   "evening"
+  "id": "sera_heart_06", "npc": "sera", "heart": 6, "title": "첫 물약",
+  "conditions": {"minHeart": 6, "location": "infirmary", "time": ["day", "evening"], "weather": ["rain"]},
+  "scene": {"weather": "rain"},
+  "rewards": {"coin": 60, "mana": 10, "know": 5, "items": {"g_chamo": 3, "honey": 1}, "flags": [], "perk": null},
+  "script": [
+    {"cmd": "fade_in"},
+    {"cmd": "bgm", "id": "calm"},
+    {"cmd": "sfx", "id": "rain"},
+    {"cmd": "if_flag", "flag": "sera_was_cold", "then": "cold_open", "else": "warm_open"},
+    {"label": "cold_open"},
+    {"cmd": "narration", "text": "빗소리가 양호실 창문을 두드린다. 선생님은 창가에 서서 이쪽을 돌아본다."},
+    {"cmd": "line", "who": "sera", "face": "neutral", "text": "{player}. 왔어요? 그날 밤은…… 서로 좀 날카로웠죠."},
+    {"cmd": "line", "who": "player", "text": "제가 해서는 안 될 말을 했어요. 죄송해요."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "나도 학생한테 기대면 안 되는 걸 기댔어요. 피장파장이에요. 앉아요."},
+    {"cmd": "goto", "to": "open_end"},
+    {"label": "warm_open"},
+    {"cmd": "narration", "text": "빗소리가 양호실 창문을 두드린다. 선생님은 창가에 서서 이쪽을 돌아본다."},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "{player}, 왔어? 아, 왔어요? ……아, 몰라. 비도 오는데 그냥 편하게 할래."},
+    {"cmd": "line", "who": "player", "text": "편하게 하세요. 저도 그게 좋아요."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "그래요. 아니, 그래. 앉아."},
+    {"cmd": "goto", "to": "open_end"},
+    {"label": "open_end"},
+    {"cmd": "if_flag", "flag": "sera_spoke_husband", "then": "sh_yes", "else": "sh_no"},
+    {"label": "sh_yes"},
+    {"cmd": "line", "who": "sera", "face": "neutral", "text": "그날 밤 그 사람이 늦게 들어와서 그러더라. {player|이/가} 서고에 있었다고. 그 말만 하고 아무 말도 안 했어."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "대신 밤새 부엌에 앉아 있었어. 불도 안 켜고. 나도 자는 척하느라 혼났어."},
+    {"cmd": "line", "who": "player", "text": "……두 분 다 잠을 못 주무셨네요."},
+    {"cmd": "goto", "to": "sh_end"},
+    {"label": "sh_no"},
+    {"cmd": "line", "who": "sera", "face": "neutral", "text": "그날 이후로 그 사람한테 아무것도 안 물어봤어. 그 사람도 아무 말 안 하고."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "도시락은 계속 싸 줘. 쪽지도 계속 넣어 주고. 그래서 더 모르겠어."},
+    {"cmd": "line", "who": "player", "text": "……쪽지는 뭐라고 쓰여 있었어요?"},
+    {"cmd": "goto", "to": "sh_end"},
+    {"label": "sh_end"},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "오늘 쪽지는 「우산 챙겨」였어. 아침엔 해가 쨍쨍했는데. 그 사람은 날씨를 이상하게 잘 맞혀."},
+    {"cmd": "if_flag", "flag": "batri_h8", "then": "bt_yes", "else": "bt_no"},
+    {"label": "bt_yes"},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "비 오는 날이면 그 폭풍우 밤이 생각나. 배트리가 반딧불이를 달고 약 편지를 들고 날아왔잖아. {player}도 같이."},
+    {"cmd": "line", "who": "sera", "face": "laugh", "text": "흠뻑 젖어서는 「배달 완료요, 죄송해요」 하는데, 웃음이 나서 혼났어. 뭐가 죄송한지."},
+    {"cmd": "line", "who": "player", "text": "그날 배트리, 진짜 용감했어요."},
+    {"cmd": "goto", "to": "bt_end"},
+    {"label": "bt_no"},
+    {"cmd": "line", "who": "sera", "face": "thinking", "text": "비 오는 날이면 우체부 배트리가 걱정돼. 그 아이는 맑은 날에도 길을 잃거든."},
+    {"cmd": "line", "who": "sera", "face": "laugh", "text": "지난주엔 양호실로 올 편지가 아울라 선생님 연구실로 갔어. 아울라 선생님이 잔소리를 붙여서 다시 보내 줬지."},
+    {"cmd": "line", "who": "player", "text": "잔소리까지 같이 배달됐네요."},
+    {"cmd": "goto", "to": "bt_end"},
+    {"label": "bt_end"},
+    {"cmd": "narration", "text": "선생님이 창문에 손바닥을 댄다. 유리 너머로 빗방울이 손바닥 모양을 따라 흘러내린다."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "비 오는 날에 얘기해 준다고 했지. 그 첫 물약 얘기."},
+    {"cmd": "line", "who": "sera", "face": "neutral", "text": "말로 하는 것보다 보여 주는 게 쉬울 것 같아. 따라와."},
+    {"cmd": "follow", "who": "sera", "to": "potion_class"},
+    {"cmd": "bgm", "id": "sad"},
+    {"cmd": "narration", "text": "빈 물약 교실. 비가 높은 창문을 타고 줄줄 흘러내린다. 솥들이 줄지어 엎어져 있다."},
+    {"cmd": "narration", "text": "선생님이 맨 앞줄 책상 앞에 선다. 처음 이 교실에 왔던 날 선생님이 손끝으로 쓸던 그 책상이다. 오래된 그을음 자국이 별 모양으로 번져 있다."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "여기가 내 자리였어. 열다섯 살, 첫 학기, 첫 물약 시간."},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "나 그때 엄청 잘난 척했다? 교과서를 미리 다 외워 갔거든. 첫 물약은 투명 물약이었어. 남들은 한 시간 걸릴 걸 나는 이십 분 만에 끝내겠다고."},
+    {"cmd": "line", "who": "sera", "face": "neutral", "text": "서두르다가 재료 순서를 하나 바꿨어. 딱 하나. 달맞이꽃을 이끼보다 먼저 넣었지."},
+    {"cmd": "sfx", "id": "explosion"},
+    {"cmd": "camera", "action": "shake"},
+    {"cmd": "flash"},
+    {"cmd": "narration", "text": "선생님이 손바닥을 펴서 퍽, 하고 터지는 시늉을 한다. 창밖에서 천둥이 마침 맞춰 울린다."},
+    {"cmd": "camera", "action": "reset"},
+    {"cmd": "line", "who": "sera", "face": "neutral", "text": "솥이 터졌어. 뜨거운 김이 얼굴로 확 들어왔고. 눈 떠 보니까 양호실 침대였어. 사흘 뒤였대."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "얼굴은 멀쩡했어. 화상도 금방 나았고. 다들 운이 좋았다고 했어. 나도 그런 줄 알았어."},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "깨어나서 제일 먼저 본 게 창문에 붙은 종이 새 세 마리였어. 사흘이니까 세 마리. 공예반 그 녀석이 붙인 거였지."},
+    {"cmd": "line", "who": "sera", "face": "sad", "text": "그날 저녁에 양호 선생님이 호박죽을 줬어. 따뜻하고, 노랗고, 김이 모락모락 나는 거."},
+    {"cmd": "wait", "sec": 2},
+    {"cmd": "line", "who": "sera", "face": "sad", "text": "아무 맛도 안 났어."},
+    {"cmd": "narration", "text": "빗소리가 갑자기 커진 것 같다."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "단맛도, 짠맛도, 아무것도. 따뜻한 모래를 씹는 것 같았어. 그 뒤로 지금까지 한 번도 돌아오지 않았고."},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "그래서 쓴 걸 쓰다고 못 해. 아무 맛이 안 나니까. 내가 만든 물약이 얼마나 끔찍한지, 학생들 얼굴을 보고서야 알아."},
+    {"cmd": "choice", "id": "c1", "options": [{"text": "그을린 책상 옆에 나란히 앉는다.", "affinity": 15, "next": "c1_sit"}, {"text": "왜 아무한테도 말 안 하셨어요?", "affinity": 0, "next": "c1_why"}, {"text": "그럼 맛있다고 한 거, 전부 거짓말이었어요?", "affinity": -15, "next": "c1_lie"}]},
+    {"label": "c1_sit"},
+    {"cmd": "narration", "text": "그을린 책상 옆 의자를 끌어와 나란히 앉는다. 선생님도 천천히 옛 자리에 앉는다."},
+    {"cmd": "line", "who": "sera", "face": "surprised", "text": "……이 자리 앉는 거, 그날 이후로 처음이야."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "생각보다 의자가 작네. 내가 컸나 봐. 그때는 발이 바닥에 안 닿았는데."},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "말한 사람이 아무도 없었던 건, 아무도 이렇게 옆에 앉지 않아서였나 봐."},
+    {"cmd": "goto", "to": "c1_end"},
+    {"label": "c1_why"},
+    {"cmd": "line", "who": "sera", "face": "thinking", "text": "처음엔 무서웠어. 말하면 물약반에서 쫓겨날까 봐. 맛을 못 보는 마녀가 물약을 만든다는 게 말이 안 되잖아."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "그다음엔 그 사람 때문에. 매일 창문에 종이 새를 붙이던 그 얼굴 앞에서, 아무 맛도 안 난다고 말할 수가 없었어."},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "그러다 보니 10 년, 아니 그보다 더 오래됐네. 타이밍을 놓친 거지. 그게 다야."},
+    {"cmd": "line", "who": "player", "text": "……그 사람한테도 말 안 하셨어요?"},
+    {"cmd": "goto", "to": "c1_end"},
+    {"label": "c1_lie"},
+    {"cmd": "line", "who": "sera", "face": "surprised", "text": "거짓말?"},
+    {"cmd": "line", "who": "sera", "face": "neutral", "text": "……응. 맞아. 다 거짓말이었어. 맛있다는 말은."},
+    {"cmd": "line", "who": "sera", "face": "sad", "text": "근데 고마운 건 진짜였어. 매일 아침 도시락 싸 주는 거, 그건 진짜로 고마웠어. 맛을 몰라서 「맛있다」밖에 할 말이 없었을 뿐이야."},
+    {"cmd": "line", "who": "player", "text": "……죄송해요. 그런 뜻이 아니었어요."},
+    {"cmd": "goto", "to": "c1_end"},
+    {"label": "c1_end"},
+    {"cmd": "line", "who": "sera", "face": "neutral", "text": "그 사람한테도 말 안 했어. {player|이/가} 처음이야. 이 얘기를 소리 내서 하는 거."},
+    {"cmd": "if_flag", "flag": "sera_tasted_first", "then": "tf_yes", "else": "tf_no"},
+    {"label": "tf_yes"},
+    {"cmd": "line", "who": "sera", "face": "laugh", "text": "처음 만난 날 기억나? {player|이/가} 나보고 먼저 맛보라고 했잖아. 그때 심장이 쿵 했어. 들킨 줄 알고."},
+    {"cmd": "line", "who": "player", "text": "전 그냥 마시기 싫어서 그런 거였는데요."},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "알아. 그래서 웃겼어. 들킨 줄 알았는데, 그냥 겁쟁이 신입생이었던 거야."},
+    {"cmd": "goto", "to": "tf_end"},
+    {"label": "tf_no"},
+    {"cmd": "line", "who": "sera", "face": "laugh", "text": "처음 만난 날 기억나? 감기 물약 마시고 세상 무너진 얼굴 하던 거. 나 그 얼굴 보고 알았어. 이번 물약도 망했구나."},
+    {"cmd": "line", "who": "player", "text": "알면서 끝까지 먹이셨어요?"},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "효과는 좋았잖아. 효과에는 타협하지 않는다고 했지?"},
+    {"cmd": "goto", "to": "tf_end"},
+    {"label": "tf_end"},
+    {"cmd": "sfx", "id": "door"},
+    {"cmd": "narration", "text": "교실 뒷문이 끼익 열린다. 젖은 깃털을 털며 아울라 선생님이 들어온다."},
+    {"cmd": "show", "who": "aula", "at": "right"},
+    {"cmd": "line", "who": "aula", "face": "surprised", "text": "어머. {npc.name} 선생님. 그 자리에 앉아 있는 건 오랜만에 보네요."},
+    {"cmd": "line", "who": "sera", "face": "neutral", "text": "……아울라 선생님. 비 피하러 잠깐 들렀어요."},
+    {"cmd": "narration", "text": "선생님의 목소리가 한 칸 내려앉는다. 서고에서 본 장면이 둘 사이에 투명하게 떠 있는 것 같다."},
+    {"cmd": "line", "who": "aula", "face": "soft", "text": "그날 당신 솥을 내가 끝까지 지켜봤어야 했어요. 서른 명 중에 제일 빨랐던 아이였는데."},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "다 지난 일이에요. 저는 이렇게 멀쩡하잖아요."},
+    {"cmd": "line", "who": "aula", "face": "worried", "text": "……정말 멀쩡한 거죠? 어디 불편한 데는 없고요?"},
+    {"cmd": "narration", "text": "아울라 선생님의 노란 눈이 선생님 얼굴을 오래 살핀다. 무언가를 알고 묻는 눈 같기도 하다."},
+    {"cmd": "line", "who": "sera", "face": "neutral", "text": "없어요. 양호 선생님이 아프면 안 되죠."},
+    {"cmd": "line", "who": "aula", "face": "sad", "text": "그래요. 그럼 됐어요. 재료장만 확인하고 갈게요."},
+    {"cmd": "hide", "who": "aula"},
+    {"cmd": "narration", "text": "아울라 선생님이 재료장 쪽으로 사라지자, 선생님이 참았던 숨을 내쉰다."},
+    {"cmd": "line", "who": "sera", "face": "sad", "text": "……저분이 나를 가르치셨어. 그래서 더 모르겠어. 그날 서고에서 본 게 뭐였는지."},
+    {"cmd": "narration", "text": "선생님이 책상의 그을음 자국을 손끝으로 따라 그린다. 별 모양의 끝까지."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "맛은 몰라도 아는 건 있어. 뜨거운 거, 차가운 거. 혀가 따끔한 거, 목이 부드러워지는 거. 그리고 냄새. 냄새는 오히려 더 잘 맡게 됐어."},
+    {"cmd": "line", "who": "player", "text": "그럼 그걸로 만들면 되겠네요."},
+    {"cmd": "line", "who": "sera", "face": "surprised", "text": "뭘?"},
+    {"cmd": "line", "who": "player", "text": "선생님이 맛있다고 느낄 수 있는 차요. 맛 말고, 온도랑 향으로요."},
+    {"cmd": "narration", "text": "선생님이 눈을 동그랗게 뜨고 한참 이쪽을 본다. 그러다 벌떡 일어선다."},
+    {"cmd": "line", "who": "sera", "face": "determined", "text": "……양호실 가자. 주전자 거기 있어."},
+    {"cmd": "move", "to": "infirmary", "transition": "fade"},
+    {"cmd": "bgm", "id": "warm"},
+    {"cmd": "sfx", "id": "rain"},
+    {"cmd": "narration", "text": "양호실 책상 위에 카모마일 다발, 꿀단지, 레몬, 온도계, 모래시계가 줄지어 놓인다. 꼭 실험실 같다."},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "좋아, 조수. 아니, 오늘은 {player|이/가} 선생님이야. 뭐부터 해?"},
+    {"cmd": "line", "who": "player", "text": "잔부터 데워요. 차가 오래 따뜻하게요."},
+    {"cmd": "sfx", "id": "water"},
+    {"cmd": "narration", "text": "끓는 물을 찻잔에 부었다 버린다. 선생님이 데워진 잔을 두 손으로 감싸 쥐고 눈을 감는다."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "아, 이거 좋다. 손바닥부터 따뜻해져."},
+    {"cmd": "line", "who": "player", "text": "그다음은 물이요. 펄펄 끓는 물 말고, 한 김 식힌 물이요. 그래야 꽃이 안 데어요."},
+    {"cmd": "line", "who": "sera", "face": "thinking", "text": "꽃이 데어? 꽃도 화상을 입어?"},
+    {"cmd": "line", "who": "player", "text": "그런 셈이죠. 너무 뜨거우면 향이 다 날아가 버린대요."},
+    {"cmd": "line", "who": "sera", "face": "laugh", "text": "양호 선생님한테 꽃 화상 얘기를 하다니. 그럼 차도 응급 처치가 필요하겠네."},
+    {"cmd": "line", "who": "player", "text": "그리고 레몬 껍질을 아주 조금요. 혀가 살짝 따끔한 건 느껴진다고 하셨잖아요."},
+    {"cmd": "line", "who": "sera", "face": "surprised", "text": "아까 한 말을 다 기억했어?"},
+    {"cmd": "line", "who": "player", "text": "선생님 처방전 받으려면 잘 들어야죠."},
+    {"cmd": "narration", "text": "선생님이 레몬 껍질을 얇게 벗겨 코에 대 본다. 눈을 감고, 한참."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "상큼하다. 이건 내가 아는 단어야. 냄새로는."},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "좋아. 그다음은? 이제 진짜 중요한 거 남았지?"},
+    {"cmd": "choice", "id": "c2", "options": [{"text": "온도계로 정확하게 재요. 선생님은 저울이 정확하다면서요.", "affinity": 30, "next": "c2_temp", "flag": "sera_warm_recipe"}, {"text": "꿀을 한 숟갈 넣어요. 목이 부드러워지는 건 느껴지잖아요.", "affinity": 15, "next": "c2_honey"}, {"text": "어차피 맛을 모르시면 아무렇게나 해도 똑같지 않아요?", "affinity": -15, "next": "c2_any"}]},
+    {"label": "c2_temp"},
+    {"cmd": "line", "who": "sera", "face": "happy", "text": "그렇지. 맛은 몰라도 숫자는 정확하지."},
+    {"cmd": "narration", "text": "선생님이 온도계를 주전자에 꽂고 눈금을 뚫어지게 본다. 숨까지 참는다."},
+    {"cmd": "line", "who": "sera", "face": "determined", "text": "구십…… 팔십오…… 지금. 지금이야."},
+    {"cmd": "line", "who": "sera", "face": "laugh", "text": "와, 물약 시험 볼 때보다 더 떨려. 꽃이 안 데게, 안 데게."},
+    {"cmd": "goto", "to": "c2_end"},
+    {"label": "c2_honey"},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "꿀. 단맛은 몰라도, 목에 감기는 그 느낌은 알아. 끈적하고 부드럽고."},
+    {"cmd": "narration", "text": "선생님이 꿀을 한 숟갈 떠서 천천히 떨어뜨린다. 금빛 실이 길게 늘어진다."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "예쁘다. 맛은 몰라도 이건 예뻐."},
+    {"cmd": "line", "who": "sera", "face": "laugh", "text": "그 사람이 들으면 놀라겠다. 내가 꿀을 이렇게 아껴 넣는 걸 보면. 맨날 한 국자씩 넣었거든."},
+    {"cmd": "goto", "to": "c2_end"},
+    {"label": "c2_any"},
+    {"cmd": "narration", "text": "선생님의 손이 꿀단지 위에서 멈춘다."},
+    {"cmd": "line", "who": "sera", "face": "neutral", "text": "……똑같지. 맞아. 10 년 동안 그렇게 생각했어."},
+    {"cmd": "line", "who": "sera", "face": "sad", "text": "그래서 아무거나 마셨고, 아무거나 맛있다고 했어. 근데 {player|이/가} 방금 꽃이 덴다고 했잖아. 그 말이 좋았는데."},
+    {"cmd": "line", "who": "player", "text": "……죄송해요. 다시 제대로 해요."},
+    {"cmd": "goto", "to": "c2_end"},
+    {"label": "c2_end"},
+    {"cmd": "narration", "text": "카모마일을 넣고 뚜껑을 덮는다. 모래시계를 뒤집는다. 5 분."},
+    {"cmd": "sfx", "id": "clock"},
+    {"cmd": "narration", "text": "모래가 사르르 흘러내리는 동안 둘은 아무 말 없이 빗소리를 듣는다. 이상하게 편안한 침묵이다."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "있잖아. 그 사람한테도 말해야 할까. 이 얘기."},
+    {"cmd": "choice", "id": "c3", "options": [{"text": "선생님이 준비됐을 때 하세요. 그게 언제든요.", "affinity": 15, "next": "c3_ready"}, {"text": "어쩌면 이미 알고 계실지도 몰라요.", "affinity": 0, "next": "c3_knows"}, {"text": "비밀은 끝까지 지키는 게 멋있죠.", "affinity": -15, "next": "c3_secret"}]},
+    {"label": "c3_ready"},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "언제든. 응. 언제든이라는 말 좋다."},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "그 사람이 나한테 숨기는 것도 그런 걸까. 아직 준비가 안 된 거."},
+    {"cmd": "line", "who": "player", "text": "그럴 수도 있어요."},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "그렇게 생각할래. 오늘은."},
+    {"cmd": "goto", "to": "c3_end"},
+    {"label": "c3_knows"},
+    {"cmd": "line", "who": "sera", "face": "surprised", "text": "알고 있다고? 그 사람이?"},
+    {"cmd": "line", "who": "player", "text": "10 년 동안 매일 도시락을 싸 줬잖아요. 소금을 두 번 넣어도 맛있다고 하는 사람한테요."},
+    {"cmd": "narration", "text": "선생님의 얼굴이 하얗게 굳는다. 그러다 고개를 세차게 젓는다."},
+    {"cmd": "line", "who": "sera", "face": "worried", "text": "설마. 알았으면 말했겠지. 그 사람은 그런 걸 숨기는 사람이…… 아니야."},
+    {"cmd": "goto", "to": "c3_end"},
+    {"label": "c3_secret"},
+    {"cmd": "line", "who": "sera", "face": "neutral", "text": "멋있다. 그런가."},
+    {"cmd": "line", "who": "sera", "face": "sad", "text": "그 사람도 지금 그렇게 생각하고 있을까. 비밀을 지키는 게 멋있다고."},
+    {"cmd": "line", "who": "player", "text": "……아, 그런 뜻은."},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "알아, 알아. 농담인 거. 근데 조금 아프네."},
+    {"cmd": "goto", "to": "c3_end"},
+    {"label": "c3_end"},
+    {"cmd": "sfx", "id": "chime"},
+    {"cmd": "narration", "text": "모래시계의 마지막 모래알이 떨어진다. 뚜껑을 열자 사과 같은 향이 양호실 가득 퍼진다."},
+    {"cmd": "narration", "text": "선생님이 데운 잔에 차를 따른다. 천천히, 두 손으로."},
+    {"label": "ending"},
+    {"cmd": "narration", "text": "선생님이 찻잔을 코끝에 대고 숨을 깊이 들이쉰다. 그리고 한 모금."},
+    {"cmd": "line", "who": "player", "text": "어때요?"},
+    {"cmd": "line", "who": "sera", "face": "thinking", "text": "잠깐만. 조용히 해 봐. 지금 처음으로 차한테 집중하고 있어."},
+    {"cmd": "wait", "sec": 2},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "……따뜻해. 혀끝이 아니라 여기가."},
+    {"cmd": "narration", "text": "선생님이 가슴께를 가리킨다. 그리고 한 모금 더 마신다."},
+    {"cmd": "line", "who": "sera", "face": "cry", "text": "이상하다. 맛은 하나도 모르겠는데. 이게 맛있다는 거면 좋겠다."},
+    {"cmd": "line", "who": "player", "text": "맛있는 거 맞아요. 제가 보증해요."},
+    {"cmd": "line", "who": "sera", "face": "laugh", "text": "{player|이/가} 보증하면 믿어야지. 이 학교에서 내 물약을 끝까지 마신 몇 안 되는 사람이니까."},
+    {"cmd": "narration", "text": "선생님이 처방전 종이를 꺼내 또박또박 적는다. 맨 위에 「위로의 레시피」라고 쓰고, 밑에 온도와 시간과 향을 적는다."},
+    {"cmd": "sfx", "id": "paper"},
+    {"cmd": "line", "who": "sera", "face": "smile", "text": "이건 처방전이야. 기운 없는 날 마실 차. 한 장은 내가 갖고, 한 장은 {player|이/가} 가져."},
+    {"cmd": "give_item", "item": "g_chamo", "n": 3},
+    {"cmd": "give_item", "item": "honey", "n": 1},
+    {"cmd": "line", "who": "sera", "face": "soft", "text": "고마워. 10 년 동안 혼자 들고 있던 걸, 오늘 처음 내려놨어. 생각보다 무거웠더라."},
+    {"cmd": "narration", "text": "창밖의 비가 조금씩 가늘어진다. 선생님은 남은 차를 아껴 가며, 아주 천천히 마신다."},
+    {"cmd": "fade_out"}
   ],
-  "weather": [
-   "rain"
+  "cold": [
+    {"cmd": "narration", "text": "차는 다 우러났지만, 선생님은 잔을 들지 않는다."},
+    {"cmd": "line", "who": "sera", "face": "neutral", "text": "……오늘 얘기는 잊어 줘요. 괜히 했나 봐요."},
+    {"cmd": "line", "who": "player", "text": "선생님, 저는……."},
+    {"cmd": "line", "who": "sera", "face": "neutral", "text": "괜찮아요. 원래 혼자 들고 있던 거니까요."},
+    {"cmd": "narration", "text": "선생님이 식어 가는 찻잔을 창가에 내려놓는다. 빗소리가 계속된다."},
+    {"cmd": "fade_out"}
   ]
- },
- "scene": {
-  "weather": "rain"
- },
- "rewards": {
-  "coin": 60,
-  "mana": 10,
-  "know": 5,
-  "items": {
-   "g_chamo": 3,
-   "honey": 1
-  },
-  "flags": [],
-  "perk": null
- },
- "script": [
-  {
-   "cmd": "fade_in"
-  },
-  {
-   "cmd": "bgm",
-   "id": "calm"
-  },
-  {
-   "cmd": "sfx",
-   "id": "rain"
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "sera_was_cold",
-   "then": "cold_open",
-   "else": "warm_open"
-  },
-  {
-   "label": "cold_open"
-  },
-  {
-   "cmd": "narration",
-   "text": "빗소리가 양호실 창문을 두드린다. 선생님은 창가에 서서 이쪽을 돌아본다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "neutral",
-   "text": "{player}. 왔어요? 그날 밤은…… 서로 좀 날카로웠죠."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "제가 해서는 안 될 말을 했어요. 죄송해요."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "나도 학생한테 기대면 안 되는 걸 기댔어요. 피장파장이에요. 앉아요."
-  },
-  {
-   "cmd": "goto",
-   "to": "open_end"
-  },
-  {
-   "label": "warm_open"
-  },
-  {
-   "cmd": "narration",
-   "text": "빗소리가 양호실 창문을 두드린다. 선생님은 창가에 서서 이쪽을 돌아본다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "{player}, 왔어? 아, 왔어요? ……아, 몰라. 비도 오는데 그냥 편하게 할래."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "편하게 하세요. 저도 그게 좋아요."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "그래요. 아니, 그래. 앉아."
-  },
-  {
-   "cmd": "goto",
-   "to": "open_end"
-  },
-  {
-   "label": "open_end"
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "sera_spoke_husband",
-   "then": "sh_yes",
-   "else": "sh_no"
-  },
-  {
-   "label": "sh_yes"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "neutral",
-   "text": "그날 밤 그 사람이 늦게 들어와서 그러더라. {player|이/가} 서고에 있었다고. 그 말만 하고 아무 말도 안 했어."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "대신 밤새 부엌에 앉아 있었어. 불도 안 켜고. 나도 자는 척하느라 혼났어."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……두 분 다 잠을 못 주무셨네요."
-  },
-  {
-   "cmd": "goto",
-   "to": "sh_end"
-  },
-  {
-   "label": "sh_no"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "neutral",
-   "text": "그날 이후로 그 사람한테 아무것도 안 물어봤어. 그 사람도 아무 말 안 하고."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "도시락은 계속 싸 줘. 쪽지도 계속 넣어 주고. 그래서 더 모르겠어."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……쪽지는 뭐라고 쓰여 있었어요?"
-  },
-  {
-   "cmd": "goto",
-   "to": "sh_end"
-  },
-  {
-   "label": "sh_end"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "오늘 쪽지는 「우산 챙겨」였어. 아침엔 해가 쨍쨍했는데. 그 사람은 날씨를 이상하게 잘 맞혀."
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "batri_h8",
-   "then": "bt_yes",
-   "else": "bt_no"
-  },
-  {
-   "label": "bt_yes"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "비 오는 날이면 그 폭풍우 밤이 생각나. 배트리가 반딧불이를 달고 약 편지를 들고 날아왔잖아. {player}도 같이."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "laugh",
-   "text": "흠뻑 젖어서는 「배달 완료요, 죄송해요」 하는데, 웃음이 나서 혼났어. 뭐가 죄송한지."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그날 배트리, 진짜 용감했어요."
-  },
-  {
-   "cmd": "goto",
-   "to": "bt_end"
-  },
-  {
-   "label": "bt_no"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "thinking",
-   "text": "비 오는 날이면 우체부 배트리가 걱정돼. 그 아이는 맑은 날에도 길을 잃거든."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "laugh",
-   "text": "지난주엔 양호실로 올 편지가 아울라 선생님 연구실로 갔어. 아울라 선생님이 잔소리를 붙여서 다시 보내 줬지."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "잔소리까지 같이 배달됐네요."
-  },
-  {
-   "cmd": "goto",
-   "to": "bt_end"
-  },
-  {
-   "label": "bt_end"
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님이 창문에 손바닥을 댄다. 유리 너머로 빗방울이 손바닥 모양을 따라 흘러내린다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "비 오는 날에 얘기해 준다고 했지. 그 첫 물약 얘기."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "neutral",
-   "text": "말로 하는 것보다 보여 주는 게 쉬울 것 같아. 따라와."
-  },
-  {
-   "cmd": "follow",
-   "who": "sera",
-   "to": "potion_class"
-  },
-  {
-   "cmd": "bgm",
-   "id": "sad"
-  },
-  {
-   "cmd": "narration",
-   "text": "빈 물약 교실. 비가 높은 창문을 타고 줄줄 흘러내린다. 솥들이 줄지어 엎어져 있다."
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님이 맨 앞줄 책상 앞에 선다. 처음 이 교실에 왔던 날 선생님이 손끝으로 쓸던 그 책상이다. 오래된 그을음 자국이 별 모양으로 번져 있다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "여기가 내 자리였어. 열다섯 살, 첫 학기, 첫 물약 시간."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "나 그때 엄청 잘난 척했다? 교과서를 미리 다 외워 갔거든. 첫 물약은 투명 물약이었어. 남들은 한 시간 걸릴 걸 나는 이십 분 만에 끝내겠다고."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "neutral",
-   "text": "서두르다가 재료 순서를 하나 바꿨어. 딱 하나. 달맞이꽃을 이끼보다 먼저 넣었지."
-  },
-  {
-   "cmd": "sfx",
-   "id": "explosion"
-  },
-  {
-   "cmd": "camera",
-   "action": "shake"
-  },
-  {
-   "cmd": "flash"
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님이 손바닥을 펴서 퍽, 하고 터지는 시늉을 한다. 창밖에서 천둥이 마침 맞춰 울린다."
-  },
-  {
-   "cmd": "camera",
-   "action": "reset"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "neutral",
-   "text": "솥이 터졌어. 뜨거운 김이 얼굴로 확 들어왔고. 눈 떠 보니까 양호실 침대였어. 사흘 뒤였대."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "얼굴은 멀쩡했어. 화상도 금방 나았고. 다들 운이 좋았다고 했어. 나도 그런 줄 알았어."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "깨어나서 제일 먼저 본 게 창문에 붙은 종이 새 세 마리였어. 사흘이니까 세 마리. 공예반 그 녀석이 붙인 거였지."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "sad",
-   "text": "그날 저녁에 양호 선생님이 호박죽을 줬어. 따뜻하고, 노랗고, 김이 모락모락 나는 거."
-  },
-  {
-   "cmd": "wait",
-   "sec": 2
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "sad",
-   "text": "아무 맛도 안 났어."
-  },
-  {
-   "cmd": "narration",
-   "text": "빗소리가 갑자기 커진 것 같다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "단맛도, 짠맛도, 아무것도. 따뜻한 모래를 씹는 것 같았어. 그 뒤로 지금까지 한 번도 돌아오지 않았고."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "그래서 쓴 걸 쓰다고 못 해. 아무 맛이 안 나니까. 내가 만든 물약이 얼마나 끔찍한지, 학생들 얼굴을 보고서야 알아."
-  },
-  {
-   "cmd": "choice",
-   "id": "c1",
-   "options": [
-    {
-     "text": "그을린 책상 옆에 나란히 앉는다.",
-     "affinity": 15,
-     "next": "c1_sit"
-    },
-    {
-     "text": "왜 아무한테도 말 안 하셨어요?",
-     "affinity": 0,
-     "next": "c1_why"
-    },
-    {
-     "text": "그럼 맛있다고 한 거, 전부 거짓말이었어요?",
-     "affinity": -15,
-     "next": "c1_lie"
-    }
-   ]
-  },
-  {
-   "label": "c1_sit"
-  },
-  {
-   "cmd": "narration",
-   "text": "그을린 책상 옆 의자를 끌어와 나란히 앉는다. 선생님도 천천히 옛 자리에 앉는다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "surprised",
-   "text": "……이 자리 앉는 거, 그날 이후로 처음이야."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "생각보다 의자가 작네. 내가 컸나 봐. 그때는 발이 바닥에 안 닿았는데."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "말한 사람이 아무도 없었던 건, 아무도 이렇게 옆에 앉지 않아서였나 봐."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_end"
-  },
-  {
-   "label": "c1_why"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "thinking",
-   "text": "처음엔 무서웠어. 말하면 물약반에서 쫓겨날까 봐. 맛을 못 보는 마녀가 물약을 만든다는 게 말이 안 되잖아."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "그다음엔 그 사람 때문에. 매일 창문에 종이 새를 붙이던 그 얼굴 앞에서, 아무 맛도 안 난다고 말할 수가 없었어."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "그러다 보니 10 년, 아니 그보다 더 오래됐네. 타이밍을 놓친 거지. 그게 다야."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……그 사람한테도 말 안 하셨어요?"
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_end"
-  },
-  {
-   "label": "c1_lie"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "surprised",
-   "text": "거짓말?"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "neutral",
-   "text": "……응. 맞아. 다 거짓말이었어. 맛있다는 말은."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "sad",
-   "text": "근데 고마운 건 진짜였어. 매일 아침 도시락 싸 주는 거, 그건 진짜로 고마웠어. 맛을 몰라서 「맛있다」밖에 할 말이 없었을 뿐이야."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……죄송해요. 그런 뜻이 아니었어요."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_end"
-  },
-  {
-   "label": "c1_end"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "neutral",
-   "text": "그 사람한테도 말 안 했어. {player|이/가} 처음이야. 이 얘기를 소리 내서 하는 거."
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "sera_tasted_first",
-   "then": "tf_yes",
-   "else": "tf_no"
-  },
-  {
-   "label": "tf_yes"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "laugh",
-   "text": "처음 만난 날 기억나? {player|이/가} 나보고 먼저 맛보라고 했잖아. 그때 심장이 쿵 했어. 들킨 줄 알고."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "전 그냥 마시기 싫어서 그런 거였는데요."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "알아. 그래서 웃겼어. 들킨 줄 알았는데, 그냥 겁쟁이 신입생이었던 거야."
-  },
-  {
-   "cmd": "goto",
-   "to": "tf_end"
-  },
-  {
-   "label": "tf_no"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "laugh",
-   "text": "처음 만난 날 기억나? 감기 물약 마시고 세상 무너진 얼굴 하던 거. 나 그 얼굴 보고 알았어. 이번 물약도 망했구나."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "알면서 끝까지 먹이셨어요?"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "효과는 좋았잖아. 효과에는 타협하지 않는다고 했지?"
-  },
-  {
-   "cmd": "goto",
-   "to": "tf_end"
-  },
-  {
-   "label": "tf_end"
-  },
-  {
-   "cmd": "sfx",
-   "id": "door"
-  },
-  {
-   "cmd": "narration",
-   "text": "교실 뒷문이 끼익 열린다. 젖은 깃털을 털며 아울라 선생님이 들어온다."
-  },
-  {
-   "cmd": "show",
-   "who": "aula",
-   "at": "right"
-  },
-  {
-   "cmd": "line",
-   "who": "aula",
-   "face": "surprised",
-   "text": "어머. {npc.name} 선생님. 그 자리에 앉아 있는 건 오랜만에 보네요."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "neutral",
-   "text": "……아울라 선생님. 비 피하러 잠깐 들렀어요."
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님의 목소리가 한 칸 내려앉는다. 서고에서 본 장면이 둘 사이에 투명하게 떠 있는 것 같다."
-  },
-  {
-   "cmd": "line",
-   "who": "aula",
-   "face": "soft",
-   "text": "그날 당신 솥을 내가 끝까지 지켜봤어야 했어요. 서른 명 중에 제일 빨랐던 아이였는데."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "다 지난 일이에요. 저는 이렇게 멀쩡하잖아요."
-  },
-  {
-   "cmd": "line",
-   "who": "aula",
-   "face": "worried",
-   "text": "……정말 멀쩡한 거죠? 어디 불편한 데는 없고요?"
-  },
-  {
-   "cmd": "narration",
-   "text": "아울라 선생님의 노란 눈이 선생님 얼굴을 오래 살핀다. 무언가를 알고 묻는 눈 같기도 하다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "neutral",
-   "text": "없어요. 양호 선생님이 아프면 안 되죠."
-  },
-  {
-   "cmd": "line",
-   "who": "aula",
-   "face": "sad",
-   "text": "그래요. 그럼 됐어요. 재료장만 확인하고 갈게요."
-  },
-  {
-   "cmd": "hide",
-   "who": "aula"
-  },
-  {
-   "cmd": "narration",
-   "text": "아울라 선생님이 재료장 쪽으로 사라지자, 선생님이 참았던 숨을 내쉰다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "sad",
-   "text": "……저분이 나를 가르치셨어. 그래서 더 모르겠어. 그날 서고에서 본 게 뭐였는지."
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님이 책상의 그을음 자국을 손끝으로 따라 그린다. 별 모양의 끝까지."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "맛은 몰라도 아는 건 있어. 뜨거운 거, 차가운 거. 혀가 따끔한 거, 목이 부드러워지는 거. 그리고 냄새. 냄새는 오히려 더 잘 맡게 됐어."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그럼 그걸로 만들면 되겠네요."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "surprised",
-   "text": "뭘?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "선생님이 맛있다고 느낄 수 있는 차요. 맛 말고, 온도랑 향으로요."
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님이 눈을 동그랗게 뜨고 한참 이쪽을 본다. 그러다 벌떡 일어선다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "determined",
-   "text": "……양호실 가자. 주전자 거기 있어."
-  },
-  {
-   "cmd": "move",
-   "to": "infirmary",
-   "transition": "fade"
-  },
-  {
-   "cmd": "bgm",
-   "id": "warm"
-  },
-  {
-   "cmd": "sfx",
-   "id": "rain"
-  },
-  {
-   "cmd": "narration",
-   "text": "양호실 책상 위에 카모마일 다발, 꿀단지, 레몬, 온도계, 모래시계가 줄지어 놓인다. 꼭 실험실 같다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "좋아, 조수. 아니, 오늘은 {player|이/가} 선생님이야. 뭐부터 해?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "잔부터 데워요. 차가 오래 따뜻하게요."
-  },
-  {
-   "cmd": "sfx",
-   "id": "water"
-  },
-  {
-   "cmd": "narration",
-   "text": "끓는 물을 찻잔에 부었다 버린다. 선생님이 데워진 잔을 두 손으로 감싸 쥐고 눈을 감는다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "아, 이거 좋다. 손바닥부터 따뜻해져."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그다음은 물이요. 펄펄 끓는 물 말고, 한 김 식힌 물이요. 그래야 꽃이 안 데어요."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "thinking",
-   "text": "꽃이 데어? 꽃도 화상을 입어?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그런 셈이죠. 너무 뜨거우면 향이 다 날아가 버린대요."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "laugh",
-   "text": "양호 선생님한테 꽃 화상 얘기를 하다니. 그럼 차도 응급 처치가 필요하겠네."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그리고 레몬 껍질을 아주 조금요. 혀가 살짝 따끔한 건 느껴진다고 하셨잖아요."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "surprised",
-   "text": "아까 한 말을 다 기억했어?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "선생님 처방전 받으려면 잘 들어야죠."
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님이 레몬 껍질을 얇게 벗겨 코에 대 본다. 눈을 감고, 한참."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "상큼하다. 이건 내가 아는 단어야. 냄새로는."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "좋아. 그다음은? 이제 진짜 중요한 거 남았지?"
-  },
-  {
-   "cmd": "choice",
-   "id": "c2",
-   "options": [
-    {
-     "text": "온도계로 정확하게 재요. 선생님은 저울이 정확하다면서요.",
-     "affinity": 30,
-     "next": "c2_temp",
-     "flag": "sera_warm_recipe"
-    },
-    {
-     "text": "꿀을 한 숟갈 넣어요. 목이 부드러워지는 건 느껴지잖아요.",
-     "affinity": 15,
-     "next": "c2_honey"
-    },
-    {
-     "text": "어차피 맛을 모르시면 아무렇게나 해도 똑같지 않아요?",
-     "affinity": -15,
-     "next": "c2_any"
-    }
-   ]
-  },
-  {
-   "label": "c2_temp"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "happy",
-   "text": "그렇지. 맛은 몰라도 숫자는 정확하지."
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님이 온도계를 주전자에 꽂고 눈금을 뚫어지게 본다. 숨까지 참는다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "determined",
-   "text": "구십…… 팔십오…… 지금. 지금이야."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "laugh",
-   "text": "와, 물약 시험 볼 때보다 더 떨려. 꽃이 안 데게, 안 데게."
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_end"
-  },
-  {
-   "label": "c2_honey"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "꿀. 단맛은 몰라도, 목에 감기는 그 느낌은 알아. 끈적하고 부드럽고."
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님이 꿀을 한 숟갈 떠서 천천히 떨어뜨린다. 금빛 실이 길게 늘어진다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "예쁘다. 맛은 몰라도 이건 예뻐."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "laugh",
-   "text": "그 사람이 들으면 놀라겠다. 내가 꿀을 이렇게 아껴 넣는 걸 보면. 맨날 한 국자씩 넣었거든."
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_end"
-  },
-  {
-   "label": "c2_any"
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님의 손이 꿀단지 위에서 멈춘다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "neutral",
-   "text": "……똑같지. 맞아. 10 년 동안 그렇게 생각했어."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "sad",
-   "text": "그래서 아무거나 마셨고, 아무거나 맛있다고 했어. 근데 {player|이/가} 방금 꽃이 덴다고 했잖아. 그 말이 좋았는데."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……죄송해요. 다시 제대로 해요."
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_end"
-  },
-  {
-   "label": "c2_end"
-  },
-  {
-   "cmd": "narration",
-   "text": "카모마일을 넣고 뚜껑을 덮는다. 모래시계를 뒤집는다. 5 분."
-  },
-  {
-   "cmd": "sfx",
-   "id": "clock"
-  },
-  {
-   "cmd": "narration",
-   "text": "모래가 사르르 흘러내리는 동안 둘은 아무 말 없이 빗소리를 듣는다. 이상하게 편안한 침묵이다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "있잖아. 그 사람한테도 말해야 할까. 이 얘기."
-  },
-  {
-   "cmd": "choice",
-   "id": "c3",
-   "options": [
-    {
-     "text": "선생님이 준비됐을 때 하세요. 그게 언제든요.",
-     "affinity": 15,
-     "next": "c3_ready"
-    },
-    {
-     "text": "어쩌면 이미 알고 계실지도 몰라요.",
-     "affinity": 0,
-     "next": "c3_knows"
-    },
-    {
-     "text": "비밀은 끝까지 지키는 게 멋있죠.",
-     "affinity": -15,
-     "next": "c3_secret"
-    }
-   ]
-  },
-  {
-   "label": "c3_ready"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "언제든. 응. 언제든이라는 말 좋다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "그 사람이 나한테 숨기는 것도 그런 걸까. 아직 준비가 안 된 거."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "그럴 수도 있어요."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "그렇게 생각할래. 오늘은."
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_end"
-  },
-  {
-   "label": "c3_knows"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "surprised",
-   "text": "알고 있다고? 그 사람이?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "10 년 동안 매일 도시락을 싸 줬잖아요. 소금을 두 번 넣어도 맛있다고 하는 사람한테요."
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님의 얼굴이 하얗게 굳는다. 그러다 고개를 세차게 젓는다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "worried",
-   "text": "설마. 알았으면 말했겠지. 그 사람은 그런 걸 숨기는 사람이…… 아니야."
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_end"
-  },
-  {
-   "label": "c3_secret"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "neutral",
-   "text": "멋있다. 그런가."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "sad",
-   "text": "그 사람도 지금 그렇게 생각하고 있을까. 비밀을 지키는 게 멋있다고."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "……아, 그런 뜻은."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "알아, 알아. 농담인 거. 근데 조금 아프네."
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_end"
-  },
-  {
-   "label": "c3_end"
-  },
-  {
-   "cmd": "sfx",
-   "id": "chime"
-  },
-  {
-   "cmd": "narration",
-   "text": "모래시계의 마지막 모래알이 떨어진다. 뚜껑을 열자 사과 같은 향이 양호실 가득 퍼진다."
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님이 데운 잔에 차를 따른다. 천천히, 두 손으로."
-  },
-  {
-   "label": "ending"
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님이 찻잔을 코끝에 대고 숨을 깊이 들이쉰다. 그리고 한 모금."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "어때요?"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "thinking",
-   "text": "잠깐만. 조용히 해 봐. 지금 처음으로 차한테 집중하고 있어."
-  },
-  {
-   "cmd": "wait",
-   "sec": 2
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "……따뜻해. 혀끝이 아니라 여기가."
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님이 가슴께를 가리킨다. 그리고 한 모금 더 마신다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "cry",
-   "text": "이상하다. 맛은 하나도 모르겠는데. 이게 맛있다는 거면 좋겠다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "맛있는 거 맞아요. 제가 보증해요."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "laugh",
-   "text": "{player|이/가} 보증하면 믿어야지. 이 학교에서 내 물약을 끝까지 마신 몇 안 되는 사람이니까."
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님이 처방전 종이를 꺼내 또박또박 적는다. 맨 위에 「위로의 레시피」라고 쓰고, 밑에 온도와 시간과 향을 적는다."
-  },
-  {
-   "cmd": "sfx",
-   "id": "paper"
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "smile",
-   "text": "이건 처방전이야. 기운 없는 날 마실 차. 한 장은 내가 갖고, 한 장은 {player|이/가} 가져."
-  },
-  {
-   "cmd": "give_item",
-   "item": "g_chamo",
-   "n": 3
-  },
-  {
-   "cmd": "give_item",
-   "item": "honey",
-   "n": 1
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "soft",
-   "text": "고마워. 10 년 동안 혼자 들고 있던 걸, 오늘 처음 내려놨어. 생각보다 무거웠더라."
-  },
-  {
-   "cmd": "narration",
-   "text": "창밖의 비가 조금씩 가늘어진다. 선생님은 남은 차를 아껴 가며, 아주 천천히 마신다."
-  },
-  {
-   "cmd": "fade_out"
-  }
- ],
- "cold": [
-  {
-   "cmd": "narration",
-   "text": "차는 다 우러났지만, 선생님은 잔을 들지 않는다."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "neutral",
-   "text": "……오늘 얘기는 잊어 줘요. 괜히 했나 봐요."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "text": "선생님, 저는……."
-  },
-  {
-   "cmd": "line",
-   "who": "sera",
-   "face": "neutral",
-   "text": "괜찮아요. 원래 혼자 들고 있던 거니까요."
-  },
-  {
-   "cmd": "narration",
-   "text": "선생님이 식어 가는 찻잔을 창가에 내려놓는다. 빗소리가 계속된다."
-  },
-  {
-   "cmd": "fade_out"
-  }
- ]
 }

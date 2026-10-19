@@ -1,1208 +1,233 @@
 {
- "id": "jipsin_heart_03",
- "npc": "jipsin",
- "heart": 3,
- "title": "무서운 표정 연습",
- "conditions": {
-  "minHeart": 3,
-  "location": "pumpkin_field",
-  "time": [
-   "evening"
+  "id": "jipsin_heart_03", "npc": "jipsin", "heart": 3, "title": "무서운 표정 연습",
+  "conditions": {"minHeart": 3, "location": "pumpkin_field", "time": ["evening"]},
+  "rewards": {"coin": 50, "mana": 0, "know": 0, "items": {"g2_straw": 1}, "flags": [], "perk": null},
+  "script": [
+    {"cmd": "fade_in"},
+    {"cmd": "bgm", "id": "happy"},
+    {"cmd": "narration", "text": "저녁노을이 호박밭을 주황색으로 한 번 더 칠하고 있다. 호박들이 저마다 작은 해처럼 빛난다."},
+    {"cmd": "if_flag", "flag": "jipsin_was_cold", "then": "cold_open", "else": "warm_open"},
+    {"label": "cold_open"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……학생. 왔네. 지난번엔, 내가 혼자 있고 싶다고 했지."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "근데 혼자 있어 보니까, 원래 혼자랑 똑같았어. 그래서 별로였어."},
+    {"cmd": "line", "who": "player", "face": "soft", "text": "그럼 오늘은 같이 있자."},
+    {"cmd": "goto", "to": "open_end"},
+    {"label": "warm_open"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……학생. 왔네. 발소리가 저번이랑 똑같아."},
+    {"cmd": "line", "who": "player", "face": "surprised", "text": "발소리로 사람을 알아봐?"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "고개가 안 돌아가니까. 귀가 대신 고개를 돌려."},
+    {"cmd": "goto", "to": "open_end"},
+    {"label": "open_end"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……학생, 구름은 왜 서 있지 않아?"},
+    {"cmd": "line", "who": "player", "face": "surprised", "text": "응? 구름?"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "하루 종일 봤는데, 한 번도 안 멈췄어. 다들 어디로 가는 거야?"},
+    {"cmd": "choice", "id": "c1", "options": [{"text": "구름도 사실 서 있고 싶은데, 바람이 안 놔주는 거야.", "affinity": 15, "next": "c1_wind"}, {"text": "구름은 원래 그래. 수증기가 바람에 밀리는 거지.", "affinity": 0, "next": "c1_science"}, {"text": "너도 서 있기 싫으면 구름처럼 날아가 버려.", "affinity": -15, "next": "c1_fly"}]},
+    {"label": "c1_wind"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……바람이 안 놔줘."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "그럼 구름은 나랑 반대네. 나는 막대가 안 놔주고."},
+    {"cmd": "line", "who": "player", "face": "smile", "text": "그러니까 둘이 친구 하면 되겠다. 하나는 가고, 하나는 기다리고."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……구름 친구. 좋다. 근데 구름은 내 이름을 모를 거야."},
+    {"cmd": "line", "who": "player", "face": "smile", "text": "내가 전해 줄게. 구름한테 크게 소리치면 되지."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……학생은 구름이랑도 말이 통해? 학교는 대단하네."},
+    {"cmd": "goto", "to": "c1_end"},
+    {"label": "c1_science"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……수증기."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "그럼 구름은 물이야? 물이 하늘에 서 있지도 않고 떠 있는 거야?"},
+    {"cmd": "line", "who": "player", "face": "thinking", "text": "음, 엄밀히 말하면…… 아니, 그렇다고 치자."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……학교는 어려운 걸 가르치네. 나는 그냥 구름이 좋았는데."},
+    {"cmd": "line", "who": "player", "face": "embarrassed", "text": "아, 그럼 지금 들은 건 잊어."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……괜찮아. 짚은 원래 잘 잊어. 구름만 남겨 둘게."},
+    {"cmd": "goto", "to": "c1_end"},
+    {"label": "c1_fly"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……날아가."},
+    {"cmd": "wait", "sec": 1},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "짚은 날아가면 흩어져. 바람 센 날 몇 가닥씩 날아가는 거, 봤어."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "다시는 안 돌아와. 구름이랑은 달라."},
+    {"cmd": "narration", "text": "장난으로 한 말이었는데, 짚신은 그 말을 오래 들여다보는 것 같았다."},
+    {"cmd": "line", "who": "player", "face": "worried", "text": "……농담이었어. 날아가지 마."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……응. 날아갈 줄도 몰라. 걱정 마."},
+    {"cmd": "goto", "to": "c1_end"},
+    {"label": "c1_end"},
+    {"cmd": "if_flag", "flag": "batri_h2", "then": "letter_yes", "else": "letter_no"},
+    {"label": "letter_yes"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……참, 학생. 얼마 전에 박쥐가 편지를 가져왔어. 학생도 같이 왔었지."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "내 이름이 적힌 건 처음이었어. 짚신. 두 글자인데, 오래 봤어."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "지금도 옷 안주머니에 있어. 바람이 불면 바스락거려. 그게 꼭 대답 같아."},
+    {"cmd": "line", "who": "player", "face": "smile", "text": "그 박쥐, 수다스럽지만 좋은 애야."},
+    {"cmd": "goto", "to": "letter_end"},
+    {"label": "letter_no"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……참, 학생. 박쥐 우체부가 하늘을 날아다니는 거, 봤어?"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "편지는 어떤 거야? 나한테는 안 와. 주소가 '호박밭 한가운데'라서 그런가."},
+    {"cmd": "line", "who": "player", "face": "smile", "text": "언젠가 올 거야. 그 박쥐, 길을 잘 잃는다던데 반대로 여기를 찾아올지도 몰라."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……길을 잃어야 오는 곳이구나, 여기는."},
+    {"cmd": "goto", "to": "letter_end"},
+    {"label": "letter_end"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……학생, 하나 더. 호박은 밤에도 자라?"},
+    {"cmd": "line", "who": "player", "face": "thinking", "text": "아마? 밤에 더 큰다는 말도 있던데."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "그럼 나는 매일 밤 호박이 크는 걸 보고 있었던 거네. 근데 한 번도 못 봤어."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "너무 천천히 크니까. 나도 너무 천천히 생각하고."},
+    {"cmd": "line", "who": "player", "face": "smile", "text": "그러니까 둘이 잘 맞는 거 아닐까?"},
+    {"cmd": "wait", "sec": 1},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……학생. 나, 결심했어."},
+    {"cmd": "line", "who": "player", "face": "surprised", "text": "결심? 무슨?"},
+    {"cmd": "line", "who": "jipsin", "face": "determined", "text": "무서워질 거야."},
+    {"cmd": "narration", "text": "짚신은 아주 진지하게 말했다. 꿰맨 입은 여전히 반달처럼 웃고 있었다."},
+    {"cmd": "line", "who": "jipsin", "face": "determined", "text": "허수아비는 무서워야 해. 그래야 까마귀가 도망가. 그래야 내가 여기 서 있는 이유가 생겨."},
+    {"cmd": "line", "who": "jipsin", "face": "determined", "text": "봐 줘. 지금 할게."},
+    {"cmd": "wait", "sec": 2},
+    {"cmd": "line", "who": "jipsin", "face": "determined", "text": "……으르렁."},
+    {"cmd": "narration", "text": "짚신의 얼굴에 힘이 들어간다. 짚이 바스락거리며 조금 오그라든다."},
+    {"cmd": "narration", "text": "그 바람에 꿰맨 입꼬리가 오히려 더 올라갔다. 아까보다 훨씬 행복해 보인다."},
+    {"cmd": "line", "who": "jipsin", "face": "determined", "text": "……어때. 무서워?"},
+    {"cmd": "choice", "id": "c2", "options": [{"text": "내가 시범 보여 줄게. 잘 봐. (최대한 무서운 얼굴)", "affinity": 15, "next": "c2_demo"}, {"text": "솔직히 말해도 돼? ……방금 웃는 거 아니었어?", "affinity": 0, "next": "c2_honest"}, {"text": "그만해. 웃는 게 더 낫다니까. 괜히 애쓰지 마.", "affinity": -15, "next": "c2_stop"}]},
+    {"label": "c2_demo"},
+    {"cmd": "narration", "text": "{player|은/는} 눈을 부릅뜨고 이를 드러내며 두 손을 갈고리처럼 구부렸다."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "학생, 배고파?"},
+    {"cmd": "line", "who": "player", "face": "embarrassed", "text": "무서운 얼굴이거든."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……그렇구나. 점심 못 먹은 사람 같았어. 그래도 나보다는 무서웠어. 조금."},
+    {"cmd": "line", "who": "player", "face": "proud", "text": "조금이라도 이겼으면 됐어."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……학생은 무서운 거에 이기면 기뻐? 사람은 신기해."},
+    {"cmd": "goto", "to": "c2_end"},
+    {"label": "c2_honest"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……웃는 거 아니야. 이빨 드러낸 거야."},
+    {"cmd": "line", "who": "player", "face": "thinking", "text": "이빨이…… 어디 있는데?"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……없어. 그래서 마음속으로 드러냈어."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "솔직하게 말해 줘서 고마워. 학생한테 물어본 건, 그래서야."},
+    {"cmd": "line", "who": "player", "face": "soft", "text": "그럼 계속 솔직하게 말해 줄게."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……응. 까마귀들도 솔직해. 근데 학생은 웃지 않고 말해 줘서 좋아."},
+    {"cmd": "goto", "to": "c2_end"},
+    {"label": "c2_stop"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……애쓰지 마."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "애쓰는 것도 안 하면, 나는 진짜 그냥 서 있기만 하는 거야."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……한 번만 더 해 볼게. 학생은 안 봐도 돼."},
+    {"cmd": "narration", "text": "짚신은 다시 얼굴에 힘을 준다. 그리고 다시 활짝 웃는 얼굴이 된다."},
+    {"cmd": "line", "who": "player", "face": "embarrassed", "text": "……미안. 계속 봐도 돼?"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……봐도 돼. 원래 보라고 서 있는 거니까."},
+    {"cmd": "goto", "to": "c2_end"},
+    {"label": "c2_end"},
+    {"cmd": "sfx", "id": "crow"},
+    {"cmd": "show", "who": "crow", "at": "right"},
+    {"cmd": "if_flag", "flag": "jipsin_crow_mimic", "then": "mimic_yes", "else": "mimic_no"},
+    {"label": "mimic_yes"},
+    {"cmd": "line", "who": "crow", "text": "까악. 저번의 못생긴 큰 까마귀다. 오늘은 무슨 소리 내나 보자."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……학생. 저번에 학생이 까마귀 말 하던 거, 나도 밤에 연습했어."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "까. 악. ……여전히 발음이 틀렸대. 목 뒤로 하는 거래. 나는 목이 없는데."},
+    {"cmd": "goto", "to": "mimic_end"},
+    {"label": "mimic_no"},
+    {"cmd": "line", "who": "crow", "text": "까악. 짚단이가 얼굴에 힘을 주고 있다. 변비인가."},
+    {"cmd": "line", "who": "crow", "text": "까악까악. 오늘 짚단이 얼굴 최고로 웃기다. 둥지에 가서 다 말해 줘야지."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……변비가 뭔지 모르지만, 아닌 것 같아."},
+    {"cmd": "goto", "to": "mimic_end"},
+    {"label": "mimic_end"},
+    {"cmd": "line", "who": "player", "face": "thinking", "text": "좋아, 그럼 눈썹을 그려 보자. 눈썹이 있으면 화난 얼굴이 되잖아."},
+    {"cmd": "narration", "text": "{player|은/는} 밭가에 떨어진 숯 막대기를 주워, 짚신의 얼굴에 눈썹 두 개를 쓱쓱 그었다. 안쪽이 아래로 내려간, 화난 눈썹이다."},
+    {"cmd": "line", "who": "jipsin", "face": "determined", "text": "……됐어? 지금 나 화났어?"},
+    {"cmd": "narration", "text": "그런데 짚이 숯을 머금고 바스락 들뜨면서, 눈썹 끝이 둘 다 위로 휘어 버렸다."},
+    {"cmd": "narration", "text": "화난 눈썹이 아니라, 깜짝 놀라서 반가워하는 눈썹이 됐다. 입은 여전히 웃고 있다."},
+    {"cmd": "line", "who": "player", "face": "laugh", "text": "……아하하. 미안, 너 지금 생일 선물 받은 얼굴이야."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……생일. 나는 생일이 언제인지도 모르는데."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "그럼 오늘 할까. 무서워지려다가 생일이 된 날."},
+    {"cmd": "hide", "who": "crow"},
+    {"cmd": "narration", "text": "까마귀들은 깔깔거리며 풍차 쪽으로 날아간다. 저녁이면 늘 그쪽으로 돌아간다."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……학생. 부탁이 하나 있어."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "저 풍차까지 가서 나를 봐 줘. 까마귀들은 저기서 날아오니까, 저기서 무서워 보여야 해."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "가까이서는 실패했지만, 멀리서는 다를지도 몰라."},
+    {"cmd": "line", "who": "player", "face": "smile", "text": "좋아. 거기서 크게 소리칠 테니까, 최고로 무서운 얼굴 하고 있어."},
+    {"cmd": "move", "to": "old_windmill", "transition": "fade", "clear": true},
+    {"cmd": "show", "who": "player", "at": "left"},
+    {"cmd": "sfx", "id": "creak"},
+    {"cmd": "narration", "text": "낡은 풍차 앞. 부서진 날개 그림자가 노을 위로 길게 늘어져 있다."},
+    {"cmd": "narration", "text": "돌아보니 멀리 호박밭 한가운데, 손톱만 한 허수아비가 서 있다."},
+    {"cmd": "narration", "text": "그런데 이상하다. 이렇게 멀리서도, 짚신의 반달 같은 입만은 또렷하게 보인다."},
+    {"cmd": "show", "who": "crow", "at": "right"},
+    {"cmd": "line", "who": "crow", "text": "까악. 저기 봐, 짚단이가 또 웃는다. 여기서도 웃는 게 보여."},
+    {"cmd": "line", "who": "player", "face": "laugh", "text": "(크게) 짚신아. 지금 무서운 얼굴 하는 중이야?"},
+    {"cmd": "line", "who": "voice", "text": "……응. 최대한."},
+    {"cmd": "narration", "text": "바람을 타고 들려온 대답에 풍차 지붕의 까마귀들이 데굴데굴 구르며 웃는다."},
+    {"cmd": "narration", "text": "노을 속에서 손톱만 한 허수아비는 꼼짝도 않고 서 있다. 이쪽을 향해, 힘껏 무서운 얼굴을 하고."},
+    {"cmd": "narration", "text": "그 얼굴이 이 넓은 밭에서 제일 잘 보이는 웃음이라는 걸, 짚신만 모르는 것 같았다."},
+    {"cmd": "choice", "id": "c3", "options": [{"text": "(크게) 여기서 보니까, 웃는 게 제일 잘 보여.", "affinity": 15, "next": "c3_smile"}, {"text": "(크게) 무서워. 엄청 무서워.", "affinity": 0, "next": "c3_lie"}, {"text": "(크게) 너무 작아서 하나도 안 보여.", "affinity": -15, "next": "c3_small"}]},
+    {"label": "c3_smile"},
+    {"cmd": "line", "who": "voice", "text": "……웃는 게 제일 잘 보여?"},
+    {"cmd": "line", "who": "crow", "text": "까악. 맞아. 우리는 저 웃는 얼굴 보고 내려앉아. 밭 어디에 있든 바로 찾을 수 있으니까."},
+    {"cmd": "narration", "text": "까마귀가 무심코 한 말이 바람에 실려 밭 쪽으로 날아간다."},
+    {"cmd": "line", "who": "player", "face": "soft", "text": "들었지? 다들 네 얼굴 보고 찾아온대."},
+    {"cmd": "goto", "to": "c3_end"},
+    {"label": "c3_lie"},
+    {"cmd": "line", "who": "crow", "text": "까악. 거짓말. 거짓말쟁이 큰 까마귀."},
+    {"cmd": "line", "who": "voice", "text": "……까마귀들이 거짓말이래. 들려."},
+    {"cmd": "line", "who": "player", "face": "embarrassed", "text": "(크게) 아, 아니야. 진짜 조금은 무서웠어."},
+    {"cmd": "line", "who": "voice", "text": "……학생, 거짓말할 때 목소리가 높아지네. 하나 배웠다."},
+    {"cmd": "goto", "to": "c3_end"},
+    {"label": "c3_small"},
+    {"cmd": "wait", "sec": 2},
+    {"cmd": "line", "who": "voice", "text": "……그렇구나. 작구나, 나."},
+    {"cmd": "line", "who": "crow", "text": "까악. 원래 작잖아. 할아버지가 서 있을 때보다 훨씬 작아."},
+    {"cmd": "narration", "text": "바람이 멎었다. 밭 쪽에서는 더 이상 대답이 오지 않았다."},
+    {"cmd": "goto", "to": "c3_end"},
+    {"label": "c3_end"},
+    {"cmd": "move", "to": "pumpkin_field", "transition": "fade", "clear": true},
+    {"cmd": "show", "who": "jipsin", "at": "center"},
+    {"cmd": "show", "who": "player", "at": "left"},
+    {"cmd": "narration", "text": "{player|이/가} 숨을 몰아쉬며 밭으로 돌아왔을 때, 하늘은 보랏빛으로 바뀌어 있었다."},
+    {"cmd": "narration", "text": "밭 너머 언덕 아래 작은 집에 노란 불이 켜진다."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……저 불, 할머니 집이야."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "저 불이 꺼지면 나도 자는 척해. 할머니가 걱정 안 하게."},
+    {"cmd": "line", "who": "player", "face": "surprised", "text": "할머니가 네 걱정을 해?"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……모르겠어. 매일 아침 와서 뭐라고 하는데, 나는 늘 반쯤 졸고 있어서."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……학생. 아까 풍차에서 보니까, 나 어땠어?"},
+    {"cmd": "line", "who": "player", "face": "soft", "text": "작고, 꼿꼿하고, 웃고 있었어. 노을 속에서."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……꼿꼿했어? 그건 다행이다. 꼿꼿한 건 자신 있거든."},
+    {"cmd": "wait", "sec": 1},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……학생은 웃는 얼굴이 좋아, 무서운 얼굴이 좋아?"},
+    {"cmd": "choice", "id": "c4", "options": [{"text": "네 얼굴이 좋아. 그게 웃는 얼굴이면, 웃는 얼굴.", "affinity": 15, "next": "c4_yours"}, {"text": "반은 웃고 반은 무섭게 해 봐. 섞으면 되잖아.", "affinity": 0, "next": "c4_mix"}, {"text": "허수아비면 무서운 얼굴이지. 일은 해야 하니까.", "affinity": -15, "next": "c4_scary"}]},
+    {"label": "c4_yours"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……내 얼굴."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "할머니가 바느질한 얼굴이야. 한 번에 꿰맸대. 안 고치고."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……그럼 오늘은, 고치는 연습은 그만할게."},
+    {"cmd": "line", "who": "player", "face": "soft", "text": "응. 내일도 그 얼굴로 서 있어 줘."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……그건 쉬워. 다른 얼굴은 할 줄 모르니까."},
+    {"cmd": "goto", "to": "c4_end"},
+    {"label": "c4_mix"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……반반. 해 볼게."},
+    {"cmd": "narration", "text": "짚신이 다시 얼굴에 힘을 준다. 왼쪽이 오그라들고, 오른쪽이 오그라들고, 결국 양쪽 다 웃는다."},
+    {"cmd": "line", "who": "player", "face": "laugh", "text": "아하하. 반반이 아니라 두 배로 웃잖아."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……두 배면, 무서운 건 영 배야? 계산이 이상해."},
+    {"cmd": "line", "who": "player", "face": "laugh", "text": "아니, 계산은 맞아. 결과가 이상할 뿐이지."},
+    {"cmd": "goto", "to": "c4_end"},
+    {"label": "c4_scary"},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……응. 일."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "일을 못 하는 허수아비는, 그럼 뭐야."},
+    {"cmd": "narration", "text": "짚신은 대답을 기다리지 않았다. 다시 얼굴에 힘을 주고, 다시 웃는 얼굴이 됐다."},
+    {"cmd": "line", "who": "player", "face": "worried", "text": "……그런 뜻은 아니었어."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……알아. 학생 말은 맞아. 그래서 내가 더 연습해야 돼."},
+    {"cmd": "goto", "to": "c4_end"},
+    {"label": "c4_end"},
+    {"label": "ending"},
+    {"cmd": "bgm", "id": "warm"},
+    {"cmd": "narration", "text": "언덕 아래 집의 불빛이 한 번 깜박인다. 저녁을 차리는 모양이다."},
+    {"cmd": "line", "who": "player", "face": "smile", "text": "오늘 연습은 여기까지 하자. 내일 또 봐 줄게."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……내일도 와?"},
+    {"cmd": "line", "who": "player", "face": "smile", "text": "응. 무서워질 때까지."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……그럼 학생, 평생 와야 할지도 몰라."},
+    {"cmd": "line", "who": "player", "face": "laugh", "text": "그럼 평생 오지 뭐."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……평생은 길어. 짚은 그렇게 오래 못 가. 그래도, 그 말은 좋다."},
+    {"cmd": "narration", "text": "숯으로 그린 눈썹이 저녁 이슬에 조금 번져, 짚신의 얼굴이 한결 순해 보였다."},
+    {"cmd": "narration", "text": "짚신이 진지하게 하는 말에, {player|은/는} 그만 웃음을 터뜨렸다."},
+    {"cmd": "narration", "text": "돌아서 걸어가는데, 등 뒤에서 아주 작은 소리가 들려왔다."},
+    {"cmd": "line", "who": "jipsin", "face": "determined", "text": "……으르렁."},
+    {"cmd": "sfx", "id": "crow"},
+    {"cmd": "line", "who": "crow", "text": "까악. 귀엽다."},
+    {"cmd": "fade_out"}
+  ],
+  "cold": [
+    {"cmd": "narration", "text": "보랏빛 하늘 아래, 짚신은 한동안 말이 없었다."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "……연습은, 혼자 할게."},
+    {"cmd": "line", "who": "jipsin", "face": "neutral", "text": "학생이 보면 더 잘 안 돼."},
+    {"cmd": "line", "who": "player", "face": "embarrassed", "text": "……알았어. 내일 또 올게."},
+    {"cmd": "narration", "text": "짚신은 대답하지 않았다. 언덕 아래 집의 불이 켜지는 쪽만 보고 있었다."},
+    {"cmd": "narration", "text": "돌아보니, 노을이 다 진 밭에서 그 웃는 얼굴만 어둠 속에 희미하게 떠 있었다."},
+    {"cmd": "fade_out"}
   ]
- },
- "rewards": {
-  "coin": 50,
-  "mana": 0,
-  "know": 0,
-  "items": {
-   "g2_straw": 1
-  },
-  "flags": [],
-  "perk": null
- },
- "script": [
-  {
-   "cmd": "fade_in"
-  },
-  {
-   "cmd": "bgm",
-   "id": "happy"
-  },
-  {
-   "cmd": "narration",
-   "text": "저녁노을이 호박밭을 주황색으로 한 번 더 칠하고 있다. 호박들이 저마다 작은 해처럼 빛난다."
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "jipsin_was_cold",
-   "then": "cold_open",
-   "else": "warm_open"
-  },
-  {
-   "label": "cold_open"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……학생. 왔네. 지난번엔, 내가 혼자 있고 싶다고 했지."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "근데 혼자 있어 보니까, 원래 혼자랑 똑같았어. 그래서 별로였어."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "soft",
-   "text": "그럼 오늘은 같이 있자."
-  },
-  {
-   "cmd": "goto",
-   "to": "open_end"
-  },
-  {
-   "label": "warm_open"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……학생. 왔네. 발소리가 저번이랑 똑같아."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "surprised",
-   "text": "발소리로 사람을 알아봐?"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "고개가 안 돌아가니까. 귀가 대신 고개를 돌려."
-  },
-  {
-   "cmd": "goto",
-   "to": "open_end"
-  },
-  {
-   "label": "open_end"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……학생, 구름은 왜 서 있지 않아?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "surprised",
-   "text": "응? 구름?"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "하루 종일 봤는데, 한 번도 안 멈췄어. 다들 어디로 가는 거야?"
-  },
-  {
-   "cmd": "choice",
-   "id": "c1",
-   "options": [
-    {
-     "text": "구름도 사실 서 있고 싶은데, 바람이 안 놔주는 거야.",
-     "affinity": 15,
-     "next": "c1_wind"
-    },
-    {
-     "text": "구름은 원래 그래. 수증기가 바람에 밀리는 거지.",
-     "affinity": 0,
-     "next": "c1_science"
-    },
-    {
-     "text": "너도 서 있기 싫으면 구름처럼 날아가 버려.",
-     "affinity": -15,
-     "next": "c1_fly"
-    }
-   ]
-  },
-  {
-   "label": "c1_wind"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……바람이 안 놔줘."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "그럼 구름은 나랑 반대네. 나는 막대가 안 놔주고."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "smile",
-   "text": "그러니까 둘이 친구 하면 되겠다. 하나는 가고, 하나는 기다리고."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……구름 친구. 좋다. 근데 구름은 내 이름을 모를 거야."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "smile",
-   "text": "내가 전해 줄게. 구름한테 크게 소리치면 되지."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……학생은 구름이랑도 말이 통해? 학교는 대단하네."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_end"
-  },
-  {
-   "label": "c1_science"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……수증기."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "그럼 구름은 물이야? 물이 하늘에 서 있지도 않고 떠 있는 거야?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "thinking",
-   "text": "음, 엄밀히 말하면…… 아니, 그렇다고 치자."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……학교는 어려운 걸 가르치네. 나는 그냥 구름이 좋았는데."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "embarrassed",
-   "text": "아, 그럼 지금 들은 건 잊어."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……괜찮아. 짚은 원래 잘 잊어. 구름만 남겨 둘게."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_end"
-  },
-  {
-   "label": "c1_fly"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……날아가."
-  },
-  {
-   "cmd": "wait",
-   "sec": 1
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "짚은 날아가면 흩어져. 바람 센 날 몇 가닥씩 날아가는 거, 봤어."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "다시는 안 돌아와. 구름이랑은 달라."
-  },
-  {
-   "cmd": "narration",
-   "text": "장난으로 한 말이었는데, 짚신은 그 말을 오래 들여다보는 것 같았다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "worried",
-   "text": "……농담이었어. 날아가지 마."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……응. 날아갈 줄도 몰라. 걱정 마."
-  },
-  {
-   "cmd": "goto",
-   "to": "c1_end"
-  },
-  {
-   "label": "c1_end"
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "batri_h2",
-   "then": "letter_yes",
-   "else": "letter_no"
-  },
-  {
-   "label": "letter_yes"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……참, 학생. 얼마 전에 박쥐가 편지를 가져왔어. 학생도 같이 왔었지."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "내 이름이 적힌 건 처음이었어. 짚신. 두 글자인데, 오래 봤어."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "지금도 옷 안주머니에 있어. 바람이 불면 바스락거려. 그게 꼭 대답 같아."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "smile",
-   "text": "그 박쥐, 수다스럽지만 좋은 애야."
-  },
-  {
-   "cmd": "goto",
-   "to": "letter_end"
-  },
-  {
-   "label": "letter_no"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……참, 학생. 박쥐 우체부가 하늘을 날아다니는 거, 봤어?"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "편지는 어떤 거야? 나한테는 안 와. 주소가 '호박밭 한가운데'라서 그런가."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "smile",
-   "text": "언젠가 올 거야. 그 박쥐, 길을 잘 잃는다던데 반대로 여기를 찾아올지도 몰라."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……길을 잃어야 오는 곳이구나, 여기는."
-  },
-  {
-   "cmd": "goto",
-   "to": "letter_end"
-  },
-  {
-   "label": "letter_end"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……학생, 하나 더. 호박은 밤에도 자라?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "thinking",
-   "text": "아마? 밤에 더 큰다는 말도 있던데."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "그럼 나는 매일 밤 호박이 크는 걸 보고 있었던 거네. 근데 한 번도 못 봤어."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "너무 천천히 크니까. 나도 너무 천천히 생각하고."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "smile",
-   "text": "그러니까 둘이 잘 맞는 거 아닐까?"
-  },
-  {
-   "cmd": "wait",
-   "sec": 1
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……학생. 나, 결심했어."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "surprised",
-   "text": "결심? 무슨?"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "determined",
-   "text": "무서워질 거야."
-  },
-  {
-   "cmd": "narration",
-   "text": "짚신은 아주 진지하게 말했다. 꿰맨 입은 여전히 반달처럼 웃고 있었다."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "determined",
-   "text": "허수아비는 무서워야 해. 그래야 까마귀가 도망가. 그래야 내가 여기 서 있는 이유가 생겨."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "determined",
-   "text": "봐 줘. 지금 할게."
-  },
-  {
-   "cmd": "wait",
-   "sec": 2
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "determined",
-   "text": "……으르렁."
-  },
-  {
-   "cmd": "narration",
-   "text": "짚신의 얼굴에 힘이 들어간다. 짚이 바스락거리며 조금 오그라든다."
-  },
-  {
-   "cmd": "narration",
-   "text": "그 바람에 꿰맨 입꼬리가 오히려 더 올라갔다. 아까보다 훨씬 행복해 보인다."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "determined",
-   "text": "……어때. 무서워?"
-  },
-  {
-   "cmd": "choice",
-   "id": "c2",
-   "options": [
-    {
-     "text": "내가 시범 보여 줄게. 잘 봐. (최대한 무서운 얼굴)",
-     "affinity": 15,
-     "next": "c2_demo"
-    },
-    {
-     "text": "솔직히 말해도 돼? ……방금 웃는 거 아니었어?",
-     "affinity": 0,
-     "next": "c2_honest"
-    },
-    {
-     "text": "그만해. 웃는 게 더 낫다니까. 괜히 애쓰지 마.",
-     "affinity": -15,
-     "next": "c2_stop"
-    }
-   ]
-  },
-  {
-   "label": "c2_demo"
-  },
-  {
-   "cmd": "narration",
-   "text": "{player|은/는} 눈을 부릅뜨고 이를 드러내며 두 손을 갈고리처럼 구부렸다."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "학생, 배고파?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "embarrassed",
-   "text": "무서운 얼굴이거든."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……그렇구나. 점심 못 먹은 사람 같았어. 그래도 나보다는 무서웠어. 조금."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "proud",
-   "text": "조금이라도 이겼으면 됐어."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……학생은 무서운 거에 이기면 기뻐? 사람은 신기해."
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_end"
-  },
-  {
-   "label": "c2_honest"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……웃는 거 아니야. 이빨 드러낸 거야."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "thinking",
-   "text": "이빨이…… 어디 있는데?"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……없어. 그래서 마음속으로 드러냈어."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "솔직하게 말해 줘서 고마워. 학생한테 물어본 건, 그래서야."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "soft",
-   "text": "그럼 계속 솔직하게 말해 줄게."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……응. 까마귀들도 솔직해. 근데 학생은 웃지 않고 말해 줘서 좋아."
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_end"
-  },
-  {
-   "label": "c2_stop"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……애쓰지 마."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "애쓰는 것도 안 하면, 나는 진짜 그냥 서 있기만 하는 거야."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……한 번만 더 해 볼게. 학생은 안 봐도 돼."
-  },
-  {
-   "cmd": "narration",
-   "text": "짚신은 다시 얼굴에 힘을 준다. 그리고 다시 활짝 웃는 얼굴이 된다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "embarrassed",
-   "text": "……미안. 계속 봐도 돼?"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……봐도 돼. 원래 보라고 서 있는 거니까."
-  },
-  {
-   "cmd": "goto",
-   "to": "c2_end"
-  },
-  {
-   "label": "c2_end"
-  },
-  {
-   "cmd": "sfx",
-   "id": "crow"
-  },
-  {
-   "cmd": "show",
-   "who": "crow",
-   "at": "right"
-  },
-  {
-   "cmd": "if_flag",
-   "flag": "jipsin_crow_mimic",
-   "then": "mimic_yes",
-   "else": "mimic_no"
-  },
-  {
-   "label": "mimic_yes"
-  },
-  {
-   "cmd": "line",
-   "who": "crow",
-   "text": "까악. 저번의 못생긴 큰 까마귀다. 오늘은 무슨 소리 내나 보자."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……학생. 저번에 학생이 까마귀 말 하던 거, 나도 밤에 연습했어."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "까. 악. ……여전히 발음이 틀렸대. 목 뒤로 하는 거래. 나는 목이 없는데."
-  },
-  {
-   "cmd": "goto",
-   "to": "mimic_end"
-  },
-  {
-   "label": "mimic_no"
-  },
-  {
-   "cmd": "line",
-   "who": "crow",
-   "text": "까악. 짚단이가 얼굴에 힘을 주고 있다. 변비인가."
-  },
-  {
-   "cmd": "line",
-   "who": "crow",
-   "text": "까악까악. 오늘 짚단이 얼굴 최고로 웃기다. 둥지에 가서 다 말해 줘야지."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……변비가 뭔지 모르지만, 아닌 것 같아."
-  },
-  {
-   "cmd": "goto",
-   "to": "mimic_end"
-  },
-  {
-   "label": "mimic_end"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "thinking",
-   "text": "좋아, 그럼 눈썹을 그려 보자. 눈썹이 있으면 화난 얼굴이 되잖아."
-  },
-  {
-   "cmd": "narration",
-   "text": "{player|은/는} 밭가에 떨어진 숯 막대기를 주워, 짚신의 얼굴에 눈썹 두 개를 쓱쓱 그었다. 안쪽이 아래로 내려간, 화난 눈썹이다."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "determined",
-   "text": "……됐어? 지금 나 화났어?"
-  },
-  {
-   "cmd": "narration",
-   "text": "그런데 짚이 숯을 머금고 바스락 들뜨면서, 눈썹 끝이 둘 다 위로 휘어 버렸다."
-  },
-  {
-   "cmd": "narration",
-   "text": "화난 눈썹이 아니라, 깜짝 놀라서 반가워하는 눈썹이 됐다. 입은 여전히 웃고 있다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "laugh",
-   "text": "……아하하. 미안, 너 지금 생일 선물 받은 얼굴이야."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……생일. 나는 생일이 언제인지도 모르는데."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "그럼 오늘 할까. 무서워지려다가 생일이 된 날."
-  },
-  {
-   "cmd": "hide",
-   "who": "crow"
-  },
-  {
-   "cmd": "narration",
-   "text": "까마귀들은 깔깔거리며 풍차 쪽으로 날아간다. 저녁이면 늘 그쪽으로 돌아간다."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……학생. 부탁이 하나 있어."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "저 풍차까지 가서 나를 봐 줘. 까마귀들은 저기서 날아오니까, 저기서 무서워 보여야 해."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "가까이서는 실패했지만, 멀리서는 다를지도 몰라."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "smile",
-   "text": "좋아. 거기서 크게 소리칠 테니까, 최고로 무서운 얼굴 하고 있어."
-  },
-  {
-   "cmd": "move",
-   "to": "old_windmill",
-   "transition": "fade",
-   "clear": true
-  },
-  {
-   "cmd": "show",
-   "who": "player",
-   "at": "left"
-  },
-  {
-   "cmd": "sfx",
-   "id": "creak"
-  },
-  {
-   "cmd": "narration",
-   "text": "낡은 풍차 앞. 부서진 날개 그림자가 노을 위로 길게 늘어져 있다."
-  },
-  {
-   "cmd": "narration",
-   "text": "돌아보니 멀리 호박밭 한가운데, 손톱만 한 허수아비가 서 있다."
-  },
-  {
-   "cmd": "narration",
-   "text": "그런데 이상하다. 이렇게 멀리서도, 짚신의 반달 같은 입만은 또렷하게 보인다."
-  },
-  {
-   "cmd": "show",
-   "who": "crow",
-   "at": "right"
-  },
-  {
-   "cmd": "line",
-   "who": "crow",
-   "text": "까악. 저기 봐, 짚단이가 또 웃는다. 여기서도 웃는 게 보여."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "laugh",
-   "text": "(크게) 짚신아. 지금 무서운 얼굴 하는 중이야?"
-  },
-  {
-   "cmd": "line",
-   "who": "voice",
-   "text": "……응. 최대한."
-  },
-  {
-   "cmd": "narration",
-   "text": "바람을 타고 들려온 대답에 풍차 지붕의 까마귀들이 데굴데굴 구르며 웃는다."
-  },
-  {
-   "cmd": "narration",
-   "text": "노을 속에서 손톱만 한 허수아비는 꼼짝도 않고 서 있다. 이쪽을 향해, 힘껏 무서운 얼굴을 하고."
-  },
-  {
-   "cmd": "narration",
-   "text": "그 얼굴이 이 넓은 밭에서 제일 잘 보이는 웃음이라는 걸, 짚신만 모르는 것 같았다."
-  },
-  {
-   "cmd": "choice",
-   "id": "c3",
-   "options": [
-    {
-     "text": "(크게) 여기서 보니까, 웃는 게 제일 잘 보여.",
-     "affinity": 15,
-     "next": "c3_smile"
-    },
-    {
-     "text": "(크게) 무서워. 엄청 무서워.",
-     "affinity": 0,
-     "next": "c3_lie"
-    },
-    {
-     "text": "(크게) 너무 작아서 하나도 안 보여.",
-     "affinity": -15,
-     "next": "c3_small"
-    }
-   ]
-  },
-  {
-   "label": "c3_smile"
-  },
-  {
-   "cmd": "line",
-   "who": "voice",
-   "text": "……웃는 게 제일 잘 보여?"
-  },
-  {
-   "cmd": "line",
-   "who": "crow",
-   "text": "까악. 맞아. 우리는 저 웃는 얼굴 보고 내려앉아. 밭 어디에 있든 바로 찾을 수 있으니까."
-  },
-  {
-   "cmd": "narration",
-   "text": "까마귀가 무심코 한 말이 바람에 실려 밭 쪽으로 날아간다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "soft",
-   "text": "들었지? 다들 네 얼굴 보고 찾아온대."
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_end"
-  },
-  {
-   "label": "c3_lie"
-  },
-  {
-   "cmd": "line",
-   "who": "crow",
-   "text": "까악. 거짓말. 거짓말쟁이 큰 까마귀."
-  },
-  {
-   "cmd": "line",
-   "who": "voice",
-   "text": "……까마귀들이 거짓말이래. 들려."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "embarrassed",
-   "text": "(크게) 아, 아니야. 진짜 조금은 무서웠어."
-  },
-  {
-   "cmd": "line",
-   "who": "voice",
-   "text": "……학생, 거짓말할 때 목소리가 높아지네. 하나 배웠다."
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_end"
-  },
-  {
-   "label": "c3_small"
-  },
-  {
-   "cmd": "wait",
-   "sec": 2
-  },
-  {
-   "cmd": "line",
-   "who": "voice",
-   "text": "……그렇구나. 작구나, 나."
-  },
-  {
-   "cmd": "line",
-   "who": "crow",
-   "text": "까악. 원래 작잖아. 할아버지가 서 있을 때보다 훨씬 작아."
-  },
-  {
-   "cmd": "narration",
-   "text": "바람이 멎었다. 밭 쪽에서는 더 이상 대답이 오지 않았다."
-  },
-  {
-   "cmd": "goto",
-   "to": "c3_end"
-  },
-  {
-   "label": "c3_end"
-  },
-  {
-   "cmd": "move",
-   "to": "pumpkin_field",
-   "transition": "fade",
-   "clear": true
-  },
-  {
-   "cmd": "show",
-   "who": "jipsin",
-   "at": "center"
-  },
-  {
-   "cmd": "show",
-   "who": "player",
-   "at": "left"
-  },
-  {
-   "cmd": "narration",
-   "text": "{player|이/가} 숨을 몰아쉬며 밭으로 돌아왔을 때, 하늘은 보랏빛으로 바뀌어 있었다."
-  },
-  {
-   "cmd": "narration",
-   "text": "밭 너머 언덕 아래 작은 집에 노란 불이 켜진다."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……저 불, 할머니 집이야."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "저 불이 꺼지면 나도 자는 척해. 할머니가 걱정 안 하게."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "surprised",
-   "text": "할머니가 네 걱정을 해?"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……모르겠어. 매일 아침 와서 뭐라고 하는데, 나는 늘 반쯤 졸고 있어서."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……학생. 아까 풍차에서 보니까, 나 어땠어?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "soft",
-   "text": "작고, 꼿꼿하고, 웃고 있었어. 노을 속에서."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……꼿꼿했어? 그건 다행이다. 꼿꼿한 건 자신 있거든."
-  },
-  {
-   "cmd": "wait",
-   "sec": 1
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……학생은 웃는 얼굴이 좋아, 무서운 얼굴이 좋아?"
-  },
-  {
-   "cmd": "choice",
-   "id": "c4",
-   "options": [
-    {
-     "text": "네 얼굴이 좋아. 그게 웃는 얼굴이면, 웃는 얼굴.",
-     "affinity": 15,
-     "next": "c4_yours"
-    },
-    {
-     "text": "반은 웃고 반은 무섭게 해 봐. 섞으면 되잖아.",
-     "affinity": 0,
-     "next": "c4_mix"
-    },
-    {
-     "text": "허수아비면 무서운 얼굴이지. 일은 해야 하니까.",
-     "affinity": -15,
-     "next": "c4_scary"
-    }
-   ]
-  },
-  {
-   "label": "c4_yours"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……내 얼굴."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "할머니가 바느질한 얼굴이야. 한 번에 꿰맸대. 안 고치고."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……그럼 오늘은, 고치는 연습은 그만할게."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "soft",
-   "text": "응. 내일도 그 얼굴로 서 있어 줘."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……그건 쉬워. 다른 얼굴은 할 줄 모르니까."
-  },
-  {
-   "cmd": "goto",
-   "to": "c4_end"
-  },
-  {
-   "label": "c4_mix"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……반반. 해 볼게."
-  },
-  {
-   "cmd": "narration",
-   "text": "짚신이 다시 얼굴에 힘을 준다. 왼쪽이 오그라들고, 오른쪽이 오그라들고, 결국 양쪽 다 웃는다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "laugh",
-   "text": "아하하. 반반이 아니라 두 배로 웃잖아."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……두 배면, 무서운 건 영 배야? 계산이 이상해."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "laugh",
-   "text": "아니, 계산은 맞아. 결과가 이상할 뿐이지."
-  },
-  {
-   "cmd": "goto",
-   "to": "c4_end"
-  },
-  {
-   "label": "c4_scary"
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……응. 일."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "일을 못 하는 허수아비는, 그럼 뭐야."
-  },
-  {
-   "cmd": "narration",
-   "text": "짚신은 대답을 기다리지 않았다. 다시 얼굴에 힘을 주고, 다시 웃는 얼굴이 됐다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "worried",
-   "text": "……그런 뜻은 아니었어."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……알아. 학생 말은 맞아. 그래서 내가 더 연습해야 돼."
-  },
-  {
-   "cmd": "goto",
-   "to": "c4_end"
-  },
-  {
-   "label": "c4_end"
-  },
-  {
-   "label": "ending"
-  },
-  {
-   "cmd": "bgm",
-   "id": "warm"
-  },
-  {
-   "cmd": "narration",
-   "text": "언덕 아래 집의 불빛이 한 번 깜박인다. 저녁을 차리는 모양이다."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "smile",
-   "text": "오늘 연습은 여기까지 하자. 내일 또 봐 줄게."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……내일도 와?"
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "smile",
-   "text": "응. 무서워질 때까지."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……그럼 학생, 평생 와야 할지도 몰라."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "laugh",
-   "text": "그럼 평생 오지 뭐."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……평생은 길어. 짚은 그렇게 오래 못 가. 그래도, 그 말은 좋다."
-  },
-  {
-   "cmd": "narration",
-   "text": "숯으로 그린 눈썹이 저녁 이슬에 조금 번져, 짚신의 얼굴이 한결 순해 보였다."
-  },
-  {
-   "cmd": "narration",
-   "text": "짚신이 진지하게 하는 말에, {player|은/는} 그만 웃음을 터뜨렸다."
-  },
-  {
-   "cmd": "narration",
-   "text": "돌아서 걸어가는데, 등 뒤에서 아주 작은 소리가 들려왔다."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "determined",
-   "text": "……으르렁."
-  },
-  {
-   "cmd": "sfx",
-   "id": "crow"
-  },
-  {
-   "cmd": "line",
-   "who": "crow",
-   "text": "까악. 귀엽다."
-  },
-  {
-   "cmd": "fade_out"
-  }
- ],
- "cold": [
-  {
-   "cmd": "narration",
-   "text": "보랏빛 하늘 아래, 짚신은 한동안 말이 없었다."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "……연습은, 혼자 할게."
-  },
-  {
-   "cmd": "line",
-   "who": "jipsin",
-   "face": "neutral",
-   "text": "학생이 보면 더 잘 안 돼."
-  },
-  {
-   "cmd": "line",
-   "who": "player",
-   "face": "embarrassed",
-   "text": "……알았어. 내일 또 올게."
-  },
-  {
-   "cmd": "narration",
-   "text": "짚신은 대답하지 않았다. 언덕 아래 집의 불이 켜지는 쪽만 보고 있었다."
-  },
-  {
-   "cmd": "narration",
-   "text": "돌아보니, 노을이 다 진 밭에서 그 웃는 얼굴만 어둠 속에 희미하게 떠 있었다."
-  },
-  {
-   "cmd": "fade_out"
-  }
- ]
 }
