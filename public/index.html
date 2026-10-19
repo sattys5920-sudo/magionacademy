@@ -5263,7 +5263,7 @@ function mqPanelText(title, text, extra = ''){ npcUI().innerHTML = `<div class="
 // 서브 NPC와 이야기할 때(npcMenu) 의뢰 목표가 있으면 한마디 더
 function mqNpcHook(n){ const ex = mqOnTalk(n.id); return ex; }
 // 메인에서 알게 된 사실 뒤의 서브 NPC 평소 대사 추가분 (npc_lines.json: { npc: [{ flag, lines }] })
-function mqNpcExtra(id){ const L = MQ.lines[id]; if (!L) return []; return L.filter(x => !x.flag || flagOn(x.flag) || (x.quest && mqState().done[x.quest])).flatMap(x => x.lines || []); }
+function mqNpcExtra(id){ const L = MQ.lines[id]; if (!L) return []; return L.filter(x => (!x.flag || flagOn(x.flag)) && (!x.quest || mqState().done[x.quest])).flatMap(x => x.lines || []); }
 // ---- 일지 「이야기」 탭 ----
 function mqJournalHTML(){
   const s = mqState(), q = mqQuest(), n = mqDoneN(), shards = mqShards();
