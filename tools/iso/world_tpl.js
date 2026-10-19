@@ -285,7 +285,8 @@ function setMap(id, spawn){
   rebuildObjs();
   if (!spawn || !free(spawn[0], spawn[1])) spawn = M.spawnIn || M.start || spawn;
   me.x = spawn[0]; me.y = spawn[1]; me.path = []; me.view = 0; me.flip = false;
-  if (!crowd[id]){ crowd[id] = []; const n = id === 'campus' ? 9 : (id === 'barn' || id === 'pen' || M.furn || M.rooms) ? 0 : 2; for (let i = 0; i < n; i++){ for (let k = 0; k < 50; k++){ const x = Math.floor(Math.random() * M.NX), y = Math.floor(Math.random() * M.NY); if (free(x, y)){ crowd[id].push(mk(NAMES[(i + (id === 'lab' ? 3 : 0)) % NAMES.length], World.Avatar.random(), x, y, false)); break; } } } }
+  // 의미 없이 걸어 다니는 학생은 없어요 (이야기 NPC는 따로)
+  if (!crowd[id]){ crowd[id] = []; const n = 0; for (let i = 0; i < n; i++){ for (let k = 0; k < 50; k++){ const x = Math.floor(Math.random() * M.NX), y = Math.floor(Math.random() * M.NY); if (free(x, y)){ crowd[id].push(mk(NAMES[(i + (id === 'lab' ? 3 : 0)) % NAMES.length], World.Avatar.random(), x, y, false)); break; } } } }
   people.length = 0; people.push(me, ...crowd[id]);
   if (M.pets) people.push(...spawnPets());
   Object.keys(peers).forEach(id => { sayOff(peers[id]); delete peers[id]; }); sayOff(me);
@@ -664,6 +665,11 @@ mcv.addEventListener('click', e => {   // 탭할 때만 (밀어서 볼 때는 �
 });
 document.getElementById('tMap').onclick = openMap;
 document.getElementById('mClose').onclick = () => mapv.classList.remove('on');
+// 관리자 페이지: 그 방 전체 그림(바닥 + 물건)과 좌표 정보
+World.mapCanvas = async id => { await World.ready; const rid = real(id); if (!MAPS[rid]) return null; await ensureMap(rid); const A = MAPS[rid], m = A.meta;
+  const c = document.createElement('canvas'); c.width = m.W; c.height = m.H; const g = c.getContext('2d'); g.fillStyle = m.fill || '#140E1E'; g.fillRect(0, 0, m.W, m.H); g.drawImage(A.bg, 0, 0);
+  (A.order || (A.order = orderObjs(m.objs))).forEach(o => g.drawImage(A.obj, o.sx, o.sy, o.sw, o.sh, o.x, o.y, o.sw, o.sh)); return { canvas: c, meta: m }; };
+World.mapIds = () => Object.keys(MAPS);
 World.ready = (async () => {
   await World.Avatar.ready;
   CR_IMG = await img(CR_SRC);

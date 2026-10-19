@@ -126,6 +126,28 @@ body:not(.inworld) #game{display:none}
 .zz{position:absolute;left:54px;top:10px;font-family:'G11B',monospace;font-size:24px;color:#6A4AC8;animation:zz 2.4s infinite}
 .zz b{font-size:12px;margin-left:2px;animation:zz 2.4s .4s infinite;display:inline-block}
 @keyframes zz{0%{opacity:0;transform:translate(0,6px)}30%{opacity:1}100%{opacity:0;transform:translate(10px,-14px)}}
+.adm-css{}
+body.admin .hud,body.admin .fab,body.admin #world{display:none}
+#adminv{position:absolute;inset:0;z-index:40;background:#FAF1E2;color:#22183F;display:flex;flex-direction:column;font-family:'G11',monospace;font-size:12px}
+.adhead{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#22183F;color:#FFD866}
+.adhead b{font-family:'G11B',monospace}
+.adseg{display:flex;flex-wrap:wrap;gap:4px;padding:6px 10px}
+.adseg button{border:2px solid #22183F;background:#fff;font-family:'G11',monospace;font-size:12px;padding:3px 8px;color:#22183F}
+.adseg button.on{background:#FFD866}
+.adseg.main{background:#F3EAFB;border-bottom:2px solid #22183F}
+.adbody{flex:1;overflow:auto;padding:8px 10px 24px;display:flex;flex-direction:column;gap:8px}
+.admapw{overflow:auto;max-height:62vh;background:#140E1E;box-shadow:0 0 0 2px #22183F;-webkit-overflow-scrolling:touch}
+#admap{display:block;image-rendering:pixelated}
+.adlist{display:flex;flex-direction:column;gap:2px}
+.adlist div{background:#fff;padding:3px 6px}
+.adlist i{color:#9480B4}
+.adlist.chat .tm{color:#9480B4}.adlist.chat .pl{color:#3FAF74}
+.adsum{display:flex;gap:10px;flex-wrap:wrap}
+.adsum b{font-family:'G11B',monospace}
+.adtbl{display:flex;flex-direction:column;gap:2px;overflow-x:auto}
+.adtbl>div{display:grid;grid-template-columns:80px 70px 64px 40px 40px 30px 50px 50px 46px 30px 30px 150px;gap:4px;background:#fff;padding:3px 6px;white-space:nowrap;min-width:max-content}
+.adtbl>div.h{background:#22183F;color:#FFD866}
+.adcard{background:#fff;border:3px solid #22183F;padding:8px;display:flex;flex-direction:column;gap:3px}
 #talk{position:absolute;left:10px;right:80px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;display:none;flex-direction:column;gap:6px;font-family:'G11',monospace}
 #talk.on{display:flex}
 body:not(.inworld) #talk{display:none}
@@ -762,6 +784,7 @@ function speak(t, e, to){
   t = String(t || '').trim().slice(0, 40); if (!t) return;
   World.say('me', t, e ? e - 1 : null); if (!e) pushLog(me.nick, t, true);
   if (!solo) F.update(F.ref(db, 'online/' + uid), { s: { t, e: e || 0, at: Date.now(), m: World.placeKey() || '', ...(to ? { to } : {}) } }).catch(() => {});
+  if (!solo) F.push(F.ref(db, 'chat/' + todayKey()), { u: uid, n: me.nick, t: e ? `[${t}]` : t, m: World.placeKey() || '', at: Date.now(), ...(to ? { to } : {}) }).catch(() => {});   // 관리자 대화 기록
 }
 function presTick(){
   if (solo || !uid) return;
@@ -1270,6 +1293,90 @@ function renderGames(){
   $('#back').onclick = closeSheet;
   on('[data-gopen]', b => { const k = b.dataset.gopen; if (k === 'pumpkin' && World.where() !== 'campus') return toast('호박 줍기는 바깥(마을)에서 열 수 있어요'); openRoom(k); });
   on('[data-gjoin]', b => joinRoom(b.dataset.gjoin));
+}
+// ===== 관리자 페이지: 로그인 화면에서 관리자 코드를 넣으면 들어와요 =====
+// 관리자 계정(magionadmin)으로 로그인해서 모두의 위치·대화·기숙사·이야기·호감도·골드·마력을 봐요
+const ADMIN_CODE = '316316316', ADMIN_ID = 'magionadmin';
+const isAdminUser = u => !!u && u.email === idEmail(ADMIN_ID);
+let AD = { tab: 'map', map: 'campus', day: null, online: {}, players: {}, houses: {}, chat: {}, games: {}, story: {}, offs: [] };
+function adminLogin(){
+  cover(`<div class="card px"><b class="b">관리자 페이지</b><form id="af" style="display:flex;flex-direction:column;gap:10px">
+    <label class="field"><span class="s">관리자 코드</span><input id="acode" type="password" inputmode="numeric" maxlength="20" autocomplete="off"></label>
+    <p class="err" id="err"></p><button class="btn go" type="submit">들어가기</button></form><button class="btn" id="aback" type="button">돌아가기</button></div>`);
+  $('#aback').onclick = () => showLogin();
+  $('#af').onsubmit = async e => {
+    e.preventDefault(); const err = $('#err');
+    if ($('#acode').value.trim() !== ADMIN_CODE) return err.textContent = '코드가 달라요.';
+    if (!configured) return showAdmin();   // Firebase가 없으면 이 기기 데이터만 봐요
+    err.textContent = '잠깐만요...';
+    try { await F.signInWithEmailAndPassword(auth, idEmail(ADMIN_ID), pwPad(ADMIN_CODE)); }
+    catch (ex){ try { await F.createUserWithEmailAndPassword(auth, idEmail(ADMIN_ID), pwPad(ADMIN_CODE)); } catch (ex2){ err.textContent = `실패했어요. (${ex2.code || ex2.message})`; } }
+  };
+}
+function showAdmin(){
+  document.body.classList.remove('inworld'); document.body.classList.add('admin'); app.classList.remove('open'); sheetOn = false;
+  AD.offs.forEach(f => f && f()); AD.offs = []; AD.day = AD.day || todayKey();
+  const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = s.val() || {}; adminRender(); }));
+  if (F && db){ L('online', 'online'); L('players', 'players'); L('houses', 'houses'); L('games', 'games'); L('story', 'story'); adminChat(); }
+  adminRender();
+}
+function adminChat(){ if (!F || !db) return; AD.chatOff?.(); AD.chatOff = F.onValue(F.query(F.ref(db, 'chat/' + AD.day), F.limitToLast(300)), s => { AD.chat = s.val() || {}; if (AD.tab === 'chat') adminRender(); }); }
+const adName = id => esc(AD.players[id]?.nick || AD.online[id]?.nick || id.slice(0, 6));
+const adPlace = m => { if (!m) return '?'; const [id, owner] = m.split(':'), meta = World.meta(id); return esc((meta?.title || id) + (owner ? ` (${AD.players[owner]?.nick || '?'}의 방)` : '')); };
+function adminRender(){
+  if (!document.body.classList.contains('admin')) return;
+  const P = AD.players, O = AD.online, ids = Object.keys(P).filter(id => P[id]?.nick);
+  const tabs = [['map', `지도 ${Object.keys(O).length}명 접속`], ['students', `학생 ${ids.length}`], ['chat', '대화'], ['dorm', '기숙사'], ['story', '이야기·미션'], ['npc', 'NPC 호감도']];
+  let body = '';
+  if (AD.tab === 'map'){
+    const where = {}; Object.entries(O).forEach(([id, o]) => { const k = (o.m || '').split(':')[0] || '?'; (where[k] = where[k] || []).push(id); });
+    body = `<div class="adseg">${['campus', ...Object.keys(where).filter(k => k !== 'campus')].map(k => `<button data-admap="${k}" class="${AD.map === k ? 'on' : ''}">${adPlace(k)} ${(where[k] || []).length}</button>`).join('')}</div>
+      <div class="admapw"><canvas id="admap"></canvas></div>
+      <div class="adlist">${Object.entries(O).map(([id, o]) => `<div><b>${adName(id)}</b> <span>${adPlace(o.m)} · (${o.x ?? '-'}, ${o.y ?? '-'})</span>${o.s?.t ? ` <i>“${esc(o.s.t)}”</i>` : ''}</div>`).join('') || '<div>지금 접속한 학생이 없어요</div>'}</div>`;
+  }
+  if (AD.tab === 'students'){
+    const sum = k => ids.reduce((t, id) => t + (+P[id][k] || 0), 0);
+    body = `<div class="adsum"><span>골드 합계 <b>${sum('coin').toLocaleString()}</b></span><span>마력 합계 <b>${sum('mana')}</b></span><span>평균 지식 <b>${ids.length ? Math.round(sum('know') / ids.length) : 0}</b></span></div>
+      <div class="adtbl"><div class="h"><span>학생</span><span>기숙사</span><span>골드</span><span>마력</span><span>지식</span><span>날</span><span>물고기</span><span>채집</span><span>낚싯대</span><span>옷</span><span>생물</span><span>상태</span></div>
+      ${ids.sort((a, b) => (P[b].coin || 0) - (P[a].coin || 0)).map(id => { const p = P[id], d = p.fdex || {};
+        return `<div><span><b>${esc(p.nick)}</b></span><span style="color:${HOUSES[p.house]?.col || '#888'}">${HOUSES[p.house]?.name || '-'}</span><span>${(p.coin || 0).toLocaleString()}</span><span>${p.mana || 0}</span><span>${p.know || 0}</span><span>${p.day || 1}</span>
+          <span>${FISH.filter(f => d[f.id]).length}/40</span><span>${FORAGE.filter(f => d[f.id]).length}/50</span><span>${RODS[p.rod || 0]?.name.split(' ')[0] || '-'}</span><span>${Object.keys(p.closet || {}).length}</span><span>${(p.cr || []).length}</span>
+          <span>${O[id] ? `🟢 ${adPlace(O[id].m)}` : p.rest ? '💤 쉬는 중' : '⚪ 외출'}</span></div>`; }).join('')}</div>`;
+  }
+  if (AD.tab === 'chat'){
+    const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(Date.now() - i * 864e5); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; });
+    const list = Object.values(AD.chat).sort((a, b) => b.at - a.at);
+    body = `<div class="adseg">${days.map(d => `<button data-adday="${d}" class="${AD.day === d ? 'on' : ''}">${d.slice(5)}</button>`).join('')}</div>
+      <div class="adlist chat">${list.map(c => { const t = new Date(c.at); return `<div><span class="tm">${t.getHours()}:${String(t.getMinutes()).padStart(2, '0')}</span> <b>${esc(c.n || adName(c.u))}</b> <span class="pl">${adPlace(c.m)}</span> ${esc(c.t)}</div>`; }).join('') || '<div>이날 대화가 없어요</div>'}</div>`;
+  }
+  if (AD.tab === 'dorm'){
+    body = HOUSE_KEYS.map(h => { const H = HOUSES[h], hs = AD.houses[h] || {}, st = Math.max(1, hs.stage || 1), mem = ids.filter(id => P[id].house === h), need = HALL_COST[h][st - 1];
+      return `<div class="adcard" style="border-color:${H.col}"><b style="color:${H.col}">${H.name}</b> · ${st}단계 「${HALL_NAMES[h][st - 1]}」 · 학생 ${mem.length}명
+        <div class="s">${mem.map(id => esc(P[id].nick)).join(', ') || '아직 없어요'}</div>
+        ${need ? `<div class="s">다음 단계 재료: ${Object.entries(need).map(([k, n]) => `${k === 'coin' ? '골드' : ITEM[k] || k} ${(hs.pool?.[k] || 0)}/${n}`).join(' · ')}</div>` : '<div class="s">마지막 단계예요</div>'}
+        ${hs.who ? `<div class="s sub">기여: ${Object.values(hs.who).sort((a, b) => b.n - a.n).map(w => `${esc(w.nick)} ${w.n}`).join(', ')}</div>` : ''}</div>`; }).join('');
+  }
+  if (AD.tab === 'story') body = typeof adminStoryHTML === 'function' ? adminStoryHTML() : '<div class="adcard">이야기 미션은 다음 업데이트에서 열려요.</div>';
+  if (AD.tab === 'npc') body = typeof adminNpcHTML === 'function' ? adminNpcHTML() : '<div class="adcard">NPC 호감도는 다음 업데이트에서 열려요.</div>';
+  app.innerHTML = '';
+  let root = $('#adminv'); if (!root){ root = document.createElement('div'); root.id = 'adminv'; $('#shell').appendChild(root); }
+  root.innerHTML = `<div class="adhead"><b>🎃 호박달 마녀학교 · 관리자</b><button class="btn sm" id="adout">나가기</button></div>
+    <div class="adseg main">${tabs.map(([k, l]) => `<button data-adtab="${k}" class="${AD.tab === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="adbody">${body}</div>`;
+  root.querySelectorAll('[data-adtab]').forEach(b => b.onclick = () => { AD.tab = b.dataset.adtab; adminRender(); });
+  root.querySelectorAll('[data-admap]').forEach(b => b.onclick = () => { AD.map = b.dataset.admap; adminRender(); });
+  root.querySelectorAll('[data-adday]').forEach(b => b.onclick = () => { AD.day = b.dataset.adday; adminChat(); adminRender(); });
+  root.querySelectorAll('[data-adst]').forEach(b => b.onclick = () => typeof adminStoryAct === 'function' && adminStoryAct(b.dataset.adst));
+  $('#adout').onclick = async () => { AD.offs.forEach(f => f && f()); AD.offs = []; document.body.classList.remove('admin'); root.remove(); if (auth?.currentUser) await F.signOut?.(auth); location.reload(); };
+  if (AD.tab === 'map') adminMap();
+}
+async function adminMap(){
+  const id = AD.map, r = await World.mapCanvas(id), cv = $('#admap'); if (!r || !cv) return;
+  const m = r.meta, k = Math.max(.75, Math.min(2, (cv.parentElement.clientWidth) / m.W));   // 폰에서는 크게 그리고 밀어서 봐요 cv.width = m.W; cv.height = m.H; cv.style.width = Math.round(m.W * k) + 'px'; cv.style.height = Math.round(m.H * k) + 'px';
+  const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(r.canvas, 0, 0);
+  const P2 = (x, y) => [m.OX + (x - y) * 8, m.OY + (x + y) * 4];
+  Object.entries(AD.online).forEach(([uid_, o], i) => { if ((o.m || '').split(':')[0] !== id) return; const [x, y] = P2((o.x || 0) + .5, (o.y || 0) + .5), c = HOUSES[o.house]?.col || '#FFD866';
+    g.fillStyle = '#22183F'; g.fillRect(x - 4, y - 4, 8, 8); g.fillStyle = c; g.fillRect(x - 3, y - 3, 6, 6);
+    g.font = '12px G11, monospace'; g.textAlign = 'center'; const nm = AD.players[uid_]?.nick || o.nick || ''; g.fillStyle = 'rgba(20,13,30,.8)'; const w = g.measureText(nm).width + 6; g.fillRect(x - w / 2, y - 20, w, 14); g.fillStyle = '#FFF6E0'; g.fillText(nm, x, y - 9); });
 }
 // 바로 가기: 그 장소로 순간 이동한 다음 화면을 열어요
 const goPlace = (mapId, obj, t, s) => { closeSheet(); World.teleport(mapId, obj, () => openSheet(t, s)); };
@@ -2536,8 +2643,10 @@ function showLogin(mode = 'login'){
       <button class="btn go" type="submit" id="lgo">${signup ? '가입하고 입학하기' : '등교하기'}</button>
     </form>` : `<span class="s">아직 Firebase가 연결되지 않았어요. public/firebase-config.js에 설정을 넣으면 친구들과 함께할 수 있어요.</span>`}
     <button class="btn" id="soloGo" type="button">혼자 해 보기 (이 기기에만 저장)</button>
+    <button class="btn ghost sm" id="adminGo" type="button" style="align-self:center">관리자</button>
   </div>`);
   $('#soloGo').onclick = startSolo;
+  $('#adminGo').onclick = adminLogin;
   if (!configured) return;
   $('#mLogin').onclick = () => showLogin('login');
   $('#mSignup').onclick = () => showLogin('signup');
@@ -2545,6 +2654,7 @@ function showLogin(mode = 'login'){
     e.preventDefault();
     const id = $('#lid').value.trim(), pw = $('#lpw').value, err = $('#err');
     if (!ID_RE.test(id)) return err.textContent = '아이디는 영어로 시작하고, 영어·숫자·_ 3~16 자여야 해요.';
+    if (id.toLowerCase() === ADMIN_ID) return err.textContent = '쓸 수 없는 아이디예요.';
     if (pw.length < 5) return err.textContent = '비밀번호는 5 자 이상이어야 해요.';
     if (signup && pw !== $('#lpw2').value) return err.textContent = '비밀번호 확인이 달라요.';
     $('#lgo').disabled = true; err.textContent = '잠깐만요...';
@@ -2747,6 +2857,7 @@ async function boot(){
   F.onAuthStateChanged(auth, async user => {
     if (!user) { uid = null; return showLogin(); }
     uid = user.uid;
+    if (isAdminUser(user)) return showAdmin();
     const snap = await F.get(F.ref(db, 'players/' + uid));
     const enter = () => {
       const oref = F.ref(db, 'online/' + uid);
