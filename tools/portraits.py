@@ -15,6 +15,7 @@ def block_size(a):
     runs = [r for r in runs if 3 <= r <= 16]
     return max(set(runs), key=runs.count) if runs else 8
 # 가장자리에서 안 닿는 갇힌 배경(볼트와 목 사이 등): 그 안의 한 점을 (가로, 세로) 비율로 적어 두면 거기서도 지워요
+POCKETS = {'hazel'}
 HOLES = {'frankie': [(.324, .576), (.675, .576)]}
 # 한 표정만 확대돼서 뽑혔을 때: 그 표정을 (배율, 왼쪽, 위)로 줄여 옮기고, 모든 표정을 같이 잘라요 (왼, 위, 오른, 아래)
 FIT = {'boo': {'happy': (.83, 59, 71)}}
@@ -65,6 +66,35 @@ def build(pid):
                         nl = pl[1 + dy:pl.shape[0] - 1 + dy, 1 + dx:pl.shape[1] - 1 + dx]; ng = pg[1 + dy:pg.shape[0] - 1 + dy, 1 + dx:pg.shape[1] - 1 + dx]
                         sim += ng & (np.abs(nl - lum) < 30)
             small[edge & gray & (sim < 2), 3] = 0
+        for _ in range(2):   # 흰 배경과 섞인 가장자리 점: 안쪽 이웃보다 흰색 쪽으로 많이 밝아진 테두리 픽셀
+            al = small[..., 3] > 0; rgb = small[..., :3].astype(float); lum = rgb.mean(-1)
+            pa = np.pad(al, 1, constant_values=True); edge = al & ~(pa[:-2, 1:-1] & pa[2:, 1:-1] & pa[1:-1, :-2] & pa[1:-1, 2:])
+            inner = al & ~edge; acc = np.zeros(rgb.shape); cnt = np.zeros(al.shape)
+            pr, pi = np.pad(rgb, ((1, 1), (1, 1), (0, 0))), np.pad(inner, 1)
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    m = pi[1 + dy:pi.shape[0] - 1 + dy, 1 + dx:pi.shape[1] - 1 + dx]
+                    acc += pr[1 + dy:pr.shape[0] - 1 + dy, 1 + dx:pr.shape[1] - 1 + dx] * m[..., None]; cnt += m
+            nb = acc / np.maximum(cnt, 1)[..., None]; nl = nb.mean(-1)
+            t = (lum - nl) / np.maximum(255 - nl, 1)   # 0 = 안쪽 색 그대로, 1 = 흰색
+            towhite = np.abs((rgb - nb) - t[..., None] * (255 - nb)).max(-1) < 40
+            small[edge & (cnt > 0) & (t > .3) & (lum - nl > 30) & towhite, 3] = 0
+        # 외곽선 안에 갇힌 흰 배경 조각: 거의 검은 테두리(또는 투명)로만 둘러싸인 작은 흰 덩어리 (이빨·눈 하이라이트도 그렇게 생겨서 고른 초상화만)
+        al = small[..., 3] > 0; rgb = small[..., :3].astype(int); lum = rgb.mean(-1)
+        wh = al & (rgb.min(-1) > 190) & (rgb.max(-1) - rgb.min(-1) < 30); seen = np.zeros_like(wh)
+        for y0, x0 in zip(*np.nonzero(wh)):
+            if seen[y0, x0]: continue
+            comp, st = [], [(y0, x0)]; seen[y0, x0] = True
+            while st:
+                y, x = st.pop(); comp.append((y, x))
+                for yy, xx in ((y + 1, x), (y - 1, x), (y, x + 1), (y, x - 1)):
+                    if 0 <= yy < h and 0 <= xx < w and wh[yy, xx] and not seen[yy, xx]: seen[yy, xx] = True; st.append((yy, xx))
+            if len(comp) > 6 or pid not in POCKETS: continue
+            cs = set(comp); ring = {(y + dy, x + dx) for y, x in comp for dy in (-1, 0, 1) for dx in (-1, 0, 1)} - cs
+            ring = [(y, x) for y, x in ring if 0 <= y < h and 0 <= x < w]
+            dark = sum(1 for y, x in ring if not al[y, x] or lum[y, x] < 40)
+            if ring and dark / len(ring) >= .7:
+                for y, x in comp: small[y, x, 3] = 0
         # 생성기 표시(✦, 오른쪽 아래 어두운 옷 위의 회색 별): 둘레보다 밝은 점을 둘레 색으로
         y0, y1, x0, x1 = int(h * .855), int(h * .945), int(w * .82), int(w * .91)
         box = small[y0:y1, x0:x1]; lum = box[..., :3].astype(int).mean(-1); med = np.median(lum[box[..., 3] > 0]) if (box[..., 3] > 0).any() else 255
