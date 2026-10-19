@@ -1832,11 +1832,21 @@ World.clockText = d => `${isFullMoon() ? '🌕' : { clear: '✨', rain: '☔', f
 function npcPortrait(n){ return n.av ? `<img src="${World.Avatar.head(npcAv(n))}" alt="">` : npcFace(n.spr); }
 const npcUI = () => $('#npcui');
 function npcClose(){ npcUI().classList.remove('on'); npcUI().innerHTML = ''; }
-const fillVars = (t, id) => String(t || '').replace(/\{([a-z_]+)(?:\.([a-z_]+))?\}/g, (m, a, b) => {
-  if (a === 'player') return me?.nick || '학생';
+// 이름 뒤 조사는 이름의 받침에 맞춰 고쳐요 (이름을 바꿔도 "세라가 / 루카스가 → 루카스가" 같은 실수가 없게)
+const JOSA = [['이에요', '예요'], ['이었', '였'], ['이랑', '랑'], ['이나', '나'], ['이야', '야'], ['으로', '로'], ['은', '는'], ['이', '가'], ['을', '를'], ['과', '와'], ['아', '야']];
+const josaFix = s => s.replace(/([^\uE000])\uE000(이에요|예요|이었|였|이랑|랑|이나|나|이야|으로|로|은|는|이|가|을|를|과|와|아|야)?(?=(.?))/g, (m, last, j, nx) => {
+  if (!j) return last; const c = last.charCodeAt(0); if (c < 0xAC00 || c > 0xD7A3) return last + j;
+  const jong = (c - 0xAC00) % 28, bat = jong > 0;
+  const pair = JOSA.find(p => p.includes(j)) || (j === '로' ? ['으로', '로'] : null); if (!pair) return last + j;
+  if (pair[0] === '으로') return last + (bat && jong !== 8 ? '으로' : '로');   // ㄹ 받침은 "로"
+  if ((j === '야' || j === '아') && /^[,!~\s]?$/.test(nx) && nx !== '' || j === '아') return last + (bat ? '아' : '야');   // 부르는 말: "하늘아," "세라야!"
+  if (j === '야' && !bat) return last + '야';
+  return last + (bat ? pair[0] : pair[1]); });
+const fillVars = (t, id) => josaFix(String(t || '').replace(/\{([a-z_]+)(?:\.([a-z_]+))?\}/g, (m, a, b) => {
+  if (a === 'player') return (me?.nick || '학생') + '\uE000';
   const who = a === 'npc' ? id : a, n = npcGet(who);
-  if (!b) return m; if (b === 'name') return n ? nameVar(n) : m;
-  const v = npcVars(who)[b]; return v !== undefined ? v : m; });
+  if (!b) return m; if (b === 'name') return n ? nameVar(n) + '\uE000' : m;
+  const v = npcVars(who)[b]; return v !== undefined ? v + '\uE000' : m; }));
 function npcPanel(n, text, btns){
   const h = hearts(n.id);
   npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${npcPortrait(n)}</div><div><b>${esc(n.name)}</b><span class="s sub">${esc(n.title || '')}</span><span class="npchr">${heartBar(h)}</span></div><button class="sx" data-nx="close">✕</button></div>
