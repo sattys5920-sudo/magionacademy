@@ -11,7 +11,7 @@ def hx(h): return tuple(int(h[i:i + 2], 16) for i in (1, 3, 5))
 MAT = {'skin': 'skin', 'eye': 'eye', 'hair': 'hair', 'top': 'cloth', 'legs': 'cloth', 'feet': 'cloth', 'hat': 'cloth', 'neck': 'cloth'}
 def compose(av):
     body = M['bodies'][av.get('body', 0)]; layers = []
-    for cat in ('body', 'face', 'hair', 'top', 'legs', 'feet', 'cape', 'neck', 'hat'):
+    for cat in ('body', 'face', 'hair', 'top', 'legs', 'feet', 'cape', 'neck', 'hat', 'acc'):
         p = M['parts'][cat][av.get(cat, 0) % len(M['parts'][cat])]
         for row, z, maps in p['L'].get(body, []): layers.append((z, p['f'], row, maps))
     layers.sort(key=lambda t: t[0]); out = np.zeros((FH, FW * NF, 4), np.uint8)

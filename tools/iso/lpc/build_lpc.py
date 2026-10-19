@@ -38,12 +38,13 @@ SEL['top'] = pick(['torso/shirts/**/*.json', 'torso/dresses/**/*.json', 'torso/j
 SEL['legs'] = pick(['legs/**/*.json'], skip=('armour',))
 SEL['feet'] = pick(['feet/shoes/*.json', 'feet/boots/*.json', 'feet/feet_sandals.json', 'feet/feet_slippers.json'])
 SEL['hat'] = []   # 모자는 옷 가게 것만 (SHOP['hat'])
+SEL['acc'] = []   # 액세서리 (안경·귀걸이·날개·뿔…) = 옷 가게
 SEL_HAT = (
     ['headwear/hats/magic/*.json', 'headwear/hats/formal/*.json', 'headwear/hats/caps/*.json', 'headwear/hats/holiday/*.json', 'headwear/coverings/**/*hood*.json'])
 SEL['cape'] = pick(['torso/cape/cape_solid.json', 'torso/cape/cape_tattered.json'])
 SEL['neck'] = pick(['headwear/neck/*.json'])
 SEL['x'] = pick(['feet/socks/feet_socks_high.json', 'torso/cape/cape_trim.json', 'torso/aprons/torso_aprons_suspenders.json', 'torso/aprons/torso_aprons_overalls.json'])   # 교복 조합에만 써요
-SLOT = {'body': 'skin', 'face': 'skin', 'hair': 'hair', 'top': 'top', 'legs': 'legs', 'feet': 'feet', 'hat': 'hat', 'cape': 'top', 'neck': 'top', 'x': 'top'}
+SLOT = {'body': 'skin', 'face': 'skin', 'hair': 'hair', 'top': 'top', 'legs': 'legs', 'feet': 'feet', 'hat': 'hat', 'cape': 'top', 'neck': 'top', 'x': 'top', 'acc': 'acc'}
 HEAD = {'female': 'head/heads/human/female/', 'male': 'head/heads/human/male/'}
 DROP = {'face': ('Looking Left', 'Looking Right', 'Closing Eyes'),
         'hat': ('Second Color', 'Belt', 'Buckle', 'feather', 'Feather', 'Trim'),
@@ -252,7 +253,108 @@ SHOP = {
          ('마녀 모자', [('raw_witch', None, None)], 'cas', 150), ('마법사 모자', [('raw_wizard', 'hat', None)], 'cas', 150),
          ('별빛 모자', [('raw_celestial', 'hat', None)], 'cas', 170), ('산타 모자', [('raw_santa', None, None)], 'cas', 100)]}
 COMBO['hat'] = []
+# ---------- 옷 가게 3차: 테마 룩(거지·천사·악마·뱀파이어·유령·할로윈) + 귀여운 옷 + 액세서리 ----------
+ONE = lambda col, extra: [(L2, col, None), ('legs_pants2', col, 21), ('raw_hood', col, None)] + extra
+SHOP2 = {
+ 'top': [('호박 니트', [(L2, 'fix:orange', None), ('fx_cable', 'fix:orange', 36), ('fx_pumpkin', 'w', 37)], 'cas', 180),
+         ('박쥐 니트', [(L2, 'cas', None), ('fx_cable', 'cas', 36), ('fx_bat', 'w', 37)], 'cas', 170),
+         ('유령 니트', [(L2, 'cas', None), ('fx_cable', 'cas', 36), ('fx_ghostp', 'w', 37)], 'cas', 170),
+         ('해골 티', [(TEE, 'cas', None), ('fx_skull', 'w', 36)], 'cas', 110),
+         ('고양이 니트', [(L2, 'cas', None), ('fx_cable', 'cas', 36), ('fx_catface', 'w', 37)], 'cas', 170),
+         ('토끼 맨투맨', [(L2, 'cas', None), ('fx_rib_l2', 'cas', 36), ('fx_bunnyface', 'w', 37)], 'cas', 150),
+         ('하트 티', [(TEE, 'cas', None), ('fx_heart', 'w', 36)], 'cas', 100), ('별 티', [(TEE, 'cas', None), ('fx_star', 'w', 36)], 'cas', 100),
+         ('딸기 티', [(TEE, 'cas', None), ('fx_berry', 'w', 36)], 'cas', 110), ('무지개 니트', [(L2, 'cas', None), ('fx_rainbow', 'w', 36)], 'cas', 180),
+         ('줄무늬 니트', [(L2, 'cas', None), ('fx_cable', 'cas', 35), ('fx_long_stripe', 'w', 36)], 'cas', 160),
+         ('리본 블라우스', [('torso_clothes_blouse_longsleeve', 'cas', None), ('fx_bow', 'w', 36)], 'cas', 140),
+         ('땡땡이 블라우스', [('torso_clothes_blouse_longsleeve', 'cas', None), ('fx_blouse_dots', 'w', 36)], 'cas', 140),
+         ('카라 원피스', [('fx_dress_mini', 'cas', None), ('fx_collar', 'w', 32)], 'cas', 180),
+         ('꽃무늬 원피스', [('fx_dress_mini', 'cas', None), ('fx_flowers', 'w', 31)], 'cas', 190),
+         ('체크 원피스', [('fx_dress_mini', 'cas', None), ('fx_dress_check', 'cas', 31)], 'cas', 180),
+         ('앞치마 원피스', [('fx_dress_mini', 'cas', None), ('fx_apron', 'w', 32)], 'cas', 200),
+         ('프릴 원피스', [('fx_dress_mini', 'cas', None), ('fx_frill_d', 'w', 31), ('fx_collar', 'w', 32)], 'cas', 210),
+         ('하와이안 셔츠', [('torso_clothes_longsleeve2_buttoned', 'cas', None), ('fx_shirt_flowers', 'w', 36)], 'cas', 150),
+         ('야구 유니폼', [('torso_clothes_longsleeve2_buttoned', 'cas', None), ('fx_pin', 'cas', 36), ('fx_number', 'w', 37)], 'cas', 180),
+         ('체육복', [(TEE, 'w', None), ('fx_gym', 'cas', 36)], 'cas', 90),
+         ('티 + 니트 조끼', [(TEE, 'w', None), ('torso_clothes_sleeveless2_vneck', 'cas', 36), ('fx_vest_cable', 'cas', 37)], 'cas', 140),
+         ('산타 옷', [(L2, 'fix:red', None), ('fx_santa', 'w', 36)], 'cas', 200),
+         ('누더기 셔츠', [('fx_torn_b', 'fix:tan', None), ('fx_patch_b', 'w', 36)], 'cas', 60),
+         ('누더기 티', [('fx_torn_t', 'cas', None), ('fx_patch_t', 'w', 36)], 'cas', 50),
+         ('누더기 망토 옷', [('fx_torn_b', 'fix:brown', None), ('fx_patch_b', 'w', 36), ('raw_hood', 'fix:brown', None)], 'cas', 80),
+         ('천사 로브', [('raw_robe_white', 'w', None), ('fx_robe_gold', 'w', 36)], 'cas', 240),
+         ('악마 드레스', [('fx_dress_mini', 'fix:red', None), ('fx_collar_blk', 'w', 32)], 'cas', 220),
+         ('악마 정장', [(SH, 'w', None), ('torso_clothes_sleeveless2_vneck', 'fix:black', 36), ('fx_blazer', 'fix:red', 37)], 'cas', 260),
+         ('뱀파이어 정장', [(SH, 'w', None), ('torso_clothes_sleeveless2_vneck', 'fix:red', 36), ('fx_blazer', 'fix:black', 37)], 'cas', 260),
+         ('뱀파이어 드레스', [('fx_dress_mini', 'fix:black', None), ('fx_frill_r', 'w', 31), ('fx_collar', 'w', 32)], 'cas', 260),
+         ('마녀 드레스', [('torso_clothes_blouse_longsleeve', 'fix:black', None), ('dress_bodice', 'fix:purple', None)], 'cas', 240),
+         ('유령 시트', [('raw_robe_white', 'w', None), ('raw_hood', 'fix:white', None), ('fx_ghosteyes', 'w', 131)], 'cas', 220),
+         ('양 잠옷', ONE('fix:white', [('fx_bearears', 'fix:white', 131), ('fx_puff', 'w', 125)]), 'pj', 220),
+         ('펭귄 잠옷', ONE('fix:black', [('fx_belly', 'w', 37)]), 'pj', 240),
+         ('개구리 잠옷', ONE('fix:green', [('fx_frogeyes', 'w', 131)]), 'pj', 240),
+         ('공룡 잠옷', ONE('fix:forest', [('fx_spikes', 'fix:yellow', 36)]), 'pj', 260),
+         ('호박 잠옷', ONE('fix:orange', [('fx_stem', 'w', 131), ('fx_pumpkin', 'w', 37)]), 'pj', 260)],
+ 'legs': [('튜튜', [('fx_tutu', None, None)], 'cas', 120), ('프릴 치마', [('fx_mini', None, None), ('fx_frill_s', 'w', 21)], 'cas', 110),
+          ('꽃무늬 치마', [('fx_mini', None, None), ('fx_skirt_flowers', 'w', 21)], 'cas', 110),
+          ('하트 치마', [('fx_mini', None, None), ('fx_skirt_hearts', 'w', 21)], 'cas', 110),
+          ('체크 반바지', [('legs_shorts', None, None), ('fx_cargo_s_chk', 'legs', 21)], 'cas', 90),
+          ('데님 반바지', [('legs_shorts', None, None), ('fx_jeans_s', 'legs', 21)], 'cas', 90),
+          ('줄무늬 레깅스', [('legs_leggings', None, None), ('fx_leg_stripe', 'w', 21)], 'cas', 80),
+          ('땡땡이 레깅스', [('legs_leggings', None, None), ('fx_leg_dots', 'w', 21)], 'cas', 80),
+          ('검은 스타킹', [('legs_hose', 'fix:black', None)], 'cas', 60), ('흰 스타킹', [('legs_hose', 'w', None)], 'cas', 60),
+          ('누더기 바지', [('fx_torn_p', 'fix:tan', None), ('fx_patch_p', 'w', 21)], 'cas', 50),
+          ('누더기 반바지', [('fx_torn_ps', 'fix:brown', None), ('fx_patch_ps', 'w', 21)], 'cas', 40),
+          ('호박 바지', [('legs_pantaloons', 'fix:orange', None)], 'cas', 120), ('조거 팬츠', [('legs_pants2', None, None), ('fx_jog', 'legs', 21)], 'cas', 110),
+          ('줄무늬 바지', [('legs_pants2', None, None), ('fx_pant_pin', 'w', 21)], 'cas', 120),
+          ('별 무늬 치마', [('fx_mini', None, None), ('fx_skirt_stars', 'w', 21)], 'cas', 110)],
+ 'feet': [('토끼 슬리퍼', [('feet_slippers', 'fix:white', None), ('fx_slip_bunny', 'w', 17)], 'pj', 70),
+          ('곰 슬리퍼', [('feet_slippers', 'fix:brown', None), ('fx_slip_bear', 'fix:brown', 17)], 'pj', 70),
+          ('장화', [('feet_boots_fold', 'fix:yellow', 15)], 'cas', 100), ('빨간 장화', [('feet_boots_fold', 'fix:red', 15)], 'cas', 100),
+          ('하이탑', [('feet_boots_basic', None, 15), ('fx_sole_b', 'w', 16)], 'cas', 130),
+          ('검은 니삭스 + 구두', [('feet_socks_high', 'fix:black', None), ('feet_shoes_revised', None, None)], 'cas', 100),
+          ('분홍 니삭스 + 리본 구두', [('feet_socks_high', 'fix:pink', None), ('feet_shoes_sara', None, None)], 'cas', 100),
+          ('알록달록 니삭스 + 운동화', [SOCK, ('fx_sock_rainbow', 'w', 14.5), ('feet_shoes_basic', None, None), ('fx_sole', 'w', 16)], 'cas', 120),
+          ('샌들', [('feet_sandals', None, None)], 'cas', 60), ('천사 샌들', [('feet_sandals', 'fix:white', None)], 'cas', 90),
+          ('고딕 부츠', [('feet_boots_rim', 'fix:black', 15)], 'cas', 140), ('악마 부츠', [('feet_boots_basic', 'fix:red', 15)], 'cas', 140),
+          ('발레 슈즈', [('feet_slippers', 'fix:pink', None)], 'cas', 80), ('색 로퍼', [('feet_shoes_ghillies', None, None)], 'cas', 80)],
+ 'hat': [('베레모', [('fx_beret', 'hat', None)], 'cas', 90), ('호박 모자', [('fx_beanie', 'fix:orange', None), ('fx_pumpkinhat', 'w', 131)], 'cas', 120),
+         ('개구리 모자', [('fx_beanie', 'fix:green', None), ('fx_frogeyes', 'w', 131)], 'cas', 120),
+         ('리본 머리띠', [('raw_headband', 'hat', None), ('fx_ribbon', 'w', 131)], 'cas', 80),
+         ('꽃 화관', [('raw_headband', 'fix:forest', None), ('fx_flowercrown', 'w', 131)], 'cas', 110),
+         ('곰 귀 머리띠', [('raw_headband', 'hat', None), ('fx_bearears', 'hat', 131)], 'cas', 90),
+         ('토끼 귀 머리띠', [('raw_headband', 'hat', None), ('fx_bunnyears', 'hat', 131)], 'cas', 100),
+         ('악마 뿔 머리띠', [('raw_headband', 'fix:black', None), ('fx_devilhorns', 'w', 131)], 'cas', 110),
+         ('유령 후드', [('raw_hood', 'fix:white', None), ('fx_ghosteyes', 'w', 131)], 'cas', 110),
+         ('해적 두건', [('raw_pbandana', None, None)], 'cas', 80), ('해적 모자', [('raw_tricorne', 'hat', None)], 'cas', 150),
+         ('중절모', [('raw_bowler', 'hat', None)], 'cas', 130), ('실크햇', [('raw_tophat', 'hat', None)], 'cas', 160),
+         ('왕관', [('raw_crown', None, None)], 'cas', 250), ('티아라', [('raw_tiara', None, None)], 'cas', 220),
+         ('보닛', [('raw_bonnie', 'hat', None)], 'cas', 120), ('깃털 모자', [('raw_cavalier', 'hat', None)], 'cas', 160),
+         ('가죽 모자', [('raw_leathercap', 'hat', None)], 'cas', 110), ('스카프 두건', [('raw_kerchief', None, None)], 'cas', 70)],
+ 'acc': [('안경', [('raw_g_glasses', 'acc', None)], 'cas', 80), ('동그란 안경', [('raw_g_round', 'acc', None)], 'cas', 90),
+         ('뿔테 안경', [('raw_g_nerd', 'acc', None)], 'cas', 90), ('반달 안경', [('raw_g_halfmoon', 'acc', None)], 'cas', 90),
+         ('세모 안경', [('raw_g_secretary', 'acc', None)], 'cas', 90), ('작은 선글라스', [('raw_g_shades', None, None)], 'cas', 100),
+         ('선글라스', [('raw_g_sunglasses', None, None)], 'cas', 110), ('외눈 안경', [('raw_monocle', None, None)], 'cas', 120),
+         ('안대', [('raw_eyepatch', None, None)], 'cas', 70), ('마스크', [('raw_mask', 'acc', None)], 'cas', 60),
+         ('달 귀걸이', [('raw_e_moon', None, None)], 'cas', 90), ('진주 귀걸이', [('raw_e_pear', None, None)], 'cas', 100),
+         ('보석 귀걸이', [('raw_e_emerald', None, None)], 'cas', 110), ('반짝 귀걸이', [('raw_e_stud', None, None)], 'cas', 80),
+         ('천사 고리', [('fx_halo', 'w', 135)], 'cas', 200), ('악마 뿔', [('raw_horns', 'fix:red', None)], 'cas', 180),
+         ('양 뿔', [('raw_ramhorns', 'acc', None)], 'cas', 160), ('엘프 귀', [('raw_elfears', 'skin', None)], 'cas', 120),
+         ('토끼처럼 긴 귀', [('raw_longears', 'skin', None)], 'cas', 120),
+         ('천사 날개', [('raw_angelwings', 'w', None)], 'cas', 300), ('박쥐 날개', [('raw_batwings', 'acc', None)], 'cas', 280),
+         ('요정 날개', [('raw_fairywings', 'acc', None)], 'cas', 300), ('고양이 꼬리', [('raw_cattail', 'acc', None)], 'cas', 150),
+         ('여우 꼬리', [('raw_foxtail', 'acc', None)], 'cas', 160), ('악마 꼬리', [('raw_cattail', 'fix:red', None)], 'cas', 160)],
+ 'neck': [('별 목걸이', [('raw_n_star', None, None)], 'cas', 100), ('십자 목걸이', [('raw_n_cross', None, None)], 'cas', 100),
+          ('거미 목걸이', [('raw_n_spider', None, None)], 'cas', 110), ('흔들 목걸이', [('raw_n_dangle', None, None)], 'cas', 100),
+          ('네모 펜던트', [('raw_n_box', None, None)], 'cas', 90), ('타원 펜던트', [('raw_n_oval', None, None)], 'cas', 90),
+          ('반지 목걸이', [('raw_n_ring', None, None)], 'cas', 90), ('별 펜던트', [('raw_n_charmstar', None, None)], 'cas', 90),
+          ('자보 (레이스 목장식)', [('neck_jabot', 'w', None)], 'cas', 120)],
+ 'cape': [('해진 망토', [('cape_tattered', 'cas', None)], 'cas', 60), ('색 망토', [('cape_solid', 'cas', None)], 'cas', 120),
+          ('뱀파이어 망토', [('cape_solid', ('fix:black', 'fix:red'), None), ('cape_trim', 'fix:red', None)], 'cas', 260),
+          ('천사 망토', [('cape_solid', 'fix:white', None), ('cape_trim', 'fix:yellow', None)], 'cas', 240),
+          ('악마 망토', [('cape_solid', ('fix:red', 'fix:black'), None), ('cape_trim', 'fix:black', None)], 'cas', 240)]}
+COMBO['acc'] = []
+COMBO['neck'] = [('넥타이', [('neck_necktie', None, None)]), ('나비넥타이', [('neck_bowtie', None, None)]), ('나비넥타이 2', [('neck_bowtie2', None, None)]),
+                 ('크라바트', [('neck_cravat', None, None)]), ('목도리', [('neck_scarf', None, None)])]
 for cat, lst in SHOP.items(): COMBO[cat] = [(n, c, 'uni', 0) for n, c in COMBO[cat]] + lst
+for cat, lst in SHOP2.items(): COMBO[cat] = [r if len(r) > 2 else (r[0], r[1], 'uni', 0) for r in COMBO.get(cat, [])] + lst
 pool = {e['id']: e for es in items.values() for e in es}
 # 직접 손본 그림 (fx:종류:원본): 블레이저(카디건 + 깃·길이), 가슴 배지, 주름치마·짧은 치마 (무릎 위)
 def fxent(base, kind, sl=None):
@@ -280,12 +382,43 @@ RAW = {'raw_hood': [(130, 'hat/cloth/hood/adult/walk.png')], 'raw_headband': [(1
        'raw_wolfears': [(130, 'fx:tocloth:' + SP_ + 'head/ears/wolf/adult/fg/walk.png'), (8, 'fx:tocloth:' + SP_ + 'head/ears/wolf/adult/bg/walk.png')],
        'raw_cattail': [(125, 'fx:tocloth:' + SP_ + 'body/tail/cat/adult/fg/walk/white.png'), (5, 'fx:tocloth:' + SP_ + 'body/tail/cat/adult/bg/walk/white.png')],
        'raw_foxtail': [(125, 'fx:tocloth:' + SP_ + 'body/tail/fluffy/adult/fg/walk/white.png'), (5, 'fx:tocloth:' + SP_ + 'body/tail/fluffy/adult/bg/walk/white.png')]}
-for c in ('black', 'purple', 'blue', 'red'): RAW['raw_robe_' + c] = [(35, 'torso/clothes/robe/female/walk/%s.png' % c)]
+for c in ('black', 'purple', 'blue', 'red', 'white'): RAW['raw_robe_' + c] = [(35, 'torso/clothes/robe/female/walk/%s.png' % c)]
+TC = lambda f: 'fx:tocloth:' + SP_ + f
+RAW.update({'raw_pbandana': [(120, 'hat/pirate/bandana/adult/walk.png')], 'raw_tricorne': [(130, 'hat/pirate/tricorne/basic/adult/walk.png')],
+            'raw_bowler': [(130, 'hat/formal/bowler/adult/walk.png')], 'raw_tophat': [(130, 'hat/formal/tophat/adult/walk.png')],
+            'raw_crown': [(130, 'hat/formal/crown/adult/walk.png')], 'raw_tiara': [(130, 'hat/formal/tiara/adult/walk.png')],
+            'raw_bonnie': [(130, 'hat/pirate/bonnie/adult/walk.png')], 'raw_cavalier': [(130, 'hat/pirate/cavalier/adult/walk.png')],
+            'raw_leathercap': [(130, 'hat/cloth/leather_cap/adult/walk.png')], 'raw_kerchief': [(125, 'hat/pirate/kerchief/adult/walk.png')],
+            'raw_monocle': [(115, 'facial/monocle/right/adult/walk.png')], 'raw_eyepatch': [(115, 'facial/patches/eyepatch/right/adult/walk.png')],
+            'raw_mask': [(115, 'facial/masks/plain/adult/walk.png')],
+            'raw_e_moon': [(115, 'facial/earrings/moon/female/walk.png')], 'raw_e_pear': [(115, 'facial/earrings/pear/female/walk.png')],
+            'raw_e_emerald': [(115, 'facial/earrings/emerald/female/walk.png')], 'raw_e_stud': [(115, 'facial/earrings/stud/female/walk.png')],
+            'raw_horns': [(126, TC('head/horns/curled/adult/walk.png'))],
+            'raw_ramhorns': [(126, TC('head/horns/backwards/adult/fg/walk.png')), (7, TC('head/horns/backwards/adult/bg/walk.png'))],
+            'raw_elfears': [(105, 'head/ears/elven/adult/walk.png')], 'raw_longears': [(105, 'head/ears/long/adult/walk.png')],
+            'raw_angelwings': [(105, 'body/wings/feathered/adult/fg/walk/white.png'), (5, 'body/wings/feathered/adult/bg/walk/white.png')],
+            'raw_batwings': [(105, TC('body/wings/bat/adult/fg/walk/white.png')), (5, TC('body/wings/bat/adult/bg/walk/white.png'))],
+            'raw_fairywings': [(105, TC('body/wings/lunar/fg/walk/white.png')), (5, TC('body/wings/lunar/bg/walk/white.png'))]})
+for g in ('glasses', 'round', 'nerd', 'halfmoon', 'secretary', 'shades', 'sunglasses'): RAW['raw_g_' + g] = [(115, 'facial/glasses/%s/adult/walk.png' % g)]
+for n, f in (('star', 'amulet/star'), ('cross', 'amulet/cross'), ('spider', 'amulet/spider'), ('dangle', 'amulet/dangle'), ('box', 'charm/box'),
+             ('oval', 'charm/oval'), ('ring', 'charm/ring'), ('charmstar', 'charm/star')): RAW['raw_n_' + n] = [(92, 'neck/%s/female/walk.png' % f)]
 for k, Ls in RAW.items(): pool[k] = dict(L={b: [(z, f if f.startswith('fx:') else SP_ + f, 'cloth', 'white', None) for z, f in Ls] for b in BODIES})
 RAW_DEFS = ['headwear/coverings/hoods/hat_hood_cloth.json', 'headwear/coverings/headbands/hat_headband_thick.json', 'headwear/coverings/bandana/hat_bandana.json',
             'headwear/hats/holiday/hat_holiday_christmas.json', 'headwear/hats/magic/hat_magic_large.json', 'headwear/hats/magic/hat_magic_wizard.json',
             'headwear/hats/magic/hat_magic_celestial.json', 'head/furry_ears/top/head_ears_cat.json', 'head/furry_ears/top/head_ears_wolf.json',
-            'body/tails/tail_cat.json', 'body/tails/tail_wolf_fluffy.json', 'torso/shirts/torso_clothes_robe.json']
+            'body/tails/tail_cat.json', 'body/tails/tail_wolf_fluffy.json', 'torso/shirts/torso_clothes_robe.json',
+            'headwear/coverings/bandana/hat_bandana_pirate.json', 'headwear/hats/tricorne/hat_tricorne.json', 'headwear/hats/formal/hat_formal_bowler.json',
+            'headwear/hats/formal/hat_formal_tophat.json', 'headwear/hats/formal/hat_formal_crown.json', 'headwear/hats/formal/hat_formal_tiara.json',
+            'headwear/hats/caps/hat_cap_bonnie.json', 'headwear/hats/caps/hat_cap_cavalier.json', 'headwear/hats/caps/hat_cap_leather.json',
+            'headwear/coverings/headbands/hat_headband_kerchief.json', 'headwear/accessories/monocle/facial_monocle_right.json',
+            'headwear/accessories/eyepatch/facial_eyepatch_right.json', 'headwear/accessories/facial_mask_plain.json',
+            'headwear/accessories/earrings/facial_earrings_moon.json', 'headwear/accessories/earrings/facial_earrings_pear.json',
+            'headwear/accessories/earrings/facial_earrings_emerald.json', 'headwear/accessories/earrings/facial_earrings_stud.json',
+            'head/appendages/head_horns_curled.json', 'head/appendages/head_horns_backwards.json', 'head/ears/head_ears_elven.json', 'head/ears/head_ears_long.json',
+            'body/wings/wings_feathered.json', 'body/wings/wings_bat.json', 'body/wings/wings_lunar.json',
+            'headwear/neck/charms/neck_amulet_star.json', 'headwear/neck/charms/neck_amulet_cross.json', 'headwear/neck/charms/neck_amulet_spider.json',
+            'headwear/neck/charms/neck_amulet_dangle.json', 'headwear/neck/charms/neck_charm_box.json', 'headwear/neck/charms/neck_charm_oval.json',
+            'headwear/neck/charms/neck_charm_ring.json', 'headwear/neck/charms/neck_charm_star.json'] + ['headwear/accessories/glasses/facial_glasses%s.json' % g for g in ('', '_round', '_nerd', '_halfmoon', '_secretary', '_shades', '_sunglasses')]
 # 그려 넣는 무늬·부품 (원본 그림을 보고 위치를 잡아요)
 HOODF = SP_ + 'hat/cloth/hood/adult/walk.png'
 FXDRAW = {'fx_hoodie': (L2, 'hoodie'), 'fx_hoodstr': (L2, 'hoodstr'), 'fx_cable': (L2, 'cable'), 'fx_nordic': (L2, 'nordic'), 'fx_heart': (L2, 'heart'),
@@ -302,7 +435,25 @@ FXDRAW.update({'fx_pj_stripe': ('torso_clothes_longsleeve2_buttoned', 'stripe'),
                'fx_pstripe_s': ('legs_shorts', 'pstripe'), 'fx_checkmini': ('legs_skirts_plain', 'checkmini'), 'fx_checkpants': ('legs_pants2', 'check'),
                'fx_pleatlong': ('legs_skirts_plain', 'pleatlong'), 'fx_tennis': ('legs_skirts_plain', 'tennis'), 'fx_denimmini': ('legs_skirts_plain', 'denimmini'),
                'fx_jeans': ('legs_pants2', 'jeans'), 'fx_cargo': ('legs_pants2', 'cargo'), 'fx_cargo_s': ('legs_shorts', 'cargo'), 'fx_sole': ('feet_shoes_basic', 'sole')})
+FXDRAW.update({'fx_pumpkin': (L2, 'pumpkin'), 'fx_bat': (L2, 'bat'), 'fx_ghostp': (L2, 'ghostp'), 'fx_skull': (TEE, 'skull'), 'fx_catface': (L2, 'catface'),
+               'fx_bunnyface': (L2, 'bunnyface'), 'fx_berry': (TEE, 'berry'), 'fx_rainbow': (L2, 'rainbow'), 'fx_bow': ('torso_clothes_blouse_longsleeve', 'bow'),
+               'fx_blouse_dots': ('torso_clothes_blouse_longsleeve', 'dots'), 'fx_collar': ('dress_sash', 'collar'), 'fx_collar_blk': ('dress_sash', 'collarblk'),
+               'fx_flowers': ('dress_sash', 'flowersshort'), 'fx_dress_check': ('dress_sash', 'checkshort'), 'fx_apron': ('dress_sash', 'apron'),
+               'fx_frill_d': ('dress_sash', 'frillshort'), 'fx_frill_r': ('dress_sash', 'frillshortred'), 'fx_shirt_flowers': ('torso_clothes_longsleeve2_buttoned', 'flowers'),
+               'fx_pin': ('torso_clothes_longsleeve2_buttoned', 'pin'), 'fx_number': ('torso_clothes_longsleeve2_buttoned', 'number'), 'fx_gym': (TEE, 'gym'), 'fx_santa': (L2, 'santa'),
+               'fx_torn_b': ('torso_clothes_longsleeve2_buttoned', 'torn'), 'fx_patch_b': ('torso_clothes_longsleeve2_buttoned', 'patch'), 'fx_torn_t': (TEE, 'torn'), 'fx_patch_t': (TEE, 'patch'),
+               'fx_robe_gold': ('torso_clothes_robe', 'robegold'), 'fx_belly': (L2, 'belly'), 'fx_spikes': (L2, 'spikes'),
+               'fx_tutu': ('legs_skirts_plain', 'tutu'), 'fx_frill_s': ('legs_skirts_plain', 'frillmini'), 'fx_skirt_flowers': ('legs_skirts_plain', 'flowersmini'),
+               'fx_skirt_hearts': ('legs_skirts_plain', 'heartsmini'), 'fx_skirt_stars': ('legs_skirts_plain', 'starsmini'),
+               'fx_cargo_s_chk': ('legs_shorts', 'check'), 'fx_jeans_s': ('legs_shorts', 'jeans'), 'fx_leg_stripe': ('legs_leggings', 'stripe'),
+               'fx_leg_dots': ('legs_leggings', 'dots'), 'fx_torn_p': ('legs_pants2', 'torn'), 'fx_patch_p': ('legs_pants2', 'patch'),
+               'fx_torn_ps': ('legs_shorts', 'torn'), 'fx_patch_ps': ('legs_shorts', 'patch'), 'fx_jog': ('legs_pants2', 'jog'), 'fx_pant_pin': ('legs_pants2', 'pinw'),
+               'fx_slip_bunny': ('feet_slippers', 'slipbunny'), 'fx_slip_bear': ('feet_slippers', 'slipbear'), 'fx_sole_b': ('feet_boots_basic', 'sole'),
+               'fx_sock_rainbow': ('feet_socks_high', 'rainbowsock')})
 for k, (base, kind) in FXDRAW.items(): pool[k] = fxent(base, kind)
+for k, kind in (('fx_beret', 'beret'), ('fx_pumpkinhat', 'pumpkinhat'), ('fx_frogeyes', 'frogeyes'), ('fx_ribbon', 'ribbon'), ('fx_flowercrown', 'flowercrown'),
+                ('fx_devilhorns', 'devilhorns'), ('fx_ghosteyes', 'ghosteyes'), ('fx_halo', 'halo'), ('fx_stem', 'stem')):
+    pool[k] = dict(L={b: [(130, 'fx:%s:%s' % (kind, HOODF), 'cloth', 'white', None)] for b in BODIES})
 for k, kind in (('fx_beanie', 'beanie'), ('fx_pompom', 'pompom'), ('fx_bearears', 'bearears'), ('fx_bunnyears', 'bunnyears'),
                 ('fx_bearears_b', 'bearearsb'), ('fx_bunnyears_b', 'bunnyearsb')):
     pool[k] = dict(L={b: [(130, 'fx:%s:%s' % (kind, HOODF), 'cloth', 'white', None)] for b in BODIES})
@@ -321,7 +472,7 @@ for cat, lst in COMBO.items():
         if e['L']: out.append(e)
     items[cat] = out
 del items['x']
-KEEP = {'neck': ['neck_necktie', 'neck_bowtie', 'neck_bowtie2', 'neck_cravat', 'neck_scarf']}
+KEEP = {}
 for cat, ids in KEEP.items():
     by = {e['id']: e for e in items[cat]}; items[cat] = [by[i] for i in ids if i in by]
 need = {f for es in items.values() for e in es for Ls in e['L'].values() for _, f, _, _, _ in Ls}
@@ -405,7 +556,7 @@ def fx_pattern(a, kind):
                     if kind == 'dots' and (y - y0) % 4 == 1 and (x + 2 * (((y - y0) // 4) % 2)) % 4 == 0: setc(oc, y, x, 5)
     return o
 # ---------- 옷 가게용 그려 넣기 ----------
-HAIRC = {tuple(int(h[i:i + 2], 16) for i in (1, 3, 5)): k for pal in PAL['hair'].values() for k, h in enumerate(pal)}
+HAIRC = {tuple(int(h[i:i + 2], 16) for i in (1, 3, 5)): k for pal in list(PAL['hair'].values()) + list(PAL['body'].values()) for k, h in enumerate(pal)}
 def fx_tocloth(a):
     """털·귀 그림(hair 팔레트) → 천 흰 팔레트 (같은 칸 번호) : 옷 색으로 칠할 수 있게"""
     a = a.copy(); m = a[..., 3] > 0
@@ -704,6 +855,213 @@ def fx_minipleat2(a):
                 if m[y, x] and m[y, x - 1] and m[y, x + 1] and x % 2 == 0:
                     i = pidx(cl[y, x]); setc(cl, y, x, i - 1) if i > 1 else None
     return a
+# ---------- 옷 가게 3차 그리기: 프린트·무늬·테마 ----------
+SPR = {   # 프린트 (# = 주색, k = 진한색, 그 밖 글자는 색 이름)
+ 'pumpkin': (['k.k.k', 'kk.kk', '.....', 'k.k.k', '.kkk.'], {'k': (70, 30, 10)}),
+ 'bat': (['#.....#', '##.#.##', '#######', '.##.##.'], {'#': (40, 30, 50)}),
+ 'ghostp': (['.###.', '#k#k#', '#####', '#####', '#.#.#'], {'#': (250, 250, 250), 'k': (40, 40, 50)}),
+ 'skull': (['.###.', '#k#k#', '##.##', '.###.', '.#.#.'], {'#': (245, 240, 230), 'k': (40, 30, 40)}),
+ 'catface': (['#...#', '##.##', '#####', '#k#k#', '##p##', '.###.'], {'#': (250, 250, 250), 'k': (40, 30, 40), 'p': (240, 140, 160)}),
+ 'bunnyface': (['#.#', '#.#', '###', 'k#k', '#p#'], {'#': (250, 250, 250), 'k': (40, 30, 40), 'p': (240, 140, 160)}),
+ 'berry': (['.g.g.', '.ggg.', '#####', '#y#y#', '.###.', '..#..'], {'#': (226, 60, 70), 'g': (70, 160, 70), 'y': (250, 230, 120)}),
+ 'bow': (['#.#', '###', '#.#'], {'#': (230, 80, 120)}),
+ 'number': (['###', '..#', '.#.', '.#.'], {'#': (250, 250, 250)}),
+ 'belly': (['.####.', '######', '######', '######', '.####.'], {'#': (250, 250, 250)}),
+}
+FLOWER = [(240, 120, 160), (250, 220, 90), (250, 250, 250), (150, 200, 250)]
+def fx_more3(a, kind):
+    if kind in ('flowersshort', 'checkshort', 'frillshort', 'frillshortred', 'collar', 'collarblk', 'apron'): a = fx_pleat(a, pleat=False)
+    if kind in ('frillmini', 'flowersmini', 'heartsmini', 'starsmini'): a = fx_pleat(a, hem=50, pleat=False)
+    if kind == 'tutu':
+        a = fx_pleat(a, hem=49, pleat=False).copy()
+        def g(cl, oc, r, m):
+            ys = np.nonzero(m.any(1))[0]; t, y1 = int(ys.min()), int(ys.max())
+            for y in range(max(t, y1 - 3), y1 + 1):
+                xs = np.nonzero(m[y])[0]
+                if not len(xs): continue
+                L_, R_ = int(xs.min()), int(xs.max()); grow = 1 + (y - (y1 - 3)) // 2
+                for k in range(1, grow + 1):
+                    for e, sg in ((L_, -1), (R_, 1)):
+                        x = e + sg * k
+                        if 0 < x < 63: cl[y, x] = cl[y, e]; cl[y, e] = cl[y, e - sg]
+            for x in range(64):
+                if cl[y1, x, 3] and x % 2: cl[y1, x] = 0
+        each(a, g, out=a); return fx_minipleat(a)
+    if kind == 'torn':
+        a = a.copy()
+        def g(cl, oc, r, m):
+            y1 = int(np.nonzero(m.any(1))[0].max())
+            for x in range(64):
+                if m[y1, x] and (x // 2) % 2 == 0:
+                    cl[y1, x] = 0
+                    if m[y1 - 1, x]: setc(cl, y1 - 1, x, 0)
+        each(a, g, out=a); return a
+    if kind == 'beret':
+        a = fx_beanie(a, rows=5).copy()
+        def g(cl, oc, r, m):
+            t = top_of(m)
+            for y in range(t + 2, t + 5):
+                xs = np.nonzero(cl[y, :, 3])[0]
+                if len(xs): R_ = int(xs.max()); cl[y, R_ + 1] = cl[y, R_]; setc(cl, y, R_ + 1, 1)
+            l, rr = span(m, t + 1); setc(cl, t - 1, (l + rr) // 2, 1)
+        each(a, g, out=a); return a
+    def f(cl, oc, r, m):
+        ys = np.nonzero(m.any(1))[0]; t, y1 = int(ys.min()), int(ys.max()); front, back, side = r == 2, r == 0, r in (1, 3)
+        I = lambda y, x: pidx(cl[y, x]) if m[y, x] else -1
+        def spr(name, y0, x0, only=None):
+            rows, pal = SPR[name]
+            for dy, row in enumerate(rows):
+                for dx, ch in enumerate(row):
+                    if ch != '.' and m[y0 + dy, x0 + dx]: put(oc, y0 + dy, x0 + dx, rgb=pal.get(ch, (250, 250, 250)))
+        l, rr = span(m, t + 1); cx = (l + rr) // 2
+        if kind in SPR and kind not in ('number', 'bow', 'belly'):
+            if front: spr(kind, t + 4, 32 - len(SPR[kind][0][0]) // 2)
+        elif kind == 'bow':
+            if front: spr('bow', t + 1, 31)
+        elif kind == 'number':
+            if back: spr('number', t + 4, 31)
+            if front: spr('number', t + 4, 35)
+        elif kind == 'belly':
+            if front: spr('belly', t + 5, 29)
+        elif kind == 'rainbow':
+            cols = [(230, 70, 70), (240, 150, 60), (240, 220, 80), (100, 190, 100), (90, 140, 230)]
+            for k, c in enumerate(cols):
+                for x in range(64):
+                    if inner(m, t + 4 + k, x): put(oc, t + 4 + k, x, rgb=c)
+        elif kind in ('collar', 'collarblk'):
+            c = (250, 250, 250) if kind == 'collar' else (30, 24, 34)
+            for x in range(64):
+                for y in (t, t + 1):
+                    if m[y, x] and (not front or abs(x - 31.5) < 6): put(oc, y, x, rgb=c)
+        elif kind in ('flowersshort', 'flowers', 'flowersmini'):
+            k = 0
+            for y in range(t + 1, y1):
+                for x in range(64):
+                    if inner(m, y, x) and (y - t) % 3 == 1 and (x + (y - t) // 3 * 2) % 4 == 0: put(oc, y, x, rgb=FLOWER[k % 4]); k += 1
+        elif kind in ('heartsmini', 'starsmini'):
+            c = (240, 100, 140) if kind == 'heartsmini' else (250, 230, 110)
+            for y in range(t + 1, y1):
+                for x in range(64):
+                    if inner(m, y, x) and (y - t) % 3 == 1 and (x + (y - t) // 3 * 2) % 5 == 0:
+                        put(oc, y, x, rgb=c)
+                        if kind == 'heartsmini' and inner(m, y, x + 1): put(oc, y, x + 1, rgb=c)
+        elif kind == 'checkshort':
+            for y in range(64):
+                for x in range(64):
+                    if inner(m, y, x) and I(y, x) > 1 and (((x - 32) % 4 == 0) or ((y - t) % 4 == 2)): put(oc, y, x, I(y, x) - 1)
+        elif kind == 'apron':
+            if front or side:
+                for y in range(t + 3, y1 + 1):
+                    for x in (range(27, 37) if front else range(*((span(m, y)[0], span(m, y)[0] + 3) if r == 1 else (span(m, y)[1] - 2, span(m, y)[1] + 1)))):
+                        if m[y, x]: put(oc, y, x, rgb=(250, 250, 250) if y < y1 or x % 2 else (220, 220, 230))
+        elif kind in ('frillshort', 'frillshortred', 'frillmini', 'frill'):
+            c = (250, 250, 250) if kind != 'frillshortred' else (200, 40, 60)
+            for x in range(64):
+                if m[y1, x]: put(oc, y1, x, rgb=c)
+                if m[y1 - 1, x] and x % 2 == 0: put(oc, y1 - 1, x, rgb=c)
+        elif kind == 'pin':
+            for y in range(t + 1, y1 + 1):
+                for x in range(64):
+                    if inner(m, y, x) and I(y, x) > 1 and (x - 32) % 3 == 0: put(oc, y, x, I(y, x) - 1)
+        elif kind == 'pinw':
+            for y in range(t + 1, y1 + 1):
+                for x in range(64):
+                    if inner(m, y, x) and (x - 32) % 3 == 0: put(oc, y, x, 5)
+        elif kind == 'gym':
+            for x in range(64):
+                if m[t, x]: put(oc, t, x, 2)
+            for y in range(t + 1, t + 6):
+                for x in (22, 41):
+                    if not side and m[y, x]: put(oc, y, x, 3)
+        elif kind == 'santa':
+            for y in (y1 - 1, y1):
+                for x in range(64):
+                    if m[y, x]: put(oc, y, x, rgb=(250, 250, 250) if y == y1 - 1 else (225, 225, 235))
+            if front:
+                for y in range(t + 1, y1 - 1):
+                    if m[y, 32]: put(oc, y, 32, rgb=(250, 250, 250))
+        elif kind == 'patch':
+            for (py, px, c) in ((t + 5, 26, (150, 105, 60)), (t + 9, 35, (190, 160, 110)), (t + 3, 37, (120, 90, 70))):
+                if side: px = (l + rr) // 2
+                for dy in range(3):
+                    for dx in range(3):
+                        if m[py + dy, px + dx]: put(oc, py + dy, px + dx, rgb=c if (dy, dx) != (1, 1) else (90, 60, 40))
+        elif kind == 'robegold':
+            for x in range(64):
+                if m[y1 - 1, x]: put(oc, y1 - 1, x, rgb=(236, 196, 84))
+            if front:
+                for y in range(t + 1, y1 - 1):
+                    if m[y, 32]: put(oc, y, 32, rgb=(236, 196, 84))
+        elif kind == 'spikes':
+            if back:
+                for y in range(t + 1, y1, 3):
+                    for dy, w_ in ((0, 0), (1, 1)):
+                        for x in range(32 - w_, 33 + w_): put(oc, y + dy, x, 4)
+            elif side:
+                bx = rr if r == 1 else l
+                for y in range(t + 1, y1, 3): put(oc, y, bx + (1 if r == 1 else -1), 4); put(oc, y + 1, bx, 4)
+        elif kind == 'jog':
+            for y in (y1 - 1, y1):
+                for x in range(64):
+                    if m[y, x] and x % 2 == 0 and I(y, x) > 1: put(oc, y, x, I(y, x) - 1)
+        elif kind == 'rainbowsock':
+            cols = [(230, 70, 70), (240, 200, 60), (100, 190, 100), (90, 140, 230)]
+            for y in range(t, y1 + 1):
+                if (y - t) % 2 == 0:
+                    for x in range(64):
+                        if inner(m, y, x): put(oc, y, x, rgb=cols[((y - t) // 2) % 4])
+        elif kind in ('slipbunny', 'slipbear'):
+            # 발마다 (서로 떨어진 덩어리) 맨 위에 귀
+            xs = [x for x in range(64) if m[t:t + 3, x].any()]
+            groups, cur = [], []
+            for x in xs:
+                if cur and x != cur[-1] + 1: groups.append(cur); cur = []
+                cur.append(x)
+            if cur: groups.append(cur)
+            for gx in groups[:2]:
+                c = (gx[0] + gx[-1]) // 2; ty = min(y for y in range(64) if m[y, gx[0]:gx[-1] + 1].any())
+                if kind == 'slipbunny':
+                    for ex in (c - 1, c + 1): put(oc, ty - 1, ex, rgb=(250, 250, 250)); put(oc, ty - 2, ex, rgb=(250, 250, 250))
+                else:
+                    for ex in (c - 1, c + 1): put(oc, ty - 1, ex, 2)
+    return each(a, f)
+def fx_hat3(a, kind):
+    """머리 위 장식 (후드 그림으로 머리 위치를 재요)"""
+    def f(cl, oc, r, m):
+        t = top_of(m); l, rr = span(m, t + 1); cx = (l + rr) // 2; side = r in (1, 3)
+        G, Y, K, W_, R_ = (80, 160, 70), (250, 220, 90), (30, 24, 34), (250, 250, 250), (220, 40, 50)
+        if kind in ('stem', 'pumpkinhat'):
+            put(oc, t - 1, cx, rgb=G); put(oc, t - 2, cx, rgb=G); put(oc, t - 2, cx + 1, rgb=G)
+            if kind == 'pumpkinhat':
+                for y in range(t + 1, t + 6):
+                    for x in (cx - 3, cx + 3):
+                        if m[y, x]: put(oc, y, x, rgb=(200, 100, 30))
+        elif kind == 'frogeyes':
+            for ex in ([cx - 3, cx + 3] if not side else [cx]):
+                for dy, row in enumerate(['.##.', '#ww#', '#wk#']):
+                    for dx, ch in enumerate(row):
+                        if ch != '.': put(oc, t - 2 + dy, ex - 2 + dx, rgb={'#': (60, 120, 50), 'w': W_, 'k': K}[ch])
+        elif kind == 'ribbon':
+            x0 = l + 1 if not side else cx
+            for dy, row in enumerate(['#.#', '###', '#.#']):
+                for dx, ch in enumerate(row):
+                    if ch == '#': put(oc, t + 1 + dy, x0 + dx, rgb=(235, 90, 130))
+        elif kind == 'flowercrown':
+            k = 0
+            for x in range(l, rr + 1, 2): put(oc, t + 2, x, rgb=FLOWER[k % 4]); k += 1
+        elif kind == 'devilhorns':
+            for ex in ([cx - 4, cx + 3] if not side else [cx]):
+                for dy, w_ in ((0, 1), (1, 2), (2, 2)):
+                    for dx in range(w_): put(oc, t - 3 + dy, ex + dx, rgb=R_ if dy < 2 else (150, 20, 30))
+        elif kind == 'ghosteyes':
+            if r == 2:
+                for ex in (cx - 2, cx + 2): put(oc, t + 2, ex, rgb=K); put(oc, t + 3, ex, rgb=K)
+        elif kind == 'halo':
+            w_ = 4 if not side else 3
+            for x in range(cx - w_, cx + w_ + 1):
+                put(oc, t - 4, x, rgb=Y if abs(x - cx) < w_ else (230, 180, 60))
+                if abs(x - cx) >= w_ - 1: put(oc, t - 3, x, rgb=(230, 180, 60))
+    return each(a, f)
 FXF = {'blazer': fx_blazer, 'emblem': fx_emblem, 'pleat': fx_pleat, 'short': lambda a: fx_pleat(a, pleat=False),
        'stripe': lambda a: fx_pattern(a, 'stripe'), 'dots': lambda a: fx_pattern(a, 'dots'),
        'dotsshort': lambda a: fx_pattern(fx_pleat(a, pleat=False), 'dots'),
@@ -712,6 +1070,10 @@ FXF = {'blazer': fx_blazer, 'emblem': fx_emblem, 'pleat': fx_pleat, 'short': lam
        'nordic': lambda a: fx_knit(a, 'nordic'), 'heart': fx_heart, 'coat': fx_coat, 'puff': fx_puff, 'beanie': fx_beanie,
        'pompom': lambda a: fx_hatdraw(a, 'pompom'), 'bearears': lambda a: fx_hatdraw(a, 'bear'), 'bunnyears': lambda a: fx_hatdraw(a, 'bunny'),
        **{k: (lambda kk: lambda a: fx_more(a, kk))(k) for k in ('jersey', 'tjersey', 'varsity', 'rib', 'mech', 'mechpatch', 'ovpocket', 'dbtn', 'sailor', 'sailorw', 'gaku', 'gakubtn', 'star', 'bearprint', 'zip', 'quilt', 'denim', 'pstripe', 'checkmini', 'pleatlong', 'tennis', 'denimmini', 'jeans', 'cargo', 'sole')},
+       **{k: (lambda kk: lambda a: fx_more3(a, kk))(k) for k in ('pumpkin', 'bat', 'ghostp', 'skull', 'catface', 'bunnyface', 'berry', 'rainbow', 'bow', 'collar',
+          'collarblk', 'flowersshort', 'checkshort', 'apron', 'frillshort', 'frillshortred', 'flowers', 'pin', 'number', 'gym', 'santa', 'torn', 'patch', 'robegold',
+          'belly', 'spikes', 'tutu', 'frillmini', 'flowersmini', 'heartsmini', 'starsmini', 'jog', 'pinw', 'slipbunny', 'slipbear', 'rainbowsock', 'beret')},
+       **{k: (lambda kk: lambda a: fx_hat3(a, kk))(k) for k in ('stem', 'pumpkinhat', 'frogeyes', 'ribbon', 'flowercrown', 'devilhorns', 'ghosteyes', 'halo')},
        'bearearsb': lambda a: fx_hatdraw(a, 'bear'), 'bunnyearsb': lambda a: fx_hatdraw(a, 'bunny'), 'minipleat': lambda a: fx_minipleat(fx_pleat(a, hem=50, pleat=False))}
 def fx_minipleat(a):
     a = a.copy()                                              # 세로 주름 (2칸마다 어둡게)
@@ -773,6 +1135,8 @@ def maps_of(cat, f, mat, src, sl=None):
     a = IMG[f]
     if cat in ('body', 'face'): return [['skin', 'light'], ['eye', 'blue']]
     if sl == 'w': return []
+    if sl == 'skin':                                          # 피부색을 따라가요 (엘프 귀)
+        best = max(PAL['body'], key=lambda k: hit(a, PAL['body'][k])); return [['skin', best]] if hit(a, PAL['body'][best]) >= .5 else []
     if sl and sl.startswith('fix:'): cat = 'top'   # 정해진 색 (예: 로브 후드)
     slot = sl or SLOT[cat]; m = {'hair': 'hair'}.get(mat, 'hair' if cat == 'hair' else 'cloth')
     cands = [src] if src in PAL[m] else []
@@ -915,7 +1279,7 @@ body_entry = dict(id='body', name='body', L={b: [(10, 'spritesheets/body/bodies/
 meta['parts']['body'] = [write('body', 0, body_entry)]
 for cat in [c for c in SEL if c not in ('body', 'x')]:
     meta['parts'][cat] = [p for p in (write(cat, i, e) for i, e in enumerate(items[cat])) if p]
-for cat, nm in (('face', '기본'), ('cape', '없음'), ('neck', '없음'), ('hat', '없음')):
+for cat, nm in (('face', '기본'), ('cape', '없음'), ('neck', '없음'), ('hat', '없음'), ('acc', '없음')):
     meta['parts'][cat].insert(0, dict(id='none', n=nm, f=None, L={b: [] for b in BODIES}))
 meta['pal'] = {'skin': PAL['body'], 'hair': PAL['hair'], 'eye': PAL['eye'], 'cloth': PAL['cloth']}
 meta['pal']['bottom'] = meta['pal']['shoe'] = PAL['cloth']   # 교복 하의·신발: 천 팔레트에서 몇 색만
@@ -925,6 +1289,17 @@ meta['colors'] = {'skin': ['light', 'amber', 'olive', 'taupe', 'bronze', 'brown'
                   'bottom': ['gray', 'school', 'charcoal', 'black', 'navy', 'slate', 'bluegray', 'maroon', 'brown', 'tan', 'blue', 'sky', 'forest', 'pink', 'lavender', 'white'],
                   'shoe': ['black', 'brown', 'walnut', 'leather', 'charcoal', 'maroon', 'navy', 'white']}
 PAL['cloth']['school'] = ['#0A0A14', '#121426', '#1A1F38', '#232B4C', '#2D3961', '#3A4A78']   # 교복 남색 (진하게)
+def ramp(hx_):                                                 # 기본색 하나로 6단계 팔레트 (외곽선·그림자·기본·밝음)
+    c = np.array([int(hx_[i:i + 2], 16) for i in (1, 3, 5)], float)
+    tones = [c * .22 + np.array([14, 8, 18]), c * .5, c * .74, c, c + (255 - c) * .35, c + (255 - c) * .65]
+    return ['#%02X%02X%02X' % tuple(int(max(0, min(255, v))) for v in t_) for t_ in tones]
+NEWC = {'p_pink': '#F2A2BE', 'p_teal': '#4FB8B0', 'p_lemon': '#F2DC72', 'p_mint': '#86D8B8', 'p_babyblue': '#94C2EE', 'p_lilac': '#BDA0EA',
+        'p_cream': '#EFE2C2', 'p_coral': '#EE7A68', 'p_hotpink': '#E4528F', 'p_wine': '#8A2A48', 'p_olive': '#8C8A3C', 'p_mustard': '#D6A434',
+        'p_sage': '#98B08C', 'p_denim': '#4A6CA4', 'p_cocoa': '#7A523E', 'p_ivory': '#FBF2DA'}
+for k, v in NEWC.items(): PAL['cloth'][k] = ramp(v)
+meta['colors']['cloth'] = meta['colors']['cloth'] + list(NEWC)                       # 옷·모자·액세서리 색 40가지
+meta['colors']['bottom'] = meta['colors']['bottom'] + ['p_pink', 'p_mint', 'p_babyblue', 'p_lilac', 'p_cream', 'p_denim', 'p_cocoa', 'p_wine', 'p_mustard', 'p_olive']
+meta['colors']['shoe'] = meta['colors']['shoe'] + ['red', 'pink', 'p_pink', 'p_mint', 'p_babyblue', 'p_lemon', 'p_lilac', 'p_cream']
 meta['fixed'] = {'sch': 'school', 'sock': 'white'}   # 학교 색 (교복 겉옷·망토), 양말
 meta['house'] = {'dew': 'forest', 'ember': 'orange', 'dusk': 'rose', 'moon': 'purple'}   # 기숙사 → 교복 겉옷·망토·넥타이 색
 # 얼굴 동그라미: 정면 서기 프레임의 머리 상자 (정사각형)

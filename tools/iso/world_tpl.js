@@ -4,16 +4,16 @@
 const MAPS = __MAPS__;
 const World = window.World = { onAct: null, onMove: null };
 // ---------- 캐릭터 조합 (LPC 부품: tools/iso/lpc/build_lpc.py) ----------
-// av = { body: 체형(0 여·1 남), hair, face, top, legs, feet, cape, neck, hat: 부품 번호,
-//        skinC, hairC, eyeC, legsC, feetC, topC(사복), hatC: 색 번호, house: 넥타이·망토 안감 색이 될 기숙사 }
+// av = { body: 체형(0 여·1 남), hair, face, top, legs, feet, cape, neck, hat, acc(액세서리): 부품 번호,
+//        skinC, hairC, eyeC, legsC, feetC, topC(사복), hatC, accC: 색 번호, house: 넥타이·망토 안감 색이 될 기숙사 }
 // 부품 그림은 필요할 때 불러와요 (art/lpc/*.png). 색은 LPC 팔레트를 바꿔 칠해요
 const AVM = __AVATAR__;
 const ASC = AVM.scale || .5;   // 캐릭터 그림 1픽셀 = 세계 픽셀의 몇 배
 World.Avatar = (() => {
-  const FW = AVM.fw, FH = AVM.fh, NF = AVM.frames, CATS = ['hair', 'face', 'top', 'legs', 'feet', 'cape', 'neck', 'hat'], HOUSES = Object.keys(AVM.house);
-  const COLORS = { skinC: 'skin', hairC: 'hair', eyeC: 'eye', legsC: 'bottom', feetC: 'shoe', topC: 'cloth', hatC: 'cloth' };   // topC: 사복·잠옷 색   // 색 키 → 고를 수 있는 색 목록
-  const SLOTC = { skin: 'skinC', hair: 'hairC', eye: 'eyeC', legs: 'legsC', feet: 'feetC', cas: 'topC', hat: 'hatC' };
-  const MAT = { skin: 'skin', eye: 'eye', hair: 'hair', top: 'cloth', legs: 'bottom', feet: 'shoe', hat: 'cloth' };
+  const FW = AVM.fw, FH = AVM.fh, NF = AVM.frames, CATS = ['hair', 'face', 'top', 'legs', 'feet', 'cape', 'neck', 'hat', 'acc'], HOUSES = Object.keys(AVM.house);
+  const COLORS = { skinC: 'skin', hairC: 'hair', eyeC: 'eye', legsC: 'bottom', feetC: 'shoe', topC: 'cloth', hatC: 'cloth', accC: 'cloth' };   // topC: 사복·잠옷 색   // 색 키 → 고를 수 있는 색 목록
+  const SLOTC = { skin: 'skinC', hair: 'hairC', eye: 'eyeC', legs: 'legsC', feet: 'feetC', cas: 'topC', hat: 'hatC', acc: 'accC' };
+  const MAT = { skin: 'skin', eye: 'eye', hair: 'hair', top: 'cloth', legs: 'bottom', feet: 'shoe', hat: 'cloth', acc: 'cloth' };
   let lastOwn = null;   // 검증용 (tools/iso/lpc/verify_legs.js)
   const imgs = {}, cache = new Map(), heads = new Map(), maps = new Map(), subs = [];
   const bodyName = av => AVM.bodies[av.body] || AVM.bodies[0];
@@ -41,7 +41,7 @@ World.Avatar = (() => {
   function fromLook(look){
     const r = rnd(((look | 0) + 7) * 9973 + 1), a = { body: Math.floor(r() * 2) };
     CATS.forEach(c => { const ok = AVM.parts[c].map((p, i) => i).filter(i => !AVM.parts[c][i].k || AVM.parts[c][i].k === 'uni'); a[c] = ok[Math.floor(r() * ok.length)]; });   // 다른 학생은 교복
-    a.cape = r() < .6 ? 0 : a.cape; a.hat = 0; a.neck = r() < .3 ? 0 : a.neck; a.face = r() < .6 ? 0 : a.face;
+    a.cape = r() < .6 ? 0 : a.cape; a.hat = 0; a.acc = 0; a.neck = r() < .3 ? 0 : a.neck; a.face = r() < .6 ? 0 : a.face;
     Object.entries(COLORS).forEach(([k, p]) => { a[k] = Math.floor(r() * AVM.colors[p].length); });
     a.skinC = Math.floor(r() * 7);
     a.legsC = Math.floor(r() * 3); a.feetC = Math.floor(r() * 2);   // 교복은 다들 비슷하게: 하의 차콜·검정·남색, 구두 검정·갈색
