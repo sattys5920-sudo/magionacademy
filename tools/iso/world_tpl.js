@@ -471,8 +471,29 @@ const ACTS = {};
 // 물건을 쓰면 게임에 물어봐요: 글을 돌려주면 말풍선에 보여 주고, 아니면 (화면이 열렸으니) 말풍선을 닫아요
 function useObj(o, a){
   const r = World.onAct ? World.onAct(map, o, a) : null;
-  if (typeof r === 'string' && bubble){ bubble.el.innerHTML = r; } else hideBubble();
+  if (typeof r === 'string'){ if (bubble) bubble.el.innerHTML = r; else showBubble(o, r); } else hideBubble();
 }
+// ---- 근처 대상(상황 버튼): 서 있는 칸에서 바로 닿는 NPC·채집 지점·물건·물가를 찾아 World.onNear(대상 | null)에 알려요 ----
+World.onNear = null; let nearKey = '', nearT = null, nearTick = 0;
+function findNear(){
+  if (busy || !M || placing) return null;
+  const mx = Math.round(me.x), my = Math.round(me.y);
+  const np = people.filter(p => p.npc && Math.abs(Math.round(p.x) - mx) + Math.abs(Math.round(p.y) - my) <= 1).sort((a, b) => (Math.abs(a.x - mx) + Math.abs(a.y - my)) - (Math.abs(b.x - mx) + Math.abs(b.y - my)))[0];
+  if (np) return { kind: 'npc', id: np.npc.id, name: np.name, key: 'n' + np.npc.id };
+  if (spotMap === map){ const si = spots.findIndex(sp => Math.abs(sp.x - mx) + Math.abs(sp.y - my) <= 1); if (si >= 0) return { kind: 'spot', i: si, sp: spots[si], key: 's' + si }; }
+  for (const o of [...objOrder, ...flats]){ const a = o.act || ACTS[o.name]; if (!a || !o.box || o.furn) continue;
+    const dx = Math.max(Math.floor(o.box[0]) - mx, 0, mx - (Math.ceil(o.box[2]) - 1)), dy = Math.max(Math.floor(o.box[1]) - my, 0, my - (Math.ceil(o.box[3]) - 1));
+    if (dx + dy === 1) return { kind: 'act', o, label: a[1], text: a[0], key: 'a' + o.name + o.x + ',' + o.y }; }
+  if (World.onWater && !World.busyFish) for (const [dx, dy] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) if (isWater(mx + dx, my + dy)) return { kind: 'water', wx: mx + dx, wy: my + dy, key: 'w' };
+  return null;
+}
+function nearCheck(){ if (!World.onNear || !started) return; const t = findNear(), k = t ? t.key : ''; if (k !== nearKey){ nearKey = k; nearT = t; World.onNear(t); } }
+World.nearRefresh = () => { nearKey = '\0'; nearCheck(); };
+World.doNear = () => { const t = nearT; if (!t) return; hideBubble();
+  if (t.kind === 'npc'){ const np = people.find(q => q.npc && q.npc.id === t.id); if (np) World.faceTo(np.x, np.y); World.onNpc && World.onNpc(t.id); }
+  else if (t.kind === 'spot'){ World.onSpot && World.onSpot(t.i, t.sp); }
+  else if (t.kind === 'act'){ useObj(t.o, t.o.act || ACTS[t.o.name]); }
+  else if (t.kind === 'water'){ World.faceTo(t.wx, t.wy); World.onWater && World.onWater(t.wx, t.wy); } };
 function goDoor(door, o){
   if (door.pen !== undefined && World.onPenDoor){   // 사육장 우리: 주인만 들어가요
     const r = World.onPenDoor(door.pen);
@@ -623,6 +644,7 @@ function drawPerson(p){ const cx = out;
 function frame(now){
   const dt = Math.min(.05, (now - last) / 1000); last = now;
   people.forEach(p => step(p, dt));
+  if ((nearTick = (nearTick + 1) % 6) === 0) nearCheck();
   const A = MAPS[rmap];
   // 카메라 먼저: 맵이 화면보다 작으면 가운데에, 크면 내 캐릭터를 따라가요
   { const [mx, my] = P(me.x + .5, me.y + .5);
@@ -724,7 +746,18 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 document.getElementById('tDay').onclick = e => { bright = (bright + 1) % 3; e.target.textContent = BRIGHT_NEXT[bright]; };
-document.getElementById('tZoom').onclick = e => { zi = (zi + 1) % ZOOMS.length; e.target.textContent = ZOOMS[(zi + 1) % ZOOMS.length][0]; resize(); camX = null; };
+const ZL = [2, 0, 1];   // 단계(가까이·보통·멀리) → ZOOMS 번호
+const zoomLabel = () => { const b = document.getElementById('tZoom'); if (b) b.textContent = ZOOMS[(zi + 1) % ZOOMS.length][0]; };
+World.zoomStep = dir => { const lv = Math.max(0, Math.min(2, ZL.indexOf(zi) + dir)); if (ZL[lv] === zi) return; zi = ZL[lv]; zoomLabel(); resize(); camX = null; };
+World.zoomLevel = () => ZL.indexOf(zi);
+document.getElementById('tZoom').onclick = () => { zi = (zi + 1) % ZOOMS.length; zoomLabel(); resize(); camX = null; };
+// 두 손가락으로 벌리면 가까이, 오므리면 멀리. 마우스 휠도 같아요
+{ const pts = new Map(); let base = 0, wheelAt = 0;
+  const dist = () => { const [a, b] = [...pts.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+  cv.addEventListener('pointerdown', e => { pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2){ base = dist(); me.path = []; pending = null; hideBubble(); } }, true);
+  cv.addEventListener('pointermove', e => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2 && base){ const r = dist() / base; if (r > 1.3){ World.zoomStep(-1); base = dist(); } else if (r < .77){ World.zoomStep(1); base = dist(); } } });
+  const up = e => { pts.delete(e.pointerId); if (pts.size < 2) base = 0; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('pointerleave', up);
+  cv.addEventListener('wheel', e => { e.preventDefault(); const t = performance.now(); if (t - wheelAt < 250) return; wheelAt = t; World.zoomStep(e.deltaY > 0 ? 1 : -1); }, { passive: false }); }
 // 지도: 캠퍼스 전체를 작게 그려서 보여 주고, 누르면 그곳으로 걸어가요
 const mapv = document.getElementById('mapv'), mcv = document.getElementById('mcv');
 let mapImg = null;
