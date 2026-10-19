@@ -840,13 +840,16 @@ let F = null, auth = null, db = null, uid = null, solo = false, me = null, saveT
 let onlineList = {}, marketList = {}, coop = {}, playersList = {}, myGuest = {};
 const coopWeek = () => 'w' + Math.floor(Date.now() / 604800000);
 const setSaveDot = s => { saveState = s; const d = $('#saveDot'); if (d) d.className = s; };
-function save(){
-  clearTimeout(saveTimer); setSaveDot('busy');
-  saveTimer = setTimeout(() => {
-    if (solo) { try { localStorage.setItem('magion-solo', JSON.stringify(me)); } catch(e){} setSaveDot(''); return; }
-    F.set(F.ref(db, 'players/' + uid), me).then(() => setSaveDot('')).catch(e => { setSaveDot('off'); toast('저장에 실패했어요: ' + (e.code || e.message)); });
-  }, 300);
+// 저장: 바꾼 건 바로 화면에, 서버에는 1.5 초 뒤에 한 번에 (연달아 바꾸면 한 번만 써요). 화면을 떠날 때는 바로 써요
+function saveNow(){
+  clearTimeout(saveTimer); saveTimer = 0; if (!me) return;
+  if (solo) { try { localStorage.setItem('magion-solo', JSON.stringify(me)); } catch(e){} setSaveDot(''); return; }
+  F.set(F.ref(db, 'players/' + uid), me).then(() => setSaveDot('')).catch(e => { setSaveDot('off'); toast('저장에 실패했어요: ' + (e.code || e.message)); });
 }
+function save(){ if (!saveTimer) setSaveDot('busy'); clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 1500); }
+addEventListener('pagehide', () => { if (saveTimer) saveNow(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && saveTimer) saveNow(); });
+addEventListener('online', () => { if (saveState === 'off') saveNow(); }); addEventListener('offline', () => setSaveDot('off'));
 // 알림: 화면 위쪽에 2 초씩, 여러 개면 쌓지 않고 차례로 (같은 글이 연달아 오면 한 번만)
 const toastQ = []; let toastBusy = false, toastLast = '';
 function toast(t){
@@ -941,7 +944,6 @@ function enterWorld(){
   document.body.classList.add('inworld'); app.innerHTML = ''; sheetOn = false; app.classList.remove('open');
   World.setPlayer(me.nick, avOf(me)); World.start(); World.resize();
   syncPens(); syncRoom(); syncHalls(); syncHallNames(); syncSpots(); syncNpcs(); NL.ready.then(() => { npcDecay(); npcSig = ''; syncNpcs(); }); dayTick(); hud(); showRest(); setTimeout(storyCheck, 1500);
-  clearInterval(spotTimer); spotTimer = setInterval(() => { syncSpots(); dayTick(); }, 60000);   // 날이 바뀌면 채집 지점도 새로
 }
 let spotTimer = 0;
 // ===== 학생끼리 어울리기: 같은 곳에 있는 친구가 걸어 다니고, 말풍선·이모티콘·인사를 주고받아요 =====
@@ -1761,8 +1763,8 @@ function renderCook(){
 const NPC_ART_V = 5;
 const NPC_DATA_V = 1;   // data/npc 캐시 버전
 // LPC NPC 그림(art/npcs.png: 한 줄 = 한 명, 64칸 20개)에서 얼굴 부분만 크게 (초상화)
-const npcFace = (spr, size = 48) => { const B = World.Avatar.headBox, k = size / B.s; return `<i class="npcspr" style="width:${size}px;height:${size}px;background:url(art/npcs.png?v=${NPC_ART_V}) ${-B.x * k}px ${-(spr * 64 + B.y) * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
-const npcFull = (spr, size = 144) => { const k = size / 64; return `<i class="stspr" style="background:url(art/npcs.png?v=${NPC_ART_V}) 0 ${-spr * 64 * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
+const npcFace = (spr, size = 48) => { const B = World.Avatar.headBox, k = size / B.s; return `<i class="npcspr" style="width:${size}px;height:${size}px;background:url(art/npcs.webp?v=${NPC_ART_V}) ${-B.x * k}px ${-(spr * 64 + B.y) * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
+const npcFull = (spr, size = 144) => { const k = size / 64; return `<i class="stspr" style="background:url(art/npcs.webp?v=${NPC_ART_V}) 0 ${-spr * 64 * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
 const NPC_DEF = [
   { id: 'nabi', wander: true, name: '나비', title: '매점 고양이', spr: 0, h: 22, map: 'campus', x: 61, y: 35, likes: ['f_crucian', 'd_minnowfry', 'g2_catnip'], dislikes: ['j_weed'],
     greet: [['…뭘 봐? 생선 없으면 저리 가.', '냐. 오늘은 바람이 비린내가 안 나네.'], ['또 왔어? …딱히 기다린 건 아니야.', '생선 가게 아저씨가 오늘은 붕어가 싱싱하대.'], ['왔구나! 아니, 반가운 척한 거 아니거든.', '네 발소리는 이제 멀리서도 알아.'], ['우리 집사 왔다냥~ …방금 건 못 들은 걸로 해.', '오늘은 네 옆에서 낮잠 자도 돼?']],
@@ -1933,9 +1935,9 @@ function syncNpcs(){
   const sig = JSON.stringify(list.map(o => [o.id, o.name, o.map, o.x, o.y, o.mark, o.own, o.spr, o.pix, o.av && JSON.stringify(o.av)]));
   World.setWeather && World.setWeather(weatherToday());
   if (sig === npcSig) return; npcSig = sig;
-  World.setNpcs(list, `art/npcs.png?v=${NPC_ART_V}`, 'art/cast_animals.png?v=1');
+  World.setNpcs(list, `art/npcs.webp?v=${NPC_ART_V}`, 'art/cast_animals.webp?v=1');
 }
-setInterval(() => { if (me && document.body.classList.contains('inworld')){ npcDecay(); syncNpcs(); } }, 30000);
+
 World.clockText = d => `${isFullMoon() ? '🌕' : { clear: '✨', rain: '☔', fog: '🌫', snow: '❄' }[weatherToday()]} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${BAND_KO[bandNow(d.getHours())]} · ${WX_KO[weatherToday()]}${isFullMoon() ? ' · 호박달 축제' : ''}`;
 // ---- 말 걸기 ----
 function npcPortrait(n){ return n.av ? `<img src="${World.Avatar.head(npcAv(n))}" alt="">` : npcFace(n.spr); }
@@ -2064,7 +2066,7 @@ async function castSprite(id, ctx){
   const ov = npcOver.__cast?.[id];   // 관리자가 꾸민 조연 (npcs/__cast/<id>)
   if (ov?.av || c.av) return { kind: 'av', av: World.Avatar.fix(ov?.av || c.av) };
   if (c.look !== undefined) return { kind: 'av', av: World.Avatar.fromLook(c.look) };
-  if (c.pix !== undefined){ const im = await loadImg('art/cast_animals.png?v=1'); return im ? { kind: 'img', img: cropCanvas(im, c.pix * 32, 0, 32, 32), w: c.w || 56 } : null; }   // 직접 그린 조연 동물 (tools/iso/cast_animals.py)
+  if (c.pix !== undefined){ const im = await loadImg('art/cast_animals.webp?v=1'); return im ? { kind: 'img', img: cropCanvas(im, c.pix * 32, 0, 32, 32), w: c.w || 56 } : null; }   // 직접 그린 조연 동물 (tools/iso/cast_animals.py)
   if (c.cr){ const i = { sheep: 0, rabbit: 1, lizard: 2, chicken: 3, cat: 4, toad: 5, bee: 6, spider: 7, owl: 8, goat: 9 }[c.cr] ?? 8, im = await loadImg('art/creatures.png?v=11');
     return { kind: 'img', img: tintCanvas(im, i * 120, 0, 120, 102, c.filter), w: c.small ? 34 : 52 }; }
   if (c.obj){ const o = await World.objSprite('campus', c.obj); return o ? { kind: 'img', img: cropCanvas(o.img, o.sx, o.sy, o.sw, o.sh), w: (c.small ? .6 : 1) * o.sw * 2 } : null; }
@@ -2175,7 +2177,7 @@ async function evPlay(n, k, ev, opt){
   const ui = evUI(); ui.innerHTML = `<div class="evwrap"><canvas width="${EV_W}" height="${EV_H}"></canvas><div class="evbox"><div class="evname"></div><div class="evtext"></div><div class="evch"></div><div class="evtap">▼</div></div>${opt.replay ? '<button class="evskip">끝내기</button>' : ''}</div>`;
   ui.classList.add('on');
   STG.cv = ui.querySelector('canvas'); STG.g = STG.cv.getContext('2d'); STG.actors = {}; STG.cam = { z: 1, x: 0, sh: 0 }; STG.fade = 1; STG.flash = 0; STG.speaker = null;
-  NPC_IMG_STAGE = NPC_IMG_STAGE || Object.assign(new Image(), { src: `art/npcs.png?v=${NPC_ART_V}` }); EMO_IMG = EMO_IMG || Object.assign(new Image(), { src: 'art/emo.png' });
+  NPC_IMG_STAGE = NPC_IMG_STAGE || Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` }); EMO_IMG = EMO_IMG || Object.assign(new Image(), { src: 'art/emo.png' });
   const sc = ev.scene || {};
   await stageBg(ev.conditions?.location || 'village_square', sc.time || bandNow(), sc.weather || weatherToday());
   await evShow(ctx, n.id, 'center'); await evShow(ctx, 'player', 'left'); evFace();
@@ -3777,10 +3779,14 @@ function eventBannerHTML(){
   return nx ? `<div class="hint" style="display:flex;align-items:center;justify-content:center;gap:2px">${ic(nx.E.icon, 'transform:scale(.6);margin:-6px')}다음 행사 · ${nx.E.name} ${whenText(nx.start)} (${untilText(nx.start - now)} 뒤)</div>` : '';
 }
 function bindEventBanner(){ const b = $('#goEvent'); if (b) b.onclick = () => { sub = 'event'; render(); }; }
-setInterval(() => {   // 홈에 있을 때 행사 띠만 새로 그려요 (스크롤 위치 유지)
+// 느린 타이머 하나: 15초마다 HUD·행사 띠, 30초마다 NPC 호감도·위치, 60초마다 채집 지점·날짜 (화면이 안 보이면 쉬어요)
+let slowN = 0;
+setInterval(() => {
+  if (!me || !document.body.classList.contains('inworld') || document.hidden) return; slowN++;
   hud();
-  const el = $('#evBanner'); if (!el || !me || sub) return;
-  const html = eventBannerHTML(); if (el.dataset.h !== html){ el.dataset.h = html; el.innerHTML = html; bindEventBanner(); }
+  const el = $('#evBanner'); if (el && !sub){ const html = eventBannerHTML(); if (el.dataset.h !== html){ el.dataset.h = html; el.innerHTML = html; bindEventBanner(); } }
+  if (slowN % 2 === 0){ npcDecay(); syncNpcs(); }
+  if (slowN % 4 === 0){ syncSpots(); dayTick(); }
 }, 15000);
 
 // ----- 행사 화면 -----

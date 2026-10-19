@@ -3,6 +3,9 @@
 // 게임(index.html)과는 window.World로 이어져요: World.start / setPlayer / teleport / onAct
 const MAPS = __MAPS__;
 const World = window.World = { onAct: null, onMove: null };
+// art/iso·art/lpc·npcs·cast_animals 그림은 무손실 WebP로 받아요 (같은 이름 .webp, 60% 작음)
+const webp = s => /^art\/(iso|lpc)\/|^art\/(npcs|cast_animals)\.png/.test(s) ? s.replace(/\.png(?=\?|$)/, '.webp') : s;
+World.webp = webp;
 // ---------- 캐릭터 조합 (LPC 부품: tools/iso/lpc/build_lpc.py) ----------
 // av = { body: 체형(0 여·1 남), hair, face, top, legs, feet, cape, neck, hat, acc(액세서리): 부품 번호,
 //        skinC, hairC, eyeC, legsC, feetC, topC(사복), hatC, accC: 색 번호, house: 넥타이·망토 안감 색이 될 기숙사 }
@@ -58,7 +61,7 @@ World.Avatar = (() => {
     if (!f) return Promise.resolve();
     if (imgs[f]) return imgs[f].p;
     const e = imgs[f] = { data: null };
-    e.p = new Promise(r => { const i = new Image(); i.onload = () => { const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; const g = c.getContext('2d'); g.drawImage(i, 0, 0); e.data = g.getImageData(0, 0, i.width, i.height); cache.clear(); heads.clear(); subs.forEach(fn => fn()); r(); }; i.onerror = () => r(); i.src = f; });
+    e.p = new Promise(r => { const i = new Image(); i.onload = () => { const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; const g = c.getContext('2d'); g.drawImage(i, 0, 0); e.data = g.getImageData(0, 0, i.width, i.height); cache.clear(); heads.clear(); subs.forEach(fn => fn()); r(); }; i.onerror = () => r(); i.src = webp(f); });
     return e.p;
   }
   const ready = load(AVM.parts.body[0].f);
@@ -213,7 +216,7 @@ function resize(){
   out.imageSmoothingEnabled = false;
 }
 addEventListener('resize', resize);
-const img = s => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = s; });
+const img = s => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = webp(s); });
 let map, M, blocked, objOrder, rmap;
 // 기숙사 휴게실은 단계마다 다른 방이에요: 'dorm_witch' → 'dorm_witch_3' 처럼 바꿔 보여 줘요
 const ALIAS = {}; Object.keys(MAPS).forEach(k => { const m = k.match(/^(dorm_\w+?)_1$/); if (m) ALIAS[m[1]] = k; });
@@ -260,7 +263,19 @@ const me = mk('나', null, 0, 0, true);
 let started = false;
 // 같은 곳에 있는 친구들 (실시간 위치). 다른 사람 화면에서는 내가 이렇게 보여요
 const peers = {}; let peerList = [];
-function retag(){ tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : p.peer ? ' peer' : p.npc ? ' npc' : ''); d.textContent = (p.npc && p.npc.mark ? '❗' : '') + p.name; if (p.npc && p.npc.mark) d.classList.add('ev'); if (p.pet) d.style.display = 'none'; world.appendChild(d); return d; }); }
+// 이름표는 캔버스에 그려요 (DOM을 매 프레임 옮기지 않아요). tags[i] = { t: 글, k: 종류(me·peer·npc·''), ev: 이벤트 표시 }
+function retag(){ tags = people.map(p => p.pet ? null : { t: (p.npc && p.npc.mark ? '❗' : '') + p.name, k: p.me ? 'me' : p.peer ? 'peer' : p.npc ? 'npc' : '', ev: !!(p.npc && p.npc.mark) }); }
+const TAG_COL = { me: '#FFD866', peer: '#9CF0FF', npc: '#F6F0FF', '': '#F6F0FF' }, tagW = new Map();
+let dpr = 1;
+function drawTag(tag, sx, sy, now){   // sx, sy: 세계 픽셀(이름표 아래 가운데). 화면 좌표계(setTransform 1)에서 불러요
+  if (!tag) return;
+  const f = Math.round(13 * dpr), px = Math.round(5 * dpr), py = Math.round(3 * dpr), r = Math.round(4 * dpr);
+  out.font = `${f}px G11, Pretendard, sans-serif`; let w = tagW.get(tag.t + f); if (w === undefined){ w = Math.ceil(out.measureText(tag.t).width); tagW.set(tag.t + f, w); }
+  const x = Math.round((sx - camIX) * KPX - w / 2 - px), y = Math.round((sy - camIY) * KPX - f - py * 2), W = w + px * 2, H = f + py * 2;
+  out.fillStyle = 'rgba(20,13,30,.8)'; out.beginPath(); out.roundRect(x, y, W, H, r); out.fill();
+  if (tag.k === 'peer' || tag.ev){ out.strokeStyle = tag.ev ? '#FFD866' : '#4FB8D8'; out.lineWidth = dpr; if (!tag.ev || Math.floor(now / 600) % 2 === 0) out.stroke(); }
+  out.fillStyle = tag.ev ? '#FFD866' : TAG_COL[tag.k]; out.textBaseline = 'top'; out.textAlign = 'left'; out.fillText(tag.t, x + px, y + py + Math.round(dpr));
+}
 // 지금 있는 곳 열쇠: 개인 방은 방 주인마다 달라요
 const placeKey = () => map + (M && M.furn ? ':' + (roomView.own ? World.myUid : roomView.uid) : '');
 World.placeKey = () => started ? placeKey() : null;
@@ -333,7 +348,7 @@ let speedK = 1; World.setSpeedK = k => { speedK = k || 1; };   // 요리 효과:
 let npcList = [], NPC_IMG = null;
 World.onNpc = null;   // (npc id) 눌렀을 때
 let PIX_IMG = null;   // 조연 동물 그림 (32칸)
-World.setNpcs = (list, sprSrc, pixSrc) => { npcList = list || []; if (sprSrc && (!NPC_IMG || NPC_IMG.src.indexOf(sprSrc) < 0)){ NPC_IMG = new Image(); NPC_IMG.src = sprSrc; } if (pixSrc && !PIX_IMG){ PIX_IMG = new Image(); PIX_IMG.src = pixSrc; } if (started && M){ placeNpcs(); retag(); } };
+World.setNpcs = (list, sprSrc, pixSrc) => { npcList = list || []; if (sprSrc && (!NPC_IMG || NPC_IMG.src.indexOf(webp(sprSrc)) < 0)){ NPC_IMG = new Image(); NPC_IMG.src = webp(sprSrc); } if (pixSrc && !PIX_IMG){ PIX_IMG = new Image(); PIX_IMG.src = webp(pixSrc); } if (started && M){ placeNpcs(); retag(); } };
 function placeNpcs(){
   for (let i = people.length - 1; i >= 0; i--) if (people[i].npc) people.splice(i, 1);
   npcList.filter(n => (n.map === map || n.map === rmap) && (!n.own || roomView.own)).forEach(n => {
@@ -366,10 +381,8 @@ function setMap(id, spawn){
   Object.keys(peers).forEach(id => { sayOff(peers[id]); delete peers[id]; }); sayOff(me);
   peerList.filter(q => q.m === placeKey() && q.uid !== World.myUid).forEach(addPeer);
   retag();
-  penTags.forEach(t => t.remove()); penTags = [];
-  roomTags.forEach(t => t.remove()); roomTags = [];
-  if (M.rooms) roomTags = M.rooms.map(rm => { const nm = (hallNames[M.house] || [])[rm.i]; const d = document.createElement('div'); d.className = 'ntag' + (nm && nm === me.name ? ' me' : ''); d.textContent = nm || '빈 방'; world.appendChild(d); return d; });
-  if (M.pens) penTags = M.pens.map(pn => { const d = document.createElement('div'); d.className = 'ntag' + (pn.i === myPen ? ' me' : ''); d.textContent = penNames[pn.i] || '빈 우리'; world.appendChild(d); return d; });
+  roomTags = M.rooms ? M.rooms.map(rm => { const nm = (hallNames[M.house] || [])[rm.i]; return { t: nm || '빈 방', k: nm && nm === me.name ? 'me' : '' }; }) : [];
+  penTags = M.pens ? M.pens.map(pn => ({ t: penNames[pn.i] || '빈 우리', k: pn.i === myPen ? 'me' : '' })) : [];
   document.getElementById('place').textContent = M.title; document.getElementById('sub').textContent = M.sub;
   if (M.furn){ document.getElementById('place').textContent = roomView.own ? '내 방' : (roomView.name || '친구') + '의 방'; document.getElementById('sub').textContent = roomView.own ? M.sub : '방명록에 한 줄 남겨 봐요'; }
   camX = camY = null; hideBubble();
@@ -388,7 +401,7 @@ World.setFurniture = list => { furnData = list || []; if (M && M.furn && roomVie
 World.roomOwner = () => (M && M.furn) ? roomView : null;   // 지금 보고 있는 방 주인 { own, uid, name }
 World.onRoomDoor = null;   // (기숙사, 문 번호) → { own, uid, name, furn } 이면 들어가요, 글이면 말풍선
 let hallNames = {};
-World.setHallNames = names => { hallNames = names || {}; if (M && M.rooms) roomTags.forEach((t, i) => { t.textContent = (hallNames[M.house] || [])[M.rooms[i].i] || '빈 방'; }); };
+World.setHallNames = names => { hallNames = names || {}; if (M && M.rooms) roomTags.forEach((t, i) => { t.t = (hallNames[M.house] || [])[M.rooms[i].i] || '빈 방'; }); };
 // 바로 가기: 그 기숙사 복도의 i번째 방으로
 World.goRoom = (house, i) => {
   const hid = 'hall_' + ({ ember: 'witch', moon: 'vamp', dusk: 'wolf', dew: 'ghost' })[house]; if (!MAPS[hid]) return;
@@ -415,7 +428,7 @@ let CR_IMG = null, penNames = [], myPen = 0, petData = [], penTags = [], roomTag
 const petPos = {};
 World.onPenDoor = null;   // (우리 번호) → true면 들어가요, 글이면 말풍선
 World.onPet = null;       // (생물 id) 생물을 눌렀을 때
-World.setPenLabels = (names, mine) => { penNames = names; myPen = mine; penTags.forEach((t, i) => { t.textContent = names[M.pens[i].i] || '빈 우리'; t.className = 'ntag' + (M.pens[i].i === mine ? ' me' : ''); }); };
+World.setPenLabels = (names, mine) => { penNames = names; myPen = mine; penTags.forEach((t, i) => { t.t = names[M.pens[i].i] || '빈 우리'; t.k = M.pens[i].i === mine ? 'me' : ''; }); };
 World.setPenExit = spawn => { const ex = MAPS.pen && MAPS.pen.meta.objs.find(o => o.name === 'exit'); if (ex) ex.door.spawn = spawn; };
 World.setPets = list => {
   petData = list;
@@ -459,6 +472,7 @@ function drawPet(p){
   if (p.flip){ cx.translate(dx, dy); cx.scale(-1, 1); cx.drawImage(S, -w / 2, 0, w, h); } else cx.drawImage(S, Math.round(dx - w / 2), dy, w, h);
   cx.restore();
 }
+const clockEl = document.getElementById('clock'); let clockTick = 0, clockLast = '';
 let tags = [], bubble = null, pending = null, busy = false, camX = null, camY = null, forceNight = null, backStack = [];
 function showBubble(o, text, btn, fn){
   hideBubble();
@@ -735,14 +749,14 @@ function frame(now){
     if (Math.sin(t * 1.7) > .5){ cx.fillRect(Math.round(x) + 5, sy - 5, 1, 1); cx.fillRect(Math.round(x) - 5, sy + 3, 1, 1); } });
   if (!M.indoor) spooky(now, dt, view);
   out.setTransform(1, 0, 0, 1, 0, 0);
-  const k = cv.clientWidth / VW;
-  if (M.rooms) M.rooms.forEach((rm, i) => { const [sx, sy] = P(rm.door[0] + .5, rm.door[1] + .5); roomTags[i].style.left = (sx - ix) * k + 'px'; roomTags[i].style.top = (sy - 52 - iy) * k + 'px'; });
-  if (M.pens) M.pens.forEach((pn, i) => { const [sx, sy] = P(pn.sign[0] + .5, pn.sign[1] + .5); penTags[i].style.left = (sx - ix) * k + 'px'; penTags[i].style.top = (sy - 20 - iy) * k + 'px'; });
-  people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); tags[i].style.left = (sx - ix) * k + 'px'; tags[i].style.top = (sy - World.Avatar.FH * ASC + 4 - iy) * k + 'px'; });
+  const k = cv.clientWidth / VW; dpr = window.devicePixelRatio || 1;
+  if (M.rooms) M.rooms.forEach((rm, i) => { const [sx, sy] = P(rm.door[0] + .5, rm.door[1] + .5); if (sx > view.x && sx < view.x + view.w) drawTag(roomTags[i], sx, sy - 52, now); });
+  if (M.pens) M.pens.forEach((pn, i) => { const [sx, sy] = P(pn.sign[0] + .5, pn.sign[1] + .5); if (sx > view.x && sx < view.x + view.w) drawTag(penTags[i], sx, sy - 20, now); });
+  people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); if (sx > view.x - 40 && sx < view.x + view.w + 40 && sy > view.y && sy < view.y + view.h + 60) drawTag(tags[i], sx, sy - World.Avatar.FH * ASC + 4, now); });
   const tn = performance.now();
   for (let i = says.length - 1; i >= 0; i--){ const p = says[i]; if (tn > p.say.until || (!p.me && !people.includes(p))){ sayOff(p); continue; } const [sx, sy] = P(p.x + .5, p.y + .5); p.say.el.style.left = (sx - ix) * k + 'px'; p.say.el.style.top = (sy - World.Avatar.FH * ASC - 2 - iy) * k + 'px'; }
   if (bubble){ const o = bubble.o; bubble.el.style.left = Math.max(90, Math.min(cv.clientWidth - 90, (o.x + o.sw / 2 - ix) * k)) + 'px'; bubble.el.style.top = Math.max(70, (o.y - 2 - iy) * k) + 'px'; }
-  const d = new Date(); document.getElementById('clock').textContent = World.clockText ? World.clockText(d) : `🌕 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · 보름밤`;
+  if ((clockTick = (clockTick + 1) % 30) === 0){ const d = new Date(), t = World.clockText ? World.clockText(d) : `🌕 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · 보름밤`; if (t !== clockLast){ clockLast = t; clockEl.textContent = t; } }
   requestAnimationFrame(frame);
 }
 document.getElementById('tDay').onclick = e => { bright = (bright + 1) % 3; e.target.textContent = BRIGHT_NEXT[bright]; };
@@ -806,7 +820,7 @@ World.start = async (id = 'campus', spawn) => {
   await ensureMap(id); resize(); setMap(id, spawn || MAPS[real(id)].meta.start || MAPS[real(id)].meta.spawnIn);
   requestAnimationFrame(frame);
 };
-World.setPlayer = (name, av) => { me.name = name; me.av = av; if (tags[0]) tags[0].textContent = name; };
+World.setPlayer = (name, av) => { me.name = name; me.av = av; if (tags[0]) tags[0].t = name; };
 World.resize = () => { if (started){ resize(); camX = null; } };
 World.where = () => map;
 World.meta = id => MAPS[real(id)] && MAPS[real(id)].meta;
