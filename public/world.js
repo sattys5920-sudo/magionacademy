@@ -244,11 +244,12 @@ function syncPeers(){
 // 머리 위 말풍선 (채팅·이모티콘). 몇 초 뒤에 사라져요
 const says = [];
 function sayOff(p){ if (p && p.say){ p.say.el.remove(); const i = says.indexOf(p); if (i >= 0) says.splice(i, 1); p.say = null; } }
-World.say = (id, text, big) => {
+World.say = (id, text, big) => {   // big: 이모티콘 번호(art/emo.png 칸)면 그림으로
   const p = id === World.myUid || id === 'me' ? me : peers[id]; if (!p || !text) return;
   sayOff(p);
-  const d = document.createElement('div'); d.className = 'say' + (big ? ' emo' : ''); d.textContent = text; world.appendChild(d);
-  p.say = { el: d, until: performance.now() + (big ? 3500 : 5500) }; says.push(p);
+  const emo = typeof big === 'number' ? big : null, d = document.createElement('div'); d.className = 'say' + (emo !== null ? ' emo' : '');
+  if (emo !== null){ const i = document.createElement('i'); i.className = 'emi'; i.style.setProperty('--i', emo); d.appendChild(i); } else d.textContent = text;
+  world.appendChild(d); p.say = { el: d, until: performance.now() + (emo !== null ? 3500 : 5500) }; says.push(p);
 };
 World.onPeer = null;   // (친구 uid) 친구를 눌렀을 때
 World.peerAt = id => { const p = peers[id]; if (!p) return null; return { get x(){ return P(p.x + .5, p.y + .5)[0]; }, get y(){ return P(p.x + .5, p.y + .5)[1] - World.Avatar.FH * ASC + 2; }, sw: 0 }; };   // 친구를 따라 움직여요

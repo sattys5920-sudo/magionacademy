@@ -44,12 +44,14 @@ body:not(.inworld) .fab,body:not(.inworld) .hud{display:none}
 .ntag.peer{color:#9CF0FF;box-shadow:0 0 0 1px #4FB8D8}
 .say{position:absolute;transform:translate(-50%,-100%);background:#FFFFFF;color:#22183F;padding:4px 7px;font-size:12px;line-height:15px;box-shadow:0 0 0 2px #22183F;max-width:180px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;text-align:center;pointer-events:none;z-index:3;margin-top:-16px}
 .say::after{content:'';position:absolute;left:50%;bottom:-6px;margin-left:-3px;border:3px solid transparent;border-top-color:#22183F}
-.say.emo{background:none;box-shadow:none;font-size:24px;line-height:28px;padding:0}
+.say.emo{background:none;box-shadow:none;padding:0;line-height:0}
+.emi{display:inline-block;width:32px;height:32px;background:url(art/emo.png) 0 0/384px 32px no-repeat;image-rendering:pixelated;vertical-align:middle}
+.say.emo .emi{width:48px;height:48px;background-size:576px 48px;background-position-x:calc(var(--i) * -48px)}
 .say.emo::after{display:none}
 .bubble .pm{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
 .bubble .pm button{margin:0;padding:5px 6px;font-size:12px;white-space:nowrap}
 .bubble .pm.emo{grid-template-columns:repeat(4,1fr)}
-.bubble .pm.emo button{font-size:24px;padding:2px 4px;background:#FAF1E2}
+.bubble .pm.emo button{padding:2px;background:#FAF1E2;line-height:0}
 #talk{position:absolute;left:10px;right:80px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;display:none;flex-direction:column;gap:6px;font-family:'G11',monospace}
 #talk.on{display:flex}
 body:not(.inworld) #talk{display:none}
@@ -57,8 +59,8 @@ body:not(.inworld) #talk{display:none}
 #tlog div{align-self:flex-start;background:rgba(20,13,30,.78);color:#F2EAD8;font-size:12px;line-height:16px;padding:2px 6px;max-width:100%;overflow-wrap:anywhere}
 #tlog b{color:#9CF0FF;font-weight:normal;margin-right:4px}
 #tlog b.me{color:#FFD866}
-.temo{display:flex;gap:4px}
-.temo button{flex:1;min-width:0;height:34px;border:0;background:rgba(250,241,226,.95);box-shadow:0 0 0 2px #22183F;font-size:12px;padding:0}
+.temo{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.temo button{min-width:0;height:40px;border:0;background:rgba(250,241,226,.95);box-shadow:0 0 0 2px #22183F;font-size:12px;padding:0}
 #tform{display:flex;gap:6px}
 #tin{flex:1;min-width:0;height:40px;border:0;box-shadow:0 0 0 2px #22183F;background:#FAF1E2;color:#22183F;font-family:'G11',monospace;font-size:12px;padding:0 10px}
 #tform button{height:40px;border:0;background:#8CE6B0;color:#1E3A2A;box-shadow:0 0 0 2px #22183F;font-family:'G11B',monospace;font-size:12px;padding:0 12px}
@@ -658,7 +660,8 @@ function enterWorld(){
 }
 // ===== 학생끼리 어울리기: 같은 곳에 있는 친구가 걸어 다니고, 말풍선·이모티콘·인사를 주고받아요 =====
 // online/<uid> 에 지금 있는 곳(m: 장소 열쇠, x, y)과 마지막 한 말(s)을 올려요
-const EMOS = ['👋', '😊', '😂', '😍', '😮', '😢', '🎃', '✨'];
+const EMOS = ['손인사', '웃음', '깔깔', '하트눈', '놀람', '눈물', '화남', '하트', '엄지척', '반짝', '호박', '유령'];   // art/emo.png 순서 (tools/iso/emotes.py)
+const emoI = i => `<i class="emi" style="background-position:-${i * 32}px 0" title="${EMOS[i]}"></i>`;
 let talkLog = [], lastPos = '', heard = {}, onlineKeys = '', talkOn = false;
 const peersOf = () => Object.entries(onlineList).filter(([id, o]) => id !== uid && o && o.m).map(([id, o]) => ({ uid: id, name: o.nick, av: avOf(o), m: o.m, x: o.x | 0, y: o.y | 0 }));
 function pushLog(nick, t, mine){ talkLog.push({ nick, t, mine }); talkLog = talkLog.slice(-4); $('#tlog').innerHTML = talkLog.map(l => `<div><b class="${l.mine ? 'me' : ''}">${esc(l.nick)}</b>${esc(l.t)}</div>`).join(''); }
@@ -670,15 +673,15 @@ function onOnline(){
     if (heard[id] === at) return; heard[id] = at;
     if (!s || !at) return;
     if (first || id === uid || s.m !== here) return;   // 들어오기 전에 한 말, 다른 곳에서 한 말은 안 보여요
-    World.say(id, s.t, !!s.e);
+    World.say(id, s.t, s.e ? s.e - 1 : null);
     if (!s.e) pushLog(o.nick, s.t);
     if (s.to === uid) toast(`${o.nick}이(가) 나에게 인사했어요! 눌러서 인사해 줘요`);
   });
 }
 function speak(t, e, to){
   t = String(t || '').trim().slice(0, 40); if (!t) return;
-  World.say('me', t, e); if (!e) pushLog(me.nick, t, true);
-  if (!solo) F.update(F.ref(db, 'online/' + uid), { s: { t, e: e ? 1 : 0, at: Date.now(), m: World.placeKey() || '', ...(to ? { to } : {}) } }).catch(() => {});
+  World.say('me', t, e ? e - 1 : null); if (!e) pushLog(me.nick, t, true);
+  if (!solo) F.update(F.ref(db, 'online/' + uid), { s: { t, e: e || 0, at: Date.now(), m: World.placeKey() || '', ...(to ? { to } : {}) } }).catch(() => {});
 }
 function presTick(){
   if (solo || !uid) return;
@@ -701,16 +704,16 @@ function peerAct(id, act){
     return;
   }
   if (act === 'emo'){
-    World.bubble(World.peerAt(id), `<b>${esc(o.nick)}에게</b><div class="pm emo">${EMOS.map(x => `<button data-em="${x}">${x}</button>`).join('')}</div>`);
-    document.querySelectorAll('.bubble [data-em]').forEach(b => b.onclick = e => { e.stopPropagation(); World.hideBubble(); speak(b.dataset.em, 1, id); });
+    World.bubble(World.peerAt(id), `<b>${esc(o.nick)}에게</b><div class="pm emo">${EMOS.map((x, i) => `<button data-em="${i}">${emoI(i)}</button>`).join('')}</div>`);
+    document.querySelectorAll('.bubble [data-em]').forEach(b => b.onclick = e => { e.stopPropagation(); World.hideBubble(); speak(EMOS[+b.dataset.em], +b.dataset.em + 1, id); });
     return;
   }
   World.hideBubble();
   if (act === 'room'){ if (solo || !playersList[id]) return toast('아직 방이 없는 친구예요'); openSheet('home'); openVisit(id); }
 }
 // 말하기 창: 이모티콘 한 번에, 글은 40자까지
-$('#temo').innerHTML = EMOS.map(x => `<button data-te="${x}">${x}</button>`).join('');
-document.querySelectorAll('[data-te]').forEach(b => b.onclick = () => speak(b.dataset.te, 1));
+$('#temo').innerHTML = EMOS.map((x, i) => `<button data-te="${i}">${emoI(i)}</button>`).join('');
+document.querySelectorAll('[data-te]').forEach(b => b.onclick = () => speak(EMOS[+b.dataset.te], +b.dataset.te + 1));
 $('#tform').onsubmit = e => { e.preventDefault(); speak($('#tin').value); $('#tin').value = ''; };
 $('#tTalk').onclick = () => { talkOn = !talkOn; $('#talk').classList.toggle('on', talkOn); $('#tTalk').textContent = talkOn ? '닫기' : '말하기'; if (talkOn && matchMedia('(pointer:fine)').matches) $('#tin').focus(); };
 // 바로 가기: 그 장소로 순간 이동한 다음 화면을 열어요
