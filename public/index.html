@@ -422,6 +422,25 @@ button.cell:not(:disabled):active{background:var(--line)}
 /* @css:bag */
 /* @css:profile */
 /* @css:rel */
+.rellist .relrow{width:100%;text-align:left;border:0;background:transparent;color:var(--text);font:inherit;min-height:54px;padding:5px 12px;gap:10px;cursor:pointer}
+.rellist .relrow:active{background:var(--soft)}
+.relface{width:40px;height:40px}.relface img,.relface .npcspr{width:100%!important;height:100%!important;image-rendering:pixelated}
+.relrow .main{gap:3px}.relrow .t b{font-family:var(--f-pxb);font-weight:normal}.relrow .t .d{display:inline;margin-left:4px}
+.rh{display:inline-flex;gap:2px;line-height:0}.rh i{width:13px;height:13px;display:inline-block;color:var(--line2)}.rh i.on{color:var(--accent)}
+.rh svg{width:100%;height:100%;shape-rendering:crispEdges;fill:currentColor;display:block}.rh.big{gap:3px}.rh.big i{width:18px;height:18px}
+.relchk{display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:var(--fs-s);color:var(--sub);white-space:nowrap;font-variant-numeric:tabular-nums}
+.relchk .on{color:var(--ok)}.tag.ev{background:var(--accent);color:#2A1506;font-family:var(--f-pxb)}
+.relback{width:44px;height:44px;margin:-12px 6px -12px -8px;vertical-align:middle}.relback svg{width:20px;height:20px}
+.relhead{display:flex;gap:14px;align-items:center}.relhead .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.relhead .nm{display:flex;align-items:baseline;gap:8px}.relhead .nm b{font-family:var(--f-pxb);font-weight:normal;font-size:var(--fs-h)}.relhead .d{font-size:var(--fs-s);color:var(--sub)}
+.relbig{width:80px;height:80px;border:2px solid var(--line2)}.relbig img,.relbig .npcspr{width:100%!important;height:100%!important;image-rendering:pixelated}
+.relgifts{padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+.relg .lab{display:block;font-size:var(--fs-s);color:var(--sub);margin-bottom:6px}
+.relg .grid{display:flex;flex-wrap:wrap;gap:6px}
+.relgift{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:72px;min-height:64px;padding:4px 2px;border-radius:var(--r-cell);background:var(--panel);border:1px solid var(--line2);font-size:var(--fs-s);text-align:center}
+.relgift .nm{font-size:var(--fs-s);line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.relgift.unk{color:var(--sub);border-style:dashed}.relgift.unk b{font-family:var(--f-pxb);font-size:22px;line-height:28px;font-weight:normal}
+.relhint{line-height:1.5}.relbtns{display:flex;gap:8px}.relbtns .btn{flex:1;min-width:0;white-space:normal;line-height:1.3;padding:6px 10px}
 /* @css:journal */
 /* @css:menu */
 /* @css:cook */
@@ -2022,6 +2041,7 @@ function renderNpcGift(){
   $('#back').onclick = closeSheet;
   on('[data-ngive]', b => { const k = b.dataset.ngive; if (done || !(me.inv[k] > 0)) return; me.inv[k]--; st.g = todayKey();
     const kind = likes.includes(k) ? 'love' : dislikes.includes(k) ? 'hate' : 'like', d = { love: 40, like: 15, hate: -30 }[kind];
+    me.giftLog = me.giftLog || {}; (me.giftLog[n.id] ||= {})[k] = kind;   // 관계 패널의 「알아낸 선물」
     const ls = P.gift?.[kind] || { love: ['우와, 이거 정말 좋아해요! 고마워요!'], like: ['고마워요, 잘 쓸게요.'], hate: ['으…… 이건 좀 별로예요.'] }[kind];
     npcMsg = ''; closeSheet(); npcAddA(n.id, d); save(); syncNpcs(); setTimeout(() => npcMenu(n, fillVars(ls[Math.floor(Math.random() * ls.length)], n.id)), 100); });
 }
@@ -2779,7 +2799,78 @@ function renderProfile(){ SOON_PANEL('내 정보', '프로필 · 능력치 · �
 // ----- /내 정보 -----
 
 // ----- 관계 (지시서 2-4) -----
-function renderRel(){ SOON_PANEL('관계', '호감도'); }
+// 목록(10명) ↔ 상세(한 명). relId가 있으면 상세. 선물 기록은 me.giftLog[npc][item] = 'love'|'like'|'hate' (renderNpcGift에서 적어요)
+let relId = null;
+const REL_WX = { rain: '비 오는 날', fog: '안개 낀 날', snow: '눈 오는 날', clear: '맑은 날' };
+const relHearts = (h, big) => `<span class="rh${big ? ' big' : ''}" aria-label="하트 ${h}/10">${Array.from({ length: 10 }, (_, i) => `<i class="${i < h ? 'on' : ''}">${ICO.heart}</i>`).join('')}</span>`;
+const relName = id => nameVar(npcGet(id)) || id;
+// 다음 이벤트 조건을 한 문장으로: "비 오는 날 저녁, 등불 시장에서……"
+function relHint(id, k, ev){
+  if (!ev) return '다음 이야기는 아직 준비 중이에요';
+  const c = ev.conditions || {}, h = hearts(id), need = c.minHeart || k;
+  if (h < need) return `호감도가 더 필요해요 (♥${need})`;
+  const parts = [];
+  const when = [c.festival ? '호박달 축제 때' : c.moon === 'full' ? '보름밤' : '', ...(c.weather || []).map(w => REL_WX[w] || WX_KO[w]), (c.time || []).map(t => BAND_KO[t]).join('이나 ')].filter(Boolean).join(' ');
+  if (when) parts.push(when);
+  const p = NL.places[c.location]; if (p) parts.push(`${fillVars(p.name, id)}에서`);
+  const extra = [];
+  (c.after || []).forEach(a => { const [o, n] = a.split(':'); extra.push(`${relName(o)}의 ♥${n} 뒤에`); });
+  if (c.afterDays) extra.push(`지난 이야기 ${c.afterDays}일 뒤`);
+  if (c.hidden) extra.push('숨어 있어요. 직접 찾아야 해요');
+  let s = parts.join(', '); if (s) s += '……';
+  return [s, ...extra].filter(Boolean).join(' · ') || '언제든 만나러 가면 돼요';
+}
+function renderRel(){
+  if (relId && npcGet(relId)) return renderRelDetail(relId);
+  relId = null;
+  const today = todayKey(), list = npcAll();
+  const rows = list.map(n => { const st = npcSt(n.id), h = hearts(n.id), ev = evCond(n.id);
+    return `<button class="li relrow" data-rel="${n.id}" aria-label="${esc(n.name)} 하트 ${h}">
+      <span class="face relface">${npcPortrait(n)}</span>
+      <span class="main"><span class="t"><b>${esc(n.name)}</b> <span class="d">${esc(n.title || '')}</span></span>${relHearts(h)}</span>
+      <span class="relchk">${ev ? '<span class="tag ev">❗ 이벤트</span>' : ''}<span class="${st.t === today ? 'on' : ''}">${st.t === today ? '✓' : '·'} 말</span><span class="${st.g === today ? 'on' : ''}">${st.g === today ? '✓' : '·'} 선물</span></span>
+    </button>`; }).join('');
+  const evN = list.filter(n => evCond(n.id)).length;
+  frame(null, '관계', `${list.length}명 · 오늘 ${evN ? `이벤트 ${evN}개 ❗` : '이벤트 없음'}`, `<div class="box rellist">${rows}</div>
+    <div class="hint">눌러서 자세히 봐요 · 그날 첫 대화 +10 · 선물은 하루 한 번</div>`);
+  on('[data-rel]', b => { relId = b.dataset.rel; render(); });
+}
+async function renderRelDetail(id){
+  const n = npcGet(id); if (!n) return renderRel();
+  const st = npcSt(id), h = hearts(id), nk = nextHeart(id), P = npcProf(id), today = todayKey();
+  const likes = P.likes || n.likes || [], dislikes = P.dislikes || n.dislikes || [], log = me.giftLog?.[id] || {};
+  const seenKs = Object.keys(st.seen).map(Number).filter(k => k >= 1 && k <= 10).sort((a, b) => a - b);
+  const evs = {}; await Promise.all([...seenKs, ...(nk ? [nk] : [])].map(async k => { evs[k] = await npcEvent(id, k); }));
+  if (relId !== id || sub !== 'rel') return;   // 기다리는 동안 다른 데로 갔어요
+  const cell = (k, known) => `<span class="cell relgift ${known ? '' : 'unk'}" title="${known ? esc(ITEM[k] || k) : '???'}">${known ? ic(k) : '<b>?</b>'}<span class="nm">${known ? esc(ITEM[k] || k) : '???'}</span></span>`;
+  const gifts = (arr, label) => `<div class="relg"><span class="lab">${label}</span><div class="grid">${arr.length ? arr.map(k => cell(k, !!log[k])).join('') : '<span class="hint">없어요</span>'}</div></div>`;
+  const seenRows = seenKs.map(k => { const s = st.seen[k], ev = evs[k];
+    return `<div class="li"><span class="gic">${s === 'fail' ? '💧' : s === 'cold' ? '🌙' : '📖'}</span><div class="main"><span class="t">♥${k} ${esc(fillVars(ev?.title || '', id)) || '(제목 없음)'}</span><span class="d">${s === 'cold' ? '서먹하게 끝났어요' : s === 'fail' ? '찾지 못했어요' : '따뜻하게 끝났어요'}</span></div>${s !== 'fail' && ev ? `<button class="btn sm" data-replay="${k}">다시 보기</button>` : ''}</div>`; }).join('');
+  const openNow = evCond(id), spot = npcSpot(n), here = World.npcAt && World.npcAt(id);
+  frame(null, `<button class="icbtn relback" id="relBack" aria-label="목록으로">${ICO.back}</button>${esc(n.name)}`, `${esc(n.title || '')} · ♥${h}`, `
+    <div class="relhead">
+      <span class="face relbig">${npcPortrait(n)}</span>
+      <div class="main">
+        <div class="nm"><b>${esc(n.name)}</b><span class="d">${esc(n.title || '')}</span></div>
+        ${relHearts(h, true)}
+        <div class="pbar"><i style="width:${h >= 10 ? 100 : st.a % 100}%"></i></div>
+        <div class="d num">${h >= 10 ? '♥10 · 마음이 다 열렸어요' : `다음 하트까지 ${100 - st.a % 100} (${st.a % 100}/100)`}${st.t === today ? ' · 오늘 대화 ✓' : ''}${st.g === today ? ' · 오늘 선물 ✓' : ''}</div>
+      </div>
+    </div>
+    <section class="sec">${secH('선물 취향', '줘 봐야 알 수 있어요')}<div class="box relgifts">${gifts(likes, '좋아하는 선물')}${gifts(dislikes, '싫어하는 선물')}</div></section>
+    <section class="sec">${secH('다음 이야기', nk ? `♥${nk}` : '')}
+      ${nk ? `<div class="hint on relhint">${openNow ? '<span class="tag ev">❗ 오늘 열렸어요</span> ' : ''}${esc(relHint(id, nk, evs[nk]))}</div>` : '<div class="hint on">모든 이야기를 다 봤어요</div>'}
+      <div class="relbtns"><button class="btn go" data-relgift="${id}" ${st.g === today ? 'disabled' : ''}>${st.g === today ? '오늘 선물했어요' : '선물 보내기'}</button><button class="btn" data-relgo="${id}" ${spot ? '' : 'disabled'}>${spot ? (here ? '말 걸러 가기' : `말 걸러 가기 (${esc(fillVars(NL.places[spot.pid]?.name || World.meta?.(spot.map)?.title || '', id))})`) : '지금은 어디 있는지 몰라요'}</button></div>
+    </section>
+    <section class="sec">${secH('본 하트 이벤트', `${seenKs.length}/10`)}${seenRows ? `<div class="box">${seenRows}</div>` : '<div class="hint">아직 본 이야기가 없어요. 호감도를 올려 봐요</div>'}</section>`);
+  $('#relBack').onclick = () => { relId = null; render(); };
+  $('#sclose').onclick = () => { relId = null; closeSheet(); };   // ✕로 닫으면 다음엔 목록부터
+  on('[data-replay]', async b => { const k = +b.dataset.replay, ev = await npcEvent(id, k); relId = null; closeSheet(); if (ev) evPlay(n, k, ev, { replay: true }); });
+  on('[data-relgift]', () => { relId = null; npcGiftId = id; openSheet('home', 'npcgift'); });
+  on('[data-relgo]', () => { const s = npcSpot(n); relId = null; closeSheet(); if (!s) return toast('지금은 어디 있는지 몰라요');
+    const walk = () => { if (!World.walkToTile(s.x, s.y)) toast('거기까진 길이 없어요'); };
+    if (World.npcAt(id)) walk(); else World.teleport(s.map, null, walk); });
+}
 // ----- /관계 -----
 
 // ----- 일지 (지시서 2-5) -----
