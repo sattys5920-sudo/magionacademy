@@ -32,10 +32,10 @@ input{font-family:var(--f-body);font-size:var(--fs);color:var(--text)}
 b,strong{font-weight:700}
 h1,h2,h3{font-weight:normal}
 /* 게임 셸: 상단 HUD · 게임 화면 · 하단 메뉴. 페이지 스크롤은 없어요 */
-#shell{position:relative;display:grid;grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"hud" "stage" "bar";height:100dvh;max-width:430px;margin:0 auto;overflow:hidden;background:var(--bg);padding-top:env(safe-area-inset-top)}
-#hud{grid-area:hud;height:var(--hud-h);display:flex;align-items:center;gap:6px;padding:0 8px;background:rgba(20,13,30,.94);border-bottom:1px solid var(--line);position:relative;z-index:12}
+#shell{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"hud" "stage" "bar";height:100dvh;max-width:430px;margin:0 auto;overflow:hidden;background:var(--bg);padding-top:env(safe-area-inset-top)}
+#hud{grid-area:hud;min-width:0;height:var(--hud-h);display:flex;align-items:center;gap:6px;padding:0 8px;background:rgba(20,13,30,.94);border-bottom:1px solid var(--line);position:relative;z-index:12}
 #stage{grid-area:stage;position:relative;min-height:0;overflow:hidden}
-#bar{grid-area:bar;height:calc(var(--bar-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);display:grid;grid-template-columns:repeat(5,1fr);background:rgba(20,13,30,.96);border-top:1px solid var(--line);position:relative;z-index:12}
+#bar{grid-area:bar;min-width:0;height:calc(var(--bar-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);display:grid;grid-template-columns:repeat(5,1fr);background:rgba(20,13,30,.96);border-top:1px solid var(--line);position:relative;z-index:12}
 #bar button{border:0;background:none;color:var(--sub);font-family:var(--f-pxb);font-size:var(--fs-s);line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:0;position:relative}
 #bar button.on{color:var(--accent)}
 #bar button:active{transform:scale(.94)}
@@ -334,6 +334,7 @@ body:not(.inworld) #talk{display:none}
 .panel .ribbon{position:static}
 
 /* 본문 */
+.panel>*{flex-shrink:0}
 .panel{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:14px 14px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;-webkit-overflow-scrolling:touch}
 .sec{display:flex;flex-direction:column;gap:8px}
 .sec-h{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:24px}
