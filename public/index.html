@@ -2143,7 +2143,7 @@ function koCheck(t, human){
   (s.match(KO_UNIT) || []).forEach(m => w.push(`숫자와 단위를 띄어 써요 「${m}」`));
   (s.match(/…+/g) || []).forEach(m => { if (m.length !== 2) w.push('말줄임표는 「……」로'); });
   ['...', '?!', '!?', '!!', '~~'].forEach(b => { if (s.includes(b)) w.push(`「${b}」는 쓰지 않아요`); });
-  KO_WRONG.forEach(b => { if (s.includes(b)) w.push(`틀린 표기 「${b}」`); });
+  KO_WRONG.forEach(b => { if (['구지', '바램', '되요'].includes(b) ? new RegExp('(?<![가-힣])' + b).test(s) : s.includes(b)) w.push(`틀린 표기 「${b}」`); });   // 「식구지」 같은 낱말 속 조각은 빼요
   KO_NAMES.forEach(b => { if (s.includes(b)) w.push(`사람 NPC 이름은 변수로 「${b}」 → {sera.name} 등`); });
   if (human){ const m = KO_GENDER.exec(s); if (m) w.push(`성별을 단정하는 말 「${m[1]}」`); }
   return w;

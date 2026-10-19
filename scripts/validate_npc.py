@@ -49,7 +49,7 @@ def korean(where, t, human_ctx, errs):
         if bad in t: errs.append(f'{where}: 「{bad}」 금지 → {t[:40]}')
     if '..' in t and '...' not in t: errs.append(f'{where}: 마침표 겹침 → {t[:40]}')
     for w in WRONG:
-        if w in t: errs.append(f'{where}: 틀린 표기 「{w}」 → {t[:40]}')
+        if (re.search(r'(?<![가-힣])' + w, t) if w in ('구지', '바램', '되요') else w in t): errs.append(f'{where}: 틀린 표기 「{w}」 → {t[:40]}')
     for n in NAMES:
         if n in t: errs.append(f'{where}: 사람 NPC 이름은 변수로 ({{sera.name}} 등) 「{n}」 → {t[:40]}')
     if human_ctx:
