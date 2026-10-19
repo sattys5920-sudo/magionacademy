@@ -47,7 +47,7 @@ async function metrics(p){
       ok(m.contrast === 0, `${name}: 명도 대비 위반 ${m.contrast}`);
       ok(m.touch === 0, `${name}: 44px 미만 버튼 ${m.touch}개 ${m.tex.join(' ')}`);
       // 닫기: 패널은 Esc, 그 밖은 각자
-      if (name === 'map') await p.click('#mClose'); else if (name === 'talk') await p.click('#tChat'); else if (name === 'npc') await p.evaluate(() => document.querySelector('#npcui [data-nx="close"]')?.click());
+      if (name === 'world') {} else if (name === 'map') await p.click('#mClose'); else if (name === 'talk') await p.click('#tChat'); else if (name === 'npc') await p.evaluate(() => document.querySelector('#npcui [data-nx="close"]')?.click());
       else { await p.keyboard.press('Escape'); await p.waitForTimeout(250); ok(!(await p.evaluate(() => document.querySelector('#app').classList.contains('open'))), `${name}: Esc로 안 닫힘`); }
       await p.waitForTimeout(200);
     }
