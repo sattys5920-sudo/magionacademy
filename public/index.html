@@ -429,10 +429,36 @@ button.cell:not(:disabled):active{background:var(--line)}
 /* @css:room */
 /* @css:fish */
 /* @css:lab */
+.labwrap{display:flex;flex-direction:column;gap:14px}
+.labmain{display:flex;flex-direction:column;gap:10px}
+.labrow{display:flex;align-items:center;gap:10px}
+.reclist{max-height:220px;overflow-y:auto}.reclist .li{width:100%;border:0;background:none;color:var(--text);text-align:left;cursor:pointer}.reclist .li:active{background:var(--line)}
+.cauldron{position:relative;border-radius:var(--r-panel);background:radial-gradient(ellipse at 50% 80%,#3B2A5E,var(--panel2) 70%);border:1px solid var(--line2);min-height:190px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:12px;gap:4px;transition:box-shadow .15s}
+.cauldron.over{box-shadow:0 0 0 3px var(--accent)}
+.cauldron.ready{box-shadow:0 0 0 2px var(--purple)}
+.cslots{display:flex;gap:10px;margin-bottom:-6px;position:relative;z-index:2}
+.cslot{width:56px;height:56px;border-radius:50%;border:2px dashed var(--line2);background:rgba(20,13,30,.5);display:flex;align-items:center;justify-content:center;color:var(--sub);font-family:var(--f-pxb);padding:0}
+.cslot.on{border:2px solid var(--purple);background:var(--panel);cursor:pointer}
+.cpot{position:relative;width:120px;height:110px;display:flex;align-items:center;justify-content:center}
+.bub{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--purple);opacity:0}
+.cauldron.ready .bub{animation:bub 1.6s infinite}.cauldron.ready .b1{left:40px;animation-delay:0s}.cauldron.ready .b2{left:60px;animation-delay:.5s}.cauldron.ready .b3{left:78px;animation-delay:1s}
+@keyframes bub{0%{bottom:48px;opacity:0;transform:scale(.6)}30%{opacity:.9}100%{bottom:96px;opacity:0;transform:scale(1.3)}}
+.cauldron.done .cpot{filter:drop-shadow(0 0 14px var(--gold))}
+.result{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(20,13,30,.55);border-radius:var(--r-panel);z-index:3;animation:toastin .2s}
+.rcard{background:var(--panel);border:1px solid var(--accent);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;align-items:center;gap:6px;max-width:92%;text-align:center}
+.rcard b{font-family:var(--f-pxb);font-size:var(--fs-h)}.rcard .frow{display:flex;gap:8px;margin-top:4px}
+.matrow{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,1fr);grid-auto-columns:78px;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;scroll-snap-type:x proximity}
+.matrow .cell{scroll-snap-align:start;min-height:72px;touch-action:none}
+.dragghost{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-60%) scale(1.3);filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))}
+.dexgrid{grid-template-columns:repeat(4,1fr)}.dexgrid .cell{min-height:76px}
+.dno{position:absolute;left:5px;top:3px;font-size:var(--fs-s);line-height:1;color:var(--sub);font-variant-numeric:tabular-nums}
+.cell.unk .ic{filter:brightness(0);opacity:.2}.cell.hint2 .ic{opacity:.5}
+@media (min-width:900px){.labwrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-areas:"main mats";align-items:start}.labmain{grid-area:main}.labmats{grid-area:mats}.matrow{grid-auto-flow:row;grid-template-rows:none;grid-template-columns:repeat(3,1fr);grid-auto-columns:auto;overflow:visible;max-height:420px;overflow-y:auto}.dexgrid{grid-template-columns:repeat(5,1fr)}}
 /* @css:map */
 /* @css:npc */
 /* @css:games */
 /* @css:misc */
+.today .tico{font-size:22px;width:32px;text-align:center;flex-shrink:0}
 /* 확인 창 */
 #confirm{position:absolute;inset:0;z-index:45;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(10,6,20,.6)}
 #confirm.on{display:flex}
@@ -2795,7 +2821,12 @@ function renderSettings(){ SOON_PANEL('설정', ''); }
 function renderHome(){
   const left = me.orders.filter(o => !o.done).length;
   const H = HOUSES[me.house], nowK = houseNow(), N = HOUSES[nowK], mine = nowK === me.house;
-  frame('island', dayLabel(), `1학년 · ${H.name} · 오늘 할 일`, `
+  const d = new Date(), wx = weatherToday(), openEv = npcAll().filter(x => evCond(x.id));
+  frame('island', '오늘의 정보', `${dayLabel()} · 1학년 · ${H.name}`, `
+    <div class="box today">
+      <div class="li"><span class="tico">${isFullMoon() ? '🌕' : { clear: '✨', rain: '☔', fog: '🌫', snow: '❄' }[wx]}</span><div class="main"><span class="t">${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${BAND_KO[bandNow(d.getHours())]} · ${WX_KO[wx]}${isFullMoon() ? ' · 호박달 축제' : ''}</span><span class="d">${mine ? `${N.name}의 시간 · 내 보너스 중!` : `${N.name}의 시간 · ${hoursText(N)}`}</span></div></div>
+      <div class="li"><span class="tico">💗</span><div class="main"><span class="t">${openEv.length ? `오늘 열린 하트 이벤트 ${openEv.length}개` : '오늘 열린 하트 이벤트 없음'}</span><span class="d">${openEv.length ? openEv.map(x => `${x.name} ♥${evCond(x.id).k}`).join(' · ') : '호감도를 올리거나 다른 시간·날씨에 다시 봐요'}</span></div>${openEv.length ? '<button class="btn sm" id="goJournal">일지</button>' : ''}</div>
+    </div>
     <div id="evBanner" style="display:contents">${eventBannerHTML()}</div>
     <section class="sec">
       ${secH('오늘의 주문', `${left} / ${me.orders.length} 남음`)}
@@ -2819,9 +2850,8 @@ function renderHome(){
       <div class="tiles">${[['lab', 'cauldron', 'lab', 'cauldron', '물약 교실', '물약 끓이기·도감'], ['toxic', 'bed', 'green', 'sprout', '독초 온실', '씨앗 심고 수확'], ['pen', 'trough', 'ranch', 'egg', '내 사육장', '생물 돌보기·부화실'], ['campus', 'stall', 'market', 'bag', '등불 시장', '사고팔기·친구']]
         .map(([m, o, t, i, n, d]) => `<button class="tile px" data-go="${m},${o},${t}">${ic(i)}<span class="main"><span class="b">${n}</span><span class="s sub">${d}</span></span></button>`).join('')}</div>
     </section>
-`, {
-    ribbon: `<div class="ribbon px" style="background:${mine ? N.col : 'rgba(34,24,63,.88)'}">${ic(N.icon)}${N.name}의 시간 · ${mine ? '내 보너스 중!' : hoursText(N)}</div>`,
-  });
+`);
+  const gj = $('#goJournal'); if (gj) gj.onclick = () => openSheet('home', 'journal');
   on('[data-deliver]', b => {
     const o = me.orders[+b.dataset.deliver];
     if (me.inv[o.p] < o.n) return;
@@ -3088,69 +3118,102 @@ let slots = [], brewMsg = null;
 const shortName = k => SHORT[k] || ITEM[k].replace(' 물약', '');
 let dexSel = null, dexPage = 0, matAll = false;
 const DEX_PAGE = 20;
+let labTab = 'brew', recipeOpen = false, brewDone = null, dragK = null;
+// 레시피를 고르면 솥에 자동으로 넣어요 (재료가 있는 만큼)
+function labFill(p){ const r = POTION_INFO[p].r.slice(); slots = []; const used = {}; r.forEach(k => { used[k] = (used[k] || 0) + 1; if ((me.inv[k] || 0) >= used[k]) slots.push(k); }); brewMsg = slots.length < 3 ? `재료가 모자라요 · ${recipeText(p)}` : null; recipeOpen = false; }
+function labAdd(k){ const left = (me.inv[k] || 0) - slots.filter(s => s === k).length; if (left <= 0 || slots.length >= 3) return; slots.push(k); brewMsg = null; brewDone = null; renderLab(); }
 function renderLab(){
-  const n = me.found.length, sel = dexSel && POTION_INFO[dexSel];
-  frame('lab', '물약 교실', `물약 도감 ${n} / ${POTIONS.length}`, `
-    <section class="sec">
-      ${secH('솥', `재료 3개 · 마력 ${brewCost()}`)}
-      <div class="grid" style="grid-template-columns:repeat(3,1fr)">
-        ${[0, 1, 2].map(i => slots[i] ? `<button class="cell slot on" data-take="${i}">${ic(slots[i])}<span class="s">${shortName(slots[i])}</span></button>` : `<div class="cell slot"><span class="s sub">빈 칸</span></div>`).join('')}
+  const n = me.found.length, sel = dexSel && POTION_INFO[dexSel], known = me.hints.filter(p => POTION_INFO[p]);
+  const key = slots.slice().sort().join(','), hit = slots.length === 3 && RECIPES[key] && me.hints.includes(RECIPES[key]) ? RECIPES[key] : null;
+  const tabs = `<div class="seg" style="grid-template-columns:1fr 1fr"><button class="${labTab === 'brew' ? 'on' : ''}" data-labtab="brew">${ic('cauldron', 'transform:scale(.6);margin:-8px -4px -8px -8px')}제조</button><button class="${labTab === 'dex' ? 'on' : ''}" data-labtab="dex">도감 ${n} / ${POTIONS.length}</button></div>`;
+  let body = '';
+  if (labTab === 'brew'){
+    const mats = MATS.filter(k => matAll || me.inv[k] > 0 || slots.includes(k));
+    body = `<div class="labwrap">
+      <div class="labmain">
+        <div class="labrow">
+          <button class="btn sm" id="recipePick" style="flex:1;justify-content:space-between">${hit ? ITEM[hit] : '레시피 선택'} <span>▼</span></button>
+          <span class="s sub num">마력 ${brewCost()}</span>
+        </div>
+        ${recipeOpen ? `<div class="box reclist">${known.length ? known.map(p => `<button class="li" data-recipe="${p}">${ic(p)}<span class="main"><span class="t">${ITEM[p]}</span><span class="d">${recipeText(p)}</span></span>${POTION_INFO[p].time ? houseTag(POTION_INFO[p].time) : ''}</button>`).join('') : '<div class="hint" style="padding:12px">아직 아는 레시피가 없어요. 수업을 듣거나 재료를 섞어 봐요.</div>'}</div>` : ''}
+        <div class="cauldron ${brewDone ? 'done' : slots.length === 3 ? 'ready' : ''}" id="cauldron">
+          <div class="cslots">${[0, 1, 2].map(i => slots[i] ? `<button class="cslot on" data-take="${i}" title="빼기">${ic(slots[i])}</button>` : `<div class="cslot"><span>${i + 1}</span></div>`).join('')}</div>
+          <div class="cpot">${ic('cauldron', 'transform:scale(2.4)')}<i class="bub b1"></i><i class="bub b2"></i><i class="bub b3"></i></div>
+          ${brewDone ? `<div class="result"><div class="rcard">${ic(brewDone.p, 'transform:scale(1.6);margin:8px')}<b>${brewDone.p ? ITEM[brewDone.p] : '실패'}</b><span class="s">${esc(brewDone.msg)}</span><div class="frow"><button class="btn sm go" id="brewBag">가방에 넣기</button><button class="btn sm" id="brewAgain" ${brewDone.p && brewDone.again ? '' : 'disabled'}>한 번 더</button></div></div></div>` : ''}
+        </div>
+        <div class="s sub" style="text-align:center">${hit ? `${ITEM[hit]} 레시피예요` : slots.length ? `넣은 재료 ${slots.length} / 3` : '재료를 눌러 넣거나, 솥 위로 끌어다 놓아요'}</div>
+        <button class="btn go" id="brew" ${slots.length === 3 && me.mana >= brewCost() && !brewDone ? '' : 'disabled'}>${ic('cauldron', 'transform:scale(.7);margin:-6px')}끓이기 (마력 ${brewCost()})</button>
+        ${brewMsg ? `<div class="hint on">${esc(brewMsg)}</div>` : ''}
       </div>
-      <button class="btn go px" id="brew" ${slots.length === 3 && me.mana >= brewCost() ? '' : 'disabled'}>${ic('cauldron')}끓이기</button>
-      ${hint(brewMsg, '아래 재료를 눌러 솥에 넣어요. 넣은 재료를 누르면 다시 빼요.')}
-    </section>
-    <section class="sec">
-      <div class="sec-h"><h3>재료함</h3><button class="btn ghost" id="matAll">${matAll ? '가진 것만 보기' : `전부 보기 (${MATS.length}종)`}</button></div>
-      <div class="grid" style="grid-template-columns:repeat(4,1fr)">
-        ${(() => { const l = MATS.filter(k => matAll || me.inv[k] > 0 || slots.includes(k)); return l.length ? '' : '<div class="hint" style="grid-column:1/-1">재료가 없어요. 온실과 사육장에서 모아 와요.</div>'; })()}
-        ${MATS.filter(k => matAll || me.inv[k] > 0 || slots.includes(k)).map(k => { const left = me.inv[k] - slots.filter(s => s === k).length; return `<button class="cell" data-add="${k}" ${left > 0 && slots.length < 3 ? '' : 'disabled'}>${ic(k)}<span class="s">${shortName(k)}</span><span class="n">${left}</span></button>`; }).join('')}
-      </div>
-    </section>
-    <section class="sec">
-      ${secH('물약 도감', `${n} / ${POTIONS.length} 발견`)}
-      <div class="seg px" style="grid-template-columns:repeat(5,1fr)">${[0, 1, 2, 3, 4].map(i => { const got = POTIONS.slice(i * DEX_PAGE, (i + 1) * DEX_PAGE).filter(p => me.found.includes(p)).length; return `<button class="${dexPage === i ? 'on' : ''}" data-dexpage="${i}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:14px;min-height:42px">${i * DEX_PAGE + 1}~${(i + 1) * DEX_PAGE}<span class="s" style="font-size:12px">${got}/${DEX_PAGE}</span></button>`; }).join('')}</div>
-      <div class="grid" style="grid-template-columns:repeat(4,1fr)">
+      <section class="sec labmats">
+        <div class="sec-h"><h3>재료 칸</h3><button class="btn ghost" id="matAll">${matAll ? '가진 것만' : `전부 (${MATS.length}종)`}</button></div>
+        <div class="matrow">${mats.length ? mats.map(k => { const left = (me.inv[k] || 0) - slots.filter(s => s === k).length; return `<button class="cell mat" data-add="${k}" draggable="${left > 0}" ${left > 0 && slots.length < 3 ? '' : 'disabled'}>${ic(k)}<span class="s">${shortName(k)}</span><span class="n">${left}</span></button>`; }).join('') : '<div class="hint" style="padding:16px">재료가 없어요. 온실과 사육장, 채집으로 모아 와요.</div>'}</div>
+      </section>
+    </div>`;
+  } else {
+    body = `<section class="sec">
+      <div class="seg" style="grid-template-columns:repeat(5,1fr)">${[0, 1, 2, 3, 4].map(i => { const got = POTIONS.slice(i * DEX_PAGE, (i + 1) * DEX_PAGE).filter(p => me.found.includes(p)).length; return `<button class="${dexPage === i ? 'on' : ''}" data-dexpage="${i}" style="flex-direction:column;line-height:1.2;min-height:44px;display:flex;align-items:center;justify-content:center">${i * DEX_PAGE + 1}~${(i + 1) * DEX_PAGE}<span class="s">${got}/${DEX_PAGE}</span></button>`; }).join('')}</div>
+      <div class="grid dexgrid">
         ${POTIONS.slice(dexPage * DEX_PAGE, (dexPage + 1) * DEX_PAGE).map(p => {
           const got = me.found.includes(p), known = me.hints.includes(p), T = POTION_INFO[p].time;
-          return `<button class="cell ${dexSel === p ? 'sel' : ''}" data-dex="${p}" style="${T ? `background:${HOUSES[T].bg}` : ''}"><span style="position:absolute;left:3px;top:2px;font-family:'G11',monospace;font-size:var(--fs-s);line-height:11px;color:var(--sub)">${POTIONS.indexOf(p) + 1}</span>
-            ${ic(p, got ? '' : known ? 'opacity:.45' : 'filter:brightness(0);opacity:.18')}<span class="s ${got ? '' : 'sub'}">${got || known ? shortName(p) : '???'}</span>${me.inv[p] ? `<span class="n">${me.inv[p]}</span>` : ''}</button>`;
+          return `<button class="cell ${dexSel === p ? 'sel' : ''} ${got ? '' : known ? 'hint2' : 'unk'}" data-dex="${p}" style="${T && got ? `border-color:${HOUSES[T].col}` : ''}"><span class="dno">${POTIONS.indexOf(p) + 1}</span>${ic(p)}<span class="s ${got ? '' : 'sub'}">${got || known ? shortName(p) : '???'}</span>${me.inv[p] ? `<span class="n">${me.inv[p]}</span>` : ''}</button>`;
         }).join('')}
       </div>
-      ${sel ? `<div class="box px" style="padding:10px 12px;display:flex;flex-direction:column;gap:6px">
+      ${sel ? `<div class="box" style="padding:10px 12px;display:flex;flex-direction:column;gap:6px">
         <div class="sec-h"><h3>${me.found.includes(dexSel) || me.hints.includes(dexSel) ? ITEM[dexSel] : '아직 모르는 물약'}</h3>${sel.time ? houseTag(sel.time) : `<span class="meta">주문 ${sel.pay}G</span>`}</div>
         ${sel.time ? `<span class="s" style="color:${HOUSES[sel.time].col}">${HOUSES[sel.time].name}의 시간(${hoursText(HOUSES[sel.time])})에만 끓어요 · 주문 ${sel.pay}G</span>` : ''}
         <span class="s">${me.hints.includes(dexSel) || me.found.includes(dexSel) ? '레시피 · ' + recipeText(dexSel) : '수업을 듣거나, 재료를 섞어 보며 찾아봐요.'}</span>
         ${sel.use ? `<span class="s sub">마시면 · ${sel.use}</span>` : sel.desc ? `<span class="s sub">${sel.desc}</span>` : ''}
-        ${sel.use ? `<button class="btn sm go" id="drink" ${me.inv[dexSel] ? '' : 'disabled'}>마시기 (${me.inv[dexSel]}병)</button>` : ''}
+        <div class="frow" style="display:flex;gap:8px">${me.hints.includes(dexSel) ? `<button class="btn sm go" id="dexBrew">솥에 넣기</button>` : ''}${sel.use ? `<button class="btn sm" id="drink" ${me.inv[dexSel] ? '' : 'disabled'}>마시기 (${me.inv[dexSel] || 0}병)</button>` : ''}</div>
       </div>` : '<div class="hint">물약을 누르면 레시피와 쓰임새를 볼 수 있어요</div>'}
-    </section>`);
-  on('[data-add]', b => { slots.push(b.dataset.add); brewMsg = null; renderLab(); });
-  on('[data-take]', b => { slots.splice(+b.dataset.take, 1); renderLab(); });
+    </section>`;
+  }
+  frame('lab', '물약 교실', `물약 도감 ${n} / ${POTIONS.length}`, tabs + body);
+  on('[data-labtab]', b => { labTab = b.dataset.labtab; renderLab(); });
+  on('[data-add]', b => labAdd(b.dataset.add));
+  on('[data-take]', b => { slots.splice(+b.dataset.take, 1); brewDone = null; renderLab(); });
   on('[data-dex]', b => { dexSel = dexSel === b.dataset.dex ? null : b.dataset.dex; renderLab(); });
-  $('#matAll').onclick = () => { matAll = !matAll; renderLab(); };
+  on('[data-recipe]', b => { labFill(b.dataset.recipe); brewDone = null; renderLab(); });
   on('[data-dexpage]', b => { dexPage = +b.dataset.dexpage; dexSel = null; renderLab(); });
-  const dk = $('#drink'); if (dk) dk.onclick = () => { brewMsg = usePotion(dexSel); renderLab(); };
-  $('#brew').onclick = () => {
+  const ma = $('#matAll'); if (ma) ma.onclick = () => { matAll = !matAll; renderLab(); };
+  const rp = $('#recipePick'); if (rp) rp.onclick = () => { recipeOpen = !recipeOpen; renderLab(); };
+  const dk = $('#drink'); if (dk) dk.onclick = () => { brewMsg = usePotion(dexSel); toast(brewMsg); renderLab(); };
+  const db_ = $('#dexBrew'); if (db_) db_.onclick = () => { labFill(dexSel); brewDone = null; labTab = 'brew'; renderLab(); };
+  const bb = $('#brewBag'); if (bb) bb.onclick = () => { brewDone = null; renderLab(); };
+  const ba = $('#brewAgain'); if (ba) ba.onclick = () => { const p = brewDone.p; brewDone = null; labFill(p); renderLab(); };
+  // 끌어다 놓기: 재료 칸 → 솥 (마우스는 HTML 드래그, 손가락은 포인터로)
+  const pot = $('#cauldron');
+  if (pot){
+    app.querySelectorAll('.mat[draggable="true"]').forEach(c => { c.ondragstart = e => { dragK = c.dataset.add; e.dataTransfer.setData('text', dragK); };
+      c.onpointerdown = e => { if (e.pointerType === 'mouse') return; dragK = c.dataset.add; const g = document.createElement('div'); g.className = 'dragghost'; g.innerHTML = ic(dragK); document.body.appendChild(g); const mv = ev => { g.style.left = ev.clientX + 'px'; g.style.top = ev.clientY + 'px'; const r = pot.getBoundingClientRect(); pot.classList.toggle('over', ev.clientX > r.left && ev.clientX < r.right && ev.clientY > r.top && ev.clientY < r.bottom); };
+        const up = ev => { document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up); g.remove(); const r = pot.getBoundingClientRect(); const inside = ev.clientX > r.left && ev.clientX < r.right && ev.clientY > r.top && ev.clientY < r.bottom; pot.classList.remove('over'); if (inside) labAdd(dragK); dragK = null; };
+        mv(e); document.addEventListener('pointermove', mv); document.addEventListener('pointerup', up); }; });
+    pot.ondragover = e => { e.preventDefault(); pot.classList.add('over'); }; pot.ondragleave = () => pot.classList.remove('over');
+    pot.ondrop = e => { e.preventDefault(); pot.classList.remove('over'); const k = e.dataTransfer.getData('text') || dragK; if (k) labAdd(k); };
+  }
+  const br = $('#brew'); if (br) br.onclick = () => {
     const key = slots.slice().sort().join(',');
     const p = RECIPES[key], T = p && POTION_INFO[p].time;
     if (T && houseNow() !== T){
       brewMsg = `솥이 잠잠해요... 이 조합은 ${HOUSES[T].name}의 시간(${hoursText(HOUSES[T])})에만 끓어요. 재료는 그대로 있어요.`;
       return renderLab();
     }
-    slots.forEach(k => me.inv[k]--);
-    me.mana -= brewCost();
+    const used = slots.slice(); slots.forEach(k => me.inv[k]--);
+    me.mana -= brewCost(); sfx('bubble');
+    let msg;
     if (p){
       me.inv[p]++;
       const isNew = !me.found.includes(p);
       if (isNew) me.found.push(p);
       if (!me.hints.includes(p)) me.hints.push(p);
-      brewMsg = `${ITEM[p]} 완성!${isNew ? ' 도감에 새로 적었어요.' : ''}`;
-      dexSel = p; dexPage = Math.floor(POTIONS.indexOf(p) / DEX_PAGE);
+      msg = isNew ? '도감에 새로 적었어요!' : '완성!';
+      dexSel = p; dexPage = Math.floor(POTIONS.indexOf(p) / DEX_PAGE); toast(`${ITEM[p]} 완성!`);
     } else if (me.house === 'ember' && myTime()){
       const back = slots[Math.floor(Math.random() * 3)]; me.inv[back]++;
-      brewMsg = `보라색 연기만 피어올랐어요... 그래도 Emberkiln의 낮이라 ${withJosa(ITEM[back], '을', '를')} 건졌어요.`;
-    } else brewMsg = '보라색 연기만 피어올랐어요... 재료는 사라졌어요.';
-    slots = []; save(); renderLab();
+      msg = `보라색 연기만 피어올랐어요... 그래도 Emberkiln의 낮이라 ${withJosa(ITEM[back], '을', '를')} 건졌어요.`;
+    } else msg = '보라색 연기만 피어올랐어요... 재료는 사라졌어요.';
+    const again = p && used.every(k => (me.inv[k] || 0) >= used.filter(x => x === k).length);
+    brewDone = { p, msg, again }; brewMsg = null; slots = []; save(); hud(); renderLab();
   };
 }
 
