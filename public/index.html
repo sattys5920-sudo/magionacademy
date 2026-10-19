@@ -148,6 +148,25 @@ body.admin .hud,body.admin .fab,body.admin #world{display:none}
 .adtbl>div{display:grid;grid-template-columns:80px 70px 64px 40px 40px 30px 50px 50px 46px 30px 30px 150px;gap:4px;background:#fff;padding:3px 6px;white-space:nowrap;min-width:max-content}
 .adtbl>div.h{background:#22183F;color:#FFD866}
 .adcard{background:#fff;border:3px solid #22183F;padding:8px;display:flex;flex-direction:column;gap:3px}
+.ck-css{}
+.cook{width:100%;max-width:360px;background:#FAF1E2;color:#22183F;box-shadow:0 0 0 3px #22183F;padding:10px;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
+.ckhd{display:flex;width:100%;justify-content:space-between;align-items:center;gap:6px}.ckhd b{font-family:'G11B',monospace}
+.ckst{display:flex;gap:3px;align-items:center;color:var(--sub)}.ckst i{font-style:normal;padding:0 6px;background:#E8DCF0}.ckst i.on{background:#FFD866;color:#22183F}.ckst i.ok{background:#8CE6B0;color:#1E3A2A}
+.ckrcp{display:flex;align-items:center;gap:4px}.cksl{padding:2px;box-shadow:0 0 0 2px #E8DCF0;background:#fff}.cksl.ok{opacity:.4}.cksl.now{box-shadow:0 0 0 2px var(--bad)}
+.cook .bad{color:var(--bad)}
+.ckig{display:grid;grid-template-columns:repeat(auto-fit,minmax(56px,1fr));gap:6px;width:100%}.ckig button{height:52px;border:0;background:#fff;box-shadow:0 0 0 2px #22183F,inset 0 -4px 0 #E8DCF0;display:flex;align-items:center;justify-content:center;touch-action:none}
+.cktb{position:relative;width:100%;height:24px;background:linear-gradient(90deg,#4A6AC8,#8A5AC8 40%,#E06A3A 80%,#FF3A3A);box-shadow:0 0 0 2px #22183F}.cktb .z{position:absolute;top:0;bottom:0;background:rgba(140,230,176,.9);box-shadow:inset 0 0 0 2px #fff}.cktb .n{position:absolute;top:-5px;bottom:-5px;width:4px;margin-left:-2px;background:#FFD866;box-shadow:0 0 0 2px #22183F}
+.cktl{display:flex;justify-content:space-between;width:100%;color:var(--sub);font-size:10px;font-family:'G9',monospace}
+.ckpg{width:100%;height:10px;background:#E8DCF0;box-shadow:0 0 0 2px #22183F}.ckpg i{display:block;height:100%;width:0;background:#8CE6B0}
+.ckbt{width:100%;min-height:46px;border:3px solid #3A2860;font-family:'G11B',monospace;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;touch-action:none;user-select:none;-webkit-user-select:none}
+.ckbt.fire{background:#FFB04A;box-shadow:inset 0 -4px 0 #D9701A;color:#3A1E10}.ckbt.fire.press{transform:translateY(2px);box-shadow:inset 0 -2px 0 #D9701A}.ckbt.go{background:#8CE6B0;box-shadow:inset 0 -4px 0 #3FAF74;color:#1E3A2A}.ckbt.w{background:#fff;box-shadow:inset 0 -4px 0 #E8DCF0;color:#3A2860}
+.ckpad{width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,#FAF1E2 32%,#E8DCF0 33%,#E8DCF0 62%,#FAF1E2 63%);box-shadow:0 0 0 2px #22183F;position:relative;touch-action:none}
+.ckpad i{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#FFD866;box-shadow:0 0 0 2px #22183F;left:90%;top:50%}.ckpad b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--sub);font-family:'G11',monospace;font-weight:normal;pointer-events:none}
+.ckres{display:flex;gap:10px;align-items:center;text-align:left}.ckres div{display:flex;flex-direction:column;gap:2px}.ckres b{font-family:'G11B',monospace}
+.ckstar{color:#E0A020;font-family:'G11B',monospace}.ckbest{background:#FFD866;font-family:'G11B',monospace;padding:0 6px;box-shadow:0 0 0 2px #22183F}
+.ckef{background:#fff;box-shadow:0 0 0 2px #E8DCF0;padding:6px 8px;width:100%;box-sizing:border-box;text-align:left}.ckef div{display:flex;justify-content:space-between;gap:6px}.ckef s{color:var(--sub)}
+.ckrow{display:flex;gap:8px;width:100%}
+#buffChip{max-width:220px;white-space:normal;font-size:12px;line-height:14px}
 #talk{position:absolute;left:10px;right:80px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;display:none;flex-direction:column;gap:6px;font-family:'G11',monospace}
 #talk.on{display:flex}
 body:not(.inworld) #talk{display:none}
@@ -291,7 +310,7 @@ button.who:not(:disabled){border-color:var(--ink)}
 <div id="shell">
   <div id="world"><canvas id="cv"></canvas>
     <div class="hud"><div class="chip"><b id="place">호박달 마녀학교</b><span id="sub">바닥을 눌러 걸어요</span></div>
-      <div class="hudr"><div class="chip" id="clock"></div><div class="chip" id="wallet"></div><button class="chip ev" id="evChip" hidden></button><button class="chip ev" id="gameChip" hidden></button></div></div>
+      <div class="hudr"><div class="chip" id="clock"></div><div class="chip" id="wallet"></div><button class="chip ev" id="evChip" hidden></button><button class="chip ev" id="gameChip" hidden></button><div class="chip" id="buffChip" hidden></div></div></div>
     <div id="fade"></div>
   </div>
   <div class="fab"><button id="tToday" class="main">오늘</button><button id="tTalk">말하기</button><button id="tMap">지도</button><button id="tZoom">멀리</button><button id="tDay">밝게</button></div>
@@ -315,6 +334,7 @@ const ICONS = ['coin','mana','p_red','p_blue','p_green','p_purple','herb','mush'
   'p_grow','p_vigor','p_fluff','p_dragon','p_dawn','p_sun','p_dusk','p_moon','mist','sun','pollen','stardust','whisker','slime','honey','silk','feather','milk','hegg'];
 const ic = (k, extra='') => { const P = POTION_INFO[k], G = !ICONS.includes(k) && typeof SEED_INFO !== 'undefined' && SEED_INFO[k], C = typeof CATCH_INFO !== 'undefined' && CATCH_INFO[k];
   if (C) return `<i class="ic" style="background:url(art/${C.sheet}.png?v=${FISH_ART_V}) ${-32 * C.i}px 0/${32 * C.n}px 32px no-repeat;${extra}"></i>`;
+  const D = typeof DISH_INFO !== 'undefined' && DISH_INFO[k]; if (D) return `<i class="ic" style="background:url(art/dishes.png?v=${DISH_ART_V}) ${-32 * D.i}px 0/${32 * 40}px 32px no-repeat;${extra}"></i>`;
   if (G) return `<i class="ic" style="background-image:url(art/plants.png);background-position:${-32 * (G.ic % 10)}px ${-32 * Math.floor(G.ic / 10)}px;${extra}"></i>`;
   return P ? `<i class="ic" style="background-image:url(art/potions.png);background-position:${-32 * (P.ic % 10)}px ${-32 * Math.floor(P.ic / 10)}px;${extra}"></i>`
     : `<i class="ic" style="background-position:${-32 * ICONS.indexOf(k)}px 0;${extra}"></i>`; };
@@ -623,7 +643,7 @@ const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${d.ge
 const roomNo = (house, key) => (HOUSE_KEYS.indexOf(house) + 1) * 100 + [...String(key)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 997, 7) % 12 + 1;
 const brewCost = () => me.house === 'ember' ? 4 : 5;
 const waterCost = () => me.house === 'dew' ? 0 : 1;
-const payOf = o => me.house === 'moon' ? Math.round(o.pay * 1.1) : o.pay;
+const payOf = o => Math.round(o.pay * (me.house === 'moon' ? 1.1 : 1) * (typeof buffOn === 'function' && buffOn('coin') ? 1.2 : 1));
 
 const ORDER_FROM =['양호 선생님', '교장실', '같은 반 친구', '사육장 관리인', '도서관 사서', '천문탑'];
 
@@ -657,7 +677,7 @@ function normalize(p){
   if (p.furn){ p.fbag = p.fbag || {}; Object.entries(p.furn).forEach(([k, st]) => { if (st?.own && OLD_FURN[k]) p.fbag[OLD_FURN[k]] = (p.fbag[OLD_FURN[k]] || 0) + 1; }); delete p.furn; }
   p.fbag = p.fbag || {}; p.room = (p.room || []).filter(r => FURN_BY[r.f]); p.common = p.common || { stage: 1, pool: {} }; p.common.pool = p.common.pool || {};
   p.orders = p.orders || []; p.know = p.know || 0;
-  p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look)); p.closet = p.closet || {}; p.rod = p.rod || 0; p.fdex = p.fdex || {};   // rod 낚싯대 단계, fdex 낚시·채집 도감 { id: { n, cm } }   // closet: 옷 가게에서 산 옷 { '부위:부품id': 1 }
+  p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look)); p.closet = p.closet || {}; p.rod = p.rod || 0; p.fdex = p.fdex || {}; p.buffs = p.buffs || {}; p.cdex = p.cdex || {};   // rod 낚싯대 단계, fdex 낚시·채집 도감 { id: { n, cm } }   // closet: 옷 가게에서 산 옷 { '부위:부품id': 1 }
   p.plots = (p.plots || []).map(x => {
     if (!x.k || !SEED_INFO[x.k]) return { k: null };
     if (x.at) return x;
@@ -741,6 +761,7 @@ function hud(){
   $('#wallet').innerHTML = `${me.coin.toLocaleString()}G · 마력 ${me.mana}`;
   const ev = eventAt(), live = ev && Date.now() < ev.end, c = $('#evChip');
   c.hidden = !live; if (live) c.textContent = `${ev.E.name} 진행 중!`;
+  if (typeof syncBuffs === 'function') syncBuffs();
 }
 // 사육장 우리: 학생마다 한 칸 (가입 순서대로 12칸). 혼자 모드는 1번 칸
 const PEN_SLOTS = 12;
@@ -870,7 +891,7 @@ const fishNow = f => !f.time || f.time === houseNow();
 const TIME_NAME = { dew: '새벽', ember: '한낮', dusk: '노을', moon: '밤' };
 const pickW = list => { let r = Math.random() * list.reduce((t, x) => t + x.w, 0); for (const x of list){ r -= x.w; if (r <= 0) return x; } return list[list.length - 1]; };
 function rollFish(){
-  const L = rodLv();
+  const L = rodLv() + (buffOn('rare') ? 1.5 : 0);   // 요리 효과: 드문 물고기
   if (Math.random() < .12 - L * .025) return JUNK[Math.floor(Math.random() * JUNK.length)];
   return pickW(FISH.filter(fishNow).map(f => ({ ...f, w: f.w * (1 + L * .9 * f.i / 39) })));
 }
@@ -888,7 +909,7 @@ World.onWater = (x, y) => {
   if (!me || fishing) return;
   World.busyFish = true; World.hideBubble(); fishing = { x, y, st: 'wait' }; World.setBobber({ x, y });
   fishShow(`<b>${rodIc(rodLv(), 24)} 찌를 던졌어요</b><span class="s">찌가 쏙 들어가면 화면을 눌러요</span><button class="btn sm" data-fx="stop">그만하기</button>`);
-  fishing.timer = setTimeout(fishBite, 1800 + Math.random() * (5200 - rodLv() * 600));
+  fishing.timer = setTimeout(fishBite, (1800 + Math.random() * (5200 - rodLv() * 600)) * (buffOn('bite') ? .55 : 1));
 };
 function fishBite(){
   if (!fishing) return;
@@ -941,7 +962,7 @@ document.addEventListener('pointerdown', e => {
 // ---------- 채집: 날마다 마을 곳곳 16군데가 반짝여요 (사람마다 자리가 달라요) ----------
 const seedRand = s => { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
 function spotsToday(){
-  const C = World.meta('campus')?.forage || [], R = seedRand((uid || me.nick) + todayKey()), want = { l: 3, g: 3, f: 4, p: 6 }, out = [];
+  const C = World.meta('campus')?.forage || [], R = seedRand((uid || me.nick) + todayKey()), want = { l: 3, g: 3, f: 4, p: 6 + (me.fg?.d === todayKey() ? me.fg.extra || 0 : 0) }, out = [];   // 요리 효과로 반짝이가 늘어요
   Object.entries(want).forEach(([z, n]) => { const pool = C.filter(c => c[2] === z); for (let k = 0; k < n && pool.length; k++){ const c = pool.splice(Math.floor(R() * pool.length), 1)[0]; out.push({ x: c[0], y: c[1], z, r: R() }); } });
   return out;
 }
@@ -953,7 +974,7 @@ function syncSpots(){
 World.onSpot = (si, spot) => {
   if (G && G.g === 'pumpkin') return pkPick(spot);
   const all = spotsToday(), live = all.map((s, i) => ({ ...s, i })).filter(s => !me.fg.got.includes(s.i)), sp = live[si]; if (!sp) return;
-  const pool = FORAGE.filter(x => x.z.includes(sp.z)); let r = sp.r * pool.reduce((t, x) => t + x.w, 0), it = pool[pool.length - 1];
+  const pool = FORAGE.filter(x => x.z.includes(sp.z)).map(x => buffOn('fluck') ? { ...x, w: x.w ** .7 } : x); let r = sp.r * pool.reduce((t, x) => t + x.w, 0), it = pool[pool.length - 1];   // 요리 효과: 드문 채집물
   for (const x of pool){ r -= x.w; if (r <= 0){ it = x; break; } }
   const isNew = dexAdd(it.id); me.fg.got.push(sp.i); if (isNew) me.mana += it.grade;
   save(); hud(); syncSpots();
@@ -968,7 +989,7 @@ function renderFish(){
   const cell = x => { const d = D[x.id]; return `<div class="cell fcell ${d ? '' : 'unk'}"><span class="fno">No.${x.i + 1}</span>${d ? ic(x.id) : '<span class="q">?</span>'}<span class="s">${d ? esc(x.name) : '???'}</span><span class="fst">${STARS(x.grade)}</span>${d ? `<span class="s sub">${x.cm ? `최고 ${d.cm}cm` : `${d.n}개 주움`}</span>` : x.time ? `<span class="s sub">${TIME_NAME[x.time]}에만</span>` : x.z ? `<span class="s sub">${[...x.z].map(c => ({ f: '숲', g: '묘지', l: '호숫가', p: '들판' })[c]).join('·')}</span>` : ''}</div>`; };
   let body = '';
   if (fsTab === 'fish') body = `${hint(fsMsg, `유령 호수 물가를 누르면 낚시해요 · 지금은 ${TIME_NAME[houseNow()]} 시간 · 앞에 있을수록 흔해요`)}<div class="grid fgrid">${FISH.map(cell).join('')}</div>`;
-  if (fsTab === 'forage') body = `${hint(fsMsg, `마을 곳곳의 반짝이는 곳을 누르면 주워요 · 오늘 ${16 - (me.fg?.d === todayKey() ? me.fg.got.length : 0)}군데 남음`)}<div class="grid fgrid">${FORAGE.map(cell).join('')}</div>`;
+  if (fsTab === 'forage') body = `${hint(fsMsg, `마을 곳곳의 반짝이는 곳을 누르면 주워요 · 오늘 ${16 + (me.fg?.d === todayKey() ? (me.fg.extra || 0) - me.fg.got.length : 0)}군데 남음`)}<div class="grid fgrid">${FORAGE.map(cell).join('')}</div>`;
   if (fsTab === 'sell'){
     const have = CATCH.filter(k => me.inv[k] > 0), total = have.reduce((t, k) => t + CATCH_INFO[k].pay * me.inv[k], 0);
     body = `${hint(fsMsg, '물고기와 채집물을 사 줘요 · 시장에 올려 친구에게 팔 수도 있어요')}
@@ -1090,11 +1111,11 @@ function gameOver(fail){
   let reward = '', coin = 0, mana = 0, rec = 0, title = '';
   if (Gm.coop){
     const res = G.result ? G.result() : { ok: !fail, score: 0, text: '' }; rec = res.score;
-    coin = res.ok ? 80 + G.n * 5 : 15; mana = res.ok ? 5 : 0;
+    coin = res.ok ? 80 + G.n * 5 : 15; mana = res.ok ? 5 : 0; if (buffOn('ggold')) coin = Math.round(coin * 1.5);
     title = res.ok ? '🎉 팀 성공!' : '😢 아쉽게 실패…'; reward = res.text;
   } else {
     const rank = 1 + ps.filter(([, p]) => (p.s || 0) > G.score).length; rec = Math.max(0, G.score);   // 같은 점수는 같은 등수
-    coin = ps.length === 1 ? 10 + Math.max(0, G.score) : G.score > 0 ? [0, 60, 40, 25][rank] || 10 : 10; mana = ps.length > 1 && G.score > 0 ? [0, 5, 3, 2][rank] || 0 : 0;
+    coin = ps.length === 1 ? 10 + Math.max(0, G.score) : G.score > 0 ? [0, 60, 40, 25][rank] || 10 : 10; mana = ps.length > 1 && G.score > 0 ? [0, 5, 3, 2][rank] || 0 : 0; if (buffOn('ggold')) coin = Math.round(coin * 1.5);   // 요리 효과
     title = ps.length === 1 ? `혼자 기록 ${G.score}점` : `${rank}등!`;
   }
   me.gdone = me.gdone || {};
@@ -1378,10 +1399,200 @@ async function adminMap(){
     g.fillStyle = '#22183F'; g.fillRect(x - 4, y - 4, 8, 8); g.fillStyle = c; g.fillRect(x - 3, y - 3, 6, 6);
     g.font = '12px G11, monospace'; g.textAlign = 'center'; const nm = AD.players[uid_]?.nick || o.nick || ''; g.fillStyle = 'rgba(20,13,30,.8)'; const w = g.measureText(nm).width + 6; g.fillRect(x - w / 2, y - 20, w, 14); g.fillStyle = '#FFF6E0'; g.fillText(nm, x, y - 9); });
 }
+// ===== 요리 40종 (과자 교실 솥): 재료 넣기 → 불 맞추기 → 휘휘 젓기, 별 3개면 「최고의 맛」 효과 2배 =====
+// 그림은 art/dishes.png (tools/iso/dish_art.py, 이 표 순서). 효과: mana 마력 · know 지식 · spot 오늘 반짝이 + · love 생물 애정 · grow 온실 시간 줄이기
+//   (시간 효과) bite 입질 빠르게 · rare 드문 물고기 · fluck 드문 채집물 · speed 걷기 빠르게 · coin 주문 보상 +20% · ggold 놀이 보상 +50% · all 전부
+const DISH_ART_V = 1;
+const DISH_LIST = [
+  ['d_pseedsoup', '호박씨 크림수프', ['g2_pseed', 'milk', 'herb'], 'mana', 8],
+  ['d_acorncookie', '도토리 쿠키', ['g2_acorn', 'g_wheat', 'hegg'], 'speed', 10],
+  ['d_minnowfry', '유령 피라미 튀김', ['f_minnow', 'g_wheat'], 'bite', 10],
+  ['d_mushskewer', '버섯 꼬치구이', ['mush', 'g2_mushpine'], 'mana', 10],
+  ['d_jamtoast', '산딸기 잼 토스트', ['g2_rasp', 'g_wheat', 'honey'], 'coin', 15],
+  ['d_carrotmuffin', '당근 머핀', ['g_carrot', 'g_wheat', 'hegg'], 'grow', 10],
+  ['d_clovertea', '세잎클로버 차', ['g2_clover3', 'drop'], 'fluck', 10],
+  ['d_tomatojuice', '피처럼 붉은 토마토주스', ['g_tomato', 'g_tomato', 'honey'], 'mana', 12],
+  ['d_crucianstew', '호박 붕어 버섯 조림', ['f_crucian', 'g2_mushpine', 'g2_rasp'], 'rare', 15],
+  ['d_batwrap', '박쥐 날개 잎 쌈', ['g2_batleaf', 'g_pepper', 'herb'], 'speed', 15],
+  ['d_spidermac', '거미 버섯 마카롱', ['g2_spider', 'hegg', 'honey', 'g_straw'], 'ggold', 20],
+  ['d_bluepie', '블루베리 파이', ['g2_blue', 'g_wheat', 'milk'], 'coin', 20],
+  ['d_killiomelet', '이끼 송사리 오믈렛', ['f_killi', 'hegg', 'g_moss'], 'bite', 15],
+  ['d_chestnut', '꿀 군밤 꼬치', ['g2_chest', 'g2_chest', 'honey'], 'mana', 15],
+  ['d_ghostmallow', '유령 마시멜로', ['g2_ghostf', 'milk', 'honey'], 'spot', 3],
+  ['d_loachsoup', '늪지 추어탕', ['f_loach', 'herb', 'g_ginger'], 'love', 1],
+  ['d_poisoncandy', '독사과 캔디', ['g2_poison', 'honey'], 'fluck', 20],
+  ['d_cornsoup', '옥수수 달빛수프', ['g_corn', 'drop', 'milk'], 'mana', 18],
+  ['d_jellyjelly', '젤리 해파리 젤리', ['f_jelly', 'honey', 'g_straw'], 'speed', 20],
+  ['d_crayboil', '거미 가재 매운찜', ['f_cray', 'g_pepper', 'g_corn'], 'rare', 20],
+  ['d_bonesoup', '해골 메기 사골탕', ['f_bonecat', 'g_ginger', 'herb', 'mush'], 'mana', 25],
+  ['d_cottonpudding', '솜사탕 넙치 푸딩', ['f_cotton', 'milk', 'hegg', 'honey'], 'ggold', 30],
+  ['d_moontrout', '달빛 송어 구이', ['f_trout', 'drop', 'g_lav'], 'bite', 25],
+  ['d_fireflyrisotto', '반딧불이 리소토', ['g2_firefly', 'g_wheat', 'milk', 'g2_moonm'], 'fluck', 25],
+  ['d_skullbread', '해골 꽃 빵', ['g2_skullf', 'g_wheat', 'hegg'], 'spot', 4],
+  ['d_witchstew', '마녀 솥 스튜', ['g2_mushred', 'g2_fern', 'f_conch', 'herb'], 'know', 1],
+  ['d_rainbowsushi', '무지개 송어 초밥', ['f_rtrout', 'g_wheat', 'g_lotus'], 'coin', 30],
+  ['d_starcookie', '별가루 쿠키', ['g2_stardust', 'g_wheat', 'hegg', 'honey'], 'ggold', 30],
+  ['d_vampsteak', '뱀파이어 피라냐 스테이크', ['f_piranha', 'g_tomato', 'g_pepper'], 'speed', 30],
+  ['d_anglerpot', '호박등 아귀 전골', ['f_angler', 'g2_pseed', 'mush', 'g_ginger'], 'rare', 30],
+  ['d_amberbream', '호박석 꿀 도미 조림', ['f_bream', 'g2_amber', 'honey'], 'coin', 40],
+  ['d_fairycake', '요정 날개 케이크', ['g2_fairy', 'g_cloud', 'milk', 'hegg'], 'spot', 6],
+  ['d_seahorsetea', '유령 해마 차', ['f_seahorse', 'g_lily', 'drop'], 'fluck', 40],
+  ['d_moonmochi', '달토끼 찹쌀떡', ['f_moonbun', 'g_wheat', 'g_frost'], 'love', 2],
+  ['d_goldcarpbowl', '황금 잉어 덮밥', ['f_gold', 'g_corn', 'g_ginseng'], 'mana', 40],
+  ['d_auroraparfait', '오로라 파르페', ['g_aurora', 'milk', 'g2_starfall'], 'know', 2],
+  ['d_dragonroll', '화룡 용비늘 롤', ['f_dragon', 'g_dragonp', 'g_pepper'], 'bite', 60],
+  ['d_whalesoup', '별똥별 고래 수프', ['f_whale', 'g_comet', 'drop'], 'rare', 60],
+  ['d_kingfeast', '호박달 메기왕 정찬', ['f_king', 'g_sung', 'g_gold', 'g2_gacorn'], 'coin', 60],
+  ['d_lordbanquet', '호수의 주인 만찬', ['f_lord', 'g2_pumpmoon', 'g_wish', 'g_soul'], 'all', 60],
+];
+const EFF = { mana: v => `마력 +${v}`, know: v => `지식 +${v}`, spot: v => `오늘 반짝이 +${v}곳`, love: v => `생물 애정 +${v}`, grow: v => `온실 남은 시간 -${v * 2}%`,
+  bite: v => `낚시 입질 빠르게 ${v}분`, rare: v => `드문 물고기 잘 와요 ${v}분`, fluck: v => `드문 채집물 잘 나와요 ${v}분`, speed: v => `걷기 빠르게 ${v}분`, coin: v => `주문 보상 +20% ${v}분`, ggold: v => `놀이 보상 +50% ${v}분`, all: v => `모든 좋은 효과 ${v}분 + 마력 +50` };
+const TIMED = ['bite', 'rare', 'fluck', 'speed', 'coin', 'ggold'];
+const BUFF_NAME = { bite: '입질↑', rare: '드문 물고기↑', fluck: '드문 채집↑', speed: '빠른 걸음', coin: '주문 보상↑', ggold: '놀이 보상↑' };
+const DISH = DISH_LIST.map(([id, name, r, e, v], i) => ({ id, name, r, e, v, i, grade: i < 8 ? 1 : i < 18 ? 2 : i < 28 ? 3 : i < 36 ? 4 : 5, pay: Math.round(20 * 1.1 ** i) }));
+const DISH_INFO = Object.fromEntries(DISH.flatMap(d => [[d.id, d], [d.id + '_s', { ...d, best: true }]]));
+DISH.forEach(d => { ITEM[d.id] = d.name; ITEM[d.id + '_s'] = '✨' + d.name; });
+const DISHES = Object.keys(DISH_INFO);
+const effText = (d, best) => EFF[d.e](best ? d.v * 2 : d.v);
+// 아이콘 그림 위치 (솥으로 날아가는 재료에도 써요)
+function iconSrc(k){
+  const C = CATCH_INFO[k]; if (C) return { src: `art/${C.sheet}.png?v=${FISH_ART_V}`, sx: C.i * 16, sy: 0, sw: 16, sh: 16 };
+  const D = DISH_INFO[k]; if (D) return { src: `art/dishes.png?v=${DISH_ART_V}`, sx: D.i * 16, sy: 0, sw: 16, sh: 16 };
+  const n = ICONS.indexOf(k); if (n >= 0) return { src: 'art/icons.png?v=3', sx: n * 32, sy: 0, sw: 32, sh: 32 };
+  const G = SEED_INFO[k]; if (G) return { src: 'art/plants.png', sx: (G.ic % 10) * 32, sy: Math.floor(G.ic / 10) * 32, sw: 32, sh: 32 };
+  return null;
+}
+// ---------- 효과 ----------
+const buffOn = k => (me?.buffs?.[k] || 0) > Date.now() || (me?.buffs?.all || 0) > Date.now();
+function eatDish(k){
+  const d = DISH_INFO[k]; if (!d || !(me.inv[k] > 0)) return;
+  me.inv[k]--; const v = d.best ? d.v * 2 : d.v; me.buffs = me.buffs || {};
+  if (TIMED.includes(d.e) || d.e === 'all'){ const key = d.e; me.buffs[key] = Math.max(Date.now(), me.buffs[key] || 0) + v * 6e4; if (d.e === 'all') me.mana += 50; }
+  if (d.e === 'mana') me.mana += v;
+  if (d.e === 'know') me.know = (me.know || 0) + v;
+  if (d.e === 'spot'){ if (!me.fg || me.fg.d !== todayKey()) me.fg = { d: todayKey(), got: [] }; me.fg.extra = (me.fg.extra || 0) + v; syncSpots(); }
+  if (d.e === 'love') me.cr.forEach(c => { c.love = Math.min(LOVE_MAX, (c.love || 0) + v); });
+  if (d.e === 'grow') (me.plots || []).forEach(p => { if (p.k && p.at){ const G = SEED_INFO[p.k], end = p.at + G.mins * 6e4, left = end - Date.now(); if (left > 0) p.at -= left * v * .02; } });
+  save(); hud(); syncBuffs(); speak(`🍳 ${d.name} 냠냠!`);
+  toast(`${d.best ? '✨' : ''}${d.name}을(를) 먹었어요! ${EFF[d.e](v)}`);
+}
+function syncBuffs(){
+  const c = $('#buffChip'); if (!c || !me) return;
+  const now = Date.now(), on = Object.entries(me.buffs || {}).filter(([, t]) => t > now);
+  World.setSpeedK && World.setSpeedK(buffOn('speed') ? 1.4 : 1);
+  c.hidden = !on.length; if (on.length) c.textContent = '🍳 ' + on.map(([k, t]) => `${k === 'all' ? '만찬' : BUFF_NAME[k]} ${Math.ceil((t - now) / 6e4)}분`).join(' · ');
+}
+// ---------- 요리하기: 솥 앞에서 ----------
+let cooking = null;
+const cookUI = () => $('#fishui');
+function cookShow(html){ const u = cookUI(); u.innerHTML = `<div class="cook px">${html}</div>`; u.classList.add('on'); }
+function cookHead(d, step){ return `<div class="ckhd"><b>🍳 ${esc(d.name)}</b><span class="ckst">${['재료', '불', '젓기', '완성'].map((t, i) => `<i class="${i + 1 < step ? 'ok' : i + 1 === step ? 'on' : ''}">${t}</i>`).join('›')}</span></div>`; }
+function cookStart(id, pot){
+  const d = DISH_INFO[id]; if (!d || cooking) return;
+  const need = {}; d.r.forEach(k => need[k] = (need[k] || 0) + 1);
+  if (!Object.entries(need).every(([k, n]) => (me.inv[k] || 0) >= n)) return toast('재료가 모자라요');
+  Object.entries(need).forEach(([k, n]) => { me.inv[k] -= n; }); save();
+  closeSheet(); World.hideBubble(); World.busyFish = true; World.setView(150);
+  if (pot){ const st = [[pot.x - 1, pot.y], [pot.x, pot.y - 1]].find(([x, y]) => World.isFree(x, y)); if (st){ World.setMe(st[0], st[1]); } World.faceTo(pot.x + .5, pot.y + .6); }
+  cooking = { d, pot, sc: [0, 0, 0], soup: d.e === 'mana' ? '#8A5AC8' : ['#C8642A', '#B8643A', '#8A5A3A', '#C84A3A', '#5AA84A'][d.i % 5] };
+  World.setCook({ x: pot.x, y: pot.y, soup: '#6A8AA8', heat: .3, steam: 1 });
+  cookIngredients();
+}
+function cookEnd(){ if (!cooking) return; clearInterval(cooking.timer); cancelAnimationFrame(cooking.raf); cooking = null; World.setCook(null); World.setView(null); World.busyFish = false; const u = cookUI(); u.classList.remove('on'); u.innerHTML = ''; }
+// 1. 재료 넣기: 레시피 순서대로, 엉뚱한 재료 2개가 섞여요
+function cookIngredients(){
+  const C = cooking, d = C.d, pool = [...CATCH.slice(0, 20), 'herb', 'mush', 'drop', 'milk', 'hegg'].filter(k => !d.r.includes(k));
+  const decoy = [pool[Math.floor(Math.random() * pool.length)], pool[Math.floor(Math.random() * pool.length)]];
+  const tray = [...new Set([...d.r, ...decoy])].sort(() => Math.random() - .5);
+  C.k = 0; C.miss = 0; C.t0 = Date.now();
+  const draw = () => {
+    const left = Math.max(0, 10 - Math.floor((Date.now() - C.t0) / 1000));
+    cookShow(`${cookHead(d, 1)}<div class="ckrcp">${d.r.map((k, i) => `<span class="cksl ${i < C.k ? 'ok' : i === C.k ? 'now' : ''}">${ic(k)}</span>`).join('<span class="sub">→</span>')}</div>
+      <span>순서대로 눌러 솥에 넣어요 · 다음은 <b class="bad">${esc(ITEM[d.r[C.k]] || '')}</b> · ${left}초</span>
+      <div class="ckig">${tray.map(k => `<button data-cki="${k}">${ic(k)}</button>`).join('')}</div>`);
+    cookUI().querySelectorAll('[data-cki]').forEach(b => b.onpointerdown = e => { e.preventDefault(); const k = b.dataset.cki;
+      const s = iconSrc(k); if (s) World.setCook({ x: C.pot.x, y: C.pot.y, soup: '#6A8AA8', heat: .35, steam: 1, drop: { ...s, t: 0 } });
+      const t0 = performance.now(), fly = () => { if (!cooking) return; const t = (performance.now() - t0) / 380; World.setCook({ x: C.pot.x, y: C.pot.y, soup: '#6A8AA8', heat: .35, steam: 1, drop: t < 1 ? { ...s, t } : null, splash: t >= 1 && t < 1.6 }); if (t < 1.6) requestAnimationFrame(fly); }; requestAnimationFrame(fly);
+      if (k === d.r[C.k]){ C.k++; if (C.k >= d.r.length){ clearInterval(C.timer); C.sc[0] = C.miss === 0 ? 3 : C.miss === 1 ? 2 : 1; return setTimeout(cookHeat, 500); } } else { C.miss++; toast('앗, 엉뚱한 재료! 맛이 조금 이상해져요'); }
+      draw(); });
+  };
+  draw();
+  C.timer = setInterval(() => { if (!cooking) return; if (Date.now() - C.t0 > 10000){ clearInterval(C.timer); C.sc[0] = Math.max(0, 1 - C.miss); toast('시간이 지나서 남은 재료를 한꺼번에 넣었어요'); return cookHeat(); } const sp = cookUI().querySelector('.ckrcp + span'); if (sp) sp.innerHTML = `순서대로 눌러 솥에 넣어요 · 다음은 <b class="bad">${esc(ITEM[d.r[C.k]] || '')}</b> · ${Math.max(0, 10 - Math.floor((Date.now() - C.t0) / 1000))}초`; }, 500);
+}
+// 2. 불 맞추기: 꾹 누르면 올라가고 떼면 내려가요, 움직이는 초록 칸에 3초
+function cookHeat(){
+  const C = cooking; if (!C) return;
+  C.heat = .2; C.hold = false; C.inz = 0; C.over = 0; C.t0 = performance.now(); C.zc = .55;
+  cookShow(`${cookHead(C.d, 2)}<span>꾹 누르면 불이 세지고, 떼면 약해져요 · 초록 칸에 3초</span><div class="cktb"><i class="z"></i><i class="n"></i></div><div class="cktl"><span>미지근</span><span>딱 좋아요</span><span>넘쳐요!</span></div>
+    <div class="ckpg"><i></i></div><span class="sub" id="ckhs"></span><button class="ckbt fire" id="ckfan">🪭 꾹 눌러 부채질</button>`);
+  const fan = $('#ckfan'); fan.onpointerdown = e => { e.preventDefault(); C.hold = true; fan.classList.add('press'); }; const up = () => { if (cooking) { C.hold = false; fan.classList.remove('press'); } };
+  fan.onpointerup = up; fan.onpointerleave = up; fan.onpointercancel = up;
+  let last = performance.now();
+  const loop = now => { if (!cooking || C.phase === 'stir') return; const dt = Math.min(.05, (now - last) / 1000), T = (now - C.t0) / 1000; last = now;
+    C.heat = Math.max(0, Math.min(1, C.heat + (C.hold ? .55 : -.4) * dt)); C.zc = .55 + Math.sin(T * .9) * .18; const zw = .18, inz = Math.abs(C.heat - C.zc) < zw / 2;
+    if (inz) C.inz += dt; if (C.heat > .97) C.over += dt;
+    const z = cookUI().querySelector('.cktb .z'), n = cookUI().querySelector('.cktb .n'); if (z){ z.style.left = (C.zc - zw / 2) * 100 + '%'; z.style.width = zw * 100 + '%'; n.style.left = C.heat * 100 + '%'; cookUI().querySelector('.ckpg i').style.width = Math.min(100, C.inz / 3 * 100) + '%'; $('#ckhs').textContent = `${inz ? '딱 좋아요!' : C.heat > C.zc ? '너무 뜨거워요' : '조금 더 세게'} · ${Math.min(3, C.inz).toFixed(1)} / 3초 · ${Math.max(0, 12 - T).toFixed(0)}초 남음`; }
+    World.setCook({ x: C.pot.x, y: C.pot.y, soup: C.soup, heat: C.heat, steam: 1 + Math.round(C.heat * 4), splash: C.heat > .95 });
+    if (C.inz >= 3 || T > 12){ C.sc[1] = C.inz >= 3 ? (T <= 6 ? 3 : T <= 9 ? 2 : 1) - (C.over > .6 ? 1 : 0) : Math.floor(C.inz); C.sc[1] = Math.max(0, C.sc[1]); C.phase = 'stir'; return setTimeout(cookStir, 300); }
+    C.raf = requestAnimationFrame(loop); };
+  C.raf = requestAnimationFrame(loop);
+}
+// 3. 휘휘 젓기: 동그라미 패드를 빙글빙글 5바퀴, 너무 빠르면 국물이 튀어요
+function cookStir(){
+  const C = cooking; if (!C) return;
+  C.turn = 0; C.acc = 0; C.splash = 0; C.t0 = performance.now(); C.lastTurn = performance.now(); C.ang = null; C.spoon = 0;
+  cookShow(`${cookHead(C.d, 3)}<span>동그라미를 따라 빙글빙글 돌려요 · 5바퀴</span><div class="ckpad" id="ckpad"><i id="ckdot"></i><b>여기를 빙글빙글</b></div><div class="ckpg"><i></i></div><span class="sub" id="ckss">0 / 5바퀴 · 일정한 속도가 최고!</span>`);
+  const pad = $('#ckpad'), dot = $('#ckdot');
+  const mv = e => { if (!cooking) return; const r = pad.getBoundingClientRect(), a = Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2));
+    if (C.ang !== null){ let da = a - C.ang; if (da > Math.PI) da -= Math.PI * 2; if (da < -Math.PI) da += Math.PI * 2; C.acc += Math.abs(da); C.spoon += da; }
+    C.ang = a; dot.style.left = (50 + Math.cos(a) * 40) + '%'; dot.style.top = (50 + Math.sin(a) * 40) + '%';
+    if (C.acc >= Math.PI * 2){ C.acc -= Math.PI * 2; C.turn++; const dt = performance.now() - C.lastTurn; C.lastTurn = performance.now(); if (dt < 350){ C.splash++; toast('첨벙! 너무 빨라요'); }
+      cookUI().querySelector('.ckpg i').style.width = Math.min(100, C.turn / 5 * 100) + '%'; $('#ckss').textContent = `${C.turn} / 5바퀴 · ${C.splash ? `국물 튐 ${C.splash}번` : '일정한 속도가 최고!'}`;
+      if (C.turn >= 5){ const T = (performance.now() - C.t0) / 1000; C.sc[2] = Math.max(1, 3 - C.splash - (T > 10 ? 1 : 0)); pad.onpointermove = null; setTimeout(cookDone, 300); } }
+    World.setCook({ x: C.pot.x, y: C.pot.y, soup: C.soup, heat: .5, steam: 3, stir: C.spoon, guide: true, splash: performance.now() - C.lastTurn < 120 && C.splash > 0 }); };
+  pad.onpointerdown = e => { e.preventDefault(); pad.setPointerCapture(e.pointerId); C.ang = null; mv(e); }; pad.onpointermove = e => { if (e.buttons || e.pointerType === 'touch') mv(e); };
+  World.setCook({ x: C.pot.x, y: C.pot.y, soup: C.soup, heat: .5, steam: 3, stir: 0, guide: true });
+}
+// 4. 완성
+function cookDone(){
+  const C = cooking; if (!C) return;
+  const total = C.sc[0] + C.sc[1] + C.sc[2], stars = total >= 8 ? 3 : total >= 5 ? 2 : 1, best = stars === 3, k = C.d.id + (best ? '_s' : '');
+  me.inv[k] = (me.inv[k] || 0) + 1; me.cdex = me.cdex || {}; const isNew = !me.cdex[C.d.id]; me.cdex[C.d.id] = Math.max(me.cdex[C.d.id] || 0, stars);
+  if (isNew) me.know = (me.know || 0) + 1;
+  save(); hud();
+  World.setCook({ x: C.pot.x, y: C.pot.y, soup: C.soup, heat: .15, steam: 5 });
+  if (best) speak(`🍳 ${C.d.name} 최고의 맛!`);
+  cookShow(`${cookHead(C.d, 4)}<div class="ckres">${ic(k, 'transform:scale(1.5);margin:8px')}<div><b>${esc(C.d.name)}</b><span class="ckstar">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span>${best ? '<span class="ckbest">✨ 최고의 맛! 효과 2배</span>' : ''}${isNew ? '<span class="bad">새 요리! 지식 +1</span>' : ''}</div></div>
+    <div class="ckef"><div><span>재료 · 불 · 젓기</span><span>+${C.sc[0]} · +${C.sc[1]} · +${C.sc[2]}</span></div><div><span>먹으면</span><span>${best ? `<s>${EFF[C.d.e](C.d.v)}</s> → ` : ''}<b>${effText(C.d, best)}</b></span></div></div>
+    <div class="ckrow"><button class="ckbt w" id="ckbag">가방에 넣기</button><button class="ckbt go" id="ckeat">바로 먹기</button></div>`);
+  $('#ckbag').onclick = () => { cookEnd(); toast(`${ITEM[k]}을(를) 가방에 넣었어요`); };
+  $('#ckeat').onclick = () => { cookEnd(); eatDish(k); };
+}
+// ---------- 요리책 화면 ----------
+let ckTab = 'book', ckMsg = '', ckPot = null;
+function renderCook(){
+  const have = k => me.inv[k] || 0, can = d => { const need = {}; d.r.forEach(k => need[k] = (need[k] || 0) + 1); return Object.entries(need).every(([k, n]) => have(k) >= n); };
+  const bag = DISHES.filter(k => have(k) > 0);
+  const tabs = [['book', `요리책 ${Object.keys(me.cdex || {}).length}/40`], ['bag', `내 요리 ${bag.reduce((t, k) => t + have(k), 0)}`]];
+  let body = '';
+  if (ckTab === 'book') body = `${hint(ckMsg, ckPot ? '재료가 다 있으면 [요리하기]를 눌러요 · 별 3개면 최고의 맛(효과 2배)' : '과자 교실 솥 앞에서 요리할 수 있어요')}
+    <div class="box px">${DISH.map(d => `<div class="li">${ic(d.id)}<div class="main"><span class="t">${esc(d.name)} <span class="fst">${'★'.repeat(d.grade)}</span>${me.cdex?.[d.id] ? ` <span class="tag">${'★'.repeat(me.cdex[d.id])} 만들어 봄</span>` : ''}</span>
+      <span class="d" style="white-space:normal">${d.r.map(k => `<span style="color:${have(k) >= d.r.filter(x => x === k).length ? '#3FAF74' : 'var(--sub)'}">${esc(ITEM[k] || k)}</span>`).join(' + ')}</span><span class="d">먹으면 ${EFF[d.e](d.v)}</span></div>
+      ${ckPot ? `<button class="btn sm go" data-ckgo="${d.id}" ${can(d) ? '' : 'disabled'}>요리하기</button>` : ''}</div>`).join('')}</div>`;
+  if (ckTab === 'bag') body = `${hint(ckMsg, '요리를 먹으면 효과가 생겨요 · 시장에 올리거나 친구에게 선물할 수도 있어요')}
+    ${bag.length ? `<div class="box px">${bag.map(k => { const d = DISH_INFO[k]; return `<div class="li">${ic(k)}<div class="main"><span class="t">${esc(ITEM[k])} ×${have(k)}</span><span class="d">${effText(d, d.best)}</span></div><button class="btn sm go" data-ckeat="${k}">먹기</button></div>`; }).join('')}</div>` : '<div class="hint">아직 만든 요리가 없어요.</div>'}`;
+  frame(null, '요리', ckPot ? '과자 교실 · 솥 앞' : '요리책', `<div class="seg" style="grid-template-columns:repeat(2,1fr)">${tabs.map(([k, l]) => `<button data-ckt="${k}" class="${ckTab === k ? 'on' : ''}">${l}</button>`).join('')}</div><section class="sec">${body}</section>
+    <div style="display:flex;gap:8px">${ckPot ? '' : '<button class="btn go" id="ckGoLab" style="flex:1">🍳 과자 교실로</button>'}${backBtn}</div>`);
+  $('#back').onclick = closeSheet;
+  $('#ckGoLab') && ($('#ckGoLab').onclick = () => { closeSheet(); World.teleport('candy', 'cauldron'); });
+  on('[data-ckt]', b => { ckTab = b.dataset.ckt; ckMsg = ''; renderCook(); });
+  on('[data-ckgo]', b => cookStart(b.dataset.ckgo, ckPot));
+  on('[data-ckeat]', b => { eatDish(b.dataset.ckeat); renderCook(); });
+}
 // 바로 가기: 그 장소로 순간 이동한 다음 화면을 열어요
 const goPlace = (mapId, obj, t, s) => { closeSheet(); World.teleport(mapId, obj, () => openSheet(t, s)); };
 const ACT_GO = { '물약 끓이기':'lab', '재료함 열기':'lab', '재료 꺼내기':'lab', '레시피 노트 보기':'lab', '시장 보기':'market', '박쥐 돌보기':'ranch', '모이 주기':'ranch', '독초 돌보기':'green', '물 주기':'green' };
-const SOON = ['과자 만들기', '카라멜 젓기', '솜사탕 만들기', '할로윈 용품 만들기'];
+const SOON = ['솜사탕 만들기', '할로윈 용품 만들기'];
 const FLAVOR = {
   '수확하기': ['축제 장식용 호박이래요. 따면 혼나요!', '호박 속에서 똑똑, 누가 노크했어요'],
   '읽어 보기': ['"여기 잠들다… 숙제를 미룬 학생"', '"내일 일어날게요" — 300년째', '"물약 맛은 보지 마시오"', '"고양이 밥 주는 걸 잊지 마"'],
@@ -1414,6 +1625,8 @@ World.onAct = (mapId, o, a) => {
   }
   if (label === '말 걸기' || label === '오늘의 실습 보기') return openSheet('home', 'class');
   if (label === '놀이 고르기') return openSheet('home', 'games');
+  if (label === '요리하기' || label === '카라멜 젓기'){ ckPot = { x: o.box[0], y: o.box[1] }; ckTab = 'book'; ckMsg = ''; return openSheet('home', 'cook'); }
+  if (label === '요리책 보기' || label === '과자 만들기'){ ckPot = null; ckTab = 'book'; ckMsg = ''; return openSheet('home', 'cook'); }
   if (label === '물고기 팔기'){ fsTab = 'sell'; fsMsg = ''; return openSheet('home', 'fish'); }
   if (label === '쓰다듬기' && o.name === 'blackcat') return openSheet('ranch');
   if (mapId === 'pen'){ ranchTab = label === '부화실 보기' ? 'hatch' : 'pen'; ranchMsg = ''; return openSheet('ranch'); }
@@ -1438,6 +1651,7 @@ function render(){
   if (sub === 'visit') return renderVisit();
   if (sub === 'fish') return renderFish();
   if (sub === 'games') return renderGames();
+  if (sub === 'cook') return renderCook();
   if (sub === 'event') return renderEvent();
   if (sub === 'exam') return renderExam();
   ({ home:renderHome, lab:renderLab, green:renderGreen, ranch:renderRanch, market:renderMarket })[tab]();
@@ -1463,7 +1677,8 @@ function renderHome(){
       <button class="tile px" id="goDorm">${ic('bed')}<span class="main"><span class="b">내 방</span><span class="s sub">${H.name} ${roomNo(me.house, uid || me.nick)}호</span></span></button>
     </div>
     <button class="tile px" id="goAvatar" style="width:100%"><div class="face" style="width:40px;height:40px;background:#E8DDF8">${World.Avatar.loaded ? `<img src="${World.Avatar.head(avOf(me))}" alt="" style="width:100%;height:100%;image-rendering:pixelated">` : ''}</div><span class="main" style="flex:1"><span class="b">캐릭터 꾸미기</span><span class="s sub">머리·눈·옷·신발·소품을 바꿔요</span></span></button>
-    <button class="tile px" id="goFish" style="width:100%">${rodIc(rodLv())}<span class="main"><span class="b">낚시 · 채집</span><span class="s sub">도감 물고기 ${FISH.filter(f => me.fdex?.[f.id]).length}/40 · 채집물 ${FORAGE.filter(f => me.fdex?.[f.id]).length}/50 · 오늘 반짝이 ${16 - (me.fg?.d === todayKey() ? me.fg.got.length : 0)}곳</span></span></button>
+    <button class="tile px" id="goFish" style="width:100%">${rodIc(rodLv())}<span class="main"><span class="b">낚시 · 채집</span><span class="s sub">도감 물고기 ${FISH.filter(f => me.fdex?.[f.id]).length}/40 · 채집물 ${FORAGE.filter(f => me.fdex?.[f.id]).length}/50 · 오늘 반짝이 ${16 + (me.fg?.d === todayKey() ? (me.fg.extra || 0) - me.fg.got.length : 0)}곳</span></span></button>
+    <button class="tile px" id="goCook" style="width:100%">${ic('d_crucianstew')}<span class="main"><span class="b">요리</span><span class="s sub">과자 교실 솥 · 요리책 ${Object.keys(me.cdex || {}).length}/40</span></span></button>
     <button class="tile px" id="goGames" style="width:100%"><span class="gic">🎪</span><span class="main"><span class="b">같이 놀기</span><span class="s sub">경쟁 3종 · 협동 3종 (2~8명) · 놀이 게시판</span></span></button>
     <section class="sec">
       ${secH('바로 가기', '누르면 그곳으로 가요')}
@@ -1486,6 +1701,7 @@ function renderHome(){
   $('#goAvatar').onclick = () => { avDraft = null; openSheet('home', 'avatar'); };
   $('#goFish').onclick = () => { fsTab = 'fish'; fsMsg = ''; openSheet('home', 'fish'); };
   $('#goGames').onclick = () => openSheet('home', 'games');
+  $('#goCook').onclick = () => { ckPot = null; ckTab = 'book'; ckMsg = ''; openSheet('home', 'cook'); };
   on('[data-go]', b => { const [m, o, t] = b.dataset.go.split(','); goPlace(m, o, t); });
 }
 
@@ -2254,7 +2470,7 @@ function renderVisit(){
   const guest = Object.entries(visitGuest).sort((a, b) => b[1].at - a[1].at);
   me.wrote = me.wrote || {};
   const wrote = me.wrote[visitUid] === todayKey();
-  const giftable = [...POTIONS, ...MATS, ...CATCH].filter(k => me.inv[k] > 0);
+  const giftable = [...POTIONS, ...MATS, ...CATCH, ...DISHES].filter(k => me.inv[k] > 0);
   frame('dorm', `${esc(p.nick)}의 방`, `${H.name} ${roomNo(p.house, visitUid)}호 · ${onlineList[visitUid] ? '접속 중' : '외출 중'}`, `
     <section class="sec">
       <div class="sec-h"><h3>${esc(p.nick)}의 방 구경</h3>${backBtn}</div>
@@ -2551,7 +2767,7 @@ function renderMarket(){
   const others = items.filter(([, l]) => l.uid !== uid && !l.buyer);
   const week = coop[coopWeek()] || {};
   const coopTotal = Object.values(week).reduce((a, b) => a + (+b || 0), 0);
-  const sellable = [...POTIONS, ...MATS, ...CATCH].filter(k => me.inv[k] > 0);
+  const sellable = [...POTIONS, ...MATS, ...CATCH, ...DISHES].filter(k => me.inv[k] > 0);
   frame(null, '등불 시장', `친구 가게 ${new Set(others.map(([, l]) => l.uid)).size}곳 영업 중`, `
     <section class="sec">
       ${secH('친구들이 올린 물건', others.length + '개')}
@@ -2566,7 +2782,7 @@ function renderMarket(){
       ${mine.length < 4 ? `<div class="box px" style="padding:10px;display:flex;flex-direction:column;gap:8px">
         <span class="s sub">팔 물건을 고르고 가격을 정해요</span>
         <div class="pal">${sellable.map(k => `<button class="cell ${sellPick === k ? 'sel' : ''}" style="width:48px;min-height:48px;padding:0" data-pick="${k}">${ic(k)}<span class="n">${me.inv[k]}</span></button>`).join('') || '<span class="s sub">팔 수 있는 물건이 없어요</span>'}</div>
-        ${sellPick ? `<div style="display:flex;gap:6px;align-items:center"><span class="s" style="flex:1">${ITEM[sellPick]} 1개</span><input id="price" type="number" min="1" max="9999" value="${PAY[sellPick] || CATCH_INFO[sellPick]?.pay || 20}" style="width:84px;height:36px;border:2px solid var(--ink);padding:0 6px;background:#fff"><span class="s">G</span><button class="btn sm go" id="list">올리기</button></div>` : ''}
+        ${sellPick ? `<div style="display:flex;gap:6px;align-items:center"><span class="s" style="flex:1">${ITEM[sellPick]} 1개</span><input id="price" type="number" min="1" max="9999" value="${PAY[sellPick] || CATCH_INFO[sellPick]?.pay || DISH_INFO[sellPick]?.pay || 20}" style="width:84px;height:36px;border:2px solid var(--ink);padding:0 6px;background:#fff"><span class="s">G</span><button class="btn sm go" id="list">올리기</button></div>` : ''}
       </div>` : ''}
     </section>
     <section class="sec">

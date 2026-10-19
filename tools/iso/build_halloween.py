@@ -33,6 +33,8 @@ def ver(src): return src + '?v=' + hashlib.md5(open(I + '/out/' + src.split('/')
 for m in MAPS.values():   # 침대: 하루 넘기기 대신 30분 쉬기 (index.html rest)
     for o in m['meta'].get('objs', []):
         if o.get('act') and o['act'][1] == '잠자고 내일로': o['act'] = [o['act'][0], '쉬기']
+        if o.get('act') and o['act'][1] == '카라멜 젓기': o['act'] = ['요리 솥', '요리하기']   # 과자 교실 = 요리 (index.html renderCook)
+        if o.get('act') and o['act'][1] == '과자 만들기': o['act'] = ['요리 조리대', '요리책 보기']
 for m in MAPS.values(): m['meta']['bgSrc'] = ver(m['meta']['bgSrc']); m['meta']['objSrc'] = ver(m['meta']['objSrc'])
 _PUBD = os.path.join(I, '..', '..', 'public')
 for ps in AV['parts'].values():                 # LPC 부품 그림 (public/art/lpc)

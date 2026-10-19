@@ -270,6 +270,8 @@ World.faceTo = (x, y) => { const DV = World.Avatar.meta.dirs, dx = x - me.x, dy 
 let cook = null, cookImg = {};
 World.setCook = c => { cook = c; if (c && c.drop && c.drop.src && !cookImg[c.drop.src]){ const im = new Image(); im.src = c.drop.src; cookImg[c.drop.src] = im; } };
 World.cookPot = () => { const o = M && M.objs.find(o => o.name === 'cauldron' && Math.abs(o.box[0] - me.x) + Math.abs(o.box[1] - me.y) < 4); return o ? { x: o.box[0], y: o.box[1] } : null; };
+World.setMe = (x, y) => { me.x = x; me.y = y; me.path = []; };
+let speedK = 1; World.setSpeedK = k => { speedK = k || 1; };   // 요리 효과: 빠른 걸음
 World.busyFish = false;   // 낚시하는 동안은 바닥을 눌러도 안 걸어가요
 World.isFree = (x, y) => !!M && free(x, y);
 World.freeNear = (x, y, r = 3) => { const out = []; for (let a = x - r; a <= x + r; a++) for (let b = y - r; b <= y + r; b++) if (free(a, b)) out.push([a, b]); return out; };
@@ -480,7 +482,7 @@ function step(p, dt){
   if (Math.abs(dx) > Math.abs(dy)){ p.view = dx > 0 ? DV.right : DV.left; p.flip = false; }
   else if (d > 0){ p.view = dy < 0 ? DV.up : DV.down; p.flip = false; }
   if (p.pet && d > 0) p.flip = dx - dy > 0;   // 생물은 화면에서 오른쪽으로 가면 뒤집어요
-  const mv = ((p.me || p.peer) && p.path.length > 10 ? RUN : (p.me || p.peer) ? SPEED : SPEED * .6) * dt; if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
+  const mv = ((p.me || p.peer) && p.path.length > 10 ? RUN : (p.me || p.peer) ? SPEED : SPEED * .6) * dt * (p.me ? speedK : 1); if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
 }
 // 할로윈 효과: 박쥐 떼, 보라 안개, 도깨비불
 const bats = Array.from({ length: 7 }, (_, i) => ({ x: 0, y: 0, vx: 0, vy: 0, ph: i, init: false }));
@@ -596,7 +598,7 @@ function frame(now){
       cx.fillStyle = 'rgba(255,255,255,.35)'; for (let i = 0; i < (cook.steam ?? 3); i++){ const ph = (t * .6 + i / 3) % 1, sx = X - 5 + i * 5 + Math.round(Math.sin(t * 2 + i) * 1.5), sy = top - 3 - ph * 14; cx.globalAlpha = 1 - ph; cx.fillRect(sx, Math.round(sy), 2, 1); cx.fillRect(sx + 1, Math.round(sy) - 1, 1, 1); } cx.globalAlpha = 1;
       // 날아드는 재료 (그림 16px → 세계 8px: 캐릭터와 같은 픽셀 크기)
       if (cook.drop){ const d = cook.drop, im = cookImg[d.src], k = Math.min(1, d.t), fx = cxp + 26 * (1 - k), fy = top - 6 - Math.sin(k * Math.PI) * 18 + k * 4;
-        if (im && im.complete) cx.drawImage(im, d.i * 16, 0, 16, 16, Math.round(fx * 2) / 2 - 4, Math.round(fy * 2) / 2 - 8, 8, 8); }
+        if (im && im.complete) cx.drawImage(im, d.sx ?? d.i * 16, d.sy || 0, d.sw || 16, d.sh || 16, Math.round(fx * 2) / 2 - 4, Math.round(fy * 2) / 2 - 8, 8, 8); }
       if (cook.splash){ cx.fillStyle = cook.splashC || '#FFD0A0'; [[-5, -3], [4, -4], [-2, -6], [6, -1], [-7, 0]].forEach(([dx, dy]) => cx.fillRect(X + dx, top + dy, 1, 1)); }
       // 국자: 빙글빙글
       if (cook.stir !== undefined && cook.stir !== null){ const a = cook.stir, lx = Math.round(cxp + Math.cos(a) * 5), ly = Math.round(top + 2 + Math.sin(a) * 1.5);
