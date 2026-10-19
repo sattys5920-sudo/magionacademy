@@ -262,9 +262,11 @@ World.onWater = null; World.onSpot = null;
 let bobber = null, spots = [], spotMap = null;
 const isWater = (x, y) => !!(M && M.water && M.water.some(w => w[0] === x && w[1] === y));
 World.setBobber = b => { bobber = b; };   // { x, y, bite } 물 칸에 찌 (없애려면 null)
-World.setSpots = (mapId, list) => { spotMap = mapId; spots = list || []; };   // [{ x, y, k }] k: 그림 칸(없으면 반짝이만)
+World.setSpots = (mapId, list) => { spotMap = mapId; spots = list || []; };
+World.getSpots = () => spotMap === map ? spots : [];   // [{ x, y, k }] k: 그림 칸(없으면 반짝이만)
 World.faceTo = (x, y) => { const DV = World.Avatar.meta.dirs, dx = x - me.x, dy = y - me.y; me.view = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? DV.right : DV.left) : (dy < 0 ? DV.up : DV.down); me.flip = false; };
 World.busyFish = false;   // 낚시하는 동안은 바닥을 눌러도 안 걸어가요
+World.isFree = (x, y) => !!M && free(x, y);
 World.freeNear = (x, y, r = 3) => { const out = []; for (let a = x - r; a <= x + r; a++) for (let b = y - r; b <= y + r; b++) if (free(a, b)) out.push([a, b]); return out; };
 let crowd = {};
 function rebuildObjs(){   // 지도 물건 + (개인 방이면) 놓은 가구
@@ -447,7 +449,7 @@ cv.addEventListener('pointerdown', e => {
   if (World.busyFish) return;
   // 채집 지점은 조금 빗나가게 눌러도 돼요 (한 칸 안)
   const si = spotMap === map ? spots.map((sp, i) => [i, Math.hypot(sp.x - tx, sp.y - ty)]).filter(([, d]) => d <= 1.5).sort((p1, p2) => p1[1] - p2[1]).map(([i]) => i)[0] ?? -1 : -1;
-  if (si >= 0 && World.onSpot){ const sp = spots[si]; if (Math.round(me.x) === sp.x && Math.round(me.y) === sp.y) World.onSpot(si); else if (goto(me, sp.x, sp.y)) pending = { spot: si }; return; }
+  if (si >= 0 && World.onSpot){ const sp = spots[si]; if (Math.round(me.x) === sp.x && Math.round(me.y) === sp.y) World.onSpot(si, sp); else if (goto(me, sp.x, sp.y)) pending = { spot: si, sp }; return; }
   if (isWater(tx, ty) && World.onWater){   // 물가 바로 옆 칸, 없으면 가까운 물가로 (그 칸에서 낚시할 물을 다시 골라요)
     let wx = tx, wy = ty, st = near([[tx, ty]])[0];
     if (!st){ const c = World.freeNear(tx, ty, 4).sort((p1, p2) => Math.hypot(p1[0] - tx, p1[1] - ty) - Math.hypot(p2[0] - tx, p2[1] - ty)).find(([a, b]) => [[1,0],[-1,0],[0,1],[0,-1]].some(([dx, dy]) => isWater(a + dx, b + dy)));
@@ -461,7 +463,7 @@ cv.addEventListener('pointerdown', e => {
 const SPEED = 6.5, RUN = 10;   // 타일/초. 멀리 갈 때(남은 길 10칸 넘게)는 달려요
 function step(p, dt){
   if (!p.path.length){
-    if (p.me && pending){ const pd = pending; pending = null; if (pd.water){ World.faceTo(pd.water[0], pd.water[1]); World.onWater && World.onWater(pd.water[0], pd.water[1]); } else if (pd.spot !== undefined){ World.onSpot && World.onSpot(pd.spot); } else if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1], () => useObj(pd.act, a)); } }
+    if (p.me && pending){ const pd = pending; pending = null; if (pd.water){ World.faceTo(pd.water[0], pd.water[1]); World.onWater && World.onWater(pd.water[0], pd.water[1]); } else if (pd.spot !== undefined){ World.onSpot && World.onSpot(pd.spot, pd.sp); } else if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1], () => useObj(pd.act, a)); } }
     if (!p.me && !p.peer && (p.idle -= dt) < 0){ p.idle = 2 + Math.random() * 5; for (let i = 0; i < 20; i++){ const gx = Math.round(p.x) + Math.floor(Math.random() * 13) - 6, gy = Math.round(p.y) + Math.floor(Math.random() * 13) - 6; if (goto(p, gx, gy)) break; } }
     p.t = 0; return;
   }
@@ -579,6 +581,16 @@ function frame(now){
   // 채집 지점: 밤에도 잘 보이게 빛 다음에 그려요
   if (spotMap === map) spots.forEach((sp, i) => { const [x, y] = P(sp.x + .5, sp.y + .5), t = now / 260 + i * 1.3, a = .6 + .4 * Math.sin(t), sy = y - 7 - Math.round(Math.sin(t * .7) * 2);
     if (x < view.x || x > view.x + view.w || y < view.y || y > view.y + view.h) return;
+    if (sp.k){   // 놀이 호박: 보통 · 황금 · 썩은
+      const C = { p: ['#F08A2A', '#C8641A'], g: ['#FFD040', '#E0A020'], r: ['#7A8A4A', '#56603A'] }[sp.k] || ['#F08A2A', '#C8641A'], X = Math.round(x), Y = Math.round(y) - 1 - Math.max(0, Math.round(Math.sin(t * 2) * 1.5));
+      { cx.globalCompositeOperation = 'lighter'; cx.globalAlpha = (sp.k === 'g' ? .6 : .35) * a; cx.drawImage(glow(10, sp.k === 'r' ? [140, 255, 120] : [255, 210, 90]), X - 10, Y - 12); cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over'; }
+      cx.fillStyle = '#FFF6D0'; if (Math.sin(t * 3) > 0){ cx.fillRect(X + 5, Y - 12, 1, 3); cx.fillRect(X + 4, Y - 11, 3, 1); }
+      cx.fillStyle = '#22183F'; cx.fillRect(X - 5, Y - 7, 11, 8); cx.fillRect(X - 4, Y - 8, 9, 10);
+      cx.fillStyle = C[0]; cx.fillRect(X - 4, Y - 7, 9, 8); cx.fillRect(X - 3, Y - 8, 7, 10); cx.fillStyle = C[1]; cx.fillRect(X - 1, Y - 7, 1, 8); cx.fillRect(X + 2, Y - 7, 1, 8);
+      cx.fillStyle = '#4A8A3A'; cx.fillRect(X, Y - 10, 2, 3);
+      if (sp.k === 'r'){ cx.fillStyle = '#3A3A2A'; cx.fillRect(X - 2, Y - 5, 1, 1); cx.fillRect(X + 2, Y - 3, 2, 1); }
+      return;
+    }
     cx.globalCompositeOperation = 'lighter'; cx.globalAlpha = .55 * a; cx.drawImage(glow(10, [255, 220, 120]), x - 10, sy - 10); cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
     cx.fillStyle = `rgba(255,250,215,${a})`; cx.fillRect(Math.round(x), sy - 3, 1, 7); cx.fillRect(Math.round(x) - 3, sy, 7, 1); cx.fillRect(Math.round(x) - 1, sy - 1, 3, 3);
     if (Math.sin(t * 1.7) > .5){ cx.fillRect(Math.round(x) + 5, sy - 5, 1, 1); cx.fillRect(Math.round(x) - 5, sy + 3, 1, 1); } });

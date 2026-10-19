@@ -295,6 +295,13 @@ def stall_hw(col, fish=False):
     return f
 for c in ('#E07A1E', '#7A4AA8', '#4AA86A', '#C8486A'): shared('stall' + c, stall_hw(c))
 shared('fishstall', stall_hw('#3A7AC8', True))
+def game_board(img, x, y):   # 놀이 게시판: 기둥 둘 + 알록달록 쪽지
+    d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
+    for dx in (-9, 8): d.rectangle([cx + dx, cy - 26, cx + dx + 1, cy], fill=hexc('#3A2A1E'))
+    d.rectangle([cx - 12, cy - 30, cx + 12, cy - 14], fill=OUTL); d.rectangle([cx - 11, cy - 29, cx + 11, cy - 15], fill=hexc('#7A5238'))
+    for k, (c2, ox, oy) in enumerate((('#FFD866', -9, -27), ('#FF8AB8', -3, -26), ('#8CE6B0', 3, -27), ('#8AB8FF', -7, -21), ('#F2E8D8', 1, -21), ('#C08AFF', 6, -20))): d.rectangle([cx + ox, cy + oy, cx + ox + 4, cy + oy + 4], fill=hexc(c2))
+    d.polygon([(cx - 14, cy - 30), (cx, cy - 37), (cx + 14, cy - 30)], fill=hexc('#C8486A')); d.line([(cx - 14, cy - 30), (cx + 14, cy - 30)], fill=OUTL)
+shared('gameboard', game_board)
 def bench_old(img, x, y):
     d = ImageDraw.Draw(img); a, b = P(x + .1, y + .35), P(x + .9, y + .35)
     poly(d, [up(a, 5), up(b, 5), up((b[0] - 3, b[1] + 2), 5), up((a[0] - 3, a[1] + 2), 5)], hexc('#5A4232'))
@@ -339,6 +346,7 @@ for (x, y) in [(47, 44), (55, 41), (50, 48)]:
 # 등불 시장 거리: 친구 가판대 4 + 생선 가게
 for i, (x, y) in enumerate(((55, 24), (55, 31), (65, 24), (65, 31))): place('stall', 'stall' + ['#E07A1E', '#7A4AA8', '#4AA86A', '#C8486A'][i], x, y, w=2, act=('등불 시장 가판대', '시장 보기')); occupied |= {(x, y), (x + 1, y)}
 place('stall', 'fishstall', 58, 34, w=2, act=('생선 가게', '물고기 팔기')); occupied |= {(58, 34), (59, 34)}
+place('board', 'gameboard', 60, 21, act=('놀이 게시판', '놀이 고르기')); occupied.add((60, 21))
 # 광장·거리 장식
 for (x, y) in [(56, 22), (66, 22), (56, 33), (66, 33), (58, 30), (64, 24)]:
     if (x, y) not in occupied: put('jack', 'jack', x, y, solid=False)

@@ -74,6 +74,48 @@ body:not(.inworld) #fishui{display:none}
 .fcell.unk{opacity:.55}
 .fcell .q{width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:'G11B',monospace;font-size:24px;color:var(--sub)}
 .fst{color:#E0A020;font-size:10px;font-family:'G9',monospace;line-height:12px}
+#game{position:absolute;inset:0;z-index:9;display:none;align-items:center;justify-content:center;padding:12px;background:rgba(14,9,22,.55);font-family:'G11',monospace}
+#game.on{display:flex}
+body:not(.inworld) #game{display:none}
+#game.hudonly{background:none;pointer-events:none;align-items:flex-start;padding-top:64px}
+#game.hudonly .gquit{pointer-events:auto;position:absolute;right:10px;top:118px}
+.ghud{background:rgba(20,13,30,.88);color:#F2EAD8;padding:6px 10px;box-shadow:0 0 0 2px #3A2860;display:flex;flex-direction:column;gap:4px;align-items:center;max-width:260px}
+.ghud b{font-family:'G11B',monospace;font-size:12px;color:#FFD866}
+.gpan{width:100%;max-width:340px;background:#FAF1E2;color:#22183F;box-shadow:0 0 0 3px #22183F;padding:12px;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center;max-height:100%;overflow:auto}
+.gpan.wide{max-width:360px}
+.gpan .gt{font-family:'G11B',monospace;font-size:12px}
+.gpan canvas{width:100%;max-width:340px;image-rendering:pixelated;box-shadow:0 0 0 2px #22183F;touch-action:none}
+.gpl{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.gpp{border:2px solid #22183F;padding:2px 6px;background:#fff}
+.gsb{display:flex;flex-wrap:wrap;gap:4px 10px;justify-content:center;font-size:12px}
+.ghud .gsb span{filter:brightness(1.2)}
+.grk{width:100%;display:flex;flex-direction:column;gap:2px}
+.grk div{display:grid;grid-template-columns:24px 1fr auto;gap:6px;padding:3px 6px;background:#fff;text-align:left}
+.grk div.me{background:#FFE9A8}
+.gic{font-size:24px;line-height:32px;width:32px;text-align:center;flex-shrink:0}
+.whg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-width:300px}
+.whh{aspect-ratio:1;border:0;background:#3A2E4A;box-shadow:inset 0 -10px 0 #2A2236,0 0 0 2px #22183F;position:relative;overflow:hidden;touch-action:none}
+.whh i{position:absolute;left:18%;right:18%;bottom:-70%;height:70%;transition:bottom .08s;background:#E8F0FF;box-shadow:0 0 0 2px #22183F;border-radius:40% 40% 10% 10%}
+.whh[data-k="p"] i,.whh[data-k="g"] i,.whh[data-k="b"] i{bottom:12%}
+.whh[data-k="g"] i{background:#FFD866}
+.whh[data-k="b"] i{background:#4A3A5A;border-radius:10%}
+.whh i::before,.whh i::after{content:'';position:absolute;left:26%;top:30%;width:13%;height:15%;background:#22183F}
+.whh i::after{left:auto;right:26%}
+.whh[data-k="b"] i::before,.whh[data-k="b"] i::after{background:#FF5A6A}
+.whh.hit{background:#8CE6B0}
+.whh.hitb{background:#C2385E}
+.caord{display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center}
+.cast{border:3px solid;padding:3px;background:#fff;opacity:.85}
+.cast.now{transform:scale(1.15);opacity:1;box-shadow:0 0 0 2px #22183F}
+.cast.done{opacity:.35}
+.caord .arr{color:var(--sub)}
+.cain{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px;width:100%}
+.cain .cell{display:flex;flex-direction:column;align-items:center;padding:6px 2px}
+.cain .s{font-size:10px;font-family:'G9',monospace;line-height:12px}
+.ghl{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}
+.ghl button{border:3px solid;background:#fff;font-family:'G11',monospace;font-size:12px;padding:3px 6px}
+.ghl button.on{background:#FFE9A8}
+.ghl b{color:#C2385E}
 #talk{position:absolute;left:10px;right:80px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;display:none;flex-direction:column;gap:6px;font-family:'G11',monospace}
 #talk.on{display:flex}
 body:not(.inworld) #talk{display:none}
@@ -217,11 +259,12 @@ button.who:not(:disabled){border-color:var(--ink)}
 <div id="shell">
   <div id="world"><canvas id="cv"></canvas>
     <div class="hud"><div class="chip"><b id="place">호박달 마녀학교</b><span id="sub">바닥을 눌러 걸어요</span></div>
-      <div class="hudr"><div class="chip" id="clock"></div><div class="chip" id="wallet"></div><button class="chip ev" id="evChip" hidden></button></div></div>
+      <div class="hudr"><div class="chip" id="clock"></div><div class="chip" id="wallet"></div><button class="chip ev" id="evChip" hidden></button><button class="chip ev" id="gameChip" hidden></button></div></div>
     <div id="fade"></div>
   </div>
   <div class="fab"><button id="tToday" class="main">오늘</button><button id="tTalk">말하기</button><button id="tMap">지도</button><button id="tZoom">멀리</button><button id="tDay">밝게</button></div>
   <div id="fishui"></div>
+  <div id="game"></div>
   <div id="talk"><div id="tlog"></div><div class="temo" id="temo"></div><form id="tform" autocomplete="off"><input id="tin" maxlength="40" placeholder="말풍선으로 말해요 (40자)" enterkeyhint="send"><button>보내기</button></form></div>
   <div id="mapv"><div class="mhead"><b>호박달 마녀학교 · 몬스터 마을 지도</b><button id="mClose">닫기</button></div><div id="mwrap"><div id="minner"><canvas id="mcv"></canvas></div></div><div class="mhint">가고 싶은 곳을 누르면 걸어가요</div></div>
   <div id="app"></div>
@@ -873,7 +916,8 @@ function syncSpots(){
   if (!me.fg || me.fg.d !== todayKey()) me.fg = { d: todayKey(), got: [] };
   const all = spotsToday(); World.setSpots('campus', all.map((s, i) => ({ ...s, i })).filter(s => !me.fg.got.includes(s.i)));
 }
-World.onSpot = si => {
+World.onSpot = (si, spot) => {
+  if (G && G.g === 'pumpkin') return pkPick(spot);
   const all = spotsToday(), live = all.map((s, i) => ({ ...s, i })).filter(s => !me.fg.got.includes(s.i)), sp = live[si]; if (!sp) return;
   const pool = FORAGE.filter(x => x.z.includes(sp.z)); let r = sp.r * pool.reduce((t, x) => t + x.w, 0), it = pool[pool.length - 1];
   for (const x of pool){ r -= x.w; if (r <= 0){ it = x; break; } }
@@ -911,6 +955,311 @@ function renderFish(){
   $('#fsAll') && ($('#fsAll').onclick = () => { let g = 0, n = 0; CATCH.forEach(k => { n += me.inv[k] || 0; g += sell(k, me.inv[k] || 0); }); fsMsg = `${n}개를 팔았어요. +${g.toLocaleString()}G`; save(); renderFish(); });
   on('[data-rod]', b => { const i = +b.dataset.rod, r = RODS[i]; if (me.coin < r.price || i !== rodLv() + 1) return; me.coin -= r.price; me.rod = i; fsMsg = `${r.name}을(를) 샀어요! ${r.desc}`; save(); renderFish(); });
 }
+// ===== 같이 하는 놀이: 등불 시장 「놀이 게시판」에서 방을 열고, 같은 곳 친구가 참가해요 =====
+// games/<방> = { g 놀이, host, hn 방장 이름, m 장소, st lobby·play·end, at, t0 시작 시각, seed, ord 참가 순서, p: { uid: { n, s 점수, d 끝남 } }, c 줍기·때리기 차지, co 협동 상태 }
+// 내용(호박 자리, 묘비, 유령, 주문, 별)은 seed로 모두 똑같이 만들고, 먼저 차지하는 건 트랜잭션으로 한 명만 인정해요
+const GAMES = {
+  pumpkin: { name: '호박 줍기 경주', ic: '🎃', coop: false, min: 1, max: 8, dur: 60, desc: '호박밭에 솟는 호박을 먼저 주워요 · 황금 +5 · 썩은 호박 -2' },
+  broom: { name: '빗자루 경주', ic: '🧹', coop: false, min: 1, max: 8, dur: 90, desc: '모두 같은 코스! 화면을 눌러 날며 묘비를 피해요' },
+  whack: { name: '유령 뿅망치', ic: '🔨', coop: false, min: 1, max: 8, dur: 45, desc: '무덤에서 올라온 유령을 먼저 때려요 · 황금 +3 · 박쥐 -1 기절' },
+  cauldron: { name: '마녀의 솥 대작전', ic: '🧪', coop: true, min: 2, max: 8, dur: 180, desc: '재료를 나눠 가져요 · 주문서 순서대로 넣어 솥을 끓여요' },
+  ghost: { name: '유령 막기', ic: '👻', coop: true, min: 2, max: 8, dur: 150, desc: '구역을 나눠 맡아 몰려오는 유령을 막아요 · 웨이브 10' },
+  stars: { name: '별자리 잇기', ic: '✨', coop: true, min: 2, max: 8, dur: 180, desc: '내 별 번호를 외워 다 같이 1번부터 순서대로 이어요' },
+};
+const PCOL = ['#FF6A8A', '#6AB8FF', '#8CE6B0', '#FFD866', '#C08AFF', '#FF9A4A', '#7AE0E0', '#F0F0F0'];
+let srvOff = 0, gameList = {}, room = null, roomV = null, roomOff = null, G = null, gameMsg = '';
+const now2 = () => Date.now() + srvOff;
+const myId = () => uid || 'me';
+const weekKey = () => 'w' + Math.floor(Date.now() / 604800000);
+// 혼자 모드: 같은 코드가 돌도록 이 기기 안의 작은 저장소
+const LT = {}, LL = [];
+const lget = p => p.split('/').reduce((o, k) => o == null ? undefined : o[k], LT);
+const lset = (p, v) => { const ks = p.split('/'); let o = LT; ks.slice(0, -1).forEach(k => { if (!o[k] || typeof o[k] !== 'object') o[k] = {}; o = o[k]; }); if (v == null) delete o[ks.at(-1)]; else o[ks.at(-1)] = JSON.parse(JSON.stringify(v)); LL.forEach(l => { if (p.startsWith(l.p) || l.p.startsWith(p)) setTimeout(() => l.cb(lget(l.p) ?? null), 0); }); };
+const GDB = {
+  set: (p, v) => solo ? (lset(p, v), Promise.resolve()) : F.set(F.ref(db, p), v),
+  upd: (p, v) => solo ? (Object.entries(v).forEach(([k, x]) => lset(p + '/' + k, x)), Promise.resolve()) : F.update(F.ref(db, p), v),
+  tx: (p, fn) => { if (solo){ const v = fn(lget(p) ?? null); if (v === undefined) return Promise.resolve({ committed: false }); lset(p, v); return Promise.resolve({ committed: true, v }); } return F.runTransaction(F.ref(db, p), fn).then(r => ({ committed: r.committed, v: r.snapshot?.val?.() })); },
+  on: (p, cb) => { if (solo){ const l = { p, cb }; LL.push(l); setTimeout(() => cb(lget(p) ?? null), 0); return () => LL.splice(LL.indexOf(l), 1); } return F.onValue(F.ref(db, p), s => cb(s.val())); },
+};
+const gui = () => $('#game');
+function gameShow(html, cls = ''){ const u = gui(); u.className = 'on ' + cls; u.innerHTML = html; }
+function gameHide(){ const u = gui(); u.className = ''; u.innerHTML = ''; }
+// ---------- 방 ----------
+function openRoom(g){
+  if (room) return toast('이미 놀이 방에 있어요');
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  GDB.set('games/' + id, { g, host: myId(), hn: me.nick, m: World.placeKey() || '', st: 'lobby', at: now2(), p: { [myId()]: { n: me.nick, s: 0 } } }).then(() => joinRoom(id, true));
+  speak(`${GAMES[g].ic} ${GAMES[g].name} 열었어! 같이 하자`);
+}
+function joinRoom(id, mine){
+  const R = gameList[id] || (solo && lget('games/' + id));
+  if (!mine && R){ const n = Object.keys(R.p || {}).length; if (R.st !== 'lobby') return toast('벌써 시작했어요'); if (n >= GAMES[R.g].max) return toast('방이 꽉 찼어요 (최대 8명)'); GDB.upd(`games/${id}/p/${myId()}`, { n: me.nick, s: 0 }); }
+  room = id; closeSheet(); roomOff?.();
+  roomOff = GDB.on('games/' + id, v => onRoom(v));
+}
+function leaveRoom(){
+  const id = room, v = roomV; roomOff?.(); roomOff = null; room = null; roomV = null; gameEnd(); gameHide();
+  if (!id || !v) return;
+  if (v.st === 'lobby'){ if (v.host === myId()) GDB.set('games/' + id, null); else GDB.set(`games/${id}/p/${myId()}`, null); }
+}
+function onRoom(v){
+  if (!room) return;
+  if (!v){ toast('방이 닫혔어요'); room = null; roomOff?.(); gameEnd(); gameHide(); return; }
+  roomV = v; const Gm = GAMES[v.g];
+  if (v.st === 'lobby'){
+    if (!v.p?.[myId()]){ toast('방에서 나왔어요'); return leaveRoom(); }
+    const ps = Object.entries(v.p), host = v.host === myId(), ok = ps.length >= Gm.min;
+    gameShow(`<div class="gpan px"><b class="gt">${Gm.ic} ${Gm.name}</b><span class="s">${Gm.desc}</span>
+      <div class="gpl">${ps.map(([id, p], i) => `<span class="gpp" style="border-color:${PCOL[i % 8]}">${esc(p.n)}${id === v.host ? ' 👑' : ''}</span>`).join('')}</div>
+      <span class="s sub">${ps.length} / ${Gm.max}명 · ${Gm.coop ? `협동 · ${Gm.min}명부터` : '1명부터'} · ${host ? (ok ? '모이면 시작을 눌러요' : `${Gm.min - ps.length}명 더 와야 해요`) : `${esc(v.hn)}이(가) 시작하길 기다려요`}</span>
+      <div class="frow">${host ? `<button class="btn sm go" data-gx="start" ${ok ? '' : 'disabled'}>시작!</button>` : ''}<button class="btn sm" data-gx="leave">나가기</button></div></div>`, 'lobby');
+    return;
+  }
+  if (v.st === 'play' && !G && v.p?.[myId()]) gameStart(v);
+  if (G) G.sync && G.sync(v);
+}
+function hostStart(){
+  const v = roomV; if (!v || v.host !== myId()) return;
+  const ord = Object.keys(v.p);
+  GDB.upd('games/' + room, { st: 'play', t0: now2() + 3500, seed: Math.floor(Math.random() * 1e9), ord });
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-gx]'); if (!b || !gui().contains(b)) return;
+  const k = b.dataset.gx;
+  if (k === 'start') hostStart();
+  if (k === 'leave') leaveRoom();
+  if (k === 'done'){ const id = room, v = roomV; leaveRoom(); if (v && v.host === myId()) setTimeout(() => GDB.set('games/' + id, null), 20000); }
+});
+// 초대: 같은 곳에서 방이 열리면 칩이 떠요
+function syncInvites(){
+  const c = $('#gameChip'); if (!c || !me) return;
+  const here = World.placeKey(), inv = Object.entries(gameList).filter(([id, r]) => r && r.st === 'lobby' && r.m === here && r.host !== myId() && !r.p?.[myId()] && now2() - r.at < 300000).sort((a, b) => b[1].at - a[1].at)[0];
+  c.hidden = !inv || !!room; if (inv && !room){ c.textContent = `${GAMES[inv[1].g].ic} ${inv[1].hn}의 ${GAMES[inv[1].g].name} · 참가`; c.onclick = () => joinRoom(inv[0]); }
+}
+// ---------- 놀이 공통 ----------
+function gameStart(v){
+  const Gm = GAMES[v.g], ord = v.ord || Object.keys(v.p), me_i = ord.indexOf(myId());
+  G = { g: v.g, id: room, v, ord, me_i, n: ord.length, t0: v.t0, end: v.t0 + Gm.dur * 1000 * (window.__gameDurK || 1), R: k => seedRand(v.seed + ':' + k), score: 0, raf: 0, timers: [] };
+  ({ pumpkin: pkStart, broom: brStart, whack: whStart, cauldron: caStart, ghost: ghStart, stars: stStart })[v.g]();
+  const tick = () => { if (!G) return; G.loop && G.loop(); if (G && now2() > G.end + 300 && !G.over) gameOver(); if (G) G.raf = requestAnimationFrame(tick); };
+  G.raf = requestAnimationFrame(tick);
+}
+function gameEnd(){ if (!G) return; cancelAnimationFrame(G.raf); G.timers.forEach(clearInterval); G.cleanup && G.cleanup(); G = null; }
+const gLeft = () => Math.max(0, Math.ceil((G.end - now2()) / 1000));
+const gCount = () => { const t = (G.t0 - now2()) / 1000; return t > 0 ? Math.ceil(t) : 0; };
+const nameOf = id => esc(roomV?.p?.[id]?.n || '친구');
+function addScore(d){ G.score = Math.max(-99, G.score + d); GDB.upd(`games/${G.id}/p/${myId()}`, { s: G.score }); }
+function scoreBoard(v){ const ps = Object.entries(v.p || {}).sort((a, b) => (b[1].s || 0) - (a[1].s || 0)); return `<div class="gsb">${ps.map(([id, p]) => `<span style="color:${PCOL[G.ord.indexOf(id) % 8]}">${esc(p.n)} ${p.s || 0}${p.d ? ' ✖' : ''}</span>`).join('')}</div>`; }
+function gameOver(fail){
+  if (!G || G.over) return; G.over = true;
+  const v = roomV || G.v, Gm = GAMES[G.g], ps = Object.entries(v.p || {}).sort((a, b) => (b[1].s || 0) - (a[1].s || 0));
+  let reward = '', coin = 0, mana = 0, rec = 0, title = '';
+  if (Gm.coop){
+    const res = G.result ? G.result() : { ok: !fail, score: 0, text: '' }; rec = res.score;
+    coin = res.ok ? 80 + G.n * 5 : 15; mana = res.ok ? 5 : 0;
+    title = res.ok ? '🎉 팀 성공!' : '😢 아쉽게 실패…'; reward = res.text;
+  } else {
+    const rank = 1 + ps.filter(([, p]) => (p.s || 0) > G.score).length; rec = Math.max(0, G.score);   // 같은 점수는 같은 등수
+    coin = ps.length === 1 ? 10 + Math.max(0, G.score) : G.score > 0 ? [0, 60, 40, 25][rank] || 10 : 10; mana = ps.length > 1 && G.score > 0 ? [0, 5, 3, 2][rank] || 0 : 0;
+    title = ps.length === 1 ? `혼자 기록 ${G.score}점` : `${rank}등!`;
+  }
+  me.gdone = me.gdone || {};
+  if (!me.gdone[G.id]){ me.gdone = { [G.id]: 1 }; me.coin += coin; me.mana += mana; save(); hud(); recordBest(G.g, rec); }
+  if (roomV && roomV.host === myId()) GDB.upd('games/' + G.id, { st: 'end' });
+  const g = G.g; gameEnd();
+  gameShow(`<div class="gpan px"><b class="gt">${GAMES[g].ic} ${title}</b>${reward ? `<span class="s">${reward}</span>` : ''}
+    ${GAMES[g].coop ? `<div class="gpl">${ps.map(([id, p], i) => `<span class="gpp">${esc(p.n)}</span>`).join('')}</div>` : `<div class="grk">${ps.map(([id, p], i) => `<div class="${id === myId() ? 'me' : ''}"><b>${1 + ps.filter(([, q]) => (q.s || 0) > (p.s || 0)).length}</b><span>${esc(p.n)}</span><span>${p.s || 0}점</span></div>`).join('')}</div>`}
+    <span class="s">보상 +${coin}G${mana ? ` · 마력 +${mana}` : ''} · 내 기록 ${rec}</span><div class="frow"><button class="btn sm go" data-gx="done">확인</button></div></div>`, 'lobby');
+}
+function recordBest(g, sc){
+  if (solo){ me.grec = me.grec || {}; const k = g + weekKey(); if (sc > (me.grec[k] || 0)){ me.grec[k] = sc; save(); } return; }
+  GDB.tx(`records/${g}/${weekKey()}/${uid}`, cur => (cur || 0) >= sc ? undefined : Math.max(0, Math.min(100000, sc)));
+}
+// ---------- 1. 호박 줍기 경주: 호박밭에서 진짜로 걸어 다니며 주워요 ----------
+const PK_FIELD = [3, 57, 14, 68];
+function pkStart(){
+  const R = G.R('pk'), list = [];
+  for (let i = 0, t = 0; t < GAMES.pumpkin.dur; i++){ t += .35 + R() * .45; const r = R(); list.push({ i, t, x: PK_FIELD[0] + Math.floor(R() * (PK_FIELD[2] - PK_FIELD[0])), y: PK_FIELD[1] + Math.floor(R() * (PK_FIELD[3] - PK_FIELD[1])), k: r < .08 ? 'g' : r < .2 ? 'r' : 'p', life: 6 + R() * 3 }); }
+  G.pk = list; G.claim = {};
+  World.teleport('campus', [8 + (G.me_i % 4), 56 + Math.floor(G.me_i / 4)]);
+  G.sync = v => { G.claim = v.c || {}; };
+  G.loop = () => {
+    const t = (now2() - G.t0) / 1000, live = G.pk.filter(p => t >= p.t && t < p.t + p.life && !G.claim[p.i] && World.isFree(p.x, p.y)).map(p => ({ x: p.x, y: p.y, k: p.k, id: p.i }));
+    const key = live.map(p => p.id).join(); if (key !== G.lastKey){ G.lastKey = key; World.setSpots('campus', live); }
+    const h = $('#ghud'); if (h) h.innerHTML = `<b>${GAMES.pumpkin.ic} ${gCount() ? `${gCount()}초 뒤 시작!` : `남은 시간 ${gLeft()}초`}</b>${scoreBoard(roomV || G.v)}`;
+  };
+  gameShow(`<div id="ghud" class="ghud px"></div><button class="btn sm gquit" data-gx="leave">나가기</button>`, 'hudonly');
+  G.cleanup = () => { syncSpots(); };
+}
+function pkPick(sp){
+  if (!G || G.g !== 'pumpkin' || now2() < G.t0) return;
+  const p = G.pk[sp.id]; if (!p) return;
+  GDB.tx(`games/${G.id}/c/${p.i}`, cur => cur ? undefined : myId()).then(r => {
+    if (!G) return;
+    if (r.committed){ const d = p.k === 'g' ? 5 : p.k === 'r' ? -2 : 1; addScore(d); toast(p.k === 'g' ? '황금 호박! +5' : p.k === 'r' ? '썩은 호박… -2' : '호박 +1'); }
+    else toast('앗, 친구가 먼저 주웠어요');
+  });
+}
+// ---------- 2. 빗자루 경주: 모두 같은 묘비 코스 ----------
+const BW = 340, BH = 300;
+function brStart(){
+  const R = G.R('br'), cols = []; for (let i = 0; i < 200; i++) cols.push({ x: 420 + i * 175, top: 40 + R() * (BH - 80 - Math.max(80, 128 - i * 1.2) - 30), gp: Math.max(80, 128 - i * 1.2) });
+  const st = G.br = { y: BH / 2, vy: 0, dist: 0, passed: 0, dead: false, cols, wait: true };   // 처음 누를 때까지 제자리에서 떠 있어요
+  gameShow(`<div class="gpan px wide"><b class="gt" id="gtop"></b><canvas id="gcv" width="${BW}" height="${BH}"></canvas><div id="gsb"></div><button class="btn sm" data-gx="leave">나가기</button></div>`);
+  const cv = $('#gcv'), g = cv.getContext('2d');
+  cv.onpointerdown = e => { e.preventDefault(); if (now2() >= G.t0 && !st.dead){ st.wait = false; st.vy = -265; } };
+  let last = performance.now();
+  G.loop = () => {
+    const nw = performance.now(), dt = Math.min(.033, (nw - last) / 1000); last = nw;
+    const t = (now2() - G.t0) / 1000;
+    if (t > 0 && !st.dead && !st.wait){
+      st.vy += 820 * dt; st.y += st.vy * dt; st.dist += (110 + Math.min(80, t * 1.2)) * dt;
+      for (const c of st.cols){ const x = c.x - st.dist; if (x > BW) break; if (x + 26 < 70 && !c.done){ c.done = true; st.passed++; addScore(1); }
+        if (80 + 9 > x && 80 - 9 < x + 26 && (st.y - 8 < c.top || st.y + 8 > c.top + c.gp)) st.dead = true; }
+      if (st.y < 8 || st.y > BH - 24) st.dead = true;
+      if (st.dead) GDB.upd(`games/${G.id}/p/${myId()}`, { d: 1 });
+    } else if (st.wait) st.y = BH / 2 + Math.sin(nw / 300) * 6;
+    // 그리기 (비행학 그림과 같은 느낌)
+    const Rr = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
+    const sky = g.createLinearGradient(0, 0, 0, BH); sky.addColorStop(0, '#1E1440'); sky.addColorStop(1, '#4A2E6A'); g.fillStyle = sky; g.fillRect(0, 0, BW, BH);
+    Rr(0, BH - 16, BW, 16, '#2A2040');
+    st.cols.forEach(c => { const x = c.x - st.dist; if (x < -40 || x > BW + 10) return; Rr(x + 6, 0, 14, c.top, '#3E6A3A'); Rr(x + 2, c.top - 10, 22, 10, '#4E8A48'); const by = c.top + c.gp; Rr(x, by, 26, BH - 16 - by, '#8A82A8'); Rr(x, by, 26, 4, '#B4AECC'); });
+    const y = Math.round(st.y); Rr(60, y + 4, 34, 3, '#8A5A30'); Rr(54, y + 1, 8, 9, '#E8B84A'); Rr(74, y - 6, 12, 11, st.dead ? '#C2385E' : PCOL[G.me_i % 8]); Rr(76, y - 13, 9, 8, '#F2C6A0'); Rr(72, y - 16, 15, 3, '#2A1C3E'); Rr(75, y - 22, 9, 6, '#2A1C3E');
+    g.font = '12px G11, monospace'; g.fillStyle = '#FFF6E0'; g.textAlign = 'center';
+    if (t <= 0) g.fillText(`${gCount()}초 뒤 출발! 눌러서 날아요`, BW / 2, BH / 2 + 46); else if (st.wait) g.fillText('출발! 화면을 눌러요', BW / 2, BH / 2 + 46);
+    if (st.dead) g.fillText(`묘비 ${st.passed}개! 친구들을 기다려요`, BW / 2, BH / 2);
+    $('#gtop').textContent = `${GAMES.broom.ic} 빗자루 경주 · 남은 시간 ${gLeft()}초`;
+    const v = roomV || G.v; $('#gsb').innerHTML = scoreBoard(v);
+    if (Object.values(v.p || {}).every(p => p.d) && !G.over) gameOver();
+  };
+}
+// ---------- 3. 유령 뿅망치: 무덤 9칸 ----------
+function whStart(){
+  const R = G.R('wh'), list = [];
+  for (let i = 0, t = .3; t < GAMES.whack.dur; i++){ const r = R(); list.push({ i, t, h: Math.floor(R() * 9), k: r < .08 ? 'g' : r < .2 ? 'b' : 'p', life: Math.max(.6, 1.3 - t / 60) }); t += Math.max(.22, .55 - t / 120) * (G.n > 2 ? .8 : 1) + R() * .2; }
+  G.wh = list; G.claim = {}; G.stun = 0;
+  gameShow(`<div class="gpan px wide"><b class="gt" id="gtop"></b><div class="whg">${Array.from({ length: 9 }, (_, h) => `<button class="whh" data-wh="${h}"><i></i></button>`).join('')}</div><div id="gsb"></div><button class="btn sm" data-gx="leave">나가기</button></div>`);
+  G.sync = v => { G.claim = v.c || {}; };
+  const cur = () => { const t = (now2() - G.t0) / 1000, out = {}; G.wh.forEach(p => { if (t >= p.t && t < p.t + p.life && !G.claim[p.i] && out[p.h] === undefined) out[p.h] = p; }); return out; };
+  gui().querySelectorAll('[data-wh]').forEach(b => b.onpointerdown = e => { e.preventDefault();
+    if (now2() < G.t0 || performance.now() < G.stun) return; const p = cur()[+b.dataset.wh]; if (!p) return;
+    GDB.tx(`games/${G.id}/c/${p.i}`, c => c ? undefined : myId()).then(r => { if (!G || !r.committed) return;
+      if (p.k === 'b'){ addScore(-1); G.stun = performance.now() + 1000; b.classList.add('hitb'); } else { addScore(p.k === 'g' ? 3 : 1); b.classList.add('hit'); }
+      setTimeout(() => b.classList.remove('hit', 'hitb'), 200); }); });
+  G.loop = () => {
+    const c = cur(); gui().querySelectorAll('[data-wh]').forEach(b => { const p = c[+b.dataset.wh]; b.dataset.k = p ? p.k : ''; });
+    $('#gtop').textContent = gCount() ? `${GAMES.whack.ic} ${gCount()}초 뒤 시작!` : performance.now() < G.stun ? '💫 기절! 박쥐는 때리면 안 돼요' : `${GAMES.whack.ic} 남은 시간 ${gLeft()}초 · 내 점수 ${G.score}`;
+    $('#gsb').innerHTML = scoreBoard(roomV || G.v);
+  };
+}
+// ---------- 4. 마녀의 솥 대작전 (협동): 재료를 나눠 갖고 주문 순서대로 넣어요 ----------
+function caStart(){
+  const R = G.R('ca'), pool = FORAGE.slice(0, 36).map(x => x.id), K = Math.min(10, Math.max(4, G.n * 2)), ing = [];
+  while (ing.length < K){ const k = pool[Math.floor(R() * pool.length)]; if (!ing.includes(k)) ing.push(k); }
+  G.ing = ing; G.owner = k => G.ord[ing.indexOf(k) % G.n]; G.co = { o: 0, k: 0, d: 0, f: 0 };
+  G.order = o => { const r = G.R('ca' + o), len = 3 + Math.min(2, Math.floor(o / 3)); return Array.from({ length: len }, () => ing[Math.floor(r() * ing.length)]); };
+  G.target = 4 + G.n;
+  const mine = ing.filter(k => G.owner(k) === myId());
+  gameShow(`<div class="gpan px wide"><b class="gt" id="gtop"></b><div class="caord" id="caord"></div><span class="s" id="cast"></span>
+    <span class="s sub">내 재료 (내 것만 넣을 수 있어요)</span><div class="cain">${mine.map(k => `<button class="cell" data-ca="${k}">${ic(k)}<span class="s">${esc(ITEM[k])}</span></button>`).join('')}</div>
+    <div class="temo">${EMOS.slice(0, 6).map((x, i) => `<button data-gemo="${i}">${emoI(i)}</button>`).join('')}</div><div id="gsb"></div><button class="btn sm" data-gx="leave">나가기</button></div>`);
+  gui().querySelectorAll('[data-gemo]').forEach(b => b.onclick = () => speak(EMOS[+b.dataset.gemo], +b.dataset.gemo + 1));
+  G.sync = v => { if (v.co) G.co = v.co; };
+  gui().querySelectorAll('[data-ca]').forEach(b => b.onpointerdown = e => { e.preventDefault(); if (now2() < G.t0 || G.over) return; const X = b.dataset.ca;
+    GDB.tx(`games/${G.id}/co`, cur => { cur = cur || { o: 0, k: 0, d: 0, f: 0 }; const od = G.order(cur.o);
+      if (od[cur.k] === X){ cur.k++; if (cur.k >= od.length){ cur.d++; cur.o++; cur.k = 0; cur.ok = now2(); } } else { cur.f++; cur.k = 0; cur.boom = now2(); } return cur; })
+      .then(r => { if (r.committed && G && r.v && r.v.boom && now2() - r.v.boom < 300) toast('펑! 순서가 틀렸어요. 처음부터!'); }); });
+  G.loop = () => {
+    const co = G.co, od = G.order(co.o);
+    $('#caord').innerHTML = od.map((k, i) => `<div class="cast ${i < co.k ? 'done' : i === co.k ? 'now' : ''}" style="border-color:${PCOL[G.ord.indexOf(G.owner(k)) % 8]}">${ic(k)}</div>`).join('<span class="arr">→</span>');
+    const boom = co.boom && now2() - co.boom < 900, ok = co.ok && now2() - co.ok < 900;
+    $('#cast').innerHTML = boom ? '💥 펑! 처음부터 다시' : ok ? '✨ 완성! 다음 주문' : `테두리 색 = 그 재료를 가진 친구 · 다음은 ${i_ownerName(od[co.k])}`;
+    $('#gtop').textContent = gCount() ? `${GAMES.cauldron.ic} ${gCount()}초 뒤 시작!` : `${GAMES.cauldron.ic} 남은 시간 ${gLeft()}초 · 끓인 주문 ${co.d} / 목표 ${G.target}`;
+    $('#gsb').innerHTML = `<div class="gsb">${G.ord.map((id, i) => `<span style="color:${PCOL[i % 8]}">● ${nameOf(id)}</span>`).join('')}</div>`;
+  };
+  G.result = () => ({ ok: G.co.d >= G.target, score: G.co.d, text: `주문 ${G.co.d}개 완성 (목표 ${G.target}) · 펑 ${G.co.f}번` });
+}
+const i_ownerName = k => { const id = G.owner(k); return id === myId() ? '<b>내 차례!</b>' : `${nameOf(id)}의 재료`; };
+// ---------- 5. 유령 막기 (협동): 구역마다 유령이 내려와요, 팀 체력 10 ----------
+const GW = 300, GH = 300;
+function ghStart(){
+  const R = G.R('gh'), lanes = G.n, list = [];
+  for (let w = 1; w <= 10; w++){ const cnt = G.n + w + 1, T = Math.max(3, 6.2 - w * .3); for (let j = 0; j < cnt; j++) list.push({ i: list.length, w, lane: Math.floor(R() * lanes), ts: (w - 1) * 14 + R() * 10, T, x: .15 + R() * .7 }); }
+  G.gh = list; G.kill = {}; G.view = G.me_i; G.hp = 10;
+  gameShow(`<div class="gpan px wide"><b class="gt" id="gtop"></b><div class="ghl" id="ghl"></div><canvas id="gcv" width="${GW}" height="${GH}"></canvas><span class="s" id="ghs"></span><div class="temo">${EMOS.slice(0, 6).map((x, i) => `<button data-gemo="${i}">${emoI(i)}</button>`).join('')}</div><button class="btn sm" data-gx="leave">나가기</button></div>`);
+  gui().querySelectorAll('[data-gemo]').forEach(b => b.onclick = () => speak(EMOS[+b.dataset.gemo], +b.dataset.gemo + 1));
+  G.sync = v => { G.kill = v.c || {}; };
+  const cv = $('#gcv'), g = cv.getContext('2d');
+  const at = (p, t) => (t - p.ts) / p.T;   // 0 위 → 1 기숙사 도착
+  cv.onpointerdown = e => { e.preventDefault(); const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) * GW / r.width, y = (e.clientY - r.top) * GH / r.height, t = (now2() - G.t0) / 1000;
+    const p = G.gh.filter(p => p.lane === G.view && !G.kill[p.i] && at(p, t) >= 0 && at(p, t) < 1).find(p => Math.hypot(p.x * GW - x, 20 + at(p, t) * (GH - 70) - y) < 22); if (!p) return;
+    GDB.tx(`games/${G.id}/c/${p.i}`, c => c || (now2() - G.t0) / 1000 > p.ts + p.T ? undefined : myId()).then(r => { if (r.committed && G) addScore(1); }); };
+  gui().addEventListener('click', e => { const b = e.target.closest('[data-lane]'); if (b && G && G.g === 'ghost') G.view = +b.dataset.lane; });
+  G.loop = () => {
+    const t = (now2() - G.t0) / 1000, lost = G.gh.filter(p => !G.kill[p.i] && t > p.ts + p.T + .4).length; G.hp = 10 - lost;
+    if (G.hp <= 0 && !G.over) return gameOver(true);
+    const wave = Math.min(10, Math.max(1, Math.floor(t / 14) + 1));
+    $('#ghl').innerHTML = G.ord.map((id, i) => { const n = G.gh.filter(p => p.lane === i && !G.kill[p.i] && at(p, t) >= 0 && at(p, t) < 1).length; return `<button data-lane="${i}" class="${G.view === i ? 'on' : ''}" style="border-color:${PCOL[i % 8]}">${i === G.me_i ? '내 구역' : nameOf(id)}${n ? ` <b>${n}</b>` : ''}</button>`; }).join('');
+    g.fillStyle = '#1E1440'; g.fillRect(0, 0, GW, GH); g.fillStyle = PCOL[G.view % 8]; g.globalAlpha = .12; g.fillRect(0, 0, GW, GH); g.globalAlpha = 1;
+    g.fillStyle = '#3A2E68'; g.fillRect(0, GH - 46, GW, 46); g.fillStyle = '#6A5A8A'; g.fillRect(GW / 2 - 40, GH - 70, 80, 40); g.fillStyle = '#3A2A5E'; g.beginPath(); g.moveTo(GW / 2 - 48, GH - 70); g.lineTo(GW / 2, GH - 100); g.lineTo(GW / 2 + 48, GH - 70); g.fill(); g.fillStyle = '#FFD866'; g.fillRect(GW / 2 - 6, GH - 56, 12, 12);
+    G.gh.forEach(p => { if (p.lane !== G.view || G.kill[p.i]) return; const a = at(p, t); if (a < 0 || a >= 1) return; const x = Math.round(p.x * GW), y = Math.round(20 + a * (GH - 70)), wob = Math.round(Math.sin(t * 6 + p.i) * 2);
+      g.fillStyle = '#22183F'; g.fillRect(x - 11, y - 12 + wob, 22, 24); g.fillStyle = a > .7 ? '#FFB0C0' : '#E8F0FF'; g.fillRect(x - 10, y - 11 + wob, 20, 20); g.fillRect(x - 10, y + 9 + wob, 4, 3); g.fillRect(x - 3, y + 9 + wob, 4, 3); g.fillRect(x + 4, y + 9 + wob, 4, 3);
+      g.fillStyle = '#22183F'; g.fillRect(x - 6, y - 5 + wob, 3, 4); g.fillRect(x + 3, y - 5 + wob, 3, 4); g.fillRect(x - 2, y + 2 + wob, 4, 3); });
+    g.font = '12px G11, monospace'; g.textAlign = 'center'; g.fillStyle = '#FFF6E0'; if (gCount()) g.fillText(`${gCount()}초 뒤 유령이 와요!`, GW / 2, GH / 2);
+    $('#gtop').textContent = `${GAMES.ghost.ic} 웨이브 ${wave} / 10 · 남은 시간 ${gLeft()}초`;
+    $('#ghs').innerHTML = `팀 체력 ${'❤'.repeat(Math.max(0, G.hp))}${'♡'.repeat(10 - Math.max(0, G.hp))} · 내가 막은 유령 ${G.score}`;
+  };
+  G.result = () => ({ ok: G.hp > 0, score: G.gh.filter(p => G.kill[p.i]).length, text: `팀이 유령 ${G.gh.filter(p => G.kill[p.i]).length}마리를 막았어요 · 남은 체력 ${Math.max(0, G.hp)}` });
+}
+// ---------- 6. 별자리 잇기 (협동): 내 별 번호만 보여요, 다 같이 1번부터 ----------
+const SW = 300, SH = 300;
+function stStart(){
+  G.layout = s => { const r = G.R('st' + s), K = Math.min(14, 3 + s + Math.floor(G.n / 2)), pts = [];
+    while (pts.length < K){ const x = 24 + r() * (SW - 48), y = 24 + r() * (SH - 48); if (pts.every(p => Math.hypot(p.x - x, p.y - y) > 40)) pts.push({ x, y }); }
+    const perm = pts.map((_, i) => i); for (let i = perm.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [perm[i], perm[j]] = [perm[j], perm[i]]; } pts.forEach((p, j) => { p.no = perm.indexOf(j); p.own = G.ord[j % G.n]; }); return pts; };
+  G.stv = { s: 1, k: 0, lives: 3, at: G.t0 };
+  gameShow(`<div class="gpan px wide"><b class="gt" id="gtop"></b><canvas id="gcv" width="${SW}" height="${SH}"></canvas><span class="s" id="sts"></span><div class="temo">${EMOS.slice(0, 6).map((x, i) => `<button data-gemo="${i}">${emoI(i)}</button>`).join('')}</div><div id="gsb"></div><button class="btn sm" data-gx="leave">나가기</button></div>`);
+  gui().querySelectorAll('[data-gemo]').forEach(b => b.onclick = () => speak(EMOS[+b.dataset.gemo], +b.dataset.gemo + 1));
+  G.sync = v => { if (v.co) G.stv = v.co; };
+  const cv = $('#gcv'), g = cv.getContext('2d');
+  const showT = s => Math.max(2.5, 5.5 - s * .3) * 1000;
+  cv.onpointerdown = e => { e.preventDefault(); const st = G.stv; if (now2() < st.at + showT(st.s) || G.over) return;
+    const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) * SW / r.width, y = (e.clientY - r.top) * SH / r.height, pts = G.layout(st.s);
+    const p = pts.find(p => Math.hypot(p.x - x, p.y - y) < 20); if (!p || p.no < st.k) return;
+    if (p.own !== myId()){ toast(`그 별은 ${roomV?.p?.[p.own]?.n || '친구'}의 별이에요`); return; }
+    GDB.tx(`games/${G.id}/co`, cur => { cur = cur || { s: 1, k: 0, lives: 3, at: G.t0 }; if (cur.s !== st.s) return undefined; const P = G.layout(cur.s), j = P.indexOf(P.find(q => q.no === cur.k));
+      if (Math.hypot(P[j].x - p.x, P[j].y - p.y) < 1){ cur.k++; if (cur.k >= P.length){ cur.s++; cur.k = 0; cur.at = now2() + 1500; } } else { cur.lives--; cur.k = 0; cur.at = now2() + 1200; cur.miss = now2(); } return cur; }); };
+  G.loop = () => {
+    const st = G.stv, pts = G.layout(st.s), showing = now2() < st.at + showT(st.s), t = performance.now() / 1000;
+    if (st.lives <= 0 && !G.over) return gameOver(true);
+    g.fillStyle = '#140E2E'; g.fillRect(0, 0, SW, SH);
+    for (let i = 0; i < 40; i++){ g.fillStyle = i % 3 ? '#4A3E7A' : '#9A8AC8'; g.fillRect((i * 73) % SW, (i * 131) % SH, 1, 1); }
+    const done = pts.filter(p => p.no < st.k).sort((a, b) => a.no - b.no); g.strokeStyle = '#FFE8A0'; g.lineWidth = 2; g.beginPath(); done.forEach((p, i) => i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)); g.stroke();
+    pts.forEach(p => { const c = PCOL[G.ord.indexOf(p.own) % 8], lit = p.no < st.k, r = lit ? 8 : 6 + Math.sin(t * 3 + p.no) * 1;
+      g.strokeStyle = c; g.lineWidth = 2; g.beginPath(); g.arc(p.x, p.y, 12, 0, 7); g.stroke();
+      g.fillStyle = lit ? '#FFE070' : '#F2EAD8'; g.beginPath(); g.moveTo(p.x, p.y - r); g.lineTo(p.x + r * .35, p.y - r * .35); g.lineTo(p.x + r, p.y); g.lineTo(p.x + r * .35, p.y + r * .35); g.lineTo(p.x, p.y + r); g.lineTo(p.x - r * .35, p.y + r * .35); g.lineTo(p.x - r, p.y); g.lineTo(p.x - r * .35, p.y - r * .35); g.fill();
+      if ((showing && p.own === myId()) || lit){ g.font = '12px G11B, monospace'; g.textAlign = 'center'; g.fillStyle = '#22183F'; g.fillText(p.no + 1, p.x + 1, p.y - 15); g.fillStyle = '#FFF'; g.fillText(p.no + 1, p.x, p.y - 16); } });
+    const miss = st.miss && now2() - st.miss < 1200;
+    $('#gtop').textContent = gCount() ? `${GAMES.stars.ic} ${gCount()}초 뒤 시작!` : `${GAMES.stars.ic} ${st.s}단계 · 별 ${pts.length}개 · 목숨 ${'♥'.repeat(Math.max(0, st.lives))} · 남은 시간 ${gLeft()}초`;
+    $('#sts').innerHTML = miss ? '💥 순서가 틀렸어요! 다시 보여 줄게요' : showing ? '내 별 번호를 외워요! (테두리 색 = 별 주인)' : `다음은 ${st.k + 1}번 별 · 내 별이면 눌러요`;
+    $('#gsb').innerHTML = `<div class="gsb">${G.ord.map((id, i) => `<span style="color:${PCOL[i % 8]}">● ${nameOf(id)}</span>`).join('')}</div>`;
+  };
+  G.result = () => ({ ok: G.stv.s - 1 >= 3, score: G.stv.s - 1, text: `별자리 ${G.stv.s - 1}단계 완성 (목표 3단계)` });
+}
+// ---------- 놀이 게시판 화면 ----------
+let recList = {};
+function renderGames(){
+  const here = World.placeKey(), open = Object.entries(gameList).filter(([, r]) => r && r.st === 'lobby' && r.m === here && now2() - r.at < 300000);
+  const best = g => { const L = Object.entries(recList[g] || {}).sort((a, b) => b[1] - a[1]).slice(0, 3); return L.length ? L.map(([id, s], i) => `${i + 1}. ${esc(playersList[id]?.nick || '친구')} ${s}`).join(' · ') : '아직 기록이 없어요'; };
+  frame(null, '놀이 게시판', '등불 시장 · 친구와 같이 놀아요', `
+    ${open.length ? `<section class="sec">${secH('지금 열린 방', open.length + '개')}<div class="box px">${open.map(([id, r]) => `<div class="li"><span class="gic">${GAMES[r.g].ic}</span><div class="main"><span class="t">${esc(r.hn)}의 ${GAMES[r.g].name}</span><span class="d">${Object.keys(r.p || {}).length} / 8명</span></div><button class="btn sm go" data-gjoin="${id}">참가</button></div>`).join('')}</div></section>` : ''}
+    ${[['경쟁 놀이', false], ['협동 놀이 · 2~8명', true]].map(([t, co]) => `<section class="sec">${secH(t)}<div class="box px">${Object.entries(GAMES).filter(([, x]) => x.coop === co).map(([k, x]) => `<div class="li"><span class="gic">${x.ic}</span><div class="main"><span class="t">${x.name}</span><span class="d" style="white-space:normal">${x.desc}</span><span class="d">이번 주 ${solo ? `내 기록 ${me.grec?.[k + weekKey()] || 0}` : best(k)}</span></div><button class="btn sm go" data-gopen="${k}" ${solo && co ? 'disabled' : ''}>방 열기</button></div>`).join('')}</div></section>`).join('')}
+    ${solo ? '<div class="hint on px">혼자 해 보기 모드에서는 경쟁 놀이를 혼자 연습할 수 있어요. 협동 놀이는 로그인하면 열려요.</div>' : ''}
+    ${backBtn}`);
+  $('#back').onclick = closeSheet;
+  on('[data-gopen]', b => { const k = b.dataset.gopen; if (k === 'pumpkin' && World.where() !== 'campus') return toast('호박 줍기는 바깥(마을)에서 열 수 있어요'); openRoom(k); });
+  on('[data-gjoin]', b => joinRoom(b.dataset.gjoin));
+}
 // 바로 가기: 그 장소로 순간 이동한 다음 화면을 열어요
 const goPlace = (mapId, obj, t, s) => { closeSheet(); World.teleport(mapId, obj, () => openSheet(t, s)); };
 const ACT_GO = { '물약 끓이기':'lab', '재료함 열기':'lab', '재료 꺼내기':'lab', '레시피 노트 보기':'lab', '시장 보기':'market', '박쥐 돌보기':'ranch', '모이 주기':'ranch', '독초 돌보기':'green', '물 주기':'green' };
@@ -946,6 +1295,7 @@ World.onAct = (mapId, o, a) => {
     return openSheet('home', 'common');
   }
   if (label === '말 걸기' || label === '오늘의 실습 보기') return openSheet('home', 'class');
+  if (label === '놀이 고르기') return openSheet('home', 'games');
   if (label === '물고기 팔기'){ fsTab = 'sell'; fsMsg = ''; return openSheet('home', 'fish'); }
   if (label === '쓰다듬기' && o.name === 'blackcat') return openSheet('ranch');
   if (mapId === 'pen'){ ranchTab = label === '부화실 보기' ? 'hatch' : 'pen'; ranchMsg = ''; return openSheet('ranch'); }
@@ -969,6 +1319,7 @@ function render(){
   if (sub === 'common') return renderCommon();
   if (sub === 'visit') return renderVisit();
   if (sub === 'fish') return renderFish();
+  if (sub === 'games') return renderGames();
   if (sub === 'event') return renderEvent();
   if (sub === 'exam') return renderExam();
   ({ home:renderHome, lab:renderLab, green:renderGreen, ranch:renderRanch, market:renderMarket })[tab]();
@@ -995,6 +1346,7 @@ function renderHome(){
     </div>
     <button class="tile px" id="goAvatar" style="width:100%"><div class="face" style="width:40px;height:40px;background:#E8DDF8">${World.Avatar.loaded ? `<img src="${World.Avatar.head(avOf(me))}" alt="" style="width:100%;height:100%;image-rendering:pixelated">` : ''}</div><span class="main" style="flex:1"><span class="b">캐릭터 꾸미기</span><span class="s sub">머리·눈·옷·신발·소품을 바꿔요</span></span></button>
     <button class="tile px" id="goFish" style="width:100%">${rodIc(rodLv())}<span class="main"><span class="b">낚시 · 채집</span><span class="s sub">도감 물고기 ${FISH.filter(f => me.fdex?.[f.id]).length}/40 · 채집물 ${FORAGE.filter(f => me.fdex?.[f.id]).length}/50 · 오늘 반짝이 ${16 - (me.fg?.d === todayKey() ? me.fg.got.length : 0)}곳</span></span></button>
+    <button class="tile px" id="goGames" style="width:100%"><span class="gic">🎪</span><span class="main"><span class="b">같이 놀기</span><span class="s sub">경쟁 3종 · 협동 3종 (2~8명) · 놀이 게시판</span></span></button>
     <section class="sec">
       ${secH('바로 가기', '누르면 그곳으로 가요')}
       <div class="tiles">${[['lab', 'cauldron', 'lab', 'cauldron', '물약 교실', '물약 끓이기·도감'], ['toxic', 'bed', 'green', 'sprout', '독초 온실', '씨앗 심고 수확'], ['pen', 'trough', 'ranch', 'egg', '내 사육장', '생물 돌보기·부화실'], ['campus', 'stall', 'market', 'bag', '등불 시장', '사고팔기·친구']]
@@ -1015,6 +1367,7 @@ function renderHome(){
   $('#goDorm').onclick = () => goPlace(myRoomId(), 'bed', 'home', 'dorm');
   $('#goAvatar').onclick = () => { avDraft = null; openSheet('home', 'avatar'); };
   $('#goFish').onclick = () => { fsTab = 'fish'; fsMsg = ''; openSheet('home', 'fish'); };
+  $('#goGames').onclick = () => openSheet('home', 'games');
   on('[data-go]', b => { const [m, o, t] = b.dataset.go.split(','); goPlace(m, o, t); });
 }
 
@@ -2337,7 +2690,7 @@ function showHousePick(counts, done){
   draw();
 }
 function startSolo(){
-  solo = true;
+  solo = true; GDB.on('games', v => { gameList = v || {}; });
   let saved = null; try { saved = JSON.parse(localStorage.getItem('magion-solo') || 'null'); } catch(e){}
   if (saved) { me = normalize(saved); if (!me.house) return showHousePick({}, enterWorld); enterWorld(); return; }
   showCreate(p => { me = p; save(); enterWorld(); });
@@ -2360,6 +2713,10 @@ async function boot(){
       setInterval(presTick, 700);
       F.onDisconnect(oref).remove();
       F.onValue(F.ref(db, 'online'), s => { onlineList = s.val() || {}; onOnline(); const k = Object.keys(onlineList).sort().join(); if (k !== onlineKeys){ onlineKeys = k; if (tab === 'home' && !sub) render(); } });
+      F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; });
+      F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); if (sub === 'games') render(); });
+      Object.keys(GAMES).forEach(g => F.onValue(F.ref(db, `records/${g}/${weekKey()}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); }));
+      setInterval(syncInvites, 3000);
       F.onValue(F.ref(db, 'market'), s => { marketList = s.val() || {}; if (tab === 'market') render(); });
       F.onValue(F.ref(db, 'coop'), s => { coop = s.val() || {}; if (tab === 'market') render(); });
       F.onValue(F.ref(db, 'players'), s => { playersList = s.val() || {}; syncPens(); syncHallNames(); if (tab === 'home' && !sub) render(); });

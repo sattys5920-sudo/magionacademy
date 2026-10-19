@@ -76,6 +76,26 @@
         ".write": "auth != null && root.child('players/' + auth.uid + '/house').val() === $house",
         ".validate": "newData.child('stage').isNumber() && newData.child('stage').val() >= 1 && newData.child('stage').val() <= 6 && (!data.exists() || newData.child('stage').val() >= data.child('stage').val())"
       }
+    },
+    "games": {
+      ".read": "auth != null",
+      "$id": {
+        ".write": "auth != null",
+        "st": {
+          ".validate": "newData.val() === 'lobby' || newData.val() === 'play' || newData.val() === 'end'"
+        }
+      }
+    },
+    "records": {
+      ".read": "auth != null",
+      "$g": {
+        "$w": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+          }
+        }
+      }
     }
   }
 }
