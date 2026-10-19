@@ -935,6 +935,8 @@ function drawSky(now){
   // 빈자리(잭의 불씨): 켜지면 가장 밝게
   if (skyCfg.jack){ const x = ox + SKY_FLAME[0], y = oy + SKY_FLAME[1], tw = .8 + .2 * Math.sin(t * 3); out.globalAlpha = .9 * tw; out.drawImage(glow(9, [255, 170, 60]), x - 9, y - 9); out.globalAlpha = 1; out.fillStyle = '#FFF2C0'; out.fillRect(x - 1, y - 1, 3, 3); }
   else if (skyCfg.hint && Math.sin(t * .7) > .95){ const x = ox + SKY_FLAME[0], y = oy + SKY_FLAME[1]; out.globalAlpha = .5; out.fillStyle = '#FFD090'; out.fillRect(x, y, 1, 1); }
+  // 완성 뒤: 등불자리 옆에 처음 보는 희미한 별 하나 (다음 이야기의 떡밥)
+  if (skyCfg.done && Math.sin(t * .9) > .2){ const x = ox - 16, y = oy + 38; out.globalAlpha = .25 + .25 * Math.sin(t * .9); out.fillStyle = '#D8CCFF'; out.fillRect(x, y, 1, 1); }
   // 완성: 별 사이를 잇는 선
   if (skyCfg.done){ out.globalAlpha = .25 + .1 * Math.sin(t * 2); out.strokeStyle = '#FFE8B0'; out.lineWidth = 1; out.beginPath(); SKY.forEach(([dx, dy], i) => { if (i === 0) out.moveTo(ox + dx + .5, oy + dy + .5); else out.lineTo(ox + dx + .5, oy + dy + .5); }); out.moveTo(ox + SKY[2][0] + .5, oy + SKY[2][1] + .5); out.lineTo(ox + SKY_LANTERN[0] + .5, oy + SKY_LANTERN[1] + .5); out.stroke(); }
   out.globalAlpha = 1; out.globalCompositeOperation = 'source-over'; out.restore();

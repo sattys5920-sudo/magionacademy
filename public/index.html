@@ -2976,6 +2976,7 @@ World.onAct = (mapId, o, a) => {
 };
 // 상황 버튼: 근처 대상에 따라 글자가 바뀌어요 (말하기·선물하기·채집하기·낚시하기·물건 이름)
 World.onNear = t => {
+  if (typeof mqCheck === 'function') mqCheck();
   const c = $('#ctx'); if (!t || sheetOn){ c.innerHTML = ''; c.dataset.key = t ? t.key : ''; return; }
   let main = '', extra = '';
   if (t.kind === 'npc'){ main = `${ICO.chat}말하기`; const n = !String(t.id).startsWith('t:') && !String(t.id).startsWith('mq:') && npcGet(t.id); if (n) extra = `<button data-ctx="gift">${ICO.heart}선물하기</button>`; }
