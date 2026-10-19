@@ -54,6 +54,17 @@ def build(pid):
             edge = al & ~(pa[:-2, 1:-1] & pa[2:, 1:-1] & pa[1:-1, :-2] & pa[1:-1, 2:])
             light = (rgb.min(-1) > 200) & (rgb.max(-1) - rgb.min(-1) < 40)
             small[edge & light, 3] = 0
+        for _ in range(2):   # 외곽선 밖의 회색 번짐 점: 둘레에 비슷한 회색이 거의 없는 무채색 점
+            al = small[..., 3] > 0; rgb = small[..., :3].astype(int); lum = rgb.mean(-1); sat = rgb.max(-1) - rgb.min(-1)
+            pa = np.pad(al, 1, constant_values=True); edge = al & ~(pa[:-2, 1:-1] & pa[2:, 1:-1] & pa[1:-1, :-2] & pa[1:-1, 2:])
+            gray = al & (sat < 14) & (lum > 110); sim = np.zeros(al.shape, int)
+            pl, pg = np.pad(lum, 1), np.pad(gray, 1)
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    if dy or dx:
+                        nl = pl[1 + dy:pl.shape[0] - 1 + dy, 1 + dx:pl.shape[1] - 1 + dx]; ng = pg[1 + dy:pg.shape[0] - 1 + dy, 1 + dx:pg.shape[1] - 1 + dx]
+                        sim += ng & (np.abs(nl - lum) < 30)
+            small[edge & gray & (sim < 2), 3] = 0
         # 생성기 표시(✦, 오른쪽 아래 어두운 옷 위의 회색 별): 둘레보다 밝은 점을 둘레 색으로
         y0, y1, x0, x1 = int(h * .855), int(h * .945), int(w * .82), int(w * .91)
         box = small[y0:y1, x0:x1]; lum = box[..., :3].astype(int).mean(-1); med = np.median(lum[box[..., 3] > 0]) if (box[..., 3] > 0).any() else 255
