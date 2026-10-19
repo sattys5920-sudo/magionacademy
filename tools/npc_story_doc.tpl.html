@@ -6,11 +6,11 @@
 /* 대본집: 왼쪽 목차, 오른쪽 NPC별 이벤트. 대사는 화자 이름 + 본문, 지문은 기울임 없이 흐린 색, 선택지는 호감도 색 */
 :root{
   --bg:#F2F0F7; --paper:#FFFFFF; --ink:#241E33; --sub:#6B6283; --line:#DDD7EA;
-  --pump:#C9561E; --night:#3B2F66; --up:#2E8B57; --down:#C23B52; --keep:#7A7290; --chip:#ECE7F7;
+  --pump:#C9561E; --night:#3B2F66; --up:#2E8B57; --down:#C23B52; --keep:#7A7290; --chip:#ECE7F7; --hl:#FFF0A6;
   --f-head:'Do Hyeon',system-ui,sans-serif; --f-body:'Gowun Batang',serif; --f-ui:'Gowun Dodum',system-ui,sans-serif;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#15121E;--paper:#1E1A2A;--ink:#ECE7F7;--sub:#A49CBD;--line:#332C47;--pump:#F08A4B;--night:#B8A8F0;--up:#6FD39A;--down:#F27A8E;--keep:#A49CBD;--chip:#2A2440;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#15121E;--paper:#1E1A2A;--ink:#ECE7F7;--sub:#A49CBD;--line:#332C47;--pump:#F08A4B;--night:#B8A8F0;--up:#6FD39A;--down:#F27A8E;--keep:#A49CBD;--chip:#2A2440;color-scheme:dark}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#15121E;--paper:#1E1A2A;--ink:#ECE7F7;--sub:#A49CBD;--line:#332C47;--pump:#F08A4B;--night:#B8A8F0;--up:#6FD39A;--down:#F27A8E;--keep:#A49CBD;--chip:#2A2440;--hl:#5A4A12;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#15121E;--paper:#1E1A2A;--ink:#ECE7F7;--sub:#A49CBD;--line:#332C47;--pump:#F08A4B;--night:#B8A8F0;--up:#6FD39A;--down:#F27A8E;--keep:#A49CBD;--chip:#2A2440;--hl:#5A4A12;color-scheme:dark}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.75;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 64px}
 .wrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:200px minmax(0,1fr);gap:32px;align-items:start}
 .top{max-width:1100px;margin:0 auto 24px}
@@ -54,12 +54,26 @@ code{font-family:ui-monospace,monospace;font-size:12px;background:var(--chip);pa
 .cold{margin-top:16px;border-top:2px dotted var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px;max-width:68ch}
 .ch2{font-family:var(--f-ui);font-size:13px;color:var(--down)}
 .wip{font-family:var(--f-ui);color:var(--sub)}
+.chg{background:var(--hl);border-radius:3px;box-shadow:0 0 0 3px var(--hl)}
+.ch li.chg{box-shadow:0 0 0 4px var(--hl)}
+.fl{font-family:var(--f-ui);font-size:13px;font-weight:700;color:var(--pump);margin-left:calc(7.5em + 10px)}
+.ch li .fl{margin-left:0;flex-basis:100%}
+.fix{max-width:1100px;margin:0 auto 40px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.fix h2{font-family:var(--f-head);font-weight:400;font-size:28px;margin:0;color:var(--night)}
+.fixwrap{overflow-x:auto;margin-top:10px}
+.fix table{border-collapse:collapse;font-family:var(--f-ui);font-size:13px;line-height:1.55;min-width:900px}
+.fix th{text-align:left;color:var(--sub);font-weight:400;border-bottom:2px solid var(--line);padding:4px 8px;white-space:nowrap}
+.fix td{border-bottom:1px solid var(--line);padding:6px 8px;vertical-align:top;word-break:keep-all}
+.fix .fn{color:var(--sub);font-variant-numeric:tabular-nums}.fix .fb{color:var(--sub);text-decoration:line-through;text-decoration-color:var(--down);min-width:14em}.fix .fa{min-width:14em}.fix .fw,.fix .fnote{color:var(--sub);font-size:12px}
+.fix a{color:var(--pump)}
 @media (max-width:760px){.wrap{grid-template-columns:minmax(0,1fr)}.toc{position:static}.toc ul{flex-direction:row;flex-wrap:wrap;gap:4px 14px}
   .ln{grid-template-columns:minmax(0,1fr);gap:0}.who{text-align:left}.nar,.sys,.scene,.ch{margin-left:0}.ev{padding:16px}}
 </style>
 <div class="top"><h1>호박달 하트 이야기 대본</h1><p class="lede">서브 NPC 10명의 ♥1~♥10 하트 이벤트 대사·지문·선택지 전문 · %%SUM%% · 분기는 모든 갈래를 다 실었어요. <b class="v">주황 글자</b>는 바뀔 수 있는 이름이에요. 미리 보기 주인공 이름은 「민준」이고, 이름 뒤 조사는 받침에 맞춰 자동으로 바뀌어요.</p></div>
+%%FIX%%
 <div class="wrap">
 <aside class="toc"><ul>
+<li><a href="#fix">수정 목록</a></li>
 %%TOC%%
 </ul></aside>
 <main>

@@ -3,7 +3,7 @@
 #   형식은 tools/npc_story_format.md
 import json, os, re, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tools'))
-import josa
+import josa, npc_context
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 DATA = os.path.join(ROOT, 'public', 'data', 'npc')
 NPCS = ['nabi', 'batri', 'kappa', 'aula', 'mandi', 'jipsin', 'sera', 'madeleine', 'stella', 'leo']
@@ -191,6 +191,8 @@ def check_event(npc, k, ev, flags_set, flags_used, prof_cast, errs):
         if c == 'if_flag' and not AUTO.fullmatch(n.get('flag') or ''): flags_used.setdefault(n.get('flag'), []).append(w)
         if c == 'if_flag' and not re.fullmatch(r'[a-z]+_[a-z0-9_]+', n.get('flag') or ''): errs.append(f'{w}: #{i} 플래그 이름 「{n.get("flag")}」')
         if c == 'if_heart' and (not isinstance(n.get('min'), int) or (n.get('npc') and n['npc'] not in NPCS)): errs.append(f'{w}: #{i} if_heart (min, npc)')
+    for n in ev.get('fail') or []:   # 숨바꼭질 실패 대본(fail)에서 켜는 플래그
+        if n.get('cmd') == 'set_flag': flags_set.setdefault(n.get('flag'), []).append(w)
     for t in texts_of({'title': ev.get('title'), 's': sc, 'c': cold, 'f': ev.get('fail') or []}):
         korean(w, t, npc in HUMAN, errs)
     return lo, hi, len(chs)
@@ -216,17 +218,20 @@ def check_profile(npc, p, errs):
     return p.get('cast') or {}
 
 def main(ids):
-    total = 0; summary = []; all_set, all_used = {}, {}
+    total = 0; summary = []; all_set, all_used = {}, {}; all_warns = []
+    for e in npc_context.engine_check(): print('  ✗', e); total += 1
     for npc in ids:
         errs = []; d = os.path.join(DATA, npc)
         try: prof = json.load(open(os.path.join(d, 'profile.json')))
         except Exception as e: print(f'[{npc}] profile.json 읽기 실패: {e}'); total += 1; continue
-        pc = check_profile(npc, prof, errs); fs, fu = {}, {}; rows = []
+        pc = check_profile(npc, prof, errs); fs, fu = {}, {}; rows = []; evs = {}
         for k in range(1, 11):
             fn = os.path.join(d, 'events', f'heart_{k:02d}.json')
             try: ev = json.load(open(fn))
             except Exception as e: errs.append(f'{npc} ♥{k}: 파일 읽기 실패 {e}'); continue
-            lo, hi, nch = check_event(npc, k, ev, fs, fu, pc, errs); rows.append((k, ev.get('title'), lo, hi, nch))
+            lo, hi, nch = check_event(npc, k, ev, fs, fu, pc, errs); rows.append((k, ev.get('title'), lo, hi, nch)); evs[k] = ev
+        errs += npc_context.cross_check(npc, evs)   # 다른 NPC 진행 플래그 분기엔 「없을 때」 대사도
+        warns = npc_context.branch_check(npc, evs); all_warns.extend(warns)
         own = [f for f in fs if f.startswith(npc + '_')]
         if len(own) < 3: errs.append(f'{npc}: 분기 플래그 {len(own)} 개 (3 개 이상, 이름은 {npc}_로 시작)')
         for f in fs:
@@ -242,6 +247,9 @@ def main(ids):
         if f and f not in all_used: print(f'  ✗ 플래그 「{f}」를 만들었는데 쓰는 곳이 없어요 ({ws[0]})'); total += 1
     for f, ws in all_used.items():
         if f not in all_set and f.split('_')[0] in ids: print(f'  ✗ 플래그 「{f}」를 쓰는데 만드는 곳이 없어요 ({ws[0]})'); total += 1
+    # 1-1 분기 한정 표현: 한 선택지 분기에서만 나온 말을 그 분기 플래그 없이 되받는 대사 (경고 — 사람이 읽고 판단)
+    for w in all_warns: print('  ⚠', w)
+    if all_warns: print(f'경고(분기 한정 표현 의심) {len(all_warns)} 건')
     if '-v' in sys.argv:
         for npc, rows, fl in summary:
             print(f'\n## {npc}')
