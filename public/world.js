@@ -264,7 +264,7 @@ let started = false;
 // 같은 곳에 있는 친구들 (실시간 위치). 다른 사람 화면에서는 내가 이렇게 보여요
 const peers = {}; let peerList = [];
 // 이름표는 캔버스에 그려요 (DOM을 매 프레임 옮기지 않아요). tags[i] = { t: 글, k: 종류(me·peer·npc·''), ev: 이벤트 표시 }
-function retag(){ tags = people.map(p => p.pet ? null : { t: (p.npc && p.npc.mark ? '❗' : '') + p.name, k: p.me ? 'me' : p.peer ? 'peer' : p.npc ? 'npc' : '', ev: !!(p.npc && p.npc.mark) }); }
+function retag(){ tags = people.map(p => p.pet || (p.npc && p.npc.cut && !p.name) ? null : { t: (p.npc && p.npc.mark ? '❗' : '') + p.name, k: p.me ? 'me' : p.peer ? 'peer' : p.npc ? 'npc' : '', ev: !!(p.npc && p.npc.mark) }); }
 const TAG_COL = { me: '#FFD866', peer: '#9CF0FF', npc: '#F6F0FF', '': '#F6F0FF' }, tagW = new Map();
 let dpr = 1;
 function drawTag(tag, sx, sy, now){   // sx, sy: 세계 픽셀(이름표 아래 가운데). 화면 좌표계(setTransform 1)에서 불러요
@@ -353,7 +353,7 @@ World.onNpc = null;   // (npc id) 눌렀을 때
 let PIX_IMG = null;   // 조연 동물 그림 (32칸)
 World.setNpcs = (list, sprSrc, pixSrc) => { npcList = list || []; if (sprSrc && (!NPC_IMG || NPC_IMG.src.indexOf(webp(sprSrc)) < 0)){ NPC_IMG = new Image(); NPC_IMG.src = webp(sprSrc); } if (pixSrc && !PIX_IMG){ PIX_IMG = new Image(); PIX_IMG.src = webp(pixSrc); } if (started && M){ placeNpcs(); retag(); } };
 function placeNpcs(){
-  for (let i = people.length - 1; i >= 0; i--) if (people[i].npc) people.splice(i, 1);
+  for (let i = people.length - 1; i >= 0; i--) if (people[i].npc && !people[i].npc.cut) people.splice(i, 1);
   npcList.filter(n => (n.map === map || n.map === rmap) && (!n.own || roomView.own)).forEach(n => {
     let x = n.x, y = n.y;
     if (!free(x, y)){ outer: for (let r = 1; r < 4; r++) for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) if (free(x + dx, y + dy)){ x += dx; y += dy; break outer; } }
@@ -498,6 +498,7 @@ function findNear(){
   const np = people.filter(p => p.npc && Math.abs(Math.round(p.x) - mx) + Math.abs(Math.round(p.y) - my) <= 1).sort((a, b) => (Math.abs(a.x - mx) + Math.abs(a.y - my)) - (Math.abs(b.x - mx) + Math.abs(b.y - my)))[0];
   if (np) return { kind: 'npc', id: np.npc.id, name: np.name, key: 'n' + np.npc.id };
   if (spotMap === map){ const si = spots.findIndex(sp => Math.abs(sp.x - mx) + Math.abs(sp.y - my) <= 1); if (si >= 0) return { kind: 'spot', i: si, sp: spots[si], key: 's' + si }; }
+  { const mi = marks.findIndex(q => (q.map === map || q.map === rmap) && Math.abs(q.x - mx) + Math.abs(q.y - my) <= 1); if (mi >= 0) return { kind: 'mark', id: marks[mi].id, label: marks[mi].label || '조사하기', key: 'm' + marks[mi].id }; }
   for (const o of [...objOrder, ...flats]){ const a = o.act || ACTS[o.name]; if (!a || !o.box || o.furn) continue;
     const dx = Math.max(Math.floor(o.box[0]) - mx, 0, mx - (Math.ceil(o.box[2]) - 1)), dy = Math.max(Math.floor(o.box[1]) - my, 0, my - (Math.ceil(o.box[3]) - 1));
     if (dx + dy === 1) return { kind: 'act', o, label: a[1], text: a[0], key: 'a' + o.name + o.x + ',' + o.y }; }
@@ -509,6 +510,7 @@ World.nearRefresh = () => { nearKey = '\0'; nearCheck(); };
 World.doNear = () => { const t = nearT; if (!t) return; hideBubble();
   if (t.kind === 'npc'){ const np = people.find(q => q.npc && q.npc.id === t.id); if (np) World.faceTo(np.x, np.y); World.onNpc && World.onNpc(t.id); }
   else if (t.kind === 'spot'){ World.onSpot && World.onSpot(t.i, t.sp); }
+  else if (t.kind === 'mark'){ World.onMark && World.onMark(t.id); }
   else if (t.kind === 'act'){ useObj(t.o, t.o.act || ACTS[t.o.name]); }
   else if (t.kind === 'water'){ World.faceTo(t.wx, t.wy); World.onWater && World.onWater(t.wx, t.wy); } };
 function goDoor(door, o){
@@ -570,6 +572,8 @@ cv.addEventListener('pointerdown', e => {
   if (World.busyFish) return;
   // 채집 지점은 조금 빗나가게 눌러도 돼요 (한 칸 안)
   const si = spotMap === map ? spots.map((sp, i) => [i, Math.hypot(sp.x - tx, sp.y - ty)]).filter(([, d]) => d <= 1.5).sort((p1, p2) => p1[1] - p2[1]).map(([i]) => i)[0] ?? -1 : -1;
+  { const mi = marks.map((q, i) => [i, (q.map === map || q.map === rmap) ? Math.hypot(q.x - tx, q.y - ty) : 99]).filter(([, d]) => d <= 1.5).sort((p1, p2) => p1[1] - p2[1]).map(([i]) => i)[0] ?? -1;
+    if (mi >= 0){ const q = marks[mi]; if (Math.abs(Math.round(me.x) - q.x) + Math.abs(Math.round(me.y) - q.y) <= 1){ World.onMark && World.onMark(q.id); } else { const c = near([[q.x, q.y]])[0]; if (c && goto(me, c[0], c[1])) pending = { mark: q.id }; } return; } }
   if (si >= 0 && World.onSpot){ const sp = spots[si]; if (Math.round(me.x) === sp.x && Math.round(me.y) === sp.y) World.onSpot(si, sp); else if (goto(me, sp.x, sp.y)) pending = { spot: si, sp }; return; }
   if (isWater(tx, ty) && World.onWater){   // 물가 바로 옆 칸, 없으면 가까운 물가로 (그 칸에서 낚시할 물을 다시 골라요)
     let wx = tx, wy = ty, st = near([[tx, ty]])[0];
@@ -584,7 +588,7 @@ cv.addEventListener('pointerdown', e => {
 const SPEED = 6.5, RUN = 10;   // 타일/초. 멀리 갈 때(남은 길 10칸 넘게)는 달려요
 function step(p, dt){
   if (!p.path.length){
-    if (p.me && pending){ const pd = pending; pending = null; if (pd.water){ World.faceTo(pd.water[0], pd.water[1]); World.onWater && World.onWater(pd.water[0], pd.water[1]); } else if (pd.npcTalk){ const np = people.find(q => q.npc && q.npc.id === pd.npcTalk); if (np) World.faceTo(np.x, np.y); World.onNpc && World.onNpc(pd.npcTalk); } else if (pd.spot !== undefined){ World.onSpot && World.onSpot(pd.spot, pd.sp); } else if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1], () => useObj(pd.act, a)); } }
+    if (p.me && pending){ const pd = pending; pending = null; if (pd.water){ World.faceTo(pd.water[0], pd.water[1]); World.onWater && World.onWater(pd.water[0], pd.water[1]); } else if (pd.mark){ World.onMark && World.onMark(pd.mark); } else if (pd.npcTalk){ const np = people.find(q => q.npc && q.npc.id === pd.npcTalk); if (np) World.faceTo(np.x, np.y); World.onNpc && World.onNpc(pd.npcTalk); } else if (pd.spot !== undefined){ World.onSpot && World.onSpot(pd.spot, pd.sp); } else if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1], () => useObj(pd.act, a)); } }
     if (p.npc && p.npc.wander && !p.path.length && (p.idle -= dt) < 0){ const r = p.npc.r ?? 2; p.idle = 1.5 + Math.random() * 3.5; for (let i = 0; i < 12; i++){ const gx = p.home[0] + Math.floor(Math.random() * (r * 2 + 1)) - r, gy = p.home[1] + Math.floor(Math.random() * (r * 2 + 1)) - r; if (goto(p, gx, gy)) break; } }   // 루틴 장소 안에서 계속 돌아다녀요
     if (!p.me && !p.peer && !p.npc && (p.idle -= dt) < 0){ p.idle = 2 + Math.random() * 5; for (let i = 0; i < 20; i++){ const gx = Math.round(p.x) + Math.floor(Math.random() * 13) - 6, gy = Math.round(p.y) + Math.floor(Math.random() * 13) - 6; if (goto(p, gx, gy)) break; } }
     p.t = 0; return;
@@ -596,7 +600,7 @@ function step(p, dt){
   if (Math.abs(dx) > Math.abs(dy)){ p.view = dx > 0 ? DV.right : DV.left; p.flip = false; }
   else if (d > 0){ p.view = dy < 0 ? DV.up : DV.down; p.flip = false; }
   if (p.pet && d > 0) p.flip = dx - dy > 0;   // 생물은 화면에서 오른쪽으로 가면 뒤집어요
-  const mv = ((p.me || p.peer) && p.path.length > 10 ? RUN : (p.me || p.peer) ? SPEED : SPEED * (p.npc ? .35 : .6)) * dt * (p.me ? speedK : 1); if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
+  const mv = (p.run ? RUN : (p.me || p.peer) && p.path.length > 10 ? RUN : (p.me || p.peer) ? SPEED : SPEED * (p.npc && !p.npc.cut ? .35 : .6)) * dt * (p.me ? speedK : 1); if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
 }
 // 할로윈 효과: 박쥐 떼, 보라 안개, 도깨비불
 const bats = Array.from({ length: 7 }, (_, i) => ({ x: 0, y: 0, vx: 0, vy: 0, ph: i, init: false }));
@@ -665,7 +669,7 @@ function frame(now){
   if ((nearTick = (nearTick + 1) % 6) === 0) nearCheck();
   const A = MAPS[rmap];
   // 카메라 먼저: 맵이 화면보다 작으면 가운데에, 크면 내 캐릭터를 따라가요
-  { const [mx, my] = P(me.x + .5, me.y + .5);
+  { const ct = camTarget && (camTarget.p || camTarget.x !== undefined) ? (camTarget.p ? [camTarget.p.x, camTarget.p.y] : [camTarget.x, camTarget.y]) : [me.x, me.y]; const [mx, my] = P(ct[0] + .5, ct[1] + .5);
     const tx = M.W <= VW ? (M.W - VW) / 2 : Math.max(0, Math.min(M.W - VW, mx - VW / 2));
     const ty = M.H <= VH ? (M.H - VH) / 2 - 10 : Math.max(0, Math.min(M.H - VH, my - 14 - VH / 2));
     if (camX === null){ camX = tx; camY = ty; } camX += (tx - camX) * Math.min(1, dt * 8); camY += (ty - camY) * Math.min(1, dt * 8); }
@@ -736,6 +740,7 @@ function frame(now){
       // 젓는 방향 안내 점선
       if (cook.guide){ cx.fillStyle = '#FFE070'; for (let i = 0; i < 12; i++){ if ((i + Math.floor(t * 8)) % 3) continue; const a = i / 12 * Math.PI * 2; cx.fillRect(Math.round(cxp + Math.cos(a) * 12), Math.round(top + 2 + Math.sin(a) * 5), 1, 1); } }
     } }
+  drawMarks(now, view); drawBats(now); if (fxDark){ cx.globalAlpha = fxDark; cx.fillStyle = '#05030A'; cx.fillRect(ix, iy, VW, VH); cx.globalAlpha = 1; }
   // 채집 지점: 밤에도 잘 보이게 빛 다음에 그려요
   if (spotMap === map) spots.forEach((sp, i) => { const [x, y] = P(sp.x + .5, sp.y + .5), t = now / 260 + i * 1.3, a = .6 + .4 * Math.sin(t), sy = y - 7 - Math.round(Math.sin(t * .7) * 2);
     if (x < view.x || x > view.x + view.w || y < view.y || y > view.y + view.h) return;
@@ -753,6 +758,7 @@ function frame(now){
     cx.fillStyle = `rgba(255,250,215,${a})`; cx.fillRect(Math.round(x), sy - 3, 1, 7); cx.fillRect(Math.round(x) - 3, sy, 7, 1); cx.fillRect(Math.round(x) - 1, sy - 1, 3, 3);
     if (Math.sin(t * 1.7) > .5){ cx.fillRect(Math.round(x) + 5, sy - 5, 1, 1); cx.fillRect(Math.round(x) - 5, sy + 3, 1, 1); } });
   if (!M.indoor) spooky(now, dt, view);
+  drawSky(now);
   out.setTransform(1, 0, 0, 1, 0, 0);
   const k = cv.clientWidth / VW; dpr = window.devicePixelRatio || 1;
   if (M.rooms) M.rooms.forEach((rm, i) => { const [sx, sy] = P(rm.door[0] + .5, rm.door[1] + .5); if (sx > view.x && sx < view.x + view.w) drawTag(roomTags[i], sx, sy - 52, now); });
@@ -847,3 +853,101 @@ World.teleport = (id, objName, then) => {
     setTimeout(() => { fadeEl.style.opacity = 0; busy = false; then && then(); }, 150);
   }, 380));
 };
+
+// ========== 메인 의뢰: 맵 컷신 · 조사 지점 · 밤하늘 등불자리 ==========
+// 컷신 명령 (index.html의 메인 의뢰 실행기가 불러요): spawn / walk / cam / say / emote / crowd / fx / player / despawn / wait / fade / end
+let cutOn = false, camTarget = null, cutActors = {}, crowdPeople = [], skyCfg = null, marks = [], markPulse = 0;
+const cutMk = (id, spec, x, y) => { const p = mk(spec.name || id, spec.av || null, x, y, false); p.npc = { id: 'cut:' + id, cut: true, spr: spec.spr, float: spec.float, alpha: spec.alpha, flap: spec.flap, wander: false, r: 0 }; p.home = [x, y]; p.idle = 1e9; p.view = World.Avatar.meta.dirs[spec.dir || 'down'] || 0; return p; };
+const walkDone = (p, timeout = 12000) => new Promise(r => { const t0 = performance.now(); const tick = () => { if (!p.path.length || performance.now() - t0 > timeout || !cutOn){ p.path = []; r(); } else requestAnimationFrame(tick); }; tick(); });
+const spawnAt = (x, y) => { if (free(x, y)) return [x, y]; return World.freeNear(x, y, 3).sort((a, b) => Math.hypot(a[0] - x, a[1] - y) - Math.hypot(b[0] - x, b[1] - y))[0] || [x, y]; };
+const personOf = id => id === 'player' || id === 'me' ? me : cutActors[id] || people.find(p => p.npc && (p.npc.id === id || p.npc.id === 'cut:' + id)) || null;
+World.cutBusy = () => cutOn;
+World.cut = async (cmds, hooks = {}) => {   // hooks: { sfx(id), skip() → true면 바로 끝 }
+  if (!started || cutOn) return false;
+  cutOn = true; busy = true; hideBubble(); dest = null; me.path = [];
+  const skip = () => hooks.skip && hooks.skip();
+  try {
+    for (const c of cmds || []){
+      if (skip()) break;
+      const k = c.cmd, who = c.who;
+      if (k === 'spawn'){ const [x, y] = spawnAt(c.x, c.y); const p = cutMk(who, c, x, y); cutActors[who] = p; people.push(p); retag(); }
+      else if (k === 'despawn'){ const p = cutActors[who]; if (p){ const i = people.indexOf(p); if (i >= 0) people.splice(i, 1); sayOff(p); delete cutActors[who]; retag(); } }
+      else if (k === 'walk'){ const p = personOf(who); if (p){ const t = spawnAt(c.x, c.y); if (c.run) p.run = true; if (goto(p, t[0], t[1])){ if (c.wait !== false) await walkDone(p, (c.timeout || 12) * 1000); } else { p.x = t[0]; p.y = t[1]; } p.run = false; if (c.dir) p.view = World.Avatar.meta.dirs[c.dir] || p.view; } }
+      else if (k === 'face'){ const p = personOf(who), q = personOf(c.to); if (p && q){ const DV = World.Avatar.meta.dirs, dx = q.x - p.x, dy = q.y - p.y; p.view = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? DV.right : DV.left) : (dy < 0 ? DV.up : DV.down); } }
+      else if (k === 'cam'){ if (who){ camTarget = { p: personOf(who) }; } else if (c.x !== undefined){ camTarget = { x: c.x, y: c.y }; } else camTarget = null; if (c.wait) await new Promise(r => setTimeout(r, c.wait * 1000)); }
+      else if (k === 'say'){ const p = personOf(who); if (p) sayOn(p, c.text, c.ms || 2600, c.big); if (c.wait !== false) await new Promise(r => setTimeout(r, (c.ms || 2600) * .9)); }
+      else if (k === 'emote'){ const p = personOf(who); if (p) sayOn(p, '', 2000, c.icon ?? 4); await new Promise(r => setTimeout(r, 600)); }
+      else if (k === 'crowd'){ await crowdDo(c); }
+      else if (k === 'wait'){ await new Promise(r => setTimeout(r, Math.min(6, c.sec || 1) * 1000)); }
+      else if (k === 'sfx'){ hooks.sfx && hooks.sfx(c.id); }
+      else if (k === 'fx'){ fxDo(c); if (c.wait) await new Promise(r => setTimeout(r, c.wait * 1000)); }
+      else if (k === 'player'){ const t = spawnAt(c.x, c.y); me.x = t[0]; me.y = t[1]; me.path = []; if (c.dir) me.view = World.Avatar.meta.dirs[c.dir] || 0; camX = null; }
+      else if (k === 'fade'){ fadeEl.textContent = c.text || ''; fadeEl.style.opacity = c.v ? 1 : 0; await new Promise(r => setTimeout(r, c.v ? 400 : 420)); }
+      else if (k === 'end') break;
+    }
+  } catch(e){ console.error('cut', e); }
+  // 정리: 임시 배우는 keep이 아니면 지워요
+  Object.keys(cutActors).forEach(id => { const p = cutActors[id]; if (!p.npc.keep){ const i = people.indexOf(p); if (i >= 0) people.splice(i, 1); sayOff(p); delete cutActors[id]; } });
+  crowdPeople.forEach(p => { const i = people.indexOf(p); if (i >= 0) people.splice(i, 1); sayOff(p); }); crowdPeople = [];
+  camTarget = null; cutOn = false; busy = false; fadeEl.style.opacity = 0; retag(); World.nearRefresh();
+  return true;
+};
+World.cutKeep = id => { const p = cutActors[id]; if (p) p.npc.keep = true; };
+World.cutClear = () => { Object.keys(cutActors).forEach(id => { const p = cutActors[id]; const i = people.indexOf(p); if (i >= 0) people.splice(i, 1); sayOff(p); delete cutActors[id]; }); retag(); };
+function sayOn(p, text, ms, big){   // 누구든(NPC도) 머리 위 말풍선
+  sayOff(p); const emo = typeof big === 'number' ? big : null, d = document.createElement('div'); d.className = 'say' + (emo !== null ? ' emo' : '');
+  if (emo !== null){ const i = document.createElement('i'); i.className = 'emi'; i.style.setProperty('--i', emo); d.appendChild(i); } else d.textContent = text;
+  world.appendChild(d); p.say = { el: d, until: performance.now() + ms }; says.push(p);
+}
+World.sayNpc = (id, text, ms = 3000) => { const p = personOf(id); if (p) sayOn(p, text, ms); };
+// 구경꾼: 학생 n명이 from 근처에서 나타나 react 대로 움직여요 (flee: 멀어짐 · watch: 가까이 와서 봄 · scream: 제자리에서 놀람 뒤 흩어짐)
+async function crowdDo(c){
+  const n = Math.min(8, c.n || 4), [fx0, fy0] = c.from || [Math.round(me.x), Math.round(me.y)], cells = World.freeNear(fx0, fy0, c.r || 5).filter(([x, y]) => Math.hypot(x - fx0, y - fy0) >= 2);
+  for (let i = 0; i < n && cells.length; i++){ const [x, y] = cells.splice(Math.floor(Math.random() * cells.length), 1)[0]; const p = mk('', World.Avatar.fromLook(Math.floor(Math.random() * 4)), x, y, false); p.npc = { id: 'crowd' + i, cut: true, wander: false, r: 0 }; p.home = [x, y]; p.idle = 1e9; p.pet = false; crowdPeople.push(p); people.push(p); }
+  retag();
+  const react = c.react || 'watch';
+  if (react === 'scream'){ crowdPeople.forEach((p, i) => setTimeout(() => sayOn(p, '', 1800, 4), i * 120)); await new Promise(r => setTimeout(r, 1200)); }
+  if (react === 'flee' || react === 'scream'){ crowdPeople.forEach(p => { const dx = p.x - fx0, dy = p.y - fy0, d = Math.hypot(dx, dy) || 1; const t = spawnAt(Math.round(p.x + dx / d * 7), Math.round(p.y + dy / d * 7)); p.run = true; goto(p, t[0], t[1]); }); await new Promise(r => setTimeout(r, 1800)); }
+  else if (react === 'watch'){ crowdPeople.forEach(p => { const t = spawnAt(Math.round(fx0 + (p.x - fx0) * .5), Math.round(fy0 + (p.y - fy0) * .5)); goto(p, t[0], t[1]); }); await new Promise(r => setTimeout(r, 1500)); crowdPeople.forEach((p, i) => setTimeout(() => sayOn(p, c.text || '', 2000, c.text ? undefined : 9), i * 200)); await new Promise(r => setTimeout(r, c.hold ? c.hold * 1000 : 2200)); }
+  if (c.keep) return;
+  crowdPeople.forEach(p => { const i = people.indexOf(p); if (i >= 0) people.splice(i, 1); sayOff(p); }); crowdPeople = []; retag();
+}
+// 효과: bats 박쥐 떼 · bell 종소리 번쩍 · lightning 번개 · wind 바람(안개 빠르게) · dark 어둡게 / light 원래대로
+let fxBats = 0, fxDark = 0;
+function fxDo(c){ const k = c.kind; if (k === 'bats') fxBats = performance.now() + (c.sec || 4) * 1000; else if (k === 'lightning' || k === 'bell') flashT = performance.now() + 260; else if (k === 'dark') fxDark = c.v ?? .45; else if (k === 'light') fxDark = 0; else if (k === 'wind'){ fogs.forEach(f => f.v *= 4); setTimeout(() => fogs.forEach(f => f.v /= 4), (c.sec || 4) * 1000); } }
+// 조사 지점: 물음표가 떠 있고, 옆에 가면 상황 버튼 「조사하기」
+World.setMarks = list => { marks = list || []; World.nearRefresh(); };
+World.onMark = null;
+// 밤하늘 등불자리: lit = 일곱 별 중 밝은 것(true/false ×7), jack = 등불 불씨(빈자리) 켜짐, done = 완성 연출
+World.setSky = cfg => { skyCfg = cfg; };
+const SKY = [[0, 0], [10, 7], [22, 2], [12, 18], [20, 30], [6, 32], [-4, 20]];   // 등불을 든 사람: 머리·어깨·팔·허리·다리 (상대 좌표)
+const SKY_LANTERN = [30, 10], SKY_FLAME = [31, 15];
+function drawSky(now){
+  if (!skyCfg || M.indoor) return;
+  const ox = VW - 48, oy = 10, t = now / 1000; out.save(); out.setTransform(KPX, 0, 0, KPX, 0, 0);
+  const lit = skyCfg.lit || [];
+  out.globalCompositeOperation = 'lighter';
+  SKY.forEach(([dx, dy], i) => { const on = !!lit[i], tw = .75 + .25 * Math.sin(t * 2 + i); const x = ox + dx, y = oy + dy;
+    if (on){ out.globalAlpha = .7 * tw; out.drawImage(glow(6, [255, 236, 170]), x - 6, y - 6); out.globalAlpha = 1; out.fillStyle = '#FFF8DC'; out.fillRect(x, y, 1, 1); out.fillRect(x - 1, y, 1, 1); out.fillRect(x + 1, y, 1, 1); out.fillRect(x, y - 1, 1, 1); out.fillRect(x, y + 1, 1, 1); }
+    else { out.globalAlpha = .35 + .15 * tw; out.fillStyle = '#B9A8D8'; out.fillRect(x, y, 1, 1); } });
+  // 등불 끝의 작은 별(첫 마녀의 등불)은 늘 보여요
+  { const x = ox + SKY_LANTERN[0], y = oy + SKY_LANTERN[1]; out.globalAlpha = .6; out.drawImage(glow(4, [255, 220, 120]), x - 4, y - 4); out.globalAlpha = 1; out.fillStyle = '#FFE8A0'; out.fillRect(x, y, 1, 1); }
+  // 빈자리(잭의 불씨): 켜지면 가장 밝게
+  if (skyCfg.jack){ const x = ox + SKY_FLAME[0], y = oy + SKY_FLAME[1], tw = .8 + .2 * Math.sin(t * 3); out.globalAlpha = .9 * tw; out.drawImage(glow(9, [255, 170, 60]), x - 9, y - 9); out.globalAlpha = 1; out.fillStyle = '#FFF2C0'; out.fillRect(x - 1, y - 1, 3, 3); }
+  else if (skyCfg.hint && Math.sin(t * .7) > .95){ const x = ox + SKY_FLAME[0], y = oy + SKY_FLAME[1]; out.globalAlpha = .5; out.fillStyle = '#FFD090'; out.fillRect(x, y, 1, 1); }
+  // 완성: 별 사이를 잇는 선
+  if (skyCfg.done){ out.globalAlpha = .25 + .1 * Math.sin(t * 2); out.strokeStyle = '#FFE8B0'; out.lineWidth = 1; out.beginPath(); SKY.forEach(([dx, dy], i) => { if (i === 0) out.moveTo(ox + dx + .5, oy + dy + .5); else out.lineTo(ox + dx + .5, oy + dy + .5); }); out.moveTo(ox + SKY[2][0] + .5, oy + SKY[2][1] + .5); out.lineTo(ox + SKY_LANTERN[0] + .5, oy + SKY_LANTERN[1] + .5); out.stroke(); }
+  out.globalAlpha = 1; out.globalCompositeOperation = 'source-over'; out.restore();
+}
+function drawMarks(now, view){
+  if (!marks.length) return;
+  marks.forEach((mk_, i) => { if (mk_.map !== map && mk_.map !== rmap) return; const [x, y] = P(mk_.x + .5, mk_.y + .5); if (x < view.x || x > view.x + view.w || y < view.y || y > view.y + view.h) return;
+    const t = now / 300 + i, a = .6 + .4 * Math.sin(t), X = Math.round(x), Y = Math.round(y) - 14 - Math.round(Math.sin(t * .8) * 2);
+    out.globalCompositeOperation = 'lighter'; out.globalAlpha = .5 * a; out.drawImage(glow(10, [180, 220, 255]), X - 10, Y - 10); out.globalAlpha = 1; out.globalCompositeOperation = 'source-over';
+    out.fillStyle = '#22183F'; out.fillRect(X - 3, Y - 6, 7, 9); out.fillStyle = '#CFEFFF';
+    out.fillRect(X - 2, Y - 5, 5, 1); out.fillRect(X + 2, Y - 4, 1, 2); out.fillRect(X, Y - 2, 2, 1); out.fillRect(X, Y - 1, 1, 1); out.fillRect(X, Y + 1, 1, 1); });
+}
+function drawBats(now){
+  if (fxBats < now) return; const t = now / 1000;
+  out.fillStyle = '#1A1026'; for (let i = 0; i < 9; i++){ const x = camIX + ((t * 70 + i * 37) % (VW + 40)) - 20, y = camIY + 20 + i * 9 + Math.sin(t * 6 + i) * 8, w = Math.sin(t * 12 + i) > 0 ? 3 : 1; out.fillRect(Math.round(x) - w, Math.round(y), w, 1); out.fillRect(Math.round(x) + 1, Math.round(y), w, 1); out.fillRect(Math.round(x), Math.round(y) - 1, 1, 2); }
+}
