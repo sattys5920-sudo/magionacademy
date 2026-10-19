@@ -421,6 +421,16 @@ button.cell:not(:disabled):active{background:var(--line)}
 @keyframes toastin{from{transform:translate(-50%,-8px);opacity:0}}
 /* @css:bag */
 /* @css:profile */
+.pfstage{height:224px;padding-bottom:6px}
+.pfstage .pfturn{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--f-pxb);font-size:var(--fs)}
+.pfstage #pfPrev{left:10px}.pfstage #pfNext{right:10px}
+.pfstage .pfview{position:absolute;left:50%;top:10px;transform:translateX(-50%)}
+.pfname{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.pftiles{grid-template-columns:repeat(3,1fr)}.pftiles .tile{padding:8px 10px;gap:6px}.pftiles .tile .main{gap:0}
+.pfgrid{grid-template-columns:repeat(5,1fr)}
+.pfgrid .cell.unk .ic{filter:brightness(0) opacity(.35)}
+.pfpager{display:flex;align-items:center;gap:6px}.pfpager .icbtn{font-family:var(--f-pxb);font-size:var(--fs-s)}.pfpager .icbtn:disabled{opacity:.35}.pfgrid{gap:5px}
+@media (min-width:900px) and (min-height:560px){.pfgrid{grid-template-columns:repeat(8,1fr)}}
 /* @css:rel */
 /* @css:journal */
 /* @css:menu */
@@ -2775,7 +2785,95 @@ function renderBag(){ SOON_PANEL('가방', '내 아이템'); }
 // ----- /가방 -----
 
 // ----- 내 정보 (지시서 2-3) -----
-function renderProfile(){ SOON_PANEL('내 정보', '프로필 · 능력치 · 도감'); }
+// 탭: 프로필(아바타 전신·이름·레벨·경험치·골드·마력·입학일) / 능력치(성장 수치와 다음 단계) / 업적·도감(물약·물고기·채집물·요리)
+let pfTab = 'prof', pfView = 0, pfDex = 'potion', pfPage = 0, pfTimer = 0;
+const PF_VIEWS = [['down', '앞모습'], ['right', '옆모습'], ['up', '뒷모습'], ['left', '옆모습']];
+const PF_PAGE = () => matchMedia('(min-width:900px) and (min-height:560px)').matches ? 40 : 30;   // 한 화면에 들어가게: 휴대폰 5칸×6줄, PC 8칸×5줄
+// 도감: [이름, 전체 목록, 얻었는지, 칸 이름, 눌렀을 때 설명]
+const PF_DEX = {
+  potion: ['물약', () => POTIONS, k => me.found.includes(k), k => shortName(k), k => `${ITEM[k]} · 주문 보상 ${POTION_INFO[k].pay}G`],
+  fish: ['물고기', () => FISH.map(f => f.id), k => !!me.fdex?.[k]?.n, k => ITEM[k], k => `${ITEM[k]} ${STARS(CATCH_INFO[k].grade)} · ${me.fdex[k].n}마리 잡음${me.fdex[k].cm ? ` · 최고 ${me.fdex[k].cm}cm` : ''}`],
+  forage: ['채집물', () => FORAGE.map(f => f.id), k => !!me.fdex?.[k]?.n, k => ITEM[k], k => `${ITEM[k]} ${STARS(CATCH_INFO[k].grade)} · ${me.fdex[k].n}개 주움`],
+  dish: ['요리', () => DISH.map(d => d.id), k => !!me.cdex?.[k], k => ITEM[k], k => `${ITEM[k]} · 최고 ${'★'.repeat(me.cdex[k])} · ${effText(DISH_INFO[k], me.cdex[k] >= 3)}`],
+};
+const pfCount = key => { const [, all, has] = PF_DEX[key]; return all().filter(has).length; };
+// 다음 단계: 10종 단위 (마지막은 전부 모으기)
+const pfStep = (n, max) => Math.min(max, Math.ceil((n + 1) / 10) * 10);
+function pfStatRow(title, cur, max, desc, extra = ''){
+  const w = Math.max(0, Math.min(100, max ? cur / max * 100 : 0));
+  return `<div class="li"><div class="main"><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><span class="t b" style="font-size:var(--fs)">${title}</span><span class="s num sub">${extra || `${cur} / ${max}`}</span></div>
+    <div class="pbar"><i style="width:${w}%"></i></div><span class="d">${desc}</span></div></div>`;
+}
+function pfProfileHTML(){
+  const A = World.Avatar, H = HOUSES[me.house], L = levelOf();
+  return `
+    <div class="avstage px pfstage"><canvas id="pfCv" width="${A.FW}" height="${A.FH}"></canvas>
+      <button class="icbtn pfturn" id="pfPrev" aria-label="왼쪽으로 돌리기">◀</button><button class="icbtn pfturn" id="pfNext" aria-label="오른쪽으로 돌리기">▶</button>
+      <span class="tag pfview">${PF_VIEWS[pfView][1]}</span></div>
+    <div class="pfname"><span class="b" style="font-size:20px">${esc(me.nick)}</span><span class="s sub">${H.name} · 1학년 · Lv ${L.lv}</span></div>
+    <div class="box"><div class="li"><div class="main">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="t b" style="font-size:var(--fs)">경험치</span><span class="s num sub">지식 ${L.cur} / ${L.need}</span></div>
+      <div class="pbar"><i style="width:${Math.min(100, L.cur / L.need * 100)}%"></i></div><span class="d">Lv ${L.lv + 1}까지 지식 ${L.need - L.cur} 더 모으면 돼요</span></div></div></div>
+    <div class="tiles pftiles">
+      <div class="tile">${ic('coin')}<div class="main"><span class="s sub">골드</span><span class="b num">${me.coin.toLocaleString()}G</span></div></div>
+      <div class="tile">${ic('mana')}<div class="main"><span class="s sub">마력</span><span class="b num">${me.mana}</span></div></div>
+      <div class="tile"><div class="main"><span class="s sub">입학한 지</span><span class="b num">${me.day}일째</span></div></div>
+    </div>
+    <button class="btn go" id="pfDress">👗 꾸미기</button>`;
+}
+function pfStatsHTML(){
+  const L = levelOf(), rod = rodLv(), nextRod = RODS[rod + 1];
+  const cook = Object.keys(me.cdex || {}).length, pot = me.found.length, fish = pfCount('fish'), forage = pfCount('forage');
+  const plots = (me.plots || []).length, cr = me.cr.length;
+  const dexDesc = (n, max, unit) => n >= max ? `전부 모았어요!` : `다음 단계(${pfStep(n, max)}${unit})까지 ${pfStep(n, max) - n}${unit} 남았어요`;
+  return `<div class="box">
+    ${pfStatRow('지식', L.cur, L.need, `Lv ${L.lv + 1}까지 지식 ${L.need - L.cur} 남았어요`, `Lv ${L.lv} · ${me.know || 0}`)}
+    ${pfStatRow('낚싯대', rod + 1, RODS.length, nextRod ? `다음: ${nextRod.name} · ${nextRod.price.toLocaleString()}G` : '최고의 낚싯대예요!', RODS[rod].name)}
+    ${pfStatRow('요리', cook, DISH.length, dexDesc(cook, DISH.length, '가지'))}
+    ${pfStatRow('물약', pot, POTIONS.length, dexDesc(pot, POTIONS.length, '종'))}
+    ${pfStatRow('물고기 도감', fish, FISH.length, dexDesc(fish, FISH.length, '종'))}
+    ${pfStatRow('채집물 도감', forage, FORAGE.length, dexDesc(forage, FORAGE.length, '종'))}
+    ${pfStatRow('온실 화단', plots, PLOT_MAX, plots >= PLOT_MAX ? '화단을 다 늘렸어요!' : `한 칸 더 늘리려면 ${PLOT_PRICE}G`)}
+    ${pfStatRow('사육장', cr, PEN_MAX, cr >= PEN_MAX ? '사육장이 꽉 찼어요' : `${PEN_MAX - cr}마리 더 키울 수 있어요`)}
+  </div>`;
+}
+function pfDexHTML(){
+  const [name, allF, has, label] = PF_DEX[pfDex], all = allF(), per = PF_PAGE(), pages = Math.max(1, Math.ceil(all.length / per));
+  pfPage = Math.min(pfPage, pages - 1);
+  const got = all.filter(has).length, list = all.slice(pfPage * per, (pfPage + 1) * per);
+  return `
+    <div class="seg" style="grid-template-columns:repeat(4,1fr)">${Object.entries(PF_DEX).map(([k, [l]]) => `<button data-pfdex="${k}" class="${pfDex === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+    <section class="sec">
+      <div class="sec-h"><h3>${name} 도감 <span class="meta num">${got} / ${all.length}</span></h3>
+        ${pages > 1 ? `<div class="pfpager"><button class="icbtn" data-pfpage="-1" aria-label="이전 쪽" ${pfPage ? '' : 'disabled'}>◀</button><span class="s num">${pfPage + 1} / ${pages}</span><button class="icbtn" data-pfpage="1" aria-label="다음 쪽" ${pfPage < pages - 1 ? '' : 'disabled'}>▶</button></div>` : ''}</div>
+      <div class="grid pfgrid">${list.map(k => { const ok = has(k); return `<button class="cell ${ok ? '' : 'unk'}" data-pfcell="${k}">${ic(k)}<span class="s ${ok ? '' : 'sub'}">${ok ? esc(label(k)) : '???'}</span></button>`; }).join('')}</div>
+    </section>`;
+}
+function renderProfile(){
+  const L = levelOf();
+  const body = pfTab === 'prof' ? pfProfileHTML() : pfTab === 'stat' ? pfStatsHTML() : pfDexHTML();
+  frame(null, '내 정보', `${esc(me.nick)} · ${HOUSES[me.house].name} · Lv ${L.lv}`, `
+    <div class="seg" style="grid-template-columns:repeat(3,1fr)">${[['prof', '프로필'], ['stat', '능력치'], ['dex', '업적·도감']].map(([k, l]) => `<button data-pftab="${k}" class="${pfTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+    ${body}`);
+  on('[data-pftab]', b => { pfTab = b.dataset.pftab; renderProfile(); });
+  if (pfTab === 'prof') bindProfileStage();
+  if (pfTab === 'dex'){
+    on('[data-pfdex]', b => { pfDex = b.dataset.pfdex; pfPage = 0; renderProfile(); });
+    on('[data-pfpage]', b => { pfPage += +b.dataset.pfpage; renderProfile(); });
+    on('[data-pfcell]', b => { const k = b.dataset.pfcell, [name, , has, , info] = PF_DEX[pfDex]; toast(has(k) ? info(k) : `아직 모르는 ${name}이에요`); });
+  }
+}
+// 전신 미리보기: 꾸미기 화면과 같은 방식으로 걷는 모습을 그려요 (◀ ▶ 로 돌려 보기)
+function bindProfileStage(){
+  const A = World.Avatar, cv = $('#pfCv'), av = avOf(me);
+  $('#pfDress').onclick = () => { avDraft = null; openSheet('home', 'avatar'); };
+  const turn = d => { pfView = (pfView + d + PF_VIEWS.length) % PF_VIEWS.length; renderProfile(); };
+  $('#pfPrev').onclick = () => turn(-1); $('#pfNext').onclick = () => turn(1);
+  clearInterval(pfTimer); if (!cv || !A.loaded) return;
+  let t = 0;
+  const paint = () => { if (!document.body.contains(cv)) return clearInterval(pfTimer); const g = cv.getContext('2d'), W = A.meta.walk, fr = A.meta.dirs[PF_VIEWS[pfView][0]] + W[t++ % W.length]; g.clearRect(0, 0, A.FW, A.FH); g.drawImage(A.compose(av), fr * A.FW, 0, A.FW, A.FH, 0, 0, A.FW, A.FH); };
+  paint(); pfTimer = setInterval(paint, 160);
+}
 // ----- /내 정보 -----
 
 // ----- 관계 (지시서 2-4) -----
