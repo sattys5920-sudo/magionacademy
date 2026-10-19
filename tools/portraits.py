@@ -40,6 +40,12 @@ def build(pid):
             edge = al & ~(np.roll(al, 1, 0) & np.roll(al, -1, 0) & np.roll(al, 1, 1) & np.roll(al, -1, 1))
             light = (rgb.min(-1) > 200) & (rgb.max(-1) - rgb.min(-1) < 40)
             small[edge & light, 3] = 0
+        # 생성기 표시(✦, 오른쪽 아래 어두운 옷 위의 회색 별): 둘레보다 밝은 점을 둘레 색으로
+        y0, y1, x0, x1 = int(h * .855), int(h * .945), int(w * .82), int(w * .91)
+        box = small[y0:y1, x0:x1]; lum = box[..., :3].astype(int).mean(-1); med = np.median(lum[box[..., 3] > 0]) if (box[..., 3] > 0).any() else 255
+        if med < 90:
+            fill = np.median(box[..., :3][(box[..., 3] > 0) & (lum <= med + 15)], 0)
+            box[(lum > med + 25) & (box[..., 3] > 0), :3] = fill
         # 생성기 표시(✦): 오른쪽 아래 구석의 회백색 작은 점들
         cy, cx = int(h * .82), int(w * .78); blk = small[cy:, cx:]; rgb = blk[..., :3].astype(int)
         mark = (rgb.min(-1) > 150) & (rgb.max(-1) - rgb.min(-1) < 30)

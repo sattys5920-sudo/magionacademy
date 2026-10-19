@@ -2459,7 +2459,7 @@ function storyReward(c){
   me.story.got[c] = 1; me.coin += coin; me.mana += mana; save(); hud(); toast(`${c}장 보상: ${coin}G · 마력 +${mana}${rank <= 3 ? ` (많이 도운 ${rank}등!)` : ''}`);
 }
 // 메인 주인공 초상화 (public/art/portraits/<id>.png, 5칸: 기본·웃음·화남·놀람·부끄러움 — tools/portraits.py)
-const PORTRAITS = { m_jack: 'jack' }, PORTRAIT_V = 1, PFACE = ['neutral', 'happy', 'angry', 'surprised', 'shy'];
+const PORTRAITS = { m_jack: ['jack', '128/171'], m_lucian: ['lucian', '224/300'] }, PORTRAIT_V = 2, PFACE = ['neutral', 'happy', 'angry', 'surprised', 'shy'];
 // 대사 내용으로 표정 고르기 (따로 표시가 없을 때)
 function faceOf(t){
   if (/\[(기본|웃음|화남|놀람|부끄러움)\]/.test(t)) return ['기본', '웃음', '화남', '놀람', '부끄러움'].indexOf(/\[(기본|웃음|화남|놀람|부끄러움)\]/.exec(t)[1]);
@@ -2470,12 +2470,12 @@ function faceOf(t){
   return 0;
 }
 function storyPlay(c, lines, title, then){
-  const S = STORY[c - 1], u = $('#storyui'); let i = 0; const pid = PORTRAITS[S.npc.id];
+  const S = STORY[c - 1], u = $('#storyui'); let i = 0; const [pid, pAsp] = PORTRAITS[S.npc.id] || [];
   const draw = () => {
     const raw = lines[i] || '', m = /^([^:：]{1,8})[:：]\s*(.*)$/.exec(raw), who = m ? m[1] : '', text = (m ? m[2] : raw).replace(/\[(기본|웃음|화남|놀람|부끄러움)\]\s*/g, ''), me_ = who === S.npc.name;
     if (pid){
       const f = faceOf(raw);
-      u.innerHTML = `<div class="vn"><span class="sttl vnttl">${esc(title)}</span><div class="vnpic ${me_ ? 'on' : ''}"><i style="background-image:url(art/portraits/${pid}.png?v=${PORTRAIT_V});background-position:${f * 25}% 0"></i></div>
+      u.innerHTML = `<div class="vn"><span class="sttl vnttl">${esc(title)}</span><div class="vnpic ${me_ ? 'on' : ''}"><i style="aspect-ratio:${pAsp};background-image:url(art/portraits/${pid}.png?v=${PORTRAIT_V});background-position:${f * 25}% 0"></i></div>
         <div class="vnbox">${who ? `<b class="vnname">${esc(who)}</b>` : ''}<div class="vntx ${who ? '' : 'nar'}">${esc(text)}</div><button class="btn go" id="stnext">${i < lines.length - 1 ? '다음 ▶' : '확인'}</button></div></div>`;
     } else u.innerHTML = `<div class="stbox px"><span class="sttl">${esc(title)}</span>${npcFull(S.npc.spr)}
       <div class="sttx">${esc(raw)}</div><button class="btn go" id="stnext">${i < lines.length - 1 ? '다음 ▶' : '확인'}</button></div>`;
