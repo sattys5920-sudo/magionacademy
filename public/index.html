@@ -213,6 +213,15 @@ body:not(.inworld) #npcui{display:none}
 #storyui{position:absolute;inset:0;z-index:28;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(10,6,20,.86);font-family:'G11',monospace}
 #storyui.on{display:flex}
 body:not(.inworld) #storyui{display:none}
+.vn{position:relative;width:100%;max-width:560px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+.vnttl{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:2}
+.vnpic{flex:1;min-height:0;width:100%;display:flex;align-items:flex-end;justify-content:center;filter:brightness(.6);transition:filter .2s}
+.vnpic.on{filter:none}
+.vnpic i{display:block;height:min(100%,60vh);aspect-ratio:128/171;background-size:500% 100%;background-repeat:no-repeat;image-rendering:pixelated}
+.vnbox{width:100%;background:#FAF1E2;color:#22183F;box-shadow:0 0 0 3px #22183F;padding:16px 14px 12px;display:flex;flex-direction:column;gap:10px;position:relative;margin-top:-6px}
+.vnname{position:absolute;left:10px;top:-14px;background:#22183F;color:#FFD866;padding:2px 10px;font-family:'G11B',monospace;font-size:12px}
+.vntx{font-size:14px;line-height:22px;word-break:keep-all;min-height:66px}.vntx.nar{color:#5A4A7A}
+.vnbox .btn{align-self:flex-end;min-width:120px}
 .stbox{width:100%;max-width:340px;background:#FAF1E2;color:#22183F;box-shadow:0 0 0 3px #22183F;padding:14px;display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center}
 .sttl{font-family:'G11B',monospace;font-size:12px;background:#FFD866;padding:2px 10px;box-shadow:0 0 0 2px #22183F}
 .stspr{display:block;width:144px;height:144px;image-rendering:pixelated;background-color:#3A2E5A;box-shadow:0 0 0 2px #22183F}
@@ -2449,10 +2458,28 @@ function storyReward(c){
   const rank = Object.entries(tot).sort((a, b) => b[1] - a[1]).findIndex(([u]) => u === uid) + 1, coin = 300 + (rank && rank <= 3 ? 200 : 0), mana = 20;
   me.story.got[c] = 1; me.coin += coin; me.mana += mana; save(); hud(); toast(`${c}장 보상: ${coin}G · 마력 +${mana}${rank <= 3 ? ` (많이 도운 ${rank}등!)` : ''}`);
 }
+// 메인 주인공 초상화 (public/art/portraits/<id>.png, 5칸: 기본·웃음·화남·놀람·부끄러움 — tools/portraits.py)
+const PORTRAITS = { m_jack: 'jack' }, PORTRAIT_V = 1, PFACE = ['neutral', 'happy', 'angry', 'surprised', 'shy'];
+// 대사 내용으로 표정 고르기 (따로 표시가 없을 때)
+function faceOf(t){
+  if (/\[(기본|웃음|화남|놀람|부끄러움)\]/.test(t)) return ['기본', '웃음', '화남', '놀람', '부끄러움'].indexOf(/\[(기본|웃음|화남|놀람|부끄러움)\]/.exec(t)[1]);
+  if (/헉|깜짝|으악|어\?|뭐\?|세상에|정말\?|진짜\?|!\?/.test(t)) return 3;
+  if (/부끄|저, 저|그, 그|미안|죄송|어쩌지|창피/.test(t)) return 4;
+  if (/화나|흥|용서|가만두지|안 돼!|그만|짜증/.test(t)) return 2;
+  if (/고마워|좋아|하하|헤헤|기뻐|최고|다행|와아|신난|!/.test(t)) return 1;
+  return 0;
+}
 function storyPlay(c, lines, title, then){
-  const S = STORY[c - 1], u = $('#storyui'); let i = 0;
-  const draw = () => { u.innerHTML = `<div class="stbox px"><span class="sttl">${esc(title)}</span>${npcFull(S.npc.spr)}
-    <div class="sttx">${esc(lines[i] || '')}</div><button class="btn go" id="stnext">${i < lines.length - 1 ? '다음 ▶' : '확인'}</button></div>`; u.classList.add('on');
+  const S = STORY[c - 1], u = $('#storyui'); let i = 0; const pid = PORTRAITS[S.npc.id];
+  const draw = () => {
+    const raw = lines[i] || '', m = /^([^:：]{1,8})[:：]\s*(.*)$/.exec(raw), who = m ? m[1] : '', text = (m ? m[2] : raw).replace(/\[(기본|웃음|화남|놀람|부끄러움)\]\s*/g, ''), me_ = who === S.npc.name;
+    if (pid){
+      const f = faceOf(raw);
+      u.innerHTML = `<div class="vn"><span class="sttl vnttl">${esc(title)}</span><div class="vnpic ${me_ ? 'on' : ''}"><i style="background-image:url(art/portraits/${pid}.png?v=${PORTRAIT_V});background-position:${f * 25}% 0"></i></div>
+        <div class="vnbox">${who ? `<b class="vnname">${esc(who)}</b>` : ''}<div class="vntx ${who ? '' : 'nar'}">${esc(text)}</div><button class="btn go" id="stnext">${i < lines.length - 1 ? '다음 ▶' : '확인'}</button></div></div>`;
+    } else u.innerHTML = `<div class="stbox px"><span class="sttl">${esc(title)}</span>${npcFull(S.npc.spr)}
+      <div class="sttx">${esc(raw)}</div><button class="btn go" id="stnext">${i < lines.length - 1 ? '다음 ▶' : '확인'}</button></div>`;
+    u.classList.add('on');
     $('#stnext').onclick = () => { i++; if (i < lines.length) draw(); else { u.classList.remove('on'); u.innerHTML = ''; then && then(); } }; };
   draw();
 }
