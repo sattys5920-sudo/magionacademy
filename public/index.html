@@ -1698,7 +1698,7 @@ const NPC_DEF = [
     reward: { 2: { coin: 40 }, 5: { items: { hegg: 3 } }, 8: { mana: 15 }, 10: { coin: 200, items: { egg: 1 } } } },
 ];
 let npcOver = {};   // 관리자가 고친 내용 (npcs/<id>)
-const npcAll = () => { const ids = [...NPC_DEF.map(n => n.id), ...Object.keys(npcOver).filter(id => !NPC_DEF.find(n => n.id === id))];
+const npcAll = () => { const ids = [...NPC_DEF.map(n => n.id), ...Object.keys(npcOver).filter(id => !id.startsWith('__') && !NPC_DEF.find(n => n.id === id))];
   return ids.map(id => ({ ...(NPC_DEF.find(n => n.id === id) || { id, av: true, look: 1, map: 'campus', x: 20, y: 31, likes: [], dislikes: [], greet: [[], [], [], []], story: {}, reward: {} }), ...(npcOver[id] || {}) })).filter(n => !n.off); };
 const npcGet = id => npcAll().find(n => n.id === id);
 const npcAv = n => n.av ? (n.avData ? World.Avatar.fix(n.avData) : World.Avatar.fromLook(n.look || 1)) : null;
@@ -1820,11 +1820,12 @@ function syncNpcs(){
   const list = [];
   npcAll().forEach(n => { const s = npcSpot(n); if (!s) return;
     list.push({ id: n.id, name: n.name, map: s.map, x: s.x, y: s.y, r: s.r, own: s.own, mark: s.mark, wander: true, dir: n.dir || 'down', ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float, flap: n.flap }) }); });
+  townList().forEach(o => list.push(o));
   if (typeof storyNpcs === 'function') storyNpcs().forEach(n => list.push({ id: n.id, name: n.name, map: n.map, x: n.x, y: n.y, spr: n.spr, alpha: n.alpha, float: n.float }));
-  const sig = JSON.stringify(list.map(o => [o.id, o.name, o.map, o.x, o.y, o.mark, o.own, o.spr, o.av && JSON.stringify(o.av)]));
+  const sig = JSON.stringify(list.map(o => [o.id, o.name, o.map, o.x, o.y, o.mark, o.own, o.spr, o.pix, o.av && JSON.stringify(o.av)]));
   World.setWeather && World.setWeather(weatherToday());
   if (sig === npcSig) return; npcSig = sig;
-  World.setNpcs(list, `art/npcs.png?v=${NPC_ART_V}`);
+  World.setNpcs(list, `art/npcs.png?v=${NPC_ART_V}`, 'art/cast_animals.png?v=1');
 }
 setInterval(() => { if (me && document.body.classList.contains('inworld')){ npcDecay(); syncNpcs(); } }, 30000);
 World.clockText = d => `${isFullMoon() ? '🌕' : { clear: '✨', rain: '☔', fog: '🌫', snow: '❄' }[weatherToday()]} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${BAND_KO[bandNow(d.getHours())]} · ${WX_KO[weatherToday()]}${isFullMoon() ? ' · 호박달 축제' : ''}`;
@@ -1853,7 +1854,7 @@ function npcPanel(n, text, btns){
     <div class="npct">${text}</div><div class="frow">${btns}</div></div>`;
   npcUI().classList.add('on');
 }
-World.onNpc = id => { if (!me) return; World.hideBubble(); const c = STORY.findIndex(S => S.npc.id === id) + 1; if (c) return storyPanel(c); const n = npcGet(id); if (n) npcMenu(n); };
+World.onNpc = id => { if (!me) return; World.hideBubble(); if (String(id).startsWith('t:')) return townTalk(id); const c = STORY.findIndex(S => S.npc.id === id) + 1; if (c) return storyPanel(c); const n = npcGet(id); if (n) npcMenu(n); };
 // 평소 대사: 말투 단계 + (가끔) 날씨·시간대 + (가끔) 지난 이벤트 회상
 function npcLine(n){
   const P = npcProf(n.id), h = hearts(n.id), r = Math.random();
@@ -1909,6 +1910,37 @@ async function renderNpcStory(){
   $('#back').onclick = closeSheet;
   on('[data-nre]', async b => { const k = +b.dataset.nre, ev = await npcEvent(n.id, k); closeSheet(); if (ev) evPlay(n, k, ev, { replay: true }); });
 }
+// ===== 마을 사람: 이야기에 자주 나오는 조연이 마을에 서 있어요 (호감도 없이, 말을 걸면 한마디) =====
+// 생김새는 data/npc/cast.json (관리자 「조연」 탭에서 고치면 npcs/__cast/<id>)
+const TOWNS = [
+  { id: 'fish_owner', map: 'campus', x: 51, y: 37, r: 1, lines: ['오늘 붕어 싱싱해. 고양이한테 들키기 전에 사 가.', '얼음은 매일 아침 반듯하게 깎아. 손님 눈은 생선보다 정직하거든.', '시장 끝자리 붕어는 원래 좀 잘 없어져. 괜찮아, 그건 그런 자리야.'] },
+  { id: 'grandma', map: 'campus', x: 12, y: 59, r: 1, when: ['morning', 'day'], lines: ['아침 이슬 맞은 호박이 제일 달단다.', '저 허수아비? 우리 집 식구지. 인사하고 가렴.', '무릎이 쑤시는 걸 보니 내일은 비가 오려나 보다.'] },
+  { id: 'merchant', map: 'campus', x: 58, y: 30, r: 2, lines: ['등불 하나 사 갈래? 밤길엔 이게 최고야.', '요즘 손님들이 다들 별 이야기만 해. 무슨 일이 있긴 있나 봐.', '깎아 달라고? 웃는 얼굴이면 조금 생각해 볼게.'] },
+  { id: 'elder_a', map: 'campus', x: 63, y: 33, r: 1, lines: ['젊을 땐 이 광장에서 밤새 춤을 췄지.', '흉년 겨울 이야기 들어 봤나? 그해 케이크 맛은 아직도 생각나.', '천천히 걸어. 마을은 도망가지 않아.'] },
+  { id: 'elder_b', map: 'campus', x: 54, y: 33, r: 1, lines: ['벌꿀은 서두르면 안 돼. 사람 마음도 그렇고.', '시장 바닥에서 반백 년을 살았어. 웬만한 소문은 다 들었지.', '그 제빵사 아이, 목소리 큰 건 예나 지금이나 똑같구먼.'] },
+  { id: 'florist', map: 'campus', x: 70, y: 27, r: 1, lines: ['오늘의 꽃은 은방울꽃이에요. 작아도 향이 멀리 가요.', '온실 쪽에서 가끔 비명이 들려요. 이제는 반가운 소리예요.', '꽃은 물보다 햇볕을 먼저 기억한대요.'] },
+  { id: 'optician', map: 'campus', x: 47, y: 27, r: 1, lines: ['눈이 침침하면 언제든 와요. 별도 다시 보일 거예요.', '안경 쓰는 걸 부끄러워하는 손님이 제일 마음에 걸려요.', '렌즈는 닦을수록 맑아져요. 마음도 그렇고요.'] },
+  { id: 'gray', map: 'campus', x: 73, y: 37, r: 1, lines: ['우체국은 지각을 용서하지 않네. 편지는 기다리니까.', '우리 우체부는 길은 몰라도 사람은 안다네. ……방금 그 말은 못 들은 걸로 하게.', '봉투에 주소는 또박또박 쓰게. 바람 부는 곳은 주소가 아니야.'] },
+  { id: 'kkaksun', map: 'campus', x: 69, y: 38, r: 1, lines: ['깍! 배달은 빨라야 제맛이지.', '박쥐 걔? ……요즘은 좀 하더라. 칭찬 아니야.', '반짝이는 거 있으면 나 줘. 그냥 보기만 할게.'] },
+  { id: 'husband', map: 'campus', x: 76, y: 38, r: 1, when: ['evening'], need: 'sera_h2', lines: ['도시락이 짰다고요? ……다음엔 소금을 덜 넣어 볼게요.', '양호실 선생님 요즘 어때 보여요? 아, 그냥 궁금해서요.', '차는 꼭 따뜻할 때 마셔야 해요. 식으면 다른 맛이 되거든요.'] },
+  { id: 'kids', map: 'campus', x: 20, y: 53, r: 2, when: ['day', 'evening'], lines: ['술래잡기 할래? 넌 술래!', '호박밭 허수아비는 웃는 얼굴이야. 무섭게 해도 웃어.', '우체부 박쥐가 우리 집에 이웃집 편지를 또 줬어!'] },
+];
+const townId = id => 't:' + id;
+const townAv = id => { const ov = npcOver.__cast?.[id], c = NL.cast[id] || {}; return ov?.av || c.av ? World.Avatar.fix(ov?.av || c.av) : null; };
+const townName = id => fillVars(npcOver.__cast?.[id]?.name || NL.cast[id]?.name || id, 'sera');
+function townList(){
+  if (!NL.cast || !Object.keys(NL.cast).length) return [];
+  return TOWNS.filter(t => (!t.when || t.when.includes(bandNow())) && (!t.need || flagOn(t.need))).map(t => {
+    const c = NL.cast[t.id] || {}, av = townAv(t.id);
+    return { id: townId(t.id), name: townName(t.id), map: t.map, x: t.x, y: t.y, r: t.r, wander: true, ...(av ? { av } : c.pix !== undefined ? { pix: c.pix } : {}) }; }).filter(o => o.av || o.pix !== undefined);
+}
+function townTalk(id){
+  const t = TOWNS.find(x => townId(x.id) === id); if (!t) return;
+  const c = NL.cast[t.id] || {}, av = townAv(t.id), pic = av ? `<img src="${World.Avatar.head(av)}" alt="">` : `<i class="npcspr" style="width:48px;height:48px;background:url(art/cast_animals.png?v=1) ${-c.pix * 48}px 0/${48 * 5}px 48px no-repeat;image-rendering:pixelated"></i>`;
+  const lines = npcOver.__cast?.[t.id]?.lines || t.lines, line = fillVars(lines[Math.floor(Math.random() * lines.length)], 'sera');
+  npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${pic}</div><div><b>${esc(townName(t.id))}</b><span class="s sub">마을 사람</span></div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(line)}</div></div>`;
+  npcUI().dataset.id = ''; npcUI().classList.add('on');
+}
 // ===== 하트 이벤트 무대: 지도를 잘라 온 배경 위에서 인물이 걷고, 대사·선택지·장면 이동 =====
 const EV_W = 320; let EV_H = 180, EV_FLOOR = 166; const POSX = { far_left: 44, left: 100, center: 160, right: 220, far_right: 276, off_left: -50, off_right: 370 };
 const EMO_IX = { heart: 7, tear: 5, angry: 6, sparkle: 9 };
@@ -1919,7 +1951,10 @@ async function castSprite(id, ctx){
   if (id === 'player') return { kind: 'av', av: me ? avOf(me) : World.Avatar.fromLook(1) };
   const n = npcGet(id); if (n) return n.av ? { kind: 'av', av: npcAv(n) } : { kind: 'spr', spr: n.spr, flap: n.flap, float: n.float };
   const c = { ...(NL.cast[id] || {}), ...((ctx.cast || {})[id] || {}) };
+  const ov = npcOver.__cast?.[id];   // 관리자가 꾸민 조연 (npcs/__cast/<id>)
+  if (ov?.av || c.av) return { kind: 'av', av: World.Avatar.fix(ov?.av || c.av) };
   if (c.look !== undefined) return { kind: 'av', av: World.Avatar.fromLook(c.look) };
+  if (c.pix !== undefined){ const im = await loadImg('art/cast_animals.png?v=1'); return im ? { kind: 'img', img: cropCanvas(im, c.pix * 32, 0, 32, 32), w: c.w || 56 } : null; }   // 직접 그린 조연 동물 (tools/iso/cast_animals.py)
   if (c.cr){ const i = { sheep: 0, rabbit: 1, lizard: 2, chicken: 3, cat: 4, toad: 5, bee: 6, spider: 7, owl: 8, goat: 9 }[c.cr] ?? 8, im = await loadImg('art/creatures.png?v=11');
     return { kind: 'img', img: tintCanvas(im, i * 120, 0, 120, 102, c.filter), w: c.small ? 34 : 52 }; }
   if (c.obj){ const o = await World.objSprite('campus', c.obj); return o ? { kind: 'img', img: cropCanvas(o.img, o.sx, o.sy, o.sw, o.sh), w: (c.small ? .6 : 1) * o.sw * 2 } : null; }
@@ -2064,7 +2099,7 @@ function evChoose(ctx, opts){
   ch.innerHTML = opts.map((o, i) => `<button class="btn sm evo" data-evo="${i}">${esc(fillVars(o.text, ctx.n.id))}</button>`).join('');
   return new Promise(res => { ch.querySelectorAll('[data-evo]').forEach(b => b.onclick = e => { e.stopPropagation(); ch.innerHTML = ''; res(opts[+b.dataset.evo]); }); if (ctx.stop) res(opts[0]); });
 }
-const castName = (ctx, id) => { if (id === 'player') return me?.nick || '학생'; const n = npcGet(id); if (n) return n.name; const c = { ...(NL.cast[id] || {}), ...((ctx.cast || {})[id] || {}) }; return fillVars(c.name || id, ctx.n.id); };
+const castName = (ctx, id) => { if (id === 'player') return me?.nick || '학생'; const n = npcGet(id); if (n) return n.name; const c = { ...(NL.cast[id] || {}), ...((ctx.cast || {})[id] || {}) }; return fillVars(npcOver.__cast?.[id]?.name || c.name || id, ctx.n.id); };
 async function evRun(ctx, sc){
   const lab = {}; sc.forEach((s, i) => { if (s.label) lab[s.label] = i; });
   let i = 0, guard = 0;
@@ -2198,7 +2233,8 @@ function adminNpcHTML(){
   const table = `<div class="adtbl npc"><div class="h"><span>학생</span>${all.map(n => `<span>${esc(n.name)}</span>`).join('')}</div>
     ${ids.map(id => `<div><span><b>${esc(P[id].nick)}</b></span>${all.map(n => { const x = P[id].npc?.[n.id], seen = Object.keys(x?.seen || {}).length; return `<span>♥${hOf(x)}${seen ? ` <small>📖${seen}</small>` : ''}</span>`; }).join('')}</div>`).join('')}</div>`;
   const wx = `<div class="adcard"><b>오늘 날씨</b><div class="adseg">${[['', '자동'], ['clear', '맑음'], ['rain', '비'], ['fog', '안개'], ['snow', '눈']].map(([k, l]) => `<button data-adwx="${k}" class="${(wxForce && wxForce.d === todayKey() ? wxForce.w : '') === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="s">지금: ${BAND_KO[bandNow()]} · ${WX_KO[weatherToday()]}${isFullMoon() ? ' · 호박달 축제(보름)' : ''} · 날씨를 바꾸면 비·안개 조건 이벤트를 바로 시험할 수 있어요</div></div>`;
-  const pick = `<div class="adseg">${all.map(n => `<button data-adnpc="${n.id}" class="${adNpc === n.id ? 'on' : ''}">${esc(n.name)}${n.av ? '' : ' 🐾'}</button>`).join('')}<button data-adnpc="__new">+ 사람 NPC</button></div>`;
+  const pick = `<div class="adseg">${all.map(n => `<button data-adnpc="${n.id}" class="${adNpc === n.id ? 'on' : ''}">${esc(n.name)}${n.av ? '' : ' 🐾'}</button>`).join('')}<button data-adnpc="__new">+ 사람 NPC</button><button data-adnpc="__cast" class="${adNpc === '__cast' ? 'on' : ''}">🎭 조연</button></div>`;
+  if (adNpc === '__cast') return `<div class="adcard"><b>학생 × NPC 호감도</b>${table}</div>${wx}${pick}${adminCastHTML()}`;
   let ed = '';
   if (adNpc && adNpcDraft){ const d = adNpcDraft, pr = d.prof || {}, stand = Object.values(NL.places).filter(p => p.stand);
     const subs = `<div class="adseg">${[['base', '기본'], ['routine', '루틴'], ['lines', '평소 대사'], ['events', '하트 이벤트']].map(([k, l]) => `<button data-adsub="${k}" class="${adSub === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
@@ -2234,6 +2270,7 @@ document.addEventListener('click', async e => {
   const t = e.target; if (!$('#adminv') || !$('#adminv').contains(t)) return;
   const b = t.closest('[data-adnpc],[data-adavk],[data-adavrand],[data-adnsave],[data-adndel],[data-adnreset],[data-adsub],[data-adevk],[data-evop],[data-evprev],[data-evsave],[data-evreset],[data-adwx]'); if (!b) return;
   if (b.dataset.adwx !== undefined){ const w = b.dataset.adwx; F.set(F.ref(db, 'story/wx'), w ? { d: todayKey(), w } : null).then(() => toast(w ? `오늘 날씨: ${WX_KO[w]}` : '날씨를 자동으로 돌렸어요')); wxForce = w ? { d: todayKey(), w } : null; return adminRender(); }
+  if (b.dataset.adnpc === '__cast'){ adNpc = '__cast'; adNpcDraft = null; return adminRender(); }
   if (b.dataset.adnpc){ const id = b.dataset.adnpc === '__new' ? 'h' + Date.now().toString(36) : b.dataset.adnpc; adNpc = id; adEvK = 0; adEvDraft = null; adWarn = [];
     const n = npcGet(id) || { id, name: '새 NPC', title: '', av: true, look: 1, likes: [], dislikes: [] };
     adNpcDraft = JSON.parse(JSON.stringify({ ...n, routine: n.routine || ROUTINE[id] || { morning: 'village_square', day: 'village_square', evening: 'village_square', night: 'village_square' }, vars: npcVars(id), prof: npcProf(id) }));
@@ -2269,6 +2306,31 @@ document.addEventListener('click', async e => {
     F.update(F.ref(db, 'npcs/' + adNpc), up).then(() => toast(`저장했어요 · 모두에게 바로 반영돼요${adWarn.length ? ` · 국어 검사 ${adWarn.length} 건` : ''}`)).catch(ex => toast('저장 실패: ' + (ex.code || ex.message))); return adminRender(); }
   if (b.dataset.adndel){ F.set(F.ref(db, 'npcs/' + adNpc), null); adNpc = null; adNpcDraft = null; return adminRender(); }
   if (b.dataset.adnreset){ if (!confirm('이 NPC의 고친 내용(생김새·대사·이벤트)을 모두 지울까요?')) return; F.set(F.ref(db, 'npcs/' + adNpc), null); const id = adNpc; adNpc = null; setTimeout(() => { const bt = document.querySelector(`[data-adnpc="${id}"]`); bt && bt.click(); }, 400); return; }
+});
+
+// ---- 관리자: 조연 (이벤트에 나오는 사람·동물, 마을 사람) ----
+let adCast = null, adCastDraft = null;
+const AD_CAST_IDS = () => Object.keys(NL.cast).filter(k => !['player', 'voice'].includes(k) && !npcGet(k));
+function adminCastHTML(){
+  const ids = AD_CAST_IDS(), pick = `<div class="adseg">${ids.map(k => `<button data-adcast="${k}" class="${adCast === k ? 'on' : ''}">${esc(fillVars(npcOver.__cast?.[k]?.name || NL.cast[k].name, 'sera'))}${TOWNS.find(t => t.id === k) ? ' 🏠' : ''}</button>`).join('')}</div>`;
+  if (!adCast || !adCastDraft) return `<div class="adcard adnpced"><div class="s">이벤트 장면에 나오는 조연이에요. 🏠는 마을에도 서 있는 조연이에요. 고르면 생김새·이름·한마디를 고칠 수 있어요.</div>${pick}</div>`;
+  const d = adCastDraft, T = TOWNS.find(t => t.id === adCast), c = NL.cast[adCast];
+  return `<div class="adcard adnpced">${pick}
+    ${d.av ? `<div class="adav"><img src="${avThumb(World.Avatar.fix(d.av))}" alt=""><div class="adavc">${['body', 'skinC', 'hair', 'hairC', 'eyeC', 'face', 'lip', 'top', 'topC', 'legs', 'legsC', 'feet', 'feetC', 'hat', 'hatC', 'acc', 'accC', 'neck', 'cape'].map(k => `<span>${k}<button data-adcavk="${k}" data-adavd="-1">◀</button><button data-adcavk="${k}" data-adavd="1">▶</button></span>`).join('')}<button data-adcrand="1">🎲 무작위</button></div></div>` : `<div class="s">🐾 동물 조연은 그림이 정해져 있어요 (tools/iso/cast_animals.py)</div>`}
+    <label>이름 <input data-adcf="name" value="${esc(d.name || '')}"></label>
+    ${T ? `<label>마을에서 하는 말 (한 줄에 하나) <textarea data-adcf="lines" rows="3">${esc((d.lines || T.lines).join('\n'))}</textarea></label><div class="s">마을 위치: ${esc(World.meta(T.map)?.title || T.map)} ${T.x},${T.y}${T.when ? ' · ' + T.when.map(x => BAND_KO[x]).join('·') + '에만' : ''}${T.need ? ' · ' + T.need + ' 본 뒤부터' : ''}</div>` : ''}
+    <div class="frow"><button class="btn sm go" data-adcsave="1">저장하기</button><button class="btn sm" data-adcreset="1">기본값으로</button></div></div>`;
+}
+function adminCastRead(){ const root = $('#adminv'), d = adCastDraft; if (!root || !d) return; root.querySelectorAll('[data-adcf]').forEach(el => { const k = el.dataset.adcf; d[k] = k === 'lines' ? el.value.split('\n').map(x => x.trim()).filter(Boolean) : el.value; }); }
+document.addEventListener('click', e => {
+  const t = e.target; if (!$('#adminv') || !$('#adminv').contains(t)) return;
+  const b = t.closest('[data-adcast],[data-adcavk],[data-adcrand],[data-adcsave],[data-adcreset]'); if (!b) return;
+  if (b.dataset.adcast){ adCast = b.dataset.adcast; const c = NL.cast[adCast], ov = npcOver.__cast?.[adCast] || {}; adCastDraft = JSON.parse(JSON.stringify({ name: ov.name || c.name, av: ov.av || c.av || null, lines: ov.lines || null })); return adminRender(); }
+  adminCastRead(); const d = adCastDraft; if (!d) return;
+  if (b.dataset.adcavk && d.av){ const k = b.dataset.adcavk, A = World.Avatar, Mt = A.meta; const max = k === 'body' ? 2 : k.endsWith('C') ? (Mt.colors[{ skinC: 'skin', hairC: 'hair', eyeC: 'eye', topC: 'cloth', legsC: 'bottom', feetC: 'shoe', hatC: 'cloth', accC: 'cloth' }[k]] || []).length : (Mt.parts[k] || []).length; if (max) d.av[k] = ((d.av[k] || 0) + +b.dataset.adavd + max) % max; d.av = A.fix(d.av); return adminRender(); }
+  if (b.dataset.adcrand && d.av){ d.av = World.Avatar.random(); delete d.av.house; return adminRender(); }
+  if (b.dataset.adcsave){ const human = !NL.cast[adCast]?.pix, warn = (d.lines || []).flatMap(x => koCheck(x, human)); F.set(F.ref(db, 'npcs/__cast/' + adCast), JSON.parse(JSON.stringify({ name: d.name, ...(d.av ? { av: d.av } : {}), ...(d.lines ? { lines: d.lines } : {}) }))).then(() => toast(`저장했어요${warn.length ? ` · 국어 검사 ${warn.length} 건: ${warn[0]}` : ''}`)); return; }
+  if (b.dataset.adcreset){ F.set(F.ref(db, 'npcs/__cast/' + adCast), null).then(() => { toast('기본값으로 돌렸어요'); adCast = null; adCastDraft = null; adminRender(); }); }
 });
 // 편집 칸의 글을 초안에 옮겨요 (이름으로 쓴 선물은 물건 id로)
 function adminNpcRead(){

@@ -332,7 +332,8 @@ let speedK = 1; World.setSpeedK = k => { speedK = k || 1; };   // 요리 효과:
 // ---------- 이야기 NPC: 한자리에 서 있어요. 사람은 아바타(av), 동물은 그림(spr: art 칸) ----------
 let npcList = [], NPC_IMG = null;
 World.onNpc = null;   // (npc id) 눌렀을 때
-World.setNpcs = (list, sprSrc) => { npcList = list || []; if (sprSrc && (!NPC_IMG || NPC_IMG.src.indexOf(sprSrc) < 0)){ NPC_IMG = new Image(); NPC_IMG.src = sprSrc; } if (started && M){ placeNpcs(); retag(); } };
+let PIX_IMG = null;   // 조연 동물 그림 (32칸)
+World.setNpcs = (list, sprSrc, pixSrc) => { npcList = list || []; if (sprSrc && (!NPC_IMG || NPC_IMG.src.indexOf(sprSrc) < 0)){ NPC_IMG = new Image(); NPC_IMG.src = sprSrc; } if (pixSrc && !PIX_IMG){ PIX_IMG = new Image(); PIX_IMG.src = pixSrc; } if (started && M){ placeNpcs(); retag(); } };
 function placeNpcs(){
   for (let i = people.length - 1; i >= 0; i--) if (people[i].npc) people.splice(i, 1);
   npcList.filter(n => (n.map === map || n.map === rmap) && (!n.own || roomView.own)).forEach(n => {
@@ -598,6 +599,12 @@ const fx = [];
 let last = performance.now(), camIX = 0, camIY = 0;
 function drawPerson(p){ const cx = out;
   if (p.pet) return drawPet(p);
+  if (p.npc && p.npc.pix !== undefined){   // 조연 동물: 32칸 그림, 걸을 때 콩콩 뛰어요
+    const [sx, sy] = P(p.x + .5, p.y + .5); cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 5, 2, 0, 0, Math.PI * 2); cx.fill();
+    if (!PIX_IMG || !PIX_IMG.complete) return; const cp = KPX * ASC, w = 32 * cp, hop = p.path.length ? Math.abs(Math.sin(p.t * 9)) * 2 * cp : 0;
+    const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - 31 * cp - hop), left = p.view === World.Avatar.meta.dirs.left;
+    cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); if (left){ cx.translate(dx, 0); cx.scale(-1, 1); cx.drawImage(PIX_IMG, p.npc.pix * 32, 0, 32, 32, -w / 2, dy, w, w); } else cx.drawImage(PIX_IMG, p.npc.pix * 32, 0, 32, 32, Math.round(dx - w / 2), dy, w, w); cx.restore(); return;
+  }
   if (p.npc && p.npc.spr !== undefined){   // 이야기 NPC: LPC로 조립한 그림 (tools/iso/lpc/npc_lpc.py), 한 줄 = 한 명, 칸 배치는 캐릭터와 같아요
     const [sx, sy] = P(p.x + .5, p.y + .5); cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 6, 2.5, 0, 0, Math.PI * 2); cx.fill();
     if (!NPC_IMG || !NPC_IMG.complete) return; const A = World.Avatar, cp = KPX * ASC, w = A.FW * cp, h = A.FH * cp, WK = A.meta.walk, col = (p.view || 0) + (p.path.length ? WK[Math.floor(p.t * 7) % WK.length] : p.npc.flap ? WK[Math.floor(performance.now() / 140) % WK.length] : 0);
