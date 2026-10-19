@@ -510,11 +510,11 @@ cv.addEventListener('pointerdown', e => {
   // 우리 안의 생물을 누르면 돌보기 화면
   const pet = people.find(p => p.pet && (() => { const [sx, sy] = P(p.x + .5, p.y + .5), w = p.pet.adult ? 11 : 8, h = p.pet.adult ? 18 : 13; return x >= sx - w && x <= sx + w && y >= sy - h && y <= sy + 2; })());
   if (pet && World.onPet){ World.onPet(pet.pet.id); return; }
-  // 이야기 NPC를 누르면
-  const np = people.filter(p => p.npc && (() => { const [sx, sy] = P(p.x + .5, p.y + .5), h = World.Avatar.FH * ASC * .62; return x >= sx - 9 && x <= sx + 9 && y >= sy - h && y <= sy + 2; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
+  // 이야기 NPC를 누르면 (판정은 발부터 머리 위 이름표까지: 얼굴을 눌러도 잡혀요)
+  const np = people.filter(p => p.npc && (() => { const [sx, sy] = P(p.x + .5, p.y + .5), h = World.Avatar.FH * ASC + 10; return x >= sx - 10 && x <= sx + 10 && y >= sy - h && y <= sy + 3; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
   if (np && World.onNpc){ const n = np.npc, d = Math.abs(Math.round(me.x) - np.x) + Math.abs(Math.round(me.y) - np.y); if (d <= 1) World.onNpc(n.id); else { const c = near([[np.x, np.y]])[0]; if (c && goto(me, c[0], c[1])) pending = { npcTalk: n.id }; } return; }
   // 친구를 누르면 (겹치면 앞에 있는 사람)
-  const pr = people.filter(p => p.peer && (() => { const [sx, sy] = P(p.x + .5, p.y + .5); return x >= sx - 8 && x <= sx + 8 && y >= sy - World.Avatar.FH * ASC * .62 && y <= sy + 2; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
+  const pr = people.filter(p => p.peer && (() => { const [sx, sy] = P(p.x + .5, p.y + .5); return x >= sx - 9 && x <= sx + 9 && y >= sy - World.Avatar.FH * ASC - 10 && y <= sy + 3; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
   if (pr && World.onPeer){ World.onPeer(pr.peer); return; }
   const hit = [...objOrder, ...flats.slice().reverse()].reverse().find(o => (o.door || o.act || o.furn || ACTS[o.name]) && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && (() => { const px = o.furn ? FURN_PX : MAPS[rmap].px; const d = px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data; return d[3] > 0; })());
   if (hit && hit.furn){   // 놓은 가구
