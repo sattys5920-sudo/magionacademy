@@ -41,7 +41,7 @@ for f, nm in [('lh_mobile.json', '모바일')]:
 page = f'''<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UI 개선 전·후 비교</title>
 <style>body{{font-family:system-ui,sans-serif;background:#140D1E;color:#F6F0FF;margin:0;padding:20px}}h1,h2{{font-weight:600}}table{{border-collapse:collapse;font-size:13px;margin:12px 0 28px}}td,th{{border:1px solid #3A2A55;padding:4px 8px;text-align:center}}th{{background:#211733}}td.b{{color:#BDB0D6}}td.a{{color:#6FD08C;font-weight:600}}
 .pair{{display:flex;gap:8px;align-items:flex-start;overflow-x:auto}}.pair img{{max-height:520px;border:1px solid #3A2A55;border-radius:8px;background:#000}}figure{{margin:0 0 16px}}figcaption{{font-size:13px;color:#BDB0D6;margin-bottom:4px}}section{{margin-bottom:36px}}.note{{color:#BDB0D6;font-size:13px}}</style>
-<h1>호박달 마녀학교 UI 개선 전·후</h1><p class="note">왼쪽 전(회색) · 오른쪽 후(초록). 전: main 12b6084 · 후: ui-overhaul</p>
+<h1>호박달 마녀학교 UI 개선 전·후</h1><p class="note">왼쪽 전(회색) · 오른쪽 후(초록). 전: main d13575e · 후: ui-overhaul (성능·Lighthouse는 같은 날 같은 기기에서 다시 잰 값)</p>
 <h2>화면별 수치</h2><table><tr><th rowspan="2">화면</th><th rowspan="2">크기</th><th colspan="2">페이지 스크롤</th><th colspan="2">패널 안 스크롤(내용/보임)</th><th colspan="2">13px 미만 글씨</th><th colspan="2">대비 위반</th><th colspan="2">44px 미만 터치</th></tr><tr>{'<th>전</th><th>후</th>' * 5}</tr>{''.join(rows)}</table>
 <h2>성능 (10초 걷기)</h2><table><tr><th>기기</th><th>CPU 감속</th><th colspan="2">평균 FPS</th><th colspan="2">걷기 중 긴 작업</th><th colspan="2">화면 열기 긴 작업 최대(ms)</th><th colspan="2">입력 지연 최대(ms)</th></tr><tr><th></th><th></th>{'<th>전</th><th>후</th>' * 4}</tr>{perf}</table>
 <table><tr><th>항목</th><th>전</th><th>후</th></tr>{lh}</table>
