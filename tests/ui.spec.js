@@ -35,7 +35,7 @@ async function metrics(p){
     await p.addInitScript(s => { window.__seed = s; window.__uid = 'me1'; }, seed);
     await p.goto(`http://localhost:${PORT}/`); await p.waitForTimeout(3500); await skipStory(p);
     const screens = [['world', async () => {}], ['map', async () => { await p.click('#tMap'); }], ['talk', async () => { await p.click('#tChat'); }], ['npc', async () => p.evaluate(() => __T.npcMenu(__T.npcGet('nabi')))],
-      ...TABS.map(t => [t, async () => p.evaluate(t => __T.openSheet(t), t)]), ...PANELS.map(s => [s, async () => p.evaluate(s => __T.openSheet('home', s), s)])];
+      ...TABS.map(t => [t, async () => p.evaluate(t => __T.openSheet(t), t)]), ...PANELS.map(s => [s, async () => p.evaluate(s => { if (s === 'npcgift' || s === 'npcstory'){ __T.npcMenu(__T.npcGet('nabi')); document.querySelector('#npcui [data-nx="' + (s === 'npcgift' ? 'gift' : 'story') + '"]')?.click(); } else __T.openSheet('home', s); }, s)])];
     for (const [name, open] of screens){
       try { await open(); } catch(e){ ok(false, `${name}: 열기 실패 ${e.message.split('\n')[0]}`); }
       await p.waitForTimeout(500);

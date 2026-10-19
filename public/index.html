@@ -115,7 +115,7 @@ body:not(.inworld) #fishui{display:none}
 .fgrid{grid-template-columns:repeat(5,minmax(0,1fr))}
 .fcell{min-height:92px;gap:1px;padding:14px 2px 6px;text-align:center}
 .fcell .s{font-size:var(--fs-s);line-height:1.3;font-family:var(--f-body)}
-.fcell .fno{position:absolute;left:4px;top:2px;font-family:var(--f-body);font-size:var(--fs-s);line-height:1.2;color:var(--sub);font-variant-numeric:tabular-nums}
+.fcell .fno{position:absolute;left:4px;top:2px;font-family:var(--f-body);font-size:var(--fs-s);line-height:1.2;color:var(--text);opacity:.85;font-variant-numeric:tabular-nums}
 .fcell.unk{opacity:.6}
 .fcell .q{width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:var(--f-pxb);font-size:24px;color:var(--sub)}
 .fst{color:var(--gold);font-size:var(--fs-s);font-family:var(--f-body);line-height:1.4;letter-spacing:-1px}
@@ -357,7 +357,7 @@ body:not(.inworld) #talk{display:none}
 .btn.go,.btn.gold{background:var(--accent);border-color:var(--accent);color:#2A1506}
 .btn.dark{background:var(--panel2);color:var(--text)}
 .btn.sm{min-height:44px;font-size:var(--fs-s);padding:0 12px}
-.btn.ghost{min-height:44px;border-color:transparent;background:transparent;color:var(--sub);font-family:var(--f-body);font-size:var(--fs-s);padding:0 8px}
+.btn.ghost{min-height:44px;min-width:64px;border-color:transparent;background:transparent;color:var(--sub);font-family:var(--f-body);font-size:var(--fs-s);padding:0 8px}
 .btn.warn{border-color:var(--warn);color:var(--warn)}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .tile{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--panel2);border:1px solid var(--line2);border-radius:12px;text-align:left;min-height:64px;color:var(--text)}
@@ -1069,7 +1069,7 @@ const backBtn = '<button class="btn ghost" id="back">닫기</button>';
 const avOf = who => who && typeof who === 'object' ? { ...(who.av || World.Avatar.fromLook(who.look)), house: who.house } : World.Avatar.fromLook(who);
 const face = (who, size = 32, online) => { const src = World.Avatar.head(avOf(who)); return `<div class="face" style="width:${size}px;height:${size}px">${src ? `<img src="${src}" alt="" style="width:100%;height:100%;image-rendering:pixelated">` : ''}${online === undefined ? '' : `<span class="dot" style="background:${online ? '#3CCB6E' : '#C8B8E8'}"></span>`}</div>`; };
 World.Avatar.ready.then(() => { if (typeof sheetOn !== 'undefined' && sheetOn) render(); });
-const houseTag = k => HOUSES[k] ? `<span class="tag" style="background:${HOUSES[k].bg};color:${HOUSES[k].col}">${HOUSES[k].name}</span>` : '';
+const houseTag = k => HOUSES[k] ? `<span class="tag" style="background:var(--panel2);border:1px solid ${HOUSES[k].col};color:${HOUSES[k].col}">${HOUSES[k].name}</span>` : '';
 function on(sel, fn){ app.querySelectorAll(sel).forEach(el => el.onclick = () => fn(el)); }
 
 // ===== 세계와 시트 =====
@@ -3437,7 +3437,7 @@ function renderHome(){
       }).join('')}</div>
     </section>
     <div class="tiles">
-      <button class="tile px" id="goClass">${ic('book')}<span class="main"><span class="b">수업 ${classLeft()} / ${CLASS_MAX}</span><span class="s ${examStarted() ? 'sub' : ''}" style="${examStarted() ? '' : 'color:#C2385E'}">${!examStarted() ? '쪽지시험 있음!' : `지식 ${me.know || 0}`}</span></span></button>
+      <button class="tile px" id="goClass">${ic('book')}<span class="main"><span class="b">수업 ${classLeft()} / ${CLASS_MAX}</span><span class="s ${examStarted() ? 'sub' : ''}" style="${examStarted() ? '' : 'color:var(--warn)'}">${!examStarted() ? '쪽지시험 있음!' : `지식 ${me.know || 0}`}</span></span></button>
       <button class="tile px" id="goDorm">${ic('bed')}<span class="main"><span class="b">내 방</span><span class="s sub">${H.name} ${roomNo(me.house, uid || me.nick)}호</span></span></button>
     </div>
     <button class="tile px" id="goAvatar" style="width:100%"><div class="face" style="width:40px;height:40px;background:#E8DDF8">${World.Avatar.loaded ? `<img src="${World.Avatar.head(avOf(me))}" alt="" style="width:100%;height:100%;image-rendering:pixelated">` : ''}</div><span class="main" style="flex:1"><span class="b">캐릭터 꾸미기</span><span class="s sub">머리·눈·옷·신발·소품을 바꿔요</span></span></button>
@@ -4495,7 +4495,7 @@ function renderExamResult(){
     </section>
     <section class="sec">
       ${secH('기숙사 평균', `${Object.keys(board).length}명 응시`)}
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">${HOUSE_KEYS.map(k => { const a = avg(k); return `<div style="background:${HOUSES[k].bg};border-top:3px solid ${HOUSES[k].col};padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:2px"><span class="s" style="color:${HOUSES[k].col}">${HOUSES[k].name}</span><span class="s" style="color:var(--gold2);letter-spacing:-1px">${a === null ? '·' : '★'.repeat(Math.max(1, Math.round(a / 20)))}</span><span class="b">${a === null ? '-' : a + '점'}</span></div>`; }).join('')}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">${HOUSE_KEYS.map(k => { const a = avg(k); return `<div style="background:var(--panel2);border-top:3px solid ${HOUSES[k].col};padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:2px"><span class="s" style="color:${HOUSES[k].col}">${HOUSES[k].name}</span><span class="s" style="color:var(--gold2);letter-spacing:-1px">${a === null ? '·' : '★'.repeat(Math.max(1, Math.round(a / 20)))}</span><span class="b">${a === null ? '-' : a + '점'}</span></div>`; }).join('')}</div>
       <div class="hint">새 시험은 다음 주에 열려요 · 60점부터 장학금, 80점부터 귀한 재료, 100점이면 용 알 껍질</div>
     </section>
     <button class="btn ghost" id="back" style="align-self:center">닫기</button>`);
