@@ -183,12 +183,33 @@ body:not(.inworld) #npcui{display:none}
 .npcsc{display:block;color:#9480B4;font-size:10px;font-family:'G9',monospace}
 .npcp .frow{display:flex;gap:6px;flex-wrap:wrap}.npcp .frow .btn{flex:1}
 .adtbl.npc>div{grid-template-columns:80px repeat(16,56px)}
+.evtbl{display:flex;flex-direction:column;gap:2px;max-height:60vh;overflow:auto;border:2px solid #22183F;padding:4px;background:#F6F0FA}
+.evrow{display:flex;gap:4px;align-items:flex-start;background:#fff;padding:3px;border-left:4px solid #C8B8E0}
+.evrow.line{border-left-color:#6AB8FF}.evrow.choice{border-left-color:#FF9A4A}.evrow.label{border-left-color:#8CE6B0;background:#EFFFF4}.evrow.narration{border-left-color:#C08AFF}
+.evrow .no{width:26px;flex-shrink:0;font-size:10px;color:#8A7AA8}.evrow select{max-width:96px}
+.evf{flex:1;display:flex;flex-wrap:wrap;gap:3px;min-width:0}.evf textarea{flex:1 1 100%;min-width:0}
+.evopts{flex:1 1 100%;display:flex;flex-direction:column;gap:2px}.evopt{display:flex;gap:2px}.evopt input{min-width:0;flex:1}.evopt select{width:52px}
+.evops{display:flex;flex-direction:column;gap:1px}.evops button,.evopt button,.evtbl>button{font-size:10px;border:1px solid #22183F;background:#FAF1E2;padding:0 4px}
+.mono{font-family:monospace!important;font-size:11px!important}
+.adwarn{background:#FFF0E8;border:2px solid #E8603A;padding:6px;font-size:11px;line-height:16px;max-height:160px;overflow:auto}
 .adnpced label{display:flex;flex-direction:column;gap:2px;font-size:12px}
 .adnpced input,.adnpced textarea,.adnpced select{font-family:'G11',monospace;font-size:12px;border:2px solid #22183F;padding:4px;background:#fff}
 .adav{display:flex;gap:8px;align-items:flex-start}.adav img{width:128px;height:128px;image-rendering:pixelated;background:#3A2E5A;box-shadow:0 0 0 2px #22183F}
 .adavc{display:flex;flex-wrap:wrap;gap:4px}.adavc span{display:flex;align-items:center;gap:2px;font-size:10px;font-family:'G9',monospace;background:#F3EAFB;padding:1px 3px}
 .adavc button{border:1px solid #22183F;background:#fff;font-size:10px;padding:0 3px}
 .st-css{}
+#evstage{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;background:#0C0715;font-family:'G11',monospace}
+#evstage.on{display:flex}
+.evwrap{position:relative;width:100%;max-width:760px;max-height:100%;display:flex;flex-direction:column}
+.evwrap canvas{width:100%;image-rendering:pixelated;display:block;background:#0C0715}
+.evbox{position:relative;background:#FAF1E2;color:#22183F;box-shadow:0 0 0 3px #22183F;margin:18px 10px calc(10px + env(safe-area-inset-bottom));padding:12px 12px 18px;min-height:100px;font-size:12px;line-height:20px;word-break:keep-all}
+.evname{position:absolute;left:8px;top:-14px;z-index:1;box-shadow:0 0 0 2px #FAF1E2;background:#22183F;color:#FFD866;padding:2px 8px;font-family:'G11B',monospace;font-size:12px;line-height:16px}
+.evbox.narr{background:#EDE3F5}.evbox.narr .evtext{color:#4A3A6A}
+.evch{display:flex;flex-direction:column;gap:6px;margin-top:8px}.evch .btn{text-align:left;white-space:normal;line-height:18px;padding:8px 10px}
+.evtap{position:absolute;right:10px;bottom:4px;font-size:10px;animation:evb 1s steps(2) infinite}
+@keyframes evb{50%{opacity:0}}
+.evskip{position:absolute;right:6px;top:6px;border:0;background:rgba(20,13,30,.8);color:#F2EAD8;font-family:'G11',monospace;font-size:12px;padding:4px 8px}
+.ntag.ev{color:#FFD866;box-shadow:0 0 0 1px #FFD866;animation:evb 1.2s steps(2) infinite}
 #storyui{position:absolute;inset:0;z-index:28;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(10,6,20,.86);font-family:'G11',monospace}
 #storyui.on{display:flex}
 body:not(.inworld) #storyui{display:none}
@@ -348,6 +369,7 @@ button.who:not(:disabled){border-color:var(--ink)}
   <div id="fishui"></div>
   <div id="npcui"></div>
   <div id="storyui"></div>
+  <div id="evstage"></div>
   <div id="game"></div>
   <div id="rest"></div>
   <div id="talk"><div id="tlog"></div><div class="temo" id="temo"></div><form id="tform" autocomplete="off"><input id="tin" maxlength="40" placeholder="말풍선으로 말해요 (40자)" enterkeyhint="send"><button>보내기</button></form></div>
@@ -810,7 +832,7 @@ World.onPet = id => { const i = me.cr.findIndex(c => c.id === id); if (i < 0) re
 function enterWorld(){
   document.body.classList.add('inworld'); app.innerHTML = ''; sheetOn = false; app.classList.remove('open');
   World.setPlayer(me.nick, avOf(me)); World.start(); World.resize();
-  syncPens(); syncRoom(); syncHalls(); syncHallNames(); syncSpots(); syncNpcs(); dayTick(); hud(); showRest(); setTimeout(storyCheck, 1500);
+  syncPens(); syncRoom(); syncHalls(); syncHallNames(); syncSpots(); syncNpcs(); NL.ready.then(() => { npcDecay(); npcSig = ''; syncNpcs(); }); dayTick(); hud(); showRest(); setTimeout(storyCheck, 1500);
   clearInterval(spotTimer); spotTimer = setInterval(() => { syncSpots(); dayTick(); }, 60000);   // 날이 바뀌면 채집 지점도 새로
 }
 let spotTimer = 0;
@@ -924,9 +946,9 @@ const fishNow = f => !f.time || f.time === houseNow();
 const TIME_NAME = { dew: '새벽', ember: '한낮', dusk: '노을', moon: '밤' };
 const pickW = list => { let r = Math.random() * list.reduce((t, x) => t + x.w, 0); for (const x of list){ r -= x.w; if (r <= 0) return x; } return list[list.length - 1]; };
 function rollFish(){
-  const L = rodLv() + (buffOn('rare') ? 1.5 : 0);   // 요리 효과: 드문 물고기
+  const L = rodLv() + (buffOn('rare') ? 1.5 : 0) + (me.perk?.rod_bonus ? .5 : 0);   // 요리 효과: 드문 물고기 · 캇파 ♥10 낚싯대 보너스
   if (Math.random() < .12 - L * .025) return JUNK[Math.floor(Math.random() * JUNK.length)];
-  return pickW(FISH.filter(fishNow).map(f => ({ ...f, w: f.w * (1 + L * .9 * f.i / 39) })));
+  return pickW(FISH.filter(fishNow).map(f => ({ ...f, w: f.w * (1 + L * .9 * f.i / 39) * (f.id === 'f_lord' && me.perk?.lord_hint && isFullMoon() ? 3 : 1) })));   // 캇파 ♥10: 보름 밤엔 호수의 주인이 가까이
 }
 function dexAdd(k, cm){
   me.fdex = me.fdex || {}; const d = me.fdex[k] || { n: 0 }, isNew = !d.n;
@@ -941,8 +963,8 @@ function fishShow(html){ const u = fishUI(); u.innerHTML = `<div class="fpan px"
 World.onWater = (x, y) => {
   if (!me || fishing) return;
   World.busyFish = true; World.hideBubble(); fishing = { x, y, st: 'wait' }; World.setBobber({ x, y });
-  fishShow(`<b>${rodIc(rodLv(), 24)} 찌를 던졌어요</b><span class="s">찌가 쏙 들어가면 화면을 눌러요</span><button class="btn sm" data-fx="stop">그만하기</button>`);
-  fishing.timer = setTimeout(fishBite, (1800 + Math.random() * (5200 - rodLv() * 600)) * (buffOn('bite') ? .55 : 1));
+  fishShow(`<b>${rodIc(rodLv(), 24)} 찌를 던졌어요</b><span class="s">찌가 쏙 들어가면 화면을 눌러요${me.perk?.lord_hint && houseNow() === 'moon' ? `<br>캇파의 힌트: ${isFullMoon() ? '오늘 같은 보름 밤엔 호수의 주인이 가까이 와요' : '호수의 주인은 밤에 나와요. 보름이면 더 잘 와요'}` : ''}</span><button class="btn sm" data-fx="stop">그만하기</button>`);
+  fishing.timer = setTimeout(fishBite, (1800 + Math.random() * (5200 - rodLv() * 600)) * (buffOn('bite') ? .55 : 1) * (me.perk?.bait ? .85 : 1));   // 나비 ♥10 미끼
 };
 function fishBite(){
   if (!fishing) return;
@@ -1152,6 +1174,7 @@ function gameOver(fail){
     title = ps.length === 1 ? `혼자 기록 ${G.score}점` : `${rank}등!`;
   }
   me.gdone = me.gdone || {};
+  if (G.g === 'pumpkin' && me.perk?.pumpkin_race) coin = Math.round(coin * 1.3);   // 짚신 ♥10: 호박 줍기 경주 보너스
   if (!me.gdone[G.id]){ me.gdone = { [G.id]: 1 }; me.coin += coin; me.mana += mana; save(); hud(); recordBest(G.g, rec); storyHook('game', { g: G.g, ok: Gm.coop ? !!(G.result ? G.result().ok : !fail) : true, score: Math.max(0, G.score) }); }
   if (roomV && roomV.host === myId()) GDB.upd('games/' + G.id, { st: 'end' });
   const g = G.g; gameEnd();
@@ -1628,6 +1651,7 @@ function renderCook(){
 // 동물은 art/npcs.png (tools/iso/npc_art.py) 그림, 사람은 아바타. 관리자 페이지에서 고친 내용(npcs/<id>)이 이 기본값 위에 덮여요
 // 호감도 점수 3점 = ♥1, ♥10까지. me.npc[id] = { p 점수, t 대화한 날, g 선물한 날, s 본 장면 [2,5,…] }
 const NPC_ART_V = 5;
+const NPC_DATA_V = 1;   // data/npc 캐시 버전
 // LPC NPC 그림(art/npcs.png: 한 줄 = 한 명, 64칸 20개)에서 얼굴 부분만 크게 (초상화)
 const npcFace = (spr, size = 48) => { const B = World.Avatar.headBox, k = size / B.s; return `<i class="npcspr" style="width:${size}px;height:${size}px;background:url(art/npcs.png?v=${NPC_ART_V}) ${-B.x * k}px ${-(spr * 64 + B.y) * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
 const npcFull = (spr, size = 144) => { const k = size / 64; return `<i class="stspr" style="background:url(art/npcs.png?v=${NPC_ART_V}) 0 ${-spr * 64 * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
@@ -1678,15 +1702,141 @@ const npcAll = () => { const ids = [...NPC_DEF.map(n => n.id), ...Object.keys(np
   return ids.map(id => ({ ...(NPC_DEF.find(n => n.id === id) || { id, av: true, look: 1, map: 'campus', x: 20, y: 31, likes: [], dislikes: [], greet: [[], [], [], []], story: {}, reward: {} }), ...(npcOver[id] || {}) })).filter(n => !n.off); };
 const npcGet = id => npcAll().find(n => n.id === id);
 const npcAv = n => n.av ? (n.avData ? World.Avatar.fix(n.avData) : World.Avatar.fromLook(n.look || 1)) : null;
-function syncNpcs(){ World.setNpcs([...npcAll().map(n => ({ id: n.id, name: n.name, map: n.map, x: n.x, y: n.y, dir: n.dir || 'down', ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float, wander: n.wander, flap: n.flap }) })),
-  ...(typeof storyNpcs === 'function' ? storyNpcs().map(n => ({ id: n.id, name: n.name, map: n.map, x: n.x, y: n.y, spr: n.spr, alpha: n.alpha, float: n.float })) : [])], `art/npcs.png?v=${NPC_ART_V}`); }   // 이야기 주인공도 같이
-const npcSt = id => { me.npc = me.npc || {}; return me.npc[id] = me.npc[id] || { p: 0, s: [] }; };
-const hearts = id => Math.min(10, Math.floor((me.npc?.[id]?.p || 0) / 3));
+// ===== NPC의 하루와 마음: 시간대 · 날씨 · 루틴 · 호감도(100점 = ♥1) · 하트 이벤트 =====
+// 데이터: data/npc/places.json(장소) · cast.json(등장인물) · <id>/profile.json(말투·일상 대사) · <id>/events/heart_XX.json (형식: tools/npc_story_format.md)
+// 내 진행: me.npc[id] = { a 호감도, t 마지막 대화 날, g 마지막 선물 날, seen { k: 'ok'|'cold'|'fail' }, cold 앞 이벤트가 서먹했는지, ev 이벤트 본 날, evAt, hide 숨바꼭질, dk 줄어듦 계산한 날 }
+//          me.nflag { 플래그: 1 }, me.perk { 보상: 1 }
+const BAND_KO = { morning: '아침', day: '낮', evening: '저녁', night: '밤' };
+const bandNow = (h = new Date().getHours()) => h >= 5 && h < 10 ? 'morning' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 21 ? 'evening' : 'night';
+const hash32 = s => { let h = 2166136261; for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+const WX_KO = { clear: '맑음', rain: '비', fog: '안개', snow: '눈' };
+let wxForce = null;   // 관리자가 정한 오늘 날씨 (story/wx)
+function weatherToday(){
+  if (wxForce && wxForce.d === todayKey()) return wxForce.w;
+  const r = hash32('wx' + todayKey()) / 4294967296, m = new Date().getMonth();
+  return r < .25 ? ([11, 0, 1].includes(m) && r < .14 ? 'snow' : 'rain') : r < .40 ? 'fog' : 'clear';
+}
+const moonAge = (t = Date.now()) => { const d = (t - Date.UTC(2000, 0, 6, 18, 14)) / 864e5; return ((d % 29.530588) + 29.530588) % 29.530588; };
+const isFullMoon = () => Math.abs(moonAge() - 14.77) <= 1.5;   // 보름 전후 3 일 = 호박달 축제
+const dayNum = k => { const [y, m, d] = String(k).split('-').map(Number); return Math.round(Date.UTC(y, m - 1, d) / 864e5); };
+const daysSince = k => k ? dayNum(todayKey()) - dayNum(k) : 1e9;
+// 평소 루틴: 시간대마다 서 있는 장소 (그 안에서 계속 돌아다녀요)
+const ROUTINE = {
+  nabi:      { morning: 'fish_stall', day: 'lantern_market', evening: 'fish_stall', night: 'market_roof' },
+  batri:     { morning: 'owl_post', day: 'village_square', evening: 'dorm_street', night: 'owl_post' },
+  kappa:     { morning: 'ghost_lake_pier', day: 'lakeside', evening: 'ghost_lake_pier', night: 'lakeside' },
+  aula:      { morning: 'potion_class', day: 'potion_class', evening: 'potion_class', night: 'library_stacks' },
+  mandi:     { morning: 'poison_greenhouse', day: 'poison_greenhouse', evening: 'swamp', night: 'poison_greenhouse' },
+  jipsin:    { morning: 'pumpkin_field', day: 'pumpkin_field', evening: 'pumpkin_field', night: 'pumpkin_field' },
+  sera:      { morning: 'infirmary', day: 'infirmary', evening: 'ghost_tea', night: 'infirmary' },
+  madeleine: { morning: 'bakery', day: 'candy_class', evening: 'lantern_market', night: 'candy_class' },
+  stella:    { morning: 'vamp_manor', day: 'witch_hut', evening: 'village_square', night: 'hill_ruin' },
+  leo:       { morning: 'pen', day: 'menagerie', evening: 'swamp', night: 'menagerie' },
+};
+const NL = { places: {}, cast: {}, prof: {}, evs: {}, ready: null };   // 불러온 데이터
+NL.ready = (async () => {
+  try {
+    const [pl, ca] = await Promise.all(['places', 'cast'].map(f => fetch(`data/npc/${f}.json?v=${NPC_DATA_V}`).then(r => r.json())));
+    pl.forEach(p => { NL.places[p.id] = p; }); NL.cast = ca;
+    await Promise.all(NPC_DEF.map(n => fetch(`data/npc/${n.id}/profile.json?v=${NPC_DATA_V}`).then(r => r.ok ? r.json() : null).then(j => { if (j) NL.prof[n.id] = j; }).catch(() => {})));
+  } catch(e){ console.warn('npc data', e); }
+})();
+async function npcEvent(id, k){
+  const key = id + ':' + k, o = npcOver[id]?.ev?.[k];
+  if (o && o.script) return { ...(NL.evs[key] || {}), ...o };   // 관리자가 고친 이벤트
+  if (NL.evs[key] !== undefined) return NL.evs[key];
+  NL.evs[key] = null;
+  try { const r = await fetch(`data/npc/${id}/events/heart_${String(k).padStart(2, '0')}.json?v=${NPC_DATA_V}`); NL.evs[key] = r.ok ? await r.json() : null; } catch(e){ NL.evs[key] = null; }
+  return NL.evs[key];
+}
+const npcProf = id => ({ ...(NL.prof[id] || {}), ...(npcOver[id]?.prof || {}) });
+const npcVars = id => ({ ...(NL.prof[id]?.vars || {}), ...(npcOver[id]?.vars || {}) });
+const nameVar = n => String(n?.name || '').replace(/\s*선생님$/, '');   // "{sera.name} 선생님"처럼 써요
+// ---- 호감도 ----
+const npcSt = id => { me.npc = me.npc || {}; const s = me.npc[id] = me.npc[id] || {};
+  if (s.a === undefined){ const p = s.p || 0; s.a = Math.floor(p / 3) * 100 + (p % 3) * 33; }   // 예전 점수(3점 = ♥1)에서 옮겨요
+  s.seen = s.seen || {}; return s; };
+const hearts = id => Math.min(10, Math.floor((npcSt(id).a || 0) / 100));
 const heartBar = h => '♥'.repeat(h) + '♡'.repeat(10 - h);
-const STORY_AT = [2, 5, 8, 10];
+const toneOf = h => h >= 9 ? 'D' : h >= 6 ? 'C' : h >= 3 ? 'B' : 'A';
+function npcAddA(id, d){
+  const st = npcSt(id), before = hearts(id); st.a = Math.max(0, Math.min(1000, (st.a || 0) + d)); const after = hearts(id);
+  if (after > before){ const n = npcGet(id); toast(`${n ? n.name : id} ♥${after}!`); }
+  return after;
+}
+// 7 일 동안 말을 안 걸면 하루에 −5 (지금 하트 칸 0 점 아래로는 안 떨어져요)
+function npcDecay(){
+  if (!me) return; const today = todayKey();
+  NPC_DEF.forEach(n => { const st = npcSt(n.id); if (!st.t || st.dk === today) return;
+    const idle = daysSince(st.t), from = Math.max(7, st.dk ? dayNum(st.dk) - dayNum(st.t) : 7);
+    if (idle > from){ const floor = Math.floor(st.a / 100) * 100; st.a = Math.max(floor, st.a - 5 * (idle - from)); }
+    st.dk = today; });
+  if (me.perk?.fortune && me.fortuneDay !== today){   // 스텔라 ♥10: 하루 한 번 운세
+    me.fortuneDay = today; const F = ['동쪽 시장에서 작은 행운이 기다려요', '호숫가에서 반가운 얼굴을 만나요', '오늘 고른 선물은 마음에 쏙 들 거예요', '길을 잃어도 괜찮아요, 별이 다시 알려 줘요', '조용한 곳에서 좋은 생각이 떠올라요'];
+    me.coin += 20; save(); setTimeout(() => toast(`${nameVar(npcGet('stella'))}의 운세: ${F[hash32(today) % F.length]} (+20G)`), 2500); }
+}
+const flagOn = f => { const m = /^([a-z]+)_h(\d+)$/.exec(f); if (m) return !!me.npc?.[m[1]]?.seen?.[m[2]];
+  const c = /^([a-z]+)_was_cold$/.exec(f); if (c) return !!me.npc?.[c[1]]?.cold; return !!me.nflag?.[f]; };
+// ---- 하트 이벤트 조건 ----
+const nextHeart = id => { const s = npcSt(id).seen; for (let k = 1; k <= 10; k++) if (!s[k]) return k; return 0; };
+function evCond(id){   // 오늘 열 수 있는 다음 이벤트 (장소 빼고 다 맞으면) → { k, ev } 아니면 null
+  const k = nextHeart(id); if (!k) return null;
+  const ev = NL.evs[id + ':' + k]; if (ev === undefined){ npcEvent(id, k).then(() => syncNpcs()); return null; }
+  if (!ev) return null;
+  const st = npcSt(id), c = ev.conditions || {};
+  if (hearts(id) < (c.minHeart || k) || st.ev === todayKey()) return null;
+  if (c.time && c.time.length && !c.time.includes(bandNow())) return null;
+  if (c.weather && c.weather.length && !c.weather.includes(weatherToday())) return null;
+  if ((c.moon === 'full' || c.festival) && !isFullMoon()) return null;
+  if (c.dow && c.dow.length && !c.dow.includes(new Date().getDay())) return null;
+  if (c.story && !(typeof storyCh !== 'undefined' && storyCh[c.story]?.done)) return null;
+  if ((c.after || []).some(a => { const [o, h] = a.split(':'); return !me.npc?.[o]?.seen?.[h]; })) return null;
+  if (c.afterDays && daysSince(st.evDay) < c.afterDays) return null;
+  return { k, ev };
+}
+// 숨바꼭질 이벤트 (나비 ♥7): 조건이 되면 며칠 동안 루틴에서 사라지고, 그 장소에서만 찾을 수 있어요
+function hideState(id){
+  const k = nextHeart(id), ev = k && NL.evs[id + ':' + k], h = ev?.conditions?.hidden; if (!h) return null;
+  const st = npcSt(id), c = ev.conditions;
+  if (!st.hide){ if (hearts(id) < c.minHeart || daysSince(st.evDay) < (c.afterDays || 0)) return null; st.hide = { k, d: todayKey() }; save(); }
+  if (daysSince(st.hide.d) >= (h.days || 3)){   // 못 찾았어요
+    st.seen[k] = 'fail'; st.ev = todayKey(); st.evDay = todayKey(); st.hide = null; st.failK = k; npcAddA(id, h.fail || -50); save(); return null; }
+  return { k, ev };
+}
+// 지금 NPC가 서 있을 곳: 이벤트 장소 > 숨바꼭질 > 루틴
+function npcSpot(n){
+  const P = NL.places; let pid = null, mark = false;
+  const hd = NL.places && hideState(n.id);
+  if (hd){ const c = hd.ev.conditions; if (c.time && c.time.length && !c.time.includes(bandNow())) return null; pid = c.location; }
+  else { const e = evCond(n.id); if (e){ pid = e.ev.conditions.location; mark = true; } else pid = (n.routine || ROUTINE[n.id] || {})[bandNow()]; }
+  const p = P[pid];
+  if (!p) return { map: n.map, x: n.x, y: n.y, r: 2, mark };
+  if (p.map === 'myroom') return { map: myRoomId(), x: p.x, y: p.y, r: p.r, mark, own: true, pid };
+  return { map: p.map, x: p.x, y: p.y, r: p.r, mark, pid };
+}
+let npcSig = '';
+function syncNpcs(){
+  if (!me || !World.setNpcs) return;
+  const list = [];
+  npcAll().forEach(n => { const s = npcSpot(n); if (!s) return;
+    list.push({ id: n.id, name: n.name, map: s.map, x: s.x, y: s.y, r: s.r, own: s.own, mark: s.mark, wander: true, dir: n.dir || 'down', ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float, flap: n.flap }) }); });
+  if (typeof storyNpcs === 'function') storyNpcs().forEach(n => list.push({ id: n.id, name: n.name, map: n.map, x: n.x, y: n.y, spr: n.spr, alpha: n.alpha, float: n.float }));
+  const sig = JSON.stringify(list.map(o => [o.id, o.name, o.map, o.x, o.y, o.mark, o.own, o.spr, o.av && JSON.stringify(o.av)]));
+  World.setWeather && World.setWeather(weatherToday());
+  if (sig === npcSig) return; npcSig = sig;
+  World.setNpcs(list, `art/npcs.png?v=${NPC_ART_V}`);
+}
+setInterval(() => { if (me && document.body.classList.contains('inworld')){ npcDecay(); syncNpcs(); } }, 30000);
+World.clockText = d => `${isFullMoon() ? '🌕' : { clear: '✨', rain: '☔', fog: '🌫', snow: '❄' }[weatherToday()]} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${BAND_KO[bandNow(d.getHours())]} · ${WX_KO[weatherToday()]}${isFullMoon() ? ' · 호박달 축제' : ''}`;
+// ---- 말 걸기 ----
 function npcPortrait(n){ return n.av ? `<img src="${World.Avatar.head(npcAv(n))}" alt="">` : npcFace(n.spr); }
 const npcUI = () => $('#npcui');
 function npcClose(){ npcUI().classList.remove('on'); npcUI().innerHTML = ''; }
+const fillVars = (t, id) => String(t || '').replace(/\{([a-z_]+)(?:\.([a-z_]+))?\}/g, (m, a, b) => {
+  if (a === 'player') return me?.nick || '학생';
+  const who = a === 'npc' ? id : a, n = npcGet(who);
+  if (!b) return m; if (b === 'name') return n ? nameVar(n) : m;
+  const v = npcVars(who)[b]; return v !== undefined ? v : m; });
 function npcPanel(n, text, btns){
   const h = hearts(n.id);
   npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${npcPortrait(n)}</div><div><b>${esc(n.name)}</b><span class="s sub">${esc(n.title || '')}</span><span class="npchr">${heartBar(h)}</span></div><button class="sx" data-nx="close">✕</button></div>
@@ -1694,102 +1844,431 @@ function npcPanel(n, text, btns){
   npcUI().classList.add('on');
 }
 World.onNpc = id => { if (!me) return; World.hideBubble(); const c = STORY.findIndex(S => S.npc.id === id) + 1; if (c) return storyPanel(c); const n = npcGet(id); if (n) npcMenu(n); };
-function npcMenu(n, line){
-  const st = npcSt(n.id), h = hearts(n.id), lv = h >= 9 ? 3 : h >= 6 ? 2 : h >= 3 ? 1 : 0, g = (n.greet || [])[lv] || (n.greet || [])[0] || ['…'];
+// 평소 대사: 말투 단계 + (가끔) 날씨·시간대 + (가끔) 지난 이벤트 회상
+function npcLine(n){
+  const P = npcProf(n.id), h = hearts(n.id), r = Math.random();
+  const daily = P.daily?.[toneOf(h)] || ((n.greet || [])[Math.min(3, Math.floor(h / 3))]) || ['……'];
+  const rec = Object.entries(P.recall || {}).filter(([k]) => k.startsWith('flag:') ? flagOn(k.slice(5)) : npcSt(n.id).seen[k]).flatMap(([, v]) => v);
+  const amb = [...(P.ambient?.[bandNow()] || []), ...(P.ambient?.[weatherToday()] || [])];
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const t = rec.length && r < .3 ? pick(rec) : amb.length && r < .55 ? pick(amb) : pick(daily);
+  return fillVars(t, n.id);
+}
+async function npcMenu(n, line){
+  const st = npcSt(n.id);
+  if (st.failK){ const k = st.failK; st.failK = null; save(); const ev = await npcEvent(n.id, k); if (ev && ev.fail) return evPlay(n, k, { ...ev, script: [{ cmd: 'fade_in' }, ...ev.fail], cold: [] }, { fail: true }); }
+  const e = evCond(n.id), here = e && npcSpot(n)?.pid === e.ev.conditions.location;
+  const hd = hideState(n.id);
+  if (hd){ npcPanel(n, '……', `<button class="btn sm go" data-nx="ev" data-k="${hd.k}">❗ ♥${hd.k} 「${esc(fillVars(hd.ev.title, n.id))}」</button>`); npcUI().dataset.id = n.id; return; }
   const talked = st.t === todayKey(), gifted = st.g === todayKey();
-  npcPanel(n, esc(line || g[(new Date().getDate() + n.id.length) % g.length] || '…'),
-    `<button class="btn sm ${talked ? '' : 'go'}" data-nx="talk">💬 대화${talked ? ' (오늘 함)' : ''}</button><button class="btn sm ${gifted ? '' : 'go'}" data-nx="gift">🎁 선물${gifted ? ' (오늘 줌)' : ''}</button><button class="btn sm" data-nx="story">📖 이야기</button>`);
+  npcPanel(n, esc(line || npcLine(n)),
+    `${here ? `<button class="btn sm go" data-nx="ev" data-k="${e.k}">❗ ♥${e.k} 「${esc(fillVars(e.ev.title, n.id))}」</button>` : ''}<button class="btn sm ${talked ? '' : 'go'}" data-nx="talk">💬 대화${talked ? ' (오늘 함)' : ''}</button><button class="btn sm ${gifted ? '' : 'go'}" data-nx="gift">🎁 선물${gifted ? ' (오늘 줌)' : ''}</button><button class="btn sm" data-nx="story">📖 이야기</button>`);
   npcUI().dataset.id = n.id;
 }
-function npcAddPts(n, d, why){
-  const st = npcSt(n.id), before = hearts(n.id); st.p = Math.max(0, st.p + d); const after = hearts(n.id);
-  save(); if (after > before) toast(`${n.name} ♥${after}!`);
-  const next = STORY_AT.find(k => after >= k && !st.s.includes(k));
-  if (next) return npcScene(n, next, 0, true);
-  npcMenu(n, why);
-}
-function npcScene(n, k, i, fresh){
-  const lines = (n.story || {})[k] || [], st = npcSt(n.id);
-  if (i >= lines.length){
-    if (fresh && !st.s.includes(k)){ st.s.push(k); const r = (n.reward || {})[k] || {}; const got = [];
-      if (r.coin){ me.coin += r.coin; got.push(`${r.coin}G`); } if (r.mana){ me.mana += r.mana; got.push(`마력 +${r.mana}`); } if (r.know){ me.know = (me.know || 0) + r.know; got.push(`지식 +${r.know}`); }
-      Object.entries(r.items || {}).forEach(([it, c]) => { me.inv[it] = (me.inv[it] || 0) + c; got.push(`${ITEM[it] || it} ×${c}`); });
-      save(); hud(); if (got.length) toast(`${n.name}의 선물: ${got.join(', ')}`); }
-    return npcMenu(n);
-  }
-  npcPanel(n, `<span class="npcsc">♥${k} 이야기 · ${i + 1}/${lines.length}</span>${esc(lines[i])}`, `<button class="btn sm go" data-nx="next" data-k="${k}" data-i="${i + 1}" data-f="${fresh ? 1 : 0}">다음 ▶</button>`);
-}
-document.addEventListener('click', e => {
+document.addEventListener('click', async e => {
   const b = e.target.closest('[data-nx]'); if (!b || !npcUI().contains(b)) return;
   const n = npcGet(npcUI().dataset.id); if (!n) return npcClose(); const st = npcSt(n.id), act = b.dataset.nx;
   if (act === 'close') return npcClose();
-  if (act === 'talk'){ if (st.t === todayKey()) return npcMenu(n, '오늘은 이미 이야기 나눴어요. 내일 또 와요!'); st.t = todayKey(); return npcAddPts(n, 1, ((n.greet || [])[Math.min(3, Math.floor(hearts(n.id) / 3))] || ['…']).slice(-1)[0]); }
+  if (act === 'talk'){ if (st.t === todayKey()) return npcMenu(n, npcLine(n)); st.t = todayKey(); npcAddA(n.id, 10); save(); syncNpcs(); return npcMenu(n, npcLine(n)); }
   if (act === 'gift'){ npcClose(); npcGiftId = n.id; return openSheet('home', 'npcgift'); }
   if (act === 'story'){ npcClose(); npcGiftId = n.id; return openSheet('home', 'npcstory'); }
-  if (act === 'next') return npcScene(n, +b.dataset.k, +b.dataset.i, b.dataset.f === '1');
+  if (act === 'ev'){ const k = +b.dataset.k, ev = await npcEvent(n.id, k); npcClose(); if (ev) evPlay(n, k, ev, {}); }
 });
 let npcGiftId = null, npcMsg = '';
 function renderNpcGift(){
   const n = npcGet(npcGiftId); if (!n) return closeSheet();
-  const st = npcSt(n.id), h = hearts(n.id), done = st.g === todayKey();
+  const st = npcSt(n.id), h = hearts(n.id), done = st.g === todayKey(), P = npcProf(n.id), likes = P.likes || n.likes || [], dislikes = P.dislikes || n.dislikes || [];
   const items = [...POTIONS, ...MATS, ...CATCH, ...DISHES].filter(k => me.inv[k] > 0);
-  frame(null, `${esc(n.name)}에게 선물`, `${heartBar(h)} · 하루 한 번`, `${hint(npcMsg, done ? '오늘은 이미 선물했어요. 내일 또 줘요!' : '좋아하는 걸 주면 ♥가 쑥 올라요')}
-    ${h >= 2 ? `<div class="box px" style="padding:8px">좋아하는 것: ${n.likes.map(k => `${ic(k, 'transform:scale(.7);margin:-6px')} ${esc(ITEM[k] || k)}`).join(' · ')}</div>` : '<div class="hint">♥2가 되면 좋아하는 걸 알려 줘요</div>'}
+  frame(null, `${esc(n.name)}에게 선물`, `${heartBar(h)} · 하루 한 번`, `${hint(npcMsg, done ? '오늘은 이미 선물했어요. 내일 또 줘요!' : '좋아하는 걸 주면 마음이 쑥 열려요')}
+    ${h >= 2 ? `<div class="box px" style="padding:8px">좋아하는 것: ${likes.map(k => `${ic(k, 'transform:scale(.7);margin:-6px')} ${esc(ITEM[k] || k)}`).join(' · ')}</div>` : '<div class="hint">♥2가 되면 좋아하는 걸 알려 줘요</div>'}
     <div class="pal">${items.map(k => `<button class="cell" style="width:52px;min-height:52px;padding:0" data-ngive="${k}" ${done ? 'disabled' : ''}>${ic(k)}<span class="n">${me.inv[k]}</span></button>`).join('') || '<div class="hint">줄 수 있는 물건이 없어요</div>'}</div>${backBtn}`);
   $('#back').onclick = closeSheet;
   on('[data-ngive]', b => { const k = b.dataset.ngive; if (done || !(me.inv[k] > 0)) return; me.inv[k]--; st.g = todayKey();
-    const d = n.likes.includes(k) ? 3 : n.dislikes.includes(k) ? -1 : 1, line = d === 3 ? '우와, 이거 정말 좋아해요! 고마워요!' : d < 0 ? '으… 이건 좀 별로예요.' : '고마워요, 잘 쓸게요.';
-    npcMsg = ''; closeSheet(); setTimeout(() => npcAddPts(n, d, line), 100); });
+    const kind = likes.includes(k) ? 'love' : dislikes.includes(k) ? 'hate' : 'like', d = { love: 40, like: 15, hate: -30 }[kind];
+    const ls = P.gift?.[kind] || { love: ['우와, 이거 정말 좋아해요! 고마워요!'], like: ['고마워요, 잘 쓸게요.'], hate: ['으…… 이건 좀 별로예요.'] }[kind];
+    npcMsg = ''; closeSheet(); npcAddA(n.id, d); save(); syncNpcs(); setTimeout(() => npcMenu(n, fillVars(ls[Math.floor(Math.random() * ls.length)], n.id)), 100); });
 }
-function renderNpcStory(){
+async function renderNpcStory(){
   const n = npcGet(npcGiftId); if (!n) return closeSheet();
-  const st = npcSt(n.id), h = hearts(n.id);
-  frame(null, `${esc(n.name)}의 이야기`, `${esc(n.title || '')} · ${heartBar(h)}`, `<div class="box px">${STORY_AT.map(k => { const open = st.s.includes(k); return `<div class="li"><span class="gic">${open ? '📖' : '🔒'}</span><div class="main"><span class="t">♥${k} 이야기</span><span class="d" style="white-space:normal">${open ? esc(((n.story || {})[k] || []).join(' ')) : `♥${k}가 되면 열려요`}</span></div>${open ? `<button class="btn sm" data-nre="${k}">다시 보기</button>` : ''}</div>`; }).join('')}</div>
-    <div class="box px" style="padding:8px">하루 한 번 대화 ♥ · 선물: 좋아하는 것 +3, 보통 +1, 싫어하는 것 -1 (점수 3 = ♥1)</div>${backBtn}`);
+  const st = npcSt(n.id), h = hearts(n.id), nk = nextHeart(n.id);
+  const evs = await Promise.all([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(k => st.seen[k] || k === nk ? npcEvent(n.id, k) : null));
+  const where = c => { const p = NL.places[c?.location]; return [p && fillVars(p.name, n.id), ...(c?.time || []).map(t => BAND_KO[t]), ...(c?.weather || []).map(w => WX_KO[w]), c?.festival ? '호박달 축제' : c?.moon ? '보름' : ''].filter(Boolean).join(' · '); };
+  frame(null, `${esc(n.name)}의 이야기`, `${esc(n.title || '')} · ${heartBar(h)} · ${st.a % 100}/100`, `<div class="box px">${evs.map((ev, i) => { const k = i + 1, s = st.seen[k];
+      return `<div class="li"><span class="gic">${s ? (s === 'fail' ? '💧' : '📖') : '🔒'}</span><div class="main"><span class="t">♥${k} ${s || k === nk ? esc(fillVars(ev?.title || '', n.id)) : '???'}</span><span class="d" style="white-space:normal">${s ? (s === 'cold' ? '서먹하게 끝났어요' : s === 'fail' ? '찾지 못했어요' : '다시 볼 수 있어요') : k === nk ? `♥${ev?.conditions?.minHeart || k} · ${esc(where(ev?.conditions))}` : '앞 이야기를 먼저 봐요'}</span></div>${s && s !== 'fail' ? `<button class="btn sm" data-nre="${k}">다시 보기</button>` : ''}</div>`; }).join('')}</div>
+    <div class="box px" style="padding:8px">그날 첫 대화 +10 · 선물: 좋아함 +40, 보통 +15, 싫어함 −30 (하루 한 번) · 100 = ♥1 · 7 일 넘게 말을 안 걸면 조금씩 줄어요</div>${backBtn}`);
   $('#back').onclick = closeSheet;
-  on('[data-nre]', b => { closeSheet(); npcScene(n, +b.dataset.nre, 0, false); });
+  on('[data-nre]', async b => { const k = +b.dataset.nre, ev = await npcEvent(n.id, k); closeSheet(); if (ev) evPlay(n, k, ev, { replay: true }); });
 }
-// ---------- 관리자: NPC 호감도 표 · 사람 NPC 편집 ----------
-let adNpc = null, adNpcDraft = null;
+// ===== 하트 이벤트 무대: 지도를 잘라 온 배경 위에서 인물이 걷고, 대사·선택지·장면 이동 =====
+const EV_W = 320; let EV_H = 180, EV_FLOOR = 166; const POSX = { far_left: 44, left: 100, center: 160, right: 220, far_right: 276, off_left: -50, off_right: 370 };
+const EMO_IX = { heart: 7, tear: 5, angry: 6, sparkle: 9 };
+const STG = { cv: null, g: null, bg: null, actors: {}, fx: [], cam: { z: 1, x: 0, sh: 0 }, flash: 0, fade: 0, wx: null, time: 'night', tint: null, raf: 0, run: 0 };
+const imgCache = {};
+const loadImg = src => imgCache[src] || (imgCache[src] = new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; }));
+async function castSprite(id, ctx){
+  if (id === 'player') return { kind: 'av', av: me ? avOf(me) : World.Avatar.fromLook(1) };
+  const n = npcGet(id); if (n) return n.av ? { kind: 'av', av: npcAv(n) } : { kind: 'spr', spr: n.spr, flap: n.flap, float: n.float };
+  const c = { ...(NL.cast[id] || {}), ...((ctx.cast || {})[id] || {}) };
+  if (c.look !== undefined) return { kind: 'av', av: World.Avatar.fromLook(c.look) };
+  if (c.cr){ const i = { sheep: 0, rabbit: 1, lizard: 2, chicken: 3, cat: 4, toad: 5, bee: 6, spider: 7, owl: 8, goat: 9 }[c.cr] ?? 8, im = await loadImg('art/creatures.png?v=11');
+    return { kind: 'img', img: tintCanvas(im, i * 120, 0, 120, 102, c.filter), w: c.small ? 34 : 52 }; }
+  if (c.obj){ const o = await World.objSprite('campus', c.obj); return o ? { kind: 'img', img: cropCanvas(o.img, o.sx, o.sy, o.sw, o.sh), w: (c.small ? .6 : 1) * o.sw * 2 } : null; }
+  if (c.item && typeof CATCH_INFO !== 'undefined' && CATCH_INFO[c.item]){ const C = CATCH_INFO[c.item], im = await loadImg(`art/${C.sheet}.png?v=${FISH_ART_V}`); if (!im) return null; const cw = im.naturalWidth / C.n;
+    return { kind: 'img', img: tintCanvas(im, C.i * cw, 0, cw, im.naturalHeight, 'silver'), w: 64 }; }
+  return null;   // 목소리만
+}
+function cropCanvas(im, sx, sy, sw, sh){ const c = document.createElement('canvas'); c.width = sw; c.height = sh; c.getContext('2d').drawImage(im, sx, sy, sw, sh, 0, 0, sw, sh); return c; }
+function tintCanvas(im, sx, sy, sw, sh, f){
+  const c = cropCanvas(im, sx, sy, sw, sh); if (!f) return c; const g = c.getContext('2d'), d = g.getImageData(0, 0, sw, sh), a = d.data;
+  for (let i = 0; i < a.length; i += 4){ const l = .3 * a[i] + .59 * a[i + 1] + .11 * a[i + 2];
+    if (f === 'gray'){ a[i] = a[i + 1] = l * .95; a[i + 2] = l * 1.05; }
+    else if (f === 'magpie'){ const v = l > 120 ? Math.min(255, l * 1.25) : l * .35; a[i] = a[i + 1] = v; a[i + 2] = v * 1.12; }
+    else if (f === 'dragon'){ a[i] = Math.min(255, l * 1.35); a[i + 1] = l * .75; a[i + 2] = l * .45; }
+    else if (f === 'silver'){ a[i] = a[i + 1] = Math.min(255, l * 1.1 + 30); a[i + 2] = Math.min(255, l * 1.2 + 40); } }
+  g.putImageData(d, 0, 0); return c;
+}
+const mapCv = {};
+async function stageBg(pid, time, weather){
+  const p = NL.places[pid] || NL.places.village_square; let mid = p.map === 'myroom' ? myRoomId() : p.map;
+  if (!World.meta(mid)) mid = 'campus';
+  const r = mapCv[mid] || (mapCv[mid] = await World.mapCanvas(mid)); if (!r) return;
+  const m = r.meta, [bx, by] = p.bg || [p.x, p.y], cx = m.OX + (bx - by) * 8, cy = m.OY + (bx + by) * 4 - 18;
+  const w = EV_W / 2, h = EV_H / 2, x0 = Math.max(0, Math.min(m.W - w, Math.round(cx - w / 2))), y0 = Math.max(0, Math.min(m.H - h, Math.round(cy - h / 2)));
+  const c = document.createElement('canvas'); c.width = EV_W; c.height = EV_H; const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+  g.fillStyle = m.fill || '#140E1E'; g.fillRect(0, 0, EV_W, EV_H); g.drawImage(r.canvas, x0, y0, w, h, 0, 0, EV_W, EV_H);
+  // 색조: 시간대 + 장소
+  const T = { morning: ['rgb(255,226,200)', 'multiply'], day: null, evening: ['rgb(255,170,120)', 'multiply'], night: ['rgb(120,110,190)', 'multiply'] }[time];
+  if (T && !m.indoor){ g.globalCompositeOperation = T[1]; g.fillStyle = T[0]; g.fillRect(0, 0, EV_W, EV_H); }
+  if (m.indoor){ g.globalCompositeOperation = 'multiply'; g.fillStyle = 'rgb(200,180,210)'; g.fillRect(0, 0, EV_W, EV_H); }
+  const Q = { dim: 'rgb(150,140,170)', warm: 'rgb(255,215,170)', green: 'rgb(170,220,160)', cave: 'rgb(70,80,130)', sky: 'rgb(170,180,255)', indoor: 'rgb(220,200,210)' }[p.tint];
+  if (Q){ g.globalCompositeOperation = 'multiply'; g.fillStyle = Q; g.fillRect(0, 0, EV_W, EV_H); }
+  if (!m.indoor && (weather === 'rain' || weather === 'storm' || weather === 'fog')){ g.globalCompositeOperation = 'multiply'; g.fillStyle = 'rgb(175,180,205)'; g.fillRect(0, 0, EV_W, EV_H); }
+  g.globalCompositeOperation = 'source-over';
+  if (p.tint === 'cave' || p.tint === 'sky'){ const gr = g.createRadialGradient(EV_W / 2, EV_H / 2, 40, EV_W / 2, EV_H / 2, 200); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, p.tint === 'cave' ? 'rgba(5,5,20,.75)' : 'rgba(40,30,90,.45)'); g.fillStyle = gr; g.fillRect(0, 0, EV_W, EV_H); }
+  STG.bg = c; STG.place = pid; STG.wxBase = weather; STG.wx = m.indoor ? null : weather; STG.time = time; STG.wxp = [];   // 실내는 비·안개를 안 그려요
+}
+function stageDraw(now){
+  const g = STG.g; if (!g) return; STG.raf = requestAnimationFrame(stageDraw);
+  const dt = Math.min(.05, (now - (STG.last || now)) / 1000); STG.last = now;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false; g.fillStyle = '#0C0715'; g.fillRect(0, 0, EV_W, EV_H);
+  const sh = STG.cam.sh > 0 ? (STG.cam.sh -= dt, Math.round((Math.random() - .5) * 6)) : 0;
+  const z = STG.cam.z; g.setTransform(z, 0, 0, z, EV_W / 2 * (1 - z) + STG.cam.x + sh, EV_H / 2 * (1 - z) + sh * .5);
+  if (STG.bg) g.drawImage(STG.bg, 0, 0);
+  const A = World.Avatar, WK = A.meta.walk, DV = A.meta.dirs;
+  Object.values(STG.actors).sort((a, b) => a.z - b.z).forEach(a => {
+    if (a.walk){ const w = a.walk, k = Math.min(1, (now - w.t0) / w.dur); a.x = w.x0 + (w.x1 - w.x0) * k; if (k >= 1){ a.walk = null; w.done(); } }
+    const moving = !!a.walk, X = Math.round(a.x), dim = STG.speaker && STG.speaker !== a.id && a.kind !== 'img' ? .55 : 0;
+    g.fillStyle = 'rgba(10,5,20,.35)'; g.beginPath(); g.ellipse(X, EV_FLOOR, 13, 4, 0, 0, Math.PI * 2); g.fill();
+    if (a.kind === 'img'){ const im = a.img, w = a.w, h = w * im.height / im.width; g.drawImage(im, Math.round(X - w / 2), Math.round(EV_FLOOR - h + 2), Math.round(w), Math.round(h)); }
+    else { const col = (a.face === 'left' ? DV.left : a.face === 'right' ? DV.right : DV.down) + (moving ? WK[Math.floor(now / 110) % WK.length] : a.flap ? WK[Math.floor(now / 140) % WK.length] : 0);
+      const src = a.kind === 'av' ? A.compose(a.av) : NPC_IMG_STAGE, sy = a.kind === 'av' ? 0 : a.spr * 64; if (!src || (a.kind === 'spr' && !src.complete)) return;
+      const bob = a.float ? Math.round(Math.sin(now / 600) * 2) : 0;
+      g.save(); if (dim) g.filter = 'brightness(.62)'; g.drawImage(src, col * 64, sy, 64, 64, X - 64, EV_FLOOR - 125 + bob, 128, 128); g.restore();
+    }
+    if (a.emo && now < a.emo.until){ const ex = X, ey = EV_FLOOR - 112 - (a.kind === 'img' ? 0 : 0) - Math.round(Math.sin((now - a.emo.t0) / 90) * 1.5); drawEmote(g, a.emo.icon, ex, ey); }
+  });
+  // 날씨
+  const W = STG.wx;
+  if (W === 'rain' || W === 'storm' || W === 'snow'){ const n = W === 'storm' ? 140 : W === 'rain' ? 80 : 60; while (STG.wxp.length < n) STG.wxp.push({ x: Math.random() * EV_W, y: Math.random() * EV_H, v: .7 + Math.random() * .6, p: Math.random() * 6 });
+    if (W === 'snow'){ g.fillStyle = 'rgba(255,255,255,.9)'; STG.wxp.forEach(d => { d.y += 26 * d.v * dt; d.p += dt; if (d.y > EV_H) d.y -= EV_H; g.fillRect(Math.round(d.x + Math.sin(d.p) * 3), Math.round(d.y), 2, 2); }); }
+    else { g.strokeStyle = 'rgba(190,205,255,.5)'; g.lineWidth = 1; g.beginPath(); STG.wxp.forEach(d => { d.y += 300 * d.v * dt; d.x -= 60 * d.v * dt; if (d.y > EV_H){ d.y -= EV_H + 10; d.x = Math.random() * (EV_W + 40); } g.moveTo(Math.round(d.x) + .5, d.y); g.lineTo(Math.round(d.x) - 2.5, d.y + 8); }); g.stroke();
+      if (W === 'storm' && Math.random() < dt / 7) STG.flash = .5; } }
+  if (W === 'fog'){ const t = now / 1000; g.fillStyle = 'rgba(215,210,232,.18)'; g.fillRect(0, 0, EV_W, EV_H); for (let i = 0; i < 4; i++){ g.fillStyle = 'rgba(225,220,240,.12)'; g.beginPath(); g.ellipse(((i * 97 + t * 8) % (EV_W + 140)) - 70, EV_H * (.25 + i * .18), 110, 16, 0, 0, Math.PI * 2); g.fill(); } }
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  if (STG.flash > 0){ g.fillStyle = `rgba(255,255,255,${Math.min(1, STG.flash * 2)})`; g.fillRect(0, 0, EV_W, EV_H); STG.flash -= dt; }
+  if (STG.fade > 0){ g.fillStyle = `rgba(8,4,16,${STG.fade})`; g.fillRect(0, 0, EV_W, EV_H); }
+}
+let NPC_IMG_STAGE = null, EMO_IMG = null;
+function drawEmote(g, icon, x, y){
+  g.fillStyle = '#22183F'; g.fillRect(x - 10, y - 18, 20, 18); g.fillStyle = '#FFF8EA'; g.fillRect(x - 9, y - 17, 18, 16); g.fillStyle = '#22183F'; g.fillRect(x - 2, y, 4, 2); g.fillStyle = '#FFF8EA'; g.fillRect(x - 1, y - 1, 2, 2);
+  if (EMO_IX[icon] !== undefined && EMO_IMG && EMO_IMG.complete){ const s = EMO_IMG.naturalHeight; g.drawImage(EMO_IMG, EMO_IX[icon] * s, 0, s, s, x - 8, y - 17, 16, 16); return; }
+  g.fillStyle = { sweat: '#4FA8E8', music: '#C2385E', question: '#3A6AD8', exclaim: '#E8603A', zzz: '#6A5AB0' }[icon] || '#22183F';
+  g.font = '12px G11B, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  if (icon === 'sweat'){ g.beginPath(); g.moveTo(x, y - 15); g.lineTo(x - 4, y - 7); g.arc(x, y - 7, 4, Math.PI, 0, true); g.closePath(); g.fill(); }
+  else g.fillText({ music: '♪', question: '?', exclaim: '!', zzz: 'z' }[icon] || '·', x, y - 8);
+}
+// 효과음: 짧은 합성음 (음악은 없어요)
+let AC = null;
+function sfx(id){
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return; }
+  const t = AC.currentTime, out = AC.createGain(); out.gain.value = .12; out.connect(AC.destination);
+  const tone = (f, d, type = 'square', at = 0, v = 1) => { const o = AC.createOscillator(), gn = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t + at); gn.gain.setValueAtTime(v, t + at); gn.gain.exponentialRampToValueAtTime(.001, t + at + d); o.connect(gn); gn.connect(out); o.start(t + at); o.stop(t + at + d + .02); };
+  const noise = (d, v = 1, at = 0, lp = 2000) => { const b = AC.createBuffer(1, AC.sampleRate * d, AC.sampleRate), a = b.getChannelData(0); for (let i = 0; i < a.length; i++) a[i] = (Math.random() * 2 - 1) * (1 - i / a.length); const s = AC.createBufferSource(), f = AC.createBiquadFilter(), gn = AC.createGain(); f.type = 'lowpass'; f.frequency.value = lp; gn.gain.value = v; s.buffer = b; s.connect(f); f.connect(gn); gn.connect(out); s.start(t + at); };
+  const S = {
+    rain: () => noise(1.2, .5, 0, 3000), rain_heavy: () => noise(1.8, .8, 0, 2500), thunder: () => noise(1.6, 1.4, 0, 400), wind: () => noise(1.5, .6, 0, 600), explosion: () => noise(.8, 1.6, 0, 900),
+    glass_break: () => { noise(.3, 1, 0, 6000); tone(2400, .2, 'triangle', .02, .4); }, splash: () => noise(.4, .9, 0, 1800), water: () => noise(.6, .4, 0, 1200), fire: () => noise(1, .6, 0, 1500),
+    door: () => { tone(110, .15, 'square', 0, .6); tone(80, .2, 'square', .08, .5); }, knock: () => { tone(160, .06); tone(160, .06, 'square', .18); }, creak: () => tone(300, .5, 'sawtooth', 0, .3),
+    bell: () => { tone(880, .9, 'triangle'); tone(1320, .7, 'triangle', .05, .5); }, chime: () => [988, 1319, 1568].forEach((f, i) => tone(f, .5, 'triangle', i * .09, .6)), clock: () => [0, .5].forEach(a => tone(1200, .05, 'square', a, .6)),
+    sparkle: () => [1568, 2093, 2637].forEach((f, i) => tone(f, .25, 'triangle', i * .06, .5)), magic: () => [523, 784, 1047, 1568].forEach((f, i) => tone(f, .3, 'triangle', i * .07, .5)),
+    pop: () => tone(660, .08, 'square'), heart: () => { tone(523, .12, 'triangle'); tone(784, .2, 'triangle', .12); }, gulp: () => tone(220, .15, 'sine'), bubble: () => [0, .1, .2].forEach(a => tone(400 + Math.random() * 300, .06, 'sine', a)),
+    step: () => tone(90, .05, 'square', 0, .4), run: () => [0, .12, .24, .36].forEach(a => tone(90, .05, 'square', a, .4)), paper: () => noise(.15, .5, 0, 5000), wing: () => [0, .15, .3].forEach(a => noise(.08, .5, a, 900)),
+    scream: () => { const o = AC.createOscillator(), gn = AC.createGain(); o.type = 'sawtooth'; o.frequency.setValueAtTime(900, t); o.frequency.exponentialRampToValueAtTime(1800, t + .6); gn.gain.setValueAtTime(.5, t); gn.gain.exponentialRampToValueAtTime(.001, t + .8); o.connect(gn); gn.connect(out); o.start(t); o.stop(t + .85); },
+    crow: () => { tone(500, .15, 'sawtooth', 0, .5); tone(440, .2, 'sawtooth', .2, .5); }, cat: () => { tone(700, .25, 'triangle', 0, .5); tone(560, .2, 'triangle', .2, .4); }, owl: () => { tone(330, .3, 'sine'); tone(300, .4, 'sine', .4); },
+    bird: () => [0, .1, .2].forEach(a => tone(2000 + Math.random() * 500, .05, 'sine', a, .5)), goat: () => tone(330, .5, 'sawtooth', 0, .4), dragon: () => { tone(160, .4, 'sawtooth', 0, .5); noise(.4, .5, .1, 1200); },
+    crowd: () => noise(1.2, .4, 0, 900), fireworks: () => { tone(300, .4, 'sine', 0, .3); noise(.6, 1, .35, 3000); }, sing: () => [523, 587, 659, 784, 659].forEach((f, i) => tone(f, .3, 'sine', i * .25, .5)), cough: () => noise(.15, .8, 0, 1200),
+  };
+  (S[id] || (() => {}))();
+}
+// ---- 실행기 ----
+let evOn = null;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function evUI(){ return $('#evstage'); }
+async function evPlay(n, k, ev, opt){
+  if (evOn) return; World.hideBubble && World.hideBubble();
+  const ctx = { n, k, ev, opt, sum: 0, cast: npcProf(n.id).cast || {}, cold: false }; evOn = ctx;
+  EV_H = innerHeight > innerWidth * 1.3 ? 270 : 180; EV_FLOOR = EV_H - 14;   // 세로 화면은 무대를 더 높게
+  const ui = evUI(); ui.innerHTML = `<div class="evwrap"><canvas width="${EV_W}" height="${EV_H}"></canvas><div class="evbox"><div class="evname"></div><div class="evtext"></div><div class="evch"></div><div class="evtap">▼</div></div>${opt.replay ? '<button class="evskip">끝내기</button>' : ''}</div>`;
+  ui.classList.add('on');
+  STG.cv = ui.querySelector('canvas'); STG.g = STG.cv.getContext('2d'); STG.actors = {}; STG.cam = { z: 1, x: 0, sh: 0 }; STG.fade = 1; STG.flash = 0; STG.speaker = null;
+  NPC_IMG_STAGE = NPC_IMG_STAGE || Object.assign(new Image(), { src: `art/npcs.png?v=${NPC_ART_V}` }); EMO_IMG = EMO_IMG || Object.assign(new Image(), { src: 'art/emo.png' });
+  const sc = ev.scene || {};
+  await stageBg(ev.conditions?.location || 'village_square', sc.time || bandNow(), sc.weather || weatherToday());
+  await evShow(ctx, n.id, 'center'); await evShow(ctx, 'player', 'left'); evFace();
+  cancelAnimationFrame(STG.raf); STG.last = 0; STG.raf = requestAnimationFrame(stageDraw);
+  if (opt.replay) ui.querySelector('.evskip').onclick = () => { ctx.stop = true; ctx.tapR && ctx.tapR(); };
+  try { await evRun(ctx, ev.script || []); } catch(e){ console.error(e); }
+  STG.fade = 1; await sleep(250); cancelAnimationFrame(STG.raf); STG.g = null; ui.classList.remove('on'); ui.innerHTML = ''; evOn = null;
+  if (!opt.replay && !opt.fail) evFinish(ctx); else if (opt.fail) npcMenu(n);
+}
+async function evShow(ctx, who, at){
+  const sp = await castSprite(who, ctx); const id = who;
+  STG.actors[id] = { id, x: POSX[at] ?? 160, z: Object.keys(STG.actors).length, face: 'down', ...(sp || { kind: 'none' }) };
+  if (!sp) delete STG.actors[id];
+}
+function evFace(){ const as = Object.values(STG.actors).filter(a => a.kind !== 'img'); as.forEach(a => { if (a.walk) return; const others = as.filter(b => b !== a); if (!others.length){ a.face = 'down'; return; } const avg = others.reduce((t, b) => t + b.x, 0) / others.length; a.face = avg > a.x + 4 ? 'right' : avg < a.x - 4 ? 'left' : 'down'; }); }
+function evWalk(id, to){ const a = STG.actors[id]; if (!a) return Promise.resolve(); const x1 = POSX[to] ?? 160;
+  return new Promise(done => { a.face = x1 > a.x ? 'right' : 'left'; a.walk = { x0: a.x, x1, t0: performance.now(), dur: Math.max(200, Math.abs(x1 - a.x) / 95 * 1000), done }; }); }
+async function evFadeTo(v, ms = 300){ const s = STG.fade, t0 = performance.now(); while (true){ const k = Math.min(1, (performance.now() - t0) / ms); STG.fade = s + (v - s) * k; if (k >= 1) break; await sleep(16); } }
+function evSay(ctx, name, text, narr){
+  const box = evUI().querySelector('.evbox'), nm = box.querySelector('.evname'), tx = box.querySelector('.evtext');
+  box.classList.toggle('narr', !!narr); nm.textContent = name || ''; nm.style.display = name ? '' : 'none'; box.querySelector('.evch').innerHTML = ''; box.querySelector('.evtap').style.visibility = 'hidden';
+  const full = fillVars(text, ctx.n.id); let i = 0, done = false;
+  return new Promise(res => {
+    const tick = () => { if (done) return; i = Math.min(full.length, i + 2); tx.textContent = full.slice(0, i); if (i < full.length) setTimeout(tick, 22); else { done = true; box.querySelector('.evtap').style.visibility = 'visible'; } };
+    tick();
+    ctx.tapR = () => { if (ctx.stop){ res(); return; } if (!done){ done = true; tx.textContent = full; box.querySelector('.evtap').style.visibility = 'visible'; return; } ctx.tapR = null; res(); };
+  });
+}
+function evChoose(ctx, opts){
+  const box = evUI().querySelector('.evbox'), ch = box.querySelector('.evch'); box.querySelector('.evtap').style.visibility = 'hidden';
+  ch.innerHTML = opts.map((o, i) => `<button class="btn sm evo" data-evo="${i}">${esc(fillVars(o.text, ctx.n.id))}</button>`).join('');
+  return new Promise(res => { ch.querySelectorAll('[data-evo]').forEach(b => b.onclick = e => { e.stopPropagation(); ch.innerHTML = ''; res(opts[+b.dataset.evo]); }); if (ctx.stop) res(opts[0]); });
+}
+const castName = (ctx, id) => { if (id === 'player') return me?.nick || '학생'; const n = npcGet(id); if (n) return n.name; const c = { ...(NL.cast[id] || {}), ...((ctx.cast || {})[id] || {}) }; return fillVars(c.name || id, ctx.n.id); };
+async function evRun(ctx, sc){
+  const lab = {}; sc.forEach((s, i) => { if (s.label) lab[s.label] = i; });
+  let i = 0, guard = 0;
+  while (i < sc.length && guard++ < 5000){
+    if (ctx.stop) return;
+    const s = sc[i]; i++;
+    if (s.label === 'ending' && ctx.sum <= -30 && !ctx.opt.replay && !ctx.opt.fail && (ctx.ev.cold || []).length){ ctx.cold = true; await evRun(ctx, ctx.ev.cold); return; }
+    const c = s.cmd; if (!c) continue;
+    if (c === 'line'){ if (!STG.actors[s.who] && s.who !== 'voice' && s.who !== 'player') await evShow(ctx, s.who, Object.values(STG.actors).some(a => a.x > 200) ? 'far_left' : 'right'), evFace(); STG.speaker = s.who; await evSay(ctx, castName(ctx, s.who), s.text); }
+    else if (c === 'narration'){ STG.speaker = null; await evSay(ctx, '', s.text, true); }
+    else if (c === 'choice'){ const o = await evChoose(ctx, s.options || []); if (!ctx.opt.replay){ ctx.sum += o.affinity || 0; if (o.flag){ me.nflag = me.nflag || {}; me.nflag[o.flag] = 1; } } if (o.next in lab) i = lab[o.next]; }
+    else if (c === 'goto'){ if (s.to in lab) i = lab[s.to]; }
+    else if (c === 'if_flag'){ const v = flagOn(s.flag); const t = v ? s.then : s.else; if (t in lab) i = lab[t]; }
+    else if (c === 'if_heart'){ const v = hearts(s.npc || ctx.n.id) >= s.min; const t = v ? s.then : s.else; if (t in lab) i = lab[t]; }
+    else if (c === 'move' || c === 'follow'){
+      if (c === 'follow'){ await Promise.all([evWalk(s.who, 'off_right'), sleep(250).then(() => evWalk('player', 'off_right'))]); }
+      if (s.transition !== 'cut') await evFadeTo(1, 280);
+      await stageBg(s.to, s.time || STG.time, s.weather || STG.wxBase);
+      if (s.clear) Object.keys(STG.actors).forEach(k => { if (k !== 'player') delete STG.actors[k]; });
+      if (c === 'follow'){ const a = STG.actors[s.who], p = STG.actors.player; if (a) a.x = POSX.off_left; if (p) p.x = POSX.off_left - 40; }
+      if (s.transition !== 'cut') await evFadeTo(0, 280); else STG.fade = 0;
+      if (c === 'follow') await Promise.all([evWalk(s.who, 'right'), evWalk('player', 'left')]);
+      evFace(); }
+    else if (c === 'walk'){ if (!STG.actors[s.who]){ await evShow(ctx, s.who, (POSX[s.to] ?? 160) > 160 ? 'off_right' : 'off_left'); } await evWalk(s.who, s.to); evFace(); }
+    else if (c === 'show'){ await evShow(ctx, s.who, s.at || 'center'); evFace(); }
+    else if (c === 'hide'){ delete STG.actors[s.who]; evFace(); }
+    else if (c === 'emote'){ const a = STG.actors[s.who]; if (a){ a.emo = { icon: s.icon, t0: performance.now(), until: performance.now() + 1500 }; } await sleep(450); }
+    else if (c === 'camera'){ const C = STG.cam; if (s.action === 'shake'){ C.sh = .5; await sleep(400); } else if (s.action === 'zoom_in') C.z = 1.25; else if (s.action === 'zoom_out' || s.action === 'reset'){ C.z = 1; C.x = 0; } else if (s.action === 'pan_left') C.x = 30; else if (s.action === 'pan_right') C.x = -30; }
+    else if (c === 'flash'){ STG.flash = .5; await sleep(200); }
+    else if (c === 'sfx') sfx(s.id);
+    else if (c === 'wait') await sleep(Math.min(5, s.sec || 1) * 1000);
+    else if (c === 'fade_in') await evFadeTo(0, 400);
+    else if (c === 'fade_out') await evFadeTo(1, 400);
+    else if (!ctx.opt.replay){
+      if (c === 'give_item'){ me.inv[s.item] = (me.inv[s.item] || 0) + (s.n || 1); toast(`${ITEM[s.item] || s.item} ×${s.n || 1}을(를) 받았어요`); }
+      else if (c === 'take_item'){ me.inv[s.item] = Math.max(0, (me.inv[s.item] || 0) - (s.n || 1)); }
+      else if (c === 'set_flag'){ me.nflag = me.nflag || {}; me.nflag[s.flag] = 1; }
+      else if (c === 'affinity') ctx.sum += s.value || 0;
+    }
+  }
+}
+const PERK_KO = { cat_furniture: '내 방 고양이 가구', bait: '나비의 낚시 미끼(입질이 빨라요)', free_post: '평생 무료 배달', rod_bonus: '캇파의 낚싯대 보너스', lord_hint: '호수의 주인 힌트', potion_hint: '물약 힌트', know_bonus: '지식 보너스',
+  greenhouse_growth: '온실 성장 보너스', pumpkin_race: '호박 줍기 경주 보너스', scarecrow_hat: '허수아비 모자', tasty_potion: '맛있는 치유 물약', cake_recipe: '호박달 케이크 레시피', fortune: '스텔라의 운세', rare_egg: '희귀 생물 알' };
+function evFinish(ctx){
+  const { n, k, ev } = ctx, st = npcSt(n.id), got = [];
+  st.seen[k] = ctx.cold ? 'cold' : 'ok'; st.cold = ctx.cold; st.ev = todayKey(); st.evDay = todayKey(); st.evAt = Date.now(); st.hide = null;
+  npcAddA(n.id, ctx.sum);
+  const r = ev.rewards || {};
+  if (r.coin){ me.coin += r.coin; got.push(`${r.coin}G`); } if (r.mana){ me.mana += r.mana; got.push(`마력 +${r.mana}`); } if (r.know){ me.know = (me.know || 0) + r.know; got.push(`지식 +${r.know}`); }
+  Object.entries(r.items || {}).forEach(([it, c]) => { me.inv[it] = (me.inv[it] || 0) + c; got.push(`${ITEM[it] || it} ×${c}`); });
+  (r.flags || []).forEach(f => { me.nflag = me.nflag || {}; me.nflag[f] = 1; });
+  [].concat(r.perk || []).forEach(p => { me.perk = me.perk || {}; me.perk[p] = 1; got.push(PERK_KO[p] || p); });
+  [].concat(r.perk || []).forEach(p => {   // 바로 받는 보상
+    if (p === 'know_bonus') me.know = (me.know || 0) + 5;
+    if (p === 'potion_hint') me.know = (me.know || 0) + KNOW_PER_HINT * 2;
+    if (p === 'cat_furniture'){ me.fbag = me.fbag || {}; ['cattower', 'catdoll'].forEach(f => { me.fbag[f] = (me.fbag[f] || 0) + 1; }); }
+    if (p === 'scarecrow_hat'){ const h = World.Avatar.meta.parts.hat.find(x => x.n === '가죽 모자'); if (h){ me.closet = me.closet || {}; me.closet['hat:' + h.id] = 1; } }
+    if (p === 'rare_egg'){ me.eggs = me.eggs || []; me.eggs.push({ id: crId(), k: 2, col: { ...CR_COLORS.find(c => c.n === '노을빛') }, at: Date.now() }); }
+    if (p === 'cake_recipe') me.inv.d_fairycake_s = (me.inv.d_fairycake_s || 0) + 3;
+  });
+  save(); hud(); npcSig = ''; syncNpcs();
+  toast(ctx.cold ? `${n.name}와(과) 조금 서먹해졌어요……` : `♥${k} 「${fillVars(ev.title, n.id)}」${got.length ? ' · ' + got.join(', ') : ''}`);
+}
+document.addEventListener('click', e => { if (!evOn || !evUI().contains(e.target) || e.target.closest('.evo,.evskip')) return; evOn.tapR && evOn.tapR(); });
+document.addEventListener('keydown', e => { if (evOn && (e.key === ' ' || e.key === 'Enter')){ e.preventDefault(); evOn.tapR && evOn.tapR(); } });
+// ---------- 관리자: NPC 호감도 표 · NPC 편집 (생김새·루틴·대사·하트 이벤트) ----------
+// 고친 내용은 npcs/<id> = { name, title, likes, dislikes, av, avData, routine, vars, prof, ev: { k: 이벤트 } } (파일 위에 덮어써요)
+// 국어 검사 (scripts/validate_npc.py와 같은 규칙): 저장할 때 경고만 띄워요
+const KO_UNIT = /\d+(일|번|째|개|마리|년|명|시|분|초|장|권|살|층|그릇|걸음|골드|주년|군데|송이|잔|병|통|칸|줄|쪽|달|주)/g;
+const KO_WRONG = ['몇 일', '몇일', '금새', '왠일', '웬지', '어떻해', '할께', '설레임', '바램', '일부로', '오랫만', '구지', '역활', '희안', '되요', '안돼', '됬', '될께', '갈께', '줄께', '볼께', '할려고', '않되', '않돼'];
+const KO_GENDER = /(?<![가-힣])(그녀|그는|그가|그를|그의|아저씨|아줌마|언니|오빠|누나|형)(?=$|[^가-힣]|[은는이가을를의도한께에님아야])/;
+const KO_NAMES = ['세라', '루카스', '마들렌', '스텔라', '레오'];
+const HUMAN_NPC = ['sera', 'madeleine', 'stella', 'leo'];
+function koCheck(t, human){
+  const w = [], s = String(t || '');
+  (s.match(KO_UNIT) || []).forEach(m => w.push(`숫자와 단위를 띄어 써요 「${m}」`));
+  (s.match(/…+/g) || []).forEach(m => { if (m.length !== 2) w.push('말줄임표는 「……」로'); });
+  ['...', '?!', '!?', '!!', '~~'].forEach(b => { if (s.includes(b)) w.push(`「${b}」는 쓰지 않아요`); });
+  KO_WRONG.forEach(b => { if (s.includes(b)) w.push(`틀린 표기 「${b}」`); });
+  KO_NAMES.forEach(b => { if (s.includes(b)) w.push(`사람 NPC 이름은 변수로 「${b}」 → {sera.name} 등`); });
+  if (human){ const m = KO_GENDER.exec(s); if (m) w.push(`성별을 단정하는 말 「${m[1]}」`); }
+  return w;
+}
+const koTexts = o => typeof o === 'string' ? [o] : Array.isArray(o) ? o.flatMap(koTexts) : o && typeof o === 'object' ? Object.entries(o).flatMap(([k, v]) => ['text', 'title'].includes(k) || typeof v === 'object' ? koTexts(v) : []) : [];
+let adNpc = null, adNpcDraft = null, adSub = 'base', adEvK = 0, adEvDraft = null, adWarn = [];
+const AD_CMDS = ['line', 'narration', 'choice', 'label', 'goto', 'if_flag', 'if_heart', 'move', 'follow', 'walk', 'show', 'hide', 'emote', 'camera', 'flash', 'sfx', 'bgm', 'wait', 'give_item', 'take_item', 'set_flag', 'affinity', 'fade_in', 'fade_out'];
+const AD_CMD_KO = { line: '대사', narration: '지문', choice: '선택지', label: '라벨', goto: '이동(goto)', if_flag: '플래그 분기', if_heart: '하트 분기', move: '장면 이동', follow: '따라가기', walk: '걷기', show: '등장', hide: '퇴장', emote: '감정 아이콘', camera: '카메라', flash: '번쩍', sfx: '효과음', bgm: '음악', wait: '침묵', give_item: '아이템 주기', take_item: '아이템 가져가기', set_flag: '플래그 켜기', affinity: '호감도', fade_in: '밝아지기', fade_out: '어두워지기' };
+const AD_FACES = ['', 'neutral', 'happy', 'smile', 'laugh', 'sad', 'cry', 'angry', 'annoyed', 'surprised', 'shy', 'embarrassed', 'worried', 'tired', 'sleepy', 'serious', 'scared', 'proud', 'smug', 'thinking', 'determined', 'soft', 'pain'];
+const adWhoList = () => ['player', ...npcAll().map(n => n.id), ...Object.keys(NL.cast).filter(k => !npcGet(k) && k !== 'player'), ...Object.keys(adNpcDraft?.prof?.cast || {})];
+const adWhoName = id => id === 'player' ? '주인공' : npcGet(id)?.name || fillVars(NL.cast[id]?.name || adNpcDraft?.prof?.cast?.[id]?.name || id, adNpc);
+function adEvRow(nd, i){
+  const c = nd.cmd || (nd.label !== undefined ? 'label' : 'line'), sel = `<select data-ek="cmd">${AD_CMDS.map(x => `<option value="${x}" ${x === c ? 'selected' : ''}>${AD_CMD_KO[x]}</option>`).join('')}</select>`;
+  const ops = `<span class="evops"><button data-evop="up" data-i="${i}">↑</button><button data-evop="down" data-i="${i}">↓</button><button data-evop="add" data-i="${i}">＋</button><button data-evop="del" data-i="${i}">✕</button></span>`;
+  let f = '';
+  if (c === 'line') f = `<select data-ek="who">${adWhoList().map(w => `<option value="${w}" ${w === nd.who ? 'selected' : ''}>${esc(adWhoName(w))}</option>`).join('')}</select><select data-ek="face">${AD_FACES.map(x => `<option ${x === (nd.face || '') ? 'selected' : ''}>${x}</option>`).join('')}</select><textarea data-ek="text" rows="2">${esc(nd.text || '')}</textarea>`;
+  else if (c === 'narration') f = `<textarea data-ek="text" rows="2">${esc(nd.text || '')}</textarea>`;
+  else if (c === 'label') f = `<input data-ek="label" value="${esc(nd.label || '')}" placeholder="라벨 이름">`;
+  else if (c === 'choice') f = `<input data-ek="id" value="${esc(nd.id || '')}" placeholder="선택지 id" style="width:70px"><div class="evopts">${(nd.options || []).map((o, j) => `<div class="evopt" data-oi="${j}"><input data-eo="text" value="${esc(o.text || '')}" placeholder="보기 문구"><select data-eo="affinity">${[30, 15, 0, -15, -30].map(v => `<option value="${v}" ${v === o.affinity ? 'selected' : ''}>${v > 0 ? '+' : ''}${v}</option>`).join('')}</select><input data-eo="next" value="${esc(o.next || '')}" placeholder="갈 라벨"><input data-eo="flag" value="${esc(o.flag || '')}" placeholder="플래그(선택)"><button data-evop="odel" data-i="${i}" data-j="${j}">✕</button></div>`).join('')}<button data-evop="oadd" data-i="${i}">＋ 보기</button></div>`;
+  else { const { cmd, ...rest } = nd; f = `<textarea data-ek="_json" rows="1" class="mono">${esc(JSON.stringify(rest))}</textarea>`; }
+  return `<div class="evrow ${c}" data-i="${i}"><span class="no">${i + 1}</span>${sel}<div class="evf">${f}</div>${ops}</div>`;
+}
+function adminEvRead(){
+  const root = $('#adminv'); if (!adEvDraft || !root) return;
+  const rows = root.querySelectorAll('.evrow'); if (!rows.length) return;
+  adEvDraft.script = [...rows].map(r => {
+    const c = r.querySelector('[data-ek="cmd"]').value, g = k => r.querySelector(`[data-ek="${k}"]`)?.value;
+    if (c === 'label') return { label: g('label') || '' };
+    if (c === 'line'){ const o = { cmd: 'line', who: g('who'), text: g('text') || '' }; if (g('face')) o.face = g('face'); return o; }
+    if (c === 'narration') return { cmd: 'narration', text: g('text') || '' };
+    if (c === 'choice') return { cmd: 'choice', id: g('id') || '', options: [...r.querySelectorAll('.evopt')].map(o => { const v = k => o.querySelector(`[data-eo="${k}"]`).value, x = { text: v('text'), affinity: +v('affinity'), next: v('next') }; if (v('flag')) x.flag = v('flag'); return x; }) };
+    let rest = {}; try { rest = JSON.parse(g('_json') || '{}'); } catch(e){ rest = { _bad: g('_json') }; } return { cmd: c, ...rest };
+  });
+  ['title'].forEach(k => { const el = root.querySelector(`[data-evf="${k}"]`); if (el) adEvDraft[k] = el.value; });
+  ['conditions', 'rewards', 'cold', 'scene'].forEach(k => { const el = root.querySelector(`[data-evj="${k}"]`); if (!el) return; try { adEvDraft[k] = el.value.trim() ? JSON.parse(el.value) : undefined; } catch(e){ adWarn = [`${k} JSON 형식이 잘못됐어요`]; } });
+}
+function adminEvHTML(){
+  if (!adEvK) return `<div class="s">고칠 하트 이벤트를 골라요</div>`;
+  if (!adEvDraft) return `<div class="s">불러오는 중…</div>`;
+  const e = adEvDraft, J = o => o === undefined ? '' : esc(JSON.stringify(o, null, 1));
+  return `<label>제목 <input data-evf="title" value="${esc(e.title || '')}"></label>
+    <label>열리는 조건 (JSON · location은 장소 id, time morning/day/evening/night, weather clear/rain/fog/snow) <textarea data-evj="conditions" rows="3" class="mono">${J(e.conditions)}</textarea></label>
+    <label>보상 (JSON) <textarea data-evj="rewards" rows="2" class="mono">${J(e.rewards)}</textarea></label>
+    <div class="evtbl">${(e.script || []).map(adEvRow).join('')}<button data-evop="add" data-i="${(e.script || []).length - 1}">＋ 맨 끝에 한 줄</button></div>
+    <label>서먹한 결말 (호감도 합 −30 이하, JSON 노드 배열) <textarea data-evj="cold" rows="4" class="mono">${J(e.cold)}</textarea></label>
+    ${adWarn.length ? `<div class="adwarn"><b>국어 검사 ${adWarn.length} 건</b>${adWarn.slice(0, 40).map(w => `<div>${esc(w)}</div>`).join('')}</div>` : ''}
+    <div class="frow"><button class="btn sm" data-evprev="1">▶ 미리 보기</button><button class="btn sm go" data-evsave="1">이벤트 저장</button><button class="btn sm" data-evreset="1">이벤트 기본값으로</button></div>`;
+}
 function adminNpcHTML(){
   const P = AD.players, ids = Object.keys(P).filter(id => P[id]?.nick), all = npcAll();
+  const hOf = x => { if (!x) return 0; const a = x.a !== undefined ? x.a : Math.floor((x.p || 0) / 3) * 100; return Math.min(10, Math.floor(a / 100)); };
   const table = `<div class="adtbl npc"><div class="h"><span>학생</span>${all.map(n => `<span>${esc(n.name)}</span>`).join('')}</div>
-    ${ids.map(id => `<div><span><b>${esc(P[id].nick)}</b></span>${all.map(n => { const p = P[id].npc?.[n.id]?.p || 0; return `<span>♥${Math.min(10, Math.floor(p / 3))}</span>`; }).join('')}</div>`).join('')}</div>`;
+    ${ids.map(id => `<div><span><b>${esc(P[id].nick)}</b></span>${all.map(n => { const x = P[id].npc?.[n.id], seen = Object.keys(x?.seen || {}).length; return `<span>♥${hOf(x)}${seen ? ` <small>📖${seen}</small>` : ''}</span>`; }).join('')}</div>`).join('')}</div>`;
+  const wx = `<div class="adcard"><b>오늘 날씨</b><div class="adseg">${[['', '자동'], ['clear', '맑음'], ['rain', '비'], ['fog', '안개'], ['snow', '눈']].map(([k, l]) => `<button data-adwx="${k}" class="${(wxForce && wxForce.d === todayKey() ? wxForce.w : '') === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="s">지금: ${BAND_KO[bandNow()]} · ${WX_KO[weatherToday()]}${isFullMoon() ? ' · 호박달 축제(보름)' : ''} · 날씨를 바꾸면 비·안개 조건 이벤트를 바로 시험할 수 있어요</div></div>`;
   const pick = `<div class="adseg">${all.map(n => `<button data-adnpc="${n.id}" class="${adNpc === n.id ? 'on' : ''}">${esc(n.name)}${n.av ? '' : ' 🐾'}</button>`).join('')}<button data-adnpc="__new">+ 사람 NPC</button></div>`;
   let ed = '';
-  if (adNpc && adNpcDraft){ const d = adNpcDraft, maps = ['campus', 'lab', 'candy', 'craft', 'toxic', 'barn'];
-    ed = `<div class="adcard adnpced">
-      ${d.av ? `<div class="adav"><img src="${avThumb(World.Avatar.fix(d.avData || World.Avatar.fromLook(d.look || 1)))}" alt=""><div class="adavc">${['body', 'skinC', 'hair', 'hairC', 'eyeC', 'face', 'top', 'topC', 'legs', 'legsC', 'feet', 'feetC', 'hat', 'hatC', 'acc', 'accC', 'neck', 'cape'].map(k => `<span>${k}<button data-adavk="${k}" data-adavd="-1">◀</button><button data-adavk="${k}" data-adavd="1">▶</button></span>`).join('')}<button data-adavrand="1">🎲 무작위</button></div></div>` : `<div class="s">🐾 그림 NPC는 생김새를 바꿀 수 없어요 (이름·대사·장소·선물은 바꿀 수 있어요)</div>`}
+  if (adNpc && adNpcDraft){ const d = adNpcDraft, pr = d.prof || {}, stand = Object.values(NL.places).filter(p => p.stand);
+    const subs = `<div class="adseg">${[['base', '기본'], ['routine', '루틴'], ['lines', '평소 대사'], ['events', '하트 이벤트']].map(([k, l]) => `<button data-adsub="${k}" class="${adSub === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+    let body = '';
+    if (adSub === 'base') body = `${d.av ? `<div class="adav"><img src="${avThumb(World.Avatar.fix(d.avData || World.Avatar.fromLook(d.look || 1)))}" alt=""><div class="adavc">${['body', 'skinC', 'hair', 'hairC', 'eyeC', 'face', 'top', 'topC', 'legs', 'legsC', 'feet', 'feetC', 'hat', 'hatC', 'acc', 'accC', 'neck', 'cape'].map(k => `<span>${k}<button data-adavk="${k}" data-adavd="-1">◀</button><button data-adavk="${k}" data-adavd="1">▶</button></span>`).join('')}<button data-adavrand="1">🎲 무작위</button></div></div>` : `<div class="s">🐾 그림 NPC는 생김새를 바꿀 수 없어요</div>`}
       <label>이름 <input data-adf="name" value="${esc(d.name || '')}"></label><label>직업 <input data-adf="title" value="${esc(d.title || '')}"></label>
-      <label>장소 <select data-adf="map">${maps.map(m => `<option value="${m}" ${d.map === m ? 'selected' : ''}>${esc(World.meta(m)?.title || m)}</option>`).join('')}</select></label>
-      <label>칸 x <input data-adf="x" type="number" value="${d.x}"></label><label>칸 y <input data-adf="y" type="number" value="${d.y}"></label>
       <label>좋아하는 것 (이름, 쉼표) <input data-adf="likes" value="${esc((d.likes || []).map(k => ITEM[k] || k).join(', '))}"></label>
       <label>싫어하는 것 <input data-adf="dislikes" value="${esc((d.dislikes || []).map(k => ITEM[k] || k).join(', '))}"></label>
-      ${[0, 1, 2, 3].map(i => `<label>인사말 ♥${[0, 3, 6, 9][i]}~ (한 줄에 하나) <textarea data-adg="${i}" rows="2">${esc(((d.greet || [])[i] || []).join('\n'))}</textarea></label>`).join('')}
-      ${STORY_AT.map(k => `<label>♥${k} 이야기 (한 줄 = 한 장면) <textarea data-ads="${k}" rows="3">${esc(((d.story || {})[k] || []).join('\n'))}</textarea></label>`).join('')}
-      <div class="frow"><button class="btn sm go" data-adnsave="1">저장하기</button>${d.av && !NPC_DEF.find(n => n.id === adNpc) ? '<button class="btn sm" data-adndel="1">삭제</button>' : ''}<button class="btn sm" data-adnreset="1">기본값으로</button></div></div>`; }
-  return `<div class="adcard"><b>학생 × NPC 호감도</b>${table}</div>${pick}${ed}`;
+      <label>이야기 속 변수 (한 줄에 이름=값, 예: husband=루카스) <textarea data-adf="vars" rows="2">${esc(Object.entries(d.vars || {}).map(([k, v]) => `${k}=${v}`).join('\n'))}</textarea></label>`;
+    if (adSub === 'routine') body = `<div class="s">시간대마다 서 있는 곳 (그 안에서 계속 돌아다녀요). 하트 이벤트 조건이 맞으면 그 이벤트 장소에 서요.</div>
+      ${['morning', 'day', 'evening', 'night'].map(t => `<label>${BAND_KO[t]} <select data-adr="${t}">${stand.map(p => `<option value="${p.id}" ${(d.routine || {})[t] === p.id ? 'selected' : ''}>${esc(fillVars(p.name, adNpc))}</option>`).join('')}</select></label>`).join('')}`;
+    if (adSub === 'lines') body = `<div class="s">한 줄 = 말풍선 하나 · {player} 주인공 이름 · {npc.name} 자기 이름</div>
+      ${['A', 'B', 'C', 'D'].map((t, i) => `<label>말투 ${t} (♥${[0, 3, 6, 9][i]}~${[2, 5, 8, 10][i]}) <textarea data-adp="daily.${t}" rows="4">${esc(((pr.daily || {})[t] || []).join('\n'))}</textarea></label>`).join('')}
+      ${['morning', 'day', 'evening', 'night', 'rain', 'fog', 'snow', 'clear'].map(t => `<label>${BAND_KO[t] || WX_KO[t]} <textarea data-adp="ambient.${t}" rows="2">${esc(((pr.ambient || {})[t] || []).join('\n'))}</textarea></label>`).join('')}
+      ${[['love', '좋아하는 선물'], ['like', '보통 선물'], ['hate', '싫어하는 선물']].map(([k, l]) => `<label>${l} 반응 <textarea data-adp="gift.${k}" rows="2">${esc(((pr.gift || {})[k] || []).join('\n'))}</textarea></label>`).join('')}
+      <label>회상 대사 (JSON: {"하트 번호": [대사], "flag:플래그": [대사]}) <textarea data-adpj="recall" rows="4" class="mono">${esc(JSON.stringify(pr.recall || {}, null, 1))}</textarea></label>`;
+    if (adSub === 'events') body = `<div class="adseg">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(k => `<button data-adevk="${k}" class="${adEvK === k ? 'on' : ''}">♥${k}${npcOver[adNpc]?.ev?.[k] ? '*' : ''}</button>`).join('')}</div>${adminEvHTML()}`;
+    ed = `<div class="adcard adnpced">${subs}${body}
+      ${adSub !== 'events' ? `${adWarn.length ? `<div class="adwarn"><b>국어 검사 ${adWarn.length} 건</b>${adWarn.slice(0, 40).map(w => `<div>${esc(w)}</div>`).join('')}</div>` : ''}<div class="frow"><button class="btn sm go" data-adnsave="1">저장하기</button>${d.av && !NPC_DEF.find(n => n.id === adNpc) ? '<button class="btn sm" data-adndel="1">삭제</button>' : ''}<button class="btn sm" data-adnreset="1">전부 기본값으로</button></div>` : ''}</div>`; }
+  return `<div class="adcard"><b>학생 × NPC 호감도</b>${table}</div>${wx}${pick}${ed}`;
 }
-document.addEventListener('click', e => {
+async function adEvLoad(){
+  adEvDraft = null; adminRender();
+  const base = await (async () => { const key = adNpc + ':' + adEvK; if (NL.evs[key] === undefined) await npcEvent(adNpc, adEvK); return NL.evs[key]; })();
+  const o = npcOver[adNpc]?.ev?.[adEvK];
+  adEvDraft = JSON.parse(JSON.stringify(o && o.script ? { ...(base || {}), ...o } : base || { id: `${adNpc}_heart_${String(adEvK).padStart(2, '0')}`, npc: adNpc, heart: adEvK, title: '새 이야기', conditions: { minHeart: adEvK, location: (ROUTINE[adNpc] || {}).day || 'village_square' }, rewards: {}, script: [{ cmd: 'fade_in' }, { cmd: 'line', who: adNpc, text: '' }, { label: 'ending' }], cold: [] }));
+  adminRender();
+}
+document.addEventListener('change', e => { const t = e.target; if (!$('#adminv')?.contains(t) || !t.matches('.evrow [data-ek="cmd"]')) return; adminEvRead(); const i = +t.closest('.evrow').dataset.i, c = t.value, nd = adEvDraft.script[i];
+  adEvDraft.script[i] = c === 'label' ? { label: nd.label || 'L' + i } : c === 'line' ? { cmd: 'line', who: nd.who || adNpc, text: nd.text || '' } : c === 'narration' ? { cmd: 'narration', text: nd.text || '' } : c === 'choice' ? { cmd: 'choice', id: 'c' + i, options: [{ text: '', affinity: 15, next: '' }, { text: '', affinity: 0, next: '' }] } : { cmd: c };
+  adminRender(); });
+document.addEventListener('click', async e => {
   const t = e.target; if (!$('#adminv') || !$('#adminv').contains(t)) return;
-  const b = t.closest('[data-adnpc],[data-adavk],[data-adavrand],[data-adnsave],[data-adndel],[data-adnreset]'); if (!b) return;
-  if (b.dataset.adnpc){ const id = b.dataset.adnpc === '__new' ? 'h' + Date.now().toString(36) : b.dataset.adnpc; adNpc = id; const n = npcGet(id) || { id, name: '새 NPC', title: '', av: true, look: 1, map: 'campus', x: 20, y: 31, likes: [], dislikes: [], greet: [['안녕!'], [], [], []], story: {} }; adNpcDraft = JSON.parse(JSON.stringify(n)); if (n.av && !adNpcDraft.avData) adNpcDraft.avData = World.Avatar.fromLook(n.look || 1); return adminRender(); }
-  adminNpcRead();
+  const b = t.closest('[data-adnpc],[data-adavk],[data-adavrand],[data-adnsave],[data-adndel],[data-adnreset],[data-adsub],[data-adevk],[data-evop],[data-evprev],[data-evsave],[data-evreset],[data-adwx]'); if (!b) return;
+  if (b.dataset.adwx !== undefined){ const w = b.dataset.adwx; F.set(F.ref(db, 'story/wx'), w ? { d: todayKey(), w } : null).then(() => toast(w ? `오늘 날씨: ${WX_KO[w]}` : '날씨를 자동으로 돌렸어요')); wxForce = w ? { d: todayKey(), w } : null; return adminRender(); }
+  if (b.dataset.adnpc){ const id = b.dataset.adnpc === '__new' ? 'h' + Date.now().toString(36) : b.dataset.adnpc; adNpc = id; adEvK = 0; adEvDraft = null; adWarn = [];
+    const n = npcGet(id) || { id, name: '새 NPC', title: '', av: true, look: 1, likes: [], dislikes: [] };
+    adNpcDraft = JSON.parse(JSON.stringify({ ...n, routine: n.routine || ROUTINE[id] || { morning: 'village_square', day: 'village_square', evening: 'village_square', night: 'village_square' }, vars: npcVars(id), prof: npcProf(id) }));
+    if (n.av && !adNpcDraft.avData) adNpcDraft.avData = World.Avatar.fromLook(n.look || 1); return adminRender(); }
+  adminNpcRead(); adminEvRead();
   const d = adNpcDraft; if (!d) return;
+  if (b.dataset.adsub){ adSub = b.dataset.adsub; adWarn = []; return adminRender(); }
+  if (b.dataset.adevk){ adEvK = +b.dataset.adevk; adWarn = []; return adEvLoad(); }
+  if (b.dataset.evop && adEvDraft){ const i = +b.dataset.i, S = adEvDraft.script = adEvDraft.script || [], op = b.dataset.evop;
+    if (op === 'up' && i > 0) [S[i - 1], S[i]] = [S[i], S[i - 1]];
+    if (op === 'down' && i < S.length - 1) [S[i + 1], S[i]] = [S[i], S[i + 1]];
+    if (op === 'add') S.splice(i + 1, 0, { cmd: 'line', who: adNpc, text: '' });
+    if (op === 'del') S.splice(i, 1);
+    if (op === 'oadd') (S[i].options = S[i].options || []).push({ text: '', affinity: 0, next: '' });
+    if (op === 'odel') S[i].options.splice(+b.dataset.j, 1);
+    return adminRender(); }
+  if (b.dataset.evprev && adEvDraft){ const n = { ...(npcGet(adNpc) || {}), ...d, id: adNpc }; return evPlay(n, adEvK, JSON.parse(JSON.stringify(adEvDraft)), { replay: true }); }
+  if (b.dataset.evsave && adEvDraft){ const human = HUMAN_NPC.includes(adNpc) || !NPC_DEF.find(n => n.id === adNpc);
+    adWarn = koTexts({ title: adEvDraft.title, s: adEvDraft.script, c: adEvDraft.cold }).flatMap(x => koCheck(x, human).map(w => `${w} → ${x.slice(0, 24)}`));
+    const labels = new Set((adEvDraft.script || []).filter(n => n.label).map(n => n.label));
+    (adEvDraft.script || []).forEach((n, i) => { [n.next, n.to, n.then, n.else, ...(n.options || []).map(o => o.next)].filter(x => x !== undefined && n.cmd !== 'move' && n.cmd !== 'follow' && n.cmd !== 'walk').forEach(x => { if (!labels.has(x)) adWarn.push(`${i + 1}번 줄: 없는 라벨 「${x}」`); }); });
+    if (!labels.has('ending')) adWarn.push('「ending」 라벨이 없어요 (서먹한 결말이 끼어들 자리)');
+    F.set(F.ref(db, `npcs/${adNpc}/ev/${adEvK}`), JSON.parse(JSON.stringify(adEvDraft))).then(() => toast(`♥${adEvK} 저장했어요${adWarn.length ? ` · 국어 검사 ${adWarn.length} 건` : ''}`)).catch(ex => toast('저장 실패: ' + (ex.code || ex.message)));
+    return adminRender(); }
+  if (b.dataset.evreset){ F.set(F.ref(db, `npcs/${adNpc}/ev/${adEvK}`), null).then(() => { toast('기본 이벤트로 돌렸어요'); setTimeout(adEvLoad, 300); }); return; }
   if (b.dataset.adavk){ const k = b.dataset.adavk, A = World.Avatar, Mt = A.meta, av = d.avData; const max = k === 'body' ? 2 : k.endsWith('C') ? (Mt.colors[{ skinC: 'skin', hairC: 'hair', eyeC: 'eye', topC: 'cloth', legsC: 'bottom', feetC: 'shoe', hatC: 'cloth', accC: 'cloth' }[k]] || []).length : (Mt.parts[k] || []).length; if (max) av[k] = ((av[k] || 0) + +b.dataset.adavd + max) % max; d.avData = A.fix(av); return adminRender(); }
   if (b.dataset.adavrand){ d.avData = World.Avatar.random(); return adminRender(); }
-  if (b.dataset.adnsave){ const keep = { name: d.name, title: d.title, map: d.map, x: +d.x, y: +d.y, likes: d.likes, dislikes: d.dislikes, greet: d.greet, story: d.story, ...(d.av ? { av: true, avData: d.avData } : {}) };
-    F.set(F.ref(db, 'npcs/' + adNpc), keep).then(() => toast('저장했어요 · 모두에게 바로 반영돼요')).catch(ex => toast('저장 실패: ' + (ex.code || ex.message))); return; }
+  if (b.dataset.adnsave){ const human = HUMAN_NPC.includes(adNpc) || !NPC_DEF.find(n => n.id === adNpc);
+    adWarn = koTexts({ d: d.prof?.daily, a: d.prof?.ambient, g: d.prof?.gift, r: d.prof?.recall }).flatMap(x => koCheck(x, human).map(w => `${w} → ${x.slice(0, 24)}`));
+    const same = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {});
+    const fileProf = NL.prof[adNpc] || {}, profOut = {}; ['daily', 'ambient', 'gift', 'recall'].forEach(k => { if (!same(d.prof?.[k], fileProf[k])) profOut[k] = d.prof[k]; });
+    const up = { name: d.name, title: d.title, likes: d.likes, dislikes: d.dislikes, routine: same(d.routine, ROUTINE[adNpc]) ? null : d.routine, vars: same(d.vars, fileProf.vars) ? null : d.vars, prof: Object.keys(profOut).length ? profOut : null, greet: null, story: null, map: null, x: null, y: null, ...(d.av ? { av: true, avData: d.avData } : {}) };
+    F.update(F.ref(db, 'npcs/' + adNpc), up).then(() => toast(`저장했어요 · 모두에게 바로 반영돼요${adWarn.length ? ` · 국어 검사 ${adWarn.length} 건` : ''}`)).catch(ex => toast('저장 실패: ' + (ex.code || ex.message))); return adminRender(); }
   if (b.dataset.adndel){ F.set(F.ref(db, 'npcs/' + adNpc), null); adNpc = null; adNpcDraft = null; return adminRender(); }
-  if (b.dataset.adnreset){ F.set(F.ref(db, 'npcs/' + adNpc), null); adNpcDraft = JSON.parse(JSON.stringify(NPC_DEF.find(n => n.id === adNpc) || adNpcDraft)); return adminRender(); }
+  if (b.dataset.adnreset){ if (!confirm('이 NPC의 고친 내용(생김새·대사·이벤트)을 모두 지울까요?')) return; F.set(F.ref(db, 'npcs/' + adNpc), null); const id = adNpc; adNpc = null; setTimeout(() => { const bt = document.querySelector(`[data-adnpc="${id}"]`); bt && bt.click(); }, 400); return; }
 });
 // 편집 칸의 글을 초안에 옮겨요 (이름으로 쓴 선물은 물건 id로)
 function adminNpcRead(){
   const d = adNpcDraft, root = $('#adminv'); if (!d || !root) return;
   const byName = s => s.split(',').map(x => x.trim()).filter(Boolean).map(x => Object.keys(ITEM).find(k => ITEM[k] === x) || x);
-  root.querySelectorAll('[data-adf]').forEach(el => { const k = el.dataset.adf; d[k] = (k === 'likes' || k === 'dislikes') ? byName(el.value) : el.value; });
-  root.querySelectorAll('[data-adg]').forEach(el => { d.greet = d.greet || [[], [], [], []]; d.greet[+el.dataset.adg] = el.value.split('\n').map(x => x.trim()).filter(Boolean); });
-  root.querySelectorAll('[data-ads]').forEach(el => { d.story = d.story || {}; d.story[el.dataset.ads] = el.value.split('\n').map(x => x.trim()).filter(Boolean); });
+  root.querySelectorAll('[data-adf]').forEach(el => { const k = el.dataset.adf;
+    d[k] = (k === 'likes' || k === 'dislikes') ? byName(el.value) : k === 'vars' ? Object.fromEntries(el.value.split('\n').map(l => l.split('=').map(x => x.trim())).filter(([a, b]) => a && b !== undefined)) : el.value; });
+  root.querySelectorAll('[data-adr]').forEach(el => { d.routine = d.routine || {}; d.routine[el.dataset.adr] = el.value; });
+  root.querySelectorAll('[data-adp]').forEach(el => { const [a, b] = el.dataset.adp.split('.'); d.prof = d.prof || {}; d.prof[a] = d.prof[a] || {}; const v = el.value.split('\n').map(x => x.trim()).filter(Boolean); if (v.length) d.prof[a][b] = v; else delete d.prof[a][b]; });
+  root.querySelectorAll('[data-adpj]').forEach(el => { try { d.prof = d.prof || {}; d.prof[el.dataset.adpj] = JSON.parse(el.value || '{}'); } catch(e){ adWarn = ['회상 대사 JSON 형식이 잘못됐어요']; } });
 }
 // ===== 메인 이야기 7장: 관리자가 송출하면 모두 동시에 시작, 단계마다 반 전체 공동 목표 =====
 // story/live = { ch 지금 열린 장(1~7), at } (관리자만) · story/ch/<n> = { step, prog: { 단계: { uid: 양 } }, done }
@@ -1875,7 +2354,7 @@ const stTotal = (c, k) => Object.values(stProg(c, k)).reduce((t, v) => t + (+v |
 function storyNpcs(){ const out = []; for (let c = 1; c <= (storyLive.ch || 0); c++){ const S = STORY[c - 1]; if (S) out.push({ ...S.npc, main: c, h: 26 }); } return out; }
 function storyListen(){
   if (solo || !F || !db || storyOff) return;
-  storyOff = F.onValue(F.ref(db, 'story'), s => { const v = s.val() || {}; storyLive = v.live || { ch: 0 }; storyCh = v.ch || {}; syncNpcs(); storyCheck(); });
+  storyOff = F.onValue(F.ref(db, 'story'), s => { const v = s.val() || {}; storyLive = v.live || { ch: 0 }; storyCh = v.ch || {}; wxForce = v.wx || null; npcSig = ''; syncNpcs(); storyCheck(); });
 }
 // 새로 열린 장·끝난 단계·끝난 장면을 아직 안 봤으면 보여 줘요 (접속하자마자도)
 function storyCheck(){
@@ -2403,7 +2882,7 @@ function renderLab(){
 
 // ===== 온실 =====
 // 화단 칸: k 심은 씨앗(없으면 빈 칸), at 심은 시각, w 물 줬는지 (물을 주면 25% 빨리 자라요)
-const growMs = p => SEED_INFO[p.k].mins * 6e4 * (p.w ? .75 : 1);
+const growMs = p => SEED_INFO[p.k].mins * 6e4 * (p.w ? .75 : 1) * (me.perk?.greenhouse_growth ? .85 : 1);   // 맨디 ♥10: 온실 성장 보너스
 const plotLeft = p => p.k ? Math.max(0, p.at + growMs(p) - Date.now()) : 0;
 const plotReady = p => !!p.k && plotLeft(p) <= 0;
 const plotFrac = p => p.k ? Math.min(1, 1 - plotLeft(p) / growMs(p)) : 0;

@@ -220,7 +220,7 @@ const me = mk('나', null, 0, 0, true);
 let started = false;
 // 같은 곳에 있는 친구들 (실시간 위치). 다른 사람 화면에서는 내가 이렇게 보여요
 const peers = {}; let peerList = [];
-function retag(){ tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : p.peer ? ' peer' : p.npc ? ' npc' : ''); d.textContent = p.name; if (p.pet) d.style.display = 'none'; world.appendChild(d); return d; }); }
+function retag(){ tags.forEach(t => t.remove()); tags = people.map(p => { const d = document.createElement('div'); d.className = 'ntag' + (p.me ? ' me' : p.peer ? ' peer' : p.npc ? ' npc' : ''); d.textContent = (p.npc && p.npc.mark ? '❗' : '') + p.name; if (p.npc && p.npc.mark) d.classList.add('ev'); if (p.pet) d.style.display = 'none'; world.appendChild(d); return d; }); }
 // 지금 있는 곳 열쇠: 개인 방은 방 주인마다 달라요
 const placeKey = () => map + (M && M.furn ? ':' + (roomView.own ? World.myUid : roomView.uid) : '');
 World.placeKey = () => started ? placeKey() : null;
@@ -270,6 +270,23 @@ World.faceTo = (x, y) => { const DV = World.Avatar.meta.dirs, dx = x - me.x, dy 
 let cook = null, cookImg = {};
 World.setCook = c => { cook = c; if (c && c.drop && c.drop.src && !cookImg[c.drop.src]){ const im = new Image(); im.src = c.drop.src; cookImg[c.drop.src] = im; } };
 World.cookPot = () => { const o = M && M.objs.find(o => o.name === 'cauldron' && Math.abs(o.box[0] - me.x) + Math.abs(o.box[1] - me.y) < 4); return o ? { x: o.box[0], y: o.box[1] } : null; };
+// 날씨: 비·폭풍·안개·눈 (바깥에서만)
+let weather = null, wx = [], flashT = 0;
+World.setWeather = w => { if (w !== weather){ weather = w; wx = []; } };
+function drawWeather(cx, ix, iy, dt){
+  if (!weather || weather === 'clear' || M.indoor) return;
+  const rain = weather === 'rain' || weather === 'storm', n = weather === 'storm' ? 160 : rain ? 90 : weather === 'snow' ? 70 : 0;
+  while (wx.length < n) wx.push({ x: Math.random() * (VW + 40) - 20, y: Math.random() * VH, v: .7 + Math.random() * .6, p: Math.random() * 6 });
+  cx.save();
+  if (rain){ cx.strokeStyle = 'rgba(180,200,255,.45)'; cx.lineWidth = 1; cx.beginPath();
+    wx.forEach(d => { d.y += 260 * d.v * dt; d.x -= 50 * d.v * dt; if (d.y > VH){ d.y -= VH + 10; d.x = Math.random() * (VW + 40) - 20; } const X = Math.round(ix + d.x) + .5, Y = Math.round(iy + d.y); cx.moveTo(X, Y); cx.lineTo(X - 2, Y + 6); }); cx.stroke();
+    if (weather === 'storm'){ flashT -= dt; if (flashT < -6 - Math.random() * 8) flashT = .25; if (flashT > 0){ cx.fillStyle = `rgba(230,235,255,${flashT * 1.6})`; cx.fillRect(ix, iy, VW, VH); } } }
+  if (weather === 'snow'){ cx.fillStyle = 'rgba(255,255,255,.85)';
+    wx.forEach(d => { d.y += 22 * d.v * dt; d.p += dt; if (d.y > VH){ d.y -= VH + 4; d.x = Math.random() * (VW + 40) - 20; } cx.fillRect(Math.round(ix + d.x + Math.sin(d.p) * 3), Math.round(iy + d.y), 1, 1); }); }
+  if (weather === 'fog'){ const t = performance.now() / 1000; cx.fillStyle = 'rgba(205,200,225,.16)'; cx.fillRect(ix, iy, VW, VH);
+    for (let i = 0; i < 4; i++){ cx.fillStyle = 'rgba(220,215,235,.10)'; cx.beginPath(); cx.ellipse(ix + ((i * 97 + t * 6) % (VW + 120)) - 60, iy + VH * (.2 + i * .2), 90, 14, 0, 0, Math.PI * 2); cx.fill(); } }
+  cx.restore();
+}
 World.setMe = (x, y) => { me.x = x; me.y = y; me.path = []; };
 let speedK = 1; World.setSpeedK = k => { speedK = k || 1; };   // 요리 효과: 빠른 걸음
 // ---------- 이야기 NPC: 한자리에 서 있어요. 사람은 아바타(av), 동물은 그림(spr: art 칸) ----------
@@ -278,7 +295,7 @@ World.onNpc = null;   // (npc id) 눌렀을 때
 World.setNpcs = (list, sprSrc) => { npcList = list || []; if (sprSrc && (!NPC_IMG || NPC_IMG.src.indexOf(sprSrc) < 0)){ NPC_IMG = new Image(); NPC_IMG.src = sprSrc; } if (started && M){ placeNpcs(); retag(); } };
 function placeNpcs(){
   for (let i = people.length - 1; i >= 0; i--) if (people[i].npc) people.splice(i, 1);
-  npcList.filter(n => n.map === map || n.map === rmap).forEach(n => {
+  npcList.filter(n => (n.map === map || n.map === rmap) && (!n.own || roomView.own)).forEach(n => {
     let x = n.x, y = n.y;
     if (!free(x, y)){ outer: for (let r = 1; r < 4; r++) for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) if (free(x + dx, y + dy)){ x += dx; y += dy; break outer; } }
     const p = mk(n.name, n.av || null, x, y, false); p.npc = n; p.home = [x, y]; p.idle = 2 + Math.random() * 5; p.view = World.Avatar.meta.dirs[n.dir || 'down'] || 0; people.push(p); if (!n.wander) blocked.add(x + ',' + y);
@@ -489,7 +506,7 @@ const SPEED = 6.5, RUN = 10;   // 타일/초. 멀리 갈 때(남은 길 10칸 �
 function step(p, dt){
   if (!p.path.length){
     if (p.me && pending){ const pd = pending; pending = null; if (pd.water){ World.faceTo(pd.water[0], pd.water[1]); World.onWater && World.onWater(pd.water[0], pd.water[1]); } else if (pd.npcTalk){ const np = people.find(q => q.npc && q.npc.id === pd.npcTalk); if (np) World.faceTo(np.x, np.y); World.onNpc && World.onNpc(pd.npcTalk); } else if (pd.spot !== undefined){ World.onSpot && World.onSpot(pd.spot, pd.sp); } else if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1], () => useObj(pd.act, a)); } }
-    if (p.npc && p.npc.wander && !p.path.length && (p.idle -= dt) < 0){ p.idle = 4 + Math.random() * 6; for (let i = 0; i < 12; i++){ const gx = p.home[0] + Math.floor(Math.random() * 5) - 2, gy = p.home[1] + Math.floor(Math.random() * 5) - 2; if (goto(p, gx, gy)) break; } }
+    if (p.npc && p.npc.wander && !p.path.length && (p.idle -= dt) < 0){ const r = p.npc.r ?? 2; p.idle = 1.5 + Math.random() * 3.5; for (let i = 0; i < 12; i++){ const gx = p.home[0] + Math.floor(Math.random() * (r * 2 + 1)) - r, gy = p.home[1] + Math.floor(Math.random() * (r * 2 + 1)) - r; if (goto(p, gx, gy)) break; } }   // 루틴 장소 안에서 계속 돌아다녀요
     if (!p.me && !p.peer && !p.npc && (p.idle -= dt) < 0){ p.idle = 2 + Math.random() * 5; for (let i = 0; i < 20; i++){ const gx = Math.round(p.x) + Math.floor(Math.random() * 13) - 6, gy = Math.round(p.y) + Math.floor(Math.random() * 13) - 6; if (goto(p, gx, gy)) break; } }
     p.t = 0; return;
   }
@@ -610,6 +627,7 @@ function frame(now){
     M.lights.forEach((L, i) => { if (L.p[0] + L.r < view.x || L.p[0] - L.r > view.x + view.w || L.p[1] + L.dy + L.r < view.y || L.p[1] + L.dy - L.r > view.y + view.h) return; const fl = L.f ? .85 + .15 * Math.sin(now / 130 + i * 1.7) * Math.sin(now / 370 + i) : 1; cx.globalAlpha = L.a * fl * (ph === 'dusk' ? .5 : 1); cx.drawImage(glow(L.r, L.c), L.p[0] - L.r, L.p[1] + L.dy - L.r); });
     cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
   }
+  drawWeather(cx, ix, iy, dt);
   if (cook){ const o = M.objs.find(q => q.name === 'cauldron' && q.box[0] === cook.x && q.box[1] === cook.y);
     if (o){ const cxp = o.x + o.sw / 2, top = o.y + (cook.top ?? 6), t = now / 1000, X = Math.round(cxp);
       // 불빛 (세기에 따라)
@@ -655,7 +673,7 @@ function frame(now){
   const tn = performance.now();
   for (let i = says.length - 1; i >= 0; i--){ const p = says[i]; if (tn > p.say.until || (!p.me && !people.includes(p))){ sayOff(p); continue; } const [sx, sy] = P(p.x + .5, p.y + .5); p.say.el.style.left = (sx - ix) * k + 'px'; p.say.el.style.top = (sy - World.Avatar.FH * ASC - 2 - iy) * k + 'px'; }
   if (bubble){ const o = bubble.o; bubble.el.style.left = Math.max(90, Math.min(cv.clientWidth - 90, (o.x + o.sw / 2 - ix) * k)) + 'px'; bubble.el.style.top = Math.max(70, (o.y - 2 - iy) * k) + 'px'; }
-  const d = new Date(); document.getElementById('clock').textContent = `🌕 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · 보름밤`;
+  const d = new Date(); document.getElementById('clock').textContent = World.clockText ? World.clockText(d) : `🌕 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · 보름밤`;
   requestAnimationFrame(frame);
 }
 document.getElementById('tDay').onclick = e => { bright = (bright + 1) % 3; e.target.textContent = BRIGHT_NEXT[bright]; };
@@ -696,6 +714,7 @@ World.mapCanvas = async id => { await World.ready; const rid = real(id); if (!MA
   const c = document.createElement('canvas'); c.width = m.W; c.height = m.H; const g = c.getContext('2d'); g.fillStyle = m.fill || '#140E1E'; g.fillRect(0, 0, m.W, m.H); g.drawImage(A.bg, 0, 0);
   (A.order || (A.order = orderObjs(m.objs))).forEach(o => g.drawImage(A.obj, o.sx, o.sy, o.sw, o.sh, o.x, o.y, o.sw, o.sh)); return { canvas: c, meta: m }; };
 World.mapIds = () => Object.keys(MAPS);
+World.objSprite = async (id, name) => { await World.ready; const rid = real(id); if (!MAPS[rid]) return null; await ensureMap(rid); const A = MAPS[rid], o = A.meta.objs.find(q => q.name === name); return o ? { img: A.obj, sx: o.sx, sy: o.sy, sw: o.sw, sh: o.sh } : null; };   // 이벤트 무대용 (까마귀 등)
 World.ready = (async () => {
   await World.Avatar.ready;
   CR_IMG = await img(CR_SRC);
