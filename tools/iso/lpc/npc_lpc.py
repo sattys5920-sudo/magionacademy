@@ -103,6 +103,9 @@ if __name__ == '__main__':
     sys.path.insert(0, HERE); from beasts import BEASTS
     for r, f in enumerate(BEASTS):
         b = f(); sheet[r * 64:(r + 1) * 64] = np.tile(b, (1, 20, 1))
+    # 생성형으로 뽑은 시트가 있으면 그걸로 (4방향 걷기까지): gen_npcs.py · tools/iso/npc_src/
+    from gen_npcs import all_gen
+    for r, strip in all_gen(): sheet[r * 64:(r + 1) * 64] = strip
     Image.fromarray(sheet).save(os.path.join(ROOT, 'public', 'art', 'npcs.png'))
     if len(sys.argv) > 2:   # 미리보기: 앞모습만 크게
         pv = Image.new('RGBA', (64 * len(plan), 64), (250, 241, 226, 255))

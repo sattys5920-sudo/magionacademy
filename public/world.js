@@ -281,7 +281,7 @@ function placeNpcs(){
   npcList.filter(n => n.map === map || n.map === rmap).forEach(n => {
     let x = n.x, y = n.y;
     if (!free(x, y)){ outer: for (let r = 1; r < 4; r++) for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) if (free(x + dx, y + dy)){ x += dx; y += dy; break outer; } }
-    const p = mk(n.name, n.av || null, x, y, false); p.npc = n; p.view = World.Avatar.meta.dirs[n.dir || 'down'] || 0; people.push(p); blocked.add(x + ',' + y);
+    const p = mk(n.name, n.av || null, x, y, false); p.npc = n; p.home = [x, y]; p.idle = 2 + Math.random() * 5; p.view = World.Avatar.meta.dirs[n.dir || 'down'] || 0; people.push(p); if (!n.wander) blocked.add(x + ',' + y);
   });
 }
 World.npcAt = id => { const p = people.find(q => q.npc && q.npc.id === id); if (!p) return null; return { get x(){ return P(p.x + .5, p.y + .5)[0]; }, get y(){ return P(p.x + .5, p.y + .5)[1] - World.Avatar.FH * ASC + 2; }, sw: 0 }; };
@@ -489,6 +489,7 @@ const SPEED = 6.5, RUN = 10;   // 타일/초. 멀리 갈 때(남은 길 10칸 �
 function step(p, dt){
   if (!p.path.length){
     if (p.me && pending){ const pd = pending; pending = null; if (pd.water){ World.faceTo(pd.water[0], pd.water[1]); World.onWater && World.onWater(pd.water[0], pd.water[1]); } else if (pd.npcTalk){ const np = people.find(q => q.npc && q.npc.id === pd.npcTalk); if (np) World.faceTo(np.x, np.y); World.onNpc && World.onNpc(pd.npcTalk); } else if (pd.spot !== undefined){ World.onSpot && World.onSpot(pd.spot, pd.sp); } else if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1], () => useObj(pd.act, a)); } }
+    if (p.npc && p.npc.wander && !p.path.length && (p.idle -= dt) < 0){ p.idle = 4 + Math.random() * 6; for (let i = 0; i < 12; i++){ const gx = p.home[0] + Math.floor(Math.random() * 5) - 2, gy = p.home[1] + Math.floor(Math.random() * 5) - 2; if (goto(p, gx, gy)) break; } }
     if (!p.me && !p.peer && !p.npc && (p.idle -= dt) < 0){ p.idle = 2 + Math.random() * 5; for (let i = 0; i < 20; i++){ const gx = Math.round(p.x) + Math.floor(Math.random() * 13) - 6, gy = Math.round(p.y) + Math.floor(Math.random() * 13) - 6; if (goto(p, gx, gy)) break; } }
     p.t = 0; return;
   }
@@ -499,7 +500,7 @@ function step(p, dt){
   if (Math.abs(dx) > Math.abs(dy)){ p.view = dx > 0 ? DV.right : DV.left; p.flip = false; }
   else if (d > 0){ p.view = dy < 0 ? DV.up : DV.down; p.flip = false; }
   if (p.pet && d > 0) p.flip = dx - dy > 0;   // 생물은 화면에서 오른쪽으로 가면 뒤집어요
-  const mv = ((p.me || p.peer) && p.path.length > 10 ? RUN : (p.me || p.peer) ? SPEED : SPEED * .6) * dt * (p.me ? speedK : 1); if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
+  const mv = ((p.me || p.peer) && p.path.length > 10 ? RUN : (p.me || p.peer) ? SPEED : SPEED * (p.npc ? .35 : .6)) * dt * (p.me ? speedK : 1); if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
 }
 // 할로윈 효과: 박쥐 떼, 보라 안개, 도깨비불
 const bats = Array.from({ length: 7 }, (_, i) => ({ x: 0, y: 0, vx: 0, vy: 0, ph: i, init: false }));
@@ -542,7 +543,7 @@ function drawPerson(p){ const cx = out;
   if (p.pet) return drawPet(p);
   if (p.npc && p.npc.spr !== undefined){   // 이야기 NPC: LPC로 조립한 그림 (tools/iso/lpc/npc_lpc.py), 한 줄 = 한 명, 칸 배치는 캐릭터와 같아요
     const [sx, sy] = P(p.x + .5, p.y + .5); cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 6, 2.5, 0, 0, Math.PI * 2); cx.fill();
-    if (!NPC_IMG || !NPC_IMG.complete) return; const A = World.Avatar, cp = KPX * ASC, w = A.FW * cp, h = A.FH * cp, col = (p.view || 0);
+    if (!NPC_IMG || !NPC_IMG.complete) return; const A = World.Avatar, cp = KPX * ASC, w = A.FW * cp, h = A.FH * cp, WK = A.meta.walk, col = (p.view || 0) + (p.path.length ? WK[Math.floor(p.t * 7) % WK.length] : p.npc.flap ? WK[Math.floor(performance.now() / 140) % WK.length] : 0);
     const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - (A.FH - 1.5) * cp) + (p.npc.float ? Math.round(Math.sin(performance.now() / 600 + p.npc.spr) * 2) * cp : 0);
     cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); if (p.npc.alpha) cx.globalAlpha = p.npc.alpha; cx.drawImage(NPC_IMG, col * A.FW, p.npc.spr * A.FH, A.FW, A.FH, Math.round(dx - w / 2), dy, w, h); cx.restore(); return;
   }

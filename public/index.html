@@ -1627,32 +1627,32 @@ function renderCook(){
 // ===== 서브 NPC 10명: 하루 한 번 대화 ♥, 선물(좋아함 +3·보통 +1·싫어함 -1), ♥2·5·8·10마다 이야기 장면과 보상 =====
 // 동물은 art/npcs.png (tools/iso/npc_art.py) 그림, 사람은 아바타. 관리자 페이지에서 고친 내용(npcs/<id>)이 이 기본값 위에 덮여요
 // 호감도 점수 3점 = ♥1, ♥10까지. me.npc[id] = { p 점수, t 대화한 날, g 선물한 날, s 본 장면 [2,5,…] }
-const NPC_ART_V = 4;
+const NPC_ART_V = 5;
 // LPC NPC 그림(art/npcs.png: 한 줄 = 한 명, 64칸 20개)에서 얼굴 부분만 크게 (초상화)
 const npcFace = (spr, size = 48) => { const B = World.Avatar.headBox, k = size / B.s; return `<i class="npcspr" style="width:${size}px;height:${size}px;background:url(art/npcs.png?v=${NPC_ART_V}) ${-B.x * k}px ${-(spr * 64 + B.y) * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
 const npcFull = (spr, size = 144) => { const k = size / 64; return `<i class="stspr" style="background:url(art/npcs.png?v=${NPC_ART_V}) 0 ${-spr * 64 * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
 const NPC_DEF = [
-  { id: 'nabi', name: '나비', title: '매점 고양이', spr: 0, h: 22, map: 'campus', x: 61, y: 35, likes: ['f_crucian', 'd_minnowfry', 'g2_catnip'], dislikes: ['j_weed'],
+  { id: 'nabi', wander: true, name: '나비', title: '매점 고양이', spr: 0, h: 22, map: 'campus', x: 61, y: 35, likes: ['f_crucian', 'd_minnowfry', 'g2_catnip'], dislikes: ['j_weed'],
     greet: [['…뭘 봐? 생선 없으면 저리 가.', '냐. 오늘은 바람이 비린내가 안 나네.'], ['또 왔어? …딱히 기다린 건 아니야.', '생선 가게 아저씨가 오늘은 붕어가 싱싱하대.'], ['왔구나! 아니, 반가운 척한 거 아니거든.', '네 발소리는 이제 멀리서도 알아.'], ['우리 집사 왔다냥~ …방금 건 못 들은 걸로 해.', '오늘은 네 옆에서 낮잠 자도 돼?']],
     story: { 2: ['호박 붕어 알아? 꼬리까지 바삭하게 구우면… 크흠.', '좋아하는 걸 말해 주는 건 너한테만이야.'], 5: ['이 방울? 옛날 주인이 달아 줬어.', '주인은 마녀였어. 어느 보름밤에 빗자루를 타고 나가서… 안 돌아왔어.', '그래서 난 시장에서 기다려. 여기선 모두가 지나가니까.'], 8: ['주인 방에서 쪽지를 찾았어. 같이 읽어 줄래?', '「나비야, 내가 늦으면 좋은 사람을 골라. 너는 고르는 눈이 있으니까.」', '…바보. 늦는 게 하루 이틀이야?'], 10: ['결정했어. 너를 새 주인으로 정할게.', '대신 생선은 매일이야. 그리고 쓰다듬는 건 하루 열 번까지만!', '…고마워, 기다리는 걸 덜 외롭게 해 줘서.'] },
     reward: { 2: { coin: 50 }, 5: { items: { f_crucian: 2 } }, 8: { mana: 15 }, 10: { coin: 300, items: { d_minnowfry_s: 2 } } } },
-  { id: 'batri', name: '배트리', title: '우체부 박쥐', spr: 1, h: 24, map: 'campus', x: 66, y: 36, likes: ['g2_rasp', 'g2_blue', 'd_chestnut'], dislikes: ['g_pepper'],
+  { id: 'batri', wander: true, flap: true, name: '배트리', title: '우체부 박쥐', spr: 1, h: 24, map: 'campus', x: 66, y: 36, likes: ['g2_rasp', 'g2_blue', 'd_chestnut'], dislikes: ['g_pepper'],
     greet: [['편지 왔어요~! 어, 이거 당신 거 아니네?', '우체국이 어디였더라… 아, 바로 뒤구나!'], ['오늘도 열 통 배달! 아홉 통은 엉뚱한 데 갔지만요!', '하늘에서 보면 마을이 호박 파이 같아요.'], ['당신 편지는 제일 먼저 배달할게요! 주소가 어디였죠?', '비밀인데요, 우체국장님 코 골아요.'], ['베프! 오늘 들은 소문 전부 알려 줄게요!', '당신 덕분에 요즘은 한 통도 안 틀려요!']],
     story: { 2: ['어제 마녀 오두막에 갈 편지를 늑대인간 집에 넣었어요…', '늑대 아저씨가 연애편지인 줄 알고 얼굴이 빨개졌대요!'], 5: ['저기… 비밀 하나 말해도 돼요?', '박쥐인데요… 밤눈이 어두워요. 그래서 자꾸 길을 잃어요.', '안경을 쓰면 놀림받을까 봐 무서워요.'], 8: ['반딧불이를 모아서 길을 밝혀 주다니…!', '이제 밤길이 하나도 안 무서워요. 안경도… 한번 써 볼까요?'], 10: ['짠! 안경 쓴 배트리 어때요? 다들 멋지대요!', '이제 당신 편지는 제가 평생 무료로 배달할게요!'] },
     reward: { 2: { coin: 40 }, 5: { items: { g2_firefly: 2 } }, 8: { mana: 15 }, 10: { coin: 250, know: 1 } } },
-  { id: 'kappa', name: '캇파', title: '낚시꾼 갓파', spr: 2, h: 26, map: 'campus', x: 57, y: 58, likes: ['g_pea', 'drop', 'd_rainbowsushi'], dislikes: ['j_can'],
+  { id: 'kappa', wander: true, name: '캇파', title: '낚시꾼 갓파', spr: 2, h: 26, map: 'campus', x: 57, y: 58, likes: ['g_pea', 'drop', 'd_rainbowsushi'], dislikes: ['j_can'],
     greet: [['쉿. 물고기가 도망가.', '…느긋하게 기다리는 것도 낚시야.'], ['오, 왔나. 오늘 물이 좋아.', '찌가 흔들릴 땐 숨부터 참아.'], ['자네 낚시 실력이 꽤 늘었군.', '내 접시 물? 오늘은 찰랑찰랑하지.'], ['낚시 친구, 오늘도 한 마리 하세.', '자네랑 있으면 30년 기다림도 짧게 느껴져.']],
     story: { 2: ['요령 하나 알려 주지. 입질 직후 반 박자만 참아.', '서두르면 놓치고, 늦으면 도망가지. 낚시는 마음이야.'], 5: ['머리 접시 물이 마르면 힘이 쭉 빠져… 이슬 좀 부어 주겠나?', '휴우… 살겠다. 자네는 은인이야.'], 8: ['30년 전 보름밤, 호수 한가운데가 금빛으로 빛났어.', '그게 「호수의 주인」이야. 난 그날부터 여기 앉아 있지.'], 10: ['자네에게만 알려 주지. 주인은 달이 가장 높을 때, 밤에만 나와.', '좋은 낚싯대와 끈기가 있으면… 자넨 해낼 거야.'] },
     reward: { 2: { coin: 40 }, 5: { items: { drop: 3 } }, 8: { mana: 15 }, 10: { coin: 300, items: { d_moontrout_s: 1 } } } },
-  { id: 'aula', name: '아울라', title: '사서 부엉이', spr: 3, h: 24, map: 'lab', x: 15, y: 10, likes: ['feather', 'd_clovertea', 'd_starcookie'], dislikes: ['d_poisoncandy'],
+  { id: 'aula', wander: true, name: '아울라', title: '사서 부엉이', spr: 3, h: 24, map: 'lab', x: 15, y: 10, likes: ['feather', 'd_clovertea', 'd_starcookie'], dislikes: ['d_poisoncandy'],
     greet: [['도서관에선 조용히… 여긴 교실이군요. 그래도 조용히.', '부우… 낮은 너무 졸려요.'], ['오늘 수업은 들었나요? 지식은 쌓일수록 무거워지지 않아요.', '물약 레시피는 순서가 생명이에요.'], ['당신은 질문을 잘하는 학생이군요. 좋은 습관이에요.', '오늘의 추천 책: 『호박과 달의 관계』.'], ['내 최고의 제자! 부우!', '당신에게는 금서 서가 열쇠도 맡길 수 있어요.']],
     story: { 2: ['수업 시간에 졸면 안 돼요. 부엉이인 나도 참는걸요.', '…방금 하품은 못 본 걸로 해요.'], 5: ['도서관 깊은 곳에 『사라진 물약 100선』이란 금서가 있었어요.', '어느 날 통째로 사라졌죠. 몇 장만 남기고.'], 8: ['찢어진 페이지를 찾아 줬군요! 여기 적힌 건… 「호박달 물약」의 앞부분이에요.', '나머지는 아직 어딘가에 있어요.'], 10: ['당신 덕분에 금서의 반을 되찾았어요.', '이건 내가 아끼는 공부 비법이에요. 당신이라면 잘 쓸 거예요.'] },
     reward: { 2: { know: 1 }, 5: { coin: 80 }, 8: { know: 2 }, 10: { know: 3, mana: 20 } } },
-  { id: 'mandi', name: '맨디', title: '정원사 맨드레이크', spr: 4, h: 20, map: 'toxic', x: 10, y: 12, likes: ['drop', 'g2_moss', 'g_mint'], dislikes: ['g2_mushred'],
+  { id: 'mandi', wander: true, name: '맨디', title: '정원사 맨드레이크', spr: 4, h: 20, map: 'toxic', x: 10, y: 12, likes: ['drop', 'g2_moss', 'g_mint'], dislikes: ['g2_mushred'],
     greet: [['히익…! 아, 아무것도 아니에요…', '(화분 뒤에 숨었다)'], ['아, 안녕하세요… 오늘은 소리 안 질렀어요…', '이 화분, 제가 키웠어요… 헤헤.'], ['오늘은 먼저 인사하고 싶었어요! 아, 안녕!', '흙 냄새 좋죠? 저는 이 냄새가 제일 좋아요.'], ['당신이 오면 잎사귀가 쫑긋해져요!', '오늘은 비명 대신 노래를 불러 볼까요?']],
     story: { 2: ['이 화분들… 다 제 친구예요. 말은 못 하지만요.', '당신도… 친구 해 줄래요? 아, 아니에요! 히익!'], 5: ['저는 놀라면 비명을 질러요. 듣는 사람이 기절할 만큼…', '그래서 다들 저를 피해요. 같이 참는 연습… 해 줄래요?'], 8: ['방금… 제가 웃었어요! 비명 말고, 웃음이요!', '처음이에요. 이렇게 크게 웃은 거.'], 10: ['이건 제 비밀 씨앗이에요. 제일 아끼는 거예요.', '친구한테 주는 첫 선물이에요. 잘 키워 줘요!'] },
     reward: { 2: { coin: 40 }, 5: { items: { g_mint: 3 } }, 8: { mana: 15 }, 10: { coin: 200, items: { g_star: 2 } } } },
-  { id: 'jipsin', name: '짚신', title: '꼬마 허수아비', spr: 5, h: 26, map: 'campus', x: 10, y: 60, likes: ['g2_straw', 'g2_pseed', 'g2_sseed'], dislikes: ['g2_crowf'],
+  { id: 'jipsin', wander: true, name: '짚신', title: '꼬마 허수아비', spr: 5, h: 26, map: 'campus', x: 10, y: 60, likes: ['g2_straw', 'g2_pseed', 'g2_sseed'], dislikes: ['g2_crowf'],
     greet: [['까, 까마귀 아니지? 휴…', '나는 무서운 허수아비다! …무서웠어?'], ['오늘은 까마귀가 세 마리밖에 안 왔어!', '호박밭 지키는 건 힘들어.'], ['너랑 있으면 까마귀가 안 와. 신기하지?', '무서운 표정 연습 봐 줄래? 크앙!'], ['내 제일 친한 친구! 호박 하나 몰래 줄까?', '이젠 까마귀도 내 친구야. 너 덕분에!']],
     story: { 2: ['나는 허수아비인데 까마귀가 무서워…', '오히려 까마귀들이 내 모자 위에서 놀아. 창피해.'], 5: ['무서운 표정을 연습했어. 봐 봐… 크아앙!', '…웃지 마! 진지하단 말이야!'], 8: ['오늘 까마귀한테 말을 걸어 봤어. 사실 걔들도 호박씨를 좋아한대.', '나눠 먹었더니 더 이상 놀리지 않아.'], 10: ['무서운 허수아비보다 친구 많은 허수아비가 더 좋은 것 같아.', '이 모자 너 줄게. 내 보물이야!'] },
     reward: { 2: { coin: 40 }, 5: { items: { g2_pseed: 3 } }, 8: { mana: 15 }, 10: { coin: 250, items: { g2_gacorn: 1 } } } },
@@ -1678,7 +1678,7 @@ const npcAll = () => { const ids = [...NPC_DEF.map(n => n.id), ...Object.keys(np
   return ids.map(id => ({ ...(NPC_DEF.find(n => n.id === id) || { id, av: true, look: 1, map: 'campus', x: 20, y: 31, likes: [], dislikes: [], greet: [[], [], [], []], story: {}, reward: {} }), ...(npcOver[id] || {}) })).filter(n => !n.off); };
 const npcGet = id => npcAll().find(n => n.id === id);
 const npcAv = n => n.av ? (n.avData ? World.Avatar.fix(n.avData) : World.Avatar.fromLook(n.look || 1)) : null;
-function syncNpcs(){ World.setNpcs([...npcAll().map(n => ({ id: n.id, name: n.name, map: n.map, x: n.x, y: n.y, dir: n.dir || 'down', ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float }) })),
+function syncNpcs(){ World.setNpcs([...npcAll().map(n => ({ id: n.id, name: n.name, map: n.map, x: n.x, y: n.y, dir: n.dir || 'down', ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float, wander: n.wander, flap: n.flap }) })),
   ...(typeof storyNpcs === 'function' ? storyNpcs().map(n => ({ id: n.id, name: n.name, map: n.map, x: n.x, y: n.y, spr: n.spr, alpha: n.alpha, float: n.float })) : [])], `art/npcs.png?v=${NPC_ART_V}`); }   // 이야기 주인공도 같이
 const npcSt = id => { me.npc = me.npc || {}; return me.npc[id] = me.npc[id] || { p: 0, s: [] }; };
 const hearts = id => Math.min(10, Math.floor((me.npc?.[id]?.p || 0) / 3));
