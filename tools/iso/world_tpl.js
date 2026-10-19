@@ -95,9 +95,10 @@ World.Avatar = (() => {
         if (dark(xc)) continue;   // 밑단 외곽선 줄
         o[d] = o[d] * .7; o[d + 1] = o[d + 1] * .7; o[d + 2] = o[d + 2] * .7;
       }
-      // 신발(부츠)끼리 붙은 줄: 두 신발 사이 진한 틈도 신발 색으로 메워요 (부츠 사이 Y자 틈 없애기)
+      // 신발(부츠)끼리 붙은 줄: 두 짝 사이 검은 틈은 신발색으로 메우고 가운데 1px만 60% 밝기 (두 짝은 그대로, 검은 Y자 틈만 없애기)
+      let sole = -1; for (let y = FH - 1; y >= crotch; y--){ let any = false; for (let x = X0; x < X0 + FW; x++) if (own[y * W + x] === 1){ any = true; break; } if (any){ sole = y; break; } }
       for (let y = crotch; y < FH; y++){
-        const cnt = new Map();
+        const cnt = new Map(), bottom = y >= sole - 1;   // 신발 맨 아래 2줄 = 발바닥 쪽: 두 발 사이 빈칸은 그대로
         for (let x = X0; x < X0 + FW; x++){ const d = P(y, x); if (!o[d + 3] || own[y * W + x] !== 1 || LUM(o[d], o[d + 1], o[d + 2]) < 45) continue; const key = (o[d] << 16) | (o[d + 1] << 8) | o[d + 2]; cnt.set(key, (cnt.get(key) || 0) + 1); }
         if (!cnt.size) continue;
         let mode = 0, best = -1; cnt.forEach((n, key) => { if (n > best){ best = n; mode = key; } });
@@ -108,8 +109,10 @@ World.Avatar = (() => {
         for (let x = xc; x >= xc - 4; x--) if (shoeAt(x)){ Lx = x; break; }
         for (let x = xc + 1; x <= xc + 4; x++) if (shoeAt(x)){ Rx = x; break; }
         if (Lx < 0 || Rx < 0 || Rx - Lx < 2) continue;
-        let ok = true; for (let x = Lx + 1; x < Rx; x++) if (!dk(x) || own[y * W + x] === 2) ok = false;
-        if (ok) for (let x = Lx + 1; x < Rx; x++){ const d = P(y, x); o[d] = mode >> 16; o[d + 1] = (mode >> 8) & 255; o[d + 2] = mode & 255; o[d + 3] = 255; }
+        let ok = true; for (let x = Lx + 1; x < Rx; x++){ const d = P(y, x); if ((bottom && !o[d + 3]) || !dk(x) || own[y * W + x] === 2) ok = false; }
+        if (!ok) continue;
+        for (let x = Lx + 1; x < Rx; x++){ const d = P(y, x); o[d] = mode >> 16; o[d + 1] = (mode >> 8) & 255; o[d + 2] = mode & 255; o[d + 3] = 255; }
+        const d = P(y, xc); o[d] = (mode >> 16) * .6; o[d + 1] = ((mode >> 8) & 255) * .6; o[d + 2] = (mode & 255) * .6;   // 두 짝은 그대로 보이게 가운데 1px만 어둡게
       }
     });
   }
