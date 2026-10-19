@@ -443,6 +443,25 @@ button.cell:not(:disabled):active{background:var(--line)}
 .relgift.unk{color:var(--sub);border-style:dashed}.relgift.unk b{font-family:var(--f-pxb);font-size:22px;line-height:28px;font-weight:normal}
 .relhint{line-height:1.5}.relbtns{display:flex;gap:8px}.relbtns .btn{flex:1;min-width:0;white-space:normal;line-height:1.3;padding:6px 10px}
 /* @css:journal */
+.jn-seg button{min-height:44px}
+.jn-card{display:flex;flex-direction:column;gap:8px;padding:12px}
+.jn-npc{display:flex;align-items:center;gap:10px}
+.jn-npc .main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.jn-npc b{font-family:var(--f-pxb);font-size:var(--fs-h);line-height:1.3}
+.jn-npc .d{font-size:var(--fs-s);color:var(--sub);line-height:1.4}
+.jn-step{display:flex;flex-direction:column;gap:2px}
+.jn-t{font-family:var(--f-pxb);font-size:var(--fs);line-height:1.4}
+.jn-d{font-size:var(--fs-s);line-height:1.5;color:var(--sub)}
+.jn-row{display:flex;justify-content:space-between;align-items:center;font-size:var(--fs-s);line-height:1.4}
+.jn-steps{display:flex;gap:4px;justify-content:center;flex-wrap:wrap}
+.jn-steps .tag{min-width:30px;text-align:center}
+.jn-steps .tag.ok{color:var(--ok)}
+.jn-steps .tag.now{background:var(--accent);color:#2A1506}
+.jn-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+.jn-past{border:1px solid var(--line2);min-height:36px;color:var(--sub)}
+.jn-hints{display:flex;flex-direction:column;gap:4px;font-size:var(--fs-s);line-height:1.5;color:var(--text);padding:10px 12px;background:var(--soft);border-radius:10px}
+.jn-foot{display:flex;align-items:center;gap:8px}.jn-foot .hint{flex:1;text-align:left;padding:0}
+.jn-ev .npcf{width:40px;height:40px}.jn-ev .npcf img{width:40px;height:40px}
 /* @css:menu */
 /* @css:cook */
 /* @css:clothes */
@@ -2901,7 +2920,77 @@ async function renderRelDetail(id){
 // ----- /관계 -----
 
 // ----- 일지 (지시서 2-5) -----
-function renderJournal(){ SOON_PANEL('일지', '할 일'); }
+// 탭: 할 일(오늘의 의뢰) · 이야기(메인 스토리 진행) · 하트 이벤트(오늘 열린 NPC 이벤트 위치)
+let jnTab = 'todo';
+// 목적지로 걸어가요: 같은 맵이면 바로 걷고, 다른 맵이면 옮겨 간 뒤에 걸어요
+function jnGo(map, x, y){
+  closeSheet();
+  if (map === 'myroom') map = myRoomId();
+  const walk = () => { if (!World.walkToTile(x, y)) toast('거기까지는 길이 없어요'); };
+  if (World.where() === map) walk(); else World.teleport(map, null, walk);
+}
+const jnTags = c => [...(c?.time || []).map(t => BAND_KO[t]), ...(c?.weather || []).map(w => WX_KO[w]), c?.festival ? '호박달 축제' : c?.moon === 'full' ? '보름' : ''].filter(Boolean);
+const jnJosa = (k, a, b) => [1, 6, 7, 8, 10].includes(k) ? a : b;   // ♥1·6·7·8·10은 받침이 있어요
+function jnTodoHTML(){
+  const left = me.orders.filter(o => !o.done).length;
+  return `<section class="sec">${secH('오늘의 의뢰', left ? `${left}건 남음` : '다 전했어요')}
+    ${me.orders.length ? `<div class="box px">${me.orders.map((o, i) => { const have = me.inv[o.p] || 0, ok = have >= o.n;
+      return `<div class="li ${o.done ? 'done' : ''}">${ic(o.p)}<div class="main"><span class="t">${ITEM[o.p]} ×${o.n}</span><span class="d">${esc(o.from)} · 가진 것 <span class="num">${have} / ${o.n}</span></span></div>
+        ${o.done ? '<span class="tag">완료</span>' : ok ? `<button class="btn sm go" data-deliver="${i}">전하기 +${payOf(o)}G</button>` : `<span class="tag num">${payOf(o)}G</span>`}</div>`; }).join('')}</div>` : '<div class="hint">오늘은 들어온 의뢰가 없어요</div>'}
+    <div class="jn-foot"><span class="hint">매일 아침 새 의뢰가 와요 · 물약은 물약 교실에서 끓여요</span><button class="btn sm" data-jnlab="1">물약 교실로</button></div></section>`;
+}
+function jnStoryHTML(){
+  const c = storyLive.ch || 0, S = c && STORY[c - 1];
+  if (!S) return `<div class="hint on">아직 열린 이야기가 없어요. 새 장이 열리면 여기에 떠요.</div>`;
+  const cur = storyCh[c] || {}, k = cur.step || 0, st = S.steps[k], n = S.npc;
+  const head = `<div class="jn-npc"><div class="npcf">${npcFace(n.spr)}</div><div class="main"><b>${c}장 · ${esc(S.name)}</b><span class="d">${esc(n.name)} · ${esc(n.title || '')}</span></div></div>`;
+  const past = c > 1 ? `<div class="jn-tags">${STORY.slice(0, c - 1).map((P, i) => `<button class="tag jn-past" data-jnre="${i + 1}">${i + 1}장 ${esc(P.name)} ✔</button>`).join('')}</div>` : '';
+  if (cur.done || !st) return `<section class="sec">${secH('메인 이야기', '해결!')}<div class="box px jn-card">${head}<span class="jn-d">${esc(S.ending[S.ending.length - 1])}</span><button class="btn" data-jnre="${c}">이야기 다시 보기</button></div>${past}</section>`;
+  const tot = stTotal(c, k), mine = +stProg(c, k)[uid] || 0, pct = Math.min(100, tot / st.goal * 100);
+  const extra = st.t === 'give' ? `가진 ${ITEM[st.item] || st.item} <span class="num">${me.inv[st.item] || 0}개</span>` : st.t === 'talk' ? (mine ? '나는 함께했어요 ✓' : '아직 함께하지 않았어요') : st.t === 'game' ? '놀이 게시판에서 협동 놀이' : '내 방 침대에서 쉬어요';
+  return `<section class="sec">${secH('메인 이야기', `${k + 1} / ${S.steps.length}단계`)}
+    <div class="box px jn-card">${head}
+      <div class="jn-step"><b class="jn-t">${k + 1}. ${esc(st.title)}</b><span class="jn-d">${esc(st.desc)}</span></div>
+      <div class="pbar"><i style="width:${pct}%"></i></div>
+      <div class="jn-row"><span>반 전체 <b class="num">${tot} / ${st.goal}</b></span><span class="sub">내 기여 <span class="num">${mine}</span></span></div>
+      <span class="jn-d">${extra}</span>
+      <button class="btn go" data-jngo="${n.map},${n.x},${n.y}">여기로 가기 · ${esc(n.name)}에게</button></div>
+    <div class="jn-steps">${S.steps.map((x, i) => `<span class="tag ${i < k ? 'ok' : i === k ? 'now' : ''}" title="${esc(x.title)}">${i < k ? '✔' : i + 1}</span>`).join('')}</div>${past}</section>`;
+}
+function jnHeartHTML(){
+  const rows = [], hints = [], missing = [];
+  [...npcAll()].sort((a, b) => (npcSt(b.id).a || 0) - (npcSt(a.id).a || 0)).forEach(n => {   // 친한 순서로
+    const k = nextHeart(n.id); if (!k) return;
+    const ev = NL.evs[n.id + ':' + k]; if (ev === undefined){ missing.push([n.id, k]); return; } if (!ev) return;
+    const c = ev.conditions || {}, p = NL.places[c.location], h = hearts(n.id), need = c.minHeart || k, e = evCond(n.id);
+    if (e){ const tags = jnTags(c);
+      rows.push(`<div class="li jn-ev"><div class="npcf">${n.av ? npcPortrait(n) : npcFace(n.spr, 40)}</div><div class="main"><span class="t">♥${k} 「${esc(fillVars(ev.title, n.id))}」</span><span class="d">${esc(n.name)} · ${p ? esc(fillVars(p.name, n.id)) : '어딘가'}</span>${tags.length ? `<span class="jn-tags">${tags.map(t => `<span class="tag">${t}</span>`).join('')}</span>` : ''}</div>
+        ${p ? `<button class="btn sm go" data-jngo="${p.map},${p.x},${p.y}">여기로</button>` : ''}</div>`); }
+    else if (h < need) hints.push(`${esc(n.name)} ♥${need}${jnJosa(need, '이', '가')} 되면 다음 이야기`);
+    else if (npcSt(n.id).ev === todayKey()) hints.push(`${esc(n.name)} · 오늘은 이미 만났어요`);
+    else hints.push(`${esc(n.name)} ♥${k} · ${[p && fillVars(p.name, n.id), ...jnTags(c)].filter(Boolean).map(esc).join(' · ')}`);
+  });
+  if (missing.length) Promise.all(missing.map(([id, k]) => npcEvent(id, k))).then(() => { if (sheetOn && sub === 'journal' && jnTab === 'heart') renderJournal(); });
+  const more = hints.length - 6;
+  return `<section class="sec">${secH('오늘 열린 이야기', rows.length ? `${rows.length}곳` : missing.length ? '불러오는 중' : '지금은 없어요')}
+    ${rows.length ? `<div class="box px">${rows.join('')}</div>` : `<div class="hint">${missing.length ? '이벤트를 불러오고 있어요…' : '지금 시간·날씨에 열린 하트 이벤트가 없어요. 아래 힌트를 봐요.'}</div>`}
+    ${hints.length ? `<div class="jn-hints">${hints.slice(0, 6).map(h => `<span>· ${h}</span>`).join('')}${more > 0 ? `<span class="sub">· 그 밖에 ${more}명</span>` : ''}</div>` : ''}</section>`;
+}
+function renderJournal(){
+  const left = me.orders.filter(o => !o.done).length, N = storyNow();
+  const tabs = [['todo', `할 일${left ? ` ${left}` : ''}`], ['story', `이야기${N ? ' ●' : ''}`], ['heart', '하트 이벤트']];
+  const body = jnTab === 'story' ? jnStoryHTML() : jnTab === 'heart' ? jnHeartHTML() : jnTodoHTML();
+  frame(null, '일지', { todo: '오늘의 의뢰', story: '메인 이야기', heart: '오늘 열린 하트 이벤트' }[jnTab], `<div class="seg jn-seg" style="grid-template-columns:repeat(3,1fr)">${tabs.map(([k, l]) => `<button data-jnt="${k}" class="${jnTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>${body}`);
+  on('[data-jnt]', b => { jnTab = b.dataset.jnt; render(); });
+  on('[data-deliver]', b => {
+    const o = me.orders[+b.dataset.deliver]; if (!o || o.done || (me.inv[o.p] || 0) < o.n) return;
+    const pay = payOf(o); me.inv[o.p] -= o.n; me.coin += pay; o.done = true; save();
+    toast(`${o.from}에게 ${withJosa(ITEM[o.p], '을', '를')} 전했어요. +${pay}G`); render();
+  });
+  on('[data-jnlab]', () => goPlace('lab', 'cauldron', 'lab'));
+  on('[data-jngo]', b => { const [m, x, y] = b.dataset.jngo.split(','); jnGo(m, +x, +y); });
+  on('[data-jnre]', b => { const c = +b.dataset.jnre, S = STORY[c - 1]; closeSheet(); storyPlay(c, [...S.intro, ...S.ending], `${c}장 · ${S.name}`); });
+}
 // ----- /일지 -----
 
 // ----- 메뉴·설정·계정 (지시서 2-1, 2-6) -----
