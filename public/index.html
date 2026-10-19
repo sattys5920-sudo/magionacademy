@@ -420,6 +420,25 @@ button.cell:not(:disabled):active{background:var(--line)}
 .toast{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(20,13,30,.94);color:var(--text);padding:10px 16px;border-radius:12px;border:1px solid var(--accent);font-size:var(--fs-s);z-index:40;max-width:min(90%,420px);text-align:center;animation:toastin .18s;pointer-events:none}
 @keyframes toastin{from{transform:translate(-50%,-8px);opacity:0}}
 /* @css:bag */
+.bag-tabs button{min-height:44px}
+.bag-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (min-width:900px){.bag-grid{grid-template-columns:repeat(8,minmax(0,1fr))}}
+.bag-grid .cell img{width:40px;height:40px;image-rendering:pixelated;object-fit:contain}
+.bag-pager{display:flex;align-items:center;justify-content:center;gap:14px;font-family:var(--f-pxb);font-size:var(--fs-s);color:var(--sub)}
+.bag-pager .btn{min-width:64px}
+.bag-dt{height:200px;flex-shrink:0;background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.bag-dt .hd{display:flex;align-items:center;gap:8px;min-height:36px}
+.bag-dt .hd .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.bag-dt .hd .b,.bag-dt .hd .s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bag-dt .hd img{width:40px;height:40px;image-rendering:pixelated;object-fit:contain;flex-shrink:0}
+.bag-dt .d{font-size:var(--fs-s);line-height:1.45;color:var(--sub);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all}
+.bag-dt .d.u{color:var(--text)}
+.bag-dt .d.on{color:var(--ok)}
+.bag-dt .empty{flex:1;display:flex;align-items:center;justify-content:center}
+.bag-dt .acts{display:flex;gap:6px;margin-top:auto}
+.bag-dt .acts .btn{flex:1;padding:0 6px;min-width:0}
+.bag-who{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0;flex-shrink:0}
+.bag-who .who{flex:0 0 auto}
 /* @css:profile */
 /* @css:rel */
 /* @css:journal */
@@ -2771,7 +2790,113 @@ function render(){
 const SOON_PANEL = (t, d) => frame(null, t, d, `<div class="hint on">곧 열려요. 지금 만드는 중이에요.</div>`);
 
 // ----- 가방 (지시서 2-2) -----
-function renderBag(){ SOON_PANEL('가방', '내 아이템'); }
+// 탭(전체·재료·물약·음식·선물·옷·중요) + 칸 격자(휴대폰 5열·PC 8열, 페이지 넘김) + 아래 상세(이름·설명·쓰임새·[사용][선물하기][버리기]).
+// 새 아이템 점: me.bagSeen = { 아이템: 본 개수 }. 칸을 보여 준 뒤 본 개수를 갱신해요.
+// 껍데기(shell)가 할 일: 인벤토리가 바뀐 뒤(채집·낚시·요리·제조·선물 등) bagBadge()를 불러 주면 하단 [가방]에 새 아이템 점이 켜져요.
+let bagTab = 'all', bagPage = 0, bagSel = null, bagPick = false, bagMsg = '';
+const BAG_TABS = [['all', '전체'], ['mat', '재료'], ['potion', '물약'], ['dish', '음식'], ['gift', '선물'], ['cloth', '옷'], ['key', '중요']];
+const BAG_ZONE = { f: '숲', g: '묘지', l: '호숫가', p: '들판' };
+const bagCols = () => matchMedia('(min-width:900px)').matches ? 8 : 5;
+const bagPer = () => bagCols() === 8 ? 40 : 20;   // 한 페이지: PC 8×5 · 휴대폰 5×4 (한 화면에 들어가게)
+const bagKind = k => DISH_INFO[k] ? 'dish' : POTION_INFO[k] ? 'potion' : (SEED_INFO[k] || CREATURE_MATS.includes(k) || CATCH_INFO[k]) ? 'mat' : 'etc';
+const bagLikers = k => npcAll().filter(n => { const P = npcProf(n.id); return (P.likes || n.likes || []).includes(k); });
+const bagNames = L => L.map(n => nameVar(n)).join(', ');
+function bagHasNew(){ return !!me && Object.keys(me.inv || {}).some(k => me.inv[k] > 0 && me.inv[k] > (me.bagSeen?.[k] || 0)); }
+function bagBadge(){
+  const b = document.querySelector('#bar [data-nav="bag"]'); if (!b || !me) return;
+  const has = bagHasNew(), i = b.querySelector('i.badge');
+  if (has && !i) b.insertAdjacentHTML('beforeend', '<i class="badge"></i>'); else if (!has && i) i.remove();
+}
+// 가방에 든 아이템 목록 (카탈로그 순서, 개수 > 0만)
+function bagInvIds(){
+  const order = [...MATS, ...CATCH, ...POTIONS, ...DISHES], set = new Set(order);
+  return [...order, ...Object.keys(me.inv || {}).filter(k => !set.has(k) && ITEM[k])].filter(k => me.inv[k] > 0);
+}
+const bagCloth = () => Object.keys(me.closet || {}).map(key => { const [cat, pid] = key.split(':'); const list = World.Avatar.meta.parts[cat] || [], i = list.findIndex(p => p.id === pid); return i < 0 ? null : { key, cat, i, p: list[i] }; }).filter(Boolean);
+// 탭별 칸 목록: { id, kind, n, name, ico }
+function bagEntries(t){
+  const inv = k => ({ id: k, kind: 'inv', n: me.inv[k], name: ITEM[k] || k, ico: ic(k) });
+  if (t === 'all') return bagInvIds().map(inv);
+  if (t === 'mat' || t === 'potion' || t === 'dish') return bagInvIds().filter(k => bagKind(k) === t).map(inv);
+  if (t === 'gift') return bagInvIds().filter(k => bagLikers(k).length).map(inv);
+  if (t === 'cloth'){
+    const av = avOf(me);
+    return bagCloth().map(c => { const src = World.Avatar.loaded ? avThumb({ ...av, [c.cat]: c.i }, c.cat === 'hat' || c.cat === 'acc') : ''; return { id: c.key, kind: 'cloth', n: 0, name: c.p.n, ico: src ? `<img src="${src}" alt="">` : ic('star') }; });
+  }
+  const out = [{ id: 'rod', kind: 'rod', n: 0, name: RODS[me.rod || 0].name, ico: rodIc(me.rod || 0) }];
+  (me.eggs || []).forEach((e, i) => out.push({ id: 'egg:' + e.id, kind: 'egg', n: 0, name: `${CREATURES[e.k]?.kind || '생물'}의 알`, ico: ic('egg'), i }));
+  Object.keys(me.perk || {}).filter(p => me.perk[p]).forEach(p => out.push({ id: 'perk:' + p, kind: 'perk', n: 0, name: PERK_KO[p] || p, ico: ic('star') }));
+  const fn = Object.values(me.fbag || {}).reduce((a, n) => a + (n > 0 ? n : 0), 0);
+  if (fn) out.push({ id: 'fbag', kind: 'fbag', n: fn, name: '가구 주머니', ico: ic('bed') });
+  return out;
+}
+// 설명과 쓰임새
+function bagInfo(k){
+  const L = bagLikers(k), gift = L.length ? `선물용 (${withJosa(bagNames(L), '이', '가')} 좋아해요)` : '';
+  const uses = [];
+  const P = POTION_INFO[k]; if (P){ uses.push(P.use ? `마시면 ${P.use}` : `주문 보상 ${P.pay}G`); if (gift) uses.push(gift); return { desc: P.desc || `${P.name} · 물약 도감 ${P.ic + 1}번`, use: uses.join(' · ') }; }
+  const D = DISH_INFO[k]; if (D){ uses.push(`먹으면 ${effText(D, D.best)}`); if (gift) uses.push(gift); return { desc: `${D.best ? '✨ 최고 품질 · ' : ''}재료: ${D.r.map(x => ITEM[x] || x).join(', ')}`, use: uses.join(' · ') }; }
+  const np = POTION_LIST.filter(x => x.r.includes(k)).length, nd = DISH.filter(d => d.r.includes(k)).length;
+  if (np) uses.push(`물약 재료 ${np}종`); if (nd) uses.push(`요리 재료 ${nd}종`); if (gift) uses.push(gift);
+  const C = CATCH_INFO[k];
+  if (C){ if (C.junk) return { desc: '호수에서 건진 쓰레기예요. 팔면 1G', use: uses.join(' · ') || '쓸모는 없지만 호수가 깨끗해졌어요' };
+    if (C.sheet === 'fish') return { desc: `${STARS(C.grade)} · ${C.cm[0]}~${C.cm[1]}cm · ${C.time ? TIME_NAME[C.time] + '에만' : '아무 때나'} 잡혀요 · 값 ${C.pay}G`, use: uses.join(' · ') || '요리 재료 · 선물용' };
+    return { desc: `${STARS(C.grade)} · ${[...C.z].map(z => BAG_ZONE[z]).join('·')}에서 주워요 · 값 ${C.pay}G`, use: uses.join(' · ') || '물약·요리 재료' }; }
+  const G = SEED_INFO[k]; if (G) return { desc: `온실에서 기르는 식물 재료 · ${G.tier + 1}등급 · ${timeText(G.mins * 6e4)} 자라요`, use: uses.join(' · ') || '물약 재료' };
+  const cr = CREATURES.find(c => c.mat === k); if (cr) return { desc: `사육장 ${cr.kind}이(가) 주는 재료예요`, use: uses.join(' · ') || '물약·요리 재료' };
+  return { desc: '', use: uses.join(' · ') };
+}
+function bagDetailHTML(e){
+  if (!e) return `<div class="bag-dt"><div class="empty hint">칸을 누르면 설명이 나와요</div></div>`;
+  const hd = (sub) => `<div class="hd">${e.ico}<div class="main"><span class="b">${esc(e.name)}</span><span class="s sub">${sub}</span></div></div>`;
+  if (e.kind === 'inv'){
+    const k = e.id, I = bagInfo(k), D = DISH_INFO[k], P = POTION_INFO[k], L = bagLikers(k);
+    const useBtn = D ? `<button class="btn sm go" data-buse="${k}">먹기</button>` : P?.use ? `<button class="btn sm go" data-buse="${k}">마시기</button>` : '';
+    const pick = bagPick ? `<div class="bag-who">${npcAll().map(n => `<button class="who" data-bgift="${n.id}">${n.av ? face({ av: npcAv(n) }, 28) : npcFace(n.spr, 28)}${esc(nameVar(n))}</button>`).join('')}</div>` : '';
+    return `<div class="bag-dt">${hd(`${me.inv[k]}개${L.length ? ' · ♥ ' + esc(bagNames(L)) : ''}`)}
+      ${bagMsg ? `<div class="d on">${esc(bagMsg)}</div>` : `<div class="d">${esc(I.desc)}</div><div class="d u">${esc(I.use)}</div>`}${pick}
+      <div class="acts">${useBtn}<button class="btn sm" data-bpick="${k}">선물하기</button><button class="btn sm ghost" data-btrash="${k}">버리기</button></div></div>`;
+  }
+  if (e.kind === 'cloth'){
+    const c = bagCloth().find(x => x.key === e.id), label = SHOP_CATS.find(([k]) => k === c.cat)?.[1] || c.cat, body = World.Avatar.meta.bodies[me.av.body || 0], can = !!c.p.L[body], onNow = me.av[c.cat] === c.i;
+    return `<div class="bag-dt">${hd(`${label} · ${c.p.k === 'pj' ? '잠옷' : '사복'}`)}<div class="d">옷 가게에서 산 옷이에요. 캐릭터 꾸미기 「옷」에서도 갈아입을 수 있어요.</div><div class="d u">${onNow ? '지금 입고 있어요' : can ? '입으면 바로 바뀌어요' : '지금 체형엔 맞지 않아요'}</div>
+      <div class="acts"><button class="btn sm go" data-bwear="${esc(e.id)}" ${can && !onNow ? '' : 'disabled'}>${onNow ? '입는 중' : '입기'}</button><button class="btn sm" data-bavatar="1">꾸미기로</button></div></div>`;
+  }
+  if (e.kind === 'rod'){ const r = RODS[me.rod || 0]; return `<div class="bag-dt">${hd(`낚싯대 ${(me.rod || 0) + 1}단계`)}<div class="d">${esc(r.desc)}</div><div class="d u">호숫가에서 낚시할 때 써요 · 더 좋은 낚싯대는 캇파에게</div></div>`; }
+  if (e.kind === 'egg'){ const eg = me.eggs[e.i], left = eggLeft(eg); return `<div class="bag-dt">${hd(left > 0 ? `${timeText(left)} 뒤에 깨어나요` : '지금 깨어날 수 있어요!')}<div class="d">${esc(CREATURES[eg.k]?.baby || '아기 생물')}이(가) 들어 있어요. 사육장 부화실에 있어요.</div><div class="d u">사육장 → 부화실에서 깨워요</div></div>`; }
+  if (e.kind === 'perk') return `<div class="bag-dt">${hd('특별한 힘')}<div class="d">친구와 가까워져서 받은 선물이에요. 늘 효과가 켜져 있어요.</div><div class="d u">관계 패널에서 누구에게 받았는지 볼 수 있어요</div></div>`;
+  return `<div class="bag-dt">${hd(`가구 ${e.n}개`)}<div class="d">${Object.entries(me.fbag || {}).filter(([, n]) => n > 0).map(([f, n]) => `${esc(FURN_BY[f]?.name || FURN_BY[f]?.n || f)} ×${n}`).join(', ')}</div><div class="d u">내 방(기숙사)에서 놓아요</div></div>`;
+}
+function renderBag(){
+  me.bagSeen = me.bagSeen || {};
+  const all = bagEntries(bagTab), per = bagPer(), pages = Math.max(1, Math.ceil(all.length / per));
+  bagPage = Math.min(bagPage, pages - 1); const list = all.slice(bagPage * per, bagPage * per + per);
+  if (bagSel && !all.find(e => e.id === bagSel)) bagSel = null;
+  const sel = all.find(e => e.id === bagSel) || null, isNew = e => e.kind === 'inv' && me.inv[e.id] > (me.bagSeen[e.id] || 0);
+  const tabs = `<div class="seg scroll bag-tabs">${BAG_TABS.map(([k, l]) => `<button data-btab="${k}" class="${bagTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  const grid = list.length ? `<div class="grid bag-grid">${list.map(e => `<button class="cell ${e.id === bagSel ? 'sel' : ''}" data-bsel="${esc(e.id)}" aria-label="${esc(e.name)}">${e.ico}${e.n ? `<span class="n num">${e.n}</span>` : ''}${isNew(e) ? '<i class="new"></i>' : ''}</button>`).join('')}</div>`
+    : `<div class="hint" style="padding:24px 8px">${{ all: '아직 가방이 비어 있어요', mat: '재료가 없어요. 온실·호숫가·사육장에서 모아요', potion: '물약이 없어요. 연구실 솥에서 만들어요', dish: '요리가 없어요. 솥 앞에서 요리해요', gift: '친구들이 좋아하는 물건이 아직 없어요', cloth: '산 옷이 없어요. 옷 가게에 가 봐요', key: '' }[bagTab]}</div>`;
+  const pager = pages > 1 ? `<div class="bag-pager"><button class="btn sm" data-bpage="-1" ${bagPage ? '' : 'disabled'}>◀</button><span class="num">${bagPage + 1} / ${pages}</span><button class="btn sm" data-bpage="1" ${bagPage < pages - 1 ? '' : 'disabled'}>▶</button></div>` : '';
+  frame(null, '가방', `${bagInvIds().length}종 · ${BAG_TABS.find(([k]) => k === bagTab)[1]} ${all.length}칸`, `${tabs}${grid}${pager}${bagDetailHTML(sel)}`);
+  const redraw = () => renderBag();
+  on('[data-btab]', b => { bagTab = b.dataset.btab; bagPage = 0; bagSel = null; bagPick = false; bagMsg = ''; redraw(); });
+  on('[data-bpage]', b => { bagPage += +b.dataset.bpage; bagPick = false; redraw(); });
+  on('[data-bsel]', b => { bagSel = bagSel === b.dataset.bsel ? null : b.dataset.bsel; bagPick = false; bagMsg = ''; redraw(); });
+  on('[data-buse]', b => { const k = b.dataset.buse; if (!(me.inv[k] > 0)) return;
+    if (DISH_INFO[k]) eatDish(k); else { const m = usePotion(k); if (m){ toast(m); hud(); } }
+    bagMsg = ''; redraw(); });
+  on('[data-bpick]', b => { const k = b.dataset.bpick, L = bagLikers(k); if (L.length){ npcGiftId = L[0].id; return openSheet('home', 'npcgift'); } bagPick = !bagPick; redraw(); });
+  on('[data-bgift]', b => { npcGiftId = b.dataset.bgift; bagPick = false; openSheet('home', 'npcgift'); });
+  on('[data-btrash]', async b => { const k = b.dataset.btrash; if (!(me.inv[k] > 0)) return;
+    if (!await confirmBox(`${withJosa(ITEM[k] || k, '을', '를')} 하나 버릴까요? 되돌릴 수 없어요.`, '버리기', '아니요', true)) return;
+    me.inv[k]--; if (me.inv[k] <= 0) delete me.inv[k]; bagMsg = `${withJosa(ITEM[k] || k, '을', '를')} 하나 버렸어요.`; toast(bagMsg); save(); redraw(); });
+  on('[data-bwear]', b => { const c = bagCloth().find(x => x.key === b.dataset.bwear); if (!c) return; me.av[c.cat] = c.i; me.av = World.Avatar.fix(me.av); delete me.av.house; save(); World.setPlayer(me.nick, avOf(me)); const hf = $('#hudFace'); if (hf) delete hf.dataset.k; toast(`${withJosa(c.p.n, '을', '를')} 입었어요`); redraw(); });
+  on('[data-bavatar]', () => { avDraft = null; openSheet('home', 'avatar'); });
+  // 보여 준 칸은 '본 것'으로
+  let changed = false; list.forEach(e => { if (e.kind === 'inv' && me.bagSeen[e.id] !== me.inv[e.id]){ me.bagSeen[e.id] = me.inv[e.id]; changed = true; } });
+  if (changed) save();
+  bagBadge();
+}
 // ----- /가방 -----
 
 // ----- 내 정보 (지시서 2-3) -----
