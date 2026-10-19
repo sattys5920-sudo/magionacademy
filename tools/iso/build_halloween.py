@@ -23,6 +23,7 @@ for k, (house, name, hall) in DORM.items():
         if o['door'] and o['door']['to'] == k: o['door']['label'] = name
 for o in camp['objs']:                          # 마을 '가면 가게' = 옷 가게 (index.html World.onLockedDoor)
     if o['door'] and o['door']['label'] == '가면 가게': o['door']['label'] = '옷 가게'
+    if o['door'] and o['door']['label'] == '해골 잡화점': o['door']['label'] = '낚시 도구점'   # index.html World.onLockedDoor
 for a in camp['areas']:
     if a['n'] == '기숙사': a['n'] = '기숙사 네 동'
 AV = json.load(open(I + '/out/lpc_meta.json'))   # lpc/build_lpc.py (LPC 캐릭터 부품)

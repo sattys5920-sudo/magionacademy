@@ -52,6 +52,28 @@ body:not(.inworld) .fab,body:not(.inworld) .hud{display:none}
 .bubble .pm button{margin:0;padding:5px 6px;font-size:12px;white-space:nowrap}
 .bubble .pm.emo{grid-template-columns:repeat(4,1fr)}
 .bubble .pm.emo button{padding:2px;background:#FAF1E2;line-height:0}
+#fishui{position:absolute;inset:0;z-index:7;display:none;align-items:flex-end;justify-content:center;padding:0 12px calc(16px + env(safe-area-inset-bottom));touch-action:manipulation}
+#fishui.on{display:flex}
+body:not(.inworld) #fishui{display:none}
+.fpan{width:100%;max-width:340px;background:#FAF1E2;color:#22183F;box-shadow:0 0 0 3px #22183F;padding:12px;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
+.fpan b{font-family:'G11B',monospace;font-size:12px;display:flex;align-items:center;gap:6px}
+.fpan .bang{font-size:24px;line-height:28px;color:#C2385E}
+.fpan .frow{display:flex;gap:8px}
+.fbar{position:relative;width:100%;height:28px;background:#3A2E68;box-shadow:0 0 0 2px #22183F}
+.fbar .fz{position:absolute;top:0;bottom:0;background:#8CE6B0}
+.fbar .fn{position:absolute;top:-4px;bottom:-4px;width:4px;margin-left:-2px;background:#FFD866;box-shadow:0 0 0 2px #22183F}
+.fstar{color:#E0A020;font-family:'G11',monospace;font-size:12px}
+.fgot{display:flex;align-items:center;gap:8px;text-align:left}
+.fgot div{display:flex;flex-direction:column;gap:2px}
+.fgot .new{color:#C2385E;font-family:'G11B',monospace;font-size:12px}
+.fgrid{grid-template-columns:repeat(4,1fr)}
+.fcell{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px;min-height:92px;text-align:center}
+.fcell .s{font-size:10px;line-height:12px;font-family:'G9',monospace;white-space:normal;word-break:keep-all}
+.fcell{position:relative}
+.fcell .fno{position:absolute;left:3px;top:2px;font-family:'G9',monospace;font-size:10px;line-height:10px;color:var(--sub)}
+.fcell.unk{opacity:.55}
+.fcell .q{width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:'G11B',monospace;font-size:24px;color:var(--sub)}
+.fst{color:#E0A020;font-size:10px;font-family:'G9',monospace;line-height:12px}
 #talk{position:absolute;left:10px;right:80px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;display:none;flex-direction:column;gap:6px;font-family:'G11',monospace}
 #talk.on{display:flex}
 body:not(.inworld) #talk{display:none}
@@ -199,6 +221,7 @@ button.who:not(:disabled){border-color:var(--ink)}
     <div id="fade"></div>
   </div>
   <div class="fab"><button id="tToday" class="main">오늘</button><button id="tTalk">말하기</button><button id="tMap">지도</button><button id="tZoom">멀리</button><button id="tDay">밝게</button></div>
+  <div id="fishui"></div>
   <div id="talk"><div id="tlog"></div><div class="temo" id="temo"></div><form id="tform" autocomplete="off"><input id="tin" maxlength="40" placeholder="말풍선으로 말해요 (40자)" enterkeyhint="send"><button>보내기</button></form></div>
   <div id="mapv"><div class="mhead"><b>호박달 마녀학교 · 몬스터 마을 지도</b><button id="mClose">닫기</button></div><div id="mwrap"><div id="minner"><canvas id="mcv"></canvas></div></div><div class="mhint">가고 싶은 곳을 누르면 걸어가요</div></div>
   <div id="app"></div>
@@ -214,7 +237,8 @@ const app = $('#app');
 // ===== 데이터 =====
 const ICONS = ['coin','mana','p_red','p_blue','p_green','p_purple','herb','mush','wool','uhair','scale','egg','heart','book','cauldron','clock','bag','owl','star','drop','seed','sprout','can','candle','bed','rune',
   'p_grow','p_vigor','p_fluff','p_dragon','p_dawn','p_sun','p_dusk','p_moon','mist','sun','pollen','stardust','whisker','slime','honey','silk','feather','milk','hegg'];
-const ic = (k, extra='') => { const P = POTION_INFO[k], G = !ICONS.includes(k) && typeof SEED_INFO !== 'undefined' && SEED_INFO[k];
+const ic = (k, extra='') => { const P = POTION_INFO[k], G = !ICONS.includes(k) && typeof SEED_INFO !== 'undefined' && SEED_INFO[k], C = typeof CATCH_INFO !== 'undefined' && CATCH_INFO[k];
+  if (C) return `<i class="ic" style="background:url(art/${C.sheet}.png?v=${FISH_ART_V}) ${-32 * C.i}px 0/${32 * C.n}px 32px no-repeat;${extra}"></i>`;
   if (G) return `<i class="ic" style="background-image:url(art/plants.png);background-position:${-32 * (G.ic % 10)}px ${-32 * Math.floor(G.ic / 10)}px;${extra}"></i>`;
   return P ? `<i class="ic" style="background-image:url(art/potions.png);background-position:${-32 * (P.ic % 10)}px ${-32 * Math.floor(P.ic / 10)}px;${extra}"></i>`
     : `<i class="ic" style="background-position:${-32 * ICONS.indexOf(k)}px 0;${extra}"></i>`; };
@@ -557,7 +581,7 @@ function normalize(p){
   if (p.furn){ p.fbag = p.fbag || {}; Object.entries(p.furn).forEach(([k, st]) => { if (st?.own && OLD_FURN[k]) p.fbag[OLD_FURN[k]] = (p.fbag[OLD_FURN[k]] || 0) + 1; }); delete p.furn; }
   p.fbag = p.fbag || {}; p.room = (p.room || []).filter(r => FURN_BY[r.f]); p.common = p.common || { stage: 1, pool: {} }; p.common.pool = p.common.pool || {};
   p.orders = p.orders || []; p.know = p.know || 0;
-  p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look)); p.closet = p.closet || {};   // closet: 옷 가게에서 산 옷 { '부위:부품id': 1 }
+  p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look)); p.closet = p.closet || {}; p.rod = p.rod || 0; p.fdex = p.fdex || {};   // rod 낚싯대 단계, fdex 낚시·채집 도감 { id: { n, cm } }   // closet: 옷 가게에서 산 옷 { '부위:부품id': 1 }
   p.plots = (p.plots || []).map(x => {
     if (!x.k || !SEED_INFO[x.k]) return { k: null };
     if (x.at) return x;
@@ -656,8 +680,10 @@ World.onPet = id => { const i = me.cr.findIndex(c => c.id === id); if (i < 0) re
 function enterWorld(){
   document.body.classList.add('inworld'); app.innerHTML = ''; sheetOn = false; app.classList.remove('open');
   World.setPlayer(me.nick, avOf(me)); World.start(); World.resize();
-  syncPens(); syncRoom(); syncHalls(); syncHallNames(); hud();
+  syncPens(); syncRoom(); syncHalls(); syncHallNames(); syncSpots(); hud();
+  clearInterval(spotTimer); spotTimer = setInterval(syncSpots, 60000);   // 날이 바뀌면 채집 지점도 새로
 }
+let spotTimer = 0;
 // ===== 학생끼리 어울리기: 같은 곳에 있는 친구가 걸어 다니고, 말풍선·이모티콘·인사를 주고받아요 =====
 // online/<uid> 에 지금 있는 곳(m: 장소 열쇠, x, y)과 마지막 한 말(s)을 올려요
 const EMOS = ['손인사', '웃음', '깔깔', '하트눈', '놀람', '눈물', '화남', '하트', '엄지척', '반짝', '호박', '유령'];   // art/emo.png 순서 (tools/iso/emotes.py)
@@ -716,6 +742,175 @@ $('#temo').innerHTML = EMOS.map((x, i) => `<button data-te="${i}">${emoI(i)}</bu
 document.querySelectorAll('[data-te]').forEach(b => b.onclick = () => speak(EMOS[+b.dataset.te], +b.dataset.te + 1));
 $('#tform').onsubmit = e => { e.preventDefault(); speak($('#tin').value); $('#tin').value = ''; };
 $('#tTalk').onclick = () => { talkOn = !talkOn; $('#talk').classList.toggle('on', talkOn); $('#tTalk').textContent = talkOn ? '닫기' : '말하기'; if (talkOn && matchMedia('(pointer:fine)').matches) $('#tin').focus(); };
+// ===== 낚시 · 채집: 물고기 40 + 쓰레기 3, 채집물 50, 낚싯대 5 =====
+// 그림은 art/fish.png · forage.png · rods.png (tools/iso/fishing_art.py, 이 표 순서대로). 앞에 있을수록 흔해요: 칸마다 희귀도가 다 달라요
+// 물고기: [id, 이름, 틀(크기용), 나오는 시간(없으면 언제나 · dew 새벽 · ember 한낮 · dusk 노을 · moon 밤)]
+const FISH_LIST = [
+  ['f_minnow', '유령 피라미', 'slim'], ['f_crucian', '호박 붕어', 'round'], ['f_killi', '이끼 송사리', 'slim'], ['f_loach', '진흙 미꾸라지', 'long'], ['f_smelt', '촛불 빙어', 'slim', 'dew'],
+  ['f_carp', '버섯 잉어', 'round'], ['f_batcat', '박쥐 메기', 'cat', 'moon'], ['f_candy', '사탕 열대어', 'round', 'ember'], ['f_jelly', '젤리 해파리', 'jelly'], ['f_cray', '거미 가재', 'cray'],
+  ['f_conch', '마녀 모자 소라', 'shell'], ['f_trout', '달빛 송어', 'slim', 'moon'], ['f_puffer', '눈알 복어', 'puff'], ['f_bonecat', '해골 메기', 'cat', 'dusk'], ['f_betta', '꽃잎 베타', 'round', 'ember'],
+  ['f_cloudray', '구름 가오리', 'flat', 'dew'], ['f_cotton', '솜사탕 넙치', 'flat'], ['f_rtrout', '무지개 송어', 'slim', 'ember'], ['f_weel', '늑대 장어', 'long', 'moon'], ['f_sweet', '안개 은어', 'slim', 'dew'],
+  ['f_angler', '호박등 아귀', 'angler', 'dusk'], ['f_piranha', '뱀파이어 피라냐', 'angler', 'moon'], ['f_starfish', '별사탕 불가사리', 'star'], ['f_goby', '부엉이 망둥이', 'round', 'dusk'], ['f_shrimp', '수정 새우', 'shrimp'],
+  ['f_bream', '루비 도미', 'round', 'ember'], ['f_seahorse', '유령 해마', 'horse', 'moon'], ['f_bolt', '번개 뱀장어', 'long', 'ember'], ['f_gold', '황금 잉어', 'round'], ['f_salmon', '오로라 연어', 'slim', 'dew'],
+  ['f_book', '마법서 넙치', 'flat', 'dusk'], ['f_witch', '마녀 모자 금붕어', 'round', 'dusk'], ['f_shadow', '그림자 가오리', 'flat', 'moon'], ['f_moonbun', '달토끼 금붕어', 'round', 'moon'], ['f_turtle', '왕관 거북', 'turtle'],
+  ['f_dragon', '용 비늘 잉어', 'round', 'ember'], ['f_whale', '별똥별 꼬마 고래', 'whale', 'dew'], ['f_mermaid', '인어의 은빛 잉어', 'slim'], ['f_king', '호박달 메기왕', 'cat', 'dusk'], ['f_lord', '호수의 주인', 'lord', 'moon'],
+];
+const FISH_ART_V = 1;   // 그림을 고치면 올려요 (png는 오래 캐시돼요)
+const JUNK_LIST = [['j_boot', '낡은 장화'], ['j_can', '찌그러진 깡통'], ['j_weed', '물풀 뭉치']];
+// 채집물: [id, 이름, 나는 곳(f 숲 · g 묘지 · l 호숫가 · p 들판, 여러 글자면 어디든 그중)]
+const FORAGE_LIST = [
+  ['g2_acorn', '도토리', 'fp'], ['g2_cone', '솔방울', 'f'], ['g2_clover3', '세잎클로버', 'p'], ['g2_pebble', '동글 조약돌', 'lp'], ['g2_daisy', '들꽃', 'p'],
+  ['g2_fern', '고사리', 'f'], ['g2_moss', '촉촉 이끼', 'fl'], ['g2_maple', '빨간 단풍잎', 'fp'], ['g2_ginkgo', '노란 은행잎', 'p'], ['g2_crowf', '까마귀 깃털', 'gp'],
+  ['g2_rasp', '산딸기', 'fp'], ['g2_blue', '블루베리', 'f'], ['g2_chest', '알밤', 'f'], ['g2_walnut', '호두', 'fp'], ['g2_catnip', '개박하', 'p'],
+  ['g2_pseed', '호박씨', 'p'], ['g2_sseed', '해바라기씨', 'p'], ['g2_snail', '달팽이 껍질', 'lf'], ['g2_lady', '무당벌레', 'p'], ['g2_straw', '빗자루 짚', 'p'],
+  ['g2_mushred', '빨간 독버섯', 'fg'], ['g2_mushpine', '송이버섯', 'f'], ['g2_bell', '은방울꽃', 'fl'], ['g2_cicada', '매미 허물', 'fp'], ['g2_firefly', '반딧불이', 'l'],
+  ['g2_batleaf', '박쥐 날개 잎', 'g'], ['g2_eve', '달맞이꽃', 'pl'], ['g2_spider', '거미 버섯', 'g'], ['g2_wild', '들장미 열매', 'p'], ['g2_crab', '꽃사과', 'p'],
+  ['g2_poison', '독사과', 'g'], ['g2_bfly', '나비 날개', 'p'], ['g2_stag', '사슴벌레', 'f'], ['g2_spegg', '거미 알', 'g'], ['g2_ghostf', '유령 꽃', 'g'],
+  ['g2_skullf', '해골 꽃', 'g'], ['g2_moonm', '달빛 버섯', 'fl'], ['g2_rmoss', '무지개 이끼', 'l'], ['g2_shiny', '반짝 돌', 'lp'], ['g2_amber', '호박석', 'f'],
+  ['g2_amethyst', '자수정', 'g'], ['g2_fossil', '조개 화석', 'l'], ['g2_moonst', '월장석', 'gl'], ['g2_stardust', '별가루 병', 'p'], ['g2_fairy', '요정 날개 가루', 'f'],
+  ['g2_wolf', '늑대 털 뭉치', 'f'], ['g2_starfall', '별똥별 조각', 'pl'], ['g2_gacorn', '황금 도토리', 'f'], ['g2_unicorn', '유니콘 털', 'fp'], ['g2_pumpmoon', '호박달 씨앗', 'g'],
+];
+const CM = { slim: [8, 32], round: [6, 26], long: [20, 80], flat: [15, 60], cat: [20, 72], puff: [5, 18], jelly: [4, 20], shrimp: [3, 12], cray: [6, 20], shell: [4, 14], horse: [5, 16], star: [6, 22], turtle: [15, 52], whale: [60, 180], angler: [12, 40], lord: [120, 320] };
+const STARS = n => '★'.repeat(n) + '☆'.repeat(5 - n);
+// 희귀도: 칸마다 다른 무게(앞일수록 큼). 등급(★)은 묶어서 보여 줘요
+const FISH = FISH_LIST.map(([id, name, t, time], i) => ({ id, name, i, time, cm: CM[t], w: Math.round(10000 * .86 ** i), grade: i < 12 ? 1 : i < 22 ? 2 : i < 31 ? 3 : i < 37 ? 4 : 5, pay: Math.round(12 * 1.125 ** i) }));
+const JUNK = JUNK_LIST.map(([id, name], j) => ({ id, name, i: 40 + j, junk: true, grade: 0, pay: 1 }));
+const FORAGE = FORAGE_LIST.map(([id, name, z], i) => ({ id, name, i, z, w: Math.round(10000 * .9 ** i), grade: i < 15 ? 1 : i < 28 ? 2 : i < 39 ? 3 : i < 46 ? 4 : 5, pay: Math.round(6 * 1.11 ** i) }));
+const CATCH_INFO = Object.fromEntries([...FISH, ...JUNK].map(x => [x.id, { ...x, sheet: 'fish', n: 43 }]).concat(FORAGE.map(x => [x.id, { ...x, sheet: 'forage', n: 50 }])));
+const CATCH = Object.keys(CATCH_INFO);
+CATCH.forEach(k => { ITEM[k] = CATCH_INFO[k].name; });
+// 낚싯대: 좋을수록 입질이 빠르고, 희귀한 물고기가 잘 오고, 맞히는 칸이 넓고, 쓰레기가 덜 걸려요
+const RODS = [
+  { name: '나무 낚싯대', price: 0, desc: '처음 받은 낚싯대' },
+  { name: '대나무 낚싯대', price: 600, desc: '입질이 조금 빨라요' },
+  { name: '은 낚싯대', price: 2500, desc: '드문 물고기가 더 잘 와요' },
+  { name: '달빛 낚싯대', price: 7000, desc: '맞히는 칸이 넓어져요' },
+  { name: '호박달 낚싯대', price: 18000, desc: '전설의 물고기도 노려 봐요' },
+];
+const rodIc = (i, s = 32) => `<i class="ic" style="width:${s}px;height:${s}px;background:url(art/rods.png?v=${FISH_ART_V}) ${-s * i}px 0/${s * 5}px ${s}px no-repeat"></i>`;
+const rodLv = () => me.rod || 0;
+const fishNow = f => !f.time || f.time === houseNow();
+const TIME_NAME = { dew: '새벽', ember: '한낮', dusk: '노을', moon: '밤' };
+const pickW = list => { let r = Math.random() * list.reduce((t, x) => t + x.w, 0); for (const x of list){ r -= x.w; if (r <= 0) return x; } return list[list.length - 1]; };
+function rollFish(){
+  const L = rodLv();
+  if (Math.random() < .12 - L * .025) return JUNK[Math.floor(Math.random() * JUNK.length)];
+  return pickW(FISH.filter(fishNow).map(f => ({ ...f, w: f.w * (1 + L * .9 * f.i / 39) })));
+}
+function dexAdd(k, cm){
+  me.fdex = me.fdex || {}; const d = me.fdex[k] || { n: 0 }, isNew = !d.n;
+  d.n++; if (cm && cm > (d.cm || 0)) d.cm = cm; me.fdex[k] = d; me.inv[k] = (me.inv[k] || 0) + 1;
+  return isNew;
+}
+// ---------- 낚시: 물을 누르면 찌를 던지고, 찌가 쏙 들어가면 탭, 바늘이 초록 칸에 올 때 탭 ----------
+let fishing = null;
+const fishUI = () => $('#fishui');
+function fishEnd(){ if (!fishing) return; clearTimeout(fishing.timer); cancelAnimationFrame(fishing.raf); fishing = null; World.setBobber(null); World.busyFish = false; fishUI().classList.remove('on'); fishUI().innerHTML = ''; }
+function fishShow(html){ const u = fishUI(); u.innerHTML = `<div class="fpan px">${html}</div>`; u.classList.add('on'); }
+World.onWater = (x, y) => {
+  if (!me || fishing) return;
+  World.busyFish = true; World.hideBubble(); fishing = { x, y, st: 'wait' }; World.setBobber({ x, y });
+  fishShow(`<b>${rodIc(rodLv(), 24)} 찌를 던졌어요</b><span class="s">찌가 쏙 들어가면 화면을 눌러요</span><button class="btn sm" data-fx="stop">그만하기</button>`);
+  fishing.timer = setTimeout(fishBite, 1800 + Math.random() * (5200 - rodLv() * 600));
+};
+function fishBite(){
+  if (!fishing) return;
+  fishing.st = 'bite'; World.setBobber({ x: fishing.x, y: fishing.y, bite: true });
+  fishShow(`<b class="bang">❗ 입질!</b><span class="s">지금 눌러요!</span>`);
+  fishing.timer = setTimeout(() => { if (fishing && fishing.st === 'bite') fishMiss('너무 늦었어요… 찌가 들어가면 바로 눌러요'); }, 1000 + rodLv() * 120);
+}
+function fishMiss(msg){
+  if (!fishing) return; clearTimeout(fishing.timer); cancelAnimationFrame(fishing.raf); fishing.st = 'done'; World.setBobber(null);
+  fishShow(`<b>${msg}</b><div class="frow"><button class="btn sm go" data-fx="again">다시 던지기</button><button class="btn sm" data-fx="stop">그만</button></div>`);
+}
+function fishReel(){
+  const f = rollFish(), L = rodLv(), g = f.grade || 1;
+  fishing.st = 'reel'; fishing.f = f; fishing.hits = 0; fishing.need = [1, 1, 1, 2, 2, 3][g];
+  fishing.zw = Math.max(.1, .3 - g * .035 + L * .03); fishing.zx = .2 + Math.random() * (.6 - fishing.zw); fishing.pos = 0; fishing.dir = 1; fishing.v = .55 + g * .16; fishing.last = performance.now();
+  World.setBobber({ x: fishing.x, y: fishing.y, bite: true });
+  fishShow(`<b>${f.junk ? '뭔가 걸렸어요!' : '물고기가 걸렸어요!'} <span class="fstar">${f.junk ? '' : STARS(g)}</span></b><div class="fbar"><i class="fz"></i><i class="fn"></i></div><span class="s" id="fhits">초록 칸에서 눌러요 · ${fishing.hits} / ${fishing.need}</span>`);
+  const loop = now => { if (!fishing || fishing.st !== 'reel') return; const dt = Math.min(.05, (now - fishing.last) / 1000); fishing.last = now;
+    fishing.pos += fishing.dir * fishing.v * dt; if (fishing.pos > 1){ fishing.pos = 1; fishing.dir = -1; } if (fishing.pos < 0){ fishing.pos = 0; fishing.dir = 1; }
+    const z = fishUI().querySelector('.fz'), n = fishUI().querySelector('.fn'); if (z){ z.style.left = fishing.zx * 100 + '%'; z.style.width = fishing.zw * 100 + '%'; n.style.left = fishing.pos * 100 + '%'; }
+    fishing.raf = requestAnimationFrame(loop); };
+  fishing.raf = requestAnimationFrame(loop);
+}
+function fishTap(){
+  if (!fishing) return;
+  if (fishing.st === 'wait'){ fishMiss('너무 빨랐어요! 물고기가 도망갔어요'); return; }
+  if (fishing.st === 'bite'){ clearTimeout(fishing.timer); fishReel(); return; }
+  if (fishing.st !== 'reel') return;
+  if (fishing.pos >= fishing.zx && fishing.pos <= fishing.zx + fishing.zw){
+    fishing.hits++; if (fishing.hits >= fishing.need) return fishCatch();
+    fishing.zx = .05 + Math.random() * (.9 - fishing.zw); fishing.v *= 1.15; $('#fhits').textContent = `한 번 더! · ${fishing.hits} / ${fishing.need}`;
+  } else fishMiss(fishing.f.junk ? '휙, 놓쳤어요' : `앗, ${fishing.f.grade >= 3 ? '커다란 ' : ''}물고기가 도망갔어요`);
+}
+function fishCatch(){
+  const f = fishing.f; cancelAnimationFrame(fishing.raf); fishing.st = 'done'; World.setBobber(null);
+  const cm = f.junk ? 0 : Math.round((f.cm[0] + (f.cm[1] - f.cm[0]) * Math.random() ** 1.6) * 10) / 10;
+  const isNew = dexAdd(f.id, cm), rec = !f.junk && me.fdex[f.id].cm === cm && !isNew;
+  if (isNew && !f.junk){ me.mana += f.grade; }
+  save(); hud();
+  if (!f.junk && f.grade >= 3) speak(`🎣 ${f.name} ${cm}cm 낚았다!`);
+  fishShow(`<div class="fgot">${ic(f.id, 'transform:scale(1.5);margin:8px')}<div><b>${f.name}</b>${f.junk ? '<span class="s">쓰레기예요… 생선 가게에서 1G에 받아 줘요</span>' : `<span class="fstar">${STARS(f.grade)}</span><span class="s">${cm}cm${rec ? ' · 최고 기록!' : ''} · ${f.pay}G</span>`}${isNew && !f.junk ? `<span class="new">새 물고기! 마력 +${f.grade}</span>` : ''}</div></div>
+    <div class="frow"><button class="btn sm go" data-fx="again">다시 던지기</button><button class="btn sm" data-fx="stop">그만</button></div>`);
+}
+document.addEventListener('pointerdown', e => {
+  const u = fishUI(); if (!u || !u.classList.contains('on')) return;
+  const b = e.target.closest('[data-fx]');
+  if (b){ e.preventDefault(); const k = b.dataset.fx, pos = fishing && [fishing.x, fishing.y]; fishEnd(); if (k === 'again' && pos) World.onWater(pos[0], pos[1]); return; }
+  if (u.contains(e.target)){ e.preventDefault(); fishTap(); }
+});
+// ---------- 채집: 날마다 마을 곳곳 16군데가 반짝여요 (사람마다 자리가 달라요) ----------
+const seedRand = s => { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+function spotsToday(){
+  const C = World.meta('campus')?.forage || [], R = seedRand((uid || me.nick) + todayKey()), want = { l: 3, g: 3, f: 4, p: 6 }, out = [];
+  Object.entries(want).forEach(([z, n]) => { const pool = C.filter(c => c[2] === z); for (let k = 0; k < n && pool.length; k++){ const c = pool.splice(Math.floor(R() * pool.length), 1)[0]; out.push({ x: c[0], y: c[1], z, r: R() }); } });
+  return out;
+}
+function syncSpots(){
+  if (!me) return;
+  if (!me.fg || me.fg.d !== todayKey()) me.fg = { d: todayKey(), got: [] };
+  const all = spotsToday(); World.setSpots('campus', all.map((s, i) => ({ ...s, i })).filter(s => !me.fg.got.includes(s.i)));
+}
+World.onSpot = si => {
+  const all = spotsToday(), live = all.map((s, i) => ({ ...s, i })).filter(s => !me.fg.got.includes(s.i)), sp = live[si]; if (!sp) return;
+  const pool = FORAGE.filter(x => x.z.includes(sp.z)); let r = sp.r * pool.reduce((t, x) => t + x.w, 0), it = pool[pool.length - 1];
+  for (const x of pool){ r -= x.w; if (r <= 0){ it = x; break; } }
+  const isNew = dexAdd(it.id); me.fg.got.push(sp.i); if (isNew) me.mana += it.grade;
+  save(); hud(); syncSpots();
+  if (it.grade >= 3) speak(`✨ ${it.name} 찾았다!`);
+  toast(`${it.name}을(를) 주웠어요! ${STARS(it.grade)}${isNew ? ` · 새 채집물! 마력 +${it.grade}` : ''}`);
+};
+// ---------- 낚시·채집 화면: 도감 · 생선 가게(팔기) · 낚싯대 ----------
+let fsTab = 'fish', fsMsg = '';
+function renderFish(){
+  const D = me.fdex || {}, nf = FISH.filter(f => D[f.id]).length, ng = FORAGE.filter(f => D[f.id]).length;
+  const tabs = [['fish', `물고기 ${nf}/40`], ['forage', `채집물 ${ng}/50`], ['sell', '생선 가게'], ['rod', '낚싯대']];
+  const cell = x => { const d = D[x.id]; return `<div class="cell fcell ${d ? '' : 'unk'}"><span class="fno">No.${x.i + 1}</span>${d ? ic(x.id) : '<span class="q">?</span>'}<span class="s">${d ? esc(x.name) : '???'}</span><span class="fst">${STARS(x.grade)}</span>${d ? `<span class="s sub">${x.cm ? `최고 ${d.cm}cm` : `${d.n}개 주움`}</span>` : x.time ? `<span class="s sub">${TIME_NAME[x.time]}에만</span>` : x.z ? `<span class="s sub">${[...x.z].map(c => ({ f: '숲', g: '묘지', l: '호숫가', p: '들판' })[c]).join('·')}</span>` : ''}</div>`; };
+  let body = '';
+  if (fsTab === 'fish') body = `${hint(fsMsg, `유령 호수 물가를 누르면 낚시해요 · 지금은 ${TIME_NAME[houseNow()]} 시간 · 앞에 있을수록 흔해요`)}<div class="grid fgrid">${FISH.map(cell).join('')}</div>`;
+  if (fsTab === 'forage') body = `${hint(fsMsg, `마을 곳곳의 반짝이는 곳을 누르면 주워요 · 오늘 ${16 - (me.fg?.d === todayKey() ? me.fg.got.length : 0)}군데 남음`)}<div class="grid fgrid">${FORAGE.map(cell).join('')}</div>`;
+  if (fsTab === 'sell'){
+    const have = CATCH.filter(k => me.inv[k] > 0), total = have.reduce((t, k) => t + CATCH_INFO[k].pay * me.inv[k], 0);
+    body = `${hint(fsMsg, '물고기와 채집물을 사 줘요 · 시장에 올려 친구에게 팔 수도 있어요')}
+      ${have.length ? `<div class="box px">${have.map(k => { const x = CATCH_INFO[k]; return `<div class="li">${ic(k)}<div class="main"><span class="t">${esc(x.name)} ×${me.inv[k]}</span><span class="d">${x.junk ? '쓰레기' : STARS(x.grade)} · 1개 ${x.pay}G</span></div><button class="btn sm" data-fsell="${k}">1개</button><button class="btn sm go" data-fsall="${k}">다</button></div>`; }).join('')}</div>
+      <button class="btn gold" id="fsAll" style="width:100%">전부 팔기 · ${total.toLocaleString()}G</button>` : '<div class="hint">팔 물건이 없어요. 호수에서 낚시하거나 마을에서 주워 와요.</div>'}`;
+  }
+  if (fsTab === 'rod') body = `${hint(fsMsg, `지금 쓰는 낚싯대: ${RODS[rodLv()].name}`)}<div class="box px">${RODS.map((r, i) => `<div class="li">${rodIc(i)}<div class="main"><span class="t">${r.name}</span><span class="d">${r.desc}</span></div>${i <= rodLv() ? `<span class="tag">${i === rodLv() ? '쓰는 중' : '가짐'}</span>` : i === rodLv() + 1 ? `<button class="btn sm go" data-rod="${i}" ${me.coin >= r.price ? '' : 'disabled'}>${ic('coin', 'transform:scale(.7);margin:0 -6px')}${r.price.toLocaleString()}</button>` : `<span class="s sub">${r.price.toLocaleString()}G</span>`}</div>`).join('')}</div>`;
+  frame(null, '낚시 · 채집', `유령 호수와 등불 시장 · ${RODS[rodLv()].name}`, `
+    <div class="seg" style="grid-template-columns:repeat(4,1fr)">${tabs.map(([k, l]) => `<button data-fst="${k}" class="${fsTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+    <section class="sec">${body}</section>
+    <div style="display:flex;gap:8px"><button class="btn go" id="fsLake" style="flex:1">🎣 유령 호수로</button>${backBtn}</div>`);
+  $('#back').onclick = closeSheet;
+  $('#fsLake').onclick = () => { closeSheet(); World.teleport('campus', [56, 53]); };
+  on('[data-fst]', b => { fsTab = b.dataset.fst; fsMsg = ''; renderFish(); });
+  const sell = (k, n) => { n = Math.min(n, me.inv[k]); if (n <= 0) return 0; me.inv[k] -= n; const g = CATCH_INFO[k].pay * n; me.coin += g; return g; };
+  on('[data-fsell]', b => { const g = sell(b.dataset.fsell, 1); fsMsg = `${ITEM[b.dataset.fsell]} 1개를 팔았어요. +${g}G`; save(); renderFish(); });
+  on('[data-fsall]', b => { const k = b.dataset.fsall, n = me.inv[k], g = sell(k, n); fsMsg = `${ITEM[k]} ${n}개를 팔았어요. +${g}G`; save(); renderFish(); });
+  $('#fsAll') && ($('#fsAll').onclick = () => { let g = 0, n = 0; CATCH.forEach(k => { n += me.inv[k] || 0; g += sell(k, me.inv[k] || 0); }); fsMsg = `${n}개를 팔았어요. +${g.toLocaleString()}G`; save(); renderFish(); });
+  on('[data-rod]', b => { const i = +b.dataset.rod, r = RODS[i]; if (me.coin < r.price || i !== rodLv() + 1) return; me.coin -= r.price; me.rod = i; fsMsg = `${r.name}을(를) 샀어요! ${r.desc}`; save(); renderFish(); });
+}
 // 바로 가기: 그 장소로 순간 이동한 다음 화면을 열어요
 const goPlace = (mapId, obj, t, s) => { closeSheet(); World.teleport(mapId, obj, () => openSheet(t, s)); };
 const ACT_GO = { '물약 끓이기':'lab', '재료함 열기':'lab', '재료 꺼내기':'lab', '레시피 노트 보기':'lab', '시장 보기':'market', '박쥐 돌보기':'ranch', '모이 주기':'ranch', '독초 돌보기':'green', '물 주기':'green' };
@@ -751,6 +946,7 @@ World.onAct = (mapId, o, a) => {
     return openSheet('home', 'common');
   }
   if (label === '말 걸기' || label === '오늘의 실습 보기') return openSheet('home', 'class');
+  if (label === '물고기 팔기'){ fsTab = 'sell'; fsMsg = ''; return openSheet('home', 'fish'); }
   if (label === '쓰다듬기' && o.name === 'blackcat') return openSheet('ranch');
   if (mapId === 'pen'){ ranchTab = label === '부화실 보기' ? 'hatch' : 'pen'; ranchMsg = ''; return openSheet('ranch'); }
   if (label === '소원 빌기'){ const ev = eventAt(); if (ev && Date.now() < ev.end) return openSheet('home', 'event'); }
@@ -772,6 +968,7 @@ function render(){
   if (sub === 'dorm') return renderDorm();
   if (sub === 'common') return renderCommon();
   if (sub === 'visit') return renderVisit();
+  if (sub === 'fish') return renderFish();
   if (sub === 'event') return renderEvent();
   if (sub === 'exam') return renderExam();
   ({ home:renderHome, lab:renderLab, green:renderGreen, ranch:renderRanch, market:renderMarket })[tab]();
@@ -797,6 +994,7 @@ function renderHome(){
       <button class="tile px" id="goDorm">${ic('bed')}<span class="main"><span class="b">내 방</span><span class="s sub">${H.name} ${roomNo(me.house, uid || me.nick)}호</span></span></button>
     </div>
     <button class="tile px" id="goAvatar" style="width:100%"><div class="face" style="width:40px;height:40px;background:#E8DDF8">${World.Avatar.loaded ? `<img src="${World.Avatar.head(avOf(me))}" alt="" style="width:100%;height:100%;image-rendering:pixelated">` : ''}</div><span class="main" style="flex:1"><span class="b">캐릭터 꾸미기</span><span class="s sub">머리·눈·옷·신발·소품을 바꿔요</span></span></button>
+    <button class="tile px" id="goFish" style="width:100%">${rodIc(rodLv())}<span class="main"><span class="b">낚시 · 채집</span><span class="s sub">도감 물고기 ${FISH.filter(f => me.fdex?.[f.id]).length}/40 · 채집물 ${FORAGE.filter(f => me.fdex?.[f.id]).length}/50 · 오늘 반짝이 ${16 - (me.fg?.d === todayKey() ? me.fg.got.length : 0)}곳</span></span></button>
     <section class="sec">
       ${secH('바로 가기', '누르면 그곳으로 가요')}
       <div class="tiles">${[['lab', 'cauldron', 'lab', 'cauldron', '물약 교실', '물약 끓이기·도감'], ['toxic', 'bed', 'green', 'sprout', '독초 온실', '씨앗 심고 수확'], ['pen', 'trough', 'ranch', 'egg', '내 사육장', '생물 돌보기·부화실'], ['campus', 'stall', 'market', 'bag', '등불 시장', '사고팔기·친구']]
@@ -816,6 +1014,7 @@ function renderHome(){
   $('#goClass').onclick = () => goPlace('lab', 'skull', 'home', 'class');
   $('#goDorm').onclick = () => goPlace(myRoomId(), 'bed', 'home', 'dorm');
   $('#goAvatar').onclick = () => { avDraft = null; openSheet('home', 'avatar'); };
+  $('#goFish').onclick = () => { fsTab = 'fish'; fsMsg = ''; openSheet('home', 'fish'); };
   on('[data-go]', b => { const [m, o, t] = b.dataset.go.split(','); goPlace(m, o, t); });
 }
 
@@ -1553,7 +1752,7 @@ function renderVisit(){
   const guest = Object.entries(visitGuest).sort((a, b) => b[1].at - a[1].at);
   me.wrote = me.wrote || {};
   const wrote = me.wrote[visitUid] === todayKey();
-  const giftable = [...POTIONS, ...MATS].filter(k => me.inv[k] > 0);
+  const giftable = [...POTIONS, ...MATS, ...CATCH].filter(k => me.inv[k] > 0);
   frame('dorm', `${esc(p.nick)}의 방`, `${H.name} ${roomNo(p.house, visitUid)}호 · ${onlineList[visitUid] ? '접속 중' : '외출 중'}`, `
     <section class="sec">
       <div class="sec-h"><h3>${esc(p.nick)}의 방 구경</h3>${backBtn}</div>
@@ -1850,7 +2049,7 @@ function renderMarket(){
   const others = items.filter(([, l]) => l.uid !== uid && !l.buyer);
   const week = coop[coopWeek()] || {};
   const coopTotal = Object.values(week).reduce((a, b) => a + (+b || 0), 0);
-  const sellable = [...POTIONS, ...MATS].filter(k => me.inv[k] > 0);
+  const sellable = [...POTIONS, ...MATS, ...CATCH].filter(k => me.inv[k] > 0);
   frame(null, '등불 시장', `친구 가게 ${new Set(others.map(([, l]) => l.uid)).size}곳 영업 중`, `
     <section class="sec">
       ${secH('친구들이 올린 물건', others.length + '개')}
@@ -1865,7 +2064,7 @@ function renderMarket(){
       ${mine.length < 4 ? `<div class="box px" style="padding:10px;display:flex;flex-direction:column;gap:8px">
         <span class="s sub">팔 물건을 고르고 가격을 정해요</span>
         <div class="pal">${sellable.map(k => `<button class="cell ${sellPick === k ? 'sel' : ''}" style="width:48px;min-height:48px;padding:0" data-pick="${k}">${ic(k)}<span class="n">${me.inv[k]}</span></button>`).join('') || '<span class="s sub">팔 수 있는 물건이 없어요</span>'}</div>
-        ${sellPick ? `<div style="display:flex;gap:6px;align-items:center"><span class="s" style="flex:1">${ITEM[sellPick]} 1개</span><input id="price" type="number" min="1" max="9999" value="${PAY[sellPick] || 20}" style="width:84px;height:36px;border:2px solid var(--ink);padding:0 6px;background:#fff"><span class="s">G</span><button class="btn sm go" id="list">올리기</button></div>` : ''}
+        ${sellPick ? `<div style="display:flex;gap:6px;align-items:center"><span class="s" style="flex:1">${ITEM[sellPick]} 1개</span><input id="price" type="number" min="1" max="9999" value="${PAY[sellPick] || CATCH_INFO[sellPick]?.pay || 20}" style="width:84px;height:36px;border:2px solid var(--ink);padding:0 6px;background:#fff"><span class="s">G</span><button class="btn sm go" id="list">올리기</button></div>` : ''}
       </div>` : ''}
     </section>
     <section class="sec">
@@ -2060,7 +2259,8 @@ function renderAvatar(){
 // 옷 가게 (마을의 옷 가게 문, 캐릭터 꾸미기에서도 열려요): 입어 보고 사서 입기
 let shopTry = null, shopKind = 'cas', shopMsg = '';
 const SHOP_CATS = [['top', '상의'], ['legs', '하의'], ['feet', '신발'], ['hat', '모자'], ['acc', '액세서리'], ['neck', '목걸이'], ['cape', '망토']];
-World.onLockedDoor = label => { if (label !== '옷 가게' || !me) return false; shopTry = null; shopMsg = ''; openSheet('home', 'clothes'); return true; };
+World.onLockedDoor = label => { if (label === '낚시 도구점' && me){ fsTab = 'rod'; fsMsg = ''; openSheet('home', 'fish'); return true; }
+  if (label !== '옷 가게' || !me) return false; shopTry = null; shopMsg = ''; openSheet('home', 'clothes'); return true; };
 function renderClothes(){
   const A = World.Avatar, M = A.meta, body = M.bodies[me.av.body || 0];
   if (!shopTry) shopTry = { ...me.av, house: me.house };

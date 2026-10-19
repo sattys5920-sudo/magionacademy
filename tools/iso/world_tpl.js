@@ -256,10 +256,20 @@ World.peerAt = id => { const p = peers[id]; if (!p) return null; return { get x(
 World.walkTo = id => { const p = peers[id]; if (!p) return; const c = near([[Math.round(p.x), Math.round(p.y)]])[0]; if (c) goto(me, c[0], c[1]); };
 World.bubble = (o, text, btn, fn) => showBubble(o, text, btn, fn);
 World.hideBubble = () => hideBubble();
+// ---------- 낚시 · 채집 ----------
+// 물을 누르면 물가로 걸어가서 World.onWater(물 x, y), 반짝이는 채집 지점을 누르면 그 칸으로 가서 World.onSpot(번호)
+World.onWater = null; World.onSpot = null;
+let bobber = null, spots = [], spotMap = null;
+const isWater = (x, y) => !!(M && M.water && M.water.some(w => w[0] === x && w[1] === y));
+World.setBobber = b => { bobber = b; };   // { x, y, bite } 물 칸에 찌 (없애려면 null)
+World.setSpots = (mapId, list) => { spotMap = mapId; spots = list || []; };   // [{ x, y, k }] k: 그림 칸(없으면 반짝이만)
+World.faceTo = (x, y) => { const DV = World.Avatar.meta.dirs, dx = x - me.x, dy = y - me.y; me.view = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? DV.right : DV.left) : (dy < 0 ? DV.up : DV.down); me.flip = false; };
+World.busyFish = false;   // 낚시하는 동안은 바닥을 눌러도 안 걸어가요
+World.freeNear = (x, y, r = 3) => { const out = []; for (let a = x - r; a <= x + r; a++) for (let b = y - r; b <= y + r; b++) if (free(a, b)) out.push([a, b]); return out; };
 let crowd = {};
 function rebuildObjs(){   // 지도 물건 + (개인 방이면) 놓은 가구
   const fo = M.furn ? furnObjs() : [];
-  blocked = new Set(); [...M.objs, ...fo].forEach(o => { if (o.solid !== false) for (let x = Math.floor(o.box[0]); x < Math.ceil(o.box[2]); x++) for (let y = Math.floor(o.box[1]); y < Math.ceil(o.box[3]); y++) blocked.add(x + ',' + y); });
+  blocked = new Set(M.water ? M.water.map(w => w[0] + ',' + w[1]) : []); [...M.objs, ...fo].forEach(o => { if (o.solid !== false) for (let x = Math.floor(o.box[0]); x < Math.ceil(o.box[2]); x++) for (let y = Math.floor(o.box[1]); y < Math.ceil(o.box[3]); y++) blocked.add(x + ',' + y); });
   flats = fo.filter(o => o.flat);
   objOrder = fo.length ? orderObjs([...M.objs, ...fo.filter(o => !o.flat)]) : (MAPS[rmap].order || (MAPS[rmap].order = orderObjs(M.objs)));
 }
@@ -434,13 +444,24 @@ cv.addEventListener('pointerdown', e => {
     return;
   }
   const [tx, ty] = tileAt();
+  if (World.busyFish) return;
+  // 채집 지점은 조금 빗나가게 눌러도 돼요 (한 칸 안)
+  const si = spotMap === map ? spots.map((sp, i) => [i, Math.hypot(sp.x - tx, sp.y - ty)]).filter(([, d]) => d <= 1.5).sort((p1, p2) => p1[1] - p2[1]).map(([i]) => i)[0] ?? -1 : -1;
+  if (si >= 0 && World.onSpot){ const sp = spots[si]; if (Math.round(me.x) === sp.x && Math.round(me.y) === sp.y) World.onSpot(si); else if (goto(me, sp.x, sp.y)) pending = { spot: si }; return; }
+  if (isWater(tx, ty) && World.onWater){   // 물가 바로 옆 칸, 없으면 가까운 물가로 (그 칸에서 낚시할 물을 다시 골라요)
+    let wx = tx, wy = ty, st = near([[tx, ty]])[0];
+    if (!st){ const c = World.freeNear(tx, ty, 4).sort((p1, p2) => Math.hypot(p1[0] - tx, p1[1] - ty) - Math.hypot(p2[0] - tx, p2[1] - ty)).find(([a, b]) => [[1,0],[-1,0],[0,1],[0,-1]].some(([dx, dy]) => isWater(a + dx, b + dy)));
+      if (c){ st = c; const w = [[1,0],[-1,0],[0,1],[0,-1]].map(([dx, dy]) => [c[0] + dx, c[1] + dy]).find(([a, b]) => isWater(a, b)); wx = w[0]; wy = w[1]; } }
+    if (st){ if (Math.round(me.x) === st[0] && Math.round(me.y) === st[1]){ World.faceTo(wx, wy); World.onWater(wx, wy); } else if (goto(me, st[0], st[1])) pending = { water: [wx, wy] }; }
+    return;
+  }
   const door = M.objs.find(o => o.door && o.door.tile[0] === tx && o.door.tile[1] === ty);
   if (goto(me, tx, ty) && door) pending = { door: door.door, o: door };
 });
 const SPEED = 6.5, RUN = 10;   // 타일/초. 멀리 갈 때(남은 길 10칸 넘게)는 달려요
 function step(p, dt){
   if (!p.path.length){
-    if (p.me && pending){ const pd = pending; pending = null; if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1], () => useObj(pd.act, a)); } }
+    if (p.me && pending){ const pd = pending; pending = null; if (pd.water){ World.faceTo(pd.water[0], pd.water[1]); World.onWater && World.onWater(pd.water[0], pd.water[1]); } else if (pd.spot !== undefined){ World.onSpot && World.onSpot(pd.spot); } else if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1], () => useObj(pd.act, a)); } }
     if (!p.me && !p.peer && (p.idle -= dt) < 0){ p.idle = 2 + Math.random() * 5; for (let i = 0; i < 20; i++){ const gx = Math.round(p.x) + Math.floor(Math.random() * 13) - 6, gy = Math.round(p.y) + Math.floor(Math.random() * 13) - 6; if (goto(p, gx, gy)) break; } }
     p.t = 0; return;
   }
@@ -523,6 +544,11 @@ function frame(now){
   M.objs.forEach(o => { if (!o.door) return; const [x, y] = P(o.door.tile[0] + .5, o.door.tile[1] + .5); cx.fillStyle = `rgba(255,216,102,${.25 + .35 * pulse})`; cx.beginPath(); cx.moveTo(x, y - 4); cx.lineTo(x + 8, y); cx.lineTo(x, y + 4); cx.lineTo(x - 8, y); cx.fill(); });
   // 바닥에 깔린 가구 (러그)
   flats.forEach(o => cx.drawImage(FURN_IMG, o.sx, 0, o.sw, o.sh, o.x, o.y, o.sw, o.sh));
+  // 낚시 찌 (입질하면 쏙 들어가고 물결)
+  if (bobber){ const [x, y] = P(bobber.x + .5, bobber.y + .5), bob = bobber.bite ? 1 + Math.round(Math.abs(Math.sin(now / 60))) : Math.round(Math.sin(now / 400));
+    const [mx, my] = P(me.x + .5, me.y + .5); cx.strokeStyle = 'rgba(230,230,240,.55)'; cx.lineWidth = .5; cx.beginPath(); cx.moveTo(mx + (bobber.x > me.x ? 6 : -6), my - 22); cx.lineTo(x, y - 2 + bob); cx.stroke();
+    cx.fillStyle = 'rgba(200,240,255,.5)'; const rr = bobber.bite ? 4 + (now / 80 % 4) : 3; cx.beginPath(); cx.ellipse(x, y + 1, rr, rr / 2, 0, 0, Math.PI * 2); cx.fill();
+    cx.fillStyle = '#F2EAD8'; cx.fillRect(Math.round(x) - 1, Math.round(y) - 2 + bob, 3, 2); cx.fillStyle = '#E0303A'; cx.fillRect(Math.round(x) - 1, Math.round(y) - 4 + bob, 3, 2); }
   // 사람을 정렬된 물건 사이에 끼워 넣기
   const R = o => ({ x: o.x, y: o.y, w: o.sw, h: o.sh });
   const list = objOrder.filter(o => sOver(R(o), view)).map(o => ({ o }));
@@ -550,6 +576,12 @@ function frame(now){
     M.lights.forEach((L, i) => { if (L.p[0] + L.r < view.x || L.p[0] - L.r > view.x + view.w || L.p[1] + L.dy + L.r < view.y || L.p[1] + L.dy - L.r > view.y + view.h) return; const fl = L.f ? .85 + .15 * Math.sin(now / 130 + i * 1.7) * Math.sin(now / 370 + i) : 1; cx.globalAlpha = L.a * fl * (ph === 'dusk' ? .5 : 1); cx.drawImage(glow(L.r, L.c), L.p[0] - L.r, L.p[1] + L.dy - L.r); });
     cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
   }
+  // 채집 지점: 밤에도 잘 보이게 빛 다음에 그려요
+  if (spotMap === map) spots.forEach((sp, i) => { const [x, y] = P(sp.x + .5, sp.y + .5), t = now / 260 + i * 1.3, a = .6 + .4 * Math.sin(t), sy = y - 7 - Math.round(Math.sin(t * .7) * 2);
+    if (x < view.x || x > view.x + view.w || y < view.y || y > view.y + view.h) return;
+    cx.globalCompositeOperation = 'lighter'; cx.globalAlpha = .55 * a; cx.drawImage(glow(10, [255, 220, 120]), x - 10, sy - 10); cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
+    cx.fillStyle = `rgba(255,250,215,${a})`; cx.fillRect(Math.round(x), sy - 3, 1, 7); cx.fillRect(Math.round(x) - 3, sy, 7, 1); cx.fillRect(Math.round(x) - 1, sy - 1, 3, 3);
+    if (Math.sin(t * 1.7) > .5){ cx.fillRect(Math.round(x) + 5, sy - 5, 1, 1); cx.fillRect(Math.round(x) - 5, sy + 3, 1, 1); } });
   if (!M.indoor) spooky(now, dt, view);
   out.setTransform(1, 0, 0, 1, 0, 0);
   const k = cv.clientWidth / VW;
@@ -622,7 +654,8 @@ World.teleport = (id, objName, then) => {
   busy = true; fadeEl.textContent = MAPS[real(id)].meta.title; fadeEl.style.opacity = 1;
   ensureMap(id).then(() => setTimeout(() => {
     if (map !== id || (MAPS[real(id)].meta.furn && !roomView.own)){ backStack = []; roomView = { own: true }; setMap(id, MAPS[real(id)].meta.start || MAPS[real(id)].meta.spawnIn); }
-    const o = M.objs.find(x => x.name === objName);
+    const o = Array.isArray(objName) ? null : M.objs.find(x => x.name === objName);
+    if (Array.isArray(objName)){ me.x = objName[0]; me.y = objName[1]; me.path = []; camX = null; }   // 바로 가기: 좌표로
     if (o){ const tiles = []; for (let a = Math.floor(o.box[0]); a < Math.ceil(o.box[2]); a++) for (let b = Math.floor(o.box[1]); b < Math.ceil(o.box[3]); b++) tiles.push([a, b]); const c = near(tiles)[0]; if (c){ me.x = c[0]; me.y = c[1]; me.path = []; camX = null; } }
     setTimeout(() => { fadeEl.style.opacity = 0; busy = false; then && then(); }, 150);
   }, 380));

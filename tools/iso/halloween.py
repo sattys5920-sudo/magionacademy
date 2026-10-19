@@ -23,6 +23,7 @@ def ellipse(kind, cx, cy, rx, ry):
             if ((x + .5 - cx) / rx) ** 2 + ((y + .5 - cy) / ry) ** 2 < 1: T[(x, y)] = kind
 fill('river', 39, 0, 45, 72)
 ellipse('lake', 56, 59, 6.5, 5)
+fill('bridge', 56, 53, 58, 59)           # 유령 호수 낚시 잔교
 # 학교 길
 fill('stone', 14, 24, 28, 30)            # 본관 앞마당
 fill('dirt', 19, 30, 22, 70)             # 학교 남북 길
@@ -34,7 +35,7 @@ fill('soil', 2, 56, 15, 69)              # 호박밭
 fill('bridge', 39, 26, 45, 29); fill('bridge', 39, 51, 45, 54)
 # 마을
 fill('dirt', 45, 26, 84, 29)             # 시장 거리
-fill('cobble', 55, 21, 67, 34)           # 마을 광장
+fill('cobble', 53, 18, 68, 37)           # 마을 광장 · 등불 시장 거리
 fill('dirt', 62, 12, 65, 21)             # 저택 가는 길
 fill('dirt', 60, 34, 63, 70)             # 광장 → 남쪽
 fill('dirt', 63, 46, 71, 49)             # 마녀 오두막 길
@@ -277,17 +278,23 @@ def bathouse_at(img, x, y):
     d.rectangle([cx - 1, cy - 20, cx, cy], fill=hexc('#5A4A3A')); d.rectangle([cx - 6, cy - 32, cx + 6, cy - 20], fill=hexc('#6A4A5A')); d.polygon([(cx - 8, cy - 32), (cx, cy - 40), (cx + 8, cy - 32)], fill=hexc('#3A2A3A'))
     d.ellipse([cx - 2, cy - 29, cx + 2, cy - 25], fill=hexc('#1A1218'))
 shared('bathouse', bathouse_at)
-def stall_hw(col):
+def stall_hw(col, fish=False):
     def f(img, x, y):
         d = ImageDraw.Draw(img); Tt, R, B, L = P(x, y), P(x + 2, y), P(x + 2, y + 1), P(x, y + 1)
         poly(d, [L, B, up(B, 8), up(L, 8)], hexc('#5A3A2A')); poly(d, [B, R, up(R, 8), up(B, 8)], hexc('#6A4632')); poly(d, [up(Tt, 8), up(R, 8), up(B, 8), up(L, 8)], hexc('#7A5238'))
-        for k, c2 in enumerate(['#E07A1E', '#C86AE8', '#8AE84A', '#F2E8D8']): xx, yy = P(x + .4 + k * .4, y + .5); d.ellipse([xx - 2, yy - 11, xx + 2, yy - 8], fill=hexc(c2))
+        if fish:   # 생선 가게: 얼음 상자에 물고기
+            ib = [up(P(x + .2, y + .2), 9), up(P(x + 1.8, y + .2), 9), up(P(x + 1.8, y + .8), 9), up(P(x + .2, y + .8), 9)]; poly(d, ib, hexc('#B8E0F0'))
+            for k, c2 in enumerate(['#8AA8E0', '#F08A2A', '#C8D8F0', '#E0303A']):
+                xx, yy = P(x + .45 + k * .38, y + .5); d.ellipse([xx - 3, yy - 11, xx + 1, yy - 9], fill=hexc(c2)); d.polygon([(xx + 1, yy - 10), (xx + 3, yy - 12), (xx + 3, yy - 8)], fill=hexc(c2)); d.point((xx - 2, yy - 11), fill=OUTL)
+        else:
+            for k, c2 in enumerate(['#E07A1E', '#C86AE8', '#8AE84A', '#F2E8D8']): xx, yy = P(x + .4 + k * .4, y + .5); d.ellipse([xx - 2, yy - 11, xx + 2, yy - 8], fill=hexc(c2))
         for p_ in (L, B, R): d.line([tuple(map(int, up(p_, 8))), tuple(map(int, up(p_, 22)))], fill=hexc('#3A2A1E'))
         a1, a2, a3, a4 = up(Tt, 22), up(R, 22), up(B, 24), up(L, 24); poly(d, [a1, a2, a3, a4], hexc(col))
         q = lambda s, e, t: (s[0] + (e[0] - s[0]) * t, s[1] + (e[1] - s[1]) * t)
         for k in range(4): poly(d, [q(a4, a3, k / 4), q(a4, a3, (k + .5) / 4), q(a1, a2, (k + .5) / 4), q(a1, a2, k / 4)], hexc('#2A1E2E'))
     return f
-for c in ('#E07A1E', '#7A4AA8', '#4AA86A'): shared('stall' + c, stall_hw(c))
+for c in ('#E07A1E', '#7A4AA8', '#4AA86A', '#C8486A'): shared('stall' + c, stall_hw(c))
+shared('fishstall', stall_hw('#3A7AC8', True))
 def bench_old(img, x, y):
     d = ImageDraw.Draw(img); a, b = P(x + .1, y + .35), P(x + .9, y + .35)
     poly(d, [up(a, 5), up(b, 5), up((b[0] - 3, b[1] + 2), 5), up((a[0] - 3, a[1] + 2), 5)], hexc('#5A4232'))
@@ -329,10 +336,12 @@ for x in range(48, 56, 2):
         if random.random() < .8: put('tomb', random.choice(['tomb0', 'tomb0', 'tomb1']), x, y, act=('오래된 묘비', '읽어 보기'))
 for (x, y) in [(47, 44), (55, 41), (50, 48)]:
     if (x, y) not in occupied: put('tree', 't_dead', x, y)
+# 등불 시장 거리: 친구 가판대 4 + 생선 가게
+for i, (x, y) in enumerate(((55, 24), (55, 31), (65, 24), (65, 31))): place('stall', 'stall' + ['#E07A1E', '#7A4AA8', '#4AA86A', '#C8486A'][i], x, y, w=2, act=('등불 시장 가판대', '시장 보기')); occupied |= {(x, y), (x + 1, y)}
+place('stall', 'fishstall', 58, 34, w=2, act=('생선 가게', '물고기 팔기')); occupied |= {(58, 34), (59, 34)}
 # 광장·거리 장식
 for (x, y) in [(56, 22), (66, 22), (56, 33), (66, 33), (58, 30), (64, 24)]:
     if (x, y) not in occupied: put('jack', 'jack', x, y, solid=False)
-for i, (x, y) in enumerate(((57, 31), (64, 31))): place('stall', 'stall' + ['#E07A1E', '#7A4AA8', '#4AA86A'][i], x, y, w=2, act=('등불 시장 가판대', '시장 보기')); occupied |= {(x, y), (x + 1, y)}
 LAMPS = [(x, 25) for x in range(4, 39, 6)] + [(x, 29) for x in range(47, 84, 6)] + [(18, y) for y in range(32, 70, 6)] + [(59, y) for y in range(36, 70, 6)] + [(x, 50) for x in range(4, 39, 7)] + [(61, 14), (61, 18), (13, 23), (28, 23)]
 LAMPS = [t for t in LAMPS if t not in occupied and T.get(t) not in ('river', 'lake')]
 for (x, y) in LAMPS: put('lantern', 'lantern', x, y)
@@ -371,7 +380,14 @@ lights += [dict(p=P(61, 27.5), dy=-18, r=60, c=[255, 160, 60], a=.6, f=1), dict(
            dict(p=P(56, 59), dy=0, r=70, c=[90, 200, 230], a=.25, f=0)]
 lights += [dict(p=P(o['box'][0] + .5, o['box'][1] + .5), dy=-3, r=14, c=[120, 240, 220], a=.5, f=0) for o in objs if o['spr'] == 'glowmush']
 WATER = [[x, y] for (x, y), t in T.items() if t in ('river', 'lake')]
+# 채집 지점 후보: 빈 풀밭·묘지 (f 숲, g 묘지, l 호숫가, p 들판)
+def zone(x, y):
+    if T[(x, y)] == 'grave': return 'g'
+    if ((x + .5 - 56) / 9) ** 2 + ((y + .5 - 59) / 7.5) ** 2 < 1: return 'l'
+    if (x > 64 and y > 48) or min(x, y, NX - 1 - x, NY - 1 - y) < 5: return 'f'
+    return 'p'
+FORAGE = [[x, y, zone(x, y)] for x in range(2, NX - 2) for y in range(2, NY - 2) if (x, y) not in occupied and T[(x, y)] in ('grass', 'grave') and (x * 7 + y * 3) % 4 == 0]
 AREAS = [dict(n='본관 · 물약 교실', t=[19, 24]), dict(n='과자 교실', t=[6, 37]), dict(n='공예 교실', t=[29, 37]), dict(n='기숙사', t=[16, 48]), dict(n='호박밭', t=[9, 55]), dict(n='독초 온실', t=[22, 63]),
-         dict(n='사육장', t=[27, 61]), dict(n='마을 광장', t=[61, 31]), dict(n='뱀파이어 저택', t=[63, 12]), dict(n='마녀의 오두막', t=[72, 49]), dict(n='묘지', t=[51, 51]), dict(n='유령 호수', t=[56, 53]), dict(n='늑대인간 집', t=[78, 60])]
-json.dump(dict(W=W, H=H, NX=NX, NY=NY, OX=OX, OY=OY, objs=meta, lights=lights, water=WATER, areas=AREAS, start=[20, 30]), open('out/hw.json', 'w'), ensure_ascii=False)
+         dict(n='사육장', t=[27, 61]), dict(n='등불 시장', t=[61, 31]), dict(n='뱀파이어 저택', t=[63, 12]), dict(n='마녀의 오두막', t=[72, 49]), dict(n='묘지', t=[51, 51]), dict(n='유령 호수', t=[56, 53]), dict(n='늑대인간 집', t=[78, 60])]
+json.dump(dict(W=W, H=H, NX=NX, NY=NY, OX=OX, OY=OY, objs=meta, lights=lights, water=WATER, forage=FORAGE, areas=AREAS, start=[20, 30]), open('out/hw.json', 'w'), ensure_ascii=False)
 print('objs', len(objs), 'sheet', sheet.size)
