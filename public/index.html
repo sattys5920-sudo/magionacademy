@@ -177,6 +177,7 @@ body:not(.inworld) #npcui{display:none}
 .npcf{width:48px;height:48px;background:#E8DDF8;box-shadow:0 0 0 2px #22183F;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
 .npcf img{width:48px;height:48px;image-rendering:pixelated}
 .npcspr{display:block;width:48px;height:48px;image-rendering:pixelated}
+.npcf .npcspr{background-color:#E8DDF8}
 .npchr{color:#E0508A;font-size:12px;letter-spacing:1px}
 .npct{background:#fff;box-shadow:0 0 0 2px #E8DCF0;padding:8px 10px;min-height:40px;line-height:18px}
 .npcsc{display:block;color:#9480B4;font-size:10px;font-family:'G9',monospace}
@@ -187,6 +188,16 @@ body:not(.inworld) #npcui{display:none}
 .adav{display:flex;gap:8px;align-items:flex-start}.adav img{width:128px;height:128px;image-rendering:pixelated;background:#3A2E5A;box-shadow:0 0 0 2px #22183F}
 .adavc{display:flex;flex-wrap:wrap;gap:4px}.adavc span{display:flex;align-items:center;gap:2px;font-size:10px;font-family:'G9',monospace;background:#F3EAFB;padding:1px 3px}
 .adavc button{border:1px solid #22183F;background:#fff;font-size:10px;padding:0 3px}
+.st-css{}
+#storyui{position:absolute;inset:0;z-index:28;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(10,6,20,.86);font-family:'G11',monospace}
+#storyui.on{display:flex}
+body:not(.inworld) #storyui{display:none}
+.stbox{width:100%;max-width:340px;background:#FAF1E2;color:#22183F;box-shadow:0 0 0 3px #22183F;padding:14px;display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center}
+.sttl{font-family:'G11B',monospace;font-size:12px;background:#FFD866;padding:2px 10px;box-shadow:0 0 0 2px #22183F}
+.stspr{display:block;width:144px;height:144px;image-rendering:pixelated;background-color:#3A2E5A;box-shadow:0 0 0 2px #22183F}
+.sttx{background:#fff;box-shadow:0 0 0 2px #E8DCF0;padding:10px;min-height:56px;width:100%;box-sizing:border-box;line-height:20px;text-align:left}
+.stbox .btn{width:100%}
+.stpg{position:relative;height:16px;background:#E8DCF0;box-shadow:0 0 0 2px #22183F;margin:6px 0 2px}.stpg i{display:block;height:100%;background:#8CE6B0}.stpg span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'G9',monospace}
 #talk{position:absolute;left:10px;right:80px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;display:none;flex-direction:column;gap:6px;font-family:'G11',monospace}
 #talk.on{display:flex}
 body:not(.inworld) #talk{display:none}
@@ -336,6 +347,7 @@ button.who:not(:disabled){border-color:var(--ink)}
   <div class="fab"><button id="tToday" class="main">오늘</button><button id="tTalk">말하기</button><button id="tMap">지도</button><button id="tZoom">멀리</button><button id="tDay">밝게</button></div>
   <div id="fishui"></div>
   <div id="npcui"></div>
+  <div id="storyui"></div>
   <div id="game"></div>
   <div id="rest"></div>
   <div id="talk"><div id="tlog"></div><div class="temo" id="temo"></div><form id="tform" autocomplete="off"><input id="tin" maxlength="40" placeholder="말풍선으로 말해요 (40자)" enterkeyhint="send"><button>보내기</button></form></div>
@@ -698,7 +710,7 @@ function normalize(p){
   if (p.furn){ p.fbag = p.fbag || {}; Object.entries(p.furn).forEach(([k, st]) => { if (st?.own && OLD_FURN[k]) p.fbag[OLD_FURN[k]] = (p.fbag[OLD_FURN[k]] || 0) + 1; }); delete p.furn; }
   p.fbag = p.fbag || {}; p.room = (p.room || []).filter(r => FURN_BY[r.f]); p.common = p.common || { stage: 1, pool: {} }; p.common.pool = p.common.pool || {};
   p.orders = p.orders || []; p.know = p.know || 0;
-  p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look)); p.closet = p.closet || {}; p.rod = p.rod || 0; p.fdex = p.fdex || {}; p.buffs = p.buffs || {}; p.cdex = p.cdex || {}; p.npc = p.npc || {};   // rod 낚싯대 단계, fdex 낚시·채집 도감 { id: { n, cm } }   // closet: 옷 가게에서 산 옷 { '부위:부품id': 1 }
+  p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look)); p.closet = p.closet || {}; p.rod = p.rod || 0; p.fdex = p.fdex || {}; p.buffs = p.buffs || {}; p.cdex = p.cdex || {}; p.npc = p.npc || {}; p.story = p.story || { seen: {}, got: {} }; p.story.seen = p.story.seen || {}; p.story.got = p.story.got || {};   // rod 낚싯대 단계, fdex 낚시·채집 도감 { id: { n, cm } }   // closet: 옷 가게에서 산 옷 { '부위:부품id': 1 }
   p.plots = (p.plots || []).map(x => {
     if (!x.k || !SEED_INFO[x.k]) return { k: null };
     if (x.at) return x;
@@ -798,7 +810,7 @@ World.onPet = id => { const i = me.cr.findIndex(c => c.id === id); if (i < 0) re
 function enterWorld(){
   document.body.classList.add('inworld'); app.innerHTML = ''; sheetOn = false; app.classList.remove('open');
   World.setPlayer(me.nick, avOf(me)); World.start(); World.resize();
-  syncPens(); syncRoom(); syncHalls(); syncHallNames(); syncSpots(); syncNpcs(); dayTick(); hud(); showRest();
+  syncPens(); syncRoom(); syncHalls(); syncHallNames(); syncSpots(); syncNpcs(); dayTick(); hud(); showRest(); setTimeout(storyCheck, 1500);
   clearInterval(spotTimer); spotTimer = setInterval(() => { syncSpots(); dayTick(); }, 60000);   // 날이 바뀌면 채집 지점도 새로
 }
 let spotTimer = 0;
@@ -1140,7 +1152,7 @@ function gameOver(fail){
     title = ps.length === 1 ? `혼자 기록 ${G.score}점` : `${rank}등!`;
   }
   me.gdone = me.gdone || {};
-  if (!me.gdone[G.id]){ me.gdone = { [G.id]: 1 }; me.coin += coin; me.mana += mana; save(); hud(); recordBest(G.g, rec); }
+  if (!me.gdone[G.id]){ me.gdone = { [G.id]: 1 }; me.coin += coin; me.mana += mana; save(); hud(); recordBest(G.g, rec); storyHook('game', { g: G.g, ok: Gm.coop ? !!(G.result ? G.result().ok : !fail) : true, score: Math.max(0, G.score) }); }
   if (roomV && roomV.host === myId()) GDB.upd('games/' + G.id, { st: 'end' });
   const g = G.g; gameEnd();
   gameShow(`<div class="gpan px"><b class="gt">${GAMES[g].ic} ${title}</b>${reward ? `<span class="s">${reward}</span>` : ''}
@@ -1615,7 +1627,10 @@ function renderCook(){
 // ===== 서브 NPC 10명: 하루 한 번 대화 ♥, 선물(좋아함 +3·보통 +1·싫어함 -1), ♥2·5·8·10마다 이야기 장면과 보상 =====
 // 동물은 art/npcs.png (tools/iso/npc_art.py) 그림, 사람은 아바타. 관리자 페이지에서 고친 내용(npcs/<id>)이 이 기본값 위에 덮여요
 // 호감도 점수 3점 = ♥1, ♥10까지. me.npc[id] = { p 점수, t 대화한 날, g 선물한 날, s 본 장면 [2,5,…] }
-const NPC_ART_V = 1;
+const NPC_ART_V = 3;
+// LPC NPC 그림(art/npcs.png: 한 줄 = 한 명, 64칸 20개)에서 얼굴 부분만 크게 (초상화)
+const npcFace = (spr, size = 48) => { const B = World.Avatar.headBox, k = size / B.s; return `<i class="npcspr" style="width:${size}px;height:${size}px;background:url(art/npcs.png?v=${NPC_ART_V}) ${-B.x * k}px ${-(spr * 64 + B.y) * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
+const npcFull = (spr, size = 144) => { const k = size / 64; return `<i class="stspr" style="background:url(art/npcs.png?v=${NPC_ART_V}) 0 ${-spr * 64 * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
 const NPC_DEF = [
   { id: 'nabi', name: '나비', title: '매점 고양이', spr: 0, h: 22, map: 'campus', x: 61, y: 35, likes: ['f_crucian', 'd_minnowfry', 'g2_catnip'], dislikes: ['j_weed'],
     greet: [['…뭘 봐? 생선 없으면 저리 가.', '냐. 오늘은 바람이 비린내가 안 나네.'], ['또 왔어? …딱히 기다린 건 아니야.', '생선 가게 아저씨가 오늘은 붕어가 싱싱하대.'], ['왔구나! 아니, 반가운 척한 거 아니거든.', '네 발소리는 이제 멀리서도 알아.'], ['우리 집사 왔다냥~ …방금 건 못 들은 걸로 해.', '오늘은 네 옆에서 낮잠 자도 돼?']],
@@ -1663,12 +1678,13 @@ const npcAll = () => { const ids = [...NPC_DEF.map(n => n.id), ...Object.keys(np
   return ids.map(id => ({ ...(NPC_DEF.find(n => n.id === id) || { id, av: true, look: 1, map: 'campus', x: 20, y: 31, likes: [], dislikes: [], greet: [[], [], [], []], story: {}, reward: {} }), ...(npcOver[id] || {}) })).filter(n => !n.off); };
 const npcGet = id => npcAll().find(n => n.id === id);
 const npcAv = n => n.av ? (n.avData ? World.Avatar.fix(n.avData) : World.Avatar.fromLook(n.look || 1)) : null;
-function syncNpcs(){ World.setNpcs(npcAll().map(n => ({ id: n.id, name: n.name, map: n.map, x: n.x, y: n.y, dir: n.dir || 'down', ...(n.av ? { av: npcAv(n) } : { spr: n.spr, h: n.h }) })), `art/npcs.png?v=${NPC_ART_V}`); }
+function syncNpcs(){ World.setNpcs([...npcAll().map(n => ({ id: n.id, name: n.name, map: n.map, x: n.x, y: n.y, dir: n.dir || 'down', ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float }) })),
+  ...(typeof storyNpcs === 'function' ? storyNpcs().map(n => ({ id: n.id, name: n.name, map: n.map, x: n.x, y: n.y, spr: n.spr, alpha: n.alpha, float: n.float })) : [])], `art/npcs.png?v=${NPC_ART_V}`); }   // 이야기 주인공도 같이
 const npcSt = id => { me.npc = me.npc || {}; return me.npc[id] = me.npc[id] || { p: 0, s: [] }; };
 const hearts = id => Math.min(10, Math.floor((me.npc?.[id]?.p || 0) / 3));
 const heartBar = h => '♥'.repeat(h) + '♡'.repeat(10 - h);
 const STORY_AT = [2, 5, 8, 10];
-function npcPortrait(n){ return n.av ? `<img src="${World.Avatar.head(npcAv(n))}" alt="">` : `<i class="npcspr" style="background:url(art/npcs.png?v=${NPC_ART_V}) ${-48 * n.spr}px 0/${48 * 6}px 48px"></i>`; }
+function npcPortrait(n){ return n.av ? `<img src="${World.Avatar.head(npcAv(n))}" alt="">` : npcFace(n.spr); }
 const npcUI = () => $('#npcui');
 function npcClose(){ npcUI().classList.remove('on'); npcUI().innerHTML = ''; }
 function npcPanel(n, text, btns){
@@ -1677,7 +1693,7 @@ function npcPanel(n, text, btns){
     <div class="npct">${text}</div><div class="frow">${btns}</div></div>`;
   npcUI().classList.add('on');
 }
-World.onNpc = id => { const n = npcGet(id); if (!n || !me) return; World.hideBubble(); npcMenu(n); };
+World.onNpc = id => { if (!me) return; World.hideBubble(); const c = STORY.findIndex(S => S.npc.id === id) + 1; if (c) return storyPanel(c); const n = npcGet(id); if (n) npcMenu(n); };
 function npcMenu(n, line){
   const st = npcSt(n.id), h = hearts(n.id), lv = h >= 9 ? 3 : h >= 6 ? 2 : h >= 3 ? 1 : 0, g = (n.greet || [])[lv] || (n.greet || [])[0] || ['…'];
   const talked = st.t === todayKey(), gifted = st.g === todayKey();
@@ -1774,6 +1790,183 @@ function adminNpcRead(){
   root.querySelectorAll('[data-adf]').forEach(el => { const k = el.dataset.adf; d[k] = (k === 'likes' || k === 'dislikes') ? byName(el.value) : el.value; });
   root.querySelectorAll('[data-adg]').forEach(el => { d.greet = d.greet || [[], [], [], []]; d.greet[+el.dataset.adg] = el.value.split('\n').map(x => x.trim()).filter(Boolean); });
   root.querySelectorAll('[data-ads]').forEach(el => { d.story = d.story || {}; d.story[el.dataset.ads] = el.value.split('\n').map(x => x.trim()).filter(Boolean); });
+}
+// ===== 메인 이야기 7장: 관리자가 송출하면 모두 동시에 시작, 단계마다 반 전체 공동 목표 =====
+// story/live = { ch 지금 열린 장(1~7), at } (관리자만) · story/ch/<n> = { step, prog: { 단계: { uid: 양 } }, done }
+// 단계 종류: talk 이야기 듣기(한 사람 1번, goal명) · give 물건 건네기(goal개) · game 놀이(g, 협동은 성공 수 / 경쟁은 점수 합) · rest 끝까지 쉬기(goal번)
+const STORY = [
+  { name: '겁쟁이 뱀파이어', npc: { id: 'm_lucian', name: '루시안', title: '겁쟁이 뱀파이어', spr: 6, map: 'campus', x: 63, y: 14 },
+    intro: ['보름달이 뜬 밤, 뱀파이어 저택의 문이 삐걱 열렸어요.', '루시안: 저, 저기… 학생 여러분… 부탁이 있어요…', '루시안: 저는 300살 뱀파이어인데요… 피를 보면… 기절해요.', '루시안: 이대로면 뱀파이어 자격을 잃어요… 도와주세요…!'],
+    steps: [
+      { t: 'talk', goal: 6, title: '루시안의 고민 듣기', desc: '저택 앞 루시안에게 이야기를 들어 줘요', done: '루시안: 다들 들어 줘서 고마워요… 피 말고 붉은 걸로 버틸 수 있을까요?' },
+      { t: 'give', item: 'g_straw', goal: 30, title: '피처럼 붉은 딸기', desc: '반 전체가 딸기 30개를 모아 건네요', done: '루시안: 딸기… 피처럼 붉은데 무섭지 않아요! 달콤해요!' },
+      { t: 'give', item: 'g2_rasp', goal: 20, title: '숲속 산딸기', desc: '산딸기 20개 (숲·들판 반짝이)', done: '루시안: 산딸기는 새콤해서 정신이 번쩍 들어요.' },
+      { t: 'give', item: 'honey', goal: 10, title: '용기를 주는 꿀', desc: '벌꿀 10개', done: '루시안: 꿀을 넣으면 붉은 음료가 더 맛있어지겠죠?' },
+      { t: 'give', item: 'd_jamtoast', goal: 6, title: '붉은 잼 토스트', desc: '과자 교실에서 「산딸기 잼 토스트」 6개를 만들어 건네요', done: '루시안: 이, 이걸 먹으니까… 몸에 힘이 나요! 피 대신 붉은 음식이면 돼요!' },
+      { t: 'talk', goal: 8, title: '저택 앞 건배', desc: '8명이 루시안과 건배해요', done: '루시안: 건배! 이제 저는 붉은 음식을 사랑하는 뱀파이어예요!' },
+    ], ending: ['루시안은 처음으로 당당하게 망토를 펼쳤어요.', '루시안: 여러분 덕분이에요. 뱀파이어 저택은 언제든 열려 있어요!', '그런데 그날 밤, 묘지 쪽에서 누군가 훌쩍이는 소리가 들려왔어요…'] },
+  { name: '외로운 유령', npc: { id: 'm_boo', name: '부우', title: '외로운 유령', spr: 7, map: 'campus', x: 51, y: 52, alpha: .8, float: true },
+    intro: ['묘지 문 앞에서 하얀 무언가가 훌쩍이고 있어요.', '부우: 흑… 아무도 나를 못 봐. 말을 걸어도 다들 지나가 버려.', '부우: 나도 친구랑 놀고 싶어… 나를 보이게 해 줄 수 있어?'],
+    steps: [
+      { t: 'talk', goal: 6, title: '부우에게 말 걸기', desc: '묘지 앞 부우에게 다가가 말을 걸어요', done: '부우: 지, 진짜로 나한테 말 거는 거야? 우와…' },
+      { t: 'give', item: 'g2_ghostf', goal: 8, title: '유령 꽃 모으기', desc: '묘지 반짝이에서 나는 유령 꽃 8송이', done: '부우: 유령 꽃 향기를 맡으니까 몸이 조금 또렷해졌어!' },
+      { t: 'give', item: 'drop', goal: 20, title: '달빛 이슬', desc: '달빛 이슬 20개', done: '부우: 달빛 이슬로 몸을 반짝반짝 닦았어!' },
+      { t: 'give', item: 'd_ghostmallow', goal: 4, title: '유령 마시멜로', desc: '「유령 마시멜로」 4개 (과자 교실)', done: '부우: 이거 먹으니까 볼이 빨개졌어! 이제 다들 날 볼 수 있어!' },
+      { t: 'game', g: 'coop', goal: 3, title: '부우와 함께 놀기', desc: '협동 놀이(솥·유령 막기·별자리)를 반 전체가 3번 성공해요', done: '부우: 같이 노는 게 이렇게 신나는 거였구나!' },
+      { t: 'talk', goal: 8, title: '부우의 첫 파티', desc: '8명이 부우의 파티에 와요', done: '부우: 오늘은 내 인생… 아니, 유령생 최고의 날이야!' },
+    ], ending: ['부우는 이제 학교 곳곳에서 친구들과 숨바꼭질을 해요.', '부우: 고마워! 그런데 마녀 오두막 쪽에서 빗자루 찾는 소리가 들렸어.'] },
+  { name: '빗자루를 잃은 마녀', npc: { id: 'm_hazel', name: '헤이즐', title: '견습 마녀', spr: 8, map: 'campus', x: 72, y: 51 },
+    intro: ['마녀의 오두막 앞에서 빨간 머리 마녀가 발을 동동 굴러요.', '헤이즐: 내 빗자루가 사라졌어! 보름달 비행 시험이 코앞인데!', '헤이즐: 새 빗자루를 만들어야 해. 재료 좀 같이 모아 줄래?'],
+    steps: [
+      { t: 'talk', goal: 6, title: '헤이즐의 사정 듣기', desc: '마녀의 오두막 앞 헤이즐과 이야기해요', done: '헤이즐: 좋아, 다 같이 최고의 빗자루를 만들자!' },
+      { t: 'give', item: 'g2_straw', goal: 24, title: '빗자루 짚', desc: '빗자루 짚 24개', done: '헤이즐: 짚이 이만큼이면 빗자루 솔은 완성!' },
+      { t: 'give', item: 'silk', goal: 10, title: '튼튼한 거미줄 실', desc: '거미줄 실 10개 (사육장)', done: '헤이즐: 거미줄 실로 꽁꽁 묶으면 절대 안 풀려!' },
+      { t: 'give', item: 'g2_maple', goal: 15, title: '단풍잎 장식', desc: '빨간 단풍잎 15장', done: '헤이즐: 단풍잎 장식까지! 세상에서 제일 예쁜 빗자루야.' },
+      { t: 'game', g: 'broom', goal: 60, title: '시험 비행', desc: '빗자루 경주에서 반 전체가 묘비 60개를 통과해요', done: '헤이즐: 다들 엄청 잘 난다! 나도 자신감이 생겼어!' },
+      { t: 'talk', goal: 8, title: '보름달 비행 시험 응원', desc: '8명이 헤이즐을 응원해요', done: '헤이즐: 합격이야! 다들 고마워!' },
+    ], ending: ['헤이즐은 새 빗자루로 보름달을 한 바퀴 돌았어요.', '헤이즐: 위에서 보니 늑대인간 집 굴뚝에서 털이 날리던데… 무슨 일이지?'] },
+  { name: '털갈이하는 늑대인간', npc: { id: 'm_wolfgang', name: '울프강', title: '늑대인간', spr: 9, map: 'campus', x: 78, y: 62 },
+    intro: ['늑대인간 집 앞에 털이 수북하게 쌓여 있어요.', '울프강: 크흠… 보지 마. 털갈이 중이야.', '울프강: 보름달 축제에서 멋진 털로 춤춰야 하는데… 이 꼴로는 못 나가.'],
+    steps: [
+      { t: 'talk', goal: 6, title: '울프강 달래기', desc: '늑대인간 집 앞 울프강에게 말을 걸어요', done: '울프강: …너희, 생각보다 괜찮은 녀석들이군.' },
+      { t: 'give', item: 'wool', goal: 20, title: '임시 털옷', desc: '양털 20개로 임시 털옷을 만들어요', done: '울프강: 따뜻하군. 털이 다시 날 때까지 이거면 돼.' },
+      { t: 'give', item: 'g2_chest', goal: 15, title: '털에 좋은 알밤', desc: '알밤 15개', done: '울프강: 알밤을 먹으니 털이 윤기 나는 것 같아.' },
+      { t: 'give', item: 'hegg', goal: 20, title: '든든한 달걀', desc: '달걀 20개', done: '울프강: 단백질은 털의 기본이지.' },
+      { t: 'give', item: 'd_chestnut', goal: 6, title: '꿀 군밤 꼬치', desc: '「꿀 군밤 꼬치」 6개 (과자 교실)', done: '울프강: 털이… 털이 돌아왔다! 아우우우~!' },
+      { t: 'talk', goal: 8, title: '보름달 축제 춤', desc: '8명이 울프강과 함께 춤춰요', done: '울프강: 너희랑 추는 춤이 최고야!' },
+    ], ending: ['울프강의 털은 보름달처럼 은빛으로 빛났어요.', '울프강: 고맙다. …그런데 묘지에서 붕대가 바람에 날아다니더군.'] },
+  { name: '붕대가 풀린 미라', npc: { id: 'm_mirabel', name: '미라벨', title: '미라', spr: 10, map: 'campus', x: 49, y: 51 },
+    intro: ['묘지 위로 하얀 붕대가 펄럭펄럭 날아다녀요.', '미라벨: 어머어머! 내 붕대! 바람에 다 풀렸어!', '미라벨: 이대로면 3000년 된 피부가 다 보여… 새 붕대를 감아 줘!'],
+    steps: [
+      { t: 'talk', goal: 6, title: '미라벨 진정시키기', desc: '묘지 앞 미라벨에게 가요', done: '미라벨: 고마워, 혼자였으면 울었을 거야. 미라도 운다구.' },
+      { t: 'give', item: 'silk', goal: 15, title: '붕대 실', desc: '거미줄 실 15개', done: '미라벨: 거미줄 실은 가볍고 튼튼해서 좋아!' },
+      { t: 'give', item: 'wool', goal: 15, title: '포근한 속붕대', desc: '양털 15개', done: '미라벨: 속은 포근하게! 3000년 만에 따뜻해.' },
+      { t: 'give', item: 'herb', goal: 30, title: '방부 약초', desc: '약초 30개', done: '미라벨: 약초 향이 나는 붕대라니, 고급스러워!' },
+      { t: 'game', g: 'whack', goal: 80, title: '붕대 도둑 유령 잡기', desc: '유령 뿅망치에서 반 전체 점수 합 80점', done: '미라벨: 붕대 훔쳐 가던 유령들을 다 혼내 줬구나!' },
+      { t: 'talk', goal: 8, title: '새 붕대 패션쇼', desc: '8명이 미라벨의 패션쇼를 봐요', done: '미라벨: 어때? 3000년 중 가장 멋진 날이야!' },
+    ], ending: ['미라벨은 새 붕대에 리본까지 달고 묘지를 걸어 다녀요.', '미라벨: 그런데 본관에서 밤새 쿵쿵 소리가 나던데… 누가 잠을 못 자나 봐.'] },
+  { name: '잠 못 드는 프랑켄', npc: { id: 'm_frankie', name: '프랭키', title: '프랑켄', spr: 11, map: 'campus', x: 21, y: 26 },
+    intro: ['본관 앞에 눈 밑이 시커먼 커다란 학생이 서 있어요.', '프랭키: …잠이… 안 와요. 100일째예요.', '프랭키: 번개로 태어나서 그런가… 눈을 감으면 찌릿찌릿해요.'],
+    steps: [
+      { t: 'talk', goal: 6, title: '프랭키의 불면 이야기', desc: '본관 앞 프랭키와 이야기해요', done: '프랭키: …이야기하니까… 조금 졸린 것 같기도…' },
+      { t: 'give', item: 'g_chamo', goal: 20, title: '카모마일', desc: '카모마일 20개', done: '프랭키: 카모마일 향… 마음이 차분해져요.' },
+      { t: 'give', item: 'p_blue', goal: 6, title: '잠꾸러기 물약', desc: '물약 교실에서 「잠꾸러기 물약」 6병', done: '프랭키: 한 모금 마셨더니… 하아암…' },
+      { t: 'give', item: 'milk', goal: 12, title: '따뜻한 우유', desc: '염소젖 12개', done: '프랭키: 따뜻한 우유는… 반칙이에요… 쿨…' },
+      { t: 'rest', goal: 10, title: '다 같이 쉬기', desc: '반 전체가 침대에서 끝까지 쉬기 10번', done: '프랭키: 다들 자니까… 나도 잘 수 있을 것 같아요.' },
+      { t: 'talk', goal: 8, title: '자장가 불러 주기', desc: '8명이 프랭키에게 자장가를 불러 줘요', done: '프랭키: …쿨… 쿠울…' },
+    ], ending: ['프랭키는 100일 만에 푹 잠들었어요.', '프랭키: 잘 잤다! 그런데 꿈에서 호박밭의 불빛이 꺼지는 걸 봤어요…'] },
+  { name: '불이 꺼진 잭오랜턴', npc: { id: 'm_jack', name: '잭', title: '잭오랜턴', spr: 12, map: 'campus', x: 9, y: 55 },
+    intro: ['호박밭의 불빛이 하나둘 꺼지고 있어요.', '잭: 내 머릿속 촛불이… 꺼져 버렸어.', '잭: 할로윈 축제는 내 불빛으로 시작하는데… 이대로면 축제가 없어져!'],
+    steps: [
+      { t: 'talk', goal: 6, title: '잭의 이야기 듣기', desc: '호박밭 앞 잭에게 가요', done: '잭: 다들 와 줬구나. 마음이 조금 따뜻해졌어.' },
+      { t: 'game', g: 'pumpkin', goal: 100, title: '호박 모으기 대작전', desc: '호박 줍기 경주에서 반 전체 점수 합 100점', done: '잭: 이 호박들로 축제 장식을 하자!' },
+      { t: 'give', item: 'g2_firefly', goal: 10, title: '반딧불이의 빛', desc: '반딧불이 10마리 (호숫가 반짝이)', done: '잭: 반딧불이 빛이 들어오니까 눈이 반짝반짝해!' },
+      { t: 'give', item: 'g2_pseed', goal: 30, title: '호박씨 심지', desc: '호박씨 30개', done: '잭: 호박씨로 새 촛불 심지를 만들었어!' },
+      { t: 'give', item: 'd_pseedsoup', goal: 8, title: '따뜻한 호박씨 수프', desc: '「호박씨 크림수프」 8그릇 (과자 교실)', done: '잭: 따뜻한 수프를 먹으니… 불이… 붙었다!!' },
+      { t: 'talk', goal: 10, title: '할로윈 축제 개막', desc: '10명이 모여 축제를 열어요', done: '잭: 호박달 마녀학교 할로윈 축제, 시작합니다!' },
+    ], ending: ['잭의 불빛이 호박밭 전체를 환하게 밝혔어요.', '루시안, 부우, 헤이즐, 울프강, 미라벨, 프랭키, 잭이 모두 모였어요.', '모두: 고마워, 호박달 마녀학교 학생들! 해피 할로윈!'] },
+];
+const STEP_ITEM_NAME = s => s.t === 'give' ? ITEM[s.item] || s.item : '';
+let storyLive = { ch: 0 }, storyCh = {}, storyOff = null;
+const stKey = (c, k) => `c${c}_${k}`;
+const stProg = (c, k) => storyCh[c]?.prog?.[k] || {};
+const stTotal = (c, k) => Object.values(stProg(c, k)).reduce((t, v) => t + (+v || 0), 0);
+// 열린 장의 주인공들이 마을에 서 있어요 (끝난 장 주인공도 남아 있어요)
+function storyNpcs(){ const out = []; for (let c = 1; c <= (storyLive.ch || 0); c++){ const S = STORY[c - 1]; if (S) out.push({ ...S.npc, main: c, h: 26 }); } return out; }
+function storyListen(){
+  if (solo || !F || !db || storyOff) return;
+  storyOff = F.onValue(F.ref(db, 'story'), s => { const v = s.val() || {}; storyLive = v.live || { ch: 0 }; storyCh = v.ch || {}; syncNpcs(); storyCheck(); });
+}
+// 새로 열린 장·끝난 단계·끝난 장면을 아직 안 봤으면 보여 줘요 (접속하자마자도)
+function storyCheck(){
+  if (!me || !storyLive.ch || $('#storyui')?.classList.contains('on')) return;
+  me.story = me.story || { seen: {}, got: {} };
+  for (let c = 1; c <= storyLive.ch; c++){
+    const S = STORY[c - 1]; if (!S) continue; const cur = storyCh[c] || {}, step = cur.step || 0;
+    if (!me.story.seen[stKey(c, 'in')]) return storyPlay(c, S.intro, `${c}장 · ${S.name}`, () => { me.story.seen[stKey(c, 'in')] = 1; save(); storyCheck(); });
+    for (let k = 0; k < Math.min(step, S.steps.length); k++) if (!me.story.seen[stKey(c, k)]) return storyPlay(c, [S.steps[k].done], `${c}장 · ${k + 1}단계 완료!`, () => { me.story.seen[stKey(c, k)] = 1; save(); storyCheck(); });
+    if (cur.done && !me.story.seen[stKey(c, 'end')]) return storyPlay(c, S.ending, `${c}장 · ${S.name} 해결!`, () => { me.story.seen[stKey(c, 'end')] = 1; storyReward(c); save(); storyCheck(); });
+  }
+}
+function storyReward(c){
+  if (me.story.got[c]) return; const S = STORY[c - 1], mine = S.steps.reduce((t, _, k) => t + (+stProg(c, k)[uid] || 0), 0); if (!mine) return;
+  const tot = {}; S.steps.forEach((_, k) => Object.entries(stProg(c, k)).forEach(([u, v]) => tot[u] = (tot[u] || 0) + (+v || 0)));
+  const rank = Object.entries(tot).sort((a, b) => b[1] - a[1]).findIndex(([u]) => u === uid) + 1, coin = 300 + (rank && rank <= 3 ? 200 : 0), mana = 20;
+  me.story.got[c] = 1; me.coin += coin; me.mana += mana; save(); hud(); toast(`${c}장 보상: ${coin}G · 마력 +${mana}${rank <= 3 ? ` (많이 도운 ${rank}등!)` : ''}`);
+}
+function storyPlay(c, lines, title, then){
+  const S = STORY[c - 1], u = $('#storyui'); let i = 0;
+  const draw = () => { u.innerHTML = `<div class="stbox px"><span class="sttl">${esc(title)}</span>${npcFull(S.npc.spr)}
+    <div class="sttx">${esc(lines[i] || '')}</div><button class="btn go" id="stnext">${i < lines.length - 1 ? '다음 ▶' : '확인'}</button></div>`; u.classList.add('on');
+    $('#stnext').onclick = () => { i++; if (i < lines.length) draw(); else { u.classList.remove('on'); u.innerHTML = ''; then && then(); } }; };
+  draw();
+}
+// 주인공을 누르면: 지금 단계와 반 전체 진행, 내 기여, 건네기
+function storyPanel(c){
+  const S = STORY[c - 1], cur = storyCh[c] || {}, k = cur.step || 0, st = S.steps[k], n = S.npc;
+  const portrait = npcFace(n.spr);
+  npcUI().dataset.id = n.id;
+  if (cur.done || !st){ npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${portrait}</div><div><b>${esc(n.name)}</b><span class="s sub">${c}장 · ${esc(S.name)} · 해결!</span></div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(S.ending[S.ending.length - 1])}</div></div>`; return npcUI().classList.add('on'); }
+  const tot = stTotal(c, k), mine = +stProg(c, k)[uid] || 0, top = Object.entries(stProg(c, k)).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const have = st.t === 'give' ? me.inv[st.item] || 0 : 0;
+  const btn = st.t === 'talk' ? (mine ? '<button class="btn sm" disabled>함께했어요 ✓</button>' : '<button class="btn sm go" data-stc="talk">💬 함께하기</button>')
+    : st.t === 'give' ? `<button class="btn sm go" data-stc="give1" ${have ? '' : 'disabled'}>${esc(STEP_ITEM_NAME(st))} 1개</button><button class="btn sm go" data-stc="giveall" ${have ? '' : 'disabled'}>가진 것 다 (${have})</button>`
+    : st.t === 'game' ? `<button class="btn sm go" data-stc="games">🎪 놀이 게시판</button>` : '<button class="btn sm go" data-stc="rest">🛏 내 방에서 쉬기</button>';
+  npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${portrait}</div><div><b>${esc(n.name)}</b><span class="s sub">${c}장 · ${esc(S.name)} · ${k + 1}/${S.steps.length}단계</span></div><button class="sx" data-nx="close">✕</button></div>
+    <div class="npct"><b>${esc(st.title)}</b><br>${esc(st.desc)}<div class="stpg"><i style="width:${Math.min(100, tot / st.goal * 100)}%"></i><span>반 전체 ${tot} / ${st.goal}</span></div>
+    <span class="sub">내 기여 ${mine}${top.length ? ` · 많이 도운 친구: ${top.map(([u, v]) => `${esc(playersList[u]?.nick || '친구')} ${v}`).join(', ')}` : ''}</span></div><div class="frow">${btn}</div></div>`;
+  npcUI().classList.add('on');
+}
+// 기여: 트랜잭션으로 더하고, 목표를 채우면 다 같이 다음 단계로
+function storyAdd(c, k, amt, then){
+  if (solo || !amt) return;
+  const S = STORY[c - 1];
+  F.runTransaction(F.ref(db, `story/ch/${c}`), cur => {
+    cur = cur || { step: 0, prog: {} }; if ((cur.step || 0) !== k || cur.done) return;
+    const st = S.steps[k]; cur.prog = cur.prog || {}; cur.prog[k] = cur.prog[k] || {};
+    const tot = Object.values(cur.prog[k]).reduce((t, v) => t + (+v || 0), 0), add = Math.min(amt, st.goal - tot);
+    if (add <= 0) return; if (st.t === 'talk' && cur.prog[k][uid]) return;
+    cur.prog[k][uid] = (+cur.prog[k][uid] || 0) + add;
+    if (tot + add >= st.goal){ cur.step = k + 1; if (cur.step >= S.steps.length) cur.done = true; }
+    return cur;
+  }).then(r => { if (then) then(r.committed); }).catch(() => then && then(false));
+}
+const storyNow = () => { const c = storyLive.ch || 0, cur = storyCh[c] || {}; return c && !cur.done ? { c, k: cur.step || 0, st: STORY[c - 1]?.steps[cur.step || 0] } : null; };
+// 놀이·쉬기 단계: 끝날 때 자동으로 기여해요
+function storyHook(kind, info){
+  const N = storyNow(); if (!N || !N.st) return;
+  if (kind === 'game' && N.st.t === 'game'){ const coop = GAMES[info.g]?.coop;
+    if (N.st.g === 'coop' && coop && info.ok) storyAdd(N.c, N.k, 1, ok => ok && toast(`이야기 기여 +1 · ${N.st.title}`));
+    if (N.st.g === info.g && !coop && info.score > 0) storyAdd(N.c, N.k, info.score, ok => ok && toast(`이야기 기여 +${info.score} · ${N.st.title}`)); }
+  if (kind === 'rest' && N.st.t === 'rest') storyAdd(N.c, N.k, 1, ok => ok && toast(`이야기 기여 +1 · ${N.st.title}`));
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-stc]'); if (!b || !npcUI().contains(b)) return;
+  const n = npcUI().dataset.id, c = STORY.findIndex(S => S.npc.id === n) + 1; if (!c) return; const cur = storyCh[c] || {}, k = cur.step || 0, st = STORY[c - 1].steps[k]; if (!st) return;
+  const a = b.dataset.stc;
+  if (a === 'talk') storyAdd(c, k, 1, ok => { toast(ok ? '함께했어요! 반 전체 기여 +1' : '이미 함께했어요'); setTimeout(() => storyPanel(c), 300); });
+  if (a === 'give1' || a === 'giveall'){ const want = a === 'give1' ? 1 : (me.inv[st.item] || 0), left = st.goal - stTotal(c, k), amt = Math.min(want, left, me.inv[st.item] || 0); if (amt <= 0) return;
+    me.inv[st.item] -= amt; save();
+    storyAdd(c, k, amt, ok => { if (!ok){ me.inv[st.item] += amt; save(); toast('이미 다 모였어요!'); } else toast(`${ITEM[st.item]} ${amt}개를 건넸어요!`); setTimeout(() => storyPanel(c), 300); }); }
+  if (a === 'games'){ npcClose(); openSheet('home', 'games'); }
+  if (a === 'rest'){ npcClose(); goPlace(myRoomId(), 'bed', 'home', 'dorm'); }
+});
+// ---------- 관리자: 송출 · 진행 보기 · 단계 넘기기 ----------
+function adminStoryHTML(){
+  const live = AD.story.live?.ch || 0, CH = AD.story.ch || {};
+  return `<div class="adcard"><b>지금 열린 장: ${live ? `${live}장 · ${STORY[live - 1].name}` : '아직 없어요'}</b><span class="s">송출하면 접속한 모두에게 바로 이야기 장면이 떠요. 나중에 들어온 사람도 접속하자마자 봐요.</span></div>
+    ${STORY.map((S, i) => { const c = i + 1, cur = CH[c] || {}, step = cur.step || 0;
+      return `<div class="adcard" style="border-color:${c <= live ? '#3FAF74' : '#22183F'}"><b>${c}장 · ${esc(S.name)} (${esc(S.npc.name)})</b> ${cur.done ? '✅ 해결' : c <= live ? `진행 중 ${step + 1}/${S.steps.length}단계` : '🔒 아직'}
+        ${S.steps.map((st, k) => { const pr = cur.prog?.[k] || {}, tot = Object.values(pr).reduce((t, v) => t + (+v || 0), 0);
+          return `<div class="s">${k < step || cur.done ? '✔' : k === step && c <= live ? '▶' : '·'} ${k + 1}. ${esc(st.title)} — ${tot}/${st.goal} ${Object.keys(pr).length ? `<span class="sub">(${Object.entries(pr).map(([u, v]) => `${adName(u)} ${v}`).join(', ')})</span>` : ''}</div>`; }).join('')}
+        <div class="frow">${c === live + 1 ? `<button class="btn sm go" data-adst="live:${c}">📣 ${c}장 송출</button>` : ''}${c <= live && !cur.done ? `<button class="btn sm" data-adst="prev:${c}">◀ 단계</button><button class="btn sm" data-adst="next:${c}">단계 ▶</button>` : ''}${c === live ? `<button class="btn sm" data-adst="live:${c - 1}">송출 취소</button>` : ''}<button class="btn sm" data-adst="reset:${c}">초기화</button></div></div>`; }).join('')}`;
+}
+function adminStoryAct(v){
+  const [a, n] = v.split(':'), c = +n, cur = (AD.story.ch || {})[c] || {}, S = STORY[c - 1];
+  if (a === 'live'){ if (c > 0 && !confirm(`${c}장 「${STORY[c - 1].name}」을(를) 모두에게 송출할까요?`)) return; F.set(F.ref(db, 'story/live'), { ch: c, at: Date.now() }); }
+  if (a === 'next'){ const s2 = Math.min(S.steps.length, (cur.step || 0) + 1); F.update(F.ref(db, `story/ch/${c}`), { step: s2, done: s2 >= S.steps.length }); }
+  if (a === 'prev') F.update(F.ref(db, `story/ch/${c}`), { step: Math.max(0, (cur.step || 0) - 1), done: false });
+  if (a === 'reset' && confirm(`${c}장 진행을 처음으로 되돌릴까요? (기여 기록도 지워져요)`)) F.set(F.ref(db, `story/ch/${c}`), null);
 }
 // 바로 가기: 그 장소로 순간 이동한 다음 화면을 열어요
 const goPlace = (mapId, obj, t, s) => { closeSheet(); World.teleport(mapId, obj, () => openSheet(t, s)); };
@@ -2492,6 +2685,7 @@ function restEnd(early){
   const before = me.mana; me.mana = Math.max(me.mana, Math.min(R.cap, me.mana + g)); me.rest = null; save(); hud();
   clearInterval(restTimer); $('#rest').classList.remove('on'); $('#rest').innerHTML = '';
   toast(early ? `일찍 일어났어요. 마력 +${me.mana - before}` : `푹 쉬었어요! 마력 +${me.mana - before} (${R.why})`);
+  if (!early) storyHook('rest');
 }
 let restTimer = 0;
 function showRest(){
@@ -3272,6 +3466,7 @@ async function boot(){
       F.onValue(F.ref(db, 'online'), s => { onlineList = s.val() || {}; onOnline(); const k = Object.keys(onlineList).sort().join(); if (k !== onlineKeys){ onlineKeys = k; if (tab === 'home' && !sub) render(); } });
       F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; });
       F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; syncNpcs(); });
+      storyListen();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); if (sub === 'games') render(); });
       Object.keys(GAMES).forEach(g => F.onValue(F.ref(db, `records/${g}/${weekKey()}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); }));
       setInterval(syncInvites, 3000);
