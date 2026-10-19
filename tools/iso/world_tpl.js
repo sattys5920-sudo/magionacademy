@@ -164,7 +164,8 @@ let VH = 220;
 function resize(){
   const dpr = window.devicePixelRatio || 1, dw = world.clientWidth * dpr, dh = world.clientHeight * dpr;
   const target = (M && M.vw && zi !== 1) ? M.vw : ZOOMS[zi][1];
-  KPX = Math.max(1, Math.round(dw / target));
+  // 캐릭터 그림은 세계의 ASC배: KPX × ASC 가 정수여야 픽셀이 고르게 보여요 (홀수 배면 줄이 두 겹씩 섞여 길쭉해 보여요)
+  const step = Math.max(1, Math.round(1 / ASC)); KPX = Math.max(step, Math.round(dw / target / step) * step);
   VW = Math.ceil(dw / KPX); VH = Math.ceil(dh / KPX);
   cv.width = VW * KPX; cv.height = VH * KPX;   // 캔버스는 기기 픽셀 그대로: 세계는 KPX배, 캐릭터는 더 촘촘하게 그려요
   cv.style.width = (VW * KPX / dpr) + 'px'; cv.style.height = (VH * KPX / dpr) + 'px';

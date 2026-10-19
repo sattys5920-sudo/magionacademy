@@ -2,21 +2,22 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#140D1E">
 <title>호박달 마녀학교</title>
 <link rel="manifest" href="manifest.webmanifest">
 <style>
 @font-face{font-family:'G11B';src:url(fonts/Galmuri11-Bold.woff2) format('woff2');font-display:swap}
+@font-face{font-family:'G11';src:url(fonts/Galmuri11.woff2) format('woff2');font-display:swap}
 @font-face{font-family:'G9';src:url(fonts/Galmuri9.woff2) format('woff2');font-display:swap}
-@font-face{font-family:'G7';src:url(fonts/Galmuri7.woff2) format('woff2');font-display:swap}
+@font-face{font-family:'G11';src:url(fonts/Galmuri7.woff2) format('woff2');font-display:swap}
 :root{--ink:#3A2860;--ink2:#22183F;--paper:#FAF1E2;--card:#FFFCF6;--sub:#9480B4;--line:#E8DCF0;--soft:#F3EAFB;--gold:#FFD866;--gold2:#D9A020;--mint:#8CE6B0;--mint2:#3FAF74;--pink:#FF8FAF;--bad:#C2385E}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:#1A1234;-webkit-font-smoothing:none;-webkit-tap-highlight-color:transparent}
-body{font-family:'G9',monospace;font-size:16px;line-height:20px;color:var(--ink)}
+body{font-family:'G11',monospace;font-size:12px;line-height:20px;color:var(--ink)}
 button{font:inherit;color:inherit;cursor:pointer;margin:0}
 button:disabled{opacity:.4;cursor:default}
-input{font-family:'G9',monospace;font-size:16px;color:var(--ink)}
+input{font-family:'G11',monospace;font-size:12px;color:var(--ink)}
 #shell{position:relative;max-width:430px;height:100dvh;margin:0 auto;overflow:hidden;background:#140D1E}
 #app{position:absolute;inset:0;background:var(--paper);display:flex;flex-direction:column;overflow:hidden;z-index:10}
 /* 세계에 들어가면 게임 화면은 아래에서 올라오는 시트가 돼요 */
@@ -27,64 +28,62 @@ body:not(.inworld) .fab,body:not(.inworld) .hud{display:none}
 .shead .title{flex:1;max-width:none;padding:0;background:none}
 .shead .stats{flex-direction:row;gap:4px}
 .shead .stat{min-width:0;height:28px;background:rgba(255,255,255,.08)}
-.sx{width:36px;height:36px;flex-shrink:0;border:0;background:var(--ink);color:var(--gold);font-family:'G11B',monospace;font-size:16px}
+.sx{width:36px;height:36px;flex-shrink:0;border:0;background:var(--ink);color:var(--gold);font-family:'G11B',monospace;font-size:12px}
 .shead + .scene{aspect-ratio:390/220}
 .panel .ribbon{position:static;align-self:flex-start;flex-shrink:0}
 /* 걸어 다니는 세계 */
-#world{position:absolute;inset:0;overflow:hidden;touch-action:manipulation;font-family:'G7',monospace;color:#F2EAD8}
+#world{position:absolute;inset:0;overflow:hidden;touch-action:manipulation;font-family:'G11',monospace;color:#F2EAD8}
 #world canvas{position:absolute;left:0;top:0;image-rendering:pixelated;image-rendering:crisp-edges;cursor:pointer}
 .hud{position:absolute;left:10px;top:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none;z-index:3}
 .hudr{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-.chip{background:rgba(20,13,30,.85);color:#F2EAD8;padding:6px 10px;font-family:'G7',monospace;font-size:14px;line-height:16px;box-shadow:0 0 0 2px #3A2860;white-space:nowrap}
-.chip b{font-family:'G11B',monospace;font-size:15px;color:#FFD866;display:block}
+.chip{background:rgba(20,13,30,.85);color:#F2EAD8;padding:6px 10px;font-family:'G11',monospace;font-size:12px;line-height:16px;box-shadow:0 0 0 2px #3A2860;white-space:nowrap}
+.chip b{font-family:'G11B',monospace;font-size:12px;color:#FFD866;display:block}
 .chip.ev{pointer-events:auto;border:0;background:#FFD866;color:#3A2860;font-family:'G11B',monospace;box-shadow:0 0 0 2px #22183F}
 .ntag{position:absolute;transform:translate(-50%,-100%);font-size:12px;line-height:12px;padding:2px 4px;background:rgba(20,13,30,.75);white-space:nowrap;pointer-events:none;z-index:2}
 .ntag.me{color:#FFD866}
 .ntag.peer{color:#9CF0FF;box-shadow:0 0 0 1px #4FB8D8}
-.say{position:absolute;transform:translate(-50%,-100%);background:#FFFFFF;color:#22183F;padding:4px 7px;font-size:13px;line-height:15px;box-shadow:0 0 0 2px #22183F;max-width:180px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;text-align:center;pointer-events:none;z-index:3;margin-top:-16px}
+.say{position:absolute;transform:translate(-50%,-100%);background:#FFFFFF;color:#22183F;padding:4px 7px;font-size:12px;line-height:15px;box-shadow:0 0 0 2px #22183F;max-width:180px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;text-align:center;pointer-events:none;z-index:3;margin-top:-16px}
 .say::after{content:'';position:absolute;left:50%;bottom:-6px;margin-left:-3px;border:3px solid transparent;border-top-color:#22183F}
-.say.emo{background:none;box-shadow:none;font-size:26px;line-height:28px;padding:0}
+.say.emo{background:none;box-shadow:none;font-size:24px;line-height:28px;padding:0}
 .say.emo::after{display:none}
 .bubble .pm{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
-.bubble .pm button{margin:0;padding:5px 6px;font-size:13px;white-space:nowrap}
+.bubble .pm button{margin:0;padding:5px 6px;font-size:12px;white-space:nowrap}
 .bubble .pm.emo{grid-template-columns:repeat(4,1fr)}
-.bubble .pm.emo button{font-size:20px;padding:2px 4px;background:#FAF1E2}
-#talk{position:absolute;left:10px;right:80px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;display:none;flex-direction:column;gap:6px;font-family:'G7',monospace}
+.bubble .pm.emo button{font-size:24px;padding:2px 4px;background:#FAF1E2}
+#talk{position:absolute;left:10px;right:80px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;display:none;flex-direction:column;gap:6px;font-family:'G11',monospace}
 #talk.on{display:flex}
 body:not(.inworld) #talk{display:none}
 #tlog{display:flex;flex-direction:column;gap:2px;pointer-events:none}
-#tlog div{align-self:flex-start;background:rgba(20,13,30,.78);color:#F2EAD8;font-size:13px;line-height:16px;padding:2px 6px;max-width:100%;overflow-wrap:anywhere}
+#tlog div{align-self:flex-start;background:rgba(20,13,30,.78);color:#F2EAD8;font-size:12px;line-height:16px;padding:2px 6px;max-width:100%;overflow-wrap:anywhere}
 #tlog b{color:#9CF0FF;font-weight:normal;margin-right:4px}
 #tlog b.me{color:#FFD866}
 .temo{display:flex;gap:4px}
-.temo button{flex:1;min-width:0;height:34px;border:0;background:rgba(250,241,226,.95);box-shadow:0 0 0 2px #22183F;font-size:19px;padding:0}
+.temo button{flex:1;min-width:0;height:34px;border:0;background:rgba(250,241,226,.95);box-shadow:0 0 0 2px #22183F;font-size:12px;padding:0}
 #tform{display:flex;gap:6px}
-#tin{flex:1;min-width:0;height:40px;border:0;box-shadow:0 0 0 2px #22183F;background:#FAF1E2;color:#22183F;font-family:'G7',monospace;font-size:16px;padding:0 10px}
-#tform button{height:40px;border:0;background:#8CE6B0;color:#1E3A2A;box-shadow:0 0 0 2px #22183F;font-family:'G11B',monospace;font-size:14px;padding:0 12px}
-.peerav{display:flex;justify-content:center;padding:6px 0 2px}
-.peerav img{width:192px;height:192px;image-rendering:pixelated}
-.bubble{position:absolute;transform:translate(-50%,-100%);background:#FAF1E2;color:#3A2860;padding:8px 10px;font-size:14px;line-height:18px;box-shadow:0 0 0 3px #22183F;white-space:nowrap;text-align:center;z-index:4}
-.bubble button{display:block;margin:6px auto 0;font-family:'G11B',monospace;font-size:14px;background:#8CE6B0;border:2px solid #22183F;padding:4px 10px;color:#1E3A2A}
-#fade{position:absolute;inset:0;background:#0E0916;opacity:0;pointer-events:none;transition:opacity .35s;z-index:5;display:flex;align-items:center;justify-content:center;font-family:'G11B',monospace;font-size:18px;color:#FFD866}
+#tin{flex:1;min-width:0;height:40px;border:0;box-shadow:0 0 0 2px #22183F;background:#FAF1E2;color:#22183F;font-family:'G11',monospace;font-size:12px;padding:0 10px}
+#tform button{height:40px;border:0;background:#8CE6B0;color:#1E3A2A;box-shadow:0 0 0 2px #22183F;font-family:'G11B',monospace;font-size:12px;padding:0 12px}
+.bubble{position:absolute;transform:translate(-50%,-100%);background:#FAF1E2;color:#3A2860;padding:8px 10px;font-size:12px;line-height:18px;box-shadow:0 0 0 3px #22183F;white-space:nowrap;text-align:center;z-index:4}
+.bubble button{display:block;margin:6px auto 0;font-family:'G11B',monospace;font-size:12px;background:#8CE6B0;border:2px solid #22183F;padding:4px 10px;color:#1E3A2A}
+#fade{position:absolute;inset:0;background:#0E0916;opacity:0;pointer-events:none;transition:opacity .35s;z-index:5;display:flex;align-items:center;justify-content:center;font-family:'G11B',monospace;font-size:12px;color:#FFD866}
 .fab{position:absolute;right:10px;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px;z-index:6}
-.fab button{width:58px;height:44px;background:rgba(20,13,30,.88);border:0;box-shadow:0 0 0 2px #3A2860;color:#FFD866;font-family:'G11B',monospace;font-size:14px}
+.fab button{width:58px;height:44px;background:rgba(20,13,30,.88);border:0;box-shadow:0 0 0 2px #3A2860;color:#FFD866;font-family:'G11B',monospace;font-size:12px}
 .fab button.main{height:58px;background:#FFD866;color:#3A2860;box-shadow:0 0 0 2px #22183F}
-#mapv{position:absolute;inset:0;background:rgba(14,9,22,.94);z-index:8;display:none;flex-direction:column;padding:14px 12px calc(14px + env(safe-area-inset-bottom));font-family:'G7',monospace;color:#F2EAD8}
+#mapv{position:absolute;inset:0;background:rgba(14,9,22,.94);z-index:8;display:none;flex-direction:column;padding:14px 12px calc(14px + env(safe-area-inset-bottom));font-family:'G11',monospace;color:#F2EAD8}
 #mapv.on{display:flex}
 .mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.mhead b{font-family:'G11B',monospace;font-size:17px;color:#FFD866}
-.mhead button{background:#3A2860;border:0;color:#F2EAD8;font-family:'G11B',monospace;font-size:14px;padding:6px 12px}
+.mhead b{font-family:'G11B',monospace;font-size:12px;color:#FFD866}
+.mhead button{background:#3A2860;border:0;color:#F2EAD8;font-family:'G11B',monospace;font-size:12px;padding:6px 12px}
 #mwrap{flex:1;position:relative;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
 #minner{position:relative;margin:auto}
 #mcv{image-rendering:pixelated;flex-shrink:0}
 .mlabel{position:absolute;transform:translate(-50%,-100%);font-size:12px;line-height:12px;padding:3px 5px;background:#FAF1E2;color:#3A2860;white-space:nowrap;pointer-events:none;box-shadow:0 0 0 2px #22183F}
 .mlabel.me{background:#FFD866}
-.mhint{text-align:center;font-size:14px;color:#C8B8FF;margin-top:8px}
+.mhint{text-align:center;font-size:12px;color:#C8B8FF;margin-top:8px}
 .px{clip-path:polygon(0 3px,3px 3px,3px 0,calc(100% - 3px) 0,calc(100% - 3px) 3px,100% 3px,100% calc(100% - 3px),calc(100% - 3px) calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,3px calc(100% - 3px),0 calc(100% - 3px))}
 .ic{display:inline-block;width:32px;height:32px;flex-shrink:0;background:url(art/icons.png?v=3) no-repeat;image-rendering:pixelated;vertical-align:middle}
 .fc{width:60px;height:66px;flex-shrink:0;background:url(art/faces.png) no-repeat;image-rendering:pixelated}
 .cr{width:120px;height:102px;background:url(art/creatures.png?v=11) no-repeat;image-rendering:pixelated}
-.b{font-family:'G11B',monospace}.s{font-family:'G7',monospace;font-size:14px;line-height:18px}.sub{color:var(--sub)}
+.b{font-family:'G11B',monospace}.s{font-family:'G11',monospace;font-size:12px;line-height:18px}.sub{color:var(--sub)}
 
 /* 장면과 상단 바 */
 .scene{position:relative;flex-shrink:0;width:100%;aspect-ratio:390/330;overflow:hidden;background:#3A2E78}
@@ -92,46 +91,46 @@ body:not(.inworld) #talk{display:none}
 .scene img{position:absolute;left:0;bottom:0;width:100%;image-rendering:pixelated}
 .top{position:absolute;left:10px;right:10px;top:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;z-index:2}
 .title{background:rgba(34,24,63,.88);color:#fff;padding:7px 10px 6px;display:flex;flex-direction:column;gap:3px;min-width:0;max-width:62%}
-.title .b{font-size:16px;line-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.title .b{font-size:12px;line-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .title .s{color:var(--gold);line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stats{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
-.stat{background:rgba(34,24,63,.88);color:#fff;height:30px;padding:0 10px 0 0;display:flex;align-items:center;font-family:'G11B',monospace;font-size:14px;min-width:84px;justify-content:space-between}
+.stat{background:rgba(34,24,63,.88);color:#fff;height:30px;padding:0 10px 0 0;display:flex;align-items:center;font-family:'G11B',monospace;font-size:12px;min-width:84px;justify-content:space-between}
 .stat .ic{transform:scale(.85)}
-.ribbon{position:absolute;left:10px;bottom:10px;z-index:2;display:flex;align-items:center;gap:4px;padding:0 10px 0 2px;height:34px;color:#fff;font-family:'G7',monospace;font-size:14px}
+.ribbon{position:absolute;left:10px;bottom:10px;z-index:2;display:flex;align-items:center;gap:4px;padding:0 10px 0 2px;height:34px;color:#fff;font-family:'G11',monospace;font-size:12px}
 .ribbon .ic{transform:scale(.8)}
 
 /* 본문 */
 .panel{flex:1;overflow-y:auto;border-top:4px solid var(--ink2);padding:16px 16px 24px;display:flex;flex-direction:column;gap:18px}
 .sec{display:flex;flex-direction:column;gap:8px}
 .sec-h{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:24px}
-.sec-h h3{margin:0;font-family:'G11B',monospace;font-size:16px;line-height:18px;font-weight:normal}
-.sec-h .meta{font-family:'G7',monospace;font-size:14px;color:var(--sub)}
+.sec-h h3{margin:0;font-family:'G11B',monospace;font-size:12px;line-height:18px;font-weight:normal}
+.sec-h .meta{font-family:'G11',monospace;font-size:12px;color:var(--sub)}
 .box{background:var(--card);border:3px solid var(--ink)}
 .li{display:flex;align-items:center;gap:10px;padding:8px 10px;min-height:52px}
 .li + .li{border-top:2px dashed var(--line)}
 .li .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .li .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.li .d{font-family:'G7',monospace;font-size:14px;line-height:16px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .d{font-family:'G11',monospace;font-size:12px;line-height:16px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .li.done{opacity:.5}
-.hint{font-family:'G7',monospace;font-size:14px;line-height:18px;color:var(--sub);text-align:center;padding:0 8px;min-height:18px}
+.hint{font-family:'G11',monospace;font-size:12px;line-height:18px;color:var(--sub);text-align:center;padding:0 8px;min-height:18px}
 .hint.on{color:var(--ink);background:var(--soft);padding:8px 10px;text-align:left}
-.tag{font-family:'G7',monospace;font-size:14px;line-height:14px;padding:3px 6px;background:var(--soft);color:var(--ink);white-space:nowrap}
+.tag{font-family:'G11',monospace;font-size:12px;line-height:14px;padding:3px 6px;background:var(--soft);color:var(--ink);white-space:nowrap}
 
 /* 버튼 */
-.btn{min-height:46px;border:3px solid var(--ink);background:#fff;box-shadow:inset 0 -4px 0 var(--line);font-family:'G11B',monospace;font-size:15px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;white-space:nowrap}
+.btn{min-height:46px;border:3px solid var(--ink);background:#fff;box-shadow:inset 0 -4px 0 var(--line);font-family:'G11B',monospace;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;white-space:nowrap}
 .btn:active:not(:disabled){box-shadow:none;transform:translateY(2px)}
 .btn.go{background:var(--mint);box-shadow:inset 0 -4px 0 var(--mint2);color:#1E3A2A}
 .btn.gold{background:var(--gold);box-shadow:inset 0 -4px 0 var(--gold2)}
 .btn.dark{background:var(--ink);color:var(--gold);border-color:var(--ink2);box-shadow:inset 0 -4px 0 var(--ink2)}
-.btn.sm{min-height:34px;border-width:2px;font-size:14px;box-shadow:inset 0 -3px 0 var(--line);padding:0 10px}
+.btn.sm{min-height:34px;border-width:2px;font-size:12px;box-shadow:inset 0 -3px 0 var(--line);padding:0 10px}
 .btn.sm.go{box-shadow:inset 0 -3px 0 var(--mint2)}
-.btn.ghost{min-height:30px;border:0;box-shadow:none;background:transparent;color:var(--sub);font-family:'G7',monospace;font-size:14px;padding:0 4px}
+.btn.ghost{min-height:30px;border:0;box-shadow:none;background:transparent;color:var(--sub);font-family:'G11',monospace;font-size:12px;padding:0 4px}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .tile{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card);border:3px solid var(--ink);box-shadow:inset 0 -4px 0 var(--line);text-align:left;min-height:60px}
 .tile .main{display:flex;flex-direction:column;gap:2px;min-width:0}
-.tile .main .b{font-size:15px;line-height:16px}
+.tile .main .b{font-size:12px;line-height:16px}
 .seg{display:grid;gap:0;border:3px solid var(--ink);background:var(--ink)}
-.seg button{border:0;background:var(--card);min-height:38px;font-family:'G11B',monospace;font-size:14px;color:var(--sub)}
+.seg button{border:0;background:var(--card);min-height:38px;font-family:'G11B',monospace;font-size:12px;color:var(--sub)}
 .seg button + button{border-left:3px solid var(--ink)}
 .seg button.on{background:var(--gold);color:var(--ink)}
 
@@ -140,7 +139,7 @@ body:not(.inworld) #talk{display:none}
 .cell{border:2px solid var(--line);background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 2px;position:relative;min-height:64px}
 button.cell:not(:disabled){border-color:var(--ink);box-shadow:inset 0 -3px 0 var(--line)}
 .cell.sel{border:3px solid #6A4AC8;background:#fff;box-shadow:none}
-.cell .n{position:absolute;right:4px;top:2px;font-family:'G11B',monospace;font-size:13px;line-height:13px;color:#6A4AC8}
+.cell .n{position:absolute;right:4px;top:2px;font-family:'G11B',monospace;font-size:12px;line-height:13px;color:#6A4AC8}
 .cell .s{white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .slot{border:3px dashed #CDBDE8;background:var(--soft);min-height:76px}
 .slot.on{border-style:solid;border-color:#6A4AC8;background:#fff}
@@ -151,7 +150,7 @@ button.cell:not(:disabled){border-color:var(--ink);box-shadow:inset 0 -3px 0 var
 .face{overflow:hidden;background:#E8DDF8;display:flex;justify-content:center;flex-shrink:0;position:relative}
 .dot{position:absolute;right:1px;bottom:1px;width:8px;height:8px;border:2px solid #fff}
 .pal{display:flex;gap:6px;flex-wrap:wrap}
-.who{display:flex;align-items:center;gap:6px;height:34px;padding:0 8px 0 0;border:2px solid var(--line);background:#fff;font-family:'G7',monospace;font-size:14px}
+.who{display:flex;align-items:center;gap:6px;height:34px;padding:0 8px 0 0;border:2px solid var(--line);background:#fff;font-family:'G11',monospace;font-size:12px}
 button.who:not(:disabled){border-color:var(--ink)}
 
 /* 행사 */
@@ -159,13 +158,13 @@ button.who:not(:disabled){border-color:var(--ink)}
 .dragon.calm-d{animation:bob 1.6s steps(2) infinite;filter:saturate(1.2)}
 @keyframes stomp{50%{transform:translate(-50%,-52%) scale(2.25) rotate(-3deg)}}
 @keyframes bob{50%{transform:translate(-50%,-54%) scale(2.2)}}
-.calm{position:absolute;left:62%;top:20%;font-family:'G11B',monospace;font-size:32px;color:#FF8FAF;animation:bob2 1.2s steps(2) infinite}
+.calm{position:absolute;left:62%;top:20%;font-family:'G11B',monospace;font-size:36px;color:#FF8FAF;animation:bob2 1.2s steps(2) infinite}
 @keyframes bob2{50%{translate:0 -8px}}
 
 /* 탭 */
 .avwrap{display:flex;flex-direction:column;gap:12px}
 .avstage{position:relative;height:236px;background:radial-gradient(circle at 50% 70%,#4A3A7A,#22183F);display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px}
-.avstage canvas{width:132px;height:192px;image-rendering:pixelated}
+.avstage canvas{width:192px;height:192px;image-rendering:pixelated}
 .avstage .btn{position:absolute;right:8px;top:8px}
 .avopts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .avo{border:2px solid var(--line);background:#F3EAFB;padding:4px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:0;min-height:72px}
@@ -175,7 +174,7 @@ button.who:not(:disabled){border-color:var(--ink)}
 .sw{width:30px;height:30px;border:2px solid var(--ink);padding:0}
 .sw.on{box-shadow:0 0 0 3px #fff,0 0 0 5px #6A4AC8}
 .tabs{flex-shrink:0;height:70px;background:var(--ink2);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom)}
-.tabs button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;font-family:'G7',monospace;font-size:14px;color:#9C8CC8;position:relative}
+.tabs button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;font-family:'G11',monospace;font-size:12px;color:#9C8CC8;position:relative}
 .tabs button .ic{opacity:.55}
 .tabs button.on{color:var(--gold)}
 .tabs button.on .ic{opacity:1}
@@ -186,8 +185,8 @@ button.who:not(:disabled){border-color:var(--ink)}
 .card{background:var(--paper);color:var(--ink);border:4px solid var(--ink2);padding:16px;display:flex;flex-direction:column;gap:12px}
 .field{display:flex;flex-direction:column;gap:4px}
 .field input{height:44px;border:3px solid var(--ink);background:#fff;padding:0 10px}
-.err{color:var(--bad);font-family:'G7',monospace;font-size:14px;min-height:18px;margin:0}
-.toast{position:absolute;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink2);color:#fff;padding:9px 14px;font-family:'G7',monospace;font-size:14px;z-index:9;max-width:90%;text-align:center;box-shadow:0 0 0 3px var(--gold)}
+.err{color:var(--bad);font-family:'G11',monospace;font-size:12px;min-height:18px;margin:0}
+.toast{position:absolute;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink2);color:#fff;padding:9px 14px;font-family:'G11',monospace;font-size:12px;z-index:9;max-width:90%;text-align:center;box-shadow:0 0 0 3px var(--gold)}
 </style>
 </head>
 <body>
@@ -660,7 +659,7 @@ function enterWorld(){
 // ===== 학생끼리 어울리기: 같은 곳에 있는 친구가 걸어 다니고, 말풍선·이모티콘·인사를 주고받아요 =====
 // online/<uid> 에 지금 있는 곳(m: 장소 열쇠, x, y)과 마지막 한 말(s)을 올려요
 const EMOS = ['👋', '😊', '😂', '😍', '😮', '😢', '🎃', '✨'];
-let talkLog = [], lastPos = '', heard = {}, onlineKeys = '', peerUid = null, talkOn = false;
+let talkLog = [], lastPos = '', heard = {}, onlineKeys = '', talkOn = false;
 const peersOf = () => Object.entries(onlineList).filter(([id, o]) => id !== uid && o && o.m).map(([id, o]) => ({ uid: id, name: o.nick, av: avOf(o), m: o.m, x: o.x | 0, y: o.y | 0 }));
 function pushLog(nick, t, mine){ talkLog.push({ nick, t, mine }); talkLog = talkLog.slice(-4); $('#tlog').innerHTML = talkLog.map(l => `<div><b class="${l.mine ? 'me' : ''}">${esc(l.nick)}</b>${esc(l.t)}</div>`).join(''); }
 function onOnline(){
@@ -690,7 +689,7 @@ function presTick(){
 // 친구를 누르면: 인사 · 이모티콘 · 코디 보기 · 방 놀러 가기
 World.onPeer = id => {
   const o = onlineList[id], at = World.peerAt(id); if (!o || !at) return;
-  World.bubble(at, `<b>${esc(o.nick)}</b> ${HOUSES[o.house] ? `<span style="color:${HOUSES[o.house].col}">${HOUSES[o.house].name}</span>` : ''}<div class="pm"><button data-pm="hi">👋 인사</button><button data-pm="emo">😊 이모티콘</button><button data-pm="look">👗 코디 보기</button><button data-pm="room">🏠 방 구경</button></div>`);
+  World.bubble(at, `<b>${esc(o.nick)}</b> ${HOUSES[o.house] ? `<span style="color:${HOUSES[o.house].col}">${HOUSES[o.house].name}</span>` : ''}<div class="pm"><button data-pm="hi">👋 인사</button><button data-pm="emo">😊 이모티콘</button><button data-pm="room" style="grid-column:1/3">🏠 방 구경</button></div>`);
   document.querySelectorAll('.bubble [data-pm]').forEach(b => b.onclick = e => { e.stopPropagation(); peerAct(id, b.dataset.pm); });
 };
 function peerAct(id, act){
@@ -707,23 +706,7 @@ function peerAct(id, act){
     return;
   }
   World.hideBubble();
-  if (act === 'look'){ peerUid = id; openSheet('home', 'peer'); return; }
   if (act === 'room'){ if (solo || !playersList[id]) return toast('아직 방이 없는 친구예요'); openSheet('home'); openVisit(id); }
-}
-// 코디 보기: 친구가 입은 옷과 소품
-const PEER_CATS = [['top', '상의'], ['legs', '하의'], ['feet', '신발'], ['hat', '모자'], ['acc', '액세서리'], ['neck', '목 장식'], ['cape', '망토']];
-function renderPeer(){
-  const o = onlineList[peerUid] || playersList[peerUid]; if (!o) return closeSheet();
-  const A = World.Avatar, av = A.fix(avOf(o)), P = A.meta.parts;
-  const rows = PEER_CATS.map(([c, l]) => { const p = P[c]?.[av[c]]; if (!p || p.id === 'none') return ''; const shop = p.k && p.k !== 'uni';
-    return `<div class="li"><div class="main"><span class="t">${esc(p.n)}</span><span class="d">${l}${shop ? (ownCloth(c, av[c]) ? ' · 나도 있어요' : ` · 옷 가게 ${p.p || ''}G`) : ' · 교복'}</span></div></div>`; }).join('');
-  frame(null, `${esc(o.nick)}의 코디`, `${HOUSES[o.house]?.name || ''} · ${onlineList[peerUid] ? '같이 노는 중' : '외출 중'}`, `
-    <div class="peerav"><img src="${avThumb(av)}" alt=""></div>
-    <section class="sec">${secH('입은 것')}<div class="box px">${rows || '<div class="li"><div class="main"><span class="t">교복 차림이에요</span></div></div>'}</div></section>
-    <div class="row" style="display:flex;gap:8px">${!solo && playersList[peerUid] ? '<button class="btn go" id="pVisit" style="flex:1">🏠 방 구경</button>' : ''}<button class="btn" id="pShop" style="flex:1">👗 옷 가게</button>${backBtn}</div>`);
-  $('#back').onclick = closeSheet;
-  $('#pVisit') && ($('#pVisit').onclick = () => openVisit(peerUid));
-  $('#pShop').onclick = () => { shopTry = null; shopMsg = ''; openSheet('home', 'clothes'); };
 }
 // 말하기 창: 이모티콘 한 번에, 글은 40자까지
 $('#temo').innerHTML = EMOS.map(x => `<button data-te="${x}">${x}</button>`).join('');
@@ -786,7 +769,6 @@ function render(){
   if (sub === 'dorm') return renderDorm();
   if (sub === 'common') return renderCommon();
   if (sub === 'visit') return renderVisit();
-  if (sub === 'peer') return renderPeer();
   if (sub === 'event') return renderEvent();
   if (sub === 'exam') return renderExam();
   ({ home:renderHome, lab:renderLab, green:renderGreen, ranch:renderRanch, market:renderMarket })[tab]();
@@ -1040,7 +1022,7 @@ function renderClass(){
     const board = L.seq.map((k, i) => {
       const got = L.input.length > i, bad = L.step === 'fail' && i === L.input.length - 1;
       const bg = bad ? '#C2385E' : got || L.step === 'ok' ? '#8CE6B0' : '#3E625A';
-      return `<div style="width:38px;height:44px;display:flex;align-items:center;justify-content:center;background:${bg};border:2px solid ${got ? '#fff' : '#5E8A80'}">${showAll || got ? ic(bad ? L.input[i] : k) : '<span class="b" style="color:#8CB8AE;font-size:20px">?</span>'}</div>`;
+      return `<div style="width:38px;height:44px;display:flex;align-items:center;justify-content:center;background:${bg};border:2px solid ${got ? '#fff' : '#5E8A80'}">${showAll || got ? ic(bad ? L.input[i] : k) : '<span class="b" style="color:#8CB8AE;font-size:24px">?</span>'}</div>`;
     }).join('');
     body = `<section class="sec"><div class="sec-h"><h3>${over ? '수업 끝' : L.step === 'show' ? `잘 봐요! (문양 ${L.seq.length}개)` : L.step === 'input' ? '본 순서대로 눌러요' : '정답!'}</h3><span class="meta">${prog}</span></div>
       <div class="px" style="background:#2E4A44;border:3px solid var(--ink2);padding:12px 6px;display:flex;justify-content:center;gap:4px;min-height:76px;align-items:center;flex-wrap:wrap">${board}</div></section>
@@ -1059,7 +1041,7 @@ function renderClass(){
     const cols = L.cards.length > 12 ? 4 : L.cards.length > 8 ? 4 : L.cards.length === 8 ? 4 : 3;
     body = `<section class="sec"><div class="sec-h"><h3>${over ? '수업 끝' : L.cards.every(c => c.done) ? '모두 찾았어요!' : '같은 동물 짝을 찾아요'}</h3><span class="meta">${prog} · <span id="bLeft">${Math.ceil(Math.max(0, L.end - Date.now()) / 1000)}초</span></span></div>
       <div style="height:8px;background:var(--line);margin-bottom:8px"><div id="bTime" style="height:100%;width:${Math.max(0, (L.end - Date.now()) / (L.secs * 1000) * 100)}%;background:var(--gold, #F6C83A)"></div></div>
-      <div class="grid" style="grid-template-columns:repeat(${cols},1fr)">${L.cards.map((c, i) => `<button class="cell" data-card="${i}" ${over ? 'disabled' : ''} style="height:72px;overflow:hidden;${c.done ? 'background:var(--mint)' : c.open ? '' : 'background:#4A3A6E'}">${c.open || c.done || over ? `<div style="width:120px;height:102px;transform:scale(.55);margin:-24px -30px">${crSprite({ k: c.k, col: { n: '기본' }, bornAt: 0 }, 1)}</div>` : '<span class="b" style="color:#B4A8D8;font-size:22px">?</span>'}</button>`).join('')}</div></section>`;
+      <div class="grid" style="grid-template-columns:repeat(${cols},1fr)">${L.cards.map((c, i) => `<button class="cell" data-card="${i}" ${over ? 'disabled' : ''} style="height:72px;overflow:hidden;${c.done ? 'background:var(--mint)' : c.open ? '' : 'background:#4A3A6E'}">${c.open || c.done || over ? `<div style="width:120px;height:102px;transform:scale(.55);margin:-24px -30px">${crSprite({ k: c.k, col: { n: '기본' }, bornAt: 0 }, 1)}</div>` : '<span class="b" style="color:#B4A8D8;font-size:24px">?</span>'}</button>`).join('')}</div></section>`;
   } else if (L.s === 'fly'){
     body = `<section class="sec"><div class="sec-h"><h3>${over ? '수업 끝' : '묘비 사이로 날아요'}</h3><span class="meta">${prog}</span></div>
       <canvas id="flyCv" width="${FW}" height="${FH}" class="px" style="width:100%;max-width:${FW * 1.2}px;display:block;margin:0 auto;border:3px solid var(--ink2);image-rendering:pixelated;touch-action:none"></canvas></section>`;
@@ -1107,7 +1089,7 @@ function renderLab(){
       <div class="grid" style="grid-template-columns:repeat(4,1fr)">
         ${POTIONS.slice(dexPage * DEX_PAGE, (dexPage + 1) * DEX_PAGE).map(p => {
           const got = me.found.includes(p), known = me.hints.includes(p), T = POTION_INFO[p].time;
-          return `<button class="cell ${dexSel === p ? 'sel' : ''}" data-dex="${p}" style="${T ? `background:${HOUSES[T].bg}` : ''}"><span style="position:absolute;left:3px;top:2px;font-family:'G7',monospace;font-size:11px;line-height:11px;color:var(--sub)">${POTIONS.indexOf(p) + 1}</span>
+          return `<button class="cell ${dexSel === p ? 'sel' : ''}" data-dex="${p}" style="${T ? `background:${HOUSES[T].bg}` : ''}"><span style="position:absolute;left:3px;top:2px;font-family:'G9',monospace;font-size:10px;line-height:11px;color:var(--sub)">${POTIONS.indexOf(p) + 1}</span>
             ${ic(p, got ? '' : known ? 'opacity:.45' : 'filter:brightness(0);opacity:.18')}<span class="s ${got ? '' : 'sub'}">${got || known ? shortName(p) : '???'}</span>${me.inv[p] ? `<span class="n">${me.inv[p]}</span>` : ''}</button>`;
         }).join('')}
       </div>
@@ -1173,7 +1155,7 @@ function renderGreen(){
           const bg = rd ? '#E2FBEA' : p.w ? '#E4F1FF' : !p.k ? 'var(--card)' : '#F6EBDB';
           return `<button class="cell" data-plot="${i}" style="min-height:96px;background:${bg};${rd ? 'border-color:var(--mint2)' : ''}">
             ${ic(icon, !p.k ? 'opacity:.3' : !rd && icon === p.k ? 'opacity:.7' : '')}<span class="s">${G ? G.seed : '빈 칸'}</span><span class="s ${rd ? 'b' : 'sub'}" style="${rd ? 'color:var(--mint2)' : ''}" ${p.k && !rd ? `data-left="${i}"` : ''}>${label}</span>
-            ${G ? `<div style="width:60px;display:flex">${segs(Math.round(fr * 10), 10, '#7BD88F')}</div>` : ''}${G && !rd && !p.w ? `<span class="s" style="font-size:11px;line-height:11px;color:#5A8AB0">물 주면 빨리 자라요</span>` : ''}</button>`;
+            ${G ? `<div style="width:60px;display:flex">${segs(Math.round(fr * 10), 10, '#7BD88F')}</div>` : ''}${G && !rd && !p.w ? `<span class="s" style="font-size:12px;line-height:11px;color:#5A8AB0">물 주면 빨리 자라요</span>` : ''}</button>`;
         }).join('')}
       </div>
       ${me.plots.length < PLOT_MAX ? `<button class="btn ghost" id="morePlot" style="align-self:center">화단 한 칸 늘리기 · ${PLOT_PRICE}G (${me.plots.length} / ${PLOT_MAX})</button>` : ''}
@@ -1181,10 +1163,10 @@ function renderGreen(){
     </section>
     <section class="sec">
       ${secH('씨앗 고르기', `지식 ${know}`)}
-      <div class="seg px" style="grid-template-columns:repeat(${SEED_TIERS.length},1fr)">${SEED_TIERS.map((k, i) => `<button class="${seedTier === i ? 'on' : ''}" data-stier="${i}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:13px;min-height:42px;${know < k ? 'opacity:.55' : ''}">${i + 1}단계<span class="s" style="font-size:11px">${k ? '지식' + k : '기본'}</span></button>`).join('')}</div>
+      <div class="seg px" style="grid-template-columns:repeat(${SEED_TIERS.length},1fr)">${SEED_TIERS.map((k, i) => `<button class="${seedTier === i ? 'on' : ''}" data-stier="${i}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:13px;min-height:42px;${know < k ? 'opacity:.55' : ''}">${i + 1}단계<span class="s" style="font-size:12px">${k ? '지식' + k : '기본'}</span></button>`).join('')}</div>
       <div class="grid" style="grid-template-columns:repeat(4,1fr)">${list.map(x => { const lock = know < x.know; return `<button class="cell ${seedPick === x.id ? 'sel' : ''}" data-seed="${x.id}" ${lock ? 'disabled' : ''}>${ic(x.id, lock ? 'filter:grayscale(1);opacity:.4' : '')}<span class="s">${x.seed}</span><span class="s ${x.price ? '' : 'sub'}" style="${x.price ? 'color:var(--gold2)' : ''}">${lock ? '🔒' : x.price ? x.price + 'G' : '무료'}</span>${me.inv[x.id] ? `<span class="n">${me.inv[x.id]}</span>` : ''}</button>`; }).join('')}</div>
       <div class="box px" style="padding:10px 12px;display:flex;align-items:center;gap:10px">${ic(P.id)}
-        <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span class="b" style="font-size:15px">${P.seed} 씨앗</span><span class="s sub">${timeText(P.mins * 6e4)} 자라서 「${P.mat}」 ${P.yield}개 · 씨앗 값 ${P.price ? P.price + 'G' : '무료'}</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span class="b" style="font-size:12px">${P.seed} 씨앗</span><span class="s sub">${timeText(P.mins * 6e4)} 자라서 「${P.mat}」 ${P.yield}개 · 씨앗 값 ${P.price ? P.price + 'G' : '무료'}</span></div>
       </div>
     </section>`);
   on('[data-stier]', b => { seedTier = +b.dataset.stier; renderGreen(); });
@@ -1240,7 +1222,7 @@ function renderRanch(){
   let body = '';
   if (placing !== null){
     body = `<section class="sec">${secH('입양 보낼 아이 고르기', '한 마리를 보내야 새 아기가 들어와요')}
-      <div class="grid" style="grid-template-columns:repeat(5,1fr)">${me.cr.map((x, i) => `<button class="cell" data-adopt="${i}" style="height:70px;padding:0;overflow:hidden;background:${CREATURES[x.k].bg}">${crSprite(x, .42)}<span class="s" style="position:absolute;left:0;right:0;bottom:1px;font-size:11px">${esc(x.name)}</span></button>`).join('')}</div>
+      <div class="grid" style="grid-template-columns:repeat(5,1fr)">${me.cr.map((x, i) => `<button class="cell" data-adopt="${i}" style="height:70px;padding:0;overflow:hidden;background:${CREATURES[x.k].bg}">${crSprite(x, .42)}<span class="s" style="position:absolute;left:0;right:0;bottom:1px;font-size:12px">${esc(x.name)}</span></button>`).join('')}</div>
       <button class="btn ghost" id="adoptCancel" style="align-self:center">그만두기</button></section>`;
   } else if (ranchTab === 'pen'){
     const adult = c && crAdult(c), tier = c ? loveTier(c) : 0, T = LOVE_TIERS[tier];
@@ -1248,7 +1230,7 @@ function renderRanch(){
     const mates = c ? me.cr.map((x, i) => [x, i]).filter(([x, i]) => i !== crSel && x.k === c.k && crAdult(x) && x.love >= BREED_LOVE) : [];
     body = `
     <div class="grid" style="grid-template-columns:repeat(5,1fr)">
-      ${me.cr.map((x, i) => `<button data-cr="${i}" class="px" style="height:62px;padding:0;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;background:${CREATURES[x.k].bg};border:3px solid ${i === crSel ? 'var(--ink)' : 'transparent'}">${crSprite(x, .42)}${crAdult(x) && loveTier(x) && prodLeft(x) <= 0 ? '<span class="dot" style="background:var(--mint2);right:3px;top:3px;bottom:auto"></span>' : ''}<span class="s" style="position:absolute;right:3px;bottom:1px;font-size:11px;line-height:11px;color:#C2385E">♥${x.love}</span></button>`).join('') || '<div class="hint" style="grid-column:1/-1">아직 생물이 없어요. 알 가게에서 알을 사 보세요.</div>'}
+      ${me.cr.map((x, i) => `<button data-cr="${i}" class="px" style="height:62px;padding:0;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;background:${CREATURES[x.k].bg};border:3px solid ${i === crSel ? 'var(--ink)' : 'transparent'}">${crSprite(x, .42)}${crAdult(x) && loveTier(x) && prodLeft(x) <= 0 ? '<span class="dot" style="background:var(--mint2);right:3px;top:3px;bottom:auto"></span>' : ''}<span class="s" style="position:absolute;right:3px;bottom:1px;font-size:12px;line-height:11px;color:#C2385E">♥${x.love}</span></button>`).join('') || '<div class="hint" style="grid-column:1/-1">아직 생물이 없어요. 알 가게에서 알을 사 보세요.</div>'}
     </div>
     ${c ? `<section class="sec">
       <div class="box px" style="padding:12px;display:flex;flex-direction:column;gap:8px">
@@ -1269,7 +1251,7 @@ function renderRanch(){
       ${!adult || c.love < BREED_LOVE ? `<div class="hint">${esc(c.name)}이(가) 어른이 되고 애정 ${BREED_LOVE} 이상이어야 해요</div>`
         : (c.bredAt || 0) + BREED_CD > now ? `<div class="hint">${esc(c.name)}은(는) 쉬는 중이에요 · <span data-cd="${c.bredAt + BREED_CD}">${cdText(c.bredAt + BREED_CD - now)}</span> 뒤에 다시</div>`
         : !mates.length ? `<div class="hint">짝꿍이 될 ${d.kind}(어른, 애정 ${BREED_LOVE} 이상)가 없어요 · 친구 방에서 친구 생물과도 맺을 수 있어요</div>`
-        : `<div class="pal">${mates.map(([x, i]) => `<button class="cell ${partner === i ? 'sel' : ''}" data-mate="${i}" style="width:62px;height:66px;min-height:0;padding:0 0 14px;overflow:hidden;background:${CREATURES[x.k].bg}">${crSprite(x, .4)}<span class="s" style="position:absolute;left:0;right:0;bottom:1px;font-size:11px">${esc(x.name)}</span></button>`).join('')}</div>
+        : `<div class="pal">${mates.map(([x, i]) => `<button class="cell ${partner === i ? 'sel' : ''}" data-mate="${i}" style="width:62px;height:66px;min-height:0;padding:0 0 14px;overflow:hidden;background:${CREATURES[x.k].bg}">${crSprite(x, .4)}<span class="s" style="position:absolute;left:0;right:0;bottom:1px;font-size:12px">${esc(x.name)}</span></button>`).join('')}</div>
           <button class="btn sm go" id="breed" style="min-height:40px" ${partner !== null && me.eggs.length < HATCH_MAX && me.mana >= BREED_MANA ? '' : 'disabled'}>${me.eggs.length >= HATCH_MAX ? '부화실이 꽉 찼어요' : '짝꿍 맺고 알 받기'}</button>
           <div class="hint">알은 부화실로 가요 · 엄마·아빠 색을 닮거나, 섞여서 처음 보는 색이 나오기도 해요</div>`}
     </section>
@@ -1489,7 +1471,7 @@ function renderCommon(){
     <section class="sec">
       <div class="sec-h"><h3>함께 꾸미는 휴게실</h3>${backBtn}</div>
       <div class="box px" style="padding:10px 12px;display:grid;grid-template-columns:repeat(6,1fr);gap:4px;text-align:center">
-        ${HALL_NAMES[h].map((nm, i) => `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span class="b" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:2px solid var(--ink2);background:${i < st ? H.col : 'var(--soft)'};color:${i < st ? '#fff' : 'var(--sub)'}">${i + 1}</span><span class="s" style="font-size:11px;line-height:1.2;color:${i === st - 1 ? 'var(--ink)' : 'var(--sub)'}">${nm}</span></div>`).join('')}
+        ${HALL_NAMES[h].map((nm, i) => `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span class="b" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:2px solid var(--ink2);background:${i < st ? H.col : 'var(--soft)'};color:${i < st ? '#fff' : 'var(--sub)'}">${i + 1}</span><span class="s" style="font-size:12px;line-height:1.2;color:${i === st - 1 ? 'var(--ink)' : 'var(--sub)'}">${nm}</span></div>`).join('')}
       </div>
       ${hint('', `${solo ? '혼자 모드에서는 혼자 모아요' : `${H.name} 학생들이 함께 재료를 모아요`} · 단계마다 방이 넓어지고, 자고 나면 마력 +2씩 더 (지금 +${(st - 1) * 2})`)}
     </section>
@@ -1661,7 +1643,7 @@ function renderExam(){
       <div class="box px" style="padding:14px 12px;min-height:72px;display:flex;align-items:center"><span style="line-height:22px">${Qn.q}</span></div>
       <div style="display:flex;flex-direction:column;gap:6px">${Qn.choices.map((c, j) => {
         const shown = exam.picked !== null, isA = c === Qn.a, mine = exam.picked === j;
-        return `<button class="btn" data-ans="${j}" ${shown ? 'disabled' : ''} style="justify-content:flex-start;text-align:left;white-space:normal;min-height:48px;padding:6px 12px;${shown && isA ? 'background:var(--mint);opacity:1' : shown && mine ? 'background:#FFD0DA;opacity:1' : ''}"><span class="b" style="color:var(--sub);width:20px;flex-shrink:0">${'ABCD'[j]}</span><span style="font-family:'G9',monospace">${c}</span></button>`;
+        return `<button class="btn" data-ans="${j}" ${shown ? 'disabled' : ''} style="justify-content:flex-start;text-align:left;white-space:normal;min-height:48px;padding:6px 12px;${shown && isA ? 'background:var(--mint);opacity:1' : shown && mine ? 'background:#FFD0DA;opacity:1' : ''}"><span class="b" style="color:var(--sub);width:20px;flex-shrink:0">${'ABCD'[j]}</span><span style="font-family:'G11',monospace">${c}</span></button>`;
       }).join('')}</div>
       <div class="hint">맞힌 문제 ${exam.right}개 · 한 문제에 ${EXAM_SEC}초</div>
     </section>`);
@@ -1711,8 +1693,8 @@ function renderExamResult(){
   frame('class', '쪽지시험 결과', '이번 주 시험 끝!', `
     <section class="sec">
       <div class="box px" style="padding:16px;display:flex;align-items:center;gap:16px">
-        <div class="b" style="width:72px;height:72px;flex-shrink:0;border:4px solid #C2385E;color:#C2385E;display:flex;align-items:center;justify-content:center;font-size:30px;transform:rotate(-8deg)">${gradeOf(ex.score || 0)}</div>
-        <div style="display:flex;flex-direction:column;gap:4px"><span class="b" style="font-size:22px">${ex.score || 0}점</span><span class="s sub">${ex.reward || ''}</span></div>
+        <div class="b" style="width:72px;height:72px;flex-shrink:0;border:4px solid #C2385E;color:#C2385E;display:flex;align-items:center;justify-content:center;font-size:36px;transform:rotate(-8deg)">${gradeOf(ex.score || 0)}</div>
+        <div style="display:flex;flex-direction:column;gap:4px"><span class="b" style="font-size:24px">${ex.score || 0}점</span><span class="s sub">${ex.reward || ''}</span></div>
       </div>
     </section>
     <section class="sec">
@@ -1765,7 +1747,7 @@ function eventBannerHTML(){
   if (ev){
     const live = now < ev.end;
     return `<button class="tile px" id="goEvent" style="width:100%;background:${live ? 'var(--gold)' : 'var(--card)'};box-shadow:inset 0 -4px 0 ${live ? 'var(--gold2)' : 'var(--line)'}">${ic(ev.E.icon)}
-      <span class="main" style="flex:1"><span class="b">${ev.E.name} ${live ? '진행 중!' : '끝났어요'}</span><span class="s" style="color:${live ? 'var(--ink)' : 'var(--sub)'}">${live ? `${untilText(ev.end - now)} 남음 · 눌러서 참가` : '결과와 보상을 확인해요'}</span></span><span class="b" style="font-size:20px">›</span></button>`;
+      <span class="main" style="flex:1"><span class="b">${ev.E.name} ${live ? '진행 중!' : '끝났어요'}</span><span class="s" style="color:${live ? 'var(--ink)' : 'var(--sub)'}">${live ? `${untilText(ev.end - now)} 남음 · 눌러서 참가` : '결과와 보상을 확인해요'}</span></span><span class="b" style="font-size:24px">›</span></button>`;
   }
   const nx = nextEvent();
   return nx ? `<div class="hint" style="display:flex;align-items:center;justify-content:center;gap:2px">${ic(nx.E.icon, 'transform:scale(.6);margin:-6px')}다음 행사 · ${nx.E.name} ${whenText(nx.start)} (${untilText(nx.start - now)} 뒤)</div>` : '';
@@ -1943,7 +1925,7 @@ const AUTH_MSG = {
   'auth/too-many-requests': '너무 여러 번 시도했어요. 잠시 뒤 다시 해 주세요.', 'auth/network-request-failed': '인터넷 연결을 확인해 주세요.',
 };
 const configured = !!(firebaseConfig.apiKey && firebaseConfig.databaseURL);
-function cover(inner){ document.body.classList.remove('inworld'); app.classList.remove('open'); sheetOn = false; app.innerHTML = `<div class="cover"><div style="text-align:center;display:flex;flex-direction:column;gap:6px;margin:10px 0"><span class="b" style="font-size:33px;line-height:36px">호박달 마녀학교</span><span class="s" style="color:#C8B8FF">늘 할로윈인 마녀학교 생활 타이쿤</span></div>${inner}</div>`; }
+function cover(inner){ document.body.classList.remove('inworld'); app.classList.remove('open'); sheetOn = false; app.innerHTML = `<div class="cover"><div style="text-align:center;display:flex;flex-direction:column;gap:6px;margin:10px 0"><span class="b" style="font-size:36px;line-height:36px">호박달 마녀학교</span><span class="s" style="color:#C8B8FF">늘 할로윈인 마녀학교 생활 타이쿤</span></div>${inner}</div>`; }
 function showLogin(mode = 'login'){
   const signup = mode === 'signup';
   let saved = ''; try { saved = localStorage.getItem('magion-id') || ''; } catch(e){}
@@ -1983,7 +1965,7 @@ function showLogin(mode = 'login'){
 const houseCards = (pick, counts) => `<div style="display:flex;flex-direction:column;gap:6px">${HOUSE_KEYS.map(k => {
   const H = HOUSES[k], n = counts[k] || 0, full = n >= HOUSE_CAP;
   return `<button data-house="${k}" ${full ? 'disabled' : ''} style="text-align:left;padding:6px 8px;display:flex;gap:8px;align-items:center;background:${pick === k ? H.bg : '#fff'};border:3px solid ${pick === k ? H.col : 'var(--line)'}">${ic(H.icon)}
-    <span style="flex:1;display:flex;flex-direction:column;gap:1px"><span class="b" style="font-size:15px;color:${H.col}">${H.name} <span class="s sub">${H.who} · ${hoursText(H)}</span></span>
+    <span style="flex:1;display:flex;flex-direction:column;gap:1px"><span class="b" style="font-size:12px;color:${H.col}">${H.name} <span class="s sub">${H.who} · ${hoursText(H)}</span></span>
     <span class="s">${H.perk}</span><span class="s sub">${H.timePerk}</span></span>
     <span class="s b" style="color:${full ? '#C2385E' : 'var(--sub)'}">${full ? '마감' : n + '/' + HOUSE_CAP}</span></button>`;
 }).join('')}</div>`;
@@ -2049,7 +2031,7 @@ async function showCredits(){
   const by = {}; list.forEach(c => (c.authors || []).forEach(a => { by[a] = by[a] || new Set(); (c.licenses || []).forEach(l => by[a].add(l)); }));
   const names = Object.keys(by).sort((a, b) => a.localeCompare(b));
   const d = document.createElement('div'); d.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(20,14,30,.75);display:flex;align-items:center;justify-content:center;padding:16px';
-  d.innerHTML = `<div class="card px" style="max-height:80vh;overflow:auto"><span class="b" style="font-size:18px">그림 만든 사람들</span>
+  d.innerHTML = `<div class="card px" style="max-height:80vh;overflow:auto"><span class="b" style="font-size:12px">그림 만든 사람들</span>
     <p class="s">캐릭터 그림은 Liberated Pixel Cup(LPC) 작가들의 그림을 썼어요. Universal LPC Spritesheet Character Generator (github.com/LiberatedPixelCup). 라이선스: CC-BY-SA 3.0 / GPL 3.0 / OGA-BY 3.0 등.</p>
     <p class="s" style="line-height:1.6">${names.map(n => esc(n)).join(' · ')}</p>
     <button class="btn" id="crClose">닫기</button></div>`;
@@ -2114,7 +2096,7 @@ function showCreate(done, counts = {}){
   const av = World.Avatar.fromLook(Math.floor(Math.random() * 1e6));
   const draw = () => {
     cover(`<div class="card px">
-      <span class="b" style="font-size:20px">입학 원서</span>
+      <span class="b" style="font-size:24px">입학 원서</span>
       <label class="field"><span class="s">이름 (1~8 자)</span><input id="nick" maxlength="8" placeholder="예: 별이" value="${esc(nick)}"></label>
       <span class="s">내 캐릭터 만들기</span>
       ${World.Avatar.loaded ? avatarUI(av) : '<div class="hint">그림을 불러오는 중...</div>'}
@@ -2140,7 +2122,7 @@ function showHousePick(counts, done){
   let house = null;
   const draw = () => {
     cover(`<div class="card px">
-      <span class="b" style="font-size:20px">기숙사 배정</span>
+      <span class="b" style="font-size:24px">기숙사 배정</span>
       <span class="s">${esc(me.nick)}, 새 학기부터 기숙사가 4개로 나뉘었어요. 들어갈 곳을 골라 주세요.</span>
       ${houseCards(house, counts)}
       <p class="err" id="err"></p>
