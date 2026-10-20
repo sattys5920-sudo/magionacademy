@@ -288,11 +288,11 @@ const peers = {}; let peerList = [];
 function retag(){ tags = people.map(p => p.pet || (p.npc && p.npc.cut && !p.name) ? null : { t: (p.npc && p.npc.mark ? '❗' : '') + p.name, k: p.me ? 'me' : p.peer ? 'peer' : p.npc ? 'npc' : '', ev: !!(p.npc && p.npc.mark) }); }
 const TAG_COL = { me: '#FFD866', peer: '#9CF0FF', npc: '#F6F0FF', '': '#F6F0FF' }, tagW = new Map();
 let dpr = 1;
-function drawTag(tag, sx, sy, now){   // sx, sy: 세계 픽셀(이름표 아래 가운데). 화면 좌표계(setTransform 1)에서 불러요
+function drawTag(tag, sx, sy, now, below){   // sx, sy: 세계 픽셀(이름표 아래 가운데, below면 위쪽 가운데). 화면 좌표계(setTransform 1)에서 불러요
   if (!tag) return;
   const f = Math.round(13 * dpr), px = Math.round(5 * dpr), py = Math.round(3 * dpr), r = Math.round(4 * dpr);
   out.font = `${f}px G11, Pretendard, sans-serif`; let w = tagW.get(tag.t + f); if (w === undefined){ w = Math.ceil(out.measureText(tag.t).width); tagW.set(tag.t + f, w); }
-  const x = Math.round((sx - camIX) * KPX - w / 2 - px), y = Math.round((sy - camIY) * KPX - f - py * 2), W = w + px * 2, H = f + py * 2;
+  const x = Math.round((sx - camIX) * KPX - w / 2 - px), y = Math.round((sy - camIY) * KPX - (below ? 0 : f + py * 2)), W = w + px * 2, H = f + py * 2;
   out.fillStyle = 'rgba(20,13,30,.8)'; out.beginPath(); out.roundRect(x, y, W, H, r); out.fill();
   if (tag.k === 'peer' || tag.ev){ out.strokeStyle = tag.ev ? '#FFD866' : '#4FB8D8'; out.lineWidth = dpr; if (!tag.ev || Math.floor(now / 600) % 2 === 0) out.stroke(); }
   out.fillStyle = tag.ev ? '#FFD866' : TAG_COL[tag.k]; out.textBaseline = 'top'; out.textAlign = 'left'; out.fillText(tag.t, x + px, y + py + Math.round(dpr));
@@ -801,7 +801,7 @@ function frame(now){
   if (M.rooms) M.rooms.forEach((rm, i) => { const [sx, sy] = P(rm.door[0] + .5, rm.door[1] + .5); if (sx > view.x && sx < view.x + view.w) drawTag(roomTags[i], sx, sy - 52, now); });
   if (M.pens) M.pens.forEach((pn, i) => { const [sx, sy] = P(pn.sign[0] + .5, pn.sign[1] + .5); if (sx > view.x && sx < view.x + view.w) drawTag(penTags[i], sx, sy - 20, now); });
   marks.forEach(mk_ => { if ((mk_.map !== map && mk_.map !== rmap) || !mk_.label) return; if (Math.abs(mk_.x - me.x) + Math.abs(mk_.y - me.y) > 14) return; const [sx, sy] = P(mk_.x + .5, mk_.y + .5); if (sx > view.x && sx < view.x + view.w && sy > view.y && sy < view.y + view.h) drawTag({ t: mk_.label, k: 'npc', ev: true }, sx, sy - 18, now); });   // 할 일 표시 위에 무엇을 하는 곳인지 글자로
-  people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); if (sx > view.x - 40 && sx < view.x + view.w + 40 && sy > view.y && sy < view.y + view.h + 60) drawTag(tags[i], sx, sy - World.Avatar.FH * ASC + 4, now); });
+  people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); if (sx > view.x - 40 && sx < view.x + view.w + 40 && sy > view.y && sy < view.y + view.h + 60) drawTag(tags[i], sx, sy + 2, now, true); });   // 이름표는 발밑에: 머리 위는 말풍선·표시가 쓰고, 뒤 사람이나 물건을 덜 가려요
   const tn = performance.now();
   for (let i = says.length - 1; i >= 0; i--){ const p = says[i]; if (tn > p.say.until || (!p.me && !people.includes(p))){ sayOff(p); continue; } const [sx, sy] = P(p.x + .5, p.y + .5); p.say.el.style.left = (sx - ix) * k + 'px'; p.say.el.style.top = (sy - World.Avatar.FH * ASC - 2 - iy) * k + 'px'; }
   if (bubble){ const o = bubble.o; bubble.el.style.left = Math.max(90, Math.min(cv.clientWidth - 90, (o.x + o.sw / 2 - ix) * k)) + 'px'; bubble.el.style.top = Math.max(70, (o.y - 2 - iy) * k) + 'px'; }
