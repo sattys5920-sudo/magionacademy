@@ -278,7 +278,7 @@ def bathouse_at(img, x, y):
     d.rectangle([cx - 1, cy - 20, cx, cy], fill=hexc('#5A4A3A')); d.rectangle([cx - 6, cy - 32, cx + 6, cy - 20], fill=hexc('#6A4A5A')); d.polygon([(cx - 8, cy - 32), (cx, cy - 40), (cx + 8, cy - 32)], fill=hexc('#3A2A3A'))
     d.ellipse([cx - 2, cy - 29, cx + 2, cy - 25], fill=hexc('#1A1218'))
 shared('bathouse', bathouse_at)
-def stall_hw(col, fish=False):
+def stall_hw(col, fish=False, veg=False):
     def f(img, x, y):
         d = ImageDraw.Draw(img); Tt, R, B, L = P(x, y), P(x + 2, y), P(x + 2, y + 1), P(x, y + 1)
         poly(d, [L, B, up(B, 8), up(L, 8)], hexc('#5A3A2A')); poly(d, [B, R, up(R, 8), up(B, 8)], hexc('#6A4632')); poly(d, [up(Tt, 8), up(R, 8), up(B, 8), up(L, 8)], hexc('#7A5238'))
@@ -286,6 +286,9 @@ def stall_hw(col, fish=False):
             ib = [up(P(x + .2, y + .2), 9), up(P(x + 1.8, y + .2), 9), up(P(x + 1.8, y + .8), 9), up(P(x + .2, y + .8), 9)]; poly(d, ib, hexc('#B8E0F0'))
             for k, c2 in enumerate(['#8AA8E0', '#F08A2A', '#C8D8F0', '#E0303A']):
                 xx, yy = P(x + .45 + k * .38, y + .5); d.ellipse([xx - 3, yy - 11, xx + 1, yy - 9], fill=hexc(c2)); d.polygon([(xx + 1, yy - 10), (xx + 3, yy - 12), (xx + 3, yy - 8)], fill=hexc(c2)); d.point((xx - 2, yy - 11), fill=OUTL)
+        elif veg:   # 채소 가게: 토마토·당근·양배추·비트를 두 줄로 쌓아요
+            for row, (dy_, rr) in enumerate(((0, 3), (-3, 2))):
+                for k, c2 in enumerate(['#E0303A', '#F08A2A', '#6AC84A', '#9A3AA8', '#E0303A']): xx, yy = P(x + .25 + k * .38, y + .5); d.ellipse([xx - rr, yy - 11 + dy_ - rr + 1, xx + rr, yy - 8 + dy_], fill=hexc(c2)); d.point((xx, yy - 12 + dy_ - rr + 1), fill=hexc('#3A7A2A'))
         else:
             for k, c2 in enumerate(['#E07A1E', '#C86AE8', '#8AE84A', '#F2E8D8']): xx, yy = P(x + .4 + k * .4, y + .5); d.ellipse([xx - 2, yy - 11, xx + 2, yy - 8], fill=hexc(c2))
         for p_ in (L, B, R): d.line([tuple(map(int, up(p_, 8))), tuple(map(int, up(p_, 22)))], fill=hexc('#3A2A1E'))
@@ -295,6 +298,7 @@ def stall_hw(col, fish=False):
     return f
 for c in ('#E07A1E', '#7A4AA8', '#4AA86A', '#C8486A'): shared('stall' + c, stall_hw(c))
 shared('fishstall', stall_hw('#3A7AC8', True))
+shared('vegstall', stall_hw('#3AA84A', False, True))
 def game_board(img, x, y):   # 놀이 게시판: 기둥 둘 + 알록달록 쪽지
     d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
     for dx in (-9, 8): d.rectangle([cx + dx, cy - 26, cx + dx + 1, cy], fill=hexc('#3A2A1E'))
@@ -356,6 +360,7 @@ for (x, y) in [(47, 44), (55, 41), (50, 48)]:
 # 등불 시장 거리: 친구 가판대 4 + 생선 가게
 for i, (x, y) in enumerate(((55, 24), (55, 31), (65, 24), (65, 31))): place('stall', 'stall' + ['#E07A1E', '#7A4AA8', '#4AA86A', '#C8486A'][i], x, y, w=2, act=('등불 시장 가판대', '시장 보기')); occupied |= {(x, y), (x + 1, y)}
 place('stall', 'fishstall', 58, 34, w=2, act=('생선 가게', '물고기 팔기')); occupied |= {(58, 34), (59, 34)}
+place('stall', 'vegstall', 54, 34, w=2, act=('채소 가게', '채소 사기')); occupied |= {(54, 34), (55, 34)}   # 토마토를 파는 채소 가게 (의뢰 1)
 place('board', 'gameboard', 60, 21, act=('놀이 게시판', '놀이 고르기')); occupied.add((60, 21))
 # 광장·거리 장식
 for (x, y) in [(56, 22), (66, 22), (56, 33), (66, 33), (58, 30), (64, 24)]:
@@ -407,6 +412,6 @@ def zone(x, y):
     return 'p'
 FORAGE = [[x, y, zone(x, y)] for x in range(2, NX - 2) for y in range(2, NY - 2) if (x, y) not in occupied and T[(x, y)] in ('grass', 'grave') and (x * 7 + y * 3) % 4 == 0]
 AREAS = [dict(n='본관 · 물약 교실', t=[19, 24]), dict(n='과자 교실', t=[6, 37]), dict(n='공예 교실', t=[29, 37]), dict(n='기숙사', t=[16, 48]), dict(n='호박밭', t=[9, 55]), dict(n='독초 온실', t=[22, 63]),
-         dict(n='사육장', t=[27, 61]), dict(n='등불 시장', t=[61, 31]), dict(n='뱀파이어 저택', t=[63, 12]), dict(n='마녀의 오두막', t=[72, 49]), dict(n='묘지', t=[51, 51]), dict(n='유령 호수', t=[56, 53]), dict(n='늑대인간 집', t=[78, 60])]
+         dict(n='사육장', t=[27, 61]), dict(n='등불 시장', t=[61, 31]), dict(n='채소 가게', t=[54, 35]), dict(n='뱀파이어 저택', t=[63, 12]), dict(n='마녀의 오두막', t=[72, 49]), dict(n='묘지', t=[51, 51]), dict(n='유령 호수', t=[56, 53]), dict(n='늑대인간 집', t=[78, 60])]
 json.dump(dict(W=W, H=H, NX=NX, NY=NY, OX=OX, OY=OY, objs=meta, lights=lights, water=WATER, forage=FORAGE, areas=AREAS, start=[20, 30]), open('out/hw.json', 'w'), ensure_ascii=False)
 print('objs', len(objs), 'sheet', sheet.size)
