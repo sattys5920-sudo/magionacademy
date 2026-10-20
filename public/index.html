@@ -2660,11 +2660,11 @@ async function evRun(ctx, sc){
     else if (c === 'if_flag'){ const v = flagOn(s.flag); const t = v ? s.then : s.else; if (t in lab) i = lab[t]; }
     else if (c === 'if_heart'){ const v = hearts(s.npc || ctx.n.id) >= s.min; const t = v ? s.then : s.else; if (t in lab) i = lab[t]; }
     else if (c === 'move' || c === 'follow'){
-      if (c === 'follow'){ await Promise.all([evWalk(s.who, 'off_right'), sleep(250).then(() => evWalk('player', 'off_right'))]); }
+      if (c === 'follow'){ await Promise.all([evWalk(s.who, 'far_right'), sleep(300).then(() => evWalk('player', 'far_right'))]); }   // 둘이 같은 방향으로 걸어가요 (화면 밖으로 나갔다 반대쪽으로 들어오지 않아요)
       if (s.transition !== 'cut') await evFadeTo(1, 280);
       await stageBg(s.to, s.time || STG.time, s.weather || STG.wxBase);
       if (s.clear) Object.keys(STG.actors).forEach(k => { if (k !== 'player') delete STG.actors[k]; });
-      if (c === 'follow'){ const a = STG.actors[s.who], p = STG.actors.player; if (a) a.x = POSX.off_left; if (p) p.x = POSX.off_left - 40; }
+      if (c === 'follow'){ const a = STG.actors[s.who], p = STG.actors.player; if (a) a.x = POSX.far_left - 24; if (p) p.x = POSX.far_left - 96; }   // 이미 걷던 모양 그대로, 캇파가 앞에 · 서로 겹치지 않게
       if (s.transition !== 'cut') await evFadeTo(0, 280); else STG.fade = 0;
       if (c === 'follow') await Promise.all([evWalk(s.who, 'right'), evWalk('player', 'left')]);
       evFace(); }
