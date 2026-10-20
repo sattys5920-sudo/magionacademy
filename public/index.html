@@ -1147,11 +1147,33 @@ function syncPens(){
 }
 World.onPenDoor = i => i === myPenIdx() ? true : `<b>${esc(penNameList()[i] || '빈 우리')}</b><br>${penNameList()[i] ? '주인만 들어갈 수 있어요' : '아직 주인이 없어요'}`;
 World.onPet = id => { const i = me.cr.findIndex(c => c.id === id); if (i < 0) return; crSel = i; ranchTab = 'pen'; partner = null; ranchMsg = ''; openSheet('ranch'); };
+// ===== 마지막 자리: 나갔다 들어오면 있던 곳에서 이어서 시작해요 (이 기기에 저장) =====
+const POS_SKIP = ['arena', 'pen'];   // 놀이 마당은 놀이가 끝나면 비는 곳, 내 우리는 어느 우리인지가 필요해서 사육장 문 앞으로
+const posKey = () => 'magion-pos:' + uid;
+function posLoad(){
+  try {
+    const q = JSON.parse(localStorage.getItem(posKey()) || 'null'); if (!q || typeof q.m !== 'string' || !Number.isFinite(q.x) || !Number.isFinite(q.y)) return null;
+    if (q.m.includes(':') || !World.meta(q.m)) return null;   // 개인 방(주인마다 다름)·없어진 곳은 처음 자리로
+    if (q.m === 'pen') return { m: 'barn', x: 21, y: 31 };
+    return POS_SKIP.includes(q.m) ? null : q;
+  } catch(e){ return null; }
+}
+let posTimer = 0, posLast = '';
+function posSave(){
+  try {
+    if (!me || !World.where || typeof World.myPos !== 'function') return; const q = World.myPos(); if (!q || !q.m) return;
+    const s = JSON.stringify({ m: q.m, x: q.x, y: q.y }); if (s === posLast) return; posLast = s; localStorage.setItem(posKey(), s);
+  } catch(e){}
+}
+function posWatch(){
+  if (posTimer) return; posTimer = setInterval(posSave, 3000);
+  addEventListener('pagehide', posSave); document.addEventListener('visibilitychange', () => { if (document.hidden) posSave(); });
+}
 function enterWorld(){
   document.body.classList.add('inworld'); app.innerHTML = ''; sheetOn = false; app.classList.remove('open');
   if (typeof applySettings === 'function') applySettings();
   if (typeof bagBadge === 'function') setTimeout(bagBadge, 500);
-  World.setPlayer(me.nick, avOf(me)); World.start(); World.resize();
+  World.setPlayer(me.nick, avOf(me)); const last = posLoad(); World.start(last ? last.m : undefined, last ? [last.x, last.y] : undefined); World.resize(); posWatch();
   syncPens(); syncRoom(); syncHalls(); syncHallNames(); syncSpots(); syncNpcs(); NL.ready.then(() => { npcDecay(); npcSig = ''; syncNpcs(); MQ.ready.then(() => { mqSky(); npcSig = ''; syncNpcs(); mqMarks(); setTimeout(mqTick, 1200); }); }); dayTick(); hud(); showRest(); setTimeout(storyCheck, 1500);
 }
 let spotTimer = 0;
