@@ -2032,8 +2032,10 @@ function renderCook(){
 const NPC_ART_V = 5;
 const NPC_DATA_V = 1;   // data/npc 캐시 버전
 // LPC NPC 그림(art/npcs.png: 한 줄 = 한 명, 64칸 20개)에서 얼굴 부분만 크게 (초상화)
-const NPC_FACE = { 0: [11, 12, 35], 1: [16, 10, 32], 2: [18, 14, 31], 3: [15, 16, 35], 4: [17, 21, 36], 5: [10, 6, 44] };   // 동물·허수아비는 사람과 머리 위치가 달라요 (나비·배트리·캇파·아울라·맨디·짚신 얼굴 틀: x, y, 크기)
-const npcFace = (spr, size = 48) => { const hb = NPC_FACE[spr], B = hb ? { x: hb[0], y: hb[1], s: hb[2] } : World.Avatar.headBox, k = size / B.s; return `<i class="npcspr" style="width:${size}px;height:${size}px;background:url(art/npcs.webp?v=${NPC_ART_V}) ${-B.x * k}px ${-(spr * 64 + B.y) * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
+const NPC_FACE = { 0: [13, 14, 31], 1: [18, 12, 29], 2: [20, 16, 28], 3: [17, 18, 31], 4: [19, 23, 32], 5: [12, 9, 39] };   // 동물·허수아비는 사람과 머리 위치가 달라요 (나비·배트리·캇파·아울라·맨디·짚신 얼굴 틀: x, y, 크기)
+const npcFace = (spr, size = 48) => {   // 액자 크기가 CSS로 바뀌어도(관계 화면 40px 등) 얼굴이 가운데에 오도록 그림 크기·위치를 퍼센트로 계산해요
+  const hb = NPC_FACE[spr], B = hb ? { x: hb[0], y: hb[1], s: hb[2] } : World.Avatar.headBox, SW = 64 * 20, SH = 64 * 13;
+  return `<i class="npcspr" style="width:${size}px;height:${size}px;background:url(art/npcs.webp?v=${NPC_ART_V}) ${(B.x / (SW - B.s) * 100).toFixed(3)}% ${((spr * 64 + B.y) / (SH - B.s) * 100).toFixed(3)}%/${(SW / B.s * 100).toFixed(2)}% ${(SH / B.s * 100).toFixed(2)}% no-repeat"></i>`; };
 const npcFull = (spr, size = 144) => { const k = size / 64; return `<i class="stspr" style="background:url(art/npcs.webp?v=${NPC_ART_V}) 0 ${-spr * 64 * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
 const NPC_DEF = [
   { id: 'nabi', wander: true, name: '나비', title: '매점 고양이', spr: 0, h: 22, map: 'campus', x: 61, y: 35, likes: ['f_crucian', 'd_minnowfry', 'g2_catnip'], dislikes: ['j_weed'],
