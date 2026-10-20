@@ -707,7 +707,7 @@ const SEED_LIST = [
   { id:'g_pine', mat:'솔잎', seed:'소나무', tier:2, know:30, days:2, yield:3, price:40, col:'#5336E2' },
   { id:'g_maple', mat:'단풍잎', seed:'단풍나무', tier:2, know:30, days:2, yield:3, price:30, col:'#E0A36F' },
   { id:'g_acorn', mat:'도토리', seed:'참나무', tier:2, know:30, days:2, yield:3, price:40, col:'#16CEA1' },
-  { id:'g_tomato', mat:'토마토', seed:'토마토', tier:2, know:30, days:2, yield:3, price:35, col:'#E198DD' },
+  { id:'g_tomato', mat:'토마토', seed:'토마토', tier:0, know:0, days:1, yield:3, price:20, col:'#E198DD' },
   { id:'g_pepper', mat:'고추', seed:'고추', tier:2, know:30, days:2, yield:3, price:35, col:'#739B26' },
   { id:'g_corn', mat:'옥수수', seed:'옥수수', tier:2, know:30, days:2, yield:3, price:40, col:'#3676E2' },
   { id:'g_lily', mat:'은방울꽃', seed:'은방울꽃', tier:3, know:60, days:3, yield:3, price:60, col:'#E06F78' },
@@ -990,7 +990,7 @@ function freshPlayer(nick, look, house, av){
     nick, look, house, av, coin:300, mana:40, day:1,
     inv:{ herb:6, drop:4, mush:2, mana:3, wool:1, scale:1, uhair:0, egg:0, p_red:0, p_green:0, p_blue:0, p_purple:0 },
     found:[], hints:['p_red'],
-    plots:[{k:'herb',at:Date.now() - 6e5,w:false},{k:'drop',at:Date.now(),w:false},{k:null},{k:null},{k:null},{k:null}],
+    plots:[{k:'herb',at:Date.now() - 6e5,w:false},{k:'drop',at:Date.now(),w:false}],
     cr:[0, 4, 7, 2].map(k => ({ ...newCreature(k, null, CREATURES[k].name, true), love: 3 })), eggs:[],
     fbag:{ candle:1, cushions:1, owldoll:1 }, room:[],
     orders:makeOrders(1, ['p_red'], []), classDay:0,
@@ -1022,6 +1022,7 @@ function normalize(p){
     const G = SEED_INFO[x.k], done = Math.max(0, Math.min(1, ((x.st || 1) - 1) / (G.days || 3)));
     return { k: x.k, at: Date.now() - done * G.mins * 6e4, w: false };
   });
+  while (p.plots.length < 2) p.plots.push({ k: null });
   migrateCreatures(p);
   return p;
 }
@@ -1355,6 +1356,12 @@ World.onSpot = (si, spot) => {
   toast(`${withJosa(it.name, '을', '를')} 주웠어요! ${STARS(it.grade)}${isNew ? ` · 새 채집물! 마력 +${it.grade}` : ''}`);
 };
 // ---------- 낚시·채집 화면: 도감(물고기·채집물, 20개씩) · 낚싯대 · 오늘 · 생선 가게 ----------
+// 파는 값은 시간대마다 달라요: 물건마다 잘 팔리는 시간대가 하나 있어요 (그 시간대 ×1.35, 반대쪽 ×0.75)
+const BANDS = ['dew', 'ember', 'dusk', 'moon'];
+const sellMul = k => { let h = 0; for (const c of k) h = (h * 31 + c.charCodeAt(0)) >>> 0; const d = (BANDS.indexOf(houseNow()) - h % 4 + 4) % 4; return [1.35, 1.05, .75, 1.05][d]; };
+const sellPay = (k, base) => Math.max(1, Math.round(base * sellMul(k)));
+const sellTag = k => { const m = sellMul(k); return m > 1.2 ? '<b style="color:var(--ok)">▲ 비싸게 쳐줘요</b>' : m < .8 ? '<b style="color:var(--bad,#c55)">▼ 싸게 쳐줘요</b>' : '보통'; };
+const cropBase = k => { const x = SEED_INFO[k]; return x ? Math.max(3, Math.round(x.price * .6 + 3)) : 0; };
 let fsTab = 'dex', fsMsg = '', fsKind = 'fish', fsPg = 0, fsSel = null, fsSellPg = 0;
 const ZONE_NAME = { f: '숲', g: '묘지', l: '호숫가', p: '들판' };
 // 쪽 넘김: 전체 n개를 per개씩. 버튼은 data-<attr>="쪽 번호" (요리 화면도 같이 써요)
@@ -1394,9 +1401,9 @@ function renderFish(){
       <div class="box px">${tips.map(([e, t]) => `<div class="li"><span class="tip">${e}</span><div class="main"><span class="d wrap">${t}</span></div></div>`).join('')}</div>`;
   }
   if (fsTab === 'sell'){
-    const have = CATCH.filter(k => me.inv[k] > 0), total = have.reduce((t, k) => t + CATCH_INFO[k].pay * me.inv[k], 0), PER = 5; fsSellPg = pgClamp(fsSellPg, have.length, PER);
-    body = `${hint(fsMsg, '물고기와 채집물을 사 줘요 · 시장에 올려 친구에게 팔 수도 있어요')}
-      ${have.length ? `<div class="box px">${pgSlice(have, fsSellPg, PER).map(k => { const x = CATCH_INFO[k]; return `<div class="li">${ic(k)}<div class="main"><span class="t">${esc(x.name)} ×${me.inv[k]}</span><span class="d">${x.junk ? '쓰레기' : STARS(x.grade)} · 1개 ${x.pay}G</span></div><button class="btn sm" data-fsell="${k}">1개</button><button class="btn sm go" data-fsall="${k}">다</button></div>`; }).join('')}</div>${pgNav('fsspg', fsSellPg, have.length, PER)}
+    const have = CATCH.filter(k => me.inv[k] > 0), total = have.reduce((t, k) => t + sellPay(k, CATCH_INFO[k].pay) * me.inv[k], 0), PER = 5; fsSellPg = pgClamp(fsSellPg, have.length, PER);
+    body = `${hint(fsMsg, `물고기와 채집물을 사 줘요 · 값은 시간대마다 달라요 (지금 ${TIME_NAME[houseNow()]})`)}
+      ${have.length ? `<div class="box px">${pgSlice(have, fsSellPg, PER).map(k => { const x = CATCH_INFO[k]; return `<div class="li">${ic(k)}<div class="main"><span class="t">${esc(x.name)} ×${me.inv[k]}</span><span class="d">${x.junk ? '쓰레기' : STARS(x.grade)} · 1개 ${sellPay(k, x.pay)}G · ${sellTag(k)}</span></div><button class="btn sm" data-fsell="${k}">1개</button><button class="btn sm go" data-fsall="${k}">다</button></div>`; }).join('')}</div>${pgNav('fsspg', fsSellPg, have.length, PER)}
       <button class="btn gold" id="fsAll" style="width:100%">전부 팔기 · ${total.toLocaleString()}G</button>` : '<div class="hint">팔 물건이 없어요. 호수에서 낚시하거나 마을에서 주워 와요.</div>'}`;
   }
   frame(null, '낚시 · 채집', `유령 호수와 등불 시장 · ${RODS[L].name}`, `
@@ -1410,7 +1417,7 @@ function renderFish(){
   on('[data-fspg]', b => { fsPg = +b.dataset.fspg; renderFish(); });
   on('[data-fsspg]', b => { fsSellPg = +b.dataset.fsspg; renderFish(); });
   on('[data-fsel]', b => { fsSel = fsSel === b.dataset.fsel ? null : b.dataset.fsel; renderFish(); });
-  const sell = (k, n) => { n = Math.min(n, me.inv[k]); if (n <= 0) return 0; me.inv[k] -= n; const g = CATCH_INFO[k].pay * n; me.coin += g; return g; };
+  const sell = (k, n) => { n = Math.min(n, me.inv[k]); if (n <= 0) return 0; me.inv[k] -= n; const g = sellPay(k, CATCH_INFO[k].pay) * n; me.coin += g; return g; };
   on('[data-fsell]', b => { const g = sell(b.dataset.fsell, 1); fsMsg = `${ITEM[b.dataset.fsell]} 1개를 팔았어요. +${g}G`; save(); renderFish(); });
   on('[data-fsall]', b => { const k = b.dataset.fsall, n = me.inv[k], g = sell(k, n); fsMsg = `${ITEM[k]} ${n}개를 팔았어요. +${g}G`; save(); renderFish(); });
   $('#fsAll') && ($('#fsAll').onclick = () => { let g = 0, n = 0; CATCH.forEach(k => { n += me.inv[k] || 0; g += sell(k, me.inv[k] || 0); }); fsMsg = `${n}개를 팔았어요. +${g.toLocaleString()}G`; save(); renderFish(); });
@@ -2964,7 +2971,7 @@ const FLAVOR = {
   '수확하기': ['축제 장식용 호박이래요. 따면 혼나요!', '호박 속에서 똑똑, 누가 노크했어요'],
   '읽어 보기': ['"여기 잠들다… 숙제를 미룬 학생"', '"내일 일어날게요" — 300년째', '"물약 맛은 보지 마시오"', '"고양이 밥 주는 걸 잊지 마"'],
   '앉아서 쉬기': ['잠깐 쉬었어요. 밤바람이 시원해요'],
-  '채소 사기': ['싱싱한 토마토 있어요! 붉다 못해 노을 색이에요', '당근은 흙 묻은 채로가 맛있어요', '비트는 껍질째 쓰는 거 알죠?', '오늘 양배추는 공짜로 웃어 드려요'],
+  '채소 팔기': ['싱싱한 토마토 있어요! 붉다 못해 노을 색이에요', '당근은 흙 묻은 채로가 맛있어요', '비트는 껍질째 쓰는 거 알죠?', '오늘 양배추는 공짜로 웃어 드려요'],
   '올려다보기': ['일곱 등불이 바람에 흔들려요. 하나하나가 별 같아요', '기둥 맨 위 등불이 가장 따뜻해 보여요', '등불 사이로 박쥐가 한 마리 지나가요'],
   '바라보기': ['등불이 꺼져 있어요. 누군가를 기다리는 자리 같아요', '벤치는 비어 있는데 누가 앉았다 간 듯 따뜻해요', '등불 유리에 작은 손자국이 있어요'],
   '차 마시기': ['따끈한 호박차를 한 모금… 포근해요', '찻잔에서 김이 모락모락'],
@@ -2997,6 +3004,7 @@ World.onAct = (mapId, o, a) => {
   if (label === '놀이 고르기') return openSheet('home', 'games');
   if (label === '요리하기' || label === '카라멜 젓기'){ ckPot = { x: o.box[0], y: o.box[1] }; ckTab = 'book'; ckMsg = ''; return openSheet('home', 'cook'); }
   if (label === '요리책 보기' || label === '과자 만들기'){ ckPot = null; ckTab = 'book'; ckMsg = ''; return openSheet('home', 'cook'); }
+  if (label === '채소 팔기'){ vgMsg = ''; return openSheet('home', 'veg'); }
   if (label === '물고기 팔기'){ fsTab = 'sell'; fsMsg = ''; return openSheet('home', 'fish'); }
   if (label === '쓰다듬기' && o.name === 'blackcat') return openSheet('ranch');
   if (mapId === 'pen'){ ranchTab = label === '부화실 보기' ? 'hatch' : 'pen'; ranchMsg = ''; return openSheet('ranch'); }
@@ -3050,6 +3058,7 @@ function render(){
   if (sub === 'common') return renderCommon();
   if (sub === 'visit') return renderVisit();
   if (sub === 'fish') return renderFish();
+  if (sub === 'veg') return renderVeg();
   if (sub === 'games') return renderGames();
   if (sub === 'cook') return renderCook();
   if (sub === 'npcgift') return renderNpcGift();
@@ -3229,7 +3238,7 @@ function pfStatsHTML(){
     ${pfStatRow('물약', pot, POTIONS.length, dexDesc(pot, POTIONS.length, '종'))}
     ${pfStatRow('물고기 도감', fish, FISH.length, dexDesc(fish, FISH.length, '종'))}
     ${pfStatRow('채집물 도감', forage, FORAGE.length, dexDesc(forage, FORAGE.length, '종'))}
-    ${pfStatRow('온실 화단', plots, PLOT_MAX, plots >= PLOT_MAX ? '화단을 다 늘렸어요!' : `한 칸 더 늘리려면 ${PLOT_PRICE}G`)}
+    ${pfStatRow('온실 화단', plots, PLOT_MAX, plots >= PLOT_MAX ? '화단을 다 늘렸어요!' : `한 칸 더: 지식 ${plotNext()[0]} · ${plotNext()[1]}G`)}
     ${pfStatRow('사육장', cr, PEN_MAX, cr >= PEN_MAX ? '사육장이 꽉 찼어요' : `${PEN_MAX - cr}마리 더 키울 수 있어요`)}
   </div>`;
 }
@@ -3908,7 +3917,10 @@ const plotLeft = p => p.k ? Math.max(0, p.at + growMs(p) - Date.now()) : 0;
 const plotReady = p => !!p.k && plotLeft(p) <= 0;
 const plotFrac = p => p.k ? Math.min(1, 1 - plotLeft(p) / growMs(p)) : 0;
 const timeText = ms => { const m = Math.ceil(ms / 6e4); return ms < 6e4 ? `${Math.ceil(ms / 1000)}초` : m < 60 ? `${m}분` : `${Math.floor(m / 60)}시간${m % 60 ? ` ${m % 60}분` : ''}`; };
-const PLOT_MAX = 9, PLOT_PRICE = 300;
+// 화단은 기본 2칸, 지식과 골드를 내면 한 칸씩 늘려 최대 10칸까지. 칸 수는 사람마다 따로예요.
+const PLOT_MIN = 2, PLOT_MAX = 10;
+const PLOT_COST = [[5, 150], [10, 300], [20, 500], [30, 800], [60, 1200], [100, 1800], [140, 2600], [180, 3600]];   // [필요 지식, 골드] · 3번째 칸부터
+const plotNext = () => PLOT_COST[Math.max(0, (me.plots || []).length - PLOT_MIN)];
 let seedPick = 'herb', greenMsg = '', seedTier = 0;
 function renderGreen(){
   const ready = me.plots.filter(plotReady).length, know = me.know || 0;
@@ -3928,13 +3940,12 @@ function renderGreen(){
             ${ic(icon, !p.k ? 'opacity:.3' : !rd && icon === p.k ? 'opacity:.7' : '')}<span class="s">${G ? G.seed : '빈 칸'}${G && !rd && p.w ? ' 💧' : ''}</span><span class="s ${rd ? 'b' : 'sub'}" style="${rd ? 'color:var(--ok)' : ''}" ${p.k && !rd ? `data-left="${i}"` : ''}>${label}</span>
             ${G ? `<div style="width:60px;display:flex">${segs(Math.round(fr * 10), 10, 'var(--ok)')}</div>` : ''}</button>`;
         }).join('')}
-        ${me.plots.length ? '' : '<div class="hint" style="grid-column:1/-1">아직 화단이 없어요. 아래에서 한 칸 늘려 보세요.</div>'}
-      </div>
+              </div>
       <div class="box px" style="padding:8px 12px;display:flex;align-items:center;gap:10px">${ic(P.id)}
         <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><span class="s">심을 씨앗 · <b>${P.seed}</b> ${P.price ? `<span class="sub num">${P.price}G</span>` : '<span class="sub">무료</span>'}</span><span class="s sub">${timeText(P.mins * 6e4)} 자라서 「${P.mat}」 ${P.yield}개</span></div>
         <button class="btn sm" data-gtab="seed">바꾸기</button>
       </div>
-      ${me.plots.length < PLOT_MAX ? `<button class="btn ghost" id="morePlot" style="align-self:center">화단 한 칸 늘리기 · ${PLOT_PRICE}G (${me.plots.length} / ${PLOT_MAX})</button>` : ''}
+      ${me.plots.length < PLOT_MAX ? (([nk, ng]) => `<button class="btn ghost" id="morePlot" style="align-self:center;${know < nk ? 'opacity:.6' : ''}">${know < nk ? '🔒 ' : ''}화단 한 칸 늘리기 · 지식 ${nk} · ${ng}G (${me.plots.length} / ${PLOT_MAX})</button>`)(plotNext()) : '<div class="hint" style="text-align:center">화단을 10칸까지 다 늘렸어요!</div>'}
       ${hint(greenMsg, '빈 칸을 눌러 심고, 자라는 칸을 누르면 물을 줘요 (25% 빨리 자라요) · 다 자라면 눌러서 수확해요')}
     </section>`;
   } else {
@@ -3954,8 +3965,11 @@ function renderGreen(){
   on('[data-stier]', b => { seedTier = +b.dataset.stier; renderGreen(); });
   on('[data-seed]', b => { seedPick = b.dataset.seed; greenMsg = ''; renderGreen(); });
   const mp = $('#morePlot'); if (mp) mp.onclick = () => {
-    if (me.coin < PLOT_PRICE){ greenMsg = '골드가 부족해요.'; return renderGreen(); }
-    me.coin -= PLOT_PRICE; me.plots.push({ k: null }); greenMsg = '화단이 한 칸 늘었어요!'; save(); renderGreen();
+    const [nk, ng] = plotNext();
+    if (me.plots.length >= PLOT_MAX) return;
+    if ((me.know || 0) < nk){ greenMsg = `지식 ${nk}부터 늘릴 수 있어요.`; return renderGreen(); }
+    if (me.coin < ng){ greenMsg = `골드 ${ng}G가 부족해요.`; return renderGreen(); }
+    me.coin -= ng; me.plots.push({ k: null }); greenMsg = `화단이 한 칸 늘었어요! -${ng}G (${me.plots.length} / ${PLOT_MAX})`; save(); hud(); renderGreen();
   };
   on('[data-plot]', b => {
     const p = me.plots[+b.dataset.plot], G = SEED_INFO[seedPick];
@@ -3978,6 +3992,24 @@ function renderGreen(){
   }, 1000);
 }
 let greenTick = 0;
+// ===== 채소 가게: 온실에서 키운 것을 사 줘요 (값은 시간대마다) =====
+let vgMsg = '', vgPg = 0;
+function renderVeg(){
+  const have = SEED_LIST.map(x => x.id).filter(k => me.inv[k] > 0), PER = 5; vgPg = pgClamp(vgPg, have.length, PER);
+  const total = have.reduce((t, k) => t + sellPay(k, cropBase(k)) * me.inv[k], 0);
+  frame(null, '채소 가게', `온실 수확물을 사 줘요 · 지금은 ${TIME_NAME[houseNow()]}`, `<section class="sec">
+    ${hint(vgMsg, '물건마다 잘 팔리는 시간대가 달라요 · ▲ 표시일 때 팔면 이득이에요')}
+    ${have.length ? `<div class="box px">${pgSlice(have, vgPg, PER).map(k => `<div class="li">${ic(k)}<div class="main"><span class="t">${esc(ITEM[k])} ×${me.inv[k]}</span><span class="d">1개 ${sellPay(k, cropBase(k))}G · ${sellTag(k)}</span></div><button class="btn sm" data-vsell="${k}">1개</button><button class="btn sm go" data-vsall="${k}">다 팔기</button></div>`).join('')}</div>
+      ${pgNav('vgpg', vgPg, have.length, PER)}
+      <button class="btn gold" id="vgAll" style="width:100%">전부 팔기 · ${total.toLocaleString()}G</button>` : '<div class="hint">팔 게 없어요. 독초 온실에서 키워 오세요.</div>'}
+  </section><div style="display:flex;gap:8px">${backBtn}</div>`);
+  $('#back').onclick = closeSheet;
+  on('[data-vgpg]', b => { vgPg = +b.dataset.vgpg; renderVeg(); });
+  const sell = (k, n) => { n = Math.min(n, me.inv[k]); if (n <= 0) return 0; me.inv[k] -= n; const g = sellPay(k, cropBase(k)) * n; me.coin += g; return g; };
+  on('[data-vsell]', b => { const g = sell(b.dataset.vsell, 1); vgMsg = `${ITEM[b.dataset.vsell]} 1개를 팔았어요. +${g}G`; save(); hud(); renderVeg(); });
+  on('[data-vsall]', b => { const k = b.dataset.vsall, n = me.inv[k], g = sell(k, n); vgMsg = `${ITEM[k]} ${n}개를 팔았어요. +${g}G`; save(); hud(); renderVeg(); });
+  $('#vgAll') && ($('#vgAll').onclick = () => { let g = 0, n = 0; have.forEach(k => { n += me.inv[k] || 0; g += sell(k, me.inv[k] || 0); }); vgMsg = `${n}개를 팔았어요. +${g.toLocaleString()}G`; save(); hud(); renderVeg(); });
+}
 
 // ===== 사육장 =====
 // ===== 내 사육장 (사육장 건물의 내 우리) =====
