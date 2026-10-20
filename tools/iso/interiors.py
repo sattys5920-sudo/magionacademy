@@ -491,11 +491,12 @@ DORMS = {
   'wolf':  dict(name='늑대인간 기숙사', paper='#3A4A2E', paper2='#4A5E3A', wain='#5A3A24', rug='#7A5232', spawn=[21, 49]),
   'ghost': dict(name='유령 기숙사', paper='#5A6A8A', paper2='#6E80A0', wain='#4A5A6A', rug='#8AA0C8', spawn=[29, 49]),
 }
-# ================= 독초 온실 (24×18) =================
+# ================= 독초 온실 (34×24) · 화단 사이 길을 3칸, 가운데 길을 6칸으로 =================
 def toxic_room():
-    R = Room(24, 18, wall=64)
+    R = Room(34, 24, wall=64)
+    XA, XB, PA, PB, ROWS = 3, 31, 14, 20, (3, 8, 13, 18)   # 화단 가로 범위, 가운데 길, 화단 줄의 시작 y
     def flo(fx, fy):
-        if 2 <= fx < 22 and 3 <= fy < 16 and (int(fy) - 3) % 4 < 2 and not (10 <= fx < 14):
+        if XA <= fx < XB and 3 <= fy < 20 and (int(fy) - 3) % 5 < 2 and not (PA <= fx < PB):
             return hexc('#3E2C20') if (fy * 2) % 1 < .5 else hexc('#4A3426')
         return checker('#6A7470', '#5A6460')(fx, fy)
     R.floor(flo)
@@ -509,8 +510,8 @@ def toxic_room():
         R.wall_fill(side, g)
     def bed_row(y):
         def f(img, d):
-            for x in range(2, 22):
-                if 10 <= x < 14: continue
+            for x in range(XA, XB):
+                if PA <= x < PB: continue
                 cx, cy = R.P(x + .5, y + .5)
                 kind = (x * 7 + y) % 4
                 if kind == 0:
@@ -524,11 +525,11 @@ def toxic_room():
                 else:
                     d.line([(cx, cy), (cx, cy - 8)], fill=hexc('#4A9A3A')); d.ellipse([cx - 3, cy - 12, cx + 3, cy - 7], fill=hexc('#E8E04A'))
         return f
-    for y in (3, 7, 11, 15):
-        cells = [(x, yy) for yy in (y, y + 1) for x in range(2, 22) if not 10 <= x < 14 and yy < 17]
+    for y in ROWS:
+        cells = [(x, yy) for yy in (y, y + 1) for x in range(XA, XB) if not PA <= x < PB]
         R.obj('bed', [c for c in cells if c[1] == y], bed_row(y), act=('독초 화단', '독초 돌보기'))
-        if y + 1 < 17: R.obj('bed', [c for c in cells if c[1] == y + 1], bed_row(y + 1), act=('독초 화단', '독초 돌보기'))
-        for x in (5.5, 17.5): R.light(x, y + 1, -6, 34, [120, 255, 160], .25, 0)
+        R.obj('bed', [c for c in cells if c[1] == y + 1], bed_row(y + 1), act=('독초 화단', '독초 돌보기'))
+        for x in (7.5, 26.5): R.light(x, y + 1, -6, 34, [120, 255, 160], .25, 0)
     def flytrap(tx, ty):
         def f(img, d):
             cx, cy = R.P(tx + .5, ty + .5)
@@ -538,23 +539,23 @@ def toxic_room():
             d.chord([cx - 10, cy - 28, cx + 4, cy - 18], 0, 360, fill=hexc('#C83A4A'))
             for k in range(5): d.point((cx - 9 + k * 3, cy - 25), fill=hexc('#F2EEE4'))
         return f
-    R.obj('flytrap', [(22, 1)], flytrap(22, 1), act=('식충식물 쩝쩝이', '먹이 주기')); R.obj('flytrap', [(0, 16)], flytrap(0, 16), act=('식충식물 쩝쩝이', '먹이 주기'))
+    R.obj('flytrap', [(32, 1)], flytrap(32, 1), act=('식충식물 쩝쩝이', '먹이 주기')); R.obj('flytrap', [(0, 22)], flytrap(0, 22), act=('식충식물 쩝쩝이', '먹이 주기'))
     def cans(img, d):
         cx, cy = R.P(1.5, 1.5)
         d.rectangle([cx - 5, cy - 8, cx + 1, cy], fill=hexc('#5A8AB0')); d.line([(cx + 1, cy - 6), (cx + 6, cy - 9)], fill=hexc('#5A8AB0'), width=2); d.rectangle([cx - 4, cy - 10, cx, cy - 8], fill=hexc('#4A7AA0'))
     R.obj('cans', [(1, 1)], cans, act=('물뿌리개', '물 주기'))
     def potting(img, d):
-        R.box(img, 10, 1.2, 4, .8, 11, '#8A6A48', '#5A3A24', '#6A4A2E')
+        R.box(img, 14, 1.2, 4, .8, 11, '#8A6A48', '#5A3A24', '#6A4A2E')
         for k in range(4):
-            x, y = R.P(10.5 + k, 1.6); y -= 11; d.polygon([(x - 3, y - 5), (x + 3, y - 5), (x + 2, y), (x - 2, y)], fill=hexc('#A8563A')); d.ellipse([x - 2, y - 9, x + 2, y - 5], fill=hexc(['#5AAE4A', '#8AE8D8', '#C86AE8', '#E8E04A'][k]))
-    R.obj('potting', [(x, 1) for x in range(10, 14)], potting, act=('분갈이 작업대', '물 주기'))
+            x, y = R.P(14.5 + k, 1.6); y -= 11; d.polygon([(x - 3, y - 5), (x + 3, y - 5), (x + 2, y), (x - 2, y)], fill=hexc('#A8563A')); d.ellipse([x - 2, y - 9, x + 2, y - 5], fill=hexc(['#5AAE4A', '#8AE8D8', '#C86AE8', '#E8E04A'][k]))
+    R.obj('potting', [(x, 1) for x in range(14, 18)], potting, act=('분갈이 작업대', '물 주기'))
     def mush(img, d):
-        cx, cy = R.P(22.5, 9.5)
+        cx, cy = R.P(32.5, 11.5)
         for dx, dy, r in ((-5, 0, 3), (4, -1, 4), (0, 3, 3), (-2, -4, 2)):
             d.rectangle([cx + dx - 1, cy + dy - r, cx + dx, cy + dy], fill=hexc('#E8DCC8')); d.ellipse([cx + dx - r, cy + dy - r - 3, cx + dx + r, cy + dy - r + 1], fill=hexc('#C83AE8'))
-    R.obj('mush', [(22, 9)], mush, act=('빛나는 버섯', '구경하기')); R.light(22.5, 9.5, -4, 26, [220, 120, 255], .4)
+    R.obj('mush', [(32, 11)], mush, act=('빛나는 버섯', '구경하기')); R.light(32.5, 11.5, -4, 26, [220, 120, 255], .4)
     R.save('toxic', '독초 온실', '빛나는 독초를 길러요', [22, 64])
-# ================= 사육장 건물: 학생 12명의 우리 (32×27) =================
+# ================= 사육장 건물: 학생 12명의 우리 (44×34) · 우리 사이 길을 넉넉하게 =================
 def fence_tile(R, tx, ty, horiz):
     def f(img, d):
         cx, cy = R.P(tx + .5, ty + .5)
@@ -569,19 +570,19 @@ def hay_draw(R, tx, ty):
         for k in range(5): d.point((cx - 5 + k * 2, cy - 9 - (k % 2)), fill=hexc('#F8E098'))
     return f
 def barn_room():
-    R = Room(32, 27)
+    R = Room(44, 34)
     def flo(fx, fy):
         c = planks(['#8A6A48', '#7E5E3E', '#94744E', '#86664A'], '#5A3E28')(fx, fy)
         if (int(fx * 3) * 7 + int(fy * 3) * 13) % 23 == 0: c = hexc('#C8A85A')   # 지푸라기
         return c
     R.floor(flo)
     R.walls('#7A5236', '#86603E', '#5A3A24', trim='#A8784A')
-    for side, u in (('R', 30), ('R', 90), ('R', 150), ('R', 210), ('L', 40), ('L', 120), ('L', 190)): R.window(side, u)
-    for side, u in (('R', 60), ('R', 120), ('R', 180), ('R', 240), ('L', 80), ('L', 160)): R.sconce(side, u)
+    for side, u in (('R', 30), ('R', 110), ('R', 190), ('R', 270), ('R', 330), ('L', 40), ('L', 130), ('L', 220)): R.window(side, u)
+    for side, u in (('R', 70), ('R', 150), ('R', 230), ('R', 300), ('L', 85), ('L', 175)): R.sconce(side, u)
     pens = []
     for r in range(3):
         for c in range(4):
-            i = r * 4 + c; x0, y0 = 1 + 8 * c, 1 + 8 * r; x1, y1 = x0 + 6, y0 + 5; gate = (x0 + 3, y1)
+            i = r * 4 + c; x0, y0 = 3 + 10 * c, 2 + 9 * r; x1, y1 = x0 + 6, y0 + 5; gate = (x0 + 3, y1)
             for x in range(x0, x1 + 1):
                 for y in (y0, y1):
                     if (x, y) != gate: R.obj('fence', [(x, y)], fence_tile(R, x, y, True))
@@ -595,8 +596,8 @@ def barn_room():
             R.obj('sign', [(x0 + 4, y1 + 1)], sign)
             R.doors.append(dict(tile=list(gate), to='pen', label='내 사육장', spawn=[14, 19], pen=i))
             pens.append(dict(i=i, gate=list(gate), sign=[x0 + 4, y1 + 1]))
-    for (x, y) in ((0, 25), (31, 25), (31, 8)): R.obj('plant', [(x, y)], plant_draw(R, x, y))
-    for (x, y) in ((8, 8), (24, 8), (16, 16), (8, 24), (24, 24)): float_candle(R, x, y)
+    for (x, y) in ((0, 32), (43, 32), (43, 10)): R.obj('plant', [(x, y)], plant_draw(R, x, y))
+    for (x, y) in ((11, 9), (31, 9), (21, 18), (11, 27), (31, 27)): float_candle(R, x, y)
     R.extra = dict(pens=pens, vw=210)
     R.save('barn', '사육장', '내 우리 문으로 들어가요 · 다른 우리는 주인만 들어가요', [32, 64])
 # ================= 내 우리 (넓은 목장, 28×22) =================
