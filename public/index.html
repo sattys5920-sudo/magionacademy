@@ -2032,7 +2032,8 @@ function renderCook(){
 const NPC_ART_V = 5;
 const NPC_DATA_V = 1;   // data/npc 캐시 버전
 // LPC NPC 그림(art/npcs.png: 한 줄 = 한 명, 64칸 20개)에서 얼굴 부분만 크게 (초상화)
-const npcFace = (spr, size = 48) => { const B = World.Avatar.headBox, k = size / B.s; return `<i class="npcspr" style="width:${size}px;height:${size}px;background:url(art/npcs.webp?v=${NPC_ART_V}) ${-B.x * k}px ${-(spr * 64 + B.y) * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
+const NPC_FACE = { 0: [16, 17, 24], 1: [19, 15, 24], 2: [22, 16, 26], 3: [19, 20, 26], 4: [21, 23, 28], 5: [18, 15, 30] };   // 동물·허수아비는 사람과 머리 위치가 달라요 (나비·배트리·캇파·아울라·맨디·짚신 얼굴 틀: x, y, 크기)
+const npcFace = (spr, size = 48) => { const hb = NPC_FACE[spr], B = hb ? { x: hb[0], y: hb[1], s: hb[2] } : World.Avatar.headBox, k = size / B.s; return `<i class="npcspr" style="width:${size}px;height:${size}px;background:url(art/npcs.webp?v=${NPC_ART_V}) ${-B.x * k}px ${-(spr * 64 + B.y) * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
 const npcFull = (spr, size = 144) => { const k = size / 64; return `<i class="stspr" style="background:url(art/npcs.webp?v=${NPC_ART_V}) 0 ${-spr * 64 * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
 const NPC_DEF = [
   { id: 'nabi', wander: true, name: '나비', title: '매점 고양이', spr: 0, h: 22, map: 'campus', x: 61, y: 35, likes: ['f_crucian', 'd_minnowfry', 'g2_catnip'], dislikes: ['j_weed'],
@@ -2104,16 +2105,16 @@ const dayNum = k => { const [y, m, d] = String(k).split('-').map(Number); return
 const daysSince = k => k ? dayNum(todayKey()) - dayNum(k) : 1e9;
 // 평소 루틴: 시간대마다 서 있는 장소 (그 안에서 계속 돌아다녀요)
 const ROUTINE = {
-  nabi:      { morning: 'fish_stall', day: 'lantern_market', evening: 'fish_stall', night: 'market_roof' },
-  batri:     { morning: 'owl_post', day: 'village_square', evening: 'dorm_street', night: 'owl_post' },
+  nabi:      { morning: 'fish_stall', day: 'dorm_street', evening: 'fish_stall', night: 'hill_ruin' },   // 밤엔 첫 주인 오르솔라의 무너진 오두막 터를 지켜요
+  batri:     { morning: 'owl_post', day: 'clock_tower', evening: 'quarter_plaza', night: 'owl_post' },   // 낮엔 학교 쪽, 저녁엔 그림자 골목으로 편지를 돌려요
   kappa:     { morning: 'ghost_lake_pier', day: 'lakeside', evening: 'ghost_lake_pier', night: 'lakeside' },
   aula:      { morning: 'potion_class', day: 'potion_class', evening: 'potion_class', night: 'library_stacks' },
   mandi:     { morning: 'poison_greenhouse', day: 'poison_greenhouse', evening: 'swamp', night: 'poison_greenhouse' },
   jipsin:    { morning: 'pumpkin_field', day: 'pumpkin_field', evening: 'pumpkin_field', night: 'pumpkin_field' },
   sera:      { morning: 'infirmary', day: 'infirmary', evening: 'ghost_tea', night: 'infirmary' },
-  madeleine: { morning: 'bakery', day: 'candy_class', evening: 'lantern_market', night: 'candy_class' },
-  stella:    { morning: 'vamp_manor', day: 'witch_hut', evening: 'village_square', night: 'hill_ruin' },
-  leo:       { morning: 'pen', day: 'menagerie', evening: 'swamp', night: 'menagerie' },
+  madeleine: { morning: 'bakery', day: 'candy_class', evening: 'dorm_street', night: 'candy_class' },   // 저녁엔 기숙사에 케이크를 날라요
+  stella:    { morning: 'vamp_manor', day: 'witch_hut', evening: 'quarter_plaza', night: 'hill_top' },   // 저녁엔 일곱 등불 광장, 밤엔 별 보는 언덕
+  leo:       { morning: 'pen', day: 'menagerie', evening: 'old_windmill', night: 'menagerie' },
 };
 const NL = { places: {}, cast: {}, prof: {}, evs: {}, ready: null };   // 불러온 데이터
 NL.ready = (async () => {
@@ -2303,8 +2304,8 @@ const TOWNS = [
   { id: 'fish_owner', map: 'campus', x: 51, y: 37, r: 1, lines: ['오늘 붕어 싱싱해. 고양이한테 들키기 전에 사 가.', '얼음은 매일 아침 반듯하게 깎아. 손님 눈은 생선보다 정직하거든.', '시장 끝자리 붕어는 원래 좀 잘 없어져. 괜찮아, 그건 그런 자리야.'] },
   { id: 'grandma', map: 'campus', x: 12, y: 59, r: 1, when: ['morning', 'day'], lines: ['아침 이슬 맞은 호박이 제일 달단다.', '저 허수아비? 우리 집 식구지. 인사하고 가렴.', '무릎이 쑤시는 걸 보니 내일은 비가 오려나 보다.'] },
   { id: 'merchant', map: 'campus', x: 58, y: 30, r: 2, lines: ['등불 하나 사 갈래? 밤길엔 이게 최고야.', '요즘 손님들이 다들 별 이야기만 해. 무슨 일이 있긴 있나 봐.', '깎아 달라고? 웃는 얼굴이면 조금 생각해 볼게.'] },
-  { id: 'elder_a', map: 'campus', x: 63, y: 33, r: 1, lines: ['젊을 땐 이 광장에서 밤새 춤을 췄지.', '흉년 겨울 이야기 들어 봤나? 그해 케이크 맛은 아직도 생각나.', '천천히 걸어. 마을은 도망가지 않아.'] },
-  { id: 'elder_b', map: 'campus', x: 54, y: 33, r: 1, lines: ['벌꿀은 서두르면 안 돼. 사람 마음도 그렇고.', '시장 바닥에서 반백 년을 살았어. 웬만한 소문은 다 들었지.', '그 제빵사 아이, 목소리 큰 건 예나 지금이나 똑같구먼.'] },
+  { id: 'elder_a', map: 'quarter', x: 60, y: 10, r: 1, lines: ['젊을 땐 이 광장에서 밤새 춤을 췄지.', '흉년 겨울 이야기 들어 봤나? 그해 케이크 맛은 아직도 생각나.', '천천히 걸어. 마을은 도망가지 않아.'] },
+  { id: 'elder_b', map: 'quarter', x: 46, y: 29, r: 1, lines: ['벌꿀은 서두르면 안 돼. 사람 마음도 그렇고.', '시장 바닥에서 반백 년을 살았어. 웬만한 소문은 다 들었지.', '그 제빵사 아이, 목소리 큰 건 예나 지금이나 똑같구먼.'] },
   { id: 'florist', map: 'campus', x: 70, y: 27, r: 1, lines: ['오늘의 꽃은 은방울꽃이에요. 작아도 향이 멀리 가요.', '온실 쪽에서 가끔 비명이 들려요. 이제는 반가운 소리예요.', '꽃은 물보다 햇볕을 먼저 기억한대요.'] },
   { id: 'optician', map: 'campus', x: 47, y: 27, r: 1, lines: ['눈이 침침하면 언제든 와요. 별도 다시 보일 거예요.', '안경 쓰는 걸 부끄러워하는 손님이 제일 마음에 걸려요.', '렌즈는 닦을수록 맑아져요. 마음도 그렇고요.'] },
   { id: 'gray', map: 'campus', x: 73, y: 37, r: 1, lines: ['우체국은 지각을 용서하지 않네. 편지는 기다리니까.', '우리 우체부는 길은 몰라도 사람은 안다네. ……방금 그 말은 못 들은 걸로 하게.', '봉투에 주소는 또박또박 쓰게. 바람 부는 곳은 주소가 아니야.'] },
