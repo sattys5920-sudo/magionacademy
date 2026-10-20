@@ -389,9 +389,10 @@ function rebuildObjs(){   // 지도 물건 + (개인 방이면) 놓은 가구
   flats = fo.filter(o => o.flat);
   objOrder = fo.length ? orderObjs([...M.objs, ...fo.filter(o => !o.flat)]) : (MAPS[rmap].order || (MAPS[rmap].order = orderObjs(M.objs)));
 }
+let gates = [];   // 길 끝에서 다음 지역으로 넘어가는 문 (door.walk): 사이를 걸어가면 자동으로 넘어가요
 function setMap(id, spawn){
   map = id; rmap = real(id); M = MAPS[rmap].meta; resize(); placing = null;
-  rebuildObjs();
+  rebuildObjs(); gates = M.objs.filter(o => o.door && o.door.walk);
   if (!spawn || !free(spawn[0], spawn[1])) spawn = M.spawnIn || M.start || spawn;
   me.x = spawn[0]; me.y = spawn[1]; me.path = []; me.view = 0; me.flip = false;
   // 의미 없이 걸어 다니는 학생은 없어요 (이야기 NPC는 따로: World.setNpcs)
@@ -542,7 +543,7 @@ function goDoor(door, o){
     if (!r || typeof r === 'string'){ const [bx, by] = P(door.tile[0] + .5, door.tile[1] + .5); showBubble({ x: bx, y: by - 30, sw: 0 }, r || '<b>빈 방</b>'); return; }
     view = r; label = r.own ? '내 방' : r.name + '의 방';
   }
-  if (!door.to){ if (World.onLockedDoor && World.onLockedDoor(door.label)) return; showBubble(o, `<b>${door.label}</b><br>아직 문이 잠겨 있어요 · 곧 열려요`); return; }
+  if (!door.to){ if (World.onLockedDoor && World.onLockedDoor(door.label)) return; showBubble(o, `<b>${door.label}</b><br>${door.note || '아직 문이 잠겨 있어요 · 곧 열려요'}`); return; }
   let to = door.to, spawn = door.spawn;
   // 돌아가는 문: 들어온 순서를 거꾸로 (없으면 그 방의 바깥 방으로)
   if (to === '@back'){ const b = backStack.pop(); to = b ? b.map : (M.backTo || 'campus'); spawn = b ? b.pos : null; label = (MAPS[real(to)] || MAPS.campus).meta.title; }
@@ -605,6 +606,7 @@ cv.addEventListener('pointerdown', e => {
 });
 const SPEED = 6.5, RUN = 10;   // 타일/초. 멀리 갈 때(남은 길 10칸 넘게)는 달려요
 function step(p, dt){
+  if (p.me && gates.length && !busy && !cutOn){ const g = gates.find(o => { const d = o.door, sp = d.span || [d.tile[1], d.tile[1]]; return Math.round(p.x) === d.tile[0] && Math.round(p.y) >= sp[0] && Math.round(p.y) <= sp[1]; }); if (g){ p.path = []; pending = null; goDoor(g.door, g); return; } }
   if (!p.path.length){
     if (p.me && pending){ const pd = pending; pending = null; if (pd.water){ World.faceTo(pd.water[0], pd.water[1]); World.onWater && World.onWater(pd.water[0], pd.water[1]); } else if (pd.mark){ World.onMark && World.onMark(pd.mark); } else if (pd.npcTalk){ const np = people.find(q => q.npc && q.npc.id === pd.npcTalk); if (np) World.faceTo(np.x, np.y); World.onNpc && World.onNpc(pd.npcTalk); } else if (pd.spot !== undefined){ World.onSpot && World.onSpot(pd.spot, pd.sp); } else if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1], () => useObj(pd.act, a)); } }
     if (p.npc && p.npc.wander && !p.path.length && (p.idle -= dt) < 0){ const r = p.npc.r ?? 2; p.idle = 1.5 + Math.random() * 3.5; for (let i = 0; i < 12; i++){ const gx = p.home[0] + Math.floor(Math.random() * (r * 2 + 1)) - r, gy = p.home[1] + Math.floor(Math.random() * (r * 2 + 1)) - r; if (goto(p, gx, gy)) break; } }   // 루틴 장소 안에서 계속 돌아다녀요
@@ -818,33 +820,43 @@ document.getElementById('tZoom').onclick = () => { zi = (zi + 1) % ZOOMS.length;
 // 지도: 캠퍼스 전체를 작게 그려서 보여 주고, 누르면 그곳으로 걸어가요
 const mapv = document.getElementById('mapv'), mcv = document.getElementById('mcv');
 let mapImg = null;
-function openMap(){
-  if (map !== 'campus'){ showBubble({ x: 0, y: 0, sw: 0 }, '지도는 바깥에서 볼 수 있어요'); return; }
-  const C = MAPS.campus, m = C.meta;
-  if (!mapImg){ mapImg = document.createElement('canvas'); mapImg.width = m.W; mapImg.height = m.H; const g = mapImg.getContext('2d'); g.drawImage(C.bg, 0, 0); C.order.forEach(o => g.drawImage(C.obj, o.sx, o.sy, o.sw, o.sh, o.x, o.y, o.sw, o.sh)); }
-  mcv.width = m.W; mcv.height = m.H; const g = mcv.getContext('2d'); g.drawImage(mapImg, 0, 0);
+let mapImgs = {}, mapView = null;   // 지도 그림은 지역마다 한 번만 그려요
+async function openMap(want){
+  if (M.indoor){ showBubble({ x: 0, y: 0, sw: 0 }, '지도는 바깥에서 볼 수 있어요'); return; }
+  const id = typeof want === 'string' ? want : (mapView && MAPS[mapView] && !MAPS[mapView].meta.indoor ? mapView : real(map)); mapView = id;
+  await ensureMap(id); const C = MAPS[id], m = C.meta; C.order = C.order || orderObjs(C.meta.objs);
+  if (!mapImgs[id]){ const c = document.createElement('canvas'); c.width = m.W; c.height = m.H; const g = c.getContext('2d'); g.drawImage(C.bg, 0, 0); C.order.forEach(o => g.drawImage(C.obj, o.sx, o.sy, o.sw, o.sh, o.x, o.y, o.sw, o.sh)); mapImgs[id] = c; }
+  mcv.width = m.W; mcv.height = m.H; const g = mcv.getContext('2d'); g.drawImage(mapImgs[id], 0, 0);
   mapv.classList.add('on'); document.querySelectorAll('.mlabel').forEach(e => e.remove());
+  let tabs = document.getElementById('mtabs'); if (!tabs){ tabs = document.createElement('div'); tabs.id = 'mtabs'; mapv.insertBefore(tabs, document.getElementById('mwrap')); }
+  const outdoors = Object.keys(MAPS).filter(k => !MAPS[k].meta.indoor && !MAPS[k].meta.lazyHide && /^(campus|quarter)$/.test(k));
+  tabs.innerHTML = outdoors.map(k => `<button data-mv="${k}" class="${k === id ? 'on' : ''}">${MAPS[k].meta.title}</button>`).join(''); tabs.querySelectorAll('button').forEach(b => b.onclick = () => openMap(b.dataset.mv));
+  const here = real(map) === id;
   requestAnimationFrame(() => {
     // 화면 높이에 맞춰 크게 그리고, 옆으로 밀어서 봐요
     const wrap = document.getElementById('mwrap'), inner = document.getElementById('minner'), k = Math.min(wrap.clientHeight / m.H, 1.2);
     const w = Math.floor(m.W * k), h = Math.floor(m.H * k);
     mcv.style.width = w + 'px'; mcv.style.height = h + 'px'; inner.style.width = w + 'px'; inner.style.height = h + 'px';
     const lab = (t, txt, cls) => { const [x, y] = P(t[0] + .5, t[1] + .5); const d = document.createElement('div'); d.className = 'mlabel' + (cls ? ' ' + cls : ''); d.textContent = txt; d.style.left = x * k + 'px'; d.style.top = (y * k - 4) + 'px'; inner.appendChild(d); };
-    m.areas.forEach(a => lab(a.t, a.n)); lab([me.x, me.y], '나', 'me');
-    const [px_, py_] = P(me.x + .5, me.y + .5); wrap.scrollLeft = px_ * k - wrap.clientWidth / 2; wrap.scrollTop = py_ * k - wrap.clientHeight / 2;
+    m.areas.forEach(a => lab(a.t, a.n)); if (here) lab([me.x, me.y], '나', 'me');
+    const [px_, py_] = here ? P(me.x + .5, me.y + .5) : P(m.start[0] + .5, m.start[1] + .5); wrap.scrollLeft = px_ * k - wrap.clientWidth / 2; wrap.scrollTop = py_ * k - wrap.clientHeight / 2;
   });
 }
 mcv.addEventListener('click', e => {   // 탭할 때만 (밀어서 볼 때는 안 움직여요)
-  const m = MAPS.campus.meta, r = mcv.getBoundingClientRect(), x = (e.clientX - r.left) * m.W / r.width, y = (e.clientY - r.top) * m.H / r.height;
+  const id = mapView || real(map), m = MAPS[id].meta, r = mcv.getBoundingClientRect(), x = (e.clientX - r.left) * m.W / r.width, y = (e.clientY - r.top) * m.H / r.height;
+  mapv.classList.remove('on'); hideBubble(); pending = null;
+  if (id !== real(map)){   // 다른 지역을 눌렀어요: 그쪽으로 가는 문까지 걸어가요
+    const gate = M.objs.find(o => o.door && o.door.walk && o.door.to === id); if (gate){ const [gx, gy] = gate.door.tile; if (goto(me, gx, gy)) pending = { door: gate.door, o: gate }; }
+    return;
+  }
   // 가장 가까운 장소로, 없으면 누른 곳 근처 빈칸으로
   let best = null, bd = 1e9; m.areas.forEach(a => { const [ax, ay] = P(a.t[0] + .5, a.t[1] + .5), d = Math.hypot(ax - x, ay - y); if (d < bd){ bd = d; best = a.t; } });
   let tgt = bd < 30 ? best : [Math.floor(((x - m.OX) / 8 + (y - m.OY) / 4) / 2), Math.floor(((y - m.OY) / 4 - (x - m.OX) / 8) / 2)];
   for (let rr = 0; rr < 6 && !free(tgt[0], tgt[1]); rr++) for (const [dx, dy] of [[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,-1]]) if (free(tgt[0] + dx * rr, tgt[1] + dy * rr)){ tgt = [tgt[0] + dx * rr, tgt[1] + dy * rr]; break; }
-  mapv.classList.remove('on'); hideBubble(); pending = null;
   const door = m.objs.find(o => o.door && o.door.tile[0] === tgt[0] && o.door.tile[1] === tgt[1]);
   if (goto(me, tgt[0], tgt[1]) && door) pending = { door: door.door, o: door };
 });
-document.getElementById('tMap').onclick = openMap;
+document.getElementById('tMap').onclick = () => openMap();
 document.getElementById('mClose').onclick = () => mapv.classList.remove('on');
 // 관리자 페이지: 그 방 전체 그림(바닥 + 물건)과 좌표 정보
 World.mapCanvas = async id => { await World.ready; const rid = real(id); if (!MAPS[rid]) return null; await ensureMap(rid); const A = MAPS[rid], m = A.meta;

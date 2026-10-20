@@ -313,6 +313,16 @@ def bush_at(img, x, y):
     for dx, dy, r in ((-4, -4, 4), (3, -4, 4), (0, -7, 4)): d.ellipse([cx + dx - r, cy + dy - r, cx + dx + r, cy + dy + r], fill=hexc('#2E3E30'))
     for dx, dy in ((-3, -7), (2, -9), (4, -5)): d.point((cx + dx, cy + dy), fill=hexc('#C86AE8'))
 shared('bush', bush_at)
+# 시장 거리 동쪽 끝 문 기둥 둘 (사이로 걸어가면 그림자 골목으로 넘어가요: quarter.py)
+def pillar(img, x, y):
+    d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
+    d.rectangle([cx - 7, cy - 6, cx + 7, cy + 2], fill=hexc('#4E4856')); d.rectangle([cx - 5, cy - 46, cx + 5, cy - 6], fill=hexc('#6E6876')); d.rectangle([cx - 5, cy - 46, cx, cy - 6], fill=hexc('#5E586A'))
+    for k in range(-40, -8, 8): d.line([(cx - 5, cy + k), (cx + 5, cy + k)], fill=hexc('#4E4856'))
+    d.rectangle([cx - 8, cy - 50, cx + 8, cy - 46], fill=hexc('#4E4856')); d.polygon([(cx - 8, cy - 50), (cx, cy - 58), (cx + 8, cy - 50)], fill=hexc('#3A2A5E'))
+    d.line([(cx, cy - 46), (cx, cy - 38)], fill=hexc('#2A2230')); d.ellipse([cx - 4, cy - 38, cx + 4, cy - 28], fill=hexc('#FF9A3A')); d.ellipse([cx - 2, cy - 36, cx + 2, cy - 31], fill=hexc('#FFE08A'))
+shared('pillar', pillar)
+place('gate', 'pillar', 80, 25); objs[-1]['door'] = dict(tile=[80, 27], to='quarter', spawn=[8, 14], label='그림자 골목', walk=True, span=[26, 28])
+place('gate', 'pillar', 80, 29)
 # ---------------- 놓기 ----------------
 occupied = set()
 for o in objs:
@@ -387,6 +397,7 @@ for o in objs:
 lights += [dict(p=P(61, 27.5), dy=-18, r=60, c=[255, 160, 60], a=.6, f=1), dict(p=P(69.5, 47.5), dy=-8, r=30, c=[130, 255, 90], a=.5, f=1), dict(p=P(22, 59.5), dy=-16, r=46, c=[120, 255, 140], a=.3, f=0),
            dict(p=P(56, 59), dy=0, r=70, c=[90, 200, 230], a=.25, f=0)]
 lights += [dict(p=P(o['box'][0] + .5, o['box'][1] + .5), dy=-3, r=14, c=[120, 240, 220], a=.5, f=0) for o in objs if o['spr'] == 'glowmush']
+lights += [dict(p=P(x + .5, y + .5), dy=-34, r=36, c=[255, 160, 70], a=.6, f=1) for (x, y) in ((80, 25), (80, 29))]
 WATER = [[x, y] for (x, y), t in T.items() if t in ('river', 'lake')]
 # 채집 지점 후보: 빈 풀밭·묘지 (f 숲, g 묘지, l 호숫가, p 들판)
 def zone(x, y):

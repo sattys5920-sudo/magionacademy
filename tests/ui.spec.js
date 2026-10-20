@@ -8,7 +8,7 @@ const PORT = process.argv[2] || 8766;
 const AXE_PATH = '/tmp/claude-0/-home-user/d683bb50-b1f3-59a3-8e5f-5f21e64e8c5a/scratchpad/audtools/node_modules/axe-core/axe.min.js';
 const AXE = fs.existsSync(AXE_PATH) ? fs.readFileSync(AXE_PATH, 'utf8') : '';
 const SIZES = [[390, 844], [820, 1180], [1440, 900]];
-const seed = { players: { me1: { nick: '민준', look: 2, house: 'dew', coin: 1200, mana: 30, day: 4, know: 55, inv: { herb: 5, drop: 4, mush: 3, g_mint: 6, f_crucian: 2, p_red: 1 }, cr: [], eggs: [], orders: [], hints: ['p_red'], found: ['p_red'], fdex: {}, rod: 1, closet: {}, fbag: { candle: 1 }, npc: { nabi: { a: 250, seen: { 1: 'ok' } } } } }, story: { live: { ch: 1, at: 1 } } };
+const seed = { players: { me1: { nick: '민준', look: 2, house: 'dew', coin: 1200, mana: 30, day: 4, know: 55, inv: { herb: 5, drop: 4, mush: 3, g_mint: 6, f_crucian: 2, p_red: 1 }, cr: [], eggs: [], orders: [], hints: ['p_red'], found: ['p_red'], fdex: {}, rod: 1, closet: {}, fbag: { candle: 1 }, npc: { nabi: { a: 250, seen: { 1: 'ok' } } }, mq: { q: null, st: 1, ph: 'arrive', prog: {}, done: { main_01_dracula: 1, main_02_ghost: 1, main_03_witch: 1, main_04_werewolf: 1, main_05_mummy: 1, main_06_frankenstein: 1, main_07_jack: 1 }, named: {}, dl: null } } }, story: { live: { ch: 1, at: 1 } } };
 const PANELS = ['bag', 'profile', 'rel', 'journal', 'menu', 'settings', 'avatar', 'clothes', 'class', 'dorm', 'fish', 'games', 'cook', 'npcgift', 'npcstory'];
 const TABS = ['home', 'lab', 'green', 'ranch', 'market'];
 let fails = 0, checks = 0;

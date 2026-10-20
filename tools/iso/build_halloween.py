@@ -6,7 +6,9 @@ camp = json.load(open(I + '/out/hw.json'))
 camp.update(bgSrc='art/iso/hw_bg.png', objSrc='art/iso/hw_obj.png', title='호박달 마녀학교', sub='반짝이는 곳이 문이에요', fill='#140E1E')
 L = json.load(open(I + '/out/pclass.json'))
 L.update(indoor=True, spawnIn=[9, 12], vw=185, fill='#0C0715', bgSrc='art/iso/pclass_bg.png', objSrc='art/iso/pclass_obj.png', title='물약 교실', sub='본관 1층 · 반짝이는 곳으로 나가요')
-MAPS = {'campus': {'meta': camp}, 'lab': {'meta': L}}
+Q = json.load(open(I + '/out/quarter.json'))   # quarter.py: 시장 거리 동쪽 끝에서 이어지는 의뢰인 마을 (들어갈 때 불러와요)
+Q.update(bgSrc='art/iso/quarter_bg.png', objSrc='art/iso/quarter_obj.png', title='그림자 골목', sub='의뢰인들이 사는 마을 · 서쪽 문으로 시장에 돌아가요', fill='#140E1E', lazy=True)
+MAPS = {'campus': {'meta': camp}, 'lab': {'meta': L}, 'quarter': {'meta': Q}}
 for k in ('candy', 'craft', 'toxic', 'barn', 'pen'):
     MAPS[k] = {'meta': json.load(open(I + '/out/%s.json' % k))}
 # 기숙사 휴게실 (dorms.py): 4곳 × 6단계, 개인 방·복도 4개씩. 들어갈 때 불러와요 (lazy)
@@ -24,7 +26,12 @@ for k, (house, name, hall) in DORM.items():
 for o in camp['objs']:                          # 마을 '가면 가게' = 옷 가게 (index.html World.onLockedDoor)
     if o['door'] and o['door']['label'] == '가면 가게': o['door']['label'] = '옷 가게'
     if o['door'] and o['door']['label'] == '해골 잡화점': o['door']['label'] = '낚시 도구점'   # index.html World.onLockedDoor
+OLDHOME = {'뱀파이어 저택': '뱀파이어 저택 별채', '마녀의 오두막': '마녀의 작은 오두막', '늑대인간 통나무집': '늑대인간 사냥 오두막'}
+for o in camp['objs']:                          # 시장 쪽 옛 집들은 별채예요: 진짜 집은 그림자 골목 (quarter.py)
+    if o['door'] and o['door']['label'] in OLDHOME: o['door']['note'] = '이곳은 별채예요. 진짜 집은 시장 동쪽 끝 「그림자 골목」에 있어요'; o['door']['label'] = OLDHOME[o['door']['label']]
 for a in camp['areas']:
+    if a['n'] in OLDHOME: a['n'] = OLDHOME[a['n']]
+    if a['n'] == '늑대인간 집': a['n'] = '늑대인간 사냥 오두막'
     if a['n'] == '기숙사': a['n'] = '기숙사 네 동'
 AV = json.load(open(I + '/out/lpc_meta.json'))   # lpc/build_lpc.py (LPC 캐릭터 부품)
 # png는 1년 동안 캐시돼요 → 내용이 바뀌면 주소도 바뀌게 ?v=해시 를 붙여요
