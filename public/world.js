@@ -538,7 +538,7 @@ World.doNear = () => { const t = nearT; if (!t) return; hideBubble();
 function goDoor(door, o){
   if (door.pen !== undefined && World.onPenDoor){   // 사육장 우리: 주인만 들어가요
     const r = World.onPenDoor(door.pen);
-    if (r !== true){ const [bx, by] = P(door.tile[0] + .5, door.tile[1] + .5); showBubble({ x: bx, y: by - 26, sw: 0 }, r); return; }
+    if (r !== true){ const [bx, by] = P(door.tile[0] + .5, door.tile[1] + .5); if (r && typeof r === 'object') showBubble({ x: bx, y: by - 26, sw: 0 }, r.html, r.btn, r.fn); else showBubble({ x: bx, y: by - 26, sw: 0 }, r); return; }
   }
   let label = door.label, view = null;
   if (door.room !== undefined){   // 기숙사 복도의 학생 방 문

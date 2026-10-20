@@ -987,7 +987,7 @@ const ORDER_FROM =['양호 선생님', '교장실', '같은 반 친구', '사육
 
 function freshPlayer(nick, look, house, av){
   return {
-    nick, look, house, av, coin:300, mana:40, day:1,
+    nick, look, house, av, coin:300, mana:40, day:1, penMig:true,
     inv:{ herb:6, drop:4, mush:2, mana:3, wool:1, scale:1, uhair:0, egg:0, p_red:0, p_green:0, p_blue:0, p_purple:0 },
     found:[], hints:['p_red'],
     plots:[{k:'herb',at:Date.now() - 6e5,w:false},{k:'drop',at:Date.now(),w:false}],
@@ -1136,16 +1136,36 @@ function hud(){
   c.hidden = !live; if (live) c.textContent = `${ev.E.name} 진행 중!`;
   if (typeof syncBuffs === 'function') syncBuffs();
 }
-// 사육장 우리: 학생마다 한 칸 (가입 순서대로 12칸). 혼자 모드는 1번 칸
+// 사육장 우리: 12칸. 빈 우리 문 앞에서 「내 우리로 만들기」를 누르면 내 우리가 돼요 (pens/<번호> = 주인 uid). 혼자 모드는 1번 칸
 const PEN_SLOTS = 12;
-const penOwners = () => solo ? ['me'] : Object.keys({ ...playersList, [uid]: me }).sort().slice(0, PEN_SLOTS);
+let pensDb = {};
+const penOwners = () => solo ? ['me'] : Array.from({ length: PEN_SLOTS }, (_, i) => pensDb[i] || null);
 const myPenIdx = () => solo ? 0 : penOwners().indexOf(uid);
-const penNameList = () => penOwners().map(id => id === 'me' || id === uid ? me.nick : playersList[id]?.nick || '친구');
+const penNameList = () => penOwners().map(id => !id ? undefined : id === 'me' || id === uid ? me.nick : playersList[id]?.nick || '친구');
+// 예전엔 가입 순서대로 칸이 정해졌어요: 이미 있던 학생은 그 칸을 한 번만 이어받아요
+function penMigrate(){
+  if (solo || !me || me.penMig) return; me.penMig = true; save();
+  if (myPenIdx() >= 0) return;
+  const old = Object.keys(playersList).sort().slice(0, PEN_SLOTS).indexOf(uid);
+  if (old >= 0 && !pensDb[old]) GDB.tx('pens/' + old, cur => cur ? undefined : uid);
+}
+async function penClaim(i){
+  if (solo || myPenIdx() >= 0) return;
+  const r = await GDB.tx('pens/' + i, cur => cur ? undefined : uid).catch(e => { toast('우리를 만들지 못했어요: ' + (e.code || e.message)); return null; });
+  if (r && r.committed){ pensDb[i] = uid; syncPens(); sfx('pop'); toast('내 사육장이 생겼어요! 이제 문으로 들어갈 수 있어요'); }
+  else if (r) toast('방금 다른 학생이 먼저 차지했어요');
+}
 function syncPens(){
   const i = myPenIdx(), names = penNameList(); World.setPenLabels(names, i);
   const pn = World.meta('barn')?.pens?.find(p => p.i === i); if (pn) World.setPenExit([pn.gate[0], pn.gate[1] + 1]);
 }
-World.onPenDoor = i => i === myPenIdx() ? true : `<b>${esc(penNameList()[i] || '빈 우리')}</b><br>${penNameList()[i] ? '주인만 들어갈 수 있어요' : '아직 주인이 없어요'}`;
+World.onPenDoor = i => {
+  if (i === myPenIdx()) return true;
+  const owner = penNameList()[i];
+  if (owner) return `<b>${esc(owner)}의 우리</b><br>주인만 들어갈 수 있어요`;
+  if (myPenIdx() >= 0) return `<b>빈 우리</b><br>이미 내 사육장이 있어요`;
+  return { html: '<b>빈 우리</b><br>아직 주인이 없어요. 내 사육장으로 만들까요?', btn: '내 우리로 만들기', fn: () => penClaim(i) };
+};
 World.onPet = id => { const i = me.cr.findIndex(c => c.id === id); if (i < 0) return; crSel = i; ranchTab = 'pen'; partner = null; ranchMsg = ''; openSheet('ranch'); };
 // ===== 마지막 자리: 나갔다 들어오면 있던 곳에서 이어서 시작해요 (이 기기에 저장) =====
 const POS_SKIP = ['arena', 'pen'];   // 놀이 마당은 놀이가 끝나면 비는 곳, 내 우리는 어느 우리인지가 필요해서 사육장 문 앞으로
@@ -5205,7 +5225,8 @@ async function boot(){
       setInterval(syncInvites, 3000);
       F.onValue(F.ref(db, 'market'), s => { marketList = s.val() || {}; if (tab === 'market') render(); });
       F.onValue(F.ref(db, 'coop'), s => { coop = s.val() || {}; if (tab === 'market') render(); });
-      F.onValue(F.ref(db, 'players'), s => { playersList = s.val() || {}; syncPens(); syncHallNames(); if (tab === 'home' && !sub) render(); });
+      F.onValue(F.ref(db, 'players'), s => { playersList = s.val() || {}; syncPens(); syncHallNames(); if (tab === 'home' && !sub) render(); penMigrate(); });
+      F.onValue(F.ref(db, 'pens'), s => { pensDb = s.val() || {}; syncPens(); penMigrate(); });
       F.onValue(F.query(F.ref(db, 'guest/' + uid), F.limitToLast(20)), s => { myGuest = s.val() || {}; if (sub === 'dorm') render(); });
       F.onValue(F.ref(db, 'houses'), s => { const old = commonStage(me.house); halls = s.val() || {}; syncHalls(); if (commonStage(me.house) > old) toast(`우리 휴게실이 ${commonStage(me.house)}단계가 됐어요!`); if (sub === 'common') render(); });
       enterWorld();
