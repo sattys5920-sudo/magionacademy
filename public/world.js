@@ -222,6 +222,17 @@ let map, M, blocked, objOrder, rmap;
 const ALIAS = {}; Object.keys(MAPS).forEach(k => { const m = k.match(/^(dorm_\w+?)_1$/); if (m) ALIAS[m[1]] = k; });
 const real = id => ALIAS[id] || id;
 // 휴게실·개인 방 그림은 들어갈 때 불러와요 (처음 열 때 빠르게)
+// 낮용 그림: 배경·건물 그림만 한 번 밝게 만들어 두고 시간대에 따라 겹쳐요 (캐릭터는 건드리지 않아요: 같이 밝히면 뿌옇게 뭉개져요)
+World.dayLook = { gain: 1.6, contrast: 1.12, sat: .9 };
+function dayCopy(src){
+  const w = src.width, h = src.height, c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(src, 0, 0);
+  const id = x.getImageData(0, 0, w, h), d = id.data, { gain: G, contrast: K, sat: S } = World.dayLook;
+  for (let i = 0; i < d.length; i += 4){ if (!d[i + 3]) continue; const l = .3 * d[i] + .59 * d[i + 1] + .11 * d[i + 2];
+    for (let j = 0; j < 3; j++){ const v = ((l + (d[i + j] - l) * S) * G - 128) * K + 128; d[i + j] = v < 0 ? 0 : v > 255 ? 255 : v; } }
+  x.putImageData(id, 0, 0); return c;
+}
+function makeDay(m){ if (m.meta.indoor || !m.bg || !m.obj) return; m.bgDay = dayCopy(m.bg); m.objDay = dayCopy(m.obj); }
+World.retuneDay = () => Object.values(MAPS).forEach(makeDay);
 async function ensureMap(id){
   const m = MAPS[real(id)]; if (m.bg) return;
   if (!m.loading) m.loading = (async () => {
@@ -234,6 +245,7 @@ async function ensureMap(id){
       for (let i = 0; i < d.length; i += 4) if (d[i] === R && d[i + 1] === G && d[i + 2] === B) d[i + 3] = 0;
       bx.putImageData(id, 0, 0); m.bg = bc;
     }
+    makeDay(m);
   })();
   return m.loading;
 }
@@ -694,10 +706,12 @@ function frame(now){
     if (camX === null){ camX = tx; camY = ty; } camX += (tx - camX) * Math.min(1, dt * 8); camY += (ty - camY) * Math.min(1, dt * 8); }
   const ix = Math.round(camX), iy = Math.round(camY); camIX = ix; camIY = iy;
   const view = { x: ix - 4, y: iy - 4, w: VW + 8, h: VH + 8 };
-  out.setTransform(KPX, 0, 0, KPX, 0, 0); out.fillStyle = M.indoor ? (M.fill || '#0C0715') : (() => { const q = skyNow(), d = Math.max(0, 1 - q.n), hx = M.fill || '#1E2A1C', N = [1, 3, 5].map(i => parseInt(hx.slice(i, i + 2), 16)), D = World.skyDay || [52, 74, 100]; return `rgb(${N.map((v, j) => Math.round(v + (D[j] - v) * d))})`; })(); out.fillRect(0, 0, VW, VH);
+  out.setTransform(KPX, 0, 0, KPX, 0, 0); out.fillStyle = M.indoor ? (M.fill || '#0C0715') : (() => { const q = skyNow(), d = Math.max(0, 1 - q.n), hx = M.fill || '#1E2A1C', N = [1, 3, 5].map(i => parseInt(hx.slice(i, i + 2), 16)), D = World.skyDay || [104, 128, 158]; return `rgb(${N.map((v, j) => Math.round(v + (D[j] - v) * d))})`; })(); out.fillRect(0, 0, VW, VH);
   out.setTransform(KPX, 0, 0, KPX, -ix * KPX, -iy * KPX);
   const cx = out;
+  const SK = M.indoor ? { c: [150, 130, 175], n: 1, g: 0 } : skyNow(); skyN = SK.n; const dk = A.bgDay ? Math.min(1, SK.g * (World.skyGain ?? 1) / 1.75) : 0;   // 낮 정도 0~1
   cx.drawImage(A.bg, Math.max(0, ix), Math.max(0, iy), VW, VH, Math.max(0, ix), Math.max(0, iy), VW, VH);
+  if (dk > .02){ cx.globalAlpha = dk; cx.drawImage(A.bgDay, Math.max(0, ix), Math.max(0, iy), VW, VH, Math.max(0, ix), Math.max(0, iy), VW, VH); cx.globalAlpha = 1; }
   // 물결 반짝임
   if (M.water) for (let i = 0; i < 6; i++){ const w = M.water[(Math.random() * M.water.length) | 0]; const [wx, wy] = P(w[0] + Math.random(), w[1] + Math.random()); if (wx > view.x && wx < view.x + view.w && wy > view.y && wy < view.y + view.h) fx.push({ x: wx, y: wy, v: 0, life: .5, c: '#DFF2FF' }); }
   if (dest){ const [dx, dy] = P(dest.x + .5, dest.y + .5), ph = (performance.now() / 500) % 1; cx.strokeStyle = `rgba(255,154,60,${1 - ph * .7})`; cx.lineWidth = 1; cx.beginPath(); cx.ellipse(dx, dy, 6 + ph * 5, 3 + ph * 2.5, 0, 0, Math.PI * 2); cx.stroke(); cx.fillStyle = '#FF9A3C'; cx.fillRect(dx - 1, dy - 9 - Math.round(ph * 3), 2, 6); }
@@ -719,7 +733,7 @@ function frame(now){
     let idx = 0; list.forEach((it, i) => { if (it.o && sOver(R(it.o), pr) && behind(it.o.box, pb)) idx = i + 1; });
     list.splice(idx, 0, { p });
   });
-  list.forEach(it => it.o ? cx.drawImage(it.o.furn ? FURN_IMG : A.obj, it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.sw, it.o.sh) : drawPerson(it.p));
+  list.forEach(it => { if (it.o){ cx.drawImage(it.o.furn ? FURN_IMG : A.obj, it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.sw, it.o.sh); if (dk > .02 && !it.o.furn){ cx.globalAlpha = dk; cx.drawImage(A.objDay, it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.sw, it.o.sh); cx.globalAlpha = 1; } } else drawPerson(it.p); });
   // 가구 놓기: 고른 자리에 반투명하게 미리 보여 줘요
   if (placing && placing.at){ const it = FURN.items[placing.k], [gx, gy] = placing.at, ok = canPlace(placing.k, gx, gy), [px, py] = P(gx, gy);
     cx.fillStyle = ok ? 'rgba(140,230,176,.45)' : 'rgba(230,90,110,.45)';
@@ -731,18 +745,6 @@ function frame(now){
   fx.forEach(b => { b.y -= b.v * dt; b.life -= dt; }); while (fx.length && fx[0].life <= 0) fx.shift();
   fx.forEach(b => { cx.fillStyle = b.c; cx.fillRect(Math.round(b.x), Math.round(b.y), 1, 1); });
   // 빛: 실내는 늘 어둑, 바깥은 시간대에 따라
-  const SK = M.indoor ? { c: [150, 130, 175], n: 1, g: 0 } : skyNow(); skyN = SK.n;
-  SK.g *= (World.skyGain ?? .5);   // 조정용 손잡이 (시험용)
-  if (SK.g > .03){   // 낮에는 그림 자체를 밝혀요 (안개를 덮는 게 아니라 색을 키워서 또렷하게)
-    const W = cv.width, H = cv.height; if (!skyTmp || skyTmp.width !== W || skyTmp.height !== H){ skyTmp = document.createElement('canvas'); skyTmp.width = W; skyTmp.height = H; }
-    const t = skyTmp.getContext('2d'); t.globalCompositeOperation = 'copy'; t.drawImage(cv, 0, 0);
-    cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); cx.globalCompositeOperation = 'lighter';
-    for (let r = SK.g; r > .02; r -= 1){ cx.globalAlpha = Math.min(1, r); cx.drawImage(skyTmp, 0, 0); }
-    const con = (World.skyCon ?? .55) * Math.min(1, SK.g);   // 대비: 밝힌 그림에 자기 자신을 곱해서 어두운 곳은 다시 어둡게 (뿌옇지 않게)
-    if (con > .01){ t.globalCompositeOperation = 'copy'; t.drawImage(cv, 0, 0); cx.globalCompositeOperation = 'multiply'; cx.globalAlpha = con; cx.drawImage(skyTmp, 0, 0); cx.globalCompositeOperation = 'lighter'; }
-    const lf = Math.min(1, SK.g); cx.globalAlpha = 1; cx.globalCompositeOperation = 'screen'; cx.fillStyle = `rgb(${Math.round(38 * lf)},${Math.round(50 * lf)},${Math.round(70 * lf)})`; cx.fillRect(0, 0, cv.width, cv.height);   // 가장 어두운 그림자만 하늘빛으로 살짝
-    cx.restore();
-  }
   if (SK.n > .02 || SK.c.some(v => v < 254)){
     cx.globalCompositeOperation = 'multiply'; cx.fillStyle = `rgb(${SK.c})`; cx.fillRect(ix, iy, VW, VH);
     cx.globalCompositeOperation = 'lighter';
