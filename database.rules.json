@@ -123,6 +123,18 @@
       "wx": {
         ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'"
       }
+    },
+    "adm": {
+      "heart": {
+        ".read": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'magionadmin@magionacademy.app')",
+          "$npc": {
+            ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= -10 && newData.val() <= 10)"
+          }
+        }
+      }
     }
   }
 }

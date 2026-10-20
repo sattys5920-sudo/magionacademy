@@ -592,6 +592,7 @@ button.cell:not(:disabled):active{background:var(--line)}
 .rbed canvas{border-radius:12px}
 .rbox .btn{width:100%;margin-top:4px}
 /* @css:main */
+.adtbl.npc .adh{display:inline-flex;align-items:center;gap:2px;white-space:nowrap}.adtbl.npc .adh button{min-width:22px;height:22px;padding:0;border-radius:6px;border:1px solid var(--line,#5a4a7a);background:var(--bg2,#2a2140);color:inherit;font-size:14px;line-height:1;cursor:pointer}.adtbl.npc .adh .pend{color:#ffb347;margin-left:2px}
 .evbox .evport{display:none;position:absolute;left:6px;bottom:calc(100% - 10px);width:34vw;max-width:150px;aspect-ratio:var(--asp,128/171);background-size:500% 100%;background-repeat:no-repeat;image-rendering:pixelated;pointer-events:none;z-index:0;filter:drop-shadow(0 2px 0 rgba(0,0,0,.5))}
 .evbox .evname,.evbox .evtext,.evbox .evch{position:relative;z-index:1}
 .evin{display:flex;gap:6px;margin-top:8px}.evin input{flex:1;min-width:0;height:44px;border:1px solid var(--line2);border-radius:10px;background:var(--panel2);color:var(--text);padding:0 12px;font-size:var(--fs)}
@@ -1739,7 +1740,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.day = AD.day || todayKey();
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = s.val() || {}; if (adminTyping()) return; adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('players', 'players'); L('houses', 'houses'); L('games', 'games'); L('story', 'story'); adminChat(); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('adm/heart', 'heart'); L('players', 'players'); L('houses', 'houses'); L('games', 'games'); L('story', 'story'); adminChat(); }
   adminRender();
 }
 const adminTyping = () => { const a = document.activeElement; return AD.tab === 'npc' && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
@@ -2619,7 +2620,8 @@ function adminNpcHTML(){
   const P = AD.players, ids = Object.keys(P).filter(id => P[id]?.nick), all = npcAll();
   const hOf = x => { if (!x) return 0; const a = x.a !== undefined ? x.a : Math.floor((x.p || 0) / 3) * 100; return Math.min(10, Math.floor(a / 100)); };
   const table = `<div class="adtbl npc"><div class="h"><span>학생</span>${all.map(n => `<span>${esc(n.name)}</span>`).join('')}</div>
-    ${ids.map(id => `<div><span><b>${esc(P[id].nick)}</b></span>${all.map(n => { const x = P[id].npc?.[n.id], seen = Object.keys(x?.seen || {}).length; return `<span>♥${hOf(x)}${seen ? ` <small>📖${seen}</small>` : ''}</span>`; }).join('')}</div>`).join('')}</div>`;
+    ${ids.map(id => `<div><span><b>${esc(P[id].nick)}</b></span>${all.map(n => { const x = P[id].npc?.[n.id], seen = Object.keys(x?.seen || {}).length, pend = +(AD.heart?.[id]?.[n.id] || 0), h = hOf(x); return `<span class="adh"><button data-adh="${id}|${n.id}|-1" title="하트 -1">−</button>♥${h}${pend ? `<small class="pend">${pend > 0 ? '+' : ''}${pend}</small>` : ''}${seen ? ` <small>📖${seen}</small>` : ''}<button data-adh="${id}|${n.id}|1" title="하트 +1">+</button></span>`; }).join('')}</div>`).join('')}</div>
+    <div class="s">− / + 를 누르면 그 학생이 다음에 접속해 있을 때(또는 지금 바로) 하트가 바뀌어요. 숫자 옆 작은 ±는 아직 적용 전인 조정이에요.</div>`;
   const wx = `<div class="adcard"><b>오늘 날씨</b><div class="adseg">${[['', '자동'], ['clear', '맑음'], ['rain', '비'], ['fog', '안개'], ['snow', '눈']].map(([k, l]) => `<button data-adwx="${k}" class="${(wxForce && wxForce.d === todayKey() ? wxForce.w : '') === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="s">지금: ${BAND_KO[bandNow()]} · ${WX_KO[weatherToday()]}${isFullMoon() ? ' · 호박달 축제(보름)' : ''} · 날씨를 바꾸면 비·안개 조건 이벤트를 바로 시험할 수 있어요</div></div>`;
   const pick = `<div class="adseg">${all.map(n => `<button data-adnpc="${n.id}" class="${adNpc === n.id ? 'on' : ''}">${esc(n.name)}${n.av ? '' : ' 🐾'}</button>`).join('')}<button data-adnpc="__new">+ 사람 NPC</button><button data-adnpc="__cast" class="${adNpc === '__cast' ? 'on' : ''}">🎭 조연</button></div>`;
   if (adNpc === '__cast') return `<div class="adcard"><b>학생 × NPC 호감도</b>${table}</div>${wx}${pick}${adminCastHTML()}`;
@@ -2656,7 +2658,9 @@ document.addEventListener('change', e => { const t = e.target; if (!$('#adminv')
   adminRender(); });
 document.addEventListener('click', async e => {
   const t = e.target; if (!$('#adminv') || !$('#adminv').contains(t)) return;
-  const b = t.closest('[data-adnpc],[data-adavk],[data-adavrand],[data-adnsave],[data-adndel],[data-adnreset],[data-adsub],[data-adevk],[data-evop],[data-evprev],[data-evsave],[data-evreset],[data-adwx]'); if (!b) return;
+  const b = t.closest('[data-adh],[data-adnpc],[data-adavk],[data-adavrand],[data-adnsave],[data-adndel],[data-adnreset],[data-adsub],[data-adevk],[data-evop],[data-evprev],[data-evsave],[data-evreset],[data-adwx]'); if (!b) return;
+  if (b.dataset.adh){ const [pid, nid, d] = b.dataset.adh.split('|'); const cur = +(AD.heart?.[pid]?.[nid] || 0), nv = Math.max(-10, Math.min(10, cur + +d)); if (!F || !db) return;
+    F.set(F.ref(db, `adm/heart/${pid}/${nid}`), nv || null).then(() => toast(`${AD.players[pid]?.nick || '학생'} · ${npcGet(nid)?.name || nid} 하트 ${nv > 0 ? '+' : ''}${nv || 0} (적용 대기)`)).catch(e => toast('저장에 실패했어요: ' + (e.code || e.message))); return; }
   if (b.dataset.adwx !== undefined){ const w = b.dataset.adwx; F.set(F.ref(db, 'story/wx'), w ? { d: todayKey(), w } : null).then(() => toast(w ? `오늘 날씨: ${WX_KO[w]}` : '날씨를 자동으로 돌렸어요')); wxForce = w ? { d: todayKey(), w } : null; return adminRender(); }
   if (b.dataset.adnpc === '__cast'){ adNpc = '__cast'; adNpcDraft = null; return adminRender(); }
   if (b.dataset.adnpc){ const id = b.dataset.adnpc === '__new' ? 'h' + Date.now().toString(36) : b.dataset.adnpc; adNpc = id; adEvK = 0; adEvDraft = null; adWarn = [];
@@ -5080,6 +5084,9 @@ async function boot(){
       F.onValue(F.ref(db, 'online'), s => { onlineList = s.val() || {}; onOnline(); const k = Object.keys(onlineList).sort().join(); if (k !== onlineKeys){ onlineKeys = k; if (tab === 'home' && !sub) render(); } });
       F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; });
       F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; syncNpcs(); });
+      F.onValue(F.ref(db, 'adm/heart/' + uid), s => { const v = s.val(); if (!v || typeof v !== 'object') return; const msg = [];   // 관리자가 조정한 하트: 받으면 바로 반영하고 지워요
+        Object.entries(v).forEach(([nid, d]) => { d = +d || 0; if (!d || !npcGet(nid)) return; const st = npcSt(nid), before = hearts(nid); st.a = Math.max(0, Math.min(1000, (st.a || 0) + d * 100)); msg.push(`${npcGet(nid).name} ♥${before} → ♥${hearts(nid)}`); });
+        F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       storyListen();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); if (sub === 'games') render(); });
       Object.keys(GAMES).forEach(g => F.onValue(F.ref(db, `records/${g}/${weekKey()}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); }));
