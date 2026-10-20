@@ -2435,7 +2435,36 @@ function drawEmote(g, icon, x, y){
   if (icon === 'sweat'){ g.beginPath(); g.moveTo(x, y - 15); g.lineTo(x - 4, y - 7); g.arc(x, y - 7, 4, Math.PI, 0, true); g.closePath(); g.fill(); }
   else g.fillText({ music: '♪', question: '?', exclaim: '!', zzz: 'z' }[icon] || '·', x, y - 8);
 }
-// 효과음: 짧은 합성음 (음악은 없어요)
+// 배경 음악: 평소에는 기본 곡이 계속 흘러요. 다른 곡이 나오는 장면(메인·서브 대화 등)은 BGM.hold(이름)으로 기본 곡을 0으로 낮추고,
+// 끝나면 BGM.release(이름)으로 되돌려요. 여러 곳이 동시에 잡아도 모두 놓아야 다시 나와요.
+const BGM = (() => {
+  const SRC = 'audio/bgm_main.mp3', FADE = 1200, holds = new Set();
+  let au = null, level = 1, fade = 1, tgt = 1, raf = 0, last = 0, wanted = false;
+  const vol = () => Math.max(0, Math.min(1, level * .6 * fade));   // 기본 곡은 효과음·대사를 가리지 않게 조금 작게
+  const apply = () => { if (au) au.volume = vol(); };
+  const loop = t => {
+    const dt = last ? t - last : 16; last = t;
+    fade += Math.sign(tgt - fade) * Math.min(Math.abs(tgt - fade), dt / FADE); apply();
+    if (fade === tgt){ raf = 0; last = 0; if (au && fade === 0) au.pause(); return; }
+    raf = requestAnimationFrame(loop);
+  };
+  const go = () => { if (!raf) raf = requestAnimationFrame(loop); };
+  const play = () => {
+    if (!wanted || !au || holds.size || !level) return;
+    const p = au.play(); if (p && p.catch) p.catch(() => {});
+  };
+  const mount = () => { if (au) return; au = new Audio(SRC); au.loop = true; au.preload = 'auto'; apply(); };
+  // 브라우저는 소리를 사용자가 한 번 누른 뒤에야 허용해요
+  const unlock = () => { wanted = true; mount(); play(); removeEventListener('pointerdown', unlock); removeEventListener('keydown', unlock); };
+  addEventListener('pointerdown', unlock); addEventListener('keydown', unlock);
+  document.addEventListener('visibilitychange', () => { if (!au) return; if (document.hidden) au.pause(); else play(); });
+  return {
+    hold(id){ holds.add(id); tgt = 0; go(); },
+    release(id){ holds.delete(id); if (holds.size) return; tgt = 1; play(); go(); },
+    sync(v){ level = v; if (!level){ if (au) au.pause(); return; } apply(); play(); },   // 설정의 배경 음악 크기(0·.5·1)
+  };
+})();
+// 효과음: 짧은 합성음
 let AC = null;
 function sfx(id){
   if (typeof SET !== 'undefined' && !SET.sfx) return;   // 설정: 효과음 끔
@@ -3434,13 +3463,14 @@ function renderJournal(){
 // ----- 메뉴·설정·계정 (지시서 2-1, 2-6) -----
 // 설정 SET: 이 기기(localStorage['magion-set'])와 계정(me.settings)에 같이 저장해요.
 // 셸은 로그인(enterWorld) 뒤에 applySettings()를 한 번 불러 주세요 — 계정에 저장된 설정을 읽어 화면에 반영해요.
-const SET_DEF = { sfx: 1, talk: 22, big: false, noshake: false, lowfx: false };
+const SET_DEF = { sfx: 1, bgm: 1, talk: 22, big: false, noshake: false, lowfx: false };
 const SET = (() => { let s = {}; try { s = JSON.parse(localStorage.getItem('magion-set') || '{}') || {}; } catch(e){} return { ...SET_DEF, ...s }; })();
 function applySettings(){
   if (me?.settings && typeof me.settings === 'object') Object.keys(SET_DEF).forEach(k => { if (me.settings[k] !== undefined) SET[k] = me.settings[k]; });   // 계정 값이 우선
   const root = document.documentElement, rm = matchMedia('(prefers-reduced-motion: reduce)').matches;   // 운영체제 '동작 줄이기'도 저사양처럼
   root.classList.toggle('big', !!SET.big); root.classList.toggle('lowfx', !!SET.lowfx || rm);
   if (window.World) World.lowFx = !!SET.lowfx;
+  try { BGM.sync(SET.bgm); } catch(e){}   // 로그인 전 이른 호출에서는 SET이 아직 없어요
   try { localStorage.setItem('magion-set', JSON.stringify(SET)); } catch(e){}
 }
 function setSet(k, v){ SET[k] = v; if (me){ me.settings = { ...SET }; save(); } applySettings(); }
@@ -3489,7 +3519,7 @@ function renderSettings(){
   frame(null, '설정', '소리 · 대사 · 화면', `
     <section class="sec">${secH('소리')}<div class="box">
       ${srow('효과음', '', sseg('sfx', [[0, '끔'], [.5, '작게'], [1, '보통']]))}
-      ${srow('배경 음악', '아직 음악이 없어요', '<button class="btn sm" disabled>준비 중</button>')}</div></section>
+      ${srow('배경 음악', '평소에 흐르는 음악', sseg('bgm', [[0, '끔'], [.5, '작게'], [1, '보통']]))}</div></section>
     <section class="sec">${secH('대사')}<div class="box">
       ${srow('대사 속도', '이야기 장면에서 글자가 나오는 빠르기', sseg('talk', [[40, '느리게'], [22, '보통'], [10, '빠르게'], [0, '즉시']]), true)}</div></section>
     <section class="sec">${secH('화면')}<div class="box">
