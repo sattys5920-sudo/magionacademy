@@ -112,6 +112,14 @@ def build(pid):
             for y, x in zip(ys, xs):
                 nb = [blk[yy, xx, :3] for yy, xx in ((y, x - 3), (y, x + 3), (y - 3, x), (y + 3, x)) if 0 <= yy < blk.shape[0] and 0 <= xx < blk.shape[1] and not mark[yy, xx] and blk[yy, xx, 3]]
                 if nb: blk[y, x, :3] = np.mean(nb, 0)
+        # 안쪽에 갇힌 흰 배경 조각(머리카락·팔 사이): 순백(248 이상) 덩어리는 전부 비워요 (눈 흰자는 순백이 아니에요)
+        from scipy import ndimage
+        pw = (small[..., 3] > 0) & (small[..., :3].min(-1) >= 248)
+        small[pw] = 0
+        for _ in range(3):   # 투명 경계에 남은 밝은 회백색 테두리(안티앨리어스 찌꺼기)도 지워요
+            al = small[..., 3] > 0; rgb = small[..., :3].astype(int)
+            light = al & (rgb.min(-1) >= 200) & (rgb.max(-1) - rgb.min(-1) <= 28)
+            small[light & ndimage.binary_dilation(~al, iterations=1)] = 0
         cells.append(small)
     sheet = np.concatenate(cells, 1)
     Image.fromarray(sheet, 'RGBA').save(os.path.join(OUT, f'{pid}.png'))
