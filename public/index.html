@@ -2075,6 +2075,8 @@ const npcAv = n => n.av ? (n.avData ? World.Avatar.fix(n.avData) : World.Avatar.
 // 내 진행: me.npc[id] = { a 호감도, t 마지막 대화 날, g 마지막 선물 날, seen { k: 'ok'|'cold'|'fail' }, cold 앞 이벤트가 서먹했는지, ev 이벤트 본 날, evAt, hide 숨바꼭질, dk 줄어듦 계산한 날 }
 //          me.nflag { 플래그: 1 }, me.perk { 보상: 1 }
 const BAND_KO = { morning: '아침', day: '낮', evening: '저녁', night: '밤' };
+const BAND_HOUR = { morning: 7.8, day: 13, evening: 18.5, night: 23.5 };   // 관리자가 시간대를 정하면 하늘도 그 시각처럼
+World.hourNow = () => { if (typeof bandForce !== 'undefined' && bandForce && bandForce.d === todayKey() && BAND_HOUR[bandForce.b] !== undefined) return BAND_HOUR[bandForce.b]; const d = new Date(); return d.getHours() + d.getMinutes() / 60; };
 const bandNow = (h = new Date().getHours()) => (typeof bandForce !== 'undefined' && bandForce && bandForce.d === todayKey() && BAND_KO[bandForce.b]) ? bandForce.b : h >= 5 && h < 10 ? 'morning' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 21 ? 'evening' : 'night';
 const hash32 = s => { let h = 2166136261; for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 const WX_KO = { clear: '맑음', rain: '비', fog: '안개', snow: '눈' };

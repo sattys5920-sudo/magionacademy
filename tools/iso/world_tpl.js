@@ -609,6 +609,7 @@ const wisps = Array.from({ length: 10 }, () => ({ x: Math.random(), y: Math.rand
 function spooky(now, dt, view){
   const cx = out;
   bats.forEach(b => {
+    if (skyN < .55) return;   // 박쥐는 해가 지면 나와요
     if (!b.init || b.x < view.x - 40 || b.x > view.x + view.w + 40 || b.y < view.y - 40 || b.y > view.y + view.h + 40){
       const left = Math.random() < .5; b.x = left ? view.x - 20 : view.x + view.w + 20; b.y = view.y + Math.random() * view.h * .6;
       b.vx = (left ? 1 : -1) * (25 + Math.random() * 25); b.vy = (Math.random() - .5) * 10; b.init = true;
@@ -623,7 +624,7 @@ function spooky(now, dt, view){
   cx.globalCompositeOperation = 'lighter';
   wisps.forEach((w, i) => {
     const x = view.x + ((w.x * view.w + now / 90 * (i % 2 ? 1 : -1)) % view.w + view.w) % view.w, y = view.y + w.y * view.h + Math.sin(now / 700 + w.ph) * 6;
-    cx.globalAlpha = .35 + .3 * Math.sin(now / 300 + w.ph); cx.drawImage(glow(4, [170, 255, 230]), x - 4, y - 4);
+    cx.globalAlpha = (.35 + .3 * Math.sin(now / 300 + w.ph)) * Math.max(0, (skyN - .4) / .6); if (cx.globalAlpha > .01) cx.drawImage(glow(4, [170, 255, 230]), x - 4, y - 4);
   });
   cx.globalCompositeOperation = 'source-over';
   fogs.forEach(f => {
@@ -636,7 +637,18 @@ const glowCache = {};
 function glow(r, c){ const k = r + c.join(); if (glowCache[k]) return glowCache[k]; const g = document.createElement('canvas'); g.width = g.height = r * 2; const x = g.getContext('2d'); const gr = x.createRadialGradient(r, r, 0, r, r, r); gr.addColorStop(0, `rgba(${c},1)`); gr.addColorStop(.35, `rgba(${c},.45)`); gr.addColorStop(1, `rgba(${c},0)`); x.fillStyle = gr; x.fillRect(0, 0, r * 2, r * 2); return glowCache[k] = g; }
 // 할로윈 마을은 늘 밤이에요. 버튼으로 밝기만 바꿔요
 let bright = 0; const BRIGHT = [[160, 140, 200], [205, 190, 230], [120, 100, 165]], BRIGHT_NEXT = ['밝게', '어둡게', '보통'];
-function phase(){ return 'night'; }
+// 하늘: 현실 시간을 따라가요 (World.hourNow 로 시각을 바꿀 수 있어요: 관리자가 시간대를 정할 때). rgb = 곱하기 색, n = 밤 정도 0~1 (null = 밤색)
+World.hourNow = () => { const d = new Date(); return d.getHours() + d.getMinutes() / 60; };
+const SKYK = [   // [시각, 곱하기 색(null=밤색), 밤 정도, 밝히기 색(화면 합성으로 어두운 그림을 끌어올려요)]
+  [0, null, 1, [0, 0, 0]], [4.5, null, 1, [0, 0, 0]], [5.5, [150, 125, 175], .9, [26, 16, 34]], [6.5, [225, 160, 170], .65, [56, 38, 48]], [7.8, [255, 222, 200], .3, [58, 50, 52]],
+  [9.5, [255, 250, 245], .08, [72, 74, 82]], [11.5, [255, 255, 255], 0, [84, 90, 108]], [15.5, [255, 252, 244], 0, [80, 84, 96]], [17.3, [255, 214, 170], .25, [66, 52, 46]],
+  [18.8, [238, 150, 150], .6, [80, 40, 44]], [20.2, [190, 135, 185], .85, [30, 16, 36]], [21.5, null, 1, [0, 0, 0]], [24, null, 1, [0, 0, 0]]];
+function skyNow(){
+  const h = ((World.hourNow() % 24) + 24) % 24, N = BRIGHT[bright]; let i = 1; while (i < SKYK.length - 1 && SKYK[i][0] <= h) i++;
+  const a = SKYK[i - 1], b = SKYK[i], k = (h - a[0]) / (b[0] - a[0] || 1), A = a[1] || N, B = b[1] || N, mix = (x, y) => x.map((v, j) => Math.round(v + (y[j] - v) * k));
+  return { c: mix(A, B), n: a[2] + (b[2] - a[2]) * k, up: mix(a[3], b[3]) };
+}
+
 const fx = [];
 let last = performance.now(), camIX = 0, camIY = 0;
 function drawPerson(p){ const cx = out;
@@ -712,11 +724,12 @@ function frame(now){
   fx.forEach(b => { b.y -= b.v * dt; b.life -= dt; }); while (fx.length && fx[0].life <= 0) fx.shift();
   fx.forEach(b => { cx.fillStyle = b.c; cx.fillRect(Math.round(b.x), Math.round(b.y), 1, 1); });
   // 빛: 실내는 늘 어둑, 바깥은 시간대에 따라
-  const ph = M.indoor ? 'night' : phase();
-  if (ph !== 'day'){
-    cx.globalCompositeOperation = 'multiply'; cx.fillStyle = M.indoor ? 'rgb(150,130,175)' : `rgb(${BRIGHT[bright]})`; cx.fillRect(ix, iy, VW, VH);
+  const SK = M.indoor ? { c: [150, 130, 175], n: 1, up: [0, 0, 0] } : skyNow(); skyN = SK.n;
+  if (SK.up[0] + SK.up[1] + SK.up[2] > 6){ cx.globalCompositeOperation = 'screen'; cx.fillStyle = `rgb(${SK.up})`; cx.fillRect(ix, iy, VW, VH); }
+  if (SK.n > .02 || SK.c.some(v => v < 254)){
+    cx.globalCompositeOperation = 'multiply'; cx.fillStyle = `rgb(${SK.c})`; cx.fillRect(ix, iy, VW, VH);
     cx.globalCompositeOperation = 'lighter';
-    M.lights.forEach((L, i) => { if (L.p[0] + L.r < view.x || L.p[0] - L.r > view.x + view.w || L.p[1] + L.dy + L.r < view.y || L.p[1] + L.dy - L.r > view.y + view.h) return; const fl = L.f ? .85 + .15 * Math.sin(now / 130 + i * 1.7) * Math.sin(now / 370 + i) : 1; cx.globalAlpha = L.a * fl * (ph === 'dusk' ? .5 : 1); cx.drawImage(glow(L.r, L.c), L.p[0] - L.r, L.p[1] + L.dy - L.r); });
+    M.lights.forEach((L, i) => { if (L.p[0] + L.r < view.x || L.p[0] - L.r > view.x + view.w || L.p[1] + L.dy + L.r < view.y || L.p[1] + L.dy - L.r > view.y + view.h) return; const fl = L.f ? .85 + .15 * Math.sin(now / 130 + i * 1.7) * Math.sin(now / 370 + i) : 1; cx.globalAlpha = L.a * fl * Math.min(1, SK.n * 1.15); cx.drawImage(glow(L.r, L.c), L.p[0] - L.r, L.p[1] + L.dy - L.r); });
     cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
   }
   drawWeather(cx, ix, iy, dt);
@@ -913,7 +926,7 @@ async function crowdDo(c){
   crowdPeople.forEach(p => { const i = people.indexOf(p); if (i >= 0) people.splice(i, 1); sayOff(p); }); crowdPeople = []; retag();
 }
 // 효과: bats 박쥐 떼 · bell 종소리 번쩍 · lightning 번개 · wind 바람(안개 빠르게) · dark 어둡게 / light 원래대로
-let fxBats = 0, fxDark = 0;
+let fxBats = 0, fxDark = 0, skyN = 1;
 function fxDo(c){ const k = c.kind; if (k === 'bats') fxBats = performance.now() + (c.sec || 4) * 1000; else if (k === 'lightning' || k === 'bell') flashT = performance.now() + 260; else if (k === 'dark') fxDark = c.v ?? .45; else if (k === 'light') fxDark = 0; else if (k === 'wind'){ fogs.forEach(f => f.v *= 4); setTimeout(() => fogs.forEach(f => f.v /= 4), (c.sec || 4) * 1000); } }
 // 조사 지점: 물음표가 떠 있고, 옆에 가면 상황 버튼 「조사하기」
 World.setMarks = list => { marks = list || []; World.nearRefresh(); };
@@ -923,11 +936,11 @@ World.setSky = cfg => { skyCfg = cfg; };
 const SKY = [[0, 0], [10, 7], [22, 2], [12, 18], [20, 30], [6, 32], [-4, 20]];   // 등불을 든 사람: 머리·어깨·팔·허리·다리 (상대 좌표)
 const SKY_LANTERN = [30, 10], SKY_FLAME = [31, 15];
 function drawSky(now){
-  if (!skyCfg || M.indoor) return;
+  if (!skyCfg || M.indoor || skyN < .3) return;
   const ox = VW - 48, oy = 10, t = now / 1000; out.save(); out.setTransform(KPX, 0, 0, KPX, 0, 0);
   const lit = skyCfg.lit || [];
   out.globalCompositeOperation = 'lighter';
-  SKY.forEach(([dx, dy], i) => { const on = !!lit[i], tw = .75 + .25 * Math.sin(t * 2 + i); const x = ox + dx, y = oy + dy;
+  SKY.forEach(([dx, dy], i) => { const on = !!lit[i], tw = (.75 + .25 * Math.sin(t * 2 + i)) * Math.max(0, Math.min(1, (skyN - .35) / .5)); const x = ox + dx, y = oy + dy;
     if (on){ out.globalAlpha = .7 * tw; out.drawImage(glow(6, [255, 236, 170]), x - 6, y - 6); out.globalAlpha = 1; out.fillStyle = '#FFF8DC'; out.fillRect(x, y, 1, 1); out.fillRect(x - 1, y, 1, 1); out.fillRect(x + 1, y, 1, 1); out.fillRect(x, y - 1, 1, 1); out.fillRect(x, y + 1, 1, 1); }
     else { out.globalAlpha = .35 + .15 * tw; out.fillStyle = '#B9A8D8'; out.fillRect(x, y, 1, 1); } });
   // 등불 끝의 작은 별(첫 마녀의 등불)은 늘 보여요
