@@ -119,6 +119,9 @@ unique('candy', [3, 30, 11, 37], combo(building(3, 30, 11, 37, 40, hexc('#8A5A4E
        door=dict(tile=[6, 37], to='candy', label='과자 교실', spawn=[12, 16]))
 unique('craft', [26, 30, 34, 37], building(26, 30, 34, 37, 40, hexc('#6A5440'), hexc('#3A2A1E'), hexc('#4A3A5A'), 22, wins_g(14, ((12, 12),)), doors=[('L', 24, 12)]),
        door=dict(tile=[29, 37], to='craft', label='공예 교실', spawn=[12, 16]))
+# 교실동: 수업(하루 10교시)을 듣는 교실. 물약 교실(본관)은 물약 끓이는 곳이에요
+unique('classroom', [31, 15, 38, 21], building(31, 15, 38, 21, 44, hexc('#6A6A58'), hexc('#3A3A2E'), hexc('#2E4A3E'), 26, wins_g(14, ((12, 14),)), doors=[('L', 24, 12)]),
+       door=dict(tile=[34, 21], to='classroom', label='교실 · 수업', spawn=[15, 20]))
 for i, (x0, wall, roof, nm) in enumerate(((3, '#6A5A8A', '#3A2A5E', '마녀 기숙사'), (11, '#5A3A44', '#8A2A3A', '뱀파이어 기숙사'), (19, '#6A5A48', '#4A3A2A', '늑대인간 기숙사'), (27, '#8A98A8', '#5A6A8A', '유령 기숙사'))):
     dk = ('dorm_witch', 'dorm_vamp', 'dorm_wolf', 'dorm_ghost')[i]
     unique('dorm', [x0, 42, x0 + 6, 48], building(x0, 42, x0 + 6, 48, 44, hexc(wall), hexc('#2A2230'), hexc(roof), 26, wins_g(14, ((10, 10), (28, 10))), doors=[('L', 20, 10)]),
@@ -349,6 +352,7 @@ FN = set((x, 56) for x in range(28, 38)) | set((x, 68) for x in range(28, 38)) |
 FN -= {(28, 61), (28, 62)}
 # 울타리는 걷는 길을 막아서 없앴어요. 두 건물 앞 마당(x 17~38, y 63~69)은 나무도 심지 않아요
 occupied |= set((x, y) for x in range(17, 39) for y in range(63, 70))
+occupied |= set((x, y) for x in range(32, 37) for y in range(21, 24))   # 교실동 문 앞은 나무를 심지 않아요
 put('blackcat', 'blackcat', 37, 60, solid=False, act=('사육부 검은 고양이', '쓰다듬기'))
 put('crow', 'crow', 37, 58, act=('사육부 까마귀', '모이 주기'))
 # 묘지
@@ -416,6 +420,6 @@ def zone(x, y):
     return 'p'
 FORAGE = [[x, y, zone(x, y)] for x in range(2, NX - 2) for y in range(2, NY - 2) if (x, y) not in occupied and T[(x, y)] in ('grass', 'grave') and (x * 7 + y * 3) % 4 == 0]
 AREAS = [dict(n='본관 · 물약 교실', t=[19, 24]), dict(n='과자 교실', t=[6, 37]), dict(n='공예 교실', t=[29, 37]), dict(n='기숙사', t=[16, 48]), dict(n='호박밭', t=[9, 55]), dict(n='독초 온실', t=[22, 63]),
-         dict(n='사육장', t=[27, 61]), dict(n='등불 시장', t=[61, 31]), dict(n='채소 가게', t=[54, 35]), dict(n='북쪽 연못', t=[26, 10]), dict(n='북동 연못', t=[74, 11]), dict(n='남동 연못', t=[75, 44]), dict(n='뱀파이어 저택', t=[63, 12]), dict(n='마녀의 오두막', t=[72, 49]), dict(n='묘지', t=[51, 51]), dict(n='유령 호수', t=[56, 53]), dict(n='늑대인간 집', t=[78, 60])]
+         dict(n='사육장', t=[27, 61]), dict(n='등불 시장', t=[61, 31]), dict(n='채소 가게', t=[54, 35]), dict(n='교실 · 수업', t=[34, 22]), dict(n='북쪽 연못', t=[26, 10]), dict(n='북동 연못', t=[74, 11]), dict(n='남동 연못', t=[75, 44]), dict(n='뱀파이어 저택', t=[63, 12]), dict(n='마녀의 오두막', t=[72, 49]), dict(n='묘지', t=[51, 51]), dict(n='유령 호수', t=[56, 53]), dict(n='늑대인간 집', t=[78, 60])]
 json.dump(dict(W=W, H=H, NX=NX, NY=NY, OX=OX, OY=OY, objs=meta, lights=lights, water=WATER, ponds=[dict(id=q['id'], name=q['name'], cx=q['cx'], cy=q['cy'], r=max(q['rx'], q['ry']) + 1.5) for q in PONDS], forage=FORAGE, areas=AREAS, start=[20, 30]), open('out/hw.json', 'w'), ensure_ascii=False)
 print('objs', len(objs), 'sheet', sheet.size)

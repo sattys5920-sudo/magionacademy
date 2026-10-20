@@ -316,7 +316,7 @@ def potion_room():
             R.box(img, x + 1.15, y + .2, .7, .6, 9, '#7A4A2E', '#4A2A1C', '#5E3826'); px_, py_ = R.P(x + 1.5, y + .5)
             d.rectangle([px_ - 2, py_ - 15, px_ + 1, py_ - 9], fill=hexc(c)); d.rectangle([px_ - 1, py_ - 17, px_, py_ - 15], fill=hexc('#C8B8A0'))
         R.obj('stand', [(x + 1, y)], stand, act=('재료 탁자', '재료함 열기'))
-    R.obj('cauldron', [(12, 3), (13, 3), (12, 4), (13, 4)], cauldron_draw(R, 12.5, 3.5, '#5CE6A0', 1.5), act=('선생님의 큰 솥', '오늘의 실습 보기'))
+    R.obj('cauldron', [(12, 3), (13, 3), (12, 4), (13, 4)], cauldron_draw(R, 12.5, 3.5, '#5CE6A0', 1.5), act=('선생님의 큰 솥', '물약 끓이기'))
     R.light(13, 4, -14, 54, [90, 255, 160], .55)
     def lectern(img, d):
         R.box(img, 17.2, 3.2, .6, .6, 14, '#7A4A2E', '#4A2A1C', '#5E3826')
@@ -333,7 +333,7 @@ def potion_room():
         cx, cy = R.P(2.5, 3.5)
         d.rectangle([cx - 1, cy - 14, cx, cy], fill=hexc('#3E2216')); d.rectangle([cx - 4, cy - 2, cx + 3, cy], fill=hexc('#3E2216'))
         d.ellipse([cx - 4, cy - 22, cx + 4, cy - 14], fill=hexc('#E8E0D0')); d.point((cx - 2, cy - 18), fill=hexc('#1A1218')); d.point((cx + 1, cy - 18), fill=hexc('#1A1218'))
-    R.obj('skull', [(2, 3)], skull, act=('해골 선생님', '말 걸기'))
+    R.obj('skull', [(2, 3)], skull, act=('해골 모형', '구경하기'))   # 수업은 새 교실(classroom_room)에서
     def barrels(tx, ty):
         def f(img, d):
             for k, (ox, oy, col) in enumerate(((.3, .3, '#7A4A2E'), (.4, 1.4, '#6E412B'))):
@@ -349,6 +349,58 @@ def potion_room():
     for (x, y) in ((0, 19), (25, 19), (0, 6), (25, 6)): R.obj('plant', [(x, y)], plant_draw(R, x, y))
     for (x, y) in ((5, 6), (13, 9), (20, 6), (5, 14), (20, 14), (13, 16), (9, 11), (17, 11)): float_candle(R, x, y)
     R.save('pclass', '물약 교실', '본관 1층 · 반짝이는 곳으로 나가요', [19, 25])
+# ================= 교실 (30×22): 수업을 듣는 곳. 책상 사이 길을 넓게 =================
+def classroom_room():
+    R = Room(30, 22)
+    def flo(fx, fy):
+        c = planks(['#8A6A48', '#7E5E3E', '#94744E', '#86664A'], '#4A2E1C')(fx, fy)
+        if 12 <= fx < 18 and 5 <= fy < R.NY - 1:   # 가운데 길 양탄자
+            e = min(fx - 12, 18 - fx)
+            c = hexc('#C49446') if e < .15 else hexc('#3A5A4A') if e > .4 else hexc('#2E4A3C')
+        return c
+    R.floor(flo)
+    R.walls('#4A5A52', '#566A60', '#4C2B1C', trim='#C49446')
+    R.window('R', 14); R.window('R', 200); R.window('L', 40); R.window('L', 80)
+    def board(u, v):
+        uu, vv = u - 70, v - 26
+        if not (0 <= uu < 110 and 0 <= vv < 38): return None
+        if uu < 3 or uu >= 107 or vv < 3 or vv >= 35: return hexc('#6A4A2E')
+        if vv >= 33 and uu % 7 < 4: return hexc('#C8B8A0')   # 분필 받침
+        if vv in (26, 27) and 8 <= uu < 60 and uu % 3: return hexc('#E8F0E0')
+        if vv in (19, 20) and 8 <= uu < 78 and (uu // 2) % 3: return hexc('#E8F0E0')
+        if vv in (12, 13) and 8 <= uu < 40 and uu % 2: return hexc('#E8F0E0')
+        if 40 < (uu - 88) ** 2 + (vv - 20) ** 2 < 70: return hexc('#F2E27A')
+        if 79 <= uu < 97 and 14 <= vv < 18: return hexc('#FF9ACA')
+        return hexc('#24443A')
+    R.wall_fill('R', board)
+    garland(R, 'R', 190, 236, 66)
+    bookshelf(R, 'L', 4, 26); bookshelf(R, 'L', 140, 26)
+    for side, u in (('R', 52), ('R', 186), ('R', 232), ('L', 62), ('L', 112), ('L', 132)): R.sconce(side, u)
+    # 수업 칠판 (선생님 자리)
+    def skull(img, d):
+        cx, cy = R.P(13.5, 2.5)
+        d.rectangle([cx - 1, cy - 14, cx, cy], fill=hexc('#3E2216')); d.rectangle([cx - 4, cy - 2, cx + 3, cy], fill=hexc('#3E2216'))
+        d.ellipse([cx - 4, cy - 22, cx + 4, cy - 14], fill=hexc('#E8E0D0')); d.point((cx - 2, cy - 18), fill=hexc('#1A1218')); d.point((cx + 1, cy - 18), fill=hexc('#1A1218'))
+        d.polygon([(cx - 6, cy - 22), (cx, cy - 33), (cx + 6, cy - 22)], fill=hexc('#3A2A5E'))   # 마녀 모자
+    R.obj('skull', [(13, 2)], skull, act=('해골 선생님', '말 걸기'))
+    def lectern(img, d):
+        R.box(img, 14.7, 2.2, 1.6, .8, 13, '#7A4A2E', '#4A2A1C', '#5E3826')
+        d.polygon([up(R.P(15.0, 2.3), 16), up(R.P(15.9, 2.3), 18), up(R.P(15.9, 2.9), 16), up(R.P(15.0, 2.9), 14)], fill=hexc('#EADBB0'))
+    R.obj('lectern', [(15, 2), (14, 2)], lectern, act=('교탁', '오늘의 실습 보기'))
+    def desk(tx, ty):
+        def f(img, d):
+            R.box(img, tx + .05, ty + .1, 1.9, .8, 9, '#A8824E', '#5A3A24', '#6A4A2E')
+            for k, col in enumerate(('#7A2A30', '#2E5A6E')):
+                x, y = R.P(tx + .6 + k * .9, ty + .5); y -= 9; d.rectangle([x - 3, y - 2, x + 2, y], fill=hexc(col)); d.rectangle([x - 3, y - 3, x + 2, y - 2], fill=hexc('#F2E8D0'))
+        return f
+    for y in (7, 11, 15):
+        for x in (3, 8, 19, 24):
+            R.obj('desk', [(x, y), (x + 1, y)], desk(x, y), act=('내 책상', '앉아서 수업 듣기'))
+            R.obj('chair', [(x, y + 1)], chair_draw(R, x, y + 1, '#4A3A6A')); R.obj('chair', [(x + 1, y + 1)], chair_draw(R, x + 1, y + 1, '#6A3A4A'))
+    for (x, y) in ((0, 21), (29, 21), (0, 5), (29, 5)): R.obj('plant', [(x, y)], plant_draw(R, x, y))
+    R.obj('pumpkins', [(28, 2)], pumpkin_pile(R, 28, 2)); R.obj('crates', [(1, 18)], crates(R, 1, 18)); R.obj('crates', [(28, 18)], crates(R, 28, 18, 1))
+    for (x, y) in ((6, 6), (22, 6), (13, 10), (13, 18), (6, 18), (23, 18)): float_candle(R, x, y)
+    R.save('classroom', '교실', '수업을 들어요 · 책상이나 선생님을 눌러요', [34, 22])
 # ================= 과자 교실 (24×18) =================
 def candy_room():
     R = Room(24, 18)
@@ -647,7 +699,7 @@ def pen_room():
     R.extra = dict(vw=230, pets=True)
     R.save('pen', '내 사육장', '생물을 누르면 돌볼 수 있어요', [4, 7])
 if __name__ == '__main__':
-    potion_room(); candy_room(); craft_room()
+    potion_room(); classroom_room(); candy_room(); craft_room()
     toxic_room()
     barn_room(); pen_room()
     import dorms; dorms.main()   # 기숙사 휴게실 4곳 × 6단계 + 개인 방 (dorms.py)
