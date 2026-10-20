@@ -227,7 +227,7 @@ body:not(.inworld) #npcui{display:none}
 .npct{background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:8px 10px;min-height:40px;line-height:1.55}
 .npcsc{display:block;color:#9480B4;font-size:var(--fs-s);font-family:var(--f-body)}
 .npcp .frow{display:flex;gap:6px;flex-wrap:wrap}.npcp .frow .btn{flex:1}
-.adtbl.npc>div{grid-template-columns:80px repeat(16,56px)}
+.adtbl.npc>div{grid-template-columns:72px repeat(16,74px);align-items:center}
 .evtbl{display:flex;flex-direction:column;gap:2px;max-height:60vh;overflow:auto;border:2px solid #22183F;padding:4px;background:#F6F0FA}
 .evrow{display:flex;gap:4px;align-items:flex-start;background:#fff;padding:3px;border-left:4px solid #C8B8E0}
 .evrow.line{border-left-color:#6AB8FF}.evrow.choice{border-left-color:#FF9A4A}.evrow.label{border-left-color:#8CE6B0;background:#EFFFF4}.evrow.narration{border-left-color:#C08AFF}
@@ -592,7 +592,7 @@ button.cell:not(:disabled):active{background:var(--line)}
 .rbed canvas{border-radius:12px}
 .rbox .btn{width:100%;margin-top:4px}
 /* @css:main */
-.adtbl.npc .adh{display:inline-flex;align-items:center;gap:2px;white-space:nowrap}.adtbl.npc .adh button{min-width:22px;height:22px;padding:0;border-radius:6px;border:1px solid var(--line,#5a4a7a);background:var(--bg2,#2a2140);color:inherit;font-size:14px;line-height:1;cursor:pointer}.adtbl.npc .adh .pend{color:#ffb347;margin-left:2px}
+.adtbl.npc .adh{display:inline-flex;flex-direction:column;align-items:center;gap:3px;white-space:nowrap;color:#22183F}.adtbl.npc .adh .hv{font-weight:700}.adtbl.npc .adh .bt{display:flex;gap:4px}.adtbl.npc .adh button{width:30px;height:28px;padding:0;border-radius:7px;border:1px solid #7a6a9a;background:#f3eefc;color:#22183F;font-size:16px;font-weight:700;line-height:1;cursor:pointer}.adtbl.npc .adh .pend{color:#d9780a;margin-left:3px;font-weight:700}
 .evbox .evport{display:none;position:absolute;left:6px;bottom:calc(100% - 10px);width:34vw;max-width:150px;aspect-ratio:var(--asp,128/171);background-size:500% 100%;background-repeat:no-repeat;image-rendering:pixelated;pointer-events:none;z-index:0;filter:drop-shadow(0 2px 0 rgba(0,0,0,.5))}
 .evbox .evname,.evbox .evtext,.evbox .evch{position:relative;z-index:1}
 .evin{display:flex;gap:6px;margin-top:8px}.evin input{flex:1;min-width:0;height:44px;border:1px solid var(--line2);border-radius:10px;background:var(--panel2);color:var(--text);padding:0 12px;font-size:var(--fs)}
@@ -2620,8 +2620,8 @@ function adminNpcHTML(){
   const P = AD.players, ids = Object.keys(P).filter(id => P[id]?.nick), all = npcAll();
   const hOf = x => { if (!x) return 0; const a = x.a !== undefined ? x.a : Math.floor((x.p || 0) / 3) * 100; return Math.min(10, Math.floor(a / 100)); };
   const table = `<div class="adtbl npc"><div class="h"><span>학생</span>${all.map(n => `<span>${esc(n.name)}</span>`).join('')}</div>
-    ${ids.map(id => `<div><span><b>${esc(P[id].nick)}</b></span>${all.map(n => { const x = P[id].npc?.[n.id], seen = Object.keys(x?.seen || {}).length, pend = +(AD.heart?.[id]?.[n.id] || 0), h = hOf(x); return `<span class="adh"><button data-adh="${id}|${n.id}|-1" title="하트 -1">−</button>♥${h}${pend ? `<small class="pend">${pend > 0 ? '+' : ''}${pend}</small>` : ''}${seen ? ` <small>📖${seen}</small>` : ''}<button data-adh="${id}|${n.id}|1" title="하트 +1">+</button></span>`; }).join('')}</div>`).join('')}</div>
-    <div class="s">− / + 를 누르면 그 학생이 다음에 접속해 있을 때(또는 지금 바로) 하트가 바뀌어요. 숫자 옆 작은 ±는 아직 적용 전인 조정이에요.</div>`;
+    ${ids.map(id => `<div><span><b>${esc(P[id].nick)}</b></span>${all.map(n => { const x = P[id].npc?.[n.id], seen = Object.keys(x?.seen || {}).length, pend = +(AD.heart?.[id]?.[n.id] || 0), h = hOf(x); return `<span class="adh"><span class="hv">♥${h}${pend ? `<small class="pend">${pend > 0 ? '+' : ''}${pend}</small>` : ''}${seen ? ` <small>📖${seen}</small>` : ''}</span><span class="bt"><button data-adh="${id}|${n.id}|-1" title="하트 -1">−</button><button data-adh="${id}|${n.id}|1" title="하트 +1">+</button></span></span>`; }).join('')}</div>`).join('')}</div>
+    <div class="s">− / + 를 누르면 그 학생이 접속해 있을 때 바로, 아니면 다음 접속 때 하트가 바뀌어요. 숫자 옆 주황색 ±는 아직 적용 전인 조정이에요. ${Object.keys(AD.heart || {}).length ? `<button class="btn sm" data-adh="__clear">대기 중인 조정 모두 지우기</button>` : ''}</div>`;
   const wx = `<div class="adcard"><b>오늘 날씨</b><div class="adseg">${[['', '자동'], ['clear', '맑음'], ['rain', '비'], ['fog', '안개'], ['snow', '눈']].map(([k, l]) => `<button data-adwx="${k}" class="${(wxForce && wxForce.d === todayKey() ? wxForce.w : '') === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="s">지금: ${BAND_KO[bandNow()]} · ${WX_KO[weatherToday()]}${isFullMoon() ? ' · 호박달 축제(보름)' : ''} · 날씨를 바꾸면 비·안개 조건 이벤트를 바로 시험할 수 있어요</div></div>`;
   const pick = `<div class="adseg">${all.map(n => `<button data-adnpc="${n.id}" class="${adNpc === n.id ? 'on' : ''}">${esc(n.name)}${n.av ? '' : ' 🐾'}</button>`).join('')}<button data-adnpc="__new">+ 사람 NPC</button><button data-adnpc="__cast" class="${adNpc === '__cast' ? 'on' : ''}">🎭 조연</button></div>`;
   if (adNpc === '__cast') return `<div class="adcard"><b>학생 × NPC 호감도</b>${table}</div>${wx}${pick}${adminCastHTML()}`;
@@ -2659,6 +2659,7 @@ document.addEventListener('change', e => { const t = e.target; if (!$('#adminv')
 document.addEventListener('click', async e => {
   const t = e.target; if (!$('#adminv') || !$('#adminv').contains(t)) return;
   const b = t.closest('[data-adh],[data-adnpc],[data-adavk],[data-adavrand],[data-adnsave],[data-adndel],[data-adnreset],[data-adsub],[data-adevk],[data-evop],[data-evprev],[data-evsave],[data-evreset],[data-adwx]'); if (!b) return;
+  if (b.dataset.adh === '__clear'){ if (!F || !db || !confirm('아직 적용되지 않은 하트 조정을 모두 지울까요?')) return; F.set(F.ref(db, 'adm/heart'), null).then(() => toast('대기 중인 조정을 지웠어요')); return; }
   if (b.dataset.adh){ const [pid, nid, d] = b.dataset.adh.split('|'); const cur = +(AD.heart?.[pid]?.[nid] || 0), nv = Math.max(-10, Math.min(10, cur + +d)); if (!F || !db) return;
     F.set(F.ref(db, `adm/heart/${pid}/${nid}`), nv || null).then(() => toast(`${AD.players[pid]?.nick || '학생'} · ${npcGet(nid)?.name || nid} 하트 ${nv > 0 ? '+' : ''}${nv || 0} (적용 대기)`)).catch(e => toast('저장에 실패했어요: ' + (e.code || e.message))); return; }
   if (b.dataset.adwx !== undefined){ const w = b.dataset.adwx; F.set(F.ref(db, 'story/wx'), w ? { d: todayKey(), w } : null).then(() => toast(w ? `오늘 날씨: ${WX_KO[w]}` : '날씨를 자동으로 돌렸어요')); wxForce = w ? { d: todayKey(), w } : null; return adminRender(); }
