@@ -234,7 +234,17 @@ function dayCopy(src){
     for (let j = 0; j < 3; j++){ const v = ((l + (d[i + j] - l) * S) * G - 128) * K + 128; d[i + j] = v < 0 ? 0 : v > 255 ? 255 : v; } }
   x.putImageData(id, 0, 0); return c;
 }
-function makeDay(m){ if (m.meta.indoor || !m.bg || !m.obj) return; m.bgDay = dayCopy(m.bg); m.objDay = dayCopy(m.obj); }
+// willReadFrequently 캔버스는 CPU 메모리에만 있어서, 매 프레임 그리면 느려요. 화면에 그릴 그림은 일반 캔버스(그래픽 가속)로 한 번 옮겨 둬요
+function gpuCopy(c){ const g = document.createElement('canvas'); g.width = c.width; g.height = c.height; g.getContext('2d').drawImage(c, 0, 0); return g; }
+// 밤↔낮 사이는 12단계로 미리 섞어 둔 그림을 하나만 그려요 (프레임마다 두 장을 겹쳐 그리면 느려요). 쓰는 단계 앞뒤 3장만 갖고 있어요
+const DAYN = 12;
+function dayLevel(m, k){
+  m.lv = m.lv || {}; if (m.lv[k]) return m.lv[k];
+  Object.keys(m.lv).forEach(q => { if (Math.abs(q - k) > 1) delete m.lv[q]; });
+  const mix = (a, b) => { const c = document.createElement('canvas'); c.width = a.width; c.height = a.height; const g = c.getContext('2d'); g.drawImage(a, 0, 0); g.globalCompositeOperation = 'source-atop'; g.globalAlpha = k / DAYN; g.drawImage(b, 0, 0); return c; };
+  return m.lv[k] = { bg: mix(m.bg, m.bgDay), obj: mix(m.obj, m.objDay) };
+}
+function makeDay(m){ if (m.meta.indoor || !m.bg || !m.obj) return; m.bgDay = gpuCopy(dayCopy(m.bg)); m.objDay = gpuCopy(dayCopy(m.obj)); m.lv = {}; }
 World.retuneDay = () => Object.values(MAPS).forEach(makeDay);
 async function ensureMap(id){
   const m = MAPS[real(id)]; if (m.bg) return;
@@ -246,7 +256,7 @@ async function ensureMap(id){
       const bc = document.createElement('canvas'); bc.width = bg.width; bc.height = bg.height; const bx = bc.getContext('2d', { willReadFrequently: true }); bx.drawImage(bg, 0, 0);
       const id = bx.getImageData(0, 0, bc.width, bc.height), d = id.data, hx = m.meta.fill || '#140E1E', R = parseInt(hx.slice(1, 3), 16), G = parseInt(hx.slice(3, 5), 16), B = parseInt(hx.slice(5, 7), 16);
       for (let i = 0; i < d.length; i += 4) if (d[i] === R && d[i + 1] === G && d[i + 2] === B) d[i + 3] = 0;
-      bx.putImageData(id, 0, 0); m.bg = bc;
+      bx.putImageData(id, 0, 0); m.bg = gpuCopy(bc);
     }
     makeDay(m);
   })();
@@ -715,8 +725,8 @@ function frame(now){
   out.setTransform(KPX, 0, 0, KPX, -ix * KPX, -iy * KPX);
   const cx = out;
   const SK = M.indoor ? { c: [150, 130, 175], n: 1, g: 0 } : skyNow(); skyN = SK.n; const dk = A.bgDay ? Math.min(1, SK.g * (World.skyGain ?? 1) / 1.75) : 0;   // 낮 정도 0~1
-  cx.drawImage(A.bg, Math.max(0, ix), Math.max(0, iy), VW, VH, Math.max(0, ix), Math.max(0, iy), VW, VH);
-  if (dk > .02){ cx.globalAlpha = dk; cx.drawImage(A.bgDay, Math.max(0, ix), Math.max(0, iy), VW, VH, Math.max(0, ix), Math.max(0, iy), VW, VH); cx.globalAlpha = 1; }
+  const dk_k = Math.round(dk * DAYN), LV = dk_k <= 0 || !A.bgDay ? null : dk_k >= DAYN ? { bg: A.bgDay, obj: A.objDay } : dayLevel(A, dk_k), BG = LV ? LV.bg : A.bg, OB = LV ? LV.obj : A.obj;
+  cx.drawImage(BG, Math.max(0, ix), Math.max(0, iy), VW, VH, Math.max(0, ix), Math.max(0, iy), VW, VH);
   // 물결 반짝임
   if (M.water) for (let i = 0; i < 6; i++){ const w = M.water[(Math.random() * M.water.length) | 0]; const [wx, wy] = P(w[0] + Math.random(), w[1] + Math.random()); if (wx > view.x && wx < view.x + view.w && wy > view.y && wy < view.y + view.h) fx.push({ x: wx, y: wy, v: 0, life: .5, c: '#DFF2FF' }); }
   if (dest){ const [dx, dy] = P(dest.x + .5, dest.y + .5), ph = (performance.now() / 500) % 1; cx.strokeStyle = `rgba(255,154,60,${1 - ph * .7})`; cx.lineWidth = 1; cx.beginPath(); cx.ellipse(dx, dy, 6 + ph * 5, 3 + ph * 2.5, 0, 0, Math.PI * 2); cx.stroke(); cx.fillStyle = '#FF9A3C'; cx.fillRect(dx - 1, dy - 9 - Math.round(ph * 3), 2, 6); }
@@ -738,7 +748,7 @@ function frame(now){
     let idx = 0; list.forEach((it, i) => { if (it.o && sOver(R(it.o), pr) && behind(it.o.box, pb)) idx = i + 1; });
     list.splice(idx, 0, { p });
   });
-  list.forEach(it => { if (it.o){ cx.drawImage(it.o.furn ? FURN_IMG : A.obj, it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.sw, it.o.sh); if (dk > .02 && !it.o.furn){ cx.globalAlpha = dk; cx.drawImage(A.objDay, it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.sw, it.o.sh); cx.globalAlpha = 1; } } else drawPerson(it.p); });
+  list.forEach(it => { if (it.o) cx.drawImage(it.o.furn ? FURN_IMG : OB, it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.sw, it.o.sh); else drawPerson(it.p); });
   // 가구 놓기: 고른 자리에 반투명하게 미리 보여 줘요
   if (placing && placing.at){ const it = FURN.items[placing.k], [gx, gy] = placing.at, ok = canPlace(placing.k, gx, gy), [px, py] = P(gx, gy);
     cx.fillStyle = ok ? 'rgba(140,230,176,.45)' : 'rgba(230,90,110,.45)';
