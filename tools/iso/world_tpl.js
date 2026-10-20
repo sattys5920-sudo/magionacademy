@@ -694,7 +694,7 @@ function frame(now){
     if (camX === null){ camX = tx; camY = ty; } camX += (tx - camX) * Math.min(1, dt * 8); camY += (ty - camY) * Math.min(1, dt * 8); }
   const ix = Math.round(camX), iy = Math.round(camY); camIX = ix; camIY = iy;
   const view = { x: ix - 4, y: iy - 4, w: VW + 8, h: VH + 8 };
-  out.setTransform(KPX, 0, 0, KPX, 0, 0); out.fillStyle = M.indoor ? (M.fill || '#0C0715') : (() => { const q = skyNow(), d = Math.max(0, 1 - q.n), hx = M.fill || '#1E2A1C', N = [1, 3, 5].map(i => parseInt(hx.slice(i, i + 2), 16)), D = [62, 96, 134]; return `rgb(${N.map((v, j) => Math.round(v + (D[j] - v) * d))})`; })(); out.fillRect(0, 0, VW, VH);
+  out.setTransform(KPX, 0, 0, KPX, 0, 0); out.fillStyle = M.indoor ? (M.fill || '#0C0715') : (() => { const q = skyNow(), d = Math.max(0, 1 - q.n), hx = M.fill || '#1E2A1C', N = [1, 3, 5].map(i => parseInt(hx.slice(i, i + 2), 16)), D = World.skyDay || [52, 74, 100]; return `rgb(${N.map((v, j) => Math.round(v + (D[j] - v) * d))})`; })(); out.fillRect(0, 0, VW, VH);
   out.setTransform(KPX, 0, 0, KPX, -ix * KPX, -iy * KPX);
   const cx = out;
   cx.drawImage(A.bg, Math.max(0, ix), Math.max(0, iy), VW, VH, Math.max(0, ix), Math.max(0, iy), VW, VH);
@@ -732,13 +732,13 @@ function frame(now){
   fx.forEach(b => { cx.fillStyle = b.c; cx.fillRect(Math.round(b.x), Math.round(b.y), 1, 1); });
   // 빛: 실내는 늘 어둑, 바깥은 시간대에 따라
   const SK = M.indoor ? { c: [150, 130, 175], n: 1, g: 0 } : skyNow(); skyN = SK.n;
-  SK.g *= (World.skyGain ?? .8);   // 조정용 손잡이 (시험용)
+  SK.g *= (World.skyGain ?? .5);   // 조정용 손잡이 (시험용)
   if (SK.g > .03){   // 낮에는 그림 자체를 밝혀요 (안개를 덮는 게 아니라 색을 키워서 또렷하게)
     const W = cv.width, H = cv.height; if (!skyTmp || skyTmp.width !== W || skyTmp.height !== H){ skyTmp = document.createElement('canvas'); skyTmp.width = W; skyTmp.height = H; }
     const t = skyTmp.getContext('2d'); t.globalCompositeOperation = 'copy'; t.drawImage(cv, 0, 0);
     cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); cx.globalCompositeOperation = 'lighter';
     for (let r = SK.g; r > .02; r -= 1){ cx.globalAlpha = Math.min(1, r); cx.drawImage(skyTmp, 0, 0); }
-    const con = (World.skyCon ?? .45) * Math.min(1, SK.g);   // 대비: 밝힌 그림에 자기 자신을 곱해서 어두운 곳은 다시 어둡게 (뿌옇지 않게)
+    const con = (World.skyCon ?? .55) * Math.min(1, SK.g);   // 대비: 밝힌 그림에 자기 자신을 곱해서 어두운 곳은 다시 어둡게 (뿌옇지 않게)
     if (con > .01){ t.globalCompositeOperation = 'copy'; t.drawImage(cv, 0, 0); cx.globalCompositeOperation = 'multiply'; cx.globalAlpha = con; cx.drawImage(skyTmp, 0, 0); cx.globalCompositeOperation = 'lighter'; }
     const lf = Math.min(1, SK.g); cx.globalAlpha = 1; cx.globalCompositeOperation = 'screen'; cx.fillStyle = `rgb(${Math.round(38 * lf)},${Math.round(50 * lf)},${Math.round(70 * lf)})`; cx.fillRect(0, 0, cv.width, cv.height);   // 가장 어두운 그림자만 하늘빛으로 살짝
     cx.restore();
@@ -746,7 +746,7 @@ function frame(now){
   if (SK.n > .02 || SK.c.some(v => v < 254)){
     cx.globalCompositeOperation = 'multiply'; cx.fillStyle = `rgb(${SK.c})`; cx.fillRect(ix, iy, VW, VH);
     cx.globalCompositeOperation = 'lighter';
-    M.lights.forEach((L, i) => { if (L.p[0] + L.r < view.x || L.p[0] - L.r > view.x + view.w || L.p[1] + L.dy + L.r < view.y || L.p[1] + L.dy - L.r > view.y + view.h) return; const fl = L.f ? .85 + .15 * Math.sin(now / 130 + i * 1.7) * Math.sin(now / 370 + i) : 1; cx.globalAlpha = L.a * fl * Math.min(1, SK.n * 1.15); cx.drawImage(glow(L.r, L.c), L.p[0] - L.r, L.p[1] + L.dy - L.r); });
+    M.lights.forEach((L, i) => { if (L.p[0] + L.r < view.x || L.p[0] - L.r > view.x + view.w || L.p[1] + L.dy + L.r < view.y || L.p[1] + L.dy - L.r > view.y + view.h) return; const fl = L.f ? .85 + .15 * Math.sin(now / 130 + i * 1.7) * Math.sin(now / 370 + i) : 1; cx.globalAlpha = L.a * fl * Math.max(.3, Math.min(1, SK.n * 1.15)); cx.drawImage(glow(L.r, L.c), L.p[0] - L.r, L.p[1] + L.dy - L.r); });
     cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
   }
   drawWeather(cx, ix, iy, dt);
