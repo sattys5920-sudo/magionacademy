@@ -16,6 +16,8 @@ GEN = {
  'mandi':  (4, 34, 58, [0, 1, 2, 3, 1]),
  'jipsin': (5, 42, 58, [0, 1, 2, 3, 1]),
 }
+TRUST = {'nabi', 'batri', 'kappa', 'aula', 'mandi', 'jipsin'}   # 옆모습 칸을 칸마다 따로 뒤집지 않을 NPC (생성 시트의 왼쪽 줄이 한 방향으로 일정해요)
+FLIP_LEFT = {'batri'}   # 생성 시트의 '왼쪽' 줄이 사실 오른쪽을 보고 있어서 통째로 뒤집어요
 GROW = {'down': 0, 'left': 1, 'right': 2, 'up': 3}   # 생성 시트의 줄
 DIRS = ['down', 'up', 'left', 'right']              # 게임 칸 순서
 def cells(a):
@@ -77,13 +79,20 @@ def build(name):
             f[ys, xs] = s[max(0, -y0):max(0, -y0) + (ys.stop - ys.start), max(0, -x0):max(0, -x0) + (xs.stop - xs.start)]
             frames.append(f)
     # 옆모습 정리: 왼쪽 서기 칸을 기준으로, 반대로 선 칸은 뒤집고 앞모습 칸은 이웃 칸으로. 오른쪽은 왼쪽을 뒤집어요
+    # 옆모습 정리 (왼쪽 서기 칸 기준): 칸마다 어느 쪽을 보는지 머리 모양으로 가려요 (다리·꼬리는 걸을 때마다 달라서 몸 전체로 비교하면 틀려요).
+    #   머리 윗부분(키의 앞 45%)을 L0와 겹쳐 보아서, 뒤집은 쪽이 더 닮으면 뒤집어요. 앞모습 칸과 더 닮으면 이웃 칸으로 대신해요
     iou = lambda p, q: ((p[..., 3] > 0) & (q[..., 3] > 0)).sum() / max(1, ((p[..., 3] > 0) | (q[..., 3] > 0)).sum())
+    def headm(f):
+        ys = np.nonzero((f[..., 3] > 0).any(1))[0]; h = f.copy()
+        if len(ys): h[int(ys[0] + (ys[-1] - ys[0] + 1) * .45):] = 0
+        return h
     L0, D0 = frames[10], frames[0]; left = [L0]
-    for f in frames[11:15]:
-        fl = f[:, ::-1]; a_, b_, c_ = iou(f, L0), iou(fl, L0), iou(f, D0)
+    for f in (frames[11:15] if name not in TRUST else []):
+        fl = f[:, ::-1]; a_, b_, c_ = iou(headm(f), headm(L0)), iou(headm(fl), headm(L0)), iou(f, D0)
         if c_ > max(a_, b_) + .05: f = left[-1]
         elif b_ > a_: f = fl
         left.append(f)
+    if name in TRUST: left = [f[:, ::-1].copy() for f in frames[10:15]] if name in FLIP_LEFT else frames[10:15]   # 생성 시트의 왼쪽 줄이 다 같은 쪽을 보고 있으면 그대로 써요 (몸 모양 비교가 걷는 칸을 뒤집어 버린 적이 있어요)
     frames[10:15] = left; frames[15:20] = [f[:, ::-1].copy() for f in left]
     strip = np.concatenate(frames, 1)
     # 색 수 줄이기 (시트 하나에 32색)
