@@ -117,6 +117,10 @@ body:not(.inworld) #fishui{display:none}
 .fmeter i{display:block;height:100%;width:0;background:var(--ok);border-radius:5px}
 .fmeter.pat i{background:var(--gold)}.fmeter.pat.low i{background:#E05A5A}
 .fctl .btn{flex:1;min-height:52px;touch-action:none;user-select:none;-webkit-user-select:none}
+.plantpick{position:sticky;bottom:0;z-index:3;margin-top:8px;padding:10px;background:var(--panel);border:1px solid var(--line2);border-radius:var(--r-panel);box-shadow:0 -8px 18px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px}
+.plantpick .pph{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.plantpick{padding:8px;gap:6px}.plantpick .ppg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:25vh;overflow:auto}
+.plantpick .ppg .cell{min-height:74px;padding:4px 2px}.plantpick .ppg .cell.dim{opacity:.5}
 .fstar{color:var(--gold);font-family:var(--f-body);font-size:var(--fs-s)}
 .fgot{display:flex;align-items:center;gap:8px;text-align:left}
 .fgot div{display:flex;flex-direction:column;gap:2px}
@@ -4047,33 +4051,39 @@ const timeText = ms => { const m = Math.ceil(ms / 6e4); return ms < 6e4 ? `${Mat
 const PLOT_MIN = 2, PLOT_MAX = 10;
 const PLOT_COST = [[5, 150], [10, 300], [20, 500], [30, 800], [60, 1200], [100, 1800], [140, 2600], [180, 3600]];   // [필요 지식, 골드] · 3번째 칸부터
 const plotNext = () => PLOT_COST[Math.max(0, (me.plots || []).length - PLOT_MIN)];
-let seedPick = 'herb', greenMsg = '', seedTier = 0;
+let seedPick = 'herb', greenMsg = '', seedTier = 0, plantFor = null;   // plantFor: 심을 칸 번호 (빈 칸을 누르면 하단에 씨앗이 떠요)
+// 빈 칸을 누르면 하단에 뜨는 씨앗 고르기: 누르면 바로 심어요
+function plantPicker(know){
+  const open = SEED_TIERS.filter(k => k <= know); if (!open.includes(SEED_TIERS[seedTier])) seedTier = SEED_TIERS.indexOf(open[open.length - 1]);
+  const list = SEED_LIST.filter(x => x.know === SEED_TIERS[seedTier]);
+  return `<div class="plantpick px"><div class="pph"><b>${plantFor + 1}번 칸에 심을 씨앗</b><button class="btn sm" data-pclose="1">닫기</button></div>
+    ${open.length > 1 ? `<div class="seg scroll">${open.map(k => `<button class="${SEED_TIERS[seedTier] === k ? 'on' : ''}" data-stier="${SEED_TIERS.indexOf(k)}">${k ? `지식 ${k}` : '기본'}</button>`).join('')}</div>` : ''}
+    <div class="ppg">${list.map(x => { const no = me.coin < x.price; return `<button class="cell ${no ? 'dim' : ''}" data-plant="${x.id}">${ic(x.id)}<span class="s">${x.seed}</span><span class="s sub">${x.price ? x.price + 'G' : '무료'} · ${timeText(growMins[x.id] * 6e4)}</span></button>`; }).join('')}</div></div>`;
+}
 function renderGreen(){
   const ready = me.plots.filter(plotReady).length, know = me.know || 0;
   const tierKnow = SEED_TIERS[seedTier], list = SEED_LIST.filter(x => x.know === tierKnow);
   const P = SEED_INFO[seedPick] || SEED_INFO.herb;
   const tabs = [['plot', `화단${ready ? ` · 수확 ${ready}` : ''}`], ['seed', '씨앗 고르기']];
   let body = '';
+  const picking = plantFor !== null && me.plots[plantFor] && !me.plots[plantFor].k;
   if (greenTab === 'plot'){
-    body = `<section class="sec">
+    body = `<section class="sec" style="${picking ? 'padding-bottom:22vh' : ''}">
       ${secH('화단', waterCost() ? '물 주기 마력 1' : '물 주기 무료')}
       <div class="grid" style="grid-template-columns:repeat(3,1fr)">
         ${me.plots.map((p, i) => {
           const G = p.k && SEED_INFO[p.k], rd = plotReady(p);
           const fr = plotFrac(p), icon = !p.k ? 'seed' : rd ? p.k : fr < .34 ? 'seed' : fr < .8 ? 'sprout' : p.k;
           const label = !p.k ? '심기' : rd ? '수확!' : `${timeText(plotLeft(p))} 남음`;
-          return `<button class="cell ${!p.k ? 'slot' : ''}" data-plot="${i}" style="min-height:96px;${rd ? 'border:2px solid var(--ok);background:var(--soft)' : p.w ? 'background:var(--soft)' : ''}">
+          return `<button class="cell ${!p.k ? 'slot' : ''} ${picking && plantFor === i ? 'sel' : ''}" data-plot="${i}" style="min-height:96px;${rd ? 'border:2px solid var(--ok);background:var(--soft)' : p.w ? 'background:var(--soft)' : ''}">
             ${ic(icon, !p.k ? 'opacity:.3' : !rd && icon === p.k ? 'opacity:.7' : '')}<span class="s">${G ? G.seed : '빈 칸'}${G && !rd && p.w ? ' 💧' : ''}</span><span class="s ${rd ? 'b' : 'sub'}" style="${rd ? 'color:var(--ok)' : ''}" ${p.k && !rd ? `data-left="${i}"` : ''}>${label}</span>
             ${G ? `<div style="width:60px;display:flex">${segs(Math.round(fr * 10), 10, 'var(--ok)')}</div>` : ''}</button>`;
         }).join('')}
               </div>
-      <div class="box px" style="padding:8px 12px;display:flex;align-items:center;gap:10px">${ic(P.id)}
-        <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><span class="s">심을 씨앗 · <b>${P.seed}</b> ${P.price ? `<span class="sub num">${P.price}G</span>` : '<span class="sub">무료</span>'}</span><span class="s sub">${timeText(P.mins * 6e4)} 자라서 「${P.mat}」 ${P.yield}개</span></div>
-        <button class="btn sm" data-gtab="seed">바꾸기</button>
-      </div>
       ${me.plots.length < PLOT_MAX ? (([nk, ng]) => `<button class="btn ghost" id="morePlot" style="align-self:center;${know < nk ? 'opacity:.6' : ''}">${know < nk ? '🔒 ' : ''}화단 한 칸 늘리기 · 지식 ${nk} · ${ng}G (${me.plots.length} / ${PLOT_MAX})</button>`)(plotNext()) : '<div class="hint" style="text-align:center">화단을 10칸까지 다 늘렸어요!</div>'}
-      ${hint(greenMsg, '빈 칸을 눌러 심고, 자라는 칸을 누르면 물을 줘요 (25% 빨리 자라요) · 다 자라면 눌러서 수확해요')}
-    </section>`;
+      ${hint(greenMsg, '빈 칸을 누르면 아래에 심을 씨앗이 떠요 · 자라는 칸을 누르면 물을 줘요 (25% 빨리 자라요) · 다 자라면 눌러서 수확해요')}
+    </section>
+    ${picking ? plantPicker(know) : ''}`;
   } else {
     body = `<section class="sec">
       ${secH('씨앗 고르기', `지식 ${know}`)}
@@ -4097,14 +4107,19 @@ function renderGreen(){
     if (me.coin < ng){ greenMsg = `골드 ${ng}G가 부족해요.`; return renderGreen(); }
     me.coin -= ng; me.plots.push({ k: null }); greenMsg = `화단이 한 칸 늘었어요! -${ng}G (${me.plots.length} / ${PLOT_MAX})`; save(); hud(); renderGreen();
   };
+  on('[data-pclose]', () => { plantFor = null; renderGreen(); });
+  on('[data-plant]', b => {
+    const p = me.plots[plantFor], G = SEED_INFO[b.dataset.plant]; if (!p || p.k) return;
+    if ((me.know || 0) < G.know) greenMsg = `지식 ${G.know}부터 심을 수 있어요.`;
+    else if (me.coin < G.price) greenMsg = `씨앗 값 ${G.price}G가 부족해요.`;
+    else { me.coin -= G.price; seedPick = G.id; Object.assign(p, { k: G.id, at: Date.now(), w: false }); greenMsg = `${G.seed} 씨앗을 심었어요. ${timeText(G.mins * 6e4)} 뒤에 수확해요.${G.price ? ` -${G.price}G` : ''}`; plantFor = null; save(); hud(); sfx('pop'); }
+    renderGreen();
+  });
   on('[data-plot]', b => {
-    const p = me.plots[+b.dataset.plot], G = SEED_INFO[seedPick];
-    if (!p.k){
-      if ((me.know || 0) < G.know) greenMsg = `지식 ${G.know}부터 심을 수 있어요.`;
-      else if (me.coin < G.price) greenMsg = `씨앗 값 ${G.price}G가 부족해요.`;
-      else { me.coin -= G.price; Object.assign(p, { k: seedPick, at: Date.now(), w: false }); greenMsg = `${G.seed} 씨앗을 심었어요. ${timeText(G.mins * 6e4)} 뒤에 수확해요.${G.price ? ` -${G.price}G` : ''}`; }
-    }
-    else if (plotReady(p)){ const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0); me.inv[p.k] += n; me.plots[me.plots.indexOf(p)] = { k: null }; greenMsg = `${g.seed} 수확! ${g.mat} +${n}${n > g.yield ? ' (Dewmorn의 새벽 보너스)' : ''}`; }
+    const i = +b.dataset.plot, p = me.plots[i];
+    if (!p.k){ plantFor = plantFor === i ? null : i; greenMsg = ''; renderGreen(); setTimeout(() => document.querySelector('[data-plot].sel')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 30); return; }
+    plantFor = null;
+    if (plotReady(p)){ const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0); me.inv[p.k] += n; me.plots[me.plots.indexOf(p)] = { k: null }; greenMsg = `${g.seed} 수확! ${g.mat} +${n}${n > g.yield ? ' (Dewmorn의 새벽 보너스)' : ''}`; }
     else if (p.w) greenMsg = `이미 물을 줬어요. ${timeText(plotLeft(p))} 남았어요.`;
     else if (me.mana < waterCost()) greenMsg = '마력이 부족해요. 내 방 침대에서 쉬고 오세요.';
     else { p.w = true; me.mana -= waterCost(); greenMsg = `물을 줬어요. 쑥쑥! ${timeText(plotLeft(p))} 남았어요.`; }
