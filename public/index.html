@@ -1096,7 +1096,12 @@ const hint = (msg, fallback) => `<div class="hint ${msg ? 'on px' : ''}">${msg |
 const backBtn = '<button class="btn ghost" id="back">닫기</button>';
 // who: 플레이어 정보(av가 있으면 그 조합) 또는 옛 look 번호
 const avOf = who => who && typeof who === 'object' ? { ...(who.av || World.Avatar.fromLook(who.look)), house: who.house } : World.Avatar.fromLook(who);
-const face = (who, size = 32, online) => { const src = World.Avatar.head(avOf(who)); return `<div class="face" style="width:${size}px;height:${size}px">${src ? `<img src="${src}" alt="" style="width:100%;height:100%;image-rendering:pixelated">` : ''}${online === undefined ? '' : `<span class="dot" style="background:${online ? '#3CCB6E' : '#C8B8E8'}"></span>`}</div>`; };
+// 얼굴 이미지: 아바타 부품이 덜 불러와졌으면 비워 두고(data-av), 다 오면 headFix가 채워요
+const headImg = (av, style = '') => { const s = World.Avatar.head(av); return `<img ${s ? `src="${s}" data-ok="1"` : ''} data-av="${esc(JSON.stringify(av))}" alt=""${style ? ` style="${style}"` : ''}>`; };
+function headFix(){ document.querySelectorAll('img[data-av]:not([data-ok])').forEach(im => { try { const s = World.Avatar.head(JSON.parse(im.dataset.av)); if (s){ im.src = s; im.dataset.ok = '1'; } } catch(e){} }); }
+let headT = 0; const headSoon = () => { clearTimeout(headT); headT = setTimeout(headFix, 80); };
+World.Avatar.onLoad(headSoon); new MutationObserver(headSoon).observe(document.body, { childList: true, subtree: true });
+const face = (who, size = 32, online) => { return `<div class="face" style="width:${size}px;height:${size}px">${headImg(avOf(who), 'width:100%;height:100%;image-rendering:pixelated')}${online === undefined ? '' : `<span class="dot" style="background:${online ? '#3CCB6E' : '#C8B8E8'}"></span>`}</div>`; };
 World.Avatar.ready.then(() => { if (typeof sheetOn !== 'undefined' && sheetOn) render(); });
 const houseTag = k => HOUSES[k] ? `<span class="tag" style="background:var(--panel2);border:1px solid ${HOUSES[k].col};color:${HOUSES[k].col}">${HOUSES[k].name}</span>` : '';
 function on(sel, fn){ app.querySelectorAll(sel).forEach(el => el.onclick = () => fn(el)); }
@@ -1125,7 +1130,7 @@ function hud(){
   World.setPets(me.cr.map(c => ({ id: c.id, k: c.k, col: c.col, adult: crAdult(c), name: c.name })));
   $('#wallet').innerHTML = `${ic('coin')}<span class="num">${me.coin.toLocaleString()}</span>${ic('mana')}<span class="num">${me.mana}</span><i id="saveDot" class="${saveState}" title="저장 상태"></i>`;
   $('#hudNick').textContent = me.nick; $('#hudLv').textContent = `Lv ${levelOf().lv}`;
-  const hf = $('#hudFace'); if (World.Avatar.loaded && !hf.dataset.k){ const s = World.Avatar.head(avOf(me)); if (s){ hf.innerHTML = `<img src="${s}" alt="" style="width:100%;height:100%;image-rendering:pixelated">`; hf.dataset.k = '1'; } }
+  const hf = $('#hudFace'), hav = avOf(me), hk = JSON.stringify(hav); if (World.Avatar.loaded && hf.dataset.k !== hk){ hf.innerHTML = headImg(hav, 'width:100%;height:100%;image-rendering:pixelated'); hf.dataset.k = hk; }   // 아바타가 바뀌면 다시 그려요 (부품이 덜 왔으면 headFix가 채워요)
   const ev = eventAt(), live = ev && Date.now() < ev.end, c = $('#evChip');
   c.hidden = !live; if (live) c.textContent = `${ev.E.name} 진행 중!`;
   if (typeof syncBuffs === 'function') syncBuffs();
@@ -2215,7 +2220,7 @@ function syncNpcs(){
 
 World.clockText = d => `${isFullMoon() ? '🌕' : { clear: '✨', rain: '☔', fog: '🌫', snow: '❄' }[weatherToday()]} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${BAND_KO[bandNow(d.getHours())]} · ${WX_KO[weatherToday()]}${isFullMoon() ? ' · 호박달 축제' : ''}`;
 // ---- 말 걸기 ----
-function npcPortrait(n){ return n.av ? `<img src="${World.Avatar.head(npcAv(n))}" alt="">` : npcFace(n.spr); }
+function npcPortrait(n){ return n.av ? headImg(npcAv(n)) : npcFace(n.spr); }
 const npcUI = () => $('#npcui');
 function npcClose(){ npcUI().classList.remove('on'); npcUI().innerHTML = ''; }
 // 이름 뒤 조사: {player|이/가}처럼 쓰면 이름의 마지막 글자 받침을 보고 골라요 (tools/josa.py와 같은 규칙)
@@ -2326,7 +2331,7 @@ function townList(){
 }
 function townTalk(id){
   const t = TOWNS.find(x => townId(x.id) === id); if (!t) return;
-  const c = NL.cast[t.id] || {}, av = townAv(t.id), pic = av ? `<img src="${World.Avatar.head(av)}" alt="">` : `<i class="npcspr" style="width:48px;height:48px;background:url(art/cast_animals.png?v=1) ${-c.pix * 48}px 0/${48 * 5}px 48px no-repeat;image-rendering:pixelated"></i>`;
+  const c = NL.cast[t.id] || {}, av = townAv(t.id), pic = av ? headImg(av) : `<i class="npcspr" style="width:48px;height:48px;background:url(art/cast_animals.png?v=1) ${-c.pix * 48}px 0/${48 * 5}px 48px no-repeat;image-rendering:pixelated"></i>`;
   const lines = npcOver.__cast?.[t.id]?.lines || t.lines, line = fillVars(lines[Math.floor(Math.random() * lines.length)], 'sera');
   npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${pic}</div><div><b>${esc(townName(t.id))}</b><span class="s sub">마을 사람</span></div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(line)}</div></div>`;
   npcUI().dataset.id = ''; npcUI().classList.add('on');
@@ -3515,7 +3520,7 @@ function renderHome(){
       <button class="tile px" id="goClass">${ic('book')}<span class="main"><span class="b">수업 ${classLeft()} / ${CLASS_MAX}</span><span class="s ${examStarted() ? 'sub' : ''}" style="${examStarted() ? '' : 'color:var(--warn)'}">${!examStarted() ? '쪽지시험 있음!' : `지식 ${me.know || 0}`}</span></span></button>
       <button class="tile px" id="goDorm">${ic('bed')}<span class="main"><span class="b">내 방</span><span class="s sub">${H.name} ${roomNo(me.house, uid || me.nick)}호</span></span></button>
     </div>
-    <button class="tile px" id="goAvatar" style="width:100%"><div class="face" style="width:40px;height:40px;background:#E8DDF8">${World.Avatar.loaded ? `<img src="${World.Avatar.head(avOf(me))}" alt="" style="width:100%;height:100%;image-rendering:pixelated">` : ''}</div><span class="main" style="flex:1"><span class="b">캐릭터 꾸미기</span><span class="s sub">머리·눈·옷·신발·소품을 바꿔요</span></span></button>
+    <button class="tile px" id="goAvatar" style="width:100%"><div class="face" style="width:40px;height:40px;background:#E8DDF8">${World.Avatar.loaded ? headImg(avOf(me), 'width:100%;height:100%;image-rendering:pixelated') : ''}</div><span class="main" style="flex:1"><span class="b">캐릭터 꾸미기</span><span class="s sub">머리·눈·옷·신발·소품을 바꿔요</span></span></button>
     <button class="tile px" id="goFish" style="width:100%">${rodIc(rodLv())}<span class="main"><span class="b">낚시 · 채집</span><span class="s sub">도감 물고기 ${FISH.filter(f => me.fdex?.[f.id]).length}/40 · 채집물 ${FORAGE.filter(f => me.fdex?.[f.id]).length}/50 · 오늘 반짝이 ${16 + (me.fg?.d === todayKey() ? (me.fg.extra || 0) - me.fg.got.length : 0)}곳</span></span></button>
     <button class="tile px" id="goCook" style="width:100%">${ic('d_crucianstew')}<span class="main"><span class="b">요리</span><span class="s sub">과자 교실 솥 · 요리책 ${Object.keys(me.cdex || {}).length}/40</span></span></button>
     <button class="tile px" id="goGames" style="width:100%"><span class="gic">🎪</span><span class="main"><span class="b">같이 놀기</span><span class="s sub">경쟁 3종 · 협동 3종 (2~8명) · 놀이 게시판</span></span></button>

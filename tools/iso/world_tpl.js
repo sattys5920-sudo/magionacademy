@@ -80,12 +80,14 @@ World.Avatar = (() => {
     return a;
   }
   const rnd = seed => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const BALDISH = [9, 10, 11, 12, 13];   // 대머리 직전 · 까까머리 · 하이앤타이트 · 긴 모히칸 · 짧은 모히칸
   function fromLook(look){
     const r = rnd(((look | 0) + 7) * 9973 + 1), a = { body: Math.floor(r() * 2) };
     CATS.forEach(c => { const ok = AVM.parts[c].map((p, i) => i).filter(i => !AVM.parts[c][i].k || AVM.parts[c][i].k === 'uni'); a[c] = ok[Math.floor(r() * ok.length)]; });   // 다른 학생은 교복
     a.cape = r() < .6 ? 0 : a.cape; a.hat = 0; a.acc = 0; a.neck = r() < .3 ? 0 : a.neck; a.face = r() < .6 ? 0 : a.face;
     Object.entries(COLORS).forEach(([k, p]) => { a[k] = Math.floor(r() * AVM.colors[p].length); });
     a.skinC = Math.floor(r() * 7);
+    if (BALDISH.includes(a.hair)){ const ok = AVM.parts.hair.map((p, i) => i).filter(i => !BALDISH.includes(i) && (!AVM.parts.hair[i].k || AVM.parts.hair[i].k === 'uni')); a.hair = ok[Math.floor(r() * ok.length)]; }   // 대머리 직전·까까머리·모히칸 계열은 임의로 뽑지 않아요 (꾸미기에서 직접 고를 수는 있어요)
     a.lip = r() < .5 ? 1 : 1 + Math.floor(r() * (MOUTHS.length - 1));   // 새 캐릭터·다른 학생은 입이 있어요 (반은 기본 미소)
     a.legsC = Math.floor(r() * 3); a.feetC = Math.floor(r() * 2);   // 교복은 다들 비슷하게: 하의 차콜·검정·남색, 구두 검정·갈색
     return fix(a);
@@ -190,8 +192,9 @@ World.Avatar = (() => {
   function head(av){
     if (!imgs[AVM.parts.body[0].f] || !imgs[AVM.parts.body[0].f].data) return '';
     const key = JSON.stringify(fix(av)); if (heads.has(key)) return heads.get(key);
-    const S = compose(av), c = document.createElement('canvas'); c.width = HB.s; c.height = HB.s; c.getContext('2d').drawImage(S, HB.x, HB.y, HB.s, HB.s, 0, 0, HB.s, HB.s);
-    const u = c.toDataURL(); if (cache.has(JSON.stringify(fix(av)))) heads.set(key, u); return u;
+    const S = compose(av); if (!cache.has(key)) return '';   // 머리카락·옷 그림이 다 불러와지기 전엔 비워 둬요 (덜 그려진 대머리 얼굴이 굳지 않게). 다 오면 onLoad로 알려요
+    const c = document.createElement('canvas'); c.width = HB.s; c.height = HB.s; c.getContext('2d').drawImage(S, HB.x, HB.y, HB.s, HB.s, 0, 0, HB.s, HB.s);
+    const u = c.toDataURL(); heads.set(key, u); return u;
   }
   const onLoad = fn => subs.push(fn);
   return { ready, compose, debugOwn: () => lastOwn, clear: () => { cache.clear(); heads.clear(); }, head, fix, fromLook, random, need, preload, onLoad, meta: AVM, FW, FH, CATS, HOUSES, headBox: { x: HB.x, y: HB.y, s: HB.s },
@@ -517,7 +520,7 @@ function findNear(){
   const np = people.filter(p => p.npc && Math.abs(Math.round(p.x) - mx) + Math.abs(Math.round(p.y) - my) <= 1).sort((a, b) => (Math.abs(a.x - mx) + Math.abs(a.y - my)) - (Math.abs(b.x - mx) + Math.abs(b.y - my)))[0];
   if (np) return { kind: 'npc', id: np.npc.id, name: np.name, key: 'n' + np.npc.id };
   if (spotMap === map){ const si = spots.findIndex(sp => Math.abs(sp.x - mx) + Math.abs(sp.y - my) <= 1); if (si >= 0) return { kind: 'spot', i: si, sp: spots[si], key: 's' + si }; }
-  { const mi = marks.findIndex(q => (q.map === map || q.map === rmap) && Math.abs(q.x - mx) + Math.abs(q.y - my) <= 1); if (mi >= 0) return { kind: 'mark', id: marks[mi].id, label: marks[mi].label || '조사하기', key: 'm' + marks[mi].id }; }
+  { const mi = marks.findIndex(q => (q.map === map || q.map === rmap) && Math.abs(q.x - mx) + Math.abs(q.y - my) <= 2); if (mi >= 0) return { kind: 'mark', id: marks[mi].id, label: marks[mi].label || '조사하기', key: 'm' + marks[mi].id }; }
   for (const o of [...objOrder, ...flats]){ const a = o.act || ACTS[o.name]; if (!a || !o.box || o.furn) continue;
     const dx = Math.max(Math.floor(o.box[0]) - mx, 0, mx - (Math.ceil(o.box[2]) - 1)), dy = Math.max(Math.floor(o.box[1]) - my, 0, my - (Math.ceil(o.box[3]) - 1));
     if (dx + dy === 1) return { kind: 'act', o, label: a[1], text: a[0], key: 'a' + o.name + o.x + ',' + o.y }; }
@@ -797,6 +800,7 @@ function frame(now){
   const k = cv.clientWidth / VW; dpr = window.devicePixelRatio || 1;
   if (M.rooms) M.rooms.forEach((rm, i) => { const [sx, sy] = P(rm.door[0] + .5, rm.door[1] + .5); if (sx > view.x && sx < view.x + view.w) drawTag(roomTags[i], sx, sy - 52, now); });
   if (M.pens) M.pens.forEach((pn, i) => { const [sx, sy] = P(pn.sign[0] + .5, pn.sign[1] + .5); if (sx > view.x && sx < view.x + view.w) drawTag(penTags[i], sx, sy - 20, now); });
+  marks.forEach(mk_ => { if ((mk_.map !== map && mk_.map !== rmap) || !mk_.label) return; if (Math.abs(mk_.x - me.x) + Math.abs(mk_.y - me.y) > 14) return; const [sx, sy] = P(mk_.x + .5, mk_.y + .5); if (sx > view.x && sx < view.x + view.w && sy > view.y && sy < view.y + view.h) drawTag({ t: mk_.label, k: 'npc', ev: true }, sx, sy - 18, now); });   // 할 일 표시 위에 무엇을 하는 곳인지 글자로
   people.forEach((p, i) => { const [sx, sy] = P(p.x + .5, p.y + .5); if (sx > view.x - 40 && sx < view.x + view.w + 40 && sy > view.y && sy < view.y + view.h + 60) drawTag(tags[i], sx, sy - World.Avatar.FH * ASC + 4, now); });
   const tn = performance.now();
   for (let i = says.length - 1; i >= 0; i--){ const p = says[i]; if (tn > p.say.until || (!p.me && !people.includes(p))){ sayOff(p); continue; } const [sx, sy] = P(p.x + .5, p.y + .5); p.say.el.style.left = (sx - ix) * k + 'px'; p.say.el.style.top = (sy - World.Avatar.FH * ASC - 2 - iy) * k + 'px'; }
