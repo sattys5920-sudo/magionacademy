@@ -1740,7 +1740,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.day = AD.day || todayKey();
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = s.val() || {}; if (adminTyping()) return; adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('adm/heart', 'heart'); L('players', 'players'); L('houses', 'houses'); L('games', 'games'); L('story', 'story'); adminChat(); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('adm/heart', 'heart'); L('players', 'players'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); }
   adminRender();
 }
 const adminTyping = () => { const a = document.activeElement; return AD.tab === 'npc' && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
@@ -2075,10 +2075,11 @@ const npcAv = n => n.av ? (n.avData ? World.Avatar.fix(n.avData) : World.Avatar.
 // 내 진행: me.npc[id] = { a 호감도, t 마지막 대화 날, g 마지막 선물 날, seen { k: 'ok'|'cold'|'fail' }, cold 앞 이벤트가 서먹했는지, ev 이벤트 본 날, evAt, hide 숨바꼭질, dk 줄어듦 계산한 날 }
 //          me.nflag { 플래그: 1 }, me.perk { 보상: 1 }
 const BAND_KO = { morning: '아침', day: '낮', evening: '저녁', night: '밤' };
-const bandNow = (h = new Date().getHours()) => h >= 5 && h < 10 ? 'morning' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 21 ? 'evening' : 'night';
+const bandNow = (h = new Date().getHours()) => (typeof bandForce !== 'undefined' && bandForce && bandForce.d === todayKey() && BAND_KO[bandForce.b]) ? bandForce.b : h >= 5 && h < 10 ? 'morning' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 21 ? 'evening' : 'night';
 const hash32 = s => { let h = 2166136261; for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 const WX_KO = { clear: '맑음', rain: '비', fog: '안개', snow: '눈' };
 let wxForce = null;   // 관리자가 정한 오늘 날씨 (story/wx)
+let bandForce = null;   // 관리자가 정한 오늘 시간대 (story/band) — 이야기·NPC 루틴 시험용
 function weatherToday(){
   if (wxForce && wxForce.d === todayKey()) return wxForce.w;
   const r = hash32('wx' + todayKey()) / 4294967296, m = new Date().getMonth();
@@ -2278,7 +2279,7 @@ async function renderNpcStory(){
   const evs = await Promise.all([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(k => st.seen[k] || k === nk ? npcEvent(n.id, k) : null));
   const where = c => { const p = NL.places[c?.location]; return [p && fillVars(p.name, n.id), ...(c?.time || []).map(t => BAND_KO[t]), ...(c?.weather || []).map(w => WX_KO[w]), c?.festival ? '호박달 축제' : c?.moon ? '보름' : ''].filter(Boolean).join(' · '); };
   frame(null, `${esc(n.name)}의 이야기`, `${esc(n.title || '')} · ${heartBar(h)} · ${st.a % 100}/100`, `<div class="box px">${evs.map((ev, i) => { const k = i + 1, s = st.seen[k];
-      return `<div class="li"><span class="gic">${s ? (s === 'fail' ? '💧' : '📖') : '🔒'}</span><div class="main"><span class="t">♥${k} ${s || k === nk ? esc(fillVars(ev?.title || '', n.id)) : '???'}</span><span class="d" style="white-space:normal">${s ? (s === 'cold' ? '서먹하게 끝났어요' : s === 'fail' ? '찾지 못했어요' : '다시 볼 수 있어요') : k === nk ? `♥${ev?.conditions?.minHeart || k} · ${esc(where(ev?.conditions))}` : '앞 이야기를 먼저 봐요'}</span></div>${s && s !== 'fail' ? `<button class="btn sm" data-nre="${k}">다시 보기</button>` : ''}</div>`; }).join('')}</div>
+      return `<div class="li"><span class="gic">${s ? (s === 'fail' ? '💧' : '📖') : '🔒'}</span><div class="main"><span class="t">♥${k} ${s || k === nk ? esc(fillVars(ev?.title || '', n.id)) : '???'}</span><span class="d" style="white-space:normal">${s ? (s === 'cold' ? '서먹하게 끝났어요' : s === 'fail' ? '찾지 못했어요' : '다시 볼 수 있어요') : k === nk ? `♥${ev?.conditions?.minHeart || k} · ${esc(where(ev?.conditions))} 에서 말을 걸면 시작돼요` : '앞 이야기를 먼저 봐요'}</span></div>${s && s !== 'fail' ? `<button class="btn sm" data-nre="${k}">다시 보기</button>` : ''}</div>`; }).join('')}</div>
     <div class="box px" style="padding:8px">그날 첫 대화 +10 · 선물: 좋아함 +40, 보통 +15, 싫어함 −30 (하루 한 번) · 100 = ♥1 · 7 일 넘게 말을 안 걸면 조금씩 줄어요</div>${backBtn}`);
   $('#back').onclick = closeSheet;
   on('[data-nre]', async b => { const k = +b.dataset.nre, ev = await npcEvent(n.id, k); closeSheet(); if (ev) evPlay(n, k, ev, { replay: true }); });
@@ -2622,7 +2623,8 @@ function adminNpcHTML(){
   const table = `<div class="adtbl npc"><div class="h"><span>학생</span>${all.map(n => `<span>${esc(n.name)}</span>`).join('')}</div>
     ${ids.map(id => `<div><span><b>${esc(P[id].nick)}</b></span>${all.map(n => { const x = P[id].npc?.[n.id], seen = Object.keys(x?.seen || {}).length, pend = +(AD.heart?.[id]?.[n.id] || 0), h = hOf(x); return `<span class="adh"><span class="hv">♥${h}${pend ? `<small class="pend">${pend > 0 ? '+' : ''}${pend}</small>` : ''}${seen ? ` <small>📖${seen}</small>` : ''}</span><span class="bt"><button data-adh="${id}|${n.id}|-1" title="하트 -1">−</button><button data-adh="${id}|${n.id}|1" title="하트 +1">+</button></span></span>`; }).join('')}</div>`).join('')}</div>
     <div class="s">− / + 를 누르면 그 학생이 접속해 있을 때 바로, 아니면 다음 접속 때 하트가 바뀌어요. 숫자 옆 주황색 ±는 아직 적용 전인 조정이에요. ${Object.keys(AD.heart || {}).length ? `<button class="btn sm" data-adh="__clear">대기 중인 조정 모두 지우기</button>` : ''}</div>`;
-  const wx = `<div class="adcard"><b>오늘 날씨</b><div class="adseg">${[['', '자동'], ['clear', '맑음'], ['rain', '비'], ['fog', '안개'], ['snow', '눈']].map(([k, l]) => `<button data-adwx="${k}" class="${(wxForce && wxForce.d === todayKey() ? wxForce.w : '') === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="s">지금: ${BAND_KO[bandNow()]} · ${WX_KO[weatherToday()]}${isFullMoon() ? ' · 호박달 축제(보름)' : ''} · 날씨를 바꾸면 비·안개 조건 이벤트를 바로 시험할 수 있어요</div></div>`;
+  const wx = `<div class="adcard"><b>오늘 날씨</b><div class="adseg">${[['', '자동'], ['clear', '맑음'], ['rain', '비'], ['fog', '안개'], ['snow', '눈']].map(([k, l]) => `<button data-adwx="${k}" class="${(wxForce && wxForce.d === todayKey() ? wxForce.w : '') === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="s">지금: ${BAND_KO[bandNow()]} · ${WX_KO[weatherToday()]}${isFullMoon() ? ' · 호박달 축제(보름)' : ''} · 날씨를 바꾸면 비·안개 조건 이벤트를 바로 시험할 수 있어요</div>
+    <b style="display:block;margin-top:10px">오늘 시간대</b><div class="adseg">${[['', '자동'], ['morning', '아침'], ['day', '낮'], ['evening', '저녁'], ['night', '밤']].map(([k, l]) => `<button data-adband="${k}" class="${(bandForce && bandForce.d === todayKey() ? bandForce.b : '') === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="s">시간대를 바꾸면 모든 학생에게 그 시간대로 보여요(NPC 위치·아침/밤 조건 이야기). 오늘만 유지되고, 시험이 끝나면 자동으로 돌려 두세요.</div></div>`;
   const pick = `<div class="adseg">${all.map(n => `<button data-adnpc="${n.id}" class="${adNpc === n.id ? 'on' : ''}">${esc(n.name)}${n.av ? '' : ' 🐾'}</button>`).join('')}<button data-adnpc="__new">+ 사람 NPC</button><button data-adnpc="__cast" class="${adNpc === '__cast' ? 'on' : ''}">🎭 조연</button></div>`;
   if (adNpc === '__cast') return `<div class="adcard"><b>학생 × NPC 호감도</b>${table}</div>${wx}${pick}${adminCastHTML()}`;
   let ed = '';
@@ -2658,10 +2660,11 @@ document.addEventListener('change', e => { const t = e.target; if (!$('#adminv')
   adminRender(); });
 document.addEventListener('click', async e => {
   const t = e.target; if (!$('#adminv') || !$('#adminv').contains(t)) return;
-  const b = t.closest('[data-adh],[data-adnpc],[data-adavk],[data-adavrand],[data-adnsave],[data-adndel],[data-adnreset],[data-adsub],[data-adevk],[data-evop],[data-evprev],[data-evsave],[data-evreset],[data-adwx]'); if (!b) return;
+  const b = t.closest('[data-adband],[data-adh],[data-adnpc],[data-adavk],[data-adavrand],[data-adnsave],[data-adndel],[data-adnreset],[data-adsub],[data-adevk],[data-evop],[data-evprev],[data-evsave],[data-evreset],[data-adwx]'); if (!b) return;
   if (b.dataset.adh === '__clear'){ if (!F || !db || !confirm('아직 적용되지 않은 하트 조정을 모두 지울까요?')) return; F.set(F.ref(db, 'adm/heart'), null).then(() => toast('대기 중인 조정을 지웠어요')); return; }
   if (b.dataset.adh){ const [pid, nid, d] = b.dataset.adh.split('|'); const cur = +(AD.heart?.[pid]?.[nid] || 0), nv = Math.max(-10, Math.min(10, cur + +d)); if (!F || !db) return;
     F.set(F.ref(db, `adm/heart/${pid}/${nid}`), nv || null).then(() => toast(`${AD.players[pid]?.nick || '학생'} · ${npcGet(nid)?.name || nid} 하트 ${nv > 0 ? '+' : ''}${nv || 0} (적용 대기)`)).catch(e => toast('저장에 실패했어요: ' + (e.code || e.message))); return; }
+  if (b.dataset.adband !== undefined){ const v = b.dataset.adband; F.set(F.ref(db, 'story/band'), v ? { d: todayKey(), b: v } : null).then(() => toast(v ? `오늘 시간대: ${BAND_KO[v]}` : '시간대를 자동으로 돌렸어요')); bandForce = v ? { d: todayKey(), b: v } : null; return adminRender(); }
   if (b.dataset.adwx !== undefined){ const w = b.dataset.adwx; F.set(F.ref(db, 'story/wx'), w ? { d: todayKey(), w } : null).then(() => toast(w ? `오늘 날씨: ${WX_KO[w]}` : '날씨를 자동으로 돌렸어요')); wxForce = w ? { d: todayKey(), w } : null; return adminRender(); }
   if (b.dataset.adnpc === '__cast'){ adNpc = '__cast'; adNpcDraft = null; return adminRender(); }
   if (b.dataset.adnpc){ const id = b.dataset.adnpc === '__new' ? 'h' + Date.now().toString(36) : b.dataset.adnpc; adNpc = id; adEvK = 0; adEvDraft = null; adWarn = [];
@@ -2820,7 +2823,7 @@ function storyNpcs(){ return [];   // 옛 반 전체 이야기는 메인 의뢰�
   const out = []; for (let c = 1; c <= (storyLive.ch || 0); c++){ const S = STORY[c - 1]; if (S) out.push({ ...S.npc, main: c, h: 26 }); } return out; }
 function storyListen(){
   if (solo || !F || !db || storyOff) return;
-  storyOff = F.onValue(F.ref(db, 'story'), s => { const v = s.val() || {}; storyLive = v.live || { ch: 0 }; storyCh = v.ch || {}; wxForce = v.wx || null; npcSig = ''; syncNpcs(); storyCheck(); });
+  storyOff = F.onValue(F.ref(db, 'story'), s => { const v = s.val() || {}; storyLive = v.live || { ch: 0 }; storyCh = v.ch || {}; wxForce = v.wx || null; bandForce = v.band || null; npcSig = ''; syncNpcs(); storyCheck(); });
 }
 // 새로 열린 장·끝난 단계·끝난 장면을 아직 안 봤으면 보여 줘요 (접속하자마자도)
 function storyCheck(){
