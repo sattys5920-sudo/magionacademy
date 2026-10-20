@@ -624,14 +624,20 @@ function step(p, dt){
     if (p.me && pending){ const pd = pending; pending = null; if (pd.water){ World.faceTo(pd.water[0], pd.water[1]); World.onWater && World.onWater(pd.water[0], pd.water[1]); } else if (pd.mark){ World.onMark && World.onMark(pd.mark); } else if (pd.npcTalk){ const np = people.find(q => q.npc && q.npc.id === pd.npcTalk); if (np) World.faceTo(np.x, np.y); World.onNpc && World.onNpc(pd.npcTalk); } else if (pd.spot !== undefined){ World.onSpot && World.onSpot(pd.spot, pd.sp); } else if (pd.door) goDoor(pd.door, pd.o); else { const a = pd.act.act || ACTS[pd.act.name]; showBubble(pd.act, a[0], a[1], () => useObj(pd.act, a)); } }
     if (p.npc && p.npc.wander && !p.path.length && (p.idle -= dt) < 0){ const r = p.npc.r ?? 2; p.idle = 1.5 + Math.random() * 3.5; for (let i = 0; i < 12; i++){ const gx = p.home[0] + Math.floor(Math.random() * (r * 2 + 1)) - r, gy = p.home[1] + Math.floor(Math.random() * (r * 2 + 1)) - r; if (goto(p, gx, gy)) break; } }   // 루틴 장소 안에서 계속 돌아다녀요
     if (!p.me && !p.peer && !p.npc && (p.idle -= dt) < 0){ p.idle = 2 + Math.random() * 5; for (let i = 0; i < 20; i++){ const gx = Math.round(p.x) + Math.floor(Math.random() * 13) - 6, gy = Math.round(p.y) + Math.floor(Math.random() * 13) - 6; if (goto(p, gx, gy)) break; } }
-    p.t = 0; return;
+    p.t = 0; p.vstart = true; return;
   }
   const [gx, gy] = p.path[0], dx = gx - p.x, dy = gy - p.y, d = Math.hypot(dx, dy);
   // 쿼터뷰 네 방향: x+ (오른쪽 아래) 오른쪽 옆, x- (왼쪽 위) 왼쪽 옆, y+ (왼쪽 아래) 앞, y- (오른쪽 위) 뒤
   // view: 프레임 첫 칸 (아래·위·왼쪽·오른쪽 보기). LPC 부품은 네 방향 그림이 다 있어서 뒤집지 않아요
   const DV = World.Avatar.meta.dirs;
-  if (Math.abs(dx) > Math.abs(dy)){ p.view = dx > 0 ? DV.right : DV.left; p.flip = false; }
-  else if (d > 0){ p.view = dy < 0 ? DV.up : DV.down; p.flip = false; }
+  // 몸 방향은 이번 한 걸음이 아니라 앞으로 갈 길 전체(8걸음)로 정해요. 한 걸음씩 보면 비스듬히 갈 때 x·y 걸음이 번갈아 나와서 좌우로 휙휙 돌아봐요
+  if (d > 0){
+    const far = p.path[Math.min(7, p.path.length - 1)], nx = far[0] - p.x, ny = far[1] - p.y, ax = Math.abs(nx), ay = Math.abs(ny);
+    const want = ax >= 2 * ay ? (nx > 0 ? DV.right : DV.left) : ay >= 2 * ax ? (ny < 0 ? DV.up : DV.down) : nx > 0 ? (ny > 0 ? DV.down : DV.right) : (ny > 0 ? DV.left : DV.up);   // 대각선: 화면에서 아래·오른쪽·왼쪽·위
+    if (want === p.view || p.vacc === undefined){ p.view = want; p.vwant = want; p.vacc = 0; }
+    else { if (want !== p.vwant){ p.vwant = want; p.vacc = 0; } p.vacc += dt; if (p.vacc > .28 || p.vstart){ p.view = want; p.vacc = 0; } }   // 방향이 잠깐 흔들리는 건 무시하고, .28초 넘게 같을 때만 돌아봐요
+    p.vstart = false; p.flip = false;
+  }
   if (p.pet && d > 0) p.flip = dx - dy > 0;   // 생물은 화면에서 오른쪽으로 가면 뒤집어요
   const mv = (p.run ? RUN : (p.me || p.peer) && p.path.length > 10 ? RUN : (p.me || p.peer) ? SPEED : SPEED * (p.npc && !p.npc.cut ? .35 : .6)) * dt * (p.me ? speedK : 1); if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
 }
