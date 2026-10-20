@@ -228,6 +228,12 @@ async function ensureMap(id){
     const [bg, obj] = await Promise.all([img(m.meta.bgSrc), img(m.meta.objSrc)]);
     const pc = document.createElement('canvas'); pc.width = obj.width; pc.height = obj.height; const px = pc.getContext('2d', { willReadFrequently: true }); px.drawImage(obj, 0, 0);
     m.px = px; m.obj = obj; m.bg = bg;
+    if (!m.meta.indoor){   // 바깥 맵: 그림에 칠해진 어두운 빈 땅(#140E1E)을 투명하게 → 그 자리에 시간대 하늘색이 보여요
+      const bc = document.createElement('canvas'); bc.width = bg.width; bc.height = bg.height; const bx = bc.getContext('2d', { willReadFrequently: true }); bx.drawImage(bg, 0, 0);
+      const id = bx.getImageData(0, 0, bc.width, bc.height), d = id.data, hx = m.meta.fill || '#140E1E', R = parseInt(hx.slice(1, 3), 16), G = parseInt(hx.slice(3, 5), 16), B = parseInt(hx.slice(5, 7), 16);
+      for (let i = 0; i < d.length; i += 4) if (d[i] === R && d[i + 1] === G && d[i + 2] === B) d[i + 3] = 0;
+      bx.putImageData(id, 0, 0); m.bg = bc;
+    }
   })();
   return m.loading;
 }
@@ -688,7 +694,7 @@ function frame(now){
     if (camX === null){ camX = tx; camY = ty; } camX += (tx - camX) * Math.min(1, dt * 8); camY += (ty - camY) * Math.min(1, dt * 8); }
   const ix = Math.round(camX), iy = Math.round(camY); camIX = ix; camIY = iy;
   const view = { x: ix - 4, y: iy - 4, w: VW + 8, h: VH + 8 };
-  out.setTransform(KPX, 0, 0, KPX, 0, 0); out.fillStyle = M.fill || (M.indoor ? '#0C0715' : (() => { const q = skyNow(), d = Math.max(0, 1 - q.n); return `rgb(${[30, 42, 28].map((v, j) => Math.round(v + ([58, 86, 112][j] - v) * d))})`; })()); out.fillRect(0, 0, VW, VH);
+  out.setTransform(KPX, 0, 0, KPX, 0, 0); out.fillStyle = M.indoor ? (M.fill || '#0C0715') : (() => { const q = skyNow(), d = Math.max(0, 1 - q.n), hx = M.fill || '#1E2A1C', N = [1, 3, 5].map(i => parseInt(hx.slice(i, i + 2), 16)), D = [40, 58, 84]; return `rgb(${N.map((v, j) => Math.round(v + (D[j] - v) * d))})`; })(); out.fillRect(0, 0, VW, VH);
   out.setTransform(KPX, 0, 0, KPX, -ix * KPX, -iy * KPX);
   const cx = out;
   cx.drawImage(A.bg, Math.max(0, ix), Math.max(0, iy), VW, VH, Math.max(0, ix), Math.max(0, iy), VW, VH);
