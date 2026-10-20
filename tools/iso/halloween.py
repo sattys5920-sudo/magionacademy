@@ -24,6 +24,9 @@ def ellipse(kind, cx, cy, rx, ry):
 fill('river', 39, 0, 45, 72)
 ellipse('lake', 56, 59, 6.5, 5)
 fill('bridge', 56, 53, 58, 59)           # 유령 호수 낚시 잔교
+# 낚시 연못: 호수·강 말고도 낚시터가 곳곳에 (이름·낚이는 물고기는 index.html FISH_SPOT)
+PONDS = [dict(id='pond_n', name='북쪽 연못', cx=26, cy=6, rx=4.5, ry=3), dict(id='pond_ne', name='북동 연못', cx=74, cy=7, rx=3.4, ry=3), dict(id='pond_se', name='남동 연못', cx=75, cy=40, rx=4, ry=3)]
+for pd in PONDS: ellipse('lake', pd['cx'], pd['cy'], pd['rx'], pd['ry'])
 # 학교 길
 fill('stone', 14, 24, 28, 30)            # 본관 앞마당
 fill('dirt', 19, 30, 22, 70)             # 학교 남북 길
@@ -413,6 +416,6 @@ def zone(x, y):
     return 'p'
 FORAGE = [[x, y, zone(x, y)] for x in range(2, NX - 2) for y in range(2, NY - 2) if (x, y) not in occupied and T[(x, y)] in ('grass', 'grave') and (x * 7 + y * 3) % 4 == 0]
 AREAS = [dict(n='본관 · 물약 교실', t=[19, 24]), dict(n='과자 교실', t=[6, 37]), dict(n='공예 교실', t=[29, 37]), dict(n='기숙사', t=[16, 48]), dict(n='호박밭', t=[9, 55]), dict(n='독초 온실', t=[22, 63]),
-         dict(n='사육장', t=[27, 61]), dict(n='등불 시장', t=[61, 31]), dict(n='채소 가게', t=[54, 35]), dict(n='뱀파이어 저택', t=[63, 12]), dict(n='마녀의 오두막', t=[72, 49]), dict(n='묘지', t=[51, 51]), dict(n='유령 호수', t=[56, 53]), dict(n='늑대인간 집', t=[78, 60])]
-json.dump(dict(W=W, H=H, NX=NX, NY=NY, OX=OX, OY=OY, objs=meta, lights=lights, water=WATER, forage=FORAGE, areas=AREAS, start=[20, 30]), open('out/hw.json', 'w'), ensure_ascii=False)
+         dict(n='사육장', t=[27, 61]), dict(n='등불 시장', t=[61, 31]), dict(n='채소 가게', t=[54, 35]), dict(n='북쪽 연못', t=[26, 10]), dict(n='북동 연못', t=[74, 11]), dict(n='남동 연못', t=[75, 44]), dict(n='뱀파이어 저택', t=[63, 12]), dict(n='마녀의 오두막', t=[72, 49]), dict(n='묘지', t=[51, 51]), dict(n='유령 호수', t=[56, 53]), dict(n='늑대인간 집', t=[78, 60])]
+json.dump(dict(W=W, H=H, NX=NX, NY=NY, OX=OX, OY=OY, objs=meta, lights=lights, water=WATER, ponds=[dict(id=q['id'], name=q['name'], cx=q['cx'], cy=q['cy'], r=max(q['rx'], q['ry']) + 1.5) for q in PONDS], forage=FORAGE, areas=AREAS, start=[20, 30]), open('out/hw.json', 'w'), ensure_ascii=False)
 print('objs', len(objs), 'sheet', sheet.size)

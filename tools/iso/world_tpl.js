@@ -726,9 +726,9 @@ function frame(now){
   // 바닥에 깔린 가구 (러그)
   flats.forEach(o => cx.drawImage(FURN_IMG, o.sx, 0, o.sw, o.sh, o.x, o.y, o.sw, o.sh));
   // 낚시 찌 (입질하면 쏙 들어가고 물결)
-  if (bobber){ const [x, y] = P(bobber.x + .5, bobber.y + .5), bob = bobber.bite ? 1 + Math.round(Math.abs(Math.sin(now / 60))) : Math.round(Math.sin(now / 400));
+  if (bobber){ const [x, y] = P(bobber.x + .5, bobber.y + .5), bob = bobber.bite ? 1 + Math.round(Math.abs(Math.sin(now / 60)) + (bobber.shake ? Math.random() * bobber.shake * 3 : 0)) : Math.round(Math.sin(now / 400));
     const [mx, my] = P(me.x + .5, me.y + .5); cx.strokeStyle = 'rgba(230,230,240,.55)'; cx.lineWidth = .5; cx.beginPath(); cx.moveTo(mx + (bobber.x > me.x ? 6 : -6), my - 22); cx.lineTo(x, y - 2 + bob); cx.stroke();
-    cx.fillStyle = 'rgba(200,240,255,.5)'; const rr = bobber.bite ? 4 + (now / 80 % 4) : 3; cx.beginPath(); cx.ellipse(x, y + 1, rr, rr / 2, 0, 0, Math.PI * 2); cx.fill();
+    cx.fillStyle = 'rgba(200,240,255,.5)'; const rr = bobber.bite ? 4 + (now / 80 % 4) * (1 + (bobber.shake || 0)) : 3; cx.beginPath(); cx.ellipse(x, y + 1, rr, rr / 2, 0, 0, Math.PI * 2); cx.fill();
     cx.fillStyle = '#F2EAD8'; cx.fillRect(Math.round(x) - 1, Math.round(y) - 2 + bob, 3, 2); cx.fillStyle = '#E0303A'; cx.fillRect(Math.round(x) - 1, Math.round(y) - 4 + bob, 3, 2); }
   // 사람을 정렬된 물건 사이에 끼워 넣기
   const R = o => ({ x: o.x, y: o.y, w: o.sw, h: o.sh });

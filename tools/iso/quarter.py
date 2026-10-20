@@ -28,6 +28,10 @@ fill('cobble', 54, 2, 70, 13)            # 일곱 등불 광장
 fill('stone', 6, 13, 20, 14)             # 저택 앞마당 돌
 for i in range(0, 4): fill('dirt', 11 + i // 2, 13, 13, 14)
 fill('grave', 54, 22, 67, 29)            # 작은 묘지
+POND = dict(id='pond_q', name='골목 연못', cx=20, cy=23, rx=5, ry=3.5)   # 낚시 연못
+for x in range(NX):
+    for y in range(NY):
+        if ((x + .5 - POND['cx']) / POND['rx']) ** 2 + ((y + .5 - POND['cy']) / POND['ry']) ** 2 < 1: T[(x, y)] = 'lake'
 for x in range(NX):
     for y in range(NY): T.setdefault((x, y), 'grass')
 GRASS = [hexc('#3E4E3A'), hexc('#36463A'), hexc('#46563E'), hexc('#3A4436')]
@@ -47,6 +51,9 @@ for y in range(H):
             if (fx * s_ + (int(fy * s_) % 2) * .5) % 1 < .1 or (fy * s_) % 1 < .12: c = hexc('#4E4856')
         elif t == 'grave':
             c = [hexc('#3A3E34'), hexc('#34382E'), hexc('#42463A')][random.randint(0, 2)]
+        elif t == 'lake':
+            c = hexc('#2E5A6A') if (int(fx * 3) + int(fy * 5)) % 7 else hexc('#4A7A8A')
+            if random.random() < .015: c = hexc('#A8E8F0')
         else:
             c = GRASS[(int(fx * 4) * 13 + int(fy * 4) * 7 + random.randint(0, 2)) % 4]
             if random.random() < .004: c = random.choice([hexc('#C86AE8'), hexc('#E8A050'), hexc('#8AE8C8')])
@@ -300,5 +307,5 @@ lights += [dict(p=P(62.5, 7.5), dy=-46, r=70, c=[255, 160, 60], a=.65, f=1), dic
 lights += [dict(p=P(o['box'][0] + .5, o['box'][1] + .5), dy=-3, r=14, c=[120, 240, 220], a=.5, f=0) for o in objs if o['spr'] == 'glowmush']
 AREAS = [dict(n='뱀파이어 저택', t=[12, 13]), dict(n='학교 박물관', t=[31, 13]), dict(n='낡은 연구 탑', t=[44, 13]), dict(n='일곱 등불 광장', t=[62, 9]), dict(n='마녀의 오두막', t=[9, 29]),
          dict(n='늑대인간 통나무집', t=[28, 29]), dict(n='비어 있는 등불대', t=[46, 28]), dict(n='작은 묘지', t=[60, 29]), dict(n='등불 시장 쪽 문', t=[4, 14])]
-json.dump(dict(W=W, H=H, NX=NX, NY=NY, OX=OX, OY=OY, objs=meta, lights=lights, areas=AREAS, start=[8, 14]), open('out/quarter.json', 'w'), ensure_ascii=False)
+json.dump(dict(W=W, H=H, NX=NX, NY=NY, OX=OX, OY=OY, objs=meta, lights=lights, areas=AREAS, water=[[x, y] for (x, y), t in T.items() if t == 'lake'], ponds=[dict(id=POND['id'], name=POND['name'], cx=POND['cx'], cy=POND['cy'], r=max(POND['rx'], POND['ry']) + 1.5)], start=[8, 14]), open('out/quarter.json', 'w'), ensure_ascii=False)
 print('objs', len(objs), 'sheet', sheet.size)

@@ -108,6 +108,15 @@ body:not(.inworld) #fishui{display:none}
 .fbar{position:relative;width:100%;height:30px;margin:6px 0;background:var(--line);border:1px solid var(--line2);border-radius:8px}
 .fbar .fz{position:absolute;top:0;bottom:0;background:var(--ok);border-radius:6px;opacity:.9}
 .fbar .fn{position:absolute;top:-6px;bottom:-6px;width:6px;margin-left:-3px;background:var(--gold);border-radius:3px;box-shadow:0 0 0 2px var(--bg)}
+.fpond{position:relative;width:100%;height:46px;margin:6px 0 2px;border:1px solid var(--line2);border-radius:10px;overflow:hidden;background:linear-gradient(#2E5A6A,#244A58);touch-action:none}
+.fpond::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 11px,rgba(255,255,255,.05) 11px 12px)}
+.fpond .fzone{position:absolute;top:0;bottom:0;background:rgba(110,230,140,.38);border-left:2px solid var(--ok);border-right:2px solid var(--ok);box-sizing:border-box;z-index:1}
+.fpond .fzone.in{background:rgba(110,230,140,.62)}
+.fpond .fbob{position:absolute;top:50%;width:14px;height:20px;margin:-10px 0 0 -7px;border-radius:7px 7px 6px 6px;background:linear-gradient(#E0303A 0 45%,#F2EAD8 45%);box-shadow:0 0 0 2px var(--bg),0 4px 0 rgba(0,0,0,.25);z-index:2}
+.fmeter{width:100%;height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.fmeter i{display:block;height:100%;width:0;background:var(--ok);border-radius:5px}
+.fmeter.pat i{background:var(--gold)}.fmeter.pat.low i{background:#E05A5A}
+.fctl .btn{flex:1;min-height:52px;touch-action:none;user-select:none;-webkit-user-select:none}
 .fstar{color:var(--gold);font-family:var(--f-body);font-size:var(--fs-s)}
 .fgot{display:flex;align-items:center;gap:8px;text-align:left}
 .fgot div{display:flex;flex-direction:column;gap:2px}
@@ -1306,10 +1315,20 @@ const rodLv = () => me.rod || 0;
 const fishNow = f => !f.time || f.time === houseNow();
 const TIME_NAME = { dew: '새벽', ember: '한낮', dusk: '노을', moon: '밤' };
 const pickW = list => { let r = Math.random() * list.reduce((t, x) => t + x.w, 0); for (const x of list){ r -= x.w; if (r <= 0) return x; } return list[list.length - 1]; };
-function rollFish(){
+// 낚시터: 호수·강·연못마다 낚이는 물고기의 한계(cap: 도감 번호)가 달라요. 연못은 작은 물고기만, 강은 중간까지, 호수는 전부
+const FISH_SPOT = {
+  lake: { name: '유령 호수', cap: 39 }, river: { name: '등불 강', cap: 33 }, pond_n: { name: '북쪽 연못', cap: 21 }, pond_ne: { name: '북동 연못', cap: 27 },
+  pond_se: { name: '남동 연못', cap: 30 }, pond_q: { name: '골목 연못', cap: 27 },
+};
+function fishSpotAt(x, y){
+  const m = World.meta(World.where()), P = (m?.ponds || []).map(q => ({ q, d: Math.hypot(x + .5 - q.cx, y + .5 - q.cy) })).filter(o => o.d <= o.q.r).sort((a, b) => a.d - b.d)[0];
+  if (P) return FISH_SPOT[P.q.id] || { name: P.q.name, cap: 21 };
+  return World.where() === 'campus' && x >= 38 && x <= 45 ? FISH_SPOT.river : FISH_SPOT.lake;
+}
+function rollFish(cap = 39){
   const L = rodLv() + (buffOn('rare') ? 1.5 : 0) + (me.perk?.rod_bonus ? .5 : 0);   // 요리 효과: 드문 물고기 · 캇파 ♥10 낚싯대 보너스
   if (Math.random() < .12 - L * .025) return JUNK[Math.floor(Math.random() * JUNK.length)];
-  return pickW(FISH.filter(fishNow).map(f => ({ ...f, w: f.w * (1 + L * .9 * f.i / 39) * (f.id === 'f_lord' && me.perk?.lord_hint && isFullMoon() ? 3 : 1) })));   // 캇파 ♥10: 보름 밤엔 호수의 주인이 가까이
+  return pickW(FISH.filter(f => fishNow(f) && f.i <= cap).map(f => ({ ...f, w: f.w * (1 + L * .9 * f.i / 39) * (f.id === 'f_lord' && me.perk?.lord_hint && isFullMoon() ? 3 : 1) })));   // 캇파 ♥10: 보름 밤엔 호수의 주인이 가까이
 }
 function dexAdd(k, cm){
   me.fdex = me.fdex || {}; const d = me.fdex[k] || { n: 0 }, isNew = !d.n;
@@ -1323,8 +1342,8 @@ function fishEnd(){ if (!fishing) return; clearTimeout(fishing.timer); cancelAni
 function fishShow(html){ const u = fishUI(); u.innerHTML = `<div class="fpan px">${html}</div>`; u.classList.add('on'); }
 World.onWater = (x, y) => {
   if (!me || fishing) return;
-  World.busyFish = true; World.hideBubble(); fishing = { x, y, st: 'wait' }; World.setBobber({ x, y });
-  fishShow(`<b>${rodIc(rodLv(), 24)} 찌를 던졌어요</b><span class="s">찌가 쏙 들어가면 화면을 눌러요${me.perk?.lord_hint && houseNow() === 'moon' ? `<br>캇파의 힌트: ${isFullMoon() ? '오늘 같은 보름 밤엔 호수의 주인이 가까이 와요' : '호수의 주인은 밤에 나와요. 보름이면 더 잘 와요'}` : ''}</span><button class="btn sm" data-fx="stop">그만하기</button>`);
+  World.busyFish = true; World.hideBubble(); fishing = { x, y, st: 'wait', spot: fishSpotAt(x, y) }; World.setBobber({ x, y });
+  fishShow(`<b>${rodIc(rodLv(), 24)} 찌를 던졌어요 · ${fishing.spot.name}</b><span class="s">찌가 쏙 들어가면 화면을 눌러요. 그다음엔 찌를 낚이는 쪽(초록 칸)에 두고 버텨요${me.perk?.lord_hint && houseNow() === 'moon' ? `<br>캇파의 힌트: ${isFullMoon() ? '오늘 같은 보름 밤엔 호수의 주인이 가까이 와요' : '호수의 주인은 밤에 나와요. 보름이면 더 잘 와요'}` : ''}</span><button class="btn sm" data-fx="stop">그만하기</button>`);
   fishing.timer = setTimeout(fishBite, (1800 + Math.random() * (5200 - rodLv() * 600)) * (buffOn('bite') ? .55 : 1) * (me.perk?.bait ? .85 : 1));   // 나비 ♥10 미끼
 };
 function fishBite(){
@@ -1337,27 +1356,54 @@ function fishMiss(msg){
   if (!fishing) return; clearTimeout(fishing.timer); cancelAnimationFrame(fishing.raf); fishing.st = 'done'; World.setBobber(null);
   fishShow(`<b>${msg}</b><div class="frow"><button class="btn sm go" data-fx="again">다시 던지기</button><button class="btn sm" data-fx="stop">그만</button></div>`);
 }
+// 입질 뒤: 물고기는 이쪽저쪽으로 끌어요. 찌를 낚이는 쪽(초록 칸)에 둔 채 일정 시간 버티면 올라와요.
+// 어려운 물고기일수록 찌가 거세게 요동치고(흔들림·확 당김), 버텨야 하는 시간이 길고, 초록 칸이 좁고, 자주 옮겨 가요.
+const FISH_HOLD = 'ArrowLeft ArrowRight a A d D'.split(' ');
 function fishReel(){
-  const f = rollFish(), L = rodLv(), g = f.grade || 1;
-  fishing.st = 'reel'; fishing.f = f; fishing.hits = 0; fishing.need = [1, 1, 1, 2, 2, 3][g];
-  fishing.zw = Math.max(.1, .3 - g * .035 + L * .03); fishing.zx = .2 + Math.random() * (.6 - fishing.zw); fishing.pos = 0; fishing.dir = 1; fishing.v = .55 + g * .16; fishing.last = performance.now();
-  World.setBobber({ x: fishing.x, y: fishing.y, bite: true });
-  fishShow(`<b>${f.junk ? '뭔가 걸렸어요!' : '물고기가 걸렸어요!'} <span class="fstar">${f.junk ? '' : STARS(g)}</span></b><div class="fbar"><i class="fz"></i><i class="fn"></i></div><span class="s" id="fhits">초록 칸에서 눌러요 · ${fishing.hits} / ${fishing.need}</span>`);
-  const loop = now => { if (!fishing || fishing.st !== 'reel') return; const dt = Math.min(.05, (now - fishing.last) / 1000); fishing.last = now;
-    fishing.pos += fishing.dir * fishing.v * dt; if (fishing.pos > 1){ fishing.pos = 1; fishing.dir = -1; } if (fishing.pos < 0){ fishing.pos = 0; fishing.dir = 1; }
-    const z = fishUI().querySelector('.fz'), n = fishUI().querySelector('.fn'); if (z){ z.style.left = fishing.zx * 100 + '%'; z.style.width = fishing.zw * 100 + '%'; n.style.left = fishing.pos * 100 + '%'; }
-    fishing.raf = requestAnimationFrame(loop); };
+  const f = rollFish(fishing.spot ? fishing.spot.cap : 39), L = rodLv(), g = f.junk ? 0.4 : (f.grade || 1);
+  const ph = [0, 1, 2].map(() => Math.random() * 6.28);
+  Object.assign(fishing, {
+    st: 'reel', f, pos: .5, dir: 0, prog: 0, pat: 1, t: 0, ph, last: performance.now(),
+    zw: Math.max(.14, Math.min(.34, .35 - g * .03 + L * .025)), zc: .5, zt: .5, zhold: 1.4,
+    T: f.junk ? 1.6 : 2 + g * .6,          // 초록 칸에 머물러야 하는 시간(초)
+    jit: .1 + g * .065, jf: 1 + g * .3,       // 찌가 흔들리는 세기·빠르기
+    yank: f.junk ? 0 : .08 + g * .035, yt: 1.2 + Math.random() * 1.5,   // 가끔 확 당겨요
+    spd: .95 + L * .06,                         // 내가 찌를 움직이는 속도(초당 칸 폭)
+  });
+  World.setBobber({ x: fishing.x, y: fishing.y, bite: true, shake: Math.min(1.6, fishing.jit * 3) });
+  fishShow(`<b>${f.junk ? '뭔가 걸렸어요!' : '물고기가 걸렸어요!'} <span class="fstar">${f.junk ? '' : STARS(g)}</span></b>
+    <div class="fpond"><i class="fzone"></i><i class="fbob"></i></div>
+    <div class="fmeter"><i class="fpg"></i></div><div class="fmeter pat"><i class="fpt"></i></div>
+    <span class="s" id="fhits">찌를 초록 칸에 두고 버텨요 (◀ ▶ 버튼을 누르고 있어요)</span>
+    <div class="frow fctl"><button class="btn" data-fdir="-1">◀ 왼쪽</button><button class="btn" data-fdir="1">오른쪽 ▶</button></div>`);
+  const ui = fishUI(), z = ui.querySelector('.fzone'), bob = ui.querySelector('.fbob'), pg = ui.querySelector('.fpg'), pt = ui.querySelector('.fpt'), pm = ui.querySelector('.fmeter.pat'), tx = ui.querySelector('#fhits');
+  z.style.width = fishing.zw * 100 + '%';
+  const loop = now => {
+    if (!fishing || fishing.st !== 'reel') return;
+    const F = fishing, dt = Math.min(.05, (now - F.last) / 1000); F.last = now; F.t += dt;
+    // 물고기의 요동: 여러 사인파를 섞어 불규칙하게 + 가끔 확 당겨요
+    const w = F.t * 6.283, j = F.jit * (Math.sin(w * F.jf * .5 + F.ph[0]) + .6 * Math.sin(w * F.jf * .83 + F.ph[1]) + .4 * Math.sin(w * F.jf * 1.37 + F.ph[2])) / 2;
+    F.yt -= dt; if (F.yt <= 0 && F.yank){ F.pos += (Math.random() < .5 ? -1 : 1) * F.yank; F.yt = (1.4 + Math.random() * 1.8) * (1 - F.f.grade * .08); }
+    F.pos = Math.max(0, Math.min(1, F.pos + (F.dir * F.spd + j) * dt));
+    // 낚이는 쪽(초록 칸)이 슬며시 옮겨 가요
+    F.zhold -= dt; if (F.zhold <= 0){ let n; do n = F.zw / 2 + .04 + Math.random() * (1 - F.zw - .08); while (Math.abs(n - F.zc) < .25); F.zt = n; F.zhold = 2.6 - Math.min(1.4, F.jit * 1.4) + Math.random() * 1.2; }
+    F.zc += Math.sign(F.zt - F.zc) * Math.min(Math.abs(F.zt - F.zc), (.12 + F.jit * .25) * dt);
+    const inz = Math.abs(F.pos - F.zc) <= F.zw / 2;
+    F.prog = Math.max(0, Math.min(1, F.prog + (inz ? dt / F.T : -dt / F.T * .5)));
+    F.pat = Math.max(0, Math.min(1, F.pat + (inz ? dt * .2 : -dt * (.17 + (F.f.junk ? 0 : F.f.grade * .025)))));
+    z.style.left = (F.zc - F.zw / 2) * 100 + '%'; z.classList.toggle('in', inz);
+    bob.style.left = (F.pos * 100 + (Math.random() - .5) * F.jit * 5) + '%'; pg.style.width = F.prog * 100 + '%'; pt.style.width = F.pat * 100 + '%'; pm.classList.toggle('low', F.pat < .35);
+    tx.textContent = inz ? '좋아요! 그대로 버텨요' : F.pat < .35 ? '놓치겠어요! 찌를 초록 칸으로!' : '찌를 초록 칸 쪽으로 옮겨요';
+    if (F.prog >= 1) return fishCatch();
+    if (F.pat <= 0) return fishMiss(F.f.junk ? '휙, 놓쳤어요' : `앗, ${F.f.grade >= 3 ? '커다란 ' : ''}물고기가 도망갔어요`);
+    F.raf = requestAnimationFrame(loop);
+  };
   fishing.raf = requestAnimationFrame(loop);
 }
 function fishTap(){
   if (!fishing) return;
   if (fishing.st === 'wait'){ fishMiss('너무 빨랐어요! 물고기가 도망갔어요'); return; }
   if (fishing.st === 'bite'){ clearTimeout(fishing.timer); fishReel(); return; }
-  if (fishing.st !== 'reel') return;
-  if (fishing.pos >= fishing.zx && fishing.pos <= fishing.zx + fishing.zw){
-    fishing.hits++; if (fishing.hits >= fishing.need) return fishCatch();
-    fishing.zx = .05 + Math.random() * (.9 - fishing.zw); fishing.v *= 1.15; $('#fhits').textContent = `한 번 더! · ${fishing.hits} / ${fishing.need}`;
-  } else fishMiss(fishing.f.junk ? '휙, 놓쳤어요' : `앗, ${fishing.f.grade >= 3 ? '커다란 ' : ''}물고기가 도망갔어요`);
 }
 function fishCatch(){
   const f = fishing.f; cancelAnimationFrame(fishing.raf); fishing.st = 'done'; World.setBobber(null);
@@ -1373,8 +1419,13 @@ document.addEventListener('pointerdown', e => {
   const u = fishUI(); if (!u || !u.classList.contains('on')) return;
   const b = e.target.closest('[data-fx]');
   if (b){ e.preventDefault(); const k = b.dataset.fx, pos = fishing && [fishing.x, fishing.y]; fishEnd(); if (k === 'again' && pos) World.onWater(pos[0], pos[1]); return; }
-  if (u.contains(e.target)){ e.preventDefault(); fishTap(); }
+  const d = e.target.closest('[data-fdir]'); if (d && fishing && fishing.st === 'reel'){ e.preventDefault(); fishing.dir = +d.dataset.fdir; return; }
+  if (u.contains(e.target)){ e.preventDefault(); if (!fishing || fishing.st !== 'reel') fishTap(); }
 });
+// 버튼을 떼면 찌가 멈춰요 (키보드 ← → · A D 도 같아요)
+['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, () => { if (fishing && fishing.st === 'reel') fishing.dir = 0; }));
+document.addEventListener('keydown', e => { if (!fishing || !FISH_HOLD.includes(e.key)) return; if (fishing.st === 'bite' || fishing.st === 'wait') return; if (fishing.st === 'reel'){ e.preventDefault(); fishing.dir = (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') ? -1 : 1; } });
+document.addEventListener('keyup', e => { if (fishing && fishing.st === 'reel' && FISH_HOLD.includes(e.key)) fishing.dir = 0; });
 // ---------- 채집: 날마다 마을 곳곳 16군데가 반짝여요 (사람마다 자리가 달라요) ----------
 const seedRand = s => { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
 function spotsToday(){
@@ -1404,7 +1455,8 @@ const sellMul = k => { let h = 0; for (const c of k) h = (h * 31 + c.charCodeAt(
 const sellPay = (k, base) => Math.max(1, Math.round(base * sellMul(k)));
 const sellTag = k => { const m = sellMul(k); return m > 1.2 ? '<b style="color:var(--ok)">▲ 비싸게 쳐줘요</b>' : m < .8 ? '<b style="color:var(--bad,#c55)">▼ 싸게 쳐줘요</b>' : '보통'; };
 const cropBase = k => { const x = SEED_INFO[k]; return x ? Math.max(3, Math.round(x.price * .6 + 3)) : 0; };
-let fsTab = 'dex', fsMsg = '', fsKind = 'fish', fsPg = 0, fsSel = null, fsSellPg = 0;
+const FISH_GO = [['유령 호수', 'campus', [56, 53], 40], ['등불 강', 'campus', [38, 21], 34], ['북쪽 연못', 'campus', [26, 9], 22], ['북동 연못', 'campus', [74, 10], 28], ['남동 연못', 'campus', [75, 43], 31], ['골목 연못', 'quarter', [20, 26], 28]];   // [이름, 맵, 물가 자리, 낚이는 물고기 수]
+let fsGo = false, fsTab = 'dex', fsMsg = '', fsKind = 'fish', fsPg = 0, fsSel = null, fsSellPg = 0;
 const ZONE_NAME = { f: '숲', g: '묘지', l: '호숫가', p: '들판' };
 // 쪽 넘김: 전체 n개를 per개씩. 버튼은 data-<attr>="쪽 번호" (요리 화면도 같이 써요)
 const pgSlice = (arr, pg, per) => arr.slice(pg * per, pg * per + per);
@@ -1420,7 +1472,7 @@ function renderFish(){
     const list = fsKind === 'fish' ? FISH : FORAGE, PER = 20; fsPg = pgClamp(fsPg, list.length, PER);
     const sel = fsSel && CATCH_INFO[fsSel], sd = sel && D[sel.id];
     const detail = sel ? `<div class="fdet">${sd ? ic(sel.id) : '<span class="q fcell" style="min-height:0;padding:0;border:0;background:none">?</span>'}<div class="main"><span class="t">No.${sel.i + 1} ${sd ? esc(sel.name) : '???'} <span class="fst">${STARS(sel.grade)}</span></span><span class="d">${sd ? (sel.cm ? `최고 기록 ${sd.cm}cm · ${sd.n}마리 낚음` : `${sd.n}개 주움`) + ' · ' : ''}${where(sel)}${sd ? ` · 가게에서 ${sel.pay}G` : ''}</span></div></div>`
-      : hint(fsMsg, fsKind === 'fish' ? `유령 호수 물가를 누르면 낚시해요 · 지금은 ${TIME_NAME[now]} · 칸을 누르면 자세히 봐요` : '마을 곳곳의 반짝이는 곳을 누르면 주워요 · 칸을 누르면 자세히 봐요');
+      : hint(fsMsg, fsKind === 'fish' ? `물가를 누르면 낚시해요 · 호수·강·연못마다 낚이는 물고기가 달라요 · 지금은 ${TIME_NAME[now]} · 칸을 누르면 자세히 봐요` : '마을 곳곳의 반짝이는 곳을 누르면 주워요 · 칸을 누르면 자세히 봐요');
     body = `<div class="seg" style="grid-template-columns:1fr 1fr"><button data-fsk="fish" class="${fsKind === 'fish' ? 'on' : ''}">🐟 물고기 ${nf}/40</button><button data-fsk="forage" class="${fsKind === 'forage' ? 'on' : ''}">🌿 채집물 ${ng}/50</button></div>
       ${detail}<div class="grid fgrid">${pgSlice(list, fsPg, PER).map(cell).join('')}</div>${pgNav('fspg', fsPg, list.length, PER)}`;
   }
@@ -1448,12 +1500,14 @@ function renderFish(){
       ${have.length ? `<div class="box px">${pgSlice(have, fsSellPg, PER).map(k => { const x = CATCH_INFO[k]; return `<div class="li">${ic(k)}<div class="main"><span class="t">${esc(x.name)} ×${me.inv[k]}</span><span class="d">${x.junk ? '쓰레기' : STARS(x.grade)} · 1개 ${sellPay(k, x.pay)}G · ${sellTag(k)}</span></div><button class="btn sm" data-fsell="${k}">1개</button><button class="btn sm go" data-fsall="${k}">다</button></div>`; }).join('')}</div>${pgNav('fsspg', fsSellPg, have.length, PER)}
       <button class="btn gold" id="fsAll" style="width:100%">전부 팔기 · ${total.toLocaleString()}G</button>` : '<div class="hint">팔 물건이 없어요. 호수에서 낚시하거나 마을에서 주워 와요.</div>'}`;
   }
-  frame(null, '낚시 · 채집', `유령 호수와 등불 시장 · ${RODS[L].name}`, `
+  frame(null, '낚시 · 채집', `호수·강·연못 · ${RODS[L].name}`, `
     <div class="seg" style="grid-template-columns:repeat(4,1fr)">${tabs.map(([k, l]) => `<button data-fst="${k}" class="${fsTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
     <section class="sec">${body}</section>
-    <div style="display:flex;gap:8px"><button class="btn go" id="fsLake" style="flex:1">🎣 유령 호수로</button>${backBtn}</div>`);
+    <div style="display:flex;gap:8px"><button class="btn go" id="fsLake" style="flex:1">🎣 낚시터로</button>${backBtn}</div>
+    ${fsGo ? `<div class="grid" style="grid-template-columns:repeat(2,1fr)">${FISH_GO.map((o, i) => `<button class="btn sm" data-fgo="${i}">${o[0]}<span class="s sub"> · 물고기 ${o[3]}번까지</span></button>`).join('')}</div>` : ''}`);
   $('#back').onclick = closeSheet;
-  $('#fsLake').onclick = () => { closeSheet(); World.teleport('campus', [56, 53]); };
+  $('#fsLake').onclick = () => { fsGo = !fsGo; renderFish(); };
+  on('[data-fgo]', b => { const o = FISH_GO[+b.dataset.fgo]; closeSheet(); World.teleport(o[1], o[2]); });
   on('[data-fst]', b => { fsTab = b.dataset.fst; fsMsg = ''; renderFish(); });
   on('[data-fsk]', b => { fsKind = b.dataset.fsk; fsPg = 0; fsSel = null; fsMsg = ''; renderFish(); });
   on('[data-fspg]', b => { fsPg = +b.dataset.fspg; renderFish(); });
