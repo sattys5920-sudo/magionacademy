@@ -639,14 +639,15 @@ function glow(r, c){ const k = r + c.join(); if (glowCache[k]) return glowCache[
 let bright = 0; const BRIGHT = [[160, 140, 200], [205, 190, 230], [120, 100, 165]], BRIGHT_NEXT = ['밝게', '어둡게', '보통'];
 // 하늘: 현실 시간을 따라가요 (World.hourNow 로 시각을 바꿀 수 있어요: 관리자가 시간대를 정할 때). rgb = 곱하기 색, n = 밤 정도 0~1 (null = 밤색)
 World.hourNow = () => { const d = new Date(); return d.getHours() + d.getMinutes() / 60; };
-const SKYK = [   // [시각, 곱하기 색(null=밤색), 밤 정도, 밝히기 색(화면 합성으로 어두운 그림을 끌어올려요)]
-  [0, null, 1, [0, 0, 0]], [4.5, null, 1, [0, 0, 0]], [5.5, [150, 125, 175], .9, [26, 16, 34]], [6.5, [225, 160, 170], .65, [56, 38, 48]], [7.8, [255, 222, 200], .3, [58, 50, 52]],
-  [9.5, [255, 250, 245], .08, [72, 74, 82]], [11.5, [255, 255, 255], 0, [84, 90, 108]], [15.5, [255, 252, 244], 0, [80, 84, 96]], [17.3, [255, 214, 170], .25, [66, 52, 46]],
-  [18.8, [238, 150, 150], .6, [80, 40, 44]], [20.2, [190, 135, 185], .85, [30, 16, 36]], [21.5, null, 1, [0, 0, 0]], [24, null, 1, [0, 0, 0]]];
+const SKYK = [   // [시각, 곱하기 색(null=밤색), 밤 정도, 밝기 배율(그림 자체를 밝혀요: 0=그대로, 1=2배)]
+  [0, null, 1, 0], [4.5, null, 1, 0], [5.6, [175, 145, 190], .85, .15], [6.6, [255, 190, 175], .6, .55], [7.8, [255, 232, 200], .28, 1.15],
+  [9.5, [255, 246, 232], .08, 1.5], [11.5, [236, 246, 255], 0, 1.75], [15.5, [255, 250, 236], 0, 1.6], [17.3, [255, 205, 150], .25, 1.0],
+  [18.8, [245, 140, 125], .6, .35], [20.2, [190, 135, 185], .85, 0], [21.5, null, 1, 0], [24, null, 1, 0]];
+let skyTmp = null;
 function skyNow(){
   const h = ((World.hourNow() % 24) + 24) % 24, N = BRIGHT[bright]; let i = 1; while (i < SKYK.length - 1 && SKYK[i][0] <= h) i++;
-  const a = SKYK[i - 1], b = SKYK[i], k = (h - a[0]) / (b[0] - a[0] || 1), A = a[1] || N, B = b[1] || N, mix = (x, y) => x.map((v, j) => Math.round(v + (y[j] - v) * k));
-  return { c: mix(A, B), n: a[2] + (b[2] - a[2]) * k, up: mix(a[3], b[3]) };
+  const a = SKYK[i - 1], b = SKYK[i], k = (h - a[0]) / (b[0] - a[0] || 1), A = a[1] || N, B = b[1] || N;
+  return { c: A.map((v, j) => Math.round(v + (B[j] - v) * k)), n: a[2] + (b[2] - a[2]) * k, g: a[3] + (b[3] - a[3]) * k };
 }
 
 const fx = [];
@@ -687,7 +688,7 @@ function frame(now){
     if (camX === null){ camX = tx; camY = ty; } camX += (tx - camX) * Math.min(1, dt * 8); camY += (ty - camY) * Math.min(1, dt * 8); }
   const ix = Math.round(camX), iy = Math.round(camY); camIX = ix; camIY = iy;
   const view = { x: ix - 4, y: iy - 4, w: VW + 8, h: VH + 8 };
-  out.setTransform(KPX, 0, 0, KPX, 0, 0); out.fillStyle = M.fill || (M.indoor ? '#0C0715' : '#1E2A1C'); out.fillRect(0, 0, VW, VH);
+  out.setTransform(KPX, 0, 0, KPX, 0, 0); out.fillStyle = M.fill || (M.indoor ? '#0C0715' : (() => { const q = skyNow(), d = Math.max(0, 1 - q.n); return `rgb(${[30, 42, 28].map((v, j) => Math.round(v + ([58, 86, 112][j] - v) * d))})`; })()); out.fillRect(0, 0, VW, VH);
   out.setTransform(KPX, 0, 0, KPX, -ix * KPX, -iy * KPX);
   const cx = out;
   cx.drawImage(A.bg, Math.max(0, ix), Math.max(0, iy), VW, VH, Math.max(0, ix), Math.max(0, iy), VW, VH);
@@ -724,8 +725,15 @@ function frame(now){
   fx.forEach(b => { b.y -= b.v * dt; b.life -= dt; }); while (fx.length && fx[0].life <= 0) fx.shift();
   fx.forEach(b => { cx.fillStyle = b.c; cx.fillRect(Math.round(b.x), Math.round(b.y), 1, 1); });
   // 빛: 실내는 늘 어둑, 바깥은 시간대에 따라
-  const SK = M.indoor ? { c: [150, 130, 175], n: 1, up: [0, 0, 0] } : skyNow(); skyN = SK.n;
-  if (SK.up[0] + SK.up[1] + SK.up[2] > 6){ cx.globalCompositeOperation = 'screen'; cx.fillStyle = `rgb(${SK.up})`; cx.fillRect(ix, iy, VW, VH); }
+  const SK = M.indoor ? { c: [150, 130, 175], n: 1, g: 0 } : skyNow(); skyN = SK.n;
+  if (SK.g > .03){   // 낮에는 그림 자체를 밝혀요 (안개를 덮는 게 아니라 색을 키워서 또렷하게)
+    const W = cv.width, H = cv.height; if (!skyTmp || skyTmp.width !== W || skyTmp.height !== H){ skyTmp = document.createElement('canvas'); skyTmp.width = W; skyTmp.height = H; }
+    const t = skyTmp.getContext('2d'); t.globalCompositeOperation = 'copy'; t.drawImage(cv, 0, 0);
+    cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); cx.globalCompositeOperation = 'lighter';
+    for (let r = SK.g; r > .02; r -= 1){ cx.globalAlpha = Math.min(1, r); cx.drawImage(skyTmp, 0, 0); }
+    const lf = Math.min(1, SK.g); cx.globalAlpha = 1; cx.globalCompositeOperation = 'screen'; cx.fillStyle = `rgb(${Math.round(38 * lf)},${Math.round(50 * lf)},${Math.round(70 * lf)})`; cx.fillRect(0, 0, cv.width, cv.height);   // 가장 어두운 그림자만 하늘빛으로 살짝
+    cx.restore();
+  }
   if (SK.n > .02 || SK.c.some(v => v < 254)){
     cx.globalCompositeOperation = 'multiply'; cx.fillStyle = `rgb(${SK.c})`; cx.fillRect(ix, iy, VW, VH);
     cx.globalCompositeOperation = 'lighter';
