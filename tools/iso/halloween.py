@@ -31,6 +31,7 @@ fill('dirt', 2, 26, 39, 29)              # 학교 동서 길 → 다리1
 fill('dirt', 2, 51, 39, 54)              # 아래 동서 길 → 다리2
 fill('dirt', 6, 37, 9, 51); fill('dirt', 28, 37, 31, 51)
 fill('soil', 2, 56, 15, 69)              # 호박밭
+fill('dirt', 19, 63, 39, 68)             # 온실·사육장 앞 넓은 마당: 남북 길에서 두 문까지 곧장 이어져요
 # 다리
 fill('bridge', 39, 26, 45, 29); fill('bridge', 39, 51, 45, 54)
 # 마을
@@ -134,10 +135,10 @@ def toxic_house(img):
     r1, r2 = up(P(x0, (y0 + y1) / 2), h + 18), up(P(x1, (y0 + y1) / 2), h + 18)
     poly(d, [Tt, R, r2, r1], hexc('#3A6A5A', 215)); poly(d, [L, B, r2, r1], hexc('#5A9A7A', 230)); poly(d, [R, B, r2], hexc('#4A8A6A', 220))
     for k in range(0, 9): d.line([up(P(x0 + k, y1), h), up(P(x0 + k, (y0 + y1) / 2), h + 18)], fill=fr)
-unique('toxic', [18, 56, 26, 63], toxic_house, door=dict(tile=[22, 63], to='toxic', label='독초 온실', spawn=[12, 16]))
+unique('toxic', [18, 56, 26, 63], toxic_house, door=dict(tile=[22, 63], to='toxic', label='독초 온실', spawn=[17, 21]))
 # 사육장 건물: 안에 학생 12명의 우리가 있어요
 unique('barn', [29, 57, 36, 63], combo(building(29, 57, 36, 63, 44, hexc('#8A4A3A'), hexc('#4A2A22'), hexc('#5A3A2E'), 26, wins_g(14, ((10, 12), (34, 12))), doors=[('L', 20, 16)])),
-       door=dict(tile=[32, 63], to='barn', label='사육장', spawn=[16, 25]))
+       door=dict(tile=[32, 63], to='barn', label='사육장', spawn=[21, 31]))
 # 마을: 뱀파이어 저택
 unique('manor', [57, 3, 71, 12], building(57, 3, 71, 12, 70, hexc('#3E3446'), hexc('#1E1824'), hexc('#2A1E30'), 40, lambda s, l: [(u, v, 8, 18) for u in range(10, int(l) - 8, 14) for v in (12, 42) if not (s == 'L' and abs(u - 44) < 10)],
        doors=[('L', 48, 14)]), door=dict(tile=[63, 12], to=None, label='뱀파이어 저택'))
@@ -343,10 +344,10 @@ put('scarecrow', 'scarecrow', 8, 61)
 # 사육장 (울타리 + 박쥐집·고양이·까마귀)
 FN = set((x, 56) for x in range(28, 38)) | set((x, 68) for x in range(28, 38)) | set((28, y) for y in range(56, 69)) | set((37, y) for y in range(56, 69))
 FN -= {(28, 61), (28, 62)}
-for (x, y) in sorted(FN):
-    if (x, y) not in occupied: put('fence', f'iron{int((x + 1, y) in FN)}{int((x, y + 1) in FN)}', x, y)
-put('blackcat', 'blackcat', 30, 66, solid=False, act=('사육부 검은 고양이', '쓰다듬기'))
-put('crow', 'crow', 35, 66, act=('사육부 까마귀', '모이 주기'))
+# 울타리는 걷는 길을 막아서 없앴어요. 두 건물 앞 마당(x 17~38, y 63~69)은 나무도 심지 않아요
+occupied |= set((x, y) for x in range(17, 39) for y in range(63, 70))
+put('blackcat', 'blackcat', 37, 60, solid=False, act=('사육부 검은 고양이', '쓰다듬기'))
+put('crow', 'crow', 37, 58, act=('사육부 까마귀', '모이 주기'))
 # 묘지
 GF = set((x, 39) for x in range(46, 57)) | set((x, 50) for x in range(46, 57)) | set((46, y) for y in range(39, 51)) | set((56, y) for y in range(39, 51))
 GF -= {(51, 50), (52, 50)}
