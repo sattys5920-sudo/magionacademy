@@ -8,7 +8,9 @@ L = json.load(open(I + '/out/pclass.json'))
 L.update(indoor=True, spawnIn=[9, 12], vw=185, fill='#0C0715', bgSrc='art/iso/pclass_bg.png', objSrc='art/iso/pclass_obj.png', title='물약 교실', sub='본관 1층 · 반짝이는 곳으로 나가요')
 Q = json.load(open(I + '/out/quarter.json'))   # quarter.py: 시장 거리 동쪽 끝에서 이어지는 의뢰인 마을 (들어갈 때 불러와요)
 Q.update(bgSrc='art/iso/quarter_bg.png', objSrc='art/iso/quarter_obj.png', title='그림자 골목', sub='의뢰인들이 사는 마을 · 서쪽 문으로 시장에 돌아가요', fill='#140E1E', lazy=True)
-MAPS = {'campus': {'meta': camp}, 'lab': {'meta': L}, 'quarter': {'meta': Q}}
+A = json.load(open(I + '/out/arena.json'))     # arena.py: 놀이(호박 줍기 …)를 하는 전용 맵 (게임이 시작되면 이리로 와요)
+A.update(bgSrc='art/iso/arena_bg.png', objSrc='art/iso/arena_obj.png', title='놀이 마당', sub='놀이가 끝나면 원래 자리로 돌아가요', fill='#140E1E', lazy=True)
+MAPS = {'campus': {'meta': camp}, 'lab': {'meta': L}, 'quarter': {'meta': Q}, 'arena': {'meta': A}}
 for k in ('candy', 'craft', 'toxic', 'barn', 'pen'):
     MAPS[k] = {'meta': json.load(open(I + '/out/%s.json' % k))}
 # 기숙사 휴게실 (dorms.py): 4곳 × 6단계, 개인 방·복도 4개씩. 들어갈 때 불러와요 (lazy)

@@ -1415,7 +1415,7 @@ function renderFish(){
 // games/<방> = { g 놀이, host, hn 방장 이름, m 장소, st lobby·play·end, at, t0 시작 시각, seed, ord 참가 순서, p: { uid: { n, s 점수, d 끝남 } }, c 줍기·때리기 차지, co 협동 상태 }
 // 내용(호박 자리, 묘비, 유령, 주문, 별)은 seed로 모두 똑같이 만들고, 먼저 차지하는 건 트랜잭션으로 한 명만 인정해요
 const GAMES = {
-  pumpkin: { name: '호박 줍기 경주', ic: '🎃', coop: false, min: 1, max: 8, dur: 60, desc: '호박밭에 솟는 호박을 먼저 주워요 · 황금 +5 · 썩은 호박 -2' },
+  pumpkin: { name: '호박 줍기 경주', ic: '🎃', coop: false, min: 1, max: 8, dur: 60, desc: '놀이 마당에 솟는 호박을 먼저 주워요 · 황금 +5 · 썩은 호박 -2' },
   broom: { name: '빗자루 경주', ic: '🧹', coop: false, min: 1, max: 8, dur: 90, desc: '모두 같은 코스! 화면을 눌러 날며 묘비를 피해요' },
   whack: { name: '유령 뿅망치', ic: '🔨', coop: false, min: 1, max: 8, dur: 45, desc: '무덤에서 올라온 유령을 먼저 때려요 · 황금 +3 · 박쥐 -1 기절' },
   cauldron: { name: '마녀의 솥 대작전', ic: '🧪', coop: true, min: 2, max: 8, dur: 180, desc: '재료를 나눠 가져요 · 주문서 순서대로 넣어 솥을 끓여요' },
@@ -1454,13 +1454,13 @@ function joinRoom(id, mine){
   roomOff = GDB.on('games/' + id, v => onRoom(v));
 }
 function leaveRoom(){
-  const id = room, v = roomV; roomOff?.(); roomOff = null; room = null; roomV = null; gameEnd(); gameHide();
+  const id = room, v = roomV; roomOff?.(); roomOff = null; room = null; roomV = null; gameEnd(); gameHide(); gameReturn();
   if (!id || !v) return;
   if (v.st === 'lobby'){ if (v.host === myId()) GDB.set('games/' + id, null); else GDB.set(`games/${id}/p/${myId()}`, null); }
 }
 function onRoom(v){
   if (!room) return;
-  if (!v){ toast('방이 닫혔어요'); room = null; roomOff?.(); gameEnd(); gameHide(); return; }
+  if (!v){ toast('방이 닫혔어요'); room = null; roomOff?.(); gameEnd(); gameHide(); gameReturn(); return; }
   roomV = v; const Gm = GAMES[v.g];
   if (v.st === 'lobby'){
     if (!v.p?.[myId()]){ toast('방에서 나왔어요'); return leaveRoom(); }
@@ -1493,9 +1493,18 @@ function syncInvites(){
   c.hidden = !inv || !!room; if (inv && !room){ c.textContent = `${GAMES[inv[1].g].ic} ${inv[1].hn}의 ${GAMES[inv[1].g].name} · 참가`; c.onclick = () => joinRoom(inv[0]); }
 }
 // ---------- 놀이 공통 ----------
+// 놀이는 전용 맵 「놀이 마당」에서 해요: 시작하면 모두 이리로 오고, 끝나거나 나가면 원래 있던 자리로 돌아가요 (장식 호박의 「수확하기」 같은 버튼이 끼어들지 않아요)
+const ARENA_START = i => [11 + (i % 4) * 4, 11 + Math.floor(i / 4) * 3];
+let gameRet = null;
+function gameGoArena(i){
+  const m = World.myPos && World.myPos(); if (World.where() !== 'arena' && m) gameRet = { map: m.m, x: Math.round(m.x), y: Math.round(m.y) };
+  World.teleport('arena', ARENA_START(i));
+}
+function gameReturn(){ const r = gameRet; gameRet = null; if (r && World.where() === 'arena') World.teleport(r.map, [r.x, r.y]); }
 function gameStart(v){
   const Gm = GAMES[v.g], ord = v.ord || Object.keys(v.p), me_i = ord.indexOf(myId());
   G = { g: v.g, id: room, v, ord, me_i, n: ord.length, t0: v.t0, end: v.t0 + Gm.dur * 1000 * (window.__gameDurK || 1), R: k => seedRand(v.seed + ':' + k), score: 0, raf: 0, timers: [] };
+  gameGoArena(me_i);
   ({ pumpkin: pkStart, broom: brStart, whack: whStart, cauldron: caStart, ghost: ghStart, stars: stStart })[v.g]();
   const tick = () => { if (!G) return; G.loop && G.loop(); if (G && now2() > G.end + 300 && !G.over) gameOver(); if (G) G.raf = requestAnimationFrame(tick); };
   G.raf = requestAnimationFrame(tick);
@@ -1532,17 +1541,16 @@ function recordBest(g, sc){
   if (solo){ me.grec = me.grec || {}; const k = g + weekKey(); if (sc > (me.grec[k] || 0)){ me.grec[k] = sc; save(); } return; }
   GDB.tx(`records/${g}/${weekKey()}/${uid}`, cur => (cur || 0) >= sc ? undefined : Math.max(0, Math.min(100000, sc)));
 }
-// ---------- 1. 호박 줍기 경주: 호박밭에서 진짜로 걸어 다니며 주워요 ----------
-const PK_FIELD = [3, 57, 14, 68];
+// ---------- 1. 호박 줍기 경주: 놀이 마당에서 진짜로 걸어 다니며 주워요 ----------
+const PK_FIELD = [7, 7, 27, 21];   // 놀이 마당 안쪽 풀밭
 function pkStart(){
   const R = G.R('pk'), list = [];
   for (let i = 0, t = 0; t < GAMES.pumpkin.dur; i++){ t += .35 + R() * .45; const r = R(); list.push({ i, t, x: PK_FIELD[0] + Math.floor(R() * (PK_FIELD[2] - PK_FIELD[0])), y: PK_FIELD[1] + Math.floor(R() * (PK_FIELD[3] - PK_FIELD[1])), k: r < .08 ? 'g' : r < .2 ? 'r' : 'p', life: 6 + R() * 3 }); }
   G.pk = list; G.claim = {};
-  World.teleport('campus', [8 + (G.me_i % 4), 56 + Math.floor(G.me_i / 4)]);
   G.sync = v => { G.claim = v.c || {}; };
   G.loop = () => {
     const t = (now2() - G.t0) / 1000, live = G.pk.filter(p => t >= p.t && t < p.t + p.life && !G.claim[p.i] && World.isFree(p.x, p.y)).map(p => ({ x: p.x, y: p.y, k: p.k, id: p.i }));
-    const key = live.map(p => p.id).join(); if (key !== G.lastKey){ G.lastKey = key; World.setSpots('campus', live); }
+    const key = live.map(p => p.id).join(); if (key !== G.lastKey){ G.lastKey = key; World.setSpots('arena', live); }
     const h = $('#ghud'); if (h) h.innerHTML = `<b>${GAMES.pumpkin.ic} ${gCount() ? `${gCount()}초 뒤 시작!` : `남은 시간 ${gLeft()}초`}</b>${scoreBoard(roomV || G.v)}`;
   };
   gameShow(`<div id="ghud" class="ghud px"></div><button class="btn sm gquit" data-gx="leave">나가기</button>`, 'hudonly');
