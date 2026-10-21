@@ -19,13 +19,14 @@ POCKETS = {'hazel'}
 HOLES = {'frankie': [(.324, .576), (.675, .576)]}
 # 한 표정만 확대돼서 뽑혔을 때: 그 표정을 (배율, 왼쪽, 위)로 줄여 옮기고, 모든 표정을 같이 잘라요 (왼, 위, 오른, 아래)
 FIT = {'boo': {'happy': (.83, 59, 71)}}
-CROP = {'boo': (66, 0, 798, 1062)}
+WHITE_MIN = {'mirabel': 253}   # 붕대가 흰색에 가까워서, 배경(순백)만 지워지게 문턱을 높여요
+CROP = {'boo': (66, 0, 798, 1062), 'mirabel': (41, 0, 837, 1090)}
 def fit(a, t):
     s, dx, dy = t; H, W = a.shape[:2]
     im = Image.fromarray(a).resize((round(W * s), round(H * s)), Image.NEAREST)
     c = Image.new('RGB', (W, H), (255, 255, 255)); c.paste(im, (dx, dy)); return np.array(c)
 def cut(a, pid=None):
-    rgb = a[..., :3].astype(int); white = (rgb.min(-1) > 225) & (rgb.max(-1) - rgb.min(-1) < 25)
+    rgb = a[..., :3].astype(int); white = (rgb.min(-1) > WHITE_MIN.get(pid, 225)) & (rgb.max(-1) - rgb.min(-1) < 25)
     reg = np.zeros_like(white); reg[0, :] = white[0, :]; reg[-1, :] = white[-1, :]; reg[:, 0] = white[:, 0]; reg[:, -1] = white[:, -1]
     for fx, fy in HOLES.get(pid, []):
         y, x = int(fy * a.shape[0]), int(fx * a.shape[1]); reg[y, x] = white[y, x]
