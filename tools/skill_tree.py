@@ -41,6 +41,20 @@ T = {
             ('함정', [('덫 설치','s','gear'),('지뢰','d','bomb'),('전기 그물','S','bolt'),('연쇄 함정','D','gear'),('대지 폭파','D','burst')]),
             ('폭탄', [('수류탄','d','bomb'),('접착탄','s','bomb'),('연막탄','w','ghost'),('시한폭탄','c','bomb'),('집중 포화','D','bomb')])],
 }
+OV = {  # 같은 직업 안에서 그림이 겹치지 않게 이름별로 모양을 바꿔요
+ 'warrior': {'강타':'fist','대지 가르기':'rock','분노의 일격':'fire','되받아치기':'spear','파쇄':'hammer','폭풍 도끼':'cloud','회전 베기':'swirl','전장의 포효':'trumpet'},
+ 'black': {'화염구':'fireball','불씨':'ember','지옥불':'skull','메테오':'rock','서리 화살':'arrow','얼음 창':'spear','연쇄 번개':'chain','암흑 구체':'orb','공허의 손':'claw'},
+ 'thief': {'이중 베기':'cross2','칼춤':'swirl','연환':'chain','난도질':'claw','급소 찌르기':'arrow','피 웅덩이':'bubble','연막':'cloud','그림자 걸음':'ghost','훔치기':'coin','뒤잡기':'fist'},
+ 'bard': {'용기의 노래':'trumpet','승리의 행진':'flag','전장의 북소리':'drum','수호의 노래':'harp','자장가':'moon','되살림의 화음':'heart','불협화음':'note1','도발의 곡':'wave','앙코르':'burst','대합창':'bell'},
+ 'time': {'서두르기':'arrow','연속 가속':'chain','가속 영역':'wave','늦추기':'hourglass','시간 정체':'orb','되감기':'cross','시계 소환':'bell','시간 균열':'burst'},
+ 'alch': {'독 병':'tube','불안정 용액':'bubble','부식':'drop','응급 물약':'cross','마력 물약':'orb','혼합 약':'swirl','엘릭서':'star','변이약':'skull','점착 폭탄':'mine','연쇄 반응':'chain','연금 대폭발':'rocket'},
+ 'white': {'치유':'drop','큰 치유':'cross','집단 치유':'flower','신성한 비':'cloud','완전 소생':'crown','전체 소생':'orb','천사의 숨결':'wave','성광탄':'burst','빛의 장막':'shield','심판의 빛':'spear','광휘의 후광':'bell'},
+ 'druid': {'재생의 숲':'tree','뿌리 속박':'chain','생명의 나무':'flower','만개':'sun','독 제거':'cross','태양의 은총':'burst','가시 덩굴':'spear','늑대의 울음':'wave','야생의 화신':'claw'},
+ 'cleric': {'수호의 기도':'cross','성스러운 방패':'tower','대신 맞기':'orb','피해 흡수 막':'bubble','해제':'wave','축복':'sun','안식':'moon','순백의 종':'flag','철퇴':'hammer'},
+ 'knight': {'도발':'trumpet','방패 치기':'fist','전열':'chain','불굴의 외침':'flag','막아서기':'tower','방어 태세':'bubble','반격 태세':'spear','돌격':'arrow','정의의 칼날':'sun','기사의 일격':'burst'},
+ 'summon': {'대지 정령':'rock','곰 소환':'claw','용 소환':'fireball','마력 연결':'chain','송환':'orb','계약의 폭주':'skull'},
+ 'gadget': {'보조 포탑':'tower','요새 포대':'rocket','덫 설치':'chain','지뢰':'mine','전기 그물':'wave','연쇄 함정':'swirl','접착탄':'bubble','연막탄':'cloud','집중 포화':'arrow'},
+}
 ORDER = ['warrior','black','thief','bard','time','alch','white','druid','cleric','knight','summon','gadget']
 BG = {'warrior':(196,74,74),'black':(110,66,170),'thief':(70,80,110),'bard':(214,130,60),'time':(60,140,160),'alch':(90,160,90),'white':(230,190,90),'druid':(70,130,70),'cleric':(150,160,200),'knight':(80,110,190),'summon':(150,70,140),'gadget':(140,110,80)}
 O = (43,27,58,255); S = 28; G = 24
@@ -89,21 +103,86 @@ def glyph(g, d, fg, ac):
     elif g == 'up': P([(12,3),(20,12),(15,12),(15,21),(9,21),(9,12),(4,12)])
     elif g == 'crown': P([(4,18),(4,8),(8,12),(12,5),(16,12),(20,8),(20,18)]); d.rectangle([4,18,20,20], fill=ac, outline=O)
     elif g == 'ghost': P([(5,20),(5,10),(8,4),(16,4),(19,10),(19,20),(16,17),(12,20),(8,17)]); d.ellipse([8,9,10,12], fill=O); d.ellipse([14,9,16,12], fill=O)
+    elif g == 'trumpet': P([(3,10),(14,10),(21,5),(21,19),(14,14),(3,14)]); d.rectangle([5,14,8,18], fill=ac, outline=O)
+    elif g == 'flag': d.rectangle([5,3,6,21], fill=O); P([(7,4),(20,7),(7,13)])
+    elif g == 'drum': d.ellipse([4,6,20,12], fill=fg, outline=O); d.rectangle([4,9,20,18], fill=ac, outline=O); d.ellipse([4,15,20,21], fill=ac, outline=O); d.line([(8,2),(13,8)], fill=O, width=2); d.line([(17,2),(12,8)], fill=O, width=2)
+    elif g == 'harp': d.line([(6,20),(6,5),(18,10),(18,20)], fill=O, width=3); d.line([(6,20),(6,5),(18,10),(18,20)], fill=fg, width=1); [d.line([(x,7+(x-6)//4),(x,19)], fill=fg) for x in (9,12,15)]
+    elif g == 'note1': d.ellipse([7,15,14,22], fill=fg, outline=O); d.rectangle([13,3,14,18], fill=O); P([(14,3),(20,8),(14,10)])
+    elif g == 'wave':
+        for i, rr in enumerate((3, 6, 9)): d.arc([12-rr, 12-rr, 12+rr, 12+rr], -50, 50, fill=O, width=3); d.arc([12-rr, 12-rr, 12+rr, 12+rr], -50, 50, fill=fg, width=1)
+        d.ellipse([3,10,6,13], fill=fg, outline=O)
+    elif g == 'tube': d.rounded_rectangle([9,3,15,21], 3, fill=fg, outline=O); d.rectangle([10,12,14,20], fill=ac); d.rectangle([8,2,16,4], fill=O)
+    elif g == 'bubble': d.ellipse([3,8,15,20], fill=fg, outline=O); d.ellipse([13,3,21,11], fill=fg, outline=O); d.ellipse([6,11,9,14], fill=ac)
+    elif g == 'mine': d.ellipse([6,9,18,21], fill=O); d.ellipse([8,11,12,15], fill=fg); [d.line([(12+8*math.cos(a*math.pi/3),15+8*math.sin(a*math.pi/3)),(12+5*math.cos(a*math.pi/3),15+5*math.sin(a*math.pi/3))], fill=O, width=2) for a in range(6)]; d.rectangle([11,3,12,9], fill=ac)
+    elif g == 'rocket': P([(12,2),(17,9),(17,17),(7,17),(7,9)]); P([(7,13),(3,19),(7,18)], ac); P([(17,13),(21,19),(17,18)], ac); P([(10,17),(14,17),(12,22)], (255,150,60,255)); d.ellipse([10,7,14,11], fill=ac, outline=O)
+    elif g == 'rock': P([(4,18),(7,8),(14,4),(20,10),(21,18)]); d.line([(10,8),(12,14),(17,12)], fill=O)
+    elif g == 'hammer': d.rectangle([11,9,13,21], fill=O); d.rectangle([12,9,12,21], fill=ac); P([(4,4),(20,4),(20,11),(4,11)])
+    elif g == 'spear': d.line([(5,21),(17,7)], fill=O, width=3); d.line([(5,21),(17,7)], fill=ac, width=1); P([(15,3),(21,3),(21,9),(18,9)])
+    elif g == 'arrow': d.line([(4,20),(18,6)], fill=O, width=3); d.line([(4,20),(18,6)], fill=fg, width=1); P([(14,3),(21,3),(21,10)]); P([(3,16),(8,21),(3,21)], ac)
+    elif g == 'claw':
+        for x in (6,11,16): P([(x,3),(x+4,9),(x+3,20),(x-1,12)])
+    elif g == 'cloud': d.ellipse([3,10,12,19], fill=fg, outline=O); d.ellipse([8,5,18,16], fill=fg, outline=O); d.ellipse([13,10,22,19], fill=fg, outline=O); d.rectangle([7,13,17,18], fill=fg)
+    elif g == 'orb': d.ellipse([4,4,20,20], fill=fg, outline=O, width=2); d.ellipse([8,7,12,11], fill=(255,255,255,255)); d.ellipse([13,13,18,18], fill=ac)
+    elif g == 'ember': P([(12,6),(16,13),(12,19),(8,13)]); d.rectangle([6,4,7,5], fill=ac); d.rectangle([17,3,18,4], fill=ac); d.rectangle([4,18,5,19], fill=ac)
+    elif g == 'fireball': d.ellipse([9,9,21,21], fill=fg, outline=O); d.ellipse([12,12,18,18], fill=ac); P([(10,12),(2,3),(7,14)], (255,150,60,255)); P([(12,10),(6,2),(14,9)], (255,150,60,255))
+    elif g == 'hourglass': P([(6,3),(18,3),(18,6),(13,12),(18,18),(18,21),(6,21),(6,18),(11,12),(6,6)]); d.rectangle([9,17,15,20], fill=ac)
+    elif g == 'flower':
+        for a in range(5): r = math.radians(a*72-90); d.ellipse([12+6*math.cos(r)-4, 12+6*math.sin(r)-4, 12+6*math.cos(r)+4, 12+6*math.sin(r)+4], fill=fg, outline=O)
+        d.ellipse([9,9,15,15], fill=ac, outline=O)
+    elif g == 'chain': d.ellipse([3,8,13,16], outline=O, width=3); d.ellipse([11,8,21,16], outline=O, width=3); d.ellipse([3,8,13,16], outline=fg, width=1); d.ellipse([11,8,21,16], outline=fg, width=1)
+    elif g == 'coin': d.ellipse([4,4,20,20], fill=ac, outline=O, width=2); d.rectangle([11,8,13,16], fill=O)
+    elif g == 'tower': P([(5,4),(19,4),(19,15),(12,21),(5,15)]); d.rectangle([5,4,19,6], fill=ac, outline=O); d.line([(12,6),(12,19)], fill=O)
+    elif g == 'cross2': P([(5,3),(8,3),(21,17),(18,20)]); P([(19,3),(16,3),(3,17),(6,20)])
 PK = {'def':'shield','hp':'heart','atk':'fist','mag':'star','spd':'wing','vamp':'drop','crit':'eye'}
-def tile(job, b, r, code, g):
+VAR = [(0,0),(1,0),(0,25),(1,25),(0,-25),(1,-25),(0,50),(1,50),(0,-50),(1,-50)]   # (좌우 뒤집기, 기울기) — 같은 모양이 겹치면 돌려서 구분
+def mod(d, code, ac):   # 오른쪽 아래 작은 표시: 스킬 종류
+    X, Y = 21, 19; d.ellipse([X-6, Y-6, X+6, Y+6], fill=O); k = code[0]
+    W = (250,245,235,255); G = (120,230,140,255); Bl = (130,190,255,255); Pu = (210,150,255,255); Or = (255,150,70,255)
+    def up(c): d.polygon([(X,Y-4),(X+4,Y),(X+1,Y),(X+1,Y+4),(X-1,Y+4),(X-1,Y),(X-4,Y)], fill=c)
+    def dn(c): d.polygon([(X,Y+4),(X+4,Y),(X+1,Y),(X+1,Y-4),(X-1,Y-4),(X-1,Y),(X-4,Y)], fill=c)
+    def plus(c): d.rectangle([X-1,Y-4,X+1,Y+4], fill=c); d.rectangle([X-4,Y-1,X+4,Y+1], fill=c)
+    def dots(c): [d.rectangle([X+dx-1,Y+dy-1,X+dx,Y+dy], fill=c) for dx,dy in ((-3,2),(3,2),(0,-3))]
+    if code.startswith('P:'): d.ellipse([X-3,Y-3,X+3,Y+3], outline=ac)
+    elif k == 'd': d.polygon([(X,Y-4),(X+1,Y-1),(X+4,Y),(X+1,Y+1),(X,Y+4),(X-1,Y+1),(X-4,Y),(X-1,Y-1)], fill=W)
+    elif k == 'D': dots(W)
+    elif k == 'c': d.arc([X-4,Y-4,X+4,Y+4], 40, 330, fill=ac, width=2); d.rectangle([X,Y-1,X+3,Y], fill=ac)
+    elif k == 'h': plus(G)
+    elif k == 'H': plus(G); d.ellipse([X-5,Y-5,X+5,Y+5], outline=G)
+    elif k == 'r': plus(W); d.rectangle([X-1,Y-5,X+1,Y-4], fill=ac)
+    elif k in 'Bb': up(ac) if k == 'B' else up(Bl)
+    elif k in 'Gg': d.polygon([(X-4,Y-4),(X+4,Y-4),(X+4,Y),(X,Y+5),(X-4,Y)], fill=Bl if k == 'G' else W)
+    elif k in 'Xx': d.polygon([(X-4,Y+3),(X-2,Y-3),(X+4,Y-4),(X+1,Y),(X+3,Y+2)], fill=Bl if k == 'X' else W)
+    elif k in 'Ss': dn(Bl) if k == 'S' else dn(W)
+    elif k in 'Ww': dn(Pu)
+    elif k in 'Ff': d.polygon([(X,Y-4),(X+3,Y+1),(X,Y+4),(X-3,Y+1)], fill=Or)
+    elif k == 'Z': d.polygon([(X+1,Y-4),(X-3,Y+1),(X,Y+1),(X-1,Y+4),(X+3,Y-1),(X,Y-1)], fill=ac)
+    elif k == 'M': d.ellipse([X-3,Y-3,X+3,Y+3], fill=Bl)
+def tile(job, b, r, code, g, v):
     bg = BG[job]; k = (0, 28, -22)[b]; bg = tuple(max(0, min(255, c + k)) for c in bg)
-    fg = (255,255,255,255) if sum(bg) < 520 else (60,40,70,255); fg = (250,245,235,255); ac = (255,214,102,255)
+    fg = (250,245,235,255); ac = (255,214,102,255)
     im = Image.new('RGBA', (S, S), (0,0,0,0)); d = ImageDraw.Draw(im)
     d.rounded_rectangle([0,0,S-1,S-1], 5, fill=O); d.rounded_rectangle([2,2,S-3,S-3], 4, fill=bg+(255,))
     if code.startswith('P:'): d.rounded_rectangle([1,1,S-2,S-2], 5, outline=ac, width=1)
     g2 = Image.new('RGBA', (G, G), (0,0,0,0)); glyph(PK[code[2:]] if code.startswith('P:') else g, ImageDraw.Draw(g2), fg, ac)
-    im.alpha_composite(g2, (2,1))
-    for i in range(r+1): d.rectangle([5+i*4, 25, 7+i*4, 25], fill=ac)   # 열 번째 칸을 점으로 (뒤로 갈수록 강한 스킬)
+    fl, ang = VAR[v % len(VAR)]
+    if fl: g2 = g2.transpose(Image.FLIP_LEFT_RIGHT)
+    if ang: g2 = g2.rotate(ang, resample=Image.NEAREST)
+    im.alpha_composite(g2, (2,0))
+    for i in range(r+1): d.rectangle([4+i*4, 25, 6+i*4, 25], fill=ac)
+    mod(d, code, ac)
     return im
 sheet = Image.new('RGBA', (S*15, S*12))
+seen = set()
 for ji, job in enumerate(ORDER):
+    cnt = {}
     for b, (bn, sks) in enumerate(T[job]):
-        for r, (n, code, g) in enumerate(sks): sheet.paste(tile(job, b, r, code, g), ((b*5+r)*S, ji*S))
+        for r, (n, code, g) in enumerate(sks):
+            g = OV.get(job, {}).get(n, g); gg = PK[code[2:]] if code.startswith('P:') else g; v = cnt.get(gg, 0); cnt[gg] = v + 1
+            while True:   # 모든 아이콘이 서로 다르도록: 같은 그림이면 변형을 바꿔요
+                im = tile(job, b, r, code, g, v); key = (job, b, r, im.tobytes())
+                if all(k[3] != key[3] or k[0] != job for k in seen) : break
+                v += 1
+            seen.add(key); sheet.paste(im, ((b*5+r)*S, ji*S))
 sheet.resize((S*15*2, S*12*2), Image.NEAREST).save('public/art/skills.png', optimize=True)
 xt = {j: [[bn, [[n, c] for n, c, g in sks]] for bn, sks in T[j]] for j in ORDER}
 js = 'const XT = ' + json.dumps(xt, ensure_ascii=False, separators=(',', ':')) + ';'
