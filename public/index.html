@@ -21,7 +21,8 @@
   --fs:15px;--fs-s:13px;--fs-h:16px;--fs-talk:17px;--r-btn:12px;--r-panel:16px;--r-cell:8px;--hud-h:56px;--bar-h:64px;--dur:.18s}
 html.big{--fs:17px;--fs-s:15px;--fs-h:18px;--fs-talk:19px}
 .jic{display:inline-block;width:1.5em;height:1.5em;vertical-align:middle;background:url(art/jobs.png?v=1) 0 0/1200% 100%;background-position:calc(var(--i)*100%/11) 0;image-rendering:pixelated}
-.big .jic{width:34px;height:34px}.jgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.jcard{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:2px solid var(--line,#5a4a78);border-radius:10px;background:transparent;color:inherit;font:inherit;text-align:center}.jcard .jic{width:32px;height:32px}.jcard b{font-size:13px}.jcard span{font-size:10px;opacity:.75;line-height:1.25}.jcard.on{border-color:#ffb84d;background:rgba(255,184,77,.18)}
+.big .jic{width:34px;height:34px}.sic{display:inline-block;width:26px;height:26px;vertical-align:middle;background:url(art/skills.png?v=1) 0 0/1500% 1200%;background-position:calc(var(--c)*100%/14) calc(var(--r)*100%/11);image-rendering:pixelated}
+.jgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.jcard{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:2px solid var(--line,#5a4a78);border-radius:10px;background:transparent;color:inherit;font:inherit;text-align:center}.jcard .jic{width:32px;height:32px}.jcard b{font-size:13px}.jcard span{font-size:10px;opacity:.75;line-height:1.25}.jcard.on{border-color:#ffb84d;background:rgba(255,184,77,.18)}
 html.lowfx *,html.lowfx *::before,html.lowfx *::after{transition-duration:0s!important;animation-duration:0s!important}
 @media (prefers-reduced-motion:reduce){:root{--dur:0s}}
 *{box-sizing:border-box}
@@ -1542,20 +1543,52 @@ const XJ = {   // 직업: 체력·공격·마공·치유·속도 [기본, 레벨
   summon: { n: '소환사', ic: `<span class="jic" style="--i:10"></span>`, d: '정령과 야수 · 광역', hp: [75, 8], atk: [4, .4], mag: [14, 2.1], heal: [4, .4], spd: [10, .3] },
   gadget: { n: '기공사', ic: `<span class="jic" style="--i:11"></span>`, d: '포탑과 폭탄 · 광역', hp: [95, 11], atk: [10, 1.6], mag: [8, 1.1], heal: [3, .3], spd: [9, .3] },
 };
-// 스킬: t 종류(dmg·heal·revive), st 쓰는 스탯, p 배율, tg 대상(one·all), lv 열리는 레벨, w 쓰고 나서 게이지(차지는 음수)
-const XS = {
-  warrior: [{ n: '강타', mp: 0, t: 'dmg', st: 'atk', p: 1.2, tg: 'one', lv: 1, fx: '💥' }, { n: '차지 베기', mp: 6, t: 'dmg', st: 'atk', p: 2.3, tg: 'one', lv: 3, fx: '🗡️' }, { n: '회전 베기', mp: 8, t: 'dmg', st: 'atk', p: 1.1, tg: 'all', lv: 6, fx: '🌀' }, { n: '분노의 일격', mp: 12, t: 'dmg', st: 'atk', p: 3.4, tg: 'one', lv: 10, fx: '💢' }, { n: '극한 차지', mp: 20, t: 'dmg', st: 'atk', p: 5.5, tg: 'one', lv: 15, fx: '⚡', w: -60 }],
-  white: [{ n: '성광탄', mp: 0, t: 'dmg', st: 'mag', p: 1.2, tg: 'one', lv: 1, fx: '🌟' }, { n: '치유', mp: 5, t: 'heal', st: 'heal', p: 2.2, tg: 'one', lv: 1, fx: '💚' }, { n: '큰 치유', mp: 10, t: 'heal', st: 'heal', p: 3.8, tg: 'one', lv: 5, fx: '💖' }, { n: '집단 치유', mp: 14, t: 'heal', st: 'heal', p: 2.2, tg: 'all', lv: 9, fx: '🌿' }, { n: '되살리기', mp: 20, t: 'revive', st: 'heal', p: 0, tg: 'one', lv: 14, fx: '👼' }],
-  black: [{ n: '불꽃탄', mp: 3, t: 'dmg', st: 'mag', p: 1.8, tg: 'one', lv: 1, fx: '🔥' }, { n: '서리 화살', mp: 5, t: 'dmg', st: 'mag', p: 1.6, tg: 'one', lv: 3, fx: '❄️' }, { n: '번개', mp: 8, t: 'dmg', st: 'mag', p: 2.6, tg: 'one', lv: 6, fx: '⚡' }, { n: '화염구', mp: 12, t: 'dmg', st: 'mag', p: 1.5, tg: 'all', lv: 10, fx: '☄️' }, { n: '메테오', mp: 24, t: 'dmg', st: 'mag', p: 3.2, tg: 'all', lv: 15, fx: '🌋' }],  thief: [{ n: '찌르기', mp: 0, t: 'dmg', st: 'atk', p: 1.3, tg: 'one', lv: 1, fx: '🗡️' }, { n: '이중 베기', mp: 5, t: 'dmg', st: 'atk', p: 2.2, tg: 'one', lv: 3, fx: '✂️' }, { n: '칼춤', mp: 9, t: 'dmg', st: 'atk', p: 1.1, tg: 'all', lv: 6, fx: '🌀' }, { n: '급소 찌르기', mp: 12, t: 'dmg', st: 'atk', p: 3.5, tg: 'one', lv: 10, fx: '💢' }, { n: '난도질', mp: 20, t: 'dmg', st: 'atk', p: 5.2, tg: 'one', lv: 15, fx: '⚡' }],
-  bard: [{ n: '불협화음', mp: 0, t: 'dmg', st: 'mag', p: 1.1, tg: 'one', lv: 1, fx: '🎵' }, { n: '수호의 노래', mp: 6, t: 'heal', st: 'heal', p: 1.6, tg: 'all', lv: 3, fx: '🎶' }, { n: '전장의 북소리', mp: 8, t: 'dmg', st: 'mag', p: 1.3, tg: 'all', lv: 6, fx: '🥁' }, { n: '평온의 선율', mp: 12, t: 'heal', st: 'heal', p: 2.6, tg: 'all', lv: 10, fx: '🎼' }, { n: '별빛 합창', mp: 22, t: 'dmg', st: 'mag', p: 2.8, tg: 'all', lv: 15, fx: '🌟' }],
-  time: [{ n: '늦추기', mp: 0, t: 'dmg', st: 'mag', p: 1.3, tg: 'one', lv: 1, fx: '⏳' }, { n: '서두르기', mp: 6, t: 'dmg', st: 'mag', p: 1.8, tg: 'one', lv: 3, fx: '⏩' }, { n: '시계 소환', mp: 9, t: 'dmg', st: 'mag', p: 1.2, tg: 'all', lv: 6, fx: '🕰️' }, { n: '시간 균열', mp: 13, t: 'dmg', st: 'mag', p: 2.8, tg: 'one', lv: 10, fx: '🌀' }, { n: '시간 정지', mp: 22, t: 'dmg', st: 'mag', p: 3.2, tg: 'all', lv: 15, fx: '⌛' }],
-  alch: [{ n: '산성 플라스크', mp: 2, t: 'dmg', st: 'mag', p: 1.5, tg: 'one', lv: 1, fx: '🧪' }, { n: '응급 물약', mp: 5, t: 'heal', st: 'heal', p: 2.0, tg: 'one', lv: 3, fx: '💚' }, { n: '폭죽탄', mp: 8, t: 'dmg', st: 'mag', p: 1.3, tg: 'all', lv: 6, fx: '🎆' }, { n: '엘릭서', mp: 12, t: 'heal', st: 'heal', p: 3.4, tg: 'one', lv: 10, fx: '💖' }, { n: '연금 대폭발', mp: 24, t: 'dmg', st: 'mag', p: 3.0, tg: 'all', lv: 15, fx: '💥' }],
-  druid: [{ n: '가시 덩굴', mp: 0, t: 'dmg', st: 'mag', p: 1.1, tg: 'one', lv: 1, fx: '🌿' }, { n: '새싹', mp: 5, t: 'heal', st: 'heal', p: 2.0, tg: 'one', lv: 1, fx: '🌱' }, { n: '재생의 숲', mp: 10, t: 'heal', st: 'heal', p: 1.9, tg: 'all', lv: 5, fx: '🌲' }, { n: '생명의 나무', mp: 14, t: 'heal', st: 'heal', p: 3.6, tg: 'one', lv: 9, fx: '🌳' }, { n: '만개', mp: 20, t: 'heal', st: 'heal', p: 2.8, tg: 'all', lv: 14, fx: '🌸' }],
-  cleric: [{ n: '철퇴', mp: 0, t: 'dmg', st: 'atk', p: 1.2, tg: 'one', lv: 1, fx: '🔨' }, { n: '수호의 기도', mp: 5, t: 'heal', st: 'heal', p: 2.0, tg: 'one', lv: 1, fx: '🙏' }, { n: '축복', mp: 9, t: 'heal', st: 'heal', p: 1.8, tg: 'all', lv: 5, fx: '✨' }, { n: '신벌', mp: 12, t: 'dmg', st: 'mag', p: 2.6, tg: 'one', lv: 9, fx: '⚡' }, { n: '구원의 빛', mp: 20, t: 'revive', st: 'heal', p: 0, tg: 'one', lv: 14, fx: '👼' }],
-  knight: [{ n: '베기', mp: 0, t: 'dmg', st: 'atk', p: 1.2, tg: 'one', lv: 1, fx: '⚔️' }, { n: '방패 치기', mp: 5, t: 'dmg', st: 'atk', p: 1.8, tg: 'one', lv: 3, fx: '🛡️' }, { n: '돌격', mp: 8, t: 'dmg', st: 'atk', p: 1.1, tg: 'all', lv: 6, fx: '🐎' }, { n: '방패 돌진', mp: 12, t: 'dmg', st: 'atk', p: 3.1, tg: 'one', lv: 10, fx: '💫' }, { n: '기사의 일격', mp: 20, t: 'dmg', st: 'atk', p: 5.0, tg: 'one', lv: 15, fx: '⚡' }],
-  summon: [{ n: '불 정령', mp: 3, t: 'dmg', st: 'mag', p: 1.8, tg: 'one', lv: 1, fx: '🔥' }, { n: '물 정령', mp: 5, t: 'dmg', st: 'mag', p: 1.6, tg: 'one', lv: 3, fx: '💧' }, { n: '늑대 소환', mp: 8, t: 'dmg', st: 'mag', p: 1.4, tg: 'all', lv: 6, fx: '🐺' }, { n: '호박 유령 소환', mp: 12, t: 'dmg', st: 'mag', p: 2.6, tg: 'one', lv: 10, fx: '🎃' }, { n: '용 소환', mp: 24, t: 'dmg', st: 'mag', p: 3.2, tg: 'all', lv: 15, fx: '🐉' }],
-  gadget: [{ n: '수류탄', mp: 2, t: 'dmg', st: 'atk', p: 1.5, tg: 'one', lv: 1, fx: '💣' }, { n: '소형 포탑', mp: 6, t: 'dmg', st: 'mag', p: 1.9, tg: 'one', lv: 3, fx: '🔫' }, { n: '전기 그물', mp: 9, t: 'dmg', st: 'mag', p: 1.2, tg: 'all', lv: 6, fx: '⚡' }, { n: '레이저 포탑', mp: 12, t: 'dmg', st: 'mag', p: 2.8, tg: 'one', lv: 10, fx: '🔆' }, { n: '집중 포화', mp: 22, t: 'dmg', st: 'atk', p: 2.3, tg: 'all', lv: 15, fx: '🎇' }],
-};
+// 스킬 트리: XT(직업 → 줄기 3 × 스킬 5, tools/skill_tree.py가 만든 데이터) + 코드 → 효과. 스킬 최대 Lv4, 레벨당 포인트 1
+const XDS = { warrior: 'atk', thief: 'atk', knight: 'atk', gadget: 'atk' }, XPAS = { def: .05, hp: .06, atk: .05, mag: .05, spd: .05, vamp: .06, crit: .06 }, XPASN = { def: '받는 피해', hp: '최대 체력', atk: '공격', mag: '마법', spd: '속도', vamp: '흡혈', crit: '치명타' };
+const XDP = [1.2, 1.6, 2.1, 2.7, 3.4], XHP = [2, 2.6, 3.2, 3.9, 4.6], XMAXLV = 4, XRESET = 300, xSkp = L => L - 1;
+const xDefs = {};
+function xDef(job, b, r){   // 스킬 하나의 효과표 (Lv1 기준)
+  const key = job + b + r; if (xDefs[key]) return xDefs[key];
+  const [n, code] = XT[job][b][1][r], k = code[0], st = XDS[job] || 'mag', d = XDP[r], h = XHP[r], mp = [0, 4, 7, 11, 16][r];
+  const o = { job, b, r, n, code, i: b * 5 + r, mp: 0, fx: '' };
+  if (code.startsWith('P:')) o.pas = code.slice(2);
+  else if (k === 'd') Object.assign(o, { t: 'dmg', st, p: d, tg: 'one', mp });
+  else if (k === 'D') Object.assign(o, { t: 'dmg', st, p: d * .62, tg: 'all', mp: Math.round(mp * 1.5 + 2) });
+  else if (k === 'c') Object.assign(o, { t: 'dmg', st, p: d * 1.6, tg: 'one', mp: Math.round(mp * 1.4 + 3), w: -40 });
+  else if (k === 'h') Object.assign(o, { t: 'heal', st: 'heal', p: h, tg: 'one', mp: 3 + r * 3 });
+  else if (k === 'H') Object.assign(o, { t: 'heal', st: 'heal', p: h * .6, tg: 'all', mp: 6 + Math.round(r * 3.5) });
+  else if (k === 'r') Object.assign(o, { t: 'revive', st: 'heal', p: 0, tg: 'one', mp: 16 });
+  else if (k === 'B') Object.assign(o, { t: 'buff', key: 'atk', v: .25, sec: 15, tg: 'all', mp: 5 + r * 2 });
+  else if (k === 'b') Object.assign(o, { t: 'buff', key: 'atk', v: .4, sec: 15, tg: 'self', mp: 4 + r * 2 });
+  else if (k === 'G') Object.assign(o, { t: 'buff', key: 'dmgIn', v: .3, sec: 12, tg: 'all', mp: 6 + r * 2 });
+  else if (k === 'g') Object.assign(o, { t: 'buff', key: 'dmgIn', v: .5, sec: 10, tg: 'self', mp: 4 + r * 2 });
+  else if (k === 'X') Object.assign(o, { t: 'buff', key: 'spd', v: .35, sec: 12, tg: 'all', mp: 6 + r * 2 });
+  else if (k === 'x') Object.assign(o, { t: 'buff', key: 'spd', v: .5, sec: 12, tg: 'self', mp: 4 + r * 2 });
+  else if (k === 'S') Object.assign(o, { t: 'deb', key: 'slow', v: .4, sec: 10, tg: 'all', mp: 6 + r * 2 });
+  else if (k === 's') Object.assign(o, { t: 'deb', key: 'slow', v: .5, sec: 10, tg: 'one', mp: 3 + r * 2 });
+  else if (k === 'W') Object.assign(o, { t: 'deb', key: 'weak', v: .3, sec: 14, tg: 'one', mp: 3 + r * 2 });
+  else if (k === 'w') Object.assign(o, { t: 'deb', key: 'weak', v: .3, sec: 14, tg: 'all', mp: 6 + r * 2 });
+  else if (k === 'F') Object.assign(o, { t: 'dot', st, p: .5, tg: 'one', mp: 3 + r * 2 });
+  else if (k === 'f') Object.assign(o, { t: 'dot', st, p: .4, tg: 'all', mp: 6 + r * 2 });
+  else if (k === 'Z') Object.assign(o, { t: 'stun', st, p: d * .6, tg: 'one', mp: 5 + r * 2 });
+  else if (k === 'M') Object.assign(o, { t: 'mp', v: .25, tg: 'all', mp: 0 });
+  return xDefs[key] = o;
+}
+const xAll = job => Array.from({ length: 15 }, (_, i) => xDef(job, Math.floor(i / 5), i % 5));
+const xPw = (o, lv) => 1 + .18 * (lv - 1), xEfv = (o, lv) => o.v * (1 + .15 * (lv - 1));
+function xDesc(o, lv){
+  if (o.pas) return `패시브 · ${XPASN[o.pas]} +${Math.round(XPAS[o.pas] * 100 * lv)}%`;
+  const L = Math.max(1, lv), who = { one: '적 하나', all: o.t === 'heal' || o.t === 'buff' || o.t === 'mp' ? '아군 전체' : '적 전체', self: '나' }[o.tg];
+  const sc = { dmg: `${who}에게 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 피해${o.w ? ' (쓰고 나면 한참 쉬어요)' : ''}`, heal: `${o.tg === 'all' ? '아군 전체' : '아군 하나'} 치유 ×${(o.p * xPw(o, L)).toFixed(1)}`, revive: '쓰러진 동료 하나를 체력 절반으로 살려요', buff: `${who} ${o.key === 'atk' ? '공격' : o.key === 'spd' ? '속도' : '받는 피해'} ${o.key === 'dmgIn' ? '-' : '+'}${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, deb: `${who} ${o.key === 'slow' ? '속도' : '공격'} -${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, dot: `${who}에게 8초 동안 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 지속 피해`, stun: `적 하나를 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 피해 + 행동 늦추기`, mp: `아군 전체 마력 ${Math.round(xEfv(o, L) * 100)}% 회복` }[o.t];
+  return sc + (o.mp ? ` · MP ${o.mp}` : '');
+}
+const xSname = k => ({ atk: '공격', mag: '마법', heal: '치유' }[k]);
+function xSkEx(ex){ ex.sk = ex.sk || {}; if (ex.job && !ex.sk['0.0']) ex.sk['0.0'] = 1; return ex.sk; }
+const xSkLv = (sk, b, r) => sk[b + '.' + r] || 0, xSpent = sk => Object.values(sk).reduce((a, v) => a + v, 0) - 1;
+const xPts = ex => xSkp(xLv(ex.exp).L) - xSpent(xSkEx(ex));
+function xAiSk(L){   // 동료는 줄을 가로로 훑으며 포인트를 쓰기
+  const sk = { '0.0': 1 }; let pts = xSkp(L); for (let lv = 1; lv <= XMAXLV && pts > 0; lv++) for (let r = 0; r < 5 && pts > 0; r++) for (let b = 0; b < 3 && pts > 0; b++){ const k = b + '.' + r; if ((sk[k] || 0) < lv){ if (r > 0 && !sk[b + '.' + (r - 1)]) continue; sk[k] = lv; pts--; } } return sk;
+}
 const XM = [   // 달빛 숲길 몬스터 (레벨 1 기준 체력·공격·속도)
   { n: '이끼 슬라임', ic: '🟢', hp: 40, atk: 6, spd: 6 }, { n: '호박 토끼', ic: '🐇', hp: 35, atk: 7, spd: 10 }, { n: '박쥐 새끼', ic: '🦇', hp: 28, atk: 8, spd: 12 }, { n: '꼬마 유령', ic: '👻', hp: 45, atk: 9, spd: 8 },
 ];
@@ -1563,13 +1596,19 @@ const XELITE = { n: '늙은 늑대', ic: '🐺', hp: 150, atk: 13, spd: 9, k: 3 
 const XREG = { n: '달빛 숲길', min: 20, fee: 50, loot: ['herb', 'drop', 'mush', 'g_dandel', 'g_mint', 'g_straw', 'g_carrot'], rare: ['mana', 'g_clover'] };
 const XDAY = 5, XNODE = { battle: ['⚔️', '몬스터', 7], elite: ['🐺', '강한 몬스터', 11], camp: ['🔥', '캠프파이어', 4], statue: ['🗿', '고대 석상', 5], chest: ['🎁', '보물상자', 4], boss: ['🌳', '숲의 주인', 100] };
 const xJobGrid = sel => `<div class="jgrid">${Object.entries(XJ).map(([k, j]) => `<button type="button" class="jcard${sel === k ? ' on' : ''}" data-job="${k}">${j.ic}<b>${j.n}</b><span>${j.d}</span></button>`).join('')}</div>`;
+/*XT*/const XT = {"warrior":[["차지",[["강타","d"],["차지 베기","c"],["대지 가르기","D"],["분노의 일격","d"],["극한 차지","c"]]],["근성",[["단단한 피부","P:def"],["되받아치기","d"],["불굴","P:hp"],["피의 갈증","P:vamp"],["전장의 포효","b"]]],["도끼술",[["회전 베기","D"],["투척 도끼","d"],["파쇄","W"],["학살자","d"],["폭풍 도끼","D"]]]],"black":[["화염",[["불꽃탄","d"],["화염구","D"],["불씨","F"],["지옥불","D"],["메테오","D"]]],["냉기와 번개",[["서리 화살","d"],["얼음 창","d"],["번개","d"],["연쇄 번개","D"],["눈보라","S"]]],["암흑",[["마력 흡수","M"],["약점 간파","w"],["암흑 구체","d"],["공허의 손","Z"],["마력 폭주","P:mag"]]]],"thief":[["연속",[["찌르기","d"],["이중 베기","d"],["칼춤","D"],["연환","d"],["난도질","c"]]],["급소",[["약점 노리기","P:crit"],["출혈","F"],["급소 찌르기","c"],["처형자","d"],["피 웅덩이","f"]]],["그림자",[["재빠른 발","P:spd"],["연막","w"],["그림자 걸음","x"],["훔치기","d"],["뒤잡기","Z"]]]],"bard":[["전투가",[["용기의 노래","B"],["승리의 행진","B"],["전장의 북소리","X"],["불꽃의 변주","D"],["영웅의 서사시","B"]]],["안식가",[["수호의 노래","G"],["자장가","H"],["평온의 선율","H"],["되살림의 화음","r"],["별빛 합창","H"]]],["풍자",[["불협화음","w"],["도발의 곡","s"],["흥겨운 춤","X"],["앙코르","B"],["대합창","D"]]]],"time":[["가속",[["서두르기","x"],["연속 가속","X"],["시간 도약","x"],["가속 영역","X"],["질주","P:spd"]]],["감속",[["늦추기","s"],["정지","Z"],["늪 같은 시간","S"],["시간 정체","S"],["영원한 정오","D"]]],["시간 조작",[["되감기","h"],["예지","P:def"],["시계 소환","Z"],["시간 균열","d"],["시간 정지","X"]]]],"alch":[["약화",[["산성 플라스크","d"],["독 병","F"],["불안정 용액","w"],["부식","W"],["약점 증폭","w"]]],["혼합",[["응급 물약","h"],["마력 물약","M"],["혼합 약","h"],["엘릭서","H"],["변이약","B"]]],["폭발물",[["폭죽탄","d"],["점착 폭탄","s"],["연쇄 반응","D"],["황금 폭발","d"],["연금 대폭발","D"]]]],"white":[["회복",[["치유","h"],["큰 치유","h"],["집단 치유","H"],["신성한 비","H"],["기적의 손길","h"]]],["부활",[["되살리기","r"],["가호","P:hp"],["완전 소생","r"],["전체 소생","H"],["천사의 숨결","H"]]],["성광",[["성광탄","d"],["정화","H"],["빛의 장막","G"],["심판의 빛","D"],["광휘의 후광","B"]]]],"druid":[["재생",[["새싹","h"],["재생의 숲","H"],["뿌리 속박","s"],["생명의 나무","h"],["만개","H"]]],["자연",[["자연 보호막","G"],["이슬","h"],["독 제거","H"],["태양의 은총","B"],["대지의 축복","P:hp"]]],["야수",[["가시 덩굴","d"],["곰의 가죽","g"],["늑대의 울음","B"],["독수리의 눈","P:crit"],["야생의 화신","D"]]]],"cleric":[["보호",[["수호의 기도","G"],["성스러운 방패","g"],["대신 맞기","g"],["피해 흡수 막","G"],["불가침","P:def"]]],["정화",[["해제","H"],["축복","B"],["안식","G"],["순백의 종","H"],["구원의 빛","r"]]],["응징",[["철퇴","d"],["응징","d"],["신벌","d"],["성스러운 낙인","w"],["심판의 종","D"]]]],"knight":[["도발",[["도발","g"],["방패 치기","d"],["전열","G"],["불굴의 외침","b"],["요새","P:def"]]],["수호",[["막아서기","g"],["방어 태세","g"],["반격 태세","d"],["수호의 서약","G"],["철벽","P:hp"]]],["검술",[["베기","d"],["돌격","D"],["방패 돌진","Z"],["정의의 칼날","c"],["기사의 일격","c"]]]],"summon":[["정령",[["불 정령","d"],["물 정령","d"],["바람 정령","D"],["대지 정령","d"],["정령왕","D"]]],["야수",[["늑대 소환","d"],["곰 소환","g"],["독수리 소환","D"],["호박 유령 소환","d"],["용 소환","D"]]],["계약",[["소환수 강화","P:mag"],["마력 연결","M"],["합체 공격","c"],["송환","H"],["계약의 폭주","B"]]]],"gadget":[["포탑",[["소형 포탑","d"],["보조 포탑","G"],["레이저 포탑","d"],["포탑 증설","P:atk"],["요새 포대","D"]]],["함정",[["덫 설치","s"],["지뢰","d"],["전기 그물","S"],["연쇄 함정","D"],["대지 폭파","D"]]],["폭탄",[["수류탄","d"],["접착탄","s"],["연막탄","w"],["시한폭탄","c"],["집중 포화","D"]]]]};/*XT-END*/
+const xIc = o => `<span class="sic" style="--c:${o.i};--r:${ORDER_J.indexOf(o.job)}"></span>`;
+const ORDER_J = ['warrior', 'black', 'thief', 'bard', 'time', 'alch', 'white', 'druid', 'cleric', 'knight', 'summon', 'gadget'];
 const xRand = a => a[Math.floor(Math.random() * a.length)];
 function xEx(){ me.ex = me.ex || { exp: 0, d: '', n: 0 }; if (me.ex.d !== todayKey()){ me.ex.d = todayKey(); me.ex.n = 0; } return me.ex; }
 const xSt = (job, L, k) => Math.round(XJ[job][k][0] + XJ[job][k][1] * (L - 1));
-const xMkUnit = (job, L, name, ai, hp, mp) => { const u = { id: name, job, name, ic: XJ[job].ic, L, ai, team: 'a', mhp: xSt(job, L, 'hp'), mmp: 30 + L * 3, atk: xSt(job, L, 'atk'), mag: xSt(job, L, 'mag'), heal: xSt(job, L, 'heal'), spd: xSt(job, L, 'spd'), g: Math.random() * 40 }; u.hp = hp ?? u.mhp; u.mp = mp ?? u.mmp; return u; };
+const xMkUnit = (job, L, name, ai, hp, mp, sk) => { sk = sk || xAiSk(L); const u = { sks: [], pas: {}, fx: {}, dr: 0, vamp: 0, crit: 0, id: name, job, name, ic: XJ[job].ic, L, ai, team: 'a', mhp: xSt(job, L, 'hp'), mmp: 30 + L * 3, atk: xSt(job, L, 'atk'), mag: xSt(job, L, 'mag'), heal: xSt(job, L, 'heal'), spd: xSt(job, L, 'spd'), g: Math.random() * 40 };
+  xAll(job).forEach(o => { const lv = sk[o.b + '.' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv) }); });
+  const P = u.pas; ['hp', 'atk', 'mag', 'spd'].forEach(k => { if (P[k]) u[k === 'hp' ? 'mhp' : k] = Math.round(u[k === 'hp' ? 'mhp' : k] * (1 + P[k])); }); u.dr = P.def || 0; u.vamp = P.vamp || 0; u.crit = P.crit || 0;
+  u.hp = hp ?? u.mhp; u.mp = mp ?? u.mmp; return u; };
 let xv = null, xb = null, xMsg = '', xTick = 0;   // xv 화면 상태, xb 전투 상태
 function xParty(){ const ex = xEx(), L = xLv(ex.exp).L, run = ex.run, jobs = ['warrior', 'white', 'black'], mine = ex.job, others = jobs.filter(j => j !== mine).slice(0, 2);
-  return [xMkUnit(mine, L, me.nick, false, run?.p?.[0]?.hp, run?.p?.[0]?.mp), ...others.map((j, i) => xMkUnit(j, L, '동료 ' + XJ[j].n, true, run?.p?.[i + 1]?.hp, run?.p?.[i + 1]?.mp))]; }
+  return [xMkUnit(mine, L, me.nick, false, run?.p?.[0]?.hp, run?.p?.[0]?.mp, xSkEx(ex)), ...others.map((j, i) => xMkUnit(j, L, '동료 ' + XJ[j].n, true, run?.p?.[i + 1]?.hp, run?.p?.[i + 1]?.mp))]; }
 function xSaveParty(){ const run = xEx().run; if (run && xb) run.p = xb.party.map(u => ({ hp: u.hp, mp: u.mp })); }
 function xEnd(how){   // how: clear · time · retreat · wipe
   const ex = xEx(), run = ex.run; if (!run) return; const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gold = how === 'wipe' ? 0 : Math.round(lo.gold * mult), exp = how === 'wipe' ? 0 : Math.round(lo.exp * mult + (how === 'clear' ? 150 : 0));
@@ -1585,17 +1624,29 @@ function renderExplore(){
   if (!xv) xv = { view: ex.run ? 'node' : 'lobby' };
   const v = xv.view, back = '<button class="btn ghost" id="back">닫기</button>';
   if (!job){
-    frame(null, '탐사', '직업을 골라요 (한 번 고르면 바뀌지 않아요)', `<section class="sec">${secH('직업 고르기', '12종')}<div class="box px">${Object.entries(XJ).map(([k, j]) => `<div class="li">${j.ic ? `<span class="big">${j.ic}</span>` : ''}<div class="main"><span class="t">${j.n}</span><span class="d" style="white-space:normal">${j.d}<br>${XS[k].map(s => s.n).join(' · ')}</span></div><button class="btn sm go" data-xj="${k}">고르기</button></div>`).join('')}</div></section><div style="display:flex;gap:8px">${back}</div>`);
-    $('#back').onclick = closeSheet; on('[data-xj]', b => confirmBox(`${XJ[b.dataset.xj].n}(으)로 정할까요? 바꿀 수 없어요.`, '정했어요', '다시 볼래요').then(ok => { if (ok){ ex.job = b.dataset.xj; save(); renderExplore(); } })); return;
+    frame(null, '탐사', '직업을 골라요 (한 번 고르면 바뀌지 않아요)', `<section class="sec">${secH('직업 고르기', '12종')}<div class="box px">${Object.entries(XJ).map(([k, j]) => `<div class="li">${j.ic ? `<span class="big">${j.ic}</span>` : ''}<div class="main"><span class="t">${j.n}</span><span class="d" style="white-space:normal">${j.d}<br>${XT[k].map(b => b[0]).join(' · ')}</span></div><button class="btn sm go" data-xj="${k}">고르기</button></div>`).join('')}</div></section><div style="display:flex;gap:8px">${back}</div>`);
+    $('#back').onclick = closeSheet; on('[data-xj]', b => confirmBox(`${XJ[b.dataset.xj].n}(으)로 정할까요? 바꿀 수 없어요.`, '정했어요', '다시 볼래요').then(ok => { if (ok){ ex.job = b.dataset.xj; xSkEx(ex); save(); renderExplore(); } })); return;
   }
   const head = `<div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center"><span class="big">${job.ic}</span><div style="flex:1"><b>${esc(me.nick)} · ${job.n} Lv ${lv.L}</b><div class="s sub">${lv.need ? `경험치 ${lv.cur} / ${lv.need}` : '최고 레벨'} · HP ${xSt(ex.job, lv.L, 'hp')} · 공 ${xSt(ex.job, lv.L, 'atk')} · 마 ${xSt(ex.job, lv.L, 'mag')} · 치 ${xSt(ex.job, lv.L, 'heal')} · 속 ${xSt(ex.job, lv.L, 'spd')}</div></div></div></div>`;
   if (v === 'lobby'){
-    frame(null, '탐사', `오늘 ${ex.n} / ${XDAY}회`, `${head}<section class="sec">${secH(XREG.n, `${XREG.min}분 · 입장 ${XREG.fee}G`)}<div class="box px"><div class="li"><span class="big">🌲</span><div class="main"><span class="t">안개 낀 달빛 숲</span><span class="d" style="white-space:normal">갈림길을 골라 100%를 채워요. 시간이 끝나거나 전멸하면 끝나요. 전멸하면 얻은 것을 모두 잃어요.<br>동료 2명이 자동으로 같이 싸워요.</span></div></div></div><button class="btn go" id="xgo" style="width:100%" ${ex.n >= XDAY || me.coin < XREG.fee ? 'disabled' : ''}>${ex.n >= XDAY ? '오늘은 끝났어요' : me.coin < XREG.fee ? `골드가 모자라요 (${XREG.fee}G)` : `출발하기 · ${XREG.fee}G`}</button>${hint(xMsg, '스킬은 레벨이 오르면 열려요. 직업마다 5개')}</section><div style="display:flex;gap:8px">${back}</div>`);
+    frame(null, '탐사', `오늘 ${ex.n} / ${XDAY}회`, `${head}<section class="sec">${secH(XREG.n, `${XREG.min}분 · 입장 ${XREG.fee}G`)}<div class="box px"><div class="li"><span class="big">🌲</span><div class="main"><span class="t">안개 낀 달빛 숲</span><span class="d" style="white-space:normal">갈림길을 골라 100%를 채워요. 시간이 끝나거나 전멸하면 끝나요. 전멸하면 얻은 것을 모두 잃어요.<br>동료 2명이 자동으로 같이 싸워요.</span></div></div></div><button class="btn" id="xtree" style="width:100%">🌳 스킬 트리${xPts(ex) > 0 ? ` · 남은 포인트 ${xPts(ex)}` : ''}</button><button class="btn go" id="xgo" style="width:100%" ${ex.n >= XDAY || me.coin < XREG.fee ? 'disabled' : ''}>${ex.n >= XDAY ? '오늘은 끝났어요' : me.coin < XREG.fee ? `골드가 모자라요 (${XREG.fee}G)` : `출발하기 · ${XREG.fee}G`}</button>${hint(xMsg, '스킬은 레벨이 오르면 열려요. 직업마다 5개')}</section><div style="display:flex;gap:8px">${back}</div>`);
     $('#back').onclick = closeSheet;
+    $('#xtree').onclick = () => { xv = { view: 'tree', sel: '0.0' }; renderExplore(); };
     const go = $('#xgo'); if (go) go.onclick = () => { me.coin -= XREG.fee; ex.n++; ex.run = { start: Date.now(), end: Date.now() + XREG.min * 6e4, prog: 0, loot: { gold: 0, exp: 0, items: {} }, buff: 0, p: null, node: null }; save(); hud(); xv = { view: 'node' }; xMsg = ''; renderExplore(); };
     return;
   }
   const run = ex.run;
+  if (v === 'tree'){
+    const sk = xSkEx(ex), pts = xPts(ex), [sb, sr] = xv.sel.split('.').map(Number), so = xDef(ex.job, sb, sr), slv = xSkLv(sk, sb, sr), can = o => slv < XMAXLV && pts > 0 && (sr === 0 || xSkLv(sk, sb, sr - 1) > 0);
+    frame(null, '스킬 트리', `${job.n} · 남은 포인트 ${pts}`, `<style>.tcol{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}.tcol .th{font-size:12px;font-weight:700;color:var(--gold)}.tn{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;background:none;border:2px solid transparent;border-radius:10px;color:inherit;font:inherit}.tn .sic{width:44px;height:44px}.tn small{font-size:10px;line-height:1.2;opacity:.85}.tn.lock{opacity:.4}.tn.sel{border-color:var(--gold);background:rgba(255,184,77,.14)}.tn i{position:absolute;right:4px;top:2px;font-style:normal;font-size:11px;font-weight:900;background:#2b1b3a;border-radius:6px;padding:0 4px;color:#ffd866}</style>
+      <section class="sec"><div class="tcol">${[0, 1, 2].map(b => `<div class="th">${XT[ex.job][b][0]}</div>`).join('')}${[0, 1, 2, 3, 4].map(r => [0, 1, 2].map(b => { const o = xDef(ex.job, b, r), lv = xSkLv(sk, b, r), lock = r > 0 && !xSkLv(sk, b, r - 1); return `<button class="tn${lock ? ' lock' : ''}${xv.sel === b + '.' + r ? ' sel' : ''}" data-ts="${b}.${r}">${xIc(o)}<small>${o.n}</small><i>${lv}/${XMAXLV}</i></button>`; }).join('')).join('')}</div></section>
+      <section class="sec"><div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center">${xIc(so)}<div style="flex:1"><b>${so.n}</b> <span class="s sub">${slv ? `Lv ${slv}` : '아직 안 배웠어요'}</span></div></div><div class="s" style="margin-top:6px">${xDesc(so, Math.max(1, slv))}</div>${slv && slv < XMAXLV ? `<div class="s sub">다음 레벨: ${xDesc(so, slv + 1)}</div>` : ''}<button class="btn go" id="tup" style="width:100%;margin-top:8px" ${can(so) ? '' : 'disabled'}>${slv >= XMAXLV ? '최대 레벨' : sr > 0 && !xSkLv(sk, sb, sr - 1) ? '앞 스킬을 먼저 배워요' : pts < 1 ? '포인트가 없어요' : slv ? '레벨 올리기 (포인트 1)' : '배우기 (포인트 1)'}</button></div></section>
+      <div class="s sub">레벨이 오를 때마다 포인트 1개를 받아요. 각 줄은 위에서부터 차례로 배워요.</div><div style="display:flex;gap:8px"><button class="btn ghost" id="trs" style="flex:1">초기화 (${XRESET}G)</button><button class="btn" id="tok" style="flex:1">돌아가기</button></div>`);
+    on('[data-ts]', b => { xv.sel = b.dataset.ts; renderExplore(); });
+    $('#tup').onclick = () => { if (!can(so)) return; sk[xv.sel] = slv + 1; sfx('pop'); save(); renderExplore(); };
+    $('#trs').onclick = () => confirmBox(`스킬 포인트를 모두 돌려받아요. ${XRESET}G가 들어요.`, '초기화', '그만둘래요').then(ok => { if (!ok) return; if (me.coin < XRESET) return toast('골드가 모자라요'); me.coin -= XRESET; ex.sk = { '0.0': 1 }; save(); hud(); renderExplore(); });
+    $('#tok').onclick = () => { xv = { view: 'lobby' }; renderExplore(); }; return;
+  }
   if (v === 'result'){
     const r = xv, T = { clear: '탐사 성공! 🎉', time: '시간이 다 됐어요', retreat: '탐사를 마쳤어요', wipe: '전멸했어요…' }[r.how];
     frame(null, '탐사 결과', T, `<section class="sec"><div class="box px" style="padding:14px;text-align:center"><div class="big" style="font-size:42px">${r.how === 'clear' ? '🏆' : r.how === 'wipe' ? '💀' : '🏕️'}</div><b>${T}</b><div class="s sub">진행 ${r.prog}%</div>
@@ -1630,30 +1681,43 @@ function xGo(k){
 // ----- 전투 -----
 function xStartBattle(kind, msg){
   const ex = xEx(), run = ex.run, party = xParty(), d = run.prog / 100, mL = Math.max(1, Math.min(12, Math.round(1 + 11 * d), xLv(ex.exp).L + 3)),   // 내 레벨보다 3 높은 몬스터까지만 (처음엔 쉽게)
-    mk = (m, i) => { const k = m.k || 1, f = 1 + .35 * (mL - 1), a = 1 + .25 * (mL - 1); return { id: 'e' + i, name: m.n, ic: m.ic, team: 'e', mhp: Math.round(m.hp * f), hp: Math.round(m.hp * f), atk: Math.round(m.atk * a), spd: m.spd, g: Math.random() * 60, k, aoe: !!m.aoe, mL }; };
+    mk = (m, i) => { const k = m.k || 1, fx = {}, f = 1 + .35 * (mL - 1), a = 1 + .25 * (mL - 1); return { id: 'e' + i, name: m.n, ic: m.ic, team: 'e', mhp: Math.round(m.hp * f), hp: Math.round(m.hp * f), atk: Math.round(m.atk * a), spd: m.spd, g: Math.random() * 60, k, aoe: !!m.aoe, mL, fx }; };
   const foes = kind === 'boss' ? [mk(XBOSS, 0)] : kind === 'elite' ? [mk(XELITE, 0), mk(xRand(XM), 1)] : Array.from({ length: 1 + Math.floor(Math.random() * (1 + (d > .3 ? 2 : 1))) }, (_, i) => mk(xRand(XM), i));
   xb = { party, foes, kind, log: msg || '', turn: null, pick: null, over: false, last: performance.now(), buff: run.buff > 0, def: {} }; if (run.buff > 0) run.buff--; xv = { view: 'battle' }; renderExplore();
 }
 function xAlive(a){ return a.filter(u => u.hp > 0); }
 function xFloat(id, txt, col){ const c = document.querySelector(`[data-u="${id}"]`); if (!c) return; const s = document.createElement('span'); s.className = 'xf'; s.textContent = txt; s.style.color = col || '#fff'; c.appendChild(s); setTimeout(() => s.remove(), 800); c.classList.add('xhit'); setTimeout(() => c.classList.remove('xhit'), 250); }
+const xFm = (u, k) => u.fx[k] ? u.fx[k].v : 0;
+function xHit(u, t, raw, col){   // 피해 한 번 (방어·받는 피해 감소·치명타·흡혈 반영)
+  let dmg = raw; if (u.team === 'a' && Math.random() < (u.crit || 0)){ dmg *= 1.6; xFloat(t.id, '치명!', '#ffb84d'); }
+  if (t.team === 'a') dmg *= 1 - Math.min(.75, xFm(t, 'dmgIn') + (t.dr || 0)); if (xb.def[t.id]) dmg /= 2;
+  dmg = Math.max(1, Math.round(dmg)); t.hp = Math.max(0, t.hp - dmg); xFloat(t.id, '-' + dmg, col); if (u.vamp) u.hp = Math.min(u.mhp, u.hp + Math.round(dmg * u.vamp)); return dmg;
+}
 function xAct(u, sk, tgt){   // 한 번 행동
   const B = xb, foes = u.team === 'a' ? B.foes : B.party, mates = u.team === 'a' ? B.party : B.foes;
-  if (u.team === 'e'){ if (!xAlive(B.party).length) return; const hit = t => { let dmg = Math.max(1, Math.round(u.atk * (.85 + Math.random() * .3) * (u.k > 1 ? 1 : 1))); if (B.def[t.id]) dmg = Math.ceil(dmg / 2); t.hp = Math.max(0, t.hp - dmg); xFloat(t.id, '-' + dmg, '#ff6a6a'); };
+  if (u.team === 'e'){ if (!xAlive(B.party).length) return; const base = u.atk * (1 - xFm(u, 'weak')), hit = t => xHit(u, t, base * (.85 + Math.random() * .3), '#ff6a6a');
     if (u.aoe && Math.random() < .35){ xAlive(B.party).forEach(hit); B.log = `${u.ic} ${u.name}의 가지 휘두르기!`; } else { const t = xRand(xAlive(B.party)); hit(t); B.log = `${u.ic} ${u.name} → ${t.name}`; } u.g = 0; return; }
-  delete B.def[u.id]; const mult = B.buff ? 1.25 : 1;
-  if (!sk){ const t = tgt || xRand(xAlive(B.foes)); const dmg = Math.max(1, Math.round(Math.max(u.atk, u.mag * .8) * (.85 + Math.random() * .3) * mult)); t.hp = Math.max(0, t.hp - dmg); xFloat(t.id, '-' + dmg, '#ffd866'); B.log = `${u.name}의 공격`; u.g = 0; return; }
-  u.mp -= sk.mp; B.log = `${sk.fx} ${u.name}의 ${sk.n}`;
-  if (sk.t === 'dmg'){ (sk.tg === 'all' ? xAlive(B.foes) : [tgt && tgt.hp > 0 ? tgt : xRand(xAlive(B.foes))]).forEach(t => { const dmg = Math.max(1, Math.round(u[sk.st] * sk.p * (.85 + Math.random() * .3) * mult)); t.hp = Math.max(0, t.hp - dmg); xFloat(t.id, '-' + dmg, '#ffd866'); }); }
-  else if (sk.t === 'heal'){ (sk.tg === 'all' ? xAlive(B.party) : [tgt && tgt.hp > 0 ? tgt : xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]]).forEach(t => { const h = Math.round(u.heal * sk.p * (.9 + Math.random() * .2)); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); }); }
+  delete B.def[u.id]; const mult = (B.buff ? 1.25 : 1) * (1 + xFm(u, 'atk'));
+  if (!sk){ const t = tgt && tgt.hp > 0 ? tgt : xRand(xAlive(B.foes)); xHit(u, t, Math.max(u.atk, u.mag * .8) * (.85 + Math.random() * .3) * mult, '#ffd866'); B.log = `${u.name}의 공격`; u.g = 0; return; }
+  u.mp -= sk.mp; B.log = `${sk.n}! ${u.name}`; const one = () => tgt && tgt.hp > 0 ? tgt : xRand(xAlive(B.foes)), fs = () => sk.tg === 'all' ? xAlive(B.foes) : [one()], as = () => sk.tg === 'all' ? xAlive(B.party) : sk.tg === 'self' ? [u] : [tgt && tgt.hp > 0 ? tgt : xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]];
+  if (sk.t === 'dmg') fs().forEach(t => xHit(u, t, u[sk.st] * sk.p * (.85 + Math.random() * .3) * mult, '#ffd866'));
+  else if (sk.t === 'heal') as().forEach(t => { const h = Math.round(u.heal * sk.p * (.9 + Math.random() * .2)); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); });
   else if (sk.t === 'revive'){ const t = tgt && tgt.hp <= 0 ? tgt : B.party.find(x => x.hp <= 0); if (t){ t.hp = Math.round(t.mhp * .5); xFloat(t.id, '부활!', '#fff'); } else { u.mp += sk.mp; B.log = '쓰러진 동료가 없어요'; } }
+  else if (sk.t === 'buff') as().forEach(t => { t.fx[sk.key] = { v: sk.v, t: sk.sec }; xFloat(t.id, { atk: '공격↑', spd: '속도↑', dmgIn: '방어↑' }[sk.key], '#9fd0ff'); });
+  else if (sk.t === 'deb') fs().forEach(t => { t.fx[sk.key] = { v: sk.v, t: sk.sec }; xFloat(t.id, sk.key === 'slow' ? '느려짐' : '약해짐', '#d0a0ff'); });
+  else if (sk.t === 'dot') fs().forEach(t => { t.fx.dot = { v: Math.round(u[sk.st] * sk.p * mult), t: 8, acc: 0 }; xFloat(t.id, '지속 피해', '#ff9a4d'); });
+  else if (sk.t === 'stun') fs().forEach(t => { xHit(u, t, u[sk.st] * sk.p * (.85 + Math.random() * .3) * mult, '#ffd866'); t.g = Math.min(t.g, -60); });
+  else if (sk.t === 'mp') B.party.forEach(t => { if (t.hp > 0){ t.mp = Math.min(t.mmp, t.mp + t.mmp * sk.v); xFloat(t.id, 'MP↑', '#6aa8ff'); } });
   u.g = sk.w ?? 0;
 }
 function xAI(u){   // 동료 자동 행동
   if (!xAlive(xb.party).length || !xAlive(xb.foes).length) return;
-  const B = xb, sks = XS[u.job].filter(s => s.lv <= u.L && s.mp <= u.mp), low = xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0], dead = B.party.find(x => x.hp <= 0);
+  const B = xb, sks = u.sks.filter(s => s.mp <= u.mp), low = xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0], dead = B.party.find(x => x.hp <= 0), foe0 = xAlive(B.foes)[0];
   const rev = sks.find(s => s.t === 'revive'); if (rev && dead) return xAct(u, rev, dead);
-  const heals = sks.filter(s => s.t === 'heal'); if (heals.length && low.hp / low.mhp < .55){ const all = heals.find(s => s.tg === 'all' && xAlive(B.party).filter(x => x.hp / x.mhp < .6).length >= 2); return xAct(u, all || heals[heals.length - 1], low); }
-  const dm = sks.filter(s => s.t === 'dmg' && s.p > 0), many = xAlive(B.foes).length >= 2; let pick = dm.filter(s => many ? true : s.tg === 'one').sort((a, b) => (b.p * (b.tg === 'all' && many ? xAlive(B.foes).length : 1)) - (a.p * (a.tg === 'all' && many ? xAlive(B.foes).length : 1)))[0];
+  const heals = sks.filter(s => s.t === 'heal'); if (heals.length && low.hp / low.mhp < .55){ const all = heals.find(s => s.tg === 'all' && xAlive(B.party).filter(x => x.hp / x.mhp < .6).length >= 2); return xAct(u, all || heals.sort((a, b) => b.p - a.p)[0], low); }
+  if (Math.random() < .35){ const sup = sks.filter(s => ((s.t === 'buff' && !(u.fx[s.key] && s.tg !== 'all' || B.party[0].fx[s.key] && s.tg === 'all')) || (s.t === 'deb' && !foe0.fx[s.key]) || (s.t === 'mp' && u.mp < u.mmp * .4))); if (sup.length) return xAct(u, xRand(sup), null); }
+  const dm = sks.filter(s => (s.t === 'dmg' || s.t === 'dot' || s.t === 'stun') && (s.p || 0) > 0), many = xAlive(B.foes).length >= 2, sc = s => (s.p || 0) * (s.tg === 'all' && many ? xAlive(B.foes).length : 1) * (s.w ? .7 : 1);
+  let pick = dm.filter(s => many ? true : s.tg === 'one').sort((a, b) => sc(b) - sc(a))[0];
   if (pick && pick.mp > u.mp * .8 && Math.random() < .4) pick = null; xAct(u, pick || null, null);
 }
 function xRenderBattle(){
@@ -1666,17 +1730,17 @@ function xCmd(){
   const B = xb, u = B.party[0], el = $('#xcmd'); if (!el) return;
   if (B.over || u.hp <= 0 || B.turn !== u){ el.innerHTML = B.over ? '' : u.hp <= 0 ? '<div class="hint">쓰러졌어요… 동료가 싸워요</div>' : '<div class="hint">차례를 기다려요…</div>'; return; }
   if (B.pick){ el.innerHTML = '<div class="hint on px" style="grid-column:1/-1">대상을 눌러요</div><button class="btn ghost" data-xc="cancel" style="grid-column:1/-1">취소</button>'; }
-  else el.innerHTML = [{ n: '공격', mp: 0, k: 'atk' }, ...XS[u.job].filter(s => s.lv <= u.L).map((s, i) => ({ ...s, k: 's' + i, full: s })), { n: '방어', mp: 0, k: 'def' }].map(c => `<button class="btn ${c.k === 'atk' ? 'go' : ''}" data-xc="${c.k}" ${c.mp > u.mp ? 'disabled' : ''}>${c.fx || ''} ${c.n}${c.mp ? ` <span class="s sub">MP ${c.mp}</span>` : ''}</button>`).join('');
+  else el.innerHTML = [{ n: '공격', mp: 0, k: 'atk' }, ...u.sks.map((s, i) => ({ ...s, k: 's' + i })), { n: '방어', mp: 0, k: 'def' }].map(c => `<button class="btn ${c.k === 'atk' ? 'go' : ''}" data-xc="${c.k}" ${Math.ceil(c.mp) > Math.floor(u.mp) ? 'disabled' : ''}>${c.i != null ? xIc(c) : ''} ${c.n}${c.mp ? ` <span class="s sub">MP ${c.mp}</span>` : ''}</button>`).join('');
   el.querySelectorAll('[data-xc]').forEach(b => b.onclick = () => xChoose(b.dataset.xc));
 }
 function xChoose(k){
   const B = xb, u = B.party[0]; if (B.turn !== u) return;
   if (k === 'cancel'){ B.pick?.unpick?.(); B.pick = null; return xCmd(); }
   if (k === 'def'){ B.def[u.id] = 1; B.log = `🛡️ ${u.name}이(가) 방어 태세`; u.g = 0; B.turn = null; return xUp(); }
-  const sk = k === 'atk' ? null : XS[u.job].filter(s => s.lv <= u.L)[+k.slice(1)];
+  const sk = k === 'atk' ? null : u.sks[+k.slice(1)];
   const go = tgt => { B.pick = null; xAct(u, sk, tgt); B.turn = null; xUp(); };
-  const targets = !sk || sk.t === 'dmg' ? xAlive(B.foes) : sk.t === 'revive' ? B.party.filter(x => x.hp <= 0) : xAlive(B.party);
-  if (sk && sk.tg === 'all') return go(null); if (targets.length <= 1) return go(targets[0] || null);
+  const foeT = !sk || ['dmg', 'deb', 'dot', 'stun'].includes(sk.t), targets = foeT ? xAlive(B.foes) : sk.t === 'revive' ? B.party.filter(x => x.hp <= 0) : xAlive(B.party);
+  if (sk && (sk.tg === 'all' || sk.tg === 'self' || sk.t === 'mp')) return go(null); if (targets.length <= 1) return go(targets[0] || null);
   B.pick = { sk, go, set: new Set(targets.map(t => t.id)) }; const unpick = () => document.querySelectorAll('.xc').forEach(c => { c.classList.remove('pick'); c.onclick = null; }); B.pick.unpick = unpick;
   document.querySelectorAll('.xc').forEach(c => { const on_ = B.pick.set.has(c.dataset.u); c.classList.toggle('pick', on_); c.onclick = on_ ? () => { const t = [...B.foes, ...B.party].find(x => x.id === c.dataset.u); unpick(); go(t); } : null; }); xCmd();
 }
@@ -1688,7 +1752,7 @@ function xUp(){   // 막대·글 갱신
 function xLoop(){
   const B = xb; if (!B || B.over) return clearInterval(xTick); if (!sheetOn || sub !== 'explore') return clearInterval(xTick);
   const now = performance.now(), dt = Math.min(.25, (now - B.last) / 1000); B.last = now;
-  B.party.concat(B.foes).forEach(u => { if (u.hp <= 0) return; if (u === B.party[0] && B.turn === u) return; if (u.team === 'a' && u.mp < u.mmp) u.mp = Math.min(u.mmp, u.mp + dt * (.6 + u.L * .05)); u.g = Math.min(100, u.g + u.spd * 3.3 * dt); });
+  B.party.concat(B.foes).forEach(u => { if (u.hp <= 0) return; if (u === B.party[0] && B.turn === u) return; if (u.team === 'a' && u.mp < u.mmp) u.mp = Math.min(u.mmp, u.mp + dt * (.6 + u.L * .05)); u.g = Math.min(100, u.g + u.spd * (1 + xFm(u, 'spd') - xFm(u, 'slow')) * 3.3 * dt); const f = u.fx; for (const k in f){ f[k].t -= dt; if (k === 'dot'){ f[k].acc += dt; while (f[k].acc >= 2 && f[k].t > -2){ f[k].acc -= 2; u.hp = Math.max(0, u.hp - f[k].v); xFloat(u.id, '-' + f[k].v, '#ff9a4d'); } } if (f[k].t <= 0) delete f[k]; } });
   if (!B.turn) for (const u of B.party.concat(B.foes)){ if (u.hp <= 0 || u.g < 100) continue; if (u === B.party[0]){ B.turn = u; B.pick = null; break; } if (u.team === 'e') xAct(u, null); else xAI(u); if (!xAlive(B.foes).length || !xAlive(B.party).length) break; }
   if (!xAlive(B.foes).length) return xWin(); if (!xAlive(B.party).length) return xLose();
   if (B.turn && B.turn.hp <= 0) B.turn = null; xUp();
