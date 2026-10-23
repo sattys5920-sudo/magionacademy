@@ -184,7 +184,7 @@ for ji, job in enumerate(ORDER):
                 v += 1
             seen.add(key); sheet.paste(im, ((b*5+r)*S, ji*S))
 sheet.resize((S*15*2, S*12*2), Image.NEAREST).save('public/art/skills.png', optimize=True)
-xt = {j: [[bn, [[n, c] for n, c, g in sks]] for bn, sks in T[j]] for j in ORDER}
+xt = {j: [[bn, [[n, c, OV.get(j, {}).get(n, g)] for n, c, g in sks]] for bn, sks in T[j]] for j in ORDER}
 js = 'const XT = ' + json.dumps(xt, ensure_ascii=False, separators=(',', ':')) + ';'
 p = 'public/index.html'; s = open(p, encoding='utf-8').read()
 if '/*XT*/' in s: s = re.sub(r'/\*XT\*/.*?/\*XT-END\*/', lambda m: '/*XT*/' + js + '/*XT-END*/', s, flags=re.S)
