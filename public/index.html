@@ -20,6 +20,8 @@
   --f-body:'Pretendard',system-ui,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;--f-px:'G11','Pretendard',monospace;--f-pxb:'G11B','Pretendard',monospace;
   --fs:15px;--fs-s:13px;--fs-h:16px;--fs-talk:17px;--r-btn:12px;--r-panel:16px;--r-cell:8px;--hud-h:56px;--bar-h:64px;--dur:.18s}
 html.big{--fs:17px;--fs-s:15px;--fs-h:18px;--fs-talk:19px}
+.jic{display:inline-block;width:1.5em;height:1.5em;vertical-align:middle;background:url(art/jobs.png?v=1) 0 0/1200% 100%;background-position:calc(var(--i)*100%/11) 0;image-rendering:pixelated}
+.big .jic{width:34px;height:34px}.jgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.jcard{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:2px solid var(--line,#5a4a78);border-radius:10px;background:transparent;color:inherit;font:inherit;text-align:center}.jcard .jic{width:32px;height:32px}.jcard b{font-size:13px}.jcard span{font-size:10px;opacity:.75;line-height:1.25}.jcard.on{border-color:#ffb84d;background:rgba(255,184,77,.18)}
 html.lowfx *,html.lowfx *::before,html.lowfx *::after{transition-duration:0s!important;animation-duration:0s!important}
 @media (prefers-reduced-motion:reduce){:root{--dur:0s}}
 *{box-sizing:border-box}
@@ -1526,16 +1528,33 @@ function renderFish(){
 // ===== 탐사 (1단계: 혼자 + 자동 동료 2명 · 시간 게이지 전투) · 설계서: docs/exploration_design.md =====
 const XCAP = 50, xNeed = L => Math.round(14 * L ** 2.3 / 10) * 10;   // 레벨 L → L+1 경험치
 const xLv = exp => { let L = 1, e = exp; while (L < XCAP && e >= xNeed(L)){ e -= xNeed(L); L++; } return { L, cur: e, need: L >= XCAP ? 0 : xNeed(L) }; };
-const XJ = {   // 직업: 체력·공격·마공·치유·속도 [기본, 레벨당]
-  warrior: { n: '전사', ic: '⚔️', d: '근접 딜러 · 큰 한 방', hp: [120, 14], atk: [14, 2.2], mag: [2, .2], heal: [2, .2], spd: [8, .25] },
-  white: { n: '백마법사', ic: '✨', d: '회복 · 부활', hp: [80, 9], atk: [5, .5], mag: [8, .8], heal: [14, 2.2], spd: [10, .3] },
-  black: { n: '흑마법사', ic: '🔥', d: '원거리 마법 · 광역', hp: [70, 8], atk: [4, .4], mag: [16, 2.4], heal: [3, .3], spd: [10, .3] },
+const XJ = {   // 직업: 체력·공격·마공·치유·속도 [기본, 레벨당] · ic는 art/jobs.png 상징
+  warrior: { n: '전사', ic: `<span class="jic" style="--i:0"></span>`, d: '근접 딜러 · 큰 한 방', hp: [120, 14], atk: [14, 2.2], mag: [2, .2], heal: [2, .2], spd: [8, .25] },
+  black: { n: '흑마법사', ic: `<span class="jic" style="--i:1"></span>`, d: '원거리 마법 · 광역', hp: [70, 8], atk: [4, .4], mag: [16, 2.4], heal: [3, .3], spd: [10, .3] },
+  thief: { n: '도적', ic: `<span class="jic" style="--i:2"></span>`, d: '빠른 연속 공격', hp: [85, 10], atk: [12, 1.9], mag: [3, .3], heal: [2, .2], spd: [14, .45] },
+  bard: { n: '음유시인', ic: `<span class="jic" style="--i:3"></span>`, d: '노래로 지원 · 약한 회복', hp: [85, 9], atk: [6, .6], mag: [8, .9], heal: [10, 1.5], spd: [12, .35] },
+  time: { n: '시간술사', ic: `<span class="jic" style="--i:4"></span>`, d: '빠른 마법 · 연속 행동', hp: [72, 8], atk: [4, .4], mag: [13, 1.9], heal: [5, .6], spd: [15, .5] },
+  alch: { n: '연금술사', ic: `<span class="jic" style="--i:5"></span>`, d: '폭발물 · 약간의 회복', hp: [80, 9], atk: [7, .8], mag: [12, 1.7], heal: [8, 1], spd: [10, .3] },
+  white: { n: '백마법사', ic: `<span class="jic" style="--i:6"></span>`, d: '회복 · 부활', hp: [80, 9], atk: [5, .5], mag: [8, .8], heal: [14, 2.2], spd: [10, .3] },
+  druid: { n: '드루이드', ic: `<span class="jic" style="--i:7"></span>`, d: '자연의 재생 · 광역 회복', hp: [90, 10], atk: [5, .5], mag: [9, 1], heal: [12, 1.9], spd: [10, .3] },
+  cleric: { n: '성직자', ic: `<span class="jic" style="--i:8"></span>`, d: '튼튼한 회복 · 응징', hp: [105, 12], atk: [8, 1], mag: [5, .5], heal: [12, 1.9], spd: [8, .25] },
+  knight: { n: '기사', ic: `<span class="jic" style="--i:9"></span>`, d: '단단한 방패 · 굳건한 검', hp: [140, 16], atk: [11, 1.7], mag: [2, .2], heal: [3, .3], spd: [7, .2] },
+  summon: { n: '소환사', ic: `<span class="jic" style="--i:10"></span>`, d: '정령과 야수 · 광역', hp: [75, 8], atk: [4, .4], mag: [14, 2.1], heal: [4, .4], spd: [10, .3] },
+  gadget: { n: '기공사', ic: `<span class="jic" style="--i:11"></span>`, d: '포탑과 폭탄 · 광역', hp: [95, 11], atk: [10, 1.6], mag: [8, 1.1], heal: [3, .3], spd: [9, .3] },
 };
 // 스킬: t 종류(dmg·heal·revive), st 쓰는 스탯, p 배율, tg 대상(one·all), lv 열리는 레벨, w 쓰고 나서 게이지(차지는 음수)
 const XS = {
   warrior: [{ n: '강타', mp: 0, t: 'dmg', st: 'atk', p: 1.2, tg: 'one', lv: 1, fx: '💥' }, { n: '차지 베기', mp: 6, t: 'dmg', st: 'atk', p: 2.3, tg: 'one', lv: 3, fx: '🗡️' }, { n: '회전 베기', mp: 8, t: 'dmg', st: 'atk', p: 1.1, tg: 'all', lv: 6, fx: '🌀' }, { n: '분노의 일격', mp: 12, t: 'dmg', st: 'atk', p: 3.4, tg: 'one', lv: 10, fx: '💢' }, { n: '극한 차지', mp: 20, t: 'dmg', st: 'atk', p: 5.5, tg: 'one', lv: 15, fx: '⚡', w: -60 }],
   white: [{ n: '성광탄', mp: 0, t: 'dmg', st: 'mag', p: 1.2, tg: 'one', lv: 1, fx: '🌟' }, { n: '치유', mp: 5, t: 'heal', st: 'heal', p: 2.2, tg: 'one', lv: 1, fx: '💚' }, { n: '큰 치유', mp: 10, t: 'heal', st: 'heal', p: 3.8, tg: 'one', lv: 5, fx: '💖' }, { n: '집단 치유', mp: 14, t: 'heal', st: 'heal', p: 2.2, tg: 'all', lv: 9, fx: '🌿' }, { n: '되살리기', mp: 20, t: 'revive', st: 'heal', p: 0, tg: 'one', lv: 14, fx: '👼' }],
-  black: [{ n: '불꽃탄', mp: 3, t: 'dmg', st: 'mag', p: 1.8, tg: 'one', lv: 1, fx: '🔥' }, { n: '서리 화살', mp: 5, t: 'dmg', st: 'mag', p: 1.6, tg: 'one', lv: 3, fx: '❄️' }, { n: '번개', mp: 8, t: 'dmg', st: 'mag', p: 2.6, tg: 'one', lv: 6, fx: '⚡' }, { n: '화염구', mp: 12, t: 'dmg', st: 'mag', p: 1.5, tg: 'all', lv: 10, fx: '☄️' }, { n: '메테오', mp: 24, t: 'dmg', st: 'mag', p: 3.2, tg: 'all', lv: 15, fx: '🌋' }],
+  black: [{ n: '불꽃탄', mp: 3, t: 'dmg', st: 'mag', p: 1.8, tg: 'one', lv: 1, fx: '🔥' }, { n: '서리 화살', mp: 5, t: 'dmg', st: 'mag', p: 1.6, tg: 'one', lv: 3, fx: '❄️' }, { n: '번개', mp: 8, t: 'dmg', st: 'mag', p: 2.6, tg: 'one', lv: 6, fx: '⚡' }, { n: '화염구', mp: 12, t: 'dmg', st: 'mag', p: 1.5, tg: 'all', lv: 10, fx: '☄️' }, { n: '메테오', mp: 24, t: 'dmg', st: 'mag', p: 3.2, tg: 'all', lv: 15, fx: '🌋' }],  thief: [{ n: '찌르기', mp: 0, t: 'dmg', st: 'atk', p: 1.3, tg: 'one', lv: 1, fx: '🗡️' }, { n: '이중 베기', mp: 5, t: 'dmg', st: 'atk', p: 2.2, tg: 'one', lv: 3, fx: '✂️' }, { n: '칼춤', mp: 9, t: 'dmg', st: 'atk', p: 1.1, tg: 'all', lv: 6, fx: '🌀' }, { n: '급소 찌르기', mp: 12, t: 'dmg', st: 'atk', p: 3.5, tg: 'one', lv: 10, fx: '💢' }, { n: '난도질', mp: 20, t: 'dmg', st: 'atk', p: 5.2, tg: 'one', lv: 15, fx: '⚡' }],
+  bard: [{ n: '불협화음', mp: 0, t: 'dmg', st: 'mag', p: 1.1, tg: 'one', lv: 1, fx: '🎵' }, { n: '수호의 노래', mp: 6, t: 'heal', st: 'heal', p: 1.6, tg: 'all', lv: 3, fx: '🎶' }, { n: '전장의 북소리', mp: 8, t: 'dmg', st: 'mag', p: 1.3, tg: 'all', lv: 6, fx: '🥁' }, { n: '평온의 선율', mp: 12, t: 'heal', st: 'heal', p: 2.6, tg: 'all', lv: 10, fx: '🎼' }, { n: '별빛 합창', mp: 22, t: 'dmg', st: 'mag', p: 2.8, tg: 'all', lv: 15, fx: '🌟' }],
+  time: [{ n: '늦추기', mp: 0, t: 'dmg', st: 'mag', p: 1.3, tg: 'one', lv: 1, fx: '⏳' }, { n: '서두르기', mp: 6, t: 'dmg', st: 'mag', p: 1.8, tg: 'one', lv: 3, fx: '⏩' }, { n: '시계 소환', mp: 9, t: 'dmg', st: 'mag', p: 1.2, tg: 'all', lv: 6, fx: '🕰️' }, { n: '시간 균열', mp: 13, t: 'dmg', st: 'mag', p: 2.8, tg: 'one', lv: 10, fx: '🌀' }, { n: '시간 정지', mp: 22, t: 'dmg', st: 'mag', p: 3.2, tg: 'all', lv: 15, fx: '⌛' }],
+  alch: [{ n: '산성 플라스크', mp: 2, t: 'dmg', st: 'mag', p: 1.5, tg: 'one', lv: 1, fx: '🧪' }, { n: '응급 물약', mp: 5, t: 'heal', st: 'heal', p: 2.0, tg: 'one', lv: 3, fx: '💚' }, { n: '폭죽탄', mp: 8, t: 'dmg', st: 'mag', p: 1.3, tg: 'all', lv: 6, fx: '🎆' }, { n: '엘릭서', mp: 12, t: 'heal', st: 'heal', p: 3.4, tg: 'one', lv: 10, fx: '💖' }, { n: '연금 대폭발', mp: 24, t: 'dmg', st: 'mag', p: 3.0, tg: 'all', lv: 15, fx: '💥' }],
+  druid: [{ n: '가시 덩굴', mp: 0, t: 'dmg', st: 'mag', p: 1.1, tg: 'one', lv: 1, fx: '🌿' }, { n: '새싹', mp: 5, t: 'heal', st: 'heal', p: 2.0, tg: 'one', lv: 1, fx: '🌱' }, { n: '재생의 숲', mp: 10, t: 'heal', st: 'heal', p: 1.9, tg: 'all', lv: 5, fx: '🌲' }, { n: '생명의 나무', mp: 14, t: 'heal', st: 'heal', p: 3.6, tg: 'one', lv: 9, fx: '🌳' }, { n: '만개', mp: 20, t: 'heal', st: 'heal', p: 2.8, tg: 'all', lv: 14, fx: '🌸' }],
+  cleric: [{ n: '철퇴', mp: 0, t: 'dmg', st: 'atk', p: 1.2, tg: 'one', lv: 1, fx: '🔨' }, { n: '수호의 기도', mp: 5, t: 'heal', st: 'heal', p: 2.0, tg: 'one', lv: 1, fx: '🙏' }, { n: '축복', mp: 9, t: 'heal', st: 'heal', p: 1.8, tg: 'all', lv: 5, fx: '✨' }, { n: '신벌', mp: 12, t: 'dmg', st: 'mag', p: 2.6, tg: 'one', lv: 9, fx: '⚡' }, { n: '구원의 빛', mp: 20, t: 'revive', st: 'heal', p: 0, tg: 'one', lv: 14, fx: '👼' }],
+  knight: [{ n: '베기', mp: 0, t: 'dmg', st: 'atk', p: 1.2, tg: 'one', lv: 1, fx: '⚔️' }, { n: '방패 치기', mp: 5, t: 'dmg', st: 'atk', p: 1.8, tg: 'one', lv: 3, fx: '🛡️' }, { n: '돌격', mp: 8, t: 'dmg', st: 'atk', p: 1.1, tg: 'all', lv: 6, fx: '🐎' }, { n: '방패 돌진', mp: 12, t: 'dmg', st: 'atk', p: 3.1, tg: 'one', lv: 10, fx: '💫' }, { n: '기사의 일격', mp: 20, t: 'dmg', st: 'atk', p: 5.0, tg: 'one', lv: 15, fx: '⚡' }],
+  summon: [{ n: '불 정령', mp: 3, t: 'dmg', st: 'mag', p: 1.8, tg: 'one', lv: 1, fx: '🔥' }, { n: '물 정령', mp: 5, t: 'dmg', st: 'mag', p: 1.6, tg: 'one', lv: 3, fx: '💧' }, { n: '늑대 소환', mp: 8, t: 'dmg', st: 'mag', p: 1.4, tg: 'all', lv: 6, fx: '🐺' }, { n: '호박 유령 소환', mp: 12, t: 'dmg', st: 'mag', p: 2.6, tg: 'one', lv: 10, fx: '🎃' }, { n: '용 소환', mp: 24, t: 'dmg', st: 'mag', p: 3.2, tg: 'all', lv: 15, fx: '🐉' }],
+  gadget: [{ n: '수류탄', mp: 2, t: 'dmg', st: 'atk', p: 1.5, tg: 'one', lv: 1, fx: '💣' }, { n: '소형 포탑', mp: 6, t: 'dmg', st: 'mag', p: 1.9, tg: 'one', lv: 3, fx: '🔫' }, { n: '전기 그물', mp: 9, t: 'dmg', st: 'mag', p: 1.2, tg: 'all', lv: 6, fx: '⚡' }, { n: '레이저 포탑', mp: 12, t: 'dmg', st: 'mag', p: 2.8, tg: 'one', lv: 10, fx: '🔆' }, { n: '집중 포화', mp: 22, t: 'dmg', st: 'atk', p: 2.3, tg: 'all', lv: 15, fx: '🎇' }],
 };
 const XM = [   // 달빛 숲길 몬스터 (레벨 1 기준 체력·공격·속도)
   { n: '이끼 슬라임', ic: '🟢', hp: 40, atk: 6, spd: 6 }, { n: '호박 토끼', ic: '🐇', hp: 35, atk: 7, spd: 10 }, { n: '박쥐 새끼', ic: '🦇', hp: 28, atk: 8, spd: 12 }, { n: '꼬마 유령', ic: '👻', hp: 45, atk: 9, spd: 8 },
@@ -1543,12 +1562,13 @@ const XM = [   // 달빛 숲길 몬스터 (레벨 1 기준 체력·공격·속�
 const XELITE = { n: '늙은 늑대', ic: '🐺', hp: 150, atk: 13, spd: 9, k: 3 }, XBOSS = { n: '숲의 수호 나무', ic: '🌳', hp: 360, atk: 14, spd: 6, k: 8, aoe: true };
 const XREG = { n: '달빛 숲길', min: 20, fee: 50, loot: ['herb', 'drop', 'mush', 'g_dandel', 'g_mint', 'g_straw', 'g_carrot'], rare: ['mana', 'g_clover'] };
 const XDAY = 5, XNODE = { battle: ['⚔️', '몬스터', 7], elite: ['🐺', '강한 몬스터', 11], camp: ['🔥', '캠프파이어', 4], statue: ['🗿', '고대 석상', 5], chest: ['🎁', '보물상자', 4], boss: ['🌳', '숲의 주인', 100] };
+const xJobGrid = sel => `<div class="jgrid">${Object.entries(XJ).map(([k, j]) => `<button type="button" class="jcard${sel === k ? ' on' : ''}" data-job="${k}">${j.ic}<b>${j.n}</b><span>${j.d}</span></button>`).join('')}</div>`;
 const xRand = a => a[Math.floor(Math.random() * a.length)];
 function xEx(){ me.ex = me.ex || { exp: 0, d: '', n: 0 }; if (me.ex.d !== todayKey()){ me.ex.d = todayKey(); me.ex.n = 0; } return me.ex; }
 const xSt = (job, L, k) => Math.round(XJ[job][k][0] + XJ[job][k][1] * (L - 1));
 const xMkUnit = (job, L, name, ai, hp, mp) => { const u = { id: name, job, name, ic: XJ[job].ic, L, ai, team: 'a', mhp: xSt(job, L, 'hp'), mmp: 30 + L * 3, atk: xSt(job, L, 'atk'), mag: xSt(job, L, 'mag'), heal: xSt(job, L, 'heal'), spd: xSt(job, L, 'spd'), g: Math.random() * 40 }; u.hp = hp ?? u.mhp; u.mp = mp ?? u.mmp; return u; };
 let xv = null, xb = null, xMsg = '', xTick = 0;   // xv 화면 상태, xb 전투 상태
-function xParty(){ const ex = xEx(), L = xLv(ex.exp).L, run = ex.run, jobs = ['warrior', 'white', 'black'], mine = ex.job, others = jobs.filter(j => j !== mine);
+function xParty(){ const ex = xEx(), L = xLv(ex.exp).L, run = ex.run, jobs = ['warrior', 'white', 'black'], mine = ex.job, others = jobs.filter(j => j !== mine).slice(0, 2);
   return [xMkUnit(mine, L, me.nick, false, run?.p?.[0]?.hp, run?.p?.[0]?.mp), ...others.map((j, i) => xMkUnit(j, L, '동료 ' + XJ[j].n, true, run?.p?.[i + 1]?.hp, run?.p?.[i + 1]?.mp))]; }
 function xSaveParty(){ const run = xEx().run; if (run && xb) run.p = xb.party.map(u => ({ hp: u.hp, mp: u.mp })); }
 function xEnd(how){   // how: clear · time · retreat · wipe
@@ -1565,7 +1585,7 @@ function renderExplore(){
   if (!xv) xv = { view: ex.run ? 'node' : 'lobby' };
   const v = xv.view, back = '<button class="btn ghost" id="back">닫기</button>';
   if (!job){
-    frame(null, '탐사', '직업을 골라요 (한 번 고르면 바뀌지 않아요)', `<section class="sec">${secH('직업 고르기', '12종 중 3종 먼저')}<div class="box px">${Object.entries(XJ).map(([k, j]) => `<div class="li">${j.ic ? `<span class="big">${j.ic}</span>` : ''}<div class="main"><span class="t">${j.n}</span><span class="d" style="white-space:normal">${j.d}<br>${XS[k].map(s => s.n).join(' · ')}</span></div><button class="btn sm go" data-xj="${k}">고르기</button></div>`).join('')}</div></section><div style="display:flex;gap:8px">${back}</div>`);
+    frame(null, '탐사', '직업을 골라요 (한 번 고르면 바뀌지 않아요)', `<section class="sec">${secH('직업 고르기', '12종')}<div class="box px">${Object.entries(XJ).map(([k, j]) => `<div class="li">${j.ic ? `<span class="big">${j.ic}</span>` : ''}<div class="main"><span class="t">${j.n}</span><span class="d" style="white-space:normal">${j.d}<br>${XS[k].map(s => s.n).join(' · ')}</span></div><button class="btn sm go" data-xj="${k}">고르기</button></div>`).join('')}</div></section><div style="display:flex;gap:8px">${back}</div>`);
     $('#back').onclick = closeSheet; on('[data-xj]', b => confirmBox(`${XJ[b.dataset.xj].n}(으)로 정할까요? 바꿀 수 없어요.`, '정했어요', '다시 볼래요').then(ok => { if (ok){ ex.job = b.dataset.xj; save(); renderExplore(); } })); return;
   }
   const head = `<div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center"><span class="big">${job.ic}</span><div style="flex:1"><b>${esc(me.nick)} · ${job.n} Lv ${lv.L}</b><div class="s sub">${lv.need ? `경험치 ${lv.cur} / ${lv.need}` : '최고 레벨'} · HP ${xSt(ex.job, lv.L, 'hp')} · 공 ${xSt(ex.job, lv.L, 'atk')} · 마 ${xSt(ex.job, lv.L, 'mag')} · 치 ${xSt(ex.job, lv.L, 'heal')} · 속 ${xSt(ex.job, lv.L, 'spd')}</div></div></div></div>`;
@@ -5381,7 +5401,7 @@ function renderClothes(){
   };
 }
 function showCreate(done, counts = {}){
-  let look = Math.floor(Math.random() * 8), house = null, nick = '';
+  let look = Math.floor(Math.random() * 8), house = null, nick = '', job = '';
   const av = World.Avatar.fromLook(Math.floor(Math.random() * 1e6));
   const draw = () => {
     cover(`<div class="card px">
@@ -5391,6 +5411,8 @@ function showCreate(done, counts = {}){
       ${World.Avatar.loaded ? avatarUI(av) : '<div class="hint">그림을 불러오는 중...</div>'}
       <span class="s">기숙사 고르기 · 언제 깨어 있는 사람인가요? (기숙사마다 ${HOUSE_CAP}명)</span>
       ${houseCards(house, counts)}
+      <span class="s">탐사 직업 · 한 번 고르면 바뀌지 않아요 (나중에 탐사가 열릴 때 골라도 돼요)</span>
+      ${xJobGrid(job)}
       <p class="err" id="err"></p>
       <button class="btn go" id="enroll">입학하기</button>
     </div>`);
@@ -5398,11 +5420,12 @@ function showCreate(done, counts = {}){
     if (!World.Avatar.loaded) World.Avatar.ready.then(() => { keep(); draw(); });
     else bindAvatarUI(av, () => { keep(); const y = app.querySelector('.cover').scrollTop; draw(); app.querySelector('.cover').scrollTop = y; });
     app.querySelectorAll('[data-house]').forEach(b => b.onclick = () => { keep(); house = b.dataset.house; av.house = house; draw(); });
+    app.querySelectorAll('[data-job]').forEach(b => b.onclick = () => { keep(); job = job === b.dataset.job ? '' : b.dataset.job; draw(); });
     $('#enroll').onclick = () => {
       keep(); const n = nick.trim();
       if (n.length < 1 || n.length > 8) return $('#err').textContent = '이름을 1~8 자로 정해 주세요.';
       if (!house) return $('#err').textContent = '기숙사를 골라 주세요.';
-      const fav = World.Avatar.fix(av); delete fav.house; done(freshPlayer(n, look, house, fav));
+      const fav = World.Avatar.fix(av); delete fav.house; const np = freshPlayer(n, look, house, fav); if (job) np.ex = { exp: 0, d: '', n: 0, job }; done(np);
     };
   };
   draw();
