@@ -3,7 +3,8 @@
 ## 꼭 할 것
 - [ ] **마들렌 대사 성별 표현 점검 (남성으로 확정)**: 마들렌이 남성으로 정해졌어요. 서브 NPC 대사(`public/data/npc/madeleine/` 하트 이벤트 10개, 평소 대사 `profile.json`, `index.html`의 `NPC_DEF` greet/story)와 다른 NPC·메인 의뢰 대사에서 마들렌을 여성으로 부르는 표현(예: 「언니」, 「그녀」, 「아가씨」, 「제빵사 누나」)을 전부 찾아 남성에 맞게 고치기. 말투(`tone`)도 남성 제빵사에 어색하지 않은지 확인. 점검 뒤 `scripts/validate_npc.py`로 검증.
 - [ ] 서브 NPC 초상 4명(세라·마들렌·스텔라·레오) 새 초상이 나오면 처리: 흰 배경 지우기·규격 맞추기·얼굴 틀 연결 (`tools/portraits.py` 사용, 붕대처럼 흰 부분이 있으면 `WHITE_MIN` 조정)
-- [ ] 서브 동물 NPC 6명 초상도 같은 방식으로 처리 (나비·배트리·캇파·아울라·맨디·짚신)
+- [x] 나비 초상 적용 완료 (`tools/portraits_src/nabi_*.webp` → `public/art/portraits/nabi.png`, `SUB_PORT`에 등록)
+- [ ] 서브 동물 NPC 5명 초상 처리 (배트리·캇파·아울라·맨디·짚신): 그림이 오면 `tools/portraits.py`의 `CROP`(아래가 자연스럽게 잘리게)·`WHITE_MIN`을 정하고 `index.html`의 `SUB_PORT`에 한 줄씩 추가
 
 ## 설계·구현 대기
 - [ ] 탐사 시스템 구현 (설계서: `docs/exploration_design.md`, 남은 질문 4개: 입구 위치·전투 중 이모티콘·쓰러진 아군 처리·입장 횟수 초기화 시각)

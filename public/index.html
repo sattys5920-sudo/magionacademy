@@ -2621,7 +2621,7 @@ async function evFadeTo(v, ms = 300){ const s = STG.fade, t0 = performance.now()
 function evSay(ctx, name, text, narr){
   const box = evUI().querySelector('.evbox'), nm = box.querySelector('.evname'), tx = box.querySelector('.evtext');
   box.classList.toggle('narr', !!narr); nm.textContent = name || ''; nm.style.display = name ? '' : 'none';
-  { const pt = box.querySelector('.evport'), mc = !narr && typeof MQ !== 'undefined' && MQ.cast[STG.speaker]; if (pt){ if (mc && mc.portrait){ pt.style.display = 'block'; pt.style.setProperty('--asp', mc.pasp || '128/171'); pt.style.backgroundImage = `url(art/portraits/${mc.portrait}.png?v=${PORTRAIT_V})`; pt.style.backgroundPosition = `${faceOf(text) * 25}% 0`; } else pt.style.display = 'none'; } } box.querySelector('.evch').innerHTML = ''; box.querySelector('.evtap').style.visibility = 'hidden';
+  { const pt = box.querySelector('.evport'), mc = !narr && ((typeof MQ !== 'undefined' && MQ.cast[STG.speaker]) || SUB_PORT[STG.speaker]); if (pt){ if (mc && mc.portrait){ pt.style.display = 'block'; pt.style.setProperty('--asp', mc.pasp || '128/171'); pt.style.backgroundImage = `url(art/portraits/${mc.portrait}.png?v=${PORTRAIT_V})`; pt.style.backgroundPosition = `${faceOf(text) * 25}% 0`; } else pt.style.display = 'none'; } } box.querySelector('.evch').innerHTML = ''; box.querySelector('.evtap').style.visibility = 'hidden';
   const full = fillVars(text, ctx.n.id).replace(/\[(기본|웃음|화남|놀람|부끄러움)\]\s*/g, ''); let i = 0, done = false;
   return new Promise(res => {
     const tick = () => { if (done) return; i = SET.talk ? Math.min(full.length, i + 2) : full.length; tx.textContent = full.slice(0, i); if (i < full.length) setTimeout(tick, SET.talk); else { done = true; box.querySelector('.evtap').style.visibility = 'visible'; } };
@@ -3001,6 +3001,8 @@ function storyReward(c){
   me.story.got[c] = 1; me.coin += coin; me.mana += mana; save(); hud(); toast(`${c}장 보상: ${coin}G · 마력 +${mana}${rank <= 3 ? ` (많이 도운 ${rank}등!)` : ''}`);
 }
 // 메인 주인공 초상화 (public/art/portraits/<id>.png, 5칸: 기본·웃음·화남·놀람·부끄러움 — tools/portraits.py)
+// 서브 NPC 대사창 초상 (art/portraits/<이름>.png, 5표정 한 줄: 기본·웃음·화남·놀람·부끄러움). 아직 그린 애들만 있어요
+const SUB_PORT = { nabi: { portrait: 'nabi', pasp: '266/266' } };
 const PORTRAITS = { m_jack: ['jack', '128/171'], m_lucian: ['lucian', '224/300'], m_mirabel: ['mirabel', '265/363'], m_frankie: ['frankie', '99/133'], m_wolfgang: ['wolfgang', '99/133'], m_boo: ['boo', '122/177'], m_hazel: ['hazel', '128/171'] }, PORTRAIT_V = 13, PFACE = ['neutral', 'happy', 'angry', 'surprised', 'shy'];
 // 대사 내용으로 표정 고르기 (따로 표시가 없을 때)
 function faceOf(t){
