@@ -3,7 +3,9 @@
 Python 3 + Pillow. `halloween.py`·`school.py`는 `world.py`의 그리기 도구를 빌려 써요.
 
 ```
-python3 halloween.py   # 학교 + 몬스터 마을(84×72, 늘 밤): out/hw_bg.png, out/hw_obj.png, out/hw.json
+python3 halloween.py   # 학교 + 몬스터 마을을 옛 크기(84×72)로 그린 뒤 split_maps.py가 둘로 나누고 넓게 펴요(가로 2배·세로 1.4배, 건물 크기는 그대로):
+                          # out/hw_bg.png(학교=campus), out/town_bg.png(마을·시장=town), out/hw_obj.png(둘이 같이 씀), out/hw.json, out/town.json, out/door_map.json
+                          # 옛 좌표 → 새 (지도, x, y)는 split_maps.leg2new (index.html legToNew, tools/split_data.py·npc_places.py)
 python3 quarter.py     # 그림자 골목(72×42): 시장 거리 동쪽 끝 문으로 이어지는 의뢰인 마을 (뱀파이어 저택·박물관·번개 탑·마녀 오두막·늑대 통나무집·일곱 등불 광장): out/quarter_bg.png, out/quarter_obj.png, out/quarter.json
                           # halloween.py의 문 기둥(80,25)·(80,29)과 짝이에요. 문의 walk:true = 기둥 사이를 걸으면 바로 넘어가요
 python3 arena.py       # 놀이 마당(34×28): 게임(호박 줍기 등)을 하는 전용 맵. 눌러서 뜨는 물건 없음. out/arena_bg.png, out/arena_obj.png, out/arena.json

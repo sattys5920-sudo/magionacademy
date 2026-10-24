@@ -397,6 +397,7 @@ place('board', 'gameboard', 60, 21, act=('놀이 게시판', '놀이 고르기')
 for (x, y) in [(56, 22), (66, 22), (56, 33), (66, 33), (58, 30), (64, 24)]:
     if (x, y) not in occupied: put('jack', 'jack', x, y, solid=False)
 LAMPS = [(x, 25) for x in range(4, 39, 6)] + [(x, 29) for x in range(47, 84, 6)] + [(18, y) for y in range(32, 70, 6)] + [(59, y) for y in range(36, 70, 6)] + [(x, 50) for x in range(4, 39, 7)] + [(61, 14), (61, 18), (13, 23), (28, 23)]
+LAMPS_ALL = list(LAMPS)   # 옛 자리 그대로 (split_maps가 새 지도에 옮겨 심어요)
 LAMPS = [t for t in LAMPS if t not in occupied and T.get(t) not in ('river', 'lake')]
 for (x, y) in LAMPS: put('lantern', 'lantern', x, y)
 for (x, y) in [(15, 29), (26, 29), (24, 38), (10, 40), (54, 23), (67, 25), (50, 54), (58, 55)]:
@@ -445,5 +446,6 @@ def zone(x, y):
 FORAGE = [[x, y, zone(x, y)] for x in range(2, NX - 2) for y in range(2, NY - 2) if (x, y) not in occupied and T[(x, y)] in ('grass', 'grave') and (x * 7 + y * 3) % 4 == 0]
 AREAS = [dict(n=f'{e[2]}쪽 길 · {e[1]}', t=e[8]) for e in EXPL] + [dict(n='본관 · 물약 교실', t=[19, 24]), dict(n='과자 교실', t=[6, 37]), dict(n='공예 교실', t=[29, 37]), dict(n='기숙사', t=[16, 48]), dict(n='호박밭', t=[9, 55]), dict(n='독초 온실', t=[22, 63]),
          dict(n='사육장', t=[27, 61]), dict(n='등불 시장', t=[61, 31]), dict(n='채소 가게', t=[54, 35]), dict(n='교실 · 수업', t=[34, 22]), dict(n='북쪽 연못', t=[26, 10]), dict(n='북동 연못', t=[74, 11]), dict(n='남동 연못', t=[75, 44]), dict(n='뱀파이어 저택', t=[63, 12]), dict(n='마녀의 오두막', t=[72, 49]), dict(n='묘지', t=[51, 51]), dict(n='유령 호수', t=[56, 53]), dict(n='늑대인간 집', t=[78, 60])]
-json.dump(dict(W=W, H=H, NX=NX, NY=NY, OX=OX, OY=OY, objs=meta, lights=lights, water=WATER, ponds=[dict(id=q['id'], name=q['name'], cx=q['cx'], cy=q['cy'], r=max(q['rx'], q['ry']) + 1.5) for q in PONDS], forage=FORAGE, areas=AREAS, start=[20, 30]), open('out/hw.json', 'w'), ensure_ascii=False)
+AREAS_LEG = AREAS[len(EXPL):]   # 탐사장 길 이름은 새 지도에서 다시 만들어요
+import split_maps; split_maps.run(globals())   # 학교·마을 두 지도로 나누고 넓게 펴요 → out/hw.json, out/town.json
 print('objs', len(objs), 'sheet', sheet.size)

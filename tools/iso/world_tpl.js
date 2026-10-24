@@ -353,7 +353,7 @@ let bobber = null, spots = [], spotMap = null;
 const isWater = (x, y) => !!(M && M.water && M.water.some(w => w[0] === x && w[1] === y));
 World.setBobber = b => { bobber = b; };   // { x, y, bite } 물 칸에 찌 (없애려면 null)
 World.setSpots = (mapId, list) => { spotMap = mapId; spots = list || []; };
-World.getSpots = () => spotMap === map ? spots : [];   // [{ x, y, k }] k: 그림 칸(없으면 반짝이만)
+World.getSpots = () => spots.filter(sp => (sp.m || spotMap) === map);   // [{ x, y, k }] k: 그림 칸(없으면 반짝이만)
 World.faceTo = (x, y) => { const DV = World.Avatar.meta.dirs, dx = x - me.x, dy = y - me.y; me.view = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? DV.right : DV.left) : (dy < 0 ? DV.up : DV.down); me.flip = false; };
 // 요리: 솥(물건 이름 + 칸) 위에 국물·김·거품·날아드는 재료·국자·불빛을 세계 픽셀 크기로 그려요
 let cook = null, cookImg = {};
@@ -529,7 +529,7 @@ function findNear(){
   const mx = Math.round(me.x), my = Math.round(me.y);
   const np = people.filter(p => p.npc && Math.abs(Math.round(p.x) - mx) + Math.abs(Math.round(p.y) - my) <= 1).sort((a, b) => (Math.abs(a.x - mx) + Math.abs(a.y - my)) - (Math.abs(b.x - mx) + Math.abs(b.y - my)))[0];
   if (np) return { kind: 'npc', id: np.npc.id, name: np.name, key: 'n' + np.npc.id };
-  if (spotMap === map){ const si = spots.findIndex(sp => Math.abs(sp.x - mx) + Math.abs(sp.y - my) <= 1); if (si >= 0) return { kind: 'spot', i: si, sp: spots[si], key: 's' + si }; }
+  { const si = spots.findIndex(sp => (sp.m || spotMap) === map && Math.abs(sp.x - mx) + Math.abs(sp.y - my) <= 1); if (si >= 0) return { kind: 'spot', i: si, sp: spots[si], key: 's' + si }; }
   { const mi = marks.findIndex(q => (q.map === map || q.map === rmap) && Math.abs(q.x - mx) + Math.abs(q.y - my) <= 2); if (mi >= 0) return { kind: 'mark', id: marks[mi].id, label: marks[mi].label || '조사하기', key: 'm' + marks[mi].id }; }
   for (const o of [...objOrder, ...flats]){ const a = o.act || ACTS[o.name]; if (!a || !o.box || o.furn) continue;
     const dx = Math.max(Math.floor(o.box[0]) - mx, 0, mx - (Math.ceil(o.box[2]) - 1)), dy = Math.max(Math.floor(o.box[1]) - my, 0, my - (Math.ceil(o.box[3]) - 1));
@@ -607,7 +607,7 @@ cv.addEventListener('pointerdown', e => {
   const [tx, ty] = tileAt();
   if (World.busyFish) return;
   // 채집 지점은 조금 빗나가게 눌러도 돼요 (한 칸 안)
-  const si = spotMap === map ? spots.map((sp, i) => [i, Math.hypot(sp.x - tx, sp.y - ty)]).filter(([, d]) => d <= 1.5).sort((p1, p2) => p1[1] - p2[1]).map(([i]) => i)[0] ?? -1 : -1;
+  const si = spots.length ? spots.map((sp, i) => [i, (sp.m || spotMap) === map ? Math.hypot(sp.x - tx, sp.y - ty) : 99]).filter(([, d]) => d <= 1.5).sort((p1, p2) => p1[1] - p2[1]).map(([i]) => i)[0] ?? -1 : -1;
   { const mi = marks.map((q, i) => [i, (q.map === map || q.map === rmap) ? Math.hypot(q.x - tx, q.y - ty) : 99]).filter(([, d]) => d <= 1.5).sort((p1, p2) => p1[1] - p2[1]).map(([i]) => i)[0] ?? -1;
     if (mi >= 0){ const q = marks[mi]; if (Math.abs(Math.round(me.x) - q.x) + Math.abs(Math.round(me.y) - q.y) <= 1){ World.onMark && World.onMark(q.id); } else { const c = near([[q.x, q.y]])[0]; if (c && goto(me, c[0], c[1])) pending = { mark: q.id }; } return; } }
   if (si >= 0 && World.onSpot){ const sp = spots[si]; if (Math.round(me.x) === sp.x && Math.round(me.y) === sp.y) World.onSpot(si, sp); else if (goto(me, sp.x, sp.y)) pending = { spot: si, sp }; return; }
@@ -799,7 +799,7 @@ function frame(now){
     } }
   drawMarks(now, view); drawBats(now); if (fxDark){ cx.globalAlpha = fxDark; cx.fillStyle = '#05030A'; cx.fillRect(ix, iy, VW, VH); cx.globalAlpha = 1; }
   // 채집 지점: 밤에도 잘 보이게 빛 다음에 그려요
-  if (spotMap === map) spots.forEach((sp, i) => { const [x, y] = P(sp.x + .5, sp.y + .5), t = now / 260 + i * 1.3, a = .6 + .4 * Math.sin(t), sy = y - 7 - Math.round(Math.sin(t * .7) * 2);
+  spots.forEach((sp, i) => { if ((sp.m || spotMap) !== map) return; const [x, y] = P(sp.x + .5, sp.y + .5), t = now / 260 + i * 1.3, a = .6 + .4 * Math.sin(t), sy = y - 7 - Math.round(Math.sin(t * .7) * 2);
     if (x < view.x || x > view.x + view.w || y < view.y || y > view.y + view.h) return;
     if (sp.k){   // 놀이 호박: 보통 · 황금 · 썩은
       const C = { p: ['#F08A2A', '#C8641A'], g: ['#FFD040', '#E0A020'], r: ['#7A8A4A', '#56603A'] }[sp.k] || ['#F08A2A', '#C8641A'], X = Math.round(x), Y = Math.round(y) - 1 - Math.max(0, Math.round(Math.sin(t * 2) * 1.5));
@@ -853,7 +853,7 @@ async function openMap(want){
   mcv.width = m.W; mcv.height = m.H; const g = mcv.getContext('2d'); g.drawImage(mapImgs[id], 0, 0);
   mapv.classList.add('on'); document.querySelectorAll('.mlabel').forEach(e => e.remove());
   let tabs = document.getElementById('mtabs'); if (!tabs){ tabs = document.createElement('div'); tabs.id = 'mtabs'; mapv.insertBefore(tabs, document.getElementById('mwrap')); }
-  const outdoors = Object.keys(MAPS).filter(k => !MAPS[k].meta.indoor && !MAPS[k].meta.lazyHide && /^(campus|quarter)$/.test(k));
+  const outdoors = Object.keys(MAPS).filter(k => !MAPS[k].meta.indoor && !MAPS[k].meta.lazyHide && /^(campus|town|quarter)$/.test(k));
   tabs.innerHTML = outdoors.map(k => `<button data-mv="${k}" class="${k === id ? 'on' : ''}">${MAPS[k].meta.title}</button>`).join(''); tabs.querySelectorAll('button').forEach(b => b.onclick = () => openMap(b.dataset.mv));
   const here = real(map) === id;
   requestAnimationFrame(() => {
@@ -887,7 +887,7 @@ World.mapCanvas = async id => { await World.ready; const rid = real(id); if (!MA
   const c = document.createElement('canvas'); c.width = m.W; c.height = m.H; const g = c.getContext('2d'); g.fillStyle = m.fill || '#140E1E'; g.fillRect(0, 0, m.W, m.H); g.drawImage(A.bg, 0, 0);
   (A.order || (A.order = orderObjs(m.objs))).forEach(o => g.drawImage(A.obj, o.sx, o.sy, o.sw, o.sh, o.x, o.y, o.sw, o.sh)); return { canvas: c, meta: m }; };
 World.mapIds = () => Object.keys(MAPS);
-World.objSprite = async (id, name) => { await World.ready; const rid = real(id); if (!MAPS[rid]) return null; await ensureMap(rid); const A = MAPS[rid], o = A.meta.objs.find(q => q.name === name); return o ? { img: A.obj, sx: o.sx, sy: o.sy, sw: o.sw, sh: o.sh } : null; };   // 이벤트 무대용 (까마귀 등)
+World.objSprite = async (id, name) => { await World.ready; for (const rid of [real(id), ...(real(id) === 'campus' ? ['town'] : real(id) === 'town' ? ['campus'] : [])]){ if (!MAPS[rid]) continue; await ensureMap(rid); const A = MAPS[rid], o = A.meta.objs.find(q => q.name === name); if (o) return { img: A.obj, sx: o.sx, sy: o.sy, sw: o.sw, sh: o.sh }; } return null; };   // 이벤트 무대용 (까마귀 등)
 World.ready = (async () => {
   await World.Avatar.ready;
   CR_IMG = await img(CR_SRC);

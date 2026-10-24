@@ -62,6 +62,23 @@ P = [
  ('barn_burnt', '그을린 헛간', 'barn', 25, 10, 0, 0, None, 'dim'),
  ('hill_top', '별 보는 언덕', 'campus', 9, 5, 0, 0, None, 'sky'),
 ]
+# 학교·마을을 둘로 나누고 넓게 펴면서 옛 campus 좌표를 새 (지도, x, y)로 바꿔요 (tools/iso/split_maps.py), 막힌 칸이면 가까운 빈 칸으로 옮겨요
+sys.path.insert(0, 'tools/iso'); import split_maps
+def snap(mp, x, y):
+    m, b = blocked(mp)
+    for rr in range(0, 8):
+        for a in range(x - rr, x + rr + 1):
+            for c in range(y - rr, y + rr + 1):
+                if (a, c) not in b and 1 <= a < m['NX'] - 1 and 1 <= c < m['NY'] - 1 and not any(((a + dx, c + dy) in b) for dx in (0,) for dy in (0,)): return a, c
+    return x, y
+P2 = []
+for pid, name, mp, x, y, r, stand, bg, tint in P:
+    if mp == 'campus':
+        mp, x, y = split_maps.leg2new(x, y)
+        if bg: bg = split_maps.leg2new(bg[0], bg[1])[1:]
+        if stand and mp in D: x, y = snap(mp, x, y)
+    P2.append((pid, name, mp, x, y, r, stand, bg, tint))
+P = P2
 out, bad = [], []
 for pid, name, mp, x, y, r, stand, bg, tint in P:
     if stand and mp in D:
