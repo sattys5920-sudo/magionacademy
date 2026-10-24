@@ -2139,7 +2139,7 @@ function xAmb(g, kind, now){   // 분위기 입자: 반딧불 · 안개 · 포�
 function xLayout(B){
   const norm = B.foes.filter(u => !(u.k >= 3)); B.foes.forEach(u => { if (u.big) [u.bx, u.by] = XBOSS_AT; else if (u.k >= 3) [u.bx, u.by] = [136, 184]; else { const sl = XFS[Math.min(2, norm.length - 1)], i = norm.indexOf(u), e = B.foes.some(f => f.k >= 3); [u.bx, u.by] = e ? [76, 204] : sl[i] || sl[0]; } });
   B.party.forEach((u, i) => { [u.bx, u.by] = XPS[i] || XPS[0]; });
-  [...B.foes, ...B.party].forEach(u => { u.sx = u.bx; u.sy = u.by; });
+  [...B.foes, ...B.party].forEach(u => { u.bx = XCW - u.bx; u.sx = u.bx; u.sy = u.by; });   // 아군은 왼쪽, 적은 오른쪽 (행군하는 쪽과 같아요)
 }
 function xFxDraw(g, f, x, y, now){
   const p = (now - f.t0) / f.dur; if (p < 0) return true; if (p >= 1) return false;
@@ -2166,6 +2166,7 @@ function xFxDraw(g, f, x, y, now){
   }
   return true;
 }
+let xTmpCv = null;
 function xDraw(){
   const B = xb, cv = $('#xcv'); if (!B || !cv || !sheetOn || sub !== 'explore' || xv?.view !== 'battle'){ xRaf = 0; return; }
   xRaf = requestAnimationFrame(xDraw); const g = cv.getContext('2d'), now = performance.now(), R = xReg();
@@ -2178,8 +2179,8 @@ function xDraw(){
     let dead = u.hp <= 0; if (dead && !u.dieAt) u.dieAt = now + (u.dieWait || 0); if (!dead){ u.dieAt = 0; u.dieWait = 0; } if (dead && now < u.dieAt) dead = false;
     let al = 1; if (dead && u.team === 'e'){ al = 1 - (now - u.dieAt) / 600; if (al <= 0) return; }
     const wa = u.wa, wp = wa ? (now - wa.t0) / wa.dur : 2; let off = 0;
-    const st = u.team === 'a' ? xState(u, now) : null; if (st) off = st.f ? st.f[4] : 0;   // 몸은 공격 프레임마다 1~2px만 움직여요
-    else if (u.team === 'e'){ const lg = u.lg ? (now - u.lg) / 320 : 2; off = lg < 1 ? Math.sin(lg * Math.PI) * 22 : 0; }
+    const st = u.team === 'a' ? xState(u, now) : null; if (st) off = st.f ? -st.f[4] : 0;   // 몸은 공격 프레임마다 1~2px만 움직여요
+    else if (u.team === 'e'){ const lg = u.lg ? (now - u.lg) / 320 : 2; off = lg < 1 ? -Math.sin(lg * Math.PI) * 22 : 0; }
     const hit = u.flash > now && now >= (u.flashAt || 0), sh = hit ? (Math.round(now / 40) % 2 ? 2 : -2) : 0, bob = dead ? 0 : Math.round(Math.sin(now / 420 + u.by) * 1);
     u.sx = u.bx + off; u.sy = u.by; const x = Math.round(u.bx + off + sh), y = u.by + bob, sc = u.sc || 1;
     g.fillStyle = 'rgba(0,0,0,.32)'; g.beginPath(); g.ellipse(u.bx + off * .3, u.by, (u.team === 'e' ? 14 * sc : 14), (u.team === 'e' ? 4 * sc : 4), 0, 0, 7); g.fill();
@@ -2188,8 +2189,11 @@ function xDraw(){
       for (let k = 0; k < 6; k++){ const a = k * 1.047 + wp * 9; g.fillStyle = wa.c; g.fillRect(Math.round(u.bx + Math.cos(a) * r), Math.round(u.by + Math.sin(a) * r * .32), 2, 2); } g.restore(); }
     if (u.team === 'a' && B.turn === u && !B.pick && !dead){ g.save(); g.strokeStyle = '#4fd8ff'; g.lineWidth = 2; g.globalAlpha = .6 + .4 * Math.sin(now / 160); g.beginPath(); g.ellipse(u.bx, u.by, 24, 7.5, 0, 0, 7); g.stroke(); g.restore(); }
     g.globalAlpha = al; const tint = c => { tintC.width = c.w; tintC.height = c.h; const q = tintC.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, c.w, c.h); q.drawImage(c.img, c.sx, c.sy, c.w, c.h, 0, 0, c.w, c.h); q.globalCompositeOperation = 'source-atop'; q.fillStyle = 'rgba(255,255,255,.75)'; q.fillRect(0, 0, c.w, c.h); q.globalCompositeOperation = 'source-over'; return tintC; };
-    if (u.team === 'e'){ if (lpc.complete){ const w = 64 * sc, c = { img: lpc, sx: u.lp * 64, sy: 0, w: 64, h: 64 }; g.drawImage(hit ? tint(c) : lpc, hit ? 0 : c.sx, 0, 64, 64, x - w / 2, y - w + 4 * sc, w, w); } }
-    else { const sp = strip(u); if (sp){ g.save(); const ox = x - FW / 2, oy = y - FH + 6; if (dead){ g.translate(x, y); g.rotate(-Math.PI / 2); g.translate(-x, -y); g.globalAlpha = .55; } const c = { img: sp, sx: dirL * FW, sy: 0, w: FW, h: FH }; xHandOf(u, sp); xArmLayer(g, u, ox, oy, st, 'b', now, sp, c.sx); g.drawImage(hit ? tint(c) : sp, hit ? 0 : c.sx, 0, FW, FH, ox, oy, FW, FH); xArmLayer(g, u, ox, oy, st, 'f', now, sp, c.sx); g.restore(); } }
+    if (u.team === 'e'){ if (lpc.complete){ const w = 64 * sc, c = { img: lpc, sx: u.lp * 64, sy: 0, w: 64, h: 64 }; g.save(); g.translate(x, 0); g.scale(-1, 1); g.drawImage(hit ? tint(c) : lpc, hit ? 0 : c.sx, 0, 64, 64, -w / 2, y - w + 4 * sc, w, w); g.restore(); } }
+    else { const sp = strip(u); if (sp){ const PAD = 48, oy = y - FH + 6, c = { img: sp, sx: dirL * FW, sy: 0, w: FW, h: FH };
+      const q = xTmpCv || (xTmpCv = document.createElement('canvas')); q.width = FW + PAD * 2; q.height = FH + PAD * 2; const t = q.getContext('2d'); t.imageSmoothingEnabled = false;   // 무기 그림은 왼쪽을 보는 기준이라, 따로 그린 뒤 좌우로 뒤집어요
+      xHandOf(u, sp); xArmLayer(t, u, PAD, PAD, st, 'b', now, sp, c.sx); t.drawImage(hit ? tint(c) : sp, hit ? 0 : c.sx, 0, FW, FH, PAD, PAD, FW, FH); xArmLayer(t, u, PAD, PAD, st, 'f', now, sp, c.sx);
+      g.save(); if (dead){ g.translate(x, y); g.rotate(Math.PI / 2); g.translate(-x, -y); g.globalAlpha = .55; } g.translate(x, 0); g.scale(-1, 1); g.drawImage(q, -(PAD + FW / 2), oy - PAD); g.restore(); } }
     g.globalAlpha = 1;
     if (u.team === 'e' && !dead){   // 몬스터 이름·체력 (머리 위)
       const bw = u.big ? 90 : u.k >= 3 ? 56 : 34, bx = Math.round(x - bw / 2), by = Math.round(y - u.hh - 12);
@@ -2205,7 +2209,7 @@ function xDraw(){
     }
     if (B.pick && B.pick.set.has(u.id)){ const cy = y - (u.team === 'e' ? u.hh + 26 : FH + 18) + Math.round(Math.sin(now / 130) * 2); g.fillStyle = '#1a1024'; g.fillRect(x - 6, cy - 1, 13, 8); g.fillStyle = '#ffd866'; g.fillRect(x - 5, cy, 11, 3); g.fillRect(x - 3, cy + 3, 7, 2); g.fillRect(x - 1, cy + 5, 3, 1); }
   });
-  const pim = xPetSheet(); if (pim.complete) B.party.forEach(u => { if (u.hp <= 0) return; (u.pets || []).forEach((p, i) => { const k = XPETI.indexOf(p.n); if (k < 0) return; const lg = p.lg ? (now - p.lg) / 260 : 2, off = lg < 1 ? -Math.sin(lg * Math.PI) * 14 : 0, x = Math.round(u.bx - 40 - i * 24 + off), y = Math.round(u.by - 4 + (i % 2 ? 10 : -8) + Math.sin(now / 320 + i * 2) * 1.5), w = 52; g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(x, y + 1, 10, 3, 0, 0, 7); g.fill(); g.globalAlpha = p.t < 2 ? .5 + .5 * Math.sin(now / 90) : 1; g.drawImage(pim, k * 64, 0, 64, 64, x - w / 2, y - w + 3, w, w); g.globalAlpha = 1; if (p.mhp){ g.fillStyle = '#1a1024'; g.fillRect(x - 11, y + 5, 22, 4); g.fillStyle = '#4a2a3a'; g.fillRect(x - 10, y + 6, 20, 2); g.fillStyle = p.hp / p.mhp > .35 ? '#7affb0' : '#ff6a4a'; g.fillRect(x - 10, y + 6, Math.max(0, Math.round(20 * p.hp / p.mhp)), 2); } });
+  const pim = xPetSheet(); if (pim.complete) B.party.forEach(u => { if (u.hp <= 0) return; (u.pets || []).forEach((p, i) => { const k = XPETI.indexOf(p.n); if (k < 0) return; const lg = p.lg ? (now - p.lg) / 260 : 2, off = lg < 1 ? Math.sin(lg * Math.PI) * 14 : 0, x = Math.round(u.bx + 40 + i * 24 + off), y = Math.round(u.by - 4 + (i % 2 ? 10 : -8) + Math.sin(now / 320 + i * 2) * 1.5), w = 52; g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(x, y + 1, 10, 3, 0, 0, 7); g.fill(); g.globalAlpha = p.t < 2 ? .5 + .5 * Math.sin(now / 90) : 1; g.drawImage(pim, k * 64, 0, 64, 64, x - w / 2, y - w + 3, w, w); g.globalAlpha = 1; if (p.mhp){ g.fillStyle = '#1a1024'; g.fillRect(x - 11, y + 5, 22, 4); g.fillStyle = '#4a2a3a'; g.fillRect(x - 10, y + 6, 20, 2); g.fillStyle = p.hp / p.mhp > .35 ? '#7affb0' : '#ff6a4a'; g.fillRect(x - 10, y + 6, Math.max(0, Math.round(20 * p.hp / p.mhp)), 2); } });
   });
   xProjDraw(g, B, now); B.fxs = B.fxs.filter(f => { const t = [...B.foes, ...B.party].find(u => u.id === f.id); return xFxDraw(g, f, t ? t.sx : 192, t ? t.sy : 120, now); });
   g.font = 'bold 13px monospace'; g.textAlign = 'center'; g.lineJoin = 'round'; B.floats = B.floats.filter(f => { const p = (now - f.t0) / 900; if (p >= 1) return false; if (p < 0) return true; const yy = f.y - p * 18; g.globalAlpha = p > .7 ? 1 - (p - .7) / .3 : 1; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText(f.txt, f.x, yy); g.fillStyle = f.col; g.fillText(f.txt, f.x, yy); g.globalAlpha = 1; return true; });
@@ -2232,7 +2236,7 @@ function xHandOf(u, sp){   // 아바타 그림에서 오른손(피부 픽셀)을
 }
 const xHP = u => u.hand || { x0: XHD[0] - 1, y0: XHD[1] - 1, w: 3, h: 3, cx: XHD[0], cy: XHD[1], sleeve: '#ccc' };
 const xTipAt = (W, P, H) => { const r = -(P.th - W[8]) * Math.PI / 180, vx = W[2] - W[6], vy = W[3] - W[7]; return [H.cx + P.dx + vx * Math.cos(r) - vy * Math.sin(r), H.cy + P.dy + vx * Math.sin(r) + vy * Math.cos(r)]; };
-function xTip(u){ const W = XW[u.job], P = xPoseOf(W, xState(u, performance.now())), t = xTipAt(W, P, xHP(u)); return [u.sx - World.Avatar.FW / 2 + t[0], u.sy - World.Avatar.FH + 6 + t[1]]; }
+function xTip(u){ const W = XW[u.job], P = xPoseOf(W, xState(u, performance.now())), t = xTipAt(W, P, xHP(u)); return [u.sx + World.Avatar.FW / 2 - t[0], u.sy - World.Avatar.FH + 6 + t[1]]; }
 function xArmLayer(g, u, ox, oy, st, layer, now, sp, sx){   // 새 팔은 그리지 않아요. 무기는 몸 뒤(적 쪽으로 튀어나온 부분만 보임), 손잡이 점은 원래 오른손에, 손 픽셀은 몸 그림 그대로
   const W = XW[u.job], wi = xWpnSheet(); if (!W || !wi.complete) return; const P = xPoseOf(W, st), H = xHP(u), hx = ox + H.cx + P.dx, hy = oy + H.cy + P.dy, sheetY = ORDER_J.indexOf(u.job) * 64, wp = u.wp || 0;
   if (layer === 'b'){ g.save(); g.translate(hx, hy); g.rotate(-(P.th - W[8]) * Math.PI / 180); g.translate(-W[6], -W[7]); g.drawImage(wi, wp * 64, sheetY, 64, 64, 0, 0, 64, 64); g.restore(); return; }
