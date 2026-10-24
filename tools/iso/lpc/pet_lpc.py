@@ -20,7 +20,7 @@ PETS = [
  ('바람 정령', animal('sheep/child', 'fur_white', (225, 240, 255), FLUF, 'white', alpha=.8)), ('대지 정령', animal('boarman/child', 'fur_brown', (200, 160, 90), CAT, 'dark_brown')),
  ('정령왕', animal('wolf/child', 'fur_white', (255, 214, 90), WOLF, 'white', extra=[(126, 'hat/formal/crown', None, None)])), ('늑대', animal('wolf/child', 'fur_grey', (200, 215, 255), WOLF, 'gray')),
  ('곰', animal('minotaur/child', 'fur_brown', (170, 115, 70), CAT, 'dark_brown')),
- ('독수리', animal('lizard/child', 'fur_tan', (240, 232, 190), None, extra=[(5, 'body/wings/feathered/adult/bg', 'brown', None), (105.5, 'body/wings/feathered/adult/fg', 'brown', None)])),
+ ('날개 도마뱀', animal('lizard/child', 'fur_tan', (240, 232, 190), None, extra=[(5, 'body/wings/feathered/adult/bg', 'brown', None), (105.5, 'body/wings/feathered/adult/fg', 'brown', None)])),
  ('호박 토끼', animal('rabbit/child', 'fur_copper', (255, 150, 40), FLUF, 'orange', alpha=.6)),
  ('용', animal('lizard/child', 'blue', (255, 80, 60), None, extra=[(5, 'body/wings/lizard/adult', None, None), (5.5, LIZ + '/bg', None, ('TINT', FUR['blue'])), (125, LIZ + '/fg', None, ('TINT', FUR['blue']))])),
  ('번개 쥐', animal('mouse/child', 'fur_grey', (90, 230, 255), CAT, 'gray')), ('수호 쥐', animal('rat/child', 'fur_black', (120, 255, 150), CAT, 'black')),
