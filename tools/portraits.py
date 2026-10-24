@@ -15,11 +15,12 @@ def block_size(a):
     runs = [r for r in runs if 3 <= r <= 16]
     return max(set(runs), key=runs.count) if runs else 8
 # 가장자리에서 안 닿는 갇힌 배경(볼트와 목 사이 등): 그 안의 한 점을 (가로, 세로) 비율로 적어 두면 거기서도 지워요
+KEEP_WHITE = {'madeleine'}
 POCKETS = {'hazel'}
 HOLES = {'frankie': [(.324, .576), (.675, .576)]}
 # 한 표정만 확대돼서 뽑혔을 때: 그 표정을 (배율, 왼쪽, 위)로 줄여 옮기고, 모든 표정을 같이 잘라요 (왼, 위, 오른, 아래)
 FIT = {'boo': {'happy': (.83, 59, 71)}}
-WHITE_MIN = {'mirabel': 253, 'nabi': 250, 'batri': 250, 'kappa': 250, 'aula': 250, 'mandi': 250, 'jipsin': 250, 'sera': 250}   # 붕대가 흰색에 가까워서, 배경(순백)만 지워지게 문턱을 높여요
+WHITE_MIN = {'mirabel': 253, 'nabi': 250, 'batri': 250, 'kappa': 250, 'aula': 250, 'mandi': 250, 'jipsin': 250, 'sera': 250, 'madeleine': 253}   # 붕대가 흰색에 가까워서, 배경(순백)만 지워지게 문턱을 높여요
 CROP = {'boo': (66, 0, 798, 1062), 'mirabel': (41, 0, 837, 1090), 'nabi': (30, 60, 830, 860), 'batri': (30, 70, 870, 970), 'kappa': (40, 100, 860, 900), 'aula': (60, 100, 840, 900), 'mandi': (80, 70, 840, 880), 'jipsin': (130, 80, 800, 840)}
 def fit(a, t):
     s, dx, dy = t; H, W = a.shape[:2]
@@ -116,7 +117,12 @@ def build(pid):
         # 안쪽에 갇힌 흰 배경 조각(머리카락·팔 사이): 순백(248 이상) 덩어리는 전부 비워요 (눈 흰자는 순백이 아니에요)
         from scipy import ndimage
         pw = (small[..., 3] > 0) & (small[..., :3].min(-1) >= 248)
-        small[pw] = 0
+        if pid in KEEP_WHITE:   # 머리카락 사이에 갇힌 흰 배경 조각(윗부분의 작은 순백 덩어리)만 지워요
+            lab, nl = ndimage.label(pw)
+            for i in range(1, nl + 1):
+                ys, xs = np.nonzero(lab == i)
+                if len(ys) <= 400 and ys.max() < h * .35: small[ys, xs] = 0
+        if pid not in KEEP_WHITE: small[pw] = 0   # 셔츠·이빨·흰자가 순백인 초상(마들렌)은 순백을 지우지 않아요
         for _ in range(3):   # 투명 경계에 남은 밝은 회백색 테두리(안티앨리어스 찌꺼기)도 지워요
             al = small[..., 3] > 0; rgb = small[..., :3].astype(int)
             light = al & (rgb.min(-1) >= 200) & (rgb.max(-1) - rgb.min(-1) <= 28)
