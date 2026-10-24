@@ -38,9 +38,13 @@ input{font-family:var(--f-body);font-size:var(--fs);color:var(--text)}
 b,strong{font-weight:700}
 h1,h2,h3{font-weight:normal}
 /* 게임 셸: 상단 HUD · 게임 화면 · 하단 메뉴. 페이지 스크롤은 없어요 */
-#shell{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"hud" "stage" "bar";height:100dvh;max-width:430px;margin:0 auto;overflow:hidden;background:var(--bg);padding-top:env(safe-area-inset-top)}
+#shell{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"hud" "stage" "chat" "bar";height:var(--vvh,100dvh);transform:translateY(var(--vvt,0px));max-width:430px;margin:0 auto;overflow:hidden;background:var(--bg);padding-top:env(safe-area-inset-top)}
 #hud{grid-area:hud;min-width:0;height:var(--hud-h);display:flex;align-items:center;gap:6px;padding:0 8px;background:rgba(20,13,30,.94);border-bottom:1px solid var(--line);position:relative;z-index:12}
 #stage{grid-area:stage;position:relative;min-height:0;overflow:hidden}
+#chat{grid-area:chat;position:relative;z-index:12;background:rgba(20,13,30,.96);border-top:1px solid var(--line);padding:6px 8px}
+#chat form{display:flex;gap:6px}
+body:not(.inworld) #chat{display:none}
+body.kb #bar{display:none}
 #bar{grid-area:bar;min-width:0;height:calc(var(--bar-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);display:grid;grid-template-columns:repeat(5,1fr);background:rgba(20,13,30,.96);border-top:1px solid var(--line);position:relative;z-index:12}
 #bar button{border:0;background:none;color:var(--sub);font-family:var(--f-pxb);font-size:var(--fs-s);line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:0;position:relative}
 #bar button.on{color:var(--accent)}
@@ -50,8 +54,8 @@ h1,h2,h3{font-weight:normal}
 body:not(.inworld) #hud,body:not(.inworld) #bar{display:none}
 @media (min-width:900px) and (min-height:560px){#shell{max-width:760px}}
 /* 가로 모드(낮은 화면): 메뉴를 오른쪽 세로로 */
-@media (orientation:landscape) and (max-height:520px){#shell{max-width:none;grid-template-columns:minmax(0,1fr) 72px;grid-template-rows:auto minmax(0,1fr);grid-template-areas:"hud hud" "stage bar"}
-  #hud{height:48px}#bar{height:auto;grid-template-columns:1fr;grid-template-rows:repeat(5,1fr);border-top:0;border-left:1px solid var(--line);padding-bottom:0;padding-right:env(safe-area-inset-right)}}
+@media (orientation:landscape) and (max-height:520px){#shell{max-width:none;grid-template-columns:minmax(0,1fr) 72px;grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"hud hud" "stage bar" "chat bar"}
+  #hud{height:48px}#bar{grid-row:2/4;height:auto;grid-template-columns:1fr;grid-template-rows:repeat(5,1fr);border-top:0;border-left:1px solid var(--line);padding-bottom:0;padding-right:env(safe-area-inset-right)}}
 /* 패널 겉: 세계 밖(로그인)에서는 화면 전체, 세계 안에서는 HUD와 메뉴 사이를 덮는 오버레이 */
 #app{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
 body.inworld #app{background:rgba(10,6,20,.55);align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity var(--dur)}
@@ -294,18 +298,17 @@ body:not(.inworld) #storyui{display:none}
 .sttx{background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:10px;min-height:56px;width:100%;box-sizing:border-box;line-height:1.55;text-align:left}
 .stbox .btn{width:100%}
 .stpg{position:relative;height:16px;background:var(--line);border-radius:8px;overflow:hidden;margin:6px 0 2px}.stpg i{display:block;height:100%;background:#8CE6B0}.stpg span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:var(--fs-s);font-family:var(--f-body)}
-#talk{position:absolute;left:12px;right:12px;bottom:68px;z-index:6;display:none;flex-direction:column;gap:6px}
-#talk.on{display:flex}
-body:not(.inworld) #talk{display:none}
-#tlog{display:flex;flex-direction:column;gap:2px;pointer-events:none}
-#tlog div{align-self:flex-start;background:rgba(20,13,30,.82);color:var(--text);font-size:var(--fs-s);line-height:1.4;padding:3px 8px;border-radius:8px;max-width:100%;overflow-wrap:anywhere}
-#tlog b{color:#9CF0FF;font-weight:normal;margin-right:4px}
-#tlog b.me{color:var(--gold)}
-.temo{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+#clog{position:absolute;left:8px;right:8px;bottom:100%;display:flex;flex-direction:column;gap:2px;pointer-events:none;padding-bottom:4px}
+#clog div{align-self:flex-start;background:rgba(20,13,30,.84);color:var(--text);font-size:var(--fs-s);line-height:1.4;padding:3px 8px;border-radius:8px;max-width:100%;overflow-wrap:anywhere;animation:cfade 1.2s 14s forwards}@keyframes cfade{to{opacity:0}}
+#clog b,#chist b{color:#9CF0FF;font-weight:normal;margin-right:4px}#clog b.me,#chist b.me{color:var(--gold)}
+#chist{position:absolute;left:8px;right:8px;bottom:100%;max-height:50vh;overflow:auto;background:rgba(20,13,30,.97);border:1px solid var(--line2);border-radius:12px;padding:8px;margin-bottom:6px;display:flex;flex-direction:column;gap:4px;-webkit-overflow-scrolling:touch}
+#chist[hidden],.temo[hidden]{display:none}
+#chist div{font-size:var(--fs-s);line-height:1.45;overflow-wrap:anywhere}#chist i{font-style:normal;color:var(--sub);font-size:11px;margin-right:6px}#chist .none{color:var(--sub);text-align:center;padding:10px}
+.temo{position:absolute;left:8px;right:8px;bottom:100%;display:grid;grid-template-columns:repeat(6,1fr);gap:5px;background:rgba(20,13,30,.97);border:1px solid var(--line2);border-radius:12px;padding:8px;margin-bottom:6px}
 .temo button{min-width:0;height:44px;border:1px solid var(--line2);border-radius:10px;background:var(--panel2);padding:0}
-#tform{display:flex;gap:6px}
-#tin{flex:1;min-width:0;height:44px;border:1px solid var(--line2);border-radius:22px;background:var(--panel2);color:var(--text);padding:0 14px}
-#tform button{height:44px;border:0;border-radius:22px;background:var(--accent);color:#2A1506;font-family:var(--f-pxb);font-size:var(--fs-s);padding:0 14px}
+#tin{flex:1;min-width:0;height:44px;border:1px solid var(--line2);border-radius:22px;background:var(--panel2);color:var(--text);padding:0 12px;font-size:16px}
+#tform button{height:44px;min-width:44px;border:0;border-radius:22px;background:var(--accent);color:#2A1506;font-family:var(--f-pxb);font-size:var(--fs-s);padding:0 12px;flex:none}
+#tform #cH,#tform #cE{background:var(--panel2);color:var(--text);border:1px solid var(--line2);padding:0 10px}#tform #cE{padding:0 8px}
 .bubble{position:absolute;transform:translate(-50%,-100%);background:var(--panel);color:var(--text);padding:8px 12px;border-radius:12px;font-size:var(--fs-s);line-height:1.45;border:1px solid var(--line2);white-space:nowrap;text-align:center;z-index:4}
 .bubble button{display:block;margin:6px auto 0;font-family:var(--f-pxb);font-size:var(--fs-s);background:var(--accent);border:0;border-radius:10px;min-height:44px;padding:0 14px;color:#2A1506}
 #fade{position:absolute;inset:0;background:#0E0916;opacity:0;pointer-events:none;transition:opacity .35s;z-index:5;display:flex;align-items:center;justify-content:center;font-family:var(--f-pxb);font-size:var(--fs-h);color:var(--gold)}
@@ -662,7 +665,7 @@ button.cell:not(:disabled):active{background:var(--line)}
       <div class="chips"><span id="sub"></span><button class="chip ev" id="evChip" hidden></button><button class="chip ev" id="gameChip" hidden></button><div class="chip" id="buffChip" hidden></div></div>
       <div id="fade"></div>
     </div>
-    <div class="corner"><button id="tZoom" class="icbtn" aria-label="확대·축소">멀리</button><button id="tChat" class="icbtn" aria-label="말하기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM13 1h1v1h-1zM1 2h1v1h-1zM14 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM1 5h1v1h-1zM14 5h1v1h-1zM1 6h1v1h-1zM14 6h1v1h-1zM1 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM14 8h1v1h-1zM2 9h1v1h-1zM3 9h1v1h-1zM4 9h1v1h-1zM5 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM12 9h1v1h-1zM13 9h1v1h-1zM4 10h1v1h-1zM3 11h1v1h-1zM2 12h1v1h-1z"/></svg></button><button id="tDay" hidden></button></div>
+    <div class="corner"><button id="tZoom" class="icbtn" aria-label="확대·축소">멀리</button><button id="tDay" hidden></button></div>
     <div id="ctx"></div>
     <div id="fishui"></div>
     <div id="npcui"></div>
@@ -670,11 +673,12 @@ button.cell:not(:disabled):active{background:var(--line)}
     <div id="evstage"></div>
     <div id="game"></div>
     <div id="rest"></div>
-    <div id="talk"><div id="tlog"></div><div class="temo" id="temo"></div><form id="tform" autocomplete="off"><input id="tin" maxlength="40" placeholder="말풍선으로 말해요 (40자)" enterkeyhint="send"><button>보내기</button></form></div>
+    
     <div id="mapv"><div class="mhead"><b>호박달 마녀학교 · 몬스터 마을 지도</b><button id="mClose">닫기</button></div><div id="mwrap"><div id="minner"><canvas id="mcv"></canvas></div></div><div class="mhint">가고 싶은 곳을 누르면 걸어가요</div></div>
     <div id="app"></div>
     <div id="confirm"></div>
   </div>
+  <div id="chat"><div id="clog"></div><div id="chist" hidden></div><div class="temo" id="temo" hidden></div><form id="tform" autocomplete="off"><button type="button" id="cH" aria-label="채팅 이력">이력</button><button type="button" id="cE" aria-label="이모티콘">😊</button><input id="tin" maxlength="40" placeholder="말풍선으로 말해요 (40자)" enterkeyhint="send"><button id="cS">보내기</button></form></div>
   <nav id="bar">
     <button data-nav="bag"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM4 2h1v1h-1zM11 2h1v1h-1zM4 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM12 4h1v1h-1zM13 4h1v1h-1zM2 5h1v1h-1zM13 5h1v1h-1zM2 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM10 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM5 7h1v1h-1zM10 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM13 10h1v1h-1zM2 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM3 13h1v1h-1zM4 13h1v1h-1zM5 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM12 13h1v1h-1zM13 13h1v1h-1z"/></svg>가방</button><button id="tMap" data-nav="map"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM13 1h1v1h-1zM2 2h1v1h-1zM5 2h1v1h-1zM8 2h1v1h-1zM13 2h1v1h-1zM2 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM8 3h1v1h-1zM13 3h1v1h-1zM2 4h1v1h-1zM13 4h1v1h-1zM2 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM13 5h1v1h-1zM2 6h1v1h-1zM5 6h1v1h-1zM7 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM13 10h1v1h-1zM2 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM5 12h1v1h-1zM8 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM3 13h1v1h-1zM4 13h1v1h-1zM5 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM12 13h1v1h-1zM13 13h1v1h-1z"/></svg>지도</button><button data-nav="rel"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1zM9 2h1v1h-1zM10 2h1v1h-1zM11 2h1v1h-1zM1 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM8 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM0 4h1v1h-1zM1 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM12 4h1v1h-1zM13 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM1 5h1v1h-1zM2 5h1v1h-1zM3 5h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM10 5h1v1h-1zM11 5h1v1h-1zM12 5h1v1h-1zM13 5h1v1h-1zM14 5h1v1h-1zM0 6h1v1h-1zM1 6h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM10 6h1v1h-1zM11 6h1v1h-1zM12 6h1v1h-1zM13 6h1v1h-1zM14 6h1v1h-1zM0 7h1v1h-1zM1 7h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM13 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM2 8h1v1h-1zM3 8h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM11 8h1v1h-1zM12 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM3 9h1v1h-1zM4 9h1v1h-1zM5 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM12 9h1v1h-1zM3 10h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM10 10h1v1h-1zM11 10h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM7 14h1v1h-1z"/></svg>관계</button><button data-nav="journal"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM2 2h1v1h-1zM14 2h1v1h-1zM2 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM8 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM14 3h1v1h-1zM2 4h1v1h-1zM4 4h1v1h-1zM12 4h1v1h-1zM14 4h1v1h-1zM2 5h1v1h-1zM4 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM10 5h1v1h-1zM12 5h1v1h-1zM14 5h1v1h-1zM2 6h1v1h-1zM4 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM2 7h1v1h-1zM4 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM12 7h1v1h-1zM14 7h1v1h-1zM2 8h1v1h-1zM4 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM2 9h1v1h-1zM4 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM12 9h1v1h-1zM14 9h1v1h-1zM2 10h1v1h-1zM4 10h1v1h-1zM12 10h1v1h-1zM14 10h1v1h-1zM2 11h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1zM12 11h1v1h-1zM14 11h1v1h-1zM2 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM3 13h1v1h-1zM4 13h1v1h-1zM5 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM12 13h1v1h-1z"/></svg>일지</button><button data-nav="menu"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM8 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM13 3h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM12 4h1v1h-1zM13 4h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM3 8h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM11 8h1v1h-1zM12 8h1v1h-1zM13 8h1v1h-1zM2 11h1v1h-1zM3 11h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1zM12 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM3 12h1v1h-1zM4 12h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM10 12h1v1h-1zM11 12h1v1h-1zM12 12h1v1h-1zM13 12h1v1h-1z"/></svg>메뉴</button>
   </nav>
@@ -1224,9 +1228,23 @@ let spotTimer = 0;
 // online/<uid> 에 지금 있는 곳(m: 장소 열쇠, x, y)과 마지막 한 말(s)을 올려요
 const EMOS = ['손인사', '웃음', '깔깔', '하트눈', '놀람', '눈물', '화남', '하트', '엄지척', '반짝', '호박', '유령'];   // art/emo.png 순서 (tools/iso/emotes.py)
 const emoI = i => `<i class="emi" style="background-position:-${i * 32}px 0" title="${EMOS[i]}"></i>`;
-let talkLog = [], lastPos = '', heard = {}, onlineKeys = '', talkOn = false;
+let lastPos = '', heard = {}, onlineKeys = '';
 const peersOf = () => Object.entries(onlineList).filter(([id, o]) => id !== uid && o && o.m).map(([id, o]) => ({ uid: id, name: o.nick, av: avOf(o), m: o.m, x: o.x | 0, y: o.y | 0 }));
-function pushLog(nick, t, mine){ talkLog.push({ nick, t, mine }); talkLog = talkLog.slice(-4); $('#tlog').innerHTML = talkLog.map(l => `<div><b class="${l.mine ? 'me' : ''}">${esc(l.nick)}</b>${esc(l.t)}</div>`).join(''); }
+// 채팅: 평소에 보이는 건 최근 5줄, 이력은 최대 50개까지만 저장해 두고 「이력」을 눌러 봐요
+const CHAT_MAX = 50, CHAT_SHOW = 5, chatKey = () => 'magion-chat:' + (typeof uid !== 'undefined' && uid ? uid : 'solo');
+let chatLog = null;
+const chatLoad = () => { if (chatLog) return chatLog; try { chatLog = JSON.parse(localStorage.getItem(chatKey()) || '[]'); } catch(e){ chatLog = []; } return chatLog; };
+const chatLine = l => `<div><b class="${l.mine ? 'me' : ''}">${esc(l.nick)}</b>${esc(l.t)}</div>`;
+function pushLog(nick, t, mine){
+  const L = chatLoad(); L.push({ nick, t, mine: !!mine, at: Date.now() }); while (L.length > CHAT_MAX) L.shift(); try { localStorage.setItem(chatKey(), JSON.stringify(L)); } catch(e){}
+  const el = $('#clog'); if (el){ el.insertAdjacentHTML('beforeend', chatLine({ nick, t, mine })); while (el.children.length > CHAT_SHOW) el.firstChild.remove(); }
+  if (!$('#chist').hidden) chatHist();
+}
+function chatHist(){
+  const L = chatLoad(), el = $('#chist'); el.hidden = false; $('#temo').hidden = true;
+  el.innerHTML = L.length ? L.map(l => { const d = new Date(l.at); return `<div><i>${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}</i><b class="${l.mine ? 'me' : ''}">${esc(l.nick)}</b>${esc(l.t)}</div>`; }).join('') + `<div class="none">최근 ${CHAT_MAX}개까지만 남아요</div>` : '<div class="none">아직 채팅이 없어요</div>';
+  el.scrollTop = el.scrollHeight;
+}
 function onOnline(){
   World.setPeers(peersOf());
   const here = World.placeKey();
@@ -1279,7 +1297,14 @@ function peerAct(id, act){
 $('#temo').innerHTML = EMOS.map((x, i) => `<button data-te="${i}">${emoI(i)}</button>`).join('');
 document.querySelectorAll('[data-te]').forEach(b => b.onclick = () => speak(EMOS[+b.dataset.te], +b.dataset.te + 1));
 $('#tform').onsubmit = e => { e.preventDefault(); speak($('#tin').value); $('#tin').value = ''; };
-$('#tChat').onclick = () => { talkOn = !talkOn; $('#talk').classList.toggle('on', talkOn); $('#tChat').classList.toggle('on', talkOn); $('#tChat').innerHTML = talkOn ? ICO.close : ICO.chat; if (talkOn && matchMedia('(pointer:fine)').matches) $('#tin').focus(); };
+$('#cH').onclick = () => { if ($('#chist').hidden) chatHist(); else $('#chist').hidden = true; };
+$('#cE').onclick = () => { const t = $('#temo'); t.hidden = !t.hidden; $('#chist').hidden = true; };
+$('#tin').addEventListener('keydown', e => { if (e.key === 'Escape') $('#tin').blur(); });
+$('#tin').addEventListener('focus', () => { $('#chist').hidden = true; $('#temo').hidden = true; });
+$('#temo').addEventListener('click', () => { $('#temo').hidden = true; });
+document.addEventListener('pointerdown', e => { if (!e.target.closest('#chat')){ $('#chist').hidden = true; $('#temo').hidden = true; } });
+// 키패드가 올라와도 입력창이 가려지지 않게: 화면 높이를 눈에 보이는 영역에 맞춰요 (아래 탭은 키패드가 열린 동안 숨겨요)
+if (window.visualViewport){ const vv = window.visualViewport, fit = () => { const r = document.documentElement.style; r.setProperty('--vvh', Math.round(vv.height) + 'px'); r.setProperty('--vvt', Math.round(vv.offsetTop) + 'px'); document.body.classList.toggle('kb', vv.height < window.innerHeight * .78); }; vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); fit(); }
 // ===== 낚시 · 채집: 물고기 40 + 쓰레기 3, 채집물 50, 낚싯대 5 =====
 // 그림은 art/fish.png · forage.png · rods.png (tools/iso/fishing_art.py, 이 표 순서대로). 앞에 있을수록 흔해요: 칸마다 희귀도가 다 달라요
 // 물고기: [id, 이름, 틀(크기용), 나오는 시간(없으면 언제나 · dew 새벽 · ember 한낮 · dusk 노을 · moon 밤)]
@@ -3637,7 +3662,7 @@ function evFinish(ctx){
   toast(ctx.cold ? `${withJosa(n.name, '과', '와')} 조금 서먹해졌어요……` : `♥${k} 「${fillVars(ev.title, n.id)}」${got.length ? ' · ' + got.join(', ') : ''}`);
 }
 document.addEventListener('click', e => { if (!evOn || !evUI().contains(e.target) || e.target.closest('.evo,.evskip')) return; evOn.tapR && evOn.tapR(); });
-document.addEventListener('keydown', e => { if (evOn && (e.key === ' ' || e.key === 'Enter')){ e.preventDefault(); evOn.tapR && evOn.tapR(); } });
+document.addEventListener('keydown', e => { if (evOn && !e.target.matches('input,textarea') && (e.key === ' ' || e.key === 'Enter')){ e.preventDefault(); evOn.tapR && evOn.tapR(); } });
 // ---------- 관리자: NPC 호감도 표 · NPC 편집 (생김새·루틴·대사·하트 이벤트) ----------
 // 고친 내용은 npcs/<id> = { name, title, likes, dislikes, av, avData, routine, vars, prof, ev: { k: 이벤트 } } (파일 위에 덮어써요)
 // 국어 검사 (scripts/validate_npc.py와 같은 규칙): 저장할 때 경고만 띄워요
@@ -4126,7 +4151,7 @@ document.querySelectorAll('#bar [data-nav]').forEach(b => { if (b.dataset.nav ==
 document.addEventListener('keydown', e => {
   if (!me || !document.body.classList.contains('inworld') || e.target.matches('input,textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key.toLowerCase();
-  if (k === 'escape'){ if ($('#confirm').classList.contains('on')) return; if (sheetOn) closeSheet(); else if ($('#mapv').classList.contains('on')) $('#mClose').click(); else if (talkOn) $('#tChat').click(); else openSheet('home', 'menu'); return; }
+  if (k === 'escape'){ if ($('#confirm').classList.contains('on')) return; if (sheetOn) closeSheet(); else if ($('#mapv').classList.contains('on')) $('#mClose').click(); else if (document.activeElement === $('#tin')) $('#tin').blur(); else openSheet('home', 'menu'); return; }
   const map = { i: 'bag', r: 'rel', j: 'journal' }; if (map[k]){ e.preventDefault(); sheetOn && sub === map[k] ? closeSheet() : openSheet('home', map[k]); }
   if (k === 'm'){ e.preventDefault(); $('#tMap').click(); }
   if (k === 'e'){ const b = $('#ctx [data-ctx="main"]'); if (b) b.click(); }
@@ -4560,7 +4585,7 @@ function renderMenu(){
     if (k === 'settings') return openSheet('home', 'settings');
     if (k === 'help'){ menuHelp = true; return render(); }
     if (k === 'credits') return showCredits();
-    if (k === 'chat'){ closeSheet(); return $('#tChat').click(); }
+    if (k === 'chat'){ closeSheet(); return $('#tin').focus(); }
     if (k === 'map'){ closeSheet(); return $('#tMap').click(); } });
 }
 const sseg = (k, opts, cls = '') => `<div class="seg sseg ${cls}">${opts.map(([v, t]) => `<button class="${SET[k] === v ? 'on' : ''}" data-set="${k}" data-v="${JSON.stringify(v)}">${t}</button>`).join('')}</div>`;

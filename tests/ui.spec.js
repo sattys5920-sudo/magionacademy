@@ -34,7 +34,7 @@ async function metrics(p){
     const p = await b.newPage({ viewport: { width: w, height: h } }); const errs = []; p.on('pageerror', e => errs.push(e.message));
     await p.addInitScript(s => { window.__seed = s; window.__uid = 'me1'; }, seed);
     await p.goto(`http://localhost:${PORT}/`); await p.waitForTimeout(3500); await skipStory(p);
-    const screens = [['world', async () => {}], ['map', async () => { await p.click('#tMap'); }], ['talk', async () => { await p.click('#tChat'); }], ['npc', async () => p.evaluate(() => __T.npcMenu(__T.npcGet('nabi')))],
+    const screens = [['world', async () => {}], ['map', async () => { await p.click('#tMap'); }], ['talk', async () => { await p.click('#cH'); }], ['npc', async () => p.evaluate(() => __T.npcMenu(__T.npcGet('nabi')))],
       ...TABS.map(t => [t, async () => p.evaluate(t => __T.openSheet(t), t)]), ...PANELS.map(s => [s, async () => p.evaluate(s => { if (s === 'npcgift' || s === 'npcstory'){ __T.npcMenu(__T.npcGet('nabi')); document.querySelector('#npcui [data-nx="' + (s === 'npcgift' ? 'gift' : 'story') + '"]')?.click(); } else __T.openSheet('home', s); }, s)])];
     for (const [name, open] of screens){
       try { await open(); } catch(e){ ok(false, `${name}: 열기 실패 ${e.message.split('\n')[0]}`); }
@@ -47,7 +47,7 @@ async function metrics(p){
       ok(m.contrast === 0, `${name}: 명도 대비 위반 ${m.contrast}`);
       ok(m.touch === 0, `${name}: 44px 미만 버튼 ${m.touch}개 ${m.tex.join(' ')}`);
       // 닫기: 패널은 Esc, 그 밖은 각자
-      if (name === 'world') {} else if (name === 'map') await p.click('#mClose'); else if (name === 'talk') await p.click('#tChat'); else if (name === 'npc') await p.evaluate(() => document.querySelector('#npcui [data-nx="close"]')?.click());
+      if (name === 'world') {} else if (name === 'map') await p.click('#mClose'); else if (name === 'talk') await p.click('#cH'); else if (name === 'npc') await p.evaluate(() => document.querySelector('#npcui [data-nx="close"]')?.click());
       else { await p.keyboard.press('Escape'); await p.waitForTimeout(250); ok(!(await p.evaluate(() => document.querySelector('#app').classList.contains('open'))), `${name}: Esc로 안 닫힘`); }
       await p.waitForTimeout(200);
     }
