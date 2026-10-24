@@ -3984,7 +3984,6 @@ document.addEventListener('click', e => {
     me.inv[st.item] -= amt; save();
     storyAdd(c, k, amt, ok => { if (!ok){ me.inv[st.item] += amt; save(); toast('이미 다 모였어요!'); } else toast(`${ITEM[st.item]} ${amt}개를 건넸어요!`); setTimeout(() => storyPanel(c), 300); }); }
   if (a === 'games'){ npcClose(); openSheet('home', 'games'); }
-  if (a === 'rest'){ npcClose(); goPlace(myRoomId(), 'bed', 'home', 'dorm'); }
 });
 // ---------- 관리자: 송출 · 진행 보기 · 단계 넘기기 ----------
 function adminStoryHTML(){
@@ -4003,8 +4002,6 @@ function adminStoryAct(v){
   if (a === 'prev') F.update(F.ref(db, `story/ch/${c}`), { step: Math.max(0, (cur.step || 0) - 1), done: false });
   if (a === 'reset' && confirm(`${c}장 진행을 처음으로 되돌릴까요? (기여 기록도 지워져요)`)) F.set(F.ref(db, `story/ch/${c}`), null);
 }
-// 바로 가기: 그 장소로 순간 이동한 다음 화면을 열어요
-const goPlace = (mapId, obj, t, s) => { closeSheet(); World.teleport(mapId, obj, () => openSheet(t, s)); };
 const ACT_GO = { '물약 끓이기':'lab', '재료함 열기':'lab', '재료 꺼내기':'lab', '레시피 노트 보기':'lab', '시장 보기':'market', '박쥐 돌보기':'ranch', '모이 주기':'ranch', '독초 돌보기':'green', '물 주기':'green' };
 const FLAVOR = {
   // 그림자 골목 집 안 (물건 이름으로 찾아요)
@@ -4439,7 +4436,7 @@ function jnTodoHTML(){
     ${me.orders.length ? `<div class="box px">${me.orders.map((o, i) => { const have = me.inv[o.p] || 0, ok = have >= o.n;
       return `<div class="li ${o.done ? 'done' : ''}">${ic(o.p)}<div class="main"><span class="t">${ITEM[o.p]} ×${o.n}</span><span class="d">${esc(o.from)} · 가진 것 <span class="num">${have} / ${o.n}</span></span></div>
         ${o.done ? '<span class="tag">완료</span>' : ok ? `<button class="btn sm go" data-deliver="${i}">전하기 +${payOf(o)}G</button>` : `<span class="tag num">${payOf(o)}G</span>`}</div>`; }).join('')}</div>` : '<div class="hint">오늘은 들어온 의뢰가 없어요</div>'}
-    <div class="jn-foot"><span class="hint">매일 아침 새 의뢰가 와요 · 물약은 물약 교실에서 끓여요</span><button class="btn sm" data-jnlab="1">물약 교실로</button></div></section>`;
+    <div class="jn-foot"><span class="hint">매일 아침 새 의뢰가 와요 · 물약은 물약 교실에서 끓여요</span></div></section>`;
 }
 function jnStoryHTML(){
   const c = storyLive.ch || 0, S = c && STORY[c - 1];
@@ -4490,7 +4487,6 @@ function renderJournal(){
     const pay = payOf(o); me.inv[o.p] -= o.n; me.coin += pay; o.done = true; save();
     toast(`${o.from}에게 ${withJosa(ITEM[o.p], '을', '를')} 전했어요. +${pay}G`); render();
   });
-  on('[data-jnlab]', () => goPlace('lab', 'cauldron', 'lab'));
   on('[data-jngo]', b => { const [m, x, y] = b.dataset.jngo.split(','); jnGo(m, +x, +y); });
   on('[data-jnre]', b => { const c = +b.dataset.jnre, S = STORY[c - 1]; closeSheet(); storyPlay(c, [...S.intro, ...S.ending], `${c}장 · ${S.name}`); });
 }
@@ -4531,7 +4527,7 @@ function renderMenu(){
   frame(null, '메뉴', '계정 · 설정 · 도움말', `
     <section class="sec">${secH('내 계정')}<div class="box"><div class="li">${face(me, 40)}<div class="main"><span class="t">${esc(me.nick)} ${houseTag(me.house)}</span><span class="d">${esc(id)} · <span class="sv">${SAVE_LABEL[saveState] || SAVE_LABEL['']}</span></span></div><button class="btn sm warn" data-logout="1">로그아웃</button></div></div></section>
     <section class="sec">${secH('바로 가기')}<div class="tiles">
-      ${mtile('explore', ICO.star || ICO.heart, '탐사', '몬스터와 싸우고 보물을 찾아요')}${mtile('settings', ICO.gear, '설정', '소리 · 대사 · 글씨 · 화면')}${mtile('help', ICO.journal, '도움말', '화면과 단축키')}
+      ${mtile('settings', ICO.gear, '설정', '소리 · 대사 · 글씨 · 화면')}${mtile('help', ICO.journal, '도움말', '화면과 단축키')}
       ${mtile('chat', ICO.chat, '채팅', '친구에게 말하기')}
       ${mtile('credits', ICO.heart, '크레딧', '그림 만든 사람들')}</div></section>
     <div class="hint">${dayLabel()} · 호박달 마녀학교</div>`);
@@ -4593,18 +4589,6 @@ function renderHome(){
           ${o.done ? '<span class="tag">완료</span>' : `<button class="btn sm ${have ? 'go' : ''}" data-deliver="${i}" ${have ? '' : 'disabled'}>${ic('coin', 'transform:scale(.7);margin:0 -6px')}${payOf(o)}</button>`}</div>`;
       }).join('')}</div>
     </section>
-    <div class="tiles">
-      <button class="tile px" id="goClass">${ic('book')}<span class="main"><span class="b">수업 ${classLeft()} / ${CLASS_MAX}</span><span class="s ${examStarted() ? 'sub' : ''}" style="${examStarted() ? '' : 'color:var(--warn)'}">${!examStarted() ? '쪽지시험 있음!' : `지식 ${me.know || 0}`}</span></span></button>
-      <button class="tile px" id="goDorm">${ic('bed')}<span class="main"><span class="b">내 방</span><span class="s sub">${H.name} ${roomNo(me.house, uid || me.nick)}호</span></span></button>
-    </div>
-    <button class="tile px" id="goFish" style="width:100%">${rodIc(rodLv())}<span class="main"><span class="b">낚시 · 채집</span><span class="s sub">도감 물고기 ${FISH.filter(f => me.fdex?.[f.id]).length}/40 · 채집물 ${FORAGE.filter(f => me.fdex?.[f.id]).length}/50 · 오늘 반짝이 ${16 + (me.fg?.d === todayKey() ? (me.fg.extra || 0) - me.fg.got.length : 0)}곳</span></span></button>
-    <button class="tile px" id="goCook" style="width:100%">${ic('d_crucianstew')}<span class="main"><span class="b">요리</span><span class="s sub">과자 교실 솥 · 요리책 ${Object.keys(me.cdex || {}).length}/40</span></span></button>
-    <button class="tile px" id="goGames" style="width:100%"><span class="gic">🎪</span><span class="main"><span class="b">같이 놀기</span><span class="s sub">경쟁 3종 · 협동 3종 (2~8명) · 놀이 게시판</span></span></button>
-    <section class="sec">
-      ${secH('바로 가기', '누르면 그곳으로 가요')}
-      <div class="tiles">${[['lab', 'cauldron', 'lab', 'cauldron', '물약 교실', '물약 끓이기·도감'], ['toxic', 'bed', 'green', 'sprout', '독초 온실', '씨앗 심고 수확'], ['pen', 'trough', 'ranch', 'egg', '내 사육장', '생물 돌보기·부화실'], ['campus', 'stall', 'market', 'bag', '등불 시장', '사고팔기·친구']]
-        .map(([m, o, t, i, n, d]) => `<button class="tile px" data-go="${m},${o},${t}">${ic(i)}<span class="main"><span class="b">${n}</span><span class="s sub">${d}</span></span></button>`).join('')}</div>
-    </section>
 `);
   const gj = $('#goJournal'); if (gj) gj.onclick = () => openSheet('home', 'journal');
   on('[data-deliver]', b => {
@@ -4615,12 +4599,6 @@ function renderHome(){
     toast(`${o.from}에게 ${withJosa(ITEM[o.p], '을', '를')} 전했어요. +${pay}G`); render();
   });
   bindEventBanner();
-  $('#goClass').onclick = () => goPlace('lab', 'skull', 'home', 'class');
-  $('#goDorm').onclick = () => goPlace(myRoomId(), 'bed', 'home', 'dorm');
-  $('#goFish').onclick = () => { fsTab = 'fish'; fsMsg = ''; openSheet('home', 'fish'); };
-  $('#goGames').onclick = () => openSheet('home', 'games');
-  $('#goCook').onclick = () => { ckPot = null; ckTab = 'book'; ckMsg = ''; openSheet('home', 'cook'); };
-  on('[data-go]', b => { const [m, o, t] = b.dataset.go.split(','); goPlace(m, o, t); });
 }
 
 // ===== 수업: 하루 10교시. 과목을 골라 라운드를 이어 가다가, 틀리면 그 교시가 끝나요 =====
@@ -5274,7 +5252,7 @@ function renderDorm(){
         <span class="s sub">아늑함 ${cozy} · 쉬고 나면 마력이 아늑함 ×2만큼 더 차요 (${COZY_MAX}까지)</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        ${inMyRoom() ? '' : `<button class="btn px" id="goRoom">${ic('bed')}내 방으로</button>`}
+        
         <button class="btn go px" id="sleep" style="${inMyRoom() ? 'grid-column:1/-1' : ''}">${ic('star')}침대에서 쉬기 (30분)</button>
       </div>
       ${hint(dormMsg, '가구 가방에서 가구를 눌러 방에 놓아요 · 방에서 가구를 누르면 가방에 넣을 수 있어요')}
@@ -5329,7 +5307,6 @@ function renderDorm(){
     dormMsg = `${withJosa(FURN_BY[fid].name, '을', '를')} 가방에 넣었어요. 아늑함 ${cozyOf(me)}`; redraw();
   });
   const sl = $('#sleep'); if (sl) sl.onclick = () => rest();
-  const gr = $('#goRoom'); if (gr) gr.onclick = () => goPlace(myRoomId(), 'bed', 'home', 'dorm');
   if (!solo) on('[data-visit]', b => openVisit(b.dataset.visit));
 }
 // 쉬기: 침대에서 30분 동안 쉬면 마력이 차요 (그동안은 아무것도 못 해요). 하루는 진짜 날짜로 넘어가요
@@ -5456,10 +5433,9 @@ function renderCommon(){
       ${who.length ? `<div class="box px">${who.map((w, i) => `<div class="li"><span class="b num" style="width:22px">${i + 1}</span><div class="main"><span class="t">${esc(w.nick)}</span></div><span class="tag num">${w.n}</span></div>`).join('')}</div>` : '<div class="hint">아직 재료를 넣은 친구가 없어요. 첫 번째가 되어 보세요!</div>'}
     </section>`;
   }
-  frame('dorm', `${H.name} 휴게실`, `${st}단계 · ${HALL_NAMES[h][st - 1]}`, segRow('ctab', commonTab, tabs) + body + `<button class="btn px" id="goRoom">${ic('bed')}내 방으로</button>`, { tint: H.col });
+  frame('dorm', `${H.name} 휴게실`, `${st}단계 · ${HALL_NAMES[h][st - 1]}`, segRow('ctab', commonTab, tabs) + body, { tint: H.col });
   on('[data-ctab]', b => { commonTab = b.dataset.ctab; renderCommon(); });
   on('[data-don]', b => { const [k, n] = b.dataset.don.split(','); donate(k, +n); });
-  $('#goRoom').onclick = () => goPlace(myRoomId(), 'bed', 'home', 'dorm');
 }
 
 // ===== 친구 방 놀러 가기 =====
@@ -6087,7 +6063,7 @@ function renderAvatar(){
         ${cat ? avPager(pg.p, pg.pages, 'avpg', mode, key ? 'avm' : null) : ''}
         ${cat === 'neck' || cat === 'cape' ? `<div class="hint">넥타이와 망토 안감은 기숙사 색이에요${av.house ? ` · ${HOUSES[av.house].name}` : ''}</div>` : key0 === 'topC' && !key ? '<div class="hint">교복 색은 정해져 있어요 · 사복·잠옷은 색을 고를 수 있어요</div>' : ''}
       </section>
-      <div class="avbtns"><button class="btn sm" id="avRand">🎲 아무거나</button><button class="btn sm" id="avShop">👗 옷 가게</button><button class="btn sm ghost" id="avCredits">그림 크레딧</button></div>
+      <div class="avbtns"><button class="btn sm" id="avRand">🎲 아무거나</button><button class="btn sm ghost" id="avCredits">그림 크레딧</button></div>
       <div class="avbtns"><button class="btn px" id="avCancel">그만두기</button><button class="btn go px" id="avSave" style="flex:2">이 모습으로!</button></div>
     </div>`);
   const cv = $('#avCv'); avPlay(cv, av); avTabShow();
@@ -6103,7 +6079,6 @@ function renderAvatar(){
   $('#avRand').onclick = () => { Object.assign(av, A.random(), { house: av.house }); avPage = {}; redraw(); };
   $('#avCredits').onclick = showCredits;
   $('#avCancel').onclick = () => { avDraft = null; closeSheet(); };
-  $('#avShop').onclick = () => { avDraft = null; shopTry = null; openSheet('home', 'clothes'); };
   $('#avSave').onclick = () => {
     me.av = World.Avatar.fix(avDraft); delete me.av.house; avDraft = null; save(); World.setPlayer(me.nick, avOf(me));
     if (!solo) F.update(F.ref(db, 'online/' + uid), { av: me.av }).catch(() => {});
@@ -6437,14 +6412,13 @@ function mqJournalHTML(){
   const c = mqClient(q), st = mqStage(), objs = mqObjs();
   const head = `<div class="jn-npc"><div class="npcf">${mqFace(q.client)}</div><div class="main"><b>${q.order}. ${esc(q.name)}</b><span class="d">${esc(mqName(q.client))} · ${esc(c.title || '')} · ${s.st} / 5 단계</span></div></div>`;
   const body = s.ph === 'arrive' ? '<div class="hint on">손님이 학교로 오고 있어요. 마을로 나가 보세요</div>'
-    : s.ph === 'pre' ? `<div class="hint on">${esc(mqName(q.client))}에게 말을 걸면 ${s.st}단계 부탁을 들어요</div><button class="btn go" data-mqgo="client">${esc(mqName(q.client))}에게 가기</button>`
-    : `<div class="box px">${objs.map((o, i) => { const z = mqObjState(o, i); const act = o.type === 'puzzle' && !z.done ? `<button class="btn sm go" data-mqpz="${i}">풀기</button>` : o.type === 'defend' && !z.done ? `<button class="btn sm go" data-mqdf="${i}">시작</button>` : o.type === 'craft' && !z.done ? `<button class="btn sm" data-mqcraft="${o.place || 'lab'}">만들러</button>` : (o.hint_location || o.place || o.where) && !z.done ? `<button class="btn sm" data-mqgo="${o.hint_location || o.place || o.where}">가기</button>` : z.done ? '<span class="tag">완료</span>' : '';
+    : s.ph === 'pre' ? `<div class="hint on">${esc(mqName(q.client))}에게 말을 걸면 ${s.st}단계 부탁을 들어요</div>`
+    : `<div class="box px">${objs.map((o, i) => { const z = mqObjState(o, i); const act = o.type === 'puzzle' && !z.done ? `<button class="btn sm go" data-mqpz="${i}">풀기</button>` : o.type === 'defend' && !z.done ? `<button class="btn sm go" data-mqdf="${i}">시작</button>` : o.type === 'craft' && !z.done ? `<button class="btn sm" data-mqcraft="${o.place || 'lab'}">만들러</button>` : (o.hint_location || o.place || o.where) && !z.done ? `` : z.done ? '<span class="tag">완료</span>' : '';
         return `<div class="li ${z.done ? 'done' : ''}"><span class="gic">${z.done ? '✅' : { collect: '🧺', craft: '⚗️', deliver: '🎁', visit: '🚶', talk: '💬', clue: '🔍', puzzle: '🧩', wait_moon: '🌙', defend: '🏮', choice: '💭' }[o.type] || '•'}</span><div class="main"><span class="t">${esc(z.text)}${z.need > 1 ? ` <span class="num">${z.cur} / ${z.need}</span>` : ''}</span>${z.hint ? `<span class="d">${esc(z.hint)}</span>` : ''}</div>${act}</div>`; }).join('')}</div>
-      ${s.ph === 'ready' ? `<div class="hint on">목표를 다 했어요. ${esc(mqName(q.client))}에게 알려요</div><button class="btn go" data-mqgo="client">${esc(mqName(q.client))}에게 가기</button>` : s.dl ? `<div class="hint">기한: ${s.dl - me.day}일 남음</div>` : ''}`;
+      ${s.ph === 'ready' ? `<div class="hint on">목표를 다 했어요. ${esc(mqName(q.client))}에게 알려요</div>` : s.dl ? `<div class="hint">기한: ${s.dl - me.day}일 남음</div>` : ''}`;
   return `<section class="sec">${secH('메인 이야기', `${s.st}단계 · ${esc(st?.title || '')}`)}<div class="box px jn-card">${head}${body}</div>${sky}${past ? `<div class="jn-tags">${past}</div>` : ''}</section>`;
 }
 function mqJournalBind(){
-  on('[data-mqgo]', b => { const k = b.dataset.mqgo; closeSheet(); if (k === 'client'){ const q = mqQuest(); const p = mqPlace((mqStage() && mqStage().place) || q.place); if (p) goPlace(p.map, [p.x, p.y]); return; } const p = NL.places[k]; if (p) goPlace(p.map, [p.x, p.y]); });
   on('[data-mqpz]', b => { mqPz = +b.dataset.mqpz; openSheet('home', 'mqpuzzle'); });
   on('[data-mqdf]', b => { const i = +b.dataset.mqdf; closeSheet(); mqDefend(i); });
   on('[data-mqcraft]', b => { mqCraftPlace = b.dataset.mqcraft; openSheet('home', 'mqcraft'); });
