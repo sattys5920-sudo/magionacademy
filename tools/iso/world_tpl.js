@@ -11,7 +11,7 @@ World.webp = webp;
 //        skinC, hairC, eyeC, legsC, feetC, topC(사복), hatC, accC: 색 번호, house: 넥타이·망토 안감 색이 될 기숙사 }
 // 부품 그림은 필요할 때 불러와요 (art/lpc/*.png). 색은 LPC 팔레트를 바꿔 칠해요
 const AVM = __AVATAR__;
-const ASC = 1 / 3;   // 캐릭터 그림 1픽셀 = 세계 픽셀의 몇 배
+const ASC = 1 / 2;   // 캐릭터 그림 1픽셀 = 세계 픽셀의 몇 배
 // 캐릭터 입 13종 (0 없음): 앞모습 6×3칸(x29~34, y32~34), 옆모습 3×3칸(왼쪽 보기 x25~27, 오른쪽은 거울)
 // # 입술선(피부색을 어둡게) r 입속 w 이 t 혀 d 침
 const MOUTHS = [
