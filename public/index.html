@@ -3423,52 +3423,46 @@ function drawEmote(g, icon, x, y){
 // 배경 음악: 평소에는 기본 곡이 계속 흘러요. 다른 곡이 나오는 장면(메인·서브 대화 등)은 BGM.hold(이름)으로 기본 곡을 0으로 낮추고,
 // 끝나면 BGM.release(이름)으로 되돌려요. 여러 곳이 동시에 잡아도 모두 놓아야 다시 나와요.
 const BGM = (() => {
-  const SRC = 'audio/bgm_main.mp3', FADE = 1800, holds = new Set();
-  let au = null, level = 1, fade = 1, tgt = 1, raf = 0, last = 0, wanted = false;
-  const vol = () => Math.max(0, Math.min(1, level * .6 * fade));   // 기본 곡은 효과음·대사를 가리지 않게 조금 작게
-  const apply = () => { if (au) au.volume = vol(); };
+  const SRC = 'audio/bgm_main.mp3', FADE = 2600, holds = new Set();
+  // 아이폰은 audio.volume을 못 바꿔서(항상 최대) 페이드가 안 먹어요 → 웹 오디오(GainNode)로 소리를 조절해요. 안 되는 기기는 volume으로 대신해요.
+  let ctx = null;
+  const ensureCtx = () => { if (!ctx){ try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} } if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {}); return ctx; };
+  const mk = src => { const au = new Audio(src); au.loop = true; au.preload = 'auto'; au.crossOrigin = 'anonymous'; const o = { au, gn: null, v: 0, t: 0 }; const c = ensureCtx(); if (c){ try { const sr = c.createMediaElementSource(au), g = c.createGain(); g.gain.value = 0; sr.connect(g); g.connect(c.destination); o.gn = g; } catch(e){} } return o; };
+  const curve = v => Math.sin(Math.max(0, Math.min(1, v)) * Math.PI / 2);   // 서로 바뀔 때 합친 소리 크기가 일정하게 (등전력 페이드)
+  let level = 1, wanted = false, raf = 0, last = 0;
+  const gain = o => Math.max(0, Math.min(1, level * .6 * curve(o.v)));   // 기본 곡은 효과음·대사를 가리지 않게 조금 작게
+  const put = o => { const g = gain(o); if (o.gn) o.gn.gain.value = g; else o.au.volume = g; };
+  const main = { au: null, gn: null, v: 1, t: 1 };
+  const TR = {};   // 장면 곡: src → { au, gn, v, t }
+  const warm = {};   // 미리 받아 둔 곡 (필요할 때 바로 나오게)
+  let cur = '';
   const loop = t => {
-    const dt = last ? t - last : 16; last = t;
-    fade += Math.sign(tgt - fade) * Math.min(Math.abs(tgt - fade), dt / FADE); apply();
-    if (fade === tgt){ raf = 0; last = 0; if (au && fade === 0) au.pause(); return; }
-    raf = requestAnimationFrame(loop);
+    const dt = last ? Math.min(100, t - last) : 16; last = t; let busy = false;
+    [main, ...Object.values(TR)].forEach(o => { if (!o.au) return; o.v += Math.sign(o.t - o.v) * Math.min(Math.abs(o.t - o.v), dt / FADE); put(o); if (o.v !== o.t) busy = true; else if (o.v === 0) o.au.pause(); });
+    Object.keys(TR).forEach(k => { const o = TR[k]; if (o.v === 0 && o.t === 0 && k !== cur){ o.au.pause(); delete TR[k]; } });
+    if (!busy){ raf = 0; last = 0; return; } raf = requestAnimationFrame(loop);
   };
   const go = () => { if (!raf) raf = requestAnimationFrame(loop); };
-  const play = () => {
-    if (!wanted || !au || holds.size || !level) return;
-    const p = au.play(); if (p && p.catch) p.catch(() => {});
-  };
-  const mount = () => { if (au) return; au = new Audio(SRC); au.loop = true; au.preload = 'auto'; apply(); };
+  const playO = o => { if (!wanted || !o.au) return; ensureCtx(); const p = o.au.play(); if (p && p.catch) p.catch(() => {}); };
+  const play = () => { if (!wanted || !main.au || holds.size || !level) return; main.t = 1; playO(main); go(); };
+  const mount = () => { if (main.au) return; Object.assign(main, mk(SRC), { v: 1, t: 1 }); put(main); };
   // 브라우저는 소리를 사용자가 한 번 누른 뒤에야 허용해요
   const unlock = () => { wanted = true; mount(); play(); removeEventListener('pointerdown', unlock); removeEventListener('keydown', unlock); };
   addEventListener('pointerdown', unlock); addEventListener('keydown', unlock);
-  document.addEventListener('visibilitychange', () => { if (!au) return; if (document.hidden) au.pause(); else play(); });
-  // 장면 전용 곡: 기본 곡을 낮추고 이 곡을 부드럽게 올려요. 곡이 바뀔 때는 앞 곡이 서서히 줄고 새 곡이 서서히 커져요 (대화가 끝나면 기본 곡으로 되돌려요)
-  const TR = {};   // src → { au, v, t }
-  let sraf = 0, slast = 0, cur = '';
-  const sloop = t => {
-    const dt = slast ? t - slast : 16; slast = t; let busy = false;
-    Object.entries(TR).forEach(([src, k]) => {
-      k.v += Math.sign(k.t - k.v) * Math.min(Math.abs(k.t - k.v), dt / FADE); k.au.volume = Math.max(0, Math.min(1, level * .6 * k.v));
-      if (k.v === k.t){ if (k.v === 0){ k.au.pause(); if (src !== cur) delete TR[src]; } } else busy = true;
-    });
-    if (!busy){ sraf = 0; slast = 0; return; }
-    sraf = requestAnimationFrame(sloop);
-  };
-  const sgo = () => { if (!sraf) sraf = requestAnimationFrame(sloop); };
+  document.addEventListener('visibilitychange', () => { if (!main.au) return; if (document.hidden){ main.au.pause(); Object.values(TR).forEach(o => o.au.pause()); } else { play(); Object.values(TR).forEach(o => { if (o.t === 1) playO(o); }); } });
   return {
+    preload(src){ if (!src || warm[src] || TR[src]) return; try { const a = new Audio(); a.preload = 'auto'; a.src = src; a.load(); warm[src] = a; } catch(e){} },   // 곡이 나오기 전에 미리 받아 둬요
     scene(id, src){
       if (holds.has('scene:' + id) && cur === src && TR[src] && TR[src].t === 1) return;
-      holds.add('scene:' + id); tgt = 0; go();
-      Object.entries(TR).forEach(([k, v]) => { if (k !== src) v.t = 0; });   // 앞 곡은 서서히 줄여요
-      cur = src; let k = TR[src];
-      if (!k){ const au = new Audio(src); au.loop = true; au.preload = 'auto'; au.volume = 0; k = TR[src] = { au, v: 0, t: 0 }; }
-      if (!wanted || !level) return; k.t = 1; const p = k.au.play(); if (p && p.catch) p.catch(() => {}); sgo();
+      holds.add('scene:' + id); main.t = 0; go();
+      Object.entries(TR).forEach(([k, o]) => { if (k !== src) o.t = 0; });   // 앞 곡은 서서히 줄여요
+      cur = src; let o = TR[src]; if (!o){ o = TR[src] = mk(src); }
+      if (!wanted || !level) return; o.t = 1; playO(o); go();
     },
-    sceneEnd(id){ Object.values(TR).forEach(k => { k.t = 0; }); sgo(); this.release('scene:' + id); },
-    hold(id){ holds.add(id); tgt = 0; go(); },
-    release(id){ holds.delete(id); if (holds.size) return; tgt = 1; play(); go(); },
-    sync(v){ level = v; if (!level){ if (au) au.pause(); return; } apply(); play(); },   // 설정의 배경 음악 크기(0·.5·1)
+    sceneEnd(id){ Object.values(TR).forEach(o => { o.t = 0; }); go(); this.release('scene:' + id); },
+    hold(id){ holds.add(id); main.t = 0; go(); },
+    release(id){ holds.delete(id); if (holds.size) return; main.t = 1; play(); go(); },
+    sync(v){ level = v; if (!level){ if (main.au) main.au.pause(); Object.values(TR).forEach(o => o.au.pause()); return; } if (main.au) put(main); Object.values(TR).forEach(put); play(); Object.values(TR).forEach(o => { if (o.t === 1) playO(o); }); },   // 설정의 배경 음악 크기(0·.5·1)
   };
 })();
 // NPC 전용 곡: 이 사람과 대화(말 걸기·이벤트·의뢰 장면)하는 동안만 그 곡으로 부드럽게 바뀌어요
@@ -4097,7 +4091,7 @@ World.onNear = t => {
   if (typeof mqCheck === 'function') mqCheck();
   const c = $('#ctx'); if (!t || sheetOn){ c.innerHTML = ''; c.dataset.key = t ? t.key : ''; return; }
   let main = '', extra = '';
-  if (t.kind === 'npc'){ main = `${ICO.chat}말하기`; const n = !String(t.id).startsWith('t:') && !String(t.id).startsWith('mq:') && npcGet(t.id); if (n) extra = `<button data-ctx="gift">${ICO.heart}선물하기</button>`; }
+  if (t.kind === 'npc'){ const bid = String(t.id).replace(/^mq:/, ''); if (typeof NPC_BGM !== 'undefined' && NPC_BGM[bid]) BGM.preload(NPC_BGM[bid]); main = `${ICO.chat}말하기`; const n = !String(t.id).startsWith('t:') && !String(t.id).startsWith('mq:') && npcGet(t.id); if (n) extra = `<button data-ctx="gift">${ICO.heart}선물하기</button>`; }
   else if (t.kind === 'mark') main = '🔍 ' + esc(t.label || '조사하기');
   else if (t.kind === 'spot') main = '✦ 채집하기';
   else if (t.kind === 'water') main = '🎣 낚시하기';
