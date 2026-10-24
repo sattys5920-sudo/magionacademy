@@ -1253,7 +1253,9 @@ const CHAT_MAX = 50, CHAT_SHOW = 5, chatKey = () => 'magion-chat:' + (typeof uid
 let chatLog = null;
 const chatLoad = () => { if (chatLog) return chatLog; try { chatLog = JSON.parse(localStorage.getItem(chatKey()) || '[]'); } catch(e){ chatLog = []; } return chatLog; };
 const chatLine = l => `<div><b class="${l.mine ? 'me' : ''}">${esc(l.nick)}</b>${esc(l.t)}</div>`;
+const xBub = {};   // 탐사 화면에서 캐릭터 머리 위에 띄울 말풍선 (닉네임 → 마지막 말)
 function pushLog(nick, t, mine){
+  xBub[nick] = { t, at: Date.now() };
   const L = chatLoad(); L.push({ nick, t, mine: !!mine, at: Date.now() }); while (L.length > CHAT_MAX) L.shift(); try { localStorage.setItem(chatKey(), JSON.stringify(L)); } catch(e){}
   const el = $('#clog'); if (el){ el.insertAdjacentHTML('beforeend', chatLine({ nick, t, mine })); while (el.children.length > CHAT_SHOW) el.firstChild.remove(); }
   if (!$('#chist').hidden) chatHist();
@@ -1270,9 +1272,9 @@ function onOnline(){
     const s = o && o.s, at = s && s.at || 0, first = heard[id] === undefined;
     if (heard[id] === at) return; heard[id] = at;
     if (!s || !at) return;
-    if (first || id === uid || s.m !== here) return;   // 들어오기 전에 한 말, 다른 곳에서 한 말은 안 보여요
+    const pty = typeof xpV !== 'undefined' && xpV && xpV.p && xpV.p[id] && xpV.p[myId()]; if ((first && !pty) || id === uid || (s.m !== here && !pty)) return;   // 들어오기 전에 한 말, 다른 곳에서 한 말은 안 보여요 (같은 탐사 파티는 어디서든 들려요)
     World.say(id, s.t, s.e ? s.e - 1 : null);
-    if (!s.e) pushLog(o.nick, s.t);
+    if (!s.e) pushLog(o.nick || (pty && xpV.p[id].n) || '친구', s.t);
     if (s.to === uid) toast(`${withJosa(o.nick, '이', '가')} 나에게 인사했어요! 눌러서 인사해 줘요`);
   });
 }
@@ -2138,6 +2140,11 @@ function xMDraw(){
     const col = dr + (M.st === 'walk' ? WK[Math.floor(now / 130 + x) % WK.length] : 0), okMap = M.res && M.res.okMap, ok = mine ? !M.res || M.res.ok : !okMap || okMap[u], hurt = M.res && !ok && now - M.res.t0 < 500 && Math.round(now / 70) % 2;
     if (!hurt) g.drawImage(sp, col * FW, 0, FW, FH, Math.round(x - FW / 2), Math.round(y - FH + 6 - (mine ? jump : 0)), FW, FH); });
   xMProps(g, R.kind, M.off, now, true);
+  order.forEach(({ u, x, y }) => { const nm = u === myId() ? me.nick : xcoBuilds[u] && xcoBuilds[u].name, b = nm && xBub[nm]; if (!b || Date.now() - b.at > 5000) return;
+    g.font = '9px G11B, Pretendard, sans-serif'; g.textAlign = 'center'; const L = [], T = String(b.t); let cur = ''; for (const ch of T){ if (g.measureText(cur + ch).width > 96){ L.push(cur); cur = ''; } cur += ch; } L.push(cur);
+    const bw = Math.max(...L.map(l => g.measureText(l).width)) + 10, bh = L.length * 11 + 6, bx = Math.max(2, Math.min(XCW - bw - 2, Math.round(x - bw / 2))), by = Math.round(y - FH - bh - 2);
+    g.globalAlpha = Math.min(1, (5000 - (Date.now() - b.at)) / 600); g.fillStyle = '#f4ecff'; g.fillRect(bx, by, bw, bh); g.fillRect(bx + 2, by - 1, bw - 4, 1); g.fillRect(bx + 2, by + bh, bw - 4, 1); g.fillRect(Math.round(x) - 2, by + bh + 1, 4, 1); g.fillRect(Math.round(x) - 1, by + bh + 2, 2, 1);
+    g.fillStyle = '#2a1840'; L.forEach((l, i) => g.fillText(l, bx + bw / 2, by + 10 + i * 11)); g.globalAlpha = 1; });
   if (M.st === 'alert' && M.alert.kind === 'boss') xMBossCut(g, M.alert, now, R);
   if (M.st === 'alert' && M.alert.kind !== 'boss'){ const a = M.alert, p = Math.min(1, (now - a.t0) / 700), mx = XCW + 30 - (XCW + 30 - 276) * p, lpc = xLpcSheet(), sc = a.kind === 'boss' ? 3 : a.kind === 'elite' ? 2 : 1;
     if (lpc.complete){ g.save(); g.translate(mx, py); g.scale(-sc, sc); g.drawImage(lpc, a.lp * 64, 0, 64, 64, -32, -60, 64, 64); g.restore(); }
@@ -4772,7 +4779,7 @@ const jnTags = c => [...(c?.time || []).map(t => BAND_KO[t]), ...(c?.weather || 
 const jnJosa = (k, a, b) => [1, 6, 7, 8, 10].includes(k) ? a : b;   // ♥1·6·7·8·10은 받침이 있어요
 function jnTodoHTML(){
   const left = me.orders.filter(o => !o.done).length;
-  return `<section class="sec">${secH('오늘의 의뢰', left ? `${left}건 남음` : '다 전했어요')}
+  return `<section class="sec">${secH('오늘의 의뢰', !me.orders.length ? '' : left ? `${left}건 남음` : '다 전했어요')}
     ${me.orders.length ? `<div class="box px">${me.orders.map((o, i) => { const have = me.inv[o.p] || 0, ok = have >= o.n;
       return `<div class="li ${o.done ? 'done' : ''}">${ic(o.p)}<div class="main"><span class="t">${ITEM[o.p]} ×${o.n}</span><span class="d">${esc(o.from)} · 가진 것 <span class="num">${have} / ${o.n}</span></span></div>
         ${o.done ? '<span class="tag">완료</span>' : ok ? `<button class="btn sm go" data-deliver="${i}">전하기 +${payOf(o)}G</button>` : `<span class="tag num">${payOf(o)}G</span>`}</div>`; }).join('')}</div>` : '<div class="hint">오늘은 들어온 의뢰가 없어요</div>'}
