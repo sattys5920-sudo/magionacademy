@@ -6176,7 +6176,7 @@ function showCreate(done, counts = {}){
       ${World.Avatar.loaded ? avatarUI(av) : '<div class="hint">그림을 불러오는 중...</div>'}
       <span class="s">기숙사 고르기 · 언제 깨어 있는 사람인가요? (기숙사마다 ${HOUSE_CAP}명)</span>
       ${houseCards(house, counts)}
-      <span class="s">탐사 직업 · 한 번 고르면 바뀌지 않아요 (나중에 탐사가 열릴 때 골라도 돼요)</span>
+      <span class="s">직업 고르기 · 한 번 고르면 바뀌지 않아요</span>
       ${xJobGrid(job)}
       <p class="err" id="err"></p>
       <button class="btn go" id="enroll">입학하기</button>
@@ -6190,6 +6190,7 @@ function showCreate(done, counts = {}){
       keep(); const n = nick.trim();
       if (n.length < 1 || n.length > 8) return $('#err').textContent = '이름을 1~8 자로 정해 주세요.';
       if (!house) return $('#err').textContent = '기숙사를 골라 주세요.';
+      if (!job) return $('#err').textContent = '직업을 골라 주세요.';
       const fav = World.Avatar.fix(av); delete fav.house; const np = freshPlayer(n, look, house, fav); if (job) np.ex = { exp: 0, d: '', n: 0, job }; done(np);
     };
   };
