@@ -2030,7 +2030,7 @@ function xMStep(M, run, dt, now){
   const co = !!run.co;
   if (M.st === 'walk'){
     M.off += dt * 38; M.wt += dt; run.prog = Math.min(99.9, run.prog + dt * xMSpd()); if (co && now - (M.lastPub || 0) > 4000){ M.lastPub = now; xcoPub({ st: 'walk' }); }
-    if (run.prog >= 88 && !M.boss){ M.boss = true; M.st = 'alert'; M.alert = { t0: now, dur: 1500, kind: 'boss', lp: xReg().boss.lp, txt: `${withJosa(xReg().boss.n, '이', '가')} 나타났어요!` }; sfx('boss'); if (co) xcoPub({ st: 'alert', alert: { kind: 'boss', lp: M.alert.lp, txt: M.alert.txt, t0: now2(), dur: 1500 } }); }
+    if (run.prog >= 88 && !M.boss){ M.boss = true; M.st = 'alert'; M.alert = { t0: now, dur: 3400, kind: 'boss', lp: xReg().boss.lp, txt: `${withJosa(xReg().boss.n, '이', '가')} 나타났어요!` }; sfx('boss'); if (co) xcoPub({ st: 'alert', alert: { kind: 'boss', lp: M.alert.lp, txt: M.alert.txt, t0: now2(), dur: 3400 } }); }
     else if (run.prog >= M.nextFork && run.prog < 84){ M.st = 'fork'; M.fork = { opts: xMForkOpts(run), t0: now, fid: Date.now(), my: -1, vs: '' }; sfx('fork'); if (co) xcoPub({ st: 'fork', fork: { fid: M.fork.fid, opts: M.fork.opts, t0: now2(), v: {} } }); }
     else if (M.wt >= M.nextEnc){ const el = run.prog > 20 && Math.random() < .12; M.nextEnc = M.wt + 12 + Math.random() * 12; const mo = el ? xReg().elite : xRand(run.pool && run.pool.length ? run.pool : xReg().mon); if (!el) run.nextMon = mo; M.st = 'alert'; M.alert = { t0: now, dur: 1200, kind: el ? 'elite' : 'battle', lp: mo.lp, txt: el ? '강한 몬스터가 나타났어요!' : '몬스터가 나타났어요!' }; sfx('enc'); if (co) xcoPub({ st: 'alert', alert: { kind: M.alert.kind, lp: mo.lp, txt: M.alert.txt, t0: now2(), dur: 1200 } }); }
     else if (M.wt >= M.nextHaz){ M.nextHaz = M.wt + 22 + Math.random() * 18; const ty = xRand(XM_HAZ); M.st = 'haz'; M.haz = { ty, tyi: XM_HAZ.indexOf(ty), hid: Date.now(), t0: now, dur: 3600, done: false, ok: false }; sfx('haz'); if (co) xcoPub({ st: 'haz', haz: { hid: M.haz.hid, ty: M.haz.tyi, t0: now2(), dur: 3600 } }); }
@@ -2054,6 +2054,56 @@ function xMStep(M, run, dt, now){
     if (now - M.res.t0 >= M.res.dur){ M.res = null; M.st = 'walk'; if (co) xcoPub({ st: 'walk' }); }
   }
 }
+// ----- 걷는 화면 소품 (지역마다 달라요: 숲 풀·버섯 / 묘지 비석·촛불 / 동굴 수정·고드름 / 신전 기둥·화로) 와 보스 등장 컷신 -----
+const XM_PROPS = { trees: ['bush', 'mush', 'log', 'flower', 'rock'], graves: ['tomb', 'cross', 'skull', 'candle', 'deadtree'], cave: ['crystal', 'stalag', 'puddle', 'gmush'], temple: ['pillar', 'brazier', 'urn', 'rubble'] };
+const xMRect = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); };
+function xMPropDraw(g, type, x, y, s, now, i){
+  g.save(); g.translate(Math.round(x), Math.round(y)); g.scale(s, s); const R = (a, b, w, h, c) => { g.fillStyle = c; g.fillRect(a, b, w, h); }, E = (cx, cy, rx, ry, c) => { g.fillStyle = c; g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, 7); g.fill(); };
+  E(0, 0, 11, 3, 'rgba(0,0,0,.28)');
+  if (type === 'bush'){ E(-6, -6, 8, 7, '#27432e'); E(5, -6, 9, 8, '#2f5236'); E(0, -11, 8, 7, '#37603f'); R(-3, -12, 2, 2, '#d868c0'); R(5, -9, 2, 2, '#f0b0e0'); }
+  else if (type === 'mush'){ R(-1, -8, 3, 8, '#e8dcc0'); E(0, -9, 8, 5, '#d8483a'); R(-4, -11, 2, 2, '#fff'); R(2, -10, 2, 2, '#fff'); g.globalAlpha = .18 + .1 * Math.sin(now / 400 + i); E(0, -6, 14, 9, '#ff9a8a'); g.globalAlpha = 1; }
+  else if (type === 'log'){ R(-12, -9, 24, 9, '#5a3a22'); R(-12, -9, 24, 2, '#7a5232'); E(-12, -4.5, 3, 4.5, '#a07a4a'); E(-12, -4.5, 1.2, 2, '#6a4a2a'); R(4, -11, 4, 2, '#3f7a3a'); }
+  else if (type === 'flower'){ for (const dx of [-5, 0, 5]){ R(dx, -9 - Math.abs(dx) / 3, 1, 9 + Math.abs(dx) / 3, '#3a6a3a'); E(dx, -10 - Math.abs(dx) / 3, 3, 3, dx ? '#f0c0e8' : '#ffe08a'); } }
+  else if (type === 'rock'){ E(0, -5, 10, 6, '#59566a'); E(-3, -8, 5, 3, '#7a7790'); }
+  else if (type === 'tomb'){ R(-7, -20, 14, 20, '#6e6a7c'); E(0, -20, 7, 5, '#6e6a7c'); R(-7, -20, 3, 20, '#5a5668'); R(-1, -22, 2, 10, '#3a3648'); R(-4, -19, 8, 2, '#3a3648'); R(-5, -4, 10, 4, '#4a4658'); }
+  else if (type === 'cross'){ R(-1, -22, 3, 22, '#4a3226'); R(-7, -17, 15, 3, '#4a3226'); R(-1, -22, 1, 22, '#6a4a36'); }
+  else if (type === 'skull'){ E(-5, -3, 4, 3, '#d8d2c0'); E(4, -3, 4, 3, '#cfc8b4'); E(0, -8, 5, 5, '#ece6d4'); R(-3, -9, 2, 2, '#1a1424'); R(1, -9, 2, 2, '#1a1424'); R(-1, -5, 2, 2, '#b8b2a0'); }
+  else if (type === 'candle'){ R(-2, -9, 4, 9, '#e8dcc0'); R(-2, -9, 1, 9, '#fff6d8'); const f = 1 + .25 * Math.sin(now / 90 + i * 3); g.globalAlpha = .25; E(0, -15, 9 * f, 9 * f, '#ffb04a'); g.globalAlpha = 1; E(0, -13, 2, 3.5 * f, '#ffd04a'); E(0, -13, 1, 2 * f, '#fff6c0'); }
+  else if (type === 'deadtree'){ R(-2, -24, 4, 24, '#2a2230'); R(-12, -22, 11, 3, '#2a2230'); R(1, -17, 11, 3, '#2a2230'); R(-12, -26, 3, 6, '#2a2230'); R(9, -21, 3, 6, '#2a2230'); }
+  else if (type === 'crystal'){ const p = .6 + .4 * Math.sin(now / 500 + i), cs = [['#7af0ff', -6, 12], ['#c88aff', 2, 18], ['#7af0ff', 8, 9]]; g.globalAlpha = .2 * p; E(0, -9, 16, 12, '#7af0ff'); g.globalAlpha = 1; cs.forEach(([c, dx, h]) => { g.fillStyle = c; g.beginPath(); g.moveTo(dx - 4, 0); g.lineTo(dx, -h); g.lineTo(dx + 4, 0); g.fill(); g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(dx - 1, -h + 3, 1, h - 5); }); }
+  else if (type === 'stalag'){ g.fillStyle = '#3f5560'; g.beginPath(); g.moveTo(-7, 0); g.lineTo(0, -26); g.lineTo(7, 0); g.fill(); g.fillStyle = '#566e78'; g.beginPath(); g.moveTo(-7, 0); g.lineTo(0, -26); g.lineTo(-1, 0); g.fill(); }
+  else if (type === 'puddle'){ E(0, -2, 14, 4, '#2a5a6a'); E(0, -2, 10, 2.5, '#4a8a9a'); const r = (now / 40 + i * 9) % 16; g.strokeStyle = `rgba(190,240,255,${1 - r / 16})`; g.lineWidth = 1; g.beginPath(); g.ellipse(2, -2, r * .9, r * .3, 0, 0, 7); g.stroke(); }
+  else if (type === 'gmush'){ R(-1, -7, 2, 7, '#8ae0d0'); E(0, -8, 6, 4, '#3ad0b8'); E(-7, -4, 3, 2, '#3ad0b8'); R(-8, -4, 2, 4, '#8ae0d0'); g.globalAlpha = .25; E(0, -6, 12, 9, '#7affe0'); g.globalAlpha = 1; }
+  else if (type === 'pillar'){ R(-7, -34, 14, 34, '#a98a5a'); R(-7, -34, 4, 34, '#c8a870'); for (let k = -30; k < 0; k += 8) R(-7, k, 14, 1, '#7a5e3a'); R(-9, -38, 18, 5, '#c8a870'); R(-9, -3, 18, 3, '#8a6e44'); R(-3, -41, 7, 4, '#b8986a'); }
+  else if (type === 'brazier'){ R(-5, -14, 10, 3, '#3a2a1e'); g.fillStyle = '#4a382a'; g.beginPath(); g.moveTo(-8, -14); g.lineTo(8, -14); g.lineTo(3, -4); g.lineTo(-3, -4); g.fill(); R(-2, -4, 4, 4, '#3a2a1e'); const f = 1 + .3 * Math.sin(now / 80 + i); g.globalAlpha = .22; E(0, -20, 14 * f, 12 * f, '#ffb04a'); g.globalAlpha = 1; E(0, -19, 5, 7 * f, '#ff7a2a'); E(0, -18, 3, 5 * f, '#ffd04a'); E(0, -17, 1.5, 3 * f, '#fff6c0'); }
+  else if (type === 'urn'){ g.fillStyle = '#b06a3a'; g.beginPath(); g.moveTo(-5, -16); g.lineTo(5, -16); g.lineTo(9, -7); g.lineTo(5, 0); g.lineTo(-5, 0); g.lineTo(-9, -7); g.fill(); R(-6, -19, 12, 3, '#8a4a2a'); R(-8, -9, 16, 2, '#e0b070'); R(-4, -13, 2, 8, '#d08a50'); }
+  else if (type === 'rubble'){ E(-6, -3, 6, 3.5, '#8a7050'); E(4, -4, 7, 4.5, '#a08660'); E(10, -2, 4, 2.5, '#7a6040'); R(-2, -9, 5, 3, '#b89870'); }
+  g.restore();
+}
+function xMProps(g, kind, off, now, front){
+  const list = XM_PROPS[kind] || XM_PROPS.trees, P = 840;
+  for (let i = 0; i < 13; i++){
+    const row = i % 3, near = row === 2; if (near !== front) continue;
+    const sp = [.8, 1, 1.45][row], x = (((i * 131 + 40 - off * sp) % P) + P) % P - 50, y = [142, 166, 205][row] + (i * 7) % 11, type = list[(i * 5 + 1) % list.length];
+    xMPropDraw(g, type, x, y, [.8, 1, 1.4][row], now, i);
+  }
+}
+let xMTmpCv = null;
+function xMBossCut(g, a, now, R){
+  const p = Math.min(1, (now - a.t0) / a.dur), W = XCW, H = XCH, e = t => 1 - (1 - t) ** 3;
+  if (p > .5 && !a.sfx2){ a.sfx2 = true; sfx('crit'); sfx('hurt'); }
+  g.save(); g.fillStyle = `rgba(6,2,12,${.62 * Math.min(1, p / .15)})`; g.fillRect(0, 0, W, H);
+  const vg = g.createRadialGradient(W * .68, H * .62, 20, W * .68, H * .62, 230); vg.addColorStop(0, 'rgba(255,60,40,0)'); vg.addColorStop(1, `rgba(130,10,10,${.5 * Math.min(1, p / .3)})`); g.fillStyle = vg; g.fillRect(0, 0, W, H);
+  const lpc = xLpcSheet();
+  if (lpc.complete){ const k = e(Math.min(1, p / .5)), bx = W + 70 - (W + 70 - 268) * k, sc = 3 + .4 * p, reveal = Math.max(0, Math.min(1, (p - .35) / .25)), tc = xMTmpCv || (xMTmpCv = document.createElement('canvas'));
+    tc.width = tc.height = 64; const tg = tc.getContext('2d'); tg.imageSmoothingEnabled = false; tg.drawImage(lpc, a.lp * 64, 0, 64, 64, 0, 0, 64, 64); tg.globalCompositeOperation = 'source-atop'; tg.fillStyle = `rgba(0,0,0,${1 - reveal})`; tg.fillRect(0, 0, 64, 64);
+    g.shadowColor = '#ff3a2a'; g.shadowBlur = 14 + 10 * Math.sin(now / 120) * reveal; g.translate(bx, 200); g.scale(-sc, sc); g.drawImage(tc, -32, -60); g.shadowBlur = 0; }
+  g.restore();
+  const bh = 34 * e(Math.min(1, p / .12)); g.fillStyle = '#000'; g.fillRect(0, 0, W, bh); g.fillRect(0, H - bh, W, bh);
+  if (p > .5){ const q = Math.min(1, (p - .5) / .15), sc2 = 1 + .6 * (1 - e(q)); g.save(); g.textAlign = 'center'; g.lineJoin = 'round'; g.globalAlpha = q;
+    const sub = `— ${R.n}의 주인 —`; g.font = 'bold 11px sans-serif'; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText(sub, W / 2, H - bh - 36); g.fillStyle = '#ffb0a0'; g.fillText(sub, W / 2, H - bh - 36);
+    g.translate(W / 2, H - bh - 10); g.scale(sc2, sc2); g.font = 'bold 26px sans-serif'; g.lineWidth = 5; g.strokeText(R.boss.n, 0, 0); g.shadowColor = '#ff3a2a'; g.shadowBlur = 12; g.fillStyle = '#fff'; g.fillText(R.boss.n, 0, 0); g.restore(); }
+}
 function xMDraw(){
   const M = xM, cv = $('#xmcv'), run = xEx().run; if (!M || !cv || !run || !sheetOn || sub !== 'explore' || xv?.view !== 'march'){ xMRaf = 0; return; }
   xMRaf = requestAnimationFrame(xMDraw); const now = performance.now(), dt = Math.min(.1, (now - M.t) / 1000); M.t = now;
@@ -2062,9 +2112,10 @@ function xMDraw(){
   xMUi();
   const R = xReg(), g = cv.getContext('2d'), bg = xBg(XRG.indexOf(R)); g.imageSmoothingEnabled = false; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#000'; g.fillRect(0, 0, XCW, XCH);
   if (M.shake && now - M.shake < 320) g.translate(Math.round((Math.random() - .5) * 6), Math.round((Math.random() - .5) * 4));
+  else if (M.st === 'alert' && M.alert && M.alert.kind === 'boss'){ const bp = (now - M.alert.t0) / M.alert.dur; if (bp > .42 && bp < .62) g.translate(Math.round((Math.random() - .5) * 5), Math.round((Math.random() - .5) * 4)); }
   const o = M.off % (XCW * 2);   // 배경은 좌우로 뒤집어 이어 붙여요 (끊김 없이 흘러가요)
   [-o, XCW * 2 - o].forEach(x0 => { g.drawImage(bg, x0, 0); g.save(); g.translate(x0 + XCW * 2, 0); g.scale(-1, 1); g.drawImage(bg, 0, 0); if (R.kind === 'trees' || R.kind === 'graves') g.drawImage(bg, 130, 6, 52, 62, 274, 6, 52, 62); g.restore(); });   // 뒤집은 쪽엔 달이 한 번 더 나오지 않게 하늘로 덮어요
-  xAmb(g, R.kind, now);
+  xAmb(g, R.kind, now); xMProps(g, R.kind, M.off, now, false);
   const A = World.Avatar, FW = A.FW, FH = A.FH, WK = A.meta.walk, dr = A.meta.dirs.right, walking = M.st === 'walk' || M.st === 'fork' && false;
   let px = 150, py = 176, jump = 0;
   const H = M.haz; if (H){ const p = Math.min(1, (now - H.t0) / H.dur), ox = XCW + 24 - (XCW + 24 - (px + 26)) * (H.done && H.ok ? Math.min(1, p + .15) : p), gy = py + 2;
@@ -2080,14 +2131,16 @@ function xMDraw(){
     g.fillStyle = 'rgba(0,0,0,.32)'; g.beginPath(); g.ellipse(x, y, 14, 4, 0, 0, 7); g.fill();
     const col = dr + (M.st === 'walk' ? WK[Math.floor(now / 130 + x) % WK.length] : 0), okMap = M.res && M.res.okMap, ok = mine ? !M.res || M.res.ok : !okMap || okMap[u], hurt = M.res && !ok && now - M.res.t0 < 500 && Math.round(now / 70) % 2;
     if (!hurt) g.drawImage(sp, col * FW, 0, FW, FH, Math.round(x - FW / 2), Math.round(y - FH + 6 - (mine ? jump : 0)), FW, FH); });
-  if (M.st === 'alert'){ const a = M.alert, p = Math.min(1, (now - a.t0) / 700), mx = XCW + 30 - (XCW + 30 - 276) * p, lpc = xLpcSheet(), sc = a.kind === 'boss' ? 3 : a.kind === 'elite' ? 2 : 1;
+  xMProps(g, R.kind, M.off, now, true);
+  if (M.st === 'alert' && M.alert.kind === 'boss') xMBossCut(g, M.alert, now, R);
+  if (M.st === 'alert' && M.alert.kind !== 'boss'){ const a = M.alert, p = Math.min(1, (now - a.t0) / 700), mx = XCW + 30 - (XCW + 30 - 276) * p, lpc = xLpcSheet(), sc = a.kind === 'boss' ? 3 : a.kind === 'elite' ? 2 : 1;
     if (lpc.complete){ g.save(); g.translate(mx, py); g.scale(-sc, sc); g.drawImage(lpc, a.lp * 64, 0, 64, 64, -32, -60, 64, 64); g.restore(); }
     if (Math.round(now / 150) % 2){ g.font = 'bold 26px monospace'; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = '#1a1024'; g.strokeText('!', px, py - FH - 4); g.fillStyle = '#ff5a4a'; g.fillText('!', px, py - FH - 4); } }
   if (M.st === 'fork'){ const sx = 300, sy = py; g.fillStyle = '#5a3a22'; g.fillRect(sx - 2, sy - 52, 5, 54); g.fillStyle = '#8a5a32'; g.beginPath(); g.moveTo(sx - 36, sy - 50); g.lineTo(sx + 4, sy - 50); g.lineTo(sx + 12, sy - 44); g.lineTo(sx + 4, sy - 38); g.lineTo(sx - 36, sy - 38); g.fill(); g.fillStyle = '#7a4a2a'; g.beginPath(); g.moveTo(sx + 40, sy - 34); g.lineTo(sx + 2, sy - 34); g.lineTo(sx - 6, sy - 28); g.lineTo(sx + 2, sy - 22); g.lineTo(sx + 40, sy - 22); g.fill();
     g.font = '14px sans-serif'; g.textAlign = 'center'; g.fillText(XM_FORK[M.fork.opts[0]][0], sx - 14, sy - 39); g.fillText(XM_FORK[M.fork.opts[1]][0], sx + 20, sy - 23);
     const left = Math.max(0, (XM_VOTE - (now - M.fork.t0)) / 1000), tx = xEx().run?.co ? `갈림길! 다수결로 정해요 (동점이면 파티장) · ${Math.ceil(left)}` : `갈림길! 누르면 그쪽으로 가요 · ${Math.ceil(left)}`; g.font = 'bold 11px monospace'; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText(tx, XCW / 2, 40); g.fillStyle = '#ffd866'; g.fillText(tx, XCW / 2, 40); }
   if (H && !H.done){ const left = Math.max(0, 1 - (now - H.t0) / H.dur); g.fillStyle = '#1a1024'; g.fillRect(60, 30, XCW - 120, 12); g.fillStyle = left > .35 ? '#ffb85a' : '#ff5a4a'; g.fillRect(62, 32, (XCW - 124) * left, 8); g.font = 'bold 14px sans-serif'; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = '#1a1024'; g.strokeText('⚠️ ' + H.ty.n, XCW / 2, 66); g.fillStyle = '#fff'; g.fillText('⚠️ ' + H.ty.n, XCW / 2, 66); }
-  const msg = M.res ? M.res.txt : M.alert ? M.alert.txt : '';
+  const msg = M.res ? M.res.txt : M.alert && M.alert.kind !== 'boss' ? M.alert.txt : '';
   if (msg){ g.font = 'bold 15px sans-serif'; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = '#1a1024'; g.strokeText(msg, XCW / 2, 70); g.fillStyle = M.res ? (M.res.ok ? '#8affb0' : '#ff8a7a') : '#ffd866'; g.fillText(msg, XCW / 2, 70); }
 }
 // ===== 협동 탐험 2~4단계: 같이 걷고 · 같이 싸워요 =====
