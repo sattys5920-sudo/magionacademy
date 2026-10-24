@@ -13,7 +13,7 @@ A.update(bgSrc='art/iso/arena_bg.png', objSrc='art/iso/arena_obj.png', title='�
 town = json.load(open(I + '/out/town.json'))    # split_maps.py: 강 동쪽 마을·시장 (학교와 다리로 이어져요)
 town.update(bgSrc='art/iso/town_bg.png', objSrc='art/iso/hw_obj.png', title='등불 마을', sub='반짝이는 곳이 문이에요 · 서쪽 다리로 학교에 가요', fill='#140E1E', lazy=True)
 camp.update(sub='반짝이는 곳이 문이에요 · 동쪽 다리로 마을·시장에 가요')
-QROOMS = {'vamp_manor': 'main_01_dracula', 'museum': 'main_05_mummy', 'lab_tower': 'main_06_frankenstein', 'witch_hut': 'main_03_witch', 'wolf_cabin': 'main_04_werewolf'}   # quarter_rooms.py: 의뢰인 집 안
+QROOMS = {'vamp_manor': 'main_01_dracula', 'museum': 'main_05_mummy', 'lab_tower': 'main_06_frankenstein', 'witch_hut': 'main_03_witch', 'wolf_cabin': 'main_04_werewolf', 'jack_hut': 'main_07_jack'}   # quarter_rooms.py: 의뢰인 집 안
 MAPS = {'campus': {'meta': camp}, 'town': {'meta': town}, 'lab': {'meta': L}, 'quarter': {'meta': Q}, 'arena': {'meta': A}}
 DOORMAP = {tuple(map(int, k.split(','))): v for k, v in json.load(open(I + '/out/door_map.json')).items()}
 ALLO, ALLA = camp['objs'] + town['objs'], camp['areas'] + town['areas']

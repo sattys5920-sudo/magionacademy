@@ -426,5 +426,52 @@ def wolf_cabin():
     R.light(13, 9, -30, 140, [255, 180, 110], .22, 0)
     finish(R, 'wolf_cabin', '늑대인간 통나무집', '우르의 집 · 벽난로가 따뜻해요', [28, 30])
     return (NX, NY)
+def jack_hut():
+    NX, NY = 26, 18
+    R = Room(NX, NY, 80)
+    def floor(fx, fy):
+        c = planks(['#8A5E30', '#7A5028', '#966836'])(fx, fy)
+        if 8 <= fx < 18 and 5 <= fy < 13:
+            e = min(fx - 8, 18 - fx, fy - 5, 13 - fy); c = hexc('#3A2412') if e < .25 else hexc('#C8661A') if e < .6 else hexc('#E07A1E')
+        return c
+    common(R, floor, '#9A6630', '#8A5A28', '#5A3818', '#3A2412', vw=250)
+    glass = ('#1E2A4E', '#3A5A8A', '#B8D0F0')
+    R.window('R', 24, 20, 28, 36, glass=glass); R.window('R', 150, 20, 28, 36, glass=glass); R.window('L', 54, 20, 28, 36, glass=glass)
+    fireplace(R, 'R', 66, 56, 52, ('#8A6E56', '#6A5240'), ('#FF8A2A', '#FFC84A'))
+    sconces(R, 'R', (50, 128, 176)); sconces(R, 'L', (20, 76, 120))
+    def pumpkin(tx, ty, k=1.0, lit=False):
+        def f(img, d):
+            x, y = R.P(tx + .5, ty + .5); r = int(7 * k)
+            for dx in (-r // 2, r // 2, 0): d.ellipse([x + dx - r, y - 2 * r, x + dx + r, y], fill=hexc('#E07A1E'))
+            d.ellipse([x - r // 2, y - 2 * r + 1, x + r // 2, y - r], fill=hexc('#F09A3A'))
+            d.rectangle([x - 1, y - 2 * r - 4, x + 1, y - 2 * r + 1], fill=hexc('#4A6A2A'))
+            if lit:
+                d.polygon([(x - r + 2, y - r - 2), (x - 3, y - r - 6), (x - 2, y - r + 1)], fill=hexc('#FFE07A')); d.polygon([(x + r - 2, y - r - 2), (x + 3, y - r - 6), (x + 2, y - r + 1)], fill=hexc('#FFE07A'))
+                d.line([(x - r + 3, y - 4), (x + r - 3, y - 4)], fill=hexc('#FFD04A'), width=2)
+        R.obj('pumpkin', [(tx, ty)], f, act=('잭의 호박', '쓰다듬기'))
+        if lit: R.light(tx + .5, ty + .5, -8, 26, [255, 170, 60], .5, 1)
+    for (x, y, k, l) in ((2, 2, 1.3, True), (4, 1, 1.0, False), (24, 16, 1.2, True), (22, 16, 1.0, False), (1, 10, 1.1, False), (1, 12, 1.2, True), (24, 8, 1.0, True), (13, 2, 1.4, True), (15, 2, 1.0, False), (11, 2, 1.0, False)): pumpkin(x, y, k, l)
+    def bed(img, d):
+        R.box(img, 21, 2, 3, 2, 8, '#5A3A22', '#3E2616', '#4A2E1C'); R.box(img, 21.1, 2.1, 2.8, 1.8, 11, '#E07A1E', '#B8561A', '#C8661A'); R.box(img, 21.2, 2.2, .9, 1.6, 13, '#F0E0C0', '#C8B898', '#E0D0B0')
+    R.obj('bed', tiles(21, 2, 3, 2), bed, act=('호박 이불 침대', '살펴보기'))
+    def scarecrow(img, d):
+        x, y = R.P(4.5, 15.5)
+        d.line([(x, y), (x, y - 34)], fill=hexc('#5A4A3A'), width=2); d.line([(x - 12, y - 26), (x + 12, y - 26)], fill=hexc('#5A4A3A'), width=2)
+        d.polygon([(x - 8, y - 26), (x + 8, y - 26), (x + 5, y - 12), (x - 5, y - 12)], fill=hexc('#5A3E7A')); d.ellipse([x - 6, y - 42, x + 6, y - 30], fill=hexc('#E07A1E'))
+        d.polygon([(x - 8, y - 40), (x + 8, y - 40), (x, y - 54)], fill=hexc('#2A2038')); d.polygon([(x - 4, y - 38), (x - 2, y - 36), (x - 5, y - 36)], fill=hexc('#FFE07A')); d.polygon([(x + 4, y - 38), (x + 2, y - 36), (x + 5, y - 36)], fill=hexc('#FFE07A'))
+    R.obj('scarecrow', tiles(4, 15, 1, 1), scarecrow, act=('허수아비 친구', '인사하기'))
+    def sacks(tx, ty):
+        R.obj('crate', [(tx, ty)], crates(R, tx, ty, 2), act=('호박씨 자루', '살펴보기'))
+    sacks(23, 12); sacks(23, 14); sacks(2, 14)
+    for x in range(11, 15): R.obj('table', [(x, 14)], table_draw(R, x, 14, '#7A5028', (('cup', 'cake'), ('cup',), ('book',), ('cup', 'cake'))[x - 11]), act=('호박 식탁', '살펴보기'))
+    for x in range(11, 15): R.obj('chair', [(x, 13)], chair_draw(R, x, 13, '#C8661A')); R.obj('chair', [(x, 15)], chair_draw(R, x, 15, '#C8661A'))
+    def stool(tx, ty):
+        R.obj('stool', [(tx, ty)], lambda img, d: R.box(img, tx + .2, ty + .2, .6, .6, 8, '#C8661A', '#8A4010', '#A85014'))
+    for (x, y) in ((19, 10), (20, 11), (5, 11)): stool(x, y)
+    for (x, y) in ((1, 4), (24, 12)): R.obj('plant', [(x, y)], plant_draw(R, x, y, '#4E7A3E', '#E8A050'))
+    for (x, y) in ((6, 9), (18, 7), (10, 16), (8, 3), (16, 14), (4, 5)): float_candle(R, x, y)
+    R.light(13, 9, -30, 140, [255, 170, 80], .25, 0)
+    finish(R, 'jack_hut', '잭의 오두막', '잭의 집 · 호박 향이 가득해요', [47, 26])
+    return (NX, NY)
 if __name__ == '__main__':
-    for fn in (vamp_manor, museum, lab_tower, witch_hut, wolf_cabin): fn()
+    for fn in (vamp_manor, museum, lab_tower, witch_hut, wolf_cabin, jack_hut): fn()

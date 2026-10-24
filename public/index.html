@@ -5969,7 +5969,7 @@ function renderAvatar(){
 let shopTry = null, shopKind = 'cas', shopMsg = '';
 const SHOP_CATS = [['top', '상의'], ['legs', '하의'], ['feet', '신발'], ['hat', '모자'], ['acc', '액세서리'], ['neck', '목걸이'], ['cape', '망토']];
 // 그림자 골목 의뢰인 집: 그 사람의 의뢰가 3단계에 닿았거나 끝난 뒤에 들어갈 수 있어요. 안에서 의뢰인을 만나요 (tools/iso/quarter_rooms.py)
-const QHOME = { main_01_dracula: ['blady', 'vamp_manor', 18, 9], main_05_mummy: ['nefer', 'museum', 18, 12], main_06_frankenstein: ['piece', 'lab_tower', 17, 11], main_03_witch: ['beatrix', 'witch_hut', 16, 10], main_04_werewolf: ['ur', 'wolf_cabin', 16, 10] };
+const QHOME = { main_01_dracula: ['blady', 'vamp_manor', 18, 9], main_05_mummy: ['nefer', 'museum', 18, 12], main_06_frankenstein: ['piece', 'lab_tower', 17, 11], main_03_witch: ['beatrix', 'witch_hut', 16, 10], main_04_werewolf: ['ur', 'wolf_cabin', 16, 10], main_07_jack: ['jack', 'jack_hut', 16, 10] };
 const qUnlocked = qid => { const s = typeof mqState === 'function' ? mqState() : null; return !!s && (!!s.done[qid] || (s.q === qid && s.st >= 3)); };
 World.canEnter = qid => { if (qUnlocked(qid)) return true; const h = QHOME[qid], nm = h && typeof mqName === 'function' ? mqName(h[0]) : '주인'; return `문이 닫혀 있어요 · ${nm}의 의뢰를 더 진행하면 열려요`; };
 World.onExplore = (ri, door) => { if (!me) return; xRgSel = ri; xv = null; toast(`${door?.label || XRG[ri].n} · ${XRG[ri].tier}`); openSheet('home', 'explore'); };   // 마을 가장자리 길 끝 기둥 문 (tools/iso/halloween.py EXPL)
@@ -6136,8 +6136,9 @@ function mqSky(){ if (!World.setSky || !me) return; const d = mqState().done, li
 // ---- 의뢰인·조연을 맵에 세우기 (syncNpcs가 불러요) ----
 function mqNpcs(){
   if (!me || !MQ.loaded) return []; const s = mqState(), out = [], seen = {};
-  const put = (id, pl, mark, dir) => { const c = MQ.cast[id]; if (!c || seen[id]) return; const p = mqPlace(pl); if (!p) return; seen[id] = 1;
-    out.push({ id: 'mq:' + id, name: mqName(id), map: p.map, x: p.x, y: p.y, r: 0, mark, wander: false, dir: dir || 'down', ...(c.av ? { av: World.Avatar.fix(c.av) } : { spr: c.spr, float: c.float, alpha: c.alpha }) }); };
+  const put = (id, pl, mark, dir, wander) => { const c = MQ.cast[id]; if (!c || seen[id]) return; const p = mqPlace(pl); if (!p) return; seen[id] = 1;
+    const r = wander && typeof pl === 'string' && NL.places[pl] ? NL.places[pl].r || 0 : 0;
+    out.push({ id: 'mq:' + id, name: mqName(id), map: p.map, x: p.x, y: p.y, r, mark, wander: !!r, dir: dir || 'down', ...(c.av ? { av: World.Avatar.fix(c.av) } : { spr: c.spr, float: c.float, alpha: c.alpha }) }); };
   if (s.q && MQ.q[s.q]){ const q = MQ.q[s.q], st = mqStage();
     if (s.ph !== 'arrive'){ const pl = (st && st.place) || q.place; put(q.client, pl, s.ph === 'pre' || s.ph === 'ready' ? '❗' : '', st && st.dir); }
     (st && st.actors || []).forEach(a => put(a.id, a.place, a.mark ? '❗' : '', a.dir));
@@ -6145,7 +6146,7 @@ function mqNpcs(){
   // 자기 집이 열렸으면 의뢰인은 집 안에서 지내요 (밖에 일이 있는 동안은 밖에)
   Object.entries(QHOME).forEach(([qid, [cid, mp, x, y]]) => { if (qUnlocked(qid)) put(cid, { map: mp, x, y }, ''); });
   // 끝낸 의뢰인은 마을에 남아요
-  MQ.list.forEach(id => { const q = MQ.q[id]; if (q && s.done[id] && q.after && !(s.q === id)) put(q.client, q.after.place, '', q.after.dir); });
+  MQ.list.forEach(id => { const q = MQ.q[id]; if (q && s.done[id] && q.after && !(s.q === id)) put(q.client, q.after.place, '', q.after.dir, q.after.wander); });
   return out;
 }
 const mqPlace = pl => { if (!pl) return null; if (typeof pl === 'string'){ const p = NL.places[pl]; return p ? { map: p.map, x: p.x, y: p.y } : null; } return pl.place ? { ...mqPlace(pl.place), ...(pl.x !== undefined ? { x: pl.x, y: pl.y } : {}) } : pl; };

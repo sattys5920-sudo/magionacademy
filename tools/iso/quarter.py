@@ -27,7 +27,8 @@ fill('dirt', 60, 17, 64, 29)
 fill('cobble', 54, 2, 70, 13)            # 일곱 등불 광장
 fill('stone', 6, 13, 20, 14)             # 저택 앞마당 돌
 for i in range(0, 4): fill('dirt', 11 + i // 2, 13, 13, 14)
-fill('grave', 54, 22, 67, 29)            # 작은 묘지
+fill('grave', 54, 22, 67, 29)
+fill('dirt', 31, 18, 43, 28)            # 잭의 호박밭 흙
 POND = dict(id='pond_q', name='골목 연못', cx=20, cy=23, rx=5, ry=3.5)   # 낚시 연못
 for x in range(NX):
     for y in range(NY):
@@ -117,6 +118,25 @@ def log_cabin(x0, y0, x1, y1, h=28):
         poly(d, [Tt, R, r2, r1], hexc('#3A2E22')); poly(d, [L, B, r2, r1], hexc('#5A4632')); poly(d, [R, B, r2], hexc('#4A3A2A'))
         claw = up(P(x1, (y0 + y1) / 2), h + 6)
         for k in range(3): d.line([(claw[0] - 6 + k * 3, claw[1] - 4), (claw[0] - 4 + k * 3, claw[1] + 4)], fill=hexc('#C8B89A'))
+    return f
+def jack_hut(x0, y0, x1, y1, h=26):
+    def f(img):
+        def fn(u, v):
+            if v >= h: return None
+            c = hexc('#9A6630') if (v // 4) % 2 else hexc('#8A5A28')
+            if v % 4 == 0: c = hexc('#5A3818')
+            return c
+        face(img, x0, y0, x1, y1, 'L', fn); face(img, x0, y0, x1, y1, 'R', fn)
+        face(img, x0, y0, x1, y1, 'L', lambda u, v: (hexc('#2A1A10') if v < 18 else None) if 18 <= u < 28 else (hexc('#FFD04A') if 36 <= u < 42 and 10 <= v < 18 else None))
+        d = ImageDraw.Draw(img); Tt, R, B, L = [up(p, h) for p in (P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1))]
+        r1, r2 = up(P(x0, (y0 + y1) / 2), h + 20), up(P(x1, (y0 + y1) / 2), h + 20)
+        poly(d, [Tt, R, r2, r1], hexc('#B8561A')); poly(d, [L, B, r2, r1], hexc('#E07A1E')); poly(d, [R, B, r2], hexc('#C8661A'))
+        for k in range(1, 4):
+            a = up(P(x0 + (x1 - x0) * k / 4, y1), h + 2); b = up(P(x0 + (x1 - x0) * k / 4, (y0 + y1) / 2), h + 20)
+            d.line([a, b], fill=hexc('#B8561A'))
+        sx, sy = (r1[0] + r2[0]) // 2, (r1[1] + r2[1]) // 2
+        d.rectangle([sx - 2, sy - 10, sx + 2, sy], fill=hexc('#4A6A2A')); d.rectangle([sx - 1, sy - 13, sx + 3, sy - 9], fill=hexc('#5A8A34'))
+        d.polygon([(sx - 18, sy + 16), (sx - 13, sy + 9), (sx - 10, sy + 17)], fill=hexc('#FFE07A')); d.polygon([(sx + 4, sy + 21), (sx + 9, sy + 13), (sx + 12, sy + 22)], fill=hexc('#FFE07A'))
     return f
 # ---------------- 건물 ----------------
 # 뱀파이어 저택 (큰길 A 북쪽, 문 (12,13))
@@ -258,6 +278,12 @@ for (x, y) in [(57, 7), (67, 7), (60, 11), (64, 11)]: put('jack', 'jack', x, y, 
 put('emptylamp', 'emptylamp', 46, 27, act=('비어 있는 등불대', '바라보기')); put('bench', 'bench', 47, 27, act=('낡은 벤치', '앉아서 쉬기'))
 # 마녀 오두막 옆 솥
 put('cauldron', 'cauldron', 13, 28, act=('부글부글 마녀의 솥', '들여다보기'))
+# 잭의 오두막과 호박밭 (큰길 B 북쪽 가운데, 문 (47,25))
+unique('jackhut', [44, 20, 50, 25], jack_hut(44, 20, 50, 25), door=dict(tile=[47, 25], to='jack_hut', spawn=[13, 16], label='잭의 오두막', lock='main_07_jack'))
+for x in range(32, 43, 2):
+    for y in range(19, 28, 2):
+        if (x, y) not in occupied and random.random() < .9: put('pumpkin', 'jack' if random.random() < .3 else 'pumpkin', x, y, solid=False, act=('잭의 호박', '들여다보기'))
+put('crow', 'crow', 37, 23); put('crow', 'crow', 43, 28)
 # 작은 묘지
 GF = set((x, 22) for x in range(54, 67)) | set((x, 28) for x in range(54, 67)) | set((54, y) for y in range(22, 29)) | set((66, y) for y in range(22, 29))
 GF -= {(60, 28), (61, 28), (62, 28), (63, 28)}
@@ -382,7 +408,7 @@ for o in objs:
 lights += [dict(p=P(62.5, 7.5), dy=-46, r=70, c=[255, 160, 60], a=.65, f=1), dict(p=P(13.5, 28.5), dy=-8, r=30, c=[130, 255, 90], a=.5, f=1), dict(p=P(45, 9), dy=-30, r=50, c=[120, 255, 190], a=.35, f=0),
            dict(p=P(46.5, 27.5), dy=-40, r=26, c=[255, 190, 90], a=.25, f=0)]
 lights += [dict(p=P(o['box'][0] + .5, o['box'][1] + .5), dy=-3, r=14, c=[120, 240, 220], a=.5, f=0) for o in objs if o['spr'] == 'glowmush']
-AREAS = [dict(n='뱀파이어 저택', t=[12, 13]), dict(n='학교 박물관', t=[31, 13]), dict(n='낡은 연구 탑', t=[44, 13]), dict(n='일곱 등불 광장', t=[62, 9]), dict(n='마녀의 오두막', t=[9, 29]),
+AREAS = [dict(n='뱀파이어 저택', t=[12, 13]), dict(n='학교 박물관', t=[31, 13]), dict(n='낡은 연구 탑', t=[44, 13]), dict(n='일곱 등불 광장', t=[62, 9]), dict(n='잭의 호박밭', t=[38, 23]), dict(n='마녀의 오두막', t=[9, 29]),
          dict(n='늑대인간 통나무집', t=[28, 29]), dict(n='비어 있는 등불대', t=[46, 28]), dict(n='작은 묘지', t=[60, 29]), dict(n='등불 시장 쪽 문', t=[4, 14])]
 json.dump(dict(W=W, H=H, NX=NX, NY=NY, OX=OX, OY=OY, objs=meta, lights=lights, areas=AREAS, water=[[x, y] for (x, y), t in T.items() if t == 'lake'], ponds=[dict(id=POND['id'], name=POND['name'], cx=POND['cx'], cy=POND['cy'], r=max(POND['rx'], POND['ry']) + 1.5)], start=[8, 14]), open('out/quarter.json', 'w'), ensure_ascii=False)
 print('objs', len(objs), 'sheet', sheet.size)

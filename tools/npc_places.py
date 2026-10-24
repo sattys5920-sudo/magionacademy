@@ -29,6 +29,8 @@ P = [
  ('aula_study', '아울라 연구실', 'lab', 5, 15, 1, 1, None, 'warm'),
  ('poison_greenhouse', '독초 온실', 'toxic', 12, 10, 3, 1, None, None),
  ('pumpkin_field', '호박밭', 'campus', 9, 60, 1, 1, None, None),
+ ('jack_field', '잭의 호박밭', 'quarter', 38, 24, 2, 1, (38, 24), None),
+ ('school_walk', '교내', 'campus', 19, 29, 7, 1, None, None),
  ('old_windmill', '낡은 풍차', 'campus', 22, 65, 2, 1, None, 'dim'),
  ('candy_class', '과자 교실', 'candy', 12, 9, 3, 1, None, None),
  ('craft_class', '공예 교실', 'craft', 12, 9, 3, 1, None, None),
