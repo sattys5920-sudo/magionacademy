@@ -1547,9 +1547,101 @@ const XJ = {   // 직업: 체력·공격·마공·치유·속도 [기본, 레벨
   gadget: { n: '기공사', ic: `<span class="jic" style="--i:11"></span>`, d: '포탑과 폭탄 · 광역', hp: [95, 11], atk: [10, 1.6], mag: [8, 1.1], heal: [3, .3], spd: [9, .3] },
 };
 // 스킬 트리: XT(직업 → 줄기 3 × 스킬 5, tools/skill_tree.py가 만든 데이터) + 코드 → 효과. 스킬 최대 Lv4, 레벨당 포인트 1
-const XDS = { warrior: 'atk', thief: 'atk', knight: 'atk', gadget: 'atk' }, XPAS = { def: .05, hp: .06, atk: .05, mag: .05, spd: .05, vamp: .06, crit: .06 }, XPASN = { def: '받는 피해', hp: '최대 체력', atk: '공격', mag: '마법', spd: '속도', vamp: '흡혈', crit: '치명타' };
+const XDS = { warrior: 'atk', thief: 'atk', knight: 'atk', gadget: 'atk' }, XPAS = { def: .05, hp: .06, atk: .05, mag: .05, spd: .05, vamp: .06, crit: .06, surv: 1, dodge: .05 }, XPASN = { surv: '쓰러질 공격 버티기', dodge: '회피', def: '받는 피해', hp: '최대 체력', atk: '공격', mag: '마법', spd: '속도', vamp: '흡혈', crit: '치명타' };
 const XDP = [1.2, 1.6, 2.1, 2.7, 3.4], XHP = [2, 2.6, 3.2, 3.9, 4.6], XMAXLV = 4, XRESET = 300, xSkp = L => L - 1;
 const xDefs = {};
+const XOV = {   // 스킬별 특수 효과 (직업.이름). t 종류 · key 효과 이름 · v 세기 · sec 지속(초) · ap 맞은 뒤 붙는 효과 [종류, 세기, 초] · hits 여러 번 타격 · exec 체력 낮은 적 추가 피해 · fcrit 반드시 치명타 · pct 체력 비율 · pet 소환수
+  'warrior.대지 가르기': { ap: [['stun', 30]], ds: '적 전체에 피해 + 행동이 잠깐 늦어져요' },
+  'warrior.되받아치기': { t: 'buff', key: 'counter', v: .6, sec: 12, tg: 'self', mp: 5, ds: '12초간 맞으면 받은 피해의 60%를 되돌려줘요' },
+  'warrior.파쇄': { p: 1, ap: [['vuln', .3, 12]], ds: '적 하나에 피해 + 12초간 받는 피해 +30% (방어 파괴)' },
+  'warrior.학살자': { exec: 1, ds: '체력이 40% 이하인 적에게는 피해 ×1.8' },
+  'warrior.폭풍 도끼': { t: 'dmg', st: 'atk', tg: 'all', p: .7, hits: 3, mp: 18, ds: '적 전체를 3번 베요' },
+  'black.지옥불': { ap: [['dot', .35, 8]], ds: '광역 피해 + 8초간 지속 화상' },
+  'black.서리 화살': { ap: [['slow', .3, 8]], ds: '피해 + 8초간 속도 -30%' },
+  'black.얼음 창': { ap: [['slow', .4, 8]], ds: '피해 + 8초간 속도 -40%' },
+  'black.번개': { ap: [['stun', 25]], ds: '피해 + 행동이 잠깐 늦어져요' },
+  'black.눈보라': { t: 'dmg', st: 'mag', tg: 'all', p: .45, ap: [['slow', .45, 10]], mp: 14, ds: '광역 피해 + 10초간 속도 -45%' },
+  'black.마력 흡수': { t: 'dmg', st: 'mag', tg: 'one', p: .7, drain: .2, mp: 2, ds: '적에게 피해 + 내 마력 20% 회복' },
+  'black.약점 간파': { t: 'deb', key: 'vuln', v: .25, sec: 14, tg: 'all', mp: 8, ds: '14초간 적 전체가 받는 피해 +25%' },
+  'thief.이중 베기': { hits: 2, p: .9, ds: '2번 베요' }, 'thief.칼춤': { hits: 2, p: .55, ds: '적 전체를 2번 베요' }, 'thief.연환': { hits: 3, p: .55, ds: '3번 연속 타격' },
+  'thief.난도질': { t: 'dmg', st: 'atk', tg: 'one', hits: 5, p: .55, mp: 18, ds: '5번 연속 타격' },
+  'thief.급소 찌르기': { fcrit: 1, ds: '반드시 치명타' }, 'thief.처형자': { exec: 1, ds: '체력이 40% 이하인 적에게는 피해 ×1.8' },
+  'thief.피 웅덩이': { t: 'burst', tg: 'all', p: 1, mp: 14, ds: '지속 피해를 받는 적에게 남은 피해를 한꺼번에 터뜨려요' },
+  'thief.연막': { t: 'deb', key: 'blind', v: .5, sec: 12, tg: 'all', mp: 8, ds: '12초간 적 전체의 공격이 절반은 빗나가요' },
+  'thief.그림자 걸음': { t: 'buff', key: 'dodge', v: .5, sec: 10, tg: 'self', mp: 7, ds: '10초간 공격을 50% 피해요' },
+  'thief.훔치기': { steal: 1, ds: '피해 + 골드와 재료를 훔쳐요' },
+  'bard.자장가': { t: 'buff', key: 'regen', v: .9, sec: 14, tg: 'all', mp: 8, ds: '14초간 아군 전체가 천천히 회복' },
+  'bard.영웅의 서사시': { v: .5, sec: 20, ds: '20초간 아군 전체 공격 +50%' },
+  'bard.되살림의 화음': { pct: .4, ds: '쓰러진 동료를 체력 40%로 살려요' },
+  'bard.도발의 곡': { t: 'buff', key: 'taunt', v: 1, sec: 8, tg: 'self', mp: 5, ds: '8초간 적이 나만 노려요' },
+  'bard.앙코르': { t: 'encore', tg: 'self', mp: 6, ds: '직전에 쓴 스킬을 공짜로 한 번 더' },
+  'bard.대합창': { ap: [['weak', .25, 12]], ds: '광역 피해 + 12초간 적 공격 -25%' },
+  'time.시간 도약': { t: 'leap', tg: 'self', w: 100, mp: 8, ds: '곧바로 다시 행동할 수 있어요' },
+  'time.정지': { t: 'dmg', st: 'mag', tg: 'one', p: .5, ap: [['stun', 100]], mp: 8, ds: '적 하나를 잠깐 멈춰 세워요' },
+  'time.시간 정체': { v: .65, ds: '10초간 적 전체 속도 -65%' },
+  'time.되감기': { pct: .4, ds: '아군 하나의 체력을 40% 되돌려요' },
+  'time.시계 소환': { t: 'dmg', st: 'mag', tg: 'all', p: .4, ap: [['stun', 45]], mp: 10, ds: '적 전체의 행동을 늦춰요' },
+  'time.시간 정지': { t: 'tstop', tg: 'all', w: 100, mp: 24, ds: '아군은 바로 행동하고 적은 4초 멈춰요' },
+  'alch.산성 플라스크': { ap: [['vuln', .2, 10]], ds: '피해 + 10초간 받는 피해 +20%' },
+  'alch.불안정 용액': { t: 'deb', key: 'vuln', v: .25, sec: 12, tg: 'one', mp: 5, ds: '12초간 적 하나가 받는 피해 +25%' },
+  'alch.부식': { p: .8, ap: [['vuln', .3, 12], ['dot', .3, 8]], ds: '피해 + 받는 피해 +30% + 부식 지속 피해' },
+  'alch.약점 증폭': { t: 'deb', key: 'vuln', v: .3, sec: 12, tg: 'all', mp: 10, ds: '12초간 적 전체가 받는 피해 +30%' },
+  'alch.혼합 약': { t: 'buff', key: 'regen', v: 1.2, sec: 12, tg: 'one', mp: 7, ds: '12초간 아군 하나가 계속 회복' },
+  'alch.엘릭서': { cl: 1, ds: '아군 전체 치유 + 나쁜 효과 제거' },
+  'alch.점착 폭탄': { t: 'dmg', st: 'mag', tg: 'one', p: .5, ap: [['slow', .4, 8], ['bomb', 2.2, 5]], mp: 8, ds: '피해 + 속도 -40% + 5초 뒤 큰 폭발' },
+  'alch.황금 폭발': { gold: 1, ds: '큰 피해 + 골드 보너스' },
+  'white.신성한 비': { t: 'buff', key: 'regen', v: .8, sec: 14, tg: 'all', mp: 12, ds: '14초간 아군 전체가 계속 회복' },
+  'white.기적의 손길': { pct: .9, ds: '아군 하나의 체력을 90%까지 회복' },
+  'white.완전 소생': { pct: 1, ds: '쓰러진 동료를 체력 100%로 살려요' },
+  'white.전체 소생': { t: 'revive', all: 1, pct: .4, tg: 'all', mp: 24, ds: '쓰러진 동료 전부를 체력 40%로 살려요' },
+  'white.천사의 숨결': { t: 'revive', all: 1, pct: .3, hl: 1.2, tg: 'all', mp: 28, ds: '쓰러진 동료를 살리고 아군 전체를 치유' },
+  'white.정화': { t: 'cleanse', tg: 'all', mp: 8, ds: '아군 전체의 나쁜 효과를 지워요' },
+  'white.빛의 장막': { t: 'buff', key: 'shield', tg: 'all', st: 'heal', sv: 2.2, sec: 14, mp: 14, ds: '14초간 아군 전체에 피해를 막는 보호막' },
+  'druid.새싹': { t: 'buff', key: 'regen', v: 1, sec: 12, tg: 'one', mp: 4, ds: '12초간 아군 하나가 계속 회복' },
+  'druid.재생의 숲': { t: 'buff', key: 'regen', v: .8, sec: 14, tg: 'all', mp: 12, ds: '14초간 아군 전체가 계속 회복' },
+  'druid.뿌리 속박': { v: .6, ds: '10초간 적 하나 속도 -60%' },
+  'druid.생명의 나무': { t: 'buff', key: 'regen', v: 1.1, sec: 24, tg: 'all', mp: 18, ds: '24초간 아군 전체가 오래 회복' },
+  'druid.자연 보호막': { t: 'buff', key: 'shield', tg: 'all', st: 'heal', sv: 2, sec: 14, mp: 10, ds: '14초간 아군 전체에 보호막' },
+  'druid.이슬': { mpb: .15, ds: '아군 하나 치유 + 마력 15% 회복' },
+  'druid.독 제거': { t: 'cleanse', tg: 'all', mp: 7, ds: '아군 전체의 나쁜 효과를 지워요' },
+  'druid.가시 덩굴': { ap: [['slow', .3, 8]], ds: '피해 + 속도 -30%' },
+  'cleric.성스러운 방패': { t: 'buff', key: 'shield', tg: 'self', st: 'heal', sv: 4, sec: 16, mp: 6, ds: '16초간 나에게 두꺼운 보호막' },
+  'cleric.대신 맞기': { t: 'buff', key: 'cover', v: 1, sec: 12, tg: 'self', mp: 8, ds: '12초간 아군 대신 내가 맞아요' },
+  'cleric.피해 흡수 막': { t: 'buff', key: 'shield', tg: 'all', st: 'heal', sv: 2.5, sec: 14, mp: 12, ds: '14초간 아군 전체에 보호막' },
+  'cleric.해제': { t: 'cleanse', tg: 'all', mp: 8, ds: '아군 전체의 나쁜 효과를 지워요' },
+  'cleric.축복': { t: 'cleanse', tg: 'all', regen: .5, mp: 10, ds: '나쁜 효과를 지우고 10초간 회복' },
+  'cleric.구원의 빛': { pct: .6, ds: '쓰러진 동료를 체력 60%로 살려요' },
+  'cleric.응징': { t: 'buff', key: 'counter', v: 1, sec: 12, tg: 'self', mp: 8, ds: '12초간 받은 피해만큼 되돌려줘요' },
+  'cleric.성스러운 낙인': { t: 'deb', key: 'vuln', v: .3, sec: 14, tg: 'one', mp: 8, ds: '14초간 적 하나가 받는 피해 +30%' },
+  'knight.도발': { t: 'buff', key: 'taunt', v: 1, sec: 8, tg: 'self', mp: 4, also: [['dmgIn', .3]], ds: '8초간 적이 나만 노리고 받는 피해 -30%' },
+  'knight.방패 치기': { ap: [['stun', 35]], ds: '피해 + 행동이 늦어져요' },
+  'knight.막아서기': { t: 'buff', key: 'cover', v: 1, sec: 12, tg: 'self', mp: 6, ds: '12초간 아군 대신 내가 맞아요' },
+  'knight.반격 태세': { t: 'buff', key: 'counter', v: .8, sec: 10, tg: 'self', mp: 7, ds: '10초간 맞으면 받은 피해의 80%를 되돌려줘요' },
+  'summon.불 정령': { t: 'summon', st: 'mag', tg: 'self', mp: 7, pet: { n: '불 정령', el: 'fire', kind: 'dmg', every: 3, sec: 15, k: .6 }, ds: '15초간 불 정령이 3초마다 적을 태워요' },
+  'summon.물 정령': { t: 'summon', st: 'mag', tg: 'self', mp: 7, pet: { n: '물 정령', el: 'water', kind: 'heal', every: 3.5, sec: 15, k: .7 }, ds: '15초간 물 정령이 3.5초마다 약한 아군을 치유' },
+  'summon.바람 정령': { t: 'summon', st: 'mag', tg: 'self', mp: 10, pet: { n: '바람 정령', el: 'wind', kind: 'dmgall', every: 3.5, sec: 15, k: .3 }, ds: '15초간 바람 정령이 적 전체를 베요' },
+  'summon.대지 정령': { t: 'summon', st: 'mag', tg: 'self', mp: 12, pet: { n: '대지 정령', el: 'earth', kind: 'shield', every: 4, sec: 16, k: 1.5 }, ds: '16초간 대지 정령이 4초마다 약한 아군에 보호막' },
+  'summon.정령왕': { t: 'summon', st: 'mag', tg: 'self', mp: 22, pet: { n: '정령왕', el: 'king', kind: 'dmgall', every: 2.5, sec: 20, k: .5 }, ds: '20초간 정령왕이 2.5초마다 적 전체를 공격' },
+  'summon.늑대 소환': { t: 'summon', st: 'mag', tg: 'self', mp: 8, pet: { n: '늑대', el: 'wolf', kind: 'dmg', every: 2, sec: 14, k: .45 }, ds: '14초간 늑대가 2초마다 물어요' },
+  'summon.곰 소환': { t: 'summon', st: 'mag', tg: 'self', mp: 10, pet: { n: '곰', el: 'bear', kind: 'dmgcover', every: 3, sec: 16, k: .3 }, ds: '16초간 곰이 싸우며 적의 시선을 끌어요' },
+  'summon.독수리 소환': { t: 'summon', st: 'mag', tg: 'self', mp: 11, pet: { n: '독수리', el: 'eagle', kind: 'dmgall', every: 3, sec: 14, k: .35 }, ds: '14초간 독수리가 적 전체를 할퀴어요' },
+  'summon.호박 유령 소환': { t: 'summon', st: 'mag', tg: 'self', mp: 12, pet: { n: '호박 유령', el: 'ghost', kind: 'dmg', every: 2.5, sec: 16, k: .5 }, ds: '16초간 호박 유령이 2.5초마다 공격' },
+  'summon.용 소환': { t: 'summon', st: 'mag', tg: 'self', mp: 24, pet: { n: '용', el: 'dragon', kind: 'dmgall', every: 3, sec: 18, k: .9 }, ds: '18초간 용이 3초마다 적 전체를 불태워요' },
+  'summon.합체 공격': { petb: .7, ds: '소환수 하나당 피해 +70%' },
+  'summon.송환': { t: 'recall', tg: 'self', mp: 6, ds: '소환수를 돌려보내고 아군 하나를 치유 (소환수 하나당 12%)' },
+  'gadget.소형 포탑': { t: 'summon', st: 'atk', tg: 'self', mp: 6, pet: { n: '소형 포탑', el: 'turret', kind: 'dmg', every: 2.5, sec: 20, k: .5 }, ds: '20초간 포탑이 2.5초마다 사격' },
+  'gadget.보조 포탑': { t: 'summon', st: 'atk', tg: 'self', mp: 9, pet: { n: '보조 포탑', el: 'turret', kind: 'shield', every: 4, sec: 20, k: 1.2 }, ds: '20초간 포탑이 4초마다 약한 아군에 보호막' },
+  'gadget.레이저 포탑': { t: 'summon', st: 'atk', tg: 'self', mp: 13, pet: { n: '레이저 포탑', el: 'laser', kind: 'dmg', every: 4, sec: 20, k: 1.2 }, ds: '20초간 포탑이 4초마다 강한 레이저를 쏴요' },
+  'gadget.요새 포대': { t: 'summon', st: 'atk', tg: 'self', mp: 22, pet: { n: '요새 포대', el: 'turret', kind: 'dmgall', every: 3, sec: 22, k: .55 }, ds: '22초간 포대가 3초마다 적 전체를 포격' },
+  'gadget.덫 설치': { t: 'dmg', st: 'atk', tg: 'one', p: .3, ap: [['slow', .6, 12], ['dot', .3, 8]], mp: 5, ds: '적 하나에 덫: 속도 -60% + 지속 피해' },
+  'gadget.지뢰': { t: 'dmg', st: 'atk', tg: 'one', p: .1, ap: [['bomb', 2.6, 4]], mp: 8, ds: '4초 뒤 폭발하는 지뢰를 붙여요' },
+  'gadget.전기 그물': { t: 'dmg', st: 'atk', tg: 'all', p: .5, ap: [['stun', 35]], mp: 12, ds: '광역 피해 + 행동이 늦어져요' },
+  'gadget.접착탄': { ap: [['slow', .4, 8]], ds: '피해 + 속도 -40%' },
+  'gadget.연막탄': { t: 'deb', key: 'blind', v: .5, sec: 12, tg: 'all', mp: 8, ds: '12초간 적 전체의 공격이 절반은 빗나가요' },
+  'gadget.시한폭탄': { t: 'dmg', st: 'atk', tg: 'one', p: .1, ap: [['bomb', 5, 6]], mp: 16, ds: '6초 뒤 아주 큰 폭발' },
+  'gadget.집중 포화': { t: 'dmg', st: 'atk', tg: 'all', hits: 4, p: .6, mp: 22, ds: '적 전체에 4번 포격' },
+};
+
 function xDef(job, b, r){   // 스킬 하나의 효과표 (Lv1 기준)
   const key = job + b + r; if (xDefs[key]) return xDefs[key];
   const [n, code, gl] = XT[job][b][1][r], k = code[0], st = XDS[job] || 'mag', d = XDP[r], h = XHP[r], mp = [0, 4, 7, 11, 16][r];
@@ -1575,15 +1667,18 @@ function xDef(job, b, r){   // 스킬 하나의 효과표 (Lv1 기준)
   else if (k === 'f') Object.assign(o, { t: 'dot', st, p: .4, tg: 'all', mp: 6 + r * 2 });
   else if (k === 'Z') Object.assign(o, { t: 'stun', st, p: d * .6, tg: 'one', mp: 5 + r * 2 });
   else if (k === 'M') Object.assign(o, { t: 'mp', v: .25, tg: 'all', mp: 0 });
+  const ov = XOV[job + '.' + n]; if (ov) Object.assign(o, ov);
   return xDefs[key] = o;
 }
 const xAll = job => Array.from({ length: 15 }, (_, i) => xDef(job, Math.floor(i / 5), i % 5));
 const xPw = (o, lv) => 1 + .18 * (lv - 1), xEfv = (o, lv) => o.v * (1 + .15 * (lv - 1));
 function xDesc(o, lv){
-  if (o.pas) return `패시브 · ${XPASN[o.pas]} +${Math.round(XPAS[o.pas] * 100 * lv)}%`;
-  const L = Math.max(1, lv), who = { one: '적 하나', all: o.t === 'heal' || o.t === 'buff' || o.t === 'mp' ? '아군 전체' : '적 전체', self: '나' }[o.tg];
+  if (o.pas) return o.pas === 'surv' ? '패시브 · 전투마다 한 번, 쓰러질 공격을 체력 1로 버텨요' : `패시브 · ${XPASN[o.pas]} +${Math.round(XPAS[o.pas] * 100 * lv)}%`;
+  const L = Math.max(1, lv), mp = o.mp ? ` · MP ${o.mp}` : '';
+  if (o.ds){ if (o.t === 'dmg' && o.p) return `${o.tg === 'all' ? '적 전체' : '적 하나'} ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)}${o.hits > 1 ? ` ×${o.hits}회` : ''} · ${o.ds}${mp}`; return o.ds + mp; }
+  const who = { one: '적 하나', all: o.t === 'heal' || o.t === 'buff' || o.t === 'mp' ? '아군 전체' : '적 전체', self: '나' }[o.tg];
   const sc = { dmg: `${who}에게 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 피해${o.w ? ' (쓰고 나면 한참 쉬어요)' : ''}`, heal: `${o.tg === 'all' ? '아군 전체' : '아군 하나'} 치유 ×${(o.p * xPw(o, L)).toFixed(1)}`, revive: '쓰러진 동료 하나를 체력 절반으로 살려요', buff: `${who} ${o.key === 'atk' ? '공격' : o.key === 'spd' ? '속도' : '받는 피해'} ${o.key === 'dmgIn' ? '-' : '+'}${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, deb: `${who} ${o.key === 'slow' ? '속도' : '공격'} -${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, dot: `${who}에게 8초 동안 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 지속 피해`, stun: `적 하나를 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 피해 + 행동 늦추기`, mp: `아군 전체 마력 ${Math.round(xEfv(o, L) * 100)}% 회복` }[o.t];
-  return sc + (o.mp ? ` · MP ${o.mp}` : '');
+  return sc + mp;
 }
 const xSname = k => ({ atk: '공격', mag: '마법', heal: '치유' }[k]);
 function xSkEx(ex){ ex.sk = ex.sk || {}; if (ex.job && !ex.sk['0.0']) ex.sk['0.0'] = 1; return ex.sk; }
@@ -1609,7 +1704,7 @@ const XRG = [   // 탐사 지역: 입장료·시간·몬스터 레벨 범위 · 
 let xRgSel = 0; const xReg = () => XRG[(xEx().run ? xEx().run.rg : xRgSel) || 0];
 const XDAY = 5, XNODE = { battle: ['⚔️', '몬스터', 7], elite: ['🐺', '강한 몬스터', 11], camp: ['🔥', '캠프파이어', 4], statue: ['🗿', '고대 석상', 5], chest: ['🎁', '보물상자', 4], boss: ['🌳', '숲의 주인', 100] };
 const xJobGrid = sel => `<div class="jgrid">${Object.entries(XJ).map(([k, j]) => `<button type="button" class="jcard${sel === k ? ' on' : ''}" data-job="${k}">${j.ic}<b>${j.n}</b><span>${j.d}</span></button>`).join('')}</div>`;
-/*XT*/const XT = {"warrior":[["차지",[["강타","d","fist"],["차지 베기","c","sword"],["대지 가르기","D","rock"],["분노의 일격","d","fire"],["극한 차지","c","bolt"]]],["근성",[["단단한 피부","P:def","shield"],["되받아치기","d","spear"],["불굴","P:hp","heart"],["피의 갈증","P:vamp","drop"],["전장의 포효","b","trumpet"]]],["도끼술",[["회전 베기","D","swirl"],["투척 도끼","d","axe"],["파쇄","W","hammer"],["학살자","d","skull"],["폭풍 도끼","D","cloud"]]]],"black":[["화염",[["불꽃탄","d","fire"],["화염구","D","fireball"],["불씨","F","ember"],["지옥불","D","skull"],["메테오","D","rock"]]],["냉기와 번개",[["서리 화살","d","arrow"],["얼음 창","d","spear"],["번개","d","bolt"],["연쇄 번개","D","chain"],["눈보라","S","ice"]]],["암흑",[["마력 흡수","M","moon"],["약점 간파","w","eye"],["암흑 구체","d","orb"],["공허의 손","Z","claw"],["마력 폭주","P:mag","star"]]]],"thief":[["연속",[["찌르기","d","dagger"],["이중 베기","d","cross2"],["칼춤","D","swirl"],["연환","d","chain"],["난도질","c","claw"]]],["급소",[["약점 노리기","P:crit","eye"],["출혈","F","drop"],["급소 찌르기","c","arrow"],["처형자","d","skull"],["피 웅덩이","f","bubble"]]],["그림자",[["재빠른 발","P:spd","wing"],["연막","w","cloud"],["그림자 걸음","x","ghost"],["훔치기","d","coin"],["뒤잡기","Z","fist"]]]],"bard":[["전투가",[["용기의 노래","B","trumpet"],["승리의 행진","B","flag"],["전장의 북소리","X","drum"],["불꽃의 변주","D","fire"],["영웅의 서사시","B","crown"]]],["안식가",[["수호의 노래","G","harp"],["자장가","H","moon"],["평온의 선율","H","note"],["되살림의 화음","r","heart"],["별빛 합창","H","star"]]],["풍자",[["불협화음","w","note1"],["도발의 곡","s","wave"],["흥겨운 춤","X","wing"],["앙코르","B","burst"],["대합창","D","bell"]]]],"time":[["가속",[["서두르기","x","arrow"],["연속 가속","X","chain"],["시간 도약","x","bolt"],["가속 영역","X","wave"],["질주","P:spd","wing"]]],["감속",[["늦추기","s","hourglass"],["정지","Z","clock"],["늪 같은 시간","S","swirl"],["시간 정체","S","orb"],["영원한 정오","D","sun"]]],["시간 조작",[["되감기","h","cross"],["예지","P:def","eye"],["시계 소환","Z","bell"],["시간 균열","d","burst"],["시간 정지","X","star"]]]],"alch":[["약화",[["산성 플라스크","d","flask"],["독 병","F","tube"],["불안정 용액","w","bubble"],["부식","W","drop"],["약점 증폭","w","eye"]]],["혼합",[["응급 물약","h","cross"],["마력 물약","M","orb"],["혼합 약","h","swirl"],["엘릭서","H","star"],["변이약","B","skull"]]],["폭발물",[["폭죽탄","d","bomb"],["점착 폭탄","s","mine"],["연쇄 반응","D","chain"],["황금 폭발","d","burst"],["연금 대폭발","D","rocket"]]]],"white":[["회복",[["치유","h","drop"],["큰 치유","h","cross"],["집단 치유","H","flower"],["신성한 비","H","cloud"],["기적의 손길","h","star"]]],["부활",[["되살리기","r","wing"],["가호","P:hp","heart"],["완전 소생","r","crown"],["전체 소생","H","orb"],["천사의 숨결","H","wave"]]],["성광",[["성광탄","d","burst"],["정화","H","sun"],["빛의 장막","G","shield"],["심판의 빛","D","spear"],["광휘의 후광","B","bell"]]]],"druid":[["재생",[["새싹","h","leaf"],["재생의 숲","H","tree"],["뿌리 속박","s","chain"],["생명의 나무","h","flower"],["만개","H","sun"]]],["자연",[["자연 보호막","G","leaf"],["이슬","h","drop"],["독 제거","H","cross"],["태양의 은총","B","burst"],["대지의 축복","P:hp","heart"]]],["야수",[["가시 덩굴","d","spear"],["곰의 가죽","g","paw"],["늑대의 울음","B","wave"],["독수리의 눈","P:crit","eye"],["야생의 화신","D","claw"]]]],"cleric":[["보호",[["수호의 기도","G","cross"],["성스러운 방패","g","tower"],["대신 맞기","g","orb"],["피해 흡수 막","G","bubble"],["불가침","P:def","shield"]]],["정화",[["해제","H","wave"],["축복","B","sun"],["안식","G","moon"],["순백의 종","H","flag"],["구원의 빛","r","star"]]],["응징",[["철퇴","d","hammer"],["응징","d","fist"],["신벌","d","bolt"],["성스러운 낙인","w","star"],["심판의 종","D","bell"]]]],"knight":[["도발",[["도발","g","trumpet"],["방패 치기","d","fist"],["전열","G","chain"],["불굴의 외침","b","flag"],["요새","P:def","shield"]]],["수호",[["막아서기","g","tower"],["방어 태세","g","bubble"],["반격 태세","d","spear"],["수호의 서약","G","crown"],["철벽","P:hp","heart"]]],["검술",[["베기","d","sword"],["돌격","D","arrow"],["방패 돌진","Z","shield"],["정의의 칼날","c","sun"],["기사의 일격","c","burst"]]]],"summon":[["정령",[["불 정령","d","fire"],["물 정령","d","drop"],["바람 정령","D","swirl"],["대지 정령","d","rock"],["정령왕","D","crown"]]],["야수",[["늑대 소환","d","paw"],["곰 소환","g","claw"],["독수리 소환","D","wing"],["호박 유령 소환","d","ghost"],["용 소환","D","fireball"]]],["계약",[["소환수 강화","P:mag","star"],["마력 연결","M","chain"],["합체 공격","c","burst"],["송환","H","orb"],["계약의 폭주","B","skull"]]]],"gadget":[["포탑",[["소형 포탑","d","gear"],["보조 포탑","G","tower"],["레이저 포탑","d","bolt"],["포탑 증설","P:atk","fist"],["요새 포대","D","rocket"]]],["함정",[["덫 설치","s","chain"],["지뢰","d","mine"],["전기 그물","S","wave"],["연쇄 함정","D","swirl"],["대지 폭파","D","burst"]]],["폭탄",[["수류탄","d","bomb"],["접착탄","s","bubble"],["연막탄","w","cloud"],["시한폭탄","c","bomb"],["집중 포화","D","arrow"]]]]};/*XT-END*/
+/*XT*/const XT = {"warrior":[["차지",[["강타","d","fist"],["차지 베기","c","sword"],["대지 가르기","D","rock"],["분노의 일격","d","fire"],["극한 차지","c","bolt"]]],["근성",[["단단한 피부","P:def","shield"],["되받아치기","d","spear"],["불굴","P:surv","heart"],["피의 갈증","P:vamp","drop"],["전장의 포효","b","trumpet"]]],["도끼술",[["회전 베기","D","swirl"],["투척 도끼","d","axe"],["파쇄","W","hammer"],["학살자","d","skull"],["폭풍 도끼","D","cloud"]]]],"black":[["화염",[["불꽃탄","d","fire"],["화염구","D","fireball"],["불씨","F","ember"],["지옥불","D","skull"],["메테오","D","rock"]]],["냉기와 번개",[["서리 화살","d","arrow"],["얼음 창","d","spear"],["번개","d","bolt"],["연쇄 번개","D","chain"],["눈보라","S","ice"]]],["암흑",[["마력 흡수","M","moon"],["약점 간파","w","eye"],["암흑 구체","d","orb"],["공허의 손","Z","claw"],["마력 폭주","P:mag","star"]]]],"thief":[["연속",[["찌르기","d","dagger"],["이중 베기","d","cross2"],["칼춤","D","swirl"],["연환","d","chain"],["난도질","c","claw"]]],["급소",[["약점 노리기","P:crit","eye"],["출혈","F","drop"],["급소 찌르기","c","arrow"],["처형자","d","skull"],["피 웅덩이","f","bubble"]]],["그림자",[["재빠른 발","P:spd","wing"],["연막","w","cloud"],["그림자 걸음","x","ghost"],["훔치기","d","coin"],["뒤잡기","Z","fist"]]]],"bard":[["전투가",[["용기의 노래","B","trumpet"],["승리의 행진","B","flag"],["전장의 북소리","X","drum"],["불꽃의 변주","D","fire"],["영웅의 서사시","B","crown"]]],["안식가",[["수호의 노래","G","harp"],["자장가","H","moon"],["평온의 선율","H","note"],["되살림의 화음","r","heart"],["별빛 합창","H","star"]]],["풍자",[["불협화음","w","note1"],["도발의 곡","s","wave"],["흥겨운 춤","X","wing"],["앙코르","B","burst"],["대합창","D","bell"]]]],"time":[["가속",[["서두르기","x","arrow"],["연속 가속","X","chain"],["시간 도약","x","bolt"],["가속 영역","X","wave"],["질주","P:spd","wing"]]],["감속",[["늦추기","s","hourglass"],["정지","Z","clock"],["늪 같은 시간","S","swirl"],["시간 정체","S","orb"],["영원한 정오","D","sun"]]],["시간 조작",[["되감기","h","cross"],["예지","P:dodge","eye"],["시계 소환","Z","bell"],["시간 균열","d","burst"],["시간 정지","X","star"]]]],"alch":[["약화",[["산성 플라스크","d","flask"],["독 병","F","tube"],["불안정 용액","w","bubble"],["부식","W","drop"],["약점 증폭","w","eye"]]],["혼합",[["응급 물약","h","cross"],["마력 물약","M","orb"],["혼합 약","h","swirl"],["엘릭서","H","star"],["변이약","B","skull"]]],["폭발물",[["폭죽탄","d","bomb"],["점착 폭탄","s","mine"],["연쇄 반응","D","chain"],["황금 폭발","d","burst"],["연금 대폭발","D","rocket"]]]],"white":[["회복",[["치유","h","drop"],["큰 치유","h","cross"],["집단 치유","H","flower"],["신성한 비","H","cloud"],["기적의 손길","h","star"]]],["부활",[["되살리기","r","wing"],["가호","P:surv","heart"],["완전 소생","r","crown"],["전체 소생","H","orb"],["천사의 숨결","H","wave"]]],["성광",[["성광탄","d","burst"],["정화","H","sun"],["빛의 장막","G","shield"],["심판의 빛","D","spear"],["광휘의 후광","B","bell"]]]],"druid":[["재생",[["새싹","h","leaf"],["재생의 숲","H","tree"],["뿌리 속박","s","chain"],["생명의 나무","h","flower"],["만개","H","sun"]]],["자연",[["자연 보호막","G","leaf"],["이슬","h","drop"],["독 제거","H","cross"],["태양의 은총","B","burst"],["대지의 축복","P:hp","heart"]]],["야수",[["가시 덩굴","d","spear"],["곰의 가죽","g","paw"],["늑대의 울음","B","wave"],["독수리의 눈","P:crit","eye"],["야생의 화신","D","claw"]]]],"cleric":[["보호",[["수호의 기도","G","cross"],["성스러운 방패","g","tower"],["대신 맞기","g","orb"],["피해 흡수 막","G","bubble"],["불가침","P:def","shield"]]],["정화",[["해제","H","wave"],["축복","B","sun"],["안식","G","moon"],["순백의 종","H","flag"],["구원의 빛","r","star"]]],["응징",[["철퇴","d","hammer"],["응징","d","fist"],["신벌","d","bolt"],["성스러운 낙인","w","star"],["심판의 종","D","bell"]]]],"knight":[["도발",[["도발","g","trumpet"],["방패 치기","d","fist"],["전열","G","chain"],["불굴의 외침","b","flag"],["요새","P:def","shield"]]],["수호",[["막아서기","g","tower"],["방어 태세","g","bubble"],["반격 태세","d","spear"],["수호의 서약","G","crown"],["철벽","P:hp","heart"]]],["검술",[["베기","d","sword"],["돌격","D","arrow"],["방패 돌진","Z","shield"],["정의의 칼날","c","sun"],["기사의 일격","c","burst"]]]],"summon":[["정령",[["불 정령","d","fire"],["물 정령","d","drop"],["바람 정령","D","swirl"],["대지 정령","d","rock"],["정령왕","D","crown"]]],["야수",[["늑대 소환","d","paw"],["곰 소환","g","claw"],["독수리 소환","D","wing"],["호박 유령 소환","d","ghost"],["용 소환","D","fireball"]]],["계약",[["소환수 강화","P:mag","star"],["마력 연결","M","chain"],["합체 공격","c","burst"],["송환","H","orb"],["계약의 폭주","B","skull"]]]],"gadget":[["포탑",[["소형 포탑","d","gear"],["보조 포탑","G","tower"],["레이저 포탑","d","bolt"],["포탑 증설","P:atk","fist"],["요새 포대","D","rocket"]]],["함정",[["덫 설치","s","chain"],["지뢰","d","mine"],["전기 그물","S","wave"],["연쇄 함정","D","swirl"],["대지 폭파","D","burst"]]],["폭탄",[["수류탄","d","bomb"],["접착탄","s","bubble"],["연막탄","w","cloud"],["시한폭탄","c","bomb"],["집중 포화","D","arrow"]]]]};/*XT-END*/
 const xIc = o => `<span class="sic" style="--c:${o.i};--r:${ORDER_J.indexOf(o.job)}"></span>`;
 const ORDER_J = ['warrior', 'black', 'thief', 'bard', 'time', 'alch', 'white', 'druid', 'cleric', 'knight', 'summon', 'gadget'];
 /*XW*/const XW = {"warrior":[24,52,43,51,"melee",0,37,51,77.5],"black":[22,49,26,22,"cast",0,22,52,-6.3],"thief":[19,47,15,46,"melee",0,18,47,76.0],"bard":[22,40,13,22,"melee",0,20,37,26.6],"time":[22,52,25,34,"cast",0,22,54,7.1],"alch":[23,51,21,37,"cast",0,23,51,10.0],"white":[24,56,22,38,"cast",0,23,55,8.1],"druid":[37,59,34,47,"cast",0,36,58,13.0],"cleric":[11,56,18,49,"melee",1,16,50,125.0],"knight":[23,44,14,24,"melee",1,21,40,24.2],"summon":[25,51,17,39,"cast",0,25,53,17.5],"gadget":[29,59,38,48,"bow",0,32,53,125.5]};/*XW-END*/
@@ -1624,9 +1719,9 @@ function xEx(){ me.ex = me.ex || { exp: 0, d: '', n: 0 }; if (me.ex.d !== todayK
 const xSt = (job, L, k) => Math.round(XJ[job][k][0] + XJ[job][k][1] * (L - 1));
 const xMkUnit = (job, L, name, ai, hp, mp, sk) => { sk = sk || xAiSk(L); const u = { av: ai ? World.Avatar.fromLook(ORDER_J.indexOf(job) * 131 + 7) : me.av, sks: [], pas: {}, fx: {}, dr: 0, vamp: 0, crit: 0, id: name, job, name, ic: XJ[job].ic, L, ai, team: 'a', mhp: xSt(job, L, 'hp'), mmp: 30 + L * 3, atk: xSt(job, L, 'atk'), mag: xSt(job, L, 'mag'), heal: xSt(job, L, 'heal'), spd: xSt(job, L, 'spd'), g: Math.random() * 40 };
   { const sp = ai ? xAiSp(job, L) : (xEx().sp || {}); u.mhp += (sp.hp || 0) * XSPV.hp; u.atk += (sp.atk || 0) * XSPV.atk; u.mag += (sp.mag || 0) * XSPV.mag; u.heal += (sp.heal || 0) * XSPV.heal; u.spd += (sp.spd || 0) * XSPV.spd; u.mmp += (sp.mag || 0) * 1.5; ['mhp', 'mmp', 'atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k]); }); }   // 스탯 포인트
-  xAll(job).forEach(o => { const lv = sk[o.b + '.' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv) }); });
+  xAll(job).forEach(o => { const lv = sk[o.b + '.' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, sv: o.sv == null ? o.sv : o.sv * xPw(o, lv), pet: o.pet ? { ...o.pet, k: o.pet.k * xPw(o, lv) } : o.pet, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv) }); });
   const P = u.pas; ['hp', 'atk', 'mag', 'spd'].forEach(k => { if (P[k]) u[k === 'hp' ? 'mhp' : k] = Math.round(u[k === 'hp' ? 'mhp' : k] * (1 + P[k])); }); u.wp = ai ? Math.min(4, Math.floor((L - 1) / 12)) : (xEx().wp || 0); const wm = 1 + .08 * u.wp; ['atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k] * wm); });   // 무기 강화 한 단계마다 +8%
-  u.dr = P.def || 0; u.vamp = P.vamp || 0; u.crit = P.crit || 0;
+  u.dr = P.def || 0; u.vamp = P.vamp || 0; u.crit = P.crit || 0; u.dodge = P.dodge || 0; u.survLeft = P.surv ? 1 : 0; u.pets = [];
   u.hp = hp ?? u.mhp; u.mp = mp ?? u.mmp; return u; };
 let xv = null, xb = null, xMsg = '', xTick = 0;   // xv 화면 상태, xb 전투 상태
 function xParty(){ const ex = xEx(), L = xLv(ex.exp).L, run = ex.run, jobs = ['warrior', 'white', 'black'], mine = ex.job, others = jobs.filter(j => j !== mine).slice(0, 2);
@@ -1740,10 +1835,17 @@ function xAlive(a){ return a.filter(u => u.hp > 0); }
 let xDelay = 0;   // 공격 모션이 닿을 때까지 숫자·번쩍임을 늦춰요
 function xFloat(id, txt, col){ const B = xb; if (!B) return; const u = [...B.foes, ...B.party].find(x => x.id === id); if (!u) return; const now = performance.now(); B.floats.push({ x: u.sx || 0, y: (u.sy || 80) - (u.hh || 50) + 4, txt, col: col || '#fff', t0: now + xDelay }); if (String(txt)[0] === '-'){ u.flashAt = now + xDelay; u.flash = u.flashAt + 130; if (u.hp <= 0) u.dieWait = xDelay; } }
 const xFm = (u, k) => u.fx[k] ? u.fx[k].v : 0;
-function xHit(u, t, raw, col){   // 피해 한 번 (방어·받는 피해 감소·치명타·흡혈 반영)
-  let dmg = raw; if (u.team === 'a' && Math.random() < (u.crit || 0)){ dmg *= 1.6; xFloat(t.id, '치명!', '#ffb84d'); }
-  if (t.team === 'a') dmg *= 1 - Math.min(.75, xFm(t, 'dmgIn') + (t.dr || 0)); if (xb.def[t.id]) dmg /= 2;
-  dmg = Math.max(1, Math.round(dmg)); t.hp = Math.max(0, t.hp - dmg); xFloat(t.id, '-' + dmg, col); if (u.vamp) u.hp = Math.min(u.mhp, u.hp + Math.round(dmg * u.vamp)); return dmg;
+function xHit(u, t, raw, col, opt){   // 피해 한 번: 치명타 · 약점(vuln) · 회피 · 받는 피해 감소 · 보호막 · 버티기 · 흡혈 · 반격
+  opt = opt || {}; let dmg = raw; if (u && u.team === 'a' && (opt.fcrit || Math.random() < (u.crit || 0))){ dmg *= 1.6; xFloat(t.id, '치명!', '#ffb84d'); }
+  if (t.team === 'e') dmg *= 1 + xFm(t, 'vuln');
+  if (t.team === 'a'){ if (u && u.team === 'e' && xFm(t, 'dodge') + (t.dodge || 0) > Math.random()){ xFloat(t.id, '회피!', '#9fd0ff'); return 0; } dmg *= 1 - Math.min(.75, xFm(t, 'dmgIn') + (t.dr || 0)); }
+  if (xb.def[t.id]) dmg /= 2; dmg = Math.max(1, Math.round(dmg));
+  const sh = t.fx.shield; if (sh && sh.v > 0){ const a = Math.min(sh.v, dmg); sh.v -= a; dmg -= a; xFloat(t.id, '막음', '#9fd0ff'); if (sh.v <= 0) delete t.fx.shield; if (dmg <= 0) return 0; }
+  t.hp = Math.max(0, t.hp - dmg); xFloat(t.id, '-' + dmg, col);
+  if (t.hp <= 0 && t.team === 'a' && (t.fx.survive || t.survLeft > 0)){ if (t.fx.survive) delete t.fx.survive; else t.survLeft--; t.hp = 1; xFloat(t.id, '버텼다!', '#ffffff'); }
+  if (u && u.vamp) u.hp = Math.min(u.mhp, u.hp + Math.round(dmg * u.vamp));
+  if (t.team === 'a' && t.hp > 0 && t.fx.counter && u && u.team === 'e' && u.hp > 0){ const r = Math.max(1, Math.round(dmg * t.fx.counter.v)); u.hp = Math.max(0, u.hp - r); xFloat(u.id, '-' + r, '#ffd866'); }
+  return dmg;
 }
 const XFXC = { fire: '#ff8a3a', ice: '#8adfff', bolt: '#ffe650', dark: '#b070ff', holy: '#fff0a0', poison: '#8aff6a', leaf: '#7aef6a', boom: '#ffb040', wind: '#e8f4ff', note: '#ffd866', time: '#9ad8ff', slash: '#ffffff', heal: '#7affb0', buff: '#9fd0ff', debuff: '#d0a0ff', impact: '#ffffff' };
 const XWA = { warrior: 'melee', knight: 'melee', thief: 'melee', bard: 'melee', cleric: 'melee', black: 'cast', white: 'cast', time: 'cast', alch: 'cast', druid: 'cast', summon: 'cast', gadget: 'bow' };
@@ -1765,20 +1867,41 @@ function xAnimAtk(u, k, list){   // 무기 모션 + 날아가는 것. 닿는 데
 }
 function xFxAt(k, list, u){ const now = performance.now(), dl = u ? (xDelay = xAnimAtk(u, k, list)) : xDelay; list.forEach((t, i) => xb.fxs.push({ k, id: t.id, t0: now + dl + i * 90, dur: k === 'bolt' ? 520 : k === 'slash' || k === 'impact' ? 380 : 760, seed: Math.random() * 100 })); }
 function xAct(u, sk, tgt){ xDelay = 0; try { xAct0(u, sk, tgt); } finally { xDelay = 0; } }
+const xFoeTarget = () => { const A = xAlive(xb.party), tk = A.find(a => xFm(a, 'taunt')); if (tk && Math.random() < .8) return tk; const cv = A.find(a => xFm(a, 'cover')), t = xRand(A); return cv && t !== cv && Math.random() < .65 ? cv : t; };   // 도발 · 대신 맞기
+const XFXN = { counter: '반격 태세', taunt: '도발!', cover: '대신 맞기', dodge: '회피↑', dmgIn: '방어↑', atk: '공격↑', spd: '속도↑' };
+function xApply(u, t, a, mult, st){   // 맞은 뒤 붙는 효과 [종류, 세기, 초]
+  const [k, v, sec] = a; if (k === 'stun'){ t.g = Math.min(t.g, -v); xFloat(t.id, '지연', '#ffd866'); } else if (k === 'dot'){ t.fx.dot = { v: Math.max(1, Math.round(u[st] * v * mult)), t: sec, acc: 0 }; xFloat(t.id, '지속 피해', '#ff9a4d'); } else if (k === 'bomb'){ t.fx.bomb = { v: Math.max(1, Math.round(u[st] * v * mult)), t: sec }; xFloat(t.id, '폭탄!', '#ffb040'); } else { t.fx[k] = { v, t: sec }; xFloat(t.id, { slow: '느려짐', weak: '약해짐', vuln: '약점', blind: '실명' }[k] || k, '#d0a0ff'); }
+}
 function xAct0(u, sk, tgt){   // 한 번 행동
   const B = xb, foes = u.team === 'a' ? B.foes : B.party, mates = u.team === 'a' ? B.party : B.foes; u.lg = performance.now();
-  if (u.team === 'e'){ if (!xAlive(B.party).length) return; const base = u.atk * (1 - xFm(u, 'weak')), hit = t => xHit(u, t, base * (.85 + Math.random() * .3), '#ff6a6a');
-    if (u.aoe && Math.random() < .35){ const L = xAlive(B.party); xDelay = 150; xFxAt('impact', L); L.forEach(hit); B.log = `${u.name}의 휘두르기!`; } else { const t = xRand(xAlive(B.party)); xDelay = 150; xFxAt('impact', [t]); hit(t); B.log = `${u.name} → ${t.name}`; } u.g = 0; return; }
+  if (u.team === 'e'){ if (!xAlive(B.party).length) return; if (xFm(u, 'blind') > Math.random()){ xFloat(u.id, '빗나감', '#d0a0ff'); B.log = `${u.name}의 공격이 빗나갔어요`; u.g = 0; return; } const base = u.atk * (1 - xFm(u, 'weak')), hit = t => xHit(u, t, base * (.85 + Math.random() * .3), '#ff6a6a');
+    if (u.aoe && Math.random() < .35){ const L = xAlive(B.party); xDelay = 150; xFxAt('impact', L); L.forEach(hit); B.log = `${u.name}의 휘두르기!`; } else { const t = xFoeTarget(); xDelay = 150; xFxAt('impact', [t]); hit(t); B.log = `${u.name} → ${t.name}`; } u.g = 0; return; }
   delete B.def[u.id]; const mult = (B.buff ? 1.25 : 1) * (1 + xFm(u, 'atk'));
   if (!sk){ const t = tgt && tgt.hp > 0 ? tgt : xRand(xAlive(B.foes)); xFxAt('slash', [t], u); xHit(u, t, Math.max(u.atk, u.mag * .8) * (.85 + Math.random() * .3) * mult, '#ffd866'); B.log = `${u.name}의 공격`; u.g = 0; return; }
   u.mp -= sk.mp; B.log = `${sk.n}! ${u.name}`; const fxk = xFxKind(sk), one = () => tgt && tgt.hp > 0 ? tgt : xRand(xAlive(B.foes)), fs = () => { const L = sk.tg === 'all' ? xAlive(B.foes) : [one()]; xFxAt(fxk, L, u); return L; }, as = () => { const L = sk.tg === 'all' ? xAlive(B.party) : sk.tg === 'self' ? [u] : [tgt && tgt.hp > 0 ? tgt : xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]]; xFxAt(fxk, L, u); return L; };
-  if (sk.t === 'dmg') fs().forEach(t => xHit(u, t, u[sk.st] * sk.p * (.85 + Math.random() * .3) * mult, '#ffd866'));
-  else if (sk.t === 'heal') as().forEach(t => { const h = Math.round(u.heal * sk.p * (.9 + Math.random() * .2)); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); });
-  else if (sk.t === 'revive'){ const t = tgt && tgt.hp <= 0 ? tgt : B.party.find(x => x.hp <= 0); if (t){ xFxAt(fxk, [t], u); t.hp = Math.round(t.mhp * .5); t.dieAt = 0; xFloat(t.id, '부활!', '#fff'); } else { u.mp += sk.mp; B.log = '쓰러진 동료가 없어요'; } }
-  else if (sk.t === 'buff') as().forEach(t => { t.fx[sk.key] = { v: sk.v, t: sk.sec }; xFloat(t.id, { atk: '공격↑', spd: '속도↑', dmgIn: '방어↑' }[sk.key], '#9fd0ff'); });
-  else if (sk.t === 'deb') fs().forEach(t => { t.fx[sk.key] = { v: sk.v, t: sk.sec }; xFloat(t.id, sk.key === 'slow' ? '느려짐' : '약해짐', '#d0a0ff'); });
+  if (!['encore'].includes(sk.t)) u.lastSk = sk;
+  if (sk.t === 'dmg'){ const L = fs(), pb = 1 + (sk.petb || 0) * (u.pets || []).length; L.forEach(t => { for (let h = 0; h < (sk.hits || 1); h++){ if (t.hp <= 0) break; let raw = u[sk.st] * sk.p * pb * (.85 + Math.random() * .3) * mult; if (sk.exec && t.hp / t.mhp < .4) raw *= 1.8; xHit(u, t, raw, '#ffd866', { fcrit: sk.fcrit }); } (sk.ap || []).forEach(a => xApply(u, t, a, mult, sk.st)); });
+    if (sk.drain){ u.mp = Math.min(u.mmp, u.mp + u.mmp * sk.drain); xFloat(u.id, 'MP↑', '#6aa8ff'); }
+    if (sk.steal){ const run = xEx().run; run.loot.gold += 5 + Math.round(u.L * 1.2); if (Math.random() < .4){ const it = xRand(xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; } xFloat(u.id, '훔쳤다!', '#ffd866'); }
+    if (sk.gold){ xEx().run.loot.gold += 8 + u.L; xFloat(u.id, '골드+', '#ffd866'); } }
+  else if (sk.t === 'burst'){ fs().forEach(t => { const d = t.fx.dot; if (d){ const tot = Math.round(d.v * Math.max(1, Math.ceil(d.t / 2)) * 1.5); xHit(u, t, tot, '#ff9a4d'); delete t.fx.dot; } }); }
+  else if (sk.t === 'heal') as().forEach(t => { const h = Math.max(Math.round(u.heal * sk.p * (.9 + Math.random() * .2)), sk.pct ? Math.round(t.mhp * sk.pct) : 0); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); if (sk.cl) ['dot', 'slow', 'weak', 'blind', 'vuln', 'bomb'].forEach(k => delete t.fx[k]); if (sk.mpb){ t.mp = Math.min(t.mmp, t.mp + t.mmp * sk.mpb); xFloat(t.id, 'MP↑', '#6aa8ff'); } });
+  else if (sk.t === 'revive'){ const dead = sk.all ? B.party.filter(x => x.hp <= 0) : [tgt && tgt.hp <= 0 ? tgt : B.party.find(x => x.hp <= 0)].filter(Boolean);
+    if (dead.length){ xFxAt(fxk, dead, u); dead.forEach(t => { t.hp = Math.max(1, Math.round(t.mhp * (sk.pct || .5))); t.dieAt = 0; xFloat(t.id, '부활!', '#fff'); }); if (sk.hl) xAlive(B.party).forEach(t => { const h = Math.round(u.heal * sk.hl); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); }); } else { u.mp += sk.mp; B.log = '쓰러진 동료가 없어요'; } }
+  else if (sk.t === 'cleanse') as().forEach(t => { ['dot', 'slow', 'weak', 'blind', 'vuln', 'bomb'].forEach(k => delete t.fx[k]); xFloat(t.id, '정화', '#fff6c0'); if (sk.regen) t.fx.regen = { v: Math.round(u.heal * sk.regen), t: 10, acc: 0 }; });
+  else if (sk.t === 'buff') as().forEach(t => {
+    if (sk.key === 'shield'){ t.fx.shield = { v: Math.round(u[sk.st || 'heal'] * (sk.sv || 2)), t: sk.sec }; xFloat(t.id, '보호막', '#9fd0ff'); }
+    else if (sk.key === 'regen'){ t.fx.regen = { v: Math.max(1, Math.round(u.heal * sk.v)), t: sk.sec, acc: 0 }; xFloat(t.id, '재생', '#7affb0'); }
+    else { t.fx[sk.key] = { v: sk.v, t: sk.sec }; xFloat(t.id, XFXN[sk.key] || sk.key, '#9fd0ff'); }
+    (sk.also || []).forEach(([k, v]) => { t.fx[k] = { v, t: sk.sec }; }); });
+  else if (sk.t === 'deb') fs().forEach(t => { t.fx[sk.key] = { v: sk.v, t: sk.sec }; xFloat(t.id, { slow: '느려짐', weak: '약해짐', vuln: '약점', blind: '실명' }[sk.key] || sk.key, '#d0a0ff'); });
   else if (sk.t === 'dot') fs().forEach(t => { t.fx.dot = { v: Math.round(u[sk.st] * sk.p * mult), t: 8, acc: 0 }; xFloat(t.id, '지속 피해', '#ff9a4d'); });
   else if (sk.t === 'stun') fs().forEach(t => { xHit(u, t, u[sk.st] * sk.p * (.85 + Math.random() * .3) * mult, '#ffd866'); t.g = Math.min(t.g, -60); });
+  else if (sk.t === 'summon'){ xFxAt('buff', [u], u); u.pets = u.pets || []; if (u.pets.length >= 3) u.pets.shift(); u.pets.push({ ...sk.pet, st: sk.st, t: sk.pet.sec, acc: 0 }); xFloat(u.id, sk.pet.n + '!', '#ffd866'); }
+  else if (sk.t === 'recall'){ const n = (u.pets || []).length; u.pets = []; const t = xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]; if (n && t){ const h = Math.round(t.mhp * .12 * n); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); } else B.log = '돌려보낼 소환수가 없어요'; }
+  else if (sk.t === 'leap'){ xFxAt('time', [u], u); xFloat(u.id, '가속!', '#9ad8ff'); }
+  else if (sk.t === 'tstop'){ xFxAt('time', xAlive(B.foes), u); xAlive(B.party).forEach(a => { a.g = 100; xFloat(a.id, '행동!', '#9ad8ff'); }); xAlive(B.foes).forEach(f => { f.g = Math.min(f.g, -150); xFloat(f.id, '정지', '#d0a0ff'); }); }
+  else if (sk.t === 'encore'){ const last = u.lastSk; if (last && last.t !== 'encore'){ B.log = `앙코르! ${last.n}`; u.mp += sk.mp; xAct0(u, { ...last, mp: 0 }, tgt); return; } else { u.mp += sk.mp; B.log = '다시 쓸 스킬이 없어요'; } }
   else if (sk.t === 'mp'){ xFxAt('buff', xAlive(B.party), u); B.party.forEach(t => { if (t.hp > 0){ t.mp = Math.min(t.mmp, t.mp + t.mmp * sk.v); xFloat(t.id, 'MP↑', '#6aa8ff'); } }); }
   u.g = sk.w ?? 0;
 }
@@ -1787,7 +1910,7 @@ function xAI(u){   // 동료 자동 행동
   const B = xb, sks = u.sks.filter(s => s.mp <= u.mp), low = xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0], dead = B.party.find(x => x.hp <= 0), foe0 = xAlive(B.foes)[0];
   const rev = sks.find(s => s.t === 'revive'); if (rev && dead) return xAct(u, rev, dead);
   const heals = sks.filter(s => s.t === 'heal'); if (heals.length && low.hp / low.mhp < .55){ const all = heals.find(s => s.tg === 'all' && xAlive(B.party).filter(x => x.hp / x.mhp < .6).length >= 2); return xAct(u, all || heals.sort((a, b) => b.p - a.p)[0], low); }
-  if (Math.random() < .35){ const sup = sks.filter(s => ((s.t === 'buff' && !(u.fx[s.key] && s.tg !== 'all' || B.party[0].fx[s.key] && s.tg === 'all')) || (s.t === 'deb' && !foe0.fx[s.key]) || (s.t === 'mp' && u.mp < u.mmp * .4))); if (sup.length) return xAct(u, xRand(sup), null); }
+  if (Math.random() < .35){ const sup = sks.filter(s => ((s.t === 'buff' && !(u.fx[s.key] && s.tg !== 'all' || B.party[0].fx[s.key] && s.tg === 'all')) || (s.t === 'deb' && !foe0.fx[s.key]) || (s.t === 'mp' && u.mp < u.mmp * .4) || (s.t === 'cleanse' && B.party.some(a => a.hp > 0 && ['dot', 'slow', 'weak', 'blind', 'vuln', 'bomb'].some(k => a.fx[k]))) || (s.t === 'summon' && !(u.pets && u.pets.length)))); if (sup.length) return xAct(u, xRand(sup), null); }
   const dm = sks.filter(s => (s.t === 'dmg' || s.t === 'dot' || s.t === 'stun') && (s.p || 0) > 0), many = xAlive(B.foes).length >= 2, sc = s => (s.p || 0) * (s.tg === 'all' && many ? xAlive(B.foes).length : 1) * (s.w ? .7 : 1);
   let pick = dm.filter(s => many ? true : s.tg === 'one').sort((a, b) => sc(b) - sc(a))[0];
   if (pick && pick.mp > u.mp * .8 && Math.random() < .4) pick = null; xAct(u, pick || null, null);
@@ -1893,6 +2016,7 @@ function xDraw(){
     }
     if (B.pick && B.pick.set.has(u.id)){ const cy = y - (u.team === 'e' ? u.hh + 26 : FH + 2) + Math.round(Math.sin(now / 130) * 2); g.fillStyle = '#1a1024'; g.fillRect(x - 6, cy - 1, 13, 8); g.fillStyle = '#ffd866'; g.fillRect(x - 5, cy, 11, 3); g.fillRect(x - 3, cy + 3, 7, 2); g.fillRect(x - 1, cy + 5, 3, 1); }
   });
+  B.party.forEach(u => { if (u.hp <= 0) return; (u.pets || []).forEach((p, i) => { const x = Math.round(u.sx + 22 + i * 11), y = Math.round(u.sy - 52 + Math.sin(now / 300 + i * 2) * 3); g.fillStyle = '#1a1024'; g.fillRect(x - 4, y - 4, 9, 9); g.fillStyle = XPETC[p.el] || '#fff'; g.fillRect(x - 3, y - 3, 7, 7); g.fillStyle = '#fff'; g.fillRect(x - 2, y - 2, 2, 2); }); });
   xProjDraw(g, B, now); B.fxs = B.fxs.filter(f => { const t = [...B.foes, ...B.party].find(u => u.id === f.id); return xFxDraw(g, f, t ? t.sx : 192, t ? t.sy : 120, now); });
   g.font = 'bold 13px monospace'; g.textAlign = 'center'; g.lineJoin = 'round'; B.floats = B.floats.filter(f => { const p = (now - f.t0) / 900; if (p >= 1) return false; if (p < 0) return true; const yy = f.y - p * 18; g.globalAlpha = p > .7 ? 1 - (p - .7) / .3 : 1; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText(f.txt, f.x, yy); g.fillStyle = f.col; g.fillText(f.txt, f.x, yy); g.globalAlpha = 1; return true; });
 }
@@ -2013,7 +2137,7 @@ function xChoose(k){
   if (k === 'def'){ B.def[u.id] = 1; B.log = `🛡️ ${u.name}이(가) 방어 태세`; u.g = 0; B.turn = null; return xUp(); }
   const sk = k === 'atk' ? null : u.sks[+k.slice(1)];
   const go = tgt => { B.pick = null; B.menu = 'main'; xAct(u, sk, tgt); B.turn = null; xUp(); };
-  const foeT = !sk || ['dmg', 'deb', 'dot', 'stun'].includes(sk.t), targets = foeT ? xAlive(B.foes) : sk.t === 'revive' ? B.party.filter(x => x.hp <= 0) : xAlive(B.party);
+  const foeT = !sk || ['dmg', 'deb', 'dot', 'stun', 'burst'].includes(sk.t), targets = foeT ? xAlive(B.foes) : sk.t === 'revive' ? B.party.filter(x => x.hp <= 0) : xAlive(B.party);
   if (sk && (sk.tg === 'all' || sk.tg === 'self' || sk.t === 'mp')) return go(null); if (targets.length <= 1) return go(targets[0] || null);
   B.pick = { sk, go, set: new Set(targets.map(t => t.id)) }; xCmd();
 }
@@ -2021,10 +2145,22 @@ function xUp(){   // 글·상태 갱신 (그림은 xDraw가 알아서 그려요)
   const B = xb; if (!B || !$('#xcv')) return;
   xStatUpdate(B); const lg = $('#xlog'); if (lg && lg.textContent !== B.log) lg.textContent = B.log; xCmd();
 }
+const XPETC = { fire: '#ff7a3a', water: '#6ad0ff', wind: '#e8f4ff', earth: '#c8a060', king: '#ffd866', wolf: '#c8c8d8', bear: '#a07040', eagle: '#e8e0c0', ghost: '#b0e0ff', dragon: '#ff4a3a', turret: '#a0a8b8', laser: '#ff5a8a' };
+const XPETFX = { fire: 'fire', water: 'ice', wind: 'wind', earth: 'boom', king: 'holy', wolf: 'slash', bear: 'slash', eagle: 'wind', ghost: 'dark', dragon: 'fire', turret: 'bolt', laser: 'bolt' };
+function xBomb(t, b){ if (t.hp <= 0) return; xFxAt('boom', [t]); xHit({ team: 'a', crit: 0, vamp: 0 }, t, b.v, '#ffb040'); }
+function xPets(u, dt){   // 소환수·포탑이 알아서 움직여요
+  if (u.team !== 'a' || !u.pets || !u.pets.length) return; const B = xb, pf = { team: 'a', crit: 0, vamp: 0 };
+  u.pets = u.pets.filter(p => { p.t -= dt; p.acc += dt; if (p.acc >= p.every){ p.acc -= p.every; const foes = xAlive(B.foes), fxk = XPETFX[p.el] || 'impact', raw = (u[p.st] || u.mag) * p.k * (.9 + Math.random() * .2);
+      if ((p.kind === 'dmg' || p.kind === 'dmgcover') && foes.length){ const t = xRand(foes); xFxAt(fxk, [t]); xHit(pf, t, raw, '#ffd866'); if (p.kind === 'dmgcover') u.fx.taunt = { v: 1, t: p.every + .5 }; }
+      else if (p.kind === 'dmgall' && foes.length){ xFxAt(fxk, foes); foes.forEach(t => xHit(pf, t, raw * .8, '#ffd866')); }
+      else if (p.kind === 'heal'){ const t = xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]; if (t){ const h = Math.round(u.heal * p.k + 2); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); } }
+      else if (p.kind === 'shield'){ const t = xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]; if (t){ t.fx.shield = { v: Math.round((u[p.st] || u.mag) * p.k), t: 8 }; xFloat(t.id, '보호막', '#9fd0ff'); } } }
+    return p.t > 0; });
+}
 function xLoop(){
   const B = xb; if (!B || B.over) return clearInterval(xTick); if (!sheetOn || sub !== 'explore') return clearInterval(xTick);
   const now = performance.now(), dt = Math.min(.25, (now - B.last) / 1000); B.last = now; if (B.fin){ if (now >= B.fin) return xAlive(B.foes).length ? xLose() : xWin(); return; }
-  B.party.concat(B.foes).forEach(u => { if (u.hp <= 0) return; if (u === B.party[0] && B.turn === u) return; if (u.team === 'a' && u.mp < u.mmp) u.mp = Math.min(u.mmp, u.mp + dt * (.6 + u.L * .05)); u.g = Math.min(100, u.g + u.spd * (1 + xFm(u, 'spd') - xFm(u, 'slow')) * 3.3 * dt); const f = u.fx; for (const k in f){ f[k].t -= dt; if (k === 'dot'){ f[k].acc += dt; while (f[k].acc >= 2 && f[k].t > -2){ f[k].acc -= 2; u.hp = Math.max(0, u.hp - f[k].v); xFloat(u.id, '-' + f[k].v, '#ff9a4d'); } } if (f[k].t <= 0) delete f[k]; } });
+  B.party.concat(B.foes).forEach(u => { if (u.hp <= 0) return; if (u === B.party[0] && B.turn === u) return; if (u.team === 'a' && u.mp < u.mmp) u.mp = Math.min(u.mmp, u.mp + dt * (.6 + u.L * .05)); u.g = Math.min(100, u.g + u.spd * (1 + xFm(u, 'spd') - xFm(u, 'slow')) * 3.3 * dt); const f = u.fx; for (const k in f){ f[k].t -= dt; if (k === 'dot'){ f[k].acc += dt; while (f[k].acc >= 2 && f[k].t > -2){ f[k].acc -= 2; u.hp = Math.max(0, u.hp - f[k].v); xFloat(u.id, '-' + f[k].v, '#ff9a4d'); } } if (k === 'regen'){ f[k].acc += dt; while (f[k].acc >= 2){ f[k].acc -= 2; u.hp = Math.min(u.mhp, u.hp + f[k].v); xFloat(u.id, '+' + f[k].v, '#7affb0'); } } if (f[k].t <= 0){ if (k === 'bomb') xBomb(u, f[k]); delete f[k]; } } xPets(u, dt); });
   if (!B.turn) for (const u of B.party.concat(B.foes)){ if (u.hp <= 0 || u.g < 100) continue; if (u === B.party[0]){ B.turn = u; B.pick = null; break; } if (u.team === 'e') xAct(u, null); else xAI(u); if (!xAlive(B.foes).length || !xAlive(B.party).length) break; }
   if (!xAlive(B.foes).length || !xAlive(B.party).length){ B.fin = performance.now() + 900; B.turn = null; return xUp(); }
   if (B.turn && B.turn.hp <= 0) B.turn = null; xUp();
