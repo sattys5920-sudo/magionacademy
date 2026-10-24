@@ -3954,6 +3954,9 @@ const FLAVOR = {
   '옷 입어 보기': ['망토가 꽤 잘 어울려요!'],
   '소원 빌기': ['잭오랜턴 눈이 반짝였어요!'],
 };
+// 기능이 있는 것만 눌려요: 요리·판매·침대 같은 곳 + 아래 목록. 분위기용 소품(소파·벤치·문구만 나오던 것)은 누를 수 없어요
+const ACT_REAL = new Set(['쉬기', '잠자고 내일로', '방명록 보기', '휴게실 꾸미기', '말 걸기', '오늘의 실습 보기', '앉아서 수업 듣기', '놀이 고르기', '요리하기', '카라멜 젓기', '요리책 보기', '과자 만들기', '채소 팔기', '물고기 팔기', '소원 빌기', '박쥐 돌보기']);
+World.actOk = (o, a, mapId) => ACT_REAL.has(a[1]) || !!ACT_GO[a[1]] || mapId === 'pen' || (a[1] === '쓰다듬기' && o.name === 'blackcat');
 World.onAct = (mapId, o, a) => {
   if (!me) return;
   const label = a[1], dh = Object.keys(HOUSE_DORM).find(k => HOUSE_DORM[k] === mapId);

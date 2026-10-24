@@ -517,6 +517,7 @@ function showBubble(o, text, btn, fn){
 }
 function hideBubble(){ bubble?.el.remove(); bubble = null; }
 const ACTS = {};
+const actOf = o => { const a = o.act || ACTS[o.name]; return a && (!World.actOk || World.actOk(o, a, rmap)) ? a : null; };   // 쓸모 있는 것만 눌러져요 (index.html의 World.actOk)
 // 물건을 쓰면 게임에 물어봐요: 글을 돌려주면 말풍선에 보여 주고, 아니면 (화면이 열렸으니) 말풍선을 닫아요
 function useObj(o, a){
   const r = World.onAct ? World.onAct(map, o, a) : null;
@@ -532,7 +533,7 @@ function findNear(){
   if (np) return { kind: 'npc', id: np.npc.id, name: np.name, key: 'n' + np.npc.id };
   { const si = spots.findIndex(sp => (sp.m || spotMap) === map && Math.abs(sp.x - mx) + Math.abs(sp.y - my) <= 1); if (si >= 0) return { kind: 'spot', i: si, sp: spots[si], key: 's' + si }; }
   { const mi = marks.findIndex(q => (q.map === map || q.map === rmap) && Math.abs(q.x - mx) + Math.abs(q.y - my) <= 2); if (mi >= 0) return { kind: 'mark', id: marks[mi].id, label: marks[mi].label || '조사하기', key: 'm' + marks[mi].id }; }
-  for (const o of [...objOrder, ...flats]){ const a = o.act || ACTS[o.name]; if (!a || !o.box || o.furn) continue;
+  for (const o of [...objOrder, ...flats]){ const a = actOf(o); if (!a || !o.box || o.furn) continue;
     const dx = Math.max(Math.floor(o.box[0]) - mx, 0, mx - (Math.ceil(o.box[2]) - 1)), dy = Math.max(Math.floor(o.box[1]) - my, 0, my - (Math.ceil(o.box[3]) - 1));
     if (dx + dy === 1) return { kind: 'act', o, label: a[1], text: a[0], key: 'a' + o.name + o.x + ',' + o.y }; }
   if (World.onWater && !World.busyFish) for (const [dx, dy] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) if (isWater(mx + dx, my + dy)) return { kind: 'water', wx: mx + dx, wy: my + dy, key: 'w' };
@@ -544,7 +545,7 @@ World.doNear = () => { const t = nearT; if (!t) return; hideBubble();
   if (t.kind === 'npc'){ const np = people.find(q => q.npc && q.npc.id === t.id); if (np) World.faceTo(np.x, np.y); World.onNpc && World.onNpc(t.id); }
   else if (t.kind === 'spot'){ World.onSpot && World.onSpot(t.i, t.sp); }
   else if (t.kind === 'mark'){ World.onMark && World.onMark(t.id); }
-  else if (t.kind === 'act'){ useObj(t.o, t.o.act || ACTS[t.o.name]); }
+  else if (t.kind === 'act'){ useObj(t.o, actOf(t.o)); }
   else if (t.kind === 'water'){ World.faceTo(t.wx, t.wy); World.onWater && World.onWater(t.wx, t.wy); } };
 function goDoor(door, o){
   if (door.explore !== undefined){   // 탐사장 가는 길: 기둥 사이를 지나면 그 지역 탐사 창이 열리고, 나는 한 걸음 물러나 있어요
@@ -596,7 +597,7 @@ cv.addEventListener('pointerdown', e => {
   // 친구를 누르면 (겹치면 앞에 있는 사람)
   const pr = people.filter(p => p.peer && (() => { const [sx, sy] = P(p.x + .5, p.y + .5); return x >= sx - 9 && x <= sx + 9 && y >= sy - World.Avatar.FH * ASC - 10 && y <= sy + 3; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
   if (pr && World.onPeer){ World.onPeer(pr.peer); return; }
-  const hit = [...objOrder, ...flats.slice().reverse()].reverse().find(o => (o.door || o.act || o.furn || ACTS[o.name]) && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && (() => { const px = o.furn ? FURN_PX : MAPS[rmap].px; const d = px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data; return d[3] > 0; })());
+  const hit = [...objOrder, ...flats.slice().reverse()].reverse().find(o => (o.door || actOf(o) || o.furn) && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && (() => { const px = o.furn ? FURN_PX : MAPS[rmap].px; const d = px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data; return d[3] > 0; })());
   if (hit && hit.furn){   // 놓은 가구
     const r = World.onFurn ? World.onFurn(hit.fid) : null;
     if (r) showBubble(hit, typeof r === 'string' ? r : r.text, r.btn, r.fn);
