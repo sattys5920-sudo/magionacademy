@@ -202,6 +202,8 @@ body.admin .hud,body.admin .fab,body.admin #world{display:none}
 .adbody{flex:1;overflow:auto;padding:8px 10px 24px;display:flex;flex-direction:column;gap:8px}
 .admapw{overflow:auto;max-height:62vh;background:#140E1E;box-shadow:0 0 0 2px #22183F;-webkit-overflow-scrolling:touch}
 #admap{display:block;image-rendering:pixelated}
+.adgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;padding:6px 10px}.adth{background:#fff;padding:4px;box-shadow:0 0 0 2px #22183F}.adth canvas{width:100%;display:block;background:#140E1E}
+.adlist div[data-adfollow]{cursor:pointer}.adlist div.on{background:#FFD866}.adlist em{color:#3FAF74;font-style:normal}
 .adlist{display:flex;flex-direction:column;gap:2px}
 .adlist div{background:#fff;padding:3px 6px}
 .adlist i{color:#9480B4}
@@ -1248,8 +1250,9 @@ function speak(t, e, to){
 function presTick(){
   if (solo || !uid) return;
   const p = World.myPos(); if (!p.m) return;
-  const k = p.m + ',' + p.x + ',' + p.y; if (k === lastPos) return; lastPos = k;
-  F.update(F.ref(db, 'online/' + uid), { m: p.m, x: p.x, y: p.y }).catch(() => { lastPos = ''; });
+  const a = fishing ? '🎣 낚시 중' : cooking ? '🍲 요리 중' : gameRet ? '🎮 놀이 마당 게임 중' : (() => { const q = typeof mqState === 'function' && MQ.loaded && mqState().q; return q && MQ.q[q] ? '📜 의뢰: ' + (MQ.q[q].name || q) : ''; })();
+  const k = p.m + ',' + p.x + ',' + p.y + ',' + a; if (k === lastPos) return; lastPos = k;
+  F.update(F.ref(db, 'online/' + uid), { m: p.m, x: p.x, y: p.y, a }).catch(() => { lastPos = ''; });
 }
 // 친구를 누르면: 인사 · 이모티콘 · 코디 보기 · 방 놀러 가기
 World.onPeer = id => {
@@ -2580,7 +2583,7 @@ function renderGames(){
 // 관리자 계정(magionadmin)으로 로그인해서 모두의 위치·대화·기숙사·이야기·호감도·골드·마력을 봐요
 const ADMIN_CODE = '316316316', ADMIN_ID = 'magionadmin';
 const isAdminUser = u => !!u && u.email === idEmail(ADMIN_ID);
-let AD = { tab: 'map', map: 'campus', day: null, online: {}, players: {}, houses: {}, chat: {}, games: {}, story: {}, offs: [] };
+let AD = { tab: 'map', map: null, follow: null, mc: {}, day: null, online: {}, players: {}, houses: {}, chat: {}, games: {}, story: {}, offs: [] };
 function adminLogin(){
   cover(`<div class="card px"><b class="b">관리자 페이지</b><form id="af" style="display:flex;flex-direction:column;gap:10px">
     <label class="field"><span class="s">관리자 코드</span><input id="acode" type="password" inputmode="numeric" maxlength="20" autocomplete="off"></label>
@@ -2613,10 +2616,20 @@ function adminRender(){
   const tabs = [['map', `지도 ${Object.keys(O).length}명 접속`], ['students', `학생 ${ids.length}`], ['chat', '대화'], ['dorm', '기숙사'], ['story', '이야기·미션'], ['npc', 'NPC 호감도']];
   let body = '';
   if (AD.tab === 'map'){
+    if (AD.follow && !O[AD.follow]) AD.follow = null;
     const where = {}; Object.entries(O).forEach(([id, o]) => { const k = (o.m || '').split(':')[0] || '?'; (where[k] = where[k] || []).push(id); });
-    body = `<div class="adseg">${['campus', ...Object.keys(where).filter(k => k !== 'campus')].map(k => `<button data-admap="${k}" class="${AD.map === k ? 'on' : ''}">${adPlace(k)} ${(where[k] || []).length}</button>`).join('')}</div>
-      <div class="admapw"><canvas id="admap"></canvas></div>
-      <div class="adlist">${Object.entries(O).map(([id, o]) => `<div><b>${adName(id)}</b> <span>${adPlace(o.m)} · (${o.x ?? '-'}, ${o.y ?? '-'})</span>${o.s?.t ? ` <i>“${esc(o.s.t)}”</i>` : ''}</div>`).join('') || '<div>지금 접속한 학생이 없어요</div>'}</div>`;
+    const fo = AD.follow && O[AD.follow], view = fo ? 'follow' : AD.map ? 'one' : 'all';
+    const row = ([id, o]) => `<div data-adfollow="${id}" class="${AD.follow === id ? 'on' : ''}"><b>${adName(id)}</b> <span>${adPlace(o.m)} · (${o.x ?? '-'}, ${o.y ?? '-'})</span>${o.a ? ` <em>${esc(o.a)}</em>` : ''}${o.s?.t ? ` <i>“${esc(o.s.t)}”</i>` : ''}</div>`;
+    const maps = ['campus', 'town', 'quarter', ...Object.keys(where).filter(k => !['campus', 'town', 'quarter'].includes(k))];
+    body = `<div class="adseg"><button data-adall="1" class="${view === 'all' ? 'on' : ''}">전체 보기</button>${maps.map(k => `<button data-admap="${k}" class="${view === 'one' && AD.map === k ? 'on' : ''}">${adPlace(k)} ${(where[k] || []).length}</button>`).join('')}</div>`;
+    if (view === 'follow'){
+      const p = AD.players[AD.follow] || {}, last = Object.values(AD.chat || {}).filter(c => c.u === AD.follow).sort((x, y) => y.at - x.at).slice(0, 3);
+      body += `<div class="adcard"><b>${adName(AD.follow)}</b> ${HOUSES[p.house] ? `<span style="color:${HOUSES[p.house].col}">${HOUSES[p.house].name}</span>` : ''} <button class="btn sm" data-adall="1">따라가기 끄기</button>
+        <div class="s">📍 ${adPlace(fo.m)} · (${fo.x ?? '-'}, ${fo.y ?? '-'})</div><div class="s">🎬 ${esc(fo.a || '돌아다니는 중')}</div>${fo.s?.t ? `<div class="s sub">“${esc(fo.s.t)}”</div>` : ''}</div>
+        <div class="admapw"><canvas id="admap"></canvas></div>`;
+    } else if (view === 'one') body += `<div class="admapw"><canvas id="admap"></canvas></div>`;
+    else body += `<div class="adgrid">${maps.filter(k => k !== 'town' && k !== 'quarter' && k !== 'campus' ? (where[k] || []).length : true).map(k => `<div class="adth"><canvas data-adth="${k}"></canvas><b>${adPlace(k)}</b> <span>${(where[k] || []).length}명</span></div>`).join('')}</div>`;
+    body += `<div class="adlist">${Object.entries(O).map(row).join('') || '<div>지금 접속한 학생이 없어요</div>'}</div>`;
   }
   if (AD.tab === 'students'){
     const sum = k => ids.reduce((t, id) => t + (+P[id][k] || 0), 0);
@@ -2647,20 +2660,41 @@ function adminRender(){
   root.innerHTML = `<div class="adhead"><b>🎃 호박달 마녀학교 · 관리자</b><button class="btn sm" id="adout">나가기</button></div>
     <div class="adseg main">${tabs.map(([k, l]) => `<button data-adtab="${k}" class="${AD.tab === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="adbody">${body}</div>`;
   root.querySelectorAll('[data-adtab]').forEach(b => b.onclick = () => { AD.tab = b.dataset.adtab; adminRender(); });
-  root.querySelectorAll('[data-admap]').forEach(b => b.onclick = () => { AD.map = b.dataset.admap; adminRender(); });
+  root.querySelectorAll('[data-admap]').forEach(b => b.onclick = () => { AD.map = b.dataset.admap; AD.follow = null; adminRender(); });
+  root.querySelectorAll('[data-adall]').forEach(b => b.onclick = () => { AD.map = null; AD.follow = null; adminRender(); });
+  root.querySelectorAll('[data-adfollow]').forEach(b => b.onclick = () => { AD.follow = AD.follow === b.dataset.adfollow ? null : b.dataset.adfollow; AD.map = null; adminRender(); });
   root.querySelectorAll('[data-adday]').forEach(b => b.onclick = () => { AD.day = b.dataset.adday; adminChat(); adminRender(); });
   root.querySelectorAll('[data-adst]').forEach(b => b.onclick = () => typeof adminStoryAct === 'function' && adminStoryAct(b.dataset.adst));
   $('#adout').onclick = async () => { AD.offs.forEach(f => f && f()); AD.offs = []; document.body.classList.remove('admin'); root.remove(); if (auth?.currentUser) await F.signOut?.(auth); location.reload(); };
   if (AD.tab === 'map') adminMap();
 }
 async function adminMap(){
-  const id = AD.map, r = await World.mapCanvas(id), cv = $('#admap'); if (!r || !cv) return;
-  const m = r.meta, k = Math.max(.75, Math.min(2, (cv.parentElement.clientWidth) / m.W));   // 폰에서는 크게 그리고 밀어서 봐요 cv.width = m.W; cv.height = m.H; cv.style.width = Math.round(m.W * k) + 'px'; cv.style.height = Math.round(m.H * k) + 'px';
-  const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(r.canvas, 0, 0);
-  const P2 = (x, y) => [m.OX + (x - y) * 8, m.OY + (x + y) * 4];
-  Object.entries(AD.online).forEach(([uid_, o], i) => { if ((o.m || '').split(':')[0] !== id) return; const [x, y] = P2((o.x || 0) + .5, (o.y || 0) + .5), c = HOUSES[o.house]?.col || '#FFD866';
-    g.fillStyle = '#22183F'; g.fillRect(x - 4, y - 4, 8, 8); g.fillStyle = c; g.fillRect(x - 3, y - 3, 6, 6);
-    g.font = '12px G11, monospace'; g.textAlign = 'center'; const nm = AD.players[uid_]?.nick || o.nick || ''; g.fillStyle = 'rgba(20,13,30,.8)'; const w = g.measureText(nm).width + 6; g.fillRect(x - w / 2, y - 20, w, 14); g.fillStyle = '#FFF6E0'; g.fillText(nm, x, y - 9); });
+  const O = AD.online, getMap = async id => AD.mc[id] || (AD.mc[id] = await World.mapCanvas(id));
+  const bid = o => (o.m || '').split(':')[0], P2 = (m, x, y) => [m.OX + (x - y) * 8, m.OY + (x + y) * 4];
+  const dots = (g, m, id, k, off) => Object.entries(O).forEach(([u, o]) => { if (bid(o) !== id) return; const [x0, y0] = P2(m, (o.x || 0) + .5, (o.y || 0) + .5), x = (x0 - off[0]) * k, y = (y0 - off[1]) * k, c = HOUSES[o.house]?.col || '#FFD866', on = u === AD.follow, r = on ? 6 : 4;
+    if (on){ g.strokeStyle = '#FFF6E0'; g.lineWidth = 2; g.beginPath(); g.arc(x, y, 13 + 2 * Math.sin(Date.now() / 200), 0, 7); g.stroke(); }
+    g.fillStyle = '#22183F'; g.fillRect(x - r - 1, y - r - 1, 2 * r + 2, 2 * r + 2); g.fillStyle = c; g.fillRect(x - r, y - r, 2 * r, 2 * r);
+    if (k >= .7){ g.font = '12px G11, monospace'; g.textAlign = 'center'; const nm = AD.players[u]?.nick || o.nick || ''; g.fillStyle = 'rgba(20,13,30,.85)'; const w = g.measureText(nm).width + 6; g.fillRect(x - w / 2, y - r - 17, w, 14); g.fillStyle = '#FFF6E0'; g.fillText(nm, x, y - r - 6); } });
+  const hit = (cv, m, id, k, off) => cv.onclick = e => { const b = cv.getBoundingClientRect(), mx = (e.clientX - b.left) * cv.width / b.width, my = (e.clientY - b.top) * cv.height / b.height; let best = null, bd = 22 * 22;
+    Object.entries(O).forEach(([u, o]) => { if (bid(o) !== id) return; const [x0, y0] = P2(m, (o.x || 0) + .5, (o.y || 0) + .5), d = ((x0 - off[0]) * k - mx) ** 2 + ((y0 - off[1]) * k - my) ** 2; if (d < bd){ bd = d; best = u; } });
+    if (best){ AD.follow = best; AD.map = null; adminRender(); } };
+  for (const cv of document.querySelectorAll('canvas[data-adth]')){   // 전체 보기: 지도마다 작은 그림
+    const id = cv.dataset.adth, r = await getMap(id); if (!r || !cv.isConnected) continue; const m = r.meta, k = 260 / m.W;
+    cv.width = 260; cv.height = Math.round(m.H * k); cv.style.cursor = 'pointer'; const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(r.canvas, 0, 0, cv.width, cv.height);
+    dots(g, m, id, k, [0, 0]); cv.onclick = () => { AD.map = id; adminRender(); };
+  }
+  const cv = $('#admap'); if (!cv) return;
+  const fo = AD.follow && O[AD.follow], id = fo ? bid(fo) : AD.map, r = await getMap(id); if (!r || !cv.isConnected) return; const m = r.meta, g = cv.getContext('2d');
+  const wrap = cv.parentElement.clientWidth || 360;
+  if (fo){   // 따라가기: 그 사람을 가운데 두고 가까이서 봐요 (움직이면 지도도 따라 바뀌어요)
+    const k = 1.6, VW = Math.min(wrap, 560), VH = 320; cv.width = VW; cv.height = VH; cv.style.width = VW + 'px'; cv.style.height = VH + 'px'; g.imageSmoothingEnabled = false;
+    const [px, py] = P2(m, (fo.x || 0) + .5, (fo.y || 0) + .5), off = [px - VW / 2 / k, py - VH / 2 / k];
+    g.fillStyle = m.fill || '#140E1E'; g.fillRect(0, 0, VW, VH); g.drawImage(r.canvas, -off[0] * k, -off[1] * k, m.W * k, m.H * k); dots(g, m, id, k, off); hit(cv, m, id, k, off);
+    return;
+  }
+  const k = Math.max(.75, Math.min(2, wrap / m.W));   // 폰에서는 크게 그리고 밀어서 봐요
+  cv.width = m.W; cv.height = m.H; cv.style.width = Math.round(m.W * k) + 'px'; cv.style.height = Math.round(m.H * k) + 'px';
+  g.imageSmoothingEnabled = false; g.drawImage(r.canvas, 0, 0); dots(g, m, id, 1, [0, 0]); hit(cv, m, id, 1, [0, 0]);
 }
 // ===== 요리 40종 (과자 교실 솥): 재료 넣기 → 불 맞추기 → 휘휘 젓기, 별 3개면 「최고의 맛」 효과 2배 =====
 // 그림은 art/dishes.png (tools/iso/dish_art.py, 이 표 순서). 효과: mana 마력 · know 지식 · spot 오늘 반짝이 + · love 생물 애정 · grow 온실 시간 줄이기
