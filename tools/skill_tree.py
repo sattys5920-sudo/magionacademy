@@ -190,3 +190,11 @@ p = 'public/index.html'; s = open(p, encoding='utf-8').read()
 if '/*XT*/' in s: s = re.sub(r'/\*XT\*/.*?/\*XT-END\*/', lambda m: '/*XT*/' + js + '/*XT-END*/', s, flags=re.S)
 else: s = s.replace('const xRand = a =>', '/*XT*/' + js + '/*XT-END*/\nconst xRand = a =>', 1)
 open(p, 'w', encoding='utf-8').write(s)
+
+# 스탯 아이콘 5개 (체력·공격·마법·치유·속도) → public/art/stats.png (28px 칸 ×2)
+SG = [('heart', (200, 70, 80)), ('sword', (220, 130, 50)), ('star', (130, 80, 200)), ('cross', (70, 170, 100)), ('wing', (60, 150, 190))]
+st = Image.new('RGBA', (S * 5, S))
+for i, (g, bg) in enumerate(SG):
+    im = Image.new('RGBA', (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(im); d.rounded_rectangle([0, 0, S-1, S-1], 5, fill=(250, 245, 235, 255)); d.rounded_rectangle([2, 2, S-3, S-3], 4, fill=O); d.rounded_rectangle([3, 3, S-4, S-4], 3, fill=bg + (255,))
+    g2 = Image.new('RGBA', (G, G), (0, 0, 0, 0)); glyph(g, ImageDraw.Draw(g2), (250, 245, 235, 255), (255, 214, 102, 255)); im.alpha_composite(g2, (2, 1)); st.paste(im, (i * S, 0))
+st.resize((S * 5 * 2, S * 2), Image.NEAREST).save('public/art/stats.png', optimize=True)
