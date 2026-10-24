@@ -696,12 +696,12 @@ const ic = (k, extra='') => { const P = POTION_INFO[k], G = !ICONS.includes(k) &
   return P ? `<i class="ic" style="background-image:url(art/potions.png);background-position:${-32 * (P.ic % 10)}px ${-32 * Math.floor(P.ic / 10)}px;${extra}"></i>`
     : `<i class="ic" style="background-position:${-32 * ICONS.indexOf(k)}px 0;${extra}"></i>`; };
 const ITEM = {
-  herb:'약초', drop:'달빛 이슬', mush:'보라 버섯', mana:'마력석', wool:'양털', scale:'도마뱀 비늘', uhair:'토끼털', egg:'용 알 껍질',
+  herb:'약초', drop:'달빛 이슬', mush:'보라 버섯', mana:'마나석', wool:'양털', scale:'도마뱀 비늘', uhair:'토끼털', egg:'용 알 껍질',
   whisker:'고양이 수염', slime:'두꺼비 점액', honey:'벌꿀', silk:'거미줄 실', feather:'부엉이 깃털', milk:'염소젖', hegg:'달걀',
 };
-const SHORT = { herb:'약초', drop:'이슬', mush:'버섯', mana:'마력석', wool:'털', scale:'비늘', uhair:'토끼털', egg:'알 껍질', hegg:'달걀', slime:'점액', milk:'염소젖' };
+const SHORT = { herb:'약초', drop:'이슬', mush:'버섯', mana:'마나석', wool:'털', scale:'비늘', uhair:'토끼털', egg:'알 껍질', hegg:'달걀', slime:'점액', milk:'염소젖' };
 // 씨앗 60종: 심으면 같은 id의 식물 재료가 나와요. know 지식이 이만큼 있어야 심을 수 있어요, price 씨앗 값 (자라는 시간은 아래 GROW_RANGE)
-// 아이콘은 art/plants.png (10×6칸, 이 표의 순서대로). 약초·이슬·버섯·마력석은 원래 아이콘을 써요.
+// 아이콘은 art/plants.png (10×6칸, 이 표의 순서대로). 약초·이슬·버섯·마나석은 원래 아이콘을 써요.
 const SEED_LIST = [
   { id:'herb', mat:'약초', seed:'약초', tier:0, know:0, days:3, yield:3, price:0, col:'#E26F36' },
   { id:'drop', mat:'달빛 이슬', seed:'월광초', tier:0, know:0, days:3, yield:3, price:0, col:'#6FE0B6' },
@@ -712,7 +712,7 @@ const SEED_LIST = [
   { id:'g_straw', mat:'딸기', seed:'딸기', tier:0, know:0, days:1, yield:3, price:5, col:'#6FE079' },
   { id:'g_carrot', mat:'당근', seed:'당근', tier:0, know:0, days:1, yield:3, price:5, col:'#5B16CE' },
   { id:'g_chamo', mat:'카모마일', seed:'카모마일', tier:0, know:0, days:1, yield:3, price:15, col:'#E1C898' },
-  { id:'mana', mat:'마력석', seed:'마력 수정초', tier:1, know:10, days:2, yield:3, price:20, col:'#269B96' },
+  { id:'mana', mat:'마나석', seed:'마력 수정초', tier:1, know:10, days:2, yield:3, price:20, col:'#269B96' },
   { id:'g_lav', mat:'라벤더', seed:'라벤더', tier:1, know:10, days:2, yield:3, price:25, col:'#E236B7' },
   { id:'g_rose', mat:'들장미 꽃잎', seed:'들장미', tier:1, know:10, days:2, yield:3, price:25, col:'#A3E06F' },
   { id:'g_sunf', mat:'해바라기 씨', seed:'해바라기', tier:1, know:10, days:2, yield:3, price:15, col:'#1635CE' },
@@ -764,13 +764,13 @@ const SEED_LIST = [
   { id:'g_soul', mat:'영혼 연꽃', seed:'영혼연꽃', tier:6, know:180, days:4, yield:2, price:180, col:'#CEE198' },
   { id:'g_wish', mat:'소원 민들레', seed:'소원민들레', tier:6, know:180, days:4, yield:2, price:190, col:'#265B9B' },
 ];
-const GROW_RANGE = [[5, 15], [15, 40], [40, 90], [90, 180], [180, 300], [300, 480], [480, 720]];   // 등급별 자라는 시간(분)
+const GROW_RANGE = [[5, 6], [6, 7], [7, 8], [8, 9], [9, 10], [10, 11], [11, 12]];   // 등급별 자라는 시간(분) — 최소 5분, 최대 12분
 const growMins = (() => {
   const out = {};
   [...new Set(SEED_LIST.map(x => x.tier))].forEach(t => {
     const list = SEED_LIST.filter(x => x.tier === t).map((x, i) => [x, i]).sort((a, b) => a[0].price - b[0].price || a[1] - b[1]);
     const [lo, hi] = GROW_RANGE[Math.min(t, GROW_RANGE.length - 1)];
-    list.forEach(([x], i) => { out[x.id] = Math.round((lo + (hi - lo) * (list.length > 1 ? i / (list.length - 1) : 0)) / 5) * 5; });
+    list.forEach(([x], i) => { out[x.id] = Math.round(lo + (hi - lo) * (list.length > 1 ? i / (list.length - 1) : 0)); });
   });
   return out;
 })();
@@ -1007,7 +1007,7 @@ const ORDER_FROM =['양호 선생님', '교장실', '같은 반 친구', '사육
 function freshPlayer(nick, look, house, av){
   return {
     nick, look, house, av, coin:300, mana:40, day:1, penMig:true,
-    inv:{ herb:6, drop:4, mush:2, mana:3, wool:1, scale:1, uhair:0, egg:0, p_red:0, p_green:0, p_blue:0, p_purple:0 },
+    inv:{ herb:6, drop:4, mush:2, mana:0, wool:1, scale:1, uhair:0, egg:0, p_red:0, p_green:0, p_blue:0, p_purple:0 },
     found:[], hints:['p_red'],
     plots:[{k:'herb',at:Date.now() - 6e5,w:false},{k:'drop',at:Date.now(),w:false}],
     cr:[0, 4, 7, 2].map(k => ({ ...newCreature(k, null, CREATURES[k].name, true), love: 3 })), eggs:[],
@@ -1688,13 +1688,13 @@ function xAiSk(L){   // 동료는 줄을 가로로 훑으며 포인트를 쓰기
   const sk = { '0.0': 1 }; let pts = xSkp(L); for (let lv = 1; lv <= XMAXLV && pts > 0; lv++) for (let r = 0; r < 5 && pts > 0; r++) for (let b = 0; b < 3 && pts > 0; b++){ const k = b + '.' + r; if ((sk[k] || 0) < lv){ if (r > 0 && !sk[b + '.' + (r - 1)]) continue; sk[k] = lv; pts--; } } return sk;
 }
 const XRG = [   // 탐사 지역: 입장료·시간·몬스터 레벨 범위 · 몬스터는 레벨 1 기준 체력·공격·속도 (lp = art/monsters_lpc.png 칸, tools/iso/lpc/monster_lpc.py)
-  { n: '달빛 숲길', ic: '🌲', min: 20, fee: 50, need: 1, lv: [1, 12], clearExp: 200, kind: 'trees', pal: ['#1b1a3a', '#3a3a72', '#2c4a3a', '#35574a', '#16243a'], loot: ['herb', 'drop', 'mush', 'g_dandel', 'g_mint', 'g_straw', 'g_carrot'], rare: ['mana', 'g_clover'],
+  { n: '달빛 숲길', ic: '🌲', min: 20, fee: 50, need: 1, lv: [1, 12], clearExp: 200, kind: 'trees', pal: ['#1b1a3a', '#3a3a72', '#2c4a3a', '#35574a', '#16243a'], loot: ['herb', 'drop', 'mana', 'mush', 'g_dandel', 'g_mint', 'g_straw', 'g_carrot'], rare: ['mana', 'g_clover'],
     mon: [{ n: '숲 요정', lp: 17, hp: 32, atk: 8, spd: 13 }, { n: '들토끼', lp: 18, hp: 34, atk: 7, spd: 11 }, { n: '잠자리 도깨비', lp: 19, hp: 30, atk: 8, spd: 12 }, { n: '아기 멧돼지', lp: 20, hp: 44, atk: 7, spd: 7 }, { n: '고블린 정찰병', lp: 0, hp: 42, atk: 7, spd: 9 }, { n: '들쥐 도적', lp: 1, hp: 34, atk: 8, spd: 12 }, { n: '토끼 창병', lp: 2, hp: 38, atk: 7, spd: 10 }],
     elite: { n: '오크 두목', lp: 12, hp: 150, atk: 13, spd: 9, k: 3 }, boss: { n: '고블린 대왕', lp: 21, hp: 360, atk: 14, spd: 6, k: 8, aoe: true, big: 1 } },
-  { n: '무너진 지하 묘지', ic: '🪦', min: 30, fee: 120, need: 8, lv: [10, 24], clearExp: 600, kind: 'graves', pal: ['#201830', '#4a3a62', '#3a3040', '#463a4c', '#1a1224'], loot: ['silk', 'whisker', 'herb', 'mush', 'drop'], rare: ['mana', 'egg'],
+  { n: '무너진 지하 묘지', ic: '🪦', min: 30, fee: 120, need: 8, lv: [10, 24], clearExp: 600, kind: 'graves', pal: ['#201830', '#4a3a62', '#3a3040', '#463a4c', '#1a1224'], loot: ['silk', 'whisker', 'herb', 'mana', 'mush', 'drop'], rare: ['mana', 'egg'],
     mon: [{ n: '해골 병사', lp: 3, hp: 50, atk: 8, spd: 8 }, { n: '좀비', lp: 4, hp: 70, atk: 8, spd: 5 }, { n: '쥐 도굴꾼', lp: 5, hp: 44, atk: 9, spd: 11 }, { n: '해골 궁수', lp: 22, hp: 40, atk: 10, spd: 11 }, { n: '떠도는 유령', lp: 23, hp: 46, atk: 10, spd: 9 }, { n: '달빛 요정', lp: 24, hp: 36, atk: 10, spd: 13 }],
     elite: { n: '해골 기사', lp: 13, hp: 190, atk: 14, spd: 8, k: 3 }, boss: { n: '묘지의 리치', lp: 15, hp: 420, atk: 15, spd: 7, k: 8, aoe: true, big: 1 } },
-  { n: '안개 호수 동굴', ic: '🕳️', min: 45, fee: 250, need: 20, lv: [22, 38], clearExp: 1500, kind: 'cave', pal: ['#0f2a3a', '#1f5a6a', '#2a4a52', '#335a62', '#0c2030'], loot: ['slime', 'scale', 'herb', 'drop', 'mush'], rare: ['mana', 'egg', 'g_clover'],
+  { n: '안개 호수 동굴', ic: '🕳️', min: 45, fee: 250, need: 20, lv: [22, 38], clearExp: 1500, kind: 'cave', pal: ['#0f2a3a', '#1f5a6a', '#2a4a52', '#335a62', '#0c2030'], loot: ['slime', 'scale', 'herb', 'mana', 'drop', 'mush'], rare: ['mana', 'egg', 'g_clover'],
     mon: [{ n: '호수 도마뱀', lp: 25, hp: 58, atk: 9, spd: 10 }, { n: '아기 트롤', lp: 26, hp: 70, atk: 9, spd: 6 }, { n: '나비 쥐', lp: 27, hp: 42, atk: 10, spd: 12 }, { n: '멧돼지 전사', lp: 6, hp: 70, atk: 10, spd: 7 }, { n: '호수의 이방인', lp: 7, hp: 50, atk: 11, spd: 10 }],
     elite: { n: '늪 트롤 대장', lp: 8, hp: 210, atk: 15, spd: 7, k: 3 }, boss: { n: '리자드 왕', lp: 28, hp: 460, atk: 16, spd: 8, k: 8, aoe: true, big: 1 } },
   { n: '호박달 고대 신전', ic: '🏛️', min: 60, fee: 500, need: 34, lv: [36, 50], clearExp: 3500, kind: 'temple', pal: ['#3a2418', '#a06a3a', '#6a5236', '#7a6040', '#3a2a1e'], loot: ['mana', 'scale', 'feather', 'egg'], rare: ['mana', 'egg'],
@@ -1713,7 +1713,7 @@ const XMAIN = { warrior: 'atk', black: 'mag', thief: 'atk', bard: 'mag', time: '
 const xSpUsed = ex => Object.values(ex.sp || {}).reduce((a, v) => a + v, 0), xSpPts = ex => 3 * (xLv(ex.exp).L - 1) - xSpUsed(ex);   // 레벨 업마다 스탯 포인트 3
 const xAiSp = (job, L) => { const T = 3 * (L - 1); return { hp: Math.round(T * .3), [XMAIN[job]]: Math.round(T * .5), spd: Math.round(T * .2) }; };   // 동료: 체력 30% · 주 스탯 50% · 속도 20%
 const xStTot = (ex, k) => xSt(ex.job, xLv(ex.exp).L, k) + ((ex.sp || {})[k] || 0) * XSPV[k];
-const XWN = { warrior: '전투 도끼', black: '구부러진 지팡이', thief: '단검', bard: '레이피어', time: '고리 지팡이', alch: '연금 지팡이', white: '수정 지팡이', druid: '나무 지팡이', cleric: '철퇴와 방패', knight: '롱소드와 방패', summon: '다이아 지팡이', gadget: '석궁' }, XWT = ['기본', '청동', '강철', '황금', '미스릴'], XWC = [[150, 1], [500, 2], [1500, 4], [4000, 8]];   // 강화 비용: 골드 · 마력석
+const XWN = { warrior: '전투 도끼', black: '구부러진 지팡이', thief: '단검', bard: '레이피어', time: '고리 지팡이', alch: '연금 지팡이', white: '수정 지팡이', druid: '나무 지팡이', cleric: '철퇴와 방패', knight: '롱소드와 방패', summon: '다이아 지팡이', gadget: '석궁' }, XWT = ['기본', '청동', '강철', '황금', '미스릴'], XWC = [[150, 1], [500, 2], [1500, 4], [4000, 8]];   // 강화 비용: 골드 · 마나석
 const xRand = a => a[Math.floor(Math.random() * a.length)];
 function xEx(){ me.ex = me.ex || { exp: 0, d: '', n: 0 }; if (me.ex.d !== todayKey()){ me.ex.d = todayKey(); me.ex.n = 0; } return me.ex; }
 const xSt = (job, L, k) => Math.round(XJ[job][k][0] + XJ[job][k][1] * (L - 1));
@@ -1777,8 +1777,8 @@ function renderExplore(){
   if (v === 'weapon'){
     const wp = ex.wp || 0, ri = ORDER_J.indexOf(ex.job), nx = wp < 4 ? XWC[wp] : null, mana = me.inv.mana || 0, ok = nx && me.coin >= nx[0] && mana >= nx[1];
     frame(null, '무기 강화', `${job.n} · ${XWN[ex.job]}`, `<section class="sec"><div class="box px" style="padding:14px"><div style="display:flex;gap:14px;align-items:center"><span class="wic wbg" style="--t:${wp};--r:${ri}"></span><div style="flex:1"><b>${XWT[wp]} ${XWN[ex.job]}</b><div class="s sub">강화 ${wp} / 4 · 공격·마법·치유 +${wp * 8}%</div>${nx ? `<div class="s" style="margin-top:6px">다음: <b>${XWT[wp + 1]}</b> (+${(wp + 1) * 8}%)</div>` : '<div class="s" style="margin-top:6px;color:var(--gold)">최고 단계예요!</div>'}</div></div>
-      ${nx ? `<div class="s" style="margin-top:10px">필요한 것: 골드 ${nx[0]} (${me.coin >= nx[0] ? '있음' : '모자라요'}) · 마력석 ${nx[1]}개 (지금 ${mana}개)</div><button class="btn go" id="wup" style="width:100%;margin-top:8px" ${ok ? '' : 'disabled'}>${ok ? `${XWT[wp + 1]} 단계로 강화` : '재료가 모자라요'}</button>` : ''}
-      <div class="wstep">${XWT.map((n, i) => `<div class="${i === wp ? 'on' : i < wp ? 'done' : ''}"><span class="wic wbg" style="--t:${i};--r:${ri}"></span><b>${n}</b><small>${i ? `+${i * 8}%` : '기본'}</small>${i === wp ? '<i>지금</i>' : i === wp + 1 ? '<i class="nx">다음</i>' : ''}</div>`).join('<em>›</em>')}</div></div></section><div class="s sub">마력석은 탐사 보스를 잡거나 숨은 상자·석상에서 나와요. 단계마다 무기 색이 바뀌고, 동료도 레벨에 맞는 무기를 들어요.</div><div style="display:flex;gap:8px"><button class="btn" id="wok" style="flex:1">돌아가기</button></div>`);
+      ${nx ? `<div class="s" style="margin-top:10px">필요한 것: 골드 ${nx[0]} (${me.coin >= nx[0] ? '있음' : '모자라요'}) · 마나석 ${nx[1]}개 (지금 ${mana}개)</div><button class="btn go" id="wup" style="width:100%;margin-top:8px" ${ok ? '' : 'disabled'}>${ok ? `${XWT[wp + 1]} 단계로 강화` : '재료가 모자라요'}</button>` : ''}
+      <div class="wstep">${XWT.map((n, i) => `<div class="${i === wp ? 'on' : i < wp ? 'done' : ''}"><span class="wic wbg" style="--t:${i};--r:${ri}"></span><b>${n}</b><small>${i ? `+${i * 8}%` : '기본'}</small>${i === wp ? '<i>지금</i>' : i === wp + 1 ? '<i class="nx">다음</i>' : ''}</div>`).join('<em>›</em>')}</div></div></section><div class="s sub">마나석은 탐사 보스를 잡거나 숨은 상자·석상에서 나와요. 단계마다 무기 색이 바뀌고, 동료도 레벨에 맞는 무기를 들어요.</div><div style="display:flex;gap:8px"><button class="btn" id="wok" style="flex:1">돌아가기</button></div>`);
     const up = $('#wup'); if (up) up.onclick = () => { if (!ok) return; me.coin -= nx[0]; me.inv.mana -= nx[1]; if (!me.inv.mana) delete me.inv.mana; ex.wp = wp + 1; sfx('pop'); save(); hud(); renderExplore(); };
     $('#wok').onclick = () => { xv = { view: 'lobby' }; renderExplore(); }; return;
   }
@@ -1872,10 +1872,14 @@ const XFXN = { counter: '반격 태세', taunt: '도발!', cover: '대신 맞기
 function xApply(u, t, a, mult, st){   // 맞은 뒤 붙는 효과 [종류, 세기, 초]
   const [k, v, sec] = a; if (k === 'stun'){ t.g = Math.min(t.g, -v); xFloat(t.id, '지연', '#ffd866'); } else if (k === 'dot'){ t.fx.dot = { v: Math.max(1, Math.round(u[st] * v * mult)), t: sec, acc: 0 }; xFloat(t.id, '지속 피해', '#ff9a4d'); } else if (k === 'bomb'){ t.fx.bomb = { v: Math.max(1, Math.round(u[st] * v * mult)), t: sec }; xFloat(t.id, '폭탄!', '#ffb040'); } else { t.fx[k] = { v, t: sec }; xFloat(t.id, { slow: '느려짐', weak: '약해짐', vuln: '약점', blind: '실명' }[k] || k, '#d0a0ff'); }
 }
+function xPetHit(u, base){   // 적이 소환수를 노릴 때가 있어요 (체력이 다 닳으면 사라져요)
+  const ps = []; xAlive(xb.party).forEach(o => (o.pets || []).forEach(p => { if (p.mhp) ps.push([o, p]); })); if (!ps.length || Math.random() > .3) return false;
+  const [o, p] = xRand(ps), d = Math.max(1, Math.round(base * (.85 + Math.random() * .3))); p.hp -= d; p.hit = performance.now(); xFxAt('impact', [o]); xFloat(o.id, `${p.n} -${d}`, '#ff9a9a'); xb.log = `${u.name} → ${p.n}`;
+  if (p.hp <= 0){ o.pets = o.pets.filter(q => q !== p); xFloat(o.id, `${p.n} 쓰러짐`, '#ffd0d0'); } return true; }
 function xAct0(u, sk, tgt){   // 한 번 행동
   const B = xb, foes = u.team === 'a' ? B.foes : B.party, mates = u.team === 'a' ? B.party : B.foes; u.lg = performance.now();
   if (u.team === 'e'){ if (!xAlive(B.party).length) return; if (xFm(u, 'blind') > Math.random()){ xFloat(u.id, '빗나감', '#d0a0ff'); B.log = `${u.name}의 공격이 빗나갔어요`; u.g = 0; return; } const base = u.atk * (1 - xFm(u, 'weak')), hit = t => xHit(u, t, base * (.85 + Math.random() * .3), '#ff6a6a');
-    if (u.aoe && Math.random() < .35){ const L = xAlive(B.party); xDelay = 150; xFxAt('impact', L); L.forEach(hit); B.log = `${u.name}의 휘두르기!`; } else { const t = xFoeTarget(); xDelay = 150; xFxAt('impact', [t]); hit(t); B.log = `${u.name} → ${t.name}`; } u.g = 0; return; }
+    if (u.aoe && Math.random() < .35){ const L = xAlive(B.party); xDelay = 150; xFxAt('impact', L); L.forEach(hit); B.log = `${u.name}의 휘두르기!`; } else if (xPetHit(u, base)){ xDelay = 150; u.g = 0; return; } else { const t = xFoeTarget(); xDelay = 150; xFxAt('impact', [t]); hit(t); B.log = `${u.name} → ${t.name}`; } u.g = 0; return; }
   delete B.def[u.id]; const mult = (B.buff ? 1.25 : 1) * (1 + xFm(u, 'atk'));
   if (!sk){ const t = tgt && tgt.hp > 0 ? tgt : xRand(xAlive(B.foes)); xFxAt('slash', [t], u); xHit(u, t, Math.max(u.atk, u.mag * .8) * (.85 + Math.random() * .3) * mult, '#ffd866'); B.log = `${u.name}의 공격`; u.g = 0; return; }
   u.mp -= sk.mp; B.log = `${sk.n}! ${u.name}`; const fxk = xFxKind(sk), one = () => tgt && tgt.hp > 0 ? tgt : xRand(xAlive(B.foes)), fs = () => { const L = sk.tg === 'all' ? xAlive(B.foes) : [one()]; xFxAt(fxk, L, u); return L; }, as = () => { const L = sk.tg === 'all' ? xAlive(B.party) : sk.tg === 'self' ? [u] : [tgt && tgt.hp > 0 ? tgt : xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]]; xFxAt(fxk, L, u); return L; };
@@ -1897,7 +1901,7 @@ function xAct0(u, sk, tgt){   // 한 번 행동
   else if (sk.t === 'deb') fs().forEach(t => { t.fx[sk.key] = { v: sk.v, t: sk.sec }; xFloat(t.id, { slow: '느려짐', weak: '약해짐', vuln: '약점', blind: '실명' }[sk.key] || sk.key, '#d0a0ff'); });
   else if (sk.t === 'dot') fs().forEach(t => { t.fx.dot = { v: Math.round(u[sk.st] * sk.p * mult), t: 8, acc: 0 }; xFloat(t.id, '지속 피해', '#ff9a4d'); });
   else if (sk.t === 'stun') fs().forEach(t => { xHit(u, t, u[sk.st] * sk.p * (.85 + Math.random() * .3) * mult, '#ffd866'); t.g = Math.min(t.g, -60); });
-  else if (sk.t === 'summon'){ xFxAt('buff', [u], u); u.pets = u.pets || []; if (u.pets.length >= 3) u.pets.shift(); u.pets.push({ ...sk.pet, st: sk.st, t: sk.pet.sec, acc: 0 }); xFloat(u.id, sk.pet.n + '!', '#ffd866'); }
+  else if (sk.t === 'summon'){ xFxAt('buff', [u], u); u.pets = u.pets || []; if (u.pets.length >= 3) u.pets.shift(); const lv = sk.lv || 1, mh = Math.round((u.mhp * .3 + 16) * (1 + .25 * (lv - 1)) * (sk.pet.hpm || 1)); u.pets.push({ ...sk.pet, st: sk.st, t: sk.pet.sec * (1 + .1 * (lv - 1)), acc: 0, lv, hp: mh, mhp: mh }); xFloat(u.id, sk.pet.n + '!', '#ffd866'); }
   else if (sk.t === 'recall'){ const n = (u.pets || []).length; u.pets = []; const t = xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]; if (n && t){ const h = Math.round(t.mhp * .12 * n); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); } else B.log = '돌려보낼 소환수가 없어요'; }
   else if (sk.t === 'leap'){ xFxAt('time', [u], u); xFloat(u.id, '가속!', '#9ad8ff'); }
   else if (sk.t === 'tstop'){ xFxAt('time', xAlive(B.foes), u); xAlive(B.party).forEach(a => { a.g = 100; xFloat(a.id, '행동!', '#9ad8ff'); }); xAlive(B.foes).forEach(f => { f.g = Math.min(f.g, -150); xFloat(f.id, '정지', '#d0a0ff'); }); }
@@ -2018,7 +2022,7 @@ function xDraw(){
       const ks = XSTI.filter(k => u.fx[k] && (u.fx[k].t === undefined || u.fx[k].t > 0)); if (ks.length) ks.forEach((k, i) => { const f = u.fx[k]; if (f.t !== undefined && f.t < 2 && Math.round(now / 150) % 2) return; g.drawImage(xStImg, XSTI.indexOf(k) * 9, 0, 9, 9, Math.round(x - ks.length * 5 + i * 10 + .5), Math.round(u.by + 7), 9, 9); }); }
     if (B.pick && B.pick.set.has(u.id)){ const cy = y - (u.team === 'e' ? u.hh + 26 : FH + 2) + Math.round(Math.sin(now / 130) * 2); g.fillStyle = '#1a1024'; g.fillRect(x - 6, cy - 1, 13, 8); g.fillStyle = '#ffd866'; g.fillRect(x - 5, cy, 11, 3); g.fillRect(x - 3, cy + 3, 7, 2); g.fillRect(x - 1, cy + 5, 3, 1); }
   });
-  const pim = xPetSheet(); if (pim.complete) B.party.forEach(u => { if (u.hp <= 0) return; (u.pets || []).forEach((p, i) => { const k = XPETI.indexOf(p.n); if (k < 0) return; const lg = p.lg ? (now - p.lg) / 260 : 2, off = lg < 1 ? -Math.sin(lg * Math.PI) * 14 : 0, x = Math.round(u.bx - 40 - i * 24 + off), y = Math.round(u.by - 4 + (i % 2 ? 10 : -8) + Math.sin(now / 320 + i * 2) * 1.5), w = 52; g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(x, y + 1, 10, 3, 0, 0, 7); g.fill(); g.globalAlpha = p.t < 2 ? .5 + .5 * Math.sin(now / 90) : 1; g.drawImage(pim, k * 64, 0, 64, 64, x - w / 2, y - w + 3, w, w); g.globalAlpha = 1; });
+  const pim = xPetSheet(); if (pim.complete) B.party.forEach(u => { if (u.hp <= 0) return; (u.pets || []).forEach((p, i) => { const k = XPETI.indexOf(p.n); if (k < 0) return; const lg = p.lg ? (now - p.lg) / 260 : 2, off = lg < 1 ? -Math.sin(lg * Math.PI) * 14 : 0, x = Math.round(u.bx - 40 - i * 24 + off), y = Math.round(u.by - 4 + (i % 2 ? 10 : -8) + Math.sin(now / 320 + i * 2) * 1.5), w = 52; g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(x, y + 1, 10, 3, 0, 0, 7); g.fill(); g.globalAlpha = p.t < 2 ? .5 + .5 * Math.sin(now / 90) : 1; g.drawImage(pim, k * 64, 0, 64, 64, x - w / 2, y - w + 3, w, w); g.globalAlpha = 1; if (p.mhp){ g.fillStyle = '#1a1024'; g.fillRect(x - 11, y + 5, 22, 4); g.fillStyle = '#4a2a3a'; g.fillRect(x - 10, y + 6, 20, 2); g.fillStyle = p.hp / p.mhp > .35 ? '#7affb0' : '#ff6a4a'; g.fillRect(x - 10, y + 6, Math.max(0, Math.round(20 * p.hp / p.mhp)), 2); } });
   });
   xProjDraw(g, B, now); B.fxs = B.fxs.filter(f => { const t = [...B.foes, ...B.party].find(u => u.id === f.id); return xFxDraw(g, f, t ? t.sx : 192, t ? t.sy : 120, now); });
   g.font = 'bold 13px monospace'; g.textAlign = 'center'; g.lineJoin = 'round'; B.floats = B.floats.filter(f => { const p = (now - f.t0) / 900; if (p >= 1) return false; if (p < 0) return true; const yy = f.y - p * 18; g.globalAlpha = p > .7 ? 1 - (p - .7) / .3 : 1; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText(f.txt, f.x, yy); g.fillStyle = f.col; g.fillText(f.txt, f.x, yy); g.globalAlpha = 1; return true; });
