@@ -3226,7 +3226,22 @@ const BGM = (() => {
   const unlock = () => { wanted = true; mount(); play(); removeEventListener('pointerdown', unlock); removeEventListener('keydown', unlock); };
   addEventListener('pointerdown', unlock); addEventListener('keydown', unlock);
   document.addEventListener('visibilitychange', () => { if (!au) return; if (document.hidden) au.pause(); else play(); });
+  // 장면 전용 곡: 기본 곡을 낮추고 이 곡을 부드럽게 올려요 (대화가 끝나면 되돌려요)
+  const SC = { au: null, src: '', v: 0, t: 0, raf: 0, last: 0 };
+  const sloop = t => {
+    const dt = SC.last ? t - SC.last : 16; SC.last = t; SC.v += Math.sign(SC.t - SC.v) * Math.min(Math.abs(SC.t - SC.v), dt / FADE);
+    if (SC.au) SC.au.volume = Math.max(0, Math.min(1, level * .6 * SC.v));
+    if (SC.v === SC.t){ SC.raf = 0; SC.last = 0; if (SC.v === 0 && SC.au) SC.au.pause(); return; }
+    SC.raf = requestAnimationFrame(sloop);
+  };
+  const sgo = () => { if (!SC.raf) SC.raf = requestAnimationFrame(sloop); };
   return {
+    scene(id, src){
+      holds.add('scene:' + id); tgt = 0; go();
+      if (SC.src !== src){ if (SC.au) SC.au.pause(); SC.au = new Audio(src); SC.au.loop = true; SC.au.preload = 'auto'; SC.src = src; SC.v = 0; }
+      if (!wanted || !level) return; SC.au.volume = Math.max(0, Math.min(1, level * .6 * SC.v)); const p = SC.au.play(); if (p && p.catch) p.catch(() => {}); SC.t = 1; sgo();
+    },
+    sceneEnd(id){ SC.t = 0; sgo(); this.release('scene:' + id); },
     hold(id){ holds.add(id); tgt = 0; go(); },
     release(id){ holds.delete(id); if (holds.size) return; tgt = 1; play(); go(); },
     sync(v){ level = v; if (!level){ if (au) au.pause(); return; } apply(); play(); },   // 설정의 배경 음악 크기(0·.5·1)
@@ -6052,11 +6067,13 @@ async function mqArrive(){
   mqArriving = false;
 }
 // ---- 장면 재생: 부탁 → 'go', 완료 → 보상 → 다음 단계 'pre' (5단계면 의뢰 완료) ----
+const MQ_BGM = { main_01_dracula: 'audio/bgm_dracula.mp3' };   // 메인 의뢰 전용 곡 (곡이 생기는 대로 추가)
 async function mqPlay(q, n, kind, sc){
   sc = sc || await mqScene(q.id, n, kind); if (!sc) return toast('장면 파일이 아직 없어요');
   const c = MQ.cast[q.client], who = { id: q.client, name: mqName(q.client), title: c.title || '', spr: c.spr, av: c.av };
   const ev = { title: sc.title || '', conditions: { location: sc.scene?.location || (mqStage()?.place?.place) || q.place || 'main_hall' }, scene: sc.scene || {}, script: sc.script || [], cold: [] };
-  mqSceneQ = q; await evPlay(who, n, ev, { main: true, replay: !!sc.replay, then: () => mqAfter(q, n, kind, sc) });
+  mqSceneQ = q; const tr = MQ_BGM[q.id]; if (tr) BGM.scene(q.id, tr);   // 의뢰마다 전용 곡이 있으면 대화 동안 틀어요
+  try { await evPlay(who, n, ev, { main: true, replay: !!sc.replay, then: () => mqAfter(q, n, kind, sc) }); } finally { if (tr) BGM.sceneEnd(q.id); }
 }
 let mqSceneQ = null;
 function mqAfter(q, n, kind, sc){
