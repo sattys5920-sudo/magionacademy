@@ -3017,7 +3017,7 @@ const fillVars = (t, id) => String(t || '').replace(/\{([a-z_]+)(?:\.([a-z_]+))?
   return ja !== undefined ? v + josaPick(v, ja, jb) : v; });
 function npcPanel(n, text, btns){
   const h = hearts(n.id);
-  npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${npcPortrait(n)}</div><div><b>${esc(n.name)}</b><span class="s sub">${esc(n.title || '')}</span><span class="npchr">${heartBar(h)}</span></div><button class="sx" data-nx="close">✕</button></div>
+  npcUI().dataset.id = n.id; npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${npcPortrait(n)}</div><div><b>${esc(n.name)}</b><span class="s sub">${esc(n.title || '')}</span><span class="npchr">${heartBar(h)}</span></div><button class="sx" data-nx="close">✕</button></div>
     <div class="npct">${text}</div><div class="frow">${btns}</div></div>`;
   npcUI().classList.add('on');
 }
@@ -3206,7 +3206,7 @@ function drawEmote(g, icon, x, y){
 // 배경 음악: 평소에는 기본 곡이 계속 흘러요. 다른 곡이 나오는 장면(메인·서브 대화 등)은 BGM.hold(이름)으로 기본 곡을 0으로 낮추고,
 // 끝나면 BGM.release(이름)으로 되돌려요. 여러 곳이 동시에 잡아도 모두 놓아야 다시 나와요.
 const BGM = (() => {
-  const SRC = 'audio/bgm_main.mp3', FADE = 1200, holds = new Set();
+  const SRC = 'audio/bgm_main.mp3', FADE = 1800, holds = new Set();
   let au = null, level = 1, fade = 1, tgt = 1, raf = 0, last = 0, wanted = false;
   const vol = () => Math.max(0, Math.min(1, level * .6 * fade));   // 기본 곡은 효과음·대사를 가리지 않게 조금 작게
   const apply = () => { if (au) au.volume = vol(); };
@@ -3237,6 +3237,7 @@ const BGM = (() => {
   const sgo = () => { if (!SC.raf) SC.raf = requestAnimationFrame(sloop); };
   return {
     scene(id, src){
+      if (holds.has('scene:' + id) && SC.src === src && SC.t === 1) return;
       holds.add('scene:' + id); tgt = 0; go();
       if (SC.src !== src){ if (SC.au) SC.au.pause(); SC.au = new Audio(src); SC.au.loop = true; SC.au.preload = 'auto'; SC.src = src; SC.v = 0; }
       if (!wanted || !level) return; SC.au.volume = Math.max(0, Math.min(1, level * .6 * SC.v)); const p = SC.au.play(); if (p && p.catch) p.catch(() => {}); SC.t = 1; sgo();
@@ -3247,6 +3248,14 @@ const BGM = (() => {
     sync(v){ level = v; if (!level){ if (au) au.pause(); return; } apply(); play(); },   // 설정의 배경 음악 크기(0·.5·1)
   };
 })();
+// NPC 전용 곡: 이 사람과 대화(말 걸기·이벤트·의뢰 장면)하는 동안만 그 곡으로 부드럽게 바뀌어요
+const NPC_BGM = { blady: 'audio/bgm_dracula.mp3' };   // 드라큘라 · Candlelight Confession (곡이 생기는 대로 추가)
+let npcThemeId = null;
+setInterval(() => {
+  let id = null; try { id = evOn ? evOn.n.id : (npcUI().classList.contains('on') ? npcUI().dataset.id : null); } catch(e){}
+  const want = id && NPC_BGM[id] ? id : null; if (want === npcThemeId) return;
+  if (npcThemeId) BGM.sceneEnd('npc:' + npcThemeId); npcThemeId = want; if (want) BGM.scene('npc:' + want, NPC_BGM[want]);
+}, 300);
 // 효과음: 짧은 합성음
 let AC = null;
 function sfx(id){
@@ -6067,13 +6076,11 @@ async function mqArrive(){
   mqArriving = false;
 }
 // ---- 장면 재생: 부탁 → 'go', 완료 → 보상 → 다음 단계 'pre' (5단계면 의뢰 완료) ----
-const MQ_BGM = { main_01_dracula: 'audio/bgm_dracula.mp3' };   // 메인 의뢰 전용 곡 (곡이 생기는 대로 추가)
 async function mqPlay(q, n, kind, sc){
   sc = sc || await mqScene(q.id, n, kind); if (!sc) return toast('장면 파일이 아직 없어요');
   const c = MQ.cast[q.client], who = { id: q.client, name: mqName(q.client), title: c.title || '', spr: c.spr, av: c.av };
   const ev = { title: sc.title || '', conditions: { location: sc.scene?.location || (mqStage()?.place?.place) || q.place || 'main_hall' }, scene: sc.scene || {}, script: sc.script || [], cold: [] };
-  mqSceneQ = q; const tr = MQ_BGM[q.id]; if (tr) BGM.scene(q.id, tr);   // 의뢰마다 전용 곡이 있으면 대화 동안 틀어요
-  try { await evPlay(who, n, ev, { main: true, replay: !!sc.replay, then: () => mqAfter(q, n, kind, sc) }); } finally { if (tr) BGM.sceneEnd(q.id); }
+  mqSceneQ = q; await evPlay(who, n, ev, { main: true, replay: !!sc.replay, then: () => mqAfter(q, n, kind, sc) });
 }
 let mqSceneQ = null;
 function mqAfter(q, n, kind, sc){
@@ -6159,7 +6166,7 @@ async function mqTalk(id){
   mqPanel(id, c.idle ? [].concat(c.idle).map(l => fillVars(l)).join(' ') : '……');
 }
 function mqFace(id, size = 48){ const c = MQ.cast[id]; if (!c) return ''; if (c.portrait) return `<i class="mqport" style="width:${size}px;height:${size}px;background-image:url(art/portraits/${c.portrait}.png?v=${PORTRAIT_V})"></i>`; return c.av ? `<img src="${World.Avatar.head(World.Avatar.fix(c.av))}" alt="">` : c.spr !== undefined ? npcFace(c.spr, size) : ''; }
-function mqPanel(id, text, btns = ''){ const c = MQ.cast[id] || {}; npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${mqFace(id)}</div><div><b>${esc(mqName(id))}</b><span class="s sub">${esc(c.title || '')}</span></div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(text)}</div><div class="frow">${btns}<button class="btn sm" data-nx="close">알겠어요</button></div></div>`; npcUI().dataset.id = 'mq:' + id; npcUI().classList.add('on'); }
+function mqPanel(id, text, btns = ''){ const c = MQ.cast[id] || {}; npcUI().dataset.id = id; npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${mqFace(id)}</div><div><b>${esc(mqName(id))}</b><span class="s sub">${esc(c.title || '')}</span></div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(text)}</div><div class="frow">${btns}<button class="btn sm" data-nx="close">알겠어요</button></div></div>`; npcUI().dataset.id = 'mq:' + id; npcUI().classList.add('on'); }
 function mqPanelText(title, text, extra = ''){ npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf"><span style="font-size:28px">🔍</span></div><div><b>${esc(title)}</b>${extra}</div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(text)}</div><div class="frow"><button class="btn sm" data-nx="close">알겠어요</button></div></div>`; npcUI().dataset.id = 'mq:'; npcUI().classList.add('on'); }
 // 서브 NPC와 이야기할 때(npcMenu) 의뢰 목표가 있으면 한마디 더
 function mqNpcHook(n){ const ex = mqOnTalk(n.id); return ex; }
