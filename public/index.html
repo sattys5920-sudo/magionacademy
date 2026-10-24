@@ -1757,6 +1757,8 @@ const xJobGrid = sel => `<div class="jgrid">${Object.entries(XJ).map(([k, j]) =>
 const xIc = o => `<span class="sic" style="--c:${o.i};--r:${ORDER_J.indexOf(o.job)}"></span>`;
 const ORDER_J = ['warrior', 'black', 'thief', 'bard', 'time', 'alch', 'white', 'druid', 'cleric', 'knight', 'summon', 'gadget'];
 /*XW*/const XW = {"warrior":[24,52,43,51,"melee",0,37,51,77.5],"black":[22,49,26,22,"cast",0,22,52,-6.3],"thief":[19,47,15,46,"melee",0,18,47,76.0],"bard":[22,40,13,22,"melee",0,20,37,26.6],"time":[22,52,25,34,"cast",0,22,54,7.1],"alch":[23,51,21,37,"cast",0,23,51,10.0],"white":[24,56,22,38,"cast",0,23,55,8.1],"druid":[37,59,34,47,"cast",0,36,58,13.0],"cleric":[11,56,18,49,"melee",1,16,50,125.0],"knight":[23,44,14,24,"melee",1,21,40,24.2],"summon":[25,51,17,39,"cast",0,25,53,17.5],"gadget":[29,59,38,48,"bow",0,32,53,125.5]};/*XW-END*/
+// 칼 종류는 칼날이 아니라 자루를 쥐어요: 쥐는 점을 끝(칼끝) 반대쪽으로 조금 옮겨요
+[['knight', 3.5], ['bard', 2.5], ['thief', 1.2]].forEach(([k, d]) => { const w = XW[k], vx = w[6] - w[2], vy = w[7] - w[3], L = Math.hypot(vx, vy) || 1; w[6] += vx / L * d; w[7] += vy / L * d; });
 const XSTAT = [['hp', '체력', '최대 체력'], ['atk', '공격', '물리 피해'], ['mag', '마법', '마법 피해 · 최대 마력'], ['heal', '치유', '회복량'], ['spd', '속도', '행동 게이지 속도']], XSPV = { hp: 8, atk: .8, mag: .8, heal: .8, spd: .15 }, XSTU = { hp: '+8', atk: '+0.8', mag: '+0.8', heal: '+0.8', spd: '+0.15' }, XSRESET = 300;   // 포인트 하나당 오르는 값
 const XMAIN = { warrior: 'atk', black: 'mag', thief: 'atk', bard: 'mag', time: 'mag', alch: 'mag', white: 'heal', druid: 'heal', cleric: 'heal', knight: 'atk', summon: 'mag', gadget: 'atk' };
 const xSpUsed = ex => Object.values(ex.sp || {}).reduce((a, v) => a + v, 0), xSpPts = ex => 3 * (xLv(ex.exp).L - 1) - xSpUsed(ex);   // 레벨 업마다 스탯 포인트 3
