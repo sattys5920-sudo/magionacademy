@@ -905,6 +905,7 @@ const POTION_LIST = [
   { id:'pt099', name:'첫사랑 물약', r:["g_gold", "g_shadow", "g_comet"], pay:275, col:'#9DE6C8' },
   { id:'pt100', name:'별빛 물약', r:["g_wish", "g_soul", "egg"], pay:400, col:'#9923A8', desc:"호박달 마녀학교의 전설. 도감 100번째 물약" },
 ];
+POTION_LIST.forEach(x => { const c = x.r.reduce((t, m) => { const q = SEED_LIST.find(z => z.id === m); return t + (q ? q.price / q.yield : 0); }, 0); x.pay = Math.max(x.pay, Math.round(c * 1.5 / 5) * 5); });   // 재료비보다 보상이 꼭 크게
 const POTION_INFO = Object.fromEntries(POTION_LIST.map((x, i) => [x.id, { ...x, ic: i }]));
 POTION_LIST.forEach(x => { ITEM[x.id] = x.name; });
 const POTIONS = Object.keys(POTION_INFO);
@@ -1352,9 +1353,9 @@ const FORAGE_LIST = [
 const CM = { slim: [8, 32], round: [6, 26], long: [20, 80], flat: [15, 60], cat: [20, 72], puff: [5, 18], jelly: [4, 20], shrimp: [3, 12], cray: [6, 20], shell: [4, 14], horse: [5, 16], star: [6, 22], turtle: [15, 52], whale: [60, 180], angler: [12, 40], lord: [120, 320] };
 const STARS = n => '★'.repeat(n) + '☆'.repeat(5 - n);
 // 희귀도: 칸마다 다른 무게(앞일수록 큼). 등급(★)은 묶어서 보여 줘요
-const FISH = FISH_LIST.map(([id, name, t, time], i) => ({ id, name, i, time, cm: CM[t], w: Math.round(10000 * .86 ** i), grade: i < 12 ? 1 : i < 22 ? 2 : i < 31 ? 3 : i < 37 ? 4 : 5, pay: Math.round(12 * 1.125 ** i) }));
+const FISH = FISH_LIST.map(([id, name, t, time], i) => ({ id, name, i, time, cm: CM[t], w: Math.round(10000 * .9 ** i), grade: i < 12 ? 1 : i < 22 ? 2 : i < 31 ? 3 : i < 37 ? 4 : 5, pay: Math.round(12 * 1.125 ** i) }));
 const JUNK = JUNK_LIST.map(([id, name], j) => ({ id, name, i: 40 + j, junk: true, grade: 0, pay: 1 }));
-const FORAGE = FORAGE_LIST.map(([id, name, z], i) => ({ id, name, i, z, w: Math.round(10000 * .9 ** i), grade: i < 15 ? 1 : i < 28 ? 2 : i < 39 ? 3 : i < 46 ? 4 : 5, pay: Math.round(6 * 1.11 ** i) }));
+const FORAGE = FORAGE_LIST.map(([id, name, z], i) => ({ id, name, i, z, w: Math.round(10000 * .93 ** i), grade: i < 15 ? 1 : i < 28 ? 2 : i < 39 ? 3 : i < 46 ? 4 : 5, pay: Math.round(6 * 1.11 ** i) }));
 const CATCH_INFO = Object.fromEntries([...FISH, ...JUNK].map(x => [x.id, { ...x, sheet: 'fish', n: 43 }]).concat(FORAGE.map(x => [x.id, { ...x, sheet: 'forage', n: 50 }])));
 const CATCH = Object.keys(CATCH_INFO);
 CATCH.forEach(k => { ITEM[k] = CATCH_INFO[k].name; });
@@ -4156,7 +4157,7 @@ const STORY = [
     intro: ['마녀의 오두막 앞에서 빨간 머리 마녀가 발을 동동 굴러요.', '헤이즐: 내 빗자루가 사라졌어! 보름달 비행 시험이 코앞인데!', '헤이즐: 새 빗자루를 만들어야 해. 재료 좀 같이 모아 줄래?'],
     steps: [
       { t: 'talk', goal: 6, title: '헤이즐의 사정 듣기', desc: '마녀의 오두막 앞 헤이즐과 이야기해요', done: '헤이즐: 좋아, 다 같이 최고의 빗자루를 만들자!' },
-      { t: 'give', item: 'g2_straw', goal: 24, title: '빗자루 짚', desc: '빗자루 짚 24개', done: '헤이즐: 짚이 이만큼이면 빗자루 솔은 완성!' },
+      { t: 'give', item: 'g2_straw', goal: 12, title: '빗자루 짚', desc: '빗자루 짚 12개', done: '헤이즐: 짚이 이만큼이면 빗자루 솔은 완성!' },
       { t: 'give', item: 'silk', goal: 10, title: '튼튼한 거미줄 실', desc: '거미줄 실 10개 (사육장)', done: '헤이즐: 거미줄 실로 꽁꽁 묶으면 절대 안 풀려!' },
       { t: 'give', item: 'g2_maple', goal: 15, title: '단풍잎 장식', desc: '빨간 단풍잎 15장', done: '헤이즐: 단풍잎 장식까지! 세상에서 제일 예쁜 빗자루야.' },
       { t: 'game', g: 'broom', goal: 60, title: '시험 비행', desc: '빗자루 경주에서 반 전체가 묘비 60개를 통과해요', done: '헤이즐: 다들 엄청 잘 난다! 나도 자신감이 생겼어!' },
@@ -4198,7 +4199,7 @@ const STORY = [
       { t: 'talk', goal: 6, title: '잭의 이야기 듣기', desc: '호박밭 앞 잭에게 가요', done: '잭: 다들 와 줬구나. 마음이 조금 따뜻해졌어.' },
       { t: 'game', g: 'pumpkin', goal: 100, title: '호박 모으기 대작전', desc: '호박 줍기 경주에서 반 전체 점수 합 100점', done: '잭: 이 호박들로 축제 장식을 하자!' },
       { t: 'give', item: 'g2_firefly', goal: 10, title: '반딧불이의 빛', desc: '반딧불이 10마리 (호숫가 반짝이)', done: '잭: 반딧불이 빛이 들어오니까 눈이 반짝반짝해!' },
-      { t: 'give', item: 'g2_pseed', goal: 30, title: '호박씨 심지', desc: '호박씨 30개', done: '잭: 호박씨로 새 촛불 심지를 만들었어!' },
+      { t: 'give', item: 'g2_pseed', goal: 15, title: '호박씨 심지', desc: '호박씨 15개', done: '잭: 호박씨로 새 촛불 심지를 만들었어!' },
       { t: 'give', item: 'd_pseedsoup', goal: 8, title: '따뜻한 호박씨 수프', desc: '「호박씨 크림수프」 8그릇 (과자 교실)', done: '잭: 따뜻한 수프를 먹으니… 불이… 붙었다!!' },
       { t: 'talk', goal: 10, title: '할로윈 축제 개막', desc: '10명이 모여 축제를 열어요', done: '잭: 호박달 마녀학교 할로윈 축제, 시작합니다!' },
     ], ending: ['잭의 불빛이 호박밭 전체를 환하게 밝혔어요.', '루시안, 부우, 헤이즐, 울프강, 미라벨, 프랭키, 잭이 모두 모였어요.', '모두: 고마워, 호박달 마녀학교 학생들! 해피 할로윈!'] },
