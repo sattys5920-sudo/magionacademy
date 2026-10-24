@@ -2020,7 +2020,12 @@ function xDraw(){
     }
     if (!dead && xStImg && xStImg.complete){   // 상태이상·강화 아이콘 (발밑 한 줄)
       const ks = XSTI.filter(k => u.fx[k] && (u.fx[k].t === undefined || u.fx[k].t > 0)); if (ks.length) ks.forEach((k, i) => { const f = u.fx[k]; if (f.t !== undefined && f.t < 2 && Math.round(now / 150) % 2) return; g.drawImage(xStImg, XSTI.indexOf(k) * 9, 0, 9, 9, Math.round(x - ks.length * 5 + i * 10 + .5), Math.round(u.by + 7), 9, 9); }); }
-    if (B.pick && B.pick.set.has(u.id)){ const cy = y - (u.team === 'e' ? u.hh + 26 : FH + 2) + Math.round(Math.sin(now / 130) * 2); g.fillStyle = '#1a1024'; g.fillRect(x - 6, cy - 1, 13, 8); g.fillStyle = '#ffd866'; g.fillRect(x - 5, cy, 11, 3); g.fillRect(x - 3, cy + 3, 7, 2); g.fillRect(x - 1, cy + 5, 3, 1); }
+    if (u.team === 'a' && !dead){   // 아군 이름·체력 (머리 위)
+      const bw = 34, bx = Math.round(x - bw / 2), by = Math.round(y - FH + 2), f = Math.max(0, u.hp / u.mhp);
+      g.font = 'bold 9px sans-serif'; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText(u.name, x, by - 4); g.fillStyle = '#f4ecff'; g.fillText(u.name, x, by - 4);
+      g.fillStyle = '#1a1024'; g.fillRect(bx - 1, by - 1, bw + 2, 7); g.fillStyle = '#4a2a3a'; g.fillRect(bx, by, bw, 5); g.fillStyle = f > .3 ? '#7affb0' : '#ff6a4a'; g.fillRect(bx, by, Math.round(bw * f), 5); g.fillStyle = 'rgba(255,255,255,.4)'; g.fillRect(bx, by, Math.round(bw * f), 1);
+    }
+    if (B.pick && B.pick.set.has(u.id)){ const cy = y - (u.team === 'e' ? u.hh + 26 : FH + 18) + Math.round(Math.sin(now / 130) * 2); g.fillStyle = '#1a1024'; g.fillRect(x - 6, cy - 1, 13, 8); g.fillStyle = '#ffd866'; g.fillRect(x - 5, cy, 11, 3); g.fillRect(x - 3, cy + 3, 7, 2); g.fillRect(x - 1, cy + 5, 3, 1); }
   });
   const pim = xPetSheet(); if (pim.complete) B.party.forEach(u => { if (u.hp <= 0) return; (u.pets || []).forEach((p, i) => { const k = XPETI.indexOf(p.n); if (k < 0) return; const lg = p.lg ? (now - p.lg) / 260 : 2, off = lg < 1 ? -Math.sin(lg * Math.PI) * 14 : 0, x = Math.round(u.bx - 40 - i * 24 + off), y = Math.round(u.by - 4 + (i % 2 ? 10 : -8) + Math.sin(now / 320 + i * 2) * 1.5), w = 52; g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(x, y + 1, 10, 3, 0, 0, 7); g.fill(); g.globalAlpha = p.t < 2 ? .5 + .5 * Math.sin(now / 90) : 1; g.drawImage(pim, k * 64, 0, 64, 64, x - w / 2, y - w + 3, w, w); g.globalAlpha = 1; if (p.mhp){ g.fillStyle = '#1a1024'; g.fillRect(x - 11, y + 5, 22, 4); g.fillStyle = '#4a2a3a'; g.fillRect(x - 10, y + 6, 20, 2); g.fillStyle = p.hp / p.mhp > .35 ? '#7affb0' : '#ff6a4a'; g.fillRect(x - 10, y + 6, Math.max(0, Math.round(20 * p.hp / p.mhp)), 2); } });
   });
