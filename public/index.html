@@ -449,7 +449,7 @@ button.cell:not(:disabled):active{background:var(--line)}
 .toast{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(20,13,30,.94);color:var(--text);padding:10px 16px;border-radius:12px;border:1px solid var(--accent);font-size:var(--fs-s);z-index:40;max-width:min(90%,420px);text-align:center;animation:toastin .18s;pointer-events:none}
 @keyframes toastin{from{transform:translate(-50%,-8px);opacity:0}}
 /* @css:bag */
-.bag-tabs button{min-height:44px}
+.bag-tabs{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none}.bag-tabs::-webkit-scrollbar{display:none}.bag-tabs button{min-height:44px;flex:0 0 auto!important;min-width:64px!important}.bag-dt:empty{display:none}
 .bag-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media (min-width:900px){.bag-grid{grid-template-columns:repeat(8,minmax(0,1fr))}}
 .bag-grid .cell img{width:40px;height:40px;image-rendering:pixelated;object-fit:contain}
@@ -1122,7 +1122,7 @@ const TABS = [['home','홈','star'],['lab','연구실','cauldron'],['green','온
 function frame(scene, title, subtitle, body, opt = {}){
   app.innerHTML = `<div class="pnl" role="dialog" aria-label="${esc(String(title).replace(/<[^>]+>/g, ''))}">
     <div class="shead">
-      <div class="title"><span class="b">${title}</span><span class="s">${subtitle}</span></div>
+      <div class="title"><span class="b">${title}</span>${/id="|포인트|문제|♥|남은 시간|^오늘 \d/.test(subtitle) ? `<span class="s">${subtitle}</span>` : ''}</div>
       <button class="sx" id="sclose" aria-label="닫기">${ICO.close}</button>
     </div>
     ${opt.overlay ? `<div class="scene">${scene ? `<img src="art/${scene}.png" alt="">` : ''}${opt.overlay}</div>` : ''}
@@ -1813,13 +1813,13 @@ function xpPanel(lv){
   if (!XCOOP) return '';
   const mineRoom = xpV ? [xpRoom, xpV] : null, open = Object.entries(xpList).filter(([id, r]) => r && r.st === 'lobby' && !r.p?.[myId()] && now2() - r.at < 600000).sort((a, b) => b[1].at - a[1].at);
   const back = Object.entries(xpList).filter(([id, r]) => r && r.st === 'run' && r.p?.[myId()]?.out);
-  if (!mineRoom) return `<section class="sec">${secH('열려 있는 파티')}<div class="box px">
+  if (!mineRoom) return !open.length && !back.length ? '' : `<section class="sec"><div class="box px">
     ${open.map(([id, r]) => `<div class="li"><div class="main"><span class="t">${esc(r.hn)}의 파티</span><span class="d">${XRG[r.rg]?.n || ''} · ${Object.keys(r.p || {}).length} / ${XP_MAX}명</span></div><button class="btn sm" data-xp="join" data-id="${id}">참가</button></div>`).join('')}
     ${back.map(([id, r]) => `<div class="li"><div class="main"><span class="t">${esc(r.hn)}의 파티 (진행 중)</span><span class="d">다시 들어갈 수 있어요</span></div><button class="btn sm go" data-xp="join" data-id="${id}">돌아가기</button></div>`).join('')}
-    ${open.length || back.length ? '' : '<div class="s sub" style="padding:6px 2px">열려 있는 파티가 없어요</div>'}</div></section>`;
+    </div></section>`;
   const [id, v] = mineRoom, host = v.host === myId(), R = XRG[v.rg] || XRG[0], ps = Object.entries(v.p).filter(([, p]) => !p.out), others = ps.filter(([u]) => u !== v.host);
   const lowL = ps.filter(([, p]) => p.L < R.need), ok = host && !lowL.length && others.every(([, p]) => p.rdy), me_p = v.p[myId()];
-  return `<section class="sec">${secH('내 파티', `${R.ic} ${R.n}${host ? ' · 위에서 지역을 골라요' : ''}`)}<div class="box px">
+  return `<section class="sec">${secH('내 파티', `${R.ic} ${R.n}`)}<div class="box px">
     ${ps.map(([u, p]) => `<div class="li"><span class="big">${p.job && XJ[p.job] ? XJ[p.job].ic : '❔'}</span><div class="main"><span class="t">${esc(p.n)}${u === v.host ? ' 👑' : ''}</span><span class="d">${p.job && XJ[p.job] ? XJ[p.job].n : '직업 없음'} Lv ${p.L}${p.L < R.need ? ` · 레벨 ${R.need} 필요` : ''}</span></div>${(() => { const r = p.row || xRowAuto(p.job); return u === myId() && v.st === 'lobby' ? `<button class="btn sm ${r === 'f' ? 'go' : ''}" data-xp="row" data-r="f">앞열</button><button class="btn sm ${r === 'b' ? 'go' : ''}" data-xp="row" data-r="b">뒤열</button>` : `<span class="s">${r === 'f' ? '앞열' : '뒤열'}</span>`; })()}<span class="s b">${u === v.host ? '방장' : p.rdy ? '✅ 준비' : '대기'}</span></div>`).join('')}
     <div class="s sub">${ps.length} / ${XP_MAX}명${host && lowL.length ? ' · 레벨이 모자란 사람이 있어요' : ''}</div>
     <div class="frow">${host ? `<button class="btn go" data-xp="start" ${(ok || !others.length) && !lowL.length && v.st === 'lobby' ? '' : 'disabled'}>출발!</button>` : v.st === 'lobby' ? `<button class="btn ${me_p.rdy ? '' : 'go'}" data-xp="ready">${me_p.rdy ? '준비 취소' : '준비'}</button>` : ''}<button class="btn" data-xp="leave">나가기</button></div>
@@ -1841,7 +1841,7 @@ function renderExplore(){
     frame(null, '탐사', '직업을 골라요 (한 번 고르면 바뀌지 않아요)', `<section class="sec">${secH('직업 고르기', '12종')}<div class="box px">${Object.entries(XJ).map(([k, j]) => `<div class="li">${j.ic ? `<span class="big">${j.ic}</span>` : ''}<div class="main"><span class="t">${j.n}</span><span class="d" style="white-space:normal">${j.d}<br>${XT[k].map(b => b[0]).join(' · ')}</span></div><button class="btn sm go" data-xj="${k}">고르기</button></div>`).join('')}</div></section><div style="display:flex;gap:8px">${back}</div>`);
     $('#back').onclick = closeSheet; on('[data-xj]', b => confirmBox(`${XJ[b.dataset.xj].n}(으)로 정할까요? 바꿀 수 없어요.`, '정했어요', '다시 볼래요').then(ok => { if (ok){ ex.job = b.dataset.xj; xSkEx(ex); save(); renderExplore(); } })); return;
   }
-  const head = `<div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center"><span class="big">${job.ic}</span><div style="flex:1"><b>${esc(me.nick)} · ${job.n} Lv ${lv.L}</b><div class="s sub">${lv.need ? `경험치 ${lv.cur} / ${lv.need}` : '최고 레벨'} · HP ${Math.round(xStTot(ex, 'hp'))} · 공 ${Math.round(xStTot(ex, 'atk'))} · 마 ${Math.round(xStTot(ex, 'mag'))} · 치 ${Math.round(xStTot(ex, 'heal'))} · 속 ${Math.round(xStTot(ex, 'spd') * 10) / 10}</div></div></div></div>`;
+  const head = `<div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center"><span class="big">${job.ic}</span><div style="flex:1"><b>${esc(me.nick)} · ${job.n} Lv ${lv.L}</b><div class="s sub">HP ${Math.round(xStTot(ex, 'hp'))} · 공 ${Math.round(xStTot(ex, 'atk'))} · 마 ${Math.round(xStTot(ex, 'mag'))} · 치 ${Math.round(xStTot(ex, 'heal'))} · 속 ${Math.round(xStTot(ex, 'spd') * 10) / 10}</div></div></div></div>`;
   if (v === 'lobby'){
     const R = xReg(), okL = lv.L >= R.need;
     frame(null, '탐사', `오늘 ${ex.n} / ${XDAY}회`, `${head}<section class="sec">${secH('가는 곳')}<div class="box px"><div class="li"><span class="big">${R.ic}</span><div class="main"><span class="t">${R.n} · ${R.tier}</span><span class="d" style="white-space:normal">${R.dir}쪽 길 · ${R.min}분 · 입장 ${R.fee}G · 몬스터 Lv ${R.lv[0]}~${R.lv[1]}${lv.L < R.need ? ` · 내 레벨 ${R.need} 이상` : ''}</span></div></div>
@@ -3299,7 +3299,7 @@ function renderCook(){
     if (!ckSel || !DISH_INFO[ckSel]) ckSel = sorted[0].id;
     ckPg = pgClamp(ckPg, sorted.length, PER);
     const d = DISH_INFO[ckSel], ok = can(d);
-    body = `${hint(ckMsg, ckPot ? `지금 만들 수 있는 요리 ${nCan}개 · 별 3개면 최고의 맛(효과 2배)` : `만들 수 있는 요리 ${nCan}개 · 요리는 과자 교실 솥 앞에서 해요`)}
+    body = `${hint(ckMsg, '')}
       <div class="ckcard"><div class="ckh">${ic(d.id, 'transform:scale(1.4);margin:4px 8px')}<div class="main"><span class="t">${esc(d.name)} <span class="fst">${'★'.repeat(d.grade)}</span></span><span class="d">${cdex[d.id] ? `만들어 봄 ${'★'.repeat(cdex[d.id])}` : '아직 안 만들어 봤어요'} · 먹으면 ${EFF[d.e](d.v)}</span></div></div>
         <div class="ckneed">${Object.entries(needOf(d)).map(([k, n]) => `<span class="${have(k) >= n ? 'ok' : 'no'}">${ic(k, 'transform:scale(.7);margin:-4px -2px -4px -4px')}${esc(ITEM[k] || k)} <span class="num">${have(k)}/${n}</span> ${have(k) >= n ? '✓' : '✗'}</span>`).join('')}</div>
         ${ckPot ? `<button class="btn go" data-ckgo="${d.id}" ${ok ? '' : 'disabled'}>🍳 요리 시작${ok ? '' : ' · 재료가 모자라요'}</button>` : ''}</div>
@@ -4534,18 +4534,18 @@ function bagDetailHTML(e){
     const k = e.id, I = bagInfo(k), D = DISH_INFO[k], P = POTION_INFO[k], L = bagLikers(k);
     const useBtn = D ? `<button class="btn sm go" data-buse="${k}">먹기</button>` : P?.use ? `<button class="btn sm go" data-buse="${k}">마시기</button>` : '';
     return `<div class="bag-dt">${hd(`${me.inv[k]}개${L.length ? ' · ♥ ' + esc(bagNames(L)) : ''}`)}
-      ${bagMsg ? `<div class="d on">${esc(bagMsg)}</div>` : `<div class="d">${esc(I.desc)}</div><div class="d u">${esc(I.use)}</div>`}
+      ${bagMsg ? `<div class="d on">${esc(bagMsg)}</div>` : `<div class="d">${esc(I.desc)}</div>`}
       <div class="acts">${useBtn}<button class="btn sm ghost" data-btrash="${k}">버리기</button></div></div>`;
   }
   if (e.kind === 'cloth'){
     const c = bagCloth().find(x => x.key === e.id), label = SHOP_CATS.find(([k]) => k === c.cat)?.[1] || c.cat, body = World.Avatar.meta.bodies[me.av.body || 0], can = !!c.p.L[body], onNow = me.av[c.cat] === c.i;
-    return `<div class="bag-dt">${hd(`${label} · ${c.p.k === 'pj' ? '잠옷' : '사복'}`)}<div class="d">옷 가게에서 산 옷이에요. 캐릭터 꾸미기 「옷」에서도 갈아입을 수 있어요.</div><div class="d u">${onNow ? '지금 입고 있어요' : can ? '입으면 바로 바뀌어요' : '지금 체형엔 맞지 않아요'}</div>
+    return `<div class="bag-dt">${hd(`${label} · ${c.p.k === 'pj' ? '잠옷' : '사복'}`)}<div class="d u">${onNow ? '지금 입고 있어요' : can ? '입으면 바로 바뀌어요' : '지금 체형엔 맞지 않아요'}</div>
       <div class="acts"><button class="btn sm go" data-bwear="${esc(e.id)}" ${can && !onNow ? '' : 'disabled'}>${onNow ? '입는 중' : '입기'}</button><button class="btn sm" data-bavatar="1">꾸미기로</button></div></div>`;
   }
-  if (e.kind === 'rod'){ const r = RODS[me.rod || 0]; return `<div class="bag-dt">${hd(`낚싯대 ${(me.rod || 0) + 1}단계`)}<div class="d">${esc(r.desc)}</div><div class="d u">호숫가에서 낚시할 때 써요 · 더 좋은 낚싯대는 캇파에게</div></div>`; }
+  if (e.kind === 'rod'){ const r = RODS[me.rod || 0]; return `<div class="bag-dt">${hd(`낚싯대 ${(me.rod || 0) + 1}단계`)}<div class="d">${esc(r.desc)}</div></div>`; }
   if (e.kind === 'egg'){ const eg = me.eggs[e.i], left = eggLeft(eg); return `<div class="bag-dt">${hd(left > 0 ? `${timeText(left)} 뒤에 깨어나요` : '지금 깨어날 수 있어요!')}<div class="d">${esc(CREATURES[eg.k]?.baby || '아기 생물')}이(가) 들어 있어요. 사육장 부화실에 있어요.</div><div class="d u">사육장 → 부화실에서 깨워요</div></div>`; }
-  if (e.kind === 'perk') return `<div class="bag-dt">${hd('특별한 힘')}<div class="d">친구와 가까워져서 받은 선물이에요. 늘 효과가 켜져 있어요.</div><div class="d u">관계 패널에서 누구에게 받았는지 볼 수 있어요</div></div>`;
-  return `<div class="bag-dt">${hd(`가구 ${e.n}개`)}<div class="d">${Object.entries(me.fbag || {}).filter(([, n]) => n > 0).map(([f, n]) => `${esc(FURN_BY[f]?.name || FURN_BY[f]?.n || f)} ×${n}`).join(', ')}</div><div class="d u">내 방(기숙사)에서 놓아요</div></div>`;
+  if (e.kind === 'perk') return `<div class="bag-dt">${hd('특별한 힘')}</div>`;
+  return `<div class="bag-dt">${hd(`가구 ${e.n}개`)}<div class="d">${Object.entries(me.fbag || {}).filter(([, n]) => n > 0).map(([f, n]) => `${esc(FURN_BY[f]?.name || FURN_BY[f]?.n || f)} ×${n}`).join(', ')}</div></div>`;
 }
 function renderBag(){
   me.bagSeen = me.bagSeen || {};
@@ -4602,14 +4602,11 @@ function pfProfileHTML(){
   return `
     <div class="avstage px pfstage"><canvas id="pfCv" width="${A.FW}" height="${A.FH}"></canvas>
       <button class="icbtn pfturn" id="pfPrev" aria-label="왼쪽으로 돌리기">◀</button><button class="icbtn pfturn" id="pfNext" aria-label="오른쪽으로 돌리기">▶</button>
-      <span class="tag pfview">${PF_VIEWS[pfView][1]}</span></div>
-    <div class="pfname"><span class="b" style="font-size:20px">${esc(me.nick)}</span><span class="s sub">${H.name} · 1학년 · Lv ${L.lv}</span></div>
+      </div>
+    <div class="pfname"><span class="b" style="font-size:20px">${esc(me.nick)}</span><span class="s sub">${H.name} · Lv ${L.lv}</span></div>
     <div class="box"><div class="li"><div class="main">
       <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="t b" style="font-size:var(--fs)">경험치</span><span class="s num sub">지식 ${L.cur} / ${L.need}</span></div>
-      <div class="pbar"><i style="width:${Math.min(100, L.cur / L.need * 100)}%"></i></div><span class="d">Lv ${L.lv + 1}까지 지식 ${L.need - L.cur} 더 모으면 돼요</span></div></div></div>
-    <div class="tiles pftiles">
-      <div class="tile"><div class="main"><span class="s sub">입학한 지</span><span class="b num">${me.day}일째</span></div></div>
-    </div>
+      <div class="pbar"><i style="width:${Math.min(100, L.cur / L.need * 100)}%"></i></div></div></div></div>
     <button class="btn go" id="pfDress">👗 꾸미기</button>`;
 }
 function pfStatsHTML(){
@@ -4697,7 +4694,7 @@ function renderRel(){
     return `<button class="li relrow" data-rel="${n.id}" aria-label="${esc(n.name)} 하트 ${h}">
       <span class="face relface">${npcPortrait(n)}</span>
       <span class="main"><span class="t"><b>${esc(n.name)}</b> <span class="d">${esc(n.title || '')}</span></span>${relHearts(h)}</span>
-      <span class="relchk">${ev ? '<span class="tag ev">❗ 이벤트</span>' : ''}<span class="${st.t === today ? 'on' : ''}">${st.t === today ? '✓' : '·'} 말</span><span class="${st.g === today ? 'on' : ''}">${st.g === today ? '✓' : '·'} 선물</span></span>
+      <span class="relchk">${ev ? '<span class="tag ev">❗ 이벤트</span>' : ''}${st.t === today ? '' : '<span>말</span>'}${st.g === today ? '' : '<span>선물</span>'}</span>
     </button>`; }).join('');
   const evN = list.filter(n => evCond(n.id)).length;
   frame(null, '관계', `${list.length}명 · 오늘 ${evN ? `이벤트 ${evN}개 ❗` : '이벤트 없음'}`, `<div class="box rellist">${rows}</div>
@@ -4834,7 +4831,7 @@ let menuHelp = false;   // 메뉴 안 도움말 보기
 document.addEventListener('click', () => { if (!sheetOn || sub !== 'menu') menuHelp = false; });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') menuHelp = false; });
 const SAVE_LABEL = { '': '방금 저장됨', busy: '저장 중…', off: '저장 안 됨 (오프라인)' };
-const mtile = (k, ico, t, d) => `<button class="tile mtile" data-m="${k}"><span class="tic">${ico}</span><div class="main"><span class="b">${t}</span><span class="d">${d}</span></div></button>`;
+const mtile = (k, ico, t, d) => `<button class="tile mtile" data-m="${k}"><span class="tic">${ico}</span><div class="main"><span class="b">${t}</span>${d ? `<span class="d">${d}</span>` : ''}</div></button>`;
 const HELP = [
   ['화면', '아래 메뉴에서 <b>가방</b>(내 아이템) · <b>지도</b>(마을 이동) · <b>관계</b>(호감도) · <b>일지</b>(할 일) · <b>메뉴</b>를 열어요. 위쪽의 얼굴을 누르면 내 정보, 시계를 누르면 오늘 정보가 나와요.'],
   ['걷기', '가고 싶은 곳을 누르면 걸어가요. 가까이 있는 물건이나 친구 옆에 <b>상황 버튼</b>이 떠요. 패널이 열려 있을 때는 걷지 않아요.'],
@@ -4848,12 +4845,11 @@ function renderMenu(){
   }
   const id = solo ? '혼자 모드' : (typeof auth !== 'undefined' && auth?.currentUser?.email?.replace(/@magionacademy\.app$/, '')) || '로그인됨';
   frame(null, '메뉴', '계정 · 설정 · 도움말', `
-    <section class="sec">${secH('내 계정')}<div class="box"><div class="li">${face(me, 40)}<div class="main"><span class="t">${esc(me.nick)} ${houseTag(me.house)}</span><span class="d">${esc(id)} · <span class="sv">${SAVE_LABEL[saveState] || SAVE_LABEL['']}</span></span></div><button class="btn sm warn" data-logout="1">로그아웃</button></div></div></section>
-    <section class="sec">${secH('바로 가기')}<div class="tiles">
-      ${mtile('settings', ICO.gear, '설정', '소리 · 대사 · 글씨 · 화면')}${mtile('help', ICO.journal, '도움말', '화면과 단축키')}
-      ${mtile('chat', ICO.chat, '채팅', '친구에게 말하기')}
-      ${mtile('credits', ICO.heart, '크레딧', '그림 만든 사람들')}</div></section>
-    <div class="hint">${dayLabel()} · 호박달 마녀학교</div>`);
+    <section class="sec"><div class="box"><div class="li">${face(me, 40)}<div class="main"><span class="t">${esc(me.nick)} ${houseTag(me.house)}</span><span class="d">${esc(id)} · <span class="sv">${SAVE_LABEL[saveState] || SAVE_LABEL['']}</span></span></div><button class="btn sm warn" data-logout="1">로그아웃</button></div></div></section>
+    <section class="sec"><div class="tiles">
+      ${mtile('settings', ICO.gear, '설정')}${mtile('help', ICO.journal, '도움말')}
+      ${mtile('chat', ICO.chat, '채팅')}
+      ${mtile('credits', ICO.heart, '크레딧')}</div></section>`);
   on('[data-logout]', async () => {
     if (!await confirmBox('정말 로그아웃할까요?', '로그아웃', '취소', true)) return;
     if (!solo && auth && F?.signOut){ try { await F.signOut(auth); } catch(e){} }   // 혼자 모드는 진행을 그대로 두고 처음 화면으로
@@ -4875,13 +4871,13 @@ function renderSettings(){
   frame(null, '설정', '소리 · 대사 · 화면', `
     <section class="sec">${secH('소리')}<div class="box">
       ${srow('효과음', '', sseg('sfx', [[0, '끔'], [.5, '작게'], [1, '보통']]))}
-      ${srow('배경 음악', '평소에 흐르는 음악', sseg('bgm', [[0, '끔'], [.5, '작게'], [1, '보통']]))}</div></section>
+      ${srow('배경 음악', '', sseg('bgm', [[0, '끔'], [.5, '작게'], [1, '보통']]))}</div></section>
     <section class="sec">${secH('대사')}<div class="box">
-      ${srow('대사 속도', '이야기 장면에서 글자가 나오는 빠르기', sseg('talk', [[40, '느리게'], [22, '보통'], [10, '빠르게'], [0, '즉시']]), true)}</div></section>
+      ${srow('대사 속도', '', sseg('talk', [[40, '느리게'], [22, '보통'], [10, '빠르게'], [0, '즉시']]), true)}</div></section>
     <section class="sec">${secH('화면')}<div class="box">
-      ${srow('밝기', `지금 ${bCur}`, `<button class="btn sm" data-bright="1">${bNext}</button>`)}
-      ${srow('글씨 크기', '크게를 고르면 전체 글씨가 2px 커져요', sseg('big', [[false, '보통'], [true, '크게']]))}
-      ${srow('화면 흔들림 끄기', '이야기 장면의 흔들림을 꺼요', sseg('noshake', ONOFF))}
+      ${srow('밝기', '', `<button class="btn sm" data-bright="1">${bNext}</button>`)}
+      ${srow('글씨 크기', '', sseg('big', [[false, '보통'], [true, '크게']]))}
+      ${srow('화면 흔들림 끄기', '', sseg('noshake', ONOFF))}
       ${srow('저사양 모드', '효과와 움직임을 줄여요', sseg('lowfx', ONOFF))}</div></section>
     <button class="btn ghost" data-mback="1">메뉴로</button>`);
   on('[data-set]', b => { setSet(b.dataset.set, JSON.parse(b.dataset.v)); if (b.dataset.set === 'sfx' && SET.sfx) sfx('pop'); render(); });
@@ -5104,11 +5100,11 @@ function renderClass(){
     const tabs = [['subj', left ? `${CLASS_MAX - left + 1}교시 · 과목` : '과목'], ['exam', `쪽지시험${examDone() ? ` · ${gradeOf(me.exam.score)}` : ''}`]];
     const body = classTab === 'subj' ? `
       <section class="sec">
-        ${secH(left ? `${CLASS_MAX - left + 1}교시 · 과목을 골라요` : '오늘 수업은 모두 끝났어요', `남은 교시 ${left} / ${CLASS_MAX}`)}
+        ${secH(left ? `${CLASS_MAX - left + 1}교시` : '오늘 수업은 모두 끝났어요')}
         <div class="box px">${SUBJECTS.map(x => `<div class="li" style="align-items:flex-start;padding-top:10px;padding-bottom:10px">${ic(x.icon)}
           <div class="main"><span class="t">${x.name}</span></div>
           <button class="btn sm ${left ? 'go' : ''}" data-subj="${x.id}" ${left ? '' : 'disabled'}>듣기</button></div>`).join('')}</div>
-        ${hint('', `틀릴 때까지 라운드가 이어져요 · 다음 레시피 힌트까지 지식 ${knowToNext()}`)}
+        
       </section>` : `
       <section class="sec">
         ${secH('이번 주 쪽지시험', examDone() ? `${me.exam.score}점 · ${gradeOf(me.exam.score)}` : examStarted() ? '응시함' : '아직 안 봤어요')}
@@ -5199,7 +5195,7 @@ function renderLab(){
           <div class="cpot">${ic('cauldron', 'transform:scale(2.4)')}<i class="bub b1"></i><i class="bub b2"></i><i class="bub b3"></i></div>
           ${brewDone ? `<div class="result"><div class="rcard">${ic(brewDone.p, 'transform:scale(1.6);margin:8px')}<b>${brewDone.p ? ITEM[brewDone.p] : '실패'}</b><span class="s">${esc(brewDone.msg)}</span><div class="frow"><button class="btn sm go" id="brewBag">가방에 넣기</button><button class="btn sm" id="brewAgain" ${brewDone.p && brewDone.again ? '' : 'disabled'}>한 번 더</button></div></div></div>` : ''}
         </div>
-        <div class="s sub" style="text-align:center">${hit ? `${ITEM[hit]} 레시피예요` : slots.length ? `넣은 재료 ${slots.length} / 3` : '재료를 눌러 넣거나, 솥 위로 끌어다 놓아요'}</div>
+        <div class="s sub" style="text-align:center">${hit ? `${ITEM[hit]} 레시피예요` : slots.length ? `넣은 재료 ${slots.length} / 3` : ''}</div>
         <button class="btn go" id="brew" ${slots.length === 3 && me.mana >= brewCost() && !brewDone ? '' : 'disabled'}>${ic('cauldron', 'transform:scale(.7);margin:-6px')}끓이기 (마력 ${brewCost()})</button>
         ${brewMsg ? `<div class="hint on">${esc(brewMsg)}</div>` : ''}
       </div>
@@ -5569,9 +5565,9 @@ function renderDorm(){
   if (dormTab === 'room'){
     body = `<section class="sec">
       <div class="box px" style="padding:12px;display:flex;flex-direction:column;gap:8px;border-color:${H.col}">
-        <div class="sec-h"><h3>${H.name} ${roomNo(me.house, uid || me.nick)}호</h3><span class="meta">놓은 가구 ${me.room.length}개</span></div>
+        <div class="sec-h"><h3>${H.name} ${roomNo(me.house, uid || me.nick)}호</h3><span class="meta"></span></div>
         <div class="meter">${ic('heart', 'transform:scale(.8);margin:-4px')}${segs(Math.min(cozy, COZY_MAX), COZY_MAX, 'var(--pink)')}<span class="s b num">${cozy}</span></div>
-        <span class="s sub">아늑함 ${cozy} · 쉬고 나면 마력이 아늑함 ×2만큼 더 차요 (${COZY_MAX}까지)</span>
+        
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         
@@ -5738,7 +5734,7 @@ function renderCommon(){
   let body = '';
   if (commonTab === 'gather'){
     body = need ? `<section class="sec">
-      ${secH(`다음: ${st + 1}단계 「${HALL_NAMES[h][st]}」`, '다 모이면 바로 꾸며져요')}
+      ${secH(`다음: ${st + 1}단계 「${HALL_NAMES[h][st]}」`, '')}
       <div class="box px">${Object.entries(need).map(([k, v]) => row(k, v)).join('')}</div>
       ${hint('', '')}
     </section>` : `<section class="sec"><div class="hint on px">전설의 휴게실을 완성했어요! 🎉</div></section>`;
@@ -6312,7 +6308,6 @@ function avatarUI(av){
           ${key === 'topC' ? (casualOn(av) ? `<div class="s" style="margin:6px 0 2px">사복·잠옷 색</div>${swatch(pal, key)}` : '') : key ? swatch(pal, key) : ''}</section>`).join('')}
       ${avTab === 'uni' || avTab === 'acc' ? `<div class="hint">넥타이와 망토 안감은 기숙사 색이에요${av.house ? ` · ${HOUSES[av.house].name}` : ''}</div>` : ''}
       <button class="btn sm" id="avRand" style="align-self:center">🎲 아무거나</button>
-      <button class="btn sm" id="avCredits" style="align-self:center">그림 만든 사람들 (LPC 크레딧)</button>
     </div>`;
 }
 function bindAvatarUI(av, redraw){
@@ -6385,7 +6380,7 @@ function renderAvatar(){
         ${cat ? avPager(pg.p, pg.pages, 'avpg', mode, key ? 'avm' : null) : ''}
         ${cat === 'neck' || cat === 'cape' ? `<div class="hint">넥타이와 망토 안감은 기숙사 색이에요${av.house ? ` · ${HOUSES[av.house].name}` : ''}</div>` : key0 === 'topC' && !key ? '<div class="hint">교복 색은 정해져 있어요 · 사복·잠옷은 색을 고를 수 있어요</div>' : ''}
       </section>
-      <div class="avbtns"><button class="btn sm" id="avRand">🎲 아무거나</button><button class="btn sm ghost" id="avCredits">그림 크레딧</button></div>
+      <div class="avbtns"><button class="btn sm" id="avRand">🎲 아무거나</button></div>
       <div class="avbtns"><button class="btn px" id="avCancel">그만두기</button><button class="btn go px" id="avSave" style="flex:2">이 모습으로!</button></div>
     </div>`);
   const cv = $('#avCv'); avPlay(cv, av); avTabShow();
@@ -6399,7 +6394,6 @@ function renderAvatar(){
   on('[data-avc]', b => { const [k, i] = b.dataset.avc.split(','); av[k] = +i; redraw(); });
   $('#avTurn').onclick = () => { avView = (avView + 1) % AV_VIEWS.length; redraw(); };
   $('#avRand').onclick = () => { Object.assign(av, A.random(), { house: av.house }); avPage = {}; redraw(); };
-  $('#avCredits').onclick = showCredits;
   $('#avCancel').onclick = () => { avDraft = null; closeSheet(); };
   $('#avSave').onclick = () => {
     me.av = World.Avatar.fix(avDraft); delete me.av.house; avDraft = null; save(); World.setPlayer(me.nick, avOf(me));
