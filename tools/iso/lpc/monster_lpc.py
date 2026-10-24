@@ -30,7 +30,7 @@ MON = [  # (id, 몸 체형(g), 층들)
  ('skelknight', 'male', [(10, 'body/bodies/skeleton', None, None), (100, 'head/heads/skeleton/adult', None, None), (20, 'legs/armour/plate/male', None, None), (35, 'torso/armour/plate/male', None, None), (126, 'hat/helmet/greathelm/male', None, None), (95, 'shield/heater/original/paint/fg', None, None), W_SWORD]),
  ('minotaur', 'male', [(10, 'body/bodies/muscular', None, SK('fur_brown')), (100, 'head/heads/minotaur/male', None, None), (20, 'legs/armour/plate/male', None, None), (35, 'torso/armour/leather/male', None, None), W_AXE]),
  ('lich', 'male', [(5, 'cape/tattered/bg', None, CL('purple')), (10, 'body/bodies/skeleton', None, None), (100, 'head/heads/skeleton/adult', None, None), (35, 'torso/clothes/longsleeve/longsleeve', None, CL('purple')), (20, 'legs/pants', None, CL('charcoal')), (126, 'hat/magic/wizard/base', None, None), (110, 'cape/tattered/fg', None, CL('purple')), (90, 'weapon/magic/gnarled/universal/foreground', 'bronze', None)]),
- ('trollking', 'male', [(10, 'body/bodies/muscular', None, SK('pale_green')), (100, 'head/heads/troll/adult', None, None), (20, 'legs/armour/plate/male', None, None), (35, 'torso/armour/plate/male', None, None), (126, 'hat/helmet/barbarian/adult', None, None), (95, 'shield/heater/original/paint/fg', None, None), W_AXE]),
+ ('trollking', 'male', [(10, 'body/bodies/muscular', None, SK('pale_green')), (100, 'head/heads/troll/adult', None, None), (20, 'legs/armour/plate/male', None, None), (35, 'torso/armour/plate/male', None, None), (126, 'hat/formal/crown', None, None), (95, 'shield/heater/original/paint/fg', None, None), W_AXE]),
  ('fairy', 'child', [(5, 'body/wings/pixie/solid', None, None), (10, 'body/bodies/child', None, SK('pale_green')), (100, 'head/heads/human/child', None, SK('pale_green')), (105, 'eyes/human/child/default', 'green', None), (35, 'torso/clothes/shirt/child', None, CL('forest')), (20, 'legs/pants', None, CL('green')), (120, 'hair/messy1', None, HR('green')), (110, 'head/ears/elven/child', None, SK('pale_green'))]),
  ('hare', 'child', [(10, 'body/bodies/child', None, SK('fur_tan')), (100, 'head/heads/rabbit/child', None, None), (35, 'torso/clothes/shirt/child', None, CL('rose')), (20, 'legs/pants', None, CL('brown'))]),
  ('dragonfly', 'child', [(5, 'body/wings/dragonfly/solid', None, None), (10, 'body/bodies/child', None, SK('green')), (100, 'head/heads/goblin/child', None, None), (35, 'torso/clothes/shirt/child', None, CL('teal')), (20, 'legs/pants', None, CL('navy'))]),
@@ -47,6 +47,7 @@ MON = [  # (id, 몸 체형(g), 층들)
  ('shadowman', 'male', [(10, 'body/bodies/teen', None, SK('black')), (100, 'head/heads/human/male', None, SK('black')), (126, 'hat/cloth/hood', None, CL('charcoal')), (35, 'torso/jacket/trench', None, CL('black')), (20, 'legs/pants', None, CL('black')), W_DAG]),
  ('firepriest', 'female', [(10, 'body/bodies/teen', None, SK('amber')), (100, 'head/heads/human/female', None, SK('amber')), (105, 'eyes/human/adult/default', 'orange', None), (35, 'torso/clothes/robe', 'maroon', None), (126, 'hat/magic/celestial/adult', None, None), (90, 'weapon/magic/gnarled/universal/foreground', 'bronze', None)]),
 ]
+CROWN_DY = {'goblinking': 4, 'lizardking': 4}
 def frame(f):
     a = np.array(Image.open(os.path.join(LPC, f)).convert('RGBA'))
     if a.shape[0] == 512:   # 큰 무기(활)는 128칸 — 가운데 64칸만 잘라 써요
@@ -77,7 +78,10 @@ sheet = np.zeros((64, 64 * len(plan), 4), np.uint8)
 for i, (mid, L) in enumerate(plan):
     cell = np.zeros((64, 64, 4), np.uint8)
     al = next((t[1] for t in L if t[0] == 'alpha'), 1)
-    for z, f, rc in sorted((t for t in L if t[0] != 'alpha'), key=lambda t: t[0]): over(cell, recolor(frame(f), rc))
+    for z, f, rc in sorted((t for t in L if t[0] != 'alpha'), key=lambda t: t[0]):
+        fr = recolor(frame(f), rc)
+        if 'formal/crown' in f and mid in CROWN_DY: fr = np.roll(fr, CROWN_DY[mid], axis=0)   # 머리가 낮은 왕은 왕관을 내려 써요
+        over(cell, fr)
     cell[..., 3] = (cell[..., 3] * al).astype(np.uint8)
     sheet[:, i * 64:(i + 1) * 64] = cell
 Image.fromarray(sheet).save(os.path.join(ROOT, 'public', 'art', 'monsters_lpc.png'))
