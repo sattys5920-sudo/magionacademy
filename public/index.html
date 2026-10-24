@@ -3942,7 +3942,7 @@ async function evRun(ctx, sc){
     else if (c === 'fade_in') await evFadeTo(0, 400);
     else if (c === 'fade_out') await evFadeTo(1, 400);
     else if (!ctx.opt.replay){
-      if (c === 'give_item'){ me.inv[s.item] = (me.inv[s.item] || 0) + (s.n || 1); toast(`${ITEM[s.item] || s.item} ×${s.n || 1} 받았어요`); }
+      if (c === 'give_item'){ me.inv[s.item] = (me.inv[s.item] || 0) + (s.n || 1); ctx.gave = ctx.gave || {}; ctx.gave[s.item] = (ctx.gave[s.item] || 0) + (s.n || 1); toast(`${ITEM[s.item] || s.item} ×${s.n || 1} 받았어요`); }
       else if (c === 'take_item'){ me.inv[s.item] = Math.max(0, (me.inv[s.item] || 0) - (s.n || 1)); }
       else if (c === 'set_flag'){ me.nflag = me.nflag || {}; me.nflag[s.flag] = 1; }
       else if (c === 'affinity') ctx.sum += s.value || 0;
@@ -3957,7 +3957,7 @@ function evFinish(ctx){
   npcAddA(n.id, ctx.sum);
   const r = ev.rewards || {};
   if (r.coin){ me.coin += r.coin; got.push(`${r.coin}G`); } if (r.mana){ me.mana += r.mana; got.push(`마력 +${r.mana}`); } if (r.know){ me.know = (me.know || 0) + r.know; got.push(`지식 +${r.know}`); }
-  Object.entries(r.items || {}).forEach(([it, c]) => { me.inv[it] = (me.inv[it] || 0) + c; got.push(`${ITEM[it] || it} ×${c}`); });
+  Object.entries(r.items || {}).forEach(([it, c]) => { const left = Math.max(0, c - ((ctx.gave || {})[it] || 0)); if (left){ me.inv[it] = (me.inv[it] || 0) + left; got.push(`${ITEM[it] || it} ×${left}`); } });   // 이야기 속에서 이미 받은 것은 두 번 주지 않아요
   (r.flags || []).forEach(f => { me.nflag = me.nflag || {}; me.nflag[f] = 1; });
   [].concat(r.perk || []).forEach(p => { me.perk = me.perk || {}; me.perk[p] = 1; got.push(PERK_KO[p] || p); });
   [].concat(r.perk || []).forEach(p => {   // 바로 받는 보상
