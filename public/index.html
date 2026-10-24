@@ -3363,10 +3363,9 @@ const BGM = (() => {
 })();
 // NPC 전용 곡: 이 사람과 대화(말 걸기·이벤트·의뢰 장면)하는 동안만 그 곡으로 부드럽게 바뀌어요
 const NPC_BGM = { blady: 'audio/bgm_dracula.mp3', yeoreum: 'audio/bgm_ghost.mp3', beatrix: 'audio/bgm_witch.mp3', ur: 'audio/bgm_werewolf.mp3', nefer: 'audio/bgm_mummy.mp3', piece: 'audio/bgm_frank.mp3', jack: 'audio/bgm_jack.mp3', nabi: 'audio/bgm_nabi.mp3', batri: 'audio/bgm_batri.mp3', kappa: 'audio/bgm_kappa.mp3', aula: 'audio/bgm_aula.mp3', mandi: 'audio/bgm_mandi.mp3', jipsin: 'audio/bgm_jipsin.mp3', sera: 'audio/bgm_sera.mp3', madeleine: 'audio/bgm_madeleine.mp3', stella: 'audio/bgm_stella.mp3', leo: 'audio/bgm_leo.mp3' };   // 드라큘라 · Candlelight Confession / 유령 · The Lake Before Nightfall / 마녀 · Rain on the Clockface / 늑대인간 · Firelight Vigil / 미라 · The Scribe's Midnight / 프랑켄슈타인 · Hesitant Steps of a Giant / 잭 · The Last Porch Light / 나비 · Stray at the Market Gate / 배트리 · A Bell at the Gate / 캇파 · The Bamboo Sigh / 아울라 · Reflections in the Margin / 맨디 · Sunlight on the Mandrake / 짚신 · Seven Miles to Sunrise / 세라 · Steeping Sunlight / 마들렌 · Sifted Sunlight / 스텔라 · The Wrong Way Home / 레오 · Golden Hour at the Barn (곡이 생기는 대로 추가)
-const MAIN_NPCS = ['blady', 'yeoreum', 'beatrix', 'ur', 'nefer', 'piece', 'jack'];
 let npcThemeId = null;
 setInterval(() => {
-  let id = null; try { id = evOn ? evOn.n.id : (npcUI().classList.contains('on') && MAIN_NPCS.includes(npcUI().dataset.id) ? npcUI().dataset.id : null); } catch(e){}   // 서브 NPC는 하트 스토리 때만 자기 곡, 말 걸기·선물은 메인 곡 그대로
+  let id = null; try { id = evOn ? evOn.n.id : null; } catch(e){}   // 자기 곡은 스토리 장면(하트 스토리·의뢰 장면)에서만, 말 걸기·선물은 메인 곡 그대로
   const want = id && NPC_BGM[id] ? id : null; if (want === npcThemeId) return;
   if (npcThemeId) BGM.sceneEnd('npc:' + npcThemeId); npcThemeId = want; if (want) BGM.scene('npc:' + want, NPC_BGM[want]);
 }, 300);
