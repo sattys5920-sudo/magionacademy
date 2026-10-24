@@ -190,7 +190,9 @@ for i, (nm, wl, rf) in enumerate(SHOPS):
     if i >= 3: y0, y1 = 30, 35
     else: y0, y1 = 19, 25
     bd = building(x0, y0, x1, y1, 38 + (i % 2) * 8, hexc(wl), hexc('#2A2230'), hexc(rf), 24 + (i % 3) * 4, wins_g(18, ((14, 12),)), doors=[('L', 18, 10)])
-    unique('shop', [x0, y0, x1, y1], bd, door=dict(tile=[x0 + 2, y1], to=None, label=nm))
+    SHOP_NOTE = {'사탕 가게': '문에 「재료 손질 중」 팻말이 걸려 있어요. 달콤한 냄새가 솔솔 나요', '호박 빵집': '갓 구운 빵 냄새가 나요. 문 앞에 「오늘 빵은 다 팔렸어요」 팻말이 걸려 있어요',
+                 '부엉이 우체국': '창구 너머로 부엉이 집배원들이 편지를 분류해요. 오늘 창구 업무는 끝났어요', '유령 찻집': '문틈으로 차가운 김이 새어 나와요. 「영업은 한밤중에」라고 적혀 있어요'}
+    unique('shop', [x0, y0, x1, y1], bd, door=dict(tile=[x0 + 2, y1], to=None, label=nm, **({'note': SHOP_NOTE[nm]} if nm in SHOP_NOTE else {})))
 # 거대 잭오랜턴 (광장)
 def giant_jack(img):
     d = ImageDraw.Draw(img); cx, cy = P(61, 27.5)

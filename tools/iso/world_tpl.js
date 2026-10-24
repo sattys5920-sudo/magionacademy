@@ -560,7 +560,7 @@ function goDoor(door, o){
     if (!r || typeof r === 'string'){ const [bx, by] = P(door.tile[0] + .5, door.tile[1] + .5); showBubble({ x: bx, y: by - 30, sw: 0 }, r || '<b>빈 방</b>'); return; }
     view = r; label = r.own ? '내 방' : r.name + '의 방';
   }
-  if (!door.to){ if (World.onLockedDoor && World.onLockedDoor(door.label)) return; showBubble(o, `<b>${door.label}</b><br>${door.note || '아직 문이 잠겨 있어요 · 곧 열려요'}`); return; }
+  if (!door.to){ if (World.onLockedDoor && World.onLockedDoor(door.label)) return; showBubble(o, `<b>${door.label}</b><br>${door.note || '문이 닫혀 있어요'}`); return; }
   let to = door.to, spawn = door.spawn;
   // 돌아가는 문: 들어온 순서를 거꾸로 (없으면 그 방의 바깥 방으로)
   if (to === '@back'){ const b = backStack.pop(); to = b ? b.map : (M.backTo || 'campus'); spawn = b ? b.pos : null; label = (MAPS[real(to)] || MAPS.campus).meta.title; }
