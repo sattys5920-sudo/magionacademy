@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#140D1E">
 <link rel="preload" href="fonts/Pretendard-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/Galmuri11-Bold.sub.woff2" as="font" type="font/woff2" crossorigin>
-<title>호박달 마녀학교</title>
+<title>호박달 마녀학교 ― Trick or Teach!</title>
 <link rel="manifest" href="manifest.webmanifest">
 <style>
 /* 글꼴: 본문 Pretendard(서브셋·직접 호스팅), 제목·버튼·HUD만 픽셀 글꼴 Galmuri11 */
@@ -3333,23 +3333,29 @@ const BGM = (() => {
   const unlock = () => { wanted = true; mount(); play(); removeEventListener('pointerdown', unlock); removeEventListener('keydown', unlock); };
   addEventListener('pointerdown', unlock); addEventListener('keydown', unlock);
   document.addEventListener('visibilitychange', () => { if (!au) return; if (document.hidden) au.pause(); else play(); });
-  // 장면 전용 곡: 기본 곡을 낮추고 이 곡을 부드럽게 올려요 (대화가 끝나면 되돌려요)
-  const SC = { au: null, src: '', v: 0, t: 0, raf: 0, last: 0 };
+  // 장면 전용 곡: 기본 곡을 낮추고 이 곡을 부드럽게 올려요. 곡이 바뀔 때는 앞 곡이 서서히 줄고 새 곡이 서서히 커져요 (대화가 끝나면 기본 곡으로 되돌려요)
+  const TR = {};   // src → { au, v, t }
+  let sraf = 0, slast = 0, cur = '';
   const sloop = t => {
-    const dt = SC.last ? t - SC.last : 16; SC.last = t; SC.v += Math.sign(SC.t - SC.v) * Math.min(Math.abs(SC.t - SC.v), dt / FADE);
-    if (SC.au) SC.au.volume = Math.max(0, Math.min(1, level * .6 * SC.v));
-    if (SC.v === SC.t){ SC.raf = 0; SC.last = 0; if (SC.v === 0 && SC.au) SC.au.pause(); return; }
-    SC.raf = requestAnimationFrame(sloop);
+    const dt = slast ? t - slast : 16; slast = t; let busy = false;
+    Object.entries(TR).forEach(([src, k]) => {
+      k.v += Math.sign(k.t - k.v) * Math.min(Math.abs(k.t - k.v), dt / FADE); k.au.volume = Math.max(0, Math.min(1, level * .6 * k.v));
+      if (k.v === k.t){ if (k.v === 0){ k.au.pause(); if (src !== cur) delete TR[src]; } } else busy = true;
+    });
+    if (!busy){ sraf = 0; slast = 0; return; }
+    sraf = requestAnimationFrame(sloop);
   };
-  const sgo = () => { if (!SC.raf) SC.raf = requestAnimationFrame(sloop); };
+  const sgo = () => { if (!sraf) sraf = requestAnimationFrame(sloop); };
   return {
     scene(id, src){
-      if (holds.has('scene:' + id) && SC.src === src && SC.t === 1) return;
+      if (holds.has('scene:' + id) && cur === src && TR[src] && TR[src].t === 1) return;
       holds.add('scene:' + id); tgt = 0; go();
-      if (SC.src !== src){ if (SC.au) SC.au.pause(); SC.au = new Audio(src); SC.au.loop = true; SC.au.preload = 'auto'; SC.src = src; SC.v = 0; }
-      if (!wanted || !level) return; SC.au.volume = Math.max(0, Math.min(1, level * .6 * SC.v)); const p = SC.au.play(); if (p && p.catch) p.catch(() => {}); SC.t = 1; sgo();
+      Object.entries(TR).forEach(([k, v]) => { if (k !== src) v.t = 0; });   // 앞 곡은 서서히 줄여요
+      cur = src; let k = TR[src];
+      if (!k){ const au = new Audio(src); au.loop = true; au.preload = 'auto'; au.volume = 0; k = TR[src] = { au, v: 0, t: 0 }; }
+      if (!wanted || !level) return; k.t = 1; const p = k.au.play(); if (p && p.catch) p.catch(() => {}); sgo();
     },
-    sceneEnd(id){ SC.t = 0; sgo(); this.release('scene:' + id); },
+    sceneEnd(id){ Object.values(TR).forEach(k => { k.t = 0; }); sgo(); this.release('scene:' + id); },
     hold(id){ holds.add(id); tgt = 0; go(); },
     release(id){ holds.delete(id); if (holds.size) return; tgt = 1; play(); go(); },
     sync(v){ level = v; if (!level){ if (au) au.pause(); return; } apply(); play(); },   // 설정의 배경 음악 크기(0·.5·1)
@@ -5825,7 +5831,7 @@ const configured = !!(firebaseConfig.apiKey && firebaseConfig.databaseURL);
 const rndOf = a => a[Math.floor(Math.random() * a.length)];
 const PUNS = ['Boo-tiful day, isn\'t it?', 'Have a fang-tastic day!', 'Witch way to the school?', 'Pumpkin spice and everything ghoul', 'Just here for the boos', 'Bat-tery at 100%', 'Skele-tonight we study', 'You\'re looking sharp… fang-ly', 'Hocus Pocus, 집중!', '오늘의 마법: 지각 안 하기', '호박이 넝쿨째 굴러왔어요', '둥글둥글 호박처럼, 굴러서 등교', '마녀는 빗자루로 출근 중', 'Don\'t be a scaredy-cat, 들어와요', 'Ghoul friends forever', 'Leaf your worries — it\'s spooky season'];
 const LOADS = ['Boo-ting up...... 부팅 중이에요', '빗자루 시동 거는 중...... 부릉부릉', 'Witch way to school? 이쪽이에요', '호박 마차 굴리는 중......', '박쥐 우체부가 편지 가지러 갔어요', '솥에서 마법이 부글부글......', '유령이 문 열어 주는 중...... Boo!'];
-function cover(inner){ document.body.classList.remove('inworld'); app.classList.remove('open'); sheetOn = false; app.innerHTML = `<div class="cover"><div style="text-align:center;display:flex;flex-direction:column;gap:6px;margin:10px 0"><span class="b" style="font-size:36px;line-height:36px">호박달 마녀학교</span><span class="s" style="color:#C8B8FF">${rndOf(PUNS)}</span></div>${inner}</div>`; }
+function cover(inner){ document.body.classList.remove('inworld'); app.classList.remove('open'); sheetOn = false; app.innerHTML = `<div class="cover"><div style="text-align:center;display:flex;flex-direction:column;gap:6px;margin:10px 0"><span class="b" style="font-size:36px;line-height:36px">호박달 마녀학교</span><span class="b" style="color:#FFD866;font-size:18px">Trick or Teach!</span><span class="s" style="color:#C8B8FF">${rndOf(PUNS)}</span></div>${inner}</div>`; }
 function showLogin(mode = 'login'){
   const signup = mode === 'signup';
   let saved = ''; try { saved = localStorage.getItem('magion-id') || ''; } catch(e){}
