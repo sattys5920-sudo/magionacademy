@@ -1529,7 +1529,7 @@ function renderFish(){
   $('#fsAll') && ($('#fsAll').onclick = () => { let g = 0, n = 0; CATCH.forEach(k => { n += me.inv[k] || 0; g += sell(k, me.inv[k] || 0); }); fsMsg = `${n}개를 팔았어요. +${g.toLocaleString()}G`; save(); renderFish(); });
   on('[data-rod]', b => { const i = +b.dataset.rod, r = RODS[i]; if (me.coin < r.price || i !== rodLv() + 1) return; me.coin -= r.price; me.rod = i; fsMsg = `${withJosa(r.name, '을', '를')} 샀어요! ${r.desc}`; save(); renderFish(); });
 }
-// ===== 탐사 (1단계: 혼자 + 자동 동료 2명 · 시간 게이지 전투) · 설계서: docs/exploration_design.md =====
+// ===== 탐사 (혼자 · 시간 게이지 전투, 협동은 준비 중) · 설계서: docs/exploration_design.md =====
 const XCAP = 50, xNeed = L => Math.round(14 * L ** 2.3 / 10) * 10;   // 레벨 L → L+1 경험치
 const xLv = exp => { let L = 1, e = exp; while (L < XCAP && e >= xNeed(L)){ e -= xNeed(L); L++; } return { L, cur: e, need: L >= XCAP ? 0 : xNeed(L) }; };
 const XJ = {   // 직업: 체력·공격·마공·치유·속도 [기본, 레벨당] · ic는 art/jobs.png 상징
@@ -1724,8 +1724,7 @@ const xMkUnit = (job, L, name, ai, hp, mp, sk) => { sk = sk || xAiSk(L); const u
   u.dr = P.def || 0; u.vamp = P.vamp || 0; u.crit = P.crit || 0; u.dodge = P.dodge || 0; u.survLeft = P.surv ? 1 : 0; u.pets = [];
   u.hp = hp ?? u.mhp; u.mp = mp ?? u.mmp; return u; };
 let xv = null, xb = null, xMsg = '', xTick = 0;   // xv 화면 상태, xb 전투 상태
-function xParty(){ const ex = xEx(), L = xLv(ex.exp).L, run = ex.run, jobs = ['warrior', 'white', 'black'], mine = ex.job, others = jobs.filter(j => j !== mine).slice(0, 2);
-  return [xMkUnit(mine, L, me.nick, false, run?.p?.[0]?.hp, run?.p?.[0]?.mp, xSkEx(ex)), ...others.map((j, i) => xMkUnit(j, L, '동료 ' + XJ[j].n, true, run?.p?.[i + 1]?.hp, run?.p?.[i + 1]?.mp))]; }
+function xParty(){ const ex = xEx(), L = xLv(ex.exp).L, run = ex.run; return [xMkUnit(ex.job, L, me.nick, false, run?.p?.[0]?.hp, run?.p?.[0]?.mp, xSkEx(ex))]; }   // 혼자일 땐 나 혼자 (AI 동료 없음, 협동은 같은 방 플레이어만)
 function xSaveParty(){ const run = xEx().run; if (run && xb) run.p = xb.party.map(u => ({ hp: u.hp, mp: u.mp })); }
 function xEnd(how){   // how: clear · time · retreat · wipe
   const ex = xEx(), run = ex.run; if (!run) return; const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gold = how === 'wipe' ? 0 : Math.round(lo.gold * mult), exp = how === 'wipe' ? 0 : Math.round(lo.exp * mult + (how === 'clear' ? xReg().clearExp : 0));
@@ -1748,7 +1747,7 @@ function renderExplore(){
   if (v === 'lobby'){
     const R = xReg(), okL = lv.L >= R.need;
     frame(null, '탐사', `오늘 ${ex.n} / ${XDAY}회`, `${head}<section class="sec">${secH('어디로 갈까요?', '레벨이 모자라면 잠겨 있어요')}<div class="box px">${XRG.map((r, i) => `<div class="li" style="${i === xRgSel ? 'outline:2px solid var(--gold);border-radius:10px;' : ''}${lv.L < r.need ? 'opacity:.5' : ''}"><span class="big">${r.ic}</span><div class="main"><span class="t">${r.n}</span><span class="d" style="white-space:normal">${r.min}분 · 입장 ${r.fee}G · 몬스터 Lv ${r.lv[0]}~${r.lv[1]}${lv.L < r.need ? ` · 내 레벨 ${r.need} 이상` : ''}</span></div><button class="btn sm ${i === xRgSel ? 'go' : ''}" data-xr="${i}" ${lv.L < r.need ? 'disabled' : ''}>${i === xRgSel ? '선택됨' : '고르기'}</button></div>`).join('')}</div>
-      <div class="s sub">갈림길을 골라 100%를 채워요. 시간이 끝나거나 전멸하면 끝나요. 전멸하면 얻은 것을 모두 잃어요. 동료 2명이 자동으로 같이 싸워요.</div><button class="btn" id="xwp" style="width:100%">⚔️ 무기 강화 · ${XWN[ex.job]} (${XWT[ex.wp || 0]})</button><button class="btn" id="xst" style="width:100%">💪 스탯${xSpPts(ex) > 0 ? ` · 남은 포인트 ${xSpPts(ex)}` : ''}</button><button class="btn" id="xtree" style="width:100%">🌳 스킬 트리${xPts(ex) > 0 ? ` · 남은 포인트 ${xPts(ex)}` : ''}</button><button class="btn go" id="xgo" style="width:100%" ${ex.n >= XDAY || me.coin < R.fee || !okL ? 'disabled' : ''}>${ex.n >= XDAY ? '오늘은 끝났어요' : !okL ? `레벨 ${R.need} 이상이에요` : me.coin < R.fee ? `골드가 모자라요 (${R.fee}G)` : `출발하기 · ${R.fee}G`}</button>${hint(xMsg, '스킬은 레벨이 오를 때마다 포인트를 받아요')}</section><div style="display:flex;gap:8px">${back}</div>`);
+      <div class="s sub">갈림길을 골라 100%를 채워요. 시간이 끝나거나 전멸하면 끝나요. 전멸하면 얻은 것을 모두 잃어요. 지금은 혼자 싸워요. (같이 싸우는 협동 탐험은 준비 중이에요)</div><button class="btn" id="xwp" style="width:100%">⚔️ 무기 강화 · ${XWN[ex.job]} (${XWT[ex.wp || 0]})</button><button class="btn" id="xst" style="width:100%">💪 스탯${xSpPts(ex) > 0 ? ` · 남은 포인트 ${xSpPts(ex)}` : ''}</button><button class="btn" id="xtree" style="width:100%">🌳 스킬 트리${xPts(ex) > 0 ? ` · 남은 포인트 ${xPts(ex)}` : ''}</button><button class="btn go" id="xgo" style="width:100%" ${ex.n >= XDAY || me.coin < R.fee || !okL ? 'disabled' : ''}>${ex.n >= XDAY ? '오늘은 끝났어요' : !okL ? `레벨 ${R.need} 이상이에요` : me.coin < R.fee ? `골드가 모자라요 (${R.fee}G)` : `출발하기 · ${R.fee}G`}</button>${hint(xMsg, '스킬은 레벨이 오를 때마다 포인트를 받아요')}</section><div style="display:flex;gap:8px">${back}</div>`);
     on('[data-xr]', b => { xRgSel = +b.dataset.xr; renderExplore(); });
     $('#back').onclick = closeSheet;
     $('#xst').onclick = () => { xv = { view: 'stats', sel: XMAIN[ex.job] }; renderExplore(); };
@@ -1828,7 +1827,7 @@ function xGo(k){
 function xStartBattle(kind, msg){
   const ex = xEx(), run = ex.run, R = xReg(), party = xParty(), d = run.prog / 100, mL = Math.max(1, Math.min(Math.round(R.lv[0] + (R.lv[1] - R.lv[0]) * d), xLv(ex.exp).L + 3)),   // 내 레벨보다 3 높은 몬스터까지만
     mk = (m, i) => { const k = m.k || 1, f = 1 + .35 * (mL - 1), a = 1 + .25 * (mL - 1); return { id: 'e' + i, name: m.n, ic: '', lp: m.lp, big: m.big, sc: m.big ? 3 : k >= 3 ? 2 : 1, hh: 56 * (m.big ? 3 : k >= 3 ? 2 : 1), team: 'e', mhp: Math.round(m.hp * f), hp: Math.round(m.hp * f), atk: Math.round(m.atk * a), spd: m.spd, g: Math.random() * 60, k, aoe: !!m.aoe, mL, fx: {} }; };
-  const foes = kind === 'boss' ? [mk(R.boss, 0)] : kind === 'elite' ? [mk(R.elite, 0), mk(xRand(R.mon), 1)] : Array.from({ length: 1 + Math.floor(Math.random() * (1 + (d > .3 ? 2 : 1))) }, (_, i) => mk(xRand(R.mon), i));
+  const sz = party.length, foes = kind === 'boss' ? [mk(R.boss, 0)] : kind === 'elite' ? (sz > 1 ? [mk(R.elite, 0), mk(xRand(R.mon), 1)] : [mk(R.elite, 0)]) : Array.from({ length: Math.max(1, Math.round((1 + Math.floor(Math.random() * (1 + (d > .3 ? 2 : 1)))) * Math.min(sz, 3) / 3)) }, (_, i) => mk(xRand(R.mon), i));
   xb = { party, foes, kind, log: msg || '', turn: null, pick: null, over: false, last: performance.now(), buff: run.buff > 0, def: {}, fxs: [], floats: [], proj: [] }; if (run.buff > 0) run.buff--; xv = { view: 'battle' }; renderExplore();
 }
 function xAlive(a){ return a.filter(u => u.hp > 0); }
