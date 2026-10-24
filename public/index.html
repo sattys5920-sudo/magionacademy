@@ -1688,16 +1688,16 @@ function xAiSk(L){   // 동료는 줄을 가로로 훑으며 포인트를 쓰기
   const sk = { '0.0': 1 }; let pts = xSkp(L); for (let lv = 1; lv <= XMAXLV && pts > 0; lv++) for (let r = 0; r < 5 && pts > 0; r++) for (let b = 0; b < 3 && pts > 0; b++){ const k = b + '.' + r; if ((sk[k] || 0) < lv){ if (r > 0 && !sk[b + '.' + (r - 1)]) continue; sk[k] = lv; pts--; } } return sk;
 }
 const XRG = [   // 탐사 지역: 입장료·시간·몬스터 레벨 범위 · 몬스터는 레벨 1 기준 체력·공격·속도 (lp = art/monsters_lpc.png 칸, tools/iso/lpc/monster_lpc.py)
-  { n: '달빛 숲길', ic: '🌲', min: 20, fee: 50, need: 1, lv: [1, 12], clearExp: 200, kind: 'trees', pal: ['#1b1a3a', '#3a3a72', '#2c4a3a', '#35574a', '#16243a'], loot: ['herb', 'drop', 'mana', 'mush', 'g_dandel', 'g_mint', 'g_straw', 'g_carrot'], rare: ['mana', 'g_clover'],
+  { n: '달빛 숲길', dir: '남', tier: '초보', ic: '🌲', min: 20, fee: 50, need: 1, lv: [1, 12], clearExp: 200, kind: 'trees', pal: ['#1b1a3a', '#3a3a72', '#2c4a3a', '#35574a', '#16243a'], loot: ['herb', 'drop', 'mana', 'mush', 'g_dandel', 'g_mint', 'g_straw', 'g_carrot'], rare: ['mana', 'g_clover'],
     mon: [{ n: '숲 요정', lp: 17, hp: 32, atk: 8, spd: 13 }, { n: '들토끼', lp: 18, hp: 34, atk: 7, spd: 11 }, { n: '잠자리 도깨비', lp: 19, hp: 30, atk: 8, spd: 12 }, { n: '아기 멧돼지', lp: 20, hp: 44, atk: 7, spd: 7 }, { n: '고블린 정찰병', lp: 0, hp: 42, atk: 7, spd: 9 }, { n: '들쥐 도적', lp: 1, hp: 34, atk: 8, spd: 12 }, { n: '토끼 창병', lp: 2, hp: 38, atk: 7, spd: 10 }],
     elite: { n: '오크 두목', lp: 12, hp: 150, atk: 13, spd: 9, k: 3 }, boss: { n: '고블린 대왕', lp: 21, hp: 360, atk: 14, spd: 6, k: 8, aoe: true, big: 1 } },
-  { n: '무너진 지하 묘지', ic: '🪦', min: 30, fee: 120, need: 8, lv: [10, 24], clearExp: 600, kind: 'graves', pal: ['#201830', '#4a3a62', '#3a3040', '#463a4c', '#1a1224'], loot: ['silk', 'whisker', 'herb', 'mana', 'mush', 'drop'], rare: ['mana', 'egg'],
+  { n: '무너진 지하 묘지', dir: '서', tier: '중급', ic: '🪦', min: 30, fee: 120, need: 8, lv: [10, 24], clearExp: 600, kind: 'graves', pal: ['#201830', '#4a3a62', '#3a3040', '#463a4c', '#1a1224'], loot: ['silk', 'whisker', 'herb', 'mana', 'mush', 'drop'], rare: ['mana', 'egg'],
     mon: [{ n: '해골 병사', lp: 3, hp: 50, atk: 8, spd: 8 }, { n: '좀비', lp: 4, hp: 70, atk: 8, spd: 5 }, { n: '쥐 도굴꾼', lp: 5, hp: 44, atk: 9, spd: 11 }, { n: '해골 궁수', lp: 22, hp: 40, atk: 10, spd: 11 }, { n: '떠도는 유령', lp: 23, hp: 46, atk: 10, spd: 9 }, { n: '달빛 요정', lp: 24, hp: 36, atk: 10, spd: 13 }],
     elite: { n: '해골 기사', lp: 13, hp: 190, atk: 14, spd: 8, k: 3 }, boss: { n: '묘지의 리치', lp: 15, hp: 420, atk: 15, spd: 7, k: 8, aoe: true, big: 1 } },
-  { n: '안개 호수 동굴', ic: '🕳️', min: 45, fee: 250, need: 20, lv: [22, 38], clearExp: 1500, kind: 'cave', pal: ['#0f2a3a', '#1f5a6a', '#2a4a52', '#335a62', '#0c2030'], loot: ['slime', 'scale', 'herb', 'mana', 'drop', 'mush'], rare: ['mana', 'egg', 'g_clover'],
+  { n: '안개 호수 동굴', dir: '북', tier: '고급', ic: '🕳️', min: 45, fee: 250, need: 20, lv: [22, 38], clearExp: 1500, kind: 'cave', pal: ['#0f2a3a', '#1f5a6a', '#2a4a52', '#335a62', '#0c2030'], loot: ['slime', 'scale', 'herb', 'mana', 'drop', 'mush'], rare: ['mana', 'egg', 'g_clover'],
     mon: [{ n: '호수 도마뱀', lp: 25, hp: 58, atk: 9, spd: 10 }, { n: '아기 트롤', lp: 26, hp: 70, atk: 9, spd: 6 }, { n: '나비 쥐', lp: 27, hp: 42, atk: 10, spd: 12 }, { n: '멧돼지 전사', lp: 6, hp: 70, atk: 10, spd: 7 }, { n: '호수의 이방인', lp: 7, hp: 50, atk: 11, spd: 10 }],
     elite: { n: '늪 트롤 대장', lp: 8, hp: 210, atk: 15, spd: 7, k: 3 }, boss: { n: '리자드 왕', lp: 28, hp: 460, atk: 16, spd: 8, k: 8, aoe: true, big: 1 } },
-  { n: '호박달 고대 신전', ic: '🏛️', min: 60, fee: 500, need: 34, lv: [36, 50], clearExp: 3500, kind: 'temple', pal: ['#3a2418', '#a06a3a', '#6a5236', '#7a6040', '#3a2a1e'], loot: ['mana', 'scale', 'feather', 'egg'], rare: ['mana', 'egg'],
+  { n: '호박달 고대 신전', dir: '동', tier: '초고급', ic: '🏛️', min: 60, fee: 500, need: 34, lv: [36, 50], clearExp: 3500, kind: 'temple', pal: ['#3a2418', '#a06a3a', '#6a5236', '#7a6040', '#3a2a1e'], loot: ['mana', 'scale', 'feather', 'egg'], rare: ['mana', 'egg'],
     mon: [{ n: '청동 수호상', lp: 29, hp: 90, atk: 10, spd: 6 }, { n: '그림자 단원', lp: 30, hp: 60, atk: 12, spd: 13 }, { n: '불꽃 사제', lp: 31, hp: 54, atk: 12, spd: 10 }, { n: '도마뱀 병사', lp: 9, hp: 66, atk: 11, spd: 9 }, { n: '양 마법사', lp: 10, hp: 52, atk: 12, spd: 10 }, { n: '돼지 투사', lp: 11, hp: 78, atk: 11, spd: 7 }],
     elite: { n: '미노타우로스', lp: 14, hp: 240, atk: 16, spd: 9, k: 3 }, boss: { n: '신전의 트롤 왕', lp: 16, hp: 520, atk: 17, spd: 7, k: 8, aoe: true, big: 1 } },
 ];
@@ -1796,7 +1796,8 @@ function renderExplore(){
   const head = `<div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center"><span class="big">${job.ic}</span><div style="flex:1"><b>${esc(me.nick)} · ${job.n} Lv ${lv.L}</b><div class="s sub">${lv.need ? `경험치 ${lv.cur} / ${lv.need}` : '최고 레벨'} · HP ${Math.round(xStTot(ex, 'hp'))} · 공 ${Math.round(xStTot(ex, 'atk'))} · 마 ${Math.round(xStTot(ex, 'mag'))} · 치 ${Math.round(xStTot(ex, 'heal'))} · 속 ${Math.round(xStTot(ex, 'spd') * 10) / 10}</div></div></div></div>`;
   if (v === 'lobby'){
     const R = xReg(), okL = lv.L >= R.need;
-    frame(null, '탐사', `오늘 ${ex.n} / ${XDAY}회`, `${head}<section class="sec">${secH('어디로 갈까요?', '레벨이 모자라면 잠겨 있어요')}<div class="box px">${XRG.map((r, i) => `<div class="li" style="${i === xRgSel ? 'outline:2px solid var(--gold);border-radius:10px;' : ''}${lv.L < r.need ? 'opacity:.5' : ''}"><span class="big">${r.ic}</span><div class="main"><span class="t">${r.n}</span><span class="d" style="white-space:normal">${r.min}분 · 입장 ${r.fee}G · 몬스터 Lv ${r.lv[0]}~${r.lv[1]}${lv.L < r.need ? ` · 내 레벨 ${r.need} 이상` : ''}</span></div><button class="btn sm ${i === xRgSel ? 'go' : ''}" data-xr="${i}" ${lv.L < r.need ? 'disabled' : ''}>${i === xRgSel ? '선택됨' : '고르기'}</button></div>`).join('')}</div>
+    frame(null, '탐사', `오늘 ${ex.n} / ${XDAY}회`, `${head}<section class="sec">${secH('가는 곳', '마을 가장자리 길 끝에서 정해요')}<div class="box px"><div class="li"><span class="big">${R.ic}</span><div class="main"><span class="t">${R.n} · ${R.tier}</span><span class="d" style="white-space:normal">${R.dir}쪽 길 · ${R.min}분 · 입장 ${R.fee}G · 몬스터 Lv ${R.lv[0]}~${R.lv[1]}${lv.L < R.need ? ` · 내 레벨 ${R.need} 이상` : ''}</span></div></div>
+      <div class="s sub" style="white-space:normal">마을 가장자리에 길이 네 갈래 있어요. 남쪽 초보 · 서쪽 중급 · 북쪽 고급 · 동쪽 초고급. 길 끝 기둥 사이로 걸어가면 그 탐사장이 열려요. 들어갈 때마다 「오늘의 길」과 만나는 몬스터가 달라져요.</div></div>
       ${xpPanel(lv)}
       <div class="s sub">갈림길을 골라 100%를 채워요. 시간이 끝나거나 전멸하면 끝나요. 전멸하면 얻은 것을 모두 잃어요. 지금은 혼자 싸워요. (같이 싸우는 협동 탐험은 준비 중이에요)</div><button class="btn" id="xwp" style="width:100%">⚔️ 무기 강화 · ${XWN[ex.job]} (${XWT[ex.wp || 0]})</button><button class="btn" id="xst" style="width:100%">💪 스탯${xSpPts(ex) > 0 ? ` · 남은 포인트 ${xSpPts(ex)}` : ''}</button><button class="btn" id="xtree" style="width:100%">🌳 스킬 트리${xPts(ex) > 0 ? ` · 남은 포인트 ${xPts(ex)}` : ''}</button><button class="btn go" id="xgo" style="width:100%" ${ex.n >= XDAY || me.coin < R.fee || !okL ? 'disabled' : ''}>${ex.n >= XDAY ? '오늘은 끝났어요' : !okL ? `레벨 ${R.need} 이상이에요` : me.coin < R.fee ? `골드가 모자라요 (${R.fee}G)` : `출발하기 · ${R.fee}G`}</button>${hint(xMsg, '스킬은 레벨이 오를 때마다 포인트를 받아요')}</section><div style="display:flex;gap:8px">${back}</div>`);
     on('[data-xr]', b => { xRgSel = +b.dataset.xr; if (xpRoom && xpV?.host === myId() && xpV.st === 'lobby') GDB.upd('xparty/' + xpRoom, { rg: xRgSel }); renderExplore(); });
@@ -1805,7 +1806,7 @@ function renderExplore(){
     $('#xst').onclick = () => { xv = { view: 'stats', sel: XMAIN[ex.job] }; renderExplore(); };
     $('#xtree').onclick = () => { xv = { view: 'tree', sel: '0.0' }; renderExplore(); };
     $('#xwp').onclick = () => { xv = { view: 'weapon' }; renderExplore(); };
-    const go = $('#xgo'); if (go) go.onclick = () => { me.coin -= xReg().fee; ex.n++; ex.run = { rg: xRgSel, start: Date.now(), end: Date.now() + xReg().min * 6e4, prog: 0, loot: { gold: 0, exp: 0, items: {} }, buff: 0, p: null, node: null }; save(); hud(); xv = { view: 'node' }; xMsg = ''; renderExplore(); };
+    const go = $('#xgo'); if (go) go.onclick = () => { me.coin -= xReg().fee; ex.n++; ex.run = { rg: xRgSel, mod: xRand(XMODS), pool: xShuffle(xReg().mon).slice(0, 4), start: Date.now(), end: Date.now() + xReg().min * 6e4, prog: 0, loot: { gold: 0, exp: 0, items: {} }, buff: 0, p: null, node: null }; save(); hud(); xv = { view: 'node' }; xMsg = ''; renderExplore(); };
     return;
   }
   const run = ex.run;
@@ -1857,19 +1858,33 @@ function renderExplore(){
   const ticker = () => { const el = $('#xtime'); if (el) el.textContent = timeText(xTime(run)); if (xTime(run) <= 0 && !xb){ clearInterval(xTick); xEnd('time'); renderExplore(); } };
   frame(null, '탐사 · ' + xReg().n, `남은 시간 <span id="xtime">${timeText(xTime(run))}</span>`, `${head}<section class="sec">${secH('진행률', `${run.prog}%`)}<div class="bar" style="height:14px;grid-template-columns:repeat(20,1fr)">${Array.from({ length: 20 }, (_, i) => `<i style="background:${i < Math.floor(run.prog / 5) ? 'var(--ok)' : 'var(--line)'}"></i>`).join('')}</div>
     <div class="s sub">얻은 것: 골드 ${run.loot.gold} · 경험치 ${run.loot.exp}${Object.keys(run.loot.items).length ? ' · ' + Object.entries(run.loot.items).map(([k, n]) => `${ITEM[k] || k}×${n}`).join(' ') : ''}${run.buff ? ` · 🗿 가호 ${run.buff}회` : ''}</div>
-    ${secH('어느 길로 갈까요?')}<div class="grid" style="grid-template-columns:repeat(${run.node.length},1fr)">${run.node.map((k, i) => `<button class="cell" data-xn="${i}" style="min-height:96px"><span class="big">${k === 'boss' ? xReg().ic : XNODE[k][0]}</span><span class="s b">${k === 'boss' ? xReg().boss.n : XNODE[k][1]}</span><span class="s sub">+${k === 'boss' ? '마지막' : XNODE[k][2] + '%'}</span></button>`).join('')}</div>
+    ${secH('어느 길로 갈까요?', run.mod && run.mod.d ? `오늘의 길: ${run.mod.n} · ${run.mod.d}` : run.mod ? `오늘의 길: ${run.mod.n}` : '')}<div class="grid" style="grid-template-columns:repeat(${run.node.length},1fr)">${run.node.map((k, i) => `<button class="cell" data-xn="${i}" style="min-height:96px"><span class="big">${k === 'boss' ? xReg().ic : XNODE[k][0]}</span><span class="s b">${k === 'boss' ? xReg().boss.n : XNODE[k][1]}</span><span class="s sub">+${k === 'boss' ? '마지막' : XNODE[k][2] + '%'}</span></button>`).join('')}</div>
     ${hint(xMsg, '선택한 곳으로 가요')}<button class="btn ghost" id="xret" style="align-self:center">탐사 끝내기 (얻은 것은 가져가요)</button></section><div style="display:flex;gap:8px">${back}</div>`);
   $('#back').onclick = () => { closeSheet(); }; clearInterval(xTick); xTick = setInterval(() => { if (!sheetOn || sub !== 'explore' || xv?.view !== 'node') return clearInterval(xTick); ticker(); }, 1000);
   $('#xret').onclick = () => confirmBox('탐사를 끝낼까요? 얻은 것은 가져가요.', '끝낼래요', '계속할래요').then(ok => { if (ok){ xEnd('retreat'); renderExplore(); } });
   on('[data-xn]', b => xGo(run.node[+b.dataset.xn]));
 }
-function xNodes(prog){ if (prog >= 88) return ['boss']; const W = ['battle', 'battle', 'battle', 'battle', 'battle', 'elite', 'camp', 'statue', 'chest', 'chest'], a = xRand(W); let b = xRand(W), t = 0; while (b === a && t++ < 12) b = xRand(W); return [a, b]; }
+// 탐사 한 번마다 「오늘의 길」이 무작위로 정해져요: 길에 나오는 노드 비율과 보상이 달라져요 (몬스터도 지역 몬스터 중 4종만 나와요)
+const XMODS = [
+  { n: '평범한 길', d: '', w: {}, rew: 1 },
+  { n: '몬스터 소굴', d: '전투가 많고 보상이 조금 더 좋아요', w: { battle: 3, elite: 1 }, rew: 1.15 },
+  { n: '보물 길', d: '상자와 석상이 많아요', w: { chest: 4, statue: 2 }, rew: 1 },
+  { n: '쉬어 가는 길', d: '캠프파이어가 많아요 · 보상은 보통', w: { camp: 3, statue: 1, battle: -2 }, rew: .95 },
+  { n: '강적의 길', d: '강한 몬스터가 많고 보상이 커요', w: { elite: 3 }, rew: 1.3 },
+];
+const xShuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+function xNodes(prog){
+  if (prog >= 88) return ['boss'];
+  const run = xEx().run, base = { battle: 5, elite: 1, camp: 1, statue: 1, chest: 2 }, mw = run?.mod?.w || {}, W = [];
+  Object.keys(base).forEach(k => { for (let i = 0, n = Math.max(0, base[k] + (mw[k] || 0)); i < n; i++) W.push(k); });
+  const a = xRand(W); let b = xRand(W), t = 0; while (b === a && t++ < 12) b = xRand(W); return [a, b];
+}
 function xAdd(k){ const run = xEx().run; run.prog = Math.min(100, run.prog + XNODE[k][2]); run.node = null; if (run.prog >= 100) run.prog = 100; }
 function xGo(k){
   const run = xEx().run; xMsg = '';
   if (k === 'battle' || k === 'elite' || k === 'boss'){ xStartBattle(k); return; }
   if (k === 'camp'){ const p = xb?.party || xParty(); p.forEach(u => { u.hp = Math.min(u.mhp, u.hp + Math.round(u.mhp * .5)); u.mp = Math.min(u.mmp, u.mp + Math.round(u.mmp * .5)); }); run.p = p.map(u => ({ hp: u.hp, mp: u.mp })); xMsg = '🔥 모닥불에 둘러앉아 체력과 마력을 절반 회복했어요.'; if (Math.random() < .5){ run.buff = (run.buff || 0) + 1; xMsg += ' 따뜻한 가호 (다음 전투 공격 +25%)'; } xAdd('camp'); save(); return renderExplore(); }
-  if (k === 'chest'){ const g = 20 + Math.round(Math.random() * 30) + Math.round(run.prog / 3), it = xRand(xReg().loot); run.loot.gold += g; run.loot.items[it] = (run.loot.items[it] || 0) + 1 + (Math.random() < .3 ? 1 : 0); xMsg = `🎁 상자에서 골드 ${g}과 ${ITEM[it] || it}이 나왔어요!`; if (Math.random() < .12){ xAdd('chest'); save(); return xStartBattle('battle', '상자가 미믹이었어요!'); } xAdd('chest'); save(); return renderExplore(); }
+  if (k === 'chest'){ const g = Math.round((20 + Math.round(Math.random() * 30) + Math.round(run.prog / 3)) * (run.mod?.rew || 1)), it = xRand(xReg().loot); run.loot.gold += g; run.loot.items[it] = (run.loot.items[it] || 0) + 1 + (Math.random() < .3 ? 1 : 0); xMsg = `🎁 상자에서 골드 ${g}과 ${ITEM[it] || it}이 나왔어요!`; if (Math.random() < .12){ xAdd('chest'); save(); return xStartBattle('battle', '상자가 미믹이었어요!'); } xAdd('chest'); save(); return renderExplore(); }
   if (k === 'statue'){ xv = { view: 'node' }; confirmBox('이끼 낀 고대 석상이 있어요. 어떻게 할까요?', '기도하기', '조사하기').then(ok => { xAdd('statue'); const r = Math.random();
       if (ok){ if (r < .6){ run.buff = (run.buff || 0) + 3; xMsg = '🗿 석상이 빛나요! 다음 3번의 전투 공격 +25%.'; } else if (r < .85) xMsg = '🗿 아무 일도 일어나지 않았어요…'; else { const p = xb?.party || xParty(); p.forEach(u => { u.hp = Math.max(1, u.hp - Math.round(u.mhp * .15)); }); run.p = p.map(u => ({ hp: u.hp, mp: u.mp })); xMsg = '🗿 저주! 모두 체력이 줄었어요.'; } }
       else { if (r < .7){ const it = xRand(xReg().rare); run.loot.items[it] = (run.loot.items[it] || 0) + 1; run.loot.gold += 30; xMsg = `🗿 석상 밑에서 ${ITEM[it] || it}과 골드 30을 찾았어요!`; } else { save(); return xStartBattle('battle', '석상을 지키던 몬스터가 깨어났어요!'); } }
@@ -1879,7 +1894,7 @@ function xGo(k){
 function xStartBattle(kind, msg){
   const ex = xEx(), run = ex.run, R = xReg(), party = xParty(), d = run.prog / 100, mL = Math.max(1, Math.min(Math.round(R.lv[0] + (R.lv[1] - R.lv[0]) * d), xLv(ex.exp).L + 3)),   // 내 레벨보다 3 높은 몬스터까지만
     mk = (m, i) => { const k = m.k || 1, f = 1 + .35 * (mL - 1), a = 1 + .25 * (mL - 1); return { id: 'e' + i, name: m.n, ic: '', lp: m.lp, big: m.big, sc: m.big ? 3 : k >= 3 ? 2 : 1, hh: 56 * (m.big ? 3 : k >= 3 ? 2 : 1), team: 'e', mhp: Math.round(m.hp * f), hp: Math.round(m.hp * f), atk: Math.round(m.atk * a), spd: m.spd, g: Math.random() * 60, k, aoe: !!m.aoe, mL, fx: {} }; };
-  const sz = party.length, foes = kind === 'boss' ? [mk(R.boss, 0)] : kind === 'elite' ? (sz > 1 ? [mk(R.elite, 0), mk(xRand(R.mon), 1)] : [mk(R.elite, 0)]) : Array.from({ length: Math.max(1, Math.round((1 + Math.floor(Math.random() * (1 + (d > .3 ? 2 : 1)))) * Math.min(sz, 3) / 3)) }, (_, i) => mk(xRand(R.mon), i));
+  const sz = party.length, foes = kind === 'boss' ? [mk(R.boss, 0)] : kind === 'elite' ? (sz > 1 ? [mk(R.elite, 0), mk(xRand(run.pool || R.mon), 1)] : [mk(R.elite, 0)]) : Array.from({ length: Math.max(1, Math.round((1 + Math.floor(Math.random() * (1 + (d > .3 ? 2 : 1)))) * Math.min(sz, 3) / 3)) }, (_, i) => mk(xRand(run.pool || R.mon), i));
   xb = { party, foes, kind, log: msg || '', turn: null, pick: null, over: false, last: performance.now(), buff: run.buff > 0, def: {}, fxs: [], floats: [], proj: [] }; if (run.buff > 0) run.buff--; xv = { view: 'battle' }; renderExplore();
 }
 function xAlive(a){ return a.filter(u => u.hp > 0); }
@@ -2234,7 +2249,7 @@ function xLoop(){
 }
 function xWin(){
   const B = xb, run = xEx().run; B.over = true; clearInterval(xTick); const mL = B.foes[0].mL; let exp = 0, gold = 0; B.foes.forEach(f => { exp += Math.round(8 * (1 + .45 * (mL - 1)) * f.k); gold += Math.round(6 * (1 + .3 * (mL - 1)) * f.k * (.8 + Math.random() * .4)); });
-  run.loot.exp += exp; run.loot.gold += gold; let drop = ''; if (Math.random() < (B.kind === 'battle' ? .3 : .8)){ const it = xRand(B.kind === 'boss' ? xReg().rare : xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; drop = ` · ${ITEM[it] || it}`; }
+  const rm = (run.mod?.rew || 1) * (.9 + Math.random() * .2); run.loot.exp += Math.round(exp * rm); run.loot.gold += Math.round(gold * rm); let drop = ''; if (Math.random() < (B.kind === 'battle' ? .3 : .8)){ const it = xRand(B.kind === 'boss' ? xReg().rare : xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; drop = ` · ${ITEM[it] || it}`; }
   xSaveParty(); B.party.forEach(u => { if (u.hp <= 0) u.hp = Math.max(1, Math.round(u.mhp * .2)); }); run.p = B.party.map(u => ({ hp: u.hp, mp: u.mp }));
   const kind = B.kind; xAdd(kind === 'boss' ? 'boss' : kind); save();
   $('#xlog') && ($('#xlog').textContent = `승리! 골드 +${gold} · 경험치 +${exp}${drop}`); const el = $('#xcmd'); if (el) el.innerHTML = '<button class="btn go" id="xnext" style="grid-column:1/-1">계속</button>';
@@ -5922,6 +5937,7 @@ function renderAvatar(){
 // 옷 가게 (마을의 옷 가게 문, 캐릭터 꾸미기에서도 열려요): 입어 보고 사서 입기
 let shopTry = null, shopKind = 'cas', shopMsg = '';
 const SHOP_CATS = [['top', '상의'], ['legs', '하의'], ['feet', '신발'], ['hat', '모자'], ['acc', '액세서리'], ['neck', '목걸이'], ['cape', '망토']];
+World.onExplore = (ri, door) => { if (!me) return; xRgSel = ri; xv = null; toast(`${door?.label || XRG[ri].n} · ${XRG[ri].tier}`); openSheet('home', 'explore'); };   // 마을 가장자리 길 끝 기둥 문 (tools/iso/halloween.py EXPL)
 World.onLockedDoor = label => { if (label === '낚시 도구점' && me){ fsTab = 'rod'; fsMsg = ''; openSheet('home', 'fish'); return true; }
   if (label !== '옷 가게' || !me) return false; shopTry = null; shopMsg = ''; openSheet('home', 'clothes'); return true; };
 function renderClothes(){

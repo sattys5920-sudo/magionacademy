@@ -546,6 +546,10 @@ World.doNear = () => { const t = nearT; if (!t) return; hideBubble();
   else if (t.kind === 'act'){ useObj(t.o, t.o.act || ACTS[t.o.name]); }
   else if (t.kind === 'water'){ World.faceTo(t.wx, t.wy); World.onWater && World.onWater(t.wx, t.wy); } };
 function goDoor(door, o){
+  if (door.explore !== undefined){   // 탐사장 가는 길: 기둥 사이를 지나면 그 지역 탐사 창이 열리고, 나는 한 걸음 물러나 있어요
+    if (door.back){ me.x = door.back[0]; me.y = door.back[1]; me.path = []; }
+    if (World.onExplore) World.onExplore(door.explore, door); return;
+  }
   if (door.pen !== undefined && World.onPenDoor){   // 사육장 우리: 주인만 들어가요
     const r = World.onPenDoor(door.pen);
     if (r !== true){ const [bx, by] = P(door.tile[0] + .5, door.tile[1] + .5); if (r && typeof r === 'object') showBubble({ x: bx, y: by - 26, sw: 0 }, r.html, r.btn, r.fn); else showBubble({ x: bx, y: by - 26, sw: 0 }, r); return; }

@@ -46,6 +46,10 @@ fill('dirt', 63, 46, 71, 49)             # 마녀 오두막 길
 fill('dirt', 63, 58, 77, 61)             # 늑대인간 집 길
 fill('dirt', 45, 51, 60, 54)             # 다리2 → 마을
 fill('grave', 46, 39, 57, 50)            # 묘지
+# 탐사장 가는 길 (남·서·북·동 가장자리 끝에 기둥 문): 서·북·동은 새로 낸 길, 남은 학교 남북 길 끝이에요
+fill('dirt', 0, 26, 3, 29)      # 서: 학교 동서 길을 가장자리까지
+fill('dirt', 8, 3, 11, 26)      # 북: 학교 동서 길에서 북쪽 가장자리까지
+fill('dirt', 66, 36, 83, 39)    # 동: 광장에서 동쪽 가장자리까지
 for x in range(NX):
     for y in range(NY): T.setdefault((x, y), 'grass')
 GRASS = [hexc('#3E4E3A'), hexc('#36463A'), hexc('#46563E'), hexc('#3A4436')]
@@ -332,6 +336,22 @@ def pillar(img, x, y):
     d.rectangle([cx - 8, cy - 50, cx + 8, cy - 46], fill=hexc('#4E4856')); d.polygon([(cx - 8, cy - 50), (cx, cy - 58), (cx + 8, cy - 50)], fill=hexc('#3A2A5E'))
     d.line([(cx, cy - 46), (cx, cy - 38)], fill=hexc('#2A2230')); d.ellipse([cx - 4, cy - 38, cx + 4, cy - 28], fill=hexc('#FF9A3A')); d.ellipse([cx - 2, cy - 36, cx + 2, cy - 31], fill=hexc('#FFE08A'))
 shared('pillar', pillar)
+def pillar_t(body, shade_, cap, lamp, lamp2):   # 지역마다 기둥 색·등불 색이 달라요
+    def f(img, x, y):
+        d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
+        d.rectangle([cx - 7, cy - 6, cx + 7, cy + 2], fill=hexc(shade_)); d.rectangle([cx - 5, cy - 46, cx + 5, cy - 6], fill=hexc(body)); d.rectangle([cx - 5, cy - 46, cx, cy - 6], fill=hexc(shade_))
+        for k in range(-40, -8, 8): d.line([(cx - 5, cy + k), (cx + 5, cy + k)], fill=hexc(shade_))
+        d.rectangle([cx - 8, cy - 50, cx + 8, cy - 46], fill=hexc(shade_)); d.polygon([(cx - 8, cy - 50), (cx, cy - 58), (cx + 8, cy - 50)], fill=hexc(cap))
+        d.line([(cx, cy - 46), (cx, cy - 38)], fill=hexc('#2A2230')); d.ellipse([cx - 4, cy - 38, cx + 4, cy - 28], fill=hexc(lamp)); d.ellipse([cx - 2, cy - 36, cx + 2, cy - 31], fill=hexc(lamp2))
+    return f
+EXPL = [   # (지역 번호, 이름, 쪽, 기둥 이름, 기둥 색, 기둥 두 곳, 문 칸과 걸음 범위, 돌아 나올 칸, 등불 색)
+    (0, '달빛 숲길', '남', 'pilF', ('#5E7A5A', '#3E5A3E', '#2A5A3A', '#7AE88A', '#E8FFC0'), (18, 69), (22, 69), dict(tile=[20, 69], spanX=[19, 21]), [20, 66], [120, 255, 150]),
+    (1, '무너진 지하 묘지', '서', 'pilG', ('#6A6070', '#4A4256', '#2A1E3A', '#B080FF', '#EAD8FF'), (3, 25), (3, 29), dict(tile=[3, 27], span=[26, 28]), [6, 27], [180, 130, 255]),
+    (2, '안개 호수 동굴', '북', 'pilC', ('#5A7A8A', '#3A5A6A', '#1E4A6A', '#60E0FF', '#E0FAFF'), (7, 4), (11, 4), dict(tile=[9, 4], spanX=[8, 10]), [9, 8], [110, 225, 255]),
+    (3, '호박달 고대 신전', '동', 'pilT', ('#B09060', '#8A6A40', '#7A3A1E', '#FFB830', '#FFF0A0'), (81, 35), (81, 39), dict(tile=[81, 37], span=[36, 38]), [78, 37], [255, 190, 70]),
+]
+for ri, nm, dr, key, col, pa, pb, dd, back, lc in EXPL:
+    shared(key, pillar_t(*col)); place('gate', key, pa[0], pa[1]); objs[-1]['door'] = dict(to=None, label=f'{dr}쪽 길 · {nm}', walk=True, explore=ri, back=back, **dd); place('gate', key, pb[0], pb[1])
 place('gate', 'pillar', 80, 25); objs[-1]['door'] = dict(tile=[80, 27], to='quarter', spawn=[8, 14], label='그림자 골목', walk=True, span=[26, 28])
 place('gate', 'pillar', 80, 29)
 # ---------------- 놓기 ----------------
@@ -342,6 +362,9 @@ for o in objs:
         for y in range(b[1], b[3]): occupied.add((x, y))
 def can(x, y): return (x, y) not in occupied and T.get((x, y)) == 'grass'
 def put(name, key, x, y, **kw): place(name, key, x, y, **kw); occupied.add((x, y))
+for e in EXPL:   # 탐사장 문 둘레는 나무를 심지 않아요 (멀리서도 기둥이 보이게)
+    (ax, ay), (bx, by) = e[5], e[6]
+    occupied |= {(x, y) for x in range(min(ax, bx) - 3, max(ax, bx) + 4) for y in range(min(ay, by) - 3, max(ay, by) + 4)}
 # 호박밭
 for x in range(2, 15):
     for y in range(56, 69):
@@ -411,6 +434,7 @@ lights += [dict(p=P(61, 27.5), dy=-18, r=60, c=[255, 160, 60], a=.6, f=1), dict(
            dict(p=P(56, 59), dy=0, r=70, c=[90, 200, 230], a=.25, f=0)]
 lights += [dict(p=P(o['box'][0] + .5, o['box'][1] + .5), dy=-3, r=14, c=[120, 240, 220], a=.5, f=0) for o in objs if o['spr'] == 'glowmush']
 lights += [dict(p=P(x + .5, y + .5), dy=-34, r=36, c=[255, 160, 70], a=.6, f=1) for (x, y) in ((80, 25), (80, 29))]
+lights += [dict(p=P(q[0] + .5, q[1] + .5), dy=-34, r=36, c=e[9], a=.6, f=1) for e in EXPL for q in (e[5], e[6])]
 WATER = [[x, y] for (x, y), t in T.items() if t in ('river', 'lake')]
 # 채집 지점 후보: 빈 풀밭·묘지 (f 숲, g 묘지, l 호숫가, p 들판)
 def zone(x, y):
@@ -419,7 +443,7 @@ def zone(x, y):
     if (x > 64 and y > 48) or min(x, y, NX - 1 - x, NY - 1 - y) < 5: return 'f'
     return 'p'
 FORAGE = [[x, y, zone(x, y)] for x in range(2, NX - 2) for y in range(2, NY - 2) if (x, y) not in occupied and T[(x, y)] in ('grass', 'grave') and (x * 7 + y * 3) % 4 == 0]
-AREAS = [dict(n='본관 · 물약 교실', t=[19, 24]), dict(n='과자 교실', t=[6, 37]), dict(n='공예 교실', t=[29, 37]), dict(n='기숙사', t=[16, 48]), dict(n='호박밭', t=[9, 55]), dict(n='독초 온실', t=[22, 63]),
+AREAS = [dict(n=f'{e[2]}쪽 길 · {e[1]}', t=e[8]) for e in EXPL] + [dict(n='본관 · 물약 교실', t=[19, 24]), dict(n='과자 교실', t=[6, 37]), dict(n='공예 교실', t=[29, 37]), dict(n='기숙사', t=[16, 48]), dict(n='호박밭', t=[9, 55]), dict(n='독초 온실', t=[22, 63]),
          dict(n='사육장', t=[27, 61]), dict(n='등불 시장', t=[61, 31]), dict(n='채소 가게', t=[54, 35]), dict(n='교실 · 수업', t=[34, 22]), dict(n='북쪽 연못', t=[26, 10]), dict(n='북동 연못', t=[74, 11]), dict(n='남동 연못', t=[75, 44]), dict(n='뱀파이어 저택', t=[63, 12]), dict(n='마녀의 오두막', t=[72, 49]), dict(n='묘지', t=[51, 51]), dict(n='유령 호수', t=[56, 53]), dict(n='늑대인간 집', t=[78, 60])]
 json.dump(dict(W=W, H=H, NX=NX, NY=NY, OX=OX, OY=OY, objs=meta, lights=lights, water=WATER, ponds=[dict(id=q['id'], name=q['name'], cx=q['cx'], cy=q['cy'], r=max(q['rx'], q['ry']) + 1.5) for q in PONDS], forage=FORAGE, areas=AREAS, start=[20, 30]), open('out/hw.json', 'w'), ensure_ascii=False)
 print('objs', len(objs), 'sheet', sheet.size)
