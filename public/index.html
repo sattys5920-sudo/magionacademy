@@ -5824,7 +5824,7 @@ const AUTH_MSG = {
 const configured = !!(firebaseConfig.apiKey && firebaseConfig.databaseURL);
 const rndOf = a => a[Math.floor(Math.random() * a.length)];
 const PUNS = ['Boo-tiful day, isn\'t it?', 'Have a fang-tastic day!', 'Witch way to the school?', 'Pumpkin spice and everything ghoul', 'Just here for the boos', 'Bat-tery at 100%', 'Skele-tonight we study', 'You\'re looking sharp… fang-ly', 'Hocus Pocus, 집중!', '오늘의 마법: 지각 안 하기', '호박이 넝쿨째 굴러왔어요', '둥글둥글 호박처럼, 굴러서 등교', '마녀는 빗자루로 출근 중', 'Don\'t be a scaredy-cat, 들어와요', 'Ghoul friends forever', 'Leaf your worries — it\'s spooky season'];
-const LOADS = ['Boo-ting up… 부팅 중이에요', '빗자루 시동 거는 중… 부릉부릉', 'Witch way to school? 이쪽이에요', '호박 마차 굴리는 중…', '박쥐 우체부가 편지 가지러 갔어요', '솥에서 마법이 부글부글…', '유령이 문 열어 주는 중… Boo!'];
+const LOADS = ['Boo-ting up...... 부팅 중이에요', '빗자루 시동 거는 중...... 부릉부릉', 'Witch way to school? 이쪽이에요', '호박 마차 굴리는 중......', '박쥐 우체부가 편지 가지러 갔어요', '솥에서 마법이 부글부글......', '유령이 문 열어 주는 중...... Boo!'];
 function cover(inner){ document.body.classList.remove('inworld'); app.classList.remove('open'); sheetOn = false; app.innerHTML = `<div class="cover"><div style="text-align:center;display:flex;flex-direction:column;gap:6px;margin:10px 0"><span class="b" style="font-size:36px;line-height:36px">호박달 마녀학교</span><span class="s" style="color:#C8B8FF">${rndOf(PUNS)}</span></div>${inner}</div>`; }
 function showLogin(mode = 'login'){
   const signup = mode === 'signup';
@@ -6012,7 +6012,7 @@ const SHOP_CATS = [['top', '상의'], ['legs', '하의'], ['feet', '신발'], ['
 // 그림자 골목 의뢰인 집: 그 사람의 의뢰가 3단계에 닿았거나 끝난 뒤에 들어갈 수 있어요. 안에서 의뢰인을 만나요 (tools/iso/quarter_rooms.py)
 const QHOME = { main_01_dracula: ['blady', 'vamp_manor', 18, 9], main_05_mummy: ['nefer', 'museum', 18, 12], main_06_frankenstein: ['piece', 'lab_tower', 17, 11], main_03_witch: ['beatrix', 'witch_hut', 16, 10], main_04_werewolf: ['ur', 'wolf_cabin', 16, 10], main_07_jack: ['jack', 'jack_hut', 16, 10] };
 const qUnlocked = qid => { const s = typeof mqState === 'function' ? mqState() : null; return !!s && (!!s.done[qid] || (s.q === qid && s.st >= 3)); };
-World.canEnter = qid => { if (qUnlocked(qid)) return true; const h = QHOME[qid], nm = h && typeof mqName === 'function' ? mqName(h[0]) : '주인'; return `문이 닫혀 있어요 · ${nm}의 의뢰를 더 진행하면 열려요`; };
+World.canEnter = qid => { if (qUnlocked(qid)) return true; return '문이 굳게 잠겨 있어요'; };
 World.onExplore = (ri, door) => { if (!me) return; xRgSel = ri; xv = null; toast(`${door?.label || XRG[ri].n} · ${XRG[ri].tier}`); openSheet('home', 'explore'); };   // 마을 가장자리 길 끝 기둥 문 (tools/iso/halloween.py EXPL)
 World.onLockedDoor = label => { if (label === '낚시 도구점' && me){ fsTab = 'rod'; fsMsg = ''; openSheet('home', 'fish'); return true; }
   if (label !== '옷 가게' || !me) return false; shopTry = null; shopMsg = ''; openSheet('home', 'clothes'); return true; };
