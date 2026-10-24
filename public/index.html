@@ -1968,19 +1968,32 @@ function xMarchView(run, head){
   $('#xret').onclick = () => confirmBox(run.co ? '파티에서 나갈까요? 얻은 것은 가져가요. (끝나기 전엔 다시 들어올 수 있어요)' : '탐사를 끝낼까요? 얻은 것은 가져가요.', run.co ? '나갈래요' : '끝낼래요', '계속할래요').then(ok => { if (ok){ if (run.co) xcoLeaveRun(); xEnd('retreat'); renderExplore(); } });
   cancelAnimationFrame(xMRaf); xMRaf = 0; xMDraw();
 }
+const xcoVoteView = M => { const c = (M.fork ? M.fork.opts : []).map(() => 0); if (!xEx().run?.co || !M.fork) return c; const v = xcoHost() ? xcoVotes(M) : (M.fork.v || {}); Object.entries(v).forEach(([u, i]) => { if (u === myId() && !xcoHost()) return; if (c[i] !== undefined) c[i]++; }); if (!xcoHost() && M.fork.my >= 0) c[M.fork.my]++; return c; };
 function xMUi(){   // 갈림길 · 돌발 상황 버튼
-  const M = xM, el = $('#xmf'); if (!el) return; let key = M.st + (M.fork ? M.fork.opts.join() : '') + (M.haz ? M.haz.ty.k + (M.haz.done ? 'd' : '') : '');
+  const M = xM, el = $('#xmf'); if (!el) return; let key = M.st + (M.fork ? M.fork.opts.join() + M.fork.my + JSON.stringify(xcoVoteView(M)) : '') + (M.haz ? M.haz.ty.k + (M.haz.done ? 'd' : '') : '');
   if (key === M.uik) return; M.uik = key;
-  if (M.st === 'fork'){ el.className = 'xmf xmf2'; el.innerHTML = M.fork.opts.map((k, i) => `<button data-xf="${i}"><span class="big">${XM_FORK[k][0]}</span>${XM_FORK[k][1]}<small>${XM_FORK[k][2]}</small></button>`).join(''); el.querySelectorAll('[data-xf]').forEach(b => b.onclick = () => xMPick(+b.dataset.xf)); }
+  if (M.st === 'fork'){ el.className = 'xmf xmf2'; const cv = xcoVoteView(M); el.innerHTML = M.fork.opts.map((k, i) => `<button data-xf="${i}" ${M.fork.my === i ? 'style="box-shadow:inset 0 0 0 3px #ffd866,0 2px 0 #000"' : ''}><span class="big">${XM_FORK[k][0]}</span>${XM_FORK[k][1]}<small>${XM_FORK[k][2]}</small>${xEx().run.co ? `<small style="color:#ffd866">${cv[i]}표${M.fork.my === i ? ' · 내 선택' : ''}</small>` : ''}</button>`).join(''); el.querySelectorAll('[data-xf]').forEach(b => b.onclick = () => xMPick(+b.dataset.xf)); }
   else if (M.st === 'haz' && !M.haz.done){ el.className = 'xmf'; el.innerHTML = `<button class="hz" id="xhz">${M.haz.ty.b}</button>`; $('#xhz').onpointerdown = e => { e.preventDefault(); if (M.haz && !M.haz.done){ M.haz.done = true; M.haz.ok = true; M.haz.t1 = performance.now(); M.uik = ''; if (xEx().run?.co && !xcoHost()) xcoSend({ hz: { hid: M.haz.hid } }); } }; }
   else { el.className = 'xmf'; el.innerHTML = `<div class="xmw">${M.st === 'walk' ? '걷는 중… 앞에서 무슨 일이 생길지 몰라요' : M.st === 'alert' ? '⚠️ 몬스터가 나타났어요!' : ''}</div>`; }
 }
-function xMPick(i){   // 먼저 누른 쪽으로 가요
+const XM_VOTE = 30000;   // 갈림길: 30초 동안 의견을 받아요 (혼자일 땐 바로)
+function xMPick(i){
   const M = xM, run = xEx().run; if (!M || M.st !== 'fork' || !M.fork) return;
-  if (run.co && !xcoHost()){ if (!M.fork.sent){ M.fork.sent = true; sfx('pick'); xcoSend({ fk: { fid: M.fork.fid, i, t: now2() } }); } return; }
-  const k = M.fork.opts[i]; sfx('pick'); M.fork = null; M.nextFork = run.prog + 8 + Math.random() * 6; M.uik = '';
-  if (run.co) return xcoForkResult(k);
-  M.st = 'busy'; xGo(k);
+  if (run.co){   // 파티: 투표 (바꿔도 돼요). 다 고르면 바로, 아니면 30초 뒤에 다수결 · 동점이면 파티장이 고른 쪽
+    if (M.fork.my === i) return; M.fork.my = i; sfx('pick'); M.uik = ''; if (!xcoHost()) xcoSend({ fk: { fid: M.fork.fid, i } }); return;
+  }
+  const k = M.fork.opts[i]; sfx('pick'); M.fork = null; M.nextFork = run.prog + 8 + Math.random() * 6; M.uik = ''; M.st = 'busy'; xGo(k);
+}
+function xcoVotes(M){   // 방장: 지금까지의 표 (끊긴 사람은 빼요)
+  const v = {}; xcoActive().forEach(u => { const i = u === myId() ? M.fork.my : xcoIn[u] && xcoIn[u].fk && xcoIn[u].fk.fid === M.fork.fid ? xcoIn[u].fk.i : -1; if (i >= 0) v[u] = i; }); return v;
+}
+function xcoForkTick(M, now){
+  const run = xEx().run, v = xcoVotes(M), vs = JSON.stringify(v), act = xcoActive();
+  if (vs !== M.fork.vs){ M.fork.vs = vs; M.uik = ''; xcoPub({ st: 'fork', fork: { fid: M.fork.fid, opts: M.fork.opts, t0: now2() - (now - M.fork.t0), v } }); }
+  if (Object.keys(v).length < act.length && now - M.fork.t0 < XM_VOTE) return;
+  const cnt = M.fork.opts.map(() => 0); Object.values(v).forEach(i => { cnt[i]++; }); const top = Math.max(...cnt), tied = cnt.map((c, i) => c === top ? i : -1).filter(i => i >= 0);
+  const mine = v[myId()]; let pick = tied.length === 1 ? tied[0] : mine !== undefined && tied.includes(mine) ? mine : tied[Math.floor(Math.random() * tied.length)];   // 동점이면 파티장이 고른 쪽
+  const k = M.fork.opts[pick]; sfx('pick'); M.fork = null; M.nextFork = run.prog + 8 + Math.random() * 6; M.uik = ''; xcoForkResult(k);
 }
 function xcoForkResult(k){   // 방장: 고른 길의 결과를 정하고 모두에게 알려요 (진행·회복·가호는 파티 전체, 골드·아이템은 사람마다)
   const M = xM, run = xEx().run; run.prog = Math.min(100, run.prog + XNODE[k][2]); let o = '';
@@ -2002,13 +2015,13 @@ function xMStep(M, run, dt, now){
   if (M.st === 'walk'){
     M.off += dt * 38; M.wt += dt; run.prog = Math.min(99.9, run.prog + dt * xMSpd()); if (co && now - (M.lastPub || 0) > 4000){ M.lastPub = now; xcoPub({ st: 'walk' }); }
     if (run.prog >= 88 && !M.boss){ M.boss = true; M.st = 'alert'; M.alert = { t0: now, dur: 1500, kind: 'boss', lp: xReg().boss.lp, txt: `${withJosa(xReg().boss.n, '이', '가')} 나타났어요!` }; sfx('boss'); if (co) xcoPub({ st: 'alert', alert: { kind: 'boss', lp: M.alert.lp, txt: M.alert.txt, t0: now2(), dur: 1500 } }); }
-    else if (run.prog >= M.nextFork && run.prog < 84){ M.st = 'fork'; M.fork = { opts: xMForkOpts(run), t0: now, fid: Date.now() }; sfx('fork'); if (co) xcoPub({ st: 'fork', fork: { fid: M.fork.fid, opts: M.fork.opts, t0: now2() } }); }
+    else if (run.prog >= M.nextFork && run.prog < 84){ M.st = 'fork'; M.fork = { opts: xMForkOpts(run), t0: now, fid: Date.now(), my: -1, vs: '' }; sfx('fork'); if (co) xcoPub({ st: 'fork', fork: { fid: M.fork.fid, opts: M.fork.opts, t0: now2(), v: {} } }); }
     else if (M.wt >= M.nextEnc){ const el = run.prog > 20 && Math.random() < .12; M.nextEnc = M.wt + 12 + Math.random() * 12; const mo = el ? xReg().elite : xRand(run.pool && run.pool.length ? run.pool : xReg().mon); if (!el) run.nextMon = mo; M.st = 'alert'; M.alert = { t0: now, dur: 1200, kind: el ? 'elite' : 'battle', lp: mo.lp, txt: el ? '강한 몬스터가 나타났어요!' : '몬스터가 나타났어요!' }; sfx('enc'); if (co) xcoPub({ st: 'alert', alert: { kind: M.alert.kind, lp: mo.lp, txt: M.alert.txt, t0: now2(), dur: 1200 } }); }
     else if (M.wt >= M.nextHaz){ M.nextHaz = M.wt + 22 + Math.random() * 18; const ty = xRand(XM_HAZ); M.st = 'haz'; M.haz = { ty, tyi: XM_HAZ.indexOf(ty), hid: Date.now(), t0: now, dur: 3600, done: false, ok: false }; sfx('haz'); if (co) xcoPub({ st: 'haz', haz: { hid: M.haz.hid, ty: M.haz.tyi, t0: now2(), dur: 3600 } }); }
   } else if (M.st === 'alert'){
     if (now - M.alert.t0 >= M.alert.dur){ const k = M.alert.kind; M.alert = null; M.st = 'busy'; xSaveParty(); save(); xStartBattle(k); }
   } else if (M.st === 'fork'){
-    if (now - M.fork.t0 > 15000) xMPick(Math.floor(Math.random() * M.fork.opts.length));
+    if (co) xcoForkTick(M, now); else if (now - M.fork.t0 > XM_VOTE) xMPick(Math.floor(Math.random() * M.fork.opts.length));
   } else if (M.st === 'haz'){
     const H = M.haz;
     if (co){   // 파티: 다 눌렀거나 시간이 지나면 한꺼번에 가려요 (못 누른 사람만 피해)
@@ -2056,7 +2069,7 @@ function xMDraw(){
     if (Math.round(now / 150) % 2){ g.font = 'bold 26px monospace'; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = '#1a1024'; g.strokeText('!', px, py - FH - 4); g.fillStyle = '#ff5a4a'; g.fillText('!', px, py - FH - 4); } }
   if (M.st === 'fork'){ const sx = 300, sy = py; g.fillStyle = '#5a3a22'; g.fillRect(sx - 2, sy - 52, 5, 54); g.fillStyle = '#8a5a32'; g.beginPath(); g.moveTo(sx - 36, sy - 50); g.lineTo(sx + 4, sy - 50); g.lineTo(sx + 12, sy - 44); g.lineTo(sx + 4, sy - 38); g.lineTo(sx - 36, sy - 38); g.fill(); g.fillStyle = '#7a4a2a'; g.beginPath(); g.moveTo(sx + 40, sy - 34); g.lineTo(sx + 2, sy - 34); g.lineTo(sx - 6, sy - 28); g.lineTo(sx + 2, sy - 22); g.lineTo(sx + 40, sy - 22); g.fill();
     g.font = '14px sans-serif'; g.textAlign = 'center'; g.fillText(XM_FORK[M.fork.opts[0]][0], sx - 14, sy - 39); g.fillText(XM_FORK[M.fork.opts[1]][0], sx + 20, sy - 23);
-    const left = Math.max(0, 15 - (now - M.fork.t0) / 1000); g.font = 'bold 11px monospace'; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText('갈림길! 누르면 그쪽으로 가요 · ' + Math.ceil(left), XCW / 2, 40); g.fillStyle = '#ffd866'; g.fillText('갈림길! 누르면 그쪽으로 가요 · ' + Math.ceil(left), XCW / 2, 40); }
+    const left = Math.max(0, (XM_VOTE - (now - M.fork.t0)) / 1000), tx = xEx().run?.co ? `갈림길! 다수결로 정해요 (동점이면 파티장) · ${Math.ceil(left)}` : `갈림길! 누르면 그쪽으로 가요 · ${Math.ceil(left)}`; g.font = 'bold 11px monospace'; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText(tx, XCW / 2, 40); g.fillStyle = '#ffd866'; g.fillText(tx, XCW / 2, 40); }
   if (H && !H.done){ const left = Math.max(0, 1 - (now - H.t0) / H.dur); g.fillStyle = '#1a1024'; g.fillRect(60, 30, XCW - 120, 12); g.fillStyle = left > .35 ? '#ffb85a' : '#ff5a4a'; g.fillRect(62, 32, (XCW - 124) * left, 8); g.font = 'bold 14px sans-serif'; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = '#1a1024'; g.strokeText('⚠️ ' + H.ty.n, XCW / 2, 66); g.fillStyle = '#fff'; g.fillText('⚠️ ' + H.ty.n, XCW / 2, 66); }
   const msg = M.res ? M.res.txt : M.alert ? M.alert.txt : '';
   if (msg){ g.font = 'bold 15px sans-serif'; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = '#1a1024'; g.strokeText(msg, XCW / 2, 70); g.fillStyle = M.res ? (M.res.ok ? '#8affb0' : '#ff8a7a') : '#ffd866'; g.fillText(msg, XCW / 2, 70); }
@@ -2120,7 +2133,7 @@ function xcoOnRs(v){
   if (v.ev) xcoMemberEv(v.ev);
   if (!M) return; const now = performance.now();
   if (v.st === 'walk'){ if (xb && xb.mirror){ xb = null; clearInterval(xTick); xv = { view: 'march' }; M.st = 'walk'; renderExplore(); } M.st = M.st === 'res' && M.res ? 'res' : 'walk'; M.fork = null; M.haz = null; M.alert = null; xMHud(); }
-  else if (v.st === 'fork'){ M.st = 'fork'; M.fork = { opts: v.fork.opts, fid: v.fork.fid, t0: xcoLocalT(v.fork.t0) }; M.uik = ''; sfx('fork'); }
+  else if (v.st === 'fork'){ const same = M.st === 'fork' && M.fork && M.fork.fid === v.fork.fid; M.st = 'fork'; M.fork = { opts: v.fork.opts, fid: v.fork.fid, t0: xcoLocalT(v.fork.t0), v: v.fork.v || {}, my: same ? M.fork.my : -1 }; M.uik = ''; if (!same) sfx('fork'); }
   else if (v.st === 'haz'){ M.st = 'haz'; M.haz = { ty: XM_HAZ[v.haz.ty], hid: v.haz.hid, t0: xcoLocalT(v.haz.t0), dur: v.haz.dur, done: false, ok: false }; M.uik = ''; sfx('haz'); }
   else if (v.st === 'res' && v.res){ const ok = !!(v.res.ok && v.res.ok[myId()]), ty = XM_HAZ[v.res.ty], loss = v.res.loss && v.res.loss[myId()] || 0; M.st = 'res'; M.haz = null; M.res = { t0: now, dur: 1500, txt: ok ? ty.ok : `${ty.bad}! 체력 -${loss}`, ok, okMap: v.res.ok || {} }; sfx(ok ? 'dodge' : 'hurt'); if (!ok) M.shake = now; M.uik = ''; xMHud(); }
   else if (v.st === 'alert'){ M.st = 'alert'; M.alert = { t0: xcoLocalT(v.alert.t0), dur: v.alert.dur, kind: v.alert.kind, lp: v.alert.lp, txt: v.alert.txt }; sfx(v.alert.kind === 'boss' ? 'boss' : 'enc'); M.uik = ''; }
@@ -2151,7 +2164,6 @@ let xcoWasHost = false;
 function xcoSend(patch){ if (xcoOn()) GDB.upd(`xrun/${xpRoom}/in/${myId()}`, patch); }
 function xcoHostInputs(){
   if (!xcoHost()) return; const M = xM, B = xb;
-  if (M && M.st === 'fork' && M.fork){ for (const [u, inp] of Object.entries(xcoIn)) if (inp && inp.fk && inp.fk.fid === M.fork.fid){ xMPick(inp.fk.i); break; } }
   if (B && !B.over && !B.mirror && B.turn && B.turn.uid && B.turn.uid !== myId()){ const c = xcoIn[B.turn.uid] && xcoIn[B.turn.uid].cmd; if (c && c.tn === B.tn && c.bn === B.bn) xcoApplyCmd(B, B.turn, c); }
 }
 function xcoApplyCmd(B, u, c){
