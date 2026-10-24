@@ -109,8 +109,9 @@ def check_quest(qid, verbose=False):
     if not q.get('name'): errs.append(f'{w}: name 없음')
     u = q.get('unlock') or {}
     if q.get('order', 0) > 1 and u.get('afterQuest') != QUESTS[q['order'] - 2]: errs.append(f'{w}: unlock.afterQuest 는 {QUESTS[q["order"] - 2]}')
-    if 2 <= q.get('order', 0) <= 6 and u.get('daysAfter') != 3: errs.append(f'{w}: unlock.daysAfter 는 3')
-    if q.get('order') == 7 and not u.get('afterFestival'): errs.append(f'{w}: 잭 의뢰는 unlock.afterFestival = true')
+    if q.get('order', 0) > 1 and u.get('daysAfter', 0) != 0: errs.append(f'{w}: unlock.daysAfter 는 0 (날짜 대기 없음)')
+    for k in ('afterFestival', 'minDay'):
+        if k in u: errs.append(f'{w}: unlock.{k} 는 쓰지 않아요 (날짜 조건 없음)')
     for pl in [q.get('place'), (q.get('arrival') or {}).get('player'), (q.get('after') or {}).get('place')]:
         if pl and pl not in PLACES: errs.append(f'{w}: 모르는 장소 「{pl}」')
     items = {**ALL_ITEMS, **(q.get('items') or {})}
