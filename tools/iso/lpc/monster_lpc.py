@@ -36,7 +36,7 @@ MON = [  # (id, 몸 체형(g), 층들)
  ('dragonfly', 'child', [(5, 'body/wings/dragonfly/solid', None, None), (10, 'body/bodies/child', None, SK('green')), (100, 'head/heads/goblin/child', None, None), (35, 'torso/clothes/shirt/child', None, CL('teal')), (20, 'legs/pants', None, CL('navy'))]),
  ('piglet', 'child', [(10, 'body/bodies/child', None, SK('fur_tan')), (100, 'head/heads/boarman/child', None, None), (35, 'torso/clothes/shirt/child', None, CL('orange')), (20, 'legs/pants', None, CL('leather'))]),
  ('goblinking', 'male', [(5, 'cape/solid/bg', None, CL('maroon')), (10, 'body/bodies/muscular', None, SK('green')), (100, 'head/heads/goblin/adult', None, None), (20, 'legs/pants', None, CL('leather')), (35, 'torso/armour/leather/male', None, None), (126, 'hat/formal/crown', None, None), (110, 'cape/solid/fg', None, CL('maroon')), W_SWORD]),
- ('skelarcher', 'male', [(10, 'body/bodies/skeleton', None, None), (100, 'head/heads/skeleton/adult', None, None), (126, 'hat/cloth/hood', None, CL('forest')), (35, 'torso/clothes/sleeveless/sleeveless', None, CL('forest')), (90, 'weapon/ranged/bow', None, None)]),
+ ('skelarcher', 'male', [(10, 'body/bodies/skeleton', None, None), (100, 'head/heads/skeleton/adult', None, None), (126, 'hat/cloth/hood', None, CL('forest')), (35, 'torso/clothes/sleeveless/sleeveless', None, CL('forest')), (8, 'spritesheets/weapon/ranged/bow/normal/walk/background/normal.png', None, None), (90, 'spritesheets/weapon/ranged/bow/normal/walk/foreground/normal.png', None, None)]),
  ('wraith', 'male', [(10, 'body/bodies/skeleton', None, None), (100, 'head/heads/skeleton/adult', None, None), (35, 'torso/clothes/robe/female', 'white', None), (126, 'hat/cloth/hood', None, CL('white')), ('alpha', .62)]),
  ('moonfairy', 'child', [(5, 'body/wings/lunar/bg', None, None), (10, 'body/bodies/child', None, SK('lavender')), (100, 'head/heads/human/child', None, SK('lavender')), (105, 'eyes/human/child/default', 'blue', None), (35, 'torso/clothes/shirt/child', None, CL('navy')), (20, 'legs/pants', None, CL('navy')), (120, 'hair/messy1', None, HR('platinum')), (110, 'body/wings/lunar/fg', None, None)]),
  ('lizard', 'male', [(10, 'body/bodies/teen', None, SK('blue')), (100, 'head/heads/lizard/male', None, SK('blue', 'green')), (20, 'legs/shorts/shorts', None, CL('tan')), (35, 'torso/clothes/sleeveless/sleeveless', None, CL('navy')), (90, 'weapon/polearm/trident', None, None)]),
@@ -48,7 +48,10 @@ MON = [  # (id, 몸 체형(g), 층들)
  ('firepriest', 'female', [(10, 'body/bodies/teen', None, SK('amber')), (100, 'head/heads/human/female', None, SK('amber')), (105, 'eyes/human/adult/default', 'orange', None), (35, 'torso/clothes/robe', 'maroon', None), (126, 'hat/magic/celestial/adult', None, None), (90, 'weapon/magic/gnarled/universal/foreground', 'bronze', None)]),
 ]
 def frame(f):
-    a = np.array(Image.open(os.path.join(LPC, f)).convert('RGBA')); y, x = ROWS['right'] * 64, 0
+    a = np.array(Image.open(os.path.join(LPC, f)).convert('RGBA'))
+    if a.shape[0] == 512:   # 큰 무기(활)는 128칸 — 가운데 64칸만 잘라 써요
+        y = ROWS['right'] * 128; return a[y + 32:y + 96, 32:96]
+    y, x = ROWS['right'] * 64, 0
     return a[y:y + 64, x:x + 64] if y + 64 <= a.shape[0] else np.zeros((64, 64, 4), np.uint8)
 def tryfind(p, c, g):
     for pp in (p, p.replace('/foreground', ''), p + '/foreground', p + '/universal'):
@@ -64,7 +67,7 @@ for mid, g, L in MON:
     for t in L:
         if t[0] == 'alpha': ls.append((t[0], t[1], None)); continue
         z, p, c, rc = t
-        f = tryfind(p, c, g)
+        f = p if p.startswith('spritesheets/') else tryfind(p, c, g)
         if f is None: missing.append((mid, p)); continue
         ls.append((z, f, rc))
     plan.append((mid, ls))
