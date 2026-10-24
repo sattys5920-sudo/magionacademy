@@ -1734,6 +1734,56 @@ function xEnd(how){   // how: clear · time · retreat · wipe
   xv = { view: 'result', how, gold, exp, items, up: after > before ? [before, after] : null, prog: run.prog };
 }
 function xTime(run){ return Math.max(0, run.end - Date.now()); }
+// ===== 협동 탐험 1단계: 방·로비 (xparty/<방> = { host, hn, rg 지역, st lobby·run·end, at, t0, seed, p: { uid: { n, job, L, rdy, out } } }) =====
+// 방장이 지역을 고르고 친구를 모아요. 아직 개발 중이라 주소 끝에 ?coop=1 을 붙여 연 기기에서만 보여요 (설계: docs/coop_design.md)
+const XCOOP = (() => { try { const q = new URLSearchParams(location.search).get('coop'); if (q != null) localStorage.setItem('magion-coop', q); return localStorage.getItem('magion-coop') === '1'; } catch(e){ return false; } })();
+const XP_MAX = 5;
+let xpList = {}, xpRoom = null, xpV = null, xpOff = null;
+const xpMe = () => { const ex = xEx(); return { n: me.nick, job: ex.job || '', L: xLv(ex.exp).L, rdy: 0 }; };
+const xpRefresh = () => { if (sheetOn && sub === 'explore' && xv?.view === 'lobby') renderExplore(); };
+function xpWatch(id){ xpRoom = id; xpOff?.(); xpOff = GDB.on('xparty/' + id, v => { if (xpRoom !== id) return; if (!v || v.st === 'end' || !v.p?.[myId()]){ xpRoom = null; xpV = null; xpOff?.(); xpOff = null; } else xpV = v; xpRefresh(); }); }
+function xpCreate(){
+  if (xpRoom) return; const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  GDB.set('xparty/' + id, { host: myId(), hn: me.nick, rg: xRgSel, st: 'lobby', at: now2(), p: { [myId()]: xpMe() } }).then(() => xpWatch(id));
+}
+function xpJoin(id){
+  const R = xpList[id] || (solo && lget('xparty/' + id)); if (!R || xpRoom) return;
+  const mineIn = !!R.p?.[myId()];
+  if (!mineIn){ if (R.st !== 'lobby') return toast('벌써 출발했어요'); if (Object.keys(R.p || {}).length >= XP_MAX) return toast(`파티가 꽉 찼어요 (최대 ${XP_MAX}명)`); GDB.upd(`xparty/${id}/p/${myId()}`, xpMe()); }
+  else if (R.p[myId()].out) GDB.upd(`xparty/${id}/p/${myId()}`, { out: null });   // 끊겼다가 돌아오면 다시 참여
+  xpWatch(id);
+}
+function xpLeave(){
+  const id = xpRoom, v = xpV; if (!id || !v) return; xpOff?.(); xpOff = null; xpRoom = null; xpV = null;
+  const rest = Object.keys(v.p || {}).filter(u => u !== myId());
+  if (v.st === 'lobby'){
+    if (v.host === myId() && rest.length){ GDB.upd('xparty/' + id, { host: rest[0], hn: v.p[rest[0]].n }); GDB.set(`xparty/${id}/p/${myId()}`, null); }
+    else if (v.host === myId()) GDB.set('xparty/' + id, null); else GDB.set(`xparty/${id}/p/${myId()}`, null);
+  } else GDB.upd(`xparty/${id}/p/${myId()}`, { out: 1 });   // 진행 중에 나가면 파티에서 빠지고, 끝나기 전엔 다시 들어올 수 있어요
+  xpRefresh();
+}
+function xpPanel(lv){
+  if (!XCOOP) return '';
+  const mineRoom = xpV ? [xpRoom, xpV] : null, open = Object.entries(xpList).filter(([id, r]) => r && r.st === 'lobby' && !r.p?.[myId()] && now2() - r.at < 600000).sort((a, b) => b[1].at - a[1].at);
+  const back = Object.entries(xpList).filter(([id, r]) => r && r.st === 'run' && r.p?.[myId()]?.out);
+  if (!mineRoom) return `<section class="sec">${secH('함께 가기', '같이 갈 친구를 모아요')}<div class="box px"><button class="btn go" data-xp="create" style="width:100%">🤝 방 만들기</button>
+    ${open.map(([id, r]) => `<div class="li"><div class="main"><span class="t">${esc(r.hn)}의 파티</span><span class="d">${XRG[r.rg]?.n || ''} · ${Object.keys(r.p || {}).length} / ${XP_MAX}명</span></div><button class="btn sm" data-xp="join" data-id="${id}">참가</button></div>`).join('')}
+    ${back.map(([id, r]) => `<div class="li"><div class="main"><span class="t">${esc(r.hn)}의 파티 (진행 중)</span><span class="d">다시 들어갈 수 있어요</span></div><button class="btn sm go" data-xp="join" data-id="${id}">돌아가기</button></div>`).join('')}
+    ${open.length || back.length ? '' : '<div class="s sub" style="padding:6px 2px">열려 있는 파티가 없어요</div>'}</div></section>`;
+  const [id, v] = mineRoom, host = v.host === myId(), R = XRG[v.rg] || XRG[0], ps = Object.entries(v.p).filter(([, p]) => !p.out), others = ps.filter(([u]) => u !== v.host);
+  const lowL = ps.filter(([, p]) => p.L < R.need), ok = host && !lowL.length && others.every(([, p]) => p.rdy), me_p = v.p[myId()];
+  return `<section class="sec">${secH('내 파티', `${R.ic} ${R.n}${host ? ' · 위에서 지역을 골라요' : ''}`)}<div class="box px">
+    ${ps.map(([u, p]) => `<div class="li"><span class="big">${p.job && XJ[p.job] ? XJ[p.job].ic : '❔'}</span><div class="main"><span class="t">${esc(p.n)}${u === v.host ? ' 👑' : ''}</span><span class="d">${p.job && XJ[p.job] ? XJ[p.job].n : '직업 없음'} Lv ${p.L}${p.L < R.need ? ` · 레벨 ${R.need} 필요` : ''}</span></div><span class="s b">${u === v.host ? '방장' : p.rdy ? '✅ 준비' : '대기'}</span></div>`).join('')}
+    <div class="s sub">${ps.length} / ${XP_MAX}명 · ${host ? (lowL.length ? '레벨이 모자란 사람이 있어요' : ok ? '모두 준비됐어요' : others.length ? '모두 준비하면 출발할 수 있어요' : '혼자서도 출발할 수 있어요') : `${esc(v.hn)}이(가) 출발하길 기다려요`}</div>
+    <div class="frow">${host ? `<button class="btn go" data-xp="start" ${(ok || !others.length) && !lowL.length && v.st === 'lobby' ? '' : 'disabled'}>출발!</button>` : v.st === 'lobby' ? `<button class="btn ${me_p.rdy ? '' : 'go'}" data-xp="ready">${me_p.rdy ? '준비 취소' : '준비'}</button>` : ''}<button class="btn" data-xp="leave">나가기</button></div>
+    ${v.st === 'run' ? '<div class="s sub">출발했어요! (같이 싸우는 화면은 다음 단계에서 이어져요)</div>' : ''}</div></section>`;
+}
+function xpWire(){
+  if (!XCOOP) return;
+  on('[data-xp]', b => { const a = b.dataset.xp; if (a === 'create') xpCreate(); else if (a === 'join') xpJoin(b.dataset.id); else if (a === 'leave') xpLeave();
+    else if (a === 'ready' && xpV) GDB.upd(`xparty/${xpRoom}/p/${myId()}`, { rdy: xpV.p[myId()].rdy ? 0 : 1 });
+    else if (a === 'start' && xpV && xpV.host === myId()) GDB.upd('xparty/' + xpRoom, { st: 'run', t0: now2() + 3000, seed: Math.floor(Math.random() * 1e9) }); });
+}
 function renderExplore(){
   const ex = xEx(), lv = xLv(ex.exp), job = ex.job && XJ[ex.job];
   if (ex.run && xTime(ex.run) <= 0 && !xb) xEnd('time');
@@ -1747,8 +1797,10 @@ function renderExplore(){
   if (v === 'lobby'){
     const R = xReg(), okL = lv.L >= R.need;
     frame(null, '탐사', `오늘 ${ex.n} / ${XDAY}회`, `${head}<section class="sec">${secH('어디로 갈까요?', '레벨이 모자라면 잠겨 있어요')}<div class="box px">${XRG.map((r, i) => `<div class="li" style="${i === xRgSel ? 'outline:2px solid var(--gold);border-radius:10px;' : ''}${lv.L < r.need ? 'opacity:.5' : ''}"><span class="big">${r.ic}</span><div class="main"><span class="t">${r.n}</span><span class="d" style="white-space:normal">${r.min}분 · 입장 ${r.fee}G · 몬스터 Lv ${r.lv[0]}~${r.lv[1]}${lv.L < r.need ? ` · 내 레벨 ${r.need} 이상` : ''}</span></div><button class="btn sm ${i === xRgSel ? 'go' : ''}" data-xr="${i}" ${lv.L < r.need ? 'disabled' : ''}>${i === xRgSel ? '선택됨' : '고르기'}</button></div>`).join('')}</div>
+      ${xpPanel(lv)}
       <div class="s sub">갈림길을 골라 100%를 채워요. 시간이 끝나거나 전멸하면 끝나요. 전멸하면 얻은 것을 모두 잃어요. 지금은 혼자 싸워요. (같이 싸우는 협동 탐험은 준비 중이에요)</div><button class="btn" id="xwp" style="width:100%">⚔️ 무기 강화 · ${XWN[ex.job]} (${XWT[ex.wp || 0]})</button><button class="btn" id="xst" style="width:100%">💪 스탯${xSpPts(ex) > 0 ? ` · 남은 포인트 ${xSpPts(ex)}` : ''}</button><button class="btn" id="xtree" style="width:100%">🌳 스킬 트리${xPts(ex) > 0 ? ` · 남은 포인트 ${xPts(ex)}` : ''}</button><button class="btn go" id="xgo" style="width:100%" ${ex.n >= XDAY || me.coin < R.fee || !okL ? 'disabled' : ''}>${ex.n >= XDAY ? '오늘은 끝났어요' : !okL ? `레벨 ${R.need} 이상이에요` : me.coin < R.fee ? `골드가 모자라요 (${R.fee}G)` : `출발하기 · ${R.fee}G`}</button>${hint(xMsg, '스킬은 레벨이 오를 때마다 포인트를 받아요')}</section><div style="display:flex;gap:8px">${back}</div>`);
-    on('[data-xr]', b => { xRgSel = +b.dataset.xr; renderExplore(); });
+    on('[data-xr]', b => { xRgSel = +b.dataset.xr; if (xpRoom && xpV?.host === myId() && xpV.st === 'lobby') GDB.upd('xparty/' + xpRoom, { rg: xRgSel }); renderExplore(); });
+    xpWire();
     $('#back').onclick = closeSheet;
     $('#xst').onclick = () => { xv = { view: 'stats', sel: XMAIN[ex.job] }; renderExplore(); };
     $('#xtree').onclick = () => { xv = { view: 'tree', sel: '0.0' }; renderExplore(); };
@@ -5957,7 +6009,7 @@ function showHousePick(counts, done){
   draw();
 }
 function startSolo(){
-  solo = true; GDB.on('games', v => { gameList = v || {}; });
+  solo = true; GDB.on('games', v => { gameList = v || {}; }); GDB.on('xparty', v => { xpList = v || {}; xpRefresh(); });
   let saved = null; try { saved = JSON.parse(localStorage.getItem('magion-solo') || 'null'); } catch(e){}
   if (saved) { me = normalize(saved); if (!me.house) return showHousePick({}, enterWorld); enterWorld(); return; }
   showCreate(p => { me = p; save(); enterWorld(); });
@@ -5988,6 +6040,7 @@ async function boot(){
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       storyListen();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); if (sub === 'games') render(); });
+      F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       Object.keys(GAMES).forEach(g => F.onValue(F.ref(db, `records/${g}/${weekKey()}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); }));
       setInterval(syncInvites, 3000);
       F.onValue(F.ref(db, 'market'), s => { marketList = s.val() || {}; if (tab === 'market') render(); });
