@@ -393,10 +393,10 @@ body:not(.inworld) #storyui{display:none}
 .tile .main{display:flex;flex-direction:column;gap:2px;min-width:0}
 .tile .main .b{font-size:var(--fs);line-height:1.3}
 .seg{display:grid;gap:4px;border:0;border-radius:12px;background:var(--panel2);padding:4px}
-.seg button{border:0;border-radius:8px;background:transparent;min-height:44px;font-family:var(--f-pxb);font-size:var(--fs-s);color:var(--sub);padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg button{border:0;border-radius:8px;background:transparent;min-height:44px;font-family:var(--f-pxb);font-size:var(--fs-s);color:var(--sub);padding:4px 6px;white-space:normal;text-align:center;line-height:1.2;overflow-wrap:anywhere;word-break:keep-all}
 .seg button + button{border-left:0}
 .seg button.on{background:var(--accent);color:#2A1506}
-.seg.scroll{display:flex;overflow-x:auto;scrollbar-width:none}.seg.scroll button{flex:0 0 auto;min-width:72px}
+.seg.scroll{display:flex;flex-wrap:wrap}.seg.scroll button{flex:1 1 auto;min-width:56px}
 
 /* 칸 */
 .grid{display:grid;gap:6px}
@@ -651,6 +651,21 @@ button.cell:not(:disabled):active{background:var(--line)}
 .cfbox{width:100%;max-width:340px;background:var(--panel);border:1px solid var(--line2);border-radius:var(--r-panel);padding:18px;display:flex;flex-direction:column;gap:14px}
 .cfbox .msg{line-height:1.5;word-break:keep-all}
 .cfbox .row{display:flex;gap:8px}.cfbox .row .btn{flex:1}
+
+/* 버튼·칸 안의 글자는 가운데에 맞추고, 길면 줄을 바꿔서 밖으로 안 삐져나가게 */
+.btn{white-space:normal;text-align:center;line-height:1.25;padding-top:6px;padding-bottom:6px;min-width:0;overflow-wrap:anywhere;word-break:keep-all}
+.btn.ghost{min-width:64px}
+.cell .s,.avo .s{overflow-wrap:anywhere;white-space:normal;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-align:center;line-height:1.2;word-break:keep-all;max-width:100%}
+.cell,.avo,.tile,.jcard,.xb{text-align:center}
+.tile .main,.mtile .main{text-align:left}
+#hud{gap:4px}
+#hudMe{flex:0 1 auto}
+.hudname b{max-width:64px}
+#hudClock{flex:1 1 0;min-width:0}
+#hudClock span{overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#wallet{flex:none;padding:0 6px}
+.mtile .main .d{white-space:normal}
+@media (max-width:370px){.hudname{display:none}}
 </style>
 </head>
 <body>
@@ -678,7 +693,7 @@ button.cell:not(:disabled):active{background:var(--line)}
     <div id="app"></div>
     <div id="confirm"></div>
   </div>
-  <div id="chat"><div id="clog"></div><div id="chist" hidden></div><div class="temo" id="temo" hidden></div><form id="tform" autocomplete="off"><button type="button" id="cH" aria-label="채팅 이력">이력</button><button type="button" id="cE" aria-label="이모티콘">😊</button><input id="tin" maxlength="40" placeholder="말풍선으로 말해요 (40자)" enterkeyhint="send"><button id="cS">보내기</button></form></div>
+  <div id="chat"><div id="clog"></div><div id="chist" hidden></div><div class="temo" id="temo" hidden></div><form id="tform" autocomplete="off"><button type="button" id="cH" aria-label="채팅 이력">이력</button><button type="button" id="cE" aria-label="이모티콘">😊</button><input id="tin" maxlength="40" placeholder="말풍선 (40자)" enterkeyhint="send"><button id="cS">보내기</button></form></div>
   <nav id="bar">
     <button data-nav="bag"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM4 2h1v1h-1zM11 2h1v1h-1zM4 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM12 4h1v1h-1zM13 4h1v1h-1zM2 5h1v1h-1zM13 5h1v1h-1zM2 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM10 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM5 7h1v1h-1zM10 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM13 10h1v1h-1zM2 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM3 13h1v1h-1zM4 13h1v1h-1zM5 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM12 13h1v1h-1zM13 13h1v1h-1z"/></svg>가방</button><button id="tMap" data-nav="map"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM13 1h1v1h-1zM2 2h1v1h-1zM5 2h1v1h-1zM8 2h1v1h-1zM13 2h1v1h-1zM2 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM8 3h1v1h-1zM13 3h1v1h-1zM2 4h1v1h-1zM13 4h1v1h-1zM2 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM13 5h1v1h-1zM2 6h1v1h-1zM5 6h1v1h-1zM7 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM13 10h1v1h-1zM2 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM5 12h1v1h-1zM8 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM3 13h1v1h-1zM4 13h1v1h-1zM5 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM12 13h1v1h-1zM13 13h1v1h-1z"/></svg>지도</button><button data-nav="rel"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1zM9 2h1v1h-1zM10 2h1v1h-1zM11 2h1v1h-1zM1 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM8 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM0 4h1v1h-1zM1 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM12 4h1v1h-1zM13 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM1 5h1v1h-1zM2 5h1v1h-1zM3 5h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM10 5h1v1h-1zM11 5h1v1h-1zM12 5h1v1h-1zM13 5h1v1h-1zM14 5h1v1h-1zM0 6h1v1h-1zM1 6h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM10 6h1v1h-1zM11 6h1v1h-1zM12 6h1v1h-1zM13 6h1v1h-1zM14 6h1v1h-1zM0 7h1v1h-1zM1 7h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM13 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM2 8h1v1h-1zM3 8h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM11 8h1v1h-1zM12 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM3 9h1v1h-1zM4 9h1v1h-1zM5 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM12 9h1v1h-1zM3 10h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM10 10h1v1h-1zM11 10h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM7 14h1v1h-1z"/></svg>관계</button><button data-nav="journal"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM2 2h1v1h-1zM14 2h1v1h-1zM2 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM8 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM14 3h1v1h-1zM2 4h1v1h-1zM4 4h1v1h-1zM12 4h1v1h-1zM14 4h1v1h-1zM2 5h1v1h-1zM4 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM10 5h1v1h-1zM12 5h1v1h-1zM14 5h1v1h-1zM2 6h1v1h-1zM4 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM2 7h1v1h-1zM4 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM12 7h1v1h-1zM14 7h1v1h-1zM2 8h1v1h-1zM4 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM2 9h1v1h-1zM4 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM12 9h1v1h-1zM14 9h1v1h-1zM2 10h1v1h-1zM4 10h1v1h-1zM12 10h1v1h-1zM14 10h1v1h-1zM2 11h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1zM12 11h1v1h-1zM14 11h1v1h-1zM2 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM3 13h1v1h-1zM4 13h1v1h-1zM5 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM12 13h1v1h-1z"/></svg>일지</button><button data-nav="menu"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM8 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM13 3h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM12 4h1v1h-1zM13 4h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM3 8h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM11 8h1v1h-1zM12 8h1v1h-1zM13 8h1v1h-1zM2 11h1v1h-1zM3 11h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1zM12 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM3 12h1v1h-1zM4 12h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM10 12h1v1h-1zM11 12h1v1h-1zM12 12h1v1h-1zM13 12h1v1h-1z"/></svg>메뉴</button>
   </nav>
@@ -3448,7 +3463,7 @@ function syncNpcs(){
   World.setNpcs(list, `art/npcs.webp?v=${NPC_ART_V}`, 'art/cast_animals.webp?v=1');
 }
 
-World.clockText = d => `${isFullMoon() ? '🌕' : { clear: '✨', rain: '☔', fog: '🌫', snow: '❄' }[weatherToday()]} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${BAND_KO[bandNow(d.getHours())]} · ${WX_KO[weatherToday()]}${isFullMoon() ? ' · 호박달 축제' : ''}`;
+World.clockText = d => `${isFullMoon() ? '🌕' : { clear: '✨', rain: '☔', fog: '🌫', snow: '❄' }[weatherToday()]} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${BAND_KO[bandNow(d.getHours())]}${isFullMoon() ? ' · 호박달 축제' : ''}`;
 // ---- 말 걸기 ----
 function npcPortrait(n){ return n.av ? headImg(npcAv(n)) : npcFace(n.spr); }
 const npcUI = () => $('#npcui');
