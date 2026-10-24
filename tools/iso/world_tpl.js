@@ -11,7 +11,7 @@ World.webp = webp;
 //        skinC, hairC, eyeC, legsC, feetC, topC(사복), hatC, accC: 색 번호, house: 넥타이·망토 안감 색이 될 기숙사 }
 // 부품 그림은 필요할 때 불러와요 (art/lpc/*.png). 색은 LPC 팔레트를 바꿔 칠해요
 const AVM = __AVATAR__;
-const ASC = AVM.scale || .5;   // 캐릭터 그림 1픽셀 = 세계 픽셀의 몇 배
+const ASC = 1 / 3;   // 캐릭터 그림 1픽셀 = 세계 픽셀의 몇 배
 // 캐릭터 입 13종 (0 없음): 앞모습 6×3칸(x29~34, y32~34), 옆모습 3×3칸(왼쪽 보기 x25~27, 오른쪽은 거울)
 // # 입술선(피부색을 어둡게) r 입속 w 이 t 혀 d 침
 const MOUTHS = [
@@ -500,7 +500,7 @@ function petSprite(k, col){
 function drawPet(p){
   const cx = out, [sx, sy] = P(p.x + .5, p.y + .5), d = p.pet, sc = d.adult ? 1 : .7;
   cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 7 * sc, 2.5 * sc, 0, 0, Math.PI * 2); cx.fill();
-  const S = petSprite(d.k, d.col), cp = KPX / 2 * sc, w = CR_W * cp, h = CR_H * cp;
+  const S = petSprite(d.k, d.col), cp = KPX * ASC * sc, w = CR_W * cp, h = CR_H * cp;
   const bob = p.path.length ? Math.round(Math.abs(Math.sin(p.t * 10)) * 2 * cp) : 0;
   const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - h + cp) - bob;
   cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0);
