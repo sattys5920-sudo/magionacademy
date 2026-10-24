@@ -1,6 +1,6 @@
 # 소환수 14종 → public/art/pets.png (64칸, 왼쪽(적 쪽)을 보고 서 있는 모습)
 #   정령 동물 10: 몸은 네발·날개 달린 동물로 직접 그리고(beasts.py와 같은 6단계 음영·색 외곽선), 얼굴은 LPC 동물 머리를 붙여요. 속성 색 빛·반투명
-#   포탑 4: 직접 그린 기계 (받침·포신·렌즈)
+#   기공사 소환수 4(번개 쥐·수호 쥐·광선 도마뱀·철갑 멧돼지)도 같은 방식
 #   python3 pet_lpc.py <LPC 저장소 경로> [미리보기.png]   순서는 index.html의 XPETI와 같아요
 import sys, os, subprocess
 sys.argv = sys.argv[:3]
@@ -58,7 +58,16 @@ def dragon(r, hd, skin):
     a = S.render(); over(a, head(hd, skin, 16, 32)); return a
 def crown_px(a, x, y):
     px(a, [(x + i, y + 4) for i in range(8)] + [(x, y + 3), (x, y + 2), (x + 3, y + 3), (x + 3, y + 1), (x + 7, y + 3), (x + 7, y + 2)], '#FFD84A')
-# 포탑 4종 (기계: 받침·몸통·포신·렌즈)
+def rodent(r, hd, skin, tail='#E8A8B8'):   # 쥐: 작은 네발 몸 + 가는 꼬리
+    S = Sprite(); S.add('rabo' if False else r, lambda d: [d.line([(46, 52), (56, 46), (62, 50)], width=2)], -.1); S.add(r, lambda d: d.ellipse([16, 38, 48, 58])); legs(S, r, [20, 28, 36, 42], 54, 62, w=4); S.add(r, lambda d: d.ellipse([20, 42, 36, 56]), .12)
+    a = S.render(); over(a, head(hd, skin, 15, 42, 1.0)); return a
+def lizard(r, hd, skin):   # 도마뱀: 길쭉한 네발 몸 + 긴 꼬리
+    S = Sprite(); S.add(r, lambda d: [d.polygon([(44, 44), (62, 56), (50, 54)]), d.ellipse([40, 42, 56, 52])], .05); S.add(r, lambda d: d.ellipse([14, 38, 48, 56])); legs(S, r, [18, 26, 36, 43], 52, 62, w=4); S.add('yellow', lambda d: d.ellipse([20, 44, 38, 55]), .12)
+    a = S.render(); over(a, head(hd, skin, 14, 40)); return a
+def armor_boar(r, hd, skin):   # 철갑 멧돼지: 멧돼지 + 철판
+    a = boar(r, hd, skin); S = Sprite(); S.add('steel', lambda d: [d.rectangle([22, 32, 42, 38]), d.rectangle([28, 34, 36, 44])], .1); over(a, S.render()); return a
+# 포탑 4종 (기계: 받침·몸통·포신·렌즈) — 지금은 쓰지 않아요
+
 def turret_s():
     S = Sprite(); S.add('steel2', lambda d: [d.polygon([(18, 62), (24, 44), (40, 44), (46, 62)]), d.rectangle([28, 40, 36, 52])]); S.add('steel', lambda d: d.rectangle([14, 30, 44, 44])); S.add('steel2', lambda d: d.rectangle([4, 34, 18, 39]), -.05)
     S.add('steel', lambda d: d.rectangle([2, 33, 8, 40]), .1); S.add('ember', lambda d: d.ellipse([34, 33, 41, 40]), .15); a = S.render(); px(a, [(5, 36), (6, 36)], '#1A1020'); return a
@@ -77,7 +86,8 @@ PETS = [  # 이름, 그리는 함수, 빛 색(없으면 기계), 투명도
  ('정령왕', lambda: (lambda a: (crown_px(a, 6, 14), a)[1])(wolf('wolfw', 'wolf/child', 'fur_white')), (255, 214, 90), .9), ('늑대', lambda: wolf('wolfg', 'wolf/child', 'fur_grey'), (200, 215, 255), .9),
  ('곰', lambda: bear('bear', 'minotaur/child', 'fur_brown'), (170, 115, 70), .92), ('독수리', lambda: eagle('eagle', None, None), (240, 232, 190), .9),
  ('호박 유령', lambda: rabbit('rabo', 'rabbit/child', 'fur_copper'), (255, 150, 40), .6), ('용', lambda: dragon('drag', 'lizard/child', 'blue'), (255, 80, 60), .9),
- ('번개 쥐', turret_s, None, 1), ('수호 쥐', turret_h, None, 1), ('광선 도깨비', turret_l, None, 1), ('철갑 트롤', turret_f, None, 1)]
+ ('번개 쥐', lambda: rodent('wolfg', 'mouse/child', 'fur_grey'), (90, 230, 255), .88), ('수호 쥐', lambda: rodent('boar', 'rat/child', 'fur_black'), (120, 255, 150), .88),
+ ('광선 도마뱀', lambda: lizard('drag', 'lizard/child', 'bright_green'), (255, 100, 170), .88), ('철갑 멧돼지', lambda: armor_boar('wolfg', 'boarman/child', 'fur_grey'), (170, 190, 210), .9)]
 def dil(m):
     d = m.copy(); d[1:] |= m[:-1]; d[:-1] |= m[1:]; d[:, 1:] |= m[:, :-1]; d[:, :-1] |= m[:, 1:]; return d
 sheet = np.zeros((64, 64 * len(PETS), 4), np.uint8)
