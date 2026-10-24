@@ -1707,7 +1707,7 @@ const XRG = [   // 탐사 지역: 입장료·시간·몬스터 레벨 범위 · 
     elite: { n: '미노타우로스', lp: 14, hp: 240, atk: 16, spd: 9, k: 3 }, boss: { n: '신전의 트롤 왕', lp: 16, hp: 520, atk: 17, spd: 7, k: 8, aoe: true, big: 1 } },
 ];
 let xRgSel = 0; const xReg = () => XRG[(xEx().run ? xEx().run.rg : xRgSel) || 0];
-const XDAY = 5, XNODE = { battle: ['⚔️', '몬스터', 7], elite: ['🐺', '강한 몬스터', 11], camp: ['🔥', '캠프파이어', 4], statue: ['🗿', '고대 석상', 5], chest: ['🎁', '보물상자', 4], boss: ['🌳', '숲의 주인', 100] };
+const XDAY = 5, XNODE = { battle: ['⚔️', '몬스터', 7], elite: ['🐺', '강한 몬스터', 11], camp: ['🔥', '캠프파이어', 4], statue: ['🗿', '고대 석상', 5], chest: ['🎁', '보물상자', 4], boss: ['🌳', '숲의 주인', 100], path: ['🛤️', '지름길', 8] };
 const xJobGrid = sel => `<div class="jgrid">${Object.entries(XJ).map(([k, j]) => `<button type="button" class="jcard${sel === k ? ' on' : ''}" data-job="${k}">${j.ic}<b>${j.n}</b><span>${j.d}</span></button>`).join('')}</div>`;
 /*XT*/const XT = {"warrior":[["차지",[["강타","d","fist"],["차지 베기","c","sword"],["대지 가르기","D","rock"],["분노의 일격","d","fire"],["극한 차지","c","bolt"]]],["근성",[["단단한 피부","P:def","shield"],["되받아치기","d","spear"],["불굴","P:surv","heart"],["피의 갈증","P:vamp","drop"],["전장의 포효","b","trumpet"]]],["도끼술",[["회전 베기","D","swirl"],["투척 도끼","d","axe"],["파쇄","W","hammer"],["학살자","d","skull"],["폭풍 도끼","D","cloud"]]]],"black":[["화염",[["불꽃탄","d","fire"],["화염구","D","fireball"],["불씨","F","ember"],["지옥불","D","skull"],["메테오","D","rock"]]],["냉기와 번개",[["서리 화살","d","arrow"],["얼음 창","d","spear"],["번개","d","bolt"],["연쇄 번개","D","chain"],["눈보라","S","ice"]]],["암흑",[["마력 흡수","M","moon"],["약점 간파","w","eye"],["암흑 구체","d","orb"],["공허의 손","Z","claw"],["마력 폭주","P:mag","star"]]]],"thief":[["연속",[["찌르기","d","dagger"],["이중 베기","d","cross2"],["칼춤","D","swirl"],["연환","d","chain"],["난도질","c","claw"]]],["급소",[["약점 노리기","P:crit","eye"],["출혈","F","drop"],["급소 찌르기","c","arrow"],["처형자","d","skull"],["피 웅덩이","f","bubble"]]],["그림자",[["재빠른 발","P:spd","wing"],["연막","w","cloud"],["그림자 걸음","x","ghost"],["훔치기","d","coin"],["뒤잡기","Z","fist"]]]],"bard":[["전투가",[["용기의 노래","B","trumpet"],["승리의 행진","B","flag"],["전장의 북소리","X","drum"],["불꽃의 변주","D","fire"],["영웅의 서사시","B","crown"]]],["안식가",[["수호의 노래","G","harp"],["자장가","H","moon"],["평온의 선율","H","note"],["되살림의 화음","r","heart"],["별빛 합창","H","star"]]],["풍자",[["불협화음","w","note1"],["도발의 곡","s","wave"],["흥겨운 춤","X","wing"],["앙코르","B","burst"],["대합창","D","bell"]]]],"time":[["가속",[["서두르기","x","arrow"],["연속 가속","X","chain"],["시간 도약","x","bolt"],["가속 영역","X","wave"],["질주","P:spd","wing"]]],["감속",[["늦추기","s","hourglass"],["정지","Z","clock"],["늪 같은 시간","S","swirl"],["시간 정체","S","orb"],["영원한 정오","D","sun"]]],["시간 조작",[["되감기","h","cross"],["예지","P:dodge","eye"],["시계 소환","Z","bell"],["시간 균열","d","burst"],["시간 정지","X","star"]]]],"alch":[["약화",[["산성 플라스크","d","flask"],["독 병","F","tube"],["불안정 용액","w","bubble"],["부식","W","drop"],["약점 증폭","w","eye"]]],["혼합",[["응급 물약","h","cross"],["마력 물약","M","orb"],["혼합 약","h","swirl"],["엘릭서","H","star"],["변이약","B","skull"]]],["폭발물",[["폭죽탄","d","bomb"],["점착 폭탄","s","mine"],["연쇄 반응","D","chain"],["황금 폭발","d","burst"],["연금 대폭발","D","rocket"]]]],"white":[["회복",[["치유","h","drop"],["큰 치유","h","cross"],["집단 치유","H","flower"],["신성한 비","H","cloud"],["기적의 손길","h","star"]]],["부활",[["되살리기","r","wing"],["가호","P:surv","heart"],["완전 소생","r","crown"],["전체 소생","H","orb"],["천사의 숨결","H","wave"]]],["성광",[["성광탄","d","burst"],["정화","H","sun"],["빛의 장막","G","shield"],["심판의 빛","D","spear"],["광휘의 후광","B","bell"]]]],"druid":[["재생",[["새싹","h","leaf"],["재생의 숲","H","tree"],["뿌리 속박","s","chain"],["생명의 나무","h","flower"],["만개","H","sun"]]],["자연",[["자연 보호막","G","leaf"],["이슬","h","drop"],["독 제거","H","cross"],["태양의 은총","B","burst"],["대지의 축복","P:hp","heart"]]],["야수",[["가시 덩굴","d","spear"],["곰의 가죽","g","paw"],["늑대의 울음","B","wave"],["매의 눈","P:crit","eye"],["야생의 화신","D","claw"]]]],"cleric":[["보호",[["수호의 기도","G","cross"],["성스러운 방패","g","tower"],["대신 맞기","g","orb"],["피해 흡수 막","G","bubble"],["불가침","P:def","shield"]]],["정화",[["해제","H","wave"],["축복","B","sun"],["안식","G","moon"],["순백의 종","H","flag"],["구원의 빛","r","star"]]],["응징",[["철퇴","d","hammer"],["응징","d","fist"],["신벌","d","bolt"],["성스러운 낙인","w","star"],["심판의 종","D","bell"]]]],"knight":[["도발",[["도발","g","trumpet"],["방패 치기","d","fist"],["전열","G","chain"],["불굴의 외침","b","flag"],["요새","P:def","shield"]]],["수호",[["막아서기","g","tower"],["방어 태세","g","bubble"],["반격 태세","d","spear"],["수호의 서약","G","crown"],["철벽","P:hp","heart"]]],["검술",[["베기","d","sword"],["돌격","D","arrow"],["방패 돌진","Z","shield"],["정의의 칼날","c","sun"],["기사의 일격","c","burst"]]]],"summon":[["정령",[["불 정령","d","fire"],["물 정령","d","drop"],["바람 정령","D","swirl"],["대지 정령","d","rock"],["정령왕","D","crown"]]],["야수",[["늑대 소환","d","paw"],["곰 소환","g","claw"],["날개 도마뱀 소환","D","wing"],["호박 토끼 소환","d","ghost"],["용 소환","D","fireball"]]],["계약",[["소환수 강화","P:mag","star"],["마력 연결","M","chain"],["합체 공격","c","burst"],["송환","H","orb"],["계약의 폭주","B","skull"]]]],"gadget":[["길들인 짐승",[["번개 쥐","d","gear"],["수호 쥐","G","gear"],["광선 도마뱀","d","bolt"],["짐승 훈련","P:atk","fist"],["철갑 멧돼지","D","bomb"]]],["함정",[["덫 설치","s","chain"],["지뢰","d","mine"],["전기 그물","S","wave"],["연쇄 함정","D","swirl"],["대지 폭파","D","burst"]]],["폭탄",[["수류탄","d","bomb"],["접착탄","s","bubble"],["연막탄","w","cloud"],["시한폭탄","c","bomb"],["집중 포화","D","arrow"]]]]};/*XT-END*/
 const xIc = o => `<span class="sic" style="--c:${o.i};--r:${ORDER_J.indexOf(o.job)}"></span>`;
@@ -1736,7 +1736,7 @@ function xEnd(how){   // how: clear · time · retreat · wipe
   const items = how === 'wipe' ? {} : { ...lo.items }; if (how === 'clear') { const r = xRand(xReg().rare); items[r] = (items[r] || 0) + 1; }
   const before = xLv(ex.exp).L; ex.exp += exp; me.coin += gold; Object.entries(items).forEach(([k, n]) => { me.inv[k] = (me.inv[k] || 0) + n; });
   const after = xLv(ex.exp).L; ex.run = null; xb = null; clearInterval(xTick); save(); hud();
-  xv = { view: 'result', how, gold, exp, items, up: after > before ? [before, after] : null, prog: run.prog };
+  xv = { view: 'result', how, gold, exp, items, up: after > before ? [before, after] : null, prog: Math.floor(run.prog) };
 }
 function xTime(run){ return Math.max(0, run.end - Date.now()); }
 // ===== 협동 탐험 1단계: 방·로비 (xparty/<방> = { host, hn, rg 지역, st lobby·run·end, at, t0, seed, p: { uid: { n, job, L, rdy, out } } }) =====
@@ -1792,7 +1792,7 @@ function xpWire(){
 function renderExplore(){
   const ex = xEx(), lv = xLv(ex.exp), job = ex.job && XJ[ex.job];
   if (ex.run && xTime(ex.run) <= 0 && !xb) xEnd('time');
-  if (!xv) xv = { view: ex.run ? 'node' : 'lobby' };
+  if (!xv) xv = { view: ex.run ? 'march' : 'lobby' };
   const v = xv.view, back = '<button class="btn ghost" id="back">닫기</button>';
   if (!job){
     frame(null, '탐사', '직업을 골라요 (한 번 고르면 바뀌지 않아요)', `<section class="sec">${secH('직업 고르기', '12종')}<div class="box px">${Object.entries(XJ).map(([k, j]) => `<div class="li">${j.ic ? `<span class="big">${j.ic}</span>` : ''}<div class="main"><span class="t">${j.n}</span><span class="d" style="white-space:normal">${j.d}<br>${XT[k].map(b => b[0]).join(' · ')}</span></div><button class="btn sm go" data-xj="${k}">고르기</button></div>`).join('')}</div></section><div style="display:flex;gap:8px">${back}</div>`);
@@ -1804,14 +1804,14 @@ function renderExplore(){
     frame(null, '탐사', `오늘 ${ex.n} / ${XDAY}회`, `${head}<section class="sec">${secH('가는 곳', '마을 가장자리 길 끝에서 정해요')}<div class="box px"><div class="li"><span class="big">${R.ic}</span><div class="main"><span class="t">${R.n} · ${R.tier}</span><span class="d" style="white-space:normal">${R.dir}쪽 길 · ${R.min}분 · 입장 ${R.fee}G · 몬스터 Lv ${R.lv[0]}~${R.lv[1]}${lv.L < R.need ? ` · 내 레벨 ${R.need} 이상` : ''}</span></div></div>
       <div class="s sub" style="white-space:normal">학교와 마을 가장자리에 길이 네 갈래 있어요. 마을 남쪽 초보 · 학교 서쪽 중급 · 마을 북쪽 고급 · 마을 동쪽 초고급. 길 끝 기둥 사이로 걸어가면 그 탐사장이 열려요. 들어갈 때마다 「오늘의 길」과 만나는 몬스터가 달라져요.</div></div>
       ${xpPanel(lv)}
-      <div class="s sub">갈림길을 골라 100%를 채워요. 시간이 끝나거나 전멸하면 끝나요. 전멸하면 얻은 것을 모두 잃어요. 지금은 혼자 싸워요. (같이 싸우는 협동 탐험은 준비 중이에요)</div><button class="btn" id="xwp" style="width:100%">⚔️ 무기 강화 · ${XWN[ex.job]} (${XWT[ex.wp || 0]})</button><button class="btn" id="xst" style="width:100%">💪 스탯${xSpPts(ex) > 0 ? ` · 남은 포인트 ${xSpPts(ex)}` : ''}</button><button class="btn" id="xtree" style="width:100%">🌳 스킬 트리${xPts(ex) > 0 ? ` · 남은 포인트 ${xPts(ex)}` : ''}</button><button class="btn go" id="xgo" style="width:100%" ${ex.n >= XDAY || me.coin < R.fee || !okL ? 'disabled' : ''}>${ex.n >= XDAY ? '오늘은 끝났어요' : !okL ? `레벨 ${R.need} 이상이에요` : me.coin < R.fee ? `골드가 모자라요 (${R.fee}G)` : `출발하기 · ${R.fee}G`}</button>${hint(xMsg, '스킬은 레벨이 오를 때마다 포인트를 받아요')}</section><div style="display:flex;gap:8px">${back}</div>`);
+      <div class="s sub">자동으로 걸어가요. 갈림길에서 길을 고르고, 돌발 상황에 대처하고, 만나는 몬스터와 싸워 100%를 채워요. 시간이 끝나거나 전멸하면 끝나요. 전멸하면 얻은 것을 모두 잃어요. 지금은 혼자 싸워요. (같이 싸우는 협동 탐험은 준비 중이에요)</div><button class="btn" id="xwp" style="width:100%">⚔️ 무기 강화 · ${XWN[ex.job]} (${XWT[ex.wp || 0]})</button><button class="btn" id="xst" style="width:100%">💪 스탯${xSpPts(ex) > 0 ? ` · 남은 포인트 ${xSpPts(ex)}` : ''}</button><button class="btn" id="xtree" style="width:100%">🌳 스킬 트리${xPts(ex) > 0 ? ` · 남은 포인트 ${xPts(ex)}` : ''}</button><button class="btn go" id="xgo" style="width:100%" ${ex.n >= XDAY || me.coin < R.fee || !okL ? 'disabled' : ''}>${ex.n >= XDAY ? '오늘은 끝났어요' : !okL ? `레벨 ${R.need} 이상이에요` : me.coin < R.fee ? `골드가 모자라요 (${R.fee}G)` : `출발하기 · ${R.fee}G`}</button>${hint(xMsg, '스킬은 레벨이 오를 때마다 포인트를 받아요')}</section><div style="display:flex;gap:8px">${back}</div>`);
     on('[data-xr]', b => { xRgSel = +b.dataset.xr; if (xpRoom && xpV?.host === myId() && xpV.st === 'lobby') GDB.upd('xparty/' + xpRoom, { rg: xRgSel }); renderExplore(); });
     xpWire();
     $('#back').onclick = closeSheet;
     $('#xst').onclick = () => { xv = { view: 'stats', sel: XMAIN[ex.job] }; renderExplore(); };
     $('#xtree').onclick = () => { xv = { view: 'tree', sel: '0.0' }; renderExplore(); };
     $('#xwp').onclick = () => { xv = { view: 'weapon' }; renderExplore(); };
-    const go = $('#xgo'); if (go) go.onclick = () => { me.coin -= xReg().fee; ex.n++; ex.run = { rg: xRgSel, mod: xRand(XMODS), pool: xShuffle(xReg().mon).slice(0, 4), start: Date.now(), end: Date.now() + xReg().min * 6e4, prog: 0, loot: { gold: 0, exp: 0, items: {} }, buff: 0, p: null, node: null }; save(); hud(); xv = { view: 'node' }; xMsg = ''; renderExplore(); };
+    const go = $('#xgo'); if (go) go.onclick = () => { me.coin -= xReg().fee; ex.n++; ex.run = { rg: xRgSel, mod: xRand(XMODS), pool: xShuffle(xReg().mon).slice(0, 4), start: Date.now(), end: Date.now() + xReg().min * 6e4, prog: 0, loot: { gold: 0, exp: 0, items: {} }, buff: 0, p: null, node: null }; save(); hud(); xv = { view: 'march' }; xMsg = ''; xM = null; renderExplore(); };
     return;
   }
   const run = ex.run;
@@ -1858,16 +1858,8 @@ function renderExplore(){
     $('#back').onclick = closeSheet; $('#xok').onclick = () => { xv = { view: 'lobby' }; renderExplore(); }; return;
   }
   if (v === 'battle') return xRenderBattle();
-  // 지도: 다음 갈림길
-  if (!run.node) run.node = xNodes(run.prog);
-  const ticker = () => { const el = $('#xtime'); if (el) el.textContent = timeText(xTime(run)); if (xTime(run) <= 0 && !xb){ clearInterval(xTick); xEnd('time'); renderExplore(); } };
-  frame(null, '탐사 · ' + xReg().n, `남은 시간 <span id="xtime">${timeText(xTime(run))}</span>`, `${head}<section class="sec">${secH('진행률', `${run.prog}%`)}<div class="bar" style="height:14px;grid-template-columns:repeat(20,1fr)">${Array.from({ length: 20 }, (_, i) => `<i style="background:${i < Math.floor(run.prog / 5) ? 'var(--ok)' : 'var(--line)'}"></i>`).join('')}</div>
-    <div class="s sub">얻은 것: 골드 ${run.loot.gold} · 경험치 ${run.loot.exp}${Object.keys(run.loot.items).length ? ' · ' + Object.entries(run.loot.items).map(([k, n]) => `${ITEM[k] || k}×${n}`).join(' ') : ''}${run.buff ? ` · 🗿 가호 ${run.buff}회` : ''}</div>
-    ${secH('어느 길로 갈까요?', run.mod && run.mod.d ? `오늘의 길: ${run.mod.n} · ${run.mod.d}` : run.mod ? `오늘의 길: ${run.mod.n}` : '')}<div class="grid" style="grid-template-columns:repeat(${run.node.length},1fr)">${run.node.map((k, i) => `<button class="cell" data-xn="${i}" style="min-height:96px"><span class="big">${k === 'boss' ? xReg().ic : XNODE[k][0]}</span><span class="s b">${k === 'boss' ? xReg().boss.n : XNODE[k][1]}</span><span class="s sub">+${k === 'boss' ? '마지막' : XNODE[k][2] + '%'}</span></button>`).join('')}</div>
-    ${hint(xMsg, '선택한 곳으로 가요')}<button class="btn ghost" id="xret" style="align-self:center">탐사 끝내기 (얻은 것은 가져가요)</button></section><div style="display:flex;gap:8px">${back}</div>`);
-  $('#back').onclick = () => { closeSheet(); }; clearInterval(xTick); xTick = setInterval(() => { if (!sheetOn || sub !== 'explore' || xv?.view !== 'node') return clearInterval(xTick); ticker(); }, 1000);
-  $('#xret').onclick = () => confirmBox('탐사를 끝낼까요? 얻은 것은 가져가요.', '끝낼래요', '계속할래요').then(ok => { if (ok){ xEnd('retreat'); renderExplore(); } });
-  on('[data-xn]', b => xGo(run.node[+b.dataset.xn]));
+  // 자동 행군: 파티가 알아서 걸어가고, 갈림길·돌발 상황·몬스터를 만나요
+  xMarchView(run, head);
 }
 // 탐사 한 번마다 「오늘의 길」이 무작위로 정해져요: 길에 나오는 노드 비율과 보상이 달라져요 (몬스터도 지역 몬스터 중 4종만 나와요)
 const XMODS = [
@@ -1878,28 +1870,143 @@ const XMODS = [
   { n: '강적의 길', d: '강한 몬스터가 많고 보상이 커요', w: { elite: 3 }, rew: 1.3 },
 ];
 const xShuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
-function xNodes(prog){
-  if (prog >= 88) return ['boss'];
-  const run = xEx().run, base = { battle: 5, elite: 1, camp: 1, statue: 1, chest: 2 }, mw = run?.mod?.w || {}, W = [];
-  Object.keys(base).forEach(k => { for (let i = 0, n = Math.max(0, base[k] + (mw[k] || 0)); i < n; i++) W.push(k); });
-  const a = xRand(W); let b = xRand(W), t = 0; while (b === a && t++ < 12) b = xRand(W); return [a, b];
-}
 function xAdd(k){ const run = xEx().run; run.prog = Math.min(100, run.prog + XNODE[k][2]); run.node = null; if (run.prog >= 100) run.prog = 100; }
 function xGo(k){
   const run = xEx().run; xMsg = '';
+  if (k === 'path'){ xAdd('path'); xMsg = '🛤️ 지름길로 들어섰어요! 진행 +8%'; save(); return renderExplore(); }
   if (k === 'battle' || k === 'elite' || k === 'boss'){ xStartBattle(k); return; }
   if (k === 'camp'){ const p = xb?.party || xParty(); p.forEach(u => { u.hp = Math.min(u.mhp, u.hp + Math.round(u.mhp * .5)); u.mp = Math.min(u.mmp, u.mp + Math.round(u.mmp * .5)); }); run.p = p.map(u => ({ hp: u.hp, mp: u.mp })); xMsg = '🔥 모닥불에 둘러앉아 체력과 마력을 절반 회복했어요.'; if (Math.random() < .5){ run.buff = (run.buff || 0) + 1; xMsg += ' 따뜻한 가호 (다음 전투 공격 +25%)'; } xAdd('camp'); save(); return renderExplore(); }
   if (k === 'chest'){ const g = Math.round((20 + Math.round(Math.random() * 30) + Math.round(run.prog / 3)) * (run.mod?.rew || 1)), it = xRand(xReg().loot); run.loot.gold += g; run.loot.items[it] = (run.loot.items[it] || 0) + 1 + (Math.random() < .3 ? 1 : 0); xMsg = `🎁 상자에서 골드 ${g}과 ${ITEM[it] || it}이 나왔어요!`; if (Math.random() < .12){ xAdd('chest'); save(); return xStartBattle('battle', '상자가 미믹이었어요!'); } xAdd('chest'); save(); return renderExplore(); }
-  if (k === 'statue'){ xv = { view: 'node' }; confirmBox('이끼 낀 고대 석상이 있어요. 어떻게 할까요?', '기도하기', '조사하기').then(ok => { xAdd('statue'); const r = Math.random();
+  if (k === 'statue'){ xv = { view: 'march' }; confirmBox('이끼 낀 고대 석상이 있어요. 어떻게 할까요?', '기도하기', '조사하기').then(ok => { xAdd('statue'); const r = Math.random();
       if (ok){ if (r < .6){ run.buff = (run.buff || 0) + 3; xMsg = '🗿 석상이 빛나요! 다음 3번의 전투 공격 +25%.'; } else if (r < .85) xMsg = '🗿 아무 일도 일어나지 않았어요…'; else { const p = xb?.party || xParty(); p.forEach(u => { u.hp = Math.max(1, u.hp - Math.round(u.mhp * .15)); }); run.p = p.map(u => ({ hp: u.hp, mp: u.mp })); xMsg = '🗿 저주! 모두 체력이 줄었어요.'; } }
       else { if (r < .7){ const it = xRand(xReg().rare); run.loot.items[it] = (run.loot.items[it] || 0) + 1; run.loot.gold += 30; xMsg = `🗿 석상 밑에서 ${ITEM[it] || it}과 골드 30을 찾았어요!`; } else { save(); return xStartBattle('battle', '석상을 지키던 몬스터가 깨어났어요!'); } }
       save(); renderExplore(); }); return; }
+}
+// ===== 자동 행군 (횡스크롤) =====
+// 파티가 알아서 걸어요. 걷다가 ① 갈림길(눌러서 고르면 먼저 누른 쪽으로) ② 돌발 상황(제한 시간 안에 눌러서 대처, 못 하면 그 사람만 피해)
+// ③ 몬스터(갈림길에는 없어요, 무작위로 꼭 만나요 → 전투). 전투가 끝나면 다시 걸어요.
+const XM_HAZ = [
+  { n: '바위가 굴러와요!', b: '피하기!', ok: '바위를 피했어요!', bad: '바위에 맞았어요', k: 'rock' },
+  { n: '땅이 꺼져요!', b: '뛰어넘기!', ok: '가볍게 뛰어넘었어요!', bad: '구덩이에 빠졌어요', k: 'pit' },
+  { n: '독안개가 몰려와요!', b: '숨 참기!', ok: '숨을 참고 버텼어요!', bad: '독안개를 마셨어요', k: 'fog' },
+  { n: '박쥐 떼가 덮쳐요!', b: '막기!', ok: '박쥐를 쫓아냈어요!', bad: '박쥐에게 물렸어요', k: 'bat' },
+];
+const XM_FORK = { chest: ['🎁', '보물상자', '뭐가 들어 있을까?'], camp: ['🔥', '캠프파이어', '체력·마력 회복'], statue: ['🗿', '고대 석상', '기도할까, 조사할까'], path: ['🛤️', '지름길', '빨리 갈 수 있어요'] };
+let xM = null, xMRaf = 0, xMSave = 0;
+const xMSpd = () => 100 / (xReg().min * 60 * 1.6);   // 걷기만 해서 100%까지 가는 데 제한 시간의 1.6배 (전투·갈림길 보상이 더해져요)
+function xMNew(run){
+  const r = (a, b) => a + Math.random() * (b - a);
+  return { id: run.start, st: 'walk', off: 0, wt: 0, t: performance.now(), nextEnc: r(8, 16), nextHaz: r(20, 34), nextFork: run.prog + r(8, 13), boss: false, fork: null, haz: null, alert: null, res: null, uik: '', clk: 0 };
+}
+function xMForkOpts(run){
+  const W = [], base = { chest: 3, camp: 2, statue: 2, path: 2 }, mw = run.mod?.w || {};
+  Object.keys(base).forEach(k => { for (let i = 0, n = Math.max(0, base[k] + (mw[k] || 0)); i < n; i++) W.push(k); });
+  const a = xRand(W); let b = xRand(W), t = 0; while (b === a && t++ < 16) b = xRand(W); return b === a ? [a, a === 'path' ? 'camp' : 'path'] : [a, b];
+}
+function xMHurt(frac){   // 못 막은 사람만 피해 (1은 남겨요 · 전멸은 전투에서만)
+  const run = xEx().run, P = xParty(); P.forEach(u => { u.hp = Math.max(1, u.hp - Math.round(u.mhp * frac)); }); run.p = P.map(u => ({ hp: u.hp, mp: u.mp })); save(); xMHud(); return P[0].mhp * frac | 0;
+}
+function xMHud(){
+  const st = $('#xmstat'); if (!st) return; const P = xParty(), B = { party: P, turn: null };
+  st.innerHTML = xStatHtml(B); headFix(); xStatUpdate(B);
+  const run = xEx().run; if (!run) return; const pg = $('#xmpg'); if (pg) pg.style.width = Math.min(100, run.prog) + '%'; const pt = $('#xmpt'); if (pt) pt.textContent = `${Math.floor(run.prog)}%`;
+  const lo = $('#xmloot'); if (lo) lo.textContent = `골드 ${run.loot.gold} · 경험치 ${run.loot.exp}${Object.keys(run.loot.items).length ? ' · ' + Object.entries(run.loot.items).map(([k, n]) => `${ITEM[k] || k}×${n}`).join(' ') : ''}${run.buff ? ` · 🗿 가호 ${run.buff}회` : ''}`;
+}
+function xMarchView(run, head){
+  if (!xM || xM.id !== run.start) xM = xMNew(run);
+  if (xM.st === 'busy') xM.st = 'walk';
+  frame(null, '탐사 · ' + xReg().n, `남은 시간 <span id="xtime">${timeText(xTime(run))}</span>`, `<style>
+    #xmcv{display:block;width:100%;aspect-ratio:16/9;image-rendering:pixelated;border:3px solid #0c0818;border-radius:6px;box-shadow:0 0 0 2px #5a4a9a;background:#000;touch-action:manipulation}
+    .xmp{display:flex;align-items:center;gap:8px}.xmp .bar{flex:1;height:12px;grid-template-columns:1fr;background:var(--line);border-radius:6px;overflow:hidden;position:relative}.xmp .bar i{display:block;height:100%;background:linear-gradient(#ffb85a,#ff8a2a);border-radius:6px;transition:width .3s linear}
+    .xmf{display:grid;gap:8px;min-height:104px;align-content:center}.xmf2{grid-template-columns:1fr 1fr}.xmf button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:96px;padding:8px;color:#fff;font:inherit;font-weight:800;background:linear-gradient(#3b2f78,#251b52);border:2px solid #0c0818;border-radius:8px;box-shadow:inset 0 0 0 2px #6a5ab0,0 2px 0 #000}.xmf button:active{transform:translateY(1px)}.xmf .big{font-size:30px}.xmf small{font-weight:600;font-size:11px;color:#b9a8ff}
+    .xmf .hz{min-height:96px;font-size:22px;background:linear-gradient(#ff9a3a,#e0661a);box-shadow:inset 0 0 0 2px #ffd08a,0 2px 0 #000;animation:xhz .5s infinite alternate}@keyframes xhz{to{transform:scale(1.03)}}
+    .xmw{display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:13px;min-height:96px}
+    .xhud{display:flex;flex-direction:column;gap:8px}.xstat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+    .xs{display:flex;flex-direction:column;gap:3px;padding:6px;background:linear-gradient(#2b2150,#1b1438);border:2px solid #0c0818;border-radius:6px;box-shadow:inset 0 0 0 2px #4a3c86;min-width:0}
+    .xs1{display:flex;gap:6px;align-items:center}.xport{width:34px;height:34px;flex:none;border:2px solid #0c0818;border-radius:4px;background:#3a2e6a;overflow:hidden;box-shadow:0 0 0 1px #6a5ab0}.xport img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+    .xs2{min-width:0;display:flex;flex-direction:column;line-height:1.15}.xs2 b{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.xj{font-size:10px;color:#b9a8ff}
+    .xbr{position:relative;height:11px;background:#120c26;border:1px solid #0c0818;border-radius:3px;overflow:hidden}.xbr i{display:block;height:100%;width:100%;transition:width .12s}.xbr.hp i{background:linear-gradient(#8af09a,#3fb858)}.xbr.mp i{background:linear-gradient(#8ac4ff,#3a78d8)}.xbr.gg{display:none}
+    .xbr em{position:absolute;inset:0;font-style:normal;font-size:9px;font-weight:800;text-align:center;line-height:10px;color:#fff;text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000}
+  </style>
+  <canvas id="xmcv" width="${XCW}" height="${XCH}"></canvas>
+  <div class="xmp"><div class="bar"><i id="xmpg" style="width:${Math.min(100, run.prog)}%"></i></div><b id="xmpt" class="s">${Math.floor(run.prog)}%</b></div>
+  <div class="s sub" id="xmloot"></div>
+  <div class="xmf" id="xmf"></div>
+  ${xMsg ? `<div class="hint on px" style="text-align:center">${esc(xMsg)}</div>` : ''}
+  <div class="xhud"><div class="xstat" id="xmstat"></div></div>
+  <button class="btn ghost" id="xret" style="align-self:center">탐사 끝내기 (얻은 것은 가져가요)</button>`);
+  xM.uik = ''; xM.t = performance.now(); xM.clk = 0; World.Avatar.need(me.av); xLpcSheet(); xMHud();
+  $('#xret').onclick = () => confirmBox('탐사를 끝낼까요? 얻은 것은 가져가요.', '끝낼래요', '계속할래요').then(ok => { if (ok){ xEnd('retreat'); renderExplore(); } });
+  cancelAnimationFrame(xMRaf); xMRaf = 0; xMDraw();
+}
+function xMUi(){   // 갈림길 · 돌발 상황 버튼
+  const M = xM, el = $('#xmf'); if (!el) return; let key = M.st + (M.fork ? M.fork.opts.join() : '') + (M.haz ? M.haz.ty.k + (M.haz.done ? 'd' : '') : '');
+  if (key === M.uik) return; M.uik = key;
+  if (M.st === 'fork'){ el.className = 'xmf xmf2'; el.innerHTML = M.fork.opts.map((k, i) => `<button data-xf="${i}"><span class="big">${XM_FORK[k][0]}</span>${XM_FORK[k][1]}<small>${XM_FORK[k][2]}</small></button>`).join(''); el.querySelectorAll('[data-xf]').forEach(b => b.onclick = () => xMPick(+b.dataset.xf)); }
+  else if (M.st === 'haz' && !M.haz.done){ el.className = 'xmf'; el.innerHTML = `<button class="hz" id="xhz">${M.haz.ty.b}</button>`; $('#xhz').onpointerdown = e => { e.preventDefault(); if (M.haz && !M.haz.done){ M.haz.done = true; M.haz.ok = true; M.haz.t1 = performance.now(); M.uik = ''; } }; }
+  else { el.className = 'xmf'; el.innerHTML = `<div class="xmw">${M.st === 'walk' ? '걷는 중… 앞에서 무슨 일이 생길지 몰라요' : M.st === 'alert' ? '⚠️ 몬스터가 나타났어요!' : ''}</div>`; }
+}
+function xMPick(i){   // 먼저 누른 쪽으로 가요
+  const M = xM; if (M.st !== 'fork' || !M.fork) return; const k = M.fork.opts[i]; M.fork = null; M.st = 'busy'; M.nextFork = xEx().run.prog + 8 + Math.random() * 6; M.uik = ''; xGo(k);
+}
+function xMStep(M, run, dt, now){
+  if (M.st === 'walk'){
+    M.off += dt * 38; M.wt += dt; run.prog = Math.min(99.9, run.prog + dt * xMSpd());
+    if (run.prog >= 88 && !M.boss){ M.boss = true; M.st = 'alert'; M.alert = { t0: now, dur: 1500, kind: 'boss', lp: xReg().boss.lp, txt: '숲의 주인이 나타났어요!' }; }
+    else if (run.prog >= M.nextFork && run.prog < 84){ M.st = 'fork'; M.fork = { opts: xMForkOpts(run), t0: now }; }
+    else if (M.wt >= M.nextEnc){ const el = run.prog > 20 && Math.random() < .12; M.nextEnc = M.wt + 12 + Math.random() * 12; const mo = el ? xReg().elite : xRand(run.pool && run.pool.length ? run.pool : xReg().mon); if (!el) run.nextMon = mo; M.st = 'alert'; M.alert = { t0: now, dur: 1200, kind: el ? 'elite' : 'battle', lp: mo.lp, txt: el ? '강한 몬스터가 나타났어요!' : '몬스터가 나타났어요!' }; }
+    else if (M.wt >= M.nextHaz){ M.nextHaz = M.wt + 22 + Math.random() * 18; M.st = 'haz'; M.haz = { ty: xRand(XM_HAZ), t0: now, dur: 3600, done: false, ok: false }; }
+  } else if (M.st === 'alert'){
+    if (now - M.alert.t0 >= M.alert.dur){ const k = M.alert.kind; M.alert = null; M.st = 'busy'; xSaveParty(); save(); xStartBattle(k); }
+  } else if (M.st === 'fork'){
+    if (now - M.fork.t0 > 15000) xMPick(Math.floor(Math.random() * M.fork.opts.length));
+  } else if (M.st === 'haz'){
+    const H = M.haz; if (!H.done && now - H.t0 >= H.dur){ H.done = true; H.ok = false; H.t1 = now; }
+    if (H.done && !H.fx){ H.fx = true; const loss = H.ok ? 0 : xMHurt(.15); M.res = { t0: now, dur: 1500, txt: H.ok ? H.ty.ok : `${H.ty.bad}! 체력 -${loss}`, ok: H.ok }; if (!H.ok) M.shake = now; }
+    if (H.done && now - H.t1 >= 900){ M.st = 'res'; M.haz = null; }
+  } else if (M.st === 'res'){
+    if (now - M.res.t0 >= M.res.dur){ M.res = null; M.st = 'walk'; }
+  }
+}
+function xMDraw(){
+  const M = xM, cv = $('#xmcv'), run = xEx().run; if (!M || !cv || !run || !sheetOn || sub !== 'explore' || xv?.view !== 'march'){ xMRaf = 0; return; }
+  xMRaf = requestAnimationFrame(xMDraw); const now = performance.now(), dt = Math.min(.1, (now - M.t) / 1000); M.t = now;
+  xMStep(M, run, dt, now); if (xv?.view !== 'march' || !xM) return;
+  if (now - xMSave > 6000){ xMSave = now; save(); } M.clk += dt; if (M.clk >= 1){ M.clk = 0; const te = $('#xtime'); if (te) te.textContent = timeText(xTime(run)); const pg = $('#xmpg'); if (pg) pg.style.width = Math.min(100, run.prog) + '%'; const pt = $('#xmpt'); if (pt) pt.textContent = `${Math.floor(run.prog)}%`; if (xTime(run) <= 0){ xEnd('time'); return renderExplore(); } }
+  xMUi();
+  const R = xReg(), g = cv.getContext('2d'), bg = xBg(XRG.indexOf(R)); g.imageSmoothingEnabled = false; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#000'; g.fillRect(0, 0, XCW, XCH);
+  if (M.shake && now - M.shake < 320) g.translate(Math.round((Math.random() - .5) * 6), Math.round((Math.random() - .5) * 4));
+  const o = M.off % (XCW * 2);   // 배경은 좌우로 뒤집어 이어 붙여요 (끊김 없이 흘러가요)
+  [-o, XCW * 2 - o].forEach(x0 => { g.drawImage(bg, x0, 0); g.save(); g.translate(x0 + XCW * 2, 0); g.scale(-1, 1); g.drawImage(bg, 0, 0); if (R.kind === 'trees' || R.kind === 'graves') g.drawImage(bg, 130, 6, 52, 62, 274, 6, 52, 62); g.restore(); });   // 뒤집은 쪽엔 달이 한 번 더 나오지 않게 하늘로 덮어요
+  xAmb(g, R.kind, now);
+  const A = World.Avatar, FW = A.FW, FH = A.FH, sp = A.compose(me.av), WK = A.meta.walk, dr = A.meta.dirs.right, walking = M.st === 'walk' || M.st === 'fork' && false;
+  let px = 150, py = 176, jump = 0;
+  const H = M.haz; if (H){ const p = Math.min(1, (now - H.t0) / H.dur), ox = XCW + 24 - (XCW + 24 - (px + 26)) * (H.done && H.ok ? Math.min(1, p + .15) : p), gy = py + 2;
+    if (H.ok && H.done) jump = Math.sin(Math.min(1, (now - H.t1) / 600) * Math.PI) * 26;
+    g.save(); const hx = H.done && H.ok ? ox - (now - H.t1) * .35 : H.done ? px + 26 : ox;
+    if (H.ty.k === 'rock'){ g.fillStyle = '#6f6a7c'; g.beginPath(); g.arc(hx, gy - 14, 14, 0, 7); g.fill(); g.strokeStyle = '#4a4658'; g.lineWidth = 2; g.beginPath(); g.arc(hx, gy - 14, 14, 0, 7); g.stroke(); g.fillStyle = '#8c869a'; g.beginPath(); g.arc(hx - 4, gy - 18, 5, 0, 7); g.fill(); g.strokeStyle = '#4a4658'; const a = now / 120; g.beginPath(); g.moveTo(hx, gy - 14); g.lineTo(hx + Math.cos(a) * 12, gy - 14 + Math.sin(a) * 12); g.stroke(); }
+    else if (H.ty.k === 'pit'){ g.fillStyle = '#0a0612'; g.beginPath(); g.ellipse(px + 28, gy, 20, 6, 0, 0, 7); g.fill(); g.fillStyle = 'rgba(255,90,60,.5)'; g.beginPath(); g.ellipse(px + 28, gy, 20 * (1 - p * .2), 6, 0, 0, 7); g.strokeStyle = '#ff6a4a'; g.stroke(); }
+    else if (H.ty.k === 'fog'){ for (let i = 0; i < 5; i++){ g.globalAlpha = .28; g.fillStyle = '#9a7ad0'; g.beginPath(); g.ellipse(hx + i * 18, gy - 12 - (i % 2) * 14, 34, 16, 0, 0, 7); g.fill(); } g.globalAlpha = 1; }
+    else { for (let i = 0; i < 5; i++){ const bx = hx + i * 14, by = gy - 30 - (i * 11) % 30 + Math.sin(now / 90 + i) * 5, w = Math.sin(now / 60 + i) * 5; g.fillStyle = '#1a1024'; g.beginPath(); g.moveTo(bx, by); g.lineTo(bx - 8, by - 3 + w); g.lineTo(bx - 4, by + 2); g.lineTo(bx, by); g.lineTo(bx + 8, by - 3 + w); g.lineTo(bx + 4, by + 2); g.fill(); } }
+    g.restore(); }
+  g.fillStyle = 'rgba(0,0,0,.32)'; g.beginPath(); g.ellipse(px, py, 14, 4, 0, 0, 7); g.fill();
+  const col = dr + ((M.st === 'walk' || M.st === 'alert' && false) ? WK[Math.floor(now / 130) % WK.length] : 0), hurt = M.res && !M.res.ok && now - M.res.t0 < 500 && Math.round(now / 70) % 2;
+  if (!hurt && sp) g.drawImage(sp, col * FW, 0, FW, FH, Math.round(px - FW / 2), Math.round(py - FH + 6 - jump), FW, FH);
+  if (M.st === 'alert'){ const a = M.alert, p = Math.min(1, (now - a.t0) / 700), mx = XCW + 30 - (XCW + 30 - 276) * p, lpc = xLpcSheet(), sc = a.kind === 'boss' ? 3 : a.kind === 'elite' ? 2 : 1;
+    if (lpc.complete){ g.save(); g.translate(mx, py); g.scale(-sc, sc); g.drawImage(lpc, a.lp * 64, 0, 64, 64, -32, -60, 64, 64); g.restore(); }
+    if (Math.round(now / 150) % 2){ g.font = 'bold 26px monospace'; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = '#1a1024'; g.strokeText('!', px, py - FH - 4); g.fillStyle = '#ff5a4a'; g.fillText('!', px, py - FH - 4); } }
+  if (M.st === 'fork'){ const sx = 300, sy = py; g.fillStyle = '#5a3a22'; g.fillRect(sx - 2, sy - 52, 5, 54); g.fillStyle = '#8a5a32'; g.beginPath(); g.moveTo(sx - 36, sy - 50); g.lineTo(sx + 4, sy - 50); g.lineTo(sx + 12, sy - 44); g.lineTo(sx + 4, sy - 38); g.lineTo(sx - 36, sy - 38); g.fill(); g.fillStyle = '#7a4a2a'; g.beginPath(); g.moveTo(sx + 40, sy - 34); g.lineTo(sx + 2, sy - 34); g.lineTo(sx - 6, sy - 28); g.lineTo(sx + 2, sy - 22); g.lineTo(sx + 40, sy - 22); g.fill();
+    g.font = '14px sans-serif'; g.textAlign = 'center'; g.fillText(XM_FORK[M.fork.opts[0]][0], sx - 14, sy - 39); g.fillText(XM_FORK[M.fork.opts[1]][0], sx + 20, sy - 23);
+    const left = Math.max(0, 15 - (now - M.fork.t0) / 1000); g.font = 'bold 11px monospace'; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText('갈림길! 누르면 그쪽으로 가요 · ' + Math.ceil(left), XCW / 2, 40); g.fillStyle = '#ffd866'; g.fillText('갈림길! 누르면 그쪽으로 가요 · ' + Math.ceil(left), XCW / 2, 40); }
+  if (H && !H.done){ const left = Math.max(0, 1 - (now - H.t0) / H.dur); g.fillStyle = '#1a1024'; g.fillRect(60, 30, XCW - 120, 12); g.fillStyle = left > .35 ? '#ffb85a' : '#ff5a4a'; g.fillRect(62, 32, (XCW - 124) * left, 8); g.font = 'bold 14px sans-serif'; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = '#1a1024'; g.strokeText('⚠️ ' + H.ty.n, XCW / 2, 66); g.fillStyle = '#fff'; g.fillText('⚠️ ' + H.ty.n, XCW / 2, 66); }
+  const msg = M.res ? M.res.txt : M.alert ? M.alert.txt : '';
+  if (msg){ g.font = 'bold 15px sans-serif'; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = '#1a1024'; g.strokeText(msg, XCW / 2, 70); g.fillStyle = M.res ? (M.res.ok ? '#8affb0' : '#ff8a7a') : '#ffd866'; g.fillText(msg, XCW / 2, 70); }
 }
 // ----- 전투 -----
 function xStartBattle(kind, msg){
   const ex = xEx(), run = ex.run, R = xReg(), party = xParty(), d = run.prog / 100, mL = Math.max(1, Math.min(Math.round(R.lv[0] + (R.lv[1] - R.lv[0]) * d), xLv(ex.exp).L + 3)),   // 내 레벨보다 3 높은 몬스터까지만
     mk = (m, i) => { const k = m.k || 1, f = 1 + .35 * (mL - 1), a = 1 + .25 * (mL - 1); return { id: 'e' + i, name: m.n, ic: '', lp: m.lp, big: m.big, sc: m.big ? 3 : k >= 3 ? 2 : 1, hh: 56 * (m.big ? 3 : k >= 3 ? 2 : 1), team: 'e', mhp: Math.round(m.hp * f), hp: Math.round(m.hp * f), atk: Math.round(m.atk * a), spd: m.spd, g: Math.random() * 60, k, aoe: !!m.aoe, mL, fx: {} }; };
-  const sz = party.length, foes = kind === 'boss' ? [mk(R.boss, 0)] : kind === 'elite' ? (sz > 1 ? [mk(R.elite, 0), mk(xRand(run.pool || R.mon), 1)] : [mk(R.elite, 0)]) : Array.from({ length: Math.max(1, Math.round((1 + Math.floor(Math.random() * (1 + (d > .3 ? 2 : 1)))) * Math.min(sz, 3) / 3)) }, (_, i) => mk(xRand(run.pool || R.mon), i));
+  const sz = party.length, foes = kind === 'boss' ? [mk(R.boss, 0)] : kind === 'elite' ? (sz > 1 ? [mk(R.elite, 0), mk(xRand(run.pool || R.mon), 1)] : [mk(R.elite, 0)]) : Array.from({ length: Math.max(1, Math.round((1 + Math.floor(Math.random() * (1 + (d > .3 ? 2 : 1)))) * Math.min(sz, 3) / 3)) }, (_, i) => mk(i === 0 && run.nextMon ? run.nextMon : xRand(run.pool || R.mon), i)); run.nextMon = null;
   xb = { party, foes, kind, log: msg || '', turn: null, pick: null, over: false, last: performance.now(), buff: run.buff > 0, def: {}, fxs: [], floats: [], proj: [] }; if (run.buff > 0) run.buff--; xv = { view: 'battle' }; renderExplore();
 }
 function xAlive(a){ return a.filter(u => u.hp > 0); }
@@ -2184,7 +2291,7 @@ function xStatUpdate(B){
 }
 function xRenderBattle(){
   const B = xb, run = xEx().run; B.menu = 'main'; B.ck = '';
-  frame(null, B.kind === 'boss' ? '⚔️ 보스!' : B.kind === 'elite' ? '⚔️ 강한 몬스터' : '⚔️ 전투', `진행 ${run.prog}% · 남은 시간 ${timeText(xTime(run))}`, `<style>
+  frame(null, B.kind === 'boss' ? '⚔️ 보스!' : B.kind === 'elite' ? '⚔️ 강한 몬스터' : '⚔️ 전투', `진행 ${Math.floor(run.prog)}% · 남은 시간 ${timeText(xTime(run))}`, `<style>
     #xcv{display:block;width:100%;aspect-ratio:16/9;image-rendering:pixelated;border:3px solid #0c0818;border-radius:6px;box-shadow:0 0 0 2px #5a4a9a;background:#000;touch-action:manipulation}
     .xhud{display:flex;flex-direction:column;gap:8px}.xstat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
     .xs{display:flex;flex-direction:column;gap:3px;padding:6px;background:linear-gradient(#2b2150,#1b1438);border:2px solid #0c0818;border-radius:6px;box-shadow:inset 0 0 0 2px #4a3c86;min-width:0}
@@ -2258,7 +2365,7 @@ function xWin(){
   xSaveParty(); B.party.forEach(u => { if (u.hp <= 0) u.hp = Math.max(1, Math.round(u.mhp * .2)); }); run.p = B.party.map(u => ({ hp: u.hp, mp: u.mp }));
   const kind = B.kind; xAdd(kind === 'boss' ? 'boss' : kind); save();
   $('#xlog') && ($('#xlog').textContent = `승리! 골드 +${gold} · 경험치 +${exp}${drop}`); const el = $('#xcmd'); if (el) el.innerHTML = '<button class="btn go" id="xnext" style="grid-column:1/-1">계속</button>';
-  $('#xnext').onclick = () => { xb = null; if (run.prog >= 100){ xEnd('clear'); } else xv = { view: 'node' }; renderExplore(); };
+  $('#xnext').onclick = () => { xb = null; if (run.prog >= 100){ xEnd('clear'); } else { xv = { view: 'march' }; xMsg = ''; } renderExplore(); };
 }
 function xLose(){ const B = xb; B.over = true; clearInterval(xTick); $('#xlog') && ($('#xlog').textContent = '모두 쓰러졌어요…'); const el = $('#xcmd'); if (el) el.innerHTML = '<button class="btn go" id="xnext" style="grid-column:1/-1">마을로 돌아가기</button>'; $('#xnext').onclick = () => { xEnd('wipe'); renderExplore(); }; }
 
