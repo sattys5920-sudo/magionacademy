@@ -25,6 +25,7 @@ W = {
  'summon': ('cast', [M + 'polearm/scythe/universal_behind/walk/scythe.png', M + 'polearm/scythe/walk/scythe.png'], None),
  'gadget': ('bow', [M + 'ranged/crossbow/background/walk/crossbow.png', M + 'ranged/crossbow/foreground/walk/crossbow.png'], None),
 }
+GRIP = {j: .18 for j in ORDER}; GRIP['gadget'] = .5   # 손잡이 위치: 손잡이 끝에서 무기 길이의 18% (석궁은 가운데)
 SCALE = .74; SSCALE = .84     # 무기·방패 크기 (캐릭터에 비해 너무 커서 줄여요)
 # 단계: 금속 색 띠(어두움→밝음), 보석 색 hue(0~1)
 RAMP = [None,
@@ -94,7 +95,12 @@ for ji, job in enumerate(ORDER):
     low = ys >= np.percentile(ys, 75); px, py = int(xs[low].mean()), int(ys[low].mean())     # 손잡이(아래쪽)
     d = (xs - px) ** 2 + (ys - py) ** 2; k = int(d.argmax()); tx, ty = int(xs[k]), int(ys[k])    # 끝
     base = scale_about(base, (px, py), SCALE); tx, ty = int(round(px + (tx - px) * SCALE)), int(round(py + (ty - py) * SCALE))
-    XW[job] = [px, py, tx, ty, kind, 1 if shf else 0]
+    import math
+    ys2, xs2 = np.nonzero(base[..., 3] > 0); pts = np.stack([xs2, ys2], 1).astype(float); cen = pts.mean(0); _u, _s, vt = np.linalg.svd(pts - cen, full_matrices=False); pr = (pts - cen) @ vt[0]
+    e0, e1 = pts[pr.argmin()], pts[pr.argmax()]; butt, head = (e0, e1) if np.hypot(*(e0 - cen)) > np.hypot(*(e1 - cen)) else (e1, e0)   # 가벼운 끝 = 손잡이, 무거운 끝 = 머리
+    if job in ('knight', 'thief', 'bard'): butt, head = np.array([px, py], float), np.array([tx, ty], float)   # 검: 날 반대쪽이 손잡이
+    gr = butt + (head - butt) * GRIP[job]; gx, gy = int(round(gr[0])), int(round(gr[1])); phi0 = round(math.degrees(math.atan2(-(head[0] - gr[0]), -(head[1] - gr[1]))), 1)   # 손잡이→머리 방향 (위쪽 0도, 반시계 +)
+    XW[job] = [px, py, tx, ty, kind, 1 if shf else 0, gx, gy, phi0]
     sh = None
     if shf:
         sh = merge([shf]); sy_, sx_ = np.nonzero(sh[..., 3] > 0); cx, cy = int(sx_.mean()), int(sy_.mean()); sh = scale_about(sh, (cx, cy), SSCALE)
