@@ -1710,7 +1710,7 @@ function xGo(k){
 // ----- 전투 -----
 function xStartBattle(kind, msg){
   const ex = xEx(), run = ex.run, R = xReg(), party = xParty(), d = run.prog / 100, mL = Math.max(1, Math.min(Math.round(R.lv[0] + (R.lv[1] - R.lv[0]) * d), xLv(ex.exp).L + 3)),   // 내 레벨보다 3 높은 몬스터까지만
-    mk = (m, i) => { const k = m.k || 1, f = 1 + .35 * (mL - 1), a = 1 + .25 * (mL - 1); return { id: 'e' + i, name: m.n, ic: '', lp: m.lp, big: m.big, sc: m.big ? 1.7 : k >= 3 ? 1.4 : 1, hh: 56 * (m.big ? 1.7 : k >= 3 ? 1.4 : 1), team: 'e', mhp: Math.round(m.hp * f), hp: Math.round(m.hp * f), atk: Math.round(m.atk * a), spd: m.spd, g: Math.random() * 60, k, aoe: !!m.aoe, mL, fx: {} }; };
+    mk = (m, i) => { const k = m.k || 1, f = 1 + .35 * (mL - 1), a = 1 + .25 * (mL - 1); return { id: 'e' + i, name: m.n, ic: '', lp: m.lp, big: m.big, sc: m.big ? 3 : k >= 3 ? 2 : 1, hh: 56 * (m.big ? 3 : k >= 3 ? 2 : 1), team: 'e', mhp: Math.round(m.hp * f), hp: Math.round(m.hp * f), atk: Math.round(m.atk * a), spd: m.spd, g: Math.random() * 60, k, aoe: !!m.aoe, mL, fx: {} }; };
   const foes = kind === 'boss' ? [mk(R.boss, 0)] : kind === 'elite' ? [mk(R.elite, 0), mk(xRand(R.mon), 1)] : Array.from({ length: 1 + Math.floor(Math.random() * (1 + (d > .3 ? 2 : 1))) }, (_, i) => mk(xRand(R.mon), i));
   xb = { party, foes, kind, log: msg || '', turn: null, pick: null, over: false, last: performance.now(), buff: run.buff > 0, def: {}, fxs: [], floats: [], proj: [] }; if (run.buff > 0) run.buff--; xv = { view: 'battle' }; renderExplore();
 }
@@ -1724,14 +1724,20 @@ function xHit(u, t, raw, col){   // 피해 한 번 (방어·받는 피해 감소
   dmg = Math.max(1, Math.round(dmg)); t.hp = Math.max(0, t.hp - dmg); xFloat(t.id, '-' + dmg, col); if (u.vamp) u.hp = Math.min(u.mhp, u.hp + Math.round(dmg * u.vamp)); return dmg;
 }
 const XFXC = { fire: '#ff8a3a', ice: '#8adfff', bolt: '#ffe650', dark: '#b070ff', holy: '#fff0a0', poison: '#8aff6a', leaf: '#7aef6a', boom: '#ffb040', wind: '#e8f4ff', note: '#ffd866', time: '#9ad8ff', slash: '#ffffff', heal: '#7affb0', buff: '#9fd0ff', debuff: '#d0a0ff', impact: '#ffffff' };
+const XWA = { warrior: 'smash', knight: 'slash', thief: 'double', bard: 'stab', cleric: 'smash', black: 'cast', white: 'cast', time: 'spin', alch: 'wand', druid: 'cast', summon: 'cast', gadget: 'shoot' };
+const XWD = { slash: [520, 36, 190], smash: [760, 28, 380], double: [640, 30, 150], stab: [440, 32, 120], cast: [700, 0, 260], spin: [760, 0, 330], wand: [460, 0, 130], shoot: [520, 0, 140], raise: [700, 0, 150] };   // [길이, 앞으로 달려드는 거리, 맞는 때(ms)]
 function xAnimAtk(u, k, list){   // 무기 모션 + 날아가는 것. 닿는 데까지 걸리는 시간(ms)을 돌려줘요
-  const B = xb, now = performance.now(), W = XW[u.job], kind = W ? W[4] : 'melee'; if (!list.length) return 0;
-  if (list[0].team === u.team){ u.wa = { k: 'raise', t0: now, dur: 560 }; return 150; }
-  if (kind === 'melee'){ u.wa = { k: 'swing', t0: now, dur: 560 }; return 200; }
-  const lob = (u.job === 'gadget' || u.job === 'alch') && (k === 'boom' || k === 'poison'), pk = kind === 'bow' ? (lob ? 'lob' : 'arrow') : lob ? 'lob' : 'orb', dur = pk === 'lob' ? 380 : 240, st = 90;
-  u.wa = { k: kind === 'bow' ? 'shoot' : 'raise', t0: now, dur: 560 };
-  list.forEach((t, i) => B.proj.push({ k: pk, from: u.id, to: t.id, t0: now + st + i * 70, dur, c: XFXC[k] || '#fff', bomb: k === 'boom' }));
-  return st + dur;
+  const B = xb, now = performance.now(), W = XW[u.job], kind = W ? W[4] : 'melee', col = XFXC[k] || '#ffffff'; if (!list.length) return 0;
+  if (list[0].team === u.team){ u.wa = { k: 'raise', t0: now, dur: 700, c: col, lunge: 0 }; return 150; }
+  const an = XWA[u.job] || 'slash', [dur, lung, rel] = XWD[an]; u.wa = { k: an, t0: now, dur, c: col, lunge: lung };
+  if (kind === 'melee'){
+    if (an === 'double') list.forEach(t => B.fxs.push({ k: 'slash', id: t.id, t0: now + 340, dur: 380, seed: Math.random() * 100 }));
+    if (an === 'smash') B.shake = { t0: now + rel, dur: 180, amp: 3 };
+    return rel;
+  }
+  const lob = (u.job === 'gadget' || u.job === 'alch') && (k === 'boom' || k === 'poison'), pk = lob ? 'lob' : kind === 'bow' ? 'arrow' : 'orb', pd = pk === 'lob' ? 380 : 230;
+  list.forEach((t, i) => B.proj.push({ k: pk, from: u.id, to: t.id, t0: now + rel + i * 70, dur: pd, c: XFXC[k] || '#fff', bomb: k === 'boom' }));
+  return rel + pd;
 }
 function xFxAt(k, list, u){ const now = performance.now(), dl = u ? (xDelay = xAnimAtk(u, k, list)) : xDelay; list.forEach((t, i) => xb.fxs.push({ k, id: t.id, t0: now + dl + i * 90, dur: k === 'bolt' ? 520 : k === 'slash' || k === 'impact' ? 380 : 760, seed: Math.random() * 100 })); }
 function xAct(u, sk, tgt){ xDelay = 0; try { xAct0(u, sk, tgt); } finally { xDelay = 0; } }
@@ -1763,29 +1769,46 @@ function xAI(u){   // 동료 자동 행동
   if (pick && pick.mp > u.mp * .8 && Math.random() < .4) pick = null; xAct(u, pick || null, null);
 }
 // ── 전투 화면: 도트 캔버스 (왼쪽 몬스터 · 오른쪽 파티) ──
-const XCW = 256, XCH = 144, XGLY = { sword: 'slash', axe: 'slash', dagger: 'slash', fist: 'slash', claw: 'slash', hammer: 'slash', spear: 'slash', arrow: 'slash', cross2: 'slash', paw: 'slash', fire: 'fire', fireball: 'fire', ember: 'fire', ice: 'ice', bolt: 'bolt', chain: 'bolt', star: 'holy', sun: 'holy', crown: 'holy', bell: 'holy', flag: 'holy', orb: 'dark', moon: 'dark', eye: 'dark', skull: 'dark', ghost: 'dark', drop: 'poison', bubble: 'poison', flask: 'poison', tube: 'poison', leaf: 'leaf', tree: 'leaf', flower: 'leaf', burst: 'boom', bomb: 'boom', mine: 'boom', rocket: 'boom', rock: 'boom', gear: 'boom', swirl: 'wind', cloud: 'wind', wave: 'wind', wing: 'wind', note: 'note', note1: 'note', trumpet: 'note', drum: 'note', harp: 'note', heart: 'heal', cross: 'heal', shield: 'buff', tower: 'buff', up: 'buff', clock: 'time', hourglass: 'time' };
+const XCW = 384, XCH = 216, XGLY = { sword: 'slash', axe: 'slash', dagger: 'slash', fist: 'slash', claw: 'slash', hammer: 'slash', spear: 'slash', arrow: 'slash', cross2: 'slash', paw: 'slash', fire: 'fire', fireball: 'fire', ember: 'fire', ice: 'ice', bolt: 'bolt', chain: 'bolt', star: 'holy', sun: 'holy', crown: 'holy', bell: 'holy', flag: 'holy', orb: 'dark', moon: 'dark', eye: 'dark', skull: 'dark', ghost: 'dark', drop: 'poison', bubble: 'poison', flask: 'poison', tube: 'poison', leaf: 'leaf', tree: 'leaf', flower: 'leaf', burst: 'boom', bomb: 'boom', mine: 'boom', rocket: 'boom', rock: 'boom', gear: 'boom', swirl: 'wind', cloud: 'wind', wave: 'wind', wing: 'wind', note: 'note', note1: 'note', trumpet: 'note', drum: 'note', harp: 'note', heart: 'heal', cross: 'heal', shield: 'buff', tower: 'buff', up: 'buff', clock: 'time', hourglass: 'time' };
 const xFxKind = sk => !sk ? 'slash' : sk.t === 'heal' || sk.t === 'revive' ? 'heal' : sk.t === 'buff' || sk.t === 'mp' ? 'buff' : sk.t === 'deb' ? 'debuff' : XGLY[sk.g] || 'boom';
-const XFS = [[[70, 106]], [[82, 82], [58, 120]], [[88, 66], [58, 94], [88, 122]]], XPS = [[204, 94], [180, 64], [228, 124]];
+const XFS = [[[110, 152]], [[130, 130], [96, 178]], [[138, 118], [100, 154], [138, 190]]], XPS = [[284, 148], [322, 114], [332, 180]], XBOSS_AT = [104, 204];
 let xRaf = 0, xBgs = {};
 let xWpnImg = null; function xWpnSheet(){ if (!xWpnImg){ xWpnImg = new Image(); xWpnImg.src = 'art/weapons.png?v=2'; } return xWpnImg; }
 let xLpcImg = null; function xLpcSheet(){ if (!xLpcImg){ xLpcImg = new Image(); xLpcImg.src = 'art/monsters_lpc.png?v=2'; } return xLpcImg; }
-function xBg(i){
-  if (xBgs[i]) return xBgs[i]; const R = XRG[i], c = document.createElement('canvas'); c.width = XCW; c.height = XCH; const g = c.getContext('2d'), [s0, s1, g0, g1, sil] = R.pal, H = 80, hex = h => [1, 3, 5].map(k => parseInt(h.slice(k, k + 2), 16)), a = hex(s0), b = hex(s1);
-  for (let y = 0; y < 10; y++){ const t = y / 9; g.fillStyle = `rgb(${a.map((v, k) => Math.round(v + (b[k] - v) * t)).join(',')})`; g.fillRect(0, y * H / 10, XCW, H / 10 + 1); }
-  const rnd = (() => { let q = i * 9301 + 49297; return () => (q = (q * 9301 + 49297) % 233280) / 233280; })();
-  if (R.kind !== 'cave') for (let k = 0; k < 28; k++){ g.fillStyle = 'rgba(255,255,230,.8)'; g.fillRect(Math.floor(rnd() * XCW), Math.floor(rnd() * 50), 1, 1); }
-  if (R.kind === 'trees' || R.kind === 'graves'){ g.fillStyle = '#f4efc8'; g.beginPath(); g.arc(200, 24, 11, 0, 7); g.fill(); g.fillStyle = '#e1dcae'; g.fillRect(196, 22, 3, 3); g.fillRect(203, 28, 2, 2); }
-  g.fillStyle = sil;
-  if (R.kind === 'trees') for (let x = -6; x < XCW + 10; x += 17){ const h = 30 + (x * 7 % 13) * 2; g.beginPath(); g.moveTo(x, H); g.lineTo(x + 9, H - h); g.lineTo(x + 18, H); g.fill(); g.fillRect(x + 8, H - 2, 2, 4); }
-  else if (R.kind === 'graves') { for (let x = 6; x < XCW; x += 26){ const h = 12 + (x * 3 % 8); g.fillRect(x, H - h, 9, h); g.fillRect(x + 1, H - h - 2, 7, 2); } for (let x = 20; x < XCW; x += 60){ g.fillRect(x, H - 30, 3, 30); g.fillRect(x - 5, H - 24, 13, 3); } }
-  else if (R.kind === 'cave') { g.fillRect(0, 0, XCW, 10); for (let x = 0; x < XCW; x += 11){ const h = 14 + (x * 5 % 17); g.beginPath(); g.moveTo(x, 8); g.lineTo(x + 5, 8 + h); g.lineTo(x + 11, 8); g.fill(); } g.fillStyle = 'rgba(120,255,230,.18)'; for (let k = 0; k < 6; k++) g.fillRect(20 + k * 42, 40 + (k * 13 % 20), 3, 3); }
-  else { for (let x = 8; x < XCW; x += 44){ g.fillRect(x, H - 52, 12, 52); g.fillRect(x - 3, H - 56, 18, 5); g.fillRect(x - 2, H - 4, 16, 4); } g.fillStyle = 'rgba(255,200,120,.25)'; g.fillRect(0, H - 10, XCW, 10); }
-  for (let y = H; y < XCH; y++){ g.fillStyle = (Math.floor((y - H) / 4) % 2) ? g0 : g1; g.fillRect(0, y, XCW, 1); }
-  g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(0, H, XCW, 2); for (let k = 0; k < 40; k++){ g.fillStyle = k % 2 ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.14)'; g.fillRect(Math.floor(rnd() * XCW), H + 4 + Math.floor(rnd() * (XCH - H - 6)), 3 + Math.floor(rnd() * 4), 1); }
+function xBg(i){   // 지역 배경: 하늘 · 먼 산 · 중간 풍경 · 땅 · 안개 (한 번만 그려 두고 계속 써요)
+  if (xBgs[i]) return xBgs[i]; const R = XRG[i], c = document.createElement('canvas'); c.width = XCW; c.height = XCH; const g = c.getContext('2d'), P = R.pal, H = 122;
+  const hex = h => [1, 3, 5].map(k => parseInt(h.slice(k, k + 2), 16)), mix = (a, b, t) => a.map((v, k) => Math.round(v + (b[k] - v) * t)), css = (a, al = 1) => `rgba(${a.join(',')},${al})`;
+  let q = i * 9301 + 49297; const rnd = () => (q = (q * 9301 + 49297) % 233280) / 233280;
+  const s0 = hex(P[0]), s1 = hex(P[1]), g0 = hex(P[2]), g1 = hex(P[3]), sil = hex(P[4]), white = [255, 255, 255];
+  for (let y = 0; y < 18; y++){ g.fillStyle = css(mix(s0, s1, y / 17)); g.fillRect(0, Math.floor(y * H / 18), XCW, Math.ceil(H / 18) + 1); }
+  if (R.kind === 'trees' || R.kind === 'graves'){ for (let k = 0; k < 46; k++){ g.fillStyle = css(white, .35 + rnd() * .5); g.fillRect(Math.floor(rnd() * XCW), Math.floor(rnd() * 70), 1, 1); } g.fillStyle = '#f4efc8'; g.beginPath(); g.arc(300, 36, 17, 0, 7); g.fill(); g.fillStyle = '#ddd7a6'; g.fillRect(293, 32, 5, 4); g.fillRect(306, 42, 4, 3); g.fillStyle = 'rgba(244,239,200,.12)'; g.beginPath(); g.arc(300, 36, 30, 0, 7); g.fill(); }
+  if (R.kind === 'temple'){ g.fillStyle = 'rgba(255,214,140,.18)'; g.beginPath(); g.arc(80, 40, 36, 0, 7); g.fill(); g.fillStyle = '#ffe6a8'; g.beginPath(); g.arc(80, 40, 16, 0, 7); g.fill(); }
+  const hills = (base, amp, col, sd) => { g.fillStyle = css(col); g.beginPath(); g.moveTo(0, H); for (let x = 0; x <= XCW; x += 4) g.lineTo(x, base + Math.sin(x * .021 + sd) * amp + Math.sin(x * .057 + sd * 2) * amp * .5); g.lineTo(XCW, H); g.fill(); };
+  if (R.kind !== 'cave'){ hills(H - 48, 20, mix(s1, sil, .3), 1); hills(H - 30, 14, mix(s1, sil, .55), 3); hills(H - 14, 9, mix(s1, sil, .8), 5); }
+  else { g.fillStyle = css(mix(s0, sil, .6)); g.fillRect(0, 0, XCW, 14); for (let x = -6; x < XCW + 10; x += 15){ const h = 22 + Math.abs(Math.sin(x * .7)) * 40; g.fillStyle = css(mix(s1, sil, .5)); g.beginPath(); g.moveTo(x, 10); g.lineTo(x + 8, 10 + h); g.lineTo(x + 16, 10); g.fill(); g.fillStyle = css(mix(s1, white, .25), .5); g.beginPath(); g.moveTo(x + 2, 10); g.lineTo(x + 8, 10 + h); g.lineTo(x + 6, 10); g.fill(); } hills(H - 20, 12, mix(s1, sil, .7), 2); }
+  g.fillStyle = css(sil);
+  if (R.kind === 'trees') for (let x = -8; x < XCW + 14; x += 21){ const h = 46 + (Math.abs(Math.sin(x * 1.7)) * 30 | 0), x1 = x + 11; g.fillStyle = css(sil); [0, 1, 2].forEach(t => { g.beginPath(); g.moveTo(x1 - 12 + t * 2, H - 4 - h * (t * .27)); g.lineTo(x1, H - 4 - h * (.45 + t * .27)); g.lineTo(x1 + 12 - t * 2, H - 4 - h * (t * .27)); g.fill(); }); g.fillRect(x1 - 1, H - 6, 3, 8); g.fillStyle = css(mix(sil, s1, .5), .6); g.fillRect(x1 - 6, H - 10 - h * .15, 1, 4); }
+  else if (R.kind === 'graves'){ for (let x = 6; x < XCW; x += 34){ const h = 16 + (Math.abs(Math.sin(x)) * 12 | 0); g.fillStyle = css(sil); g.fillRect(x, H - h, 12, h); g.fillRect(x + 1, H - h - 2, 10, 2); g.fillStyle = css(mix(sil, s1, .5)); g.fillRect(x + 1, H - h, 2, h); } for (let x = 24; x < XCW; x += 88){ g.fillStyle = css(sil); g.fillRect(x, H - 42, 4, 42); g.fillRect(x - 7, H - 34, 18, 4); } g.fillStyle = css(sil); g.fillRect(0, H - 14, XCW, 2); for (let x = 0; x < XCW; x += 8) g.fillRect(x, H - 20, 2, 12); }
+  else if (R.kind === 'cave'){ for (let k = 0; k < 9; k++){ const cx = 24 + k * 44 + rnd() * 16, cy = H - 6 - rnd() * 26; g.fillStyle = 'rgba(120,255,230,.14)'; g.beginPath(); g.arc(cx, cy, 14, 0, 7); g.fill(); g.fillStyle = '#7af0e0'; g.beginPath(); g.moveTo(cx, cy - 12); g.lineTo(cx + 4, cy); g.lineTo(cx, cy + 4); g.lineTo(cx - 4, cy); g.fill(); g.fillStyle = '#d8fffa'; g.fillRect(cx - 1, cy - 8, 1, 5); } for (let x = 0; x < XCW; x += 26){ g.fillStyle = css(sil); const h = 14 + Math.abs(Math.sin(x * .9)) * 26; g.beginPath(); g.moveTo(x, H + 2); g.lineTo(x + 8, H - h); g.lineTo(x + 18, H + 2); g.fill(); } }
+  else { g.fillStyle = css(mix(sil, s1, .25)); g.fillRect(0, H - 70, XCW, 5); for (let x = 12; x < XCW; x += 70){ g.fillStyle = css(sil); g.fillRect(x, H - 66, 18, 66); g.fillRect(x - 4, H - 72, 26, 6); g.fillRect(x - 3, H - 4, 24, 5); g.fillStyle = css(mix(sil, s1, .45)); [4, 9, 13].forEach(d => g.fillRect(x + d, H - 62, 1, 56)); } g.fillStyle = css([255, 214, 140], .1); [60, 170, 280].forEach((x, k) => { g.beginPath(); g.moveTo(x, 0); g.lineTo(x + 26, 0); g.lineTo(x + 70 + k * 6, H); g.lineTo(x + 20 + k * 6, H); g.fill(); }); }
+  for (let y = H; y < XCH; y++){ const t = (y - H) / (XCH - H), band = Math.floor((y - H) / (3 + Math.floor(t * 5))) % 2; g.fillStyle = css(mix(band ? g0 : g1, [0, 0, 0], t * .22)); g.fillRect(0, y, XCW, 1); }
+  g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(0, H, XCW, 3); g.fillStyle = css(white, .07); g.fillRect(0, H + 3, XCW, 2);
+  for (let k = 0; k < 70; k++){ const x = Math.floor(rnd() * XCW), y = H + 8 + Math.floor(rnd() * (XCH - H - 14)), t = (y - H) / (XCH - H), w = 3 + Math.floor(t * 7);
+    if (k % 7 === 0){ g.fillStyle = css(mix(g0, [0, 0, 0], .3)); g.fillRect(x, y, w + 2, 2); g.fillStyle = css(mix(g1, white, .25)); g.fillRect(x + 1, y - 2, w, 2); }
+    else if (k % 5 === 0 && R.kind !== 'cave'){ g.fillStyle = css(mix(g1, [40, 90, 40], .55)); g.fillRect(x, y - 4, 1, 4); g.fillRect(x + 2, y - 3, 1, 3); g.fillRect(x - 2, y - 3, 1, 3); }
+    else { g.fillStyle = css(k % 2 ? white : [0, 0, 0], k % 2 ? .1 : .16); g.fillRect(x, y, w, 1); } }
+  const vg = g.createLinearGradient(0, 0, 0, XCH); vg.addColorStop(0, 'rgba(0,0,0,.35)'); vg.addColorStop(.3, 'rgba(0,0,0,0)'); vg.addColorStop(.8, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.4)'); g.fillStyle = vg; g.fillRect(0, 0, XCW, XCH);
   return xBgs[i] = c;
 }
+function xAmb(g, kind, now){   // 분위기 입자: 반딧불 · 안개 · 포자 · 먼지
+  const R = (x, y, w, h, c, a) => { g.globalAlpha = a; g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); g.globalAlpha = 1; };
+  if (kind === 'trees') for (let i = 0; i < 16; i++){ const x = (i * 97 + Math.sin(now / 1700 + i) * 22 + 400) % XCW, y = 118 + (i * 53) % 90 + Math.sin(now / 900 + i * 2) * 7, a = .45 + .45 * Math.sin(now / 500 + i * 1.7); R(x - 1, y - 1, 4, 4, '#e8ff7a', a * .22); R(x, y, 2, 2, '#f4ffb0', a); }
+  else if (kind === 'graves'){ for (let i = 0; i < 6; i++){ const x = ((now / 55 + i * 83) % (XCW + 120)) - 60, y = 132 + i * 13; g.globalAlpha = .07; g.fillStyle = '#dcd6ff'; g.beginPath(); g.ellipse(x, y, 56, 6, 0, 0, 7); g.fill(); g.globalAlpha = 1; } for (let i = 0; i < 8; i++){ const x = 30 + i * 46 + Math.sin(now / 1300 + i) * 12, y = 150 - ((now / 30 + i * 41) % 90); R(x, y, 2, 2, '#9ad0ff', .7 * (1 - ((now / 30 + i * 41) % 90) / 90)); } }
+  else if (kind === 'cave') for (let i = 0; i < 22; i++){ const t = (now / 38 + i * 37) % 170, x = 24 + i * 17 + Math.sin(now / 1100 + i) * 7, y = 206 - t; R(x, y, 2, 2, '#9afff0', .65 * (1 - t / 170)); }
+  else for (let i = 0; i < 24; i++){ const t = (now / 46 + i * 29) % 260, x = (i * 53 + t * .6) % XCW, y = 30 + t * .6 + (i % 3) * 10; R(x, y, 2, 2, '#ffe6a8', .55 * Math.sin(t / 260 * Math.PI)); }
+}
 function xLayout(B){
-  B.foes.forEach((u, i, a) => { const sl = u.big ? [[62, 120]] : XFS[Math.min(2, a.length - 1)]; [u.bx, u.by] = u.big ? [78, 124] : sl[i] || sl[0]; });
+  const norm = B.foes.filter(u => !(u.k >= 3)); B.foes.forEach(u => { if (u.big) [u.bx, u.by] = XBOSS_AT; else if (u.k >= 3) [u.bx, u.by] = [136, 184]; else { const sl = XFS[Math.min(2, norm.length - 1)], i = norm.indexOf(u), e = B.foes.some(f => f.k >= 3); [u.bx, u.by] = e ? [76, 204] : sl[i] || sl[0]; } });
   B.party.forEach((u, i) => { [u.bx, u.by] = XPS[i] || XPS[0]; });
   [...B.foes, ...B.party].forEach(u => { u.sx = u.bx; u.sy = u.by; });
 }
@@ -1817,38 +1840,70 @@ function xFxDraw(g, f, x, y, now){
 function xDraw(){
   const B = xb, cv = $('#xcv'); if (!B || !cv || !sheetOn || sub !== 'explore' || xv?.view !== 'battle'){ xRaf = 0; return; }
   xRaf = requestAnimationFrame(xDraw); const g = cv.getContext('2d'), now = performance.now(), R = xReg();
-  g.imageSmoothingEnabled = false; g.drawImage(xBg(XRG.indexOf(R)), 0, 0);
-  const all = [...B.foes, ...B.party].sort((a, b) => a.by - b.by), FW = World.Avatar.FW, FH = World.Avatar.FH, strip = u => World.Avatar.compose(u.av), dirL = World.Avatar.meta.dirs.left;
+  g.imageSmoothingEnabled = false; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#000'; g.fillRect(0, 0, XCW, XCH);
+  if (B.shake && now >= B.shake.t0 && now < B.shake.t0 + B.shake.dur){ const a = B.shake.amp; g.translate(Math.round((Math.random() - .5) * 2 * a), Math.round((Math.random() - .5) * 2 * a)); }
+  g.drawImage(xBg(XRG.indexOf(R)), 0, 0); xAmb(g, R.kind, now);
+  const all = [...B.foes, ...B.party].sort((a, b) => a.by - b.by), FW = World.Avatar.FW, FH = World.Avatar.FH, strip = u => World.Avatar.compose(u.av), dirL = World.Avatar.meta.dirs.left, lpc = xLpcSheet();
+  const tintC = document.createElement('canvas');
   all.forEach(u => {
     let dead = u.hp <= 0; if (dead && !u.dieAt) u.dieAt = now + (u.dieWait || 0); if (!dead){ u.dieAt = 0; u.dieWait = 0; } if (dead && now < u.dieAt) dead = false;
     let al = 1; if (dead && u.team === 'e'){ al = 1 - (now - u.dieAt) / 600; if (al <= 0) return; }
-    const lg = u.lg ? (now - u.lg) / 320 : 2, off = lg < 1 ? Math.sin(lg * Math.PI) * 16 * (u.team === 'e' ? 1 : -1) : 0, hit = u.flash > now && now >= (u.flashAt || 0), sh = hit ? (Math.round(now / 40) % 2 ? 2 : -2) : 0, bob = dead ? 0 : Math.round(Math.sin(now / 420 + u.by) * 1);
-    u.sx = u.bx + off; u.sy = u.by; const x = Math.round(u.bx + off + sh), y = u.by + bob;
-    g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(x - 12, u.by - 1, 24, 3);
-    g.globalAlpha = al; const tint = c => { const t = tint.cv || (tint.cv = document.createElement('canvas')); t.width = c.w; t.height = c.h; const q = t.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(c.img, c.sx, c.sy, c.w, c.h, 0, 0, c.w, c.h); q.globalCompositeOperation = 'source-atop'; q.fillStyle = 'rgba(255,255,255,.75)'; q.fillRect(0, 0, c.w, c.h); q.globalCompositeOperation = 'source-over'; return t; };
-    if (u.team === 'e'){ const im = xLpcSheet(); if (im.complete){ const sc = u.sc, w = 64 * sc, c = { img: im, sx: u.lp * 64, sy: 0, w: 64, h: 64 }; g.drawImage(hit ? tint(c) : im, hit ? 0 : c.sx, 0, 64, 64, x - w / 2, y - w + 4 * sc, w, w); } }
+    const wa = u.wa, wp = wa ? (now - wa.t0) / wa.dur : 2; let off = 0;
+    if (u.team === 'a' && wa && wa.lunge && wp >= 0 && wp < 1){ const cv_ = wp < .2 ? 0 : wp < .42 ? Math.sin((wp - .2) / .22 * Math.PI / 2) : wp < .68 ? 1 : 1 - Math.sin((wp - .68) / .32 * Math.PI / 2); off = -wa.lunge * cv_; }
+    else if (u.team === 'e'){ const lg = u.lg ? (now - u.lg) / 320 : 2; off = lg < 1 ? Math.sin(lg * Math.PI) * 22 : 0; }
+    const hit = u.flash > now && now >= (u.flashAt || 0), sh = hit ? (Math.round(now / 40) % 2 ? 2 : -2) : 0, bob = dead ? 0 : Math.round(Math.sin(now / 420 + u.by) * 1);
+    u.sx = u.bx + off; u.sy = u.by; const x = Math.round(u.bx + off + sh), y = u.by + bob, sc = u.sc || 1;
+    g.fillStyle = 'rgba(0,0,0,.32)'; g.beginPath(); g.ellipse(u.bx + off * .3, u.by, (u.team === 'e' ? 14 * sc : 14), (u.team === 'e' ? 4 * sc : 4), 0, 0, 7); g.fill();
+    if (u.team === 'a' && wa && wp >= 0 && wp < .65 && ['cast', 'spin', 'wand', 'raise'].includes(wa.k) && !dead){   // 마법진
+      const r = 10 + Math.min(1, wp / .4) * 22; g.save(); g.strokeStyle = wa.c; g.globalAlpha = .75 * (1 - wp / .65); g.lineWidth = 1; g.beginPath(); g.ellipse(u.bx, u.by, r, r * .32, 0, 0, 7); g.stroke(); g.beginPath(); g.ellipse(u.bx, u.by, r * .6, r * .2, 0, 0, 7); g.stroke();
+      for (let k = 0; k < 6; k++){ const a = k * 1.047 + wp * 9; g.fillStyle = wa.c; g.fillRect(Math.round(u.bx + Math.cos(a) * r), Math.round(u.by + Math.sin(a) * r * .32), 2, 2); } g.restore(); }
+    if (u.team === 'a' && B.turn === u && !B.pick && !dead){ g.save(); g.strokeStyle = '#4fd8ff'; g.lineWidth = 2; g.globalAlpha = .6 + .4 * Math.sin(now / 160); g.beginPath(); g.ellipse(u.bx, u.by, 24, 7.5, 0, 0, 7); g.stroke(); g.restore(); }
+    g.globalAlpha = al; const tint = c => { tintC.width = c.w; tintC.height = c.h; const q = tintC.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, c.w, c.h); q.drawImage(c.img, c.sx, c.sy, c.w, c.h, 0, 0, c.w, c.h); q.globalCompositeOperation = 'source-atop'; q.fillStyle = 'rgba(255,255,255,.75)'; q.fillRect(0, 0, c.w, c.h); q.globalCompositeOperation = 'source-over'; return tintC; };
+    if (u.team === 'e'){ if (lpc.complete){ const w = 64 * sc, c = { img: lpc, sx: u.lp * 64, sy: 0, w: 64, h: 64 }; g.drawImage(hit ? tint(c) : lpc, hit ? 0 : c.sx, 0, 64, 64, x - w / 2, y - w + 4 * sc, w, w); } }
     else { const sp = strip(u); if (sp){ g.save(); const ox = x - FW / 2, oy = y - FH + 6; if (dead){ g.translate(x, y); g.rotate(-Math.PI / 2); g.translate(-x, -y); g.globalAlpha = .55; } const c = { img: sp, sx: dirL * FW, sy: 0, w: FW, h: FH }; g.drawImage(hit ? tint(c) : sp, hit ? 0 : c.sx, 0, FW, FH, ox, oy, FW, FH); xWeapon(g, u, ox, oy, now); g.restore(); } }
     g.globalAlpha = 1;
-    if (!dead){ const bw = u.team === 'e' ? (u.big ? 44 : 30) : 28, bx = x - bw / 2, by = u.by + 3; g.fillStyle = '#241830'; g.fillRect(bx - 1, by - 1, bw + 2, u.team === 'a' ? 9 : 5); g.fillStyle = '#6fe07a'; g.fillRect(bx, by, Math.round(bw * u.hp / u.mhp), 3); if (u.team === 'a'){ g.fillStyle = '#6aa8ff'; g.fillRect(bx, by + 3, Math.round(bw * u.mp / u.mmp), 2); g.fillStyle = '#ffd866'; g.fillRect(bx, by + 5, Math.round(bw * Math.max(0, Math.min(100, u.g)) / 100), 2); } }
-    if (B.pick && B.pick.set.has(u.id)){ const cy = y - (u.team === 'e' ? u.hh + 6 : FH - 6) - 4 + Math.round(Math.sin(now / 130) * 2); g.fillStyle = '#241830'; g.fillRect(x - 5, cy - 1, 11, 7); g.fillStyle = '#ffd866'; g.fillRect(x - 4, cy, 9, 3); g.fillRect(x - 2, cy + 3, 5, 2); g.fillRect(x - 1, cy + 5, 3, 1); }
-    if (B.turn === u && !B.pick){ g.fillStyle = '#ffd866'; g.fillRect(x - 2, y - FH + 2 + Math.round(Math.sin(now / 150) * 2), 5, 3); }
+    if (u.team === 'e' && !dead){   // 몬스터 이름·체력 (머리 위)
+      const bw = u.big ? 90 : u.k >= 3 ? 56 : 34, bx = Math.round(x - bw / 2), by = Math.round(y - u.hh - 12);
+      g.font = 'bold 9px sans-serif'; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText(u.name, x, by - 4); g.fillStyle = '#f4ecff'; g.fillText(u.name, x, by - 4);
+      g.fillStyle = '#1a1024'; g.fillRect(bx - 1, by - 1, bw + 2, 7); g.fillStyle = '#4a2a3a'; g.fillRect(bx, by, bw, 5); g.fillStyle = u.hp / u.mhp > .3 ? '#ffd24a' : '#ff6a4a'; g.fillRect(bx, by, Math.round(bw * u.hp / u.mhp), 5); g.fillStyle = 'rgba(255,255,255,.4)'; g.fillRect(bx, by, Math.round(bw * u.hp / u.mhp), 1);
+    }
+    if (B.pick && B.pick.set.has(u.id)){ const cy = y - (u.team === 'e' ? u.hh + 26 : FH + 2) + Math.round(Math.sin(now / 130) * 2); g.fillStyle = '#1a1024'; g.fillRect(x - 6, cy - 1, 13, 8); g.fillStyle = '#ffd866'; g.fillRect(x - 5, cy, 11, 3); g.fillRect(x - 3, cy + 3, 7, 2); g.fillRect(x - 1, cy + 5, 3, 1); }
   });
-  xProjDraw(g, B, now); B.fxs = B.fxs.filter(f => { const t = [...B.foes, ...B.party].find(u => u.id === f.id); return xFxDraw(g, f, t ? t.sx : 128, t ? t.sy : 80, now); });
-  g.font = 'bold 10px monospace'; g.textAlign = 'center'; B.floats = B.floats.filter(f => { const p = (now - f.t0) / 900; if (p >= 1) return false; const y = f.y - p * 14; g.globalAlpha = p > .7 ? 1 - (p - .7) / .3 : 1; g.lineJoin = 'round'; g.lineWidth = 2; g.strokeStyle = '#241830'; g.strokeText(f.txt, f.x, y); g.fillStyle = f.col; g.fillText(f.txt, f.x, y); g.globalAlpha = 1; return true; });
+  xProjDraw(g, B, now); B.fxs = B.fxs.filter(f => { const t = [...B.foes, ...B.party].find(u => u.id === f.id); return xFxDraw(g, f, t ? t.sx : 192, t ? t.sy : 120, now); });
+  g.font = 'bold 13px monospace'; g.textAlign = 'center'; g.lineJoin = 'round'; B.floats = B.floats.filter(f => { const p = (now - f.t0) / 900; if (p >= 1) return false; if (p < 0) return true; const yy = f.y - p * 18; g.globalAlpha = p > .7 ? 1 - (p - .7) / .3 : 1; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText(f.txt, f.x, yy); g.fillStyle = f.col; g.fillText(f.txt, f.x, yy); g.globalAlpha = 1; return true; });
 }
 function xTip(u){ const W = XW[u.job]; return [u.sx - World.Avatar.FW / 2 + W[2], u.sy - World.Avatar.FH + 6 + W[3]]; }
-function xWeapon(g, u, ox, oy, now){   // 파티 캐릭터가 든 무기 (강화 단계마다 색이 바뀌고, 공격할 때 휘둘러요)
-  const W = XW[u.job], wi = xWpnSheet(); if (!W || !wi.complete) return; const wa = u.wa, p = wa ? (now - wa.t0) / wa.dur : 2; let ang = 0, dx = 0, dy = 0;
-  if (p >= 0 && p < 1){ if (wa.k === 'swing'){ ang = p < .3 ? 38 * p / .3 : p < .55 ? 38 - 128 * (p - .3) / .25 : -90 * (1 - (p - .55) / .45); dx = p > .3 && p < .6 ? -3 : 0; } else if (wa.k === 'shoot'){ dx = p < .2 ? 3 * p / .2 : 3 * (1 - p) / .8; ang = p < .2 ? 4 : 0; } else { ang = -14 * Math.sin(p * Math.PI); dy = -2 * Math.sin(p * Math.PI); } }
-  g.save(); g.translate(ox + W[0], oy + W[1]); g.rotate(ang * Math.PI / 180); g.translate(-W[0] + dx, -W[1] + dy); g.drawImage(wi, (u.wp || 0) * 64, ORDER_J.indexOf(u.job) * 64, 64, 64, 0, 0, 64, 64); g.restore();
+const xE = t => t * t * (3 - 2 * t), xC = t => Math.max(0, Math.min(1, t)), xS = (p, a, b) => xC((p - a) / (b - a));
+function xPose(k, p){   // 무기마다 다른 몸짓: [기울기(도), 가로, 세로]
+  switch (k){
+    case 'slash': return [p < .28 ? 55 * xE(xS(p, 0, .28)) : p < .42 ? 55 - 160 * xE(xS(p, .28, .42)) : p < .55 ? -105 : -105 * (1 - xE(xS(p, .55, 1))), 0, 0];
+    case 'smash': { const t = xS(p, .4, .52); return [p < .4 ? 82 * xE(xS(p, 0, .4)) : p < .52 ? 82 - 164 * t * t : p < .7 ? -82 : -82 * (1 - xE(xS(p, .7, 1))), 0, p < .4 ? -5 * xS(p, 0, .4) : 0]; }
+    case 'double': return [p < .1 ? 30 * xE(xS(p, 0, .1)) : p < .3 ? 30 - 120 * xE(xS(p, .1, .3)) : p < .38 ? -90 + 120 * xS(p, .3, .38) : p < .58 ? 30 - 120 * xE(xS(p, .38, .58)) : -90 * (1 - xE(xS(p, .62, 1))), 0, 0];
+    case 'stab': return [-84 * xE(xS(p, 0, .15)) * (1 - xE(xS(p, .75, 1))), p < .3 ? -16 * xE(xS(p, .15, .3)) : -16 * (1 - xE(xS(p, .45, .8))), 0];
+    case 'cast': return [p < .35 ? -10 * xE(xS(p, 0, .35)) : p < .5 ? -10 - 30 * xS(p, .35, .5) : -40 * (1 - xE(xS(p, .5, 1))), 0, p < .35 ? -14 * xE(xS(p, 0, .35)) : -14 * (1 - xE(xS(p, .5, 1))) * (p > .5 ? 1 : 1)];
+    case 'spin': return [-360 * xE(xS(p, .1, .62)) % 360, 0, -7 * Math.sin(xS(p, .1, .62) * Math.PI)];
+    case 'wand': return [p < .2 ? -75 * xE(xS(p, 0, .2)) : -75 * (1 - xE(xS(p, .2, .6))), 0, p < .2 ? -5 * xS(p, 0, .2) : -5 * (1 - xS(p, .2, .6))];
+    case 'shoot': return [0, p < .2 ? 5 * xE(xS(p, 0, .2)) : p < .3 ? 5 - 10 * xS(p, .2, .3) : -5 * (1 - xE(xS(p, .3, .8))), 0];
+    default: return [-14 * Math.sin(Math.PI * p), 0, -11 * Math.sin(Math.PI * xC(p * 1.2))];   // 번쩍 들어올리기
+  }
+}
+function xWeapon(g, u, ox, oy, now){   // 파티 캐릭터가 든 무기 (강화 단계마다 색이 바뀌고, 무기 종류마다 다르게 움직여요)
+  const W = XW[u.job], wi = xWpnSheet(); if (!W || !wi.complete) return; const wa = u.wa, p = wa ? (now - wa.t0) / wa.dur : 2, on = p >= 0 && p < 1, sw = on && ['slash', 'smash', 'double'].includes(wa.k);
+  const [ang, dx, dy] = on ? xPose(wa.k, p) : [0, 0, 0], sheetX = (u.wp || 0) * 64, sheetY = ORDER_J.indexOf(u.job) * 64, draw = (a, al) => { g.save(); g.globalAlpha *= al; g.translate(ox + W[0], oy + W[1]); g.rotate(a * Math.PI / 180); g.translate(-W[0] + dx, -W[1] + dy); g.drawImage(wi, sheetX, sheetY, 64, 64, 0, 0, 64, 64); g.restore(); };
+  if (sw){ const prev = xPose(wa.k, Math.max(0, p - .035))[0]; if (Math.abs(prev - ang) > 6) [[.035 * 3, .12], [.035 * 2, .2], [.035, .32]].forEach(([d, al]) => draw(xPose(wa.k, Math.max(0, p - d))[0], al)); }   // 잔상
+  draw(ang, 1);
+  if (sw){ const a1 = ang, a0 = xPose(wa.k, Math.max(0, p - .06))[0]; if (a0 - a1 > 12){ const tx = W[2] - W[0], ty = W[3] - W[1]; g.save(); for (let i = 0; i <= 8; i++){ const a = (a0 + (a1 - a0) * i / 8) * Math.PI / 180, rx = tx * Math.cos(a) - ty * Math.sin(a), ry = tx * Math.sin(a) + ty * Math.cos(a); g.globalAlpha = .25 + .6 * i / 8; g.fillStyle = i > 5 ? '#ffffff' : (wa.c || '#fff'); g.fillRect(Math.round(ox + W[0] + rx * .95), Math.round(oy + W[1] + ry * .95), 3, 3); } g.restore(); } }
+  if (on && ['cast', 'spin', 'wand'].includes(wa.k) && p < .5){   // 끝에 힘이 모여요
+    const [tx, ty] = [ox + W[2], oy + W[3] + dy], q = p / .5; g.save(); for (let i = 0; i < 7; i++){ const a = i * .9 + p * 14, r = (1 - q) * 16 + 2; g.globalAlpha = .4 + .6 * q; g.fillStyle = i % 2 ? '#ffffff' : wa.c; g.fillRect(Math.round(tx + Math.cos(a) * r), Math.round(ty + Math.sin(a) * r), 2, 2); } g.globalAlpha = .25 + .3 * q; g.fillStyle = wa.c; g.beginPath(); g.arc(tx, ty, 3 + q * 4, 0, 7); g.fill(); g.restore(); }
+  if (on && wa.k === 'shoot' && p > .18 && p < .4){ const [tx, ty] = [ox + W[2], oy + W[3]]; g.save(); g.globalAlpha = 1 - (p - .18) / .22; g.fillStyle = '#fff6c0'; g.fillRect(tx - 6, ty - 2, 5, 4); g.fillStyle = '#ffd04a'; g.fillRect(tx - 10, ty - 1, 4, 2); g.restore(); }
 }
 function xProjDraw(g, B, now){   // 화살 · 마법구 · 던지는 것
   B.proj = B.proj.filter(q => { const p = (now - q.t0) / q.dur; if (p < 0) return true; if (p >= 1) return false;
     const a = [...B.foes, ...B.party].find(x => x.id === q.from), t = [...B.foes, ...B.party].find(x => x.id === q.to); if (!a || !t) return false;
-    const [x0, y0] = a.team === 'a' && XW[a.job] ? xTip(a) : [a.sx, a.sy - 30], x1 = t.sx, y1 = t.sy - 28, e = p, x = x0 + (x1 - x0) * e, y = y0 + (y1 - y0) * e - (q.k === 'lob' ? Math.sin(p * Math.PI) * 30 : 0), R = (px, py, w, h, c, al) => { g.globalAlpha = al ?? 1; g.fillStyle = c; g.fillRect(Math.round(px), Math.round(py), w, h); g.globalAlpha = 1; };
-    if (q.k === 'arrow'){ const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L; for (let i = 0; i < 9; i++) R(x - ux * i, y - uy * i, 2, 2, i === 0 ? '#c8d0dc' : i < 7 ? '#8a6a3a' : '#f4f0e0'); }
-    else if (q.k === 'lob'){ R(x - 2, y - 2, 5, 5, q.bomb ? '#2a2030' : q.c); R(x - 1, y - 1, 2, 2, '#ffffff'); R(x + 1, y - 4, 1, 2, '#ffb040'); }
-    else { for (let i = 5; i > 0; i--) R(x - (x1 - x0) * .03 * i, y - (y1 - y0) * .03 * i, 5 - i * .6, 5 - i * .6, q.c, .5 - i * .08); R(x - 2, y - 2, 5, 5, q.c); R(x - 1, y - 1, 3, 3, '#ffffff'); }
+    const [x0, y0] = a.team === 'a' && XW[a.job] ? xTip(a) : [a.sx, a.sy - 30], x1 = t.sx, y1 = t.sy - (t.hh ? t.hh * .5 : 28), e = p, x = x0 + (x1 - x0) * e, y = y0 + (y1 - y0) * e - (q.k === 'lob' ? Math.sin(p * Math.PI) * 36 : 0), R = (px, py, w, h, c, al) => { g.globalAlpha = al ?? 1; g.fillStyle = c; g.fillRect(Math.round(px), Math.round(py), w, h); g.globalAlpha = 1; };
+    if (q.k === 'arrow'){ const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L; for (let i = 0; i < 11; i++) R(x - ux * i, y - uy * i, 2, 2, i === 0 ? '#e0e6f0' : i < 8 ? '#8a6a3a' : '#f4f0e0'); for (let i = 11; i < 20; i++) R(x - ux * i, y - uy * i, 1, 1, '#fff', .35 - (i - 11) * .035); }
+    else if (q.k === 'lob'){ R(x - 3, y - 3, 6, 6, q.bomb ? '#2a2030' : q.c); R(x - 1, y - 2, 2, 2, '#ffffff'); R(x + 1, y - 5, 1, 3, '#ffb040'); }
+    else { for (let i = 6; i > 0; i--) R(x - (x1 - x0) * .03 * i, y - (y1 - y0) * .03 * i, 6 - i * .7, 6 - i * .7, q.c, .5 - i * .07); R(x - 3, y - 3, 6, 6, q.c); R(x - 1, y - 1, 3, 3, '#ffffff'); }
     return true; });
 }
 function xHitTest(e){
@@ -1856,35 +1911,59 @@ function xHitTest(e){
   [...B.foes, ...B.party].forEach(u => { if (!B.pick.set.has(u.id)) return; const hh = u.team === 'e' ? u.hh : 48, cx = u.sx, cy = u.sy - hh / 2, d = Math.max(Math.abs(x - cx) - 22, 0) ** 2 + Math.max(Math.abs(y - cy) - hh / 2, 0) ** 2; if (d < bd){ bd = d; best = u; } });
   return bd < 22 * 22 ? best : null;
 }
-function xStatHtml(B){ return B.party.map(u => `<div class="xs ${u.hp <= 0 ? 'xdead' : ''}"><b>${esc(u.name)}</b><span class="s sub">${XJ[u.job].n} Lv ${u.L}</span><i class="xbar"><i class="xh" style="width:${Math.max(0, u.hp) / u.mhp * 100}%"></i></i><i class="xbar"><i class="xm" style="width:${u.mp / u.mmp * 100}%"></i></i><span class="xv">HP ${Math.max(0, u.hp)}/${u.mhp} · MP ${Math.floor(u.mp)}</span></div>`).join(''); }
+function xStatHtml(B){   // 아래쪽 파티 카드: 얼굴 · 이름 · 체력 · 마력 · 행동 게이지
+  return B.party.map(u => `<div class="xs" data-cu="${u.id}"><div class="xs1"><span class="xport">${headImg(u.av)}</span><div class="xs2"><b>${esc(u.name)}</b><span class="xj">${XJ[u.job].n} Lv ${u.L}</span></div></div><div class="xbr hp"><i data-b="h"></i><em data-t="h"></em></div><div class="xbr mp"><i data-b="m"></i><em data-t="m"></em></div><div class="xbr gg"><i data-b="g"></i></div></div>`).join('');
+}
+function xStatUpdate(B){
+  B.party.forEach(u => { const c = document.querySelector(`[data-cu="${u.id}"]`); if (!c) return; c.classList.toggle('xdead', u.hp <= 0); c.classList.toggle('xturn', B.turn === u);
+    const set = (k, w, t) => { const b = c.querySelector(`[data-b="${k}"]`); if (b) b.style.width = w + '%'; const e = c.querySelector(`[data-t="${k}"]`); if (e && t != null) e.textContent = t; };
+    set('h', Math.max(0, u.hp) / u.mhp * 100, `${Math.max(0, u.hp)}/${u.mhp}`); set('m', u.mp / u.mmp * 100, `${Math.floor(u.mp)}/${u.mmp}`); set('g', Math.max(0, Math.min(100, u.g))); });
+}
 function xRenderBattle(){
-  const B = xb, run = xEx().run;
-  frame(null, B.kind === 'boss' ? '⚔️ 보스!' : B.kind === 'elite' ? '⚔️ 강한 몬스터' : '⚔️ 전투', `진행 ${run.prog}% · 남은 시간 ${timeText(xTime(run))}`, `<style>#xcv{display:block;width:100%;aspect-ratio:16/9;image-rendering:pixelated;border:2px solid var(--line2);border-radius:10px;background:#000;touch-action:manipulation}.xs{display:flex;flex-direction:column;gap:2px;padding:6px;background:var(--panel);border:1px solid var(--line2);border-radius:10px;font-size:12px;min-width:0}.xs.xdead{opacity:.4}.xs b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.xstat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.xbar{display:block;width:100%;height:5px;background:var(--line);border-radius:3px;overflow:hidden}.xbar i{display:block;height:100%}.xh{background:#6fe07a}.xm{background:#6aa8ff}.xv{color:var(--sub);font-size:11px}.xcmd{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:34vh;overflow:auto}.xcmd .btn{min-height:42px;display:flex;align-items:center;justify-content:center;gap:4px}.xcmd .sic{width:22px;height:22px}</style>
-    <canvas id="xcv" width="${XCW}" height="${XCH}"></canvas><div class="hint on px" id="xlog" style="text-align:center">${esc(B.log || '전투 시작!')}</div><div class="xstat" id="xstat">${xStatHtml(B)}</div><div id="xcmd" class="xcmd"></div>`);
-  xLayout(B); B.fxs = []; B.floats = []; B.proj = []; xWpnSheet(); B.party.forEach(u => World.Avatar.need(u.av)); xLpcSheet();
+  const B = xb, run = xEx().run; B.menu = 'main'; B.ck = '';
+  frame(null, B.kind === 'boss' ? '⚔️ 보스!' : B.kind === 'elite' ? '⚔️ 강한 몬스터' : '⚔️ 전투', `진행 ${run.prog}% · 남은 시간 ${timeText(xTime(run))}`, `<style>
+    #xcv{display:block;width:100%;aspect-ratio:16/9;image-rendering:pixelated;border:3px solid #0c0818;border-radius:6px;box-shadow:0 0 0 2px #5a4a9a;background:#000;touch-action:manipulation}
+    .xhud{display:flex;flex-direction:column;gap:8px}.xstat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+    .xs{display:flex;flex-direction:column;gap:3px;padding:6px;background:linear-gradient(#2b2150,#1b1438);border:2px solid #0c0818;border-radius:6px;box-shadow:inset 0 0 0 2px #4a3c86;min-width:0}
+    .xs.xturn{box-shadow:inset 0 0 0 2px #4fd8ff,0 0 10px #4fd8ff99;animation:xpulse 1s infinite}@keyframes xpulse{50%{box-shadow:inset 0 0 0 2px #9af0ff,0 0 14px #4fd8ffcc}}.xs.xdead{filter:grayscale(1);opacity:.5}
+    .xs1{display:flex;gap:6px;align-items:center}.xport{width:34px;height:34px;flex:none;border:2px solid #0c0818;border-radius:4px;background:#3a2e6a;overflow:hidden;box-shadow:0 0 0 1px #6a5ab0}.xport img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+    .xs2{min-width:0;display:flex;flex-direction:column;line-height:1.15}.xs2 b{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.xj{font-size:10px;color:#b9a8ff}
+    .xbr{position:relative;height:11px;background:#120c26;border:1px solid #0c0818;border-radius:3px;overflow:hidden}.xbr i{display:block;height:100%;width:100%;transition:width .12s}.xbr.hp i{background:linear-gradient(#8af09a,#3fb858)}.xbr.mp i{background:linear-gradient(#8ac4ff,#3a78d8)}.xbr.gg{height:5px}.xbr.gg i{background:linear-gradient(#ffe88a,#f0a820)}
+    .xbr em{position:absolute;inset:0;font-style:normal;font-size:9px;font-weight:800;text-align:center;line-height:10px;color:#fff;text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000}
+    .xcmd{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:34vh;overflow:auto}.xwait{grid-column:1/-1;text-align:center;color:var(--sub);padding:12px 0;font-size:13px}
+    .xb{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:6px 8px;color:#fff;font:inherit;font-weight:800;font-size:14px;background:linear-gradient(#3b2f78,#251b52);border:2px solid #0c0818;border-radius:6px;box-shadow:inset 0 0 0 2px #6a5ab0,0 2px 0 #000;text-shadow:0 1px 0 #000}.xb:active{transform:translateY(1px)}.xb.atk{background:linear-gradient(#2a6ab8,#1a3f80);box-shadow:inset 0 0 0 2px #4fd8ff,0 2px 0 #000}
+    .xb:disabled{opacity:.4}.xb.sk{grid-column:span 1;font-size:12px;justify-content:flex-start}.xb .sic{width:26px;height:26px;flex:none}.xb small{display:block;font-size:10px;font-weight:600;color:#9fd0ff}.xskh{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;font-weight:800;color:#ffd866}.xsk2{grid-template-columns:repeat(2,1fr)}
+  </style>
+    <canvas id="xcv" width="${XCW}" height="${XCH}"></canvas><div class="hint on px" id="xlog" style="text-align:center">${esc(B.log || '전투 시작!')}</div><div class="xhud"><div class="xstat" id="xstat">${xStatHtml(B)}</div><div id="xcmd" class="xcmd"></div></div>`);
+  xLayout(B); B.fxs = []; B.floats = []; B.proj = []; xWpnSheet(); B.party.forEach(u => World.Avatar.need(u.av)); xLpcSheet(); headFix(); xStatUpdate(B);
   $('#xcv').onpointerdown = e => { if (!B.pick) return; const t = xHitTest(e); if (t){ const go = B.pick.go; B.pick = null; go(t); } };
   clearInterval(xTick); B.last = performance.now(); xTick = setInterval(xLoop, 100); cancelAnimationFrame(xRaf); xRaf = 0; xDraw(); xCmd();
 }
 function xCmd(){
   const B = xb, u = B.party[0], el = $('#xcmd'); if (!el) return;
-  if (B.over || u.hp <= 0 || B.turn !== u){ el.innerHTML = B.over ? '' : u.hp <= 0 ? '<div class="hint">쓰러졌어요… 동료가 싸워요</div>' : '<div class="hint">차례를 기다려요…</div>'; return; }
-  if (B.pick){ el.innerHTML = '<div class="hint on px" style="grid-column:1/-1">화면에서 대상을 눌러요</div><button class="btn ghost" data-xc="cancel" style="grid-column:1/-1">취소</button>'; }
-  else el.innerHTML = [{ n: '공격', mp: 0, k: 'atk' }, ...u.sks.map((s, i) => ({ ...s, k: 's' + i })), { n: '방어', mp: 0, k: 'def' }].map(c => `<button class="btn ${c.k === 'atk' ? 'go' : ''}" data-xc="${c.k}" ${Math.ceil(c.mp) > Math.floor(u.mp) ? 'disabled' : ''}>${c.i != null ? xIc(c) : ''} ${c.n}${c.mp ? ` <span class="s sub">MP ${c.mp}</span>` : ''}</button>`).join('');
+  const wait = B.over ? '' : u.hp <= 0 ? '쓰러졌어요… 동료가 싸워요' : B.turn !== u ? '차례를 기다려요…' : null;
+  const key = wait !== null ? 'w' + wait : B.pick ? 'pick' : B.menu + ':' + u.sks.map(s => Math.ceil(s.mp) <= Math.floor(u.mp) ? 1 : 0).join('');
+  if (el.dataset.k === key) return; el.dataset.k = key; el.classList.toggle('xsk2', key.startsWith('skills'));
+  if (wait !== null){ el.innerHTML = `<div class="xwait">${wait}</div>`; return; }
+  if (B.pick) el.innerHTML = '<div class="xskh" style="grid-column:1/-1">화면에서 대상을 눌러요</div><button class="xb" data-xc="cancel" style="grid-column:1/-1">취소</button>';
+  else if (B.menu === 'skills') el.innerHTML = `<div class="xskh"><span>✦ 스킬</span><button class="xb" data-xc="m_back" style="min-height:32px;padding:2px 12px">뒤로</button></div>${u.sks.map((s, i) => `<button class="xb sk" data-xc="s${i}" ${Math.ceil(s.mp) > Math.floor(u.mp) ? 'disabled' : ''}>${xIc(s)}<span>${s.n}<small>${s.mp ? 'MP ' + s.mp : '무료'}</small></span></button>`).join('') || '<div class="xwait">배운 스킬이 없어요</div>'}`;
+  else el.innerHTML = `<button class="xb atk" data-xc="atk">⚔ 공격</button><button class="xb" data-xc="m_skills" ${u.sks.length ? '' : 'disabled'}>✦ 스킬</button><button class="xb" data-xc="def">🛡 방어</button>`;
   el.querySelectorAll('[data-xc]').forEach(b => b.onclick = () => xChoose(b.dataset.xc));
 }
 function xChoose(k){
   const B = xb, u = B.party[0]; if (B.turn !== u) return;
+  if (k === 'm_skills'){ B.menu = 'skills'; return xCmd(); } if (k === 'm_back'){ B.menu = 'main'; return xCmd(); }
   if (k === 'cancel'){ B.pick?.unpick?.(); B.pick = null; return xCmd(); }
   if (k === 'def'){ B.def[u.id] = 1; B.log = `🛡️ ${u.name}이(가) 방어 태세`; u.g = 0; B.turn = null; return xUp(); }
   const sk = k === 'atk' ? null : u.sks[+k.slice(1)];
-  const go = tgt => { B.pick = null; xAct(u, sk, tgt); B.turn = null; xUp(); };
+  const go = tgt => { B.pick = null; B.menu = 'main'; xAct(u, sk, tgt); B.turn = null; xUp(); };
   const foeT = !sk || ['dmg', 'deb', 'dot', 'stun'].includes(sk.t), targets = foeT ? xAlive(B.foes) : sk.t === 'revive' ? B.party.filter(x => x.hp <= 0) : xAlive(B.party);
   if (sk && (sk.tg === 'all' || sk.tg === 'self' || sk.t === 'mp')) return go(null); if (targets.length <= 1) return go(targets[0] || null);
   B.pick = { sk, go, set: new Set(targets.map(t => t.id)) }; xCmd();
 }
 function xUp(){   // 글·상태 갱신 (그림은 xDraw가 알아서 그려요)
   const B = xb; if (!B || !$('#xcv')) return;
-  const st = $('#xstat'); if (st) st.innerHTML = xStatHtml(B); const lg = $('#xlog'); if (lg) lg.textContent = B.log; xCmd();
+  xStatUpdate(B); const lg = $('#xlog'); if (lg && lg.textContent !== B.log) lg.textContent = B.log; xCmd();
 }
 function xLoop(){
   const B = xb; if (!B || B.over) return clearInterval(xTick); if (!sheetOn || sub !== 'explore') return clearInterval(xTick);
