@@ -3741,15 +3741,16 @@ function drawEmote(g, icon, x, y){
 }
 // 배경 음악: 평소에는 기본 곡이 계속 흘러요. 다른 곡이 나오는 장면(메인·서브 대화 등)은 BGM.hold(이름)으로 기본 곡을 0으로 낮추고,
 // 끝나면 BGM.release(이름)으로 되돌려요. 여러 곳이 동시에 잡아도 모두 놓아야 다시 나와요.
+const BGM_TRIM = {"bgm_aula.mp3": 0.81, "bgm_batri.mp3": 0.83, "bgm_dracula.mp3": 0.84, "bgm_frank.mp3": 0.83, "bgm_ghost.mp3": 0.79, "bgm_jack.mp3": 0.84, "bgm_jipsin.mp3": 0.72, "bgm_kappa.mp3": 0.84, "bgm_leo.mp3": 0.84, "bgm_madeleine.mp3": 0.82, "bgm_main.mp3": 1.06, "bgm_mandi.mp3": 0.77, "bgm_mummy.mp3": 0.86, "bgm_nabi.mp3": 0.82, "bgm_sera.mp3": 0.82, "bgm_stella.mp3": 0.88, "bgm_werewolf.mp3": 0.8, "bgm_witch.mp3": 0.86, "bgm_x1_forest.mp3": 0.71, "bgm_x2_crypt.mp3": 0.86, "bgm_x3_cave.mp3": 0.68, "bgm_x4_temple.mp3": 0.68};   // 곡마다 소리 크기를 맞춰요 (ffmpeg 측정: 목표 −14.5 LUFS · 최대치 −1dB 이하)
 const BGM = (() => {
   const SRC = 'audio/bgm_main.mp3', FADE = 2600, holds = new Set();
   // 아이폰은 audio.volume을 못 바꿔서(항상 최대) 페이드가 안 먹어요 → 웹 오디오(GainNode)로 소리를 조절해요. 안 되는 기기는 volume으로 대신해요.
   let ctx = null;
   const ensureCtx = () => { if (!ctx){ try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} } if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {}); return ctx; };
-  const mk = src => { const au = new Audio(src); au.loop = true; au.preload = 'auto'; au.crossOrigin = 'anonymous'; const o = { au, gn: null, v: 0, t: 0 }; const c = ensureCtx(); if (c){ try { const sr = c.createMediaElementSource(au), g = c.createGain(); g.gain.value = 0; sr.connect(g); g.connect(c.destination); o.gn = g; } catch(e){} } return o; };
+  const mk = src => { const au = new Audio(src); au.loop = true; au.preload = 'auto'; au.crossOrigin = 'anonymous'; const o = { au, gn: null, v: 0, t: 0, trim: BGM_TRIM[String(src).split('/').pop()] || 1 }; const c = ensureCtx(); if (c){ try { const sr = c.createMediaElementSource(au), g = c.createGain(); g.gain.value = 0; sr.connect(g); g.connect(c.destination); o.gn = g; } catch(e){} } return o; };
   const curve = v => Math.sin(Math.max(0, Math.min(1, v)) * Math.PI / 2);   // 서로 바뀔 때 합친 소리 크기가 일정하게 (등전력 페이드)
   let level = 1, wanted = false, raf = 0, last = 0;
-  const gain = o => Math.max(0, Math.min(1, level * .6 * curve(o.v)));   // 기본 곡은 효과음·대사를 가리지 않게 조금 작게
+  const gain = o => Math.max(0, Math.min(1, level * .6 * (o.trim || 1) * curve(o.v)));   // 기본 곡은 효과음·대사를 가리지 않게 조금 작게
   const put = o => { const g = gain(o); if (o.gn) o.gn.gain.value = g; else o.au.volume = g; };
   const main = { au: null, gn: null, v: 1, t: 1 };
   const TR = {};   // 장면 곡: src → { au, gn, v, t }
@@ -3808,7 +3809,7 @@ let AC = null;
 function sfx(id){
   if (typeof SET !== 'undefined' && !SET.sfx) return;   // 설정: 효과음 끔
   try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return; }
-  const t = AC.currentTime, out = AC.createGain(); out.gain.value = .12 * (typeof SET !== 'undefined' ? SET.sfx : 1); out.connect(AC.destination);
+  const t = AC.currentTime, out = AC.createGain(); out.gain.value = .36 * (typeof SET !== 'undefined' ? SET.sfx : 1); out.connect(AC.destination);   // 음악(−19 LUFS)에 묻히지 않게 키웠어요
   const tone = (f, d, type = 'square', at = 0, v = 1) => { const o = AC.createOscillator(), gn = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t + at); gn.gain.setValueAtTime(v, t + at); gn.gain.exponentialRampToValueAtTime(.001, t + at + d); o.connect(gn); gn.connect(out); o.start(t + at); o.stop(t + at + d + .02); };
   const noise = (d, v = 1, at = 0, lp = 2000) => { const b = AC.createBuffer(1, AC.sampleRate * d, AC.sampleRate), a = b.getChannelData(0); for (let i = 0; i < a.length; i++) a[i] = (Math.random() * 2 - 1) * (1 - i / a.length); const s = AC.createBufferSource(), f = AC.createBiquadFilter(), gn = AC.createGain(); f.type = 'lowpass'; f.frequency.value = lp; gn.gain.value = v; s.buffer = b; s.connect(f); f.connect(gn); gn.connect(out); s.start(t + at); };
   const S = {
@@ -3824,10 +3825,10 @@ function sfx(id){
     bird: () => [0, .1, .2].forEach(a => tone(2000 + Math.random() * 500, .05, 'sine', a, .5)), goat: () => tone(330, .5, 'sawtooth', 0, .4), dragon: () => { tone(160, .4, 'sawtooth', 0, .5); noise(.4, .5, .1, 1200); },
     enc: () => { tone(220, .12, 'square', 0, .7); tone(165, .25, 'square', .12, .7); }, boss: () => { tone(80, .9, 'sawtooth', 0, .8); tone(60, 1.1, 'sawtooth', .1, .7); noise(.8, .6, .1, 300); },
     fork: () => { tone(659, .12, 'triangle'); tone(880, .16, 'triangle', .12); }, pick: () => { tone(784, .07, 'square'); tone(1047, .1, 'square', .07); }, haz: () => [0, .14, .28].forEach(a => tone(990, .08, 'square', a, .7)),
-    dodge: () => { noise(.18, .6, 0, 2500); tone(880, .1, 'triangle', .1, .5); tone(1319, .14, 'triangle', .18, .5); }, hurt: () => { noise(.25, 1, 0, 500); tone(110, .25, 'sawtooth', 0, .8); },
+    dodge: () => { noise(.18, 1, 0, 2500); tone(880, .1, 'triangle', .1, .9); tone(1319, .14, 'triangle', .18, .9); }, hurt: () => { noise(.25, 1, 0, 500); tone(110, .25, 'sawtooth', 0, .8); },
     hit: () => { noise(.1, .9, 0, 1800); tone(140, .1, 'square', 0, .6); }, crit: () => { noise(.12, 1, 0, 3000); tone(220, .12, 'square', 0, .7); tone(1568, .15, 'triangle', .05, .5); },
-    win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, .25, 'triangle', i * .12, .6)), lose: () => [392, 330, 262, 196].forEach((f, i) => tone(f, .3, 'sawtooth', i * .18, .5)),
-    chest: () => [784, 988, 1319, 1568].forEach((f, i) => tone(f, .2, 'triangle', i * .07, .5)), camp: () => noise(.8, .3, 0, 900),
+    win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, .25, 'triangle', i * .12, .9)), lose: () => [392, 330, 262, 196].forEach((f, i) => tone(f, .3, 'sawtooth', i * .18, .9)),
+    chest: () => [784, 988, 1319, 1568].forEach((f, i) => tone(f, .2, 'triangle', i * .07, .5)), camp: () => noise(.8, .9, 0, 900),
     crowd: () => noise(1.2, .4, 0, 900), fireworks: () => { tone(300, .4, 'sine', 0, .3); noise(.6, 1, .35, 3000); }, sing: () => [523, 587, 659, 784, 659].forEach((f, i) => tone(f, .3, 'sine', i * .25, .5)), cough: () => noise(.15, .8, 0, 1200),
   };
   (S[id] || (() => {}))();
