@@ -2680,9 +2680,9 @@ function onRoom(v){
   if (v.st === 'lobby'){
     if (!v.p?.[myId()]){ toast('방에서 나왔어요'); return leaveRoom(); }
     const ps = Object.entries(v.p), host = v.host === myId(), ok = ps.length >= Gm.min;
-    gameShow(`<div class="gpan px"><b class="gt">${Gm.ic} ${Gm.name}</b><span class="s">${Gm.desc}</span>
+    gameShow(`<div class="gpan px"><b class="gt">${Gm.ic} ${Gm.name}</b>
       <div class="gpl">${ps.map(([id, p], i) => `<span class="gpp" style="border-color:${PCOL[i % 8]}">${esc(p.n)}${id === v.host ? ' 👑' : ''}</span>`).join('')}</div>
-      <span class="s sub">${ps.length} / ${Gm.max}명 · ${Gm.coop ? `협동 · ${Gm.min}명부터` : '1명부터'} · ${host ? (ok ? '모이면 시작을 눌러요' : `${Gm.min - ps.length}명 더 와야 해요`) : `${withJosa(esc(v.hn), '이', '가')} 시작하길 기다려요`}</span>
+      <span class="s sub">${ps.length} / ${Gm.max}명${host && !ok ? ` · ${Gm.min - ps.length}명 더 와야 해요` : ''}</span>
       <div class="frow">${host ? `<button class="btn sm go" data-gx="start" ${ok ? '' : 'disabled'}>시작!</button>` : ''}<button class="btn sm" data-gx="leave">나가기</button></div></div>`, 'lobby');
     return;
   }
@@ -2806,7 +2806,7 @@ function brStart(){
     st.cols.forEach(c => { const x = c.x - st.dist; if (x < -40 || x > BW + 10) return; Rr(x + 6, 0, 14, c.top, '#3E6A3A'); Rr(x + 2, c.top - 10, 22, 10, '#4E8A48'); const by = c.top + c.gp; Rr(x, by, 26, BH - 16 - by, '#8A82A8'); Rr(x, by, 26, 4, '#B4AECC'); });
     const y = Math.round(st.y); Rr(60, y + 4, 34, 3, '#8A5A30'); Rr(54, y + 1, 8, 9, '#E8B84A'); Rr(74, y - 6, 12, 11, st.dead ? '#C2385E' : PCOL[G.me_i % 8]); Rr(76, y - 13, 9, 8, '#F2C6A0'); Rr(72, y - 16, 15, 3, '#2A1C3E'); Rr(75, y - 22, 9, 6, '#2A1C3E');
     g.font = '12px G11, monospace'; g.fillStyle = '#FFF6E0'; g.textAlign = 'center';
-    if (t <= 0) g.fillText(`${gCount()}초 뒤 출발! 눌러서 날아요`, BW / 2, BH / 2 + 46); else if (st.wait) g.fillText('출발! 화면을 눌러요', BW / 2, BH / 2 + 46);
+    if (t <= 0) g.fillText(`${gCount()}초 뒤 출발!`, BW / 2, BH / 2 + 46); else if (st.wait) g.fillText('출발!', BW / 2, BH / 2 + 46);
     if (st.dead) g.fillText(`묘비 ${st.passed}개! 친구들을 기다려요`, BW / 2, BH / 2);
     $('#gtop').textContent = `${GAMES.broom.ic} 빗자루 경주 · 남은 시간 ${gLeft()}초`;
     const v = roomV || G.v; $('#gsb').innerHTML = scoreBoard(v);
@@ -2936,7 +2936,7 @@ function renderGames(){
   frame(null, '놀이 게시판', '등불 시장 · 친구와 같이 놀아요', `
     ${open.length ? `<section class="sec">${secH('지금 열린 방', open.length + '개')}<div class="box px">${open.slice(0, 3).map(([id, r]) => `<div class="li"><span class="gic">${GAMES[r.g].ic}</span><div class="main"><span class="t">${esc(r.hn)}의 ${GAMES[r.g].name}</span><span class="d">${Object.keys(r.p || {}).length} / 8명</span></div><button class="btn sm go" data-gjoin="${id}">참가</button></div>`).join('')}</div>${open.length > 3 ? `<div class="hint">그 밖에 ${open.length - 3}개 더 열려 있어요</div>` : ''}</section>` : ''}
     ${segRow('gtab', gamesTab, tabs)}
-    <section class="sec"><div class="box px">${list.map(([k, x]) => `<div class="li" style="align-items:flex-start;padding-top:10px;padding-bottom:10px"><span class="gic">${x.ic}</span><div class="main"><span class="t">${x.name}</span><span class="d" style="white-space:normal">${x.desc}</span><span class="d">이번 주 ${solo ? `내 기록 ${me.grec?.[k + weekKey()] || 0}` : best(k)}</span></div><button class="btn sm go" data-gopen="${k}" ${solo && x.coop ? 'disabled' : ''}>방 열기</button></div>`).join('')}</div>
+    <section class="sec"><div class="box px">${list.map(([k, x]) => `<div class="li" style="align-items:flex-start;padding-top:10px;padding-bottom:10px"><span class="gic">${x.ic}</span><div class="main"><span class="t">${x.name}</span><span class="d">이번 주 ${solo ? `내 기록 ${me.grec?.[k + weekKey()] || 0}` : best(k)}</span></div><button class="btn sm go" data-gopen="${k}" ${solo && x.coop ? 'disabled' : ''}>방 열기</button></div>`).join('')}</div>
     ${hint('', solo && gamesTab === 'coop' ? '협동 놀이는 로그인하면 열려요' : '')}</section>`);
   on('[data-gtab]', b => { gamesTab = b.dataset.gtab; renderGames(); });
   on('[data-gopen]', b => { const k = b.dataset.gopen; if (k === 'pumpkin' && !['campus', 'town'].includes(World.where())) return toast('호박 줍기는 바깥(마을)에서 열 수 있어요'); openRoom(k); });
@@ -5053,7 +5053,7 @@ function renderClass(){
       <section class="sec">
         ${secH(left ? `${CLASS_MAX - left + 1}교시 · 과목을 골라요` : '오늘 수업은 모두 끝났어요', `남은 교시 ${left} / ${CLASS_MAX}`)}
         <div class="box px">${SUBJECTS.map(x => `<div class="li" style="align-items:flex-start;padding-top:10px;padding-bottom:10px">${ic(x.icon)}
-          <div class="main"><span class="t">${x.name}</span><span class="d" style="white-space:normal">${x.desc}<br>${x.rule}</span></div>
+          <div class="main"><span class="t">${x.name}</span></div>
           <button class="btn sm ${left ? 'go' : ''}" data-subj="${x.id}" ${left ? '' : 'disabled'}>듣기</button></div>`).join('')}</div>
         ${hint('', `틀릴 때까지 라운드가 이어져요 · 다음 레시피 힌트까지 지식 ${knowToNext()}`)}
       </section>` : `
@@ -5107,7 +5107,7 @@ function renderClass(){
   const g2 = L.earned ? `이번 교시에서 지식 +${L.earned}` : `${g}라운드까지 성공해야 지식을 받아요`;
   frame('class', S.name, `${CLASS_MAX - left}교시 · 지식 ${me.know || 0}`, `
     ${body}
-    <div id="flyMsg">${hint(over ? `${L.why} · ${g2}` : L.msg, S.rule)}</div>
+    <div id="flyMsg">${hint(over ? `${L.why} · ${g2}` : L.msg, '')}</div>
     ${over ? `<button class="btn go px" id="lessonDone">${ic('book')}교실로 (오늘 ${left}교시 남음)</button>` : `<button class="btn ghost" id="lessonQuit" style="width:100%">그만하기 · ${g2}</button>`}`);
   on('[data-rune]', b => runeTap(b.dataset.rune));
   on('[data-herb]', b => herbPick(b.dataset.herb));
