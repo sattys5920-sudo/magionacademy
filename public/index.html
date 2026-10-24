@@ -6,7 +6,8 @@
 <meta name="theme-color" content="#140D1E">
 <link rel="preload" href="fonts/Pretendard-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/Galmuri11-Bold.sub.woff2" as="font" type="font/woff2" crossorigin>
-<title>호박달 마녀학교 ― Trick or Teach!</title>
+<title>Trick or Teach</title>
+<meta name="application-name" content="Trick or Teach"><meta name="apple-mobile-web-app-title" content="Trick or Teach">
 <link rel="manifest" href="manifest.webmanifest">
 <style>
 /* 글꼴: 본문 Pretendard(서브셋·직접 호스팅), 제목·버튼·HUD만 픽셀 글꼴 Galmuri11 */
@@ -4492,6 +4493,7 @@ function render(){
   if (sub === 'journal') return renderJournal();
   if (sub === 'menu') return renderMenu();
   if (sub === 'settings') return renderSettings();
+  if (sub === 'friends') return renderFriends();
   ({ home:renderHome, lab:renderLab, green:renderGreen, ranch:renderRanch, market:renderMarket })[tab]();
 }
 
@@ -4875,7 +4877,7 @@ function renderMenu(){
     <section class="sec"><div class="box"><div class="li">${face(me, 40)}<div class="main"><span class="t">${esc(me.nick)} ${houseTag(me.house)}</span><span class="d">${esc(id)} · <span class="sv">${SAVE_LABEL[saveState] || SAVE_LABEL['']}</span></span></div><button class="btn sm warn" data-logout="1">로그아웃</button></div></div></section>
     <section class="sec"><div class="tiles">
       ${mtile('settings', ICO.gear, '설정')}${mtile('help', ICO.journal, '도움말')}
-      ${mtile('chat', ICO.chat, '채팅')}
+      ${mtile('friends', ICO.heart, '친구')}${mtile('chat', ICO.chat, '채팅')}
       ${mtile('credits', ICO.heart, '크레딧')}</div></section>`);
   on('[data-logout]', async () => {
     if (!await confirmBox('정말 로그아웃할까요?', '로그아웃', '취소', true)) return;
@@ -4887,12 +4889,18 @@ function renderMenu(){
     if (k === 'settings') return openSheet('home', 'settings');
     if (k === 'help'){ menuHelp = true; return render(); }
     if (k === 'credits') return showCredits();
+    if (k === 'friends') return openSheet('home', 'friends');
     if (k === 'chat'){ closeSheet(); return $('#tin').focus(); }
     if (k === 'map'){ closeSheet(); return $('#tMap').click(); } });
 }
 const sseg = (k, opts, cls = '') => `<div class="seg sseg ${cls}">${opts.map(([v, t]) => `<button class="${SET[k] === v ? 'on' : ''}" data-set="${k}" data-v="${JSON.stringify(v)}">${t}</button>`).join('')}</div>`;
 const srow = (t, d, ctrl, stack) => `<div class="li sli ${stack ? 'stack' : ''}"><div class="main"><span class="t">${t}</span>${d ? `<span class="d">${d}</span>` : ''}</div>${ctrl}</div>`;
 const ONOFF = [[false, '끔'], [true, '켬']];
+function renderFriends(){   // 친구 목록: 어디 있든 눌러서 방에 놀러 가요
+  const on_ = id => !!(onlineList[id] && onlineList[id].m), L = Object.entries(playersList).filter(([id, p]) => id !== uid && p && p.nick).sort((a, b) => on_(b[0]) - on_(a[0]) || String(a[1].nick).localeCompare(String(b[1].nick)));
+  frame(null, '친구', '', L.length ? `<div class="box">${L.map(([id, p]) => `<div class="li">${face(p, 40, on_(id))}<div class="main"><span class="t">${esc(p.nick)} ${houseTag(p.house)}</span></div><button class="btn sm go" data-visit="${id}">놀러 가기</button></div>`).join('')}</div>` : '<div class="hint">아직 친구가 없어요</div>');
+  on('[data-visit]', b => openVisit(b.dataset.visit));
+}
 function renderSettings(){
   const bi = typeof bright === 'number' ? bright : 0, bNext = typeof BRIGHT_NEXT !== 'undefined' ? BRIGHT_NEXT[bi] : '바꾸기', bCur = ['보통', '밝게', '어둡게'][bi] || '보통';
   frame(null, '설정', '소리 · 대사 · 화면', `
