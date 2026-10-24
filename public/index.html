@@ -672,7 +672,7 @@ button.cell:not(:disabled):active{background:var(--line)}
 <div id="shell">
   <header id="hud">
     <button id="hudMe" class="hudbtn" aria-label="내 정보"><span class="face" id="hudFace"></span><span class="hudname"><b id="hudNick"></b><span class="s" id="hudLv">Lv 1</span></span></button>
-    <button id="hudClock" class="hudbtn" aria-label="오늘의 정보"><b id="place">호박달 마녀학교</b><span id="clock"></span></button>
+    <div id="hudClock" class="hudbtn" style="pointer-events:none"><b id="place">호박달 마녀학교</b><span id="clock"></span></div>
     <div id="wallet"></div>
   </header>
   <div id="stage">
@@ -4422,7 +4422,6 @@ World.onNear = t => {
   const mc = c.querySelector('[data-ctx="mqcraft"]'); if (mc) mc.onclick = () => openSheet('home', 'mqcraft');
   const g = c.querySelector('[data-ctx="gift"]'); if (g) g.onclick = () => { npcGiftId = t.id; openSheet('home', 'npcgift'); };
 };
-$('#hudClock').onclick = () => sheetOn && tab === 'home' && !sub ? closeSheet() : openSheet('home');
 $('#hudMe').onclick = () => sheetOn && sub === 'profile' ? closeSheet() : openSheet('home', 'profile');
 document.querySelectorAll('#bar [data-nav]').forEach(b => { if (b.dataset.nav === 'map') return;   // 지도는 world.js가 열어요
   b.onclick = () => { const s = b.dataset.nav; if (sheetOn && sub === s) return closeSheet(); openSheet('home', s); }; });
