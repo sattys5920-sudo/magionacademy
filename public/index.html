@@ -21,6 +21,7 @@
   --fs:15px;--fs-s:13px;--fs-h:16px;--fs-talk:17px;--r-btn:12px;--r-panel:16px;--r-cell:8px;--hud-h:56px;--bar-h:64px;--dur:.18s}
 html.big{--fs:17px;--fs-s:15px;--fs-h:18px;--fs-talk:19px}
 .jic{display:inline-block;width:1.5em;height:1.5em;vertical-align:middle;background:url(art/jobs.png?v=1) 0 0/1200% 100%;background-position:calc(var(--i)*100%/11) 0;image-rendering:pixelated}
+@media (max-height:760px){#xcv,#xmcv{width:auto!important;max-width:100%;max-height:30vh;margin:0 auto}}
 .big .jic{width:34px;height:34px}.wstep{display:flex;align-items:center;justify-content:space-between;gap:2px;margin-top:12px}.wstep>div{position:relative;display:flex;flex-direction:column;align-items:center;flex:1;padding:4px 0;border:2px solid transparent;border-radius:10px;opacity:.55}.wstep>div.done{opacity:.85}.wstep>div.on{opacity:1;border-color:var(--gold);background:rgba(255,184,77,.14)}.wstep .wic{width:58px;height:58px}.wstep b{font-size:11px}.wstep small{font-size:10px;opacity:.8}.wstep i{position:absolute;top:-8px;font-style:normal;font-size:10px;font-weight:800;background:var(--gold);color:#2b1b3a;border-radius:6px;padding:0 5px}.wstep i.nx{background:#9fd0ff}.wstep em{font-style:normal;opacity:.5}
 .wbg{background-image:url(art/weapons_big.png?v=2)!important}
 .wic{display:inline-block;width:96px;height:96px;background:url(art/weapons_big.png?v=2) 0 0/500% 1200%;background-position:calc(var(--t)*100%/4) calc(var(--r)*100%/11);image-rendering:pixelated;flex:none}
@@ -804,11 +805,11 @@ const MATS = [...SEED_LIST.map(x => x.id), ...CREATURE_MATS];
 // 물약 도감 100종: r 재료 3개, pay 주문 보상, col 물약 색, use 마시면 생기는 일, time 그 기숙사 시간에만 끓어요
 // 아이콘은 art/potions.png (10×10칸, 이 표의 순서대로)
 const POTION_LIST = [
-  { id:'p_red', name:'치유 물약', r:["herb", "herb", "drop"], pay:60, col:'#FF5A7A', desc:"양호실에서 늘 찾는 기본 물약" },
+  { id:'p_red', name:'치유 물약', r:["herb", "herb", "drop"], pay:60, col:'#FF5A7A', desc:"양호실에서 늘 찾는 기본 물약", use:"전투 중 마시면 체력 50% 회복" },
   { id:'p_green', name:'화염 저항 물약', r:["mush", "scale", "drop"], pay:90, col:'#5ED67A', desc:"솥가마 근처에선 필수품" },
   { id:'p_blue', name:'잠꾸러기 물약', r:["wool", "mana", "drop"], pay:70, col:'#5AA8FF', desc:"한 모금이면 꿀잠" },
   { id:'p_grow', name:'성장 물약', r:["herb", "mush", "mush"], pay:80, col:'#86D14A', use:"온실에서 자라는 식물의 남은 시간이 절반으로 줄어요" },
-  { id:'p_vigor', name:'활력 물약', r:["mana", "scale", "herb"], pay:100, col:'#FF9A2E', use:"마력 +15" },
+  { id:'p_vigor', name:'활력 물약', r:["mana", "scale", "herb"], pay:100, col:'#FF9A2E', use:"마력 +15 · 전투 중 마시면 마력(MP) 50% 회복" },
   { id:'p_fluff', name:'포근 물약', r:["wool", "wool", "drop"], pay:90, col:'#FFB8D2', use:"사육장 생물 모두 애정 +1" },
   { id:'p_purple', name:'반짝 물약', r:["herb", "drop", "uhair"], pay:280, col:'#B47AFF', desc:"반 공동 의뢰에 쓰여요" },
   { id:'p_dragon', name:'용기의 물약', r:["egg", "scale", "mana"], pay:320, col:'#C8323C', desc:"드래곤이 두고 간 알 껍질로만 만들 수 있어요" },
@@ -1056,7 +1057,7 @@ function normalize(p){
   p.found = p.found || []; p.hints = p.hints || ['p_red'];
   if (p.furn){ p.fbag = p.fbag || {}; Object.entries(p.furn).forEach(([k, st]) => { if (st?.own && OLD_FURN[k]) p.fbag[OLD_FURN[k]] = (p.fbag[OLD_FURN[k]] || 0) + 1; }); delete p.furn; }
   p.fbag = p.fbag || {}; p.room = (p.room || []).filter(r => FURN_BY[r.f]); p.common = p.common || { stage: 1, pool: {} }; p.common.pool = p.common.pool || {};
-  p.orders = p.orders || []; p.know = p.know || 0;
+  p.orders = p.orders || []; p.know = p.know || 0; p.hints = p.hints || []; if (!p.hints.includes('p_vigor')) p.hints.push('p_vigor');   // 전투에서 쓰는 두 물약(치유·활력)은 처음부터 만들 수 있어요
   p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look)); p.closet = p.closet || {}; p.rod = p.rod || 0; p.fdex = p.fdex || {}; p.buffs = p.buffs || {}; p.cdex = p.cdex || {}; p.npc = p.npc || {}; p.story = p.story || { seen: {}, got: {} }; p.story.seen = p.story.seen || {}; p.story.got = p.story.got || {};   // rod 낚싯대 단계, fdex 낚시·채집 도감 { id: { n, cm } }   // closet: 옷 가게에서 산 옷 { '부위:부품id': 1 }
   p.plots = (p.plots || []).map(x => {
     if (!x.k || !SEED_INFO[x.k]) return { k: null };
@@ -1965,7 +1966,7 @@ function xMarchView(run, head){
   frame(null, '탐사 · ' + xReg().n, `남은 시간 <span id="xtime">${timeText(xTime(run))}</span>`, `<style>
     #xmcv{display:block;width:100%;aspect-ratio:16/9;image-rendering:pixelated;border:3px solid #0c0818;border-radius:6px;box-shadow:0 0 0 2px #5a4a9a;background:#000;touch-action:manipulation}
     .xmp{display:flex;align-items:center;gap:8px}.xmp .bar{flex:1;height:12px;grid-template-columns:1fr;background:var(--line);border-radius:6px;overflow:hidden;position:relative}.xmp .bar i{display:block;height:100%;background:linear-gradient(#ffb85a,#ff8a2a);border-radius:6px;transition:width .3s linear}
-    .xmf{display:grid;gap:8px;min-height:104px;align-content:center}.xmf2{grid-template-columns:1fr 1fr}.xmf button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:96px;padding:8px;color:#fff;font:inherit;font-weight:800;background:linear-gradient(#3b2f78,#251b52);border:2px solid #0c0818;border-radius:8px;box-shadow:inset 0 0 0 2px #6a5ab0,0 2px 0 #000}.xmf button:active{transform:translateY(1px)}.xmf .big{font-size:30px}.xmf small{font-weight:600;font-size:11px;color:#b9a8ff}
+    .xmf{display:grid;gap:8px;align-content:center}.xmf:empty{display:none}.xmf2{grid-template-columns:1fr 1fr}.xmf button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:84px;padding:8px;color:#fff;font:inherit;font-weight:800;background:linear-gradient(#3b2f78,#251b52);border:2px solid #0c0818;border-radius:8px;box-shadow:inset 0 0 0 2px #6a5ab0,0 2px 0 #000}.xmf button:active{transform:translateY(1px)}.xmf .big{font-size:30px}.xmf small{font-weight:600;font-size:11px;color:#b9a8ff}
     .xmf .hz{min-height:96px;font-size:22px;background:linear-gradient(#ff9a3a,#e0661a);box-shadow:inset 0 0 0 2px #ffd08a,0 2px 0 #000;animation:xhz .5s infinite alternate}@keyframes xhz{to{transform:scale(1.03)}}
     .xmw{display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:13px;min-height:96px}
     .xhud{display:flex;flex-direction:column;gap:8px}.xstat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
@@ -1992,7 +1993,7 @@ function xMUi(){   // 갈림길 · 돌발 상황 버튼
   if (key === M.uik) return; M.uik = key;
   if (M.st === 'fork'){ el.className = 'xmf xmf2'; const cv = xcoVoteView(M); el.innerHTML = M.fork.opts.map((k, i) => `<button data-xf="${i}" ${M.fork.my === i ? 'style="box-shadow:inset 0 0 0 3px #ffd866,0 2px 0 #000"' : ''}><span class="big">${XM_FORK[k][0]}</span>${XM_FORK[k][1]}<small>${XM_FORK[k][2]}</small>${xEx().run.co ? `<small style="color:#ffd866">${cv[i]}표${M.fork.my === i ? ' · 내 선택' : ''}</small>` : ''}</button>`).join(''); el.querySelectorAll('[data-xf]').forEach(b => b.onclick = () => xMPick(+b.dataset.xf)); }
   else if (M.st === 'haz' && !M.haz.done){ el.className = 'xmf'; el.innerHTML = `<button class="hz" id="xhz">${M.haz.ty.b}</button>`; $('#xhz').onpointerdown = e => { e.preventDefault(); if (M.haz && !M.haz.done){ M.haz.done = true; M.haz.ok = true; M.haz.t1 = performance.now(); M.uik = ''; if (xEx().run?.co && !xcoHost()) xcoSend({ hz: { hid: M.haz.hid } }); } }; }
-  else { el.className = 'xmf'; el.innerHTML = '<div class="xmw"></div>'; }
+  else { el.className = 'xmf'; el.innerHTML = ''; }
 }
 const XM_VOTE = 30000;   // 갈림길: 30초 동안 의견을 받아요 (혼자일 땐 바로)
 function xMPick(i){
@@ -2238,7 +2239,8 @@ function xcoHostInputs(){
   if (B && !B.over && !B.mirror && B.turn && B.turn.uid && B.turn.uid !== myId()){ const c = xcoIn[B.turn.uid] && xcoIn[B.turn.uid].cmd; if (c && c.tn === B.tn && c.bn === B.bn) xcoApplyCmd(B, B.turn, c); }
 }
 function xcoApplyCmd(B, u, c){
-  B.pick = null; B.turn = null; if (c.a === 'def'){ B.def[u.id] = 1; B.log = `🛡️ ${u.name}이(가) 방어 태세`; u.g = 0; return xUp(); }
+  B.pick = null; B.turn = null; if (c.a === 'item'){ xItemUse(B, u, c.k); return xUp(); }
+  if (c.a === 'def'){ B.def[u.id] = 1; B.log = `🛡️ ${u.name}이(가) 방어 태세`; u.g = 0; return xUp(); }
   let sk = c.s >= 0 ? u.sks[c.s] : null; if (sk && Math.ceil(sk.mp) > Math.floor(u.mp)) sk = null; const tgt = c.tg ? [...B.foes, ...B.party].find(x => x.id === c.tg) : null; xAct(u, sk, tgt); xUp();
 }
 // ----- 전투 장면(bt) 올리기·받기 -----
@@ -2597,7 +2599,7 @@ function xRenderBattle(){
     .xs2{min-width:0;display:flex;flex-direction:column;line-height:1.15}.xs2 b{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.xj{font-size:10px;color:#b9a8ff}
     .xbr{position:relative;height:11px;background:#120c26;border:1px solid #0c0818;border-radius:3px;overflow:hidden}.xbr i{display:block;height:100%;width:100%;transition:width .12s}.xbr.hp i{background:linear-gradient(#8af09a,#3fb858)}.xbr.mp i{background:linear-gradient(#8ac4ff,#3a78d8)}.xbr.gg{height:5px}.xbr.gg i{background:linear-gradient(#ffe88a,#f0a820)}
     .xbr em{position:absolute;inset:0;font-style:normal;font-size:9px;font-weight:800;text-align:center;line-height:10px;color:#fff;text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000}
-    .xcmd{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:34vh;overflow:auto}.xwait{grid-column:1/-1;text-align:center;color:var(--sub);padding:12px 0;font-size:13px}
+    .xcmd{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:34vh;overflow:auto}.xcmd.xm4{grid-template-columns:repeat(4,1fr)}.xcmd.xm4 .xb{padding:6px 2px;font-size:13px}.xwait{grid-column:1/-1;text-align:center;color:var(--sub);padding:12px 0;font-size:13px}
     .xb{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:6px 8px;color:#fff;font:inherit;font-weight:800;font-size:14px;background:linear-gradient(#3b2f78,#251b52);border:2px solid #0c0818;border-radius:6px;box-shadow:inset 0 0 0 2px #6a5ab0,0 2px 0 #000;text-shadow:0 1px 0 #000}.xb:active{transform:translateY(1px)}.xb.atk{background:linear-gradient(#2a6ab8,#1a3f80);box-shadow:inset 0 0 0 2px #4fd8ff,0 2px 0 #000}
     .xb:disabled{opacity:.4}.xb.sk{grid-column:span 1;font-size:12px;justify-content:flex-start}.xb .sic{width:26px;height:26px;flex:none}.xb small{display:block;font-size:10px;font-weight:600;color:#9fd0ff}.xskh{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;font-weight:800;color:#ffd866}.xsk2{grid-template-columns:repeat(2,1fr)}
   </style>
@@ -2611,17 +2613,20 @@ function xcoCmdSend(B, u, c){ c.tn = B.tn; c.bn = B.bn; xcoSend({ cmd: c }); B.t
 function xCmd(){
   const B = xb, u = xMine(B), el = $('#xcmd'); if (!el) return;
   const wait = B.over ? '' : u.hp <= 0 ? '쓰러졌어요… 동료가 싸워요' : B.turn !== u ? '차례를 기다려요…' : null;
-  const key = wait !== null ? 'w' + wait : B.pick ? 'pick' : B.menu + ':' + u.sks.map(s => Math.ceil(s.mp) <= Math.floor(u.mp) ? 1 : 0).join('');
-  if (el.dataset.k === key) return; el.dataset.k = key; el.classList.toggle('xsk2', key.startsWith('skills'));
+  const key = wait !== null ? 'w' + wait : B.pick ? 'pick' : B.menu + ':' + u.sks.map(s => Math.ceil(s.mp) <= Math.floor(u.mp) ? 1 : 0).join('') + X_ITEMS.map(x => me.inv[x[0]] || 0).join();
+  if (el.dataset.k === key) return; el.dataset.k = key; el.classList.toggle('xsk2', key.startsWith('skills')); el.classList.toggle('xm4', key.startsWith('main'));
   if (wait !== null){ el.innerHTML = `<div class="xwait">${wait}</div>`; return; }
   if (B.pick) el.innerHTML = '<div class="xskh" style="grid-column:1/-1">화면에서 대상을 눌러요</div><button class="xb" data-xc="cancel" style="grid-column:1/-1">취소</button>';
   else if (B.menu === 'skills') el.innerHTML = `<div class="xskh"><span>✦ 스킬</span><button class="xb" data-xc="m_back" style="min-height:32px;padding:2px 12px">뒤로</button></div>${u.sks.map((s, i) => `<button class="xb sk" data-xc="s${i}" ${Math.ceil(s.mp) > Math.floor(u.mp) ? 'disabled' : ''}>${xIc(s)}<span>${s.n}<small>${s.mp ? 'MP ' + s.mp : '무료'}</small></span></button>`).join('') || '<div class="xwait">배운 스킬이 없어요</div>'}`;
-  else el.innerHTML = `<button class="xb atk" data-xc="atk">⚔ 공격</button><button class="xb" data-xc="m_skills" ${u.sks.length ? '' : 'disabled'}>✦ 스킬</button><button class="xb" data-xc="def">🛡 방어</button>`;
+  else if (B.menu === 'items') el.innerHTML = X_ITEMS.map(x => `<button class="xb" data-xc="i_${x[0]}" ${(me.inv[x[0]] || 0) > 0 ? '' : 'disabled'}><span>${x[2]} ${x[3]}<small>${ITEM[x[0]]} ×${me.inv[x[0]] || 0}</small></span></button>`).join('') + '<button class="xb" data-xc="m_back">뒤로</button>';
+  else el.innerHTML = `<button class="xb atk" data-xc="atk">⚔ 공격</button><button class="xb" data-xc="m_skills" ${u.sks.length ? '' : 'disabled'}>✦ 스킬</button><button class="xb" data-xc="m_items">🧪 아이템</button><button class="xb" data-xc="def">🛡 방어</button>`;
   el.querySelectorAll('[data-xc]').forEach(b => b.onclick = () => xChoose(b.dataset.xc));
 }
 function xChoose(k){
   const B = xb, u = xMine(B); if (B.turn !== u) return;
   if (k === 'm_skills'){ B.menu = 'skills'; return xCmd(); } if (k === 'm_back'){ B.menu = 'main'; return xCmd(); }
+  if (k === 'm_items'){ B.menu = 'items'; return xCmd(); }
+  if (k.startsWith('i_')){ const id = k.slice(2); if (!(me.inv[id] > 0)) return; me.inv[id]--; save(); B.menu = 'main'; if (B.mirror) return xcoCmdSend(B, u, { a: 'item', k: id }); xItemUse(B, u, id); B.turn = null; return xUp(); }
   if (k === 'cancel'){ B.pick?.unpick?.(); B.pick = null; return xCmd(); }
   if (k === 'def'){ if (B.mirror) return xcoCmdSend(B, u, { a: 'def' }); B.def[u.id] = 1; B.log = `🛡️ ${u.name}이(가) 방어 태세`; u.g = 0; B.turn = null; return xUp(); }
   const sk = k === 'atk' ? null : u.sks[+k.slice(1)];
@@ -2635,6 +2640,11 @@ function xUp(){   // 글·상태 갱신 (그림은 xDraw가 알아서 그려요)
   xStatUpdate(B); const lg = $('#xlog'); if (lg && lg.textContent !== B.log) lg.textContent = B.log; xCmd();
 }
 const XPETI = ['불 정령', '물 정령', '바람 정령', '대지 정령', '정령왕', '늑대', '곰', '날개 도마뱀', '호박 토끼', '용', '번개 쥐', '수호 쥐', '광선 도마뱀', '철갑 멧돼지'];   // art/pets.png 칸 순서 (tools/iso/lpc/pet_lpc.py)
+const X_ITEMS = [['p_red', 'hp', '🧪', '체력 회복'], ['p_vigor', 'mp', '💧', '마력 회복']];   // 전투 중 쓰는 물약 (한 턴을 써요) · 둘 다 물약 교실에서 만들어요
+function xItemUse(B, u, k){   // 효과만 적용 (개수는 쓰는 사람 기기에서 줄여요)
+  const it = X_ITEMS.find(x => x[0] === k); if (!it) return; const hp = it[1] === 'hp', mx = hp ? u.mhp : u.mmp, was = hp ? u.hp : u.mp, now = Math.min(mx, was + Math.round(mx * .5));
+  if (hp) u.hp = now; else u.mp = now; B.log = `${it[2]} ${u.name}이(가) ${ITEM[k]}을(를) 마셨어요`; xFloat(u.id, `+${Math.round(now - was)}`, hp ? '#8af09a' : '#8ac4ff'); sfx('win'); u.g = 0;
+}
 const XSTI = ['slow','weak','vuln','blind','dot','bomb','atk','spd','dmgIn','taunt','cover','counter','dodge','regen','shield','survive'];
 let xStImg = null; function xStSheet(){ if (!xStImg){ xStImg = new Image(); xStImg.src = 'art/status.png?v=2'; } return xStImg; }
 let xPetImg = null; function xPetSheet(){ if (!xPetImg){ xPetImg = new Image(); xPetImg.src = 'art/pets.png?v=6'; } return xPetImg; }
