@@ -19,8 +19,8 @@ POCKETS = {'hazel'}
 HOLES = {'frankie': [(.324, .576), (.675, .576)]}
 # 한 표정만 확대돼서 뽑혔을 때: 그 표정을 (배율, 왼쪽, 위)로 줄여 옮기고, 모든 표정을 같이 잘라요 (왼, 위, 오른, 아래)
 FIT = {'boo': {'happy': (.83, 59, 71)}}
-WHITE_MIN = {'mirabel': 253, 'nabi': 250}   # 붕대가 흰색에 가까워서, 배경(순백)만 지워지게 문턱을 높여요
-CROP = {'boo': (66, 0, 798, 1062), 'mirabel': (41, 0, 837, 1090), 'nabi': (30, 60, 830, 860)}
+WHITE_MIN = {'mirabel': 253, 'nabi': 250, 'batri': 250}   # 붕대가 흰색에 가까워서, 배경(순백)만 지워지게 문턱을 높여요
+CROP = {'boo': (66, 0, 798, 1062), 'mirabel': (41, 0, 837, 1090), 'nabi': (30, 60, 830, 860), 'batri': (30, 70, 870, 1110)}
 def fit(a, t):
     s, dx, dy = t; H, W = a.shape[:2]
     im = Image.fromarray(a).resize((round(W * s), round(H * s)), Image.NEAREST)
