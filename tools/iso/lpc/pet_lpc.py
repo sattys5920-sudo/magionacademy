@@ -11,8 +11,8 @@ ROOT = os.path.join(HERE, '..', '..', '..')
 CH = 'body/bodies/child'
 FUR = {'fur_copper': (232, 120, 46), 'blue': (120, 170, 240), 'fur_white': (240, 244, 250), 'fur_brown': (138, 106, 72), 'fur_grey': (140, 146, 160), 'fur_tan': (184, 152, 104), 'bright_green': (100, 200, 100), 'fur_black': (66, 62, 72)}   # 털 색 (몸 전체를 이 색으로)
 def animal(head, fur, glow, tail=None, tcol='gray', extra=(), alpha=.88, hair=None):
-    L = [(10, CH, None, ('TINT', FUR[fur])), (100, 'head/heads/' + head, None, None)] + list(extra)
-    if tail: L += [(5, tail + '/bg', tcol, None), (125, tail + '/fg', tcol, None)]
+    L = [(10, CH, None, ('TINT', FUR[fur])), (100, 'head/heads/' + head, None, ('TINT', FUR[fur]))] + list(extra)
+    if tail: L += [(5, tail + '/bg', tcol, ('TINT', FUR[fur])), (125, tail + '/fg', tcol, ('TINT', FUR[fur]))]
     return (L, glow, alpha)
 WOLF, CAT, FLUF, LIZ = 'body/tail/wolf/child', 'body/tail/cat/child', 'body/tail/fluffy/child', 'body/tail/lizard/child'
 PETS = [
@@ -22,12 +22,12 @@ PETS = [
  ('곰', animal('minotaur/child', 'fur_brown', (170, 115, 70), CAT, 'dark_brown')),
  ('독수리', animal('lizard/child', 'fur_tan', (240, 232, 190), None, extra=[(5, 'body/wings/feathered/adult/bg', 'brown', None), (105.5, 'body/wings/feathered/adult/fg', 'brown', None)])),
  ('호박 유령', animal('rabbit/child', 'fur_copper', (255, 150, 40), FLUF, 'orange', alpha=.6)),
- ('용', animal('lizard/child', 'blue', (255, 80, 60), None, extra=[(5, 'body/wings/lizard/adult', None, None), (5.5, LIZ + '/bg', None, None), (125, LIZ + '/fg', None, None)])),
+ ('용', animal('lizard/child', 'blue', (255, 80, 60), None, extra=[(5, 'body/wings/lizard/adult', None, None), (5.5, LIZ + '/bg', None, ('TINT', FUR['blue'])), (125, LIZ + '/fg', None, ('TINT', FUR['blue']))])),
  ('번개 쥐', animal('mouse/child', 'fur_grey', (90, 230, 255), CAT, 'gray')), ('수호 쥐', animal('rat/child', 'fur_black', (120, 255, 150), CAT, 'black')),
- ('광선 도마뱀', animal('lizard/child', 'bright_green', (255, 100, 170), None, extra=[(5.5, LIZ + '/bg', None, None), (125, LIZ + '/fg', None, None)])), ('철갑 멧돼지', animal('boarman/child', 'fur_grey', (170, 190, 210), CAT, 'gray')),
+ ('광선 도마뱀', animal('lizard/child', 'bright_green', (255, 100, 170), None, extra=[(5.5, LIZ + '/bg', None, ('TINT', FUR['bright_green'])), (125, LIZ + '/fg', None, ('TINT', FUR['bright_green']))])), ('철갑 멧돼지', animal('boarman/child', 'fur_grey', (170, 190, 210), CAT, 'gray')),
 ]
 def tint(a, rgb):   # 몸 그림의 밝기는 살리고 색을 털 색으로
-    o = a.copy(); lum = (a[..., 0] * .299 + a[..., 1] * .587 + a[..., 2] * .114); k = np.clip(.62 + (lum - 150) / 120, .45, 1.25)[..., None]
+    o = a.copy(); lum = (a[..., 0] * .299 + a[..., 1] * .587 + a[..., 2] * .114); mean = lum[a[..., 3] > 0].mean() if (a[..., 3] > 0).any() else 150; k = np.clip(.95 + (lum - mean) / 110, .5, 1.3)[..., None]   # 이 조각 자신의 평균 밝기 기준 (머리·몸 색조가 같아져요)
     o[..., :3] = np.clip(np.array(rgb)[None, None, :] * k, 0, 255).astype(np.uint8); return o
 def layer(f, rc):
     a = frame(f); return tint(a, rc[1]) if rc and rc[0] == 'TINT' else recolor(a, rc)
