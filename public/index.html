@@ -813,7 +813,7 @@ const POTION_LIST = [
   { id:'p_fluff', name:'포근 물약', r:["wool", "wool", "drop"], pay:90, col:'#FFB8D2', use:"사육장 생물 모두 애정 +1" },
   { id:'p_purple', name:'반짝 물약', r:["herb", "drop", "uhair"], pay:280, col:'#B47AFF', desc:"반 공동 의뢰에 쓰여요" },
   { id:'p_dragon', name:'용기의 물약', r:["egg", "scale", "mana"], pay:320, col:'#C8323C', desc:"드래곤이 두고 간 알 껍질로만 만들 수 있어요" },
-  { id:'p_dawn', name:'새벽빛 물약', r:["drop", "drop", "herb"], pay:160, col:'#FFEFA0', time:"dew", desc:"새벽에만 맑게 끓어요" },
+  { id:'p_dawn', name:'새벽빛 물약', r:["drop", "drop", "herb"], pay:160, col:'#FFEFA0', time:"dew", desc:"새벽에만 맑게 끓어요", use:"전투 중 마시면 체력·마력 70% 회복" },
   { id:'p_sun', name:'한낮의 물약', r:["scale", "scale", "herb"], pay:160, col:'#FFC81E', time:"ember", desc:"한낮의 열기로 끓여요" },
   { id:'p_dusk', name:'노을 물약', r:["uhair", "uhair", "wool"], pay:180, col:'#FF7A5C', time:"dusk", desc:"해 질 녘에만 색이 바뀌어요" },
   { id:'p_moon', name:'달그림자 물약', r:["mana", "mana", "drop"], pay:180, col:'#5548B8', time:"moon", desc:"달이 뜬 밤에만 굳어요" },
@@ -2242,7 +2242,7 @@ function xcoHostInputs(){
   if (B && !B.over && !B.mirror && B.turn && B.turn.uid && B.turn.uid !== myId()){ const c = xcoIn[B.turn.uid] && xcoIn[B.turn.uid].cmd; if (c && c.tn === B.tn && c.bn === B.bn) xcoApplyCmd(B, B.turn, c); }
 }
 function xcoApplyCmd(B, u, c){
-  B.pick = null; B.turn = null; if (c.a === 'item'){ xItemUse(B, u, c.k); return xUp(); }
+  B.pick = null; B.turn = null; if (c.a === 'item'){ const t = c.tg ? B.party.find(x => x.id === c.tg && x.hp > 0) : null; xItemUse(B, u, c.k, t || u); return xUp(); }
   if (c.a === 'def'){ B.def[u.id] = 1; B.log = `🛡️ ${u.name}이(가) 방어 태세`; u.g = 0; return xUp(); }
   let sk = c.s >= 0 ? u.sks[c.s] : null; if (sk && Math.ceil(sk.mp) > Math.floor(u.mp)) sk = null; const tgt = c.tg ? [...B.foes, ...B.party].find(x => x.id === c.tg) : null; xAct(u, sk, tgt); xUp();
 }
@@ -2619,7 +2619,7 @@ function xCmd(){
   const B = xb, u = xMine(B), el = $('#xcmd'); if (!el) return;
   const wait = B.over ? '' : u.hp <= 0 ? '쓰러졌어요… 동료가 싸워요' : B.turn !== u ? '차례를 기다려요…' : null;
   const key = wait !== null ? 'w' + wait : B.pick ? 'pick' : B.menu + ':' + u.sks.map(s => Math.ceil(s.mp) <= Math.floor(u.mp) ? 1 : 0).join('') + X_ITEMS.map(x => me.inv[x[0]] || 0).join();
-  if (el.dataset.k === key) return; el.dataset.k = key; el.classList.toggle('xsk2', key.startsWith('skills')); el.classList.toggle('xm4', key.startsWith('main'));
+  if (el.dataset.k === key) return; el.dataset.k = key; el.classList.toggle('xsk2', key.startsWith('skills')); el.classList.toggle('xm4', key.startsWith('main') || key.startsWith('items'));
   if (wait !== null){ el.innerHTML = `<div class="xwait">${wait}</div>`; return; }
   if (B.pick) el.innerHTML = '<div class="xskh" style="grid-column:1/-1">화면에서 대상을 눌러요</div><button class="xb" data-xc="cancel" style="grid-column:1/-1">취소</button>';
   else if (B.menu === 'skills') el.innerHTML = `<div class="xskh"><span>✦ 스킬</span><button class="xb" data-xc="m_back" style="min-height:32px;padding:2px 12px">뒤로</button></div>${u.sks.map((s, i) => `<button class="xb sk" data-xc="s${i}" ${Math.ceil(s.mp) > Math.floor(u.mp) ? 'disabled' : ''}>${xIc(s)}<span>${s.n}<small>${s.mp ? 'MP ' + s.mp : '무료'}</small></span></button>`).join('') || '<div class="xwait">배운 스킬이 없어요</div>'}`;
@@ -2631,7 +2631,9 @@ function xChoose(k){
   const B = xb, u = xMine(B); if (B.turn !== u) return;
   if (k === 'm_skills'){ B.menu = 'skills'; return xCmd(); } if (k === 'm_back'){ B.menu = 'main'; return xCmd(); }
   if (k === 'm_items'){ B.menu = 'items'; return xCmd(); }
-  if (k.startsWith('i_')){ const id = k.slice(2); if (!(me.inv[id] > 0)) return; me.inv[id]--; save(); B.menu = 'main'; if (B.mirror) return xcoCmdSend(B, u, { a: 'item', k: id }); xItemUse(B, u, id); B.turn = null; return xUp(); }
+  if (k.startsWith('i_')){ const id = k.slice(2); if (!(me.inv[id] > 0)) return;
+    const go = t => { if (!(me.inv[id] > 0)) return; me.inv[id]--; save(); B.pick = null; B.menu = 'main'; if (B.mirror) return xcoCmdSend(B, u, { a: 'item', k: id, tg: t.id }); xItemUse(B, u, id, t); B.turn = null; xUp(); };
+    const al = xAlive(B.party); if (al.length <= 1) return go(u); B.pick = { sk: null, go, set: new Set(al.map(a => a.id)) }; return xCmd(); }
   if (k === 'cancel'){ B.pick?.unpick?.(); B.pick = null; return xCmd(); }
   if (k === 'def'){ if (B.mirror) return xcoCmdSend(B, u, { a: 'def' }); B.def[u.id] = 1; B.log = `🛡️ ${u.name}이(가) 방어 태세`; u.g = 0; B.turn = null; return xUp(); }
   const sk = k === 'atk' ? null : u.sks[+k.slice(1)];
@@ -2645,10 +2647,11 @@ function xUp(){   // 글·상태 갱신 (그림은 xDraw가 알아서 그려요)
   xStatUpdate(B); const lg = $('#xlog'); if (lg && lg.textContent !== B.log) lg.textContent = B.log; xCmd();
 }
 const XPETI = ['불 정령', '물 정령', '바람 정령', '대지 정령', '정령왕', '늑대', '곰', '날개 도마뱀', '호박 토끼', '용', '번개 쥐', '수호 쥐', '광선 도마뱀', '철갑 멧돼지'];   // art/pets.png 칸 순서 (tools/iso/lpc/pet_lpc.py)
-const X_ITEMS = [['p_red', 'hp', '🧪', '체력 회복'], ['p_vigor', 'mp', '💧', '마력 회복']];   // 전투 중 쓰는 물약 (한 턴을 써요) · 둘 다 물약 교실에서 만들어요
-function xItemUse(B, u, k){   // 효과만 적용 (개수는 쓰는 사람 기기에서 줄여요)
-  const it = X_ITEMS.find(x => x[0] === k); if (!it) return; const hp = it[1] === 'hp', mx = hp ? u.mhp : u.mmp, was = hp ? u.hp : u.mp, now = Math.min(mx, was + Math.round(mx * .5));
-  if (hp) u.hp = now; else u.mp = now; B.log = `${it[2]} ${u.name}이(가) ${ITEM[k]}을(를) 마셨어요`; xFloat(u.id, `+${Math.round(now - was)}`, hp ? '#8af09a' : '#8ac4ff'); sfx('win'); u.g = 0;
+const X_ITEMS = [['p_red', 'hp', '🧪', '체력 50%', .5], ['p_vigor', 'mp', '💧', '마력 50%', .5], ['p_dawn', 'both', '✨', '체력·마력 70%', .7]];   // 전투 중 쓰는 물약 (한 턴을 써요 · 아군을 골라 줄 수 있어요) · 모두 물약 교실에서 만들어요 (새벽빛 물약은 새벽에만)
+function xItemUse(B, u, k, t){   // 효과만 적용 (개수는 쓰는 사람 기기에서 줄여요) · t: 받는 아군 (없으면 나)
+  const it = X_ITEMS.find(x => x[0] === k); if (!it) return; t = t || u; const g = (kind, mx, was, set) => { const now = Math.min(mx, was + Math.round(mx * it[4])); set(now); return Math.round(now - was); };
+  const dh = it[1] !== 'mp' ? g('hp', t.mhp, t.hp, v => { t.hp = v; }) : 0, dm = it[1] !== 'hp' ? g('mp', t.mmp, t.mp, v => { t.mp = v; }) : 0;
+  B.log = `${it[2]} ${u.name}이(가) ${t === u ? '' : t.name + '에게 '}${ITEM[k]}을(를) ${t === u ? '마셨어요' : '먹여 줬어요'}`; if (dh) xFloat(t.id, `+${dh}`, '#8af09a'); if (dm) xFloat(t.id, `+${dm}`, '#8ac4ff'); sfx('win'); u.g = 0;
 }
 const XSTI = ['slow','weak','vuln','blind','dot','bomb','atk','spd','dmgIn','taunt','cover','counter','dodge','regen','shield','survive'];
 let xStImg = null; function xStSheet(){ if (!xStImg){ xStImg = new Image(); xStImg.src = 'art/status.png?v=2'; } return xStImg; }
