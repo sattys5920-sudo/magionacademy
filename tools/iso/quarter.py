@@ -122,16 +122,16 @@ def log_cabin(x0, y0, x1, y1, h=28):
 # 뱀파이어 저택 (큰길 A 북쪽, 문 (12,13))
 unique('manor', [6, 4, 20, 13], combo(building(6, 4, 20, 13, 70, hexc('#3E3446'), hexc('#1E1824'), hexc('#2A1E30'), 40, lambda s, l: [(u, v, 8, 18) for u in range(10, int(l) - 8, 14) for v in (12, 42) if not (s == 'L' and abs(u - 44) < 10)], doors=[('L', 48, 14)]),
        turret(6.4, 12.6, 100, '#3E3446', '#2A1E30', '#FF5A4A'), turret(19.6, 4.4, 100, '#3E3446', '#2A1E30', '#FF5A4A')),
-       door=dict(tile=[12, 13], to='vamp_manor', spawn=[11, 14], label='뱀파이어 저택', lock='main_01_dracula'))
+       door=dict(tile=[12, 13], to='vamp_manor', spawn=[18, 24], label='뱀파이어 저택', lock='main_01_dracula'))
 # 학교 박물관 (문 (31,13))
 unique('museum', [26, 6, 38, 13], combo(building(26, 6, 38, 13, 46, hexc('#B8A276'), hexc('#D8C494'), hexc('#8A7448'), 14, wins_g(16, ((18, 14),)), doors=[('L', 40, 14)]), columns(26, 6, 38, 13, 46, '#E0CFA0')),
-       door=dict(tile=[31, 13], to='museum', spawn=[11, 14], label='학교 박물관', lock='main_05_mummy'))
+       door=dict(tile=[31, 13], to='museum', spawn=[15, 20], label='학교 박물관', lock='main_05_mummy'))
 # 번개 탑 (낡은 연구 탑, 문 (45,13))
 unique('labtower', [42, 5, 48, 13], combo(building(42, 5, 48, 13, 84, hexc('#585868'), hexc('#34344A'), hexc('#2E3E44'), 20, wins_g(14, ((14, 14), (42, 14), (66, 10))), doors=[('L', 20, 12)]), rod(42, 5, 48, 13, 84 + 20)),
-       door=dict(tile=[44, 13], to='lab_tower', spawn=[11, 14], label='낡은 연구 탑', lock='main_06_frankenstein'))
+       door=dict(tile=[44, 13], to='lab_tower', spawn=[14, 18], label='낡은 연구 탑', lock='main_06_frankenstein'))
 # 마녀 오두막 (큰길 B 북쪽, 문 (9,29)) · 늑대인간 통나무집 (문 (28,29))
-unique('witchhut', [8, 25, 12, 29], witch_hut(10, 26.5), door=dict(tile=[9, 29], to='witch_hut', spawn=[11, 14], label='마녀의 오두막', lock='main_03_witch'))
-unique('cabin', [26, 24, 32, 29], log_cabin(26, 24, 32, 29), door=dict(tile=[28, 29], to='wolf_cabin', spawn=[11, 14], label='늑대인간 통나무집', lock='main_04_werewolf'))
+unique('witchhut', [8, 25, 12, 29], witch_hut(10, 26.5), door=dict(tile=[9, 29], to='witch_hut', spawn=[13, 16], label='마녀의 오두막', lock='main_03_witch'))
+unique('cabin', [26, 24, 32, 29], log_cabin(26, 24, 32, 29), door=dict(tile=[28, 29], to='wolf_cabin', spawn=[13, 16], label='늑대인간 통나무집', lock='main_04_werewolf'))
 # 일곱 등불 광장 가운데 기둥, 비어 있는 등불대, 바깥 솥
 def sevenpost(img, x, y):
     d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)

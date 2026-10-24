@@ -5969,7 +5969,7 @@ function renderAvatar(){
 let shopTry = null, shopKind = 'cas', shopMsg = '';
 const SHOP_CATS = [['top', '상의'], ['legs', '하의'], ['feet', '신발'], ['hat', '모자'], ['acc', '액세서리'], ['neck', '목걸이'], ['cape', '망토']];
 // 그림자 골목 의뢰인 집: 그 사람의 의뢰가 3단계에 닿았거나 끝난 뒤에 들어갈 수 있어요. 안에서 의뢰인을 만나요 (tools/iso/quarter_rooms.py)
-const QHOME = { main_01_dracula: ['blady', 'vamp_manor', 11, 11], main_05_mummy: ['nefer', 'museum', 12, 9], main_06_frankenstein: ['piece', 'lab_tower', 8, 9], main_03_witch: ['beatrix', 'witch_hut', 12, 9], main_04_werewolf: ['ur', 'wolf_cabin', 9, 10] };
+const QHOME = { main_01_dracula: ['blady', 'vamp_manor', 18, 9], main_05_mummy: ['nefer', 'museum', 18, 12], main_06_frankenstein: ['piece', 'lab_tower', 17, 11], main_03_witch: ['beatrix', 'witch_hut', 16, 10], main_04_werewolf: ['ur', 'wolf_cabin', 16, 10] };
 const qUnlocked = qid => { const s = typeof mqState === 'function' ? mqState() : null; return !!s && (!!s.done[qid] || (s.q === qid && s.st >= 3)); };
 World.canEnter = qid => { if (qUnlocked(qid)) return true; const h = QHOME[qid], nm = h && typeof mqName === 'function' ? mqName(h[0]) : '주인'; return `문이 닫혀 있어요 · ${nm}의 의뢰를 더 진행하면 열려요`; };
 World.onExplore = (ri, door) => { if (!me) return; xRgSel = ri; xv = null; toast(`${door?.label || XRG[ri].n} · ${XRG[ri].tier}`); openSheet('home', 'explore'); };   // 마을 가장자리 길 끝 기둥 문 (tools/iso/halloween.py EXPL)
