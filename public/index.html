@@ -2188,7 +2188,7 @@ setInterval(() => {   // 하트비트 · 방장 이어받기 · 방장의 시간
   }
 }, 2000);
 function xcoTakeover(){   // 방장을 이어받았어요: 올라와 있던 진행 상태에서 이어서 해요 (전투 중이었다면 같은 곳에서 새 전투)
-  toast('방장이 바뀌었어요. 내가 이어받아요'); const run = xEx().run; if (!run) return; const rs = xcoRs; xcoHp = {}; if (rs && rs.hp) Object.entries(rs.hp).forEach(([u, a]) => { xcoHp[u] = a.slice(); });
+  toast('방장이 바뀌었어요. 내가 이어받아요'); const run = xEx().run; if (!run) return; const rs = xcoRs; xcoRsN = Math.max(xcoRsN, xcoRsSeen, rs && rs.n || 0) + 5; xcoHp = {};   // (순번이 이어져야 팀원이 새 방장의 소식을 받아요) if (rs && rs.hp) Object.entries(rs.hp).forEach(([u, a]) => { xcoHp[u] = a.slice(); });
   const battle = !!xb; xb = null; clearInterval(xTick); xM = xMNew(run); xM.wt = 0; if (rs) run.prog = rs.prog || run.prog;
   xv = { view: 'march' }; if (battle){ xM.st = 'busy'; xcoRs = null; xStartBattle('battle', '이어받은 전투'); } else { xcoPub({ st: 'walk' }); renderExplore(); }
 }
@@ -2292,7 +2292,7 @@ function xStartBattle(kind, msg){
   const foes = kind === 'boss' ? [mk(R.boss, 0, 1 + .7 * (sz - 1))] : kind === 'elite' ? [mk(R.elite, 0, 1 + .5 * (sz - 1)), ...Array.from({ length: Math.min(4, sz - 1) }, (_, i) => mk(xRand(pool), i + 1))]
     : Array.from({ length: Math.min(6, sz + (sz >= 2 && d > .3 && Math.random() < .3 ? 1 : 0)) }, (_, i) => mk(i === 0 && run.nextMon ? run.nextMon : xRand(pool), i)); run.nextMon = null;
   xb = { party, foes, kind, log: msg || '', turn: null, pick: null, over: false, last: performance.now(), buff: run.buff > 0, def: {}, fxs: [], floats: [], proj: [], n0: sz }; if (run.buff > 0) run.buff--; xv = { view: 'battle' };
-  if (xcoHost()){ xb.bn = ++xcoBn; xb.tn = 0; xcoEv = []; xcoEvN = 0; xcoPub({ st: 'battle' }); xcoPubBt(true); }
+  if (xcoHost()){ xb.bn = Math.round(now2()) * 10 + (++xcoBn % 10); xb.tn = 0; xcoEv = []; xcoEvN = 0; xcoPub({ st: 'battle' }); xcoPubBt(true); }
   renderExplore();
 }
 function xAlive(a){ return a.filter(u => u.hp > 0); }
