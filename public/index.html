@@ -383,7 +383,8 @@ body:not(.inworld) #talk{display:none}
 .btn.sm{min-height:44px;font-size:var(--fs-s);padding:0 12px}
 .btn.ghost{min-height:44px;min-width:64px;border-color:transparent;background:transparent;color:var(--sub);font-family:var(--f-body);font-size:var(--fs-s);padding:0 8px}
 .btn.warn{border-color:var(--warn);color:var(--warn)}
-.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tiles{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.pnl #back:not(.keep){display:none}   /* 위의 ✕와 같은 일을 하는 '닫기'는 숨겨요 */
 .tile{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--panel2);border:1px solid var(--line2);border-radius:12px;text-align:left;min-height:64px;color:var(--text)}
 .tile:active{background:var(--line)}
 .tile .main{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -470,7 +471,7 @@ button.cell:not(:disabled):active{background:var(--line)}
 .pfstage #pfPrev{left:10px}.pfstage #pfNext{right:10px}
 .pfstage .pfview{position:absolute;left:50%;top:10px;transform:translateX(-50%)}
 .pfname{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
-.pftiles{grid-template-columns:repeat(3,1fr)}.pftiles .tile{padding:8px 10px;gap:6px}.pftiles .tile .main{gap:0}
+.pftiles{grid-template-columns:1fr}.pftiles .tile{padding:8px 10px;gap:6px}.pftiles .tile .main{gap:0}
 .pfgrid{grid-template-columns:repeat(5,1fr)}
 .pfgrid .cell.unk .ic{filter:brightness(0) opacity(.35)}
 .pfpager{display:flex;align-items:center;gap:6px}.pfpager .icbtn{font-family:var(--f-pxb);font-size:var(--fs-s)}.pfpager .icbtn:disabled{opacity:.35}.pfgrid{gap:5px}
@@ -655,7 +656,6 @@ button.cell:not(:disabled):active{background:var(--line)}
     <button id="hudMe" class="hudbtn" aria-label="내 정보"><span class="face" id="hudFace"></span><span class="hudname"><b id="hudNick"></b><span class="s" id="hudLv">Lv 1</span></span></button>
     <button id="hudClock" class="hudbtn" aria-label="오늘의 정보"><b id="place">호박달 마녀학교</b><span id="clock"></span></button>
     <div id="wallet"></div>
-    <button id="hudMenu" class="icbtn" aria-label="메뉴"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM8 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM13 3h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM12 4h1v1h-1zM13 4h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM3 8h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM11 8h1v1h-1zM12 8h1v1h-1zM13 8h1v1h-1zM2 11h1v1h-1zM3 11h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1zM12 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM3 12h1v1h-1zM4 12h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM10 12h1v1h-1zM11 12h1v1h-1zM12 12h1v1h-1zM13 12h1v1h-1z"/></svg></button>
   </header>
   <div id="stage">
     <div id="world"><canvas id="cv"></canvas>
@@ -1104,7 +1104,6 @@ function frame(scene, title, subtitle, body, opt = {}){
   app.innerHTML = `<div class="pnl" role="dialog" aria-label="${esc(String(title).replace(/<[^>]+>/g, ''))}">
     <div class="shead">
       <div class="title"><span class="b">${title}</span><span class="s">${subtitle}</span></div>
-      <div class="stats"><div class="stat">${ic('coin')}${me.coin.toLocaleString()}</div><div class="stat">${ic('mana')}${me.mana}</div></div>
       <button class="sx" id="sclose" aria-label="닫기">${ICO.close}</button>
     </div>
     ${opt.overlay ? `<div class="scene">${scene ? `<img src="art/${scene}.png" alt="">` : ''}${opt.overlay}</div>` : ''}
@@ -4000,7 +3999,6 @@ World.onNear = t => {
 };
 $('#hudClock').onclick = () => sheetOn && tab === 'home' && !sub ? closeSheet() : openSheet('home');
 $('#hudMe').onclick = () => sheetOn && sub === 'profile' ? closeSheet() : openSheet('home', 'profile');
-$('#hudMenu').onclick = () => sheetOn && sub === 'menu' ? closeSheet() : openSheet('home', 'menu');
 document.querySelectorAll('#bar [data-nav]').forEach(b => { if (b.dataset.nav === 'map') return;   // 지도는 world.js가 열어요
   b.onclick = () => { const s = b.dataset.nav; if (sheetOn && sub === s) return closeSheet(); openSheet('home', s); }; });
 // 단축키: I 가방 · M 지도 · R 관계 · J 일지 · Esc 닫기·메뉴 (입력창에서는 안 먹어요)
@@ -4185,8 +4183,6 @@ function pfProfileHTML(){
       <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="t b" style="font-size:var(--fs)">경험치</span><span class="s num sub">지식 ${L.cur} / ${L.need}</span></div>
       <div class="pbar"><i style="width:${Math.min(100, L.cur / L.need * 100)}%"></i></div><span class="d">Lv ${L.lv + 1}까지 지식 ${L.need - L.cur} 더 모으면 돼요</span></div></div></div>
     <div class="tiles pftiles">
-      <div class="tile">${ic('coin')}<div class="main"><span class="s sub">골드</span><span class="b num">${me.coin.toLocaleString()}G</span></div></div>
-      <div class="tile">${ic('mana')}<div class="main"><span class="s sub">마력</span><span class="b num">${me.mana}</span></div></div>
       <div class="tile"><div class="main"><span class="s sub">입학한 지</span><span class="b num">${me.day}일째</span></div></div>
     </div>
     <button class="btn go" id="pfDress">👗 꾸미기</button>`;
@@ -4431,7 +4427,7 @@ function renderMenu(){
     <section class="sec">${secH('내 계정')}<div class="box"><div class="li">${face(me, 40)}<div class="main"><span class="t">${esc(me.nick)} ${houseTag(me.house)}</span><span class="d">${esc(id)} · <span class="sv">${SAVE_LABEL[saveState] || SAVE_LABEL['']}</span></span></div><button class="btn sm warn" data-logout="1">로그아웃</button></div></div></section>
     <section class="sec">${secH('바로 가기')}<div class="tiles">
       ${mtile('explore', ICO.star || ICO.heart, '탐사', '몬스터와 싸우고 보물을 찾아요')}${mtile('settings', ICO.gear, '설정', '소리 · 대사 · 글씨 · 화면')}${mtile('help', ICO.journal, '도움말', '화면과 단축키')}
-      ${mtile('chat', ICO.chat, '채팅', '친구에게 말하기')}${mtile('map', ICO.map, '지도', '마을 둘러보기')}
+      ${mtile('chat', ICO.chat, '채팅', '친구에게 말하기')}
       ${mtile('credits', ICO.heart, '크레딧', '그림 만든 사람들')}</div></section>
     <div class="hint">${dayLabel()} · 호박달 마녀학교</div>`);
   on('[data-logout]', async () => {
@@ -4496,7 +4492,6 @@ function renderHome(){
       <button class="tile px" id="goClass">${ic('book')}<span class="main"><span class="b">수업 ${classLeft()} / ${CLASS_MAX}</span><span class="s ${examStarted() ? 'sub' : ''}" style="${examStarted() ? '' : 'color:var(--warn)'}">${!examStarted() ? '쪽지시험 있음!' : `지식 ${me.know || 0}`}</span></span></button>
       <button class="tile px" id="goDorm">${ic('bed')}<span class="main"><span class="b">내 방</span><span class="s sub">${H.name} ${roomNo(me.house, uid || me.nick)}호</span></span></button>
     </div>
-    <button class="tile px" id="goAvatar" style="width:100%"><div class="face" style="width:40px;height:40px;background:#E8DDF8">${World.Avatar.loaded ? headImg(avOf(me), 'width:100%;height:100%;image-rendering:pixelated') : ''}</div><span class="main" style="flex:1"><span class="b">캐릭터 꾸미기</span><span class="s sub">머리·눈·옷·신발·소품을 바꿔요</span></span></button>
     <button class="tile px" id="goFish" style="width:100%">${rodIc(rodLv())}<span class="main"><span class="b">낚시 · 채집</span><span class="s sub">도감 물고기 ${FISH.filter(f => me.fdex?.[f.id]).length}/40 · 채집물 ${FORAGE.filter(f => me.fdex?.[f.id]).length}/50 · 오늘 반짝이 ${16 + (me.fg?.d === todayKey() ? (me.fg.extra || 0) - me.fg.got.length : 0)}곳</span></span></button>
     <button class="tile px" id="goCook" style="width:100%">${ic('d_crucianstew')}<span class="main"><span class="b">요리</span><span class="s sub">과자 교실 솥 · 요리책 ${Object.keys(me.cdex || {}).length}/40</span></span></button>
     <button class="tile px" id="goGames" style="width:100%"><span class="gic">🎪</span><span class="main"><span class="b">같이 놀기</span><span class="s sub">경쟁 3종 · 협동 3종 (2~8명) · 놀이 게시판</span></span></button>
@@ -4517,7 +4512,6 @@ function renderHome(){
   bindEventBanner();
   $('#goClass').onclick = () => goPlace('lab', 'skull', 'home', 'class');
   $('#goDorm').onclick = () => goPlace(myRoomId(), 'bed', 'home', 'dorm');
-  $('#goAvatar').onclick = () => { avDraft = null; openSheet('home', 'avatar'); };
   $('#goFish').onclick = () => { fsTab = 'fish'; fsMsg = ''; openSheet('home', 'fish'); };
   $('#goGames').onclick = () => openSheet('home', 'games');
   $('#goCook').onclick = () => { ckPot = null; ckTab = 'book'; ckMsg = ''; openSheet('home', 'cook'); };
@@ -5589,7 +5583,7 @@ function renderExamResult(){
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">${HOUSE_KEYS.map(k => { const a = avg(k); return `<div style="background:var(--panel2);border-top:3px solid ${HOUSES[k].col};padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:2px"><span class="s" style="color:${HOUSES[k].col}">${HOUSES[k].name}</span><span class="s" style="color:var(--gold2);letter-spacing:-1px">${a === null ? '·' : '★'.repeat(Math.max(1, Math.round(a / 20)))}</span><span class="b">${a === null ? '-' : a + '점'}</span></div>`; }).join('')}</div>
       <div class="hint">새 시험은 다음 주에 열려요 · 60점부터 장학금, 80점부터 귀한 재료, 100점이면 용 알 껍질</div>
     </section>
-    <button class="btn ghost" id="back" style="align-self:center">닫기</button>`);
+    <button class="btn ghost keep" id="back" style="align-self:center">닫기</button>`);
   $('#back').onclick = () => { examOff?.(); examOff = null; closeSheet(); };
 }
 
@@ -5673,7 +5667,7 @@ function renderEvent(){
       <div class="hint">${ev.E.blurb}</div>
       <div id="evBody" class="sec"></div>
     </section>
-    <button class="btn ghost" id="back" style="align-self:center">닫기</button>`, { overlay });
+    <button class="btn ghost keep" id="back" style="align-self:center">닫기</button>`, { overlay });
   $('#back').onclick = leaveEvent;
   paintEvent();
   clearInterval(evTimer); evTimer = setInterval(() => { if (sub !== 'event') return stopEvent(); tickEvent(); }, 250);
@@ -5687,7 +5681,7 @@ function tickEvent(){
 function paintEvent(){
   const ev = eventAt(), body = $('#evBody'); if (!ev || !body) return;
   const live = Date.now() < ev.end;
-  const st = app.querySelectorAll('.stat'); if (st.length === 2){ st[0].innerHTML = ic('coin') + me.coin.toLocaleString(); st[1].innerHTML = ic('mana') + me.mana; }
+
   body.dataset.live = live ? '1' : '0';
   const me_ = solo ? 'me' : uid;
   const houseOf = id => id === me_ ? me.house : playersList[id]?.house;
