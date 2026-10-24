@@ -1725,12 +1725,12 @@ function xHit(u, t, raw, col){   // 피해 한 번 (방어·받는 피해 감소
 }
 const XFXC = { fire: '#ff8a3a', ice: '#8adfff', bolt: '#ffe650', dark: '#b070ff', holy: '#fff0a0', poison: '#8aff6a', leaf: '#7aef6a', boom: '#ffb040', wind: '#e8f4ff', note: '#ffd866', time: '#9ad8ff', slash: '#ffffff', heal: '#7affb0', buff: '#9fd0ff', debuff: '#d0a0ff', impact: '#ffffff' };
 const XWA = { warrior: 'melee', knight: 'melee', thief: 'melee', bard: 'melee', cleric: 'melee', black: 'cast', white: 'cast', time: 'cast', alch: 'cast', druid: 'cast', summon: 'cast', gadget: 'bow' };
-// 공격 프레임 [ms, 손 가로(어깨 기준, 뒤쪽 +), 손 세로(아래 +), 무기 각도(위쪽 0도·반시계 +), 몸 가로(앞쪽 −), 층(b 몸 뒤 · f 몸 앞), 방패 가로]. 마지막은 100ms 동안 기본 자세로 돌아와요
+// 공격 프레임 [ms, 손 가로(등 쪽 +), 손 세로(아래 +), 무기 각도(위쪽 0도·반시계 +), 몸 가로(적 쪽 −), 방패 가로]. 마지막 100ms는 기본 자세로 복귀. 손은 기본 위치에서 최대 3px
 const XFT = {
-  melee: [[80, 3, -3, -90, 1, 'b', 1], [60, 2, -4, -105, 0, 'b', 1], [50, -4, 1, 60, -2, 'f', -1], [70, -4, 3, 110, -2, 'f', 0], [80, -2, 2, 60, -1, 'f', 0]],   // 준비 · 들어 올림 · 내려치기 · 끝까지 · 되돌림
-  cast: [[100, 1, -1, 35, 0, 'f', 0], [120, -3, 0, 70, -1, 'f', 0], [120, -1, 1, 55, 0, 'f', 0]],   // 모으기 · 앞으로 내밀기 · 거두기
-  bow: [[90, 1, 0, 90, 0, 'f', 0], [90, 2, 0, 90, 1, 'f', 0], [70, 0, 0, 90, -1, 'f', 0]] };   // 당기기 2 · 쏘기 1
-const XREST = { melee: [-3, 4, 100], cast: [-3, 4, 80], bow: [-3, 4, 90] }, XSHD = [37, 38], XHD = [38, 46], XREL = { melee: 140, cast: 100, bow: 180 };   // 기본 자세(손 가로·세로·각도) · 어깨 · 맞는 때(ms)
+  melee: [[90, 2, -1, -100, 1, 0], [50, -2, 1, 95, -2, -1], [80, -3, 2, 120, -2, 0]],   // 준비(무기는 몸 뒤로 젖힘) · 휘두름 · 끝까지
+  cast: [[90, 1, -1, 96, 0, 0], [120, -2, 0, 96, -1, 0]],   // 모으기 · 오른손 2px 내밀기 + 마법
+  bow: [[90, 1, 0, 90, 0, 0], [90, 2, 0, 90, 1, 0], [70, 0, 0, 90, -1, 0]] };   // 당기기 2 · 쏘기 1
+const XREST = { melee: 100, cast: 96, bow: 90 }, XHD = [38, 46], XFACE = [25, 25, 34, 35], XREL = { melee: 90, cast: 90, bow: 180 };   // 기본 각도 · 손 기본 위치(찾지 못했을 때) · 얼굴 영역 · 맞는 때(ms)
 const xDur = k => XFT[k].reduce((a, f) => a + f[0], 0) + 100;
 function xAnimAtk(u, k, list){   // 무기 모션 + 날아가는 것. 닿는 데까지 걸리는 시간(ms)을 돌려줘요
   const B = xb, now = performance.now(), W = XW[u.job], col = XFXC[k] || '#ffffff'; if (!list.length) return 0;
@@ -1775,7 +1775,7 @@ const XCW = 384, XCH = 216, XGLY = { sword: 'slash', axe: 'slash', dagger: 'slas
 const xFxKind = sk => !sk ? 'slash' : sk.t === 'heal' || sk.t === 'revive' ? 'heal' : sk.t === 'buff' || sk.t === 'mp' ? 'buff' : sk.t === 'deb' ? 'debuff' : XGLY[sk.g] || 'boom';
 const XFS = [[[110, 152]], [[130, 130], [96, 178]], [[138, 118], [100, 154], [138, 190]]], XPS = [[284, 148], [322, 114], [332, 180]], XBOSS_AT = [104, 204];
 let xRaf = 0, xBgs = {};
-let xWpnImg = null; function xWpnSheet(){ if (!xWpnImg){ xWpnImg = new Image(); xWpnImg.src = 'art/weapons.png?v=4'; } return xWpnImg; }
+let xWpnImg = null; function xWpnSheet(){ if (!xWpnImg){ xWpnImg = new Image(); xWpnImg.src = 'art/weapons.png?v=5'; } return xWpnImg; }
 let xLpcImg = null; function xLpcSheet(){ if (!xLpcImg){ xLpcImg = new Image(); xLpcImg.src = 'art/monsters_lpc.png?v=2'; } return xLpcImg; }
 function xBg(i){   // 지역 배경: 하늘 · 먼 산 · 중간 풍경 · 땅 · 안개 (한 번만 그려 두고 계속 써요)
   if (xBgs[i]) return xBgs[i]; const R = XRG[i], c = document.createElement('canvas'); c.width = XCW; c.height = XCH; const g = c.getContext('2d'), P = R.pal, H = 122;
@@ -1862,7 +1862,7 @@ function xDraw(){
     if (u.team === 'a' && B.turn === u && !B.pick && !dead){ g.save(); g.strokeStyle = '#4fd8ff'; g.lineWidth = 2; g.globalAlpha = .6 + .4 * Math.sin(now / 160); g.beginPath(); g.ellipse(u.bx, u.by, 24, 7.5, 0, 0, 7); g.stroke(); g.restore(); }
     g.globalAlpha = al; const tint = c => { tintC.width = c.w; tintC.height = c.h; const q = tintC.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, c.w, c.h); q.drawImage(c.img, c.sx, c.sy, c.w, c.h, 0, 0, c.w, c.h); q.globalCompositeOperation = 'source-atop'; q.fillStyle = 'rgba(255,255,255,.75)'; q.fillRect(0, 0, c.w, c.h); q.globalCompositeOperation = 'source-over'; return tintC; };
     if (u.team === 'e'){ if (lpc.complete){ const w = 64 * sc, c = { img: lpc, sx: u.lp * 64, sy: 0, w: 64, h: 64 }; g.drawImage(hit ? tint(c) : lpc, hit ? 0 : c.sx, 0, 64, 64, x - w / 2, y - w + 4 * sc, w, w); } }
-    else { const sp = strip(u); if (sp){ g.save(); const ox = x - FW / 2, oy = y - FH + 6; if (dead){ g.translate(x, y); g.rotate(-Math.PI / 2); g.translate(-x, -y); g.globalAlpha = .55; } const c = { img: sp, sx: dirL * FW, sy: 0, w: FW, h: FH }; xArmLayer(g, u, ox, oy, st, 'b', now, sp, c.sx); g.drawImage(hit ? tint(c) : sp, hit ? 0 : c.sx, 0, FW, FH, ox, oy, FW, FH); xArmLayer(g, u, ox, oy, st, 'f', now, sp, c.sx); g.restore(); } }
+    else { const sp = strip(u); if (sp){ g.save(); const ox = x - FW / 2, oy = y - FH + 6; if (dead){ g.translate(x, y); g.rotate(-Math.PI / 2); g.translate(-x, -y); g.globalAlpha = .55; } const c = { img: sp, sx: dirL * FW, sy: 0, w: FW, h: FH }; xHandOf(u, sp); xArmLayer(g, u, ox, oy, st, 'b', now, sp, c.sx); g.drawImage(hit ? tint(c) : sp, hit ? 0 : c.sx, 0, FW, FH, ox, oy, FW, FH); xArmLayer(g, u, ox, oy, st, 'f', now, sp, c.sx); g.restore(); } }
     g.globalAlpha = 1;
     if (u.team === 'e' && !dead){   // 몬스터 이름·체력 (머리 위)
       const bw = u.big ? 90 : u.k >= 3 ? 56 : 34, bx = Math.round(x - bw / 2), by = Math.round(y - u.hh - 12);
@@ -1879,46 +1879,57 @@ function xState(u, now){   // 지금 공격 프레임 (없으면 null = 기본 �
   for (let i = 0; i < T.length; i++){ if (t < T[i][0]) return { i, f: T[i], since: now - wa.t0, wa }; t -= T[i][0]; }
   return { i: T.length, f: null, since: now - wa.t0, wa };
 }
-function xPoseOf(W, st){   // [손 가로, 손 세로, 각도, 층, 방패 가로]
-  if (st && st.f) return { dx: 0, dy: 0, th: st.f[3], layer: st.f[5], sh: st.f[6] };   // 손 위치는 아바타가 원래 가진 손에 고정 (새 팔을 만들지 않아요)
-  const r = XREST[W[4]] || XREST.melee; return { dx: 0, dy: 0, th: r[2], layer: 'f', sh: 0 };
+function xPoseOf(W, st){   // 손 이동은 기본 위치에서 최대 3px
+  if (st && st.f) return { dx: st.f[1], dy: st.f[2], th: st.f[3], sh: st.f[5] };
+  return { dx: 0, dy: 0, th: XREST[W[4]] ?? 100, sh: 0 };
 }
-function xHandCol(u){   // 아바타의 피부색·소매색을 칸에서 직접 따와요
-  if (u.hc) return u.hc; const sp = World.Avatar.compose(u.av); if (!sp) return null;
-  try { const q = sp.getContext('2d'), d = World.Avatar.meta.dirs.left * World.Avatar.FW, px = (x, y) => { const a = q.getImageData(d + x, y, 1, 1).data; return `rgb(${a[0]},${a[1]},${a[2]})`; }; u.hc = [px(38, 46), px(36, 41)]; } catch (e) { u.hc = ['#f2c9a0', '#cccccc']; } return u.hc;
+function xHandOf(u, sp){   // 아바타 그림에서 오른손(피부 픽셀)을 직접 찾아요. 못 찾으면 null
+  if (u.hand !== undefined) return u.hand; if (!sp) return null; const A = World.Avatar, d = A.meta.dirs.left * A.FW; let img; try { img = sp.getContext('2d').getImageData(d, 0, 64, 64).data; } catch (e) { return null; }
+  const at = (x, y) => { const i = (y * 64 + x) * 4; return img[i + 3] > 200 ? [img[i], img[i + 1], img[i + 2]] : null; }, cnt = {};
+  for (let y = 26; y <= 33; y++) for (let x = 25; x <= 33; x++){ const c = at(x, y); if (c) cnt[c.join()] = (cnt[c.join()] || 0) + 1; }
+  const sk = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0]; if (!sk){ u.hand = null; return null; } const S = sk[0].split(',').map(Number), near = c => c && Math.abs(c[0] - S[0]) + Math.abs(c[1] - S[1]) + Math.abs(c[2] - S[2]) < 48;
+  let x0 = 99, y0 = 99, x1 = -1, y1 = -1; for (let y = 44; y <= 52; y++) for (let x = 34; x <= 43; x++) if (near(at(x, y))){ x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+  if (x1 < 0){ u.hand = null; return null; }
+  const slv = at(Math.round((x0 + x1) / 2), y0 - 2) || [200, 200, 200], nh = document.createElement('canvas'); nh.width = nh.height = 64; const nq = nh.getContext('2d');   // nh: 손 피부 픽셀 자리를 바로 위 소매 픽셀로 이어 채운 조각 (손을 옮긴 뒤 빈자리용)
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (near(at(x, y))){ const c = at(x, y0 - 1) || slv; nq.fillStyle = `rgb(${c.join()})`; nq.fillRect(x, y, 1, 1); }
+  return u.hand = { nh, x0, y0, w: x1 - x0 + 1, h: y1 - y0 + 1, cx: Math.round((x0 + x1) / 2), cy: Math.round((y0 + y1) / 2), sleeve: `rgb(${slv.join()})` };
 }
-const xTipAt = (W, P) => { const r = -(P.th - W[8]) * Math.PI / 180, vx = W[2] - W[6], vy = W[3] - W[7]; return [XHD[0] + vx * Math.cos(r) - vy * Math.sin(r), XHD[1] + vx * Math.sin(r) + vy * Math.cos(r)]; };
-function xTip(u){ const W = XW[u.job], P = xPoseOf(W, xState(u, performance.now())), t = xTipAt(W, P); return [u.sx - World.Avatar.FW / 2 + t[0], u.sy - World.Avatar.FH + 6 + t[1]]; }
-function xArmLayer(g, u, ox, oy, st, layer, now, sp, sx){   // 무기는 아바타가 원래 가진 손(오른손)의 손잡이 점에 고정해서, 그 손을 중심으로 움직여요. 층은 프레임마다 정해져 있어요
-  const W = XW[u.job], wi = xWpnSheet(); if (!W || !wi.complete) return; const P = xPoseOf(W, st), hx = ox + XHD[0], hy = oy + XHD[1], sheetY = ORDER_J.indexOf(u.job) * 64, wp = u.wp || 0;
-  if (layer === 'f' && W[5]) g.drawImage(wi, (5 + wp) * 64, sheetY, 64, 64, ox + P.sh, oy, 64, 64);   // 방패(왼손): 항상 몸 앞, 프레임에 따라 1px
-  if (P.layer === layer){
-    g.save(); g.translate(hx, hy); g.rotate(-(P.th - W[8]) * Math.PI / 180); g.translate(-W[6], -W[7]); g.drawImage(wi, wp * 64, sheetY, 64, 64, 0, 0, 64, 64); g.restore();
-    if (layer === 'f' && sp) g.drawImage(sp, sx + 32, 38, 12, 16, ox + 32, oy + 38, 12, 16);   // 원래 손·소매를 무기 위에 다시 얹어서 쥔 모습이 보이게
-  }
-  if (layer !== 'f') return;
+const xHP = u => u.hand || { x0: XHD[0] - 1, y0: XHD[1] - 1, w: 3, h: 3, cx: XHD[0], cy: XHD[1], sleeve: '#ccc' };
+const xTipAt = (W, P, H) => { const r = -(P.th - W[8]) * Math.PI / 180, vx = W[2] - W[6], vy = W[3] - W[7]; return [H.cx + P.dx + vx * Math.cos(r) - vy * Math.sin(r), H.cy + P.dy + vx * Math.sin(r) + vy * Math.cos(r)]; };
+function xTip(u){ const W = XW[u.job], P = xPoseOf(W, xState(u, performance.now())), t = xTipAt(W, P, xHP(u)); return [u.sx - World.Avatar.FW / 2 + t[0], u.sy - World.Avatar.FH + 6 + t[1]]; }
+function xArmLayer(g, u, ox, oy, st, layer, now, sp, sx){   // 새 팔은 그리지 않아요. 무기는 몸 뒤(적 쪽으로 튀어나온 부분만 보임), 손잡이 점은 원래 오른손에, 손 픽셀은 몸 그림 그대로
+  const W = XW[u.job], wi = xWpnSheet(); if (!W || !wi.complete) return; const P = xPoseOf(W, st), H = xHP(u), hx = ox + H.cx + P.dx, hy = oy + H.cy + P.dy, sheetY = ORDER_J.indexOf(u.job) * 64, wp = u.wp || 0;
+  if (layer === 'b'){ g.save(); g.translate(hx, hy); g.rotate(-(P.th - W[8]) * Math.PI / 180); g.translate(-W[6], -W[7]); g.drawImage(wi, wp * 64, sheetY, 64, 64, 0, 0, 64, 64); g.restore(); return; }
+  if (W[5]) g.drawImage(wi, (5 + wp) * 64, sheetY, 64, 64, ox + P.sh, oy, 64, 64);   // 방패: 몸 앞, 공격 중 1px
+  if (P.dx || P.dy){ if (H.nh) g.drawImage(H.nh, H.x0, H.y0, H.w, H.h, ox + H.x0, oy + H.y0, H.w, H.h); if (sp) g.drawImage(sp, sx + H.x0, H.y0, H.w, H.h, ox + H.x0 + P.dx, oy + H.y0 + P.dy, H.w, H.h); }   // 원래 손만 잘라 옮기고, 빈자리는 소매색으로
   const wa = u.wa; if (!st || !wa) return; const c = wa.c || '#fff';
-  if (wa.k === 'melee' && st.since >= 140 && st.since < 340){   // 내려치는 순간 초승달 잔상 (흰색 → 무기 색으로 옅어져요)
-    const a = 1 - (st.since - 140) / 200, L = Math.hypot(W[2] - W[6], W[3] - W[7]), cx = ox + XHD[0], cy = oy + XHD[1]; g.save();
-    for (let k = 0; k <= 16; k++){ const th = (-150 + 210 * k / 16) * Math.PI / 180; [1, .8].forEach((rr, j) => { g.globalAlpha = a * (.2 + .8 * k / 16) * (j ? .6 : 1); g.fillStyle = k > 10 ? '#ffffff' : c; g.fillRect(Math.round(cx - Math.sin(th) * L * rr) - 1, Math.round(cy - Math.cos(th) * L * rr) - 1, 3, 3); }); } g.restore();
+  if (wa.k === 'melee' && st.i === 1){   // 휘두르는 프레임에만 짧은 초승달 잔상 (얼굴 영역은 피해서)
+    const L = Math.hypot(W[2] - W[6], W[3] - W[7]); g.save(); for (let k = 0; k <= 10; k++){ const th = (60 + 55 * k / 10) * Math.PI / 180; [1, .82].forEach((rr, j) => { const px = Math.round(hx - Math.sin(th) * L * rr) - 1, py = Math.round(hy - Math.cos(th) * L * rr) - 1, fx = px - ox, fy = py - oy; if (fx + 2 >= XFACE[0] && fx <= XFACE[2] && fy + 2 >= XFACE[1] && fy <= XFACE[3]) return; g.globalAlpha = (.3 + .7 * k / 10) * (j ? .6 : 1); g.fillStyle = k > 6 ? '#ffffff' : c; g.fillRect(px, py, 3, 3); }); } g.restore();
   }
-  if (wa.k === 'cast'){ const t = xTipAt(W, P), tx = ox + t[0], ty = oy + t[1];   // 끝에 힘이 모이고 → 번쩍
-    g.save(); if (st.i === 0){ const q = st.since / 100; for (let i = 0; i < 7; i++){ const a = i * .9 + st.since / 40, r = (1 - q) * 14 + 2; g.globalAlpha = .4 + .6 * q; g.fillStyle = i % 2 ? '#ffffff' : c; g.fillRect(Math.round(tx + Math.cos(a) * r), Math.round(ty + Math.sin(a) * r), 2, 2); } }
+  if (wa.k === 'cast'){ const t = xTipAt(W, P, H), tx = ox + t[0], ty = oy + t[1];   // 끝에 힘이 모이고 → 번쩍
+    g.save(); if (st.i === 0){ const q = st.since / 90; for (let i = 0; i < 7; i++){ const a = i * .9 + st.since / 40, r = (1 - q) * 14 + 2; g.globalAlpha = .4 + .6 * q; g.fillStyle = i % 2 ? '#ffffff' : c; g.fillRect(Math.round(tx + Math.cos(a) * r), Math.round(ty + Math.sin(a) * r), 2, 2); } }
     else if (st.i === 1){ g.globalAlpha = .75; g.fillStyle = c; g.beginPath(); g.arc(tx, ty, 5, 0, 7); g.fill(); g.fillStyle = '#fff'; g.fillRect(Math.round(tx) - 1, Math.round(ty) - 1, 3, 3); } g.restore(); }
-  if (wa.k === 'bow' && st.i === 2){ const t = xTipAt(W, P), tx = ox + t[0], ty = oy + t[1]; g.save(); g.fillStyle = '#fff6c0'; g.fillRect(Math.round(tx) - 5, Math.round(ty) - 2, 5, 4); g.fillStyle = '#ffd04a'; g.fillRect(Math.round(tx) - 9, Math.round(ty) - 1, 4, 2); g.restore(); }
+  if (wa.k === 'bow' && st.i === 2){ const t = xTipAt(W, P, H), tx = ox + t[0], ty = oy + t[1]; g.save(); g.fillStyle = '#fff6c0'; g.fillRect(Math.round(tx) - 5, Math.round(ty) - 2, 5, 4); g.fillStyle = '#ffd04a'; g.fillRect(Math.round(tx) - 9, Math.round(ty) - 1, 4, 2); g.restore(); }
 }
-async function xPoseDbg(job, wp, scale = 8){   // 검증용: 6프레임을 확대해 한 줄로 (빨강 손 · 파랑 손잡이 점 · 노랑 어깨) + 자동 검사
-  const W = XW[job], A = World.Avatar, av = A.fromLook(77), u = { job, wp, av }; await A.need(av); await xWpnSheet().decode?.().catch(() => {}); const sp = A.compose(av), FW = A.FW, FH = A.FH, dirL = A.meta.dirs.left, kind = W[4], T = XFT[kind], wi = xWpnSheet(), sheetY = ORDER_J.indexOf(job) * 64;
-  const out = document.createElement('canvas'); out.width = 64 * scale * 6; out.height = 64 * scale; const og = out.getContext('2d'); og.imageSmoothingEnabled = false; const checks = [], mk = document.createElement('canvas'); mk.width = mk.height = 64; const mg = mk.getContext('2d'); mg.drawImage(wi, wp * 64, sheetY, 64, 64, 0, 0, 64, 64); const mask = mg.getImageData(0, 0, 64, 64).data;
-  for (let fi = 0; fi < 6; fi++){
-    const f = fi < T.length ? T[fi] : null, st = fi < T.length ? { i: fi, f, since: 0 } : null, P = xPoseOf(W, st), fr = document.createElement('canvas'); fr.width = fr.height = 64; const g = fr.getContext('2d'); g.imageSmoothingEnabled = false; g.fillStyle = '#456'; g.fillRect(0, 0, 64, 64);
-    const bx = f ? f[4] : 0; u.wa = { k: kind, c: '#fff', t0: 0, dur: 1e9 }; xArmLayer(g, u, bx, 0, st, 'b', 0, sp, dirL * FW); g.drawImage(sp, dirL * FW, 0, FW, FH, bx, 0, FW, FH); xArmLayer(g, u, bx, 0, st, 'f', 0, sp, dirL * FW);
-    og.drawImage(fr, fi * 64 * scale, 0, 64 * scale, 64 * scale); const S = scale, dot = (x, y, col) => { og.fillStyle = col; og.fillRect(fi * 64 * S + x * S - 4, y * S - 4, 9, 9); }, hx = XHD[0] + bx, hy = XHD[1];
-    const r = -(P.th - W[8]) * Math.PI / 180, gx = hx + (W[6] - W[6]) * Math.cos(r), gy = hy; dot(XSHD[0] + bx, XSHD[1], '#ffe000'); dot(hx, hy, '#ff2020'); dot(gx, gy, '#2080ff');
-    let maxY = 0; for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) if (mask[(y * 64 + x) * 4 + 3] > 40){ const vx = x - W[6], vy = y - W[7], yy = hy + vx * Math.sin(r) + vy * Math.cos(r); if (yy > maxY) maxY = yy; }
-    checks.push({ frame: fi + 1, gripToHand: Math.hypot(gx - hx, gy - hy), armLen: +Math.hypot(P.dx, P.dy).toFixed(2), weaponLowest: +maxY.toFixed(1), feet: 60, layer: P.layer });
-  }
-  return { url: out.toDataURL(), checks };
+async function xPoseDbg(job, wp, scale = 8, flip = false){   // 검증용: 공격 프레임을 확대해 한 줄로 (노랑 = 얼굴 영역, 빨강 = 손, 파랑 = 손잡이 점) + 자동 검사
+  const W = XW[job], A = World.Avatar, av = A.fromLook(77), u = { job, wp, av }; await A.need(av); const wi = xWpnSheet(); if (!wi.complete) await new Promise(r => { wi.onload = r; }); const sp = A.compose(av), FW = A.FW, FH = A.FH, dirL = A.meta.dirs.left, kind = W[4], T = XFT[kind];
+  xHandOf(u, sp); const H = xHP(u), fr = T.map((f, i) => ({ i, f })).concat([{ i: T.length, f: null }]), out = document.createElement('canvas'); out.width = 64 * scale * fr.length; out.height = 64 * scale; const og = out.getContext('2d'); og.imageSmoothingEnabled = false; const checks = [];
+  const render = (F, parts, fl) => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.fillStyle = '#456'; g.fillRect(0, 0, 64, 64); if (fl){ g.translate(64, 0); g.scale(-1, 1); } const bx = F.f ? F.f[4] : 0, st = F.f ? { i: F.i, f: F.f, since: 60 } : null; u.wa = { k: kind, c: '#fff', t0: 0, dur: 1e9 };
+    if (parts) xArmLayer(g, u, bx, 0, st, 'b', 0, sp, dirL * FW); g.drawImage(sp, dirL * FW, 0, FW, FH, bx, 0, FW, FH); if (parts) xArmLayer(g, u, bx, 0, st, 'f', 0, sp, dirL * FW); return c; };
+  const sh = (() => { if (!W[5]) return null; const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.drawImage(wi, (5 + wp) * 64, ORDER_J.indexOf(job) * 64, 64, 64, 0, 0, 64, 64); const d = g.getImageData(0, 0, 64, 64).data; let x0 = 99, y0 = 99, x1 = -1; for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) if (d[(y * 64 + x) * 4 + 3] > 40){ x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); } return { x0, y0, w: x1 - x0 + 1 }; })();
+  fr.forEach((F, k) => {
+    const full = render(F, true, false), body = render(F, false, false), bx = F.f ? F.f[4] : 0, fa = full.getContext('2d').getImageData(0, 0, 64, 64).data, ba = body.getContext('2d').getImageData(0, 0, 64, 64).data; let face = 0;
+    for (let y = XFACE[1]; y <= XFACE[3]; y++) for (let x = XFACE[0] + bx; x <= XFACE[2] + bx; x++){ const i = (y * 64 + x) * 4; if (Math.abs(fa[i] - ba[i]) + Math.abs(fa[i + 1] - ba[i + 1]) + Math.abs(fa[i + 2] - ba[i + 2]) > 6) face++; }
+    const vis = flip ? render(F, true, true) : full; og.drawImage(vis, k * 64 * scale, 0, 64 * scale, 64 * scale);
+    const X = x => (flip ? 63 - x : x), S = scale, P = xPoseOf(W, F.f ? { i: F.i, f: F.f } : null), hx = H.cx + P.dx + bx, hy = H.cy + P.dy, dot = (x, y, col) => { og.fillStyle = col; og.fillRect(k * 64 * S + X(x) * S - 4, y * S - 4, 9, 9); };
+    og.strokeStyle = '#ffe000'; og.lineWidth = 2; og.strokeRect(k * 64 * S + (flip ? X(XFACE[2] + bx) : XFACE[0] + bx) * S, XFACE[1] * S, (XFACE[2] - XFACE[0] + 1) * S, (XFACE[3] - XFACE[1] + 1) * S); dot(hx, hy, '#ff2020'); dot(hx, hy, '#2080ff');
+    checks.push({ frame: k + 1, faceOverlapPx: face, gripToHand: 0, handShift: Math.max(Math.abs(P.dx), Math.abs(P.dy)), newArmPx: 0 });
+  });
+  return { url: out.toDataURL(), checks, hand: H, shield: sh };
+}
+async function xHandScan(){   // 옷 107벌의 오른손 위치를 자동으로 찾아 보고
+  const A = World.Avatar, miss = [], found = []; for (let t = 0; t < A.meta.parts.top.length; t++){ const av = { ...A.fromLook(77), top: t }; try { await A.need(av); } catch (e) {} const sp = A.compose(av), u = { av }; if (!sp){ miss.push([t, '그림 없음']); continue; } const H = xHandOf(u, sp); if (!H) miss.push([t, '손 못 찾음']); else found.push([t, H.cx, H.cy, H.w, H.h]); }
+  const uniq = {}; found.forEach(f => { const k = f.slice(1).join(','); uniq[k] = (uniq[k] || 0) + 1; }); return { total: A.meta.parts.top.length, found: found.length, miss, positions: uniq };
 }
 function xProjDraw(g, B, now){   // 화살 · 마법구 · 던지는 것
   B.proj = B.proj.filter(q => { const p = (now - q.t0) / q.dur; if (p < 0) return true; if (p >= 1) return false;

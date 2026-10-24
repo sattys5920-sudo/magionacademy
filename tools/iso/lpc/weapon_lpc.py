@@ -49,6 +49,15 @@ def scale_about(a, pv, sc):
         for x in range(n):
             if crisp[y, x] and 0 <= x + ox < 64 and 0 <= y + oy < 64: res[y + oy, x + ox] = (*np.clip(rgb[y, x], 0, 255).astype(np.uint8), 255)
     return res
+def fit_to(a, left, top, width):   # 방패: 가로 width px로 줄여서 (left, top)에 놓기 (몸통 폭의 약 70%, 턱선 아래·얼굴 중심선 뒤)
+    ys, xs = np.nonzero(a[..., 3] > 0); y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1; c = a[y0:y1, x0:x1].astype(np.float32); al = c[..., 3:4] / 255
+    pm = np.concatenate([c[..., :3] * al, c[..., 3:4]], axis=2); k = width / (x1 - x0); n_w, n_h = width, max(1, round((y1 - y0) * k))
+    ch = [np.array(Image.fromarray(np.clip(pm[..., i], 0, 255).astype(np.uint8)).resize((n_w, n_h), Image.LANCZOS)).astype(np.float32) for i in range(4)]; out = np.stack(ch, axis=2); a2 = out[..., 3:4] / 255
+    rgb = np.where(a2 > .01, out[..., :3] / np.maximum(a2, .01), 0); res = np.zeros((64, 64, 4), np.uint8)
+    for y in range(n_h):
+        for x in range(n_w):
+            if out[y, x, 3] > 105 and 0 <= x + left < 64 and 0 <= y + top < 64: res[y + top, x + left] = (*np.clip(rgb[y, x], 0, 255).astype(np.uint8), 255)
+    return res
 def lerp_ramp(r, l):
     t = max(0, min(.999, l / 255)) * (len(r) - 1); i = int(t); f = t - i
     return [int(r[i][k] + (r[i + 1][k] - r[i][k]) * f) for k in range(3)]
@@ -103,7 +112,7 @@ for ji, job in enumerate(ORDER):
     XW[job] = [px, py, tx, ty, kind, 1 if shf else 0, gx, gy, phi0]
     sh = None
     if shf:
-        sh = merge([shf]); sy_, sx_ = np.nonzero(sh[..., 3] > 0); cx, cy = int(sx_.mean()), int(sy_.mean()); sh = scale_about(sh, (cx, cy), SSCALE)
+        sh = fit_to(merge([shf]), 32, 38, 11); sy_, sx_ = np.nonzero(sh[..., 3] > 0); cx, cy = int(sx_.mean()), int(sy_.mean())
     for n in range(5):
         c = tier(base, n, (tx, ty), (px, py), kind); sheet[ji * 64:(ji + 1) * 64, n * 64:(n + 1) * 64] = c; cc = c.copy()
         if sh is not None:
