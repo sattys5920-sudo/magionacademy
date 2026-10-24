@@ -40,7 +40,9 @@ def frame(f):
 def lerp_ramp(r, l):
     t = max(0, min(.999, l / 255)) * (len(r) - 1); i = int(t); f = t - i
     return [int(r[i][k] + (r[i + 1][k] - r[i][k]) * f) for k in range(3)]
-def tier(a, n):
+GEMC = [None, (230, 70, 70), (90, 150, 255), (255, 214, 70), (130, 255, 240)]       # 단계 보석·빛 색
+GLOW = [None, None, (200, 220, 255), (255, 214, 70), (110, 240, 255)]
+def tier(a, n, tip, hilt, kind):
     if n == 0: return a.copy()
     o = a.copy(); H, Wd = a.shape[:2]
     for y in range(H):
@@ -48,8 +50,25 @@ def tier(a, n):
             r, g, b, al = a[y, x]
             if not al: continue
             h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
-            if s < .3: o[y, x, :3] = lerp_ramp(RAMP[n], .299 * r + .587 * g + .114 * b)       # 금속
-            elif not (.03 < h < .16): o[y, x, :3] = [int(c * 255) for c in colorsys.hsv_to_rgb(GEM[n], min(1, s + .1), v)]   # 보석 (나무 손잡이는 그대로)
+            if s < .3 or (.03 < h < .16): o[y, x, :3] = lerp_ramp(RAMP[n], .299 * r + .587 * g + .114 * b)    # 금속·나무 손잡이 전부 단계 색으로
+            else: o[y, x, :3] = [int(c * 255) for c in colorsys.hsv_to_rgb(GEM[n], min(1, s + .1), v)]   # 보석
+    m = o[..., 3] > 0
+    def ring(mask):
+        d = np.zeros_like(mask)
+        d[1:] |= mask[:-1]; d[:-1] |= mask[1:]; d[:, 1:] |= mask[:, :-1]; d[:, :-1] |= mask[:, 1:]
+        return d & ~mask
+    if n >= 2:      # 빛나는 테두리 (모양이 커 보이게)
+        r1 = ring(m); c = GLOW[n]; o[r1] = (*c, 200 if n == 2 else 235)
+        if n == 4: r2 = ring(m | r1); o[r2] = (*c, 90)
+    gx, gy = (tip if kind == 'cast' else hilt); rad = [0, 1, 2, 2, 3][n]; gc = GEMC[n]    # 보석: 마법 지팡이는 끝에, 나머지는 손잡이 끝에
+    for dy in range(-rad, rad + 1):
+        for dx in range(-rad, rad + 1):
+            if abs(dx) + abs(dy) <= rad and 0 <= gx + dx < 64 and 0 <= gy + dy < 64: o[gy + dy, gx + dx] = (*gc, 255)
+    if rad >= 1 and 0 <= gx - 1 < 64 and 0 <= gy - 1 < 64: o[gy - 1, gx - 1] = (255, 255, 255, 255)
+    if n >= 3:      # 반짝이
+        for sx, sy in ((tip[0] + 3, tip[1] - 3), (tip[0] - 3, tip[1] - 1), (tip[0] + 1, tip[1] - 5))[:n - 1]:
+            if 1 <= sx < 63 and 1 <= sy < 63:
+                for ddx, ddy in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)): o[sy + ddy, sx + ddx] = (255, 255, 255, 255 if (ddx, ddy) == (0, 0) else 170)
     return o
 sheet = np.zeros((64 * 12, 64 * 5, 4), np.uint8); XW = {}
 for ji, job in enumerate(ORDER):
@@ -62,12 +81,17 @@ for ji, job in enumerate(ORDER):
     d = (xs - px) ** 2 + (ys - py) ** 2; k = int(d.argmax()); tx, ty = int(xs[k]), int(ys[k])    # 끝
     XW[job] = [px, py, tx, ty, kind]
     for n in range(5):
-        c = tier(base, n)
-        if n == 4:
-            for sx, sy in ((tx, ty), (tx + 2, ty - 2), (tx - 2, ty + 1)):
-                if 0 <= sx < 64 and 0 <= sy < 64: c[sy, sx] = (255, 255, 255, 255)
+        c = tier(base, n, (tx, ty), (px, py), kind)
         sheet[ji * 64:(ji + 1) * 64, n * 64:(n + 1) * 64] = c
 Image.fromarray(sheet).save(os.path.join(ROOT, 'public', 'art', 'weapons.png'))
+big = Image.new('RGBA', (96 * 5, 96 * 12), (0, 0, 0, 0))
+for ji in range(12):
+    cells = [sheet[ji * 64:(ji + 1) * 64, n * 64:(n + 1) * 64] for n in range(5)]; ys, xs = np.nonzero(np.max([c[..., 3] for c in cells], axis=0) > 0)
+    if len(ys) == 0: continue
+    y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1; k = max(1, min(96 // (y1 - y0), 96 // (x1 - x0)))
+    for n, c in enumerate(cells):
+        im = Image.fromarray(c[y0:y1, x0:x1]).resize(((x1 - x0) * k, (y1 - y0) * k), Image.NEAREST); big.alpha_composite(im, (n * 96 + (96 - im.width) // 2, ji * 96 + (96 - im.height) // 2))
+big.save(os.path.join(ROOT, 'public', 'art', 'weapons_big.png'))
 p = os.path.join(ROOT, 'public', 'index.html'); s = open(p, encoding='utf-8').read(); js = 'const XW = ' + json.dumps(XW, separators=(',', ':')) + ';'
 if '/*XW*/' in s: s = re.sub(r'/\*XW\*/.*?/\*XW-END\*/', lambda m: '/*XW*/' + js + '/*XW-END*/', s, flags=re.S)
 else: s = s.replace('const xRand = a =>', '/*XW*/' + js + '/*XW-END*/\nconst xRand = a =>', 1)
