@@ -523,6 +523,7 @@ function useObj(o, a){
   if (typeof r === 'string'){ if (bubble) bubble.el.innerHTML = r; else showBubble(o, r); } else hideBubble();
 }
 // ---- 근처 대상(상황 버튼): 서 있는 칸에서 바로 닿는 NPC·채집 지점·물건·물가를 찾아 World.onNear(대상 | null)에 알려요 ----
+World.enterDoorAt = (x, y) => { const o = M && M.objs.find(q => q.door && q.door.tile[0] === x && q.door.tile[1] === y); if (o) goDoor(o.door, o); return !!o; };   // (시험용·바로 들어가기) 이 칸의 문 열기
 World.onNear = null; let nearKey = '', nearT = null, nearTick = 0;
 function findNear(){
   if (busy || !M || placing) return null;
@@ -553,6 +554,9 @@ function goDoor(door, o){
   if (door.pen !== undefined && World.onPenDoor){   // 사육장 우리: 주인만 들어가요
     const r = World.onPenDoor(door.pen);
     if (r !== true){ const [bx, by] = P(door.tile[0] + .5, door.tile[1] + .5); if (r && typeof r === 'object') showBubble({ x: bx, y: by - 26, sw: 0 }, r.html, r.btn, r.fn); else showBubble({ x: bx, y: by - 26, sw: 0 }, r); return; }
+  }
+  if (door.lock && World.canEnter){   // 의뢰인 집: 이야기가 꽤 진행돼야 들어갈 수 있어요
+    const r = World.canEnter(door.lock, door); if (r !== true){ showBubble(o, `<b>${door.label}</b><br>${r}`); return; }
   }
   let label = door.label, view = null;
   if (door.room !== undefined){   // 기숙사 복도의 학생 방 문

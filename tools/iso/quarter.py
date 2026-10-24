@@ -122,16 +122,16 @@ def log_cabin(x0, y0, x1, y1, h=28):
 # 뱀파이어 저택 (큰길 A 북쪽, 문 (12,13))
 unique('manor', [6, 4, 20, 13], combo(building(6, 4, 20, 13, 70, hexc('#3E3446'), hexc('#1E1824'), hexc('#2A1E30'), 40, lambda s, l: [(u, v, 8, 18) for u in range(10, int(l) - 8, 14) for v in (12, 42) if not (s == 'L' and abs(u - 44) < 10)], doors=[('L', 48, 14)]),
        turret(6.4, 12.6, 100, '#3E3446', '#2A1E30', '#FF5A4A'), turret(19.6, 4.4, 100, '#3E3446', '#2A1E30', '#FF5A4A')),
-       door=dict(tile=[12, 13], to=None, label='뱀파이어 저택', note='집사 박쥐가 마당에서 기다려요. 안은 손님이 들어가기엔 아직 어수선해요'))
+       door=dict(tile=[12, 13], to='vamp_manor', spawn=[11, 14], label='뱀파이어 저택', lock='main_01_dracula'))
 # 학교 박물관 (문 (31,13))
 unique('museum', [26, 6, 38, 13], combo(building(26, 6, 38, 13, 46, hexc('#B8A276'), hexc('#D8C494'), hexc('#8A7448'), 14, wins_g(16, ((18, 14),)), doors=[('L', 40, 14)]), columns(26, 6, 38, 13, 46, '#E0CFA0')),
-       door=dict(tile=[31, 13], to=None, label='학교 박물관', note='창가 관 옆에서 서기가 지켜보고 있어요. 안으로는 아직 못 들어가요'))
+       door=dict(tile=[31, 13], to='museum', spawn=[11, 14], label='학교 박물관', lock='main_05_mummy'))
 # 번개 탑 (낡은 연구 탑, 문 (45,13))
 unique('labtower', [42, 5, 48, 13], combo(building(42, 5, 48, 13, 84, hexc('#585868'), hexc('#34344A'), hexc('#2E3E44'), 20, wins_g(14, ((14, 14), (42, 14), (66, 10))), doors=[('L', 20, 12)]), rod(42, 5, 48, 13, 84 + 20)),
-       door=dict(tile=[44, 13], to=None, label='낡은 연구 탑', note='번개 맞은 자국이 선명해요. 문은 오래전에 잠겼어요'))
+       door=dict(tile=[44, 13], to='lab_tower', spawn=[11, 14], label='낡은 연구 탑', lock='main_06_frankenstein'))
 # 마녀 오두막 (큰길 B 북쪽, 문 (9,29)) · 늑대인간 통나무집 (문 (28,29))
-unique('witchhut', [8, 25, 12, 29], witch_hut(10, 26.5), door=dict(tile=[9, 29], to=None, label='마녀의 오두막', note='초록 연기가 굴뚝에서 피어올라요. 주인은 지금 바빠요'))
-unique('cabin', [26, 24, 32, 29], log_cabin(26, 24, 32, 29), door=dict(tile=[28, 29], to=None, label='늑대인간 통나무집', note='문틈으로 장작 타는 냄새가 나요. 지하실 문은 이제 열려 있대요'))
+unique('witchhut', [8, 25, 12, 29], witch_hut(10, 26.5), door=dict(tile=[9, 29], to='witch_hut', spawn=[11, 14], label='마녀의 오두막', lock='main_03_witch'))
+unique('cabin', [26, 24, 32, 29], log_cabin(26, 24, 32, 29), door=dict(tile=[28, 29], to='wolf_cabin', spawn=[11, 14], label='늑대인간 통나무집', lock='main_04_werewolf'))
 # 일곱 등불 광장 가운데 기둥, 비어 있는 등불대, 바깥 솥
 def sevenpost(img, x, y):
     d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
@@ -266,6 +266,83 @@ for (x, y) in sorted(GF):
 for x in range(56, 65, 2):
     for y in range(24, 28, 2):
         if random.random() < .85: put('tomb', random.choice(['tomb0', 'tomb0', 'tomb1']), x, y, act=('오래된 묘비', '읽어 보기'))
+# ---- 골목 꾸미기: 집마다 마당 소품 ----
+def barrel_at(img, x, y):
+    d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
+    d.ellipse([cx - 6, cy - 2, cx + 6, cy + 4], fill=hexc('#4A2E1A')); d.rectangle([cx - 6, cy - 14, cx + 6, cy + 1], fill=hexc('#7A5232')); d.rectangle([cx - 6, cy - 14, cx - 1, cy + 1], fill=hexc('#6A4428'))
+    d.ellipse([cx - 6, cy - 17, cx + 6, cy - 11], fill=hexc('#8A6240')); d.line([(cx - 6, cy - 9), (cx + 6, cy - 9)], fill=hexc('#2A2230')); d.line([(cx - 6, cy - 3), (cx + 6, cy - 3)], fill=hexc('#2A2230'))
+shared('barrel', barrel_at)
+def sign_at(img, x, y):
+    d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
+    d.rectangle([cx - 1, cy - 26, cx, cy]); d.rectangle([cx - 1, cy - 26, cx, cy], fill=hexc('#5A3A22'))
+    d.polygon([(cx - 12, cy - 24), (cx + 8, cy - 24), (cx + 13, cy - 20), (cx + 8, cy - 16), (cx - 12, cy - 16)], fill=hexc('#8A6240')); d.line([(cx - 9, cy - 20), (cx + 6, cy - 20)], fill=hexc('#3A2616'))
+    d.polygon([(cx - 8, cy - 14), (cx + 12, cy - 14), (cx + 8, cy - 10), (cx + 12, cy - 7), (cx - 8, cy - 7)], fill=hexc('#7A5232')); d.line([(cx - 5, cy - 10), (cx + 6, cy - 10)], fill=hexc('#3A2616'))
+shared('sign', sign_at)
+def well_at(img, x, y):
+    d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
+    d.ellipse([cx - 12, cy - 8, cx + 12, cy + 6], fill=hexc('#6E6876')); d.ellipse([cx - 9, cy - 8, cx + 9, cy + 1], fill=hexc('#2A4A5A')); d.rectangle([cx - 12, cy - 10, cx - 10, cy - 1], fill=hexc('#7E7886')); d.rectangle([cx + 10, cy - 10, cx + 12, cy - 1], fill=hexc('#5E586A'))
+    d.rectangle([cx - 11, cy - 30, cx - 9, cy - 8], fill=hexc('#5A3A22')); d.rectangle([cx + 9, cy - 30, cx + 11, cy - 8], fill=hexc('#4A2E1A')); d.polygon([(cx - 14, cy - 28), (cx, cy - 38), (cx + 14, cy - 28)], fill=hexc('#3A2A5E')); d.line([(cx, cy - 30), (cx, cy - 14)], fill=hexc('#3A2616')); d.rectangle([cx - 2, cy - 14, cx + 2, cy - 10], fill=hexc('#8A6240'))
+shared('well', well_at)
+def cart_at(img, x, y):
+    d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
+    d.polygon([(cx - 12, cy - 8), (cx + 8, cy - 14), (cx + 12, cy - 6), (cx - 8, cy)], fill=hexc('#7A5232')); d.polygon([(cx - 12, cy - 8), (cx - 8, cy), (cx - 8, cy - 5), (cx - 12, cy - 13)], fill=hexc('#5A3A22'))
+    for hx, hy in ((-6, -11), (-1, -13), (4, -12), (0, -10)): d.line([(cx + hx, cy + hy), (cx + hx + 2, cy + hy - 5)], fill=hexc('#E0C050'), width=2)
+    d.ellipse([cx - 6, cy - 4, cx + 2, cy + 4], outline=hexc('#2A2230'), width=2); d.ellipse([cx + 4, cy - 8, cx + 9, cy - 2], outline=hexc('#2A2230'), width=1)
+shared('cart', cart_at)
+def rose_at(img, x, y):
+    d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
+    for dx, dy, r in ((-5, -5, 5), (4, -6, 5), (0, -10, 5), (-1, -4, 4)): d.ellipse([cx + dx - r, cy + dy - r, cx + dx + r, cy + dy + r], fill=hexc('#2E4A32'))
+    for dx, dy in ((-6, -8), (3, -11), (-1, -5), (5, -5), (0, -13), (-4, -3)): d.ellipse([cx + dx - 1, cy + dy - 1, cx + dx + 1, cy + dy + 1], fill=hexc('#D8283A'))
+shared('rose', rose_at)
+def herb_at(img, x, y):
+    d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
+    d.polygon([(cx - 9, cy - 2), (cx, cy - 6), (cx + 9, cy - 2), (cx, cy + 2)], fill=hexc('#4A3426'))
+    for dx, dy in ((-5, -3), (-1, -5), (4, -3), (0, -1), (-3, -1), (5, -1)):
+        d.line([(cx + dx, cy + dy), (cx + dx, cy + dy - 6)], fill=hexc('#4E8A4E')); d.ellipse([cx + dx - 2, cy + dy - 9, cx + dx + 2, cy + dy - 5], fill=hexc(['#6AAA5A', '#8A5ABA', '#C86AE8'][(dx + dy) % 3]))
+shared('herb', herb_at)
+def stump_at(img, x, y):
+    d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
+    d.ellipse([cx - 6, cy - 3, cx + 6, cy + 4], fill=hexc('#4A2E1A')); d.rectangle([cx - 6, cy - 10, cx + 6, cy]); d.rectangle([cx - 6, cy - 10, cx + 6, cy], fill=hexc('#7A5232')); d.ellipse([cx - 6, cy - 13, cx + 6, cy - 7], fill=hexc('#C8A060')); d.ellipse([cx - 3, cy - 12, cx + 3, cy - 8], outline=hexc('#8A6240'))
+    d.line([(cx + 1, cy - 11), (cx + 9, cy - 22)], fill=hexc('#6A4428'), width=2); d.polygon([(cx + 5, cy - 24), (cx + 12, cy - 21), (cx + 9, cy - 17)], fill=hexc('#9AA0A8'))
+shared('stump', stump_at)
+def woodpile_at(img, x, y):
+    d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
+    for k, (dx, dy) in enumerate(((-6, 0), (0, 0), (6, 0), (-3, -5), (3, -5), (0, -10))):
+        d.ellipse([cx + dx - 3, cy + dy - 7, cx + dx + 3, cy + dy - 1], fill=hexc('#8A6240')); d.ellipse([cx + dx - 2, cy + dy - 6, cx + dx + 2, cy + dy - 2], fill=hexc('#C8A060'))
+shared('woodpile', woodpile_at)
+def gargoyle_at(img, x, y):
+    d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
+    d.rectangle([cx - 7, cy - 10, cx + 7, cy + 1], fill=hexc('#5E586A')); d.rectangle([cx - 7, cy - 10, cx - 1, cy + 1], fill=hexc('#4E4856'))
+    d.rectangle([cx - 4, cy - 22, cx + 4, cy - 10], fill=hexc('#6E6876')); d.polygon([(cx - 5, cy - 22), (cx - 8, cy - 28), (cx - 2, cy - 22)], fill=hexc('#6E6876')); d.polygon([(cx + 5, cy - 22), (cx + 8, cy - 28), (cx + 2, cy - 22)], fill=hexc('#6E6876'))
+    d.polygon([(cx - 10, cy - 16), (cx - 4, cy - 20), (cx - 4, cy - 12)], fill=hexc('#4E4856')); d.polygon([(cx + 10, cy - 16), (cx + 4, cy - 20), (cx + 4, cy - 12)], fill=hexc('#4E4856'))
+    d.point((cx - 2, cy - 18), fill=hexc('#FF5A4A')); d.point((cx + 2, cy - 18), fill=hexc('#FF5A4A'))
+shared('gargoyle', gargoyle_at)
+def banner_at(col):
+    def f(img, x, y):
+        d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
+        d.rectangle([cx - 1, cy - 40, cx, cy], fill=hexc('#5A3A22')); d.polygon([(cx + 1, cy - 38), (cx + 11, cy - 36), (cx + 11, cy - 16), (cx + 6, cy - 20), (cx + 1, cy - 16)], fill=hexc(col)); d.line([(cx + 3, cy - 32), (cx + 9, cy - 31)], fill=hexc('#E8C85A')); d.line([(cx + 3, cy - 27), (cx + 9, cy - 26)], fill=hexc('#E8C85A'))
+    return f
+shared('banner', banner_at('#8A2A22'))
+def urn_at(img, x, y):
+    d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
+    d.polygon([(cx - 5, cy - 2), (cx + 5, cy - 2), (cx + 7, cy - 12), (cx + 3, cy - 18), (cx - 3, cy - 18), (cx - 7, cy - 12)], fill=hexc('#B85A3A')); d.line([(cx - 6, cy - 11), (cx + 6, cy - 11)], fill=hexc('#E8C85A')); d.rectangle([cx - 4, cy - 20, cx + 4, cy - 17], fill=hexc('#8A3A22'))
+shared('urn', urn_at)
+def tesla_at(img, x, y):
+    d = ImageDraw.Draw(img); cx, cy = P(x + .5, y + .5)
+    d.rectangle([cx - 5, cy - 6, cx + 5, cy + 1], fill=hexc('#4A4A5A')); d.rectangle([cx - 2, cy - 38, cx + 2, cy - 6], fill=hexc('#7A7A8A')); d.ellipse([cx - 6, cy - 48, cx + 6, cy - 36], fill=hexc('#C8E8FF')); d.ellipse([cx - 3, cy - 45, cx + 3, cy - 39], fill=hexc('#FFFFFF'))
+    for k in range(3): d.line([(cx - 5, cy - 32 + k * 8), (cx + 5, cy - 30 + k * 8)], fill=hexc('#E0A83A'))
+shared('tesla', tesla_at)
+def pl_many(name, key, pts, **kw):
+    for (x, y) in pts: put(name, key, x, y, **kw)
+pl_many('rose', 'rose', [(5, 6), (5, 10), (20, 7), (20, 11), (8, 14) if False else (5, 12)], solid=False)
+pl_many('gargoyle', 'gargoyle', [(10, 13), (14, 13)], act=('돌 가고일', '쳐다보기'))
+pl_many('banner', 'banner', [(29, 13), (33, 13)], solid=False); pl_many('urn', 'urn', [(25, 13), (38, 13)], act=('커다란 항아리', '들여다보기'))
+pl_many('tesla', 'tesla', [(41, 12), (48, 12)], act=('번개 막대', '쳐다보기')); put('crate', 'barrel', 49, 11); put('crate', 'barrel', 40, 11)
+pl_many('herb', 'herb', [(5, 26), (6, 26), (5, 28), (6, 28)], solid=False); put('barrel', 'barrel', 14, 26)
+put('stump', 'stump', 24, 29, act=('도끼 박힌 그루터기', '살펴보기')); pl_many('woodpile', 'woodpile', [(33, 26), (33, 27)], act=('장작더미', '살펴보기')); put('barrel', 'barrel', 24, 25)
+put('well', 'well', 59, 5, act=('오래된 우물', '들여다보기')); put('cart', 'cart', 67, 8, act=('건초 수레', '살펴보기'))
+pl_many('sign', 'sign', [(33, 17), (59, 17), (7, 17), (33, 33)], act=('나무 이정표', '읽어 보기'))
+pl_many('barrel', 'barrel', [(22, 17), (41, 17), (50, 17), (16, 33), (45, 33)])
 # 길가 가로등
 LAMPS = [(x, 17) for x in range(6, NX - 2, 6)] + [(x, 33) for x in range(6, NX - 2, 6)] + [(36, y) for y in range(20, 29, 4)] + [(62, y) for y in range(19, 22, 3)]
 LAMPS = [t for t in LAMPS if t not in occupied and T.get(t) == 'grass']
