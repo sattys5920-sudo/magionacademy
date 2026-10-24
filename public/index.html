@@ -1874,8 +1874,8 @@ function xApply(u, t, a, mult, st){   // 맞은 뒤 붙는 효과 [종류, 세�
 }
 function xPetHit(u, base){   // 적이 소환수를 노릴 때가 있어요 (체력이 다 닳으면 사라져요)
   const ps = []; xAlive(xb.party).forEach(o => (o.pets || []).forEach(p => { if (p.mhp) ps.push([o, p]); })); if (!ps.length || Math.random() > .3) return false;
-  const [o, p] = xRand(ps), d = Math.max(1, Math.round(base * (.85 + Math.random() * .3))); p.hp -= d; p.hit = performance.now(); xFxAt('impact', [o]); xFloat(o.id, `${p.n} -${d}`, '#ff9a9a'); xb.log = `${u.name} → ${p.n}`;
-  if (p.hp <= 0){ o.pets = o.pets.filter(q => q !== p); xFloat(o.id, `${p.n} 쓰러짐`, '#ffd0d0'); } return true; }
+  const [o, p] = xRand(ps), d = Math.max(1, Math.round(base * (.85 + Math.random() * .3))); p.hp -= d; p.hit = performance.now(); xFxAt('impact', [o]); xFloat(o.id, `-${d}`, '#ff9a9a'); xb.log = `${u.name} → ${p.n}`;
+  if (p.hp <= 0){ o.pets = o.pets.filter(q => q !== p); xFloat(o.id, '쓰러짐', '#ffd0d0'); } return true; }
 function xAct0(u, sk, tgt){   // 한 번 행동
   const B = xb, foes = u.team === 'a' ? B.foes : B.party, mates = u.team === 'a' ? B.party : B.foes; u.lg = performance.now();
   if (u.team === 'e'){ if (!xAlive(B.party).length) return; if (xFm(u, 'blind') > Math.random()){ xFloat(u.id, '빗나감', '#d0a0ff'); B.log = `${u.name}의 공격이 빗나갔어요`; u.g = 0; return; } const base = u.atk * (1 - xFm(u, 'weak')), hit = t => xHit(u, t, base * (.85 + Math.random() * .3), '#ff6a6a');
@@ -1901,7 +1901,7 @@ function xAct0(u, sk, tgt){   // 한 번 행동
   else if (sk.t === 'deb') fs().forEach(t => { t.fx[sk.key] = { v: sk.v, t: sk.sec }; xFloat(t.id, { slow: '느려짐', weak: '약해짐', vuln: '약점', blind: '실명' }[sk.key] || sk.key, '#d0a0ff'); });
   else if (sk.t === 'dot') fs().forEach(t => { t.fx.dot = { v: Math.round(u[sk.st] * sk.p * mult), t: 8, acc: 0 }; xFloat(t.id, '지속 피해', '#ff9a4d'); });
   else if (sk.t === 'stun') fs().forEach(t => { xHit(u, t, u[sk.st] * sk.p * (.85 + Math.random() * .3) * mult, '#ffd866'); t.g = Math.min(t.g, -60); });
-  else if (sk.t === 'summon'){ xFxAt('buff', [u], u); u.pets = u.pets || []; if (u.pets.length >= 3) u.pets.shift(); const lv = sk.lv || 1, mh = Math.round((u.mhp * .3 + 16) * (1 + .25 * (lv - 1)) * (sk.pet.hpm || 1)); u.pets.push({ ...sk.pet, st: sk.st, t: sk.pet.sec * (1 + .1 * (lv - 1)), acc: 0, lv, hp: mh, mhp: mh }); xFloat(u.id, sk.pet.n + '!', '#ffd866'); }
+  else if (sk.t === 'summon'){ xFxAt('buff', [u], u); u.pets = u.pets || []; if (u.pets.length >= 3) u.pets.shift(); const lv = sk.lv || 1, mh = Math.round((u.mhp * .3 + 16) * (1 + .25 * (lv - 1)) * (sk.pet.hpm || 1)); u.pets.push({ ...sk.pet, st: sk.st, t: sk.pet.sec * (1 + .1 * (lv - 1)), acc: 0, lv, hp: mh, mhp: mh }); }
   else if (sk.t === 'recall'){ const n = (u.pets || []).length; u.pets = []; const t = xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]; if (n && t){ const h = Math.round(t.mhp * .12 * n); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); } else B.log = '돌려보낼 소환수가 없어요'; }
   else if (sk.t === 'leap'){ xFxAt('time', [u], u); xFloat(u.id, '가속!', '#9ad8ff'); }
   else if (sk.t === 'tstop'){ xFxAt('time', xAlive(B.foes), u); xAlive(B.party).forEach(a => { a.g = 100; xFloat(a.id, '행동!', '#9ad8ff'); }); xAlive(B.foes).forEach(f => { f.g = Math.min(f.g, -150); xFloat(f.id, '정지', '#d0a0ff'); }); }
