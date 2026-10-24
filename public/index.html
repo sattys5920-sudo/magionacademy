@@ -1979,7 +1979,7 @@ function xMarchView(run, head){
   <div class="xmf" id="xmf"></div>
   ${xMsg ? `<div class="hint on px" style="text-align:center">${esc(xMsg)}</div>` : ''}
   <div class="xhud"><div class="xstat" id="xmstat"></div></div>
-  <button class="btn ghost" id="xret" style="align-self:center">탐사 끝내기 (얻은 것은 가져가요)</button>`);
+  <button class="btn ghost" id="xret" style="align-self:center">탐사 끝내기</button>`);
   xM.uik = ''; xM.t = performance.now(); xM.clk = 0; World.Avatar.need(me.av); xLpcSheet(); xMHud();
   $('#xret').onclick = () => confirmBox(run.co ? '파티에서 나갈까요? 얻은 것은 가져가요. (끝나기 전엔 다시 들어올 수 있어요)' : '탐사를 끝낼까요? 얻은 것은 가져가요.', run.co ? '나갈래요' : '끝낼래요', '계속할래요').then(ok => { if (ok){ if (run.co) xcoLeaveRun(); xEnd('retreat'); renderExplore(); } });
   cancelAnimationFrame(xMRaf); xMRaf = 0; xMDraw();
@@ -2983,13 +2983,13 @@ function stStart(){
 let recList = {};
 function renderGames(){
   const here = World.placeKey(), open = Object.entries(gameList).filter(([, r]) => r && r.st === 'lobby' && r.m === here && now2() - r.at < 300000);
-  const best = g => { const L = Object.entries(recList[g] || {}).sort((a, b) => b[1] - a[1]).slice(0, 3); return L.length ? L.map(([id, s], i) => `${i + 1}. ${esc(playersList[id]?.nick || '친구')} ${s}`).join(' · ') : '아직 기록이 없어요'; };
-  const tabs = [['solo', '경쟁 놀이'], ['coop', '협동 놀이 · 2~8명']];
+  const best = g => { const L = Object.entries(recList[g] || {}).sort((a, b) => b[1] - a[1]).slice(0, 3); return L.length ? L.map(([id, s], i) => `${i + 1}. ${esc(playersList[id]?.nick || '친구')} ${s}`).join(' · ') : ''; };
+  const tabs = [['solo', '경쟁 놀이'], ['coop', '협동 놀이']];
   const list = Object.entries(GAMES).filter(([, x]) => x.coop === (gamesTab === 'coop'));
   frame(null, '놀이 게시판', '등불 시장 · 친구와 같이 놀아요', `
     ${open.length ? `<section class="sec">${secH('지금 열린 방', open.length + '개')}<div class="box px">${open.slice(0, 3).map(([id, r]) => `<div class="li"><span class="gic">${GAMES[r.g].ic}</span><div class="main"><span class="t">${esc(r.hn)}의 ${GAMES[r.g].name}</span><span class="d">${Object.keys(r.p || {}).length} / 8명</span></div><button class="btn sm go" data-gjoin="${id}">참가</button></div>`).join('')}</div>${open.length > 3 ? `<div class="hint">그 밖에 ${open.length - 3}개 더 열려 있어요</div>` : ''}</section>` : ''}
     ${segRow('gtab', gamesTab, tabs)}
-    <section class="sec"><div class="box px">${list.map(([k, x]) => `<div class="li" style="align-items:flex-start;padding-top:10px;padding-bottom:10px"><span class="gic">${x.ic}</span><div class="main"><span class="t">${x.name}</span><span class="d">이번 주 ${solo ? `내 기록 ${me.grec?.[k + weekKey()] || 0}` : best(k)}</span></div><button class="btn sm go" data-gopen="${k}" ${solo && x.coop ? 'disabled' : ''}>방 열기</button></div>`).join('')}</div>
+    <section class="sec"><div class="box px">${list.map(([k, x]) => `<div class="li" style="align-items:flex-start;padding-top:10px;padding-bottom:10px"><span class="gic">${x.ic}</span><div class="main"><span class="t">${x.name}</span><span class="d">${solo ? (me.grec?.[k + weekKey()] ? `내 기록 ${me.grec[k + weekKey()]}` : '') : best(k)}</span></div><button class="btn sm go" data-gopen="${k}" ${solo && x.coop ? 'disabled' : ''}>방 열기</button></div>`).join('')}</div>
     ${hint('', solo && gamesTab === 'coop' ? '협동 놀이는 로그인하면 열려요' : '')}</section>`);
   on('[data-gtab]', b => { gamesTab = b.dataset.gtab; renderGames(); });
   on('[data-gopen]', b => { const k = b.dataset.gopen; if (k === 'pumpkin' && !['campus', 'town'].includes(World.where())) return toast('호박 줍기는 바깥(마을)에서 열 수 있어요'); openRoom(k); });
@@ -3597,9 +3597,9 @@ async function renderNpcStory(){
   const st = npcSt(n.id), h = hearts(n.id), nk = nextHeart(n.id);
   const evs = await Promise.all([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(k => st.seen[k] || k === nk ? npcEvent(n.id, k) : null));
   const where = c => { const p = NL.places[c?.location]; return [p && fillVars(p.name, n.id), ...(c?.time || []).map(t => BAND_KO[t]), ...(c?.weather || []).map(w => WX_KO[w]), c?.festival ? '호박달 축제' : c?.moon ? '보름' : ''].filter(Boolean).join(' · '); };
-  frame(null, `${esc(n.name)}의 이야기`, `${esc(n.title || '')} · ${heartBar(h)} · ${st.a % 100}/100`, `<div class="box px">${evs.map((ev, i) => { const k = i + 1, s = st.seen[k];
+  frame(null, `${esc(n.name)}의 이야기`, `${esc(n.title || '')} · ${heartBar(h)} · ${st.a % 100}/100`, `<div class="box px">${evs.map((ev, i) => { const k = i + 1, s = st.seen[k]; if (!s && k !== nk && k > (nk || 11)) return '';
       return `<div class="li"><span class="gic">${s ? (s === 'fail' ? '💧' : '📖') : '🔒'}</span><div class="main"><span class="t">♥${k} ${s || k === nk ? esc(fillVars(ev?.title || '', n.id)) : '???'}</span><span class="d" style="white-space:normal">${s ? (s === 'cold' ? '서먹하게 끝났어요' : s === 'fail' ? '찾지 못했어요' : '다시 볼 수 있어요') : k === nk ? `♥${ev?.conditions?.minHeart || k} · ${esc(where(ev?.conditions))} 에서 말을 걸면 시작돼요` : '앞 이야기를 먼저 봐요'}</span></div>${s && s !== 'fail' ? `<button class="btn sm" data-nre="${k}">다시 보기</button>` : ''}</div>`; }).join('')}</div>
-    <div class="box px" style="padding:8px">그날 첫 대화 +10 · 선물: 좋아함 +40, 보통 +15, 싫어함 −30 (하루 한 번) · 100 = ♥1 · 7 일 넘게 말을 안 걸면 조금씩 줄어요</div>${backBtn}`);
+    ${backBtn}`);
   $('#back').onclick = closeSheet;
   on('[data-nre]', async b => { const k = +b.dataset.nre, ev = await npcEvent(n.id, k); closeSheet(); if (ev) evPlay(n, k, ev, { replay: true }); });
 }
@@ -4894,8 +4894,8 @@ function renderHome(){
   const d = new Date(), wx = weatherToday(), openEv = npcAll().filter(x => evCond(x.id));
   frame('island', '오늘의 정보', `${dayLabel()} · 1학년 · ${H.name}`, `
     <div class="box today">
-      <div class="li"><span class="tico">${isFullMoon() ? '🌕' : { clear: '✨', rain: '☔', fog: '🌫', snow: '❄' }[wx]}</span><div class="main"><span class="t">${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${BAND_KO[bandNow(d.getHours())]} · ${WX_KO[wx]}${isFullMoon() ? ' · 호박달 축제' : ''}</span><span class="d">${mine ? `${N.name}의 시간 · 내 보너스 중!` : `${N.name}의 시간 · ${hoursText(N)}`}</span></div></div>
-      <div class="li"><span class="tico">💗</span><div class="main"><span class="t">${openEv.length ? `오늘 열린 하트 이벤트 ${openEv.length}개` : '오늘 열린 하트 이벤트 없음'}</span><span class="d">${openEv.length ? openEv.map(x => `${x.name} ♥${evCond(x.id).k}`).join(' · ') : '호감도를 올리거나 다른 시간·날씨에 다시 봐요'}</span></div>${openEv.length ? '<button class="btn sm" id="goJournal">일지</button>' : ''}</div>
+      <div class="li"><span class="tico">${isFullMoon() ? '🌕' : { clear: '✨', rain: '☔', fog: '🌫', snow: '❄' }[wx]}</span><div class="main"><span class="t">${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${BAND_KO[bandNow(d.getHours())]} · ${WX_KO[wx]}${isFullMoon() ? ' · 호박달 축제' : ''}</span></div></div>
+      ${openEv.length ? `<div class="li"><span class="tico">💗</span><div class="main"><span class="t">하트 이벤트 ${openEv.length}개</span><span class="d">${openEv.map(x => `${x.name} ♥${evCond(x.id).k}`).join(' · ')}</span></div><button class="btn sm" id="goJournal">일지</button></div>` : ''}
     </div>
     <div id="evBanner" style="display:contents">${eventBannerHTML()}</div>
     <section class="sec">
