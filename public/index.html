@@ -1875,8 +1875,8 @@ function xGo(k){
   const run = xEx().run; xMsg = '';
   if (k === 'path'){ xAdd('path'); xMsg = '🛤️ 지름길로 들어섰어요! 진행 +8%'; save(); return renderExplore(); }
   if (k === 'battle' || k === 'elite' || k === 'boss'){ xStartBattle(k); return; }
-  if (k === 'camp'){ const p = xb?.party || xParty(); p.forEach(u => { u.hp = Math.min(u.mhp, u.hp + Math.round(u.mhp * .5)); u.mp = Math.min(u.mmp, u.mp + Math.round(u.mmp * .5)); }); run.p = p.map(u => ({ hp: u.hp, mp: u.mp })); xMsg = '🔥 모닥불에 둘러앉아 체력과 마력을 절반 회복했어요.'; if (Math.random() < .5){ run.buff = (run.buff || 0) + 1; xMsg += ' 따뜻한 가호 (다음 전투 공격 +25%)'; } xAdd('camp'); save(); return renderExplore(); }
-  if (k === 'chest'){ const g = Math.round((20 + Math.round(Math.random() * 30) + Math.round(run.prog / 3)) * (run.mod?.rew || 1)), it = xRand(xReg().loot); run.loot.gold += g; run.loot.items[it] = (run.loot.items[it] || 0) + 1 + (Math.random() < .3 ? 1 : 0); xMsg = `🎁 상자에서 골드 ${g}과 ${ITEM[it] || it}이 나왔어요!`; if (Math.random() < .12){ xAdd('chest'); save(); return xStartBattle('battle', '상자가 미믹이었어요!'); } xAdd('chest'); save(); return renderExplore(); }
+  if (k === 'camp'){ const p = xb?.party || xParty(); p.forEach(u => { u.hp = Math.min(u.mhp, u.hp + Math.round(u.mhp * .5)); u.mp = Math.min(u.mmp, u.mp + Math.round(u.mmp * .5)); }); run.p = p.map(u => ({ hp: u.hp, mp: u.mp })); xMsg = '🔥 모닥불에 둘러앉아 체력과 마력을 절반 회복했어요.'; sfx('camp'); sfx('heart'); if (Math.random() < .5){ run.buff = (run.buff || 0) + 1; xMsg += ' 따뜻한 가호 (다음 전투 공격 +25%)'; } xAdd('camp'); save(); return renderExplore(); }
+  if (k === 'chest'){ const g = Math.round((20 + Math.round(Math.random() * 30) + Math.round(run.prog / 3)) * (run.mod?.rew || 1)), it = xRand(xReg().loot); run.loot.gold += g; run.loot.items[it] = (run.loot.items[it] || 0) + 1 + (Math.random() < .3 ? 1 : 0); xMsg = `🎁 상자에서 골드 ${g}과 ${ITEM[it] || it}이 나왔어요!`; sfx('chest'); if (Math.random() < .12){ xAdd('chest'); save(); return xStartBattle('battle', '상자가 미믹이었어요!'); } xAdd('chest'); save(); return renderExplore(); }
   if (k === 'statue'){ xv = { view: 'march' }; confirmBox('이끼 낀 고대 석상이 있어요. 어떻게 할까요?', '기도하기', '조사하기').then(ok => { xAdd('statue'); const r = Math.random();
       if (ok){ if (r < .6){ run.buff = (run.buff || 0) + 3; xMsg = '🗿 석상이 빛나요! 다음 3번의 전투 공격 +25%.'; } else if (r < .85) xMsg = '🗿 아무 일도 일어나지 않았어요…'; else { const p = xb?.party || xParty(); p.forEach(u => { u.hp = Math.max(1, u.hp - Math.round(u.mhp * .15)); }); run.p = p.map(u => ({ hp: u.hp, mp: u.mp })); xMsg = '🗿 저주! 모두 체력이 줄었어요.'; } }
       else { if (r < .7){ const it = xRand(xReg().rare); run.loot.items[it] = (run.loot.items[it] || 0) + 1; run.loot.gold += 30; xMsg = `🗿 석상 밑에서 ${ITEM[it] || it}과 골드 30을 찾았어요!`; } else { save(); return xStartBattle('battle', '석상을 지키던 몬스터가 깨어났어요!'); } }
@@ -1947,22 +1947,22 @@ function xMUi(){   // 갈림길 · 돌발 상황 버튼
   else { el.className = 'xmf'; el.innerHTML = `<div class="xmw">${M.st === 'walk' ? '걷는 중… 앞에서 무슨 일이 생길지 몰라요' : M.st === 'alert' ? '⚠️ 몬스터가 나타났어요!' : ''}</div>`; }
 }
 function xMPick(i){   // 먼저 누른 쪽으로 가요
-  const M = xM; if (M.st !== 'fork' || !M.fork) return; const k = M.fork.opts[i]; M.fork = null; M.st = 'busy'; M.nextFork = xEx().run.prog + 8 + Math.random() * 6; M.uik = ''; xGo(k);
+  const M = xM; if (M.st !== 'fork' || !M.fork) return; const k = M.fork.opts[i]; sfx('pick'); M.fork = null; M.st = 'busy'; M.nextFork = xEx().run.prog + 8 + Math.random() * 6; M.uik = ''; xGo(k);
 }
 function xMStep(M, run, dt, now){
   if (M.st === 'walk'){
     M.off += dt * 38; M.wt += dt; run.prog = Math.min(99.9, run.prog + dt * xMSpd());
-    if (run.prog >= 88 && !M.boss){ M.boss = true; M.st = 'alert'; M.alert = { t0: now, dur: 1500, kind: 'boss', lp: xReg().boss.lp, txt: '숲의 주인이 나타났어요!' }; }
-    else if (run.prog >= M.nextFork && run.prog < 84){ M.st = 'fork'; M.fork = { opts: xMForkOpts(run), t0: now }; }
-    else if (M.wt >= M.nextEnc){ const el = run.prog > 20 && Math.random() < .12; M.nextEnc = M.wt + 12 + Math.random() * 12; const mo = el ? xReg().elite : xRand(run.pool && run.pool.length ? run.pool : xReg().mon); if (!el) run.nextMon = mo; M.st = 'alert'; M.alert = { t0: now, dur: 1200, kind: el ? 'elite' : 'battle', lp: mo.lp, txt: el ? '강한 몬스터가 나타났어요!' : '몬스터가 나타났어요!' }; }
-    else if (M.wt >= M.nextHaz){ M.nextHaz = M.wt + 22 + Math.random() * 18; M.st = 'haz'; M.haz = { ty: xRand(XM_HAZ), t0: now, dur: 3600, done: false, ok: false }; }
+    if (run.prog >= 88 && !M.boss){ M.boss = true; M.st = 'alert'; M.alert = { t0: now, dur: 1500, kind: 'boss', lp: xReg().boss.lp, txt: `${withJosa(xReg().boss.n, '이', '가')} 나타났어요!` }; sfx('boss'); }
+    else if (run.prog >= M.nextFork && run.prog < 84){ M.st = 'fork'; M.fork = { opts: xMForkOpts(run), t0: now }; sfx('fork'); }
+    else if (M.wt >= M.nextEnc){ const el = run.prog > 20 && Math.random() < .12; M.nextEnc = M.wt + 12 + Math.random() * 12; const mo = el ? xReg().elite : xRand(run.pool && run.pool.length ? run.pool : xReg().mon); if (!el) run.nextMon = mo; M.st = 'alert'; M.alert = { t0: now, dur: 1200, kind: el ? 'elite' : 'battle', lp: mo.lp, txt: el ? '강한 몬스터가 나타났어요!' : '몬스터가 나타났어요!' }; sfx('enc'); }
+    else if (M.wt >= M.nextHaz){ M.nextHaz = M.wt + 22 + Math.random() * 18; M.st = 'haz'; M.haz = { ty: xRand(XM_HAZ), t0: now, dur: 3600, done: false, ok: false }; sfx('haz'); }
   } else if (M.st === 'alert'){
     if (now - M.alert.t0 >= M.alert.dur){ const k = M.alert.kind; M.alert = null; M.st = 'busy'; xSaveParty(); save(); xStartBattle(k); }
   } else if (M.st === 'fork'){
     if (now - M.fork.t0 > 15000) xMPick(Math.floor(Math.random() * M.fork.opts.length));
   } else if (M.st === 'haz'){
     const H = M.haz; if (!H.done && now - H.t0 >= H.dur){ H.done = true; H.ok = false; H.t1 = now; }
-    if (H.done && !H.fx){ H.fx = true; const loss = H.ok ? 0 : xMHurt(.15); M.res = { t0: now, dur: 1500, txt: H.ok ? H.ty.ok : `${H.ty.bad}! 체력 -${loss}`, ok: H.ok }; if (!H.ok) M.shake = now; }
+    if (H.done && !H.fx){ H.fx = true; const loss = H.ok ? 0 : xMHurt(.15); sfx(H.ok ? 'dodge' : 'hurt'); M.res = { t0: now, dur: 1500, txt: H.ok ? H.ty.ok : `${H.ty.bad}! 체력 -${loss}`, ok: H.ok }; if (!H.ok) M.shake = now; }
     if (H.done && now - H.t1 >= 900){ M.st = 'res'; M.haz = null; }
   } else if (M.st === 'res'){
     if (now - M.res.t0 >= M.res.dur){ M.res = null; M.st = 'walk'; }
@@ -2013,13 +2013,15 @@ function xAlive(a){ return a.filter(u => u.hp > 0); }
 let xDelay = 0;   // 공격 모션이 닿을 때까지 숫자·번쩍임을 늦춰요
 function xFloat(id, txt, col){ const B = xb; if (!B) return; const u = [...B.foes, ...B.party].find(x => x.id === id); if (!u) return; const now = performance.now(); B.floats.push({ x: u.sx || 0, y: (u.sy || 80) - (u.hh || 50) + 4, txt, col: col || '#fff', t0: now + xDelay }); if (String(txt)[0] === '-'){ u.flashAt = now + xDelay; u.flash = u.flashAt + 130; if (u.hp <= 0) u.dieWait = xDelay; } }
 const xFm = (u, k) => u.fx[k] ? u.fx[k].v : 0;
+let xSfxT = 0;
 function xHit(u, t, raw, col, opt){   // 피해 한 번: 치명타 · 약점(vuln) · 회피 · 받는 피해 감소 · 보호막 · 버티기 · 흡혈 · 반격
-  opt = opt || {}; let dmg = raw; if (u && u.team === 'a' && (opt.fcrit || Math.random() < (u.crit || 0))){ dmg *= 1.6; xFloat(t.id, '치명!', '#ffb84d'); }
+  opt = opt || {}; let dmg = raw; let isCrit = false; if (u && u.team === 'a' && (opt.fcrit || Math.random() < (u.crit || 0))){ dmg *= 1.6; isCrit = true; xFloat(t.id, '치명!', '#ffb84d'); }
   if (t.team === 'e') dmg *= 1 + xFm(t, 'vuln');
   if (t.team === 'a'){ if (u && u.team === 'e' && xFm(t, 'dodge') + (t.dodge || 0) > Math.random()){ xFloat(t.id, '회피!', '#9fd0ff'); return 0; } dmg *= 1 - Math.min(.75, xFm(t, 'dmgIn') + (t.dr || 0)); }
   if (xb.def[t.id]) dmg /= 2; dmg = Math.max(1, Math.round(dmg));
   const sh = t.fx.shield; if (sh && sh.v > 0){ const a = Math.min(sh.v, dmg); sh.v -= a; dmg -= a; xFloat(t.id, '막음', '#9fd0ff'); if (sh.v <= 0) delete t.fx.shield; if (dmg <= 0) return 0; }
   t.hp = Math.max(0, t.hp - dmg); xFloat(t.id, '-' + dmg, col);
+  { const now = performance.now(); if (now - xSfxT > 70){ xSfxT = now; setTimeout(() => sfx(isCrit ? 'crit' : 'hit'), xDelay || 0); } }
   if (t.hp <= 0 && t.team === 'a' && (t.fx.survive || t.survLeft > 0)){ if (t.fx.survive) delete t.fx.survive; else t.survLeft--; t.hp = 1; xFloat(t.id, '버텼다!', '#ffffff'); }
   if (u && u.vamp) u.hp = Math.min(u.mhp, u.hp + Math.round(dmg * u.vamp));
   if (t.team === 'a' && t.hp > 0 && t.fx.counter && u && u.team === 'e' && u.hp > 0){ const r = Math.max(1, Math.round(dmg * t.fx.counter.v)); u.hp = Math.max(0, u.hp - r); xFloat(u.id, '-' + r, '#ffd866'); }
@@ -2364,14 +2366,14 @@ function xLoop(){
   if (B.turn && B.turn.hp <= 0) B.turn = null; xUp();
 }
 function xWin(){
-  const B = xb, run = xEx().run; B.over = true; clearInterval(xTick); const mL = B.foes[0].mL; let exp = 0, gold = 0; B.foes.forEach(f => { exp += Math.round(8 * (1 + .45 * (mL - 1)) * f.k); gold += Math.round(6 * (1 + .3 * (mL - 1)) * f.k * (.8 + Math.random() * .4)); });
+  sfx('win'); const B = xb, run = xEx().run; B.over = true; clearInterval(xTick); const mL = B.foes[0].mL; let exp = 0, gold = 0; B.foes.forEach(f => { exp += Math.round(8 * (1 + .45 * (mL - 1)) * f.k); gold += Math.round(6 * (1 + .3 * (mL - 1)) * f.k * (.8 + Math.random() * .4)); });
   const rm = (run.mod?.rew || 1) * (.9 + Math.random() * .2); run.loot.exp += Math.round(exp * rm); run.loot.gold += Math.round(gold * rm); let drop = ''; if (Math.random() < (B.kind === 'battle' ? .3 : .8)){ const it = xRand(B.kind === 'boss' ? xReg().rare : xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; drop = ` · ${ITEM[it] || it}`; }
   xSaveParty(); B.party.forEach(u => { if (u.hp <= 0) u.hp = Math.max(1, Math.round(u.mhp * .2)); }); run.p = B.party.map(u => ({ hp: u.hp, mp: u.mp }));
   const kind = B.kind; xAdd(kind === 'boss' ? 'boss' : kind); save();
   $('#xlog') && ($('#xlog').textContent = `승리! 골드 +${gold} · 경험치 +${exp}${drop}`); const el = $('#xcmd'); if (el) el.innerHTML = '<button class="btn go" id="xnext" style="grid-column:1/-1">계속</button>';
   $('#xnext').onclick = () => { xb = null; if (run.prog >= 100){ xEnd('clear'); } else { xv = { view: 'march' }; xMsg = ''; } renderExplore(); };
 }
-function xLose(){ const B = xb; B.over = true; clearInterval(xTick); $('#xlog') && ($('#xlog').textContent = '모두 쓰러졌어요…'); const el = $('#xcmd'); if (el) el.innerHTML = '<button class="btn go" id="xnext" style="grid-column:1/-1">마을로 돌아가기</button>'; $('#xnext').onclick = () => { xEnd('wipe'); renderExplore(); }; }
+function xLose(){ sfx('lose'); const B = xb; B.over = true; clearInterval(xTick); $('#xlog') && ($('#xlog').textContent = '모두 쓰러졌어요…'); const el = $('#xcmd'); if (el) el.innerHTML = '<button class="btn go" id="xnext" style="grid-column:1/-1">마을로 돌아가기</button>'; $('#xnext').onclick = () => { xEnd('wipe'); renderExplore(); }; }
 
 // ===== 같이 하는 놀이: 등불 시장 「놀이 게시판」에서 방을 열고, 같은 곳 친구가 참가해요 =====
 // games/<방> = { g 놀이, host, hn 방장 이름, m 장소, st lobby·play·end, at, t0 시작 시각, seed, ord 참가 순서, p: { uid: { n, s 점수, d 끝남 } }, c 줍기·때리기 차지, co 협동 상태 }
@@ -3467,6 +3469,16 @@ const BGM = (() => {
 })();
 // NPC 전용 곡: 이 사람과 대화(말 걸기·이벤트·의뢰 장면)하는 동안만 그 곡으로 부드럽게 바뀌어요
 const NPC_BGM = { blady: 'audio/bgm_dracula.mp3', yeoreum: 'audio/bgm_ghost.mp3', beatrix: 'audio/bgm_witch.mp3', ur: 'audio/bgm_werewolf.mp3', nefer: 'audio/bgm_mummy.mp3', piece: 'audio/bgm_frank.mp3', jack: 'audio/bgm_jack.mp3', nabi: 'audio/bgm_nabi.mp3', batri: 'audio/bgm_batri.mp3', kappa: 'audio/bgm_kappa.mp3', aula: 'audio/bgm_aula.mp3', mandi: 'audio/bgm_mandi.mp3', jipsin: 'audio/bgm_jipsin.mp3', sera: 'audio/bgm_sera.mp3', madeleine: 'audio/bgm_madeleine.mp3', stella: 'audio/bgm_stella.mp3', leo: 'audio/bgm_leo.mp3' };   // 드라큘라 · Candlelight Confession / 유령 · The Lake Before Nightfall / 마녀 · Rain on the Clockface / 늑대인간 · Firelight Vigil / 미라 · The Scribe's Midnight / 프랑켄슈타인 · Hesitant Steps of a Giant / 잭 · The Last Porch Light / 나비 · Stray at the Market Gate / 배트리 · A Bell at the Gate / 캇파 · The Bamboo Sigh / 아울라 · Reflections in the Margin / 맨디 · Sunlight on the Mandrake / 짚신 · Seven Miles to Sunrise / 세라 · Steeping Sunlight / 마들렌 · Sifted Sunlight / 스텔라 · The Wrong Way Home / 레오 · Golden Hour at the Barn (곡이 생기는 대로 추가)
+// 탐사 배경 음악: 지역마다 한 곡 (파일이 아직 없으면 기본 곡이 계속 나와요)
+const XR_BGM = ['audio/bgm_x1_forest.mp3', 'audio/bgm_x2_crypt.mp3', 'audio/bgm_x3_cave.mp3', 'audio/bgm_x4_temple.mp3'], xrOk = {};
+let xrCur = null;
+setInterval(() => {
+  let want = null; try { const run = me && me.ex && me.ex.run; if (sheetOn && sub === 'explore' && run && (xv?.view === 'march' || xv?.view === 'battle')) want = XR_BGM[run.rg]; } catch(e){}
+  if (want === xrCur) return;
+  if (want && xrOk[want] === undefined){ xrOk[want] = null; fetch(want, { method: 'HEAD' }).then(r => { xrOk[want] = r.ok; }).catch(() => { xrOk[want] = false; }); return; }
+  if (want && xrOk[want] !== true) return;
+  if (xrCur) BGM.sceneEnd('xr'); xrCur = want; if (want) BGM.scene('xr', want);
+}, 400);
 let npcThemeId = null;
 setInterval(() => {
   let id = null; try { id = evOn ? evOn.n.id : null; } catch(e){}   // 자기 곡은 스토리 장면(하트 스토리·의뢰 장면)에서만, 말 걸기·선물은 메인 곡 그대로
@@ -3492,6 +3504,12 @@ function sfx(id){
     scream: () => { const o = AC.createOscillator(), gn = AC.createGain(); o.type = 'sawtooth'; o.frequency.setValueAtTime(900, t); o.frequency.exponentialRampToValueAtTime(1800, t + .6); gn.gain.setValueAtTime(.5, t); gn.gain.exponentialRampToValueAtTime(.001, t + .8); o.connect(gn); gn.connect(out); o.start(t); o.stop(t + .85); },
     crow: () => { tone(500, .15, 'sawtooth', 0, .5); tone(440, .2, 'sawtooth', .2, .5); }, cat: () => { tone(700, .25, 'triangle', 0, .5); tone(560, .2, 'triangle', .2, .4); }, owl: () => { tone(330, .3, 'sine'); tone(300, .4, 'sine', .4); },
     bird: () => [0, .1, .2].forEach(a => tone(2000 + Math.random() * 500, .05, 'sine', a, .5)), goat: () => tone(330, .5, 'sawtooth', 0, .4), dragon: () => { tone(160, .4, 'sawtooth', 0, .5); noise(.4, .5, .1, 1200); },
+    enc: () => { tone(220, .12, 'square', 0, .7); tone(165, .25, 'square', .12, .7); }, boss: () => { tone(80, .9, 'sawtooth', 0, .8); tone(60, 1.1, 'sawtooth', .1, .7); noise(.8, .6, .1, 300); },
+    fork: () => { tone(659, .12, 'triangle'); tone(880, .16, 'triangle', .12); }, pick: () => { tone(784, .07, 'square'); tone(1047, .1, 'square', .07); }, haz: () => [0, .14, .28].forEach(a => tone(990, .08, 'square', a, .7)),
+    dodge: () => { noise(.18, .6, 0, 2500); tone(880, .1, 'triangle', .1, .5); tone(1319, .14, 'triangle', .18, .5); }, hurt: () => { noise(.25, 1, 0, 500); tone(110, .25, 'sawtooth', 0, .8); },
+    hit: () => { noise(.1, .9, 0, 1800); tone(140, .1, 'square', 0, .6); }, crit: () => { noise(.12, 1, 0, 3000); tone(220, .12, 'square', 0, .7); tone(1568, .15, 'triangle', .05, .5); },
+    win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, .25, 'triangle', i * .12, .6)), lose: () => [392, 330, 262, 196].forEach((f, i) => tone(f, .3, 'sawtooth', i * .18, .5)),
+    chest: () => [784, 988, 1319, 1568].forEach((f, i) => tone(f, .2, 'triangle', i * .07, .5)), camp: () => noise(.8, .3, 0, 900),
     crowd: () => noise(1.2, .4, 0, 900), fireworks: () => { tone(300, .4, 'sine', 0, .3); noise(.6, 1, .35, 3000); }, sing: () => [523, 587, 659, 784, 659].forEach((f, i) => tone(f, .3, 'sine', i * .25, .5)), cough: () => noise(.15, .8, 0, 1200),
   };
   (S[id] || (() => {}))();
