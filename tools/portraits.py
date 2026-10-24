@@ -15,12 +15,13 @@ def block_size(a):
     runs = [r for r in runs if 3 <= r <= 16]
     return max(set(runs), key=runs.count) if runs else 8
 # 가장자리에서 안 닿는 갇힌 배경(볼트와 목 사이 등): 그 안의 한 점을 (가로, 세로) 비율로 적어 두면 거기서도 지워요
-KEEP_WHITE = {'madeleine'}
+KEEP_WHITE = {'madeleine', 'leo'}
+FILL_EYES = {'leo'}
 POCKETS = {'hazel'}
 HOLES = {'frankie': [(.324, .576), (.675, .576)]}
 # 한 표정만 확대돼서 뽑혔을 때: 그 표정을 (배율, 왼쪽, 위)로 줄여 옮기고, 모든 표정을 같이 잘라요 (왼, 위, 오른, 아래)
 FIT = {'boo': {'happy': (.83, 59, 71)}}
-WHITE_MIN = {'mirabel': 253, 'nabi': 250, 'batri': 250, 'kappa': 250, 'aula': 250, 'mandi': 250, 'jipsin': 250, 'sera': 250, 'madeleine': 253, 'stella': 250}   # 붕대가 흰색에 가까워서, 배경(순백)만 지워지게 문턱을 높여요
+WHITE_MIN = {'mirabel': 253, 'nabi': 250, 'batri': 250, 'kappa': 250, 'aula': 250, 'mandi': 250, 'jipsin': 250, 'sera': 250, 'madeleine': 253, 'stella': 250, 'leo': 250}   # 붕대가 흰색에 가까워서, 배경(순백)만 지워지게 문턱을 높여요
 CROP = {'boo': (66, 0, 798, 1062), 'mirabel': (41, 0, 837, 1090), 'nabi': (30, 60, 830, 860), 'batri': (30, 70, 870, 970), 'kappa': (40, 100, 860, 900), 'aula': (60, 100, 840, 900), 'mandi': (80, 70, 840, 880), 'jipsin': (130, 80, 800, 840)}
 def fit(a, t):
     s, dx, dy = t; H, W = a.shape[:2]
@@ -127,6 +128,13 @@ def build(pid):
             al = small[..., 3] > 0; rgb = small[..., :3].astype(int)
             light = al & (rgb.min(-1) >= 200) & (rgb.max(-1) - rgb.min(-1) <= 28)
             small[light & ndimage.binary_dilation(~al, iterations=1)] = 0
+        if pid in FILL_EYES:   # 눈 흰자가 비는 곳(얼굴 높이에서 외곽선 안에 갇힌 작은 투명 조각)을 흰색으로 메워요
+            from scipy import ndimage
+            lab, nl = ndimage.label(small[..., 3] == 0)
+            for i in range(1, nl + 1):
+                ys, xs = np.nonzero(lab == i)
+                if len(ys) <= 60 and ys.min() > 0 and xs.min() > 0 and ys.max() < h - 1 and xs.max() < w - 1 and h * .25 < ys.mean() < h * .5:
+                    small[ys, xs] = (250, 250, 250, 255)
         cells.append(small)
     sheet = np.concatenate(cells, 1)
     Image.fromarray(sheet, 'RGBA').save(os.path.join(OUT, f'{pid}.png'))
