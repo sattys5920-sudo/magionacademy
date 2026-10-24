@@ -3433,8 +3433,9 @@ function weatherToday(){
   const r = hash32('wx' + todayKey()) / 4294967296, m = new Date().getMonth();
   return r < .25 ? ([11, 0, 1].includes(m) && r < .14 ? 'snow' : 'rain') : r < .40 ? 'fog' : 'clear';
 }
-const moonAge = (t = Date.now()) => { const d = (t - Date.UTC(2000, 0, 6, 18, 14)) / 864e5; return ((d % 29.530588) + 29.530588) % 29.530588; };
-const isFullMoon = () => Math.abs(moonAge() - 14.77) <= 1.5;   // 보름 전후 3 일 = 호박달 축제
+const MOON_DAYS = 8;   // 달이 차고 기우는 주기: 진짜 달(29.5일)을 기다리면 이야기가 몇 주씩 멈추니까, 이 세계에선 8일에 한 번 보름·그믐이 와요
+const moonAge = (t = Date.now()) => { const d = (t - Date.UTC(2000, 0, 6, 18, 14)) / 864e5; return (((d % MOON_DAYS) + MOON_DAYS) % MOON_DAYS) / MOON_DAYS * 29.530588; };
+const isFullMoon = () => Math.abs(moonAge() - 14.77) <= 4.2;   // 보름 전후 이틀쯤 = 호박달 축제
 const dayNum = k => { const [y, m, d] = String(k).split('-').map(Number); return Math.round(Date.UTC(y, m - 1, d) / 864e5); };
 const daysSince = k => k ? dayNum(todayKey()) - dayNum(k) : 1e9;
 // 평소 루틴: 시간대마다 서 있는 장소 (그 안에서 계속 돌아다녀요)
@@ -6602,7 +6603,7 @@ const mqName = id => { const c = MQ.cast[id]; if (!c) return id; const nm = mqSt
 const mqShards = () => me.inv.lantern_shard || 0;
 const mqDoneN = () => Object.keys(mqState().done).length;
 // 달: 실제 달 (관리자·시험용 강제: localStorage['magion-moon'] = full | new | other)
-const moonNow = () => { const f = localStorage.getItem('magion-moon'); if (f) return f; if (isFullMoon()) return 'full'; const a = moonAge(); return a <= 1.5 || a >= 28 ? 'new' : 'other'; };
+const moonNow = () => { const f = localStorage.getItem('magion-moon'); if (f) return f; if (isFullMoon()) return 'full'; const a = moonAge(); return a <= 4.2 || a >= 25.3 ? 'new' : 'other'; };
 const MOON_KO = { full: '보름', new: '그믐', other: '반달' };
 // ---- 밤하늘: 끝낸 의뢰 수만큼 별이 켜져요 ----
 function mqSky(){ if (!World.setSky || !me) return; const d = mqState().done, lit = MQ.list.slice(0, 6).map(id => !!d[id]); World.setSky({ lit, jack: !!d[MQ.list[6]], done: !!d[MQ.list[6]], hint: mqShards() >= 6 }); }
