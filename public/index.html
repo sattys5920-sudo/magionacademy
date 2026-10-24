@@ -1768,7 +1768,7 @@ function xEnd(how){   // how: clear · time · retreat · wipe
 function xTime(run){ return Math.max(0, run.end - Date.now()); }
 // ===== 협동 탐험 1단계: 방·로비 (xparty/<방> = { host, hn, rg 지역, st lobby·run·end, at, t0, seed, p: { uid: { n, job, L, rdy, out } } }) =====
 // 방장이 지역을 고르고 친구를 모아요. 아직 개발 중이라 주소 끝에 ?coop=1 을 붙여 연 기기에서만 보여요 (설계: docs/coop_design.md)
-const XCOOP = (() => { try { const q = new URLSearchParams(location.search).get('coop'); if (q != null) localStorage.setItem('magion-coop', q); return localStorage.getItem('magion-coop') === '1'; } catch(e){ return false; } })();
+const XCOOP = (() => { try { const q = new URLSearchParams(location.search).get('coop'); if (q != null) localStorage.setItem('magion-coop', q); return localStorage.getItem('magion-coop') !== '0'; } catch(e){ return true; } })();   // 주소 끝에 ?coop=0 을 붙이면 협동을 꺼요
 const XP_MAX = 5;
 let xpList = {}, xpRoom = null, xpV = null, xpOff = null;
 const xpMe = () => { const ex = xEx(); return { n: me.nick, job: ex.job || '', L: xLv(ex.exp).L, rdy: 0 }; };
@@ -1798,7 +1798,7 @@ function xpPanel(lv){
   if (!XCOOP) return '';
   const mineRoom = xpV ? [xpRoom, xpV] : null, open = Object.entries(xpList).filter(([id, r]) => r && r.st === 'lobby' && !r.p?.[myId()] && now2() - r.at < 600000).sort((a, b) => b[1].at - a[1].at);
   const back = Object.entries(xpList).filter(([id, r]) => r && r.st === 'run' && r.p?.[myId()]?.out);
-  if (!mineRoom) return `<section class="sec">${secH('함께 가기', '같이 갈 친구를 모아요')}<div class="box px"><button class="btn go" data-xp="create" style="width:100%">🤝 방 만들기</button>
+  if (!mineRoom) return `<section class="sec">${secH('열려 있는 파티', '같이 갈 친구를 찾아요')}<div class="box px">
     ${open.map(([id, r]) => `<div class="li"><div class="main"><span class="t">${esc(r.hn)}의 파티</span><span class="d">${XRG[r.rg]?.n || ''} · ${Object.keys(r.p || {}).length} / ${XP_MAX}명</span></div><button class="btn sm" data-xp="join" data-id="${id}">참가</button></div>`).join('')}
     ${back.map(([id, r]) => `<div class="li"><div class="main"><span class="t">${esc(r.hn)}의 파티 (진행 중)</span><span class="d">다시 들어갈 수 있어요</span></div><button class="btn sm go" data-xp="join" data-id="${id}">돌아가기</button></div>`).join('')}
     ${open.length || back.length ? '' : '<div class="s sub" style="padding:6px 2px">열려 있는 파티가 없어요</div>'}</div></section>`;
@@ -1831,7 +1831,7 @@ function renderExplore(){
     frame(null, '탐사', `오늘 ${ex.n} / ${XDAY}회`, `${head}<section class="sec">${secH('가는 곳', '마을 가장자리 길 끝에서 정해요')}<div class="box px"><div class="li"><span class="big">${R.ic}</span><div class="main"><span class="t">${R.n} · ${R.tier}</span><span class="d" style="white-space:normal">${R.dir}쪽 길 · ${R.min}분 · 입장 ${R.fee}G · 몬스터 Lv ${R.lv[0]}~${R.lv[1]}${lv.L < R.need ? ` · 내 레벨 ${R.need} 이상` : ''}</span></div></div>
       <div class="s sub" style="white-space:normal">학교와 마을 가장자리에 길이 네 갈래 있어요. 마을 남쪽 초보 · 학교 서쪽 중급 · 마을 북쪽 고급 · 마을 동쪽 초고급. 길 끝 기둥 사이로 걸어가면 그 탐사장이 열려요. 들어갈 때마다 「오늘의 길」과 만나는 몬스터가 달라져요.</div></div>
       ${xpPanel(lv)}
-      <div class="s sub">자동으로 걸어가요. 갈림길에서 길을 고르고, 돌발 상황에 대처하고, 만나는 몬스터와 싸워 100%를 채워요. 시간이 끝나거나 전멸하면 끝나요. 전멸하면 얻은 것을 모두 잃어요. 혼자서도, 친구와 같이도 갈 수 있어요.</div><button class="btn" id="xwp" style="width:100%">⚔️ 무기 강화 · ${XWN[ex.job]} (${XWT[ex.wp || 0]})</button><button class="btn" id="xst" style="width:100%">💪 스탯${xSpPts(ex) > 0 ? ` · 남은 포인트 ${xSpPts(ex)}` : ''}</button><button class="btn" id="xtree" style="width:100%">🌳 스킬 트리${xPts(ex) > 0 ? ` · 남은 포인트 ${xPts(ex)}` : ''}</button><button class="btn go" id="xgo" style="width:100%" ${ex.n >= XDAY || me.coin < R.fee || !okL ? 'disabled' : ''}>${ex.n >= XDAY ? '오늘은 끝났어요' : !okL ? `레벨 ${R.need} 이상이에요` : me.coin < R.fee ? `골드가 모자라요 (${R.fee}G)` : `출발하기 · ${R.fee}G`}</button>${hint(xMsg, '스킬은 레벨이 오를 때마다 포인트를 받아요')}</section><div style="display:flex;gap:8px">${back}</div>`);
+      <div class="s sub">자동으로 걸어가요. 갈림길에서 길을 고르고, 돌발 상황에 대처하고, 만나는 몬스터와 싸워 100%를 채워요. 시간이 끝나거나 전멸하면 끝나요. 전멸하면 얻은 것을 모두 잃어요. 혼자서도, 친구와 같이도 갈 수 있어요.</div><button class="btn" id="xwp" style="width:100%">⚔️ 무기 강화 · ${XWN[ex.job]} (${XWT[ex.wp || 0]})</button><button class="btn" id="xst" style="width:100%">💪 스탯${xSpPts(ex) > 0 ? ` · 남은 포인트 ${xSpPts(ex)}` : ''}</button><button class="btn" id="xtree" style="width:100%">🌳 스킬 트리${xPts(ex) > 0 ? ` · 남은 포인트 ${xPts(ex)}` : ''}</button>${xpV ? '' : `<div class="frow" style="display:flex;gap:8px"><button class="btn go" id="xgo" style="flex:1" ${ex.n >= XDAY || me.coin < R.fee || !okL ? 'disabled' : ''}>${ex.n >= XDAY ? '오늘은 끝났어요' : !okL ? `레벨 ${R.need} 이상이에요` : me.coin < R.fee ? `골드가 모자라요 (${R.fee}G)` : `${XCOOP ? '혼자 가기' : '출발하기'} · ${R.fee}G`}</button><button class="btn" data-xp="create" style="flex:1" ${ex.n >= XDAY || !okL ? 'disabled' : ''}>🤝 파티 모집하기</button></div>`}${hint(xMsg, '스킬은 레벨이 오를 때마다 포인트를 받아요')}</section><div style="display:flex;gap:8px">${back}</div>`);
     on('[data-xr]', b => { xRgSel = +b.dataset.xr; if (xpRoom && xpV?.host === myId() && xpV.st === 'lobby') GDB.upd('xparty/' + xpRoom, { rg: xRgSel }); renderExplore(); });
     xpWire();
     $('#back').onclick = closeSheet;
@@ -2093,7 +2093,7 @@ function xcoEnter(id, v){   // 방이 「출발」하면 각자 탐사 기록을
   const ex = xEx(), me_p = v.p?.[myId()]; if (!me_p || me_p.out || !v.t0 || !v.seed) return; if (ex.run && ex.run.co === id){ if (!xcoOff.length) xcoWatch(id); return; }
   if (ex.run) return;
   const R = XRG[v.rg] || XRG[0]; if (xLv(ex.exp).L < R.need) return;
-  if (!me_p.paid){ if (me.coin < R.fee){ toast('입장료가 모자라서 같이 못 가요'); return xpLeave(); } me.coin -= R.fee; ex.n++; GDB.upd(`xparty/${id}/p/${myId()}`, { paid: 1 }); }
+  if (!me_p.paid){ if (ex.n >= XDAY){ toast('오늘 탐사는 모두 했어요'); return xpLeave(); } if (me.coin < R.fee){ toast('입장료가 모자라서 같이 못 가요'); return xpLeave(); } me.coin -= R.fee; ex.n++; GDB.upd(`xparty/${id}/p/${myId()}`, { paid: 1 }); }
   const rnd = xcoSeeded(v.seed || 1), mod = XMODS[Math.floor(rnd() * XMODS.length)], pool = R.mon.map(m => [rnd(), m]).sort((a, b) => a[0] - b[0]).slice(0, 4).map(a => a[1]);
   ex.run = { rg: v.rg, co: id, mod, pool, start: v.t0, end: v.t0 + R.min * 6e4, prog: 0, loot: { gold: 0, exp: 0, items: {} }, buff: 0, p: null, node: null }; save(); hud();
   xv = { view: 'march' }; xMsg = ''; xM = null; xb = null; xcoWatch(id); xcoWasHost = v.host === myId(); if (xcoWasHost) setTimeout(() => xcoPub({ st: 'walk' }), 400);
@@ -2214,9 +2214,11 @@ function xcoMemberWin(B, rew){   // 이긴 보상: 경험치·골드는 같고, 
 // ----- 전투 -----
 function xStartBattle(kind, msg){
   const ex = xEx(), run = ex.run, R = xReg(), party = xcoHost() ? xcoPartyUnits() : xParty(), d = run.prog / 100, mL = Math.max(1, Math.min(Math.round(R.lv[0] + (R.lv[1] - R.lv[0]) * d), xLv(ex.exp).L + 3)),   // 내 레벨보다 3 높은 몬스터까지만
-    mk = (m, i) => { const k = m.k || 1, f = 1 + .35 * (mL - 1), a = 1 + .25 * (mL - 1); return { id: 'e' + i, name: m.n, ic: '', lp: m.lp, big: m.big, sc: m.big ? 3 : k >= 3 ? 2 : 1, hh: 56 * (m.big ? 3 : k >= 3 ? 2 : 1), team: 'e', mhp: Math.round(m.hp * f), hp: Math.round(m.hp * f), atk: Math.round(m.atk * a), spd: m.spd, g: Math.random() * 60, k, aoe: !!m.aoe, mL, fx: {} }; };
-  const sz = party.length, foes = kind === 'boss' ? [mk(R.boss, 0)] : kind === 'elite' ? (sz > 1 ? [mk(R.elite, 0), mk(xRand(run.pool || R.mon), 1)] : [mk(R.elite, 0)]) : Array.from({ length: Math.max(1, Math.round((1 + Math.floor(Math.random() * (1 + (d > .3 ? 2 : 1)))) * Math.min(sz, 3) / 3)) }, (_, i) => mk(i === 0 && run.nextMon ? run.nextMon : xRand(run.pool || R.mon), i)); run.nextMon = null;
-  xb = { party, foes, kind, log: msg || '', turn: null, pick: null, over: false, last: performance.now(), buff: run.buff > 0, def: {}, fxs: [], floats: [], proj: [] }; if (run.buff > 0) run.buff--; xv = { view: 'battle' };
+    mk = (m, i, hm = 1) => { const k = m.k || 1, f = (1 + .35 * (mL - 1)) * hm, a = 1 + .25 * (mL - 1); return { id: 'e' + i, name: m.n, ic: '', lp: m.lp, big: m.big, sc: m.big ? 3 : k >= 3 ? 2 : 1, hh: 56 * (m.big ? 3 : k >= 3 ? 2 : 1), team: 'e', mhp: Math.round(m.hp * f), hp: Math.round(m.hp * f), atk: Math.round(m.atk * a), spd: m.spd, g: Math.random() * 60, k, aoe: !!m.aoe, mL, fx: {} }; };
+  const sz = party.length, pool = run.pool || R.mon;   // 인원이 늘면 몬스터도 늘어요: 일반 = 인원수(깊이 30% 이후엔 가끔 +1) · 정예 = 정예 + (인원−1) · 보스는 한 마리지만 체력이 늘어요
+  const foes = kind === 'boss' ? [mk(R.boss, 0, 1 + .7 * (sz - 1))] : kind === 'elite' ? [mk(R.elite, 0, 1 + .5 * (sz - 1)), ...Array.from({ length: Math.min(4, sz - 1) }, (_, i) => mk(xRand(pool), i + 1))]
+    : Array.from({ length: Math.min(6, sz + (sz >= 2 && d > .3 && Math.random() < .3 ? 1 : 0)) }, (_, i) => mk(i === 0 && run.nextMon ? run.nextMon : xRand(pool), i)); run.nextMon = null;
+  xb = { party, foes, kind, log: msg || '', turn: null, pick: null, over: false, last: performance.now(), buff: run.buff > 0, def: {}, fxs: [], floats: [], proj: [], n0: sz }; if (run.buff > 0) run.buff--; xv = { view: 'battle' };
   if (xcoHost()){ xb.bn = ++xcoBn; xb.tn = 0; xcoEv = []; xcoEvN = 0; xcoPub({ st: 'battle' }); xcoPubBt(true); }
   renderExplore();
 }
@@ -2313,7 +2315,9 @@ function xAI(u){   // 동료 자동 행동
 // ── 전투 화면: 도트 캔버스 (왼쪽 몬스터 · 오른쪽 파티) ──
 const XCW = 384, XCH = 216, XGLY = { sword: 'slash', axe: 'slash', dagger: 'slash', fist: 'slash', claw: 'slash', hammer: 'slash', spear: 'slash', arrow: 'slash', cross2: 'slash', paw: 'slash', fire: 'fire', fireball: 'fire', ember: 'fire', ice: 'ice', bolt: 'bolt', chain: 'bolt', star: 'holy', sun: 'holy', crown: 'holy', bell: 'holy', flag: 'holy', orb: 'dark', moon: 'dark', eye: 'dark', skull: 'dark', ghost: 'dark', drop: 'poison', bubble: 'poison', flask: 'poison', tube: 'poison', leaf: 'leaf', tree: 'leaf', flower: 'leaf', burst: 'boom', bomb: 'boom', mine: 'boom', rocket: 'boom', rock: 'boom', gear: 'boom', swirl: 'wind', cloud: 'wind', wave: 'wind', wing: 'wind', note: 'note', note1: 'note', trumpet: 'note', drum: 'note', harp: 'note', heart: 'heal', cross: 'heal', shield: 'buff', tower: 'buff', up: 'buff', clock: 'time', hourglass: 'time' };
 const xFxKind = sk => !sk ? 'slash' : sk.t === 'heal' || sk.t === 'revive' ? 'heal' : sk.t === 'buff' || sk.t === 'mp' ? 'buff' : sk.t === 'deb' ? 'debuff' : XGLY[sk.g] || 'boom';
-const XFS = [[[110, 152]], [[130, 134], [96, 178]], [[138, 134], [100, 160], [138, 192]]], XPS = [[282, 150], [320, 134], [332, 184]], XBOSS_AT = [104, 204];
+const XFS = [[[110, 152]], [[130, 134], [96, 178]], [[138, 134], [100, 160], [138, 192]], [[142, 124], [104, 146], [142, 168], [104, 192]], [[146, 118], [108, 138], [146, 158], [108, 178], [146, 198]], [[148, 116], [110, 132], [148, 150], [110, 168], [148, 186], [110, 204]]],
+  XFE = [[84, 128], [120, 118], [84, 168], [120, 152]],   // 정예 곁에 서는 졸개 자리
+  XPS = [[282, 150], [322, 128], [334, 176], [296, 200], [340, 104]], XBOSS_AT = [104, 204];
 let xRaf = 0, xBgs = {};
 let xWpnImg = null; function xWpnSheet(){ if (!xWpnImg){ xWpnImg = new Image(); xWpnImg.src = 'art/weapons.png?v=5'; } return xWpnImg; }
 let xLpcImg = null; function xLpcSheet(){ if (!xLpcImg){ xLpcImg = new Image(); xLpcImg.src = 'art/monsters_lpc.png?v=4'; } return xLpcImg; }
@@ -2350,7 +2354,8 @@ function xAmb(g, kind, now){   // 분위기 입자: 반딧불 · 안개 · 포�
   else for (let i = 0; i < 24; i++){ const t = (now / 46 + i * 29) % 260, x = (i * 53 + t * .6) % XCW, y = 30 + t * .6 + (i % 3) * 10; R(x, y, 2, 2, '#ffe6a8', .55 * Math.sin(t / 260 * Math.PI)); }
 }
 function xLayout(B){
-  const norm = B.foes.filter(u => !(u.k >= 3)); B.foes.forEach(u => { if (u.big) [u.bx, u.by] = XBOSS_AT; else if (u.k >= 3) [u.bx, u.by] = [136, 184]; else { const sl = XFS[Math.min(2, norm.length - 1)], i = norm.indexOf(u), e = B.foes.some(f => f.k >= 3); [u.bx, u.by] = e ? [76, 204] : sl[i] || sl[0]; } });
+  const norm = B.foes.filter(u => !(u.k >= 3)), e = B.foes.some(f => f.k >= 3);
+  B.foes.forEach(u => { if (u.big) [u.bx, u.by] = XBOSS_AT; else if (u.k >= 3) [u.bx, u.by] = [136, 184]; else { const i = norm.indexOf(u); [u.bx, u.by] = e ? (XFE[i] || XFE[0]) : (XFS[Math.min(5, norm.length - 1)][i] || XFS[0][0]); } });
   B.party.forEach((u, i) => { [u.bx, u.by] = XPS[i] || XPS[0]; });
   [...B.foes, ...B.party].forEach(u => { u.bx = XCW - u.bx; u.sx = u.bx; u.sy = u.by; });   // 아군은 왼쪽, 적은 오른쪽 (행군하는 쪽과 같아요)
 }
@@ -2589,6 +2594,7 @@ function xLoop0(){
 }
 function xWin(){
   sfx('win'); const B = xb, run = xEx().run; B.over = true; clearInterval(xTick); const mL = B.foes[0].mL; let exp = 0, gold = 0; B.foes.forEach(f => { exp += Math.round(8 * (1 + .45 * (mL - 1)) * f.k); gold += Math.round(6 * (1 + .3 * (mL - 1)) * f.k * (.8 + Math.random() * .4)); });
+  { const n = B.n0 || 1, sc = n > 1 ? (1 + .15 * (n - 1)) / n : 1; exp = Math.round(exp * sc); gold = Math.round(gold * sc); }   // 몬스터가 인원만큼 늘었으니 보상은 나눠서 (파티 보너스 +15%/명)
   const rm = (run.mod?.rew || 1) * (.9 + Math.random() * .2); run.loot.exp += Math.round(exp * rm); run.loot.gold += Math.round(gold * rm); let drop = ''; if (Math.random() < (B.kind === 'battle' ? .3 : .8)){ const it = xRand(B.kind === 'boss' ? xReg().rare : xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; drop = ` · ${ITEM[it] || it}`; }
   xSaveParty(); B.party.forEach(u => { if (u.hp <= 0 && !u.gone) u.hp = Math.max(1, Math.round(u.mhp * .2)); }); run.p = B.party.map(u => ({ hp: u.hp, mp: u.mp }));
   if (run.co){ B.party.forEach(u => { if (!u.gone) xcoHp[u.uid] = [u.hp, u.mp]; }); const mu = xMine(B); run.p = [{ hp: mu.hp, mp: mu.mp }]; B.won = true; B.rew = { exp, gold, kind: B.kind }; }
