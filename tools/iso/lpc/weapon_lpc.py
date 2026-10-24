@@ -26,7 +26,7 @@ W = {
  'gadget': ('bow', [M + 'ranged/crossbow/background/walk/crossbow.png', M + 'ranged/crossbow/foreground/walk/crossbow.png'], None),
 }
 GRIP = {j: .18 for j in ORDER}; GRIP['gadget'] = .5   # 손잡이 위치: 손잡이 끝에서 무기 길이의 18% (석궁은 가운데)
-SCALE = .74; SSCALE = .84     # 무기·방패 크기 (캐릭터에 비해 너무 커서 줄여요)
+SCALE = .62; SSCALE = .78     # 무기·방패 크기 (캐릭터에 비해 너무 커서 줄여요)
 # 단계: 금속 색 띠(어두움→밝음), 보석 색 hue(0~1)
 RAMP = [None,
  [(58, 36, 20), (122, 74, 34), (184, 122, 58), (224, 170, 102)],      # 청동
