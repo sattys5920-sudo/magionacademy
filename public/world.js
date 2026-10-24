@@ -540,6 +540,7 @@ function findNear(){
   return null;
 }
 function nearCheck(){ if (!World.onNear || !started) return; const t = findNear(), k = t ? t.key : ''; if (k !== nearKey){ nearKey = k; nearT = t; World.onNear(t); } }
+World.npcNear = id => { if (!M || !me) return false; const mx = Math.round(me.x), my = Math.round(me.y); return people.some(p => p.npc && p.npc.id === id && Math.abs(Math.round(p.x) - mx) + Math.abs(Math.round(p.y) - my) <= 1); };   // 그 사람 바로 옆에 있는지 (선물 등)
 World.nearRefresh = () => { nearKey = '\0'; nearCheck(); };
 World.doNear = () => { const t = nearT; if (!t) return; hideBubble();
   if (t.kind === 'npc'){ const np = people.find(q => q.npc && q.npc.id === t.id); if (np) World.faceTo(np.x, np.y); World.onNpc && World.onNpc(t.id); }
