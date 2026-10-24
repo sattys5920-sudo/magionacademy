@@ -1629,10 +1629,10 @@ const XOV = {   // 스킬별 특수 효과 (직업.이름). t 종류 · key 효�
   'summon.용 소환': { t: 'summon', st: 'mag', tg: 'self', mp: 24, pet: { n: '용', el: 'dragon', kind: 'dmgall', every: 3, sec: 18, k: .9 }, ds: '18초간 용이 3초마다 적 전체를 불태워요' },
   'summon.합체 공격': { petb: .7, ds: '소환수 하나당 피해 +70%' },
   'summon.송환': { t: 'recall', tg: 'self', mp: 6, ds: '소환수를 돌려보내고 아군 하나를 치유 (소환수 하나당 12%)' },
-  'gadget.소형 포탑': { t: 'summon', st: 'atk', tg: 'self', mp: 6, pet: { n: '번개 쥐', el: 'turret', kind: 'dmg', every: 2.5, sec: 20, k: .5 }, ds: '20초간 번개 쥐가 2.5초마다 전기를 쏴요' },
-  'gadget.보조 포탑': { t: 'summon', st: 'atk', tg: 'self', mp: 9, pet: { n: '수호 쥐', el: 'turret', kind: 'shield', every: 4, sec: 20, k: 1.2 }, ds: '20초간 수호 쥐가 4초마다 약한 아군에 보호막' },
-  'gadget.레이저 포탑': { t: 'summon', st: 'atk', tg: 'self', mp: 13, pet: { n: '광선 도깨비', el: 'laser', kind: 'dmg', every: 4, sec: 20, k: 1.2 }, ds: '20초간 광선 도깨비가 4초마다 강한 광선을 쏴요' },
-  'gadget.요새 포대': { t: 'summon', st: 'atk', tg: 'self', mp: 22, pet: { n: '철갑 트롤', el: 'turret', kind: 'dmgall', every: 3, sec: 22, k: .55 }, ds: '22초간 철갑 트롤이 3초마다 적 전체를 쾅쾅 내려쳐요' },
+  'gadget.소형 포탑': { t: 'summon', st: 'atk', tg: 'self', mp: 6, pet: { n: '소형 포탑', el: 'turret', kind: 'dmg', every: 2.5, sec: 20, k: .5 }, ds: '20초간 포탑이 2.5초마다 사격' },
+  'gadget.보조 포탑': { t: 'summon', st: 'atk', tg: 'self', mp: 9, pet: { n: '보조 포탑', el: 'turret', kind: 'shield', every: 4, sec: 20, k: 1.2 }, ds: '20초간 포탑이 4초마다 약한 아군에 보호막' },
+  'gadget.레이저 포탑': { t: 'summon', st: 'atk', tg: 'self', mp: 13, pet: { n: '레이저 포탑', el: 'laser', kind: 'dmg', every: 4, sec: 20, k: 1.2 }, ds: '20초간 포탑이 4초마다 강한 레이저를 쏴요' },
+  'gadget.요새 포대': { t: 'summon', st: 'atk', tg: 'self', mp: 22, pet: { n: '요새 포대', el: 'turret', kind: 'dmgall', every: 3, sec: 22, k: .55 }, ds: '22초간 포대가 3초마다 적 전체를 포격' },
   'gadget.덫 설치': { t: 'dmg', st: 'atk', tg: 'one', p: .3, ap: [['slow', .6, 12], ['dot', .3, 8]], mp: 5, ds: '적 하나에 덫: 속도 -60% + 지속 피해' },
   'gadget.지뢰': { t: 'dmg', st: 'atk', tg: 'one', p: .1, ap: [['bomb', 2.6, 4]], mp: 8, ds: '4초 뒤 폭발하는 지뢰를 붙여요' },
   'gadget.전기 그물': { t: 'dmg', st: 'atk', tg: 'all', p: .5, ap: [['stun', 35]], mp: 12, ds: '광역 피해 + 행동이 늦어져요' },
@@ -2016,7 +2016,7 @@ function xDraw(){
     }
     if (B.pick && B.pick.set.has(u.id)){ const cy = y - (u.team === 'e' ? u.hh + 26 : FH + 2) + Math.round(Math.sin(now / 130) * 2); g.fillStyle = '#1a1024'; g.fillRect(x - 6, cy - 1, 13, 8); g.fillStyle = '#ffd866'; g.fillRect(x - 5, cy, 11, 3); g.fillRect(x - 3, cy + 3, 7, 2); g.fillRect(x - 1, cy + 5, 3, 1); }
   });
-  const pim = xPetSheet(); if (pim.complete) B.party.forEach(u => { if (u.hp <= 0) return; (u.pets || []).forEach((p, i) => { const k = XPETI.indexOf(p.n); if (k < 0) return; const lg = p.lg ? (now - p.lg) / 260 : 2, off = lg < 1 ? -Math.sin(lg * Math.PI) * 14 : 0, x = Math.round(u.bx - 40 - i * 24 + off), y = Math.round(u.by - 4 + (i % 2 ? 10 : -8) + Math.sin(now / 320 + i * 2) * 1.5), w = 48; g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(x, y + 1, 10, 3, 0, 0, 7); g.fill(); g.globalAlpha = p.t < 2 ? .5 + .5 * Math.sin(now / 90) : 1; g.drawImage(pim, k * 64, 0, 64, 64, x - w / 2, y - w + 3, w, w); g.globalAlpha = 1; });
+  const pim = xPetSheet(); if (pim.complete) B.party.forEach(u => { if (u.hp <= 0) return; (u.pets || []).forEach((p, i) => { const k = XPETI.indexOf(p.n); if (k < 0) return; const lg = p.lg ? (now - p.lg) / 260 : 2, off = lg < 1 ? -Math.sin(lg * Math.PI) * 14 : 0, x = Math.round(u.bx - 40 - i * 24 + off), y = Math.round(u.by - 4 + (i % 2 ? 10 : -8) + Math.sin(now / 320 + i * 2) * (XPETI.indexOf(p.n) >= 10 ? 0 : 1.5)), w = 52; g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(x, y + 1, 10, 3, 0, 0, 7); g.fill(); g.globalAlpha = p.t < 2 ? .5 + .5 * Math.sin(now / 90) : 1; g.drawImage(pim, k * 64, 0, 64, 64, x - w / 2, y - w + 3, w, w); g.globalAlpha = 1; });
   });
   xProjDraw(g, B, now); B.fxs = B.fxs.filter(f => { const t = [...B.foes, ...B.party].find(u => u.id === f.id); return xFxDraw(g, f, t ? t.sx : 192, t ? t.sy : 120, now); });
   g.font = 'bold 13px monospace'; g.textAlign = 'center'; g.lineJoin = 'round'; B.floats = B.floats.filter(f => { const p = (now - f.t0) / 900; if (p >= 1) return false; if (p < 0) return true; const yy = f.y - p * 18; g.globalAlpha = p > .7 ? 1 - (p - .7) / .3 : 1; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText(f.txt, f.x, yy); g.fillStyle = f.col; g.fillText(f.txt, f.x, yy); g.globalAlpha = 1; return true; });
@@ -2146,8 +2146,8 @@ function xUp(){   // 글·상태 갱신 (그림은 xDraw가 알아서 그려요)
   const B = xb; if (!B || !$('#xcv')) return;
   xStatUpdate(B); const lg = $('#xlog'); if (lg && lg.textContent !== B.log) lg.textContent = B.log; xCmd();
 }
-const XPETI = ['불 정령', '물 정령', '바람 정령', '대지 정령', '정령왕', '늑대', '곰', '독수리', '호박 유령', '용', '번개 쥐', '수호 쥐', '광선 도깨비', '철갑 트롤'];   // art/pets.png 칸 순서 (tools/iso/lpc/pet_lpc.py)
-let xPetImg = null; function xPetSheet(){ if (!xPetImg){ xPetImg = new Image(); xPetImg.src = 'art/pets.png?v=2'; } return xPetImg; }
+const XPETI = ['불 정령', '물 정령', '바람 정령', '대지 정령', '정령왕', '늑대', '곰', '독수리', '호박 유령', '용', '소형 포탑', '보조 포탑', '레이저 포탑', '요새 포대'];   // art/pets.png 칸 순서 (tools/iso/lpc/pet_lpc.py)
+let xPetImg = null; function xPetSheet(){ if (!xPetImg){ xPetImg = new Image(); xPetImg.src = 'art/pets.png?v=3'; } return xPetImg; }
 const XPETC = { fire: '#ff7a3a', water: '#6ad0ff', wind: '#e8f4ff', earth: '#c8a060', king: '#ffd866', wolf: '#c8c8d8', bear: '#a07040', eagle: '#e8e0c0', ghost: '#b0e0ff', dragon: '#ff4a3a', turret: '#a0a8b8', laser: '#ff5a8a' };
 const XPETFX = { fire: 'fire', water: 'ice', wind: 'wind', earth: 'boom', king: 'holy', wolf: 'slash', bear: 'slash', eagle: 'wind', ghost: 'dark', dragon: 'fire', turret: 'bolt', laser: 'bolt' };
 function xBomb(t, b){ if (t.hp <= 0) return; xFxAt('boom', [t]); xHit({ team: 'a', crit: 0, vamp: 0 }, t, b.v, '#ffb040'); }
