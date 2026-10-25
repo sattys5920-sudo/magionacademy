@@ -6623,6 +6623,16 @@ async function boot(){
   });
 }
 boot();
+// 새 버전이 배포되면 접속 중인 모두의 화면이 저절로 새로 고쳐져요 (version.json은 배포할 때마다 바뀌어요)
+{ let buildV = null, reloading = false;
+  const chk = async () => { if (reloading) return; try {
+    const v = (await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json()).v;
+    if (buildV === null){ buildV = v; return; }
+    if (v === buildV) return;
+    reloading = true; try { saveNow(); } catch(e){} toast('새 버전이 나왔어요. 곧 새로 고쳐요');
+    setTimeout(() => location.reload(), 2500);
+  } catch(e){} };
+  chk(); setInterval(chk, 60000); document.addEventListener('visibilitychange', () => { if (!document.hidden) chk(); }); }
 // ----- 메인 의뢰 「일곱 등불의 의뢰」 (지시서 tools/main_quest_spec.md) -----
 // 데이터: data/main/index.json(순서) · cast.json(의뢰인·조연) · <qid>/quest.json · stage_N_request.json / stage_N_complete.json · idle.json · npc_lines.json
 // 상태: me.mq = { q: 지금 의뢰 id, st: 단계(1~5), ph: 'arrive'(등장 대기) | 'pre'(부탁 전) | 'go'(목표 수행) | 'ready'(보고 전), prog: {}, done: { qid: 끝낸 날 }, dl: 기한 날, named: {} }
