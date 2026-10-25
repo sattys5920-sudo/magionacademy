@@ -4273,7 +4273,7 @@ function storyNpcs(){ return [];   // 옛 반 전체 이야기는 메인 의뢰�
   const out = []; for (let c = 1; c <= (storyLive.ch || 0); c++){ const S = STORY[c - 1]; if (S) out.push({ ...S.npc, main: c, h: 26 }); } return out; }
 function storyListen(){
   if (solo || !F || !db || storyOff) return;
-  storyOff = F.onValue(F.ref(db, 'story'), s => { const v = s.val() || {}; storyLive = v.live || { ch: 0 }; storyCh = v.ch || {}; wxForce = v.wx || null; bandForce = v.band || null; npcSig = ''; syncNpcs(); storyCheck(); });
+  storyOff = F.onValue(F.ref(db, 'story'), s => { const v = s.val() || {}; storyLive = v.live || { ch: 0 }; storyCh = v.ch || {}; const rel = v.mq && +v.mq.n >= 0 ? +v.mq.n : 1; if (rel !== mqRel){ mqRel = rel; if (typeof mqTick === 'function' && me) mqTick(); } wxForce = v.wx || null; bandForce = v.band || null; npcSig = ''; syncNpcs(); storyCheck(); });
 }
 // 새로 열린 장·끝난 단계·끝난 장면을 아직 안 봤으면 보여 줘요 (접속하자마자도)
 function storyCheck(){
@@ -4370,21 +4370,17 @@ document.addEventListener('click', e => {
   if (a === 'games'){ npcClose(); openSheet('home', 'games'); }
 });
 // ---------- 관리자: 송출 · 진행 보기 · 단계 넘기기 ----------
-function adminStoryHTML(){
-  const live = AD.story.live?.ch || 0, CH = AD.story.ch || {};
-  return `<div class="adcard"><b>지금 열린 장: ${live ? `${live}장 · ${STORY[live - 1].name}` : '아직 없어요'}</b><span class="s">송출하면 접속한 모두에게 바로 이야기 장면이 떠요. 나중에 들어온 사람도 접속하자마자 봐요.</span></div>
-    ${STORY.map((S, i) => { const c = i + 1, cur = CH[c] || {}, step = cur.step || 0;
-      return `<div class="adcard" style="border-color:${c <= live ? '#3FAF74' : '#22183F'}"><b>${c}장 · ${esc(S.name)} (${esc(S.npc.name)})</b> ${cur.done ? '해결' : c <= live ? `진행 중 ${step + 1}/${S.steps.length}단계` : '아직'}
-        ${S.steps.map((st, k) => { const pr = cur.prog?.[k] || {}, tot = Object.values(pr).reduce((t, v) => t + (+v || 0), 0);
-          return `<div class="s">${k < step || cur.done ? '✔' : k === step && c <= live ? '▶' : '·'} ${k + 1}. ${esc(st.title)} — ${tot}/${st.goal} ${Object.keys(pr).length ? `<span class="sub">(${Object.entries(pr).map(([u, v]) => `${adName(u)} ${v}`).join(', ')})</span>` : ''}</div>`; }).join('')}
-        <div class="frow">${c === live + 1 ? `<button class="btn sm go" data-adst="live:${c}">${c}장 송출</button>` : ''}${c <= live && !cur.done ? `<button class="btn sm" data-adst="prev:${c}">◀ 단계</button><button class="btn sm" data-adst="next:${c}">단계 ▶</button>` : ''}${c === live ? `<button class="btn sm" data-adst="live:${c - 1}">송출 취소</button>` : ''}<button class="btn sm" data-adst="reset:${c}">초기화</button></div></div>`; }).join('')}`;
+function adminStoryHTML(){   // 메인 의뢰 송출: 송출한 장까지만 열려요. 앞 장을 끝낸 사람은 바로, 아직 하는 사람은 끝내는 즉시 다음 장이 와요
+  const rel = AD.story.mq && +AD.story.mq.n >= 0 ? +AD.story.mq.n : 1, ps = Object.values(AD.players || {}).filter(p => p?.nick), list = MQ.list || [];
+  return `<div class="adcard"><b>송출된 장: ${rel} / ${list.length}장</b><span class="s">송출하면 앞 장을 끝낸 학생은 바로 다음 손님을 만나고, 아직 하는 학생은 끝내자마자 이어서 받아요.</span></div>
+    ${list.map((id, i) => { const q = MQ.q[id], c = i + 1, done = ps.filter(p => p.mq?.done?.[id]).length, now = ps.filter(p => p.mq?.q === id).length, open = c <= rel, wait = ps.filter(p => !p.mq?.done?.[id] && (i === 0 || p.mq?.done?.[list[i - 1]]) && p.mq?.q !== id).length;
+      return `<div class="adcard" style="border-color:${open ? '#3FAF74' : '#22183F'}"><b>${c}장 · ${esc(q?.name || id)} (${esc(MQ.cast[q?.client]?.name || '')})</b> ${open ? '송출됨' : '아직'}
+        <div class="s">끝낸 학생 ${done}명 · 하는 중 ${now}명${open ? ` · 받을 차례 ${wait}명` : ''}</div>
+        <div class="frow">${c === rel + 1 ? `<button class="btn sm go" data-adst="mq:${c}">${c}장 송출</button>` : ''}${c === rel && c > 1 ? `<button class="btn sm" data-adst="mq:${c - 1}">송출 취소</button>` : ''}</div></div>`; }).join('')}`;
 }
 function adminStoryAct(v){
-  const [a, n] = v.split(':'), c = +n, cur = (AD.story.ch || {})[c] || {}, S = STORY[c - 1];
-  if (a === 'live'){ if (c > 0 && !confirm(`${c}장 「${STORY[c - 1].name}」 이야기를 모두에게 송출할까요?`)) return; F.set(F.ref(db, 'story/live'), { ch: c, at: Date.now() }); }
-  if (a === 'next'){ const s2 = Math.min(S.steps.length, (cur.step || 0) + 1); F.update(F.ref(db, `story/ch/${c}`), { step: s2, done: s2 >= S.steps.length }); }
-  if (a === 'prev') F.update(F.ref(db, `story/ch/${c}`), { step: Math.max(0, (cur.step || 0) - 1), done: false });
-  if (a === 'reset' && confirm(`${c}장 진행을 처음으로 되돌릴까요? (기여 기록도 지워져요)`)) F.set(F.ref(db, `story/ch/${c}`), null);
+  const [a, n] = v.split(':'), c = +n;
+  if (a === 'mq'){ if (c > (AD.story.mq?.n ?? 1) && !confirm(`${c}장 「${MQ.q[MQ.list[c - 1]]?.name || c}」을(를) 송출할까요?`)) return; F.set(F.ref(db, 'story/mq'), { n: c, at: Date.now() }); }
 }
 const ACT_GO = { '물약 끓이기':'lab', '재료함 열기':'lab', '재료 꺼내기':'lab', '레시피 노트 보기':'lab', '시장 보기':'market', '박쥐 돌보기':'ranch', '모이 주기':'ranch', '독초 돌보기':'green', '물 주기':'green' };
 const FLAVOR = {
@@ -6631,6 +6627,7 @@ boot();
 // 데이터: data/main/index.json(순서) · cast.json(의뢰인·조연) · <qid>/quest.json · stage_N_request.json / stage_N_complete.json · idle.json · npc_lines.json
 // 상태: me.mq = { q: 지금 의뢰 id, st: 단계(1~5), ph: 'arrive'(등장 대기) | 'pre'(부탁 전) | 'go'(목표 수행) | 'ready'(보고 전), prog: {}, done: { qid: 끝낸 날 }, dl: 기한 날, named: {} }
 const MQ = { list: [], q: {}, cast: {}, items: {}, scenes: {}, idle: {}, lines: {}, ready: null, loaded: false };
+let mqRel = 1;   // 관리자가 송출한 장 수 (story/mq.n). 아직 없으면 1장만 열려 있어요
 const MQ_V = 1;
 const mqFetch = async p => { try { const r = await fetch(`data/main/${p}?v=${MQ_V}`); return r.ok ? await r.json() : null; } catch(e){ return null; } };
 MQ.ready = (async () => {
@@ -6679,8 +6676,7 @@ function mqTick(){
   if (s.q){ if (s.ph === 'arrive') mqArrive(); else mqCheck(); mqDeadline(); return; }
   const next = MQ.list.find(id => !s.done[id]); if (!next) return; const q = MQ.q[next]; if (!q) return;
   const u = q.unlock || {}; if (u.afterQuest && !s.done[u.afterQuest]) return;
-  const base = u.afterQuest ? s.done[u.afterQuest] : 0; if (me.day < (base || 0) + (u.daysAfter || 0) || me.day < (u.minDay || 0)) return;
-  if (u.time && bandNow() !== u.time && !(u.time === 'morning' && ['day', 'evening', 'night'].includes(bandNow()))) return;   // 아침에 온다 = 그날 아무 때나
+  if (MQ.list.indexOf(next) + 1 > mqRel) return;   // 관리자가 송출한 장까지만. 앞 장을 끝낸 사람은 송출되는 즉시, 송출 뒤에 끝내면 바로 다음 손님이 와요
   s.q = next; s.st = 1; s.ph = 'arrive'; s.prog = {}; s.dl = null; save(); mqArrive();
 }
 let mqArriving = false;
@@ -6803,8 +6799,7 @@ function mqJournalHTML(){
   const past = MQ.list.filter(id => s.done[id]).map(id => { const P = MQ.q[id]; return `<button class="tag jn-past" data-mqre="${id}">${P.order}. ${esc(P.name)} ✔</button>`; }).join('');
   if (!q){ const nextId = MQ.list.find(id => !s.done[id]), nq = nextId && MQ.q[nextId];
     let when = '아직 손님이 오지 않았어요';
-    if (nq){ const u = nq.unlock || {}; const base = u.afterQuest ? s.done[u.afterQuest] : 0; const d = (base || 0) + (u.daysAfter || 0) - me.day;
-      when = n >= 7 ? '일곱 등불의 의뢰를 모두 끝냈어요' : d > 0 ? `${d}일 뒤 아침에 다음 손님이 와요` : '곧 다음 손님이 학교에 와요'; }
+    if (nq){ when = n >= 7 ? '일곱 등불의 의뢰를 모두 끝냈어요' : MQ.list.indexOf(nextId) + 1 > mqRel ? '다음 이야기는 곧 열려요' : '곧 다음 손님이 학교에 와요'; }
     return `<section class="sec">${secH('메인 이야기', n ? `${n} / 7 의뢰` : '')}${sky}<div class="hint ${nq ? 'on' : ''}">${when}</div>${past ? `<div class="jn-tags">${past}</div>` : ''}${n >= 7 ? '<div class="hint on">등불자리 옆에, 처음 보는 희미한 별 하나가 떠 있어요……</div>' : ''}</section>`; }
   const c = mqClient(q), st = mqStage(), objs = mqObjs();
   const head = `<div class="jn-npc"><div class="npcf">${mqFace(q.client)}</div><div class="main"><b>${q.order}. ${esc(q.name)}</b><span class="d">${esc(mqName(q.client))} · ${esc(c.title || '')} · ${s.st} / 5 단계</span></div></div>`;
