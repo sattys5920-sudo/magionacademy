@@ -6289,10 +6289,10 @@ function showLogin(mode = 'login'){
       <p class="err" id="err"></p>
       <button class="btn go" type="submit" id="lgo">${signup ? '가입 신청하기' : '등교하기'}</button>
     </form>` : `<span class="s">아직 Firebase가 연결되지 않았어요. public/firebase-config.js에 설정을 넣으면 친구들과 함께할 수 있어요.</span>`}
-    <button class="btn" id="soloGo" type="button">혼자 해 보기 (이 기기에만 저장)</button>
+    ${configured ? '' : '<button class="btn" id="soloGo" type="button">혼자 해 보기 (이 기기에만 저장)</button>'}
     <button class="btn ghost sm" id="adminGo" type="button" style="align-self:center">관리자</button>
   </div>`);
-  $('#soloGo').onclick = startSolo;
+  const sg = $('#soloGo'); if (sg) sg.onclick = startSolo;
   $('#adminGo').onclick = adminLogin;
   if (!configured) return;
   $('#mLogin').onclick = () => showLogin('login');
