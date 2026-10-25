@@ -2162,14 +2162,13 @@ function xMDraw(){
     if (lpc.complete){ g.save(); g.translate(mx, py); g.scale(-sc, sc); g.drawImage(lpc, a.lp * 64, 0, 64, 64, -32, -60, 64, 64); g.restore(); }
     if (Math.round(now / 150) % 2){ g.font = '26px G11B, Pretendard, sans-serif'; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = '#1a1024'; g.strokeText('!', px, py - FH - 4); g.fillStyle = '#ff5a4a'; g.fillText('!', px, py - FH - 4); } }
   if (M.st === 'fork'){   // 길이 둘로 갈라져요: 위 길·아래 길 끝에 도트 그림이 서 있어요
-    const fx = 214, fy = py + 4, T = (now - M.fork.t0) / 1000, grow = Math.min(1, T / .6);
+    const fx = px + 18, fy = py + 4, T = (now - M.fork.t0) / 1000, grow = Math.min(1, T / .6);
     const end = [[XCW - 52, py - 40], [XCW - 52, py + 18]];
     end.forEach(([ex, ey], i) => { const ox = fx + (ex - fx) * grow, oy = fy + (ey - fy) * grow;
       g.fillStyle = '#6e4e32'; g.beginPath(); g.moveTo(fx, fy - 8); g.lineTo(ox, oy - 8); g.lineTo(ox, oy + 8); g.lineTo(fx, fy + 8); g.fill();
       g.fillStyle = '#966c48'; g.beginPath(); g.moveTo(fx, fy - 6); g.lineTo(ox, oy - 6); g.lineTo(ox, oy + 6); g.lineTo(fx, fy + 6); g.fill(); });
-    g.fillStyle = '#966c48'; g.fillRect(fx - 24, fy - 6, 26, 12); g.fillStyle = '#6e4e32'; g.fillRect(fx - 24, fy - 8, 26, 2); g.fillRect(fx - 24, fy + 6, 26, 2);
     const bob = Math.sin(now / 260) * 2, pop = Math.min(1, T / .35);
-    g.globalAlpha = pop; g.drawImage(xSpr('q'), fx - 2, fy - 50 + (1 - pop) * 10, 28, 28);
+    g.globalAlpha = pop; g.drawImage(xSpr('q'), fx + 14, fy - 46 + (1 - pop) * 10, 28, 28);
     end.forEach(([ex, ey], i) => { const k = M.fork.opts[i], on = M.fork.my === i, im = xSpr(XM_FORK[k][0]), sz = on ? 46 : 40, nm = XM_FORK[k][1];
       if (on){ g.strokeStyle = '#ffd866'; g.lineWidth = 2; g.beginPath(); g.ellipse(ex + 4, ey + 24, 26, 8, 0, 0, 7); g.stroke(); }
       g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(ex + 4, ey + 24, 18, 5, 0, 0, 7); g.fill();
