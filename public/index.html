@@ -214,7 +214,7 @@ body.admin .hud,body.admin .fab,body.admin #world{display:none}
 .adlist{display:flex;flex-direction:column;gap:2px}
 .adlist div{background:#fff;padding:3px 6px}
 .adlist i{color:#9480B4}
-.adlist.chat .tm{color:#9480B4}.adlist.chat .pl{color:#3FAF74}
+.adlist.chat .dv{background:none;color:#9480B4;font-weight:700;text-align:center;padding:6px 0 2px}.adlist.chat .tm{color:#9480B4}.adlist.chat .pl{color:#3FAF74}
 .adsum{display:flex;gap:10px;flex-wrap:wrap}
 .adsum b{font-family:var(--f-pxb)}
 .adtbl{display:flex;flex-direction:column;gap:2px;overflow-x:auto}
@@ -3033,7 +3033,7 @@ function renderGames(){
 // 관리자 계정(magionadmin)으로 로그인해서 모두의 위치·대화·기숙사·이야기·호감도·골드·마력을 봐요
 const ADMIN_CODE = '316316316', ADMIN_ID = 'magionadmin';
 const isAdminUser = u => !!u && u.email === idEmail(ADMIN_ID);
-let AD = { tab: 'map', map: null, follow: null, mc: {}, day: null, online: {}, players: {}, houses: {}, chat: {}, games: {}, story: {}, offs: [] };
+let AD = { pending: {}, tab: 'map', map: null, follow: null, mc: {}, day: null, online: {}, players: {}, houses: {}, chat: {}, games: {}, story: {}, offs: [] };
 function adminLogin(){
   cover(`<div class="card px"><b class="b">관리자 페이지</b><form id="af" style="display:flex;flex-direction:column;gap:10px">
     <label class="field"><span class="s">관리자 코드</span><input id="acode" type="password" inputmode="numeric" maxlength="20" autocomplete="off"></label>
@@ -3053,17 +3053,22 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.day = AD.day || todayKey();
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = s.val() || {}; if (adminTyping()) return; adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('adm/heart', 'heart'); L('players', 'players'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('adm/heart', 'heart'); L('players', 'players'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); }
   adminRender();
 }
 const adminTyping = () => { const a = document.activeElement; return AD.tab === 'npc' && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
-function adminChat(){ if (!F || !db) return; AD.chatOff?.(); AD.chatOff = F.onValue(F.query(F.ref(db, 'chat/' + AD.day), F.limitToLast(300)), s => { AD.chat = s.val() || {}; if (AD.tab === 'chat') adminRender(); }); }
+function adminChat(){   // 최근 14일 대화를 한 줄로 이어 봐요
+  if (!F || !db) return; AD.chatOff?.(); const by = {}, offs = [];
+  const merge = () => { AD.chat = {}; Object.entries(by).forEach(([d, v]) => Object.entries(v).forEach(([k, c]) => { AD.chat[d + '/' + k] = c; })); if (AD.tab === 'chat') adminRender(); };
+  for (let i = 0; i < 14; i++){ const d = new Date(Date.now() - i * 864e5), key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; offs.push(F.onValue(F.query(F.ref(db, 'chat/' + key), F.limitToLast(300)), s => { by[key] = s.val() || {}; merge(); })); }
+  AD.chatOff = () => offs.forEach(f => f && f());
+}
 const adName = id => esc(AD.players[id]?.nick || AD.online[id]?.nick || id.slice(0, 6));
 const adPlace = m => { if (!m) return '?'; const [id, owner] = m.split(':'), meta = World.meta(id); return esc((meta?.title || id) + (owner ? ` (${AD.players[owner]?.nick || '?'}의 방)` : '')); };
 function adminRender(){
   if (!document.body.classList.contains('admin')) return;
   const P = AD.players, O = AD.online, ids = Object.keys(P).filter(id => P[id]?.nick);
-  const tabs = [['map', `지도 ${Object.keys(O).length}명 접속`], ['students', `학생 ${ids.length}`], ['chat', '대화'], ['dorm', '기숙사'], ['story', '이야기·미션'], ['npc', 'NPC 호감도']];
+  const tabs = [['map', `지도 ${Object.keys(O).length}명 접속`], ['students', `학생 ${ids.length}`], ['join', `가입 신청${Object.keys(AD.pending || {}).length ? ' ' + Object.keys(AD.pending).length : ''}`], ['chat', '대화'], ['dorm', '기숙사'], ['story', '이야기·미션'], ['npc', 'NPC 호감도']];
   let body = '';
   if (AD.tab === 'map'){
     if (AD.follow && !O[AD.follow]) AD.follow = null;
@@ -3090,11 +3095,15 @@ function adminRender(){
           <span>${FISH.filter(f => d[f.id]).length}/40</span><span>${FORAGE.filter(f => d[f.id]).length}/50</span><span>${RODS[p.rod || 0]?.name.split(' ')[0] || '-'}</span><span>${Object.keys(p.closet || {}).length}</span><span>${(p.cr || []).length}</span>
           <span>${O[id] ? `🟢 ${adPlace(O[id].m)}` : p.rest ? '💤 쉬는 중' : '⚪ 외출'}</span></div>`; }).join('')}</div>`;
   }
+  if (AD.tab === 'join'){
+    const pend = Object.entries(AD.pending || {}).sort((a, b) => a[1].at - b[1].at);
+    body = `<div class="adcard"><b>가입 신청</b> <span class="s">승인하면 그때부터 캐릭터를 만들 수 있어요</span></div>
+      <div class="adlist">${pend.map(([id, v]) => `<div><b>${esc(v.id || id.slice(0, 6))}</b> <span class="tm">${new Date(v.at).toLocaleString('ko-KR')}</span> <button class="btn sm" data-adok="${id}">승인</button> <button class="btn sm" data-adno="${id}">거절</button></div>`).join('') || '<div>기다리는 신청이 없어요</div>'}</div>`;
+  }
   if (AD.tab === 'chat'){
-    const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(Date.now() - i * 864e5); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; });
-    const list = Object.values(AD.chat).sort((a, b) => b.at - a.at);
-    body = `<div class="adseg">${days.map(d => `<button data-adday="${d}" class="${AD.day === d ? 'on' : ''}">${d.slice(5)}</button>`).join('')}</div>
-      <div class="adlist chat">${list.map(c => { const t = new Date(c.at); return `<div><span class="tm">${t.getHours()}:${String(t.getMinutes()).padStart(2, '0')}</span> <b>${esc(c.n || adName(c.u))}</b> <span class="pl">${adPlace(c.m)}</span> ${esc(c.t)}</div>`; }).join('') || '<div>이날 대화가 없어요</div>'}</div>`;
+    const list = Object.values(AD.chat).sort((a, b) => a.at - b.at); let lastDay = '';
+    body = `<div class="adlist chat">${list.map(c => { const t = new Date(c.at), dk = `${t.getMonth() + 1}/${t.getDate()}`, head = dk !== lastDay ? `<div class="dv">${dk}</div>` : ''; lastDay = dk;
+      return `${head}<div><span class="tm">${t.getHours()}:${String(t.getMinutes()).padStart(2, '0')}</span> <b>${esc(c.n || adName(c.u))}</b> <span class="pl">${adPlace(c.m)}</span> ${esc(c.t)}</div>`; }).join('') || '<div>최근 대화가 없어요</div>'}</div>`;
   }
   if (AD.tab === 'dorm'){
     body = HOUSE_KEYS.map(h => { const H = HOUSES[h], hs = AD.houses[h] || {}, st = Math.max(1, hs.stage || 1), mem = ids.filter(id => P[id].house === h), need = HALL_COST[h][st - 1];
@@ -3113,7 +3122,8 @@ function adminRender(){
   root.querySelectorAll('[data-admap]').forEach(b => b.onclick = () => { AD.map = b.dataset.admap; AD.follow = null; adminRender(); });
   root.querySelectorAll('[data-adall]').forEach(b => b.onclick = () => { AD.map = null; AD.follow = null; adminRender(); });
   root.querySelectorAll('[data-adfollow]').forEach(b => b.onclick = () => { AD.follow = AD.follow === b.dataset.adfollow ? null : b.dataset.adfollow; AD.map = null; adminRender(); });
-  root.querySelectorAll('[data-adday]').forEach(b => b.onclick = () => { AD.day = b.dataset.adday; adminChat(); adminRender(); });
+  root.querySelectorAll('[data-adok]').forEach(b => b.onclick = () => { F.set(F.ref(db, 'approved/' + b.dataset.adok), true).then(() => F.remove(F.ref(db, 'pending/' + b.dataset.adok))); });
+  root.querySelectorAll('[data-adno]').forEach(b => b.onclick = () => { if (confirm('이 신청을 거절할까요?')) F.set(F.ref(db, 'approved/' + b.dataset.adno), false).then(() => F.remove(F.ref(db, 'pending/' + b.dataset.adno))); });
   root.querySelectorAll('[data-adst]').forEach(b => b.onclick = () => typeof adminStoryAct === 'function' && adminStoryAct(b.dataset.adst));
   $('#adout').onclick = async () => { AD.offs.forEach(f => f && f()); AD.offs = []; document.body.classList.remove('admin'); root.remove(); if (auth?.currentUser) await F.signOut?.(auth); location.reload(); };
   if (AD.tab === 'map') adminMap();
@@ -6277,7 +6287,7 @@ function showLogin(mode = 'login'){
       <label class="field"><span class="s">비밀번호</span><input id="lpw" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}" maxlength="40" placeholder="5 자 이상"></label>
       ${signup ? '<label class="field"><span class="s">비밀번호 확인</span><input id="lpw2" type="password" autocomplete="new-password" maxlength="40"></label>' : ''}
       <p class="err" id="err"></p>
-      <button class="btn go" type="submit" id="lgo">${signup ? '가입하고 입학하기' : '등교하기'}</button>
+      <button class="btn go" type="submit" id="lgo">${signup ? '가입 신청하기' : '등교하기'}</button>
     </form>` : `<span class="s">아직 Firebase가 연결되지 않았어요. public/firebase-config.js에 설정을 넣으면 친구들과 함께할 수 있어요.</span>`}
     <button class="btn" id="soloGo" type="button">혼자 해 보기 (이 기기에만 저장)</button>
     <button class="btn ghost sm" id="adminGo" type="button" style="align-self:center">관리자</button>
@@ -6524,6 +6534,19 @@ function showCreate(done, counts = {}){
   };
   draw();
 }
+// 가입 신청: 관리자가 승인해야 캐릭터를 만들 수 있어요 (12명 겹치기 방지)
+function waitApproval(user, go){
+  const aref = F.ref(db, 'approved/' + uid), pref = F.ref(db, 'pending/' + uid), name = (user.email || '').split('@')[0];
+  let stop = null, sent = false;
+  stop = F.onValue(aref, s => {
+    const v = s.val();
+    if (v === true){ stop?.(); go(); return; }
+    if (v === false) return cover(`<div class="card px"><span class="b" style="font-size:22px">가입이 거절됐어요</span><span class="s">관리자에게 물어봐 주세요.</span><button class="btn" id="wout">로그아웃</button></div>`), $('#wout').onclick = () => { stop?.(); F.signOut(auth); };
+    if (!sent){ sent = true; F.set(pref, { id: name, at: Date.now() }).catch(() => {}); }
+    cover(`<div class="card px"><span class="b" style="font-size:22px">가입 신청 완료</span><span class="s">관리자가 승인하면 캐릭터를 만들 수 있어요.<br>승인되면 이 화면이 저절로 바뀌어요. (아이디 ${esc(name)})</span><button class="btn" id="wout">로그아웃</button></div>`);
+    $('#wout').onclick = () => { stop?.(); F.signOut(auth); };
+  });
+}
 function showHousePick(counts, done){
   let house = null;
   const draw = () => {
@@ -6583,7 +6606,7 @@ async function boot(){
       enterWorld();
     };
     if (snap.exists()) { me = normalize(snap.val()); if (!me.house) showHousePick(await houseCounts(), enter); else enter(); }
-    else showCreate(p => { me = p; save(); enter(); }, await houseCounts());
+    else waitApproval(user, async () => showCreate(p => { me = p; save(); enter(); }, await houseCounts()));
   });
 }
 boot();

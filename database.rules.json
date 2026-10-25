@@ -1,9 +1,22 @@
 {
   "rules": {
+    "approved": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'"
+      }
+    },
+    "pending": {
+      ".read": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+      "$uid": {
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'magionadmin@magionacademy.app')",
+        ".validate": "!newData.exists() || (newData.child('id').isString() && newData.child('id').val().length <= 20 && newData.child('at').isNumber())"
+      }
+    },
     "players": {
       ".read": "auth != null",
       "$uid": {
-        ".write": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid && (data.exists() || root.child('approved').child($uid).val() === true)",
         ".validate": "newData.hasChildren(['nick', 'look']) && newData.child('nick').isString() && newData.child('nick').val().length >= 1 && newData.child('nick').val().length <= 8 && newData.child('look').isNumber() && (!newData.child('house').exists() || newData.child('house').val() === 'dew' || newData.child('house').val() === 'ember' || newData.child('house').val() === 'dusk' || newData.child('house').val() === 'moon')"
       }
     },
