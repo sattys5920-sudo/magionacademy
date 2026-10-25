@@ -16,14 +16,14 @@
     "players": {
       ".read": "auth != null",
       "$uid": {
-        ".write": "auth != null && auth.uid === $uid && (data.exists() || root.child('approved').child($uid).val() === true)",
+        ".write": "auth != null && (auth.token.email === 'magionadmin@magionacademy.app' || (auth.uid === $uid && (data.exists() || root.child('approved').child($uid).val() === true)))",
         ".validate": "newData.hasChildren(['nick', 'look']) && newData.child('nick').isString() && newData.child('nick').val().length >= 1 && newData.child('nick').val().length <= 8 && newData.child('look').isNumber() && (!newData.child('house').exists() || newData.child('house').val() === 'dew' || newData.child('house').val() === 'ember' || newData.child('house').val() === 'dusk' || newData.child('house').val() === 'moon')"
       }
     },
     "online": {
       ".read": "auth != null",
       "$uid": {
-        ".write": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'magionadmin@magionacademy.app')",
         "m": {
           ".validate": "newData.isString() && newData.val().length <= 80"
         },
@@ -150,12 +150,18 @@
             ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= -10 && newData.val() <= 10)"
           }
         }
+      },
+      "reset": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'"
+        }
       }
     },
     "pens": {
       ".read": "auth != null",
       "$i": {
-        ".write": "auth != null && $i.matches(/^([0-9]|1[01])$/) && ((!data.exists() && newData.val() === auth.uid) || (data.val() === auth.uid && !newData.exists()))",
+        ".write": "auth != null && (auth.token.email === 'magionadmin@magionacademy.app' || ($i.matches(/^([0-9]|1[01])$/) && ((!data.exists() && newData.val() === auth.uid) || (data.val() === auth.uid && !newData.exists()))))",
         ".validate": "newData.isString()"
       }
     },
