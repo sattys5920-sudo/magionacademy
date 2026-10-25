@@ -699,6 +699,30 @@ function skyNow(){
   return { c: A.map((v, j) => Math.round(v + (B[j] - v) * k)), n: a[2] + (b[2] - a[2]) * k, g: a[3] + (b[3] - a[3]) * k };
 }
 
+// 맵 바깥 하늘: 시간대마다 색·구름·별·해·달이 바뀌어요 (새벽 · 낮 · 해 질 녘 · 밤)
+const SKYB = [   // [시각, 위쪽 색, 아래쪽 색, 구름 색, 별 밝기]
+  [0, [8, 6, 22], [34, 26, 66], [54, 46, 92], 1], [5, [22, 18, 52], [110, 76, 108], [96, 76, 120], .7], [6.5, [46, 40, 84], [214, 152, 150], [236, 186, 176], .2],
+  [9, [64, 150, 232], [176, 222, 246], [255, 255, 255], 0], [16, [64, 150, 232], [176, 222, 246], [255, 255, 255], 0], [18, [52, 32, 84], [232, 112, 84], [246, 150, 110], .15],
+  [20, [20, 14, 44], [70, 40, 90], [70, 56, 110], .8], [22, [8, 6, 22], [34, 26, 66], [54, 46, 92], 1], [24, [8, 6, 22], [34, 26, 66], [54, 46, 92], 1]];
+const SKYSTARS = Array.from({ length: 70 }, (_, i) => { const r = k => { const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); }; return [r(1), r(2) * .75, r(3) < .15]; });
+const SKYCLOUDS = [[.1, .12, 1], [.55, .06, 1.2], [.8, .26, .9], [.3, .3, 1.1]];
+const CLOUD_PX = [[0, 2, 12, 3], [2, 0, 8, 3], [5, -1, 6, 3]];
+function drawSkyBack(c, VW, VH, now){
+  const h = ((World.hourNow() % 24) + 24) % 24; let i = 1; while (i < SKYB.length - 1 && SKYB[i][0] <= h) i++;
+  const a = SKYB[i - 1], b = SKYB[i], k = (h - a[0]) / (b[0] - a[0] || 1), L = (u, v) => u.map((x, j) => Math.round(x + (v[j] - x) * k)), top = L(a[1], b[1]), bot = L(a[2], b[2]), cl = L(a[3], b[3]), st = a[4] + (b[4] - a[4]) * k;
+  const BANDS = 18, bh = Math.ceil(VH / BANDS);
+  const mc0 = skyNow().c, K0 = v => v.map((x, j) => Math.min(255, Math.round(x * 255 / Math.max(60, mc0[j]))));
+  for (let y = 0; y < BANDS; y++){ const t = y / (BANDS - 1); c.fillStyle = `rgb(${K0(top.map((v, j) => Math.round(v + (bot[j] - v) * t)))})`; c.fillRect(0, y * bh, VW, bh); }
+  if (st > .02) SKYSTARS.forEach(([x, y, big], n) => { if (n / SKYSTARS.length > st + .1) return; const tw = Math.sin(now / 600 + n) > .6 ? .5 : 1; c.globalAlpha = Math.min(1, st * 1.4) * tw; c.fillStyle = n % 3 ? '#FFF4C8' : '#BEC8FF'; const sx = Math.round(x * VW), sy = Math.round(y * VH); c.fillRect(sx, sy, 1, 1); if (big){ c.fillRect(sx - 1, sy, 3, 1); c.fillRect(sx, sy - 1, 1, 3); } c.globalAlpha = 1; });
+  const sh = cl.map(v => Math.round(v * .8)), mc = skyNow().c, K = v => v.map((x, j) => Math.min(255, Math.round(x * 255 / Math.max(60, mc[j]))));   // 이어서 곱해지는 낮밤 색을 미리 보정해요
+  SKYCLOUDS.forEach(([bx, by, sc], n) => { const x = Math.round(((bx * (VW + 60) + now / (1200 + n * 300)) % (VW + 60)) - 30), y = Math.round(by * VH);
+    c.fillStyle = `rgb(${K(cl)})`; CLOUD_PX.forEach(([dx, dy, w, hh]) => c.fillRect(x + Math.round(dx * sc), y + dy, Math.round(w * sc), hh)); c.fillStyle = `rgb(${K(sh)})`; c.fillRect(x, y + 4, Math.round(12 * sc), 1); });
+  // 해: 6.5~18시에 왼쪽에서 오른쪽으로, 달: 그 나머지 시간
+  const day = h >= 6.5 && h < 18, u = day ? (h - 6.5) / 11.5 : ((h >= 18 ? h - 18 : h + 6) / 12.5), px = Math.round(VW * (.1 + .8 * u)), py = Math.round(VH * (.42 - .3 * Math.sin(Math.PI * Math.min(1, Math.max(0, u)))));
+  if (day){ const low = h < 8 || h > 16.5; c.fillStyle = `rgb(${K(low ? [255, 154, 92] : [255, 244, 190])})`; c.fillRect(px - 5, py - 2, 11, 5); c.fillRect(px - 3, py - 4, 7, 9); c.fillRect(px - 2, py - 5, 5, 11); c.fillStyle = `rgb(${K(low ? [255, 210, 138] : [255, 226, 110])})`; c.fillRect(px - 3, py - 2, 7, 5); c.fillRect(px - 2, py - 3, 5, 7); }
+  else { const tq = Math.min(1, py / VH), cut = K0(top.map((v, j) => Math.round(v + (bot[j] - v) * tq))); c.fillStyle = `rgb(${K([255, 244, 214])})`; c.fillRect(px - 4, py - 2, 9, 5); c.fillRect(px - 3, py - 4, 7, 9); c.fillRect(px - 2, py - 5, 5, 11); c.fillStyle = `rgb(${cut})`; c.fillRect(px + 1, py - 4, 5, 3); c.fillRect(px + 2, py - 2, 5, 5); c.fillRect(px + 1, py + 1, 4, 3); }
+}
+
 const fx = [];
 let last = performance.now(), camIX = 0, camIY = 0;
 function drawPerson(p){ const cx = out;
@@ -737,7 +761,7 @@ function frame(now){
     if (camX === null){ camX = tx; camY = ty; } camX += (tx - camX) * Math.min(1, dt * 8); camY += (ty - camY) * Math.min(1, dt * 8); }
   const ix = Math.round(camX), iy = Math.round(camY); camIX = ix; camIY = iy;
   const view = { x: ix - 4, y: iy - 4, w: VW + 8, h: VH + 8 };
-  out.setTransform(KPX, 0, 0, KPX, 0, 0); out.fillStyle = M.indoor ? (M.fill || '#0C0715') : (() => { const q = skyNow(), d = Math.max(0, 1 - q.n), hx = M.fill || '#1E2A1C', N = [1, 3, 5].map(i => parseInt(hx.slice(i, i + 2), 16)), D = World.skyDay || [46, 36, 74]; return `rgb(${N.map((v, j) => Math.round(v + (D[j] - v) * d))})`; })(); out.fillRect(0, 0, VW, VH);
+  out.setTransform(KPX, 0, 0, KPX, 0, 0); out.fillStyle = M.indoor ? (M.fill || '#0C0715') : (() => { const q = skyNow(), d = Math.max(0, 1 - q.n), hx = M.fill || '#1E2A1C', N = [1, 3, 5].map(i => parseInt(hx.slice(i, i + 2), 16)), D = World.skyDay || [46, 36, 74]; return `rgb(${N.map((v, j) => Math.round(v + (D[j] - v) * d))})`; })(); out.fillRect(0, 0, VW, VH); if (!M.indoor) drawSkyBack(out, VW, VH, performance.now());
   out.setTransform(KPX, 0, 0, KPX, -ix * KPX, -iy * KPX);
   const cx = out;
   const SK = M.indoor ? { c: [150, 130, 175], n: 1, g: 0 } : skyNow(); skyN = SK.n; const dk = A.bgDay ? Math.min(1, SK.g * (World.skyGain ?? 1) / 1.75) : 0;   // 낮 정도 0~1
