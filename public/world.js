@@ -737,7 +737,7 @@ function frame(now){
     if (camX === null){ camX = tx; camY = ty; } camX += (tx - camX) * Math.min(1, dt * 8); camY += (ty - camY) * Math.min(1, dt * 8); }
   const ix = Math.round(camX), iy = Math.round(camY); camIX = ix; camIY = iy;
   const view = { x: ix - 4, y: iy - 4, w: VW + 8, h: VH + 8 };
-  out.setTransform(KPX, 0, 0, KPX, 0, 0); out.fillStyle = M.indoor ? (M.fill || '#0C0715') : (() => { const q = skyNow(), d = Math.max(0, 1 - q.n), hx = M.fill || '#1E2A1C', N = [1, 3, 5].map(i => parseInt(hx.slice(i, i + 2), 16)), D = World.skyDay || [104, 128, 158]; return `rgb(${N.map((v, j) => Math.round(v + (D[j] - v) * d))})`; })(); out.fillRect(0, 0, VW, VH);
+  out.setTransform(KPX, 0, 0, KPX, 0, 0); out.fillStyle = M.indoor ? (M.fill || '#0C0715') : (() => { const q = skyNow(), d = Math.max(0, 1 - q.n), hx = M.fill || '#1E2A1C', N = [1, 3, 5].map(i => parseInt(hx.slice(i, i + 2), 16)), D = World.skyDay || [46, 36, 74]; return `rgb(${N.map((v, j) => Math.round(v + (D[j] - v) * d))})`; })(); out.fillRect(0, 0, VW, VH);
   out.setTransform(KPX, 0, 0, KPX, -ix * KPX, -iy * KPX);
   const cx = out;
   const SK = M.indoor ? { c: [150, 130, 175], n: 1, g: 0 } : skyNow(); skyN = SK.n; const dk = A.bgDay ? Math.min(1, SK.g * (World.skyGain ?? 1) / 1.75) : 0;   // 낮 정도 0~1
