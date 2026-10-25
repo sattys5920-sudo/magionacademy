@@ -867,9 +867,10 @@ async function openMap(want){
     const wrap = document.getElementById('mwrap'), inner = document.getElementById('minner'), k = Math.min(wrap.clientHeight / m.H, 1.2);
     const w = Math.floor(m.W * k), h = Math.floor(m.H * k);
     mcv.style.width = w + 'px'; mcv.style.height = h + 'px'; inner.style.width = w + 'px'; inner.style.height = h + 'px';
-    const lab = (t, txt, cls) => { const [x, y] = P(t[0] + .5, t[1] + .5); const d = document.createElement('div'); d.className = 'mlabel' + (cls ? ' ' + cls : ''); d.textContent = txt; d.style.left = x * k + 'px'; d.style.top = (y * k - 4) + 'px'; inner.appendChild(d); };
+    const Pm = (tx, ty) => [m.OX + (tx - ty) * 8, m.OY + (tx + ty) * 4];   // 보는 지역의 기준점 (지금 서 있는 지역과 달라도 맞아요)
+    const lab = (t, txt, cls) => { const [x, y] = Pm(t[0] + .5, t[1] + .5); const d = document.createElement('div'); d.className = 'mlabel' + (cls ? ' ' + cls : ''); d.textContent = txt; d.style.left = x * k + 'px'; d.style.top = (y * k - 4) + 'px'; inner.appendChild(d); };
     m.areas.forEach(a => lab(a.t, a.n)); if (here) lab([me.x, me.y], '나', 'me');
-    const [px_, py_] = here ? P(me.x + .5, me.y + .5) : P(m.start[0] + .5, m.start[1] + .5); wrap.scrollLeft = px_ * k - wrap.clientWidth / 2; wrap.scrollTop = py_ * k - wrap.clientHeight / 2;
+    const [px_, py_] = here ? Pm(me.x + .5, me.y + .5) : Pm(m.start[0] + .5, m.start[1] + .5); wrap.scrollLeft = px_ * k - wrap.clientWidth / 2; wrap.scrollTop = py_ * k - wrap.clientHeight / 2;
   });
 }
 mcv.addEventListener('click', e => {   // 탭할 때만 (밀어서 볼 때는 안 움직여요)
