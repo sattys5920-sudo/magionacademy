@@ -576,8 +576,8 @@ button.cell:not(:disabled):active{background:var(--line)}
 .cauldron{position:relative;border-radius:var(--r-panel);background:radial-gradient(ellipse at 50% 80%,#3B2A5E,var(--panel2) 70%);border:1px solid var(--line2);min-height:190px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:12px;gap:4px;transition:box-shadow .15s}
 .cauldron.over{box-shadow:0 0 0 3px var(--accent)}
 .cauldron.ready{box-shadow:0 0 0 2px var(--purple)}
-.cslots{display:flex;gap:10px;margin-bottom:-6px;position:relative;z-index:2}
-.cslot{width:56px;height:56px;border-radius:50%;border:2px dashed var(--line2);background:rgba(20,13,30,.5);display:flex;align-items:center;justify-content:center;color:var(--sub);font-family:var(--f-pxb);padding:0}
+.cslots{display:flex;gap:6px;margin-bottom:-6px;position:relative;z-index:2}
+.cslot{width:48px;height:48px;border-radius:50%;border:2px dashed var(--line2);background:rgba(20,13,30,.5);display:flex;align-items:center;justify-content:center;color:var(--sub);font-family:var(--f-pxb);padding:0}
 .cslot.on{border:2px solid var(--purple);background:var(--panel);cursor:pointer}
 .cpot{position:relative;width:120px;height:110px;display:flex;align-items:center;justify-content:center}
 .bub{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--purple);opacity:0}
@@ -803,8 +803,8 @@ const SEED_INFO = Object.fromEntries(SEED_LIST.map((x, i) => [x.id, { ...x, ic: 
 const SEED_TIERS = [...new Set(SEED_LIST.map(x => x.know))];
 SEED_LIST.forEach(x => { ITEM[x.id] = x.mat; });
 const CREATURE_MATS = ['wool','uhair','scale','hegg','whisker','slime','honey','silk','feather','milk','egg'];
-const MATS = [...SEED_LIST.map(x => x.id), ...CREATURE_MATS];
-// 물약 도감 100종: r 재료 3개, pay 주문 보상, col 물약 색, use 마시면 생기는 일, time 그 기숙사 시간에만 끓어요
+const MATS = [...SEED_LIST.map(x => x.id), ...CREATURE_MATS];   // 채집물·물고기 재료는 아래 FORAGE/FISH 뒤에서 덧붙여요
+// 물약 도감 100종: r 재료 3~5개, pay 주문 보상, col 물약 색, use 마시면 생기는 일, time 그 기숙사 시간에만 끓어요
 // 아이콘은 art/potions.png (10×10칸, 이 표의 순서대로)
 const POTION_LIST = [
   { id:'p_red', name:'치유 물약', r:["herb", "herb", "drop"], pay:60, col:'#FF5A7A', desc:"양호실에서 늘 찾는 기본 물약", use:"전투 중 마시면 체력 50% 회복" },
@@ -819,94 +819,94 @@ const POTION_LIST = [
   { id:'p_sun', name:'한낮의 물약', r:["scale", "scale", "herb"], pay:160, col:'#FFC81E', time:"ember", desc:"한낮의 열기로 끓여요" },
   { id:'p_dusk', name:'노을 물약', r:["uhair", "uhair", "wool"], pay:180, col:'#FF7A5C', time:"dusk", desc:"해 질 녘에만 색이 바뀌어요" },
   { id:'p_moon', name:'달그림자 물약', r:["mana", "mana", "drop"], pay:180, col:'#5548B8', time:"moon", desc:"달이 뜬 밤에만 굳어요" },
-  { id:'pt013', name:'속삭임 물약', r:["g_clover", "g_mint", "g_dandel"], pay:45, col:'#127AE2' },
-  { id:'pt014', name:'투명 물약', r:["g_carrot", "g_clover", "herb"], pay:45, col:'#E69DAC' },
-  { id:'pt015', name:'깃털 물약', r:["drop", "drop", "g_straw"], pay:45, col:'#23A82E' },
-  { id:'pt016', name:'거품 물약', r:["mush", "g_clover", "g_straw"], pay:45, col:'#7E3EE9' },
-  { id:'pt017', name:'무지개 물약', r:["g_chamo", "herb", "herb"], pay:45, col:'#E6C074' },
-  { id:'pt018', name:'기억 물약', r:["g_dandel", "g_dandel", "herb"], pay:45, col:'#12E2DA' },
-  { id:'pt019', name:'망각 물약', r:["g_carrot", "g_straw", "g_straw"], pay:45, col:'#E69DD3' },
-  { id:'pt020', name:'웃음 물약', r:["g_straw", "drop", "g_dandel"], pay:45, col:'#60A823' },
-  { id:'pt021', name:'눈물 물약', r:["g_clover", "g_mint", "drop"], pay:45, col:'#3E5AE9' },
-  { id:'pt022', name:'행운 물약', r:["g_clover", "g_mint", "herb"], pay:45, col:'#E68274' },
-  { id:'pt023', name:'번개 물약', r:["g_straw", "drop", "mush"], pay:45, col:'#12E269' },
-  { id:'pt024', name:'얼음 물약', r:["g_dandel", "drop", "herb"], pay:45, col:'#D19DE6' },
-  { id:'pt025', name:'바람 물약', r:["herb", "g_carrot", "g_carrot"], pay:45, col:'#A7A823' },
-  { id:'pt026', name:'구름 물약', r:["g_rose", "g_pea", "g_straw"], pay:70, col:'#3EB7E9' },
-  { id:'pt027', name:'안개 물약', r:["g_moss", "g_wheat", "g_straw"], pay:70, col:'#E674A3' },
-  { id:'pt028', name:'꿈결 물약', r:["g_lav", "g_moss", "g_sunf"], pay:85, col:'#2BE212' },
-  { id:'pt029', name:'수다 물약', r:["mana", "g_sunf", "g_moss"], pay:85, col:'#A99DE6' },
-  { id:'pt030', name:'침묵 물약', r:["g_blueb", "herb", "g_chamo"], pay:60, col:'#A86023' },
-  { id:'pt031', name:'변신 물약', r:["g_ginger", "herb", "g_straw"], pay:60, col:'#3EE9BF' },
-  { id:'pt032', name:'축소 물약', r:["g_rose", "g_sunf", "g_dandel"], pay:70, col:'#E674E1' },
-  { id:'pt033', name:'거대화 물약', r:["mana", "g_clover", "g_straw"], pay:60, col:'#9CE212' },
-  { id:'pt034', name:'부유 물약', r:["g_wheat", "g_chamo", "herb"], pay:60, col:'#9DB8E6' },
-  { id:'pt035', name:'야광 물약', r:["g_blueb", "mana", "g_sunf"], pay:85, col:'#A8232E' },
-  { id:'pt036', name:'그림자 물약', r:["g_lav", "mush", "mush"], pay:60, col:'#3EE962' },
-  { id:'pt037', name:'거울 물약', r:["g_sunf", "g_carrot", "herb"], pay:60, col:'#AD74E6' },
-  { id:'pt038', name:'메아리 물약', r:["g_blueb", "g_rose", "g_blueb"], pay:85, col:'#E2B812' },
-  { id:'pt039', name:'노래 물약', r:["g_pine", "g_cotton", "g_cotton"], pay:125, col:'#9DE0E6' },
-  { id:'pt040', name:'춤 물약', r:["g_maple", "g_sunf", "g_clover"], pay:85, col:'#A82375' },
-  { id:'pt041', name:'딸꾹질 물약', r:["g_tomato", "g_carrot", "g_carrot"], pay:70, col:'#76E93E' },
-  { id:'pt042', name:'재채기 물약', r:["g_acorn", "g_mint", "g_pea"], pay:85, col:'#7478E6' },
-  { id:'pt043', name:'꽃향기 물약', r:["g_bamboo", "g_maple", "g_ginger"], pay:110, col:'#E24712' },
-  { id:'pt044', name:'비눗방울 물약', r:["g_pepper", "g_moss", "g_dandel"], pay:85, col:'#9DE6C5' },
-  { id:'pt045', name:'솜사탕 물약', r:["g_corn", "g_wheat", "g_carrot"], pay:85, col:'#9223A8' },
-  { id:'pt046', name:'박하 물약', r:["g_pepper", "g_chamo", "g_bamboo"], pay:100, col:'#D3E93E' },
-  { id:'pt047', name:'초콜릿 물약', r:["g_corn", "mana", "g_tomato"], pay:110, col:'#74B6E6' },
-  { id:'pt048', name:'사과 물약', r:["g_bamboo", "g_clover", "g_pea"], pay:85, col:'#E2124D' },
-  { id:'pt049', name:'꿀 물약', r:["g_bamboo", "g_chamo", "egg"], pay:145, col:'#9DE69D' },
-  { id:'pt050', name:'계피 물약', r:["g_maple", "g_tomato", "g_chamo"], pay:100, col:'#4B23A8' },
-  { id:'pt051', name:'레몬 물약', r:["g_pepper", "g_blueb", "drop"], pay:85, col:'#E9A33E' },
-  { id:'pt052', name:'체리 물약', r:["g_cactus", "g_cotton", "g_chamo"], pay:110, col:'#74E6D9' },
-  { id:'pt053', name:'복숭아 물약', r:["g_lily", "g_tomato", "g_cactus"], pay:155, col:'#E212BE' },
-  { id:'pt054', name:'포도 물약', r:["g_tulip", "g_redcap", "g_chamo"], pay:125, col:'#C4E69D' },
-  { id:'pt055', name:'바닐라 물약', r:["g_lotus", "drop", "g_acorn"], pay:110, col:'#2343A8' },
-  { id:'pt056', name:'생강 물약', r:["g_ginseng", "g_bamboo", "drop"], pay:110, col:'#E9463E' },
-  { id:'pt057', name:'해바라기 물약', r:["g_aloe", "g_tulip", "g_bamboo"], pay:155, col:'#74E69B' },
-  { id:'pt058', name:'장미 물약', r:["g_morning", "g_chamo", "g_clover"], pay:85, col:'#9512E2' },
-  { id:'pt059', name:'라벤더 물약', r:["g_redcap", "g_tomato", "g_chamo"], pay:110, col:'#E6E09D' },
-  { id:'pt060', name:'클로버 물약', r:["g_morning", "g_acorn", "g_tulip"], pay:155, col:'#238BA8' },
-  { id:'pt061', name:'이끼 물약', r:["g_lotus", "g_lily", "drop"], pay:125, col:'#E93E92' },
-  { id:'pt062', name:'도토리 물약', r:["g_redcap", "herb", "g_pepper"], pay:110, col:'#8BE674' },
-  { id:'pt063', name:'솔방울 물약', r:["g_ginseng", "herb", "g_mint"], pay:85, col:'#2512E2' },
-  { id:'pt064', name:'단풍 물약', r:["g_lotus", "g_carrot", "g_lily"], pay:125, col:'#E6B99D' },
-  { id:'pt065', name:'눈꽃 물약', r:["g_bell", "g_pepper", "g_evening"], pay:180, col:'#23A87D' },
-  { id:'pt066', name:'봄비 물약', r:["g_fairy", "g_cactus", "g_firefly"], pay:195, col:'#E33EE9' },
-  { id:'pt067', name:'소나기 물약', r:["g_snow", "g_redcap", "drop"], pay:140, col:'#C8E674' },
-  { id:'pt068', name:'천둥 물약', r:["g_whisper", "g_fairy", "drop"], pay:155, col:'#126FE2' },
-  { id:'pt069', name:'오로라 물약', r:["g_cloud", "g_carrot", "g_bell"], pay:155, col:'#E69DA8' },
-  { id:'pt070', name:'혜성 물약', r:["g_glass", "g_wheat", "g_tomato"], pay:140, col:'#23A835' },
-  { id:'pt071', name:'은하수 물약', r:["g_fairy", "mana", "g_sunf"], pay:125, col:'#873EE9' },
-  { id:'pt072', name:'일식 물약', r:["g_cloud", "g_maple", "g_cactus"], pay:165, col:'#E6C674' },
-  { id:'pt073', name:'별자리 물약', r:["g_glass", "g_ginger", "wool"], pay:130, col:'#12E0E2' },
-  { id:'pt074', name:'나침반 물약', r:["g_fairy", "g_sunf", "g_sunf"], pay:125, col:'#E69DD0' },
-  { id:'pt075', name:'모래시계 물약', r:["g_evening", "g_pepper", "g_pine"], pay:155, col:'#59A823' },
-  { id:'pt076', name:'열쇠 물약', r:["g_evening", "g_chamo", "g_acorn"], pay:125, col:'#3E51E9' },
-  { id:'pt077', name:'풍선 물약', r:["g_firefly", "g_clover", "g_pea"], pay:110, col:'#E68874' },
-  { id:'pt078', name:'종이학 물약', r:["g_dream", "g_carrot", "g_pea"], pay:125, col:'#12E273' },
-  { id:'pt079', name:'잉크 물약', r:["g_dragonp", "g_lily", "g_redcap"], pay:195, col:'#D49DE6' },
-  { id:'pt080', name:'등불 물약', r:["g_thunder", "g_dragonp", "egg"], pay:255, col:'#A1A823' },
-  { id:'pt081', name:'반딧불 물약', r:["g_ocean", "g_cactus", "egg"], pay:230, col:'#3EAEE9' },
-  { id:'pt082', name:'고양이 물약', r:["g_star", "g_pea", "mush"], pay:125, col:'#E6749D' },
-  { id:'pt083', name:'부엉이 물약', r:["g_frost", "g_mirror", "g_acorn"], pay:205, col:'#21E212' },
-  { id:'pt084', name:'토끼 물약', r:["g_shadow", "g_glass", "drop"], pay:165, col:'#AD9DE6' },
-  { id:'pt085', name:'여우 물약', r:["g_dream", "g_corn", "drop"], pay:140, col:'#A86723' },
-  { id:'pt086', name:'거북 물약', r:["g_shadow", "g_ginger", "g_dandel"], pay:125, col:'#3EE9C7' },
-  { id:'pt087', name:'해파리 물약', r:["g_dragonp", "g_cactus", "g_firefly"], pay:205, col:'#E674DB' },
-  { id:'pt088', name:'고래 물약', r:["g_thunder", "g_clover", "g_sunf"], pay:125, col:'#91E212' },
-  { id:'pt089', name:'산호 물약', r:["g_ocean", "g_wheat", "herb"], pay:125, col:'#9DB4E6' },
-  { id:'pt090', name:'진주 물약', r:["g_ocean", "g_firefly", "g_rose"], pay:180, col:'#A82327' },
-  { id:'pt091', name:'수정 물약', r:["g_sung", "g_pea", "g_firefly"], pay:195, col:'#3EE96B' },
-  { id:'pt092', name:'호박빛 물약', r:["g_wish", "g_ginseng", "g_frost"], pay:235, col:'#B374E6' },
-  { id:'pt093', name:'금박 물약', r:["g_moonf", "g_corn", "g_dream"], pay:220, col:'#E2C212' },
-  { id:'pt094', name:'용암 물약', r:["g_comet", "g_mint", "g_time"], pay:205, col:'#9DDCE6' },
-  { id:'pt095', name:'간지럼 물약', r:["g_rainbow", "g_chamo", "g_sunf"], pay:140, col:'#A8236F' },
-  { id:'pt096', name:'집중 물약', r:["g_aurora", "g_pepper", "g_glass"], pay:205, col:'#6EE93E' },
-  { id:'pt097', name:'영감 물약', r:["g_soul", "g_aurora", "g_maple"], pay:235, col:'#7574E6' },
-  { id:'pt098', name:'우정 물약', r:["g_crystal", "g_pine", "g_moss"], pay:165, col:'#E25112' },
-  { id:'pt099', name:'첫사랑 물약', r:["g_gold", "g_shadow", "g_comet"], pay:275, col:'#9DE6C8' },
-  { id:'pt100', name:'별빛 물약', r:["g_wish", "g_soul", "egg"], pay:400, col:'#9923A8', desc:"호박달 마녀학교의 전설. 도감 100번째 물약" },
+  { id:'pt013', name:'속삭임 물약', r:["f_loach", "g_moss", "g2_cone"], pay:45, col:'#127AE2' },
+  { id:'pt014', name:'투명 물약', r:["g_bamboo", "milk", "g2_acorn"], pay:50, col:'#E69DAC' },
+  { id:'pt015', name:'깃털 물약', r:["f_batcat", "g2_pebble", "mush"], pay:45, col:'#23A82E' },
+  { id:'pt016', name:'거품 물약', r:["slime", "f_cloudcrab", "g_corn"], pay:60, col:'#7E3EE9' },
+  { id:'pt017', name:'무지개 물약', r:["g2_pebble", "g2_clover3", "herb"], pay:45, col:'#E6C074' },
+  { id:'pt018', name:'기억 물약', r:["uhair", "g2_clover3", "g_straw"], pay:45, col:'#12E2DA' },
+  { id:'pt019', name:'망각 물약', r:["g_acorn", "g2_daisy", "g2_pebble", "f_crucian"], pay:45, col:'#E69DD3' },
+  { id:'pt020', name:'웃음 물약', r:["g_pepper", "f_seedbit", "g2_acorn"], pay:45, col:'#60A823' },
+  { id:'pt021', name:'눈물 물약', r:["scale", "g2_fern", "g_ginger", "f_minnow"], pay:50, col:'#3E5AE9' },
+  { id:'pt022', name:'행운 물약', r:["scale", "g2_pebble", "mush"], pay:45, col:'#E68274' },
+  { id:'pt023', name:'번개 물약', r:["f_cray", "g2_crowf", "g_aloe", "whisker", "f_killi"], pay:105, col:'#12E269' },
+  { id:'pt024', name:'얼음 물약', r:["f_tadpole", "f_smelt", "f_seedbit"], pay:55, col:'#D19DE6' },
+  { id:'pt025', name:'바람 물약', r:["milk", "g_blueb", "g2_acorn", "g_chamo", "f_minnow"], pay:55, col:'#A7A823' },
+  { id:'pt026', name:'구름 물약', r:["f_tadpole", "g2_pebble", "g_carrot"], pay:70, col:'#3EB7E9' },
+  { id:'pt027', name:'안개 물약', r:["f_smelt", "g_pepper", "g_dandel"], pay:70, col:'#E674A3' },
+  { id:'pt028', name:'꿈결 물약', r:["f_cloudcrab", "g2_daisy", "g_chamo", "wool"], pay:85, col:'#2BE212' },
+  { id:'pt029', name:'수다 물약', r:["f_tadpole", "g_cactus", "g2_pebble", "g_tomato"], pay:85, col:'#A99DE6' },
+  { id:'pt030', name:'침묵 물약', r:["f_cloudcrab", "g_pea", "g2_cone", "wool"], pay:60, col:'#A86023' },
+  { id:'pt031', name:'변신 물약', r:["whisker", "g2_moss", "g_mint"], pay:60, col:'#3EE9BF' },
+  { id:'pt032', name:'축소 물약', r:["g2_crowf", "g_lotus", "g2_moss", "g2_daisy"], pay:70, col:'#E674E1' },
+  { id:'pt033', name:'거대화 물약', r:["f_puffer", "g2_maple", "hegg"], pay:75, col:'#9CE212' },
+  { id:'pt034', name:'부유 물약', r:["g2_pseed", "honey", "f_batcat", "scale"], pay:90, col:'#9DB8E6' },
+  { id:'pt035', name:'야광 물약', r:["g_tulip", "g2_ginkgo", "wool"], pay:85, col:'#A8232E' },
+  { id:'pt036', name:'그림자 물약', r:["g2_blue", "g_ginseng", "f_batcat"], pay:70, col:'#3EE962' },
+  { id:'pt037', name:'거울 물약', r:["g2_snail", "feather", "g_cactus"], pay:85, col:'#AD74E6' },
+  { id:'pt038', name:'메아리 물약', r:["g2_sseed", "silk", "g_acorn", "f_loach"], pay:85, col:'#E2B812' },
+  { id:'pt039', name:'노래 물약', r:["g2_snail", "f_puffer", "g_glass", "g_bamboo"], pay:155, col:'#9DE0E6' },
+  { id:'pt040', name:'춤 물약', r:["g_ginseng", "f_killi", "g_mint"], pay:85, col:'#A82375' },
+  { id:'pt041', name:'딸꾹질 물약', r:["g2_moss", "scale", "f_loach", "g_blueb"], pay:70, col:'#76E93E' },
+  { id:'pt042', name:'재채기 물약', r:["g2_sseed", "hegg", "g_ginger"], pay:85, col:'#7478E6' },
+  { id:'pt043', name:'꽃향기 물약', r:["g2_catnip", "f_jelly", "g_redcap"], pay:110, col:'#E24712' },
+  { id:'pt044', name:'비눗방울 물약', r:["f_bonecat", "g_whisper", "slime", "scale", "g2_pebble"], pay:165, col:'#9DE6C5' },
+  { id:'pt045', name:'솜사탕 물약', r:["f_cotton", "f_seedbit", "g2_acorn", "wool", "g_chamo"], pay:115, col:'#9223A8' },
+  { id:'pt046', name:'박하 물약', r:["silk", "g_cotton", "f_crucian", "g2_acorn"], pay:100, col:'#D3E93E' },
+  { id:'pt047', name:'초콜릿 물약', r:["f_bonecat", "g_tulip", "scale", "uhair", "g_ginger"], pay:130, col:'#74B6E6' },
+  { id:'pt048', name:'사과 물약', r:["g2_pseed", "f_puffer", "g_lily", "slime", "g_dandel"], pay:125, col:'#E2124D' },
+  { id:'pt049', name:'꿀 물약', r:["g2_blue", "f_cloudcrab", "g_cotton", "f_killi"], pay:145, col:'#9DE69D' },
+  { id:'pt050', name:'계피 물약', r:["g2_bell", "g_morning", "whisker", "g2_ginkgo", "f_seedbit"], pay:125, col:'#4B23A8' },
+  { id:'pt051', name:'레몬 물약', r:["g2_snail", "g_tulip", "g_cotton", "mana", "mush"], pay:90, col:'#E9A33E' },
+  { id:'pt052', name:'체리 물약', r:["g2_bell", "honey", "g2_rasp"], pay:110, col:'#74E6D9' },
+  { id:'pt053', name:'복숭아 물약', r:["g2_bell", "g2_mushpine", "f_lampshrimp", "g2_acorn"], pay:155, col:'#E212BE' },
+  { id:'pt054', name:'포도 물약', r:["f_rtrout", "f_betta", "g_cloud"], pay:180, col:'#C4E69D' },
+  { id:'pt055', name:'바닐라 물약', r:["g2_lady", "g_ginseng", "g_bamboo", "g_corn", "g_sunf"], pay:115, col:'#2343A8' },
+  { id:'pt056', name:'생강 물약', r:["f_candleeel", "g_glass", "whisker", "g2_daisy"], pay:155, col:'#E9463E' },
+  { id:'pt057', name:'해바라기 물약', r:["f_sweet", "f_candleeel", "g_evening", "honey"], pay:235, col:'#74E69B' },
+  { id:'pt058', name:'장미 물약', r:["f_candleeel", "feather", "g_cloud", "g2_chest", "f_cray"], pay:190, col:'#9512E2' },
+  { id:'pt059', name:'라벤더 물약', r:["g2_batleaf", "g_ginseng", "slime", "f_smelt"], pay:140, col:'#E6E09D' },
+  { id:'pt060', name:'클로버 물약', r:["g_star", "g_shadow", "g2_moss"], pay:195, col:'#238BA8' },
+  { id:'pt061', name:'이끼 물약', r:["f_candleeel", "silk", "g2_rasp", "g_cotton"], pay:125, col:'#E93E92' },
+  { id:'pt062', name:'도토리 물약', r:["g_dream", "feather", "g_lotus", "f_smelt", "g_tomato"], pay:170, col:'#8BE674' },
+  { id:'pt063', name:'솔방울 물약', r:["g_dream", "feather", "f_puffer", "g2_catnip"], pay:175, col:'#2512E2' },
+  { id:'pt064', name:'단풍 물약', r:["g_tulip", "g2_maple", "scale", "f_cloudcrab", "g_chamo"], pay:125, col:'#E6B99D' },
+  { id:'pt065', name:'눈꽃 물약', r:["g_crystal", "feather", "f_tadpole", "g2_fern", "wool"], pay:215, col:'#23A87D' },
+  { id:'pt066', name:'봄비 물약', r:["g_moonf", "f_weel", "wool", "g_tomato"], pay:250, col:'#E33EE9' },
+  { id:'pt067', name:'소나기 물약', r:["g2_bell", "g_mirror", "f_batcat", "g2_fern"], pay:180, col:'#C8E674' },
+  { id:'pt068', name:'천둥 물약', r:["f_mushflat", "g2_crowf", "g_tulip", "g_corn"], pay:160, col:'#126FE2' },
+  { id:'pt069', name:'오로라 물약', r:["g2_batleaf", "g2_mushpine", "f_bonecat", "g_cloud"], pay:230, col:'#E69DA8' },
+  { id:'pt070', name:'혜성 물약', r:["g2_mushred", "g_lily", "hegg", "f_minnow"], pay:140, col:'#23A835' },
+  { id:'pt071', name:'은하수 물약', r:["g2_mushred", "whisker", "f_cloudcrab", "g_bamboo", "g_carrot"], pay:125, col:'#873EE9' },
+  { id:'pt072', name:'일식 물약', r:["g_ocean", "g2_sseed", "whisker", "f_candy"], pay:170, col:'#E6C674' },
+  { id:'pt073', name:'별자리 물약', r:["g_crystal", "f_weel", "whisker", "g2_acorn"], pay:250, col:'#12E0E2' },
+  { id:'pt074', name:'나침반 물약', r:["g2_mushpine", "g_frost", "g_thunder", "silk", "milk"], pay:285, col:'#E69DD0' },
+  { id:'pt075', name:'모래시계 물약', r:["g_soul", "slime", "g2_pebble", "f_minnow", "g_straw"], pay:180, col:'#59A823' },
+  { id:'pt076', name:'열쇠 물약', r:["g_soul", "f_rtrout", "g2_daisy", "mush"], pay:215, col:'#3E51E9' },
+  { id:'pt077', name:'풍선 물약', r:["f_puffer", "g_cloud", "slime", "g2_moss", "g_acorn"], pay:150, col:'#E68874' },
+  { id:'pt078', name:'종이학 물약', r:["g2_firefly", "f_cotton", "g_star", "feather"], pay:245, col:'#12E273' },
+  { id:'pt079', name:'잉크 물약', r:["f_mushflat", "g2_pseed", "f_conch", "g_bamboo"], pay:195, col:'#D49DE6' },
+  { id:'pt080', name:'등불 물약', r:["g_time", "g2_firefly", "f_cloudray", "f_ghostsquid", "g_dandel"], pay:310, col:'#A1A823' },
+  { id:'pt081', name:'반딧불 물약', r:["g2_firefly", "g_frost", "f_betta", "slime"], pay:235, col:'#3EAEE9' },
+  { id:'pt082', name:'고양이 물약', r:["f_mushflat", "g_dragonp", "silk", "g2_catnip", "g2_cone"], pay:250, col:'#E6749D' },
+  { id:'pt083', name:'부엉이 물약', r:["f_cloudray", "feather", "g2_crowf", "g_acorn", "f_crucian"], pay:205, col:'#21E212' },
+  { id:'pt084', name:'토끼 물약', r:["g_bell", "g2_crowf", "uhair", "g_straw", "g_clover"], pay:165, col:'#AD9DE6' },
+  { id:'pt085', name:'여우 물약', r:["g_sung", "f_carp", "g2_moss", "hegg"], pay:190, col:'#A86723' },
+  { id:'pt086', name:'거북 물약', r:["g2_eve", "g_time", "f_puffer", "g2_clover3"], pay:270, col:'#3EE9C7' },
+  { id:'pt087', name:'해파리 물약', r:["g_aurora", "feather", "f_ghostsquid", "g2_moss"], pay:210, col:'#E674DB' },
+  { id:'pt088', name:'고래 물약', r:["g_moonf", "f_betta", "f_candy", "g2_daisy", "milk"], pay:240, col:'#91E212' },
+  { id:'pt089', name:'산호 물약', r:["g_shadow", "f_ghostsquid", "g2_catnip", "f_cray"], pay:185, col:'#9DB4E6' },
+  { id:'pt090', name:'진주 물약', r:["g_wish", "g2_batleaf", "f_puffer", "slime", "g2_pebble"], pay:285, col:'#A82327' },
+  { id:'pt091', name:'수정 물약', r:["g_soul", "f_smelt", "g_cotton", "hegg", "g2_clover3"], pay:200, col:'#3EE96B' },
+  { id:'pt092', name:'호박빛 물약', r:["g2_eve", "g_wish", "g_whisper", "whisker", "f_loach"], pay:325, col:'#B374E6' },
+  { id:'pt093', name:'금박 물약', r:["g2_spider", "g_gold", "f_smelt", "g_bamboo", "wool"], pay:290, col:'#E2C212' },
+  { id:'pt094', name:'용암 물약', r:["g2_spider", "g_aurora", "silk", "f_crucian", "g_straw"], pay:260, col:'#9DDCE6' },
+  { id:'pt095', name:'간지럼 물약', r:["f_mushflat", "g2_bell", "g_cloud", "g_lily", "scale"], pay:265, col:'#A8236F' },
+  { id:'pt096', name:'집중 물약', r:["g_wish", "g2_firefly", "feather", "f_tadpole", "g2_moss"], pay:265, col:'#6EE93E' },
+  { id:'pt097', name:'영감 물약', r:["g2_cicada", "g_shadow", "g2_lady", "g_fairy", "g2_ginkgo"], pay:265, col:'#7574E6' },
+  { id:'pt098', name:'우정 물약', r:["g_aurora", "f_tadpole", "g2_crowf", "g_sunf", "wool"], pay:205, col:'#E25112' },
+  { id:'pt099', name:'첫사랑 물약', r:["g_rainbow", "g_dream", "g_bell", "silk", "f_batcat"], pay:330, col:'#9DE6C8' },
+  { id:'pt100', name:'별빛 물약', r:["g_aurora", "g2_snail", "feather", "f_lampshrimp", "g2_ginkgo"], pay:400, col:'#9923A8', desc:"호박달 마녀학교의 전설. 도감 100번째 물약" },
 ];
 POTION_LIST.forEach(x => { const c = x.r.reduce((t, m) => { const q = SEED_LIST.find(z => z.id === m); return t + (q ? q.price / q.yield : 0); }, 0); x.pay = Math.max(x.pay, Math.round(c * 1.5 / 5) * 5); });   // 재료비보다 보상이 꼭 크게
 const POTION_INFO = Object.fromEntries(POTION_LIST.map((x, i) => [x.id, { ...x, ic: i }]));
@@ -1331,14 +1331,18 @@ if (window.visualViewport){ const vv = window.visualViewport, fit = () => { cons
 // 그림은 art/fish.png · forage.png · rods.png (tools/iso/fishing_art.py, 이 표 순서대로). 앞에 있을수록 흔해요: 칸마다 희귀도가 다 달라요
 // 물고기: [id, 이름, 틀(크기용), 나오는 시간(없으면 언제나 · dew 새벽 · ember 한낮 · dusk 노을 · moon 밤)]
 const FISH_LIST = [
-  ['f_minnow', '유령 피라미', 'slim'], ['f_crucian', '호박 붕어', 'round'], ['f_killi', '이끼 송사리', 'slim'], ['f_loach', '진흙 미꾸라지', 'long'], ['f_smelt', '촛불 빙어', 'slim', 'dew'],
-  ['f_carp', '버섯 잉어', 'round'], ['f_batcat', '박쥐 메기', 'cat', 'moon'], ['f_candy', '사탕 열대어', 'round', 'ember'], ['f_jelly', '젤리 해파리', 'jelly'], ['f_cray', '거미 가재', 'cray'],
-  ['f_conch', '마녀 모자 소라', 'shell'], ['f_trout', '달빛 송어', 'slim', 'moon'], ['f_puffer', '눈알 복어', 'puff'], ['f_bonecat', '해골 메기', 'cat', 'dusk'], ['f_betta', '꽃잎 베타', 'round', 'ember'],
-  ['f_cloudray', '구름 가오리', 'flat', 'dew'], ['f_cotton', '솜사탕 넙치', 'flat'], ['f_rtrout', '무지개 송어', 'slim', 'ember'], ['f_weel', '늑대 장어', 'long', 'moon'], ['f_sweet', '안개 은어', 'slim', 'dew'],
-  ['f_angler', '호박등 아귀', 'angler', 'dusk'], ['f_piranha', '뱀파이어 피라냐', 'angler', 'moon'], ['f_starfish', '별사탕 불가사리', 'star'], ['f_goby', '부엉이 망둥이', 'round', 'dusk'], ['f_shrimp', '수정 새우', 'shrimp'],
-  ['f_bream', '루비 도미', 'round', 'ember'], ['f_seahorse', '유령 해마', 'horse', 'moon'], ['f_bolt', '번개 뱀장어', 'long', 'ember'], ['f_gold', '황금 잉어', 'round'], ['f_salmon', '오로라 연어', 'slim', 'dew'],
-  ['f_book', '마법서 넙치', 'flat', 'dusk'], ['f_witch', '마녀 모자 금붕어', 'round', 'dusk'], ['f_shadow', '그림자 가오리', 'flat', 'moon'], ['f_moonbun', '달토끼 금붕어', 'round', 'moon'], ['f_turtle', '왕관 거북', 'turtle'],
-  ['f_dragon', '용 비늘 잉어', 'round', 'ember'], ['f_whale', '별똥별 꼬마 고래', 'whale', 'dew'], ['f_mermaid', '인어의 은빛 잉어', 'slim'], ['f_king', '호박달 메기왕', 'cat', 'dusk'], ['f_lord', '호수의 주인', 'lord', 'moon'],
+  ['f_minnow', '유령 피라미', 'slim'], ['f_crucian', '호박 붕어', 'round'], ['f_seedbit', '호박씨 송사리', 'slim'], ['f_killi', '이끼 송사리', 'slim'], ['f_loach', '진흙 미꾸라지', 'long'],
+  ['f_smelt', '촛불 빙어', 'slim', 'dew'], ['f_cloudcrab', '구름 게', 'crab'], ['f_carp', '버섯 잉어', 'round'], ['f_batcat', '박쥐 메기', 'cat', 'moon'], ['f_candy', '사탕 열대어', 'round', 'ember'],
+  ['f_tadpole', '진흙 개구리', 'frog'], ['f_jelly', '젤리 해파리', 'jelly'], ['f_cray', '거미 가재', 'cray'], ['f_conch', '마녀 모자 소라', 'shell'], ['f_lampshrimp', '등불 새우', 'shrimp', 'dusk'],
+  ['f_trout', '달빛 송어', 'slim', 'moon'], ['f_puffer', '눈알 복어', 'puff'], ['f_ghostsquid', '유령 오징어', 'squid', 'moon'], ['f_bonecat', '해골 메기', 'cat', 'dusk'], ['f_betta', '꽃잎 베타', 'round', 'ember'],
+  ['f_cloudray', '구름 가오리', 'flat', 'dew'], ['f_candleeel', '촛농 뱀장어', 'eel', 'dusk'], ['f_cotton', '솜사탕 넙치', 'flat'], ['f_rtrout', '무지개 송어', 'slim', 'ember'], ['f_maplebass', '단풍 쏘가리', 'round', 'dew'],
+  ['f_weel', '늑대 장어', 'long', 'moon'], ['f_sweet', '안개 은어', 'slim', 'dew'], ['f_mushflat', '버섯 가자미', 'flat'], ['f_angler', '호박등 아귀', 'angler', 'dusk'], ['f_piranha', '뱀파이어 피라냐', 'angler', 'moon'],
+  ['f_octopus', '마법 문어', 'octo', 'dusk'], ['f_starfish', '별사탕 불가사리', 'star'], ['f_goby', '부엉이 망둥이', 'round', 'dusk'], ['f_shrimp', '수정 새우', 'shrimp'], ['f_ribbonmoray', '리본 곰치', 'eel', 'ember'],
+  ['f_bream', '루비 도미', 'round', 'ember'], ['f_seahorse', '유령 해마', 'horse', 'moon'], ['f_pumpray', '호박 쥐가오리', 'flat', 'ember'], ['f_bolt', '번개 뱀장어', 'long', 'ember'], ['f_gold', '황금 잉어', 'round'],
+  ['f_marshpuff', '마시멜로 복어', 'puff', 'dew'], ['f_salmon', '오로라 연어', 'slim', 'dew'], ['f_book', '마법서 넙치', 'flat', 'dusk'], ['f_witch', '마녀 모자 금붕어', 'round', 'dusk'], ['f_starmarlin', '별빛 청새치', 'long', 'moon'],
+  ['f_shadow', '그림자 가오리', 'flat', 'moon'], ['f_moonbun', '달토끼 금붕어', 'round', 'moon'], ['f_jellyqueen', '등불 해파리 여왕', 'jelly', 'moon'], ['f_turtle', '왕관 거북', 'turtle'], ['f_dragon', '용 비늘 잉어', 'round', 'ember'],
+  ['f_crystalcrab', '수정 왕게', 'crab'], ['f_whale', '별똥별 꼬마 고래', 'whale', 'dew'], ['f_cauldronangler', '가마솥 아귀', 'angler', 'dusk'], ['f_mermaid', '인어의 은빛 잉어', 'slim'], ['f_ghostshark', '유령 상어', 'shark', 'moon'],
+  ['f_king', '호박달 메기왕', 'cat', 'dusk'], ['f_auroracachalot', '오로라 향유고래', 'whale', 'dew'], ['f_dragonsea', '용머리 바다거북', 'turtle', 'ember'], ['f_lord', '호수의 주인', 'lord', 'moon'], ['f_moonkoi', '달잉어 신령', 'lord', 'moon'],
 ];
 const FISH_ART_V = 1;   // 그림을 고치면 올려요 (png는 오래 캐시돼요)
 const JUNK_LIST = [['j_boot', '낡은 장화'], ['j_can', '찌그러진 깡통'], ['j_weed', '물풀 뭉치']];
@@ -1355,13 +1359,14 @@ const FORAGE_LIST = [
   ['g2_amethyst', '자수정', 'g'], ['g2_fossil', '조개 화석', 'l'], ['g2_moonst', '월장석', 'gl'], ['g2_stardust', '별가루 병', 'p'], ['g2_fairy', '요정 날개 가루', 'f'],
   ['g2_wolf', '늑대 털 뭉치', 'f'], ['g2_starfall', '별똥별 조각', 'pl'], ['g2_gacorn', '황금 도토리', 'f'], ['g2_unicorn', '유니콘 털', 'fp'], ['g2_pumpmoon', '호박달 씨앗', 'g'],
 ];
-const CM = { slim: [8, 32], round: [6, 26], long: [20, 80], flat: [15, 60], cat: [20, 72], puff: [5, 18], jelly: [4, 20], shrimp: [3, 12], cray: [6, 20], shell: [4, 14], horse: [5, 16], star: [6, 22], turtle: [15, 52], whale: [60, 180], angler: [12, 40], lord: [120, 320] };
+const CM = { slim: [8, 32], round: [6, 26], long: [20, 80], flat: [15, 60], cat: [20, 72], puff: [5, 18], jelly: [4, 20], shrimp: [3, 12], cray: [6, 20], shell: [4, 14], horse: [5, 16], star: [6, 22], turtle: [15, 52], whale: [60, 180], angler: [12, 40], lord: [120, 320], crab: [5, 24], frog: [4, 14], squid: [10, 60], eel: [25, 110], octo: [20, 90], shark: [90, 260] };
 const STARS = n => '★'.repeat(n) + '☆'.repeat(5 - n);
 // 희귀도: 칸마다 다른 무게(앞일수록 큼). 등급(★)은 묶어서 보여 줘요
-const FISH = FISH_LIST.map(([id, name, t, time], i) => ({ id, name, i, time, cm: CM[t], w: Math.round(10000 * .9 ** i), grade: i < 12 ? 1 : i < 22 ? 2 : i < 31 ? 3 : i < 37 ? 4 : 5, pay: Math.round(12 * 1.125 ** i) }));
-const JUNK = JUNK_LIST.map(([id, name], j) => ({ id, name, i: 40 + j, junk: true, grade: 0, pay: 1 }));
+const FISH = FISH_LIST.map(([id, name, t, time], i) => ({ id, name, i, time, cm: CM[t], w: Math.round(10000 * .94 ** i), grade: i < 18 ? 1 : i < 33 ? 2 : i < 46 ? 3 : i < 55 ? 4 : 5, pay: Math.round(12 * 1.085 ** i) }));
+const JUNK = JUNK_LIST.map(([id, name], j) => ({ id, name, i: 60 + j, junk: true, grade: 0, pay: 1 }));
 const FORAGE = FORAGE_LIST.map(([id, name, z], i) => ({ id, name, i, z, w: Math.round(10000 * .93 ** i), grade: i < 15 ? 1 : i < 28 ? 2 : i < 39 ? 3 : i < 46 ? 4 : 5, pay: Math.round(6 * 1.11 ** i) }));
-const CATCH_INFO = Object.fromEntries([...FISH, ...JUNK].map(x => [x.id, { ...x, sheet: 'fish', n: 43 }]).concat(FORAGE.map(x => [x.id, { ...x, sheet: 'forage', n: 50 }])));
+{ const used = new Set(POTION_LIST.flatMap(x => x.r)); [...FORAGE, ...FISH].forEach(x => { if (used.has(x.id)) MATS.push(x.id); }); }   // 물약 재료로 쓰이는 채집물·물고기
+const CATCH_INFO = Object.fromEntries([...FISH, ...JUNK].map(x => [x.id, { ...x, sheet: 'fish', n: 63 }]).concat(FORAGE.map(x => [x.id, { ...x, sheet: 'forage', n: 50 }])));
 const CATCH = Object.keys(CATCH_INFO);
 CATCH.forEach(k => { ITEM[k] = CATCH_INFO[k].name; });
 // 낚싯대: 좋을수록 입질이 빠르고, 희귀한 물고기가 잘 오고, 맞히는 칸이 넓고, 쓰레기가 덜 걸려요
@@ -1379,18 +1384,18 @@ const TIME_NAME = { dew: '새벽', ember: '한낮', dusk: '노을', moon: '밤' 
 const pickW = list => { let r = Math.random() * list.reduce((t, x) => t + x.w, 0); for (const x of list){ r -= x.w; if (r <= 0) return x; } return list[list.length - 1]; };
 // 낚시터: 호수·강·연못마다 낚이는 물고기의 한계(cap: 도감 번호)가 달라요. 연못은 작은 물고기만, 강은 중간까지, 호수는 전부
 const FISH_SPOT = {
-  lake: { name: '유령 호수', cap: 39 }, river: { name: '등불 강', cap: 33 }, pond_n: { name: '북쪽 연못', cap: 21 }, pond_ne: { name: '북동 연못', cap: 27 },
-  pond_se: { name: '남동 연못', cap: 30 }, pond_q: { name: '골목 연못', cap: 27 },
+  lake: { name: '유령 호수', cap: 59 }, river: { name: '등불 강', cap: 50 }, pond_n: { name: '북쪽 연못', cap: 32 }, pond_ne: { name: '북동 연못', cap: 41 },
+  pond_se: { name: '남동 연못', cap: 45 }, pond_q: { name: '골목 연못', cap: 41 },
 };
 function fishSpotAt(x, y){
   const m = World.meta(World.where()), P = (m?.ponds || []).map(q => ({ q, d: Math.hypot(x + .5 - q.cx, y + .5 - q.cy) })).filter(o => o.d <= o.q.r).sort((a, b) => a.d - b.d)[0];
-  if (P) return FISH_SPOT[P.q.id] || { name: P.q.name, cap: 21 };
+  if (P) return FISH_SPOT[P.q.id] || { name: P.q.name, cap: 32 };
   const rv = m?.river; return rv && x >= rv[0] - 1 && x < rv[2] + 1 ? FISH_SPOT.river : FISH_SPOT.lake;
 }
-function rollFish(cap = 39){
+function rollFish(cap = 59){
   const L = rodLv() + (buffOn('rare') ? 1.5 : 0) + (me.perk?.rod_bonus ? .5 : 0);   // 요리 효과: 드문 물고기 · 캇파 ♥10 낚싯대 보너스
   if (Math.random() < .12 - L * .025) return JUNK[Math.floor(Math.random() * JUNK.length)];
-  return pickW(FISH.filter(f => fishNow(f) && f.i <= cap).map(f => ({ ...f, w: f.w * (1 + L * .9 * f.i / 39) * (f.id === 'f_lord' && me.perk?.lord_hint && isFullMoon() ? 3 : 1) })));   // 캇파 ♥10: 보름 밤엔 호수의 주인이 가까이
+  return pickW(FISH.filter(f => fishNow(f) && f.i <= cap).map(f => ({ ...f, w: f.w * (1 + L * .9 * f.i / 59) * (f.id === 'f_lord' && me.perk?.lord_hint && isFullMoon() ? 3 : 1) })));   // 캇파 ♥10: 보름 밤엔 호수의 주인이 가까이
 }
 function dexAdd(k, cm){
   me.fdex = me.fdex || {}; const d = me.fdex[k] || { n: 0 }, isNew = !d.n;
@@ -1422,7 +1427,7 @@ function fishMiss(msg){
 // 어려운 물고기일수록 찌가 거세게 요동치고(흔들림·확 당김), 버텨야 하는 시간이 길고, 초록 칸이 좁고, 자주 옮겨 가요.
 const FISH_HOLD = 'ArrowLeft ArrowRight a A d D'.split(' ');
 function fishReel(){
-  const f = rollFish(fishing.spot ? fishing.spot.cap : 39), L = rodLv(), g = f.junk ? 0.4 : (f.grade || 1);
+  const f = rollFish(fishing.spot ? fishing.spot.cap : 59), L = rodLv(), g = f.junk ? 0.4 : (f.grade || 1);
   const ph = [0, 1, 2].map(() => Math.random() * 6.28);
   Object.assign(fishing, {
     st: 'reel', f, pos: .5, dir: 0, prog: 0, pat: 1, t: 0, ph, last: performance.now(),
@@ -1535,7 +1540,7 @@ function renderFish(){
     const sel = fsSel && CATCH_INFO[fsSel], sd = sel && D[sel.id];
     const detail = sel ? `<div class="fdet">${sd ? ic(sel.id) : '<span class="q fcell" style="min-height:0;padding:0;border:0;background:none">?</span>'}<div class="main"><span class="t">No.${sel.i + 1} ${sd ? esc(sel.name) : '???'} <span class="fst">${STARS(sel.grade)}</span></span><span class="d">${sd ? (sel.cm ? `최고 기록 ${sd.cm}cm · ${sd.n}마리 낚음` : `${sd.n}개 주움`) + ' · ' : ''}${where(sel)}${sd ? ` · 가게에서 ${sel.pay}G` : ''}</span></div></div>`
       : hint(fsMsg, '');
-    body = `<div class="seg" style="grid-template-columns:1fr 1fr"><button data-fsk="fish" class="${fsKind === 'fish' ? 'on' : ''}">🐟 물고기 ${nf}/40</button><button data-fsk="forage" class="${fsKind === 'forage' ? 'on' : ''}">🌿 채집물 ${ng}/50</button></div>
+    body = `<div class="seg" style="grid-template-columns:1fr 1fr"><button data-fsk="fish" class="${fsKind === 'fish' ? 'on' : ''}">🐟 물고기 ${nf}/${FISH.length}</button><button data-fsk="forage" class="${fsKind === 'forage' ? 'on' : ''}">🌿 채집물 ${ng}/50</button></div>
       ${detail}<div class="grid fgrid">${pgSlice(list, fsPg, PER).map(cell).join('')}</div>${pgNav('fspg', fsPg, list.length, PER)}`;
   }
   if (fsTab === 'rod'){ const cur = RODS[L], nx = RODS[L + 1];
@@ -5144,7 +5149,7 @@ function renderClass(){
         
       </section>` : `
       <section class="sec">
-        ${secH('이번 주 쪽지시험', examDone() ? `${me.exam.score}점 · ${gradeOf(me.exam.score)}` : examStarted() ? '응시함' : '아직 안 봤어요')}
+        ${secH('쪽지시험', examDone() ? `${me.exam.score}점 · ${gradeOf(me.exam.score)}` : examStarted() ? '응시함' : '아직 안 봤어요')}
         <div class="box px" style="padding:12px;display:flex;flex-direction:column;gap:8px">
           <div style="display:flex;align-items:center;gap:10px">${ic('rune')}<div style="flex:1"><span class="s">${EXAM_N}문제 · 문제당 ${EXAM_SEC}초</span></div></div>
           <button class="btn ${examStarted() ? '' : 'go'}" id="goExam">${examStarted() ? '결과 보기' : '시험 보기'}</button>
@@ -5153,7 +5158,7 @@ function renderClass(){
       </section>`;
     frame('class', '수업', `오늘 남은 교시 ${left} / ${CLASS_MAX} · 지식 ${me.know || 0}`, segRow('ktab', classTab, tabs) + body);
     on('[data-ktab]', b => { classTab = b.dataset.ktab; renderClass(); });
-    const ge = $('#goExam'); if (ge) ge.onclick = () => { if (examStarted()){ exam = null; sub = 'exam'; render(); } else confirmBox('쪽지시험은 일주일에 한 번만 볼 수 있어요. 지금 볼까요?', '시험 보기').then(ok => { if (ok) startExam(); }); };
+    const ge = $('#goExam'); if (ge) ge.onclick = () => { if (examStarted()){ exam = null; sub = 'exam'; render(); } else confirmBox('쪽지시험은 3일에 한 번만 볼 수 있어요. 지금 볼까요?', '시험 보기').then(ok => { if (ok) startExam(); }); };
     on('[data-subj]', b => startSubject(b.dataset.subj));
     return;
   }
@@ -5211,11 +5216,11 @@ let dexSel = null, dexPage = 0, matAll = false;
 const DEX_PAGE = 20;
 let labTab = 'brew', recipeOpen = false, brewDone = null, dragK = null;
 // 레시피를 고르면 솥에 자동으로 넣어요 (재료가 있는 만큼)
-function labFill(p){ const r = POTION_INFO[p].r.slice(); slots = []; const used = {}; r.forEach(k => { used[k] = (used[k] || 0) + 1; if ((me.inv[k] || 0) >= used[k]) slots.push(k); }); brewMsg = slots.length < 3 ? `재료가 모자라요 · ${recipeText(p)}` : null; recipeOpen = false; }
-function labAdd(k){ const left = (me.inv[k] || 0) - slots.filter(s => s === k).length; if (left <= 0 || slots.length >= 3) return; slots.push(k); brewMsg = null; brewDone = null; renderLab(); }
+function labFill(p){ const r = POTION_INFO[p].r.slice(); slots = []; const used = {}; r.forEach(k => { used[k] = (used[k] || 0) + 1; if ((me.inv[k] || 0) >= used[k]) slots.push(k); }); brewMsg = slots.length < r.length ? `재료가 모자라요 · ${recipeText(p)}` : null; recipeOpen = false; }
+function labAdd(k){ const left = (me.inv[k] || 0) - slots.filter(s => s === k).length; if (left <= 0 || slots.length >= 5) return; slots.push(k); brewMsg = null; brewDone = null; renderLab(); }
 function renderLab(){
   const n = me.found.length, sel = dexSel && POTION_INFO[dexSel], known = me.hints.filter(p => POTION_INFO[p]);
-  const key = slots.slice().sort().join(','), hit = slots.length === 3 && RECIPES[key] && me.hints.includes(RECIPES[key]) ? RECIPES[key] : null;
+  const key = slots.slice().sort().join(','), hit = slots.length >= 3 && RECIPES[key] && me.hints.includes(RECIPES[key]) ? RECIPES[key] : null;
   const tabs = `<div class="seg" style="grid-template-columns:1fr 1fr"><button class="${labTab === 'brew' ? 'on' : ''}" data-labtab="brew">${ic('cauldron', 'transform:scale(.6);margin:-8px -4px -8px -8px')}제조</button><button class="${labTab === 'dex' ? 'on' : ''}" data-labtab="dex">도감 ${n} / ${POTIONS.length}</button></div>`;
   let body = '';
   if (labTab === 'brew'){
@@ -5227,18 +5232,18 @@ function renderLab(){
           <span class="s sub num">마력 ${brewCost()}</span>
         </div>
         ${recipeOpen ? `<div class="box reclist">${known.length ? known.map(p => `<button class="li" data-recipe="${p}">${ic(p)}<span class="main"><span class="t">${ITEM[p]}</span><span class="d">${recipeText(p)}</span></span>${POTION_INFO[p].time ? houseTag(POTION_INFO[p].time) : ''}</button>`).join('') : '<div class="hint" style="padding:12px">아직 아는 레시피가 없어요. 수업을 듣거나 재료를 섞어 봐요.</div>'}</div>` : ''}
-        <div class="cauldron ${brewDone ? 'done' : slots.length === 3 ? 'ready' : ''}" id="cauldron">
-          <div class="cslots">${[0, 1, 2].map(i => slots[i] ? `<button class="cslot on" data-take="${i}" title="빼기">${ic(slots[i])}</button>` : `<div class="cslot"><span>${i + 1}</span></div>`).join('')}</div>
+        <div class="cauldron ${brewDone ? 'done' : slots.length >= 3 ? 'ready' : ''}" id="cauldron">
+          <div class="cslots">${[0, 1, 2, 3, 4].map(i => slots[i] ? `<button class="cslot on" data-take="${i}" title="빼기">${ic(slots[i])}</button>` : `<div class="cslot"><span>${i + 1}</span></div>`).join('')}</div>
           <div class="cpot">${ic('cauldron', 'transform:scale(2.4)')}<i class="bub b1"></i><i class="bub b2"></i><i class="bub b3"></i></div>
           ${brewDone ? `<div class="result"><div class="rcard">${ic(brewDone.p, 'transform:scale(1.6);margin:8px')}<b>${brewDone.p ? ITEM[brewDone.p] : '실패'}</b><span class="s">${esc(brewDone.msg)}</span><div class="frow"><button class="btn sm go" id="brewBag">가방에 넣기</button><button class="btn sm" id="brewAgain" ${brewDone.p && brewDone.again ? '' : 'disabled'}>한 번 더</button></div></div></div>` : ''}
         </div>
-        <div class="s sub" style="text-align:center">${hit ? `${ITEM[hit]} 레시피예요` : slots.length ? `넣은 재료 ${slots.length} / 3` : ''}</div>
-        <button class="btn go" id="brew" ${slots.length === 3 && me.mana >= brewCost() && !brewDone ? '' : 'disabled'}>${ic('cauldron', 'transform:scale(.7);margin:-6px')}끓이기 (마력 ${brewCost()})</button>
+        <div class="s sub" style="text-align:center">${hit ? `${ITEM[hit]} 레시피예요` : slots.length ? `넣은 재료 ${slots.length} (3~5개)` : ''}</div>
+        <button class="btn go" id="brew" ${slots.length >= 3 && me.mana >= brewCost() && !brewDone ? '' : 'disabled'}>${ic('cauldron', 'transform:scale(.7);margin:-6px')}끓이기 (마력 ${brewCost()})</button>
         ${brewMsg ? `<div class="hint on">${esc(brewMsg)}</div>` : ''}
       </div>
       <section class="sec labmats">
         <div class="sec-h"><h3>재료 칸</h3><button class="btn ghost" id="matAll">${matAll ? '가진 것만' : `전부 (${MATS.length}종)`}</button></div>
-        <div class="matrow">${mats.length ? mats.map(k => { const left = (me.inv[k] || 0) - slots.filter(s => s === k).length; return `<button class="cell mat" data-add="${k}" draggable="${left > 0}" ${left > 0 && slots.length < 3 ? '' : 'disabled'}>${ic(k)}<span class="s">${shortName(k)}</span><span class="n">${left}</span></button>`; }).join('') : '<div class="hint" style="padding:16px">재료가 없어요. 온실과 사육장, 채집으로 모아 와요.</div>'}</div>
+        <div class="matrow">${mats.length ? mats.map(k => { const left = (me.inv[k] || 0) - slots.filter(s => s === k).length; return `<button class="cell mat" data-add="${k}" draggable="${left > 0}" ${left > 0 && slots.length < 5 ? '' : 'disabled'}>${ic(k)}<span class="s">${shortName(k)}</span><span class="n">${left}</span></button>`; }).join('') : '<div class="hint" style="padding:16px">재료가 없어요. 온실과 사육장, 채집으로 모아 와요.</div>'}</div>
       </section>
     </div>`;
   } else {
@@ -5300,7 +5305,7 @@ function renderLab(){
       msg = isNew ? '도감에 새로 적었어요!' : '완성!';
       dexSel = p; dexPage = Math.floor(POTIONS.indexOf(p) / DEX_PAGE); toast(`${ITEM[p]} 완성!`);
     } else if (me.house === 'ember' && myTime()){
-      const back = slots[Math.floor(Math.random() * 3)]; me.inv[back]++;
+      const back = slots[Math.floor(Math.random() * slots.length)]; me.inv[back]++;
       msg = `보라색 연기만 피어올랐어요... 그래도 Emberkiln의 낮이라 ${withJosa(ITEM[back], '을', '를')} 건졌어요.`;
     } else msg = '보라색 연기만 피어올랐어요... 재료는 사라졌어요.';
     const again = p && used.every(k => (me.inv[k] || 0) >= used.filter(x => x === k).length);
@@ -5911,10 +5916,11 @@ function renderVisit(){
   };
 }
 
-// ===== 주간 쪽지시험: 일주일에 한 번, 10문제 =====
+// ===== 쪽지시험: 3일에 한 번, 10문제 =====
 const EXAM_N = 10, EXAM_SEC = 20;
-const examDone = () => me.exam?.week === coopWeek() && me.exam.done;
-const examStarted = () => me.exam?.week === coopWeek();
+const examKey = () => 'e' + Math.floor(Date.now() / (3 * 864e5));   // 쪽지시험은 3일에 한 번
+const examDone = () => me.exam?.week === examKey() && me.exam.done;
+const examStarted = () => me.exam?.week === examKey();
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const pick = (a, n, not = []) => shuffle(a.filter(x => !not.includes(x))).slice(0, n);
 // 받침에 맞춰 조사 고르기: josa('물약', '을', '를') → '을'
@@ -5944,7 +5950,7 @@ function makeExam(){
 let exam = null;   // { qs, i, right, picked, t0 }
 function startExam(){
   if (examStarted()) return;
-  me.exam = { week: coopWeek(), score: 0, done: false }; save();   // 도중에 나가도 한 번 본 걸로 쳐요
+  me.exam = { week: examKey(), score: 0, done: false }; save();   // 도중에 나가도 한 번 본 걸로 쳐요
   exam = { qs: makeExam(), i: 0, right: 0, picked: null, t0: Date.now() };
   sub = 'exam'; render();
 }
@@ -5991,20 +5997,20 @@ function answer(j){
 function finishExam(){
   const s = exam.right * 100 / exam.qs.length;
   exam = null;
-  me.exam = { week: coopWeek(), score: Math.round(s), done: true };
+  me.exam = { week: examKey(), score: Math.round(s), done: true };
   const r = [];
   if (s >= 60){ const g = Math.round(s * 2); me.coin += g; r.push(`장학금 ${g}G`); }
   if (s >= 80){ const k = ['uhair','scale','wool'][Math.floor(Math.random() * 3)]; me.inv[k] += 2; r.push(`${ITEM[k]} ×2`); }
   if (s >= 100){ me.inv.egg += 1; r.push('용 알 껍질 ×1'); }
   me.exam.reward = r.join(' · ') || '다음 주엔 장학금을 노려 봐요';
   save();
-  if (!solo) F.set(F.ref(db, `exam/${coopWeek()}/${uid}`), me.exam.score).catch(() => {});
+  if (!solo) F.set(F.ref(db, `exam/${examKey()}/${uid}`), me.exam.score).catch(() => {});
   renderExamResult();
 }
 let examBoard = {}, examOff = null;
 function renderExamResult(){
   const ex = me.exam || {};
-  if (!solo && !examOff) examOff = F.onValue(F.ref(db, `exam/${coopWeek()}`), s => { examBoard = s.val() || {}; if (sub === 'exam' && !exam) renderExamResult(); });
+  if (!solo && !examOff) examOff = F.onValue(F.ref(db, `exam/${examKey()}`), s => { examBoard = s.val() || {}; if (sub === 'exam' && !exam) renderExamResult(); });
   const board = solo ? { me: ex.score } : examBoard;
   const avg = k => { const v = Object.entries(board).filter(([u]) => (solo ? me.house : playersList[u]?.house) === k).map(([, n]) => +n || 0); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
   frame('class', '쪽지시험 결과', '이번 주 시험 끝!', `
