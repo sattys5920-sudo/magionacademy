@@ -339,9 +339,12 @@ class Cv:
         if 0 <= x < N and 0 <= y < N:
             self.front[int(y), int(x)] = (*col, a)
 
-    def image(self):
+    def image(self, fit_size=True):
+        layers = [self.back, self.body, self.front]
+        if fit_size:
+            layers = fit(layers)
         im = Image.new('RGBA', (N, N), (0, 0, 0, 0))
-        for L in (self.back, self.body, self.front):
+        for L in layers:
             im.alpha_composite(Image.fromarray(L, 'RGBA'))
         return im
 
@@ -377,6 +380,69 @@ def icon(idx):
         return f
     return deco
 
+
+# ---------------------------------------------------------------- 크기 맞춤: 테두리 포함 30px 이하로 (가장 단순한 줄·열을 지워 줄임) → 가운데 정렬
+MAXEXT = 30
+
+def _bbox(L):
+    ys, xs = np.nonzero(L[1][:, :, 3] > 0)
+    return xs.min(), ys.min(), xs.max(), ys.max()
+
+def _squeeze(layers, axis, k, lo, hi):
+    """axis 0=세로(줄 지우기) 1=가로(열 지우기). lo..hi 사이에서 이웃과 가장 비슷한 줄 k개 지움."""
+    def cost(i):
+        tot = 0
+        for L in layers:
+            a = L[i] if axis == 0 else L[:, i]
+            b = L[i + 1] if axis == 0 else L[:, i + 1]
+            tot += int((a != b).any(axis=-1).sum())
+        return tot
+    cands = sorted(range(lo, hi), key=lambda i: (cost(i), abs(i - (lo + hi) / 2)))
+    chosen = []
+    for i in cands:
+        if all(abs(i - j) >= 4 for j in chosen):
+            chosen.append(i)
+        if len(chosen) == k:
+            break
+    out = []
+    for L in layers:
+        out.append(np.delete(L, chosen, axis=axis))
+    # 다시 32로 (위/왼쪽을 투명으로 채움)
+    res = []
+    for L in out:
+        pad = [(0, 0)] * 3
+        pad[axis] = (0, k)
+        res.append(np.pad(L, pad))
+    return res
+
+def fit(layers):
+    x0, y0, x1, y1 = _bbox(layers)
+    w, h = x1 - x0 + 1, y1 - y0 + 1
+    if h > MAXEXT:
+        layers = _squeeze(layers, 0, h - MAXEXT, y0 + 3, y1 - 3)
+    x0, y0, x1, y1 = _bbox(layers)
+    if x1 - x0 + 1 > MAXEXT:
+        layers = _squeeze(layers, 1, x1 - x0 + 1 - MAXEXT, x0 + 3, x1 - 3)
+    x0, y0, x1, y1 = _bbox(layers)
+    w, h = x1 - x0 + 1, y1 - y0 + 1
+    dx = (N - w) // 2 - x0
+    dy = (N - h) // 2 - y0
+    # 반짝임·빛무리가 칸 밖으로 밀려나지 않게 제한
+    allp = np.zeros((N, N), bool)
+    for L in layers:
+        allp |= L[:, :, 3] > 0
+    ys_, xs_ = np.nonzero(allp)
+    dx = max(-xs_.min(), min(N - 1 - xs_.max(), dx))
+    dy = max(-ys_.min(), min(N - 1 - ys_.max(), dy))
+    res = []
+    for L in layers:
+        R = np.zeros_like(L)
+        ys = slice(max(dy, 0), N + min(dy, 0)); yd = slice(max(-dy, 0), N + min(-dy, 0))
+        xs = slice(max(dx, 0), N + min(dx, 0)); xd = slice(max(-dx, 0), N + min(-dx, 0))
+        R[ys, xs] = L[yd, xd]
+        res.append(R)
+    return res
+
 # 자주 쓰는 색
 GREEN = ramp('#5cc04a', hi='#b8ec78', lo='#2f8a46', dk='#1c5a3c')
 LEAFG = ramp('#4aa84a', hi='#a8e070', lo='#2a7a44', dk='#1a4a38')
@@ -389,7 +455,7 @@ def stem(c, pts, w=2, pal=STEM):
     c.shade(m, pal, R=1.4, soft=0)
     return m
 
-# === ICONS ===
+# 자주 쓰는 색
 
 def petal_ring(c, cx, cy, n, r0, r1, w, pal, a0=0.0, R=1.8, pw=0.55, skew=0.3):
     for i in range(n):
@@ -488,22 +554,27 @@ def _(c):
 def _(c):
     LAV = ramp('#9a6ee0', hi='#d6b8ff', lo='#6a46b8', dk='#40286e')
     LAV2 = ramp('#b48af0', hi='#e8d4ff', lo='#7c58c8', dk='#4a2c80')
-    stem(c, [(16, 30), (16.5, 21), (17, 14)], 2)
-    c.shade(leaf((16, 29), (8.5, 23.5), 2, pw=0.7), GREEN, R=1.6, soft=0)
-    c.shade(leaf((16, 28), (24, 22.5), 2, pw=0.7), GREEN, R=1.6, soft=0)
-    # 꽃송이: 위로 갈수록 작고 좁게, 좌우 번갈아
-    rows = [(21, 3.4), (19, 3.2), (17, 3.0), (15, 2.8), (13, 2.5), (11, 2.2), (9, 1.9), (7, 1.5), (5, 1.1), (3.5, 0.0)]
-    for k, (y, w) in enumerate(rows):
-        x0 = 17.0 - (21 - y) * 0.10
-        r = 2.2 if w > 1.6 else 1.8
-        pal = LAV if k % 2 == 0 else LAV2
-        if w == 0:
-            c.shade(ell(x0, y, 1.6, 1.8), LAV2, R=1.6, soft=0)
-            continue
-        for sgn in (-1, 1):
-            yy = y + (0.6 if sgn > 0 else -0.5)
-            c.shade(ell(x0 + sgn * w * 0.62, yy, r, r * 0.9), pal if sgn < 0 else LAV, R=2, soft=0)
-    c.shade(ell(17.1, 14.5, 1.9, 1.6), LAV, R=1.6, soft=0)
+    def spike(x_base, y_base, y_top, lean, scale=1.0, cap=True):
+        c.shade(tube(bez((x_base, 31), (x_base + lean * 0.3, 26), (x_base + lean, y_base)), 1.0, 0.9), STEM, R=1.0, soft=0)
+        n = int((y_base - y_top) / 2.2)
+        for k in range(n):
+            t = k / max(1, n - 1)          # 0 아래 → 1 위
+            y = y_base - k * 2.2
+            x0 = x_base + lean * (1 - 0) - lean * 0 + (y_base - y) * (-lean / (y_base - y_top)) * 0.9 * 0 
+            x0 = x_base + lean + (y_base - y) * 0.04
+            w = (3.3 - 2.6 * t) * scale
+            r = (2.5 - 0.9 * t) * scale
+            pal = LAV if k % 2 == 0 else LAV2
+            for sgn in (-1, 1):
+                yy = y + (0.7 if sgn > 0 else -0.4)
+                c.shade(ell(x0 + sgn * w * 0.7, yy, r, r * 0.92), pal if sgn < 0 else LAV, R=2, soft=0)
+        if cap:
+            c.shade(ell(x_base + lean + (y_base - y_top) * 0.04, y_top - 0.2, 1.6 * scale, 2.0 * scale), LAV2, R=1.6, soft=0)
+    spike(10.5, 24, 12, -0.6, 0.85, cap=False)
+    spike(21.5, 23, 11, 0.8, 0.85, cap=False)
+    spike(16, 22, 3.5, 0.0, 1.0)
+    c.shade(leaf((16, 30), (7, 24.5), 2.0, pw=0.7), GREEN, R=1.6, soft=0)
+    c.shade(leaf((16, 29.5), (25.5, 24), 2.0, pw=0.7), GREEN, R=1.6, soft=0)
 
 @icon(11)  # 들장미 꽃잎 (들장미 꽃: 하트 모양 꽃잎 5장)
 def _(c):
@@ -1179,8 +1250,8 @@ def _(c):
     # 그림자 연기
     for (x, y) in [(9, 6), (22, 4), (24, 8), (6, 11)]:
         c.flat(ell(x, y, 1.5, 1.2), hx('#3a2468'), layer=c.back)
-    mushroom(c, 10, 29, 3.8, 3.0, 1.1, 4.5, SH, SS, spots=[(-1, -1.0, 0.7)], spot_col=hx('#d0b8ff'))
-    mushroom(c, 17.5, 29.5, 8.4, 7.2, 2.4, 12, SH, SS, spots=[(-3.5, -3.2, 1.3), (2.5, -4.6, 1.5), (4.8, -1.8, 1.0), (-1, -1.4, 0.8), (-5.5, -1.0, 0.8)], spot_col=hx('#d0b8ff'))
+    mushroom(c, 8, 29, 3.8, 3.0, 1.1, 4.5, SH, SS, spots=[(-1, -1.0, 0.7)], spot_col=hx('#d0b8ff'))
+    mushroom(c, 18, 30, 10.0, 8.6, 2.8, 15, SH, SS, spots=[(-3.5, -3.2, 1.3), (2.5, -4.6, 1.5), (4.8, -1.8, 1.0), (-1, -1.4, 0.8), (-5.5, -1.0, 0.8)], spot_col=hx('#d0b8ff'))
     for (x, y) in [(14, 13), (20, 11), (22, 14)]:
         c.px(x, y, hx('#ffffff'))
     c.px(15, 22, hx('#5ae8ff'), layer=c.front); c.px(19, 22, hx('#5ae8ff'), layer=c.front)

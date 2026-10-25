@@ -1376,19 +1376,20 @@ def _(c):
     r = R('#f6902a', dk='#b0521c', lt='#ffbc4a', hi='#ffe08a')
     d = R('#d96a1a', dk='#8e3a1a', lt='#f79a2a')
     g = R('#5fae3a', dk='#2f6d2c', lt='#92d65a')
-    c.add(tube([(24, 16), (28, 17), (31, 18)], 1.2, .5, smooth=False), d, edge='out', shade=False)
-    body = PG([(4, 16), (8, 10), (16, 3), (26, 5), (24, 11), (26, 16), (24, 21), (26, 27), (16, 29), (8, 22)])
-    c.add(body, r, edge='out')
-    # 머리 지느러미 (뿔)
-    c.add(PG([(1, 11), (6, 12), (6, 15), (3, 14)]), d, edge='out')
-    c.add(PG([(1, 21), (6, 20), (6, 17), (3, 18)]), d, edge='out')
-    # 호박 갈비
-    for x, h in ((9, 6), (13, 9), (17, 10), (21, 9), (24, 6)):
-        c.pat(tube([(x, 16 - h), (x - 2, 16), (x, 16 + h)], .5) & body, d)
-    c.pat({(x, y) for (x, y) in body if y >= 23 and x >= 10}, d)
+    c.add(tube([(21, 16), (26, 17), (31, 20)], 1.2, .5, smooth=False), d, edge='out', shade=False)
+    wings = PG([(4, 16), (10, 11), (17, 5), (25, 1), (23, 8), (21, 13), (23, 16), (21, 19), (23, 24), (25, 31), (17, 27), (10, 21)])
+    c.add(wings, d, edge='out')
+    # 머리 지느러미 (뿔 두 개)
+    c.add(PG([(0, 11), (6, 12), (6, 15), (2, 14)]), d, edge='out')
+    c.add(PG([(0, 21), (6, 20), (6, 17), (2, 18)]), d, edge='out')
+    # 호박 몸통
+    pk = E(14, 16, 9.5, 9.5)
+    c.add(pk, r, edge='out')
+    for x, h in ((8, 4), (11, 7), (14, 9), (17, 7), (20, 4)):
+        c.pat(tube([(x, 16 - h), (x - 1.5 if x < 14 else x + 1.5 if x > 14 else x, 16), (x, 16 + h)], .5) & pk, d)
     # 꼭지
-    c.add(PG([(15, 11), (15, 7), (18, 6), (18, 12)]), g, edge='out')
-    c.add(tube([(18, 7), (21, 5), (22, 7)], .5), g[1], shade=False)
+    c.add(PG([(13, 8), (13, 5), (16, 4), (16, 9)]), g, edge='out')
+    c.add(tube([(16, 5), (19, 3), (19, 6)], .5), g[1], shade=False)
     c.eye(5, 11, 2)
     c.eye(5, 19, 2)
     c.put({(7, 15), (7, 17)}, hx('#7a2a10'))
@@ -1450,3 +1451,402 @@ def _(c):
     c.put(LN((3, 18), (0, 21), .5) | LN((4, 19), (1, 24), .5), hx('#ffe070'))
     for (x, y) in ((5, 7), (20, 3), (28, 22)):
         c.put({(x, y), (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)}, (255, 255, 255))
+
+
+@fish(40, 'f_marshpuff', '마시멜로 복어')
+def _(c):
+    r = R('#fff4f6', dk='#e6b4cc', lt='#ffffff')
+    br = R('#e0a050', dk='#8a5230', lt='#f8c878')
+    fn = R('#ffd6e4', dk='#e096b4', lt='#fff0f6')
+    # 꼬리
+    c.add(PG([(25, 14), (31, 12), (31, 21), (25, 18)]), fn, edge='out')
+    # 말랑한 통통 몸 (둥근 네모)
+    body = RC(5, 7, 24, 24) - {(5, 7), (6, 7), (5, 8), (24, 7), (23, 7), (24, 8), (5, 24), (6, 24), (5, 23), (24, 24), (23, 24), (24, 23)}
+    body |= E(15, 15.5, 11, 9.2)
+    c.add(body, r, edge='out')
+    # 구운 갈색 윗면
+    c.pat({(x, y) for (x, y) in body if y <= 9 + (1 if (x // 3) % 2 else 0) and 7 <= x <= 22}, br)
+    c.pat({(x, y) for (x, y) in body if y <= 11 and x in (9, 10, 15, 16, 19) and False}, br)
+    c.pat({(x, y) for (x, y) in body if (x, y) in {(8, 11), (9, 11), (14, 11), (15, 11), (20, 10), (21, 11)}}, br)
+    # 작은 몽글 가시
+    for (x, y) in ((8, 6), (13, 5), (18, 6), (23, 9), (4, 11), (4, 18), (8, 25), (14, 26), (20, 25), (24, 21)):
+        c.add(E(x, y, 1.3, 1.3), fn, edge='out', shade=False)
+    c.add(E(16, 18, 2.6, 2.4), fn, edge='out')
+    # 얼굴
+    c.eye(7, 13, 3)
+    c.dot(5, 18, hx('#ff9ac0')); c.dot(6, 18, hx('#ff9ac0')); c.dot(10, 18, hx('#ff9ac0'))
+    c.put({(6, 20), (7, 21), (8, 21), (9, 20)}, hx('#c0608a'))
+    c.dot(2, 3, (255, 255, 255)) if False else None
+
+
+@fish(41, 'f_salmon', '오로라 연어')
+def _(c):
+    r = R('#5ae8b8', dk='#2a8a98', lt='#a8ffd8')
+    fn = R('#6ab8e8', dk='#3a62b0', lt='#a8dcff')
+    ramp = [R('#58f0a0', dk='#28986a', lt='#a0ffd0'), R('#38d8d8', dk='#1c8898', lt='#88f0f0'), R('#5a9aff', dk='#2c52b8', lt='#9cc4ff'),
+            R('#a070f0', dk='#5a34b0', lt='#c8a4ff'), R('#ff7ad0', dk='#b43a8e', lt='#ffa8e4')]
+    c.add(PG([(24, 14), (31, 7), (28, 16), (31, 25), (24, 19)]), fn, edge='out')
+    c.rays(PG([(24, 14), (31, 7), (28, 16), (31, 25), (24, 19)]), (24, 16), [-40, -20, 20, 40], .78)
+    c.add(PG([(12, 10), (15, 6), (20, 8), (21, 12)]), fn, edge='out')
+    c.add(PG([(21, 11), (23, 9), (24, 13)]), fn)
+    c.add(PG([(13, 22), (16, 26), (21, 22)]), fn)
+    body = prof([(2, 16, 19.5), (4, 12, 22), (8, 9.5, 24.5), (14, 9, 25), (20, 11, 23), (24, 14, 19.5)])
+    c.add(body, r, edge='out')
+    # 오로라 띠 (비스듬한 색 띠)
+    for (x, y) in body:
+        k = ((x * 3 + y * 2) // 8) % 5
+        c.pat({(x, y)}, ramp[k])
+    c.pat({(x, y) for (x, y) in body if y >= 22 and x >= 5}, R('#e8fff4', dk='#9ac8c4', lt='#ffffff'))
+    c.add(PG([(8, 20), (12, 24), (14, 20)]), fn, edge='in')
+    c.eye(4, 13, 3)
+    # 갈고리 턱 + 이빨
+    c.put({(x, 19) for x in range(2, 9)}, OUT)
+    c.add(PG([(1, 19), (3, 21), (6, 20)]), r, edge='out')
+    c.dot(4, 20, (255, 255, 255))
+    for (x, y) in ((22, 4), (28, 3), (4, 27), (29, 29), (10, 3)):
+        c.put({(x, y), (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)}, (255, 255, 255))
+
+
+@fish(42, 'f_book', '마법서 넙치')
+def _(c):
+    cv = R('#7a3a6a', dk='#3e1a46', lt='#a85a90')
+    pg = R('#fff0cc', dk='#c8a878', lt='#ffffff')
+    gd = R('#ffd24a', dk='#c88a1a', lt='#fff09a')
+    fn = R('#a8506e', dk='#5a2440', lt='#d07a92')
+    # 꼬리 (책등 쪽에서 삐죽)
+    c.add(PG([(26, 14), (31, 11), (31, 22), (26, 19)]), fn, edge='out')
+    # 가장자리 지느러미 술
+    for x in range(6, 26, 3):
+        c.add(PG([(x, 9), (x + 1, 6), (x + 2, 9)]), fn, edge=None)
+        c.add(PG([(x, 25), (x + 1, 28), (x + 2, 25)]), fn, edge=None)
+    # 책 표지
+    c.add(PG([(2, 11), (13, 9), (16, 11), (28, 9), (28, 24), (16, 27), (13, 25), (2, 25)]) | RC(2, 10, 28, 25), cv, edge='out')
+    # 쪽
+    c.add(PG([(4, 12), (14, 11), (15, 22), (4, 23)]), pg, edge='out')
+    c.add(PG([(16, 11), (26, 12), (26, 23), (16, 22)]), pg, edge='out')
+    c.put({(15, y) for y in range(11, 24)}, pg[0])
+    # 왼쪽 쪽: 넙치 얼굴 (눈 두 개, 입)
+    c.eye(5, 13, 2)
+    c.eye(9, 13, 2)
+    c.put({(6, 20), (7, 20), (8, 20), (9, 19)}, hx('#a84a6a'))
+    c.put({(x, 16) for x in range(5, 14)} - {(9, 16)}, pg[0]) if False else None
+    # 오른쪽 쪽: 마법진
+    ring = E(21, 17, 3.8, 3.8) - E(21, 17, 2.4, 2.4)
+    c.put(ring, hx('#8a5ae0'))
+    c.put({(21, 14), (21, 20), (18, 17), (24, 17), (21, 17)}, hx('#b48aff'))
+    c.put({(19, 15), (23, 15), (19, 19), (23, 19)}, hx('#8a5ae0'))
+    c.put({(20, 17), (22, 17), (21, 16), (21, 18)}, gd[1])
+    # 금박 모서리
+    for (x, y) in ((2, 10), (28, 10), (2, 25), (28, 25)):
+        c.put({(x, y), (x + (1 if x < 10 else -1), y), (x, y + (1 if y < 15 else -1))}, gd[1])
+    c.put({(x, 10) for x in range(3, 28, 2)}, gd[0]) if False else None
+
+
+@fish(43, 'f_witch', '마녀 모자 금붕어')
+def _(c):
+    r = R('#ff8a2a', dk='#c04a1c', lt='#ffb44a')
+    fn = R('#ffa040', dk='#d0602a', lt='#ffd078')
+    hat = R('#6a3aa8', dk='#321a62', lt='#9468d8')
+    gold = R('#ffd24a', dk='#c88a1a', lt='#fff09a')
+    # 부채꼴 꼬리 (너울)
+    t = PG([(21, 17), (27, 8), (31, 10), (31, 17), (31, 25), (27, 27), (21, 21)])
+    c.add(fade(t, 28, 1) if False else t, fn, edge='out')
+    c.rays(t, (21, 19), [-50, -30, -10, 10, 30, 50], .78)
+    c.add(PG([(13, 12), (16, 9), (21, 12), (20, 16)]), fn, edge='out')
+    c.add(PG([(13, 26), (15, 30), (19, 26)]), fn)
+    body = E(12.5, 20, 10.5, 8) | E(8, 19.5, 6, 6)
+    c.add(body, r, edge='out')
+    c.pat({(x, y) for (x, y) in body if y >= 24}, R('#ffd8a0', dk='#e0a070', lt='#fff0d0'))
+    for (x, y) in ((11, 16), (14, 15), (17, 18), (10, 21), (14, 21)):
+        c.pat({(x, y), (x + 1, y)} & body, fn)
+    c.add(E(14, 22, 3, 2.2), fn, edge='in')
+    c.eye(5, 17, 3)
+    c.put({(1, 21), (2, 22)}, hx('#7a2d12'))
+    # 마녀 모자
+    c.add(E(8.5, 12.5, 7, 2.2), hat, edge='out')
+    c.add(PG([(5, 11), (8, 3), (10, 0), (12, 2), (12, 11)]), hat, edge='out')
+    c.put({(x, 10) for x in range(5, 13)} & set(c.p), gold[1])
+    c.dot(9, 10, hat[0]); c.dot(8, 10, hat[0])
+    c.dot(11, 0, hat[1]); c.dot(12, 1, hat[2]); c.dot(13, 2, hat[1])
+
+
+@fish(44, 'f_starmarlin', '별빛 청새치')
+def _(c):
+    r = R('#3a5eb8', dk='#1c2e78', lt='#6a8ee0')
+    bl = R('#d6e4fa', dk='#8ea4d8', lt='#ffffff')
+    fn = R('#2c4aa0', dk='#16286a', lt='#5a7ad0')
+    yl = R('#ffe45e', dk='#ffae2a', lt='#fff6b0')
+    # 초승달 꼬리
+    c.add(PG([(25, 16), (30, 5), (31, 6), (28, 16), (31, 26), (30, 27)]) | PG([(24, 14), (28, 13), (28, 19), (24, 18)]) | PG([(26, 14), (31, 4), (28, 14)]) | PG([(26, 18), (31, 28), (28, 18)]), fn, edge='out')
+    # 큰 돛 등지느러미
+    sail = PG([(12, 13), (13, 8), (16, 6), (22, 7), (24, 13)])
+    c.add(sail, fn, edge='out')
+    c.rays(sail, (18, 14), [-100, -80, -60, -45], .8)
+    c.add(PG([(14, 19), (13, 25), (18, 21)]), fn)
+    c.add(PG([(19, 20), (22, 25), (23, 20)]), fn)
+    body = prof([(8, 15.5, 18), (11, 13, 20.5), (16, 12.5, 21), (21, 13.5, 20), (25, 15, 18.5)])
+    c.add(body, r, edge='out')
+    c.pat({(x, y) for (x, y) in body if y >= 18}, bl)
+    # 긴 창 주둥이
+    c.add(tube([(10, 16.5), (1, 16.5)], 1.4, .5, smooth=False), bl, edge='out')
+    c.eye(9, 14, 2)
+    # 별빛 무늬 (등지느러미와 몸)
+    def star(x, y, k=1):
+        c.put({(x, y), (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)} if k else {(x, y)}, yl[1])
+        c.dot(x, y, yl[2])
+    star(17, 6); star(21, 9)
+    c.put({(13, 17), (18, 16), (22, 16)}, yl[1])
+    c.pat({(14, 14), (17, 13), (20, 14)} & body, R('#8ab4ff'))
+    c.put({(4, 8), (3, 24), (28, 22)}, (255, 255, 255))
+
+
+@fish(45, 'f_shadow', '그림자 가오리')
+def _(c):
+    r = R('#5a3e8c', dk='#281a50', lt='#8062b4')
+    d = R('#3c2a68', dk='#1c1238', lt='#5a428c')
+    gl = R('#ff6ad0', dk='#c8349a', lt='#ffb4ec', hi='#ffffff')
+    # 길고 가시 돋친 꼬리
+    c.add(tube([(21, 16), (26, 16), (31, 14)], 1.3, .5, smooth=False), d, edge='out', shade=False)
+    c.add(PG([(25, 14), (27, 11), (27, 15)]) | PG([(25, 18), (27, 21), (27, 17)]), d, edge='out', shade=False)
+    # 박쥐 같은 뾰족 날개 (뒷가장자리가 톱니)
+    top = [(3, 16), (9, 10), (17, 3), (25, 1), (22, 6), (24, 8), (20, 10), (22, 13), (19, 15)]
+    bot = [(19, 17), (22, 19), (20, 22), (24, 24), (22, 26), (25, 31), (17, 29), (9, 22)]
+    body = PG(top + bot)
+    c.add(body, r, edge='out')
+    # 날개맥
+    c.pat(LN((8, 15), (24, 3), .5) & body | LN((10, 18), (24, 29), .5) & body, d)
+    c.pat(LN((10, 16), (20, 16), .5) & body, d)
+    # 반짝이는 눈
+    c.eye(4, 11, 2, white=gl[3], pupil=gl[1])
+    c.eye(4, 19, 2, white=gl[3], pupil=gl[1])
+    c.put({(5, 12), (5, 20)}, gl[1])
+    # 달무리 안개
+    for (x, y) in ((28, 4), (3, 27)):
+        c.put({(x, y), (x - 1, y), (x + 1, y)}, hx('#a888e0'))
+    c.put({(7, 15), (7, 17)}, d[0])
+
+
+@fish(46, 'f_moonbun', '달토끼 금붕어')
+def _(c):
+    r = R('#fff6ee', dk='#d8b8c4', lt='#ffffff')
+    fn = R('#ffe6ee', dk='#e0a8c0', lt='#fff6fa')
+    pk = R('#ff9ec0', dk='#d0608c', lt='#ffc8dc')
+    mo = R('#ffe27a', dk='#e0aa30', lt='#fff4b0')
+    # 길게 너울거리는 리본 꼬리
+    t = PG([(19, 17), (24, 9), (31, 7), (28, 14), (31, 20), (26, 26), (19, 20)])
+    c.add(fade(t, 28), fn, edge='out')
+    c.rays(t, (19, 18), [-45, -25, -5, 15, 35], .82)
+    c.add(PG([(12, 22), (13, 28), (18, 23)]), fn)
+    body = E(11, 19, 9.5, 7) | E(7, 18.5, 6, 5.5)
+    c.add(body, r, edge='out')
+    # 토끼 귀 (길게 솟은)
+    c.add(EL(6.5, 8, 7.5, 2.4, 100), r, edge='out')
+    c.add(EL(12.5, 8, 7, 2.4, 80), r, edge='out')
+    c.pat(EL(6.4, 8, 5, 1, 100) | EL(12.6, 8, 4.5, 1, 80), pk)
+    c.pat({(x, y) for (x, y) in body if y >= 23}, pk) if False else None
+    # 초승달 이마 무늬
+    c.pat({(8, 14), (9, 14), (7, 15), (7, 16), (8, 17), (9, 17)} & body, mo, keep_tone=False)
+    c.put({(9, 15), (9, 16)} & body, r[1])
+    c.eye(4, 17, 3)
+    c.put({(1, 21)}, pk[1]); c.put({(2, 20), (1, 20), (1, 19)}, pk[0] if False else pk[1])
+    c.dot(2, 21, pk[0])
+    c.add(E(14, 22, 2.6, 2), fn, edge='in')
+    # 솜꼬리 + 별빛
+    c.add(E(20, 20, 2.4, 2.4), (255, 255, 255), edge='out') if False else None
+    for (x, y) in ((26, 3), (3, 4), (29, 28)):
+        c.put({(x, y), (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)}, mo[1])
+
+
+@fish(47, 'f_jellyqueen', '등불 해파리 여왕')
+def _(c):
+    lt_ = R('#ffb02a', dk='#d0561a', lt='#ffd860', hi='#fff4b8')
+    rib = R('#e07a1a', dk='#a03a14', lt='#ff9a2a')
+    gold = R('#ffe05a', dk='#d89a1a', lt='#fff6b0')
+    ar = R('#ffcf70', dk='#e08a3a', lt='#fff0b0')
+    # 긴 촉수 + 끝의 작은 등불
+    for x, ph in ((7, 0), (11, 1), (21, 0), (25, 1)):
+        s_ = 1 if ph else -1
+        pts = [(x, 18), (x + s_, 22), (x - s_, 26), (x + s_, 29)]
+        c.add(tube(pts, .6, .5), ar, shade=False)
+        c.dot(x + s_, 30, gold[2]); c.dot(x + s_, 31, gold[1])
+    for x, ph in ((13, 0), (16, 1), (19, 0)):
+        s_ = 2 if ph else -2
+        c.add(tube([(x, 17), (x + s_, 21), (x - s_, 25), (x + s_, 29)], 1.7, .7), ar, edge='out')
+    # 등불 모양 종 (둥근 타원 + 세로 갈비)
+    bell = E(15.5, 12, 10.5, 8.2)
+    c.add(bell, lt_, edge='out')
+    for dx in (-6.5, -3.4, 0, 3.4, 6.5):
+        c.pat(tube([(15.5 + dx * .5, 4.5), (15.5 + dx, 12), (15.5 + dx * .5, 19.5)], .5) & bell, rib)
+    # 윗뚜껑 + 아랫 술
+    c.add(E(15.5, 17.5, 8, 1.4), rib, edge='out')
+    c.pat(E(13, 9, 3, 2) | {(11, 12), (10, 13)}, R('#fff4c0', dk='#ffd860', lt='#ffffff'))
+    # 왕관
+    crown = PG([(9, 5), (9, 0), (12, 3), (15, 0), (16, 0), (19, 3), (22, 0), (22, 5)])
+    c.add(crown, gold, edge='out')
+    c.put({(12, 3), (16, 2), (20, 3)}, hx('#ff4a6a'))
+    c.dot(11, 1, hx('#ffffff')) if False else None
+    c.eye(11, 12, 2)
+    c.eye(18, 12, 2)
+    c.put({(15, 15), (16, 15)}, hx('#a03a14'))
+
+
+@fish(48, 'f_turtle', '왕관 거북')
+def _(c):
+    sh_ = R('#4ea860', dk='#1e5a3c', lt='#86d880')
+    sk = R('#9ac86a', dk='#4e7e3c', lt='#c8ec94')
+    gold = R('#ffd24a', dk='#c88a1a', lt='#fff09a')
+    # 꼬리, 뒷발
+    c.add(PG([(26, 21), (31, 23), (26, 24)]), sk, edge='out')
+    c.add(E(22, 26, 4.5, 3), sk, edge='out')
+    # 머리와 목
+    c.add(tube([(10, 19), (6, 19)], 3, 3, smooth=False) | E(5, 18, 4.2, 3.8), sk, edge='out')
+    # 앞발
+    c.add(EL(11.5, 25, 4.6, 2.6, 25), sk, edge='out')
+    # 배딱지
+    c.add(E(16.5, 23, 12, 2.6), R('#f2e4a8', dk='#b09858', lt='#fff6d0'), edge='out')
+    # 등딱지
+    shell = E(16.5, 16, 11.5, 8.5) & {(x, y) for x in range(N) for y in range(0, 22)}
+    c.add(shell, sh_, edge='out')
+    hexs = R('#8ee08a', dk='#3a8a58', lt='#c4f8b0')
+    for (x, y) in ((16, 13), (11, 17), (22, 17), (16, 19) if False else (16, 18), (8, 14) if False else (13, 21) if False else (12, 12), (21, 12)):
+        pass
+    # 육각 무늬
+    c.pat(LN((10, 21), (13, 11), .5) | LN((16, 8), (16, 22), .5) | LN((22, 21), (19, 11), .5) | LN((9, 14), (24, 14), .5) | LN((9, 19), (24, 19), .5), sh_ and R('#2a7048', dk='#14402c', lt='#3a8858')) if False else None
+    for pts in (((11, 21), (13, 15), (19, 15), (21, 21)), ((13, 15), (14, 9)), ((19, 15), (18, 9)), ((13, 15), (9, 14)), ((19, 15), (24, 14))):
+        for i in range(len(pts) - 1):
+            c.pat(LN(pts[i], pts[i + 1], .5) & shell, R('#2e7a4a', dk='#164a30', lt='#48986a'))
+    c.pat(E(16, 18, 2, 1.4) & shell, hexs)
+    # 왕관 (머리 위)
+    crown = PG([(2, 13), (2, 8), (4, 11), (6, 7), (8, 11), (10, 8), (10, 13)])
+    c.add(crown, gold, edge='out')
+    c.put({(4, 12), (7, 12)}, hx('#ff4a6a'))
+    c.eye(3, 16, 2)
+    c.put({(1, 20), (2, 20), (3, 21)}, OUT)
+    c.dot(2, 17, (255, 255, 255)) if False else None
+
+
+@fish(49, 'f_dragon', '용 비늘 잉어')
+def _(c):
+    r = R('#d8322a', dk='#7a1430', lt='#ff6a48')
+    gd = R('#ffcc3a', dk='#c88a1a', lt='#fff09a')
+    fn = R('#ff9a2a', dk='#b0521c', lt='#ffd05a')
+    # 불꽃 같은 긴 꼬리
+    t = PG([(23, 15), (27, 8), (31, 2), (29, 11), (31, 15), (31, 20), (29, 25), (31, 30), (25, 25), (23, 19)])
+    c.add(t, fn, edge='out')
+    c.rays(t, (23, 17), [-70, -45, -20, 5, 30, 55, 80], .78)
+    # 용의 갈기 (등지느러미 가시)
+    sp = set()
+    for x in range(8, 23, 3):
+        sp |= PG([(x - 1, 11), (x, 5 + (x % 4)), (x + 2, 11)])
+    c.add(sp, fn, edge='out')
+    c.add(PG([(14, 23), (16, 28), (21, 24)]), fn)
+    body = prof([(4, 14, 20), (6, 11, 23), (10, 9.5, 25), (15, 9.5, 25), (20, 11.5, 23), (23, 14.5, 20)])
+    c.add(body, r, edge='out')
+    # 금빛 용 비늘 (물결 호)
+    for (x, y) in ((9, 14), (13, 13), (17, 14), (20, 17), (11, 18), (15, 18), (19, 20), (13, 22), (17, 23)):
+        c.pat({(x - 1, y), (x - 1, y + 1), (x, y + 1), (x + 1, y + 1), (x + 1, y)} & body, gd)
+    c.pat({(x, y) for (x, y) in body if y >= 23}, R('#ffd070', dk='#d89a3a', lt='#fff0b0'))
+    # 뿔 + 수염
+    c.add(PG([(6, 11), (4, 5), (9, 10)]), gd, edge='out')
+    c.add(PG([(9, 10), (9, 4), (13, 10)]), gd, edge='out')
+    c.put(tube([(4, 18), (1, 20), (1, 24), (4, 26)], .5), gd[2])
+    c.put(tube([(5, 19), (2, 23), (3, 28)], .5), gd[2])
+    c.add(PG([(10, 19), (14, 24), (15, 20)]), fn, edge='in')
+    c.eye(6, 13, 3, ring=hx('#ffe35a'))
+    c.dot(5, 18, OUT)
+
+
+@fish(50, 'f_crystalcrab', '수정 왕게')
+def _(c):
+    b = R('#8ad4ff', dk='#3a78d0', lt='#d0f0ff', hi='#ffffff')
+    pk = R('#ffa8e0', dk='#c85cb4', lt='#ffd4f2')
+    cx = 15.5
+    legs = set()
+    for sgn in (-1, 1):
+        for (y0, kx, ky, ex, ey) in ((18, 11, 14, 4, 20), (20, 11.5, 18, 3, 27), (22, 10, 22, 4, 30)):
+            legs |= tube([(cx + sgn * 7, y0), (cx + sgn * kx, ky), (cx + sgn * (cx - ex), ey)], .9, .6, smooth=False)
+    c.add(legs, pk, shade=False, edge='out')
+    for sgn in (-1, 1):
+        arm = tube([(cx + sgn * 6, 17), (cx + sgn * 10, 12), (cx + sgn * 11, 9)], 1.7, 1.7)
+        c.add(arm, b, edge='out')
+        claw = E(cx + sgn * 11, 5.2, 4.2, 4.6) - PG([(cx + sgn * 11, 5), (cx + sgn * 14, -1), (cx + sgn * 8, -1)]) - PG([(cx + sgn * 11, 4), (cx + sgn * 12.5, 0), (cx + sgn * 9.5, 0)])
+        c.add(claw, pk, edge='out')
+    shell = PG([(cx, 8), (cx + 8, 13), (cx + 9, 21), (cx + 4, 26), (cx - 4, 26), (cx - 9, 21), (cx - 8, 13)])
+    c.add(shell, b, edge='out')
+    # 뾰족뾰족 수정 가시
+    for (x, y, h) in ((cx - 7, 13, 3), (cx + 7, 13, 3), (cx - 9, 20, 3), (cx + 9, 20, 3)):
+        c.add(PG([(x - 1, y + 1), (x + (-3 if x < cx else 3), y - 1), (x + (0), y + 3)]), pk, edge='out')
+    # 면 나누기
+    fac = R('#dff6ff', dk='#78b4f0', lt='#ffffff')
+    for pts in (((cx, 8), (cx, 26)), ((cx - 8, 13), (cx + 8, 21)), ((cx + 8, 13), (cx - 8, 21)), ((cx - 9, 21), (cx + 9, 21))):
+        c.pat(LN(pts[0], pts[1], .5) & shell, fac)
+    # 왕관 수정
+    c.add(PG([(cx - 3, 11), (cx - 3, 6), (cx - 1, 9), (cx, 4), (cx + 1, 9), (cx + 3, 6), (cx + 3, 11)]), pk, edge='out')
+    c.put({(int(cx) , 8), (int(cx), 7)}, (255, 255, 255))
+    c.eye(10, 14, 2)
+    c.eye(19, 14, 2)
+    c.put({(14, 22), (15, 22), (16, 22), (17, 22)}, pk[0]) if False else None
+
+
+@fish(51, 'f_whale', '별똥별 꼬마 고래')
+def _(c):
+    r = R('#4a8ee8', dk='#223a98', lt='#82bcff')
+    bl = R('#e8f2ff', dk='#9cb4e8', lt='#ffffff')
+    yl = R('#ffe45e', dk='#ffae2a', lt='#fff6b0', hi='#ffffff')
+    fn = R('#3a70c8', dk='#1c2e84', lt='#6a9ae8')
+    # 꼬리 지느러미 (위로 들어 올림)
+    c.add(tube([(21, 17), (25, 14), (27, 10)], 3.0, 1.6), r, edge='out')
+    c.add(PG([(27, 11), (23, 6), (23, 3), (27, 6), (28, 3), (31, 5), (31, 8), (27, 12)]), fn, edge='out')
+    body = prof([(2, 14, 22), (4, 11, 25), (8, 9.5, 26.5), (14, 11, 26), (19, 15, 23), (22, 18, 21)])
+    c.add(body, r, edge='out')
+    # 흰 배 + 주름
+    c.pat({(x, y) for (x, y) in body if y >= 21 and x < 19}, bl)
+    for x in (8, 10, 12, 14):
+        c.pat({(x, 23), (x, 24)} & body, R('#c8d8f4', dk='#8aa4e0', lt='#e4eefc'))
+    c.add(EL(14, 24, 4, 2, 30), fn, edge='out')
+    c.eye(5, 15, 3)
+    c.dot(4, 19, hx('#ff9ac0')); c.dot(5, 19, hx('#ff9ac0'))
+    c.put({(2, 20), (3, 21), (4, 21)}, hx('#16286a'))
+    # 별똥별: 큰 별 + 꼬리 줄
+    c.put({(9, 6), (8, 6), (10, 6), (9, 5), (9, 7), (9, 4), (9, 8)} , yl[1])
+    c.put({(8, 5), (10, 5), (8, 7), (10, 7)}, yl[2])
+    c.dot(9, 6, yl[3])
+    for i in range(1, 7):
+        c.dot(9 + i * 2, 6 + i // 2 - 0, yl[1] if i % 2 else yl[0])
+    c.dot(11, 4, (255, 255, 255)); c.dot(3, 8, (255, 255, 255))
+    c.dot(20, 3, yl[2]); c.dot(28, 14, yl[2])
+
+
+@fish(52, 'f_cauldronangler', '가마솥 아귀')
+def _(c):
+    ir = R('#4a4a62', dk='#1e1e30', lt='#7a7a96')
+    gr = R('#7aff5a', dk='#2aa83a', lt='#c8ffa8', hi='#f0ffe0')
+    fn = R('#3a3a54', dk='#18182a', lt='#5a5a78')
+    tooth = R('#ffffff', dk='#d0d0e0')
+    # 꼬리
+    c.add(PG([(25, 18), (31, 14), (31, 26), (25, 23)]), fn, edge='out')
+    # 다리
+    c.add(RC(7, 27, 10, 30) | RC(21, 27, 24, 30), fn, edge='out')
+    # 솥 몸통
+    body = E(15.5, 20, 11.5, 8.5)
+    c.add(body, ir, edge='out')
+    # 솥 귀(손잡이)
+    c.add(E(4, 15, 2.2, 2.2) - E(4, 15, 1, 1), fn, edge='out')
+    # 솥 입구 테두리
+    c.add(E(15.5, 12.5, 9.5, 2.2), ir, edge='out')
+    # 보글보글 초록 물약
+    c.add(E(15.5, 12, 7.8, 1.5), gr, edge=None)
+    for (x, y, rr) in ((11, 9, 1.8), (16, 7, 2.4), (21, 9.5, 1.6), (14, 4, 1.2), (19, 3, 1)):
+        c.add(E(x, y, rr, rr), gr, edge='out')
+    c.dot(15, 6, gr[3]); c.dot(10, 8, gr[3])
+    # 얼굴 (아귀 입 + 이빨)
+    c.put({(x, 21) for x in range(6, 25)} , OUT)
+    for x in range(7, 24, 3):
+        c.add({(x, 20), (x, 19), (x + 1, 20)}, tooth, shade=False)
+    for x in (8, 11, 14, 17, 20, 23):
+        c.dot(x, 22, tooth[0])
+    c.eye(9, 15, 3, ring=gr[1])
+    c.eye(18, 15, 3, ring=gr[1])
+    # 낚싯대 (불꽃 등불)
+    c.put(tube([(25, 14), (28, 8), (28, 3)], .5), hx('#c8a0ff'))
+    c.add(PG([(28, 0), (30, 3), (28, 5), (26, 3)]), gr, edge='out')

@@ -1092,7 +1092,7 @@ def _(c):
         sep(c, m, BW[3])
         c.shade(m, BW, 'diag', th=(.4, -.2, -.6))
         c.pts([(a, yb) for (a, b) in m if b == yb], BW[3])
-    for (t, drop, s) in [(.47, 4, 1.0), (.62, 6, 1.0), (.77, 4, 0.95), (.92, 6, 0.85)]:
+    for (t, drop, s) in [(.45, 4, 1.15), (.6, 6, 1.15), (.76, 4, 1.05), (.92, 6, 0.95)]:
         px, py = pts[int(t * 30)]
         c.line((px, py), (px, py + drop - 0.5), PED, 1.0)
         bell(px, py + drop - 1.5, s)
@@ -1151,7 +1151,7 @@ def _(c):
     gl = E(16, 26.2, 4.8, 3.8)
     c.shade(gl, R4('#fdffd8', '#e4ff6a', '#b4e834', '#6cb41e'), 'sphere', th=(.5, .1, -.4), box=(16, 26, 4.8, 3.8))
     c.pts([(15, 25), (16, 25), (15, 26)], WHITE)
-    c.halo = (H('#e4ff80'), 3.2, 70)
+    c.halo = (H('#d8ff50'), 2.6, 56)
     c.spark(5, 26, H('#f0ffa0'), 1, WHITE)
     c.dot(27, 22, H('#f0ffa0'))
     c.dot(26, 29, H('#d8ff70'))
@@ -1218,31 +1218,34 @@ def _(c):
     STEM = R4('#f8f0ff', '#dcd2f2', '#aaa0cc', '#6c6296')
     cx, rim = 16, 17.5
     cap, stem = mushroom(c, cx, rim, 12.6, 10.2, CAPP, STEM, 7, 8.5, 29.5, lipc=R4('#efe6ff', '#cbbfe6', '#9488b8', '#5e5486'))
-    WEB = H('#f2eaff')
-    ctr = (16, 8.5)
-    for a in (-72, -48, -24, 0, 24, 48, 72):
+    WEB = H('#f6f0ff')
+    ctr = (16, 8.0)
+    for a in (-78, -52, -26, 0, 26, 52, 78):
         t = math.radians(a)
         end = (ctr[0] + math.sin(t) * 16, ctr[1] + math.cos(t) * 16)
-        c.fill(LN([ctr, end], 0.8) & cap, WEB)
-    for rr_ in (4.5, 8.2, 12.0):
-        ringm = E(ctr[0], ctr[1], rr_, rr_ * 0.95) - E(ctr[0], ctr[1], rr_ - 1.2, rr_ * .95 - 1.2)
+        c.fill(LN([ctr, end], 0.9) & cap, WEB)
+    for rr_ in (4.0, 7.4, 10.8):
+        ringm = E(ctr[0], ctr[1], rr_ + .5, (rr_ + .5) * .95) - E(ctr[0], ctr[1], rr_ - .6, (rr_ - .6) * .95)
         for q in ringm & cap:
             if q[1] >= ctr[1] - 0.5:
-                c.put(q[0], q[1], H('#bfb0ea') if rr_ > 5 else WEB)
-    c.line((24.5, 17.5), (24.5, 22.5), H('#e4d8ff'), 0.9)
-    sp = E(24.5, 25, 2.4, 2.6)
-    c.fill(sp, H('#2a1a3a'))
-    c.pts([(23, 24), (23, 23)], H('#6a5a8a'))
-    c.pts([(24, 26), (25, 26)], H('#e83a5a'))
-    for (dy, ex, ey) in [(23.5, 4.5, -1.5), (24.8, 5, 0), (26, 4.5, 1.8), (27, 3.4, 3.2)]:
+                c.put(q[0], q[1], WEB)
+    c.pts([(15, 7), (16, 7), (15, 8), (16, 8)], WEB)
+    # 거미 (실에 매달림)
+    SPC = H('#2a1a3a')
+    c.line((25.5, 17.5), (25.5, 23.6), H('#f0e8ff'), 0.9)
+    c.fill(E(25.5, 26, 2.6, 2.8), SPC)
+    c.fill(E(25.5, 23.6, 1.5, 1.2), SPC)
+    c.pts([(24, 25), (24, 24)], H('#7a6aa0'))
+    c.pts([(25, 27), (26, 27)], H('#ff4a6a'))
+    for (dy, ex, ey) in [(24.4, 5.2, -2.2), (25.6, 5.8, -0.2), (26.8, 5.4, 2.2), (27.8, 4.2, 3.8)]:
         for sgn in (-1, 1):
-            c.line((24.5 + sgn * 1.5, dy), (24.5 + sgn * ex, dy + ey), H('#2a1a3a'), 0.9)
+            c.fill(LN([(25.5 + sgn * 1.8, dy), (25.5 + sgn * ex * .6, dy + ey * .4 - 0.8), (25.5 + sgn * ex, dy + ey)], 0.9), SPC)
 
 
 # ---------------------------------------------------------------- 28 들장미 열매
 @icon(28)
 def _(c):
-    HP = R4('#ffbc70', '#ee5e28', '#b0302c', '#6e1c30')
+    HP = R4('#ff9a78', '#e03a2c', '#a01c2c', '#601428')
     GL = R4('#a8e478', '#5cb046', '#3a8240', '#25593a')
     BR = R4('#c89868', '#946040', '#64402a', '#3c2418')
     br = LN(bez3((1.5, 7.5), (8, 1.5), (18, 1.5), (24.5, 5.5)), 1.9)
@@ -1345,7 +1348,6 @@ def _(c):
     lf = LEAF((17, 5.6), (27, 3.4), 2.8, a=2, b=.7, bend=-1)
     c.shade(lf, R4('#a888e0', '#6e4cb0', '#48306e', '#2c1c4c'), 'diag')
     c.pts([(10, 11), (9, 12), (11, 10)], WHITE)
-    c.halo = (H('#a8ff60'), 2.4, 55)
     c.dot(3, 8, H('#c8ff90'))
     c.dot(29, 24, H('#c8ff90'))
 
@@ -1418,10 +1420,13 @@ def _(c):
     hd = E(16, 8.6, 4.6, 3.2)
     c.shade(hd, TH, 'sphere')
     for sgn in (-1, 1):
-        pts = [(16 + sgn * 3.0, 8.4), (16 + sgn * 6.6, 6.6), (16 + sgn * 7.8, 3.6), (16 + sgn * 5.8, 1.4)]
-        m = LN(pts, 2.8, 1.2)
-        c.bevel(m, R4('#c8785a', '#8a4430', '#5a2a28', '#321618'))
-        c.fill(PG([(16 + sgn * 6.3, 5.3), (16 + sgn * 4.0, 4.8), (16 + sgn * 6.0, 7.0)]), H('#8a4430'))
+        pts = [(16 + sgn * 3.0, 9.0), (16 + sgn * 7.4, 7.6), (16 + sgn * 9.2, 4.4), (16 + sgn * 6.4, 1.2)]
+        m = LN(pts, 3.4, 1.2)
+        sep(c, m, H('#2e1416'))
+        c.bevel(m, R4('#d08060', '#954a34', '#5e2c28', '#321618'))
+        tooth = PG([(16 + sgn * 7.6, 6.6), (16 + sgn * 4.6, 5.6), (16 + sgn * 6.6, 4.2)])
+        c.fill(tooth, H('#954a34'))
+        c.pts([(int(16 + sgn * 5.0 - (1 if sgn < 0 else 0)), 5)], H('#5e2c28'))
     c.line((14, 6), (12, 3), LEG, 0.9) if False else None
     c.pts([(8, 15), (9, 14)], H('#c89a80'))
     c.pts([(9, 14), (10, 13), (10, 17), (9, 18)], EL[0]) if False else None
@@ -1441,12 +1446,15 @@ def _(c):
             k = SC.index(c.p[q])
             c.put(q[0], q[1], SC[min(3, k + 1)] if (q[0] + q[1]) % 2 == 0 else c.p[q])
     # 알이 비치는 창
-    win = E(16, 17, 6.2, 5.4)
+    win = E(16, 17.4, 7.4, 6.4)
     for q in win:
-        c.put(q[0], q[1], H('#b8aedc') if (q[0] - 16) + (q[1] - 17) > 0 else H('#d4cbee'))
-    for (x, y) in [(13, 14), (16, 13), (19, 14.5), (11.5, 17.5), (14.5, 17), (17.5, 17.5), (20.5, 18), (13, 20.5), (16, 21), (19, 21)]:
-        c.fill(E(x, y, 1.3, 1.3), H('#fff2b0'))
-        c.pts([(int(x) + 1, int(y) + 1)], H('#d8b868'))
+        c.put(q[0], q[1], H('#b4a8da') if (q[0] - 16) + (q[1] - 17) > 1 else H('#d0c6ec'))
+    for (x, y) in [(13.5, 14.2), (18.5, 14.2), (11, 17.8), (16, 17.6), (21, 17.8), (13.5, 21), (18.5, 21)]:
+        e = E(x, y, 1.7, 1.7)
+        c.fill(e, H('#fff0a8'))
+        c.pts([(int(x) + 1, int(y) + 1)], H('#d8a850'))
+        c.pts([(int(x), int(y) + 1)], H('#e8c878'))
+        c.pts([(int(x) - 1, int(y) - 1)], WHITE)
     c.pts([(7, 9), (8, 8), (9, 7), (10, 6)], WHITE)
     # 실 (윤곽선 없이)
     th = H('#c4badc')
@@ -1479,7 +1487,7 @@ def _(c):
     for ex in (14, 17.5):
         c.pts([(ex, 11), (ex, 12)], H('#2a2658'))
     c.pts([(15, 14), (16, 14)], H('#2a2658'))
-    c.halo = (H('#bfe8ff'), 3.0, 60)
+    c.halo = (H('#bfe8ff'), 2.4, 46)
     c.spark(4, 7, H('#dff4ff'), 1, WHITE)
     c.dot(28, 18, H('#dff4ff'))
     c.dot(5, 22, H('#dff4ff'))
@@ -1533,7 +1541,7 @@ def _(c):
     for (x, y, r) in [(8.5, 11.5, 2.0), (15, 8.5, 1.7), (17.8, 13, 1.5), (11.5, 15, 1.2), (6.5, 15.5, 1.0), (20.5, 16.5, 1.0)]:
         spot(c, x, y, r, cap, H('#e8ffff'), H('#9ad8ff'))
     c.pts([(6, 11), (7, 10), (9, 8), (8, 9)], H('#ffffff'))
-    c.halo = (H('#7fd8ff'), 3.6, 80)
+    c.halo = (H('#7fd8ff'), 2.8, 60)
     c.spark(27, 7, H('#c8f4ff'), 1, WHITE)
     c.dot(2, 4, H('#c8f4ff'))
     c.dot(29, 15, H('#c8f4ff'))
@@ -1620,45 +1628,428 @@ def _(c):
 # ---------------------------------------------------------------- 39 호박석 (벌레가 들어 있는 호박)
 @icon(39)
 def _(c):
-    AMB = R4('#fff0a0', '#fbc040', '#d8801c', '#8e4418')
-    m = (E(16, 16.5, 12.4, 10.4) | RE(16, 17, 11, 11, 25)) & RC(0, 0, 32, 30)
-    m -= {(0, 0)}
-    cc = (15.5, 16)
+    AMB = R4('#fff2a8', '#fcc444', '#dc841c', '#8e4418')
+    poly = PG([(5.5, 14), (8, 8), (14, 4.8), (21.5, 5.5), (27, 10), (27.5, 18), (24, 24.5), (17, 27.5), (9.5, 26), (5.5, 20.5)])
+    m = dilate(erode(poly, 2), 2) & dilate(poly, 1)
+    cc = (16, 16)
     for q in m:
-        d = math.hypot((q[0] + .5 - cc[0]) / 12.4, (q[1] + .5 - cc[1]) / 10.6)
-        ang = (q[0] - cc[0]) * -0.5 + (q[1] - cc[1]) * -0.6
+        d = math.hypot((q[0] + .5 - cc[0]) / 12.0, (q[1] + .5 - cc[1]) / 11.0)
+        ang = (q[0] - cc[0]) * -0.4 + (q[1] - cc[1]) * -0.5
         v = d - 0.12 * (ang / 8)
-        k = 0 if v < .38 else 1 if v < .68 else 2 if v < .9 else 3
+        k = 0 if v < .34 else 1 if v < .64 else 2 if v < .86 else 3
         c.put(q[0], q[1], AMB[k])
-    # 안의 벌레
-    A = -28
-    INS = H('#4a2810')
-
-    def R(p):
-        return rot([p], A, (16, 16.5))[0]
+    # 안쪽 가장자리 빛 (반투명 느낌)
+    for q in m:
+        if (q[0] + 1, q[1] + 1) not in m and c.p[q] != AMB[0]:
+            pass
+    for q in erode(m, 1) - erode(m, 2):
+        if q[0] + q[1] > 28 and c.p[q] == AMB[3]:
+            c.put(q[0], q[1], AMB[2])
+    INS = H('#3a1e0c')
+    # 날개
     for sgn in (-1, 1):
-        for (y, ex, ey) in [(14.6, 6.5, -1.5), (16.2, 7.2, 1.0), (17.6, 6.0, 4.0)]:
-            c.line(R((16 + sgn * 1.2, y)), R((16 + sgn * ex, y + ey)), INS, 0.9)
-    for sgn in (-1, 1):
-        w = LEAF(R((16 + sgn * 1.2, 13.8)), R((16 + sgn * 9, 7.0)), 2.3, a=2, b=.7)
+        w = LEAF((16 + sgn * 1.4, 14.2), (16 + sgn * 9.4, 8.6), 2.6, a=2, b=.7)
+        for q in ring(w):
+            if q in m:
+                c.put(q[0], q[1], H('#9a5a1c'))
         for q in w:
-            c.put(q[0], q[1], H('#fff4c0'))
-        for q in ring(w) & m:
-            c.put(q[0], q[1], H('#b0701c'))
-        c.fill(LN([R((16 + sgn * 1.5, 13.4)), R((16 + sgn * 8, 7.6))], 0.7) & w, H('#e0a850'))
-    c.fill(LEAF(R((16, 15.2)), R((16, 24.5)), 1.9, a=2, b=.7), INS)
-    c.fill(E(*R((16, 14.2)), 2.0, 2.0), INS)
-    hd = R((16, 11.6))
-    c.fill(E(hd[0], hd[1], 1.5, 1.5), INS)
-    c.pts([(int(R((16, 15.2))[0]), int(R((16, 15.2))[1]))], INS)
-    c.line(R((16, 10.5)), R((16, 7.5)), INS, 0.8) if False else None
-    c.fill(LN([R((16, 20)), R((16, 20.4))], 1.5), H('#7a4420')) if False else None
+            c.put(q[0], q[1], H('#fff4c4'))
+        c.fill(LN([(16 + sgn * 2, 13.8), (16 + sgn * 8.2, 9.2)], 0.7) & w, H('#e0a850'))
+    # 다리
+    for sgn in (-1, 1):
+        for (y, ex, ey) in [(15.0, 5.4, -2.2), (16.6, 6.0, 0.6), (18.2, 5.0, 3.6)]:
+            c.fill(LN([(16 + sgn * 1.6, y), (16 + sgn * ex * .55, y + ey * .4 + 0.6), (16 + sgn * ex, y + ey)], 0.9) & m, INS)
+    c.fill(LEAF((16, 16), (16, 25), 2.0, a=2, b=.7), INS)
+    c.fill(E(16, 14.8, 2.1, 2.1), INS)
+    c.fill(E(16, 11.8, 1.6, 1.6), INS)
+    c.line((15.2, 10.5), (13.6, 8.4), INS, 0.9)
+    c.line((16.8, 10.5), (18.4, 8.4), INS, 0.9)
+    for y in (19, 21.5):
+        c.pts([(15, int(y)), (16, int(y))], H('#8a5a24'))
     # 윤기
-    c.pts([(7, 11), (8, 10), (9, 9), (10, 8), (7, 12)], H('#fff8d0'))
-    c.pts([(8, 10), (9, 9)], WHITE)
-    c.pts([(24, 22), (23, 23)], H('#ffd870'))
-    c.halo = (H('#ffc850'), 2.4, 55)
-    c.spark(27, 6, H('#fff0a0'), 1, WHITE)
+    c.pts([(8, 11), (9, 10), (10, 9), (11, 8), (8, 12)], H('#fffbe0'))
+    c.pts([(9, 10), (10, 9)], WHITE)
+    c.pts([(24, 21), (23, 22)], H('#ffd870'))
+    c.spark(27, 5, H('#fff0a0'), 1, WHITE)
+    c.dot(3, 26, H('#ffe890'))
+
+
+# ---------------------------------------------------------------- 보조 (e)
+def dilate(m, n=1):
+    m = set(m)
+    for _ in range(n):
+        m = m | ring(m)
+    return {q for q in m if 0 <= q[0] < S and 0 <= q[1] < S}
+
+
+def smooth(m, n=2):
+    return dilate(erode(m, n), n) & m if False else dilate(erode(m, n), n)
+
+
+def crystal(c, base, ang, L, w, CR):
+    ty = -(L - w * 1.5)
+
+    def T(pts):
+        return PG(rot([(base[0] + x, base[1] + y) for x, y in pts], ang, base))
+    left = T([(-w, 0), (-w * .25, 0), (-w * .25, ty), (-w, ty)])
+    mid = T([(-w * .25, 0), (w * .35, 0), (w * .35, ty), (-w * .25, ty)])
+    right = T([(w * .35, 0), (w, 0), (w, ty), (w * .35, ty)])
+    tl = T([(-w, ty), (-w * .25, ty), (0, -L), ])
+    tm = T([(-w * .25, ty), (w * .35, ty), (0, -L)])
+    tr = T([(w * .35, ty), (w, ty), (0, -L)])
+    whole = left | mid | right | tl | tm | tr
+    return whole, [(left, CR[1]), (mid, CR[0]), (right, CR[2]), (tl, CR[0]), (tm, lerpc(CR[0], CR[1], .5)), (tr, CR[1])]
+
+
+# ---------------------------------------------------------------- 40 자수정
+@icon(40)
+def _(c):
+    CR = R4('#e4baff', '#a86cec', '#6e3cb4', '#46267c')
+    ROCK = R4('#9a8aa8', '#6e6080', '#4a3f5e', '#2e2640')
+    rock = (E(16, 28, 13.5, 4.2) | E(9, 27, 5, 3.4) | E(23, 27.4, 5.5, 3.6)) & RC(0, 0, 32, 31)
+    c.shade(rock, ROCK, 'sphere', box=(16, 27, 14, 5))
+    rr = c.rng
+    for q in rock:
+        if rr.random() < .15:
+            c.put(q[0], q[1], ROCK[0] if rr.random() < .5 else ROCK[3])
+    cl = [((5.5, 28), -58, 10, 2.5), ((26.5, 28), 58, 10.5, 2.6), ((10.5, 27), -27, 17, 3.4), ((21.5, 27), 25, 16, 3.4),
+          ((16, 27), 0, 24, 4.4), ((13.8, 28), -10, 10, 2.5)]
+    for (b, a, L, w) in cl:
+        whole, faces = crystal(c, b, a, L, w, CR)
+        sep(c, whole, CR[3])
+        for (m, col) in faces:
+            c.fill(m, col)
+        # 모서리 하이라이트
+        edge = [rot([(b[0] - w * .25, b[1] - 1), (b[0] - w * .25, b[1] - (L - w * 1.5))], a, b)][0]
+        c.fill(LN(edge, 0.8) & whole, H('#f4dcff'))
+    c.spark(7, 6, H('#f4dcff'), 1, WHITE)
+    c.spark(25, 8, WHITE, 1, WHITE)
+    c.dot(16, 2, WHITE)
+    c.dot(29, 18, H('#e4baff'))
+
+
+# ---------------------------------------------------------------- 41 조개 화석 (암모나이트)
+@icon(41)
+def _(c):
+    MX = R4('#e6dcc4', '#c0b294', '#8e8068', '#5c5240')
+    AM = R4('#fbd896', '#d49c54', '#966034', '#53321e')
+    disc = (E(16, 16, 13.4, 12.8) | E(17, 17, 12.6, 13)) & RC(0, 1, 32, 31)
+    cc = (15.0, 15.6)
+    c.shade(disc, MX, 'sphere', box=(16, 16, 13.4, 12.8), th=(.82, .45, .08))
+    g = 2.3
+    for q in disc:
+        dx, dy = q[0] + .5 - cc[0], q[1] + .5 - cc[1]
+        r = math.hypot(dx, dy)
+        k = MX.index(c.p[q])
+        if r > 12.0:
+            continue
+        th = math.atan2(dy, dx)
+        ph = (th / (2 * math.pi) - math.log(max(r, .3)) / math.log(g)) % 1.0
+        rib = (th / (2 * math.pi) * (9 + r * 0.7)) % 1.0
+        if r < 1.4:
+            c.p[q] = AM[3]
+        elif ph < 0.17:
+            c.p[q] = AM[3]
+        else:
+            u = (ph - 0.17) / 0.83
+            kk = 0 if u < .28 else 1 if u < .62 else 2
+            if rib < 0.4 and kk < 2:
+                kk += 1
+            c.p[q] = AM[kk]
+    rr = c.rng
+    for q in disc:
+        r = math.hypot(q[0] + .5 - cc[0], q[1] + .5 - cc[1])
+        if r > 12.2 and rr.random() < .22:
+            c.put(q[0], q[1], MX[2] if rr.random() < .6 else MX[0])
+    c.pts([(7, 8), (8, 7), (9, 6)], H('#fff8e8'))
+    c.dot(28, 5, H('#fff0d0'))
+
+
+# ---------------------------------------------------------------- 42 월장석
+@icon(42)
+def _(c):
+    MS = R4('#ffffff', '#e6eeff', '#b8c4ee', '#8890c4')
+    m = E(16, 16.2, 10.8, 12.8)
+    c.shade(m, MS, 'sphere', box=(16, 16, 10.8, 12.8), th=(.85, .5, .1))
+    sheen = E(13, 12.5, 6.8, 8.6) - E(16.2, 15.4, 6.6, 8.6)
+    for q in sheen & m:
+        c.put(q[0], q[1], H('#9ccaff') if (q[0] + q[1]) % 3 else H('#bfdcff'))
+    inner = E(14.5, 14, 4.2, 5.6) & m
+    for q in inner:
+        c.put(q[0], q[1], H('#f4f8ff'))
+    # 달 문양 (옅은 초승달)
+    cres = E(17.5, 19.5, 4.2, 4.2) - E(19.4, 18.2, 3.8, 3.8)
+    for q in cres & m:
+        c.put(q[0], q[1], H('#fff0b8') if (q[0] + q[1]) % 2 == 0 else H('#ffe090'))
+    c.pts([(9, 10), (9, 11), (10, 8), (10, 9), (11, 7)], WHITE)
+    c.pts([(21, 24), (22, 23)], MS[3])
+    c.spark(26, 6, H('#dce8ff'), 2, WHITE)
+    c.spark(5, 24, H('#dce8ff'), 1, WHITE)
+    c.dot(27, 27, H('#dce8ff'))
+
+
+# ---------------------------------------------------------------- 43 별가루 병
+@icon(43)
+def _(c):
+    glass = PG([(9.5, 14), (22.5, 14), (25, 17), (25, 26), (22, 29.6), (10, 29.6), (7, 26), (7, 17)]) | RC(12.5, 8, 19.5, 14) | RC(11.5, 7, 20.5, 9)
+    inner = erode(glass, 1)
+    c.fill(glass, H('#bfe0ff'))
+    EMPTY = (190, 216, 255, 70)
+    for q in inner:
+        c.p[q] = EMPTY
+    # 별가루(차있는 부분)
+    top_y = 17
+    dust = {q for q in inner if q[1] >= top_y}
+    for q in dust:
+        t = (q[1] - top_y) / 12.0
+        c.p[q] = lerpc(H('#3a2a8c'), H('#24185a'), t)
+    for q in dust:
+        if q[1] == top_y:
+            c.p[q] = H('#8a7ae0')
+    rr = c.rng
+    for q in dust:
+        if rr.random() < .1:
+            c.p[q] = H('#5a48b8')
+    for (x, y) in [(12, 21), (18, 19), (14, 26), (20, 24), (10, 27)]:
+        c.pts([(x, y), (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)], H('#ffe36a'))
+        c.pts([(x, y)], H('#fff8c0'))
+    for (x, y) in [(15, 22), (21, 28), (11, 23), (17, 27), (23, 20)]:
+        c.pts([(x, y)], H('#ffffff'))
+    for (x, y) in [(13, 18), (22, 26)]:
+        c.pts([(x, y)], H('#ff9ad0'))
+    for (x, y) in [(16, 20), (9, 25), (19, 22)]:
+        c.pts([(x, y)], H('#8af0ff'))
+    # 병 하이라이트
+    for y in range(18, 27):
+        c.put(9, y, H('#e8f6ff'))
+    c.pts([(9, 16), (10, 15), (10, 17), (14, 10), (14, 11), (14, 12)], WHITE)
+    # 코르크
+    cork = RC(13, 2, 19, 8)
+    c.shade(cork, R4('#e4b078', '#bc844a', '#8a5a2c', '#5a3818'), 'cylv')
+    for q in [(15, 4), (17, 6), (14, 6), (16, 3)]:
+        c.put(q[0], q[1], H('#8a5a2c'))
+    c.fill(RC(11, 7, 21, 8), H('#9cb8e0'))
+    c.spark(27, 8, H('#fff0a0'), 1, WHITE)
+    c.spark(4, 20, H('#c8b8ff'), 1, WHITE)
+    c.dot(28, 22, H('#8af0ff'))
+    c.dot(3, 8, H('#ffffff'))
+
+
+# ---------------------------------------------------------------- 44 요정 날개 가루
+@icon(44)
+def _(c):
+    PO = R4('#f8d4fc', '#d08ce8', '#9254bc', '#5e3088')
+    body = E(16, 21, 10.6, 8.8) | PG([(11, 9.5), (21, 9.5), (19.5, 14), (12.5, 14)]) | E(16, 14, 5.2, 3)
+    body &= RC(0, 0, 32, 30)
+    c.shade(body, PO, 'sphere', box=(16, 20, 11, 10), th=(.84, .45, .08))
+    # 입구 주름(윗단)
+    fr = PG([(10.2, 8), (21.8, 8), (20.6, 12.2), (11.4, 12.2)])
+    c.shade(fr, PO, 'cylh', th=(.8, .1, -.4))
+    for x in range(11, 22, 2):
+        c.pts([(x, 9), (x, 10)], PO[2])
+    # 금색 끈
+    c.fill(LN([(11, 13), (21, 13)], 1.7), H('#ffd23a'))
+    c.fill(LN([(11, 14.2), (21, 14.2)], 0.9), H('#c88a1c'))
+    c.pts([(12, 12), (13, 12)], H('#fff4a0'))
+    c.fill(E(22, 14.5, 2.2, 1.7), H('#ffd23a'))
+    c.line((21.5, 15.5), (23.5, 20), H('#e0a828'), 1.2)
+    c.line((22.5, 15.5), (26, 19), H('#e0a828'), 1.2)
+    c.pts([(24, 20), (26, 19)], H('#ffe27a'))
+    # 날개 문양
+    WN = R4('#e8fffc', '#9ceaf0', '#52b8d0', '#2e7aa0')
+    for sgn in (-1, 1):
+        w1 = LEAF((16 + sgn * 0.8, 21.4), (16 + sgn * 6.0, 17.2), 2.0, a=2, b=.65)
+        w2 = LEAF((16 + sgn * 0.8, 22), (16 + sgn * 4.6, 25.8), 1.6, a=2, b=.65)
+        for w in (w2, w1):
+            for q in ring(w):
+                if q in c.p:
+                    c.p[q] = WN[3]
+            c.shade(w, WN, 'diag')
+    c.fill(LN([(16, 19), (16, 24)], 1.3), H('#6a3a98'))
+    # 반짝이 가루
+    glit = [H('#ff9ad8'), H('#8af0ff'), H('#fff08a'), H('#ffffff'), H('#c8a8ff')]
+    for (x, y) in [(13, 6), (16, 3), (19, 5), (11, 3), (21, 2), (15, 7), (18, 8), (24, 7), (8, 6), (5, 12)]:
+        c.dot(x, y, glit[(x * 3 + y) % 5])
+    c.spark(16, 4, H('#fff0a0'), 2, WHITE)
+    c.spark(7, 9, H('#8af0ff'), 1, WHITE)
+    c.spark(26, 10, H('#ff9ad8'), 1, WHITE)
+    c.top[(13, 6)] = H('#ffffff')
+
+
+# ---------------------------------------------------------------- 45 늑대 털 뭉치
+@icon(45)
+def _(c):
+    FUR = [R4('#f4f2fa', '#d0cee0', '#a4a2bc', '#70708e'), R4('#dcdaea', '#b4b2ca', '#8a88a4', '#5c5a78'),
+           R4('#b4b2c8', '#8a88a2', '#625f7c', '#413f58'), R4('#8c8aa4', '#66647e', '#464360', '#2e2c44')]
+    base = (16, 28)
+    strands = [(3, 14, 3), (30, 15, 3), (6, 7, 2), (26, 6, 2), (10, 3, 1), (22, 3, 1), (16, 1.5, 0), (13, 5, 0), (19, 6, 1),
+               (4, 21, 3), (28, 22, 2), (8, 11, 1), (24, 11, 1), (11, 8, 0), (21, 9, 0), (15, 10, 1), (17, 12, 0)]
+    for k, (tx, ty, ci) in enumerate(strands):
+        bx = base[0] + (tx - 16) * 0.16
+        p0 = (bx, base[1])
+        mid = lerp(p0, (tx, ty), .55)
+        nx_, ny_ = -(ty - base[1]), (tx - bx)
+        nl = math.hypot(nx_, ny_)
+        off = 3.2 * (1 if k % 2 else -1)
+        ctrl = (mid[0] + nx_ / nl * off, mid[1] + ny_ / nl * off)
+        pts = bez(p0, ctrl, (tx, ty), 14)
+        m = LN(pts, 4.2, 0.6)
+        F = FUR[ci]
+        sep(c, m, F[3])
+        c.fill(m, F[1])
+        lit = LN([(x - .8, y - .5) for x, y in pts], 1.4, 0.4) & m
+        c.fill(lit, F[0])
+        dk = LN([(x + 1.0, y + .7) for x, y in pts], 1.2, 0.3) & m
+        c.fill(dk - lit, F[2])
+    mass = E(16, 27.5, 5.6, 2.8)
+    c.shade(mass, FUR[2], 'sphere')
+    for x in range(12, 21):
+        c.pts([(x, 29)], FUR[3]) if False else None
+    c.pts([(12, 26), (13, 25), (14, 25)], FUR[0][0])
+
+
+# ---------------------------------------------------------------- 46 별똥별 조각
+@icon(46)
+def _(c):
+    RK = R4('#a498c8', '#6a5e94', '#443c6c', '#2a2448')
+    outline = [(13, 15.5), (18, 12), (24, 12.5), (28.5, 17), (28, 24), (22.5, 29), (15, 27.8), (11.5, 22)]
+    rock = smooth(PG(outline), 1) & PG(outline) if False else PG(outline)
+    c.shade(rock, RK, 'sphere', box=(20, 20, 9.5, 9.5), th=(.84, .46, .08))
+    # 구덩이
+    for (x, y, r) in [(20, 17, 2.2), (25, 21, 1.8), (18, 24, 2.0), (23, 26, 1.2)]:
+        cr = E(x, y, r, r) & rock
+        c.fill(cr, RK[3])
+        for q in cr:
+            if (q[0] - 1, q[1] - 1) not in cr:
+                pass
+        c.fill(shift(cr, 0, 1) - cr & rock, RK[0]) if False else None
+        for q in (shift(cr, 1, 1) - cr) & rock:
+            c.put(q[0], q[1], RK[0])
+    # 달궈진 가장자리 / 균열
+    for q in rock:
+        if (q[0] - 1, q[1] - 1) not in rock or (q[0] - 1, q[1]) not in rock and (q[0], q[1] - 1) not in rock:
+            c.put(q[0], q[1], H('#ff9a3a'))
+    for pl in [[(21, 13), (22, 17), (20, 20)], [(26, 15), (25, 19), (27, 22)], [(15, 20), (18, 21), (19, 25)]]:
+        m = LN(pl, 0.9) & rock
+        c.fill(m, H('#ff7a2a'))
+        c.fill(shift(m, -1, -1) & rock, H('#ffd060')) if False else None
+    c.pts([(22, 14), (22, 15), (21, 19)], H('#ffd060'))
+    c.pts([(25, 18), (26, 21)], H('#ffd060'))
+    c.pts([(16, 20), (18, 21)], H('#ffd060'))
+    # 꼬리 (윤곽선 없이 위에 얹음)
+    keep = rock | ring(rock)
+    tail_o = LN([(14, 17), (2.5, 2.5)], 9.0, 0.6)
+    tail_m = LN([(14, 17), (3.5, 3.5)], 5.8, 0.4)
+    tail_c = LN([(14, 17), (4.5, 4.5)], 3.0, 0.3)
+    for q in tail_o - keep:
+        c.top[q] = H('#ff8a2a')
+    for q in tail_m - keep:
+        c.top[q] = H('#ffc84a')
+    for q in tail_c - keep:
+        c.top[q] = H('#fff6c8')
+    rr = c.rng
+    for _ in range(14):
+        t = rr.random()
+        x = 12 - t * 9 + rr.uniform(-3, 3)
+        y = 15 - t * 12 + rr.uniform(-3, 3)
+        q = (int(x), int(y))
+        if q not in keep and q not in c.top and 0 <= q[0] < 32 and 0 <= q[1] < 32:
+            c.top[q] = H('#ffb040') if rr.random() < .6 else H('#fff0a0')
+    c.spark(6, 22, H('#fff0a0'), 1, WHITE)
+    c.spark(24, 5, H('#ffd8a0'), 1, WHITE)
+    c.dot(2, 12, H('#ffe080'))
+
+
+# ---------------------------------------------------------------- 47 황금 도토리
+@icon(47)
+def _(c):
+    acorn(c, GOLD, GOLDCAP, R4('#f6d070', '#c8962c', '#8e5e1c', '#5a3a14'), H('#fffbe0'), gold=True)
+    c.halo = (H('#ffe070'), 2.6, 52)
+    c.spark(6, 9, H('#fff4a0'), 2, WHITE)
+    c.spark(26, 14, H('#fff4a0'), 1, WHITE)
+    c.spark(25, 27, H('#ffe890'), 1, WHITE)
+    c.dot(5, 24, H('#fff4a0'))
+
+
+# ---------------------------------------------------------------- 48 유니콘 털
+@icon(48)
+def _(c):
+    grad = [H('#ffa8d4'), H('#e8a8ff'), H('#a8b8ff'), H('#90e4ff'), H('#a8ffd8')]
+
+    def gcol(t):
+        f = max(0.0, min(1.0, t)) * (len(grad) - 1)
+        i = min(len(grad) - 2, int(f))
+        return lerpc(grad[i], grad[i + 1], f - i)
+
+    def lock(path, w0, w1, tshift):
+        m = LN(path, w0, w1)
+        n = len(path)
+        for q in m:
+            px, py = q[0] + .5, q[1] + .5
+            best = (99, 0)
+            for i, (x, y) in enumerate(path):
+                d = math.hypot(px - x, py - y)
+                if d < best[0]:
+                    best = (d, i)
+            d, i = best
+            j = min(n - 1, i + 1)
+            j0 = max(0, i - 1)
+            tx, ty = path[j][0] - path[j0][0], path[j][1] - path[j0][1]
+            tl = math.hypot(tx, ty) or 1
+            nx_, ny_ = -ty / tl, tx / tl
+            s = (px - path[i][0]) * nx_ + (py - path[i][1]) * ny_
+            if nx_ + ny_ > 0:
+                s = -s
+            col = gcol(i / (n - 1) + tshift)
+            hw = (w0 * (1 - i / (n - 1)) + w1 * (i / (n - 1))) / 2
+            f = s / max(hw, .8)
+            if f > 0.3:
+                col = lerpc(col, (255, 255, 255), .5)
+            elif f < -0.4:
+                col = lerpc(col, (80, 40, 140), .38)
+            if abs(abs(s) - hw * .42) < .5 and hw > 1.7:
+                col = lerpc(col, (255, 255, 255), .32) if s > 0 else lerpc(col, (80, 40, 140), .24)
+            c.put(q[0], q[1], col)
+        return m
+    back = bez3((17, 6), (3, 12), (20, 21), (5, 29), 40)
+    m2 = lock(back, 6.0, 1.2, 0.25)
+    front = bez3((22, 3), (7, 9), (28, 19), (14, 30), 40)
+    sep(c, LN(front, 9.2, 1.8), H('#5a2c88'))
+    m1 = lock(front, 9.2, 1.8, 0.0)
+    band = LN([(19.4, 1.8), (24.8, 6.6)], 3.4) & m1
+    c.fill(band, H('#ffd23a'))
+    c.pts([(20, 2), (21, 3), (20, 3)], H('#fff4a0'))
+    c.fill(shift(band, 1, 1) - band & m1, H('#c88a1c'))
+    c.spark(5, 6, H('#ffd8f4'), 2, WHITE)
+    c.spark(27, 15, H('#c8f0ff'), 1, WHITE)
+    c.spark(5, 20, H('#d8ffe8'), 1, WHITE)
+    c.spark(24, 27, H('#fff0a0'), 1, WHITE)
+    c.dot(29, 25, H('#ffd8f4'))
+    c.dot(11, 3, H('#ffd8f4'))
+
+
+# ---------------------------------------------------------------- 49 호박달 씨앗
+@icon(49)
+def _(c):
+    cres = E(15.5, 16.5, 13.8, 13.8) - E(20.5, 12, 12.6, 12.6)
+    cres &= RC(0, 0, 32, 31)
+    CM = R4('#fffbd0', '#ffe98a', '#f0b83c', '#b87a20')
+    c.shade(cres, CM, 'diag', th=(.55, 0.0, -.5), box=(8, 22, 10, 10))
+    seed = LEAF((8.5, 25.5), (24.5, 6.5), 6.3, a=2.0, b=.58, skew=-0.28)
+    sep(c, seed, H('#7a3a14'))
+    inner = erode(seed, 1)
+    OR = R4('#ffe49a', '#ffa032', '#d86a18', '#8e3a14')
+    for q in seed:
+        c.put(q[0], q[1], H('#c8641c'))
+    c.shade(inner, OR, 'diag', th=(.4, -.2, -.65))
+    for q in LN([lerp((8.5, 25.5), (24.5, 6.5), .25), lerp((8.5, 25.5), (24.5, 6.5), .75)], 0.8) & inner:
+        c.put(q[0], q[1], OR[2])
+    c.pts([(12, 18), (13, 17), (14, 15), (13, 16)], H('#fff2c0'))
+    c.halo = (H('#ffc060'), 2.4, 52)
+    c.spark(27, 24, H('#fff0a0'), 1, WHITE)
+    c.spark(4, 6, H('#ffe890'), 1, WHITE)
+    c.dot(28, 8, H('#fff0a0'))
+    c.dot(3, 28, H('#ffe890'))
 # ==== ICONS-END (아래는 미리보기/메인)
 
 
