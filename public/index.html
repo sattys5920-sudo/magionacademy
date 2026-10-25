@@ -6318,7 +6318,7 @@ function showLogin(mode = 'login'){
 // 기숙사 고르기 카드 (입학 원서와, 기숙사가 없는 예전 학생 둘 다 써요)
 const houseCards = (pick, counts) => `<div style="display:flex;flex-direction:column;gap:6px">${HOUSE_KEYS.map(k => {
   const H = HOUSES[k], n = counts[k] || 0, full = n >= HOUSE_CAP;
-  return `<button data-house="${k}" ${full ? 'disabled' : ''} style="text-align:left;padding:6px 8px;display:flex;gap:8px;align-items:center;background:${pick === k ? H.bg : '#fff'};border:3px solid ${pick === k ? H.col : 'var(--line)'}">${ic(H.icon)}
+  return `<button data-house="${k}" ${full ? 'disabled' : ''} style="text-align:left;padding:6px 8px;display:flex;gap:8px;align-items:center;background:${pick === k ? H.col + '33' : 'var(--panel2)'};color:var(--text);border:2px solid ${pick === k ? H.col : 'var(--line2)'};border-radius:12px">${ic(H.icon)}
     <span style="flex:1;display:flex;flex-direction:column;gap:1px"><span class="b" style="font-size:12px;color:${H.col}">${H.name} <span class="s sub">${H.who} · ${hoursText(H)}</span></span>
     <span class="s">${H.perk}</span><span class="s sub">${H.timePerk}</span></span>
     <span class="s b" style="color:${full ? '#C2385E' : 'var(--sub)'}">${full ? '마감' : n + '/' + HOUSE_CAP}</span></button>`;
@@ -6512,7 +6512,7 @@ function showCreate(done, counts = {}){
       <label class="field"><span class="s">이름 (1~8 자)</span><input id="nick" maxlength="8" placeholder="예: 별이" value="${esc(nick)}"></label>
       <span class="s">내 캐릭터 만들기</span>
       ${World.Avatar.loaded ? avatarUI(av) : '<div class="hint">그림을 불러오는 중...</div>'}
-      <span class="s">기숙사 고르기 · 언제 깨어 있는 사람인가요? (기숙사마다 ${HOUSE_CAP}명)</span>
+      <span class="s">기숙사 고르기 (기숙사마다 ${HOUSE_CAP}명)</span>
       ${houseCards(house, counts)}
       <span class="s">직업 고르기 · 한 번 고르면 바뀌지 않아요</span>
       ${xJobGrid(job)}
