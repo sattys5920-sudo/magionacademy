@@ -651,7 +651,7 @@ function step(p, dt){
   if (p.pet && d > 0) p.flip = dx - dy > 0;   // 생물은 화면에서 오른쪽으로 가면 뒤집어요
   const mv = (p.run ? RUN : (p.me || p.peer) && p.path.length > 10 ? RUN : (p.me || p.peer) ? SPEED : SPEED * (p.npc && !p.npc.cut ? .35 : .6)) * dt * (p.me ? speedK : 1); if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
 }
-// 할로윈 효과: 박쥐 떼, 보라 안개, 도깨비불
+// 핼러윈 효과: 박쥐 떼, 보라 안개, 도깨비불
 const bats = Array.from({ length: 7 }, (_, i) => ({ x: 0, y: 0, vx: 0, vy: 0, ph: i, init: false }));
 const fogs = Array.from({ length: 6 }, (_, i) => ({ x: Math.random(), y: Math.random(), s: 60 + Math.random() * 50, v: 4 + Math.random() * 6 }));
 const wisps = Array.from({ length: 10 }, () => ({ x: Math.random(), y: Math.random(), ph: Math.random() * 6 }));
@@ -684,7 +684,7 @@ function spooky(now, dt, view){
 }
 const glowCache = {};
 function glow(r, c){ const k = r + c.join(); if (glowCache[k]) return glowCache[k]; const g = document.createElement('canvas'); g.width = g.height = r * 2; const x = g.getContext('2d'); const gr = x.createRadialGradient(r, r, 0, r, r, r); gr.addColorStop(0, `rgba(${c},1)`); gr.addColorStop(.35, `rgba(${c},.45)`); gr.addColorStop(1, `rgba(${c},0)`); x.fillStyle = gr; x.fillRect(0, 0, r * 2, r * 2); return glowCache[k] = g; }
-// 할로윈 마을은 늘 밤이에요. 버튼으로 밝기만 바꿔요
+// 핼러윈 마을은 늘 밤이에요. 버튼으로 밝기만 바꿔요
 let bright = 0; const BRIGHT = [[160, 140, 200], [205, 190, 230], [120, 100, 165]], BRIGHT_NEXT = ['밝게', '어둡게', '보통'];
 // 하늘: 현실 시간을 따라가요 (World.hourNow 로 시각을 바꿀 수 있어요: 관리자가 시간대를 정할 때). rgb = 곱하기 색, n = 밤 정도 0~1 (null = 밤색)
 World.hourNow = () => { const d = new Date(); return d.getHours() + d.getMinutes() / 60; };

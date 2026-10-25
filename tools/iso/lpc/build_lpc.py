@@ -253,7 +253,7 @@ SHOP = {
          ('마녀 모자', [('raw_witch', None, None)], 'cas', 150), ('마법사 모자', [('raw_wizard', 'hat', None)], 'cas', 150),
          ('별빛 모자', [('raw_celestial', 'hat', None)], 'cas', 170), ('산타 모자', [('raw_santa', None, None)], 'cas', 100)]}
 COMBO['hat'] = []
-# ---------- 옷 가게 3차: 테마 룩(거지·천사·악마·뱀파이어·유령·할로윈) + 귀여운 옷 + 액세서리 ----------
+# ---------- 옷 가게 3차: 테마 룩(거지·천사·악마·뱀파이어·유령·핼러윈) + 귀여운 옷 + 액세서리 ----------
 ONE = lambda col, extra: [(L2, col, None), ('legs_pants2', col, 21), ('raw_hood', col, None)] + extra
 SHOP2 = {
  'top': [('호박 니트', [(L2, 'fix:orange', None), ('fx_cable', 'fix:orange', 36), ('fx_pumpkin', 'w', 37)], 'cas', 180),

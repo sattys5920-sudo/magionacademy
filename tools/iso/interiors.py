@@ -201,7 +201,7 @@ def candy_jars(R, u0, side='L'):
         if lv > 8: return hexc('#E8E0D8')
         return hexc(c) if (uu + lv) % 3 else hexc('#F8F4F0')
     R.wall_fill(side, f)
-def garland(R, side, u0, u1, v=60, cols=('#E07A1E', '#7A4AA8', '#2A2030')):   # 할로윈 깃발 줄
+def garland(R, side, u0, u1, v=60, cols=('#E07A1E', '#7A4AA8', '#2A2030')):   # 핼러윈 깃발 줄
     def f(u, vv):
         if not (u0 <= u < u1): return None
         sag = int(4 * math.sin((u - u0) / (u1 - u0) * math.pi))
@@ -508,7 +508,7 @@ def craft_room():
         return f
     ITEMS = ['pumpkin', 'wax', 'paint', 'cloth', 'mask']
     for i, (x, y) in enumerate([(x, y) for y in (6, 11) for x in (2, 6, 16, 20)]):
-        R.obj('bench', [(x, y), (x + 1, y)], bench(x, y, [ITEMS[i % 5], ITEMS[(i + 3) % 5]]), act=('공예 작업대', '할로윈 용품 만들기'))
+        R.obj('bench', [(x, y), (x + 1, y)], bench(x, y, [ITEMS[i % 5], ITEMS[(i + 3) % 5]]), act=('공예 작업대', '핼러윈 용품 만들기'))
     def mannequin(tx, ty, cape, hat):
         def f(img, d):
             cx, cy = R.P(tx + .5, ty + .5)

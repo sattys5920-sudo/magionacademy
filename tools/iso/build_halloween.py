@@ -59,7 +59,7 @@ for m in MAPS.values():   # 침대: 하루 넘기기 대신 30분 쉬기 (index.
         if o.get('act') and o['act'][1] == '잠자고 내일로': o['act'] = [o['act'][0], '쉬기']
         if o.get('act') and o['act'][1] == '카라멜 젓기': o['act'] = ['요리 솥', '요리하기']   # 과자 교실 = 요리 (index.html renderCook)
         if o.get('act') and o['act'][1] == '과자 만들기': o['act'] = ['요리 조리대', '요리책 보기']
-        if o.get('act') and o['act'][1] in ('솜사탕 만들기', '할로윈 용품 만들기'): o['act'] = None   # 아직 없는 기능은 눌러도 반응이 없는 장식으로 둬요
+        if o.get('act') and o['act'][1] in ('솜사탕 만들기', '핼러윈 용품 만들기'): o['act'] = None   # 아직 없는 기능은 눌러도 반응이 없는 장식으로 둬요
 for m in MAPS.values(): m['meta']['bgSrc'] = ver(m['meta']['bgSrc']); m['meta']['objSrc'] = ver(m['meta']['objSrc'])
 _PUBD = os.path.join(I, '..', '..', 'public')
 for ps in AV['parts'].values():                 # LPC 부품 그림 (public/art/lpc)
