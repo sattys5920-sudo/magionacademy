@@ -6520,10 +6520,10 @@ function dfHostResume(){   // 관리자 화면이 새로 고쳐져도 하던 진
 }
 function dfHostStart(rs){
   if (dfHost || !F || !db) return; const S = rs ? rs.S : TD.newState([], { auto: 0 }); if (!rs) S.phase = 'ready';
-  dfHost = { S, id: rs ? rs.id : Date.now(), sv: 0, intro: rs ? rs.intro || 0 : 0, startAt: 0, last: performance.now(), pub: 9, hb: 9, ph: '', w: -1, paused: false, timer: setInterval(dfHostTick, 100) };
+  dfHost = { S, id: rs ? rs.id : Date.now(), sv: 0, intro: rs ? rs.intro || 0 : 0, startAt: 0, last: performance.now(), pub: 9, hb: 9, ph: '', w: -1, paused: false, timer: dfTimer(dfHostTick, 100) };
   dfHost.last = performance.now(); dfHost.seen = {}; dfHost.cmdOff = F.onValue(F.ref(db, 'defense/cmd'), sn => { const v = sn.val() || {}, H = dfHost; if (!H) return; Object.entries(v).forEach(([u, c]) => { if (!c || H.seen[u] === c.n) return; const first = !(u in H.seen); H.seen[u] = c.n; if (first && H.warm !== false && Date.now() - c.n > 5000) return; const p = H.S.players[u]; if (!p) return; if (c.a !== undefined) p.auto = c.a ? 1 : 0; if (c.r !== undefined) TD.setReady(H.S, u, c.r); if (c.i !== undefined && !H.paused) TD.cast(H.S, u, c.i); if (c.u && (c.u[0] === 0 || c.u[0] === 1) && ['pow', 'rng', 'cd'].includes(c.u[1])) TD.upgrade(H.S, u, c.u[0], c.u[1]); }); });
   if (!rs){ F.set(F.ref(db, 'defense/ctl'), { open: true, id: dfHost.id, ph: 'ready', w: 0, win: 0, hb: Date.now() }); F.set(F.ref(db, 'defense/st'), TD.snap(S)); }
-  adminRender();
+  dfWakeOn(); adminRender();
 }
 function dfHostSeats(S){
   const P = AD.dfpick || {}; Object.entries(P).forEach(([u, p]) => { const q = S.players[u]; if (!q || q.zone !== p.z || q.slot !== p.s || q.job !== p.job) TD.seat(S, u, p.z, p.s, p.job); });
@@ -6538,9 +6538,16 @@ function dfHostTick(){
   H.pub += dt; if (H.pub >= .25){ H.pub = 0; F.set(F.ref(db, 'defense/st'), TD.snap(S)); }
   H.hb += dt; if (H.hb >= 2 || S.phase !== H.ph || S.wave !== H.w){ const ch = S.phase !== H.ph || S.wave !== H.w; H.hb = 0; H.ph = S.phase; H.w = S.wave; F.set(F.ref(db, 'defense/ctl'), { open: true, id: H.id, intro: H.intro || 0, ph: S.phase, w: S.wave, win: S.win ? 1 : 0, hb: Date.now(), pause: H.paused ? 1 : 0 }); if (ch && S.phase === 'over') F.set(F.ref(db, 'defense/res'), { id: H.id, eggs: S.eggs.map(Math.round), win: S.win ? 1 : 0, at: Date.now() }); if (ch && AD.tab === 'event') adminRender(); }
 }
-function dfHostStop(){ if (!dfHost) return; try { localStorage.removeItem('dfhost'); } catch(e){} clearInterval(dfHost.timer); if (dfHost.cmdOff) dfHost.cmdOff(); dfHost = null; }
+function dfTimer(fn, ms){   // 화면이 가려져도 느려지지 않게 워커 시계를 써요 (안 되면 보통 시계)
+  let w = null; try { w = new Worker(URL.createObjectURL(new Blob([`setInterval(()=>postMessage(0),${ms})`], { type: 'text/javascript' }))); w.onmessage = fn; } catch(e){ w = null; }
+  const iv = w ? 0 : setInterval(fn, ms); return { stop(){ if (w) w.terminate(); else clearInterval(iv); } };
+}
+let dfWake = null;
+async function dfWakeOn(){ try { if (navigator.wakeLock && !dfWake){ dfWake = await navigator.wakeLock.request('screen'); dfWake.addEventListener('release', () => { dfWake = null; }); } } catch(e){} }
+document.addEventListener('visibilitychange', () => { if (!document.hidden && dfHost) dfWakeOn(); });
+function dfHostStop(){ if (!dfHost) return; try { if (dfWake) dfWake.release(); } catch(e){} dfWake = null; try { localStorage.removeItem('dfhost'); } catch(e){} dfHost.timer.stop(); if (dfHost.cmdOff) dfHost.cmdOff(); dfHost = null; }
 function dfHostClose(){ dfHostStop(); if (!F || !db) return; F.set(F.ref(db, 'defense/ctl'), { open: false }); F.set(F.ref(db, 'defense/st'), null); F.set(F.ref(db, 'defense/pick'), null); F.set(F.ref(db, 'defense/cmd'), null); adminRender(); }
-const DF_LOCAL = !!window.__seed;   // 시험용 화면에서는 서버 없이 이 화면에서 계산해요
+const DF_LOCAL = true;   // 지금은 관리자 화면이 계산해요. 서버 계산(Cloud Functions)이 배포되면 false 로 바꿔요
 function adminEventHTMLSrv(){
   const c = AD.dfctl || {}, open = !!c.open, st = AD.dfst || {}, picks = Object.entries(AD.dfpick || {}), nm = u => esc((AD.players[u] && AD.players[u].nick) || u.slice(0, 6));
   const dead = open && c.hb && Date.now() - c.hb > 15000, wait = AD.dfWait && Date.now() - AD.dfWait < 20000 && !open, ph = c.ph;
