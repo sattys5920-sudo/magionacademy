@@ -3125,7 +3125,7 @@ const adPlace = m => { if (!m) return '?'; const [id, owner] = m.split(':'), met
 function adminRender(){
   if (!document.body.classList.contains('admin')) return;
   const P = AD.players, O = AD.online, ids = Object.keys(P).filter(id => P[id]?.nick);
-  const tabs = [['map', `지도 ${Object.keys(O).length}명 접속`], ['students', `학생 ${ids.length}`], ['join', `가입 신청${Object.keys(AD.pending || {}).length ? ' ' + Object.keys(AD.pending).length : ''}`], ['chat', '대화'], ['dorm', '기숙사'], ['story', '이야기·미션'], ['npc', 'NPC 호감도'], ['event', '이벤트']];
+  const tabs = [['map', `지도 ${Object.keys(O).length}명 접속`], ['students', `학생 ${ids.length}`], ['join', `가입 신청${Object.keys(AD.pending || {}).length ? ' ' + Object.keys(AD.pending).length : ''}`], ['chat', '대화'], ['dorm', '기숙사'], ['story', '이야기·미션'], ['npc', 'NPC 호감도'], ['event', '이벤트'], ['reset', '초기화']];
   let body = '';
   if (AD.tab === 'map'){
     if (AD.follow && !O[AD.follow]) AD.follow = null;
@@ -3171,6 +3171,7 @@ function adminRender(){
   }
   if (AD.tab === 'story') body = typeof adminStoryHTML === 'function' ? adminStoryHTML() : '<div class="adcard">이야기 미션은 다음 업데이트에서 열려요.</div>';
   if (AD.tab === 'event') body = adminEventHTML();
+  if (AD.tab === 'reset') body = `<div class="adcard" style="border-color:#c0392b"><b>모든 진행 상황 초기화</b><div class="s">학생 ${ids.length}명 전원이 처음부터 다시 시작해요. 이름·모습·기숙사·직업은 그대로예요.</div><div class="s">지워지는 것: 레벨·골드·가방·요리·낚시·사육장·방·친구·호감도·이야기와 메인 의뢰 진행·기숙사 단계·놀이 기록·시장·방명록·<b>채팅 내역 전체</b>·이벤트 진행</div><div class="s">남는 것: 가입(승인)·캐릭터·NPC 편집 내용</div><div class="frow"><button class="btn sm" id="adresetall" style="background:#c0392b;color:#fff">모두 초기화하기</button></div></div>`;
   if (AD.tab === 'npc') body = typeof adminNpcHTML === 'function' ? adminNpcHTML() : '<div class="adcard">NPC 호감도는 다음 업데이트에서 열려요.</div>';
   app.innerHTML = '';
   let root = $('#adminv'); if (!root){ root = document.createElement('div'); root.id = 'adminv'; $('#shell').appendChild(root); }
@@ -3192,6 +3193,16 @@ function adminRender(){
       await F.update(F.ref(db, '/'), ups); alert(del ? `${who}의 가입 데이터를 지웠어요.` : `${who}의 진행을 리셋했어요.`);
     } catch(e){ alert('실패했어요: ' + (e.code || e.message)); }
   };
+  const adResetAll = async () => {
+    const ids = Object.keys(AD.players).filter(id => AD.players[id] && AD.players[id].nick);
+    if (!confirm(`학생 ${ids.length}명의 모든 진행 상황과 채팅 내역을 지울까요? 되돌릴 수 없어요.`)) return;
+    if (prompt("정말 모두 초기화할까요? 아래에 '초기화' 라고 입력해요.") !== '초기화') return alert('취소했어요.');
+    const ups = {}, now = Date.now(); dfHostStop();
+    ids.forEach(id => { const p = AD.players[id], np = freshPlayer(p.nick, p.look, p.house, p.av); if (p.ex && p.ex.job) np.ex = { exp: 0, d: '', n: 0, job: p.ex.job }; ups['players/' + id] = np; ups['adm/reset/' + id] = now; });
+    ['chat', 'story', 'houses', 'games', 'xparty', 'xrun', 'events', 'coop', 'exam', 'market', 'guest', 'records', 'pens', 'defense'].forEach(k => { ups[k] = null; });
+    try { await F.update(F.ref(db, '/'), ups); alert('모든 진행 상황과 채팅 내역을 초기화했어요.'); } catch(e){ alert('실패했어요: ' + (e.code || e.message)); }
+  };
+  const ar = $('#adresetall'); if (ar) ar.onclick = adResetAll;
   root.querySelectorAll('[data-adreset]').forEach(b => b.onclick = () => adWipe(b.dataset.adreset, false));
   root.querySelectorAll('[data-addel]').forEach(b => b.onclick = () => adWipe(b.dataset.addel, true));
   root.querySelectorAll('[data-adok]').forEach(b => b.onclick = () => { F.set(F.ref(db, 'approved/' + b.dataset.adok), true).then(() => F.remove(F.ref(db, 'pending/' + b.dataset.adok))); });
@@ -4353,7 +4364,7 @@ function storyReward(c){
 // 메인 주인공 초상화 (public/art/portraits/<id>.png, 5칸: 기본·웃음·화남·놀람·부끄러움 — tools/portraits.py)
 // 서브 NPC 대사창 초상 (art/portraits/<이름>.png, 5표정 한 줄: 기본·웃음·화남·놀람·부끄러움). 아직 그린 애들만 있어요
 const SUB_PORT = { nabi: { portrait: 'nabi', pasp: '266/266' }, batri: { portrait: 'batri', pasp: '280/300' }, kappa: { portrait: 'kappa', pasp: '273/266' }, aula: { portrait: 'aula', pasp: '260/266' }, mandi: { portrait: 'mandi', pasp: '253/270' }, jipsin: { portrait: 'jipsin', pasp: '223/253' }, sera: { portrait: 'sera', pasp: '298/400' }, madeleine: { portrait: 'madeleine', pasp: '298/400' }, stella: { portrait: 'stella', pasp: '298/400' }, leo: { portrait: 'leo', pasp: '298/400' } };
-const PORTRAITS = { m_jack: ['jack', '128/171'], m_lucian: ['lucian', '224/300'], m_mirabel: ['mirabel', '265/363'], m_frankie: ['frankie', '99/133'], m_wolfgang: ['wolfgang', '99/133'], m_boo: ['boo', '122/177'], m_hazel: ['hazel', '128/171'] }, PORTRAIT_V = 13, PFACE = ['neutral', 'happy', 'angry', 'surprised', 'shy'];
+const PORTRAITS = { m_jack: ['jack', '128/171'], m_lucian: ['lucian', '224/300'], m_mirabel: ['mirabel', '265/363'], m_frankie: ['frankie', '99/133'], m_wolfgang: ['wolfgang', '99/133'], m_boo: ['boo', '122/177'], m_hazel: ['hazel', '128/171'] }, PORTRAIT_V = 14, PFACE = ['neutral', 'happy', 'angry', 'surprised', 'shy'];
 // 대사 내용으로 표정 고르기 (따로 표시가 없을 때)
 function faceOf(t){
   if (/\[(기본|웃음|화남|놀람|부끄러움)\]/.test(t)) return ['기본', '웃음', '화남', '놀람', '부끄러움'].indexOf(/\[(기본|웃음|화남|놀람|부끄러움)\]/.exec(t)[1]);
