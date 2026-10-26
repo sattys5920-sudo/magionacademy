@@ -1736,7 +1736,7 @@ const xAll = job => Array.from({ length: 15 }, (_, i) => xDef(job, Math.floor(i 
 const xMpK = lv => 1 + .15 * (Math.max(1, lv) - 1);   // 스킬을 올릴수록 위력이 커지는 만큼 MP도 더 들어요 (Lv4는 1.45배)
 const xPw = (o, lv) => 1 + .18 * (lv - 1), xEfv = (o, lv) => o.v * (1 + .15 * (lv - 1));
 function xDesc(o, lv){
-  if (o.pas) return o.pas === 'surv' ? '패시브 · 전투마다 한 번, 쓰러질 공격을 체력 1로 버텨요' : `패시브 · ${XPASN[o.pas]} +${Math.round(XPAS[o.pas] * 100 * lv)}%`;
+  if (o.pas) return o.pas === 'surv' ? '패시브 · 전투마다 한 번, 쓰러질 공격을 체력 1로 버텨요' : `패시브 · ${XPASN[o.pas]} ${o.pas === 'def' ? '-' : '+'}${Math.round(XPAS[o.pas] * 100 * lv)}%`;
   const L = Math.max(1, lv), mp = o.mp ? ` · MP ${xSkMp(o, L)}` : '';
   if (o.ds){ if (o.t === 'dmg' && o.p) return `${o.tg === 'all' ? '적 전체' : '적 하나'} ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)}${o.hits > 1 ? ` ×${o.hits}회` : ''} · ${o.ds}${mp}`; return o.ds + mp; }
   const who = { one: '적 하나', all: o.t === 'heal' || o.t === 'buff' || o.t === 'mp' ? '아군 전체' : '적 전체', self: '나' }[o.tg];
