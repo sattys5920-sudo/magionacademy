@@ -725,25 +725,26 @@ function drawSkyBack(c, VW, VH, now){
 
 const fx = [];
 let last = performance.now(), camIX = 0, camIY = 0;
+const cheerHop = (p, cp) => p.cheer && p.cheer > performance.now() ? Math.round(Math.abs(Math.sin(performance.now() / 120 + p.x * 1.7 + p.y)) * 3) * cp : 0;
 function drawPerson(p){ const cx = out;
   if (p.pet) return drawPet(p);
   if (p.npc && p.npc.pix !== undefined){   // 조연 동물: 32칸 그림, 걸을 때 콩콩 뛰어요
     const [sx, sy] = P(p.x + .5, p.y + .5); cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 5, 2, 0, 0, Math.PI * 2); cx.fill();
     if (!PIX_IMG || !PIX_IMG.complete) return; const cp = KPX * ASC, w = 32 * cp, hop = p.path.length ? Math.abs(Math.sin(p.t * 9)) * 2 * cp : 0;
-    const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - 31 * cp - hop), left = p.view === World.Avatar.meta.dirs.left;
+    const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - 31 * cp - hop - cheerHop(p, cp)), left = p.view === World.Avatar.meta.dirs.left;
     cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); if (left){ cx.translate(dx, 0); cx.scale(-1, 1); cx.drawImage(PIX_IMG, p.npc.pix * 32, 0, 32, 32, -w / 2, dy, w, w); } else cx.drawImage(PIX_IMG, p.npc.pix * 32, 0, 32, 32, Math.round(dx - w / 2), dy, w, w); cx.restore(); return;
   }
   if (p.npc && p.npc.spr !== undefined){   // 이야기 NPC: LPC로 조립한 그림 (tools/iso/lpc/npc_lpc.py), 한 줄 = 한 명, 칸 배치는 캐릭터와 같아요
     const [sx, sy] = P(p.x + .5, p.y + .5); cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 6, 2.5, 0, 0, Math.PI * 2); cx.fill();
     if (!NPC_IMG || !NPC_IMG.complete) return; const A = World.Avatar, cp = KPX * ASC, w = A.FW * cp, h = A.FH * cp, WK = A.meta.walk, col = (p.view || 0) + (p.path.length ? WK[Math.floor(p.t * 7) % WK.length] : p.npc.flap ? WK[Math.floor(performance.now() / 140) % WK.length] : 0);
-    const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - (A.FH - 1.5) * cp) + (p.npc.float ? Math.round(Math.sin(performance.now() / 600 + p.npc.spr) * 2) * cp : 0);
+    const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - (A.FH - 1.5) * cp) + (p.npc.float ? Math.round(Math.sin(performance.now() / 600 + p.npc.spr) * 2) * cp : 0) - cheerHop(p, cp);
     cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); if (p.npc.alpha) cx.globalAlpha = p.npc.alpha; cx.drawImage(NPC_IMG, col * A.FW, p.npc.spr * A.FH, A.FW, A.FH, Math.round(dx - w / 2), dy, w, h); cx.restore(); return;
   }
   const [sx, sy] = P(p.x + .5, p.y + .5);
   cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 6, 2.5, 0, 0, Math.PI * 2); cx.fill();
   const WK = World.Avatar.meta.walk, f = p.path.length ? WK[Math.floor(p.t * (p.me || p.peer ? 10 : 7)) % WK.length] : 0, col = (p.view || 0) + f;
   const A = World.Avatar, S = A.compose(p.av), cp = KPX * ASC, w = A.FW * cp, h = A.FH * cp;
-  const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - (A.FH - 1.5) * cp);
+  const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - (A.FH - 1.5) * cp) - cheerHop(p, cp);
   cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0);
   if (p.flip){ cx.translate(dx, dy); cx.scale(-1, 1); cx.drawImage(S, col * A.FW, 0, A.FW, A.FH, -w / 2, 0, w, h); } else cx.drawImage(S, col * A.FW, 0, A.FW, A.FH, Math.round(dx - w / 2), dy, w, h);
   cx.restore();
@@ -828,7 +829,7 @@ function frame(now){
       // 젓는 방향 안내 점선
       if (cook.guide){ cx.fillStyle = '#FFE070'; for (let i = 0; i < 12; i++){ if ((i + Math.floor(t * 8)) % 3) continue; const a = i / 12 * Math.PI * 2; cx.fillRect(Math.round(cxp + Math.cos(a) * 12), Math.round(top + 2 + Math.sin(a) * 5), 1, 1); } }
     } }
-  drawMarks(now, view); drawBats(now); drawPartyAir(now); if (fxDark){ cx.globalAlpha = fxDark; cx.fillStyle = '#05030A'; cx.fillRect(ix, iy, VW, VH); cx.globalAlpha = 1; }
+  drawMarks(now, view); drawBats(now); drawPartyAir(now); drawGlyphs(now); if (fxDark){ cx.globalAlpha = fxDark; cx.fillStyle = '#05030A'; cx.fillRect(ix, iy, VW, VH); cx.globalAlpha = 1; }
   // 채집 지점: 밤에도 잘 보이게 빛 다음에 그려요
   spots.forEach((sp, i) => { if ((sp.m || spotMap) !== map) return; const [x, y] = P(sp.x + .5, sp.y + .5), t = now / 260 + i * 1.3, a = .6 + .4 * Math.sin(t), sy = y - 7 - Math.round(Math.sin(t * .7) * 2);
     if (x < view.x || x > view.x + view.w || y < view.y || y > view.y + view.h) return;
@@ -980,6 +981,7 @@ World.cut = async (cmds, hooks = {}) => {   // hooks: { sfx(id), skip() → true
       else if (k === 'crowd'){ await crowdDo(c); }
       else if (k === 'wait'){ await new Promise(r => setTimeout(r, Math.min(6, c.sec || 1) * 1000)); }
       else if (k === 'sfx'){ hooks.sfx && hooks.sfx(c.id); }
+      else if (k === 'cheer'){ World.cheer(c.list || [], c.sec || 4); }
       else if (k === 'fx'){ fxDo(c); if (c.wait) await new Promise(r => setTimeout(r, c.wait * 1000)); }
       else if (k === 'player'){ const t = spawnAt(c.x, c.y); me.x = t[0]; me.y = t[1]; me.path = []; if (c.dir) me.view = World.Avatar.meta.dirs[c.dir] || 0; camX = null; }
       else if (k === 'fade'){ fadeEl.textContent = c.text || ''; fadeEl.style.opacity = c.v ? 1 : 0; await new Promise(r => setTimeout(r, c.v ? 400 : 420)); }
@@ -1014,6 +1016,27 @@ async function crowdDo(c){
 }
 // 효과: bats 박쥐 떼 · bell 종소리 번쩍 · lightning 번개 · wind 바람(안개 빠르게) · dark 어둡게 / light 원래대로
 let fxBats = 0, fxDark = 0, skyN = 1, partyCfg = null, confettiUntil = 0;
+// 응원: 둘러선 사람들이 폴짝폴짝 뛰며 하트·박쥐·별 같은 그림이 머리 위로 올라가요
+let cheers = [], glyphs = [];
+const GLYPH = {   // 작은 도트 그림 (한 글자 = 한 칸)
+  heart: ['.XX.XX.', 'XRRXRRX', 'XRRRRRX', '.XRRRX.', '..XRX..', '...X...'], bat: ['X...X...X'.slice(0, 9), 'XX.XXX.XX', 'XXXXXXXXX', '.X.XXX.X.', '...X.X...'],
+  star: ['...Y...', '...Y...', 'YYYWYYY', '...Y...', '...Y...'], clap: ['Y..Y..Y', '.Y.Y.Y.', '..YYY..', '.Y.Y.Y.', 'Y..Y..Y'], note: ['..XXXX', '..X..X', '..X..X', 'XXX.XXX', 'XXX.XX.'],
+  pumpkin: ['..G..', '.OOOO', 'OOOOO', 'OKOKO', '.OOO.'], ghost: ['.WWW.', 'WWWWW', 'WKWKW', 'WWWWW', 'W.W.W']
+};
+const GLYPH_COL = { X: '#1A1024', R: '#FF5A7A', Y: '#FFE070', W: '#FFFFFF', O: '#FF9A3C', G: '#4FAF6F', K: '#2A1840' };
+const GLYPH_X = { bat: '#2A1840', note: '#C89AFF', heart: '#1A1024' };
+World.cheer = (list, sec) => { const now = performance.now(); list.forEach(([id, kinds]) => { const p = personOf(id); if (!p) return; p.cheer = now + sec * 1000; cheers.push({ p, kinds, until: now + sec * 1000, next: now + Math.random() * 500 }); }); };
+function drawGlyphs(now){
+  cheers = cheers.filter(c => c.until > now);
+  cheers.forEach(c => { if (now >= c.next){ c.next = now + 600 + Math.random() * 500; glyphs.push({ p: c.p, kind: c.kinds[Math.floor(Math.random() * c.kinds.length)], t0: now, dx: (Math.random() - .5) * 8 }); } });
+  glyphs = glyphs.filter(g => now - g.t0 < 1500);
+  glyphs.forEach(g => { const k = (now - g.t0) / 1500, [sx, sy] = P(g.p.x + .5, g.p.y + .5), rows = GLYPH[g.kind]; if (!rows) return;
+    const x0 = Math.round(sx + g.dx + Math.sin(k * 6 + g.dx) * 2 - rows[0].length / 2), y0 = Math.round(sy - 34 - k * 22 - rows.length);
+    out.globalAlpha = k > .7 ? 1 - (k - .7) / .3 : 1;
+    rows.forEach((row, j) => { for (let i = 0; i < row.length; i++){ const ch = row[i]; if (ch === '.') continue; out.fillStyle = ch === 'X' ? (GLYPH_X[g.kind] || GLYPH_COL.X) : GLYPH_COL[ch]; out.fillRect(x0 + i, y0 + j, 1, 1); } });
+    out.globalAlpha = 1; });
+}
+
 // 엔딩 핼러윈 파티 장식: 탁자와 음식(캐릭터 아래), 줄 전구·깃발·떠오르는 등불·색종이(캐릭터 위)
 const PARTY_FOOD = [['#E8832A', 2], ['#F6D7E4', 3], ['#7A4A2A', 2], ['#E8832A', 2], ['#B8E6A0', 2], ['#F6D7E4', 3]];
 function partyBox(a, b, c, d, h, top, side){   // 타일 (a,b)~(c,d) 위에 높이 h인 상자
@@ -1025,7 +1048,7 @@ function partyBox(a, b, c, d, h, top, side){   // 타일 (a,b)~(c,d) 위에 높�
 const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16); return `rgb(${Math.round((n >> 16) * k)},${Math.round(((n >> 8) & 255) * k)},${Math.round((n & 255) * k)})`; };
 let cx_ = null;
 function drawPartyGround(now){
-  if (!partyCfg || M.indoor) return; cx_ = out; const { x: X, y: Y } = partyCfg, k = Math.min(1, (now - partyCfg.t0) / 900); cx_.globalAlpha = k;
+  if (!partyCfg || M.indoor) return; cx_ = out; const { tx: X, ty: Y } = partyCfg, k = Math.min(1, (now - partyCfg.t0) / 900); cx_.globalAlpha = k;
   [[X - 5, Y + 2], [X + 1.5, Y + 2]].forEach(([tx, ty], ti) => {
     partyBox(tx, ty, tx + 3.5, ty + 1.1, 9, '#8A5A32', '#6A4224');
     cx_.fillStyle = '#F4ECFF'; const A = P(tx, ty), B = P(tx + 3.5, ty), C = P(tx + 3.5, ty + 1.1), D = P(tx, ty + 1.1);   // 식탁보 줄
@@ -1052,7 +1075,7 @@ function drawPartyAir(now){
   g.restore();
 }
 
-function fxDo(c){ const k = c.kind; if (k === 'bats') fxBats = performance.now() + (c.sec || 4) * 1000; else if (k === 'lightning' || k === 'bell') flashT = performance.now() + 260; else if (k === 'dark') fxDark = c.v ?? .45; else if (k === 'light') fxDark = 0; else if (k === 'party') partyCfg = c.off ? null : { t0: performance.now(), x: c.x, y: c.y }; else if (k === 'confetti') confettiUntil = performance.now() + (c.sec || 4) * 1000; else if (k === 'wind'){ fogs.forEach(f => f.v *= 4); setTimeout(() => fogs.forEach(f => f.v /= 4), (c.sec || 4) * 1000); } }
+function fxDo(c){ const k = c.kind; if (k === 'bats') fxBats = performance.now() + (c.sec || 4) * 1000; else if (k === 'lightning' || k === 'bell') flashT = performance.now() + 260; else if (k === 'dark') fxDark = c.v ?? .45; else if (k === 'light') fxDark = 0; else if (k === 'party') partyCfg = c.off ? null : { t0: performance.now(), x: c.x, y: c.y, tx: c.tx ?? c.x, ty: c.ty ?? c.y }; else if (k === 'confetti') confettiUntil = performance.now() + (c.sec || 4) * 1000; else if (k === 'wind'){ fogs.forEach(f => f.v *= 4); setTimeout(() => fogs.forEach(f => f.v /= 4), (c.sec || 4) * 1000); } }
 // 조사 지점: 물음표가 떠 있고, 옆에 가면 상황 버튼 「조사하기」
 World.setMarks = list => { marks = list || []; World.nearRefresh(); };
 World.onMark = null;
