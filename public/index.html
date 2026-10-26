@@ -75,7 +75,9 @@ body.inworld #app.open{opacity:1;pointer-events:auto}
 #hudClock b{font-family:var(--f-pxb);font-size:var(--fs-s);color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 #hudClock span{font-size:var(--fs-s);color:var(--text);white-space:nowrap;font-variant-numeric:tabular-nums}
 #wallet{display:flex;align-items:center;gap:3px;height:36px;padding:0 8px;border-radius:18px;background:var(--panel2);border:1px solid var(--line2);font-family:var(--f-pxb);font-size:var(--fs-s);color:var(--gold);white-space:nowrap;font-variant-numeric:tabular-nums}
-#wallet .ic{transform:scale(.6);margin:0 -8px 0 -10px}
+#wallet .ic{transform:scale(.6);margin:0 -6px 0 -11px}
+#wallet .ws{display:flex;align-items:center;gap:0}
+#wallet .num{letter-spacing:0;font-size:12px;line-height:1}
 #saveDot{width:8px;height:8px;border-radius:50%;background:var(--ok);margin-left:2px;transition:background .3s;flex-shrink:0}
 #saveDot.busy{background:var(--gold)}#saveDot.off{background:var(--warn)}
 .icbtn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line2);background:var(--panel2);color:var(--text);display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
@@ -668,7 +670,7 @@ button.cell:not(:disabled):active{background:var(--line)}
 .hudname b{max-width:64px}
 #hudClock{flex:1 1 0;min-width:0}
 #hudClock span{overflow:hidden;text-overflow:ellipsis;max-width:100%}
-#wallet{flex:none;padding:0 6px}
+#wallet{flex:none;padding:0 8px 0 6px;gap:7px;font-size:12px}
 .mtile .main .d{white-space:normal}
 @media (max-width:370px){.hudname{display:none}}
 </style>
@@ -1175,7 +1177,7 @@ let saveState = '';
 function hud(){
   if (!me || !document.body.classList.contains('inworld')) return;
   World.setPets(me.cr.map(c => ({ id: c.id, k: c.k, col: c.col, adult: crAdult(c), name: c.name })));
-  $('#wallet').innerHTML = `${ic('coin')}<span class="num">${me.coin.toLocaleString()}</span>${ic('mana')}<span class="num" title="마력">${me.mana}</span>${ic('book')}<span class="num" title="지력">${me.know || 0}</span><i id="saveDot" class="${saveState}" title="저장 상태"></i>`;
+  $('#wallet').innerHTML = `<span class="ws" title="골드">${ic('coin')}<span class="num">${me.coin.toLocaleString()}</span></span><span class="ws" title="마력">${ic('mana')}<span class="num">${me.mana}</span></span><span class="ws" title="지력">${ic('book')}<span class="num">${me.know || 0}</span></span><i id="saveDot" class="${saveState}" title="저장 상태"></i>`;
   $('#hudNick').textContent = me.nick; $('#hudLv').textContent = `Lv ${levelOf().lv}`;
   const hf = $('#hudFace'), hav = avOf(me), hk = JSON.stringify(hav); if (World.Avatar.loaded && hf.dataset.k !== hk){ hf.innerHTML = headImg(hav, 'width:100%;height:100%;image-rendering:pixelated'); hf.dataset.k = hk; }   // 아바타가 바뀌면 다시 그려요 (부품이 덜 왔으면 headFix가 채워요)
   const ev = eventAt(), live = ev && Date.now() < ev.end, c = $('#evChip');
