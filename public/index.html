@@ -96,6 +96,7 @@ body.inworld #app.open{opacity:1;pointer-events:auto}
 #dfv{position:absolute;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column}#dfv .dfh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;background:#1b1230;border-bottom:1px solid var(--line)}#dfv .dfh b{font-family:var(--f-pxb)}#dfv .dft{display:flex;gap:6px;padding:7px 12px;background:#1b1230}#dfv .dft button{flex:1;min-height:40px;border-radius:8px;border:0;background:#2d2147;color:var(--sub);font-family:var(--f-pxb);font-size:var(--fs)}#dfv .dft button.on{background:var(--accent);color:#2a1400}
 #dfv .dfs{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:#000}#dfv canvas{width:100%;max-height:100%;aspect-ratio:130/147;image-rendering:pixelated;touch-action:manipulation}#dfv .dfb{padding:10px 12px 12px;background:#1b1230;border-top:1px solid var(--line);font-size:var(--fs);display:flex;flex-direction:column;gap:8px}#dfv .dfsk{display:flex;gap:8px}#dfv .dfsk button{position:relative;flex:1;min-height:64px;border-radius:12px;border:2px solid var(--accent);background:#2d2147;color:var(--text);font-size:var(--fs);display:flex;align-items:center;gap:8px;padding:0 10px;overflow:hidden;text-align:left}#dfv .dfsk button .sic{width:40px;height:40px;flex:none}#dfv .dfsk .cdm{position:absolute;left:0;right:0;bottom:0;height:0;background:rgba(10,5,20,.7)}#dfv .dfsk .cdt{position:absolute;right:8px;top:6px;font-family:var(--f-pxb);color:#ffd866}#dfv .dfsk button.shake{animation:dfs .25s}@keyframes dfs{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}#dfv .dfsk #dfauto{flex:none;width:64px;justify-content:center;text-align:center;border-color:var(--line)}#dfv .dfsk #dfauto.on{border-color:#6fd08c;color:#6fd08c}
 #dfv #dfup{position:absolute;left:0;right:0;bottom:0;max-height:62%;overflow:auto;background:var(--panel);border-top:2px solid var(--accent);padding:10px 12px 14px;z-index:5;display:flex;flex-direction:column;gap:8px}#dfv #dfup .uph{display:flex;justify-content:space-between;align-items:center}#dfv #dfup .upt{display:flex;gap:6px}#dfv #dfup .upt button{flex:1;min-height:44px;border-radius:8px;border:0;background:#2d2147;color:var(--sub);display:flex;align-items:center;justify-content:center;gap:6px;font-size:var(--fs)}#dfv #dfup .upt button .sic{width:28px;height:28px}#dfv #dfup .upt button.on{background:var(--accent);color:#2a1400}#dfv .uprow{background:#2b1f45;border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:5px}#dfv .pips{display:flex;gap:4px}#dfv .pips i{flex:1;height:8px;border-radius:4px;background:#3a2a55}#dfv .pips i.on{background:linear-gradient(90deg,#ff7a2a,#ffc23a)}
+#dfcut{position:absolute;inset:0;z-index:70;background:#000;display:flex;align-items:center;justify-content:center}#dfcut canvas{width:100%;max-height:100%;aspect-ratio:130/147;image-rendering:pixelated}#dfcut .dcb{position:absolute;left:10px;right:10px;bottom:22px;background:rgba(20,13,30,.94);border:2px solid var(--accent);border-radius:12px;padding:10px 12px;min-height:72px;font-size:var(--fs);line-height:1.5}#dfcut .dcb b{display:block;color:var(--gold);font-family:var(--f-pxb);margin-bottom:2px}#dfcut .dcb.cap{text-align:center;border-color:transparent;background:rgba(0,0,0,.55);min-height:0;font-family:var(--f-pxb)}#dfcut #dcs{position:absolute;right:10px;top:10px}
 #dfv .dfj{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}#dfv .dfj button{min-height:40px;border-radius:8px;border:1px solid var(--line);background:#2d2147;color:var(--text);font-size:var(--fs)}
 #ctx{position:absolute;right:12px;bottom:12px;z-index:6;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
 #ctx button{min-height:48px;padding:0 16px 0 12px;border-radius:24px;border:2px solid #2A1506;background:var(--accent);color:#2A1506;font-family:var(--f-pxb);font-size:var(--fs);display:flex;align-items:center;gap:8px;box-shadow:0 4px 0 var(--accent2);animation:ctxin .18s}
@@ -6257,8 +6258,8 @@ let dfCtl = null, dfSt = null, dfStAt = 0, dfPick = {}, dfOn = false, dfZone = 0
 const DF_PH = { ready: '준비 중', wave: '웨이브 진행 중', rest: '쉬는 시간', over: '끝났어요' };
 function dfListen(){
   if (solo || !F || !db || dfOffs.length) return;
-  dfOffs.push(F.onValue(F.ref(db, 'defense/ctl'), s => { const v = s.val(), was = dfCtl && dfCtl.open; dfCtl = v; dfBtn(); if (v && v.open && !was) toast('이벤트 「용의 알 지키기」가 열렸어요! 오른쪽 위 버튼을 눌러 보세요'); if (!(v && v.open) && dfOn) dfClose(); else if (dfOn) dfUi(); }));
-  dfOffs.push(F.onValue(F.ref(db, 'defense/st'), s => { dfSt = s.val(); dfStAt = performance.now(); if (dfPend && Date.now() - dfPend.t > 150){ const mp = dfMe(); if (mp && mp[6][dfPend.i] < .3 && dfCtl && dfCtl.ph === 'wave') toast('사거리 안에 몬스터가 없어요'); dfPend = null; } if (dfOn) dfUi(); }));
+  dfOffs.push(F.onValue(F.ref(db, 'defense/ctl'), s => { const v = s.val(), was = dfCtl && dfCtl.open; dfCtl = v; dfBtn(); if (v && v.open && !was) toast('이벤트 「용의 알 지키기」가 열렸어요! 오른쪽 위 버튼을 눌러 보세요'); if (!(v && v.open) && dfOn) dfClose(); else if (dfOn) dfUi(); dfCheckCut(); }));
+  dfOffs.push(F.onValue(F.ref(db, 'defense/st'), s => { dfSt = s.val(); dfStAt = performance.now(); if (dfPend && Date.now() - dfPend.t > 150){ const mp = dfMe(); if (mp && mp[6][dfPend.i] < .3 && dfCtl && dfCtl.ph === 'wave') toast('사거리 안에 몬스터가 없어요'); dfPend = null; } if (dfOn) dfUi(); dfCheckCut(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/pick'), s => { dfPick = s.val() || {}; if (dfOn) dfUi(); }));
 }
 function dfBtn(){
@@ -6271,9 +6272,9 @@ function dfOpen(){
   const v = document.createElement('div'); v.id = 'dfv';
   v.innerHTML = `<div class="dfh"><b>용의 알 지키기</b><span id="dfinfo" class="s sub"></span><button class="btn sm" id="dfx">나가기</button></div><div class="dft" id="dft"></div><div class="dfs"><canvas id="dfc" width="390" height="441"></canvas></div><div class="dfb" id="dfb"></div>`;
   $('#shell').appendChild(v); $('#dfx').onclick = dfClose; $('#dfc').onclick = dfTap;
-  dfUi(); dfRaf = requestAnimationFrame(dfDraw);
+  dfUi(); dfRaf = requestAnimationFrame(dfDraw); dfCheckCut();
 }
-function dfClose(){ dfOn = false; cancelAnimationFrame(dfRaf); const v = $('#dfv'); if (v) v.remove(); dfBtn(); }
+function dfClose(){ dfCutEnd(); dfOn = false; cancelAnimationFrame(dfRaf); const v = $('#dfv'); if (v) v.remove(); dfBtn(); }
 const dfJob = () => me.dfJob || (xEx() && xEx().job) || '';
 const dfSet = (el, html) => { if (!el || el.dataset.sig === html) return false; el.dataset.sig = html; el.innerHTML = html; return true; };
 function dfSkillMeta(job){   // 직업이 가진 스킬 그림·이름을 빌려 와요 (공격: 첫 공격 스킬 · 둘째는 막기/광역/응원)
@@ -6372,13 +6373,91 @@ function dfDraw(){
   // 공격 효과
   if (st && now - dfStAt < 260 && st.f){ x.lineWidth = 2; st.f.forEach(([u, mid]) => { const q = seats[u], mm = st.m.find(m => m[0] === mid); if (!q || !mm || q.z !== dfZone || mm[2] !== dfZone) return; const a = Z.slots[q.s], b = mons.find(o => o.m[0] === mid); if (!b) return; x.strokeStyle = `rgba(255,236,120,${1 - (now - dfStAt) / 260})`; x.beginPath(); x.moveTo(a[0] * K, a[1] * K - 16); x.lineTo(b.p[0] * K, b.p[1] * K - 8); x.stroke(); }); }
 }
+// ----- 연출: 시작(용 알 이야기) · 끝(부화) — 평범한 영상처럼 한 번씩 나와요 -----
+let dfCut = null;
+const dfSeen = (id, k, set) => { try { if (set) localStorage.setItem(`df-seen-${id}-${k}`, '1'); return !!localStorage.getItem(`df-seen-${id}-${k}`); } catch (e){ return !!set && false; } };
+const DF_BABY = ['불꽃이', '파랑이', '숲이'];
+const DF_INTRO = [
+  { bg: 2, who: 'leo', text: '큰일이에요! 사육장 뒤 둥지에서 신성한 용의 알 세 개가 곧 깨어나려고 해요!' },
+  { bg: 2, who: 'stella', text: '별들이 알려 줬어요. 오늘 밤 용이 태어난다고… 그런데 문제가 생겼어요.' },
+  { bg: 0, who: 'stella', text: '숲의 몬스터들이 그 알을 노리고 있어요!', mons: 1 },
+  { bg: 1, who: 'leo', text: '숲길, 둥지 입구, 둥지 앞 세 곳으로 나눠서 막아야 해요. 학생 여러분, 도와주세요!', mons: 1 },
+  { bg: 2, who: 'stella', text: '알이 깨지면 용은 영영 돌아오지 않아요. 부탁해요!' },
+];
+function dfOutro(eggs){
+  const n = eggs.filter(e => e > 0).length;
+  if (!n) return [{ dur: 3.5, ph: 'sad', cap: '…' }, { dur: 5, ph: 'sad', who: 'leo', text: '…알이 모두 깨져 버렸어요…' }, { dur: 5.5, ph: 'sad', who: 'stella', text: '그래도 끝까지 싸워 줘서 고마워요, 학생 여러분.' }];
+  return [{ dur: 3, ph: 'shake', cap: '…똑, 똑.' }, { dur: 2.6, ph: 'crack', cap: '알에 금이 가요…' }, { dur: 1.6, ph: 'burst', cap: '' }, { dur: 4, ph: 'born', cap: '용이 태어났어요!' },
+    { dur: 5.5, ph: 'born', who: 'leo', text: n === 3 ? '해냈어요! 세 마리 모두 무사히 태어났어요!' : `${n}마리가 무사히 태어났어요! 지켜 내지 못한 알은 아쉽지만…` },
+    { dur: 6, ph: 'born', who: 'stella', text: n === 3 ? '고마워요, 학생 여러분. 이 아이들은 이제 학교의 식구예요.' : '태어난 아이들은 학교에서 소중히 돌볼게요. 고마워요!' }];
+}
+const dfNpcLook = id => { const n = typeof npcGet === 'function' ? npcGet(id) : null; return n && n.look !== undefined ? n.look : id === 'leo' ? 5 : 3; };
+function dfAvKey(key, av){
+  if (key in dfAvc) return dfAvc[key]; dfAvc[key] = null; const a = World.Avatar.fix(av);
+  World.Avatar.need(a).then(() => { dfAvc[key] = World.Avatar.compose(a); }).catch(() => { delete dfAvc[key]; }); return null;
+}
+function dfCheckCut(){
+  if (!dfCtl || !dfCtl.open || dfCut || !dfCtl.id) return;
+  if (dfCtl.intro && !dfSeen(dfCtl.id, 'intro')){ dfSeen(dfCtl.id, 'intro', 1); if (!dfOn) dfOpen(); dfPlayCut('intro'); return; }
+  if (dfCtl.ph === 'over' && dfSt && dfSt.ph === 'over' && !dfSeen(dfCtl.id, 'end')){ dfSeen(dfCtl.id, 'end', 1); if (!dfOn) dfOpen(); dfPlayCut('end'); }
+}
+function dfPlayCut(kind){
+  const v = $('#dfv'); if (!v || dfCut) return;
+  const el = document.createElement('div'); el.id = 'dfcut'; el.innerHTML = '<canvas id="dfcc" width="390" height="441"></canvas><div class="dcb"><b id="dcn"></b><span id="dct"></span></div><button class="btn sm" id="dcs">건너뛰기</button>'; v.appendChild(el);
+  const eggs = dfSt ? dfSt.e.slice() : [100, 100, 100];
+  dfCut = { kind, steps: kind === 'intro' ? DF_INTRO : dfOutro(eggs), i: 0, t0: performance.now(), eggs, done: false, raf: 0 };
+  $('#dcs').onclick = e => { e.stopPropagation(); dfCutEnd(); };
+  el.onclick = () => { const C = dfCut; if (!C) return; const st = C.steps[C.i]; if (st && st.text && performance.now() - C.t0 < st.text.length * 40 + 200){ C.t0 = performance.now() - st.text.length * 40 - 300; return; } if (C.kind === 'intro') dfCutNext(); };
+  dfCut.raf = requestAnimationFrame(dfCutDraw);
+}
+function dfCutNext(){ const C = dfCut; if (!C) return; C.i++; C.t0 = performance.now(); if (C.i >= C.steps.length) dfCutEnd(); }
+function dfCutEnd(){ const C = dfCut; if (!C) return; cancelAnimationFrame(C.raf); dfCut = null; const el = $('#dfcut'); if (el) el.remove(); dfUi(); }
+function dfCutDraw(now){
+  const C = dfCut; if (!C) return; C.raf = requestAnimationFrame(dfCutDraw);
+  const c = $('#dfcc'); if (!c) return; const x = c.getContext('2d'), K = 3, st = C.steps[C.i], u = (now - C.t0) / 1000, T = (now - dfCutT0(C)) / 1000;
+  if (C.kind === 'end' && st.dur && u >= st.dur) return dfCutNext();
+  if (C.kind === 'intro' && st.text && u > st.text.length * .04 + 3.4) return dfCutNext();
+  const bg = C.kind === 'intro' ? st.bg : 2; x.imageSmoothingEnabled = false; x.drawImage(TDMAP.render(bg, TD.ZONES[bg]), 0, 0, 390, 441);
+  const ph = C.kind === 'intro' ? 'intro' : st.ph, eg = C.eggs;
+  // 알 자리 (둥지 앞 그림 위)
+  const POS = [[50, 120], [64, 122], [78, 120]], EC = ['rgba(255,150,100,', 'rgba(130,200,255,', 'rgba(150,230,140,'];
+  if (bg === 2){ const g = x.createRadialGradient(192, 360, 6, 192, 360, 120); g.addColorStop(0, `rgba(255,220,130,${.35 + .15 * Math.sin(T * 3)})`); g.addColorStop(1, 'rgba(255,200,100,0)'); x.fillStyle = g; x.fillRect(0, 250, 390, 191); }
+  const bornT = C.kind === 'end' ? (C.steps.slice(0, C.i).reduce((a, s) => a + (s.ph === 'born' ? 0 : 0), 0)) : 0;
+  const phStart = C.kind === 'end' ? C.steps.slice(0, C.i).filter(s => s.ph === st.ph).reduce((a, s) => a + s.dur, 0) : 0;   // 같은 단계가 이어지는 동안의 시간
+  const uu = u + phStart;
+  POS.forEach(([gx, gy], i) => { const alive = eg[i] > 0; const px = gx * K, py = gy * K;
+    if (ph === 'burst' || ph === 'born'){ if (!alive){ const im = dfEggImg(i); if (im){ x.globalAlpha = .35; x.drawImage(im, px - 33, py - 28, 66, 56); x.globalAlpha = 1; } return; }
+      if (ph === 'burst') return;   // 번쩍 하는 동안은 비워 둬요
+      const born = dfImg('art/dragons.png'); if (born.complete && born.naturalWidth){ const t = uu, fr = t < 1.3 ? 2 : (Math.floor(t * 2.5 + i) % 2 ? 3 : 0), hop = t < 1.3 ? -Math.abs(Math.sin(t * 5)) * 14 : st.who ? 0 : -Math.max(0, Math.sin(t * 4 + i)) * 4; x.drawImage(born, fr * 32, i * 32, 32, 32, px - 40, py - 62 + hop, 80, 80); }
+      const a = Math.min(1, Math.max(0, (u - .6 - i * .5) / .6)); if (a > 0){ x.globalAlpha = a; x.font = '12px G11, sans-serif'; x.textAlign = 'center'; x.lineWidth = 3; x.strokeStyle = '#000'; x.strokeText(DF_BABY[i], px, py - 70); x.fillStyle = '#ffe9a8'; x.fillText(DF_BABY[i], px, py - 70); x.globalAlpha = 1; }
+      return; }
+    const im = dfEggImg(i); if (!im) return; const sh = ph === 'shake' ? Math.sin(T * 30 + i) * (1 + u * 1.2) : ph === 'crack' ? Math.sin(T * 40 + i) * 3 : ph === 'intro' ? Math.sin(T * 7 + i * 2) * 1.2 : 0;
+    x.globalAlpha = alive ? 1 : .35; x.drawImage(im, px - 33 + sh, py - 28, 66, 56); x.globalAlpha = 1;
+    const cr = ph === 'crack' ? Math.min(1, u / st.dur) : !alive || ph === 'sad' ? 1 : 0;
+    if (cr > 0){ x.strokeStyle = alive ? '#3a2616' : '#222'; x.lineWidth = 2; x.beginPath(); const pts = [[0, -26], [-5, -16], [3, -9], [-4, -1], [4, 6]]; pts.forEach(([ax, ay], k) => { if (k / (pts.length - 1) > cr) return; const X = px + ax + sh, Y = py + ay; if (!k) x.moveTo(X, Y); else x.lineTo(X, Y); }); x.stroke(); } });
+  // 번쩍 + 껍데기 조각
+  if (ph === 'burst'){ const f = Math.max(0, 1 - u / st.dur * 1.6); x.fillStyle = `rgba(255,255,240,${f})`; x.fillRect(0, 0, 390, 441);
+    POS.forEach(([gx, gy], i) => { if (eg[i] <= 0) return; for (let k = 0; k < 10; k++){ const a = k / 10 * 6.28 + i, d = u * 120 * (.5 + (k % 3) * .3); x.fillStyle = k % 2 ? '#fff4d6' : '#e8d6a8'; x.fillRect(gx * K + Math.cos(a) * d, gy * K - 10 + Math.sin(a) * d + u * u * 60, 6, 5); } }); }
+  // 반짝이
+  if (ph === 'born' || ph === 'intro' || ph === 'shake'){ for (let k = 0; k < 14; k++){ const rn = (n) => { const q = Math.sin(k * 91.3 + n * 17.7) * 43758.5; return q - Math.floor(q); }, sx = (rn(1) * 390 + Math.sin(T + k) * 12), sy = 440 - ((T * 22 + rn(2) * 440) % 440); x.fillStyle = `rgba(255,236,150,${.4 + .4 * Math.sin(T * 4 + k)})`; x.fillRect(sx, sy, 3, 3); } }
+  // 몬스터 행진 (시작 연출)
+  if (C.kind === 'intro' && st.mons){ const Z = TD.ZONES[bg], mi = dfImg('art/monsters_lpc.png'), tier = bg; for (let k = 0; k < 6; k++){ const s = ((T * 14 + k * 26) % (Z.len + 40)) - 20, p = TD.posAt(bg, Math.max(0, Math.min(Z.len, s))), p2 = TD.posAt(bg, Math.min(Z.len, Math.max(0, s) + 2)); if (s < 0 || s > Z.len) continue; if (mi.complete && mi.naturalWidth){ x.save(); x.translate(p[0] * K, p[1] * K + 14); x.scale(p2[0] < p[0] - .2 ? -.8 : .8, .8); x.drawImage(mi, DF_MON.n[Math.min(2, tier)] * 64, 0, 64, 64, -32, -64, 64, 64); x.restore(); } } x.fillStyle = 'rgba(40,0,60,.25)'; x.fillRect(0, 0, 390, 441); }
+  // 레오 · 스텔라 (둥지 앞 장면에서 곁에 서 있어요)
+  if (bg === 2){ [['leo', 26], ['stella', 102]].forEach(([id, gx]) => { const av = dfAvKey('npc:' + id, World.Avatar.fromLook(dfNpcLook(id))); if (av) x.drawImage(av, 0, 0, 64, 64, gx * K - 31, 112 * K - 40, 61, 61); const nm = id === 'leo' ? '레오' : '스텔라'; x.font = '10px G11, sans-serif'; x.textAlign = 'center'; x.lineWidth = 3; x.strokeStyle = '#000'; x.strokeText(nm, gx * K, 112 * K + 30); x.fillStyle = '#fff'; x.fillText(nm, gx * K, 112 * K + 30); }); }
+  // 말상자 · 자막
+  const box = $('.dcb'), nm = $('#dcn'), tx = $('#dct');
+  if (st.text){ const nc = Math.min(st.text.length, Math.floor(u * 25)); nm.textContent = st.who === 'leo' ? '레오' : '스텔라'; tx.textContent = st.text.slice(0, nc); box.style.display = ''; }
+  else if (st.cap){ nm.textContent = ''; tx.textContent = st.cap; box.style.display = ''; box.classList.add('cap'); } else box.style.display = 'none';
+  if (st.text) box.classList.remove('cap');
+}
+const dfCutT0 = C => C.t00 || (C.t00 = performance.now());
 // ----- 관리자: 계산을 맡아요 (이 화면이 켜져 있는 동안만 진행돼요) -----
 let dfHost = null;
 function dfHostStart(){
   if (dfHost || !F || !db) return; const S = TD.newState([], {}); S.phase = 'ready';
-  dfHost = { S, last: performance.now(), pub: 9, hb: 9, ph: '', w: -1, paused: false, timer: setInterval(dfHostTick, 100) };
+  dfHost = { S, id: Date.now(), intro: 0, startAt: 0, last: performance.now(), pub: 9, hb: 9, ph: '', w: -1, paused: false, timer: setInterval(dfHostTick, 100) };
   dfHost.last = performance.now(); dfHost.seen = {}; dfHost.cmdOff = F.onValue(F.ref(db, 'defense/cmd'), sn => { const v = sn.val() || {}, H = dfHost; if (!H) return; Object.entries(v).forEach(([u, c]) => { if (!c || H.seen[u] === c.n) return; const first = !(u in H.seen); H.seen[u] = c.n; if (first && H.warm !== false && Date.now() - c.n > 5000) return; const p = H.S.players[u]; if (!p) return; if (c.a !== undefined) p.auto = c.a ? 1 : 0; if (c.i !== undefined && !H.paused) TD.cast(H.S, u, c.i); if (c.u && (c.u[0] === 0 || c.u[0] === 1) && ['pow', 'rng', 'cd'].includes(c.u[1])) TD.upgrade(H.S, u, c.u[0], c.u[1]); }); });
-  F.set(F.ref(db, 'defense/ctl'), { open: true, ph: 'ready', w: 0, win: 0, hb: Date.now() }); F.set(F.ref(db, 'defense/st'), TD.snap(S)); adminRender();
+  F.set(F.ref(db, 'defense/ctl'), { open: true, id: dfHost.id, ph: 'ready', w: 0, win: 0, hb: Date.now() }); F.set(F.ref(db, 'defense/st'), TD.snap(S)); adminRender();
 }
 function dfHostSeats(S){
   const P = AD.dfpick || {}; Object.entries(P).forEach(([u, p]) => { const q = S.players[u]; if (!q || q.zone !== p.z || q.slot !== p.s || q.job !== p.job) TD.seat(S, u, p.z, p.s, p.job); });
@@ -6387,9 +6466,10 @@ function dfHostSeats(S){
 function dfHostTick(){
   const H = dfHost; if (!H) return; const now = performance.now(), dt = Math.min(.5, (now - H.last) / 1000), S = H.S; H.last = now;
   if (S.phase === 'ready' || S.phase === 'rest') dfHostSeats(S);
+  if (H.startAt && now >= H.startAt){ H.startAt = 0; TD.startWave(S); }
   if (!H.paused) TD.step(S, dt);
   H.pub += dt; if (H.pub >= .25){ H.pub = 0; F.set(F.ref(db, 'defense/st'), TD.snap(S)); }
-  H.hb += dt; if (H.hb >= 2 || S.phase !== H.ph || S.wave !== H.w){ const ch = S.phase !== H.ph || S.wave !== H.w; H.hb = 0; H.ph = S.phase; H.w = S.wave; F.set(F.ref(db, 'defense/ctl'), { open: true, ph: S.phase, w: S.wave, win: S.win ? 1 : 0, hb: Date.now(), pause: H.paused ? 1 : 0 }); if (ch && AD.tab === 'event') adminRender(); }
+  H.hb += dt; if (H.hb >= 2 || S.phase !== H.ph || S.wave !== H.w){ const ch = S.phase !== H.ph || S.wave !== H.w; H.hb = 0; H.ph = S.phase; H.w = S.wave; F.set(F.ref(db, 'defense/ctl'), { open: true, id: H.id, intro: H.intro || 0, ph: S.phase, w: S.wave, win: S.win ? 1 : 0, hb: Date.now(), pause: H.paused ? 1 : 0 }); if (ch && AD.tab === 'event') adminRender(); }
 }
 function dfHostStop(){ if (!dfHost) return; clearInterval(dfHost.timer); if (dfHost.cmdOff) dfHost.cmdOff(); dfHost = null; }
 function dfHostClose(){ dfHostStop(); if (!F || !db) return; F.set(F.ref(db, 'defense/ctl'), { open: false }); F.set(F.ref(db, 'defense/st'), null); F.set(F.ref(db, 'defense/pick'), null); F.set(F.ref(db, 'defense/cmd'), null); adminRender(); }
@@ -6398,14 +6478,14 @@ function adminEventHTML(){
   const zl = TD.ZONES.map((z, i) => `${z.name}: ${picks.filter(([, p]) => p.z === i).map(([u, p]) => `${nm(u)}(${XJ[p.job] ? XJ[p.job].n : '?'})`).join(', ') || '비어 있어요'}`);
   return `<div class="adcard"><b>이벤트 「용의 알 지키기」</b> · ${H ? DF_PH[ph] : open ? '열려 있지만 이 화면에서 진행하고 있지 않아요' : '닫혀 있어요'}
     <div class="s">학생에게는 ${open ? '버튼이 보여요' : '아무것도 안 보여요'}${S ? ` · 웨이브 ${S.wave}/15 · 알 ${S.eggs.map(Math.round).join('/')} · 앉은 학생 ${Object.keys(S.players).length}명${S.phase === 'wave' ? ` · 몬스터 ${S.mons.length + S.q.length}마리` : ''}` : ''}</div>
-    <div class="frow">${!H ? '<button class="btn sm go" data-dfa="open">이벤트 열기</button>' : `${ph === 'ready' ? '<button class="btn sm go" data-dfa="start">첫 웨이브 시작</button>' : ''}${ph === 'rest' ? '<button class="btn sm go" data-dfa="next">바로 다음 웨이브</button>' : ''}${ph !== 'ready' && ph !== 'over' ? `<button class="btn sm" data-dfa="pause">${H.paused ? '다시 진행' : '잠깐 멈춤'}</button>` : ''}<button class="btn sm" data-dfa="reset">처음으로</button><button class="btn sm" data-dfa="close">이벤트 닫기</button>`}${open && !H ? '<button class="btn sm" data-dfa="close">이벤트 닫기</button>' : ''}</div>
+    <div class="frow">${!H ? '<button class="btn sm go" data-dfa="open">이벤트 열기</button>' : `${ph === 'ready' ? (H.startAt ? '<span class="s">시작 연출이 나오고 있어요 (곧 첫 웨이브)</span>' : '<button class="btn sm go" data-dfa="start">시작 송출 (연출 후 첫 웨이브)</button>') : ''}${ph === 'rest' ? '<button class="btn sm go" data-dfa="next">바로 다음 웨이브</button>' : ''}${ph !== 'ready' && ph !== 'over' ? `<button class="btn sm" data-dfa="pause">${H.paused ? '다시 진행' : '잠깐 멈춤'}</button>` : ''}<button class="btn sm" data-dfa="reset">처음으로</button><button class="btn sm" data-dfa="close">이벤트 닫기</button>`}${open && !H ? '<button class="btn sm" data-dfa="close">이벤트 닫기</button>' : ''}</div>
     ${open && !H ? '<div class="s">이 화면을 새로 열었다면 「이벤트 열기」로 이어서 진행해요. 학생들이 고른 자리는 남아 있어요.</div>' : ''}</div>
   <div class="adcard"><b>자리</b> (학생이 웨이브 사이에 골라요)${zl.map(t => `<div class="s">${t}</div>`).join('')}</div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-dfa]'); if (!b) return; const a = b.dataset.dfa, H = dfHost;
   if (a === 'open') dfHostStart(); else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 학생들의 자리와 진행이 지워져요.')) dfHostClose(); }
-  else if (a === 'start' && H) TD.startWave(H.S); else if (a === 'next' && H){ H.S.rest = 0; } else if (a === 'pause' && H){ H.paused = !H.paused; adminRender(); }
-  else if (a === 'reset' && H){ if (confirm('처음으로 되돌릴까요? 번 골드와 올린 스킬이 지워져요.')){ const S = TD.newState([], {}); S.phase = 'ready'; H.S = S; H.ph = ''; adminRender(); } } });
+  else if (a === 'start' && H){ H.intro = Date.now(); H.startAt = performance.now() + 26000; H.hb = 9; adminRender(); } else if (a === 'next' && H){ H.S.rest = 0; } else if (a === 'pause' && H){ H.paused = !H.paused; adminRender(); }
+  else if (a === 'reset' && H){ if (confirm('처음으로 되돌릴까요? 번 골드와 올린 스킬이 지워져요.')){ const S = TD.newState([], {}); S.phase = 'ready'; H.S = S; H.ph = ''; H.intro = 0; H.startAt = 0; H.id = Date.now(); H.hb = 9; adminRender(); } } });
 // ===== 시장 (온라인 전용) =====
 let sellPick = null;
 function renderMarket(){
