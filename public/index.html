@@ -6281,7 +6281,8 @@ function dfListen(){
   if (solo || !F || !db || dfOffs.length) return;
   dfOffs.push(F.onValue(F.ref(db, 'defense/ctl'), s => { const v = s.val(), was = dfCtl && dfCtl.open; dfCtl = v; dfBtn(); if (v && v.open && !was) toast('이벤트 「용의 알 지키기」가 열렸어요! 오른쪽 위 버튼을 눌러 보세요'); if (!(v && v.open) && dfOn) dfClose(); else if (dfOn) dfUi(); dfCheckCut(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/st'), s => { dfSt = s.val(); if (dfSt){ dfSt.m = dfSt.m || []; dfSt.p = dfSt.p || {}; dfSt.f = dfSt.f || []; dfSt.e = dfSt.e || [0, 0, 0]; dfSt.left = dfSt.left || 0; }   // 서버는 빈 목록·빈 객체를 저장하지 않아요 → 빈 값으로 채워요
-     dfStAt = performance.now(); if (dfPend && Date.now() - dfPend.t > 150){ const mp = dfMe(); if (mp && mp[6][dfPend.i] < .3 && dfCtl && dfCtl.ph === 'wave') toast('사거리 안에 몬스터가 없어요'); dfPend = null; } if (dfOn) dfUi(); dfCheckCut(); }));
+     dfStAt = performance.now(); if (dfSt && dfSt.f){ const nw = performance.now(); dfSt.f.forEach(([u2]) => { const U = dfUnits[u2]; if (U && !(U.wa && nw - U.wa.t0 < U.wa.dur - 40)){ const k = XWA[U.job] || 'melee'; U.wa = { k, t0: nw, dur: xDur(k), c: '#ffffff' }; } }); }
+    if (dfPend && Date.now() - dfPend.t > 150){ const mp = dfMe(); if (mp && mp[6][dfPend.i] < .3 && dfCtl && dfCtl.ph === 'wave') toast('사거리 안에 몬스터가 없어요'); dfPend = null; } if (dfOn) dfUi(); dfCheckCut(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/res'), s => { dfRes = s.val(); if (World.reqRefresh) World.reqRefresh(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/pick'), s => { dfPick = s.val() || {}; if (dfOn) dfUi(); }));
 }
@@ -6298,7 +6299,7 @@ function dfOpen(){
   dfUi(); dfRaf = requestAnimationFrame(dfDraw); dfCheckCut();
 }
 function dfClose(){ dfCutEnd(); dfOn = false; cancelAnimationFrame(dfRaf); const v = $('#dfv'); if (v) v.remove(); dfBtn(); }
-const dfJob = () => me.dfJob || (xEx() && xEx().job) || '';
+const dfJob = () => (xEx() && xEx().job) || '';   // 직업은 한 번 고르면 바뀌지 않아요 (탐사에서 고른 직업 그대로)
 const dfSet = (el, html) => { if (!el || el.dataset.sig === html) return false; el.dataset.sig = html; el.innerHTML = html; return true; };
 function dfSkillMeta(job){   // 직업이 가진 스킬 그림·이름을 빌려 와요 (공격: 첫 공격 스킬 · 둘째는 막기/광역/응원)
   const cat = TD.CAT[job] || 'melee', all = xAll(job).filter(o => !o.pas), by = t => all.filter(o => o.t === t); let a, b;
@@ -6314,17 +6315,17 @@ function dfUi(){
   const eggs = st ? st.e : [100, 100, 100], w = st ? st.w : 0;
   $('#dfinfo').textContent = `웨이브 ${w} / 15 · 알 ${eggs.filter(e => e > 0).length}개${mp ? ` · ${mp[3]}G` : ''}`;
   const stale = dfCtl && dfCtl.hb && Date.now() - dfCtl.hb > 12000 && ph !== 'over';
-  let txt = ph === 'ready' ? '관리자가 시작하면 첫 웨이브가 와요. 점선 원을 눌러 자리를 골라요.' : ph === 'wave' ? `웨이브 ${w} 진행 중 · 남은 몬스터 ${st ? st.m.length + st.left : '-'}마리` : ph === 'rest' ? `${st ? st.r : 0}초 뒤 웨이브 ${w + 1}` : ph === 'over' ? (st && st.win ? '알을 모두 지켜 냈어요!' : '알이 모두 깨졌어요…') : '';
+  const plN = st ? Object.keys(st.p).length : 0, rdN = st ? Object.values(st.p).filter(q => q[8]).length : 0;
+  let txt = ph === 'ready' ? `점선 원을 눌러 자리를 정하고 「시작」을 눌러요. 모두 누르면 첫 웨이브가 와요 (준비 ${rdN}/${plN})` : ph === 'wave' ? `웨이브 ${w} 진행 중 · 남은 몬스터 ${st ? st.m.length + st.left : '-'}마리` : ph === 'rest' ? `자리를 바꾸고 「시작」을 눌러요. 모두 누르면 웨이브 ${w + 1}이 와요 (준비 ${rdN}/${plN})` : ph === 'over' ? (st && st.win ? '알을 모두 지켜 냈어요!' : '알이 모두 깨졌어요…') : '';
   if (stale) txt = '관리자 화면이 잠시 멈췄어요. 잠깐만 기다려 주세요.';
-  const job = dfJob(), jn = job && XJ[job] ? XJ[job].n : '직업을 골라요';
+  const job = dfJob(), jn = job && XJ[job] ? XJ[job].n : '아직 없어요 (탐사에서 먼저 골라요)';
   let sk = ''; if (mp){ const meta = dfSkillMeta(mp[2]); sk = `<div class="dfsk">${meta.map((m, i) => `<button data-sk="${i}">${m.ic}<span>${esc(m.n)}</span><i class="cdm"></i><b class="cdt"></b></button>`).join('')}<button id="dfauto" class="${mp[7] ? 'on' : ''}">자동<br>${mp[7] ? '켬' : '끔'}</button></div>`; }
   const upb = mp ? `<button class="btn sm" id="dfupb">스킬 올리기 · ${mp[3]}G${[0, 1].some(i => ['pow', 'rng', 'cd'].some(k => { const c = TD.upCost(dfPlayerOf(mp), i, k); return c != null && c <= mp[3]; })) ? ' ●' : ''}</button>` : '';
   { let up = $('#dfup'); if (dfUpOpen && mp){ if (!up){ up = document.createElement('div'); up.id = 'dfup'; v.appendChild(up); } if (dfSet(up, dfUpHTML(mp))){ up.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const [i, k] = b.dataset.up.split(','); dfSend({ u: [+i, k] }); sfx('pick'); }); up.querySelectorAll('[data-ut]').forEach(b => b.onclick = () => { dfUpTab = +b.dataset.ut; dfUi(); }); $('#dfupx').onclick = () => { dfUpOpen = false; dfUi(); }; } } else if (up) up.remove(); }
-  const html = `${sk}${upb}<div>${txt}</div><div class="s sub">${my ? `내 자리: ${TD.ZONES[my.z].name} ${my.s + 1}번 · ${XJ[my.job] ? XJ[my.job].n : ''}` : '아직 자리가 없어요'} · 내 직업: ${jn}${mp ? '' : ''}</div>${canSeat ? `<div style="display:flex;gap:8px"><button class="btn sm" id="dfjob">직업 ${job ? '바꾸기' : '고르기'}</button>${my ? '<button class="btn sm" id="dfout">자리 빼기</button>' : ''}</div>` : ''}${canSeat && (dfJobPick || !job) ? `<div class="dfj">${ORDER_J.map(j => `<button data-dj="${j}">${XJ[j].n}</button>`).join('')}</div>` : ''}`;
+  const html = `${sk}${upb}<div>${txt}</div><div class="s sub">${my ? `내 자리: ${TD.ZONES[my.z].name} ${my.s + 1}번 · ${XJ[my.job] ? XJ[my.job].n : ''}` : '아직 자리가 없어요'} · 내 직업: ${jn}${mp ? '' : ''}</div>${canSeat && my ? `<div style="display:flex;gap:8px">${mp ? `<button class="btn sm ${mp[8] ? '' : 'go'}" id="dfready" style="flex:1">${mp[8] ? '준비 취소' : '시작'} · ${rdN}/${plN}</button>` : '<span class="s">자리를 확인하고 있어요…</span>'}<button class="btn sm" id="dfout">자리 빼기</button></div>` : ''}`;
   if (!dfSet($('#dfb'), html)) return;
-  const jb = $('#dfjob'); if (jb) jb.onclick = () => { dfJobPick = !dfJobPick; dfUi(); };
+  const rb = $('#dfready'); if (rb) rb.onclick = () => { dfSend({ r: mp && mp[8] ? 0 : 1 }); sfx('pick'); };
   const o = $('#dfout'); if (o) o.onclick = () => { delete dfPick[myId()]; GDB.set('defense/pick/' + myId(), null); dfUi(); };
-  $('#dfb').querySelectorAll('[data-dj]').forEach(b => b.onclick = () => { me.dfJob = b.dataset.dj; save(); dfJobPick = false; const m = dfPick[myId()]; if (m && canSeat) dfSeat(m.z, m.s); else dfUi(); });
   $('#dfb').querySelectorAll('[data-sk]').forEach(b => b.onclick = () => dfCast(+b.dataset.sk, b));
   const ub = $('#dfupb'); if (ub) ub.onclick = () => { dfUpOpen = true; dfUi(); };
   const au = $('#dfauto'); if (au) au.onclick = () => { dfSend({ a: dfMe() && dfMe()[7] ? 0 : 1 }); };
@@ -6357,7 +6358,7 @@ function dfSkillTick(now){
 }
 function dfSeat(z, s){
   const ph = dfCtl ? dfCtl.ph : 'ready'; if (ph !== 'ready' && ph !== 'rest') return toast('웨이브 중에는 자리를 바꿀 수 없어요');
-  const job = dfJob(); if (!job){ dfJobPick = true; dfUi(); return toast('먼저 직업을 골라요'); }
+  const job = dfJob(); if (!job) return toast('탐사에서 직업을 먼저 골라야 해요');
   if (Object.entries(dfPick).some(([u, p]) => u !== myId() && p.z === z && p.s === s)) return toast('다른 친구가 앉아 있어요');
   const p = { z, s, job, n: me.nick, at: Date.now() }; dfPick[myId()] = p; GDB.set('defense/pick/' + myId(), p); dfUi();
 }
@@ -6365,6 +6366,16 @@ function dfTap(e){
   const c = $('#dfc'), r = c.getBoundingClientRect(), gx = (e.clientX - r.left) / r.width * TD.W, gy = (e.clientY - r.top) / r.height * TD.H;
   let best = -1, bd = 11; TD.ZONES[dfZone].slots.forEach((q, i) => { const d = Math.hypot(q[0] - gx, q[1] - gy + 4); if (d < bd){ bd = d; best = i; } });
   if (best >= 0) dfSeat(dfZone, best);
+}
+const dfUnits = {}, dfTmp = document.createElement('canvas'); dfTmp.width = dfTmp.height = 64;
+function dfWp(u){ const e = u === myId() ? xEx() : (playersList[u] && playersList[u].ex); return (e && e.wp) || 0; }
+// 전투 화면과 똑같이 무기를 든 모습 (왼쪽을 보고 서 있고, 적이 오른쪽에 있으면 뒤집어요) · 공격하면 무기를 휘둘러요
+function dfUnitDraw(x, uid, job, px, py, flip, now){
+  const sp = dfAvatar(uid); if (!sp) return; const A = World.Avatar, FW = A.FW, FH = A.FH, dirL = A.meta.dirs.left;
+  const U = dfUnits[uid] && dfUnits[uid].job === job ? dfUnits[uid] : (dfUnits[uid] = { job, wp: dfWp(uid) }); U.wp = dfWp(uid);
+  xHandOf(U, sp); const st = xState(U, now), bx = st && st.f ? st.f[4] : 0, g = dfTmp.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, 64, 64); g.save(); if (flip){ g.translate(64, 0); g.scale(-1, 1); }
+  xArmLayer(g, U, bx, 0, st, 'b', now, sp, dirL * FW); g.drawImage(sp, dirL * FW, 0, FW, FH, bx, 0, FW, FH); xArmLayer(g, U, bx, 0, st, 'f', now, sp, dirL * FW); g.restore();
+  x.drawImage(dfTmp, 0, 0, 64, 64, px - 31, py - 40, 61, 61);
 }
 function dfAvatar(u){
   if (u in dfAvc) return dfAvc[u]; dfAvc[u] = null;
@@ -6385,9 +6396,9 @@ function dfDraw(){
     if (!u && canSeat){ x.fillStyle = '#ffe680'; x.font = '16px sans-serif'; x.textAlign = 'center'; x.fillText('+', px, py + 6); } });
   const heads = Object.entries(seats).filter(([, q]) => q.z === dfZone).sort((a, b) => a[1].s - b[1].s);
   const mons = st ? st.m.filter(m => m[2] === dfZone).map(m => { const zl = TD.ZONES[m[2]], s = Math.max(0, Math.min(zl.len, m[3] + m[5] * (now - dfStAt) / 1000)), p = TD.posAt(m[2], s), p2 = TD.posAt(m[2], Math.min(zl.len, s + 2)); return { m, p, fl: p2[0] < p[0] - .2 }; }) : [];
-  heads.forEach(([u, q]) => { const sl = Z.slots[q.s], px = sl[0] * K, py = sl[1] * K, av = dfAvatar(u); x.globalAlpha = q.ok ? 1 : .55; if (av) x.drawImage(av, 0, 0, 64, 64, px - 31, py - 40, 61, 61); x.globalAlpha = 1;
+  heads.forEach(([u, q]) => { const sl = Z.slots[q.s], px = sl[0] * K, py = sl[1] * K; x.globalAlpha = q.ok ? 1 : .55; const tg = mons.length ? mons.reduce((a, b) => Math.hypot(a.p[0] - sl[0], a.p[1] - sl[1]) < Math.hypot(b.p[0] - sl[0], b.p[1] - sl[1]) ? a : b) : null; dfUnitDraw(x, u, q.job, px, py, tg ? tg.p[0] > sl[0] + 1 : false, now); x.globalAlpha = 1;
     const nm = u === myId() ? me.nick : (playersList[u] && playersList[u].nick) || (dfPick[u] && dfPick[u].n) || ''; x.font = '10px G11, sans-serif'; x.textAlign = 'center'; x.lineWidth = 3; x.strokeStyle = '#000'; x.strokeText(nm, px, py + 30); x.fillStyle = u === myId() ? '#ffd866' : '#fff'; x.fillText(nm, px, py + 30); });
-  { const mp = dfMe(); if (mp && mp[0] === dfZone && ph === 'wave'){ const sl = Z.slots[mp[1]], r0 = TD.skillOf(dfPlayerOf(mp), 0).rng; x.beginPath(); x.arc(sl[0] * K, sl[1] * K, r0 * K, 0, 7); x.lineWidth = 1; x.strokeStyle = 'rgba(255,230,120,.35)'; x.stroke(); } }
+  { const mp = dfMe(); if (mp && mp[0] === dfZone && ph === 'wave'){ const sl = Z.slots[mp[1]], r0 = TD.skillOf(dfPlayerOf(mp), 0).rng + Z.d0[mp[1]]; x.beginPath(); x.arc(sl[0] * K, sl[1] * K, r0 * K, 0, 7); x.lineWidth = 1; x.strokeStyle = 'rgba(255,230,120,.35)'; x.stroke(); } }
   // 몬스터
   const tier = st ? Math.floor((Math.max(1, st.w) - 1) / 5) : 0, mi = dfImg('art/monsters_lpc.png');
   mons.sort((a, b) => a.p[1] - b.p[1]).forEach(({ m, p, fl }) => { const px = p[0] * K, py = p[1] * K + 14, sc = m[1] === 'b' ? 1.3 : m[1] === 'e' ? 1 : .8, f = DF_MON[m[1]][tier], hp = m[4];
@@ -6490,9 +6501,9 @@ const dfCutT0 = C => C.t00 || (C.t00 = performance.now());
 // ----- 관리자: 계산을 맡아요 (이 화면이 켜져 있는 동안만 진행돼요) -----
 let dfHost = null;
 function dfHostStart(){
-  if (dfHost || !F || !db) return; const S = TD.newState([], {}); S.phase = 'ready';
+  if (dfHost || !F || !db) return; const S = TD.newState([], { auto: 0 }); S.phase = 'ready';
   dfHost = { S, id: Date.now(), intro: 0, startAt: 0, last: performance.now(), pub: 9, hb: 9, ph: '', w: -1, paused: false, timer: setInterval(dfHostTick, 100) };
-  dfHost.last = performance.now(); dfHost.seen = {}; dfHost.cmdOff = F.onValue(F.ref(db, 'defense/cmd'), sn => { const v = sn.val() || {}, H = dfHost; if (!H) return; Object.entries(v).forEach(([u, c]) => { if (!c || H.seen[u] === c.n) return; const first = !(u in H.seen); H.seen[u] = c.n; if (first && H.warm !== false && Date.now() - c.n > 5000) return; const p = H.S.players[u]; if (!p) return; if (c.a !== undefined) p.auto = c.a ? 1 : 0; if (c.i !== undefined && !H.paused) TD.cast(H.S, u, c.i); if (c.u && (c.u[0] === 0 || c.u[0] === 1) && ['pow', 'rng', 'cd'].includes(c.u[1])) TD.upgrade(H.S, u, c.u[0], c.u[1]); }); });
+  dfHost.last = performance.now(); dfHost.seen = {}; dfHost.cmdOff = F.onValue(F.ref(db, 'defense/cmd'), sn => { const v = sn.val() || {}, H = dfHost; if (!H) return; Object.entries(v).forEach(([u, c]) => { if (!c || H.seen[u] === c.n) return; const first = !(u in H.seen); H.seen[u] = c.n; if (first && H.warm !== false && Date.now() - c.n > 5000) return; const p = H.S.players[u]; if (!p) return; if (c.a !== undefined) p.auto = c.a ? 1 : 0; if (c.r !== undefined) TD.setReady(H.S, u, c.r); if (c.i !== undefined && !H.paused) TD.cast(H.S, u, c.i); if (c.u && (c.u[0] === 0 || c.u[0] === 1) && ['pow', 'rng', 'cd'].includes(c.u[1])) TD.upgrade(H.S, u, c.u[0], c.u[1]); }); });
   F.set(F.ref(db, 'defense/ctl'), { open: true, id: dfHost.id, ph: 'ready', w: 0, win: 0, hb: Date.now() }); F.set(F.ref(db, 'defense/st'), TD.snap(S)); adminRender();
 }
 function dfHostSeats(S){
@@ -6502,7 +6513,7 @@ function dfHostSeats(S){
 function dfHostTick(){
   const H = dfHost; if (!H) return; const now = performance.now(), dt = Math.min(.5, (now - H.last) / 1000), S = H.S; H.last = now;
   if (S.phase === 'ready' || S.phase === 'rest') dfHostSeats(S);
-  if (H.startAt && now >= H.startAt){ H.startAt = 0; TD.startWave(S); }
+  if (H.startAt && now >= H.startAt) H.startAt = 0;   // 시작 연출이 끝났어요 (웨이브는 학생들이 모두 「시작」을 눌러야 와요)
   if (!H.paused) TD.step(S, dt);
   H.pub += dt; if (H.pub >= .25){ H.pub = 0; F.set(F.ref(db, 'defense/st'), TD.snap(S)); }
   H.hb += dt; if (H.hb >= 2 || S.phase !== H.ph || S.wave !== H.w){ const ch = S.phase !== H.ph || S.wave !== H.w; H.hb = 0; H.ph = S.phase; H.w = S.wave; F.set(F.ref(db, 'defense/ctl'), { open: true, id: H.id, intro: H.intro || 0, ph: S.phase, w: S.wave, win: S.win ? 1 : 0, hb: Date.now(), pause: H.paused ? 1 : 0 }); if (ch && S.phase === 'over') F.set(F.ref(db, 'defense/res'), { id: H.id, eggs: S.eggs.map(Math.round), win: S.win ? 1 : 0, at: Date.now() }); if (ch && AD.tab === 'event') adminRender(); }
@@ -6514,14 +6525,15 @@ function adminEventHTML(){
   const zl = TD.ZONES.map((z, i) => `${z.name}: ${picks.filter(([, p]) => p.z === i).map(([u, p]) => `${nm(u)}(${XJ[p.job] ? XJ[p.job].n : '?'})`).join(', ') || '비어 있어요'}`);
   return `<div class="adcard"><b>이벤트 「용의 알 지키기」</b> · ${H ? DF_PH[ph] : open ? '열려 있지만 이 화면에서 진행하고 있지 않아요' : '닫혀 있어요'}
     <div class="s">학생에게는 ${open ? '버튼이 보여요' : '아무것도 안 보여요'}${S ? ` · 웨이브 ${S.wave}/15 · 알 ${S.eggs.map(Math.round).join('/')} · 앉은 학생 ${Object.keys(S.players).length}명${S.phase === 'wave' ? ` · 몬스터 ${S.mons.length + S.q.length}마리` : ''}` : ''}</div>
-    <div class="frow">${!H ? '<button class="btn sm go" data-dfa="open">이벤트 열기</button>' : `${ph === 'ready' ? (H.startAt ? '<span class="s">시작 연출이 나오고 있어요 (곧 첫 웨이브)</span>' : '<button class="btn sm go" data-dfa="start">시작 송출 (연출 후 첫 웨이브)</button>') : ''}${ph === 'rest' ? '<button class="btn sm go" data-dfa="next">바로 다음 웨이브</button>' : ''}${ph !== 'ready' && ph !== 'over' ? `<button class="btn sm" data-dfa="pause">${H.paused ? '다시 진행' : '잠깐 멈춤'}</button>` : ''}<button class="btn sm" data-dfa="reset">처음으로</button><button class="btn sm" data-dfa="close">이벤트 닫기</button>`}${open && !H ? '<button class="btn sm" data-dfa="close">이벤트 닫기</button>' : ''}</div>
+    <div class="frow">${!H ? '<button class="btn sm go" data-dfa="open">이벤트 열기</button>' : `${ph === 'ready' ? (H.startAt ? '<span class="s">시작 연출이 나오고 있어요</span>' : '<button class="btn sm go" data-dfa="start">시작 송출 (연출)</button>') : ''}${ph === 'ready' || ph === 'rest' ? '<button class="btn sm" data-dfa="force">웨이브 강제 시작</button>' : ''}${ph !== 'ready' && ph !== 'over' ? `<button class="btn sm" data-dfa="pause">${H.paused ? '다시 진행' : '잠깐 멈춤'}</button>` : ''}<button class="btn sm" data-dfa="reset">처음으로</button><button class="btn sm" data-dfa="close">이벤트 닫기</button>`}${open && !H ? '<button class="btn sm" data-dfa="close">이벤트 닫기</button>' : ''}</div>
     ${open && !H ? '<div class="s">이 화면을 새로 열었다면 「이벤트 열기」로 이어서 진행해요. 학생들이 고른 자리는 남아 있어요.</div>' : ''}</div>
   <div class="adcard"><b>자리</b> (학생이 웨이브 사이에 골라요)${zl.map(t => `<div class="s">${t}</div>`).join('')}</div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-dfa]'); if (!b) return; const a = b.dataset.dfa, H = dfHost;
   if (a === 'open') dfHostStart(); else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 학생들의 자리와 진행이 지워져요.')) dfHostClose(); }
-  else if (a === 'start' && H){ H.intro = Date.now(); H.startAt = performance.now() + 26000; H.hb = 9; adminRender(); } else if (a === 'next' && H){ H.S.rest = 0; } else if (a === 'pause' && H){ H.paused = !H.paused; adminRender(); }
-  else if (a === 'reset' && H){ if (confirm('처음으로 되돌릴까요? 번 골드와 올린 스킬이 지워져요.')){ const S = TD.newState([], {}); S.phase = 'ready'; H.S = S; H.ph = ''; H.intro = 0; H.startAt = 0; H.id = Date.now(); H.hb = 9; F.set(F.ref(db, 'defense/res'), null); adminRender(); } } });
+  else if (a === 'start' && H){ H.intro = Date.now(); H.startAt = performance.now() + 26000; H.hb = 9; adminRender(); }
+  else if (a === 'force' && H){ TD.startWave(H.S); adminRender(); } else if (a === 'pause' && H){ H.paused = !H.paused; adminRender(); }
+  else if (a === 'reset' && H){ if (confirm('처음으로 되돌릴까요? 번 골드와 올린 스킬이 지워져요.')){ const S = TD.newState([], { auto: 0 }); S.phase = 'ready'; H.S = S; H.ph = ''; H.intro = 0; H.startAt = 0; H.id = Date.now(); H.hb = 9; F.set(F.ref(db, 'defense/res'), null); adminRender(); } } });
 // ===== 시장 (온라인 전용) =====
 let sellPick = null;
 function renderMarket(){
