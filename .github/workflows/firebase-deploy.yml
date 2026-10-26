@@ -30,8 +30,13 @@ jobs:
       - name: 버전 기록 (접속 중인 학생 화면이 새 버전을 알아채요)
         if: steps.check.outputs.skip != '1'
         run: echo "{\"v\":\"${GITHUB_SHA}\"}" > public/version.json
-      - name: 호스팅과 DB 규칙 배포
+      - name: DB 규칙 배포 (호스팅이 막혀도 규칙은 먼저 올라가요)
         if: steps.check.outputs.skip != '1'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
-        run: npx -y firebase-tools@13 deploy --only hosting,database --non-interactive
+        run: npx -y firebase-tools@13 deploy --only database --non-interactive
+      - name: 호스팅 배포
+        if: steps.check.outputs.skip != '1'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+        run: npx -y firebase-tools@13 deploy --only hosting --non-interactive
