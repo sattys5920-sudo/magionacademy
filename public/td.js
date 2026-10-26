@@ -34,7 +34,7 @@
     players.forEach(p => { S.players[p.uid] = { uid: p.uid, zone: p.zone, slot: p.slot, job: p.job, cat: CAT[p.job] || 'melee', gold: 0, earned: 0, up: [{ pow: 0, rng: 0, cd: 0 }, { pow: 0, rng: 0, cd: 0 }], cd: [0, 0], buff: 0, basic: 0, auto: opt.auto !== undefined ? opt.auto : 1 }; });
     return S;
   }
-  const skillOf = (p, i) => { const b = SK[p.cat][i], u = p.up[i]; return { ...b, pow: b.pow * (1 + UP_PER.pow * u.pow), rng: b.rng * (1 + UP_PER.rng * u.rng), cd: Math.max(.6, b.cd * (1 - UP_PER.cd * u.cd)), dur: b.dur ? b.dur * (1 + UP_PER.pow * u.pow) : undefined, rad: b.rad ? b.rad * (1 + UP_PER.rng * u.rng) : undefined }; };
+  const skillOf = (p, i) => { const b = SK[p.cat][i], u = p.up[i]; return { ...b, pow: b.t === 'slow' ? Math.min(.9, b.pow * (1 + .12 * u.pow)) : b.pow * (1 + UP_PER.pow * u.pow), cnt: b.t === 'eggheal' ? Math.min(3, 1 + u.rng) : undefined, rng: b.rng * (1 + UP_PER.rng * u.rng), cd: Math.max(.6, b.cd * (1 - UP_PER.cd * u.cd)), dur: b.dur ? b.dur * (1 + UP_PER.pow * u.pow) : undefined, rad: b.rad ? b.rad * (1 + UP_PER.rng * u.rng) : undefined }; };
   const upCost = (p, i, k) => p.up[i][k] >= UP_MAX - 1 ? null : UP_COST[p.up[i][k]];
   function seat(S, uid, zone, slot, job){   // 자리 고르기 · 새로 들어오기 · 자리 옮기기 (이미 앉은 사람이 있으면 못 앉아요)
   if (S.phase === 'wave' || S.phase === 'over') return false; if (Object.values(S.players).some(q => q.uid !== uid && q.zone === zone && q.slot === slot)) return false;
@@ -55,7 +55,7 @@ function upgrade(S, uid, i, k){ const p = S.players[uid], c = p && upCost(p, i, 
     if (s.t === 'hit'){ const t = nearOf(S, p, s.rng).sort((a, b) => b.s - a.s)[0]; if (t){ hurt(S, t, s.pow * mult, p); ok = true; } }
     else if (s.t === 'aoe'){ const ts = nearOf(S, p, s.rng).sort((a, b) => b.s - a.s); if (ts[0]){ const c = posAt(ts[0].zone, ts[0].s); ts.filter(m => { const q = posAt(m.zone, m.s); return Math.hypot(q[0] - c[0], q[1] - c[1]) <= s.rad; }).forEach(m => hurt(S, m, s.pow * mult, p)); ok = true; } }
     else if (s.t === 'slow'){ const ts = nearOf(S, p, s.rng); if (ts.length){ ts.forEach(m => { m.slow = Math.max(m.slow, s.pow); m.slowT = Math.max(m.slowT, s.dur); }); ok = true; } }
-    else if (s.t === 'eggheal'){ const e = S.eggs.findIndex(v => v > 0 && v < 100); if (e >= 0){ S.eggs[e] = Math.min(100, S.eggs[e] + s.pow); ok = true; } }
+    else if (s.t === 'eggheal'){ const es = S.eggs.map((v, i) => [v, i]).filter(([v]) => v > 0 && v < 100).sort((a, b) => a[0] - b[0]).slice(0, s.cnt); es.forEach(([, i]) => { S.eggs[i] = Math.min(100, S.eggs[i] + s.pow); ok = true; }); }
     else if (s.t === 'buff'){ Object.values(S.players).forEach(q => { const qp = ZONES[q.zone].slots[q.slot]; if (q.zone === p.zone && Math.hypot(qp[0] - pos[0], qp[1] - pos[1]) <= s.rng) q.buff = Math.max(q.buff, s.dur); }); ok = true; }
     if (!ok) return 'none'; p.cd[i] = s.cd; return true;
   }
