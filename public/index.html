@@ -1175,7 +1175,7 @@ let saveState = '';
 function hud(){
   if (!me || !document.body.classList.contains('inworld')) return;
   World.setPets(me.cr.map(c => ({ id: c.id, k: c.k, col: c.col, adult: crAdult(c), name: c.name })));
-  $('#wallet').innerHTML = `${ic('coin')}<span class="num">${me.coin.toLocaleString()}</span>${ic('mana')}<span class="num">${me.mana}</span><i id="saveDot" class="${saveState}" title="저장 상태"></i>`;
+  $('#wallet').innerHTML = `${ic('coin')}<span class="num">${me.coin.toLocaleString()}</span>${ic('mana')}<span class="num" title="마력">${me.mana}</span>${ic('book')}<span class="num" title="지력">${me.know || 0}</span><i id="saveDot" class="${saveState}" title="저장 상태"></i>`;
   $('#hudNick').textContent = me.nick; $('#hudLv').textContent = `Lv ${levelOf().lv}`;
   const hf = $('#hudFace'), hav = avOf(me), hk = JSON.stringify(hav); if (World.Avatar.loaded && hf.dataset.k !== hk){ hf.innerHTML = headImg(hav, 'width:100%;height:100%;image-rendering:pixelated'); hf.dataset.k = hk; }   // 아바타가 바뀌면 다시 그려요 (부품이 덜 왔으면 headFix가 채워요)
   const ev = eventAt(), live = ev && Date.now() < ev.end, c = $('#evChip');
@@ -1731,10 +1731,11 @@ function xDef(job, b, r){   // 스킬 하나의 효과표 (Lv1 기준)
   return xDefs[key] = o;
 }
 const xAll = job => Array.from({ length: 15 }, (_, i) => xDef(job, Math.floor(i / 5), i % 5));
+const xMpK = lv => 1 + .15 * (Math.max(1, lv) - 1);   // 스킬을 올릴수록 위력이 커지는 만큼 MP도 더 들어요 (Lv4는 1.45배)
 const xPw = (o, lv) => 1 + .18 * (lv - 1), xEfv = (o, lv) => o.v * (1 + .15 * (lv - 1));
 function xDesc(o, lv){
   if (o.pas) return o.pas === 'surv' ? '패시브 · 전투마다 한 번, 쓰러질 공격을 체력 1로 버텨요' : `패시브 · ${XPASN[o.pas]} +${Math.round(XPAS[o.pas] * 100 * lv)}%`;
-  const L = Math.max(1, lv), mp = o.mp ? ` · MP ${o.mp}` : '';
+  const L = Math.max(1, lv), mp = o.mp ? ` · MP ${Math.round(o.mp * xMpK(L))}` : '';
   if (o.ds){ if (o.t === 'dmg' && o.p) return `${o.tg === 'all' ? '적 전체' : '적 하나'} ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)}${o.hits > 1 ? ` ×${o.hits}회` : ''} · ${o.ds}${mp}`; return o.ds + mp; }
   const who = { one: '적 하나', all: o.t === 'heal' || o.t === 'buff' || o.t === 'mp' ? '아군 전체' : '적 전체', self: '나' }[o.tg];
   const sc = { dmg: `${who}에게 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 피해${o.w ? ' (쓰고 나면 한참 쉬어요)' : ''}`, heal: `${o.tg === 'all' ? '아군 전체' : '아군 하나'} 치유 ×${(o.p * xPw(o, L)).toFixed(1)}`, revive: '쓰러진 동료 하나를 체력 절반으로 살려요', buff: `${who} ${o.key === 'atk' ? '공격' : o.key === 'spd' ? '속도' : '받는 피해'} ${o.key === 'dmgIn' ? '-' : '+'}${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, deb: `${who} ${o.key === 'slow' ? '속도' : '공격'} -${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, dot: `${who}에게 8초 동안 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 지속 피해`, stun: `적 하나를 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 피해 + 행동 늦추기`, mp: `아군 전체 마력 ${Math.round(xEfv(o, L) * 100)}% 회복` }[o.t];
@@ -1782,7 +1783,7 @@ function xEx(){ me.ex = me.ex || { exp: 0, d: '', n: 0 }; if (me.ex.d !== todayK
 const xSt = (job, L, k) => Math.round(XJ[job][k][0] + XJ[job][k][1] * (L - 1));
 const xMkUnit = (job, L, name, ai, hp, mp, sk) => { sk = sk || xAiSk(L); const u = { av: ai ? World.Avatar.fromLook(ORDER_J.indexOf(job) * 131 + 7) : me.av, sks: [], pas: {}, fx: {}, dr: 0, vamp: 0, crit: 0, id: name, job, name, ic: XJ[job].ic, L, ai, team: 'a', mhp: xSt(job, L, 'hp'), mmp: 30 + L * 3, atk: xSt(job, L, 'atk'), mag: xSt(job, L, 'mag'), heal: xSt(job, L, 'heal'), spd: xSt(job, L, 'spd'), g: Math.random() * 40 };
   { const sp = ai ? xAiSp(job, L) : (xEx().sp || {}); u.mhp += (sp.hp || 0) * XSPV.hp; u.atk += (sp.atk || 0) * XSPV.atk; u.mag += (sp.mag || 0) * XSPV.mag; u.heal += (sp.heal || 0) * XSPV.heal; u.spd += (sp.spd || 0) * XSPV.spd; u.mmp += (sp.mag || 0) * 1.5; ['mhp', 'mmp', 'atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k]); }); }   // 스탯 포인트
-  xAll(job).forEach(o => { const lv = sk[o.b + '.' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, sv: o.sv == null ? o.sv : o.sv * xPw(o, lv), pet: o.pet ? { ...o.pet, k: o.pet.k * xPw(o, lv) } : o.pet, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv) }); });
+  xAll(job).forEach(o => { const lv = sk[o.b + '.' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, mp: o.mp ? Math.round(o.mp * xMpK(lv)) : o.mp, sv: o.sv == null ? o.sv : o.sv * xPw(o, lv), pet: o.pet ? { ...o.pet, k: o.pet.k * xPw(o, lv) } : o.pet, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv) }); });
   const P = u.pas; ['hp', 'atk', 'mag', 'spd'].forEach(k => { if (P[k]) u[k === 'hp' ? 'mhp' : k] = Math.round(u[k === 'hp' ? 'mhp' : k] * (1 + P[k])); }); u.wp = ai ? Math.min(4, Math.floor((L - 1) / 12)) : (xEx().wp || 0); const wm = 1 + .08 * u.wp; ['atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k] * wm); });   // 무기 강화 한 단계마다 +8%
   u.dr = P.def || 0; u.vamp = P.vamp || 0; u.crit = P.crit || 0; u.dodge = P.dodge || 0; u.survLeft = P.surv ? 1 : 0; u.pets = [];
   u.hp = hp ?? u.mhp; u.mp = mp ?? u.mmp; return u; };
