@@ -6654,6 +6654,7 @@ function pzDrag(e, el){
 // ---- 연출: 처음 열렸을 때 · 완성했을 때 (밤 호수 + 해골 선장 + 아울라) ----
 function pzSeen(id, k, set){ const key = `pz-${k}-${id}`; try { if (set){ localStorage.setItem(key, '1'); return true; } return !!localStorage.getItem(key); } catch(e){ return false; } }
 // 줄: [누구(aula·cap·narr), 말, 표정(아울라 0기본 1웃음 2화남 3놀람 4부끄), 선장 보임(1)·배 올라옴(2)·지도 보임(3)]
+const pzDots = t => t.replace(/(…|\.{2,})(?=\s*$)|…|\.{2,}/g, (m, e) => e ? '......' : '....');   // 말줄임표: 말 중간이면 점 4개, 말 끝이면 점 6개
 function pzScene(lines, done){
   document.getElementById('pzcut')?.remove();
   const el = document.createElement('div'); el.id = 'pzcut'; $('#shell').appendChild(el); let i = 0;
@@ -6661,7 +6662,7 @@ function pzScene(lines, done){
   const stage = el.querySelector('.pzstage');
   const show = () => { const [who, t, face, st] = lines[i], pic = who === 'aula' ? `<i class="pzpt" style="background-image:url(art/portraits/aula.png?v=${PORTRAIT_V});background-size:500% 100%;background-position:${(face || 0) * 25}% 0"></i>` : who === 'cap' ? '<i class="pzpt pzcp"></i>' : '';
     stage.classList.toggle('cap', who === 'cap' || st === 1); stage.classList.toggle('ship', st >= 2 || lines.slice(0, i + 1).some(l => l[3] === 2)); stage.classList.toggle('map', st === 3 || lines.slice(0, i + 1).some(l => l[3] === 3));
-    $('#pzbox').innerHTML = `<div class="pzh">${pic}<b>${who === 'aula' ? '아울라' : who === 'cap' ? '유령 선장' : ''}</b></div><div class="pzt2">${t}</div><button class="btn sm go" id="pzn">${i + 1 < lines.length ? '다음' : '확인'}</button>`;
+    $('#pzbox').innerHTML = `<div class="pzh">${pic}<b>${who === 'aula' ? '아울라' : who === 'cap' ? '유령 선장' : ''}</b></div><div class="pzt2">${pzDots(t)}</div><button class="btn sm go" id="pzn">${i + 1 < lines.length ? '다음' : '확인'}</button>`;
     $('#pzn').onclick = () => { if (++i < lines.length) show(); else { el.remove(); if (done) done(); } }; };
   show();
 }
