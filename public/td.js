@@ -22,11 +22,11 @@
   // 웨이브: 1~15, 차수(1·2·3)마다 세져요. 일반(1·2) · 정예(3·4) · 보스(5)
   const TIER_HP = [1, 2.4, 4.6], TIER_GOLD = [[8, 30, 150], [10, 40, 150], [14, 55, 300]];
   const MON = { n: { hp: 70, spd: 10.5, egg: 8 }, e: { hp: 260, spd: 9, egg: 22 }, b: { hp: 1100, spd: 6.7, egg: 60 } };
+  const WAVE_TAB = [[20, 0, 0], [40, 0, 0], [20, 20, 0], [30, 20, 0], [30, 30, 1], [30, 0, 0], [40, 0, 0], [30, 20, 0], [30, 30, 0], [30, 40, 1], [40, 0, 0], [50, 0, 0], [40, 30, 0], [40, 40, 0], [50, 50, 2]];   // 웨이브별 [일반, 정예, 보스] 마릿수
   function waveDef(w){   // w: 1~15 → [종류, 마릿수, 간격(초)] 목록
-    const tier = Math.floor((w - 1) / 5), k = (w - 1) % 5;
-    if (k < 2) return { tier, list: [['n', 8 + tier * 3 + k * 2, .9]] };
-    if (k < 4) return { tier, list: [['e', 3 + tier * 2 + (k - 2), 2.4], ['n', 6 + tier * 2, .8]] };
-    return { tier, list: [['b', 1, 1], ['n', 6 + tier * 3, .9], ['e', 2 + tier, 2.4]] };
+    const tier = Math.floor((w - 1) / 5), [n, e, b] = WAVE_TAB[w - 1], list = [];
+    if (b) list.push(['b', b, 4]); if (n) list.push(['n', n, .5]); if (e) list.push(['e', e, 1.1]);
+    return { tier, list };
   }
   function newState(players, opt){   // players: [{ uid, zone(0~2), slot, job }]
     opt = opt || {};
@@ -45,7 +45,7 @@ function unseat(S, uid){ if (S.phase !== 'wave') delete S.players[uid]; }
 const setReady = (S, uid, v) => { const p = S.players[uid]; if (p && (S.phase === 'ready' || S.phase === 'rest')) p.ready = v ? 1 : 0; };
 const allReady = S => { const a = Object.values(S.players); return a.length > 0 && a.every(q => q.ready); };
 function upgrade(S, uid, i, k){ const p = S.players[uid], c = p && upCost(p, i, k); if (!p || c == null || p.gold < c) return false; p.gold -= c; p.up[i][k]++; return true; }
-  function startWave(S){ if (S.phase === 'over' || S.wave >= 15) return false; S.wave++; Object.values(S.players).forEach(q => { q.ready = 0; }); { const n = Object.keys(S.players).length / 9; S.hpN = n >= 1 ? n : Math.max(.3, Math.pow(n, 1.15)); } const cf = .85 + .15 * Math.min(2, Math.max(1, S.hpN)), d = waveDef(S.wave); S.phase = 'wave'; S.tier = d.tier; S.q = []; let t = 0; d.list.forEach(([type, n0, gap]) => { const n = Math.max(1, Math.round(n0 * cf)); for (let i = 0; i < n; i++){ S.q.push({ at: t, type }); t += gap; } t += 1.5; }); S.q.sort((a, b) => a.at - b.at); S.wt = 0; S.spawned = 0; S.total = S.q.length; return true; }
+  function startWave(S){ if (S.phase === 'over' || S.wave >= 15) return false; S.wave++; Object.values(S.players).forEach(q => { q.ready = 0; }); { const n = Object.keys(S.players).length / 9; S.hpN = n >= 1 ? n : Math.max(.3, Math.pow(n, 1.15)); } const cf = .85 + .15 * Math.min(2, Math.max(1, S.hpN)), d = waveDef(S.wave); S.phase = 'wave'; S.tier = d.tier; S.q = []; let t = 0; d.list.forEach(([type, n0, gap]) => { const n = n0; for (let i = 0; i < n; i++){ S.q.push({ at: t, type }); t += gap; } t += 1.5; }); S.q.sort((a, b) => a.at - b.at); S.wt = 0; S.spawned = 0; S.total = S.q.length; return true; }
   function spawn(S, type){ const m = MON[type], tier = S.tier, wk = 1 + ((S.wave - 1) % 5) * .06, hp = Math.round(m.hp * TIER_HP[tier] * wk * S.hpN * S.hpK * K.hp); S.mons.push({ id: S.nid++, type, zone: 0, s: 0, hp, mhp: hp, spd: m.spd * (1 + tier * .06), egg: m.egg * (1 + tier * .35), slow: 0, slowT: 0, gold: Math.round(TIER_GOLD[tier][type === 'n' ? 0 : type === 'e' ? 1 : 2] * K.gold) }); }
   const K = { gold: 3, dmg: 1.15, bonus: 30, hp: 2.1, egg: .08, basic: 10, reach: 16 };   // 균형 조절용
   const alive = S => S.mons.filter(m => m.hp > 0);
