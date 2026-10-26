@@ -9,7 +9,7 @@ function run(seed){let r=seed;const rnd=()=>(r=(r*16807)%2147483647)/2147483647;
   if((tt*10|0)%20===0)Object.values(S.players).forEach(p=>{const opts=[];for(let i=0;i<2;i++)for(const k of['pow','rng','cd']){const c=TD.upCost(p,i,k);if(c!=null&&p.gold>=c)opts.push([i,k,c])}
    if(opts.length&&rnd()<.7){const o=opts[rnd()*opts.length|0];TD.upgrade(S,p.uid,o[0],o[1]);spent+=o[2]}})}
  const earned=Object.values(S.players).reduce((a,p)=>a+p.earned,0)/pl.length;
- return {win:S.win?1:0,wave:S.wave,eggs:S.eggs.map(Math.round),earned:Math.round(earned),leaks:S.leaks,t:Math.round(tt)}}
+ return {kz:S.kz,win:S.win?1:0,wave:S.wave,eggs:S.eggs.map(Math.round),earned:Math.round(earned),leaks:S.leaks,t:Math.round(tt)}}
 const R=[];for(let i=1;i<=N;i++)R.push(run(i*7919));
 const avg=f=>Math.round(R.reduce((a,x)=>a+f(x),0)/R.length*10)/10;
-console.log('팀당',PER,'명 hpK',HPK,'승',avg(x=>x.win)*100+'%','도달 웨이브',avg(x=>x.wave),'남은 알 합',avg(x=>x.eggs.reduce((a,b)=>a+b,0)),'1인 번 골드',avg(x=>x.earned),'새어나간 수',avg(x=>x.leaks),'시간(초)',avg(x=>x.t));
+const kz=R.reduce((a,x)=>a.map((v,i)=>v+x.kz[i]),[0,0,0]),kt=kz.reduce((a,b)=>a+b)||1;console.log('처치 비율 숲길/입구/둥지앞',kz.map(v=>Math.round(v/kt*100)+'%').join(' / '));console.log('팀당',PER,'명 hpK',HPK,'승',avg(x=>x.win)*100+'%','도달 웨이브',avg(x=>x.wave),'남은 알 합',avg(x=>x.eggs.reduce((a,b)=>a+b,0)),'1인 번 골드',avg(x=>x.earned),'새어나간 수',avg(x=>x.leaks),'시간(초)',avg(x=>x.t));

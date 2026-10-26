@@ -6281,7 +6281,7 @@ function dfListen(){
   if (solo || !F || !db || dfOffs.length) return;
   dfOffs.push(F.onValue(F.ref(db, 'defense/ctl'), s => { const v = s.val(), was = dfCtl && dfCtl.open; dfCtl = v; dfBtn(); if (v && v.open && !was) toast('이벤트 「용의 알 지키기」가 열렸어요! 오른쪽 위 버튼을 눌러 보세요'); if (!(v && v.open) && dfOn) dfClose(); else if (dfOn) dfUi(); dfCheckCut(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/st'), s => { dfSt = s.val(); if (dfSt){ dfSt.m = dfSt.m || []; dfSt.p = dfSt.p || {}; dfSt.f = dfSt.f || []; dfSt.e = dfSt.e || [0, 0, 0]; dfSt.left = dfSt.left || 0; }   // 서버는 빈 목록·빈 객체를 저장하지 않아요 → 빈 값으로 채워요
-     dfStAt = performance.now(); if (dfSt && dfSt.f){ const nw = performance.now(); dfSt.f.forEach(([u2]) => { const U = dfUnits[u2]; if (U && !(U.wa && nw - U.wa.t0 < U.wa.dur - 40)){ const k = XWA[U.job] || 'melee'; U.wa = { k, t0: nw, dur: xDur(k), c: '#ffffff' }; } }); }
+     dfStAt = performance.now(); if (dfSt && dfSt.f){ const nw = performance.now(); dfSt.f.forEach(([u2, , k2]) => { if (k2 === 0) return; const U = dfUnits[u2]; if (U && !(U.wa && nw - U.wa.t0 < U.wa.dur - 40)){ const k = XWA[U.job] || 'melee'; U.wa = { k, t0: nw, dur: xDur(k), c: '#ffffff' }; } }); }
     if (dfPend && Date.now() - dfPend.t > 150){ const mp = dfMe(); if (mp && mp[6][dfPend.i] < .3 && dfCtl && dfCtl.ph === 'wave') toast('사거리 안에 몬스터가 없어요'); dfPend = null; } if (dfOn) dfUi(); dfCheckCut(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/res'), s => { dfRes = s.val(); if (World.reqRefresh) World.reqRefresh(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/pick'), s => { dfPick = s.val() || {}; if (dfOn) dfUi(); }));
@@ -6404,8 +6404,13 @@ function dfDraw(){
   mons.sort((a, b) => a.p[1] - b.p[1]).forEach(({ m, p, fl }) => { const px = p[0] * K, py = p[1] * K + 14, sc = m[1] === 'b' ? 1.3 : m[1] === 'e' ? 1 : .8, f = DF_MON[m[1]][tier], hp = m[4];
     if (mi.complete && mi.naturalWidth){ x.save(); x.translate(px, py); x.scale(fl ? -sc : sc, sc); x.drawImage(mi, f * 64, 0, 64, 64, -32, -64, 64, 64); x.restore(); }
     const bw = m[1] === 'b' ? 44 : 28; x.fillStyle = '#000'; x.fillRect(px - bw / 2 - 1, py - 64 * sc - 2, bw + 2, 6); x.fillStyle = hp > 40 ? '#7ddc5a' : '#ff6a4a'; x.fillRect(px - bw / 2, py - 64 * sc - 1, bw * hp / 100, 4); });
-  // 공격 효과
-  if (st && now - dfStAt < 260 && st.f){ x.lineWidth = 2; st.f.forEach(([u, mid]) => { const q = seats[u], mm = st.m.find(m => m[0] === mid); if (!q || !mm || q.z !== dfZone || mm[2] !== dfZone) return; const a = Z.slots[q.s], b = mons.find(o => o.m[0] === mid); if (!b) return; x.strokeStyle = `rgba(255,236,120,${1 - (now - dfStAt) / 260})`; x.beginPath(); x.moveTo(a[0] * K, a[1] * K - 16); x.lineTo(b.p[0] * K, b.p[1] * K - 8); x.stroke(); }); }
+  // 공격 효과: 기본 공격은 작은 콩알이 날아가고, 스킬은 빛줄기가 번쩍해요
+  if (st && now - dfStAt < 300 && st.f){ const pr = Math.min(1, (now - dfStAt) / 200); st.f.forEach(([u, mid, k]) => { const q = seats[u], mm = st.m.find(m => m[0] === mid); if (!q || !mm || q.z !== dfZone || mm[2] !== dfZone) return; const a = Z.slots[q.s], b = mons.find(o => o.m[0] === mid); if (!b) return;
+      const ax = a[0] * K, ay = a[1] * K - 16, bx = b.p[0] * K, by = b.p[1] * K - 8;
+      if (k === 0){ const X = ax + (bx - ax) * pr, Y = ay + (by - ay) * pr; x.fillStyle = '#2a2000'; x.beginPath(); x.arc(X, Y, 4, 0, 7); x.fill(); x.fillStyle = '#fff2a0'; x.beginPath(); x.arc(X, Y, 2.6, 0, 7); x.fill(); }
+      else { x.lineWidth = 3; x.strokeStyle = `rgba(255,236,120,${1 - (now - dfStAt) / 300})`; x.beginPath(); x.moveTo(ax, ay); x.lineTo(bx, by); x.stroke(); } }); }
+  // 알을 때리는 몬스터가 있으면 알이 깜빡여요
+  if (st && st.m.some(m => m[2] === 2 && m[5] === 0) && dfZone === 2){ x.fillStyle = `rgba(255,60,40,${.12 + .1 * Math.sin(now / 90)})`; x.fillRect(0, 300, 390, 141); }
 }
 // ----- 용의 동굴: 지켜 낸 용들이 살아요. 말을 걸면 크르릉! 그리고 가호(2시간, 하루 2번) -----
 let dfRes = null;   // defense/res = { id, eggs:[체력 0~100 ×3], win, at } — 이벤트가 끝날 때 관리자 기기가 남겨요
