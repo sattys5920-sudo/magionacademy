@@ -6281,7 +6281,7 @@ function dfListen(){
   if (solo || !F || !db || dfOffs.length) return;
   dfOffs.push(F.onValue(F.ref(db, 'defense/ctl'), s => { const v = s.val(), was = dfCtl && dfCtl.open; dfCtl = v; dfBtn(); if (v && v.open && !was) toast('이벤트 「용의 알 지키기」가 열렸어요! 오른쪽 위 버튼을 눌러 보세요'); if (!(v && v.open) && dfOn) dfClose(); else if (dfOn) dfUi(); dfCheckCut(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/st'), s => { dfSt = s.val(); if (dfSt){ dfSt.m = dfSt.m || []; dfSt.p = dfSt.p || {}; dfSt.f = dfSt.f || []; dfSt.e = dfSt.e || [0, 0, 0]; dfSt.left = dfSt.left || 0; }   // 서버는 빈 목록·빈 객체를 저장하지 않아요 → 빈 값으로 채워요
-     dfStAt = performance.now(); if (dfSt && dfSt.f){ const nw = performance.now(); dfSt.f.forEach(([u2, , k2]) => { if (k2 === 0) return; const U = dfUnits[u2]; if (U && !(U.wa && nw - U.wa.t0 < U.wa.dur - 40)){ const k = XWA[U.job] || 'melee'; U.wa = { k, t0: nw, dur: xDur(k), c: '#ffffff' }; } }); }
+     dfStAt = performance.now(); if (dfSt && dfSt.f){ const nw = performance.now(); dfSt.f.forEach(([u2]) => { const U = dfUnits[u2]; if (U && !(U.wa && nw - U.wa.t0 < U.wa.dur - 40)){ const k = XWA[U.job] || 'melee'; U.wa = { k, t0: nw, dur: xDur(k), c: '#ffffff' }; } }); }
     if (dfPend && Date.now() - dfPend.t > 150){ const mp = dfMe(); if (mp && mp[6][dfPend.i] < .3 && dfCtl && dfCtl.ph === 'wave') toast('사거리 안에 몬스터가 없어요'); dfPend = null; } if (dfOn) dfUi(); dfCheckCut(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/res'), s => { dfRes = s.val(); if (World.reqRefresh) World.reqRefresh(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/pick'), s => { dfPick = s.val() || {}; if (dfOn) dfUi(); }));
@@ -6400,13 +6400,13 @@ function dfDraw(){
   Z.slots.forEach((q, i) => { const px = q[0] * K, py = q[1] * K, u = taken[i]; x.beginPath(); x.arc(px, py, 22, 0, 7); x.setLineDash([5, 4]); x.lineWidth = 2; x.strokeStyle = u === myId() ? '#ffd866' : canSeat ? 'rgba(255,230,120,.9)' : 'rgba(255,230,120,.25)'; x.fillStyle = u === myId() ? 'rgba(255,230,120,.28)' : 'rgba(255,230,120,.1)'; x.fill(); x.stroke(); x.setLineDash([]);
     if (!u && canSeat){ x.fillStyle = '#ffe680'; x.font = '16px sans-serif'; x.textAlign = 'center'; x.fillText('+', px, py + 6); } });
   const heads = Object.entries(seats).filter(([, q]) => q.z === dfZone).sort((a, b) => a[1].s - b[1].s);
-  const mons = st ? st.m.filter(m => m[2] === dfZone).map(m => { const zl = TD.ZONES[m[2]], s = dfMonS(m, zl.len, now), p = TD.posAt(m[2], s), p2 = TD.posAt(m[2], Math.min(zl.len, s + 2)); return { m, p, fl: p2[0] < p[0] - .2 }; }) : [];
+  const mons = st ? st.m.filter(m => m[2] === dfZone).map(m => { const zl = TD.ZONES[m[2]], s = dfMonS(m, zl.len, now), p = TD.posAt(m[2], s), p2 = TD.posAt(m[2], Math.min(zl.len, s + 2)); const e = dfMD[m[0]], dx = p2[0] - p[0]; if (e){ if (dx < -.5) e.fl = true; else if (dx > .5) e.fl = false; } return { m, p, fl: !!(e && e.fl) }; }) : [];
   heads.forEach(([u, q]) => { const sl = Z.slots[q.s], px = sl[0] * K, py = sl[1] * K; x.globalAlpha = q.ok ? 1 : .55; const tg = mons.length ? mons.reduce((a, b) => Math.hypot(a.p[0] - sl[0], a.p[1] - sl[1]) < Math.hypot(b.p[0] - sl[0], b.p[1] - sl[1]) ? a : b) : null; dfUnitDraw(x, u, q.job, px, py, tg ? tg.p[0] > sl[0] + 1 : false, now); x.globalAlpha = 1;
     const nm = u === myId() ? me.nick : (playersList[u] && playersList[u].nick) || (dfPick[u] && dfPick[u].n) || ''; x.font = '10px G11, sans-serif'; x.textAlign = 'center'; x.lineWidth = 3; x.strokeStyle = '#000'; x.strokeText(nm, px, py + 30); x.fillStyle = u === myId() ? '#ffd866' : '#fff'; x.fillText(nm, px, py + 30); });
   { const mp = dfMe(); if (mp && mp[0] === dfZone && ph === 'wave'){ const sl = Z.slots[mp[1]], r0 = TD.skillOf(dfPlayerOf(mp), 0).rng + Z.d0[mp[1]]; x.beginPath(); x.arc(sl[0] * K, sl[1] * K, r0 * K, 0, 7); x.lineWidth = 1; x.strokeStyle = 'rgba(255,230,120,.35)'; x.stroke(); } }
   // 몬스터
   const tier = st ? Math.floor((Math.max(1, st.w) - 1) / 5) : 0, mi = dfImg('art/monsters_lpc.png');
-  mons.sort((a, b) => a.p[1] - b.p[1]).forEach(({ m, p, fl }) => { const px = p[0] * K, py = p[1] * K + 14, sc = m[1] === 'b' ? 1.3 : m[1] === 'e' ? 1 : .8, f = DF_MON[m[1]][tier], hp = m[4];
+  mons.sort((a, b) => a.p[1] - b.p[1]).forEach(({ m, p, fl }) => { const px = p[0] * K, py = p[1] * K + 14 - (m[5] > 0 ? Math.abs(Math.sin(now / 110 + m[0])) * 3 : 0), sc = m[1] === 'b' ? 1.3 : m[1] === 'e' ? 1 : .8, f = DF_MON[m[1]][tier], hp = m[4];
     if (mi.complete && mi.naturalWidth){ x.save(); x.translate(px, py); x.scale(fl ? -sc : sc, sc); x.drawImage(mi, f * 64, 0, 64, 64, -32, -64, 64, 64); x.restore(); }
     const bw = m[1] === 'b' ? 44 : 28; x.fillStyle = '#000'; x.fillRect(px - bw / 2 - 1, py - 64 * sc - 2, bw + 2, 6); x.fillStyle = hp > 40 ? '#7ddc5a' : '#ff6a4a'; x.fillRect(px - bw / 2, py - 64 * sc - 1, bw * hp / 100, 4); });
   // 공격 효과: 기본 = 작은 콩알 · 스킬1 = 굵은 빛줄기와 번쩍 · 스킬2 = 넓게 퍼지는 파동과 번개
