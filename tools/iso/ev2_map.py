@@ -118,3 +118,7 @@ for r in range(2):
     for cc in range(COLS): sheet.alpha_composite(P[(r + 1, cc)].resize(((PW + 12) * 2, (PH + 12) * 2), Image.NEAREST), (cc * (PW + 12) * 2, r * (PH + 12) * 2))
 sheet.convert('RGB').save('out/ev2_pieces.png')
 print('ok', len(P))
+# ---- 게임용 그림: 조각 모음(10×5칸, 칸 32×36)과 완성 지도 ----
+full = Image.new('RGBA', (COLS * (PW + 12), ROWS * (PH + 12)), (0, 0, 0, 0))
+for (r, cc), im in P.items(): full.alpha_composite(im, (cc * (PW + 12), r * (PH + 12)))
+full.save('../../public/art/ev2_pieces.png'); M.save('../../public/art/ev2_map.png')

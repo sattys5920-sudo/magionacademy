@@ -225,6 +225,22 @@
         ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid) || data.val() === auth.uid)",
         ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 40)"
       }
+    },
+    "puzzle": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+      "own": {
+        "$pid": {
+          ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid) || auth != null && auth.token.email === 'magionadmin@magionacademy.app')",
+          ".validate": "newData.isString()"
+        }
+      },
+      "board": {
+        "$pid": {
+          ".write": "auth != null && ((!data.exists() && root.child('puzzle/own/' + $pid).val() === auth.uid) || auth != null && auth.token.email === 'magionadmin@magionacademy.app')",
+          ".validate": "newData.isString()"
+        }
+      }
     }
   }
 }
