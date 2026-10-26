@@ -1608,9 +1608,9 @@ const XJ = {   // 직업: 체력·공격·마공·치유·속도 [기본, 레벨
   summon: { n: '소환사', ic: `<span class="jic" style="--i:10"></span>`, d: '정령과 야수 · 광역', hp: [75, 8], atk: [4, .4], mag: [14, 2.1], heal: [4, .4], spd: [10, .3] },
   gadget: { n: '기공사', ic: `<span class="jic" style="--i:11"></span>`, d: '포탑과 폭탄 · 광역', hp: [80, 9], atk: [10, 1.6], mag: [8, 1.1], heal: [3, .3], spd: [9, .3] },
 };
-// 스킬 트리: XT(직업 → 줄기 3 × 스킬 5, tools/skill_tree.py가 만든 데이터) + 코드 → 효과. 스킬 최대 Lv4, 레벨당 포인트 1
+// 스킬 트리: XT(직업 → 줄기 3 × 스킬 5, tools/skill_tree.py가 만든 데이터) + 코드 → 효과. 스킬 최대 Lv5, 레벨당 포인트 1
 const XDS = { warrior: 'atk', thief: 'atk', knight: 'atk', gadget: 'atk' }, XPAS = { def: .05, hp: .06, atk: .05, mag: .05, spd: .05, vamp: .06, crit: .06, surv: 1, dodge: .05 }, XPASN = { surv: '쓰러질 공격 버티기', dodge: '회피', def: '받는 피해', hp: '최대 체력', atk: '공격', mag: '마법', spd: '속도', vamp: '흡혈', crit: '치명타' };
-const XDP = [1.2, 1.6, 2.1, 2.7, 3.4], XHP = [2, 2.6, 3.2, 3.9, 4.6], XMAXLV = 4, XRESET = 300, xSkp = L => L - 1;
+const XDP = [1.2, 1.6, 2.1, 2.7, 3.4], XHP = [2, 2.6, 3.2, 3.9, 4.6], XMAXLV = 5, XRESET = 300, xSkp = L => L - 1;
 const xDefs = {};
 const XOV = {   // 스킬별 특수 효과 (직업.이름). t 종류 · key 효과 이름 · v 세기 · sec 지속(초) · ap 맞은 뒤 붙는 효과 [종류, 세기, 초] · hits 여러 번 타격 · exec 체력 낮은 적 추가 피해 · fcrit 반드시 치명타 · pct 체력 비율 · pet 소환수
   'warrior.대지 가르기': { ap: [['stun', 30]], ds: '적 전체에 피해 + 행동이 잠깐 늦어져요' },
@@ -1733,7 +1733,7 @@ function xDef(job, b, r){   // 스킬 하나의 효과표 (Lv1 기준)
   return xDefs[key] = o;
 }
 const xAll = job => Array.from({ length: 15 }, (_, i) => xDef(job, Math.floor(i / 5), i % 5));
-const xMpK = lv => 1 + .15 * (Math.max(1, lv) - 1);   // 스킬을 올릴수록 위력이 커지는 만큼 MP도 더 들어요 (Lv4는 1.45배)
+const xMpK = lv => 1 + .15 * (Math.max(1, lv) - 1);   // 스킬을 올릴수록 위력이 커지는 만큼 MP도 더 들어요 (Lv5는 1.6배)
 const xPw = (o, lv) => 1 + .18 * (lv - 1), xEfv = (o, lv) => o.v * (1 + .15 * (lv - 1));
 function xDesc(o, lv){
   if (o.pas) return o.pas === 'surv' ? '패시브 · 전투마다 한 번, 쓰러질 공격을 체력 1로 버텨요' : `패시브 · ${XPASN[o.pas]} ${o.pas === 'def' ? '-' : '+'}${Math.round(XPAS[o.pas] * 100 * lv)}%`;
