@@ -2356,9 +2356,9 @@ function xcoMemberWin(B, rew){   // 이긴 보상: 경험치·골드는 같고, 
 function xStartBattle(kind, msg){
   const ex = xEx(), run = ex.run, R = xReg(), party = xcoHost() ? xcoPartyUnits() : xParty(), d = run.prog / 100, mL = Math.max(1, Math.min(Math.round(R.lv[0] + (R.lv[1] - R.lv[0]) * d), xLv(ex.exp).L + 3)),   // 내 레벨보다 3 높은 몬스터까지만
     mk = (m, i, hm = 1) => { const k = m.k || 1, f = (1 + .35 * (mL - 1)) * hm * (k >= 3 ? R.ehm || 1 : R.hpm || 1), a = (1 + .25 * (mL - 1)) * (k >= 3 ? Math.sqrt(R.atkm || 1) : R.atkm || 1) * (k >= 8 ? R.bat || 1 : 1); return { id: 'e' + i, name: m.n, ic: '', lp: m.lp, big: m.big, sc: m.big ? 3 : k >= 3 ? 2 : 1, hh: 56 * (m.big ? 3 : k >= 3 ? 2 : 1), team: 'e', mhp: Math.round(m.hp * f), hp: Math.round(m.hp * f), atk: Math.round(m.atk * a), spd: m.spd, g: Math.random() * 60, k, aoe: !!m.aoe, mL, fx: {} }; };
-  const sz = party.length, pool = run.pool || R.mon;   // 인원이 늘면 몬스터도 늘어요: 일반 = 인원수(깊이 30% 이후엔 가끔 +1) · 정예 = 정예 + (인원−1) · 보스는 한 마리지만 체력이 늘어요
-  const foes = kind === 'boss' ? [mk(R.boss, 0, 1 + .7 * (sz - 1))] : kind === 'elite' ? [mk(R.elite, 0, 1 + .5 * (sz - 1)), ...Array.from({ length: Math.min(4, sz - 1) }, (_, i) => mk(xRand(pool), i + 1))]
-    : Array.from({ length: Math.min(6, sz + (sz >= 2 && d > .3 && Math.random() < .3 ? 1 : 0)) }, (_, i) => mk(i === 0 && run.nextMon ? run.nextMon : xRand(pool), i)); run.nextMon = null;
+  const sz = party.length, pool = run.pool || R.mon;   // 인원이 늘면 몬스터도 늘어요: 일반 = 인원+1 (혼자면 1마리) · 정예 = 정예 + (인원−1) · 보스 = 보스 + 졸개 (인원−1) · 체력도 조금 늘어요
+  const foes = kind === 'boss' ? [mk(R.boss, 0, 1 + .4 * (sz - 1)), ...Array.from({ length: Math.min(4, sz - 1) }, (_, i) => mk(xRand(pool), i + 1))] : kind === 'elite' ? [mk(R.elite, 0, 1 + .5 * (sz - 1)), ...Array.from({ length: Math.min(4, sz - 1) }, (_, i) => mk(xRand(pool), i + 1))]
+    : Array.from({ length: Math.min(6, sz >= 2 ? sz + 1 : 1) }, (_, i) => mk(i === 0 && run.nextMon ? run.nextMon : xRand(pool), i)); run.nextMon = null;
   xb = { party, foes, kind, log: msg || '', turn: null, pick: null, over: false, last: performance.now(), buff: run.buff > 0, def: {}, fxs: [], floats: [], proj: [], n0: sz }; if (run.buff > 0) run.buff--; xv = { view: 'battle' };
   if (xcoHost()){ xb.bn = Math.round(now2()) * 10 + (++xcoBn % 10); xb.tn = 0; xcoEv = []; xcoEvN = 0; xcoPub({ st: 'battle' }); xcoPubBt(true); }
   renderExplore();
