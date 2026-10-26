@@ -6382,6 +6382,13 @@ function dfAvatar(u){
 }
 const DF_MON = { n: [0, 3, 6], e: [8, 12, 13], b: [16, 16, 16] }, DF_EGG = ['rgba(255,90,40,.5)', 'rgba(80,170,255,.5)', 'rgba(90,220,110,.5)'];
 function dfEggImg(i){ if (!dfEggImg.c) dfEggImg.c = []; if (dfEggImg.c[i]) return dfEggImg.c[i]; const src = dfImg('art/creatures.png'); if (!src.complete || !src.naturalWidth) return null; const c = document.createElement('canvas'); c.width = 120; c.height = 102; const x = c.getContext('2d'); x.drawImage(src, 1200, 0, 120, 102, 0, 0, 120, 102); x.globalCompositeOperation = 'source-atop'; x.fillStyle = DF_EGG[i]; x.fillRect(0, 0, 120, 102); return (dfEggImg.c[i] = c); }
+const dfMD = {};
+function dfMonS(m, len, now){   // 몬스터는 뒤로 가지 않고 부드럽게 따라가요 (4번/초 받는 값 사이를 이어 줘요)
+  const e = dfMD[m[0]], tg = Math.max(0, Math.min(len, m[3] + m[5] * Math.min(.6, (now - dfStAt) / 1000)));
+  if (!e || e.z !== m[2] || Math.abs(e.s - tg) > 8){ dfMD[m[0]] = { z: m[2], s: tg, t: now }; return tg; }
+  const sp = Math.max(m[5], 3) * 1.6 * Math.min(.1, (now - e.t) / 1000); if (tg > e.s) e.s = Math.min(tg, e.s + sp); e.t = now;
+  return e.s;
+}
 function dfDraw(){
   dfRaf = requestAnimationFrame(dfDraw); const c = $('#dfc'); if (!c) return; const x = c.getContext('2d'), K = 3, now = performance.now(), st = dfSt, ph = dfCtl ? dfCtl.ph : 'ready', Z = TD.ZONES[dfZone];
   x.imageSmoothingEnabled = false; x.drawImage(TDMAP.render(dfZone, Z), 0, 0, 390, 441); dfSkillTick(now);
@@ -6393,7 +6400,7 @@ function dfDraw(){
   Z.slots.forEach((q, i) => { const px = q[0] * K, py = q[1] * K, u = taken[i]; x.beginPath(); x.arc(px, py, 22, 0, 7); x.setLineDash([5, 4]); x.lineWidth = 2; x.strokeStyle = u === myId() ? '#ffd866' : canSeat ? 'rgba(255,230,120,.9)' : 'rgba(255,230,120,.25)'; x.fillStyle = u === myId() ? 'rgba(255,230,120,.28)' : 'rgba(255,230,120,.1)'; x.fill(); x.stroke(); x.setLineDash([]);
     if (!u && canSeat){ x.fillStyle = '#ffe680'; x.font = '16px sans-serif'; x.textAlign = 'center'; x.fillText('+', px, py + 6); } });
   const heads = Object.entries(seats).filter(([, q]) => q.z === dfZone).sort((a, b) => a[1].s - b[1].s);
-  const mons = st ? st.m.filter(m => m[2] === dfZone).map(m => { const zl = TD.ZONES[m[2]], s = Math.max(0, Math.min(zl.len, m[3] + m[5] * (now - dfStAt) / 1000)), p = TD.posAt(m[2], s), p2 = TD.posAt(m[2], Math.min(zl.len, s + 2)); return { m, p, fl: p2[0] < p[0] - .2 }; }) : [];
+  const mons = st ? st.m.filter(m => m[2] === dfZone).map(m => { const zl = TD.ZONES[m[2]], s = dfMonS(m, zl.len, now), p = TD.posAt(m[2], s), p2 = TD.posAt(m[2], Math.min(zl.len, s + 2)); return { m, p, fl: p2[0] < p[0] - .2 }; }) : [];
   heads.forEach(([u, q]) => { const sl = Z.slots[q.s], px = sl[0] * K, py = sl[1] * K; x.globalAlpha = q.ok ? 1 : .55; const tg = mons.length ? mons.reduce((a, b) => Math.hypot(a.p[0] - sl[0], a.p[1] - sl[1]) < Math.hypot(b.p[0] - sl[0], b.p[1] - sl[1]) ? a : b) : null; dfUnitDraw(x, u, q.job, px, py, tg ? tg.p[0] > sl[0] + 1 : false, now); x.globalAlpha = 1;
     const nm = u === myId() ? me.nick : (playersList[u] && playersList[u].nick) || (dfPick[u] && dfPick[u].n) || ''; x.font = '10px G11, sans-serif'; x.textAlign = 'center'; x.lineWidth = 3; x.strokeStyle = '#000'; x.strokeText(nm, px, py + 30); x.fillStyle = u === myId() ? '#ffd866' : '#fff'; x.fillText(nm, px, py + 30); });
   { const mp = dfMe(); if (mp && mp[0] === dfZone && ph === 'wave'){ const sl = Z.slots[mp[1]], r0 = TD.skillOf(dfPlayerOf(mp), 0).rng + Z.d0[mp[1]]; x.beginPath(); x.arc(sl[0] * K, sl[1] * K, r0 * K, 0, 7); x.lineWidth = 1; x.strokeStyle = 'rgba(255,230,120,.35)'; x.stroke(); } }
@@ -6403,10 +6410,10 @@ function dfDraw(){
     if (mi.complete && mi.naturalWidth){ x.save(); x.translate(px, py); x.scale(fl ? -sc : sc, sc); x.drawImage(mi, f * 64, 0, 64, 64, -32, -64, 64, 64); x.restore(); }
     const bw = m[1] === 'b' ? 44 : 28; x.fillStyle = '#000'; x.fillRect(px - bw / 2 - 1, py - 64 * sc - 2, bw + 2, 6); x.fillStyle = hp > 40 ? '#7ddc5a' : '#ff6a4a'; x.fillRect(px - bw / 2, py - 64 * sc - 1, bw * hp / 100, 4); });
   // 공격 효과: 기본 = 작은 콩알 · 스킬1 = 굵은 빛줄기와 번쩍 · 스킬2 = 넓게 퍼지는 파동과 번개
-  if (st && now - dfStAt < 360 && st.f){ const el = now - dfStAt, pr = Math.min(1, el / 200), fade = Math.max(0, 1 - el / 360), ringDone = {};
+  if (st && now - dfStAt < 420 && st.f){ const el = now - dfStAt, pr = Math.min(1, el / 220), fade = Math.max(0, 1 - el / 420), ringDone = {};
     st.f.forEach(([u, mid, k]) => { const q = seats[u], mm = st.m.find(m => m[0] === mid); if (!q || !mm || q.z !== dfZone || mm[2] !== dfZone) return; const a = Z.slots[q.s], b = mons.find(o => o.m[0] === mid); if (!b) return;
       const ax = a[0] * K, ay = a[1] * K - 16, bx = b.p[0] * K, by = b.p[1] * K - 8;
-      if (k === 0){ const X = ax + (bx - ax) * pr, Y = ay + (by - ay) * pr; x.fillStyle = '#2a2000'; x.beginPath(); x.arc(X, Y, 4, 0, 7); x.fill(); x.fillStyle = '#fff2a0'; x.beginPath(); x.arc(X, Y, 2.6, 0, 7); x.fill(); }
+      if (k === 0){ const X = ax + (bx - ax) * pr, Y = ay + (by - ay) * pr; x.fillStyle = '#2a2000'; x.beginPath(); x.arc(X, Y, 6, 0, 7); x.fill(); x.fillStyle = '#fff2a0'; x.beginPath(); x.arc(X, Y, 4, 0, 7); x.fill(); if (pr >= 1){ x.strokeStyle = `rgba(255,240,150,${fade})`; x.lineWidth = 2; x.beginPath(); x.arc(bx, by, 6 + (1 - fade) * 10, 0, 7); x.stroke(); } }
       else if (k === 1){ x.lineCap = 'round'; x.lineWidth = 7; x.strokeStyle = `rgba(255,150,40,${fade * .6})`; x.beginPath(); x.moveTo(ax, ay); x.lineTo(bx, by); x.stroke(); x.lineWidth = 3; x.strokeStyle = `rgba(255,248,180,${fade})`; x.beginPath(); x.moveTo(ax, ay); x.lineTo(bx, by); x.stroke();
         x.strokeStyle = `rgba(255,220,100,${fade})`; x.lineWidth = 3; x.beginPath(); x.arc(bx, by, 8 + el / 14, 0, 7); x.stroke(); x.fillStyle = `rgba(255,255,230,${fade})`; x.beginPath(); x.arc(bx, by, 6, 0, 7); x.fill(); }
       else { if (!ringDone[u]){ ringDone[u] = 1; x.lineWidth = 4; x.strokeStyle = `rgba(150,215,255,${fade})`; x.beginPath(); x.arc(a[0] * K, a[1] * K, 30 + el * .5, 0, 7); x.stroke(); x.lineWidth = 2; x.strokeStyle = `rgba(220,240,255,${fade * .8})`; x.beginPath(); x.arc(a[0] * K, a[1] * K, 18 + el * .35, 0, 7); x.stroke(); }

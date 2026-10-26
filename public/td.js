@@ -74,7 +74,7 @@ function upgrade(S, uid, i, k){ const p = S.players[uid], c = p && upCost(p, i, 
     // 기본 공격은 늘 알아서 · 스킬은 직접 누르거나(cast) 「자동」을 켠 사람만 쿨타임이 차면 알아서
     Object.values(S.players).forEach(p => {
       p.buff = Math.max(0, p.buff - dt); const pos = ZONES[p.zone].slots[p.slot], mult = p.buff > 0 ? 1.25 : 1;
-      p.basic -= dt; if (p.basic <= 0){ const t = nearOf(S, p, K.reach).sort((a, b) => b.s - a.s)[0]; if (t){ hurt(S, t, K.basic * mult, p, 0); p.basic = 1; } else p.basic = .2; }   // 직업 상관없이 사거리 같고 1초에 한 번
+      p.basic -= dt; if (p.basic <= 0){ const t = nearOf(S, p, K.reach).sort((a, b) => b.s - a.s)[0]; if (t){ hurt(S, t, K.basic * mult, p, 0); p.basic = 2; } else p.basic = .2; }   // 직업 상관없이 사거리 같고 2초에 한 번
       for (let i = 0; i < 2; i++){ p.cd[i] -= dt; if (p.auto && p.cd[i] <= 0) cast(S, p.uid, i); } });
     S.mons = S.mons.filter(m => m.hp > 0);
     if (!S.eggs.some(v => v > 0)){ S.phase = 'over'; S.win = false; return; }
