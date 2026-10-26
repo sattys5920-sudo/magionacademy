@@ -21,7 +21,7 @@
   const UP_COST = [200, 350, 550, 800], UP_MAX = 5, UP_PER = { pow: .25, rng: .12, cd: .08 };
   // 웨이브: 1~15, 차수(1·2·3)마다 세져요. 일반(1·2) · 정예(3·4) · 보스(5)
   const TIER_HP = [1, 2.4, 4.6], TIER_GOLD = [[8, 30, 150], [10, 40, 150], [14, 55, 300]];
-  const MON = { n: { hp: 70, spd: 10.5, egg: 8 }, e: { hp: 260, spd: 9, egg: 22 }, b: { hp: 1100, spd: 6.7, egg: 60 } };
+  const MON = { n: { hp: 70, spd: 15, egg: 8 }, e: { hp: 260, spd: 13, egg: 22 }, b: { hp: 1100, spd: 9.5, egg: 60 } };
   const WAVE_TAB = [[20, 0, 0], [40, 0, 0], [20, 20, 0], [30, 20, 0], [30, 30, 1], [30, 0, 0], [40, 0, 0], [30, 20, 0], [30, 30, 0], [30, 40, 1], [40, 0, 0], [50, 0, 0], [40, 30, 0], [40, 40, 0], [50, 50, 2]];   // 웨이브별 [일반, 정예, 보스] 마릿수
   function waveDef(w){   // w: 1~15 → [종류, 마릿수, 간격(초)] 목록
     const tier = Math.floor((w - 1) / 5), [n, e, b] = WAVE_TAB[w - 1], list = [];
@@ -47,7 +47,7 @@ const allReady = S => { const a = Object.values(S.players); return a.length > 0 
 function upgrade(S, uid, i, k){ const p = S.players[uid], c = p && upCost(p, i, k); if (!p || c == null || p.gold < c) return false; p.gold -= c; p.up[i][k]++; return true; }
   function startWave(S){ if (S.phase === 'over' || S.wave >= 15) return false; S.wave++; Object.values(S.players).forEach(q => { q.ready = 0; }); { const n = Object.keys(S.players).length / 9; S.hpN = n >= 1 ? n : Math.max(.3, Math.pow(n, 1.15)); } const cf = .85 + .15 * Math.min(2, Math.max(1, S.hpN)), d = waveDef(S.wave); S.phase = 'wave'; S.tier = d.tier; S.q = []; let t = 0; d.list.forEach(([type, n0, gap]) => { const n = n0; for (let i = 0; i < n; i++){ S.q.push({ at: t, type }); t += gap; } t += 1.5; }); S.q.sort((a, b) => a.at - b.at); S.wt = 0; S.spawned = 0; S.total = S.q.length; return true; }
   function spawn(S, type){ const m = MON[type], tier = S.tier, wk = 1 + ((S.wave - 1) % 5) * .06, hp = Math.round(m.hp * TIER_HP[tier] * wk * S.hpN * S.hpK * K.hp); S.mons.push({ id: S.nid++, type, zone: 0, s: 0, hp, mhp: hp, spd: m.spd * (1 + tier * .06), egg: m.egg * (1 + tier * .35), slow: 0, slowT: 0, gold: Math.round(TIER_GOLD[tier][type === 'n' ? 0 : type === 'e' ? 1 : 2] * K.gold) }); }
-  const K = { gold: 3, dmg: 1.15, bonus: 30, hp: 2.1, egg: .08, basic: 10, reach: 16 };   // 균형 조절용
+  const K = { gold: 3, dmg: 1.15, bonus: 30, hp: 1.5, egg: .08, basic: 5, reach: 16 };   // 균형 조절용
   const alive = S => S.mons.filter(m => m.hp > 0);
   function hurt(S, m, dmg, by, kind){ if (m.hp <= 0) return; if (by && S.fx) S.fx.push([by.uid, m.id, kind || 0]); m.hp -= dmg * K.dmg; if (m.hp <= 0 && by){ by.gold += m.gold; by.earned += m.gold; if (S.kz) S.kz[by.zone]++; } }
   const nearOf = (S, p, rng) => { const pos = ZONES[p.zone].slots[p.slot], R = rng + ZONES[p.zone].d0[p.slot]; return alive(S).filter(m => m.zone === p.zone && (m.atk || Math.hypot(posAt(m.zone, m.s)[0] - pos[0], posAt(m.zone, m.s)[1] - pos[1]) <= R)); };   // 알을 때리는 중인 몬스터는 둥지 앞 자리 누구든 때릴 수 있어요 · 사거리는 가장 가까운 길에서부터 재요 (어느 자리든 길 가까이에는 닿아요)
