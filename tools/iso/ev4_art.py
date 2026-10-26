@@ -34,7 +34,23 @@ for i, (x0, x1) in enumerate(cells):
         if m.sum() < 30: continue
         lo = (lumsub[m] < 230).mean(); hi = (lumsub[m] >= 240).mean()
         if lo > .25 and hi > .25: bg |= m
-    rgba = np.dstack([sub, np.where(bg, 0, 255)]).astype(np.uint8); im = Image.fromarray(rgba, 'RGBA'); bb = im.getbbox()
+    # 가장자리 정리: 체크무늬가 섞인 한 겹을 깎고, 가장자리 색은 안쪽 색으로 채우고, 알파를 살짝 부드럽게(누끼 깔끔하게)
+    solid = ~bg
+    ys, xs = np.nonzero(solid); x_lo, x_hi = xs.min(), xs.max(); lumsub2 = sub.sum(2) / 3; chroma = sub.max(2) - sub.min(2)
+    zone = np.zeros_like(solid); zone[:, int(x_lo + (x_hi - x_lo) * .78):] = True                      # 오른쪽 가장자리(작은 등불 걸이 둘레): 남은 회색·흰 체크무늬 조각 제거
+    solid &= ~(zone & (chroma <= 12) & (lumsub2 > 195))
+    g_ = (sub[..., 1] - sub[..., 0] > 60) & (chroma > 70); g_ &= np.arange(solid.shape[1])[None, :] > x_lo + (x_hi - x_lo) * .6      # 작은 초록 등불 걸이(진한 초록)를 찾아
+    if g_.sum() > 40:
+        gy, gx = np.nonzero(g_); cx0, cx1, cy0, cy1 = gx.min() - 7, gx.max() + 7, gy.min() - 7, gy.max() + 7; mid = (gx.min() + gx.max()) // 2
+        box = np.zeros_like(solid); box[max(cy0, 0):cy1, mid:cx1] = True; solid &= ~(box & (chroma <= 28) & (lumsub2 > 200) & ~g_)     # 그 오른쪽 둘레의 옅은 네모 조각을 지워요
+    solid = ndimage.binary_opening(solid, iterations=1); solid = ndimage.binary_erosion(solid, iterations=1)
+    lab2, n2 = ndimage.label(solid, structure=np.ones((3, 3)))
+    for k in range(1, n2 + 1):                                                                         # 작고 어두운 먼지(틀 조각) 제거
+        m = lab2 == k
+        if m.sum() < 160 and lumsub2[m].mean() < 130: solid[m] = False
+    idx = ndimage.distance_transform_edt(~solid, return_distances=False, return_indices=True); filled = sub[idx[0], idx[1]]
+    alpha = np.clip(ndimage.gaussian_filter(solid.astype(float), .8) * 1.35 - .15, 0, 1) * 255
+    rgba = np.dstack([filled, alpha]).astype(np.uint8); im = Image.fromarray(rgba, 'RGBA'); bb = im.getbbox()
     im = im.crop(bb); k = min(250 / im.width, 258 / im.height, 1.0); im = im.resize((max(1, int(im.width * k)), max(1, int(im.height * k))), Image.LANCZOS)
     strip.alpha_composite(im, (i * 260 + (260 - im.width) // 2, 262 - im.height))
 strip.save(ART + 'ev4_ghost.png')

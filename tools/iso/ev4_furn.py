@@ -23,7 +23,7 @@ if new:
         b = np.array(im); b[..., 3] = np.where(b[..., 3] > 110, 255, 0); q = Image.fromarray(b[..., :3]).quantize(14, dither=Image.NONE).convert('RGB'); b[..., :3] = np.array(q); im = Image.fromarray(b, 'RGBA')   # 도트답게 색을 줄여요
         sx = x0 + j * (SW + 2); atlas.alpha_composite(im, (sx + (SW - im.width) // 2, SH - im.height))
         FURN['items'].append({'id': f'ghostlamp{k}', 'name': f'유령 등불 ({n})', 'cat': '이벤트', 'price': 0, 'pts': 3, 'w': 1, 'd': 1, 'solid': 1, 'flat': 0, 'sw': SW, 'sh': SH, 'ax': SW // 2, 'ay': SH - 5, 'sx': sx, 'ev': 1})
-    atlas.save(ATLAS)
+    atlas.save(ATLAS); atlas.save(ATLAS.replace('.png', '.webp'), lossless=True)   # 게임은 웹피 그림을 먼저 써요
     h = hashlib.md5(open(ATLAS, 'rb').read()).hexdigest()[:8]; FURN['src'] = re.sub(r'\?v=\w+', '?v=' + h, FURN['src'])
     s = s[:i] + json.dumps(FURN, ensure_ascii=False, separators=(', ', ': ')) + s[i + end:]; open(WJ, 'w').write(s)
 print('furn items', len(FURN['items']), 'added', len(new))

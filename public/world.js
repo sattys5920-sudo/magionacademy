@@ -808,9 +808,10 @@ function frame(now){
   // 빛: 실내는 늘 어둑, 바깥은 시간대에 따라
   if (SK.n > .02 || SK.c.some(v => v < 254)){
     const lb = M.indoor ? 0 : (World.lampBoost || 0);   // 이벤트: 모은 등불이 늘수록 학교 등불이 점점 밝아져요 (0~1)
-    cx.globalCompositeOperation = 'multiply'; cx.fillStyle = `rgb(${lb ? SK.c.map(v => Math.round(v + (255 - v) * .3 * lb)) : SK.c})`; cx.fillRect(ix, iy, VW, VH);
+    cx.globalCompositeOperation = 'multiply'; cx.fillStyle = `rgb(${lb > 0 ? SK.c.map(v => Math.round(v + (255 - v) * .3 * lb)) : lb < 0 ? SK.c.map(v => Math.round(v * (1 + .62 * lb))) : SK.c})`;   // lb<0: 연출용(불을 모두 끈 어두운 학교)
+     cx.fillRect(ix, iy, VW, VH);
     cx.globalCompositeOperation = 'lighter';
-    M.lights.forEach((L, i) => { if (L.p[0] + L.r < view.x || L.p[0] - L.r > view.x + view.w || L.p[1] + L.dy + L.r < view.y || L.p[1] + L.dy - L.r > view.y + view.h) return; const fl = L.f ? .85 + .15 * Math.sin(now / 130 + i * 1.7) * Math.sin(now / 370 + i) : 1; cx.globalAlpha = Math.min(1, L.a * fl * Math.max(.3, Math.min(1, SK.n * 1.15)) * (1 + 1.2 * lb)); const rr = L.r * (1 + .7 * lb); cx.drawImage(glow(L.r, L.c), L.p[0] - rr, L.p[1] + L.dy - rr, rr * 2, rr * 2); });
+    M.lights.forEach((L, i) => { if (L.p[0] + L.r < view.x || L.p[0] - L.r > view.x + view.w || L.p[1] + L.dy + L.r < view.y || L.p[1] + L.dy - L.r > view.y + view.h) return; const fl = L.f ? .85 + .15 * Math.sin(now / 130 + i * 1.7) * Math.sin(now / 370 + i) : 1; cx.globalAlpha = Math.max(0, Math.min(1, L.a * fl * Math.max(.3, Math.min(1, SK.n * 1.15)) * (lb < 0 ? 1 + .85 * lb : 1 + 1.2 * lb))); const rr = L.r * (lb < 0 ? 1 + .3 * lb : 1 + .7 * lb); cx.drawImage(glow(L.r, L.c), L.p[0] - rr, L.p[1] + L.dy - rr, rr * 2, rr * 2); });
     cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
   }
   drawWeather(cx, ix, iy, dt);

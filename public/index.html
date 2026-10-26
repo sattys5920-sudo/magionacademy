@@ -6749,7 +6749,7 @@ function lnUi(){
   $('#lninfo').textContent = `모은 등불 ${t} / ${LN.GOAL}`;
   const sig = [t, m, my, Object.keys(lnColor).length, lnDone()].join(',');
   const body = $('#lnbody'); if (body.dataset.sig === sig) return; body.dataset.sig = sig;
-  body.innerHTML = `<div class="lnscene"><img class="lnbg" src="art/ev4_school_dim.png"><img class="lnbg" src="art/ev4_school_lit.png" style="opacity:${k}"><i class="lnghost px" style="background-image:url(art/ev4_ghost.png);background-position:${(lnDone() ? 1 : 0) * 25}% 0"></i></div>
+  body.innerHTML = `<div class="lnscene"><img class="lnbg" src="art/ev4_school_dim.png"><img class="lnbg" src="art/ev4_school_lit.png" style="opacity:${k}"><i class="lnghost" style="background-image:url(art/ev4_ghost.png);background-position:${(lnDone() ? 1 : 0) * 25}% 0"></i></div>
     <div class="lnbar"><i style="width:${k * 100}%"></i></div><div class="s sub" style="text-align:center">반 친구들이 모은 등불 ${t} / ${LN.GOAL} · 학교가 점점 밝아져요</div>
     <div class="lnmine"><b>내 등불</b> ${m} / ${LN.MAX}<div class="lnrow">${Array.from({ length: LN.MAX }, (_, i) => `<i class="lnic ${i < m ? 'on' : ''}"></i>`).join('')}</div></div>
     <div class="s sub" style="padding:4px 14px">${lnDone() ? '등불을 모두 모았어요!' : m >= LN.MAX ? '내 등불은 다 모았어요. 친구들을 응원해 주세요!' : '낚시 · 채집 · 탐사를 하면 가끔(5%) 등불이 저절로 모여요'}</div>
@@ -6773,7 +6773,7 @@ const lnEndLines = [
 function lnScene(lines, done){
   document.getElementById('lncut')?.remove();
   const el = document.createElement('div'); el.id = 'lncut'; $('#shell').appendChild(el); let i = 0, st = { g: 0, lit: 0, m: 0 };
-  el.innerHTML = `<div class="lnstage"><img class="lnbg" src="art/ev4_school_dim.png"><img class="lnbg lnlit" src="art/ev4_school_lit.png"><i class="lnghost big px" style="background-image:url(art/ev4_ghost.png)"></i><div class="lnminis">${[0, 1, 2, 3, 4].map(n => `<i class="lnghost mini px" style="background-image:url(art/ev4_ghost.png);background-position:${n * 25}% 0;animation-delay:${n * .25}s;left:${6 + n * 19}%"></i>`).join('')}</div></div><div class="pzbox" id="lnbox"></div>`;
+  el.innerHTML = `<div class="lnstage"><img class="lnbg" src="art/ev4_school_dim.png"><img class="lnbg lnlit" src="art/ev4_school_lit.png"><i class="lnghost big" style="background-image:url(art/ev4_ghost.png)"></i><div class="lnminis">${[0, 1, 2, 3, 4].map(n => `<i class="lnghost mini" style="background-image:url(art/ev4_ghost.png);background-position:${n * 25}% 0;animation-delay:${n * .25}s;left:${6 + n * 19}%"></i>`).join('')}</div></div><div class="pzbox" id="lnbox"></div>`;
   const stage = el.querySelector('.lnstage');
   const show = () => { const [who, t, face, f] = lines[i]; st = { ...st, ...(f || {}) };
     stage.classList.toggle('g', !!st.g); stage.classList.toggle('m', !!st.m); el.querySelector('.lnlit').style.opacity = st.lit; const big = el.querySelector('.lnghost.big'); big.style.backgroundPosition = `${(who === 'ghost' ? face : 1) * 25}% 0`;
