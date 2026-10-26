@@ -6301,10 +6301,8 @@ function dfOpen(){
 function dfClose(){ dfCutEnd(); dfOn = false; cancelAnimationFrame(dfRaf); const v = $('#dfv'); if (v) v.remove(); dfBtn(); }
 const dfJob = () => (xEx() && xEx().job) || '';   // 직업은 한 번 고르면 바뀌지 않아요 (탐사에서 고른 직업 그대로)
 const dfSet = (el, html) => { if (!el || el.dataset.sig === html) return false; el.dataset.sig = html; el.innerHTML = html; return true; };
-function dfSkillMeta(job){   // 직업이 가진 스킬 그림·이름을 빌려 와요 (공격: 첫 공격 스킬 · 둘째는 막기/광역/응원)
-  const cat = TD.CAT[job] || 'melee', all = xAll(job).filter(o => !o.pas), by = t => all.filter(o => o.t === t); let a, b;
-  if (cat === 'heal'){ a = by('heal')[0] || all[0]; b = by('buff')[0] || all[1]; } else if (cat === 'melee'){ a = by('dmg')[0] || all[0]; b = by('buff')[0] || all[1]; } else { a = by('dmg')[0] || all[0]; b = by('dmg')[1] || all[1]; }
-  return [a, b].map(o => ({ n: o.n, ic: xIc(o) }));
+function dfSkillMeta(){   // 이벤트 전용 스킬 2개: 직업·레벨과 상관없이 모두 같아요 (1 가까운 한 명에게 센 공격 · 2 넓은 범위에 약한 공격)
+  return [{ n: '일격', ic: xIc({ i: 0, job: 'warrior' }) }, { n: '번개비', ic: xIc({ i: 1, job: 'black' }) }];
 }
 const dfMe = () => dfSt && dfSt.p && dfSt.p[myId()];
 function dfPlayerOf(q){ return { cat: TD.CAT[q[2]] || 'melee', up: q[4].map(a => ({ pow: a[0], rng: a[1], cd: a[2] })) }; }
@@ -6319,7 +6317,7 @@ function dfUi(){
   let txt = ph === 'ready' ? `점선 원을 눌러 자리를 정하고 「시작」을 눌러요. 모두 누르면 첫 웨이브가 와요 (준비 ${rdN}/${plN})` : ph === 'wave' ? `웨이브 ${w} 진행 중 · 남은 몬스터 ${st ? st.m.length + st.left : '-'}마리` : ph === 'rest' ? `자리를 바꾸고 「시작」을 눌러요. 모두 누르면 웨이브 ${w + 1}이 와요 (준비 ${rdN}/${plN})` : ph === 'over' ? (st && st.win ? '알을 모두 지켜 냈어요!' : '알이 모두 깨졌어요…') : '';
   if (stale) txt = '관리자 화면이 잠시 멈췄어요. 잠깐만 기다려 주세요.';
   const job = dfJob(), jn = job && XJ[job] ? XJ[job].n : '아직 없어요 (탐사에서 먼저 골라요)';
-  let sk = ''; if (mp){ const meta = dfSkillMeta(mp[2]); sk = `<div class="dfsk">${meta.map((m, i) => `<button data-sk="${i}">${m.ic}<span>${esc(m.n)}</span><i class="cdm"></i><b class="cdt"></b></button>`).join('')}<button id="dfauto" class="${mp[7] ? 'on' : ''}">자동<br>${mp[7] ? '켬' : '끔'}</button></div>`; }
+  let sk = ''; if (mp){ const meta = dfSkillMeta(); sk = `<div class="dfsk">${meta.map((m, i) => `<button data-sk="${i}">${m.ic}<span>${esc(m.n)}</span><i class="cdm"></i><b class="cdt"></b></button>`).join('')}<button id="dfauto" class="${mp[7] ? 'on' : ''}">자동<br>${mp[7] ? '켬' : '끔'}</button></div>`; }
   const upb = mp ? `<button class="btn sm" id="dfupb">스킬 올리기 · ${mp[3]}G${[0, 1].some(i => ['pow', 'rng', 'cd'].some(k => { const c = TD.upCost(dfPlayerOf(mp), i, k); return c != null && c <= mp[3]; })) ? ' ●' : ''}</button>` : '';
   { let up = $('#dfup'); if (dfUpOpen && mp){ if (!up){ up = document.createElement('div'); up.id = 'dfup'; v.appendChild(up); } if (dfSet(up, dfUpHTML(mp))){ up.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const [i, k] = b.dataset.up.split(','); dfSend({ u: [+i, k] }); sfx('pick'); }); up.querySelectorAll('[data-ut]').forEach(b => b.onclick = () => { dfUpTab = +b.dataset.ut; dfUi(); }); $('#dfupx').onclick = () => { dfUpOpen = false; dfUi(); }; } } else if (up) up.remove(); }
   const html = `${sk}${upb}<div>${txt}</div><div class="s sub">${my ? `내 자리: ${TD.ZONES[my.z].name} ${my.s + 1}번 · ${XJ[my.job] ? XJ[my.job].n : ''}` : '아직 자리가 없어요'} · 내 직업: ${jn}${mp ? '' : ''}</div>${canSeat && my ? `<div style="display:flex;gap:8px">${mp ? `<button class="btn sm ${mp[8] ? '' : 'go'}" id="dfready" style="flex:1">${mp[8] ? '준비 취소' : '시작'} · ${rdN}/${plN}</button>` : '<span class="s">자리를 확인하고 있어요…</span>'}<button class="btn sm" id="dfout">자리 빼기</button></div>` : ''}`;
@@ -6331,14 +6329,14 @@ function dfUi(){
   const au = $('#dfauto'); if (au) au.onclick = () => { dfSend({ a: dfMe() && dfMe()[7] ? 0 : 1 }); };
 }
 let dfLastCmd = 0, dfPend = null, dfUpOpen = false, dfUpTab = 0;
-const DF_UPLB = { pow: { hit: '공격력', aoe: '공격력', eggheal: '치유량', buff: '지속 시간', slow: '막는 힘' }, rng: { hit: '사거리', aoe: '범위', eggheal: '치유할 알 수', buff: '범위', slow: '범위' } };
+const DF_UPLB = { pow: { hit: '공격력', aoe: '공격력' }, rng: { hit: '사거리', aoe: '범위' } };
 function dfUpVal(pl, i, k, lv){   // 올린 값이 어떻게 보이는지
   const c = { cat: pl.cat, up: pl.up.map(u => ({ ...u })) }; c.up[i][k] = lv; const s = TD.skillOf(c, i), t = TD.SK[pl.cat][i].t;
   if (k === 'cd') return s.cd.toFixed(1) + '초'; if (k === 'rng') return t === 'eggheal' ? s.cnt + '개' : '+' + Math.round(12 * lv) + '%';
   return t === 'buff' ? s.dur.toFixed(1) + '초' : t === 'slow' ? Math.round(s.pow * 100) + '%' : Math.round(s.pow);
 }
 function dfUpHTML(mp){
-  const pl = dfPlayerOf(mp), meta = dfSkillMeta(mp[2]), i = dfUpTab, t = TD.SK[pl.cat][i].t, gold = mp[3];
+  const pl = dfPlayerOf(mp), meta = dfSkillMeta(), i = dfUpTab, t = TD.SK[pl.cat][i].t, gold = mp[3];
   const rows = ['pow', 'rng', 'cd'].map(k => { const lv = pl.up[i][k], cost = TD.upCost(pl, i, k), nm = k === 'cd' ? '쿨타임 감소' : DF_UPLB[k][t];
     return `<div class="uprow"><div style="display:flex;justify-content:space-between"><b>${nm}</b><span class="s sub">Lv${lv + 1}${cost == null ? ' (최대)' : ''}</span></div><div class="pips">${[0, 1, 2, 3, 4].map(n => `<i class="${n <= lv ? 'on' : ''}"></i>`).join('')}</div>
       <div style="display:flex;justify-content:space-between;align-items:center"><span class="s">${dfUpVal(pl, i, k, lv)}${cost == null ? '' : ` → ${dfUpVal(pl, i, k, lv + 1)}`}</span>${cost == null ? '<span class="s sub">다 올렸어요</span>' : `<button class="btn sm ${gold >= cost ? 'go' : ''}" data-up="${i},${k}" ${gold >= cost ? '' : 'disabled'}>올리기 ${cost}G</button>`}</div></div>`; }).join('');
@@ -6404,11 +6402,15 @@ function dfDraw(){
   mons.sort((a, b) => a.p[1] - b.p[1]).forEach(({ m, p, fl }) => { const px = p[0] * K, py = p[1] * K + 14, sc = m[1] === 'b' ? 1.3 : m[1] === 'e' ? 1 : .8, f = DF_MON[m[1]][tier], hp = m[4];
     if (mi.complete && mi.naturalWidth){ x.save(); x.translate(px, py); x.scale(fl ? -sc : sc, sc); x.drawImage(mi, f * 64, 0, 64, 64, -32, -64, 64, 64); x.restore(); }
     const bw = m[1] === 'b' ? 44 : 28; x.fillStyle = '#000'; x.fillRect(px - bw / 2 - 1, py - 64 * sc - 2, bw + 2, 6); x.fillStyle = hp > 40 ? '#7ddc5a' : '#ff6a4a'; x.fillRect(px - bw / 2, py - 64 * sc - 1, bw * hp / 100, 4); });
-  // 공격 효과: 기본 공격은 작은 콩알이 날아가고, 스킬은 빛줄기가 번쩍해요
-  if (st && now - dfStAt < 300 && st.f){ const pr = Math.min(1, (now - dfStAt) / 200); st.f.forEach(([u, mid, k]) => { const q = seats[u], mm = st.m.find(m => m[0] === mid); if (!q || !mm || q.z !== dfZone || mm[2] !== dfZone) return; const a = Z.slots[q.s], b = mons.find(o => o.m[0] === mid); if (!b) return;
+  // 공격 효과: 기본 = 작은 콩알 · 스킬1 = 굵은 빛줄기와 번쩍 · 스킬2 = 넓게 퍼지는 파동과 번개
+  if (st && now - dfStAt < 360 && st.f){ const el = now - dfStAt, pr = Math.min(1, el / 200), fade = Math.max(0, 1 - el / 360), ringDone = {};
+    st.f.forEach(([u, mid, k]) => { const q = seats[u], mm = st.m.find(m => m[0] === mid); if (!q || !mm || q.z !== dfZone || mm[2] !== dfZone) return; const a = Z.slots[q.s], b = mons.find(o => o.m[0] === mid); if (!b) return;
       const ax = a[0] * K, ay = a[1] * K - 16, bx = b.p[0] * K, by = b.p[1] * K - 8;
       if (k === 0){ const X = ax + (bx - ax) * pr, Y = ay + (by - ay) * pr; x.fillStyle = '#2a2000'; x.beginPath(); x.arc(X, Y, 4, 0, 7); x.fill(); x.fillStyle = '#fff2a0'; x.beginPath(); x.arc(X, Y, 2.6, 0, 7); x.fill(); }
-      else { x.lineWidth = 3; x.strokeStyle = `rgba(255,236,120,${1 - (now - dfStAt) / 300})`; x.beginPath(); x.moveTo(ax, ay); x.lineTo(bx, by); x.stroke(); } }); }
+      else if (k === 1){ x.lineCap = 'round'; x.lineWidth = 7; x.strokeStyle = `rgba(255,150,40,${fade * .6})`; x.beginPath(); x.moveTo(ax, ay); x.lineTo(bx, by); x.stroke(); x.lineWidth = 3; x.strokeStyle = `rgba(255,248,180,${fade})`; x.beginPath(); x.moveTo(ax, ay); x.lineTo(bx, by); x.stroke();
+        x.strokeStyle = `rgba(255,220,100,${fade})`; x.lineWidth = 3; x.beginPath(); x.arc(bx, by, 8 + el / 14, 0, 7); x.stroke(); x.fillStyle = `rgba(255,255,230,${fade})`; x.beginPath(); x.arc(bx, by, 6, 0, 7); x.fill(); }
+      else { if (!ringDone[u]){ ringDone[u] = 1; x.lineWidth = 4; x.strokeStyle = `rgba(150,215,255,${fade})`; x.beginPath(); x.arc(a[0] * K, a[1] * K, 30 + el * .5, 0, 7); x.stroke(); x.lineWidth = 2; x.strokeStyle = `rgba(220,240,255,${fade * .8})`; x.beginPath(); x.arc(a[0] * K, a[1] * K, 18 + el * .35, 0, 7); x.stroke(); }
+        x.strokeStyle = `rgba(190,230,255,${fade})`; x.lineWidth = 2; x.beginPath(); x.moveTo(bx - 4, by - 34); x.lineTo(bx + 2, by - 18); x.lineTo(bx - 3, by - 14); x.lineTo(bx + 3, by); x.stroke(); x.fillStyle = `rgba(190,230,255,${fade * .8})`; x.beginPath(); x.arc(bx, by, 8, 0, 7); x.fill(); } }); }
   // 알을 때리는 몬스터가 있으면 알이 깜빡여요
   if (st && st.m.some(m => m[2] === 2 && m[5] === 0) && dfZone === 2){ x.fillStyle = `rgba(255,60,40,${.12 + .1 * Math.sin(now / 90)})`; x.fillRect(0, 300, 390, 141); }
 }

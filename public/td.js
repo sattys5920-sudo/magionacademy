@@ -14,12 +14,10 @@
   const posAt = (z, s) => { const Z = ZONES[z]; s = Math.max(0, Math.min(Z.len, s)); for (let i = 0; i < Z.seg.length; i++){ if (s <= Z.seg[i] || i === Z.seg.length - 1){ const a = Z.path[i], b = Z.path[i + 1], t = Z.seg[i] ? s / Z.seg[i] : 0; return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; } s -= Z.seg[i]; } return Z.path[Z.path.length - 1]; };
   // 직업 → 역할 (근접 · 원거리 · 치유)
   const CAT = { warrior: 'melee', knight: 'melee', thief: 'melee', black: 'ranged', summon: 'ranged', gadget: 'ranged', alch: 'ranged', time: 'ranged', white: 'heal', druid: 'heal', cleric: 'heal', bard: 'heal' };
-  // 스킬 2개 + 기본 공격. 올릴 수 있는 것: pow(공격력/치유량/지속) · rng(사거리/범위) · cd(쿨타임 감소)
-  const SK = {
-    melee: [{ n: '강타', t: 'hit', pow: 70, rng: 15, cd: 2.2, tg: 1 }, { n: '막기', t: 'slow', pow: .6, rng: 18, cd: 8, dur: 3 }],
-    ranged: [{ n: '마법탄', t: 'hit', pow: 50, rng: 30, cd: 2.4, tg: 1 }, { n: '폭발', t: 'aoe', pow: 75, rng: 26, cd: 7, rad: 12 }],
-    heal: [{ n: '치유의 빛', t: 'eggheal', pow: 14, rng: 99, cd: 9 }, { n: '응원', t: 'buff', pow: .25, rng: 40, cd: 12, dur: 5 }],
-  };
+  // 이벤트 전용 스킬 2개 (직업·레벨·습득과 상관없이 모두 똑같아요) + 기본 공격
+  //   1 가까운 한 명에게 센 공격 · 2 넓은 범위 모두에게 약한 공격. 올릴 수 있는 것: pow(공격력) · rng(사거리/범위) · cd(쿨타임 감소)
+  const SKA = [{ n: '일격', t: 'hit', pow: 95, rng: 18, cd: 3 }, { n: '번개비', t: 'aoe', pow: 32, rng: 55, cd: 7 }];
+  const SK = { melee: SKA, ranged: SKA, heal: SKA };
   const UP_COST = [200, 350, 550, 800], UP_MAX = 5, UP_PER = { pow: .25, rng: .12, cd: .08 };
   // 웨이브: 1~15, 차수(1·2·3)마다 세져요. 일반(1·2) · 정예(3·4) · 보스(5)
   const TIER_HP = [1, 2.4, 4.6], TIER_GOLD = [[8, 30, 150], [10, 40, 150], [14, 55, 300]];
@@ -37,7 +35,7 @@
     S.autoReady = opt.auto !== undefined ? !!opt.auto : true;
     return S;
   }
-  const skillOf = (p, i) => { const b = SK[p.cat][i], u = p.up[i]; return { ...b, pow: b.t === 'slow' ? Math.min(.9, b.pow * (1 + .12 * u.pow)) : b.pow * (1 + UP_PER.pow * u.pow), cnt: b.t === 'eggheal' ? Math.min(3, 1 + u.rng) : undefined, rng: b.rng * (1 + UP_PER.rng * u.rng), cd: Math.max(.6, b.cd * (1 - UP_PER.cd * u.cd)), dur: b.dur ? b.dur * (1 + UP_PER.pow * u.pow) : undefined, rad: b.rad ? b.rad * (1 + UP_PER.rng * u.rng) : undefined }; };
+  const skillOf = (p, i) => { const b = SK[p.cat][i], u = p.up[i]; return { ...b, pow: b.pow * (1 + UP_PER.pow * u.pow), rng: b.rng * (1 + UP_PER.rng * u.rng), cd: Math.max(.6, b.cd * (1 - UP_PER.cd * u.cd)) }; };
   const upCost = (p, i, k) => p.up[i][k] >= UP_MAX - 1 ? null : UP_COST[p.up[i][k]];
   function seat(S, uid, zone, slot, job){   // 자리 고르기 · 새로 들어오기 · 자리 옮기기 (이미 앉은 사람이 있으면 못 앉아요)
   if (S.phase === 'wave' || S.phase === 'over') return false; if (Object.values(S.players).some(q => q.uid !== uid && q.zone === zone && q.slot === slot)) return false;
@@ -47,22 +45,20 @@ function unseat(S, uid){ if (S.phase !== 'wave') delete S.players[uid]; }
 const setReady = (S, uid, v) => { const p = S.players[uid]; if (p && (S.phase === 'ready' || S.phase === 'rest')) p.ready = v ? 1 : 0; };
 const allReady = S => { const a = Object.values(S.players); return a.length > 0 && a.every(q => q.ready); };
 function upgrade(S, uid, i, k){ const p = S.players[uid], c = p && upCost(p, i, k); if (!p || c == null || p.gold < c) return false; p.gold -= c; p.up[i][k]++; return true; }
-  function startWave(S){ if (S.phase === 'over' || S.wave >= 15) return false; S.wave++; Object.values(S.players).forEach(q => { q.ready = 0; }); { const n = Object.keys(S.players).length / 9; S.hpN = n >= 1 ? n : Math.max(.3, Math.pow(n, 1.3)); } const cf = .85 + .15 * Math.min(2, Math.max(1, S.hpN)), d = waveDef(S.wave); S.phase = 'wave'; S.tier = d.tier; S.q = []; let t = 0; d.list.forEach(([type, n0, gap]) => { const n = Math.max(1, Math.round(n0 * cf)); for (let i = 0; i < n; i++){ S.q.push({ at: t, type }); t += gap; } t += 1.5; }); S.q.sort((a, b) => a.at - b.at); S.wt = 0; S.spawned = 0; S.total = S.q.length; return true; }
+  function startWave(S){ if (S.phase === 'over' || S.wave >= 15) return false; S.wave++; Object.values(S.players).forEach(q => { q.ready = 0; }); { const n = Object.keys(S.players).length / 9; S.hpN = n >= 1 ? n : Math.max(.3, Math.pow(n, 1.15)); } const cf = .85 + .15 * Math.min(2, Math.max(1, S.hpN)), d = waveDef(S.wave); S.phase = 'wave'; S.tier = d.tier; S.q = []; let t = 0; d.list.forEach(([type, n0, gap]) => { const n = Math.max(1, Math.round(n0 * cf)); for (let i = 0; i < n; i++){ S.q.push({ at: t, type }); t += gap; } t += 1.5; }); S.q.sort((a, b) => a.at - b.at); S.wt = 0; S.spawned = 0; S.total = S.q.length; return true; }
   function spawn(S, type){ const m = MON[type], tier = S.tier, wk = 1 + ((S.wave - 1) % 5) * .06, hp = Math.round(m.hp * TIER_HP[tier] * wk * S.hpN * S.hpK * K.hp); S.mons.push({ id: S.nid++, type, zone: 0, s: 0, hp, mhp: hp, spd: m.spd * (1 + tier * .06), egg: m.egg * (1 + tier * .35), slow: 0, slowT: 0, gold: Math.round(TIER_GOLD[tier][type === 'n' ? 0 : type === 'e' ? 1 : 2] * K.gold) }); }
-  const K = { gold: 3, dmg: 1.15, bonus: 30, hp: 2.1, egg: .08, basic: 10, reach: 16 };   // 균형 조절용
+  const K = { gold: 3, dmg: 1.15, bonus: 30, hp: 2.4, egg: .08, basic: 10, reach: 16 };   // 균형 조절용
   const alive = S => S.mons.filter(m => m.hp > 0);
-  function hurt(S, m, dmg, by, kind){ if (m.hp <= 0) return; if (by && S.fx) S.fx.push([by.uid, m.id, kind === 0 ? 0 : 1]); m.hp -= dmg * K.dmg; if (m.hp <= 0 && by){ by.gold += m.gold; by.earned += m.gold; if (S.kz) S.kz[by.zone]++; } }
+  function hurt(S, m, dmg, by, kind){ if (m.hp <= 0) return; if (by && S.fx) S.fx.push([by.uid, m.id, kind || 0]); m.hp -= dmg * K.dmg; if (m.hp <= 0 && by){ by.gold += m.gold; by.earned += m.gold; if (S.kz) S.kz[by.zone]++; } }
   const nearOf = (S, p, rng) => { const pos = ZONES[p.zone].slots[p.slot], R = rng + ZONES[p.zone].d0[p.slot]; return alive(S).filter(m => m.zone === p.zone && (m.atk || Math.hypot(posAt(m.zone, m.s)[0] - pos[0], posAt(m.zone, m.s)[1] - pos[1]) <= R)); };   // 알을 때리는 중인 몬스터는 둥지 앞 자리 누구든 때릴 수 있어요 · 사거리는 가장 가까운 길에서부터 재요 (어느 자리든 길 가까이에는 닿아요)
   // 스킬 쓰기: 성공하면 true, 못 쓰면 이유('cd' 쿨타임 · 'none' 쏠 곳이 없음 · 'wave' 웨이브가 아님)
   function cast(S, uid, i){
     const p = S.players[uid]; if (!p || S.phase !== 'wave') return 'wave'; if (p.cd[i] > 0) return 'cd';
-    const s = skillOf(p, i), pos = ZONES[p.zone].slots[p.slot], mult = p.buff > 0 ? 1.25 : 1; let ok = false;
-    if (s.t === 'hit'){ const t = nearOf(S, p, s.rng).sort((a, b) => b.s - a.s)[0]; if (t){ hurt(S, t, s.pow * mult, p); ok = true; } }
-    else if (s.t === 'aoe'){ const ts = nearOf(S, p, s.rng).sort((a, b) => b.s - a.s); if (ts[0]){ const c = posAt(ts[0].zone, ts[0].s); ts.filter(m => { const q = posAt(m.zone, m.s); return Math.hypot(q[0] - c[0], q[1] - c[1]) <= s.rad; }).forEach(m => hurt(S, m, s.pow * mult, p)); ok = true; } }
-    else if (s.t === 'slow'){ const ts = nearOf(S, p, s.rng); if (ts.length){ ts.forEach(m => { m.slow = Math.max(m.slow, s.pow); m.slowT = Math.max(m.slowT, s.dur); }); ok = true; } }
-    else if (s.t === 'eggheal'){ const es = S.eggs.map((v, i) => [v, i]).filter(([v]) => v > 0 && v < 100).sort((a, b) => a[0] - b[0]).slice(0, s.cnt); es.forEach(([, i]) => { S.eggs[i] = Math.min(100, S.eggs[i] + s.pow); ok = true; }); }
-    else if (s.t === 'buff'){ Object.values(S.players).forEach(q => { const qp = ZONES[q.zone].slots[q.slot]; if (q.zone === p.zone && Math.hypot(qp[0] - pos[0], qp[1] - pos[1]) <= s.rng) q.buff = Math.max(q.buff, s.dur); }); ok = true; }
-    if (!ok) return 'none'; p.cd[i] = s.cd; return true;
+    const s = skillOf(p, i), pos = ZONES[p.zone].slots[p.slot], ts = nearOf(S, p, s.rng); if (!ts.length) return 'none';
+    const dist = m => { const q = posAt(m.zone, m.s); return Math.hypot(q[0] - pos[0], q[1] - pos[1]); };
+    if (s.t === 'hit') hurt(S, ts.sort((a, b) => dist(a) - dist(b))[0], s.pow, p, 1);   // 가까운 한 명에게 센 공격
+    else ts.forEach(m => hurt(S, m, s.pow, p, 2));   // 넓은 범위 모두에게 약한 공격
+    p.cd[i] = s.cd; return true;
   }
   function step(S, dt){
     if (S.phase === 'over') return;
