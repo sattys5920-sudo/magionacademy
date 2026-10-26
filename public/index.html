@@ -6272,7 +6272,8 @@ const DF_PH = { ready: '준비 중', wave: '웨이브 진행 중', rest: '쉬는
 function dfListen(){
   if (solo || !F || !db || dfOffs.length) return;
   dfOffs.push(F.onValue(F.ref(db, 'defense/ctl'), s => { const v = s.val(), was = dfCtl && dfCtl.open; dfCtl = v; dfBtn(); if (v && v.open && !was) toast('이벤트 「용의 알 지키기」가 열렸어요! 오른쪽 위 버튼을 눌러 보세요'); if (!(v && v.open) && dfOn) dfClose(); else if (dfOn) dfUi(); dfCheckCut(); }));
-  dfOffs.push(F.onValue(F.ref(db, 'defense/st'), s => { dfSt = s.val(); dfStAt = performance.now(); if (dfPend && Date.now() - dfPend.t > 150){ const mp = dfMe(); if (mp && mp[6][dfPend.i] < .3 && dfCtl && dfCtl.ph === 'wave') toast('사거리 안에 몬스터가 없어요'); dfPend = null; } if (dfOn) dfUi(); dfCheckCut(); }));
+  dfOffs.push(F.onValue(F.ref(db, 'defense/st'), s => { dfSt = s.val(); if (dfSt){ dfSt.m = dfSt.m || []; dfSt.p = dfSt.p || {}; dfSt.f = dfSt.f || []; dfSt.e = dfSt.e || [0, 0, 0]; dfSt.left = dfSt.left || 0; }   // 서버는 빈 목록·빈 객체를 저장하지 않아요 → 빈 값으로 채워요
+     dfStAt = performance.now(); if (dfPend && Date.now() - dfPend.t > 150){ const mp = dfMe(); if (mp && mp[6][dfPend.i] < .3 && dfCtl && dfCtl.ph === 'wave') toast('사거리 안에 몬스터가 없어요'); dfPend = null; } if (dfOn) dfUi(); dfCheckCut(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/res'), s => { dfRes = s.val(); if (World.reqRefresh) World.reqRefresh(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/pick'), s => { dfPick = s.val() || {}; if (dfOn) dfUi(); }));
 }
