@@ -92,6 +92,9 @@ body.inworld #app.open{opacity:1;pointer-events:auto}
 .chip b{font-family:var(--f-pxb);color:var(--gold);display:block}
 .chip.ev{pointer-events:auto;border:0;background:var(--accent);color:#2A1506;font-family:var(--f-pxb);min-height:44px}
 /* 상황 버튼(근처 대상이 있을 때만)과 구석 버튼 */
+#dfbtn{position:absolute;right:10px;top:66px;z-index:7;min-height:40px;padding:0 14px;border-radius:20px;border:2px solid #2A1506;background:var(--accent);color:#2A1506;font-family:var(--f-pxb);font-size:var(--fs);box-shadow:0 0 14px rgba(255,154,60,.7);animation:dfp 1.4s ease-in-out infinite}@keyframes dfp{50%{box-shadow:0 0 4px rgba(255,154,60,.3)}}
+#dfv{position:absolute;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column}#dfv .dfh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;background:#1b1230;border-bottom:1px solid var(--line)}#dfv .dfh b{font-family:var(--f-pxb)}#dfv .dft{display:flex;gap:6px;padding:7px 12px;background:#1b1230}#dfv .dft button{flex:1;min-height:40px;border-radius:8px;border:0;background:#2d2147;color:var(--sub);font-family:var(--f-pxb);font-size:var(--fs)}#dfv .dft button.on{background:var(--accent);color:#2a1400}
+#dfv .dfs{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:#000}#dfv canvas{width:100%;max-height:100%;aspect-ratio:130/147;image-rendering:pixelated;touch-action:manipulation}#dfv .dfb{padding:10px 12px 12px;background:#1b1230;border-top:1px solid var(--line);font-size:var(--fs);display:flex;flex-direction:column;gap:8px}#dfv .dfj{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}#dfv .dfj button{min-height:40px;border-radius:8px;border:1px solid var(--line);background:#2d2147;color:var(--text);font-size:var(--fs)}
 #ctx{position:absolute;right:12px;bottom:12px;z-index:6;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
 #ctx button{min-height:48px;padding:0 16px 0 12px;border-radius:24px;border:2px solid #2A1506;background:var(--accent);color:#2A1506;font-family:var(--f-pxb);font-size:var(--fs);display:flex;align-items:center;gap:8px;box-shadow:0 4px 0 var(--accent2);animation:ctxin .18s}
 #ctx button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--accent2)}
@@ -707,6 +710,8 @@ button.cell:not(:disabled):active{background:var(--line)}
 </div>
 <script type="application/json" id="icoData">{"bag": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM4 2h1v1h-1zM11 2h1v1h-1zM4 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM12 4h1v1h-1zM13 4h1v1h-1zM2 5h1v1h-1zM13 5h1v1h-1zM2 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM10 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM5 7h1v1h-1zM10 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM13 10h1v1h-1zM2 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM3 13h1v1h-1zM4 13h1v1h-1zM5 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM12 13h1v1h-1zM13 13h1v1h-1z\"/></svg>", "map": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M2 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM13 1h1v1h-1zM2 2h1v1h-1zM5 2h1v1h-1zM8 2h1v1h-1zM13 2h1v1h-1zM2 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM8 3h1v1h-1zM13 3h1v1h-1zM2 4h1v1h-1zM13 4h1v1h-1zM2 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM13 5h1v1h-1zM2 6h1v1h-1zM5 6h1v1h-1zM7 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM13 10h1v1h-1zM2 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM5 12h1v1h-1zM8 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM3 13h1v1h-1zM4 13h1v1h-1zM5 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM12 13h1v1h-1zM13 13h1v1h-1z\"/></svg>", "heart": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M2 2h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1zM9 2h1v1h-1zM10 2h1v1h-1zM11 2h1v1h-1zM1 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM8 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM0 4h1v1h-1zM1 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM12 4h1v1h-1zM13 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM1 5h1v1h-1zM2 5h1v1h-1zM3 5h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM10 5h1v1h-1zM11 5h1v1h-1zM12 5h1v1h-1zM13 5h1v1h-1zM14 5h1v1h-1zM0 6h1v1h-1zM1 6h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM10 6h1v1h-1zM11 6h1v1h-1zM12 6h1v1h-1zM13 6h1v1h-1zM14 6h1v1h-1zM0 7h1v1h-1zM1 7h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM13 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM2 8h1v1h-1zM3 8h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM11 8h1v1h-1zM12 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM3 9h1v1h-1zM4 9h1v1h-1zM5 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM12 9h1v1h-1zM3 10h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM10 10h1v1h-1zM11 10h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM7 14h1v1h-1z\"/></svg>", "journal": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M2 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM2 2h1v1h-1zM14 2h1v1h-1zM2 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM8 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM14 3h1v1h-1zM2 4h1v1h-1zM4 4h1v1h-1zM12 4h1v1h-1zM14 4h1v1h-1zM2 5h1v1h-1zM4 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM10 5h1v1h-1zM12 5h1v1h-1zM14 5h1v1h-1zM2 6h1v1h-1zM4 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM2 7h1v1h-1zM4 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM12 7h1v1h-1zM14 7h1v1h-1zM2 8h1v1h-1zM4 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM2 9h1v1h-1zM4 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM12 9h1v1h-1zM14 9h1v1h-1zM2 10h1v1h-1zM4 10h1v1h-1zM12 10h1v1h-1zM14 10h1v1h-1zM2 11h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1zM12 11h1v1h-1zM14 11h1v1h-1zM2 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM3 13h1v1h-1zM4 13h1v1h-1zM5 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM12 13h1v1h-1z\"/></svg>", "menu": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM8 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM13 3h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM12 4h1v1h-1zM13 4h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM3 8h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM11 8h1v1h-1zM12 8h1v1h-1zM13 8h1v1h-1zM2 11h1v1h-1zM3 11h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1zM12 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM3 12h1v1h-1zM4 12h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM10 12h1v1h-1zM11 12h1v1h-1zM12 12h1v1h-1zM13 12h1v1h-1z\"/></svg>", "chat": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M2 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM13 1h1v1h-1zM1 2h1v1h-1zM14 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM1 5h1v1h-1zM14 5h1v1h-1zM1 6h1v1h-1zM14 6h1v1h-1zM1 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM14 8h1v1h-1zM2 9h1v1h-1zM3 9h1v1h-1zM4 9h1v1h-1zM5 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM12 9h1v1h-1zM13 9h1v1h-1zM4 10h1v1h-1zM3 11h1v1h-1zM2 12h1v1h-1z\"/></svg>", "gear": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM2 2h1v1h-1zM6 2h1v1h-1zM7 2h1v1h-1zM8 2h1v1h-1zM9 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM8 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM12 3h1v1h-1zM13 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM12 4h1v1h-1zM13 4h1v1h-1zM2 5h1v1h-1zM3 5h1v1h-1zM4 5h1v1h-1zM11 5h1v1h-1zM12 5h1v1h-1zM13 5h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM12 6h1v1h-1zM13 6h1v1h-1zM0 7h1v1h-1zM1 7h1v1h-1zM2 7h1v1h-1zM13 7h1v1h-1zM14 7h1v1h-1zM15 7h1v1h-1zM0 8h1v1h-1zM1 8h1v1h-1zM2 8h1v1h-1zM13 8h1v1h-1zM14 8h1v1h-1zM15 8h1v1h-1zM2 9h1v1h-1zM3 9h1v1h-1zM12 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM3 10h1v1h-1zM4 10h1v1h-1zM11 10h1v1h-1zM12 10h1v1h-1zM13 10h1v1h-1zM1 11h1v1h-1zM2 11h1v1h-1zM3 11h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1zM12 11h1v1h-1zM13 11h1v1h-1zM1 12h1v1h-1zM2 12h1v1h-1zM3 12h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM10 12h1v1h-1zM12 12h1v1h-1zM13 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM13 13h1v1h-1zM6 14h1v1h-1zM7 14h1v1h-1zM8 14h1v1h-1zM9 14h1v1h-1z\"/></svg>", "close": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M2 2h1v1h-1zM3 2h1v1h-1zM12 2h1v1h-1zM13 2h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM13 3h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM10 4h1v1h-1zM11 4h1v1h-1zM12 4h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM9 5h1v1h-1zM10 5h1v1h-1zM11 5h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM10 6h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM5 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM9 10h1v1h-1zM10 10h1v1h-1zM11 10h1v1h-1zM3 11h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1zM12 11h1v1h-1zM2 12h1v1h-1zM3 12h1v1h-1zM4 12h1v1h-1zM11 12h1v1h-1zM12 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM3 13h1v1h-1zM12 13h1v1h-1zM13 13h1v1h-1z\"/></svg>", "user": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M6 1h1v1h-1zM7 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM5 2h1v1h-1zM6 2h1v1h-1zM7 2h1v1h-1zM8 2h1v1h-1zM9 2h1v1h-1zM10 2h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM8 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM3 8h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM11 8h1v1h-1zM12 8h1v1h-1zM2 9h1v1h-1zM3 9h1v1h-1zM4 9h1v1h-1zM5 9h1v1h-1zM6 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM12 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM3 10h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM10 10h1v1h-1zM11 10h1v1h-1zM12 10h1v1h-1zM13 10h1v1h-1zM2 11h1v1h-1zM3 11h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1zM12 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM3 12h1v1h-1zM4 12h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM10 12h1v1h-1zM11 12h1v1h-1zM12 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM3 13h1v1h-1zM4 13h1v1h-1zM5 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM12 13h1v1h-1zM13 13h1v1h-1z\"/></svg>", "back": "<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M6 2h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM3 5h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM1 7h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM2 8h1v1h-1zM3 8h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM3 9h1v1h-1zM4 9h1v1h-1zM5 9h1v1h-1zM6 9h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM5 11h1v1h-1zM6 11h1v1h-1zM6 12h1v1h-1z\"/></svg>"}</script>
 <script src="world.js"></script>
+<script src="td.js"></script>
+<script src="tdmap.js"></script>
 <script type="module">
 import { firebaseConfig } from './firebase-config.js';
 const FB = 'https://www.gstatic.com/firebasejs/10.12.2/';
@@ -3102,7 +3107,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.day = AD.day || todayKey();
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = s.val() || {}; if (adminTyping()) return; adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('adm/heart', 'heart'); L('players', 'players'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('adm/heart', 'heart'); L('players', 'players'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
   adminRender();
 }
 const adminTyping = () => { const a = document.activeElement; return AD.tab === 'npc' && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
@@ -3117,7 +3122,7 @@ const adPlace = m => { if (!m) return '?'; const [id, owner] = m.split(':'), met
 function adminRender(){
   if (!document.body.classList.contains('admin')) return;
   const P = AD.players, O = AD.online, ids = Object.keys(P).filter(id => P[id]?.nick);
-  const tabs = [['map', `지도 ${Object.keys(O).length}명 접속`], ['students', `학생 ${ids.length}`], ['join', `가입 신청${Object.keys(AD.pending || {}).length ? ' ' + Object.keys(AD.pending).length : ''}`], ['chat', '대화'], ['dorm', '기숙사'], ['story', '이야기·미션'], ['npc', 'NPC 호감도']];
+  const tabs = [['map', `지도 ${Object.keys(O).length}명 접속`], ['students', `학생 ${ids.length}`], ['join', `가입 신청${Object.keys(AD.pending || {}).length ? ' ' + Object.keys(AD.pending).length : ''}`], ['chat', '대화'], ['dorm', '기숙사'], ['story', '이야기·미션'], ['npc', 'NPC 호감도'], ['event', '이벤트']];
   let body = '';
   if (AD.tab === 'map'){
     if (AD.follow && !O[AD.follow]) AD.follow = null;
@@ -3162,6 +3167,7 @@ function adminRender(){
         ${hs.who ? `<div class="s sub">기여: ${Object.values(hs.who).sort((a, b) => b.n - a.n).map(w => `${esc(w.nick)} ${w.n}`).join(', ')}</div>` : ''}</div>`; }).join('');
   }
   if (AD.tab === 'story') body = typeof adminStoryHTML === 'function' ? adminStoryHTML() : '<div class="adcard">이야기 미션은 다음 업데이트에서 열려요.</div>';
+  if (AD.tab === 'event') body = adminEventHTML();
   if (AD.tab === 'npc') body = typeof adminNpcHTML === 'function' ? adminNpcHTML() : '<div class="adcard">NPC 호감도는 다음 업데이트에서 열려요.</div>';
   app.innerHTML = '';
   let root = $('#adminv'); if (!root){ root = document.createElement('div'); root.id = 'adminv'; $('#shell').appendChild(root); }
@@ -3188,7 +3194,7 @@ function adminRender(){
   root.querySelectorAll('[data-adok]').forEach(b => b.onclick = () => { F.set(F.ref(db, 'approved/' + b.dataset.adok), true).then(() => F.remove(F.ref(db, 'pending/' + b.dataset.adok))); });
   root.querySelectorAll('[data-adno]').forEach(b => b.onclick = () => { if (confirm('이 신청을 거절할까요?')) F.set(F.ref(db, 'approved/' + b.dataset.adno), false).then(() => F.remove(F.ref(db, 'pending/' + b.dataset.adno))); });
   root.querySelectorAll('[data-adst]').forEach(b => b.onclick = () => typeof adminStoryAct === 'function' && adminStoryAct(b.dataset.adst));
-  $('#adout').onclick = async () => { AD.offs.forEach(f => f && f()); AD.offs = []; document.body.classList.remove('admin'); root.remove(); if (auth?.currentUser) await F.signOut?.(auth); location.reload(); };
+  $('#adout').onclick = async () => { dfHostStop(); AD.offs.forEach(f => f && f()); AD.offs = []; document.body.classList.remove('admin'); root.remove(); if (auth?.currentUser) await F.signOut?.(auth); location.reload(); };
   if (AD.tab === 'map') adminMap();
 }
 async function adminMap(){
@@ -6242,6 +6248,122 @@ function paintEvent(){
   }
 }
 
+// ===== 이벤트 「용의 알 지키기」 (실시간 디펜스) =====
+// 관리자 기기가 계산하고(td.js) 학생은 자리만 골라요. defense/ctl = { open, ph, w, win, hb } · defense/st = TD.snap · defense/pick/<uid> = { z, s, job, n }
+// 평소에는 아무것도 안 보이고, 관리자가 열어야만 오른쪽 위에 버튼이 생겨요. 자리는 웨이브가 시작되기 전(준비·쉬는 시간)에만 고를 수 있어요
+let dfCtl = null, dfSt = null, dfStAt = 0, dfPick = {}, dfOn = false, dfZone = 0, dfRaf = 0, dfOffs = [], dfAvc = {}, dfImgs = {}, dfJobPick = false;
+const DF_PH = { ready: '준비 중', wave: '웨이브 진행 중', rest: '쉬는 시간', over: '끝났어요' };
+function dfListen(){
+  if (solo || !F || !db || dfOffs.length) return;
+  dfOffs.push(F.onValue(F.ref(db, 'defense/ctl'), s => { const v = s.val(), was = dfCtl && dfCtl.open; dfCtl = v; dfBtn(); if (v && v.open && !was) toast('이벤트 「용의 알 지키기」가 열렸어요! 오른쪽 위 버튼을 눌러 보세요'); if (!(v && v.open) && dfOn) dfClose(); else if (dfOn) dfUi(); }));
+  dfOffs.push(F.onValue(F.ref(db, 'defense/st'), s => { dfSt = s.val(); dfStAt = performance.now(); if (dfOn) dfUi(); }));
+  dfOffs.push(F.onValue(F.ref(db, 'defense/pick'), s => { dfPick = s.val() || {}; if (dfOn) dfUi(); }));
+}
+function dfBtn(){
+  let b = $('#dfbtn'); const on = dfCtl && dfCtl.open && !dfOn;
+  if (on && !b){ b = document.createElement('button'); b.id = 'dfbtn'; b.textContent = '용의 알 지키기'; b.onclick = dfOpen; $('#shell').appendChild(b); } else if (!on && b) b.remove();
+}
+function dfImg(src){ if (!dfImgs[src]){ const i = new Image(); i.src = src; dfImgs[src] = i; } return dfImgs[src]; }
+function dfOpen(){
+  if (dfOn || !(dfCtl && dfCtl.open)) return; dfOn = true; dfBtn(); dfZone = dfPick[myId()] ? dfPick[myId()].z : 0;
+  const v = document.createElement('div'); v.id = 'dfv';
+  v.innerHTML = `<div class="dfh"><b>용의 알 지키기</b><span id="dfinfo" class="s sub"></span><button class="btn sm" id="dfx">나가기</button></div><div class="dft" id="dft"></div><div class="dfs"><canvas id="dfc" width="390" height="441"></canvas></div><div class="dfb" id="dfb"></div>`;
+  $('#shell').appendChild(v); $('#dfx').onclick = dfClose; $('#dfc').onclick = dfTap;
+  dfUi(); dfRaf = requestAnimationFrame(dfDraw);
+}
+function dfClose(){ dfOn = false; cancelAnimationFrame(dfRaf); const v = $('#dfv'); if (v) v.remove(); dfBtn(); }
+const dfJob = () => me.dfJob || (xEx() && xEx().job) || '';
+function dfUi(){
+  const v = $('#dfv'); if (!v) return; const st = dfSt, ph = dfCtl ? dfCtl.ph : 'ready', canSeat = ph === 'ready' || ph === 'rest', my = dfPick[myId()];
+  const cnt = [0, 0, 0]; if (st) st.m.forEach(m => cnt[m[2]]++);
+  $('#dft').innerHTML = TD.ZONES.map((z, i) => `<button data-dz="${i}" class="${i === dfZone ? 'on' : ''}">${z.name}${cnt[i] ? ` (${cnt[i]})` : ''}</button>`).join('');
+  $('#dft').querySelectorAll('[data-dz]').forEach(b => b.onclick = () => { dfZone = +b.dataset.dz; dfUi(); });
+  const eggs = st ? st.e : [100, 100, 100], w = st ? st.w : 0;
+  $('#dfinfo').textContent = `웨이브 ${w} / 15 · 알 ${eggs.filter(e => e > 0).length}개`;
+  const stale = dfCtl && dfCtl.hb && Date.now() - dfCtl.hb > 12000 && ph !== 'over';
+  let txt = ph === 'ready' ? '관리자가 시작하면 첫 웨이브가 와요. 점선 원을 눌러 자리를 골라요.' : ph === 'wave' ? `웨이브 ${w} 진행 중 · 남은 몬스터 ${st ? st.m.length + st.left : '-'}마리 (자리는 쉬는 시간에 바꿔요)` : ph === 'rest' ? `${st ? st.r : 0}초 뒤 웨이브 ${w + 1} · 자리를 바꿀 수 있어요` : ph === 'over' ? (st && st.win ? '알을 모두 지켜 냈어요!' : '알이 모두 깨졌어요…') : '';
+  if (stale) txt = '관리자 화면이 잠시 멈췄어요. 잠깐만 기다려 주세요.';
+  const job = dfJob(), jn = job && XJ[job] ? XJ[job].n : '직업을 골라요';
+  $('#dfb').innerHTML = `<div>${txt}</div><div class="s sub">${my ? `내 자리: ${TD.ZONES[my.z].name} ${my.s + 1}번 · ${XJ[my.job] ? XJ[my.job].n : ''}` : '아직 자리가 없어요'} · 내 직업: ${jn}</div>
+    <div style="display:flex;gap:8px"><button class="btn sm" id="dfjob" ${canSeat ? '' : 'disabled'}>직업 ${job ? '바꾸기' : '고르기'}</button>${my && canSeat ? '<button class="btn sm" id="dfout">자리 빼기</button>' : ''}</div>
+    ${dfJobPick || !job ? `<div class="dfj">${ORDER_J.map(j => `<button data-dj="${j}">${XJ[j].n}</button>`).join('')}</div>` : ''}`;
+  $('#dfjob').onclick = () => { dfJobPick = !dfJobPick; dfUi(); };
+  const o = $('#dfout'); if (o) o.onclick = () => { delete dfPick[myId()]; GDB.set('defense/pick/' + myId(), null); dfUi(); };
+  $('#dfb').querySelectorAll('[data-dj]').forEach(b => b.onclick = () => { me.dfJob = b.dataset.dj; save(); dfJobPick = false; const m = dfPick[myId()]; if (m && canSeat) dfSeat(m.z, m.s); else dfUi(); });
+}
+function dfSeat(z, s){
+  const ph = dfCtl ? dfCtl.ph : 'ready'; if (ph !== 'ready' && ph !== 'rest') return toast('웨이브 중에는 자리를 바꿀 수 없어요');
+  const job = dfJob(); if (!job){ dfJobPick = true; dfUi(); return toast('먼저 직업을 골라요'); }
+  if (Object.entries(dfPick).some(([u, p]) => u !== myId() && p.z === z && p.s === s)) return toast('다른 친구가 앉아 있어요');
+  const p = { z, s, job, n: me.nick, at: Date.now() }; dfPick[myId()] = p; GDB.set('defense/pick/' + myId(), p); dfUi();
+}
+function dfTap(e){
+  const c = $('#dfc'), r = c.getBoundingClientRect(), gx = (e.clientX - r.left) / r.width * TD.W, gy = (e.clientY - r.top) / r.height * TD.H;
+  let best = -1, bd = 11; TD.ZONES[dfZone].slots.forEach((q, i) => { const d = Math.hypot(q[0] - gx, q[1] - gy + 4); if (d < bd){ bd = d; best = i; } });
+  if (best >= 0) dfSeat(dfZone, best);
+}
+function dfAvatar(u){
+  if (u in dfAvc) return dfAvc[u]; dfAvc[u] = null;
+  const who = u === myId() ? { av: me.av, house: me.house } : playersList[u]; if (!who) return null;
+  const av = avOf(who); World.Avatar.need(World.Avatar.fix(av)).then(() => { dfAvc[u] = World.Avatar.compose(av); }).catch(() => { delete dfAvc[u]; }); return null;
+}
+const DF_MON = { n: [0, 3, 6], e: [8, 12, 13], b: [16, 16, 16] }, DF_EGG = ['rgba(255,90,40,.5)', 'rgba(80,170,255,.5)', 'rgba(90,220,110,.5)'];
+function dfEggImg(i){ if (!dfEggImg.c) dfEggImg.c = []; if (dfEggImg.c[i]) return dfEggImg.c[i]; const src = dfImg('art/creatures.png'); if (!src.complete || !src.naturalWidth) return null; const c = document.createElement('canvas'); c.width = 120; c.height = 102; const x = c.getContext('2d'); x.drawImage(src, 1200, 0, 120, 102, 0, 0, 120, 102); x.globalCompositeOperation = 'source-atop'; x.fillStyle = DF_EGG[i]; x.fillRect(0, 0, 120, 102); return (dfEggImg.c[i] = c); }
+function dfDraw(){
+  dfRaf = requestAnimationFrame(dfDraw); const c = $('#dfc'); if (!c) return; const x = c.getContext('2d'), K = 3, now = performance.now(), st = dfSt, ph = dfCtl ? dfCtl.ph : 'ready', Z = TD.ZONES[dfZone];
+  x.imageSmoothingEnabled = false; x.drawImage(TDMAP.render(dfZone, Z), 0, 0, 390, 441);
+  // 알 (둥지 앞)
+  if (dfZone === 2){ const eg = st ? st.e : [100, 100, 100]; [[50, 120], [64, 122], [78, 120]].forEach(([gx, gy], i) => { const im = dfEggImg(i); if (!im) return; x.globalAlpha = eg[i] > 0 ? 1 : .3; x.drawImage(im, gx * K - 33, gy * K - 28, 66, 56); x.globalAlpha = 1; x.fillStyle = '#000'; x.fillRect(gx * K - 17, gy * K + 30, 34, 5); x.fillStyle = eg[i] > 40 ? '#7ddc5a' : '#ff6a4a'; x.fillRect(gx * K - 16, gy * K + 31, 32 * Math.max(0, eg[i]) / 100, 3); }); }
+  // 자리와 학생
+  const seats = {}; if (st) Object.entries(st.p).forEach(([u, p]) => { seats[u] = { z: p[0], s: p[1], job: p[2], ok: 1, buff: p[5] }; }); Object.entries(dfPick).forEach(([u, p]) => { if (!seats[u]) seats[u] = { z: p.z, s: p.s, job: p.job, ok: 0 }; });
+  const canSeat = ph === 'ready' || ph === 'rest', taken = {}; Object.entries(seats).forEach(([u, q]) => { if (q.z === dfZone) taken[q.s] = u; });
+  Z.slots.forEach((q, i) => { const px = q[0] * K, py = q[1] * K, u = taken[i]; x.beginPath(); x.arc(px, py, 22, 0, 7); x.setLineDash([5, 4]); x.lineWidth = 2; x.strokeStyle = u === myId() ? '#ffd866' : canSeat ? 'rgba(255,230,120,.9)' : 'rgba(255,230,120,.25)'; x.fillStyle = u === myId() ? 'rgba(255,230,120,.28)' : 'rgba(255,230,120,.1)'; x.fill(); x.stroke(); x.setLineDash([]);
+    if (!u && canSeat){ x.fillStyle = '#ffe680'; x.font = '16px sans-serif'; x.textAlign = 'center'; x.fillText('+', px, py + 6); } });
+  const heads = Object.entries(seats).filter(([, q]) => q.z === dfZone).sort((a, b) => a[1].s - b[1].s);
+  const mons = st ? st.m.filter(m => m[2] === dfZone).map(m => { const zl = TD.ZONES[m[2]], s = Math.max(0, Math.min(zl.len, m[3] + m[5] * (now - dfStAt) / 1000)), p = TD.posAt(m[2], s), p2 = TD.posAt(m[2], Math.min(zl.len, s + 2)); return { m, p, fl: p2[0] < p[0] - .2 }; }) : [];
+  heads.forEach(([u, q]) => { const sl = Z.slots[q.s], px = sl[0] * K, py = sl[1] * K, av = dfAvatar(u); x.globalAlpha = q.ok ? 1 : .55; if (av) x.drawImage(av, 0, 0, 64, 64, px - 31, py - 40, 61, 61); x.globalAlpha = 1;
+    const nm = u === myId() ? me.nick : (playersList[u] && playersList[u].nick) || (dfPick[u] && dfPick[u].n) || ''; x.font = '10px G11, sans-serif'; x.textAlign = 'center'; x.lineWidth = 3; x.strokeStyle = '#000'; x.strokeText(nm, px, py + 30); x.fillStyle = u === myId() ? '#ffd866' : '#fff'; x.fillText(nm, px, py + 30); });
+  // 몬스터
+  const tier = st ? Math.floor((Math.max(1, st.w) - 1) / 5) : 0, mi = dfImg('art/monsters_lpc.png');
+  mons.sort((a, b) => a.p[1] - b.p[1]).forEach(({ m, p, fl }) => { const px = p[0] * K, py = p[1] * K + 14, sc = m[1] === 'b' ? 1.3 : m[1] === 'e' ? 1 : .8, f = DF_MON[m[1]][tier], hp = m[4];
+    if (mi.complete && mi.naturalWidth){ x.save(); x.translate(px, py); x.scale(fl ? -sc : sc, sc); x.drawImage(mi, f * 64, 0, 64, 64, -32, -64, 64, 64); x.restore(); }
+    const bw = m[1] === 'b' ? 44 : 28; x.fillStyle = '#000'; x.fillRect(px - bw / 2 - 1, py - 64 * sc - 2, bw + 2, 6); x.fillStyle = hp > 40 ? '#7ddc5a' : '#ff6a4a'; x.fillRect(px - bw / 2, py - 64 * sc - 1, bw * hp / 100, 4); });
+  // 공격 효과
+  if (st && now - dfStAt < 260 && st.f){ x.lineWidth = 2; st.f.forEach(([u, mid]) => { const q = seats[u], mm = st.m.find(m => m[0] === mid); if (!q || !mm || q.z !== dfZone || mm[2] !== dfZone) return; const a = Z.slots[q.s], b = mons.find(o => o.m[0] === mid); if (!b) return; x.strokeStyle = `rgba(255,236,120,${1 - (now - dfStAt) / 260})`; x.beginPath(); x.moveTo(a[0] * K, a[1] * K - 16); x.lineTo(b.p[0] * K, b.p[1] * K - 8); x.stroke(); }); }
+}
+// ----- 관리자: 계산을 맡아요 (이 화면이 켜져 있는 동안만 진행돼요) -----
+let dfHost = null;
+function dfHostStart(){
+  if (dfHost || !F || !db) return; const S = TD.newState([], {}); S.phase = 'ready';
+  dfHost = { S, last: performance.now(), pub: 9, hb: 9, ph: '', w: -1, paused: false, timer: setInterval(dfHostTick, 100) };
+  F.set(F.ref(db, 'defense/ctl'), { open: true, ph: 'ready', w: 0, win: 0, hb: Date.now() }); F.set(F.ref(db, 'defense/st'), TD.snap(S)); adminRender();
+}
+function dfHostSeats(S){
+  const P = AD.dfpick || {}; Object.entries(P).forEach(([u, p]) => { const q = S.players[u]; if (!q || q.zone !== p.z || q.slot !== p.s || q.job !== p.job) TD.seat(S, u, p.z, p.s, p.job); });
+  Object.keys(S.players).forEach(u => { if (!P[u]) TD.unseat(S, u); });
+}
+function dfHostTick(){
+  const H = dfHost; if (!H) return; const now = performance.now(), dt = Math.min(.5, (now - H.last) / 1000), S = H.S; H.last = now;
+  if (S.phase === 'ready' || S.phase === 'rest') dfHostSeats(S);
+  if (!H.paused) TD.step(S, dt);
+  H.pub += dt; if (H.pub >= .25){ H.pub = 0; F.set(F.ref(db, 'defense/st'), TD.snap(S)); }
+  H.hb += dt; if (H.hb >= 2 || S.phase !== H.ph || S.wave !== H.w){ const ch = S.phase !== H.ph || S.wave !== H.w; H.hb = 0; H.ph = S.phase; H.w = S.wave; F.set(F.ref(db, 'defense/ctl'), { open: true, ph: S.phase, w: S.wave, win: S.win ? 1 : 0, hb: Date.now(), pause: H.paused ? 1 : 0 }); if (ch && AD.tab === 'event') adminRender(); }
+}
+function dfHostStop(){ if (!dfHost) return; clearInterval(dfHost.timer); dfHost = null; }
+function dfHostClose(){ dfHostStop(); if (!F || !db) return; F.set(F.ref(db, 'defense/ctl'), { open: false }); F.set(F.ref(db, 'defense/st'), null); F.set(F.ref(db, 'defense/pick'), null); adminRender(); }
+function adminEventHTML(){
+  const H = dfHost, S = H && H.S, ph = S ? S.phase : null, open = !!(AD.dfctl && AD.dfctl.open), picks = Object.entries(AD.dfpick || {}), nm = u => esc((AD.players[u] && AD.players[u].nick) || u.slice(0, 6));
+  const zl = TD.ZONES.map((z, i) => `${z.name}: ${picks.filter(([, p]) => p.z === i).map(([u, p]) => `${nm(u)}(${XJ[p.job] ? XJ[p.job].n : '?'})`).join(', ') || '비어 있어요'}`);
+  return `<div class="adcard"><b>이벤트 「용의 알 지키기」</b> · ${H ? DF_PH[ph] : open ? '열려 있지만 이 화면에서 진행하고 있지 않아요' : '닫혀 있어요'}
+    <div class="s">학생에게는 ${open ? '버튼이 보여요' : '아무것도 안 보여요'}${S ? ` · 웨이브 ${S.wave}/15 · 알 ${S.eggs.map(Math.round).join('/')} · 앉은 학생 ${Object.keys(S.players).length}명${S.phase === 'wave' ? ` · 몬스터 ${S.mons.length + S.q.length}마리` : ''}` : ''}</div>
+    <div class="frow">${!H ? '<button class="btn sm go" data-dfa="open">이벤트 열기</button>' : `${ph === 'ready' ? '<button class="btn sm go" data-dfa="start">첫 웨이브 시작</button>' : ''}${ph === 'rest' ? '<button class="btn sm go" data-dfa="next">바로 다음 웨이브</button>' : ''}${ph !== 'ready' && ph !== 'over' ? `<button class="btn sm" data-dfa="pause">${H.paused ? '다시 진행' : '잠깐 멈춤'}</button>` : ''}<button class="btn sm" data-dfa="reset">처음으로</button><button class="btn sm" data-dfa="close">이벤트 닫기</button>`}${open && !H ? '<button class="btn sm" data-dfa="close">이벤트 닫기</button>' : ''}</div>
+    ${open && !H ? '<div class="s">이 화면을 새로 열었다면 「이벤트 열기」로 이어서 진행해요. 학생들이 고른 자리는 남아 있어요.</div>' : ''}</div>
+  <div class="adcard"><b>자리</b> (학생이 웨이브 사이에 골라요)${zl.map(t => `<div class="s">${t}</div>`).join('')}</div>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-dfa]'); if (!b) return; const a = b.dataset.dfa, H = dfHost;
+  if (a === 'open') dfHostStart(); else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 학생들의 자리와 진행이 지워져요.')) dfHostClose(); }
+  else if (a === 'start' && H) TD.startWave(H.S); else if (a === 'next' && H){ H.S.rest = 0; } else if (a === 'pause' && H){ H.paused = !H.paused; adminRender(); }
+  else if (a === 'reset' && H){ if (confirm('처음으로 되돌릴까요? 번 골드와 올린 스킬이 지워져요.')){ const S = TD.newState([], {}); S.phase = 'ready'; H.S = S; H.ph = ''; adminRender(); } } });
 // ===== 시장 (온라인 전용) =====
 let sellPick = null;
 function renderMarket(){
@@ -6663,7 +6785,7 @@ async function boot(){
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       F.onValue(F.ref(db, 'adm/reset/' + uid), s => { const v = +s.val() || 0; if (!v) return; let seen = 0; try { seen = +localStorage.getItem('magion-rs-' + uid) || 0; } catch(e){}
         if (v > seen){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
-      storyListen();
+      storyListen(); dfListen();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); if (sub === 'games') render(); });
       F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       Object.keys(GAMES).forEach(g => F.onValue(F.ref(db, `records/${g}/${weekKey()}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); }));

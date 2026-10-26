@@ -30,18 +30,23 @@
   }
   function newState(players, opt){   // players: [{ uid, zone(0~2), slot, job }]
     opt = opt || {};
-    const S = { t: 0, wave: 0, phase: 'ready', rest: 0, mons: [], q: [], nid: 1, eggs: [100, 100, 100], leaks: 0, players: {}, hpK: opt.hpK || 1, hpN: Math.max(1, players.length) / 9, log: [] };
+    const S = { t: 0, wave: 0, phase: 'ready', rest: 0, mons: [], q: [], nid: 1, eggs: [100, 100, 100], leaks: 0, players: {}, hpK: opt.hpK || 1, hpN: Math.max(1, players.length) / 9, log: [], fx: [] };
     players.forEach(p => { S.players[p.uid] = { uid: p.uid, zone: p.zone, slot: p.slot, job: p.job, cat: CAT[p.job] || 'melee', gold: 0, earned: 0, up: [{ pow: 0, rng: 0, cd: 0 }, { pow: 0, rng: 0, cd: 0 }], cd: [0, 0], buff: 0, basic: 0 }; });
     return S;
   }
   const skillOf = (p, i) => { const b = SK[p.cat][i], u = p.up[i]; return { ...b, pow: b.pow * (1 + UP_PER.pow * u.pow), rng: b.rng * (1 + UP_PER.rng * u.rng), cd: Math.max(.6, b.cd * (1 - UP_PER.cd * u.cd)), dur: b.dur ? b.dur * (1 + UP_PER.pow * u.pow) : undefined, rad: b.rad ? b.rad * (1 + UP_PER.rng * u.rng) : undefined }; };
   const upCost = (p, i, k) => p.up[i][k] >= UP_MAX - 1 ? null : UP_COST[p.up[i][k]];
-  function upgrade(S, uid, i, k){ const p = S.players[uid], c = p && upCost(p, i, k); if (!p || c == null || p.gold < c) return false; p.gold -= c; p.up[i][k]++; return true; }
-  function startWave(S){ if (S.phase === 'over' || S.wave >= 15) return false; S.wave++; const d = waveDef(S.wave); S.phase = 'wave'; S.tier = d.tier; S.q = []; let t = 0; d.list.forEach(([type, n, gap]) => { for (let i = 0; i < n; i++){ S.q.push({ at: t, type }); t += gap; } t += 1.5; }); S.q.sort((a, b) => a.at - b.at); S.wt = 0; S.spawned = 0; S.total = S.q.length; return true; }
+  function seat(S, uid, zone, slot, job){   // 자리 고르기 · 새로 들어오기 · 자리 옮기기 (이미 앉은 사람이 있으면 못 앉아요)
+  if (S.phase === 'wave' || S.phase === 'over') return false; if (Object.values(S.players).some(q => q.uid !== uid && q.zone === zone && q.slot === slot)) return false;
+  let p = S.players[uid]; if (!p){ p = S.players[uid] = { uid, gold: 0, earned: 0, up: [{ pow: 0, rng: 0, cd: 0 }, { pow: 0, rng: 0, cd: 0 }], cd: [0, 0], buff: 0, basic: 0 }; }
+  p.zone = zone; p.slot = slot; p.job = job; p.cat = CAT[job] || 'melee'; return true; }
+function unseat(S, uid){ if (S.phase !== 'wave') delete S.players[uid]; }
+function upgrade(S, uid, i, k){ const p = S.players[uid], c = p && upCost(p, i, k); if (!p || c == null || p.gold < c) return false; p.gold -= c; p.up[i][k]++; return true; }
+  function startWave(S){ if (S.phase === 'over' || S.wave >= 15) return false; S.wave++; { const n = Object.keys(S.players).length / 9; S.hpN = n >= 1 ? n : Math.max(.3, Math.pow(n, 1.3)); } const cf = .85 + .15 * Math.min(2, Math.max(1, S.hpN)), d = waveDef(S.wave); S.phase = 'wave'; S.tier = d.tier; S.q = []; let t = 0; d.list.forEach(([type, n0, gap]) => { const n = Math.max(1, Math.round(n0 * cf)); for (let i = 0; i < n; i++){ S.q.push({ at: t, type }); t += gap; } t += 1.5; }); S.q.sort((a, b) => a.at - b.at); S.wt = 0; S.spawned = 0; S.total = S.q.length; return true; }
   function spawn(S, type){ const m = MON[type], tier = S.tier, wk = 1 + ((S.wave - 1) % 5) * .06, hp = Math.round(m.hp * TIER_HP[tier] * wk * S.hpN * S.hpK); S.mons.push({ id: S.nid++, type, zone: 0, s: 0, hp, mhp: hp, spd: m.spd * (1 + tier * .06), egg: m.egg * (1 + tier * .35), slow: 0, slowT: 0, gold: Math.round(TIER_GOLD[tier][type === 'n' ? 0 : type === 'e' ? 1 : 2] * K.gold) }); }
   const K = { gold: 3, dmg: 1, bonus: 30 };   // 균형 조절용
   const alive = S => S.mons.filter(m => m.hp > 0);
-  function hurt(S, m, dmg, by){ if (m.hp <= 0) return; m.hp -= dmg * K.dmg; if (m.hp <= 0 && by){ by.gold += m.gold; by.earned += m.gold; } }
+  function hurt(S, m, dmg, by){ if (m.hp <= 0) return; if (by && S.fx) S.fx.push([by.uid, m.id]); m.hp -= dmg * K.dmg; if (m.hp <= 0 && by){ by.gold += m.gold; by.earned += m.gold; } }
   function step(S, dt){
     if (S.phase === 'over' || S.phase === 'ready') return;
     S.t += dt;
@@ -70,5 +75,8 @@
       if (S.wave >= 15){ S.phase = 'over'; S.win = true; } else { S.phase = 'rest'; S.rest = S.wave % 5 === 0 ? 60 : 30; } }
     else if (S.phase === 'rest'){ S.rest -= dt; if (S.rest <= 0) startWave(S); }
   }
-  return { K, W, H, ZONES, CAT, SK, UP_COST, UP_MAX, waveDef, newState, startWave, step, upgrade, upCost, skillOf, posAt };
+  const r1 = v => Math.round(v * 10) / 10;
+  function snap(S){ const p = {}; Object.values(S.players).forEach(q => { p[q.uid] = [q.zone, q.slot, q.job, Math.round(q.gold), q.up.map(u => u.pow + u.rng * 10 + u.cd * 100), q.buff > 0 ? 1 : 0]; });
+    const out = { t: Math.round(S.t), w: S.wave, ph: S.phase, r: Math.max(0, Math.round(S.rest || 0)), e: S.eggs.map(Math.round), win: S.win ? 1 : 0, left: S.q ? S.q.length : 0, m: S.mons.map(m => [m.id, m.type, m.zone, r1(m.s), Math.max(1, Math.round(m.hp / m.mhp * 100)), r1(m.spd * (1 - m.slow))]), p, f: S.fx.slice(-24) }; S.fx = []; return out; }
+  return { K, MON, W, H, ZONES, snap, seat, unseat, CAT, SK, UP_COST, UP_MAX, waveDef, newState, startWave, step, upgrade, upCost, skillOf, posAt };
 });
