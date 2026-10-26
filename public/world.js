@@ -686,6 +686,14 @@ function spooky(now, dt, view){
   });
   cx.globalAlpha = 1;
 }
+const FURN_LIGHT = { candle: { c: [255, 200, 120], r: 16, a: .6, f: 1 }, jack: { c: [255, 150, 60], r: 18, a: .65, f: 1 }, mushlamp: { c: [210, 150, 255], r: 18, a: .6 }, stove: { c: [255, 140, 60], r: 24, a: .7, f: 1 } };
+const hsv2rgb = (h, s, v) => { const f = n => { const k = (n + h / 60) % 6; return Math.round(255 * (v - v * s * Math.max(0, Math.min(k, 4 - k, 1)))); }; return [f(5), f(3), f(1)]; };
+const ghostLampC = {};
+function furnLight(it){   // 가구가 내는 빛(없으면 null): 유령 등불 12색은 이름 번호(ghostlamp0~11)로 색을 정해요
+  if (FURN_LIGHT[it.id]) return FURN_LIGHT[it.id];
+  const m = /^ghostlamp(\d+)$/.exec(it.id); if (!m) return null;
+  return ghostLampC[m[1]] || (ghostLampC[m[1]] = { c: hsv2rgb(+m[1] * 30, .55, 1), r: 20, a: .6 });
+}
 const glowCache = {};
 function glow(r, c){ const k = r + c.join(); if (glowCache[k]) return glowCache[k]; const g = document.createElement('canvas'); g.width = g.height = r * 2; const x = g.getContext('2d'); const gr = x.createRadialGradient(r, r, 0, r, r, r); gr.addColorStop(0, `rgba(${c},1)`); gr.addColorStop(.35, `rgba(${c},.45)`); gr.addColorStop(1, `rgba(${c},0)`); x.fillStyle = gr; x.fillRect(0, 0, r * 2, r * 2); return glowCache[k] = g; }
 // 핼러윈 마을은 늘 밤이에요. 버튼으로 밝기만 바꿔요
@@ -812,6 +820,10 @@ function frame(now){
      cx.fillRect(ix, iy, VW, VH);
     cx.globalCompositeOperation = 'lighter';
     M.lights.forEach((L, i) => { if (L.p[0] + L.r < view.x || L.p[0] - L.r > view.x + view.w || L.p[1] + L.dy + L.r < view.y || L.p[1] + L.dy - L.r > view.y + view.h) return; const fl = L.f ? .85 + .15 * Math.sin(now / 130 + i * 1.7) * Math.sin(now / 370 + i) : 1; cx.globalAlpha = Math.max(0, Math.min(1, L.a * fl * Math.max(.3, Math.min(1, SK.n * 1.15)) * (lb < 0 ? 1 + .85 * lb : 1 + 1.2 * lb))); const rr = L.r * (lb < 0 ? 1 + .3 * lb : 1 + .7 * lb); cx.drawImage(glow(L.r, L.c), L.p[0] - rr, L.p[1] + L.dy - rr, rr * 2, rr * 2); });
+    // 놓은 가구 중 불빛이 나는 것(촛대·호박 랜턴·버섯 스탠드·난로·유령 등불 12색)은 램프처럼 은은하게 빛나요
+    if (M.furn){ shownFurn().forEach((f, i) => { const it = FURN.items[f.k], lt = it && furnLight(it); if (!lt) return; const [fx, fy] = P(f.x, f.y), cyy = fy - it.ay + Math.min(10, it.sh * .3), rr = lt.r;
+      if (fx + rr < view.x || fx - rr > view.x + view.w || cyy + rr < view.y || cyy - rr > view.y + view.h) return;
+      const fl = lt.f ? .85 + .15 * Math.sin(now / 130 + i * 1.7) * Math.sin(now / 370 + i) : .9 + .1 * Math.sin(now / 700 + i); cx.globalAlpha = lt.a * fl * (1 + .25 * lb); cx.drawImage(glow(rr, lt.c), fx - rr, cyy - rr); }); }
     cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
   }
   drawWeather(cx, ix, iy, dt);
