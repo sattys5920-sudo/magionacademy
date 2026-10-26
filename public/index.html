@@ -28,7 +28,7 @@ html.big{--fs:17px;--fs-s:15px;--fs-h:18px;--fs-talk:19px}
 .wbg{background-image:url(art/weapons_big.png?v=2)!important}
 .wic{display:inline-block;width:96px;height:96px;background:url(art/weapons_big.png?v=2) 0 0/500% 1200%;background-position:calc(var(--t)*100%/4) calc(var(--r)*100%/11);image-rendering:pixelated;flex:none}
 .sic{display:inline-block;width:26px;height:26px;vertical-align:middle;background:url(art/skills.png?v=2) 0 0/1500% 1200%;background-position:calc(var(--c)*100%/14) calc(var(--r)*100%/11);image-rendering:pixelated}
-.jgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.jcard{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:2px solid var(--line,#5a4a78);border-radius:10px;background:transparent;color:inherit;font:inherit;text-align:center}.jcard .jic{width:32px;height:32px}.jcard b{font-size:13px}.jcard span{font-size:10px;opacity:.75;line-height:1.25}.jcard.on{border-color:#ffb84d;background:rgba(255,184,77,.18)}
+.jgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.jcard.off{opacity:.45;filter:grayscale(.7)}.jcard{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:2px solid var(--line,#5a4a78);border-radius:10px;background:transparent;color:inherit;font:inherit;text-align:center}.jcard .jic{width:32px;height:32px}.jcard b{font-size:13px}.jcard span{font-size:10px;opacity:.75;line-height:1.25}.jcard.on{border-color:#ffb84d;background:rgba(255,184,77,.18)}
 html.lowfx *,html.lowfx *::before,html.lowfx *::after{transition-duration:0s!important;animation-duration:0s!important}
 @media (prefers-reduced-motion:reduce){:root{--dur:0s}}
 *{box-sizing:border-box}
@@ -1775,7 +1775,15 @@ const XRG = [   // 탐사 지역: 입장료·시간·몬스터 레벨 범위 · 
 [[1, 1, 1], [2.2, 1.3, 1.8], [3.5, 1.8, 3], [4.5, 2.7, 5.2]].forEach(([h, e, a], i) => { XRG[i].hpm = h; XRG[i].ehm = e; XRG[i].atkm = a; XRG[i].bat = [1.3, 1.3, 1.2, 1.4][i]; });   // bat: 보스는 더 아프게 때려요 (물약을 더 마셔야 해요)   // 지역마다 몬스터가 더 단단하고 세요 (무기 강화 0 · 2 · 3 · 4단계 이상인 사람 기준)
 let xRgSel = 0; const xReg = () => XRG[(xEx().run ? xEx().run.rg : xRgSel) || 0];
 const XDAY = 5, XNODE = { battle: ['', '몬스터', 7], elite: ['', '강한 몬스터', 11], camp: ['', '캠프파이어', 4], statue: ['', '고대 석상', 5], chest: ['', '보물상자', 4], boss: ['', '숲의 주인', 100], path: ['', '지름길', 8] };
-const xJobGrid = sel => `<div class="jgrid">${Object.entries(XJ).map(([k, j]) => `<button type="button" class="jcard${sel === k ? ' on' : ''}" data-job="${k}">${j.ic}<b>${j.n}</b><span>${j.d}</span></button>`).join('')}</div>`;
+const xJobGrid = (sel, taken = {}) => `<div class="jgrid">${Object.entries(XJ).map(([k, j]) => `<button type="button" class="jcard${sel === k ? ' on' : ''}${taken[k] ? ' off' : ''}" data-job="${k}" ${taken[k] ? 'disabled' : ''}>${j.ic}<b>${j.n}</b><span>${taken[k] ? `${esc(taken[k])}가 골랐어요` : j.d}</span></button>`).join('')}</div>`;
+// 직업은 한 사람에 하나씩: 앞서 가입한 친구가 고른 직업은 뒤에 가입하는 사람이 못 골라요 (jobs/<직업> = 고른 사람, 동시에 고르는 것도 막아요)
+async function jobsTaken(){
+  const t = {}; if (solo || !F || !db) return t;
+  try { const ps = (await F.get(F.ref(db, 'players'))).val() || {}; Object.entries(ps).forEach(([id, p]) => { const j = p && p.ex && p.ex.job; if (j && id !== uid) t[j] = p.nick || '친구'; });
+    const cl = (await F.get(F.ref(db, 'jobs'))).val() || {}; Object.entries(cl).forEach(([j, id]) => { if (id !== uid && !t[j]) t[j] = ps[id] && ps[id].nick || '친구'; }); } catch(e){}
+  return t;
+}
+const jobClaim = job => solo ? Promise.resolve(true) : GDB.tx('jobs/' + job, v => (v && v !== myId()) ? undefined : myId()).then(r => r.committed || r.v === myId()).catch(() => true);
 /*XT*/const XT = {"warrior":[["차지",[["강타","d","fist"],["차지 베기","c","sword"],["대지 가르기","D","rock"],["분노의 일격","d","fire"],["극한 차지","c","bolt"]]],["근성",[["단단한 피부","P:def","shield"],["되받아치기","d","spear"],["불굴","P:surv","heart"],["피의 갈증","P:vamp","drop"],["전장의 포효","b","trumpet"]]],["도끼술",[["회전 베기","D","swirl"],["투척 도끼","d","axe"],["파쇄","W","hammer"],["학살자","d","skull"],["폭풍 도끼","D","cloud"]]]],"black":[["화염",[["불꽃탄","d","fire"],["화염구","D","fireball"],["불씨","F","ember"],["지옥불","D","skull"],["메테오","D","rock"]]],["냉기와 번개",[["서리 화살","d","arrow"],["얼음 창","d","spear"],["번개","d","bolt"],["연쇄 번개","D","chain"],["눈보라","S","ice"]]],["암흑",[["마력 흡수","M","moon"],["약점 간파","w","eye"],["암흑 구체","d","orb"],["공허의 손","Z","claw"],["마력 폭주","P:mag","star"]]]],"thief":[["연속",[["찌르기","d","dagger"],["이중 베기","d","cross2"],["칼춤","D","swirl"],["연환","d","chain"],["난도질","c","claw"]]],["급소",[["약점 노리기","P:crit","eye"],["출혈","F","drop"],["급소 찌르기","c","arrow"],["처형자","d","skull"],["피 웅덩이","f","bubble"]]],["그림자",[["재빠른 발","P:spd","wing"],["연막","w","cloud"],["그림자 걸음","x","ghost"],["훔치기","d","coin"],["뒤잡기","Z","fist"]]]],"bard":[["전투가",[["용기의 노래","B","trumpet"],["승리의 행진","B","flag"],["전장의 북소리","X","drum"],["불꽃의 변주","D","fire"],["영웅의 서사시","B","crown"]]],["안식가",[["수호의 노래","G","harp"],["자장가","H","moon"],["평온의 선율","H","note"],["되살림의 화음","r","heart"],["별빛 합창","H","star"]]],["풍자",[["불협화음","w","note1"],["도발의 곡","s","wave"],["흥겨운 춤","X","wing"],["앙코르","B","burst"],["대합창","D","bell"]]]],"time":[["가속",[["서두르기","x","arrow"],["연속 가속","X","chain"],["시간 도약","x","bolt"],["가속 영역","X","wave"],["질주","P:spd","wing"]]],["감속",[["늦추기","s","hourglass"],["정지","Z","clock"],["늪 같은 시간","S","swirl"],["시간 정체","S","orb"],["영원한 정오","D","sun"]]],["시간 조작",[["되감기","h","cross"],["예지","P:dodge","eye"],["시계 소환","Z","bell"],["시간 균열","d","burst"],["시간 정지","X","star"]]]],"alch":[["약화",[["산성 플라스크","d","flask"],["독 병","F","tube"],["불안정 용액","w","bubble"],["부식","W","drop"],["약점 증폭","w","eye"]]],["혼합",[["응급 물약","h","cross"],["마력 물약","M","orb"],["혼합 약","h","swirl"],["엘릭서","H","star"],["변이약","B","skull"]]],["폭발물",[["폭죽탄","d","bomb"],["점착 폭탄","s","mine"],["연쇄 반응","D","chain"],["황금 폭발","d","burst"],["연금 대폭발","D","rocket"]]]],"white":[["회복",[["치유","h","drop"],["큰 치유","h","cross"],["집단 치유","H","flower"],["신성한 비","H","cloud"],["기적의 손길","h","star"]]],["부활",[["되살리기","r","wing"],["가호","P:surv","heart"],["완전 소생","r","crown"],["전체 소생","H","orb"],["천사의 숨결","H","wave"]]],["성광",[["성광탄","d","burst"],["정화","H","sun"],["빛의 장막","G","shield"],["심판의 빛","D","spear"],["광휘의 후광","B","bell"]]]],"druid":[["재생",[["새싹","h","leaf"],["재생의 숲","H","tree"],["뿌리 속박","s","chain"],["생명의 나무","h","flower"],["만개","H","sun"]]],["자연",[["자연 보호막","G","leaf"],["이슬","h","drop"],["독 제거","H","cross"],["태양의 은총","B","burst"],["대지의 축복","P:hp","heart"]]],["야수",[["가시 덩굴","d","spear"],["곰의 가죽","g","paw"],["늑대의 울음","B","wave"],["매의 눈","P:crit","eye"],["야생의 화신","D","claw"]]]],"cleric":[["보호",[["수호의 기도","G","cross"],["성스러운 방패","g","tower"],["대신 맞기","g","orb"],["피해 흡수 막","G","bubble"],["불가침","P:def","shield"]]],["정화",[["해제","H","wave"],["축복","B","sun"],["안식","G","moon"],["순백의 종","H","flag"],["구원의 빛","r","star"]]],["응징",[["철퇴","d","hammer"],["응징","d","fist"],["신벌","d","bolt"],["성스러운 낙인","w","star"],["심판의 종","D","bell"]]]],"knight":[["도발",[["도발","g","trumpet"],["방패 치기","d","fist"],["전열","G","chain"],["불굴의 외침","b","flag"],["요새","P:def","shield"]]],["수호",[["막아서기","g","tower"],["방어 태세","g","bubble"],["반격 태세","d","spear"],["수호의 서약","G","crown"],["철벽","P:hp","heart"]]],["검술",[["베기","d","sword"],["돌격","D","arrow"],["방패 돌진","Z","shield"],["정의의 칼날","c","sun"],["기사의 일격","c","burst"]]]],"summon":[["정령",[["불 정령","d","fire"],["물 정령","d","drop"],["바람 정령","D","swirl"],["대지 정령","d","rock"],["정령왕","D","crown"]]],["야수",[["늑대 소환","d","paw"],["곰 소환","g","claw"],["날개 도마뱀 소환","D","wing"],["호박 토끼 소환","d","ghost"],["용 소환","D","fireball"]]],["계약",[["소환수 강화","P:mag","star"],["마력 연결","M","chain"],["합체 공격","c","burst"],["송환","H","orb"],["계약의 폭주","B","skull"]]]],"gadget":[["길들인 짐승",[["번개 쥐","d","gear"],["수호 쥐","G","gear"],["광선 도마뱀","d","bolt"],["짐승 훈련","P:atk","fist"],["철갑 멧돼지","D","bomb"]]],["함정",[["덫 설치","s","chain"],["지뢰","d","mine"],["전기 그물","S","wave"],["연쇄 함정","D","swirl"],["대지 폭파","D","burst"]]],["폭탄",[["수류탄","d","bomb"],["접착탄","s","bubble"],["연막탄","w","cloud"],["시한폭탄","c","bomb"],["집중 포화","D","arrow"]]]]};/*XT-END*/
 const xIc = o => `<span class="sic" style="--c:${o.i};--r:${ORDER_J.indexOf(o.job)}"></span>`;
 const ORDER_J = ['warrior', 'black', 'thief', 'bard', 'time', 'alch', 'white', 'druid', 'cleric', 'knight', 'summon', 'gadget'];
@@ -1882,8 +1890,8 @@ function renderExplore(){
   if (!xv) xv = { view: ex.run ? 'march' : 'lobby' };
   const v = xv.view, back = '<button class="btn ghost" id="back">닫기</button>';
   if (!job){
-    frame(null, '탐사', '직업을 골라요 (한 번 고르면 바뀌지 않아요)', `<section class="sec">${secH('직업 고르기', '12종')}<div class="box px">${Object.entries(XJ).map(([k, j]) => `<div class="li">${j.ic ? `<span class="big">${j.ic}</span>` : ''}<div class="main"><span class="t">${j.n}</span><span class="d" style="white-space:normal">${j.d}<br>${XT[k].map(b => b[0]).join(' · ')}</span></div><button class="btn sm go" data-xj="${k}">고르기</button></div>`).join('')}</div></section><div style="display:flex;gap:8px">${back}</div>`);
-    $('#back').onclick = closeSheet; on('[data-xj]', b => confirmBox(`${XJ[b.dataset.xj].n}(으)로 정할까요? 바꿀 수 없어요.`, '정했어요', '다시 볼래요').then(ok => { if (ok){ ex.job = b.dataset.xj; xSkEx(ex); save(); renderExplore(); } })); return;
+    frame(null, '탐사', '직업을 골라요 (한 번 고르면 바뀌지 않아요)', `<section class="sec">${secH('직업 고르기', '12종')}<div class="box px">${Object.entries(XJ).map(([k, j]) => { const tk = Object.entries(playersList).find(([id, p]) => id !== uid && p && p.ex && p.ex.job === k); return `<div class="li"${tk ? ' style="opacity:.5"' : ''}>${j.ic ? `<span class="big">${j.ic}</span>` : ''}<div class="main"><span class="t">${j.n}</span><span class="d" style="white-space:normal">${tk ? `${esc(tk[1].nick || '친구')}가 골랐어요` : `${j.d}<br>${XT[k].map(b => b[0]).join(' · ')}`}</span></div><button class="btn sm go" data-xj="${k}" ${tk ? 'disabled' : ''}>고르기</button></div>`; }).join('')}</div></section><div style="display:flex;gap:8px">${back}</div>`);
+    $('#back').onclick = closeSheet; on('[data-xj]', b => confirmBox(`${XJ[b.dataset.xj].n}(으)로 정할까요? 바꿀 수 없어요.`, '정했어요', '다시 볼래요').then(async ok => { if (!ok) return; if (!(await jobClaim(b.dataset.xj))) return toast('방금 다른 친구가 그 직업을 골랐어요'); ex.job = b.dataset.xj; xSkEx(ex); save(); renderExplore(); })); return;
   }
   const head = `<div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center"><span class="big">${job.ic}</span><div style="flex:1"><b>${esc(me.nick)} · ${job.n} Lv ${lv.L}</b><div class="s sub">HP ${Math.round(xStTot(ex, 'hp'))} · 공 ${Math.round(xStTot(ex, 'atk'))} · 마 ${Math.round(xStTot(ex, 'mag'))} · 치 ${Math.round(xStTot(ex, 'heal'))} · 속 ${Math.round(xStTot(ex, 'spd') * 10) / 10}</div></div></div></div>`;
   if (v === 'lobby'){
@@ -3185,7 +3193,7 @@ function adminRender(){
     const p = AD.players[id] || {}, who = p.nick || id.slice(0, 6);
     if (!confirm(del ? `${who}의 가입 데이터를 모두 지울까요? 캐릭터와 진행이 사라지고, 다시 가입 승인을 받아야 해요.` : `${who}의 진행 데이터를 처음부터 다시 시작하게 할까요? (이름·모습·기숙사·직업은 그대로)`)) return;
     const ups = {};
-    if (del){ ups['players/' + id] = null; ups['approved/' + id] = null; ups['pending/' + id] = null; ups['online/' + id] = null; }
+    if (del){ ups['players/' + id] = null; ups['approved/' + id] = null; ups['pending/' + id] = null; ups['online/' + id] = null; if (p.ex && p.ex.job) ups['jobs/' + p.ex.job] = null; }
     else { const np = freshPlayer(p.nick, p.look, p.house, p.av); if (p.ex?.job) np.ex = { exp: 0, d: '', n: 0, job: p.ex.job }; ups['players/' + id] = np; }
     ups['adm/reset/' + id] = Date.now();
     try {
@@ -3198,7 +3206,7 @@ function adminRender(){
     if (!confirm(`학생 ${ids.length}명의 모든 진행 상황과 채팅 내역을 지울까요? 되돌릴 수 없어요.`)) return;
     if (prompt("정말 모두 초기화할까요? 아래에 '초기화' 라고 입력해요.") !== '초기화') return alert('취소했어요.');
     const ups = {}, now = Date.now(); dfHostStop();
-    ids.forEach(id => { const p = AD.players[id], np = freshPlayer(p.nick, p.look, p.house, p.av); if (p.ex && p.ex.job) np.ex = { exp: 0, d: '', n: 0, job: p.ex.job }; ups['players/' + id] = np; ups['adm/reset/' + id] = now; });
+    ups['jobs'] = null; ids.forEach(id => { const p = AD.players[id], np = freshPlayer(p.nick, p.look, p.house, p.av); if (p.ex && p.ex.job){ np.ex = { exp: 0, d: '', n: 0, job: p.ex.job }; ups['jobs/' + p.ex.job] = id; } ups['players/' + id] = np; ups['adm/reset/' + id] = now; });
     ['chat', 'story', 'houses', 'games', 'xparty', 'xrun', 'events', 'coop', 'exam', 'market', 'guest', 'records', 'pens', 'defense'].forEach(k => { ups[k] = null; });
     try { await F.update(F.ref(db, '/'), ups); alert('모든 진행 상황과 채팅 내역을 초기화했어요.'); } catch(e){ alert('실패했어요: ' + (e.code || e.message)); }
   };
@@ -6844,7 +6852,7 @@ function renderClothes(){
     shopMsg = bought.length ? `${withJosa(bought.join(', '), '을', '를')} 샀어요! 잘 어울려요` : '갈아입었어요!'; shopTry = null; redraw(); hud();
   };
 }
-function showCreate(done, counts = {}){
+function showCreate(done, counts = {}, taken = {}){
   let look = Math.floor(Math.random() * 8), house = null, nick = '', job = '';
   const av = World.Avatar.fromLook(Math.floor(Math.random() * 1e6));
   const draw = () => {
@@ -6856,7 +6864,7 @@ function showCreate(done, counts = {}){
       <span class="s">기숙사 고르기 (기숙사마다 ${HOUSE_CAP}명)</span>
       ${houseCards(house, counts)}
       <span class="s">직업 고르기 · 한 번 고르면 바뀌지 않아요</span>
-      ${xJobGrid(job)}
+      ${xJobGrid(job, taken)}
       <p class="err" id="err"></p>
       <button class="btn go" id="enroll">입학하기</button>
     </div>`);
@@ -6865,11 +6873,12 @@ function showCreate(done, counts = {}){
     else bindAvatarUI(av, () => { keep(); const y = app.querySelector('.cover').scrollTop; draw(); app.querySelector('.cover').scrollTop = y; });
     app.querySelectorAll('[data-house]').forEach(b => b.onclick = () => { keep(); house = b.dataset.house; av.house = house; draw(); });
     app.querySelectorAll('[data-job]').forEach(b => b.onclick = () => { keep(); job = job === b.dataset.job ? '' : b.dataset.job; draw(); });
-    $('#enroll').onclick = () => {
+    $('#enroll').onclick = async () => {
       keep(); const n = nick.trim();
       if (n.length < 1 || n.length > 8) return $('#err').textContent = '이름을 1~8 자로 정해 주세요.';
       if (!house) return $('#err').textContent = '기숙사를 골라 주세요.';
       if (!job) return $('#err').textContent = '직업을 골라 주세요.';
+      if (!(await jobClaim(job))){ taken = await jobsTaken(); job = ''; draw(); return $('#err').textContent = '방금 다른 친구가 그 직업을 골랐어요. 다른 직업을 골라 주세요.'; }
       const fav = World.Avatar.fix(av); delete fav.house; const np = freshPlayer(n, look, house, fav); if (job) np.ex = { exp: 0, d: '', n: 0, job }; done(np);
     };
   };
@@ -6949,7 +6958,7 @@ async function boot(){
       enterWorld();
     };
     if (snap.exists()) { me = normalize(snap.val()); if (!me.house) showHousePick(await houseCounts(), enter); else enter(); }
-    else waitApproval(user, async () => showCreate(p => { me = p; save(); enter(); }, await houseCounts()));
+    else waitApproval(user, async () => showCreate(p => { me = p; save(); enter(); }, await houseCounts(), await jobsTaken()));
   });
 }
 boot();

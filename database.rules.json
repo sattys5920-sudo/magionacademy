@@ -217,6 +217,14 @@
         ".read": "auth != null",
         ".write": "auth != null"
       }
+    },
+    "jobs": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+      "$job": {
+        ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid) || data.val() === auth.uid)",
+        ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 40)"
+      }
     }
   }
 }
