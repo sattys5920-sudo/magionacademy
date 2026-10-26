@@ -6514,11 +6514,16 @@ function dfCutDraw(now){
 const dfCutT0 = C => C.t00 || (C.t00 = performance.now());
 // ----- 관리자: 계산을 맡아요 (이 화면이 켜져 있는 동안만 진행돼요) -----
 let dfHost = null;
-function dfHostStart(){
-  if (dfHost || !F || !db) return; const S = TD.newState([], { auto: 0 }); S.phase = 'ready';
-  dfHost = { S, id: Date.now(), intro: 0, startAt: 0, last: performance.now(), pub: 9, hb: 9, ph: '', w: -1, paused: false, timer: setInterval(dfHostTick, 100) };
+function dfHostResume(){   // 관리자 화면이 새로 고쳐져도 하던 진행을 이어 가요
+  if (dfHost || !AD.dfctl || !AD.dfctl.open) return; let sv = null; try { sv = JSON.parse(localStorage.getItem('dfhost') || 'null'); } catch(e){}
+  if (sv && sv.id === AD.dfctl.id && sv.S) dfHostStart(sv);
+}
+function dfHostStart(rs){
+  if (dfHost || !F || !db) return; const S = rs ? rs.S : TD.newState([], { auto: 0 }); if (!rs) S.phase = 'ready';
+  dfHost = { S, id: rs ? rs.id : Date.now(), sv: 0, intro: rs ? rs.intro || 0 : 0, startAt: 0, last: performance.now(), pub: 9, hb: 9, ph: '', w: -1, paused: false, timer: setInterval(dfHostTick, 100) };
   dfHost.last = performance.now(); dfHost.seen = {}; dfHost.cmdOff = F.onValue(F.ref(db, 'defense/cmd'), sn => { const v = sn.val() || {}, H = dfHost; if (!H) return; Object.entries(v).forEach(([u, c]) => { if (!c || H.seen[u] === c.n) return; const first = !(u in H.seen); H.seen[u] = c.n; if (first && H.warm !== false && Date.now() - c.n > 5000) return; const p = H.S.players[u]; if (!p) return; if (c.a !== undefined) p.auto = c.a ? 1 : 0; if (c.r !== undefined) TD.setReady(H.S, u, c.r); if (c.i !== undefined && !H.paused) TD.cast(H.S, u, c.i); if (c.u && (c.u[0] === 0 || c.u[0] === 1) && ['pow', 'rng', 'cd'].includes(c.u[1])) TD.upgrade(H.S, u, c.u[0], c.u[1]); }); });
-  F.set(F.ref(db, 'defense/ctl'), { open: true, id: dfHost.id, ph: 'ready', w: 0, win: 0, hb: Date.now() }); F.set(F.ref(db, 'defense/st'), TD.snap(S)); adminRender();
+  if (!rs){ F.set(F.ref(db, 'defense/ctl'), { open: true, id: dfHost.id, ph: 'ready', w: 0, win: 0, hb: Date.now() }); F.set(F.ref(db, 'defense/st'), TD.snap(S)); }
+  adminRender();
 }
 function dfHostSeats(S){
   const P = AD.dfpick || {}; Object.entries(P).forEach(([u, p]) => { const q = S.players[u]; if (!q || q.zone !== p.z || q.slot !== p.s || q.job !== p.job) TD.seat(S, u, p.z, p.s, p.job); });
@@ -6529,12 +6534,14 @@ function dfHostTick(){
   if (S.phase === 'ready' || S.phase === 'rest') dfHostSeats(S);
   if (H.startAt && now >= H.startAt) H.startAt = 0;   // 시작 연출이 끝났어요 (웨이브는 학생들이 모두 「시작」을 눌러야 와요)
   if (!H.paused) TD.step(S, dt);
+  H.sv += dt; if (H.sv >= 2){ H.sv = 0; try { localStorage.setItem('dfhost', JSON.stringify({ id: H.id, S, intro: H.intro || 0 })); } catch(e){} }
   H.pub += dt; if (H.pub >= .25){ H.pub = 0; F.set(F.ref(db, 'defense/st'), TD.snap(S)); }
   H.hb += dt; if (H.hb >= 2 || S.phase !== H.ph || S.wave !== H.w){ const ch = S.phase !== H.ph || S.wave !== H.w; H.hb = 0; H.ph = S.phase; H.w = S.wave; F.set(F.ref(db, 'defense/ctl'), { open: true, id: H.id, intro: H.intro || 0, ph: S.phase, w: S.wave, win: S.win ? 1 : 0, hb: Date.now(), pause: H.paused ? 1 : 0 }); if (ch && S.phase === 'over') F.set(F.ref(db, 'defense/res'), { id: H.id, eggs: S.eggs.map(Math.round), win: S.win ? 1 : 0, at: Date.now() }); if (ch && AD.tab === 'event') adminRender(); }
 }
-function dfHostStop(){ if (!dfHost) return; clearInterval(dfHost.timer); if (dfHost.cmdOff) dfHost.cmdOff(); dfHost = null; }
+function dfHostStop(){ if (!dfHost) return; try { localStorage.removeItem('dfhost'); } catch(e){} clearInterval(dfHost.timer); if (dfHost.cmdOff) dfHost.cmdOff(); dfHost = null; }
 function dfHostClose(){ dfHostStop(); if (!F || !db) return; F.set(F.ref(db, 'defense/ctl'), { open: false }); F.set(F.ref(db, 'defense/st'), null); F.set(F.ref(db, 'defense/pick'), null); F.set(F.ref(db, 'defense/cmd'), null); adminRender(); }
 function adminEventHTML(){
+  dfHostResume();
   const H = dfHost, S = H && H.S, ph = S ? S.phase : null, open = !!(AD.dfctl && AD.dfctl.open), picks = Object.entries(AD.dfpick || {}), nm = u => esc((AD.players[u] && AD.players[u].nick) || u.slice(0, 6));
   const zl = TD.ZONES.map((z, i) => `${z.name}: ${picks.filter(([, p]) => p.z === i).map(([u, p]) => `${nm(u)}(${XJ[p.job] ? XJ[p.job].n : '?'})`).join(', ') || '비어 있어요'}`);
   return `<div class="adcard"><b>이벤트 「용의 알 지키기」</b> · ${H ? DF_PH[ph] : open ? '열려 있지만 이 화면에서 진행하고 있지 않아요' : '닫혀 있어요'}
@@ -6547,7 +6554,7 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
   if (a === 'open') dfHostStart(); else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 학생들의 자리와 진행이 지워져요.')) dfHostClose(); }
   else if (a === 'start' && H){ H.intro = Date.now(); H.startAt = performance.now() + 26000; H.hb = 9; adminRender(); }
   else if (a === 'force' && H){ TD.startWave(H.S); adminRender(); } else if (a === 'pause' && H){ H.paused = !H.paused; adminRender(); }
-  else if (a === 'reset' && H){ if (confirm('처음으로 되돌릴까요? 번 골드와 올린 스킬이 지워져요.')){ const S = TD.newState([], { auto: 0 }); S.phase = 'ready'; H.S = S; H.ph = ''; H.intro = 0; H.startAt = 0; H.id = Date.now(); H.hb = 9; F.set(F.ref(db, 'defense/res'), null); adminRender(); } } });
+  else if (a === 'reset' && H){ if (confirm('처음으로 되돌릴까요? 번 골드와 올린 스킬이 지워져요.')){ const S = TD.newState([], { auto: 0 }); S.phase = 'ready'; H.S = S; H.ph = ''; H.intro = 0; H.startAt = 0; H.id = Date.now(); H.hb = 9; H.sv = 9; F.set(F.ref(db, 'defense/res'), null); adminRender(); } } });
 // ===== 시장 (온라인 전용) =====
 let sellPick = null;
 function renderMarket(){
@@ -6994,6 +7001,7 @@ boot();
     const v = (await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json()).v;
     if (buildV === null){ buildV = v; return; }
     if (v === buildV) return;
+    if (dfHost && dfHost.S.phase !== 'over') return;   // 이벤트를 진행 중인 관리자 화면은 새로 고치지 않아요
     reloading = true; try { saveNow(); } catch(e){} toast('새 버전이 나왔어요. 곧 새로 고쳐요');
     setTimeout(() => location.reload(), 2500);
   } catch(e){} };
