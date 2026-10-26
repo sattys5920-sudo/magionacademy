@@ -4321,7 +4321,7 @@ function storyNpcs(){ return [];   // 옛 반 전체 이야기는 메인 의뢰�
   const out = []; for (let c = 1; c <= (storyLive.ch || 0); c++){ const S = STORY[c - 1]; if (S) out.push({ ...S.npc, main: c, h: 26 }); } return out; }
 function storyListen(){
   if (solo || !F || !db || storyOff) return;
-  storyOff = F.onValue(F.ref(db, 'story'), s => { const v = s.val() || {}; storyLive = v.live || { ch: 0 }; storyCh = v.ch || {}; const rel = v.mq && +v.mq.n >= 0 ? +v.mq.n : 1; if (rel !== mqRel){ mqRel = rel; if (typeof mqTick === 'function' && me) mqTick(); } wxForce = v.wx || null; bandForce = v.band || null; npcSig = ''; syncNpcs(); storyCheck(); });
+  storyOff = F.onValue(F.ref(db, 'story'), s => { const v = s.val() || {}; storyLive = v.live || { ch: 0 }; storyCh = v.ch || {}; const rel = v.mq && +v.mq.n >= 0 ? +v.mq.n : 0; if (rel !== mqRel){ mqRel = rel; if (typeof mqTick === 'function' && me) mqTick(); } wxForce = v.wx || null; bandForce = v.band || null; npcSig = ''; syncNpcs(); storyCheck(); });
 }
 // 새로 열린 장·끝난 단계·끝난 장면을 아직 안 봤으면 보여 줘요 (접속하자마자도)
 function storyCheck(){
@@ -4419,16 +4419,16 @@ document.addEventListener('click', e => {
 });
 // ---------- 관리자: 송출 · 진행 보기 · 단계 넘기기 ----------
 function adminStoryHTML(){   // 메인 의뢰 송출: 송출한 장까지만 열려요. 앞 장을 끝낸 사람은 바로, 아직 하는 사람은 끝내는 즉시 다음 장이 와요
-  const rel = AD.story.mq && +AD.story.mq.n >= 0 ? +AD.story.mq.n : 1, ps = Object.values(AD.players || {}).filter(p => p?.nick), list = MQ.list || [];
+  const rel = AD.story.mq && +AD.story.mq.n >= 0 ? +AD.story.mq.n : 0, ps = Object.values(AD.players || {}).filter(p => p?.nick), list = MQ.list || [];
   return `<div class="adcard"><b>송출된 장: ${rel} / ${list.length}장</b><span class="s">송출하면 앞 장을 끝낸 학생은 바로 다음 손님을 만나고, 아직 하는 학생은 끝내자마자 이어서 받아요.</span></div>
     ${list.map((id, i) => { const q = MQ.q[id], c = i + 1, done = ps.filter(p => p.mq?.done?.[id]).length, now = ps.filter(p => p.mq?.q === id).length, open = c <= rel, wait = ps.filter(p => !p.mq?.done?.[id] && (i === 0 || p.mq?.done?.[list[i - 1]]) && p.mq?.q !== id).length;
       return `<div class="adcard" style="border-color:${open ? '#3FAF74' : '#22183F'}"><b>${c}장 · ${esc(q?.name || id)} (${esc(MQ.cast[q?.client]?.name || '')})</b> ${open ? '송출됨' : '아직'}
         <div class="s">끝낸 학생 ${done}명 · 하는 중 ${now}명${open ? ` · 받을 차례 ${wait}명` : ''}</div>
-        <div class="frow">${c === rel + 1 ? `<button class="btn sm go" data-adst="mq:${c}">${c}장 송출</button>` : ''}${c === rel && c > 1 ? `<button class="btn sm" data-adst="mq:${c - 1}">송출 취소</button>` : ''}</div></div>`; }).join('')}`;
+        <div class="frow">${c === rel + 1 ? `<button class="btn sm go" data-adst="mq:${c}">${c}장 송출</button>` : ''}${c === rel ? `<button class="btn sm" data-adst="mq:${c - 1}">송출 취소</button>` : ''}</div></div>`; }).join('')}`;
 }
 function adminStoryAct(v){
   const [a, n] = v.split(':'), c = +n;
-  if (a === 'mq'){ if (c > (AD.story.mq?.n ?? 1) && !confirm(`${c}장 「${MQ.q[MQ.list[c - 1]]?.name || c}」을(를) 송출할까요?`)) return; F.set(F.ref(db, 'story/mq'), { n: c, at: Date.now() }); }
+  if (a === 'mq'){ if (c > (AD.story.mq?.n ?? 0) && !confirm(`${c}장 「${MQ.q[MQ.list[c - 1]]?.name || c}」을(를) 송출할까요?`)) return; F.set(F.ref(db, 'story/mq'), { n: c, at: Date.now() }); }
 }
 const ACT_GO = { '물약 끓이기':'lab', '재료함 열기':'lab', '재료 꺼내기':'lab', '레시피 노트 보기':'lab', '시장 보기':'market', '박쥐 돌보기':'ranch', '모이 주기':'ranch', '독초 돌보기':'green', '물 주기':'green' };
 const FLAVOR = {
@@ -6695,7 +6695,7 @@ boot();
 // 데이터: data/main/index.json(순서) · cast.json(의뢰인·조연) · <qid>/quest.json · stage_N_request.json / stage_N_complete.json · idle.json · npc_lines.json
 // 상태: me.mq = { q: 지금 의뢰 id, st: 단계(1~5), ph: 'arrive'(등장 대기) | 'pre'(부탁 전) | 'go'(목표 수행) | 'ready'(보고 전), prog: {}, done: { qid: 끝낸 날 }, dl: 기한 날, named: {} }
 const MQ = { list: [], q: {}, cast: {}, items: {}, scenes: {}, idle: {}, lines: {}, ready: null, loaded: false };
-let mqRel = 1;   // 관리자가 송출한 장 수 (story/mq.n). 아직 없으면 1장만 열려 있어요
+let mqRel = 0;   // 관리자가 송출한 장 수 (story/mq.n). 아직 없으면 아무 장도 열리지 않아요 (관리자가 1장을 송출해야 시작)
 const MQ_V = 1;
 const mqFetch = async p => { try { const r = await fetch(`data/main/${p}?v=${MQ_V}`); return r.ok ? await r.json() : null; } catch(e){ return null; } };
 MQ.ready = (async () => {
