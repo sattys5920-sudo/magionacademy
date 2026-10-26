@@ -399,6 +399,7 @@ let crowd = {};
 function rebuildObjs(){   // 지도 물건 + (개인 방이면) 놓은 가구
   const fo = M.furn ? furnObjs() : [];
   blocked = new Set(M.water ? M.water.map(w => w[0] + ',' + w[1]) : []); [...M.objs, ...fo].forEach(o => { if (o.solid !== false) for (let x = Math.floor(o.box[0]); x < Math.ceil(o.box[2]); x++) for (let y = Math.floor(o.box[1]); y < Math.ceil(o.box[3]); y++) blocked.add(x + ',' + y); });
+  M.objs.forEach(o => { const d = o.door; if (!d || d.walk || d.span || d.spanX) return; d.t2 = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([a, b]) => [d.tile[0] + a, d.tile[1] + b]).find(([a, b]) => free(a, b)) || null; });   // 문은 바닥 두 칸: 옆 빈 칸 하나를 더 눌러요
   flats = fo.filter(o => o.flat);
   objOrder = fo.length ? orderObjs([...M.objs, ...fo.filter(o => !o.flat)]) : (MAPS[rmap].order || (MAPS[rmap].order = orderObjs(M.objs)));
 }
@@ -524,7 +525,8 @@ function useObj(o, a){
   if (typeof r === 'string'){ if (bubble) bubble.el.innerHTML = r; else showBubble(o, r); } else hideBubble();
 }
 // ---- 근처 대상(상황 버튼): 서 있는 칸에서 바로 닿는 NPC·채집 지점·물건·물가를 찾아 World.onNear(대상 | null)에 알려요 ----
-World.enterDoorAt = (x, y) => { const o = M && M.objs.find(q => q.door && q.door.tile[0] === x && q.door.tile[1] === y); if (o) goDoor(o.door, o); return !!o; };   // (시험용·바로 들어가기) 이 칸의 문 열기
+World.doorTiles = () => M.objs.filter(o => o.door).map(o => ({ t: o.door.tile, t2: o.door.t2, walk: !!o.door.walk, label: o.door.label }));   // (시험용)
+World.enterDoorAt = (x, y) => { const o = M && M.objs.find(q => q.door && ((q.door.tile[0] === x && q.door.tile[1] === y) || (q.door.t2 && q.door.t2[0] === x && q.door.t2[1] === y))); if (o) goDoor(o.door, o); return !!o; };   // (시험용·바로 들어가기) 이 칸의 문 열기
 World.onNear = null; let nearKey = '', nearT = null, nearTick = 0;
 function findNear(){
   if (busy || !M || placing) return null;
@@ -605,7 +607,7 @@ cv.addEventListener('pointerdown', e => {
     return;
   }
   if (hit){
-    if (hit.door){ const [dx, dy] = hit.door.tile; if (Math.round(me.x) === dx && Math.round(me.y) === dy) return goDoor(hit.door, hit); if (goto(me, dx, dy)) pending = { door: hit.door, o: hit }; return; }
+    if (hit.door){ const ts = [hit.door.tile, hit.door.t2].filter(Boolean).sort((a, b) => Math.hypot(a[0] - me.x, a[1] - me.y) - Math.hypot(b[0] - me.x, b[1] - me.y)); if (ts.some(t => Math.round(me.x) === t[0] && Math.round(me.y) === t[1])) return goDoor(hit.door, hit); if (ts.some(([dx, dy]) => goto(me, dx, dy))) pending = { door: hit.door, o: hit }; return; }
     const tiles = []; for (let a = Math.floor(hit.box[0]); a < Math.ceil(hit.box[2]); a++) for (let b = Math.floor(hit.box[1]); b < Math.ceil(hit.box[3]); b++) tiles.push([a, b]);
     for (const c of near(tiles)) if (goto(me, c[0], c[1])){ pending = { act: hit }; return; }
     return;
@@ -624,7 +626,7 @@ cv.addEventListener('pointerdown', e => {
     if (st){ if (Math.round(me.x) === st[0] && Math.round(me.y) === st[1]){ World.faceTo(wx, wy); World.onWater(wx, wy); } else if (goto(me, st[0], st[1])) pending = { water: [wx, wy] }; }
     return;
   }
-  const door = M.objs.find(o => o.door && o.door.tile[0] === tx && o.door.tile[1] === ty);
+  const door = M.objs.find(o => o.door && ((o.door.tile[0] === tx && o.door.tile[1] === ty) || (o.door.t2 && o.door.t2[0] === tx && o.door.t2[1] === ty)));
   if (goto(me, tx, ty) && door) pending = { door: door.door, o: door };
 });
 const SPEED = 6.5, RUN = 10;   // 타일/초. 멀리 갈 때(남은 길 10칸 넘게)는 달려요
@@ -773,7 +775,7 @@ function frame(now){
   if (dest){ const [dx, dy] = P(dest.x + .5, dest.y + .5), ph = (performance.now() / 500) % 1; cx.strokeStyle = `rgba(255,154,60,${1 - ph * .7})`; cx.lineWidth = 1; cx.beginPath(); cx.ellipse(dx, dy, 6 + ph * 5, 3 + ph * 2.5, 0, 0, Math.PI * 2); cx.stroke(); cx.fillStyle = '#FF9A3C'; cx.fillRect(dx - 1, dy - 9 - Math.round(ph * 3), 2, 6); }
   // 문 표시 (반짝이는 발판)
   const pulse = .5 + .5 * Math.sin(now / 300);
-  M.objs.forEach(o => { if (!o.door) return; const [x, y] = P(o.door.tile[0] + .5, o.door.tile[1] + .5); cx.fillStyle = `rgba(255,216,102,${.25 + .35 * pulse})`; cx.beginPath(); cx.moveTo(x, y - 4); cx.lineTo(x + 8, y); cx.lineTo(x, y + 4); cx.lineTo(x - 8, y); cx.fill(); });
+  M.objs.forEach(o => { if (!o.door) return; [o.door.tile, o.door.t2].forEach(t => { if (!t) return; const [x, y] = P(t[0] + .5, t[1] + .5); cx.fillStyle = `rgba(255,216,102,${.25 + .35 * pulse})`; cx.beginPath(); cx.moveTo(x, y - 4); cx.lineTo(x + 8, y); cx.lineTo(x, y + 4); cx.lineTo(x - 8, y); cx.fill(); }); });
   // 바닥에 깔린 가구 (러그)
   flats.forEach(o => cx.drawImage(FURN_IMG, o.sx, 0, o.sw, o.sh, o.x, o.y, o.sw, o.sh));
   // 낚시 찌 (입질하면 쏙 들어가고 물결)
