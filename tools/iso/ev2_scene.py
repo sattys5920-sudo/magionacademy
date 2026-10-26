@@ -4,6 +4,7 @@ from PIL import Image, ImageDraw
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 random.seed(9)
 def c(h, a=255): return tuple(int(h[i:i+2], 16) for i in (1, 3, 5)) + (a,)
+OUT = c('#120A18')
 # ---- 밤 호수와 유령선 (200×120) ----
 W, H = 200, 120
 im = Image.new('RGBA', (W, H)); px = im.load(); d = ImageDraw.Draw(im)
@@ -36,28 +37,7 @@ for dy in range(8, 30, 3): d.line([sx - 30 + dy % 5, sy + 6 + dy - 4, sx + 30 - 
 for _ in range(6):                                   # 안개
     fx, fy = random.randrange(W), random.randrange(70, 108); g2 = Image.new('RGBA', (W, H), (0, 0, 0, 0)); ImageDraw.Draw(g2).ellipse([fx - 30, fy - 4, fx + 30, fy + 4], fill=c('#B8C4E8', 26)); im.alpha_composite(g2)
 im.save('../../public/art/ev2_lake.png')
-# ---- 해골 선장 (64×64) ----
-cap = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); d = ImageDraw.Draw(cap)
-BONE, BONE2, DK, OUT = c('#EEE8D2'), c('#C4BCA2'), c('#2A2438'), c('#120A18')
-d.ellipse([22, 12, 42, 30], fill=BONE, outline=OUT); d.rectangle([26, 27, 38, 33], fill=BONE, outline=OUT)                 # 두개골과 턱
-for x in (28, 31, 34, 37): d.line([x, 30, x, 33], fill=OUT)
-d.ellipse([25, 18, 31, 24], fill=OUT); d.ellipse([33, 18, 39, 24], fill=OUT)                                               # 눈구멍
-d.rectangle([27, 20, 28, 21], fill=c('#6FF0D8')); d.rectangle([35, 20, 36, 21], fill=c('#6FF0D8'))                          # 눈불
-d.line([24, 17, 40, 23], fill=OUT); d.line([24, 17, 40, 23], fill=OUT)                                                    # 안대 끈
-d.polygon([(32, 26), (30, 29), (34, 29)], fill=OUT)                                                                        # 코
-# 해적 모자(삼각모)
-d.polygon([(14, 15), (50, 15), (44, 8), (32, 2), (20, 8)], fill=c('#241A34'), outline=OUT); d.rectangle([14, 13, 50, 16], fill=c('#3A2A52'), outline=OUT)
-d.line([16, 14, 48, 14], fill=c('#E0B040')); d.ellipse([29, 5, 35, 11], fill=BONE, outline=OUT); d.point((31, 8), fill=OUT); d.point((33, 8), fill=OUT)   # 모자 해골 표시
-# 몸: 갈비뼈 + 낡은 외투
-d.polygon([(20, 34), (44, 34), (48, 56), (16, 56)], fill=c('#6A1E2E'), outline=OUT); d.polygon([(26, 34), (38, 34), (36, 56), (28, 56)], fill=DK)
-for y in (37, 41, 45, 49): d.line([27, y, 37, y], fill=BONE)
-d.line([32, 34, 32, 54], fill=BONE2)
-for y in (40, 46, 52): d.ellipse([18, y, 21, y + 3], fill=c('#E0B040'))                                                    # 단추
-d.rectangle([14, 36, 20, 52], fill=BONE2, outline=OUT); d.rectangle([44, 36, 50, 52], fill=BONE2, outline=OUT)             # 팔뼈
-d.line([48, 50, 58, 30], fill=c('#C8D0DC'), width=2); d.line([47, 51, 49, 49], fill=c('#E0B040'), width=2)                  # 휘어진 칼
-d.rectangle([22, 56, 28, 62], fill=BONE, outline=OUT); d.rectangle([36, 56, 42, 62], fill=BONE, outline=OUT)
-# 유령 기운(반투명 푸른 윤곽)
-g = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); gd = ImageDraw.Draw(g); gd.ellipse([8, 4, 56, 62], fill=c('#6FF0D8', 36)); g.alpha_composite(cap); g.save('../../public/art/ev2_captain.png')
+# ---- 해골 선장: 이미지로 만든 그림을 쓰므로(64×96, 8배 확대본의 칸 가운데 값) 여기서는 그리지 않아요: public/art/ev2_captain.png ----
 # ---- 보물 상자 (닫힘·열림, 32×32 두 칸) ----
 ch = Image.new('RGBA', (64, 32), (0, 0, 0, 0)); d = ImageDraw.Draw(ch)
 WD, WD2, GD = c('#8A5A2A'), c('#6A4220'), c('#E8B83A')
