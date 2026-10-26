@@ -916,7 +916,7 @@ const POTIONS = Object.keys(POTION_INFO);
 const RECIPES = Object.fromEntries(POTIONS.map(p => [POTION_INFO[p].r.slice().sort().join(','), p]));
 const PAY = Object.fromEntries(POTIONS.map(p => [p, POTION_INFO[p].pay]));
 const recipeText = p => { const c = {}; POTION_INFO[p].r.forEach(k => c[k] = (c[k] || 0) + 1); return Object.entries(c).map(([k, n]) => ITEM[k] + (n > 1 ? ' ×' + n : '')).join(' + '); };
-const HINTS = Object.fromEntries(POTIONS.map(p => [p, `${ITEM[p]} = ${recipeText(p)}`]));
+const HINTS = new Proxy({}, { get: (_, p) => POTION_INFO[p] ? `${ITEM[p]} = ${recipeText(p)}` : undefined });   // 채집물·물고기 이름은 나중에 정해져서, 읽을 때 만들어요
 // 지식이 오를 때 열리는 레시피 힌트 순서: 기존 12종 다음, 표 순서(쉬운 것부터)
 const HINT_ORDER = ['p_green','p_blue','p_grow','p_vigor','p_fluff','p_purple','p_dawn','p_sun','p_dusk','p_moon','p_dragon', ...POTION_LIST.slice(12).map(x => x.id)];
 const KNOW_PER_HINT = 3;
@@ -1480,6 +1480,7 @@ function fishCatch(){
   const isNew = dexAdd(f.id, cm), rec = !f.junk && me.fdex[f.id].cm === cm && !isNew;
   if (isNew && !f.junk){ me.mana += f.grade; }
   save(); hud();
+  if (!f.junk && Math.random() < .02) setTimeout(() => recipePaper('fish'), 1200);   // 낚시: 레시피 종이 2%
   if (!f.junk && f.grade >= 3) speak(`${f.name} ${cm}cm 낚았다!`);
   fishShow(`<div class="fgot">${ic(f.id, 'transform:scale(1.5);margin:8px')}<div><b>${f.name}</b>${f.junk ? '<span class="s">쓰레기예요… 생선 가게에서 1G에 받아 줘요</span>' : `<span class="fstar">${STARS(f.grade)}</span><span class="s">${cm}cm${rec ? ' · 최고 기록!' : ''} · ${f.pay}G</span>`}${isNew && !f.junk ? `<span class="new">새 물고기! 마력 +${f.grade}</span>` : ''}</div></div>
     <div class="frow"><button class="btn sm go" data-fx="again">다시 던지기</button><button class="btn sm" data-fx="stop">그만</button></div>`);
@@ -1787,6 +1788,16 @@ const xMkUnit = (job, L, name, ai, hp, mp, sk) => { sk = sk || xAiSk(L); const u
   u.hp = hp ?? u.mhp; u.mp = mp ?? u.mmp; return u; };
 let xv = null, xb = null, xMsg = '', xTick = 0;   // xv 화면 상태, xb 전투 상태
 function xParty(){ const ex = xEx(), L = xLv(ex.exp).L, run = ex.run; return [Object.assign(xMkUnit(ex.job, L, me.nick, false, run?.p?.[0]?.hp, run?.p?.[0]?.mp, xSkEx(ex)), { hum: true, uid: myId() })]; }   // 혼자일 땐 나 혼자 (AI 동료 없음, 협동은 같은 방 플레이어만)
+
+// 레시피 종이: 탐사 보상(2%)이나 낚시(2%)에서 가끔 나와요. 아직 모르는 레시피 중에서 사람마다 무작위로 하나를 알려 줘요
+function recipePaper(from){
+  const left = POTIONS.filter(p => !me.hints.includes(p));
+  if (!left.length) return false;
+  const p = left[Math.floor(Math.random() * left.length)]; me.hints.push(p); save();
+  const c = $('#confirm'); c.innerHTML = `<div class="cfbox" role="alertdialog" style="background:#f3e8c8;color:#3a2a14;border:2px solid #b89a5a;transform:rotate(-1.2deg)"><div class="msg" style="font-weight:700;font-size:15px">${from === 'fish' ? '물고기 사이에 젖은 종이가 걸려 올라왔어요' : '상자 밑에서 낡은 종이를 찾았어요'}</div>
+    <div style="background:rgba(255,255,255,.45);border:1px dashed #b89a5a;border-radius:8px;padding:12px;line-height:1.7"><b>레시피 종이</b><br>${esc(HINTS[p])}</div><div class="row"><button class="btn go" id="rpOk">레시피 노트에 적을게요</button></div></div>`;
+  c.classList.add('on'); sfx('pick'); $('#rpOk').onclick = () => { c.classList.remove('on'); c.innerHTML = ''; }; return true;
+}
 function xSaveParty(){ const run = xEx().run; if (run && xb) run.p = xb.party.map(u => ({ hp: u.hp, mp: u.mp })); }
 function xEnd(how){   // how: clear · time · retreat · wipe
   const ex = xEx(), run = ex.run; if (!run) return;
@@ -1796,6 +1807,7 @@ function xEnd(how){   // how: clear · time · retreat · wipe
   const before = xLv(ex.exp).L; ex.exp += exp; me.coin += gold; Object.entries(items).forEach(([k, n]) => { me.inv[k] = (me.inv[k] || 0) + n; });
   const after = xLv(ex.exp).L; ex.run = null; xb = null; clearInterval(xTick); save(); hud();
   xv = { view: 'result', how, gold, exp, items, up: after > before ? [before, after] : null, prog: Math.floor(run.prog) };
+  if (how !== 'wipe' && Math.random() < .02) setTimeout(() => recipePaper('explore'), 700);   // 탐사 보상: 레시피 종이 2%
 }
 function xTime(run){ return Math.max(0, run.end - Date.now()); }
 // ===== 협동 탐험 1단계: 방·로비 (xparty/<방> = { host, hn, rg 지역, st lobby·run·end, at, t0, seed, p: { uid: { n, job, L, rdy, out } } }) =====
@@ -5663,7 +5675,7 @@ function renderDorm(){
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         
-        <button class="btn go px" id="sleep" style="${inMyRoom() ? 'grid-column:1/-1' : ''}">${ic('star')}침대에서 쉬기 (30분)</button>
+        <button class="btn go px" id="sleep" style="${inMyRoom() ? 'grid-column:1/-1' : ''}">${ic('star')}침대에서 쉬기</button>
       </div>
       ${hint(dormMsg, '')}
     </section>
@@ -5719,25 +5731,35 @@ function renderDorm(){
   const sl = $('#sleep'); if (sl) sl.onclick = () => rest();
   if (!solo) on('[data-visit]', b => openVisit(b.dataset.visit));
 }
-// 쉬기: 침대에서 30분 동안 쉬면 마력이 차요 (그동안은 아무것도 못 해요). 하루는 진짜 날짜로 넘어가요
-const REST_MS = 30 * 6e4;
-function rest(){
-  if (me.rest) return showRest();
-  const since = me.lastSleepAt || 0;
+// 쉬기: 침대에서 낮잠(30분) 또는 밤잠(5시간)을 자면 마력이 차요 (그동안은 아무것도 못 해요). 밤잠은 마력이 훨씬 많이 차요. 하루는 진짜 날짜로 넘어가요
+const REST_NAP = 30 * 6e4, REST_NIGHT = 5 * 60 * 6e4;
+function restPlan(){
+  const since = me.lastSleepAt || 0, lv = xLv(xEx().exp).L;
   const guests = Math.min(3, new Set(Object.values(myGuest).filter(g => g.at > since).map(g => g.uid)).size);
-  const cozy = Math.min(COZY_MAX, cozyOf(me)), hall = (commonStage(me.house) - 1) * 2, gain = 20 + cozy * 2 + guests * 3 + hall;
+  const cozy = Math.min(COZY_MAX, cozyOf(me)), hall = (commonStage(me.house) - 1) * 2, bonus = Math.floor(lv / 2), capLv = (lv - 1) * 2;   // 레벨이 오를수록 더 많이 차고 더 많이 담아요
+  const gain = 20 + cozy * 2 + guests * 3 + hall + bonus, cap = 50 + cozy * 2 + guests * 3 + hall + capLv;
+  const why = `아늑함 +${cozy * 2}${hall ? `, 휴게실 +${hall}` : ''}${guests ? `, 손님 ${guests}명 +${guests * 3}` : ''}${bonus ? `, 레벨 +${bonus}` : ''}`;
+  return { nap: { ms: REST_NAP, gain, cap, why, name: '낮잠' }, night: { ms: REST_NIGHT, gain: gain * 3, cap: cap + 50, why, name: '밤잠' } };
+}
+function restChoose(){
+  const P = restPlan();
+  return new Promise(res => {
+    const c = $('#confirm'); c.innerHTML = `<div class="cfbox" role="alertdialog"><div class="msg">얼마나 쉴까요?</div>
+      <button class="btn go" id="rcNap" style="text-align:left;display:flex;flex-direction:column;gap:2px;align-items:flex-start"><b>낮잠 · 30분</b><span class="s">마력 +${P.nap.gain} (최대 ${P.nap.cap}까지)</span></button>
+      <button class="btn go" id="rcNight" style="text-align:left;display:flex;flex-direction:column;gap:2px;align-items:flex-start"><b>밤잠 · 5시간</b><span class="s">마력 +${P.night.gain} (최대 ${P.night.cap}까지)</span></button>
+      <button class="btn" id="rcNo">그만둘래요</button></div>`;
+    c.classList.add('on'); const done = v => { c.classList.remove('on'); c.innerHTML = ''; res(v); };
+    $('#rcNap').onclick = () => done('nap'); $('#rcNight').onclick = () => done('night'); $('#rcNo').onclick = () => done(null); c.onclick = e => { if (e.target === c) done(null); };
+  });
+}
+async function rest(){
+  if (me.rest) return showRest();
+  const kind = await restChoose(); if (!kind) return;
+  const R = restPlan()[kind];
   me.lastSleepAt = Date.now();
-  me.rest = { at: Date.now(), until: Date.now() + REST_MS, gain, cap: 50 + cozy * 2 + guests * 3 + hall, why: `아늑함 +${cozy * 2}${hall ? `, 휴게실 +${hall}` : ''}${guests ? `, 손님 ${guests}명 +${guests * 3}` : ''}` };
+  me.rest = { at: Date.now(), until: Date.now() + R.ms, gain: R.gain, cap: R.cap, why: R.why, kind };
   endLesson(); save(); closeSheet(); speak('쉬는 중이에요');
   showRest();
-}
-function restEnd(early){
-  const R = me.rest; if (!R) return;
-  const k = early ? Math.max(0, Math.min(1, (Date.now() - R.at) / (R.until - R.at))) : 1, g = Math.floor(R.gain * k);
-  const before = me.mana; me.mana = Math.max(me.mana, Math.min(R.cap, me.mana + g)); me.rest = null; save(); hud();
-  clearInterval(restTimer); $('#rest').classList.remove('on'); $('#rest').innerHTML = '';
-  toast(early ? `일찍 일어났어요. 마력 +${me.mana - before}` : `푹 쉬었어요! 마력 +${me.mana - before} (${R.why})`);
-  if (!early) storyHook('rest');
 }
 let restTimer = 0;
 function showRest(){
@@ -5745,7 +5767,7 @@ function showRest(){
   if (Date.now() >= R.until) return restEnd(false);
   const A = World.Avatar, fc = A.meta.parts.face.findIndex(p => p.id === 'face_closed'), av = { ...avOf(me), ...(fc >= 0 ? { face: fc } : {}) };
   $('#rest').innerHTML = `<div class="rbox px"><div class="rbed"><canvas id="rcv" width="96" height="56"></canvas><span class="zz">Z<b>z</b><b>z</b></span></div>
-    <b class="gt">쉬고 있어요</b><span class="s" id="rleft"></span><span class="s sub">다 쉬면 마력 +${R.gain} (${R.why}) · 쉬는 동안은 아무것도 못 해요</span>
+    <b class="gt">${R.kind === 'night' ? '밤잠을 자고 있어요' : '낮잠을 자고 있어요'}</b><span class="s" id="rleft"></span><span class="s sub">다 쉬면 마력 +${R.gain} (${R.why}) · 쉬는 동안은 아무것도 못 해요</span>
     <button class="btn sm" id="rwake">일찍 일어나기</button></div>`;
   $('#rest').classList.add('on');
   // 픽셀 침대: 뒤판 → 누운 캐릭터(왼쪽으로 90도) → 이불 (tools/iso/rest_art.py)
