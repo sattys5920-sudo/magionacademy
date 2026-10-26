@@ -783,6 +783,7 @@ function frame(now){
   // 사람을 정렬된 물건 사이에 끼워 넣기
   const R = o => ({ x: o.x, y: o.y, w: o.sw, h: o.sh });
   const list = objOrder.filter(o => sOver(R(o), view)).map(o => ({ o }));
+  drawPartyGround(now);
   [...people].sort((a, b) => (a.x + a.y) - (b.x + b.y)).forEach(p => {
     const [sx, sy] = P(p.x + .5, p.y + .5), pr = { x: sx - World.Avatar.FW * ASC / 2, y: sy - World.Avatar.FH * ASC, w: World.Avatar.FW * ASC, h: World.Avatar.FH * ASC + 1 }, pb = [p.x + .15, p.y + .15, p.x + .85, p.y + .85];
     let idx = 0; list.forEach((it, i) => { if (it.o && sOver(R(it.o), pr) && behind(it.o.box, pb)) idx = i + 1; });
@@ -827,7 +828,7 @@ function frame(now){
       // 젓는 방향 안내 점선
       if (cook.guide){ cx.fillStyle = '#FFE070'; for (let i = 0; i < 12; i++){ if ((i + Math.floor(t * 8)) % 3) continue; const a = i / 12 * Math.PI * 2; cx.fillRect(Math.round(cxp + Math.cos(a) * 12), Math.round(top + 2 + Math.sin(a) * 5), 1, 1); } }
     } }
-  drawMarks(now, view); drawBats(now); if (fxDark){ cx.globalAlpha = fxDark; cx.fillStyle = '#05030A'; cx.fillRect(ix, iy, VW, VH); cx.globalAlpha = 1; }
+  drawMarks(now, view); drawBats(now); drawPartyAir(now); if (fxDark){ cx.globalAlpha = fxDark; cx.fillStyle = '#05030A'; cx.fillRect(ix, iy, VW, VH); cx.globalAlpha = 1; }
   // 채집 지점: 밤에도 잘 보이게 빛 다음에 그려요
   spots.forEach((sp, i) => { if ((sp.m || spotMap) !== map) return; const [x, y] = P(sp.x + .5, sp.y + .5), t = now / 260 + i * 1.3, a = .6 + .4 * Math.sin(t), sy = y - 7 - Math.round(Math.sin(t * .7) * 2);
     if (x < view.x || x > view.x + view.w || y < view.y || y > view.y + view.h) return;
@@ -956,7 +957,7 @@ World.teleport = (id, objName, then) => {
 // ========== 메인 의뢰: 맵 컷신 · 조사 지점 · 밤하늘 등불자리 ==========
 // 컷신 명령 (index.html의 메인 의뢰 실행기가 불러요): spawn / walk / cam / say / emote / crowd / fx / player / despawn / wait / fade / end
 let cutOn = false, camTarget = null, cutActors = {}, crowdPeople = [], skyCfg = null, marks = [], markPulse = 0;
-const cutMk = (id, spec, x, y) => { const p = mk(spec.name || id, spec.av || null, x, y, false); p.npc = { id: 'cut:' + id, cut: true, spr: spec.spr, float: spec.float, alpha: spec.alpha, flap: spec.flap, wander: false, r: 0 }; p.home = [x, y]; p.idle = 1e9; p.view = World.Avatar.meta.dirs[spec.dir || 'down'] || 0; return p; };
+const cutMk = (id, spec, x, y) => { const p = mk(spec.name === '' ? '' : spec.name || id, spec.av || null, x, y, false); p.npc = { id: 'cut:' + id, cut: true, spr: spec.spr, pix: spec.pix, float: spec.float, alpha: spec.alpha, flap: spec.flap, wander: false, r: 0 }; p.home = [x, y]; p.idle = 1e9; p.view = World.Avatar.meta.dirs[spec.dir || 'down'] || 0; return p; };
 const walkDone = (p, timeout = 12000) => new Promise(r => { const t0 = performance.now(); const tick = () => { if (!p.path.length || performance.now() - t0 > timeout || !cutOn){ p.path = []; r(); } else requestAnimationFrame(tick); }; tick(); });
 const spawnAt = (x, y) => { if (free(x, y)) return [x, y]; return World.freeNear(x, y, 3).sort((a, b) => Math.hypot(a[0] - x, a[1] - y) - Math.hypot(b[0] - x, b[1] - y))[0] || [x, y]; };
 const personOf = id => id === 'player' || id === 'me' ? me : cutActors[id] || people.find(p => p.npc && (p.npc.id === id || p.npc.id === 'cut:' + id)) || null;
@@ -1012,8 +1013,46 @@ async function crowdDo(c){
   crowdPeople.forEach(p => { const i = people.indexOf(p); if (i >= 0) people.splice(i, 1); sayOff(p); }); crowdPeople = []; retag();
 }
 // 효과: bats 박쥐 떼 · bell 종소리 번쩍 · lightning 번개 · wind 바람(안개 빠르게) · dark 어둡게 / light 원래대로
-let fxBats = 0, fxDark = 0, skyN = 1;
-function fxDo(c){ const k = c.kind; if (k === 'bats') fxBats = performance.now() + (c.sec || 4) * 1000; else if (k === 'lightning' || k === 'bell') flashT = performance.now() + 260; else if (k === 'dark') fxDark = c.v ?? .45; else if (k === 'light') fxDark = 0; else if (k === 'wind'){ fogs.forEach(f => f.v *= 4); setTimeout(() => fogs.forEach(f => f.v /= 4), (c.sec || 4) * 1000); } }
+let fxBats = 0, fxDark = 0, skyN = 1, partyCfg = null, confettiUntil = 0;
+// 엔딩 핼러윈 파티 장식: 탁자와 음식(캐릭터 아래), 줄 전구·깃발·떠오르는 등불·색종이(캐릭터 위)
+const PARTY_FOOD = [['#E8832A', 2], ['#F6D7E4', 3], ['#7A4A2A', 2], ['#E8832A', 2], ['#B8E6A0', 2], ['#F6D7E4', 3]];
+function partyBox(a, b, c, d, h, top, side){   // 타일 (a,b)~(c,d) 위에 높이 h인 상자
+  const A = P(a, b), B = P(c, b), C = P(c, d), D = P(a, d);
+  cx_.fillStyle = side; cx_.beginPath(); cx_.moveTo(D[0], D[1]); cx_.lineTo(C[0], C[1]); cx_.lineTo(C[0], C[1] - h); cx_.lineTo(D[0], D[1] - h); cx_.fill();
+  cx_.fillStyle = shade(side, .8); cx_.beginPath(); cx_.moveTo(C[0], C[1]); cx_.lineTo(B[0], B[1]); cx_.lineTo(B[0], B[1] - h); cx_.lineTo(C[0], C[1] - h); cx_.fill();
+  cx_.fillStyle = top; cx_.beginPath(); cx_.moveTo(A[0], A[1] - h); cx_.lineTo(B[0], B[1] - h); cx_.lineTo(C[0], C[1] - h); cx_.lineTo(D[0], D[1] - h); cx_.fill();
+}
+const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16); return `rgb(${Math.round((n >> 16) * k)},${Math.round(((n >> 8) & 255) * k)},${Math.round((n & 255) * k)})`; };
+let cx_ = null;
+function drawPartyGround(now){
+  if (!partyCfg || M.indoor) return; cx_ = out; const { x: X, y: Y } = partyCfg, k = Math.min(1, (now - partyCfg.t0) / 900); cx_.globalAlpha = k;
+  [[X - 5, Y + 2], [X + 1.5, Y + 2]].forEach(([tx, ty], ti) => {
+    partyBox(tx, ty, tx + 3.5, ty + 1.1, 9, '#8A5A32', '#6A4224');
+    cx_.fillStyle = '#F4ECFF'; const A = P(tx, ty), B = P(tx + 3.5, ty), C = P(tx + 3.5, ty + 1.1), D = P(tx, ty + 1.1);   // 식탁보 줄
+    cx_.globalAlpha = k * .55; cx_.beginPath(); cx_.moveTo((A[0] + D[0]) / 2, (A[1] + D[1]) / 2 - 9); cx_.lineTo((B[0] + C[0]) / 2, (B[1] + C[1]) / 2 - 9); cx_.lineTo((B[0] + C[0]) / 2, (B[1] + C[1]) / 2 - 8); cx_.lineTo((A[0] + D[0]) / 2, (A[1] + D[1]) / 2 - 8); cx_.fill(); cx_.globalAlpha = k;
+    for (let i = 0; i < 6; i++){ const [col, r] = PARTY_FOOD[(i + ti * 2) % 6], [fx0, fy0] = P(tx + .45 + i * .52, ty + .55); cx_.fillStyle = '#1A1024'; cx_.fillRect(Math.round(fx0 - r - 1), Math.round(fy0 - 9 - r - 1), r * 2 + 2, r * 2 + 2); cx_.fillStyle = col; cx_.fillRect(Math.round(fx0 - r), Math.round(fy0 - 9 - r), r * 2, r * 2); cx_.fillStyle = 'rgba(255,255,255,.35)'; cx_.fillRect(Math.round(fx0 - r), Math.round(fy0 - 9 - r), 1, 1);
+      if (i % 3 === 1){ cx_.fillStyle = '#FFD866'; cx_.fillRect(Math.round(fx0), Math.round(fy0 - 9 - r - 3), 1, 2); } }
+  });
+  cx_.globalAlpha = 1;
+}
+function drawPartyAir(now){
+  if (!partyCfg || M.indoor) return; const g = out, { x: X, y: Y } = partyCfg, k = Math.min(1, (now - partyCfg.t0) / 1200), t = now / 1000, [mx, my] = P(X + .5, Y + .5);
+  g.save(); g.globalAlpha = k;
+  [[-92, -62, 10], [-92, -44, 8]].forEach(([dx, dy, sag], r) => {   // 줄 전구와 깃발
+    const x0 = mx + dx, x1 = mx + 92 + (r ? 14 : 0), y0 = my + dy, N = 22;
+    for (let i = 0; i <= N; i++){ const u = i / N, x = Math.round(x0 + (x1 - x0) * u), y = Math.round(y0 + Math.sin(u * Math.PI) * sag + u * (r ? 6 : -4));
+      g.fillStyle = '#2A1C44'; g.fillRect(x, y, 1, 1);
+      if (i % 2 === 0){ const c = ['#FF9A3C', '#B47AFF', '#7AE6A0', '#FFD866'][(i / 2 + r) % 4]; g.fillStyle = c; g.beginPath(); g.moveTo(x - 3, y + 1); g.lineTo(x + 3, y + 1); g.lineTo(x, y + 8); g.fill(); }
+      else { const tw = .6 + .4 * Math.sin(t * 4 + i * 1.7); g.globalCompositeOperation = 'lighter'; g.globalAlpha = k * tw * .8; g.drawImage(glow(5, [255, 214, 110]), x - 5, y - 5); g.globalAlpha = k; g.globalCompositeOperation = 'source-over'; g.fillStyle = '#FFE8A0'; g.fillRect(x, y + 1, 1, 2); } }
+  });
+  for (let i = 0; i < 7; i++){ const ph = ((t * .05 + i * .137) % 1), lx = mx - 80 + i * 26 + Math.sin(t + i) * 4, ly = my + 20 - ph * 150;   // 떠오르는 등불
+    g.globalCompositeOperation = 'lighter'; g.globalAlpha = k * .65; g.drawImage(glow(11, [255, 170, 70]), Math.round(lx) - 11, Math.round(ly) - 11); g.globalCompositeOperation = 'source-over'; g.globalAlpha = k;
+    g.fillStyle = '#1A1024'; g.fillRect(Math.round(lx) - 3, Math.round(ly) - 4, 7, 9); g.fillStyle = '#FF9A3C'; g.fillRect(Math.round(lx) - 2, Math.round(ly) - 3, 5, 7); g.fillStyle = '#FFE8A0'; g.fillRect(Math.round(lx) - 1, Math.round(ly) - 1, 3, 3); }
+  if (confettiUntil > now){ for (let i = 0; i < 46; i++){ const ph = ((t * (.35 + (i % 5) * .06) + i * .071) % 1), cxp = mx - 110 + ((i * 53) % 220) + Math.sin(t * 3 + i) * 5, cyp = my - 90 + ph * 170; g.fillStyle = ['#FF7A9A', '#FFD866', '#7AE6A0', '#7AB8FF', '#C89AFF', '#FF9A3C'][i % 6]; g.fillRect(Math.round(cxp), Math.round(cyp), 2, 2); } }
+  g.restore();
+}
+
+function fxDo(c){ const k = c.kind; if (k === 'bats') fxBats = performance.now() + (c.sec || 4) * 1000; else if (k === 'lightning' || k === 'bell') flashT = performance.now() + 260; else if (k === 'dark') fxDark = c.v ?? .45; else if (k === 'light') fxDark = 0; else if (k === 'party') partyCfg = c.off ? null : { t0: performance.now(), x: c.x, y: c.y }; else if (k === 'confetti') confettiUntil = performance.now() + (c.sec || 4) * 1000; else if (k === 'wind'){ fogs.forEach(f => f.v *= 4); setTimeout(() => fogs.forEach(f => f.v /= 4), (c.sec || 4) * 1000); } }
 // 조사 지점: 물음표가 떠 있고, 옆에 가면 상황 버튼 「조사하기」
 World.setMarks = list => { marks = list || []; World.nearRefresh(); };
 World.onMark = null;

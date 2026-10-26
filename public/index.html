@@ -6705,6 +6705,45 @@ function mqNpcs(){
   MQ.list.forEach(id => { const q = MQ.q[id]; if (q && s.done[id] && q.after && !(s.q === id)) put(q.client, q.after.place, '', q.after.dir, q.after.wander); });
   return out;
 }
+
+// ===== 엔딩: 모두 모여 핼러윈 파티를 준비해요 (약 20초) =====
+// 마지막 장까지 끝낸 학생에게 보여 줘요. 본관 앞마당에서 일곱 의뢰인과 서브 NPC가 모두 모여, 고민이 풀린 모습으로 축제를 준비해요.
+async function playEnding(){
+  if (World.cutBusy && World.cutBusy()) return;
+  await MQ.ready; closeSheet(); npcClose();
+  const X = 41, Y = 32;   // 등불 마을 장터 광장 (커다란 호박등 앞)
+  const avOfCast = c => c.av ? { av: World.Avatar.fix(c.av) } : c.look !== undefined ? { av: World.Avatar.fromLook(c.look) } : { spr: c.spr, float: c.float, alpha: c.alpha };
+  const cast = {}; Object.entries(MQ.cast).forEach(([id, c]) => { if (id !== 'alchemist' && id !== 'hunter') cast[id] = { name: c.name, ...avOfCast(c) }; });
+  npcAll().forEach(n => { cast[n.id] = { name: n.name, ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float, flap: n.flap }) }; });
+  // [누구, 서 있을 자리(광장 중심에서 몇 칸), 한마디]. 탁자 뒤 줄 · 앞 줄 · 가운데
+  const S = [
+    ['principal', -7, -1, '모두 수고했어요'], ['countess', -5, -1, '블라디, 잘했구나'], ['sera', -3, -1, '다친 사람 없죠?'], ['aula', -1, -1, '순서표 적어 왔어'],
+    ['stella', 1, -1, '오늘 별이 좋아요'], ['batri', 3, -1, '초대장 다 돌렸어요!'], ['mandi', 5, -1, '호박이 엄청 열렸어'], ['nabi', 7, -1, '간식 팔아요~'],
+    ['blady', -7, 5, '토마토 주스, 제가 만들었어요!'], ['yeoreum', -5, 5, '이름표 예쁘죠? 여름이에요'], ['beatrix', -3, 5, '노래 한 곡, 웃으면 안 돼!'], ['nefer', -1, 5, '명단은 빠짐없이 적었소'],
+    ['piece', 1, 5, '접시, 안 깼어요!'], ['madeleine', 3, 5, '케이크 나왔어요!'], ['kappa', 5, 5, '물고기는 놓아줬어요'],
+    ['ur', -8, 3, '올해는 달을 같이 봐요'], ['somi', -8, 4, '아빠 눈이 반짝반짝!'], ['jipsin', 7, 5, '나도 껴 줘요!'], ['leo', 9, 2, '아기 동물들도 왔어요'], ['jack', 0, 2, '다들 모이니 따뜻하네!']
+  ].filter(r => cast[r[0]]);
+  const say = id => S.find(r => r[0] === id);
+  const cmd = [];
+  cmd.push({ cmd: 'fade', v: 1, text: '호박달 축제 전날 저녁' }, { cmd: 'wait', sec: 1.6 });
+  cmd.push({ cmd: 'player', x: X, y: Y + 8, dir: 'up' }, { cmd: 'cam', x: X, y: Y + 2 }, { cmd: 'fx', kind: 'party', x: X, y: Y });
+  S.forEach(([id, dx, dy], i) => cmd.push({ cmd: 'spawn', who: id, ...cast[id], name: '', x: X + (i % 2 ? 9 : -9), y: Y + 4 + (i % 5) }));
+  cmd.push({ cmd: 'fade', v: 0 });
+  S.forEach(([id, dx, dy]) => cmd.push({ cmd: 'walk', who: id, x: Math.round(X + dx), y: Math.round(Y + dy), run: true, wait: false }));
+  cmd.push({ cmd: 'wait', sec: 3.6 });
+  // 한 번에 네 명씩, 말풍선이 겹치지 않게 (앞줄·뒷줄을 섞어서)
+  [['blady', 'principal', 'piece', 'aula'], ['yeoreum', 'nabi', 'ur', 'sera'], ['beatrix', 'stella', 'kappa', 'batri'], ['nefer', 'countess', 'madeleine', 'mandi'], ['somi', 'leo', 'jipsin', 'jack']].forEach(b => {
+    b.forEach(id => { const r = say(id); if (r) cmd.push({ cmd: 'say', who: id, text: (cast[id].name ? cast[id].name + ': ' : '') + r[3], ms: 2500, wait: false }); });
+    cmd.push({ cmd: 'wait', sec: 2.1 }); });
+  cmd.push({ cmd: 'fx', kind: 'confetti', sec: 5 }, { cmd: 'sfx', id: 'win' });
+  S.forEach(([id], i) => { if (i % 2 === 0) cmd.push({ cmd: 'emote', who: id, icon: [7, 9, 10, 11][i % 4] }); });
+  cmd.push({ cmd: 'wait', sec: 1.4 });
+  cmd.push({ cmd: 'fade', v: 1, text: 'Trick or Teach' }, { cmd: 'wait', sec: 1.2 }, { cmd: 'fx', kind: 'party', off: true });
+  const lv0 = World.zoomLevel(); World.zoomStep(2 - lv0);   // 넓게 보여요
+  await new Promise(r => World.teleport('town', [X, Y + 8], r));
+  await World.cut(cmd, { sfx: id => sfx(id) });
+  World.zoomStep(lv0 - 2);
+}
 const mqPlace = pl => { if (!pl) return null; if (typeof pl === 'string'){ const p = NL.places[pl]; return p ? { map: p.map, x: p.x, y: p.y } : null; } return pl.place ? { ...mqPlace(pl.place), ...(pl.x !== undefined ? { x: pl.x, y: pl.y } : {}) } : pl; };
 // ---- 장면 불러오기 ----
 async function mqScene(qid, n, kind){ const k = `${qid}/stage_${n}_${kind}.json`; if (!MQ.scenes[k]) MQ.scenes[k] = await mqFetch(k); return MQ.scenes[k]; }
