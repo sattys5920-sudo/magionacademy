@@ -1523,7 +1523,7 @@ World.onSpot = (si, spot) => {
   const all = spotsToday(), live = all.map((s, i) => ({ ...s, i })).filter(s => !me.fg.got.includes(s.i)), sp = live[si]; if (!sp) return;
   const pool = FORAGE.filter(x => x.z.includes(sp.z)).map(x => buffOn('fluck') ? { ...x, w: x.w ** .7 } : x); let r = sp.r * pool.reduce((t, x) => t + x.w, 0), it = pool[pool.length - 1];   // 요리 효과: 드문 채집물
   for (const x of pool){ r -= x.w; if (r <= 0){ it = x; break; } }
-  const isNew = dexAdd(it.id); me.fg.got.push(sp.i); if (isNew) me.mana += it.grade;
+  const isNew = dexAdd(it.id); if (dbuff('dforest') && Math.random() < .1) dexAdd(it.id); me.fg.got.push(sp.i); if (isNew) me.mana += it.grade;
   save(); hud(); syncSpots();
   if (it.grade >= 3) speak(`${it.name} 찾았다!`);
   toast(`${withJosa(it.name, '을', '를')} 주웠어요! ${STARS(it.grade)}${isNew ? ` · 새 채집물! 마력 +${it.grade}` : ''}`);
@@ -1798,7 +1798,7 @@ const xMmp = (job, L) => Math.round(XMPP[XROLE[job]][0] + XMPP[XROLE[job]][1] * 
 const xMkUnit = (job, L, name, ai, hp, mp, sk) => { sk = sk || xAiSk(L); const u = { av: ai ? World.Avatar.fromLook(ORDER_J.indexOf(job) * 131 + 7) : me.av, sks: [], pas: {}, fx: {}, dr: 0, vamp: 0, crit: 0, id: name, job, name, ic: XJ[job].ic, L, ai, team: 'a', mhp: xSt(job, L, 'hp'), mmp: xMmp(job, L), atk: xSt(job, L, 'atk'), mag: xSt(job, L, 'mag'), heal: xSt(job, L, 'heal'), spd: xSt(job, L, 'spd'), g: Math.random() * 40 };
   { const sp = ai ? xAiSp(job, L) : (xEx().sp || {}); u.mhp += (sp.hp || 0) * XSPV.hp; u.atk += (sp.atk || 0) * XSPV.atk; u.mag += (sp.mag || 0) * XSPV.mag; u.heal += (sp.heal || 0) * XSPV.heal; u.spd += (sp.spd || 0) * XSPV.spd; u.mmp += (sp.mag || 0) * 1.5; ['mhp', 'mmp', 'atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k]); }); }   // 스탯 포인트
   xAll(job).forEach(o => { const lv = sk[o.b + '.' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, mp: xSkMp(o, lv), sv: o.sv == null ? o.sv : o.sv * xPw(o, lv), pet: o.pet ? { ...o.pet, k: o.pet.k * xPw(o, lv) } : o.pet, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv) }); });
-  const P = u.pas; ['hp', 'atk', 'mag', 'spd'].forEach(k => { if (P[k]) u[k === 'hp' ? 'mhp' : k] = Math.round(u[k === 'hp' ? 'mhp' : k] * (1 + P[k])); }); u.wp = ai ? Math.min(4, Math.floor((L - 1) / 12)) : (xEx().wp || 0); const wm = 1 + .08 * u.wp; ['atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k] * wm); });   // 무기 강화 한 단계마다 +8%
+  const P = u.pas; ['hp', 'atk', 'mag', 'spd'].forEach(k => { if (P[k]) u[k === 'hp' ? 'mhp' : k] = Math.round(u[k === 'hp' ? 'mhp' : k] * (1 + P[k])); }); u.wp = ai ? Math.min(4, Math.floor((L - 1) / 12)) : (xEx().wp || 0); const wm = (1 + .08 * u.wp) * (!ai && dbuff('dfire') ? 1.05 : 1); ['atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k] * wm); });   // 무기 강화 한 단계마다 +8%
   u.dr = P.def || 0; u.vamp = P.vamp || 0; u.crit = P.crit || 0; u.dodge = P.dodge || 0; u.survLeft = P.surv ? 1 : 0; u.pets = [];
   u.hp = hp ?? u.mhp; u.mp = mp ?? u.mmp; return u; };
 let xv = null, xb = null, xMsg = '', xTick = 0;   // xv 화면 상태, xb 전투 상태
@@ -1817,7 +1817,7 @@ function xSaveParty(){ const run = xEx().run; if (run && xb) run.p = xb.party.ma
 function xEnd(how){   // how: clear · time · retreat · wipe
   const ex = xEx(), run = ex.run; if (!run) return;
   if (run.co && how !== 'retreat' && xcoHost()){ xcoPub({ st: 'end', end: { how } }); const rid = run.co; setTimeout(() => GDB.upd('xparty/' + rid, { st: 'end' }), 3500); }
-  if (run.co){ xcoStop(); xM = null; } const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gold = how === 'wipe' ? 0 : Math.round(lo.gold * mult), exp = how === 'wipe' ? 0 : Math.round(lo.exp * mult + (how === 'clear' ? xReg().clearExp : 0));
+  if (run.co){ xcoStop(); xM = null; } const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gold = how === 'wipe' ? 0 : Math.round(lo.gold * mult), exp = how === 'wipe' ? 0 : Math.round((lo.exp * mult + (how === 'clear' ? xReg().clearExp : 0)) * (dbuff('dforest') ? 1.03 : 1));
   const items = how === 'wipe' ? {} : { ...lo.items }; if (how === 'clear') { const r = xRand(xReg().rare); items[r] = (items[r] || 0) + 1; }
   const before = xLv(ex.exp).L; ex.exp += exp; me.coin += gold; Object.entries(items).forEach(([k, n]) => { me.inv[k] = (me.inv[k] || 0) + n; });
   const after = xLv(ex.exp).L, sp = how === 'clear' || (how !== 'wipe' && Math.random() < .1) ? 1 : 0; ex.spx = (ex.spx || 0) + sp; ex.run = null; xb = null; clearInterval(xTick); save(); hud();
@@ -2751,7 +2751,7 @@ function xcoTimeouts(B){   // 명령이 늦으면 자동 공격 · 끊긴 사람
 function xLoop0(){
   const B = xb; if (!B || B.over) return clearInterval(xTick); if (!sheetOn || sub !== 'explore') return clearInterval(xTick);
   const now = performance.now(), dt = Math.min(.25, (now - B.last) / 1000); B.last = now; if (B.fin){ if (now >= B.fin) return xAlive(B.foes).length ? xLose() : xWin(); return; }
-  B.party.concat(B.foes).forEach(u => { if (u.hp <= 0) return; if (u.hum && B.turn === u) return; if (u.team === 'a' && u.mp < u.mmp) u.mp = Math.min(u.mmp, u.mp + dt * (.6 + u.L * .05) * (XMPR[XROLE[u.job]] || 1)); u.g = Math.min(100, u.g + u.spd * (1 + xFm(u, 'spd') - xFm(u, 'slow')) * 3.3 * dt); const f = u.fx; for (const k in f){ f[k].t -= dt; if (k === 'dot'){ f[k].acc += dt; while (f[k].acc >= 2 && f[k].t > -2){ f[k].acc -= 2; u.hp = Math.max(0, u.hp - f[k].v); xFloat(u.id, '-' + f[k].v, '#ff9a4d'); } } if (k === 'regen'){ f[k].acc += dt; while (f[k].acc >= 2){ f[k].acc -= 2; u.hp = Math.min(u.mhp, u.hp + f[k].v); xFloat(u.id, '+' + f[k].v, '#7affb0'); } } if (f[k].t <= 0){ if (k === 'bomb') xBomb(u, f[k]); delete f[k]; } } xPets(u, dt); });
+  B.party.concat(B.foes).forEach(u => { if (u.hp <= 0) return; if (u.hum && B.turn === u) return; if (u.team === 'a' && u.mp < u.mmp) u.mp = Math.min(u.mmp, u.mp + dt * (.6 + u.L * .05) * (XMPR[XROLE[u.job]] || 1) * (!u.ai && dbuff('dwater') ? 1.1 : 1)); u.g = Math.min(100, u.g + u.spd * (1 + xFm(u, 'spd') - xFm(u, 'slow')) * 3.3 * dt); const f = u.fx; for (const k in f){ f[k].t -= dt; if (k === 'dot'){ f[k].acc += dt; while (f[k].acc >= 2 && f[k].t > -2){ f[k].acc -= 2; u.hp = Math.max(0, u.hp - f[k].v); xFloat(u.id, '-' + f[k].v, '#ff9a4d'); } } if (k === 'regen'){ f[k].acc += dt; while (f[k].acc >= 2){ f[k].acc -= 2; u.hp = Math.min(u.mhp, u.hp + f[k].v); xFloat(u.id, '+' + f[k].v, '#7affb0'); } } if (f[k].t <= 0){ if (k === 'bomb') xBomb(u, f[k]); delete f[k]; } } xPets(u, dt); });
   if (!B.turn) for (const u of B.party.concat(B.foes)){ if (u.hp <= 0 || u.g < 100) continue; if (u.hum){ B.turn = u; B.pick = null; B.tn = (B.tn || 0) + 1; B.tdl = performance.now() + 12000; break; } if (u.team === 'e') xAct(u, null); else xAI(u); if (!xAlive(B.foes).length || !xAlive(B.party).length) break; }
   if (!xAlive(B.foes).length || !xAlive(B.party).length){ B.fin = performance.now() + 900; B.turn = null; return xUp(); }
   if (B.turn && B.turn.hp <= 0) B.turn = null; xUp();
@@ -3292,7 +3292,7 @@ const DISH_LIST = [
 const EFF = { mana: v => `마력 +${v}`, know: v => `지식 +${v}`, spot: v => `오늘 반짝이 +${v}곳`, love: v => `생물 애정 +${v}`, grow: v => `온실 남은 시간 -${v * 2}%`,
   bite: v => `낚시 입질 빠르게 ${v}분`, rare: v => `드문 물고기 잘 와요 ${v}분`, fluck: v => `드문 채집물 잘 나와요 ${v}분`, speed: v => `걷기 빠르게 ${v}분`, coin: v => `주문 보상 +20% ${v}분`, ggold: v => `놀이 보상 +50% ${v}분`, all: v => `모든 좋은 효과 ${v}분 + 마력 +50` };
 const TIMED = ['bite', 'rare', 'fluck', 'speed', 'coin', 'ggold'];
-const BUFF_NAME = { bite: '입질↑', rare: '드문 물고기↑', fluck: '드문 채집↑', speed: '빠른 걸음', coin: '주문 보상↑', ggold: '놀이 보상↑' };
+const BUFF_NAME = { dfire: '불의 용 가호', dwater: '물의 용 가호', dforest: '숲의 용 가호', bite: '입질↑', rare: '드문 물고기↑', fluck: '드문 채집↑', speed: '빠른 걸음', coin: '주문 보상↑', ggold: '놀이 보상↑' };
 const DISH = DISH_LIST.map(([id, name, r, e, v], i) => ({ id, name, r, e, v, i, grade: i < 8 ? 1 : i < 18 ? 2 : i < 28 ? 3 : i < 36 ? 4 : 5, pay: Math.round(20 * 1.1 ** i) }));
 const DISH_INFO = Object.fromEntries(DISH.flatMap(d => [[d.id, d], [d.id + '_s', { ...d, best: true }]]));
 DISH.forEach(d => { ITEM[d.id] = d.name; ITEM[d.id + '_s'] = '' + d.name; });
@@ -3307,6 +3307,7 @@ function iconSrc(k){
   return null;
 }
 // ---------- 효과 ----------
+const dbuff = k => ((me && me.buffs && me.buffs[k]) || 0) > Date.now();   // 용의 가호 (용의 동굴)
 const buffOn = k => (me?.buffs?.[k] || 0) > Date.now() || (me?.buffs?.all || 0) > Date.now();
 function eatDish(k){
   const d = DISH_INFO[k]; if (!d || !(me.inv[k] > 0)) return;
@@ -4504,10 +4505,11 @@ const FLAVOR = {
   '소원 빌기': ['잭오랜턴 눈이 반짝였어요!'],
 };
 // 기능이 있는 것만 눌려요: 요리·판매·침대 같은 곳 + 아래 목록. 분위기용 소품(소파·벤치·문구만 나오던 것)은 누를 수 없어요
-const ACT_REAL = new Set(['쉬기', '잠자고 내일로', '방명록 보기', '휴게실 꾸미기', '말 걸기', '오늘의 실습 보기', '앉아서 수업 듣기', '놀이 고르기', '요리하기', '카라멜 젓기', '요리책 보기', '과자 만들기', '채소 팔기', '물고기 팔기', '소원 빌기', '박쥐 돌보기']);
+const ACT_REAL = new Set(['용 만나기', '쉬기', '잠자고 내일로', '방명록 보기', '휴게실 꾸미기', '말 걸기', '오늘의 실습 보기', '앉아서 수업 듣기', '놀이 고르기', '요리하기', '카라멜 젓기', '요리책 보기', '과자 만들기', '채소 팔기', '물고기 팔기', '소원 빌기', '박쥐 돌보기']);
 World.actOk = (o, a, mapId) => ACT_REAL.has(a[1]) || !!ACT_GO[a[1]] || mapId === 'pen' || (a[1] === '쓰다듬기' && o.name === 'blackcat');
 World.onAct = (mapId, o, a) => {
   if (!me) return;
+  if (a[1] === '용 만나기'){ const i = +String(o.name).replace('dragon', ''), D = DF_DRAG[i]; if (!D) return; setTimeout(() => dfDragonOffer(i), 900); return `<b>${D.n} · ${D.t}</b><br>${['크르릉…', '크르르…', '크릉! 크르릉~'][Math.floor(Math.random() * 3)]}`; }
   const label = a[1], dh = Object.keys(HOUSE_DORM).find(k => HOUSE_DORM[k] === mapId);
   if (label === '쉬기' || label === '잠자고 내일로' || label === '방명록 보기'){
     const v = World.roomOwner();
@@ -5481,7 +5483,7 @@ function renderGreen(){
     const i = +b.dataset.plot, p = me.plots[i];
     if (!p.k){ plantFor = plantFor === i ? null : i; greenMsg = ''; renderGreen(); setTimeout(() => document.querySelector('[data-plot].sel')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 30); return; }
     plantFor = null;
-    if (plotReady(p)){ const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0); me.inv[p.k] += n; me.plots[me.plots.indexOf(p)] = { k: null }; greenMsg = `${g.seed} 수확! ${g.mat} +${n}${n > g.yield ? ' (Dewmorn의 새벽 보너스)' : ''}`; }
+    if (plotReady(p)){ const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0) + (dbuff('dforest') && Math.random() < .1 ? 1 : 0); me.inv[p.k] += n; me.plots[me.plots.indexOf(p)] = { k: null }; greenMsg = `${g.seed} 수확! ${g.mat} +${n}${n > g.yield ? ' (Dewmorn의 새벽 보너스)' : ''}`; }
     else if (p.w) greenMsg = `이미 물을 줬어요. ${timeText(plotLeft(p))} 남았어요.`;
     else if (me.mana < waterCost()) greenMsg = '마력이 부족해요. 내 방 침대에서 쉬고 오세요.';
     else { p.w = true; me.mana -= waterCost(); greenMsg = `물을 줬어요. 쑥쑥! ${timeText(plotLeft(p))} 남았어요.`; }
@@ -5764,7 +5766,7 @@ function restPlan(){
   const since = me.lastSleepAt || 0, lv = xLv(xEx().exp).L;
   const guests = Math.min(3, new Set(Object.values(myGuest).filter(g => g.at > since).map(g => g.uid)).size);
   const cozy = Math.min(COZY_MAX, cozyOf(me)), hall = (commonStage(me.house) - 1) * 2, bonus = Math.floor(lv / 2), capLv = (lv - 1) * 2;   // 레벨이 오를수록 더 많이 차고 더 많이 담아요
-  const gain = 20 + cozy * 2 + guests * 3 + hall + bonus, cap = 50 + cozy * 2 + guests * 3 + hall + capLv;
+  const gain = Math.round((20 + cozy * 2 + guests * 3 + hall + bonus) * (dbuff('dwater') ? 1.1 : 1)), cap = 50 + cozy * 2 + guests * 3 + hall + capLv;
   const why = `아늑함 +${cozy * 2}${hall ? `, 휴게실 +${hall}` : ''}${guests ? `, 손님 ${guests}명 +${guests * 3}` : ''}${bonus ? `, 레벨 +${bonus}` : ''}`;
   return { nap: { ms: REST_NAP, gain, cap, why, name: '낮잠' }, night: { ms: REST_NIGHT, gain: gain * 3, cap: cap + 50, why, name: '밤잠' } };
 }
@@ -6271,6 +6273,7 @@ function dfListen(){
   if (solo || !F || !db || dfOffs.length) return;
   dfOffs.push(F.onValue(F.ref(db, 'defense/ctl'), s => { const v = s.val(), was = dfCtl && dfCtl.open; dfCtl = v; dfBtn(); if (v && v.open && !was) toast('이벤트 「용의 알 지키기」가 열렸어요! 오른쪽 위 버튼을 눌러 보세요'); if (!(v && v.open) && dfOn) dfClose(); else if (dfOn) dfUi(); dfCheckCut(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/st'), s => { dfSt = s.val(); dfStAt = performance.now(); if (dfPend && Date.now() - dfPend.t > 150){ const mp = dfMe(); if (mp && mp[6][dfPend.i] < .3 && dfCtl && dfCtl.ph === 'wave') toast('사거리 안에 몬스터가 없어요'); dfPend = null; } if (dfOn) dfUi(); dfCheckCut(); }));
+  dfOffs.push(F.onValue(F.ref(db, 'defense/res'), s => { dfRes = s.val(); if (World.reqRefresh) World.reqRefresh(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/pick'), s => { dfPick = s.val() || {}; if (dfOn) dfUi(); }));
 }
 function dfBtn(){
@@ -6384,6 +6387,19 @@ function dfDraw(){
   // 공격 효과
   if (st && now - dfStAt < 260 && st.f){ x.lineWidth = 2; st.f.forEach(([u, mid]) => { const q = seats[u], mm = st.m.find(m => m[0] === mid); if (!q || !mm || q.z !== dfZone || mm[2] !== dfZone) return; const a = Z.slots[q.s], b = mons.find(o => o.m[0] === mid); if (!b) return; x.strokeStyle = `rgba(255,236,120,${1 - (now - dfStAt) / 260})`; x.beginPath(); x.moveTo(a[0] * K, a[1] * K - 16); x.lineTo(b.p[0] * K, b.p[1] * K - 8); x.stroke(); }); }
 }
+// ----- 용의 동굴: 지켜 낸 용들이 살아요. 말을 걸면 크르릉! 그리고 가호(2시간, 하루 2번) -----
+let dfRes = null;   // defense/res = { id, eggs:[체력 0~100 ×3], win, at } — 이벤트가 끝날 때 관리자 기기가 남겨요
+const DF_DRAG = [{ k: 'dfire', n: '불꽃이', t: '불의 용', fx: '탐사 공격 +5%' }, { k: 'dwater', n: '파랑이', t: '물의 용', fx: '마력 회복 +10%' }, { k: 'dforest', n: '숲이', t: '숲의 용', fx: '채집·수확 +10% · 경험치 +3%' }];
+const dfCaveOpen = () => !!(dfRes && dfRes.eggs && dfRes.eggs.some(e => e > 0));
+World.reqOk = key => { const [k, i] = String(key).split(':'), e = dfRes && dfRes.eggs ? dfRes.eggs[+i] : null; if (e == null) return false; return k === 'alive' ? e > 0 : e <= 0; };
+async function dfDragonOffer(i){
+  const D = DF_DRAG[i]; if (!D || !me) return; const day = todayKey(); if (!me.dfb || me.dfb.day !== day) me.dfb = { day, n: 0 };
+  const left = 2 - me.dfb.n, until = (me.buffs && me.buffs[D.k]) || 0;
+  if (left <= 0) return toast('오늘은 용의 가호를 두 번 받았어요. 내일 다시 와요');
+  const ok = await confirmBox(`${D.n}가 머리를 비벼요. ${D.t}의 가호를 받을까요?\n${D.fx} · 2시간 · 오늘 ${me.dfb.n}/2번 받았어요${until > Date.now() ? `\n(지금 남은 가호 ${Math.ceil((until - Date.now()) / 6e4)}분은 새로 2시간이 돼요)` : ''}`, '받을게요', '다음에');
+  if (!ok) return;
+  me.buffs = me.buffs || {}; me.buffs[D.k] = Date.now() + 2 * 3600 * 1000; me.dfb.n++; save(); hud(); sfx('heart'); toast(`${D.t}의 가호를 받았어요! (${D.fx}, 2시간)`);
+}
 // ----- 연출: 시작(용 알 이야기) · 끝(부화) — 평범한 영상처럼 한 번씩 나와요 -----
 let dfCut = null;
 const dfSeen = (id, k, set) => { try { if (set) localStorage.setItem(`df-seen-${id}-${k}`, '1'); return !!localStorage.getItem(`df-seen-${id}-${k}`); } catch (e){ return !!set && false; } };
@@ -6480,7 +6496,7 @@ function dfHostTick(){
   if (H.startAt && now >= H.startAt){ H.startAt = 0; TD.startWave(S); }
   if (!H.paused) TD.step(S, dt);
   H.pub += dt; if (H.pub >= .25){ H.pub = 0; F.set(F.ref(db, 'defense/st'), TD.snap(S)); }
-  H.hb += dt; if (H.hb >= 2 || S.phase !== H.ph || S.wave !== H.w){ const ch = S.phase !== H.ph || S.wave !== H.w; H.hb = 0; H.ph = S.phase; H.w = S.wave; F.set(F.ref(db, 'defense/ctl'), { open: true, id: H.id, intro: H.intro || 0, ph: S.phase, w: S.wave, win: S.win ? 1 : 0, hb: Date.now(), pause: H.paused ? 1 : 0 }); if (ch && AD.tab === 'event') adminRender(); }
+  H.hb += dt; if (H.hb >= 2 || S.phase !== H.ph || S.wave !== H.w){ const ch = S.phase !== H.ph || S.wave !== H.w; H.hb = 0; H.ph = S.phase; H.w = S.wave; F.set(F.ref(db, 'defense/ctl'), { open: true, id: H.id, intro: H.intro || 0, ph: S.phase, w: S.wave, win: S.win ? 1 : 0, hb: Date.now(), pause: H.paused ? 1 : 0 }); if (ch && S.phase === 'over') F.set(F.ref(db, 'defense/res'), { id: H.id, eggs: S.eggs.map(Math.round), win: S.win ? 1 : 0, at: Date.now() }); if (ch && AD.tab === 'event') adminRender(); }
 }
 function dfHostStop(){ if (!dfHost) return; clearInterval(dfHost.timer); if (dfHost.cmdOff) dfHost.cmdOff(); dfHost = null; }
 function dfHostClose(){ dfHostStop(); if (!F || !db) return; F.set(F.ref(db, 'defense/ctl'), { open: false }); F.set(F.ref(db, 'defense/st'), null); F.set(F.ref(db, 'defense/pick'), null); F.set(F.ref(db, 'defense/cmd'), null); adminRender(); }
@@ -6496,7 +6512,7 @@ function adminEventHTML(){
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-dfa]'); if (!b) return; const a = b.dataset.dfa, H = dfHost;
   if (a === 'open') dfHostStart(); else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 학생들의 자리와 진행이 지워져요.')) dfHostClose(); }
   else if (a === 'start' && H){ H.intro = Date.now(); H.startAt = performance.now() + 26000; H.hb = 9; adminRender(); } else if (a === 'next' && H){ H.S.rest = 0; } else if (a === 'pause' && H){ H.paused = !H.paused; adminRender(); }
-  else if (a === 'reset' && H){ if (confirm('처음으로 되돌릴까요? 번 골드와 올린 스킬이 지워져요.')){ const S = TD.newState([], {}); S.phase = 'ready'; H.S = S; H.ph = ''; H.intro = 0; H.startAt = 0; H.id = Date.now(); H.hb = 9; adminRender(); } } });
+  else if (a === 'reset' && H){ if (confirm('처음으로 되돌릴까요? 번 골드와 올린 스킬이 지워져요.')){ const S = TD.newState([], {}); S.phase = 'ready'; H.S = S; H.ph = ''; H.intro = 0; H.startAt = 0; H.id = Date.now(); H.hb = 9; F.set(F.ref(db, 'defense/res'), null); adminRender(); } } });
 // ===== 시장 (온라인 전용) =====
 let sellPick = null;
 function renderMarket(){
@@ -6784,7 +6800,7 @@ const SHOP_CATS = [['top', '상의'], ['legs', '하의'], ['feet', '신발'], ['
 // 그림자 골목 의뢰인 집: 그 사람의 의뢰가 3단계에 닿았거나 끝난 뒤에 들어갈 수 있어요. 안에서 의뢰인을 만나요 (tools/iso/quarter_rooms.py)
 const QHOME = { main_01_dracula: ['blady', 'vamp_manor', 18, 9], main_05_mummy: ['nefer', 'museum', 18, 12], main_06_frankenstein: ['piece', 'lab_tower', 17, 11], main_03_witch: ['beatrix', 'witch_hut', 16, 10], main_04_werewolf: ['ur', 'wolf_cabin', 16, 10], main_07_jack: ['jack', 'jack_hut', 16, 10] };
 const qUnlocked = qid => { const s = typeof mqState === 'function' ? mqState() : null; return !!s && (!!s.done[qid] || (s.q === qid && s.st >= 3)); };
-World.canEnter = qid => { if (qUnlocked(qid)) return true; return '문이 굳게 잠겨 있어요'; };
+World.canEnter = qid => { if (qid === 'dragon') return dfCaveOpen() ? true : '굳게 닫힌 바위 문이에요. 안에서 무언가 잠들어 있는 것 같아요…'; if (qUnlocked(qid)) return true; return '문이 굳게 잠겨 있어요'; };
 World.onExplore = (ri, door) => { if (!me) return; xRgSel = ri; xv = null; toast(`${door?.label || XRG[ri].n} · ${XRG[ri].tier}`); openSheet('home', 'explore'); };   // 마을 가장자리 길 끝 기둥 문 (tools/iso/halloween.py EXPL)
 World.onLockedDoor = label => { if (label === '낚시 도구점' && me){ fsTab = 'rod'; fsMsg = ''; openSheet('home', 'fish'); return true; }
   if (label !== '옷 가게' || !me) return false; shopTry = null; shopMsg = ''; openSheet('home', 'clothes'); return true; };

@@ -13,8 +13,29 @@ A.update(bgSrc='art/iso/arena_bg.png', objSrc='art/iso/arena_obj.png', title='�
 town = json.load(open(I + '/out/town.json'))    # split_maps.py: 강 동쪽 마을·시장 (학교와 다리로 이어져요)
 town.update(bgSrc='art/iso/town_bg.png', objSrc='art/iso/hw_obj.png', title='등불 마을', sub='반짝이는 곳이 문이에요 · 서쪽 다리로 학교에 가요', fill='#140E1E', lazy=True)
 camp.update(sub='반짝이는 곳이 문이에요 · 동쪽 다리로 마을·시장에 가요')
+# 학교 북쪽 문 → 용의 동굴 (dcave.py): 길을 깔고 나무를 치우고 기둥 문을 세워요. 문은 용이 사는 동안만 열려요 (index.html World.canEnter 'dragon')
+from PIL import Image as _Im
+GX, GY, GW = 30, 14, 3
+_bgp = _Im.open(I + '/out/hw_bg.png').convert('RGBA'); _px = _bgp.load(); _OX, _OY = camp['OX'], camp['OY']
+import random as _r; _r.seed(5)
+for _y in range(_bgp.height):
+    for _x in range(_bgp.width):
+        _a, _b = (_x - _OX) / 8, (_y - _OY) / 4; _fx, _fy = (_a + _b) / 2, (_b - _a) / 2
+        if GX - 1 <= _fx < GX - 1 + GW and GY <= _fy < 44 and _px[_x, _y][3] == 255 and _px[_x, _y][:3] != (0x14, 0x0E, 0x1E):
+            _px[_x, _y] = (106, 84, 68, 255) if _r.random() > .12 else (94, 74, 60, 255)
+_bgp.save(I + '/out/hw_bg.png')
+_gt = next(o for o in camp['objs'] if o['name'] == 'gate')
+def _gate_at(tx, ty):
+    n = dict(_gt); gx, gy = _gt['box'][0], _gt['box'][1]
+    n.update(box=[tx, ty, tx + 1, ty + 1], x=_gt['x'] + (tx - gx) * 8 - (ty - gy) * 8, y=_gt['y'] + (tx - gx) * 4 + (ty - gy) * 4, door=None); return n
+camp['objs'] = [o for o in camp['objs'] if not (o['name'] in ('tree', 'bush', 'lantern', 'jack', 'pumpkin') and o['box'][0] < GX - 1 + GW + 1 and o['box'][2] > GX - 1 - 1 and o['box'][1] < 44 and o['box'][3] > GY - 1)]
+_g1, _g2 = _gate_at(GX - 2, GY), _gate_at(GX + 2, GY)
+_g1['door'] = dict(tile=[GX, GY], to='dcave', spawn=[16, 22], label='용의 동굴', walk=True, spanX=[GX - 1, GX + 1], lock='dragon', back=[GX, GY + 3])
+camp['objs'] += [_g1, _g2]; camp['areas'].append(dict(n='용의 동굴 · 북쪽 문', t=[GX, GY]))
 QROOMS = {'vamp_manor': 'main_01_dracula', 'museum': 'main_05_mummy', 'lab_tower': 'main_06_frankenstein', 'witch_hut': 'main_03_witch', 'wolf_cabin': 'main_04_werewolf', 'jack_hut': 'main_07_jack'}   # quarter_rooms.py: 의뢰인 집 안
-MAPS = {'campus': {'meta': camp}, 'town': {'meta': town}, 'lab': {'meta': L}, 'quarter': {'meta': Q}, 'arena': {'meta': A}}
+D = json.load(open(I + '/out/dcave.json'))      # dcave.py: 지켜 낸 용들이 사는 동굴 (학교 북쪽 문)
+D.update(indoor=True, vw=185, spawnIn=[16, 22], fill='#0C0715', bgSrc='art/iso/dcave_bg.png', objSrc='art/iso/dcave_obj.png', title='용의 동굴', sub='지켜 낸 용들이 살아요 · 남쪽 문으로 학교에 돌아가요', lazy=True)
+MAPS = {'campus': {'meta': camp}, 'town': {'meta': town}, 'lab': {'meta': L}, 'quarter': {'meta': Q}, 'arena': {'meta': A}, 'dcave': {'meta': D}}
 DOORMAP = {tuple(map(int, k.split(','))): v for k, v in json.load(open(I + '/out/door_map.json')).items()}
 ALLO, ALLA = camp['objs'] + town['objs'], camp['areas'] + town['areas']
 for k in QROOMS: MAPS[k] = {'meta': dict(json.load(open(I + '/out/%s.json' % k)), lazy=True)}
@@ -73,6 +94,6 @@ open(OUT, 'w').write(t); print('wrote', OUT, len(t))
 
 # 지도 그림(png + 무손실 webp)을 public/art/iso에 복사해요
 from PIL import Image
-for nm in ['hw_bg', 'town_bg', 'hw_obj', 'quarter_bg', 'quarter_obj'] + [k + sfx for k in QROOMS for sfx in ('_bg', '_obj')]:
+for nm in ['hw_bg', 'town_bg', 'hw_obj', 'quarter_bg', 'quarter_obj', 'dcave_bg', 'dcave_obj'] + [k + sfx for k in QROOMS for sfx in ('_bg', '_obj')]:
     im = Image.open(I + '/out/%s.png' % nm); d = os.path.join(_PUBD, 'art', 'iso')
     im.save(os.path.join(d, nm + '.png')); im.save(os.path.join(d, nm + '.webp'), lossless=True)
