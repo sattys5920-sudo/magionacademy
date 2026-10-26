@@ -40,3 +40,9 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
         run: npx -y firebase-tools@13 deploy --only hosting --non-interactive
+      - name: 이벤트 서버 함수 배포 (실패해도 사이트 배포는 이미 끝났어요)
+        if: steps.check.outputs.skip != '1'
+        continue-on-error: true
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+        run: npx -y firebase-tools@13 deploy --only functions --non-interactive

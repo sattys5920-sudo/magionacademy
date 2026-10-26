@@ -3118,7 +3118,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.day = AD.day || todayKey();
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = s.val() || {}; if (adminTyping()) return; adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('adm/heart', 'heart'); L('players', 'players'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('adm/heart', 'heart'); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
   adminRender();
 }
 const adminTyping = () => { const a = document.activeElement; return AD.tab === 'npc' && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
@@ -6315,7 +6315,7 @@ function dfUi(){
   const stale = dfCtl && dfCtl.hb && Date.now() - dfCtl.hb > 12000 && ph !== 'over';
   const plN = st ? Object.keys(st.p).length : 0, rdN = st ? Object.values(st.p).filter(q => q[8]).length : 0;
   let txt = ph === 'ready' ? `점선 원을 눌러 자리를 정하고 「시작」! (준비 ${rdN}/${plN})` : ph === 'wave' ? `웨이브 ${w} 진행 중 · 남은 몬스터 ${st ? st.m.length + st.left : '-'}마리` : ph === 'rest' ? `자리를 바꾸고 「시작」! (준비 ${rdN}/${plN})` : ph === 'over' ? (st && st.win ? '알을 모두 지켜 냈어요!' : '알이 모두 깨졌어요…') : '';
-  if (stale) txt = '관리자 화면이 잠시 멈췄어요. 잠깐만 기다려 주세요.';
+  if (stale) txt = '진행이 잠시 멈췄어요. 잠깐만 기다려 주세요.';
   const job = dfJob(), jn = job && XJ[job] ? XJ[job].n : '아직 없어요 (탐사에서 먼저 골라요)';
   const upgB = mp ? `<button class="btn sm" id="dfupb">올리기${[0, 1].some(i => ['pow', 'rng', 'cd'].some(k => { const c = TD.upCost(dfPlayerOf(mp), i, k); return c != null && c <= mp[3]; })) ? ' ●' : ''}</button>` : '';
   let sk = ''; if (mp){ const meta = dfSkillMeta(); sk = `<div class="dfsk">${meta.map((m, i) => `<button data-sk="${i}">${m.ic}<span>${esc(m.n)}</span><i class="cdm"></i><b class="cdt"></b></button>`).join('')}<button id="dfauto" class="${mp[7] ? 'on' : ''}">자동<br>${mp[7] ? '켬' : '끔'}</button>${upgB}</div>`; }
@@ -6540,7 +6540,20 @@ function dfHostTick(){
 }
 function dfHostStop(){ if (!dfHost) return; try { localStorage.removeItem('dfhost'); } catch(e){} clearInterval(dfHost.timer); if (dfHost.cmdOff) dfHost.cmdOff(); dfHost = null; }
 function dfHostClose(){ dfHostStop(); if (!F || !db) return; F.set(F.ref(db, 'defense/ctl'), { open: false }); F.set(F.ref(db, 'defense/st'), null); F.set(F.ref(db, 'defense/pick'), null); F.set(F.ref(db, 'defense/cmd'), null); adminRender(); }
+const DF_LOCAL = !!window.__seed;   // 시험용 화면에서는 서버 없이 이 화면에서 계산해요
+function adminEventHTMLSrv(){
+  const c = AD.dfctl || {}, open = !!c.open, st = AD.dfst || {}, picks = Object.entries(AD.dfpick || {}), nm = u => esc((AD.players[u] && AD.players[u].nick) || u.slice(0, 6));
+  const dead = open && c.hb && Date.now() - c.hb > 15000, wait = AD.dfWait && Date.now() - AD.dfWait < 20000 && !open, ph = c.ph;
+  const zl = TD.ZONES.map((z, i) => `${z.name}: ${picks.filter(([, p]) => p.z === i).map(([u, p]) => `${nm(u)}(${XJ[p.job] ? XJ[p.job].n : '?'})`).join(', ') || '비어 있어요'}`);
+  const pl = st.p ? Object.keys(st.p).length : 0, eg = st.e || [];
+  return `<div class="adcard"><b>이벤트 「용의 알 지키기」</b> · ${wait ? '서버를 켜는 중이에요… (몇 초 걸려요)' : open ? DF_PH[ph] || '' : '닫혀 있어요'}
+    <div class="s">서버가 계산해요. 이 화면을 꺼도 괜찮아요. 학생에게는 ${open ? '버튼이 보여요' : '아무것도 안 보여요'}${open ? ` · 웨이브 ${st.w || 0}/15 · 알 ${eg.map(Math.round).join('/')} · 앉은 학생 ${pl}명${ph === 'wave' ? ` · 몬스터 ${(st.m || []).length + (st.left || 0)}마리` : ''}` : ''}</div>
+    ${dead ? '<div class="s" style="color:var(--danger,#ff7a6a)">서버가 15초 넘게 응답이 없어요. 「서버 다시 깨우기」를 눌러 주세요.</div>' : ''}
+    <div class="frow">${!open ? `<button class="btn sm go" data-dfa="open">이벤트 열기</button><button class="btn sm" data-dfa="local">이 화면에서 직접 진행 (예비)</button>` : `${ph === 'ready' ? (c.cut ? '<span class="s">시작 연출이 나오고 있어요</span>' : '<button class="btn sm go" data-dfa="start">시작 송출 (연출)</button>') : ''}${ph === 'ready' || ph === 'rest' ? '<button class="btn sm" data-dfa="force">웨이브 강제 시작</button>' : ''}${ph !== 'ready' && ph !== 'over' ? `<button class="btn sm" data-dfa="pause">${c.pause ? '다시 진행' : '잠깐 멈춤'}</button>` : ''}<button class="btn sm" data-dfa="reset">처음으로</button><button class="btn sm" data-dfa="close">이벤트 닫기</button>${dead ? '<button class="btn sm go" data-dfa="wake">서버 다시 깨우기</button>' : ''}`}</div></div>
+  <div class="adcard"><b>자리</b> (학생이 웨이브 사이에 골라요)${zl.map(t => `<div class="s">${t}</div>`).join('')}</div>`;
+}
 function adminEventHTML(){
+  if (!DF_LOCAL && !dfHost) return adminEventHTMLSrv();
   dfHostResume();
   const H = dfHost, S = H && H.S, ph = S ? S.phase : null, open = !!(AD.dfctl && AD.dfctl.open), picks = Object.entries(AD.dfpick || {}), nm = u => esc((AD.players[u] && AD.players[u].nick) || u.slice(0, 6));
   const zl = TD.ZONES.map((z, i) => `${z.name}: ${picks.filter(([, p]) => p.z === i).map(([u, p]) => `${nm(u)}(${XJ[p.job] ? XJ[p.job].n : '?'})`).join(', ') || '비어 있어요'}`);
@@ -6551,6 +6564,15 @@ function adminEventHTML(){
   <div class="adcard"><b>자리</b> (학생이 웨이브 사이에 골라요)${zl.map(t => `<div class="s">${t}</div>`).join('')}</div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-dfa]'); if (!b) return; const a = b.dataset.dfa, H = dfHost;
+  if (!DF_LOCAL && !H && F && db){
+    if (a === 'local'){ dfHostStart(); return; }
+    if (a === 'open'){ AD.dfWait = Date.now(); F.set(F.ref(db, 'defense/run'), { n: Date.now(), fresh: 1 }); adminRender(); setTimeout(adminRender, 20500); return; }
+    if (a === 'wake'){ F.set(F.ref(db, 'defense/run'), { n: Date.now(), resume: 1 }); return; }
+    if (a === 'close'){ if (confirm('이벤트를 닫을까요? 학생들의 자리와 진행이 지워져요.')) F.set(F.ref(db, 'defense/adm'), { a: 'close', n: Date.now() }); return; }
+    if (a === 'reset'){ if (confirm('처음으로 되돌릴까요? 번 골드와 올린 스킬이 지워져요.')) F.set(F.ref(db, 'defense/adm'), { a: 'reset', n: Date.now() }); return; }
+    if (['start', 'force', 'pause'].includes(a)) F.set(F.ref(db, 'defense/adm'), { a, n: Date.now() });
+    return;
+  }
   if (a === 'open') dfHostStart(); else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 학생들의 자리와 진행이 지워져요.')) dfHostClose(); }
   else if (a === 'start' && H){ H.intro = Date.now(); H.startAt = performance.now() + 26000; H.hb = 9; adminRender(); }
   else if (a === 'force' && H){ TD.startWave(H.S); adminRender(); } else if (a === 'pause' && H){ H.paused = !H.paused; adminRender(); }
