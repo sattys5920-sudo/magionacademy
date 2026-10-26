@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#140D1E">
 <link rel="preload" href="fonts/Pretendard-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/Galmuri11-Bold.sub.woff2" as="font" type="font/woff2" crossorigin>
-<title>Trick or Teach</title>
-<meta name="application-name" content="Trick or Teach"><meta name="apple-mobile-web-app-title" content="Trick or Teach">
+<title>Curse, Scare, Monster</title>
+<meta name="application-name" content="Curse, Scare, Monster"><meta name="apple-mobile-web-app-title" content="Curse, Scare, Monster">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/icon-64.png"><link rel="apple-touch-icon" href="icons/icon-180.png">
 <style>
@@ -6316,7 +6316,7 @@ const configured = !!(firebaseConfig.apiKey && firebaseConfig.databaseURL);
 const rndOf = a => a[Math.floor(Math.random() * a.length)];
 const PUNS = ['Boo-tiful day, isn\'t it?', 'Have a fang-tastic day!', 'Witch way to the school?', 'Pumpkin spice and everything ghoul', 'Just here for the boos', 'Bat-tery at 100%', 'Skele-tonight we study', 'You\'re looking sharp… fang-ly', 'Hocus Pocus, 집중!', '오늘의 마법: 지각 안 하기', '호박이 넝쿨째 굴러왔어요', '둥글둥글 호박처럼, 굴러서 등교', '마녀는 빗자루로 출근 중', 'Don\'t be a scaredy-cat, 들어와요', 'Ghoul friends forever', 'Leaf your worries — it\'s spooky season'];
 const LOADS = ['Boo-ting up...... 부팅 중이에요', '빗자루 시동 거는 중...... 부릉부릉', 'Witch way to school? 이쪽이에요', '호박 마차 굴리는 중......', '박쥐 우체부가 편지 가지러 갔어요', '솥에서 마법이 부글부글......', '유령이 문 열어 주는 중...... Boo!'];
-function cover(inner){ document.body.classList.remove('inworld'); app.classList.remove('open'); sheetOn = false; app.innerHTML = `<div class="cover"><div style="text-align:center;display:flex;flex-direction:column;gap:6px;margin:10px 0"><span class="b" style="font-size:34px;line-height:38px;text-shadow:0 3px 0 #1a1030,0 0 14px rgba(20,10,40,.7)">Trick or Teach!</span><span class="s" style="color:#E8DEFA;text-shadow:0 1px 0 #1a1030">${rndOf(PUNS)}</span></div>${inner}</div>`; }
+function cover(inner){ document.body.classList.remove('inworld'); app.classList.remove('open'); sheetOn = false; app.innerHTML = `<div class="cover"><div style="text-align:center;display:flex;flex-direction:column;gap:6px;margin:10px 0"><span class="b" style="font-size:25px;line-height:32px;text-shadow:0 3px 0 #1a1030,0 0 14px rgba(20,10,40,.7)">Curse, Scare, Monster</span><span class="s" style="color:#E8DEFA;text-shadow:0 1px 0 #1a1030">${rndOf(PUNS)}</span></div>${inner}</div>`; }
 function showLogin(mode = 'login'){
   const signup = mode === 'signup';
   let saved = ''; try { saved = localStorage.getItem('magion-id') || ''; } catch(e){}
@@ -6708,6 +6708,36 @@ function mqNpcs(){
 
 // ===== 엔딩: 모두 모여 핼러윈 파티를 준비해요 (약 20초) =====
 // 마지막 장까지 끝낸 학생에게 보여 줘요. 본관 앞마당에서 일곱 의뢰인과 서브 NPC가 모두 모여, 고민이 풀린 모습으로 축제를 준비해요.
+
+// 엔딩 제목 카드: Curse, Scare, Monster 의 글자가 제각각 움직여 Cures, Cares, Mentors 가 돼요
+function endingCard(){
+  return new Promise(done => {
+    const ROWS = [{ a: 'CURSE', b: 'CURES', map: [0, 1, 2, 4, 3] }, { a: 'SCARE', b: 'CARES', map: [4, 0, 1, 2, 3] }, { a: 'MONSTER', b: 'MENTORS', map: [0, 4, 2, 6, 3, 1, 5] }];
+    const ov = document.createElement('div'); ov.id = 'endcard';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:60;background:radial-gradient(ellipse at 50% 30%,#2a1c52 0,#0e0916 70%);color:#fff;overflow:hidden;opacity:0;transition:opacity .6s';
+    const W = 34, rowY = [0, 1, 2].map(i => i * 84), H0 = Math.max(120, innerHeight * .28);
+    let html = '<div id="ecw" style="position:absolute;left:0;right:0;top:' + H0 + 'px;height:260px"></div><div id="eck" style="position:absolute;left:0;right:0;bottom:16%;text-align:center;font-size:15px;color:#ffe9a8;opacity:0;transition:opacity .8s;line-height:1.6">치유하고 · 돌봐 주고 · 서로의 스승이 되는 이야기</div><div id="ecs" style="position:absolute;left:0;right:0;bottom:6%;text-align:center;font-size:11px;color:#9a8cc0;opacity:0;transition:opacity .8s">화면을 누르면 닫혀요</div>';
+    ov.innerHTML = html; document.body.appendChild(ov);
+    const wrap = ov.querySelector('#ecw'), L = [];
+    ROWS.forEach((R, ri) => { const n = R.a.length, x0 = (innerWidth - W * n) / 2; R.els = [...R.a].map((ch, k) => { const d = document.createElement('div'); d.textContent = ch; d.style.cssText = `position:absolute;left:0;top:0;width:${W}px;text-align:center;font:700 34px/38px G11B,Galmuri11,Pretendard,sans-serif;color:#ff9a3c;text-shadow:0 3px 0 #1a1030,0 0 8px rgba(255,120,40,.5);will-change:transform`; wrap.appendChild(d); return d; });
+      R.x0 = x0; R.y = rowY[ri]; const c = document.createElement('div'); c.textContent = ri < 2 ? ',' : ''; c.style.cssText = `position:absolute;left:0;top:0;font:700 34px/38px G11B,Galmuri11,Pretendard,sans-serif;color:#ffe9a8;opacity:0;transition:opacity .6s;transform:translate(${x0 + n * W - 4}px,${R.y + 6}px)`; wrap.appendChild(c); R.comma = c; });
+    const ease = t => t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t); let t0 = performance.now(), raf = 0, closed = false, ready = false;
+    const close = () => { if (closed) return; closed = true; cancelAnimationFrame(raf); ov.style.opacity = 0; setTimeout(() => { ov.remove(); done(); }, 600); };
+    ov.onclick = () => { if (ready) close(); };
+    requestAnimationFrame(() => { ov.style.opacity = 1; });
+    const tick = now => { const T = (now - t0) / 1000;
+      ROWS.forEach((R, ri) => { const p = ease((T - (1.8 + ri * 1.4)) / 1.5), warm = ease((T - (1.8 + ri * 1.4) - 1.3) / .6), n = R.a.length;
+        R.els.forEach((el, k) => { const from = R.x0 + k * W, to = R.x0 + R.map[k] * W, x = from + (to - from) * p, lift = Math.sin(p * Math.PI), y = R.y - lift * (30 + (k % 3) * 10) * (k % 2 ? 1 : -1), rot = lift * (k % 2 ? 16 : -16);
+          el.style.transform = `translate(${x}px,${y}px) rotate(${rot}deg) scale(${1 + lift * .15})`;
+          if (warm > 0){ el.style.color = `rgb(255,${Math.round(150 + 80 * warm)},${Math.round(90 + 90 * warm)})`; el.style.textShadow = `0 3px 0 #1a1030,0 0 ${8 + warm * 14}px rgba(255,220,140,.8)`; } });
+        if (warm > .5) R.comma.style.opacity = 1; });
+      if (T > 6.6) ov.querySelector('#eck').style.opacity = 1;
+      if (T > 8) { ov.querySelector('#ecs').style.opacity = 1; ready = true; }
+      if (T > 13) return close();
+      raf = requestAnimationFrame(tick); };
+    raf = requestAnimationFrame(tick);
+  });
+}
 async function playEnding(){
   if (World.cutBusy && World.cutBusy()) return;
   await MQ.ready; closeSheet(); npcClose();
@@ -6741,10 +6771,12 @@ async function playEnding(){
   order.forEach((id, i) => { if (i % 3 === 1) cmd.push({ cmd: 'emote', who: id, icon: [8, 7, 9, 1][i % 4] }); });
   cmd.push({ cmd: 'wait', sec: 3.2 });
   cmd.push({ cmd: 'emote', who: 'player', icon: 7 }, { cmd: 'wait', sec: 1.2 });
-  cmd.push({ cmd: 'fade', v: 1, text: 'Trick or Teach' }, { cmd: 'wait', sec: 1.2 }, { cmd: 'fx', kind: 'party', off: true });
+  cmd.push({ cmd: 'fade', v: 1, text: '' }, { cmd: 'sfx', id: '__card' }, { cmd: 'wait', sec: .8 }, { cmd: 'fx', kind: 'party', off: true });
   const lv0 = World.zoomLevel(); World.zoomStep(2 - lv0);   // 넓게 보여요
   await new Promise(r => World.teleport('town', [X, Y + 3], r));
-  await World.cut(cmd, { sfx: id => sfx(id) });
+  let card = null;
+  await World.cut(cmd, { sfx: id => { if (id === '__card') card = endingCard(); else sfx(id); } });
+  if (card) await card;
   World.zoomStep(lv0 - 2);
 }
 const mqPlace = pl => { if (!pl) return null; if (typeof pl === 'string'){ const p = NL.places[pl]; return p ? { map: p.map, x: p.x, y: p.y } : null; } return pl.place ? { ...mqPlace(pl.place), ...(pl.x !== undefined ? { x: pl.x, y: pl.y } : {}) } : pl; };
@@ -6798,7 +6830,7 @@ function mqAfter(q, n, kind, sc){
       s.done[q.id] = me.day; s.q = null; s.st = 1; s.ph = 'arrive'; s.prog = {}; s.dl = null;
       mqSky(); if (World.setMarks) World.setMarks([]);
       toast(`「${esc(q.name || q.id)}」 의뢰를 끝냈어요${got.length ? ' · ' + got.join(', ') : ''}`);
-      if (q.order === 7){ me.nflag = me.nflag || {}; me.nflag.main_done = 1; }
+      if (q.order === 7){ me.nflag = me.nflag || {}; me.nflag.main_done = 1; if (!me.nflag.ending){ me.nflag.ending = 1; setTimeout(() => playEnding(), 2500); } }
     } else { s.st = n + 1; s.ph = 'pre'; s.prog = {}; s.dl = null; toast(`${n}단계 끝! ${got.length ? got.join(', ') + ' · ' : ''}${mqName(q.client)}에게 다시 말을 걸면 다음 부탁을 들어요`); }
     save(); hud(); syncNpcs(); mqMarks();
   }
@@ -6881,7 +6913,7 @@ function mqJournalHTML(){
   if (!q){ const nextId = MQ.list.find(id => !s.done[id]), nq = nextId && MQ.q[nextId];
     let when = '아직 손님이 오지 않았어요';
     if (nq){ when = n >= 7 ? '일곱 등불의 의뢰를 모두 끝냈어요' : MQ.list.indexOf(nextId) + 1 > mqRel ? '다음 이야기는 곧 열려요' : '곧 다음 손님이 학교에 와요'; }
-    return `<section class="sec">${secH('메인 이야기', n ? `${n} / 7 의뢰` : '')}${sky}<div class="hint ${nq ? 'on' : ''}">${when}</div>${past ? `<div class="jn-tags">${past}</div>` : ''}${n >= 7 ? '<div class="hint on">등불자리 옆에, 처음 보는 희미한 별 하나가 떠 있어요……</div>' : ''}</section>`; }
+    return `<section class="sec">${secH('메인 이야기', n ? `${n} / 7 의뢰` : '')}${sky}<div class="hint ${nq ? 'on' : ''}">${when}</div>${past ? `<div class="jn-tags">${past}</div>` : ''}${n >= 7 ? '<div class="hint on">등불자리 옆에, 처음 보는 희미한 별 하나가 떠 있어요……</div><button class="btn go" id="endRe">엔딩 다시 보기</button>' : ''}</section>`; }
   const c = mqClient(q), st = mqStage(), objs = mqObjs();
   const head = `<div class="jn-npc"><div class="npcf">${mqFace(q.client)}</div><div class="main"><b>${q.order}. ${esc(q.name)}</b><span class="d">${esc(mqName(q.client))} · ${esc(c.title || '')} · ${s.st} / 5 단계</span></div></div>`;
   const body = s.ph === 'arrive' ? '<div class="hint on">손님이 학교로 오고 있어요. 마을로 나가 보세요</div>'
@@ -6892,6 +6924,7 @@ function mqJournalHTML(){
   return `<section class="sec">${secH('메인 이야기', `${s.st}단계 · ${esc(st?.title || '')}`)}<div class="box px jn-card">${head}${body}</div>${sky}${past ? `<div class="jn-tags">${past}</div>` : ''}</section>`;
 }
 function mqJournalBind(){
+  const er = $('#endRe'); if (er) er.onclick = () => playEnding();
   on('[data-mqpz]', b => { mqPz = +b.dataset.mqpz; openSheet('home', 'mqpuzzle'); });
   on('[data-mqdf]', b => { const i = +b.dataset.mqdf; closeSheet(); mqDefend(i); });
   on('[data-mqcraft]', b => { mqCraftPlace = b.dataset.mqcraft; openSheet('home', 'mqcraft'); });
