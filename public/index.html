@@ -256,7 +256,7 @@ body.admin .hud,body.admin .fab,body.admin #world{display:none}
 .adsum{display:flex;gap:10px;flex-wrap:wrap}
 .adsum b{font-family:var(--f-pxb)}
 .adtbl{display:flex;flex-direction:column;gap:2px;overflow-x:auto}
-.adtbl>div{display:grid;grid-template-columns:80px 150px 74px 64px 40px 40px 30px 50px 50px 46px 30px 30px 150px 290px;gap:4px;background:#fff;padding:3px 6px;white-space:nowrap;min-width:max-content}
+.adtbl>div{display:grid;grid-template-columns:80px 150px 74px 64px 40px 40px 30px 50px 50px 46px 30px 30px 150px 380px;gap:4px;background:#fff;padding:3px 6px;white-space:nowrap;min-width:max-content}
 .adtbl>div.h{background:#22183F;color:#FFD866}
 .adcard{background:#fff;border:3px solid #22183F;padding:8px;display:flex;flex-direction:column;gap:3px}
 .ck-css{}
@@ -3232,13 +3232,13 @@ function adminRender(){
   }
   if (AD.tab === 'students'){
     const sum = k => ids.reduce((t, id) => t + (+P[id][k] || 0), 0);
-    body = `<div class="adsum"><button class="btn sm" data-adstripall="1">전체 학생 지급품 회수</button><span>골드 합계 <b>${sum('coin').toLocaleString()}</b></span><span>마력 합계 <b>${sum('mana')}</b></span><span>평균 지식 <b>${ids.length ? Math.round(sum('know') / ids.length) : 0}</b></span></div>
+    body = `<div class="adsum"><button class="btn sm" data-adstripall="1">전체 학생 지급품 회수</button><button class="btn sm" data-adcrall="1">전체 학생 생물 회수</button><span>골드 합계 <b>${sum('coin').toLocaleString()}</b></span><span>마력 합계 <b>${sum('mana')}</b></span><span>평균 지식 <b>${ids.length ? Math.round(sum('know') / ids.length) : 0}</b></span></div>
       <div class="adsum">${Object.entries(XJ).map(([k, j]) => { const n = ids.filter(id => P[id].ex?.job === k).length; return `<span>${j.n} <b>${n}</b></span>`; }).join('')}<span>미선택 <b>${ids.filter(id => !XJ[P[id].ex?.job]).length}</b></span></div>
       <div class="adtbl"><div class="h"><span>학생</span><span>기숙사</span><span>직업</span><span>골드</span><span>마력</span><span>지식</span><span>날</span><span>물고기</span><span>채집</span><span>낚싯대</span><span>옷</span><span>생물</span><span>상태</span><span>관리</span></div>
       ${ids.sort((a, b) => (P[b].coin || 0) - (P[a].coin || 0)).map(id => { const p = P[id], d = p.fdex || {};
         return `<div><span><b>${esc(p.nick)}</b></span><span><button class="btn sm" data-adhouse="${id}" style="color:${HOUSES[p.house]?.col || '#888'};font-weight:700">${HOUSES[p.house]?.name || '정하기'} ▾</button></span><span>${XJ[p.ex?.job]?.n || '-'}</span><span>${(p.coin || 0).toLocaleString()}</span><span>${p.mana || 0}</span><span>${p.know || 0}</span><span>${p.day || 1}</span>
           <span>${FISH.filter(f => d[f.id]).length}/${FISH.length}</span><span>${FORAGE.filter(f => d[f.id]).length}/50</span><span>${RODS[p.rod || 0]?.name.split(' ')[0] || '-'}</span><span>${Object.keys(p.closet || {}).length}</span><span>${(p.cr || []).length}</span>
-          <span>${O[id] ? `${adPlace(O[id].m)}` : p.rest ? '쉬는 중' : '외출'}</span><span><button class="btn sm" data-adstrip="${id}">지급품 회수</button> <button class="btn sm" data-adreset="${id}">진행 리셋</button> <button class="btn sm" data-addel="${id}">가입 삭제</button></span></div>`; }).join('')}</div>`;
+          <span>${O[id] ? `${adPlace(O[id].m)}` : p.rest ? '쉬는 중' : '외출'}</span><span><button class="btn sm" data-adstrip="${id}">지급품 회수</button> <button class="btn sm" data-adcr="${id}">생물 회수 ${(p.cr || []).length}</button> <button class="btn sm" data-adreset="${id}">진행 리셋</button> <button class="btn sm" data-addel="${id}">가입 삭제</button></span></div>`; }).join('')}</div>`;
   }
   if (AD.tab === 'join'){
     const pend = Object.entries(AD.pending || {}).sort((a, b) => a[1].at - b[1].at);
@@ -3309,11 +3309,19 @@ function adminRender(){
   root.querySelectorAll('[data-addel]').forEach(b => b.onclick = () => adWipe(b.dataset.addel, true));
   const adStrip = async ids2 => {   // 시작할 때 받은 생물 4마리·재료·가구를 거둬요 (이미 쓴 만큼은 0까지만)
     const ups = {}; let tot = 0;
-    ids2.forEach(id => { const p = AD.players[id]; if (!p) return; const d = starterDiff(p, true); if (!d.n) return; tot++; ups['players/' + id + '/cr'] = d.cr.length ? d.cr : null; ups['players/' + id + '/inv'] = d.inv; ups['players/' + id + '/fbag'] = Object.values(d.fb).some(v => v > 0) ? d.fb : null; ups['players/' + id + '/sg'] = 1; ups['adm/reset/' + id] = Date.now(); });
+    ids2.forEach(id => { const p = AD.players[id]; if (!p) return; const d = starterDiff(p, true); if (!d.n) return; tot++; ups['players/' + id + '/cr'] = d.cr.length ? d.cr : null; ups['players/' + id + '/inv'] = d.inv; ups['players/' + id + '/fbag'] = Object.values(d.fb).some(v => v > 0) ? d.fb : null; ups['players/' + id + '/sg'] = 1; ups['players/' + id + '/rv'] = (p.rv || 0) + 1000; ups['adm/reset/' + id] = Date.now(); });
     if (!tot) return alert('거둘 지급품이 없어요');
     if (!confirm(`${tot}명에게서 시작 때 받은 생물·재료·가구를 거둘까요? (접속 중이면 화면이 새로 불러와져요)`)) return;
     try { await F.update(F.ref(db, '/'), ups); toast(`${tot}명에게서 거뒀어요`); } catch(e){ alert('실패했어요: ' + (e.code || e.message)); } };
   root.querySelectorAll('[data-adstrip]').forEach(b => b.onclick = () => adStrip([b.dataset.adstrip]));
+  const adCrAll = async ids2 => {   // 사육장의 생물을 모두 거둬요 (부화실의 알은 그대로)
+    const L = ids2.filter(id => (AD.players[id]?.cr || []).length); if (!L.length) return alert('거둘 생물이 없어요');
+    const n = L.reduce((a, id) => a + AD.players[id].cr.length, 0);
+    if (!confirm(`${L.length === 1 ? (AD.players[L[0]].nick || '학생') + '의' : L.length + '명의'} 사육장 생물 ${n}마리를 모두 거둘까요? 되돌릴 수 없어요. (접속 중이면 화면이 새로 불러와져요)`)) return;
+    const ups = {}; L.forEach(id => { ups['players/' + id + '/cr'] = null; ups['players/' + id + '/rv'] = (AD.players[id].rv || 0) + 1000; ups['adm/reset/' + id] = Date.now(); });   // 번호를 크게 올려서, 학생 화면이 옛 상태로 덮어쓰지 못하게 해요
+    try { await F.update(F.ref(db, '/'), ups); toast(`생물 ${n}마리를 거뒀어요`); } catch(e){ alert('실패했어요: ' + (e.code || e.message)); } };
+  root.querySelectorAll('[data-adcr]').forEach(b => b.onclick = () => adCrAll([b.dataset.adcr]));
+  root.querySelectorAll('[data-adcrall]').forEach(b => b.onclick = () => adCrAll(Object.keys(AD.players)));
   root.querySelectorAll('[data-adstripall]').forEach(b => b.onclick = () => adStrip(Object.keys(AD.players)));
   root.querySelectorAll('[data-adhouse]').forEach(btn => btn.onclick = () => {   // 기숙사 옮기기: 창에서 고르면 옮겨요 (정원 3명을 넘으면 막고, 접속 중이면 새로 불러와요)
     const id = btn.dataset.adhouse, p = AD.players[id] || {}, old = p.house, cnt = k => Object.keys(AD.players).filter(i => i !== id && AD.players[i]?.house === k).length;
@@ -3326,7 +3334,7 @@ function adminRender(){
     d.onclick = async e => {
       const t = e.target.closest('[data-pick]'); if (!t && e.target !== d) return; const h = t ? t.dataset.pick : ''; d.remove(); if (!h || h === old) return;
       if (!confirm(`${p.nick || id.slice(0, 6)}을(를) ${old ? HOUSES[old]?.name + ' → ' : ''}${HOUSES[h].name}(으)로 옮길까요? 접속 중이면 화면이 새로 불러와져요.`)) return;
-      const ups = { ['players/' + id + '/house']: h, ['hmem/' + h + '/' + id]: 1, ['adm/reset/' + id]: Date.now() }; if (old) ups['hmem/' + old + '/' + id] = null;
+      const ups = { ['players/' + id + '/house']: h, ['players/' + id + '/rv']: (p.rv || 0) + 1000, ['hmem/' + h + '/' + id]: 1, ['adm/reset/' + id]: Date.now() }; if (old) ups['hmem/' + old + '/' + id] = null;
       try { await F.update(F.ref(db, '/'), ups); toast('기숙사를 옮겼어요'); } catch(ex){ alert('실패했어요: ' + (ex.code || ex.message)); }
     };
   });
