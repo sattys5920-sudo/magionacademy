@@ -473,6 +473,8 @@ button.cell:not(:disabled):active{background:var(--line)}
 .avstage{position:relative;height:236px;border-radius:12px;background:radial-gradient(circle at 50% 70%,#4A3A7A,#22183F);display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px}
 .avstage canvas{width:192px;height:192px;image-rendering:pixelated}
 .avstage .btn{position:absolute;right:8px;top:8px}
+@media (min-width:900px) and (min-height:480px){.card.crt{max-width:900px}.crt .avwrap{display:grid;grid-template-columns:210px minmax(0,1fr);gap:10px 18px;align-items:start}.crt .avstage{grid-column:1;grid-row:1/span 30;position:sticky;top:0}.crt .avwrap>:not(.avstage){grid-column:2}.crt .avopts{grid-template-columns:repeat(6,minmax(0,1fr))}.crsel{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}}
+.crsel>div{display:flex;flex-direction:column;gap:8px;min-width:0}
 .avopts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .avo{border:1px solid var(--line2);border-radius:var(--r-cell);background:var(--panel2);padding:4px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:0;min-height:72px;color:var(--text)}
 .avo img{width:44px;height:44px;image-rendering:pixelated;object-fit:contain;object-position:center bottom}
@@ -482,7 +484,7 @@ button.cell:not(:disabled):active{background:var(--line)}
 .sw.on{box-shadow:0 0 0 3px var(--panel),0 0 0 5px var(--accent)}
 
 /* 로그인·시작 */
-.cover{flex:1;overflow-y:auto;background:#22185a url(art/cover.png?v=1) center bottom / cover no-repeat;image-rendering:pixelated;padding:28px 18px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;color:#fff;justify-content:center}
+.cover{flex:1;overflow-y:auto;background:#22185a url(art/cover.png?v=1) center bottom / cover no-repeat;image-rendering:pixelated;padding:28px 18px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;color:#fff}.cover>:first-child{margin-top:auto}.cover>:last-child{margin-bottom:auto}
 .card{background:var(--panel);color:var(--text);border:1px solid var(--line2);border-radius:var(--r-panel);padding:18px;display:flex;flex-direction:column;gap:12px;max-width:420px;width:100%;margin:0 auto}
 .field{display:flex;flex-direction:column;gap:4px}
 .field input{height:48px;border:1px solid var(--line2);border-radius:var(--r-btn);background:var(--panel2);padding:0 12px}
@@ -7580,15 +7582,15 @@ function showCreate(done, counts = {}, taken = {}){
   let look = Math.floor(Math.random() * 8), house = null, nick = '', job = '';
   const av = World.Avatar.fromLook(Math.floor(Math.random() * 1e6));
   const draw = () => {
-    cover(`<div class="card px">
+    cover(`<div class="card px crt">
       <span class="b" style="font-size:24px">입학 원서</span>
       <label class="field"><span class="s">이름 (1~8 자)</span><input id="nick" maxlength="8" placeholder="예: 별이" value="${esc(nick)}"></label>
       <span class="s">내 캐릭터 만들기</span>
       ${World.Avatar.loaded ? avatarUI(av) : '<div class="hint">그림을 불러오는 중.......</div>'}
-      <span class="s">기숙사 고르기 (기숙사마다 ${HOUSE_CAP}명)</span>
-      ${houseCards(house, counts)}
-      <span class="s">직업 고르기 · 한 번 고르면 바뀌지 않아요</span>
-      ${xJobGrid(job, taken)}
+      <div class="crsel"><div><span class="s">기숙사 고르기 (기숙사마다 ${HOUSE_CAP}명)</span>
+      ${houseCards(house, counts)}</div>
+      <div><span class="s">직업 고르기 · 한 번 고르면 바뀌지 않아요</span>
+      ${xJobGrid(job, taken)}</div></div>
       <p class="err" id="err"></p>
       <button class="btn go" id="enroll">입학하기</button>
     </div>`);
