@@ -6836,11 +6836,11 @@ document.addEventListener('click', e => { const bt = e.target.closest && e.targe
 // ===== 이벤트 「호박밭 같이 가꾸기」 (하루 이벤트, 전투 없음): 반 전체가 학교 앞 호박밭의 마법 호박을 키워요 =====
 // pumpkin/ctl = { open, id, rate, goal } · pumpkin/pts/<uid> = 내가 키운 점수 · pumpkin/w/<uid> = 물 준 횟수. 점수 합이 goal 이 되면 거대 호박 완성 (호박은 이벤트가 끝난 뒤에도 남아요)
 let pkCtl = null, pkPts = {}, pkW = {}, pkLoad = { p: 0, w: 0 }, pkOn = false, pkOffs = [], pkTick = 0, pkLastStage = -1;
-const PK = { GOAL: 600, STAGES: [0, .2, .45, .7, 1], NAMES: ['씨앗', '새싹', '덩굴', '꽃', '거대 호박'], TILE: [22, 88], WATER: [2, 5 * 60e3], TALK: [3, 10 * 60e3], FCAP: 10,
+const PK = { GOAL: 600, STAGES: [0, .2, .45, .7, 1], NAMES: ['씨앗', '새싹', '덩굴', '꽃', '거대 호박'], TILE: [22, 88], WATER: [2, 3600e3], TALK: [3, 7200e3], FCAP: 10,
   MAT: [['herb', '약초', 6, '흔함'], ['drop', '달빛 이슬', 10, '보통'], ['mana', '마나석', 20, '귀함']], BUFF_MS: 3 * 3600e3, CELL: [60, 50] };
 const pkGoal = () => (pkCtl && pkCtl.goal) || PK.GOAL, pkTotal = () => Object.values(pkPts).reduce((a, n) => a + (+n || 0), 0), pkDone = () => !!pkCtl && pkTotal() >= pkGoal();
 const pkStage = () => { const k = Math.min(1, pkTotal() / pkGoal()); let s = 0; PK.STAGES.forEach((t, i) => { if (k >= t) s = i; }); return s; };
-const pkMy = () => (me.pk && pkCtl && me.pk.id === pkCtl.id) ? me.pk : (me.pk = { id: pkCtl ? pkCtl.id : 0, wAt: 0, tAt: 0, f: 0, st: {}, fin: 0, bd: {} });
+const pkMy = () => (me.pk && pkCtl && me.pk.id === pkCtl.id) ? me.pk : (me.pk = { id: pkCtl ? pkCtl.id : 0, wAt: 0, tAt: 0, f: {}, st: {}, fin: 0, bd: {} });
 const pkRank = () => { const L = Object.entries(pkPts).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).map(([u]) => u); return L.indexOf(myId()) + 1; };
 function pkListen(){
   if (solo || !F || !db || pkOffs.length) return;
@@ -6893,8 +6893,8 @@ async function pkAct(kind, mat){
   const m = pkMy(); let g = 0;
   if (kind === 'w'){ if (pkLeft(m.wAt, PK.WATER[1])) return; g = await pkGain(PK.WATER[0], 'w'); if (g){ m.wAt = Date.now(); sfx('pop'); toast(`물을 줬어요! 성장 +${g}`); } }
   else if (kind === 't'){ if (pkLeft(m.tAt, PK.TALK[1])) return; g = await pkGain(PK.TALK[0], 't'); if (g){ m.tAt = Date.now(); sfx('heart'); toast(`호박에게 말을 걸었어요. 성장 +${g}`); } }
-  else { const M_ = PK.MAT.find(x => x[0] === mat); if (!M_ || (me.inv[mat] || 0) < 1) return toast(`${M_ ? M_[1] : '재료'}이(가) 없어요`); if ((m.f || 0) >= PK.FCAP) return toast(`거름은 ${PK.FCAP}번까지 줄 수 있어요`);
-    g = await pkGain(M_[2], 'f'); if (g){ me.inv[mat]--; m.f = (m.f || 0) + 1; sfx('pick'); toast(`${M_[1]}을(를) 거름으로 줬어요! 성장 +${g}`); } }
+  else { const M_ = PK.MAT.find(x => x[0] === mat); if (!M_ || (me.inv[mat] || 0) < 1) return toast(`${M_ ? M_[1] : '재료'}이(가) 없어요`); if (typeof m.f !== 'object' || !m.f) m.f = {}; if ((m.f[mat] || 0) >= PK.FCAP) return toast(`${M_[1]} 거름은 ${PK.FCAP}번까지 줄 수 있어요`);
+    g = await pkGain(M_[2], 'f'); if (g){ me.inv[mat]--; m.f[mat] = (m.f[mat] || 0) + 1; sfx('pick'); toast(`${M_[1]}을(를) 거름으로 줬어요! 성장 +${g}`); } }
   if (g){ save(); hud(); pkUi(); }
 }
 function pkBubble(){   // 호박을 눌렀을 때
@@ -6912,20 +6912,20 @@ function pkOpen(){
   $('#shell').appendChild(v); $('#pkx').onclick = pkClose; pkUi(); pkTick = setInterval(pkUi, 1000);
 }
 function pkClose(){ pkOn = false; clearInterval(pkTick); const v = $('#pkv'); if (v) v.remove(); pkSync(); }
-const pkMin = ms => { const s = Math.ceil(ms / 1000); return s >= 60 ? `${Math.floor(s / 60)}분 ${s % 60}초` : `${s}초`; };
+const pkMin = ms => { const s = Math.ceil(ms / 1000); return s >= 3600 ? `${Math.floor(s / 3600)}시간 ${Math.floor(s % 3600 / 60)}분` : s >= 60 ? `${Math.floor(s / 60)}분 ${s % 60}초` : `${s}초`; };
 function pkUi(){
   const v = $('#pkv'); if (!v) return; if (!pkCtl){ pkClose(); return; } const t = pkTotal(), goal = pkGoal(), k = Math.min(1, t / goal), st = pkStage(), m = pkMy(), done = pkDone(), mine = +pkPts[myId()] || 0, rk = pkRank();
   $('#pkinfo').textContent = `${PK.NAMES[st]} · ${Math.round(k * 100)}%`;
   const wl = pkLeft(m.wAt, PK.WATER[1]), tl = pkLeft(m.tAt, PK.TALK[1]), off = !pkCtl.open || done;
   const btn = (id, label, sub, left, dis) => `<button class="pkact ${left || dis ? 'wait' : 'go'}" data-pk="${id}" ${left || dis ? 'disabled' : ''}><b>${label}</b><span>${left ? pkMin(left) + ' 뒤' : sub}</span></button>`;
-  const body = $('#pkbody'); const sig = [t, st, mine, rk, wl > 0, tl > 0, done, m.f, m.fin, m.bd.day, pkCtl.open, ...PK.MAT.map(x => me.inv[x[0]] || 0), Math.ceil(wl / 1000), Math.ceil(tl / 1000)].join(','); if (body.dataset.sig === sig) return; body.dataset.sig = sig;
+  const body = $('#pkbody'); const sig = [t, st, mine, rk, wl > 0, tl > 0, done, JSON.stringify(m.f || 0), m.fin, m.bd.day, pkCtl.open, ...PK.MAT.map(x => me.inv[x[0]] || 0), Math.ceil(wl / 1000), Math.ceil(tl / 1000)].join(','); if (body.dataset.sig === sig) return; body.dataset.sig = sig;
   body.innerHTML = `<div class="pkscene"><i class="pkspr" style="background-position:${st * 25}% 0"></i></div>
     <div class="pkbar"><i style="width:${k * 100}%"></i>${PK.STAGES.slice(1, 4).map(x => `<u style="left:${x * 100}%"></u>`).join('')}</div>
     <div class="s sub" style="text-align:center">반 전체 성장 ${t} / ${goal}${done ? ' · 완성!' : ''}</div>
     <div class="pkme"><b>내 기여</b> ${mine}점${rk ? ` · ${rk}등${rk <= 5 ? ' (상위 5명 안!)' : ''}` : ''} <span class="s sub">· 물 준 횟수 ${+pkW[myId()] || 0}</span></div>
     ${done ? `<div class="pkdone">거대 호박이 활짝 웃어요!${m.res ? `<br>내 완성 보상: ${m.res.g ? `${m.res.g}골드${m.res.m ? ` · 마나석 ${m.res.m}개` : ''}` : '물을 준 적이 없어서 보상이 없어요'}` : ''}<br><span class="s sub">호박밭에 가서 호박에게 말을 걸면 하루 한 번 3시간 축복(탐사 경험치 +10%)을 줘요</span></div>` : ''}
-    <div class="pkacts">${btn('w', '물 주기', `성장 +${PK.WATER[0]} · 5분마다`, off ? 1 : wl, off)}${btn('t', '말 걸어 주기', `성장 +${PK.TALK[0]} · 10분마다`, off ? 1 : tl, off)}</div>
-    <div class="pkmat"><b>거름 주기</b> <span class="s sub">재료가 귀할수록 많이 자라요 · ${m.f || 0}/${PK.FCAP}번</span><div class="pkacts">${PK.MAT.map(([id, nm, g, r]) => `<button class="pkact ${off || !(me.inv[id] || 0) ? 'wait' : 'go'}" data-pkm="${id}" ${off || !(me.inv[id] || 0) ? 'disabled' : ''}><b>${nm}</b><span>${r} · 성장 +${g} · 가진 ${me.inv[id] || 0}개</span></button>`).join('')}</div></div>
+    <div class="pkacts">${btn('w', '물 주기', `성장 +${PK.WATER[0]} · 1시간마다`, off ? 1 : wl, off)}${btn('t', '말 걸어 주기', `성장 +${PK.TALK[0]} · 2시간마다`, off ? 1 : tl, off)}</div>
+    <div class="pkmat"><b>거름 주기</b> <span class="s sub">재료가 귀할수록 많이 자라요 · 재료마다 ${PK.FCAP}번까지</span><div class="pkacts">${PK.MAT.map(([id, nm, g, r]) => { const u = (m.f && m.f[id]) || 0, no = off || !(me.inv[id] || 0) || u >= PK.FCAP; return `<button class="pkact ${no ? 'wait' : 'go'}" data-pkm="${id}" ${no ? 'disabled' : ''}><b>${nm}</b><span>${r} · 성장 +${g}<br>쓴 횟수 ${u}/${PK.FCAP} · 가진 ${me.inv[id] || 0}개</span></button>`; }).join('')}</div></div>
     <div class="pkrew"><b>보상</b><div class="s sub">2단계(새싹) 씨앗 2개 · 3단계(덩굴) 스킬 포인트 1 · 4단계(꽃) 마나석 1개 (모두에게)<br>완성: 물을 준 학생 500골드 · 기여 상위 5명은 1000골드와 마나석 1개 더</div></div>`;
   body.querySelectorAll('[data-pk]').forEach(b => b.onclick = () => pkAct(b.dataset.pk)); body.querySelectorAll('[data-pkm]').forEach(b => b.onclick = () => pkAct('f', b.dataset.pkm));
 }
