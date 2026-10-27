@@ -5600,8 +5600,8 @@ function renderRanch(){
       <div class="box px" style="padding:12px;display:flex;flex-direction:column;gap:8px">
         <div class="sec-h"><h3>${esc(c.name)}</h3><span style="display:flex;gap:4px"><span class="tag" style="${c.col.rare ? 'background:var(--gold);color:#2A1506' : ''}">${esc(c.col.n)}${c.col.rare ? ' ' : ''}</span><span class="tag">${crKind(c)}</span></span></div>
         <div class="meter"><span class="s">애정</span>${segs(c.love, LOVE_MAX, 'var(--pink)')}<span class="s b num">${c.love}</span></div>
-        <span class="s" style="color:var(--pink)">${T.n} · ${T.d}${tier < 4 ? ` <span class="sub">(다음 단계까지 ♥${(tier + 1) * 5 - c.love})</span>` : ''}</span>
-        <div class="s sub" style="display:flex;align-items:center;gap:4px">${ic(d.mat, 'transform:scale(.8);margin:-6px')}<span>${!adult ? `어른까지 돌봄 ${Math.min(c.care || 0, CR_NEED(c.k))} / ${CR_NEED(c.k)} · 어른이 되면 「${ITEM[d.mat]}」을 줘요` : !tier ? `애정 5부터 「${ITEM[d.mat]}」을 줘요` : prodLeft(c) > 0 ? `「${ITEM[d.mat]}」 생기기까지 <b data-cd="${c.prodAt + d.prod * 6e4}">${cdText(prodLeft(c))}</b>` : `「${ITEM[d.mat]}」이 생겼어요!`}</span></div>
+        <span class="s" style="color:var(--pink)">${T.n}</span>
+        <div class="s sub" style="display:flex;align-items:center;gap:4px">${ic(d.mat, 'transform:scale(.8);margin:-6px')}<span>${!adult ? `돌봄 ${Math.min(c.care || 0, CR_NEED(c.k))} / ${CR_NEED(c.k)}` : !tier ? '' : prodLeft(c) > 0 ? `「${ITEM[d.mat]}」 <b data-cd="${c.prodAt + d.prod * 6e4}">${cdText(prodLeft(c))}</b>` : `「${ITEM[d.mat]}」이 생겼어요!`}</span></div>
       </div>
       <div class="grid" style="grid-template-columns:repeat(3,1fr)">
         <button class="btn gold" id="feed" ${fedLeft ? 'disabled' : ''}>${fedLeft ? `<span data-cd="${c.fedAt + FEED_CD}">${cdText(fedLeft)}</span>` : `${d.food} 주기`}</button>
@@ -5611,10 +5611,10 @@ function renderRanch(){
       ${hint(ranchMsg, '')}
     </section>
     <section class="sec">
-      ${secH('짝꿍 맺기', `같은 종 어른 · 애정 ${BREED_LOVE} 이상 · 마력 ${BREED_MANA}`)}
-      ${!adult || c.love < BREED_LOVE ? `<div class="hint">${withJosa(esc(c.name), '이', '가')} 어른이 되고 애정 ${BREED_LOVE} 이상이어야 해요</div>`
+      ${secH('짝꿍 맺기')}
+      ${!adult || c.love < BREED_LOVE ? `<div class="hint">아직 맺을 수 없어요</div>`
         : (c.bredAt || 0) + BREED_CD > now ? `<div class="hint">${withJosa(esc(c.name), '은', '는')} 쉬는 중이에요 · <span data-cd="${c.bredAt + BREED_CD}">${cdText(c.bredAt + BREED_CD - now)}</span> 뒤에 다시</div>`
-        : !mates.length ? `<div class="hint">짝꿍이 될 ${d.kind}(어른, 애정 ${BREED_LOVE} 이상)가 없어요 · 친구 방에서 친구 생물과도 맺을 수 있어요</div>`
+        : !mates.length ? `<div class="hint">짝꿍이 될 ${d.kind}${josa(d.kind, '이', '가')} 없어요</div>`
         : `<div class="pal">${mates.map(([x, i]) => crCell(x, `data-mate="${i}"`, partner === i, .4)).join('')}</div>
           <button class="btn sm go" id="breed" ${partner !== null && me.eggs.length < HATCH_MAX && me.mana >= BREED_MANA ? '' : 'disabled'}>${me.eggs.length >= HATCH_MAX ? '부화실이 꽉 찼어요' : '짝꿍 맺고 알 받기'}</button>
           `}
@@ -5630,7 +5630,7 @@ function renderRanch(){
     eggPage = clampP(eggPage, CREATURES.length, 4);
     body = `<section class="sec">${secH('알 가게', `부화실 빈 둥지 ${HATCH_MAX - me.eggs.length}개`)}
       <div class="box px">${pageOf(CREATURES.map((x, k) => [x, k]), eggPage, 4).map(([x, k]) => `<div class="li" style="align-items:flex-start;padding-top:10px;padding-bottom:10px"><div style="width:44px;height:40px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0">${crSprite({ k, col: {}, bornAt: 0 }, .36)}</div>
-        <div class="main"><span class="t">${x.kind}의 알</span><span class="d" style="white-space:normal">${timeText(x.hatch * 6e4)} 뒤 부화 · 어른까지 최소 ${CR_HRS[k]}시간 · 「${ITEM[x.mat]}」</span></div>
+        <div class="main"><span class="t">${x.kind}의 알</span></div>
         <button class="btn sm ${me.coin >= x.egg && me.eggs.length < HATCH_MAX ? 'go' : ''}" data-buyegg="${k}" ${me.coin >= x.egg && me.eggs.length < HATCH_MAX ? '' : 'disabled'}>${ic('coin', 'transform:scale(.7);margin:0 -6px')}${x.egg}</button></div>`).join('')}</div>
       ${pager('eggpg', eggPage, CREATURES.length, 4)}
       ${hint(ranchMsg, '')}</section>`;
