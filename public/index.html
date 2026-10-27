@@ -6978,7 +6978,7 @@ function sgLoadDlg(id){
   const need = ['common', id].filter(k => k && !sgDlg[k] && !sgNo[k]); need.forEach(k => { sgNo[k] = 1; fetch(`data/events/stargazing/dialogue/${k}.json`).then(r => r.json()).then(d => { sgDlg[k] = d; sgSig = ''; }).catch(() => {}); });
 }
 function sgListen(){
-  if (solo || !F || !db || sgOffs.length) return; sgLoad();
+  if (solo || !F || !db || sgOffs.length) return; sgLoad(); sgPop.t0 = Date.now() + 4000;   // 들어오자마자는 다른 장면이 먼저 시작할 수 있어서 잠깐 기다려요
   const on = (p, fn) => sgOffs.push(F.onValue(F.ref(db, 'stargaze/' + p), s => { fn(s.val()); sgSync(); }));
   on('ctl', v => { sgCtl = v; }); on('join', v => { sgJoin = v || {}; }); on('lit', v => { sgLit = v || {}; }); on('cfg', v => { sgCfgV = v || {}; }); on('sched', v => { sgSched = v || {}; }); on('hist', v => { sgHist = v || {}; });
   if (sgAdmin()) setInterval(sgAdminTick, 500);
@@ -7041,7 +7041,7 @@ function sgAv(u, src){
 }
 function sgPop(){
   let p = $('#sgpop'); const M = sgModel(), c = sgCtl;
-  const show = !sgOn && !sgAdmin() && c && c.open && M && sgData && !sgPop.no;
+  const show = !sgOn && !sgAdmin() && c && c.open && M && sgData && !sgPop.no && !uiBusy() && Date.now() > sgPop.t0;
   if (!show){ if (p) p.remove(); return; }
   if (!p){ p = document.createElement('div'); p.id = 'sgpop'; document.body.appendChild(p); }
   const j = M.joined, can = c.ph === 'gather', msg = can ? (sgDlg.common && sgDlg.common.popup) || '스텔라가 같이 별을 보자고 해요!' : j ? '별 보는 밤이 이어지고 있어요' : '스텔라와 학생들이 별을 보고 있어요';
@@ -7049,7 +7049,8 @@ function sgPop(){
   p.innerHTML = `<b>${esc(msg)}</b><div class="frow"><button class="btn sm go" data-sg="${can && !j ? 'join' : 'view'}">${can && !j ? '같이 볼래요' : j ? '이어서 보기' : '구경하기'}</button><button class="btn sm" data-sg="later">나중에</button></div>`;
 }
 function sgSync(){
-  if (!sgData) return; if (sgCtl && sgCtl.c) sgLoadDlg(sgCtl.c);
+  if (!sgData) return; if (!sgSync.iv) sgSync.iv = setInterval(sgPop, 500);   // 장면이 끝나면 팝업이 떠요
+ if (sgCtl && sgCtl.c) sgLoadDlg(sgCtl.c);
   if (sgCtl && sgCtl.id !== sgSync.id){ sgSync.id = sgCtl.id; sgPop.no = false; sgSync.adm = false; }
   if (sgAdmin() && sgCtl && sgCtl.open && !sgOn && !sgSync.adm){ sgSync.adm = true; sgOpen(); }
   if (sgOn && !sgPrev && (!sgCtl || (!sgCtl.open && sgCtl.ph !== 'end'))) sgClose();
@@ -7198,7 +7199,11 @@ function tutNpcs(){
   return [{ id: 'tut:senior', name: TUT.name, map: TUT.map, x: TUT.x, y: TUT.y, r: 1, mark, wander: true, dir: 'down', av: tutAv() }];
 }
 var tutAuto = false;
-function tutGreet(){ if (tutAuto || !tutOn() || !me || !(!me.tut.g || me.tut.ok)) return; tutAuto = true; setTimeout(() => { if (tutOn() && !sheetOn && !evOn) tutTalk(); }, 1800); }
+const uiBusy = () => !!(evOn || sheetOn || mqArriving || fishing || cooking || lesson || (typeof sgOn !== 'undefined' && sgOn) || (World.cutBusy && World.cutBusy()) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || $('#fishui').classList.contains('on'));   // 장면·미니게임·창이 떠 있으면 다른 알림은 기다려요
+function tutGreet(){   // 들어오면 코니 선배가 먼저 말을 걸어요 (다른 장면이 끝날 때까지 기다렸다가 한 번만)
+  if (tutAuto || !tutOn() || !me || !(!me.tut.g || me.tut.ok)) return; tutAuto = true; let n = 0;
+  const iv = setInterval(() => { if (!tutOn() || ++n > 90) return clearInterval(iv); if (!uiBusy()){ clearInterval(iv); tutTalk(); } }, 1500);
+}
 function tutHook(k){
   if (!tutOn()) return; const T = me.tut; if (!T.g || T.ok || TUT.steps[T.s].k !== k) return;
   T.ok = 1; save(); syncNpcs(); setTimeout(() => toast('입문 과제 완료! 코니 선배에게 가 보세요'), 600);
@@ -7806,7 +7811,7 @@ function mqTick(){
 }
 let mqArriving = false;
 async function mqArrive(){
-  const s = mqState(), q = mqQuest(); if (!q || s.ph !== 'arrive' || mqArriving || evOn || sheetOn || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy())) return;
+  const s = mqState(), q = mqQuest(); if (!q || s.ph !== 'arrive' || mqArriving || evOn || sheetOn || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy())) return;
   mqArriving = true;
   try {
     const sc = await mqScene(q.id, 1, 'request'); if (!sc){ mqArriving = false; return; }
