@@ -717,7 +717,7 @@ button.cell:not(:disabled):active{background:var(--line)}
   </header>
   <div id="stage">
     <div id="world"><canvas id="cv"></canvas>
-      <div class="chips"><span id="sub"></span><button class="chip ev" id="evChip" hidden></button><button class="chip ev" id="gameChip" hidden></button><div class="chip" id="buffChip" hidden></div></div>
+      <div class="chips"><span id="sub"></span><button class="chip ev" id="gameChip" hidden></button><div class="chip" id="buffChip" hidden></div></div>
       <div id="fade"></div>
     </div>
     <div class="corner"><button id="tZoom" class="icbtn" aria-label="확대·축소">멀리</button><button id="tDay" hidden></button></div>
@@ -1203,7 +1203,6 @@ app.addEventListener('click', e => { if (e.target === app && sheetOn) closeSheet
 function closeSheet(){
   endLesson();
   clearInterval(examTick); exam = null; examOff?.(); examOff = null;
-  stopEvent();
   if (visitUid){ visitOff?.(); visitOff = null; visitUid = null; }
   sheetOn = false; sub = null; tab = 'home'; app.classList.remove('open'); hud(); navMark(); World.nearRefresh && World.nearRefresh();
 }
@@ -1216,8 +1215,6 @@ function hud(){
   $('#wallet').innerHTML = `<span class="ws" title="골드">${ic('coin')}<span class="num">${me.coin.toLocaleString()}</span></span><span class="ws" title="마력">${ic('mana')}<span class="num">${me.mana}</span></span><span class="ws" title="지력">${ic('book')}<span class="num">${me.know || 0}</span></span><i id="saveDot" class="${saveState}" title="저장 상태"></i>`;
   $('#hudNick').textContent = me.nick; $('#hudLv').textContent = `Lv ${levelOf().lv}`;
   const hf = $('#hudFace'), hav = avOf(me), hk = JSON.stringify(hav); if (World.Avatar.loaded && hf.dataset.k !== hk){ hf.innerHTML = headImg(hav, 'width:100%;height:100%;image-rendering:pixelated'); hf.dataset.k = hk; }   // 아바타가 바뀌면 다시 그려요 (부품이 덜 왔으면 headFix가 채워요)
-  const ev = eventAt(), live = ev && Date.now() < ev.end, c = $('#evChip');
-  c.hidden = !live; if (live) c.textContent = `${ev.E.name} 진행 중!`;
   if (typeof syncBuffs === 'function') syncBuffs();
 }
 // 사육장 우리: 12칸. 빈 우리 문 앞에서 「내 우리로 만들기」를 누르면 내 우리가 돼요 (pens/<번호> = 주인 uid). 혼자 모드는 1번 칸
@@ -4570,7 +4567,6 @@ World.onAct = (mapId, o, a) => {
   if (label === '물고기 팔기'){ fsTab = 'sell'; fsMsg = ''; return openSheet('home', 'fish'); }
   if (label === '쓰다듬기' && o.name === 'blackcat') return openSheet('ranch');
   if (mapId === 'pen'){ ranchTab = label === '부화실 보기' ? 'hatch' : 'pen'; ranchMsg = ''; return openSheet('ranch'); }
-  if (label === '소원 빌기'){ const ev = eventAt(); if (ev && Date.now() < ev.end) return openSheet('home', 'event'); }
   if (ACT_GO[label]) return openSheet(ACT_GO[label]);
   const f = FLAVOR[a[0]] || FLAVOR[label];
   return `<b>${a[0]}</b><br>${f ? f[Math.floor(Math.random() * f.length)] : '.......'}`;
@@ -4604,7 +4600,6 @@ document.addEventListener('keydown', e => {
   if (k === 'e'){ const b = $('#ctx [data-ctx="main"]'); if (b) b.click(); }
   if ((k === ' ' || k === 'enter') && $('#storyui.on #stnext')){ e.preventDefault(); $('#stnext').click(); }
 });
-$('#evChip').onclick = () => openSheet('home', 'event');
 addEventListener('resize', () => World.resize());
 
 function render(){
@@ -4623,7 +4618,6 @@ function render(){
   if (sub === 'cook') return renderCook();
   if (sub === 'npcgift') return renderNpcGift();
   if (sub === 'npcstory') return renderNpcStory();
-  if (sub === 'event') return renderEvent();
   if (sub === 'exam') return renderExam();
   if (sub === 'profile') return renderProfile();
   if (sub === 'bag') return renderBag();
@@ -5072,7 +5066,6 @@ function renderHome(){
       <div class="li"><div class="main"><span class="t">${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${BAND_KO[bandNow(d.getHours())]} · ${WX_KO[wx]}${isFullMoon() ? ' · 호박달 축제' : ''}</span></div></div>
       ${openEv.length ? `<div class="li"><div class="main"><span class="t">하트 이벤트 ${openEv.length}개</span><span class="d">${openEv.map(x => `${x.name} ♥${evCond(x.id).k}`).join(' · ')}</span></div><button class="btn sm" id="goJournal">일지</button></div>` : ''}
     </div>
-    <div id="evBanner" style="display:contents">${eventBannerHTML()}</div>
     <section class="sec">
       ${secH('오늘의 주문', `${left} / ${me.orders.length} 남음`)}
       <div class="box px">${me.orders.map((o, i) => {
@@ -5091,7 +5084,6 @@ function renderHome(){
     me.inv[o.p] -= o.n; me.coin += pay; o.done = true; save();
     toast(`${o.from}에게 ${withJosa(ITEM[o.p], '을', '를')} 전했어요. +${pay}G`); render();
   });
-  bindEventBanner();
 }
 
 // ===== 수업: 하루 10교시. 과목을 골라 라운드를 이어 가다가, 틀리면 그 교시가 끝나요 =====
@@ -6174,136 +6166,16 @@ function renderExamResult(){
 
 // ===== 학교 행사: 정해진 시간에 다 같이 모이는 실시간 이벤트 =====
 // days: 요일(0=일), 시각은 각자 기기 시계 기준. 끝난 뒤 60분 동안은 결과·보상을 볼 수 있어요.
-const EVENTS = {
-  dragon: { name:'드래곤의 방문', icon:'egg', days:[6,0], hour:20, min:0, dur:20,
-            blurb:'화난 드래곤에게 다 같이 물약을 바쳐 달래요' },
-};
-const AFTER_MIN = 60;
-const DRAGON_PTS = p => p === 'p_dragon' ? 6 : p === 'p_purple' ? 4 : POTION_INFO[p].time ? 3 : Math.max(1, Math.min(6, Math.round(POTION_INFO[p].pay / 60)));
-const dragonGoal = () => solo ? 8 : 40;
-// 미리보기: 주소 뒤에 ?event=dragon 을 붙이면 지금 바로 열려요 (기록은 test 칸에 따로 쌓여요)
-const PREVIEW = (() => { const k = new URLSearchParams(location.search).get('event'); return EVENTS[k] ? { id: k, start: Date.now() } : null; })();
 const ymd = d => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-function eventAt(now = Date.now()){
-  if (PREVIEW){ const E = EVENTS[PREVIEW.id]; return { id: PREVIEW.id, E, start: PREVIEW.start, end: PREVIEW.start + E.dur * 60000, key: PREVIEW.id + '-test' }; }
-  for (const [id, E] of Object.entries(EVENTS)){
-    for (const back of [0, 1]){   // 자정 근처를 위해 어제 것도 봐요
-      const d = new Date(now); d.setDate(d.getDate() - back); d.setHours(E.hour, E.min, 0, 0);
-      if (!E.days.includes(d.getDay())) continue;
-      const start = d.getTime(), end = start + E.dur * 60000;
-      if (now >= start && now < end + AFTER_MIN * 60000) return { id, E, start, end, key: `${id}-${ymd(d)}` };
-    }
-  }
-  return null;
-}
-function nextEvent(now = Date.now()){
-  let best = null;
-  for (const [id, E] of Object.entries(EVENTS)) for (let i = 0; i < 8; i++){
-    const d = new Date(now); d.setDate(d.getDate() + i); d.setHours(E.hour, E.min, 0, 0);
-    if (E.days.includes(d.getDay()) && d.getTime() > now){ if (!best || d.getTime() < best.start) best = { id, E, start: d.getTime() }; break; }
-  }
-  return best;
-}
-const untilText = ms => { const m = Math.max(0, Math.round(ms / 60000)); return m >= 60 ? `${Math.floor(m / 60)}시간 ${m % 60}분` : `${m}분`; };
-const whenText = t => { const d = new Date(t), today = ymd(new Date()) === ymd(d); return `${today ? '오늘' : ['일','월','화','수','목','금','토'][d.getDay()] + '요일'} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; };
-
-// 홈 맨 위 행사 띠
-function eventBannerHTML(){
-  const ev = eventAt(), now = Date.now();
-  if (ev){
-    const live = now < ev.end;
-    return `<button class="tile px" id="goEvent" style="width:100%;background:${live ? 'var(--gold)' : 'var(--card)'};box-shadow:inset 0 -4px 0 ${live ? 'var(--gold2)' : 'var(--line)'}">${ic(ev.E.icon)}
-      <span class="main" style="flex:1"><span class="b">${ev.E.name} ${live ? '진행 중!' : '끝났어요'}</span><span class="s" style="color:${live ? 'var(--ink)' : 'var(--sub)'}">${live ? `${untilText(ev.end - now)} 남음 · 눌러서 참가` : '결과와 보상을 확인해요'}</span></span><span class="b" style="font-size:24px">›</span></button>`;
-  }
-  const nx = nextEvent();
-  return nx ? `<div class="hint" style="display:flex;align-items:center;justify-content:center;gap:2px">${ic(nx.E.icon, 'transform:scale(.6);margin:-6px')}다음 행사 · ${nx.E.name} ${whenText(nx.start)} (${untilText(nx.start - now)} 뒤)</div>` : '';
-}
-function bindEventBanner(){ const b = $('#goEvent'); if (b) b.onclick = () => { sub = 'event'; render(); }; }
-// 느린 타이머 하나: 15초마다 HUD·행사 띠, 30초마다 NPC 호감도·위치, 60초마다 채집 지점·날짜 (화면이 안 보이면 쉬어요)
+// 느린 타이머 하나: 15초마다 HUD, 30초마다 NPC 호감도·위치, 60초마다 채집 지점·날짜 (화면이 안 보이면 쉬어요)
 let slowN = 0;
 setInterval(() => {
   if (!me || !document.body.classList.contains('inworld') || document.hidden) return; slowN++;
   hud();
-  const el = $('#evBanner'); if (el && !sub){ const html = eventBannerHTML(); if (el.dataset.h !== html){ el.dataset.h = html; el.innerHTML = html; bindEventBanner(); } }
   if (slowN % 2 === 0){ npcDecay(); syncNpcs(); }
   if (slowN % 4 === 0){ syncSpots(); dayTick(); }
   if (typeof mqTick === 'function') mqTick();
 }, 15000);
-
-// ----- 행사 화면 -----
-let evTimer = 0, evOff = null, evKey = null, evData = {}, evMsg = '', evPending = {};
-function stopEvent(){ clearInterval(evTimer); evTimer = 0; evOff?.(); evOff = null; evKey = null; }
-function leaveEvent(){ stopEvent(); closeSheet(); }
-function watchEvent(ev){
-  if (evKey === ev.key) return;
-  stopEvent(); evKey = ev.key; evData = {}; evMsg = ''; evPending = {};
-  if (solo){ try { evData = JSON.parse(localStorage.getItem('magion-ev-' + ev.key) || '{}'); } catch(e){} return; }
-  evOff = F.onValue(F.ref(db, `events/${ev.id}/${ev.key}`), s => { evData = s.val() || {}; if (sub === 'event') paintEvent(); });
-}
-const soloSaveEv = () => { if (solo) try { localStorage.setItem('magion-ev-' + evKey, JSON.stringify(evData)); } catch(e){} };
-function renderEvent(){
-  const ev = eventAt();
-  if (!ev){ toast('지금은 열린 행사가 없어요.'); return leaveEvent(); }
-  watchEvent(ev);
-  const overlay = `<div style="position:absolute;inset:0;background:rgba(20,10,50,.45);pointer-events:none"></div>
-    <div class="cr dragon" style="position:absolute;left:50%;top:52%;background-position:-1320px 0"></div><div id="dragonFx" style="position:absolute;inset:0;z-index:1;pointer-events:none"></div>`;
-  frame('island', ev.E.name, `<span id="evClock"></span>`, `
-    <section class="sec">
-      <div class="hint">${ev.E.blurb}</div>
-      <div id="evBody" class="sec"></div>
-    </section>
-    <button class="btn ghost keep" id="back" style="align-self:center">닫기</button>`, { overlay });
-  $('#back').onclick = leaveEvent;
-  paintEvent();
-  clearInterval(evTimer); evTimer = setInterval(() => { if (sub !== 'event') return stopEvent(); tickEvent(); }, 250);
-}
-function tickEvent(){
-  const ev = eventAt(); if (!ev) return leaveEvent();
-  const now = Date.now(), live = now < ev.end;
-  const c = $('#evClock'); if (c) c.textContent = live ? `${Math.floor((ev.end - now) / 60000)}:${String(Math.floor((ev.end - now) / 1000) % 60).padStart(2, '0')} 남음` : '행사가 끝났어요';
-  if (!live && $('#evBody')?.dataset.live === '1') paintEvent();
-}
-function paintEvent(){
-  const ev = eventAt(), body = $('#evBody'); if (!ev || !body) return;
-  const live = Date.now() < ev.end;
-
-  body.dataset.live = live ? '1' : '0';
-  const me_ = solo ? 'me' : uid;
-  const houseOf = id => id === me_ ? me.house : playersList[id]?.house;
-  const nickOf = id => id === me_ ? me.nick : playersList[id]?.nick || '친구';
-  const lookOf = id => id === me_ ? me : playersList[id];
-  {
-    const total = Object.values(evData).reduce((t, v) => t + (+v || 0), 0), goal = dragonGoal(), done = total >= goal;
-    const mine = +evData[me_] || 0;
-    me.evClaimed = me.evClaimed || {};
-    const claimed = me.evClaimed[ev.key];
-    const offer = POTIONS.filter(p => me.inv[p] > 0);
-    const fx = $('#dragonFx'); if (fx) fx.innerHTML = done ? '<div class="calm">♥</div>' : '';
-    const dr = app.querySelector('.dragon'); if (dr) dr.classList.toggle('calm-d', done);
-    body.innerHTML = `
-      <div class="box px" style="padding:10px 12px;display:flex;flex-direction:column;gap:8px">
-        <div class="sec-h"><h3>${done ? '드래곤이 진정했어요!' : '드래곤의 기분'}</h3><span class="meta">${total} / ${goal}</span></div>
-        <div style="height:14px;background:var(--ink);padding:2px"><div style="width:${Math.min(100, total / goal * 100)}%;height:100%;background:${done ? 'var(--mint)' : 'linear-gradient(90deg,#FF7A5A,#FFC24A)'}"></div></div>
-      </div>
-      ${hint(evMsg, done || live ? '' : '시간이 끝났어요')}
-      ${done ? (mine ? `<button class="btn go px" id="claim" ${claimed ? 'disabled' : ''}>${claimed ? '받았어요' : '보상 받기'}</button>` : '')
-        : live ? `<div class="pal">${offer.map(p => `<button class="cell" style="width:58px;min-height:58px" data-offer="${p}">${ic(p)}<span class="s">+${DRAGON_PTS(p)}</span><span class="n">${me.inv[p]}</span></button>`).join('') || '<span class="s sub">물약이 없어요</span>'}</div>` : ''}
-      ${Object.keys(evData).length ? `<div class="box px">${Object.entries(evData).sort((a, b) => b[1] - a[1]).map(([u, n]) => `<div class="li">${face(lookOf(u), 30)}<div class="main"><span class="t">${esc(nickOf(u))}</span><span class="d">${HOUSES[houseOf(u)]?.name || ''}</span></div><span class="b">${n}점</span></div>`).join('')}</div>` : ''}`;
-    body.querySelectorAll('[data-offer]').forEach(b => b.onclick = async () => {
-      const p = b.dataset.offer; if (me.inv[p] < 1 || Date.now() >= ev.end) return;
-      me.inv[p]--; save();
-      const nv = (+evData[me_] || 0) + DRAGON_PTS(p);
-      evMsg = `${withJosa(ITEM[p], '을', '를')} 바쳤어요. +${DRAGON_PTS(p)}점`;
-      if (solo){ evData[me_] = nv; soloSaveEv(); paintEvent(); }
-      else await F.set(F.ref(db, `events/dragon/${ev.key}/${uid}`), nv).catch(e => toast('바치지 못했어요: ' + (e.code || e.message)));
-    });
-    const cl = $('#claim'); if (cl) cl.onclick = () => {
-      if (me.evClaimed[ev.key]) return;
-      me.evClaimed[ev.key] = 1; me.inv.egg += 2; me.coin += 150; save();
-      toast('드래곤이 고맙다며 알 껍질을 두고 갔어요! +150G'); evMsg = ''; paintEvent();
-    };
-  }
-}
 
 // ===== 이벤트 「용의 알 지키기」 (실시간 디펜스) =====
 // 관리자 기기가 계산하고(td.js) 학생은 자리만 골라요. defense/ctl = { open, ph, w, win, hb } · defense/st = TD.snap · defense/pick/<uid> = { z, s, job, n }
