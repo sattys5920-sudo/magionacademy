@@ -1596,7 +1596,7 @@ function renderFish(){
     body = `${hint(fsMsg, '')}
       <div class="box px"><div class="li">${rodIc(L, 48)}<div class="main"><span class="t">${cur.name} <span class="tag">쓰는 중</span></span><span class="d">${cur.desc}</span></div></div></div>
       ${nx ? `${secH('다음 낚싯대')}<div class="box px"><div class="li">${rodIc(L + 1, 48)}<div class="main"><span class="t">${nx.name}</span><span class="d">${nx.desc}</span></div><button class="btn sm go" data-rod="${L + 1}" ${me.coin >= nx.price ? '' : 'disabled'}>${ic('coin', 'transform:scale(.7);margin:0 -6px')}${nx.price.toLocaleString()}</button></div></div>
-      <div class="hint">${me.coin >= nx.price ? '지금 바로 살 수 있어요!' : `${(nx.price - me.coin).toLocaleString()}G 더 모으면 살 수 있어요`}</div>` : '<div class="hint">가장 좋은 낚싯대예요! 보름 밤에 전설의 물고기를 노려 봐요</div>'}
+      ` : ''}
       <div class="rods">${RODS.map((r, i) => `<span class="${i <= L ? 'on' : ''}" title="${r.name}">${rodIc(i, 32)}</span>`).join('')}</div>`; }
   if (fsTab === 'today'){
     const fg = me.fg?.d === todayKey() ? me.fg : { got: [], extra: 0 }, total = 16 + (fg.extra || 0), left = total - fg.got.length, nowFish = FISH.filter(fishNow).length, onlyNow = FISH.filter(f => f.time === now).length;
@@ -3488,8 +3488,8 @@ function renderCook(){
   if (ckTab === 'eff'){
     const PER = 4; ckBagPg = pgClamp(ckBagPg, bag.length, PER);
     body = `${hint(ckMsg, '')}
-      ${secH('지금 효과', buffs.length ? '' : '없음')}${buffs.length ? `<div class="ckbuff">${buffs.map(([k, t]) => `<span>${k === 'all' ? '만찬' : BUFF_NAME[k]} ${Math.ceil((t - nowMs) / 6e4)}분</span>`).join('')}</div>` : '<div class="hint">요리를 먹으면 여기에 남은 시간이 보여요</div>'}
-      ${secH('내 요리', `${bag.reduce((t, k) => t + have(k), 0)}개`)}${bag.length ? `<div class="box px">${pgSlice(bag, ckBagPg, PER).map(k => { const d = DISH_INFO[k]; return `<div class="li">${ic(k)}<div class="main"><span class="t">${esc(ITEM[k])} ×${have(k)}</span><span class="d">${effText(d, d.best)}</span></div><button class="btn sm go" data-ckeat="${k}">먹기</button></div>`; }).join('')}</div>${pgNav('ckbpg', ckBagPg, bag.length, PER)}` : '<div class="hint">아직 만든 요리가 없어요. 요리하기에서 골라 봐요.</div>'}`;
+      ${secH('지금 효과', buffs.length ? '' : '없음')}${buffs.length ? `<div class="ckbuff">${buffs.map(([k, t]) => `<span>${k === 'all' ? '만찬' : BUFF_NAME[k]} ${Math.ceil((t - nowMs) / 6e4)}분</span>`).join('')}</div>` : ''}
+      ${secH('내 요리', `${bag.reduce((t, k) => t + have(k), 0)}개`)}${bag.length ? `<div class="box px">${pgSlice(bag, ckBagPg, PER).map(k => { const d = DISH_INFO[k]; return `<div class="li">${ic(k)}<div class="main"><span class="t">${esc(ITEM[k])} ×${have(k)}</span><span class="d">${effText(d, d.best)}</span></div><button class="btn sm go" data-ckeat="${k}">먹기</button></div>`; }).join('')}</div>${pgNav('ckbpg', ckBagPg, bag.length, PER)}` : '<div class="hint">만든 요리가 없어요</div>'}`;
   }
   frame(null, '요리', ckPot ? '과자 교실 · 솥 앞' : '요리책', `<div class="seg" style="grid-template-columns:repeat(3,1fr)">${tabs.map(([k, l]) => `<button data-ckt="${k}" class="${ckTab === k ? 'on' : ''}">${l}</button>`).join('')}</div><section class="sec">${body}</section>
     <div style="display:flex;gap:8px">${ckPot ? '' : goLab}${backBtn}</div>`);
@@ -3760,7 +3760,7 @@ function renderNpcGift(){
   const st = npcSt(n.id), h = hearts(n.id), done = st.g === todayKey(), P = npcProf(n.id), likes = P.likes || n.likes || [], dislikes = P.dislikes || n.dislikes || [];
   const items = [...POTIONS, ...MATS, ...CATCH, ...DISHES].filter(k => me.inv[k] > 0);
   frame(null, `${esc(n.name)}에게 선물`, `${heartBar(h)} · 하루 한 번`, `${hint(npcMsg, '')}
-    ${h >= 2 ? `<div class="box px" style="padding:8px">좋아하는 것: ${likes.map(k => `${ic(k, 'transform:scale(.7);margin:-6px')} ${esc(ITEM[k] || k)}`).join(' · ')}</div>` : '<div class="hint">♥2가 되면 좋아하는 걸 알려 줘요</div>'}
+    ${h >= 2 ? `<div class="box px" style="padding:8px">좋아하는 것: ${likes.map(k => `${ic(k, 'transform:scale(.7);margin:-6px')} ${esc(ITEM[k] || k)}`).join(' · ')}</div>` : ''}
     <div class="pal">${items.map(k => `<button class="cell" style="width:52px;min-height:52px;padding:0" data-ngive="${k}" ${done ? 'disabled' : ''}>${ic(k)}<span class="n">${me.inv[k]}</span></button>`).join('') || '<div class="hint">줄 수 있는 물건이 없어요</div>'}</div>${backBtn}`);
   $('#back').onclick = closeSheet;
   on('[data-ngive]', b => { const k = b.dataset.ngive; if (done || !(me.inv[k] > 0)) return; me.inv[k]--; st.g = todayKey();
@@ -4964,7 +4964,7 @@ function jnHeartHTML(){
   if (missing.length) Promise.all(missing.map(([id, k]) => npcEvent(id, k))).then(() => { if (sheetOn && sub === 'journal' && jnTab === 'heart') renderJournal(); });
   const more = hints.length - 6;
   return `<section class="sec">${secH('오늘 열린 이야기', rows.length ? `${rows.length}곳` : missing.length ? '불러오는 중' : '지금은 없어요')}
-    ${rows.length ? `<div class="box px">${rows.join('')}</div>` : `<div class="hint">${missing.length ? '이벤트를 불러오고 있어요.......' : '지금 시간·날씨에 열린 하트 이벤트가 없어요. 아래 힌트를 봐요.'}</div>`}
+    ${rows.length ? `<div class="box px">${rows.join('')}</div>` : `<div class="hint">${missing.length ? '이벤트를 불러오고 있어요.......' : '열린 이벤트가 없어요'}</div>`}
     ${hints.length ? `<div class="jn-hints">${hints.slice(0, 6).map(h => `<span>· ${h}</span>`).join('')}${more > 0 ? `<span class="sub">· 그 밖에 ${more}명</span>` : ''}</div>` : ''}</section>`;
 }
 function renderJournal(){
@@ -5501,7 +5501,6 @@ function renderGreen(){
         <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><span class="s b">${P.seed} 씨앗</span><span class="s sub">${timeText(P.mins * 6e4)} 자라서 「${P.mat}」 ${P.yield}개 · 씨앗 값 ${P.price ? P.price + 'G' : '무료'}</span></div>
         <button class="btn sm go" data-gtab="plot">심으러</button>
       </div>
-      ${hint('', `지식이 오르면 새 씨앗이 열려요 · 심을 수 있는 씨앗 ${SEED_LIST.filter(x => x.know <= know).length} / ${SEED_LIST.length}종`)}
     </section>`;
   }
   frame('green', '독초 온실', ready ? `수확할 칸 ${ready}개` : `심을 수 있는 씨앗 ${SEED_LIST.filter(x => x.know <= know).length} / ${SEED_LIST.length}종`, segRow('gtab', greenTab, tabs) + body);
@@ -5754,7 +5753,7 @@ function renderDorm(){
     </section>
     <section class="sec">
       ${secH('놓은 가구', placed.length ? '눌러서 가방에 넣어요' : '')}
-      ${placed.length ? `<div class="grid" style="grid-template-columns:repeat(4,1fr)">${pageOf(placed, 0, 12).map(([fid, n]) => `<button class="cell" data-unplace="${fid}" style="min-height:84px">${furnPic(fid, 40)}<span class="s">${FURN_BY[fid].name}</span>${n > 1 ? `<span class="n">${n}</span>` : ''}</button>`).join('')}</div>${placed.length > 12 ? `<div class="hint">그 밖에 ${placed.length - 12}종 더 · 방에서 직접 눌러 보세요</div>` : ''}`
+      ${placed.length ? `<div class="grid" style="grid-template-columns:repeat(4,1fr)">${pageOf(placed, 0, 12).map(([fid, n]) => `<button class="cell" data-unplace="${fid}" style="min-height:84px">${furnPic(fid, 40)}<span class="s">${FURN_BY[fid].name}</span>${n > 1 ? `<span class="n">${n}</span>` : ''}</button>`).join('')}</div>${placed.length > 12 ? `<div class="hint">그 밖에 ${placed.length - 12}종 더</div>` : ''}`
         : '<div class="hint">놓은 가구가 없어요</div>'}
     </section>`;
   } else if (dormTab === 'bag'){
@@ -5775,7 +5774,7 @@ function renderDorm(){
   } else {
     body = `<section class="sec">
       ${secH('내 방명록', '손님 1명당 내일 마력 +3')}
-      ${guest.length ? `<div class="box px">${pageOf(guest, guestPage, 5).map(([id, g]) => guestRow(id, g, true)).join('')}</div>${pager('guestpg', guestPage, guest.length, 5)}` : '<div class="hint">아직 다녀간 친구가 없어요. 시장에서 친구 이름을 누르면 그 친구 방에 놀러 갈 수 있어요.</div>'}
+      ${guest.length ? `<div class="box px">${pageOf(guest, guestPage, 5).map(([id, g]) => guestRow(id, g, true)).join('')}</div>${pager('guestpg', guestPage, guest.length, 5)}` : '<div class="hint">아직 다녀간 친구가 없어요</div>'}
     </section>`;
   }
   frame('dorm', `${H.name} ${roomNo(me.house, uid || me.nick)}호`, `아늑함 ${cozy} · 놓은 가구 ${me.room.length}개`, segRow('dtab', dormTab, tabs) + body, { tint: H.col });
@@ -5935,7 +5934,7 @@ function renderCommon(){
     </section>`;
   } else {
     body = `<section class="sec">${secH('많이 도와준 친구', who.length ? '재료를 넣은 수' : '')}
-      ${who.length ? `<div class="box px">${who.map((w, i) => `<div class="li"><span class="b num" style="width:22px">${i + 1}</span><div class="main"><span class="t">${esc(w.nick)}</span></div><span class="tag num">${w.n}</span></div>`).join('')}</div>` : '<div class="hint">아직 재료를 넣은 친구가 없어요. 첫 번째가 되어 보세요!</div>'}
+      ${who.length ? `<div class="box px">${who.map((w, i) => `<div class="li"><span class="b num" style="width:22px">${i + 1}</span><div class="main"><span class="t">${esc(w.nick)}</span></div><span class="tag num">${w.n}</span></div>`).join('')}</div>` : '<div class="hint">아직 없어요</div>'}
     </section>`;
   }
   frame('dorm', `${H.name} 휴게실`, `${st}단계 · ${HALL_NAMES[h][st - 1]}`, segRow('ctab', commonTab, tabs) + body, { tint: H.col });
@@ -6025,7 +6024,7 @@ function renderVisit(){
     visitPage = clampP(visitPage, guest.length, 3);
     body = `<section class="sec">
       ${secH('방명록 남기기', wrote ? '오늘은 남겼어요' : '하루 한 번 · 자정에 갱신')}
-      ${wrote ? '<div class="hint">방명록은 하루에 한 번만 남길 수 있어요. 자정이 지나면 다시 남길 수 있어요</div>' : `
+      ${wrote ? '<div class="hint">오늘은 이미 남겼어요</div>' : `
       <div class="box px" style="padding:10px;display:flex;flex-direction:column;gap:8px">
         <input id="gtext" maxlength="40" placeholder="예: 방 진짜 아늑하다!" class="mkin" style="width:100%">
         <span class="s sub">선물</span>
@@ -6035,7 +6034,7 @@ function renderVisit(){
     </section>
     <section class="sec">
       ${secH('방명록', guest.length + '개')}
-      ${guest.length ? `<div class="box px">${pageOf(guest, visitPage, 3).map(([id, g]) => guestRow(id, g, false)).join('')}</div>${pager('vpg', visitPage, guest.length, 3)}` : '<div class="hint">첫 번째 손님이 되어 주세요!</div>'}
+      ${guest.length ? `<div class="box px">${pageOf(guest, visitPage, 3).map(([id, g]) => guestRow(id, g, false)).join('')}</div>${pager('vpg', visitPage, guest.length, 3)}` : '<div class="hint">아직 없어요</div>'}
     </section>`;
   }
   frame('dorm', `${esc(p.nick)}의 방`, `${H.name} ${roomNo(p.house, visitUid)}호 · ${onlineList[visitUid] ? '접속 중' : '외출 중'}`, segRow('vtab', visitTab, tabs) + body, { tint: H.col });
@@ -6121,7 +6120,7 @@ function renderExam(){
         const shown = exam.picked !== null, isA = c === Qn.a, mine = exam.picked === j;
         return `<button class="btn" data-ans="${j}" ${shown ? 'disabled' : ''} style="justify-content:flex-start;text-align:left;white-space:normal;min-height:48px;padding:6px 12px;${shown && isA ? 'background:var(--mint);opacity:1' : shown && mine ? 'background:#FFD0DA;opacity:1' : ''}"><span class="b" style="color:var(--sub);width:20px;flex-shrink:0">${'ABCD'[j]}</span><span style="font-family:'G11',monospace">${c}</span></button>`;
       }).join('')}</div>
-      <div class="hint">맞힌 문제 ${exam.right}개 · 한 문제에 ${EXAM_SEC}초</div>
+      <div class="hint">맞힌 문제 ${exam.right}개</div>
     </section>`);
   on('[data-ans]', b => answer(+b.dataset.ans));
   if (exam.picked === null){
@@ -6635,7 +6634,7 @@ function pzChests(){
   const el = document.createElement('div'); el.id = 'pzch'; $('#shell').appendChild(el); let busy = false;
   const mineIdx = () => { const k = Object.keys(pzChest).find(i => pzChest[i] === myId()); return k === undefined ? -1 : +k; };
   const draw = () => { if (!document.getElementById('pzch')) return; const my = mineIdx(), left = rew.filter((_, i) => pzChest[i] === undefined).length;
-    el.innerHTML = `<div class="pzstage ship"><img class="pzlake" src="art/ev2_lake.png"></div><div class="pzgrid">${rew.map((r, i) => { const who = pzChest[i], open = who !== undefined; return `<button class="pzchest ${open ? (i === my ? 'sel open' : 'open dim') : ''}" data-ch="${i}"><i style="background-position:${open ? 100 : 0}% 0"></i>${open ? `<span>${i === my ? pzRewText(r) : `${esc(pzNick(who))}님이<br>가져갔어요`}</span>` : ''}</button>`; }).join('')}</div><div class="pzbox"><div class="pzt2">${my >= 0 ? `<b>${pzRewText(rew[my])}</b>을(를) 받았어요!<br><span class="s sub">상자는 한 사람이 하나씩만 가져갈 수 있어요.</span>` : left ? `상자를 하나 골라 주세요. 한 번만 고를 수 있고, 다른 친구가 고른 상자는 고를 수 없어요! (남은 상자 ${left}개)` : '상자가 모두 없어졌어요. 다음 이벤트에서 만나요!'}</div>${my >= 0 || !left ? '<button class="btn sm go" id="pzdone">닫기</button>' : ''}</div>`;
+    el.innerHTML = `<div class="pzstage ship"><img class="pzlake" src="art/ev2_lake.png"></div><div class="pzgrid">${rew.map((r, i) => { const who = pzChest[i], open = who !== undefined; return `<button class="pzchest ${open ? (i === my ? 'sel open' : 'open dim') : ''}" data-ch="${i}"><i style="background-position:${open ? 100 : 0}% 0"></i>${open ? `<span>${i === my ? pzRewText(r) : `${esc(pzNick(who))}님이<br>가져갔어요`}</span>` : ''}</button>`; }).join('')}</div><div class="pzbox"><div class="pzt2">${my >= 0 ? `<b>${pzRewText(rew[my])}</b>을(를) 받았어요!` : left ? `상자를 하나 골라 주세요. 한 번만 고를 수 있고, 다른 친구가 고른 상자는 고를 수 없어요! (남은 상자 ${left}개)` : '상자가 모두 없어졌어요. 다음 이벤트에서 만나요!'}</div>${my >= 0 || !left ? '<button class="btn sm go" id="pzdone">닫기</button>' : ''}</div>`;
     if (my < 0) el.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => take(+b.dataset.ch)); const d = $('#pzdone'); if (d) d.onclick = () => { el.remove(); pzUi(); }; };
   const take = async i => { if (busy || mineIdx() >= 0 || pzChest[i] !== undefined) return; busy = true; const r = rew[i];
     const res = await GDB.tx('puzzle/chest/' + i, cur => cur ? undefined : myId()).catch(() => ({ committed: false })); busy = false;
@@ -7429,7 +7428,6 @@ function avatarUI(av){
       ${rows.map(([label, cat, key, pal]) => `<section class="sec">${secH(label, cat ? cur(cat) : `${av[key] + 1} / ${M.colors[pal].length}`)}
           ${cat ? `<div class="avopts">${list(cat).map(([p, i]) => `<button class="avo ${av[cat] === i ? 'on' : ''}" data-avp="${cat},${i}"><img src="${avThumb({ ...av, [cat]: i }, !!AV_HEADTHUMB[cat])}" alt=""><span class="s">${p.n}</span></button>`).join('')}</div>` : ''}
           ${key === 'topC' ? (casualOn(av) ? `<div class="s" style="margin:6px 0 2px">사복·잠옷 색</div>${swatch(pal, key)}` : '') : key ? swatch(pal, key) : ''}</section>`).join('')}
-      ${avTab === 'uni' || avTab === 'acc' ? `<div class="hint">넥타이와 망토 안감은 기숙사 색이에요${av.house ? ` · ${HOUSES[av.house].name}` : ''}</div>` : ''}
       <button class="btn sm" id="avRand" style="align-self:center">아무거나</button>
     </div>`;
 }
@@ -7501,7 +7499,7 @@ function renderAvatar(){
       <section class="sec">${secH(label, cur)}
         ${mode === 'part' ? `<div class="avopts pg">${pg.items.map(([p, i]) => `<button class="avo ${av[cat] === i ? 'on' : ''}" data-avp="${cat},${i}"><img src="${avThumb({ ...av, [cat]: i }, !!AV_HEADTHUMB[cat])}" alt=""><span class="s">${p.n}</span></button>`).join('')}</div>` : avSwatch(pal, key, av[key], 'avc')}
         ${cat ? avPager(pg.p, pg.pages, 'avpg', mode, key ? 'avm' : null) : ''}
-        ${cat === 'neck' || cat === 'cape' ? `<div class="hint">넥타이와 망토 안감은 기숙사 색이에요${av.house ? ` · ${HOUSES[av.house].name}` : ''}</div>` : key0 === 'topC' && !key ? '<div class="hint">교복 색은 정해져 있어요 · 사복·잠옷은 색을 고를 수 있어요</div>' : ''}
+        
       </section>
       <div class="avbtns"><button class="btn sm" id="avRand">아무거나</button></div>
       <div class="avbtns"><button class="btn px" id="avCancel">그만두기</button><button class="btn go px" id="avSave" style="flex:2">이 모습으로!</button></div>
