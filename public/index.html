@@ -1108,9 +1108,18 @@ function makeOrders(day, hints, found){
 // 예전에 시작할 때 받던 지급품(생물 4마리·재료·가구). 손 안 댄 것은 한 번 자동으로 거두고, 관리자는 원하는 학생에게서 뺄 수 있어요
 const STARTER_K = [0, 4, 7, 2], STARTER_INV = { herb: 6, drop: 4, mush: 2, wool: 1, scale: 1 }, STARTER_FB = { candle: 1, cushions: 1, owldoll: 1 };
 const crPristine = c => c && STARTER_K.includes(c.k) && c.love === 3 && !c.fedAt && !c.petAt && !c.bredAt && CREATURES[c.k] && c.name === CREATURES[c.k].name;
+// 처음에 잘못 준 시작 생물 4마리 찾기: 가입하는 순간 「다 자란 채로」 한꺼번에 만들어져서, 태어난 시각 + 자라는 시간이 넷 다 같아요 (알에서 부화한 아이는 그때그때 달라요)
+function starterCrIds(cr){
+  const c = (cr || []).filter(x => x && STARTER_K.includes(x.k) && CREATURES[x.k]), T = x => (x.bornAt || 0) + CREATURES[x.k].grow * 6e4;
+  let best = [];
+  c.forEach(a => { const g = c.filter(b => Math.abs(T(b) - T(a)) < 10000), one = [...new Map(g.map(b => [b.k, b])).values()]; if (one.length > best.length) best = one; });
+  if (best.length >= 2) return new Set(best.map(x => x.id));
+  return new Set(c.filter(x => x.name === CREATURES[x.k].name).map(x => x.id));   // 하나만 남았을 때: 기본 이름 (부화한 아이는 다른 이름을 받아요)
+}
 function starterDiff(p, force){   // force: 관리자(쓰고 남은 만큼만 빼요) · 아니면 하나도 안 쓴 경우에만
   const cr = (p.cr || []).slice(), inv = { ...(p.inv || {}) }, fb = { ...(p.fbag || {}) }; let n = 0;
-  STARTER_K.forEach(k => { const i = cr.findIndex(c => crPristine(c) && c.k === k); if (i >= 0){ cr.splice(i, 1); n++; } });
+  if (force){ const ids = starterCrIds(cr); for (let i = cr.length - 1; i >= 0; i--) if (ids.has(cr[i].id)){ cr.splice(i, 1); n++; } }   // 관리자: 키웠어도 시작 생물이면 거둬요
+  else STARTER_K.forEach(k => { const i = cr.findIndex(c => crPristine(c) && c.k === k); if (i >= 0){ cr.splice(i, 1); n++; } });
   const invSame = Object.keys(inv).every(k => (+inv[k] || 0) === (STARTER_INV[k] || 0)), fbSame = Object.keys(fb).every(k => (+fb[k] || 0) === (STARTER_FB[k] || 0)) && !(p.room || []).length;
   if (force || invSame) Object.entries(STARTER_INV).forEach(([k, v]) => { const had = +inv[k] || 0, now = Math.max(0, had - v); if (now !== had){ inv[k] = now; n++; } });
   if (force || fbSame) Object.entries(STARTER_FB).forEach(([k, v]) => { const had = +fb[k] || 0, now = Math.max(0, had - v); if (now !== had){ fb[k] = now; n++; } });
@@ -3232,13 +3241,13 @@ function adminRender(){
   }
   if (AD.tab === 'students'){
     const sum = k => ids.reduce((t, id) => t + (+P[id][k] || 0), 0);
-    body = `<div class="adsum"><button class="btn sm" data-adstripall="1">전체 학생 지급품 회수</button><button class="btn sm" data-adcrall="1">전체 학생 생물 회수</button><span>골드 합계 <b>${sum('coin').toLocaleString()}</b></span><span>마력 합계 <b>${sum('mana')}</b></span><span>평균 지식 <b>${ids.length ? Math.round(sum('know') / ids.length) : 0}</b></span></div>
+    body = `<div class="adsum"><button class="btn sm" data-adstripall="1">전체 학생 지급품 회수</button><button class="btn sm" data-adcrall="1">전체 학생 시작 생물 회수</button><span>골드 합계 <b>${sum('coin').toLocaleString()}</b></span><span>마력 합계 <b>${sum('mana')}</b></span><span>평균 지식 <b>${ids.length ? Math.round(sum('know') / ids.length) : 0}</b></span></div>
       <div class="adsum">${Object.entries(XJ).map(([k, j]) => { const n = ids.filter(id => P[id].ex?.job === k).length; return `<span>${j.n} <b>${n}</b></span>`; }).join('')}<span>미선택 <b>${ids.filter(id => !XJ[P[id].ex?.job]).length}</b></span></div>
       <div class="adtbl"><div class="h"><span>학생</span><span>기숙사</span><span>직업</span><span>골드</span><span>마력</span><span>지식</span><span>날</span><span>물고기</span><span>채집</span><span>낚싯대</span><span>옷</span><span>생물</span><span>상태</span><span>관리</span></div>
       ${ids.sort((a, b) => (P[b].coin || 0) - (P[a].coin || 0)).map(id => { const p = P[id], d = p.fdex || {};
         return `<div><span><b>${esc(p.nick)}</b></span><span><button class="btn sm" data-adhouse="${id}" style="color:${HOUSES[p.house]?.col || '#888'};font-weight:700">${HOUSES[p.house]?.name || '정하기'} ▾</button></span><span>${XJ[p.ex?.job]?.n || '-'}</span><span>${(p.coin || 0).toLocaleString()}</span><span>${p.mana || 0}</span><span>${p.know || 0}</span><span>${p.day || 1}</span>
           <span>${FISH.filter(f => d[f.id]).length}/${FISH.length}</span><span>${FORAGE.filter(f => d[f.id]).length}/50</span><span>${RODS[p.rod || 0]?.name.split(' ')[0] || '-'}</span><span>${Object.keys(p.closet || {}).length}</span><span>${(p.cr || []).length}</span>
-          <span>${O[id] ? `${adPlace(O[id].m)}` : p.rest ? '쉬는 중' : '외출'}</span><span><button class="btn sm" data-adstrip="${id}">지급품 회수</button> <button class="btn sm" data-adcr="${id}">생물 회수 ${(p.cr || []).length}</button> <button class="btn sm" data-adreset="${id}">진행 리셋</button> <button class="btn sm" data-addel="${id}">가입 삭제</button></span></div>`; }).join('')}</div>`;
+          <span>${O[id] ? `${adPlace(O[id].m)}` : p.rest ? '쉬는 중' : '외출'}</span><span><button class="btn sm" data-adstrip="${id}">지급품 회수</button> <button class="btn sm" data-adcr="${id}" ${starterCrIds(p.cr).size ? '' : 'disabled'}>시작 생물 회수 ${starterCrIds(p.cr).size}</button> <button class="btn sm" data-adreset="${id}">진행 리셋</button> <button class="btn sm" data-addel="${id}">가입 삭제</button></span></div>`; }).join('')}</div>`;
   }
   if (AD.tab === 'join'){
     const pend = Object.entries(AD.pending || {}).sort((a, b) => a[1].at - b[1].at);
@@ -3314,12 +3323,12 @@ function adminRender(){
     if (!confirm(`${tot}명에게서 시작 때 받은 생물·재료·가구를 거둘까요? (접속 중이면 화면이 새로 불러와져요)`)) return;
     try { await F.update(F.ref(db, '/'), ups); toast(`${tot}명에게서 거뒀어요`); } catch(e){ alert('실패했어요: ' + (e.code || e.message)); } };
   root.querySelectorAll('[data-adstrip]').forEach(b => b.onclick = () => adStrip([b.dataset.adstrip]));
-  const adCrAll = async ids2 => {   // 사육장의 생물을 모두 거둬요 (부화실의 알은 그대로)
-    const L = ids2.filter(id => (AD.players[id]?.cr || []).length); if (!L.length) return alert('거둘 생물이 없어요');
-    const n = L.reduce((a, id) => a + AD.players[id].cr.length, 0);
-    if (!confirm(`${L.length === 1 ? (AD.players[L[0]].nick || '학생') + '의' : L.length + '명의'} 사육장 생물 ${n}마리를 모두 거둘까요? 되돌릴 수 없어요. (접속 중이면 화면이 새로 불러와져요)`)) return;
-    const ups = {}; L.forEach(id => { ups['players/' + id + '/cr'] = null; ups['players/' + id + '/rv'] = (AD.players[id].rv || 0) + 1000; ups['adm/reset/' + id] = Date.now(); });   // 번호를 크게 올려서, 학생 화면이 옛 상태로 덮어쓰지 못하게 해요
-    try { await F.update(F.ref(db, '/'), ups); toast(`생물 ${n}마리를 거뒀어요`); } catch(e){ alert('실패했어요: ' + (e.code || e.message)); } };
+  const adCrAll = async ids2 => {   // 처음에 잘못 준 시작 생물만 거둬요 (알에서 부화한 아이·부화실의 알은 그대로)
+    const L = ids2.map(id => [id, starterCrIds(AD.players[id]?.cr)]).filter(([, st]) => st.size); if (!L.length) return alert('거둘 시작 생물이 없어요');
+    const n = L.reduce((a, [, st]) => a + st.size, 0);
+    if (!confirm(`${L.length === 1 ? (AD.players[L[0][0]].nick || '학생') + '의' : L.length + '명의'} 시작 생물 ${n}마리를 거둘까요? 알에서 부화한 아이는 그대로 둬요. (접속 중이면 화면이 새로 불러와져요)`)) return;
+    const ups = {}; L.forEach(([id, st]) => { const keep = (AD.players[id].cr || []).filter(c => !st.has(c.id)); ups['players/' + id + '/cr'] = keep.length ? keep : null; ups['players/' + id + '/rv'] = (AD.players[id].rv || 0) + 1000; ups['adm/reset/' + id] = Date.now(); });
+    try { await F.update(F.ref(db, '/'), ups); toast(`시작 생물 ${n}마리를 거뒀어요`); } catch(e){ alert('실패했어요: ' + (e.code || e.message)); } };
   root.querySelectorAll('[data-adcr]').forEach(b => b.onclick = () => adCrAll([b.dataset.adcr]));
   root.querySelectorAll('[data-adcrall]').forEach(b => b.onclick = () => adCrAll(Object.keys(AD.players)));
   root.querySelectorAll('[data-adstripall]').forEach(b => b.onclick = () => adStrip(Object.keys(AD.players)));
