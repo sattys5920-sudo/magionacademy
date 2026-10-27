@@ -6284,11 +6284,10 @@ function paintEvent(){
       <div class="box px" style="padding:10px 12px;display:flex;flex-direction:column;gap:8px">
         <div class="sec-h"><h3>${done ? '드래곤이 진정했어요!' : '드래곤의 기분'}</h3><span class="meta">${total} / ${goal}</span></div>
         <div style="height:14px;background:var(--ink);padding:2px"><div style="width:${Math.min(100, total / goal * 100)}%;height:100%;background:${done ? 'var(--mint)' : 'linear-gradient(90deg,#FF7A5A,#FFC24A)'}"></div></div>
-        <span class="s sub">비싼 물약일수록 점수가 높아요 (1~6점) · 시간대 물약 3점 · 반짝 4점 · 용기의 물약 6점</span>
       </div>
-      ${hint(evMsg, done ? '' : live ? '가방의 물약을 눌러 드래곤에게 바쳐요' : '시간 안에 달래지 못했어요. 다음 주말에 다시 와요.')}
-      ${done ? (mine ? `<button class="btn go px" id="claim" ${claimed ? 'disabled' : ''}>${claimed ? '보상을 받았어요' : '보상 받기 · 용 알 껍질 ×2 + 150G'}</button>` : '<div class="hint">물약을 바친 학생만 보상을 받아요</div>')
-        : live ? `<div class="pal">${offer.map(p => `<button class="cell" style="width:58px;min-height:58px" data-offer="${p}">${ic(p)}<span class="s">+${DRAGON_PTS(p)}</span><span class="n">${me.inv[p]}</span></button>`).join('') || '<span class="s sub">가방에 물약이 없어요. 연구실에서 끓여 오세요!</span>'}</div>` : ''}
+      ${hint(evMsg, done || live ? '' : '시간이 끝났어요')}
+      ${done ? (mine ? `<button class="btn go px" id="claim" ${claimed ? 'disabled' : ''}>${claimed ? '받았어요' : '보상 받기'}</button>` : '')
+        : live ? `<div class="pal">${offer.map(p => `<button class="cell" style="width:58px;min-height:58px" data-offer="${p}">${ic(p)}<span class="s">+${DRAGON_PTS(p)}</span><span class="n">${me.inv[p]}</span></button>`).join('') || '<span class="s sub">물약이 없어요</span>'}</div>` : ''}
       ${Object.keys(evData).length ? `<div class="box px">${Object.entries(evData).sort((a, b) => b[1] - a[1]).map(([u, n]) => `<div class="li">${face(lookOf(u), 30)}<div class="main"><span class="t">${esc(nickOf(u))}</span><span class="d">${HOUSES[houseOf(u)]?.name || ''}</span></div><span class="b">${n}점</span></div>`).join('')}</div>` : ''}`;
     body.querySelectorAll('[data-offer]').forEach(b => b.onclick = async () => {
       const p = b.dataset.offer; if (me.inv[p] < 1 || Date.now() >= ev.end) return;
@@ -6348,7 +6347,7 @@ function dfUi(){
   $('#dfinfo').textContent = `웨이브 ${w} / 15 · 알 ${eggs.filter(e => e > 0).length}개${mp ? ` · ${mp[3]}G` : ''}`;
   const stale = dfCtl && dfCtl.hb && Date.now() - dfCtl.hb > 12000 && ph !== 'over';
   const plN = st ? Object.keys(st.p).length : 0, rdN = st ? Object.values(st.p).filter(q => q[8]).length : 0;
-  let txt = ph === 'ready' ? `점선 원을 눌러 자리를 정하고 「시작」! (준비 ${rdN}/${plN})` : ph === 'wave' ? `웨이브 ${w} 진행 중 · 남은 몬스터 ${st ? st.m.length + st.left : '-'}마리` : ph === 'rest' ? `자리를 바꾸고 「시작」! (준비 ${rdN}/${plN})` : ph === 'over' ? (st && st.win ? '알을 모두 지켜 냈어요!' : '알이 모두 깨졌어요.......') : '';
+  let txt = ph === 'ready' ? `준비 ${rdN} / ${plN}` : ph === 'wave' ? `남은 몬스터 ${st ? st.m.length + st.left : '-'}마리` : ph === 'rest' ? `준비 ${rdN} / ${plN}` : ph === 'over' ? (st && st.win ? '알을 모두 지켜 냈어요!' : '알이 모두 깨졌어요.......') : '';
   if (stale) txt = '진행이 잠시 멈췄어요. 잠깐만 기다려 주세요.';
   const job = dfJob(), jn = job && XJ[job] ? XJ[job].n : '아직 없어요 (탐사에서 먼저 골라요)';
   const upgB = mp ? `<button class="btn sm" id="dfupb">올리기${[0, 1].some(i => ['pow', 'rng', 'cd'].some(k => { const c = TD.upCost(dfPlayerOf(mp), i, k); return c != null && c <= mp[3]; })) ? ' ●' : ''}</button>` : '';
