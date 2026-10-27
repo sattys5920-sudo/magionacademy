@@ -1086,7 +1086,7 @@ function freshPlayer(nick, look, house, av){
     inv:{ herb:6, drop:4, mush:2, mana:0, wool:1, scale:1, uhair:0, egg:0, p_red:0, p_green:0, p_blue:0, p_purple:0 },
     found:[], hints:['p_red'],
     plots:[{k:'herb',at:Date.now() - 6e5,w:false},{k:'drop',at:Date.now(),w:false}],
-    cr:[0, 4, 7, 2].map(k => ({ ...newCreature(k, null, CREATURES[k].name, true), love: 3 })), eggs:[],
+    cr:[], eggs:[],   // 사육장은 비어서 시작해요 (알 가게에서 알을 사서 부화시켜요)
     fbag:{ candle:1, cushions:1, owldoll:1 }, room:[],
     orders:makeOrders(1, ['p_red'], []), classDay:0,
   };
@@ -3239,6 +3239,10 @@ function adminRender(){
   app.innerHTML = '';
   let root = $('#adminv'); if (!root){ root = document.createElement('div'); root.id = 'adminv'; $('#shell').appendChild(root); }
   const ob = root.querySelector('.adbody'), keep = ob && AD.sc && AD.sc.tab === AD.tab ? { top: ob.scrollTop, bot: ob.scrollTop + ob.clientHeight >= ob.scrollHeight - 40 } : null;   // 새로 그려도 보던 자리를 지켜요 (대화는 맨 아래 = 최신)
+  const mw = root.querySelector('.admapw'), mkey = (AD.map || '') + '|' + (AD.follow || '');   // 지도를 밀어서 보던 자리도 지켜요 (보고 있는 지도가 바뀌면 처음부터)
+  if (AD.mscKey !== mkey || AD.tabPrev !== AD.tab){ AD.msc = null; AD.kt = keep ? keep.top : null; }
+  else if (AD.mdone !== false){ AD.msc = mw ? [mw.scrollLeft, mw.scrollTop] : AD.msc; AD.kt = keep ? keep.top : null; }   // 그리는 중에 또 그려지면 앞서 저장한 자리를 그대로 써요
+  AD.mscKey = mkey; AD.tabPrev = AD.tab; AD.mdone = AD.tab === 'map' ? false : true;
   root.innerHTML = `<div class="adhead"><b>호박달 마녀학교 · 관리자</b><button class="btn sm" id="adout">나가기</button></div>
     <div class="adseg main">${tabs.map(([k, l]) => `<button data-adtab="${k}" class="${AD.tab === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="adbody">${body}</div>`;
   { const nb = root.querySelector('.adbody'); if (nb){ if (AD.tab === 'chat' && (!keep || keep.bot)) nb.scrollTop = nb.scrollHeight; else if (keep) nb.scrollTop = keep.top; AD.sc = { tab: AD.tab }; } }
@@ -3290,7 +3294,10 @@ function adminRender(){
   root.querySelectorAll('[data-adno]').forEach(b => b.onclick = () => { if (confirm('이 신청을 거절할까요?')) F.set(F.ref(db, 'approved/' + b.dataset.adno), false).then(() => F.remove(F.ref(db, 'pending/' + b.dataset.adno))); });
   root.querySelectorAll('[data-adst]').forEach(b => b.onclick = () => typeof adminStoryAct === 'function' && adminStoryAct(b.dataset.adst));
   $('#adout').onclick = async () => { dfHostStop(); AD.offs.forEach(f => f && f()); AD.offs = []; document.body.classList.remove('admin'); root.remove(); if (auth?.currentUser) await F.signOut?.(auth); location.reload(); };
-  if (AD.tab === 'map') adminMap();
+  if (AD.tab === 'map') adminMap().then(adRestoreScroll);
+}
+function adRestoreScroll(){   // 지도 그림이 다 그려진 뒤에 보던 자리로 돌려요
+  const nb = $('#adminv .adbody'), mw = $('#adminv .admapw'); if (AD.msc && mw){ mw.scrollLeft = AD.msc[0]; mw.scrollTop = AD.msc[1]; } if (nb && AD.kt != null) nb.scrollTop = AD.kt; AD.mdone = true;
 }
 async function adminMap(){
   const O = AD.online, getMap = async id => AD.mc[id] || (AD.mc[id] = await World.mapCanvas(id));
@@ -5669,6 +5676,7 @@ function renderRanch(){
       ${pager('eggpg', eggPage, CREATURES.length, 4)}
       ${hint(ranchMsg, '')}</section>`;
   }
+  tutHook('feed');   // 입문: 사육장을 열어 보면 돼요 (처음엔 생물이 없어요)
   frame('ranch', '내 사육장', `${me.cr.length} / ${PEN_MAX}마리 · 부화실 ${me.eggs.length} / ${HATCH_MAX}`, tabs + body);
   const redraw = () => keepScroll(renderRanch);
   on('[data-rtab]', b => { ranchTab = b.dataset.rtab; ranchMsg = ''; placing = null; renderRanch(); });
@@ -7234,8 +7242,8 @@ const TUT = {
       again: '독초 온실에서 화단을 눌러 수확하거나 물을 줘 봐요. 어느 쪽이든 괜찮아요. 천천히 해요.', done: ['어머, 약초를 돌봐 줬네요? 약초가 좋아하겠어요.', '약초는 물약을 만들 때 꼭 필요해요. 잘 돌보면 자기도 고마워한대요.', '자라는 동안 다른 걸 해 봐요. 이것도 용돈이에요!'], rew: { coin: 50 } },
     { k: 'fish', ask: ['이번엔 낚시예요. 나는 낚시를 좋아해서 설레네요.', '물가에 서면 「낚시하기」 버튼이 떠요. 학교 북쪽 연못이 가까워요.', '찌가 움직일 때 맞춰서 눌러 봐요. 한 마리만 낚으면 돼요. 못 잡아도 다시 하면 되고요.'],
       again: '물가에서 낚시를 해 봐요. 학교 북쪽 연못이 가까워요. 서두르지 않아도 돼요.', done: ['와아, 낚았네요! 반짝반짝 예쁜 물고기예요.', '잡은 물고기는 도감에 기록되고, 생선 가게에 팔 수도 있어요. 요리 재료로도 쓰이고요.', '오늘의 용돈 나가요!'], rew: { coin: 50 } },
-    { k: 'feed', ask: ['사육장에도 가 봐요. 새싹의 생물들이 기다리고 있어요.', '「사육장」에 들어가서 「내 사육장」을 열고, 생물에게 먹이를 줘 봐요.', '애정이 쌓이면 귀한 재료를 나눠 줘요. 아주 귀여우니까 마음의 준비를 해요.'],
-      again: '사육장에서 내 생물에게 먹이를 줘 봐요. 한 마리면 충분해요. 쓰다듬어 줘도 좋아요.', done: ['귀여워하는 마음이 전해졌을 거예요. 생물들은 다 알아요.', '이제 마지막 하나 남았어요. 탐사인데, 입장료가 50G 필요해요.', '내가 미리 챙겨 놨어요. 자, 받아요!'], rew: { coin: 50 } },
+    { k: 'feed', ask: ['사육장에도 가 봐요. 아직 생물은 없지만, 곧 새 친구가 생길 거예요.', '「사육장」에 들어가서 「내 사육장」을 열어 봐요. 알 가게에서 알을 사서 부화시키면 생물이 태어나요.', '애정이 쌓이면 귀한 재료를 나눠 줘요. 아주 귀여우니까 마음의 준비를 해요.'],
+      again: '사육장에 들어가서 「내 사육장」을 열어 봐요. 구경만 해도 괜찮아요.', done: ['사육장을 구경했네요! 알은 나중에 천천히 사서 부화시켜도 돼요.', '이제 마지막 하나 남았어요. 탐사인데, 입장료가 50G 필요해요.', '내가 미리 챙겨 놨어요. 자, 받아요!'], rew: { coin: 50 } },
     { k: 'explore', ask: ['마지막은 탐사예요. 조금 두근거리죠? 괜찮아요, 문을 열어 보기만 하면 돼요.', '마을 가장자리 길 끝에 기둥 문이 있어요. 거기로 들어가서 탐사 화면을 열어 봐요.', '싸우지 않아도 괜찮아요. 새싹이 용기 낸 것만으로 충분해요. 나는 여기서 응원할게요.'],
       again: '마을 가장자리 길 끝 기둥 문으로 들어가 봐요. 화면만 열어 봐도 돼요. 응원하고 있을게요!', done: ['탐사 문까지 와 봤네요.... 정말 대단해요, 새싹.', '이제 이 학교에서 할 건 거의 다 해 본 거예요. 이렇게 잘 해낼 줄 알았어요.', '이건 내 마지막 선물이에요. 꼭 맛있는 것도 사 먹어요.', '앞으로는 새싹이 스스로 가는 길이에요. 힘들면 하늘을 올려다봐요. 언제나 응원할게요.......'], rew: { coin: 100 } },
   ],
