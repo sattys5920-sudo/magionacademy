@@ -255,7 +255,7 @@ body.admin .hud,body.admin .fab,body.admin #world{display:none}
 .adsum{display:flex;gap:10px;flex-wrap:wrap}
 .adsum b{font-family:var(--f-pxb)}
 .adtbl{display:flex;flex-direction:column;gap:2px;overflow-x:auto}
-.adtbl>div{display:grid;grid-template-columns:80px 150px 74px 64px 40px 40px 30px 50px 50px 46px 30px 30px 150px 190px;gap:4px;background:#fff;padding:3px 6px;white-space:nowrap;min-width:max-content}
+.adtbl>div{display:grid;grid-template-columns:80px 150px 74px 64px 40px 40px 30px 50px 50px 46px 30px 30px 150px 290px;gap:4px;background:#fff;padding:3px 6px;white-space:nowrap;min-width:max-content}
 .adtbl>div.h{background:#22183F;color:#FFD866}
 .adcard{background:#fff;border:3px solid #22183F;padding:8px;display:flex;flex-direction:column;gap:3px}
 .ck-css{}
@@ -1104,7 +1104,19 @@ function makeOrders(day, hints, found){
   return out;
 }
 // 저장된 데이터에서 빠진 칸을 채워요 (Firebase는 빈 배열과 빈 객체를 저장하지 않아요)
+// 예전에 시작할 때 받던 지급품(생물 4마리·재료·가구). 손 안 댄 것은 한 번 자동으로 거두고, 관리자는 원하는 학생에게서 뺄 수 있어요
+const STARTER_K = [0, 4, 7, 2], STARTER_INV = { herb: 6, drop: 4, mush: 2, wool: 1, scale: 1 }, STARTER_FB = { candle: 1, cushions: 1, owldoll: 1 };
+const crPristine = c => c && STARTER_K.includes(c.k) && c.love === 3 && !c.fedAt && !c.petAt && !c.bredAt && CREATURES[c.k] && c.name === CREATURES[c.k].name;
+function starterDiff(p, force){   // force: 관리자(쓰고 남은 만큼만 빼요) · 아니면 하나도 안 쓴 경우에만
+  const cr = (p.cr || []).slice(), inv = { ...(p.inv || {}) }, fb = { ...(p.fbag || {}) }; let n = 0;
+  STARTER_K.forEach(k => { const i = cr.findIndex(c => crPristine(c) && c.k === k); if (i >= 0){ cr.splice(i, 1); n++; } });
+  const invSame = Object.keys(inv).every(k => (+inv[k] || 0) === (STARTER_INV[k] || 0)), fbSame = Object.keys(fb).every(k => (+fb[k] || 0) === (STARTER_FB[k] || 0)) && !(p.room || []).length;
+  if (force || invSame) Object.entries(STARTER_INV).forEach(([k, v]) => { const had = +inv[k] || 0, now = Math.max(0, had - v); if (now !== had){ inv[k] = now; n++; } });
+  if (force || fbSame) Object.entries(STARTER_FB).forEach(([k, v]) => { const had = +fb[k] || 0, now = Math.max(0, had - v); if (now !== had){ fb[k] = now; n++; } });
+  return { cr, inv, fb, n };
+}
 function normalize(p){
+  if (!p.sg){ p.sg = 1; if (p.house){ const d = starterDiff(p, false); if (d.n){ p.cr = d.cr; p.inv = d.inv; p.fbag = d.fb; } } }   // 한 번만
   p.inv = p.inv || {}; Object.keys(ITEM).forEach(k => { p.inv[k] = p.inv[k] || 0; });
   p.found = p.found || []; p.hints = p.hints || ['p_red'];
   if (p.furn){ p.fbag = p.fbag || {}; Object.entries(p.furn).forEach(([k, st]) => { if (st?.own && OLD_FURN[k]) p.fbag[OLD_FURN[k]] = (p.fbag[OLD_FURN[k]] || 0) + 1; }); delete p.furn; }
@@ -3202,13 +3214,13 @@ function adminRender(){
   }
   if (AD.tab === 'students'){
     const sum = k => ids.reduce((t, id) => t + (+P[id][k] || 0), 0);
-    body = `<div class="adsum"><span>골드 합계 <b>${sum('coin').toLocaleString()}</b></span><span>마력 합계 <b>${sum('mana')}</b></span><span>평균 지식 <b>${ids.length ? Math.round(sum('know') / ids.length) : 0}</b></span></div>
+    body = `<div class="adsum"><button class="btn sm" data-adstripall="1">전체 학생 지급품 회수</button><span>골드 합계 <b>${sum('coin').toLocaleString()}</b></span><span>마력 합계 <b>${sum('mana')}</b></span><span>평균 지식 <b>${ids.length ? Math.round(sum('know') / ids.length) : 0}</b></span></div>
       <div class="adsum">${Object.entries(XJ).map(([k, j]) => { const n = ids.filter(id => P[id].ex?.job === k).length; return `<span>${j.n} <b>${n}</b></span>`; }).join('')}<span>미선택 <b>${ids.filter(id => !XJ[P[id].ex?.job]).length}</b></span></div>
       <div class="adtbl"><div class="h"><span>학생</span><span>기숙사</span><span>직업</span><span>골드</span><span>마력</span><span>지식</span><span>날</span><span>물고기</span><span>채집</span><span>낚싯대</span><span>옷</span><span>생물</span><span>상태</span><span>관리</span></div>
       ${ids.sort((a, b) => (P[b].coin || 0) - (P[a].coin || 0)).map(id => { const p = P[id], d = p.fdex || {};
         return `<div><span><b>${esc(p.nick)}</b></span><span><button class="btn sm" data-adhouse="${id}" style="color:${HOUSES[p.house]?.col || '#888'};font-weight:700">${HOUSES[p.house]?.name || '정하기'} ▾</button></span><span>${XJ[p.ex?.job]?.n || '-'}</span><span>${(p.coin || 0).toLocaleString()}</span><span>${p.mana || 0}</span><span>${p.know || 0}</span><span>${p.day || 1}</span>
           <span>${FISH.filter(f => d[f.id]).length}/${FISH.length}</span><span>${FORAGE.filter(f => d[f.id]).length}/50</span><span>${RODS[p.rod || 0]?.name.split(' ')[0] || '-'}</span><span>${Object.keys(p.closet || {}).length}</span><span>${(p.cr || []).length}</span>
-          <span>${O[id] ? `${adPlace(O[id].m)}` : p.rest ? '쉬는 중' : '외출'}</span><span><button class="btn sm" data-adreset="${id}">진행 리셋</button> <button class="btn sm" data-addel="${id}">가입 삭제</button></span></div>`; }).join('')}</div>`;
+          <span>${O[id] ? `${adPlace(O[id].m)}` : p.rest ? '쉬는 중' : '외출'}</span><span><button class="btn sm" data-adstrip="${id}">지급품 회수</button> <button class="btn sm" data-adreset="${id}">진행 리셋</button> <button class="btn sm" data-addel="${id}">가입 삭제</button></span></div>`; }).join('')}</div>`;
   }
   if (AD.tab === 'join'){
     const pend = Object.entries(AD.pending || {}).sort((a, b) => a[1].at - b[1].at);
@@ -3274,6 +3286,14 @@ function adminRender(){
   const ar = $('#adresetall'); if (ar) ar.onclick = adResetAll;
   root.querySelectorAll('[data-adreset]').forEach(b => b.onclick = () => adWipe(b.dataset.adreset, false));
   root.querySelectorAll('[data-addel]').forEach(b => b.onclick = () => adWipe(b.dataset.addel, true));
+  const adStrip = async ids2 => {   // 시작할 때 받은 생물 4마리·재료·가구를 거둬요 (이미 쓴 만큼은 0까지만)
+    const ups = {}; let tot = 0;
+    ids2.forEach(id => { const p = AD.players[id]; if (!p) return; const d = starterDiff(p, true); if (!d.n) return; tot++; ups['players/' + id + '/cr'] = d.cr.length ? d.cr : null; ups['players/' + id + '/inv'] = d.inv; ups['players/' + id + '/fbag'] = Object.values(d.fb).some(v => v > 0) ? d.fb : null; ups['players/' + id + '/sg'] = 1; ups['adm/reset/' + id] = Date.now(); });
+    if (!tot) return alert('거둘 지급품이 없어요');
+    if (!confirm(`${tot}명에게서 시작 때 받은 생물·재료·가구를 거둘까요? (접속 중이면 화면이 새로 불러와져요)`)) return;
+    try { await F.update(F.ref(db, '/'), ups); toast(`${tot}명에게서 거뒀어요`); } catch(e){ alert('실패했어요: ' + (e.code || e.message)); } };
+  root.querySelectorAll('[data-adstrip]').forEach(b => b.onclick = () => adStrip([b.dataset.adstrip]));
+  root.querySelectorAll('[data-adstripall]').forEach(b => b.onclick = () => adStrip(Object.keys(AD.players)));
   root.querySelectorAll('[data-adhouse]').forEach(btn => btn.onclick = () => {   // 기숙사 옮기기: 창에서 고르면 옮겨요 (정원 3명을 넘으면 막고, 접속 중이면 새로 불러와요)
     const id = btn.dataset.adhouse, p = AD.players[id] || {}, old = p.house, cnt = k => Object.keys(AD.players).filter(i => i !== id && AD.players[i]?.house === k).length;
     document.querySelector('#adhmodal')?.remove();
@@ -3968,13 +3988,16 @@ const BGM = (() => {
     if (!busy){ raf = 0; last = 0; return; } raf = requestAnimationFrame(loop);
   };
   const go = () => { if (!raf) raf = requestAnimationFrame(loop); };
-  const playO = o => { if (!wanted || !o.au) return; ensureCtx(); const p = o.au.play(); if (p && p.catch) p.catch(() => {}); };
-  const play = () => { if (!wanted || !main.au || holds.size || !level) return; main.t = 1; playO(main); go(); };
+  const playO = o => { if (!wanted || !o.au) return Promise.resolve(false); ensureCtx(); const p = o.au.play(); return p && p.then ? p.then(() => true).catch(() => false) : Promise.resolve(true); };
+  const play = () => { if (!wanted || !main.au || holds.size || !level) return Promise.resolve(false); main.t = 1; const r = playO(main); go(); return r; };
   const mount = () => { if (main.au) return; Object.assign(main, mk(SRC), { v: 1, t: 1 }); put(main); };
   // 브라우저는 소리를 사용자가 한 번 누른 뒤에야 허용해요
+  // 아이폰은 「누르는 순간(pointerdown)」을 허락으로 안 쳐서 「손을 뗄 때(touchend·click)」에도 시도해요. 소리가 실제로 난 뒤에야 그만 기다려요.
+  const UNL = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'];
   const unlock = () => { try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}   // 아이폰: 무음 스위치가 켜져 있어도 음악이 나오게
-    wanted = true; mount(); play(); removeEventListener('pointerdown', unlock); removeEventListener('keydown', unlock); };
-  addEventListener('pointerdown', unlock); addEventListener('keydown', unlock);
+    wanted = true; mount(); if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+    Promise.resolve(play()).then(ok => { if (ok || holds.size || !level) UNL.forEach(t => removeEventListener(t, unlock, true)); }); };
+  UNL.forEach(t => addEventListener(t, unlock, true));
   document.addEventListener('visibilitychange', () => { if (!main.au) return; if (document.hidden){ main.au.pause(); Object.values(TR).forEach(o => o.au.pause()); } else { play(); Object.values(TR).forEach(o => { if (o.t === 1) playO(o); }); } });
   return {
     preload(src){ if (!src || warm[src] || TR[src]) return; try { const a = new Audio(); a.preload = 'auto'; a.src = src; a.load(); warm[src] = a; } catch(e){} },   // 곡이 나오기 전에 미리 받아 둬요
