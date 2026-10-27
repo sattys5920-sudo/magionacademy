@@ -1154,8 +1154,14 @@ let haltSave = false;   // 관리자가 내 데이터를 리셋했을 때 옛 �
 function saveNow(){
   clearTimeout(saveTimer); saveTimer = 0; if (!me || haltSave) return;
   if (solo) { try { localStorage.setItem('magion-solo', JSON.stringify(me)); } catch(e){} setSaveDot(''); return; }
-  F.set(F.ref(db, 'players/' + uid), me).then(() => setSaveDot('')).catch(e => { setSaveDot('off'); toast('저장에 실패했어요: ' + (e.code || e.message)); });
+  // 다른 기기·옛 화면이 열려 있으면 그쪽이 먼저 저장한 최신 진행을 옛 상태로 덮어쓸 수 있어요 → 저장할 때마다 번호(rv)를 올리고, 서버 번호가 내가 아는 것보다 크면 덮어쓰지 않고 최신으로 새로 불러와요
+  me.rv = knownRv + 1;
+  F.runTransaction(F.ref(db, 'players/' + uid), cur => (cur && (cur.rv || 0) > knownRv) ? undefined : me).then(r => {
+    if (r.committed){ knownRv = me.rv; setSaveDot(''); return; }
+    me.rv = knownRv; haltSave = true; toast('다른 기기에서 먼저 진행했어요. 최신 상태로 새로 불러와요'); setTimeout(() => location.reload(), 1800);
+  }).catch(e => { me.rv = knownRv; setSaveDot('off'); toast('저장에 실패했어요: ' + (e.code || e.message)); });
 }
+let knownRv = 0;   // 마지막으로 내가 불러오거나 저장한 진행 번호
 function save(){ if (!saveTimer) setSaveDot('busy'); clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 1500); if (typeof bagBadge === 'function' && !sheetOn) bagBadge(); }
 addEventListener('pagehide', () => { if (saveTimer) saveNow(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden && saveTimer) saveNow(); });
@@ -7772,7 +7778,7 @@ async function boot(){
       $('#wout').onclick = () => { stop?.(); F.signOut(auth); };
       const stop = F.onValue(F.ref(db, 'school/ctl'), s => { const v = s.val(); if (v && v.open === false) return; stop?.(); delete me.wait; save(); enter(); });
     };
-    if (snap.exists()) { me = normalize(snap.val()); if (!me.house) showHousePick(await houseCounts(), gate); else gate(); }
+    if (snap.exists()) { me = normalize(snap.val()); knownRv = me.rv || 0; if (!me.house) showHousePick(await houseCounts(), gate); else gate(); }
     else waitApproval(user, async () => showCreate(async p => { me = p; if (await closed()) me.wait = 1; save(); gate(); }, await houseCounts(), await jobsTaken()));
   });
 }
