@@ -1,7 +1,7 @@
 <!doctype html><meta charset="utf-8"><body style="margin:0;background:#1a1230;font:12px sans-serif;color:#fff">
 <canvas id="c"></canvas><script src="../../public/xfx.js"></script><script>
-const rows=[];['warrior','knight','thief','black','time','alch','bard','white','druid','cleric','summon','gadget'].forEach(j=>{rows.push([j+':n',j+' 보통']);rows.push([j+':b',j+' 센']);});
-['bard','white','druid','cleric'].forEach(j=>{rows.push([j+':nh',j+' 회복']);rows.push([j+':bh',j+' 센 회복']);});
+const rows=[];['warrior','knight','thief','black','time','alch','bard','white','druid','cleric','summon','gadget'].forEach(j=>{['n0','n1','n2','b0','b1'].forEach(v=>rows.push([j+':'+v,j+' '+v]));});
+['bard','white','druid','cleric'].forEach(j=>{['nh0','nh1','bh0','bh1'].forEach(v=>rows.push([j+':'+v,j+' '+v]));});
 const P=[.12,.28,.45,.62,.8],W=96,H=84,S=2,c=document.getElementById('c');c.width=P.length*W*S+120;c.height=rows.length*H*S;
 const g=c.getContext('2d');g.imageSmoothingEnabled=false;
 const q=new URLSearchParams(location.search).get('r');const sel=q?rows.filter(r=>q.split(',').includes(r[0])):rows;c.height=sel.length*H*S;
