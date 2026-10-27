@@ -10,7 +10,7 @@ Read first, in this order:
 5. The skeleton `public/data/main/main_01_dracula/` (a working but placeholder example of every file; the dracula writer replaces it).
 
 ## Shared names (all writers use these — do not invent others)
-- Clients: `blady` 블라디 · `yeoreum` 유령→여름 · `beatrix` 베아트릭스 · `ur` 우르 · `somi` 솜이 · `nefer` 네페르 · `piece` 조각→(player names, default 프랭) · `jack` 잭. Common cast in `public/data/main/cast.json`: `principal` 교장 선생님, `countess` 백작 부인, `hunter` 사냥꾼, `alchemist` 연금술 선생님(일지 속). Sub-NPC cast in `public/data/npc/cast.json` (`fish_owner`, `grandma`, `orsola`, `elder_a`, `elder_b`, `merchant`, `kids` …). Need more? add to your quest.json `"cast"`.
+- Clients: `blady` 블라디 · `yeoreum` 유령→썸머 · `beatrix` 베아트릭스 · `ur` 우르 · `somi` 리코 · `nefer` 네페르 · `piece` 조각→(player names, default 프랭) · `jack` 잭. Common cast in `public/data/main/cast.json`: `principal` 교장 선생님, `countess` 백작 부인, `hunter` 사냥꾼, `alchemist` 연금술 선생님(일지 속). Sub-NPC cast in `public/data/npc/cast.json` (`fish_owner`, `grandma`, `orsola`, `elder_a`, `elder_b`, `merchant`, `kids` …). Need more? add to your quest.json `"cast"`.
 - Ending flags (5 단계 choice, exactly these):
   - main_01 `blady_spoke_himself` / `player_spoke_for_blady`
   - main_02 `yeoreum_named_by_player` / `yeoreum_remembered`

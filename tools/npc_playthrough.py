@@ -8,7 +8,7 @@ from josa import VAR as JVAR, pick as jpick
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 D = os.path.join(ROOT, 'public', 'data', 'npc')
 NPCS = ['nabi', 'batri', 'kappa', 'aula', 'mandi', 'jipsin', 'sera', 'madeleine', 'stella', 'leo']
-KO = {'nabi': '나비', 'batri': '배트리', 'kappa': '캇파', 'aula': '아울라', 'mandi': '맨디', 'jipsin': '짚신', 'sera': '세라', 'madeleine': '마들렌', 'stella': '스텔라', 'leo': '레오'}
+KO = {'nabi': '나비', 'batri': '배트리', 'kappa': '캇파', 'aula': '아울라', 'mandi': '맨디', 'jipsin': '스트로', 'sera': '세라', 'madeleine': '마들렌', 'stella': '스텔라', 'leo': '레오'}
 VARS = {'player': '민준', 'sera.name': '세라', 'madeleine.name': '마들렌', 'stella.name': '스텔라', 'leo.name': '레오', 'sera.husband': '루카스', 'npc.husband': '루카스'}
 PLACES = {p['id']: p['name'] for p in json.load(open(os.path.join(D, 'places.json')))}
 CAST = json.load(open(os.path.join(D, 'cast.json')))

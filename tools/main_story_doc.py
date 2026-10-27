@@ -27,7 +27,7 @@ for q in QUESTS:
     for k, v in (d.get('cast') or {}).items(): CAST.setdefault(k, v)
 for k, v in CAST.items():
     if k not in NAME: NAME[k] = re.sub(r'\{[^}]*\}', '', v.get('name', k)) or k
-NAME['yeoreum'] = '유령(여름)'; NAME['piece'] = '조각(프랭)'
+NAME['yeoreum'] = '유령(썸머)'; NAME['piece'] = '조각(프랭)'
 
 def fill(t):
     def r(m):

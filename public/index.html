@@ -2934,7 +2934,7 @@ function gameOver(fail){
     title = ps.length === 1 ? `혼자 기록 ${G.score}점` : `${rank}등!`;
   }
   me.gdone = me.gdone || {};
-  if (G.g === 'pumpkin' && me.perk?.pumpkin_race) coin = Math.round(coin * 1.3);   // 짚신 ♥10: 호박 줍기 경주 보너스
+  if (G.g === 'pumpkin' && me.perk?.pumpkin_race) coin = Math.round(coin * 1.3);   // 스트로 ♥10: 호박 줍기 경주 보너스
   if (!me.gdone[G.id]){ me.gdone = { [G.id]: 1 }; me.coin += coin; me.mana += mana; save(); hud(); recordBest(G.g, rec); storyHook('game', { g: G.g, ok: Gm.coop ? !!(G.result ? G.result().ok : !fail) : true, score: Math.max(0, G.score) }); }
   if (roomV && roomV.host === myId()) GDB.upd('games/' + G.id, { st: 'end' });
   const g = G.g; gameEnd();
@@ -3515,7 +3515,7 @@ function renderCook(){
 const NPC_ART_V = 6;
 const NPC_DATA_V = 1;   // data/npc 캐시 버전
 // LPC NPC 그림(art/npcs.png: 한 줄 = 한 명, 64칸 20개)에서 얼굴 부분만 크게 (초상화)
-const NPC_FACE = { 0: [13, 14, 31], 1: [18, 12, 29], 2: [20, 16, 28], 3: [17, 18, 31], 4: [19, 23, 32], 5: [12, 9, 39] };   // 동물·허수아비는 사람과 머리 위치가 달라요 (나비·배트리·캇파·아울라·맨디·짚신 얼굴 틀: x, y, 크기)
+const NPC_FACE = { 0: [13, 14, 31], 1: [18, 12, 29], 2: [20, 16, 28], 3: [17, 18, 31], 4: [19, 23, 32], 5: [12, 9, 39] };   // 동물·허수아비는 사람과 머리 위치가 달라요 (나비·배트리·캇파·아울라·맨디·스트로 얼굴 틀: x, y, 크기)
 const npcFace = (spr, size = 48) => {   // 액자 크기가 CSS로 바뀌어도(관계 화면 40px 등) 얼굴이 가운데에 오도록 그림 크기·위치를 퍼센트로 계산해요
   const hb = NPC_FACE[spr], B = hb ? { x: hb[0], y: hb[1], s: hb[2] } : World.Avatar.headBox, SW = 64 * 20, SH = 64 * 13;
   return `<i class="npcspr" style="width:${size}px;height:${size}px;background:url(art/npcs.webp?v=${NPC_ART_V}) ${(B.x / (SW - B.s) * 100).toFixed(3)}% ${((spr * 64 + B.y) / (SH - B.s) * 100).toFixed(3)}%/${(SW / B.s * 100).toFixed(2)}% ${(SH / B.s * 100).toFixed(2)}% no-repeat"></i>`; };
@@ -3541,7 +3541,7 @@ const NPC_DEF = [
     greet: [['히익....! 아, 아무것도 아니에요.......', '(화분 뒤에 숨었다)'], ['아, 안녕하세요.... 오늘은 소리 안 질렀어요.......', '이 화분, 제가 키웠어요.... 헤헤.'], ['오늘은 먼저 인사하고 싶었어요! 아, 안녕!', '흙 냄새 좋죠? 저는 이 냄새가 제일 좋아요.'], ['당신이 오면 잎사귀가 쫑긋해져요!', '오늘은 비명 대신 노래를 불러 볼까요?']],
     story: { 2: ['이 화분들.... 다 제 친구예요. 말은 못 하지만요.', '당신도.... 친구 해 줄래요? 아, 아니에요! 히익!'], 5: ['저는 놀라면 비명을 질러요. 듣는 사람이 기절할 만큼.......', '그래서 다들 저를 피해요. 같이 참는 연습.... 해 줄래요?'], 8: ['방금.... 제가 웃었어요! 비명 말고, 웃음이요!', '처음이에요. 이렇게 크게 웃은 거.'], 10: ['이건 제 비밀 씨앗이에요. 제일 아끼는 거예요.', '친구한테 주는 첫 선물이에요. 잘 키워 줘요!'] },
     reward: { 2: { coin: 40 }, 5: { items: { g_mint: 3 } }, 8: { mana: 15 }, 10: { coin: 200, items: { g_star: 2 } } } },
-  { id: 'jipsin', wander: true, name: '짚신', title: '꼬마 허수아비', spr: 5, h: 26, map: 'campus', x: 24, y: 88, likes: ['g2_straw', 'g2_pseed', 'g2_sseed'], dislikes: ['g2_crowf'],
+  { id: 'jipsin', wander: true, name: '스트로', title: '꼬마 허수아비', spr: 5, h: 26, map: 'campus', x: 24, y: 88, likes: ['g2_straw', 'g2_pseed', 'g2_sseed'], dislikes: ['g2_crowf'],
     greet: [['까, 까마귀 아니지? 휴.......', '나는 무서운 허수아비다! ....무서웠어?'], ['오늘은 까마귀가 세 마리밖에 안 왔어!', '호박밭 지키는 건 힘들어.'], ['너랑 있으면 까마귀가 안 와. 신기하지?', '무서운 표정 연습 봐 줄래? 크앙!'], ['내 제일 친한 친구! 호박 하나 몰래 줄까?', '이젠 까마귀도 내 친구야. 너 덕분에!']],
     story: { 2: ['나는 허수아비인데 까마귀가 무서워.......', '오히려 까마귀들이 내 모자 위에서 놀아. 창피해.'], 5: ['무서운 표정을 연습했어. 봐 봐.... 크아앙!', '....웃지 마! 진지하단 말이야!'], 8: ['오늘 까마귀한테 말을 걸어 봤어. 사실 걔들도 호박씨를 좋아한대.', '나눠 먹었더니 더 이상 놀리지 않아.'], 10: ['무서운 허수아비보다 친구 많은 허수아비가 더 좋은 것 같아.', '이 모자 너 줄게. 내 보물이야!'] },
     reward: { 2: { coin: 40 }, 5: { items: { g2_pseed: 3 } }, 8: { mana: 15 }, 10: { coin: 250, items: { g2_gacorn: 1 } } } },
@@ -3955,7 +3955,7 @@ const BGM = (() => {
   };
 })();
 // NPC 전용 곡: 이 사람과 대화(말 걸기·이벤트·의뢰 장면)하는 동안만 그 곡으로 부드럽게 바뀌어요
-const NPC_BGM = { blady: 'audio/bgm_dracula.mp3', yeoreum: 'audio/bgm_ghost.mp3', beatrix: 'audio/bgm_witch.mp3', ur: 'audio/bgm_werewolf.mp3', nefer: 'audio/bgm_mummy.mp3', piece: 'audio/bgm_frank.mp3', jack: 'audio/bgm_jack.mp3', nabi: 'audio/bgm_nabi.mp3', batri: 'audio/bgm_batri.mp3', kappa: 'audio/bgm_kappa.mp3', aula: 'audio/bgm_aula.mp3', mandi: 'audio/bgm_mandi.mp3', jipsin: 'audio/bgm_jipsin.mp3', sera: 'audio/bgm_sera.mp3', madeleine: 'audio/bgm_madeleine.mp3', stella: 'audio/bgm_stella.mp3', leo: 'audio/bgm_leo.mp3' };   // 드라큘라 · Candlelight Confession / 유령 · The Lake Before Nightfall / 마녀 · Rain on the Clockface / 늑대인간 · Firelight Vigil / 미라 · The Scribe's Midnight / 프랑켄슈타인 · Hesitant Steps of a Giant / 잭 · The Last Porch Light / 나비 · Stray at the Market Gate / 배트리 · A Bell at the Gate / 캇파 · The Bamboo Sigh / 아울라 · Reflections in the Margin / 맨디 · Sunlight on the Mandrake / 짚신 · Seven Miles to Sunrise / 세라 · Steeping Sunlight / 마들렌 · Sifted Sunlight / 스텔라 · The Wrong Way Home / 레오 · Golden Hour at the Barn (곡이 생기는 대로 추가)
+const NPC_BGM = { blady: 'audio/bgm_dracula.mp3', yeoreum: 'audio/bgm_ghost.mp3', beatrix: 'audio/bgm_witch.mp3', ur: 'audio/bgm_werewolf.mp3', nefer: 'audio/bgm_mummy.mp3', piece: 'audio/bgm_frank.mp3', jack: 'audio/bgm_jack.mp3', nabi: 'audio/bgm_nabi.mp3', batri: 'audio/bgm_batri.mp3', kappa: 'audio/bgm_kappa.mp3', aula: 'audio/bgm_aula.mp3', mandi: 'audio/bgm_mandi.mp3', jipsin: 'audio/bgm_jipsin.mp3', sera: 'audio/bgm_sera.mp3', madeleine: 'audio/bgm_madeleine.mp3', stella: 'audio/bgm_stella.mp3', leo: 'audio/bgm_leo.mp3' };   // 드라큘라 · Candlelight Confession / 유령 · The Lake Before Nightfall / 마녀 · Rain on the Clockface / 늑대인간 · Firelight Vigil / 미라 · The Scribe's Midnight / 프랑켄슈타인 · Hesitant Steps of a Giant / 잭 · The Last Porch Light / 나비 · Stray at the Market Gate / 배트리 · A Bell at the Gate / 캇파 · The Bamboo Sigh / 아울라 · Reflections in the Margin / 맨디 · Sunlight on the Mandrake / 스트로 · Seven Miles to Sunrise / 세라 · Steeping Sunlight / 마들렌 · Sifted Sunlight / 스텔라 · The Wrong Way Home / 레오 · Golden Hour at the Barn (곡이 생기는 대로 추가)
 // 탐사 배경 음악: 지역마다 한 곡 (파일이 아직 없으면 기본 곡이 계속 나와요)
 // 1 달빛 숲길 · Steel and Moonlight / 2 지하 묘지 · Beneath the Heavy Slab / 3 안개 호수 동굴 · Beneath the Frozen Surface / 4 고대 신전 · Sovereign of the Gilded Hall
 const XR_BGM = ['audio/bgm_x1_forest.mp3', 'audio/bgm_x2_crypt.mp3', 'audio/bgm_x3_cave.mp3', 'audio/bgm_x4_temple.mp3'], xrOk = {};
@@ -4345,14 +4345,14 @@ const STORY = [
       { t: 'talk', goal: 8, title: '보름달 밤 비행 응원', desc: '8명이 베아트릭스를 응원해요', done: '베아트릭스: 날았다! 마흔 해 만에 다시 학교 위를 나는 기분이야! 다들 고마워!' },
     ], ending: ['베아트릭스는 새 빗자루로 보름달을 한 바퀴 돌았어요.', '베아트릭스: 위에서 보니 숲가 통나무집 굴뚝에서 털이 날리던데.... 무슨 일이지?'] },
   { name: '털갈이하는 늑대인간', npc: { id: 'm_wolfgang', name: '우르', title: '숲가 통나무집의 사냥꾼', spr: 9, map: 'town', x: 76, y: 91 },
-    intro: ['숲가 통나무집 앞에 털이 수북하게 쌓여 있어요.', '우르: 크흠.... 보지 마. 털갈이 중이야.', '우르: 보름달 축제에서 딸 솜이에게 멋진 털로 춤을 보여 주기로 했는데.... 이 꼴로는 못 나가.'],
+    intro: ['숲가 통나무집 앞에 털이 수북하게 쌓여 있어요.', '우르: 크흠.... 보지 마. 털갈이 중이야.', '우르: 보름달 축제에서 딸 리코에게 멋진 털로 춤을 보여 주기로 했는데.... 이 꼴로는 못 나가.'],
     steps: [
       { t: 'talk', goal: 6, title: '우르 달래기', desc: '숲가 통나무집 앞 우르에게 말을 걸어요', done: '우르: ....너희, 생각보다 괜찮은 녀석들이군.' },
       { t: 'give', item: 'wool', goal: 20, title: '임시 털옷', desc: '양털 20개로 임시 털옷을 만들어요', done: '우르: 따뜻하군. 털이 다시 날 때까지 이거면 돼.' },
       { t: 'give', item: 'g2_chest', goal: 15, title: '털에 좋은 알밤', desc: '알밤 15개', done: '우르: 알밤을 먹으니 털이 윤기 나는 것 같아.' },
       { t: 'give', item: 'hegg', goal: 20, title: '든든한 달걀', desc: '달걀 20개', done: '우르: 단백질은 털의 기본이지.' },
       { t: 'give', item: 'd_chestnut', goal: 6, title: '꿀 군밤 꼬치', desc: '「꿀 군밤 꼬치」 6개 (과자 교실)', done: '우르: 털이.... 털이 돌아왔다! 아우우우~!' },
-      { t: 'talk', goal: 8, title: '보름달 축제 춤', desc: '8명이 우르와 함께 춤춰요', done: '우르: 너희랑 추는 춤이 최고야! 솜이도 좋아하겠군.' },
+      { t: 'talk', goal: 8, title: '보름달 축제 춤', desc: '8명이 우르와 함께 춤춰요', done: '우르: 너희랑 추는 춤이 최고야! 리코도 좋아하겠군.' },
     ], ending: ['우르의 털은 보름달처럼 은빛으로 빛났어요.', '우르: 고맙다. ....그런데 묘지에서 붕대가 바람에 날아다니더군.'] },
   { name: '붕대가 풀린 미라', npc: { id: 'm_mirabel', name: '네페르', title: '서약의 서기', spr: 10, map: 'town', x: 18, y: 75 },
     intro: ['묘지 위로 하얀 붕대가 펄럭펄럭 날아다녀요.', '네페르: 어머어머! 내 붕대! 바람에 다 풀렸어!', '네페르: 이대로면 300년 된 피부가 다 보여.... 새 붕대를 감아 줘!'],
@@ -6839,12 +6839,12 @@ async function pkAct(kind, mat){
     g = await pkGain(M_[2], 'f'); if (g){ me.inv[mat]--; m.f[mat] = (m.f[mat] || 0) + 1; sfx('pick'); toast(`${M_[1]}을(를) 거름으로 줬어요! 성장 +${g}`); } }
   if (g){ save(); hud(); pkUi(); }
 }
-// 호박 이벤트 앞뒤 인사: 짚신이 호박밭에 뭔가 생겼다고 알려 주고, 다 자라면 알려 줘요 (이벤트마다 한 번씩)
+// 호박 이벤트 앞뒤 인사: 스트로가 호박밭에 뭔가 생겼다고 알려 주고, 다 자라면 알려 줘요 (이벤트마다 한 번씩)
 const PK_TALK = {
   start: ['저, 저기! 큰일, 아니 신기한 일이 생겼어!', '호박밭에 뭐가 쏙 생겼는데.... 아직 아주 작은 호박이야.', '근데 이게 보통 호박이 아닌 것 같아. 마법 냄새가 나!', '물도 주고, 말도 걸어 주고, 거름도 주면 쑥쑥 자란대.', '같이 키워 줄래? 나 혼자 하면 까마귀가 와서 무서워서.......'],
   end: ['와아! 다 자랐어! 호박이 엄청 커졌어!', '봐 봐, 활짝 웃고 있어. 다들 열심히 돌봐 준 덕분이야.', '이제 이 거대 호박은 밭에 쭉 있을 거야. 말을 걸면 복을 나눠 준대.', '까마귀도 깜짝 놀라서 안 오더라. 고마워, 정말로.......'] };
 var nlCtx = null;
-function nlTalk(id, lines, after, i = 0){   // 짚신 같은 NPC가 하는 짧은 인사 (다음 · 알겠어요)
+function nlTalk(id, lines, after, i = 0){   // 스트로 같은 NPC가 하는 짧은 인사 (다음 · 알겠어요)
   const n = npcGet(id); if (!n) return; const last = i >= lines.length - 1; nlCtx = { id, lines, after, i };
   npcUI().dataset.id = 'nl:' + id;
   npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${npcPortrait(n)}</div><div><b>${esc(n.name)}</b><span class="s sub">${esc(n.title || '')}</span></div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(lines[i])}</div><div class="frow"><button class="btn sm go" data-nl="${last ? 'end' : 'next'}">${last ? '알겠어요' : '다음'}</button></div></div>`;
@@ -7787,7 +7787,7 @@ async function playEnding(){
   const avOfCast = c => c.av ? { av: World.Avatar.fix(c.av) } : c.look !== undefined ? { av: World.Avatar.fromLook(c.look) } : { spr: c.spr, float: c.float, alpha: c.alpha };
   const cast = {}; Object.entries(MQ.cast).forEach(([id, c]) => { if (id !== 'alchemist' && id !== 'hunter') cast[id] = { name: '', ...avOfCast(c) }; });
   npcAll().forEach(n => { cast[n.id] = { name: '', ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float, flap: n.flap }) }; });
-  // 둘러선 순서(안쪽 고리 → 바깥 고리)와 머리 위로 올라갈 그림. 박쥐는 블라디·배트리, 유령은 여름, 호박은 잭과 짚신
+  // 둘러선 순서(안쪽 고리 → 바깥 고리)와 머리 위로 올라갈 그림. 박쥐는 블라디·배트리, 유령은 썸머, 호박은 잭과 스트로
   const G = {
     blady: ['bat', 'heart'], yeoreum: ['ghost', 'heart'], beatrix: ['star', 'note'], ur: ['heart', 'clap'], somi: ['heart', 'star'], nefer: ['star', 'clap'], piece: ['heart', 'clap'], jack: ['pumpkin', 'star'],
     madeleine: ['heart', 'clap'], kappa: ['note', 'clap'], sera: ['heart', 'clap'], aula: ['star', 'clap'], batri: ['bat', 'note'], mandi: ['heart', 'clap'], nabi: ['heart', 'note'], stella: ['star', 'heart'],

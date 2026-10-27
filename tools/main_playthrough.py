@@ -11,7 +11,7 @@ CAST = {**json.load(open(os.path.join(ND, 'cast.json'))), **json.load(open(os.pa
 PLACES = {p['id']: p['name'] for p in json.load(open(os.path.join(ND, 'places.json')))}
 PLACES.update({p['id']: p['name'] for p in json.load(open(os.path.join(D, 'places.json')))})
 ITEMS = dict(json.load(open(os.path.join(ROOT, 'tools', 'npc_items.json'))))
-NAME = {'nabi': '나비', 'batri': '배트리', 'kappa': '캇파', 'aula': '아울라', 'mandi': '맨디', 'jipsin': '짚신', 'sera': '세라', 'madeleine': '마들렌', 'stella': '스텔라', 'leo': '레오'}
+NAME = {'nabi': '나비', 'batri': '배트리', 'kappa': '캇파', 'aula': '아울라', 'mandi': '맨디', 'jipsin': '스트로', 'sera': '세라', 'madeleine': '마들렌', 'stella': '스텔라', 'leo': '레오'}
 VARS = {'player': '민준', 'sera.name': '세라', 'madeleine.name': '마들렌', 'stella.name': '스텔라', 'leo.name': '레오', 'sera.husband': '루카스', 'npc.husband': '루카스'}
 Q = {}
 for q in QUESTS:

@@ -99,7 +99,7 @@ npc_id: nabi, batri, kappa, aula, mandi, jipsin, sera, madeleine, stella, leo
 | `kappa` | 캇파 |  |
 | `aula` | 아울라 |  |
 | `mandi` | 맨디 |  |
-| `jipsin` | 짚신 |  |
+| `jipsin` | 스트로 |  |
 | `sera` | {sera.name} |  |
 | `madeleine` | {madeleine.name} |  |
 | `stella` | {stella.name} |  |
@@ -131,7 +131,7 @@ npc_id: nabi, batri, kappa, aula, mandi, jipsin, sera, madeleine, stella, leo
 | `voice` | 목소리 |  |
 
 - 주인공은 `player`예요. 이름은 `{player}`. 주인공의 성별을 단정하지 마세요(외모를 꾸밀 수 있어요).
-- 사람 NPC 이름은 바뀔 수 있어요. 대사에서는 항상 변수로 쓰세요: `{npc.name}`(이벤트 주인 자기 이름), `{sera.name}`, `{madeleine.name}`, `{stella.name}`, `{leo.name}`, `{sera.husband}`(세라 이벤트 안에서는 `{npc.husband}`도 돼요). 동물 NPC 이름(나비, 배트리, 캇파, 아울라, 맨디, 짚신)은 그대로 써도 돼요.
+- 사람 NPC 이름은 바뀔 수 있어요. 대사에서는 항상 변수로 쓰세요: `{npc.name}`(이벤트 주인 자기 이름), `{sera.name}`, `{madeleine.name}`, `{stella.name}`, `{leo.name}`, `{sera.husband}`(세라 이벤트 안에서는 `{npc.husband}`도 돼요). 동물 NPC 이름(나비, 배트리, 캇파, 아울라, 맨디, 스트로)은 그대로 써도 돼요.
 - **이름 뒤 조사는 함수로 써요.** 이름은 바뀔 수 있어서 받침 유무를 미리 알 수 없어요. `{player|이/가}`, `{npc.name|은/는}`, `{sera.husband|을/를}`처럼 **받침 있을 때/없을 때** 순서로 쓰면 엔진이 실제 이름을 보고 골라요. 쓸 수 있는 쌍: 이/가, 은/는, 을/를, 과/와, 아/야, 이랑/랑, 으로/로(ㄹ 받침은 '로'), 이에요/예요, 이야/야, 이나/나, 이라는/라는, 이라면/라면, 이다/다, 이었/였, 이구나/구나, 이요/요, 이네/네. 변수 바로 뒤에 조사를 그냥 붙이거나 "을(를)"처럼 병기하면 검증 스크립트가 잡아요. 의/도/만/에게/한테처럼 받침과 상관없는 조사는 그냥 붙여요.
 - 표에 없는 조연이 필요하면 `profile.json`의 `"cast"`에 추가하세요: `"cast": {"fish_wife": {"name": "생선 가게 안주인", "look": 201}}`. 사람은 `look`(아무 숫자, 생김새 씨앗), 동물은 `"cr": "sheep|rabbit|lizard|chicken|cat|toad|bee|spider|owl|goat"`, 목소리만 나오면 `"kind": "voice"`예요. 이름에 성별을 단정하는 말(아저씨 등)은 넣지 마세요.
 
@@ -207,10 +207,10 @@ npc_id: nabi, batri, kappa, aula, mandi, jipsin, sera, madeleine, stella, leo
 - 플래그 이름은 `<npc>_`로 시작해요(예: `nabi_fish_promise`). 분기 플래그 3 개 이상, 만든 플래그는 뒤 이벤트의 `if_flag`에서 꼭 쓰세요.
 
 ## 교차 장면 약속 (NPC끼리 맞물리는 곳)
-- 배트리 ♥2: 짚신이 등장해 편지를 처음 받아 봐요(`who: "jipsin"`).
+- 배트리 ♥2: 스트로가 등장해 편지를 처음 받아 봐요(`who: "jipsin"`).
 - 배트리 ♥8: 양호실에서 `sera`가 등장해 고마워해요.
 - 아울라 ♥9: `batri`가 등장해 "주소가 '바람 부는 곳'인데요?"
-- 맨디 ♥5: 호박밭에서 `jipsin`과 친해져요. 짚신 ♥10에는 맨디·할머니·아기 까마귀가 와요.
+- 맨디 ♥5: 호박밭에서 `jipsin`과 친해져요. 스트로 ♥10에는 맨디·할머니·아기 까마귀가 와요.
 - 세라: `{npc.husband}`(`husband`)는 아울라에게 금서 책장을(`if_flag aula_h8`로 대사 변화), 맨디에게 뿌리 한 조각을, 캇파에게 달빛 이슬을 얻었어요. 세라 ♥5에 `aula`와 `husband`가 서고에서 속삭이는 장면이 있어요.
 - 마들렌 ♥5: `stella`에게 점을 봐 달라고 해요. ♥6~7: `grandma`가 "그때 호박을 가져간 게 나였지." ♥9: 나비(호박 붕어 비늘 장식), 캇파(달빛 이슬), 맨디(박하 잎) 등에게 재료를 부탁해요. `{"cmd": "if_heart", "npc": "nabi", "min": 4, …}`로 그 NPC 하트가 낮으면 다른 재료로 대체해요.
 - 스텔라 ♥7: 마들렌의 야식(선택). ♥9: `batri`와 함께 `sera`에게 달려가요.

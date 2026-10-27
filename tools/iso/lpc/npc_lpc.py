@@ -2,7 +2,7 @@
 #   한 줄 = NPC 하나, 64×64 칸 20개 (아래·위·왼쪽·오른쪽 × 서기 + 걷기 4) — 게임 캐릭터(public/art/lpc)와 같은 칸 배치·같은 화풍
 #   python3 npc_lpc.py <LPC 저장소 경로> [미리보기.png]
 #   몸은 캐릭터와 같은 teen 체형을 같은 방식으로 날씬하게 (SLIM)
-#   0 나비 1 배트리 2 캇파 3 아울라 4 맨디 (이 다섯은 beasts.py의 동물 그림으로 덮어요) 5 짚신 / 6 루시안 7 부우 8 헤이즐 9 울프강 10 미라벨 11 프랭키 12 잭
+#   0 나비 1 배트리 2 캇파 3 아울라 4 맨디 (이 다섯은 beasts.py의 동물 그림으로 덮어요) 5 스트로 / 6 루시안 7 부우 8 헤이즐 9 울프강 10 미라벨 11 프랭키 12 잭
 import sys, os, json, subprocess
 import numpy as np
 from PIL import Image
@@ -38,7 +38,7 @@ NPC = [
    (121, 'hair/bunches/adult/fg', None, HR('light brown')), (110, 'head/ears/avyon', None, SK('fur_brown', 'fur_brown')), (130, 'facial/glasses/glasses', None, CL('gold'))]),
  ('맨디', 'female', [(10, 'body/bodies/teen', None, SK('pale_green')), (100, 'head/heads/human/female', None, SK('pale_green')), (105, 'eyes/human/adult/default', 'brown', None),
    (20, 'legs/skirts/plain', None, CL('forest')), (35, 'torso/clothes/sleeveless/sleeveless', None, CL('green')), (15, 'feet/slippers', None, CL('brown')), (120, 'hair/pixie', None, HR('green'))]),
- ('짚신', 'male', [(10, 'body/bodies/teen', None, SK('taupe')), (100, 'head/heads/human/male', None, SK('taupe')), (105, 'eyes/human/adult/default', 'brown', None), (20, 'legs/pants', None, CL('blue')),
+ ('스트로', 'male', [(10, 'body/bodies/teen', None, SK('taupe')), (100, 'head/heads/human/male', None, SK('taupe')), (105, 'eyes/human/adult/default', 'brown', None), (20, 'legs/pants', None, CL('blue')),
    (35, 'torso/clothes/longsleeve/longsleeve', None, CL('red')), (40, 'torso/aprons/suspenders', 'brown', None), (15, 'feet/boots/basic', None, CL('brown')), (120, 'hair/messy1', None, HR('blonde')),
    (126, 'hat/cloth/bandana', None, CL('yellow'))]),
  ('루시안', 'male', [(5, 'cape/solid/bg', None, CL('red')), (10, 'body/bodies/teen', None, SK('lavender')), (100, 'head/heads/vampire', None, None), (105, 'eyes/human/adult/default', 'red', None),

@@ -5,7 +5,7 @@ from josa import VAR as JVAR, pick as jpick
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 D = os.path.join(ROOT, 'public', 'data', 'npc')
 NPCS = [('nabi', '나비', '매점 고양이'), ('batri', '배트리', '우체부 박쥐'), ('kappa', '캇파', '낚시꾼 갓파'), ('aula', '아울라', '사서 부엉이'), ('mandi', '맨디', '정원사 맨드레이크'),
-        ('jipsin', '짚신', '꼬마 허수아비'), ('sera', '세라', '양호 선생님'), ('madeleine', '마들렌', '과자 교실 제빵사'), ('stella', '스텔라', '점성술사'), ('leo', '레오', '사육장 관리인')]
+        ('jipsin', '스트로', '꼬마 허수아비'), ('sera', '세라', '양호 선생님'), ('madeleine', '마들렌', '과자 교실 제빵사'), ('stella', '스텔라', '점성술사'), ('leo', '레오', '사육장 관리인')]
 NAME = {i: n for i, n, _ in NPCS}
 PLACES = {p['id']: p['name'] for p in json.load(open(os.path.join(D, 'places.json')))}
 CAST = json.load(open(os.path.join(D, 'cast.json')))
