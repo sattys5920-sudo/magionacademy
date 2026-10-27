@@ -3572,7 +3572,7 @@ function weatherToday(){
 }
 const MOON_DAYS = 8;   // 달이 차고 기우는 주기: 진짜 달(29.5일)을 기다리면 이야기가 몇 주씩 멈추니까, 이 세계에선 8일에 한 번 보름·그믐이 와요
 const moonAge = (t = Date.now()) => { const d = (t - Date.UTC(2000, 0, 6, 18, 14)) / 864e5; return (((d % MOON_DAYS) + MOON_DAYS) % MOON_DAYS) / MOON_DAYS * 29.530588; };
-const isFullMoon = () => Math.abs(moonAge() - 14.77) <= 4.2;   // 보름 전후 이틀쯤 = 호박달 축제
+const isFullMoon = () => Math.abs(moonAge() - 14.77) <= 4.2;   // 보름 전후 이틀쯤 (이야기·낚시 힌트의 「보름」)
 const dayNum = k => { const [y, m, d] = String(k).split('-').map(Number); return Math.round(Date.UTC(y, m - 1, d) / 864e5); };
 const daysSince = k => k ? dayNum(todayKey()) - dayNum(k) : 1e9;
 // 평소 루틴: 시간대마다 서 있는 장소 (그 안에서 계속 돌아다녀요)
@@ -3642,7 +3642,7 @@ function evCond(id){   // 오늘 열 수 있는 다음 이벤트 (장소 빼고 
   if (hearts(id) < (c.minHeart || k) || st.ev === todayKey()) return null;
   if (c.time && c.time.length && !c.time.includes(bandNow())) return null;
   if (c.weather && c.weather.length && !c.weather.includes(weatherToday())) return null;
-  if ((c.moon === 'full' || c.festival) && !isFullMoon()) return null;
+  if (c.moon === 'full' && !isFullMoon()) return null;
   if (c.dow && c.dow.length && !c.dow.includes(new Date().getDay())) return null;
   if (c.story && !(typeof storyCh !== 'undefined' && storyCh[c.story]?.done)) return null;
   if ((c.after || []).some(a => { const [o, h] = a.split(':'); return !me.npc?.[o]?.seen?.[h]; })) return null;
@@ -3684,7 +3684,7 @@ function syncNpcs(){
   World.setNpcs(list, `art/npcs.webp?v=${NPC_ART_V}`, 'art/cast_animals.webp?v=1');
 }
 
-World.clockText = d => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${BAND_KO[bandNow(d.getHours())]}${isFullMoon() ? ' · 호박달 축제' : ''}`;
+World.clockText = d => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${BAND_KO[bandNow(d.getHours())]}`;
 // ---- 말 걸기 ----
 function npcPortrait(n){ return n.av ? headImg(npcAv(n)) : npcFace(n.spr); }
 const npcUI = () => $('#npcui');
@@ -3764,7 +3764,7 @@ async function renderNpcStory(){
   const n = npcGet(npcGiftId); if (!n) return closeSheet();
   const st = npcSt(n.id), h = hearts(n.id), nk = nextHeart(n.id);
   const evs = await Promise.all([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(k => st.seen[k] || k === nk ? npcEvent(n.id, k) : null));
-  const where = c => { const p = NL.places[c?.location]; return [p && fillVars(p.name, n.id), ...(c?.time || []).map(t => BAND_KO[t]), ...(c?.weather || []).map(w => WX_KO[w]), c?.festival ? '호박달 축제' : c?.moon ? '보름' : ''].filter(Boolean).join(' · '); };
+  const where = c => { const p = NL.places[c?.location]; return [p && fillVars(p.name, n.id), ...(c?.time || []).map(t => BAND_KO[t]), ...(c?.weather || []).map(w => WX_KO[w]), c?.moon ? '보름' : ''].filter(Boolean).join(' · '); };
   frame(null, `${esc(n.name)}의 이야기`, `${esc(n.title || '')} · ${heartBar(h)} · ${st.a % 100}/100`, `<div class="box px">${evs.map((ev, i) => { const k = i + 1, s = st.seen[k]; if (!s && k !== nk && k > (nk || 11)) return '';
       return `<div class="li"><span class="gic">${s ? (s === 'fail' ? '×' : '·') : '·'}</span><div class="main"><span class="t">♥${k} ${s || k === nk ? esc(fillVars(ev?.title || '', n.id)) : '???'}</span><span class="d" style="white-space:normal">${s ? (s === 'cold' ? '서먹하게 끝났어요' : s === 'fail' ? '찾지 못했어요' : '다시 볼 수 있어요') : k === nk ? `♥${ev?.conditions?.minHeart || k} · ${esc(where(ev?.conditions))} 에서 말을 걸면 시작돼요` : '앞 이야기를 먼저 봐요'}</span></div>${s && s !== 'fail' ? `<button class="btn sm" data-nre="${k}">다시 보기</button>` : ''}</div>`; }).join('')}</div>
     ${backBtn}`);
@@ -4181,7 +4181,7 @@ function adminNpcHTML(){
   const table = `<div class="adtbl npc"><div class="h"><span>학생</span>${all.map(n => `<span>${esc(n.name)}</span>`).join('')}</div>
     ${ids.map(id => `<div><span><b>${esc(P[id].nick)}</b></span>${all.map(n => { const x = P[id].npc?.[n.id], seen = Object.keys(x?.seen || {}).length, pend = +(AD.heart?.[id]?.[n.id] || 0), h = hOf(x); return `<span class="adh"><span class="hv">♥${h}${pend ? `<small class="pend">${pend > 0 ? '+' : ''}${pend}</small>` : ''}${seen ? ` <small>${seen}</small>` : ''}</span><span class="bt"><button data-adh="${id}|${n.id}|-1" title="하트 -1">−</button><button data-adh="${id}|${n.id}|1" title="하트 +1">+</button></span></span>`; }).join('')}</div>`).join('')}</div>
     <div class="s">− / + 를 누르면 그 학생이 접속해 있을 때 바로, 아니면 다음 접속 때 하트가 바뀌어요. 숫자 옆 주황색 ±는 아직 적용 전인 조정이에요. ${Object.keys(AD.heart || {}).length ? `<button class="btn sm" data-adh="__clear">대기 중인 조정 모두 지우기</button>` : ''}</div>`;
-  const wx = `<div class="adcard"><b>오늘 날씨</b><div class="adseg">${[['', '자동'], ['clear', '맑음'], ['rain', '비'], ['fog', '안개'], ['snow', '눈']].map(([k, l]) => `<button data-adwx="${k}" class="${(wxForce && wxForce.d === todayKey() ? wxForce.w : '') === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="s">지금: ${BAND_KO[bandNow()]} · ${WX_KO[weatherToday()]}${isFullMoon() ? ' · 호박달 축제(보름)' : ''} · 날씨를 바꾸면 비·안개 조건 이벤트를 바로 시험할 수 있어요</div>
+  const wx = `<div class="adcard"><b>오늘 날씨</b><div class="adseg">${[['', '자동'], ['clear', '맑음'], ['rain', '비'], ['fog', '안개'], ['snow', '눈']].map(([k, l]) => `<button data-adwx="${k}" class="${(wxForce && wxForce.d === todayKey() ? wxForce.w : '') === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="s">지금: ${BAND_KO[bandNow()]} · ${WX_KO[weatherToday()]}${isFullMoon() ? ' · 보름' : ''} · 날씨를 바꾸면 비·안개 조건 이벤트를 바로 시험할 수 있어요</div>
     <b style="display:block;margin-top:10px">오늘 시간대</b><div class="adseg">${[['', '자동'], ['morning', '아침'], ['day', '낮'], ['evening', '저녁'], ['night', '밤']].map(([k, l]) => `<button data-adband="${k}" class="${(bandForce && bandForce.d === todayKey() ? bandForce.b : '') === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="s">시간대를 바꾸면 모든 학생에게 그 시간대로 보여요(NPC 위치·아침/밤 조건 이야기). 오늘만 유지되고, 시험이 끝나면 자동으로 돌려 두세요.</div></div>`;
   const pick = `<div class="adseg">${all.map(n => `<button data-adnpc="${n.id}" class="${adNpc === n.id ? 'on' : ''}">${esc(n.name)}${n.av ? '' : ' '}</button>`).join('')}<button data-adnpc="__new">+ 사람 NPC</button><button data-adnpc="__cast" class="${adNpc === '__cast' ? 'on' : ''}">조연</button></div>`;
   if (adNpc === '__cast') return `<div class="adcard"><b>학생 × NPC 호감도</b>${table}</div>${wx}${pick}${adminCastHTML()}`;
@@ -4839,7 +4839,7 @@ function relHint(id, k, ev){
   const c = ev.conditions || {}, h = hearts(id), need = c.minHeart || k;
   if (h < need) return `호감도가 더 필요해요 (♥${need})`;
   const parts = [];
-  const when = [c.festival ? '호박달 축제 때' : c.moon === 'full' ? '보름밤' : '', ...(c.weather || []).map(w => REL_WX[w] || WX_KO[w]), (c.time || []).map(t => BAND_KO[t]).join('이나 ')].filter(Boolean).join(' ');
+  const when = [c.moon === 'full' ? '보름밤' : '', ...(c.weather || []).map(w => REL_WX[w] || WX_KO[w]), (c.time || []).map(t => BAND_KO[t]).join('이나 ')].filter(Boolean).join(' ');
   if (when) parts.push(when);
   const p = NL.places[c.location]; if (p) parts.push(`${fillVars(p.name, id)}에서`);
   const extra = [];
@@ -4911,7 +4911,7 @@ function jnGo(map, x, y){
   const walk = () => { if (!World.walkToTile(x, y)) toast('거기까지는 길이 없어요'); };
   if (World.where() === map) walk(); else World.teleport(map, null, walk);
 }
-const jnTags = c => [...(c?.time || []).map(t => BAND_KO[t]), ...(c?.weather || []).map(w => WX_KO[w]), c?.festival ? '호박달 축제' : c?.moon === 'full' ? '보름' : ''].filter(Boolean);
+const jnTags = c => [...(c?.time || []).map(t => BAND_KO[t]), ...(c?.weather || []).map(w => WX_KO[w]), c?.moon === 'full' ? '보름' : ''].filter(Boolean);
 const jnJosa = (k, a, b) => [1, 6, 7, 8, 10].includes(k) ? a : b;   // ♥1·6·7·8·10은 받침이 있어요
 function jnTodoHTML(){
   const left = me.orders.filter(o => !o.done).length;
