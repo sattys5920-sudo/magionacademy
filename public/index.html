@@ -3156,7 +3156,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.day = AD.day || todayKey(); sgListen(); if (!noticeOff && F && db) noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); if (AD.tab === 'gift' && !adminTyping()) adminRender(); });
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = s.val() || {}; if (adminTyping()) return; adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('adm/heart', 'heart'); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
   adminRender();
 }
 const adminTyping = () => { const a = document.activeElement; return (AD.tab === 'npc' || AD.tab === 'gift') && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
@@ -3200,7 +3200,11 @@ function adminRender(){
   }
   if (AD.tab === 'join'){
     const pend = Object.entries(AD.pending || {}).sort((a, b) => a[1].at - b[1].at);
-    body = `<div class="adcard"><b>가입 신청</b> <span class="s">승인하면 그때부터 캐릭터를 만들 수 있어요</span></div>
+    const sc = AD.schoolctl || {}, closedNow = sc.open === false, waiting = ids.filter(id => P[id].wait);
+    body = `<div class="adcard"><b>입학</b> · ${closedNow ? '대기 중' : '열려 있어요'}
+      <div class="s">${closedNow ? `입학 대기 ${waiting.length}명${waiting.length ? ' · ' + waiting.map(id => esc(P[id].nick)).join(', ') : ''}` : '지금 만든 캐릭터는 바로 시작해요'}</div>
+      <div class="frow">${closedNow ? '<button class="btn sm go" data-adsc="start">시작</button>' : '<button class="btn sm" data-adsc="wait">입학 대기 켜기</button>'}</div></div>
+      <div class="adcard"><b>가입 신청</b> <span class="s">승인하면 그때부터 캐릭터를 만들 수 있어요</span></div>
       <div class="adlist">${pend.map(([id, v]) => `<div><b>${esc(v.id || id.slice(0, 6))}</b> <span class="tm">${new Date(v.at).toLocaleString('ko-KR')}</span> <button class="btn sm" data-adok="${id}">승인</button> <button class="btn sm" data-adno="${id}">거절</button></div>`).join('') || '<div>기다리는 신청이 없어요</div>'}</div>`;
   }
   if (AD.tab === 'chat'){
@@ -3252,6 +3256,7 @@ function adminRender(){
   const ar = $('#adresetall'); if (ar) ar.onclick = adResetAll;
   root.querySelectorAll('[data-adreset]').forEach(b => b.onclick = () => adWipe(b.dataset.adreset, false));
   root.querySelectorAll('[data-addel]').forEach(b => b.onclick = () => adWipe(b.dataset.addel, true));
+  root.querySelectorAll('[data-adsc]').forEach(b => b.onclick = () => { if (b.dataset.adsc === 'start'){ if (confirm('입학을 시작할까요? 기다리던 학생이 모두 들어와요.')) F.set(F.ref(db, 'school/ctl'), { open: true, at: Date.now() }); } else if (confirm('입학 대기를 켤까요? 지금부터 캐릭터를 만드는 학생은 시작 전까지 기다려요.')) F.set(F.ref(db, 'school/ctl'), { open: false, at: Date.now() }); });
   root.querySelectorAll('[data-adok]').forEach(b => b.onclick = () => { F.set(F.ref(db, 'approved/' + b.dataset.adok), true).then(() => F.remove(F.ref(db, 'pending/' + b.dataset.adok))); });
   root.querySelectorAll('[data-adno]').forEach(b => b.onclick = () => { if (confirm('이 신청을 거절할까요?')) F.set(F.ref(db, 'approved/' + b.dataset.adno), false).then(() => F.remove(F.ref(db, 'pending/' + b.dataset.adno))); });
   root.querySelectorAll('[data-adst]').forEach(b => b.onclick = () => typeof adminStoryAct === 'function' && adminStoryAct(b.dataset.adst));
@@ -7676,8 +7681,16 @@ async function boot(){
       F.onValue(F.ref(db, 'houses'), s => { const old = commonStage(me.house); halls = s.val() || {}; syncHalls(); if (commonStage(me.house) > old) toast(`우리 휴게실이 ${commonStage(me.house)}단계가 됐어요!`); if (sub === 'common') render(); });
       enterWorld();
     };
-    if (snap.exists()) { me = normalize(snap.val()); if (!me.house) showHousePick(await houseCounts(), enter); else enter(); }
-    else waitApproval(user, async () => showCreate(p => { me = p; save(); enter(); }, await houseCounts(), await jobsTaken()));
+    // 입학 대기: 관리자가 「시작」을 누르기 전에 캐릭터를 만든 학생은 기다려요 (school/ctl.open === false 일 때만)
+    const closed = async () => { try { const s = await F.get(F.ref(db, 'school/ctl')); return !!(s.val() && s.val().open === false); } catch(e){ return false; } };
+    const gate = async () => {
+      if (!me.wait || !(await closed())){ if (me.wait){ delete me.wait; save(); } return enter(); }
+      cover(`<div class="card px"><span class="b" style="font-size:22px">입학 대기 중이에요</span><button class="btn" id="wout">로그아웃</button></div>`);
+      $('#wout').onclick = () => { stop?.(); F.signOut(auth); };
+      const stop = F.onValue(F.ref(db, 'school/ctl'), s => { const v = s.val(); if (v && v.open === false) return; stop?.(); delete me.wait; save(); enter(); });
+    };
+    if (snap.exists()) { me = normalize(snap.val()); if (!me.house) showHousePick(await houseCounts(), gate); else gate(); }
+    else waitApproval(user, async () => showCreate(async p => { me = p; if (await closed()) me.wait = 1; save(); gate(); }, await houseCounts(), await jobsTaken()));
   });
 }
 boot();
