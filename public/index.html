@@ -1480,11 +1480,11 @@ function fishReel(){
   const ph = [0, 1, 2].map(() => Math.random() * 6.28);
   Object.assign(fishing, {
     st: 'reel', f, pos: .5, dir: 0, prog: 0, pat: 1, t: 0, ph, last: performance.now(),
-    zw: Math.max(.14, Math.min(.34, .35 - g * .03 + L * .025)), zc: .5, zt: .5, zhold: 1.4,
-    T: f.junk ? 1.6 : 2 + g * .6,          // 초록 칸에 머물러야 하는 시간(초)
-    jit: .1 + g * .065, jf: 1 + g * .3,       // 찌가 흔들리는 세기·빠르기
-    yank: f.junk ? 0 : .08 + g * .035, yt: 1.2 + Math.random() * 1.5,   // 가끔 확 당겨요
-    spd: .95 + L * .06,                         // 내가 찌를 움직이는 속도(초당 칸 폭)
+    zw: Math.max(.12, Math.min(.31, .33 - g * .032 + L * .022)), zc: .5, zt: .5, zhold: 1.4,
+    T: f.junk ? 1.6 : 2.2 + g * .68,          // 초록 칸에 머물러야 하는 시간(초)
+    jit: .11 + g * .07, jf: 1 + g * .3,       // 찌가 흔들리는 세기·빠르기
+    yank: f.junk ? 0 : .09 + g * .038, yt: 1.2 + Math.random() * 1.5,   // 가끔 확 당겨요
+    spd: .93 + L * .055,                         // 내가 찌를 움직이는 속도(초당 칸 폭)
   });
   World.setBobber({ x: fishing.x, y: fishing.y, bite: true, shake: Math.min(1.6, fishing.jit * 3) });
   fishShow(`<b>${f.junk ? '뭔가 걸렸어요!' : '물고기가 걸렸어요!'} <span class="fstar">${f.junk ? '' : STARS(g)}</span></b>
@@ -1505,8 +1505,8 @@ function fishReel(){
     F.zhold -= dt; if (F.zhold <= 0){ let n; do n = F.zw / 2 + .04 + Math.random() * (1 - F.zw - .08); while (Math.abs(n - F.zc) < .25); F.zt = n; F.zhold = 2.6 - Math.min(1.4, F.jit * 1.4) + Math.random() * 1.2; }
     F.zc += Math.sign(F.zt - F.zc) * Math.min(Math.abs(F.zt - F.zc), (.12 + F.jit * .25) * dt);
     const inz = Math.abs(F.pos - F.zc) <= F.zw / 2;
-    F.prog = Math.max(0, Math.min(1, F.prog + (inz ? dt / F.T : -dt / F.T * .5)));
-    F.pat = Math.max(0, Math.min(1, F.pat + (inz ? dt * .2 : -dt * (.17 + (F.f.junk ? 0 : F.f.grade * .025)))));
+    F.prog = Math.max(0, Math.min(1, F.prog + (inz ? dt / F.T : -dt / F.T * .6)));
+    F.pat = Math.max(0, Math.min(1, F.pat + (inz ? dt * .18 : -dt * (.18 + (F.f.junk ? 0 : F.f.grade * .027)))));
     z.style.left = (F.zc - F.zw / 2) * 100 + '%'; z.classList.toggle('in', inz);
     bob.style.left = (F.pos * 100 + (Math.random() - .5) * F.jit * 5) + '%'; pg.style.width = F.prog * 100 + '%'; pt.style.width = F.pat * 100 + '%'; pm.classList.toggle('low', F.pat < .35);
     tx.textContent = inz ? '좋아요! 그대로 버텨요' : F.pat < .35 ? '놓치겠어요! 찌를 초록 칸으로!' : '찌를 초록 칸 쪽으로 옮겨요';
