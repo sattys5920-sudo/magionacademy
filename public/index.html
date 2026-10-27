@@ -1132,7 +1132,7 @@ function toastNext(){
   $('#stage').insertAdjacentHTML('beforeend', `<div class="toast" role="status">${esc(t)}</div>`);
   setTimeout(() => { document.querySelector('.toast')?.remove(); toastBusy = false; toastNext(); }, toastQ.length ? 1500 : 2000);
 }
-// 확인 창: confirmBox('정말 로그아웃할까요?').then(ok => …)
+// 확인 창: confirmBox('정말 로그아웃할까요?').then(ok => .......)
 function confirmBox(msg, okText = '네', cancelText = '아니요', danger = false){
   return new Promise(res => {
     const c = $('#confirm'); c.innerHTML = `<div class="cfbox" role="alertdialog"><div class="msg">${esc(msg)}</div><div class="row"><button class="btn" id="cfNo">${esc(cancelText)}</button><button class="btn ${danger ? 'warn' : 'go'}" id="cfOk">${esc(okText)}</button></div></div>`;
@@ -1190,7 +1190,7 @@ function closeSheet(){
   if (visitUid){ visitOff?.(); visitOff = null; visitUid = null; }
   sheetOn = false; sub = null; tab = 'home'; app.classList.remove('open'); hud(); navMark(); World.nearRefresh && World.nearRefresh();
 }
-// 레벨은 지식(know)으로 정해요: Lv n이 되려면 지식 10·n² (Lv2 40, Lv3 90 …). 내 정보 패널의 경험치 바도 이 값
+// 레벨은 지식(know)으로 정해요: Lv n이 되려면 지식 10·n² (Lv2 40, Lv3 90 ....). 내 정보 패널의 경험치 바도 이 값
 function levelOf(){ const k = me.know || 0, lv = Math.max(1, Math.floor(Math.sqrt(k / 10))); const a = 10 * lv * lv, b = 10 * (lv + 1) * (lv + 1); return { lv, cur: k - a, need: b - a, next: b }; }
 let saveState = '';
 function hud(){
@@ -1440,7 +1440,7 @@ function fishBite(){
   if (!fishing) return;
   fishing.st = 'bite'; World.setBobber({ x: fishing.x, y: fishing.y, bite: true });
   fishShow(`<b class="bang">입질!</b><span class="s">지금 눌러요!</span>`);
-  fishing.timer = setTimeout(() => { if (fishing && fishing.st === 'bite') fishMiss('너무 늦었어요… 찌가 들어가면 바로 눌러요'); }, 1000 + rodLv() * 120);
+  fishing.timer = setTimeout(() => { if (fishing && fishing.st === 'bite') fishMiss('너무 늦었어요.... 찌가 들어가면 바로 눌러요'); }, 1000 + rodLv() * 120);
 }
 function fishMiss(msg){
   if (!fishing) return; clearTimeout(fishing.timer); cancelAnimationFrame(fishing.raf); fishing.st = 'done'; World.setBobber(null);
@@ -1504,7 +1504,7 @@ function fishCatch(){
   if (!f.junk){ pzDrop('fish'); lnDrop('fish'); }
   if (!f.junk && Math.random() < .02) setTimeout(() => recipePaper('fish'), 1200);   // 낚시: 레시피 종이 2%
   if (!f.junk && f.grade >= 3) speak(`${f.name} ${cm}cm 낚았다!`);
-  fishShow(`<div class="fgot">${ic(f.id, 'transform:scale(1.5);margin:8px')}<div><b>${f.name}</b>${f.junk ? '<span class="s">쓰레기예요… 생선 가게에서 1G에 받아 줘요</span>' : `<span class="fstar">${STARS(f.grade)}</span><span class="s">${cm}cm${rec ? ' · 최고 기록!' : ''} · ${f.pay}G</span>`}${isNew && !f.junk ? `<span class="new">새 물고기! 마력 +${f.grade}</span>` : ''}</div></div>
+  fishShow(`<div class="fgot">${ic(f.id, 'transform:scale(1.5);margin:8px')}<div><b>${f.name}</b>${f.junk ? '<span class="s">쓰레기예요.... 생선 가게에서 1G에 받아 줘요</span>' : `<span class="fstar">${STARS(f.grade)}</span><span class="s">${cm}cm${rec ? ' · 최고 기록!' : ''} · ${f.pay}G</span>`}${isNew && !f.junk ? `<span class="new">새 물고기! 마력 +${f.grade}</span>` : ''}</div></div>
     <div class="frow"><button class="btn sm go" data-fx="again">다시 던지기</button><button class="btn sm" data-fx="stop">그만</button></div>`);
 }
 document.addEventListener('pointerdown', e => {
@@ -1960,7 +1960,7 @@ function renderExplore(){
     $('#tok').onclick = () => { xv = { view: 'lobby' }; renderExplore(); }; return;
   }
   if (v === 'result'){
-    const r = xv, T = { clear: '탐사 성공!', time: '시간이 다 됐어요', retreat: '탐사를 마쳤어요', wipe: '전멸했어요…' }[r.how];
+    const r = xv, T = { clear: '탐사 성공!', time: '시간이 다 됐어요', retreat: '탐사를 마쳤어요', wipe: '전멸했어요.......' }[r.how];
     frame(null, '탐사 결과', T, `<section class="sec"><div class="box px" style="padding:14px;text-align:center"><div class="big" style="font-size:42px">${r.how === 'clear' ? '' : r.how === 'wipe' ? '' : ''}</div><b>${T}</b><div class="s sub">진행 ${r.prog}%</div>
       ${r.how === 'wipe' ? '<div class="s">얻은 것을 모두 잃었어요.</div>' : `<div class="s">골드 +${r.gold} · 경험치 +${r.exp}${r.how === 'clear' ? ' (성공 보너스 ×1.5)' : ''}</div>${Object.keys(r.items).length ? `<div class="s">${Object.entries(r.items).map(([k, n]) => `${ITEM[k] || k} ×${n}`).join(' · ')}</div>` : ''}`}
       ${r.up ? `<div class="s b" style="color:var(--gold)">레벨 업! Lv ${r.up[0]} → Lv ${r.up[1]}</div>` : ''}${r.sp ? `<div class="s b" style="color:var(--gold)">스킬 포인트 +${r.sp}</div>` : ''}</div></section><div style="display:flex;gap:8px"><button class="btn go" id="xok" style="flex:1">로비로</button>${back}</div>`);
@@ -1987,7 +1987,7 @@ function xGo(k){
   if (k === 'camp'){ const p = xb?.party || xParty(); p.forEach(u => { u.hp = Math.min(u.mhp, u.hp + Math.round(u.mhp * .5)); u.mp = Math.min(u.mmp, u.mp + Math.round(u.mmp * .5)); }); run.p = p.map(u => ({ hp: u.hp, mp: u.mp })); xMsg = '모닥불에 둘러앉아 체력과 마력을 절반 회복했어요.'; sfx('camp'); sfx('heart'); if (Math.random() < .5){ run.buff = (run.buff || 0) + 1; xMsg += ' 따뜻한 가호 (다음 전투 공격 +25%)'; } xAdd('camp'); save(); return renderExplore(); }
   if (k === 'chest'){ const g = Math.round((20 + Math.round(Math.random() * 30) + Math.round(run.prog / 3)) * (run.mod?.rew || 1)), it = xRand(xReg().loot); run.loot.gold += g; run.loot.items[it] = (run.loot.items[it] || 0) + 1 + (Math.random() < .3 ? 1 : 0); xMsg = `상자에서 골드 ${g}과 ${ITEM[it] || it}이 나왔어요!`; sfx('chest'); if (Math.random() < .12){ xAdd('chest'); save(); return xStartBattle('battle', '상자가 미믹이었어요!'); } xAdd('chest'); save(); return renderExplore(); }
   if (k === 'statue'){ xv = { view: 'march' }; confirmBox('이끼 낀 고대 석상이 있어요. 어떻게 할까요?', '기도하기', '조사하기').then(ok => { xAdd('statue'); const r = Math.random();
-      if (ok){ if (r < .6){ run.buff = (run.buff || 0) + 3; xMsg = '석상이 빛나요! 다음 3번의 전투 공격 +25%.'; } else if (r < .85) xMsg = '아무 일도 일어나지 않았어요…'; else { const p = xb?.party || xParty(); p.forEach(u => { u.hp = Math.max(1, u.hp - Math.round(u.mhp * .15)); }); run.p = p.map(u => ({ hp: u.hp, mp: u.mp })); xMsg = '저주! 모두 체력이 줄었어요.'; } }
+      if (ok){ if (r < .6){ run.buff = (run.buff || 0) + 3; xMsg = '석상이 빛나요! 다음 3번의 전투 공격 +25%.'; } else if (r < .85) xMsg = '아무 일도 일어나지 않았어요.......'; else { const p = xb?.party || xParty(); p.forEach(u => { u.hp = Math.max(1, u.hp - Math.round(u.mhp * .15)); }); run.p = p.map(u => ({ hp: u.hp, mp: u.mp })); xMsg = '저주! 모두 체력이 줄었어요.'; } }
       else { if (r < .7){ const it = xRand(xReg().rare); run.loot.items[it] = (run.loot.items[it] || 0) + 1; run.loot.gold += 30; xMsg = `석상 밑에서 ${ITEM[it] || it}과 골드 30을 찾았어요!`; } else { save(); return xStartBattle('battle', '석상을 지키던 몬스터가 깨어났어요!'); } }
       save(); renderExplore(); }); return; }
 }
@@ -2315,7 +2315,7 @@ function xcoLocalEffect(k, o){
   const run = xEx().run; if (!run) return;
   if (k === 'chest'){ const g = Math.round((20 + Math.round(Math.random() * 30) + Math.round(run.prog / 3)) * (run.mod?.rew || 1)), it = xRand(xReg().loot); run.loot.gold += g; run.loot.items[it] = (run.loot.items[it] || 0) + 1 + (Math.random() < .3 ? 1 : 0); xMsg = `상자에서 골드 ${g}과 ${ITEM[it] || it}이 나왔어요!`; sfx('chest'); }
   else if (k === 'camp'){ xMsg = '모닥불에 둘러앉아 모두 체력과 마력을 절반 회복했어요.' + (o === 'buff' ? ' 따뜻한 가호 (다음 전투 공격 +25%)' : ''); sfx('camp'); sfx('heart'); }
-  else if (k === 'statue'){ if (o === 'buff') xMsg = '석상이 빛나요! 다음 3번의 전투 공격 +25%.'; else if (o === 'none') xMsg = '아무 일도 일어나지 않았어요…'; else { const it = xRand(xReg().rare); run.loot.items[it] = (run.loot.items[it] || 0) + 1; run.loot.gold += 30; xMsg = `석상 밑에서 ${ITEM[it] || it}과 골드 30을 찾았어요!`; } }
+  else if (k === 'statue'){ if (o === 'buff') xMsg = '석상이 빛나요! 다음 3번의 전투 공격 +25%.'; else if (o === 'none') xMsg = '아무 일도 일어나지 않았어요.......'; else { const it = xRand(xReg().rare); run.loot.items[it] = (run.loot.items[it] || 0) + 1; run.loot.gold += 30; xMsg = `석상 밑에서 ${ITEM[it] || it}과 골드 30을 찾았어요!`; } }
   else if (k === 'path') xMsg = '지름길로 들어섰어요! 진행 +8%';
   toast(xMsg); save(); xMHud();
 }
@@ -2374,13 +2374,13 @@ function xcoOnBt(v){
     else if (e.k === 'fl'){ xDelay = e.dl || 0; xFloat(e.id, e.txt, e.col); xDelay = 0; }
     else if (e.k === 'lg'){ const u = [...B.foes, ...B.party].find(x => x.id === e.id); if (u) u.lg = now; }
     else if (e.k === 'sfx'){ setTimeout(() => sfx(e.s), e.dl || 0); } });
-  if (v.over && !B.over){ B.over = true; if (v.win && !B.rewarded) xcoMemberWin(B, v.rew); else if (!v.win) { $('#xlog') && ($('#xlog').textContent = '모두 쓰러졌어요…'); } }
+  if (v.over && !B.over){ B.over = true; if (v.win && !B.rewarded) xcoMemberWin(B, v.rew); else if (!v.win) { $('#xlog') && ($('#xlog').textContent = '모두 쓰러졌어요.......'); } }
   if (sheetOn && sub === 'explore' && xv?.view === 'battle'){ xUp(); xCmd(); }
 }
 function xcoMemberWin(B, rew){   // 이긴 보상: 경험치·골드는 같고, 드롭은 사람마다 따로 굴려요
   B.rewarded = true; const run = xEx().run; if (!run || !rew) return; const rm = (run.mod?.rew || 1) * (.9 + Math.random() * .2); run.loot.exp += Math.round(rew.exp * rm); run.loot.gold += Math.round(rew.gold * rm); let drop = '';
   if (Math.random() < (rew.kind === 'battle' ? .3 : .8)){ const it = xRand(rew.kind === 'boss' ? xReg().rare : xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; drop = ` · ${ITEM[it] || it}`; }
-  save(); $('#xlog') && ($('#xlog').textContent = `승리! 골드 +${rew.gold} · 경험치 +${rew.exp}${drop}`); const el = $('#xcmd'); if (el) el.innerHTML = '<div class="xwait">잠시 뒤 다시 걸어요…</div>';
+  save(); $('#xlog') && ($('#xlog').textContent = `승리! 골드 +${rew.gold} · 경험치 +${rew.exp}${drop}`); const el = $('#xcmd'); if (el) el.innerHTML = '<div class="xwait">잠시 뒤 다시 걸어요.......</div>';
 }
 // ----- 전투 -----
 function xStartBattle(kind, msg){
@@ -2710,7 +2710,7 @@ const xMine = B => B.party.find(x => x.uid === myId()) || B.party[0];
 function xcoCmdSend(B, u, c){ c.tn = B.tn; c.bn = B.bn; xcoSend({ cmd: c }); B.turn = null; B.pick = null; B.menu = 'main'; xUp(); xCmd(); }
 function xCmd(){
   const B = xb, u = xMine(B), el = $('#xcmd'); if (!el) return;
-  const wait = B.over ? '' : u.hp <= 0 ? '쓰러졌어요… 동료가 싸워요' : B.turn !== u ? '차례를 기다려요…' : null;
+  const wait = B.over ? '' : u.hp <= 0 ? '쓰러졌어요.... 동료가 싸워요' : B.turn !== u ? '차례를 기다려요.......' : null;
   const key = wait !== null ? 'w' + wait : B.pick ? 'pick' : B.menu + ':' + u.sks.map(s => Math.ceil(s.mp) <= Math.floor(u.mp) ? 1 : 0).join('') + X_ITEMS.map(x => me.inv[x[0]] || 0).join();
   if (el.dataset.k === key) return; el.dataset.k = key; el.classList.toggle('xsk2', key.startsWith('skills')); el.classList.toggle('xm4', key.startsWith('main') || key.startsWith('items'));
   if (wait !== null){ el.innerHTML = `<div class="xwait">${wait}</div>`; return; }
@@ -2790,7 +2790,7 @@ function xWin(){
   $('#xnext').onclick = next;
   if (run.co){ xcoPubBt(true); setTimeout(next, 2800); }
 }
-function xLose(){ sfx('lose'); const B = xb; B.over = true; clearInterval(xTick); if (xEx().run?.co){ B.won = false; xcoPubBt(true); setTimeout(() => { if (xb === B){ xEnd('wipe'); renderExplore(); } }, 3000); } $('#xlog') && ($('#xlog').textContent = '모두 쓰러졌어요…'); const el = $('#xcmd'); if (el) el.innerHTML = '<button class="btn go" id="xnext" style="grid-column:1/-1">마을로 돌아가기</button>'; $('#xnext').onclick = () => { xEnd('wipe'); renderExplore(); }; }
+function xLose(){ sfx('lose'); const B = xb; B.over = true; clearInterval(xTick); if (xEx().run?.co){ B.won = false; xcoPubBt(true); setTimeout(() => { if (xb === B){ xEnd('wipe'); renderExplore(); } }, 3000); } $('#xlog') && ($('#xlog').textContent = '모두 쓰러졌어요.......'); const el = $('#xcmd'); if (el) el.innerHTML = '<button class="btn go" id="xnext" style="grid-column:1/-1">마을로 돌아가기</button>'; $('#xnext').onclick = () => { xEnd('wipe'); renderExplore(); }; }
 
 // ===== 같이 하는 놀이: 등불 시장 「놀이 게시판」에서 방을 열고, 같은 곳 친구가 참가해요 =====
 // games/<방> = { g 놀이, host, hn 방장 이름, m 장소, st lobby·play·end, at, t0 시작 시각, seed, ord 참가 순서, p: { uid: { n, s 점수, d 끝남 } }, c 줍기·때리기 차지, co 협동 상태 }
@@ -2903,7 +2903,7 @@ function gameOver(fail){
   if (Gm.coop){
     const res = G.result ? G.result() : { ok: !fail, score: 0, text: '' }; rec = res.score;
     coin = res.ok ? 80 + G.n * 5 : 15; mana = res.ok ? 5 : 0; if (buffOn('ggold')) coin = Math.round(coin * 1.5);
-    title = res.ok ? '팀 성공!' : '아쉽게 실패…'; reward = res.text;
+    title = res.ok ? '팀 성공!' : '아쉽게 실패.......'; reward = res.text;
   } else {
     const rank = 1 + ps.filter(([, p]) => (p.s || 0) > G.score).length; rec = Math.max(0, G.score);   // 같은 점수는 같은 등수
     coin = ps.length === 1 ? 10 + Math.max(0, G.score) : G.score > 0 ? [0, 60, 40, 25][rank] || 10 : 10; mana = ps.length > 1 && G.score > 0 ? [0, 5, 3, 2][rank] || 0 : 0; if (buffOn('ggold')) coin = Math.round(coin * 1.5);   // 요리 효과
@@ -2942,7 +2942,7 @@ function pkPick(sp){
   const p = G.pk[sp.id]; if (!p) return;
   GDB.tx(`games/${G.id}/c/${p.i}`, cur => cur ? undefined : myId()).then(r => {
     if (!G) return;
-    if (r.committed){ const d = p.k === 'g' ? 5 : p.k === 'r' ? -2 : 1; addScore(d); toast(p.k === 'g' ? '황금 호박! +5' : p.k === 'r' ? '썩은 호박… -2' : '호박 +1'); }
+    if (r.committed){ const d = p.k === 'g' ? 5 : p.k === 'r' ? -2 : 1; addScore(d); toast(p.k === 'g' ? '황금 호박! +5' : p.k === 'r' ? '썩은 호박.... -2' : '호박 +1'); }
     else toast('앗, 친구가 먼저 주웠어요');
   });
 }
@@ -3122,7 +3122,7 @@ function adminLogin(){
     e.preventDefault(); const err = $('#err');
     if ($('#acode').value.trim() !== ADMIN_CODE) return err.textContent = '코드가 달라요.';
     if (!configured) return showAdmin();   // Firebase가 없으면 이 기기 데이터만 봐요
-    err.textContent = '잠깐만요...';
+    err.textContent = '잠깐만요.......';
     try { await F.signInWithEmailAndPassword(auth, idEmail(ADMIN_ID), pwPad(ADMIN_CODE)); }
     catch (ex){ try { await F.createUserWithEmailAndPassword(auth, idEmail(ADMIN_ID), pwPad(ADMIN_CODE)); } catch (ex2){ err.textContent = `실패했어요. (${ex2.code || ex2.message})`; } }
   };
@@ -3492,44 +3492,44 @@ const npcFace = (spr, size = 48) => {   // 액자 크기가 CSS로 바뀌어도(
 const npcFull = (spr, size = 144) => { const k = size / 64; return `<i class="stspr" style="background:url(art/npcs.webp?v=${NPC_ART_V}) 0 ${-spr * 64 * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
 const NPC_DEF = [
   { id: 'nabi', wander: true, name: '나비', title: '매점 고양이', spr: 0, h: 22, map: 'town', x: 42, y: 53, likes: ['f_crucian', 'd_minnowfry', 'g2_catnip'], dislikes: ['j_weed'],
-    greet: [['…뭘 봐? 생선 없으면 저리 가.', '냐. 오늘은 바람이 비린내가 안 나네.'], ['또 왔어? …딱히 기다린 건 아니야.', '생선 가게 아저씨가 오늘은 붕어가 싱싱하대.'], ['왔구나! 아니, 반가운 척한 거 아니거든.', '네 발소리는 이제 멀리서도 알아.'], ['우리 집사 왔다냥~ …방금 건 못 들은 걸로 해.', '오늘은 네 옆에서 낮잠 자도 돼?']],
-    story: { 2: ['호박 붕어 알아? 꼬리까지 바삭하게 구우면… 크흠.', '좋아하는 걸 말해 주는 건 너한테만이야.'], 5: ['이 방울? 옛날 주인이 달아 줬어.', '주인은 마녀였어. 어느 보름밤에 빗자루를 타고 나가서… 안 돌아왔어.', '그래서 난 시장에서 기다려. 여기선 모두가 지나가니까.'], 8: ['주인 방에서 쪽지를 찾았어. 같이 읽어 줄래?', '「나비야, 내가 늦으면 좋은 사람을 골라. 너는 고르는 눈이 있으니까.」', '…바보. 늦는 게 하루 이틀이야?'], 10: ['결정했어. 너를 새 주인으로 정할게.', '대신 생선은 매일이야. 그리고 쓰다듬는 건 하루 열 번까지만!', '…고마워, 기다리는 걸 덜 외롭게 해 줘서.'] },
+    greet: [['....뭘 봐? 생선 없으면 저리 가.', '냐. 오늘은 바람이 비린내가 안 나네.'], ['또 왔어? ....딱히 기다린 건 아니야.', '생선 가게 아저씨가 오늘은 붕어가 싱싱하대.'], ['왔구나! 아니, 반가운 척한 거 아니거든.', '네 발소리는 이제 멀리서도 알아.'], ['우리 집사 왔다냥~ ....방금 건 못 들은 걸로 해.', '오늘은 네 옆에서 낮잠 자도 돼?']],
+    story: { 2: ['호박 붕어 알아? 꼬리까지 바삭하게 구우면.... 크흠.', '좋아하는 걸 말해 주는 건 너한테만이야.'], 5: ['이 방울? 옛날 주인이 달아 줬어.', '주인은 마녀였어. 어느 보름밤에 빗자루를 타고 나가서.... 안 돌아왔어.', '그래서 난 시장에서 기다려. 여기선 모두가 지나가니까.'], 8: ['주인 방에서 쪽지를 찾았어. 같이 읽어 줄래?', '「나비야, 내가 늦으면 좋은 사람을 골라. 너는 고르는 눈이 있으니까.」', '....바보. 늦는 게 하루 이틀이야?'], 10: ['결정했어. 너를 새 주인으로 정할게.', '대신 생선은 매일이야. 그리고 쓰다듬는 건 하루 열 번까지만!', '....고마워, 기다리는 걸 덜 외롭게 해 줘서.'] },
     reward: { 2: { coin: 50 }, 5: { items: { f_crucian: 2 } }, 8: { mana: 15 }, 10: { coin: 300, items: { d_minnowfry_s: 2 } } } },
   { id: 'batri', wander: true, flap: true, name: '배트리', title: '우체부 박쥐', spr: 1, h: 24, map: 'town', x: 52, y: 54, likes: ['g2_rasp', 'g2_blue', 'd_chestnut'], dislikes: ['g_pepper'],
-    greet: [['편지 왔어요~! 어, 이거 당신 거 아니네?', '우체국이 어디였더라… 아, 바로 뒤구나!'], ['오늘도 열 통 배달! 아홉 통은 엉뚱한 데 갔지만요!', '하늘에서 보면 마을이 호박 파이 같아요.'], ['당신 편지는 제일 먼저 배달할게요! 주소가 어디였죠?', '비밀인데요, 우체국장님 코 골아요.'], ['베프! 오늘 들은 소문 전부 알려 줄게요!', '당신 덕분에 요즘은 한 통도 안 틀려요!']],
-    story: { 2: ['어제 마녀 오두막에 갈 편지를 늑대인간 집에 넣었어요…', '늑대 아저씨가 연애편지인 줄 알고 얼굴이 빨개졌대요!'], 5: ['저기… 비밀 하나 말해도 돼요?', '박쥐인데요… 밤눈이 어두워요. 그래서 자꾸 길을 잃어요.', '안경을 쓰면 놀림받을까 봐 무서워요.'], 8: ['반딧불이를 모아서 길을 밝혀 주다니…!', '이제 밤길이 하나도 안 무서워요. 안경도… 한번 써 볼까요?'], 10: ['짠! 안경 쓴 배트리 어때요? 다들 멋지대요!', '이제 당신 편지는 제가 평생 무료로 배달할게요!'] },
+    greet: [['편지 왔어요~! 어, 이거 당신 거 아니네?', '우체국이 어디였더라.... 아, 바로 뒤구나!'], ['오늘도 열 통 배달! 아홉 통은 엉뚱한 데 갔지만요!', '하늘에서 보면 마을이 호박 파이 같아요.'], ['당신 편지는 제일 먼저 배달할게요! 주소가 어디였죠?', '비밀인데요, 우체국장님 코 골아요.'], ['베프! 오늘 들은 소문 전부 알려 줄게요!', '당신 덕분에 요즘은 한 통도 안 틀려요!']],
+    story: { 2: ['어제 마녀 오두막에 갈 편지를 늑대인간 집에 넣었어요.......', '늑대 아저씨가 연애편지인 줄 알고 얼굴이 빨개졌대요!'], 5: ['저기.... 비밀 하나 말해도 돼요?', '박쥐인데요.... 밤눈이 어두워요. 그래서 자꾸 길을 잃어요.', '안경을 쓰면 놀림받을까 봐 무서워요.'], 8: ['반딧불이를 모아서 길을 밝혀 주다니.......!', '이제 밤길이 하나도 안 무서워요. 안경도.... 한번 써 볼까요?'], 10: ['짠! 안경 쓴 배트리 어때요? 다들 멋지대요!', '이제 당신 편지는 제가 평생 무료로 배달할게요!'] },
     reward: { 2: { coin: 40 }, 5: { items: { g2_firefly: 2 } }, 8: { mana: 15 }, 10: { coin: 250, know: 1 } } },
   { id: 'kappa', wander: true, name: '캇파', title: '낚시꾼 갓파', spr: 2, h: 26, map: 'town', x: 34, y: 85, likes: ['g_pea', 'drop', 'd_rainbowsushi'], dislikes: ['j_can'],
-    greet: [['쉿. 물고기가 도망가.', '…느긋하게 기다리는 것도 낚시야.'], ['오, 왔나. 오늘 물이 좋아.', '찌가 흔들릴 땐 숨부터 참아.'], ['자네 낚시 실력이 꽤 늘었군.', '내 접시 물? 오늘은 찰랑찰랑하지.'], ['낚시 친구, 오늘도 한 마리 하세.', '자네랑 있으면 30년 기다림도 짧게 느껴져.']],
-    story: { 2: ['요령 하나 알려 주지. 입질 직후 반 박자만 참아.', '서두르면 놓치고, 늦으면 도망가지. 낚시는 마음이야.'], 5: ['머리 접시 물이 마르면 힘이 쭉 빠져… 이슬 좀 부어 주겠나?', '휴우… 살겠다. 자네는 은인이야.'], 8: ['30년 전 보름밤, 호수 한가운데가 금빛으로 빛났어.', '그게 「호수의 주인」이야. 난 그날부터 여기 앉아 있지.'], 10: ['자네에게만 알려 주지. 주인은 달이 가장 높을 때, 밤에만 나와.', '좋은 낚싯대와 끈기가 있으면… 자넨 해낼 거야.'] },
+    greet: [['쉿. 물고기가 도망가.', '....느긋하게 기다리는 것도 낚시야.'], ['오, 왔나. 오늘 물이 좋아.', '찌가 흔들릴 땐 숨부터 참아.'], ['자네 낚시 실력이 꽤 늘었군.', '내 접시 물? 오늘은 찰랑찰랑하지.'], ['낚시 친구, 오늘도 한 마리 하세.', '자네랑 있으면 30년 기다림도 짧게 느껴져.']],
+    story: { 2: ['요령 하나 알려 주지. 입질 직후 반 박자만 참아.', '서두르면 놓치고, 늦으면 도망가지. 낚시는 마음이야.'], 5: ['머리 접시 물이 마르면 힘이 쭉 빠져.... 이슬 좀 부어 주겠나?', '휴우.... 살겠다. 자네는 은인이야.'], 8: ['30년 전 보름밤, 호수 한가운데가 금빛으로 빛났어.', '그게 「호수의 주인」이야. 난 그날부터 여기 앉아 있지.'], 10: ['자네에게만 알려 주지. 주인은 달이 가장 높을 때, 밤에만 나와.', '좋은 낚싯대와 끈기가 있으면.... 자넨 해낼 거야.'] },
     reward: { 2: { coin: 40 }, 5: { items: { drop: 3 } }, 8: { mana: 15 }, 10: { coin: 300, items: { d_moontrout_s: 1 } } } },
   { id: 'aula', wander: true, name: '아울라', title: '사서 부엉이', spr: 3, h: 24, map: 'lab', x: 15, y: 10, likes: ['feather', 'd_clovertea', 'd_starcookie'], dislikes: ['d_poisoncandy'],
-    greet: [['도서관에선 조용히… 여긴 교실이군요. 그래도 조용히.', '부우… 낮은 너무 졸려요.'], ['오늘 수업은 들었나요? 지식은 쌓일수록 무거워지지 않아요.', '물약 레시피는 순서가 생명이에요.'], ['당신은 질문을 잘하는 학생이군요. 좋은 습관이에요.', '오늘의 추천 책: 『호박과 달의 관계』.'], ['내 최고의 제자! 부우!', '당신에게는 금서 서가 열쇠도 맡길 수 있어요.']],
-    story: { 2: ['수업 시간에 졸면 안 돼요. 부엉이인 나도 참는걸요.', '…방금 하품은 못 본 걸로 해요.'], 5: ['도서관 깊은 곳에 『사라진 물약 100선』이란 금서가 있었어요.', '어느 날 통째로 사라졌죠. 몇 장만 남기고.'], 8: ['찢어진 페이지를 찾아 줬군요! 여기 적힌 건… 「호박달 물약」의 앞부분이에요.', '나머지는 아직 어딘가에 있어요.'], 10: ['당신 덕분에 금서의 반을 되찾았어요.', '이건 내가 아끼는 공부 비법이에요. 당신이라면 잘 쓸 거예요.'] },
+    greet: [['도서관에선 조용히.... 여긴 교실이군요. 그래도 조용히.', '부우.... 낮은 너무 졸려요.'], ['오늘 수업은 들었나요? 지식은 쌓일수록 무거워지지 않아요.', '물약 레시피는 순서가 생명이에요.'], ['당신은 질문을 잘하는 학생이군요. 좋은 습관이에요.', '오늘의 추천 책: 『호박과 달의 관계』.'], ['내 최고의 제자! 부우!', '당신에게는 금서 서가 열쇠도 맡길 수 있어요.']],
+    story: { 2: ['수업 시간에 졸면 안 돼요. 부엉이인 나도 참는걸요.', '....방금 하품은 못 본 걸로 해요.'], 5: ['도서관 깊은 곳에 『사라진 물약 100선』이란 금서가 있었어요.', '어느 날 통째로 사라졌죠. 몇 장만 남기고.'], 8: ['찢어진 페이지를 찾아 줬군요! 여기 적힌 건.... 「호박달 물약」의 앞부분이에요.', '나머지는 아직 어딘가에 있어요.'], 10: ['당신 덕분에 금서의 반을 되찾았어요.', '이건 내가 아끼는 공부 비법이에요. 당신이라면 잘 쓸 거예요.'] },
     reward: { 2: { know: 1 }, 5: { coin: 80 }, 8: { know: 2 }, 10: { know: 3, mana: 20 } } },
   { id: 'mandi', wander: true, name: '맨디', title: '정원사 맨드레이크', spr: 4, h: 20, map: 'toxic', x: 16, y: 6, likes: ['drop', 'g2_moss', 'g_mint'], dislikes: ['g2_mushred'],
-    greet: [['히익…! 아, 아무것도 아니에요…', '(화분 뒤에 숨었다)'], ['아, 안녕하세요… 오늘은 소리 안 질렀어요…', '이 화분, 제가 키웠어요… 헤헤.'], ['오늘은 먼저 인사하고 싶었어요! 아, 안녕!', '흙 냄새 좋죠? 저는 이 냄새가 제일 좋아요.'], ['당신이 오면 잎사귀가 쫑긋해져요!', '오늘은 비명 대신 노래를 불러 볼까요?']],
-    story: { 2: ['이 화분들… 다 제 친구예요. 말은 못 하지만요.', '당신도… 친구 해 줄래요? 아, 아니에요! 히익!'], 5: ['저는 놀라면 비명을 질러요. 듣는 사람이 기절할 만큼…', '그래서 다들 저를 피해요. 같이 참는 연습… 해 줄래요?'], 8: ['방금… 제가 웃었어요! 비명 말고, 웃음이요!', '처음이에요. 이렇게 크게 웃은 거.'], 10: ['이건 제 비밀 씨앗이에요. 제일 아끼는 거예요.', '친구한테 주는 첫 선물이에요. 잘 키워 줘요!'] },
+    greet: [['히익....! 아, 아무것도 아니에요.......', '(화분 뒤에 숨었다)'], ['아, 안녕하세요.... 오늘은 소리 안 질렀어요.......', '이 화분, 제가 키웠어요.... 헤헤.'], ['오늘은 먼저 인사하고 싶었어요! 아, 안녕!', '흙 냄새 좋죠? 저는 이 냄새가 제일 좋아요.'], ['당신이 오면 잎사귀가 쫑긋해져요!', '오늘은 비명 대신 노래를 불러 볼까요?']],
+    story: { 2: ['이 화분들.... 다 제 친구예요. 말은 못 하지만요.', '당신도.... 친구 해 줄래요? 아, 아니에요! 히익!'], 5: ['저는 놀라면 비명을 질러요. 듣는 사람이 기절할 만큼.......', '그래서 다들 저를 피해요. 같이 참는 연습.... 해 줄래요?'], 8: ['방금.... 제가 웃었어요! 비명 말고, 웃음이요!', '처음이에요. 이렇게 크게 웃은 거.'], 10: ['이건 제 비밀 씨앗이에요. 제일 아끼는 거예요.', '친구한테 주는 첫 선물이에요. 잘 키워 줘요!'] },
     reward: { 2: { coin: 40 }, 5: { items: { g_mint: 3 } }, 8: { mana: 15 }, 10: { coin: 200, items: { g_star: 2 } } } },
   { id: 'jipsin', wander: true, name: '짚신', title: '꼬마 허수아비', spr: 5, h: 26, map: 'campus', x: 24, y: 88, likes: ['g2_straw', 'g2_pseed', 'g2_sseed'], dislikes: ['g2_crowf'],
-    greet: [['까, 까마귀 아니지? 휴…', '나는 무서운 허수아비다! …무서웠어?'], ['오늘은 까마귀가 세 마리밖에 안 왔어!', '호박밭 지키는 건 힘들어.'], ['너랑 있으면 까마귀가 안 와. 신기하지?', '무서운 표정 연습 봐 줄래? 크앙!'], ['내 제일 친한 친구! 호박 하나 몰래 줄까?', '이젠 까마귀도 내 친구야. 너 덕분에!']],
-    story: { 2: ['나는 허수아비인데 까마귀가 무서워…', '오히려 까마귀들이 내 모자 위에서 놀아. 창피해.'], 5: ['무서운 표정을 연습했어. 봐 봐… 크아앙!', '…웃지 마! 진지하단 말이야!'], 8: ['오늘 까마귀한테 말을 걸어 봤어. 사실 걔들도 호박씨를 좋아한대.', '나눠 먹었더니 더 이상 놀리지 않아.'], 10: ['무서운 허수아비보다 친구 많은 허수아비가 더 좋은 것 같아.', '이 모자 너 줄게. 내 보물이야!'] },
+    greet: [['까, 까마귀 아니지? 휴.......', '나는 무서운 허수아비다! ....무서웠어?'], ['오늘은 까마귀가 세 마리밖에 안 왔어!', '호박밭 지키는 건 힘들어.'], ['너랑 있으면 까마귀가 안 와. 신기하지?', '무서운 표정 연습 봐 줄래? 크앙!'], ['내 제일 친한 친구! 호박 하나 몰래 줄까?', '이젠 까마귀도 내 친구야. 너 덕분에!']],
+    story: { 2: ['나는 허수아비인데 까마귀가 무서워.......', '오히려 까마귀들이 내 모자 위에서 놀아. 창피해.'], 5: ['무서운 표정을 연습했어. 봐 봐.... 크아앙!', '....웃지 마! 진지하단 말이야!'], 8: ['오늘 까마귀한테 말을 걸어 봤어. 사실 걔들도 호박씨를 좋아한대.', '나눠 먹었더니 더 이상 놀리지 않아.'], 10: ['무서운 허수아비보다 친구 많은 허수아비가 더 좋은 것 같아.', '이 모자 너 줄게. 내 보물이야!'] },
     reward: { 2: { coin: 40 }, 5: { items: { g2_pseed: 3 } }, 8: { mana: 15 }, 10: { coin: 250, items: { g2_gacorn: 1 } } } },
   { id: 'sera', name: '세라 선생님', title: '양호 선생님', av: true, look: 7, map: 'lab', x: 8, y: 9, likes: ['g_chamo', 'p_red', 'd_seahorsetea'], dislikes: ['j_boot'],
     greet: [['어디 다친 데는 없니? 물약 맛은 보장 못 하지만.', '손은 깨끗이 씻었지?'], ['오늘도 무사히 왔구나. 다행이야.', '피곤하면 침대에서 좀 쉬렴.'], ['네가 오면 양호실이 밝아져.', '오늘은 맛있는(!) 물약을 만들어 봤어.'], ['우리 학교 최고의 조수님 오셨네.', '너라면 언젠가 훌륭한 마녀가 될 거야.']],
-    story: { 2: ['내 물약이 맛없다는 소문? …사실이야.', '하지만 잘 듣는 건 확실해!'], 5: ['나도 학생 때 첫 물약을 망쳤어. 솥이 터져서 머리가 초록색이 됐지.', '그날 울면서 깨달았어. 실수는 레시피를 고치는 거라고.'], 8: ['이건 그때 만든 「위로의 레시피」야. 맛은… 조금 나아졌어.', '힘든 날 마셔. 너도 실수해도 괜찮아.'], 10: ['고마워. 네 덕분에 학생들한테 더 다정해질 수 있었어.', '이건 양호실 비상약이야. 꼭 필요할 때 써.'] },
+    story: { 2: ['내 물약이 맛없다는 소문? ....사실이야.', '하지만 잘 듣는 건 확실해!'], 5: ['나도 학생 때 첫 물약을 망쳤어. 솥이 터져서 머리가 초록색이 됐지.', '그날 울면서 깨달았어. 실수는 레시피를 고치는 거라고.'], 8: ['이건 그때 만든 「위로의 레시피」야. 맛은.... 조금 나아졌어.', '힘든 날 마셔. 너도 실수해도 괜찮아.'], 10: ['고마워. 네 덕분에 학생들한테 더 다정해질 수 있었어.', '이건 양호실 비상약이야. 꼭 필요할 때 써.'] },
     reward: { 2: { coin: 40 }, 5: { mana: 10 }, 8: { items: { p_red: 3 } }, 10: { coin: 200, mana: 25 } } },
   { id: 'madeleine', name: '마들렌', title: '과자 교실 제빵사', av: true, look: 11, map: 'candy', x: 12, y: 9, likes: ['g_wheat', 'honey', 'd_moonmochi'], dislikes: ['g2_poison'],
     greet: [['어서 와! 손 씻고! 앞치마 입고!', '반죽은 사랑이야, 사랑!'], ['오늘 솥 냄새 좋지? 내 비법이야!', '설탕은 조금, 웃음은 많이!'], ['너 요리 실력 많이 늘었더라!', '맛보기 하나? 아, 이건 아직 실험작이야.'], ['우리 과자 교실의 자랑! 꼬옥 안아 주자!', '너라면 호박달 케이크도 만들 수 있어!']],
     story: { 2: ['내 꿈은 전설의 「호박달 케이크」를 굽는 거야.', '보름달 아래서 구우면 먹은 사람이 하루 종일 웃는대!'], 5: ['레시피 반은 할머니 노트에 있었는데, 나머지가 없어.', '밀가루 얼룩이랑 「달이 노래할 때」라는 말만 남았어.'], 8: ['「달이 노래할 때」는 노래하는 종꽃을 말하는 거였어!', '네 덕분에 거의 다 찾았어. 이제 굽기만 하면 돼!'], 10: ['완성이야! 호박달 케이크!', '첫 조각은 너한테 줄게. 그리고 레시피도 같이 나누자.'] },
     reward: { 2: { coin: 40 }, 5: { items: { honey: 3 } }, 8: { mana: 15 }, 10: { coin: 250, items: { d_fairycake_s: 1 } } } },
   { id: 'stella', name: '스텔라', title: '점성술사', av: true, look: 3, map: 'town', x: 68, y: 74, likes: ['g2_moonst', 'g2_starfall', 'd_auroraparfait'], dislikes: ['g2_pebble'],
-    greet: [['별이 말하길… 당신이 올 줄 알았대요.', '오두막이 어느 쪽이었더라… 아, 바로 뒤네요.'], ['오늘의 운세: 호수 쪽으로 가면 좋은 일이 있어요.', '별은 길을 알려 주는데 저는 길을 잃어요.'], ['당신의 별자리가 반짝이고 있어요.', '오늘은 특별히 무료로 점쳐 줄게요.'], ['운명의 친구여, 오늘도 별이 당신 편이에요.', '당신과 만난 건 별자리에도 쓰여 있었어요.']],
-    story: { 2: ['사실 저 길치예요. 별 보는 사람이 길을 잃다니, 웃기죠?', '그래도 하늘 길은 절대 안 헤매요.'], 5: ['요즘 별자리가 이상해요. 호박달 옆에 처음 보는 붉은 별이 떴어요.', '큰일이 시작되려는 징조예요. 학교에 손님들이 찾아올지도…'], 8: ['붉은 별은 「겁 많은 별」이래요. 무언가를 무서워하는 존재의 별.', '그 존재를 도와주는 게 우리 몫일지도 몰라요.'], 10: ['당신은 별의 아이예요. 앞으로 올 일들을 잘 헤쳐 나갈 거예요.', '이건 행운의 부적이에요. 별가루를 담았어요.'] },
+    greet: [['별이 말하길.... 당신이 올 줄 알았대요.', '오두막이 어느 쪽이었더라.... 아, 바로 뒤네요.'], ['오늘의 운세: 호수 쪽으로 가면 좋은 일이 있어요.', '별은 길을 알려 주는데 저는 길을 잃어요.'], ['당신의 별자리가 반짝이고 있어요.', '오늘은 특별히 무료로 점쳐 줄게요.'], ['운명의 친구여, 오늘도 별이 당신 편이에요.', '당신과 만난 건 별자리에도 쓰여 있었어요.']],
+    story: { 2: ['사실 저 길치예요. 별 보는 사람이 길을 잃다니, 웃기죠?', '그래도 하늘 길은 절대 안 헤매요.'], 5: ['요즘 별자리가 이상해요. 호박달 옆에 처음 보는 붉은 별이 떴어요.', '큰일이 시작되려는 징조예요. 학교에 손님들이 찾아올지도.......'], 8: ['붉은 별은 「겁 많은 별」이래요. 무언가를 무서워하는 존재의 별.', '그 존재를 도와주는 게 우리 몫일지도 몰라요.'], 10: ['당신은 별의 아이예요. 앞으로 올 일들을 잘 헤쳐 나갈 거예요.', '이건 행운의 부적이에요. 별가루를 담았어요.'] },
     reward: { 2: { coin: 40 }, 5: { mana: 10 }, 8: { items: { g2_stardust: 2 } }, 10: { coin: 250, know: 1, mana: 15 } } },
   { id: 'leo', name: '레오', title: '사육장 관리인', av: true, look: 5, map: 'barn', x: 21, y: 31, likes: ['milk', 'hegg', 'd_loachsoup'], dislikes: ['d_poisoncandy'],
-    greet: [['…뭐. 볼일 있으면 말해.', '생물들 밥은 줬나.'], ['오늘 박쥐들 컨디션이 좋더군.', '…너, 생물 다루는 손이 나쁘지 않아.'], ['왔나. 차 한잔 하고 가.', '저 녀석이 너만 보면 꼬리를 흔들어.'], ['너라면 우리 사육장을 맡겨도 되겠어.', '…고맙다. 이 말 처음 해 본다.']],
-    story: { 2: ['생물들은 거짓말을 안 해. 그래서 사람보다 편해.', '…방금 건 혼잣말이다.'], 5: ['3년 전, 알 하나를 잃어버렸어. 아기 용 알이었지.', '폭풍이 치던 밤에 둥지에서 굴러떨어져서… 아직도 찾고 있어.'], 8: ['호수 근처에서 알 껍질 조각을 찾았다고? …용 비늘 무늬가 맞아.', '살아 있어. 어딘가에서 자라고 있을 거야.'], 10: ['네 덕분에 다시 희망이 생겼어.', '이건 우리 사육장에서 제일 귀한 알이야. 네가 키워 줘.'] },
+    greet: [['....뭐. 볼일 있으면 말해.', '생물들 밥은 줬나.'], ['오늘 박쥐들 컨디션이 좋더군.', '....너, 생물 다루는 손이 나쁘지 않아.'], ['왔나. 차 한잔 하고 가.', '저 녀석이 너만 보면 꼬리를 흔들어.'], ['너라면 우리 사육장을 맡겨도 되겠어.', '....고맙다. 이 말 처음 해 본다.']],
+    story: { 2: ['생물들은 거짓말을 안 해. 그래서 사람보다 편해.', '....방금 건 혼잣말이다.'], 5: ['3년 전, 알 하나를 잃어버렸어. 아기 용 알이었지.', '폭풍이 치던 밤에 둥지에서 굴러떨어져서.... 아직도 찾고 있어.'], 8: ['호수 근처에서 알 껍질 조각을 찾았다고? ....용 비늘 무늬가 맞아.', '살아 있어. 어딘가에서 자라고 있을 거야.'], 10: ['네 덕분에 다시 희망이 생겼어.', '이건 우리 사육장에서 제일 귀한 알이야. 네가 키워 줘.'] },
     reward: { 2: { coin: 40 }, 5: { items: { hegg: 3 } }, 8: { mana: 15 }, 10: { coin: 200, items: { egg: 1 } } } },
 ];
 let npcOver = {};   // 관리자가 고친 내용 (npcs/<id>)
@@ -3699,7 +3699,7 @@ World.onNpc = id => { if (!me) return; World.hideBubble(); if (String(id).starts
 // 평소 대사: 말투 단계 + (가끔) 날씨·시간대 + (가끔) 지난 이벤트 회상
 function npcLine(n){
   const P = npcProf(n.id), h = hearts(n.id), r = Math.random();
-  const daily = P.daily?.[toneOf(h)] || ((n.greet || [])[Math.min(3, Math.floor(h / 3))]) || ['……'];
+  const daily = P.daily?.[toneOf(h)] || ((n.greet || [])[Math.min(3, Math.floor(h / 3))]) || ['.......'];
   const rec = Object.entries(P.recall || {}).filter(([k]) => k.startsWith('flag:') ? flagOn(k.slice(5)) : npcSt(n.id).seen[k]).flatMap(([, v]) => v);
   if (typeof mqNpcExtra === 'function') rec.push(...mqNpcExtra(n.id));
   const amb = [...(P.ambient?.[bandNow()] || []), ...(P.ambient?.[weatherToday()] || [])];
@@ -3713,7 +3713,7 @@ async function npcMenu(n, line){
   if (st.failK){ const k = st.failK; st.failK = null; save(); const ev = await npcEvent(n.id, k); if (ev && ev.fail) return evPlay(n, k, { ...ev, script: [{ cmd: 'fade_in' }, ...ev.fail], cold: [] }, { fail: true }); }
   const e = evCond(n.id), here = e && npcSpot(n)?.pid === e.ev.conditions.location;
   const hd = hideState(n.id);
-  if (hd){ npcPanel(n, '……', `<button class="btn sm go" data-nx="ev" data-k="${hd.k}"> ♥${hd.k} 「${esc(fillVars(hd.ev.title, n.id))}」</button>`); npcUI().dataset.id = n.id; return; }
+  if (hd){ npcPanel(n, '.......', `<button class="btn sm go" data-nx="ev" data-k="${hd.k}"> ♥${hd.k} 「${esc(fillVars(hd.ev.title, n.id))}」</button>`); npcUI().dataset.id = n.id; return; }
   const talked = st.t === todayKey(), gifted = st.g === todayKey();
   npcPanel(n, esc(line || npcLine(n)),
     `${here ? `<button class="btn sm go" data-nx="ev" data-k="${e.k}"> ♥${e.k} 「${esc(fillVars(e.ev.title, n.id))}」</button>` : ''}<button class="btn sm ${talked ? '' : 'go'}" data-nx="talk">대화${talked ? ' (오늘 함)' : ''}</button><button class="btn sm ${gifted ? '' : 'go'}" data-nx="gift">선물${gifted ? ' (오늘 줌)' : ''}</button><button class="btn sm" data-nx="story">이야기</button>`);
@@ -3740,7 +3740,7 @@ function renderNpcGift(){
   on('[data-ngive]', b => { const k = b.dataset.ngive; if (done || !(me.inv[k] > 0)) return; me.inv[k]--; st.g = todayKey();
     const kind = likes.includes(k) ? 'love' : dislikes.includes(k) ? 'hate' : 'like', d = { love: 40, like: 15, hate: -30 }[kind];
     me.giftLog = me.giftLog || {}; (me.giftLog[n.id] ||= {})[k] = kind;   // 관계 패널의 「알아낸 선물」
-    const ls = P.gift?.[kind] || { love: ['우와, 이거 정말 좋아해요! 고마워요!'], like: ['고마워요, 잘 쓸게요.'], hate: ['으…… 이건 좀 별로예요.'] }[kind];
+    const ls = P.gift?.[kind] || { love: ['우와, 이거 정말 좋아해요! 고마워요!'], like: ['고마워요, 잘 쓸게요.'], hate: ['으.... 이건 좀 별로예요.'] }[kind];
     npcMsg = ''; closeSheet(); npcAddA(n.id, d); save(); syncNpcs(); setTimeout(() => npcMenu(n, fillVars(ls[Math.floor(Math.random() * ls.length)], n.id)), 100); });
 }
 async function renderNpcStory(){
@@ -3764,9 +3764,9 @@ const TOWNS = [
   { id: 'elder_b', map: 'quarter', x: 46, y: 29, r: 1, lines: ['벌꿀은 서두르면 안 돼. 사람 마음도 그렇고.', '시장 바닥에서 반백 년을 살았어. 웬만한 소문은 다 들었지.', '그 제빵사 아이, 목소리 큰 건 예나 지금이나 똑같구먼.'] },
   { id: 'florist', map: 'town', x: 60, y: 42, r: 1, lines: ['오늘의 꽃은 은방울꽃이에요. 작아도 향이 멀리 가요.', '온실 쪽에서 가끔 비명이 들려요. 이제는 반가운 소리예요.', '꽃은 물보다 햇볕을 먼저 기억한대요.'] },
   { id: 'optician', map: 'town', x: 14, y: 42, r: 1, lines: ['눈이 침침하면 언제든 와요. 별도 다시 보일 거예요.', '안경 쓰는 걸 부끄러워하는 손님이 제일 마음에 걸려요.', '렌즈는 닦을수록 맑아져요. 마음도 그렇고요.'] },
-  { id: 'gray', map: 'town', x: 66, y: 56, r: 1, lines: ['우체국은 지각을 용서하지 않네. 편지는 기다리니까.', '우리 우체부는 길은 몰라도 사람은 안다네. ……방금 그 말은 못 들은 걸로 하게.', '봉투에 주소는 또박또박 쓰게. 바람 부는 곳은 주소가 아니야.'] },
-  { id: 'kkaksun', map: 'town', x: 58, y: 57, r: 1, lines: ['깍! 배달은 빨라야 제맛이지.', '박쥐 걔? ……요즘은 좀 하더라. 칭찬 아니야.', '반짝이는 거 있으면 나 줘. 그냥 보기만 할게.'] },
-  { id: 'husband', map: 'town', x: 72, y: 57, r: 1, when: ['evening'], need: 'sera_h2', lines: ['도시락이 짰다고요? ……다음엔 소금을 덜 넣어 볼게요.', '양호실 선생님 요즘 어때 보여요? 아, 그냥 궁금해서요.', '차는 꼭 따뜻할 때 마셔야 해요. 식으면 다른 맛이 되거든요.'] },
+  { id: 'gray', map: 'town', x: 66, y: 56, r: 1, lines: ['우체국은 지각을 용서하지 않네. 편지는 기다리니까.', '우리 우체부는 길은 몰라도 사람은 안다네. ....방금 그 말은 못 들은 걸로 하게.', '봉투에 주소는 또박또박 쓰게. 바람 부는 곳은 주소가 아니야.'] },
+  { id: 'kkaksun', map: 'town', x: 58, y: 57, r: 1, lines: ['깍! 배달은 빨라야 제맛이지.', '박쥐 걔? ....요즘은 좀 하더라. 칭찬 아니야.', '반짝이는 거 있으면 나 줘. 그냥 보기만 할게.'] },
+  { id: 'husband', map: 'town', x: 72, y: 57, r: 1, when: ['evening'], need: 'sera_h2', lines: ['도시락이 짰다고요? ....다음엔 소금을 덜 넣어 볼게요.', '양호실 선생님 요즘 어때 보여요? 아, 그냥 궁금해서요.', '차는 꼭 따뜻할 때 마셔야 해요. 식으면 다른 맛이 되거든요.'] },
   { id: 'kids', map: 'campus', x: 44, y: 78, r: 2, when: ['day', 'evening'], lines: ['술래잡기 할래? 넌 술래!', '호박밭 허수아비는 웃는 얼굴이야. 무섭게 해도 웃어.', '우체부 박쥐가 우리 집에 이웃집 편지를 또 줬어!'] },
 ];
 const townId = id => 't:' + id;
@@ -4090,7 +4090,7 @@ function evFinish(ctx){
     if (p === 'cake_recipe') me.inv.d_fairycake_s = (me.inv.d_fairycake_s || 0) + 3;
   });
   save(); hud(); npcSig = ''; syncNpcs();
-  toast(ctx.cold ? `${withJosa(n.name, '과', '와')} 조금 서먹해졌어요……` : `♥${k} 「${fillVars(ev.title, n.id)}」${got.length ? ' · ' + got.join(', ') : ''}`);
+  toast(ctx.cold ? `${withJosa(n.name, '과', '와')} 조금 서먹해졌어요.......` : `♥${k} 「${fillVars(ev.title, n.id)}」${got.length ? ' · ' + got.join(', ') : ''}`);
 }
 document.addEventListener('click', e => { if (!evOn || !evUI().contains(e.target) || e.target.closest('.evo,.evskip')) return; evOn.tapR && evOn.tapR(); });
 document.addEventListener('keydown', e => { if (evOn && !e.target.matches('input,textarea') && (e.key === ' ' || e.key === 'Enter')){ e.preventDefault(); evOn.tapR && evOn.tapR(); } });
@@ -4105,8 +4105,8 @@ const HUMAN_NPC = ['sera', 'madeleine', 'stella', 'leo'];
 function koCheck(t, human){
   const w = [], s = String(t || '');
   (s.match(KO_UNIT) || []).forEach(m => w.push(`숫자와 단위를 띄어 써요 「${m}」`));
-  (s.match(/…+/g) || []).forEach(m => { if (m.length !== 2) w.push('말줄임표는 「……」로'); });
-  ['...', '?!', '!?', '!!', '~~'].forEach(b => { if (s.includes(b)) w.push(`「${b}」는 쓰지 않아요`); });
+  (s.match(/....+/g) || []).forEach(m => { if (m.length !== 2) w.push('말줄임표는 「....」로'); });
+  ['.......', '?!', '!?', '!!', '~~'].forEach(b => { if (s.includes(b)) w.push(`「${b}」는 쓰지 않아요`); });
   KO_WRONG.forEach(b => { if (['구지', '바램', '되요'].includes(b) ? new RegExp('(?<![가-힣])' + b).test(s) : s.includes(b)) w.push(`틀린 표기 「${b}」`); });   // 「식구지」 같은 낱말 속 조각은 빼요
   KO_NAMES.forEach(b => { if (s.includes(b)) w.push(`사람 NPC 이름은 변수로 「${b}」 → {sera.name} 등`); });
   if (human){ const m = KO_GENDER.exec(s); if (m) w.push(`성별을 단정하는 말 「${m[1]}」`); }
@@ -4148,7 +4148,7 @@ function adminEvRead(){
 }
 function adminEvHTML(){
   if (!adEvK) return `<div class="s">고칠 하트 이벤트를 골라요</div>`;
-  if (!adEvDraft) return `<div class="s">불러오는 중…</div>`;
+  if (!adEvDraft) return `<div class="s">불러오는 중.......</div>`;
   const e = adEvDraft, J = o => o === undefined ? '' : esc(JSON.stringify(o, null, 1));
   return `<label>제목 <input data-evf="title" value="${esc(e.title || '')}"></label>
     <label>열리는 조건 (JSON · location은 장소 id, time morning/day/evening/night, weather clear/rain/fog/snow) <textarea data-evj="conditions" rows="3" class="mono">${J(e.conditions)}</textarea></label>
@@ -4284,24 +4284,24 @@ function adminNpcRead(){
 // 단계 종류: talk 이야기 듣기(한 사람 1번, goal명) · give 물건 건네기(goal개) · game 놀이(g, 협동은 성공 수 / 경쟁은 점수 합) · rest 끝까지 쉬기(goal번)
 const STORY = [
   { name: '겁쟁이 뱀파이어', npc: { id: 'm_lucian', name: '블라디', title: '드라큘라 백작 가문의 막내', spr: 6, map: 'town', x: 46, y: 24 },
-    intro: ['보름달이 뜬 밤, 뱀파이어 저택의 문이 삐걱 열렸어요.', '블라디: 저, 저기… 학생 여러분… 부탁이 있어요…', '블라디: 저는 드라큘라 백작 가문의 막내, 열세 살 뱀파이어인데요… 피를 보면… 기절해요. 토마토 주스는 정말 좋아하는데…', '블라디: 이대로면 뱀파이어 자격을 잃어요… 도와주세요…!'],
+    intro: ['보름달이 뜬 밤, 뱀파이어 저택의 문이 삐걱 열렸어요.', '블라디: 저, 저기.... 학생 여러분.... 부탁이 있어요.......', '블라디: 저는 드라큘라 백작 가문의 막내, 열세 살 뱀파이어인데요.... 피를 보면.... 기절해요. 토마토 주스는 정말 좋아하는데.......', '블라디: 이대로면 뱀파이어 자격을 잃어요.... 도와주세요.......!'],
     steps: [
-      { t: 'talk', goal: 6, title: '블라디의 고민 듣기', desc: '저택 앞 블라디에게 이야기를 들어 줘요', done: '블라디: 다들 들어 줘서 고마워요… 피 말고 붉은 걸로 버틸 수 있을까요?' },
-      { t: 'give', item: 'g_straw', goal: 30, title: '피처럼 붉은 딸기', desc: '반 전체가 딸기 30개를 모아 건네요', done: '블라디: 딸기… 피처럼 붉은데 무섭지 않아요! 달콤해요!' },
+      { t: 'talk', goal: 6, title: '블라디의 고민 듣기', desc: '저택 앞 블라디에게 이야기를 들어 줘요', done: '블라디: 다들 들어 줘서 고마워요.... 피 말고 붉은 걸로 버틸 수 있을까요?' },
+      { t: 'give', item: 'g_straw', goal: 30, title: '피처럼 붉은 딸기', desc: '반 전체가 딸기 30개를 모아 건네요', done: '블라디: 딸기.... 피처럼 붉은데 무섭지 않아요! 달콤해요!' },
       { t: 'give', item: 'g2_rasp', goal: 20, title: '숲속 산딸기', desc: '산딸기 20개 (숲·들판 반짝이)', done: '블라디: 산딸기는 새콤해서 정신이 번쩍 들어요.' },
       { t: 'give', item: 'honey', goal: 10, title: '용기를 주는 꿀', desc: '벌꿀 10개', done: '블라디: 꿀을 넣으면 토마토 주스 같은 붉은 음료가 더 맛있어지겠죠?' },
-      { t: 'give', item: 'd_jamtoast', goal: 6, title: '붉은 잼 토스트', desc: '과자 교실에서 「산딸기 잼 토스트」 6개를 만들어 건네요', done: '블라디: 이, 이걸 먹으니까… 몸에 힘이 나요! 피 대신 붉은 음식이면 돼요!' },
+      { t: 'give', item: 'd_jamtoast', goal: 6, title: '붉은 잼 토스트', desc: '과자 교실에서 「산딸기 잼 토스트」 6개를 만들어 건네요', done: '블라디: 이, 이걸 먹으니까.... 몸에 힘이 나요! 피 대신 붉은 음식이면 돼요!' },
       { t: 'talk', goal: 8, title: '저택 앞 건배', desc: '8명이 블라디와 건배해요', done: '블라디: 건배! 이제 저는 붉은 음식을 사랑하는 뱀파이어예요!' },
-    ], ending: ['블라디는 처음으로 당당하게 망토를 펼쳤어요.', '블라디: 여러분 덕분이에요. 뱀파이어 저택은 언제든 열려 있어요!', '그런데 그날 밤, 묘지 쪽에서 누군가 훌쩍이는 소리가 들려왔어요…'] },
+    ], ending: ['블라디는 처음으로 당당하게 망토를 펼쳤어요.', '블라디: 여러분 덕분이에요. 뱀파이어 저택은 언제든 열려 있어요!', '그런데 그날 밤, 묘지 쪽에서 누군가 훌쩍이는 소리가 들려왔어요.......'] },
   { name: '외로운 유령', npc: { id: 'm_boo', name: '유령', title: '이름을 잊은 유령', spr: 7, map: 'town', x: 22, y: 77, alpha: .8, float: true },
-    intro: ['묘지 문 앞에서 하얀 무언가가 훌쩍이고 있어요.', '유령: 흑… 아무도 나를 못 봐. 말을 걸어도 다들 지나가 버려.', '유령: 내 이름도 잊어버렸어… 나도 친구랑 놀고 싶어… 나를 보이게 해 줄 수 있어?'],
+    intro: ['묘지 문 앞에서 하얀 무언가가 훌쩍이고 있어요.', '유령: 흑.... 아무도 나를 못 봐. 말을 걸어도 다들 지나가 버려.', '유령: 내 이름도 잊어버렸어.... 나도 친구랑 놀고 싶어.... 나를 보이게 해 줄 수 있어?'],
     steps: [
-      { t: 'talk', goal: 6, title: '유령에게 말 걸기', desc: '묘지 앞 유령에게 다가가 말을 걸어요', done: '유령: 지, 진짜로 나한테 말 거는 거야? 우와…' },
+      { t: 'talk', goal: 6, title: '유령에게 말 걸기', desc: '묘지 앞 유령에게 다가가 말을 걸어요', done: '유령: 지, 진짜로 나한테 말 거는 거야? 우와.......' },
       { t: 'give', item: 'g2_ghostf', goal: 8, title: '유령 꽃 모으기', desc: '묘지 반짝이에서 나는 유령 꽃 8송이', done: '유령: 유령 꽃 향기를 맡으니까 몸이 조금 또렷해졌어!' },
       { t: 'give', item: 'drop', goal: 20, title: '달빛 이슬', desc: '달빛 이슬 20개', done: '유령: 달빛 이슬로 몸을 반짝반짝 닦았어!' },
       { t: 'give', item: 'd_ghostmallow', goal: 4, title: '유령 마시멜로', desc: '「유령 마시멜로」 4개 (과자 교실)', done: '유령: 이거 먹으니까 볼이 빨개졌어! 이제 다들 날 볼 수 있어!' },
       { t: 'game', g: 'coop', goal: 3, title: '유령과 함께 놀기', desc: '협동 놀이(솥·유령 막기·별자리)를 반 전체가 3번 성공해요', done: '유령: 같이 노는 게 이렇게 신나는 거였구나!' },
-      { t: 'talk', goal: 8, title: '유령의 첫 파티', desc: '8명이 유령의 파티에 와요', done: '유령: 오늘은 내 인생… 아니, 유령생 최고의 날이야!' },
+      { t: 'talk', goal: 8, title: '유령의 첫 파티', desc: '8명이 유령의 파티에 와요', done: '유령: 오늘은 내 인생.... 아니, 유령생 최고의 날이야!' },
     ], ending: ['유령은 이제 학교 곳곳에서 친구들과 숨바꼭질을 해요.', '유령: 고마워! 그런데 마녀 오두막 쪽에서 빗자루 찾는 소리가 들렸어.'] },
   { name: '빗자루를 잃은 마녀', npc: { id: 'm_hazel', name: '베아트릭스', title: '떠돌이 마녀', spr: 8, map: 'town', x: 64, y: 75 },
     intro: ['마녀의 오두막 앞에서 떠돌이 마녀가 발을 동동 굴러요.', '베아트릭스: 내 빗자루가 사라졌어! 보름달이 뜨기 전에 날아가야 하는데!', '베아트릭스: 새 빗자루를 만들어야 해. 마흔 해 전 이 학교에서 배운 솜씨 그대로 말이야. 재료 좀 같이 모아 줄래?'],
@@ -4312,19 +4312,19 @@ const STORY = [
       { t: 'give', item: 'g2_maple', goal: 15, title: '단풍잎 장식', desc: '빨간 단풍잎 15장', done: '베아트릭스: 단풍잎 장식까지! 세상에서 제일 예쁜 빗자루야.' },
       { t: 'game', g: 'broom', goal: 60, title: '시험 비행', desc: '빗자루 경주에서 반 전체가 묘비 60개를 통과해요', done: '베아트릭스: 다들 엄청 잘 난다! 나도 자신감이 생겼어!' },
       { t: 'talk', goal: 8, title: '보름달 밤 비행 응원', desc: '8명이 베아트릭스를 응원해요', done: '베아트릭스: 날았다! 마흔 해 만에 다시 학교 위를 나는 기분이야! 다들 고마워!' },
-    ], ending: ['베아트릭스는 새 빗자루로 보름달을 한 바퀴 돌았어요.', '베아트릭스: 위에서 보니 숲가 통나무집 굴뚝에서 털이 날리던데… 무슨 일이지?'] },
+    ], ending: ['베아트릭스는 새 빗자루로 보름달을 한 바퀴 돌았어요.', '베아트릭스: 위에서 보니 숲가 통나무집 굴뚝에서 털이 날리던데.... 무슨 일이지?'] },
   { name: '털갈이하는 늑대인간', npc: { id: 'm_wolfgang', name: '우르', title: '숲가 통나무집의 사냥꾼', spr: 9, map: 'town', x: 76, y: 91 },
-    intro: ['숲가 통나무집 앞에 털이 수북하게 쌓여 있어요.', '우르: 크흠… 보지 마. 털갈이 중이야.', '우르: 보름달 축제에서 딸 솜이에게 멋진 털로 춤을 보여 주기로 했는데… 이 꼴로는 못 나가.'],
+    intro: ['숲가 통나무집 앞에 털이 수북하게 쌓여 있어요.', '우르: 크흠.... 보지 마. 털갈이 중이야.', '우르: 보름달 축제에서 딸 솜이에게 멋진 털로 춤을 보여 주기로 했는데.... 이 꼴로는 못 나가.'],
     steps: [
-      { t: 'talk', goal: 6, title: '우르 달래기', desc: '숲가 통나무집 앞 우르에게 말을 걸어요', done: '우르: …너희, 생각보다 괜찮은 녀석들이군.' },
+      { t: 'talk', goal: 6, title: '우르 달래기', desc: '숲가 통나무집 앞 우르에게 말을 걸어요', done: '우르: ....너희, 생각보다 괜찮은 녀석들이군.' },
       { t: 'give', item: 'wool', goal: 20, title: '임시 털옷', desc: '양털 20개로 임시 털옷을 만들어요', done: '우르: 따뜻하군. 털이 다시 날 때까지 이거면 돼.' },
       { t: 'give', item: 'g2_chest', goal: 15, title: '털에 좋은 알밤', desc: '알밤 15개', done: '우르: 알밤을 먹으니 털이 윤기 나는 것 같아.' },
       { t: 'give', item: 'hegg', goal: 20, title: '든든한 달걀', desc: '달걀 20개', done: '우르: 단백질은 털의 기본이지.' },
-      { t: 'give', item: 'd_chestnut', goal: 6, title: '꿀 군밤 꼬치', desc: '「꿀 군밤 꼬치」 6개 (과자 교실)', done: '우르: 털이… 털이 돌아왔다! 아우우우~!' },
+      { t: 'give', item: 'd_chestnut', goal: 6, title: '꿀 군밤 꼬치', desc: '「꿀 군밤 꼬치」 6개 (과자 교실)', done: '우르: 털이.... 털이 돌아왔다! 아우우우~!' },
       { t: 'talk', goal: 8, title: '보름달 축제 춤', desc: '8명이 우르와 함께 춤춰요', done: '우르: 너희랑 추는 춤이 최고야! 솜이도 좋아하겠군.' },
-    ], ending: ['우르의 털은 보름달처럼 은빛으로 빛났어요.', '우르: 고맙다. …그런데 묘지에서 붕대가 바람에 날아다니더군.'] },
+    ], ending: ['우르의 털은 보름달처럼 은빛으로 빛났어요.', '우르: 고맙다. ....그런데 묘지에서 붕대가 바람에 날아다니더군.'] },
   { name: '붕대가 풀린 미라', npc: { id: 'm_mirabel', name: '네페르', title: '서약의 서기', spr: 10, map: 'town', x: 18, y: 75 },
-    intro: ['묘지 위로 하얀 붕대가 펄럭펄럭 날아다녀요.', '네페르: 어머어머! 내 붕대! 바람에 다 풀렸어!', '네페르: 이대로면 300년 된 피부가 다 보여… 새 붕대를 감아 줘!'],
+    intro: ['묘지 위로 하얀 붕대가 펄럭펄럭 날아다녀요.', '네페르: 어머어머! 내 붕대! 바람에 다 풀렸어!', '네페르: 이대로면 300년 된 피부가 다 보여.... 새 붕대를 감아 줘!'],
     steps: [
       { t: 'talk', goal: 6, title: '네페르 진정시키기', desc: '묘지 앞 네페르에게 가요', done: '네페르: 고마워, 혼자였으면 울었을 거야. 미라도 운다구.' },
       { t: 'give', item: 'silk', goal: 15, title: '붕대 실', desc: '거미줄 실 15개', done: '네페르: 거미줄 실은 가볍고 튼튼해서 좋아!' },
@@ -4332,25 +4332,25 @@ const STORY = [
       { t: 'give', item: 'herb', goal: 30, title: '방부 약초', desc: '약초 30개', done: '네페르: 약초 향이 나는 붕대라니, 고급스러워!' },
       { t: 'game', g: 'whack', goal: 80, title: '붕대 도둑 유령 잡기', desc: '유령 뿅망치에서 반 전체 점수 합 80점', done: '네페르: 붕대 훔쳐 가던 유령들을 다 혼내 줬구나!' },
       { t: 'talk', goal: 8, title: '새 붕대 패션쇼', desc: '8명이 네페르의 패션쇼를 봐요', done: '네페르: 어때? 300년 중 가장 멋진 날이야!' },
-    ], ending: ['네페르는 새 붕대에 리본까지 달고 묘지를 걸어 다녀요.', '네페르: 그런데 본관에서 밤새 쿵쿵 소리가 나던데… 누가 잠을 못 자나 봐.'] },
+    ], ending: ['네페르는 새 붕대에 리본까지 달고 묘지를 걸어 다녀요.', '네페르: 그런데 본관에서 밤새 쿵쿵 소리가 나던데.... 누가 잠을 못 자나 봐.'] },
   { name: '잠 못 드는 프랑켄', npc: { id: 'm_frankie', name: '조각', title: '이어 붙인 거인', spr: 11, map: 'campus', x: 46, y: 40 },
-    intro: ['본관 앞에 눈 밑이 시커먼 커다란 거인이 서 있어요.', '조각: …잠이… 안 와요. 100일째예요.', '조각: 여기저기 이어 붙인 몸이라 그런가… 눈을 감으면 바느질 자국이 찌릿찌릿해요.'],
+    intro: ['본관 앞에 눈 밑이 시커먼 커다란 거인이 서 있어요.', '조각: ....잠이.... 안 와요. 100일째예요.', '조각: 여기저기 이어 붙인 몸이라 그런가.... 눈을 감으면 바느질 자국이 찌릿찌릿해요.'],
     steps: [
-      { t: 'talk', goal: 6, title: '조각의 불면 이야기', desc: '본관 앞 조각과 이야기해요', done: '조각: …이야기하니까… 조금 졸린 것 같기도…' },
-      { t: 'give', item: 'g_chamo', goal: 20, title: '카모마일', desc: '카모마일 20개', done: '조각: 카모마일 향… 마음이 차분해져요.' },
-      { t: 'give', item: 'p_blue', goal: 6, title: '잠꾸러기 물약', desc: '물약 교실에서 「잠꾸러기 물약」 6병', done: '조각: 한 모금 마셨더니… 하아암…' },
-      { t: 'give', item: 'milk', goal: 12, title: '따뜻한 우유', desc: '염소젖 12개', done: '조각: 따뜻한 우유는… 반칙이에요… 쿨…' },
-      { t: 'rest', goal: 10, title: '다 같이 쉬기', desc: '반 전체가 침대에서 끝까지 쉬기 10번', done: '조각: 다들 자니까… 나도 잘 수 있을 것 같아요.' },
-      { t: 'talk', goal: 8, title: '자장가 불러 주기', desc: '8명이 조각에게 자장가를 불러 줘요', done: '조각: …쿨… 쿠울…' },
-    ], ending: ['조각은 100일 만에 푹 잠들었어요.', '조각: 잘 잤다! 그런데 꿈에서 호박밭의 불빛이 꺼지는 걸 봤어요…'] },
+      { t: 'talk', goal: 6, title: '조각의 불면 이야기', desc: '본관 앞 조각과 이야기해요', done: '조각: ....이야기하니까.... 조금 졸린 것 같기도.......' },
+      { t: 'give', item: 'g_chamo', goal: 20, title: '카모마일', desc: '카모마일 20개', done: '조각: 카모마일 향.... 마음이 차분해져요.' },
+      { t: 'give', item: 'p_blue', goal: 6, title: '잠꾸러기 물약', desc: '물약 교실에서 「잠꾸러기 물약」 6병', done: '조각: 한 모금 마셨더니.... 하아암.......' },
+      { t: 'give', item: 'milk', goal: 12, title: '따뜻한 우유', desc: '염소젖 12개', done: '조각: 따뜻한 우유는.... 반칙이에요.... 쿨.......' },
+      { t: 'rest', goal: 10, title: '다 같이 쉬기', desc: '반 전체가 침대에서 끝까지 쉬기 10번', done: '조각: 다들 자니까.... 나도 잘 수 있을 것 같아요.' },
+      { t: 'talk', goal: 8, title: '자장가 불러 주기', desc: '8명이 조각에게 자장가를 불러 줘요', done: '조각: ....쿨.... 쿠울.......' },
+    ], ending: ['조각은 100일 만에 푹 잠들었어요.', '조각: 잘 잤다! 그런데 꿈에서 호박밭의 불빛이 꺼지는 걸 봤어요.......'] },
   { name: '불이 꺼진 잭오랜턴', npc: { id: 'm_jack', name: '잭', title: '등불을 든 떠돌이', spr: 12, map: 'campus', x: 22, y: 81 },
-    intro: ['호박밭의 불빛이 하나둘 꺼지고 있어요.', '잭: 내 머릿속 촛불이… 꺼져 버렸어. 오래전에 내 불씨를 나눠 주고 나서는 늘 가물가물했는데…', '잭: 핼러윈 축제는 내 불빛으로 시작하는데… 이대로면 축제가 없어져!'],
+    intro: ['호박밭의 불빛이 하나둘 꺼지고 있어요.', '잭: 내 머릿속 촛불이.... 꺼져 버렸어. 오래전에 내 불씨를 나눠 주고 나서는 늘 가물가물했는데.......', '잭: 핼러윈 축제는 내 불빛으로 시작하는데.... 이대로면 축제가 없어져!'],
     steps: [
       { t: 'talk', goal: 6, title: '잭의 이야기 듣기', desc: '호박밭 앞 잭에게 가요', done: '잭: 다들 와 줬구나. 마음이 조금 따뜻해졌어.' },
       { t: 'game', g: 'pumpkin', goal: 100, title: '호박 모으기 대작전', desc: '호박 줍기 경주에서 반 전체 점수 합 100점', done: '잭: 이 호박들로 축제 장식을 하자!' },
       { t: 'give', item: 'g2_firefly', goal: 10, title: '반딧불이의 빛', desc: '반딧불이 10마리 (호숫가 반짝이)', done: '잭: 반딧불이 빛이 들어오니까 눈이 반짝반짝해!' },
       { t: 'give', item: 'g2_pseed', goal: 15, title: '호박씨 심지', desc: '호박씨 15개', done: '잭: 호박씨로 새 촛불 심지를 만들었어!' },
-      { t: 'give', item: 'd_pseedsoup', goal: 8, title: '따뜻한 호박씨 수프', desc: '「호박씨 크림수프」 8그릇 (과자 교실)', done: '잭: 따뜻한 수프를 먹으니… 불이… 붙었다!!' },
+      { t: 'give', item: 'd_pseedsoup', goal: 8, title: '따뜻한 호박씨 수프', desc: '「호박씨 크림수프」 8그릇 (과자 교실)', done: '잭: 따뜻한 수프를 먹으니.... 불이.... 붙었다!!' },
       { t: 'talk', goal: 10, title: '핼러윈 축제 개막', desc: '10명이 모여 축제를 열어요', done: '잭: 호박달 마녀학교 핼러윈 축제, 시작합니다!' },
     ], ending: ['잭의 불빛이 호박밭 전체를 환하게 밝혔어요.', '블라디, 유령, 베아트릭스, 우르, 네페르, 조각, 잭이 모두 모였어요.', '모두: 고마워, 호박달 마녀학교 학생들! 해피 핼러윈!'] },
 ];
@@ -4391,7 +4391,7 @@ const PORTRAITS = { m_jack: ['jack', '128/171'], m_lucian: ['lucian', '224/300']
 // 대사 내용으로 표정 고르기 (따로 표시가 없을 때)
 function faceOf(t){
   if (/\[(기본|웃음|화남|놀람|부끄러움)\]/.test(t)) return ['기본', '웃음', '화남', '놀람', '부끄러움'].indexOf(/\[(기본|웃음|화남|놀람|부끄러움)\]/.exec(t)[1]);
-  if (/헉|깜짝|으악|(?:^|[\s:…])어\?|뭐\?|세상에|어머|사라졌|없어졌|큰일|이대로면|도와|정말\?|진짜\?|!\?/.test(t)) return 3;
+  if (/헉|깜짝|으악|(?:^|[\s:.])어\?|뭐\?|세상에|어머|사라졌|없어졌|큰일|이대로면|도와|정말\?|진짜\?|!\?/.test(t)) return 3;
   if (/부끄|크흠|보지 마|저, 저|그, 그|미안|죄송|어쩌지|창피/.test(t)) return 4;
   if (/화나|흥|용서|가만두지|안 돼!|그만|짜증/.test(t)) return 2;
   if (/고마워|좋아|하하|헤헤|기뻐|최고|다행|와아|신난|!/.test(t)) return 1;
@@ -4507,16 +4507,16 @@ const FLAVOR = {
   '스튜 냄비': ['고소한 냄새가 나요. 우르 특제 사냥꾼 스튜래요', '냄비 뚜껑을 열려다 혼날 뻔했어요'],
   '통나무 식탁': ['컵이 두 개 놓여 있어요. 손님이 올 걸 아나 봐요', '식탁 위 칼자국이 오래된 이야기를 하는 것 같아요'],
   '수확하기': ['축제 장식용 호박이래요. 따면 혼나요!', '호박 속에서 똑똑, 누가 노크했어요'],
-  '읽어 보기': ['"여기 잠들다… 숙제를 미룬 학생"', '"내일 일어날게요" — 300년째', '"물약 맛은 보지 마시오"', '"고양이 밥 주는 걸 잊지 마"'],
+  '읽어 보기': ['"여기 잠들다.... 숙제를 미룬 학생"', '"내일 일어날게요" — 300년째', '"물약 맛은 보지 마시오"', '"고양이 밥 주는 걸 잊지 마"'],
   '앉아서 쉬기': ['잠깐 쉬었어요. 밤바람이 시원해요'],
   '채소 팔기': ['싱싱한 토마토 있어요! 붉다 못해 노을 색이에요', '당근은 흙 묻은 채로가 맛있어요', '비트는 껍질째 쓰는 거 알죠?', '오늘 양배추는 공짜로 웃어 드려요'],
   '올려다보기': ['일곱 등불이 바람에 흔들려요. 하나하나가 별 같아요', '기둥 맨 위 등불이 가장 따뜻해 보여요', '등불 사이로 박쥐가 한 마리 지나가요'],
   '바라보기': ['등불이 꺼져 있어요. 누군가를 기다리는 자리 같아요', '벤치는 비어 있는데 누가 앉았다 간 듯 따뜻해요', '등불 유리에 작은 손자국이 있어요'],
-  '차 마시기': ['따끈한 호박차를 한 모금… 포근해요', '찻잔에서 김이 모락모락'],
-  '들여다보기': ['초록 연기 속에서 누가 키득거려요', '아무도 안 비쳐요… 나도요!'],
-  '쓰다듬기': ['골골골… 기분이 좋은가 봐요'],
+  '차 마시기': ['따끈한 호박차를 한 모금.... 포근해요', '찻잔에서 김이 모락모락'],
+  '들여다보기': ['초록 연기 속에서 누가 키득거려요', '아무도 안 비쳐요.... 나도요!'],
+  '쓰다듬기': ['골골골.... 기분이 좋은가 봐요'],
   '먹이 주기': ['쩝쩝이가 파리를 꿀꺽 삼켰어요'],
-  '미래 엿보기': ['"오늘은 물약 운이 좋아요"', '"주문서를 확인해 봐요"', '"보름달 아래 행운이…"'],
+  '미래 엿보기': ['"오늘은 물약 운이 좋아요"', '"주문서를 확인해 봐요"', '"보름달 아래 행운이......."'],
   '타 보기': ['빗자루가 쌩 하고 도망갔어요'],
   '들어가 보기': ['관 속이 의외로 푹신해요'],
   '불 켜기': ['촛불이 파랗게 타올라요'],
@@ -4531,7 +4531,7 @@ const ACT_REAL = new Set(['용 만나기', '쉬기', '잠자고 내일로', '방
 World.actOk = (o, a, mapId) => ACT_REAL.has(a[1]) || !!ACT_GO[a[1]] || mapId === 'pen' || (a[1] === '쓰다듬기' && o.name === 'blackcat');
 World.onAct = (mapId, o, a) => {
   if (!me) return;
-  if (a[1] === '용 만나기'){ const i = +String(o.name).replace('dragon', ''), D = DF_DRAG[i]; if (!D) return; setTimeout(() => dfDragonOffer(i), 900); return `<b>${D.n} · ${D.t}</b><br>${['크르릉…', '크르르…', '크릉! 크르릉~'][Math.floor(Math.random() * 3)]}`; }
+  if (a[1] === '용 만나기'){ const i = +String(o.name).replace('dragon', ''), D = DF_DRAG[i]; if (!D) return; setTimeout(() => dfDragonOffer(i), 900); return `<b>${D.n} · ${D.t}</b><br>${['크르릉.......', '크르르.......', '크릉! 크르릉~'][Math.floor(Math.random() * 3)]}`; }
   const label = a[1], dh = Object.keys(HOUSE_DORM).find(k => HOUSE_DORM[k] === mapId);
   if (label === '쉬기' || label === '잠자고 내일로' || label === '방명록 보기'){
     const v = World.roomOwner();
@@ -4553,7 +4553,7 @@ World.onAct = (mapId, o, a) => {
   if (label === '소원 빌기'){ const ev = eventAt(); if (ev && Date.now() < ev.end) return openSheet('home', 'event'); }
   if (ACT_GO[label]) return openSheet(ACT_GO[label]);
   const f = FLAVOR[a[0]] || FLAVOR[label];
-  return `<b>${a[0]}</b><br>${f ? f[Math.floor(Math.random() * f.length)] : '…'}`;
+  return `<b>${a[0]}</b><br>${f ? f[Math.floor(Math.random() * f.length)] : '.......'}`;
 };
 // 상황 버튼: 근처 대상에 따라 글자가 바뀌어요 (말하기·선물하기·채집하기·낚시하기·물건 이름)
 World.onNear = t => {
@@ -4819,7 +4819,7 @@ let relId = null;
 const REL_WX = { rain: '비 오는 날', fog: '안개 낀 날', snow: '눈 오는 날', clear: '맑은 날' };
 const relHearts = (h, big) => `<span class="rh${big ? ' big' : ''}" aria-label="하트 ${h}/10">${Array.from({ length: 10 }, (_, i) => `<i class="${i < h ? 'on' : ''}">${ICO.heart}</i>`).join('')}</span>`;
 const relName = id => nameVar(npcGet(id)) || id;
-// 다음 이벤트 조건을 한 문장으로: "비 오는 날 저녁, 등불 시장에서……"
+// 다음 이벤트 조건을 한 문장으로: "비 오는 날 저녁, 등불 시장에서......."
 function relHint(id, k, ev){
   if (!ev) return '다음 이야기는 아직 준비 중이에요';
   const c = ev.conditions || {}, h = hearts(id), need = c.minHeart || k;
@@ -4832,7 +4832,7 @@ function relHint(id, k, ev){
   (c.after || []).forEach(a => { const [o, n] = a.split(':'); extra.push(`${relName(o)}의 ♥${n} 뒤에`); });
   if (c.afterDays) extra.push(`지난 이야기 ${c.afterDays}일 뒤`);
   if (c.hidden) extra.push('숨어 있어요. 직접 찾아야 해요');
-  let s = parts.join(', '); if (s) s += '……';
+  let s = parts.join(', '); if (s) s += '.......';
   return [s, ...extra].filter(Boolean).join(' · ') || '언제든 만나러 가면 돼요';
 }
 function renderRel(){
@@ -4941,7 +4941,7 @@ function jnHeartHTML(){
   if (missing.length) Promise.all(missing.map(([id, k]) => npcEvent(id, k))).then(() => { if (sheetOn && sub === 'journal' && jnTab === 'heart') renderJournal(); });
   const more = hints.length - 6;
   return `<section class="sec">${secH('오늘 열린 이야기', rows.length ? `${rows.length}곳` : missing.length ? '불러오는 중' : '지금은 없어요')}
-    ${rows.length ? `<div class="box px">${rows.join('')}</div>` : `<div class="hint">${missing.length ? '이벤트를 불러오고 있어요…' : '지금 시간·날씨에 열린 하트 이벤트가 없어요. 아래 힌트를 봐요.'}</div>`}
+    ${rows.length ? `<div class="box px">${rows.join('')}</div>` : `<div class="hint">${missing.length ? '이벤트를 불러오고 있어요.......' : '지금 시간·날씨에 열린 하트 이벤트가 없어요. 아래 힌트를 봐요.'}</div>`}
     ${hints.length ? `<div class="jn-hints">${hints.slice(0, 6).map(h => `<span>· ${h}</span>`).join('')}${more > 0 ? `<span class="sub">· 그 밖에 ${more}명</span>` : ''}</div>` : ''}</section>`;
 }
 function renderJournal(){
@@ -4980,7 +4980,7 @@ applySettings();
 let menuHelp = false;   // 메뉴 안 도움말 보기
 document.addEventListener('click', () => { if (!sheetOn || sub !== 'menu') menuHelp = false; });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') menuHelp = false; });
-const SAVE_LABEL = { '': '방금 저장됨', busy: '저장 중…', off: '저장 안 됨 (오프라인)' };
+const SAVE_LABEL = { '': '방금 저장됨', busy: '저장 중.......', off: '저장 안 됨 (오프라인)' };
 const mtile = (k, ico, t, d) => `<button class="tile mtile" data-m="${k}"><span class="tic">${ico}</span><div class="main"><span class="b">${t}</span>${d ? `<span class="d">${d}</span>` : ''}</div></button>`;
 const HELP = [
   ['화면', '아래 메뉴에서 <b>가방</b>(내 아이템) · <b>지도</b>(마을 이동) · <b>관계</b>(호감도) · <b>일지</b>(할 일) · <b>메뉴</b>를 열어요. 위쪽의 얼굴을 누르면 내 정보, 시계를 누르면 오늘 정보가 나와요.'],
@@ -5404,7 +5404,7 @@ function renderLab(){
     const key = slots.slice().sort().join(',');
     const p = RECIPES[key], T = p && POTION_INFO[p].time;
     if (T && houseNow() !== T){
-      brewMsg = `솥이 잠잠해요... 이 조합은 ${HOUSES[T].name}의 시간(${hoursText(HOUSES[T])})에만 끓어요. 재료는 그대로 있어요.`;
+      brewMsg = `솥이 잠잠해요.... 이 조합은 ${HOUSES[T].name}의 시간(${hoursText(HOUSES[T])})에만 끓어요. 재료는 그대로 있어요.`;
       return renderLab();
     }
     const used = slots.slice(); slots.forEach(k => me.inv[k]--);
@@ -5419,8 +5419,8 @@ function renderLab(){
       dexSel = p; dexPage = Math.floor(POTIONS.indexOf(p) / DEX_PAGE); toast(`${ITEM[p]} 완성!`);
     } else if (me.house === 'ember' && myTime()){
       const back = slots[Math.floor(Math.random() * slots.length)]; me.inv[back]++;
-      msg = `보라색 연기만 피어올랐어요... 그래도 Emberkiln의 낮이라 ${withJosa(ITEM[back], '을', '를')} 건졌어요.`;
-    } else msg = '보라색 연기만 피어올랐어요... 재료는 사라졌어요.';
+      msg = `보라색 연기만 피어올랐어요.... 그래도 Emberkiln의 낮이라 ${withJosa(ITEM[back], '을', '를')} 건졌어요.`;
+    } else msg = '보라색 연기만 피어올랐어요.... 재료는 사라졌어요.';
     const again = p && used.every(k => (me.inv[k] || 0) >= used.filter(x => x === k).length);
     brewDone = { p, msg, again }; brewMsg = null; slots = []; save(); hud(); renderLab();
   };
@@ -6328,13 +6328,13 @@ function dfUi(){
   $('#dfinfo').textContent = `웨이브 ${w} / 15 · 알 ${eggs.filter(e => e > 0).length}개${mp ? ` · ${mp[3]}G` : ''}`;
   const stale = dfCtl && dfCtl.hb && Date.now() - dfCtl.hb > 12000 && ph !== 'over';
   const plN = st ? Object.keys(st.p).length : 0, rdN = st ? Object.values(st.p).filter(q => q[8]).length : 0;
-  let txt = ph === 'ready' ? `점선 원을 눌러 자리를 정하고 「시작」! (준비 ${rdN}/${plN})` : ph === 'wave' ? `웨이브 ${w} 진행 중 · 남은 몬스터 ${st ? st.m.length + st.left : '-'}마리` : ph === 'rest' ? `자리를 바꾸고 「시작」! (준비 ${rdN}/${plN})` : ph === 'over' ? (st && st.win ? '알을 모두 지켜 냈어요!' : '알이 모두 깨졌어요…') : '';
+  let txt = ph === 'ready' ? `점선 원을 눌러 자리를 정하고 「시작」! (준비 ${rdN}/${plN})` : ph === 'wave' ? `웨이브 ${w} 진행 중 · 남은 몬스터 ${st ? st.m.length + st.left : '-'}마리` : ph === 'rest' ? `자리를 바꾸고 「시작」! (준비 ${rdN}/${plN})` : ph === 'over' ? (st && st.win ? '알을 모두 지켜 냈어요!' : '알이 모두 깨졌어요.......') : '';
   if (stale) txt = '진행이 잠시 멈췄어요. 잠깐만 기다려 주세요.';
   const job = dfJob(), jn = job && XJ[job] ? XJ[job].n : '아직 없어요 (탐사에서 먼저 골라요)';
   const upgB = mp ? `<button class="btn sm" id="dfupb">올리기${[0, 1].some(i => ['pow', 'rng', 'cd'].some(k => { const c = TD.upCost(dfPlayerOf(mp), i, k); return c != null && c <= mp[3]; })) ? ' ●' : ''}</button>` : '';
   let sk = ''; if (mp){ const meta = dfSkillMeta(); sk = `<div class="dfsk">${meta.map((m, i) => `<button data-sk="${i}">${m.ic}<span>${esc(m.n)}</span><i class="cdm"></i><b class="cdt"></b></button>`).join('')}<button id="dfauto" class="${mp[7] ? 'on' : ''}">자동<br>${mp[7] ? '켬' : '끔'}</button>${upgB}</div>`; }
   { let up = $('#dfup'); if (dfUpOpen && mp){ if (!up){ up = document.createElement('div'); up.id = 'dfup'; v.appendChild(up); } if (dfSet(up, dfUpHTML(mp))){ up.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const [i, k] = b.dataset.up.split(','); dfSend({ u: [+i, k] }); sfx('pick'); }); up.querySelectorAll('[data-ut]').forEach(b => b.onclick = () => { dfUpTab = +b.dataset.ut; dfUi(); }); $('#dfupx').onclick = () => { dfUpOpen = false; dfUi(); }; } } else if (up) up.remove(); }
-  const html = `${sk}<div class="dtx">${txt}${my ? ` · 내 자리 ${TD.ZONES[my.z].name} ${my.s + 1}번` : ''}</div>${canSeat && my ? `<div style="display:flex;gap:8px">${mp ? `<button class="btn sm ${mp[8] ? '' : 'go'}" id="dfready" style="flex:1">${mp[8] ? '준비 취소' : '시작'} · ${rdN}/${plN}</button>` : '<span class="s">자리를 확인하고 있어요…</span>'}<button class="btn sm" id="dfout">자리 빼기</button></div>` : ''}`;
+  const html = `${sk}<div class="dtx">${txt}${my ? ` · 내 자리 ${TD.ZONES[my.z].name} ${my.s + 1}번` : ''}</div>${canSeat && my ? `<div style="display:flex;gap:8px">${mp ? `<button class="btn sm ${mp[8] ? '' : 'go'}" id="dfready" style="flex:1">${mp[8] ? '준비 취소' : '시작'} · ${rdN}/${plN}</button>` : '<span class="s">자리를 확인하고 있어요.......</span>'}<button class="btn sm" id="dfout">자리 빼기</button></div>` : ''}`;
   if (!dfSet($('#dfb'), html)) return;
   const rb = $('#dfready'); if (rb) rb.onclick = () => { dfSend({ r: mp && mp[8] ? 0 : 1 }); sfx('pick'); };
   const o = $('#dfout'); if (o) o.onclick = () => { delete dfPick[myId()]; GDB.set('defense/pick/' + myId(), null); dfUi(); };
@@ -6454,16 +6454,16 @@ const dfSeen = (id, k, set) => { try { if (set) localStorage.setItem(`df-seen-${
 const DF_BABY = ['화륵이', '졸졸이', '무럭이'];
 const DF_INTRO = [
   { bg: 2, who: 'leo', text: '큰일이에요! 사육장 뒤 둥지에서 신성한 용의 알 세 개가 곧 깨어나려고 해요!' },
-  { bg: 2, who: 'stella', text: '별들이 알려 줬어요. 오늘 밤 용이 태어난다고… 그런데 문제가 생겼어요.' },
+  { bg: 2, who: 'stella', text: '별들이 알려 줬어요. 오늘 밤 용이 태어난다고.... 그런데 문제가 생겼어요.' },
   { bg: 0, who: 'stella', text: '숲의 몬스터들이 그 알을 노리고 있어요!', mons: 1 },
   { bg: 1, who: 'leo', text: '숲길, 둥지 입구, 둥지 앞 세 곳으로 나눠서 막아야 해요. 학생 여러분, 도와주세요!', mons: 1 },
   { bg: 2, who: 'stella', text: '알이 깨지면 용은 영영 돌아오지 않아요. 부탁해요!' },
 ];
 function dfOutro(eggs){
   const n = eggs.filter(e => e > 0).length;
-  if (!n) return [{ dur: 3.5, ph: 'sad', cap: '…' }, { dur: 5, ph: 'sad', who: 'leo', text: '…알이 모두 깨져 버렸어요…' }, { dur: 5.5, ph: 'sad', who: 'stella', text: '그래도 끝까지 싸워 줘서 고마워요, 학생 여러분.' }];
-  return [{ dur: 3, ph: 'shake', cap: '…똑, 똑.' }, { dur: 2.6, ph: 'crack', cap: '알에 금이 가요…' }, { dur: 1.6, ph: 'burst', cap: '' }, { dur: 4, ph: 'born', cap: '용이 태어났어요!' },
-    { dur: 5.5, ph: 'born', who: 'leo', text: n === 3 ? '해냈어요! 세 마리 모두 무사히 태어났어요!' : `${n}마리가 무사히 태어났어요! 지켜 내지 못한 알은 아쉽지만…` },
+  if (!n) return [{ dur: 3.5, ph: 'sad', cap: '.......' }, { dur: 5, ph: 'sad', who: 'leo', text: '....알이 모두 깨져 버렸어요.......' }, { dur: 5.5, ph: 'sad', who: 'stella', text: '그래도 끝까지 싸워 줘서 고마워요, 학생 여러분.' }];
+  return [{ dur: 3, ph: 'shake', cap: '....똑, 똑.' }, { dur: 2.6, ph: 'crack', cap: '알에 금이 가요.......' }, { dur: 1.6, ph: 'burst', cap: '' }, { dur: 4, ph: 'born', cap: '용이 태어났어요!' },
+    { dur: 5.5, ph: 'born', who: 'leo', text: n === 3 ? '해냈어요! 세 마리 모두 무사히 태어났어요!' : `${n}마리가 무사히 태어났어요! 지켜 내지 못한 알은 아쉽지만.......` },
     { dur: 6, ph: 'born', who: 'stella', text: n === 3 ? '고마워요, 학생 여러분. 이 아이들은 이제 학교의 식구예요.' : '태어난 아이들은 학교에서 소중히 돌볼게요. 고마워요!' }];
 }
 const dfNpcLook = id => { const n = typeof npcGet === 'function' ? npcGet(id) : null; return n && n.look !== undefined ? n.look : id === 'leo' ? 5 : 3; };
@@ -6567,7 +6567,7 @@ function adminEventHTMLSrv(){
   const dead = open && c.hb && Date.now() - c.hb > 15000, wait = AD.dfWait && Date.now() - AD.dfWait < 20000 && !open, ph = c.ph;
   const zl = TD.ZONES.map((z, i) => `${z.name}: ${picks.filter(([, p]) => p.z === i).map(([u, p]) => `${nm(u)}(${XJ[p.job] ? XJ[p.job].n : '?'})`).join(', ') || '비어 있어요'}`);
   const pl = st.p ? Object.keys(st.p).length : 0, eg = st.e || [];
-  return `<div class="adcard"><b>이벤트 「용의 알 지키기」</b> · ${wait ? '서버를 켜는 중이에요… (몇 초 걸려요)' : open ? DF_PH[ph] || '' : '닫혀 있어요'}
+  return `<div class="adcard"><b>이벤트 「용의 알 지키기」</b> · ${wait ? '서버를 켜는 중이에요.... (몇 초 걸려요)' : open ? DF_PH[ph] || '' : '닫혀 있어요'}
     <div class="s">서버가 계산해요. 이 화면을 꺼도 괜찮아요. 학생에게는 ${open ? '버튼이 보여요' : '아무것도 안 보여요'}${open ? ` · 웨이브 ${st.w || 0}/15 · 알 ${eg.map(Math.round).join('/')} · 앉은 학생 ${pl}명${ph === 'wave' ? ` · 몬스터 ${(st.m || []).length + (st.left || 0)}마리` : ''}` : ''}</div>
     ${dead ? '<div class="s" style="color:var(--danger,#ff7a6a)">서버가 15초 넘게 응답이 없어요. 「서버 다시 깨우기」를 눌러 주세요.</div>' : ''}
     <div class="frow">${!open ? `<button class="btn sm go" data-dfa="open">이벤트 열기</button><button class="btn sm" data-dfa="local">이 화면에서 직접 진행 (예비)</button>` : `${ph === 'ready' ? (c.cut ? '<span class="s">시작 연출이 나오고 있어요</span>' : '<button class="btn sm go" data-dfa="start">시작 송출 (연출)</button>') : ''}${ph === 'ready' || ph === 'rest' ? '<button class="btn sm" data-dfa="force">웨이브 강제 시작</button>' : ''}${ph !== 'ready' && ph !== 'over' ? `<button class="btn sm" data-dfa="pause">${c.pause ? '다시 진행' : '잠깐 멈춤'}</button>` : ''}<button class="btn sm" data-dfa="reset">처음으로</button><button class="btn sm" data-dfa="close">이벤트 닫기</button>${dead ? '<button class="btn sm go" data-dfa="wake">서버 다시 깨우기</button>' : ''}`}</div></div>
@@ -6661,7 +6661,7 @@ function pzDrag(e, el){
 // ---- 연출: 처음 열렸을 때 · 완성했을 때 (밤 호수 + 해골 선장 + 아울라) ----
 function pzSeen(id, k, set){ const key = `pz-${k}-${id}`; try { if (set){ localStorage.setItem(key, '1'); return true; } return !!localStorage.getItem(key); } catch(e){ return false; } }
 // 줄: [누구(aula·cap·narr), 말, 표정(아울라 0기본 1웃음 2화남 3놀람 4부끄), 선장 보임(1)·배 올라옴(2)·지도 보임(3)]
-const pzDots = t => t.replace(/(…|\.{2,})(?=\s*$)|…|\.{2,}/g, (m, e) => e ? '......' : '....');   // 말줄임표: 말 중간이면 점 4개, 말 끝이면 점 6개
+const pzDots = t => t.replace(/(\.{2,})(?=\s*$)|\.{2,}/g, (m, e) => e ? '.......' : '....');   // 말줄임표: 말 중간이면 점 4개, 말 끝이면 점 7개 (이미 4·7개인 글에도 안전)
 function pzScene(lines, done){
   document.getElementById('pzcut')?.remove();
   const el = document.createElement('div'); el.id = 'pzcut'; $('#shell').appendChild(el); let i = 0;
@@ -6676,12 +6676,12 @@ function pzScene(lines, done){
 function pzCheckCut(){
   if (!pzCtl || !pzCtl.open || !pzCtl.id || document.getElementById('pzcut')) return;
   if (!pzSeen(pzCtl.id, 'intro')){ pzSeen(pzCtl.id, 'intro', 1);
-    pzScene([['aula', '호, 호오?! 호수가 이상해요… 안개가 몰려오고 있어요!', 3], ['narr', '쿠르르르… 호수 한가운데에서 낡은 유령선이 천천히 떠올랐다.', 0, 2], ['cap', '으흐흐흐… 오랜만이군, 산 자들의 학교야. 나는 이 호수의 유령 선장이라네.', 0, 1], ['cap', '내 보물 지도가 쉰 조각으로 찢겨서 이 학교 곳곳에 흩어져 버렸지. 지도가 없으니 보물을 어디 묻었는지 도통 기억이 안 나…'], ['cap', '낚시터에서, 풀숲에서, 탐험길에서… 젖은 조각을 찾으면 지도에 맞춰 주겠나?'], ['aula', '조각은 반 모두가 함께 맞추는 거예요! 내 조각이 어디에 들어가는지 그림을 잘 보세요.', 1]]); return; }
+    pzScene([['aula', '호, 호오?! 호수가 이상해요.... 안개가 몰려오고 있어요!', 3], ['narr', '쿠르르르.... 호수 한가운데에서 낡은 유령선이 천천히 떠올랐다.', 0, 2], ['cap', '으흐흐흐.... 오랜만이군, 산 자들의 학교야. 나는 이 호수의 유령 선장이라네.', 0, 1], ['cap', '내 보물 지도가 쉰 조각으로 찢겨서 이 학교 곳곳에 흩어져 버렸지. 지도가 없으니 보물을 어디 묻었는지 도통 기억이 안 나.......'], ['cap', '낚시터에서, 풀숲에서, 탐험길에서.... 젖은 조각을 찾으면 지도에 맞춰 주겠나?'], ['aula', '조각은 반 모두가 함께 맞추는 거예요! 내 조각이 어디에 들어가는지 그림을 잘 보세요.', 1]]); return; }
   if (pzCount() >= PZ.C * PZ.R && !(me.pz && me.pz.id === pzCtl.id) && !Object.values(pzChest).includes(myId()) && Object.keys(pzChest).length < PZ_REW.length){ if (!pzOn) pzOpen(); pzEnd(); }
 }
 function pzEnd(){
   if (document.getElementById('pzcut')) return;
-  pzScene([['aula', '다 맞춰졌어요! 지도에 길이 나타나요!', 3, 3], ['cap', '오오… 이 섬, 이 길… 기억났다! 내 보물은 바로 이 학교 뒷산에 묻혀 있었군.', 0, 1], ['cap', '상자는 열두 개. 그중 딱 하나씩만 가져가게나. 욕심부리면 저주받는다네, 으흐흐…'], ['aula', '열두 개 중에 하나만 고를 수 있어요! 신중하게 고르세요.', 1]], pzChests);
+  pzScene([['aula', '다 맞춰졌어요! 지도에 길이 나타나요!', 3, 3], ['cap', '오오.... 이 섬, 이 길.... 기억났다! 내 보물은 바로 이 학교 뒷산에 묻혀 있었군.', 0, 1], ['cap', '상자는 열두 개. 그중 딱 하나씩만 가져가게나. 욕심부리면 저주받는다네, 으흐흐.......'], ['aula', '열두 개 중에 하나만 고를 수 있어요! 신중하게 고르세요.', 1]], pzChests);
 }
 // 보물 상자 12개: 학생마다 안에 든 것이 섞여 있고, 딱 하나만 골라서 가져가요
 const PZ_REW = [[300, 3, 2], [400, 3, 2], [500, 3, 1], [600, 3, 1], [700, 2, 1], [800, 1, 1], [900, 0, 1], [1000, 0, 0], [1100, 0, 0], [1200, 0, 0], [1300, 0, 0], [1400, 0, 0]];   // [골드, 마나석, 스킬 포인트]: 돈이 적은 상자에 마나석·스킬 포인트가 얹혀요
@@ -6774,17 +6774,17 @@ function lnUi(){
 }
 // ---- 연출 (꼬마 유령 + 아울라) ----
 const lnIntroLines = [
-  ['aula', '호, 호오?! 학교가 너무 어두워요… 등불이 하나도 안 켜져 있어요!', 3, { lit: 0 }],
-  ['narr', '…쪼르르. 창문 틈에서 작고 하얀 것이 쏙 얼굴을 내밀었다.', 0, { g: 1 }],
-  ['ghost', '에, 에잇…! 안녕… 나는 꼬마 유령이야.', 4],
-  ['ghost', '우리 유령 친구들이 등불을 잃어버렸어… 등불이 있어야 하늘로 놀러 갈 수 있는데…', 4],
+  ['aula', '호, 호오?! 학교가 너무 어두워요.... 등불이 하나도 안 켜져 있어요!', 3, { lit: 0 }],
+  ['narr', '....쪼르르. 창문 틈에서 작고 하얀 것이 쏙 얼굴을 내밀었다.', 0, { g: 1 }],
+  ['ghost', '에, 에잇....! 안녕.... 나는 꼬마 유령이야.', 4],
+  ['ghost', '우리 유령 친구들이 등불을 잃어버렸어.... 등불이 있어야 하늘로 놀러 갈 수 있는데.......', 4],
   ['ghost', '학교 곳곳에서 등불이 나올 거야! 같이 60개 모아 줄래?', 1],
   ['aula', '낚시하고, 풀을 줍고, 탐험하면 가끔 등불이 반짝! 하고 모여요. 한 사람이 열 개까지 모을 수 있어요!', 1]];
 const lnEndLines = [
-  ['ghost', '와아아아! 등불이 60개…! 다 모였어!', 3, { g: 1, lit: 1 }],
+  ['ghost', '와아아아! 등불이 60개....! 다 모였어!', 3, { g: 1, lit: 1 }],
   ['aula', '학교가 대낮처럼 환해요, 호!', 1],
   ['ghost', '고마워! 얘들아, 다 같이 인사하자!', 1, { m: 1 }],
-  ['ghost', '그래서… 고마운 마음으로 등불 장식을 하나씩 선물할게. 색은 하나만 고를 수 있고, 먼저 고른 친구 거야!', 4],
+  ['ghost', '그래서.... 고마운 마음으로 등불 장식을 하나씩 선물할게. 색은 하나만 고를 수 있고, 먼저 고른 친구 거야!', 4],
   ['aula', '신중하게 골라요!', 1]];
 function lnScene(lines, done){
   document.getElementById('lncut')?.remove();
@@ -7043,8 +7043,8 @@ const AUTH_MSG = {
 };
 const configured = !!(firebaseConfig.apiKey && firebaseConfig.databaseURL);
 const rndOf = a => a[Math.floor(Math.random() * a.length)];
-const PUNS = ['Boo-tiful day, isn\'t it?', 'Have a fang-tastic day!', 'Witch way to the school?', 'Pumpkin spice and everything ghoul', 'Just here for the boos', 'Bat-tery at 100%', 'Skele-tonight we study', 'You\'re looking sharp… fang-ly', 'Hocus Pocus, 집중!', '오늘의 마법: 지각 안 하기', '호박이 넝쿨째 굴러왔어요', '둥글둥글 호박처럼, 굴러서 등교', '마녀는 빗자루로 출근 중', 'Don\'t be a scaredy-cat, 들어와요', 'Ghoul friends forever', 'Leaf your worries — it\'s spooky season'];
-const LOADS = ['Boo-ting up...... 부팅 중이에요', '빗자루 시동 거는 중...... 부릉부릉', 'Witch way to school? 이쪽이에요', '호박 마차 굴리는 중......', '박쥐 우체부가 편지 가지러 갔어요', '솥에서 마법이 부글부글......', '유령이 문 열어 주는 중...... Boo!'];
+const PUNS = ['Boo-tiful day, isn\'t it?', 'Have a fang-tastic day!', 'Witch way to the school?', 'Pumpkin spice and everything ghoul', 'Just here for the boos', 'Bat-tery at 100%', 'Skele-tonight we study', 'You\'re looking sharp.... fang-ly', 'Hocus Pocus, 집중!', '오늘의 마법: 지각 안 하기', '호박이 넝쿨째 굴러왔어요', '둥글둥글 호박처럼, 굴러서 등교', '마녀는 빗자루로 출근 중', 'Don\'t be a scaredy-cat, 들어와요', 'Ghoul friends forever', 'Leaf your worries — it\'s spooky season'];
+const LOADS = ['Boo-ting up.... 부팅 중이에요', '빗자루 시동 거는 중.... 부릉부릉', 'Witch way to school? 이쪽이에요', '호박 마차 굴리는 중.......', '박쥐 우체부가 편지 가지러 갔어요', '솥에서 마법이 부글부글.......', '유령이 문 열어 주는 중.... Boo!'];
 function cover(inner){ document.body.classList.remove('inworld'); app.classList.remove('open'); sheetOn = false; app.innerHTML = `<div class="cover"><div style="text-align:center;display:flex;flex-direction:column;gap:6px;margin:10px 0"><span class="b" style="font-size:25px;line-height:32px;text-shadow:0 3px 0 #1a1030,0 0 14px rgba(20,10,40,.7)">Curse, Scare, Monster</span><span class="s" style="color:#E8DEFA;text-shadow:0 1px 0 #1a1030">${rndOf(PUNS)}</span></div>${inner}</div>`; }
 function showLogin(mode = 'login'){
   const signup = mode === 'signup';
@@ -7073,7 +7073,7 @@ function showLogin(mode = 'login'){
     if (id.toLowerCase() === ADMIN_ID) return err.textContent = '쓸 수 없는 아이디예요.';
     if (pw.length < 5) return err.textContent = '비밀번호는 5 자 이상이어야 해요.';
     if (signup && pw !== $('#lpw2').value) return err.textContent = '비밀번호 확인이 달라요.';
-    $('#lgo').disabled = true; err.textContent = '잠깐만요...';
+    $('#lgo').disabled = true; err.textContent = '잠깐만요.......';
     try {
       if (signup) await F.createUserWithEmailAndPassword(auth, idEmail(id), pwPad(pw));
       else await F.signInWithEmailAndPassword(auth, idEmail(id), pwPad(pw));
@@ -7229,7 +7229,7 @@ const SHOP_CATS = [['top', '상의'], ['legs', '하의'], ['feet', '신발'], ['
 // 그림자 골목 의뢰인 집: 그 사람의 의뢰가 3단계에 닿았거나 끝난 뒤에 들어갈 수 있어요. 안에서 의뢰인을 만나요 (tools/iso/quarter_rooms.py)
 const QHOME = { main_01_dracula: ['blady', 'vamp_manor', 18, 9], main_05_mummy: ['nefer', 'museum', 18, 12], main_06_frankenstein: ['piece', 'lab_tower', 17, 11], main_03_witch: ['beatrix', 'witch_hut', 16, 10], main_04_werewolf: ['ur', 'wolf_cabin', 16, 10], main_07_jack: ['jack', 'jack_hut', 16, 10] };
 const qUnlocked = qid => { const s = typeof mqState === 'function' ? mqState() : null; return !!s && (!!s.done[qid] || (s.q === qid && s.st >= 3)); };
-World.canEnter = qid => { if (qid === 'dragon') return dfCaveOpen() ? true : '굳게 닫힌 바위 문이에요. 안에서 무언가 잠들어 있는 것 같아요…'; if (qUnlocked(qid)) return true; return '문이 굳게 잠겨 있어요'; };
+World.canEnter = qid => { if (qid === 'dragon') return dfCaveOpen() ? true : '굳게 닫힌 바위 문이에요. 안에서 무언가 잠들어 있는 것 같아요.......'; if (qUnlocked(qid)) return true; return '문이 굳게 잠겨 있어요'; };
 World.onExplore = (ri, door) => { if (!me) return; xRgSel = ri; xv = null; toast(`${door?.label || XRG[ri].n} · ${XRG[ri].tier}`); openSheet('home', 'explore'); };   // 마을 가장자리 길 끝 기둥 문 (tools/iso/halloween.py EXPL)
 World.onLockedDoor = label => { if (label === '낚시 도구점' && me){ fsTab = 'rod'; fsMsg = ''; openSheet('home', 'fish'); return true; }
   if (label !== '옷 가게' || !me) return false; shopTry = null; shopMsg = ''; openSheet('home', 'clothes'); return true; };
@@ -7280,7 +7280,7 @@ function showCreate(done, counts = {}, taken = {}){
       <span class="b" style="font-size:24px">입학 원서</span>
       <label class="field"><span class="s">이름 (1~8 자)</span><input id="nick" maxlength="8" placeholder="예: 별이" value="${esc(nick)}"></label>
       <span class="s">내 캐릭터 만들기</span>
-      ${World.Avatar.loaded ? avatarUI(av) : '<div class="hint">그림을 불러오는 중...</div>'}
+      ${World.Avatar.loaded ? avatarUI(av) : '<div class="hint">그림을 불러오는 중.......</div>'}
       <span class="s">기숙사 고르기 (기숙사마다 ${HOUSE_CAP}명)</span>
       ${houseCards(house, counts)}
       <span class="s">직업 고르기 · 한 번 고르면 바뀌지 않아요</span>
@@ -7618,15 +7618,15 @@ async function mqTalk(id){
     if (s.ph === 'pre') return mqPlay(q, s.st, 'request');
     if (s.ph === 'ready') return mqPlay(q, s.st, 'complete');
     const ex = mqOnTalk(id); if (ex) return mqPanel(id, ex);
-    const idle = await mqIdle(q.id), set = idle[String(s.st)] || {}, lines = set[s.ph === 'go' ? 'a' : 'b'] || set.a || ['……'];
+    const idle = await mqIdle(q.id), set = idle[String(s.st)] || {}, lines = set[s.ph === 'go' ? 'a' : 'b'] || set.a || ['.......'];
     return mqPanel(id, lines.map(l => fillVars(l)).join(' '));
   }
   const ex = mqOnTalk(id); if (ex) return mqPanel(id, ex);
   // 끝낸 의뢰인 · 조연
   const dq = MQ.list.map(k => MQ.q[k]).find(x => x && x.client === id && s.done[x.id]);
-  if (dq){ const idle = await mqIdle(dq.id), lines = idle.done || ['……']; return mqPanel(id, lines.map(l => fillVars(l)).join(' ')); }
+  if (dq){ const idle = await mqIdle(dq.id), lines = idle.done || ['.......']; return mqPanel(id, lines.map(l => fillVars(l)).join(' ')); }
   if (q){ const st = mqStage(), a = (st && st.actors || []).find(x => x.id === id); if (a && a.lines) return mqPanel(id, [].concat(a.lines).map(l => fillVars(l)).join(' ')); }
-  mqPanel(id, c.idle ? [].concat(c.idle).map(l => fillVars(l)).join(' ') : '……');
+  mqPanel(id, c.idle ? [].concat(c.idle).map(l => fillVars(l)).join(' ') : '.......');
 }
 function mqFace(id, size = 48){ const c = MQ.cast[id]; if (!c) return ''; if (c.portrait) return `<i class="mqport" style="width:${size}px;height:${size}px;background-image:url(art/portraits/${c.portrait}.png?v=${PORTRAIT_V})"></i>`; return c.av ? `<img src="${World.Avatar.head(World.Avatar.fix(c.av))}" alt="">` : c.spr !== undefined ? npcFace(c.spr, size) : ''; }
 function mqPanel(id, text, btns = ''){ const c = MQ.cast[id] || {}; npcUI().dataset.id = id; npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${mqFace(id)}</div><div><b>${esc(mqName(id))}</b><span class="s sub">${esc(c.title || '')}</span></div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(text)}</div><div class="frow">${btns}<button class="btn sm" data-nx="close">알겠어요</button></div></div>`; npcUI().dataset.id = 'mq:' + id; npcUI().classList.add('on'); }
@@ -7643,7 +7643,7 @@ function mqJournalHTML(){
   if (!q){ const nextId = MQ.list.find(id => !s.done[id]), nq = nextId && MQ.q[nextId];
     let when = '아직 손님이 오지 않았어요';
     if (nq){ when = n >= 7 ? '일곱 등불의 의뢰를 모두 끝냈어요' : MQ.list.indexOf(nextId) + 1 > mqRel ? '다음 이야기는 곧 열려요' : '곧 다음 손님이 학교에 와요'; }
-    return `<section class="sec">${secH('메인 이야기', n ? `${n} / 7 의뢰` : '')}${sky}<div class="hint ${nq ? 'on' : ''}">${when}</div>${past ? `<div class="jn-tags">${past}</div>` : ''}${n >= 7 ? '<div class="hint on">등불자리 옆에, 처음 보는 희미한 별 하나가 떠 있어요……</div><button class="btn go" id="endRe">엔딩 다시 보기</button>' : ''}</section>`; }
+    return `<section class="sec">${secH('메인 이야기', n ? `${n} / 7 의뢰` : '')}${sky}<div class="hint ${nq ? 'on' : ''}">${when}</div>${past ? `<div class="jn-tags">${past}</div>` : ''}${n >= 7 ? '<div class="hint on">등불자리 옆에, 처음 보는 희미한 별 하나가 떠 있어요.......</div><button class="btn go" id="endRe">엔딩 다시 보기</button>' : ''}</section>`; }
   const c = mqClient(q), st = mqStage(), objs = mqObjs();
   const head = `<div class="jn-npc"><div class="npcf">${mqFace(q.client)}</div><div class="main"><b>${q.order}. ${esc(q.name)}</b><span class="d">${esc(mqName(q.client))} · ${esc(c.title || '')} · ${s.st} / 5 단계</span></div></div>`;
   const body = s.ph === 'arrive' ? '<div class="hint on">손님이 학교로 오고 있어요. 마을로 나가 보세요</div>'
@@ -7717,7 +7717,7 @@ function mqDefend(i){
   $('#stage').appendChild(ov); sfx('wind');
   let flame = 100, t0 = performance.now(), last = t0, spawnAt = 0, gusts = [], over = false;
   const stg = ov.querySelector('#mqds'), lamp = ov.querySelector('#mqlamp');
-  const end = ok => { if (over) return; over = true; gusts.forEach(g => g.el.remove()); ov.remove(); if (ok){ s.prog['defend:' + i] = 1; save(); sfx('magic'); toast(o.doneText || '등불을 지켰어요!'); mqCheck(); } else { sfx('thunder'); toast('등불이 꺼졌어요…… 다시 해 봐요'); } };
+  const end = ok => { if (over) return; over = true; gusts.forEach(g => g.el.remove()); ov.remove(); if (ok){ s.prog['defend:' + i] = 1; save(); sfx('magic'); toast(o.doneText || '등불을 지켰어요!'); mqCheck(); } else { sfx('thunder'); toast('등불이 꺼졌어요.... 다시 해 봐요'); } };
   const tick = now => { if (over) return; const dt = (now - last) / 1000; last = now; const el = (now - t0) / 1000, left = Math.max(0, sec - el); ov.querySelector('#mqdt').textContent = Math.ceil(left);
     if (now > spawnAt){ spawnAt = now + Math.max(500, 1500 - el * 25); const g = document.createElement('button'); g.className = 'mqgust'; g.textContent = ['🌬️', '🌫️', '👻', '🍂'][Math.floor(Math.random() * 4)]; const ang = Math.random() * Math.PI * 2; const r = 1.1; g.ax = .5 + Math.cos(ang) * r; g.ay = .5 + Math.sin(ang) * r; g.sp = (.12 + Math.random() * .08) * (1 + el / sec); stg.appendChild(g); const G = { el: g, x: g.ax, y: g.ay }; gusts.push(G); g.onclick = e => { e.stopPropagation(); G.dead = true; g.remove(); sfx('pop'); }; g.onpointerdown = g.onclick; }
     gusts.forEach(G => { if (G.dead) return; const dx = .5 - G.x, dy = .5 - G.y, d = Math.hypot(dx, dy) || 1; G.x += dx / d * G.sp * dt; G.y += dy / d * G.sp * dt; G.el.style.left = G.x * 100 + '%'; G.el.style.top = G.y * 100 + '%'; if (d < .06){ G.dead = true; G.el.remove(); flame -= o.hitDamage || 18; lamp.classList.add('hit'); setTimeout(() => lamp.classList.remove('hit'), 300); sfx('gulp'); } });

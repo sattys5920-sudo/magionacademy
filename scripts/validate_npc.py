@@ -45,11 +45,14 @@ def texts_of(o):
 
 def korean(where, t, human_ctx, errs):
     for m in UNIT.finditer(t): errs.append(f'{where}: 숫자와 단위를 띄어 쓰세요 「{m.group(0)}」 → {t[:40]}')
-    for run in re.findall(r'…+', t):
-        if len(run) != 2: errs.append(f'{where}: 말줄임표는 「……」(2 글자)로 → {t[:40]}')
-    for bad in ('...', '?!', '!?', '!!', '??', '~~'):
+    if '…' in t: errs.append(f'{where}: 「…」 글자 금지, 말줄임표는 점으로 (중간 4개 · 끝 7개) → {t[:40]}')
+    for m in re.finditer(r'\.{2,}', t):
+        rest, n = t[m.end():], len(m.group(0))
+        end = re.match(r'[」』)\]”’"\']*[?!]*[」』)\]”’"\']*\s*$', rest)
+        ok = n == 7 if end else (n == 4 or (n == 7 and rest[:1] in '\'"'))   # 따옴표 바로 앞은 안쪽 말의 끝일 수 있어요
+        if not ok: errs.append(f'{where}: 말줄임표는 말 중간 점 4개, 말 끝 점 7개 → {t[:40]}')
+    for bad in ('?!', '!?', '!!', '??', '~~'):
         if bad in t: errs.append(f'{where}: 「{bad}」 금지 → {t[:40]}')
-    if '..' in t and '...' not in t: errs.append(f'{where}: 마침표 겹침 → {t[:40]}')
     for w in WRONG:
         if (re.search(r'(?<![가-힣])' + w, t) if w in ('구지', '바램', '되요') else w in t): errs.append(f'{where}: 틀린 표기 「{w}」 → {t[:40]}')
     for n in NAMES:
