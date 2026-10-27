@@ -29,7 +29,9 @@ jobs:
           printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
       - name: 버전 기록 (접속 중인 학생 화면이 새 버전을 알아채요)
         if: steps.check.outputs.skip != '1'
-        run: echo "{\"v\":\"${GITHUB_SHA}\"}" > public/version.json
+        run: |
+          echo "{\"v\":\"${GITHUB_SHA}\"}" > public/version.json
+          sed -i "s/__BUILD__/${GITHUB_SHA}/" public/index.html
       - name: DB 규칙 배포 (호스팅이 막혀도 규칙은 먼저 올라가요)
         if: steps.check.outputs.skip != '1'
         env:

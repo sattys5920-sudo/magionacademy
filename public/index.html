@@ -7731,11 +7731,12 @@ async function boot(){
 }
 boot();
 // 새 버전이 배포되면 접속 중인 모두의 화면이 저절로 새로 고쳐져요 (version.json은 배포할 때마다 바뀌어요)
-{ let buildV = null, reloading = false;
+{ let buildV = null, reloading = false; const BUILD_ID = '__BUILD__';   // 배포할 때 이 값이 커밋 번호로 바뀌어요. 오래된 화면이 남아 있어도 새 버전을 알아채요
   const chk = async () => { if (reloading) return; try {
     const v = (await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json()).v;
-    if (buildV === null){ buildV = v; return; }
+    if (buildV === null){ buildV = BUILD_ID.startsWith('__') ? v : BUILD_ID; }
     if (v === buildV) return;
+    try { if (sessionStorage.getItem('magion-rl') === v) return; sessionStorage.setItem('magion-rl', v); } catch(e){}   // 새로 고쳐도 그대로면 계속 반복하지 않아요
     if (dfHost && dfHost.S.phase !== 'over') return;   // 이벤트를 진행 중인 관리자 화면은 새로 고치지 않아요
     reloading = true; try { saveNow(); } catch(e){} toast('새 버전이 나왔어요. 곧 새로 고쳐요');
     setTimeout(() => location.reload(), 2500);
