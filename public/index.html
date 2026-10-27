@@ -3251,12 +3251,15 @@ function adminRender(){
   app.innerHTML = '';
   let root = $('#adminv'); if (!root){ root = document.createElement('div'); root.id = 'adminv'; $('#shell').appendChild(root); }
   const ob = root.querySelector('.adbody'), keep = ob && AD.sc && AD.sc.tab === AD.tab ? { top: ob.scrollTop, bot: ob.scrollTop + ob.clientHeight >= ob.scrollHeight - 40 } : null;   // 새로 그려도 보던 자리를 지켜요 (대화는 맨 아래 = 최신)
+  const SCS = ['.adtbl', '.adlist', '.adseg', '.admapw'], sameTab = AD.tabPrev === AD.tab;   // 표·목록·탭 줄을 밀어서 보던 자리도 지켜요
+  const scs = sameTab ? SCS.map(q => [...root.querySelectorAll(q)].map(e => [e.scrollLeft, e.scrollTop])) : null;
   const mw = root.querySelector('.admapw'), mkey = (AD.map || '') + '|' + (AD.follow || '');   // 지도를 밀어서 보던 자리도 지켜요 (보고 있는 지도가 바뀌면 처음부터)
   if (AD.mscKey !== mkey || AD.tabPrev !== AD.tab){ AD.msc = null; AD.kt = keep ? keep.top : null; }
   else if (AD.mdone !== false){ AD.msc = mw ? [mw.scrollLeft, mw.scrollTop] : AD.msc; AD.kt = keep ? keep.top : null; }   // 그리는 중에 또 그려지면 앞서 저장한 자리를 그대로 써요
   AD.mscKey = mkey; AD.tabPrev = AD.tab; AD.mdone = AD.tab === 'map' ? false : true;
   root.innerHTML = `<div class="adhead"><b>호박달 마녀학교 · 관리자</b><button class="btn sm" id="adout">나가기</button></div>
     <div class="adseg main">${tabs.map(([k, l]) => `<button data-adtab="${k}" class="${AD.tab === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="adbody">${body}</div>`;
+  if (scs) SCS.forEach((q, i) => root.querySelectorAll(q).forEach((e, j) => { const v = scs[i][j]; if (v){ e.scrollLeft = v[0]; e.scrollTop = v[1]; } }));
   { const nb = root.querySelector('.adbody'); if (nb){ if (AD.tab === 'chat' && (!keep || keep.bot)) nb.scrollTop = nb.scrollHeight; else if (keep) nb.scrollTop = keep.top; AD.sc = { tab: AD.tab }; } }
   root.querySelectorAll('[data-adtab]').forEach(b => b.onclick = () => { AD.tab = b.dataset.adtab; if (AD.tab === 'gift') adminMailLoad(); adminRender(); });
   root.querySelectorAll('[data-admap]').forEach(b => b.onclick = () => { AD.map = b.dataset.admap; AD.follow = null; adminRender(); });
