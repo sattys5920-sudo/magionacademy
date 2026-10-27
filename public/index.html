@@ -1054,7 +1054,7 @@ const ORDER_FROM =['양호 선생님', '교장실', '같은 반 친구', '사육
 
 function freshPlayer(nick, look, house, av){
   return {
-    nick, look, house, av, coin:300, mana:40, day:1, penMig:true,
+    nick, look, house, av, coin:300, mana:40, day:1, penMig:true, tut:{ s:0, g:0, ok:0 },
     inv:{ herb:6, drop:4, mush:2, mana:0, wool:1, scale:1, uhair:0, egg:0, p_red:0, p_green:0, p_blue:0, p_purple:0 },
     found:[], hints:['p_red'],
     plots:[{k:'herb',at:Date.now() - 6e5,w:false},{k:'drop',at:Date.now(),w:false}],
@@ -1501,7 +1501,7 @@ function fishCatch(){
   const isNew = dexAdd(f.id, cm), rec = !f.junk && me.fdex[f.id].cm === cm && !isNew;
   if (isNew && !f.junk){ me.mana += f.grade; }
   save(); hud();
-  if (!f.junk){ pzDrop('fish'); lnDrop('fish'); }
+  if (!f.junk){ pzDrop('fish'); lnDrop('fish'); tutHook('fish'); }
   if (!f.junk && Math.random() < .02) setTimeout(() => recipePaper('fish'), 1200);   // 낚시: 레시피 종이 2%
   if (!f.junk && f.grade >= 3) speak(`${f.name} ${cm}cm 낚았다!`);
   fishShow(`<div class="fgot">${ic(f.id, 'transform:scale(1.5);margin:8px')}<div><b>${f.name}</b>${f.junk ? '<span class="s">쓰레기예요.... 생선 가게에서 1G에 받아 줘요</span>' : `<span class="fstar">${STARS(f.grade)}</span><span class="s">${cm}cm${rec ? ' · 최고 기록!' : ''} · ${f.pay}G</span>`}${isNew && !f.junk ? `<span class="new">새 물고기! 마력 +${f.grade}</span>` : ''}</div></div>
@@ -1843,6 +1843,7 @@ function xEnd(how){   // how: clear · time · retreat · wipe
   const before = xLv(ex.exp).L; ex.exp += exp; me.coin += gold; Object.entries(items).forEach(([k, n]) => { me.inv[k] = (me.inv[k] || 0) + n; });
   const after = xLv(ex.exp).L, sp = how === 'clear' || (how !== 'wipe' && Math.random() < .1) ? 1 : 0; ex.spx = (ex.spx || 0) + sp; ex.run = null; xb = null; clearInterval(xTick); save(); hud();
   xv = { view: 'result', how, gold, exp, items, up: after > before ? [before, after] : null, sp, prog: Math.floor(run.prog) };
+  tutHook('explore');
   if (how !== 'wipe'){ pzDrop('explore'); lnDrop('explore'); }
   if (how !== 'wipe' && Math.random() < .02) setTimeout(() => recipePaper('explore'), 700);   // 탐사 보상: 레시피 종이 2%
 }
@@ -3660,6 +3661,7 @@ function syncNpcs(){
   npcAll().forEach(n => { const s = npcSpot(n); if (!s) return;
     list.push({ id: n.id, name: n.name, map: s.map, x: s.x, y: s.y, r: s.r, own: s.own, mark: s.mark, wander: true, dir: n.dir || 'down', ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float, flap: n.flap }) }); });
   townList().forEach(o => list.push(o));
+  if (typeof tutNpcs === 'function') tutNpcs().forEach(o => list.push(o));
   if (typeof mqNpcs === 'function') mqNpcs().forEach(o => list.push(o));
   const sig = JSON.stringify(list.map(o => [o.id, o.name, o.map, o.x, o.y, o.mark, o.own, o.spr, o.pix, o.av && JSON.stringify(o.av)]));
   World.setWeather && World.setWeather(weatherToday());
@@ -3695,7 +3697,7 @@ function npcPanel(n, text, btns){
     <div class="npct">${text}</div><div class="frow">${btns}</div></div>`;
   npcUI().classList.add('on');
 }
-World.onNpc = id => { if (!me) return; World.hideBubble(); if (String(id).startsWith('mq:')) return mqTalk(id.slice(3)); if (String(id).startsWith('t:')) return townTalk(id); const c = STORY.findIndex(S => S.npc.id === id) + 1; if (c) return storyPanel(c); const n = npcGet(id); if (n) npcMenu(n); };
+World.onNpc = id => { if (!me) return; World.hideBubble(); if (String(id).startsWith('mq:')) return mqTalk(id.slice(3)); if (String(id).startsWith('t:')) return townTalk(id); if (id === 'tut:senior') return tutTalk(); const c = STORY.findIndex(S => S.npc.id === id) + 1; if (c) return storyPanel(c); const n = npcGet(id); if (n) npcMenu(n); };
 // 평소 대사: 말투 단계 + (가끔) 날씨·시간대 + (가끔) 지난 이벤트 회상
 function npcLine(n){
   const P = npcProf(n.id), h = hearts(n.id), r = Math.random();
@@ -5118,7 +5120,7 @@ function roundWon(){
 }
 function lessonOver(why){
   const L = lesson; if (!L || L.phase === 'over') return;
-  stopLesson(); L.phase = 'over'; L.why = why; save();
+  stopLesson(); L.phase = 'over'; L.why = why; save(); tutHook('class');
   if (sub === 'class') renderClass();
 }
 function nextRound(first){
@@ -5508,7 +5510,7 @@ function renderGreen(){
     if (plotReady(p)){ const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0) + (dbuff('dforest') && Math.random() < .1 ? 1 : 0); me.inv[p.k] += n; me.plots[me.plots.indexOf(p)] = { k: null }; greenMsg = `${g.seed} 수확! ${g.mat} +${n}${n > g.yield ? ' (Dewmorn의 새벽 보너스)' : ''}`; }
     else if (p.w) greenMsg = `이미 물을 줬어요. ${timeText(plotLeft(p))} 남았어요.`;
     else if (me.mana < waterCost()) greenMsg = '마력이 부족해요. 내 방 침대에서 쉬고 오세요.';
-    else { p.w = true; me.mana -= waterCost(); greenMsg = `물을 줬어요. 쑥쑥! ${timeText(plotLeft(p))} 남았어요.`; }
+    else { p.w = true; tutHook('water'); me.mana -= waterCost(); greenMsg = `물을 줬어요. 쑥쑥! ${timeText(plotLeft(p))} 남았어요.`; }
     save(); renderGreen();
   });
   clearInterval(greenTick);
@@ -5635,7 +5637,7 @@ function renderRanch(){
   const ac = $('#adoptCancel'); if (ac) ac.onclick = () => { placing = null; ranchMsg = ''; redraw(); };
   const ad = $('#adopt'); if (ad) ad.onclick = () => confirmBox(`${withJosa(c.name, '을', '를')} 입양 보낼까요? 돌아오지 않아요.`, '보내기', '아니요', true).then(ok => { if (!ok) return; ranchMsg = adoptOut(crSel); save(); redraw(); });
   const fd = $('#feed'); if (fd) fd.onclick = () => {
-    const n = 2 + (me.house === 'dusk' && myTime() ? 1 : 0); c.love = Math.min(LOVE_MAX, c.love + n); c.fedAt = Date.now();
+    const n = 2 + (me.house === 'dusk' && myTime() ? 1 : 0); c.love = Math.min(LOVE_MAX, c.love + n); c.fedAt = Date.now(); tutHook('feed');
     ranchMsg = `${withJosa(c.name, '이', '가')} ${withJosa(d.food, '을', '를')} 맛있게 먹었어요. 애정 +${n}`; save(); redraw();
   };
   const pt = $('#pat'); if (pt) pt.onclick = () => {
@@ -6942,6 +6944,56 @@ document.addEventListener('click', e => { const bt = e.target.closest && e.targe
   else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 지금까지 자란 호박은 남아요(다 자랐다면 거대 호박이 그대로 있어요).')) F.set(F.ref(db, 'pumpkin/ctl'), { ...(AD.pkctl || {}), open: false }); }
   else if (a === 'reset'){ if (confirm('처음으로 되돌릴까요? 자란 호박과 모두의 기여 점수가 지워져요.')){ wipe(); F.set(F.ref(db, 'pumpkin/ctl'), { open: true, id, rate: (AD.pkctl && AD.pkctl.rate) || 1, goal: PK.GOAL }); } }
   else if (a[0] === 'r') F.update(F.ref(db, 'pumpkin/ctl'), { rate: +a.slice(1) }); });
+// ===== 입문 퀘스트: 학교 선배가 수업 · 온실 · 낚시 · 사육장 · 탐사를 한 번씩 해 보게 이끌어요 (새로 만든 계정만, 순서 고정, 건너뛰기 없음) =====
+//   me.tut = { s: 지금 단계(0~4), g: 과제를 받았는지, ok: 과제를 끝냈는지, end: 모두 끝남 } · 옛 계정은 me.tut이 없어서 선배가 나오지 않아요
+const TUT = {
+  name: '하랑 선배', title: '학교 선배', look: 21, map: 'campus', x: 47, y: 47,
+  intro: ['어, 새로 왔구나. 나는 하랑이야. 이 학교 3학년이고, 신입생 길 안내를 맡고 있어.', '여기서 할 수 있는 건 많은데.... 한꺼번에 말하면 헷갈리니까 하나씩 해 보자.', '다 하고 나면 용돈도 줄게. 걱정 말고 따라와.'],
+  steps: [
+    { k: 'class', ask: ['먼저 수업부터 들어 보자.', '본관 옆 「교실」에 들어가서 「앉아서 수업 듣기」를 눌러 봐. 과목은 아무거나 괜찮아.', '한 판만 끝까지 해 보면 돼.'],
+      again: '교실에서 수업을 한 판 끝까지 해 봐. 과목은 아무거나 괜찮아.', done: ['오, 해냈네! 수업은 하루에 열 번까지 들을 수 있어.', '들을수록 지식이 쌓이고, 새 레시피도 알게 돼. 이건 용돈이야.'], rew: { coin: 50 } },
+    { k: 'water', ask: ['다음은 약초 키우기야.', '「독초 온실」에 가서 내 화단에 물을 줘 봐. 물을 주면 마력을 조금 써.', '물 준 약초는 시간이 지나면 다 자라. 나중에 와서 수확하면 돼.'],
+      again: '독초 온실에서 화단에 물을 줘 봐. 심어 둔 약초가 이미 있을 거야.', done: ['잘했어. 약초는 물약을 만들 때 꼭 필요해.', '자라는 동안 다른 걸 해 보자. 이것도 용돈이야.'], rew: { coin: 50 } },
+    { k: 'fish', ask: ['이번엔 낚시야.', '물가에 서면 「낚시하기」 버튼이 떠. 학교 북쪽 연못이 가까워.', '찌가 움직일 때 타이밍을 맞춰서 눌러 봐. 한 마리만 낚으면 돼.'],
+      again: '물가에서 낚시를 해 봐. 학교 북쪽 연못이 가까워. 한 마리만 낚으면 돼.', done: ['한 마리 낚았네! 잡은 물고기는 도감에 기록돼.', '생선 가게에 팔 수도 있고, 요리 재료로도 쓰여. 이것도 받아.'], rew: { coin: 50 } },
+    { k: 'feed', ask: ['사육장에도 가 보자. 네 생물들이 기다리고 있어.', '「사육장」에 들어가서 「내 사육장」을 열고, 생물에게 먹이를 줘 봐.', '애정이 쌓이면 귀한 재료를 나눠 줘.'],
+      again: '사육장에서 내 생물에게 먹이를 줘 봐. 한 마리면 충분해.', done: ['귀여워하는 거 봤지? 애정이 쌓이면 재료도 나눠 줘.', '마지막은 탐사야. 입장료가 50G 드니까 미리 줄게.'], rew: { coin: 50 } },
+    { k: 'explore', ask: ['마지막은 탐사야. 학교에서 제일 짜릿한 일이지.', '마을 가장자리 길 끝에 기둥 문이 있어. 거기서 「달빛 숲길」로 들어가 봐.', '몬스터와 싸우니까 조금 무섭지? 도중에 돌아와도 괜찮아. 한 번 다녀오기만 하면 돼.'],
+      again: '마을 가장자리 길 끝 기둥 문에서 탐사를 한 번 다녀와 봐. 도중에 돌아와도 괜찮아.', done: ['탐사까지 다녀왔네.... 이제 이 학교에서 할 건 거의 다 해 본 거야.', '이건 내 마지막 선물이야. 앞으로는 스스로 해 나가면 돼.', '그럼 잘 지내.......'], rew: { coin: 300 } },
+  ],
+};
+const tutOn = () => !!(me && me.tut && !me.tut.end);
+const tutAv = () => World.Avatar.fromLook(TUT.look);
+function tutNpcs(){
+  if (!tutOn()) return [];
+  const T = me.tut, mark = !T.g || T.ok ? '❗' : '';
+  return [{ id: 'tut:senior', name: TUT.name, map: TUT.map, x: TUT.x, y: TUT.y, r: 1, mark, wander: true, dir: 'down', av: tutAv() }];
+}
+function tutHook(k){
+  if (!tutOn()) return; const T = me.tut; if (!T.g || T.ok || TUT.steps[T.s].k !== k) return;
+  T.ok = 1; save(); syncNpcs(); setTimeout(() => toast('입문 과제 완료! 하랑 선배에게 가 보세요'), 600);
+}
+let tutCtx = null;
+function tutPanel(lines, i){
+  const last = i >= lines.length - 1;
+  npcUI().dataset.id = 'tut:senior';
+  npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${headImg(tutAv())}</div><div><b>${esc(TUT.name)}</b><span class="s sub">${esc(TUT.title)}${tutOn() ? ` · 입문 ${me.tut.s + 1} / ${TUT.steps.length}` : ''}</span></div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(lines[i])}</div><div class="frow"><button class="btn sm go" data-tut="${last ? 'end' : 'next'}">${last ? '알겠어요' : '다음'}</button></div></div>`;
+  npcUI().classList.add('on'); tutCtx = { lines, i, after: tutCtx && tutCtx.after };
+}
+function tutTalk(){
+  if (!tutOn()) return; const T = me.tut, st = TUT.steps[T.s], nx = TUT.steps[T.s + 1]; let lines, after = null;
+  if (!T.g){ lines = [...(T.s === 0 ? TUT.intro : []), ...st.ask]; after = () => { T.g = 1; save(); syncNpcs(); }; }
+  else if (!T.ok) lines = [st.again];
+  else { lines = [...st.done, ...(nx ? nx.ask : [])];
+    after = () => { me.coin += st.rew.coin; toast(`${st.rew.coin}G 받았어요`); if (nx){ T.s++; T.g = 1; T.ok = 0; } else T.end = 1; save(); hud(); syncNpcs(); }; }
+  tutCtx = { after }; tutPanel(lines, 0);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-tut]'); if (!b || !npcUI().contains(b) || !tutCtx) return;
+  if (b.dataset.tut === 'next') return tutPanel(tutCtx.lines, tutCtx.i + 1);
+  const af = tutCtx.after; tutCtx = null; npcClose(); if (af) af();
+});
+
 // ===== 시장 (온라인 전용) =====
 let sellPick = null;
 function renderMarket(){
