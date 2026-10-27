@@ -11,19 +11,34 @@ const SKY = (() => {
     for (let i = 0; i < 150; i++){ const x = r() * W, y = r() * H * .78, a = .2 + r() * .5, big = r() < .12, tw = .5 + .5 * Math.sin(t * (1 + r() * 2) + i); g.globalAlpha = a * (.6 + .4 * tw); px(g, x, y, big ? U : 1, big ? U : 1, '#C9D6FF'); if (big){ px(g, x - 1, y + U / 2 - .5, U + 2, 1, '#C9D6FF'); } }
     g.globalAlpha = 1;
   }
-  function horizon(g, W, H){
-    const U = W < 700 ? 4 : 6, base = H - Math.round(H * .17);
-    g.fillStyle = '#0A0F26'; for (let x = 0; x < W; x += U){ const h = Math.round((Math.sin(x / W * 5.1 + 1) * .5 + Math.sin(x / W * 11) * .2) * 18 / U) * U; g.fillRect(x, base - h - 10, U, H - base + h + 10); }
-    // 학교 실루엣: 본관 + 탑 두 개 (계단식 지붕), 불 켜진 창
-    const cx = W * .72, by = base - 30; g.fillStyle = '#070B1D';
-    g.fillRect(cx - 62, by - 26, 124, 40);
-    for (let k = 0; k < 6; k++) g.fillRect(cx - 62 + k * 5, by - 26 - (k + 1) * 4, 124 - k * 10, 4);
-    g.fillRect(cx - 80, by - 66, 18, 80); for (let k = 0; k < 4; k++) g.fillRect(cx - 80 + k * 2, by - 66 - (k + 1) * 4, 18 - k * 4, 4);
-    g.fillRect(cx + 62, by - 52, 16, 66); for (let k = 0; k < 4; k++) g.fillRect(cx + 62 + k * 2, by - 52 - (k + 1) * 4, 16 - k * 4, 4);
-    const r = rnd(3); for (let i = 0; i < 14; i++) px(g, cx - 56 + i * 8 + (i % 2) * 2, by - 14 + (i % 3) * 8, 3, 4, r() < .7 ? '#F6B24C' : '#8A5A24');
-    px(g, cx - 75, by - 50, 3, 5, '#F6B24C'); px(g, cx + 67, by - 36, 3, 5, '#F6B24C');
-    // 언덕 위 작은 사람들 (참가자)
-    for (let i = 0; i < 9; i++){ const x = W * .08 + i * (W * .056), y = base - 6 + (i % 2) * 5; px(g, x, y - 7, 4, 4, '#04060F'); px(g, x - 1, y - 3, 6, 6, '#04060F'); }
+  // 아래 풍경: 도트 그림(art/stargaze_horizon_390·720.png, tools/stargaze/horizon.py)을 정수 배로 키워 찍어요
+  function horizon(g, W, H, img){
+    if (!img || !img.complete || !img.naturalWidth) return;
+    const sc = Math.max(1, Math.floor(W / img.naturalWidth)), dw = img.naturalWidth * sc, dh = img.naturalHeight * sc, x0 = Math.round((W - dw) / 2), y0 = H - dh;
+    g.imageSmoothingEnabled = false; g.fillStyle = '#0C0F28'; g.fillRect(0, H - 14 * sc, W, 14 * sc); g.fillStyle = '#131840'; g.fillRect(0, H - 30 * sc, x0, 16 * sc); g.fillRect(x0 + dw, H - 30 * sc, W - x0 - dw, 16 * sc);
+    g.drawImage(img, x0, y0, dw, dh);
+  }
+
+  // 언덕에 선 학생들: 플레이어가 만든 캐릭터를 열 맞춰 세워요 (하늘을 보느라 뒷모습). 자기 별을 켠 학생은 손을 들고 흔들어요
+  //   S.crowd = [{ img: 걷기 그림줄(64칸 × 20), lit: 자기 별을 켰는지, mag: 맡은 별 밝기 }]
+  function skinOf(g2, img){ const c = document.createElement('canvas'); c.width = c.height = 64; const q = c.getContext('2d'); q.drawImage(img, 0, 0, 64, 64, 0, 0, 64, 64); const d = q.getImageData(29, 27, 6, 3).data, px = []; for (let i = 0; i < d.length; i += 4) px.push([d[i], d[i + 1], d[i + 2]]); px.sort((a, b) => (a[0] + a[1] + a[2]) - (b[0] + b[1] + b[2])); return px[px.length >> 1]; }
+  function person(img, lit, t, k){
+    const c = document.createElement('canvas'); c.width = c.height = 64; const q = c.getContext('2d'); q.drawImage(img, 5 * 64, 0, 64, 64, 0, 0, 64, 64);
+    if (lit){ const sk = skinOf(null, img), slv = q.getImageData(36, 33, 1, 1).data, w = Math.round(Math.sin(t * 5 + k) * 1.2);
+      const sl = `rgb(${slv[0]},${slv[1]},${slv[2]})`, kn = `rgb(${sk[0]},${sk[1]},${sk[2]})`, hx = 43 + w;   // 어깨에서 위로 쭉 뻗은 팔 + 손 (흔들흔들)
+      const line = (x0, y0, x1, y1, col, th) => { const n = y0 - y1; for (let i = 0; i <= n; i++){ const x = Math.round(x0 + (x1 - x0) * i / n); q.fillStyle = col; q.fillRect(x, y0 - i, th, 1); } };
+      line(37, 33, hx - 1, 11, 'rgba(30,16,20,.7)', 4); line(38, 33, hx, 11, kn, 2); line(38, 33, 40, 26, sl, 2);
+      q.fillStyle = 'rgba(30,16,20,.7)'; q.fillRect(hx - 2, 5, 5, 6); q.fillStyle = kn; q.fillRect(hx - 1, 6, 3, 4); q.fillStyle = 'rgba(255,255,255,.3)'; q.fillRect(hx - 1, 6, 1, 2); }
+    return c;
+  }
+  function crowd(g, W, H, S, t){
+    const L = S.crowd || []; if (!L.length) return; const sc = W < 700 ? 1 : 2, gap = (W < 700 ? 34 : 70), n = L.length, x0 = W / 2 - (n - 1) / 2 * gap, base = H - (W < 700 ? 40 : 72), U = W < 700 ? 2 : 3;
+    g.imageSmoothingEnabled = false;
+    L.forEach((p, i) => { const x = Math.round(x0 + i * gap), cv = person(p.img, p.lit, t, i), y = base - 56 * sc;
+      g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(x - 11 * sc, base - 1, 22 * sc, 3 * sc);
+      g.drawImage(cv, x - 32 * sc, y, 64 * sc, 64 * sc);
+      const sx = x, sy = y + 4 * sc - 14, col = p.lit ? '#FFF6D0' : '#6C7AA8';   // 머리 위에 맡은 별
+      g.globalAlpha = p.lit ? 1 : .6; g.fillStyle = col; g.fillRect(sx - U / 2, sy - U / 2, U, U); for (let k = 1; k <= (p.mag || 1); k++){ g.fillRect(sx - U / 2 + k * U, sy - U / 2, U, U); g.fillRect(sx - U / 2 - k * U, sy - U / 2, U, U); g.fillRect(sx - U / 2, sy - U / 2 + k * U, U, U); g.fillRect(sx - U / 2, sy - U / 2 - k * U, U, U); } g.globalAlpha = 1; });
   }
   // 별자리 그림 윤곽 (얇은 선화) — 별 좌표 기준으로 그려요
   const OUT = {
@@ -35,7 +50,7 @@ const SKY = (() => {
   };
   function draw(g, W, H, C, S){
     const t = S.t || 0, B = box(W, H), U = W < 700 ? 3 : 4, byId = Object.fromEntries(C.stars.map(s => [s.id, s]));
-    g.clearRect(0, 0, W, H); background(g, W, H, t); horizon(g, W, H);
+    g.clearRect(0, 0, W, H); background(g, W, H, t); horizon(g, W, H, S.horizon);
     if (S.outline > 0){ const P = (x, y) => [B.x + x / 100 * B.w, B.y + y / 60 * B.h]; P.w = v => v / 100 * B.w; P.h = v => v / 60 * B.h;
       g.save(); g.globalAlpha = .34 * S.outline; g.strokeStyle = '#E6EEFF'; g.lineWidth = 2; g.lineJoin = 'round'; g.setLineDash([]); OUT[C.id](g, P, C); g.stroke(); g.restore(); }
     // 선 (순서대로, 앞 별에서 뒤 별로 뻗어 나가요)
@@ -48,8 +63,8 @@ const SKY = (() => {
       else { g.globalAlpha = .55 + .35 * Math.sin(t * 3 + x); }
       px(g, x - U / 2, y - U / 2, U, U, col); for (let k = 1; k <= arm; k++){ px(g, x - U / 2 + k * U, y - U / 2, U, U, col); px(g, x - U / 2 - k * U, y - U / 2, U, U, col); px(g, x - U / 2, y - U / 2 + k * U, U, U, col); px(g, x - U / 2, y - U / 2 - k * U, U, U, col); }
       g.globalAlpha = 1;
-      if (S.names && S.own && S.own[s.id]){ g.font = (W < 700 ? '11' : '14') + 'px G11, Pretendard, sans-serif'; g.textAlign = 'center'; const tx = S.own[s.id], w = g.measureText(tx).width + 10, ty = y + (arm + 1) * U + 6, hot = S.hot && S.hot.includes(s.id);
-        g.fillStyle = hot ? 'rgba(255,241,193,.9)' : 'rgba(10,14,40,.62)'; g.fillRect(Math.round(x - w / 2), Math.round(ty), Math.round(w), W < 700 ? 16 : 20); g.fillStyle = hot ? '#1A1A3A' : L ? '#FFF1C1' : '#9FB0E0'; g.fillText(tx, x, ty + (W < 700 ? 12 : 15)); } });
+    });
+    crowd(g, W, H, S, t);
     if (head){ for (let i = 0; i < 6; i++){ const a = i * 1.1 + t * 6; g.fillStyle = 'rgba(255,241,193,.8)'; g.fillRect(Math.round(head[0] + Math.cos(a) * 7), Math.round(head[1] + Math.sin(a) * 7), 2, 2); } }
     if (S.title > 0){ g.save(); g.globalAlpha = S.title; g.textAlign = 'center'; g.font = `${W < 700 ? 28 : 42}px G11B, Pretendard, sans-serif`; g.shadowColor = 'rgba(255,220,130,.85)'; g.shadowBlur = 18; g.fillStyle = '#FFF1C1'; g.fillText(C.name, W / 2, B.y + B.h + (W < 700 ? 52 : 70)); g.restore(); }
   }

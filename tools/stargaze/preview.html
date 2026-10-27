@@ -31,9 +31,10 @@ const cv = document.getElementById('cv'); cv.width = W * DPR; cv.height = H * DP
   const lit = C.stars.slice(0, Q.lit ?? 12).map(s => s.id);
   document.getElementById('tx').textContent = Q.text || '';
   document.getElementById('cnt').textContent = Q.count || '';
-  document.getElementById('names').innerHTML = C.stars.map(s => `<span class="${lit.includes(s.id) ? 'on' : ''} ${own[s.id] === '스텔라' ? 'st' : ''}">${own[s.id]}</span>`).join('');
-  document.getElementById('names').style.display = Q.noNames ? 'none' : '';
-  const S = { lit, own, drawn: Q.drawn || 0, outline: Q.outline || 0, title: Q.title || 0, t: Q.t || 1.3, names: Q.tags !== false, hot: Q.hot || [] };
+  document.getElementById('names').style.display = 'none';
+  const hz = new Image(); hz.src = '../../public/art/stargaze_horizon_' + (W < 700 ? 390 : 720) + '.png'; await new Promise(r => { hz.onload = r; hz.onerror = r; });
+  const crowd = await Promise.all((Q.crowd || []).map((u, i) => new Promise(r => { const im = new Image(); im.onload = () => r({ img: im, lit: lit.includes(C.stars[i]?.id), mag: C.stars[i]?.mag }); im.src = u; })));
+  const S = { crowd, horizon: hz, lit, own, drawn: Q.drawn || 0, outline: Q.outline || 0, title: Q.title || 0, t: Q.t || 1.3, names: false, hot: Q.hot || [] };
   SKY.draw(g, W, H, C, S); window.__ready = 1;
 })();
 </script>
