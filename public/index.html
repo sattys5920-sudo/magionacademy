@@ -6860,7 +6860,7 @@ const PK = { GOAL: 600, STAGES: [0, .2, .45, .7, 1], NAMES: ['씨앗', '새싹',
   MAT: [['herb', '약초', 6, '흔함'], ['drop', '달빛 이슬', 10, '보통'], ['mana', '마나석', 20, '귀함']], BUFF_MS: 3 * 3600e3, CELL: [60, 50] };
 const pkGoal = () => (pkCtl && pkCtl.goal) || PK.GOAL, pkTotal = () => Object.values(pkPts).reduce((a, n) => a + (+n || 0), 0), pkDone = () => !!pkCtl && pkTotal() >= pkGoal();
 const pkStage = () => { const k = Math.min(1, pkTotal() / pkGoal()); let s = 0; PK.STAGES.forEach((t, i) => { if (k >= t) s = i; }); return s; };
-const pkMy = () => (me.pk && pkCtl && me.pk.id === pkCtl.id) ? me.pk : (me.pk = { id: pkCtl ? pkCtl.id : 0, wAt: 0, tAt: 0, f: {}, st: {}, fin: 0, bd: {} });
+const pkMy = () => (me.pk && pkCtl && me.pk.id === pkCtl.id) ? me.pk : (me.pk = { id: pkCtl ? pkCtl.id : 0, wAt: 0, tAt: 0, f: {}, st: {}, fin: 0, bd: {}, ss: 0, se: 0 });
 const pkRank = () => { const L = Object.entries(pkPts).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).map(([u]) => u); return L.indexOf(myId()) + 1; };
 function pkListen(){
   if (solo || !F || !db || pkOffs.length) return;
@@ -6868,6 +6868,7 @@ function pkListen(){
   pkOffs.push(F.onValue(F.ref(db, 'pumpkin/pts'), s => { pkPts = s.val() || {}; pkLoad.p = 1; pkSync(); pkAuto(); if (pkOn) pkUi(); }));
   pkOffs.push(F.onValue(F.ref(db, 'pumpkin/w'), s => { pkW = s.val() || {}; pkLoad.w = 1; pkAuto(); if (pkOn) pkUi(); }));
   World.onProp = id => id === 'pkgiant' ? pkBubble() : null;
+  pkScene.t0 = Date.now() + 4000; setInterval(pkScene, 1500);   // 들어오자마자는 다른 장면이 먼저예요
 }
 // 호박밭에 마법 호박 놓기(그림은 art/ev5_pumpkin.png 5단계) · 단계가 오르면 그림이 바뀌어요
 const pkImg = dfImg('art/ev5_pumpkin.png'), pkCan = {};
@@ -6916,6 +6917,27 @@ async function pkAct(kind, mat){
   else { const M_ = PK.MAT.find(x => x[0] === mat); if (!M_ || (me.inv[mat] || 0) < 1) return toast(`${M_ ? M_[1] : '재료'}이(가) 없어요`); if (typeof m.f !== 'object' || !m.f) m.f = {}; if ((m.f[mat] || 0) >= PK.FCAP) return toast(`${M_[1]} 거름은 ${PK.FCAP}번까지 줄 수 있어요`);
     g = await pkGain(M_[2], 'f'); if (g){ me.inv[mat]--; m.f[mat] = (m.f[mat] || 0) + 1; sfx('pick'); toast(`${M_[1]}을(를) 거름으로 줬어요! 성장 +${g}`); } }
   if (g){ save(); hud(); pkUi(); }
+}
+// 호박 이벤트 앞뒤 인사: 짚신이 호박밭에 뭔가 생겼다고 알려 주고, 다 자라면 알려 줘요 (이벤트마다 한 번씩)
+const PK_TALK = {
+  start: ['저, 저기! 큰일, 아니 신기한 일이 생겼어!', '호박밭에 뭐가 쏙 생겼는데.... 아직 아주 작은 호박이야.', '근데 이게 보통 호박이 아닌 것 같아. 마법 냄새가 나!', '물도 주고, 말도 걸어 주고, 거름도 주면 쑥쑥 자란대.', '같이 키워 줄래? 나 혼자 하면 까마귀가 와서 무서워서.......'],
+  end: ['와아! 다 자랐어! 호박이 엄청 커졌어!', '봐 봐, 활짝 웃고 있어. 다들 열심히 돌봐 준 덕분이야.', '이제 이 거대 호박은 밭에 쭉 있을 거야. 말을 걸면 복을 나눠 준대.', '까마귀도 깜짝 놀라서 안 오더라. 고마워, 정말로.......'] };
+var nlCtx = null;
+function nlTalk(id, lines, after, i = 0){   // 짚신 같은 NPC가 하는 짧은 인사 (다음 · 알겠어요)
+  const n = npcGet(id); if (!n) return; const last = i >= lines.length - 1; nlCtx = { id, lines, after, i };
+  npcUI().dataset.id = 'nl:' + id;
+  npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${npcPortrait(n)}</div><div><b>${esc(n.name)}</b><span class="s sub">${esc(n.title || '')}</span></div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(lines[i])}</div><div class="frow"><button class="btn sm go" data-nl="${last ? 'end' : 'next'}">${last ? '알겠어요' : '다음'}</button></div></div>`;
+  npcUI().classList.add('on');
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-nl]'); if (!b || !nlCtx || !npcUI().contains(b)) return;
+  if (b.dataset.nl === 'next') return nlTalk(nlCtx.id, nlCtx.lines, nlCtx.after, nlCtx.i + 1);
+  const af = nlCtx.after; nlCtx = null; npcClose(); if (af) af();
+});
+function pkScene(){
+  if (!me || !pkCtl || !pkCtl.id || !pkLoad.p || uiBusy() || Date.now() < (pkScene.t0 || 0)) return; const m = pkMy();
+  if (pkDone() && !m.se && Object.keys(pkPts).length){ m.se = 1; m.ss = 1; save(); nlTalk('jipsin', PK_TALK.end); }
+  else if (pkCtl.open && !pkDone() && !m.ss){ m.ss = 1; save(); nlTalk('jipsin', PK_TALK.start); }
 }
 function pkBubble(){   // 호박을 눌렀을 때
   if (!pkCtl) return null; const st = pkStage(), done = pkDone(), m = pkMy(), day = todayKey();
