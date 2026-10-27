@@ -1,6 +1,6 @@
 // 별 보는 밤 · 하늘 화면 그리기 (시안용, 게임에 붙일 때 그대로 가져가요)
-//   skyDraw(g, W, H, C, S)  C: 별자리 데이터 · S: { lit:[별 id], own:{별 id: 이름}, drawn: 이어진 선 수(소수면 그리는 중), outline: 0~1, title: 0~1, t: 초, names: 이름표를 보일지 }
-const SKY = (() => {
+//   STARSKY.draw(g, W, H, C, S)  C: 별자리 데이터 · S: { lit:[별 id], own:{별 id: 이름}, drawn: 이어진 선 수(소수면 그리는 중), outline: 0~1, title: 0~1, t: 초, names: 이름표를 보일지 }
+const STARSKY = (() => {
   const rnd = seed => () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
   const px = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); };
   function box(W, H){ const bw = Math.min(W - 56, 1000), bh = Math.min(H * .46, bw * .86); return { x: (W - bw) / 2, y: Math.max(150, H * .17), w: bw, h: bh }; }
@@ -32,7 +32,7 @@ const SKY = (() => {
     return c;
   }
   function crowd(g, W, H, S, t){
-    const L = S.crowd || []; if (!L.length) return; const sc = W < 700 ? 1 : 2, gap = (W < 700 ? 34 : 70), n = L.length, x0 = W / 2 - (n - 1) / 2 * gap, base = H - (W < 700 ? 40 : 72), U = W < 700 ? 2 : 3;
+    const L = S.crowd || []; if (!L.length) return; const sc = W < 700 ? 1 : 2, n = L.length, gap = Math.min(W < 700 ? 34 : 70, (W - 28) / n), x0 = W / 2 - (n - 1) / 2 * gap, base = H - (W < 700 ? 40 : 72), U = W < 700 ? 2 : 3;
     g.imageSmoothingEnabled = false;
     L.forEach((p, i) => { const x = Math.round(x0 + i * gap), cv = person(p.img, p.lit, t, i), y = base - 56 * sc;
       g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(x - 11 * sc, base - 1, 22 * sc, 3 * sc);
@@ -61,6 +61,7 @@ const SKY = (() => {
     C.stars.forEach(s => { const [x, y] = pos(B, s), L = lit.has(s.id), r = s.mag, arm = r + 0, tw = L ? .8 + .2 * Math.sin(t * 2.4 + x) : 1, col = L ? '#FFF6D0' : '#7C8BBA';
       if (L){ const gr = g.createRadialGradient(x, y, 0, x, y, (8 + r * 5) * U / 2); gr.addColorStop(0, `rgba(255,236,170,${.55 * tw})`); gr.addColorStop(1, 'rgba(255,236,170,0)'); g.fillStyle = gr; g.fillRect(x - 40, y - 40, 80, 80); }
       else { g.globalAlpha = .55 + .35 * Math.sin(t * 3 + x); }
+      if (!L && S.mine && S.mine.includes(s.id)){ g.save(); g.globalAlpha = .9; g.strokeStyle = '#FFF1C1'; g.lineWidth = 2; g.beginPath(); g.arc(x, y, 14 + 3 * Math.sin(t * 5), 0, 7); g.stroke(); g.restore(); }
       px(g, x - U / 2, y - U / 2, U, U, col); for (let k = 1; k <= arm; k++){ px(g, x - U / 2 + k * U, y - U / 2, U, U, col); px(g, x - U / 2 - k * U, y - U / 2, U, U, col); px(g, x - U / 2, y - U / 2 + k * U, U, U, col); px(g, x - U / 2, y - U / 2 - k * U, U, U, col); }
       g.globalAlpha = 1;
     });
@@ -70,4 +71,4 @@ const SKY = (() => {
   }
   return { draw, box, pos };
 })();
-if (typeof module !== 'undefined') module.exports = SKY;
+if (typeof module !== 'undefined') module.exports = STARSKY;

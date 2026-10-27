@@ -279,6 +279,21 @@
           ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3000 && (!data.exists() || newData.val() >= data.val() || auth != null && auth.token.email === 'magionadmin@magionacademy.app')"
         }
       }
+    },
+    "stargaze": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+      "join": {
+        "$u": {
+          ".write": "auth != null && (auth.uid === $u || auth != null && auth.token.email === 'magionadmin@magionacademy.app')"
+        }
+      },
+      "lit": {
+        "$s": {
+          ".write": "auth != null && (root.child('stargaze/ctl/asg/' + $s).val() === auth.uid || auth != null && auth.token.email === 'magionadmin@magionacademy.app')",
+          ".validate": "newData.isNumber()"
+        }
+      }
     }
   }
 }
