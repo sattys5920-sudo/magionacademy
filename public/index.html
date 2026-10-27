@@ -1445,9 +1445,9 @@ const FORAGE_LIST = [
 const CM = { slim: [8, 32], round: [6, 26], long: [20, 80], flat: [15, 60], cat: [20, 72], puff: [5, 18], jelly: [4, 20], shrimp: [3, 12], cray: [6, 20], shell: [4, 14], horse: [5, 16], star: [6, 22], turtle: [15, 52], whale: [60, 180], angler: [12, 40], lord: [120, 320], crab: [5, 24], frog: [4, 14], squid: [10, 60], eel: [25, 110], octo: [20, 90], shark: [90, 260] };
 const STARS = n => '★'.repeat(n) + '☆'.repeat(5 - n);
 // 희귀도: 칸마다 다른 무게(앞일수록 큼). 등급(★)은 묶어서 보여 줘요
-const FISH = FISH_LIST.map(([id, name, t, time], i) => ({ id, name, i, time, cm: CM[t], w: Math.round(10000 * .94 ** i), grade: i < 18 ? 1 : i < 33 ? 2 : i < 46 ? 3 : i < 55 ? 4 : 5, pay: Math.round(12 * 1.085 ** i) }));
+const FISH = FISH_LIST.map(([id, name, t, time], i) => ({ id, name, i, time, cm: CM[t], w: Math.round(10000 * .94 ** i), grade: i < 18 ? 1 : i < 33 ? 2 : i < 46 ? 3 : i < 55 ? 4 : 5, pay: Math.round(6 * 1.075 ** i) }));
 const JUNK = JUNK_LIST.map(([id, name], j) => ({ id, name, i: 60 + j, junk: true, grade: 0, pay: 1 }));
-const FORAGE = FORAGE_LIST.map(([id, name, z], i) => ({ id, name, i, z, w: Math.round(10000 * .93 ** i), grade: i < 15 ? 1 : i < 28 ? 2 : i < 39 ? 3 : i < 46 ? 4 : 5, pay: Math.round(6 * 1.11 ** i) }));
+const FORAGE = FORAGE_LIST.map(([id, name, z], i) => ({ id, name, i, z, w: Math.round(10000 * .93 ** i), grade: i < 15 ? 1 : i < 28 ? 2 : i < 39 ? 3 : i < 46 ? 4 : 5, pay: Math.round(3 * 1.1 ** i) }));
 { const used = new Set(POTION_LIST.flatMap(x => x.r)); [...FORAGE, ...FISH].forEach(x => { if (used.has(x.id)) MATS.push(x.id); }); }   // 물약 재료로 쓰이는 채집물·물고기
 const CATCH_INFO = Object.fromEntries([...FISH, ...JUNK].map(x => [x.id, { ...x, sheet: 'fish', n: 63 }]).concat(FORAGE.map(x => [x.id, { ...x, sheet: 'forage', n: 50 }])));
 const CATCH = Object.keys(CATCH_INFO);
@@ -1514,11 +1514,11 @@ function fishReel(){
   const ph = [0, 1, 2].map(() => Math.random() * 6.28);
   Object.assign(fishing, {
     st: 'reel', f, pos: .5, dir: 0, prog: 0, pat: 1, t: 0, ph, last: performance.now(),
-    zw: Math.max(.12, Math.min(.31, .33 - g * .032 + L * .022)), zc: .5, zt: .5, zhold: 1.4,
-    T: f.junk ? 1.6 : 2.2 + g * .68,          // 초록 칸에 머물러야 하는 시간(초)
-    jit: .11 + g * .07, jf: 1 + g * .3,       // 찌가 흔들리는 세기·빠르기
-    yank: f.junk ? 0 : .09 + g * .038, yt: 1.2 + Math.random() * 1.5,   // 가끔 확 당겨요
-    spd: .93 + L * .055,                         // 내가 찌를 움직이는 속도(초당 칸 폭)
+    zw: Math.max(.10, Math.min(.28, .30 - g * .033 + L * .022)), zc: .5, zt: .5, zhold: 1.4,
+    T: f.junk ? 1.6 : 2.5 + g * .78,          // 초록 칸에 머물러야 하는 시간(초)
+    jit: .13 + g * .075, jf: 1 + g * .3,       // 찌가 흔들리는 세기·빠르기
+    yank: f.junk ? 0 : .1 + g * .042, yt: 1.2 + Math.random() * 1.5,   // 가끔 확 당겨요
+    spd: .9 + L * .055,                         // 내가 찌를 움직이는 속도(초당 칸 폭)
   });
   World.setBobber({ x: fishing.x, y: fishing.y, bite: true, shake: Math.min(1.6, fishing.jit * 3) });
   fishShow(`<b>${f.junk ? '뭔가 걸렸어요!' : '물고기가 걸렸어요!'} <span class="fstar">${f.junk ? '' : STARS(g)}</span></b>
@@ -1539,8 +1539,8 @@ function fishReel(){
     F.zhold -= dt; if (F.zhold <= 0){ let n; do n = F.zw / 2 + .04 + Math.random() * (1 - F.zw - .08); while (Math.abs(n - F.zc) < .25); F.zt = n; F.zhold = 2.6 - Math.min(1.4, F.jit * 1.4) + Math.random() * 1.2; }
     F.zc += Math.sign(F.zt - F.zc) * Math.min(Math.abs(F.zt - F.zc), (.12 + F.jit * .25) * dt);
     const inz = Math.abs(F.pos - F.zc) <= F.zw / 2;
-    F.prog = Math.max(0, Math.min(1, F.prog + (inz ? dt / F.T : -dt / F.T * .6)));
-    F.pat = Math.max(0, Math.min(1, F.pat + (inz ? dt * .18 : -dt * (.18 + (F.f.junk ? 0 : F.f.grade * .027)))));
+    F.prog = Math.max(0, Math.min(1, F.prog + (inz ? dt / F.T : -dt / F.T * .75)));
+    F.pat = Math.max(0, Math.min(1, F.pat + (inz ? dt * .16 : -dt * (.2 + (F.f.junk ? 0 : F.f.grade * .03)))));
     z.style.left = (F.zc - F.zw / 2) * 100 + '%'; z.classList.toggle('in', inz);
     bob.style.left = (F.pos * 100 + (Math.random() - .5) * F.jit * 5) + '%'; pg.style.width = F.prog * 100 + '%'; pt.style.width = F.pat * 100 + '%'; pm.classList.toggle('low', F.pat < .35);
     tx.textContent = inz ? '좋아요! 그대로 버텨요' : F.pat < .35 ? '놓치겠어요! 찌를 초록 칸으로!' : '찌를 초록 칸 쪽으로 옮겨요';
@@ -1608,7 +1608,7 @@ const BANDS = ['dew', 'ember', 'dusk', 'moon'];
 const sellMul = k => { let h = 0; for (const c of k) h = (h * 31 + c.charCodeAt(0)) >>> 0; const d = (BANDS.indexOf(houseNow()) - h % 4 + 4) % 4; return [1.35, 1.05, .75, 1.05][d]; };
 const sellPay = (k, base) => Math.max(1, Math.round(base * sellMul(k)));
 const sellTag = k => { const m = sellMul(k); return m > 1.2 ? '<b style="color:var(--ok)">▲ 비싸게 쳐줘요</b>' : m < .8 ? '<b style="color:var(--bad,#c55)">▼ 싸게 쳐줘요</b>' : '보통'; };
-const cropBase = k => { const x = SEED_INFO[k]; return x ? Math.max(3, Math.round(x.price * .6 + 3)) : 0; };
+const cropBase = k => { const x = SEED_INFO[k]; return x ? Math.max(2, Math.round(x.price * .5 + 2)) : 0; };
 const FISH_GO = [['유령 호수', 'town', [32, 78], 40], ['등불 강', 'campus', [80, 33], 34], ['북쪽 연못', 'campus', [56, 17], 22], ['북동 연못', 'town', [68, 18], 28], ['남동 연못', 'town', [70, 64], 31], ['골목 연못', 'quarter', [20, 26], 28]];   // [이름, 맵, 물가 자리, 낚이는 물고기 수]
 let fsGo = false, fsTab = 'dex', fsMsg = '', fsKind = 'fish', fsPg = 0, fsSel = null, fsSellPg = 0;
 const ZONE_NAME = { f: '숲', g: '묘지', l: '호숫가', p: '들판' };
@@ -1849,7 +1849,7 @@ const XRG = [   // 탐사 지역: 입장료·시간·몬스터 레벨 범위 · 
 ];
 [[1, 1, 1], [2.2, 1.3, 1.8], [3.5, 1.8, 3], [4.5, 2.7, 5.2]].forEach(([h, e, a], i) => { XRG[i].hpm = h; XRG[i].ehm = e; XRG[i].atkm = a; XRG[i].bat = [1.3, 1.3, 1.2, 1.4][i]; });   // bat: 보스는 더 아프게 때려요 (물약을 더 마셔야 해요)   // 지역마다 몬스터가 더 단단하고 세요 (무기 강화 0 · 2 · 3 · 4단계 이상인 사람 기준)
 let xRgSel = 0; const xReg = () => XRG[(xEx().run ? xEx().run.rg : xRgSel) || 0];
-const XDAY = 5, XNODE = { battle: ['', '몬스터', 7], elite: ['', '강한 몬스터', 11], camp: ['', '캠프파이어', 4], statue: ['', '고대 석상', 5], chest: ['', '보물상자', 4], boss: ['', '숲의 주인', 100], path: ['', '지름길', 8] };
+const XNODE = { battle: ['', '몬스터', 7], elite: ['', '강한 몬스터', 11], camp: ['', '캠프파이어', 4], statue: ['', '고대 석상', 5], chest: ['', '보물상자', 4], boss: ['', '숲의 주인', 100], path: ['', '지름길', 8] };
 const xJobGrid = (sel, taken = {}) => `<div class="jgrid">${Object.entries(XJ).map(([k, j]) => `<button type="button" class="jcard${sel === k ? ' on' : ''}${taken[k] ? ' off' : ''}" data-job="${k}" ${taken[k] ? 'disabled' : ''}>${j.ic}<b>${j.n}</b><span>${taken[k] ? `${esc(taken[k])}가 골랐어요` : j.d}</span></button>`).join('')}</div>`;
 // 직업은 한 사람에 하나씩: 앞서 가입한 친구가 고른 직업은 뒤에 가입하는 사람이 못 골라요 (jobs/<직업> = 고른 사람, 동시에 고르는 것도 막아요)
 async function jobsTaken(){
@@ -1973,10 +1973,10 @@ function renderExplore(){
   const head = `<div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center"><span class="big">${job.ic}</span><div style="flex:1"><b>${esc(me.nick)} · ${job.n} Lv ${lv.L}</b><div class="s sub">HP ${Math.round(xStTot(ex, 'hp'))} · 공 ${Math.round(xStTot(ex, 'atk'))} · 마 ${Math.round(xStTot(ex, 'mag'))} · 치 ${Math.round(xStTot(ex, 'heal'))} · 속 ${Math.round(xStTot(ex, 'spd') * 10) / 10}</div></div></div></div>`;
   if (v === 'lobby'){
     const R = xReg(), okL = lv.L >= R.need;
-    frame(null, '탐사', `오늘 ${ex.n} / ${XDAY}회`, `${head}<section class="sec">${secH('가는 곳')}<div class="box px"><div class="li"><div class="main"><span class="t">${R.n} · ${R.tier}</span><span class="d" style="white-space:normal">${R.dir}쪽 길 · ${R.min}분 · 입장 ${R.fee}G · 몬스터 Lv ${R.lv[0]}~${R.lv[1]}${lv.L < R.need ? ` · 내 레벨 ${R.need} 이상` : ''}</span></div></div>
+    frame(null, '탐사', `오늘 ${ex.n}회 다녀왔어요`, `${head}<section class="sec">${secH('가는 곳')}<div class="box px"><div class="li"><div class="main"><span class="t">${R.n} · ${R.tier}</span><span class="d" style="white-space:normal">${R.dir}쪽 길 · ${R.min}분 · 입장 ${R.fee}G · 몬스터 Lv ${R.lv[0]}~${R.lv[1]}${lv.L < R.need ? ` · 내 레벨 ${R.need} 이상` : ''}</span></div></div>
       </div>
       ${xpPanel(lv)}
-      <button class="btn" id="xwp" style="width:100%">무기 강화 · ${XWN[ex.job]} (${XWT[ex.wp || 0]})</button><button class="btn" id="xst" style="width:100%">스탯${xSpPts(ex) > 0 ? ` · 남은 포인트 ${xSpPts(ex)}` : ''}</button><button class="btn" id="xtree" style="width:100%">스킬 트리${xPts(ex) > 0 ? ` · 남은 포인트 ${xPts(ex)}` : ''}</button>${xpV ? '' : `<div class="frow" style="display:flex;gap:8px"><button class="btn go" id="xgo" style="flex:1" ${ex.n >= XDAY || me.coin < R.fee || !okL ? 'disabled' : ''}>${ex.n >= XDAY ? '오늘은 끝났어요' : !okL ? `레벨 ${R.need} 이상이에요` : me.coin < R.fee ? `골드가 모자라요 (${R.fee}G)` : `${XCOOP ? '혼자 가기' : '출발하기'} · ${R.fee}G`}</button><button class="btn" data-xp="create" style="flex:1" ${ex.n >= XDAY || !okL ? 'disabled' : ''}>파티 모집하기</button></div>`}${hint(xMsg, '')}</section><div style="display:flex;gap:8px">${back}</div>`);
+      <button class="btn" id="xwp" style="width:100%">무기 강화 · ${XWN[ex.job]} (${XWT[ex.wp || 0]})</button><button class="btn" id="xst" style="width:100%">스탯${xSpPts(ex) > 0 ? ` · 남은 포인트 ${xSpPts(ex)}` : ''}</button><button class="btn" id="xtree" style="width:100%">스킬 트리${xPts(ex) > 0 ? ` · 남은 포인트 ${xPts(ex)}` : ''}</button>${xpV ? '' : `<div class="frow" style="display:flex;gap:8px"><button class="btn go" id="xgo" style="flex:1" ${me.coin < R.fee || !okL ? 'disabled' : ''}>${!okL ? `레벨 ${R.need} 이상이에요` : me.coin < R.fee ? `골드가 모자라요 (${R.fee}G)` : `${XCOOP ? '혼자 가기' : '출발하기'} · ${R.fee}G`}</button><button class="btn" data-xp="create" style="flex:1" ${!okL ? 'disabled' : ''}>파티 모집하기</button></div>`}${hint(xMsg, '')}</section><div style="display:flex;gap:8px">${back}</div>`);
     on('[data-xr]', b => { xRgSel = +b.dataset.xr; if (xpRoom && xpV?.host === myId() && xpV.st === 'lobby') GDB.upd('xparty/' + xpRoom, { rg: xRgSel }); renderExplore(); });
     xpWire();
     $('#back').onclick = closeSheet;
@@ -2324,7 +2324,7 @@ function xcoEnter(id, v){   // 방이 「출발」하면 각자 탐사 기록을
   const ex = xEx(), me_p = v.p?.[myId()]; if (!me_p || me_p.out || !v.t0 || !v.seed) return; if (ex.run && ex.run.co === id){ if (!xcoOff.length) xcoWatch(id); return; }
   if (ex.run) return;
   const R = XRG[v.rg] || XRG[0]; if (xLv(ex.exp).L < R.need) return;
-  if (!me_p.paid){ if (ex.n >= XDAY){ toast('오늘 탐사는 모두 했어요'); return xpLeave(); } if (me.coin < R.fee){ toast('입장료가 모자라서 같이 못 가요'); return xpLeave(); } me.coin -= R.fee; ex.n++; GDB.upd(`xparty/${id}/p/${myId()}`, { paid: 1 }); }
+  if (!me_p.paid){ if (me.coin < R.fee){ toast('입장료가 모자라서 같이 못 가요'); return xpLeave(); } me.coin -= R.fee; ex.n++; GDB.upd(`xparty/${id}/p/${myId()}`, { paid: 1 }); }
   const rnd = xcoSeeded(v.seed || 1), mod = XMODS[Math.floor(rnd() * XMODS.length)], pool = R.mon.map(m => [rnd(), m]).sort((a, b) => a[0] - b[0]).slice(0, 4).map(a => a[1]);
   ex.run = { rg: v.rg, co: id, mod, pool, start: v.t0, end: v.t0 + R.min * 6e4, prog: 0, loot: { gold: 0, exp: 0, items: {} }, buff: 0, p: null, node: null }; save(); hud();
   xv = { view: 'march' }; xMsg = ''; xM = null; xb = null; xcoWatch(id); xcoWasHost = v.host === myId(); if (xcoWasHost) setTimeout(() => xcoPub({ st: 'walk' }), 400);
@@ -3439,7 +3439,7 @@ const EFF = { mana: v => `마력 +${v}`, know: v => `지식 +${v}`, spot: v => `
   bite: v => `낚시 입질 빠르게 ${v}분`, rare: v => `드문 물고기 잘 와요 ${v}분`, fluck: v => `드문 채집물 잘 나와요 ${v}분`, speed: v => `걷기 빠르게 ${v}분`, coin: v => `주문 보상 +20% ${v}분`, ggold: v => `놀이 보상 +50% ${v}분`, all: v => `모든 좋은 효과 ${v}분 + 마력 +50` };
 const TIMED = ['bite', 'rare', 'fluck', 'speed', 'coin', 'ggold'];
 const BUFF_NAME = { dfire: '불의 용 가호', dwater: '물의 용 가호', dforest: '숲의 용 가호', bite: '입질↑', rare: '드문 물고기↑', fluck: '드문 채집↑', speed: '빠른 걸음', coin: '주문 보상↑', ggold: '놀이 보상↑' };
-const DISH = DISH_LIST.map(([id, name, r, e, v], i) => ({ id, name, r, e, v, i, grade: i < 8 ? 1 : i < 18 ? 2 : i < 28 ? 3 : i < 36 ? 4 : 5, pay: Math.round(20 * 1.1 ** i) }));
+const DISH = DISH_LIST.map(([id, name, r, e, v], i) => ({ id, name, r, e, v, i, grade: i < 8 ? 1 : i < 18 ? 2 : i < 28 ? 3 : i < 36 ? 4 : 5, pay: Math.round(14 * 1.09 ** i) }));
 const DISH_INFO = Object.fromEntries(DISH.flatMap(d => [[d.id, d], [d.id + '_s', { ...d, best: true }]]));
 DISH.forEach(d => { ITEM[d.id] = d.name; ITEM[d.id + '_s'] = '' + d.name; });
 const DISHES = Object.keys(DISH_INFO);
