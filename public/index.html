@@ -7976,7 +7976,7 @@ async function mqIdle(qid){ if (!MQ.idle[qid]) MQ.idle[qid] = (await mqFetch(`${
 // ---- 열기: 다음 의뢰가 올 때가 됐나 (매일 아침 · 15초마다 · 들어올 때) ----
 function mqTick(){
   if (!me || !MQ.loaded) return; const s = mqState();
-  if (s.q){ if (s.ph === 'arrive') mqArrive(); else mqCheck(); mqDeadline(); return; }
+  if (s.q){ if (s.ph === 'arrive') mqArrive(); else mqCheck(); mqDeadline(); mqMarks(); return; }   // 재료를 써 버렸거나 되돌려졌으면 캐는 곳이 다시 떠요
   const next = MQ.list.find(id => !s.done[id]); if (!next) return; const q = MQ.q[next]; if (!q) return;
   const u = q.unlock || {}; if (u.afterQuest && !s.done[u.afterQuest]) return;
   if (MQ.list.indexOf(next) + 1 > mqRel) return;   // 관리자가 송출한 장까지만. 앞 장을 끝낸 사람은 송출되는 즉시, 송출 뒤에 끝내면 바로 다음 손님이 와요
@@ -8018,7 +8018,7 @@ function mqAfter(q, n, kind, sc){
     if (n >= 5 || n >= q.stages.length){   // 의뢰 완료
       const cr = q.completion_reward || {}; [].concat(cr.items || []).forEach(k => { mqGive(k, 1); got.push(ITEM[k] || k); });
       s.done[q.id] = me.day; s.q = null; s.st = 1; s.ph = 'arrive'; s.prog = {}; s.dl = null;
-      mqSky(); if (World.setMarks) World.setMarks([]);
+      mqSky(); if (World.setMarks) mqSetMarks([]);
       toast(`「${esc(q.name || q.id)}」 의뢰를 끝냈어요${got.length ? ' · ' + got.join(', ') : ''}`);
       if (q.order === 7){ me.nflag = me.nflag || {}; me.nflag.main_done = 1; if (!me.nflag.ending){ me.nflag.ending = 1; setTimeout(() => playEnding(), 2500); } }
     } else { s.st = n + 1; s.ph = 'pre'; s.prog = {}; s.dl = null; toast(`${n}단계 끝! ${got.length ? got.join(', ') + ' · ' : ''}${mqName(q.client)}에게 다시 말을 걸면 다음 부탁을 들어요`); }
@@ -8032,7 +8032,7 @@ const OBJ_KO = { collect: '모으기', craft: '만들기', deliver: '전하기',
 function mqObjs(){ const st = mqStage(); return st ? (st.objectives || []) : []; }
 function mqObjState(o, i){   // → { done, cur, need, text, hint }
   const s = mqState(), P = s.prog, t = o.type, h = o.hint ? fillVars(o.hint, null) : '';
-  if (t === 'collect'){ const cur = me.inv[o.item] || 0; return { done: cur >= o.count, cur, need: o.count, text: `${ITEM[o.item] || o.item} ${o.count}개 모으기`, hint: h || (o.hint_location && NL.places[o.hint_location] ? `${NL.places[o.hint_location].name}에 있어요` : '') }; }
+  if (t === 'collect'){ const cur = me.inv[o.item] || 0; return { done: cur >= o.count, cur, need: o.count, text: `${ITEM[o.item] || o.item} ${o.count}개 모으기`, hint: '' }; }   // 어디서 구하는지는 알려 주지 않아요 (직접 찾아요)
   if (t === 'craft'){ const cur = P['craft:' + o.item] || 0, n = o.count || 1; return { done: cur >= n, cur, need: n, text: `${ITEM[o.item] || o.item} ${n > 1 ? n + '개 ' : ''}만들기${o.quality ? ` (품질 ${MQ_Q[o.quality]} 이상)` : ''}`, hint: h || `${o.place === 'candy' ? '과자 교실 오븐' : '물약 교실 솥'}에서 「의뢰 제조」` }; }
   if (t === 'deliver'){ const cur = P['deliver:' + i] || 0, n = o.count || 1; return { done: cur >= n, cur, need: n, text: `${mqName(o.to)}에게 ${ITEM[o.item] || o.item} ${n}개 전하기`, hint: h || `가진 것 ${me.inv[o.item] || 0}개` }; }
   if (t === 'visit'){ const d = !!P['visit:' + i]; const p = NL.places[o.place]; return { done: d, cur: d ? 1 : 0, need: 1, text: `${p ? fillVars(p.name) : o.place}에 가기${o.time ? ' · ' + o.time.map(x => BAND_KO[x]).join('이나 ') : ''}${o.weather ? ' · ' + o.weather.map(x => WX_KO[x]).join('이나 ') : ''}${o.moon ? ' · ' + MOON_KO[o.moon] : ''}`, hint: h }; }
@@ -8054,20 +8054,22 @@ function mqCheck(quiet){
     if (ok){ s.prog['visit:' + i] = 1; toast(`${fillVars(p.name)}에 왔어요 ✓`); save(); } }
     if (o.type === 'wait_moon' && !s.prog['moon:' + i] && moonNow() === o.moon){ s.prog['moon:' + i] = 1; save(); } });
   const all = objs.every((o, i) => mqObjState(o, i).done);
-  if (all){ s.ph = 'ready'; save(); syncNpcs(); if (World.setMarks) World.setMarks([]); toast(`목표를 다 했어요! ${mqName(mqQuest().client)}에게 알려요`); if (sheetOn && sub === 'journal') render(); }
+  if (all){ s.ph = 'ready'; save(); syncNpcs(); if (World.setMarks) mqSetMarks([]); toast(`목표를 다 했어요! ${mqName(mqQuest().client)}에게 알려요`); if (sheetOn && sub === 'journal') render(); }
 }
 function mqDeadline(){ const s = mqState(); if (!s.q || s.ph !== 'go' || !s.dl) return; if (me.day > s.dl){ const st = mqStage(); s.dl = me.day + (st.deadline || 5); Object.keys(s.prog).filter(k => k.startsWith('craft:')).forEach(k => delete s.prog[k]); save(); toast('기한이 지나 제조를 처음부터 다시 해요'); } }
 // 조사 지점(clue)을 맵에 띄워요
-function mqMarks(){ if (!World.setMarks) return; const s = mqState(); if (!s.q || s.ph !== 'go') return World.setMarks([]); const list = [];
+let mqMarkSig = null;
+const mqSetMarks = list => { const g = JSON.stringify(list); if (g === mqMarkSig) return; mqMarkSig = g; World.setMarks(list); };   // 바뀔 때만 다시 그려요
+function mqMarks(){ if (!World.setMarks) return; const s = mqState(); if (!s.q || s.ph !== 'go') return mqSetMarks([]); const list = [];
   mqObjs().forEach((o, i) => { if (o.type === 'collect' && o.source && !mqObjState(o, i).done){ const p = mqPlace(o.source.place ? { place: o.source.place, x: o.source.x, y: o.source.y } : o.source); if (p) list.push({ id: 'buy:' + o.item, map: p.map, x: p.x, y: p.y, label: o.source.label || `${ITEM[o.item]} ${o.source.price ? '사기' : '줍기'}` }); return; }
     if (o.type !== 'clue') return; (o.spots || []).forEach(sp => { if (s.prog['clue:' + sp.id]) return; const p = mqPlace(sp.place ? { place: sp.place, x: sp.x, y: sp.y } : sp); if (p) list.push({ id: sp.id, map: p.map, x: p.x, y: p.y, label: sp.label || '조사하기' }); }); });
-  World.setMarks(list); }
+  mqSetMarks(list); }
 World.onMark = id => { const s = mqState(); let hit = null;
   if (id.startsWith('buy:')){ const item = id.slice(4), o = mqObjs().find(x => x.type === 'collect' && x.item === item); if (!o) return; const pr = o.source.price || 0; if (me.coin < pr) return toast(`골드가 모자라요 (${pr}G)`); me.coin -= pr; mqGive(item, 1); save(); hud(); sfx('pop'); toast(`${ITEM[item]} ${pr ? `샀어요 (−${pr}G)` : '얻었어요'} · ${me.inv[item]} / ${o.count}`); if ((me.inv[item] || 0) >= o.count) mqMarks(); mqCheck(); return; } mqObjs().forEach(o => { if (o.type === 'clue') (o.spots || []).forEach(sp => { if (sp.id === id) hit = sp; }); }); if (!hit || s.prog['clue:' + id]) return;
   s.prog['clue:' + id] = 1; save(); mqMarks(); const o = mqObjs().find(x => x.type === 'clue' && (x.spots || []).includes(hit)), st = mqObjState(o, mqObjs().indexOf(o));
   mqPanelText(hit.title || '단서', fillVars(hit.text || ''), `<span class="tag">${st.cur} / ${st.need}</span>`); if (hit.item) mqGive(hit.item, 1); mqCheck(); };
 // 제조·요리에서 불러요: 의뢰 제조는 mqCraft가, 일반 요리·물약도 셀 수 있게
-function mqOnCraft(item, quality = 'normal'){ const s = mqState(); if (!s.q || s.ph !== 'go') return; mqObjs().forEach(o => { if (o.type === 'craft' && o.item === item && (!o.quality || MQ_QN[quality] >= MQ_QN[o.quality])){ s.prog['craft:' + item] = (s.prog['craft:' + item] || 0) + 1; } }); save(); mqCheck(); }
+function mqOnCraft(item, quality = 'normal'){ const s = mqState(); if (!s.q || s.ph !== 'go') return; mqObjs().forEach(o => { if (o.type === 'craft' && o.item === item && (!o.quality || MQ_QN[quality] >= MQ_QN[o.quality])){ s.prog['craft:' + item] = (s.prog['craft:' + item] || 0) + 1; } }); save(); mqCheck(); mqMarks(); }
 function mqOnTalk(id){ const s = mqState(); if (!s.q || s.ph !== 'go') return null; let line = null; mqObjs().forEach((o, i) => { if (o.type === 'talk' && o.who === id && !s.prog['talk:' + id]){ s.prog['talk:' + id] = 1; line = o.line || null; }
   if (o.type === 'deliver' && o.to === id){ const have = me.inv[o.item] || 0, need = (o.count || 1) - (s.prog['deliver:' + i] || 0); if (have > 0 && need > 0){ const n = Math.min(have, need); me.inv[o.item] -= n; s.prog['deliver:' + i] = (s.prog['deliver:' + i] || 0) + n; line = o.line || `${ITEM[o.item]} ${n}개를 건넸어요`; } } });
   save(); mqCheck(); return line ? fillVars(line) : null; }
