@@ -6068,16 +6068,17 @@ function renderVisit(){
 }
 
 // ===== 쪽지시험: 화·목·토(현실 시간) 오전 9시~오후 8시, 그날 한 번만 · 시작하면 나갈 수 없어요 · 다음 날(수·금·일) 게시판에 성적이 붙고 1~3등은 장학금 =====
-const EXAM_N = 10, EXAM_SEC = 20, EXAM_DAYS = [2, 4, 6], EXAM_FROM = 9, EXAM_TO = 20, EXAM_TOP = [500, 400, 300];
+const EXAM_N = 10, EXAM_SEC = 20, EXAM_DAYS = [2, 4, 6], EXAM_FROM = 9, EXAM_TO = 20, EXAM_TOP = [500, 400, 300], EXAM_START = new Date(2026, 9, 29);   // 첫 시험은 10월 29일(목)부터
+const examDay = d => EXAM_DAYS.includes(d.getDay()) && d >= EXAM_START;
 const ymd = d => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-const examOpenKey = (d = new Date()) => EXAM_DAYS.includes(d.getDay()) && d.getHours() >= EXAM_FROM && d.getHours() < EXAM_TO ? ymd(d) : null;   // 지금 볼 수 있으면 그날 열쇠
+const examOpenKey = (d = new Date()) => examDay(d) && d.getHours() >= EXAM_FROM && d.getHours() < EXAM_TO ? ymd(d) : null;   // 지금 볼 수 있으면 그날 열쇠
 const examKey = () => ymd(new Date());
-const examToday = () => EXAM_DAYS.includes(new Date().getDay());
+const examToday = () => examDay(new Date());
 const examDone = () => examToday() && me.exam?.week === examKey() && me.exam.done;
 const examStarted = () => examToday() && me.exam?.week === examKey();
 const examDayName = ['일', '월', '화', '수', '목', '금', '토'];
 function examBoardKey(){   // 가장 최근에 성적이 붙은 시험날 (시험 다음 날 0시부터)
-  const d = new Date(); for (let k = 1; k <= 8; k++){ const x = new Date(d); x.setDate(x.getDate() - k); if (EXAM_DAYS.includes(x.getDay())) return ymd(x); } return null; }
+  const d = new Date(); for (let k = 1; k <= 8; k++){ const x = new Date(d); x.setDate(x.getDate() - k); if (examDay(x)) return ymd(x); } return null; }
 function examForfeit(){   // 시험 도중에 앱을 닫았으면 푼 데까지만 점수가 돼요
   if (!me || !me.exam || me.exam.done || exam) return; const e = me.exam; e.done = true; e.score = Math.max(0, Math.min(100, e.score || 0)); examFinalize(e.score, e.week); }
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
