@@ -6648,16 +6648,16 @@ function pzDrop(src){
 function pzOpen(){
   if (pzOn || !(pzCtl && pzCtl.open)) return; pzOn = true; pzBtn();
   const v = document.createElement('div'); v.id = 'pzv';
-  v.innerHTML = `<div class="dfh"><b>유령 선장의 보물 지도</b><span id="pzinfo" class="s sub"></span><button class="btn sm" id="pzx">나가기</button></div><div class="pzw"><canvas id="pzc" width="200" height="120"></canvas></div><div class="pzt s sub">조각을 끌어다 지도에 맞춰 보세요. 맞는 자리에 가까이 놓으면 딱 붙어요</div><div id="pztray"></div>`;
+  v.innerHTML = `<div class="dfh"><b>유령 선장의 보물 지도</b><span id="pzinfo" class="s sub"></span><button class="btn sm" id="pzx">나가기</button></div><div class="pzw"><canvas id="pzc" width="200" height="120"></canvas></div><div class="pzt s sub"></div><div id="pztray"></div>`;
   $('#shell').appendChild(v); $('#pzx').onclick = pzClose; pzUi(); pzCheckCut();
 }
 function pzClose(){ pzOn = false; const v = $('#pzv'); if (v) v.remove(); pzBtn(); }
 const pzSheet = () => dfImg('art/ev2_pieces.png'), pzMapImg = () => dfImg('art/ev2_map.png');
 function pzUi(){
   const v = $('#pzv'); if (!v) return; const n = pzCount(), mine = pzMine();
-  $('#pzinfo').textContent = `맞춘 조각 ${n} / 50`; { const w = $('#pzv .pzt'); if (w) w.innerHTML = n >= 50 ? `<button class="btn sm go" id="pzopench">${me.pz && me.pz.id === pzCtl.id ? '받은 보물 보기' : '보물 상자 고르기'}</button>` : '조각을 끌어다 지도에 맞춰 보세요. 맞는 자리에 가까이 놓으면 딱 붙어요'; const ob = $('#pzopench'); if (ob) ob.onclick = pzChests; }
+  $('#pzinfo').textContent = `맞춘 조각 ${n} / 50`; { const w = $('#pzv .pzt'); if (w) w.innerHTML = n >= 50 ? `<button class="btn sm go" id="pzopench">${me.pz && me.pz.id === pzCtl.id ? '받은 보물 보기' : '보물 상자 고르기'}</button>` : ''; const ob = $('#pzopench'); if (ob) ob.onclick = pzChests; }
   const tray = $('#pztray'), sig = mine.join(',') + '|' + (pzCtl && pzCtl.id);
-  if (tray.dataset.sig !== sig){ tray.dataset.sig = sig; tray.innerHTML = mine.length ? mine.map(i => `<div class="pzp" data-pz="${i}" style="background-image:url(art/ev2_pieces.png);background-position:-${(i % PZ.C) * 80}px -${Math.floor(i / PZ.C) * 90}px"></div>`).join('') : `<div class="s sub" style="padding:12px">${n >= 50 ? '지도가 완성됐어요!' : '가진 조각이 없어요. 낚시·채집·탐사를 하면 가끔 나와요'}</div>`; tray.querySelectorAll('.pzp').forEach(el => el.onpointerdown = e => pzDrag(e, el)); }
+  if (tray.dataset.sig !== sig){ tray.dataset.sig = sig; tray.innerHTML = mine.length ? mine.map(i => `<div class="pzp" data-pz="${i}" style="background-image:url(art/ev2_pieces.png);background-position:-${(i % PZ.C) * 80}px -${Math.floor(i / PZ.C) * 90}px"></div>`).join('') : `<div class="s sub" style="padding:12px">${n >= 50 ? '완성!' : ''}</div>`; tray.querySelectorAll('.pzp').forEach(el => el.onpointerdown = e => pzDrag(e, el)); }
   pzDraw();
 }
 function pzDraw(){
@@ -6782,13 +6782,9 @@ function lnUi(){
   const sig = [t, m, my, Object.keys(lnColor).length, lnDone(), lnClaimed(), lnCtl && lnCtl.open].join(',');
   const body = $('#lnbody'); if (body.dataset.sig === sig) return; body.dataset.sig = sig;
   body.innerHTML = `<div class="lnscene"><img class="lnbg" src="art/ev4_school_dim.png"><img class="lnbg" src="art/ev4_school_lit.png" style="opacity:${k}"><i class="lnghost" style="background-image:url(art/ev4_ghost.png);background-position:${(lnDone() ? 1 : 0) * 25}% 0"></i></div>
-    <div class="lnbar"><i style="width:${k * 100}%"></i></div><div class="s sub" style="text-align:center">반 친구들이 모은 등불 ${t} / ${LN.GOAL} · 학교가 점점 밝아져요</div>
+    <div class="lnbar"><i style="width:${k * 100}%"></i></div>
     <div class="lnmine"><b>내 등불</b> ${m} / ${LN.MAX}<div class="lnrow">${Array.from({ length: LN.MAX }, (_, i) => `<i class="lnic ${i < m ? 'on' : ''}"></i>`).join('')}</div></div>
-    <div class="s sub" style="padding:4px 14px">${lnDone() ? '등불을 모두 모았어요!' : m >= LN.MAX ? '내 등불은 다 모았어요. 친구들을 응원해 주세요!' : '낚시 · 채집 · 탐사를 하면 가끔(5%) 등불이 저절로 모여요'}</div>
-    <div class="lnrew"><b>내 개인 보상</b> <span class="s sub">모은 등불 수에 따라 받아요</span>
-      <div class="lnnow">${lnClaimed() ? `받았어요 (${me.lnr.n}개): ${lnRewText(LN_REW[Math.min(LN.MAX, me.lnr.n)])}` : `지금 ${m}개 → ${lnRewText(LN_REW[Math.min(LN.MAX, m)])}`}</div>
-      <div class="lnlad">${LN_REW.map((r, i) => r ? `<span class="${i === m ? 'cur' : ''}"><b>${i}개</b> ${lnRewText(r)}</span>` : '').join('')}</div>
-      ${!lnClaimed() && (lnDone() || !(lnCtl && lnCtl.open)) ? '<button class="btn go" id="lnclaim" style="width:100%;margin-top:8px">개인 보상 받기</button>' : !lnClaimed() ? '<div class="s sub" style="margin-top:6px">60개가 모이면(또는 이벤트가 끝나면) 받을 수 있어요</div>' : ''}</div>
+    ${lnClaimed() ? `<div class="s sub" style="padding:4px 14px">받은 보상: ${lnRewText(LN_REW[Math.min(LN.MAX, me.lnr.n)])}</div>` : (lnDone() || !(lnCtl && lnCtl.open)) ? '<div style="padding:4px 14px"><button class="btn go" id="lnclaim" style="width:100%">보상 받기</button></div>' : ''}
     ${lnDone() ? `<div style="padding:6px 14px 14px;display:flex;gap:8px"><button class="btn go" id="lnpick" style="flex:1">${my >= 0 ? '내 유령 등불 장식 보기' : '유령 등불 장식 고르기'}</button><button class="btn" id="lnrep">연출 다시 보기</button></div>` : ''}`;
   const cl = $('#lnclaim'); if (cl) cl.onclick = lnClaim; const p = $('#lnpick'); if (p) p.onclick = lnPick; const r = $('#lnrep'); if (r) r.onclick = () => lnScene(lnEndLines, () => { lnClaim(); lnPick(); });
 }
@@ -6957,17 +6953,17 @@ function pkClose(){ pkOn = false; clearInterval(pkTick); const v = $('#pkv'); if
 const pkMin = ms => { const s = Math.ceil(ms / 1000); return s >= 3600 ? `${Math.floor(s / 3600)}시간 ${Math.floor(s % 3600 / 60)}분` : s >= 60 ? `${Math.floor(s / 60)}분 ${s % 60}초` : `${s}초`; };
 function pkUi(){
   const v = $('#pkv'); if (!v) return; if (!pkCtl){ pkClose(); return; } const t = pkTotal(), goal = pkGoal(), k = Math.min(1, t / goal), st = pkStage(), m = pkMy(), done = pkDone(), mine = +pkPts[myId()] || 0, rk = pkRank();
-  $('#pkinfo').textContent = `${PK.NAMES[st]} · ${Math.round(k * 100)}%`;
+  $('#pkinfo').textContent = `${Math.round(k * 100)}%`;
   const wl = pkLeft(m.wAt, PK.WATER[1]), tl = pkLeft(m.tAt, PK.TALK[1]), off = !pkCtl.open || done;
-  const btn = (id, label, sub, left, dis) => `<button class="pkact ${left || dis ? 'wait' : 'go'}" data-pk="${id}" ${left || dis ? 'disabled' : ''}><b>${label}</b><span>${left ? pkMin(left) + ' 뒤' : sub}</span></button>`;
+  const btn = (id, label, sub, left, dis) => `<button class="pkact ${left || dis ? 'wait' : 'go'}" data-pk="${id}" ${left || dis ? 'disabled' : ''}><b>${label}</b><span>${left ? pkMin(left) + ' 뒤' : ''}</span></button>`;
   const body = $('#pkbody'); const sig = [t, st, mine, rk, wl > 0, tl > 0, done, JSON.stringify(m.f || 0), m.fin, m.bd.day, pkCtl.open, ...PK.MAT.map(x => me.inv[x[0]] || 0), Math.ceil(wl / 1000), Math.ceil(tl / 1000)].join(','); if (body.dataset.sig === sig) return; body.dataset.sig = sig;
   body.innerHTML = `<div class="pkscene"><i class="pkspr" style="background-position:${st * 25}% 0"></i></div>
     <div class="pkbar"><i style="width:${k * 100}%"></i>${PK.STAGES.slice(1, 4).map(x => `<u style="left:${x * 100}%"></u>`).join('')}</div>
-    <div class="s sub" style="text-align:center">반 전체 성장 ${t} / ${goal}${done ? ' · 완성!' : ''}</div>
-    <div class="pkme"><b>내 기여</b> ${mine}점${rk ? ` · ${rk}등${rk <= 5 ? ' (상위 5명 안!)' : ''}` : ''} <span class="s sub">· 물 준 횟수 ${+pkW[myId()] || 0}</span></div>
+    <div class="s sub" style="text-align:center">${t} / ${goal}</div>
+    <div class="pkme"><b>내 기여</b> ${mine}점${rk ? ` · ${rk}등${rk <= 5 ? ' (상위 5명 안!)' : ''}` : ''} </div>
     ${done ? `<div class="pkdone">거대 호박이 활짝 웃어요!${m.res ? `<br>내 완성 보상: ${m.res.g ? `${m.res.g}골드${m.res.m ? ` · 마나석 ${m.res.m}개` : ''}` : '물을 준 적이 없어서 보상이 없어요'}` : ''}</div>` : ''}
     <div class="pkacts">${btn('w', '물 주기', `성장 +${PK.WATER[0]} · 1시간마다`, off ? 1 : wl, off)}${btn('t', '말 걸어 주기', `성장 +${PK.TALK[0]} · 2시간마다`, off ? 1 : tl, off)}</div>
-    <div class="pkmat"><b>거름 주기</b> <span class="s sub">재료가 귀할수록 많이 자라요 · 재료마다 ${PK.FCAP}번까지</span><div class="pkacts">${PK.MAT.map(([id, nm, g, r]) => { const u = (m.f && m.f[id]) || 0, no = off || !(me.inv[id] || 0) || u >= PK.FCAP; return `<button class="pkact ${no ? 'wait' : 'go'}" data-pkm="${id}" ${no ? 'disabled' : ''}><b>${nm}</b><span>${r} · 성장 +${g}<br>쓴 횟수 ${u}/${PK.FCAP} · 가진 ${me.inv[id] || 0}개</span></button>`; }).join('')}</div></div>`;
+    <div class="pkmat"><b>거름 주기</b> <div class="pkacts">${PK.MAT.map(([id, nm, g, r]) => { const u = (m.f && m.f[id]) || 0, no = off || !(me.inv[id] || 0) || u >= PK.FCAP; return `<button class="pkact ${no ? 'wait' : 'go'}" data-pkm="${id}" ${no ? 'disabled' : ''}><b>${nm}</b><span>${me.inv[id] || 0}개 · ${u}/${PK.FCAP}</span></button>`; }).join('')}</div></div>`;
   body.querySelectorAll('[data-pk]').forEach(b => b.onclick = () => pkAct(b.dataset.pk)); body.querySelectorAll('[data-pkm]').forEach(b => b.onclick = () => pkAct('f', b.dataset.pkm));
 }
 // ---- 관리자 ----
