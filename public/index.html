@@ -106,6 +106,8 @@ body.inworld #app.open{opacity:1;pointer-events:auto}
 .lnrew{margin:6px 14px;padding:10px 12px;background:#1b1230;border:1px solid #4a3a6a;border-radius:12px}.lnnow{margin:6px 0;color:#FFC23A}.lnlad{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;font-size:11px;color:#9A90B8}.lnlad .cur{color:#3FE0A0}.lnlad b{display:inline-block;min-width:26px;color:#D9CFF0}
 #lncut{position:absolute;inset:0;z-index:60;background:#0a0618;display:flex;flex-direction:column;overflow:auto}#lncut .lnlit{opacity:0;transition:opacity 2.4s}#lncut .lnghost.big{position:absolute;right:10%;bottom:2%;width:34%;aspect-ratio:260/266;background-size:500% 100%;opacity:0;transition:opacity .5s}#lncut .lnstage.g .lnghost.big{opacity:1}.lnminis{position:absolute;inset:0;opacity:0;transition:opacity .6s}.lnstage.m .lnminis{opacity:1}.lnghost.mini{position:absolute;bottom:8%;width:17%;aspect-ratio:260/266;background-size:500% 100%}
 .lngrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px 12px 16px}.lncard{position:relative;background:#1b1230;border:2px solid #4a3a6a;border-radius:12px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text)}.lncard img{width:64%;aspect-ratio:215/240;object-fit:contain}.lncard.sel{border-color:var(--accent);box-shadow:0 0 14px rgba(255,154,60,.7)}.lncard.dim{opacity:.45}.lncard span{font-size:11px}
+#pkbtn{position:absolute;left:10px;top:158px;z-index:7;min-height:40px;padding:0 14px;border-radius:20px;border:2px solid #2A1506;background:#FF9A2E;color:#2A1400;font-family:var(--f-pxb);font-size:var(--fs);box-shadow:0 0 14px rgba(255,154,46,.7)}
+#pkv{position:absolute;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column;overflow:auto}#pkv .dfh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;background:#1b1230;border-bottom:1px solid var(--line)}#pkv .dfh b{font-family:var(--f-pxb)}.pkscene{display:flex;justify-content:center;padding:14px 0 4px;background:#0f0b20}.pkspr{display:block;width:300px;height:250px;max-width:100%;background:url(art/ev5_pumpkin.png) 0 0/500% 100% no-repeat;image-rendering:pixelated}.pkbar{position:relative;height:14px;margin:10px 16px 6px;border-radius:7px;background:#2a2040;overflow:hidden}.pkbar i{display:block;height:100%;background:linear-gradient(90deg,#FF9A2E,#FFD04A);transition:width .6s}.pkbar u{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.5)}.pkme{padding:6px 16px}.pkdone{margin:6px 16px;padding:10px 12px;border:2px solid #FF9A2E;border-radius:12px;background:#2a1a10;color:#FFC23A}.pkacts{display:flex;gap:8px;padding:8px 16px;flex-wrap:wrap}.pkmat{padding:4px 0}.pkmat>b{padding:0 16px}.pkmat .pkacts{padding-top:6px}.pkact{flex:1;min-width:30%;min-height:60px;border-radius:12px;border:2px solid #4a3a6a;background:#2d2147;color:var(--text);display:flex;flex-direction:column;justify-content:center;gap:2px;padding:6px 8px}.pkact span{font-size:11px;color:#9A90B8}.pkact.go{border-color:var(--accent)}.pkact.wait{opacity:.5}.pkrew{margin:6px 16px 16px;padding:10px 12px;background:#1b1230;border:1px solid #4a3a6a;border-radius:12px}
 #dfv .dfj{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}#dfv .dfj button{min-height:40px;border-radius:8px;border:1px solid var(--line);background:#2d2147;color:var(--text);font-size:var(--fs)}
 #ctx{position:absolute;right:12px;bottom:12px;z-index:6;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
 #ctx button{min-height:48px;padding:0 16px 0 12px;border-radius:24px;border:2px solid #2A1506;background:var(--accent);color:#2A1506;font-family:var(--f-pxb);font-size:var(--fs);display:flex;align-items:center;gap:8px;box-shadow:0 4px 0 var(--accent2);animation:ctxin .18s}
@@ -1836,7 +1838,7 @@ function xSaveParty(){ const run = xEx().run; if (run && xb) run.p = xb.party.ma
 function xEnd(how){   // how: clear · time · retreat · wipe
   const ex = xEx(), run = ex.run; if (!run) return;
   if (run.co && how !== 'retreat' && xcoHost()){ xcoPub({ st: 'end', end: { how } }); const rid = run.co; setTimeout(() => GDB.upd('xparty/' + rid, { st: 'end' }), 3500); }
-  if (run.co){ xcoStop(); xM = null; } const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gold = how === 'wipe' ? 0 : Math.round(lo.gold * mult), exp = how === 'wipe' ? 0 : Math.round((lo.exp * mult + (how === 'clear' ? xReg().clearExp : 0)) * (dbuff('dforest') ? 1.03 : 1));
+  if (run.co){ xcoStop(); xM = null; } const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gold = how === 'wipe' ? 0 : Math.round(lo.gold * mult), exp = how === 'wipe' ? 0 : Math.round((lo.exp * mult + (how === 'clear' ? xReg().clearExp : 0)) * (dbuff('dforest') ? 1.03 : 1) * (dbuff('pump') ? 1.1 : 1));
   const items = how === 'wipe' ? {} : { ...lo.items }; if (how === 'clear') { const r = xRand(xReg().rare); items[r] = (items[r] || 0) + 1; }
   const before = xLv(ex.exp).L; ex.exp += exp; me.coin += gold; Object.entries(items).forEach(([k, n]) => { me.inv[k] = (me.inv[k] || 0) + n; });
   const after = xLv(ex.exp).L, sp = how === 'clear' || (how !== 'wipe' && Math.random() < .1) ? 1 : 0; ex.spx = (ex.spx || 0) + sp; ex.run = null; xb = null; clearInterval(xTick); save(); hud();
@@ -3130,7 +3132,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.day = AD.day || todayKey();
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = s.val() || {}; if (adminTyping()) return; adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('adm/heart', 'heart'); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('adm/heart', 'heart'); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
   adminRender();
 }
 const adminTyping = () => { const a = document.activeElement; return AD.tab === 'npc' && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
@@ -5442,7 +5444,7 @@ function plantPicker(know){
   const list = SEED_LIST.filter(x => x.know === SEED_TIERS[seedTier]);
   return `<div class="plantpick px"><div class="pph"><b>${plantFor + 1}번 칸에 심을 씨앗</b><button class="btn sm" data-pclose="1">닫기</button></div>
     ${open.length > 1 ? `<div class="seg scroll">${open.map(k => `<button class="${SEED_TIERS[seedTier] === k ? 'on' : ''}" data-stier="${SEED_TIERS.indexOf(k)}">${k ? `지식 ${k}` : '기본'}</button>`).join('')}</div>` : ''}
-    <div class="ppg">${list.map(x => { const no = me.coin < x.price; return `<button class="cell ${no ? 'dim' : ''}" data-plant="${x.id}">${ic(x.id)}<span class="s">${x.seed}</span><span class="s sub">${x.price ? x.price + 'G' : '무료'} · ${timeText(growMins[x.id] * 6e4)}</span></button>`; }).join('')}</div></div>`;
+    <div class="ppg">${list.map(x => { const no = me.coin < x.price && !(x.price && (me.sdt || 0) > 0); return `<button class="cell ${no ? 'dim' : ''}" data-plant="${x.id}">${ic(x.id)}<span class="s">${x.seed}</span><span class="s sub">${x.price ? ((me.sdt || 0) > 0 ? '쿠폰 ' + me.sdt + '장' : x.price + 'G') : '무료'} · ${timeText(growMins[x.id] * 6e4)}</span></button>`; }).join('')}</div></div>`;
 }
 function renderGreen(){
   const ready = me.plots.filter(plotReady).length, know = me.know || 0;
@@ -5495,8 +5497,8 @@ function renderGreen(){
   on('[data-plant]', b => {
     const p = me.plots[plantFor], G = SEED_INFO[b.dataset.plant]; if (!p || p.k) return;
     if ((me.know || 0) < G.know) greenMsg = `지식 ${G.know}부터 심을 수 있어요.`;
-    else if (me.coin < G.price) greenMsg = `씨앗 값 ${G.price}G가 부족해요.`;
-    else { me.coin -= G.price; seedPick = G.id; Object.assign(p, { k: G.id, at: Date.now(), w: false }); greenMsg = `${G.seed} 씨앗을 심었어요. ${timeText(G.mins * 6e4)} 뒤에 수확해요.${G.price ? ` -${G.price}G` : ''}`; plantFor = null; save(); hud(); sfx('pop'); }
+    else if (me.coin < G.price && !(G.price && (me.sdt || 0) > 0)) greenMsg = `씨앗 값 ${G.price}G가 부족해요.`;
+    else { const free = G.price && (me.sdt || 0) > 0; if (free) me.sdt--; else me.coin -= G.price; seedPick = G.id; Object.assign(p, { k: G.id, at: Date.now(), w: false }); greenMsg = `${G.seed} 씨앗을 심었어요. ${timeText(G.mins * 6e4)} 뒤에 수확해요.${free ? ' (씨앗 쿠폰 사용)' : G.price ? ` -${G.price}G` : ''}`; plantFor = null; save(); hud(); sfx('pop'); }
     renderGreen();
   });
   on('[data-plot]', b => {
@@ -6571,7 +6573,7 @@ function adminEventHTMLSrv(){
     <div class="frow">${!open ? `<button class="btn sm go" data-dfa="open">이벤트 열기</button><button class="btn sm" data-dfa="local">이 화면에서 직접 진행 (예비)</button>` : `${ph === 'ready' ? (c.cut ? '<span class="s">시작 연출이 나오고 있어요</span>' : '<button class="btn sm go" data-dfa="start">시작 송출 (연출)</button>') : ''}${ph === 'ready' || ph === 'rest' ? '<button class="btn sm" data-dfa="force">웨이브 강제 시작</button>' : ''}${ph !== 'ready' && ph !== 'over' ? `<button class="btn sm" data-dfa="pause">${c.pause ? '다시 진행' : '잠깐 멈춤'}</button>` : ''}<button class="btn sm" data-dfa="reset">처음으로</button><button class="btn sm" data-dfa="close">이벤트 닫기</button>${dead ? '<button class="btn sm go" data-dfa="wake">서버 다시 깨우기</button>' : ''}`}</div></div>
   <div class="adcard"><b>자리</b> (학생이 웨이브 사이에 골라요)${zl.map(t => `<div class="s">${t}</div>`).join('')}</div>`;
 }
-function adminEventHTML(){ return adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML(); }
+function adminEventHTML(){ return adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML(); }
 function adminEventHTML0(){
   if (!DF_LOCAL && !dfHost) return adminEventHTMLSrv();
   dfHostResume();
@@ -6831,6 +6833,115 @@ document.addEventListener('click', e => { const bt = e.target.closest && e.targe
   else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 모은 등불과 고른 색 기록은 남아요.')) F.set(F.ref(db, 'lantern/ctl'), { ...(AD.lnctl || {}), open: false }); }
   else if (a === 'reset'){ if (confirm('처음으로 되돌릴까요? 모은 등불과 고른 색이 모두 지워져요.')){ wipe(); F.set(F.ref(db, 'lantern/ctl'), { open: true, id, rate: (AD.lnctl && AD.lnctl.rate) || 1 }); } }
   else if (a[0] === 'r') F.update(F.ref(db, 'lantern/ctl'), { rate: +a.slice(1) }); });
+// ===== 이벤트 「호박밭 같이 가꾸기」 (하루 이벤트, 전투 없음): 반 전체가 학교 앞 호박밭의 마법 호박을 키워요 =====
+// pumpkin/ctl = { open, id, rate, goal } · pumpkin/pts/<uid> = 내가 키운 점수 · pumpkin/w/<uid> = 물 준 횟수. 점수 합이 goal 이 되면 거대 호박 완성 (호박은 이벤트가 끝난 뒤에도 남아요)
+let pkCtl = null, pkPts = {}, pkW = {}, pkLoad = { p: 0, w: 0 }, pkOn = false, pkOffs = [], pkTick = 0, pkLastStage = -1;
+const PK = { GOAL: 600, STAGES: [0, .2, .45, .7, 1], NAMES: ['씨앗', '새싹', '덩굴', '꽃', '거대 호박'], TILE: [22, 88], WATER: [2, 5 * 60e3], TALK: [3, 10 * 60e3], FCAP: 10,
+  MAT: [['herb', '약초', 6, '흔함'], ['drop', '달빛 이슬', 10, '보통'], ['mana', '마나석', 20, '귀함']], BUFF_MS: 3 * 3600e3, CELL: [60, 50] };
+const pkGoal = () => (pkCtl && pkCtl.goal) || PK.GOAL, pkTotal = () => Object.values(pkPts).reduce((a, n) => a + (+n || 0), 0), pkDone = () => !!pkCtl && pkTotal() >= pkGoal();
+const pkStage = () => { const k = Math.min(1, pkTotal() / pkGoal()); let s = 0; PK.STAGES.forEach((t, i) => { if (k >= t) s = i; }); return s; };
+const pkMy = () => (me.pk && pkCtl && me.pk.id === pkCtl.id) ? me.pk : (me.pk = { id: pkCtl ? pkCtl.id : 0, wAt: 0, tAt: 0, f: 0, st: {}, fin: 0, bd: {} });
+const pkRank = () => { const L = Object.entries(pkPts).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).map(([u]) => u); return L.indexOf(myId()) + 1; };
+function pkListen(){
+  if (solo || !F || !db || pkOffs.length) return;
+  pkOffs.push(F.onValue(F.ref(db, 'pumpkin/ctl'), s => { pkCtl = s.val(); pkSync(); pkAuto(); if (pkOn) pkUi(); }));
+  pkOffs.push(F.onValue(F.ref(db, 'pumpkin/pts'), s => { pkPts = s.val() || {}; pkLoad.p = 1; pkSync(); pkAuto(); if (pkOn) pkUi(); }));
+  pkOffs.push(F.onValue(F.ref(db, 'pumpkin/w'), s => { pkW = s.val() || {}; pkLoad.w = 1; pkAuto(); if (pkOn) pkUi(); }));
+  World.onProp = id => id === 'pkgiant' ? pkBubble() : null;
+}
+// 호박밭에 마법 호박 놓기(그림은 art/ev5_pumpkin.png 5단계) · 단계가 오르면 그림이 바뀌어요
+const pkImg = dfImg('art/ev5_pumpkin.png'), pkCan = {};
+function pkSprite(st){
+  if (pkCan[st]) return pkCan[st]; if (!pkImg.complete || !pkImg.naturalWidth) return null;
+  const [W, H] = PK.CELL, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d', { willReadFrequently: true }); g.drawImage(pkImg, st * W, 0, W, H, 0, 0, W, H);
+  const d = g.getImageData(0, 0, W, H).data; let x0 = W, x1 = 0, y0 = H, y1 = 0; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (d[(y * W + x) * 4 + 3]){ x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  return (pkCan[st] = { cv, g, ox: x0, sw: x1 - x0 + 1, sh: y1 - y0 + 1, oy: y0 });
+}
+function pkSync(){
+  const show = pkCtl && (pkCtl.open || pkDone()) && pkCtl.id; const st = pkStage();
+  let b = $('#pkbtn'); const on = pkCtl && pkCtl.open && !pkOn && !pkDone();
+  if (on){ if (!b){ b = document.createElement('button'); b.id = 'pkbtn'; b.onclick = pkOpen; $('#shell').appendChild(b); } b.textContent = `호박 ${Math.min(100, Math.round(pkTotal() / pkGoal() * 100))}%`; } else if (b) b.remove();
+  if (!show){ World.setProps('campus', []); pkLastStage = -1; return; }
+  const sp = pkSprite(st); if (!sp){ setTimeout(pkSync, 400); return; }
+  const cv = document.createElement('canvas'); cv.width = sp.sw; cv.height = sp.sh; cv.getContext('2d').drawImage(sp.cv, sp.ox, sp.oy, sp.sw, sp.sh, 0, 0, sp.sw, sp.sh);
+  World.setProps('campus', [{ id: 'pkgiant', x: PK.TILE[0], y: PK.TILE[1], img: cv, pxc: cv.getContext('2d'), sw: sp.sw, sh: sp.sh, ax: Math.round(sp.sw / 2), ay: sp.sh - 2, solid: true, light: st === 4 ? { c: [255, 170, 60], r: 34, a: .55 } : null }]);
+  if (pkLastStage >= 0 && st > pkLastStage) toast(`마법 호박이 ${PK.NAMES[st]} 단계가 됐어요!`);
+  pkLastStage = st;
+}
+// 단계 보상(모두에게) · 완성 보상(물 준 학생 500골드, 기여 5위 안은 1000골드와 마나석 1 더)
+function pkAuto(){
+  if (!pkCtl || !pkCtl.id || !me || !pkLoad.p || !pkLoad.w) return; const m = pkMy(), st = pkStage(); let got = [];
+  if (st >= 1 && !m.st[1]){ m.st[1] = 1; me.sdt = (me.sdt || 0) + 2; got.push('씨앗 2개'); }
+  if (st >= 2 && !m.st[2]){ m.st[2] = 1; const ex = xEx(); ex.spx = (ex.spx || 0) + 1; got.push('스킬 포인트 1'); }
+  if (st >= 3 && !m.st[3]){ m.st[3] = 1; me.inv.mana = (me.inv.mana || 0) + 1; got.push('마나석 1개'); }
+  if (got.length){ save(); hud(); sfx('heart'); setTimeout(() => toast(`호박 성장 보상: ${got.join(', ')}을 받았어요!`), 700); }
+  if (pkDone() && !m.fin && Object.keys(pkPts).length){
+    m.fin = 1; const w = (+pkW[myId()] || 0) >= 1, rk = pkRank(), top = rk >= 1 && rk <= 5; let g = 0, ms = 0;
+    if (w) g += 500; if (top){ g += 1000; ms += 1; }
+    if (g){ me.coin += g; if (ms) me.inv.mana = (me.inv.mana || 0) + ms; m.res = { g, m: ms, rk }; sfx('heart'); setTimeout(() => toast(`거대 호박 완성 보상: ${g}골드${ms ? ` · 마나석 ${ms}개` : ''}${top ? ` (기여 ${rk}위!)` : ''}`), 1400); } else m.res = { g: 0, m: 0, rk };
+    save(); hud(); if (pkOn) pkUi();
+  }
+}
+const pkLeft = (at, cd) => Math.max(0, at + cd - Date.now());
+async function pkGain(n, kind){   // 점수를 더해요 (서버에는 내 점수 하나만 고쳐요)
+  if (!pkCtl || !pkCtl.open || pkDone()) return false; const g = Math.round(n * (pkCtl.rate || 1));
+  const r = await GDB.tx('pumpkin/pts/' + myId(), cur => (cur || 0) + g).catch(() => ({ committed: false })); if (!r.committed) { toast('잠시 뒤에 다시 해 주세요'); return false; }
+  if (kind === 'w') await GDB.tx('pumpkin/w/' + myId(), cur => (cur || 0) + 1).catch(() => {});
+  return g;
+}
+async function pkAct(kind, mat){
+  const m = pkMy(); let g = 0;
+  if (kind === 'w'){ if (pkLeft(m.wAt, PK.WATER[1])) return; g = await pkGain(PK.WATER[0], 'w'); if (g){ m.wAt = Date.now(); sfx('pop'); toast(`물을 줬어요! 성장 +${g}`); } }
+  else if (kind === 't'){ if (pkLeft(m.tAt, PK.TALK[1])) return; g = await pkGain(PK.TALK[0], 't'); if (g){ m.tAt = Date.now(); sfx('heart'); toast(`호박에게 말을 걸었어요. 성장 +${g}`); } }
+  else { const M_ = PK.MAT.find(x => x[0] === mat); if (!M_ || (me.inv[mat] || 0) < 1) return toast(`${M_ ? M_[1] : '재료'}이(가) 없어요`); if ((m.f || 0) >= PK.FCAP) return toast(`거름은 ${PK.FCAP}번까지 줄 수 있어요`);
+    g = await pkGain(M_[2], 'f'); if (g){ me.inv[mat]--; m.f = (m.f || 0) + 1; sfx('pick'); toast(`${M_[1]}을(를) 거름으로 줬어요! 성장 +${g}`); } }
+  if (g){ save(); hud(); pkUi(); }
+}
+function pkBubble(){   // 호박을 눌렀을 때
+  if (!pkCtl) return null; const st = pkStage(), done = pkDone(), m = pkMy(), day = todayKey();
+  if (done){ const can = m.bd.day !== day; return { text: `<b>거대 호박</b><br>활짝 웃고 있어요${can ? '. 말을 걸면 축복을 줘요' : ' (오늘 축복은 이미 받았어요)'}`, btn: can ? '축복 받기' : '', fn: can ? pkBless : null }; }
+  return { text: `<b>마법 호박</b> (${PK.NAMES[st]})<br>${Math.min(100, Math.round(pkTotal() / pkGoal() * 100))}% 자랐어요`, btn: pkCtl.open ? '돌봐 주기' : '', fn: pkCtl.open ? pkOpen : null };
+}
+function pkBless(){   // 완성된 호박: 하루에 한 번, 3시간 동안 탐사 경험치 +10%
+  const m = pkMy(), day = todayKey(); if (m.bd.day === day) return toast('오늘은 이미 축복을 받았어요');
+  m.bd = { day }; me.buffs = me.buffs || {}; me.buffs.pump = Date.now() + PK.BUFF_MS; save(); hud(); sfx('heart'); toast('호박의 축복을 받았어요! 3시간 동안 탐사 경험치 +10%');
+}
+function pkOpen(){
+  if (pkOn || !pkCtl) return; pkOn = true; pkSync();
+  const v = document.createElement('div'); v.id = 'pkv'; v.innerHTML = `<div class="dfh"><b>호박밭 같이 가꾸기</b><span id="pkinfo" class="s sub"></span><button class="btn sm" id="pkx">나가기</button></div><div class="lnbody" id="pkbody"></div>`;
+  $('#shell').appendChild(v); $('#pkx').onclick = pkClose; pkUi(); pkTick = setInterval(pkUi, 1000);
+}
+function pkClose(){ pkOn = false; clearInterval(pkTick); const v = $('#pkv'); if (v) v.remove(); pkSync(); }
+const pkMin = ms => { const s = Math.ceil(ms / 1000); return s >= 60 ? `${Math.floor(s / 60)}분 ${s % 60}초` : `${s}초`; };
+function pkUi(){
+  const v = $('#pkv'); if (!v) return; if (!pkCtl){ pkClose(); return; } const t = pkTotal(), goal = pkGoal(), k = Math.min(1, t / goal), st = pkStage(), m = pkMy(), done = pkDone(), mine = +pkPts[myId()] || 0, rk = pkRank();
+  $('#pkinfo').textContent = `${PK.NAMES[st]} · ${Math.round(k * 100)}%`;
+  const wl = pkLeft(m.wAt, PK.WATER[1]), tl = pkLeft(m.tAt, PK.TALK[1]), off = !pkCtl.open || done;
+  const btn = (id, label, sub, left, dis) => `<button class="pkact ${left || dis ? 'wait' : 'go'}" data-pk="${id}" ${left || dis ? 'disabled' : ''}><b>${label}</b><span>${left ? pkMin(left) + ' 뒤' : sub}</span></button>`;
+  const body = $('#pkbody'); const sig = [t, st, mine, rk, wl > 0, tl > 0, done, m.f, m.fin, m.bd.day, pkCtl.open, ...PK.MAT.map(x => me.inv[x[0]] || 0), Math.ceil(wl / 1000), Math.ceil(tl / 1000)].join(','); if (body.dataset.sig === sig) return; body.dataset.sig = sig;
+  body.innerHTML = `<div class="pkscene"><i class="pkspr" style="background-position:${st * 25}% 0"></i></div>
+    <div class="pkbar"><i style="width:${k * 100}%"></i>${PK.STAGES.slice(1, 4).map(x => `<u style="left:${x * 100}%"></u>`).join('')}</div>
+    <div class="s sub" style="text-align:center">반 전체 성장 ${t} / ${goal}${done ? ' · 완성!' : ''}</div>
+    <div class="pkme"><b>내 기여</b> ${mine}점${rk ? ` · ${rk}등${rk <= 5 ? ' (상위 5명 안!)' : ''}` : ''} <span class="s sub">· 물 준 횟수 ${+pkW[myId()] || 0}</span></div>
+    ${done ? `<div class="pkdone">거대 호박이 활짝 웃어요!${m.res ? `<br>내 완성 보상: ${m.res.g ? `${m.res.g}골드${m.res.m ? ` · 마나석 ${m.res.m}개` : ''}` : '물을 준 적이 없어서 보상이 없어요'}` : ''}<br><span class="s sub">호박밭에 가서 호박에게 말을 걸면 하루 한 번 3시간 축복(탐사 경험치 +10%)을 줘요</span></div>` : ''}
+    <div class="pkacts">${btn('w', '물 주기', `성장 +${PK.WATER[0]} · 5분마다`, off ? 1 : wl, off)}${btn('t', '말 걸어 주기', `성장 +${PK.TALK[0]} · 10분마다`, off ? 1 : tl, off)}</div>
+    <div class="pkmat"><b>거름 주기</b> <span class="s sub">재료가 귀할수록 많이 자라요 · ${m.f || 0}/${PK.FCAP}번</span><div class="pkacts">${PK.MAT.map(([id, nm, g, r]) => `<button class="pkact ${off || !(me.inv[id] || 0) ? 'wait' : 'go'}" data-pkm="${id}" ${off || !(me.inv[id] || 0) ? 'disabled' : ''}><b>${nm}</b><span>${r} · 성장 +${g} · 가진 ${me.inv[id] || 0}개</span></button>`).join('')}</div></div>
+    <div class="pkrew"><b>보상</b><div class="s sub">2단계(새싹) 씨앗 2개 · 3단계(덩굴) 스킬 포인트 1 · 4단계(꽃) 마나석 1개 (모두에게)<br>완성: 물을 준 학생 500골드 · 기여 상위 5명은 1000골드와 마나석 1개 더</div></div>`;
+  body.querySelectorAll('[data-pk]').forEach(b => b.onclick = () => pkAct(b.dataset.pk)); body.querySelectorAll('[data-pkm]').forEach(b => b.onclick = () => pkAct('f', b.dataset.pkm));
+}
+// ---- 관리자 ----
+function adminPumpkinHTML(){
+  const c = AD.pkctl || {}, open = !!c.open, pts = AD.pkpts || {}, tot = Object.values(pts).reduce((a, n) => a + (+n || 0), 0), goal = c.goal || PK.GOAL, who = Object.keys(pts).length, rate = c.rate || 1, nm = u => esc((AD.players[u] && AD.players[u].nick) || u.slice(0, 6));
+  const top = Object.entries(pts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([u, n]) => `${nm(u)} ${n}`).join(' · ');
+  return `<div class="adcard"><b>이벤트 「호박밭 같이 가꾸기」</b> · ${open ? '열려 있어요' : tot >= goal ? '완성됐어요 (호박이 남아 있어요)' : '닫혀 있어요'}
+    <div class="s">성장 ${tot}/${goal} · 돌본 학생 ${who}명${open ? ` · 성장 속도 ×${rate}` : ''}${top ? `<br>기여 상위: ${top}` : ''}</div>
+    <div class="frow">${open ? `<button class="btn sm" data-pka="r1">속도 ×1</button><button class="btn sm" data-pka="r2">×2</button><button class="btn sm" data-pka="r3">×3</button><button class="btn sm" data-pka="reset">처음으로</button><button class="btn sm" data-pka="close">이벤트 닫기</button>` : '<button class="btn sm go" data-pka="open">이벤트 열기</button>'}</div></div>`;
+}
+document.addEventListener('click', e => { const bt = e.target.closest && e.target.closest('[data-pka]'); if (!bt || !F || !db) return; const a = bt.dataset.pka, id = Date.now(), wipe = () => { F.set(F.ref(db, 'pumpkin/pts'), null); F.set(F.ref(db, 'pumpkin/w'), null); };
+  if (a === 'open'){ wipe(); F.set(F.ref(db, 'pumpkin/ctl'), { open: true, id, rate: 1, goal: PK.GOAL }); }
+  else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 지금까지 자란 호박은 남아요(다 자랐다면 거대 호박이 그대로 있어요).')) F.set(F.ref(db, 'pumpkin/ctl'), { ...(AD.pkctl || {}), open: false }); }
+  else if (a === 'reset'){ if (confirm('처음으로 되돌릴까요? 자란 호박과 모두의 기여 점수가 지워져요.')){ wipe(); F.set(F.ref(db, 'pumpkin/ctl'), { open: true, id, rate: (AD.pkctl && AD.pkctl.rate) || 1, goal: PK.GOAL }); } }
+  else if (a[0] === 'r') F.update(F.ref(db, 'pumpkin/ctl'), { rate: +a.slice(1) }); });
 // ===== 시장 (온라인 전용) =====
 let sellPick = null;
 function renderMarket(){
@@ -7253,7 +7364,7 @@ async function boot(){
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       F.onValue(F.ref(db, 'adm/reset/' + uid), s => { const v = +s.val() || 0; if (!v) return; let seen = 0; try { seen = +localStorage.getItem('magion-rs-' + uid) || 0; } catch(e){}
         if (v > seen){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
-      storyListen(); dfListen(); pzListen(); lnListen();
+      storyListen(); dfListen(); pzListen(); lnListen(); pkListen();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); if (sub === 'games') render(); });
       F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       Object.keys(GAMES).forEach(g => F.onValue(F.ref(db, `records/${g}/${weekKey()}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); }));

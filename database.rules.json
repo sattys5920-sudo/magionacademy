@@ -263,6 +263,22 @@
           ".validate": "newData.isString()"
         }
       }
+    },
+    "pumpkin": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+      "pts": {
+        "$u": {
+          ".write": "auth != null && (auth.uid === $u || auth != null && auth.token.email === 'magionadmin@magionacademy.app')",
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3000 && (!data.exists() || newData.val() >= data.val() || auth != null && auth.token.email === 'magionadmin@magionacademy.app')"
+        }
+      },
+      "w": {
+        "$u": {
+          ".write": "auth != null && (auth.uid === $u || auth != null && auth.token.email === 'magionadmin@magionacademy.app')",
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3000 && (!data.exists() || newData.val() >= data.val() || auth != null && auth.token.email === 'magionadmin@magionacademy.app')"
+        }
+      }
     }
   }
 }

@@ -396,8 +396,11 @@ World.busyFish = false;   // 낚시하는 동안은 바닥을 눌러도 안 걸�
 World.isFree = (x, y) => !!M && free(x, y);
 World.freeNear = (x, y, r = 3) => { const out = []; for (let a = x - r; a <= x + r; a++) for (let b = y - r; b <= y + r; b++) if (free(a, b)) out.push([a, b]); return out; };
 let crowd = {};
-function rebuildObjs(){   // 지도 물건 + (개인 방이면) 놓은 가구
-  const fo = M.furn ? furnObjs() : [];
+let propsData = {};   // 이벤트 소품: World.setProps(지도 id, [{ id, x, y(칸), img(그림), sw, sh, ax, ay, solid, light }]) — 눌리면 World.onProp(id)
+function propObjs(){ return (propsData[rmap] || []).map(p => { const [px, py] = P(p.x + .5, p.y + .5); return { name: 'prop', pid: p.id, prop: p, img: p.img, pxc: p.pxc, box: [p.x, p.y, p.x + 1, p.y + 1], x: px - p.ax, y: py - p.ay, sx: 0, sy: 0, sw: p.sw, sh: p.sh, solid: p.solid !== false }; }); }
+World.setProps = (id, list) => { propsData[id] = list || []; if (M && rmap === id) rebuildObjs(); };
+function rebuildObjs(){   // 지도 물건 + (개인 방이면) 놓은 가구 + 이벤트 소품
+  const fo = [...(M.furn ? furnObjs() : []), ...propObjs()];
   blocked = new Set(M.water ? M.water.map(w => w[0] + ',' + w[1]) : []); [...M.objs, ...fo].forEach(o => { if (o.solid !== false) for (let x = Math.floor(o.box[0]); x < Math.ceil(o.box[2]); x++) for (let y = Math.floor(o.box[1]); y < Math.ceil(o.box[3]); y++) blocked.add(x + ',' + y); });
   M.objs.forEach(o => { const d = o.door; if (!d || d.walk || d.span || d.spanX) return; d.t2 = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([a, b]) => [d.tile[0] + a, d.tile[1] + b]).find(([a, b]) => free(a, b)) || null; });   // 문은 바닥 두 칸: 옆 빈 칸 하나를 더 눌러요
   flats = fo.filter(o => o.flat);
@@ -602,7 +605,8 @@ cv.addEventListener('pointerdown', e => {
   // 친구를 누르면 (겹치면 앞에 있는 사람)
   const pr = people.filter(p => p.peer && (() => { const [sx, sy] = P(p.x + .5, p.y + .5); return x >= sx - 9 && x <= sx + 9 && y >= sy - World.Avatar.FH * ASC - 10 && y <= sy + 3; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
   if (pr && World.onPeer){ World.onPeer(pr.peer); return; }
-  const hit = [...objOrder, ...flats.slice().reverse()].reverse().find(o => (o.door || actOf(o) || o.furn) && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && (() => { const px = o.furn ? FURN_PX : MAPS[rmap].px; const d = px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data; return d[3] > 0; })());
+  const hit = [...objOrder, ...flats.slice().reverse()].reverse().find(o => (o.door || actOf(o) || o.furn || o.prop) && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && (() => { const px = o.pxc || (o.furn ? FURN_PX : MAPS[rmap].px); const d = px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data; return d[3] > 0; })());
+  if (hit && hit.prop){ const r = World.onProp ? World.onProp(hit.pid) : null; if (r) showBubble(hit, typeof r === 'string' ? r : r.text, r.btn, r.fn); return; }
   if (hit && hit.furn){   // 놓은 가구
     const r = World.onFurn ? World.onFurn(hit.fid) : null;
     if (r) showBubble(hit, typeof r === 'string' ? r : r.text, r.btn, r.fn);
@@ -802,7 +806,7 @@ function frame(now){
     let idx = 0; list.forEach((it, i) => { if (it.o && sOver(R(it.o), pr) && behind(it.o.box, pb)) idx = i + 1; });
     list.splice(idx, 0, { p });
   });
-  list.forEach(it => { if (it.o) cx.drawImage(it.o.furn ? FURN_IMG : OB, it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.sw, it.o.sh); else drawPerson(it.p); });
+  list.forEach(it => { if (it.o) cx.drawImage(it.o.img || (it.o.furn ? FURN_IMG : OB), it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.sw, it.o.sh); else drawPerson(it.p); });
   // 가구 놓기: 고른 자리에 반투명하게 미리 보여 줘요
   if (placing && placing.at){ const it = FURN.items[placing.k], [gx, gy] = placing.at, ok = canPlace(placing.k, gx, gy), [px, py] = P(gx, gy);
     cx.fillStyle = ok ? 'rgba(140,230,176,.45)' : 'rgba(230,90,110,.45)';
@@ -820,6 +824,7 @@ function frame(now){
      cx.fillRect(ix, iy, VW, VH);
     cx.globalCompositeOperation = 'lighter';
     M.lights.forEach((L, i) => { if (L.p[0] + L.r < view.x || L.p[0] - L.r > view.x + view.w || L.p[1] + L.dy + L.r < view.y || L.p[1] + L.dy - L.r > view.y + view.h) return; const fl = L.f ? .85 + .15 * Math.sin(now / 130 + i * 1.7) * Math.sin(now / 370 + i) : 1; cx.globalAlpha = Math.max(0, Math.min(1, L.a * fl * Math.max(.3, Math.min(1, SK.n * 1.15)) * (lb < 0 ? 1 + .85 * lb : 1 + 1.2 * lb))); const rr = L.r * (lb < 0 ? 1 + .3 * lb : 1 + .7 * lb); cx.drawImage(glow(L.r, L.c), L.p[0] - rr, L.p[1] + L.dy - rr, rr * 2, rr * 2); });
+    (propsData[rmap] || []).forEach(p => { if (!p.light) return; const [fx, fy] = P(p.x + .5, p.y + .5), cyy = fy - p.ay * .5, rr = p.light.r; if (fx + rr < view.x || fx - rr > view.x + view.w || cyy + rr < view.y || cyy - rr > view.y + view.h) return; cx.globalAlpha = p.light.a * (.9 + .1 * Math.sin(now / 500)); cx.drawImage(glow(rr, p.light.c), fx - rr, cyy - rr); });
     // 놓은 가구 중 불빛이 나는 것(촛대·호박 랜턴·버섯 스탠드·난로·유령 등불 12색)은 램프처럼 은은하게 빛나요
     if (M.furn){ shownFurn().forEach((f, i) => { const it = FURN.items[f.k], lt = it && furnLight(it); if (!lt) return; const [fx, fy] = P(f.x, f.y), cyy = fy - it.ay + Math.min(10, it.sh * .3), rr = lt.r;
       if (fx + rr < view.x || fx - rr > view.x + view.w || cyy + rr < view.y || cyy - rr > view.y + view.h) return;

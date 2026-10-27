@@ -80,6 +80,10 @@ def stage(k):
         if 0 <= x < W_ and 0 <= y < H_: px[x, y] = col
     return im
 ST = [stage(k) for k in range(5)]
+CELL_W, CELL_H = 60, 50   # 게임용 시트: 5단계를 60×50 칸에 아래 가운데 정렬로 한 줄
+_sheet = Image.new('RGBA', (CELL_W * 5, CELL_H), (0, 0, 0, 0))
+for _k, _s in enumerate(ST): _sheet.alpha_composite(_s, (_k * CELL_W + (CELL_W - _s.width) // 2, CELL_H - _s.height))
+_sheet.save(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../public/art/ev5_pumpkin.png'))
 def shot(n): return Image.open(f'{SH}/{n}.png').convert('RGBA')            # 780×1480 (게임 화면 2배)
 def spr(base, k, cx, by, scale, glow=False):   # 좌표는 390×740 기준, 도트 한 칸 = scale×2 화면 칸
     s = ST[k].resize((ST[k].width * scale * 2, ST[k].height * scale * 2), Image.NEAREST); cx *= 2; by *= 2
