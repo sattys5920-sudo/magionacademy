@@ -2,16 +2,18 @@
 <style>
 @font-face{font-family:'Pretendard';font-weight:400;src:url(../../public/fonts/Pretendard-Regular.woff2) format('woff2')}
 @font-face{font-family:'Pretendard';font-weight:700;src:url(../../public/fonts/Pretendard-Bold.woff2) format('woff2')}
+@font-face{font-family:'G11';src:url(../../public/fonts/Galmuri11.sub.woff2) format('woff2')}
+@font-face{font-family:'G11B';src:url(../../public/fonts/Galmuri11-Bold.sub.woff2) format('woff2')}
 html,body{margin:0;background:#000;overflow:hidden;font-family:Pretendard,sans-serif}
 #stage{position:relative;overflow:hidden}
 canvas{position:absolute;inset:0;width:100%;height:100%}
 #say{position:absolute;left:12px;right:12px;top:12px;display:flex;gap:10px;padding:10px;background:rgba(36,27,63,.94);border:2px solid #5A4A8A;border-radius:12px;color:#F1E9FF;box-sizing:border-box}
 #say img{width:56px;height:56px;border-radius:8px;background:#2D2250;object-fit:cover;flex:none;image-rendering:pixelated}
-#say b{display:block;font-size:13px;color:#FFD98A;margin-bottom:3px}
+#say b{font-family:G11B,Pretendard,sans-serif;display:block;font-size:13px;color:#FFD98A;margin-bottom:3px}
 #say p{margin:0;font-size:14.5px;line-height:1.45}
-#cnt{position:absolute;left:0;right:0;top:94px;text-align:center;font-size:13px;color:#BFD0FF}
+#cnt{font-family:G11,Pretendard,sans-serif;position:absolute;left:0;right:0;top:94px;text-align:center;font-size:13px;color:#BFD0FF}
 #names{position:absolute;left:12px;right:12px;bottom:12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
-#names span{font-size:12px;padding:5px 9px;border-radius:999px;background:rgba(10,14,40,.7);color:#9FB0E0;border:1px solid #3A4686;min-height:18px}
+#names span{font-family:G11,Pretendard,sans-serif;font-size:12px;padding:5px 9px;border-radius:999px;background:rgba(10,14,40,.7);color:#9FB0E0;border:1px solid #3A4686;min-height:18px}
 #names span.on{color:#1A1A3A;background:#FFF1C1;border-color:#FFF1C1}
 #names span.st{color:#FFD98A;border-color:#FFD98A}
 </style>
@@ -23,6 +25,7 @@ const NM = ['민준', '서연', '하준', '지우', '도윤', '수아', '예준'
 const st = document.getElementById('stage'); st.style.width = W + 'px'; st.style.height = H + 'px';
 const cv = document.getElementById('cv'); cv.width = W * DPR; cv.height = H * DPR; const g = cv.getContext('2d'); g.setTransform(DPR, 0, 0, DPR, 0, 0);
 (async () => {
+  await Promise.all([document.fonts.load('12px G11'), document.fonts.load('12px G11B'), document.fonts.load('12px Pretendard')]);
   const D = Q.data || await (await fetch('../../public/data/events/stargazing/constellations.json')).json(), C = D.constellations.find(c => c.id === Q.c);
   const nP = Q.people ?? 9, own = {}; C.stars.forEach((s, i) => { own[s.id] = i < nP ? NM[(i + (Q.shift || 0)) % 12] : '스텔라'; });
   const lit = C.stars.slice(0, Q.lit ?? 12).map(s => s.id);

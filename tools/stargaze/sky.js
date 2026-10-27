@@ -48,10 +48,10 @@ const SKY = (() => {
       else { g.globalAlpha = .55 + .35 * Math.sin(t * 3 + x); }
       px(g, x - U / 2, y - U / 2, U, U, col); for (let k = 1; k <= arm; k++){ px(g, x - U / 2 + k * U, y - U / 2, U, U, col); px(g, x - U / 2 - k * U, y - U / 2, U, U, col); px(g, x - U / 2, y - U / 2 + k * U, U, U, col); px(g, x - U / 2, y - U / 2 - k * U, U, U, col); }
       g.globalAlpha = 1;
-      if (S.names && S.own && S.own[s.id]){ g.font = (W < 700 ? '11' : '14') + 'px Pretendard, G11, sans-serif'; g.textAlign = 'center'; const tx = S.own[s.id], w = g.measureText(tx).width + 10, ty = y + (arm + 1) * U + 6, hot = S.hot && S.hot.includes(s.id);
+      if (S.names && S.own && S.own[s.id]){ g.font = (W < 700 ? '11' : '14') + 'px G11, Pretendard, sans-serif'; g.textAlign = 'center'; const tx = S.own[s.id], w = g.measureText(tx).width + 10, ty = y + (arm + 1) * U + 6, hot = S.hot && S.hot.includes(s.id);
         g.fillStyle = hot ? 'rgba(255,241,193,.9)' : 'rgba(10,14,40,.62)'; g.fillRect(Math.round(x - w / 2), Math.round(ty), Math.round(w), W < 700 ? 16 : 20); g.fillStyle = hot ? '#1A1A3A' : L ? '#FFF1C1' : '#9FB0E0'; g.fillText(tx, x, ty + (W < 700 ? 12 : 15)); } });
     if (head){ for (let i = 0; i < 6; i++){ const a = i * 1.1 + t * 6; g.fillStyle = 'rgba(255,241,193,.8)'; g.fillRect(Math.round(head[0] + Math.cos(a) * 7), Math.round(head[1] + Math.sin(a) * 7), 2, 2); } }
-    if (S.title > 0){ g.save(); g.globalAlpha = S.title; g.textAlign = 'center'; g.font = `bold ${W < 700 ? 30 : 46}px Pretendard, G11B, sans-serif`; g.shadowColor = 'rgba(255,220,130,.85)'; g.shadowBlur = 18; g.fillStyle = '#FFF1C1'; g.fillText(C.name, W / 2, B.y + B.h + (W < 700 ? 52 : 70)); g.restore(); }
+    if (S.title > 0){ g.save(); g.globalAlpha = S.title; g.textAlign = 'center'; g.font = `${W < 700 ? 28 : 42}px G11B, Pretendard, sans-serif`; g.shadowColor = 'rgba(255,220,130,.85)'; g.shadowBlur = 18; g.fillStyle = '#FFF1C1'; g.fillText(C.name, W / 2, B.y + B.h + (W < 700 ? 52 : 70)); g.restore(); }
   }
   return { draw, box, pos };
 })();
