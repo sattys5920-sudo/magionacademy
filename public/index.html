@@ -3170,7 +3170,7 @@ function showAdmin(){
   if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
   adminRender();
 }
-const adminTyping = () => { const a = document.activeElement; return (AD.tab === 'npc' || AD.tab === 'gift') && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
+const adminTyping = () => { const a = document.activeElement; return a && $('#adminv')?.contains(a) && (a.matches('select') || ((AD.tab === 'npc' || AD.tab === 'gift') && a.matches('input,textarea'))); };   // 편집 중에는 새로 그리지 않아요
 function adminChat(){   // 최근 14일 대화를 한 줄로 이어 봐요
   if (!F || !db) return; AD.chatOff?.(); const by = {}, offs = [];
   const merge = () => { AD.chat = {}; Object.entries(by).forEach(([d, v]) => Object.entries(v).forEach(([k, c]) => { AD.chat[d + '/' + k] = c; })); if (AD.tab === 'chat') adminRender(); };
@@ -3269,7 +3269,7 @@ function adminRender(){
   root.querySelectorAll('[data-adreset]').forEach(b => b.onclick = () => adWipe(b.dataset.adreset, false));
   root.querySelectorAll('[data-addel]').forEach(b => b.onclick = () => adWipe(b.dataset.addel, true));
   root.querySelectorAll('[data-adhouse]').forEach(sel => sel.onchange = async () => {   // 기숙사 옮기기: 정원 3명을 넘으면 막고, 접속 중이면 새로 불러오게 해요
-    const id = sel.dataset.adhouse, p = AD.players[id] || {}, h = sel.value, old = p.house; if (!h || h === old) return adminRender();
+    const id = sel.dataset.adhouse, p = AD.players[id] || {}, h = sel.value, old = p.house; sel.blur(); if (!h || h === old) return adminRender();
     const n = Object.keys(AD.players).filter(i => i !== id && AD.players[i]?.house === h).length;
     if (n >= HOUSE_CAP){ alert(`${HOUSES[h].name}은(는) 이미 ${HOUSE_CAP}명이라 옮길 수 없어요.`); return adminRender(); }
     if (!confirm(`${p.nick || id.slice(0, 6)}을(를) ${old ? HOUSES[old]?.name + ' → ' : ''}${HOUSES[h].name}(으)로 옮길까요? 접속 중이면 화면이 새로 불러와져요.`)) return adminRender();
