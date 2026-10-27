@@ -1008,11 +1008,15 @@ const LOVE_TIERS = [
   { n:'낯가림', mat:0, coin:0, d:'아직 경계해요 · 애정 5부터 재료를 줘요' },
   { n:'친해짐', mat:1, coin:0, d:'재료 1개' },
   { n:'단짝', mat:2, coin:0, d:'재료 2개 · 짝꿍 맺기 가능' },
-  { n:'찰떡', mat:3, coin:20, d:'재료 3개 + 20G' },
-  { n:'영원한 친구', mat:5, coin:50, d:'재료 5개 + 50G' },
+  { n:'찰떡', mat:3, coin:200, d:'재료 3개 + 200G' },
+  { n:'영원한 친구', mat:5, coin:500, d:'재료 5개 + 500G' },
 ];
 const loveTier = c => Math.min(4, Math.floor((c.love || 0) / 5));
-const crAdult = c => Date.now() - c.bornAt >= CREATURES[c.k].grow * 6e4;
+// 어른이 되는 건 시간이 아니라 돌봄(먹이·쓰다듬기로 오른 애정을 쌓은 점수)이에요. 먹이 2시간·쓰다듬기 30분 제한 때문에 열심히 해도 알마다 4시간(양)~12시간(부엉이)은 걸려요
+const CR_HRS = [4, 6.5, 8, 4.5, 10.5, 9, 6, 5, 12, 7];   // CREATURES 순서: 양 토끼 도마뱀 닭 고양이 두꺼비 꿀벌 거미 부엉이 염소 (쉬지 않고 돌볼 때 걸리는 최소 시간)
+const CR_NEED = k => Math.round(3 * CR_HRS[k] + 3);   // 돌봄 점수: 열심히 하면 시간당 약 3점
+const crAdult = c => c.care !== undefined ? c.care >= CR_NEED(c.k) : Date.now() - c.bornAt >= CREATURES[c.k].grow * 6e4;
+const crCare = (c, n) => { const was = crAdult(c); c.care = (c.care || 0) + n; return !was && crAdult(c); };   // 어른이 됐으면 true
 const crKind = c => crAdult(c) ? CREATURES[c.k].kind : CREATURES[c.k].baby;
 const prodLeft = c => Math.max(0, (c.prodAt || 0) + CREATURES[c.k].prod * 6e4 - Date.now());
 const eggLeft = e => Math.max(0, e.at + CREATURES[e.k].hatch * 6e4 - Date.now());
@@ -1020,7 +1024,7 @@ const crSprite = (c, scale, egg) => `<div class="cr" style="background-position:
 const crId = () => Math.random().toString(36).slice(2, 9);
 function newCreature(k, col, name, adult){
   const d = CREATURES[k], now = Date.now();
-  return { id: crId(), k, col: col || randColor(), name: name || d.names[Math.floor(Math.random() * d.names.length)], love: 0, bornAt: adult ? now - d.grow * 6e4 : now, prodAt: now, fedAt: 0, petAt: 0, bredAt: 0 };
+  return { id: crId(), k, col: col || randColor(), name: name || d.names[Math.floor(Math.random() * d.names.length)], love: 0, care: adult ? CR_NEED(k) : 0, bornAt: adult ? now - d.grow * 6e4 : now, prodAt: now, fedAt: 0, petAt: 0, bredAt: 0 };
 }
 function makeEgg(a, b){ return { id: crId(), k: a.k, col: mixColor(a.col || {}, b.col || {}), at: Date.now() }; }
 // 옛 생물(4종·하루 단위)을 새 방식으로: 알은 부화실로, 애정 5칸 → 20
@@ -1037,6 +1041,7 @@ function migrateCreatures(p){
     const age = c.k === undefined ? 3 : (c.age || 0);
     return [{ id: crId(), k, col, name: c.name || d.name, love: Math.min(LOVE_MAX, (c.love || 0) * 4), bornAt: Date.now() - Math.min(1, age / 3) * d.grow * 6e4, prodAt: 0, fedAt: 0, petAt: 0, bredAt: 0 }];
   });
+  p.cr.forEach(c => { if (c.care === undefined){ const need = CR_NEED(c.k), f = Math.min(1, (Date.now() - c.bornAt) / (CREATURES[c.k].grow * 6e4)); c.care = f >= 1 ? need : Math.floor(f * need); } });   // 옛 생물: 이미 어른이면 어른 그대로
   p.eggs = p.eggs.slice(0, HATCH_MAX);
 }
 // 개인 방 가구 50종 (그림·이름·값은 tools/iso/furniture.py → world.js의 World.FURN)
@@ -5568,9 +5573,9 @@ function hatchToPen(i){
 }
 function adoptOut(i){
   const c = me.cr[i], d = CREATURES[c.k];
-  me.cr.splice(i, 1); me.inv[d.mat] = (me.inv[d.mat] || 0) + 1; me.coin += 30;
+  me.cr.splice(i, 1); me.inv[d.mat] = (me.inv[d.mat] || 0) + 1; me.coin += 100;
   if (crSel >= me.cr.length) crSel = Math.max(0, me.cr.length - 1);
-  return `${withJosa(c.name, '이', '가')} 새 가족을 찾아 떠났어요. 고맙다며 ${ITEM[d.mat]} +1 · 30G를 남겼어요.`;
+  return `${withJosa(c.name, '이', '가')} 새 가족을 찾아 떠났어요. 고맙다며 ${ITEM[d.mat]} +1 · 100G를 남겼어요.`;
 }
 function renderRanch(){
   if (crSel >= me.cr.length) crSel = 0;
@@ -5596,7 +5601,7 @@ function renderRanch(){
         <div class="sec-h"><h3>${esc(c.name)}</h3><span style="display:flex;gap:4px"><span class="tag" style="${c.col.rare ? 'background:var(--gold);color:#2A1506' : ''}">${esc(c.col.n)}${c.col.rare ? ' ' : ''}</span><span class="tag">${crKind(c)}</span></span></div>
         <div class="meter"><span class="s">애정</span>${segs(c.love, LOVE_MAX, 'var(--pink)')}<span class="s b num">${c.love}</span></div>
         <span class="s" style="color:var(--pink)">${T.n} · ${T.d}${tier < 4 ? ` <span class="sub">(다음 단계까지 ♥${(tier + 1) * 5 - c.love})</span>` : ''}</span>
-        <div class="s sub" style="display:flex;align-items:center;gap:4px">${ic(d.mat, 'transform:scale(.8);margin:-6px')}<span>${!adult ? `어른까지 <b data-cd="${c.bornAt + d.grow * 6e4}">${cdText(c.bornAt + d.grow * 6e4 - now)}</b> · 어른이 되면 「${ITEM[d.mat]}」을 줘요` : !tier ? `애정 5부터 「${ITEM[d.mat]}」을 줘요` : prodLeft(c) > 0 ? `「${ITEM[d.mat]}」 생기기까지 <b data-cd="${c.prodAt + d.prod * 6e4}">${cdText(prodLeft(c))}</b>` : `「${ITEM[d.mat]}」이 생겼어요!`}</span></div>
+        <div class="s sub" style="display:flex;align-items:center;gap:4px">${ic(d.mat, 'transform:scale(.8);margin:-6px')}<span>${!adult ? `어른까지 돌봄 ${Math.min(c.care || 0, CR_NEED(c.k))} / ${CR_NEED(c.k)} · 어른이 되면 「${ITEM[d.mat]}」을 줘요` : !tier ? `애정 5부터 「${ITEM[d.mat]}」을 줘요` : prodLeft(c) > 0 ? `「${ITEM[d.mat]}」 생기기까지 <b data-cd="${c.prodAt + d.prod * 6e4}">${cdText(prodLeft(c))}</b>` : `「${ITEM[d.mat]}」이 생겼어요!`}</span></div>
       </div>
       <div class="grid" style="grid-template-columns:repeat(3,1fr)">
         <button class="btn gold" id="feed" ${fedLeft ? 'disabled' : ''}>${fedLeft ? `<span data-cd="${c.fedAt + FEED_CD}">${cdText(fedLeft)}</span>` : `${d.food} 주기`}</button>
@@ -5625,7 +5630,7 @@ function renderRanch(){
     eggPage = clampP(eggPage, CREATURES.length, 4);
     body = `<section class="sec">${secH('알 가게', `부화실 빈 둥지 ${HATCH_MAX - me.eggs.length}개`)}
       <div class="box px">${pageOf(CREATURES.map((x, k) => [x, k]), eggPage, 4).map(([x, k]) => `<div class="li" style="align-items:flex-start;padding-top:10px;padding-bottom:10px"><div style="width:44px;height:40px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0">${crSprite({ k, col: {}, bornAt: 0 }, .36)}</div>
-        <div class="main"><span class="t">${x.kind}의 알</span><span class="d" style="white-space:normal">${timeText(x.hatch * 6e4)} 뒤 부화 · 어른까지 ${timeText(x.grow * 6e4)} · 「${ITEM[x.mat]}」</span></div>
+        <div class="main"><span class="t">${x.kind}의 알</span><span class="d" style="white-space:normal">${timeText(x.hatch * 6e4)} 뒤 부화 · 어른까지 최소 ${CR_HRS[k]}시간 · 「${ITEM[x.mat]}」</span></div>
         <button class="btn sm ${me.coin >= x.egg && me.eggs.length < HATCH_MAX ? 'go' : ''}" data-buyegg="${k}" ${me.coin >= x.egg && me.eggs.length < HATCH_MAX ? '' : 'disabled'}>${ic('coin', 'transform:scale(.7);margin:0 -6px')}${x.egg}</button></div>`).join('')}</div>
       ${pager('eggpg', eggPage, CREATURES.length, 4)}
       ${hint(ranchMsg, '')}</section>`;
@@ -5652,12 +5657,12 @@ function renderRanch(){
   const ac = $('#adoptCancel'); if (ac) ac.onclick = () => { placing = null; ranchMsg = ''; redraw(); };
   const ad = $('#adopt'); if (ad) ad.onclick = () => confirmBox(`${withJosa(c.name, '을', '를')} 입양 보낼까요? 돌아오지 않아요.`, '보내기', '아니요', true).then(ok => { if (!ok) return; ranchMsg = adoptOut(crSel); save(); redraw(); });
   const fd = $('#feed'); if (fd) fd.onclick = () => {
-    const n = 2 + (me.house === 'dusk' && myTime() ? 1 : 0); c.love = Math.min(LOVE_MAX, c.love + n); c.fedAt = Date.now(); tutHook('feed');
-    ranchMsg = `${withJosa(c.name, '이', '가')} ${withJosa(d.food, '을', '를')} 맛있게 먹었어요. 애정 +${n}`; save(); redraw();
+    const n = 2 + (me.house === 'dusk' && myTime() ? 1 : 0); c.love = Math.min(LOVE_MAX, c.love + n); c.fedAt = Date.now(); tutHook('feed'); const up1 = crCare(c, n);
+    ranchMsg = `${withJosa(c.name, '이', '가')} ${withJosa(d.food, '을', '를')} 맛있게 먹었어요. 애정 +${n}${up1 ? ' · 어른이 됐어요!' : ''}`; save(); redraw();
   };
   const pt = $('#pat'); if (pt) pt.onclick = () => {
-    const n = me.house === 'dusk' ? 2 : 1; c.love = Math.min(LOVE_MAX, c.love + n); c.petAt = Date.now();
-    ranchMsg = `${withJosa(c.name, '이', '가')} 기분 좋아해요. 애정 +${n}`; save(); redraw();
+    const n = me.house === 'dusk' ? 2 : 1; c.love = Math.min(LOVE_MAX, c.love + n); c.petAt = Date.now(); const up2 = crCare(c, n);
+    ranchMsg = `${withJosa(c.name, '이', '가')} 기분 좋아해요. 애정 +${n}${up2 ? ' · 어른이 됐어요!' : ''}`; save(); redraw();
   };
   const hv = $('#harvest'); if (hv) hv.onclick = () => {
     const T = LOVE_TIERS[loveTier(c)]; if (!T.mat || prodLeft(c) > 0 || !crAdult(c)) return;
