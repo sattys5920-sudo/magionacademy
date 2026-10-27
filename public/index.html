@@ -110,6 +110,9 @@ body.inworld #app.open{opacity:1;pointer-events:auto}
 #sgcv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
 #sgsay{position:absolute;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));display:flex;gap:10px;padding:10px;background:rgba(36,27,63,.94);border:2px solid #5A4A8A;border-radius:12px;color:#F1E9FF}
 #sgsay img{width:56px;height:56px;border-radius:8px;background:#2D2250;object-fit:cover;flex:none;image-rendering:pixelated}
+#sgsay.fx img{display:none}
+#sgsay.fx b{color:#8FE3A8}
+#sgsay.fx p{color:#8FE3A8;font-family:var(--f-pxb)}
 #sgsay b{display:block;font-family:var(--f-pxb);font-size:var(--fs-s);color:#FFD98A;margin-bottom:3px}
 #sgsay p{margin:0;font-size:var(--fs);line-height:1.45;min-height:2.9em}
 #sgcnt{position:absolute;left:0;right:0;top:calc(128px + env(safe-area-inset-top));text-align:center;font-family:var(--f-px);font-size:var(--fs-s);color:#BFD0FF;pointer-events:none}
@@ -3362,7 +3365,7 @@ function syncBuffs(){
   const c = $('#buffChip'); if (!c || !me) return;
   const now = Date.now(), on = Object.entries(me.buffs || {}).filter(([, t]) => t > now);
   World.setSpeedK && World.setSpeedK((buffOn('speed') ? 1.4 : 1) * (1 + sgFx('move_speed')));
-  c.hidden = !on.length; if (on.length) c.textContent = '' + on.map(([k, t]) => `${k === 'all' ? '만찬' : BUFF_NAME[k]} ${(t - now) >= 72e5 ? Math.ceil((t - now) / 36e5) + '시간' : Math.ceil((t - now) / 6e4) + '분'}`).join(' · ');
+  c.hidden = !on.length; if (on.length) c.textContent = '' + on.map(([k, t]) => `${k === 'all' ? '만찬' : BUFF_NAME[k]} ${(t - now) >= 72e5 ? Math.ceil((t - now) / 36e5) + ' 시간' : Math.ceil((t - now) / 6e4) + '분'}`).join(' · ');
 }
 // ---------- 요리하기: 솥 앞에서 ----------
 let cooking = null;
@@ -6982,7 +6985,7 @@ function sgListen(){
 // ---- 효과: 별빛 버프의 수치는 별자리 데이터(effects)에서 읽어요 ----
 const sgFx = stat => { if (!me || !sgData) return 0; let v = 0; const t = Date.now(); sgData.forEach(C => { if (((me.buffs || {})[C.buff.id] || 0) > t) C.buff.effects.forEach(e => { if (e.stat === stat) v += e.value; }); }); return v; };
 const sgMul = (n, v) => { const x = n * (1 + v), f = Math.floor(x); return f + (Math.random() < x - f ? 1 : 0); };
-const sgHours = ms => { const h = ms / 3600e3; return h >= 1 ? `${Math.round(h * 10) / 10 % 1 ? Math.round(h * 10) / 10 : Math.round(h)}시간` : `${Math.round(ms / 6e4)}분`; };
+const sgHours = ms => { const h = ms / 3600e3; return h >= 1 ? `${Math.round(h * 10) / 10} 시간` : `${Math.round(ms / 6e4)} 분`; };
 // ---- 장면 모양 만들기: 실제 진행(sgCtl)과 관리자 미리 보기(sgPrev)가 같은 길로 그려요 ----
 function sgSrc(){
   if (sgPrev){ const t = (Date.now() - sgPrev.t0) / 1000, C = sgConst(sgPrev.c), N = sgPrev.n, order = C.order.length, tl = 4, ta = 3, tp = .7, tL = N * tp + 2.5, tS = order * SG_LINE / 1000 + 3.5, step = 3.5;
@@ -7077,7 +7080,8 @@ function sgLoop(){
 const sgHzI = {}; function sgHz(W){ const k = W < 700 ? 390 : 720; if (!sgHzI[k]){ const i = new Image(); i.src = `art/stargaze_horizon_${k}.png`; sgHzI[k] = i; } return sgHzI[k]; }
 function sgUi(M){
   const v = $('#sgv'); if (!v) return; M = M || sgModel(); if (!M) return; const tx = sgText(M);
-  if ($('#sgtx').textContent !== tx) $('#sgtx').textContent = tx;
+  const fx = tx.startsWith('§'), say = $('#sgsay'); say.classList.toggle('fx', fx); if (say.dataset.fx !== (fx ? '1' : '')){ say.dataset.fx = fx ? '1' : ''; say.querySelector('b').textContent = fx ? '별빛 효과' : '스텔라'; }
+  if ($('#sgtx').textContent !== tx.replace('§', '')) $('#sgtx').textContent = tx.replace('§', '');
   const cn = M.ph === 'light' ? `켜진 별 ${M.count} / 12` : M.ph === 'gather' ? `모인 학생 ${Object.keys(M.src.join).length}명` : '';
   if ($('#sgcnt').textContent !== cn) $('#sgcnt').textContent = cn;
   const sig = [M.ph, M.mine.filter(k => !M.src.lit[k]).join(), innerWidth, innerHeight].join('|');   // 내 별 버튼은 바뀔 때만 다시 만들어요 (누르는 도중에 사라지지 않게)
