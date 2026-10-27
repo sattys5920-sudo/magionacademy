@@ -122,7 +122,7 @@ npc_id: nabi, batri, kappa, aula, mandi, jipsin, sera, madeleine, stella, leo
 | `grandson` | 손자 |  |
 | `mentor` | 늙은 제빵사 | 마들렌의 스승 (회상) |
 | `stella_sib` | {stella.name}의 동생 |  |
-| `kongal` | 콩알 | 레오의 아기 용 |
+| `kongal` | 베니 | 레오의 아기 용 |
 | `baby_goat` | 아기 염소 |  |
 | `crow` | 까마귀 |  |
 | `baby_crow` | 아기 까마귀 |  |
