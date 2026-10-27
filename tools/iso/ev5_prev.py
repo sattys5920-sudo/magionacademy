@@ -43,12 +43,30 @@ def stage(k):
         ell(P, W_, H_, cx, cy, rx, ry, base, shade=.55, rib=None if green else (-int(rx * .5), 0, int(rx * .5)), hi=[(cx - rx // 2 - 1 + i, cy - ry // 2 + j) for i in range(2) for j in range(2)] if not green else None)
         for i in range(-rx // 3, rx // 3 + 1): P[(cx + i, cy - ry + 1)] = ORAL if not green else c('#B8D868')            # 꼭지 둘레 밝은 면
         rect(cx - 1, cy - ry - 3, cx + 1, cy - ry, STEM); P[(cx - 2, cy - ry - 3)] = OUTL; P[(cx + 2, cy - ry - 3)] = OUTL
-        if face:
-            ex = max(4, rx // 3)
-            for sgn in (-1, 1):
-                x0 = cx + sgn * ex
-                for r_, wd in enumerate((1, 3, 5, 7)): rect(x0 - wd // 2, cy - 7 + r_ * 2 - 1, x0 + wd // 2, cy - 7 + r_ * 2, YEL)
-            rect(cx - rx // 2, cy + 5, cx + rx // 2, cy + 7, YEL2); rect(cx - 1, cy - 1, cx + 1, cy + 1, ORAL)
+        if face:                                                              # 잭 호박 얼굴: 파낸 구멍(어두운 테두리)에 노란 불빛이 차 있어요
+            fy = cy - 3
+            RIM, CORE = c('#7A3608'), c('#FFF4B8')
+            def hole(cells, col=YEL, core=()):
+                cs = set(cells)
+                for (x, y) in cs:
+                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        if (x + dx, y + dy) not in cs and (x + dx, y + dy) not in P.get('holes', ()): P[(x + dx, y + dy)] = RIM
+                for p in cs: P[p] = col
+                for p in core: P[p] = CORE
+            ex, ey = cx - 0, fy - 6
+            for sgn in (-1, 1):                                               # 눈: 위로 뾰족한 삼각형 + 한가운데 밝은 심
+                x0 = cx + sgn * 8; cells = [(x0 + dx, ey + r_) for r_, hw in enumerate((0, 1, 2, 3, 4)) for dx in range(-hw, hw + 1)]
+                hole(cells, YEL, [(x0, ey + 3), (x0 - 1, ey + 3), (x0 + 1, ey + 3), (x0, ey + 2)])
+            hole([(cx + dx, fy + 1 + r_) for r_, hw in enumerate((0, 1)) for dx in range(-hw, hw + 1)], YEL2)    # 코: 작은 삼각형
+            mouth = []
+            for dx in range(-12, 13):                                         # 입: 활짝 웃는 곡선(가운데가 아래로, 양끝이 위로)
+                yy = fy + 6 + int(5 * (1 - (dx / 12.5) ** 2) + .5)
+                for t_ in range(3): mouth.append((cx + dx, yy + t_))
+            hole(mouth, YEL2)
+            for x_ in (cx - 6, cx - 5, cx + 5, cx + 6):                       # 이빨 두 개: 입 위쪽에 주황 칸을 남겨요
+                top = min(q[1] for q in mouth if q[0] == x_)
+                for t_ in range(2): P[(x_, top + t_)] = ORA
+                P[(x_, top + 2)] = ORA if t_ else P[(x_, top + 2)]
     if k == 0: soil(11, 10); rect(9, 1, 12, 4, c('#D8B070')); [P.__setitem__(p, OUTL) for p in ((8, 2), (8, 3), (13, 2), (13, 3), (9, 0), (10, 0), (11, 0), (12, 0), (9, 5), (10, 5), (11, 5), (12, 5))]
     elif k == 1: soil(7, 6); rect(7, 5, 7, 11, GRN); rect(6, 5, 6, 11, GRNL); leaf(3, 6, 3, 2); leaf(11, 4, 3.5, 2)
     elif k == 2: soil(15, 13); vine([(1, H_ - 7), (7, H_ - 10), (16, H_ - 9), (28, H_ - 12)]); leaf(5, H_ - 11, 4, 2.3); leaf(26, H_ - 14, 4, 2.3); pump(15, H_ - 8, 6, 5, green=True)
