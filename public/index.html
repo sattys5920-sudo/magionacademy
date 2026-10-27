@@ -3170,7 +3170,7 @@ function showAdmin(){
   if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
   adminRender();
 }
-const adminTyping = () => { const a = document.activeElement; return a && $('#adminv')?.contains(a) && (a.matches('select') || ((AD.tab === 'npc' || AD.tab === 'gift') && a.matches('input,textarea'))); };   // 편집 중에는 새로 그리지 않아요
+const adminTyping = () => { const a = document.activeElement; return (AD.tab === 'npc' || AD.tab === 'gift') && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
 function adminChat(){   // 최근 14일 대화를 한 줄로 이어 봐요
   if (!F || !db) return; AD.chatOff?.(); const by = {}, offs = [];
   const merge = () => { AD.chat = {}; Object.entries(by).forEach(([d, v]) => Object.entries(v).forEach(([k, c]) => { AD.chat[d + '/' + k] = c; })); if (AD.tab === 'chat') adminRender(); };
@@ -3206,7 +3206,7 @@ function adminRender(){
       <div class="adsum">${Object.entries(XJ).map(([k, j]) => { const n = ids.filter(id => P[id].ex?.job === k).length; return `<span>${j.n} <b>${n}</b></span>`; }).join('')}<span>미선택 <b>${ids.filter(id => !XJ[P[id].ex?.job]).length}</b></span></div>
       <div class="adtbl"><div class="h"><span>학생</span><span>기숙사</span><span>직업</span><span>골드</span><span>마력</span><span>지식</span><span>날</span><span>물고기</span><span>채집</span><span>낚싯대</span><span>옷</span><span>생물</span><span>상태</span><span>관리</span></div>
       ${ids.sort((a, b) => (P[b].coin || 0) - (P[a].coin || 0)).map(id => { const p = P[id], d = p.fdex || {};
-        return `<div><span><b>${esc(p.nick)}</b></span><span><select data-adhouse="${id}" style="color:${HOUSES[p.house]?.col || '#888'};font-weight:700;max-width:100%">${HOUSE_KEYS.map(k => `<option value="${k}" ${p.house === k ? 'selected' : ''}>${HOUSES[k].name} (${ids.filter(i => P[i].house === k).length}/${HOUSE_CAP})</option>`).join('')}${p.house ? '' : '<option value="" selected>-</option>'}</select></span><span>${XJ[p.ex?.job]?.n || '-'}</span><span>${(p.coin || 0).toLocaleString()}</span><span>${p.mana || 0}</span><span>${p.know || 0}</span><span>${p.day || 1}</span>
+        return `<div><span><b>${esc(p.nick)}</b></span><span><button class="btn sm" data-adhouse="${id}" style="color:${HOUSES[p.house]?.col || '#888'};font-weight:700">${HOUSES[p.house]?.name || '정하기'} ▾</button></span><span>${XJ[p.ex?.job]?.n || '-'}</span><span>${(p.coin || 0).toLocaleString()}</span><span>${p.mana || 0}</span><span>${p.know || 0}</span><span>${p.day || 1}</span>
           <span>${FISH.filter(f => d[f.id]).length}/${FISH.length}</span><span>${FORAGE.filter(f => d[f.id]).length}/50</span><span>${RODS[p.rod || 0]?.name.split(' ')[0] || '-'}</span><span>${Object.keys(p.closet || {}).length}</span><span>${(p.cr || []).length}</span>
           <span>${O[id] ? `${adPlace(O[id].m)}` : p.rest ? '쉬는 중' : '외출'}</span><span><button class="btn sm" data-adreset="${id}">진행 리셋</button> <button class="btn sm" data-addel="${id}">가입 삭제</button></span></div>`; }).join('')}</div>`;
   }
@@ -3268,13 +3268,20 @@ function adminRender(){
   const ar = $('#adresetall'); if (ar) ar.onclick = adResetAll;
   root.querySelectorAll('[data-adreset]').forEach(b => b.onclick = () => adWipe(b.dataset.adreset, false));
   root.querySelectorAll('[data-addel]').forEach(b => b.onclick = () => adWipe(b.dataset.addel, true));
-  root.querySelectorAll('[data-adhouse]').forEach(sel => sel.onchange = async () => {   // 기숙사 옮기기: 정원 3명을 넘으면 막고, 접속 중이면 새로 불러오게 해요
-    const id = sel.dataset.adhouse, p = AD.players[id] || {}, h = sel.value, old = p.house; sel.blur(); if (!h || h === old) return adminRender();
-    const n = Object.keys(AD.players).filter(i => i !== id && AD.players[i]?.house === h).length;
-    if (n >= HOUSE_CAP){ alert(`${HOUSES[h].name}은(는) 이미 ${HOUSE_CAP}명이라 옮길 수 없어요.`); return adminRender(); }
-    if (!confirm(`${p.nick || id.slice(0, 6)}을(를) ${old ? HOUSES[old]?.name + ' → ' : ''}${HOUSES[h].name}(으)로 옮길까요? 접속 중이면 화면이 새로 불러와져요.`)) return adminRender();
-    const ups = { ['players/' + id + '/house']: h, ['hmem/' + h + '/' + id]: 1, ['adm/reset/' + id]: Date.now() }; if (old) ups['hmem/' + old + '/' + id] = null;
-    try { await F.update(F.ref(db, '/'), ups); toast('기숙사를 옮겼어요'); } catch(e){ alert('실패했어요: ' + (e.code || e.message)); }
+  root.querySelectorAll('[data-adhouse]').forEach(btn => btn.onclick = () => {   // 기숙사 옮기기: 창에서 고르면 옮겨요 (정원 3명을 넘으면 막고, 접속 중이면 새로 불러와요)
+    const id = btn.dataset.adhouse, p = AD.players[id] || {}, old = p.house, cnt = k => Object.keys(AD.players).filter(i => i !== id && AD.players[i]?.house === k).length;
+    document.querySelector('#adhmodal')?.remove();
+    const d = document.createElement('div'); d.id = 'adhmodal'; d.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(20,14,30,.7);display:flex;align-items:center;justify-content:center;padding:16px';
+    d.innerHTML = `<div class="card px" style="max-width:340px"><span class="b" style="font-size:16px">${esc(p.nick || id.slice(0, 6))}의 기숙사</span><span class="s">현재: ${old ? HOUSES[old]?.name : '없음'}</span>
+      ${HOUSE_KEYS.map(k => { const n = cnt(k), full = n >= HOUSE_CAP && k !== old; return `<button class="btn" data-pick="${k}" ${full ? 'disabled' : ''} style="text-align:left;color:${HOUSES[k].col}">${HOUSES[k].name} · ${n}/${HOUSE_CAP}${k === old ? ' (지금)' : ''}${full ? ' · 마감' : ''}</button>`; }).join('')}
+      <button class="btn" data-pick="">닫기</button></div>`;
+    document.body.appendChild(d);
+    d.onclick = async e => {
+      const t = e.target.closest('[data-pick]'); if (!t && e.target !== d) return; const h = t ? t.dataset.pick : ''; d.remove(); if (!h || h === old) return;
+      if (!confirm(`${p.nick || id.slice(0, 6)}을(를) ${old ? HOUSES[old]?.name + ' → ' : ''}${HOUSES[h].name}(으)로 옮길까요? 접속 중이면 화면이 새로 불러와져요.`)) return;
+      const ups = { ['players/' + id + '/house']: h, ['hmem/' + h + '/' + id]: 1, ['adm/reset/' + id]: Date.now() }; if (old) ups['hmem/' + old + '/' + id] = null;
+      try { await F.update(F.ref(db, '/'), ups); toast('기숙사를 옮겼어요'); } catch(ex){ alert('실패했어요: ' + (ex.code || ex.message)); }
+    };
   });
   root.querySelectorAll('[data-adsc]').forEach(b => b.onclick = () => { if (b.dataset.adsc === 'start'){ if (confirm('입학을 시작할까요? 기다리던 학생이 모두 들어와요.')) F.set(F.ref(db, 'school/ctl'), { open: true, at: Date.now() }); } else if (confirm('입학 대기를 켤까요? 지금부터 캐릭터를 만드는 학생은 시작 전까지 기다려요.')) F.set(F.ref(db, 'school/ctl'), { open: false, at: Date.now() }); });
   root.querySelectorAll('[data-adok]').forEach(b => b.onclick = () => { F.set(F.ref(db, 'approved/' + b.dataset.adok), true).then(() => F.remove(F.ref(db, 'pending/' + b.dataset.adok))); });
