@@ -2457,7 +2457,7 @@ function xAnimAtk(u, k, list){   // 무기 모션 + 날아가는 것. 닿는 데
   list.forEach((t, i) => B.proj.push({ k: pk, from: u.id, to: t.id, t0: now + rel + i * 70, dur: pd, c: col, bomb: k === 'boom' || (jb && u.job === 'gadget') }));
   return rel + pd;
 }
-function xFxAt(k, list, u){ xcoEvPush({ k: 'fx', f: k, tg: list.map(t => t.id), u: u ? u.id : null, dl: xDelay }); const now = performance.now(), dl = u ? (xDelay = xAnimAtk(u, k, list)) : xDelay; list.forEach((t, i) => xb.fxs.push({ k, id: t.id, t0: now + dl + i * 90, dur: k === 'bolt' ? 520 : k === 'slash' || k === 'impact' ? 380 : k.indexOf(':b') > 0 ? 1150 : 760, seed: Math.random() * 100 })); if (u && k.indexOf(':b') > 0 && !/h$/.test(k)) xb.shake = { t0: now + dl + 60, dur: 260, amp: 2 }; }
+function xFxAt(k, list, u){ const sk = k.startsWith('sk:'); xcoEvPush({ k: 'fx', f: k, tg: list.map(t => t.id), u: u ? u.id : null, dl: xDelay }); const now = performance.now(), dl = u ? (xDelay = xAnimAtk(u, k, list)) : xDelay; if (sk && list.length > 1 && u) list = [u]; list.forEach((t, i) => xb.fxs.push({ k, id: t.id, t0: now + dl + i * 90, dur: sk ? XFXJOB.dur(k) : k === 'bolt' ? 520 : k === 'slash' || k === 'impact' ? 380 : k.indexOf(':b') > 0 ? 1150 : 760, seed: Math.random() * 100 })); if (u && ((k.indexOf(':b') > 0 && !/h$/.test(k)) || (sk && XFXJOB.grand(k)))) xb.shake = { t0: now + dl + 60, dur: sk ? 900 : 260, amp: sk ? 3 : 2 }; }
 // 스킬 쿨타임: 쓴 스킬은 내 다음 행동 n번 동안 못 써요 (MP가 클수록 길어요). 전투가 끝나면 사라져요
 const xCdOf = sk => { const m = sk ? (sk.mp0 ?? sk.mp ?? 0) : 0; return m >= 18 ? 4 : m >= 14 ? 3 : m >= 8 ? 2 : m >= 4 ? 1 : 0; }, xCdLeft = (u, sk) => sk && u.cdn && u.cdn[sk.n] > 0 ? u.cdn[sk.n] : 0;
 function xCdTick(u, sk){ if (u.team !== 'a') return; const c = u.cdn || (u.cdn = {}); Object.keys(c).forEach(k => { if (c[k] > 0) c[k]--; if (c[k] <= 0) delete c[k]; }); const n = xCdOf(sk); if (n) c[sk.n] = n; }
@@ -2496,12 +2496,12 @@ function xAct0(u, sk, tgt){   // 한 번 행동
   else if (sk.t === 'deb') fs().forEach(t => { t.fx[sk.key] = { v: sk.v, t: sk.sec }; xFloat(t.id, { slow: '느려짐', weak: '약해짐', vuln: '약점', blind: '실명' }[sk.key] || sk.key, '#d0a0ff'); });
   else if (sk.t === 'dot') fs().forEach(t => { t.fx.dot = { v: Math.round(u[sk.st] * sk.p * mult), t: 8, acc: 0 }; xFloat(t.id, '지속 피해', '#ff9a4d'); });
   else if (sk.t === 'stun') fs().forEach(t => { xHit(u, t, u[sk.st] * sk.p * (.85 + Math.random() * .3) * mult, '#ffd866'); t.g = Math.min(t.g, -60); });
-  else if (sk.t === 'summon'){ xFxAt('buff', [u], u); u.pets = u.pets || []; if (u.pets.length >= 3) u.pets.shift(); const lv = sk.lv || 1, mh = Math.round((u.mhp * .3 + 16) * (1 + .25 * (lv - 1)) * (sk.pet.hpm || 1)); u.pets.push({ ...sk.pet, st: sk.st, t: sk.pet.sec * (1 + .1 * (lv - 1)), acc: 0, lv, hp: mh, mhp: mh }); }
-  else if (sk.t === 'recall'){ const n = (u.pets || []).length; u.pets = []; const t = xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]; if (n && t){ const h = Math.round(t.mhp * .12 * n); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); } else B.log = '돌려보낼 소환수가 없어요'; }
+  else if (sk.t === 'summon'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'buff', [u], u); u.pets = u.pets || []; if (u.pets.length >= 3) u.pets.shift(); const lv = sk.lv || 1, mh = Math.round((u.mhp * .3 + 16) * (1 + .25 * (lv - 1)) * (sk.pet.hpm || 1)); u.pets.push({ ...sk.pet, st: sk.st, t: sk.pet.sec * (1 + .1 * (lv - 1)), acc: 0, lv, hp: mh, mhp: mh }); }
+  else if (sk.t === 'recall'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'heal', [u], u); const n = (u.pets || []).length; u.pets = []; const t = xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]; if (n && t){ const h = Math.round(t.mhp * .12 * n); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); } else B.log = '돌려보낼 소환수가 없어요'; }
   else if (sk.t === 'leap'){ xFxAt('time', [u], u); xFloat(u.id, '가속!', '#9ad8ff'); }
   else if (sk.t === 'tstop'){ xFxAt('time', xAlive(B.foes), u); xAlive(B.party).forEach(a => { a.g = 100; xFloat(a.id, '행동!', '#9ad8ff'); }); xAlive(B.foes).forEach(f => { f.g = Math.min(f.g, -150); xFloat(f.id, '정지', '#d0a0ff'); }); }
   else if (sk.t === 'encore'){ const last = u.lastSk; if (last && last.t !== 'encore'){ B.log = `앙코르! ${last.n}`; u.mp += sk.mp; xAct0(u, { ...last, mp: 0 }, tgt); return; } else { u.mp += sk.mp; B.log = '다시 쓸 스킬이 없어요'; } }
-  else if (sk.t === 'mp'){ xFxAt('buff', xAlive(B.party), u); B.party.forEach(t => { if (t.hp > 0){ t.mp = Math.min(t.mmp, t.mp + t.mmp * sk.v); xFloat(t.id, 'MP↑', '#6aa8ff'); } }); }
+  else if (sk.t === 'mp'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'buff', xAlive(B.party), u); B.party.forEach(t => { if (t.hp > 0){ t.mp = Math.min(t.mmp, t.mp + t.mmp * sk.v); xFloat(t.id, 'MP↑', '#6aa8ff'); } }); }
   u.g = sk.w ?? 0;
 }
 function xAI(u){   // 동료 자동 행동 (쿨타임 중인 스킬은 안 써요)
@@ -2516,7 +2516,7 @@ function xAI(u){   // 동료 자동 행동 (쿨타임 중인 스킬은 안 써�
 }
 // ── 전투 화면: 도트 캔버스 (왼쪽 몬스터 · 오른쪽 파티) ──
 const XCW = 384, XCH = 216, XGLY = { sword: 'slash', axe: 'slash', dagger: 'slash', fist: 'slash', claw: 'slash', hammer: 'slash', spear: 'slash', arrow: 'slash', cross2: 'slash', paw: 'slash', fire: 'fire', fireball: 'fire', ember: 'fire', ice: 'ice', bolt: 'bolt', chain: 'bolt', star: 'holy', sun: 'holy', crown: 'holy', bell: 'holy', flag: 'holy', orb: 'dark', moon: 'dark', eye: 'dark', skull: 'dark', ghost: 'dark', drop: 'poison', bubble: 'poison', flask: 'poison', tube: 'poison', leaf: 'leaf', tree: 'leaf', flower: 'leaf', burst: 'boom', bomb: 'boom', mine: 'boom', rocket: 'boom', rock: 'boom', gear: 'boom', swirl: 'wind', cloud: 'wind', wave: 'wind', wing: 'wind', note: 'note', note1: 'note', trumpet: 'note', drum: 'note', harp: 'note', heart: 'heal', cross: 'heal', shield: 'buff', tower: 'buff', up: 'buff', clock: 'time', hourglass: 'time' };
-const xFxKind = (sk, u) => { const j = sk && u && window.XFXJOB && XFXJOB.kind(u.job, sk); return j || xFxKind0(sk); };
+const xFxKind = (sk, u) => { const j = sk && u && window.XFXJOB && (XFXJOB.skKey(u.job, sk) || XFXJOB.kind(u.job, sk)); return j || xFxKind0(sk); };
 const xFxKind0 = sk => !sk ? 'slash' : sk.t === 'heal' || sk.t === 'revive' ? 'heal' : sk.t === 'buff' || sk.t === 'mp' ? 'buff' : sk.t === 'deb' ? 'debuff' : XGLY[sk.g] || 'boom';
 const XFS = [[[110, 152]], [[130, 134], [96, 178]], [[138, 134], [100, 160], [138, 192]], [[142, 124], [104, 146], [142, 168], [104, 192]], [[146, 118], [108, 138], [146, 158], [108, 178], [146, 198]], [[148, 116], [110, 132], [148, 150], [110, 168], [148, 186], [110, 204]]],
   XFE = [[84, 128], [120, 118], [84, 168], [120, 152]],   // 정예 곁에 서는 졸개 자리
@@ -2565,6 +2565,7 @@ function xLayout(B){
   [...B.foes, ...B.party].forEach(u => { u.bx = XCW - u.bx; u.sx = u.bx; u.sy = u.by; });   // 아군은 왼쪽, 적은 오른쪽 (행군하는 쪽과 같아요)
 }
 function xFxDraw(g, f, x, y, now){
+  if (f.k.startsWith('sk:')) return XFXJOB.drawSk(g, f, x, y, now);
   if (f.k.indexOf(':') > 0) return XFXJOB.draw(g, f, x, y, now);
   const p = (now - f.t0) / f.dur; if (p < 0) return true; if (p >= 1) return false;
   const R = (a, b, w, h, c, al) => { g.globalAlpha = al ?? 1; g.fillStyle = c; g.fillRect(Math.round(a), Math.round(b), w, h); g.globalAlpha = 1; };
@@ -2787,7 +2788,7 @@ const XPETFX = { fire: 'fire', water: 'ice', wind: 'wind', earth: 'boom', king: 
 function xBomb(t, b){ if (t.hp <= 0) return; xFxAt('boom', [t]); xHit({ team: 'a', crit: 0, vamp: 0 }, t, b.v, '#ffb040'); }
 function xPets(u, dt){   // 소환수·포탑이 알아서 움직여요
   if (u.team !== 'a' || !u.pets || !u.pets.length) return; const B = xb, pf = { team: 'a', crit: 0, vamp: 0 };
-  u.pets = u.pets.filter(p => { p.t -= dt; p.acc += dt; if (p.acc >= p.every){ p.acc -= p.every; p.lg = performance.now(); const foes = xAlive(B.foes), fxk = XPETFX[p.el] || 'impact', raw = (u[p.st] || u.mag) * p.k * (.9 + Math.random() * .2);
+  u.pets = u.pets.filter(p => { p.t -= dt; p.acc += dt; if (p.acc >= p.every){ p.acc -= p.every; p.lg = performance.now(); const foes = xAlive(B.foes), fxk = XFXJOB.SK['pet.' + p.el] ? 'sk:pet.' + p.el : XPETFX[p.el] || 'impact', raw = (u[p.st] || u.mag) * p.k * (.9 + Math.random() * .2);
       if ((p.kind === 'dmg' || p.kind === 'dmgcover') && foes.length){ const t = xRand(foes); xFxAt(fxk, [t]); xHit(pf, t, raw, '#ffd866'); if (p.kind === 'dmgcover') u.fx.taunt = { v: 1, t: p.every + .5 }; }
       else if (p.kind === 'dmgall' && foes.length){ xFxAt(fxk, foes); foes.forEach(t => xHit(pf, t, raw * .8, '#ffd866')); }
       else if (p.kind === 'heal'){ const t = xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]; if (t){ const h = Math.round(u.heal * p.k + 2); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); } }
