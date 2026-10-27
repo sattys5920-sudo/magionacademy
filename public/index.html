@@ -3975,7 +3975,14 @@ const BGM = (() => {
   // 아이폰은 audio.volume을 못 바꿔서(항상 최대) 페이드가 안 먹어요 → 웹 오디오(GainNode)로 소리를 조절해요. 안 되는 기기는 volume으로 대신해요.
   let ctx = null;
   const ensureCtx = () => { if (!ctx){ try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} } if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {}); return ctx; };
-  const mk = src => { const au = new Audio(src); au.loop = true; au.preload = 'auto'; au.crossOrigin = 'anonymous'; const o = { au, gn: null, v: 0, t: 0, trim: BGM_TRIM[String(src).split('/').pop()] || 1 }; const c = ensureCtx(); if (c){ try { const sr = c.createMediaElementSource(au), g = c.createGain(); g.gain.value = 0; sr.connect(g); g.connect(c.destination); o.gn = g; } catch(e){} } return o; };
+  // 아이폰은 「사용자가 누른 순간」에 한 번 틀어 본 소리 칸만 나중에도 마음대로 틀 수 있어요 → 처음 누를 때 칸 세 개를 미리 열어 두고, 곡이 바뀔 때마다 그 칸의 곡만 바꿔 끼워요
+  const POOL = [], SIL = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+  const mkSlot = () => { const au = new Audio(); au.loop = true; au.preload = 'auto'; au.crossOrigin = 'anonymous'; const sl = { au, gn: null, busy: false }; const c = ensureCtx(); if (c){ try { const sr = c.createMediaElementSource(au), g = c.createGain(); g.gain.value = 0; sr.connect(g); g.connect(c.destination); sl.gn = g; } catch(e){} } POOL.push(sl); return sl; };
+  const takeSlot = () => { let sl = POOL.find(x => !x.busy); if (!sl) sl = mkSlot(); sl.busy = true; return sl; };
+  const freeO = o => { if (o && o.slot){ try { o.au.pause(); } catch(e){} o.slot.busy = false; o.slot = null; } };
+  let primed = false;
+  const prime = () => { if (primed) return; primed = true; for (let i = 0; i < 3; i++){ const sl = POOL[i] || mkSlot(); try { const was = sl.au.src; sl.au.src = SIL; const pr = sl.au.play(); if (pr && pr.then) pr.then(() => { if (!sl.busy) sl.au.pause(); }).catch(() => {}); } catch(e){} } };
+  const mk = src => { const sl = takeSlot(), au = sl.au; au.src = src; const o = { au, gn: sl.gn, slot: sl, v: 0, t: 0, trim: BGM_TRIM[String(src).split('/').pop()] || 1 }; return o; };
   const curve = v => Math.sin(Math.max(0, Math.min(1, v)) * Math.PI / 2);   // 서로 바뀔 때 합친 소리 크기가 일정하게 (등전력 페이드)
   let level = 1, wanted = false, raf = 0, last = 0;
   const gain = o => Math.max(0, Math.min(1, level * .6 * (o.trim || 1) * curve(o.v)));   // 기본 곡은 효과음·대사를 가리지 않게 조금 작게
@@ -3987,7 +3994,7 @@ const BGM = (() => {
   const loop = t => {
     const dt = last ? Math.min(100, t - last) : 16; last = t; let busy = false;
     [main, ...Object.values(TR)].forEach(o => { if (!o.au) return; o.v += Math.sign(o.t - o.v) * Math.min(Math.abs(o.t - o.v), dt / FADE); put(o); if (o.v !== o.t) busy = true; else if (o.v === 0) o.au.pause(); });
-    Object.keys(TR).forEach(k => { const o = TR[k]; if (o.v === 0 && o.t === 0 && k !== cur){ o.au.pause(); delete TR[k]; } });
+    Object.keys(TR).forEach(k => { const o = TR[k]; if (o.v === 0 && o.t === 0 && k !== cur){ freeO(o); delete TR[k]; } });
     if (!busy){ raf = 0; last = 0; return; } raf = requestAnimationFrame(loop);
   };
   const go = () => { if (!raf) raf = requestAnimationFrame(loop); };
@@ -3998,7 +4005,7 @@ const BGM = (() => {
   // 아이폰은 「누르는 순간(pointerdown)」을 허락으로 안 쳐서 「손을 뗄 때(touchend·click)」에도 시도해요. 소리가 실제로 난 뒤에야 그만 기다려요.
   const UNL = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'];
   const unlock = () => { try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}   // 아이폰: 무음 스위치가 켜져 있어도 음악이 나오게
-    wanted = true; mount(); if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+    wanted = true; ensureCtx(); prime(); mount(); if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
     Promise.resolve(play()).then(ok => { if (ok || holds.size || !level) UNL.forEach(t => removeEventListener(t, unlock, true)); }); };
   UNL.forEach(t => addEventListener(t, unlock, true));
   document.addEventListener('visibilitychange', () => { if (!main.au) return; if (document.hidden){ main.au.pause(); Object.values(TR).forEach(o => o.au.pause()); } else { play(); Object.values(TR).forEach(o => { if (o.t === 1) playO(o); }); } });
