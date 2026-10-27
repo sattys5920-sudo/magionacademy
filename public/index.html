@@ -3963,7 +3963,8 @@ const BGM = (() => {
   const play = () => { if (!wanted || !main.au || holds.size || !level) return; main.t = 1; playO(main); go(); };
   const mount = () => { if (main.au) return; Object.assign(main, mk(SRC), { v: 1, t: 1 }); put(main); };
   // 브라우저는 소리를 사용자가 한 번 누른 뒤에야 허용해요
-  const unlock = () => { wanted = true; mount(); play(); removeEventListener('pointerdown', unlock); removeEventListener('keydown', unlock); };
+  const unlock = () => { try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}   // 아이폰: 무음 스위치가 켜져 있어도 음악이 나오게
+    wanted = true; mount(); play(); removeEventListener('pointerdown', unlock); removeEventListener('keydown', unlock); };
   addEventListener('pointerdown', unlock); addEventListener('keydown', unlock);
   document.addEventListener('visibilitychange', () => { if (!main.au) return; if (document.hidden){ main.au.pause(); Object.values(TR).forEach(o => o.au.pause()); } else { play(); Object.values(TR).forEach(o => { if (o.t === 1) playO(o); }); } });
   return {
