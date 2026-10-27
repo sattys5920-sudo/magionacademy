@@ -1,5 +1,13 @@
 {
   "rules": {
+    "errs": {
+      ".read": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+      ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+      "$id": {
+        ".write": "auth != null && !data.exists() && newData.child('u').val() === auth.uid",
+        ".validate": "newData.hasChildren(['m', 'at', 'u']) && newData.child('m').isString() && newData.child('m').val().length <= 300 && newData.child('at').isNumber() && (!newData.child('s').exists() || (newData.child('s').isString() && newData.child('s').val().length <= 900))"
+      }
+    },
     "approved": {
       ".read": "auth != null",
       "$uid": {
