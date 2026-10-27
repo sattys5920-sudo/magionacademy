@@ -1157,12 +1157,18 @@ function saveNow(){
   if (solo) { try { localStorage.setItem('magion-solo', JSON.stringify(me)); } catch(e){} setSaveDot(''); return; }
   // 다른 기기·옛 화면이 열려 있으면 그쪽이 먼저 저장한 최신 진행을 옛 상태로 덮어쓸 수 있어요 → 저장할 때마다 번호(rv)를 올리고, 서버 번호가 내가 아는 것보다 크면 덮어쓰지 않고 최신으로 새로 불러와요
   me.rv = knownRv + 1;
-  F.runTransaction(F.ref(db, 'players/' + uid), cur => (cur && (cur.rv || 0) > knownRv) ? undefined : me).then(r => {
+  const body = fbClean(me);   // Firebase가 거절하는 값(undefined·NaN·이름에 . # $ / [ ])이 있으면 저장 전체가 실패해요 → 미리 정리해요
+  F.runTransaction(F.ref(db, 'players/' + uid), cur => (cur && (cur.rv || 0) > knownRv) ? undefined : body).then(r => {
     if (r.committed){ knownRv = me.rv; setSaveDot(''); return; }
     me.rv = knownRv; haltSave = true; toast('다른 기기에서 먼저 진행했어요. 최신 상태로 새로 불러와요'); setTimeout(() => location.reload(), 1800);
   }).catch(e => { me.rv = knownRv; setSaveDot('off'); toast('저장에 실패했어요: ' + (e.code || e.message)); });
 }
 let knownRv = 0;   // 마지막으로 내가 불러오거나 저장한 진행 번호
+let fbWarned = false;
+function fbClean(o){
+  const fix = v => { if (v === undefined || (typeof v === 'number' && !isFinite(v))) return null; if (Array.isArray(v)) return v.map(fix); if (v && typeof v === 'object'){ const r = {}; for (const k in v){ const x = fix(v[k]); if (x === null) continue; let nk = k; if (/[.#$\/\[\]]/.test(k) || !k){ nk = (k || '_').replace(/[.#$\/\[\]]/g, '_'); if (!fbWarned){ fbWarned = true; console.warn('저장 못 하는 이름을 바꿨어요:', k); } } r[nk] = x; } return r; } return v; };
+  return fix(o);
+}
 function save(){ if (!saveTimer) setSaveDot('busy'); clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 1500); if (typeof bagBadge === 'function' && !sheetOn) bagBadge(); }
 addEventListener('pagehide', () => { if (saveTimer) saveNow(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden && saveTimer) saveNow(); });
@@ -1811,11 +1817,12 @@ function xDesc(o, lv){
   return sc + mp;
 }
 const xSname = k => ({ atk: '공격', mag: '마법', heal: '치유' }[k]);
-function xSkEx(ex){ ex.sk = ex.sk || {}; if (ex.job && !ex.sk['0.0']) ex.sk['0.0'] = 1; return ex.sk; }
-const xSkLv = (sk, b, r) => sk[b + '.' + r] || 0, xSpent = sk => Object.values(sk).reduce((a, v) => a + v, 0) - 1;
+// 스킬 칸 이름은 「줄기_칸」(예: 0_0). Firebase는 이름에 점(.)을 못 써서, 예전 「0.0」은 저장이 통째로 실패했어요
+function xSkEx(ex){ ex.sk = ex.sk || {}; Object.keys(ex.sk).forEach(k => { if (k.includes('.')){ const n = k.replace('.', '_'); ex.sk[n] = Math.max(ex.sk[n] || 0, ex.sk[k]); delete ex.sk[k]; } }); if (ex.job && !ex.sk['0_0']) ex.sk['0_0'] = 1; return ex.sk; }
+const xSkLv = (sk, b, r) => sk[b + '_' + r] || 0, xSpent = sk => Object.values(sk).reduce((a, v) => a + v, 0) - 1;
 const xPts = ex => xSkp(xLv(ex.exp).L) + (ex.spx || 0) - xSpent(xSkEx(ex));
 function xAiSk(L){   // 동료는 줄을 가로로 훑으며 포인트를 쓰기
-  const sk = { '0.0': 1 }; let pts = xSkp(L); for (let lv = 1; lv <= XMAXLV && pts > 0; lv++) for (let r = 0; r < 5 && pts > 0; r++) for (let b = 0; b < 3 && pts > 0; b++){ const k = b + '.' + r; if ((sk[k] || 0) < lv){ if (r > 0 && !sk[b + '.' + (r - 1)]) continue; sk[k] = lv; pts--; } } return sk;
+  const sk = { '0_0': 1 }; let pts = xSkp(L); for (let lv = 1; lv <= XMAXLV && pts > 0; lv++) for (let r = 0; r < 5 && pts > 0; r++) for (let b = 0; b < 3 && pts > 0; b++){ const k = b + '_' + r; if ((sk[k] || 0) < lv){ if (r > 0 && !sk[b + '.' + (r - 1)]) continue; sk[k] = lv; pts--; } } return sk;
 }
 const XRG = [   // 탐사 지역: 입장료·시간·몬스터 레벨 범위 · 몬스터는 레벨 1 기준 체력·공격·속도 (lp = art/monsters_lpc.png 칸, tools/iso/lpc/monster_lpc.py)
   { n: '달빛 숲길', dir: '남', tier: '초보', ic: '', min: 20, fee: 50, need: 1, lv: [1, 12], clearExp: 200, kind: 'trees', pal: ['#1b1a3a', '#3a3a72', '#2c4a3a', '#35574a', '#16243a'], loot: ['herb', 'drop', 'mana', 'mush', 'g_dandel', 'g_mint', 'g_straw', 'g_carrot'], rare: ['mana', 'g_clover'],
@@ -1856,7 +1863,7 @@ const xAiSp = (job, L) => { const T = 3 * (L - 1); return { hp: Math.round(T * .
 const xStTot = (ex, k) => xSt(ex.job, xLv(ex.exp).L, k) + ((ex.sp || {})[k] || 0) * XSPV[k];
 const XWN = { warrior: '전투 도끼', black: '구부러진 지팡이', thief: '단검', bard: '레이피어', time: '고리 지팡이', alch: '연금 지팡이', white: '수정 지팡이', druid: '나무 지팡이', cleric: '철퇴와 방패', knight: '롱소드와 방패', summon: '다이아 지팡이', gadget: '석궁' }, XWT = ['기본', '청동', '강철', '황금', '미스릴'], XWC = [[150, 1], [500, 2], [1500, 4], [4000, 8]];   // 강화 비용: 골드 · 마나석
 const xRand = a => a[Math.floor(Math.random() * a.length)];
-function xEx(){ me.ex = me.ex || { exp: 0, d: '', n: 0 }; if (me.ex.d !== todayKey()){ me.ex.d = todayKey(); me.ex.n = 0; } return me.ex; }
+function xEx(){ me.ex = me.ex || { exp: 0, d: '', n: 0 }; if (me.ex.d !== todayKey()){ me.ex.d = todayKey(); me.ex.n = 0; } if (me.ex.sk) xSkEx(me.ex); return me.ex; }
 const xSt = (job, L, k) => Math.round(XJ[job][k][0] + XJ[job][k][1] * (L - 1));
 // 역할: 근접(체력 많고 MP는 적고 스킬은 MP를 많이 먹어요) · 원거리(체력 적고 MP 보통) · 치유(체력은 원거리보다 많고 MP가 가장 많아요). 탱커 기사가 체력 최고
 const XROLE = { warrior: 'melee', thief: 'melee', knight: 'melee', black: 'ranged', summon: 'ranged', gadget: 'ranged', alch: 'ranged', time: 'ranged', white: 'heal', druid: 'heal', cleric: 'heal', bard: 'heal' };
@@ -1864,7 +1871,7 @@ const XMPP = { melee: [20, 1.6], ranged: [30, 3], heal: [40, 4.4] }, XMPC = { me
 const xMmp = (job, L) => Math.round(XMPP[XROLE[job]][0] + XMPP[XROLE[job]][1] * L), xSkMp = (o, lv) => o.mp ? Math.round(o.mp * xMpK(lv) * XMPC[XROLE[o.job]]) : o.mp;
 const xMkUnit = (job, L, name, ai, hp, mp, sk) => { sk = sk || xAiSk(L); const u = { av: ai ? World.Avatar.fromLook(ORDER_J.indexOf(job) * 131 + 7) : me.av, sks: [], pas: {}, fx: {}, dr: 0, vamp: 0, crit: 0, id: name, job, name, ic: XJ[job].ic, L, ai, team: 'a', mhp: xSt(job, L, 'hp'), mmp: xMmp(job, L), atk: xSt(job, L, 'atk'), mag: xSt(job, L, 'mag'), heal: xSt(job, L, 'heal'), spd: xSt(job, L, 'spd'), g: Math.random() * 40 };
   { const sp = ai ? xAiSp(job, L) : (xEx().sp || {}); u.mhp += (sp.hp || 0) * XSPV.hp; u.atk += (sp.atk || 0) * XSPV.atk; u.mag += (sp.mag || 0) * XSPV.mag; u.heal += (sp.heal || 0) * XSPV.heal; u.spd += (sp.spd || 0) * XSPV.spd; u.mmp += (sp.mag || 0) * 1.5; ['mhp', 'mmp', 'atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k]); }); }   // 스탯 포인트
-  xAll(job).forEach(o => { const lv = sk[o.b + '.' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, mp0: o.mp, mp: xSkMp(o, lv), sv: o.sv == null ? o.sv : o.sv * xPw(o, lv), pet: o.pet ? { ...o.pet, k: o.pet.k * xPw(o, lv) } : o.pet, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv) }); });
+  xAll(job).forEach(o => { const lv = sk[o.b + '_' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, mp0: o.mp, mp: xSkMp(o, lv), sv: o.sv == null ? o.sv : o.sv * xPw(o, lv), pet: o.pet ? { ...o.pet, k: o.pet.k * xPw(o, lv) } : o.pet, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv) }); });
   const P = u.pas; ['hp', 'atk', 'mag', 'spd'].forEach(k => { if (P[k]) u[k === 'hp' ? 'mhp' : k] = Math.round(u[k === 'hp' ? 'mhp' : k] * (1 + P[k])); }); u.wp = ai ? Math.min(4, Math.floor((L - 1) / 12)) : (xEx().wp || 0); const wm = (1 + .08 * u.wp) * (!ai && dbuff('dfire') ? 1.05 : 1); ['atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k] * wm); });   // 무기 강화 한 단계마다 +8%
   u.dr = P.def || 0; u.vamp = P.vamp || 0; u.crit = P.crit || 0; u.dodge = P.dodge || 0; u.survLeft = P.surv ? 1 : 0; u.pets = [];
   u.hp = hp ?? u.mhp; u.mp = mp ?? u.mmp; return u; };
@@ -1965,7 +1972,7 @@ function renderExplore(){
     xpWire();
     $('#back').onclick = closeSheet;
     $('#xst').onclick = () => { xv = { view: 'stats', sel: XMAIN[ex.job] }; renderExplore(); };
-    $('#xtree').onclick = () => { xv = { view: 'tree', sel: '0.0' }; renderExplore(); };
+    $('#xtree').onclick = () => { xv = { view: 'tree', sel: '0_0' }; renderExplore(); };
     $('#xwp').onclick = () => { xv = { view: 'weapon' }; renderExplore(); };
     const go = $('#xgo'); if (go) go.onclick = () => { me.coin -= xReg().fee; ex.n++; ex.run = { rg: xRgSel, mod: xRand(XMODS), pool: xShuffle(xReg().mon).slice(0, 4), start: Date.now(), end: Date.now() + xReg().min * 6e4, prog: 0, loot: { gold: 0, exp: 0, items: {} }, buff: 0, p: null, node: null }; save(); hud(); xv = { view: 'march' }; xMsg = ''; xM = null; renderExplore(); };
     return;
@@ -1996,9 +2003,9 @@ function renderExplore(){
     $('#wok').onclick = () => { xv = { view: 'lobby' }; renderExplore(); }; return;
   }
   if (v === 'tree'){
-    const sk = xSkEx(ex), pts = xPts(ex), [sb, sr] = xv.sel.split('.').map(Number), so = xDef(ex.job, sb, sr), slv = xSkLv(sk, sb, sr), can = o => slv < XMAXLV && pts > 0 && (sr === 0 || xSkLv(sk, sb, sr - 1) > 0);
+    const sk = xSkEx(ex), pts = xPts(ex), [sb, sr] = xv.sel.split('_').map(Number), so = xDef(ex.job, sb, sr), slv = xSkLv(sk, sb, sr), can = o => slv < XMAXLV && pts > 0 && (sr === 0 || xSkLv(sk, sb, sr - 1) > 0);
     frame(null, '스킬 트리', `${job.n} · 남은 포인트 ${pts}`, `<style>.tcol{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}.tcol .th{font-size:12px;font-weight:700;color:var(--gold)}.tn{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;background:none;border:2px solid transparent;border-radius:10px;color:inherit;font:inherit}.tn .sic{width:44px;height:44px}.tn small{font-size:10px;line-height:1.2;opacity:.85}.tn.lock{opacity:.4}.tn.ln::before{content:'';position:absolute;top:-8px;left:50%;width:2px;height:8px;background:#4a3c86}.tn.ln.lk::before{background:var(--gold)}.tcol{row-gap:10px}.tn.sel{border-color:var(--gold);background:rgba(255,184,77,.14)}.tn i{position:absolute;right:4px;top:2px;font-style:normal;font-size:11px;font-weight:900;background:#2b1b3a;border-radius:6px;padding:0 4px;color:#ffd866}</style>
-      <section class="sec"><div class="tcol">${[0, 1, 2].map(b => `<div class="th">${XT[ex.job][b][0]}</div>`).join('')}${[0, 1, 2, 3, 4].map(r => [0, 1, 2].map(b => { const o = xDef(ex.job, b, r), lv = xSkLv(sk, b, r), lock = r > 0 && !xSkLv(sk, b, r - 1); return `<button class="tn${lock ? ' lock' : ''}${r > 0 ? ' ln' : ''}${r > 0 && !lock ? ' lk' : ''}${xv.sel === b + '.' + r ? ' sel' : ''}" data-ts="${b}.${r}">${xIc(o)}<small>${o.n}</small><i>${lv}/${XMAXLV}</i></button>`; }).join('')).join('')}</div></section>
+      <section class="sec"><div class="tcol">${[0, 1, 2].map(b => `<div class="th">${XT[ex.job][b][0]}</div>`).join('')}${[0, 1, 2, 3, 4].map(r => [0, 1, 2].map(b => { const o = xDef(ex.job, b, r), lv = xSkLv(sk, b, r), lock = r > 0 && !xSkLv(sk, b, r - 1); return `<button class="tn${lock ? ' lock' : ''}${r > 0 ? ' ln' : ''}${r > 0 && !lock ? ' lk' : ''}${xv.sel === b + '_' + r ? ' sel' : ''}" data-ts="${b}_${r}">${xIc(o)}<small>${o.n}</small><i>${lv}/${XMAXLV}</i></button>`; }).join('')).join('')}</div></section>
       <section class="sec"><div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center">${xIc(so)}<div style="flex:1"><b>${so.n}</b> <span class="s sub">${slv ? `Lv ${slv}` : '아직 안 배웠어요'}</span></div></div><div class="s" style="margin-top:6px">${xDesc(so, Math.max(1, slv))}</div>${slv && slv < XMAXLV ? `<div class="s sub">다음 레벨: ${xDesc(so, slv + 1)}</div>` : ''}<button class="btn go" id="tup" style="width:100%;margin-top:8px" ${can(so) ? '' : 'disabled'}>${slv >= XMAXLV ? '최대 레벨' : sr > 0 && !xSkLv(sk, sb, sr - 1) ? '앞 스킬을 먼저 배워요' : pts < 1 ? '포인트가 없어요' : slv ? '레벨 올리기 (포인트 1)' : '배우기 (포인트 1)'}</button></div></section>
       <div style="display:flex;gap:8px"><button class="btn ghost" id="trs" style="flex:1">초기화 (${XRESET}G)</button><button class="btn" id="tok" style="flex:1">돌아가기</button></div>`);
     on('[data-ts]', b => { xv.sel = b.dataset.ts; renderExplore(); });

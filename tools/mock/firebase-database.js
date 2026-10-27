@@ -12,10 +12,12 @@ export const getDatabase = () => ({});
 export const ref = (db, p) => ({ p });
 export const query = r => r; export const limitToLast = () => null;
 export const get = async r => snap(r.p);
-export const set = async (r, v) => { setAt(r.p, v); notify(r.p); };
-export const update = async (r, v) => { Object.entries(v).forEach(([k, x]) => setAt(r.p + '/' + k, x)); notify(r.p); };
+// 진짜 Firebase처럼 저장할 수 없는 값은 거절해요 (이름에 . # $ / [ ] · undefined · NaN)
+const fbCheck = (v, path) => { if (v === undefined) throw new Error('mock: undefined at ' + path); if (typeof v === 'number' && !isFinite(v)) throw new Error('mock: NaN at ' + path); if (v && typeof v === 'object') for (const k in v){ if (!k || /[.#$\/\[\]]/.test(k)) throw new Error('mock: invalid key (' + k + ') at ' + path); fbCheck(v[k], path + '/' + k); } };
+export const set = async (r, v) => { fbCheck(v, r.p); setAt(r.p, v); notify(r.p); };
+export const update = async (r, v) => { Object.entries(v).forEach(([k, x]) => fbCheck(x, r.p + '/' + k)); Object.entries(v).forEach(([k, x]) => setAt(r.p + '/' + k, x)); notify(r.p); };
 export const remove = async r => { setAt(r.p, null); notify(r.p); };
 let n = 0; export const push = async (r, v) => { const id = 'k' + (++n); setAt(r.p + '/' + id, v); notify(r.p); return { key: id }; };
 export const onValue = (r, cb) => { const l = { p: r.p, cb }; ls.push(l); setTimeout(() => cb(snap(r.p)), 0); return () => ls.splice(ls.indexOf(l), 1); };
 export const onDisconnect = () => ({ remove() {} });
-export const runTransaction = async (r, fn) => { const v = fn(getAt(r.p)); if (v === undefined) return { committed: false }; setAt(r.p, v); notify(r.p); return { committed: true }; };
+export const runTransaction = async (r, fn) => { const v = fn(getAt(r.p)); if (v === undefined) return { committed: false }; fbCheck(v, r.p); setAt(r.p, v); notify(r.p); return { committed: true }; };
