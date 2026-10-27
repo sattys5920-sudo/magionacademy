@@ -3247,7 +3247,7 @@ function adminRender(){
     const p = AD.players[id] || {}, who = p.nick || id.slice(0, 6);
     if (!confirm(del ? `${who}의 가입 데이터를 모두 지울까요? 캐릭터와 진행이 사라지고, 다시 가입 승인을 받아야 해요.` : `${who}의 진행 데이터를 처음부터 다시 시작하게 할까요? (이름·모습·기숙사·직업은 그대로)`)) return;
     const ups = {};
-    if (del){ ups['players/' + id] = null; ups['approved/' + id] = null; ups['pending/' + id] = null; ups['online/' + id] = null; if (p.ex && p.ex.job) ups['jobs/' + p.ex.job] = null; }
+    if (del){ ups['players/' + id] = null; ups['approved/' + id] = null; ups['pending/' + id] = null; ups['online/' + id] = null; if (p.ex && p.ex.job) ups['jobs/' + p.ex.job] = null; if (p.house) ups['hmem/' + p.house + '/' + id] = null; }
     else { const np = freshPlayer(p.nick, p.look, p.house, p.av); if (p.ex?.job) np.ex = { exp: 0, d: '', n: 0, job: p.ex.job }; ups['players/' + id] = np; }
     ups['adm/reset/' + id] = Date.now();
     try {
@@ -7415,6 +7415,13 @@ async function houseCounts(){
   try { const snap = await F.get(F.ref(db, 'players')); Object.entries(snap.val() || {}).forEach(([id, p]) => { if (id !== uid && p?.house) c[p.house] = (c[p.house] || 0) + 1; }); } catch(e){}
   return c;
 }
+// 기숙사 자리: 동시에 가입해도 기숙사마다 3명을 넘지 않게, hmem/<기숙사> 에서 한 번에 한 사람씩 자리를 잡아요 (이미 입학한 학생도 센 자리에 들어가요)
+async function houseClaim(h){
+  if (solo || !F || !db) return true;
+  let saved = []; try { const ps = (await F.get(F.ref(db, 'players'))).val() || {}; saved = Object.entries(ps).filter(([id, p]) => id !== uid && p && p.house === h).map(([id]) => id); } catch(e){}
+  const r = await GDB.tx('hmem/' + h, v => { const o = { ...(v || {}) }, ids = new Set([...Object.keys(o), ...saved]); if (!ids.has(myId()) && ids.size >= HOUSE_CAP) return undefined; o[myId()] = 1; return o; }).catch(() => null);
+  return !r || r.committed || !!(r.v && r.v[myId()]);
+}
 // ===== 캐릭터 꾸미기: 머리부터 발끝까지 =====
 // [탭, 이름, [[제목, 부품(없으면 색만), 색 키, 팔레트]]]
 const AV_TABS = [
@@ -7614,6 +7621,7 @@ function showCreate(done, counts = {}, taken = {}){
       if (n.length < 1 || n.length > 8) return $('#err').textContent = '이름을 1~8 자로 정해 주세요.';
       if (!house) return $('#err').textContent = '기숙사를 골라 주세요.';
       if (!job) return $('#err').textContent = '직업을 골라 주세요.';
+      if (!(await houseClaim(house))){ counts = await houseCounts(); house = null; draw(); return $('#err').textContent = '방금 그 기숙사가 다 찼어요. 다른 기숙사를 골라 주세요.'; }
       if (!(await jobClaim(job))){ taken = await jobsTaken(); job = ''; draw(); return $('#err').textContent = '방금 다른 친구가 그 직업을 골랐어요. 다른 직업을 골라 주세요.'; }
       const fav = World.Avatar.fix(av); delete fav.house; const np = freshPlayer(n, look, house, fav); if (job) np.ex = { exp: 0, d: '', n: 0, job }; done(np);
     };
@@ -7644,7 +7652,7 @@ function showHousePick(counts, done){
       <button class="btn go" id="hgo">이 기숙사로 갈래요</button>
     </div>`);
     app.querySelectorAll('[data-house]').forEach(b => b.onclick = () => { house = b.dataset.house; draw(); });
-    $('#hgo').onclick = () => { if (!house) return $('#err').textContent = '기숙사를 골라 주세요.'; me.house = house; save(); done(); };
+    $('#hgo').onclick = async () => { if (!house) return $('#err').textContent = '기숙사를 골라 주세요.'; if (!(await houseClaim(house))){ counts = await houseCounts(); house = null; draw(); return $('#err').textContent = '방금 그 기숙사가 다 찼어요. 다른 기숙사를 골라 주세요.'; } me.house = house; save(); done(); };
   };
   draw();
 }
