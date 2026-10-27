@@ -6965,10 +6965,9 @@ function pkUi(){
     <div class="pkbar"><i style="width:${k * 100}%"></i>${PK.STAGES.slice(1, 4).map(x => `<u style="left:${x * 100}%"></u>`).join('')}</div>
     <div class="s sub" style="text-align:center">반 전체 성장 ${t} / ${goal}${done ? ' · 완성!' : ''}</div>
     <div class="pkme"><b>내 기여</b> ${mine}점${rk ? ` · ${rk}등${rk <= 5 ? ' (상위 5명 안!)' : ''}` : ''} <span class="s sub">· 물 준 횟수 ${+pkW[myId()] || 0}</span></div>
-    ${done ? `<div class="pkdone">거대 호박이 활짝 웃어요!${m.res ? `<br>내 완성 보상: ${m.res.g ? `${m.res.g}골드${m.res.m ? ` · 마나석 ${m.res.m}개` : ''}` : '물을 준 적이 없어서 보상이 없어요'}` : ''}<br><span class="s sub">호박밭에 가서 호박에게 말을 걸면 하루 한 번 3시간 축복(탐사 경험치 +10%)을 줘요</span></div>` : ''}
+    ${done ? `<div class="pkdone">거대 호박이 활짝 웃어요!${m.res ? `<br>내 완성 보상: ${m.res.g ? `${m.res.g}골드${m.res.m ? ` · 마나석 ${m.res.m}개` : ''}` : '물을 준 적이 없어서 보상이 없어요'}` : ''}</div>` : ''}
     <div class="pkacts">${btn('w', '물 주기', `성장 +${PK.WATER[0]} · 1시간마다`, off ? 1 : wl, off)}${btn('t', '말 걸어 주기', `성장 +${PK.TALK[0]} · 2시간마다`, off ? 1 : tl, off)}</div>
-    <div class="pkmat"><b>거름 주기</b> <span class="s sub">재료가 귀할수록 많이 자라요 · 재료마다 ${PK.FCAP}번까지</span><div class="pkacts">${PK.MAT.map(([id, nm, g, r]) => { const u = (m.f && m.f[id]) || 0, no = off || !(me.inv[id] || 0) || u >= PK.FCAP; return `<button class="pkact ${no ? 'wait' : 'go'}" data-pkm="${id}" ${no ? 'disabled' : ''}><b>${nm}</b><span>${r} · 성장 +${g}<br>쓴 횟수 ${u}/${PK.FCAP} · 가진 ${me.inv[id] || 0}개</span></button>`; }).join('')}</div></div>
-    <div class="pkrew"><b>보상</b><div class="s sub">2단계(새싹) 씨앗 2개 · 3단계(덩굴) 스킬 포인트 1 · 4단계(꽃) 마나석 1개 (모두에게)<br>완성: 물을 준 학생 500골드 · 기여 상위 5명은 1000골드와 마나석 1개 더</div></div>`;
+    <div class="pkmat"><b>거름 주기</b> <span class="s sub">재료가 귀할수록 많이 자라요 · 재료마다 ${PK.FCAP}번까지</span><div class="pkacts">${PK.MAT.map(([id, nm, g, r]) => { const u = (m.f && m.f[id]) || 0, no = off || !(me.inv[id] || 0) || u >= PK.FCAP; return `<button class="pkact ${no ? 'wait' : 'go'}" data-pkm="${id}" ${no ? 'disabled' : ''}><b>${nm}</b><span>${r} · 성장 +${g}<br>쓴 횟수 ${u}/${PK.FCAP} · 가진 ${me.inv[id] || 0}개</span></button>`; }).join('')}</div></div>`;
   body.querySelectorAll('[data-pk]').forEach(b => b.onclick = () => pkAct(b.dataset.pk)); body.querySelectorAll('[data-pkm]').forEach(b => b.onclick = () => pkAct('f', b.dataset.pkm));
 }
 // ---- 관리자 ----
