@@ -1312,9 +1312,9 @@ function pushLog(nick, t, mine){
   if (!$('#chist').hidden) chatHist();
 }
 function chatHist(){
-  const L = chatLoad(), el = $('#chist'); el.hidden = false; $('#temo').hidden = true;
+  const L = chatLoad(), el = $('#chist'), shown = !el.hidden, top = el.scrollTop, atBot = !shown || el.scrollTop + el.clientHeight >= el.scrollHeight - 30; el.hidden = false; $('#temo').hidden = true;
   el.innerHTML = L.length ? L.map(l => { const d = new Date(l.at); return `<div><i>${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}</i><b class="${l.mine ? 'me' : ''}">${esc(l.nick)}</b>${esc(l.t)}</div>`; }).join('') + `<div class="none">최근 ${CHAT_MAX}개까지만 남아요</div>` : '<div class="none">아직 채팅이 없어요</div>';
-  el.scrollTop = el.scrollHeight;
+  el.scrollTop = atBot ? el.scrollHeight : top;   // 위로 올려서 읽는 중이면 그 자리를 지켜요
 }
 function onOnline(){
   World.setPeers(peersOf());
@@ -3238,8 +3238,10 @@ function adminRender(){
   if (AD.tab === 'npc') body = typeof adminNpcHTML === 'function' ? adminNpcHTML() : '<div class="adcard">NPC 호감도는 다음 업데이트에서 열려요.</div>';
   app.innerHTML = '';
   let root = $('#adminv'); if (!root){ root = document.createElement('div'); root.id = 'adminv'; $('#shell').appendChild(root); }
+  const ob = root.querySelector('.adbody'), keep = ob && AD.sc && AD.sc.tab === AD.tab ? { top: ob.scrollTop, bot: ob.scrollTop + ob.clientHeight >= ob.scrollHeight - 40 } : null;   // 새로 그려도 보던 자리를 지켜요 (대화는 맨 아래 = 최신)
   root.innerHTML = `<div class="adhead"><b>호박달 마녀학교 · 관리자</b><button class="btn sm" id="adout">나가기</button></div>
     <div class="adseg main">${tabs.map(([k, l]) => `<button data-adtab="${k}" class="${AD.tab === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="adbody">${body}</div>`;
+  { const nb = root.querySelector('.adbody'); if (nb){ if (AD.tab === 'chat' && (!keep || keep.bot)) nb.scrollTop = nb.scrollHeight; else if (keep) nb.scrollTop = keep.top; AD.sc = { tab: AD.tab }; } }
   root.querySelectorAll('[data-adtab]').forEach(b => b.onclick = () => { AD.tab = b.dataset.adtab; if (AD.tab === 'gift') adminMailLoad(); adminRender(); });
   root.querySelectorAll('[data-admap]').forEach(b => b.onclick = () => { AD.map = b.dataset.admap; AD.follow = null; adminRender(); });
   root.querySelectorAll('[data-adall]').forEach(b => b.onclick = () => { AD.map = null; AD.follow = null; adminRender(); });
