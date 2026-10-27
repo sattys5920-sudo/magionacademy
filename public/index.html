@@ -3792,7 +3792,7 @@ let npcGiftId = null, npcMsg = '';
 function renderNpcGift(){
   const n = npcGet(npcGiftId); if (!n) return closeSheet();
   const st = npcSt(n.id), h = hearts(n.id), done = st.g === todayKey(), P = npcProf(n.id), likes = P.likes || n.likes || [], dislikes = P.dislikes || n.dislikes || [];
-  const items = [...POTIONS, ...MATS, ...CATCH, ...DISHES].filter(k => me.inv[k] > 0);
+  const items = [...new Set([...POTIONS, ...MATS, ...CATCH, ...DISHES])].filter(k => me.inv[k] > 0);
   frame(null, `${esc(n.name)}에게 선물`, `${heartBar(h)} · 하루 한 번`, `${hint(npcMsg, '')}
     ${h >= 2 ? `<div class="box px" style="padding:8px">좋아하는 것: ${likes.map(k => `${ic(k, 'transform:scale(.7);margin:-6px')} ${esc(ITEM[k] || k)}`).join(' · ')}</div>` : ''}
     <div class="pal">${items.map(k => `<button class="cell" style="width:52px;min-height:52px;padding:0" data-ngive="${k}" ${done ? 'disabled' : ''}>${ic(k)}<span class="n">${me.inv[k]}</span></button>`).join('') || '<div class="hint">줄 수 있는 물건이 없어요</div>'}</div>${backBtn}`);
@@ -6042,7 +6042,7 @@ function renderVisit(){
   const guest = Object.entries(visitGuest).sort((a, b) => b[1].at - a[1].at);
   me.wrote = me.wrote || {};
   const wrote = Object.values(me.wrote).includes(todayKey());
-  const giftable = [...POTIONS, ...MATS, ...CATCH, ...DISHES].filter(k => me.inv[k] > 0);
+  const giftable = [...new Set([...POTIONS, ...MATS, ...CATCH, ...DISHES])].filter(k => me.inv[k] > 0);
   const tabs = [['room', '방 구경'], ['breed', '짝꿍 맺기'], ['guest', `방명록${guest.length ? ' ' + guest.length : ''}`]];
   let body = '';
   if (visitTab === 'room'){
@@ -7290,7 +7290,7 @@ function renderMarket(){
   const others = items.filter(([, l]) => l.uid !== uid && !l.buyer).sort((a, b) => (b[1].at || 0) - (a[1].at || 0));
   const week = coop[coopWeek()] || {};
   const coopTotal = Object.values(week).reduce((a, b) => a + (+b || 0), 0);
-  const sellable = [...POTIONS, ...MATS, ...CATCH, ...DISHES].filter(k => me.inv[k] > 0);
+  const sellable = [...new Set([...POTIONS, ...MATS, ...CATCH, ...DISHES])].filter(k => me.inv[k] > 0);
   const sold = mine.filter(([, l]) => l.buyer).length;
   const tabs = [['shop', `친구 가게${others.length ? ' ' + others.length : ''}`], ['mine', `내 가판대 ${mine.length}/4${sold ? ' ●' : ''}`], ['coop', '반 공동 의뢰']];
   let body = '';
