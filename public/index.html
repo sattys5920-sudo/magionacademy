@@ -1844,7 +1844,7 @@ const XMPP = { melee: [20, 1.6], ranged: [30, 3], heal: [40, 4.4] }, XMPC = { me
 const xMmp = (job, L) => Math.round(XMPP[XROLE[job]][0] + XMPP[XROLE[job]][1] * L), xSkMp = (o, lv) => o.mp ? Math.round(o.mp * xMpK(lv) * XMPC[XROLE[o.job]]) : o.mp;
 const xMkUnit = (job, L, name, ai, hp, mp, sk) => { sk = sk || xAiSk(L); const u = { av: ai ? World.Avatar.fromLook(ORDER_J.indexOf(job) * 131 + 7) : me.av, sks: [], pas: {}, fx: {}, dr: 0, vamp: 0, crit: 0, id: name, job, name, ic: XJ[job].ic, L, ai, team: 'a', mhp: xSt(job, L, 'hp'), mmp: xMmp(job, L), atk: xSt(job, L, 'atk'), mag: xSt(job, L, 'mag'), heal: xSt(job, L, 'heal'), spd: xSt(job, L, 'spd'), g: Math.random() * 40 };
   { const sp = ai ? xAiSp(job, L) : (xEx().sp || {}); u.mhp += (sp.hp || 0) * XSPV.hp; u.atk += (sp.atk || 0) * XSPV.atk; u.mag += (sp.mag || 0) * XSPV.mag; u.heal += (sp.heal || 0) * XSPV.heal; u.spd += (sp.spd || 0) * XSPV.spd; u.mmp += (sp.mag || 0) * 1.5; ['mhp', 'mmp', 'atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k]); }); }   // 스탯 포인트
-  xAll(job).forEach(o => { const lv = sk[o.b + '.' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, mp: xSkMp(o, lv), sv: o.sv == null ? o.sv : o.sv * xPw(o, lv), pet: o.pet ? { ...o.pet, k: o.pet.k * xPw(o, lv) } : o.pet, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv) }); });
+  xAll(job).forEach(o => { const lv = sk[o.b + '.' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, mp0: o.mp, mp: xSkMp(o, lv), sv: o.sv == null ? o.sv : o.sv * xPw(o, lv), pet: o.pet ? { ...o.pet, k: o.pet.k * xPw(o, lv) } : o.pet, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv) }); });
   const P = u.pas; ['hp', 'atk', 'mag', 'spd'].forEach(k => { if (P[k]) u[k === 'hp' ? 'mhp' : k] = Math.round(u[k === 'hp' ? 'mhp' : k] * (1 + P[k])); }); u.wp = ai ? Math.min(4, Math.floor((L - 1) / 12)) : (xEx().wp || 0); const wm = (1 + .08 * u.wp) * (!ai && dbuff('dfire') ? 1.05 : 1); ['atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k] * wm); });   // 무기 강화 한 단계마다 +8%
   u.dr = P.def || 0; u.vamp = P.vamp || 0; u.crit = P.crit || 0; u.dodge = P.dodge || 0; u.survLeft = P.surv ? 1 : 0; u.pets = [];
   u.hp = hp ?? u.mhp; u.mp = mp ?? u.mmp; return u; };
@@ -2364,7 +2364,7 @@ function xcoHostInputs(){
 function xcoApplyCmd(B, u, c){
   B.pick = null; B.turn = null; if (c.a === 'item'){ const t = c.tg ? B.party.find(x => x.id === c.tg && x.hp > 0) : null; xItemUse(B, u, c.k, t || u); return xUp(); }
   if (c.a === 'def'){ B.def[u.id] = 1; B.log = `${u.name}이(가) 방어 태세`; u.g = 0; return xUp(); }
-  let sk = c.s >= 0 ? u.sks[c.s] : null; if (sk && Math.ceil(sk.mp) > Math.floor(u.mp)) sk = null; const tgt = c.tg ? [...B.foes, ...B.party].find(x => x.id === c.tg) : null; xAct(u, sk, tgt); xUp();
+  let sk = c.s >= 0 ? u.sks[c.s] : null; if (sk && (Math.ceil(sk.mp) > Math.floor(u.mp) || xCdLeft(u, sk))) sk = null; const tgt = c.tg ? [...B.foes, ...B.party].find(x => x.id === c.tg) : null; xAct(u, sk, tgt); xUp();
 }
 // ----- 전투 장면(bt) 올리기·받기 -----
 const XROW_F = ['warrior', 'knight', 'thief'], xRowAuto = job => XROW_F.includes(job) ? 'f' : 'b';   // 정하지 않으면 직업에 따라: 전사·기사·도적은 앞열, 나머지는 뒤열
@@ -2378,7 +2378,7 @@ function xcoPartyUnits(){
 const xcoFoeStat = f => ({ id: f.id, name: f.name, lp: f.lp, big: f.big, sc: f.sc, hh: f.hh, k: f.k, mhp: f.mhp, team: 'e' });
 function xcoPubBt(force){
   const B = xb, now = performance.now(); if (!B || !xcoHost() || B.mirror) return; if (!force && now - xcoLastBt < 180) return; xcoLastBt = now;
-  const un = u => { const o = { h: Math.round(u.hp), m: Math.round(u.mp || 0), g: Math.round(u.g) }, f = {}; for (const k in u.fx){ f[k] = u.fx[k] && u.fx[k].t !== undefined ? Math.round(u.fx[k].t) : 99; } if (Object.keys(f).length) o.f = f; if (u.pets && u.pets.length) o.p = u.pets.map(p => [p.n, Math.round(p.hp || 0), Math.round(p.mhp || 0), Math.round(p.t)]); return o; };
+  const un = u => { const o = { h: Math.round(u.hp), m: Math.round(u.mp || 0), g: Math.round(u.g) }, f = {}; for (const k in u.fx){ f[k] = u.fx[k] && u.fx[k].t !== undefined ? Math.round(u.fx[k].t) : 99; } if (Object.keys(f).length) o.f = f; if (u.pets && u.pets.length) o.p = u.pets.map(p => [p.n, Math.round(p.hp || 0), Math.round(p.mhp || 0), Math.round(p.t)]); if (u.cdn && Object.keys(u.cdn).length) o.c = { ...u.cdn }; return o; };
   const units = {}; [...B.party, ...B.foes].forEach(u => { units[u.id] = un(u); });
   const bt = { n: (B.pn = (B.pn || 0) + 1), bn: B.bn, t: now2(), kind: B.kind, log: B.log || '', turn: B.turn ? B.turn.id : null, tn: B.tn || 0, tdl: B.tdl ? now2() + (B.tdl - now) : 0, order: B.party.map(u => u.id), foes: B.foes.map(xcoFoeStat), units, ev: xcoEv.slice(-30), over: !!B.over, win: !!B.won, rew: B.rew || null, fin: !!B.fin };
   GDB.set(`xrun/${xpRoom}/bt`, bt);
@@ -2394,7 +2394,7 @@ function xcoOnBt(v){
     if (xM) xM.st = 'busy'; xv = { view: 'battle' }; if (sheetOn && sub === 'explore') renderExplore(); else { closeSheet(); openSheet('home', 'explore'); }
   }
   if (v.n <= B.sn) return; B.sn = v.n; const now = performance.now();
-  [...B.party, ...B.foes].forEach(u => { const a = v.units[u.id]; if (!a) return; u.hp = a.h; u.mp = a.m; u.g = a.g; const nf = {}; Object.entries(a.f || {}).forEach(([k, t]) => { nf[k] = u.fx[k] ? { ...u.fx[k], t } : { t, v: 0 }; }); u.fx = nf; u.pets = (a.p || []).map(p => ({ n: p[0], hp: p[1], mhp: p[2], t: p[3] })); });
+  [...B.party, ...B.foes].forEach(u => { const a = v.units[u.id]; if (!a) return; u.hp = a.h; u.mp = a.m; u.g = a.g; const nf = {}; Object.entries(a.f || {}).forEach(([k, t]) => { nf[k] = u.fx[k] ? { ...u.fx[k], t } : { t, v: 0 }; }); u.fx = nf; u.pets = (a.p || []).map(p => ({ n: p[0], hp: p[1], mhp: p[2], t: p[3] })); u.cdn = a.c || {}; });
   B.log = v.log || B.log; B.tn = v.tn; B.turn = v.turn ? [...B.party].find(u => u.id === v.turn) || null : null; B.tdl = v.tdl ? now + (v.tdl - now2()) : 0;
   (v.ev || []).filter(e => e.i > B.evi).forEach(e => { B.evi = e.i;
     if (e.k === 'fx'){ xDelay = e.dl || 0; const L = e.tg.map(id => [...B.foes, ...B.party].find(x => x.id === id)).filter(Boolean), A = e.u && [...B.foes, ...B.party].find(x => x.id === e.u); if (L.length) xFxAt(e.f, L, A || null); xDelay = 0; }
@@ -2416,6 +2416,7 @@ function xStartBattle(kind, msg){
   const sz = party.length, pool = run.pool || R.mon;   // 인원이 늘면 몬스터도 늘어요: 일반 = 인원+1 (혼자면 1마리) · 정예 = 정예 + (인원−1) · 보스 = 보스 + 졸개 (인원−1) · 체력도 조금 늘어요
   const foes = kind === 'boss' ? [mk(R.boss, 0, 1 + .4 * (sz - 1)), ...Array.from({ length: Math.min(4, sz - 1) }, (_, i) => mk(xRand(pool), i + 1))] : kind === 'elite' ? [mk(R.elite, 0, 1 + .5 * (sz - 1)), ...Array.from({ length: Math.min(4, sz - 1) }, (_, i) => mk(xRand(pool), i + 1))]
     : Array.from({ length: Math.min(6, sz >= 2 ? sz + 1 : 1) }, (_, i) => mk(i === 0 && run.nextMon ? run.nextMon : xRand(pool), i)); run.nextMon = null;
+  party.forEach(u => { u.cdn = {}; });
   xb = { party, foes, kind, log: msg || '', turn: null, pick: null, over: false, last: performance.now(), buff: run.buff > 0, def: {}, fxs: [], floats: [], proj: [], n0: sz }; if (run.buff > 0) run.buff--; xv = { view: 'battle' };
   if (xcoHost()){ xb.bn = Math.round(now2()) * 10 + (++xcoBn % 10); xb.tn = 0; xcoEv = []; xcoEvN = 0; xcoPub({ st: 'battle' }); xcoPubBt(true); }
   renderExplore();
@@ -2457,7 +2458,10 @@ function xAnimAtk(u, k, list){   // 무기 모션 + 날아가는 것. 닿는 데
   return rel + pd;
 }
 function xFxAt(k, list, u){ xcoEvPush({ k: 'fx', f: k, tg: list.map(t => t.id), u: u ? u.id : null, dl: xDelay }); const now = performance.now(), dl = u ? (xDelay = xAnimAtk(u, k, list)) : xDelay; list.forEach((t, i) => xb.fxs.push({ k, id: t.id, t0: now + dl + i * 90, dur: k === 'bolt' ? 520 : k === 'slash' || k === 'impact' ? 380 : k.indexOf(':b') > 0 ? 1150 : 760, seed: Math.random() * 100 })); if (u && k.indexOf(':b') > 0 && !/h$/.test(k)) xb.shake = { t0: now + dl + 60, dur: 260, amp: 2 }; }
-function xAct(u, sk, tgt){ xDelay = 0; try { xAct0(u, sk, tgt); } finally { xDelay = 0; } }
+// 스킬 쿨타임: 쓴 스킬은 내 다음 행동 n번 동안 못 써요 (MP가 클수록 길어요). 전투가 끝나면 사라져요
+const xCdOf = sk => { const m = sk ? (sk.mp0 ?? sk.mp ?? 0) : 0; return m >= 18 ? 4 : m >= 14 ? 3 : m >= 8 ? 2 : m >= 4 ? 1 : 0; }, xCdLeft = (u, sk) => sk && u.cdn && u.cdn[sk.n] > 0 ? u.cdn[sk.n] : 0;
+function xCdTick(u, sk){ if (u.team !== 'a') return; const c = u.cdn || (u.cdn = {}); Object.keys(c).forEach(k => { if (c[k] > 0) c[k]--; if (c[k] <= 0) delete c[k]; }); const n = xCdOf(sk); if (n) c[sk.n] = n; }
+function xAct(u, sk, tgt){ xDelay = 0; if (sk && xCdLeft(u, sk)) sk = null; try { xAct0(u, sk, tgt); } finally { xDelay = 0; xCdTick(u, sk); } }
 const xFoeTarget = () => { const A = xAlive(xb.party), tk = A.find(a => xFm(a, 'taunt')); if (tk && Math.random() < .8) return tk; const cv = A.find(a => xFm(a, 'cover')), fr = A.filter(a => a.row === 'f'), bk = A.filter(a => a.row === 'b'), pool = fr.length && bk.length ? (Math.random() < .8 ? fr : bk) : A, t = xRand(pool); return cv && t !== cv && Math.random() < .65 ? cv : t; };   // 도발 · 대신 맞기 · 앞열이 먼저 맞아요 (앞열 80 : 뒤열 20, 한쪽만 남으면 그쪽)
 const XFXN = { counter: '반격 태세', taunt: '도발!', cover: '대신 맞기', dodge: '회피↑', dmgIn: '방어↑', atk: '공격↑', spd: '속도↑' };
 function xApply(u, t, a, mult, st){   // 맞은 뒤 붙는 효과 [종류, 세기, 초]
@@ -2500,9 +2504,9 @@ function xAct0(u, sk, tgt){   // 한 번 행동
   else if (sk.t === 'mp'){ xFxAt('buff', xAlive(B.party), u); B.party.forEach(t => { if (t.hp > 0){ t.mp = Math.min(t.mmp, t.mp + t.mmp * sk.v); xFloat(t.id, 'MP↑', '#6aa8ff'); } }); }
   u.g = sk.w ?? 0;
 }
-function xAI(u){   // 동료 자동 행동
+function xAI(u){   // 동료 자동 행동 (쿨타임 중인 스킬은 안 써요)
   if (!xAlive(xb.party).length || !xAlive(xb.foes).length) return;
-  const B = xb, sks = u.sks.filter(s => s.mp <= u.mp), low = xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0], dead = B.party.find(x => x.hp <= 0), foe0 = xAlive(B.foes)[0];
+  const B = xb, sks = u.sks.filter(s => s.mp <= u.mp && !xCdLeft(u, s)), low = xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0], dead = B.party.find(x => x.hp <= 0), foe0 = xAlive(B.foes)[0];
   const rev = sks.find(s => s.t === 'revive'); if (rev && dead) return xAct(u, rev, dead);
   const heals = sks.filter(s => s.t === 'heal'); if (heals.length && low.hp / low.mhp < .55){ const all = heals.find(s => s.tg === 'all' && xAlive(B.party).filter(x => x.hp / x.mhp < .6).length >= 2); return xAct(u, all || heals.sort((a, b) => b.p - a.p)[0], low); }
   if (Math.random() < .35){ const sup = sks.filter(s => ((s.t === 'buff' && !(u.fx[s.key] && s.tg !== 'all' || B.party[0].fx[s.key] && s.tg === 'all')) || (s.t === 'deb' && !foe0.fx[s.key]) || (s.t === 'mp' && u.mp < u.mmp * .4) || (s.t === 'cleanse' && B.party.some(a => a.hp > 0 && ['dot', 'slow', 'weak', 'blind', 'vuln', 'bomb'].some(k => a.fx[k]))) || (s.t === 'summon' && !(u.pets && u.pets.length)))); if (sup.length) return xAct(u, xRand(sup), null); }
@@ -2740,11 +2744,11 @@ function xcoCmdSend(B, u, c){ c.tn = B.tn; c.bn = B.bn; xcoSend({ cmd: c }); B.t
 function xCmd(){
   const B = xb, u = xMine(B), el = $('#xcmd'); if (!el) return;
   const wait = B.over ? '' : u.hp <= 0 ? '쓰러졌어요.... 동료가 싸워요' : B.turn !== u ? '차례를 기다려요.......' : null;
-  const key = wait !== null ? 'w' + wait : B.pick ? 'pick' : B.menu + ':' + u.sks.map(s => Math.ceil(s.mp) <= Math.floor(u.mp) ? 1 : 0).join('') + X_ITEMS.map(x => me.inv[x[0]] || 0).join();
+  const key = wait !== null ? 'w' + wait : B.pick ? 'pick' : B.menu + ':' + u.sks.map(s => (Math.ceil(s.mp) <= Math.floor(u.mp) ? 1 : 0) + '' + xCdLeft(u, s)).join('') + X_ITEMS.map(x => me.inv[x[0]] || 0).join();
   if (el.dataset.k === key) return; el.dataset.k = key; el.classList.toggle('xsk2', key.startsWith('skills')); el.classList.toggle('xm4', key.startsWith('main') || key.startsWith('items'));
   if (wait !== null){ el.innerHTML = `<div class="xwait">${wait}</div>`; return; }
   if (B.pick) el.innerHTML = '<div class="xskh" style="grid-column:1/-1">화면에서 대상을 눌러요</div><button class="xb" data-xc="cancel" style="grid-column:1/-1">취소</button>';
-  else if (B.menu === 'skills') el.innerHTML = `<div class="xskh"><span>✦ 스킬</span><button class="xb" data-xc="m_back" style="min-height:32px;padding:2px 12px">뒤로</button></div>${u.sks.map((s, i) => `<button class="xb sk" data-xc="s${i}" ${Math.ceil(s.mp) > Math.floor(u.mp) ? 'disabled' : ''}>${xIc(s)}<span>${s.n}<small>${s.mp ? 'MP ' + s.mp : '무료'}</small></span></button>`).join('') || '<div class="xwait">배운 스킬이 없어요</div>'}`;
+  else if (B.menu === 'skills') el.innerHTML = `<div class="xskh"><span>✦ 스킬</span><button class="xb" data-xc="m_back" style="min-height:32px;padding:2px 12px">뒤로</button></div>${u.sks.map((s, i) => `<button class="xb sk" data-xc="s${i}" ${Math.ceil(s.mp) > Math.floor(u.mp) || xCdLeft(u, s) ? 'disabled' : ''}>${xIc(s)}<span>${s.n}<small>${xCdLeft(u, s) ? `쿨타임 ${xCdLeft(u, s)}턴` : (s.mp ? 'MP ' + s.mp : '무료') + (xCdOf(s) ? ' · 쿨 ' + xCdOf(s) + '턴' : '')}</small></span></button>`).join('') || '<div class="xwait">배운 스킬이 없어요</div>'}`;
   else if (B.menu === 'items') el.innerHTML = X_ITEMS.map(x => `<button class="xb" data-xc="i_${x[0]}" ${(me.inv[x[0]] || 0) > 0 ? '' : 'disabled'}><span>${x[2]} ${x[3]}<small>${ITEM[x[0]]} ×${me.inv[x[0]] || 0}</small></span></button>`).join('') + '<button class="xb" data-xc="m_back">뒤로</button>';
   else el.innerHTML = `<button class="xb atk" data-xc="atk">공격</button><button class="xb" data-xc="m_skills" ${u.sks.length ? '' : 'disabled'}>✦ 스킬</button><button class="xb" data-xc="m_items">아이템</button><button class="xb" data-xc="def">방어</button>`;
   el.querySelectorAll('[data-xc]').forEach(b => b.onclick = () => xChoose(b.dataset.xc));
@@ -2758,7 +2762,7 @@ function xChoose(k){
     const al = xAlive(B.party); if (al.length <= 1) return go(u); B.pick = { sk: null, go, set: new Set(al.map(a => a.id)) }; return xCmd(); }
   if (k === 'cancel'){ B.pick?.unpick?.(); B.pick = null; return xCmd(); }
   if (k === 'def'){ if (B.mirror) return xcoCmdSend(B, u, { a: 'def' }); B.def[u.id] = 1; B.log = `${u.name}이(가) 방어 태세`; u.g = 0; B.turn = null; return xUp(); }
-  const sk = k === 'atk' ? null : u.sks[+k.slice(1)];
+  const sk = k === 'atk' ? null : u.sks[+k.slice(1)]; if (sk && xCdLeft(u, sk)) return;
   const go = tgt => { B.pick = null; B.menu = 'main'; if (B.mirror) return xcoCmdSend(B, u, { a: 'act', s: sk ? u.sks.indexOf(sk) : -1, tg: tgt ? tgt.id : null }); xAct(u, sk, tgt); B.turn = null; xUp(); };
   const foeT = !sk || ['dmg', 'deb', 'dot', 'stun', 'burst'].includes(sk.t), targets = foeT ? xAlive(B.foes) : sk.t === 'revive' ? B.party.filter(x => x.hp <= 0) : xAlive(B.party);
   if (sk && (sk.tg === 'all' || sk.tg === 'self' || sk.t === 'mp')) return go(null); if (targets.length <= 1) return go(targets[0] || null);
