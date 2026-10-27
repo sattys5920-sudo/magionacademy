@@ -3848,7 +3848,7 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('[data-nx]'); if (!b || !npcUI().contains(b)) return;
   const n = npcGet(npcUI().dataset.id); if (!n) return npcClose(); const st = npcSt(n.id), act = b.dataset.nx;
   if (act === 'close') return npcClose();
-  if (act === 'talk'){ if (st.t === todayKey()) return npcMenu(n, npcLine(n)); st.t = todayKey(); npcAddA(n.id, 10); save(); syncNpcs(); return npcMenu(n, npcLine(n)); }
+  if (act === 'talk'){ if (st.t === todayKey()) return npcMenu(n, npcLine(n)); st.t = todayKey(); npcAddA(n.id, 30); save(); syncNpcs(); return npcMenu(n, npcLine(n)); }
   if (act === 'gift'){ npcClose(); npcGiftId = n.id; return openSheet('home', 'npcgift'); }
   if (act === 'story'){ npcClose(); npcGiftId = n.id; return openSheet('home', 'npcstory'); }
   if (act === 'ev'){ const k = +b.dataset.k, ev = await npcEvent(n.id, k); npcClose(); if (ev) evPlay(n, k, ev, {}); }
@@ -3859,11 +3859,10 @@ function renderNpcGift(){
   const st = npcSt(n.id), h = hearts(n.id), done = st.g === todayKey(), P = npcProf(n.id), likes = P.likes || n.likes || [], dislikes = P.dislikes || n.dislikes || [];
   const items = [...new Set([...POTIONS, ...MATS, ...CATCH, ...DISHES])].filter(k => me.inv[k] > 0);
   frame(null, `${esc(n.name)}에게 선물`, `${heartBar(h)} · 하루 한 번`, `${hint(npcMsg, '')}
-    ${h >= 2 ? `<div class="box px" style="padding:8px">좋아하는 것: ${likes.map(k => `${ic(k, 'transform:scale(.7);margin:-6px')} ${esc(ITEM[k] || k)}`).join(' · ')}</div>` : ''}
     <div class="pal">${items.map(k => `<button class="cell" style="width:52px;min-height:52px;padding:0" data-ngive="${k}" ${done ? 'disabled' : ''}>${ic(k)}<span class="n">${me.inv[k]}</span></button>`).join('') || '<div class="hint">줄 수 있는 물건이 없어요</div>'}</div>${backBtn}`);
   $('#back').onclick = closeSheet;
   on('[data-ngive]', b => { const k = b.dataset.ngive; if (done || !(me.inv[k] > 0)) return; me.inv[k]--; st.g = todayKey();
-    const kind = likes.includes(k) ? 'love' : dislikes.includes(k) ? 'hate' : 'like', d0 = { love: 40, like: 15, hate: -30 }[kind], d = d0 > 0 ? Math.round(d0 * (1 + sgFx('gift_affection'))) : d0;
+    const kind = likes.includes(k) ? 'love' : dislikes.includes(k) ? 'hate' : 'like', d0 = { love: 40, like: 20, hate: -30 }[kind], d = d0 > 0 ? Math.round(d0 * (1 + sgFx('gift_affection'))) : d0;
     me.giftLog = me.giftLog || {}; (me.giftLog[n.id] ||= {})[k] = kind;   // 관계 패널의 「알아낸 선물」
     const ls = P.gift?.[kind] || { love: ['우와, 이거 정말 좋아해요! 고마워요!'], like: ['고마워요, 잘 쓸게요.'], hate: ['으.... 이건 좀 별로예요.'] }[kind];
     npcMsg = ''; closeSheet(); npcAddA(n.id, d); save(); syncNpcs(); setTimeout(() => npcMenu(n, fillVars(ls[Math.floor(Math.random() * ls.length)], n.id)), 100); });
