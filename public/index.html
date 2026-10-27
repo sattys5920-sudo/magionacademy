@@ -1323,7 +1323,7 @@ let spotTimer = 0;
 const EMOS = ['손인사', '웃음', '깔깔', '하트눈', '놀람', '눈물', '화남', '하트', '엄지척', '반짝', '호박', '유령'];   // art/emo.png 순서 (tools/iso/emotes.py)
 const emoI = i => `<i class="emi" style="background-position:-${i * 32}px 0" title="${EMOS[i]}"></i>`;
 let lastPos = '', heard = {}, onlineKeys = '';
-const peersOf = () => Object.entries(onlineList).filter(([id, o]) => id !== uid && o && o.m).map(([id, o]) => ({ uid: id, name: o.nick, av: avOf(o), m: o.m, x: o.x | 0, y: o.y | 0 }));
+const peersOf = () => Object.entries(onlineList).filter(([id, o]) => id !== uid && o && o.m && o.nick).map(([id, o]) => ({ uid: id, name: o.nick, av: avOf(o), m: o.m, x: o.x | 0, y: o.y | 0 }));
 // 채팅: 평소에 보이는 건 최근 5줄, 이력은 최대 50개까지만 저장해 두고 「이력」을 눌러 봐요
 const CHAT_MAX = 50, CHAT_SHOW = 5, chatKey = () => 'magion-chat:' + (typeof uid !== 'undefined' && uid ? uid : 'solo');
 let chatLog = null;
@@ -3208,9 +3208,10 @@ function adminChat(){   // 최근 14일 대화를 한 줄로 이어 봐요
 }
 const adName = id => esc(AD.players[id]?.nick || AD.online[id]?.nick || id.slice(0, 6));
 const adPlace = m => { if (!m) return '?'; const [id, owner] = m.split(':'), meta = World.meta(id); return esc((meta?.title || id) + (owner ? ` (${AD.players[owner]?.nick || '?'}의 방)` : '')); };
+const adOnline = () => Object.fromEntries(Object.entries(AD.online || {}).filter(([, o]) => o && o.nick));   // 이름 없는 접속 표시(끊겼다 다시 붙으며 남은 찌꺼기)는 빼요
 function adminRender(){
   if (!document.body.classList.contains('admin')) return;
-  const P = AD.players, O = AD.online, ids = Object.keys(P).filter(id => P[id]?.nick);
+  const P = AD.players, O = adOnline(), ids = Object.keys(P).filter(id => P[id]?.nick);
   const tabs = [['map', `지도 ${Object.keys(O).length}명 접속`], ['students', `학생 ${ids.length}`], ['join', `가입 신청${Object.keys(AD.pending || {}).length ? ' ' + Object.keys(AD.pending).length : ''}`], ['chat', '대화'], ['dorm', '기숙사'], ['story', '이야기·미션'], ['npc', 'NPC 호감도'], ['event', '이벤트'], ['gift', '지급·공지'], ['reset', '초기화']];
   let body = '';
   if (AD.tab === 'map'){
@@ -3340,7 +3341,7 @@ function adRestoreScroll(){   // 지도 그림이 다 그려진 뒤에 보던 �
   const nb = $('#adminv .adbody'), mw = $('#adminv .admapw'); if (AD.msc && mw){ mw.scrollLeft = AD.msc[0]; mw.scrollTop = AD.msc[1]; } if (nb && AD.kt != null) nb.scrollTop = AD.kt; AD.mdone = true;
 }
 async function adminMap(){
-  const O = AD.online, getMap = async id => AD.mc[id] || (AD.mc[id] = await World.mapCanvas(id));
+  const O = adOnline(), getMap = async id => AD.mc[id] || (AD.mc[id] = await World.mapCanvas(id));
   const bid = o => (o.m || '').split(':')[0], P2 = (m, x, y) => [m.OX + (x - y) * 8, m.OY + (x + y) * 4];
   const dots = (g, m, id, k, off) => Object.entries(O).forEach(([u, o]) => { if (bid(o) !== id) return; const [x0, y0] = P2(m, (o.x || 0) + .5, (o.y || 0) + .5), x = (x0 - off[0]) * k, y = (y0 - off[1]) * k, c = HOUSES[o.house]?.col || '#FFD866', on = u === AD.follow, r = on ? 6 : 4;
     if (on){ g.strokeStyle = '#FFF6E0'; g.lineWidth = 2; g.beginPath(); g.arc(x, y, 13 + 2 * Math.sin(Date.now() / 200), 0, 7); g.stroke(); }
@@ -7754,9 +7755,10 @@ async function boot(){
     const enter = () => {
       const oref = F.ref(db, 'online/' + uid);
       World.myUid = uid;
-      F.set(oref, { nick: me.nick, look: me.look, av: me.av, house: me.house, at: Date.now() });
-      setInterval(presTick, 700);
-      F.onDisconnect(oref).remove();
+      // 접속 표시: 연결이 끊기면 서버가 지워요. 다시 연결되면 이름까지 통째로 다시 써요 (안 그러면 위치만 남은 「undefined」 유령이 돌아다녀요)
+      const presFull = () => { const p = World.myPos ? World.myPos() : {}; lastPos = ''; F.onDisconnect(oref).remove(); return F.set(oref, { nick: me.nick, look: me.look, av: me.av, house: me.house, at: Date.now(), ...(p && p.m ? { m: p.m, x: p.x, y: p.y } : {}) }); };
+      presFull(); setInterval(presTick, 700);
+      F.onValue(F.ref(db, '.info/connected'), s => { if (s.val() === true) presFull().catch(() => {}); });
       F.onValue(F.ref(db, 'online'), s => { onlineList = s.val() || {}; onOnline(); const k = Object.keys(onlineList).sort().join(); if (k !== onlineKeys){ onlineKeys = k; if (tab === 'home' && !sub) render(); } });
       F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; });
       F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; syncNpcs(); });
