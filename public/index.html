@@ -2877,10 +2877,13 @@ function openRoom(g){
 }
 function joinRoom(id, mine){
   const R = gameList[id] || (solo && lget('games/' + id));
-  if (!mine && R){ const n = Object.keys(R.p || {}).length; if (R.st !== 'lobby') return toast('벌써 시작했어요'); if (n >= GAMES[R.g].max) return toast('방이 꽉 찼어요 (최대 8명)'); GDB.upd(`games/${id}/p/${myId()}`, { n: me.nick, s: 0 }); }
-  room = id; closeSheet(); roomOff?.();
-  roomOff = GDB.on('games/' + id, v => onRoom(v));
+  const attach = () => { room = id; roomJoinAt = Date.now(); closeSheet(); roomOff?.(); roomOff = GDB.on('games/' + id, v => onRoom(v)); };
+  if (!mine && R){ const n = Object.keys(R.p || {}).length; if (R.st !== 'lobby') return toast('벌써 시작했어요'); if (n >= GAMES[R.g].max) return toast('방이 꽉 찼어요 (최대 8명)');
+    // 서버가 참가를 받아 준 뒤에 방 화면을 열어요 (받아 주기 전에 열면 「방에서 나왔어요」로 바로 튕겨요)
+    return Promise.resolve(GDB.upd(`games/${id}/p/${myId()}`, { n: me.nick, s: 0 })).then(attach).catch(e => toast('참가하지 못했어요 (' + (e && (e.code || e.message) || '알 수 없는 오류') + ')')); }
+  attach();
 }
+let roomJoinAt = 0;
 function leaveRoom(){
   const id = room, v = roomV; roomOff?.(); roomOff = null; room = null; roomV = null; gameEnd(); gameHide(); gameReturn();
   if (!id || !v) return;
@@ -2891,7 +2894,7 @@ function onRoom(v){
   if (!v){ toast('방이 닫혔어요'); room = null; roomOff?.(); gameEnd(); gameHide(); gameReturn(); return; }
   roomV = v; const Gm = GAMES[v.g];
   if (v.st === 'lobby'){
-    if (!v.p?.[myId()]){ toast('방에서 나왔어요'); return leaveRoom(); }
+    if (!v.p?.[myId()]){ if (Date.now() - roomJoinAt < 3000) return; toast('방에서 나왔어요'); return leaveRoom(); }   // 막 참가한 직후에는 잠깐 기다려요
     const ps = Object.entries(v.p), host = v.host === myId(), ok = ps.length >= Gm.min;
     gameShow(`<div class="gpan px"><b class="gt">${Gm.ic} ${Gm.name}</b>
       <div class="gpl">${ps.map(([id, p], i) => `<span class="gpp" style="border-color:${PCOL[i % 8]}">${esc(p.n)}${id === v.host ? ' ' : ''}</span>`).join('')}</div>
