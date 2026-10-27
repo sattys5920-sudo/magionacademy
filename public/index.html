@@ -255,7 +255,7 @@ body.admin .hud,body.admin .fab,body.admin #world{display:none}
 .adsum{display:flex;gap:10px;flex-wrap:wrap}
 .adsum b{font-family:var(--f-pxb)}
 .adtbl{display:flex;flex-direction:column;gap:2px;overflow-x:auto}
-.adtbl>div{display:grid;grid-template-columns:80px 70px 74px 64px 40px 40px 30px 50px 50px 46px 30px 30px 150px 190px;gap:4px;background:#fff;padding:3px 6px;white-space:nowrap;min-width:max-content}
+.adtbl>div{display:grid;grid-template-columns:80px 150px 74px 64px 40px 40px 30px 50px 50px 46px 30px 30px 150px 190px;gap:4px;background:#fff;padding:3px 6px;white-space:nowrap;min-width:max-content}
 .adtbl>div.h{background:#22183F;color:#FFD866}
 .adcard{background:#fff;border:3px solid #22183F;padding:8px;display:flex;flex-direction:column;gap:3px}
 .ck-css{}
@@ -746,6 +746,7 @@ button.cell:not(:disabled):active{background:var(--line)}
 <script src="world.js"></script>
 <script src="stargaze_sky.js"></script>
 <script src="xfx.js"></script>
+<script src="xfx2.js"></script>
 <script src="td.js"></script>
 <script src="tdmap.js"></script>
 <script type="module">
@@ -2457,7 +2458,7 @@ function xAnimAtk(u, k, list){   // 무기 모션 + 날아가는 것. 닿는 데
   list.forEach((t, i) => B.proj.push({ k: pk, from: u.id, to: t.id, t0: now + rel + i * 70, dur: pd, c: col, bomb: k === 'boom' || (jb && u.job === 'gadget') }));
   return rel + pd;
 }
-function xFxAt(k, list, u){ const sk = k.startsWith('sk:'); xcoEvPush({ k: 'fx', f: k, tg: list.map(t => t.id), u: u ? u.id : null, dl: xDelay }); const now = performance.now(), dl = u ? (xDelay = xAnimAtk(u, k, list)) : xDelay; if (sk && list.length > 1 && u) list = [u]; list.forEach((t, i) => xb.fxs.push({ k, id: t.id, t0: now + dl + i * 90, dur: sk ? XFXJOB.dur(k) : k === 'bolt' ? 520 : k === 'slash' || k === 'impact' ? 380 : k.indexOf(':b') > 0 ? 1150 : 760, seed: Math.random() * 100 })); if (u && ((k.indexOf(':b') > 0 && !/h$/.test(k)) || (sk && XFXJOB.grand(k)))) xb.shake = { t0: now + dl + 60, dur: sk ? 900 : 260, amp: sk ? 3 : 2 }; }
+function xFxAt(k, list, u){ const sk = k.startsWith('sk:'); xcoEvPush({ k: 'fx', f: k, tg: list.map(t => t.id), u: u ? u.id : null, dl: xDelay }); const now = performance.now(), dl = u ? (xDelay = xAnimAtk(u, k, list)) : xDelay; if (sk && list.length > 1 && u && (XFXJOB.SK[k.slice(3)] || {}).once) list = [u]; list.forEach((t, i) => xb.fxs.push({ k, n: i, id: t.id, t0: now + dl + i * 90, dur: sk ? XFXJOB.dur(k) : k === 'bolt' ? 520 : k === 'slash' || k === 'impact' ? 380 : k.indexOf(':b') > 0 ? 1150 : 760, seed: Math.random() * 100 })); if (u && ((k.indexOf(':b') > 0 && !/h$/.test(k)) || (sk && XFXJOB.grand(k)))) xb.shake = { t0: now + dl + 60, dur: sk ? 900 : 260, amp: sk ? 3 : 2 }; }
 // 스킬 쿨타임: 쓴 스킬은 내 다음 행동 n번 동안 못 써요 (MP가 클수록 길어요). 전투가 끝나면 사라져요
 const xCdOf = sk => { const m = sk ? (sk.mp0 ?? sk.mp ?? 0) : 0; return m >= 18 ? 4 : m >= 14 ? 3 : m >= 8 ? 2 : m >= 4 ? 1 : 0; }, xCdLeft = (u, sk) => sk && u.cdn && u.cdn[sk.n] > 0 ? u.cdn[sk.n] : 0;
 function xCdTick(u, sk){ if (u.team !== 'a') return; const c = u.cdn || (u.cdn = {}); Object.keys(c).forEach(k => { if (c[k] > 0) c[k]--; if (c[k] <= 0) delete c[k]; }); const n = xCdOf(sk); if (n) c[sk.n] = n; }
@@ -2498,9 +2499,9 @@ function xAct0(u, sk, tgt){   // 한 번 행동
   else if (sk.t === 'stun') fs().forEach(t => { xHit(u, t, u[sk.st] * sk.p * (.85 + Math.random() * .3) * mult, '#ffd866'); t.g = Math.min(t.g, -60); });
   else if (sk.t === 'summon'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'buff', [u], u); u.pets = u.pets || []; if (u.pets.length >= 3) u.pets.shift(); const lv = sk.lv || 1, mh = Math.round((u.mhp * .3 + 16) * (1 + .25 * (lv - 1)) * (sk.pet.hpm || 1)); u.pets.push({ ...sk.pet, st: sk.st, t: sk.pet.sec * (1 + .1 * (lv - 1)), acc: 0, lv, hp: mh, mhp: mh }); }
   else if (sk.t === 'recall'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'heal', [u], u); const n = (u.pets || []).length; u.pets = []; const t = xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]; if (n && t){ const h = Math.round(t.mhp * .12 * n); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); } else B.log = '돌려보낼 소환수가 없어요'; }
-  else if (sk.t === 'leap'){ xFxAt('time', [u], u); xFloat(u.id, '가속!', '#9ad8ff'); }
-  else if (sk.t === 'tstop'){ xFxAt('time', xAlive(B.foes), u); xAlive(B.party).forEach(a => { a.g = 100; xFloat(a.id, '행동!', '#9ad8ff'); }); xAlive(B.foes).forEach(f => { f.g = Math.min(f.g, -150); xFloat(f.id, '정지', '#d0a0ff'); }); }
-  else if (sk.t === 'encore'){ const last = u.lastSk; if (last && last.t !== 'encore'){ B.log = `앙코르! ${last.n}`; u.mp += sk.mp; xAct0(u, { ...last, mp: 0 }, tgt); return; } else { u.mp += sk.mp; B.log = '다시 쓸 스킬이 없어요'; } }
+  else if (sk.t === 'leap'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'time', [u], u); xFloat(u.id, '가속!', '#9ad8ff'); }
+  else if (sk.t === 'tstop'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'time', xAlive(B.foes), u); xAlive(B.party).forEach(a => { a.g = 100; xFloat(a.id, '행동!', '#9ad8ff'); }); xAlive(B.foes).forEach(f => { f.g = Math.min(f.g, -150); xFloat(f.id, '정지', '#d0a0ff'); }); }
+  else if (sk.t === 'encore'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'buff', [u], u); const last = u.lastSk; if (last && last.t !== 'encore'){ B.log = `앙코르! ${last.n}`; u.mp += sk.mp; xAct0(u, { ...last, mp: 0 }, tgt); return; } else { u.mp += sk.mp; B.log = '다시 쓸 스킬이 없어요'; } }
   else if (sk.t === 'mp'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'buff', xAlive(B.party), u); B.party.forEach(t => { if (t.hp > 0){ t.mp = Math.min(t.mmp, t.mp + t.mmp * sk.v); xFloat(t.id, 'MP↑', '#6aa8ff'); } }); }
   u.g = sk.w ?? 0;
 }
@@ -3205,7 +3206,7 @@ function adminRender(){
       <div class="adsum">${Object.entries(XJ).map(([k, j]) => { const n = ids.filter(id => P[id].ex?.job === k).length; return `<span>${j.n} <b>${n}</b></span>`; }).join('')}<span>미선택 <b>${ids.filter(id => !XJ[P[id].ex?.job]).length}</b></span></div>
       <div class="adtbl"><div class="h"><span>학생</span><span>기숙사</span><span>직업</span><span>골드</span><span>마력</span><span>지식</span><span>날</span><span>물고기</span><span>채집</span><span>낚싯대</span><span>옷</span><span>생물</span><span>상태</span><span>관리</span></div>
       ${ids.sort((a, b) => (P[b].coin || 0) - (P[a].coin || 0)).map(id => { const p = P[id], d = p.fdex || {};
-        return `<div><span><b>${esc(p.nick)}</b></span><span style="color:${HOUSES[p.house]?.col || '#888'}">${HOUSES[p.house]?.name || '-'}</span><span>${XJ[p.ex?.job]?.n || '-'}</span><span>${(p.coin || 0).toLocaleString()}</span><span>${p.mana || 0}</span><span>${p.know || 0}</span><span>${p.day || 1}</span>
+        return `<div><span><b>${esc(p.nick)}</b></span><span><select data-adhouse="${id}" style="color:${HOUSES[p.house]?.col || '#888'};font-weight:700;max-width:100%">${HOUSE_KEYS.map(k => `<option value="${k}" ${p.house === k ? 'selected' : ''}>${HOUSES[k].name} (${ids.filter(i => P[i].house === k).length}/${HOUSE_CAP})</option>`).join('')}${p.house ? '' : '<option value="" selected>-</option>'}</select></span><span>${XJ[p.ex?.job]?.n || '-'}</span><span>${(p.coin || 0).toLocaleString()}</span><span>${p.mana || 0}</span><span>${p.know || 0}</span><span>${p.day || 1}</span>
           <span>${FISH.filter(f => d[f.id]).length}/${FISH.length}</span><span>${FORAGE.filter(f => d[f.id]).length}/50</span><span>${RODS[p.rod || 0]?.name.split(' ')[0] || '-'}</span><span>${Object.keys(p.closet || {}).length}</span><span>${(p.cr || []).length}</span>
           <span>${O[id] ? `${adPlace(O[id].m)}` : p.rest ? '쉬는 중' : '외출'}</span><span><button class="btn sm" data-adreset="${id}">진행 리셋</button> <button class="btn sm" data-addel="${id}">가입 삭제</button></span></div>`; }).join('')}</div>`;
   }
@@ -3267,6 +3268,14 @@ function adminRender(){
   const ar = $('#adresetall'); if (ar) ar.onclick = adResetAll;
   root.querySelectorAll('[data-adreset]').forEach(b => b.onclick = () => adWipe(b.dataset.adreset, false));
   root.querySelectorAll('[data-addel]').forEach(b => b.onclick = () => adWipe(b.dataset.addel, true));
+  root.querySelectorAll('[data-adhouse]').forEach(sel => sel.onchange = async () => {   // 기숙사 옮기기: 정원 3명을 넘으면 막고, 접속 중이면 새로 불러오게 해요
+    const id = sel.dataset.adhouse, p = AD.players[id] || {}, h = sel.value, old = p.house; if (!h || h === old) return adminRender();
+    const n = Object.keys(AD.players).filter(i => i !== id && AD.players[i]?.house === h).length;
+    if (n >= HOUSE_CAP){ alert(`${HOUSES[h].name}은(는) 이미 ${HOUSE_CAP}명이라 옮길 수 없어요.`); return adminRender(); }
+    if (!confirm(`${p.nick || id.slice(0, 6)}을(를) ${old ? HOUSES[old]?.name + ' → ' : ''}${HOUSES[h].name}(으)로 옮길까요? 접속 중이면 화면이 새로 불러와져요.`)) return adminRender();
+    const ups = { ['players/' + id + '/house']: h, ['hmem/' + h + '/' + id]: 1, ['adm/reset/' + id]: Date.now() }; if (old) ups['hmem/' + old + '/' + id] = null;
+    try { await F.update(F.ref(db, '/'), ups); toast('기숙사를 옮겼어요'); } catch(e){ alert('실패했어요: ' + (e.code || e.message)); }
+  });
   root.querySelectorAll('[data-adsc]').forEach(b => b.onclick = () => { if (b.dataset.adsc === 'start'){ if (confirm('입학을 시작할까요? 기다리던 학생이 모두 들어와요.')) F.set(F.ref(db, 'school/ctl'), { open: true, at: Date.now() }); } else if (confirm('입학 대기를 켤까요? 지금부터 캐릭터를 만드는 학생은 시작 전까지 기다려요.')) F.set(F.ref(db, 'school/ctl'), { open: false, at: Date.now() }); });
   root.querySelectorAll('[data-adok]').forEach(b => b.onclick = () => { F.set(F.ref(db, 'approved/' + b.dataset.adok), true).then(() => F.remove(F.ref(db, 'pending/' + b.dataset.adok))); });
   root.querySelectorAll('[data-adno]').forEach(b => b.onclick = () => { if (confirm('이 신청을 거절할까요?')) F.set(F.ref(db, 'approved/' + b.dataset.adno), false).then(() => F.remove(F.ref(db, 'pending/' + b.dataset.adno))); });

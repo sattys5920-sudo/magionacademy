@@ -181,8 +181,8 @@
   const SK = {
     'summon.불 정령': { dur: 1000 }, 'summon.물 정령': { dur: 1000 }, 'summon.바람 정령': { dur: 1000 }, 'summon.대지 정령': { dur: 1000 },
     'summon.정령왕': { dur: 2400, grand: 1 }, 'summon.늑대 소환': { dur: 1000 }, 'summon.곰 소환': { dur: 1000 }, 'summon.날개 도마뱀 소환': { dur: 1000 },
-    'summon.호박 토끼 소환': { dur: 1000 }, 'summon.용 소환': { dur: 2600, grand: 1 }, 'summon.마력 연결': { dur: 1100 }, 'summon.합체 공격': { dur: 1500 },
-    'summon.송환': { dur: 1100 }, 'summon.계약의 폭주': { dur: 2400, grand: 1 },
+    'summon.호박 토끼 소환': { dur: 1000 }, 'summon.용 소환': { dur: 2600, grand: 1 }, 'summon.마력 연결': { dur: 1100, once: 1 }, 'summon.합체 공격': { dur: 1500 },
+    'summon.송환': { dur: 1100 }, 'summon.계약의 폭주': { dur: 2400, grand: 1, once: 1 },
     'pet.fire': { dur: 520 }, 'pet.water': { dur: 520 }, 'pet.wind': { dur: 520 }, 'pet.earth': { dur: 520 }, 'pet.king': { dur: 700 }, 'pet.wolf': { dur: 460 }, 'pet.bear': { dur: 520 }, 'pet.eagle': { dur: 560 }, 'pet.ghost': { dur: 560 }, 'pet.dragon': { dur: 800 },
   };
   function drawSk(g, f, x, y, now){

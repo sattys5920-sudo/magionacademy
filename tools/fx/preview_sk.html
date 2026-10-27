@@ -1,11 +1,11 @@
 <!doctype html><meta charset="utf-8"><body style="margin:0;background:#1a1230;font:12px sans-serif;color:#fff">
-<canvas id="c"></canvas><script src="../../public/xfx.js"></script><script>
+<canvas id="c"></canvas><script src="../../public/xfx.js"></script><script src="../../public/xfx2.js"></script><script>
 const q=new URLSearchParams(location.search).get('r').split(',');
-const SELF=k=>/summon\.(?!합체)/.test(k);
-const P=[.12,.3,.48,.66,.84],W=288,H=162,c=document.getElementById('c');c.width=P.length*W+110;c.height=q.length*H;
+const FOE=new URLSearchParams(location.search).get('f').split(',');const SELF=k=>!FOE.includes(k);
+const P=[.12,.3,.48,.66,.84],W=192,H=108,c=document.getElementById('c');c.width=P.length*W+110;c.height=q.length*H;
 const g=c.getContext('2d');g.imageSmoothingEnabled=false;
 q.forEach((k,ri)=>{g.fillStyle='#fff';g.font='12px sans-serif';g.fillText(k.replace('summon.','').replace('pet.','소환수 '),4,ri*H+16);
 P.forEach((p,pi)=>{const t=document.createElement('canvas');t.width=384;t.height=216;const u=t.getContext('2d');u.fillStyle='#232060';u.fillRect(0,0,384,216);u.fillStyle='#2f3a5a';u.fillRect(0,130,384,86);
 [[84,160,'#caa'],[300,160,'#a8a']].forEach(([x,y,col])=>{u.fillStyle='rgba(0,0,0,.3)';u.beginPath();u.ellipse(x,y,14,4,0,0,7);u.fill();u.fillStyle=col;u.fillRect(x-6,y-34,12,30);});
-const meta=XFXJOB.SK[k],dur=meta.dur;const [x,y]=SELF(k)?[84,160]:[300,160];XFXJOB.drawSk(u,{k:'sk:'+k,t0:0,dur,seed:12.3},x,y,p*dur);g.drawImage(t,110+pi*W,ri*H,W,H);});});
+const meta=XFXJOB.SK[k],dur=meta.dur;const [x,y]=SELF(k)?[84,160]:[300,160];XFXJOB.drawSk(u,{k:'sk:'+k,t0:0,dur,seed:12.3,n:0},x,y,p*dur);g.drawImage(t,110+pi*W,ri*H,W,H);});});
 </script>
