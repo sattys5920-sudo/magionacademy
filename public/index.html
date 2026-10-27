@@ -1518,7 +1518,8 @@ function fishCatch(){
   const isNew = dexAdd(f.id, cm), rec = !f.junk && me.fdex[f.id].cm === cm && !isNew;
   if (isNew && !f.junk){ me.mana += f.grade; }
   save(); hud();
-  if (!f.junk){ pzDrop('fish'); lnDrop('fish'); tutHook('fish'); }
+  tutHook('fish');   // 쓰레기가 걸려도 낚시를 해 본 걸로 쳐요
+  if (!f.junk){ pzDrop('fish'); lnDrop('fish'); }
   if (!f.junk && Math.random() < .02) setTimeout(() => recipePaper('fish'), 1200);   // 낚시: 레시피 종이 2%
   if (!f.junk && f.grade >= 3) speak(`${f.name} ${cm}cm 낚았다!`);
   fishShow(`<div class="fgot">${ic(f.id, 'transform:scale(1.5);margin:8px')}<div><b>${f.name}</b>${f.junk ? '<span class="s">쓰레기예요.... 생선 가게에서 1G에 받아 줘요</span>' : `<span class="fstar">${STARS(f.grade)}</span><span class="s">${cm}cm${rec ? ' · 최고 기록!' : ''} · ${f.pay}G</span>`}${isNew && !f.junk ? `<span class="new">새 물고기! 마력 +${f.grade}</span>` : ''}</div></div>
@@ -5524,7 +5525,7 @@ function renderGreen(){
     const i = +b.dataset.plot, p = me.plots[i];
     if (!p.k){ plantFor = plantFor === i ? null : i; greenMsg = ''; renderGreen(); setTimeout(() => document.querySelector('[data-plot].sel')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 30); return; }
     plantFor = null;
-    if (plotReady(p)){ const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0) + (dbuff('dforest') && Math.random() < .1 ? 1 : 0), n2 = sgMul(n, sgFx('gather_yield')); me.inv[p.k] += n2; me.plots[me.plots.indexOf(p)] = { k: null }; greenMsg = `${g.seed} 수확! ${g.mat} +${n2}${n2 > g.yield ? ' (Dewmorn의 새벽 보너스)' : ''}`; }
+    if (plotReady(p)){ tutHook('water'); const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0) + (dbuff('dforest') && Math.random() < .1 ? 1 : 0), n2 = sgMul(n, sgFx('gather_yield')); me.inv[p.k] += n2; me.plots[me.plots.indexOf(p)] = { k: null }; greenMsg = `${g.seed} 수확! ${g.mat} +${n2}${n2 > g.yield ? ' (Dewmorn의 새벽 보너스)' : ''}`; }
     else if (p.w) greenMsg = `이미 물을 줬어요. ${timeText(plotLeft(p))} 남았어요.`;
     else if (me.mana < waterCost()) greenMsg = '마력이 부족해요. 내 방 침대에서 쉬고 오세요.';
     else { p.w = true; tutHook('water'); me.mana -= waterCost(); greenMsg = `물을 줬어요. 쑥쑥! ${timeText(plotLeft(p))} 남았어요.`; }
@@ -7179,8 +7180,8 @@ const TUT = {
   steps: [
     { k: 'class', ask: ['먼저 수업부터 들어 볼까요?', '본관 옆 「교실」에 들어가서 「앉아서 수업 듣기」를 눌러 봐요. 과목은 아무거나 괜찮아요.', '한 판만 끝까지 해 보면 돼요. 틀려도 괜찮아요, 나도 처음엔 다 틀렸는걸요.'],
       again: '교실에서 수업을 한 판 해 봐요. 천천히 해도 괜찮아요. 사탕 하나 먹고 갈래요?', done: ['와, 해냈네요! 정말 잘했어요, 새싹.', '수업은 하루에 열 번까지 들을 수 있어요. 들을수록 지식이 쌓이고, 새 레시피도 알게 돼요.', '자, 이건 첫 용돈이에요. 맛있는 거 사 먹어요!'], rew: { coin: 50 } },
-    { k: 'water', ask: ['다음은 약초 키우기예요.', '「독초 온실」에 가서 내 화단에 물을 줘 봐요. 물을 주면 마력을 조금 써요.', '물 준 약초는 시간이 지나면 쑥쑥 자라요. 나중에 와서 수확하면 돼요.'],
-      again: '독초 온실에서 화단에 물을 줘 봐요. 이미 심어 둔 약초가 있을 거예요. 천천히 찾아봐요.', done: ['어머, 벌써 물 줬어요? 약초가 좋아하겠어요.', '약초는 물약을 만들 때 꼭 필요해요. 잘 돌보면 자기도 고마워한대요.', '자라는 동안 다른 걸 해 봐요. 이것도 용돈이에요!'], rew: { coin: 50 } },
+    { k: 'water', ask: ['다음은 약초 키우기예요.', '「독초 온실」에 가서 내 화단을 돌봐 줘요. 다 자란 약초는 눌러서 수확하고, 아직 자라는 건 물을 주면 돼요.', '물을 주면 마력을 조금 써요. 어느 쪽이든 한 번만 해 보면 돼요.'],
+      again: '독초 온실에서 화단을 눌러 수확하거나 물을 줘 봐요. 어느 쪽이든 괜찮아요. 천천히 해요.', done: ['어머, 약초를 돌봐 줬네요? 약초가 좋아하겠어요.', '약초는 물약을 만들 때 꼭 필요해요. 잘 돌보면 자기도 고마워한대요.', '자라는 동안 다른 걸 해 봐요. 이것도 용돈이에요!'], rew: { coin: 50 } },
     { k: 'fish', ask: ['이번엔 낚시예요. 나는 낚시를 좋아해서 설레네요.', '물가에 서면 「낚시하기」 버튼이 떠요. 학교 북쪽 연못이 가까워요.', '찌가 움직일 때 맞춰서 눌러 봐요. 한 마리만 낚으면 돼요. 못 잡아도 다시 하면 되고요.'],
       again: '물가에서 낚시를 해 봐요. 학교 북쪽 연못이 가까워요. 서두르지 않아도 돼요.', done: ['와아, 낚았네요! 반짝반짝 예쁜 물고기예요.', '잡은 물고기는 도감에 기록되고, 생선 가게에 팔 수도 있어요. 요리 재료로도 쓰이고요.', '오늘의 용돈 나가요!'], rew: { coin: 50 } },
     { k: 'feed', ask: ['사육장에도 가 봐요. 새싹의 생물들이 기다리고 있어요.', '「사육장」에 들어가서 「내 사육장」을 열고, 생물에게 먹이를 줘 봐요.', '애정이 쌓이면 귀한 재료를 나눠 줘요. 아주 귀여우니까 마음의 준비를 해요.'],
