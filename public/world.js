@@ -770,10 +770,10 @@ function drawPerson(p){ const cx = out;
 }
 function frame(now){
   const dt = Math.min(.05, (now - last) / 1000); last = now;
+  const A = rmap && MAPS[rmap]; if (!M || !A || !A.bg || !A.obj){ requestAnimationFrame(frame); return; }   // 지도나 그림이 아직 없으면 이번 장면은 건너뛰어요
   people.forEach(p => step(p, dt));
   if (dest && (!me.path.length || performance.now() - dest.t0 > 20000)) dest = null;
   if ((nearTick = (nearTick + 1) % 6) === 0) nearCheck();
-  const A = MAPS[rmap]; if (!A.bg || !A.obj){ requestAnimationFrame(frame); return; }   // 그림이 아직 없으면 이번 장면은 건너뛰어요
   // 카메라 먼저: 맵이 화면보다 작으면 가운데에, 크면 내 캐릭터를 따라가요
   { const ct = camTarget && (camTarget.p || camTarget.x !== undefined) ? (camTarget.p ? [camTarget.p.x, camTarget.p.y] : [camTarget.x, camTarget.y]) : [me.x, me.y]; const [mx, my] = P(ct[0] + .5, ct[1] + .5);
     const tx = M.W <= VW ? (M.W - VW) / 2 : Math.max(0, Math.min(M.W - VW, mx - VW / 2));
