@@ -1645,7 +1645,7 @@ function renderFish(){
   if (fsTab === 'dex'){
     const list = fsKind === 'fish' ? FISH : FORAGE, PER = 20; fsPg = pgClamp(fsPg, list.length, PER);
     const sel = fsSel && CATCH_INFO[fsSel], sd = sel && D[sel.id];
-    const detail = sel ? `<div class="fdet">${sd ? ic(sel.id) : '<span class="q fcell" style="min-height:0;padding:0;border:0;background:none">?</span>'}<div class="main"><span class="t">No.${sel.i + 1} ${sd ? esc(sel.name) : '???'} <span class="fst">${STARS(sel.grade)}</span></span><span class="d">${sd ? (sel.cm ? `최고 기록 ${sd.cm}cm · ${sd.n}마리 낚음` : `${sd.n}개 주움`) + ' · ' : ''}${where(sel)}${sd ? ` · 가게에서 ${sel.pay}G` : ''}</span></div></div>`
+    const detail = sel ? `<div class="fdet">${sd ? ic(sel.id) : '<span class="q fcell" style="min-height:0;padding:0;border:0;background:none">?</span>'}<div class="main"><span class="t">No.${sel.i + 1} ${sd ? esc(sel.name) : '???'} <span class="fst">${STARS(sel.grade)}</span></span><span class="d">${sd ? (sel.cm ? `최고 기록 ${sd.cm}cm · ${sd.n}마리 낚음` : `${sd.n}개 주움`) + ' · ' + where(sel) + ` · 가게에서 ${sel.pay}G` : '아직 못 찾았어요'}</span></div></div>`
       : hint(fsMsg, '');
     body = `<div class="seg" style="grid-template-columns:1fr 1fr"><button data-fsk="fish" class="${fsKind === 'fish' ? 'on' : ''}">물고기 ${nf}/${FISH.length}</button><button data-fsk="forage" class="${fsKind === 'forage' ? 'on' : ''}">채집물 ${ng}/50</button></div>
       ${detail}<div class="grid fgrid">${pgSlice(list, fsPg, PER).map(cell).join('')}</div>${pgNav('fspg', fsPg, list.length, PER)}`;
