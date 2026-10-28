@@ -762,7 +762,7 @@ const ICONS = ['coin','mana','p_red','p_blue','p_green','p_purple','herb','mush'
   'p_grow','p_vigor','p_fluff','p_dragon','p_dawn','p_sun','p_dusk','p_moon','mist','sun','pollen','stardust','whisker','slime','honey','silk','feather','milk','hegg'];
 const ic = (k, extra='') => { const P = POTION_INFO[k], G = !ICONS.includes(k) && typeof SEED_INFO !== 'undefined' && SEED_INFO[k], C = typeof CATCH_INFO !== 'undefined' && CATCH_INFO[k];
   if (C) return `<i class="ic" style="background:url(art/${C.sheet}.png?v=${FISH_ART_V}) ${-32 * C.i}px 0/${32 * C.n}px 32px no-repeat;${extra}"></i>`;
-  const D = typeof DISH_INFO !== 'undefined' && DISH_INFO[k]; if (D) return `<i class="ic" style="background:url(art/dishes.png?v=${DISH_ART_V}) ${-32 * D.i}px 0/${32 * 40}px 32px no-repeat;${extra}"></i>`;
+  const D = typeof DISH_INFO !== 'undefined' && DISH_INFO[k]; if (D) return `<i class="ic" style="background:url(art/dishes.png?v=${DISH_ART_V}) ${-32 * D.i}px 0/${32 * DISH.length}px 32px no-repeat;${extra}"></i>`;
   if (G) return `<i class="ic" style="background-image:url(art/plants.png?v=4);background-position:${-32 * (G.ic % 10)}px ${-32 * Math.floor(G.ic / 10)}px;${extra}"></i>`;
   return P ? `<i class="ic" style="background-image:url(art/potions.png);background-position:${-32 * (P.ic % 10)}px ${-32 * Math.floor(P.ic / 10)}px;${extra}"></i>`
     : `<i class="ic" style="background-position:${-32 * ICONS.indexOf(k)}px 0;${extra}"></i>`; };
@@ -1506,7 +1506,7 @@ function dexAdd(k, cm){
   d.n++; if (cm && cm > (d.cm || 0)) d.cm = cm; me.fdex[k] = d; me.inv[k] = (me.inv[k] || 0) + 1;
   return isNew;
 }
-// ---------- 낚시: 물을 누르면 찌를 던지고, 찌가 쏙 들어가면 탭, 바늘이 초록 칸에 올 때 탭 ----------
+// ---------- 낚시: 물을 누르면 찌를 던지고, 찌가 쏙 들어가면 탭, 그다음 ◀ ▶로 찌를 초록 칸에 두고 버텨요 ----------
 let fishing = null;
 const fishUI = () => $('#fishui');
 function fishEnd(){ if (!fishing) return; clearTimeout(fishing.timer); cancelAnimationFrame(fishing.raf); fishing = null; World.setBobber(null); World.busyFish = false; fishUI().classList.remove('on'); fishUI().innerHTML = ''; }
@@ -1586,7 +1586,7 @@ function fishCatch(){
   if (!f.junk){ pzDrop('fish'); lnDrop('fish'); }
   if (!f.junk && Math.random() < .02) setTimeout(() => recipePaper('fish'), 1200);   // 낚시: 레시피 종이 2%
   if (!f.junk && f.grade >= 3) speak(`${f.name} ${cm}cm 낚았다!`);
-  fishShow(`<div class="fgot">${ic(f.id, 'transform:scale(1.5);margin:8px')}<div><b>${f.name}</b>${f.junk ? '<span class="s">쓰레기예요.... 생선 가게에서 1G에 받아 줘요</span>' : `<span class="fstar">${STARS(f.grade)}</span><span class="s">${cm}cm${rec ? ' · 최고 기록!' : ''} · ${f.pay}G</span>`}${isNew && !f.junk ? `<span class="new">새 물고기! 마력 +${f.grade}</span>` : ''}</div></div>
+  fishShow(`<div class="fgot">${ic(f.id, 'transform:scale(1.5);margin:8px')}<div><b>${f.name}</b>${f.junk ? '<span class="s">쓰레기예요.... 생선 가게에서 1G에 받아 줘요</span>' : `<span class="fstar">${STARS(f.grade)}</span><span class="s">${cm}cm${rec ? ' · 최고 기록!' : ''} · 지금 ${sellPay(f.id, f.pay)}G</span>`}${isNew && !f.junk ? `<span class="new">새 물고기! 마력 +${f.grade}</span>` : ''}</div></div>
     <div class="frow"><button class="btn sm go" data-fx="again">다시 던지기</button><button class="btn sm" data-fx="stop">그만</button></div>`);
 }
 document.addEventListener('pointerdown', e => {
@@ -1618,7 +1618,7 @@ World.onSpot = (si, spot) => {
   const all = spotsToday(), live = all.map((s, i) => ({ ...s, i })).filter(s => !me.fg.got.includes(s.i)), sp = live[si]; if (!sp) return;
   const pool = FORAGE.filter(x => x.z.includes(sp.z)).map(x => buffOn('fluck') ? { ...x, w: x.w ** .7 } : x); let r = sp.r * pool.reduce((t, x) => t + x.w, 0), it = pool[pool.length - 1];   // 요리 효과: 드문 채집물
   for (const x of pool){ r -= x.w; if (r <= 0){ it = x; break; } }
-  const isNew = dexAdd(it.id); if (dbuff('dforest') && Math.random() < .1) dexAdd(it.id); me.fg.got.push(sp.i); if (isNew) me.mana += it.grade;
+  const isNew = dexAdd(it.id); if (dbuff('dforest') && Math.random() < .1) dexAdd(it.id); { const ex = sgMul(1, sgFx('gather_yield') + partyFx()) - 1; if (ex > 0) me.inv[it.id] = (me.inv[it.id] || 0) + ex; } me.fg.got.push(sp.i);   // 풍작의 별빛 · 친구와 함께 if (isNew) me.mana += it.grade;
   save(); hud(); syncSpots();
   pzDrop('forage'); lnDrop('forage');
   if (it.grade >= 3) speak(`${it.name} 찾았다!`);
@@ -1631,7 +1631,7 @@ const sellMul = k => { let h = 0; for (const c of k) h = (h * 31 + c.charCodeAt(
 const sellPay = (k, base) => Math.max(1, Math.round(base * sellMul(k)));
 const sellTag = k => { const m = sellMul(k); return m > 1.2 ? '<b style="color:var(--ok)">▲ 비싸게 쳐줘요</b>' : m < .8 ? '<b style="color:var(--bad,#c55)">▼ 싸게 쳐줘요</b>' : '보통'; };
 const cropBase = k => { const x = SEED_INFO[k]; return x ? Math.max(2, Math.round(x.price * .5 + 2)) : 0; };
-const FISH_GO = [['유령 호수', 'town', [32, 78], 40], ['등불 강', 'campus', [80, 33], 34], ['북쪽 연못', 'campus', [56, 17], 22], ['북동 연못', 'town', [68, 18], 28], ['남동 연못', 'town', [70, 64], 31], ['골목 연못', 'quarter', [20, 26], 28]];   // [이름, 맵, 물가 자리, 낚이는 물고기 수]
+const FISH_GO = [['유령 호수', 'town', [32, 78], FISH_SPOT.lake.cap + 1], ['등불 강', 'campus', [80, 33], FISH_SPOT.river.cap + 1], ['북쪽 연못', 'campus', [56, 17], FISH_SPOT.pond_n.cap + 1], ['북동 연못', 'town', [68, 18], FISH_SPOT.pond_ne.cap + 1], ['남동 연못', 'town', [70, 64], FISH_SPOT.pond_se.cap + 1], ['골목 연못', 'quarter', [20, 26], FISH_SPOT.pond_q.cap + 1]];   // [이름, 맵, 물가 자리, 낚이는 물고기 수]
 let fsGo = false, fsTab = 'dex', fsMsg = '', fsKind = 'fish', fsPg = 0, fsSel = null, fsSellPg = 0;
 const ZONE_NAME = { f: '숲', g: '묘지', l: '호숫가', p: '들판' };
 // 쪽 넘김: 전체 n개를 per개씩. 버튼은 data-<attr>="쪽 번호" (요리 화면도 같이 써요)
@@ -1647,7 +1647,7 @@ function renderFish(){
   if (fsTab === 'dex'){
     const list = fsKind === 'fish' ? FISH : FORAGE, PER = 20; fsPg = pgClamp(fsPg, list.length, PER);
     const sel = fsSel && CATCH_INFO[fsSel], sd = sel && D[sel.id];
-    const detail = sel ? `<div class="fdet">${sd ? ic(sel.id) : '<span class="q fcell" style="min-height:0;padding:0;border:0;background:none">?</span>'}<div class="main"><span class="t">No.${sel.i + 1} ${sd ? esc(sel.name) : '???'} <span class="fst">${STARS(sel.grade)}</span></span><span class="d">${sd ? (sel.cm ? `최고 기록 ${sd.cm}cm · ${sd.n}마리 낚음` : `${sd.n}개 주움`) + ' · ' + where(sel) + ` · 가게에서 ${sel.pay}G` : '아직 못 찾았어요'}</span></div></div>`
+    const detail = sel ? `<div class="fdet">${sd ? ic(sel.id) : '<span class="q fcell" style="min-height:0;padding:0;border:0;background:none">?</span>'}<div class="main"><span class="t">No.${sel.i + 1} ${sd ? esc(sel.name) : '???'} <span class="fst">${STARS(sel.grade)}</span></span><span class="d">${sd ? (sel.cm ? `최고 기록 ${sd.cm}cm · ${sd.n}마리 낚음` : `${sd.n}개 주움`) + ' · ' + where(sel) + ` · 지금 가게에서 ${sellPay(sel.id, sel.pay)}G` : '아직 못 찾았어요'}</span></div></div>`
       : hint(fsMsg, '');
     body = `<div class="seg" style="grid-template-columns:1fr 1fr"><button data-fsk="fish" class="${fsKind === 'fish' ? 'on' : ''}">물고기 ${nf}/${FISH.length}</button><button data-fsk="forage" class="${fsKind === 'forage' ? 'on' : ''}">채집물 ${ng}/50</button></div>
       ${detail}<div class="grid fgrid">${pgSlice(list, fsPg, PER).map(cell).join('')}</div>${pgNav('fspg', fsPg, list.length, PER)}`;
@@ -1661,7 +1661,7 @@ function renderFish(){
   if (fsTab === 'today'){
     const fg = me.fg?.d === todayKey() ? me.fg : { got: [], extra: 0 }, total = 16 + (fg.extra || 0), left = total - fg.got.length, nowFish = FISH.filter(fishNow).length, onlyNow = FISH.filter(f => f.time === now).length;
     const buffs = Object.entries(me.buffs || {}).filter(([, t]) => t > Date.now()).map(([k, t]) => `${k === 'all' ? '만찬' : BUFF_NAME[k]} ${Math.ceil((t - Date.now()) / 6e4)}분`);
-    const tips = [['', '물가를 누르면 찌를 던져요. 찌가 쏙 들어가면 바로 누르고, 바늘이 초록 칸에 올 때 또 눌러요.'], ['', '반짝이는 곳은 날마다 자리가 바뀌어요. 숲·묘지·호숫가·들판마다 나오는 것이 달라요.'], ['', '물고기는 시간대마다 달라요. 밤에만 나오는 물고기도 있어요.']];
+    const tips = [['', '물가를 누르면 찌를 던져요. 찌가 쏙 들어가면 바로 누르고, 그다음엔 ◀ ▶를 눌러 찌를 초록 칸 안에 두고 버텨요. 칸 밖에 오래 있으면 놓쳐요.'], ['', '반짝이는 곳은 날마다 자리가 바뀌어요. 숲·묘지·호숫가·들판마다 나오는 것이 달라요.'], ['', '물고기는 시간대마다 달라요. 밤에만 나오는 물고기도 있어요.']];
     if (buffs.length) tips.unshift(['', `요리 효과 중: ${buffs.join(' · ')}`]);
     if (me.perk?.bait) tips.push(['', '나비의 미끼: 입질이 15% 빨라요']);
     if (me.perk?.lord_hint) tips.push(['', `캇파의 힌트: 호수의 주인은 밤에 나와요${isFullMoon() ? ' · 오늘은 보름!' : ''}`]);
@@ -1689,7 +1689,7 @@ function renderFish(){
   on('[data-fspg]', b => { fsPg = +b.dataset.fspg; renderFish(); });
   on('[data-fsspg]', b => { fsSellPg = +b.dataset.fsspg; renderFish(); });
   on('[data-fsel]', b => { fsSel = fsSel === b.dataset.fsel ? null : b.dataset.fsel; renderFish(); });
-  const sell = (k, n) => { n = Math.min(n, me.inv[k]); if (n <= 0) return 0; me.inv[k] -= n; const g = sellPay(k, CATCH_INFO[k].pay) * n; me.coin += g; return g; };
+  const sell = (k, n) => { n = Math.min(n, me.inv[k]); if (n <= 0) return 0; me.inv[k] -= n; const g = partyMul(sellPay(k, CATCH_INFO[k].pay) * n); me.coin += g; return g; };
   on('[data-fsell]', b => { const g = sell(b.dataset.fsell, 1); fsMsg = `${ITEM[b.dataset.fsell]} 1개를 팔았어요. +${g}G`; save(); renderFish(); });
   on('[data-fsall]', b => { const k = b.dataset.fsall, n = me.inv[k], g = sell(k, n); fsMsg = `${ITEM[k]} ${n}개를 팔았어요. +${g}G`; save(); renderFish(); });
   $('#fsAll') && ($('#fsAll').onclick = () => { let g = 0, n = 0; CATCH.forEach(k => { n += me.inv[k] || 0; g += sell(k, me.inv[k] || 0); }); fsMsg = `${n}개를 팔았어요. +${g.toLocaleString()}G`; save(); renderFish(); });
@@ -1922,7 +1922,7 @@ function xSaveParty(){ const run = xEx().run; if (run && xb) run.p = xb.party.ma
 function xEnd(how){   // how: clear · time · retreat · wipe
   const ex = xEx(), run = ex.run; if (!run) return;
   if (run.co && how !== 'retreat' && xcoHost()){ xcoPub({ st: 'end', end: { how } }); const rid = run.co; setTimeout(() => GDB.upd('xparty/' + rid, { st: 'end' }), 3500); }
-  if (run.co){ xcoStop(); xM = null; } const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gold = how === 'wipe' ? 0 : Math.round(lo.gold * mult), exp = how === 'wipe' ? 0 : Math.round((lo.exp * mult + (how === 'clear' ? xReg().clearExp : 0)) * (dbuff('dforest') ? 1.03 : 1) * (dbuff('pump') ? 1.1 : 1) * (1 + sgFx('exp_gain')));
+  if (run.co){ xcoStop(); xM = null; } const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gold = how === 'wipe' ? 0 : partyMul(Math.round(lo.gold * mult)), exp = how === 'wipe' ? 0 : Math.round((lo.exp * mult + (how === 'clear' ? xReg().clearExp : 0)) * (dbuff('dforest') ? 1.03 : 1) * (dbuff('pump') ? 1.1 : 1) * (1 + sgFx('exp_gain') + partyFx()));
   const items = how === 'wipe' ? {} : { ...lo.items }; if (how === 'clear') { const r = xRand(xReg().rare); items[r] = (items[r] || 0) + 1; }
   const before = xLv(ex.exp).L; ex.exp += exp; me.coin += gold; Object.entries(items).forEach(([k, n]) => { me.inv[k] = (me.inv[k] || 0) + n; });
   const after = xLv(ex.exp).L, sp = how === 'clear' || (how !== 'wipe' && Math.random() < .1) ? 1 : 0; ex.spx = (ex.spx || 0) + sp; ex.run = null; xb = null; clearInterval(xTick); save(); hud();
@@ -2834,8 +2834,10 @@ function xUp(){   // 글·상태 갱신 (그림은 xDraw가 알아서 그려요)
 const XPETI = ['불 정령', '물 정령', '바람 정령', '대지 정령', '정령왕', '늑대', '곰', '날개 도마뱀', '호박 토끼', '용', '번개 쥐', '수호 쥐', '광선 도마뱀', '철갑 멧돼지'];   // art/pets.png 칸 순서 (tools/iso/lpc/pet_lpc.py)
 const X_ITEMS = [['p_red', 'hp', '', '체력 50%', .5], ['p_vigor', 'mp', '', '마력 50%', .5], ['p_dawn', 'both', '', '체력·마력 70%', .7]];   // 전투 중 쓰는 물약 (한 턴을 써요 · 아군을 골라 줄 수 있어요) · 모두 물약 교실에서 만들어요 (새벽빛 물약은 새벽에만)
 function xItemUse(B, u, k, t){   // 효과만 적용 (개수는 쓰는 사람 기기에서 줄여요) · t: 받는 아군 (없으면 나)
-  const it = X_ITEMS.find(x => x[0] === k); if (!it) return; t = t || u; const g = (kind, mx, was, set) => { const now = Math.min(mx, was + Math.round(mx * it[4])); set(now); return Math.round(now - was); };
-  const dh = it[1] !== 'mp' ? g('hp', t.mhp, t.hp, v => { t.hp = v; }) : 0, dm = it[1] !== 'hp' ? g('mp', t.mmp, t.mp, v => { t.mp = v; }) : 0;
+  const it = X_ITEMS.find(x => x[0] === k); if (!it) return; t = t || u;
+  const tasty = k === 'p_red' && (u.tasty || (u.uid === myId() && me.perk?.tasty_potion));   // 세라 ♥10: 맛있는 치유 물약 (체력 70% + 마력 20%)
+  const g = (kind, mx, was, set, f) => { const now = Math.min(mx, was + Math.round(mx * f)); set(now); return Math.round(now - was); };
+  const dh = it[1] !== 'mp' ? g('hp', t.mhp, t.hp, v => { t.hp = v; }, tasty ? .7 : it[4]) : 0, dm = it[1] !== 'hp' || tasty ? g('mp', t.mmp, t.mp, v => { t.mp = v; }, tasty ? .2 : it[4]) : 0;
   B.log = `${it[2]} ${u.name}이(가) ${t === u ? '' : t.name + '에게 '}${ITEM[k]}을(를) ${t === u ? '마셨어요' : '먹여 줬어요'}`; if (dh) xFloat(t.id, `+${dh}`, '#8af09a'); if (dm) xFloat(t.id, `+${dm}`, '#8ac4ff'); sfx('win'); u.g = 0;
 }
 const XSTI = ['slow','weak','vuln','blind','dot','bomb','atk','spd','dmgIn','taunt','cover','counter','dodge','regen','shield','survive'];
@@ -3445,7 +3447,7 @@ async function adminMap(){
 // ===== 요리 40종 (과자 교실 솥): 재료 넣기 → 불 맞추기 → 휘휘 젓기, 별 3개면 「최고의 맛」 효과 2배 =====
 // 그림은 art/dishes.png (tools/iso/dish_art.py, 이 표 순서). 효과: mana 마력 · know 지식 · spot 오늘 반짝이 + · love 생물 애정 · grow 온실 시간 줄이기
 //   (시간 효과) bite 입질 빠르게 · rare 드문 물고기 · fluck 드문 채집물 · speed 걷기 빠르게 · coin 주문 보상 +20% · ggold 놀이 보상 +50% · all 전부
-const DISH_ART_V = 2;
+const DISH_ART_V = 3;
 const DISH_LIST = [
   ['d_pseedsoup', '호박씨 크림수프', ['g2_pseed', 'milk', 'herb'], 'mana', 8],
   ['d_acorncookie', '도토리 쿠키', ['g2_acorn', 'g_wheat', 'hegg'], 'speed', 10],
@@ -3487,6 +3489,7 @@ const DISH_LIST = [
   ['d_whalesoup', '별똥별 고래 수프', ['f_whale', 'g_comet', 'drop'], 'rare', 60],
   ['d_kingfeast', '호박달 메기왕 정찬', ['f_king', 'g_sung', 'g_gold', 'g2_gacorn'], 'coin', 60],
   ['d_lordbanquet', '호수의 주인 만찬', ['f_lord', 'g2_pumpmoon', 'g_wish', 'g_soul'], 'all', 60],
+  ['d_pmooncake', '호박달 케이크', ['g2_pseed', 'g_wheat', 'milk', 'honey'], 'all', 20],   // 마들렌 ♥10 레시피를 받아야 만들 수 있어요
 ];
 const EFF = { mana: v => `마력 +${v}`, know: v => `지식 +${v}`, spot: v => `오늘 반짝이 +${v}곳`, love: v => `생물 애정 +${v}`, grow: v => `온실 남은 시간 -${v * 2}%`,
   bite: v => `낚시 입질 빠르게 ${v}분`, rare: v => `드문 물고기 잘 와요 ${v}분`, fluck: v => `드문 채집물 잘 나와요 ${v}분`, speed: v => `걷기 빠르게 ${v}분`, coin: v => `주문 보상 +20% ${v}분`, ggold: v => `놀이 보상 +50% ${v}분`, all: v => `모든 좋은 효과 ${v}분 + 마력 +50` };
@@ -3513,7 +3516,7 @@ function eatDish(k){
   me.inv[k]--; const v = d.best ? d.v * 2 : d.v; me.buffs = me.buffs || {};
   if (TIMED.includes(d.e) || d.e === 'all'){ const key = d.e; me.buffs[key] = Math.max(Date.now(), me.buffs[key] || 0) + v * 6e4; if (d.e === 'all') me.mana += 50; }
   if (d.e === 'mana') me.mana += v;
-  if (d.e === 'know') me.know = (me.know || 0) + v;
+  if (d.e === 'know'){ const got = addKnow(v); if (got.length) setTimeout(() => toast(got.join(' · ')), 1200); }
   if (d.e === 'spot'){ if (!me.fg || me.fg.d !== todayKey()) me.fg = { d: todayKey(), got: [] }; me.fg.got = me.fg.got || []; me.fg.extra = (me.fg.extra || 0) + v; syncSpots(); }
   if (d.e === 'love') me.cr.forEach(c => { c.love = Math.min(LOVE_MAX, (c.love || 0) + v); });
   if (d.e === 'grow') (me.plots || []).forEach(p => { if (p.k && p.at){ const G = SEED_INFO[p.k], end = p.at + G.mins * 6e4, left = end - Date.now(); if (left > 0) p.at -= left * v * .02; } });
@@ -3601,8 +3604,8 @@ function cookStir(){
 function cookDone(){
   const C = cooking; if (!C) return;
   const total = C.sc[0] + C.sc[1] + C.sc[2], stars0 = total >= 8 ? 3 : total >= 5 ? 2 : 1, stars = stars0 < 3 && Math.random() < sgFx('craft_success') ? stars0 + 1 : stars0, best = stars === 3, k = C.d.id + (best ? '_s' : '');
-  me.inv[k] = (me.inv[k] || 0) + 1; me.cdex = me.cdex || {}; const isNew = !me.cdex[C.d.id]; me.cdex[C.d.id] = Math.max(me.cdex[C.d.id] || 0, stars);
-  if (isNew) me.know = (me.know || 0) + 1;
+  const coX = coExtra(); me.inv[k] = (me.inv[k] || 0) + 1 + coX; if (coX) setTimeout(() => toast(`친구와 함께 만들어서 ${coX}개 더!`), 800); me.cdex = me.cdex || {}; const isNew = !me.cdex[C.d.id]; me.cdex[C.d.id] = Math.max(me.cdex[C.d.id] || 0, stars);
+  if (isNew){ const got = addKnow(1); if (got.length) setTimeout(() => toast(got.join(' · ')), 1500); }
   save(); hud();
   World.setCook({ x: C.pot.x, y: C.pot.y, soup: C.soup, heat: .15, steam: 5 });
   if (best) speak(`${C.d.name} 최고의 맛!`);
@@ -3615,14 +3618,15 @@ function cookDone(){
 // ---------- 요리 화면: 요리하기(고르기·재료 확인) · 요리책(20개씩) · 효과(지금 효과·내 요리) ----------
 // 다른 곳(솥 말풍선, 홈)에서 ckTab = 'book'으로 열어요 → 'book' = 요리하기 탭
 let ckTab = 'book', ckMsg = '', ckPot = null, ckSel = null, ckPg = 0, ckDexPg = 0, ckBagPg = 0;
+const dishOpen = d => d.id !== 'd_pmooncake' || !!me.perk?.cake_recipe;   // 비밀 레시피
 function renderCook(){
   const have = k => me.inv[k] || 0, needOf = d => { const need = {}; d.r.forEach(k => need[k] = (need[k] || 0) + 1); return need; }, can = d => Object.entries(needOf(d)).every(([k, n]) => have(k) >= n);
   const bag = DISHES.filter(k => have(k) > 0), cdex = me.cdex || {}, nowMs = Date.now(), buffs = Object.entries(me.buffs || {}).filter(([, t]) => t > nowMs);
-  const tabs = [['book', '요리하기'], ['dex', `요리책 ${Object.keys(cdex).length}/40`], ['eff', `효과${buffs.length ? ' ●' : ''}`]];
+  const tabs = [['book', '요리하기'], ['dex', `요리책 ${Object.keys(cdex).length}/${DISH.length}`], ['eff', `효과${buffs.length ? ' ●' : ''}`]];
   const goLab = '<button class="btn go" data-cklab="1" style="flex:1">과자 교실 솥으로</button>';
   let body = '';
   if (ckTab === 'book'){
-    const sorted = [...DISH].sort((a, b) => (can(b) - can(a)) || a.i - b.i), nCan = sorted.filter(can).length, PER = 10;
+    const sorted = DISH.filter(dishOpen).sort((a, b) => (can(b) - can(a)) || a.i - b.i), nCan = sorted.filter(can).length, PER = 10;
     if (!ckSel || !DISH_INFO[ckSel]) ckSel = sorted[0].id;
     ckPg = pgClamp(ckPg, sorted.length, PER);
     const d = DISH_INFO[ckSel], ok = can(d);
@@ -3787,6 +3791,13 @@ function npcDecay(){
     const idle = daysSince(st.t), from = Math.max(7, st.dk ? dayNum(st.dk) - dayNum(st.t) : 7);
     if (idle > from){ const floor = Math.floor(st.a / 100) * 100; st.a = Math.max(floor, st.a - 5 * (idle - from)); }
     st.dk = today; });
+  if (me.perk?.potion_hint && !me.phFix){   // 예전에 아울라 ♥10을 받고도 레시피가 안 열렸던 학생: 한 번 2개를 알려 줘요
+    me.phFix = 1; const got = []; for (const x of HINT_ORDER){ if (got.length >= 2) break; if (!me.hints.includes(x)){ me.hints.push(x); got.push(HINTS[x]); } }
+    save(); if (got.length) setTimeout(() => toast(`아울라의 물약 힌트: 새 레시피 ${got.join(', ')}`), 3000); }
+  if (me.perk?.free_post && me.postDay !== today){   // 배트리 ♥10: 날마다 소포가 와요 (채집물 3개 + 15G)
+    me.postDay = today; const pool = FORAGE.filter(x => x.grade <= 2), got = [];
+    for (let i = 0; i < 3; i++){ const x = pool[hash32(today + uid + i) % pool.length]; me.inv[x.id] = (me.inv[x.id] || 0) + 1; got.push(x.name); }
+    me.coin += 15; save(); setTimeout(() => toast(`${nameVar(npcGet('batri'))}의 소포가 왔어요: ${got.join(', ')} · 15G`), 4000); }
   if (me.perk?.fortune && me.fortuneDay !== today){   // 스텔라 ♥10: 하루 한 번 운세
     me.fortuneDay = today; const F = ['동쪽 시장에서 작은 행운이 기다려요', '호숫가에서 반가운 얼굴을 만나요', '오늘 고른 선물은 마음에 쏙 들 거예요', '길을 잃어도 괜찮아요, 별이 다시 알려 줘요', '조용한 곳에서 좋은 생각이 떠올라요'];
     me.coin += 20; save(); setTimeout(() => toast(`${nameVar(npcGet('stella'))}의 운세: ${F[hash32(today) % F.length]} (+20G)`), 2500); }
@@ -4260,24 +4271,24 @@ async function evRun(ctx, sc){
     }
   }
 }
-const PERK_KO = { cat_furniture: '내 방 고양이 가구', bait: '나비의 낚시 미끼(입질이 빨라요)', free_post: '평생 무료 배달', rod_bonus: '캇파의 낚싯대 보너스', lord_hint: '호수의 주인 힌트', potion_hint: '물약 힌트', know_bonus: '지식 보너스',
-  greenhouse_growth: '온실 성장 보너스', pumpkin_race: '호박 줍기 경주 보너스', scarecrow_hat: '허수아비 모자', tasty_potion: '맛있는 치유 물약', cake_recipe: '호박달 케이크 레시피', fortune: '스텔라의 운세', rare_egg: '희귀 생물 알' };
+const PERK_KO = { cat_furniture: '내 방 고양이 가구', bait: '나비의 낚시 미끼(입질이 빨라요)', free_post: '배트리의 매일 무료 소포', rod_bonus: '캇파의 낚싯대 보너스', lord_hint: '호수의 주인 힌트', potion_hint: '물약 힌트', know_bonus: '지식 보너스',
+  greenhouse_growth: '온실 성장 보너스', pumpkin_race: '호박 줍기 경주 보너스', scarecrow_hat: '허수아비 모자', tasty_potion: '맛있는 치유 물약 (전투에서 체력 70%·마력 20%)', cake_recipe: '호박달 케이크 레시피', fortune: '스텔라의 운세', rare_egg: '희귀 생물 알' };
 function evFinish(ctx){
   const { n, k, ev } = ctx, st = npcSt(n.id), got = [];
   st.seen[k] = ctx.cold ? 'cold' : 'ok'; st.cold = ctx.cold; st.ev = todayKey(); st.evDay = todayKey(); st.evAt = Date.now(); st.hide = null;
   npcAddA(n.id, ctx.sum);
   const r = ev.rewards || {};
-  if (r.coin){ me.coin += r.coin; got.push(`${r.coin}G`); } if (r.mana){ me.mana += r.mana; got.push(`마력 +${r.mana}`); } if (r.know){ me.know = (me.know || 0) + r.know; got.push(`지식 +${r.know}`); }
+  if (r.coin){ me.coin += r.coin; got.push(`${r.coin}G`); } if (r.mana){ me.mana += r.mana; got.push(`마력 +${r.mana}`); } if (r.know){ got.push(`지식 +${r.know}`, ...addKnow(r.know)); }
   Object.entries(r.items || {}).forEach(([it, c]) => { const left = Math.max(0, c - ((ctx.gave || {})[it] || 0)); if (left){ me.inv[it] = (me.inv[it] || 0) + left; got.push(`${ITEM[it] || it} ×${left}`); } });   // 이야기 속에서 이미 받은 것은 두 번 주지 않아요
   (r.flags || []).forEach(f => { me.nflag = me.nflag || {}; me.nflag[f] = 1; });
   [].concat(r.perk || []).forEach(p => { me.perk = me.perk || {}; me.perk[p] = 1; got.push(PERK_KO[p] || p); });
   [].concat(r.perk || []).forEach(p => {   // 바로 받는 보상
-    if (p === 'know_bonus') me.know = (me.know || 0) + 5;
-    if (p === 'potion_hint') me.know = (me.know || 0) + KNOW_PER_HINT * 2;
+    if (p === 'know_bonus') got.push(...addKnow(5));
+    if (p === 'potion_hint'){ let k = 0; for (const x of HINT_ORDER){ if (k >= 2) break; if (!me.hints.includes(x)){ me.hints.push(x); got.push(`새 레시피: ${HINTS[x]}`); k++; } } if (!k){ me.coin += 60; got.push('장학금 +60G'); } }   // 아울라 ♥10: 모르는 레시피 2개를 바로 알려 줘요
     if (p === 'cat_furniture'){ me.fbag = me.fbag || {}; ['cattower', 'catdoll'].forEach(f => { me.fbag[f] = (me.fbag[f] || 0) + 1; }); }
     if (p === 'scarecrow_hat'){ const h = World.Avatar.meta.parts.hat.find(x => x.n === '가죽 모자'); if (h){ me.closet = me.closet || {}; me.closet['hat:' + h.id] = 1; } }
     if (p === 'rare_egg'){ me.eggs = me.eggs || []; me.eggs.push({ id: crId(), k: 2, col: { ...CR_COLORS.find(c => c.n === '노을빛') }, at: Date.now() }); }
-    if (p === 'cake_recipe') me.inv.d_fairycake_s = (me.inv.d_fairycake_s || 0) + 3;
+    if (p === 'cake_recipe') got.push('요리책에 「호박달 케이크」가 생겼어요');
   });
   save(); hud(); npcSig = ''; syncNpcs();
   toast(ctx.cold ? `${withJosa(n.name, '과', '와')} 조금 서먹해졌어요.......` : `♥${k} 「${fillVars(ev.title, n.id)}」${got.length ? ' · ' + got.join(', ') : ''}`);
@@ -4816,7 +4827,7 @@ const BAG_ZONE = { f: '숲', g: '묘지', l: '호숫가', p: '들판' };
 const bagCols = () => matchMedia('(min-width:900px)').matches ? 8 : 5;
 const bagPer = () => bagCols() === 8 ? 40 : 20;   // 한 페이지: PC 8×5 · 휴대폰 5×4 (한 화면에 들어가게)
 const bagKind = k => DISH_INFO[k] ? 'dish' : POTION_INFO[k] ? 'potion' : (SEED_INFO[k] || CREATURE_MATS.includes(k) || CATCH_INFO[k]) ? 'mat' : 'etc';
-const bagLikers = k => npcAll().filter(n => { const P = npcProf(n.id); return (P.likes || n.likes || []).includes(k); });
+const bagLikers = k => npcAll().filter(n => { const P = npcProf(n.id); return (P.likes || n.likes || []).includes(k) && me.giftLog?.[n.id]?.[k] === 'love'; });   // 선물해 보고 알아낸 취향만 보여요
 const bagNames = L => L.map(n => nameVar(n)).join(', ');
 function bagHasNew(){ return !!me && Object.keys(me.inv || {}).some(k => me.inv[k] > 0 && me.inv[k] > (me.bagSeen?.[k] || 0)); }
 function bagBadge(){
@@ -4857,8 +4868,8 @@ function bagInfo(k){
   if (np) uses.push(`물약 재료 ${np}종`); if (nd) uses.push(`요리 재료 ${nd}종`); if (gift) uses.push(gift);
   const C = CATCH_INFO[k];
   if (C){ if (C.junk) return { desc: '호수에서 건진 쓰레기예요. 팔면 1G', use: uses.join(' · ') || '쓸모는 없지만 호수가 깨끗해졌어요' };
-    if (C.sheet === 'fish') return { desc: `${STARS(C.grade)} · ${C.cm[0]}~${C.cm[1]}cm · ${C.time ? TIME_NAME[C.time] + '에만' : '아무 때나'} 잡혀요 · 값 ${C.pay}G`, use: uses.join(' · ') || '요리 재료 · 선물용' };
-    return { desc: `${STARS(C.grade)} · ${[...C.z].map(z => BAG_ZONE[z]).join('·')}에서 주워요 · 값 ${C.pay}G`, use: uses.join(' · ') || '물약·요리 재료' }; }
+    if (C.sheet === 'fish') return { desc: `${STARS(C.grade)} · ${C.cm[0]}~${C.cm[1]}cm · ${C.time ? TIME_NAME[C.time] + '에만' : '아무 때나'} 잡혀요 · 지금 팔면 ${sellPay(k, C.pay)}G`, use: uses.join(' · ') || '요리 재료 · 선물용' };
+    return { desc: `${STARS(C.grade)} · ${[...C.z].map(z => BAG_ZONE[z]).join('·')}에서 주워요 · 지금 팔면 ${sellPay(k, C.pay)}G`, use: uses.join(' · ') || '물약·요리 재료' }; }
   const G = SEED_INFO[k]; if (G) return { desc: `온실에서 기르는 식물 재료 · ${G.tier + 1}등급 · ${timeText(G.mins * 6e4)} 자라요`, use: uses.join(' · ') || '물약 재료' };
   const cr = CREATURES.find(c => c.mat === k); if (cr) return { desc: `사육장 ${cr.kind}이(가) 주는 재료예요`, use: uses.join(' · ') || '물약·요리 재료' };
   return { desc: '', use: uses.join(' · ') };
@@ -5141,7 +5152,7 @@ function renderJournal(){
   if (jnTab === 'story') mqJournalBind();
   on('[data-deliver]', b => {
     const o = me.orders[+b.dataset.deliver]; if (!o || o.done || (me.inv[o.p] || 0) < o.n) return;
-    const pay = payOf(o); me.inv[o.p] -= o.n; me.coin += pay; o.done = true; save();
+    const pay = partyMul(payOf(o)); me.inv[o.p] -= o.n; me.coin += pay; o.done = true; save();
     toast(`${o.from}에게 ${withJosa(ITEM[o.p], '을', '를')} 전했어요. +${pay}G`); render();
   });
   on('[data-jngo]', b => { const [m, x, y] = b.dataset.jngo.split(','); jnGo(m, +x, +y); });
@@ -5253,7 +5264,7 @@ function renderHome(){
   on('[data-deliver]', b => {
     const o = me.orders[+b.dataset.deliver];
     if (me.inv[o.p] < o.n) return;
-    const pay = payOf(o);
+    const pay = partyMul(payOf(o));
     me.inv[o.p] -= o.n; me.coin += pay; o.done = true; save();
     toast(`${o.from}에게 ${withJosa(ITEM[o.p], '을', '를')} 전했어요. +${pay}G`); render();
   });
@@ -5276,14 +5287,22 @@ let lesson = null, lessonTimer = 0, lessonIv = 0, flyRaf = 0, flyKey = null;
 document.addEventListener('keydown', e => { if (flyKey && sub === 'class') flyKey(e); });
 function stopLesson(){ clearTimeout(lessonTimer); clearInterval(lessonIv); cancelAnimationFrame(flyRaf); flyKey = null; }
 function endLesson(){ stopLesson(); lesson = null; }
-function gainKnow(){
-  me.know = (me.know || 0) + 1;
-  let msg = `지식 +1 (지식 ${me.know})`;
-  if (me.know % KNOW_PER_HINT === 0){
-    const next = HINT_ORDER.find(p => !me.hints.includes(p));
-    if (next){ me.hints.push(next); msg += ` · 새 레시피: ${HINTS[next]}`; }
-    else { me.coin += 30; msg += ' · 모든 레시피를 알아요. 장학금 +30G'; }
+// 지식을 n 만큼 올려요. 지식 KNOW_PER_HINT마다 새 레시피 (어디서 얻든 똑같이) → 새로 알게 된 것 문구들
+function addKnow(n){
+  const out = [];
+  for (let i = 0; i < (n | 0); i++){
+    me.know = (me.know || 0) + 1;
+    if (me.know % KNOW_PER_HINT === 0){
+      const next = HINT_ORDER.find(p => !me.hints.includes(p));
+      if (next){ me.hints.push(next); out.push(`새 레시피: ${HINTS[next]}`); }
+      else { me.coin += 30; out.push('모든 레시피를 알아요. 장학금 +30G'); }
+    }
   }
+  return out;
+}
+function gainKnow(){
+  const got = addKnow(1);
+  let msg = `지식 +1 (지식 ${me.know})${got.length ? ' · ' + got.join(' · ') : ''}`;
   save(); return msg;
 }
 function startSubject(id){
@@ -5597,7 +5616,7 @@ function renderLab(){
     me.mana -= brewCost(); sfx('bubble');
     let msg;
     if (p){
-      me.inv[p]++;
+      const coX = coExtra(); me.inv[p] += 1 + coX; if (coX) setTimeout(() => toast(`친구와 함께 만들어서 ${coX}개 더!`), 900);
       const isNew = !me.found.includes(p);
       if (isNew) me.found.push(p);
       if (!me.hints.includes(p)) me.hints.push(p);
@@ -5690,7 +5709,7 @@ function renderGreen(){
     const i = +b.dataset.plot, p = me.plots[i];
     if (!p.k){ plantFor = plantFor === i ? null : i; greenMsg = ''; renderGreen(); setTimeout(() => document.querySelector('[data-plot].sel')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 30); return; }
     plantFor = null;
-    if (plotReady(p)){ tutHook('water'); const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0) + (dbuff('dforest') && Math.random() < .1 ? 1 : 0), n2 = sgMul(n, sgFx('gather_yield')); me.inv[p.k] += n2; me.plots[me.plots.indexOf(p)] = { k: null }; greenMsg = `${g.seed} 수확! ${g.mat} +${n2}${n2 > g.yield ? ' (Dewmorn의 새벽 보너스)' : ''}`; }
+    if (plotReady(p)){ tutHook('water'); const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0) + (dbuff('dforest') && Math.random() < .1 ? 1 : 0), n2 = sgMul(n, sgFx('gather_yield') + partyFx()); me.inv[p.k] += n2; me.plots[me.plots.indexOf(p)] = { k: null }; greenMsg = `${g.seed} 수확! ${g.mat} +${n2}${n2 > g.yield ? ' (Dewmorn의 새벽 보너스)' : ''}`; }
     else if (p.w) greenMsg = `이미 물을 줬어요. ${timeText(plotLeft(p))} 남았어요.`;
     else if (me.mana < waterCost()) greenMsg = '마력이 부족해요. 내 방 침대에서 쉬고 오세요.';
     else { p.w = true; tutHook('water'); me.mana -= waterCost(); greenMsg = `물을 줬어요. 쑥쑥! ${timeText(plotLeft(p))} 남았어요.`; }
@@ -5717,7 +5736,7 @@ function renderVeg(){
   </section><div style="display:flex;gap:8px">${backBtn}</div>`);
   $('#back').onclick = closeSheet;
   on('[data-vgpg]', b => { vgPg = +b.dataset.vgpg; renderVeg(); });
-  const sell = (k, n) => { n = Math.min(n, me.inv[k]); if (n <= 0) return 0; me.inv[k] -= n; const g = sellPay(k, cropBase(k)) * n; me.coin += g; return g; };
+  const sell = (k, n) => { n = Math.min(n, me.inv[k]); if (n <= 0) return 0; me.inv[k] -= n; const g = partyMul(sellPay(k, cropBase(k)) * n); me.coin += g; return g; };
   on('[data-vsell]', b => { const g = sell(b.dataset.vsell, 1); vgMsg = `${ITEM[b.dataset.vsell]} 1개를 팔았어요. +${g}G`; save(); hud(); renderVeg(); });
   on('[data-vsall]', b => { const k = b.dataset.vsall, n = me.inv[k], g = sell(k, n); vgMsg = `${ITEM[k]} ${n}개를 팔았어요. +${g}G`; save(); hud(); renderVeg(); });
   $('#vgAll') && ($('#vgAll').onclick = () => { let g = 0, n = 0; have.forEach(k => { n += me.inv[k] || 0; g += sell(k, me.inv[k] || 0); }); vgMsg = `${n}개를 팔았어요. +${g.toLocaleString()}G`; save(); hud(); renderVeg(); });
@@ -7097,6 +7116,11 @@ function sgListen(){
 // ---- 효과: 별빛 버프의 수치는 별자리 데이터(effects)에서 읽어요 ----
 const sgFx = stat => { if (!me || !sgData) return 0; let v = 0; const t = Date.now(); sgData.forEach(C => { if (((me.buffs || {})[C.buff.id] || 0) > t) C.buff.effects.forEach(e => { if (e.stat === stat) v += e.value; }); }); return v; };
 const sgMul = (n, v) => { const x = n * (1 + v), f = Math.floor(x); return f + (Math.random() < x - f ? 1 : 0); };
+// 열두 친구의 별빛: 다른 학생과 같은 곳에 있으면 활동 보상 +10% · 같이 만들면 1개 더
+const nearFriend = () => { try { const here = World.placeKey && World.placeKey(); return !!here && peersOf().some(o => o.m === here); } catch(e){ return false; } };
+const partyFx = () => { const v = sgFx('party_reward'); return v > 0 && nearFriend() ? v : 0; };
+const partyMul = n => { const v = partyFx(); return v ? sgMul(n, v) : n; };
+const coExtra = () => sgFx('co_craft_extra') > 0 && nearFriend() ? Math.round(sgFx('co_craft_extra')) : 0;
 const sgHours = ms => { const h = ms / 3600e3; return h >= 1 ? `${Math.round(h * 10) / 10} 시간` : `${Math.round(ms / 6e4)} 분`; };
 // ---- 장면 모양 만들기: 실제 진행(sgCtl)과 관리자 미리 보기(sgPrev)가 같은 길로 그려요 ----
 function sgSrc(){
@@ -7370,7 +7394,7 @@ const TUT = {
       again: '교실에서 수업을 한 판 해 봐요. 천천히 해도 괜찮아요. 사탕 하나 먹고 갈래요?', done: ['와, 해냈네요! 정말 잘했어요, 새싹.', '수업은 하루에 열 번까지 들을 수 있어요. 들을수록 지식이 쌓이고, 새 레시피도 알게 돼요.', '자, 이건 첫 용돈이에요. 맛있는 거 사 먹어요!'], rew: { coin: 50 } },
     { k: 'water', ask: ['다음은 약초 키우기예요.', '「독초 온실」에 가서 내 화단을 돌봐 줘요. 다 자란 약초는 눌러서 수확하고, 아직 자라는 건 물을 주면 돼요.', '물을 주면 마력을 조금 써요. 어느 쪽이든 한 번만 해 보면 돼요.'],
       again: '독초 온실에서 화단을 눌러 수확하거나 물을 줘 봐요. 어느 쪽이든 괜찮아요. 천천히 해요.', done: ['어머, 약초를 돌봐 줬네요? 약초가 좋아하겠어요.', '약초는 물약을 만들 때 꼭 필요해요. 잘 돌보면 자기도 고마워한대요.', '자라는 동안 다른 걸 해 봐요. 이것도 용돈이에요!'], rew: { coin: 50 } },
-    { k: 'fish', ask: ['이번엔 낚시예요. 나는 낚시를 좋아해서 설레네요.', '물가에 서면 「낚시하기」 버튼이 떠요. 학교 북쪽 연못이 가까워요.', '찌가 움직일 때 맞춰서 눌러 봐요. 한 마리만 낚으면 돼요. 못 잡아도 다시 하면 되고요.'],
+    { k: 'fish', ask: ['이번엔 낚시예요. 나는 낚시를 좋아해서 설레네요.', '물가에 서면 「낚시하기」 버튼이 떠요. 학교 북쪽 연못이 가까워요.', '찌가 쏙 들어가면 누르고, ◀ ▶로 찌를 초록 칸 안에 두고 버텨 봐요. 한 마리만 낚으면 돼요. 못 잡아도 다시 하면 되고요.'],
       again: '물가에서 낚시를 해 봐요. 학교 북쪽 연못이 가까워요. 서두르지 않아도 돼요.', done: ['와아, 낚았네요! 반짝반짝 예쁜 물고기예요.', '잡은 물고기는 도감에 기록되고, 생선 가게에 팔 수도 있어요. 요리 재료로도 쓰이고요.', '오늘의 용돈 나가요!'], rew: { coin: 50 } },
     { k: 'feed', ask: ['사육장에도 가 봐요. 아직 생물은 없지만, 곧 새 친구가 생길 거예요.', '「사육장」에 들어가서 「내 사육장」을 열어 봐요. 알 가게에서 알을 사서 부화시키면 생물이 태어나요.', '애정이 쌓이면 귀한 재료를 나눠 줘요. 아주 귀여우니까 마음의 준비를 해요.'],
       again: '사육장에 들어가서 「내 사육장」을 열어 봐요. 구경만 해도 괜찮아요.', done: ['사육장을 구경했네요! 알은 나중에 천천히 사서 부화시켜도 돼요.', '이제 마지막 하나 남았어요. 탐사인데, 입장료가 50G 필요해요.', '내가 미리 챙겨 놨어요. 자, 받아요!'], rew: { coin: 50 } },
@@ -8044,7 +8068,7 @@ function mqAfter(q, n, kind, sc){
     save(); syncNpcs(); mqMarks(); mqCheck(true); toast(`일지에 새 목표가 생겼어요 · ${st ? esc(st.title || '') : ''}`); }
   else {
     const st = q.stages.find(x => x.n === n), r = st && st.rewards || {}, got = [];
-    if (r.gold){ me.coin += r.gold; got.push(`${r.gold}G`); } if (r.mana){ me.mana += r.mana; got.push(`마력 +${r.mana}`); } if (r.know){ me.know = (me.know || 0) + r.know; got.push(`지식 +${r.know}`); }
+    if (r.gold){ me.coin += r.gold; got.push(`${r.gold}G`); } if (r.mana){ me.mana += r.mana; got.push(`마력 +${r.mana}`); } if (r.know){ got.push(`지식 +${r.know}`, ...addKnow(r.know)); }
     [].concat(r.items || []).forEach(it => { const [k, cnt] = typeof it === 'string' ? [it, 1] : [it.id, it.n || 1]; mqGive(k, cnt); got.push(`${ITEM[k] || k} ×${cnt}`); });
     if (n >= 5 || n >= q.stages.length){   // 의뢰 완료
       const cr = q.completion_reward || {}; [].concat(cr.items || []).forEach(k => { mqGive(k, 1); got.push(ITEM[k] || k); });
