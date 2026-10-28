@@ -6742,15 +6742,18 @@ const PZ = { C: 10, R: 5, W: 20, H: 24, PAD: 6, HOLD: 8, REWARD: 600 };
 function pzListen(){
   if (solo || !F || !db || pzOffs.length) return;
   pzOffs.push(F.onValue(F.ref(db, 'puzzle/ctl'), s => { const v = s.val(), was = pzCtl && pzCtl.open; pzCtl = v; pzBtn(); if (v && v.open && !was) toast('이벤트 「유령 선장의 보물 지도」가 열렸어요! 왼쪽 위 버튼을 눌러 보세요'); if (!(v && v.open) && pzOn) pzClose(); else if (pzOn) pzUi(); pzCheckCut(); }));
-  pzOffs.push(F.onValue(F.ref(db, 'puzzle/board'), s => { pzBoard = s.val() || {}; if (pzOn) pzUi(); pzCheckCut(); }));
-  pzOffs.push(F.onValue(F.ref(db, 'puzzle/chest'), s => { pzChest = s.val() || {}; if (pzChestDraw && document.getElementById('pzch')) pzChestDraw(); }));
+  pzOffs.push(F.onValue(F.ref(db, 'puzzle/board'), s => { pzBoard = s.val() || {}; if (pzOn) pzUi(); pzCheckCut(); pzBtn(); }));
+  pzOffs.push(F.onValue(F.ref(db, 'puzzle/chest'), s => { pzChest = s.val() || {}; if (pzChestDraw && document.getElementById('pzch')) pzChestDraw(); pzBtn(); }));
   pzOffs.push(F.onValue(F.ref(db, 'puzzle/own'), s => { pzOwn = s.val() || {}; if (pzOn) pzUi(); }));
 }
 const pzCount = () => Object.keys(pzBoard).length;
 const pzMine = () => Object.keys(pzOwn).filter(k => pzOwn[k] === myId() && pzBoard[k] === undefined).map(Number).sort((a, b) => a - b);
+// 이벤트가 닫힌 뒤에도: 지도가 다 맞춰졌는데 아직 상자를 못 고른 학생은 상자를 받을 수 있어요
+const pzClaim = () => !!(pzCtl && pzCtl.id && !pzCtl.open && pzCount() >= PZ.C * PZ.R && !(me && me.pz && me.pz.id === pzCtl.id) && !Object.values(pzChest).includes(myId()) && Object.keys(pzChest).length < PZ_REW.length);
 function pzBtn(){
-  let b = $('#pzbtn'); const on = pzCtl && pzCtl.open && !pzOn;
-  if (on && !b){ b = document.createElement('button'); b.id = 'pzbtn'; b.textContent = '보물 지도'; b.onclick = pzOpen; $('#shell').appendChild(b); } else if (!on && b) b.remove();
+  let b = $('#pzbtn'); const claim = pzClaim(), on = pzCtl && (pzCtl.open || claim) && !pzOn;
+  if (on && !b){ b = document.createElement('button'); b.id = 'pzbtn'; b.onclick = () => pzClaim() ? pzChests() : pzOpen(); $('#shell').appendChild(b); } else if (!on && b) b.remove();
+  if (on && b) b.textContent = claim ? '보물 상자 받기' : '보물 지도';
 }
 // 낚시·채집·탐사에서 가끔 조각이 나와요 (src: fish · forage · explore)
 function pzDrop(src){
@@ -6831,24 +6834,27 @@ function pzChests(){
   const mineIdx = () => { const k = Object.keys(pzChest).find(i => pzChest[i] === myId()); return k === undefined ? -1 : +k; };
   const draw = () => { if (!document.getElementById('pzch')) return; const my = mineIdx(), left = rew.filter((_, i) => pzChest[i] === undefined).length;
     el.innerHTML = `<div class="pzstage ship"><img class="pzlake" src="art/ev2_lake.png"></div><div class="pzgrid">${rew.map((r, i) => { const who = pzChest[i], open = who !== undefined; return `<button class="pzchest ${open ? (i === my ? 'sel open' : 'open dim') : ''}" data-ch="${i}"><i style="background-position:${open ? 100 : 0}% 0"></i>${open ? `<span>${i === my ? pzRewText(r) : `${esc(pzNick(who))}님이<br>가져갔어요`}</span>` : ''}</button>`; }).join('')}</div><div class="pzbox"><div class="pzt2">${my >= 0 ? `<b>${pzRewText(rew[my])}</b>을(를) 받았어요!` : left ? `상자를 하나 골라 주세요. 한 번만 고를 수 있고, 다른 친구가 고른 상자는 고를 수 없어요! (남은 상자 ${left}개)` : '상자가 모두 없어졌어요. 다음 이벤트에서 만나요!'}</div>${my >= 0 || !left ? '<button class="btn sm go" id="pzdone">닫기</button>' : ''}</div>`;
-    if (my < 0) el.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => take(+b.dataset.ch)); const d = $('#pzdone'); if (d) d.onclick = () => { el.remove(); pzUi(); }; };
+    if (my < 0) el.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => take(+b.dataset.ch)); const d = $('#pzdone'); if (d) d.onclick = () => { el.remove(); if (pzOn) pzUi(); pzBtn(); }; };
   const take = async i => { if (busy || mineIdx() >= 0 || pzChest[i] !== undefined) return; busy = true; const r = rew[i];
     const res = await GDB.tx('puzzle/chest/' + i, cur => cur ? undefined : myId()).catch(() => ({ committed: false })); busy = false;
     if (!res.committed){ toast('다른 친구가 먼저 가져갔어요. 다른 상자를 골라 보세요'); return; }
-    pzChest[i] = myId(); me.pz = { id: pzCtl.id, ch: i, g: r[0], m: r[1], sp: r[2] }; me.coin += r[0]; if (r[1]) me.inv.mana = (me.inv.mana || 0) + r[1]; if (r[2]){ const ex = xEx(); ex.spx = (ex.spx || 0) + r[2]; } save(); hud(); sfx('heart'); draw(); };
-  pzChestDraw = draw; el.addEventListener('remove', () => { pzChestDraw = null; }); draw();
+    pzChest[i] = myId(); me.pz = { id: pzCtl.id, ch: i, g: r[0], m: r[1], sp: r[2] }; me.coin += r[0]; if (r[1]) me.inv.mana = (me.inv.mana || 0) + r[1]; if (r[2]){ const ex = xEx(); ex.spx = (ex.spx || 0) + r[2]; } save(); hud(); sfx('heart'); draw(); pzBtn(); };
+  pzChestDraw = draw; draw();
 }
 // ---- 관리자 ----
 function adminPuzzleHTML(){
   const c = AD.pzctl || {}, open = !!c.open, b = AD.pzboard || {}, o = AD.pzown || {}, n = Object.keys(b).length, ppl = new Set(Object.values(o)).size, rate = c.rate || 1;
   return `<div class="adcard"><b>이벤트 「유령 선장의 보물 지도」</b> · ${open ? '열려 있어요' : '닫혀 있어요'}
     <div class="s">맞춘 조각 ${n}/50 · 가져간 상자 ${Object.keys(AD.pzchest || {}).length}/12 · 얻은 조각 ${Object.keys(o).length}/50 · 조각을 얻은 학생 ${ppl}명${open ? ` · 조각 나올 확률 ×${rate}` : ''}</div>
-    <div class="frow">${open ? `<button class="btn sm" data-pza="r1">확률 ×1</button><button class="btn sm" data-pza="r2">×2</button><button class="btn sm" data-pza="r3">×3</button><button class="btn sm" data-pza="reset">처음으로</button><button class="btn sm" data-pza="close">이벤트 닫기</button>` : '<button class="btn sm go" data-pza="open">이벤트 열기</button>'}</div></div>`;
+    <div class="frow">${open ? `<button class="btn sm" data-pza="r1">확률 ×1</button><button class="btn sm" data-pza="r2">×2</button><button class="btn sm" data-pza="r3">×3</button><button class="btn sm" data-pza="free">접속 안 한 학생 조각 풀기</button><button class="btn sm" data-pza="reset">처음으로</button><button class="btn sm" data-pza="close">이벤트 닫기</button>` : '<button class="btn sm go" data-pza="open">이벤트 열기</button>'}</div></div>`;
 }
 document.addEventListener('click', e => { const bt = e.target.closest && e.target.closest('[data-pza]'); if (!bt || !F || !db) return; const a = bt.dataset.pza, id = Date.now();
   if (a === 'open'){ F.set(F.ref(db, 'puzzle/board'), null); F.set(F.ref(db, 'puzzle/own'), null); F.set(F.ref(db, 'puzzle/chest'), null); F.set(F.ref(db, 'puzzle/ctl'), { open: true, id, rate: 1 }); }
   else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 맞춘 조각 기록은 남아요.')) F.set(F.ref(db, 'puzzle/ctl'), { ...(AD.pzctl || {}), open: false }); }
   else if (a === 'reset'){ if (confirm('처음으로 되돌릴까요? 맞춘 조각과 학생들이 가진 조각이 모두 지워져요.')){ F.set(F.ref(db, 'puzzle/board'), null); F.set(F.ref(db, 'puzzle/own'), null); F.set(F.ref(db, 'puzzle/chest'), null); F.set(F.ref(db, 'puzzle/ctl'), { open: true, id, rate: (AD.pzctl && AD.pzctl.rate) || 1 }); } }
+  else if (a === 'free'){   // 조각을 들고 안 들어오는 학생 때문에 막히지 않게: 지금 접속 안 한 학생이 가진(아직 안 맞춘) 조각을 다시 나오게 해요
+    const o = AD.pzown || {}, b = AD.pzboard || {}, on = adOnline(), ups = {}; Object.keys(o).forEach(k => { if (b[k] === undefined && !on[o[k]]) ups['puzzle/own/' + k] = null; });
+    const n = Object.keys(ups).length; if (!n) return alert('풀 조각이 없어요'); if (confirm(`접속하지 않은 학생이 가진 조각 ${n}개를 다시 나오게 할까요?`)) F.update(F.ref(db, '/'), ups).then(() => toast(`조각 ${n}개를 풀었어요`)); }
   else if (a[0] === 'r') F.update(F.ref(db, 'puzzle/ctl'), { rate: +a.slice(1) }); });
 // ===== 이벤트 「유령 등불 찾기」 (하루 이벤트): 반 전체가 유령 등불 60개를 모아요 =====
 // lantern/ctl = { open, id, rate } · lantern/cnt/<uid> = 그 사람이 모은 등불(최대 10) · lantern/color/<0~11> = 그 색 등불 장식을 가져간 사람 (색마다 한 사람)
@@ -6972,7 +6978,7 @@ const PK = { GOAL: 600, STAGES: [0, .2, .45, .7, 1], NAMES: ['씨앗', '새싹',
   MAT: [['herb', '약초', 6, '흔함'], ['drop', '달빛 이슬', 10, '보통'], ['mana', '마나석', 20, '귀함']], BUFF_MS: 3 * 3600e3, CELL: [60, 50] };
 const pkGoal = () => (pkCtl && pkCtl.goal) || PK.GOAL, pkTotal = () => Object.values(pkPts).reduce((a, n) => a + (+n || 0), 0), pkDone = () => !!pkCtl && pkTotal() >= pkGoal();
 const pkStage = () => { const k = Math.min(1, pkTotal() / pkGoal()); let s = 0; PK.STAGES.forEach((t, i) => { if (k >= t) s = i; }); return s; };
-const pkMy = () => (me.pk && pkCtl && me.pk.id === pkCtl.id) ? me.pk : (me.pk = { id: pkCtl ? pkCtl.id : 0, wAt: 0, tAt: 0, f: {}, st: {}, fin: 0, bd: {}, ss: 0, se: 0 });
+const pkMy = () => { const m = (me.pk && pkCtl && me.pk.id === pkCtl.id) ? me.pk : (me.pk = { id: pkCtl ? pkCtl.id : 0, wAt: 0, tAt: 0, f: {}, st: {}, fin: 0, bd: {}, ss: 0, se: 0 }); m.f = m.f || {}; m.st = m.st || {}; m.bd = m.bd || {}; return m; };   // 빈 칸은 Firebase에 안 남아서 다시 채워요
 const pkRank = () => { const L = Object.entries(pkPts).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).map(([u]) => u); return L.indexOf(myId()) + 1; };
 function pkListen(){
   if (solo || !F || !db || pkOffs.length) return;
@@ -7179,7 +7185,7 @@ function sgAv(u, src){
 }
 function sgPop(){
   let p = $('#sgpop'); const M = sgModel(), c = sgCtl;
-  const show = !sgOn && !sgAdmin() && c && c.open && M && sgData && !sgPop.no && !uiBusy() && Date.now() > sgPop.t0;
+  const show = !sgOn && !sgAdmin() && c && c.open && M && sgData && !(sgPop.no > Date.now()) && !uiBusy() && Date.now() > sgPop.t0;
   if (!show){ if (p) p.remove(); return; }
   if (!p){ p = document.createElement('div'); p.id = 'sgpop'; document.body.appendChild(p); }
   const j = M.joined, can = c.ph === 'gather', msg = can ? (sgDlg.common && sgDlg.common.popup) || '스텔라가 같이 별을 보자고 해요!' : j ? '별 보는 밤이 이어지고 있어요' : '스텔라와 학생들이 별을 보고 있어요';
@@ -7189,10 +7195,10 @@ function sgPop(){
 function sgSync(){
   if (!sgData) return; if (!sgSync.iv) sgSync.iv = setInterval(sgPop, 500);   // 장면이 끝나면 팝업이 떠요
  if (sgCtl && sgCtl.c) sgLoadDlg(sgCtl.c);
-  if (sgCtl && sgCtl.id !== sgSync.id){ sgSync.id = sgCtl.id; sgPop.no = false; sgSync.adm = false; }
+  if (sgCtl && sgCtl.id !== sgSync.id){ sgSync.id = sgCtl.id; sgPop.no = 0; sgSync.adm = false; }
   if (sgAdmin() && sgCtl && sgCtl.open && !sgOn && !sgSync.adm){ sgSync.adm = true; sgOpen(); }
   if (sgOn && !sgPrev && (!sgCtl || (!sgCtl.open && sgCtl.ph !== 'end'))) sgClose();
-  if (sgCtl && (sgCtl.ph === 'done' || sgCtl.ph === 'end') && me && !sgAdmin() && sgJoin[myId()] && sgGot !== sgCtl.id && me.sgd !== sgCtl.id) sgGrant();
+  if (sgCtl && (sgCtl.ph === 'done' || (sgCtl.ph === 'end' && sgCtl.ok !== 0)) && me && !sgAdmin() && sgJoin[myId()] && sgGot !== sgCtl.id && me.sgd !== sgCtl.id) sgGrant();
   sgPop(); sgSig = ''; sgUi();
   if (sgAdmin() && AD.tab === 'event' && !adminTyping()) adminRender();
 }
@@ -7234,7 +7240,7 @@ function sgLight(id){ if (!sgCtl || sgCtl.ph !== 'light' || sgLit[id]) return; s
 // ---- 참가·나중에 ----
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-sg]'); if (!b) return; const a = b.dataset.sg;
-  if (a === 'later'){ sgPop.no = true; sgPop(); }
+  if (a === 'later'){ sgPop.no = Date.now() + 120000; sgPop(); setTimeout(sgPop, 121000); }   // 2분 뒤에 다시 물어봐요
   else if (a === 'join'){ if (!F || !db || !me || !sgCtl || sgCtl.ph !== 'gather') return; F.set(F.ref(db, 'stargaze/join/' + myId()), { n: me.nick, at: now2() }).then(() => { sgJoin[myId()] = { n: me.nick, at: now2() }; sgOpen(); }); }
   else if (a === 'view') sgOpen();
 });
@@ -7253,7 +7259,7 @@ function sgDoAssign(){
 function sgDoLight(){ F.set(F.ref(db, 'stargaze/lit'), null); return sgUpd({ ph: 'light', at: now2() }); }
 function sgLitAll(){ const C = sgConst(sgCtl.c), up = {}; C.stars.forEach(s => { if (!sgLit[s.id]) up[s.id] = now2(); }); return Object.keys(up).length ? F.update(F.ref(db, 'stargaze/lit'), up) : Promise.resolve(); }
 function sgDoSky(){ return sgLitAll().then(() => sgUpd({ ph: 'sky', at: now2() })); }
-function sgDoEnd(){ const was = sgCtl.ph; return sgUpd({ ph: 'end', open: false }).then(() => { if (was === 'done'){ const C = sgConst(sgCtl.c); F.update(F.ref(db, 'stargaze/hist'), { total: (+sgHist.total || 0) + 1 }); F.set(F.ref(db, 'stargaze/hist/c/' + C.id), ((sgHist.c || {})[C.id] || 0) + 1); } }); }
+function sgDoEnd(){ const was = sgCtl.ph; return sgUpd({ ok: was === 'done' ? 1 : 0, ph: 'end', open: false }).then(() => { if (was === 'done'){ const C = sgConst(sgCtl.c); F.update(F.ref(db, 'stargaze/hist'), { total: (+sgHist.total || 0) + 1 }); F.set(F.ref(db, 'stargaze/hist/c/' + C.id), ((sgHist.c || {})[C.id] || 0) + 1); } }); }
 function sgDoOpen(cid){
   const C = sgConst(cid), cfg = sgCfg(), id = Date.now(); F.set(F.ref(db, 'stargaze/join'), null); F.set(F.ref(db, 'stargaze/lit'), null);
   return F.set(F.ref(db, 'stargaze/ctl'), { open: true, id, c: C.id, round: sgRound(), ph: 'gather', at: now2(), gm: cfg.gatherS * 1000, lm: cfg.lightS * 1000, bm: cfg.buffH * 3600e3, sm: SG_STORY });
