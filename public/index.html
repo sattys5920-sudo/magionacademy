@@ -1941,7 +1941,7 @@ function xEnd(how){   // how: clear · time · retreat · wipe
   if (run.co){ xcoStop(); xM = null; } const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gold = how === 'wipe' ? 0 : partyMul(Math.round(lo.gold * mult)), exp = how === 'wipe' ? 0 : Math.round((lo.exp * mult + (how === 'clear' ? xReg().clearExp : 0)) * (dbuff('dforest') ? 1.03 : 1) * (dbuff('pump') ? 1.1 : 1) * (1 + sgFx('exp_gain') + partyFx()));
   const items = how === 'wipe' ? {} : { ...lo.items }; if (how === 'clear') { const r = xRand(xReg().rare); items[r] = (items[r] || 0) + 1; }
   const before = xLv(ex.exp).L; ex.exp += exp; me.coin += gold; Object.entries(items).forEach(([k, n]) => { me.inv[k] = (me.inv[k] || 0) + n; });
-  const after = xLv(ex.exp).L, sp = how === 'clear' || (how !== 'wipe' && Math.random() < .1) ? 1 : 0; ex.spx = (ex.spx || 0) + sp; ex.run = null; xb = null; clearInterval(xTick); save(); hud();
+  const after = xLv(ex.exp).L, sp = how === 'clear' || (how !== 'wipe' && !(run.co && how === 'retreat') && Math.random() < .1) ? 1 : 0; ex.spx = (ex.spx || 0) + sp; ex.run = null; xb = null; clearInterval(xTick); save(); hud();
   xv = { view: 'result', how, gold, exp, items, up: after > before ? [before, after] : null, sp, prog: Math.floor(run.prog) };
   if (how !== 'wipe'){ pzDrop('explore'); lnDrop('explore'); }
   if (how !== 'wipe' && Math.random() < .02) setTimeout(() => recipePaper('explore'), 700);   // 탐사 보상: 레시피 종이 2%
@@ -2481,7 +2481,7 @@ function xcoOnBt(v){
     if (!party.length) return;
     B = xb = { party, foes, kind: v.kind, log: v.log || '', turn: null, pick: null, over: false, mirror: true, bn: v.bn, sn: -1, evi: 0, def: {}, fxs: [], floats: [], proj: [], last: performance.now(), buff: false, tn: 0 };
     if (xM) xM.st = 'busy'; xv = { view: 'battle' }; if (sheetOn && sub === 'explore') renderExplore(); else { closeSheet(); openSheet('home', 'explore'); }
-  }
+  } else v.order.forEach(u => { if (!B.party.some(x => x.id === u) && xcoBuilds[u]) B.party.push(xcoUnitFromBuild(u)); });   // 전투 중에 돌아온 사람
   if (v.n <= B.sn) return; B.sn = v.n; const now = performance.now();
   [...B.party, ...B.foes].forEach(u => { const a = v.units[u.id]; if (!a) return; u.hp = a.h; u.mp = a.m; u.g = a.g; const nf = {}; Object.entries(a.f || {}).forEach(([k, t]) => { nf[k] = u.fx[k] ? { ...u.fx[k], t } : { t, v: 0 }; }); u.fx = nf; u.pets = (a.p || []).map(p => ({ n: p[0], hp: p[1], mhp: p[2], t: p[3] })); u.cdn = a.c || {}; });
   B.log = v.log || B.log; B.tn = v.tn; B.turn = v.turn ? [...B.party].find(u => u.id === v.turn) || null : null; B.tdl = v.tdl ? now + (v.tdl - now2()) : 0;
@@ -2893,6 +2893,7 @@ function xLoop(){
 }
 function xcoTimeouts(B){   // 명령이 늦으면 자동 공격 · 끊긴 사람은 전투에서 빠져요
   const act = xcoActive(), now = performance.now(); B.party.forEach(u => { if (u.uid && u.uid !== myId() && !act.includes(u.uid) && u.hp > 0){ u.hp = 0; u.gone = true; if (B.turn === u) B.turn = null; } });
+  if (!B.over) act.forEach(uid => { const u = B.party.find(x => x.uid === uid); if (u){ if (u.gone){ u.gone = false; u.hp = Math.max(1, Math.round(u.mhp * .5)); u.g = 0; } } else if (xcoBuilds[uid]){ const c = xcoHp[uid]; B.party.push(xcoUnitFromBuild(uid, c ? Math.max(1, c[0]) : undefined, c ? c[1] : undefined)); } });   // 돌아온 사람은 지금 전투에 바로 끼워요
   if (B.turn && B.turn.uid && B.turn.uid !== myId() && now > B.tdl) xcoApplyCmd(B, B.turn, { a: 'atk', s: -1 });
 }
 function xLoop0(){
