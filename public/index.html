@@ -1954,6 +1954,7 @@ function recipePaper(from){
   c.classList.add('on'); sfx('pick'); $('#rpOk').onclick = () => { c.classList.remove('on'); c.innerHTML = ''; }; return true;
 }
 function xSaveParty(){ const run = xEx().run; if (run && xb) run.p = xb.party.map(u => ({ hp: u.hp, mp: u.mp })); }
+const xDrop = L => { const o = L.filter(k => k !== 'mana'); return (L.includes('mana') && Math.random() < .02) || !o.length ? 'mana' : xRand(o); };   // 탐사 전리품: 마나석은 2% 확률로만
 function xChestMake(R){   // 보상 상자 셋: 드문 재료 하나 + 보통 재료 둘 (골드는 상자마다 조금씩)
   const g = () => Math.round(R.fee * (.8 + Math.random() * .8)), loot = xShuffle(R.loot.filter(k => k !== 'mana')), rare = R.rare.filter(k => k !== 'mana');   // 마나석은 희귀 상자에서만 5% 확률로 1개
   return { o: xShuffle([{ it: Math.random() < .05 || !rare.length ? 'mana' : xRand(rare), n: 1, g: g(), r: 1 }, { it: loot[0], n: 2 + (Math.random() < .5 ? 1 : 0), g: g() }, { it: loot[1] || loot[0], n: 2 + (Math.random() < .5 ? 1 : 0), g: g() }]) };
@@ -2141,10 +2142,10 @@ function xGo(k){
   if (k === 'path'){ xAdd('path'); xMsg = '지름길로 들어섰어요! 진행 +8%'; save(); return renderExplore(); }
   if (k === 'battle' || k === 'elite' || k === 'boss'){ xStartBattle(k); return; }
   if (k === 'camp'){ const p = xb?.party || xParty(); p.forEach(u => { u.hp = Math.min(u.mhp, u.hp + Math.round(u.mhp * .5)); u.mp = Math.min(u.mmp, u.mp + Math.round(u.mmp * .5)); }); run.p = p.map(u => ({ hp: u.hp, mp: u.mp })); xMsg = '모닥불에 둘러앉아 체력과 마력을 절반 회복했어요.'; sfx('camp'); sfx('heart'); if (Math.random() < .5){ run.buff = (run.buff || 0) + 1; xMsg += ' 따뜻한 가호 (다음 전투 공격 +25%)'; } xAdd('camp'); save(); return renderExplore(); }
-  if (k === 'chest'){ const g = Math.round((20 + Math.round(Math.random() * 30) + Math.round(run.prog / 3)) * (run.mod?.rew || 1)), it = xRand(xReg().loot); run.loot.gold += g; run.loot.items[it] = (run.loot.items[it] || 0) + 1 + (Math.random() < .3 ? 1 : 0); xMsg = `상자에서 골드 ${g}과 ${ITEM[it] || it}이 나왔어요!`; sfx('chest'); if (Math.random() < .12){ xAdd('chest'); save(); return xStartBattle('battle', '상자가 미믹이었어요!'); } xAdd('chest'); save(); return renderExplore(); }
+  if (k === 'chest'){ const g = Math.round((20 + Math.round(Math.random() * 30) + Math.round(run.prog / 3)) * (run.mod?.rew || 1)), it = xDrop(xReg().loot); run.loot.gold += g; run.loot.items[it] = (run.loot.items[it] || 0) + 1 + (Math.random() < .3 ? 1 : 0); xMsg = `상자에서 골드 ${g}과 ${ITEM[it] || it}이 나왔어요!`; sfx('chest'); if (Math.random() < .12){ xAdd('chest'); save(); return xStartBattle('battle', '상자가 미믹이었어요!'); } xAdd('chest'); save(); return renderExplore(); }
   if (k === 'statue'){ xv = { view: 'march' }; confirmBox('이끼 낀 고대 석상이 있어요. 어떻게 할까요?', '기도하기', '조사하기').then(ok => { xAdd('statue'); const r = Math.random();
       if (ok){ if (r < .6){ run.buff = (run.buff || 0) + 3; xMsg = '석상이 빛나요! 다음 3번의 전투 공격 +25%.'; } else if (r < .85) xMsg = '아무 일도 일어나지 않았어요.......'; else { const p = xb?.party || xParty(); p.forEach(u => { u.hp = Math.max(1, u.hp - Math.round(u.mhp * .15)); }); run.p = p.map(u => ({ hp: u.hp, mp: u.mp })); xMsg = '저주! 모두 체력이 줄었어요.'; } }
-      else { if (r < .7){ const it = xRand(xReg().rare); run.loot.items[it] = (run.loot.items[it] || 0) + 1; run.loot.gold += 30; xMsg = `석상 밑에서 ${ITEM[it] || it}과 골드 30을 찾았어요!`; } else { save(); return xStartBattle('battle', '석상을 지키던 몬스터가 깨어났어요!'); } }
+      else { if (r < .7){ const it = xDrop(xReg().rare); run.loot.items[it] = (run.loot.items[it] || 0) + 1; run.loot.gold += 30; xMsg = `석상 밑에서 ${ITEM[it] || it}과 골드 30을 찾았어요!`; } else { save(); return xStartBattle('battle', '석상을 지키던 몬스터가 깨어났어요!'); } }
       save(); renderExplore(); }); return; }
 }
 // ===== 자동 행군 (횡스크롤) =====
@@ -2476,9 +2477,9 @@ function xcoMemberEv(ev){   // 방장이 고른 갈림길의 효과를 각자 �
 }
 function xcoLocalEffect(k, o){
   const run = xEx().run; if (!run) return;
-  if (k === 'chest'){ const g = Math.round((20 + Math.round(Math.random() * 30) + Math.round(run.prog / 3)) * (run.mod?.rew || 1)), it = xRand(xReg().loot); run.loot.gold += g; run.loot.items[it] = (run.loot.items[it] || 0) + 1 + (Math.random() < .3 ? 1 : 0); xMsg = `상자에서 골드 ${g}과 ${ITEM[it] || it}이 나왔어요!`; sfx('chest'); }
+  if (k === 'chest'){ const g = Math.round((20 + Math.round(Math.random() * 30) + Math.round(run.prog / 3)) * (run.mod?.rew || 1)), it = xDrop(xReg().loot); run.loot.gold += g; run.loot.items[it] = (run.loot.items[it] || 0) + 1 + (Math.random() < .3 ? 1 : 0); xMsg = `상자에서 골드 ${g}과 ${ITEM[it] || it}이 나왔어요!`; sfx('chest'); }
   else if (k === 'camp'){ xMsg = '모닥불에 둘러앉아 모두 체력과 마력을 절반 회복했어요.' + (o === 'buff' ? ' 따뜻한 가호 (다음 전투 공격 +25%)' : ''); sfx('camp'); sfx('heart'); }
-  else if (k === 'statue'){ if (o === 'buff') xMsg = '석상이 빛나요! 다음 3번의 전투 공격 +25%.'; else if (o === 'none') xMsg = '아무 일도 일어나지 않았어요.......'; else { const it = xRand(xReg().rare); run.loot.items[it] = (run.loot.items[it] || 0) + 1; run.loot.gold += 30; xMsg = `석상 밑에서 ${ITEM[it] || it}과 골드 30을 찾았어요!`; } }
+  else if (k === 'statue'){ if (o === 'buff') xMsg = '석상이 빛나요! 다음 3번의 전투 공격 +25%.'; else if (o === 'none') xMsg = '아무 일도 일어나지 않았어요.......'; else { const it = xDrop(xReg().rare); run.loot.items[it] = (run.loot.items[it] || 0) + 1; run.loot.gold += 30; xMsg = `석상 밑에서 ${ITEM[it] || it}과 골드 30을 찾았어요!`; } }
   else if (k === 'path') xMsg = '지름길로 들어섰어요! 진행 +8%';
   toast(xMsg); save(); xMHud();
 }
@@ -2542,7 +2543,7 @@ function xcoOnBt(v){
 }
 function xcoMemberWin(B, rew){   // 이긴 보상: 경험치·골드는 같고, 드롭은 사람마다 따로 굴려요
   B.rewarded = true; const run = xEx().run; if (!run || !rew) return; const rm = (run.mod?.rew || 1) * (.9 + Math.random() * .2); run.loot.exp += Math.round(rew.exp * rm); run.loot.gold += Math.round(rew.gold * rm); let drop = '';
-  if (Math.random() < (rew.kind === 'battle' ? .3 : .8)){ const it = xRand(rew.kind === 'boss' ? xReg().rare : xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; drop = ` · ${ITEM[it] || it}`; }
+  if (Math.random() < (rew.kind === 'battle' ? .3 : .8)){ const it = xDrop(rew.kind === 'boss' ? xReg().rare : xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; drop = ` · ${ITEM[it] || it}`; }
   save(); $('#xlog') && ($('#xlog').textContent = `승리! 골드 +${rew.gold} · 경험치 +${rew.exp}${drop}`); const el = $('#xcmd'); if (el) el.innerHTML = '<div class="xwait">잠시 뒤 다시 걸어요.......</div>';
 }
 // ----- 전투 -----
@@ -2629,7 +2630,7 @@ function xAct0(u, sk, tgt){   // 한 번 행동
   if (!['encore'].includes(sk.t)) u.lastSk = sk;
   if (sk.t === 'dmg'){ const L = fs(), pb = 1 + (sk.petb || 0) * (u.pets || []).length; L.forEach(t => { for (let h = 0; h < (sk.hits || 1); h++){ if (t.hp <= 0) break; let raw = u[sk.st] * sk.p * pb * (.85 + Math.random() * .3) * mult; if (sk.exec && t.hp / t.mhp < .4) raw *= 1.8; xHit(u, t, raw, '#ffd866', { fcrit: sk.fcrit }); } (sk.ap || []).forEach(a => xApply(u, t, a, mult, sk.st)); });
     if (sk.drain){ u.mp = Math.min(u.mmp, u.mp + u.mmp * sk.drain); xFloat(u.id, 'MP↑', '#6aa8ff'); }
-    if (sk.steal){ const run = xEx().run; run.loot.gold += 5 + Math.round(u.L * 1.2); if (Math.random() < .4){ const it = xRand(xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; } xFloat(u.id, '훔쳤다!', '#ffd866'); }
+    if (sk.steal){ const run = xEx().run; run.loot.gold += 5 + Math.round(u.L * 1.2); if (Math.random() < .4){ const it = xDrop(xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; } xFloat(u.id, '훔쳤다!', '#ffd866'); }
     if (sk.gold){ xEx().run.loot.gold += 8 + u.L; xFloat(u.id, '골드+', '#ffd866'); } }
   else if (sk.t === 'burst'){ fs().forEach(t => { const d = t.fx.dot; if (d){ const tot = Math.round(d.v * Math.max(1, Math.ceil(d.t / 2)) * 1.5); xHit(u, t, tot, '#ff9a4d'); delete t.fx.dot; } }); }
   else if (sk.t === 'heal') as().forEach(t => { const h = Math.max(Math.round(u.heal * sk.p * (.9 + Math.random() * .2)), sk.pct ? Math.round(t.mhp * sk.pct) : 0); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); if (sk.cl) ['dot', 'slow', 'weak', 'blind', 'vuln', 'bomb'].forEach(k => delete t.fx[k]); if (sk.mpb){ t.mp = Math.min(t.mmp, t.mp + t.mmp * sk.mpb); xFloat(t.id, 'MP↑', '#6aa8ff'); } });
@@ -2970,7 +2971,7 @@ function xLoop0(){
 function xWin(){
   sfx('win'); const B = xb, run = xEx().run; B.over = true; clearInterval(xTick); const mL = B.foes[0].mL; let exp = 0, gold = 0; B.foes.forEach(f => { exp += Math.round(8 * (1 + .45 * (mL - 1)) * f.k); gold += Math.round(6 * (1 + .3 * (mL - 1)) * f.k * (.8 + Math.random() * .4)); });
   { const n = B.n0 || 1, sc = n > 1 ? (1 + .15 * (n - 1)) / n : 1; exp = Math.round(exp * sc); gold = Math.round(gold * sc); }   // 몬스터가 인원만큼 늘었으니 보상은 나눠서 (파티 보너스 +15%/명)
-  const rm = (run.mod?.rew || 1) * (.9 + Math.random() * .2); run.loot.exp += Math.round(exp * rm); run.loot.gold += Math.round(gold * rm); let drop = ''; if (Math.random() < (B.kind === 'battle' ? .3 : .8)){ const it = xRand(B.kind === 'boss' ? xReg().rare : xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; drop = ` · ${ITEM[it] || it}`; }
+  const rm = (run.mod?.rew || 1) * (.9 + Math.random() * .2); run.loot.exp += Math.round(exp * rm); run.loot.gold += Math.round(gold * rm); let drop = ''; if (Math.random() < (B.kind === 'battle' ? .3 : .8)){ const it = xDrop(B.kind === 'boss' ? xReg().rare : xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; drop = ` · ${ITEM[it] || it}`; }
   xSaveParty(); B.party.forEach(u => { if (u.hp <= 0 && !u.gone) u.hp = Math.max(1, Math.round(u.mhp * .2)); }); run.p = B.party.map(u => ({ hp: u.hp, mp: u.mp }));
   if (run.co){ B.party.forEach(u => { if (!u.gone) xcoHp[u.uid] = [u.hp, u.mp]; }); const mu = xMine(B); run.p = [{ hp: mu.hp, mp: mu.mp }]; B.won = true; B.rew = { exp, gold, kind: B.kind }; }
   const kind = B.kind; xAdd(kind === 'boss' ? 'boss' : kind); save();
