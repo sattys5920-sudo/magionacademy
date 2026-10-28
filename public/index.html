@@ -4094,7 +4094,7 @@ const loadImg = src => imgCache[src] || (imgCache[src] = new Promise(res => { co
 async function castSprite(id, ctx){
   if (id === 'player') return { kind: 'av', av: me ? avOf(me) : World.Avatar.fromLook(1) };
   const n = npcGet(id); if (n) return n.av ? { kind: 'av', av: npcAv(n) } : { kind: 'spr', spr: n.spr, flap: n.flap, float: n.float };
-  const mc = typeof MQ !== 'undefined' && MQ.cast[id]; if (mc && mc.av) return { kind: 'av', av: World.Avatar.fix(mc.av) }; if (mc && mc.spr !== undefined) return { kind: 'spr', spr: mc.spr, float: mc.float };
+  const mc = typeof MQ !== 'undefined' && MQ.cast[id]; if (mc && mc.av && !npcOver.__cast?.[id]?.av) return { kind: 'av', av: World.Avatar.fix(mc.av) }; if (mc && mc.spr !== undefined) return { kind: 'spr', spr: mc.spr, float: mc.float };
   const c = { ...(NL.cast[id] || {}), ...((ctx.cast || {})[id] || {}) };
   const ov = npcOver.__cast?.[id];   // 관리자가 꾸민 조연 (npcs/__cast/<id>)
   if (ov?.av || c.av) return { kind: 'av', av: World.Avatar.fix(ov?.av || c.av) };
