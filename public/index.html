@@ -791,7 +791,7 @@ const SEED_LIST = [
   { id:'g_straw', mat:'딸기', seed:'딸기', tier:0, know:0, days:1, yield:3, price:5, col:'#6FE079' },
   { id:'g_carrot', mat:'당근', seed:'당근', tier:0, know:0, days:1, yield:3, price:5, col:'#5B16CE' },
   { id:'g_chamo', mat:'카모마일', seed:'카모마일', tier:0, know:0, days:1, yield:3, price:15, col:'#E1C898' },
-  { id:'mana', mat:'마나석', seed:'마력 수정초', tier:1, know:10, days:2, yield:3, price:20, col:'#269B96' },
+  { id:'mana', mat:'마나석', seed:'마력 수정초', tier:1, know:10, days:2, yield:1, price:20, col:'#269B96' },
   { id:'g_lav', mat:'라벤더', seed:'라벤더', tier:1, know:10, days:2, yield:3, price:25, col:'#E236B7' },
   { id:'g_rose', mat:'들장미 꽃잎', seed:'들장미', tier:1, know:10, days:2, yield:3, price:25, col:'#A3E06F' },
   { id:'g_sunf', mat:'해바라기 씨', seed:'해바라기', tier:1, know:10, days:2, yield:3, price:15, col:'#1635CE' },
@@ -5846,7 +5846,7 @@ function renderGreen(){
     const i = +b.dataset.plot, p = me.plots[i];
     if (!p.k){ plantFor = plantFor === i ? null : i; greenMsg = ''; renderGreen(); setTimeout(() => document.querySelector('[data-plot].sel')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 30); return; }
     plantFor = null;
-    if (plotReady(p)){ tutHook('water'); const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0) + (dbuff('dforest') && Math.random() < .1 ? 1 : 0), n2 = sgMul(n, sgFx('gather_yield') + partyFx()); me.inv[p.k] += n2; me.plots[me.plots.indexOf(p)] = { k: null }; greenMsg = `${g.seed} 수확! ${g.mat} +${n2}${n2 > g.yield ? ` (보너스 +${n2 - g.yield}${me.house === 'dew' && myTime() ? ' · Dewmorn의 새벽·아침' : ''})` : ''}`; }
+    if (plotReady(p)){ tutHook('water'); const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0) + (dbuff('dforest') && Math.random() < .1 ? 1 : 0), n2 = p.k === 'mana' ? 1 : sgMul(n, sgFx('gather_yield') + partyFx()); me.inv[p.k] = (me.inv[p.k] || 0) + n2;   /* 마나석은 보너스 없이 1개 */ me.plots[me.plots.indexOf(p)] = { k: null }; greenMsg = `${g.seed} 수확! ${g.mat} +${n2}${n2 > g.yield ? ` (보너스 +${n2 - g.yield}${me.house === 'dew' && myTime() ? ' · Dewmorn의 새벽·아침' : ''})` : ''}`; }
     else if (p.w) greenMsg = `이미 물을 줬어요. ${timeText(plotLeft(p))} 남았어요.`;
     else if (me.mana < waterCost()) greenMsg = '마력이 부족해요. 내 방 침대에서 쉬고 오세요.';
     else { p.w = true; tutHook('water'); me.mana -= waterCost(); greenMsg = `물을 줬어요. 쑥쑥! ${timeText(plotLeft(p))} 남았어요.`; }
