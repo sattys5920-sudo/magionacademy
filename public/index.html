@@ -1654,7 +1654,7 @@ World.onSpot = (si, spot) => {
   const all = spotsToday(), live = all.map((s, i) => ({ ...s, i })).filter(s => !me.fg.got.includes(s.i)), sp = live[si]; if (!sp) return;
   const pool = FORAGE.filter(x => x.z.includes(sp.z)).map(x => buffOn('fluck') ? { ...x, w: x.w ** .7 } : x); let r = sp.r * pool.reduce((t, x) => t + x.w, 0), it = pool[pool.length - 1];   // 요리 효과: 드문 채집물
   for (const x of pool){ r -= x.w; if (r <= 0){ it = x; break; } }
-  const isNew = dexAdd(it.id); if (dbuff('dforest') && Math.random() < .1) dexAdd(it.id); { const ex = sgMul(1, sgFx('gather_yield') + partyFx()) - 1; if (ex > 0) me.inv[it.id] = (me.inv[it.id] || 0) + ex; } me.fg.got.push(sp.i);   // 풍작의 별빛 · 친구와 함께 if (isNew) me.mana += it.grade;
+  const isNew = dexAdd(it.id); if (dbuff('dforest') && Math.random() < .1) dexAdd(it.id); { const ex = sgMul(1, sgFx('gather_yield') + partyFx()) - 1; if (ex > 0) me.inv[it.id] = (me.inv[it.id] || 0) + ex; } me.fg.got.push(sp.i); if (isNew) me.mana += it.grade;   // 풍작의 별빛 · 친구와 함께
   save(); hud(); syncSpots();
   pzDrop('forage'); lnDrop('forage');
   if (it.grade >= 3) speak(`${it.name} 찾았다!`);
@@ -2103,7 +2103,7 @@ function renderExplore(){
     frame(null, '무기 강화', `${job.n} · ${XWN[ex.job]}`, `<section class="sec"><div class="box px" style="padding:14px"><div style="display:flex;gap:14px;align-items:center"><span class="wic wbg" style="--t:${wp};--r:${ri}"></span><div style="flex:1"><b>${XWT[wp]} ${XWN[ex.job]}</b><div class="s sub">강화 ${wp} / 4 · 공격·마법·치유 +${wp * 8}%</div>${nx ? `<div class="s" style="margin-top:6px">다음: <b>${XWT[wp + 1]}</b> (+${(wp + 1) * 8}%)</div>` : '<div class="s" style="margin-top:6px;color:var(--gold)">최고 단계예요!</div>'}</div></div>
       ${nx ? `<div class="s" style="margin-top:10px">필요한 것: 골드 ${nx[0]} (${me.coin >= nx[0] ? '있음' : '모자라요'}) · 마나석 ${nx[1]}개 (지금 ${mana}개)</div><button class="btn go" id="wup" style="width:100%;margin-top:8px" ${ok ? '' : 'disabled'}>${ok ? `${XWT[wp + 1]} 단계로 강화` : '재료가 모자라요'}</button>` : ''}
       <div class="wstep">${XWT.map((n, i) => `<div class="${i === wp ? 'on' : i < wp ? 'done' : ''}"><span class="wic wbg" style="--t:${i};--r:${ri}"></span><b>${n}</b><small>${i ? `+${i * 8}%` : '기본'}</small>${i === wp ? '<i>지금</i>' : i === wp + 1 ? '<i class="nx">다음</i>' : ''}</div>`).join('<em>›</em>')}</div></div></section><div style="display:flex;gap:8px"><button class="btn" id="wok" style="flex:1">돌아가기</button></div>`);
-    const up = $('#wup'); if (up) up.onclick = () => { if (!ok) return; me.coin -= nx[0]; me.inv.mana -= nx[1]; if (!me.inv.mana) delete me.inv.mana; ex.wp = wp + 1; sfx('pop'); save(); hud(); renderExplore(); };
+    const up = $('#wup'); if (up) up.onclick = () => { if (!ok) return; me.coin -= nx[0]; me.inv.mana = Math.max(0, (me.inv.mana || 0) - nx[1]); ex.wp = wp + 1; sfx('pop'); save(); hud(); renderExplore(); };
     $('#wok').onclick = () => { xv = { view: 'lobby' }; renderExplore(); }; return;
   }
   if (v === 'tree'){
@@ -5051,7 +5051,7 @@ function renderBag(){
     bagMsg = ''; redraw(); });
   on('[data-btrash]', async b => { const k = b.dataset.btrash; if (!(me.inv[k] > 0)) return;
     if (!await confirmBox(`${withJosa(ITEM[k] || k, '을', '를')} 하나 버릴까요? 되돌릴 수 없어요.`, '버리기', '아니요', true)) return;
-    me.inv[k]--; if (me.inv[k] <= 0) delete me.inv[k]; bagMsg = `${withJosa(ITEM[k] || k, '을', '를')} 하나 버렸어요.`; toast(bagMsg); save(); redraw(); });
+    me.inv[k] = Math.max(0, (me.inv[k] || 0) - 1); bagMsg = `${withJosa(ITEM[k] || k, '을', '를')} 하나 버렸어요.`; toast(bagMsg); save(); redraw(); });
   on('[data-bwear]', b => { const c = bagCloth().find(x => x.key === b.dataset.bwear); if (!c) return; me.av[c.cat] = c.i; me.av = World.Avatar.fix(me.av); delete me.av.house; save(); World.setPlayer(me.nick, avOf(me)); const hf = $('#hudFace'); if (hf) delete hf.dataset.k; toast(`${withJosa(c.p.n, '을', '를')} 입었어요`); redraw(); });
   on('[data-bavatar]', () => { avDraft = null; openSheet('home', 'avatar'); });
   // 보여 준 칸은 '본 것'으로
@@ -7713,7 +7713,7 @@ function renderMarket(){
       return { ...cur, buyer: uid, buyerNick: me.nick };
     });
     if (!res.committed) return toast('한발 늦었어요. 다른 친구가 먼저 샀어요.');
-    me.coin -= l.price; me.inv[l.item] += l.qty; save();
+    me.coin -= l.price; me.inv[l.item] = (me.inv[l.item] || 0) + l.qty; save();
     toast(`${withJosa(ITEM[l.item], '을', '를')} 샀어요! -${l.price}G`);
   });
   const dn = $('#donate'); if (dn) dn.onclick = async () => {
