@@ -3243,7 +3243,7 @@ function showAdmin(){
   if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
   adminRender();
 }
-const adminTyping = () => { const a = document.activeElement; return (AD.tab === 'npc' || AD.tab === 'gift') && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
+const adminTyping = () => { const a = document.activeElement; return (AD.tab === 'npc' || AD.tab === 'gift' || AD.tab === 'story') && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
 function adminChat(){   // 최근 14일 대화를 한 줄로 이어 봐요
   if (!F || !db) return; AD.chatOff?.(); const by = {}, offs = [];
   const merge = () => { AD.chat = {}; Object.entries(by).forEach(([d, v]) => Object.entries(v).forEach(([k, c]) => { AD.chat[d + '/' + k] = c; })); if (AD.tab === 'chat') adminRender(); };
@@ -4675,11 +4675,32 @@ document.addEventListener('click', e => {
 // ---------- 관리자: 송출 · 진행 보기 · 단계 넘기기 ----------
 function adminStoryHTML(){   // 메인 의뢰 송출: 송출한 장까지만 열려요. 앞 장을 끝낸 사람은 바로, 아직 하는 사람은 끝내는 즉시 다음 장이 와요
   const rel = AD.story.mq && +AD.story.mq.n >= 0 ? +AD.story.mq.n : 0, ps = Object.values(AD.players || {}).filter(p => p?.nick), list = MQ.list || [];
-  return `<div class="adcard"><b>송출된 장: ${rel} / ${list.length}장</b><span class="s">송출하면 앞 장을 끝낸 학생은 바로 다음 손님을 만나고, 아직 하는 학생은 끝내자마자 이어서 받아요.</span></div>
+  return `<div class="adcard"><b>송출된 장: ${rel} / ${list.length}장</b><span class="s">송출하면 앞 장을 끝낸 학생은 바로 다음 손님을 만나고, 아직 하는 학생은 끝내자마자 이어서 받아요.</span></div>${adminMqPlayerHTML(ps)}
     ${list.map((id, i) => { const q = MQ.q[id], c = i + 1, done = ps.filter(p => p.mq?.done?.[id]).length, now = ps.filter(p => p.mq?.q === id).length, open = c <= rel, wait = ps.filter(p => !p.mq?.done?.[id] && (i === 0 || p.mq?.done?.[list[i - 1]]) && p.mq?.q !== id).length;
       return `<div class="adcard" style="border-color:${open ? '#3FAF74' : '#22183F'}"><b>${c}장 · ${esc(q?.name || id)} (${esc(MQ.cast[q?.client]?.name || '')})</b> ${open ? '송출됨' : '아직'}
         <div class="s">끝낸 학생 ${done}명 · 하는 중 ${now}명${open ? ` · 받을 차례 ${wait}명` : ''}</div>
         <div class="frow">${c === rel + 1 ? `<button class="btn sm go" data-adst="mq:${c}">${c}장 송출</button>` : ''}${c === rel ? `<button class="btn sm" data-adst="mq:${c - 1}">송출 취소</button>` : ''}</div></div>`; }).join('')}`;
+}
+function adminMqPlayerHTML(ps){   // 학생 한 명을 골라 메인 의뢰가 어디까지 왔는지 봐요
+  const list = MQ.list || [], ids = Object.keys(AD.players || {}).filter(id => AD.players[id]?.nick).sort((a, b) => AD.players[a].nick.localeCompare(AD.players[b].nick, 'ko'));
+  const where = p => { const m = p.mq || {}, d = list.filter(id => m.done?.[id]).length; if (m.q && MQ.q[m.q]) return `${list.indexOf(m.q) + 1}장 ${m.st || 1}단계`; return d ? `${d}장까지 끝` : '시작 전'; };
+  const pick = AD.mqp && AD.players[AD.mqp] ? AD.mqp : '';
+  let out = '';
+  if (pick){
+    const p = AD.players[pick], m = p.mq || {}, q = m.q ? MQ.q[m.q] : null, done = list.filter(id => m.done?.[id]);
+    out += `<div class="s">끝낸 의뢰: ${done.length ? done.map(id => `${list.indexOf(id) + 1}장 ${esc(MQ.q[id]?.name || id)}`).join(' · ') : '없음'}</div>`;
+    if (q){
+      const st = (q.stages || []).find(x => x.n === (m.st || 1)), PH = { arrive: '손님이 오기를 기다리는 중', pre: '부탁을 듣기 전', go: '목표 하는 중', ready: '목표 끝 · 보고하러 가야 해요' };
+      out += `<div style="margin-top:6px"><b>지금: ${list.indexOf(q.id) + 1}장 「${esc(q.name)}」 ${m.st || 1} / ${(q.stages || []).length}단계${st?.title ? ` · ${esc(st.title)}` : ''}</b></div><div class="s">${PH[m.ph] || esc(m.ph || '')}</div>`;
+      if (st && (m.ph === 'go' || m.ph === 'ready')){
+        const keep = me; let rows = '';
+        try { me = structuredClone(p); me.inv = me.inv || {}; rows = (st.objectives || []).map((o, i) => { const r = mqObjState(o, i); if (m.ph === 'ready') r.done = true, r.cur = r.need; return `<div class="s">${r.done ? '✅' : '⬜'} ${esc(r.text)}${r.need > 1 ? ` (${Math.min(r.cur, r.need)}/${r.need})` : ''}</div>`; }).join(''); }
+        catch(e){ rows = '<div class="s">목표를 읽지 못했어요</div>'; } finally { me = keep; }
+        out += rows;
+      }
+    } else out += `<div class="s">${done.length >= list.length ? '모든 의뢰를 끝냈어요' : '다음 의뢰를 기다리는 중'}</div>`;
+  }
+  return `<div class="adcard"><b>학생별 진행</b><div class="frow"><select id="admqp"><option value="">학생 고르기</option>${ids.map(id => `<option value="${id}" ${id === pick ? 'selected' : ''}>${esc(AD.players[id].nick)} · ${where(AD.players[id])}</option>`).join('')}</select></div>${out}</div>`;
 }
 function adminStoryAct(v){
   const [a, n] = v.split(':'), c = +n;
@@ -7401,6 +7422,7 @@ function adminMailSend(u, e){
   if (!F || !db || !u) return Promise.resolve(); const id = Date.now() + '_' + Math.random().toString(36).slice(2, 5), sum = [e.coin && `골드 ${e.coin}`, e.mana && `마력 ${e.mana}`, e.stone && `마나석 ${e.stone}`, e.sp && `SP ${e.sp}`, ...Object.entries(e.items || {}).map(([k, n]) => `${ITEM[k]} ×${n}`), e.set && e.set.coin !== undefined && `골드를 ${e.set.coin}으로`, ...Object.entries((e.set && e.set.items) || {}).map(([k, n]) => `${ITEM[k]}을(를) ${n}개로`), (e.delBuff || []).length && `버프 제거`, e.resetExam && '쪽지시험 기록 지움'].filter(Boolean).join(', ');
   return F.set(F.ref(db, `mail/${u}/${id}`), { at: Date.now(), sum, ...e }).then(() => adminMailLoad());
 }
+document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('#admqp'); if (s){ AD.mqp = s.value; adminRender(); } });
 document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('#adgu'); if (s){ AD.gu = s.value; adminMailLog = []; adminMailLoad(); adminRender(); } });
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-adg]'); if (!b || b.tagName === 'SELECT') return; const a = b.dataset.adg, u = AD.gu, v = id => { const x = $('#' + id); return x ? x.value.trim() : ''; }, n = id => Math.round(+v(id) || 0);
@@ -8124,7 +8146,7 @@ function mqObjState(o, i){   // → { done, cur, need, text, hint }
   if (t === 'craft'){ const cur = P['craft:' + o.item] || 0, n = o.count || 1; return { done: cur >= n, cur, need: n, text: `${ITEM[o.item] || o.item} ${n > 1 ? n + '개 ' : ''}만들기${o.quality ? ` (품질 ${MQ_Q[o.quality]} 이상)` : ''}`, hint: h || `${o.place === 'candy' ? '과자 교실 오븐' : '물약 교실 솥'}에서 「의뢰 제조」` }; }
   if (t === 'deliver'){ const cur = P['deliver:' + i] || 0, n = o.count || 1; return { done: cur >= n, cur, need: n, text: `${mqName(o.to)}에게 ${ITEM[o.item] || o.item} ${n}개 전하기`, hint: h || `가진 것 ${me.inv[o.item] || 0}개` }; }
   if (t === 'visit'){ const d = !!P['visit:' + i]; const p = NL.places[o.place]; return { done: d, cur: d ? 1 : 0, need: 1, text: `${p ? fillVars(p.name) : o.place}에 가기${o.time ? ' · ' + o.time.map(x => BAND_KO[x]).join('이나 ') : ''}${o.weather ? ' · ' + o.weather.map(x => WX_KO[x]).join('이나 ') : ''}${o.moon ? ' · ' + MOON_KO[o.moon] : ''}`, hint: h }; }
-  if (t === 'talk'){ const d = !!P['talk:' + (o.who)]; return { done: d, cur: d ? 1 : 0, need: 1, text: `${mqName(o.who) === o.who ? (npcGet(o.who)?.name || o.who) : mqName(o.who)}${withJosa(mqName(o.who) === o.who ? (npcGet(o.who)?.name || o.who) : mqName(o.who), '과', '와')} 이야기하기`, hint: h || (o.where ? `${NL.places[o.where]?.name || ''}에 있어요` : '') }; }
+  if (t === 'talk'){ const d = !!P['talk:' + (o.who)], nm = mqName(o.who) === o.who ? (npcGet(o.who)?.name || townName(o.who)) : mqName(o.who); return { done: d, cur: d ? 1 : 0, need: 1, text: `${withJosa(nm, '과', '와')} 이야기하기`, hint: h || (o.where ? `${NL.places[o.where]?.name || ''}에 있어요` : '') }; }
   if (t === 'clue'){ const cur = (o.spots || []).filter(sp => P['clue:' + sp.id]).length, n = o.count || (o.spots || []).length; return { done: cur >= n, cur, need: n, text: `${o.text || '단서'} ${n}개 찾기`, hint: h || (o.spots || []).filter(sp => !P['clue:' + sp.id]).slice(0, 2).map(sp => sp.hint || NL.places[sp.place]?.name || '').filter(Boolean).join(' · ') }; }
   if (t === 'puzzle'){ const d = !!P['puzzle:' + i]; return { done: d, cur: d ? 1 : 0, need: 1, text: o.text || (o.kind === 'stars' ? '별자리 잇기' : '순서 맞추기'), hint: h || '일지에서 「풀기」를 눌러요' }; }
   if (t === 'wait_moon'){ const d = moonNow() === o.moon || !!P['moon:' + i]; return { done: d, cur: d ? 1 : 0, need: 1, text: `${MOON_KO[o.moon]}까지 기다리기`, hint: h || `지금은 ${MOON_KO[moonNow()]}이에요` }; }
