@@ -1977,7 +1977,7 @@ function xEnd(how){   // how: clear · time · retreat · wipe
   if (run.co){ xcoStop(); xM = null; } const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gold = how === 'wipe' ? 0 : partyMul(Math.round(lo.gold * mult)), exp = how === 'wipe' ? 0 : Math.round((lo.exp * mult + (how === 'clear' ? xReg().clearExp : 0)) * (dbuff('dforest') ? 1.03 : 1) * (dbuff('pump') ? 1.1 : 1) * (1 + sgFx('exp_gain') + partyFx()));
   const items = how === 'wipe' ? {} : { ...lo.items }; if (how === 'clear') ex.chest = xChestMake(xReg());   // 끝까지 가면 보상 상자 셋 중 하나를 골라요
   const before = xLv(ex.exp).L; ex.exp += exp; me.coin += gold; Object.entries(items).forEach(([k, n]) => { me.inv[k] = (me.inv[k] || 0) + n; });
-  const after = xLv(ex.exp).L, sp = how === 'clear' || (how !== 'wipe' && !(run.co && how === 'retreat') && Math.random() < .1) ? 1 : 0; ex.spx = (ex.spx || 0) + sp; ex.run = null; xb = null; clearInterval(xTick); save(); hud();
+  const after = xLv(ex.exp).L, sp = how === 'clear' ? 1 : 0;   // 스킬 포인트는 끝까지 간 탐사에서만 ex.spx = (ex.spx || 0) + sp; ex.run = null; xb = null; clearInterval(xTick); save(); hud();
   xv = { view: 'result', how, gold, exp, items, up: after > before ? [before, after] : null, sp, prog: Math.floor(run.prog) };
   if (how !== 'wipe'){ pzDrop('explore'); lnDrop('explore'); }
   if (how !== 'wipe' && Math.random() < .02) setTimeout(() => recipePaper('explore'), 700);   // 탐사 보상: 레시피 종이 2%
