@@ -861,7 +861,7 @@ const POTION_LIST = [
   { id:'p_fluff', name:'포근 물약', r:["wool", "wool", "drop"], pay:90, col:'#FFB8D2', use:"사육장 생물 모두 애정 +1" },
   { id:'p_purple', name:'반짝 물약', r:["herb", "drop", "uhair"], pay:280, col:'#B47AFF', desc:"반 공동 의뢰에 쓰여요" },
   { id:'p_dragon', name:'용기의 물약', r:["egg", "scale", "mana"], pay:320, col:'#C8323C', desc:"드래곤이 두고 간 알 껍질로만 만들 수 있어요" },
-  { id:'p_dawn', name:'새벽빛 물약', r:["drop", "drop", "herb"], pay:160, col:'#FFEFA0', time:"dew", desc:"새벽에만 맑게 끓어요", use:"전투 중 마시면 체력·마력 70% 회복" },
+  { id:'p_dawn', name:'새벽빛 물약', r:["drop", "drop", "herb"], pay:160, col:'#FFEFA0', time:"dew", desc:"새벽·아침에만 맑게 끓어요", use:"전투 중 마시면 체력·마력 70% 회복" },
   { id:'p_sun', name:'한낮의 물약', r:["scale", "scale", "herb"], pay:160, col:'#FFC81E', time:"ember", desc:"한낮의 열기로 끓여요" },
   { id:'p_dusk', name:'노을 물약', r:["uhair", "uhair", "wool"], pay:180, col:'#FF7A5C', time:"dusk", desc:"해 질 녘에만 색이 바뀌어요" },
   { id:'p_moon', name:'달그림자 물약', r:["mana", "mana", "drop"], pay:180, col:'#5548B8', time:"moon", desc:"달이 뜬 밤에만 굳어요" },
@@ -1059,13 +1059,13 @@ const furnPic = (fid, box = 48) => { const x = FURN_BY[fid], k = Math.min(2, box
 const OLD_FURN = { candle:'candle', bed:'cushions', owl:'owldoll', plant:'monstera', shelf:'bookcase', rug:'rug_star' };
 // 기숙사: 하루 중 깨어 있는 시간대로 나눠요. 기숙사마다 3명까지.
 const HOUSES = {
-  dew:   { name:'Dewmorn',    ko:'듀모른',     from:5,  to:10, col:'#5CCB8E', bg:'#E2F8EA', icon:'sprout', where:'유령관 · 안개 낀 푸른 기숙사', who:'부지런한 정원사들',
-           perk:'물 주기에 마력이 안 들어요', timePerk:'새벽에 수확하면 약초 +1' },
-  ember: { name:'Emberkiln',  ko:'엠버킬른',   from:10, to:16, col:'#F08A3C', bg:'#FFEBDC', icon:'cauldron', where:'마녀관 · 보랏빛 기숙사', who:'시끌벅적한 실험광들',
+  dew:   { name:'Dewmorn',    ko:'듀모른',     from:4,  to:12, col:'#5CCB8E', bg:'#E2F8EA', icon:'sprout', where:'유령관 · 안개 낀 푸른 기숙사', who:'부지런한 정원사들',
+           perk:'물 주기에 마력이 안 들어요', timePerk:'새벽·아침에 수확하면 약초 +1' },
+  ember: { name:'Emberkiln',  ko:'엠버킬른',   from:12, to:16, col:'#F08A3C', bg:'#FFEBDC', icon:'cauldron', where:'마녀관 · 보랏빛 기숙사', who:'시끌벅적한 실험광들',
            perk:'물약 끓이기 마력 5 → 4', timePerk:'낮에 실패하면 재료 1개를 돌려받아요' },
   dusk:  { name:'Duskfold',   ko:'더스크폴드', from:16, to:21, col:'#E8709A', bg:'#FFE6EE', icon:'wool', where:'늑대관 · 숲 냄새 나는 기숙사', who:'다정한 돌봄이들',
            perk:'쓰다듬으면 애정 +1 더', timePerk:'저녁에 먹이를 주면 배부름 +1 더' },
-  moon:  { name:'Moonhollow', ko:'문할로우',   from:21, to:5,  col:'#7A66E0', bg:'#E8E2FF', icon:'owl', where:'뱀파이어관 · 붉은 기숙사', who:'소문 많은 밤의 장사꾼들',
+  moon:  { name:'Moonhollow', ko:'문할로우',   from:21, to:4,  col:'#7A66E0', bg:'#E8E2FF', icon:'owl', where:'뱀파이어관 · 붉은 기숙사', who:'소문 많은 밤의 장사꾼들',
            perk:'주문 납품 보상 +10%', timePerk:'밤에 올린 시장 물건에 달빛 표시' },
 };
 const HOUSE_KEYS = Object.keys(HOUSES);
@@ -1432,7 +1432,7 @@ document.addEventListener('pointerdown', e => { if (!e.target.closest('#chat')){
 if (window.visualViewport){ const vv = window.visualViewport, fit = () => { const r = document.documentElement.style; r.setProperty('--vvh', Math.round(vv.height) + 'px'); r.setProperty('--vvt', Math.round(vv.offsetTop) + 'px'); document.body.classList.toggle('kb', vv.height < window.innerHeight * .78); }; vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); fit(); }
 // ===== 낚시 · 채집: 물고기 40 + 쓰레기 3, 채집물 50, 낚싯대 5 =====
 // 그림은 art/fish.png · forage.png · rods.png (tools/iso/fishing_art.py, 이 표 순서대로). 앞에 있을수록 흔해요: 칸마다 희귀도가 다 달라요
-// 물고기: [id, 이름, 틀(크기용), 나오는 시간(없으면 언제나 · dew 새벽 · ember 한낮 · dusk 노을 · moon 밤)]
+// 물고기: [id, 이름, 틀(크기용), 나오는 시간(없으면 언제나 · dew 새벽·아침 · ember 한낮 · dusk 노을 · moon 밤)]
 const FISH_LIST = [
   ['f_minnow', '유령 피라미', 'slim'], ['f_crucian', '호박 붕어', 'round'], ['f_seedbit', '호박씨 송사리', 'slim'], ['f_killi', '이끼 송사리', 'slim'], ['f_loach', '진흙 미꾸라지', 'long'],
   ['f_smelt', '촛불 빙어', 'slim', 'dew'], ['f_cloudcrab', '구름 게', 'crab'], ['f_carp', '버섯 잉어', 'round'], ['f_batcat', '박쥐 메기', 'cat', 'moon'], ['f_candy', '사탕 열대어', 'round', 'ember'],
@@ -1483,7 +1483,7 @@ const RODS = [
 const rodIc = (i, s = 32) => `<i class="ic" style="width:${s}px;height:${s}px;background:url(art/rods.png?v=${FISH_ART_V}) ${-s * i}px 0/${s * 5}px ${s}px no-repeat"></i>`;
 const rodLv = () => me.rod || 0;
 const fishNow = f => !f.time || f.time === houseNow();
-const TIME_NAME = { dew: '새벽', ember: '한낮', dusk: '노을', moon: '밤' };
+const TIME_NAME = { dew: '새벽·아침', ember: '한낮', dusk: '노을', moon: '밤' };
 const pickW = list => { let r = Math.random() * list.reduce((t, x) => t + x.w, 0); for (const x of list){ r -= x.w; if (r <= 0) return x; } return list[list.length - 1]; };
 // 낚시터: 호수·강·연못마다 낚이는 물고기의 한계(cap: 도감 번호)가 달라요. 연못은 작은 물고기만, 강은 중간까지, 호수는 전부
 const FISH_SPOT = {
@@ -3697,10 +3697,10 @@ const npcAv = n => n.av ? (n.avData ? World.Avatar.fix(n.avData) : World.Avatar.
 // 데이터: data/npc/places.json(장소) · cast.json(등장인물) · <id>/profile.json(말투·일상 대사) · <id>/events/heart_XX.json (형식: tools/npc_story_format.md)
 // 내 진행: me.npc[id] = { a 호감도, t 마지막 대화 날, g 마지막 선물 날, seen { k: 'ok'|'cold'|'fail' }, cold 앞 이벤트가 서먹했는지, ev 이벤트 본 날, evAt, hide 숨바꼭질, dk 줄어듦 계산한 날 }
 //          me.nflag { 플래그: 1 }, me.perk { 보상: 1 }
-const BAND_KO = { morning: '아침', day: '낮', evening: '저녁', night: '밤' };
-const BAND_HOUR = { morning: 7.8, day: 13, evening: 18.5, night: 23.5 };   // 관리자가 시간대를 정하면 하늘도 그 시각처럼
+const BAND_KO = { morning: '새벽·아침', day: '낮', evening: '저녁', night: '밤' };
+const BAND_HOUR = { morning: 9.5, day: 13, evening: 18.5, night: 23.5 };   // 관리자가 시간대를 정하면 하늘도 그 시각처럼
 World.hourNow = () => { if (typeof bandForce !== 'undefined' && bandForce && bandForce.d === todayKey() && BAND_HOUR[bandForce.b] !== undefined) return BAND_HOUR[bandForce.b]; const d = new Date(); return d.getHours() + d.getMinutes() / 60; };
-const bandNow = (h = new Date().getHours()) => (typeof bandForce !== 'undefined' && bandForce && bandForce.d === todayKey() && BAND_KO[bandForce.b]) ? bandForce.b : h >= 5 && h < 10 ? 'morning' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 21 ? 'evening' : 'night';
+const bandNow = (h = new Date().getHours()) => (typeof bandForce !== 'undefined' && bandForce && bandForce.d === todayKey() && BAND_KO[bandForce.b]) ? bandForce.b : h >= 4 && h < 12 ? 'morning' : h >= 12 && h < 16 ? 'day' : h >= 16 && h < 21 ? 'evening' : 'night';
 const hash32 = s => { let h = 2166136261; for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 const WX_KO = { clear: '맑음', rain: '비', fog: '안개', snow: '눈' };
 let wxForce = null;   // 관리자가 정한 오늘 날씨 (story/wx)
@@ -3824,7 +3824,9 @@ function syncNpcs(){
   World.setNpcs(list, `art/npcs.webp?v=${NPC_ART_V}`, 'art/cast_animals.webp?v=1');
 }
 
-World.clockText = d => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${BAND_KO[bandNow(d.getHours())]}`;
+// 시계에 보이는 이름은 다섯 칸: 새벽 4~8 · 아침 8~12 · 낮 12~16 · 저녁 16~21 · 밤 21~4 (새벽·아침은 같은 시간대로 쳐요)
+const bandLabel = h => { const b = bandNow(h); return b === 'morning' ? (typeof bandForce !== 'undefined' && bandForce && bandForce.d === todayKey() ? '아침' : h < 8 ? '새벽' : '아침') : BAND_KO[b]; };
+World.clockText = d => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${bandLabel(d.getHours())}`;
 // ---- 말 걸기 ----
 function npcPortrait(n){ return n.av ? headImg(npcAv(n)) : npcFace(n.spr); }
 const npcUI = () => $('#npcui');
@@ -5213,7 +5215,7 @@ function renderHome(){
   const d = new Date(), wx = weatherToday(), openEv = npcAll().filter(x => evCond(x.id));
   frame('island', '오늘의 정보', `${dayLabel()} · 1학년 · ${H.name}`, `
     <div class="box today">
-      <div class="li"><div class="main"><span class="t">${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${BAND_KO[bandNow(d.getHours())]} · ${WX_KO[wx]}${isFullMoon() ? ' · 호박달 축제' : ''}</span></div></div>
+      <div class="li"><div class="main"><span class="t">${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${bandLabel(d.getHours())} · ${WX_KO[wx]}${isFullMoon() ? ' · 호박달 축제' : ''}</span></div></div>
       ${openEv.length ? `<div class="li"><div class="main"><span class="t">하트 이벤트 ${openEv.length}개</span><span class="d">${openEv.map(x => `${x.name} ♥${evCond(x.id).k}`).join(' · ')}</span></div><button class="btn sm" id="goJournal">일지</button></div>` : ''}
     </div>
     <section class="sec">
