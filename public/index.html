@@ -1955,8 +1955,8 @@ function recipePaper(from){
 }
 function xSaveParty(){ const run = xEx().run; if (run && xb) run.p = xb.party.map(u => ({ hp: u.hp, mp: u.mp })); }
 function xChestMake(R){   // 보상 상자 셋: 드문 재료 하나 + 보통 재료 둘 (골드는 상자마다 조금씩)
-  const g = () => Math.round(R.fee * (.8 + Math.random() * .8)), loot = xShuffle(R.loot.slice());
-  return { o: xShuffle([{ it: xRand(R.rare), n: 1, g: g(), r: 1 }, { it: loot[0], n: 2 + (Math.random() < .5 ? 1 : 0), g: g() }, { it: loot[1] || loot[0], n: 2 + (Math.random() < .5 ? 1 : 0), g: g() }]) };
+  const g = () => Math.round(R.fee * (.8 + Math.random() * .8)), loot = xShuffle(R.loot.filter(k => k !== 'mana')), rare = R.rare.filter(k => k !== 'mana');   // 마나석은 희귀 상자에서만 5% 확률로 1개
+  return { o: xShuffle([{ it: Math.random() < .05 || !rare.length ? 'mana' : xRand(rare), n: 1, g: g(), r: 1 }, { it: loot[0], n: 2 + (Math.random() < .5 ? 1 : 0), g: g() }, { it: loot[1] || loot[0], n: 2 + (Math.random() < .5 ? 1 : 0), g: g() }]) };
 }
 function xChestPick(i){
   const ex = xEx(), C = ex.chest; if (!C || C.p !== undefined || !C.o[i]) return; const o = C.o[i];
