@@ -4305,7 +4305,7 @@ function evFinish(ctx){
   toast(ctx.cold ? `${withJosa(n.name, '과', '와')} 조금 서먹해졌어요.......` : `♥${k} 「${fillVars(ev.title, n.id)}」${got.length ? ' · ' + got.join(', ') : ''}`);
 }
 document.addEventListener('click', e => { if (!evOn || !evUI().contains(e.target) || e.target.closest('.evo,.evskip')) return; evOn.tapR && evOn.tapR(); });
-document.addEventListener('keydown', e => { if (evOn && !e.target.matches('input,textarea') && (e.key === ' ' || e.key === 'Enter')){ e.preventDefault(); evOn.tapR && evOn.tapR(); } });
+document.addEventListener('keydown', e => { if (evOn && !e.target.matches?.('input,textarea') && (e.key === ' ' || e.key === 'Enter')){ e.preventDefault(); evOn.tapR && evOn.tapR(); } });
 // ---------- 관리자: NPC 호감도 표 · NPC 편집 (생김새·루틴·대사·하트 이벤트) ----------
 // 고친 내용은 npcs/<id> = { name, title, likes, dislikes, av, avData, routine, vars, prof, ev: { k: 이벤트 } } (파일 위에 덮어써요)
 // 국어 검사 (scripts/validate_npc.py와 같은 규칙): 저장할 때 경고만 띄워요
@@ -4787,8 +4787,8 @@ document.querySelectorAll('#bar [data-nav]').forEach(b => { if (b.dataset.nav ==
   b.onclick = () => { const s = b.dataset.nav; if (sheetOn && sub === s) return closeSheet(); openSheet('home', s); }; });
 // 단축키: I 가방 · M 지도 · R 관계 · J 일지 · Esc 닫기·메뉴 (입력창에서는 안 먹어요)
 document.addEventListener('keydown', e => {
-  if (!me || !document.body.classList.contains('inworld') || e.target.matches('input,textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
-  const k = e.key.toLowerCase();
+  if (!me || !document.body.classList.contains('inworld') || e.target.matches?.('input,textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = (e.key || '').toLowerCase();
   if (k === 'escape'){ if ($('#confirm').classList.contains('on')) return; if (sheetOn) closeSheet(); else if ($('#mapv').classList.contains('on')) $('#mClose').click(); else if (document.activeElement === $('#tin')) $('#tin').blur(); else openSheet('home', 'menu'); return; }
   const map = { i: 'bag', r: 'rel', j: 'journal' }; if (map[k]){ e.preventDefault(); sheetOn && sub === map[k] ? closeSheet() : openSheet('home', map[k]); }
   if (k === 'm'){ e.preventDefault(); $('#tMap').click(); }
