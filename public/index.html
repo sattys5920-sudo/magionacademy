@@ -1140,6 +1140,7 @@ function normalize(p){
     return { k: x.k, at: Date.now() - done * G.mins * 6e4, w: false };
   });
   while (p.plots.length < 2) p.plots.push({ k: null });
+  if (p.fg && !Array.isArray(p.fg.got)) p.fg.got = Object.values(p.fg.got || {});   // 빈 배열은 Firebase에 안 남아요
   migrateCreatures(p);
   return p;
 }
@@ -1609,6 +1610,7 @@ function spotsToday(){
 function syncSpots(){
   if (!me) return;
   if (!me.fg || me.fg.d !== todayKey()) me.fg = { d: todayKey(), got: [] };
+  if (!Array.isArray(me.fg.got)) me.fg.got = Object.values(me.fg.got || {});   // Firebase는 빈 배열을 저장하지 않아서, 불러오면 got이 없어요
   const all = spotsToday(); World.setSpots('campus', all.map((s, i) => ({ ...s, i })).filter(s => !me.fg.got.includes(s.i)));
 }
 World.onSpot = (si, spot) => {
@@ -3493,7 +3495,7 @@ function eatDish(k){
   if (TIMED.includes(d.e) || d.e === 'all'){ const key = d.e; me.buffs[key] = Math.max(Date.now(), me.buffs[key] || 0) + v * 6e4; if (d.e === 'all') me.mana += 50; }
   if (d.e === 'mana') me.mana += v;
   if (d.e === 'know') me.know = (me.know || 0) + v;
-  if (d.e === 'spot'){ if (!me.fg || me.fg.d !== todayKey()) me.fg = { d: todayKey(), got: [] }; me.fg.extra = (me.fg.extra || 0) + v; syncSpots(); }
+  if (d.e === 'spot'){ if (!me.fg || me.fg.d !== todayKey()) me.fg = { d: todayKey(), got: [] }; me.fg.got = me.fg.got || []; me.fg.extra = (me.fg.extra || 0) + v; syncSpots(); }
   if (d.e === 'love') me.cr.forEach(c => { c.love = Math.min(LOVE_MAX, (c.love || 0) + v); });
   if (d.e === 'grow') (me.plots || []).forEach(p => { if (p.k && p.at){ const G = SEED_INFO[p.k], end = p.at + G.mins * 6e4, left = end - Date.now(); if (left > 0) p.at -= left * v * .02; } });
   save(); hud(); syncBuffs(); speak(`${d.name} 냠냠!`);
@@ -5976,6 +5978,14 @@ async function rest(){
   me.rest = { at: Date.now(), until: Date.now() + R.ms, gain: R.gain, cap: R.cap, why: R.why, kind };
   endLesson(); save(); closeSheet(); speak('쉬는 중이에요');
   showRest();
+}
+function restEnd(early){   // 다 쉬었거나 일찍 일어났을 때: 쉰 만큼 마력을 채워요
+  const R = me.rest; if (!R) return;
+  const k = early ? Math.max(0, Math.min(1, (Date.now() - R.at) / (R.until - R.at))) : 1, g = Math.floor(R.gain * k);
+  const before = me.mana; me.mana = Math.max(me.mana, Math.min(R.cap, me.mana + g)); me.rest = null; save(); hud();
+  clearInterval(restTimer); $('#rest').classList.remove('on'); $('#rest').innerHTML = '';
+  toast(early ? `일찍 일어났어요. 마력 +${me.mana - before}` : `푹 쉬었어요! 마력 +${me.mana - before} (${R.why})`);
+  if (!early) storyHook('rest');
 }
 let restTimer = 0;
 function showRest(){

@@ -2,7 +2,9 @@ const tree = window.__seed || {};
 const ls = [];
 const parts = p => p.split('/').filter(Boolean);
 const getAt = p => parts(p).reduce((o, k) => o == null ? undefined : o[k], tree);
-const setAt = (p, v, remote) => { if (!remote && bc) bc.postMessage({ p, v: v === undefined ? null : v }); const ks = parts(p); let o = tree; ks.slice(0, -1).forEach(k => { if (typeof o[k] !== 'object' || !o[k]) o[k] = {}; o = o[k]; }); if (v === null || v === undefined) delete o[ks.at(-1)]; else o[ks.at(-1)] = JSON.parse(JSON.stringify(v)); };
+const setAt = (p, v, remote) => { if (!remote && bc) bc.postMessage({ p, v: v === undefined ? null : v }); const ks = parts(p); let o = tree; ks.slice(0, -1).forEach(k => { if (typeof o[k] !== 'object' || !o[k]) o[k] = {}; o = o[k]; }); if (v === null || v === undefined) delete o[ks.at(-1)]; else { const c = fbPrune(JSON.parse(JSON.stringify(v))); if (c === undefined) delete o[ks.at(-1)]; else o[ks.at(-1)] = c; } };
+// 진짜 Firebase처럼 빈 배열·빈 객체는 남기지 않아요
+function fbPrune(v){ if (!v || typeof v !== 'object') return v; for (const k of Object.keys(v)){ const c = fbPrune(v[k]); if (c === undefined) delete v[k]; else v[k] = c; } if (Array.isArray(v)){ const a = v.filter(x => x !== undefined); return a.length ? a : undefined; } return Object.keys(v).length ? v : undefined; }
 const snap = p => { const v = getAt(p); return { exists: () => v !== undefined, val: () => v === undefined ? null : JSON.parse(JSON.stringify(v)) }; };
 const bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('mockdb') : null;   // 같은 브라우저의 다른 창과 DB를 나눠 써요 (협동 시험용)
 if (bc) bc.onmessage = e => { setAt(e.data.p, e.data.v, true); notify(e.data.p); };
