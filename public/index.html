@@ -6060,6 +6060,9 @@ const HALL_COST = {
   dusk:  [{ wool:10, herb:10, coin:800 }, { uhair:10, hegg:10, coin:2000 }, { milk:10, honey:10, coin:4000 }, { whisker:10, feather:10, slime:10, coin:7000 }, { wool:30, honey:20, egg:3, coin:12000 }],
   dew:   [{ herb:15, drop:10, coin:800 }, { g_mint:10, g_clover:10, coin:2000 }, { g_lily:8, g_lotus:8, coin:4000 }, { g_firefly:6, g_snow:6, coin:7000 }, { g_aurora:4, g_moonf:4, egg:2, coin:12000 }],
 };
+// 단계가 올라갈수록 훨씬 많이 필요해요 (재료·골드 모두 단계별 배율)
+const HALL_MUL = [1.2, 1.8, 2.6, 3.6, 5];
+Object.values(HALL_COST).forEach(L => L.forEach((c, i) => Object.keys(c).forEach(k => { c[k] = k === 'coin' ? Math.round(c[k] * HALL_MUL[i] / 100) * 100 : Math.ceil(c[k] * HALL_MUL[i]); })));
 const HALL_NAMES = {
   ember: ['먼지 쌓인 창고', '불 붙은 벽난로', '물약 선반', '수정구와 빗자루', '불타는 가마', '전설의 실험실'],
   moon:  ['낡은 관이 있는 방', '붉은 커튼', '벨벳 살롱', '금화 상자', '달빛 피아노', '밤의 왕좌'],
