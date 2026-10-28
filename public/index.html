@@ -1082,7 +1082,8 @@ const HOUSE_CAP = 3;
 const houseNow = () => { const h = new Date().getHours(); return HOUSE_KEYS.find(k => { const H = HOUSES[k]; return H.from < H.to ? h >= H.from && h < H.to : h >= H.from || h < H.to; }); };
 const myTime = () => !!me.house && houseNow() === me.house;
 const hoursText = H => `${H.from}~${H.to}시`;
-const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+const todayKey = () => { const d = new Date(Date.now() + 9 * 3600e3); return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`; };   // 하루는 한국 시각 자정에 바뀌어요 (외국에 있거나 기기 시간대가 달라도 같은 날)
+const dayNo = k => { const [y, m, d] = String(k || '').split('-').map(Number); return y ? Date.UTC(y, m - 1, d) / 864e5 : 0; };
 const roomNo = (house, key) => (HOUSE_KEYS.indexOf(house) + 1) * 100 + [...String(key)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 997, 7) % 12 + 1;
 const brewCost = () => me.house === 'ember' ? 4 : 5;
 const waterCost = () => me.house === 'dew' || Math.random() < -sgFx('stamina_cost') ? 0 : 1;
@@ -6202,7 +6203,8 @@ function showRest(){
 // 하루: 진짜 날짜가 바뀌면 학기 날짜가 하루 지나고 주문이 새로 와요
 function dayTick(){
   if (!me) return;
-  if (me.dayKey !== todayKey()){ if (me.dayKey){ me.day++; me.orders = makeOrders(me.day, me.hints, me.found); toast(`봄 학기 ${me.day}일 아침이에요! 새 주문이 왔어요`); } me.dayKey = todayKey(); save(); if (sheetOn) render(); }
+  { const d = new Date(), loc = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; if (me.dayKey === loc && loc !== todayKey()){ me.dayKey = todayKey(); save(); } }   // 예전(기기 시간대) 날짜로 적혀 있으면 오늘 주문은 그대로 두고 한국 날짜로만 바꿔 적어요
+  if (me.dayKey !== todayKey() && dayNo(todayKey()) > dayNo(me.dayKey)){ if (me.dayKey){ me.day++; me.orders = makeOrders(me.day, me.hints, me.found); toast(`봄 학기 ${me.day}일 아침이에요! 새 주문이 왔어요`); } me.dayKey = todayKey(); save(); if (sheetOn) render(); }
   if (typeof mqTick === 'function') mqTick();
 }
 
