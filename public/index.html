@@ -1180,7 +1180,7 @@ function saveNow(){
   const body = fbKeep(fbClean(me));   // Firebase가 거절하는 값(undefined·NaN·이름에 . # $ / [ ])이 있으면 저장 전체가 실패해요 → 미리 정리해요
   F.runTransaction(F.ref(db, 'players/' + uid), cur => (cur && (cur.rv || 0) > knownRv) ? undefined : body).then(r => {
     if (r.committed){ knownRv = me.rv; setSaveDot(''); if (typeof mailDone !== 'undefined') mailDone.splice(0).forEach(id => F.set(F.ref(db, `mail/${uid}/${id}/c`), 1).catch(() => {})); return; }
-    me.rv = knownRv; haltSave = true; toast('다른 기기에서 먼저 진행했어요. 최신 상태로 새로 불러와요'); setTimeout(() => location.reload(), 1800);
+    me.rv = knownRv; haltSave = true; errReport('save', '다른 기기·창이 먼저 저장해서 이 화면의 최근 진행을 버리고 새로 불러옴', ''); toast('다른 기기에서 먼저 진행했어요. 최신 상태로 새로 불러와요'); setTimeout(() => location.reload(), 1800);
   }).catch(e => { me.rv = knownRv; setSaveDot('off'); toast('저장에 실패했어요: ' + (e.code || e.message)); errReport('save', '저장 실패: ' + (e.code || e.message), e.stack); });
 }
 // ---- 오류 모으기: 학생 화면에서 난 오류를 errs/ 에 남겨 관리자 「오류」 탭에서 봐요 (같은 오류는 한 번, 한 번 켤 때 15개까지) ----
@@ -3334,7 +3334,7 @@ const adName = id => esc(AD.players[id]?.nick || AD.online[id]?.nick || id.slice
 const adPlace = m => { if (!m) return '?'; const [id, owner] = m.split(':'), meta = World.meta(id); return esc((meta?.title || id) + (owner ? ` (${AD.players[owner]?.nick || '?'}의 ${id === 'pen' ? '우리' : '방'})` : '')); };
 function adminErrHTML(){   // 같은 오류끼리 묶어서 많이·최근에 난 순서로 보여요
   const G = {}; Object.values(AD.errs || {}).forEach(e => { if (!e || !e.m) return; const g = G[e.m] = G[e.m] || { m: e.m, k: e.k, n: 0, who: new Set(), last: 0, e }; g.n++; g.who.add(e.n || (e.u || '').slice(0, 6)); if ((e.at || 0) > g.last){ g.last = e.at || 0; g.e = e; } });
-  const list = Object.values(G).sort((a, b) => b.last - a.last), K = { party: '파티 탐사 기록', error: '화면 오류', promise: '처리 오류', save: '저장 실패' };
+  const list = Object.values(G).sort((a, b) => b.last - a.last), K = { party: '파티 탐사 기록', error: '화면 오류', promise: '처리 오류', save: '저장 문제' };
   const t = at => { const d = new Date(at); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
   return `<div class="adcard"><b>오류 기록</b><div class="s">학생 화면에서 난 오류가 자동으로 모여요. 같은 오류는 묶어서 보여요. 고친 뒤에는 지워 두면 새로 생긴 것만 보기 쉬워요.</div>
     <div style="margin-top:8px"><button class="btn sm" data-aderrclr ${list.length ? '' : 'disabled'}>모두 지우기</button></div></div>
@@ -3467,15 +3467,21 @@ function adminRender(){
     const d = document.createElement('div'); d.id = 'adhmodal'; d.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(20,14,30,.7);display:flex;align-items:center;justify-content:center;padding:16px';
     d.innerHTML = `<div class="card px" style="max-width:420px;max-height:85vh;overflow:auto"><span class="b" style="font-size:16px">${esc(p.nick || id.slice(0, 6))}의 생물 ${cr.length}마리</span><span class="s">거둘 아이를 고르세요. 「시작 생물」은 처음에 잘못 준 걸로 보이는 아이예요.</span>
       ${cr.length ? cr.map(c => { const C = CREATURES[c.k] || {}; return `<label style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #0002"><input type="checkbox" data-crk="${esc(c.id)}" ${st.has(c.id) ? 'checked' : ''}><span><b>${esc(c.name || C.name || '?')}</b> · ${esc(C.name || '')}${st.has(c.id) ? ' · <b style="color:#c0392b">시작 생물</b>' : ''}<br><span class="s">태어난 때 ${day(c.bornAt)} · 애정 ${c.love || 0}</span></span></label>`; }).join('') : '<span class="s">생물이 없어요</span>'}
-      <div style="display:flex;gap:8px;margin-top:8px"><button class="btn go" data-crgo style="flex:1">고른 아이 거두기</button><button class="btn" data-crno style="flex:1">닫기</button></div></div>`;
+      <div style="display:flex;gap:8px;margin-top:8px"><button class="btn go" data-crgo style="flex:1">고른 아이 거두기</button><button class="btn" data-crno style="flex:1">닫기</button></div>
+      ${(p.crGone || []).filter(Boolean).length ? `<span class="b" style="margin-top:12px;display:block">떠난 아이 (최근 10마리)</span>${(p.crGone || []).filter(Boolean).map((c, i) => `<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #0002"><span style="flex:1"><b>${esc(c.name || '?')}</b> · ${esc((CREATURES[c.k] || {}).name || '')}<br><span class="s">${c.why === 'admin' ? '관리자가 거둠' : '입양 보냄'} · ${day(c.goneAt)}</span></span><button class="btn sm" data-crback="${i}">돌려주기</button></div>`).join('')}` : ''}</div>`;
     document.body.appendChild(d);
     d.onclick = async e => {
       if (e.target === d || e.target.closest('[data-crno]')) return d.remove();
+      const bk = e.target.closest('[data-crback]');
+      if (bk){ const P0 = AD.players[id] || {}, G = (P0.crGone || []).filter(Boolean), c = G[+bk.dataset.crback]; if (!c || !confirm(`${c.name}을(를) ${P0.nick || '학생'}에게 돌려줄까요?`)) return;
+        const { goneAt, why, ...back } = c, cr2 = [...(P0.cr || []).filter(Boolean), back], G2 = G.filter((_, i) => i !== +bk.dataset.crback);
+        try { await F.update(F.ref(db, '/'), { ['players/' + id + '/cr']: fbClean(cr2), ['players/' + id + '/crGone']: G2.length ? fbClean(G2) : null, ['players/' + id + '/rv']: (P0.rv || 0) + 1000, ['adm/reset/' + id]: Date.now() }); d.remove(); toast(`${c.name}을(를) 돌려줬어요`); } catch(e2){ alert('실패했어요: ' + (e2.code || e2.message)); }
+        return; }
       if (!e.target.closest('[data-crgo]')) return;
       const pick = new Set([...d.querySelectorAll('[data-crk]:checked')].map(x => x.dataset.crk)); if (!pick.size) return alert('고른 아이가 없어요');
       if (!confirm(`${p.nick || '학생'}의 생물 ${pick.size}마리를 거둘까요? 접속 중이면 화면이 새로 불러와져요.`)) return;
-      const cur = (AD.players[id]?.cr || []).filter(c => c && !pick.has(c.id));
-      const ups = { ['players/' + id + '/cr']: cur.length ? cur : null, ['players/' + id + '/rv']: (AD.players[id]?.rv || 0) + 1000, ['adm/reset/' + id]: Date.now() };
+      const cur = (AD.players[id]?.cr || []).filter(c => c && !pick.has(c.id)), gone = [...(AD.players[id]?.crGone || []), ...(AD.players[id]?.cr || []).filter(c => c && pick.has(c.id)).map(c => ({ ...c, goneAt: Date.now(), why: 'admin' }))].slice(-10);
+      const ups = { ['players/' + id + '/cr']: cur.length ? cur : null, ['players/' + id + '/crGone']: fbClean(gone), ['players/' + id + '/rv']: (AD.players[id]?.rv || 0) + 1000, ['adm/reset/' + id]: Date.now() };
       try { await F.update(F.ref(db, '/'), ups); d.remove(); toast(`생물 ${pick.size}마리를 거뒀어요`); } catch(ex){ alert('실패했어요: ' + (ex.code || ex.message)); }
     };
   });
@@ -5883,6 +5889,7 @@ async function crRename(c, born){
 }
 function adoptOut(i){
   const c = me.cr[i], d = CREATURES[c.k];
+  me.crGone = [...(me.crGone || []), { ...c, goneAt: Date.now(), why: 'adopt' }].slice(-10);   // 보낸 아이 기록: 실수로 보냈으면 관리자가 돌려줄 수 있어요
   me.cr.splice(i, 1); me.inv[d.mat] = (me.inv[d.mat] || 0) + 1; me.coin += 100;
   if (crSel >= me.cr.length) crSel = Math.max(0, me.cr.length - 1);
   return `${withJosa(c.name, '이', '가')} 새 가족을 찾아 떠났어요. 고맙다며 ${ITEM[d.mat]} +1 · 100G를 남겼어요.`;
