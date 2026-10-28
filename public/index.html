@@ -1950,7 +1950,8 @@ const XP_MAX = 5;
 let xpList = {}, xpRoom = null, xpV = null, xpOff = null;
 const xpMe = () => { const ex = xEx(); return { n: me.nick, job: ex.job || '', L: xLv(ex.exp).L, rdy: 0 }; };
 const xpRefresh = () => { if (sheetOn && sub === 'explore' && xv?.view === 'lobby') renderExplore(); };
-function xpWatch(id){ xpRoom = id; xpOff?.(); xpOff = GDB.on('xparty/' + id, v => { if (xpRoom !== id) return; if (!v || v.st === 'end' || !v.p?.[myId()]){ xpRoom = null; xpV = null; xpOff?.(); xpOff = null; xcoStop(); xcoWasHost = false; } else { xpV = v; if (v.st === 'run') xcoEnter(id, v); const h = v.host === myId(); if (xcoOn() && h && !xcoWasHost && xM && xcoOff.length) xcoTakeover(); xcoWasHost = xcoOn() && h; } xpRefresh(); }); }
+const xpLog = (why, v) => { try { const p = v && v.p || {}; errReport('party', `파티에서 빠짐: ${why}`, `방장 ${v && v.host === myId() ? '나' : '다른 사람'} · ${Object.keys(p).length}명 · 상태 ${v && v.st || '-'} · 나간 사람 ${Object.values(p).filter(x => x.out).length} · 골드 ${me.coin} · 혼자 탐사 ${xEx().run && !xEx().run.co ? '있음' : '없음'}`); } catch(e){} };   // 왜 빠졌는지 관리자 오류 탭에 남겨요
+function xpWatch(id){ xpRoom = id; xpOff?.(); xpOff = GDB.on('xparty/' + id, v => { if (xpRoom !== id) return; if (!v || v.st === 'end' || !v.p?.[myId()]){ if (!v) xpLog('방이 사라짐', xpV); else if (v.st !== 'end') xpLog('명단에서 내 이름이 빠짐', v); xpRoom = null; xpV = null; xpOff?.(); xpOff = null; xcoStop(); xcoWasHost = false; } else { if (xpV && xpV.host === myId() && v.host !== myId()) xpLog('방장이 다른 사람으로 바뀜', v); xpV = v; if (v.st === 'run') xcoEnter(id, v); const h = v.host === myId(); if (xcoOn() && h && !xcoWasHost && xM && xcoOff.length) xcoTakeover(); xcoWasHost = xcoOn() && h; } xpRefresh(); }); }
 function xpCreate(){
   if (xpRoom) return; const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   GDB.set('xparty/' + id, { host: myId(), hn: me.nick, rg: xRgSel, st: 'lobby', at: now2(), p: { [myId()]: xpMe() } }).then(() => xpWatch(id));
@@ -1962,8 +1963,8 @@ function xpJoin(id){
   else if (R.p[myId()].out) GDB.upd(`xparty/${id}/p/${myId()}`, { out: null });   // 끊겼다가 돌아오면 다시 참여
   xpWatch(id);
 }
-function xpLeave(){
-  const id = xpRoom, v = xpV; if (!id || !v) return; xpOff?.(); xpOff = null; xpRoom = null; xpV = null;
+function xpLeave(why){
+  const id = xpRoom, v = xpV; if (!id || !v) return; xpLog(why || '나가기 버튼', v); xpOff?.(); xpOff = null; xpRoom = null; xpV = null;
   const rest = Object.keys(v.p || {}).filter(u => u !== myId());
   if (v.st === 'lobby'){
     if (v.host === myId() && rest.length){ GDB.upd('xparty/' + id, { host: rest[0], hn: v.p[rest[0]].n }); GDB.set(`xparty/${id}/p/${myId()}`, null); }
@@ -2358,9 +2359,9 @@ function xcoBuild(){   // 내 전투용 능력치 (싸울 때 방장 기기가 �
 function xcoStop(){ xcoOff.forEach(f => f && f()); xcoOff = []; xcoRs = null; xcoRsSeen = -1; xcoBuilds = {}; xcoIn = {}; xcoHp = {}; xcoEv = []; }
 function xcoEnter(id, v){   // 방이 「출발」하면 각자 탐사 기록을 만들고 화면을 열어요
   const ex = xEx(), me_p = v.p?.[myId()]; if (!me_p || me_p.out || !v.t0 || !v.seed) return; if (ex.run && ex.run.co === id){ if (!xcoOff.length) xcoWatch(id); return; }
-  if (ex.run) return;
-  const R = XRG[v.rg] || XRG[0]; if (xLv(ex.exp).L < R.need) return;
-  if (!me_p.paid){ if (me.coin < R.fee){ toast('입장료가 모자라서 같이 못 가요'); return xpLeave(); } me.coin -= R.fee; ex.n++; GDB.upd(`xparty/${id}/p/${myId()}`, { paid: 1 }); }
+  if (ex.run){ xpLog('혼자 하던 탐사가 남아서 못 들어감', v); return; }
+  const R = XRG[v.rg] || XRG[0]; if (xLv(ex.exp).L < R.need){ xpLog('레벨이 모자라서 못 들어감', v); return; }
+  if (!me_p.paid){ if (me.coin < R.fee){ toast('입장료가 모자라서 같이 못 가요'); return xpLeave('입장료 모자람'); } me.coin -= R.fee; ex.n++; GDB.upd(`xparty/${id}/p/${myId()}`, { paid: 1 }); }
   const rnd = xcoSeeded(v.seed || 1), mod = XMODS[Math.floor(rnd() * XMODS.length)], pool = R.mon.map(m => [rnd(), m]).sort((a, b) => a[0] - b[0]).slice(0, 4).map(a => a[1]);
   ex.run = { rg: v.rg, co: id, mod, pool, start: v.t0, end: v.t0 + R.min * 6e4, prog: 0, loot: { gold: 0, exp: 0, items: {} }, buff: 0, p: null, node: null }; save(); hud();
   xv = { view: 'march' }; xMsg = ''; xM = null; xb = null; xcoWatch(id); xcoWasHost = v.host === myId(); if (xcoWasHost) setTimeout(() => xcoPub({ st: 'walk' }), 400);
@@ -2419,7 +2420,7 @@ function xcoLocalEffect(k, o){
   toast(xMsg); save(); xMHud();
 }
 function xcoLeaveRun(){   // 진행 중에 파티에서 나가요 (방장이면 다음 사람에게 넘겨요)
-  const id = xpRoom, v = xpV; if (!id || !v) return; const rest = Object.keys(v.p || {}).filter(u => u !== myId() && !v.p[u].out).sort();
+  const id = xpRoom, v = xpV; if (!id || !v) return; xpLog('탐사 중 나가기', v); const rest = Object.keys(v.p || {}).filter(u => u !== myId() && !v.p[u].out).sort();
   if (v.host === myId() && rest.length) GDB.upd('xparty/' + id, { host: rest[0], hn: v.p[rest[0]].n }); GDB.upd(`xparty/${id}/p/${myId()}`, { out: 1 }); if (!rest.length) setTimeout(() => GDB.upd('xparty/' + id, { st: 'end' }), 500);
   xpOff?.(); xpOff = null; xpRoom = null; xpV = null; xcoStop();
 }
@@ -3258,7 +3259,7 @@ const adName = id => esc(AD.players[id]?.nick || AD.online[id]?.nick || id.slice
 const adPlace = m => { if (!m) return '?'; const [id, owner] = m.split(':'), meta = World.meta(id); return esc((meta?.title || id) + (owner ? ` (${AD.players[owner]?.nick || '?'}의 방)` : '')); };
 function adminErrHTML(){   // 같은 오류끼리 묶어서 많이·최근에 난 순서로 보여요
   const G = {}; Object.values(AD.errs || {}).forEach(e => { if (!e || !e.m) return; const g = G[e.m] = G[e.m] || { m: e.m, k: e.k, n: 0, who: new Set(), last: 0, e }; g.n++; g.who.add(e.n || (e.u || '').slice(0, 6)); if ((e.at || 0) > g.last){ g.last = e.at || 0; g.e = e; } });
-  const list = Object.values(G).sort((a, b) => b.last - a.last), K = { error: '화면 오류', promise: '처리 오류', save: '저장 실패' };
+  const list = Object.values(G).sort((a, b) => b.last - a.last), K = { party: '파티 탐사 기록', error: '화면 오류', promise: '처리 오류', save: '저장 실패' };
   const t = at => { const d = new Date(at); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
   return `<div class="adcard"><b>오류 기록</b><div class="s">학생 화면에서 난 오류가 자동으로 모여요. 같은 오류는 묶어서 보여요. 고친 뒤에는 지워 두면 새로 생긴 것만 보기 쉬워요.</div>
     <div style="margin-top:8px"><button class="btn sm" data-aderrclr ${list.length ? '' : 'disabled'}>모두 지우기</button></div></div>
