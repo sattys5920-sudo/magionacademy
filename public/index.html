@@ -264,7 +264,7 @@ body.admin .hud,body.admin .fab,body.admin #world{display:none}
 .adsum{display:flex;gap:10px;flex-wrap:wrap}
 .adsum b{font-family:var(--f-pxb)}
 .adtbl{display:flex;flex-direction:column;gap:2px;overflow-x:auto}
-.adtbl>div{display:grid;grid-template-columns:80px 150px 74px 64px 40px 40px 30px 50px 50px 46px 30px 30px 150px 380px;gap:4px;background:#fff;padding:3px 6px;white-space:nowrap;min-width:max-content}
+.adtbl>div{display:grid;grid-template-columns:80px 150px 74px 64px 40px 40px 30px 56px 50px 50px 46px 30px 30px 150px 380px;gap:4px;background:#fff;padding:3px 6px;white-space:nowrap;min-width:max-content}
 .adtbl>div.h{background:#22183F;color:#FFD866}
 .adcard{background:#fff;border:3px solid #22183F;padding:8px;display:flex;flex-direction:column;gap:3px}
 .ck-css{}
@@ -769,7 +769,7 @@ const app = $('#app');
 const ICONS = ['coin','mana','p_red','p_blue','p_green','p_purple','herb','mush','wool','uhair','scale','egg','heart','book','cauldron','clock','bag','owl','star','drop','seed','sprout','can','candle','bed','rune',
   'p_grow','p_vigor','p_fluff','p_dragon','p_dawn','p_sun','p_dusk','p_moon','mist','sun','pollen','stardust','whisker','slime','honey','silk','feather','milk','hegg'];
 const ic = (k, extra='') => { const P = POTION_INFO[k], G = !ICONS.includes(k) && typeof SEED_INFO !== 'undefined' && SEED_INFO[k], C = typeof CATCH_INFO !== 'undefined' && CATCH_INFO[k];
-  if (C) return `<i class="ic" style="background:url(art/${C.sheet}.png?v=${FISH_ART_V}) ${-32 * C.i}px 0/${32 * C.n}px 32px no-repeat;${extra}"></i>`;
+  if (C) return `<i class="ic" style="background:url(art/${C.sheet}.png?v=${FISH_ART_V}) ${-32 * (C.si ?? C.i)}px 0/${32 * C.n}px 32px no-repeat;${extra}"></i>`;
   const D = typeof DISH_INFO !== 'undefined' && DISH_INFO[k]; if (D) return `<i class="ic" style="background:url(art/dishes.png?v=${DISH_ART_V}) ${-32 * D.i}px 0/${32 * DISH.length}px 32px no-repeat;${extra}"></i>`;
   if (G) return `<i class="ic" style="background-image:url(art/plants.png?v=4);background-position:${-32 * (G.ic % 10)}px ${-32 * Math.floor(G.ic / 10)}px;${extra}"></i>`;
   return P ? `<i class="ic" style="background-image:url(art/potions.png);background-position:${-32 * (P.ic % 10)}px ${-32 * Math.floor(P.ic / 10)}px;${extra}"></i>`
@@ -1471,8 +1471,17 @@ const FISH_LIST = [
   ['f_shadow', '그림자 가오리', 'flat', 'moon'], ['f_moonbun', '달토끼 금붕어', 'round', 'moon'], ['f_jellyqueen', '등불 해파리 여왕', 'jelly', 'moon'], ['f_turtle', '왕관 거북', 'turtle'], ['f_dragon', '용 비늘 잉어', 'round', 'ember'],
   ['f_crystalcrab', '수정 왕게', 'crab'], ['f_whale', '별똥별 꼬마 고래', 'whale', 'dew'], ['f_cauldronangler', '가마솥 아귀', 'angler', 'dusk'], ['f_mermaid', '인어의 은빛 잉어', 'slim'], ['f_ghostshark', '유령 상어', 'shark', 'moon'],
   ['f_king', '호박달 메기왕', 'cat', 'dusk'], ['f_auroracachalot', '오로라 향유고래', 'whale', 'dew'], ['f_dragonsea', '용머리 바다거북', 'turtle', 'ember'], ['f_lord', '호수의 주인', 'lord', 'moon'], ['f_moonkoi', '달잉어 신령', 'lord', 'moon'],
+  // 희귀 물고기 40종 (61~100번): 바탕 물고기의 빛깔을 바꾼 그림 (tools/iso/fish_rare.py) · 다섯째 칸 rain = 비 오는 날만
+  ['f_goldminnow', '황금 피라미', 'slim'], ['f_shadowcrucian', '그림자 붕어', 'round', 'moon'], ['f_frostsmelt', '서리 빙어', 'slim', 'dew'], ['f_rainbowkilli', '무지개 송사리', 'slim', '', 'rain'], ['f_jadeloach', '비취 미꾸라지', 'long'],
+  ['f_icecrab', '얼음 구름 게', 'crab', 'dew'], ['f_rosecarp', '장미 잉어', 'round', 'ember'], ['f_starbatcat', '별무늬 박쥐 메기', 'cat', 'moon'], ['f_lavacandy', '용암 사탕 열대어', 'round', 'ember'], ['f_goldfrog', '황금 개구리', 'frog', '', 'rain'],
+  ['f_abyssjelly', '심연 해파리', 'jelly', 'moon'], ['f_rubycray', '루비 가재', 'cray', 'ember'], ['f_pearlconch', '진주 소라', 'shell', 'dew'], ['f_aurorashrimp', '오로라 새우', 'shrimp', 'dew'], ['f_bloodtrout', '핏빛 송어', 'slim', 'moon'],
+  ['f_starpuff', '별빛 복어', 'puff', 'moon'], ['f_mirrorsquid', '거울 오징어', 'squid', 'moon'], ['f_flamecat', '불꽃 해골 메기', 'cat', 'dusk'], ['f_jadebetta', '비취 베타', 'round', 'ember'], ['f_stormray', '폭풍 가오리', 'flat', '', 'rain'],
+  ['f_goldeel', '황금 촛농 뱀장어', 'eel', 'dusk'], ['f_sakuraflat', '벚꽃 넙치', 'flat', 'dew'], ['f_crystaltrout', '수정 송어', 'slim', 'ember'], ['f_emberperch', '불씨 쏘가리', 'round', 'dusk'], ['f_silverwolfeel', '은빛 늑대 장어', 'long', 'moon'],
+  ['f_raindrop', '빗방울 은어', 'slim', '', 'rain'], ['f_shadowangler', '그림자 아귀', 'angler', 'moon'], ['f_goldpiranha', '황금 피라냐', 'angler', 'moon'], ['f_abyssocto', '심연 문어', 'octo', 'dusk'], ['f_rainbowstar', '무지개 불가사리', 'star'],
+  ['f_crystalhorse', '수정 해마', 'horse', 'moon'], ['f_thunderray', '천둥 쥐가오리', 'flat', 'ember', 'rain'], ['f_platinumcarp', '백금 잉어', 'round'], ['f_auroramarlin', '오로라 청새치', 'long', 'moon'], ['f_eclipsegold', '일식 금붕어', 'round', 'moon'],
+  ['f_goldturtle', '황금 왕관 거북', 'turtle'], ['f_phoenixcarp', '불사조 잉어', 'round', 'ember'], ['f_abyssshark', '심연의 상어', 'shark', 'moon'], ['f_eclipselord', '일식의 주인', 'lord', 'moon'], ['f_sunlord', '태양잉어 신령', 'lord', 'dew'],
 ];
-const FISH_ART_V = 2;   // 그림을 고치면 올려요 (png는 오래 캐시돼요)
+const FISH_ART_V = 3;   // 그림을 고치면 올려요 (png는 오래 캐시돼요)
 const JUNK_LIST = [['j_boot', '낡은 장화'], ['j_can', '찌그러진 깡통'], ['j_weed', '물풀 뭉치']];
 // 채집물: [id, 이름, 나는 곳(f 숲 · g 묘지 · l 호숫가 · p 들판, 여러 글자면 어디든 그중)]
 const FORAGE_LIST = [
@@ -1490,11 +1499,11 @@ const FORAGE_LIST = [
 const CM = { slim: [8, 32], round: [6, 26], long: [20, 80], flat: [15, 60], cat: [20, 72], puff: [5, 18], jelly: [4, 20], shrimp: [3, 12], cray: [6, 20], shell: [4, 14], horse: [5, 16], star: [6, 22], turtle: [15, 52], whale: [60, 180], angler: [12, 40], lord: [120, 320], crab: [5, 24], frog: [4, 14], squid: [10, 60], eel: [25, 110], octo: [20, 90], shark: [90, 260] };
 const STARS = n => '★'.repeat(n) + '☆'.repeat(5 - n);
 // 희귀도: 칸마다 다른 무게(앞일수록 큼). 등급(★)은 묶어서 보여 줘요
-const FISH = FISH_LIST.map(([id, name, t, time], i) => ({ id, name, i, time, cm: CM[t], w: Math.round(10000 * .94 ** i), grade: i < 18 ? 1 : i < 33 ? 2 : i < 46 ? 3 : i < 55 ? 4 : 5, pay: Math.round(6 * 1.075 ** i) }));
-const JUNK = JUNK_LIST.map(([id, name], j) => ({ id, name, i: 60 + j, junk: true, grade: 0, pay: 1 }));
-const FORAGE = FORAGE_LIST.map(([id, name, z], i) => ({ id, name, i, z, w: Math.round(10000 * .93 ** i), grade: i < 15 ? 1 : i < 28 ? 2 : i < 39 ? 3 : i < 46 ? 4 : 5, pay: Math.round(3 * 1.1 ** i) }));
+const FISH = FISH_LIST.map(([id, name, t, time, wx], i) => ({ id, name, i, si: i < 60 ? i : i + 3, time: time || undefined, wx, cm: i < 60 ? CM[t] : CM[t].map(v => Math.round(v * 1.3)), w: Math.round(10000 * .94 ** i), grade: i < 18 ? 1 : i < 33 ? 2 : i < 46 ? 3 : i < 55 ? 4 : i < 60 ? 5 : i < 80 ? 4 : 5, pay: Math.round(6 * 1.075 ** Math.min(i, 59) * (i < 60 ? 1 : 1 + (i - 59) * .02)) }));   // si: 그림 칸 (61번부터는 쓰레기 3칸 뒤)
+const JUNK = JUNK_LIST.map(([id, name], j) => ({ id, name, i: 200 + j, si: 60 + j, junk: true, grade: 0, pay: 1 }));
+const FORAGE = FORAGE_LIST.map(([id, name, z], i) => ({ id, name, i, z, w: Math.round(10000 * .9 ** i),   /* 뒤로 갈수록 훨씬 드물게 (.93 → .9) */ grade: i < 15 ? 1 : i < 28 ? 2 : i < 39 ? 3 : i < 46 ? 4 : 5, pay: Math.round(3 * 1.1 ** i) }));
 { const used = new Set(POTION_LIST.flatMap(x => x.r)); [...FORAGE, ...FISH].forEach(x => { if (used.has(x.id)) MATS.push(x.id); }); }   // 물약 재료로 쓰이는 채집물·물고기
-const CATCH_INFO = Object.fromEntries([...FISH, ...JUNK].map(x => [x.id, { ...x, sheet: 'fish', n: 63 }]).concat(FORAGE.map(x => [x.id, { ...x, sheet: 'forage', n: 50 }])));
+const CATCH_INFO = Object.fromEntries([...FISH, ...JUNK].map(x => [x.id, { ...x, sheet: 'fish', n: 103 }]).concat(FORAGE.map(x => [x.id, { ...x, sheet: 'forage', n: 50 }])));
 const CATCH = Object.keys(CATCH_INFO);
 CATCH.forEach(k => { ITEM[k] = CATCH_INFO[k].name; });
 // 낚싯대: 좋을수록 입질이 빠르고, 희귀한 물고기가 잘 오고, 맞히는 칸이 넓고, 쓰레기가 덜 걸려요
@@ -1507,23 +1516,23 @@ const RODS = [
 ];
 const rodIc = (i, s = 32) => `<i class="ic" style="width:${s}px;height:${s}px;background:url(art/rods.png?v=${FISH_ART_V}) ${-s * i}px 0/${s * 5}px ${s}px no-repeat"></i>`;
 const rodLv = () => me.rod || 0;
-const fishNow = f => !f.time || f.time === houseNow();
+const fishNow = f => (!f.time || f.time === houseNow()) && (!f.wx || weatherToday() === f.wx);
 const TIME_NAME = { dew: '새벽·아침', ember: '한낮', dusk: '노을', moon: '밤' };
 const pickW = list => { let r = Math.random() * list.reduce((t, x) => t + x.w, 0); for (const x of list){ r -= x.w; if (r <= 0) return x; } return list[list.length - 1]; };
 // 낚시터: 호수·강·연못마다 낚이는 물고기의 한계(cap: 도감 번호)가 달라요. 연못은 작은 물고기만, 강은 중간까지, 호수는 전부
 const FISH_SPOT = {
-  lake: { name: '유령 호수', cap: 59 }, river: { name: '등불 강', cap: 50 }, pond_n: { name: '북쪽 연못', cap: 32 }, pond_ne: { name: '북동 연못', cap: 41 },
-  pond_se: { name: '남동 연못', cap: 45 }, pond_q: { name: '골목 연못', cap: 41 },
+  lake: { name: '유령 호수', cap: 99 }, river: { name: '등불 강', cap: 84 }, pond_n: { name: '북쪽 연못', cap: 52 }, pond_ne: { name: '북동 연못', cap: 68 },
+  pond_se: { name: '남동 연못', cap: 76 }, pond_q: { name: '골목 연못', cap: 68 },
 };
 function fishSpotAt(x, y){
   const m = World.meta(World.where()), P = (m?.ponds || []).map(q => ({ q, d: Math.hypot(x + .5 - q.cx, y + .5 - q.cy) })).filter(o => o.d <= o.q.r).sort((a, b) => a.d - b.d)[0];
   if (P) return FISH_SPOT[P.q.id] || { name: P.q.name, cap: 32 };
   const rv = m?.river; return rv && x >= rv[0] - 1 && x < rv[2] + 1 ? FISH_SPOT.river : FISH_SPOT.lake;
 }
-function rollFish(cap = 59){
+function rollFish(cap = 99){
   const L = rodLv() + sgFx('rare_fish') * 5 + (buffOn('rare') ? 1.5 : 0) + (me.perk?.rod_bonus ? .5 : 0);   // 요리 효과: 드문 물고기 · 캇파 ♥10 낚싯대 보너스
   if (Math.random() < .12 - L * .025) return JUNK[Math.floor(Math.random() * JUNK.length)];
-  return pickW(FISH.filter(f => fishNow(f) && f.i <= cap).map(f => ({ ...f, w: f.w * (1 + L * .9 * f.i / 59) * (f.id === 'f_lord' && me.perk?.lord_hint && isFullMoon() ? 3 : 1) })));   // 캇파 ♥10: 보름 밤엔 호수의 주인이 가까이
+  return pickW(FISH.filter(f => fishNow(f) && f.i <= cap).map(f => ({ ...f, w: f.w * (1 + L * 1.4 * f.i / 99) * (f.id === 'f_lord' && me.perk?.lord_hint && isFullMoon() ? 3 : 1) })));   // 캇파 ♥10: 보름 밤엔 호수의 주인이 가까이
 }
 function dexAdd(k, cm){
   me.fdex = me.fdex || {}; const d = me.fdex[k] || { n: 0 }, isNew = !d.n;
@@ -1555,7 +1564,7 @@ function fishMiss(msg){
 // 어려운 물고기일수록 찌가 거세게 요동치고(흔들림·확 당김), 버텨야 하는 시간이 길고, 초록 칸이 좁고, 자주 옮겨 가요.
 const FISH_HOLD = 'ArrowLeft ArrowRight a A d D'.split(' ');
 function fishReel(){
-  const f = rollFish(fishing.spot ? fishing.spot.cap : 59), L = rodLv(), g = f.junk ? 0.4 : (f.grade || 1);
+  const f = rollFish(fishing.spot ? fishing.spot.cap : 99), L = rodLv(), g = f.junk ? 0.4 : (f.grade || 1);
   const ph = [0, 1, 2].map(() => Math.random() * 6.28);
   Object.assign(fishing, {
     st: 'reel', f, pos: .5, dir: 0, prog: 0, pat: 1, t: 0, ph, last: performance.now(),
@@ -1666,7 +1675,7 @@ function pgNav(attr, pg, n, per){ const last = Math.ceil(n / per) - 1; if (last 
 function renderFish(){
   const D = me.fdex || {}, nf = FISH.filter(f => D[f.id]).length, ng = FORAGE.filter(f => D[f.id]).length, now = houseNow(), L = rodLv();
   const tabs = [['dex', '도감'], ['rod', '낚싯대'], ['today', '오늘'], ['sell', '가게']];
-  const where = x => x.time ? `${TIME_NAME[x.time]}에만 나와요` : x.z ? `${[...x.z].map(c => ZONE_NAME[c]).join('·')}에서 주워요` : '언제나 나와요';
+  const where = x => x.time || x.wx ? `${[x.time && TIME_NAME[x.time], x.wx && '비 오는 날'].filter(Boolean).join(' · ')}에만 나와요` : x.z ? `${[...x.z].map(c => ZONE_NAME[c]).join('·')}에서 주워요` : '언제나 나와요';
   const cell = x => { const d = D[x.id]; return `<button class="cell fcell ${d ? '' : 'unk'} ${fsSel === x.id ? 'sel' : ''}" data-fsel="${x.id}"><span class="fno">${x.i + 1}</span>${d ? ic(x.id) : '<span class="q">?</span>'}<span class="s">${d ? esc(x.name) : '???'}</span><span class="fst">${'★'.repeat(x.grade)}</span></button>`; };
   let body = '';
   if (fsTab === 'dex'){
@@ -3359,9 +3368,9 @@ function adminRender(){
     const sum = k => ids.reduce((t, id) => t + (+P[id][k] || 0), 0);
     body = `<div class="adsum"><button class="btn sm" data-adstripall="1">전체 학생 지급품 회수</button><button class="btn sm" data-adcrall="1">전체 학생 시작 생물 회수</button><span>골드 합계 <b>${sum('coin').toLocaleString()}</b></span><span>마력 합계 <b>${sum('mana')}</b></span><span>평균 지식 <b>${ids.length ? Math.round(sum('know') / ids.length) : 0}</b></span></div>
       <div class="adsum">${Object.entries(XJ).map(([k, j]) => { const n = ids.filter(id => P[id].ex?.job === k).length; return `<span>${j.n} <b>${n}</b></span>`; }).join('')}<span>미선택 <b>${ids.filter(id => !XJ[P[id].ex?.job]).length}</b></span></div>
-      <div class="adtbl"><div class="h"><span>학생</span><span>기숙사</span><span>직업</span><span>골드</span><span>마력</span><span>지식</span><span>날</span><span>물고기</span><span>채집</span><span>낚싯대</span><span>옷</span><span>생물</span><span>상태</span><span>관리</span></div>
+      <div class="adtbl"><div class="h"><span>학생</span><span>기숙사</span><span>직업</span><span>골드</span><span>마력</span><span>지식</span><span>날</span><span>물약 도감</span><span>물고기</span><span>채집</span><span>낚싯대</span><span>옷</span><span>생물</span><span>상태</span><span>관리</span></div>
       ${ids.sort((a, b) => (P[b].coin || 0) - (P[a].coin || 0)).map(id => { const p = P[id], d = p.fdex || {};
-        return `<div><span><b>${esc(p.nick)}</b></span><span><button class="btn sm" data-adhouse="${id}" style="color:${HOUSES[p.house]?.col || '#888'};font-weight:700">${HOUSES[p.house]?.name || '정하기'} ▾</button></span><span>${XJ[p.ex?.job]?.n || '-'}</span><span>${(p.coin || 0).toLocaleString()}</span><span>${p.mana || 0}</span><span>${p.know || 0}</span><span>${p.day || 1}</span>
+        return `<div><span><b>${esc(p.nick)}</b></span><span><button class="btn sm" data-adhouse="${id}" style="color:${HOUSES[p.house]?.col || '#888'};font-weight:700">${HOUSES[p.house]?.name || '정하기'} ▾</button></span><span>${XJ[p.ex?.job]?.n || '-'}</span><span>${(p.coin || 0).toLocaleString()}</span><span>${p.mana || 0}</span><span>${p.know || 0}</span><span>${p.day || 1}</span><span>${(p.found || []).filter(k => POTION_INFO[k]).length}/${POTIONS.length}</span>
           <span>${FISH.filter(f => d[f.id]).length}/${FISH.length}</span><span>${FORAGE.filter(f => d[f.id]).length}/50</span><span>${RODS[p.rod || 0]?.name.split(' ')[0] || '-'}</span><span>${Object.keys(p.closet || {}).length}</span><span><button class="btn sm" data-adcrl="${id}" style="white-space:nowrap">${(p.cr || []).length}마리</button></span>
           <span>${O[id] ? `${adPlace(O[id].m)}` : p.rest ? '쉬는 중' : '외출'}</span><span><button class="btn sm" data-adstrip="${id}">지급품 회수</button> <button class="btn sm" data-adcr="${id}" ${starterCrIds(p.cr).size ? '' : 'disabled'}>시작 생물 회수 ${starterCrIds(p.cr).size}</button> <button class="btn sm" data-adreset="${id}">진행 리셋</button> <button class="btn sm" data-addel="${id}">가입 삭제</button></span></div>`; }).join('')}</div>`;
   }
@@ -3585,7 +3594,7 @@ const DISHES = Object.keys(DISH_INFO);
 const effText = (d, best) => EFF[d.e](best ? d.v * 2 : d.v);
 // 아이콘 그림 위치 (솥으로 날아가는 재료에도 써요)
 function iconSrc(k){
-  const C = CATCH_INFO[k]; if (C) return { src: `art/${C.sheet}.png?v=${FISH_ART_V}`, sx: C.i * 32, sy: 0, sw: 32, sh: 32 };
+  const C = CATCH_INFO[k]; if (C) return { src: `art/${C.sheet}.png?v=${FISH_ART_V}`, sx: (C.si ?? C.i) * 32, sy: 0, sw: 32, sh: 32 };
   const D = DISH_INFO[k]; if (D) return { src: `art/dishes.png?v=${DISH_ART_V}`, sx: D.i * 32, sy: 0, sw: 32, sh: 32 };
   const n = ICONS.indexOf(k); if (n >= 0) return { src: 'art/icons.png?v=4', sx: n * 32, sy: 0, sw: 32, sh: 32 };
   const G = SEED_INFO[k]; if (G) return { src: 'art/plants.png?v=4', sx: (G.ic % 10) * 32, sy: Math.floor(G.ic / 10) * 32, sw: 32, sh: 32 };
@@ -4078,7 +4087,7 @@ async function castSprite(id, ctx){
     return { kind: 'img', img: tintCanvas(im, i * 120, 0, 120, 102, c.filter), w: c.small ? 34 : 52 }; }
   if (c.obj){ const o = await World.objSprite('campus', c.obj); return o ? { kind: 'img', img: cropCanvas(o.img, o.sx, o.sy, o.sw, o.sh), w: (c.small ? .6 : 1) * o.sw * 2 } : null; }
   if (c.item && typeof CATCH_INFO !== 'undefined' && CATCH_INFO[c.item]){ const C = CATCH_INFO[c.item], im = await loadImg(`art/${C.sheet}.png?v=${FISH_ART_V}`); if (!im) return null; const cw = im.naturalWidth / C.n;
-    return { kind: 'img', img: tintCanvas(im, C.i * cw, 0, cw, im.naturalHeight, 'silver'), w: 64 }; }
+    return { kind: 'img', img: tintCanvas(im, (C.si ?? C.i) * cw, 0, cw, im.naturalHeight, 'silver'), w: 64 }; }
   return null;   // 목소리만
 }
 function cropCanvas(im, sx, sy, sw, sh){ const c = document.createElement('canvas'); c.width = sw; c.height = sh; c.getContext('2d').drawImage(im, sx, sy, sw, sh, 0, 0, sw, sh); return c; }
@@ -4973,7 +4982,7 @@ function bagInfo(k){
   if (np) uses.push(`물약 재료 ${np}종`); if (nd) uses.push(`요리 재료 ${nd}종`); if (gift) uses.push(gift);
   const C = CATCH_INFO[k];
   if (C){ if (C.junk) return { desc: '호수에서 건진 쓰레기예요. 팔면 1G', use: uses.join(' · ') || '쓸모는 없지만 호수가 깨끗해졌어요' };
-    if (C.sheet === 'fish') return { desc: `${STARS(C.grade)} · ${C.cm[0]}~${C.cm[1]}cm · ${C.time ? TIME_NAME[C.time] + '에만' : '아무 때나'} 잡혀요 · 지금 팔면 ${sellPay(k, C.pay)}G`, use: uses.join(' · ') || '요리 재료 · 선물용' };
+    if (C.sheet === 'fish') return { desc: `${STARS(C.grade)} · ${C.cm[0]}~${C.cm[1]}cm · ${C.time || C.wx ? [C.time && TIME_NAME[C.time], C.wx && '비 오는 날'].filter(Boolean).join(' · ') + '에만' : '아무 때나'} 잡혀요 · 지금 팔면 ${sellPay(k, C.pay)}G`, use: uses.join(' · ') || '요리 재료 · 선물용' };
     return { desc: `${STARS(C.grade)} · ${[...C.z].map(z => BAG_ZONE[z]).join('·')}에서 주워요 · 지금 팔면 ${sellPay(k, C.pay)}G`, use: uses.join(' · ') || '물약·요리 재료' }; }
   const G = SEED_INFO[k]; if (G) return { desc: `온실에서 기르는 식물 재료 · ${G.tier + 1}등급 · ${timeText(G.mins * 6e4)} 자라요`, use: uses.join(' · ') || '물약 재료' };
   const cr = CREATURES.find(c => c.mat === k); if (cr) return { desc: `사육장 ${cr.kind}이(가) 주는 재료예요`, use: uses.join(' · ') || '물약·요리 재료' };
