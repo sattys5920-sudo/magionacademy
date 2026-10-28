@@ -974,18 +974,18 @@ const HINTS = new Proxy({}, { get: (_, p) => POTION_INFO[p] ? `${ITEM[p]} = ${re
 const HINT_ORDER = ['p_green','p_blue','p_grow','p_vigor','p_fluff','p_purple','p_dawn','p_sun','p_dusk','p_moon','p_dragon', ...POTION_LIST.slice(12).map(x => x.id)];
 const KNOW_PER_HINT = 3;
 // ===== 생물: 10종 · 내 사육장 최대 20마리 · 애정 20 (5마다 보상 단계) · 부화실 · 색 섞기 =====
-// 그림은 creatures.png의 같은 칸 (10번째 칸 다음이 알). prod: 재료가 생기는 간격, hatch: 알이 깨는 시간(예전의 4배), grow: 어른이 되는 시간 (모두 분)
+// 그림은 creatures.png의 같은 칸 (10번째 칸 다음이 알). prod: 재료가 생기는 간격, hatch: 알이 깨는 시간(양 3시간 ~ 부엉이 14시간), grow: 어른이 되는 시간 (모두 분)
 const CREATURES = [
-  { name:'뭉게', kind:'양', baby:'아기 양', food:'건초', mat:'wool', bg:'#E6F0FF', prod:30, hatch:80, grow:60, egg:60, names:['몽실','솜사탕','구름이','포실','뭉치'] },
-  { name:'콩떡', kind:'토끼', baby:'아기 토끼', food:'당근', mat:'uhair', bg:'#F6E6FF', prod:60, hatch:120, grow:120, egg:120, names:['깡총','솜털','찹쌀','보송','토토'] },
-  { name:'초롱', kind:'도마뱀', baby:'아기 도마뱀', food:'귀뚜라미', mat:'scale', bg:'#FFE8D8', prod:90, hatch:180, grow:180, egg:180, names:['살금','모닥','꼬리','따끈','도롱'] },
-  { name:'꼬꼬', kind:'닭', baby:'병아리', food:'모이', mat:'hegg', bg:'#FFF6DC', prod:40, hatch:100, grow:90, egg:80, names:['삐약','꼬순','노랑','톡톡','꼬댁'] },
-  { name:'먹물', kind:'검은 고양이', baby:'아기 고양이', food:'생선', mat:'whisker', bg:'#ECE6F6', prod:120, hatch:240, grow:240, egg:250, names:['까망','나비','밤톨','야옹','깜지'] },
-  { name:'개굴', kind:'두꺼비', baby:'올챙이', food:'날벌레', mat:'slime', bg:'#E6F2DC', prod:90, hatch:160, grow:180, egg:160, names:['울퉁','풀잎','개구','퐁당','방울'] },
-  { name:'붕붕', kind:'꿀벌', baby:'아기 꿀벌', food:'꽃', mat:'honey', bg:'#FFF2D0', prod:60, hatch:120, grow:120, egg:140, names:['윙윙','꿀단지','호박엿','노랑','달콤'] },
-  { name:'줄줄', kind:'거미', baby:'아기 거미', food:'날벌레', mat:'silk', bg:'#F0E6F4', prod:45, hatch:100, grow:90, egg:100, names:['실뭉치','여덟','폭신','거미줄','보송'] },
-  { name:'부엉', kind:'부엉이', baby:'아기 부엉이', food:'고기 조각', mat:'feather', bg:'#F6EEE2', prod:180, hatch:360, grow:360, egg:400, names:['깃털','동글','부엉','도토리','책벌레'] },
-  { name:'매매', kind:'염소', baby:'아기 염소', food:'풀', mat:'milk', bg:'#F4EEE2', prod:60, hatch:140, grow:150, egg:150, names:['수염','뿔뿔','하양','음매','몽돌'] },
+  { name:'뭉게', kind:'양', baby:'아기 양', food:'건초', mat:'wool', bg:'#E6F0FF', prod:30, hatch:180, grow:60, egg:60, names:['몽실','솜사탕','구름이','포실','뭉치'] },
+  { name:'콩떡', kind:'토끼', baby:'아기 토끼', food:'당근', mat:'uhair', bg:'#F6E6FF', prod:60, hatch:300, grow:120, egg:120, names:['깡총','솜털','찹쌀','보송','토토'] },
+  { name:'초롱', kind:'도마뱀', baby:'아기 도마뱀', food:'귀뚜라미', mat:'scale', bg:'#FFE8D8', prod:90, hatch:480, grow:180, egg:180, names:['살금','모닥','꼬리','따끈','도롱'] },
+  { name:'꼬꼬', kind:'닭', baby:'병아리', food:'모이', mat:'hegg', bg:'#FFF6DC', prod:40, hatch:240, grow:90, egg:80, names:['삐약','꼬순','노랑','톡톡','꼬댁'] },
+  { name:'먹물', kind:'검은 고양이', baby:'아기 고양이', food:'생선', mat:'whisker', bg:'#ECE6F6', prod:120, hatch:600, grow:240, egg:250, names:['까망','나비','밤톨','야옹','깜지'] },
+  { name:'개굴', kind:'두꺼비', baby:'올챙이', food:'날벌레', mat:'slime', bg:'#E6F2DC', prod:90, hatch:420, grow:180, egg:160, names:['울퉁','풀잎','개구','퐁당','방울'] },
+  { name:'붕붕', kind:'꿀벌', baby:'아기 꿀벌', food:'꽃', mat:'honey', bg:'#FFF2D0', prod:60, hatch:300, grow:120, egg:140, names:['윙윙','꿀단지','호박엿','노랑','달콤'] },
+  { name:'줄줄', kind:'거미', baby:'아기 거미', food:'날벌레', mat:'silk', bg:'#F0E6F4', prod:45, hatch:240, grow:90, egg:100, names:['실뭉치','여덟','폭신','거미줄','보송'] },
+  { name:'부엉', kind:'부엉이', baby:'아기 부엉이', food:'고기 조각', mat:'feather', bg:'#F6EEE2', prod:180, hatch:840, grow:360, egg:400, names:['깃털','동글','부엉','도토리','책벌레'] },
+  { name:'매매', kind:'염소', baby:'아기 염소', food:'풀', mat:'milk', bg:'#F4EEE2', prod:60, hatch:360, grow:150, egg:150, names:['수염','뿔뿔','하양','음매','몽돌'] },
 ];
 const EGG_CELL = 10;
 // 색 15가지 (같은 그림에 색만 입혀요). p 세피아, s 채도, h 색상 회전, b 밝기
