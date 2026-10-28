@@ -1223,6 +1223,16 @@ function confirmBox(msg, okText = '네', cancelText = '아니요', danger = fals
     $('#cfOk').onclick = () => done(true); $('#cfNo').onclick = () => done(false); c.onclick = e => { if (e.target === c) done(false); };
   });
 }
+// 짧은 이름 입력 창 (1~max 글자) → 문자열 또는 null
+function nameBox(msg, cur = '', max = 8){
+  return new Promise(res => {
+    const c = $('#confirm'); c.innerHTML = `<div class="cfbox" role="dialog"><div class="msg">${esc(msg)}</div><input id="nbIn" maxlength="${max}" value="${esc(cur)}" autocomplete="off" style="width:100%;font-size:16px;padding:10px;border-radius:10px;border:2px solid var(--line);background:#1b1230;color:var(--text);box-sizing:border-box"><div class="row"><button class="btn" id="cfNo">그만두기</button><button class="btn go" id="cfOk">정하기</button></div></div>`;
+    c.classList.add('on'); const inp = $('#nbIn'); setTimeout(() => { inp.focus(); inp.select(); }, 50);
+    const done = v => { c.classList.remove('on'); c.innerHTML = ''; res(v); };
+    const ok = () => { const v = inp.value.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, max); if (!v) return inp.focus(); done(v); };
+    $('#cfOk').onclick = ok; $('#cfNo').onclick = () => done(null); inp.onkeydown = e => { if (e.key === 'Enter') ok(); }; c.onclick = e => { if (e.target === c) done(null); };
+  });
+}
 // 픽셀 아이콘(16칸) — 하단 메뉴·HUD·닫기 등에 같은 모양을 써요
 const ICO = JSON.parse(document.getElementById('icoData').textContent);
 
@@ -5752,6 +5762,11 @@ function hatchToPen(i){
   const c = newCreature(e.k, e.col); me.cr.push(c); me.eggs.splice(i, 1);
   ranchMsg = `${c.name}(${withJosa(CREATURES[c.k].baby, '이', '가')}) 사육장에 들어왔어요!${c.col.rare ? ` 처음 보는 색 「${c.col.n}」이에요!` : ''}`;
   crSel = me.cr.length - 1; ranchTab = 'pen'; placing = null; save();
+  setTimeout(() => crRename(c, true), 400);   // 태어나면 바로 이름을 지어 줘요
+}
+async function crRename(c, born){
+  const v = await nameBox(born ? `새로 태어난 ${CREATURES[c.k].baby}에게 이름을 지어 주세요 (1~8자)` : `${c.name}의 새 이름 (1~8자)`, c.name);
+  if (!v || v === c.name) return; c.name = v; save(); toast(`이름을 「${v}」(으)로 정했어요`); if ($('#crnm')) keepScroll(renderRanch);
 }
 function adoptOut(i){
   const c = me.cr[i], d = CREATURES[c.k];
@@ -5780,7 +5795,7 @@ function renderRanch(){
     </div>
     ${c ? `<section class="sec">
       <div class="box px" style="padding:12px;display:flex;flex-direction:column;gap:8px">
-        <div class="sec-h"><h3>${esc(c.name)}</h3><span style="display:flex;gap:4px"><span class="tag" style="${c.col.rare ? 'background:var(--gold);color:#2A1506' : ''}">${esc(c.col.n)}${c.col.rare ? ' ' : ''}</span><span class="tag">${crKind(c)}</span></span></div>
+        <div class="sec-h"><h3>${esc(c.name)} <button class="btn sm" id="crnm" style="min-height:28px;padding:0 8px;font-size:12px;vertical-align:middle">이름 바꾸기</button></h3><span style="display:flex;gap:4px"><span class="tag" style="${c.col.rare ? 'background:var(--gold);color:#2A1506' : ''}">${esc(c.col.n)}${c.col.rare ? ' ' : ''}</span><span class="tag">${crKind(c)}</span></span></div>
         <div class="meter"><span class="s">애정</span>${segs(c.love, LOVE_MAX, 'var(--pink)')}<span class="s b num">${c.love}</span></div>
         <span class="s" style="color:var(--pink)">${T.n}</span>
         <div class="s sub" style="display:flex;align-items:center;gap:4px">${ic(d.mat, 'transform:scale(.8);margin:-6px')}<span>${!adult ? `돌봄 ${Math.min(c.care || 0, CR_NEED(c.k))} / ${CR_NEED(c.k)}` : !tier ? '' : prodLeft(c) > 0 ? `「${ITEM[d.mat]}」 <b data-cd="${c.prodAt + d.prod * 6e4}">${cdText(prodLeft(c))}</b>` : `「${ITEM[d.mat]}」이 생겼어요!`}</span></div>
@@ -5839,6 +5854,7 @@ function renderRanch(){
   });
   const ac = $('#adoptCancel'); if (ac) ac.onclick = () => { placing = null; ranchMsg = ''; redraw(); };
   const ad = $('#adopt'); if (ad) ad.onclick = () => confirmBox(`${withJosa(c.name, '을', '를')} 입양 보낼까요? 돌아오지 않아요.`, '보내기', '아니요', true).then(ok => { if (!ok) return; ranchMsg = adoptOut(crSel); save(); redraw(); });
+  const nm = $('#crnm'); if (nm) nm.onclick = () => crRename(c);
   const fd = $('#feed'); if (fd) fd.onclick = () => {
     const n = 2 + (me.house === 'dusk' && myTime() ? 1 : 0); c.love = Math.min(LOVE_MAX, c.love + n); c.fedAt = Date.now(); tutHook('feed'); const up1 = crCare(c, n);
     ranchMsg = `${withJosa(c.name, '이', '가')} ${withJosa(d.food, '을', '를')} 맛있게 먹었어요. 애정 +${n}${up1 ? ' · 어른이 됐어요!' : ''}`; save(); redraw();
