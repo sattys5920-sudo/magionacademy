@@ -1974,7 +1974,7 @@ function xChestHTML(){   // 상자 고르기 · 고른 뒤
 function xEnd(how){   // how: clear · time · retreat · wipe
   const ex = xEx(), run = ex.run; if (!run) return;
   if (run.co && how !== 'retreat' && xcoHost()){ xcoPub({ st: 'end', end: { how } }); const rid = run.co; setTimeout(() => GDB.upd('xparty/' + rid, { st: 'end' }), 3500); }
-  if (run.co){ xcoStop(); xM = null; } const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gold = how === 'wipe' ? 0 : partyMul(Math.round(lo.gold * mult)), exp = how === 'wipe' ? 0 : Math.round((lo.exp * mult + (how === 'clear' ? xReg().clearExp : 0)) * (dbuff('dforest') ? 1.03 : 1) * (dbuff('pump') ? 1.1 : 1) * (1 + sgFx('exp_gain') + partyFx()));
+  if (run.co){ xcoStop(); xM = null; ex.coDone = [...(ex.coDone || []).filter(x => x !== run.co), run.co].slice(-10); } const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gold = how === 'wipe' ? 0 : partyMul(Math.round(lo.gold * mult)), exp = how === 'wipe' ? 0 : Math.round((lo.exp * mult + (how === 'clear' ? xReg().clearExp : 0)) * (dbuff('dforest') ? 1.03 : 1) * (dbuff('pump') ? 1.1 : 1) * (1 + sgFx('exp_gain') + partyFx()));
   const items = how === 'wipe' ? {} : { ...lo.items }; if (how === 'clear') ex.chest = xChestMake(xReg());   // 끝까지 가면 보상 상자 셋 중 하나를 골라요
   const before = xLv(ex.exp).L; ex.exp += exp; me.coin += gold; Object.entries(items).forEach(([k, n]) => { me.inv[k] = (me.inv[k] || 0) + n; });
   const after = xLv(ex.exp).L, sp = how === 'clear' ? 1 : 0; ex.spx = (ex.spx || 0) + sp; ex.run = null; xb = null; clearInterval(xTick); save(); hud();   // 스킬 포인트는 끝까지 간 탐사에서만
@@ -2413,7 +2413,8 @@ function xcoBuild(){   // 내 전투용 능력치 (싸울 때 방장 기기가 �
 }
 function xcoStop(){ xcoOff.forEach(f => f && f()); xcoOff = []; xcoRs = null; xcoRsSeen = -1; xcoBuilds = {}; xcoIn = {}; xcoHp = {}; xcoEv = []; }
 function xcoEnter(id, v){   // 방이 「출발」하면 각자 탐사 기록을 만들고 화면을 열어요
-  const ex = xEx(), me_p = v.p?.[myId()]; if (!me_p || me_p.out || !v.t0 || !v.seed) return; if (ex.run && ex.run.co === id){ if (!xcoOff.length) xcoWatch(id); return; }
+  const ex = xEx(), me_p = v.p?.[myId()]; if (!me_p || me_p.out || !v.t0 || !v.seed) return; if (!ex.run && (ex.coDone || []).includes(id)) return;   // 이미 끝낸 파티 탐사에 다시 들어가 보상을 또 받지 않게
+  if (ex.run && ex.run.co === id){ if (!xcoOff.length) xcoWatch(id); return; }
   if (ex.run){ xpLog('혼자 하던 탐사가 남아서 못 들어감', v); return; }
   const R = XRG[v.rg] || XRG[0]; if (xLv(ex.exp).L < R.need){ xpLog('레벨이 모자라서 못 들어감', v); return; }
   if (!me_p.paid){ if (ex.n >= XDAY){ toast(`오늘 탐사를 다 다녀와서 같이 못 가요 (${XDAY}회)`); return xpLeave('하루 탐사 횟수 다 씀'); } if (me.coin < R.fee){ toast('입장료가 모자라서 같이 못 가요'); return xpLeave('입장료 모자람'); } me.coin -= R.fee; ex.n++; GDB.upd(`xparty/${id}/p/${myId()}`, { paid: 1 }); }
@@ -2493,10 +2494,10 @@ let xcoWasHost = false;
 function xcoSend(patch){ if (xcoOn()) GDB.upd(`xrun/${xpRoom}/in/${myId()}`, patch); }
 function xcoHostInputs(){
   if (!xcoHost()) return; const M = xM, B = xb;
-  if (B && !B.over && !B.mirror && B.turn && B.turn.uid && B.turn.uid !== myId()){ const c = xcoIn[B.turn.uid] && xcoIn[B.turn.uid].cmd; if (c && c.tn === B.tn && c.bn === B.bn) xcoApplyCmd(B, B.turn, c); }
+  if (B && !B.over && !B.fin && !B.mirror) B.party.forEach(u => { if (!xRdy(u) || !u.uid || u.uid === myId()) return; const c = xcoIn[u.uid] && xcoIn[u.uid].cmd; if (c && c.rt === u.rt && c.bn === B.bn) xcoApplyCmd(B, u, c); });
 }
 function xcoApplyCmd(B, u, c){
-  B.pick = null; B.turn = null; if (c.a === 'item'){ const t = c.tg ? B.party.find(x => x.id === c.tg && x.hp > 0) : null; xItemUse(B, u, c.k, t || u); return xUp(); }
+  if (c.a === 'item'){ const t = c.tg ? B.party.find(x => x.id === c.tg && x.hp > 0) : null; xItemUse(B, u, c.k, t || u); return xUp(); }
   if (c.a === 'def'){ B.def[u.id] = 1; B.log = `${u.name}이(가) 방어 태세`; u.g = 0; return xUp(); }
   let sk = c.s >= 0 ? u.sks[c.s] : null; if (sk && (Math.ceil(sk.mp) > Math.floor(u.mp) || xCdLeft(u, sk))) sk = null; const tgt = c.tg ? [...B.foes, ...B.party].find(x => x.id === c.tg) : null; xAct(u, sk, tgt); xUp();
 }
@@ -2512,9 +2513,9 @@ function xcoPartyUnits(){
 const xcoFoeStat = f => ({ id: f.id, name: f.name, lp: f.lp, big: f.big, sc: f.sc, hh: f.hh, k: f.k, mhp: f.mhp, team: 'e' });
 function xcoPubBt(force){
   const B = xb, now = performance.now(); if (!B || !xcoHost() || B.mirror) return; if (!force && now - xcoLastBt < 180) return; xcoLastBt = now;
-  const un = u => { const o = { h: Math.round(u.hp), m: Math.round(u.mp || 0), g: Math.round(u.g) }, f = {}; for (const k in u.fx){ f[k] = u.fx[k] && u.fx[k].t !== undefined ? Math.round(u.fx[k].t) : 99; } if (Object.keys(f).length) o.f = f; if (u.pets && u.pets.length) o.p = u.pets.map(p => [p.n, Math.round(p.hp || 0), Math.round(p.mhp || 0), Math.round(p.t)]); if (u.cdn && Object.keys(u.cdn).length) o.c = { ...u.cdn }; return o; };
+  const un = u => { const o = { h: Math.round(u.hp), m: Math.round(u.mp || 0), g: Math.round(u.g) }, f = {}; if (u.hum){ o.r = u.rt || 0; if (u.g >= 100 && u.tdl) o.d = Math.max(0, Math.round(u.tdl - now)); } for (const k in u.fx){ f[k] = u.fx[k] && u.fx[k].t !== undefined ? Math.round(u.fx[k].t) : 99; } if (Object.keys(f).length) o.f = f; if (u.pets && u.pets.length) o.p = u.pets.map(p => [p.n, Math.round(p.hp || 0), Math.round(p.mhp || 0), Math.round(p.t)]); if (u.cdn && Object.keys(u.cdn).length) o.c = { ...u.cdn }; return o; };
   const units = {}; [...B.party, ...B.foes].forEach(u => { units[u.id] = un(u); });
-  const bt = { n: (B.pn = (B.pn || 0) + 1), bn: B.bn, t: now2(), kind: B.kind, log: B.log || '', turn: B.turn ? B.turn.id : null, tn: B.tn || 0, tdl: B.tdl ? now2() + (B.tdl - now) : 0, order: B.party.map(u => u.id), foes: B.foes.map(xcoFoeStat), units, ev: xcoEv.slice(-30), over: !!B.over, win: !!B.won, rew: B.rew || null, fin: !!B.fin };
+  const bt = { n: (B.pn = (B.pn || 0) + 1), bn: B.bn, t: now2(), kind: B.kind, log: B.log || '', order: B.party.map(u => u.id), foes: B.foes.map(xcoFoeStat), units, ev: xcoEv.slice(-30), over: !!B.over, win: !!B.won, rew: B.rew || null, fin: !!B.fin };
   GDB.set(`xrun/${xpRoom}/bt`, bt);
 }
 function xcoEvPush(e){ if (!xcoHost() || !xb || xb.mirror) return; e.i = ++xcoEvN; xcoEv.push(e); if (xcoEv.length > 60) xcoEv.shift(); }
@@ -2528,8 +2529,8 @@ function xcoOnBt(v){
     if (xM) xM.st = 'busy'; xv = { view: 'battle' }; if (sheetOn && sub === 'explore') renderExplore(); else toast('파티가 전투를 시작했어요! 「탐사」를 열어 같이 싸워요');   // 다른 창을 보고 있으면 끌고 오지 않아요 (차례는 12초 뒤 자동 공격)
   } else v.order.forEach(u => { if (!B.party.some(x => x.id === u) && xcoBuilds[u]) B.party.push(xcoUnitFromBuild(u)); });   // 전투 중에 돌아온 사람
   if (v.n <= B.sn) return; B.sn = v.n; const now = performance.now();
-  [...B.party, ...B.foes].forEach(u => { const a = v.units[u.id]; if (!a) return; u.hp = a.h; u.mp = a.m; u.g = a.g; const nf = {}; Object.entries(a.f || {}).forEach(([k, t]) => { nf[k] = u.fx[k] ? { ...u.fx[k], t } : { t, v: 0 }; }); u.fx = nf; u.pets = (a.p || []).map(p => ({ n: p[0], hp: p[1], mhp: p[2], t: p[3] })); u.cdn = a.c || {}; });
-  B.log = v.log || B.log; B.tn = v.tn; B.turn = v.turn ? [...B.party].find(u => u.id === v.turn) || null : null; B.tdl = v.tdl ? now + (v.tdl - now2()) : 0;
+  [...B.party, ...B.foes].forEach(u => { const a = v.units[u.id]; if (!a) return; u.hp = a.h; u.mp = a.m; u.g = a.g; if (a.r !== undefined){ u.rt = a.r; u.tdl = a.d !== undefined ? now + a.d : 0; } const nf = {}; Object.entries(a.f || {}).forEach(([k, t]) => { nf[k] = u.fx[k] ? { ...u.fx[k], t } : { t, v: 0 }; }); u.fx = nf; u.pets = (a.p || []).map(p => ({ n: p[0], hp: p[1], mhp: p[2], t: p[3] })); u.cdn = a.c || {}; });
+  B.log = v.log || B.log;
   (v.ev || []).filter(e => e.i > B.evi).forEach(e => { B.evi = e.i;
     if (e.k === 'fx'){ xDelay = e.dl || 0; const L = e.tg.map(id => [...B.foes, ...B.party].find(x => x.id === id)).filter(Boolean), A = e.u && [...B.foes, ...B.party].find(x => x.id === e.u); if (L.length) xFxAt(e.f, L, A || null); xDelay = 0; }
     else if (e.k === 'fl'){ xDelay = e.dl || 0; xFloat(e.id, e.txt, e.col); xDelay = 0; }
@@ -2595,7 +2596,7 @@ function xFxAt(k, list, u){ const sk = k.startsWith('sk:'); xcoEvPush({ k: 'fx',
 // 스킬 쿨타임: 쓴 스킬은 내 다음 행동 n번 동안 못 써요 (MP가 클수록 길어요). 전투가 끝나면 사라져요
 const xCdOf = sk => { const m = sk ? (sk.mp0 ?? sk.mp ?? 0) : 0; return m >= 18 ? 4 : m >= 14 ? 3 : m >= 8 ? 2 : m >= 4 ? 1 : 0; }, xCdLeft = (u, sk) => sk && u.cdn && u.cdn[sk.n] > 0 ? u.cdn[sk.n] : 0;
 function xCdTick(u, sk){ if (u.team !== 'a') return; const c = u.cdn || (u.cdn = {}); Object.keys(c).forEach(k => { if (c[k] > 0) c[k]--; if (c[k] <= 0) delete c[k]; }); const n = xCdOf(sk); if (n) c[sk.n] = n; }
-function xAct(u, sk, tgt){ xDelay = 0; if (sk && xCdLeft(u, sk)) sk = null; try { xAct0(u, sk, tgt); } finally { xDelay = 0; xCdTick(u, sk); } }
+function xAct(u, sk, tgt){ if (!xb || xb.fin || !xAlive(u.team === 'a' ? xb.foes : xb.party).length) return; xDelay = 0; if (sk && xCdLeft(u, sk)) sk = null; try { xAct0(u, sk, tgt); } finally { xDelay = 0; xCdTick(u, sk); } }
 const xFoeTarget = () => { const A = xAlive(xb.party), tk = A.find(a => xFm(a, 'taunt')); if (tk && Math.random() < .8) return tk; const cv = A.find(a => xFm(a, 'cover')), fr = A.filter(a => a.row === 'f'), bk = A.filter(a => a.row === 'b'), pool = fr.length && bk.length ? (Math.random() < .8 ? fr : bk) : A, t = xRand(pool); return cv && t !== cv && Math.random() < .65 ? cv : t; };   // 도발 · 대신 맞기 · 앞열이 먼저 맞아요 (앞열 80 : 뒤열 20, 한쪽만 남으면 그쪽)
 const XFXN = { counter: '반격 태세', taunt: '도발!', cover: '대신 맞기', dodge: '회피↑', dmgIn: '방어↑', atk: '공격↑', spd: '속도↑' };
 function xApply(u, t, a, mult, st){   // 맞은 뒤 붙는 효과 [종류, 세기, 초]
@@ -2758,7 +2759,7 @@ function xDraw(){
     if (u.team === 'a' && wa && wp >= 0 && wp < .65 && wa.k === 'cast' && !dead){   // 마법진
       const r = 10 + Math.min(1, wp / .4) * 22; g.save(); g.strokeStyle = wa.c; g.globalAlpha = .75 * (1 - wp / .65); g.lineWidth = 1; g.beginPath(); g.ellipse(u.bx, u.by, r, r * .32, 0, 0, 7); g.stroke(); g.beginPath(); g.ellipse(u.bx, u.by, r * .6, r * .2, 0, 0, 7); g.stroke();
       for (let k = 0; k < 6; k++){ const a = k * 1.047 + wp * 9; g.fillStyle = wa.c; g.fillRect(Math.round(u.bx + Math.cos(a) * r), Math.round(u.by + Math.sin(a) * r * .32), 2, 2); } g.restore(); }
-    if (u.team === 'a' && B.turn === u && !B.pick && !dead){ g.save(); g.strokeStyle = '#4fd8ff'; g.lineWidth = 2; g.globalAlpha = .6 + .4 * Math.sin(now / 160); g.beginPath(); g.ellipse(u.bx, u.by, 24, 7.5, 0, 0, 7); g.stroke(); g.restore(); }
+    if (u.team === 'a' && xRdy(u) && u === xMine(B) && !B.pick && !dead){ g.save(); g.strokeStyle = '#4fd8ff'; g.lineWidth = 2; g.globalAlpha = .6 + .4 * Math.sin(now / 160); g.beginPath(); g.ellipse(u.bx, u.by, 24, 7.5, 0, 0, 7); g.stroke(); g.restore(); }
     g.globalAlpha = al; const tint = c => { tintC.width = c.w; tintC.height = c.h; const q = tintC.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, c.w, c.h); q.drawImage(c.img, c.sx, c.sy, c.w, c.h, 0, 0, c.w, c.h); q.globalCompositeOperation = 'source-atop'; q.fillStyle = 'rgba(255,255,255,.75)'; q.fillRect(0, 0, c.w, c.h); q.globalCompositeOperation = 'source-over'; return tintC; };
     if (u.team === 'e'){ if (lpc.complete){ const w = 64 * sc, c = { img: lpc, sx: u.lp * 64, sy: 0, w: 64, h: 64 }; g.save(); g.translate(x, 0); g.scale(-1, 1); g.drawImage(hit ? tint(c) : lpc, hit ? 0 : c.sx, 0, 64, 64, -w / 2, y - w + 4 * sc, w, w); g.restore(); } }
     else { const sp = strip(u); if (sp){ const PAD = 48, oy = y - FH + 6, c = { img: sp, sx: dirL * FW, sy: 0, w: FW, h: FH };
@@ -2862,7 +2863,7 @@ function xStatHtml(B){   // 아래쪽 파티 카드: 얼굴 · 이름 · 체력 
   return B.party.map(u => `<div class="xs" data-cu="${u.id}"><div class="xs1"><span class="xport">${headImg(u.av)}</span><div class="xs2"><b>${esc(u.name)}</b><span class="xj">${XJ[u.job].n} Lv ${u.L}</span></div></div><div class="xbr hp"><i data-b="h"></i><em data-t="h"></em></div><div class="xbr mp"><i data-b="m"></i><em data-t="m"></em></div><div class="xbr gg"><i data-b="g"></i></div></div>`).join('');
 }
 function xStatUpdate(B){
-  B.party.forEach(u => { const c = document.querySelector(`[data-cu="${u.id}"]`); if (!c) return; c.classList.toggle('xdead', u.hp <= 0); c.classList.toggle('xturn', B.turn === u);
+  B.party.forEach(u => { const c = document.querySelector(`[data-cu="${u.id}"]`); if (!c) return; c.classList.toggle('xdead', u.hp <= 0); c.classList.toggle('xturn', xRdy(u));
     const set = (k, w, t) => { const b = c.querySelector(`[data-b="${k}"]`); if (b) b.style.width = w + '%'; const e = c.querySelector(`[data-t="${k}"]`); if (e && t != null) e.textContent = t; };
     set('h', Math.max(0, u.hp) / u.mhp * 100, `${Math.max(0, u.hp)}/${u.mhp}`); set('m', u.mp / u.mmp * 100, `${Math.floor(u.mp)}/${u.mmp}`); set('g', Math.max(0, Math.min(100, u.g))); });
 }
@@ -2886,11 +2887,13 @@ function xRenderBattle(){
   $('#xcv').onpointerdown = e => { if (!B.pick) return; const t = xHitTest(e); if (t){ const go = B.pick.go; B.pick = null; go(t); } };
   clearInterval(xTick); B.last = performance.now(); xTick = setInterval(xLoop, 100); cancelAnimationFrame(xRaf); xRaf = 0; xDraw(); xCmd();
 }
+const XRDY_MS = 15000;   // 게이지가 다 찬 뒤 이만큼 고르지 않으면 자동 공격 (파티일 때)
+const xRdy = u => !!u && u.hum && u.hp > 0 && u.g >= 100 && !(xb && xb.mirror && u.sent === (u.rt || 0));   // 차례 없이: 내 게이지가 다 차면 언제든 행동해요
 const xMine = B => B.party.find(x => x.uid === myId()) || B.party[0];
-function xcoCmdSend(B, u, c){ c.tn = B.tn; c.bn = B.bn; xcoSend({ cmd: c }); B.turn = null; B.pick = null; B.menu = 'main'; xUp(); xCmd(); }
+function xcoCmdSend(B, u, c){ c.rt = u.rt || 0; c.bn = B.bn; xcoSend({ cmd: c }); u.sent = u.rt || 0; B.pick = null; B.menu = 'main'; xUp(); xCmd(); }
 function xCmd(){
   const B = xb, u = xMine(B), el = $('#xcmd'); if (!el) return;
-  const wait = B.over ? '' : u.hp <= 0 ? '쓰러졌어요.... 동료가 싸워요' : B.turn !== u ? '차례를 기다려요.......' : null;
+  const wait = B.over ? '' : u.hp <= 0 ? '쓰러졌어요.... 동료가 싸워요' : !xRdy(u) ? '게이지가 차면 행동해요' : null;
   const key = wait !== null ? 'w' + wait : B.pick ? 'pick' : B.menu + ':' + u.sks.map(s => (Math.ceil(s.mp) <= Math.floor(u.mp) ? 1 : 0) + '' + xCdLeft(u, s)).join('') + X_ITEMS.map(x => me.inv[x[0]] || 0).join();
   if (el.dataset.k === key) return; el.dataset.k = key; el.classList.toggle('xsk2', key.startsWith('skills')); el.classList.toggle('xm4', key.startsWith('main') || key.startsWith('items'));
   if (wait !== null){ el.innerHTML = `<div class="xwait">${wait}</div>`; return; }
@@ -2901,16 +2904,16 @@ function xCmd(){
   el.querySelectorAll('[data-xc]').forEach(b => b.onclick = () => xChoose(b.dataset.xc));
 }
 function xChoose(k){
-  const B = xb, u = xMine(B); if (B.turn !== u) return;
+  const B = xb, u = xMine(B); if (!xRdy(u) || B.fin || B.over) return;
   if (k === 'm_skills'){ B.menu = 'skills'; return xCmd(); } if (k === 'm_back'){ B.menu = 'main'; return xCmd(); }
   if (k === 'm_items'){ B.menu = 'items'; return xCmd(); }
   if (k.startsWith('i_')){ const id = k.slice(2); if (!(me.inv[id] > 0)) return;
-    const go = t => { if (!(me.inv[id] > 0)) return; me.inv[id]--; save(); B.pick = null; B.menu = 'main'; if (B.mirror) return xcoCmdSend(B, u, { a: 'item', k: id, tg: t.id }); xItemUse(B, u, id, t); B.turn = null; xUp(); };
+    const go = t => { if (!(me.inv[id] > 0)) return; me.inv[id]--; save(); B.pick = null; B.menu = 'main'; if (B.mirror) return xcoCmdSend(B, u, { a: 'item', k: id, tg: t.id }); xItemUse(B, u, id, t); xUp(); };
     const al = xAlive(B.party); if (al.length <= 1) return go(u); B.pick = { sk: null, go, set: new Set(al.map(a => a.id)) }; return xCmd(); }
   if (k === 'cancel'){ B.pick?.unpick?.(); B.pick = null; return xCmd(); }
-  if (k === 'def'){ if (B.mirror) return xcoCmdSend(B, u, { a: 'def' }); B.def[u.id] = 1; B.log = `${u.name}이(가) 방어 태세`; u.g = 0; B.turn = null; return xUp(); }
+  if (k === 'def'){ if (B.mirror) return xcoCmdSend(B, u, { a: 'def' }); B.def[u.id] = 1; B.log = `${u.name}이(가) 방어 태세`; u.g = 0; return xUp(); }
   const sk = k === 'atk' ? null : u.sks[+k.slice(1)]; if (sk && xCdLeft(u, sk)) return;
-  const go = tgt => { B.pick = null; B.menu = 'main'; if (B.mirror) return xcoCmdSend(B, u, { a: 'act', s: sk ? u.sks.indexOf(sk) : -1, tg: tgt ? tgt.id : null }); xAct(u, sk, tgt); B.turn = null; xUp(); };
+  const go = tgt => { B.pick = null; B.menu = 'main'; if (B.mirror) return xcoCmdSend(B, u, { a: 'act', s: sk ? u.sks.indexOf(sk) : -1, tg: tgt ? tgt.id : null }); xAct(u, sk, tgt); xUp(); };
   const foeT = !sk || ['dmg', 'deb', 'dot', 'stun', 'burst'].includes(sk.t), targets = foeT ? xAlive(B.foes) : sk.t === 'revive' ? B.party.filter(x => x.hp <= 0) : xAlive(B.party);
   if (sk && (sk.tg === 'all' || sk.tg === 'self' || sk.t === 'mp')) return go(null); if (targets.length <= 1) return go(targets[0] || null);
   B.pick = { sk, go, set: new Set(targets.map(t => t.id)) }; xCmd();
@@ -2949,19 +2952,19 @@ function xLoop(){
   if (xb && xcoHost() && !xb.mirror){ xcoHostInputs(); xcoTimeouts(xb); xcoPubBt(); }
 }
 function xcoTimeouts(B){   // 명령이 늦으면 자동 공격 · 끊긴 사람은 전투에서 빠져요
-  const act = xcoActive(), now = performance.now(), hum0 = B.party.filter(u => u.hum && u.hp > 0).length; B.party.forEach(u => { if (u.uid && u.uid !== myId() && !act.includes(u.uid) && u.hp > 0){ u.hpGone = u.hp; u.hp = 0; u.gone = true; if (B.turn === u) B.turn = null; } });
+  const act = xcoActive(), now = performance.now(), hum0 = B.party.filter(u => u.hum && u.hp > 0).length; B.party.forEach(u => { if (u.uid && u.uid !== myId() && !act.includes(u.uid) && u.hp > 0){ u.hpGone = u.hp; u.hp = 0; u.gone = true; } });
   { const hum1 = B.party.filter(u => u.hum && u.hp > 0).length; if (hum1 > 0 && hum1 < hum0){ const k = hum1 / hum0; xAlive(B.foes).forEach(f => { f.hp = Math.max(1, Math.round(f.hp * k)); }); B.log = '동료가 빠져서 몬스터도 약해졌어요'; } }   // 혼자 남아도 해 볼 만하게
   if (!B.over) act.forEach(uid => { const u = B.party.find(x => x.uid === uid); if (u){ if (u.gone && u.hpGone){ u.gone = false; u.hp = u.hpGone; u.hpGone = 0; u.g = 0; } } else if (xcoBuilds[uid]){ const c = xcoHp[uid]; B.party.push(xcoUnitFromBuild(uid, c ? Math.max(1, c[0]) : undefined, c ? c[1] : undefined)); } });   // 돌아온 사람은 나가기 전 체력으로 지금 전투에 바로 끼워요
-  if (B.turn && B.turn.uid && B.turn.uid !== myId() && now > B.tdl) xcoApplyCmd(B, B.turn, { a: 'atk', s: -1 });
-  else if (B.turn && B.turn.uid === myId() && act.length > 1 && now > B.tdl){ B.pick?.unpick?.(); xcoApplyCmd(B, B.turn, { a: 'atk', s: -1 }); toast('차례가 지나서 자동으로 공격했어요'); }   // 방장이 자리를 비워도 파티 전투가 멈추지 않게
+  if (!B.fin && !B.over) B.party.forEach(u => { if (!xRdy(u) || !u.uid || !(now > u.tdl)) return; if (u.uid !== myId()) xcoApplyCmd(B, u, { a: 'atk', s: -1 }); else if (act.length > 1){ B.pick?.unpick?.(); B.pick = null; B.menu = 'main'; xcoApplyCmd(B, u, { a: 'atk', s: -1 }); toast('오래 고르지 않아서 자동으로 공격했어요'); } });   // 방장이 자리를 비워도 파티 전투가 멈추지 않게
 }
+const XGSPD = 1.65;   // 게이지 속도: 속도 10이면 약 6초에 한 번 (도적처럼 빠르면 더 자주)
 function xLoop0(){
   const B = xb; if (!B || B.over) return clearInterval(xTick); if ((!sheetOn || sub !== 'explore') && !(xEx().run?.co && xcoHost())) return clearInterval(xTick);   // 파티 방장은 다른 창을 열어도 전투가 계속 돌아가요 (안 그러면 모두 멈춰요)
   const now = performance.now(), dt = Math.min(.25, (now - B.last) / 1000); B.last = now; if (B.fin){ if (now >= B.fin) return xAlive(B.foes).length ? xLose() : xWin(); return; }
-  B.party.concat(B.foes).forEach(u => { if (u.hp <= 0) return; if (u.hum && B.turn === u) return; if (u.team === 'a' && u.mp < u.mmp) u.mp = Math.min(u.mmp, u.mp + dt * (.6 + u.L * .05) * (XMPR[XROLE[u.job]] || 1) * (!u.ai && dbuff('dwater') ? 1.1 : 1)); u.g = Math.min(100, u.g + u.spd * (1 + xFm(u, 'spd') - xFm(u, 'slow')) * 3.3 * dt); const f = u.fx; for (const k in f){ f[k].t -= dt; if (k === 'dot'){ f[k].acc += dt; while (f[k].acc >= 2 && f[k].t > -2){ f[k].acc -= 2; u.hp = Math.max(0, u.hp - f[k].v); xFloat(u.id, '-' + f[k].v, '#ff9a4d'); } } if (k === 'regen'){ f[k].acc += dt; while (f[k].acc >= 2){ f[k].acc -= 2; u.hp = Math.min(u.mhp, u.hp + f[k].v); xFloat(u.id, '+' + f[k].v, '#7affb0'); } } if (f[k].t <= 0){ if (k === 'bomb') xBomb(u, f[k]); delete f[k]; } } xPets(u, dt); });
-  if (!B.turn) for (const u of B.party.concat(B.foes)){ if (u.hp <= 0 || u.g < 100) continue; if (u.hum){ B.turn = u; B.pick = null; B.tn = (B.tn || 0) + 1; B.tdl = performance.now() + 12000; break; } if (u.team === 'e') xAct(u, null); else xAI(u); if (!xAlive(B.foes).length || !xAlive(B.party).length) break; }
-  if (!xAlive(B.foes).length || !xAlive(B.party).length){ B.fin = performance.now() + 900; B.turn = null; return xUp(); }
-  if (B.turn && B.turn.hp <= 0) B.turn = null; xUp();
+  B.party.concat(B.foes).forEach(u => { if (u.hp <= 0) return; if (u.team === 'a' && u.mp < u.mmp) u.mp = Math.min(u.mmp, u.mp + dt * (.6 + u.L * .05) * (XMPR[XROLE[u.job]] || 1) * (!u.ai && dbuff('dwater') ? 1.1 : 1)); { const was = u.g; u.g = Math.min(100, u.g + u.spd * (1 + xFm(u, 'spd') - xFm(u, 'slow')) * XGSPD * dt); if (u.hum && was < 100 && u.g >= 100){ u.rt = (u.rt || 0) + 1; u.tdl = now + XRDY_MS; } } const f = u.fx; for (const k in f){ f[k].t -= dt; if (k === 'dot'){ f[k].acc += dt; while (f[k].acc >= 2 && f[k].t > -2){ f[k].acc -= 2; u.hp = Math.max(0, u.hp - f[k].v); xFloat(u.id, '-' + f[k].v, '#ff9a4d'); } } if (k === 'regen'){ f[k].acc += dt; while (f[k].acc >= 2){ f[k].acc -= 2; u.hp = Math.min(u.mhp, u.hp + f[k].v); xFloat(u.id, '+' + f[k].v, '#7affb0'); } } if (f[k].t <= 0){ if (k === 'bomb') xBomb(u, f[k]); delete f[k]; } } xPets(u, dt); });
+  for (const u of B.party.concat(B.foes)){ if (u.hp <= 0 || u.g < 100 || u.hum) continue; if (u.team === 'e') xAct(u, null); else xAI(u); if (!xAlive(B.foes).length || !xAlive(B.party).length) break; }
+  if (!xAlive(B.foes).length || !xAlive(B.party).length){ B.fin = performance.now() + 900; return xUp(); }
+  xUp();
 }
 function xWin(){
   sfx('win'); const B = xb, run = xEx().run; B.over = true; clearInterval(xTick); const mL = B.foes[0].mL; let exp = 0, gold = 0; B.foes.forEach(f => { exp += Math.round(8 * (1 + .45 * (mL - 1)) * f.k); gold += Math.round(6 * (1 + .3 * (mL - 1)) * f.k * (.8 + Math.random() * .4)); });
