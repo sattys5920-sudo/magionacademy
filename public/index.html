@@ -1335,8 +1335,8 @@ const legToNew = (x, y) => { const lo = x >= 42 ? 42 : 0; return [lo ? 'town' : 
 function posLoad(){
   try {
     const q = JSON.parse(localStorage.getItem(posKey()) || 'null'); if (!q || typeof q.m !== 'string' || !Number.isFinite(q.x) || !Number.isFinite(q.y)) return null;
+    if (q.m === 'pen' || q.m.startsWith('pen:')) return { m: 'barn', x: 21, y: 31 };
     if (q.m.includes(':') || !World.meta(q.m)) return null;   // 개인 방(주인마다 다름)·없어진 곳은 처음 자리로
-    if (q.m === 'pen') return { m: 'barn', x: 21, y: 31 };
     if (q.m === 'campus' && q.v !== 2){ const t = legToNew(q.x, q.y); q.m = t[0]; q.x = t[1]; q.y = t[2]; }   // 지도를 학교·마을로 나누기 전에 저장한 자리
     return POS_SKIP.includes(q.m) ? null : q;
   } catch(e){ return null; }
@@ -3256,7 +3256,7 @@ function adminChat(){   // 최근 14일 대화를 한 줄로 이어 봐요
   AD.chatOff = () => offs.forEach(f => f && f());
 }
 const adName = id => esc(AD.players[id]?.nick || AD.online[id]?.nick || id.slice(0, 6));
-const adPlace = m => { if (!m) return '?'; const [id, owner] = m.split(':'), meta = World.meta(id); return esc((meta?.title || id) + (owner ? ` (${AD.players[owner]?.nick || '?'}의 방)` : '')); };
+const adPlace = m => { if (!m) return '?'; const [id, owner] = m.split(':'), meta = World.meta(id); return esc((meta?.title || id) + (owner ? ` (${AD.players[owner]?.nick || '?'}의 ${id === 'pen' ? '우리' : '방'})` : '')); };
 function adminErrHTML(){   // 같은 오류끼리 묶어서 많이·최근에 난 순서로 보여요
   const G = {}; Object.values(AD.errs || {}).forEach(e => { if (!e || !e.m) return; const g = G[e.m] = G[e.m] || { m: e.m, k: e.k, n: 0, who: new Set(), last: 0, e }; g.n++; g.who.add(e.n || (e.u || '').slice(0, 6)); if ((e.at || 0) > g.last){ g.last = e.at || 0; g.e = e; } });
   const list = Object.values(G).sort((a, b) => b.last - a.last), K = { party: '파티 탐사 기록', error: '화면 오류', promise: '처리 오류', save: '저장 실패' };

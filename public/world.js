@@ -308,7 +308,7 @@ function drawTag(tag, sx, sy, now, below){   // sx, sy: 세계 픽셀(이름표 
   out.fillStyle = tag.ev ? '#FFD866' : TAG_COL[tag.k]; out.textBaseline = 'top'; out.textAlign = 'left'; out.fillText(tag.t, x + px, y + py + Math.round(dpr));
 }
 // 지금 있는 곳 열쇠: 개인 방은 방 주인마다 달라요
-const placeKey = () => map + (M && M.furn ? ':' + (roomView.own ? World.myUid : roomView.uid) : '');
+const placeKey = () => map + (M && M.furn ? ':' + (roomView.own ? World.myUid : roomView.uid) : map === 'pen' ? ':' + World.myUid : '');   // 내 우리 안은 사람마다 따로예요
 World.placeKey = () => started ? placeKey() : null;
 World.myPos = () => { const t = me.path.length ? me.path[me.path.length - 1] : [Math.round(me.x), Math.round(me.y)]; return { m: placeKey(), x: t[0], y: t[1] }; };
 World.setPeers = list => { peerList = list || []; if (started && M) syncPeers(); };
