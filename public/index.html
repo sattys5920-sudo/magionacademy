@@ -2892,8 +2892,8 @@ function xLoop(){
   if (xb && xcoHost() && !xb.mirror){ xcoHostInputs(); xcoTimeouts(xb); xcoPubBt(); }
 }
 function xcoTimeouts(B){   // 명령이 늦으면 자동 공격 · 끊긴 사람은 전투에서 빠져요
-  const act = xcoActive(), now = performance.now(); B.party.forEach(u => { if (u.uid && u.uid !== myId() && !act.includes(u.uid) && u.hp > 0){ u.hp = 0; u.gone = true; if (B.turn === u) B.turn = null; } });
-  if (!B.over) act.forEach(uid => { const u = B.party.find(x => x.uid === uid); if (u){ if (u.gone){ u.gone = false; u.hp = Math.max(1, Math.round(u.mhp * .5)); u.g = 0; } } else if (xcoBuilds[uid]){ const c = xcoHp[uid]; B.party.push(xcoUnitFromBuild(uid, c ? Math.max(1, c[0]) : undefined, c ? c[1] : undefined)); } });   // 돌아온 사람은 지금 전투에 바로 끼워요
+  const act = xcoActive(), now = performance.now(); B.party.forEach(u => { if (u.uid && u.uid !== myId() && !act.includes(u.uid) && u.hp > 0){ u.hpGone = u.hp; u.hp = 0; u.gone = true; if (B.turn === u) B.turn = null; } });
+  if (!B.over) act.forEach(uid => { const u = B.party.find(x => x.uid === uid); if (u){ if (u.gone && u.hpGone){ u.gone = false; u.hp = u.hpGone; u.hpGone = 0; u.g = 0; } } else if (xcoBuilds[uid]){ const c = xcoHp[uid]; B.party.push(xcoUnitFromBuild(uid, c ? Math.max(1, c[0]) : undefined, c ? c[1] : undefined)); } });   // 돌아온 사람은 나가기 전 체력으로 지금 전투에 바로 끼워요
   if (B.turn && B.turn.uid && B.turn.uid !== myId() && now > B.tdl) xcoApplyCmd(B, B.turn, { a: 'atk', s: -1 });
 }
 function xLoop0(){
