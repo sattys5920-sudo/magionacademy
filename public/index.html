@@ -3526,10 +3526,19 @@ async function adminMap(){
   const cv = $('#admap'); if (!cv) return;
   const fo = AD.follow && O[AD.follow], id = fo ? bid(fo) : AD.map, r = await getMap(id); if (!r || !cv.isConnected) return; const m = r.meta, g = cv.getContext('2d');
   const wrap = cv.parentElement.clientWidth || 360;
-  if (fo){   // 따라가기: 그 사람을 가운데 두고 가까이서 봐요 (움직이면 지도도 따라 바뀌어요)
+  if (fo){   // 따라가기: 그 사람을 가운데 두고 가까이서 봐요. 서버에는 「가려는 칸」만 오니까, 화면에서 걸어가듯 이어 그려요 (서버 쓰기는 그대로)
     const k = 1.6, VW = Math.min(wrap, 560), VH = 320; cv.width = VW; cv.height = VH; cv.style.width = VW + 'px'; cv.style.height = VH + 'px'; g.imageSmoothingEnabled = false;
-    const [px, py] = P2(m, (fo.x || 0) + .5, (fo.y || 0) + .5), off = [px - VW / 2 / k, py - VH / 2 / k];
-    g.fillStyle = m.fill || '#140E1E'; g.fillRect(0, 0, VW, VH); g.drawImage(r.canvas, -off[0] * k, -off[1] * k, m.W * k, m.H * k); dots(g, m, id, k, off); hit(cv, m, id, k, off);
+    AD.pos = AD.pos || {}; cancelAnimationFrame(AD.fRaf); let last = performance.now();
+    const frame = t => {
+      if (!cv.isConnected || !AD.follow) return; const dt = Math.min(.1, (t - last) / 1000); last = t; const O2 = adOnline(), view = {};
+      Object.entries(O2).forEach(([u, o]) => { if (bid(o) !== id) return; let q = AD.pos[u]; if (!q || q.m !== o.m || Math.hypot(q.x - o.x, q.y - o.y) > 30) q = AD.pos[u] = { m: o.m, x: o.x || 0, y: o.y || 0 };
+        const dx = (o.x || 0) - q.x, dy = (o.y || 0) - q.y, d = Math.hypot(dx, dy), st = 4.5 * dt; if (d > st){ q.x += dx / d * st; q.y += dy / d * st; } else { q.x = o.x || 0; q.y = o.y || 0; }   // 걷는 속도로 따라가요
+        view[u] = { ...o, x: q.x, y: q.y }; });
+      const me2 = view[AD.follow]; if (!me2) return; const [px, py] = P2(m, me2.x + .5, me2.y + .5), off = [px - VW / 2 / k, py - VH / 2 / k];
+      g.fillStyle = m.fill || '#140E1E'; g.fillRect(0, 0, VW, VH); g.drawImage(r.canvas, -off[0] * k, -off[1] * k, m.W * k, m.H * k);
+      Object.keys(O).forEach(u => delete O[u]); Object.assign(O, view); dots(g, m, id, k, off); hit(cv, m, id, k, off);   // 그린 자리 그대로 누를 수 있게
+      AD.fRaf = requestAnimationFrame(frame); };
+    AD.fRaf = requestAnimationFrame(frame);
     return;
   }
   const k = Math.max(.75, Math.min(2, wrap / m.W));   // 폰에서는 크게 그리고 밀어서 봐요
