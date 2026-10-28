@@ -2667,7 +2667,7 @@ const XCW = 384, XCH = 216, XGLY = { sword: 'slash', axe: 'slash', dagger: 'slas
 const xFxKind = (sk, u) => { const j = sk && u && window.XFXJOB && (XFXJOB.skKey(u.job, sk) || XFXJOB.kind(u.job, sk)); return j || xFxKind0(sk); };
 const xFxKind0 = sk => !sk ? 'slash' : sk.t === 'heal' || sk.t === 'revive' ? 'heal' : sk.t === 'buff' || sk.t === 'mp' ? 'buff' : sk.t === 'deb' ? 'debuff' : XGLY[sk.g] || 'boom';
 const XFS = [[[110, 152]], [[130, 134], [96, 178]], [[138, 134], [100, 160], [138, 192]], [[142, 124], [104, 146], [142, 168], [104, 192]], [[146, 118], [108, 138], [146, 158], [108, 178], [146, 198]], [[148, 116], [110, 132], [148, 150], [110, 168], [148, 186], [110, 204]]],
-  XFE = [[84, 128], [120, 118], [84, 168], [120, 152]],   // 정예 곁에 서는 졸개 자리
+  XFE = [[84, 128], [120, 118], [84, 168], [120, 152]], XFB = [[206, 136], [214, 196], [178, 116], [184, 172]],   /* 보스 앞에 서는 졸개 자리 */   // 정예 곁에 서는 졸개 자리
   XPS = [[282, 150], [322, 128], [334, 176], [296, 200], [340, 104]], XBOSS_AT = [104, 204];
 let xRaf = 0, xBgs = {};
 let xWpnImg = null; function xWpnSheet(){ if (!xWpnImg){ xWpnImg = new Image(); xWpnImg.src = 'art/weapons.png?v=5'; } return xWpnImg; }
@@ -2705,8 +2705,8 @@ function xAmb(g, kind, now){   // 분위기 입자: 반딧불 · 안개 · 포�
   else for (let i = 0; i < 24; i++){ const t = (now / 46 + i * 29) % 260, x = (i * 53 + t * .6) % XCW, y = 30 + t * .6 + (i % 3) * 10; R(x, y, 2, 2, '#ffe6a8', .55 * Math.sin(t / 260 * Math.PI)); }
 }
 function xLayout(B){
-  const norm = B.foes.filter(u => !(u.k >= 3)), e = B.foes.some(f => f.k >= 3);
-  B.foes.forEach(u => { if (u.big) [u.bx, u.by] = XBOSS_AT; else if (u.k >= 3) [u.bx, u.by] = [136, 184]; else { const i = norm.indexOf(u); [u.bx, u.by] = e ? (XFE[i] || XFE[0]) : (XFS[Math.min(5, norm.length - 1)][i] || XFS[0][0]); } });
+  const norm = B.foes.filter(u => !(u.k >= 3)), e = B.foes.some(f => f.k >= 3), bo = B.foes.some(f => f.big);
+  B.foes.forEach(u => { if (u.big) [u.bx, u.by] = XBOSS_AT; else if (u.k >= 3) [u.bx, u.by] = [136, 184]; else { const i = norm.indexOf(u); [u.bx, u.by] = bo ? (XFB[i] || XFB[0]) : e ? (XFE[i] || XFE[0]) : (XFS[Math.min(5, norm.length - 1)][i] || XFS[0][0]); } });
   if (B.party.some(u => u.row)){   // 파티: 앞열은 적 쪽, 뒤열은 그 뒤에 줄을 세워요
     [B.party.filter(u => u.row === 'f'), B.party.filter(u => u.row !== 'f')].forEach((arr, r) => arr.forEach((u, i) => { const n = arr.length; u.bx = (r ? 342 : 290) - (i % 2) * 20; u.by = n === 1 ? 152 : Math.round(108 + 98 * i / (n - 1)); }));
   } else B.party.forEach((u, i) => { [u.bx, u.by] = XPS[i] || XPS[0]; });
@@ -2746,7 +2746,7 @@ function xDraw(){
   g.imageSmoothingEnabled = false; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#000'; g.fillRect(0, 0, XCW, XCH);
   if (B.shake && now >= B.shake.t0 && now < B.shake.t0 + B.shake.dur){ const a = B.shake.amp; g.translate(Math.round((Math.random() - .5) * 2 * a), Math.round((Math.random() - .5) * 2 * a)); }
   g.drawImage(xBg(XRG.indexOf(R)), 0, 0); xAmb(g, R.kind, now);
-  const all = [...B.foes, ...B.party].sort((a, b) => a.by - b.by), FW = World.Avatar.FW, FH = World.Avatar.FH, strip = u => World.Avatar.compose(u.av), dirL = World.Avatar.meta.dirs.left, lpc = xLpcSheet();
+  const all = [...B.foes, ...B.party].sort((a, b) => (b.sc || 1) - (a.sc || 1) || a.by - b.by),   /* 큰 보스·정예를 먼저 그려서 졸개가 뒤에 숨지 않게 */ FW = World.Avatar.FW, FH = World.Avatar.FH, strip = u => World.Avatar.compose(u.av), dirL = World.Avatar.meta.dirs.left, lpc = xLpcSheet();
   const tintC = document.createElement('canvas');
   all.forEach(u => {
     let dead = u.hp <= 0; if (dead && !u.dieAt) u.dieAt = now + (u.dieWait || 0); if (!dead){ u.dieAt = 0; u.dieWait = 0; } if (dead && now < u.dieAt) dead = false;
@@ -2857,7 +2857,7 @@ function xProjDraw(g, B, now){   // 화살 · 마법구 · 던지는 것
 }
 function xHitTest(e){
   const B = xb, cv = $('#xcv'), r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * XCW, y = (e.clientY - r.top) / r.height * XCH; let best = null, bd = 1e9;
-  [...B.foes, ...B.party].forEach(u => { if (!B.pick.set.has(u.id)) return; const hh = u.team === 'e' ? u.hh : 48, cx = u.sx, cy = u.sy - hh / 2, d = Math.max(Math.abs(x - cx) - 22, 0) ** 2 + Math.max(Math.abs(y - cy) - hh / 2, 0) ** 2; if (d < bd){ bd = d; best = u; } });
+  [...B.foes, ...B.party].forEach(u => { if (!B.pick.set.has(u.id)) return; const hh = u.team === 'e' ? u.hh : 48, cx = u.sx, cy = u.sy - hh / 2, d = Math.max(Math.abs(x - cx) - 22, 0) ** 2 + Math.max(Math.abs(y - cy) - hh / 2, 0) ** 2; if (d < bd || (d === bd && best && (u.sc || 1) < (best.sc || 1))){ bd = d; best = u; } });
   return bd < 22 * 22 ? best : null;
 }
 function xStatHtml(B){   // 아래쪽 파티 카드: 얼굴 · 이름 · 체력 · 마력 · 행동 게이지
