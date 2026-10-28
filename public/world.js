@@ -410,6 +410,7 @@ function rebuildObjs(){   // 지도 물건 + (개인 방이면) 놓은 가구 + 
 }
 let gates = [];   // 길 끝에서 다음 지역으로 넘어가는 문 (door.walk): 사이를 걸어가면 자동으로 넘어가요
 function setMap(id, spawn){
+  if (!MAPS[real(id)].bg){ ensureMap(id).then(() => setMap(id, spawn)).catch(() => {}); return; }   // 기숙사 단계가 막 바뀌어 새 방 그림이 아직 안 왔으면 받고 나서 옮겨요
   map = id; rmap = real(id); M = MAPS[rmap].meta; resize(); placing = null;
   if (M.objs.some(o => o.req) || M.all){ M.all = M.all || M.objs; M.objs = M.all.filter(o => !o.req || (World.reqOk && World.reqOk(o.req))); MAPS[rmap].order = null; }   // req 가 있는 물건: 용의 동굴의 용 · 깨진 알껍데기
   rebuildObjs(); gates = M.objs.filter(o => o.door && o.door.walk);
@@ -772,7 +773,7 @@ function frame(now){
   people.forEach(p => step(p, dt));
   if (dest && (!me.path.length || performance.now() - dest.t0 > 20000)) dest = null;
   if ((nearTick = (nearTick + 1) % 6) === 0) nearCheck();
-  const A = MAPS[rmap];
+  const A = MAPS[rmap]; if (!A.bg || !A.obj){ requestAnimationFrame(frame); return; }   // 그림이 아직 없으면 이번 장면은 건너뛰어요
   // 카메라 먼저: 맵이 화면보다 작으면 가운데에, 크면 내 캐릭터를 따라가요
   { const ct = camTarget && (camTarget.p || camTarget.x !== undefined) ? (camTarget.p ? [camTarget.p.x, camTarget.p.y] : [camTarget.x, camTarget.y]) : [me.x, me.y]; const [mx, my] = P(ct[0] + .5, ct[1] + .5);
     const tx = M.W <= VW ? (M.W - VW) / 2 : Math.max(0, Math.min(M.W - VW, mx - VW / 2));

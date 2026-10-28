@@ -1206,9 +1206,9 @@ setInterval(errFlush, 15000);
 let knownRv = 0, bootT = 0, playersSig = '', gamesSig = '';   // 마지막으로 내가 불러오거나 저장한 진행 번호
 let fbWarned = false;
 // Firebase는 빈 배열·빈 객체·배열 속 빈 칸을 저장하지 않아서 다시 불러오면 모양이 달라져요 (화단 칸·전리품·목록이 사라지는 오류의 뿌리)
-// → 학생 저장은 빈 것을 표시로 바꿔 저장하고({__a}·{__o}·{__n}), 불러올 때 되돌려요
-function fbKeep(v){ if (Array.isArray(v)) return v.length ? v.map(x => x === null || x === undefined ? { __n: 1 } : fbKeep(x)) : { __a: 1 }; if (v && typeof v === 'object'){ const ks = Object.keys(v); if (!ks.length) return { __o: 1 }; const r = {}; ks.forEach(k => { r[k] = fbKeep(v[k]); }); return r; } return v; }
-function fbBack(v){ if (Array.isArray(v)) return v.map(fbBack); if (v && typeof v === 'object'){ if (v.__a === 1 && Object.keys(v).length === 1) return []; if (v.__o === 1 && Object.keys(v).length === 1) return {}; if (v.__n === 1 && Object.keys(v).length === 1) return null; const r = {}; Object.keys(v).forEach(k => { r[k] = fbBack(v[k]); }); return r; } return v; }
+// → 학생 저장은 빈 것을 표시로 바꿔 저장하고({__a}·{__o}), 불러올 때 되돌려요. 배열 속 빈 칸(null)은 예전처럼 빼요 (코드가 빈 칸 없는 목록을 기대해요)
+function fbKeep(v){ if (Array.isArray(v)){ const a = v.filter(x => x !== null && x !== undefined); return a.length ? a.map(fbKeep) : { __a: 1 }; } if (v && typeof v === 'object'){ const ks = Object.keys(v); if (!ks.length) return { __o: 1 }; const r = {}; ks.forEach(k => { r[k] = fbKeep(v[k]); }); return r; } return v; }
+function fbBack(v){ if (Array.isArray(v)) return v.map(fbBack).filter(x => x !== null && x !== undefined); if (v && typeof v === 'object'){ if (v.__a === 1 && Object.keys(v).length === 1) return []; if (v.__o === 1 && Object.keys(v).length === 1) return {}; if (v.__n === 1 && Object.keys(v).length === 1) return null; const r = {}; Object.keys(v).forEach(k => { r[k] = fbBack(v[k]); }); return r; } return v; }
 function fbClean(o){
   const fix = v => { if (v === undefined || (typeof v === 'number' && !isFinite(v))) return null; if (Array.isArray(v)) return v.map(fix); if (v && typeof v === 'object'){ const r = {}; for (const k in v){ const x = fix(v[k]); if (x === null) continue; let nk = k; if (/[.#$\/\[\]]/.test(k) || !k){ nk = (k || '_').replace(/[.#$\/\[\]]/g, '_'); if (!fbWarned){ fbWarned = true; console.warn('저장 못 하는 이름을 바꿨어요:', k); } } r[nk] = x; } return r; } return v; };
   return fix(o);
