@@ -5398,7 +5398,7 @@ function renderHome(){
   const gj = $('#goJournal'); if (gj) gj.onclick = () => openSheet('home', 'journal');
   on('[data-deliver]', b => {
     const o = me.orders[+b.dataset.deliver];
-    if (me.inv[o.p] < o.n) return;
+    if (!o || o.done || (me.inv[o.p] || 0) < o.n) return;   // 두 번 눌러도 한 번만
     const pay = partyMul(payOf(o));
     me.inv[o.p] -= o.n; me.coin += pay; o.done = true; save();
     toast(`${o.from}에게 ${withJosa(ITEM[o.p], '을', '를')} 전했어요. +${pay}G`); render();
@@ -5751,7 +5751,7 @@ function renderLab(){
     me.mana -= brewCost(); sfx('bubble');
     let msg;
     if (p){
-      const coX = coExtra(); me.inv[p] += 1 + coX; if (coX) setTimeout(() => toast(`친구와 함께 만들어서 ${coX}개 더!`), 900);
+      const coX = coExtra(); me.inv[p] = (me.inv[p] || 0) + 1 + coX; if (coX) setTimeout(() => toast(`친구와 함께 만들어서 ${coX}개 더!`), 900);
       const isNew = !me.found.includes(p);
       if (isNew) me.found.push(p);
       if (!me.hints.includes(p)) me.hints.push(p);
@@ -6491,8 +6491,8 @@ function finishExam(){
 function examFinalize(s, week){
   const r = [];
   if (s >= 60){ const g = Math.round(s * 2); me.coin += g; r.push(`장학금 ${g}G`); }
-  if (s >= 80){ const k = ['uhair','scale','wool'][Math.floor(Math.random() * 3)]; me.inv[k] += 2; r.push(`${ITEM[k]} ×2`); }
-  if (s >= 100){ me.inv.egg += 1; r.push('용 알 껍질 ×1'); }
+  if (s >= 80){ const k = ['uhair','scale','wool'][Math.floor(Math.random() * 3)]; me.inv[k] = (me.inv[k] || 0) + 2; r.push(`${ITEM[k]} ×2`); }
+  if (s >= 100){ me.inv.egg = (me.inv.egg || 0) + 1; r.push('용 알 껍질 ×1'); }
   me.exam.reward = r.join(' · ') || ''; me.exam.at = Date.now();
   save(); hud();
   const n = new Date(), frac = .99 * (1 - (n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds()) / 86400);   // 같은 점수면 먼저 낸 사람이 앞서요
@@ -7691,9 +7691,10 @@ function renderMarket(){
     me.inv[l.item] = (me.inv[l.item] || 0) + l.qty; save(); toast('가판대에서 내렸어요.');
   });
   on('[data-collect]', async b => {
-    const l = marketList[b.dataset.collect]; if (!l || !l.buyer) return;
-    await F.remove(F.ref(db, 'market/' + b.dataset.collect));
-    me.coin += l.price; save(); toast(`판매 대금 ${l.price}G를 받았어요.`);
+    const l = marketList[b.dataset.collect]; if (!l || !l.buyer || b.disabled) return; b.disabled = true;
+    let price = 0; const res = await F.runTransaction(F.ref(db, 'market/' + b.dataset.collect), cur => { if (!cur || !cur.buyer) return; price = cur.price || 0; return null; }).catch(() => null);   // 두 창에서 눌러도 한 번만 받아요
+    if (!res || !res.committed){ b.disabled = false; return; }
+    me.coin += price; save(); toast(`판매 대금 ${price}G를 받았어요.`);
   });
   on('[data-buy]', async b => {
     const id = b.dataset.buy, l = marketList[id];
@@ -8252,7 +8253,7 @@ async function mqPlay(q, n, kind, sc){
 }
 let mqSceneQ = null;
 function mqAfter(q, n, kind, sc){
-  const s = mqState(); if (sc.replay || s.q !== q.id) return;
+  const s = mqState(); if (sc.replay || s.q !== q.id) return; if (kind !== 'request' && s.st !== n) return;   // 같은 단계 보상을 두 번 받지 않게
   if (kind === 'request' && !(sc && sc.replay)){ const t = todayKey(); s.dd = s.dd && s.dd.d === t ? { d: t, n: s.dd.n + 1 } : { d: t, n: 1 }; }   // 오늘 받은 부탁 수
   if (kind === 'request'){ s.st = n; s.ph = 'go'; s.prog = {}; const st = q.stages.find(x => x.n === n); s.dl = st && st.deadline ? me.day + st.deadline : null; s.prog.__day = me.day;
     (st && st.actors || []).forEach(a => { if (a.spawnOnly) return; });
