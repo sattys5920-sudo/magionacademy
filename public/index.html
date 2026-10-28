@@ -6758,12 +6758,15 @@ let pzCtl = null, pzBoard = {}, pzOwn = {}, pzChest = {}, pzChestDraw = null, pz
 const PZ = { C: 10, R: 5, W: 20, H: 24, PAD: 6, HOLD: 8, REWARD: 600 };
 function pzListen(){
   if (solo || !F || !db || pzOffs.length) return;
-  pzOffs.push(F.onValue(F.ref(db, 'puzzle/ctl'), s => { const v = s.val(), was = pzCtl && pzCtl.open; pzCtl = v; pzBtn(); if (v && v.open && !was) toast('이벤트 「유령 선장의 보물 지도」가 열렸어요! 왼쪽 위 버튼을 눌러 보세요'); if (!(v && v.open) && pzOn) pzClose(); else if (pzOn) pzUi(); pzCheckCut(); }));
+  pzOffs.push(F.onValue(F.ref(db, 'puzzle/ctl'), s => { const v = s.val(), was = pzCtl && pzCtl.open; pzCtl = v; pzRegrant(); pzBtn(); if (v && v.open && !was) toast('이벤트 「유령 선장의 보물 지도」가 열렸어요! 왼쪽 위 버튼을 눌러 보세요'); if (!(v && v.open) && pzOn) pzClose(); else if (pzOn) pzUi(); pzCheckCut(); }));
   pzOffs.push(F.onValue(F.ref(db, 'puzzle/board'), s => { pzBoard = s.val() || {}; if (pzOn) pzUi(); pzCheckCut(); pzBtn(); }));
-  pzOffs.push(F.onValue(F.ref(db, 'puzzle/chest'), s => { pzChest = s.val() || {}; if (pzChestDraw && document.getElementById('pzch')) pzChestDraw(); pzBtn(); }));
+  pzOffs.push(F.onValue(F.ref(db, 'puzzle/chest'), s => { pzChest = s.val() || {}; pzRegrant(); if (pzChestDraw && document.getElementById('pzch')) pzChestDraw(); pzBtn(); }));
   pzOffs.push(F.onValue(F.ref(db, 'puzzle/own'), s => { pzOwn = s.val() || {}; if (pzOn) pzUi(); }));
 }
 const pzCount = () => Object.keys(pzBoard).length;
+// 상자는 내 것으로 기록됐는데 내 진행이 되돌려져서 보상이 없으면 다시 넣어 줘요
+function pzRegrant(){ if (!me || !pzCtl || !pzCtl.id || (me.pz && me.pz.id === pzCtl.id)) return; const k = Object.keys(pzChest).find(i => pzChest[i] === myId()); if (k === undefined) return;
+  const r = pzShuffle()[+k]; if (!r) return; me.pz = { id: pzCtl.id, ch: +k, g: r[0], m: r[1], sp: r[2] }; me.coin += r[0]; if (r[1]) me.inv.mana = (me.inv.mana || 0) + r[1]; if (r[2]){ const ex = xEx(); ex.spx = (ex.spx || 0) + r[2]; } save(); hud(); toast(`보물 상자 보상을 다시 받았어요 · ${pzRewText(r)}`); }
 const pzMine = () => Object.keys(pzOwn).filter(k => pzOwn[k] === myId() && pzBoard[k] === undefined).map(Number).sort((a, b) => a - b);
 // 이벤트가 닫힌 뒤에도: 지도가 다 맞춰졌는데 아직 상자를 못 고른 학생은 상자를 받을 수 있어요
 const pzClaim = () => !!(pzCtl && pzCtl.id && !pzCtl.open && pzCount() >= PZ.C * PZ.R && !(me && me.pz && me.pz.id === pzCtl.id) && !Object.values(pzChest).includes(myId()) && Object.keys(pzChest).length < PZ_REW.length);
@@ -6875,6 +6878,8 @@ document.addEventListener('click', e => { const bt = e.target.closest && e.targe
   else if (a[0] === 'r') F.update(F.ref(db, 'puzzle/ctl'), { rate: +a.slice(1) }); });
 // ===== 이벤트 「유령 등불 찾기」 (하루 이벤트): 반 전체가 유령 등불 60개를 모아요 =====
 // lantern/ctl = { open, id, rate } · lantern/cnt/<uid> = 그 사람이 모은 등불(최대 10) · lantern/color/<0~11> = 그 색 등불 장식을 가져간 사람 (색마다 한 사람)
+function lnRegrant(){ if (!me || !lnCtl || !lnCtl.id || (me.ln && me.ln.id === lnCtl.id)) return; const k = Object.keys(lnColor).find(i => lnColor[i] === myId()); if (k === undefined) return;   // 되돌려진 진행: 고른 등불 장식을 다시 넣어 줘요
+  me.fbag = me.fbag || {}; const fid = 'ghostlamp' + k; me.fbag[fid] = (me.fbag[fid] || 0) + 1; me.ln = { id: lnCtl.id, c: +k }; save(); toast(`${LN.NAMES[+k]} 유령 등불 장식을 다시 받았어요`); }
 let lnCtl = null, lnCnt = {}, lnColor = {}, lnOn = false, lnOffs = [], lnBoost = 0, lnBoostT = 0, lnTimer = 0;
 const LN = { GOAL: 60, MAX: 10, RATE: .05, NAMES: ['빨강', '주황', '노랑', '연두', '초록', '민트', '하늘', '파랑', '남색', '보라', '자홍', '분홍'] };
 const LN_REW = [null, [50, 0, 0], [100, 0, 0], [200, 0, 0], [300, 0, 0], [400, 0, 0], [500, 0, 0], [200, 0, 1], [300, 0, 2], [400, 1, 2], [500, 2, 2]];   // 모은 등불 수 → [골드, 마나석, 스킬 포인트]
@@ -6890,9 +6895,9 @@ const lnTotal = () => Object.values(lnCnt).reduce((a, n) => a + (+n || 0), 0), l
 const lnMyColor = () => { const k = Object.keys(lnColor).find(i => lnColor[i] === myId()); return k === undefined ? -1 : +k; };
 function lnListen(){
   if (solo || !F || !db || lnOffs.length) return;
-  lnOffs.push(F.onValue(F.ref(db, 'lantern/ctl'), s => { const v = s.val(), was = lnCtl && lnCtl.open; lnCtl = v; lnSync(); if (v && v.open && !was) toast('이벤트 「유령 등불 찾기」가 열렸어요! 왼쪽 위 버튼을 눌러 보세요'); if (!(v && v.open) && lnOn && lnClaimed()) lnClose(); else if (lnOn) lnUi(); lnCheckCut(); }));
+  lnOffs.push(F.onValue(F.ref(db, 'lantern/ctl'), s => { const v = s.val(), was = lnCtl && lnCtl.open; lnCtl = v; lnRegrant(); lnSync(); if (v && v.open && !was) toast('이벤트 「유령 등불 찾기」가 열렸어요! 왼쪽 위 버튼을 눌러 보세요'); if (!(v && v.open) && lnOn && lnClaimed()) lnClose(); else if (lnOn) lnUi(); lnCheckCut(); }));
   lnOffs.push(F.onValue(F.ref(db, 'lantern/cnt'), s => { lnCnt = s.val() || {}; lnSync(); if (lnOn) lnUi(); lnCheckCut(); }));
-  lnOffs.push(F.onValue(F.ref(db, 'lantern/color'), s => { lnColor = s.val() || {}; if (lnOn) lnUi(); lnPickRedraw && lnPickRedraw(); }));
+  lnOffs.push(F.onValue(F.ref(db, 'lantern/color'), s => { lnColor = s.val() || {}; lnRegrant(); if (lnOn) lnUi(); lnPickRedraw && lnPickRedraw(); }));
 }
 let lnPickRedraw = null;
 function lnSync(){   // 단추와 학교 밝기
@@ -8057,12 +8062,14 @@ async function mqIdle(qid){ if (!MQ.idle[qid]) MQ.idle[qid] = (await mqFetch(`${
 // ---- 열기: 다음 의뢰가 올 때가 됐나 (매일 아침 · 15초마다 · 들어올 때) ----
 function mqTick(){
   if (!me || !MQ.loaded) return; const s = mqState();
-  if (s.q){ if (s.ph === 'arrive') mqArrive(); else mqCheck(); mqDeadline(); mqMarks(); return; }   // 재료를 써 버렸거나 되돌려졌으면 캐는 곳이 다시 떠요
+  if (s.q){ if (s.ph === 'arrive') mqArrive(); else mqCheck(); mqDeadline(); mqRegive(); mqMarks(); return; }   // 재료를 써 버렸거나 되돌려졌으면 캐는 곳이 다시 떠요
   const next = MQ.list.find(id => !s.done[id]); if (!next) return; const q = MQ.q[next]; if (!q) return;
   const u = q.unlock || {}; if (u.afterQuest && !s.done[u.afterQuest]) return;
   if (MQ.list.indexOf(next) + 1 > mqRel) return;   // 관리자가 송출한 장까지만. 앞 장을 끝낸 사람은 송출되는 즉시, 송출 뒤에 끝내면 바로 다음 손님이 와요
   s.q = next; s.st = 1; s.ph = 'arrive'; s.prog = {}; s.dl = null; save(); mqArrive();
 }
+// 앞 장면에서 받은 이야기 물건을 (진행이 되돌려져서) 잃어버렸으면 다시 줘요: 단계의 regive = { 아이템: 개수 }
+function mqRegive(){ const s = mqState(), st = mqStage(); if (s.ph !== 'go' || !st || !st.regive || !(st.objectives || []).some((o, i) => o.type === 'craft' && !mqObjState(o, i).done)) return; Object.entries(st.regive).forEach(([k, n]) => { if ((me.inv[k] || 0) < n){ mqGive(k, n - (me.inv[k] || 0)); save(); toast(`${ITEM[k] || k}${josa(ITEM[k] || k, '을', '를')} 다시 챙겼어요`); } }); }
 let mqArriving = false;
 async function mqArrive(){
   const s = mqState(), q = mqQuest(); if (!q || s.ph !== 'arrive' || mqArriving || evOn || sheetOn || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy())) return;
@@ -8141,12 +8148,17 @@ function mqDeadline(){ const s = mqState(); if (!s.q || s.ph !== 'go' || !s.dl) 
 // 조사 지점(clue)을 맵에 띄워요
 let mqMarkSig = null;
 const mqSetMarks = list => { const g = JSON.stringify(list); if (g === mqMarkSig) return; mqMarkSig = g; World.setMarks(list); };   // 바뀔 때만 다시 그려요
+// 되돌려진 진행 대비: 이번 단계에 전할 물건이 없으면, 다시 만드는 데 필요한 재료(앞 단계에서 캐던 것)의 자리를 다시 띄워요
+function mqLostMats(){ const q = mqQuest(), st = mqStage(); if (!q || !st) return {}; const R = {}; (q.recipes || []).forEach(r => { R[r.id] = r; }); const need = {};
+  const want = (k, n) => { const lack = n - (me.inv[k] || 0); if (lack <= 0) return; const r = R[k]; if (!r) { need[k] = (need[k] || 0) + lack; return; } Object.entries(r.mats || {}).forEach(([m, c]) => want(m, c * lack)); };
+  (st.objectives || []).forEach((o, i) => { if (o.type === 'deliver' && !mqObjState(o, i).done) want(o.item, o.count || 1); }); return need; }
 function mqMarks(){ if (!World.setMarks) return; const s = mqState(); if (!s.q || s.ph !== 'go') return mqSetMarks([]); const list = [];
+  { const lost = mqLostMats(), q = mqQuest(); Object.keys(lost).forEach(k => { const o = (q.stages || []).flatMap(x => x.objectives || []).find(x => x.type === 'collect' && x.item === k && x.source); if (!o) return; const p = mqPlace(o.source.place ? { place: o.source.place, x: o.source.x, y: o.source.y } : o.source); if (p) list.push({ id: 'buy:' + k, map: p.map, x: p.x, y: p.y, label: o.source.label || `${ITEM[k]} 줍기` }); }); }
   mqObjs().forEach((o, i) => { if (o.type === 'collect' && o.source && !mqObjState(o, i).done){ const p = mqPlace(o.source.place ? { place: o.source.place, x: o.source.x, y: o.source.y } : o.source); if (p) list.push({ id: 'buy:' + o.item, map: p.map, x: p.x, y: p.y, label: o.source.label || `${ITEM[o.item]} ${o.source.price ? '사기' : '줍기'}` }); return; }
     if (o.type !== 'clue') return; (o.spots || []).forEach(sp => { if (s.prog['clue:' + sp.id]) return; const p = mqPlace(sp.place ? { place: sp.place, x: sp.x, y: sp.y } : sp); if (p) list.push({ id: sp.id, map: p.map, x: p.x, y: p.y, label: sp.label || '조사하기' }); }); });
   mqSetMarks(list); }
 World.onMark = id => { const s = mqState(); let hit = null;
-  if (id.startsWith('buy:')){ const item = id.slice(4), o = mqObjs().find(x => x.type === 'collect' && x.item === item); if (!o) return; const pr = o.source.price || 0; if (me.coin < pr) return toast(`골드가 모자라요 (${pr}G)`); me.coin -= pr; mqGive(item, 1); save(); hud(); sfx('pop'); toast(`${ITEM[item]} ${pr ? `샀어요 (−${pr}G)` : '얻었어요'} · ${me.inv[item]} / ${o.count}`); if ((me.inv[item] || 0) >= o.count) mqMarks(); mqCheck(); return; } mqObjs().forEach(o => { if (o.type === 'clue') (o.spots || []).forEach(sp => { if (sp.id === id) hit = sp; }); }); if (!hit || s.prog['clue:' + id]) return;
+  if (id.startsWith('buy:')){ const item = id.slice(4), o = mqObjs().find(x => x.type === 'collect' && x.item === item) || (mqQuest()?.stages || []).flatMap(x => x.objectives || []).find(x => x.type === 'collect' && x.item === item && x.source); if (!o) return; const pr = o.source.price || 0; if (me.coin < pr) return toast(`골드가 모자라요 (${pr}G)`); me.coin -= pr; mqGive(item, 1); save(); hud(); sfx('pop'); toast(`${ITEM[item]} ${pr ? `샀어요 (−${pr}G)` : '얻었어요'} · ${me.inv[item]} / ${o.count}`); if ((me.inv[item] || 0) >= o.count) mqMarks(); mqCheck(); return; } mqObjs().forEach(o => { if (o.type === 'clue') (o.spots || []).forEach(sp => { if (sp.id === id) hit = sp; }); }); if (!hit || s.prog['clue:' + id]) return;
   s.prog['clue:' + id] = 1; save(); mqMarks(); const o = mqObjs().find(x => x.type === 'clue' && (x.spots || []).includes(hit)), st = mqObjState(o, mqObjs().indexOf(o));
   mqPanelText(hit.title || '단서', fillVars(hit.text || ''), `<span class="tag">${st.cur} / ${st.need}</span>`); if (hit.item) mqGive(hit.item, 1); mqCheck(); };
 // 제조·요리에서 불러요: 의뢰 제조는 mqCraft가, 일반 요리·물약도 셀 수 있게
@@ -8208,7 +8220,7 @@ async function mqReplay(q){ const picks = []; for (let n = 1; n <= 5; n++){ pick
 document.addEventListener('click', e => { const b = e.target.closest('[data-mqrp]'); if (!b) return; const [id, n, k] = b.dataset.mqrp.split(','); npcClose(); mqScene(id, +n, k).then(sc => { if (sc) mqPlay(MQ.q[id], +n, k, { ...sc, replay: true }); }); });
 // ---- 의뢰 제조 (물약 교실 솥 · 과자 교실 오븐): 단계마다 때맞춰 누르기 → 품질 ----
 let mqCraftPlace = 'lab', mqCraftSel = null, mqCraftRun = null;
-function mqRecipes(){ const q = mqQuest(); if (!q) return []; const st = mqStage(), all = q.recipes || [], ids = new Set((st && st.objectives || []).filter(o => o.type === 'craft').map(o => o.item));
+function mqRecipes(){ const q = mqQuest(); if (!q) return []; const st = mqStage(), all = q.recipes || [], ids = new Set((st && st.objectives || []).filter(o => o.type === 'craft' || ((o.type === 'deliver' || o.type === 'collect') && all.some(r => r.id === o.item))).map(o => o.item));   // 전할 물건을 잃어버렸으면 다시 만들 수 있게
   // 재료로 쓰는 의뢰 물건도 다시 만들 수 있게 (예: 가짜 피 주스에 들어가는 토마토 주스를 잃어버렸을 때)
   let grow = true; while (grow){ grow = false; all.forEach(r => { if (!ids.has(r.id)) return; Object.keys(r.mats || {}).forEach(k => { if (!ids.has(k) && all.some(x => x.id === k)){ ids.add(k); grow = true; } }); }); }
   const main = new Set((st && st.objectives || []).filter(o => o.type === 'craft').map(o => o.item));
