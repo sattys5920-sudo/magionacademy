@@ -1951,7 +1951,11 @@ let xpList = {}, xpRoom = null, xpV = null, xpOff = null;
 const xpMe = () => { const ex = xEx(); return { n: me.nick, job: ex.job || '', L: xLv(ex.exp).L, rdy: 0 }; };
 const xpRefresh = () => { if (sheetOn && sub === 'explore' && xv?.view === 'lobby') renderExplore(); };
 const xpLog = (why, v) => { try { const p = v && v.p || {}; errReport('party', `파티에서 빠짐: ${why}`, `방장 ${v && v.host === myId() ? '나' : '다른 사람'} · ${Object.keys(p).length}명 · 상태 ${v && v.st || '-'} · 나간 사람 ${Object.values(p).filter(x => x.out).length} · 골드 ${me.coin} · 혼자 탐사 ${xEx().run && !xEx().run.co ? '있음' : '없음'}`); } catch(e){} };   // 왜 빠졌는지 관리자 오류 탭에 남겨요
-function xpWatch(id){ xpRoom = id; xpOff?.(); xpOff = GDB.on('xparty/' + id, v => { if (xpRoom !== id) return; if (!v || v.st === 'end' || !v.p?.[myId()]){ if (!v) xpLog('방이 사라짐', xpV); else if (v.st !== 'end') xpLog('명단에서 내 이름이 빠짐', v); xpRoom = null; xpV = null; xpOff?.(); xpOff = null; xcoStop(); xcoWasHost = false; } else { if (xpV && xpV.host === myId() && v.host !== myId()) xpLog('방장이 다른 사람으로 바뀜', v); xpV = v; if (v.st === 'run') xcoEnter(id, v); const h = v.host === myId(); if (xcoOn() && h && !xcoWasHost && xM && xcoOff.length) xcoTakeover(); xcoWasHost = xcoOn() && h; } xpRefresh(); }); }
+let xpFix = 0;   // 대기실에서 내 이름이 사라지면 다시 써 넣은 횟수
+const xpPut = id => GDB.upd(`xparty/${id}/p/${myId()}`, xpMe()).catch(e => errReport('party', `파티 참가 쓰기 실패: ${e.code || e.message}`, ''));
+function xpWatch(id){ xpRoom = id; xpFix = 0; xpOff?.(); xpOff = GDB.on('xparty/' + id, v => { if (xpRoom !== id) return;
+  if (v && v.st === 'lobby' && v.p && !v.p[myId()] && xpFix < 3 && Object.keys(v.p).length < XP_MAX){ xpFix++; xpLog(`대기실 명단에서 빠져서 다시 넣음 (${xpFix})`, v); xpPut(id); return; }   // 나가기를 누르지 않았는데 빠졌으면 다시 들어가요
+  if (!v || v.st === 'end' || !v.p?.[myId()]){ if (!v) xpLog('방이 사라짐', xpV); else if (v.st !== 'end') xpLog('명단에서 내 이름이 빠짐', v); xpRoom = null; xpV = null; xpOff?.(); xpOff = null; xcoStop(); xcoWasHost = false; } else { if (xpV && xpV.host === myId() && v.host !== myId()) xpLog('방장이 다른 사람으로 바뀜', v); xpV = v; if (v.st === 'run') xcoEnter(id, v); const h = v.host === myId(); if (xcoOn() && h && !xcoWasHost && xM && xcoOff.length) xcoTakeover(); xcoWasHost = xcoOn() && h; } xpRefresh(); }); }
 function xpCreate(){
   if (xpRoom) return; const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   GDB.set('xparty/' + id, { host: myId(), hn: me.nick, rg: xRgSel, st: 'lobby', at: now2(), p: { [myId()]: xpMe() } }).then(() => xpWatch(id));
@@ -1959,7 +1963,7 @@ function xpCreate(){
 function xpJoin(id){
   const R = xpList[id] || (solo && lget('xparty/' + id)); if (!R || xpRoom) return;
   const mineIn = !!R.p?.[myId()];
-  if (!mineIn){ if (R.st !== 'lobby') return toast('벌써 출발했어요'); if (Object.keys(R.p || {}).length >= XP_MAX) return toast(`파티가 꽉 찼어요 (최대 ${XP_MAX}명)`); GDB.upd(`xparty/${id}/p/${myId()}`, xpMe()); }
+  if (!mineIn){ if (R.st !== 'lobby') return toast('벌써 출발했어요'); if (Object.keys(R.p || {}).length >= XP_MAX) return toast(`파티가 꽉 찼어요 (최대 ${XP_MAX}명)`); xpPut(id); }
   else if (R.p[myId()].out) GDB.upd(`xparty/${id}/p/${myId()}`, { out: null });   // 끊겼다가 돌아오면 다시 참여
   xpWatch(id);
 }
