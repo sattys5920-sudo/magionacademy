@@ -1060,11 +1060,11 @@ const OLD_FURN = { candle:'candle', bed:'cushions', owl:'owldoll', plant:'monste
 // 기숙사: 하루 중 깨어 있는 시간대로 나눠요. 기숙사마다 3명까지.
 const HOUSES = {
   dew:   { name:'Dewmorn',    ko:'듀모른',     from:4,  to:12, col:'#5CCB8E', bg:'#E2F8EA', icon:'sprout', where:'유령관 · 안개 낀 푸른 기숙사', who:'부지런한 정원사들',
-           perk:'물 주기에 마력이 안 들어요', timePerk:'새벽·아침에 수확하면 약초 +1' },
+           perk:'물 주기에 마력이 안 들어요', timePerk:'새벽·아침에 수확하면 작물 +1' },
   ember: { name:'Emberkiln',  ko:'엠버킬른',   from:12, to:16, col:'#F08A3C', bg:'#FFEBDC', icon:'cauldron', where:'마녀관 · 보랏빛 기숙사', who:'시끌벅적한 실험광들',
            perk:'물약 끓이기 마력 5 → 4', timePerk:'낮에 실패하면 재료 1개를 돌려받아요' },
   dusk:  { name:'Duskfold',   ko:'더스크폴드', from:16, to:21, col:'#E8709A', bg:'#FFE6EE', icon:'wool', where:'늑대관 · 숲 냄새 나는 기숙사', who:'다정한 돌봄이들',
-           perk:'쓰다듬으면 애정 +1 더', timePerk:'저녁에 먹이를 주면 배부름 +1 더' },
+           perk:'쓰다듬으면 애정 +1 더', timePerk:'저녁에 먹이를 주면 애정 +1 더' },
   moon:  { name:'Moonhollow', ko:'문할로우',   from:21, to:4,  col:'#7A66E0', bg:'#E8E2FF', icon:'owl', where:'뱀파이어관 · 붉은 기숙사', who:'소문 많은 밤의 장사꾼들',
            perk:'주문 납품 보상 +10%', timePerk:'밤에 올린 시장 물건에 달빛 표시' },
 };
@@ -2832,7 +2832,7 @@ function xUp(){   // 글·상태 갱신 (그림은 xDraw가 알아서 그려요)
   xStatUpdate(B); const lg = $('#xlog'); if (lg && lg.textContent !== B.log) lg.textContent = B.log; xCmd();
 }
 const XPETI = ['불 정령', '물 정령', '바람 정령', '대지 정령', '정령왕', '늑대', '곰', '날개 도마뱀', '호박 토끼', '용', '번개 쥐', '수호 쥐', '광선 도마뱀', '철갑 멧돼지'];   // art/pets.png 칸 순서 (tools/iso/lpc/pet_lpc.py)
-const X_ITEMS = [['p_red', 'hp', '', '체력 50%', .5], ['p_vigor', 'mp', '', '마력 50%', .5], ['p_dawn', 'both', '', '체력·마력 70%', .7]];   // 전투 중 쓰는 물약 (한 턴을 써요 · 아군을 골라 줄 수 있어요) · 모두 물약 교실에서 만들어요 (새벽빛 물약은 새벽에만)
+const X_ITEMS = [['p_red', 'hp', '', '체력 50%', .5], ['p_vigor', 'mp', '', '마력 50%', .5], ['p_dawn', 'both', '', '체력·마력 70%', .7]];   // 전투 중 쓰는 물약 (한 턴을 써요 · 아군을 골라 줄 수 있어요) · 모두 물약 교실에서 만들어요 (새벽빛 물약은 새벽·아침에만)
 function xItemUse(B, u, k, t){   // 효과만 적용 (개수는 쓰는 사람 기기에서 줄여요) · t: 받는 아군 (없으면 나)
   const it = X_ITEMS.find(x => x[0] === k); if (!it) return; t = t || u;
   const tasty = k === 'p_red' && (u.tasty || (u.uid === myId() && me.perk?.tasty_potion));   // 세라 ♥10: 맛있는 치유 물약 (체력 70% + 마력 20%)
@@ -3660,9 +3660,9 @@ function renderCook(){
   on('[data-ckgo]', b => cookStart(b.dataset.ckgo, ckPot));
   on('[data-ckeat]', b => { eatDish(b.dataset.ckeat); renderCook(); });
 }
-// ===== 서브 NPC 10명: 하루 한 번 대화 ♥, 선물(좋아함 +3·보통 +1·싫어함 -1), ♥2·5·8·10마다 이야기 장면과 보상 =====
+// ===== 서브 NPC 10명: 하루 한 번 대화 ♥, 대화 +30 · 선물(좋아함 +40·보통 +20·싫어함 −30), ♥2·5·8·10마다 이야기 장면과 보상 =====
 // 동물은 art/npcs.png (tools/iso/npc_art.py) 그림, 사람은 아바타. 관리자 페이지에서 고친 내용(npcs/<id>)이 이 기본값 위에 덮여요
-// 호감도 점수 3점 = ♥1, ♥10까지. me.npc[id] = { p 점수, t 대화한 날, g 선물한 날, s 본 장면 [2,5,…] }
+// 호감도 100점 = ♥1, ♥10까지 (예전엔 3점 = ♥1). me.npc[id] = { p 옛 점수, t 대화한 날, g 선물한 날, s 본 장면 [2,5,…] }
 const NPC_ART_V = 6;
 const NPC_DATA_V = 1;   // data/npc 캐시 버전
 // LPC NPC 그림(art/npcs.png: 한 줄 = 한 명, 64칸 20개)에서 얼굴 부분만 크게 (초상화)
@@ -5709,7 +5709,7 @@ function renderGreen(){
     const i = +b.dataset.plot, p = me.plots[i];
     if (!p.k){ plantFor = plantFor === i ? null : i; greenMsg = ''; renderGreen(); setTimeout(() => document.querySelector('[data-plot].sel')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 30); return; }
     plantFor = null;
-    if (plotReady(p)){ tutHook('water'); const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0) + (dbuff('dforest') && Math.random() < .1 ? 1 : 0), n2 = sgMul(n, sgFx('gather_yield') + partyFx()); me.inv[p.k] += n2; me.plots[me.plots.indexOf(p)] = { k: null }; greenMsg = `${g.seed} 수확! ${g.mat} +${n2}${n2 > g.yield ? ' (Dewmorn의 새벽 보너스)' : ''}`; }
+    if (plotReady(p)){ tutHook('water'); const g = SEED_INFO[p.k], n = g.yield + (me.house === 'dew' && myTime() ? 1 : 0) + (dbuff('dforest') && Math.random() < .1 ? 1 : 0), n2 = sgMul(n, sgFx('gather_yield') + partyFx()); me.inv[p.k] += n2; me.plots[me.plots.indexOf(p)] = { k: null }; greenMsg = `${g.seed} 수확! ${g.mat} +${n2}${n2 > g.yield ? ` (보너스 +${n2 - g.yield}${me.house === 'dew' && myTime() ? ' · Dewmorn의 새벽·아침' : ''})` : ''}`; }
     else if (p.w) greenMsg = `이미 물을 줬어요. ${timeText(plotLeft(p))} 남았어요.`;
     else if (me.mana < waterCost()) greenMsg = '마력이 부족해요. 내 방 침대에서 쉬고 오세요.';
     else { p.w = true; tutHook('water'); me.mana -= waterCost(); greenMsg = `물을 줬어요. 쑥쑥! ${timeText(plotLeft(p))} 남았어요.`; }
@@ -5957,7 +5957,7 @@ function renderDorm(){
     </section>`;
   } else {
     body = `<section class="sec">
-      ${secH('내 방명록', '손님 1명당 내일 마력 +3')}
+      ${secH('내 방명록', '다음에 쉴 때 손님 1명당 마력 +3 (최대 3명 · 밤잠은 3배)')}
       ${guest.length ? `<div class="box px">${pageOf(guest, guestPage, 5).map(([id, g]) => guestRow(id, g, true)).join('')}</div>${pager('guestpg', guestPage, guest.length, 5)}` : '<div class="hint">아직 다녀간 친구가 없어요</div>'}
     </section>`;
   }
@@ -6152,7 +6152,7 @@ function openVisit(id){
   me.visited = me.visited || {};
   if (me.visited[id] !== todayKey()){
     me.visited[id] = todayKey(); me.mana += 5; save();
-    toast(`${playersList[id].nick}의 방에 처음 놀러 왔어요. 마력 +5`);
+    toast(`${playersList[id].nick}의 방에 오늘 처음 놀러 왔어요. 마력 +5`);
   }
   renderVisit();
 }
@@ -6556,7 +6556,7 @@ function dfDraw(){
 }
 // ----- 용의 동굴: 지켜 낸 용들이 살아요. 말을 걸면 크르릉! 그리고 가호(2시간, 하루 2번) -----
 let dfRes = null;   // defense/res = { id, eggs:[체력 0~100 ×3], win, at } — 이벤트가 끝날 때 관리자 기기가 남겨요
-const DF_DRAG = [{ k: 'dfire', n: '화륵이', t: '불의 용', fx: '탐사 공격 +5%' }, { k: 'dwater', n: '졸졸이', t: '물의 용', fx: '마력 회복 +10%' }, { k: 'dforest', n: '무럭이', t: '숲의 용', fx: '채집·수확 +10% · 경험치 +3%' }];
+const DF_DRAG = [{ k: 'dfire', n: '화륵이', t: '불의 용', fx: '탐사 공격 +5%' }, { k: 'dwater', n: '졸졸이', t: '물의 용', fx: '마력 회복 +10%' }, { k: 'dforest', n: '무럭이', t: '숲의 용', fx: '채집·수확 때 10% 확률로 1개 더 · 경험치 +3%' }];
 const dfCaveOpen = () => !!(dfRes && dfRes.eggs && dfRes.eggs.some(e => e > 0));
 World.reqOk = key => { const [k, i] = String(key).split(':'), e = dfRes && dfRes.eggs ? dfRes.eggs[+i] : null; if (e == null) return false; return k === 'alive' ? e > 0 : e <= 0; };
 async function dfDragonOffer(i){
@@ -7001,7 +7001,7 @@ function pkSync(){
 // 단계 보상(모두에게) · 완성 보상(물 준 학생 500골드, 기여 5위 안은 1000골드와 마나석 1 더)
 function pkAuto(){
   if (!pkCtl || !pkCtl.id || !me || !pkLoad.p || !pkLoad.w) return; const m = pkMy(), st = pkStage(); let got = [];
-  if (st >= 1 && !m.st[1]){ m.st[1] = 1; me.sdt = (me.sdt || 0) + 2; got.push('씨앗 2개'); }
+  if (st >= 1 && !m.st[1]){ m.st[1] = 1; me.sdt = (me.sdt || 0) + 2; got.push('씨앗 쿠폰 2장'); }
   if (st >= 2 && !m.st[2]){ m.st[2] = 1; const ex = xEx(); ex.spx = (ex.spx || 0) + 1; got.push('스킬 포인트 1'); }
   if (st >= 3 && !m.st[3]){ m.st[3] = 1; me.inv.mana = (me.inv.mana || 0) + 1; got.push('마나석 1개'); }
   if (got.length){ save(); hud(); sfx('heart'); setTimeout(() => toast(`호박 성장 보상: ${got.join(', ')}을 받았어요!`), 700); }
@@ -7068,7 +7068,7 @@ function pkUi(){
   const v = $('#pkv'); if (!v) return; if (!pkCtl){ pkClose(); return; } const t = pkTotal(), goal = pkGoal(), k = Math.min(1, t / goal), st = pkStage(), m = pkMy(), done = pkDone(), mine = +pkPts[myId()] || 0, rk = pkRank();
   $('#pkinfo').textContent = `${Math.round(k * 100)}%`;
   const wl = pkLeft(m.wAt, PK.WATER[1]), tl = pkLeft(m.tAt, PK.TALK[1]), off = !pkCtl.open || done;
-  const btn = (id, label, sub, left, dis) => `<button class="pkact ${left || dis ? 'wait' : 'go'}" data-pk="${id}" ${left || dis ? 'disabled' : ''}><b>${label}</b><span>${left ? pkMin(left) + ' 뒤' : ''}</span></button>`;
+  const btn = (id, label, sub, left, dis) => `<button class="pkact ${left || dis ? 'wait' : 'go'}" data-pk="${id}" ${left || dis ? 'disabled' : ''}><b>${label}</b><span>${left ? pkMin(left) + ' 뒤' : sub}</span></button>`;
   const body = $('#pkbody'); const sig = [t, st, mine, rk, wl > 0, tl > 0, done, JSON.stringify(m.f || 0), m.fin, m.bd.day, pkCtl.open, ...PK.MAT.map(x => me.inv[x[0]] || 0), Math.ceil(wl / 1000), Math.ceil(tl / 1000)].join(','); if (body.dataset.sig === sig) return; body.dataset.sig = sig;
   body.innerHTML = `<div class="pkscene"><i class="pkspr" style="background-position:${st * 25}% 0"></i></div>
     <div class="pkbar"><i style="width:${k * 100}%"></i>${PK.STAGES.slice(1, 4).map(x => `<u style="left:${x * 100}%"></u>`).join('')}</div>
