@@ -3972,6 +3972,7 @@ const TOWNS = [
 ];
 const townId = id => 't:' + id;
 const townAv = id => { const ov = npcOver.__cast?.[id], c = NL.cast[id] || {}; return ov?.av || c.av ? World.Avatar.fix(ov?.av || c.av) : null; };
+const townWhere = id => { const t = TOWNS.find(x => x.id === id); if (!t) return ''; let best = null, bd = 1e9; Object.values(NL.places).forEach(p => { if (p.map !== t.map) return; const d = Math.hypot(p.x - t.x, p.y - t.y); if (d < bd){ bd = d; best = p; } }); return best ? fillVars(best.name) + ' 근처' : ''; };   // 마을 사람이 실제로 서 있는 곳
 const townName = id => fillVars(npcOver.__cast?.[id]?.name || NL.cast[id]?.name || id, 'sera');
 function townList(){
   if (!NL.cast || !Object.keys(NL.cast).length) return [];
@@ -3982,7 +3983,7 @@ function townList(){
 function townTalk(id){
   const t = TOWNS.find(x => townId(x.id) === id); if (!t) return;
   const c = NL.cast[t.id] || {}, av = townAv(t.id), pic = av ? headImg(av) : `<i class="npcspr" style="width:48px;height:48px;background:url(art/cast_animals.png?v=1) ${-c.pix * 48}px 0/${48 * 5}px 48px no-repeat;image-rendering:pixelated"></i>`;
-  const lines = npcOver.__cast?.[t.id]?.lines || t.lines, line = fillVars(lines[Math.floor(Math.random() * lines.length)], 'sera');
+  const lines = npcOver.__cast?.[t.id]?.lines || t.lines, ex = typeof mqOnTalk === 'function' ? mqOnTalk(t.id) : null, line = ex || fillVars(lines[Math.floor(Math.random() * lines.length)], 'sera');   // 의뢰에서 「이야기하기」 목표면 그 대사가 먼저예요
   npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${pic}</div><div><b>${esc(townName(t.id))}</b><span class="s sub">마을 사람</span></div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(line)}</div></div>`;
   npcUI().dataset.id = ''; npcUI().classList.add('on');
 }
@@ -8142,11 +8143,11 @@ const OBJ_KO = { collect: '모으기', craft: '만들기', deliver: '전하기',
 function mqObjs(){ const st = mqStage(); return st ? (st.objectives || []) : []; }
 function mqObjState(o, i){   // → { done, cur, need, text, hint }
   const s = mqState(), P = s.prog, t = o.type, h = o.hint ? fillVars(o.hint, null) : '';
-  if (t === 'collect'){ const cur = me.inv[o.item] || 0; return { done: cur >= o.count, cur, need: o.count, text: `${ITEM[o.item] || o.item} ${o.count}개 모으기`, hint: '' }; }   // 어디서 구하는지는 알려 주지 않아요 (직접 찾아요)
+  if (t === 'collect'){ const cur = me.inv[o.item] || 0, used = mqObjs().some(c => c.type === 'craft' && (P['craft:' + c.item] || 0) >= (c.count || 1) && (mqQuest()?.recipes || []).some(r => r.id === c.item && (r.mats || {})[o.item])); return { done: used || cur >= o.count, cur: used ? o.count : cur, need: o.count, text: `${ITEM[o.item] || o.item} ${o.count}개 모으기`, hint: '' }; }   // 어디서 구하는지는 알려 주지 않아요 (직접 찾아요)
   if (t === 'craft'){ const cur = P['craft:' + o.item] || 0, n = o.count || 1; return { done: cur >= n, cur, need: n, text: `${ITEM[o.item] || o.item} ${n > 1 ? n + '개 ' : ''}만들기${o.quality ? ` (품질 ${MQ_Q[o.quality]} 이상)` : ''}`, hint: h || `${o.place === 'candy' ? '과자 교실 오븐' : '물약 교실 솥'}에서 「의뢰 제조」` }; }
   if (t === 'deliver'){ const cur = P['deliver:' + i] || 0, n = o.count || 1; return { done: cur >= n, cur, need: n, text: `${mqName(o.to)}에게 ${ITEM[o.item] || o.item} ${n}개 전하기`, hint: h || `가진 것 ${me.inv[o.item] || 0}개` }; }
   if (t === 'visit'){ const d = !!P['visit:' + i]; const p = NL.places[o.place]; return { done: d, cur: d ? 1 : 0, need: 1, text: `${p ? fillVars(p.name) : o.place}에 가기${o.time ? ' · ' + o.time.map(x => BAND_KO[x]).join('이나 ') : ''}${o.weather ? ' · ' + o.weather.map(x => WX_KO[x]).join('이나 ') : ''}${o.moon ? ' · ' + MOON_KO[o.moon] : ''}`, hint: h }; }
-  if (t === 'talk'){ const d = !!P['talk:' + (o.who)], nm = mqName(o.who) === o.who ? (npcGet(o.who)?.name || townName(o.who)) : mqName(o.who); return { done: d, cur: d ? 1 : 0, need: 1, text: `${withJosa(nm, '과', '와')} 이야기하기`, hint: h || (o.where ? `${NL.places[o.where]?.name || ''}에 있어요` : '') }; }
+  if (t === 'talk'){ const d = !!P['talk:' + (o.who)], nm = mqName(o.who) === o.who ? (npcGet(o.who)?.name || townName(o.who)) : mqName(o.who); return { done: d, cur: d ? 1 : 0, need: 1, text: `${withJosa(nm, '과', '와')} 이야기하기`, hint: h || (TOWNS.some(x => x.id === o.who) ? `${townWhere(o.who)}에 있어요` : o.where ? `${NL.places[o.where]?.name || ''}에 있어요` : '') }; }
   if (t === 'clue'){ const cur = (o.spots || []).filter(sp => P['clue:' + sp.id]).length, n = o.count || (o.spots || []).length; return { done: cur >= n, cur, need: n, text: `${o.text || '단서'} ${n}개 찾기`, hint: h || (o.spots || []).filter(sp => !P['clue:' + sp.id]).slice(0, 2).map(sp => sp.hint || NL.places[sp.place]?.name || '').filter(Boolean).join(' · ') }; }
   if (t === 'puzzle'){ const d = !!P['puzzle:' + i]; return { done: d, cur: d ? 1 : 0, need: 1, text: o.text || (o.kind === 'stars' ? '별자리 잇기' : '순서 맞추기'), hint: h || '일지에서 「풀기」를 눌러요' }; }
   if (t === 'wait_moon'){ const d = moonNow() === o.moon || !!P['moon:' + i]; return { done: d, cur: d ? 1 : 0, need: 1, text: `${MOON_KO[o.moon]}까지 기다리기`, hint: h || `지금은 ${MOON_KO[moonNow()]}이에요` }; }
@@ -8257,7 +8258,7 @@ function renderMqCraft(){
       ${Object.entries(r.mats || {}).map(([k, n]) => `<div class="li"><span class="gic">${ic(k)}</span><div class="main"><span class="t">${esc(ITEM[k] || k)} ${n}개</span><span class="d">가진 것 ${me.inv[k] || 0}개</span></div>${(me.inv[k] || 0) >= n ? '<span class="tag">✓</span>' : ''}</div>`).join('')}
       ${r.mana ? `<div class="li"><div class="main"><span class="t">마력 ${r.mana}</span><span class="d">지금 ${me.mana}</span></div></div>` : ''}</div>
     ${run ? `<div class="mqbar"><div class="mqtrack"><i class="zone" style="left:${run.z0}%;width:${run.zw}%"></i><i class="pin" id="mqpin"></i></div><div class="s">단계 ${run.k + 1} / ${run.steps} · 초록 칸에서 「지금!」 · 맞힌 ${run.hit}</div><button class="btn go" id="mqhit">지금!</button></div>`
-      : `<div class="hint">${r.steps > 1 ? `${r.steps}단계로 만들어요. 단계마다 움직이는 점이 초록 칸에 들어왔을 때 눌러요. 다 맞히면 품질 「최고」, 절반 넘게 맞히면 「좋음」` : '움직이는 점이 초록 칸에 들어왔을 때 눌러요'}</div><button class="btn go" id="mqstart" ${can ? '' : 'disabled'}>${can ? '만들기 시작' : '재료나 마력이 모자라요'}</button>`}`);
+      : `<div class="hint">${r.steps > 1 ? `${r.steps}단계로 만들어요. 단계마다 움직이는 점이 초록 칸에 들어왔을 때 눌러요. 다 맞히면 품질 「최고」, 절반 이상 맞히면 「좋음」` : '움직이는 점이 초록 칸에 들어왔을 때 눌러요'}</div><button class="btn go" id="mqstart" ${can ? '' : 'disabled'}>${can ? '만들기 시작' : '재료나 마력이 모자라요'}</button>`}`);
   on('[data-mqr]', b => { mqCraftSel = b.dataset.mqr; mqCraftRun = null; render(); });
   const st = $('#mqstart'); if (st) st.onclick = () => { Object.entries(r.mats || {}).forEach(([k, n]) => me.inv[k] -= n); me.mana -= (r.mana || 0); save(); hud(); mqCraftRun = { steps: r.steps || 1, k: 0, hit: 0, z0: 35 + Math.random() * 30, zw: 18, t0: performance.now(), sp: 1.1 + (r.steps || 1) * .15 }; render(); mqCraftAnim(); };
   const ht = $('#mqhit'); if (ht) ht.onclick = () => { const p = mqPinPos(); const ok = p >= run.z0 && p <= run.z0 + run.zw; if (ok){ run.hit++; sfx('pop'); } else sfx('gulp'); run.k++;
