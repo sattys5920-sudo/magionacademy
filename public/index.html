@@ -4226,7 +4226,7 @@ let xrCur = null;
 setInterval(() => {
   let want = null; try { const run = me && me.ex && me.ex.run; if (sheetOn && sub === 'explore' && run && (xv?.view === 'march' || xv?.view === 'battle')) want = XR_BGM[run.rg]; } catch(e){}
   if (want === xrCur) return;
-  if (want && xrOk[want] === undefined){ xrOk[want] = null; fetch(want, { method: 'HEAD' }).then(r => { xrOk[want] = r.ok; }).catch(() => { xrOk[want] = false; }); return; }
+  if (want && (xrOk[want] === undefined || (xrOk[want] === false && Date.now() - (xrOk['t' + want] || 0) > 30000))){ xrOk[want] = null; xrOk['t' + want] = Date.now(); fetch(want, { method: 'HEAD' }).then(r => { xrOk[want] = r.ok; }).catch(() => { xrOk[want] = false; }); return; }   // 연결이 잠깐 끊겨 확인에 실패하면 30초 뒤 다시 확인해요
   if (want && xrOk[want] !== true) return;
   if (xrCur) BGM.sceneEnd('xr'); xrCur = want; if (want) BGM.scene('xr', want);
 }, 400);
