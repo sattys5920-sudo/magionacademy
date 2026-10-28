@@ -2917,9 +2917,10 @@ const LT = {}, LL = [];
 const lget = p => p.split('/').reduce((o, k) => o == null ? undefined : o[k], LT);
 const lset = (p, v) => { const ks = p.split('/'); let o = LT; ks.slice(0, -1).forEach(k => { if (!o[k] || typeof o[k] !== 'object') o[k] = {}; o = o[k]; }); if (v == null) delete o[ks.at(-1)]; else o[ks.at(-1)] = JSON.parse(JSON.stringify(v)); LL.forEach(l => { if (p.startsWith(l.p) || l.p.startsWith(p)) setTimeout(() => l.cb(lget(l.p) ?? null), 0); }); };
 const GDB = {
-  set: (p, v) => solo ? (lset(p, v), Promise.resolve()) : F.set(F.ref(db, p), v),
-  upd: (p, v) => solo ? (Object.entries(v).forEach(([k, x]) => lset(p + '/' + k, x)), Promise.resolve()) : F.update(F.ref(db, p), v),
-  tx: (p, fn) => { if (solo){ const v = fn(lget(p) ?? null); if (v === undefined) return Promise.resolve({ committed: false }); lset(p, v); return Promise.resolve({ committed: true, v }); } return F.runTransaction(F.ref(db, p), fn).then(r => ({ committed: r.committed, v: r.snapshot?.val?.() })); },
+  // Firebase는 undefined·NaN이 하나라도 있으면 쓰기 전체를 거절해요 → 보내기 전에 정리해요 (null은 지우기라서 그대로)
+  set: (p, v) => solo ? (lset(p, v), Promise.resolve()) : F.set(F.ref(db, p), v === null ? null : fbClean(v)),
+  upd: (p, v) => solo ? (Object.entries(v).forEach(([k, x]) => lset(p + '/' + k, x)), Promise.resolve()) : F.update(F.ref(db, p), Object.fromEntries(Object.entries(v).map(([k, x]) => [k, x === null || x === undefined ? null : fbClean(x)]))),
+  tx: (p, fn) => { if (solo){ const v = fn(lget(p) ?? null); if (v === undefined) return Promise.resolve({ committed: false }); lset(p, v); return Promise.resolve({ committed: true, v }); } return F.runTransaction(F.ref(db, p), cur => { const v = fn(cur); return v === undefined || v === null ? v : fbClean(v); }).then(r => ({ committed: r.committed, v: r.snapshot?.val?.() })); },
   on: (p, cb) => { if (solo){ const l = { p, cb }; LL.push(l); setTimeout(() => cb(lget(p) ?? null), 0); return () => LL.splice(LL.indexOf(l), 1); } return F.onValue(F.ref(db, p), s => cb(s.val())); },
 };
 const gui = () => $('#game');
