@@ -1133,13 +1133,15 @@ function normalize(p){
   p.fbag = p.fbag || {}; p.room = (p.room || []).filter(r => FURN_BY[r.f]); p.common = p.common || { stage: 1, pool: {} }; p.common.pool = p.common.pool || {};
   p.orders = p.orders || []; p.know = p.know || 0; p.hints = p.hints || []; if (!p.hints.includes('p_vigor')) p.hints.push('p_vigor');   // 전투에서 쓰는 두 물약(치유·활력)은 처음부터 만들 수 있어요
   p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look)); p.closet = p.closet || {}; p.rod = p.rod || 0; p.fdex = p.fdex || {}; p.buffs = p.buffs || {}; p.cdex = p.cdex || {}; p.npc = p.npc || {}; p.story = p.story || { seen: {}, got: {} }; p.story.seen = p.story.seen || {}; p.story.got = p.story.got || {};   // rod 낚싯대 단계, fdex 낚시·채집 도감 { id: { n, cm } }   // closet: 옷 가게에서 산 옷 { '부위:부품id': 1 }
-  p.plots = (p.plots || []).map(x => {
-    if (!x.k || !SEED_INFO[x.k]) return { k: null };
+  const pn = Math.max(p.plotN || 0, Array.isArray(p.plots) ? p.plots.length : Math.max(0, ...Object.keys(p.plots || {}).map(k => +k + 1)));   // 빈 화단은 Firebase에 안 남아서 늘린 칸 수를 따로 기억해요
+  p.plots = Array.isArray(p.plots) ? [...p.plots] : Array.from({ length: pn }, (_, i) => (p.plots || {})[i]);
+  p.plots = Array.from({ length: Math.max(pn, p.plots.length) }, (_, i) => p.plots[i]).map(x => {
+    if (!x || !x.k || !SEED_INFO[x.k]) return { k: null };
     if (x.at) return x;
     const G = SEED_INFO[x.k], done = Math.max(0, Math.min(1, ((x.st || 1) - 1) / (G.days || 3)));
     return { k: x.k, at: Date.now() - done * G.mins * 6e4, w: false };
   });
-  while (p.plots.length < 2) p.plots.push({ k: null });
+  while (p.plots.length < 2) p.plots.push({ k: null }); p.plotN = p.plots.length;
   if (p.fg && !Array.isArray(p.fg.got)) p.fg.got = Object.values(p.fg.got || {});   // 빈 배열은 Firebase에 안 남아요
   migrateCreatures(p);
   return p;
@@ -5728,7 +5730,7 @@ function renderGreen(){
     if (me.plots.length >= PLOT_MAX) return;
     if ((me.know || 0) < nk){ greenMsg = `지식 ${nk}부터 늘릴 수 있어요.`; return renderGreen(); }
     if (me.coin < ng){ greenMsg = `골드 ${ng}G가 부족해요.`; return renderGreen(); }
-    me.coin -= ng; me.plots.push({ k: null }); greenMsg = `화단이 한 칸 늘었어요! -${ng}G (${me.plots.length} / ${PLOT_MAX})`; save(); hud(); renderGreen();
+    me.coin -= ng; me.plots.push({ k: null }); me.plotN = me.plots.length; greenMsg = `화단이 한 칸 늘었어요! -${ng}G (${me.plots.length} / ${PLOT_MAX})`; save(); hud(); renderGreen();
   };
   on('[data-pclose]', () => { plantFor = null; renderGreen(); });
   on('[data-plant]', b => {
