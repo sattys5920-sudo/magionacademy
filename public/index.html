@@ -1063,7 +1063,7 @@ const FURN = World.FURN.items, FIDX = Object.fromEntries(FURN.map((x, i) => [x.i
 const FURN_CATS = ['전체', ...new Set(FURN.filter(x => !x.ev).map(x => x.cat))];
 const FURN_W = Math.max(...FURN.map(x => x.sx + x.sw)), FURN_H = Math.max(...FURN.map(x => x.sh));
 // 가구 그림 칸: 가로·세로 box 안에 맞춰 크게
-const furnPic = (fid, box = 48) => { const x = FURN_BY[fid], k = Math.min(2, box / Math.max(x.sw, x.sh)); return `<i style="display:block;width:${Math.round(x.sw * k)}px;height:${Math.round(x.sh * k)}px;background:url(${World.FURN.src}) ${-x.sx * k}px 0 / ${FURN_W * k}px ${FURN_H * k}px no-repeat;image-rendering:pixelated"></i>`; };
+const furnPic = (fid, box = 48) => { const x = FURN_BY[fid]; if (!x) return ''; const k = Math.min(2, box / Math.max(x.sw, x.sh)); return `<i style="display:block;width:${Math.round(x.sw * k)}px;height:${Math.round(x.sh * k)}px;background:url(${World.FURN.src}) ${-x.sx * k}px 0 / ${FURN_W * k}px ${FURN_H * k}px no-repeat;image-rendering:pixelated"></i>`; };
 // 옛 가구 6종 → 새 가구
 const OLD_FURN = { candle:'candle', bed:'cushions', owl:'owldoll', plant:'monstera', shelf:'bookcase', rug:'rug_star' };
 // 기숙사: 하루 중 깨어 있는 시간대로 나눠요. 기숙사마다 3명까지.
@@ -1139,7 +1139,7 @@ function normalize(p){
   p.inv = p.inv || {}; Object.keys(ITEM).forEach(k => { p.inv[k] = p.inv[k] || 0; });
   p.found = p.found || []; p.hints = p.hints || ['p_red'];
   if (p.furn){ p.fbag = p.fbag || {}; Object.entries(p.furn).forEach(([k, st]) => { if (st?.own && OLD_FURN[k]) p.fbag[OLD_FURN[k]] = (p.fbag[OLD_FURN[k]] || 0) + 1; }); delete p.furn; }
-  p.fbag = p.fbag || {}; p.room = (p.room || []).filter(r => FURN_BY[r.f]); p.common = p.common || { stage: 1, pool: {} }; p.common.pool = p.common.pool || {};
+  p.fbag = p.fbag || {}; Object.entries({ bed: 'coffinsofa', plant: 'monstera' }).forEach(([o, n]) => { if (p.fbag[o]){ p.fbag[n] = (p.fbag[n] || 0) + p.fbag[o]; delete p.fbag[o]; } }); Object.keys(p.fbag).forEach(k => { if (!FURN_BY[k]) delete p.fbag[k]; }); p.room = (p.room || []).filter(r => FURN_BY[r.f]);   /* 이야기 보상 가구 이름이 틀렸던 것(bed·plant)을 바로잡아요 */ p.common = p.common || { stage: 1, pool: {} }; p.common.pool = p.common.pool || {};
   p.orders = p.orders || []; p.know = p.know || 0; p.hints = p.hints || []; if (!p.hints.includes('p_vigor')) p.hints.push('p_vigor');   // 전투에서 쓰는 두 물약(치유·활력)은 처음부터 만들 수 있어요
   p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look)); p.closet = p.closet || {}; p.rod = p.rod || 0; p.fdex = p.fdex || {}; p.buffs = p.buffs || {}; p.cdex = p.cdex || {}; p.npc = p.npc || {}; p.story = p.story || { seen: {}, got: {} }; p.story.seen = p.story.seen || {}; p.story.got = p.story.got || {};   // rod 낚싯대 단계, fdex 낚시·채집 도감 { id: { n, cm } }   // closet: 옷 가게에서 산 옷 { '부위:부품id': 1 }
   const pn = Math.max(p.plotN || 0, Array.isArray(p.plots) ? p.plots.length : Math.max(0, ...Object.keys(p.plots || {}).map(k => +k + 1)));   // 빈 화단은 Firebase에 안 남아서 늘린 칸 수를 따로 기억해요
@@ -6059,7 +6059,7 @@ const keepScroll = fn => { const pn = app.querySelector('.panel'), y = pn?.scrol
 function renderDorm(){
   const cozy = cozyOf(me), H = HOUSES[me.house];
   const guest = Object.entries(myGuest).sort((a, b) => b[1].at - a[1].at);
-  const bag = Object.entries(me.fbag).filter(([, n]) => n > 0), bagN = bag.reduce((a, [, n]) => a + n, 0);
+  const bag = Object.entries(me.fbag).filter(([k, n]) => n > 0 && FURN_BY[k]), bagN = bag.reduce((a, [, n]) => a + n, 0);
   const shop = FURN.filter(x => !x.ev && (furnCat === '전체' || x.cat === furnCat));
   const placed = Object.entries(me.room.reduce((a, r) => (FURN_BY[r.f] && (a[r.f] = (a[r.f] || 0) + 1), a), {}));
   fbagPage = clampP(fbagPage, bag.length, 12); fshopPage = clampP(fshopPage, shop.length, 9); guestPage = clampP(guestPage, guest.length, 5);
@@ -8282,7 +8282,7 @@ function mqAfter(q, n, kind, sc){
   }
   if (sheetOn && sub === 'journal') render();
 }
-function mqGive(k, n = 1){ const it = MQ.items[k]; if (it && it.furn){ me.fbag = me.fbag || {}; me.fbag[it.furn] = (me.fbag[it.furn] || 0) + n; return; } if (it && it.cloth){ me.closet = me.closet || {}; me.closet[it.cloth] = 1; return; } me.inv[k] = (me.inv[k] || 0) + n; }
+function mqGive(k, n = 1){ const it = MQ.items[k]; if (it && it.furn && FURN_BY[it.furn]){ me.fbag = me.fbag || {}; me.fbag[it.furn] = (me.fbag[it.furn] || 0) + n; return; } if (it && it.cloth){ me.closet = me.closet || {}; me.closet[it.cloth] = 1; return; } me.inv[k] = (me.inv[k] || 0) + n; }
 // ---- 목표 ----
 const OBJ_KO = { collect: '모으기', craft: '만들기', deliver: '전하기', visit: '가기', talk: '이야기하기', clue: '단서 찾기', puzzle: '퍼즐', wait_moon: '달 기다리기', defend: '지키기', choice: '선택' };
 function mqObjs(){ const st = mqStage(); return st ? (st.objectives || []) : []; }
