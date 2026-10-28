@@ -1500,10 +1500,10 @@ CATCH.forEach(k => { ITEM[k] = CATCH_INFO[k].name; });
 // 낚싯대: 좋을수록 입질이 빠르고, 희귀한 물고기가 잘 오고, 맞히는 칸이 넓고, 쓰레기가 덜 걸려요
 const RODS = [
   { name: '나무 낚싯대', price: 0, desc: '처음 받은 낚싯대' },
-  { name: '대나무 낚싯대', price: 600, desc: '입질이 조금 빨라요' },
-  { name: '은 낚싯대', price: 2500, desc: '드문 물고기가 더 잘 와요' },
-  { name: '달빛 낚싯대', price: 7000, desc: '맞히는 칸이 넓어져요' },
-  { name: '호박달 낚싯대', price: 18000, desc: '전설의 물고기도 노려 봐요' },
+  { name: '대나무 낚싯대', price: 1500, desc: '입질이 조금 빨라요' },
+  { name: '은 낚싯대', price: 6000, desc: '드문 물고기가 더 잘 와요' },
+  { name: '달빛 낚싯대', price: 16000, desc: '맞히는 칸이 넓어져요' },
+  { name: '호박달 낚싯대', price: 40000, desc: '전설의 물고기도 노려 봐요' },
 ];
 const rodIc = (i, s = 32) => `<i class="ic" style="width:${s}px;height:${s}px;background:url(art/rods.png?v=${FISH_ART_V}) ${-s * i}px 0/${s * 5}px ${s}px no-repeat"></i>`;
 const rodLv = () => me.rod || 0;
@@ -1739,7 +1739,7 @@ const XJ = {   // 직업: 체력·공격·마공·치유·속도 [기본, 레벨
 };
 // 스킬 트리: XT(직업 → 줄기 3 × 스킬 5, tools/skill_tree.py가 만든 데이터) + 코드 → 효과. 스킬 최대 Lv5, 레벨당 포인트 1
 const XDS = { warrior: 'atk', thief: 'atk', knight: 'atk', gadget: 'atk' }, XPAS = { def: .05, hp: .06, atk: .05, mag: .05, spd: .05, vamp: .06, crit: .06, surv: 1, dodge: .05 }, XPASN = { surv: '쓰러질 공격 버티기', dodge: '회피', def: '받는 피해', hp: '최대 체력', atk: '공격', mag: '마법', spd: '속도', vamp: '흡혈', crit: '치명타' };
-const XDP = [1.2, 1.6, 2.1, 2.7, 3.4], XHP = [2, 2.6, 3.2, 3.9, 4.6], XMAXLV = 5, XRESET = 300, xSkp = L => 2 * (L - 1);   // 레벨 업마다 2포인트 (탐사 보상 포인트 ex.spx 는 따로 더해요)
+const XDP = [1.2, 1.6, 2.1, 2.7, 3.4], XHP = [2, 2.6, 3.2, 3.9, 4.6], XMAXLV = 5, XRESET = 800, xSkp = L => 2 * (L - 1);   // 레벨 업마다 2포인트 (탐사 보상 포인트 ex.spx 는 따로 더해요)
 const xDefs = {};
 const XOV = {   // 스킬별 특수 효과 (직업.이름). t 종류 · key 효과 이름 · v 세기 · sec 지속(초) · ap 맞은 뒤 붙는 효과 [종류, 세기, 초] · hits 여러 번 타격 · exec 체력 낮은 적 추가 피해 · fcrit 반드시 치명타 · pct 체력 비율 · pet 소환수
   'warrior.대지 가르기': { ap: [['stun', 30]], ds: '적 전체에 피해 + 행동이 잠깐 늦어져요' },
@@ -1917,7 +1917,7 @@ const XMAIN = { warrior: 'atk', black: 'mag', thief: 'atk', bard: 'mag', time: '
 const xSpUsed = ex => Object.values(ex.sp || {}).reduce((a, v) => a + v, 0), xSpPts = ex => 3 * (xLv(ex.exp).L - 1) - xSpUsed(ex);   // 레벨 업마다 스탯 포인트 3
 const xAiSp = (job, L) => { const T = 3 * (L - 1); return { hp: Math.round(T * .3), [XMAIN[job]]: Math.round(T * .5), spd: Math.round(T * .2) }; };   // 동료: 체력 30% · 주 스탯 50% · 속도 20%
 const xStTot = (ex, k) => xSt(ex.job, xLv(ex.exp).L, k) + ((ex.sp || {})[k] || 0) * XSPV[k];
-const XWN = { warrior: '전투 도끼', black: '구부러진 지팡이', thief: '단검', bard: '레이피어', time: '고리 지팡이', alch: '연금 지팡이', white: '수정 지팡이', druid: '나무 지팡이', cleric: '철퇴와 방패', knight: '롱소드와 방패', summon: '다이아 지팡이', gadget: '석궁' }, XWT = ['기본', '청동', '강철', '황금', '미스릴'], XWC = [[150, 1], [500, 2], [1500, 4], [4000, 8]];   // 강화 비용: 골드 · 마나석
+const XWN = { warrior: '전투 도끼', black: '구부러진 지팡이', thief: '단검', bard: '레이피어', time: '고리 지팡이', alch: '연금 지팡이', white: '수정 지팡이', druid: '나무 지팡이', cleric: '철퇴와 방패', knight: '롱소드와 방패', summon: '다이아 지팡이', gadget: '석궁' }, XWT = ['기본', '청동', '강철', '황금', '미스릴'], XWC = [[500, 3], [1800, 6], [5000, 12], [14000, 25]];   // 강화 비용: 골드 · 마나석
 const xRand = a => a[Math.floor(Math.random() * a.length)];
 function xEx(){ me.ex = me.ex || { exp: 0, d: '', n: 0 }; if (me.ex.d !== todayKey()){ me.ex.d = todayKey(); me.ex.n = 0; } const r = me.ex.run; if (r){ r.loot = r.loot || {}; r.loot.gold = r.loot.gold || 0; r.loot.exp = r.loot.exp || 0; r.loot.items = r.loot.items || {}; r.pool = r.pool || []; } if (me.ex.sk) xSkEx(me.ex); return me.ex; }
 const xSt = (job, L, k) => Math.round(XJ[job][k][0] + XJ[job][k][1] * (L - 1));
@@ -5745,7 +5745,7 @@ const plotFrac = p => p.k ? Math.min(1, 1 - plotLeft(p) / growMs(p)) : 0;
 const timeText = ms => { const m = Math.ceil(ms / 6e4); return ms < 6e4 ? `${Math.ceil(ms / 1000)}초` : m < 60 ? `${m}분` : `${Math.floor(m / 60)}시간${m % 60 ? ` ${m % 60}분` : ''}`; };
 // 화단은 기본 2칸, 지식과 골드를 내면 한 칸씩 늘려 최대 10칸까지. 칸 수는 사람마다 따로예요.
 const PLOT_MIN = 2, PLOT_MAX = 10;
-const PLOT_COST = [[5, 150], [10, 300], [20, 500], [30, 800], [60, 1200], [100, 1800], [140, 2600], [180, 3600]];   // [필요 지식, 골드] · 3번째 칸부터
+const PLOT_COST = [[8, 400], [15, 800], [30, 1300], [45, 2000], [90, 3000], [150, 4500], [210, 6500], [270, 9000]];   // [필요 지식, 골드] · 3번째 칸부터
 const plotNext = () => PLOT_COST[Math.max(0, (me.plots || []).length - PLOT_MIN)];
 let seedPick = 'herb', greenMsg = '', seedTier = 0, plantFor = null;   // plantFor: 심을 칸 번호 (빈 칸을 누르면 하단에 씨앗이 떠요)
 // 빈 칸을 누르면 하단에 뜨는 씨앗 고르기: 누르면 바로 심어요
@@ -6172,7 +6172,7 @@ const HALL_COST = {
   dew:   [{ herb:15, drop:10, coin:800 }, { g_mint:10, g_clover:10, coin:2000 }, { g_lily:8, g_lotus:8, coin:4000 }, { g_firefly:6, g_snow:6, coin:7000 }, { g_aurora:4, g_moonf:4, egg:2, coin:12000 }],
 };
 // 단계가 올라갈수록 훨씬 많이 필요해요 (재료·골드 모두 단계별 배율)
-const HALL_MUL = [1.2, 1.8, 2.6, 3.6, 5];
+const HALL_MUL = [2, 3.2, 4.8, 7, 10];
 Object.values(HALL_COST).forEach(L => L.forEach((c, i) => Object.keys(c).forEach(k => { c[k] = k === 'coin' ? Math.round(c[k] * HALL_MUL[i] / 100) * 100 : Math.ceil(c[k] * HALL_MUL[i]); })));
 const HALL_NAMES = {
   ember: ['먼지 쌓인 창고', '불 붙은 벽난로', '물약 선반', '수정구와 빗자루', '불타는 가마', '전설의 실험실'],
@@ -8082,7 +8082,7 @@ function mqNpcs(){
     const r = wander && typeof pl === 'string' && NL.places[pl] ? NL.places[pl].r || 0 : 0;
     out.push({ id: 'mq:' + id, name: mqName(id), map: p.map, x: p.x, y: p.y, r, mark, wander: !!r, dir: dir || 'down', ...(c.av ? { av: World.Avatar.fix(c.av) } : { spr: c.spr, float: c.float, alpha: c.alpha }) }); };
   if (s.q && MQ.q[s.q]){ const q = MQ.q[s.q], st = mqStage();
-    if (s.ph !== 'arrive'){ const pl = (st && st.place) || q.place; put(q.client, pl, s.ph === 'pre' || s.ph === 'ready' ? '❗' : '', st && st.dir); }
+    if (s.ph !== 'arrive'){ const pl = (st && st.place) || q.place; put(q.client, pl, (s.ph === 'pre' && !mqDayFull()) || s.ph === 'ready' ? '❗' : '', st && st.dir); }
     (st && st.actors || []).forEach(a => put(a.id, a.place, a.mark ? '❗' : '', a.dir));
   }
   // 자기 집이 열렸으면 의뢰인은 집 안에서 지내요 (밖에 일이 있는 동안은 밖에)
@@ -8180,8 +8180,10 @@ function mqTick(){
 // 앞 장면에서 받은 이야기 물건을 (진행이 되돌려져서) 잃어버렸으면 다시 줘요: 단계의 regive = { 아이템: 개수 }
 function mqRegive(){ const s = mqState(), st = mqStage(); if (s.ph !== 'go' || !st || !st.regive || !(st.objectives || []).some((o, i) => o.type === 'craft' && !mqObjState(o, i).done)) return; Object.entries(st.regive).forEach(([k, n]) => { if ((me.inv[k] || 0) < n){ mqGive(k, n - (me.inv[k] || 0)); save(); toast(`${ITEM[k] || k}${josa(ITEM[k] || k, '을', '를')} 다시 챙겼어요`); } }); }
 let mqArriving = false;
+const MQ_DAY_MAX = 3;   // 하루에 받을 수 있는 이야기 의뢰 단계 수
+const mqDayFull = () => { const d = mqState().dd; return !!d && d.d === todayKey() && d.n >= MQ_DAY_MAX; };
 async function mqArrive(){
-  const s = mqState(), q = mqQuest(); if (!q || s.ph !== 'arrive' || mqArriving || evOn || sheetOn || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy())) return;
+  const s = mqState(), q = mqQuest(); if (!q || s.ph !== 'arrive' || mqDayFull() || mqArriving || evOn || sheetOn || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy())) return;
   mqArriving = true;
   try {
     const sc = await mqScene(q.id, 1, 'request'); if (!sc){ mqArriving = false; return; }
@@ -8205,6 +8207,7 @@ async function mqPlay(q, n, kind, sc){
 let mqSceneQ = null;
 function mqAfter(q, n, kind, sc){
   const s = mqState(); if (sc.replay || s.q !== q.id) return;
+  if (kind === 'request' && !(sc && sc.replay)){ const t = todayKey(); s.dd = s.dd && s.dd.d === t ? { d: t, n: s.dd.n + 1 } : { d: t, n: 1 }; }   // 오늘 받은 부탁 수
   if (kind === 'request'){ s.st = n; s.ph = 'go'; s.prog = {}; const st = q.stages.find(x => x.n === n); s.dl = st && st.deadline ? me.day + st.deadline : null; s.prog.__day = me.day;
     (st && st.actors || []).forEach(a => { if (a.spawnOnly) return; });
     save(); syncNpcs(); mqMarks(); mqCheck(true); toast(`일지에 새 목표가 생겼어요 · ${st ? esc(st.title || '') : ''}`); }
@@ -8279,7 +8282,7 @@ function mqOnTalk(id){ const s = mqState(); if (!s.q || s.ph !== 'go') return nu
 async function mqTalk(id){
   const s = mqState(), q = mqQuest(), c = MQ.cast[id]; if (!c) return;
   if (q && q.client === id){
-    if (s.ph === 'pre') return mqPlay(q, s.st, 'request');
+    if (s.ph === 'pre'){ if (mqDayFull()) return mqPanel(id, '오늘은 여기까지 하자. 내일 다시 와 줘.......'); return mqPlay(q, s.st, 'request'); }
     if (s.ph === 'ready') return mqPlay(q, s.st, 'complete');
     const ex = mqOnTalk(id); if (ex) return mqPanel(id, ex);
     const idle = await mqIdle(q.id), set = idle[String(s.st)] || {}, lines = set[s.ph === 'go' ? 'a' : 'b'] || set.a || ['.......'];
@@ -8311,7 +8314,7 @@ function mqJournalHTML(){
   const c = mqClient(q), st = mqStage(), objs = mqObjs();
   const head = `<div class="jn-npc"><div class="npcf">${mqFace(q.client)}</div><div class="main"><b>${q.order}. ${esc(q.name)}</b><span class="d">${esc(mqName(q.client))} · ${esc(c.title || '')} · ${s.st} / 5 단계</span></div></div>`;
   const body = s.ph === 'arrive' ? '<div class="hint on">손님이 학교로 오고 있어요. 마을로 나가 보세요</div>'
-    : s.ph === 'pre' ? `<div class="hint on">${esc(mqName(q.client))}에게 말을 걸면 ${s.st}단계 부탁을 들어요</div>`
+    : s.ph === 'pre' ? `<div class="hint on">${mqDayFull() ? `오늘 이야기는 여기까지예요. 내일 ${s.st}단계 부탁을 들어요` : `${esc(mqName(q.client))}에게 말을 걸면 ${s.st}단계 부탁을 들어요`}</div>`
     : `<div class="box px">${objs.map((o, i) => { const z = mqObjState(o, i); const act = o.type === 'puzzle' && !z.done ? `<button class="btn sm go" data-mqpz="${i}">풀기</button>` : o.type === 'defend' && !z.done ? `<button class="btn sm go" data-mqdf="${i}">시작</button>` : o.type === 'craft' && !z.done ? `<button class="btn sm" data-mqcraft="${o.place || 'lab'}">만들러</button>` : (o.hint_location || o.place || o.where) && !z.done ? `` : z.done ? '<span class="tag">완료</span>' : '';
         return `<div class="li ${z.done ? 'done' : ''}"><span class="gic">${z.done ? '✓' : '·'}</span><div class="main"><span class="t">${esc(z.text)}${z.need > 1 ? ` <span class="num">${z.cur} / ${z.need}</span>` : ''}</span>${z.hint ? `<span class="d">${esc(z.hint)}</span>` : ''}</div>${act}</div>`; }).join('')}</div>
       ${s.ph === 'ready' ? `<div class="hint on">목표를 다 했어요. ${esc(mqName(q.client))}에게 알려요</div>` : s.dl ? `<div class="hint">기한: ${s.dl - me.day}일 남음</div>` : ''}`;
