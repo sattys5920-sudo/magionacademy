@@ -706,7 +706,7 @@ function glow(r, c){ const k = r + c.join(); if (glowCache[k]) return glowCache[
 // 핼러윈 마을은 늘 밤이에요. 버튼으로 밝기만 바꿔요
 let bright = 0; const BRIGHT = [[160, 140, 200], [205, 190, 230], [120, 100, 165]], BRIGHT_NEXT = ['밝게', '어둡게', '보통'];
 // 하늘: 현실 시간을 따라가요 (World.hourNow 로 시각을 바꿀 수 있어요: 관리자가 시간대를 정할 때). rgb = 곱하기 색, n = 밤 정도 0~1 (null = 밤색)
-World.hourNow = () => { const d = new Date(); return d.getHours() + d.getMinutes() / 60; };
+World.hourNow = () => { const d = World.kNow ? World.kNow() : new Date(); return d.getHours() + d.getMinutes() / 60; };
 const SKYK = [   // [시각, 곱하기 색(null=밤색), 밤 정도, 밝기 배율(그림 자체를 밝혀요: 0=그대로, 1=2배)]
   [0, null, 1, 0], [4.5, null, 1, 0], [5.6, [175, 145, 190], .85, .15], [6.6, [255, 190, 175], .6, .55], [7.8, [255, 232, 200], .28, 1.15],
   [9.5, [255, 246, 232], .08, 1.5], [11.5, [236, 246, 255], 0, 1.75], [15.5, [255, 250, 236], 0, 1.6], [17.3, [255, 205, 150], .25, 1.0],
@@ -883,7 +883,7 @@ function frame(now){
   const tn = performance.now();
   for (let i = says.length - 1; i >= 0; i--){ const p = says[i]; if (tn > p.say.until || (!p.me && !people.includes(p))){ sayOff(p); continue; } const [sx, sy] = P(p.x + .5, p.y + .5); p.say.el.style.left = (sx - ix) * k + 'px'; p.say.el.style.top = (sy - World.Avatar.FH * ASC - 2 - iy) * k + 'px'; }
   if (bubble){ const o = bubble.o; bubble.el.style.left = Math.max(90, Math.min(cv.clientWidth - 90, (o.x + o.sw / 2 - ix) * k)) + 'px'; bubble.el.style.top = Math.max(70, (o.y - 2 - iy) * k) + 'px'; }
-  if ((clockTick = (clockTick + 1) % 30) === 0){ const d = new Date(), t = World.clockText ? World.clockText(d) : `🌕 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · 보름밤`; if (t !== clockLast){ clockLast = t; clockEl.textContent = t; } }
+  if ((clockTick = (clockTick + 1) % 30) === 0){ const d = World.kNow ? World.kNow() : new Date(), t = World.clockText ? World.clockText(d) : `🌕 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · 보름밤`; if (t !== clockLast){ clockLast = t; clockEl.textContent = t; } }
   requestAnimationFrame(frame);
 }
 document.getElementById('tDay').onclick = e => { bright = (bright + 1) % 3; e.target.textContent = BRIGHT_NEXT[bright]; };

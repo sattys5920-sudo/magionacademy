@@ -1029,18 +1029,18 @@ const loveTier = c => Math.min(4, Math.floor((c.love || 0) / 5));
 // 어른이 되는 건 시간이 아니라 돌봄(먹이·쓰다듬기로 오른 애정을 쌓은 점수)이에요. 먹이 2시간·쓰다듬기 30분 제한 때문에 열심히 해도 알마다 4시간(양)~12시간(부엉이)은 걸려요
 const CR_HRS = [4, 6.5, 8, 4.5, 10.5, 9, 6, 5, 12, 7];   // CREATURES 순서: 양 토끼 도마뱀 닭 고양이 두꺼비 꿀벌 거미 부엉이 염소 (쉬지 않고 돌볼 때 걸리는 최소 시간)
 const CR_NEED = k => Math.round(3 * CR_HRS[k] + 3);   // 돌봄 점수: 열심히 하면 시간당 약 3점
-const crAdult = c => c.care !== undefined ? c.care >= CR_NEED(c.k) : Date.now() - c.bornAt >= CREATURES[c.k].grow * 6e4;
+const crAdult = c => c.care !== undefined ? c.care >= CR_NEED(c.k) : now2() - c.bornAt >= CREATURES[c.k].grow * 6e4;
 const crCare = (c, n) => { const was = crAdult(c); c.care = (c.care || 0) + n; return !was && crAdult(c); };   // 어른이 됐으면 true
 const crKind = c => crAdult(c) ? CREATURES[c.k].kind : CREATURES[c.k].baby;
-const prodLeft = c => Math.max(0, (c.prodAt || 0) + CREATURES[c.k].prod * 6e4 - Date.now());
-const eggLeft = e => Math.max(0, e.at + CREATURES[e.k].hatch * 6e4 - Date.now());
+const prodLeft = c => Math.max(0, (c.prodAt || 0) + CREATURES[c.k].prod * 6e4 - now2());
+const eggLeft = e => Math.max(0, e.at + CREATURES[e.k].hatch * 6e4 - now2());
 const crSprite = (c, scale, egg) => `<div class="cr" style="background-position:${-120 * (egg ? EGG_CELL : c.k)}px 0;transform:scale(${egg ? scale * .9 : !crAdult(c) ? scale * .72 : scale});flex-shrink:0;${colorFilter(c.col) ? 'filter:' + colorFilter(c.col) : ''}"></div>`;
 const crId = () => Math.random().toString(36).slice(2, 9);
 function newCreature(k, col, name, adult){
-  const d = CREATURES[k], now = Date.now();
+  const d = CREATURES[k], now = now2();
   return { id: crId(), k, col: col || randColor(), name: name || d.names[Math.floor(Math.random() * d.names.length)], love: 0, care: adult ? CR_NEED(k) : 0, bornAt: adult ? now - d.grow * 6e4 : now, prodAt: now, fedAt: 0, petAt: 0, bredAt: 0 };
 }
-function makeEgg(a, b){ return { id: crId(), k: a.k, col: mixColor(a.col || {}, b.col || {}), at: Date.now() }; }
+function makeEgg(a, b){ return { id: crId(), k: a.k, col: mixColor(a.col || {}, b.col || {}), at: now2() }; }
 // 옛 생물(4종·하루 단위)을 새 방식으로: 알은 부화실로, 애정 5칸 → 20
 const OLD_VARIANT = [null, '노을빛', '바다빛', '황금빛'];
 function migrateCreatures(p){
@@ -1051,11 +1051,11 @@ function migrateCreatures(p){
     if (c.bornAt !== undefined) return [c];
     const k = c.k ?? i, d = CREATURES[k] || CREATURES[0];
     const col = OLD_VARIANT[c.v] ? { ...CR_COLORS.find(x => x.n === OLD_VARIANT[c.v]) } : { n:'기본' };
-    if (c.hatch > 0){ p.eggs.push({ id: crId(), k, col, at: Date.now() - (2 - c.hatch) / 2 * d.hatch * 6e4 }); return []; }
+    if (c.hatch > 0){ p.eggs.push({ id: crId(), k, col, at: now2() - (2 - c.hatch) / 2 * d.hatch * 6e4 }); return []; }
     const age = c.k === undefined ? 3 : (c.age || 0);
-    return [{ id: crId(), k, col, name: c.name || d.name, love: Math.min(LOVE_MAX, (c.love || 0) * 4), bornAt: Date.now() - Math.min(1, age / 3) * d.grow * 6e4, prodAt: 0, fedAt: 0, petAt: 0, bredAt: 0 }];
+    return [{ id: crId(), k, col, name: c.name || d.name, love: Math.min(LOVE_MAX, (c.love || 0) * 4), bornAt: now2() - Math.min(1, age / 3) * d.grow * 6e4, prodAt: 0, fedAt: 0, petAt: 0, bredAt: 0 }];
   });
-  p.cr.forEach(c => { if (c.care === undefined){ const need = CR_NEED(c.k), f = Math.min(1, (Date.now() - c.bornAt) / (CREATURES[c.k].grow * 6e4)); c.care = f >= 1 ? need : Math.floor(f * need); } });   // 옛 생물: 이미 어른이면 어른 그대로
+  p.cr.forEach(c => { if (c.care === undefined){ const need = CR_NEED(c.k), f = Math.min(1, (now2() - c.bornAt) / (CREATURES[c.k].grow * 6e4)); c.care = f >= 1 ? need : Math.floor(f * need); } });   // 옛 생물: 이미 어른이면 어른 그대로
   p.eggs = p.eggs.slice(0, HATCH_MAX);
 }
 // 개인 방 가구 50종 (그림·이름·값은 tools/iso/furniture.py → world.js의 World.FURN)
@@ -1079,10 +1079,14 @@ const HOUSES = {
 };
 const HOUSE_KEYS = Object.keys(HOUSES);
 const HOUSE_CAP = 3;
-const houseNow = () => { const h = new Date().getHours(); return HOUSE_KEYS.find(k => { const H = HOUSES[k]; return H.from < H.to ? h >= H.from && h < H.to : h >= H.from || h < H.to; }); };
+let srvOff = 0, srvOk = false;   // 서버 시각과 기기 시각의 차이: 기기 시계를 바꿔도 게임 날짜·시간·성장 타이머는 서버 시각을 따라요
+const now2 = () => Date.now() + srvOff;
+const kNow = () => new Date(now2() + 9 * 3600e3 + (new Date).getTimezoneOffset() * 6e4);   // 한국 시각 (getHours·getDate 등이 한국 시각으로 나와요)
+World.kNow = kNow;
+const houseNow = () => { const h = kNow().getHours(); return HOUSE_KEYS.find(k => { const H = HOUSES[k]; return H.from < H.to ? h >= H.from && h < H.to : h >= H.from || h < H.to; }); };
 const myTime = () => !!me.house && houseNow() === me.house;
 const hoursText = H => `${H.from}~${H.to}시`;
-const todayKey = () => { const d = new Date(Date.now() + 9 * 3600e3); return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`; };   // 하루는 한국 시각 자정에 바뀌어요 (외국에 있거나 기기 시간대가 달라도 같은 날)
+const todayKey = () => { const d = kNow(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };   // 하루는 한국 시각 자정에 바뀌어요 (외국에 있거나 기기 시간대가 달라도 같은 날)
 const dayNo = k => { const [y, m, d] = String(k || '').split('-').map(Number); return y ? Date.UTC(y, m - 1, d) / 864e5 : 0; };
 const roomNo = (house, key) => (HOUSE_KEYS.indexOf(house) + 1) * 100 + [...String(key)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 997, 7) % 12 + 1;
 const brewCost = () => me.house === 'ember' ? 4 : 5;
@@ -1096,7 +1100,7 @@ function freshPlayer(nick, look, house, av){
     nick, look, house, av, coin:0, mana:40, day:1, penMig:true, tut:{ s:0, g:0, ok:0 },
     inv:{},   // 가방은 빈 채로 시작해요
     found:[], hints:['p_red'],
-    plots:[{k:'herb',at:Date.now() - 6e5,w:false},{k:'drop',at:Date.now(),w:false}],
+    plots:[{k:'herb',at:now2() - 6e5,w:false},{k:'drop',at:now2(),w:false}],
     cr:[], eggs:[],   // 사육장은 비어서 시작해요 (알 가게에서 알을 사서 부화시켜요)
     fbag:{}, room:[],
     orders:makeOrders(1, ['p_red'], []), classDay:0,
@@ -1149,7 +1153,7 @@ function normalize(p){
     if (!x || !x.k || !SEED_INFO[x.k]) return { k: null };
     if (x.at) return x;
     const G = SEED_INFO[x.k], done = Math.max(0, Math.min(1, ((x.st || 1) - 1) / 3));
-    return { k: x.k, at: Date.now() - done * G.mins * 6e4, w: false };
+    return { k: x.k, at: now2() - done * G.mins * 6e4, w: false };
   });
   while (p.plots.length < 2) p.plots.push({ k: null }); p.plotN = p.plots.length;
   if (p.fg && !Array.isArray(p.fg.got)) p.fg.got = Object.values(p.fg.got || {});   // 빈 배열은 Firebase에 안 남아요
@@ -1170,7 +1174,7 @@ const COZY_MAX = 30;   // 쉬고 나서 마력에 쳐 주는 아늑함은 30까�
 // ===== 저장: 온라인이면 Firebase, 혼자 모드면 이 기기 =====
 let F = null, auth = null, db = null, uid = null, solo = false, me = null, saveTimer = 0;
 let onlineList = {}, marketList = {}, coop = {}, playersList = {}, myGuest = {};
-const coopWeek = () => 'w' + Math.floor(Date.now() / 604800000);
+const coopWeek = () => 'w' + Math.floor(now2() / 604800000);
 const setSaveDot = s => { saveState = s; const d = $('#saveDot'); if (d) d.className = s; };
 // 저장: 바꾼 건 바로 화면에, 서버에는 1.5 초 뒤에 한 번에 (연달아 바꾸면 한 번만 써요). 화면을 떠날 때는 바로 써요
 let haltSave = false; const SAVE_SID = Math.random().toString(36).slice(2, 10), saveTried = new Set();   // 이 화면이 보낸 저장 번호들 (끊겼다 붙으면 내 저장이 먼저 들어가 있을 수 있어요)   // 관리자가 내 데이터를 리셋했을 때 옛 데이터로 덮어쓰지 않도록
@@ -1195,7 +1199,7 @@ function errReport(kind, msg, stack){
     msg = String(msg || '').slice(0, 300); if (!msg || ERR_SKIP.test(msg) || errN >= 15 || errSeen.has(kind + msg)) return;
     errSeen.add(kind + msg); errN++;
     let w = ''; try { w = [tab, sub, typeof World !== 'undefined' && World.placeKey ? World.placeKey() : ''].filter(Boolean).join(' · '); } catch(e){}
-    errQ.push({ k: kind, m: msg, s: String(stack || '').slice(0, 900), w: w.slice(0, 80), b: ERR_BUILD.slice(0, 7), ua: navigator.userAgent.slice(0, 160), at: Date.now() });
+    errQ.push({ k: kind, m: msg, s: String(stack || '').slice(0, 900), w: w.slice(0, 80), b: ERR_BUILD.slice(0, 7), ua: navigator.userAgent.slice(0, 160), at: now2() });
     errFlush();
   } catch(e){}
 }
@@ -1388,8 +1392,8 @@ const chatLoad = () => { if (chatLog) return chatLog; try { chatLog = JSON.parse
 const chatLine = l => `<div><b class="${l.mine ? 'me' : ''}">${esc(l.nick)}</b>${esc(l.t)}</div>`;
 const xBub = {};   // 탐사 화면에서 캐릭터 머리 위에 띄울 말풍선 (닉네임 → 마지막 말)
 function pushLog(nick, t, mine){
-  xBub[nick] = { t, at: Date.now() };
-  const L = chatLoad(); L.push({ nick, t, mine: !!mine, at: Date.now() }); while (L.length > CHAT_MAX) L.shift(); try { localStorage.setItem(chatKey(), JSON.stringify(L)); } catch(e){}
+  xBub[nick] = { t, at: now2() };
+  const L = chatLoad(); L.push({ nick, t, mine: !!mine, at: now2() }); while (L.length > CHAT_MAX) L.shift(); try { localStorage.setItem(chatKey(), JSON.stringify(L)); } catch(e){}
   const el = $('#clog'); if (el){ el.insertAdjacentHTML('beforeend', chatLine({ nick, t, mine })); while (el.children.length > CHAT_SHOW) el.firstChild.remove(); }
   if (!$('#chist').hidden) chatHist();
 }
@@ -1414,8 +1418,8 @@ function onOnline(){
 function speak(t, e, to){
   t = String(t || '').trim().slice(0, 40); if (!t) return;
   World.say('me', t, e ? e - 1 : null); if (!e) pushLog(me.nick, t, true);
-  if (!solo) F.update(F.ref(db, 'online/' + uid), { s: { t, e: e || 0, at: Date.now(), m: World.placeKey() || '', ...(to ? { to } : {}) } }).catch(() => {});
-  if (!solo) F.push(F.ref(db, 'chat/' + todayKey()), { u: uid, n: me.nick, t: e ? `[${t}]` : t, m: World.placeKey() || '', at: Date.now(), ...(to ? { to } : {}) }).catch(() => {});   // 관리자 대화 기록
+  if (!solo) F.update(F.ref(db, 'online/' + uid), { s: { t, e: e || 0, at: now2(), m: World.placeKey() || '', ...(to ? { to } : {}) } }).catch(() => {});
+  if (!solo) F.push(F.ref(db, 'chat/' + todayKey()), { u: uid, n: me.nick, t: e ? `[${t}]` : t, m: World.placeKey() || '', at: now2(), ...(to ? { to } : {}) }).catch(() => {});   // 관리자 대화 기록
 }
 function presTick(){
   if (solo || !uid) return;
@@ -1697,7 +1701,7 @@ function renderFish(){
       <div class="rods">${RODS.map((r, i) => `<span class="${i <= L ? 'on' : ''}" title="${r.name}">${rodIc(i, 32)}</span>`).join('')}</div>`; }
   if (fsTab === 'today'){
     const fg = me.fg?.d === todayKey() ? me.fg : { got: [], extra: 0 }, total = 16 + (fg.extra || 0), left = total - fg.got.length, nowFish = FISH.filter(fishNow).length, onlyNow = FISH.filter(f => f.time === now).length;
-    const buffs = Object.entries(me.buffs || {}).filter(([, t]) => t > Date.now()).map(([k, t]) => `${k === 'all' ? '만찬' : BUFF_NAME[k]} ${Math.ceil((t - Date.now()) / 6e4)}분`);
+    const buffs = Object.entries(me.buffs || {}).filter(([, t]) => t > now2()).map(([k, t]) => `${k === 'all' ? '만찬' : BUFF_NAME[k]} ${Math.ceil((t - now2()) / 6e4)}분`);
     const tips = [['', '물가를 누르면 찌를 던져요. 찌가 쏙 들어가면 바로 누르고, 그다음엔 ◀ ▶를 눌러 찌를 초록 칸 안에 두고 버텨요. 칸 밖에 오래 있으면 놓쳐요.'], ['', '반짝이는 곳은 날마다 자리가 바뀌어요. 숲·묘지·호숫가·들판마다 나오는 것이 달라요.'], ['', '물고기는 시간대마다 달라요. 밤에만 나오는 물고기도 있어요.']];
     if (buffs.length) tips.unshift(['', `요리 효과 중: ${buffs.join(' · ')}`]);
     if (me.perk?.bait) tips.push(['', '나비의 미끼: 입질이 15% 빨라요']);
@@ -1986,7 +1990,7 @@ function xEnd(how){   // how: clear · time · retreat · wipe
   if (how !== 'wipe'){ pzDrop('explore'); lnDrop('explore'); }
   if (how !== 'wipe' && Math.random() < .02) setTimeout(() => recipePaper('explore'), 700);   // 탐사 보상: 레시피 종이 2%
 }
-function xTime(run){ return Math.max(0, run.end - (run.co ? now2() : Date.now())); }   // 파티 탐사는 방장이 서버 시각으로 정해요
+function xTime(run){ return Math.max(0, run.end - (run.co ? now2() : now2())); }   // 파티 탐사는 방장이 서버 시각으로 정해요
 // ===== 협동 탐험 1단계: 방·로비 (xparty/<방> = { host, hn, rg 지역, st lobby·run·end, at, t0, seed, p: { uid: { n, job, L, rdy, out } } }) =====
 // 방장이 지역을 고르고 친구를 모아요. 아직 개발 중이라 주소 끝에 ?coop=1 을 붙여 연 기기에서만 보여요 (설계: docs/coop_design.md)
 const XCOOP = (() => { try { const q = new URLSearchParams(location.search).get('coop'); if (q != null) localStorage.setItem('magion-coop', q); return localStorage.getItem('magion-coop') !== '0'; } catch(e){ return true; } })();   // 주소 끝에 ?coop=0 을 붙이면 협동을 꺼요
@@ -1997,13 +2001,13 @@ const xpRefresh = () => { if (sheetOn && sub === 'explore' && xv?.view === 'lobb
 const xpLog = (why, v) => { try { const p = v && v.p || {}; errReport('party', `파티에서 빠짐: ${why}`, `방장 ${v && v.host === myId() ? '나' : '다른 사람'} · ${Object.keys(p).length}명 · 상태 ${v && v.st || '-'} · 나간 사람 ${Object.values(p).filter(x => x.out).length} · 골드 ${me.coin} · 혼자 탐사 ${xEx().run && !xEx().run.co ? '있음' : '없음'}`); } catch(e){} };   // 왜 빠졌는지 관리자 오류 탭에 남겨요
 let xpFix = 0, xpT0 = 0, xpRunAt = 0;   // 대기실에서 내 이름이 사라지면 다시 써 넣은 횟수
 const xpPut = id => GDB.upd(`xparty/${id}/p/${myId()}`, xpMe()).catch(e => errReport('party', `파티 참가 쓰기 실패: ${e.code || e.message}`, ''));
-function xpWatch(id){ xpRoom = id; xpFix = 0; xpT0 = Date.now(); xpOff?.(); xpOff = GDB.on('xparty/' + id, v => { if (xpRoom !== id) return;
-  if (v && v.st === 'lobby' && v.p && !v.p[myId()] && xpFix < 3 && Object.keys(v.p).length < XP_MAX){ xpFix++; if (Date.now() - xpT0 > 8000) xpLog(`대기실 명단에서 빠져서 다시 넣음 (${xpFix})`, v); xpPut(id); return; }   // 나가기를 누르지 않았는데 빠졌으면 다시 들어가요
-  if (!v || v.st === 'end' || !v.p?.[myId()]){ if (!v) xpLog('방이 사라짐', xpV); else if (v.st !== 'end') xpLog('명단에서 내 이름이 빠짐', v); xpRoom = null; xpV = null; xpOff?.(); xpOff = null; xcoStop(); xcoWasHost = false; } else { if (xpV && xpV.host === myId() && v.host !== myId()){ xpLog('방장이 다른 사람으로 바뀜', v); if (xb && !xb.mirror){ xb = null; clearInterval(xTick); xv = { view: 'march' }; if (xM) xM.st = 'busy'; } } if (v.st === 'run' && xpV?.st === 'lobby') xpRunAt = Date.now(); xpV = v; if (v.st === 'run') xcoEnter(id, v); const h = v.host === myId(); if (xcoOn() && h && !xcoWasHost && xM && xcoOff.length) xcoTakeover(); xcoWasHost = xcoOn() && h; } xpRefresh(); }); }
+function xpWatch(id){ xpRoom = id; xpFix = 0; xpT0 = now2(); xpOff?.(); xpOff = GDB.on('xparty/' + id, v => { if (xpRoom !== id) return;
+  if (v && v.st === 'lobby' && v.p && !v.p[myId()] && xpFix < 3 && Object.keys(v.p).length < XP_MAX){ xpFix++; if (now2() - xpT0 > 8000) xpLog(`대기실 명단에서 빠져서 다시 넣음 (${xpFix})`, v); xpPut(id); return; }   // 나가기를 누르지 않았는데 빠졌으면 다시 들어가요
+  if (!v || v.st === 'end' || !v.p?.[myId()]){ if (!v) xpLog('방이 사라짐', xpV); else if (v.st !== 'end') xpLog('명단에서 내 이름이 빠짐', v); xpRoom = null; xpV = null; xpOff?.(); xpOff = null; xcoStop(); xcoWasHost = false; } else { if (xpV && xpV.host === myId() && v.host !== myId()){ xpLog('방장이 다른 사람으로 바뀜', v); if (xb && !xb.mirror){ xb = null; clearInterval(xTick); xv = { view: 'march' }; if (xM) xM.st = 'busy'; } } if (v.st === 'run' && xpV?.st === 'lobby') xpRunAt = now2(); xpV = v; if (v.st === 'run') xcoEnter(id, v); const h = v.host === myId(); if (xcoOn() && h && !xcoWasHost && xM && xcoOff.length) xcoTakeover(); xcoWasHost = xcoOn() && h; } xpRefresh(); }); }
 const XDAY = 10;   // 탐사는 한 사람이 하루에 10번까지 (혼자·파티 모두)
 function xpCreate(){
   if (xEx().n >= XDAY) return toast(`탐사는 하루에 ${XDAY}번까지예요`);
-  if (xpRoom || xpCreate.busy) return; xpCreate.busy = true; setTimeout(() => { xpCreate.busy = false; }, 3000); const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  if (xpRoom || xpCreate.busy) return; xpCreate.busy = true; setTimeout(() => { xpCreate.busy = false; }, 3000); const id = now2().toString(36) + Math.random().toString(36).slice(2, 6);
   GDB.set('xparty/' + id, { host: myId(), hn: me.nick, rg: xRgSel, st: 'lobby', at: now2(), p: { [myId()]: xpMe() } }).then(() => { xpCreate.busy = false; xpWatch(id); });
 }
 function xpJoin(id){
@@ -2041,7 +2045,7 @@ function xpPanel(lv){
 }
 function xpWire(){
   if (!XCOOP) return;
-  on('[data-xp]', b => { const a = b.dataset.xp; if (a === 'create') xpCreate(); else if (a === 'join') xpJoin(b.dataset.id); else if (a === 'leave'){ if (!(xpV && xpV.st === 'run' && Date.now() - xpRunAt < 2000)) xpLeave(); }
+  on('[data-xp]', b => { const a = b.dataset.xp; if (a === 'create') xpCreate(); else if (a === 'join') xpJoin(b.dataset.id); else if (a === 'leave'){ if (!(xpV && xpV.st === 'run' && now2() - xpRunAt < 2000)) xpLeave(); }
     else if (a === 'row' && xpV) GDB.upd(`xparty/${xpRoom}/p/${myId()}`, { row: b.dataset.r });
     else if ((a === 'ready' || a === 'start') && xpV && !(a === 'ready' && xpV.p[myId()].rdy) && xpCantGo(xpV)) toast(xpCantGo(xpV));   // 입장료가 모자란 채로 출발하면 파티에서 빠져서 미리 막아요
     else if (a === 'ready' && xpV) GDB.upd(`xparty/${xpRoom}/p/${myId()}`, { rdy: xpV.p[myId()].rdy ? 0 : 1 });
@@ -2082,7 +2086,7 @@ function renderExplore(){
     $('#xst').onclick = () => { xv = { view: 'stats', sel: XMAIN[ex.job] }; renderExplore(); };
     $('#xtree').onclick = () => { xv = { view: 'tree', sel: '0_0' }; renderExplore(); };
     $('#xwp').onclick = () => { xv = { view: 'weapon' }; renderExplore(); };
-    const go = $('#xgo'); if (go) go.onclick = () => { if (ex.n >= XDAY) return toast(`탐사는 하루에 ${XDAY}번까지예요`); me.coin -= xReg().fee; ex.n++; ex.run = { rg: xRgSel, mod: xRand(XMODS), pool: xShuffle(xReg().mon).slice(0, 4), start: Date.now(), end: Date.now() + xReg().min * 6e4, prog: 0, loot: { gold: 0, exp: 0, items: {} }, buff: 0, p: null, node: null }; save(); hud(); xv = { view: 'march' }; xMsg = ''; xM = null; renderExplore(); };
+    const go = $('#xgo'); if (go) go.onclick = () => { if (ex.n >= XDAY) return toast(`탐사는 하루에 ${XDAY}번까지예요`); me.coin -= xReg().fee; ex.n++; ex.run = { rg: xRgSel, mod: xRand(XMODS), pool: xShuffle(xReg().mon).slice(0, 4), start: now2(), end: now2() + xReg().min * 6e4, prog: 0, loot: { gold: 0, exp: 0, items: {} }, buff: 0, p: null, node: null }; save(); hud(); xv = { view: 'march' }; xMsg = ''; xM = null; renderExplore(); };
     return;
   }
   const run = ex.run;
@@ -2247,7 +2251,7 @@ function xcoForkResult(k){   // 방장: 고른 길의 결과를 정하고 모두
   else if (k === 'camp'){ xcoActive().forEach(u => { const b = xcoBuilds[u], c = xcoHp[u] || [b.mhp, b.mmp]; xcoHp[u] = [Math.min(b.mhp, c[0] + Math.round(b.mhp * .5)), Math.min(b.mmp, c[1] + Math.round(b.mmp * .5))]; }); if (Math.random() < .5){ run.buff = (run.buff || 0) + 1; o = 'buff'; } }
   else if (k === 'statue'){ const r = Math.random(); o = r < .6 ? 'buff' : r < .85 ? 'none' : 'item'; if (o === 'buff') run.buff = (run.buff || 0) + 3; }
   xcoLocalEffect(k, o); M.st = 'walk';
-  xcoPub({ st: 'walk', ev: { n: Date.now(), k: 'fork', pick: k, o } });
+  xcoPub({ st: 'walk', ev: { n: now2(), k: 'fork', pick: k, o } });
   if (o === 'mimic'){ const mo = xRand(run.pool && run.pool.length ? run.pool : xReg().mon); run.nextMon = mo; M.st = 'alert'; M.alert = { t0: performance.now(), dur: 1200, kind: 'battle', lp: mo.lp, txt: '상자가 미믹이었어요!' }; sfx('enc'); xcoPub({ st: 'alert', alert: { kind: 'battle', lp: mo.lp, txt: '상자가 미믹이었어요!', t0: now2(), dur: 1200 } }); }
 }
 function xcoMirrorStep(M, run, dt, now){   // 멤버: 방장이 올린 상태를 따라가요
@@ -2262,9 +2266,9 @@ function xMStep(M, run, dt, now){
   if (M.st === 'walk'){
     M.off += dt * 38; M.wt += dt; run.prog = Math.min(99.9, run.prog + dt * xMSpd()); if (co && now - (M.lastPub || 0) > 4000){ M.lastPub = now; xcoPub({ st: 'walk' }); }
     if (run.prog >= 88 && !M.boss){ M.boss = true; run.boss = 1; M.st = 'alert'; M.alert = { t0: now, dur: 3400, kind: 'boss', lp: xReg().boss.lp, txt: `${withJosa(xReg().boss.n, '이', '가')} 나타났어요!` }; sfx('boss'); if (co) xcoPub({ st: 'alert', alert: { kind: 'boss', lp: M.alert.lp, txt: M.alert.txt, t0: now2(), dur: 3400 } }); }
-    else if (run.prog >= M.nextFork && run.prog < 84){ M.st = 'fork'; M.fork = { opts: xMForkOpts(run), t0: now, fid: Date.now(), my: -1, vs: '' }; sfx('fork'); if (co) xcoPub({ st: 'fork', fork: { fid: M.fork.fid, opts: M.fork.opts, t0: now2(), v: {} } }); }
+    else if (run.prog >= M.nextFork && run.prog < 84){ M.st = 'fork'; M.fork = { opts: xMForkOpts(run), t0: now, fid: now2(), my: -1, vs: '' }; sfx('fork'); if (co) xcoPub({ st: 'fork', fork: { fid: M.fork.fid, opts: M.fork.opts, t0: now2(), v: {} } }); }
     else if (M.wt >= M.nextEnc){ const el = run.prog > 20 && Math.random() < .12; M.nextEnc = M.wt + 12 + Math.random() * 12; const mo = el ? xReg().elite : xRand(run.pool && run.pool.length ? run.pool : xReg().mon); if (!el) run.nextMon = mo; M.st = 'alert'; M.alert = { t0: now, dur: 1200, kind: el ? 'elite' : 'battle', lp: mo.lp, txt: el ? '강한 몬스터가 나타났어요!' : '몬스터가 나타났어요!' }; sfx('enc'); if (co) xcoPub({ st: 'alert', alert: { kind: M.alert.kind, lp: mo.lp, txt: M.alert.txt, t0: now2(), dur: 1200 } }); }
-    else if (M.wt >= M.nextHaz){ M.nextHaz = M.wt + 22 + Math.random() * 18; const ty = xRand(XM_HAZ); M.st = 'haz'; M.haz = { ty, tyi: XM_HAZ.indexOf(ty), hid: Date.now(), t0: now, dur: 3600, done: false, ok: false }; sfx('haz'); if (co) xcoPub({ st: 'haz', haz: { hid: M.haz.hid, ty: M.haz.tyi, t0: now2(), dur: 3600 } }); }
+    else if (M.wt >= M.nextHaz){ M.nextHaz = M.wt + 22 + Math.random() * 18; const ty = xRand(XM_HAZ); M.st = 'haz'; M.haz = { ty, tyi: XM_HAZ.indexOf(ty), hid: now2(), t0: now, dur: 3600, done: false, ok: false }; sfx('haz'); if (co) xcoPub({ st: 'haz', haz: { hid: M.haz.hid, ty: M.haz.tyi, t0: now2(), dur: 3600 } }); }
   } else if (M.st === 'alert'){
     if (now - M.alert.t0 >= M.alert.dur){ const k = M.alert.kind; M.alert = null; M.st = 'busy'; xSaveParty(); save(); xStartBattle(k); }
   } else if (M.st === 'fork'){
@@ -2363,10 +2367,10 @@ function xMDraw(){
     const col = dr + (M.st === 'walk' && !xFxOn(now) ? WK[Math.floor(now / 130 + x) % WK.length] : 0), okMap = M.res && M.res.okMap, ok = mine ? !M.res || M.res.ok : !okMap || okMap[u], hurt = M.res && !ok && now - M.res.t0 < 500 && Math.round(now / 70) % 2;
     if (!hurt) g.drawImage(sp, col * FW, 0, FW, FH, Math.round(x - FW / 2), Math.round(y - FH + 6 - (mine ? jump : 0)), FW, FH); });
   xMProps(g, R.kind, M.off, now, true); xForkFxDraw(g, px, py, now);
-  order.forEach(({ u, x, y }) => { const nm = u === myId() ? me.nick : xcoBuilds[u] && xcoBuilds[u].name, b = nm && xBub[nm]; if (!b || Date.now() - b.at > 5000) return;
+  order.forEach(({ u, x, y }) => { const nm = u === myId() ? me.nick : xcoBuilds[u] && xcoBuilds[u].name, b = nm && xBub[nm]; if (!b || now2() - b.at > 5000) return;
     g.font = '9px G11B, Pretendard, sans-serif'; g.textAlign = 'center'; const L = [], T = String(b.t); let cur = ''; for (const ch of T){ if (g.measureText(cur + ch).width > 96){ L.push(cur); cur = ''; } cur += ch; } L.push(cur);
     const bw = Math.max(...L.map(l => g.measureText(l).width)) + 10, bh = L.length * 11 + 6, bx = Math.max(2, Math.min(XCW - bw - 2, Math.round(x - bw / 2))), by = Math.round(y - FH - bh - 2);
-    g.globalAlpha = Math.min(1, (5000 - (Date.now() - b.at)) / 600); g.fillStyle = '#f4ecff'; g.fillRect(bx, by, bw, bh); g.fillRect(bx + 2, by - 1, bw - 4, 1); g.fillRect(bx + 2, by + bh, bw - 4, 1); g.fillRect(Math.round(x) - 2, by + bh + 1, 4, 1); g.fillRect(Math.round(x) - 1, by + bh + 2, 2, 1);
+    g.globalAlpha = Math.min(1, (5000 - (now2() - b.at)) / 600); g.fillStyle = '#f4ecff'; g.fillRect(bx, by, bw, bh); g.fillRect(bx + 2, by - 1, bw - 4, 1); g.fillRect(bx + 2, by + bh, bw - 4, 1); g.fillRect(Math.round(x) - 2, by + bh + 1, 4, 1); g.fillRect(Math.round(x) - 1, by + bh + 2, 2, 1);
     g.fillStyle = '#2a1840'; L.forEach((l, i) => g.fillText(l, bx + bw / 2, by + 10 + i * 11)); g.globalAlpha = 1; });
   if (M.st === 'alert' && M.alert.kind === 'boss') xMBossCut(g, M.alert, now, R);
   if (M.st === 'alert' && M.alert.kind !== 'boss'){ const a = M.alert, p = Math.min(1, (now - a.t0) / 700), mx = XCW + 30 - (XCW + 30 - 276) * p, lpc = xLpcSheet(), sc = a.kind === 'boss' ? 3 : a.kind === 'elite' ? 2 : 1;
@@ -3004,10 +3008,9 @@ const GAMES = {
   stars: { name: '별자리 잇기', ic: '', coop: true, min: 2, max: 8, dur: 180, desc: '내 별 번호를 외워 다 같이 1번부터 순서대로 이어요' },
 };
 const PCOL = ['#FF6A8A', '#6AB8FF', '#8CE6B0', '#FFD866', '#C08AFF', '#FF9A4A', '#7AE0E0', '#F0F0F0'];
-let srvOff = 0, gameList = {}, room = null, roomV = null, roomOff = null, G = null, gameMsg = '';
-const now2 = () => Date.now() + srvOff;
+let gameList = {}, room = null, roomV = null, roomOff = null, G = null, gameMsg = '';
 const myId = () => uid || 'me';
-const weekKey = () => 'w' + Math.floor(Date.now() / 604800000);
+const weekKey = () => 'w' + Math.floor(now2() / 604800000);
 // 혼자 모드: 같은 코드가 돌도록 이 기기 안의 작은 저장소
 const LT = {}, LL = [];
 const lget = p => p.split('/').reduce((o, k) => o == null ? undefined : o[k], LT);
@@ -3025,13 +3028,13 @@ function gameHide(){ const u = gui(); u.className = ''; u.innerHTML = ''; }
 // ---------- 방 ----------
 function openRoom(g){
   if (room || openRoom.busy) return room ? toast('이미 놀이 방에 있어요') : null; openRoom.busy = true; setTimeout(() => { openRoom.busy = false; }, 3000);   // 두 번 눌러 방이 두 개 생기지 않게
-  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const id = now2().toString(36) + Math.random().toString(36).slice(2, 6);
   GDB.set('games/' + id, { g, host: myId(), hn: me.nick, m: World.placeKey() || '', st: 'lobby', at: now2(), p: { [myId()]: { n: me.nick, s: 0 } } }).then(() => { openRoom.busy = false; joinRoom(id, true); });
   speak(`${GAMES[g].ic} ${GAMES[g].name} 열었어! 같이 하자`);
 }
 function joinRoom(id, mine){
   const R = gameList[id] || (solo && lget('games/' + id));
-  const attach = () => { room = id; roomJoinAt = Date.now(); closeSheet(); roomOff?.(); roomOff = GDB.on('games/' + id, v => onRoom(v)); };
+  const attach = () => { room = id; roomJoinAt = now2(); closeSheet(); roomOff?.(); roomOff = GDB.on('games/' + id, v => onRoom(v)); };
   if (!mine && R){ const n = Object.keys(R.p || {}).length; if (R.st !== 'lobby') return toast('벌써 시작했어요'); if (n >= GAMES[R.g].max) return toast('방이 꽉 찼어요 (최대 8명)');
     // 서버가 참가를 받아 준 뒤에 방 화면을 열어요 (받아 주기 전에 열면 「방에서 나왔어요」로 바로 튕겨요)
     return Promise.resolve(GDB.upd(`games/${id}/p/${myId()}`, { n: me.nick, s: 0 })).then(attach).catch(e => toast('참가하지 못했어요 (' + (e && (e.code || e.message) || '알 수 없는 오류') + ')')); }
@@ -3048,7 +3051,7 @@ function onRoom(v){
   if (!v){ toast('방이 닫혔어요'); room = null; roomOff?.(); gameEnd(); gameHide(); gameReturn(); return; }
   roomV = v; const Gm = GAMES[v.g];
   if (v.st === 'lobby'){
-    if (!v.p?.[myId()]){ if (Date.now() - roomJoinAt < 3000) return; toast('방에서 나왔어요'); return leaveRoom(); }   // 막 참가한 직후에는 잠깐 기다려요
+    if (!v.p?.[myId()]){ if (now2() - roomJoinAt < 3000) return; toast('방에서 나왔어요'); return leaveRoom(); }   // 막 참가한 직후에는 잠깐 기다려요
     const ps = Object.entries(v.p), host = v.host === myId(), ok = ps.length >= Gm.min;
     gameShow(`<div class="gpan px"><b class="gt">${Gm.ic} ${Gm.name}</b>
       <div class="gpl">${ps.map(([id, p], i) => `<span class="gpp" style="border-color:${PCOL[i % 8]}">${esc(p.n)}${id === v.host ? ' ' : ''}</span>`).join('')}</div>
@@ -3337,14 +3340,14 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.day = AD.day || todayKey(); sgListen(); if (!noticeOff && F && db) noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); if (AD.tab === 'gift' && !adminTyping()) adminRender(); });
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = k === 'players' ? fbBack(s.val() || {}) : s.val() || {}; if (adminTyping()) return; adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
   adminRender();
 }
 const adminTyping = () => { const a = document.activeElement; return (AD.tab === 'npc' || AD.tab === 'gift' || AD.tab === 'story') && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
 function adminChat(){   // 최근 14일 대화를 한 줄로 이어 봐요
   if (!F || !db) return; AD.chatOff?.(); const by = {}, offs = [];
   const merge = () => { AD.chat = {}; Object.entries(by).forEach(([d, v]) => Object.entries(v).forEach(([k, c]) => { AD.chat[d + '/' + k] = c; })); if (AD.tab === 'chat') adminRender(); };
-  for (let i = 0; i < 14; i++){ const d = new Date(Date.now() - i * 864e5), key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; offs.push(F.onValue(F.query(F.ref(db, 'chat/' + key), F.limitToLast(300)), s => { by[key] = s.val() || {}; merge(); })); }
+  for (let i = 0; i < 14; i++){ const d = new Date(kNow().getTime() - i * 864e5), key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; offs.push(F.onValue(F.query(F.ref(db, 'chat/' + key), F.limitToLast(300)), s => { by[key] = s.val() || {}; merge(); })); }
   AD.chatOff = () => offs.forEach(f => f && f());
 }
 const adName = id => esc(AD.players[id]?.nick || AD.online[id]?.nick || id.slice(0, 6));
@@ -3444,7 +3447,7 @@ function adminRender(){
     const ups = {};
     if (del){ ups['players/' + id] = null; ups['approved/' + id] = null; ups['pending/' + id] = null; ups['online/' + id] = null; if (p.ex && p.ex.job) ups['jobs/' + p.ex.job] = null; if (p.house) ups['hmem/' + p.house + '/' + id] = null; }
     else ups['players/' + id] = adFresh(p);
-    ups['adm/reset/' + id] = Date.now();
+    ups['adm/reset/' + id] = now2();
     try {
       const pens = (await F.get(F.ref(db, 'pens'))).val() || {}; Object.entries(pens).forEach(([i, o]) => { if (o === id) ups['pens/' + i] = null; });
       await F.update(F.ref(db, '/'), ups); alert(del ? `${who}의 가입 데이터를 지웠어요.` : `${who}의 진행을 리셋했어요.`);
@@ -3454,7 +3457,7 @@ function adminRender(){
     const ids = Object.keys(AD.players).filter(id => AD.players[id] && AD.players[id].nick);
     if (!confirm(`학생 ${ids.length}명의 모든 진행 상황과 채팅 내역을 지울까요? 되돌릴 수 없어요.`)) return;
     if (prompt("정말 모두 초기화할까요? 아래에 '초기화' 라고 입력해요.") !== '초기화') return alert('취소했어요.');
-    const ups = {}, now = Date.now(); dfHostStop();
+    const ups = {}, now = now2(); dfHostStop();
     const jobs = {}; ids.forEach(id => { const p = AD.players[id]; if (p.ex && p.ex.job) jobs[p.ex.job] = id; ups['players/' + id] = adFresh(p); ups['adm/reset/' + id] = now; }); ups['jobs'] = Object.keys(jobs).length ? jobs : null;   // jobs와 jobs/x를 한 번에 쓰면 거절돼요
     ['chat', 'story', 'houses', 'games', 'xparty', 'xrun', 'events', 'coop', 'exam', 'market', 'guest', 'records', 'pens', 'defense'].forEach(k => { ups[k] = null; });
     try { await F.update(F.ref(db, '/'), ups); alert('모든 진행 상황과 채팅 내역을 초기화했어요.'); } catch(e){ alert('실패했어요: ' + (e.code || e.message)); }
@@ -3464,7 +3467,7 @@ function adminRender(){
   root.querySelectorAll('[data-addel]').forEach(b => b.onclick = () => adWipe(b.dataset.addel, true));
   const adStrip = async ids2 => {   // 시작할 때 받은 생물 4마리·재료·가구를 거둬요 (이미 쓴 만큼은 0까지만)
     const ups = {}; let tot = 0;
-    ids2.forEach(id => { const p = AD.players[id]; if (!p) return; const d = starterDiff(p, true); if (!d.n) return; tot++; ups['players/' + id + '/cr'] = d.cr.length ? d.cr : null; ups['players/' + id + '/inv'] = d.inv; ups['players/' + id + '/fbag'] = Object.values(d.fb).some(v => v > 0) ? d.fb : null; ups['players/' + id + '/sg'] = 1; ups['players/' + id + '/rv'] = (p.rv || 0) + 1000; ups['adm/reset/' + id] = Date.now(); });
+    ids2.forEach(id => { const p = AD.players[id]; if (!p) return; const d = starterDiff(p, true); if (!d.n) return; tot++; ups['players/' + id + '/cr'] = d.cr.length ? d.cr : null; ups['players/' + id + '/inv'] = d.inv; ups['players/' + id + '/fbag'] = Object.values(d.fb).some(v => v > 0) ? d.fb : null; ups['players/' + id + '/sg'] = 1; ups['players/' + id + '/rv'] = (p.rv || 0) + 1000; ups['adm/reset/' + id] = now2(); });
     if (!tot) return alert('거둘 지급품이 없어요');
     if (!confirm(`${tot}명에게서 시작 때 받은 생물·재료·가구를 거둘까요? (접속 중이면 화면이 새로 불러와져요)`)) return;
     try { await F.update(F.ref(db, '/'), ups); toast(`${tot}명에게서 거뒀어요`); } catch(e){ alert('실패했어요: ' + (e.code || e.message)); } };
@@ -3473,7 +3476,7 @@ function adminRender(){
     const L = ids2.map(id => [id, starterCrIds(AD.players[id]?.cr)]).filter(([, st]) => st.size); if (!L.length) return alert('거둘 시작 생물이 없어요');
     const n = L.reduce((a, [, st]) => a + st.size, 0);
     if (!confirm(`${L.length === 1 ? (AD.players[L[0][0]].nick || '학생') + '의' : L.length + '명의'} 시작 생물 ${n}마리를 거둘까요? 알에서 부화한 아이는 그대로 둬요. (접속 중이면 화면이 새로 불러와져요)`)) return;
-    const ups = {}; L.forEach(([id, st]) => { const keep = (AD.players[id].cr || []).filter(c => !st.has(c.id)); ups['players/' + id + '/cr'] = keep.length ? keep : null; ups['players/' + id + '/rv'] = (AD.players[id].rv || 0) + 1000; ups['adm/reset/' + id] = Date.now(); });
+    const ups = {}; L.forEach(([id, st]) => { const keep = (AD.players[id].cr || []).filter(c => !st.has(c.id)); ups['players/' + id + '/cr'] = keep.length ? keep : null; ups['players/' + id + '/rv'] = (AD.players[id].rv || 0) + 1000; ups['adm/reset/' + id] = now2(); });
     try { await F.update(F.ref(db, '/'), ups); toast(`시작 생물 ${n}마리를 거뒀어요`); } catch(e){ alert('실패했어요: ' + (e.code || e.message)); } };
   root.querySelectorAll('[data-adcr]').forEach(b => b.onclick = () => adCrAll([b.dataset.adcr]));
   root.querySelectorAll('[data-adcrall]').forEach(b => b.onclick = () => adCrAll(Object.keys(AD.players)));
@@ -3493,13 +3496,13 @@ function adminRender(){
       const bk = e.target.closest('[data-crback]');
       if (bk){ const P0 = AD.players[id] || {}, G = (P0.crGone || []).filter(Boolean), c = G[+bk.dataset.crback]; if (!c || !confirm(`${c.name}을(를) ${P0.nick || '학생'}에게 돌려줄까요?`)) return;
         const { goneAt, why, ...back } = c, cr2 = [...(P0.cr || []).filter(Boolean), back], G2 = G.filter((_, i) => i !== +bk.dataset.crback);
-        try { await F.update(F.ref(db, '/'), { ['players/' + id + '/cr']: fbClean(cr2), ['players/' + id + '/crGone']: G2.length ? fbClean(G2) : null, ['players/' + id + '/rv']: (P0.rv || 0) + 1000, ['adm/reset/' + id]: Date.now() }); d.remove(); toast(`${c.name}을(를) 돌려줬어요`); } catch(e2){ alert('실패했어요: ' + (e2.code || e2.message)); }
+        try { await F.update(F.ref(db, '/'), { ['players/' + id + '/cr']: fbClean(cr2), ['players/' + id + '/crGone']: G2.length ? fbClean(G2) : null, ['players/' + id + '/rv']: (P0.rv || 0) + 1000, ['adm/reset/' + id]: now2() }); d.remove(); toast(`${c.name}을(를) 돌려줬어요`); } catch(e2){ alert('실패했어요: ' + (e2.code || e2.message)); }
         return; }
       if (!e.target.closest('[data-crgo]')) return;
       const pick = new Set([...d.querySelectorAll('[data-crk]:checked')].map(x => x.dataset.crk)); if (!pick.size) return alert('고른 아이가 없어요');
       if (!confirm(`${p.nick || '학생'}의 생물 ${pick.size}마리를 거둘까요? 접속 중이면 화면이 새로 불러와져요.`)) return;
-      const cur = (AD.players[id]?.cr || []).filter(c => c && !pick.has(c.id)), gone = [...(AD.players[id]?.crGone || []), ...(AD.players[id]?.cr || []).filter(c => c && pick.has(c.id)).map(c => ({ ...c, goneAt: Date.now(), why: 'admin' }))].slice(-10);
-      const ups = { ['players/' + id + '/cr']: cur.length ? cur : null, ['players/' + id + '/crGone']: fbClean(gone), ['players/' + id + '/rv']: (AD.players[id]?.rv || 0) + 1000, ['adm/reset/' + id]: Date.now() };
+      const cur = (AD.players[id]?.cr || []).filter(c => c && !pick.has(c.id)), gone = [...(AD.players[id]?.crGone || []), ...(AD.players[id]?.cr || []).filter(c => c && pick.has(c.id)).map(c => ({ ...c, goneAt: now2(), why: 'admin' }))].slice(-10);
+      const ups = { ['players/' + id + '/cr']: cur.length ? cur : null, ['players/' + id + '/crGone']: fbClean(gone), ['players/' + id + '/rv']: (AD.players[id]?.rv || 0) + 1000, ['adm/reset/' + id]: now2() };
       try { await F.update(F.ref(db, '/'), ups); d.remove(); toast(`생물 ${pick.size}마리를 거뒀어요`); } catch(ex){ alert('실패했어요: ' + (ex.code || ex.message)); }
     };
   });
@@ -3514,11 +3517,11 @@ function adminRender(){
     d.onclick = async e => {
       const t = e.target.closest('[data-pick]'); if (!t && e.target !== d) return; const h = t ? t.dataset.pick : ''; d.remove(); if (!h || h === old) return;
       if (!confirm(`${p.nick || id.slice(0, 6)}을(를) ${old ? HOUSES[old]?.name + ' → ' : ''}${HOUSES[h].name}(으)로 옮길까요? 접속 중이면 화면이 새로 불러와져요.`)) return;
-      const ups = { ['players/' + id + '/house']: h, ['players/' + id + '/rv']: (p.rv || 0) + 1000, ['hmem/' + h + '/' + id]: 1, ['adm/reset/' + id]: Date.now() }; if (old) ups['hmem/' + old + '/' + id] = null;
+      const ups = { ['players/' + id + '/house']: h, ['players/' + id + '/rv']: (p.rv || 0) + 1000, ['hmem/' + h + '/' + id]: 1, ['adm/reset/' + id]: now2() }; if (old) ups['hmem/' + old + '/' + id] = null;
       try { await F.update(F.ref(db, '/'), ups); toast('기숙사를 옮겼어요'); } catch(ex){ alert('실패했어요: ' + (ex.code || ex.message)); }
     };
   });
-  root.querySelectorAll('[data-adsc]').forEach(b => b.onclick = () => { if (b.dataset.adsc === 'start'){ if (confirm('입학을 시작할까요? 기다리던 학생이 모두 들어와요.')) F.set(F.ref(db, 'school/ctl'), { open: true, at: Date.now() }); } else if (confirm('입학 대기를 켤까요? 지금부터 캐릭터를 만드는 학생은 시작 전까지 기다려요.')) F.set(F.ref(db, 'school/ctl'), { open: false, at: Date.now() }); });
+  root.querySelectorAll('[data-adsc]').forEach(b => b.onclick = () => { if (b.dataset.adsc === 'start'){ if (confirm('입학을 시작할까요? 기다리던 학생이 모두 들어와요.')) F.set(F.ref(db, 'school/ctl'), { open: true, at: now2() }); } else if (confirm('입학 대기를 켤까요? 지금부터 캐릭터를 만드는 학생은 시작 전까지 기다려요.')) F.set(F.ref(db, 'school/ctl'), { open: false, at: now2() }); });
   root.querySelectorAll('[data-adok]').forEach(b => b.onclick = () => { F.set(F.ref(db, 'approved/' + b.dataset.adok), true).then(() => F.remove(F.ref(db, 'pending/' + b.dataset.adok))); });
   root.querySelectorAll('[data-adno]').forEach(b => b.onclick = () => { if (confirm('이 신청을 거절할까요?')) F.set(F.ref(db, 'approved/' + b.dataset.adno), false).then(() => F.remove(F.ref(db, 'pending/' + b.dataset.adno))); });
   root.querySelectorAll('[data-adst]').forEach(b => b.onclick = () => typeof adminStoryAct === 'function' && adminStoryAct(b.dataset.adst));
@@ -3532,7 +3535,7 @@ async function adminMap(){
   const O = adOnline(), getMap = async id => AD.mc[id] || (AD.mc[id] = await World.mapCanvas(id));
   const bid = o => (o.m || '').split(':')[0], P2 = (m, x, y) => [m.OX + (x - y) * 8, m.OY + (x + y) * 4];
   const dots = (g, m, id, k, off) => Object.entries(O).forEach(([u, o]) => { if (bid(o) !== id) return; const [x0, y0] = P2(m, (o.x || 0) + .5, (o.y || 0) + .5), x = (x0 - off[0]) * k, y = (y0 - off[1]) * k, c = HOUSES[o.house]?.col || '#FFD866', on = u === AD.follow, r = on ? 6 : 4;
-    if (on){ g.strokeStyle = '#FFF6E0'; g.lineWidth = 2; g.beginPath(); g.arc(x, y, 13 + 2 * Math.sin(Date.now() / 200), 0, 7); g.stroke(); }
+    if (on){ g.strokeStyle = '#FFF6E0'; g.lineWidth = 2; g.beginPath(); g.arc(x, y, 13 + 2 * Math.sin(now2() / 200), 0, 7); g.stroke(); }
     let ah = 0;
     if (k >= .7 && !AD.noAv) try { const A = World.Avatar, S = A.compose(avOf(AD.players[u] && { ...AD.players[u], ...(o.av ? { av: o.av } : {}) } || o)), sc = k * (on ? 1.1 : .8); ah = A.FH * sc;
       g.save(); g.fillStyle = 'rgba(10,5,20,.35)'; g.beginPath(); g.ellipse(x, y, 9 * sc, 3.5 * sc, 0, 0, 7); g.fill(); g.restore();
@@ -3634,12 +3637,12 @@ function iconSrc(k){
   return null;
 }
 // ---------- 효과 ----------
-const dbuff = k => ((me && me.buffs && me.buffs[k]) || 0) > Date.now();   // 용의 가호 (용의 동굴)
-const buffOn = k => (me?.buffs?.[k] || 0) > Date.now() || (me?.buffs?.all || 0) > Date.now();
+const dbuff = k => ((me && me.buffs && me.buffs[k]) || 0) > now2();   // 용의 가호 (용의 동굴)
+const buffOn = k => (me?.buffs?.[k] || 0) > now2() || (me?.buffs?.all || 0) > now2();
 function eatDish(k){
   const d = DISH_INFO[k]; if (!d || !(me.inv[k] > 0)) return;
   me.inv[k]--; const v = d.best ? d.v * 2 : d.v; me.buffs = me.buffs || {};
-  if (TIMED.includes(d.e) || d.e === 'all'){ const key = d.e; me.buffs[key] = Math.max(Date.now(), me.buffs[key] || 0) + v * 6e4; if (d.e === 'all') me.mana += 50; }
+  if (TIMED.includes(d.e) || d.e === 'all'){ const key = d.e; me.buffs[key] = Math.max(now2(), me.buffs[key] || 0) + v * 6e4; if (d.e === 'all') me.mana += 50; }
   if (d.e === 'mana') me.mana += v;
   if (d.e === 'know'){ const got = addKnow(v); if (got.length) setTimeout(() => toast(got.join(' · ')), 1200); }
   if (d.e === 'spot'){ if (!me.fg || me.fg.d !== todayKey()) me.fg = { d: todayKey(), got: [] }; me.fg.got = me.fg.got || []; me.fg.extra = (me.fg.extra || 0) + v; syncSpots(); }
@@ -3650,7 +3653,7 @@ function eatDish(k){
 }
 function syncBuffs(){
   const c = $('#buffChip'); if (!c || !me) return;
-  const now = Date.now(), on = Object.entries(me.buffs || {}).filter(([, t]) => t > now);
+  const now = now2(), on = Object.entries(me.buffs || {}).filter(([, t]) => t > now);
   World.setSpeedK && World.setSpeedK((buffOn('speed') ? 1.4 : 1) * (1 + sgFx('move_speed')));
   c.hidden = !on.length; if (on.length) c.textContent = '' + on.map(([k, t]) => `${k === 'all' ? '만찬' : BUFF_NAME[k]} ${(t - now) >= 72e5 ? Math.ceil((t - now) / 36e5) + ' 시간' : Math.ceil((t - now) / 6e4) + '분'}`).join(' · ');
 }
@@ -3676,9 +3679,9 @@ function cookIngredients(){
   const C = cooking, d = C.d, pool = [...CATCH.slice(0, 20), 'herb', 'mush', 'drop', 'milk', 'hegg'].filter(k => !d.r.includes(k));
   const decoy = [pool[Math.floor(Math.random() * pool.length)], pool[Math.floor(Math.random() * pool.length)]];
   const tray = [...new Set([...d.r, ...decoy])].sort(() => Math.random() - .5);
-  C.k = 0; C.miss = 0; C.t0 = Date.now();
+  C.k = 0; C.miss = 0; C.t0 = now2();
   const draw = () => {
-    const left = Math.max(0, 10 - Math.floor((Date.now() - C.t0) / 1000));
+    const left = Math.max(0, 10 - Math.floor((now2() - C.t0) / 1000));
     cookShow(`${cookHead(d, 1)}<div class="ckrcp">${d.r.map((k, i) => `<span class="cksl ${i < C.k ? 'ok' : i === C.k ? 'now' : ''}">${ic(k)}</span>`).join('<span class="sub">→</span>')}</div>
       <span>순서대로 눌러 솥에 넣어요 · 다음은 <b class="bad">${esc(ITEM[d.r[C.k]] || '')}</b> · ${left}초</span>
       <div class="ckig">${tray.map(k => `<button data-cki="${k}">${ic(k)}</button>`).join('')}</div>`);
@@ -3689,7 +3692,7 @@ function cookIngredients(){
       draw(); });
   };
   draw();
-  C.timer = setInterval(() => { if (!cooking) return; if (Date.now() - C.t0 > 10000){ clearInterval(C.timer); C.sc[0] = Math.max(0, 1 - C.miss); toast('시간이 지나서 남은 재료를 한꺼번에 넣었어요'); return cookHeat(); } const sp = cookUI().querySelector('.ckrcp + span'); if (sp) sp.innerHTML = `순서대로 눌러 솥에 넣어요 · 다음은 <b class="bad">${esc(ITEM[d.r[C.k]] || '')}</b> · ${Math.max(0, 10 - Math.floor((Date.now() - C.t0) / 1000))}초`; }, 500);
+  C.timer = setInterval(() => { if (!cooking) return; if (now2() - C.t0 > 10000){ clearInterval(C.timer); C.sc[0] = Math.max(0, 1 - C.miss); toast('시간이 지나서 남은 재료를 한꺼번에 넣었어요'); return cookHeat(); } const sp = cookUI().querySelector('.ckrcp + span'); if (sp) sp.innerHTML = `순서대로 눌러 솥에 넣어요 · 다음은 <b class="bad">${esc(ITEM[d.r[C.k]] || '')}</b> · ${Math.max(0, 10 - Math.floor((now2() - C.t0) / 1000))}초`; }, 500);
 }
 // 2. 불 맞추기: 꾹 누르면 올라가고 떼면 내려가요, 움직이는 초록 칸에 3초
 function cookHeat(){
@@ -3746,7 +3749,7 @@ let ckTab = 'book', ckMsg = '', ckPot = null, ckSel = null, ckPg = 0, ckDexPg = 
 const dishOpen = d => d.id !== 'd_pmooncake' || !!me.perk?.cake_recipe;   // 비밀 레시피
 function renderCook(){
   const have = k => me.inv[k] || 0, needOf = d => { const need = {}; d.r.forEach(k => need[k] = (need[k] || 0) + 1); return need; }, can = d => Object.entries(needOf(d)).every(([k, n]) => have(k) >= n);
-  const bag = DISHES.filter(k => have(k) > 0), cdex = me.cdex || {}, nowMs = Date.now(), buffs = Object.entries(me.buffs || {}).filter(([, t]) => t > nowMs);
+  const bag = DISHES.filter(k => have(k) > 0), cdex = me.cdex || {}, nowMs = now2(), buffs = Object.entries(me.buffs || {}).filter(([, t]) => t > nowMs);
   const tabs = [['book', '요리하기'], ['dex', `요리책 ${Object.keys(cdex).length}/${DISH.length}`], ['eff', `효과${buffs.length ? ' ●' : ''}`]];
   const goLab = '<button class="btn go" data-cklab="1" style="flex:1">과자 교실 솥으로</button>';
   let body = '';
@@ -3849,19 +3852,19 @@ const npcAv = n => n.av ? (n.avData ? World.Avatar.fix(n.avData) : World.Avatar.
 //          me.nflag { 플래그: 1 }, me.perk { 보상: 1 }
 const BAND_KO = { morning: '새벽·아침', day: '낮', evening: '저녁', night: '밤' };
 const BAND_HOUR = { morning: 9.5, day: 13, evening: 18.5, night: 23.5 };   // 관리자가 시간대를 정하면 하늘도 그 시각처럼
-World.hourNow = () => { if (typeof bandForce !== 'undefined' && bandForce && bandForce.d === todayKey() && BAND_HOUR[bandForce.b] !== undefined) return BAND_HOUR[bandForce.b]; const d = new Date(); return d.getHours() + d.getMinutes() / 60; };
-const bandNow = (h = new Date().getHours()) => (typeof bandForce !== 'undefined' && bandForce && bandForce.d === todayKey() && BAND_KO[bandForce.b]) ? bandForce.b : h >= 4 && h < 12 ? 'morning' : h >= 12 && h < 16 ? 'day' : h >= 16 && h < 21 ? 'evening' : 'night';
+World.hourNow = () => { if (typeof bandForce !== 'undefined' && bandForce && bandForce.d === todayKey() && BAND_HOUR[bandForce.b] !== undefined) return BAND_HOUR[bandForce.b]; const d = kNow(); return d.getHours() + d.getMinutes() / 60; };
+const bandNow = (h = kNow().getHours()) => (typeof bandForce !== 'undefined' && bandForce && bandForce.d === todayKey() && BAND_KO[bandForce.b]) ? bandForce.b : h >= 4 && h < 12 ? 'morning' : h >= 12 && h < 16 ? 'day' : h >= 16 && h < 21 ? 'evening' : 'night';
 const hash32 = s => { let h = 2166136261; for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 const WX_KO = { clear: '맑음', rain: '비', fog: '안개', snow: '눈' };
 let wxForce = null;   // 관리자가 정한 오늘 날씨 (story/wx)
 let bandForce = null;   // 관리자가 정한 오늘 시간대 (story/band) — 이야기·NPC 루틴 시험용
 function weatherToday(){
   if (wxForce && wxForce.d === todayKey()) return wxForce.w;
-  const r = hash32('wx' + todayKey()) / 4294967296, m = new Date().getMonth();
+  const r = hash32('wx' + todayKey()) / 4294967296, m = kNow().getMonth();
   return r < .25 ? ([11, 0, 1].includes(m) && r < .14 ? 'snow' : 'rain') : r < .40 ? 'fog' : 'clear';
 }
 const MOON_DAYS = 8;   // 달이 차고 기우는 주기: 진짜 달(29.5일)을 기다리면 이야기가 몇 주씩 멈추니까, 이 세계에선 8일에 한 번 보름·그믐이 와요
-const moonAge = (t = Date.now()) => { const d = (t - Date.UTC(2000, 0, 6, 18, 14)) / 864e5; return (((d % MOON_DAYS) + MOON_DAYS) % MOON_DAYS) / MOON_DAYS * 29.530588; };
+const moonAge = (t = now2()) => { const d = (t - Date.UTC(2000, 0, 6, 18, 14)) / 864e5; return (((d % MOON_DAYS) + MOON_DAYS) % MOON_DAYS) / MOON_DAYS * 29.530588; };
 const isFullMoon = () => Math.abs(moonAge() - 14.77) <= 4.2;   // 보름 전후 이틀쯤 (이야기·낚시 힌트의 「보름」)
 const dayNum = k => { const [y, m, d] = String(k).split('-').map(Number); return Math.round(Date.UTC(y, m - 1, d) / 864e5); };
 const daysSince = k => k ? dayNum(todayKey()) - dayNum(k) : 1e9;
@@ -3940,7 +3943,7 @@ function evCond(id){   // 오늘 열 수 있는 다음 이벤트 (장소 빼고 
   if (c.time && c.time.length && !c.time.includes(bandNow())) return null;
   if (c.weather && c.weather.length && !c.weather.includes(weatherToday())) return null;
   if (c.moon === 'full' && !isFullMoon()) return null;
-  if (c.dow && c.dow.length && !c.dow.includes(new Date().getDay())) return null;
+  if (c.dow && c.dow.length && !c.dow.includes(kNow().getDay())) return null;
   if (c.story && !(typeof storyCh !== 'undefined' && storyCh[c.story]?.done)) return null;
   if ((c.after || []).some(a => { const [o, h] = a.split(':'); return !me.npc?.[o]?.seen?.[h]; })) return null;
   if (c.afterDays && daysSince(st.evDay) < c.afterDays) return null;
@@ -4259,7 +4262,7 @@ let xrCur = null;
 setInterval(() => {
   let want = null; try { const run = me && me.ex && me.ex.run; if (sheetOn && sub === 'explore' && run && (xv?.view === 'march' || xv?.view === 'battle')) want = XR_BGM[run.rg]; } catch(e){}
   if (want === xrCur) return;
-  if (want && (xrOk[want] === undefined || (xrOk[want] === false && Date.now() - (xrOk['t' + want] || 0) > 30000))){ xrOk[want] = null; xrOk['t' + want] = Date.now(); fetch(want, { method: 'HEAD' }).then(r => { xrOk[want] = r.ok; }).catch(() => { xrOk[want] = false; }); return; }   // 연결이 잠깐 끊겨 확인에 실패하면 30초 뒤 다시 확인해요
+  if (want && (xrOk[want] === undefined || (xrOk[want] === false && now2() - (xrOk['t' + want] || 0) > 30000))){ xrOk[want] = null; xrOk['t' + want] = now2(); fetch(want, { method: 'HEAD' }).then(r => { xrOk[want] = r.ok; }).catch(() => { xrOk[want] = false; }); return; }   // 연결이 잠깐 끊겨 확인에 실패하면 30초 뒤 다시 확인해요
   if (want && xrOk[want] !== true) return;
   if (xrCur) BGM.sceneEnd('xr'); xrCur = want; if (want) BGM.scene('xr', want);
 }, 400);
@@ -4401,7 +4404,7 @@ const PERK_KO = { cat_furniture: '내 방 고양이 가구', bait: '나비의 �
   greenhouse_growth: '온실 성장 보너스', pumpkin_race: '호박 줍기 경주 보너스', scarecrow_hat: '허수아비 모자', tasty_potion: '맛있는 치유 물약 (전투에서 체력 70%·마력 20%)', cake_recipe: '호박달 케이크 레시피', fortune: '스텔라의 운세', rare_egg: '희귀 생물 알' };
 function evFinish(ctx){
   const { n, k, ev } = ctx, st = npcSt(n.id), got = [];
-  st.seen[k] = ctx.cold ? 'cold' : 'ok'; st.cold = ctx.cold; st.ev = todayKey(); st.evDay = todayKey(); st.evAt = Date.now(); st.hide = null;
+  st.seen[k] = ctx.cold ? 'cold' : 'ok'; st.cold = ctx.cold; st.ev = todayKey(); st.evDay = todayKey(); st.evAt = now2(); st.hide = null;
   npcAddA(n.id, ctx.sum);
   const r = ev.rewards || {};
   if (r.coin){ me.coin += r.coin; got.push(`${r.coin}G`); } if (r.mana){ me.mana += r.mana; got.push(`마력 +${r.mana}`); } if (r.know){ got.push(`지식 +${r.know}`, ...addKnow(r.know)); }
@@ -4413,7 +4416,7 @@ function evFinish(ctx){
     if (p === 'potion_hint'){ let k = 0; for (const x of HINT_ORDER){ if (k >= 2) break; if (!me.hints.includes(x)){ me.hints.push(x); got.push(`새 레시피: ${HINTS[x]}`); k++; } } if (!k){ me.coin += 60; got.push('장학금 +60G'); } }   // 아울라 ♥10: 모르는 레시피 2개를 바로 알려 줘요
     if (p === 'cat_furniture'){ me.fbag = me.fbag || {}; ['cattower', 'catdoll'].forEach(f => { me.fbag[f] = (me.fbag[f] || 0) + 1; }); }
     if (p === 'scarecrow_hat'){ const h = World.Avatar.meta.parts.hat.find(x => x.n === '가죽 모자'); if (h){ me.closet = me.closet || {}; me.closet['hat:' + h.id] = 1; } }
-    if (p === 'rare_egg'){ me.eggs = me.eggs || []; me.eggs.push({ id: crId(), k: 2, col: { ...CR_COLORS.find(c => c.n === '노을빛') }, at: Date.now() }); }
+    if (p === 'rare_egg'){ me.eggs = me.eggs || []; const e = { id: crId(), k: 2, col: { ...CR_COLORS.find(c => c.n === '노을빛') }, at: now2() }; if (me.eggs.length < HATCH_MAX) me.eggs.push(e); else { me.eggWait = [...(me.eggWait || []), e]; got.push('부화칸이 가득 차서 알은 칸이 비면 들어가요'); } }
     if (p === 'cake_recipe') got.push('요리책에 「호박달 케이크」가 생겼어요');
   });
   save(); hud(); npcSig = ''; syncNpcs();
@@ -4535,7 +4538,7 @@ document.addEventListener('click', async e => {
   if (b.dataset.adband !== undefined){ const v = b.dataset.adband; F.set(F.ref(db, 'story/band'), v ? { d: todayKey(), b: v } : null).then(() => toast(v ? `오늘 시간대: ${BAND_KO[v]}` : '시간대를 자동으로 돌렸어요')); bandForce = v ? { d: todayKey(), b: v } : null; return adminRender(); }
   if (b.dataset.adwx !== undefined){ const w = b.dataset.adwx; F.set(F.ref(db, 'story/wx'), w ? { d: todayKey(), w } : null).then(() => toast(w ? `오늘 날씨: ${WX_KO[w]}` : '날씨를 자동으로 돌렸어요')); wxForce = w ? { d: todayKey(), w } : null; return adminRender(); }
   if (b.dataset.adnpc === '__cast'){ adNpc = '__cast'; adNpcDraft = null; return adminRender(); }
-  if (b.dataset.adnpc){ const id = b.dataset.adnpc === '__new' ? 'h' + Date.now().toString(36) : b.dataset.adnpc; adNpc = id; adEvK = 0; adEvDraft = null; adWarn = [];
+  if (b.dataset.adnpc){ const id = b.dataset.adnpc === '__new' ? 'h' + now2().toString(36) : b.dataset.adnpc; adNpc = id; adEvK = 0; adEvDraft = null; adWarn = [];
     const n = npcGet(id) || { id, name: '새 NPC', title: '', av: true, look: 1, likes: [], dislikes: [] };
     adNpcDraft = JSON.parse(JSON.stringify({ ...n, routine: n.routine || ROUTINE[id] || { morning: 'village_square', day: 'village_square', evening: 'village_square', night: 'village_square' }, vars: npcVars(id), prof: npcProf(id) }));
     if (n.av && !adNpcDraft.avData) adNpcDraft.avData = World.Avatar.fromLook(n.look || 1); return adminRender(); }
@@ -4819,7 +4822,7 @@ function adminMqPlayerHTML(ps){   // 학생 한 명을 골라 메인 의뢰가 �
 }
 function adminStoryAct(v){
   const [a, n] = v.split(':'), c = +n;
-  if (a === 'mq'){ if (c > (AD.story.mq?.n ?? 0) && !confirm(`${c}장 「${MQ.q[MQ.list[c - 1]]?.name || c}」을(를) 송출할까요?`)) return; F.set(F.ref(db, 'story/mq'), { n: c, at: Date.now() }); }
+  if (a === 'mq'){ if (c > (AD.story.mq?.n ?? 0) && !confirm(`${c}장 「${MQ.q[MQ.list[c - 1]]?.name || c}」을(를) 송출할까요?`)) return; F.set(F.ref(db, 'story/mq'), { n: c, at: now2() }); }
 }
 const ACT_GO = { '물약 끓이기':'lab', '재료함 열기':'lab', '재료 꺼내기':'lab', '레시피 노트 보기':'lab', '시장 보기':'market', '박쥐 돌보기':'ranch', '모이 주기':'ranch', '독초 돌보기':'green', '물 주기':'green' };
 const FLAVOR = {
@@ -5391,7 +5394,7 @@ function renderSettings(){
 function renderHome(){
   const left = me.orders.filter(o => !o.done).length;
   const H = HOUSES[me.house], nowK = houseNow(), N = HOUSES[nowK], mine = nowK === me.house;
-  const d = new Date(), wx = weatherToday(), openEv = npcAll().filter(x => evCond(x.id));
+  const d = kNow(), wx = weatherToday(), openEv = npcAll().filter(x => evCond(x.id));
   frame('island', '오늘의 정보', `${dayLabel()} · 1학년 · ${H.name}`, `
     <div class="box today">
       <div class="li"><div class="main"><span class="t">${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${bandLabel(d.getHours())} · ${WX_KO[wx]}${isFullMoon() ? ' · 호박달 축제' : ''}</span></div></div>
@@ -5493,11 +5496,11 @@ function nextRound(first){
     const secs = L.round <= 3 ? pairs * 7 : Math.max(18, 44 - (L.round - 4) * 4);
     const ks = shuffle(CREATURES.map((_, k) => k)).slice(0, pairs);
     L.cards = shuffle([...ks, ...ks]).map(k => ({ k, open: false, done: false })); L.flip = []; L.busy = false;
-    L.end = Date.now() + secs * 1000; L.secs = secs;
+    L.end = now2() + secs * 1000; L.secs = secs;
     clearInterval(lessonIv);
     lessonIv = setInterval(() => {
       if (lesson !== L){ clearInterval(lessonIv); return; }
-      const left = L.end - Date.now(), bar = $('#bTime');
+      const left = L.end - now2(), bar = $('#bTime');
       if (bar){ bar.style.width = Math.max(0, left / (L.secs * 1000) * 100) + '%'; $('#bLeft').textContent = Math.ceil(Math.max(0, left) / 1000) + '초'; }
       if (left <= 0) lessonOver('시간이 다 됐어요');
     }, 200);
@@ -5653,8 +5656,8 @@ function renderClass(){
         return `<button class="btn" data-herb="${id}" ${L.pick || over ? 'disabled' : ''} style="min-height:48px;white-space:normal;${st};opacity:1">${ITEM[id]}</button>`; }).join('')}</div>`;
   } else if (L.s === 'beast'){
     const cols = L.cards.length > 6 ? 4 : 3;
-    body = `<section class="sec"><div class="sec-h"><h3>${over ? '수업 끝' : L.cards.every(c => c.done) ? '모두 찾았어요!' : '같은 동물 짝을 찾아요'}</h3><span class="meta">${prog} · <span id="bLeft">${Math.ceil(Math.max(0, L.end - Date.now()) / 1000)}초</span></span></div>
-      <div class="pbar" style="height:8px;margin-bottom:8px"><i id="bTime" style="width:${Math.max(0, (L.end - Date.now()) / (L.secs * 1000) * 100)}%;background:var(--gold)"></i></div>
+    body = `<section class="sec"><div class="sec-h"><h3>${over ? '수업 끝' : L.cards.every(c => c.done) ? '모두 찾았어요!' : '같은 동물 짝을 찾아요'}</h3><span class="meta">${prog} · <span id="bLeft">${Math.ceil(Math.max(0, L.end - now2()) / 1000)}초</span></span></div>
+      <div class="pbar" style="height:8px;margin-bottom:8px"><i id="bTime" style="width:${Math.max(0, (L.end - now2()) / (L.secs * 1000) * 100)}%;background:var(--gold)"></i></div>
       <div class="grid" style="grid-template-columns:repeat(${cols},1fr)">${L.cards.map((c, i) => `<button class="cell" data-card="${i}" ${over ? 'disabled' : ''} style="height:72px;overflow:hidden;${c.done ? 'background:var(--ok2);border-color:var(--ok)' : c.open ? '' : 'background:var(--soft)'}">${c.open || c.done || over ? `<div style="width:120px;height:102px;transform:scale(.55);margin:-24px -30px">${crSprite({ k: c.k, col: { n: '기본' }, bornAt: 0 }, 1)}</div>` : '<span class="b" style="color:var(--sub);font-size:24px">?</span>'}</button>`).join('')}</div></section>`;
   } else if (L.s === 'fly'){
     body = `<section class="sec"><div class="sec-h"><h3>${over ? '수업 끝' : '묘비 사이로 날아요'}</h3><span class="meta">${prog}</span></div>
@@ -5782,7 +5785,7 @@ function renderLab(){
 // ===== 온실 =====
 // 화단 칸: k 심은 씨앗(없으면 빈 칸), at 심은 시각, w 물 줬는지 (물을 주면 25% 빨리 자라요)
 const growMs = p => SEED_INFO[p.k].mins * 6e4 * (p.w ? .75 : 1) * (me.perk?.greenhouse_growth ? .85 : 1) / (1 + sgFx('crop_growth'));   // 맨디 ♥10: 온실 성장 보너스
-const plotLeft = p => p.k ? Math.max(0, p.at + growMs(p) - Date.now()) : 0;
+const plotLeft = p => p.k ? Math.max(0, p.at + growMs(p) - now2()) : 0;
 const plotReady = p => !!p.k && plotLeft(p) <= 0;
 const plotFrac = p => p.k ? Math.min(1, 1 - plotLeft(p) / growMs(p)) : 0;
 const timeText = ms => { const m = Math.ceil(ms / 6e4); return ms < 6e4 ? `${Math.ceil(ms / 1000)}초` : m < 60 ? `${m}분` : m >= 1440 ? `${Math.floor(m / 1440)}일${Math.floor(m % 1440 / 60) ? ` ${Math.floor(m % 1440 / 60)}시간` : ''}` : `${Math.floor(m / 60)}시간${m % 60 ? ` ${m % 60}분` : ''}`; };
@@ -5850,7 +5853,7 @@ function renderGreen(){
     const p = me.plots[plantFor], G = SEED_INFO[b.dataset.plant]; if (!p || p.k) return;
     if ((me.know || 0) < G.know) greenMsg = `지식 ${G.know}부터 심을 수 있어요.`;
     else if (me.coin < G.price && !(G.price && (me.sdt || 0) > 0)) greenMsg = `씨앗 값 ${G.price}G가 부족해요.`;
-    else { const free = G.price && (me.sdt || 0) > 0; if (free) me.sdt--; else me.coin -= G.price; seedPick = G.id; Object.assign(p, { k: G.id, at: Date.now(), w: false }); greenMsg = `${G.seed} 씨앗을 심었어요. ${timeText(growMs(p))} 뒤에 수확해요.${free ? ' (씨앗 쿠폰 사용)' : G.price ? ` -${G.price}G` : ''}`; plantFor = null; save(); hud(); sfx('pop'); }
+    else { const free = G.price && (me.sdt || 0) > 0; if (free) me.sdt--; else me.coin -= G.price; seedPick = G.id; Object.assign(p, { k: G.id, at: now2(), w: false }); greenMsg = `${G.seed} 씨앗을 심었어요. ${timeText(growMs(p))} 뒤에 수확해요.${free ? ' (씨앗 쿠폰 사용)' : G.price ? ` -${G.price}G` : ''}`; plantFor = null; save(); hud(); sfx('pop'); }
     renderGreen();
   });
   on('[data-plot]', b => {
@@ -5908,14 +5911,14 @@ async function crRename(c, born){
 }
 function adoptOut(i){
   const c = me.cr[i], d = CREATURES[c.k];
-  me.crGone = [...(me.crGone || []), { ...c, goneAt: Date.now(), why: 'adopt' }].slice(-10);   // 보낸 아이 기록: 실수로 보냈으면 관리자가 돌려줄 수 있어요
+  me.crGone = [...(me.crGone || []), { ...c, goneAt: now2(), why: 'adopt' }].slice(-10);   // 보낸 아이 기록: 실수로 보냈으면 관리자가 돌려줄 수 있어요
   const big = crAdult(c), cg = big ? Math.round(d.egg * .3) : 0; me.cr.splice(i, 1); if (big) me.inv[d.mat] = (me.inv[d.mat] || 0) + 1; me.coin += cg;   // 다 자란 아이만 답례를 남겨요 (알 사서 바로 보내기로 돈 벌지 못하게)
   if (crSel >= me.cr.length) crSel = Math.max(0, me.cr.length - 1);
   return `${withJosa(c.name, '이', '가')} 새 가족을 찾아 떠났어요. ${big ? `고맙다며 ${ITEM[d.mat]} +1 · ${cg}G를 남겼어요.` : ''}`;
 }
 function renderRanch(){
   if (crSel >= me.cr.length) crSel = 0;
-  const c = me.cr[crSel], d = c && CREATURES[c.k], now = Date.now();
+  const c = me.cr[crSel], d = c && CREATURES[c.k], now = now2();
   const ready = me.eggs.filter(e => eggLeft(e) <= 0).length;
   const tabs = segRow('rtab', ranchTab, [['pen', `사육장 ${me.cr.length}/${PEN_MAX}`], ['hatch', `부화실 ${me.eggs.length}/${HATCH_MAX}${ready ? ' ●' : ''}`], ['shop', '알 가게']]);
   const crCell = (x, attr, on_, size = .42) => `<button class="cell ${on_ ? 'sel' : ''}" ${attr} style="width:62px;height:66px;min-height:0;padding:0 0 14px;overflow:hidden;flex:0 0 62px">${crSprite(x, size)}<span class="crname">${esc(x.name)}</span></button>`;
@@ -5989,27 +5992,27 @@ function renderRanch(){
   on('[data-buyegg]', b => {
     const k = +b.dataset.buyegg, x = CREATURES[k];
     if (me.coin < x.egg || me.eggs.length >= HATCH_MAX) return;
-    me.coin -= x.egg; me.eggs.push({ id: crId(), k, col: randColor(), at: Date.now() }); ranchMsg = `${x.kind}의 알을 샀어요! 부화실에서 ${timeText(x.hatch * 6e4)} 뒤에 깨어나요.`; save(); redraw();
+    me.coin -= x.egg; me.eggs.push({ id: crId(), k, col: randColor(), at: now2() }); ranchMsg = `${x.kind}의 알을 샀어요! 부화실에서 ${timeText(x.hatch * 6e4)} 뒤에 깨어나요.`; save(); redraw();
   });
   const ac = $('#adoptCancel'); if (ac) ac.onclick = () => { placing = null; ranchMsg = ''; redraw(); };
   const ad = $('#adopt'); if (ad) ad.onclick = () => confirmBox(`${withJosa(c.name, '을', '를')} 입양 보낼까요? 돌아오지 않아요.`, '보내기', '아니요', true).then(ok => { if (!ok) return; ranchMsg = adoptOut(crSel); save(); redraw(); });
   const nm = $('#crnm'); if (nm) nm.onclick = () => crRename(c);
   const fd = $('#feed'); if (fd) fd.onclick = () => {
-    const n = 2 + (me.house === 'dusk' && myTime() ? 1 : 0); c.love = Math.min(LOVE_MAX, c.love + n); c.fedAt = Date.now(); tutHook('feed'); const up1 = crCare(c, n);
+    const n = 2 + (me.house === 'dusk' && myTime() ? 1 : 0); c.love = Math.min(LOVE_MAX, c.love + n); c.fedAt = now2(); tutHook('feed'); const up1 = crCare(c, n);
     ranchMsg = `${withJosa(c.name, '이', '가')} ${withJosa(d.food, '을', '를')} 맛있게 먹었어요. 애정 +${n}${up1 ? ' · 어른이 됐어요!' : ''}`; save(); redraw();
   };
   const pt = $('#pat'); if (pt) pt.onclick = () => {
-    const n = me.house === 'dusk' ? 2 : 1; c.love = Math.min(LOVE_MAX, c.love + n); c.petAt = Date.now(); const up2 = crCare(c, n);
+    const n = me.house === 'dusk' ? 2 : 1; c.love = Math.min(LOVE_MAX, c.love + n); c.petAt = now2(); const up2 = crCare(c, n);
     ranchMsg = `${withJosa(c.name, '이', '가')} 기분 좋아해요. 애정 +${n}${up2 ? ' · 어른이 됐어요!' : ''}`; save(); redraw();
   };
   const hv = $('#harvest'); if (hv) hv.onclick = () => {
     const T = LOVE_TIERS[loveTier(c)]; if (!T.mat || prodLeft(c) > 0 || !crAdult(c)) return;
-    const cg = Math.round(T.coin * d.prod / 60); me.inv[d.mat] = (me.inv[d.mat] || 0) + T.mat; me.coin += cg; c.prodAt = Date.now();   // 골드는 시간당 T.coin (자주 주는 아이는 조금씩)
+    const cg = Math.round(T.coin * d.prod / 60); me.inv[d.mat] = (me.inv[d.mat] || 0) + T.mat; me.coin += cg; c.prodAt = now2();   // 골드는 시간당 T.coin (자주 주는 아이는 조금씩)
     ranchMsg = `「${ITEM[d.mat]}」 ${T.mat}개${cg ? ` · ${cg}G` : ''}를 받았어요! (${T.n})`; save(); redraw();
   };
   const br = $('#breed'); if (br) br.onclick = () => {
     const m = me.cr[partner]; if (!m || me.eggs.length >= HATCH_MAX || me.mana < BREED_MANA) return;
-    me.eggs.push(makeEgg(c, m)); me.mana -= BREED_MANA; c.bredAt = m.bredAt = Date.now();
+    me.eggs.push(makeEgg(c, m)); me.mana -= BREED_MANA; c.bredAt = m.bredAt = now2();
     ranchMsg = `${c.name} ♥ ${m.name} · 알이 부화실로 갔어요! ${timeText(d.hatch * 6e4)} 뒤에 깨어나요.`; partner = null; save(); redraw();
   };
   // 남은 시간 표시를 1초마다, 무언가 끝나면 다시 그려요
@@ -6017,7 +6020,7 @@ function renderRanch(){
   ranchTick = setInterval(() => {
     if (!sheetOn || tab !== 'ranch' || sub) return clearInterval(ranchTick);
     let done = false;
-    app.querySelectorAll('[data-cd]').forEach(el => { const left = +el.dataset.cd - Date.now(); if (left <= 0) done = true; else el.textContent = timeText(left); });
+    app.querySelectorAll('[data-cd]').forEach(el => { const left = +el.dataset.cd - now2(); if (left <= 0) done = true; else el.textContent = timeText(left); });
     if (done) redraw();
   }, 1000);
 }
@@ -6167,14 +6170,14 @@ async function rest(){
   if (me.rest) return showRest();
   const kind = await restChoose(); if (!kind) return;
   const R = restPlan()[kind];
-  me.lastSleepAt = Date.now();
-  me.rest = { at: Date.now(), until: Date.now() + R.ms, gain: R.gain, cap: R.cap, why: R.why, kind };
+  me.lastSleepAt = now2();
+  me.rest = { at: now2(), until: now2() + R.ms, gain: R.gain, cap: R.cap, why: R.why, kind };
   endLesson(); save(); closeSheet(); speak('쉬는 중이에요');
   showRest();
 }
 function restEnd(early){   // 다 쉬었거나 일찍 일어났을 때: 쉰 만큼 마력을 채워요
   const R = me.rest; if (!R) return;
-  const k = early ? Math.max(0, Math.min(1, (Date.now() - R.at) / (R.until - R.at))) : 1, g = Math.floor(R.gain * k);
+  const k = early ? Math.max(0, Math.min(1, (now2() - R.at) / (R.until - R.at))) : 1, g = Math.floor(R.gain * k);
   const before = me.mana; me.mana = Math.max(me.mana, Math.min(R.cap, me.mana + g)); me.rest = null; save(); hud();
   clearInterval(restTimer); $('#rest').classList.remove('on'); $('#rest').innerHTML = '';
   toast(early ? `일찍 일어났어요. 마력 +${me.mana - before}` : `푹 쉬었어요! 마력 +${me.mana - before} (${R.why})`);
@@ -6183,7 +6186,7 @@ function restEnd(early){   // 다 쉬었거나 일찍 일어났을 때: 쉰 만�
 let restTimer = 0;
 function showRest(){
   const R = me.rest; if (!R) return;
-  if (Date.now() >= R.until) return restEnd(false);
+  if (now2() >= R.until) return restEnd(false);
   const A = World.Avatar, fc = A.meta.parts.face.findIndex(p => p.id === 'face_closed'), av = { ...avOf(me), ...(fc >= 0 ? { face: fc } : {}) };
   $('#rest').innerHTML = `<div class="rbox px"><div class="rbed"><canvas id="rcv" width="96" height="56"></canvas><span class="zz">Z<b>z</b><b>z</b></span></div>
     <b class="gt">${R.kind === 'night' ? '밤잠을 자고 있어요' : '낮잠을 자고 있어요'}</b><span class="s" id="rleft"></span><span class="s sub">다 쉬면 마력 +${R.gain} (${R.why}) · 쉬는 동안은 아무것도 못 해요</span>
@@ -6197,13 +6200,15 @@ function showRest(){
     g.drawImage(quilt, 0, 0);
   });
   $('#rwake').onclick = () => restEnd(true);
-  const tick = () => { if (!me.rest) return; const left = me.rest.until - Date.now(); if (left <= 0) return restEnd(false); const m = Math.floor(left / 6e4), sc = Math.floor(left / 1000) % 60, got = Math.floor(me.rest.gain * (Date.now() - me.rest.at) / (me.rest.until - me.rest.at)); $('#rleft').textContent = `남은 시간 ${m}:${String(sc).padStart(2, '0')} · 지금 일어나면 마력 +${got}`; };
+  const tick = () => { if (!me.rest) return; const left = me.rest.until - now2(); if (left <= 0) return restEnd(false); const m = Math.floor(left / 6e4), sc = Math.floor(left / 1000) % 60, got = Math.floor(me.rest.gain * (now2() - me.rest.at) / (me.rest.until - me.rest.at)); $('#rleft').textContent = `남은 시간 ${m}:${String(sc).padStart(2, '0')} · 지금 일어나면 마력 +${got}`; };
   clearInterval(restTimer); tick(); restTimer = setInterval(tick, 1000);
 }
 // 하루: 진짜 날짜가 바뀌면 학기 날짜가 하루 지나고 주문이 새로 와요
 function dayTick(){
   if (!me) return;
-  { const d = new Date(), loc = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; if (me.dayKey === loc && loc !== todayKey()){ me.dayKey = todayKey(); save(); } }   // 예전(기기 시간대) 날짜로 적혀 있으면 오늘 주문은 그대로 두고 한국 날짜로만 바꿔 적어요
+  if (me.eggWait?.length && (me.eggs || []).length < HATCH_MAX){ me.eggs = me.eggs || []; while (me.eggWait.length && me.eggs.length < HATCH_MAX) me.eggs.push({ ...me.eggWait.shift(), at: now2() }); save(); toast('기다리던 알이 부화칸에 들어갔어요'); }   // 부화칸이 비면 기다리던 알이 들어가요
+  if (!srvOk && !solo) return;   // 서버 시각을 받기 전에는 날짜를 넘기지 않아요
+  { const d = new Date, loc = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; if (me.dayKey === loc && loc !== todayKey()){ me.dayKey = todayKey(); save(); } }   // 예전(기기 시간대) 날짜로 적혀 있으면 오늘 주문은 그대로 두고 한국 날짜로만 바꿔 적어요
   if (me.dayKey !== todayKey() && dayNo(todayKey()) > dayNo(me.dayKey)){ if (me.dayKey){ me.day++; me.orders = makeOrders(me.day, me.hints, me.found); toast(`봄 학기 ${me.day}일 아침이에요! 새 주문이 왔어요`); } me.dayKey = todayKey(); save(); if (sheetOn) render(); }
   if (typeof mqTick === 'function') mqTick();
 }
@@ -6346,7 +6351,7 @@ function bindBreed(p){
     btn.disabled = true;
     const egg = makeEgg(mineC, theirs);
     me.eggs.push(egg); me.mana -= BREED_MANA; me.bredWith[visitUid] = todayKey(); save();
-    F.push(F.ref(db, 'guest/' + visitUid), { uid, nick: me.nick, look: me.look, av: me.av, house: me.house, text: `${mineC.name}${josa(mineC.name, '과', '와')} ${theirs.name}${josa(theirs.name, '이', '가')} 짝꿍이 됐어요!`, at: Date.now() }).catch(() => {});
+    F.push(F.ref(db, 'guest/' + visitUid), { uid, nick: me.nick, look: me.look, av: me.av, house: me.house, text: `${mineC.name}${josa(mineC.name, '과', '와')} ${theirs.name}${josa(theirs.name, '이', '가')} 짝꿍이 됐어요!`, at: now2() }).catch(() => {});
     toast(`${mineC.name} ♥ ${theirs.name} · 알이 내 부화실로 갔어요!`);
     vMine = vTheirs = null; renderVisit();
   };
@@ -6404,7 +6409,7 @@ function renderVisit(){
     if (!text && !giftPick) return toast('한 줄이라도 남겨 주세요.');
     if (giftPick && me.inv[giftPick] < 1) return;
     send.disabled = true;
-    const entry = { uid, nick: me.nick, look: me.look, av: me.av, house: me.house, text, at: Date.now() };
+    const entry = { uid, nick: me.nick, look: me.look, av: me.av, house: me.house, text, at: now2() };
     if (giftPick) entry.gift = giftPick;
     try { await F.push(F.ref(db, 'guest/' + visitUid), entry); }
     catch(e){ send.disabled = false; return toast('방명록을 남기지 못했어요: ' + (e.code || e.message)); }
@@ -6418,14 +6423,14 @@ function renderVisit(){
 const EXAM_N = 10, EXAM_SEC = 20, EXAM_DAYS = [2, 4, 6], EXAM_FROM = 9, EXAM_TO = 20, EXAM_TOP = [500, 400, 300], EXAM_START = new Date(2026, 9, 29);   // 첫 시험은 10월 29일(목)부터
 const examDay = d => EXAM_DAYS.includes(d.getDay()) && d >= EXAM_START;
 const ymd = d => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-const examOpenKey = (d = new Date()) => examDay(d) && d.getHours() >= EXAM_FROM && d.getHours() < EXAM_TO ? ymd(d) : null;   // 지금 볼 수 있으면 그날 열쇠
-const examKey = () => ymd(new Date());
-const examToday = () => examDay(new Date());
+const examOpenKey = (d = kNow()) => examDay(d) && d.getHours() >= EXAM_FROM && d.getHours() < EXAM_TO ? ymd(d) : null;   // 지금 볼 수 있으면 그날 열쇠
+const examKey = () => ymd(kNow());
+const examToday = () => examDay(kNow());
 const examDone = () => examToday() && me.exam?.week === examKey() && me.exam.done;
 const examStarted = () => examToday() && me.exam?.week === examKey();
 const examDayName = ['일', '월', '화', '수', '목', '금', '토'];
 function examBoardKey(){   // 가장 최근에 성적이 붙은 시험날 (시험 다음 날 0시부터)
-  const d = new Date(); for (let k = 1; k <= 8; k++){ const x = new Date(d); x.setDate(x.getDate() - k); if (examDay(x)) return ymd(x); } return null; }
+  const d = kNow(); for (let k = 1; k <= 8; k++){ const x = new Date(d); x.setDate(x.getDate() - k); if (examDay(x)) return ymd(x); } return null; }
 function examForfeit(){   // 시험 도중에 앱을 닫았으면 푼 데까지만 점수가 돼요
   if (!me || !me.exam || me.exam.done || exam) return; const e = me.exam; e.done = true; e.score = Math.max(0, Math.min(100, e.score || 0)); examFinalize(e.score, e.week); }
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -6458,7 +6463,7 @@ let exam = null;   // { qs, i, right, picked, t0 }
 function startExam(){
   if (examStarted()) return; if (!examOpenKey()) return toast('시험 시간이 아니에요');
   me.exam = { week: examKey(), score: 0, done: false }; save();   // 도중에 나가도 한 번 본 걸로 쳐요
-  exam = { qs: makeExam(), i: 0, right: 0, picked: null, t0: Date.now() };
+  exam = { qs: makeExam(), i: 0, right: 0, picked: null, t0: now2() };
   sub = 'exam'; render();
 }
 let examTick = 0;
@@ -6480,7 +6485,7 @@ function renderExam(){
   on('[data-ans]', b => answer(+b.dataset.ans));
   if (exam.picked === null){
     const tick = () => {
-      const left = EXAM_SEC - (Date.now() - exam.t0) / 1000;
+      const left = EXAM_SEC - (now2() - exam.t0) / 1000;
       const el = $('#exBar'); if (!el || sub !== 'exam') return clearInterval(examTick);
       el.style.width = Math.max(0, left / EXAM_SEC * 100) + '%'; $('#exLeft').textContent = Math.ceil(Math.max(0, left)) + '초';
       if (left <= 0) answer(-1);
@@ -6497,7 +6502,7 @@ function answer(j){
   renderExam();
   setTimeout(() => {
     if (sub !== 'exam' || !exam) return;
-    exam.i++; exam.picked = null; exam.t0 = Date.now();
+    exam.i++; exam.picked = null; exam.t0 = now2();
     if (exam.i >= exam.qs.length) finishExam(); else renderExam();
   }, 900);
 }
@@ -6509,10 +6514,13 @@ function examFinalize(s, week){
   if (s >= 60){ const g = Math.round(s * 2); me.coin += g; r.push(`장학금 ${g}G`); }
   if (s >= 80){ const k = ['uhair','scale','wool'][Math.floor(Math.random() * 3)]; me.inv[k] = (me.inv[k] || 0) + 2; r.push(`${ITEM[k]} ×2`); }
   if (s >= 100){ me.inv.egg = (me.inv.egg || 0) + 1; r.push('용 알 껍질 ×1'); }
-  me.exam.reward = r.join(' · ') || ''; me.exam.at = Date.now();
+  me.exam.reward = r.join(' · ') || ''; me.exam.at = now2();
   save(); hud();
-  const n = new Date(), frac = .99 * (1 - (n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds()) / 86400);   // 같은 점수면 먼저 낸 사람이 앞서요
-  if (!solo && F && db) F.set(F.ref(db, `exam/${week}/${uid}`), s + frac).catch(() => {});
+  const n = kNow(), frac = .99 * (1 - (n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds()) / 86400);   // 같은 점수면 먼저 낸 사람이 앞서요
+  if (!solo && F && db) F.set(F.ref(db, `exam/${week}/${uid}`), { s: s + frac, at: F.serverTimestamp ? F.serverTimestamp() : now2() }).catch(() => {});   // 서버가 시험 요일·시간인지 확인해요 (DB 규칙)
+}
+// 성적 한 칸: 서버 시각이 그 시험날과 같은 것만 쳐요 (다른 날 미리 써 둔 점수는 빼요)
+function examVal(v, key){ if (typeof v === 'number') return solo ? v : null; if (!v || typeof v.s !== 'number' || !v.at) return null; return Math.floor((v.at + 9 * 3600e3) / 864e5) === dayNo(key) ? v.s : null;
 }
 
 // ---- 성적 게시판: 시험 다음 날부터 붙어요. 1·2·3등은 장학금을 더 받아요 ----
@@ -6523,7 +6531,7 @@ function renderExamBoard(){
   const draw = () => {
     if (!(sheetOn && sub === 'class' && classTab === 'board' && !lesson)) return;
     const raw = key ? (solo ? (me.exam && me.exam.week === key ? { me: me.exam.score + .5 } : {}) : (examBd || {})) : {}, me_ = myId();
-    const rows = Object.entries(raw).filter(([, v]) => typeof v === 'number').sort((a, b) => b[1] - a[1]), mine = rows.findIndex(([u]) => u === (solo ? 'me' : me_));
+    const rows = Object.entries(raw).map(([u, v]) => [u, examVal(v, key)]).filter(([, v]) => typeof v === 'number').sort((a, b) => b[1] - a[1]), mine = rows.findIndex(([u]) => u === (solo ? 'me' : me_));
     let msg = ''; me.examBonus = me.examBonus || {};
     if (!solo && key && mine >= 0 && mine < 3 && !me.examBonus[key]){ me.examBonus[key] = 1; me.coin += EXAM_TOP[mine]; save(); hud(); sfx('heart'); msg = `${mine + 1}등 장학금 +${EXAM_TOP[mine]}G`; }
     const list = rows.length ? rows.map(([u, v], i) => { const nm = solo ? me.nick : (playersList[u] && playersList[u].nick) || '학생', you = i === mine;
@@ -6537,7 +6545,7 @@ function renderExamBoard(){
 let examBoard = {}, examOff = null;
 function renderExamResult(){
   const ex = me.exam || {};
-  if (!solo && !examOff) examOff = F.onValue(F.ref(db, `exam/${ex.week}`), s => { examBoard = s.val() || {}; if (sub === 'exam' && !exam) renderExamResult(); });
+  if (!solo && !examOff) examOff = F.onValue(F.ref(db, `exam/${ex.week}`), s => { examBoard = Object.fromEntries(Object.entries(s.val() || {}).map(([u, v]) => [u, examVal(v, ex.week)]).filter(([, v]) => v !== null)); if (sub === 'exam' && !exam) renderExamResult(); });
   const board = solo ? { me: ex.score } : examBoard;
   const avg = k => { const v = Object.entries(board).filter(([u]) => (solo ? me.house : playersList[u]?.house) === k).map(([, n]) => Math.floor(+n || 0)); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
   frame('class', '쪽지시험 결과', '이번 주 시험 끝!', `
@@ -6577,7 +6585,7 @@ function dfListen(){
   dfOffs.push(F.onValue(F.ref(db, 'defense/ctl'), s => { const v = s.val(), was = dfCtl && dfCtl.open; dfCtl = v; dfBtn(); if (v && v.open && !was) toast('이벤트 「용의 알 지키기」가 열렸어요! 오른쪽 위 버튼을 눌러 보세요'); if (!(v && v.open) && dfOn) dfClose(); else if (dfOn) dfUi(); dfCheckCut(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/st'), s => { dfSt = s.val(); if (dfSt){ dfSt.m = dfSt.m || []; dfSt.p = dfSt.p || {}; dfSt.f = dfSt.f || []; dfSt.e = dfSt.e || [0, 0, 0]; dfSt.left = dfSt.left || 0; }   // 서버는 빈 목록·빈 객체를 저장하지 않아요 → 빈 값으로 채워요
      dfStAt = performance.now(); if (dfSt && dfSt.f){ const nw = performance.now(); dfSt.f.forEach(([u2]) => { const U = dfUnits[u2]; if (U && !(U.wa && nw - U.wa.t0 < U.wa.dur - 40)){ const k = XWA[U.job] || 'melee'; U.wa = { k, t0: nw, dur: xDur(k), c: '#ffffff' }; } }); }
-    if (dfPend && Date.now() - dfPend.t > 150){ const mp = dfMe(); if (mp && mp[6][dfPend.i] < .3 && dfCtl && dfCtl.ph === 'wave') toast('사거리 안에 몬스터가 없어요'); dfPend = null; } if (dfOn) dfUi(); dfCheckCut(); }));
+    if (dfPend && now2() - dfPend.t > 150){ const mp = dfMe(); if (mp && mp[6][dfPend.i] < .3 && dfCtl && dfCtl.ph === 'wave') toast('사거리 안에 몬스터가 없어요'); dfPend = null; } if (dfOn) dfUi(); dfCheckCut(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/res'), s => { dfRes = s.val(); if (World.reqRefresh) World.reqRefresh(); }));
   dfOffs.push(F.onValue(F.ref(db, 'defense/pick'), s => { dfPick = s.val() || {}; if (dfOn) dfUi(); }));
 }
@@ -6611,7 +6619,7 @@ function dfUi(){
   const plN = st ? Object.keys(st.p).length : 0, rdN = st ? Object.values(st.p).filter(q => q[8]).length : 0;
   let txt = ph === 'ready' ? `준비 ${rdN} / ${plN}` : ph === 'wave' ? `남은 몬스터 ${st ? st.m.length + st.left : '-'}마리` : ph === 'rest' ? `준비 ${rdN} / ${plN}` : ph === 'over' ? (st && st.win ? '알을 모두 지켜 냈어요!' : '알이 모두 깨졌어요.......') : '';
   if (stale) txt = '진행이 잠시 멈췄어요. 잠깐만 기다려 주세요.';
-  if (canSeat && my && !mp){ dfSeatWait = dfSeatWait || Date.now(); if (Date.now() - dfSeatWait > 4000){ dfSeatWait = 0; delete dfPick[myId()]; GDB.set('defense/pick/' + myId(), null); toast('다른 친구가 같은 자리를 먼저 골랐어요. 다른 자리를 골라요'); } } else dfSeatWait = 0;   // 같은 자리를 동시에 고르면 한 명은 못 앉아요
+  if (canSeat && my && !mp){ dfSeatWait = dfSeatWait || now2(); if (now2() - dfSeatWait > 4000){ dfSeatWait = 0; delete dfPick[myId()]; GDB.set('defense/pick/' + myId(), null); toast('다른 친구가 같은 자리를 먼저 골랐어요. 다른 자리를 골라요'); } } else dfSeatWait = 0;   // 같은 자리를 동시에 고르면 한 명은 못 앉아요
   const job = dfJob(), jn = job && XJ[job] ? XJ[job].n : '아직 없어요 (탐사에서 먼저 골라요)';
   const upgB = mp ? `<button class="btn sm" id="dfupb">올리기${[0, 1].some(i => ['pow', 'rng', 'cd'].some(k => { const c = TD.upCost(dfPlayerOf(mp), i, k); return c != null && c <= mp[3]; })) ? ' ●' : ''}</button>` : '';
   let sk = ''; if (mp){ const meta = dfSkillMeta(); sk = `<div class="dfsk">${meta.map((m, i) => `<button data-sk="${i}">${m.ic}<span>${esc(m.n)}</span><i class="cdm"></i><b class="cdt"></b></button>`).join('')}<button id="dfauto" class="${mp[7] ? 'on' : ''}">자동<br>${mp[7] ? '켬' : '끔'}</button>${upgB}</div>`; }
@@ -6640,11 +6648,11 @@ function dfUpHTML(mp){
       <div style="display:flex;justify-content:space-between;align-items:center"><span class="s">${dfUpVal(pl, i, k, lv)}${cost == null ? '' : ` → ${dfUpVal(pl, i, k, lv + 1)}`}</span>${cost == null ? '<span class="s sub">다 올렸어요</span>' : `<button class="btn sm ${gold >= cost ? 'go' : ''}" data-up="${i},${k}" ${gold >= cost ? '' : 'disabled'}>올리기 ${cost}G</button>`}</div></div>`; }).join('');
   return `<div class="uph"><b>스킬 올리기</b><span><span class="gold" style="color:var(--gold)">내 골드 ${gold}G</span> <button class="btn sm" id="dfupx">닫기</button></span></div><div class="upt">${meta.map((m, n) => `<button data-ut="${n}" class="${n === i ? 'on' : ''}">${m.ic}<span>${esc(m.n)}</span></button>`).join('')}</div>${rows}`;
 }
-function dfSend(c){ GDB.set('defense/cmd/' + myId(), { ...c, n: Date.now() }); }
+function dfSend(c){ GDB.set('defense/cmd/' + myId(), { ...c, n: now2() }); }
 function dfCast(i, btn){
   const mp = dfMe(); if (!mp) return toast('먼저 자리에 앉아요'); if (!dfCtl || dfCtl.ph !== 'wave') return toast('웨이브가 시작되면 쓸 수 있어요');
   const rem = mp[6][i] - (performance.now() - dfStAt) / 1000; if (rem > .15){ if (btn){ btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake'); } return; }
-  const now = Date.now(); if (now - dfLastCmd < 220) return; dfLastCmd = now; dfPend = { i, t: now }; dfSend({ i }); sfx('pick');
+  const now = now2(); if (now - dfLastCmd < 220) return; dfLastCmd = now; dfPend = { i, t: now }; dfSend({ i }); sfx('pick');
 }
 // 스킬 단추의 쿨타임 표시 (매 프레임)
 function dfSkillTick(now){
@@ -6656,7 +6664,7 @@ function dfSeat(z, s){
   const ph = dfCtl ? dfCtl.ph : 'ready'; if (ph !== 'ready' && ph !== 'rest') return toast('웨이브 중에는 자리를 바꿀 수 없어요');
   const job = dfJob(); if (!job) return toast('탐사에서 직업을 먼저 골라야 해요');
   if (Object.entries(dfPick).some(([u, p]) => u !== myId() && p.z === z && p.s === s)) return toast('다른 친구가 앉아 있어요');
-  const p = { z, s, job, n: me.nick, at: Date.now() }; dfPick[myId()] = p; GDB.set('defense/pick/' + myId(), p); dfUi();
+  const p = { z, s, job, n: me.nick, at: now2() }; dfPick[myId()] = p; GDB.set('defense/pick/' + myId(), p); dfUi();
 }
 function dfTap(e){
   const c = $('#dfc'), r = c.getBoundingClientRect(), gx = (e.clientX - r.left) / r.width * TD.W, gy = (e.clientY - r.top) / r.height * TD.H;
@@ -6728,9 +6736,9 @@ async function dfDragonOffer(i){
   const D = DF_DRAG[i]; if (!D || !me) return; const day = todayKey(); if (!me.dfb || me.dfb.day !== day) me.dfb = { day, n: 0 };
   const left = 2 - me.dfb.n, until = (me.buffs && me.buffs[D.k]) || 0;
   if (left <= 0) return toast('오늘은 용의 가호를 두 번 받았어요. 내일 다시 와요');
-  const ok = await confirmBox(`${D.n}가 머리를 비벼요. ${D.t}의 가호를 받을까요?\n${D.fx} · 2시간 · 오늘 ${me.dfb.n}/2번 받았어요${until > Date.now() ? `\n(지금 남은 가호 ${Math.ceil((until - Date.now()) / 6e4)}분은 새로 2시간이 돼요)` : ''}`, '받을게요', '다음에');
+  const ok = await confirmBox(`${D.n}가 머리를 비벼요. ${D.t}의 가호를 받을까요?\n${D.fx} · 2시간 · 오늘 ${me.dfb.n}/2번 받았어요${until > now2() ? `\n(지금 남은 가호 ${Math.ceil((until - now2()) / 6e4)}분은 새로 2시간이 돼요)` : ''}`, '받을게요', '다음에');
   if (!ok) return;
-  me.buffs = me.buffs || {}; me.buffs[D.k] = Date.now() + 2 * 3600 * 1000; me.dfb.n++; save(); hud(); sfx('heart'); toast(`${D.t}의 가호를 받았어요! (${D.fx}, 2시간)`);
+  me.buffs = me.buffs || {}; me.buffs[D.k] = now2() + 2 * 3600 * 1000; me.dfb.n++; save(); hud(); sfx('heart'); toast(`${D.t}의 가호를 받았어요! (${D.fx}, 2시간)`);
 }
 // ----- 연출: 시작(용 알 이야기) · 끝(부화) — 평범한 영상처럼 한 번씩 나와요 -----
 let dfCut = null;
@@ -6818,8 +6826,8 @@ function dfHostResume(){   // 관리자 화면이 새로 고쳐져도 하던 진
 }
 function dfHostStart(rs){
   if (dfHost || !F || !db) return; const S = rs ? rs.S : TD.newState([], { auto: 0 }); if (!rs) S.phase = 'ready';
-  dfHost = { S, id: rs ? rs.id : Date.now(), sv: 0, intro: rs ? rs.intro || 0 : 0, startAt: 0, last: performance.now(), pub: 9, hb: 9, ph: '', w: -1, paused: false, timer: dfTimer(dfHostTick, 100) };
-  dfHost.last = performance.now(); dfHost.seen = {}; dfHost.cmdOff = F.onValue(F.ref(db, 'defense/cmd'), sn => { const v = sn.val() || {}, H = dfHost; if (!H) return; Object.entries(v).forEach(([u, c]) => { if (!c || H.seen[u] === c.n) return; const first = !(u in H.seen); H.seen[u] = c.n; if (first && H.warm !== false && Date.now() - c.n > 5000) return; const p = H.S.players[u]; if (!p) return; if (c.a !== undefined) p.auto = c.a ? 1 : 0; if (c.r !== undefined) TD.setReady(H.S, u, c.r); if (c.i !== undefined && !H.paused) TD.cast(H.S, u, c.i); if (c.u && (c.u[0] === 0 || c.u[0] === 1) && ['pow', 'rng', 'cd'].includes(c.u[1])) TD.upgrade(H.S, u, c.u[0], c.u[1]); }); });
+  dfHost = { S, id: rs ? rs.id : now2(), sv: 0, intro: rs ? rs.intro || 0 : 0, startAt: 0, last: performance.now(), pub: 9, hb: 9, ph: '', w: -1, paused: false, timer: dfTimer(dfHostTick, 100) };
+  dfHost.last = performance.now(); dfHost.seen = {}; dfHost.cmdOff = F.onValue(F.ref(db, 'defense/cmd'), sn => { const v = sn.val() || {}, H = dfHost; if (!H) return; Object.entries(v).forEach(([u, c]) => { if (!c || H.seen[u] === c.n) return; const first = !(u in H.seen); H.seen[u] = c.n; if (first && H.warm !== false && now2() - c.n > 5000) return; const p = H.S.players[u]; if (!p) return; if (c.a !== undefined) p.auto = c.a ? 1 : 0; if (c.r !== undefined) TD.setReady(H.S, u, c.r); if (c.i !== undefined && !H.paused) TD.cast(H.S, u, c.i); if (c.u && (c.u[0] === 0 || c.u[0] === 1) && ['pow', 'rng', 'cd'].includes(c.u[1])) TD.upgrade(H.S, u, c.u[0], c.u[1]); }); });
   if (!rs){ F.set(F.ref(db, 'defense/ctl'), { open: true, id: dfHost.id, ph: 'ready', w: 0, win: 0, hb: now2() }); F.set(F.ref(db, 'defense/st'), TD.snap(S)); }
   dfWakeOn(); adminRender();
 }
@@ -6834,7 +6842,7 @@ function dfHostTick(){
   if (!H.paused) TD.step(S, dt);
   H.sv += dt; if (H.sv >= 2){ H.sv = 0; try { localStorage.setItem('dfhost', JSON.stringify({ id: H.id, S, intro: H.intro || 0 })); } catch(e){} }
   H.pub += dt; if (H.pub >= .25){ H.pub = 0; F.set(F.ref(db, 'defense/st'), TD.snap(S)); }
-  H.hb += dt; if (H.hb >= 2 || S.phase !== H.ph || S.wave !== H.w){ const ch = S.phase !== H.ph || S.wave !== H.w; H.hb = 0; H.ph = S.phase; H.w = S.wave; F.set(F.ref(db, 'defense/ctl'), { open: true, id: H.id, intro: H.intro || 0, ph: S.phase, w: S.wave, win: S.win ? 1 : 0, hb: now2(), pause: H.paused ? 1 : 0 }); if (ch && S.phase === 'over') F.set(F.ref(db, 'defense/res'), { id: H.id, eggs: S.eggs.map(Math.round), win: S.win ? 1 : 0, at: Date.now() }); if (ch && AD.tab === 'event') adminRender(); }
+  H.hb += dt; if (H.hb >= 2 || S.phase !== H.ph || S.wave !== H.w){ const ch = S.phase !== H.ph || S.wave !== H.w; H.hb = 0; H.ph = S.phase; H.w = S.wave; F.set(F.ref(db, 'defense/ctl'), { open: true, id: H.id, intro: H.intro || 0, ph: S.phase, w: S.wave, win: S.win ? 1 : 0, hb: now2(), pause: H.paused ? 1 : 0 }); if (ch && S.phase === 'over') F.set(F.ref(db, 'defense/res'), { id: H.id, eggs: S.eggs.map(Math.round), win: S.win ? 1 : 0, at: now2() }); if (ch && AD.tab === 'event') adminRender(); }
 }
 function dfTimer(fn, ms){   // 화면이 가려져도 느려지지 않게 워커 시계를 써요 (안 되면 보통 시계)
   let w = null; try { w = new Worker(URL.createObjectURL(new Blob([`setInterval(()=>postMessage(0),${ms})`], { type: 'text/javascript' }))); w.onmessage = fn; } catch(e){ w = null; }
@@ -6848,7 +6856,7 @@ function dfHostClose(){ dfHostStop(); if (!F || !db) return; F.set(F.ref(db, 'de
 const DF_LOCAL = true;   // 지금은 관리자 화면이 계산해요. 서버 계산(Cloud Functions)이 배포되면 false 로 바꿔요
 function adminEventHTMLSrv(){
   const c = AD.dfctl || {}, open = !!c.open, st = AD.dfst || {}, picks = Object.entries(AD.dfpick || {}), nm = u => esc((AD.players[u] && AD.players[u].nick) || u.slice(0, 6));
-  const dead = open && c.hb && now2() - c.hb > 15000, wait = AD.dfWait && Date.now() - AD.dfWait < 20000 && !open, ph = c.ph;
+  const dead = open && c.hb && now2() - c.hb > 15000, wait = AD.dfWait && now2() - AD.dfWait < 20000 && !open, ph = c.ph;
   const zl = TD.ZONES.map((z, i) => `${z.name}: ${picks.filter(([, p]) => p.z === i).map(([u, p]) => `${nm(u)}(${XJ[p.job] ? XJ[p.job].n : '?'})`).join(', ') || '비어 있어요'}`);
   const pl = st.p ? Object.keys(st.p).length : 0, eg = st.e || [];
   return `<div class="adcard"><b>이벤트 「용의 알 지키기」</b> · ${wait ? '서버를 켜는 중이에요.... (몇 초 걸려요)' : open ? DF_PH[ph] || '' : '닫혀 있어요'}
@@ -6886,17 +6894,17 @@ function adminEventHTML0(){
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-dfa]'); if (!b) return; const a = b.dataset.dfa, H = dfHost;
   if (!DF_LOCAL && !H && F && db){
     if (a === 'local'){ dfHostStart(); return; }
-    if (a === 'open'){ AD.dfWait = Date.now(); F.set(F.ref(db, 'defense/run'), { n: Date.now(), fresh: 1 }); adminRender(); setTimeout(adminRender, 20500); return; }
-    if (a === 'wake'){ F.set(F.ref(db, 'defense/run'), { n: Date.now(), resume: 1 }); return; }
-    if (a === 'close'){ if (confirm('이벤트를 닫을까요? 학생들의 자리와 진행이 지워져요.')) F.set(F.ref(db, 'defense/adm'), { a: 'close', n: Date.now() }); return; }
-    if (a === 'reset'){ if (confirm('처음으로 되돌릴까요? 번 골드와 올린 스킬이 지워져요.')) F.set(F.ref(db, 'defense/adm'), { a: 'reset', n: Date.now() }); return; }
-    if (['start', 'force', 'pause'].includes(a)) F.set(F.ref(db, 'defense/adm'), { a, n: Date.now() });
+    if (a === 'open'){ AD.dfWait = now2(); F.set(F.ref(db, 'defense/run'), { n: now2(), fresh: 1 }); adminRender(); setTimeout(adminRender, 20500); return; }
+    if (a === 'wake'){ F.set(F.ref(db, 'defense/run'), { n: now2(), resume: 1 }); return; }
+    if (a === 'close'){ if (confirm('이벤트를 닫을까요? 학생들의 자리와 진행이 지워져요.')) F.set(F.ref(db, 'defense/adm'), { a: 'close', n: now2() }); return; }
+    if (a === 'reset'){ if (confirm('처음으로 되돌릴까요? 번 골드와 올린 스킬이 지워져요.')) F.set(F.ref(db, 'defense/adm'), { a: 'reset', n: now2() }); return; }
+    if (['start', 'force', 'pause'].includes(a)) F.set(F.ref(db, 'defense/adm'), { a, n: now2() });
     return;
   }
   if (a === 'open') dfHostStart(); else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 학생들의 자리와 진행이 지워져요.')) dfHostClose(); }
-  else if (a === 'start' && H){ H.intro = Date.now(); H.startAt = performance.now() + 26000; H.hb = 9; adminRender(); }
+  else if (a === 'start' && H){ H.intro = now2(); H.startAt = performance.now() + 26000; H.hb = 9; adminRender(); }
   else if (a === 'force' && H){ TD.startWave(H.S); adminRender(); } else if (a === 'pause' && H){ H.paused = !H.paused; adminRender(); }
-  else if (a === 'reset' && H){ if (confirm('처음으로 되돌릴까요? 번 골드와 올린 스킬이 지워져요.')){ const S = TD.newState([], { auto: 0 }); S.phase = 'ready'; H.S = S; H.ph = ''; H.intro = 0; H.startAt = 0; H.id = Date.now(); H.hb = 9; H.sv = 9; F.set(F.ref(db, 'defense/res'), null); adminRender(); } } });
+  else if (a === 'reset' && H){ if (confirm('처음으로 되돌릴까요? 번 골드와 올린 스킬이 지워져요.')){ const S = TD.newState([], { auto: 0 }); S.phase = 'ready'; H.S = S; H.ph = ''; H.intro = 0; H.startAt = 0; H.id = now2(); H.hb = 9; H.sv = 9; F.set(F.ref(db, 'defense/res'), null); adminRender(); } } });
 // ===== 이벤트 2 「유령 선장의 보물 지도」: 반 전체가 50조각 직소 퍼즐을 드래그로 맞춰요 (하루 이벤트) =====
 // puzzle/ctl = { open, id, rate } · puzzle/own/<조각번호> = 조각을 얻은 사람 · puzzle/board/<조각번호> = 맞춘 사람 (조각번호 = 줄*10 + 칸)
 let pzCtl = null, pzBoard = {}, pzOwn = {}, pzChest = {}, pzChestDraw = null, pzOn = false, pzOffs = [], pzMsgAt = 0;
@@ -6959,7 +6967,7 @@ function pzDrag(e, el){
     document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up); fl.remove(); el.style.opacity = '';
     const r = c.getBoundingClientRect(), nx = (ev.clientX - r.left) / r.width * 200, ny = (ev.clientY - r.top) / r.height * 120, tx = (id % PZ.C) * PZ.W + PZ.W / 2, ty = Math.floor(id / PZ.C) * PZ.H + PZ.H / 2;
     if (Math.hypot(nx - tx, ny - ty) <= 13){ if (pzBoard[id] !== undefined) return; pzBoard[id] = myId(); GDB.set('puzzle/board/' + id, myId()).catch(() => { delete pzBoard[id]; toast('놓지 못했어요'); pzUi(); }); sfx('heart'); pzUi(); }
-    else if (nx >= -10 && nx <= 210 && ny >= -10 && ny <= 130){ el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 300); if (Date.now() - pzMsgAt > 2500){ pzMsgAt = Date.now(); toast('거기는 아닌가 봐요. 그림을 잘 보세요'); } }
+    else if (nx >= -10 && nx <= 210 && ny >= -10 && ny <= 130){ el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 300); if (now2() - pzMsgAt > 2500){ pzMsgAt = now2(); toast('거기는 아닌가 봐요. 그림을 잘 보세요'); } }
   };
   document.addEventListener('pointermove', mv); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
 }
@@ -7014,7 +7022,7 @@ function adminPuzzleHTML(){
     <div class="s">맞춘 조각 ${n}/50 · 가져간 상자 ${Object.keys(AD.pzchest || {}).length}/12 · 얻은 조각 ${Object.keys(o).length}/50 · 조각을 얻은 학생 ${ppl}명${open ? ` · 조각 나올 확률 ×${rate}` : ''}</div>
     <div class="frow">${open ? `<button class="btn sm" data-pza="r1">확률 ×1</button><button class="btn sm" data-pza="r2">×2</button><button class="btn sm" data-pza="r3">×3</button><button class="btn sm" data-pza="free">접속 안 한 학생 조각 풀기</button><button class="btn sm" data-pza="reset">처음으로</button><button class="btn sm" data-pza="close">이벤트 닫기</button>` : '<button class="btn sm go" data-pza="open">이벤트 열기</button>'}</div></div>`;
 }
-document.addEventListener('click', e => { const bt = e.target.closest && e.target.closest('[data-pza]'); if (!bt || !F || !db) return; const a = bt.dataset.pza, id = Date.now();
+document.addEventListener('click', e => { const bt = e.target.closest && e.target.closest('[data-pza]'); if (!bt || !F || !db) return; const a = bt.dataset.pza, id = now2();
   if (a === 'open'){ F.set(F.ref(db, 'puzzle/board'), null); F.set(F.ref(db, 'puzzle/own'), null); F.set(F.ref(db, 'puzzle/chest'), null); F.set(F.ref(db, 'puzzle/ctl'), { open: true, id, rate: 1 }); }
   else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 맞춘 조각 기록은 남아요.')) F.set(F.ref(db, 'puzzle/ctl'), { ...(AD.pzctl || {}), open: false }); }
   else if (a === 'reset'){ if (confirm('처음으로 되돌릴까요? 맞춘 조각과 학생들이 가진 조각이 모두 지워져요.')){ F.set(F.ref(db, 'puzzle/board'), null); F.set(F.ref(db, 'puzzle/own'), null); F.set(F.ref(db, 'puzzle/chest'), null); F.set(F.ref(db, 'puzzle/ctl'), { open: true, id, rate: (AD.pzctl && AD.pzctl.rate) || 1 }); } }
@@ -7134,7 +7142,7 @@ function adminLanternHTML(){
     <div class="s">모은 등불 ${n}/${LN.GOAL} · 모은 학생 ${who}명 · 고른 등불 장식 ${Object.keys(col).length}/12${open ? ` · 등불 나올 확률 ${Math.round(LN.RATE * rate * 100)}%` : ''}</div>
     <div class="frow">${open ? `<button class="btn sm" data-lna="r1">확률 5%</button><button class="btn sm" data-lna="r2">10%</button><button class="btn sm" data-lna="r3">15%</button><button class="btn sm" data-lna="reset">처음으로</button><button class="btn sm" data-lna="close">이벤트 닫기</button>` : '<button class="btn sm go" data-lna="open">이벤트 열기</button>'}</div></div>`;
 }
-document.addEventListener('click', e => { const bt = e.target.closest && e.target.closest('[data-lna]'); if (!bt || !F || !db) return; const a = bt.dataset.lna, id = Date.now(), wipe = () => { F.set(F.ref(db, 'lantern/cnt'), null); F.set(F.ref(db, 'lantern/color'), null); };
+document.addEventListener('click', e => { const bt = e.target.closest && e.target.closest('[data-lna]'); if (!bt || !F || !db) return; const a = bt.dataset.lna, id = now2(), wipe = () => { F.set(F.ref(db, 'lantern/cnt'), null); F.set(F.ref(db, 'lantern/color'), null); };
   if (a === 'open'){ wipe(); F.set(F.ref(db, 'lantern/ctl'), { open: true, id, rate: 1 }); }
   else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 모은 등불과 고른 색 기록은 남아요.')) F.set(F.ref(db, 'lantern/ctl'), { ...(AD.lnctl || {}), open: false }); }
   else if (a === 'reset'){ if (confirm('처음으로 되돌릴까요? 모은 등불과 고른 색이 모두 지워져요.')){ wipe(); F.set(F.ref(db, 'lantern/ctl'), { open: true, id, rate: (AD.lnctl && AD.lnctl.rate) || 1 }); } }
@@ -7154,7 +7162,7 @@ function pkListen(){
   pkOffs.push(F.onValue(F.ref(db, 'pumpkin/pts'), s => { pkPts = s.val() || {}; pkLoad.p = 1; pkSync(); pkAuto(); if (pkOn) pkUi(); }));
   pkOffs.push(F.onValue(F.ref(db, 'pumpkin/w'), s => { pkW = s.val() || {}; pkLoad.w = 1; pkAuto(); if (pkOn) pkUi(); }));
   World.onProp = id => id === 'pkgiant' ? pkBubble() : null;
-  pkScene.t0 = Date.now() + 4000; setInterval(pkScene, 1500);   // 들어오자마자는 다른 장면이 먼저예요
+  pkScene.t0 = now2() + 4000; setInterval(pkScene, 1500);   // 들어오자마자는 다른 장면이 먼저예요
 }
 // 호박밭에 마법 호박 놓기(그림은 art/ev5_pumpkin.png 5단계) · 단계가 오르면 그림이 바뀌어요
 const pkImg = dfImg('art/ev5_pumpkin.png'), pkCan = {};
@@ -7189,7 +7197,7 @@ function pkAuto(){
     save(); hud(); if (pkOn) pkUi();
   }
 }
-const pkLeft = (at, cd) => Math.max(0, at + cd - Date.now());
+const pkLeft = (at, cd) => Math.max(0, at + cd - now2());
 async function pkGain(n, kind){   // 점수를 더해요 (서버에는 내 점수 하나만 고쳐요)
   if (!pkCtl || !pkCtl.open || pkDone()) return false; const g = Math.round(n * (pkCtl.rate || 1));
   const r = await GDB.tx('pumpkin/pts/' + myId(), cur => (cur || 0) + g).catch(() => ({ committed: false })); if (!r.committed) { toast('잠시 뒤에 다시 해 주세요'); return false; }
@@ -7201,8 +7209,8 @@ async function pkAct(kind, mat){
 }
 async function pkAct0(kind, mat){
   const m = pkMy(); let g = 0;
-  if (kind === 'w'){ if (pkLeft(m.wAt, PK.WATER[1])) return; g = await pkGain(PK.WATER[0], 'w'); if (g){ m.wAt = Date.now(); sfx('pop'); toast(`물을 줬어요! 성장 +${g}`); } }
-  else if (kind === 't'){ if (pkLeft(m.tAt, PK.TALK[1])) return; g = await pkGain(PK.TALK[0], 't'); if (g){ m.tAt = Date.now(); sfx('heart'); toast(`호박에게 말을 걸었어요. 성장 +${g}`); } }
+  if (kind === 'w'){ if (pkLeft(m.wAt, PK.WATER[1])) return; g = await pkGain(PK.WATER[0], 'w'); if (g){ m.wAt = now2(); sfx('pop'); toast(`물을 줬어요! 성장 +${g}`); } }
+  else if (kind === 't'){ if (pkLeft(m.tAt, PK.TALK[1])) return; g = await pkGain(PK.TALK[0], 't'); if (g){ m.tAt = now2(); sfx('heart'); toast(`호박에게 말을 걸었어요. 성장 +${g}`); } }
   else { const M_ = PK.MAT.find(x => x[0] === mat); if (!M_ || (me.inv[mat] || 0) < 1) return toast(`${M_ ? M_[1] : '재료'}이(가) 없어요`); if (typeof m.f !== 'object' || !m.f) m.f = {}; if ((m.f[mat] || 0) >= PK.FCAP) return toast(`${M_[1]} 거름은 ${PK.FCAP}번까지 줄 수 있어요`);
     g = await pkGain(M_[2], 'f'); if (g){ me.inv[mat]--; m.f[mat] = (m.f[mat] || 0) + 1; sfx('pick'); toast(`${M_[1]}을(를) 거름으로 줬어요! 성장 +${g}`); } }
   if (g){ save(); hud(); pkUi(); }
@@ -7224,7 +7232,7 @@ document.addEventListener('click', e => {
   const af = nlCtx.after; nlCtx = null; npcClose(); if (af) af();
 });
 function pkScene(){
-  if (!me || !pkCtl || !pkCtl.id || !pkLoad.p || uiBusy() || Date.now() < (pkScene.t0 || 0)) return; const m = pkMy();
+  if (!me || !pkCtl || !pkCtl.id || !pkLoad.p || uiBusy() || now2() < (pkScene.t0 || 0)) return; const m = pkMy();
   if (pkDone() && !m.se && Object.keys(pkPts).length){ m.se = 1; m.ss = 1; save(); nlTalk('jipsin', PK_TALK.end); }
   else if (pkCtl.open && !pkDone() && !m.ss){ m.ss = 1; save(); nlTalk('jipsin', PK_TALK.start); }
 }
@@ -7235,7 +7243,7 @@ function pkBubble(){   // 호박을 눌렀을 때
 }
 function pkBless(){   // 완성된 호박: 하루에 한 번, 3시간 동안 탐사 경험치 +10%
   const m = pkMy(), day = todayKey(); if (m.bd.day === day) return toast('오늘은 이미 축복을 받았어요');
-  m.bd = { day }; me.buffs = me.buffs || {}; me.buffs.pump = Date.now() + PK.BUFF_MS; save(); hud(); sfx('heart'); toast('호박의 축복을 받았어요! 3시간 동안 탐사 경험치 +10%');
+  m.bd = { day }; me.buffs = me.buffs || {}; me.buffs.pump = now2() + PK.BUFF_MS; save(); hud(); sfx('heart'); toast('호박의 축복을 받았어요! 3시간 동안 탐사 경험치 +10%');
 }
 function pkOpen(){
   if (pkOn || !pkCtl) return; pkOn = true; pkSync();
@@ -7267,7 +7275,7 @@ function adminPumpkinHTML(){
     <div class="s">성장 ${tot}/${goal} · 돌본 학생 ${who}명${open ? ` · 성장 속도 ×${rate}` : ''}${top ? `<br>기여 상위: ${top}` : ''}</div>
     <div class="frow">${open ? `<button class="btn sm" data-pka="r1">속도 ×1</button><button class="btn sm" data-pka="r2">×2</button><button class="btn sm" data-pka="r3">×3</button><button class="btn sm" data-pka="reset">처음으로</button><button class="btn sm" data-pka="close">이벤트 닫기</button>` : '<button class="btn sm go" data-pka="open">이벤트 열기</button>'}</div></div>`;
 }
-document.addEventListener('click', e => { const bt = e.target.closest && e.target.closest('[data-pka]'); if (!bt || !F || !db) return; const a = bt.dataset.pka, id = Date.now(), wipe = () => { F.set(F.ref(db, 'pumpkin/pts'), null); F.set(F.ref(db, 'pumpkin/w'), null); };
+document.addEventListener('click', e => { const bt = e.target.closest && e.target.closest('[data-pka]'); if (!bt || !F || !db) return; const a = bt.dataset.pka, id = now2(), wipe = () => { F.set(F.ref(db, 'pumpkin/pts'), null); F.set(F.ref(db, 'pumpkin/w'), null); };
   if (a === 'open'){ wipe(); F.set(F.ref(db, 'pumpkin/ctl'), { open: true, id, rate: 1, goal: PK.GOAL }); }
   else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 지금까지 자란 호박은 남아요(다 자랐다면 거대 호박이 그대로 있어요).')) F.set(F.ref(db, 'pumpkin/ctl'), { ...(AD.pkctl || {}), open: false }); }
   else if (a === 'reset'){ if (confirm('처음으로 되돌릴까요? 자란 호박과 모두의 기여 점수가 지워져요.')){ wipe(); F.set(F.ref(db, 'pumpkin/ctl'), { open: true, id, rate: (AD.pkctl && AD.pkctl.rate) || 1, goal: PK.GOAL }); } }
@@ -7288,13 +7296,13 @@ function sgLoadDlg(id){
   const need = ['common', id].filter(k => k && !sgDlg[k] && !sgNo[k]); need.forEach(k => { sgNo[k] = 1; fetch(`data/events/stargazing/dialogue/${k}.json`).then(r => r.json()).then(d => { sgDlg[k] = d; sgSig = ''; }).catch(() => {}); });
 }
 function sgListen(){
-  if (solo || !F || !db || sgOffs.length) return; sgLoad(); sgPop.t0 = Date.now() + 4000;   // 들어오자마자는 다른 장면이 먼저 시작할 수 있어서 잠깐 기다려요
+  if (solo || !F || !db || sgOffs.length) return; sgLoad(); sgPop.t0 = now2() + 4000;   // 들어오자마자는 다른 장면이 먼저 시작할 수 있어서 잠깐 기다려요
   const on = (p, fn) => sgOffs.push(F.onValue(F.ref(db, 'stargaze/' + p), s => { fn(s.val()); sgSync(); }));
   on('ctl', v => { sgCtl = v; }); on('join', v => { sgJoin = v || {}; }); on('lit', v => { sgLit = v || {}; }); on('cfg', v => { sgCfgV = v || {}; }); on('sched', v => { sgSched = v || {}; }); on('hist', v => { sgHist = v || {}; });
   if (sgAdmin()) setInterval(sgAdminTick, 500);
 }
 // ---- 효과: 별빛 버프의 수치는 별자리 데이터(effects)에서 읽어요 ----
-const sgFx = stat => { if (!me || !sgData) return 0; let v = 0; const t = Date.now(); sgData.forEach(C => { if (((me.buffs || {})[C.buff.id] || 0) > t) C.buff.effects.forEach(e => { if (e.stat === stat) v += e.value; }); }); return v; };
+const sgFx = stat => { if (!me || !sgData) return 0; let v = 0; const t = now2(); sgData.forEach(C => { if (((me.buffs || {})[C.buff.id] || 0) > t) C.buff.effects.forEach(e => { if (e.stat === stat) v += e.value; }); }); return v; };
 const sgMul = (n, v) => { const x = n * (1 + v), f = Math.floor(x); return f + (Math.random() < x - f ? 1 : 0); };
 // 열두 친구의 별빛: 다른 학생과 같은 곳에 있으면 활동 보상 +10% · 같이 만들면 1개 더
 const nearFriend = () => { try { const here = World.placeKey && World.placeKey(); return !!here && peersOf().some(o => o.m === here); } catch(e){ return false; } };
@@ -7304,13 +7312,13 @@ const coExtra = () => sgFx('co_craft_extra') > 0 && nearFriend() ? Math.round(sg
 const sgHours = ms => { const h = ms / 3600e3; return h >= 1 ? `${Math.round(h * 10) / 10} 시간` : `${Math.round(ms / 6e4)} 분`; };
 // ---- 장면 모양 만들기: 실제 진행(sgCtl)과 관리자 미리 보기(sgPrev)가 같은 길로 그려요 ----
 function sgSrc(){
-  if (sgPrev){ const t = (Date.now() - sgPrev.t0) / 1000, C = sgConst(sgPrev.c), N = sgPrev.n, order = C.order.length, tl = 4, ta = 3, tp = .7, tL = N * tp + 2.5, tS = order * SG_LINE / 1000 + 3.5, step = 3.5;
+  if (sgPrev){ const t = (now2() - sgPrev.t0) / 1000, C = sgConst(sgPrev.c), N = sgPrev.n, order = C.order.length, tl = 4, ta = 3, tp = .7, tL = N * tp + 2.5, tS = order * SG_LINE / 1000 + 3.5, step = 3.5;
     const joins = {}; for (let i = 0; i < N; i++) joins['p' + i] = { n: sgPrev.names[i], at: i };
     const stars = C.stars.map(s => s.id), asg = {}, ord = Object.keys(joins); stars.forEach((id, i) => { asg[id] = ord[i] || 'stella'; });
     const dn = sgDoneLines(C, sgPrev.round).length; let ph, el;
     if (t < tl){ ph = 'gather'; el = t; } else if (t < tl + ta){ ph = 'assign'; el = t - tl; } else if (t < tl + ta + tL){ ph = 'light'; el = t - tl - ta; } else if (t < tl + ta + tL + tS){ ph = 'sky'; el = t - tl - ta - tL; } else if (t < tl + ta + tL + tS + dn * step + 3){ ph = 'done'; el = t - tl - ta - tL - tS; } else { ph = 'end'; el = t - tl - ta - tL - tS - dn * step - 3; }
     const lit = {}; if (ph === 'light'){ const k = Math.floor(el / tp); stars.forEach((id, i) => { if (i < k || (asg[id] === 'stella' && el > tL - 1)) lit[id] = 1; }); } else if (ph === 'sky' || ph === 'done' || ph === 'end') stars.forEach(id => { lit[id] = 1; });
-    return { ctl: { open: true, c: C.id, round: sgPrev.round, ph, at: Date.now() - el * 1000, asg, ord, dn, sm: step * 1000, full: N >= 12 }, join: joins, lit, prev: true }; }
+    return { ctl: { open: true, c: C.id, round: sgPrev.round, ph, at: now2() - el * 1000, asg, ord, dn, sm: step * 1000, full: N >= 12 }, join: joins, lit, prev: true }; }
   return { ctl: sgCtl, join: sgJoin, lit: sgLit };
 }
 function sgPeople(src){   // 서 있는 순서: 별을 받은 순서(없으면 참가 순서) → 마지막에 스텔라
@@ -7319,7 +7327,7 @@ function sgPeople(src){   // 서 있는 순서: 별을 받은 순서(없으면 �
 }
 function sgModel(){
   const src = sgSrc(), c = src.ctl; if (!c || !sgData) return null; const C = sgConst(c.c); if (!C) return null;
-  const now = src.prev ? Date.now() : now2(), el = Math.max(0, now - c.at), ph = c.ph, n = C.order.length, asg = c.asg || {}, me_ = myId(), lit = Object.keys(src.lit || {});
+  const now = src.prev ? now2() : now2(), el = Math.max(0, now - c.at), ph = c.ph, n = C.order.length, asg = c.asg || {}, me_ = myId(), lit = Object.keys(src.lit || {});
   let drawn = 0, outline = 0, title = 0;
   if (ph === 'sky'){ drawn = Math.min(n, el / SG_LINE); const e2 = el - n * SG_LINE; title = Math.max(0, Math.min(1, e2 / 800)); outline = Math.max(0, Math.min(1, (e2 - 300) / 1500)); } else if (ph === 'done' || ph === 'end'){ drawn = n; title = 1; outline = 1; }
   const crowd = sgPeople(src).map(p => { const star = Object.keys(asg).find(k => asg[k] === p.u), s = star && C.stars.find(x => x.id === star); return { ...p, star, lit: !!(star && src.lit[star]), mag: s ? s.mag : 1 }; });
@@ -7356,7 +7364,7 @@ function sgAv(u, src){
 }
 function sgPop(){
   let p = $('#sgpop'); const M = sgModel(), c = sgCtl;
-  const base = !sgOn && !sgAdmin() && c && c.open && M && sgData && !uiBusy() && Date.now() > sgPop.t0, show = base && !(sgPop.no > Date.now());
+  const base = !sgOn && !sgAdmin() && c && c.open && M && sgData && !uiBusy() && now2() > sgPop.t0, show = base && !(sgPop.no > now2());
   { let b = $('#sgbtn'); if (base && !show){ if (!b){ b = document.createElement('button'); b.id = 'sgbtn'; b.textContent = '별 보는 밤'; b.onclick = () => { sgPop.no = 0; sgPop(); }; $('#shell').appendChild(b); } } else if (b) b.remove(); }   // 「나중에」를 눌러도 언제든 다시 들어갈 수 있게
   if (!show){ if (p) p.remove(); return; }
   if (!p){ p = document.createElement('div'); p.id = 'sgpop'; document.body.appendChild(p); }
@@ -7376,9 +7384,9 @@ function sgSync(){
   if (sgAdmin() && AD.tab === 'event' && !adminTyping()) adminRender();
 }
 function sgGrant(){
-  const C = sgConst(sgCtl.c); if (!C) return; sgGot = sgCtl.id; const b = C.buff, until = Date.now() + (sgCtl.bm || sgCfg().buffH * 3600e3);
+  const C = sgConst(sgCtl.c); if (!C) return; sgGot = sgCtl.id; const b = C.buff, until = now2() + (sgCtl.bm || sgCfg().buffH * 3600e3);
   me.buffs = me.buffs || {}; Object.keys(me.buffs).forEach(k => { if (k.startsWith('buff_')) delete me.buffs[k]; });   // 같은 종류의 별빛은 겹치지 않고 새것으로 바뀌어요
-  me.buffs[b.id] = until; me.sgd = sgCtl.id; me.sgdex = me.sgdex || {}; me.sgdex[C.id] = Date.now(); save(); hud(); syncBuffs(); sfx('heart');
+  me.buffs[b.id] = until; me.sgd = sgCtl.id; me.sgdex = me.sgdex || {}; me.sgdex[C.id] = now2(); save(); hud(); syncBuffs(); sfx('heart');
   setTimeout(() => toast(`「${b.name}」 별빛이 깃들었어요! ${b.desc}`), 800);
 }
 function sgOpen(preview){
@@ -7413,7 +7421,7 @@ function sgLight(id){ if (!sgCtl || sgCtl.ph !== 'light' || sgLit[id]) return; s
 // ---- 참가·나중에 ----
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-sg]'); if (!b) return; const a = b.dataset.sg;
-  if (a === 'later'){ sgPop.no = Date.now() + 120000; sgPop(); setTimeout(sgPop, 121000); }   // 2분 뒤에 다시 물어봐요
+  if (a === 'later'){ sgPop.no = now2() + 120000; sgPop(); setTimeout(sgPop, 121000); }   // 2분 뒤에 다시 물어봐요
   else if (a === 'join'){ if (!F || !db || !me || !sgCtl || sgCtl.ph !== 'gather') return; F.set(F.ref(db, 'stargaze/join/' + myId()), { n: me.nick, at: now2() }).then(() => { sgJoin[myId()] = { n: me.nick, at: now2() }; sgOpen(); }); }
   else if (a === 'view') sgOpen();
 });
@@ -7434,7 +7442,7 @@ function sgLitAll(){ const C = sgConst(sgCtl.c), up = {}; C.stars.forEach(s => {
 function sgDoSky(){ return sgLitAll().then(() => sgUpd({ ph: 'sky', at: now2() })); }
 function sgDoEnd(){ const was = sgCtl.ph; return sgUpd({ ok: was === 'done' ? 1 : 0, ph: 'end', open: false }).then(() => { if (was === 'done'){ const C = sgConst(sgCtl.c); F.update(F.ref(db, 'stargaze/hist'), { total: (+sgHist.total || 0) + 1 }); F.set(F.ref(db, 'stargaze/hist/c/' + C.id), ((sgHist.c || {})[C.id] || 0) + 1); } }); }
 function sgDoOpen(cid){
-  const C = sgConst(cid), cfg = sgCfg(), id = Date.now(); F.set(F.ref(db, 'stargaze/join'), null); F.set(F.ref(db, 'stargaze/lit'), null);
+  const C = sgConst(cid), cfg = sgCfg(), id = now2(); F.set(F.ref(db, 'stargaze/join'), null); F.set(F.ref(db, 'stargaze/lit'), null);
   return F.set(F.ref(db, 'stargaze/ctl'), { open: true, id, c: C.id, round: sgRound(), ph: 'gather', at: now2(), gm: cfg.gatherS * 1000, lm: cfg.lightS * 1000, bm: cfg.buffH * 3600e3, sm: SG_STORY });
 }
 function sgAdminTick(force){
@@ -7451,7 +7459,7 @@ function sgAdminTick(force){
   else if (c.ph === 'done' && el >= (c.dn || sgDoneLines(C, c.round).length) * (c.sm || SG_STORY) + 5000) sgDoEnd();
 }
 function sgSchedTick(){
-  if (!F || !db || !sgData || sgCtl && sgCtl.open) return; const now = Date.now(), due = Object.entries(sgSched).filter(([, s]) => s.at <= now).sort((a, b) => a[1].at - b[1].at)[0];
+  if (!F || !db || !sgData || sgCtl && sgCtl.open) return; const now = now2(), due = Object.entries(sgSched).filter(([, s]) => s.at <= now).sort((a, b) => a[1].at - b[1].at)[0];
   if (due && !sgSchedTick.busy){ sgSchedTick.busy = 1; F.set(F.ref(db, 'stargaze/sched/' + due[0]), null).then(() => sgDoOpen(due[1].c)).finally(() => { sgSchedTick.busy = 0; }); }
 }
 async function sgAdminAct(a, v){
@@ -7466,9 +7474,9 @@ async function sgAdminAct(a, v){
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-sga]'); if (!b) return; const a = b.dataset.sga;
   if (a === 'view'){ if (sgCtl && sgCtl.open) sgOpen(); return; }
-  if (a === 'preview'){ const sel = $('#sgsel'), r = $('#sgprd'); sgOpen({ c: sel ? sel.value : 'pumpkin_cart', round: r ? +r.value : 1, n: 9, names: ['민준', '서연', '하준', '지우', '도윤', '수아', '예준', '하은', '시우'], t0: Date.now() }); return; }
+  if (a === 'preview'){ const sel = $('#sgsel'), r = $('#sgprd'); sgOpen({ c: sel ? sel.value : 'pumpkin_cart', round: r ? +r.value : 1, n: 9, names: ['민준', '서연', '하준', '지우', '도윤', '수아', '예준', '하은', '시우'], t0: now2() }); return; }
   if (a === 'open'){ sgAdminAct('open', $('#sgsel').value); return; }
-  if (a === 'resv'){ const d = $('#sgdt').value; if (!d) return alert('날짜와 시각을 골라 주세요'); const at = new Date(d).getTime(); if (!(at > Date.now())) return alert('지금보다 뒤로 정해 주세요'); F.set(F.ref(db, 'stargaze/sched/' + at), { at, c: $('#sgsel').value }); return; }
+  if (a === 'resv'){ const d = $('#sgdt').value; if (!d) return alert('날짜와 시각을 골라 주세요'); const at = new Date(d).getTime(); if (!(at > now2())) return alert('지금보다 뒤로 정해 주세요'); F.set(F.ref(db, 'stargaze/sched/' + at), { at, c: $('#sgsel').value }); return; }
   if (a === 'delresv'){ F.set(F.ref(db, 'stargaze/sched/' + b.dataset.k), null); return; }
   sgAdminAct(a);
 });
@@ -7536,7 +7544,7 @@ const adItemOpts = () => Object.keys(ITEM).filter(k => ITEM[k]).sort((a, b) => S
 const adSkPts = ex => xSkp(xLv(ex.exp || 0).L) + (ex.spx || 0) - Math.max(0, Object.values(ex.sk || {}).reduce((a, v) => a + (+v || 0), 0) - 1);   // 관리자 화면용: 학생 데이터를 건드리지 않고 남은 스킬 포인트만 세요
 function adminGiftHTML(){
   const P = AD.players, ids = Object.keys(P).filter(id => P[id]?.nick).sort((a, b) => P[a].nick.localeCompare(P[b].nick, 'ko'));
-  if (!AD.gu || !P[AD.gu]) AD.gu = ids[0]; const u = AD.gu, p = P[u] || {}, buffs = Object.entries(p.buffs || {}).filter(([, v]) => v > Date.now());
+  if (!AD.gu || !P[AD.gu]) AD.gu = ids[0]; const u = AD.gu, p = P[u] || {}, buffs = Object.entries(p.buffs || {}).filter(([, v]) => v > now2());
   const nt = noticeCur && noticeCur.id ? esc(noticeCur.text) : '';
   return `<div class="adcard"><b>공지 한 줄</b> <span class="s sub">접속 중인 학생에게 팝업으로 떠요</span>
       <div class="frow"><input id="adnt" maxlength="60" placeholder="예: 10분 뒤 점검이 있어요" value="${nt}" style="flex:1"><button class="btn sm go" data-adg="notice">띄우기</button><button class="btn sm" data-adg="noticeclr">내리기</button></div></div>
@@ -7565,14 +7573,14 @@ async function adminMailLoad(){
   adminMailLog = Object.values(v).sort((a, b) => b.at - a.at).slice(0, 5); if (AD.tab === 'gift') adminRender();
 }
 function adminMailSend(u, e){
-  if (!F || !db || !u) return Promise.resolve(); const id = Date.now() + '_' + Math.random().toString(36).slice(2, 5), sum = [e.coin && `골드 ${e.coin}`, e.mana && `마력 ${e.mana}`, e.stone && `마나석 ${e.stone}`, e.sp && `SP ${e.sp}`, ...Object.entries(e.items || {}).map(([k, n]) => `${ITEM[k]} ×${n}`), e.set && e.set.coin !== undefined && `골드를 ${e.set.coin}으로`, e.set && e.set.sp !== undefined && `남은 스킬 포인트를 ${e.set.sp}개로`, ...Object.entries((e.set && e.set.items) || {}).map(([k, n]) => `${ITEM[k]}을(를) ${n}개로`), (e.delBuff || []).length && `버프 제거`, e.resetExam && '쪽지시험 기록 지움', e.skReset && '스킬 되돌리기', e.stReset && '스탯 되돌리기', e.wpReset && '무기 되돌리기', e.set && e.set.lv !== undefined && `탐사 레벨을 ${e.set.lv}로`, e.set && e.set.st !== undefined && `남은 스탯 포인트를 ${e.set.st}개로`].filter(Boolean).join(', ');
-  return F.set(F.ref(db, `mail/${u}/${id}`), { at: Date.now(), sum, ...e }).then(() => adminMailLoad());
+  if (!F || !db || !u) return Promise.resolve(); const id = now2() + '_' + Math.random().toString(36).slice(2, 5), sum = [e.coin && `골드 ${e.coin}`, e.mana && `마력 ${e.mana}`, e.stone && `마나석 ${e.stone}`, e.sp && `SP ${e.sp}`, ...Object.entries(e.items || {}).map(([k, n]) => `${ITEM[k]} ×${n}`), e.set && e.set.coin !== undefined && `골드를 ${e.set.coin}으로`, e.set && e.set.sp !== undefined && `남은 스킬 포인트를 ${e.set.sp}개로`, ...Object.entries((e.set && e.set.items) || {}).map(([k, n]) => `${ITEM[k]}을(를) ${n}개로`), (e.delBuff || []).length && `버프 제거`, e.resetExam && '쪽지시험 기록 지움', e.skReset && '스킬 되돌리기', e.stReset && '스탯 되돌리기', e.wpReset && '무기 되돌리기', e.set && e.set.lv !== undefined && `탐사 레벨을 ${e.set.lv}로`, e.set && e.set.st !== undefined && `남은 스탯 포인트를 ${e.set.st}개로`].filter(Boolean).join(', ');
+  return F.set(F.ref(db, `mail/${u}/${id}`), { at: now2(), sum, ...e }).then(() => adminMailLoad());
 }
 document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('#admqp'); if (s){ AD.mqp = s.value; adminRender(); } });
 document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('#adgu'); if (s){ AD.gu = s.value; adminMailLog = []; adminMailLoad(); adminRender(); } });
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-adg]'); if (!b || b.tagName === 'SELECT') return; const a = b.dataset.adg, u = AD.gu, v = id => { const x = $('#' + id); return x ? x.value.trim() : ''; }, n = id => Math.round(+v(id) || 0);
-  if (a === 'notice'){ const tx = v('adnt'); if (!tx) return; F.set(F.ref(db, 'notice/cur'), { id: Date.now(), text: tx, at: Date.now() }); return; }
+  if (a === 'notice'){ const tx = v('adnt'); if (!tx) return; F.set(F.ref(db, 'notice/cur'), { id: now2(), text: tx, at: now2() }); return; }
   if (a === 'noticeclr'){ F.set(F.ref(db, 'notice/cur'), null); return; }
   if (!u) return; const nm = (AD.players[u] && AD.players[u].nick) || u;
   if (a === 'send'){ const e2 = {}; if (n('adgc')) e2.coin = n('adgc'); if (n('adgm')) e2.mana = n('adgm'); if (n('adgs')) e2.stone = n('adgs'); if (n('adgp')) e2.sp = n('adgp'); if (v('adgi') && n('adgn') > 0) e2.items = { [v('adgi')]: n('adgn') }; if (v('adgmsg')) e2.msg = v('adgmsg');
@@ -7703,7 +7711,7 @@ function renderMarket(){
     const price = Math.max(1, Math.min(9999, Math.floor(+$('#price').value || 0)));
     if (me.inv[sellPick] < 1 || lb.disabled) return; lb.disabled = true; const it = sellPick;
     me.inv[it]--; save();
-    try { await F.push(F.ref(db, 'market'), { uid, nick: me.nick, look: me.look, item: it, qty: 1, price, at: Date.now(), ...(me.house === 'moon' && myTime() ? { moon: true } : {}) }); }
+    try { await F.push(F.ref(db, 'market'), { uid, nick: me.nick, look: me.look, item: it, qty: 1, price, at: now2(), ...(me.house === 'moon' && myTime() ? { moon: true } : {}) }); }
     catch(e){ me.inv[it]++; save(); lb.disabled = false; return toast('가판대에 올리지 못했어요. 물건은 돌려받았어요'); }   // 실패하면 물건이 사라지지 않게
     toast(`${withJosa(ITEM[sellPick], '을', '를')} ${price}G에 올렸어요.`); sellPick = null;
   };
@@ -8027,7 +8035,7 @@ function waitApproval(user, go){
     const v = s.val();
     if (v === true){ stop?.(); go(); return; }
     if (v === false) return cover(`<div class="card px"><span class="b" style="font-size:22px">가입이 거절됐어요</span><span class="s">관리자에게 물어봐 주세요.</span><button class="btn" id="wout">로그아웃</button></div>`), $('#wout').onclick = () => { stop?.(); F.signOut(auth); };
-    if (!sent){ sent = true; F.set(pref, { id: name, at: Date.now() }).catch(() => {}); }
+    if (!sent){ sent = true; F.set(pref, { id: name, at: now2() }).catch(() => {}); }
     cover(`<div class="card px"><span class="b" style="font-size:22px">가입 신청 완료</span><span class="s">관리자가 승인하면 캐릭터를 만들 수 있어요.<br>승인되면 이 화면이 저절로 바뀌어요. (아이디 ${esc(name)})</span><button class="btn" id="wout">로그아웃</button></div>`);
     $('#wout').onclick = () => { stop?.(); F.signOut(auth); };
   });
@@ -8064,16 +8072,16 @@ async function boot(){
     if (!user) { uid = null; return showLogin(); }
     uid = user.uid;
     if (isAdminUser(user)) return showAdmin();
-    bootT = Date.now(); const snap0 = await F.get(F.ref(db, 'players/' + uid)), snap = { exists: () => snap0.exists(), val: () => fbBack(snap0.val()) };
+    bootT = now2(); const snap0 = await F.get(F.ref(db, 'players/' + uid)), snap = { exists: () => snap0.exists(), val: () => fbBack(snap0.val()) };
     const enter = () => {
       const oref = F.ref(db, 'online/' + uid);
       World.myUid = uid;
       // 접속 표시: 연결이 끊기면 서버가 지워요. 다시 연결되면 이름까지 통째로 다시 써요 (안 그러면 위치만 남은 「undefined」 유령이 돌아다녀요)
-      const presFull = () => { const p = World.myPos ? World.myPos() : {}; lastPos = ''; F.onDisconnect(oref).remove(); return F.set(oref, { nick: me.nick, look: me.look, av: me.av, house: me.house, at: Date.now(), ...(p && p.m ? { m: p.m, x: p.x, y: p.y } : {}) }); };
+      const presFull = () => { const p = World.myPos ? World.myPos() : {}; lastPos = ''; F.onDisconnect(oref).remove(); return F.set(oref, { nick: me.nick, look: me.look, av: me.av, house: me.house, at: now2(), ...(p && p.m ? { m: p.m, x: p.x, y: p.y } : {}) }); };
       presFull(); setInterval(presTick, 700);
       F.onValue(F.ref(db, '.info/connected'), s => { if (s.val() === true) presFull().catch(() => {}); });
       F.onValue(F.ref(db, 'online'), s => { onlineList = s.val() || {}; onOnline(); const k = Object.keys(onlineList).sort().join(); if (k !== onlineKeys){ onlineKeys = k; if (tab === 'home' && !sub) render(); } });
-      F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; });
+      F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; });
       F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; syncNpcs(); });
       F.onValue(F.ref(db, 'adm/heart/' + uid), s => { const v = s.val(); if (!v || typeof v !== 'object') return; const msg = [];   // 관리자가 조정한 하트: 받으면 바로 반영하고 지워요
         Object.entries(v).forEach(([nid, d]) => { d = +d || 0; if (!d || !npcGet(nid)) return; const st = npcSt(nid), before = hearts(nid); st.a = Math.max(0, Math.min(1000, (st.a || 0) + d * 100)); msg.push(`${npcGet(nid).name} ♥${before} → ♥${hearts(nid)}`); });
@@ -8110,7 +8118,7 @@ boot();
 // 새 버전이 배포되면 접속 중인 모두의 화면이 저절로 새로 고쳐져요 (version.json은 배포할 때마다 바뀌어요)
 { let buildV = null, reloading = false; const BUILD_ID = '__BUILD__';   // 배포할 때 이 값이 커밋 번호로 바뀌어요. 오래된 화면이 남아 있어도 새 버전을 알아채요
   const chk = async () => { if (reloading) return; try {
-    const v = (await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json()).v;
+    const v = (await (await fetch('version.json?t=' + now2(), { cache: 'no-store' })).json()).v;
     if (buildV === null){ buildV = BUILD_ID.startsWith('__') ? v : BUILD_ID; }
     if (v === buildV) return;
     try { if (sessionStorage.getItem('magion-rl') === v) return; sessionStorage.setItem('magion-rl', v); } catch(e){}   // 새로 고쳐도 그대로면 계속 반복하지 않아요

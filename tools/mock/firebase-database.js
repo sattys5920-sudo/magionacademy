@@ -23,3 +23,4 @@ let n = 0; export const push = async (r, v) => { const id = 'k' + (++n); setAt(r
 export const onValue = (r, cb) => { const l = { p: r.p, cb }; ls.push(l); setTimeout(() => cb(snap(r.p)), 0); return () => ls.splice(ls.indexOf(l), 1); };
 export const onDisconnect = () => ({ remove() {} });
 export const runTransaction = async (r, fn) => { const v = fn(getAt(r.p)); if (v === undefined) return { committed: false }; fbCheck(v, r.p); setAt(r.p, v); notify(r.p); return { committed: true }; };
+export const serverTimestamp = () => Date.now();

@@ -113,7 +113,7 @@
       "$week": {
         "$uid": {
           ".write": "auth != null && auth.uid === $uid && !data.exists()",
-          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 101"
+          ".validate": "newData.hasChildren(['s', 'at']) && newData.child('s').isNumber() && newData.child('s').val() >= 0 && newData.child('s').val() <= 101 && newData.child('at').val() === now && (now + 32400000) % 86400000 >= 32400000 && (now + 32400000) % 86400000 < 72600000 && (((now + 32400000 - (now + 32400000) % 86400000) / 86400000 + 4) % 7 === 2 || ((now + 32400000 - (now + 32400000) % 86400000) / 86400000 + 4) % 7 === 4 || ((now + 32400000 - (now + 32400000) % 86400000) / 86400000 + 4) % 7 === 6)"
         }
       }
     },
