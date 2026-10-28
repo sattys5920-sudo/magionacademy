@@ -7484,10 +7484,14 @@ function mailListen(){
   setInterval(() => { mailApply(); noticePop(); }, 2000);
 }
 const mailDone = [];
+const MAIL_KEYS = new Set(['at', 'sum', 'msg', 'c', 'coin', 'mana', 'stone', 'sp', 'items', 'set', 'delBuff', 'resetExam', 'skReset', 'stReset']), MAIL_SET = new Set(['coin', 'items', 'lv', 'st', 'sp']);
+function mailOld(){ try { if (sessionStorage.getItem('magion-mailold')) return; sessionStorage.setItem('magion-mailold', '1'); } catch(e){ return; } saveNow(); setTimeout(() => location.reload(), 1500); }
 function mailApply(){
   if (!me || !mailBox || !document.body.classList.contains('inworld')) return; me.mailGot = me.mailGot || {};
   Object.entries(mailBox).sort((a, b) => (a[1].at || 0) - (b[1].at || 0)).forEach(([id, e]) => {
-    if (me.mailGot[id] || e.c) return; me.mailGot[id] = 1; const got = [], num = v => Math.max(-99999, Math.min(99999, Math.round(+v || 0)));
+    if (me.mailGot[id] || e.c) return;
+    if (Object.keys(e).some(k => !MAIL_KEYS.has(k)) || Object.keys(e.set || {}).some(k => !MAIL_SET.has(k))){ mailOld(); return; }   // 모르는 고치기가 섞여 있으면 받지 않고 새 버전으로 다시 열어요
+    me.mailGot[id] = 1; const got = [], num = v => Math.max(-99999, Math.min(99999, Math.round(+v || 0)));
     if (e.set){ if (e.set.coin !== undefined) me.coin = Math.max(0, num(e.set.coin)); if (e.set.lv !== undefined){ const ex = xEx(), L = Math.max(1, Math.min(XCAP, num(e.set.lv))); let t = 0; for (let l = 1; l < L; l++) t += xNeed(l); ex.exp = t; } if (e.set.st !== undefined){ const ex = xEx(); ex.stx = (+ex.stx || 0) + Math.max(0, num(e.set.st)) - xSpPts(ex); } if (e.set.sp !== undefined){ const ex = xEx(); ex.spx = (+ex.spx || 0) + Math.max(0, num(e.set.sp)) - xPts(ex); } Object.entries(e.set.items || {}).forEach(([k, n]) => { if (ITEM[k] !== undefined) me.inv[k] = Math.max(0, num(n)); }); }
     if (e.coin){ me.coin = Math.max(0, me.coin + num(e.coin)); got.push(`${num(e.coin).toLocaleString()}G`); }
     if (e.mana){ me.mana += num(e.mana); got.push(`마력 ${num(e.mana)}`); }
