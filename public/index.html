@@ -1996,14 +1996,16 @@ const xpPut = id => GDB.upd(`xparty/${id}/p/${myId()}`, xpMe()).catch(e => errRe
 function xpWatch(id){ xpRoom = id; xpFix = 0; xpOff?.(); xpOff = GDB.on('xparty/' + id, v => { if (xpRoom !== id) return;
   if (v && v.st === 'lobby' && v.p && !v.p[myId()] && xpFix < 3 && Object.keys(v.p).length < XP_MAX){ xpFix++; xpLog(`대기실 명단에서 빠져서 다시 넣음 (${xpFix})`, v); xpPut(id); return; }   // 나가기를 누르지 않았는데 빠졌으면 다시 들어가요
   if (!v || v.st === 'end' || !v.p?.[myId()]){ if (!v) xpLog('방이 사라짐', xpV); else if (v.st !== 'end') xpLog('명단에서 내 이름이 빠짐', v); xpRoom = null; xpV = null; xpOff?.(); xpOff = null; xcoStop(); xcoWasHost = false; } else { if (xpV && xpV.host === myId() && v.host !== myId()){ xpLog('방장이 다른 사람으로 바뀜', v); if (xb && !xb.mirror){ xb = null; clearInterval(xTick); xv = { view: 'march' }; if (xM) xM.st = 'busy'; } } xpV = v; if (v.st === 'run') xcoEnter(id, v); const h = v.host === myId(); if (xcoOn() && h && !xcoWasHost && xM && xcoOff.length) xcoTakeover(); xcoWasHost = xcoOn() && h; } xpRefresh(); }); }
+const XDAY = 10;   // 탐사는 한 사람이 하루에 10번까지 (혼자·파티 모두)
 function xpCreate(){
+  if (xEx().n >= XDAY) return toast(`탐사는 하루에 ${XDAY}번까지예요`);
   if (xpRoom || xpCreate.busy) return; xpCreate.busy = true; setTimeout(() => { xpCreate.busy = false; }, 3000); const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   GDB.set('xparty/' + id, { host: myId(), hn: me.nick, rg: xRgSel, st: 'lobby', at: now2(), p: { [myId()]: xpMe() } }).then(() => { xpCreate.busy = false; xpWatch(id); });
 }
 function xpJoin(id){
   const R = xpList[id] || (solo && lget('xparty/' + id)); if (!R || xpRoom) return;
   const mineIn = !!R.p?.[myId()];
-  if (!mineIn){ if (R.st !== 'lobby') return toast('벌써 출발했어요'); if (Object.keys(R.p || {}).length >= XP_MAX) return toast(`파티가 꽉 찼어요 (최대 ${XP_MAX}명)`); xpPut(id); }
+  if (!mineIn){ if (R.st !== 'lobby') return toast('벌써 출발했어요'); if (xEx().n >= XDAY) return toast(`탐사는 하루에 ${XDAY}번까지예요`); if (Object.keys(R.p || {}).length >= XP_MAX) return toast(`파티가 꽉 찼어요 (최대 ${XP_MAX}명)`); xpPut(id); }
   else if (R.p[myId()].out) GDB.upd(`xparty/${id}/p/${myId()}`, { out: null });   // 끊겼다가 돌아오면 다시 참여
   xpWatch(id);
 }
@@ -2016,7 +2018,7 @@ function xpLeave(why){
   } else GDB.upd(`xparty/${id}/p/${myId()}`, { out: 1 });   // 진행 중에 나가면 파티에서 빠지고, 끝나기 전엔 다시 들어올 수 있어요
   xpRefresh();
 }
-const xpCantGo = v => { const R = XRG[v.rg] || XRG[0], ex = xEx(); if (ex.run && ex.run.co !== xpRoom) return '지금 하고 있는 탐사를 먼저 끝내요'; if (me.coin < R.fee) return `입장료 ${R.fee}G가 모자라요 (지금 ${me.coin}G)`; if (xLv(ex.exp).L < R.need) return `레벨 ${R.need}부터 갈 수 있어요`; return ''; };
+const xpCantGo = v => { const R = XRG[v.rg] || XRG[0], ex = xEx(); if (ex.run && ex.run.co !== xpRoom) return '지금 하고 있는 탐사를 먼저 끝내요'; if (!(ex.run && ex.run.co === xpRoom) && ex.n >= XDAY) return `탐사는 하루에 ${XDAY}번까지예요 (오늘 다 다녀왔어요)`; if (me.coin < R.fee) return `입장료 ${R.fee}G가 모자라요 (지금 ${me.coin}G)`; if (xLv(ex.exp).L < R.need) return `레벨 ${R.need}부터 갈 수 있어요`; return ''; };
 function xpPanel(lv){
   if (!XCOOP) return '';
   const mineRoom = xpV ? [xpRoom, xpV] : null, open = Object.entries(xpList).filter(([id, r]) => r && r.st === 'lobby' && !r.p?.[myId()] && now2() - r.at < 600000).sort((a, b) => b[1].at - a[1].at);
@@ -2063,17 +2065,17 @@ function renderExplore(){
   const head = `<div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center"><span class="big">${job.ic}</span><div style="flex:1"><b>${esc(me.nick)} · ${job.n} Lv ${lv.L}</b><div class="s sub">HP ${Math.round(xStTot(ex, 'hp'))} · 공 ${Math.round(xStTot(ex, 'atk'))} · 마 ${Math.round(xStTot(ex, 'mag'))} · 치 ${Math.round(xStTot(ex, 'heal'))} · 속 ${Math.round(xStTot(ex, 'spd') * 10) / 10}</div></div></div></div>`;
   if (v === 'lobby'){
     const R = xReg(), okL = lv.L >= R.need;
-    frame(null, '탐사', `오늘 ${ex.n}회 다녀왔어요`, `${head}<section class="sec">${secH('가는 곳')}<div class="box px"><div class="li"><div class="main"><span class="t">${R.n} · ${R.tier}</span><span class="d" style="white-space:normal">${R.dir}쪽 길 · ${R.min}분 · 입장 ${R.fee}G · 몬스터 Lv ${R.lv[0]}~${R.lv[1]}${lv.L < R.need ? ` · 내 레벨 ${R.need} 이상` : ''}</span></div></div>
+    frame(null, '탐사', `오늘 ${Math.min(ex.n, XDAY)} / ${XDAY}회 다녀왔어요`, `${head}<section class="sec">${secH('가는 곳')}<div class="box px"><div class="li"><div class="main"><span class="t">${R.n} · ${R.tier}</span><span class="d" style="white-space:normal">${R.dir}쪽 길 · ${R.min}분 · 입장 ${R.fee}G · 몬스터 Lv ${R.lv[0]}~${R.lv[1]}${lv.L < R.need ? ` · 내 레벨 ${R.need} 이상` : ''}</span></div></div>
       </div>
       ${xpPanel(lv)}
-      <button class="btn" id="xwp" style="width:100%">무기 강화 · ${XWN[ex.job]} (${XWT[ex.wp || 0]})</button><button class="btn" id="xst" style="width:100%">스탯${xSpPts(ex) > 0 ? ` · 남은 포인트 ${xSpPts(ex)}` : ''}</button><button class="btn" id="xtree" style="width:100%">스킬 트리${xPts(ex) > 0 ? ` · 남은 포인트 ${xPts(ex)}` : ''}</button>${xpV ? '' : `<div class="frow" style="display:flex;gap:8px"><button class="btn go" id="xgo" style="flex:1" ${me.coin < R.fee || !okL ? 'disabled' : ''}>${!okL ? `레벨 ${R.need} 이상이에요` : me.coin < R.fee ? `골드가 모자라요 (${R.fee}G)` : `${XCOOP ? '혼자 가기' : '출발하기'} · ${R.fee}G`}</button><button class="btn" data-xp="create" style="flex:1" ${!okL ? 'disabled' : ''}>파티 모집하기</button></div>`}${hint(xMsg, '')}</section><div style="display:flex;gap:8px">${back}</div>`);
+      <button class="btn" id="xwp" style="width:100%">무기 강화 · ${XWN[ex.job]} (${XWT[ex.wp || 0]})</button><button class="btn" id="xst" style="width:100%">스탯${xSpPts(ex) > 0 ? ` · 남은 포인트 ${xSpPts(ex)}` : ''}</button><button class="btn" id="xtree" style="width:100%">스킬 트리${xPts(ex) > 0 ? ` · 남은 포인트 ${xPts(ex)}` : ''}</button>${xpV ? '' : `<div class="frow" style="display:flex;gap:8px"><button class="btn go" id="xgo" style="flex:1" ${me.coin < R.fee || !okL || ex.n >= XDAY ? 'disabled' : ''}>${ex.n >= XDAY ? `오늘은 다 다녀왔어요 (${XDAY}회)` : !okL ? `레벨 ${R.need} 이상이에요` : me.coin < R.fee ? `골드가 모자라요 (${R.fee}G)` : `${XCOOP ? '혼자 가기' : '출발하기'} · ${R.fee}G`}</button><button class="btn" data-xp="create" style="flex:1" ${!okL ? 'disabled' : ''}>파티 모집하기</button></div>`}${hint(xMsg, '')}</section><div style="display:flex;gap:8px">${back}</div>`);
     on('[data-xr]', b => { xRgSel = +b.dataset.xr; if (xpRoom && xpV?.host === myId() && xpV.st === 'lobby') GDB.upd('xparty/' + xpRoom, { rg: xRgSel }); renderExplore(); });
     xpWire();
     $('#back').onclick = closeSheet;
     $('#xst').onclick = () => { xv = { view: 'stats', sel: XMAIN[ex.job] }; renderExplore(); };
     $('#xtree').onclick = () => { xv = { view: 'tree', sel: '0_0' }; renderExplore(); };
     $('#xwp').onclick = () => { xv = { view: 'weapon' }; renderExplore(); };
-    const go = $('#xgo'); if (go) go.onclick = () => { me.coin -= xReg().fee; ex.n++; ex.run = { rg: xRgSel, mod: xRand(XMODS), pool: xShuffle(xReg().mon).slice(0, 4), start: Date.now(), end: Date.now() + xReg().min * 6e4, prog: 0, loot: { gold: 0, exp: 0, items: {} }, buff: 0, p: null, node: null }; save(); hud(); xv = { view: 'march' }; xMsg = ''; xM = null; renderExplore(); };
+    const go = $('#xgo'); if (go) go.onclick = () => { if (ex.n >= XDAY) return toast(`탐사는 하루에 ${XDAY}번까지예요`); me.coin -= xReg().fee; ex.n++; ex.run = { rg: xRgSel, mod: xRand(XMODS), pool: xShuffle(xReg().mon).slice(0, 4), start: Date.now(), end: Date.now() + xReg().min * 6e4, prog: 0, loot: { gold: 0, exp: 0, items: {} }, buff: 0, p: null, node: null }; save(); hud(); xv = { view: 'march' }; xMsg = ''; xM = null; renderExplore(); };
     return;
   }
   const run = ex.run;
@@ -2414,7 +2416,7 @@ function xcoEnter(id, v){   // 방이 「출발」하면 각자 탐사 기록을
   const ex = xEx(), me_p = v.p?.[myId()]; if (!me_p || me_p.out || !v.t0 || !v.seed) return; if (ex.run && ex.run.co === id){ if (!xcoOff.length) xcoWatch(id); return; }
   if (ex.run){ xpLog('혼자 하던 탐사가 남아서 못 들어감', v); return; }
   const R = XRG[v.rg] || XRG[0]; if (xLv(ex.exp).L < R.need){ xpLog('레벨이 모자라서 못 들어감', v); return; }
-  if (!me_p.paid){ if (me.coin < R.fee){ toast('입장료가 모자라서 같이 못 가요'); return xpLeave('입장료 모자람'); } me.coin -= R.fee; ex.n++; GDB.upd(`xparty/${id}/p/${myId()}`, { paid: 1 }); }
+  if (!me_p.paid){ if (ex.n >= XDAY){ toast(`오늘 탐사를 다 다녀와서 같이 못 가요 (${XDAY}회)`); return xpLeave('하루 탐사 횟수 다 씀'); } if (me.coin < R.fee){ toast('입장료가 모자라서 같이 못 가요'); return xpLeave('입장료 모자람'); } me.coin -= R.fee; ex.n++; GDB.upd(`xparty/${id}/p/${myId()}`, { paid: 1 }); }
   const rnd = xcoSeeded(v.seed || 1), mod = XMODS[Math.floor(rnd() * XMODS.length)], pool = R.mon.map(m => [rnd(), m]).sort((a, b) => a[0] - b[0]).slice(0, 4).map(a => a[1]);
   ex.run = { rg: v.rg, co: id, mod, pool, start: v.t0, end: v.t0 + R.min * 6e4, prog: 0, loot: { gold: 0, exp: 0, items: {} }, buff: 0, p: null, node: null }; save(); hud();
   xv = { view: 'march' }; xMsg = ''; xM = null; xb = null; xcoWatch(id); xcoWasHost = v.host === myId(); if (xcoWasHost) setTimeout(() => xcoPub({ st: 'walk' }), 400);
