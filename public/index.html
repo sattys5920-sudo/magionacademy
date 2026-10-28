@@ -7484,7 +7484,7 @@ function mailApply(){
   if (!me || !mailBox || !document.body.classList.contains('inworld')) return; me.mailGot = me.mailGot || {};
   Object.entries(mailBox).sort((a, b) => (a[1].at || 0) - (b[1].at || 0)).forEach(([id, e]) => {
     if (me.mailGot[id] || e.c) return; me.mailGot[id] = 1; const got = [], num = v => Math.max(-99999, Math.min(99999, Math.round(+v || 0)));
-    if (e.set){ if (e.set.coin !== undefined) me.coin = Math.max(0, num(e.set.coin)); Object.entries(e.set.items || {}).forEach(([k, n]) => { if (ITEM[k] !== undefined) me.inv[k] = Math.max(0, num(n)); }); }
+    if (e.set){ if (e.set.coin !== undefined) me.coin = Math.max(0, num(e.set.coin)); if (e.set.sp !== undefined){ const ex = xEx(); ex.spx = (+ex.spx || 0) + Math.max(0, num(e.set.sp)) - xPts(ex); } Object.entries(e.set.items || {}).forEach(([k, n]) => { if (ITEM[k] !== undefined) me.inv[k] = Math.max(0, num(n)); }); }
     if (e.coin){ me.coin = Math.max(0, me.coin + num(e.coin)); got.push(`${num(e.coin).toLocaleString()}G`); }
     if (e.mana){ me.mana += num(e.mana); got.push(`마력 ${num(e.mana)}`); }
     if (e.stone){ me.inv.mana = Math.max(0, (me.inv.mana || 0) + num(e.stone)); got.push(`마나석 ${num(e.stone)}개`); }
@@ -7506,6 +7506,7 @@ function noticePop(){
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-nt]'); if (!b || !noticeCur) return; try { localStorage.setItem('magion-notice', String(noticeCur.id)); } catch(e2){} $('#ntpop')?.remove(); });
 const adItemOpts = () => Object.keys(ITEM).filter(k => ITEM[k]).sort((a, b) => String(ITEM[a]).localeCompare(String(ITEM[b]), 'ko')).map(k => `<option value="${k}">${esc(ITEM[k])}</option>`).join('');
+const adSkPts = ex => xSkp(xLv(ex.exp || 0).L) + (ex.spx || 0) - Math.max(0, Object.values(ex.sk || {}).reduce((a, v) => a + (+v || 0), 0) - 1);   // 관리자 화면용: 학생 데이터를 건드리지 않고 남은 스킬 포인트만 세요
 function adminGiftHTML(){
   const P = AD.players, ids = Object.keys(P).filter(id => P[id]?.nick).sort((a, b) => P[a].nick.localeCompare(P[b].nick, 'ko'));
   if (!AD.gu || !P[AD.gu]) AD.gu = ids[0]; const u = AD.gu, p = P[u] || {}, buffs = Object.entries(p.buffs || {}).filter(([, v]) => v > Date.now());
@@ -7514,13 +7515,14 @@ function adminGiftHTML(){
       <div class="frow"><input id="adnt" maxlength="60" placeholder="예: 10분 뒤 점검이 있어요" value="${nt}" style="flex:1"><button class="btn sm go" data-adg="notice">띄우기</button><button class="btn sm" data-adg="noticeclr">내리기</button></div></div>
     <div class="adcard"><b>학생에게 보내기 · 고치기</b>
       <div class="frow"><select id="adgu" data-adg="pick" style="flex:1">${ids.map(id => `<option value="${id}" ${id === u ? 'selected' : ''}>${esc(P[id].nick)}</option>`).join('')}</select></div>
-      <div class="s">${esc(p.nick || '')} · 골드 ${(p.coin || 0).toLocaleString()} · 마력 ${p.mana || 0} · 마나석 ${(p.inv && p.inv.mana) || 0}${buffs.length ? ` · 버프 ${buffs.map(([k]) => esc(BUFF_NAME[k] || k)).join(', ')}` : ''}</div>
+      <div class="s">${esc(p.nick || '')} · 골드 ${(p.coin || 0).toLocaleString()} · 마력 ${p.mana || 0} · 마나석 ${(p.inv && p.inv.mana) || 0}${p.ex ? ` · 탐사 Lv ${xLv(p.ex.exp || 0).L} · 스킬 포인트 ${adSkPts(p.ex)} (보상으로 받은 것 ${p.ex.spx || 0})` : ''}${buffs.length ? ` · 버프 ${buffs.map(([k]) => esc(BUFF_NAME[k] || k)).join(', ')}` : ''}</div>
       <div class="s"><b>보내기</b> (학생 가방으로 들어가요)</div>
       <div class="frow"><label class="s">골드 <input id="adgc" type="number" style="width:76px"></label><label class="s">마력 <input id="adgm" type="number" style="width:60px"></label><label class="s">마나석 <input id="adgs" type="number" style="width:56px"></label><label class="s">스킬 포인트 <input id="adgp" type="number" style="width:50px"></label></div>
       <div class="frow"><select id="adgi" style="flex:1"><option value="">아이템 고르기</option>${adItemOpts()}</select><input id="adgn" type="number" min="1" value="1" style="width:56px"></div>
       <div class="frow"><input id="adgmsg" maxlength="40" placeholder="전할 말 (없어도 돼요)" style="flex:1"><button class="btn sm go" data-adg="send">보내기</button></div>
       <div class="s"><b>고치기</b></div>
       <div class="frow"><label class="s">골드를 <input id="adfc" type="number" min="0" style="width:84px"> 으로</label><button class="btn sm" data-adg="setcoin">적용</button></div>
+      <div class="frow"><label class="s">남은 스킬 포인트를 <input id="adfp" type="number" min="0" style="width:64px"> 으로</label><button class="btn sm" data-adg="setsp">적용</button></div>
       <div class="frow"><select id="adfi" style="flex:1"><option value="">아이템 고르기</option>${adItemOpts()}</select><input id="adfn" type="number" min="0" value="0" style="width:56px"><button class="btn sm" data-adg="setitem">개수로</button></div>
       <div class="frow">${buffs.length ? `<select id="adfb" style="flex:1">${buffs.map(([k]) => `<option value="${k}">${esc(BUFF_NAME[k] || k)}</option>`).join('')}</select><button class="btn sm" data-adg="delbuff">버프 없애기</button>` : '<span class="s sub">걸려 있는 버프가 없어요</span>'}<button class="btn sm" data-adg="resetexam">쪽지시험 기록 지우기</button></div>
       <div class="s sub">${(adminMailLog || []).length ? '최근 기록<br>' + adminMailLog.map(m => `${new Date(m.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · ${esc(m.sum)}${m.c ? '' : ' (아직 안 받음)'}`).join('<br>') : ''}</div></div>`;
@@ -7530,7 +7532,7 @@ async function adminMailLoad(){
   adminMailLog = Object.values(v).sort((a, b) => b.at - a.at).slice(0, 5); if (AD.tab === 'gift') adminRender();
 }
 function adminMailSend(u, e){
-  if (!F || !db || !u) return Promise.resolve(); const id = Date.now() + '_' + Math.random().toString(36).slice(2, 5), sum = [e.coin && `골드 ${e.coin}`, e.mana && `마력 ${e.mana}`, e.stone && `마나석 ${e.stone}`, e.sp && `SP ${e.sp}`, ...Object.entries(e.items || {}).map(([k, n]) => `${ITEM[k]} ×${n}`), e.set && e.set.coin !== undefined && `골드를 ${e.set.coin}으로`, ...Object.entries((e.set && e.set.items) || {}).map(([k, n]) => `${ITEM[k]}을(를) ${n}개로`), (e.delBuff || []).length && `버프 제거`, e.resetExam && '쪽지시험 기록 지움'].filter(Boolean).join(', ');
+  if (!F || !db || !u) return Promise.resolve(); const id = Date.now() + '_' + Math.random().toString(36).slice(2, 5), sum = [e.coin && `골드 ${e.coin}`, e.mana && `마력 ${e.mana}`, e.stone && `마나석 ${e.stone}`, e.sp && `SP ${e.sp}`, ...Object.entries(e.items || {}).map(([k, n]) => `${ITEM[k]} ×${n}`), e.set && e.set.coin !== undefined && `골드를 ${e.set.coin}으로`, e.set && e.set.sp !== undefined && `남은 스킬 포인트를 ${e.set.sp}개로`, ...Object.entries((e.set && e.set.items) || {}).map(([k, n]) => `${ITEM[k]}을(를) ${n}개로`), (e.delBuff || []).length && `버프 제거`, e.resetExam && '쪽지시험 기록 지움'].filter(Boolean).join(', ');
   return F.set(F.ref(db, `mail/${u}/${id}`), { at: Date.now(), sum, ...e }).then(() => adminMailLoad());
 }
 document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('#admqp'); if (s){ AD.mqp = s.value; adminRender(); } });
@@ -7542,6 +7544,7 @@ document.addEventListener('click', e => {
   if (!u) return; const nm = (AD.players[u] && AD.players[u].nick) || u;
   if (a === 'send'){ const e2 = {}; if (n('adgc')) e2.coin = n('adgc'); if (n('adgm')) e2.mana = n('adgm'); if (n('adgs')) e2.stone = n('adgs'); if (n('adgp')) e2.sp = n('adgp'); if (v('adgi') && n('adgn') > 0) e2.items = { [v('adgi')]: n('adgn') }; if (v('adgmsg')) e2.msg = v('adgmsg');
     if (!Object.keys(e2).filter(k => k !== 'msg').length) return alert('보낼 게 없어요'); if (!confirm(`${nm}에게 보낼까요?`)) return; adminMailSend(u, e2).then(() => { ['adgc', 'adgm', 'adgs', 'adgp', 'adgmsg'].forEach(i => { const x = $('#' + i); if (x) x.value = ''; }); }); return; }
+  if (a === 'setsp'){ if (v('adfp') === '') return; const t = Math.max(0, n('adfp')); if (confirm(`${nm}의 남은 스킬 포인트를 ${t}개로 바꿀까요? (찍어 둔 스킬은 그대로예요)`)) adminMailSend(u, { set: { sp: t } }); return; }
   if (a === 'setcoin'){ if (v('adfc') === '') return; if (confirm(`${nm}의 골드를 ${n('adfc')}G로 바꿀까요?`)) adminMailSend(u, { set: { coin: n('adfc') } }); return; }
   if (a === 'setitem'){ if (!v('adfi')) return; if (confirm(`${nm}의 ${ITEM[v('adfi')]}을(를) ${n('adfn')}개로 바꿀까요?`)) adminMailSend(u, { set: { items: { [v('adfi')]: n('adfn') } } }); return; }
   if (a === 'delbuff'){ if (v('adfb') && confirm(`${nm}의 버프를 없앨까요?`)) adminMailSend(u, { delBuff: [v('adfb')] }); return; }
