@@ -851,6 +851,7 @@ const growMins = (() => {
     const [lo, hi] = GROW_RANGE[Math.min(t, GROW_RANGE.length - 1)];
     list.forEach(([x], i) => { out[x.id] = Math.round((lo + (hi - lo) * (list.length > 1 ? i / (list.length - 1) : 0)) / 5) * 5; });
   });
+  out.mana = 2 * 24 * 60;   // 마나석은 귀하게: 이틀
   return out;
 })();
 const SEED_INFO = Object.fromEntries(SEED_LIST.map((x, i) => [x.id, { ...x, ic: i, mins: growMins[x.id] }]));
@@ -5773,7 +5774,7 @@ const growMs = p => SEED_INFO[p.k].mins * 6e4 * (p.w ? .75 : 1) * (me.perk?.gree
 const plotLeft = p => p.k ? Math.max(0, p.at + growMs(p) - Date.now()) : 0;
 const plotReady = p => !!p.k && plotLeft(p) <= 0;
 const plotFrac = p => p.k ? Math.min(1, 1 - plotLeft(p) / growMs(p)) : 0;
-const timeText = ms => { const m = Math.ceil(ms / 6e4); return ms < 6e4 ? `${Math.ceil(ms / 1000)}초` : m < 60 ? `${m}분` : `${Math.floor(m / 60)}시간${m % 60 ? ` ${m % 60}분` : ''}`; };
+const timeText = ms => { const m = Math.ceil(ms / 6e4); return ms < 6e4 ? `${Math.ceil(ms / 1000)}초` : m < 60 ? `${m}분` : m >= 1440 ? `${Math.floor(m / 1440)}일${Math.floor(m % 1440 / 60) ? ` ${Math.floor(m % 1440 / 60)}시간` : ''}` : `${Math.floor(m / 60)}시간${m % 60 ? ` ${m % 60}분` : ''}`; };
 // 화단은 기본 2칸, 지식과 골드를 내면 한 칸씩 늘려 최대 10칸까지. 칸 수는 사람마다 따로예요.
 const PLOT_MIN = 2, PLOT_MAX = 10;
 const PLOT_COST = [[8, 400], [15, 800], [30, 1300], [45, 2000], [90, 3000], [150, 4500], [210, 6500], [270, 9000]];   // [필요 지식, 골드] · 3번째 칸부터
