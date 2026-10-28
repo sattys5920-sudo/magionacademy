@@ -2390,7 +2390,7 @@ function xForkFxDraw(g, px, py, now){
 // 방장 기기가 걷기·갈림길·돌발 상황·전투 계산을 모두 하고, 결과를 xrun/<방>에 올려요. 멤버는 보기만 하고 입력(갈림길 선택 · 돌발 반응 · 전투 명령)만 올려요.
 //   xrun/<방>/u/<uid> 전투용 능력치(탐사 시작 때 한 번) · rs 진행 상태 · bt 전투 장면 · in/<uid> 입력
 // 접속이 끊기면(5초마다 하트비트, 20초 조용하면) 그 사람은 파티·전투에서 빠져요. 끝나기 전에 돌아오면 다시 참여해요. 방장이 끊기면 다음 사람이 이어받아요.
-const XCO_HB = 5000, XCO_DEAD = 20000;
+const XCO_HB = 4000, XCO_DEAD = 15000;
 let xcoOff = [], xcoBuilds = {}, xcoIn = {}, xcoRs = null, xcoRsN = 0, xcoRsSeen = -1, xcoHp = {}, xcoBn = 0, xcoLastBt = 0, xcoEv = [], xcoEvN = 0, xcoHbT = 0, xcoBound = null;
 const xcoOn = () => { const r = me && me.ex && me.ex.run; return !!(r && r.co && xpRoom && xpV && r.co === xpRoom); };
 const xcoHost = () => xcoOn() && xpV.host === myId();
@@ -2419,7 +2419,7 @@ function xcoWatch(id){
   xcoOff.push(GDB.on(`xrun/${id}/bt`, v => xcoOnBt(v)));
   xcoOff.push(GDB.on(`xrun/${id}/in`, v => { xcoIn = v || {}; xcoHostInputs(); }));
 }
-let xcoAwayAt = 0;
+let xcoAwayAt = 0, xcoWaitT = 0;
 setInterval(() => {   // 하트비트 · 방장 이어받기 · 방장의 시간·끊김 점검
   if (!xcoOn()) return; const id = xpRoom, now = now2();
   if (xcoHost() && (!sheetOn || sub !== 'explore')){   // 방장이 다른 창에 오래 있으면 진행이 멈추니 다음 사람에게 방장을 넘겨요
@@ -2428,6 +2428,7 @@ setInterval(() => {   // 하트비트 · 방장 이어받기 · 방장의 시간
   } else xcoAwayAt = 0;
   if (now - xcoHbT >= XCO_HB){ xcoHbT = now; GDB.upd(`xparty/${id}/p/${myId()}`, { hb: now }); }
   const h = xpV.host, hp = xpV.p?.[h];
+  if (h !== myId() && hp && now - (hp.hb || 0) > 8000){ if (!xcoWaitT){ xcoWaitT = 1; toast('방장 연결이 끊긴 것 같아요. 잠깐만 기다리면 이어서 해요'); } } else xcoWaitT = 0;
   if (h !== myId() && (!hp || hp.out || now - (hp.hb || 0) > XCO_DEAD)){   // 방장이 끊겼어요 → 남은 사람 중 첫 번째가 이어받아요
     const next = Object.keys(xpV.p || {}).filter(u => u !== h && !xpV.p[u].out && now - (xpV.p[u].hb || 0) < XCO_DEAD).sort()[0];
     if (next === myId()) GDB.tx(`xparty/${id}/host`, cur => cur === h ? myId() : undefined).then(r => { if (r.committed) { GDB.upd(`xparty/${id}`, { hn: me.nick }); xcoTakeover(); } });
@@ -2435,7 +2436,7 @@ setInterval(() => {   // 하트비트 · 방장 이어받기 · 방장의 시간
 }, 2000);
 function xcoTakeover(){   // 방장을 이어받았어요: 올라와 있던 진행 상태에서 이어서 해요 (전투 중이었다면 같은 곳에서 새 전투)
   toast('방장이 바뀌었어요. 내가 이어받아요'); const run = xEx().run; if (!run) return; const rs = xcoRs; xcoRsN = Math.max(xcoRsN, xcoRsSeen, rs && rs.n || 0) + 5; xcoHp = {}; if (rs && rs.hp) Object.entries(rs.hp).forEach(([u, a]) => { xcoHp[u] = a.slice(); });   // (순번이 이어져야 팀원이 새 방장의 소식을 받아요)
-  const battle = !!xb; xb = null; clearInterval(xTick); xM = xMNew(run); xM.wt = 0; if (rs) run.prog = rs.prog || run.prog;
+  const battle = !!xb; xb = null; clearInterval(xTick); xM = xMNew(run); xM.wt = 0; if (rs) run.prog = Math.max(run.prog || 0, rs.prog || 0);   // 끊긴 동안 걸어 둔 만큼 되돌아가지 않게
   xv = { view: 'march' }; if (battle){ xM.st = 'busy'; xcoRs = null; xStartBattle('battle', '이어받은 전투'); } else { xcoPub({ st: 'walk' }); renderExplore(); }
 }
 // ----- 진행 상태(rs) 올리기·받기 -----
@@ -2513,7 +2514,7 @@ function xcoOnBt(v){
     const foes = v.foes.map(f => ({ ...f, fx: {}, pets: [], g: 0, hp: f.mhp, mp: 0, atk: 0, spd: 1, aoe: false }));
     if (!party.length) return;
     B = xb = { party, foes, kind: v.kind, log: v.log || '', turn: null, pick: null, over: false, mirror: true, bn: v.bn, sn: -1, evi: 0, def: {}, fxs: [], floats: [], proj: [], last: performance.now(), buff: false, tn: 0 };
-    if (xM) xM.st = 'busy'; xv = { view: 'battle' }; if (sheetOn && sub === 'explore') renderExplore(); else { closeSheet(); openSheet('home', 'explore'); }
+    if (xM) xM.st = 'busy'; xv = { view: 'battle' }; if (sheetOn && sub === 'explore') renderExplore(); else toast('파티가 전투를 시작했어요! 「탐사」를 열어 같이 싸워요');   // 다른 창을 보고 있으면 끌고 오지 않아요 (차례는 12초 뒤 자동 공격)
   } else v.order.forEach(u => { if (!B.party.some(x => x.id === u) && xcoBuilds[u]) B.party.push(xcoUnitFromBuild(u)); });   // 전투 중에 돌아온 사람
   if (v.n <= B.sn) return; B.sn = v.n; const now = performance.now();
   [...B.party, ...B.foes].forEach(u => { const a = v.units[u.id]; if (!a) return; u.hp = a.h; u.mp = a.m; u.g = a.g; const nf = {}; Object.entries(a.f || {}).forEach(([k, t]) => { nf[k] = u.fx[k] ? { ...u.fx[k], t } : { t, v: 0 }; }); u.fx = nf; u.pets = (a.p || []).map(p => ({ n: p[0], hp: p[1], mhp: p[2], t: p[3] })); u.cdn = a.c || {}; });
@@ -2937,9 +2938,11 @@ function xLoop(){
   if (xb && xcoHost() && !xb.mirror){ xcoHostInputs(); xcoTimeouts(xb); xcoPubBt(); }
 }
 function xcoTimeouts(B){   // 명령이 늦으면 자동 공격 · 끊긴 사람은 전투에서 빠져요
-  const act = xcoActive(), now = performance.now(); B.party.forEach(u => { if (u.uid && u.uid !== myId() && !act.includes(u.uid) && u.hp > 0){ u.hpGone = u.hp; u.hp = 0; u.gone = true; if (B.turn === u) B.turn = null; } });
+  const act = xcoActive(), now = performance.now(), hum0 = B.party.filter(u => u.hum && u.hp > 0).length; B.party.forEach(u => { if (u.uid && u.uid !== myId() && !act.includes(u.uid) && u.hp > 0){ u.hpGone = u.hp; u.hp = 0; u.gone = true; if (B.turn === u) B.turn = null; } });
+  { const hum1 = B.party.filter(u => u.hum && u.hp > 0).length; if (hum1 > 0 && hum1 < hum0){ const k = hum1 / hum0; xAlive(B.foes).forEach(f => { f.hp = Math.max(1, Math.round(f.hp * k)); }); B.log = '동료가 빠져서 몬스터도 약해졌어요'; } }   // 혼자 남아도 해 볼 만하게
   if (!B.over) act.forEach(uid => { const u = B.party.find(x => x.uid === uid); if (u){ if (u.gone && u.hpGone){ u.gone = false; u.hp = u.hpGone; u.hpGone = 0; u.g = 0; } } else if (xcoBuilds[uid]){ const c = xcoHp[uid]; B.party.push(xcoUnitFromBuild(uid, c ? Math.max(1, c[0]) : undefined, c ? c[1] : undefined)); } });   // 돌아온 사람은 나가기 전 체력으로 지금 전투에 바로 끼워요
   if (B.turn && B.turn.uid && B.turn.uid !== myId() && now > B.tdl) xcoApplyCmd(B, B.turn, { a: 'atk', s: -1 });
+  else if (B.turn && B.turn.uid === myId() && act.length > 1 && now > B.tdl){ B.pick?.unpick?.(); xcoApplyCmd(B, B.turn, { a: 'atk', s: -1 }); toast('차례가 지나서 자동으로 공격했어요'); }   // 방장이 자리를 비워도 파티 전투가 멈추지 않게
 }
 function xLoop0(){
   const B = xb; if (!B || B.over) return clearInterval(xTick); if ((!sheetOn || sub !== 'explore') && !(xEx().run?.co && xcoHost())) return clearInterval(xTick);   // 파티 방장은 다른 창을 열어도 전투가 계속 돌아가요 (안 그러면 모두 멈춰요)
