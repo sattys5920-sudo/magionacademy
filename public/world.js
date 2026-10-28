@@ -219,7 +219,7 @@ function resize(){
   out.imageSmoothingEnabled = false;
 }
 addEventListener('resize', resize);
-const img = s => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = webp(s); });
+const img = s => new Promise((r, j) => { let n = 0; const i = new Image(); i.onload = () => r(i); i.onerror = () => { if (n++ < 2) setTimeout(() => { i.src = webp(s) + (webp(s).includes('?') ? '&' : '?') + 'r=' + n; }, 800 * n); else j(new Error('그림을 불러오지 못했어요: ' + s)); }; i.src = webp(s); });   // 와이파이가 끊겨 그림이 안 오면 두 번 다시 받고, 그래도 안 되면 실패로 알려요
 let map, M, blocked, objOrder, rmap;
 // 기숙사 휴게실은 단계마다 다른 방이에요: 'dorm_witch' → 'dorm_witch_3' 처럼 바꿔 보여 줘요
 const ALIAS = {}; Object.keys(MAPS).forEach(k => { const m = k.match(/^(dorm_\w+?)_1$/); if (m) ALIAS[m[1]] = k; });
@@ -246,6 +246,7 @@ function dayLevel(m, k){
 }
 function makeDay(m){ if (m.meta.indoor || !m.bg || !m.obj) return; m.bgDay = gpuCopy(dayCopy(m.bg)); m.objDay = gpuCopy(dayCopy(m.obj)); m.lv = {}; }
 World.retuneDay = () => Object.values(MAPS).forEach(makeDay);
+function mapFail(){ fadeEl.textContent = '연결이 약해서 못 갔어요. 다시 눌러 주세요'; setTimeout(() => { fadeEl.style.opacity = 0; busy = false; }, 1400); }   // 검은 화면에 갇히지 않게
 async function ensureMap(id){
   const m = MAPS[real(id)]; if (m.bg) return;
   if (!m.loading) m.loading = (async () => {
@@ -260,6 +261,7 @@ async function ensureMap(id){
     }
     makeDay(m);
   })();
+  m.loading.catch(() => { m.loading = null; });   // 실패한 걸 붙잡고 있지 않게: 다음에 다시 받아요
   return m.loading;
 }
 const P = (tx, ty) => [M.OX + (tx - ty) * 8, M.OY + (tx + ty) * 4];
@@ -580,7 +582,7 @@ function goDoor(door, o){
   else if (door.back) backStack.push({ map, pos: [Math.round(me.x), Math.round(me.y + (door.tile[1] === 0 ? 1 : 0))] });
   if (view) roomView = view;
   busy = true; fadeEl.textContent = label; fadeEl.style.opacity = 1;
-  const t0 = Date.now(); ensureMap(to).then(() => setTimeout(() => { setMap(to, spawn); setTimeout(() => { fadeEl.style.opacity = 0; busy = false; }, 150); }, Math.max(0, 380 - (Date.now() - t0))));
+  const t0 = Date.now(); ensureMap(to).then(() => setTimeout(() => { setMap(to, spawn); setTimeout(() => { fadeEl.style.opacity = 0; busy = false; }, 150); }, Math.max(0, 380 - (Date.now() - t0)))).catch(mapFail);
 }
 function goto(p, gx, gy){ const r = path(Math.round(p.x), Math.round(p.y), gx, gy); if (r){ p.path = r; return true; } return false; }
 function near(tiles){ const c = []; tiles.forEach(([a, b]) => [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx, dy]) => free(a + dx, b + dy) && c.push([a + dx, b + dy]))); return c.sort((p1, p2) => Math.hypot(p1[0] - me.x, p1[1] - me.y) - Math.hypot(p2[0] - me.x, p2[1] - me.y)); }
@@ -975,7 +977,7 @@ World.teleport = (id, objName, then) => {
     if (Array.isArray(objName)){ me.x = objName[0]; me.y = objName[1]; me.path = []; camX = null; }   // 바로 가기: 좌표로
     if (o){ const tiles = []; for (let a = Math.floor(o.box[0]); a < Math.ceil(o.box[2]); a++) for (let b = Math.floor(o.box[1]); b < Math.ceil(o.box[3]); b++) tiles.push([a, b]); const c = near(tiles)[0]; if (c){ me.x = c[0]; me.y = c[1]; me.path = []; camX = null; } }
     setTimeout(() => { fadeEl.style.opacity = 0; busy = false; then && then(); }, 150);
-  }, 380));
+  }, 380)).catch(mapFail);
 };
 
 // ========== 메인 의뢰: 맵 컷신 · 조사 지점 · 밤하늘 등불자리 ==========

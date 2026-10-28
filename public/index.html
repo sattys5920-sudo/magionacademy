@@ -1171,7 +1171,7 @@ function saveNow(){
   me.rv = knownRv + 1;
   const body = fbKeep(fbClean(me));   // Firebase가 거절하는 값(undefined·NaN·이름에 . # $ / [ ])이 있으면 저장 전체가 실패해요 → 미리 정리해요
   F.runTransaction(F.ref(db, 'players/' + uid), cur => (cur && (cur.rv || 0) > knownRv) ? undefined : body).then(r => {
-    if (r.committed){ knownRv = me.rv; setSaveDot(''); return; }
+    if (r.committed){ knownRv = me.rv; setSaveDot(''); if (typeof mailDone !== 'undefined') mailDone.splice(0).forEach(id => F.set(F.ref(db, `mail/${uid}/${id}/c`), 1).catch(() => {})); return; }
     me.rv = knownRv; haltSave = true; toast('다른 기기에서 먼저 진행했어요. 최신 상태로 새로 불러와요'); setTimeout(() => location.reload(), 1800);
   }).catch(e => { me.rv = knownRv; setSaveDot('off'); toast('저장에 실패했어요: ' + (e.code || e.message)); errReport('save', '저장 실패: ' + (e.code || e.message), e.stack); });
 }
@@ -1195,7 +1195,7 @@ function errFlush(){
 window.addEventListener('error', e => errReport('error', e.message || (e.error && e.error.message), (e.error && e.error.stack) || `${e.filename || ''}:${e.lineno || ''}:${e.colno || ''}`));
 window.addEventListener('unhandledrejection', e => { const r = e.reason; errReport('promise', (r && (r.message || r.code)) || String(r), r && r.stack); });
 setInterval(errFlush, 15000);
-let knownRv = 0;   // 마지막으로 내가 불러오거나 저장한 진행 번호
+let knownRv = 0, bootT = 0, playersSig = '', gamesSig = '';   // 마지막으로 내가 불러오거나 저장한 진행 번호
 let fbWarned = false;
 // Firebase는 빈 배열·빈 객체·배열 속 빈 칸을 저장하지 않아서 다시 불러오면 모양이 달라져요 (화단 칸·전리품·목록이 사라지는 오류의 뿌리)
 // → 학생 저장은 빈 것을 표시로 바꿔 저장하고({__a}·{__o}·{__n}), 불러올 때 되돌려요
@@ -1631,6 +1631,7 @@ function syncSpots(){
 }
 World.onSpot = (si, spot) => {
   if (G && G.g === 'pumpkin') return pkPick(spot);
+  if (!me.fg || me.fg.d !== todayKey()){ syncSpots(); return toast('날짜가 바뀌어서 채집 자리가 새로 생겼어요'); }   // 자정을 넘기면 어제 기록으로 다른 자리를 캐지 않게
   const all = spotsToday(), live = all.map((s, i) => ({ ...s, i })).filter(s => !me.fg.got.includes(s.i)), sp = live[si]; if (!sp) return;
   const pool = FORAGE.filter(x => x.z.includes(sp.z)).map(x => buffOn('fluck') ? { ...x, w: x.w ** .7 } : x); let r = sp.r * pool.reduce((t, x) => t + x.w, 0), it = pool[pool.length - 1];   // 요리 효과: 드문 채집물
   for (const x of pool){ r -= x.w; if (r <= 0){ it = x; break; } }
@@ -1874,16 +1875,16 @@ function xAiSk(L){   // 동료는 줄을 가로로 훑으며 포인트를 쓰기
 const XRG = [   // 탐사 지역: 입장료·시간·몬스터 레벨 범위 · 몬스터는 레벨 1 기준 체력·공격·속도 (lp = art/monsters_lpc.png 칸, tools/iso/lpc/monster_lpc.py)
   { n: '달빛 숲길', dir: '남', tier: '초보', ic: '', min: 20, fee: 50, need: 1, lv: [1, 12], clearExp: 200, kind: 'trees', pal: ['#1b1a3a', '#3a3a72', '#2c4a3a', '#35574a', '#16243a'], loot: ['herb', 'drop', 'mana', 'mush', 'g_dandel', 'g_mint', 'g_straw', 'g_carrot'], rare: ['mana', 'g_clover'],
     mon: [{ n: '숲 요정', lp: 17, hp: 32, atk: 8, spd: 13 }, { n: '들토끼', lp: 18, hp: 34, atk: 7, spd: 11 }, { n: '잠자리 도깨비', lp: 19, hp: 30, atk: 8, spd: 12 }, { n: '아기 멧돼지', lp: 20, hp: 44, atk: 7, spd: 7 }, { n: '고블린 정찰병', lp: 0, hp: 42, atk: 7, spd: 9 }, { n: '들쥐 도적', lp: 1, hp: 34, atk: 8, spd: 12 }, { n: '토끼 창병', lp: 2, hp: 38, atk: 7, spd: 10 }],
-    elite: { n: '오크 두목', lp: 12, hp: 150, atk: 13, spd: 9, k: 3 }, boss: { n: '고블린 대왕', lp: 21, hp: 220, atk: 14, spd: 6, k: 8, aoe: true, big: 1 } },
+    elite: { n: '오크 두목', lp: 12, hp: 150, atk: 13, spd: 9, k: 3, sk: 'combo', skn: '연속 베기' }, boss: { n: '고블린 대왕', lp: 21, hp: 220, atk: 14, spd: 6, k: 8, aoe: true, big: 1, sk: 'rock', skn: '돌 던지기' } },
   { n: '무너진 지하 묘지', dir: '서', tier: '중급', ic: '', min: 30, fee: 120, need: 8, lv: [10, 24], clearExp: 600, kind: 'graves', pal: ['#201830', '#4a3a62', '#3a3040', '#463a4c', '#1a1224'], loot: ['silk', 'whisker', 'herb', 'mana', 'mush', 'drop'], rare: ['mana', 'egg'],
     mon: [{ n: '해골 병사', lp: 3, hp: 50, atk: 8, spd: 8 }, { n: '좀비', lp: 4, hp: 70, atk: 8, spd: 5 }, { n: '쥐 도굴꾼', lp: 5, hp: 44, atk: 9, spd: 11 }, { n: '해골 궁수', lp: 22, hp: 40, atk: 10, spd: 11 }, { n: '떠도는 유령', lp: 23, hp: 46, atk: 10, spd: 9 }, { n: '달빛 요정', lp: 24, hp: 36, atk: 10, spd: 13 }],
-    elite: { n: '해골 기사', lp: 13, hp: 190, atk: 14, spd: 8, k: 3 }, boss: { n: '묘지의 리치', lp: 15, hp: 250, atk: 15, spd: 7, k: 8, aoe: true, big: 1 } },
+    elite: { n: '해골 기사', lp: 13, hp: 190, atk: 14, spd: 8, k: 3, sk: 'cleave', skn: '베어 넘기기' }, boss: { n: '묘지의 리치', lp: 15, hp: 250, atk: 15, spd: 7, k: 8, aoe: true, big: 1, sk: 'curse', skn: '죽음의 저주' } },
   { n: '안개 호수 동굴', dir: '북', tier: '고급', ic: '', min: 45, fee: 250, need: 20, lv: [22, 38], clearExp: 1500, kind: 'cave', pal: ['#0f2a3a', '#1f5a6a', '#2a4a52', '#335a62', '#0c2030'], loot: ['slime', 'scale', 'herb', 'mana', 'drop', 'mush'], rare: ['mana', 'egg', 'g_clover'],
     mon: [{ n: '호수 도마뱀', lp: 25, hp: 58, atk: 9, spd: 10 }, { n: '아기 트롤', lp: 26, hp: 70, atk: 9, spd: 6 }, { n: '나비 쥐', lp: 27, hp: 42, atk: 10, spd: 12 }, { n: '멧돼지 전사', lp: 6, hp: 70, atk: 10, spd: 7 }, { n: '호수의 이방인', lp: 7, hp: 50, atk: 11, spd: 10 }],
-    elite: { n: '늪 트롤 대장', lp: 8, hp: 210, atk: 15, spd: 7, k: 3 }, boss: { n: '리자드 왕', lp: 28, hp: 280, atk: 16, spd: 8, k: 8, aoe: true, big: 1 } },
+    elite: { n: '늪 트롤 대장', lp: 8, hp: 210, atk: 15, spd: 7, k: 3, sk: 'cleave', skn: '휩쓸기' }, boss: { n: '리자드 왕', lp: 28, hp: 280, atk: 16, spd: 8, k: 8, aoe: true, big: 1, sk: 'venom', skn: '독침 세례' } },
   { n: '호박달 고대 신전', dir: '동', tier: '초고급', ic: '', min: 60, fee: 500, need: 34, lv: [36, 50], clearExp: 3500, kind: 'temple', pal: ['#3a2418', '#a06a3a', '#6a5236', '#7a6040', '#3a2a1e'], loot: ['mana', 'scale', 'feather', 'egg'], rare: ['mana', 'egg'],
     mon: [{ n: '청동 수호상', lp: 29, hp: 90, atk: 10, spd: 6 }, { n: '그림자 단원', lp: 30, hp: 60, atk: 12, spd: 13 }, { n: '불꽃 사제', lp: 31, hp: 54, atk: 12, spd: 10 }, { n: '도마뱀 병사', lp: 9, hp: 66, atk: 11, spd: 9 }, { n: '양 마법사', lp: 10, hp: 52, atk: 12, spd: 10 }, { n: '돼지 투사', lp: 11, hp: 78, atk: 11, spd: 7 }],
-    elite: { n: '미노타우로스', lp: 14, hp: 240, atk: 16, spd: 9, k: 3 }, boss: { n: '신전의 트롤 왕', lp: 16, hp: 310, atk: 17, spd: 7, k: 8, aoe: true, big: 1 } },
+    elite: { n: '미노타우로스', lp: 14, hp: 240, atk: 16, spd: 9, k: 3, sk: 'combo', skn: '돌진 연타' }, boss: { n: '신전의 트롤 왕', lp: 16, hp: 310, atk: 17, spd: 7, k: 8, aoe: true, big: 1, sk: 'quake', skn: '땅 울리기' } },
 ];
 [[1, 1, 1], [2.2, 1.3, 1.8], [3.5, 1.8, 3], [4.5, 2.7, 5.2]].forEach(([h, e, a], i) => { XRG[i].hpm = h; XRG[i].ehm = e; XRG[i].atkm = a; XRG[i].bat = [1.3, 1.3, 1.2, 1.4][i]; });   // bat: 보스는 더 아프게 때려요 (물약을 더 마셔야 해요)   // 지역마다 몬스터가 더 단단하고 세요 (무기 강화 0 · 2 · 3 · 4단계 이상인 사람 기준)
 let xRgSel = 0; const xReg = () => XRG[(xEx().run ? xEx().run.rg : xRgSel) || 0];
@@ -1946,7 +1947,7 @@ function xEnd(how){   // how: clear · time · retreat · wipe
   if (how !== 'wipe'){ pzDrop('explore'); lnDrop('explore'); }
   if (how !== 'wipe' && Math.random() < .02) setTimeout(() => recipePaper('explore'), 700);   // 탐사 보상: 레시피 종이 2%
 }
-function xTime(run){ return Math.max(0, run.end - Date.now()); }
+function xTime(run){ return Math.max(0, run.end - (run.co ? now2() : Date.now())); }   // 파티 탐사는 방장이 서버 시각으로 정해요
 // ===== 협동 탐험 1단계: 방·로비 (xparty/<방> = { host, hn, rg 지역, st lobby·run·end, at, t0, seed, p: { uid: { n, job, L, rdy, out } } }) =====
 // 방장이 지역을 고르고 친구를 모아요. 아직 개발 중이라 주소 끝에 ?coop=1 을 붙여 연 기기에서만 보여요 (설계: docs/coop_design.md)
 const XCOOP = (() => { try { const q = new URLSearchParams(location.search).get('coop'); if (q != null) localStorage.setItem('magion-coop', q); return localStorage.getItem('magion-coop') !== '0'; } catch(e){ return true; } })();   // 주소 끝에 ?coop=0 을 붙이면 협동을 꺼요
@@ -1959,10 +1960,10 @@ let xpFix = 0;   // 대기실에서 내 이름이 사라지면 다시 써 넣은
 const xpPut = id => GDB.upd(`xparty/${id}/p/${myId()}`, xpMe()).catch(e => errReport('party', `파티 참가 쓰기 실패: ${e.code || e.message}`, ''));
 function xpWatch(id){ xpRoom = id; xpFix = 0; xpOff?.(); xpOff = GDB.on('xparty/' + id, v => { if (xpRoom !== id) return;
   if (v && v.st === 'lobby' && v.p && !v.p[myId()] && xpFix < 3 && Object.keys(v.p).length < XP_MAX){ xpFix++; xpLog(`대기실 명단에서 빠져서 다시 넣음 (${xpFix})`, v); xpPut(id); return; }   // 나가기를 누르지 않았는데 빠졌으면 다시 들어가요
-  if (!v || v.st === 'end' || !v.p?.[myId()]){ if (!v) xpLog('방이 사라짐', xpV); else if (v.st !== 'end') xpLog('명단에서 내 이름이 빠짐', v); xpRoom = null; xpV = null; xpOff?.(); xpOff = null; xcoStop(); xcoWasHost = false; } else { if (xpV && xpV.host === myId() && v.host !== myId()) xpLog('방장이 다른 사람으로 바뀜', v); xpV = v; if (v.st === 'run') xcoEnter(id, v); const h = v.host === myId(); if (xcoOn() && h && !xcoWasHost && xM && xcoOff.length) xcoTakeover(); xcoWasHost = xcoOn() && h; } xpRefresh(); }); }
+  if (!v || v.st === 'end' || !v.p?.[myId()]){ if (!v) xpLog('방이 사라짐', xpV); else if (v.st !== 'end') xpLog('명단에서 내 이름이 빠짐', v); xpRoom = null; xpV = null; xpOff?.(); xpOff = null; xcoStop(); xcoWasHost = false; } else { if (xpV && xpV.host === myId() && v.host !== myId()){ xpLog('방장이 다른 사람으로 바뀜', v); if (xb && !xb.mirror){ xb = null; clearInterval(xTick); xv = { view: 'march' }; if (xM) xM.st = 'busy'; } } xpV = v; if (v.st === 'run') xcoEnter(id, v); const h = v.host === myId(); if (xcoOn() && h && !xcoWasHost && xM && xcoOff.length) xcoTakeover(); xcoWasHost = xcoOn() && h; } xpRefresh(); }); }
 function xpCreate(){
-  if (xpRoom) return; const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  GDB.set('xparty/' + id, { host: myId(), hn: me.nick, rg: xRgSel, st: 'lobby', at: now2(), p: { [myId()]: xpMe() } }).then(() => xpWatch(id));
+  if (xpRoom || xpCreate.busy) return; xpCreate.busy = true; setTimeout(() => { xpCreate.busy = false; }, 3000); const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  GDB.set('xparty/' + id, { host: myId(), hn: me.nick, rg: xRgSel, st: 'lobby', at: now2(), p: { [myId()]: xpMe() } }).then(() => { xpCreate.busy = false; xpWatch(id); });
 }
 function xpJoin(id){
   const R = xpList[id] || (solo && lget('xparty/' + id)); if (!R || xpRoom) return;
@@ -2172,7 +2173,7 @@ const xcoVoteView = M => { const c = (M.fork ? M.fork.opts : []).map(() => 0); i
 function xMUi(){   // 갈림길 · 돌발 상황 버튼
   const M = xM, el = $('#xmf'); if (!el) return; let key = M.st + (M.fork ? M.fork.opts.join() + M.fork.my + JSON.stringify(xcoVoteView(M)) : '') + (M.haz ? M.haz.ty.k + (M.haz.done ? 'd' : '') : '');
   if (key === M.uik) return; M.uik = key;
-  if (M.st === 'fork'){ el.className = 'xmf xmf2'; const cv = xcoVoteView(M); el.innerHTML = M.fork.opts.map((k, i) => `<button data-xf="${i}" ${M.fork.my === i ? 'style="box-shadow:inset 0 0 0 3px #ffd866,0 2px 0 #000"' : ''}><img class="xfi" src="${XM_SPR[XM_FORK[k][0]]}" alt="">${XM_FORK[k][1]}<small>${XM_FORK[k][2]}</small>${xEx().run.co ? `<small style="color:#ffd866">${cv[i]}표${M.fork.my === i ? ' · 내 선택' : ''}</small>` : ''}</button>`).join(''); el.querySelectorAll('[data-xf]').forEach(b => b.onclick = () => xMPick(+b.dataset.xf)); }
+  if (M.st === 'fork'){ el.className = 'xmf xmf2'; const cv = xcoVoteView(M); el.innerHTML = M.fork.opts.map((k, i) => `<button data-xf="${i}" ${M.fork.my === i ? 'style="box-shadow:inset 0 0 0 3px #ffd866,0 2px 0 #000"' : ''}><img class="xfi" src="${XM_SPR[XM_FORK[k][0]]}" alt="">${XM_FORK[k][1]}<small>${XM_FORK[k][2]}</small>${xEx().run.co ? `<small style="color:#ffd866">${cv[i]}표${M.fork.my === i ? ' · 내 선택' : ''}</small>` : ''}</button>`).join(''); el.querySelectorAll('[data-xf]').forEach(b => b.onpointerdown = e => { e.preventDefault(); xMPick(+b.dataset.xf); }); }
   else if (M.st === 'haz' && !M.haz.done){ el.className = 'xmf'; el.innerHTML = `<button class="hz" id="xhz">${M.haz.ty.b}</button>`; $('#xhz').onpointerdown = e => { e.preventDefault(); if (M.haz && !M.haz.done){ M.haz.done = true; M.haz.ok = true; M.haz.t1 = performance.now(); M.uik = ''; if (xEx().run?.co && !xcoHost()) xcoSend({ hz: { hid: M.haz.hid } }); } }; }
   else { el.className = 'xmf'; el.innerHTML = ''; }
 }
@@ -2391,8 +2392,13 @@ function xcoWatch(id){
   xcoOff.push(GDB.on(`xrun/${id}/bt`, v => xcoOnBt(v)));
   xcoOff.push(GDB.on(`xrun/${id}/in`, v => { xcoIn = v || {}; xcoHostInputs(); }));
 }
+let xcoAwayAt = 0;
 setInterval(() => {   // 하트비트 · 방장 이어받기 · 방장의 시간·끊김 점검
   if (!xcoOn()) return; const id = xpRoom, now = now2();
+  if (xcoHost() && (!sheetOn || sub !== 'explore')){   // 방장이 다른 창에 오래 있으면 진행이 멈추니 다음 사람에게 방장을 넘겨요
+    xcoAwayAt = xcoAwayAt || now; const next = Object.keys(xpV.p || {}).filter(u => u !== myId() && !xpV.p[u].out && now - (xpV.p[u].hb || 0) < XCO_DEAD).sort()[0];
+    if (next && now - xcoAwayAt > 6000){ xcoAwayAt = 0; GDB.upd('xparty/' + id, { host: next, hn: xpV.p[next].n }); toast('다른 창을 보는 동안 방장을 넘겼어요'); }
+  } else xcoAwayAt = 0;
   if (now - xcoHbT >= XCO_HB){ xcoHbT = now; GDB.upd(`xparty/${id}/p/${myId()}`, { hb: now }); }
   const h = xpV.host, hp = xpV.p?.[h];
   if (h !== myId() && (!hp || hp.out || now - (hp.hb || 0) > XCO_DEAD)){   // 방장이 끊겼어요 → 남은 사람 중 첫 번째가 이어받아요
@@ -2401,7 +2407,7 @@ setInterval(() => {   // 하트비트 · 방장 이어받기 · 방장의 시간
   }
 }, 2000);
 function xcoTakeover(){   // 방장을 이어받았어요: 올라와 있던 진행 상태에서 이어서 해요 (전투 중이었다면 같은 곳에서 새 전투)
-  toast('방장이 바뀌었어요. 내가 이어받아요'); const run = xEx().run; if (!run) return; const rs = xcoRs; xcoRsN = Math.max(xcoRsN, xcoRsSeen, rs && rs.n || 0) + 5; xcoHp = {};   // (순번이 이어져야 팀원이 새 방장의 소식을 받아요) if (rs && rs.hp) Object.entries(rs.hp).forEach(([u, a]) => { xcoHp[u] = a.slice(); });
+  toast('방장이 바뀌었어요. 내가 이어받아요'); const run = xEx().run; if (!run) return; const rs = xcoRs; xcoRsN = Math.max(xcoRsN, xcoRsSeen, rs && rs.n || 0) + 5; xcoHp = {}; if (rs && rs.hp) Object.entries(rs.hp).forEach(([u, a]) => { xcoHp[u] = a.slice(); });   // (순번이 이어져야 팀원이 새 방장의 소식을 받아요)
   const battle = !!xb; xb = null; clearInterval(xTick); xM = xMNew(run); xM.wt = 0; if (rs) run.prog = rs.prog || run.prog;
   xv = { view: 'march' }; if (battle){ xM.st = 'busy'; xcoRs = null; xStartBattle('battle', '이어받은 전투'); } else { xcoPub({ st: 'walk' }); renderExplore(); }
 }
@@ -2411,7 +2417,7 @@ function xcoPub(patch){
   if (!xcoHost()) return; const run = xEx().run; xcoRsN++; xcoRs = { n: xcoRsN, t: now2(), prog: run.prog, hp: xcoHpMap(), ...patch }; GDB.set(`xrun/${xpRoom}/rs`, xcoRs);
 }
 function xcoOnRs(v){
-  if (!v || !xcoOn()) return; if (xcoHost()){ return; } if (v.n <= xcoRsSeen) return; xcoRsSeen = v.n; xcoRs = v; const run = xEx().run, M = xM; if (!run) return;
+  if (!v || !xcoOn()) return; if (xcoHost()){ xcoRsN = Math.max(xcoRsN, v.n || 0); return; } if (v.n <= xcoRsSeen) return; xcoRsSeen = v.n; xcoRs = v; const run = xEx().run, M = xM; if (!run) return;
   run.prog = v.prog; const h = v.hp && v.hp[myId()]; if (h) run.p = [{ hp: Math.max(1, h[0]), mp: h[1] }];
   if (v.end){ xcoEndRun(v.end.how); return; }
   if (v.ev) xcoMemberEv(v.ev);
@@ -2501,7 +2507,7 @@ function xcoMemberWin(B, rew){   // 이긴 보상: 경험치·골드는 같고, 
 // ----- 전투 -----
 function xStartBattle(kind, msg){
   const ex = xEx(), run = ex.run, R = xReg(), party = xcoHost() ? xcoPartyUnits() : xParty(), d = run.prog / 100, mL = Math.max(1, Math.min(Math.round(R.lv[0] + (R.lv[1] - R.lv[0]) * d), xLv(ex.exp).L + 3)),   // 내 레벨보다 3 높은 몬스터까지만
-    mk = (m, i, hm = 1) => { const k = m.k || 1, f = (1 + .35 * (mL - 1)) * hm * (k >= 3 ? R.ehm || 1 : R.hpm || 1), a = (1 + .25 * (mL - 1)) * (k >= 3 ? Math.sqrt(R.atkm || 1) : R.atkm || 1) * (k >= 8 ? R.bat || 1 : 1); return { id: 'e' + i, name: m.n, ic: '', lp: m.lp, big: m.big, sc: m.big ? 3 : k >= 3 ? 2 : 1, hh: 56 * (m.big ? 3 : k >= 3 ? 2 : 1), team: 'e', mhp: Math.round(m.hp * f), hp: Math.round(m.hp * f), atk: Math.round(m.atk * a), spd: m.spd, g: Math.random() * 60, k, aoe: !!m.aoe, mL, fx: {} }; };
+    mk = (m, i, hm = 1) => { const k = m.k || 1, f = (1 + .35 * (mL - 1)) * hm * (k >= 3 ? R.ehm || 1 : R.hpm || 1), a = (1 + .25 * (mL - 1)) * (k >= 3 ? Math.sqrt(R.atkm || 1) : R.atkm || 1) * (k >= 8 ? R.bat || 1 : 1); return { id: 'e' + i, name: m.n, ic: '', lp: m.lp, big: m.big, sc: m.big ? 3 : k >= 3 ? 2 : 1, hh: 56 * (m.big ? 3 : k >= 3 ? 2 : 1), team: 'e', mhp: Math.round(m.hp * f), hp: Math.round(m.hp * f), atk: Math.round(m.atk * a), spd: m.spd, g: Math.random() * 60, k, aoe: !!m.aoe, sk: m.sk || '', skn: m.skn || '', mL, fx: {} }; };
   const sz = party.length, pool = run.pool || R.mon;   // 인원이 늘면 몬스터도 늘어요: 일반 = 인원+1 (혼자면 1마리) · 정예 = 정예 + (인원−1) · 보스 = 보스 + 졸개 (인원−1) · 체력도 조금 늘어요
   const foes = kind === 'boss' ? [mk(R.boss, 0, 1 + .4 * (sz - 1)), ...Array.from({ length: Math.min(4, sz - 1) }, (_, i) => mk(xRand(pool), i + 1))] : kind === 'elite' ? [mk(R.elite, 0, 1 + .5 * (sz - 1)), ...Array.from({ length: Math.min(4, sz - 1) }, (_, i) => mk(xRand(pool), i + 1))]
     : Array.from({ length: Math.min(6, sz >= 2 ? sz + 1 : 1) }, (_, i) => mk(i === 0 && run.nextMon ? run.nextMon : xRand(pool), i)); run.nextMon = null;
@@ -2517,7 +2523,7 @@ const xFm = (u, k) => u.fx[k] ? u.fx[k].v : 0;
 let xSfxT = 0;
 function xHit(u, t, raw, col, opt){   // 피해 한 번: 치명타 · 약점(vuln) · 회피 · 받는 피해 감소 · 보호막 · 버티기 · 흡혈 · 반격
   opt = opt || {}; let dmg = raw; let isCrit = false; if (u && u.team === 'a' && (opt.fcrit || Math.random() < (u.crit || 0))){ dmg *= 1.6; isCrit = true; xFloat(t.id, '치명!', '#ffb84d'); }
-  if (t.team === 'e') dmg *= 1 + xFm(t, 'vuln');
+  dmg *= 1 + xFm(t, 'vuln');   // 약점: 적은 내 디버프, 우리 편은 보스 저주
   if (t.team === 'a'){ if (u && u.team === 'e' && xFm(t, 'dodge') + (t.dodge || 0) > Math.random()){ xFloat(t.id, '회피!', '#9fd0ff'); return 0; } dmg *= 1 - Math.min(.75, xFm(t, 'dmgIn') + (t.dr || 0)); }
   if (xb.def[t.id]) dmg /= 2; dmg = Math.max(1, Math.round(dmg));
   const sh = t.fx.shield; if (sh && sh.v > 0){ const a = Math.min(sh.v, dmg); sh.v -= a; dmg -= a; xFloat(t.id, '막음', '#9fd0ff'); if (sh.v <= 0) delete t.fx.shield; if (dmg <= 0) return 0; }
@@ -2560,10 +2566,22 @@ function xPetHit(u, base){   // 적이 소환수를 노릴 때가 있어요 (체
   const ps = []; xAlive(xb.party).forEach(o => (o.pets || []).forEach(p => { if (p.mhp) ps.push([o, p]); })); if (!ps.length || Math.random() > .3) return false;
   const [o, p] = xRand(ps), d = Math.max(1, Math.round(base * (.85 + Math.random() * .3))); p.hp -= d; p.hit = performance.now(); xFxAt('impact', [o]); xFloat(o.id, `-${d}`, '#ff9a9a'); xb.log = `${u.name} → ${p.n}`;
   if (p.hp <= 0){ o.pets = o.pets.filter(q => q !== p); xFloat(o.id, '쓰러짐', '#ffd0d0'); } return true; }
+function xFoeSkill(u, base, hit){   // 정예: 여러 명 베기·연속 공격 · 보스: 저마다 다른 기술
+  const B = xb, alive = xAlive(B.party), some = n => xShuffle(alive.slice()).slice(0, Math.min(alive.length, n)); xDelay = 150; B.log = `${u.name}의 ${u.skn}!`;
+  const hitK = (t, k) => xHit(u, t, base * k * (.85 + Math.random() * .3), '#ff6a6a');
+  if (u.sk === 'cleave'){ const L = some(2 + (Math.random() < .5 ? 1 : 0)); xFxAt('impact', L); L.forEach(t => hitK(t, .8)); }
+  else if (u.sk === 'combo'){ const t = xFoeTarget(); xFxAt('impact', [t]); hitK(t, .65); setTimeout(() => { if (xb === B && t.hp > 0 && !B.over){ xFxAt('impact', [t]); hitK(t, .65); } }, 260); }
+  else if (u.sk === 'rock'){ const L = some(2 + (Math.random() < .5 ? 1 : 0)); xFxAt('impact', L); L.forEach(t => { hitK(t, .7); if (t.hp > 0){ t.g = Math.min(t.g, -25); xFloat(t.id, '지연', '#ffd866'); } }); }
+  else if (u.sk === 'curse'){ alive.forEach(t => { t.fx.vuln = { v: .2, t: 12 }; xFloat(t.id, '저주', '#d0a0ff'); }); xFxAt('impact', alive); }
+  else if (u.sk === 'venom'){ const L = some(2 + (Math.random() < .5 ? 1 : 0)); xFxAt('impact', L); L.forEach(t => { hitK(t, .5); t.fx.dot = { v: Math.max(1, Math.round(base * .3)), t: 8, acc: 0 }; xFloat(t.id, '독', '#9ae66e'); }); }
+  else if (u.sk === 'quake'){ xFxAt('impact', alive); alive.forEach(t => { hitK(t, .6); t.fx.slow = { v: .3, t: 10 }; xFloat(t.id, '느려짐', '#9fd0ff'); }); }
+  else hit(xFoeTarget());
+}
 function xAct0(u, sk, tgt){   // 한 번 행동
   const B = xb, foes = u.team === 'a' ? B.foes : B.party, mates = u.team === 'a' ? B.party : B.foes; u.lg = performance.now(); xcoEvPush({ k: 'lg', id: u.id });
   if (u.team === 'e'){ if (!xAlive(B.party).length) return; if (xFm(u, 'blind') > Math.random()){ xFloat(u.id, '빗나감', '#d0a0ff'); B.log = `${u.name}의 공격이 빗나갔어요`; u.g = 0; return; } const base = u.atk * (1 - xFm(u, 'weak')), hit = t => xHit(u, t, base * (.85 + Math.random() * .3), '#ff6a6a');
-    if (u.aoe && Math.random() < .35){ const L = xAlive(B.party); xDelay = 150; xFxAt('impact', L); L.forEach(hit); B.log = `${u.name}의 휘두르기!`; } else if (xPetHit(u, base)){ xDelay = 150; u.g = 0; return; } else { const t = xFoeTarget(); xDelay = 150; xFxAt('impact', [t]); hit(t); B.log = `${u.name} → ${t.name}`; } u.g = 0; return; }
+    if (u.sk && Math.random() < (u.k >= 8 ? .25 : .3)){ xFoeSkill(u, base, hit); u.g = 0; return; }   // 정예·보스 기술
+    if (u.aoe && Math.random() < .3){ const L = xAlive(B.party); xDelay = 150; xFxAt('impact', L); L.forEach(hit); B.log = `${u.name}의 휘두르기!`; } else if (xPetHit(u, base)){ xDelay = 150; u.g = 0; return; } else { const t = xFoeTarget(); xDelay = 150; xFxAt('impact', [t]); hit(t); B.log = `${u.name} → ${t.name}`; } u.g = 0; return; }
   delete B.def[u.id]; const mult = (B.buff ? 1.25 : 1) * (1 + xFm(u, 'atk'));
   if (!sk){ const t = tgt && tgt.hp > 0 ? tgt : xRand(xAlive(B.foes)); xFxAt('slash', [t], u); xHit(u, t, Math.max(u.atk, u.mag * .8) * (.85 + Math.random() * .3) * mult, '#ffd866'); B.log = `${u.name}의 공격`; u.g = 0; return; }
   u.mp -= sk.mp; B.log = `${sk.n}! ${u.name}`; const fxk = xFxKind(sk, u), one = () => tgt && tgt.hp > 0 ? tgt : xRand(xAlive(B.foes)), fs = () => { const L = sk.tg === 'all' ? xAlive(B.foes) : [one()]; xFxAt(fxk, L, u); return L; }, as = () => { const L = sk.tg === 'all' ? xAlive(B.party) : sk.tg === 'self' ? [u] : [tgt && tgt.hp > 0 ? tgt : xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]]; xFxAt(fxk, L, u); return L; };
@@ -2897,7 +2915,7 @@ function xcoTimeouts(B){   // 명령이 늦으면 자동 공격 · 끊긴 사람
   if (B.turn && B.turn.uid && B.turn.uid !== myId() && now > B.tdl) xcoApplyCmd(B, B.turn, { a: 'atk', s: -1 });
 }
 function xLoop0(){
-  const B = xb; if (!B || B.over) return clearInterval(xTick); if (!sheetOn || sub !== 'explore') return clearInterval(xTick);
+  const B = xb; if (!B || B.over) return clearInterval(xTick); if ((!sheetOn || sub !== 'explore') && !(xEx().run?.co && xcoHost())) return clearInterval(xTick);   // 파티 방장은 다른 창을 열어도 전투가 계속 돌아가요 (안 그러면 모두 멈춰요)
   const now = performance.now(), dt = Math.min(.25, (now - B.last) / 1000); B.last = now; if (B.fin){ if (now >= B.fin) return xAlive(B.foes).length ? xLose() : xWin(); return; }
   B.party.concat(B.foes).forEach(u => { if (u.hp <= 0) return; if (u.hum && B.turn === u) return; if (u.team === 'a' && u.mp < u.mmp) u.mp = Math.min(u.mmp, u.mp + dt * (.6 + u.L * .05) * (XMPR[XROLE[u.job]] || 1) * (!u.ai && dbuff('dwater') ? 1.1 : 1)); u.g = Math.min(100, u.g + u.spd * (1 + xFm(u, 'spd') - xFm(u, 'slow')) * 3.3 * dt); const f = u.fx; for (const k in f){ f[k].t -= dt; if (k === 'dot'){ f[k].acc += dt; while (f[k].acc >= 2 && f[k].t > -2){ f[k].acc -= 2; u.hp = Math.max(0, u.hp - f[k].v); xFloat(u.id, '-' + f[k].v, '#ff9a4d'); } } if (k === 'regen'){ f[k].acc += dt; while (f[k].acc >= 2){ f[k].acc -= 2; u.hp = Math.min(u.mhp, u.hp + f[k].v); xFloat(u.id, '+' + f[k].v, '#7affb0'); } } if (f[k].t <= 0){ if (k === 'bomb') xBomb(u, f[k]); delete f[k]; } } xPets(u, dt); });
   if (!B.turn) for (const u of B.party.concat(B.foes)){ if (u.hp <= 0 || u.g < 100) continue; if (u.hum){ B.turn = u; B.pick = null; B.tn = (B.tn || 0) + 1; B.tdl = performance.now() + 12000; break; } if (u.team === 'e') xAct(u, null); else xAI(u); if (!xAlive(B.foes).length || !xAlive(B.party).length) break; }
@@ -2950,9 +2968,9 @@ function gameShow(html, cls = ''){ const u = gui(); u.className = 'on ' + cls; u
 function gameHide(){ const u = gui(); u.className = ''; u.innerHTML = ''; }
 // ---------- 방 ----------
 function openRoom(g){
-  if (room) return toast('이미 놀이 방에 있어요');
+  if (room || openRoom.busy) return room ? toast('이미 놀이 방에 있어요') : null; openRoom.busy = true; setTimeout(() => { openRoom.busy = false; }, 3000);   // 두 번 눌러 방이 두 개 생기지 않게
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  GDB.set('games/' + id, { g, host: myId(), hn: me.nick, m: World.placeKey() || '', st: 'lobby', at: now2(), p: { [myId()]: { n: me.nick, s: 0 } } }).then(() => joinRoom(id, true));
+  GDB.set('games/' + id, { g, host: myId(), hn: me.nick, m: World.placeKey() || '', st: 'lobby', at: now2(), p: { [myId()]: { n: me.nick, s: 0 } } }).then(() => { openRoom.busy = false; joinRoom(id, true); });
   speak(`${GAMES[g].ic} ${GAMES[g].name} 열었어! 같이 하자`);
 }
 function joinRoom(id, mine){
@@ -2982,7 +3000,7 @@ function onRoom(v){
       <div class="frow">${host ? `<button class="btn sm go" data-gx="start" ${ok ? '' : 'disabled'}>시작!</button>` : ''}<button class="btn sm" data-gx="leave">나가기</button></div></div>`, 'lobby');
     return;
   }
-  if (v.st === 'play' && !G && v.p?.[myId()]) gameStart(v);
+  if (v.st === 'play' && !G && v.p?.[myId()] && gameDoneId !== room) gameStart(v);   // 이미 끝낸 판이 늦게 온 점수 때문에 다시 시작되지 않게
   if (G) G.sync && G.sync(v);
 }
 function hostStart(){
@@ -3026,8 +3044,9 @@ const gCount = () => { const t = (G.t0 - now2()) / 1000; return t > 0 ? Math.cei
 const nameOf = id => esc(roomV?.p?.[id]?.n || '친구');
 function addScore(d){ G.score = Math.max(-99, G.score + d); GDB.upd(`games/${G.id}/p/${myId()}`, { s: G.score }); }
 function scoreBoard(v){ const ps = Object.entries(v.p || {}).sort((a, b) => (b[1].s || 0) - (a[1].s || 0)); return `<div class="gsb">${ps.map(([id, p]) => `<span style="color:${PCOL[G.ord.indexOf(id) % 8]}">${esc(p.n)} ${p.s || 0}${p.d ? ' ✖' : ''}</span>`).join('')}</div>`; }
+let gameDoneId = null;
 function gameOver(fail){
-  if (!G || G.over) return; G.over = true;
+  if (!G || G.over) return; G.over = true; gameDoneId = room;
   const v = roomV || G.v, Gm = GAMES[G.g], ps = Object.entries(v.p || {}).sort((a, b) => (b[1].s || 0) - (a[1].s || 0));
   let reward = '', coin = 0, mana = 0, rec = 0, title = '';
   if (Gm.coop){
@@ -3170,12 +3189,12 @@ function ghStart(){
   cv.onpointerdown = e => { e.preventDefault(); const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) * GW / r.width, y = (e.clientY - r.top) * GH / r.height, t = (now2() - G.t0) / 1000;
     const p = G.gh.filter(p => p.lane === G.view && !G.kill[p.i] && at(p, t) >= 0 && at(p, t) < 1).find(p => Math.hypot(p.x * GW - x, 20 + at(p, t) * (GH - 70) - y) < 22); if (!p) return;
     GDB.tx(`games/${G.id}/c/${p.i}`, c => c || (now2() - G.t0) / 1000 > p.ts + p.T ? undefined : myId()).then(r => { if (r.committed && G) addScore(1); }); };
-  gui().addEventListener('click', e => { const b = e.target.closest('[data-lane]'); if (b && G && G.g === 'ghost') G.view = +b.dataset.lane; });
+  gui().addEventListener('pointerdown', e => { const b = e.target.closest('[data-lane]'); if (b && G && G.g === 'ghost') G.view = +b.dataset.lane; });   // 버튼이 매 순간 다시 그려져서 click은 놓쳐요
   G.loop = () => {
     const t = (now2() - G.t0) / 1000, lost = G.gh.filter(p => !G.kill[p.i] && t > p.ts + p.T + .4).length; G.hp = 10 - lost;
     if (G.hp <= 0 && !G.over) return gameOver(true);
     const wave = Math.min(10, Math.max(1, Math.floor(t / 14) + 1));
-    $('#ghl').innerHTML = G.ord.map((id, i) => { const n = G.gh.filter(p => p.lane === i && !G.kill[p.i] && at(p, t) >= 0 && at(p, t) < 1).length; return `<button data-lane="${i}" class="${G.view === i ? 'on' : ''}" style="border-color:${PCOL[i % 8]}">${i === G.me_i ? '내 구역' : nameOf(id)}${n ? ` <b>${n}</b>` : ''}</button>`; }).join('');
+    { const gl = $('#ghl'), gh = G.ord.map((id, i) => { const n = G.gh.filter(p => p.lane === i && !G.kill[p.i] && at(p, t) >= 0 && at(p, t) < 1).length; return `<button data-lane="${i}" class="${G.view === i ? 'on' : ''}" style="border-color:${PCOL[i % 8]}">${i === G.me_i ? '내 구역' : nameOf(id)}${n ? ` <b>${n}</b>` : ''}</button>`; }).join(''); if (gl && gl._h !== gh){ gl._h = gh; gl.innerHTML = gh; } }
     g.fillStyle = '#1E1440'; g.fillRect(0, 0, GW, GH); g.fillStyle = PCOL[G.view % 8]; g.globalAlpha = .12; g.fillRect(0, 0, GW, GH); g.globalAlpha = 1;
     g.fillStyle = '#3A2E68'; g.fillRect(0, GH - 46, GW, 46); g.fillStyle = '#6A5A8A'; g.fillRect(GW / 2 - 40, GH - 70, 80, 40); g.fillStyle = '#3A2A5E'; g.beginPath(); g.moveTo(GW / 2 - 48, GH - 70); g.lineTo(GW / 2, GH - 100); g.lineTo(GW / 2 + 48, GH - 70); g.fill(); g.fillStyle = '#FFD866'; g.fillRect(GW / 2 - 6, GH - 56, 12, 12);
     G.gh.forEach(p => { if (p.lane !== G.view || G.kill[p.i]) return; const a = at(p, t); if (a < 0 || a >= 1) return; const x = Math.round(p.x * GW), y = Math.round(20 + a * (GH - 70)), wob = Math.round(Math.sin(t * 6 + p.i) * 2);
@@ -3262,7 +3281,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.day = AD.day || todayKey(); sgListen(); if (!noticeOff && F && db) noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); if (AD.tab === 'gift' && !adminTyping()) adminRender(); });
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = k === 'players' ? fbBack(s.val() || {}) : s.val() || {}; if (adminTyping()) return; adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
   adminRender();
 }
 const adminTyping = () => { const a = document.activeElement; return (AD.tab === 'npc' || AD.tab === 'gift' || AD.tab === 'story') && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
@@ -3361,12 +3380,13 @@ function adminRender(){
   root.querySelectorAll('[data-admap]').forEach(b => b.onclick = () => { AD.map = b.dataset.admap; AD.follow = null; adminRender(); });
   root.querySelectorAll('[data-adall]').forEach(b => b.onclick = () => { AD.map = null; AD.follow = null; adminRender(); });
   root.querySelectorAll('[data-adfollow]').forEach(b => b.onclick = () => { AD.follow = AD.follow === b.dataset.adfollow ? null : b.dataset.adfollow; AD.map = null; adminRender(); });
+  const adFresh = p => { const np = freshPlayer(p.nick, p.look, p.house, p.av); if (p.ex?.job) np.ex = { exp: 0, d: '', n: 0, job: p.ex.job }; np.rv = (p.rv || 0) + 1000; return fbKeep(fbClean(np)); };   // 열려 있던 옛 화면이 리셋을 덮어쓰지 않게 번호를 올리고, 빈 값은 정리해요
   const adWipe = async (id, del) => {   // 진행 리셋: 이름·모습·기숙사·직업은 두고 처음부터 / 가입 삭제: 학생 기록을 모두 지워요
     const p = AD.players[id] || {}, who = p.nick || id.slice(0, 6);
     if (!confirm(del ? `${who}의 가입 데이터를 모두 지울까요? 캐릭터와 진행이 사라지고, 다시 가입 승인을 받아야 해요.` : `${who}의 진행 데이터를 처음부터 다시 시작하게 할까요? (이름·모습·기숙사·직업은 그대로)`)) return;
     const ups = {};
     if (del){ ups['players/' + id] = null; ups['approved/' + id] = null; ups['pending/' + id] = null; ups['online/' + id] = null; if (p.ex && p.ex.job) ups['jobs/' + p.ex.job] = null; if (p.house) ups['hmem/' + p.house + '/' + id] = null; }
-    else { const np = freshPlayer(p.nick, p.look, p.house, p.av); if (p.ex?.job) np.ex = { exp: 0, d: '', n: 0, job: p.ex.job }; ups['players/' + id] = np; }
+    else ups['players/' + id] = adFresh(p);
     ups['adm/reset/' + id] = Date.now();
     try {
       const pens = (await F.get(F.ref(db, 'pens'))).val() || {}; Object.entries(pens).forEach(([i, o]) => { if (o === id) ups['pens/' + i] = null; });
@@ -3378,7 +3398,7 @@ function adminRender(){
     if (!confirm(`학생 ${ids.length}명의 모든 진행 상황과 채팅 내역을 지울까요? 되돌릴 수 없어요.`)) return;
     if (prompt("정말 모두 초기화할까요? 아래에 '초기화' 라고 입력해요.") !== '초기화') return alert('취소했어요.');
     const ups = {}, now = Date.now(); dfHostStop();
-    ups['jobs'] = null; ids.forEach(id => { const p = AD.players[id], np = freshPlayer(p.nick, p.look, p.house, p.av); if (p.ex && p.ex.job){ np.ex = { exp: 0, d: '', n: 0, job: p.ex.job }; ups['jobs/' + p.ex.job] = id; } ups['players/' + id] = np; ups['adm/reset/' + id] = now; });
+    const jobs = {}; ids.forEach(id => { const p = AD.players[id]; if (p.ex && p.ex.job) jobs[p.ex.job] = id; ups['players/' + id] = adFresh(p); ups['adm/reset/' + id] = now; }); ups['jobs'] = Object.keys(jobs).length ? jobs : null;   // jobs와 jobs/x를 한 번에 쓰면 거절돼요
     ['chat', 'story', 'houses', 'games', 'xparty', 'xrun', 'events', 'coop', 'exam', 'market', 'guest', 'records', 'pens', 'defense'].forEach(k => { ups[k] = null; });
     try { await F.update(F.ref(db, '/'), ups); alert('모든 진행 상황과 채팅 내역을 초기화했어요.'); } catch(e){ alert('실패했어요: ' + (e.code || e.message)); }
   };
@@ -6212,7 +6232,7 @@ function openVisit(id){
   if (solo || !playersList[id] || id === uid) return;
   visitUid = id; visitGuest = {}; giftPick = null; vMine = null; vTheirs = null; sub = 'visit';
   visitOff?.();
-  visitOff = F.onValue(F.query(F.ref(db, 'guest/' + id), F.limitToLast(20)), s => { visitGuest = s.val() || {}; if (sub === 'visit') renderVisit(); });
+  visitOff = F.onValue(F.query(F.ref(db, 'guest/' + id), F.limitToLast(20)), s => { visitGuest = s.val() || {}; if (sub === 'visit' && !typingNow()){ const t = $('#gtext')?.value; renderVisit(); if (t && $('#gtext')) $('#gtext').value = t; } });   // 쓰는 중이면 다시 그리지 않아요
   me.visited = me.visited || {};
   if (me.visited[id] !== todayKey()){
     me.visited[id] = todayKey(); me.mana += 5; save();
@@ -6254,6 +6274,7 @@ function bindBreed(p){
     vMine = vTheirs = null; renderVisit();
   };
 }
+const typingNow = () => { const a = document.activeElement; return !!a && a.matches?.('input,textarea,select') && !!a.closest?.('#app'); };   // 글을 쓰거나 값을 고르는 중
 function renderVisit(){
   const p = playersList[visitUid];
   if (!p) return leaveVisit();
@@ -6506,26 +6527,29 @@ function dfPlayerOf(q){ return { cat: TD.CAT[q[2]] || 'melee', up: q[4].map(a =>
 function dfUi(){
   const v = $('#dfv'); if (!v) return; const st = dfSt, ph = dfCtl ? dfCtl.ph : 'ready', canSeat = ph === 'ready' || ph === 'rest', my = dfPick[myId()], mp = dfMe();
   const cnt = [0, 0, 0]; if (st) st.m.forEach(m => cnt[m[2]]++);
-  if (dfSet($('#dft'), TD.ZONES.map((z, i) => `<button data-dz="${i}" class="${i === dfZone ? 'on' : ''}">${z.name}${cnt[i] ? ` (${cnt[i]})` : ''}</button>`).join(''))) $('#dft').querySelectorAll('[data-dz]').forEach(b => b.onclick = () => { dfZone = +b.dataset.dz; dfUi(); });
+  if (dfSet($('#dft'), TD.ZONES.map((z, i) => `<button data-dz="${i}" class="${i === dfZone ? 'on' : ''}">${z.name}${cnt[i] ? ` (${cnt[i]})` : ''}</button>`).join(''))) $('#dft').querySelectorAll('[data-dz]').forEach(b => b.onpointerdown = () => { dfZone = +b.dataset.dz; dfUi(); });
   const eggs = st ? st.e : [100, 100, 100], w = st ? st.w : 0;
   $('#dfinfo').textContent = `웨이브 ${w} / 15 · 알 ${eggs.filter(e => e > 0).length}개${mp ? ` · ${mp[3]}G` : ''}`;
-  const stale = dfCtl && dfCtl.hb && Date.now() - dfCtl.hb > 12000 && ph !== 'over';
+  const stale = dfCtl && dfCtl.hb && now2() - dfCtl.hb > 12000 && ph !== 'over';
   const plN = st ? Object.keys(st.p).length : 0, rdN = st ? Object.values(st.p).filter(q => q[8]).length : 0;
   let txt = ph === 'ready' ? `준비 ${rdN} / ${plN}` : ph === 'wave' ? `남은 몬스터 ${st ? st.m.length + st.left : '-'}마리` : ph === 'rest' ? `준비 ${rdN} / ${plN}` : ph === 'over' ? (st && st.win ? '알을 모두 지켜 냈어요!' : '알이 모두 깨졌어요.......') : '';
   if (stale) txt = '진행이 잠시 멈췄어요. 잠깐만 기다려 주세요.';
+  if (canSeat && my && !mp){ dfSeatWait = dfSeatWait || Date.now(); if (Date.now() - dfSeatWait > 4000){ dfSeatWait = 0; delete dfPick[myId()]; GDB.set('defense/pick/' + myId(), null); toast('다른 친구가 같은 자리를 먼저 골랐어요. 다른 자리를 골라요'); } } else dfSeatWait = 0;   // 같은 자리를 동시에 고르면 한 명은 못 앉아요
   const job = dfJob(), jn = job && XJ[job] ? XJ[job].n : '아직 없어요 (탐사에서 먼저 골라요)';
   const upgB = mp ? `<button class="btn sm" id="dfupb">올리기${[0, 1].some(i => ['pow', 'rng', 'cd'].some(k => { const c = TD.upCost(dfPlayerOf(mp), i, k); return c != null && c <= mp[3]; })) ? ' ●' : ''}</button>` : '';
   let sk = ''; if (mp){ const meta = dfSkillMeta(); sk = `<div class="dfsk">${meta.map((m, i) => `<button data-sk="${i}">${m.ic}<span>${esc(m.n)}</span><i class="cdm"></i><b class="cdt"></b></button>`).join('')}<button id="dfauto" class="${mp[7] ? 'on' : ''}">자동<br>${mp[7] ? '켬' : '끔'}</button>${upgB}</div>`; }
   { let up = $('#dfup'); if (dfUpOpen && mp){ if (!up){ up = document.createElement('div'); up.id = 'dfup'; v.appendChild(up); } if (dfSet(up, dfUpHTML(mp))){ up.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const [i, k] = b.dataset.up.split(','); dfSend({ u: [+i, k] }); sfx('pick'); }); up.querySelectorAll('[data-ut]').forEach(b => b.onclick = () => { dfUpTab = +b.dataset.ut; dfUi(); }); $('#dfupx').onclick = () => { dfUpOpen = false; dfUi(); }; } } else if (up) up.remove(); }
-  const html = `${sk}<div class="dtx">${txt}${my ? ` · 내 자리 ${TD.ZONES[my.z].name} ${my.s + 1}번` : ''}</div>${canSeat && my ? `<div style="display:flex;gap:8px">${mp ? `<button class="btn sm ${mp[8] ? '' : 'go'}" id="dfready" style="flex:1">${mp[8] ? '준비 취소' : '시작'} · ${rdN}/${plN}</button>` : '<span class="s">자리를 확인하고 있어요.......</span>'}<button class="btn sm" id="dfout">자리 빼기</button></div>` : ''}`;
-  if (!dfSet($('#dfb'), html)) return;
+  const tline = `${txt}${my ? ` · 내 자리 ${TD.ZONES[my.z].name} ${my.s + 1}번` : ''}`;
+  const html = `${sk}<div class="dtx" id="dftx"></div>${canSeat && my ? `<div style="display:flex;gap:8px">${mp ? `<button class="btn sm ${mp[8] ? '' : 'go'}" id="dfready" style="flex:1">${mp[8] ? '준비 취소' : '시작'} · ${rdN}/${plN}</button>` : '<span class="s">자리를 확인하고 있어요.......</span>'}<button class="btn sm" id="dfout">자리 빼기</button></div>` : ''}`;
+  const changed = dfSet($('#dfb'), html); { const tx = $('#dftx'); if (tx && tx.textContent !== tline) tx.textContent = tline; }   // 바뀌는 글자는 버튼을 다시 만들지 않고 글자만 바꿔요 (누르던 버튼이 사라지지 않게)
+  if (!changed) return;
   const rb = $('#dfready'); if (rb) rb.onclick = () => { dfSend({ r: mp && mp[8] ? 0 : 1 }); sfx('pick'); };
   const o = $('#dfout'); if (o) o.onclick = () => { delete dfPick[myId()]; GDB.set('defense/pick/' + myId(), null); dfUi(); };
-  $('#dfb').querySelectorAll('[data-sk]').forEach(b => b.onclick = () => dfCast(+b.dataset.sk, b));
+  $('#dfb').querySelectorAll('[data-sk]').forEach(b => b.onpointerdown = e => { e.preventDefault(); dfCast(+b.dataset.sk, b); });
   const ub = $('#dfupb'); if (ub) ub.onclick = () => { dfUpOpen = true; dfUi(); };
   const au = $('#dfauto'); if (au) au.onclick = () => { dfSend({ a: dfMe() && dfMe()[7] ? 0 : 1 }); };
 }
-let dfLastCmd = 0, dfPend = null, dfUpOpen = false, dfUpTab = 0;
+let dfLastCmd = 0, dfPend = null, dfUpOpen = false, dfUpTab = 0, dfSeatWait = 0;
 const DF_UPLB = { pow: { hit: '공격력', aoe: '공격력' }, rng: { hit: '사거리', aoe: '범위' } };
 function dfUpVal(pl, i, k, lv){   // 올린 값이 어떻게 보이는지
   const c = { cat: pl.cat, up: pl.up.map(u => ({ ...u })) }; c.up[i][k] = lv; const s = TD.skillOf(c, i), t = TD.SK[pl.cat][i].t;
@@ -6719,7 +6743,7 @@ function dfHostStart(rs){
   if (dfHost || !F || !db) return; const S = rs ? rs.S : TD.newState([], { auto: 0 }); if (!rs) S.phase = 'ready';
   dfHost = { S, id: rs ? rs.id : Date.now(), sv: 0, intro: rs ? rs.intro || 0 : 0, startAt: 0, last: performance.now(), pub: 9, hb: 9, ph: '', w: -1, paused: false, timer: dfTimer(dfHostTick, 100) };
   dfHost.last = performance.now(); dfHost.seen = {}; dfHost.cmdOff = F.onValue(F.ref(db, 'defense/cmd'), sn => { const v = sn.val() || {}, H = dfHost; if (!H) return; Object.entries(v).forEach(([u, c]) => { if (!c || H.seen[u] === c.n) return; const first = !(u in H.seen); H.seen[u] = c.n; if (first && H.warm !== false && Date.now() - c.n > 5000) return; const p = H.S.players[u]; if (!p) return; if (c.a !== undefined) p.auto = c.a ? 1 : 0; if (c.r !== undefined) TD.setReady(H.S, u, c.r); if (c.i !== undefined && !H.paused) TD.cast(H.S, u, c.i); if (c.u && (c.u[0] === 0 || c.u[0] === 1) && ['pow', 'rng', 'cd'].includes(c.u[1])) TD.upgrade(H.S, u, c.u[0], c.u[1]); }); });
-  if (!rs){ F.set(F.ref(db, 'defense/ctl'), { open: true, id: dfHost.id, ph: 'ready', w: 0, win: 0, hb: Date.now() }); F.set(F.ref(db, 'defense/st'), TD.snap(S)); }
+  if (!rs){ F.set(F.ref(db, 'defense/ctl'), { open: true, id: dfHost.id, ph: 'ready', w: 0, win: 0, hb: now2() }); F.set(F.ref(db, 'defense/st'), TD.snap(S)); }
   dfWakeOn(); adminRender();
 }
 function dfHostSeats(S){
@@ -6733,7 +6757,7 @@ function dfHostTick(){
   if (!H.paused) TD.step(S, dt);
   H.sv += dt; if (H.sv >= 2){ H.sv = 0; try { localStorage.setItem('dfhost', JSON.stringify({ id: H.id, S, intro: H.intro || 0 })); } catch(e){} }
   H.pub += dt; if (H.pub >= .25){ H.pub = 0; F.set(F.ref(db, 'defense/st'), TD.snap(S)); }
-  H.hb += dt; if (H.hb >= 2 || S.phase !== H.ph || S.wave !== H.w){ const ch = S.phase !== H.ph || S.wave !== H.w; H.hb = 0; H.ph = S.phase; H.w = S.wave; F.set(F.ref(db, 'defense/ctl'), { open: true, id: H.id, intro: H.intro || 0, ph: S.phase, w: S.wave, win: S.win ? 1 : 0, hb: Date.now(), pause: H.paused ? 1 : 0 }); if (ch && S.phase === 'over') F.set(F.ref(db, 'defense/res'), { id: H.id, eggs: S.eggs.map(Math.round), win: S.win ? 1 : 0, at: Date.now() }); if (ch && AD.tab === 'event') adminRender(); }
+  H.hb += dt; if (H.hb >= 2 || S.phase !== H.ph || S.wave !== H.w){ const ch = S.phase !== H.ph || S.wave !== H.w; H.hb = 0; H.ph = S.phase; H.w = S.wave; F.set(F.ref(db, 'defense/ctl'), { open: true, id: H.id, intro: H.intro || 0, ph: S.phase, w: S.wave, win: S.win ? 1 : 0, hb: now2(), pause: H.paused ? 1 : 0 }); if (ch && S.phase === 'over') F.set(F.ref(db, 'defense/res'), { id: H.id, eggs: S.eggs.map(Math.round), win: S.win ? 1 : 0, at: Date.now() }); if (ch && AD.tab === 'event') adminRender(); }
 }
 function dfTimer(fn, ms){   // 화면이 가려져도 느려지지 않게 워커 시계를 써요 (안 되면 보통 시계)
   let w = null; try { w = new Worker(URL.createObjectURL(new Blob([`setInterval(()=>postMessage(0),${ms})`], { type: 'text/javascript' }))); w.onmessage = fn; } catch(e){ w = null; }
@@ -6747,7 +6771,7 @@ function dfHostClose(){ dfHostStop(); if (!F || !db) return; F.set(F.ref(db, 'de
 const DF_LOCAL = true;   // 지금은 관리자 화면이 계산해요. 서버 계산(Cloud Functions)이 배포되면 false 로 바꿔요
 function adminEventHTMLSrv(){
   const c = AD.dfctl || {}, open = !!c.open, st = AD.dfst || {}, picks = Object.entries(AD.dfpick || {}), nm = u => esc((AD.players[u] && AD.players[u].nick) || u.slice(0, 6));
-  const dead = open && c.hb && Date.now() - c.hb > 15000, wait = AD.dfWait && Date.now() - AD.dfWait < 20000 && !open, ph = c.ph;
+  const dead = open && c.hb && now2() - c.hb > 15000, wait = AD.dfWait && Date.now() - AD.dfWait < 20000 && !open, ph = c.ph;
   const zl = TD.ZONES.map((z, i) => `${z.name}: ${picks.filter(([, p]) => p.z === i).map(([u, p]) => `${nm(u)}(${XJ[p.job] ? XJ[p.job].n : '?'})`).join(', ') || '비어 있어요'}`);
   const pl = st.p ? Object.keys(st.p).length : 0, eg = st.e || [];
   return `<div class="adcard"><b>이벤트 「용의 알 지키기」</b> · ${wait ? '서버를 켜는 중이에요.... (몇 초 걸려요)' : open ? DF_PH[ph] || '' : '닫혀 있어요'}
@@ -6809,7 +6833,8 @@ function pzListen(){
 }
 const pzCount = () => Object.keys(pzBoard).length;
 // 상자는 내 것으로 기록됐는데 내 진행이 되돌려져서 보상이 없으면 다시 넣어 줘요
-function pzRegrant(){ if (!me || !pzCtl || !pzCtl.id || (me.pz && me.pz.id === pzCtl.id)) return; const k = Object.keys(pzChest).find(i => pzChest[i] === myId()); if (k === undefined) return;
+let pzTaking = false, lnTaking = false;   // 고르는 중에는 「다시 받기」를 하지 않아요 (내 쓰기가 먼저 보여서 두 번 받던 문제)
+function pzRegrant(){ if (pzTaking || !me || !pzCtl || !pzCtl.id || (me.pz && me.pz.id === pzCtl.id)) return; const k = Object.keys(pzChest).find(i => pzChest[i] === myId()); if (k === undefined) return;
   const r = pzShuffle()[+k]; if (!r) return; me.pz = { id: pzCtl.id, ch: +k, g: r[0], m: r[1], sp: r[2] }; me.coin += r[0]; if (r[1]) me.inv.mana = (me.inv.mana || 0) + r[1]; if (r[2]){ const ex = xEx(); ex.spx = (ex.spx || 0) + r[2]; } save(); hud(); toast(`보물 상자 보상을 다시 받았어요 · ${pzRewText(r)}`); }
 const pzMine = () => Object.keys(pzOwn).filter(k => pzOwn[k] === myId() && pzBoard[k] === undefined).map(Number).sort((a, b) => a - b);
 // 이벤트가 닫힌 뒤에도: 지도가 다 맞춰졌는데 아직 상자를 못 고른 학생은 상자를 받을 수 있어요
@@ -6897,9 +6922,9 @@ function pzChests(){
   const el = document.createElement('div'); el.id = 'pzch'; $('#shell').appendChild(el); let busy = false;
   const mineIdx = () => { const k = Object.keys(pzChest).find(i => pzChest[i] === myId()); return k === undefined ? -1 : +k; };
   const draw = () => { if (!document.getElementById('pzch')) return; const my = mineIdx(), left = rew.filter((_, i) => pzChest[i] === undefined).length;
-    el.innerHTML = `<div class="pzstage ship"><img class="pzlake" src="art/ev2_lake.png"></div><div class="pzgrid">${rew.map((r, i) => { const who = pzChest[i], open = who !== undefined; return `<button class="pzchest ${open ? (i === my ? 'sel open' : 'open dim') : ''}" data-ch="${i}"><i style="background-position:${open ? 100 : 0}% 0"></i>${open ? `<span>${i === my ? pzRewText(r) : `${esc(pzNick(who))}님이<br>가져갔어요`}</span>` : ''}</button>`; }).join('')}</div><div class="pzbox"><div class="pzt2">${my >= 0 ? `<b>${pzRewText(rew[my])}</b>을(를) 받았어요!` : left ? `상자를 하나 골라 주세요. 한 번만 고를 수 있고, 다른 친구가 고른 상자는 고를 수 없어요! (남은 상자 ${left}개)` : '상자가 모두 없어졌어요. 다음 이벤트에서 만나요!'}</div>${my >= 0 || !left ? '<button class="btn sm go" id="pzdone">닫기</button>' : ''}</div>`;
+    el.innerHTML = `<div class="pzstage ship"><img class="pzlake" src="art/ev2_lake.png"></div><div class="pzgrid">${rew.map((r, i) => { const who = pzChest[i], open = who !== undefined; return `<button class="pzchest ${open ? (i === my ? 'sel open' : 'open dim') : ''}" data-ch="${i}"><i style="background-position:${open ? 100 : 0}% 0"></i>${open ? `<span>${i === my ? pzRewText(r) : `${esc(pzNick(who))}님이<br>가져갔어요`}</span>` : ''}</button>`; }).join('')}</div><div class="pzbox"><div class="pzt2">${my >= 0 ? `<b>${pzRewText(rew[my])}</b>을(를) 받았어요!` : left ? `상자를 하나 골라 주세요. 한 번만 고를 수 있고, 다른 친구가 고른 상자는 고를 수 없어요! (남은 상자 ${left}개)` : '상자가 모두 없어졌어요. 다음 이벤트에서 만나요!'}</div>${my >= 0 || !left ? '<button class="btn sm go" id="pzdone">닫기</button>' : '<button class="btn sm" id="pzdone">나중에 고를래요</button>'}</div>`;
     if (my < 0) el.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => take(+b.dataset.ch)); const d = $('#pzdone'); if (d) d.onclick = () => { el.remove(); if (pzOn) pzUi(); pzBtn(); }; };
-  const take = async i => { if (busy || mineIdx() >= 0 || pzChest[i] !== undefined) return; busy = true; const r = rew[i];
+  const take = async i => { if (busy || mineIdx() >= 0 || pzChest[i] !== undefined) return; busy = true; pzTaking = true; setTimeout(() => { pzTaking = false; }, 8000); const r = rew[i];
     const res = await GDB.tx('puzzle/chest/' + i, cur => cur ? undefined : myId()).catch(() => ({ committed: false })); busy = false;
     if (!res.committed){ toast('다른 친구가 먼저 가져갔어요. 다른 상자를 골라 보세요'); return; }
     pzChest[i] = myId(); me.pz = { id: pzCtl.id, ch: i, g: r[0], m: r[1], sp: r[2] }; me.coin += r[0]; if (r[1]) me.inv.mana = (me.inv.mana || 0) + r[1]; if (r[2]){ const ex = xEx(); ex.spx = (ex.spx || 0) + r[2]; } save(); hud(); sfx('heart'); draw(); pzBtn(); };
@@ -6922,7 +6947,7 @@ document.addEventListener('click', e => { const bt = e.target.closest && e.targe
   else if (a[0] === 'r') F.update(F.ref(db, 'puzzle/ctl'), { rate: +a.slice(1) }); });
 // ===== 이벤트 「유령 등불 찾기」 (하루 이벤트): 반 전체가 유령 등불 60개를 모아요 =====
 // lantern/ctl = { open, id, rate } · lantern/cnt/<uid> = 그 사람이 모은 등불(최대 10) · lantern/color/<0~11> = 그 색 등불 장식을 가져간 사람 (색마다 한 사람)
-function lnRegrant(){ if (!me || !lnCtl || !lnCtl.id || (me.ln && me.ln.id === lnCtl.id)) return; const k = Object.keys(lnColor).find(i => lnColor[i] === myId()); if (k === undefined) return;   // 되돌려진 진행: 고른 등불 장식을 다시 넣어 줘요
+function lnRegrant(){ if (lnTaking || !me || !lnCtl || !lnCtl.id || (me.ln && me.ln.id === lnCtl.id)) return; const k = Object.keys(lnColor).find(i => lnColor[i] === myId()); if (k === undefined) return;   // 되돌려진 진행: 고른 등불 장식을 다시 넣어 줘요
   me.fbag = me.fbag || {}; const fid = 'ghostlamp' + k; me.fbag[fid] = (me.fbag[fid] || 0) + 1; me.ln = { id: lnCtl.id, c: +k }; save(); toast(`${LN.NAMES[+k]} 유령 등불 장식을 다시 받았어요`); }
 let lnCtl = null, lnCnt = {}, lnColor = {}, lnOn = false, lnOffs = [], lnBoost = 0, lnBoostT = 0, lnTimer = 0;
 const LN = { GOAL: 60, MAX: 10, RATE: .05, NAMES: ['빨강', '주황', '노랑', '연두', '초록', '민트', '하늘', '파랑', '남색', '보라', '자홍', '분홍'] };
@@ -7018,7 +7043,7 @@ function lnPick(){
       <div class="lngrid">${LN.NAMES.map((n, i) => { const who = lnColor[i], mine = who === myId(); return `<button class="lncard ${who !== undefined ? (mine ? 'sel' : 'dim') : ''}" data-c="${i}"><img src="art/ev4_lamp_${String(i).padStart(2, '0')}.png"><b>${n}</b>${who !== undefined ? `<span>${mine ? '내 것' : esc(pzNick(who)) + '님'}</span>` : ''}</button>`; }).join('')}</div>`;
     $('#lnchx').onclick = () => { el.remove(); lnPickRedraw = null; };
     if (my < 0) el.querySelectorAll('[data-c]').forEach(b => b.onclick = () => take(+b.dataset.c)); };
-  const take = async i => { if (busy || lnMyColor() >= 0 || lnColor[i] !== undefined) return;
+  const take = async i => { if (busy || lnMyColor() >= 0 || lnColor[i] !== undefined) return; lnTaking = true; setTimeout(() => { lnTaking = false; }, 8000);
     if (!await confirmBox(`${LN.NAMES[i]} 유령 등불을 가져갈까요?\n한 번 고르면 바꿀 수 없어요.`, '가져갈게요', '다시 볼래요')) return; busy = true;
     const res = await GDB.tx('lantern/color/' + i, cur => cur ? undefined : myId()).catch(() => ({ committed: false })); busy = false;
     if (!res.committed){ toast('다른 친구가 먼저 가져갔어요. 다른 색을 골라 보세요'); draw(); return; }
@@ -7095,6 +7120,9 @@ async function pkGain(n, kind){   // 점수를 더해요 (서버에는 내 점�
   return g;
 }
 async function pkAct(kind, mat){
+  if (pkAct.busy) return; pkAct.busy = true; try { await pkAct0(kind, mat); } finally { pkAct.busy = false; }   // 빠르게 두 번 눌러도 한 번만
+}
+async function pkAct0(kind, mat){
   const m = pkMy(); let g = 0;
   if (kind === 'w'){ if (pkLeft(m.wAt, PK.WATER[1])) return; g = await pkGain(PK.WATER[0], 'w'); if (g){ m.wAt = Date.now(); sfx('pop'); toast(`물을 줬어요! 성장 +${g}`); } }
   else if (kind === 't'){ if (pkLeft(m.tAt, PK.TALK[1])) return; g = await pkGain(PK.TALK[0], 't'); if (g){ m.tAt = Date.now(); sfx('heart'); toast(`호박에게 말을 걸었어요. 성장 +${g}`); } }
@@ -7143,8 +7171,8 @@ function pkUi(){
   const v = $('#pkv'); if (!v) return; if (!pkCtl){ pkClose(); return; } const t = pkTotal(), goal = pkGoal(), k = Math.min(1, t / goal), st = pkStage(), m = pkMy(), done = pkDone(), mine = +pkPts[myId()] || 0, rk = pkRank();
   $('#pkinfo').textContent = `${Math.round(k * 100)}%`;
   const wl = pkLeft(m.wAt, PK.WATER[1]), tl = pkLeft(m.tAt, PK.TALK[1]), off = !pkCtl.open || done;
-  const btn = (id, label, sub, left, dis) => `<button class="pkact ${left || dis ? 'wait' : 'go'}" data-pk="${id}" ${left || dis ? 'disabled' : ''}><b>${label}</b><span>${left ? pkMin(left) + ' 뒤' : sub}</span></button>`;
-  const body = $('#pkbody'); const sig = [t, st, mine, rk, wl > 0, tl > 0, done, JSON.stringify(m.f || 0), m.fin, m.bd.day, pkCtl.open, ...PK.MAT.map(x => me.inv[x[0]] || 0), Math.ceil(wl / 1000), Math.ceil(tl / 1000)].join(','); if (body.dataset.sig === sig) return; body.dataset.sig = sig;
+  const btn = (id, label, sub, left, dis) => `<button class="pkact ${left || dis ? 'wait' : 'go'}" data-pk="${id}" ${left || dis ? 'disabled' : ''}><b>${label}</b><span>${left ? (left >= 3600000 ? pkMin(left).replace(/ \d+초$/, '') : Math.ceil(left / 60000) + '분') + ' 뒤' : sub}</span></button>`;
+  const body = $('#pkbody'); const sig = [t, st, mine, rk, wl > 0, tl > 0, done, JSON.stringify(m.f || 0), m.fin, m.bd.day, pkCtl.open, ...PK.MAT.map(x => me.inv[x[0]] || 0), Math.ceil(wl / 60000), Math.ceil(tl / 60000)].join(',');   /* 화면에 보이는 분 단위가 바뀔 때만 다시 그려요 (매초 버튼을 새로 만들면 누른 게 사라져요) */ if (body.dataset.sig === sig) return; body.dataset.sig = sig;
   body.innerHTML = `<div class="pkscene"><i class="pkspr" style="background-position:${st * 25}% 0"></i></div>
     <div class="pkbar"><i style="width:${k * 100}%"></i>${PK.STAGES.slice(1, 4).map(x => `<u style="left:${x * 100}%"></u>`).join('')}</div>
     <div class="s sub" style="text-align:center">${t} / ${goal}</div>
@@ -7392,6 +7420,7 @@ function mailListen(){
   noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); noticePop(); });
   setInterval(() => { mailApply(); noticePop(); }, 2000);
 }
+const mailDone = [];
 function mailApply(){
   if (!me || !mailBox || !document.body.classList.contains('inworld')) return; me.mailGot = me.mailGot || {};
   Object.entries(mailBox).sort((a, b) => (a[1].at || 0) - (b[1].at || 0)).forEach(([id, e]) => {
@@ -7405,7 +7434,7 @@ function mailApply(){
     (e.delBuff || []).forEach(k => { if (me.buffs) delete me.buffs[k]; });
     if (e.resetExam) delete me.exam;
     save(); hud(); syncBuffs && syncBuffs();
-    if (F && db) F.set(F.ref(db, `mail/${uid}/${id}/c`), 1).catch(() => {});
+    mailDone.push(id);   // 받음 표시는 선물이 저장된 뒤에 남겨요 (저장이 실패하면 다시 받게)
     setTimeout(() => toast(e.msg ? esc(e.msg) + (got.length ? ` · ${got.join(', ')}` : '') : got.length ? `관리자에게 선물을 받았어요: ${got.join(', ')}` : '관리자가 정보를 고쳤어요'), 900); sfx('heart');
   });
 }
@@ -7457,7 +7486,7 @@ document.addEventListener('click', e => {
   if (a === 'setcoin'){ if (v('adfc') === '') return; if (confirm(`${nm}의 골드를 ${n('adfc')}G로 바꿀까요?`)) adminMailSend(u, { set: { coin: n('adfc') } }); return; }
   if (a === 'setitem'){ if (!v('adfi')) return; if (confirm(`${nm}의 ${ITEM[v('adfi')]}을(를) ${n('adfn')}개로 바꿀까요?`)) adminMailSend(u, { set: { items: { [v('adfi')]: n('adfn') } } }); return; }
   if (a === 'delbuff'){ if (v('adfb') && confirm(`${nm}의 버프를 없앨까요?`)) adminMailSend(u, { delBuff: [v('adfb')] }); return; }
-  if (a === 'resetexam'){ if (confirm(`${nm}의 쪽지시험 기록을 지울까요? 시험 시간 안이면 다시 볼 수 있어요.`)) adminMailSend(u, { resetExam: 1 }); return; }
+  if (a === 'resetexam'){ if (confirm(`${nm}의 쪽지시험 기록을 지울까요? 시험 시간 안이면 다시 볼 수 있어요.`)){ adminMailSend(u, { resetExam: 1 }); const wk = AD.players[u]?.exam?.week; if (wk) F.set(F.ref(db, `exam/${wk}/${u}`), null).catch(() => {}); } return; }   // 순위표 점수도 지워야 다시 본 점수가 올라가요
 });
 
 // ===== 입문 퀘스트: 학교 선배가 수업 · 온실 · 낚시 · 사육장 · 탐사를 한 번씩 해 보게 이끌어요 (새로 만든 계정만, 순서 고정, 건너뛰기 없음) =====
@@ -7571,15 +7600,17 @@ function renderMarket(){
   const lb = $('#list');
   if (lb) lb.onclick = async () => {
     const price = Math.max(1, Math.min(9999, Math.floor(+$('#price').value || 0)));
-    if (me.inv[sellPick] < 1) return;
-    me.inv[sellPick]--; save();
-    await F.push(F.ref(db, 'market'), { uid, nick: me.nick, look: me.look, item: sellPick, qty: 1, price, at: Date.now(), ...(me.house === 'moon' && myTime() ? { moon: true } : {}) });
+    if (me.inv[sellPick] < 1 || lb.disabled) return; lb.disabled = true; const it = sellPick;
+    me.inv[it]--; save();
+    try { await F.push(F.ref(db, 'market'), { uid, nick: me.nick, look: me.look, item: it, qty: 1, price, at: Date.now(), ...(me.house === 'moon' && myTime() ? { moon: true } : {}) }); }
+    catch(e){ me.inv[it]++; save(); lb.disabled = false; return toast('가판대에 올리지 못했어요. 물건은 돌려받았어요'); }   // 실패하면 물건이 사라지지 않게
     toast(`${withJosa(ITEM[sellPick], '을', '를')} ${price}G에 올렸어요.`); sellPick = null;
   };
   on('[data-cancel]', async b => {
-    const l = marketList[b.dataset.cancel]; if (!l || l.buyer) return;
-    await F.remove(F.ref(db, 'market/' + b.dataset.cancel));
-    me.inv[l.item] += l.qty; save(); toast('가판대에서 내렸어요.');
+    const l = marketList[b.dataset.cancel]; if (!l || l.buyer || b.disabled) return; b.disabled = true;
+    const r = await F.runTransaction(F.ref(db, 'market/' + b.dataset.cancel), cur => cur && !cur.buyer ? null : undefined).catch(() => null);   // 누가 막 사 가는 중이면 내리지 않아요
+    if (!r || !r.committed){ toast('방금 누가 샀어요. 「받기」로 골드를 받아요'); return; }
+    me.inv[l.item] = (me.inv[l.item] || 0) + l.qty; save(); toast('가판대에서 내렸어요.');
   });
   on('[data-collect]', async b => {
     const l = marketList[b.dataset.collect]; if (!l || !l.buyer) return;
@@ -7930,7 +7961,7 @@ async function boot(){
     if (!user) { uid = null; return showLogin(); }
     uid = user.uid;
     if (isAdminUser(user)) return showAdmin();
-    const snap0 = await F.get(F.ref(db, 'players/' + uid)), snap = { exists: () => snap0.exists(), val: () => fbBack(snap0.val()) };
+    bootT = Date.now(); const snap0 = await F.get(F.ref(db, 'players/' + uid)), snap = { exists: () => snap0.exists(), val: () => fbBack(snap0.val()) };
     const enter = () => {
       const oref = F.ref(db, 'online/' + uid);
       World.myUid = uid;
@@ -7945,15 +7976,15 @@ async function boot(){
         Object.entries(v).forEach(([nid, d]) => { d = +d || 0; if (!d || !npcGet(nid)) return; const st = npcSt(nid), before = hearts(nid); st.a = Math.max(0, Math.min(1000, (st.a || 0) + d * 100)); msg.push(`${npcGet(nid).name} ♥${before} → ♥${hearts(nid)}`); });
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       F.onValue(F.ref(db, 'adm/reset/' + uid), s => { const v = +s.val() || 0; if (!v) return; let seen = 0; try { seen = +localStorage.getItem('magion-rs-' + uid) || 0; } catch(e){}
-        if (v > seen){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
+        if (v > seen && v > bootT - 5000){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
       storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen();
-      F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); if (sub === 'games') render(); });
+      F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); const sg = Object.entries(gameList).map(([id, r]) => r ? id + r.st + Object.keys(r.p || {}).length : '').join('|'); if (sub === 'games' && sg !== gamesSig) render(); gamesSig = sg; });   // 점수가 오를 때마다가 아니라 방이 열리고 닫히고 사람이 드나들 때만 다시 그려요
       F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       Object.keys(GAMES).forEach(g => F.onValue(F.ref(db, `records/${g}/${weekKey()}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); }));
       setInterval(syncInvites, 3000);
-      F.onValue(F.ref(db, 'market'), s => { marketList = s.val() || {}; if (tab === 'market') render(); });
+      F.onValue(F.ref(db, 'market'), s => { marketList = s.val() || {}; if (tab === 'market' && !typingNow()) render(); });
       F.onValue(F.ref(db, 'coop'), s => { coop = s.val() || {}; if (tab === 'market') render(); });
-      F.onValue(F.ref(db, 'players'), s => { playersList = fbBack(s.val() || {}); syncPens(); syncHallNames(); if (tab === 'home' && !sub) render(); penMigrate(); });
+      F.onValue(F.ref(db, 'players'), s => { playersList = fbBack(s.val() || {}); syncPens(); syncHallNames(); { const sg = Object.entries(playersList).map(([id, p]) => id + (p && p.nick) + (p && p.house)).join('|'); if (tab === 'home' && !sub && sg !== playersSig) render(); playersSig = sg; } penMigrate(); });   // 누가 저장할 때마다 다시 그리지 않고, 이름·기숙사가 바뀔 때만
       F.onValue(F.ref(db, 'pens'), s => { pensDb = s.val() || {}; syncPens(); penMigrate(); });
       F.onValue(F.query(F.ref(db, 'guest/' + uid), F.limitToLast(20)), s => { myGuest = s.val() || {}; if (sub === 'dorm') render(); });
       F.onValue(F.ref(db, 'houses'), s => { const old = commonStage(me.house); halls = s.val() || {}; syncHalls(); if (commonStage(me.house) > old) toast(`우리 휴게실이 ${commonStage(me.house)}단계가 됐어요!`); if (sub === 'common') render(); });
@@ -8322,7 +8353,7 @@ function mqDefend(i){
   let flame = 100, t0 = performance.now(), last = t0, spawnAt = 0, gusts = [], over = false;
   const stg = ov.querySelector('#mqds'), lamp = ov.querySelector('#mqlamp');
   const end = ok => { if (over) return; over = true; gusts.forEach(g => g.el.remove()); ov.remove(); if (ok){ s.prog['defend:' + i] = 1; save(); sfx('magic'); toast(o.doneText || '등불을 지켰어요!'); mqCheck(); } else { sfx('thunder'); toast('등불이 꺼졌어요.... 다시 해 봐요'); } };
-  const tick = now => { if (over) return; const dt = (now - last) / 1000; last = now; const el = (now - t0) / 1000, left = Math.max(0, sec - el); ov.querySelector('#mqdt').textContent = Math.ceil(left);
+  const tick = now => { if (over) return; const dt = Math.min(.1, (now - last) / 1000); last = now; tick.el = (tick.el || 0) + dt; const el = tick.el, left = Math.max(0, sec - el); ov.querySelector('#mqdt').textContent = Math.ceil(left);
     if (now > spawnAt){ spawnAt = now + Math.max(500, 1500 - el * 25); const g = document.createElement('button'); g.className = 'mqgust'; g.textContent = ['🌬️', '🌫️', '👻', '🍂'][Math.floor(Math.random() * 4)]; const ang = Math.random() * Math.PI * 2; const r = 1.1; g.ax = .5 + Math.cos(ang) * r; g.ay = .5 + Math.sin(ang) * r; g.sp = (.12 + Math.random() * .08) * (1 + el / sec); stg.appendChild(g); const G = { el: g, x: g.ax, y: g.ay }; gusts.push(G); g.onclick = e => { e.stopPropagation(); G.dead = true; g.remove(); sfx('pop'); }; g.onpointerdown = g.onclick; }
     gusts.forEach(G => { if (G.dead) return; const dx = .5 - G.x, dy = .5 - G.y, d = Math.hypot(dx, dy) || 1; G.x += dx / d * G.sp * dt; G.y += dy / d * G.sp * dt; G.el.style.left = G.x * 100 + '%'; G.el.style.top = G.y * 100 + '%'; if (d < .06){ G.dead = true; G.el.remove(); flame -= o.hitDamage || 18; lamp.classList.add('hit'); setTimeout(() => lamp.classList.remove('hit'), 300); sfx('gulp'); } });
     gusts = gusts.filter(G => !G.dead); ov.querySelector('#mqdf').style.width = Math.max(0, flame) + '%';
