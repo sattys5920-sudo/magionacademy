@@ -1991,11 +1991,11 @@ let xpList = {}, xpRoom = null, xpV = null, xpOff = null;
 const xpMe = () => { const ex = xEx(); return { n: me.nick, job: ex.job || '', L: xLv(ex.exp).L, rdy: 0 }; };
 const xpRefresh = () => { if (sheetOn && sub === 'explore' && xv?.view === 'lobby') renderExplore(); };
 const xpLog = (why, v) => { try { const p = v && v.p || {}; errReport('party', `파티에서 빠짐: ${why}`, `방장 ${v && v.host === myId() ? '나' : '다른 사람'} · ${Object.keys(p).length}명 · 상태 ${v && v.st || '-'} · 나간 사람 ${Object.values(p).filter(x => x.out).length} · 골드 ${me.coin} · 혼자 탐사 ${xEx().run && !xEx().run.co ? '있음' : '없음'}`); } catch(e){} };   // 왜 빠졌는지 관리자 오류 탭에 남겨요
-let xpFix = 0;   // 대기실에서 내 이름이 사라지면 다시 써 넣은 횟수
+let xpFix = 0, xpT0 = 0, xpRunAt = 0;   // 대기실에서 내 이름이 사라지면 다시 써 넣은 횟수
 const xpPut = id => GDB.upd(`xparty/${id}/p/${myId()}`, xpMe()).catch(e => errReport('party', `파티 참가 쓰기 실패: ${e.code || e.message}`, ''));
-function xpWatch(id){ xpRoom = id; xpFix = 0; xpOff?.(); xpOff = GDB.on('xparty/' + id, v => { if (xpRoom !== id) return;
-  if (v && v.st === 'lobby' && v.p && !v.p[myId()] && xpFix < 3 && Object.keys(v.p).length < XP_MAX){ xpFix++; xpLog(`대기실 명단에서 빠져서 다시 넣음 (${xpFix})`, v); xpPut(id); return; }   // 나가기를 누르지 않았는데 빠졌으면 다시 들어가요
-  if (!v || v.st === 'end' || !v.p?.[myId()]){ if (!v) xpLog('방이 사라짐', xpV); else if (v.st !== 'end') xpLog('명단에서 내 이름이 빠짐', v); xpRoom = null; xpV = null; xpOff?.(); xpOff = null; xcoStop(); xcoWasHost = false; } else { if (xpV && xpV.host === myId() && v.host !== myId()){ xpLog('방장이 다른 사람으로 바뀜', v); if (xb && !xb.mirror){ xb = null; clearInterval(xTick); xv = { view: 'march' }; if (xM) xM.st = 'busy'; } } xpV = v; if (v.st === 'run') xcoEnter(id, v); const h = v.host === myId(); if (xcoOn() && h && !xcoWasHost && xM && xcoOff.length) xcoTakeover(); xcoWasHost = xcoOn() && h; } xpRefresh(); }); }
+function xpWatch(id){ xpRoom = id; xpFix = 0; xpT0 = Date.now(); xpOff?.(); xpOff = GDB.on('xparty/' + id, v => { if (xpRoom !== id) return;
+  if (v && v.st === 'lobby' && v.p && !v.p[myId()] && xpFix < 3 && Object.keys(v.p).length < XP_MAX){ xpFix++; if (Date.now() - xpT0 > 8000) xpLog(`대기실 명단에서 빠져서 다시 넣음 (${xpFix})`, v); xpPut(id); return; }   // 나가기를 누르지 않았는데 빠졌으면 다시 들어가요
+  if (!v || v.st === 'end' || !v.p?.[myId()]){ if (!v) xpLog('방이 사라짐', xpV); else if (v.st !== 'end') xpLog('명단에서 내 이름이 빠짐', v); xpRoom = null; xpV = null; xpOff?.(); xpOff = null; xcoStop(); xcoWasHost = false; } else { if (xpV && xpV.host === myId() && v.host !== myId()){ xpLog('방장이 다른 사람으로 바뀜', v); if (xb && !xb.mirror){ xb = null; clearInterval(xTick); xv = { view: 'march' }; if (xM) xM.st = 'busy'; } } if (v.st === 'run' && xpV?.st === 'lobby') xpRunAt = Date.now(); xpV = v; if (v.st === 'run') xcoEnter(id, v); const h = v.host === myId(); if (xcoOn() && h && !xcoWasHost && xM && xcoOff.length) xcoTakeover(); xcoWasHost = xcoOn() && h; } xpRefresh(); }); }
 const XDAY = 10;   // 탐사는 한 사람이 하루에 10번까지 (혼자·파티 모두)
 function xpCreate(){
   if (xEx().n >= XDAY) return toast(`탐사는 하루에 ${XDAY}번까지예요`);
@@ -2032,12 +2032,12 @@ function xpPanel(lv){
   return `<section class="sec">${secH('내 파티', R.n)}<div class="box px">
     ${ps.map(([u, p]) => `<div class="li"><span class="big">${p.job && XJ[p.job] ? XJ[p.job].ic : ''}</span><div class="main"><span class="t">${esc(p.n)}</span><span class="d">${p.job && XJ[p.job] ? XJ[p.job].n : '직업 없음'} Lv ${p.L}${p.L < R.need ? ` · 레벨 ${R.need} 필요` : ''}</span></div>${(() => { const r = p.row || xRowAuto(p.job); return u === myId() && v.st === 'lobby' ? `<button class="btn sm ${r === 'f' ? 'go' : ''}" data-xp="row" data-r="f">앞열</button><button class="btn sm ${r === 'b' ? 'go' : ''}" data-xp="row" data-r="b">뒤열</button>` : `<span class="s">${r === 'f' ? '앞열' : '뒤열'}</span>`; })()}<span class="s b">${u === v.host ? '방장' : p.rdy ? '준비' : '대기'}</span></div>`).join('')}
     <div class="s sub">${ps.length} / ${XP_MAX}명 · 입장료 ${R.fee}G는 각자 내요${host && lowL.length ? ' · 레벨이 모자란 사람이 있어요' : ''}${v.st === 'lobby' && xpCantGo(v) ? ` · ${xpCantGo(v)}` : ''}</div>
-    <div class="frow">${host ? `<button class="btn go" data-xp="start" ${(ok || !others.length) && !lowL.length && v.st === 'lobby' ? '' : 'disabled'}>출발!</button>` : v.st === 'lobby' ? `<button class="btn ${me_p.rdy ? '' : 'go'}" data-xp="ready">${me_p.rdy ? '준비 취소' : '준비'}</button>` : ''}<button class="btn" data-xp="leave">나가기</button></div>
+    <div class="frow">${host ? `<button class="btn go" data-xp="start" ${(ok || !others.length) && !lowL.length && v.st === 'lobby' ? '' : 'disabled'}>출발!</button>` : v.st === 'lobby' ? `<button class="btn ${me_p.rdy ? '' : 'go'}" data-xp="ready">${me_p.rdy ? '준비 취소' : '준비'}</button>` : '<button class="btn" disabled>준비</button>'}<button class="btn" data-xp="leave">나가기</button></div>
     ${v.st === 'run' ? '<div class="s sub">출발했어요!</div>' : ''}</div></section>`;
 }
 function xpWire(){
   if (!XCOOP) return;
-  on('[data-xp]', b => { const a = b.dataset.xp; if (a === 'create') xpCreate(); else if (a === 'join') xpJoin(b.dataset.id); else if (a === 'leave') xpLeave();
+  on('[data-xp]', b => { const a = b.dataset.xp; if (a === 'create') xpCreate(); else if (a === 'join') xpJoin(b.dataset.id); else if (a === 'leave'){ if (!(xpV && xpV.st === 'run' && Date.now() - xpRunAt < 2000)) xpLeave(); }
     else if (a === 'row' && xpV) GDB.upd(`xparty/${xpRoom}/p/${myId()}`, { row: b.dataset.r });
     else if ((a === 'ready' || a === 'start') && xpV && !(a === 'ready' && xpV.p[myId()].rdy) && xpCantGo(xpV)) toast(xpCantGo(xpV));   // 입장료가 모자란 채로 출발하면 파티에서 빠져서 미리 막아요
     else if (a === 'ready' && xpV) GDB.upd(`xparty/${xpRoom}/p/${myId()}`, { rdy: xpV.p[myId()].rdy ? 0 : 1 });
