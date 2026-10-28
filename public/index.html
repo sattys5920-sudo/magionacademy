@@ -1171,17 +1171,18 @@ let onlineList = {}, marketList = {}, coop = {}, playersList = {}, myGuest = {};
 const coopWeek = () => 'w' + Math.floor(Date.now() / 604800000);
 const setSaveDot = s => { saveState = s; const d = $('#saveDot'); if (d) d.className = s; };
 // 저장: 바꾼 건 바로 화면에, 서버에는 1.5 초 뒤에 한 번에 (연달아 바꾸면 한 번만 써요). 화면을 떠날 때는 바로 써요
-let haltSave = false;   // 관리자가 내 데이터를 리셋했을 때 옛 데이터로 덮어쓰지 않도록
+let haltSave = false; const SAVE_SID = Math.random().toString(36).slice(2, 10), saveTried = new Set();   // 이 화면이 보낸 저장 번호들 (끊겼다 붙으면 내 저장이 먼저 들어가 있을 수 있어요)   // 관리자가 내 데이터를 리셋했을 때 옛 데이터로 덮어쓰지 않도록
 function saveNow(){
   clearTimeout(saveTimer); saveTimer = 0; if (!me || haltSave) return;
   if (solo) { try { localStorage.setItem('magion-solo', JSON.stringify(me)); } catch(e){} setSaveDot(''); return; }
   // 다른 기기·옛 화면이 열려 있으면 그쪽이 먼저 저장한 최신 진행을 옛 상태로 덮어쓸 수 있어요 → 저장할 때마다 번호(rv)를 올리고, 서버 번호가 내가 아는 것보다 크면 덮어쓰지 않고 최신으로 새로 불러와요
-  me.rv = knownRv + 1;
+  me.rv = knownRv + 1; me.sid = SAVE_SID; saveTried.add(me.rv);
   const body = fbKeep(fbClean(me));   // Firebase가 거절하는 값(undefined·NaN·이름에 . # $ / [ ])이 있으면 저장 전체가 실패해요 → 미리 정리해요
-  F.runTransaction(F.ref(db, 'players/' + uid), cur => (cur && (cur.rv || 0) > knownRv) ? undefined : body).then(r => {
-    if (r.committed){ knownRv = me.rv; setSaveDot(''); if (typeof mailDone !== 'undefined') mailDone.splice(0).forEach(id => F.set(F.ref(db, `mail/${uid}/${id}/c`), 1).catch(() => {})); return; }
+  F.runTransaction(F.ref(db, 'players/' + uid), cur => { const crv = (cur && cur.rv) || 0; if (crv <= knownRv){ body.rv = knownRv + 1; return body; } if (cur.sid === SAVE_SID && saveTried.has(crv)){ body.rv = crv + 1; saveTried.add(body.rv); return body; } return undefined; }).then(r => {   // 서버 번호가 더 커도, 연결이 끊긴 사이 들어간 「이 화면의」 저장이면 다른 기기가 아니에요
+    if (r.committed){ knownRv = me.rv = body.rv; saveTried.clear(); setSaveDot(''); if (typeof mailDone !== 'undefined') mailDone.splice(0).forEach(id => F.set(F.ref(db, `mail/${uid}/${id}/c`), 1).catch(() => {})); return; }
     me.rv = knownRv; haltSave = true; errReport('save', '다른 기기·창이 먼저 저장해서 이 화면의 최근 진행을 버리고 새로 불러옴', ''); toast('다른 기기에서 먼저 진행했어요. 최신 상태로 새로 불러와요'); setTimeout(() => location.reload(), 1800);
-  }).catch(e => { me.rv = knownRv; setSaveDot('off'); toast('저장에 실패했어요: ' + (e.code || e.message)); errReport('save', '저장 실패: ' + (e.code || e.message), e.stack); });
+  }).catch(e => { me.rv = knownRv; setSaveDot('off'); if (!saveNow.retry){ saveNow.retry = setTimeout(() => { saveNow.retry = 0; save(); }, 5000); } if ((e.code || e.message) === 'disconnect') return;   // 잠깐 끊긴 건 5초 뒤 다시 저장해요
+    toast('저장에 실패했어요: ' + (e.code || e.message)); errReport('save', '저장 실패: ' + (e.code || e.message), e.stack); });
 }
 // ---- 오류 모으기: 학생 화면에서 난 오류를 errs/ 에 남겨 관리자 「오류」 탭에서 봐요 (같은 오류는 한 번, 한 번 켤 때 15개까지) ----
 const ERR_BUILD = '__BUILD__';
