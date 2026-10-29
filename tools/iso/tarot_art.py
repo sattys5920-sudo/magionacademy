@@ -45,14 +45,19 @@ class Art:   # 그림 칸 (IW×IH): bg 칠 → 물체(윤곽선) 차례로 → �
         for p in m:
             if 0 <= p[0] < IW and 0 <= p[1] < IH: s.px[p] = C(c) if isinstance(c, str) else c
         return s
-    def obj(s, m, c, ol=True):
-        m = {p for p in m if 0 <= p[0] < IW and 0 <= p[1] < IH}
+    def obj(s, m, c, ol=True, shade=True):   # 윤곽선 + 아래·오른쪽 그늘 + 위·왼쪽 빛 (작은 건 그늘 없이)
+        m = {p for p in m if 0 <= p[0] < IW and 0 <= p[1] < IH}; c = C(c) if isinstance(c, str) else c
         if ol:
             for (x, y) in m:
                 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
                     q = (x + dx, y + dy)
                     if q not in m and 0 <= q[0] < IW and 0 <= q[1] < IH: s.px[q] = OL
-        for p in m: s.px[p] = C(c) if isinstance(c, str) else c
+        dk = tuple(round(v * .78) for v in c[:3]) + (255,); lt = tuple(min(255, round(v + (255 - v) * .35)) for v in c[:3]) + (255,)
+        big = shade and len(m) >= 18
+        for (x, y) in m:
+            if big and ((x + 1, y) not in m or (x, y + 1) not in m): s.px[(x, y)] = dk
+            elif big and (x - 1, y) not in m and (x, y - 1) not in m: s.px[(x, y)] = lt
+            else: s.px[(x, y)] = c
         return s
     def dot(s, pts, c):
         for p in pts:
@@ -66,23 +71,29 @@ class Art:   # 그림 칸 (IW×IH): bg 칠 → 물체(윤곽선) 차례로 → �
         if blush: s.dot([(x - 1, y + 2), (x + gap + 1, y + 2)], BLUSH)
         if mouth: s.dot([(x + gap // 2 + (gap % 2) * 0, y + 2)], EYE)
         return s
-    def person(s, cx, top, robe, hair='#5A3A2A', hat=None, arms='down', skin=SKIN, robe2=None, hood=False, h=1.0):
-        # 귀여운 2등신: 머리(반지름 5) + 망토 몸통. cx: 가운데, top: 머리 맨 위
-        hy = top + 5; by0 = hy + 4; by1 = top + int(22 * h)
-        body = poly([(cx - 3, by0), (cx + 4, by0), (cx + 7, by1), (cx - 6, by1)])
+    def person(s, cx, top, robe, hair='#5A3A2A', hat=None, arms='down', skin=SKIN, robe2=None, hood=False, h=1.0, closed=False):
+        # 귀여운 큰 머리 꼬마: 머리(가로 13) + 동글 몸통. cx: 가운데, top: 머리 맨 위
+        hy = top + 6; by0 = hy + 5; bh = max(5, round(9 * h)); by1 = by0 + bh
+        body = ell(cx + .5, by0 + bh * .6, 5.2, bh * .62) | rect(cx - 4, by0, cx + 5, by0 + 2)
+        if arms == 'up': s.obj(line(cx - 3, by0 + 2, cx - 7, by0 - 3, 2) | line(cx + 4, by0 + 2, cx + 8, by0 - 3, 2), robe, shade=False); s.obj(ell(cx - 7, by0 - 4, 1.6, 1.6) | ell(cx + 8, by0 - 4, 1.6, 1.6), skin, shade=False)
+        if arms == 'side': s.obj(ell(cx - 5, by0 + 3, 2, 2.4) | ell(cx + 6, by0 + 3, 2, 2.4), robe, shade=False)
         s.obj(body, robe)
-        if robe2: s.dot([(x, by1 - 1) for x in range(cx - 5, cx + 7)], robe2)
-        if arms == 'up': s.obj(line(cx - 3, by0 + 2, cx - 7, by0 - 4, 2) | line(cx + 4, by0 + 2, cx + 8, by0 - 4, 2), robe)
-        elif arms == 'side': s.obj(line(cx - 3, by0 + 2, cx - 8, by0 + 5, 2) | line(cx + 4, by0 + 2, cx + 9, by0 + 5, 2), robe)
-        elif arms == 'front': s.obj(rect(cx - 2, by0 + 4, cx + 3, by0 + 6), robe2 or robe)
-        head = ell(cx + .5, hy + .5, 5, 5)
-        if hood: s.obj(ell(cx + .5, hy + .5, 6.5, 6.5) | rect(cx - 6, hy, cx + 7, hy + 5), robe); s.obj(ell(cx + .5, hy + 1.5, 4, 3.8), skin)
-        else:
-            s.obj(head, skin); s.dot([(x, y) for (x, y) in head if y <= hy - 2], hair); s.dot([(cx - 5, hy - 1), (cx - 5, hy), (cx + 5, hy - 1), (cx + 5, hy)], hair)
-        if hat == 'witch': s.obj(poly([(cx - 8, hy - 3), (cx + 9, hy - 3), (cx + 4, hy - 5), (cx + 1, hy - 13), (cx - 3, hy - 5)]), '#3A2A63'); s.dot([(x, hy - 4) for x in range(cx - 3, cx + 5)], GOLD)
-        elif hat == 'crown': s.obj(poly([(cx - 5, hy - 3), (cx + 6, hy - 3), (cx + 6, hy - 8), (cx + 3, hy - 5), (cx + .5, hy - 9), (cx - 2, hy - 5), (cx - 5, hy - 8)]), GOLD); s.dot([(cx, hy - 5), (cx + 1, hy - 5)], '#E8506A')
-        elif hat == 'tiara': s.obj(rect(cx - 4, hy - 5, cx + 5, hy - 4) | {(cx, hy - 6), (cx + 1, hy - 6), (cx, hy - 7)}, GOLD)
-        s.face(cx - 2, hy + (1 if hood else 0), gap=4)
+        if robe2: s.dot([(x, y) for (x, y) in body if by0 + 1 <= y <= by0 + 2 and abs(x - cx - .5) <= 3] + [(cx, by0 + 3), (cx + 1, by0 + 3)], robe2)   # 옷깃
+        s.dot([(cx - 2, by1), (cx - 1, by1), (cx + 2, by1), (cx + 3, by1)], '#3A2A3A')
+        if arms == 'front': s.obj(ell(cx - 1, by0 + 4, 1.6, 1.4) | ell(cx + 2, by0 + 4, 1.6, 1.4), skin, shade=False)
+        if arms == 'side': s.dot([(cx - 6, by0 + 5), (cx + 7, by0 + 5)], skin)
+        hb = ell(cx + .5, hy - .2, 6.6, 6.2) | rect(cx - 6, hy, cx - 5, hy + 4 if not hood else hy + 5) | rect(cx + 6, hy, cx + 7, hy + 4 if not hood else hy + 5)
+        s.obj(hb, robe if hood else hair)
+        win = ell(cx + .5, hy + 1.6, 5.1, 4.1); s.obj(win, skin, ol=False, shade=False)
+        if not hood: s.dot([(x, y) for (x, y) in win if y <= hy - 2 or (y == hy - 1 and (x - cx) % 3 == 0)], hair)
+        if hat == 'witch': s.obj(poly([(cx - 9, hy - 3), (cx + 10, hy - 3), (cx + 5, hy - 6), (cx + 3, hy - 15), (cx - 4, hy - 6)]), '#3A2A63'); s.dot([(x, hy - 5) for x in range(cx - 4, cx + 6)], GOLD)
+        elif hat == 'crown': s.obj(poly([(cx - 5, hy - 5), (cx + 6, hy - 5), (cx + 6, hy - 10), (cx + 3, hy - 7), (cx + .5, hy - 11), (cx - 2, hy - 7), (cx - 5, hy - 10)]), GOLD); s.dot([(cx, hy - 7), (cx + 1, hy - 7)], '#E8506A')
+        elif hat == 'tiara': s.obj(rect(cx - 4, hy - 7, cx + 5, hy - 6) | {(cx, hy - 8), (cx + 1, hy - 8), (cx, hy - 9), (cx + 1, hy - 9)}, GOLD, shade=False)
+        ey = hy + 1
+        for ex in (cx - 3, cx + 3):
+            if closed: s.dot([(ex, ey + 1), (ex + 1, ey + 1)], EYE)
+            else: s.dot([(ex, ey), (ex + 1, ey), (ex, ey + 1), (ex + 1, ey + 1)], EYE); s.dot([(ex, ey)], HI)
+        s.dot([(cx - 4, ey + 2), (cx + 5, ey + 2)], BLUSH); s.dot([(cx, ey + 3), (cx + 1, ey + 3)], C('#C0506A'))
         return s
     def render(s):
         im = Image.new('RGBA', (IW, IH)); P = im.load()
