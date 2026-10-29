@@ -604,8 +604,8 @@ let tags = [], bubble = null, pending = null, busy = false, camX = null, camY = 
 function showBubble(o, text, btn, fn){
   hideBubble();
   const b = document.createElement('div'); b.className = 'bubble'; const list = Array.isArray(btn) ? btn : btn ? [[btn, fn]] : [];   // btn: 글 하나 또는 [[글, 할 일], ...]
-  b.innerHTML = text + (list.length > 1 ? `<span class="bbtns">${list.map(() => '<button></button>').join('')}</span>` : list.length ? '<button></button>' : '');
-  b.querySelectorAll('button').forEach((el, i) => { el.textContent = list[i][0]; el.onclick = e => { e.stopPropagation(); list[i][1] && list[i][1](); }; });
+  b.innerHTML = text + (list.length > 1 ? `<span class="bbtns">${list.map(() => '<button class="bbx"></button>').join('')}</span>` : list.length ? '<button class="bbx"></button>' : '');
+  b.querySelectorAll('button.bbx').forEach((el, i) => { el.textContent = list[i][0]; el.onclick = e => { e.stopPropagation(); list[i][1] && list[i][1](); }; });   // 글 안에 원래 있던 버튼(친구 말풍선의 인사 등)은 건드리지 않아요
   world.appendChild(b); bubble = { el: b, o };
 }
 function hideBubble(){ bubble?.el.remove(); bubble = null; }
