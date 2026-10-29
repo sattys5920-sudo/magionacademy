@@ -258,6 +258,7 @@ body.admin #shell{max-width:none}
 .adside{display:none}
 #adminv .adth{border-radius:10px;box-shadow:0 0 0 1px #E2D8EE;padding:6px}#adminv .adth canvas{border-radius:6px}#adminv .admapw{border-radius:10px;box-shadow:0 0 0 1px #E2D8EE}#adminv .adgrid{padding:0}
 #adminv .adbody{padding:12px;gap:10px}
+.pffx{display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:8px;border-radius:12px;background:rgba(255,255,255,.07);font-size:14px}.pffx span{margin-left:auto;opacity:.85;text-align:right}
 .bbtodo{display:flex;align-items:center;gap:10px;padding:6px 4px}.bbtodo span{margin-left:auto;font-size:13px;opacity:.85}
 .bbwrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 16px 12px;text-align:center}
 .bbstage{width:156px;height:156px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 50% 58%,rgba(255,214,140,.32) 0,rgba(196,160,255,.16) 52%,rgba(196,160,255,0) 72%)}
@@ -3769,6 +3770,9 @@ const DISH_INFO = Object.fromEntries(DISH.flatMap(d => [[d.id, d], [d.id + '_s',
 DISH.forEach(d => { ITEM[d.id] = d.name; ITEM[d.id + '_s'] = '' + d.name; });
 const DISHES = Object.keys(DISH_INFO);
 const effText = (d, best) => EFF[d.e](best ? d.v * 2 : d.v);
+// 효능 한 줄 (가방·도감): 요리는 먹으면 생기는 효과, 물약은 마시면 생기는 효과 (없으면 쓰임)
+const POT_FX = { p_red: '전투 중 체력 50% 회복', p_grow: '온실 남은 시간 절반', p_vigor: '마력 +15 · 전투 중 마력 50% 회복', p_fluff: '생물 애정 +1', p_dawn: '전투 중 체력·마력 70% 회복', p_purple: '반 공동 의뢰에 내요' };
+const fxShort = k => { const D = DISH_INFO[k]; if (D) return effText(D, D.best); const P = POTION_INFO[k]; return P ? POT_FX[k] || `주문 보상 ${P.pay}G` : ''; };
 // 아이콘 그림 위치 (솥으로 날아가는 재료에도 써요)
 function iconSrc(k){
   const C = CATCH_INFO[k]; if (C) return { src: `art/${C.sheet}.png?v=${FISH_ART_V}`, sx: (C.si ?? C.i) * 32, sy: 0, sw: 32, sh: 32 };
@@ -5175,7 +5179,7 @@ function bagDetailHTML(e){
     const k = e.id, I = bagInfo(k), D = DISH_INFO[k], P = POTION_INFO[k], L = bagLikers(k);
     const useBtn = D ? `<button class="btn sm go" data-buse="${k}">먹기</button>` : P?.use ? `<button class="btn sm go" data-buse="${k}">마시기</button>` : '';
     return `<div class="bag-dt">${hd(`${me.inv[k]}개${L.length ? ' · ♥ ' + esc(bagNames(L)) : ''}`)}
-      ${bagMsg ? `<div class="d on">${esc(bagMsg)}</div>` : `<div class="d">${esc(I.desc)}</div>`}
+      ${bagMsg ? `<div class="d on">${esc(bagMsg)}</div>` : `<div class="d">${esc(D || P ? fxShort(k) : I.desc)}</div>`}
       <div class="acts">${useBtn}<button class="btn sm ghost" data-btrash="${k}">버리기</button></div></div>`;
   }
   if (e.kind === 'cloth'){
@@ -5268,6 +5272,7 @@ function pfStatsHTML(){
     ${pfStatRow('사육장', cr, PEN_MAX, cr >= PEN_MAX ? '사육장이 꽉 찼어요' : `${PEN_MAX - cr}마리 더 키울 수 있어요`)}
   </div>`;
 }
+let pfSel = null;
 function pfDexHTML(){
   const [name, allF, has, label] = PF_DEX[pfDex], all = allF(), per = PF_PAGE(), pages = Math.max(1, Math.ceil(all.length / per));
   pfPage = Math.min(pfPage, pages - 1);
@@ -5277,7 +5282,8 @@ function pfDexHTML(){
     <section class="sec">
       <div class="sec-h"><h3>${name} 도감 <span class="meta num">${got} / ${all.length}</span></h3>
         ${pages > 1 ? `<div class="pfpager"><button class="icbtn" data-pfpage="-1" aria-label="이전 쪽" ${pfPage ? '' : 'disabled'}>◀</button><span class="s num">${pfPage + 1} / ${pages}</span><button class="icbtn" data-pfpage="1" aria-label="다음 쪽" ${pfPage < pages - 1 ? '' : 'disabled'}>▶</button></div>` : ''}</div>
-      <div class="grid pfgrid">${list.map(k => { const ok = has(k); return `<button class="cell ${ok ? '' : 'unk'}" data-pfcell="${k}">${ic(k)}<span class="s ${ok ? '' : 'sub'}">${ok ? esc(label(k)) : '???'}</span></button>`; }).join('')}</div>
+      ${pfSel && list.includes(pfSel) && (pfDex === 'potion' || pfDex === 'dish') ? `<div class="pffx">${ic(pfSel)}<b>${esc(ITEM[pfSel])}</b><span>${esc(pfDex === 'dish' ? effText(DISH_INFO[pfSel], (me.cdex[pfSel] || 0) >= 3) : fxShort(pfSel))}</span></div>` : ''}
+      <div class="grid pfgrid">${list.map(k => { const ok = has(k); return `<button class="cell ${ok ? '' : 'unk'} ${pfSel === k ? 'sel' : ''}" data-pfcell="${k}">${ic(k)}<span class="s ${ok ? '' : 'sub'}">${ok ? esc(label(k)) : '???'}</span></button>`; }).join('')}</div>
     </section>`;
 }
 function renderProfile(){
@@ -5291,7 +5297,7 @@ function renderProfile(){
   if (pfTab === 'dex'){
     on('[data-pfdex]', b => { pfDex = b.dataset.pfdex; pfPage = 0; renderProfile(); });
     on('[data-pfpage]', b => { pfPage += +b.dataset.pfpage; renderProfile(); });
-    on('[data-pfcell]', () => {});   // 도감은 그림·이름만 (설명 없음)
+    on('[data-pfcell]', b => { const k = b.dataset.pfcell; if ((pfDex === 'potion' || pfDex === 'dish') && PF_DEX[pfDex][2](k)){ pfSel = pfSel === k ? null : k; renderProfile(); } });   // 물약·요리는 효능 한 줄
   }
 }
 // 전신 미리보기: 꾸미기 화면과 같은 방식으로 걷는 모습을 그려요 (◀ ▶ 로 돌려 보기)
@@ -5878,7 +5884,7 @@ function renderLab(){
         <div class="sec-h"><h3>${me.found.includes(dexSel) || me.hints.includes(dexSel) ? ITEM[dexSel] : '아직 모르는 물약'}</h3>${sel.time ? houseTag(sel.time) : `<span class="meta">주문 ${sel.pay}G</span>`}</div>
         ${sel.time ? `<span class="s" style="color:${HOUSES[sel.time].col}">${HOUSES[sel.time].name}의 시간(${hoursText(HOUSES[sel.time])})에만 끓어요 · 주문 ${sel.pay}G</span>` : ''}
         <span class="s">${me.hints.includes(dexSel) || me.found.includes(dexSel) ? '레시피 · ' + recipeText(dexSel) : '수업을 듣거나, 재료를 섞어 보며 찾아봐요.'}</span>
-        ${sel.use ? `<span class="s sub">마시면 · ${sel.use}</span>` : sel.desc ? `<span class="s sub">${sel.desc}</span>` : ''}
+        <span class="s sub">${fxShort(dexSel)}</span>
         <div class="frow" style="display:flex;gap:8px">${me.hints.includes(dexSel) ? `<button class="btn sm go" id="dexBrew">솥에 넣기</button>` : ''}${sel.use ? `<button class="btn sm" id="drink" ${me.inv[dexSel] ? '' : 'disabled'}>마시기 (${me.inv[dexSel] || 0}병)</button>` : ''}</div>
       </div>` : ''}
     </section>`;
