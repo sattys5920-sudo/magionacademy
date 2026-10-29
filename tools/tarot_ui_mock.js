@@ -1,6 +1,6 @@
 // 오늘의 운세 뽑기 화면 시안 (페이지에 넣어서 써요)
 window.tarotMock = function(){
-  const N = 22, W = 60, H = 90, NAMES = ['바보','마법사','여사제','여황제','황제','교황','연인','전차','힘','은둔자','운명의 수레바퀴','정의','매달린 사람','죽음','절제','악마','탑','별','달','태양','심판','세계'];
+  const N = 22, W = 60, H = 90, NAMES = ['The Fool','The Magician','The High Priestess','The Empress','The Emperor','The Hierophant','The Lovers','The Chariot','Strength','The Hermit','Wheel of Fortune','Justice','The Hanged Man','Death','Temperance','The Devil','The Tower','The Star','The Moon','The Sun','Judgement','The World'];
   const RO = ['0','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX','XXI'];
   const FX = {19:'요리할 때 별이 하나 더 나올 확률 ↑', 17:'희귀 물고기 확률 ↑', 0:'걷는 속도 +15%'};
   const st = document.createElement('style'); st.textContent = `
