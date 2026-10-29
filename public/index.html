@@ -46,7 +46,7 @@ h1,h2,h3{font-weight:normal}
 #stage{grid-area:stage;position:relative;min-height:0;overflow:hidden}
 #chat{grid-area:chat;position:relative;z-index:12;background:rgba(20,13,30,.96);border-top:1px solid var(--line);padding:6px 8px}
 #chat form{display:flex;gap:6px}
-body:not(.inworld) #chat{display:none}
+body:not(.inworld) #chat,body.focus #chat{display:none}
 body.kb #bar{display:none}
 #bar{grid-area:bar;min-width:0;height:calc(var(--bar-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);display:grid;grid-template-columns:repeat(5,1fr);background:rgba(20,13,30,.96);border-top:1px solid var(--line);position:relative;z-index:12}
 #bar button{border:0;background:none;color:var(--sub);font-family:var(--f-pxb);font-size:var(--fs-s);line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:0;position:relative}
@@ -1317,7 +1317,10 @@ const ICO = JSON.parse(document.getElementById('icoData').textContent);
 let tab = 'home', sub = null;
 const TABS = [['home','홈','star'],['lab','연구실','cauldron'],['green','온실','sprout'],['ranch','사육장','egg'],['market','시장','bag']];
 // 시트 틀. opt: { ribbon: 위쪽 띠 HTML, overlay: 장면 그림 위에 얹을 것 (행사) }
+// 수업·시험을 하는 동안엔 아래 대화창을 숨겨요 (답 버튼 아래를 살짝 눌렀다가 대화창이 눌려 화면이 밀리지 않게)
+const focusSync = () => document.body.classList.toggle('focus', !!(sheetOn && ((sub === 'class' && lesson && lesson.phase === 'play') || (sub === 'exam' && exam))));
 function frame(scene, title, subtitle, body, opt = {}){
+  setTimeout(focusSync, 0);
   app.innerHTML = `<div class="pnl" role="dialog" aria-label="${esc(String(title).replace(/<[^>]+>/g, ''))}">
     <div class="shead">
       <div class="title"><span class="b">${title}</span>${/id="|포인트|문제|♥|남은 시간|^오늘 \d/.test(subtitle) ? `<span class="s">${subtitle}</span>` : ''}</div>
@@ -1358,7 +1361,7 @@ function closeSheet(){
   endLesson();
   clearInterval(examTick); exam = null; examOff?.(); examOff = null;
   if (visitUid){ visitOff?.(); visitOff = null; visitUid = null; }
-  sheetOn = false; sub = null; tab = 'home'; app.classList.remove('open'); hud(); navMark(); World.nearRefresh && World.nearRefresh();
+  sheetOn = false; sub = null; tab = 'home'; app.classList.remove('open'); focusSync(); hud(); navMark(); World.nearRefresh && World.nearRefresh();
 }
 // 레벨은 지식(know)으로 정해요: Lv n이 되려면 지식 10·n² (Lv2 40, Lv3 90 ....). 내 정보 패널의 경험치 바도 이 값
 function levelOf(){ const k = me.know || 0, lv = Math.max(1, Math.floor(Math.sqrt(k / 10))); const a = 10 * lv * lv, b = 10 * (lv + 1) * (lv + 1); return { lv, cur: k - a, need: b - a, next: b }; }
@@ -3063,7 +3066,7 @@ const GAMES = {
   ghost: { name: '유령 막기', ic: '', coop: true, min: 2, max: 8, dur: 150, desc: '구역을 나눠 맡아 몰려오는 유령을 막아요 · 웨이브 10' },
   stars: { name: '별자리 잇기', ic: '', coop: true, min: 2, max: 8, dur: 180, desc: '내 별 번호를 외워 다 같이 1번부터 순서대로 이어요' },
 };
-const GAME_DAY = 6;
+const GAME_DAY = 10;
 const PCOL = ['#FF6A8A', '#6AB8FF', '#8CE6B0', '#FFD866', '#C08AFF', '#FF9A4A', '#7AE0E0', '#F0F0F0'];
 let gameList = {}, room = null, roomV = null, roomOff = null, G = null, gameMsg = '';
 const myId = () => uid || 'me';
@@ -3176,7 +3179,7 @@ function gameOver(fail){
   }
   me.gdone = me.gdone || {};
   if (G.g === 'pumpkin' && me.perk?.pumpkin_race) coin = Math.round(coin * 1.3);   // 스트로 ♥10: 호박 줍기 경주 보너스
-  if (!me.gdone[G.id]){ if (!me.gday || me.gday.d !== todayKey()) me.gday = { d: todayKey(), n: 0 };   // 놀이 보상은 하루 6판까지 (짧은 판을 계속 돌려 골드를 찍어 내지 않게)
+  if (!me.gdone[G.id]){ if (!me.gday || me.gday.d !== todayKey()) me.gday = { d: todayKey(), n: 0 };   // 놀이 보상은 하루 10판까지 (짧은 판을 계속 돌려 골드를 찍어 내지 않게)
     if (me.gday.n >= GAME_DAY){ coin = 0; mana = 0; reward = (reward ? reward + ' · ' : '') + `오늘 놀이 보상 ${GAME_DAY}판을 다 받았어요`; } else me.gday.n++;
     me.gdone = { [G.id]: 1 }; me.coin += coin; me.mana += mana; save(); hud(); recordBest(G.g, rec); storyHook('game', { g: G.g, ok: Gm.coop ? !!(G.result ? G.result().ok : !fail) : true, score: Math.max(0, G.score) }); }
   if (roomV && roomV.host === myId()) GDB.upd('games/' + G.id, { st: 'end' });
@@ -5018,7 +5021,7 @@ World.onNear = t => {
 };
 $('#hudMe').onclick = () => sheetOn && sub === 'profile' ? closeSheet() : openSheet('home', 'profile');
 document.querySelectorAll('#bar [data-nav]').forEach(b => { if (b.dataset.nav === 'map') return;   // 지도는 world.js가 열어요
-  b.onclick = () => { const s = b.dataset.nav; if (sheetOn && sub === s) return closeSheet(); openSheet('home', s); }; });
+  b.onclick = async () => { const s = b.dataset.nav; if (document.body.classList.contains('focus') && sub === 'class' && !await confirmBox('수업 중이에요. 다른 화면으로 갈까요?', '갈게요', '수업 계속')) return; if (sheetOn && sub === s) return closeSheet(); openSheet('home', s); }; });   // 수업 중에 아래 메뉴를 잘못 눌러도 바로 나가지 않게
 // 단축키: I 가방 · M 지도 · R 관계 · J 일지 · Esc 닫기·메뉴 (입력창에서는 안 먹어요)
 document.addEventListener('keydown', e => {
   if (!me || !document.body.classList.contains('inworld') || e.target.matches?.('input,textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
