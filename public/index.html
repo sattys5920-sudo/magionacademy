@@ -3460,7 +3460,7 @@ function showAdmin(){
   if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('morph/ctl', 'moctl'); L('morph/st', 'most'); L('morph/form', 'moform'); L('board', 'board'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
   adminRender();
 }
-const adminTyping = () => { const a = document.activeElement; return (AD.tab === 'npc' || AD.tab === 'gift' || AD.tab === 'story') && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
+const adminTyping = () => { const a = document.activeElement; return (AD.tab === 'npc' || AD.tab === 'gift' || AD.tab === 'story' || AD.tab === 'event') && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
 function adminChat(){   // 최근 14일 대화를 한 줄로 이어 봐요
   if (!F || !db) return; AD.chatOff?.(); const by = {}, offs = [];
   const merge = () => { AD.chat = {}; Object.entries(by).forEach(([d, v]) => Object.entries(v).forEach(([k, c]) => { AD.chat[d + '/' + k] = c; })); if (AD.tab === 'chat') adminRender(); };
@@ -8451,20 +8451,21 @@ document.addEventListener('click', e => {
   if (a === 'delresv'){ F.set(F.ref(db, 'stargaze/sched/' + b.dataset.k), null); return; }
   sgAdminAct(a);
 });
+document.addEventListener('change', e => { const k = { sgsel: 'sgSel', sgprd: 'sgPrd', sgdt: 'sgDt' }[e.target.id]; if (k) AD[k] = e.target.value; });   // 화면이 새로 그려져도 고른 별자리·밤·예약 시각을 기억해요
 document.addEventListener('change', e => { const i = e.target.closest && e.target.closest('[data-sgc]'); if (!i || !F || !db) return; const v = Math.max(+i.min || 1, Math.min(+i.max || 9999, +i.value || 0)); F.update(F.ref(db, 'stargaze/cfg'), { [i.dataset.sgc]: v }); });
 function adminStargazeHTML(){
   if (!sgData){ sgLoad(); return `<div class="adcard"><b>이벤트 「별 보는 밤」</b></div>`; }
   const c = sgCtl, open = !!(c && c.open), cfg = sgCfg(), C = open && sgConst(c.c), used = (sgHist.c || {}), nm = u => u === 'stella' ? '스텔라' : esc((sgJoin[u] && sgJoin[u].n) || (AD.players[u] && AD.players[u].nick) || u.slice(0, 6));
   const PH = { gather: '모이는 중', assign: '별을 나눠 줬어요', light: '별 켜는 중', sky: '하늘 보기', done: '이야기 중', end: '끝났어요' };
-  const sel = sgData.map(x => `<option value="${x.id}">${esc(x.name)}${used[x.id] ? ` (사용함 ${used[x.id]}번)` : ''}${x.tag ? ` · ${x.tag}` : ''}</option>`).join('');
+  const sel = sgData.map(x => `<option value="${x.id}" ${AD.sgSel === x.id ? 'selected' : ''}>${esc(x.name)}${used[x.id] ? ` (사용함 ${used[x.id]}번)` : ''}${x.tag ? ` · ${x.tag}` : ''}</option>`).join('');
   const sch = Object.entries(sgSched).sort((a, b) => a[1].at - b[1].at).map(([k, s]) => `<div class="s">· ${new Date(s.at).toLocaleString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' })} · ${esc((sgConst(s.c) || {}).name || s.c)} <button class="btn sm" data-sga="delresv" data-k="${k}">취소</button></div>`).join('');
   const asg = open && c.asg ? Object.entries(c.asg).map(([k, u]) => `${k}:${nm(u)}${sgLit[k] ? '★' : ''}`).join(' · ') : '';
   return `<div class="adcard"><b>이벤트 「별 보는 밤」</b> · ${open ? `${esc(C ? C.name : '')} · ${c.round}번째 밤 · ${PH[c.ph] || c.ph}` : sgCtl && sgCtl.ph === 'end' ? '지난 밤이 끝났어요' : '닫혀 있어요'}
     ${open ? `<div class="s">참가 ${Object.keys(sgJoin).length}명 · 켜진 별 ${Object.keys(sgLit).length}/12${!Object.keys(sgJoin).length ? ' · <b>참가자가 없어요</b>' : ''}${asg ? `<br>별 배정: ${asg}` : ''}</div>
       <div class="frow">${sgAdminBtns(c)}<button class="btn sm" data-sga="view">같이 보기</button></div>` : ''}
     <div class="frow"><select id="sgsel">${sel}</select><button class="btn sm go" data-sga="open">지금 열기</button><button class="btn sm" data-sga="preview">미리 보기</button></div>
-    <div class="frow"><select id="sgprd">${[1, 2, 3, 4].map(i => `<option value="${i}">${i}번째 밤</option>`).join('')}</select></div>
-    <div class="s"><b>예약</b></div><div class="frow"><input id="sgdt" type="datetime-local"><button class="btn sm" data-sga="resv">예약 추가</button></div>${sch || '<div class="s sub">예약이 없어요</div>'}
+    <div class="frow"><select id="sgprd">${[1, 2, 3, 4].map(i => `<option value="${i}" ${+AD.sgPrd === i ? 'selected' : ''}>${i}번째 밤</option>`).join('')}</select></div>
+    <div class="s"><b>예약</b></div><div class="frow"><input id="sgdt" type="datetime-local" value="${esc(AD.sgDt || '')}"><button class="btn sm" data-sga="resv">예약 추가</button></div>${sch || '<div class="s sub">예약이 없어요</div>'}
     <div class="s"><b>설정</b></div>
     <div class="frow"><label class="s">버프 시간(시간) <input type="number" min="1" max="72" data-sgc="buffH" value="${cfg.buffH}" style="width:56px"></label><label class="s">별 켜기 제한(초) <input type="number" min="10" max="300" data-sgc="lightS" value="${cfg.lightS}" style="width:56px"></label><label class="s">모이기 기다림(초) <input type="number" min="10" max="900" data-sgc="gatherS" value="${cfg.gatherS}" style="width:56px"></label></div></div>`;
 }
