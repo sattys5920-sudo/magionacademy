@@ -940,7 +940,7 @@ function frame(now){
       // 젓는 방향 안내 점선
       if (cook.guide){ cx.fillStyle = '#FFE070'; for (let i = 0; i < 12; i++){ if ((i + Math.floor(t * 8)) % 3) continue; const a = i / 12 * Math.PI * 2; cx.fillRect(Math.round(cxp + Math.cos(a) * 12), Math.round(top + 2 + Math.sin(a) * 5), 1, 1); } }
     } }
-  drawMarks(now, view); drawBats(now); drawPartyAir(now); drawGlyphs(now); if (fxDark){ cx.globalAlpha = fxDark; cx.fillStyle = '#05030A'; cx.fillRect(ix, iy, VW, VH); cx.globalAlpha = 1; } drawSmoke(now);
+  drawMarks(now, view); drawBats(now); drawPartyAir(now); drawGlyphs(now); if (fxDark){ cx.globalAlpha = fxDark; cx.fillStyle = '#05030A'; cx.fillRect(ix, iy, VW, VH); cx.globalAlpha = 1; } drawConfetti(now, ix, iy, VW, VH); drawSmoke(now);
   // 채집 지점: 밤에도 잘 보이게 빛 다음에 그려요
   spots.forEach((sp, i) => { if ((sp.m || spotMap) !== map) return; const [x, y] = P(sp.x + .5, sp.y + .5), t = now / 260 + i * 1.3, a = .6 + .4 * Math.sin(t), sy = y - 7 - Math.round(Math.sin(t * .7) * 2);
     if (x < view.x || x > view.x + view.w || y < view.y || y > view.y + view.h) return;
@@ -1131,24 +1131,34 @@ async function crowdDo(c){
 // 효과: bats 박쥐 떼 · bell 종소리 번쩍 · lightning 번개 · wind 바람(안개 빠르게) · dark 어둡게 / light 원래대로
 let fxBats = 0, fxDark = 0, skyN = 1, partyCfg = null, confettiUntil = 0, smokeCfg = null;
 // 뭉게뭉게 연기: 화면을 다 덮어요 (말풍선은 위에 보여요). { kind: 'smoke' } 켜기 · { kind: 'smoke', off: true } 천천히 걷혀요
-const SMOKE_COL = [['#4A3E62', '#B9AFCB', '#DCD5E6'], ['#4A3E62', '#A89EBC', '#C8BFD8'], ['#4A3E62', '#CFC6DC', '#EEEAF4']];   // [윤곽, 몸, 밝은 면]
+const SMOKE_COL = [['#3E3356', '#8E84A4', '#A79DBC', '#C3BBD4'], ['#4A3E62', '#B2A8C6', '#CFC7DD', '#EEEAF4']];   // 뒤 구름 · 앞 구름: [윤곽, 그늘, 몸, 밝은 면]
+// 구름 하나 = 크고 작은 둥근 덩이 여러 개. 윤곽은 덩이를 다 합친 바깥에만 둘러서 비눗방울이 아니라 뭉게구름처럼 보여요
+const CLOUDS = Array.from({ length: 30 }, (_, i) => { const n = 4 + (i % 3), lobes = [];
+  for (let j = 0; j < n; j++){ const u = n > 1 ? j / (n - 1) - .5 : 0; lobes.push([u * 1.7 + Math.sin(i * 7.3 + j) * .12, -(1 - Math.abs(u) * 1.3) * .55 + Math.cos(i * 3.1 + j * 2.7) * .08, .55 + (1 - Math.abs(u) * 1.4) * .45 + ((i + j) % 3) * .06]); }
+  return { x: ((i * 97 + 31) % 1000) / 1000, y: ((i * 61 + 13) % 1000) / 1000, s: .8 + (i % 4) * .22, ph: i * 1.7, back: i < 12, lobes }; });
 let smokeCv = null;
-function smokeBlob(g, x, y, r, col){   // 도트 원: 줄마다 한 번에 칠해서 가장자리가 계단처럼 또렷해요
-  x = Math.round(x); y = Math.round(y); r = Math.round(r);
-  const disc = (rr, c, ox = 0, oy = 0) => { g.fillStyle = c; for (let d = -rr; d <= rr; d++){ const hw = Math.floor(Math.sqrt(rr * rr - d * d)); g.fillRect(x + ox - hw, y + oy + d, hw * 2 + 1, 1); } };
-  disc(r + 1, col[0]); disc(r, col[1]); disc(Math.max(1, Math.round(r * .55)), col[2], -Math.round(r * .3), -Math.round(r * .3));
+function smokeDisc(g, x, y, r, c){ x = Math.round(x); y = Math.round(y); r = Math.max(1, Math.round(r)); g.fillStyle = c; for (let d = -r; d <= r; d++){ const hw = Math.floor(Math.sqrt(r * r - d * d)); g.fillRect(x - hw, y + d, hw * 2 + 1, 1); } }   // 도트 원: 가장자리가 계단처럼 또렷해요
+function smokeCloud(g, L, cx0, cy0, R, col){
+  L.forEach(([dx, dy, r]) => smokeDisc(g, cx0 + dx * R, cy0 + dy * R, r * R + 1, col[0]));                 // 바깥 윤곽
+  L.forEach(([dx, dy, r]) => smokeDisc(g, cx0 + dx * R, cy0 + dy * R, r * R, col[1]));                                              // 아래 그늘
+  L.forEach(([dx, dy, r]) => smokeDisc(g, cx0 + dx * R, cy0 + dy * R - Math.max(1, R * .12), r * R * .92, col[2]));                // 몸 (살짝 위로 → 아래에 그늘이 남아요)
+  L.forEach(([dx, dy, r]) => smokeDisc(g, cx0 + dx * R - R * .14, cy0 + dy * R - R * .3, r * R * .45, col[3]));                   // 밝은 면
 }
 function drawSmoke(now){
   const c = smokeCfg; if (!c) return; if (c.off && now - c.off >= 1400){ smokeCfg = null; return; } const a = Math.max(0, Math.min(1, (now - c.t0) / 350)) * (c.off ? Math.min(1, 1 - (now - c.off) / 1400) : 1); if (a <= 0) return;   // 프레임 시각이 켠 시각보다 살짝 앞설 수 있어요
   const W = out.canvas.width, H = out.canvas.height, k = Math.max(1, Math.round(KPX)), w = Math.ceil(W / k), h = Math.ceil(H / k), t = now / 1000, grow = Math.max(0, Math.min(1, (now - c.t0) / 600));   // 게임 픽셀 한 칸 = 연기 도트 한 칸
   if (!smokeCv) smokeCv = document.createElement('canvas'); if (smokeCv.width !== w || smokeCv.height !== h){ smokeCv.width = w; smokeCv.height = h; }
-  const g = smokeCv.getContext('2d'); g.fillStyle = '#9C92B0'; g.fillRect(0, 0, w, h);
-  const u = Math.min(w, h) / 100;
-  for (let i = 0; i < 40; i++){
-    const bx = ((i * 97) % 1000) / 1000 * w, by = ((i * 61 + 13) % 1000) / 1000 * h, x = w / 2 + (bx - w / 2) * grow + Math.sin(t * .7 + i) * 4 * u, y = h / 2 + (by - h / 2) * grow + Math.cos(t * .5 + i * 1.3) * 3 * u - (c.off ? (now - c.off) / 80 * u : 0);
-    smokeBlob(g, x, y, (12 + (i % 5) * 5) * (.4 + .6 * grow) * u, SMOKE_COL[i % 3]);
-  }
+  const g = smokeCv.getContext('2d'), u = Math.min(w, h) / 100, lift = c.off ? (now - c.off) / 60 * u : 0; g.fillStyle = '#7A7092'; g.fillRect(0, 0, w, h);
+  CLOUDS.forEach(cl => { const bx = cl.x * (w + 40 * u) - 20 * u, by = cl.y * (h + 30 * u) - 15 * u, x = w / 2 + (bx - w / 2) * grow + Math.sin(t * .4 + cl.ph) * 4 * u, y = h / 2 + (by - h / 2) * grow + Math.cos(t * .3 + cl.ph) * 2 * u - lift * (cl.back ? .6 : 1);
+    smokeCloud(g, cl.lobes, x, y, (cl.back ? 20 : 17) * cl.s * (.35 + .65 * grow) * u, SMOKE_COL[cl.back ? 0 : 1]); });
   out.save(); out.setTransform(1, 0, 0, 1, 0, 0); out.imageSmoothingEnabled = false; out.globalAlpha = a; out.drawImage(smokeCv, 0, 0, w * k, h * k); out.restore();
+}
+// 꽃가루: 화면 가득 떨어져요 (실내·실외 어디서나)
+function drawConfetti(now, ix, iy, VW, VH){
+  if (confettiUntil <= now) return; const g = out, t = now / 1000, left = (confettiUntil - now) / 1000; g.save(); if (left < 1) g.globalAlpha = left;
+  for (let i = 0; i < 80; i++){ const sp = .22 + (i % 7) * .035, ph = (t * sp + ((i * 37) % 100) / 100) % 1, x = ix + ((i * 53) % 1000) / 1000 * VW + Math.sin(t * 2.4 + i) * 6, y = iy - 4 + ph * (VH + 8), flip = Math.sin(t * 7 + i * 1.3) > 0;
+    g.fillStyle = ['#FF7A9A', '#FFD866', '#7AE6A0', '#7AB8FF', '#C89AFF', '#FF9A3C'][i % 6]; g.fillRect(Math.round(x), Math.round(y), flip ? 3 : 2, flip ? 2 : 3); }
+  g.restore();
 }
 World.fx = c => fxDo(c);
 // 응원: 둘러선 사람들이 폴짝폴짝 뛰며 하트·박쥐·별 같은 그림이 머리 위로 올라가요
@@ -1206,7 +1216,6 @@ function drawPartyAir(now){
   for (let i = 0; i < 7; i++){ const ph = ((t * .05 + i * .137) % 1), lx = mx - 80 + i * 26 + Math.sin(t + i) * 4, ly = my + 20 - ph * 150;   // 떠오르는 등불
     g.globalCompositeOperation = 'lighter'; g.globalAlpha = k * .65; g.drawImage(glow(11, [255, 170, 70]), Math.round(lx) - 11, Math.round(ly) - 11); g.globalCompositeOperation = 'source-over'; g.globalAlpha = k;
     g.fillStyle = '#1A1024'; g.fillRect(Math.round(lx) - 3, Math.round(ly) - 4, 7, 9); g.fillStyle = '#FF9A3C'; g.fillRect(Math.round(lx) - 2, Math.round(ly) - 3, 5, 7); g.fillStyle = '#FFE8A0'; g.fillRect(Math.round(lx) - 1, Math.round(ly) - 1, 3, 3); }
-  if (confettiUntil > now){ for (let i = 0; i < 46; i++){ const ph = ((t * (.35 + (i % 5) * .06) + i * .071) % 1), cxp = mx - 110 + ((i * 53) % 220) + Math.sin(t * 3 + i) * 5, cyp = my - 90 + ph * 170; g.fillStyle = ['#FF7A9A', '#FFD866', '#7AE6A0', '#7AB8FF', '#C89AFF', '#FF9A3C'][i % 6]; g.fillRect(Math.round(cxp), Math.round(cyp), 2, 2); } }
   g.restore();
 }
 
