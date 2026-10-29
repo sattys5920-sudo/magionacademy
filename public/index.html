@@ -270,9 +270,13 @@ body.admin #shell{max-width:none}
 .bbbtns{display:flex;flex-direction:column;align-items:stretch;gap:10px;width:100%;max-width:300px;margin-top:4px}
 .bbcta{height:54px;border:0;border-radius:16px;font:inherit;font-size:17px;font-weight:800;background:#FFA53A;color:#2A1600;box-shadow:0 4px 0 #C2741C;cursor:pointer}.bbcta:active{transform:translateY(2px);box-shadow:0 2px 0 #C2741C}
 .bbcta:disabled{background:rgba(255,255,255,.1);color:rgba(255,255,255,.4);box-shadow:none;cursor:default}.bbhearts{display:flex;gap:4px;font-size:20px;line-height:1}.bbhearts i{font-style:normal;color:rgba(255,255,255,.18)}.bbhearts i.on{color:#FF7A9A}
-.bbcta.sub2{display:flex;align-items:center;justify-content:center;gap:6px;background:#FFE7C2;box-shadow:0 4px 0 #D9B27A}.bbcta.sub2 img,.bbcta.sub2 i{transform:scale(.8)}
+.bbcta.sub2{background:#FFE7C2;box-shadow:0 4px 0 #D9B27A}
 .bbcta.sub{background:transparent;color:inherit;border:2px solid rgba(255,255,255,.28);box-shadow:none}
 .bbinput{width:100%;max-width:300px;height:50px;border-radius:14px;border:2px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:inherit;font:inherit;font-size:17px;text-align:center}.bbinput:focus{outline:none;border-color:#FFA53A}
+#adminv .abhead{display:flex;align-items:center;justify-content:space-between;gap:8px}#adminv .abchips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px}#adminv .abchips span{font-size:12px;padding:3px 9px;border-radius:999px;background:#F3EEF9;color:#5A4B72}#adminv .abchips b{color:#2A1E3A}
+#adminv .abtable{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px 16px}#adminv .abrow{display:grid;grid-template-columns:72px 92px 1fr;align-items:center;gap:8px;padding:5px 2px;border-bottom:1px solid #F0EAF6;font-size:13px}
+#adminv .abn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}#adminv .abrow select{width:100%}#adminv .abs{display:flex;align-items:center;gap:6px;color:#5A4B72}#adminv .abs.dim{color:#A99CBE}#adminv .abs.ok{color:#2E8A55;font-weight:700}#adminv .abs.go{color:#C2741C;font-weight:700}
+#adminv .abs .dots{display:inline-flex;gap:3px}#adminv .abs .dots b{width:7px;height:7px;border-radius:50%;background:#E2D8EE}#adminv .abs .dots b.on{background:#F5A13A}
 #adminv .adbaby{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px 12px}#adminv .adbaby label{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:13px}
 #adminv .adcard{border:1px solid #E2D8EE;border-radius:12px;padding:12px 14px;gap:6px;box-shadow:0 1px 3px rgba(34,24,63,.06)}
 #adminv .adcard>b:first-child{font-size:15px}
@@ -7248,7 +7252,7 @@ const BABY_SND = [[['꽥!! 꽤액!!', '꽉! 꽉!'], ['꽥....?', '꾸악....'], 
   [['크르릉!', '캭!'], ['끄응....?', '낑....'], ['끼잉♪', '쿠웅♪']], [['개굴!! 개굴!', '꾸르륵!'], ['개....굴?', '꾸....'], ['개굴개굴♪', '꾸르♪']], [['삐약!! 삐약!', '삑!'], ['삐....?', '삐약....'], ['삐약삐약♪', '삐삐♪']]];
 // 헤어지기 싫을 때 (레오에게 돌려주려 하면)
 const BABY_CLING = ['꽥....!! 꽥꽥....!!', '냐아앙....!!', '낑낑....!! 낑....', '킁....!! 킁킁....!!', '찌이익....!!', '쀼우....!!', '끼이잉....!!', '부우....!! 부엉....', '캥....!! 캐앵....', '끼잉....!! 끼이잉....', '개구울....!!', '삐약....!! 삐이약....!!'];
-const BABY_LOVE_MAX = 5;   // 친밀도 ♥5칸 (10점에 한 칸): 쓰다듬기 하루 5번 +2 · 밥 주기 하루 2번 +5, 그냥 귀여움 (효과 없음)
+const BABY_LOVE_MAX = 5;   // 친밀도 ♥5칸 (10점에 한 칸): 쓰다듬기 하루 3번 +1 · 밥 주기 하루 1번 +2 → 하루 최대 5점, 꽉 채우는 데 10일 · 그냥 귀여움 (효과 없음)
 const babyMood = b => !b ? 2 : b.adopt || b.st >= 4 ? 2 : b.st >= 2 ? 1 : 0;
 const babySnd = (k, mood) => { const L = BABY_SND[k][mood]; return L[Math.floor(Math.random() * L.length)]; };
 const babyPic = (k, z = 5) => `<i class="bbpic" style="width:${14 * z}px;height:${14 * z}px;background-position:${-k * 14 * z}px 0;background-size:${168 * z}px ${14 * z}px"></i>`;
@@ -7378,10 +7382,10 @@ function renderBaby(){
     const d = b.day && b.day.d === todayKey() ? b.day : (b.day = { d: todayKey(), p: 0, f: 0 }), food = BABY_NEED[b.k][0][0], hv = me.inv[food] || 0, love = b.love || 0, H = Math.min(BABY_LOVE_MAX, Math.floor(love / 10));
     frame(null, esc(b.name), '', `<div class="bbwrap">${stage(b.k, babyMsg)}
       <div class="bbhearts">${[...Array(BABY_LOVE_MAX)].map((_, i) => `<i class="${i < H ? 'on' : ''}">♥</i>`).join('')}</div>
-      <div class="bbbtns"><button class="bbcta" id="bbpet">쓰다듬기</button><button class="bbcta sub2" id="bbfeed" ${hv && d.f < 2 ? '' : 'disabled'}>${ic(food)}밥 주기</button><button class="bbcta sub" id="bbfol">${b.follow ? '방에 두기' : '데리고 다니기'}</button></div></div>`);
+      <div class="bbbtns"><button class="bbcta" id="bbpet">쓰다듬기</button><button class="bbcta sub2" id="bbfeed" ${hv && d.f < 1 ? '' : 'disabled'}>밥 주기</button><button class="bbcta sub" id="bbfol">${b.follow ? '방에 두기' : '데리고 다니기'}</button></div></div>`);
     const up = n => { const h0 = Math.floor((b.love || 0) / 10); b.love = Math.min(BABY_LOVE_MAX * 10, (b.love || 0) + n); if (Math.floor(b.love / 10) > h0) setTimeout(() => World.babySay('mine', '♥'), 900); };
-    $('#bbpet').onclick = () => { if (d.p < 5){ d.p++; up(2); } babyMsg = babySnd(b.k, 2); World.babySay('mine', babyMsg); sfx('pop'); save(); renderBaby(); };
-    $('#bbfeed').onclick = () => { if (!(me.inv[food] > 0) || d.f >= 2) return; me.inv[food]--; if (!me.inv[food]) delete me.inv[food]; d.f++; up(5); babyMsg = '냠냠'; World.babySay('mine', '냠냠'); sfx('pop'); save(); renderBaby(); };
+    $('#bbpet').onclick = () => { if (d.p < 3){ d.p++; up(1); } babyMsg = babySnd(b.k, 2); World.babySay('mine', babyMsg); sfx('pop'); save(); renderBaby(); };
+    $('#bbfeed').onclick = () => { if (!(me.inv[food] > 0) || d.f >= 1) return; me.inv[food]--; if (!me.inv[food]) delete me.inv[food]; d.f++; up(2); babyMsg = '냠냠'; World.babySay('mine', '냠냠'); sfx('pop'); save(); renderBaby(); };
     $('#bbfol').onclick = () => { b.follow = !b.follow; save(); babyTick(); closeSheet(); };
     return;
   }
@@ -7403,12 +7407,16 @@ function renderBaby(){
     World.babySay('mine', babyMsg); babyTick(); renderBaby(); };
 }
 function adminBabyHTML(){
-  const pk = AD.bbpick || {}, ids = Object.keys(AD.players || {}).filter(id => AD.players[id]?.nick).sort((a, b) => AD.players[a].nick.localeCompare(AD.players[b].nick, 'ko'));
-  const cnt = BABY.NAMES.map((_, i) => ids.filter(id => pk[id] === i).length);
-  const c = AD.bbctl || {}, st = id => { const b = AD.players[id].baby; return !b ? '' : b.adopt ? ' · 입양' : b.ev === c.id ? ` · ${b.st}/5` : ''; };
-  return `<div class="adcard"><b>이벤트 「길 잃은 아기 동물」 · ${c.open ? '진행 중' : '닫혀 있어요'} · 배정 ${ids.filter(id => pk[id] !== undefined).length}/${ids.length}명</b>
-    <div class="frow">${c.open ? '<button class="btn sm" data-bba="close">이벤트 끝내기</button>' : '<button class="btn sm go" data-bba="open">이벤트 시작</button>'}</div>
-    <div class="adbaby">${ids.map(id => `<label>${esc(AD.players[id].nick)}${st(id)} <select data-bbu="${id}"><option value="">-</option>${BABY.NAMES.map((n, i) => `<option value="${i}" ${pk[id] === i ? 'selected' : ''}>${n}${cnt[i] ? ` (${cnt[i]})` : ''}</option>`).join('')}</select></label>`).join('') || '<div class="s">학생이 없어요</div>'}</div></div>`;
+  const pk = AD.bbpick || {}, c = AD.bbctl || {}, ids = Object.keys(AD.players || {}).filter(id => AD.players[id]?.nick).sort((a, b) => AD.players[a].nick.localeCompare(AD.players[b].nick, 'ko'));
+  const bOf = id => { const b = AD.players[id].baby; return b && (b.adopt || b.ev === c.id) ? b : null; };
+  const adopted = ids.filter(id => bOf(id)?.adopt), going = ids.filter(id => { const b = bOf(id); return b && !b.adopt; });
+  const stat = id => { const b = bOf(id); if (!b) return pk[id] !== undefined && c.open ? '<span class="abs dim">아직 못 만남</span>' : '';
+    if (b.adopt) return `<span class="abs ok">${esc(b.name || '')} · ♥${Math.min(BABY_LOVE_MAX, Math.floor((b.love || 0) / 10))}</span>`;
+    if (b.st >= 5) return `<span class="abs go">${b.fin ? '이름 짓는 중' : '사육장으로'}</span>`;
+    return `<span class="abs">${b.met ? `<i class="dots">${[0, 1, 2, 3, 4].map(i => `<b class="${i < b.st ? 'on' : ''}"></b>`).join('')}</i>${b.st}/5` : '아직 못 만남'}</span>`; };
+  return `<div class="adcard"><div class="abhead"><b>이벤트 「길 잃은 아기 동물」</b>${c.open ? '<button class="btn sm" data-bba="close">이벤트 끝내기</button>' : '<button class="btn sm go" data-bba="open">이벤트 시작</button>'}</div>
+    <div class="abchips"><span>${c.open ? '진행 중' : '닫힘'}</span><span>배정 <b>${ids.filter(id => pk[id] !== undefined).length}</b>/${ids.length}</span><span>돌보는 중 <b>${going.length}</b></span><span>입양 <b>${adopted.length}</b></span></div>
+    <div class="abtable">${ids.map(id => `<div class="abrow"><span class="abn">${esc(AD.players[id].nick)}</span><select data-bbu="${id}" ${bOf(id)?.adopt ? 'disabled' : ''}><option value="">-</option>${BABY.NAMES.map((n, i) => `<option value="${i}" ${(bOf(id)?.adopt ? bOf(id).k : pk[id]) === i ? 'selected' : ''}>${n.replace('아기 ', '')}</option>`).join('')}</select>${stat(id)}</div>`).join('') || '<div class="s">학생이 없어요</div>'}</div></div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-bba]'); if (!b || !F || !db) return;
   if (b.dataset.bba === 'open'){ if (confirm('이벤트를 시작할까요? 접속한 학생에게 첫 장면이 바로 나와요')) F.set(F.ref(db, 'baby/ctl'), { open: true, id: now2() }); }
