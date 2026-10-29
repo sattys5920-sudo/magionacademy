@@ -278,6 +278,9 @@ body.admin #shell{max-width:none}
 #adminv .abtable{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px 16px}#adminv .abrow{display:grid;grid-template-columns:72px 92px 1fr;align-items:center;gap:8px;padding:5px 2px;border-bottom:1px solid #F0EAF6;font-size:13px}
 #adminv .abn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}#adminv .abrow select{width:100%}#adminv .abs{display:flex;align-items:center;gap:6px;color:#5A4B72}#adminv .abs.dim{color:#A99CBE}#adminv .abs.ok{color:#2E8A55;font-weight:700}#adminv .abs.go{color:#C2741C;font-weight:700}
 #adminv .abs .dots{display:inline-flex;gap:3px}#adminv .abs .dots b{width:7px;height:7px;border-radius:50%;background:#E2D8EE}#adminv .abs .dots b.on{background:#F5A13A}
+#snowbtn{position:absolute;left:12px;bottom:64px;z-index:6;min-height:44px;padding:0 16px;border-radius:22px;border:2px solid #2A1E3A;background:#F2F4FF;color:#2A1E3A;font-family:var(--f-pxb);font-size:var(--fs);box-shadow:0 3px 0 #A9B3DA}#snowbtn.on{background:#BFE6FF}#snowbtn.cold{background:#DDE3F2;color:#7A7F98;box-shadow:none}#snowbtn[hidden]{display:none}
+.snlist{display:flex;flex-direction:column;gap:8px;padding:6px 0}.snrow{display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.06)}.snrow.ok{opacity:.65}.snneed{display:flex;flex-wrap:wrap;gap:8px}.snneed span{display:flex;align-items:center;gap:4px}.snneed i{font-style:normal;font-size:13px}.sndone{color:#8CE6A8;font-weight:800;padding:0 10px}
+#adminv .snadm{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 16px}#adminv .snadm>div{display:grid;grid-template-columns:44px 1fr 64px;align-items:center;gap:8px;font-size:13px}#adminv .snbar{height:8px;border-radius:4px;background:#EEE8F5;overflow:hidden}#adminv .snbar i{display:block;height:100%;background:#7AB8E8}
 #adminv .adbaby{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px 12px}#adminv .adbaby label{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:13px}
 #adminv .adcard{border:1px solid #E2D8EE;border-radius:12px;padding:12px 14px;gap:6px;box-shadow:0 1px 3px rgba(34,24,63,.06)}
 #adminv .adcard>b:first-child{font-size:15px}
@@ -3046,7 +3049,8 @@ const X_ITEMS = [['p_red', 'hp', '', '체력 50%', .5], ['p_vigor', 'mp', '', 'M
 function xItemUse(B, u, k, t){   // 효과만 적용 (개수는 쓰는 사람 기기에서 줄여요) · t: 받는 아군 (없으면 나)
   const it = X_ITEMS.find(x => x[0] === k); if (!it) return; t = t || u;
   const tasty = k === 'p_red' && (u.tasty || (u.uid === myId() && me.perk?.tasty_potion));   // 세라 ♥10: 맛있는 치유 물약 (체력 70% + MP 20%)
-  const g = (kind, mx, was, set, f) => { const now = Math.min(mx, was + Math.round(mx * f)); set(now); return Math.round(now - was); };
+  const sk = u.uid === myId() && (me.buffs?.snow || 0) > now2() ? 1.2 : 1;   // 눈사람의 축복: 회복 +20%
+  const g = (kind, mx, was, set, f) => { const now = Math.min(mx, was + Math.round(mx * f * sk)); set(now); return Math.round(now - was); };
   const dh = it[1] !== 'mp' ? g('hp', t.mhp, t.hp, v => { t.hp = v; }, tasty ? .7 : it[4]) : 0, dm = it[1] !== 'hp' || tasty ? g('mp', t.mmp, t.mp, v => { t.mp = v; }, tasty ? .2 : it[4]) : 0;
   B.log = `${it[2]} ${u.name}이(가) ${t === u ? '' : t.name + '에게 '}${ITEM[k]}을(를) ${t === u ? '마셨어요' : '먹여 줬어요'}`; if (dh) xFloat(t.id, `+${dh}`, '#8af09a'); if (dm) xFloat(t.id, `+${dm}`, '#8ac4ff'); sfx('win'); u.g = 0;
 }
@@ -3448,7 +3452,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.examBd = {}; AD.day = AD.day || todayKey(); sgListen(); if (!noticeOff && F && db) noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); if (AD.tab === 'gift' && !adminTyping()) adminRender(); });
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = k === 'players' ? fbBack(s.val() || {}) : s.val() || {}; if (adminTyping()) return; adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
   adminRender();
 }
 const adminTyping = () => { const a = document.activeElement; return (AD.tab === 'npc' || AD.tab === 'gift' || AD.tab === 'story') && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
@@ -4004,6 +4008,7 @@ const WX_KO = { clear: '맑음', rain: '비', fog: '안개', snow: '눈' };
 let wxForce = null;   // 관리자가 정한 오늘 날씨 (story/wx)
 let bandForce = null;   // 관리자가 정한 오늘 시간대 (story/band) — 이야기·NPC 루틴 시험용
 function weatherToday(){
+  if (window.__snowOn) return 'snow';   // 눈사람 이벤트 중에는 늘 눈
   if (wxForce && wxForce.d === todayKey()) return wxForce.w;
   const r = hash32('wx' + todayKey()) / 4294967296, m = kNow().getMonth();
   return r < .25 ? ([11, 0, 1].includes(m) && r < .14 ? 'snow' : 'rain') : r < .40 ? 'fog' : 'clear';
@@ -5089,6 +5094,7 @@ function render(){
   if (sub === 'clothes') return renderClothes();
   if (sub === 'class') return renderClass();
   if (sub === 'baby') return renderBaby();
+  if (sub === 'snow') return renderSnow();
   if (sub === 'dorm') return renderDorm();
   if (sub === 'common') return renderCommon();
   if (sub === 'visit') return renderVisit();
@@ -7338,7 +7344,7 @@ async function babyIntro(){
       if (t >= 4.9){ const k = (t - 4.9) / 1.7; D.forEach(([dx, dy], j) => { const tt = Math.max(0, Math.min(1, k * 1.5 - j * .05)), a = k < .8 ? 1 : Math.max(0, (1 - k) / .2), key = 's' + j; if (tt <= 0 || a <= 0){ delete P[key]; return; } const [c, g] = cv(I.sh, j * 14, 0, 14, 14, a); P[key] = { id: key, x: 42.6 + dx * tt * 4, y: 62 + dy * tt * 4, img: c, pxc: g, sw: 14, sh: 14, ax: 7, ay: 13, solid: false }; }); }
       World.setProps('town', Object.values(P), 'babycut');
     };
-    closeSheet(); npcClose(); await new Promise(r => World.teleport('town', [46, 58], r)); await sleep(300);
+    closeSheet(); npcClose(); await tpSafe('town', [46, 58]); await sleep(300);
     let skip = false, t0 = performance.now(), raf = 0; const sk = document.createElement('button'); sk.className = 'btn sm mqskip'; sk.textContent = '건너뛰기'; sk.onclick = () => { skip = true; }; $('#stage').appendChild(sk);
     World.setView(150);   // 가까이서 봐요
     const loop = () => { scene((performance.now() - t0) / 1000); raf = requestAnimationFrame(loop); }; loop();
@@ -7423,6 +7429,142 @@ function renderBaby(){
     if (b.st >= 5){ closeSheet(); babyTick(); setTimeout(() => World.babySay('mine', babySnd(b.k, 2)), 300); setTimeout(() => World.say('me', '이제 돌아가자!'), 1500); return; }
     World.babySay('mine', babyMsg); babyTick(); renderBaby(); };
 }
+// ===== 이벤트 「눈사람」: 관리자가 열면 끝내기 전까지 눈이 와요 · 눈을 굴려(최대 30) 교정 동쪽 잔디에 뭉쳐요 (몸통 600 · 머리 400) · 장식 7가지 · 완성되면 그 자리에 늘 서 있고 하루 한 번 축복 =====
+// DB: snow/ctl { open, id } (관리자) · snow/st { body, head, deco: { 칸: { 재료: 개수 } }, done, at } · snow/who/<uid> { n, b(뭉친 수), d(낸 장식 수) }
+const SNOW = { SPOT: [66, 37], MAX: 30, BODY: 600, HEAD: 400, COOL: 30 * 6e4, BLESS: 12 * 36e5,
+  DECO: [['hat', '모자', { g_sung: 2 }], ['scarf', '목도리', { g_cloud: 5, wool: 10 }], ['arms', '팔', { g2_straw: 4 }], ['buttons', '단추', { g2_shiny: 3 }], ['eyes', '눈', { g2_moonst: 2 }], ['nose', '코', { d_carrotmuffin_s: 1 }], ['mouth', '입', { g2_amethyst: 5 }]] };
+BUFF_NAME.snow = '눈사람의 축복';   // 탐사 전투에서 치유·활력·새벽빛 물약 회복 +20% (12시간)
+let snowCtl, snowSt = null, snowOffs = [], snowRoll = false, snowLast = null, snowCutOn = false, snowArt = null, snowSig = '';
+const snowOn = () => !!(snowCtl && snowCtl.open);
+const snowMe = () => (me.snow = me.snow || { ball: 0 });
+const snowDecoOk = (st, k) => Object.entries(SNOW.DECO.find(x => x[0] === k)[2]).every(([i, n]) => ((((st || {}).deco || {})[k] || {})[i] || 0) >= n);
+const snowStage = st => !st || !((st.body || 0) > 0 || st.done) ? 'none' : (st.body || 0) < SNOW.BODY ? 'body' : (st.head || 0) < SNOW.HEAD ? 'head' : st.done ? 'done' : 'deco';
+const snowCoolLeft = () => Math.max(0, (snowMe().cool || 0) - now2());
+const snowOutdoor = () => ['town', 'campus'].includes(World.where());
+function snowListen(){
+  if (solo || !F || !db || snowOffs.length) return;
+  snowOffs.push(F.onValue(F.ref(db, 'snow/ctl'), s => { snowCtl = s.val() || null; window.__snowOn = !!(snowCtl && snowCtl.open); World.setWeather && World.setWeather(weatherToday()); snowTick(); }));
+  snowOffs.push(F.onValue(F.ref(db, 'snow/st'), s => { snowSt = s.val() || null; snowProps(); snowTick(); if (sheetOn && sub === 'snow') renderSnow(); }));
+  Promise.all([new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = 'art/snowman.png?v=e6b69aa9'; }), fetch('art/snowman.json?v=e6b69aa9').then(r => r.json()).catch(() => null)]).then(([img, meta]) => { if (img && meta){ snowArt = { img, meta }; snowSig = ''; snowProps(); } });
+  const prev = World.onProp; World.onProp = id => id === 'snowman' ? (snowTap(), null) : prev ? prev(id) : null;
+  setInterval(snowTick, 250);
+}
+// 광장 눈사람 그림: 단계에 맞는 칸 + 다 모인 장식 층
+function snowProps(){
+  if (!snowArt) return; const st = snowSt, g = snowStage(st);
+  const layers = g === 'none' ? [] : g === 'body' ? ['mound' + Math.min(3, Math.floor((st.body || 0) / SNOW.BODY * 4))] : g === 'head' ? [(st.head || 0) <= 0 ? 'body' : (st.head || 0) < SNOW.HEAD / 2 ? 'head0' : 'head1'] : ['full', ...SNOW.DECO.map(d => d[0]).filter(k => g === 'done' || snowDecoOk(st, k))];
+  const sig = layers.join(','); if (sig === snowSig) return; snowSig = sig;
+  if (!layers.length) return World.setProps('campus', [], 'snow');
+  const { img, meta } = snowArt, W = meta.w, H = meta.h, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  layers.forEach(k => x.drawImage(img, meta.cell[k] * W, 0, W, H, 0, 0, W, H));
+  World.setProps('campus', [{ id: 'snowman', x: SNOW.SPOT[0], y: SNOW.SPOT[1], img: c, pxc: x, sw: W, sh: H, ax: meta.ax, ay: meta.ay + 2, solid: true }], 'snow');
+}
+// 눈 굴리기 버튼 (바깥에서만) · 걸으면 한 칸에 1씩 커져요
+function snowBtn(){
+  let b = $('#snowbtn'); const g = snowStage(snowSt), show = me && snowOn() && (g === 'none' || g === 'body' || g === 'head') && snowOutdoor() && !sheetOn && !babyCutOn && !snowCutOn && !(World.cutBusy && World.cutBusy());
+  if (!show){ if (b) b.hidden = true; return; }
+  if (!b){ b = document.createElement('button'); b.id = 'snowbtn'; $('#stage').appendChild(b); b.onclick = snowBtnTap; }
+  const m = snowMe(), cool = snowCoolLeft(), label = cool ? `손이 시려요 ${Math.ceil(cool / 6e4)}분` : m.ball >= SNOW.MAX ? `눈뭉치 ${SNOW.MAX}/${SNOW.MAX}` : snowRoll ? `굴리는 중 ${m.ball}/${SNOW.MAX}` : m.ball ? `눈 굴리기 ${m.ball}/${SNOW.MAX}` : '눈 굴리기';
+  if (b.textContent !== label) b.textContent = label; b.hidden = false; b.classList.toggle('cold', !!cool); b.classList.toggle('on', snowRoll || m.ball >= SNOW.MAX);
+}
+function snowBtnTap(){
+  const m = snowMe(), cool = snowCoolLeft();
+  if (cool) return toast(`손이 시려서 지금은 눈을 뭉칠 수 없어요 (남은 시간 ${Math.ceil(cool / 6e4)}분)`);
+  if (m.ball >= SNOW.MAX){ World.walkToTile(SNOW.SPOT[0], SNOW.SPOT[1] + 2); return; }
+  snowRoll = !snowRoll; snowLast = null; snowBtn();
+}
+function snowTick(){
+  if (!me) return; const m = snowMe();
+  if (snowRoll && (!snowOn() || snowCoolLeft() || !snowOutdoor())) snowRoll = false;
+  if (snowRoll){ const t = World.meTile && World.meTile(); if (t){ const k = t.m + ':' + t.x + ',' + t.y; if (snowLast && k !== snowLast && m.ball < SNOW.MAX){ m.ball++; if (m.ball % 5 === 0 || m.ball >= SNOW.MAX) save(); if (m.ball >= SNOW.MAX){ snowRoll = false; sfx('pop'); } } snowLast = k; } }
+  World.setSnowball && World.setSnowball(snowOn() && snowOutdoor() && (snowRoll || m.ball) ? m.ball || 1 : 0);
+  snowBtn();
+  if (snowOn() && snowCtl.id && m.seen !== snowCtl.id) snowIntro();
+  if (snowSt && snowSt.done && snowSt.at && m.seenDone !== snowSt.at && m.seen) snowFinale();
+}
+async function snowTap(){
+  const t = World.meTile && World.meTile(); if (!t || t.m !== 'campus' || Math.abs(t.x - SNOW.SPOT[0]) + Math.abs(t.y - SNOW.SPOT[1]) > 6){ World.walkToTile(SNOW.SPOT[0], SNOW.SPOT[1] + 2); return; }
+  const g = snowStage(snowSt), m = snowMe();
+  if (g === 'done'){ if (m.bd === todayKey()) return toast('오늘은 축복을 받았어요'); m.bd = todayKey(); me.buffs = me.buffs || {}; me.buffs.snow = now2() + SNOW.BLESS; save(); hud(); sfx('heart'); return toast('눈사람의 축복을 받았어요! (12시간)'); }
+  if (g === 'deco') return openSheet('home', 'snow');
+  if (!snowOn()) return;
+  if (snowCoolLeft()) return toast(`손이 시려서 지금은 눈을 뭉칠 수 없어요 (남은 시간 ${Math.ceil(snowCoolLeft() / 6e4)}분)`);
+  if (m.ball < SNOW.MAX) return toast(`눈뭉치가 아직 작아요 (${m.ball}/${SNOW.MAX})`);
+  let nv = null; const r = await F.runTransaction(F.ref(db, 'snow/st'), c => { c = c || { body: 0, head: 0 }; if ((c.body || 0) < SNOW.BODY) c.body = Math.min(SNOW.BODY, (c.body || 0) + SNOW.MAX); else if ((c.head || 0) < SNOW.HEAD) c.head = Math.min(SNOW.HEAD, (c.head || 0) + SNOW.MAX); else return; nv = { ...c }; return c; }).catch(() => null);
+  if (!r || !r.committed) return toast('지금은 뭉칠 수 없어요');
+  m.ball = 0; m.cool = now2() + SNOW.COOL; snowRoll = false; save(); sfx('win');
+  F.runTransaction(F.ref(db, 'snow/who/' + uid), c => ({ n: me.nick, b: ((c && c.b) || 0) + 1, d: (c && c.d) || 0 })).catch(() => {});
+  const s2 = nv || {}; toast((s2.head || 0) >= SNOW.HEAD ? '머리가 완성됐어요!' : (s2.body || 0) >= SNOW.BODY && !(s2.head > 0) ? '몸통이 완성됐어요!' : '눈을 뭉쳤어요!');
+}
+// 장식 모으기: 칸마다 재료를 내요 (모자랄 때 낼 수 있는 만큼)
+function renderSnow(){
+  const st = snowSt || {}, g = snowStage(st); if (g !== 'deco') return closeSheet();
+  const rows = SNOW.DECO.map(([k, nm, need]) => { const ok = snowDecoOk(st, k), got = (st.deco || {})[k] || {};
+    return `<div class="snrow ${ok ? 'ok' : ''}"><b>${nm}</b><div class="snneed">${Object.entries(need).map(([i, n]) => `<span>${ic(i)}<i>${Math.min(got[i] || 0, n)}/${n}</i></span>`).join('')}</div>${ok ? '<span class="sndone">✓</span>' : `<button class="btn sm go" data-sng="${k}" ${Object.entries(need).some(([i, n]) => (me.inv[i] || 0) > 0 && (got[i] || 0) < n) ? '' : 'disabled'}>내기</button>`}</div>`; }).join('');
+  frame(null, '눈사람 장식', '', `<div class="snlist">${rows}</div>`);
+  on('[data-sng]', async b => { const k = b.dataset.sng, need = SNOW.DECO.find(x => x[0] === k)[2]; b.disabled = true; let gave = 0;
+    const want = Object.fromEntries(Object.entries(need).map(([i]) => [i, me.inv[i] || 0]));
+    Object.entries(want).forEach(([i, n]) => { me.inv[i] = (me.inv[i] || 0) - n; }); if (!await saveSure()){ Object.entries(want).forEach(([i, n]) => { me.inv[i] += n; }); save(); return toast('지금은 저장이 안 돼요. 잠시 뒤에 다시 해 주세요'); }
+    const used = {};
+    const r = await F.runTransaction(F.ref(db, 'snow/st'), c => { if (!c) return; c.deco = c.deco || {}; const d = c.deco[k] = c.deco[k] || {}; Object.keys(used).forEach(i => delete used[i]);
+      Object.entries(need).forEach(([i, n]) => { const u = Math.min(want[i], Math.max(0, n - (d[i] || 0))); if (u > 0){ d[i] = (d[i] || 0) + u; used[i] = u; } });
+      if (!c.done && SNOW.DECO.every(([kk]) => snowDecoOk(c, kk))){ c.done = true; c.at = Date.now(); } return c; }).catch(() => null);
+    if (!r || !r.committed) Object.keys(used).forEach(i => delete used[i]);
+    Object.entries(want).forEach(([i, n]) => { me.inv[i] += n - (used[i] || 0); gave += used[i] || 0; }); saveSure();
+    if (gave){ sfx('pop'); F.runTransaction(F.ref(db, 'snow/who/' + uid), c => ({ n: me.nick, b: (c && c.b) || 0, d: ((c && c.d) || 0) + gave })).catch(() => {}); toast(`${SNOW.DECO.find(x => x[0] === k)[1]}에 냈어요`); }
+    if (snowStage(snowSt) === 'done') closeSheet(); else renderSnow(); });
+}
+// ---- 장면: 첫눈 (이벤트를 열면) · 완성 ----
+const snowCast = ['madeleine', 'stella', 'leo', 'sera'];
+// 순간이동: 다른 이동 중이면 World.teleport가 콜백 없이 끝나요 → 잠깐 기다렸다 다시 해요
+async function tpSafe(m, xy){ for (let i = 0; i < 6; i++){ const ok = await Promise.race([new Promise(r => World.teleport(m, xy, () => r(true))), sleep(1500).then(() => false)]); if (ok) return true; await sleep(500); } return false; }
+const snowSpawn = (id, x, y, dir = 'up') => { const n = npcGet(id); return n ? { cmd: 'spawn', who: id, name: n.name, av: npcAv(n), x, y, dir } : { cmd: 'wait', sec: 0 }; };
+const snowBusy = () => snowCutOn || babyCutOn || evOn || sheetOn || mqArriving || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '');
+async function snowPlay(cmds, mark){
+  snowCutOn = true; const [X, Y] = SNOW.SPOT;
+  try {
+    closeSheet(); npcClose(); await tpSafe('campus', [X - 1, Y + 4]); await sleep(300); World.setView(150);
+    let skip = false; const sk = document.createElement('button'); sk.className = 'btn sm mqskip'; sk.textContent = '건너뛰기'; sk.onclick = () => { skip = true; }; $('#stage').appendChild(sk);
+    await World.cut(cmds, { sfx: k => sfx(k), skip: () => skip }); sk.remove();
+  } catch(e){ console.error(e); }
+  World.setView(null); mark(); save(); snowCutOn = false;
+}
+function snowIntro(){
+  if (snowBusy()) return; const [X, Y] = SNOW.SPOT, id = snowCtl.id;
+  snowPlay([snowSpawn('madeleine', X - 3, Y + 2, 'right'), snowSpawn('stella', X + 2, Y + 2, 'left'), snowSpawn('leo', X - 2, Y + 5, 'up'), snowSpawn('sera', X + 1, Y + 5, 'up'), { cmd: 'player', x: X - 1, y: Y + 4, dir: 'up' }, { cmd: 'cam', x: X, y: Y + 3 },
+    { cmd: 'wait', sec: 1 }, { cmd: 'say', who: 'madeleine', text: '어....? 이거 혹시.......', ms: 1800 },
+    ...snowCast.map(w => ({ cmd: 'emote', who: w, icon: 4 })), { cmd: 'emote', who: 'player', icon: 4 },
+    { cmd: 'say', who: 'stella', text: '눈이에요! 올해 첫눈!', ms: 1900 },
+    { cmd: 'cheer', list: [...snowCast.map(w => [w, ['snow', 'heart', 'clap']]), ['player', ['snow', 'heart']]], sec: 5 },
+    { cmd: 'say', who: 'leo', text: '....생물들 담요부터 챙겨야겠군.', ms: 2000 },
+    { cmd: 'say', who: 'sera', text: '감기 조심해야 해! ....그래도 예쁘다.', ms: 2200 },
+    { cmd: 'say', who: 'player', text: '와아.......!', ms: 1500 },
+    { cmd: 'say', who: 'madeleine', text: '다 같이 눈사람 만들자! 여기 넓은 잔디에 아주 크게!', ms: 2600 }, { cmd: 'wait', sec: .5 }, { cmd: 'end' }], () => { snowMe().seen = id; });
+}
+function snowFinale(){
+  if (snowBusy()) return; const [X, Y] = SNOW.SPOT, at = snowSt.at;
+  snowPlay([snowSpawn('madeleine', X - 3, Y + 2, 'right'), snowSpawn('stella', X + 2, Y + 2, 'left'), snowSpawn('leo', X - 2, Y + 5, 'up'), snowSpawn('sera', X + 1, Y + 5, 'up'), { cmd: 'player', x: X - 1, y: Y + 4, dir: 'up' }, { cmd: 'cam', x: X, y: Y + 1 },
+    { cmd: 'wait', sec: 1 }, { cmd: 'say', who: 'madeleine', text: '다 됐다....! 우리 눈사람!', ms: 2000 },
+    { cmd: 'fx', kind: 'confetti', sec: 7 }, { cmd: 'sfx', id: 'win' },
+    { cmd: 'cheer', list: [...snowCast.map(w => [w, ['heart', 'clap', 'star']]), ['player', ['heart', 'clap']]], sec: 7 },
+    { cmd: 'say', who: 'stella', text: '호박 모자가 제일 잘 어울려요.', ms: 2000 },
+    { cmd: 'say', who: 'leo', text: '....나쁘지 않군.', ms: 1600 },
+    { cmd: 'say', who: 'sera', text: '매일 인사하러 오자!', ms: 2000 }, { cmd: 'wait', sec: 1 }, { cmd: 'end' }], () => { snowMe().seenDone = at; });
+}
+function adminSnowHTML(){
+  const c = AD.snowctl || {}, st = AD.snowst || {}, g = snowStage(st), who = Object.values(AD.snowwho || {}).sort((a, b) => (b.b + b.d) - (a.b + a.d));
+  const pct = (v, n) => `<div class="snbar"><i style="width:${Math.min(100, (v || 0) / n * 100)}%"></i></div><span>${v || 0}/${n}</span>`;
+  return `<div class="adcard"><div class="abhead"><b>이벤트 「눈사람」</b>${c.open ? '<button class="btn sm" data-sna="close">이벤트 끝내기</button>' : '<button class="btn sm go" data-sna="open">이벤트 시작</button>'}</div>
+    <div class="abchips"><span>${c.open ? '눈 오는 중' : '닫힘'}</span><span>${{ none: '아직 시작 전', body: '몸통 만드는 중', head: '머리 만드는 중', deco: '장식 모으는 중', done: '완성' }[g]}</span><span>참여 <b>${who.length}</b>명</span></div>
+    <div class="snadm"><div><b>몸통</b>${pct(st.body, SNOW.BODY)}</div><div><b>머리</b>${pct(st.head, SNOW.HEAD)}</div>
+    ${SNOW.DECO.map(([k, nm, need]) => `<div><b>${nm}</b>${pct(Object.entries(need).reduce((t, [i, n]) => t + Math.min(n, (((st.deco || {})[k] || {})[i] || 0)), 0), Object.values(need).reduce((a, b) => a + b, 0))}</div>`).join('')}</div>
+    ${who.length ? `<div class="s">${who.slice(0, 12).map(w => `${esc(w.n || '')} 눈 ${w.b || 0}·장식 ${w.d || 0}`).join(' · ')}</div>` : ''}
+    <div class="frow"><button class="btn sm ghost" data-sna="reset">눈사람 처음부터</button></div></div>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-sna]'); if (!b || !F || !db) return; const a = b.dataset.sna;
+  if (a === 'open'){ if (confirm('눈사람 이벤트를 시작할까요? 접속한 학생에게 첫눈 장면이 바로 나와요')) F.set(F.ref(db, 'snow/ctl'), { open: true, id: now2() }); }
+  else if (a === 'close'){ if (confirm('이벤트를 끝낼까요? 눈이 그치고, 만든 눈사람은 그대로 있어요')) F.set(F.ref(db, 'snow/ctl'), { open: false }); }
+  else if (a === 'reset'){ if (confirm('눈사람을 지우고 처음부터 다시 만들까요?')) { F.set(F.ref(db, 'snow/st'), null); F.set(F.ref(db, 'snow/who'), null); } } });
 function adminBabyHTML(){
   const pk = AD.bbpick || {}, c = AD.bbctl || {}, ids = Object.keys(AD.players || {}).filter(id => AD.players[id]?.nick).sort((a, b) => AD.players[a].nick.localeCompare(AD.players[b].nick, 'ko'));
   const bOf = id => { const b = AD.players[id].baby; return b && (b.adopt || b.ev === c.id) ? b : null; };
@@ -7456,7 +7598,7 @@ document.addEventListener('click', e => {
   else if (a === 'close'){ if (confirm('유령 열차 이벤트를 닫을까요? 목적지에 있는 학생은 등불 마을로 돌아와요.')) F.set(F.ref(db, 'gtrain/ctl'), { open: false }); }
 });
 setInterval(() => { if (document.body.classList.contains('admin') && AD.tab === 'event' && AD.gtctl && AD.gtctl.open && !adminTyping()) { const el = document.querySelector('[data-gta]')?.closest('.adcard'); if (el) el.outerHTML = adminGtrainHTML(); } }, 1000);
-function adminEventHTML(){ return adminEventOverview() + adminBabyHTML() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
+function adminEventHTML(){ return adminEventOverview() + adminSnowHTML() + adminBabyHTML() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
 // 이벤트 한눈에: 열려 있는지 · 진행도 · 참가한 학생 수
 function adminEventOverview(){
   const sum = o => Object.values(o || {}).reduce((a, n) => a + (+n || 0), 0), n = o => Object.keys(o || {}).length;
@@ -8685,7 +8827,7 @@ async function boot(){
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       F.onValue(F.ref(db, 'adm/reset/' + uid), s => { const v = +s.val() || 0; if (!v) return; let seen = 0; try { seen = +localStorage.getItem('magion-rs-' + uid) || 0; } catch(e){}
         if (v > seen && v > bootT - 5000){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
-      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen();
+      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); snowListen();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); const sg = Object.entries(gameList).map(([id, r]) => r ? id + r.st + Object.keys(r.p || {}).length : '').join('|'); if (sub === 'games' && sg !== gamesSig) render(); gamesSig = sg; });   // 점수가 오를 때마다가 아니라 방이 열리고 닫히고 사람이 드나들 때만 다시 그려요
       F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       const recWatch = () => { const wk = weekKey(); if (recWatch.wk === wk) return; recWatch.wk = wk; (recWatch.offs || []).forEach(f => f()); recList = {}; recWatch.offs = Object.keys(GAMES).map(g => F.onValue(F.ref(db, `records/${g}/${wk}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); })); };

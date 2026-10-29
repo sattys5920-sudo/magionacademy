@@ -381,6 +381,19 @@ function drawWeather(cx, ix, iy, dt){
 World.setMe = (x, y) => { me.x = x; me.y = y; me.path = []; };
 let speedK = 1; World.setSpeedK = k => { speedK = k || 1; };   // 요리 효과: 빠른 걸음
 
+// ---------- 눈사람 이벤트: 굴리는 눈뭉치 (크기 0~30, 내 발 앞에) ----------
+let snowN = 0;
+World.setSnowball = n => { snowN = n || 0; };
+World.meTile = () => started && M ? { m: map, x: Math.round(me.x), y: Math.round(me.y), moving: me.path.length > 0 } : null;
+function drawSnowball(){
+  if (!snowN || rideOn) return; const D = World.Avatar.meta.dirs, v = me.view, f = v === D.left ? [-.55, 0] : v === D.right ? [.55, 0] : v === D.up ? [0, -.55] : [0, .55];
+  const [sx, sy] = P(me.x + .5 + f[0], me.y + .5 + f[1]), r = 1.6 + snowN * .2, cx = out, roll = me.path.length ? (performance.now() / 120) % 6.28 : 0;
+  cx.fillStyle = 'rgba(40,50,90,.25)'; cx.beginPath(); cx.ellipse(sx, sy + .5, r + 1, (r + 1) * .4, 0, 0, Math.PI * 2); cx.fill();
+  cx.fillStyle = '#120A18'; cx.beginPath(); cx.arc(sx, sy - r, r + .8, 0, Math.PI * 2); cx.fill();
+  cx.fillStyle = '#CDD5F0'; cx.beginPath(); cx.arc(sx, sy - r, r, 0, Math.PI * 2); cx.fill();
+  cx.fillStyle = '#F2F4FF'; cx.beginPath(); cx.arc(sx - r * .2, sy - r * 1.2, r * .78, 0, Math.PI * 2); cx.fill();
+  cx.fillStyle = '#FFFFFF'; cx.fillRect(Math.round(sx - r * .5 + Math.cos(roll) * r * .2), Math.round(sy - r * 1.55), Math.max(1, Math.round(r * .3)), 1);
+}
 // ---------- 아기 동물 (이벤트 「길 잃은 아기 동물」): 숨은 자리 · 방 가구 위 · 따라다니기 ----------
 // World.setBabies([{ id, k(그림 칸), map(placeKey), x, y, ox, oy(px), pose(normal·float·flip·peek), top(가구 위면 앞에 그려요), follow('me'·친구 uid), grr(경계하면 부르르) }])
 let BABY_IMG = null, babyData = [];
@@ -854,7 +867,7 @@ function frame(now){
     list.splice(idx, 0, { p });
   });
   list.filter(it => it.p && it.p.baby && it.p.baby.carry).forEach(it => { const h = babyHost(it.p.baby), j = list.findIndex(q => q.p === h); if (j < 0) return; list.splice(list.indexOf(it), 1); list.splice(list.findIndex(q => q.p === h) + (h.view === World.Avatar.meta.dirs.up ? 0 : 1), 0, it); });   // 품에 안긴 아기는 안은 사람 바로 앞에 (등을 보이면 뒤에)
-  list.forEach(it => { if (it.o) cx.drawImage(it.o.img || (it.o.furn ? FURN_IMG : OB), it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.sw, it.o.sh); else drawPerson(it.p); });
+  list.forEach(it => { if (it.o) cx.drawImage(it.o.img || (it.o.furn ? FURN_IMG : OB), it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.sw, it.o.sh); else { drawPerson(it.p); if (it.p === me) drawSnowball(); } });
   // 가구 놓기: 고른 자리에 반투명하게 미리 보여 줘요
   if (placing && placing.at){ const it = FURN.items[placing.k], [gx, gy] = placing.at, ok = canPlace(placing.k, gx, gy), [px, py] = P(gx, gy);
     cx.fillStyle = ok ? 'rgba(140,230,176,.45)' : 'rgba(230,90,110,.45)';
@@ -1095,7 +1108,7 @@ let cheers = [], glyphs = [];
 const GLYPH = {   // 작은 도트 그림 (한 글자 = 한 칸)
   heart: ['.XX.XX.', 'XRRXRRX', 'XRRRRRX', '.XRRRX.', '..XRX..', '...X...'], bat: ['X...X...X'.slice(0, 9), 'XX.XXX.XX', 'XXXXXXXXX', '.X.XXX.X.', '...X.X...'],
   star: ['...Y...', '...Y...', 'YYYWYYY', '...Y...', '...Y...'], clap: ['Y..Y..Y', '.Y.Y.Y.', '..YYY..', '.Y.Y.Y.', 'Y..Y..Y'], note: ['..XXXX', '..X..X', '..X..X', 'XXX.XXX', 'XXX.XX.'],
-  pumpkin: ['..G..', '.OOOO', 'OOOOO', 'OKOKO', '.OOO.'], ghost: ['.WWW.', 'WWWWW', 'WKWKW', 'WWWWW', 'W.W.W']
+  pumpkin: ['..G..', '.OOOO', 'OOOOO', 'OKOKO', '.OOO.'], ghost: ['.WWW.', 'WWWWW', 'WKWKW', 'WWWWW', 'W.W.W'], snow: ['..W..', 'W.W.W', '.WWW.', 'W.W.W', '..W..']
 };
 const GLYPH_COL = { X: '#1A1024', R: '#FF5A7A', Y: '#FFE070', W: '#FFFFFF', O: '#FF9A3C', G: '#4FAF6F', K: '#2A1840' };
 const GLYPH_X = { bat: '#2A1840', note: '#C89AFF', heart: '#1A1024' };
