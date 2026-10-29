@@ -1855,8 +1855,14 @@ function renderFish(){
   on('[data-rod]', b => { const i = +b.dataset.rod, r = RODS[i]; if (me.coin < r.price || i !== rodLv() + 1) return; me.coin -= r.price; me.rod = i; fsMsg = `${withJosa(r.name, '을', '를')} 샀어요! ${r.desc}`; save(); renderFish(); });
 }
 // ===== 탐사 (혼자 · 시간 게이지 전투, 협동은 준비 중) · 설계서: docs/exploration_design.md =====
-const XCAP = 50, xNeed = L => Math.round(14 * L ** 2.3 / 10) * 10;   // 레벨 L → L+1 경험치
+const XCAP = 50, xNeed = L => Math.round((3500 + 9 * L ** 2.3) / 10) * 10;   // 레벨 L → L+1 경험치 (탐사 4~8번에 1레벨 · 하루 10번이면 2레벨 안팎)
+const xNeed0 = L => Math.round(14 * L ** 2.3 / 10) * 10;   // 예전 표: 예전 경험치를 새 표로 옮길 때만 써요
+function xExpMove(ex){   // 레벨이 내려가지 않게: 예전 표의 레벨과 그 안에서 간 만큼을 새 표에 그대로 옮겨요 (한 번만)
+  if (!ex || ex.xv === 2) return; let L = 1, e = ex.exp || 0; while (L < XCAP && e >= xNeed0(L)){ e -= xNeed0(L); L++; }
+  let t = 0; for (let l = 1; l < L; l++) t += xNeed(l); if (L < XCAP) t += Math.round(e / xNeed0(L) * xNeed(L)); ex.exp = t; ex.xv = 2;
+}
 const xLv = exp => { let L = 1, e = exp; while (L < XCAP && e >= xNeed(L)){ e -= xNeed(L); L++; } return { L, cur: e, need: L >= XCAP ? 0 : xNeed(L) }; };
+const xLvA = ex => { if (ex.xv === 2) return xLvA(ex); const c = { exp: ex.exp || 0 }; xExpMove(c); return xLv(c.exp); };   // 관리자 화면: 아직 새 표로 안 옮긴 학생도 같은 레벨로
 const XJ = {   // 직업: 체력·공격·마공·치유·속도 [기본, 레벨당] · ic는 art/jobs.png 상징
   warrior: { n: '전사', ic: `<span class="jic" style="--i:0"></span>`, d: '근접 딜러 · 큰 한 방', hp: [135, 15], atk: [14, 2.2], mag: [2, .2], heal: [2, .2], spd: [8, .25] },
   black: { n: '흑마법사', ic: `<span class="jic" style="--i:1"></span>`, d: '원거리 마법 · 광역', hp: [70, 8], atk: [4, .4], mag: [16, 2.4], heal: [3, .3], spd: [10, .3] },
@@ -2059,7 +2065,7 @@ const xAiSp = (job, L) => { const T = 3 * (L - 1); return { hp: Math.round(T * .
 const xStTot = (ex, k) => xSt(ex.job, xLv(ex.exp).L, k) + ((ex.sp || {})[k] || 0) * XSPV[k];
 const XWN = { warrior: '전투 도끼', black: '구부러진 지팡이', thief: '단검', bard: '레이피어', time: '고리 지팡이', alch: '연금 지팡이', white: '수정 지팡이', druid: '나무 지팡이', cleric: '철퇴와 방패', knight: '롱소드와 방패', summon: '다이아 지팡이', gadget: '석궁' }, XWT = ['기본', '청동', '강철', '황금', '미스릴'], XWC = [[500, 3], [1800, 6], [5000, 12], [14000, 25]];   // 강화 비용: 골드 · 마나석
 const xRand = a => a[Math.floor(Math.random() * a.length)];
-function xEx(){ me.ex = me.ex || { exp: 0, d: '', n: 0 }; if (me.ex.d !== todayKey()){ me.ex.d = todayKey(); me.ex.n = 0; } const r = me.ex.run; if (r){ r.loot = r.loot || {}; r.loot.gold = r.loot.gold || 0; r.loot.exp = r.loot.exp || 0; r.loot.items = r.loot.items || {}; r.pool = r.pool || []; } if (me.ex.sk) xSkEx(me.ex); return me.ex; }
+function xEx(){ me.ex = me.ex || { exp: 0, d: '', n: 0, xv: 2 }; xExpMove(me.ex); if (me.ex.d !== todayKey()){ me.ex.d = todayKey(); me.ex.n = 0; } const r = me.ex.run; if (r){ r.loot = r.loot || {}; r.loot.gold = r.loot.gold || 0; r.loot.exp = r.loot.exp || 0; r.loot.items = r.loot.items || {}; r.pool = r.pool || []; } if (me.ex.sk) xSkEx(me.ex); return me.ex; }
 const xSt = (job, L, k) => Math.round(XJ[job][k][0] + XJ[job][k][1] * (L - 1));
 // 역할: 근접(체력 많고 MP는 적고 스킬은 MP를 많이 먹어요) · 원거리(체력 적고 MP 보통) · 치유(체력은 원거리보다 많고 MP가 가장 많아요). 탱커 기사가 체력 최고
 const XROLE = { warrior: 'melee', thief: 'melee', knight: 'melee', black: 'ranged', summon: 'ranged', gadget: 'ranged', alch: 'ranged', time: 'ranged', white: 'heal', druid: 'heal', cleric: 'heal', bard: 'heal' };
@@ -8614,7 +8620,7 @@ function noticePop(){
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-nt]'); if (!b || !noticeCur) return; try { localStorage.setItem('magion-notice', String(noticeCur.id)); } catch(e2){} $('#ntpop')?.remove(); });
 const adItemOpts = () => Object.keys(ITEM).filter(k => ITEM[k]).sort((a, b) => String(ITEM[a]).localeCompare(String(ITEM[b]), 'ko')).map(k => `<option value="${k}">${esc(ITEM[k])}</option>`).join('');
-const adSkPts = ex => xSkp(xLv(ex.exp || 0).L) + (ex.spx || 0) - Math.max(0, Object.values(ex.sk || {}).reduce((a, v) => a + (+v || 0), 0) - 1);   // 관리자 화면용: 학생 데이터를 건드리지 않고 남은 스킬 포인트만 세요
+const adSkPts = ex => xSkp(xLvA(ex).L) + (ex.spx || 0) - Math.max(0, Object.values(ex.sk || {}).reduce((a, v) => a + (+v || 0), 0) - 1);   // 관리자 화면용: 학생 데이터를 건드리지 않고 남은 스킬 포인트만 세요
 function adminGiftHTML(){
   const P = AD.players, ids = Object.keys(P).filter(id => P[id]?.nick).sort((a, b) => P[a].nick.localeCompare(P[b].nick, 'ko'));
   if (!AD.gu || !P[AD.gu]) AD.gu = ids[0]; const u = AD.gu, p = P[u] || {}, buffs = Object.entries(p.buffs || {}).filter(([, v]) => v > now2());
@@ -8624,7 +8630,7 @@ function adminGiftHTML(){
       <div class="frow"><input id="adnt" maxlength="60" placeholder="예: 10분 뒤 점검이 있어요" value="${nt}" style="flex:1"><button class="btn sm go" data-adg="notice">띄우기</button><button class="btn sm" data-adg="noticeclr">내리기</button></div></div>
     <div class="adcard"><b>학생 고르기</b>
       <select id="adgu" data-adg="pick">${ids.map(id => `<option value="${id}" ${id === u ? 'selected' : ''}>${esc(P[id].nick)}</option>`).join('')}</select>
-      <div class="adstat"><span>골드 <b>${(p.coin || 0).toLocaleString()}</b></span><span>마력 <b>${p.mana || 0}</b></span><span>마나석 <b>${(p.inv && p.inv.mana) || 0}</b></span>${ex ? `<span>탐사 Lv <b>${xLv(ex.exp || 0).L}</b></span><span>스킬 포인트 <b>${adSkPts(ex)}</b> (보상 ${ex.spx || 0})</span><span>스탯 포인트 <b>${xSpPts(ex)}</b></span><span>무기 <b>${ex.wp || 0}</b>단계</span>` : ''}${buffs.length ? `<span>버프 ${buffs.map(([k]) => esc(BUFF_NAME[k] || k)).join(', ')}</span>` : ''}</div>
+      <div class="adstat"><span>골드 <b>${(p.coin || 0).toLocaleString()}</b></span><span>마력 <b>${p.mana || 0}</b></span><span>마나석 <b>${(p.inv && p.inv.mana) || 0}</b></span>${ex ? `<span>탐사 Lv <b>${xLvA(ex).L}</b></span><span>스킬 포인트 <b>${adSkPts(ex)}</b> (보상 ${ex.spx || 0})</span><span>스탯 포인트 <b>${xSpPts(ex)}</b></span><span>무기 <b>${ex.wp || 0}</b>단계</span>` : ''}${buffs.length ? `<span>버프 ${buffs.map(([k]) => esc(BUFF_NAME[k] || k)).join(', ')}</span>` : ''}</div>
       <div class="s sub">${(adminMailLog || []).length ? '최근 기록<br>' + adminMailLog.map(m => `${new Date(m.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · ${esc(m.sum)}${m.c ? '' : ' (아직 안 받음)'}`).join('<br>') : ''}</div></div>
     <div class="adcard"><b>보내기</b><span class="s sub">지금 가진 것에 더해서 학생 가방으로 들어가요</span>
       <div class="adfg"><label>골드<input id="adgc" type="number"></label><label>마력<input id="adgm" type="number"></label><label>마나석<input id="adgs" type="number"></label><label>스킬 포인트<input id="adgp" type="number"></label></div>
