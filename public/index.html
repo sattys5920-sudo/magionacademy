@@ -7298,6 +7298,7 @@ function babyListen(){
   if (solo || !F || !db || babyOffs.length) return;
   babyOffs.push(F.onValue(F.ref(db, 'baby/ctl'), s => { babyCtl = s.val() || null; babyState(); babyTick(); }));
   babyOffs.push(F.onValue(F.ref(db, 'baby/pick/' + uid), s => { const v = s.val(); babyPickV = typeof v === 'number' ? v : null; babyState(); babyTick(); }));
+  setInterval(babyMeetTick, 1000);
   World.setBabyImg('art/babies.png?v=5aad28cf');
   setInterval(babyTick, 2000);
 }
@@ -7330,6 +7331,39 @@ function babyTick(){
   if (!solo && F && db && uid && want !== have && onlineList[uid]) F.update(F.ref(db, 'online/' + uid), { bb: want }).catch(() => {});
   if (babyCtl && babyCtl.open && me.babySeen !== babyCtl.id) babyIntro();
   else if (me.baby && !me.baby.adopt && me.baby.st >= 5 && !me.baby.fin) babyFinale();
+}
+// ---- 산책 모임: 데리고 다니는 아기끼리 3칸 안에 5초 있으면 모여서 놀아요 (보이기만 · 효과 없음) ----
+// 짝꿍 반응: [아기 a, 아기 b, 모임 모양, [[ms, 누가('a'·'b'·'all'), 말풍선], ...]] — a·b 순서는 상관없어요
+const BABY_PAIR = [
+  [1, 2, 'gather', [[300, 'a', '하악!'], [1300, 'b', '낑....?'], [2600, 'a', '....냐?'], [3800, 'b', '멍!'], [5000, 'all', '♥']]],                       // 고양이 · 강아지: 처음엔 하악, 곧 친해져요
+  [0, 11, 'line', [[300, 'b', '삐약?'], [1300, 'a', '꽥!'], [2400, 'b', '삐약삐약♪'], [4200, 'a', '꽥꽥♪'], [6000, 'b', '삐약♪'], [7600, 'all', '♥']]],   // 오리 · 병아리: 병아리가 엄마인 줄 알고 졸졸 따라가요
+  [0, 10, 'gather', [[300, 'a', '꽥?'], [1200, 'b', '개굴!'], [2300, 'all', '퐁당!'], [3600, 'all', '퐁당!'], [5000, 'all', '♥']]],                     // 오리 · 개구리: 같이 퐁당퐁당
+  [6, 7, 'spin', [[300, 'a', '끽?'], [1200, 'b', '부엉?'], [2300, 'all', '퍼덕퍼덕'], [3800, 'all', '퍼덕퍼덕'], [5300, 'all', '♥']]],                   // 박쥐 · 부엉이: 밤 친구, 같이 날개를 퍼덕여요
+  [3, 4, 'gather', [[300, 'b', '쮸?'], [1300, 'a', '킁킁'], [2500, 'all', '오물오물'], [4000, 'all', '오물오물'], [5400, 'all', '♥']]],                  // 토끼 · 다람쥐: 간식을 나눠 먹어요
+  [8, 9, 'spin', [[300, 'a', '캥!'], [1100, 'b', '끼잉!'], [2000, 'all', '다다다다!'], [3600, 'all', '다다다다!'], [5200, 'all', '♥']]],                // 여우 · 너구리: 장난꾸러기끼리 빙글빙글 술래잡기
+  [5, 1, 'gather', [[300, 'b', '....?'], [1200, 'b', '콕!'], [2000, 'a', '찌릿!'], [3200, 'a', '쀼....'], [4500, 'all', '♥']]],                          // 고슴도치 · 고양이: 콕 찔러 보고 깜짝
+  [2, 3, 'spin', [[300, 'a', '멍멍!'], [1200, 'b', '쿵쿵!'], [2200, 'all', '폴짝폴짝'], [3800, 'all', '폴짝폴짝'], [5200, 'all', '♥']]],                 // 강아지 · 토끼: 신나서 폴짝폴짝 뛰어다녀요
+  [11, 4, 'gather', [[300, 'a', '삐약?'], [1300, 'b', '찍?'], [2400, 'all', '콕콕 오물'], [4000, 'all', '♥']]],                                           // 병아리 · 다람쥐: 씨앗 나눠 먹기
+];
+let babyNear = {}, babyMeetAt = 0;
+function babyMeetTick(){
+  const b = me && me.baby; if (!b || !b.adopt || !b.follow || babyCutOn || snowCutOn || (World.cutBusy && World.cutBusy())) { babyNear = {}; return; }
+  const t = World.meTile && World.meTile(), pk = World.placeKey && World.placeKey(); if (!t || !pk) return;
+  const now = Date.now(), near = Object.entries(onlineList).filter(([id, o]) => id !== uid && o && typeof o.bb === 'number' && o.m === pk && Math.abs((o.x | 0) - t.x) + Math.abs((o.y | 0) - t.y) <= 3);
+  const nb = {}; near.forEach(([id]) => { nb[id] = babyNear[id] || now; }); babyNear = nb;
+  if (now - babyMeetAt < 90000) return;   // 한 번 놀고 나면 1분 30초 쉬어요
+  const ready = near.filter(([id]) => now - nb[id] >= 5000); if (!ready.length) return;
+  babyMeetAt = now;
+  const mates = ready.slice(0, 4), ids = ['mine', ...mates.map(([id]) => 'peer:' + id)], ks = [b.k, ...mates.map(([, o]) => o.bb)];
+  const cx = (t.x + mates.reduce((s, [, o]) => s + (o.x | 0), 0)) / ids.length, cy = (t.y + mates.reduce((s, [, o]) => s + (o.y | 0), 0)) / ids.length - .6;
+  let pair = null, ai = 0, bi = 1;   // 짝꿍 반응: 나와 한 친구가 맞는 짝이면 그 연출, 아니면 둥글게 모여 인사
+  for (let j = 1; j < ks.length && !pair; j++){ const p = BABY_PAIR.find(q => (q[0] === ks[0] && q[1] === ks[j]) || (q[1] === ks[0] && q[0] === ks[j])); if (p){ pair = p; if (p[0] === ks[0]){ ai = 0; bi = j; } else { ai = j; bi = 0; } } }
+  const say = (who, txt) => (who === 'all' ? ids : [ids[who === 'a' ? ai : bi]]).forEach(id => World.babySay(id, txt));
+  if (pair){ const order = pair[2] === 'line' ? [ids[ai], ids[bi], ...ids.filter((_, j) => j !== ai && j !== bi)] : ids;
+    World.babyMeet(order, cx, cy, Math.max(...pair[3].map(x => x[0])) + 2500, pair[2]); pair[3].forEach(([ms, who, txt]) => setTimeout(() => say(who, txt), ms + 700)); return; }
+  World.babyMeet(ids, cx, cy, 9000, ids.length > 2 ? 'spin' : 'gather');
+  ids.forEach((id, j) => setTimeout(() => World.babySay(id, babySnd(ks[j], 2)), 900 + j * 900));
+  setTimeout(() => ids.forEach(id => World.babySay(id, '♥')), 1200 + ids.length * 900 + 1200);
 }
 // ---- 첫 장면: 밤길에 수레가 넘어지고 먼지 뭉치 그림자 12개가 흩어져요 (접속해 있으면 바로, 나중에 들어오면 들어오자마자) ----
 async function babyIntro(){

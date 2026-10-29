@@ -408,9 +408,20 @@ function syncBabies(){
     const p = o || mk('', null, h ? h.x : d.x, h ? h.y + .7 : d.y, false); if (!h){ p.x = d.x; p.y = d.y; } p.baby = d; p.path = []; return p; });
   people.length = 0; people.push(...keep, ...add); retag();
 }
+// 산책 모임: 데리고 다니던 아기들이 잠깐 한곳에 모여 놀아요 (mode: gather 둥글게 · spin 빙글빙글 · line 앞장선 아기를 졸졸)
+let babyMeetCfg = null;
+World.babyMeet = (ids, cx, cy, ms, mode = 'gather') => { babyMeetCfg = { ids, cx, cy, until: performance.now() + ms, t0: performance.now(), mode }; };
+function meetTarget(p){
+  const c = babyMeetCfg; if (!c || performance.now() > c.until){ babyMeetCfg = null; return null; } const i = c.ids.indexOf(p.baby.id); if (i < 0) return null;
+  const n = c.ids.length, t = (performance.now() - c.t0) / 1000;
+  if (c.mode === 'line'){ const a = t * .9, lead = [c.cx + Math.cos(a) * .9, c.cy + Math.sin(a) * .9]; if (!i) return lead; const b = a - i * .7; return [c.cx + Math.cos(b) * .9, c.cy + Math.sin(b) * .9]; }
+  const a = (c.mode === 'spin' ? t * 1.6 : 0) + i / n * Math.PI * 2 + .4, r = n > 2 ? .85 : .7;
+  return [c.cx + Math.cos(a) * r, c.cy + Math.sin(a) * r];
+}
 function stepBaby(p, dt){
   const h = babyHost(p.baby); p.moving = false; if (!h) return;
   if (p.baby.carry){ p.x = h.x + .02; p.y = h.y + .02; p.flip = h.view === World.Avatar.meta.dirs.right; return; }   // 품에 안고 있어요
+  const mt = meetTarget(p); if (mt){ const ex = mt[0] - p.x, ey = mt[1] - p.y, dd = Math.hypot(ex, ey); if (dd > .04){ const v = Math.min(dd, 3.2 * dt); p.x += ex / dd * v; p.y += ey / dd * v; p.moving = true; p.t += dt; if (Math.abs(ex - ey) > .02) p.flip = ex - ey > 0; } else { const c = babyMeetCfg, fx = c.cx - p.x, fy = c.cy - p.y; if (Math.abs(fx - fy) > .05) p.flip = fx - fy > 0; } return; }
   const dx = h.x - p.x, dy = h.y - p.y, d = Math.hypot(dx, dy);
   if (d > 12){ p.x = h.x; p.y = h.y + .7; return; }   // 순간 이동하면 같이
   if (d > 1.05){ const v = Math.max(SPEED * .9, d * 5) * dt, k = Math.min(1, v / (d - .9)); p.x += dx * k * (d - .9) / d; p.y += dy * k * (d - .9) / d; p.moving = true; p.t += dt; if (Math.abs(dx - dy) > .05) p.flip = dx - dy > 0; }
