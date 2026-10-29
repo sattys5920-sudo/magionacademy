@@ -71,9 +71,10 @@ b.add(px((2, 0), (2, 1), (3, 1)), K).add(px((9, 0), (9, 1), (8, 1)), K).dot([(2,
 D = H('#d8a068'); b = Baby(); b.add(px((10, 8), (11, 7)), D); base(D, H('#f4dcb8'), H('#a8743c'), b)
 EAR = H('#8a5a30'); b.add(rect(1, 3, 1, 6), EAR).add(rect(10, 3, 10, 6), EAR)
 b.add(ell(6, 7.4, 1.8, 1.1), H('#fff4e4')).face(mouth=False).dot([(5, 7), (6, 7)], EYE).dot([(5, 8)], H('#ff7a9a')); B.append(b)
-# 4 아기 토끼: 하얀 털 · 긴 귀(한쪽 접힘) · 솜뭉치 꼬리
-Wt = H('#f6f0ff'); b = Baby(); b.add(ell(10.2, 9.6, 1.3, 1.2), Wt); base(Wt, None, H('#d8d0ec'), b)
-b.add(rect(3, 0, 4, 1), Wt).add(px((7, 1), (8, 1), (9, 1), (9, 2)), Wt).dot([(4, 0), (8, 1)], H('#ffb0cc')).face(); B.append(b)
+# 4 아기 토끼: 하얀 털 · 머리를 낮추고 위로 쫑긋 선 긴 귀(분홍 속) · 분홍 코와 앞니 · 솜뭉치 꼬리
+Wt = H('#f6f0ff'); PK = H('#ffb0cc'); b = Baby(); b.add(ell(9.6, 10.3, 1.2, 1.1), Wt).add(ell(6, 10.2, 2.7, 1.4), Wt).add(FEET, H('#d8d0ec')).add(ell(6, 7.2, 3.9, 2.9), Wt)
+b.add(rect(3, 0, 4, 4), Wt).add(rect(7, 0, 8, 4), Wt).dot([(4, 1), (4, 2), (4, 3), (7, 1), (7, 2), (7, 3)], PK)
+b.face(y=7, mouth=False, blush=False).dot([(5, 9), (6, 9)], PK).dot([(5, 10), (6, 10)], H('#ffffff')).dot([(2, 9), (9, 9)], BLUSH); B.append(b)
 # 5 아기 다람쥐: 주황 · 크게 말린 줄무늬 꼬리 · 도토리를 안음
 R = H('#e08a42'); b = Baby(); b.add(ell(10.2, 7.3, 1.8, 3.6), R).add(ell(10.4, 7.1, .8, 2.4), H('#f6d098')); base(R, H('#f6d098'), H('#a85e28'), b)
 b.add(px((3, 1), (2, 1)), R).add(px((8, 1), (9, 1)), R).face().dot([(5, 9), (6, 9)], H('#a8743c')).dot([(5, 8), (6, 8)], H('#6e4824')); B.append(b)

@@ -261,7 +261,7 @@ body.admin #shell{max-width:none}
 .bbtodo{display:flex;align-items:center;gap:10px;padding:6px 4px}.bbtodo span{margin-left:auto;font-size:13px;opacity:.85}
 .bbwrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 16px 12px;text-align:center}
 .bbstage{width:156px;height:156px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 50% 58%,rgba(255,214,140,.32) 0,rgba(196,160,255,.16) 52%,rgba(196,160,255,0) 72%)}
-.bbpic{display:block;background-image:url(art/babies.png);image-rendering:pixelated}
+.bbpic{display:block;background-image:url(art/babies.png?v=5aad28cf);image-rendering:pixelated}
 .bbsay{position:relative;background:#FFFDF6;color:#2A1E3A;border:2px solid #2A1E3A;border-radius:14px;padding:8px 18px;font-size:19px;font-weight:800;margin-top:-6px}
 .bbsay::before{content:'';position:absolute;left:50%;top:-9px;margin-left:-8px;border:8px solid transparent;border-top:0;border-bottom:9px solid #2A1E3A}.bbsay::after{content:'';position:absolute;left:50%;top:-6px;margin-left:-6px;border:6px solid transparent;border-top:0;border-bottom:7px solid #FFFDF6}
 .bbsay.grr{animation:bbgrr .35s steps(2) infinite}@keyframes bbgrr{50%{transform:translateX(2px)}}
@@ -7263,7 +7263,7 @@ function babyListen(){
   if (solo || !F || !db || babyOffs.length) return;
   babyOffs.push(F.onValue(F.ref(db, 'baby/ctl'), s => { babyCtl = s.val() || null; babyState(); babyTick(); }));
   babyOffs.push(F.onValue(F.ref(db, 'baby/pick/' + uid), s => { const v = s.val(); babyPickV = typeof v === 'number' ? v : null; babyState(); babyTick(); }));
-  World.setBabyImg('art/babies.png?v=e1e83df0');
+  World.setBabyImg('art/babies.png?v=5aad28cf');
   setInterval(babyTick, 2000);
 }
 const babyRoomKey = () => { const k = World.placeKey(); return k && /^myroom_/.test(k) ? k : null; };
@@ -7294,8 +7294,8 @@ async function babyIntro(){
   if (babyCutOn || evOn || sheetOn || mqArriving || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '')) return;
   babyCutOn = true; const id = babyCtl.id;
   try {
-    const ld = f => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = 'art/' + f + '?v=e1e83df0'; });
-    const meta = await (await fetch('art/cart.json?v=e1e83df0')).json(), I = {};
+    const ld = f => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = 'art/' + f + '?v=5aad28cf'; });
+    const meta = await (await fetch('art/cart.json?v=5aad28cf')).json(), I = {};
     for (const k of ['up', 'tilt', 'fall']) I[k] = await ld('cart_' + k + '.png'); I.tarp = await ld('cart_tarp.png'); I.puff = await ld('cart_puff.png'); I.sh = await ld('cart_shadows.png');
     const cv = (im, sx, sy, sw, sh, a = 1) => { const c = document.createElement('canvas'); c.width = sw; c.height = sh; const g = c.getContext('2d'); g.globalAlpha = a; g.drawImage(im, sx, sy, sw, sh, 0, 0, sw, sh); return [c, g]; };
     const P = {}, cart = (k, x, y, dy = 0) => { const m = meta[k], [c, g] = cv(I[k], 0, 0, m.sw, m.sh); P.cart = { id: 'cart', x, y, img: c, pxc: g, sw: m.sw, sh: m.sh, ax: m.ax, ay: m.ay + dy, solid: false, light: k === 'up' ? { r: 26, c: [255, 170, 80], a: .55 } : null }; };
