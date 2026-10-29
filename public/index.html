@@ -1895,12 +1895,13 @@ const XOV = {   // 스킬별 특수 효과 (직업.이름). t 종류 · key 효�
   'bard.도발의 곡': { t: 'buff', key: 'taunt', v: 1, sec: 8, tg: 'self', mp: 5, ds: '8초간 적이 나만 노려요' },
   'bard.앙코르': { t: 'encore', tg: 'self', mp: 6, ds: '직전에 쓴 스킬을 공짜로 한 번 더' },
   'bard.대합창': { ap: [['weak', .25, 12]], ds: '광역 피해 + 12초간 적 공격 -25%' },
-  'time.시간 도약': { t: 'leap', tg: 'self', w: 100, mp: 8, ds: '곧바로 다시 행동할 수 있어요' },
+  'time.시간 도약': { t: 'leap', tg: 'self', w: 100, mp: 8, key: 'spd', v: .2, sec: 10 },   // 곧바로 다시 행동 + 내 속도 (레벨마다 올라요)
+  'time.가속 영역': { v: .5, sec: 18 },   // 연속 가속보다 세고 오래
   'time.정지': { t: 'dmg', st: 'mag', tg: 'one', p: .5, ap: [['stun', 100]], mp: 8, ds: '적 하나를 잠깐 멈춰 세워요' },
-  'time.시간 정체': { v: .65, ds: '10초간 적 전체 속도 -65%' },
-  'time.되감기': { pct: .4, ds: '아군 하나의 체력을 40% 되돌려요' },
+  'time.시간 정체': { v: .5, sec: 15 },
+  'time.되감기': { pct: .4 },   // 40% → Lv5 60%
   'time.시계 소환': { t: 'dmg', st: 'mag', tg: 'all', p: .4, ap: [['stun', 45]], mp: 10, ds: '적 전체의 행동을 늦춰요' },
-  'time.시간 정지': { t: 'tstop', tg: 'all', w: 100, mp: 24, ds: '아군은 바로 행동하고 적은 4초 멈춰요' },
+  'time.시간 정지': { t: 'tstop', tg: 'all', w: 100, mp: 24 },   // 적이 멈추는 시간 4초 → Lv5 7.2초
   'alch.산성 플라스크': { ap: [['vuln', .2, 10]], ds: '피해 + 10초간 받는 피해 +20%' },
   'alch.불안정 용액': { t: 'deb', key: 'vuln', v: .25, sec: 12, tg: 'one', mp: 5, ds: '12초간 적 하나가 받는 피해 +25%' },
   'alch.부식': { p: .8, ap: [['vuln', .3, 12], ['dot', .3, 8]], ds: '피해 + 받는 피해 +30% + 부식 지속 피해' },
@@ -1991,10 +1992,14 @@ function xDef(job, b, r){   // 스킬 하나의 효과표 (Lv1 기준)
 }
 const xAll = job => Array.from({ length: 15 }, (_, i) => xDef(job, Math.floor(i / 5), i % 5));
 const xMpK = lv => 1 + .15 * (Math.max(1, lv) - 1);   // 스킬을 올릴수록 위력이 커지는 만큼 MP도 더 들어요 (Lv5는 1.6배)
-const xPw = (o, lv) => 1 + .18 * (lv - 1), xEfv = (o, lv) => o.v * (1 + .15 * (lv - 1));
+const xPw = (o, lv) => 1 + .18 * (lv - 1), xEfv = (o, lv) => o.t === 'deb' ? Math.min(.9, o.v * (1 + .15 * (lv - 1))) : o.v * (1 + .15 * (lv - 1));   // 느려짐·약해짐은 90%까지
+const xPct = (o, lv) => Math.min(.8, o.pct * (1 + .125 * (Math.max(1, lv) - 1))), xTs = lv => +(4 * (1 + .2 * (Math.max(1, lv) - 1))).toFixed(1);   // 체력 비율 회복 · 시간 정지 초
 function xDesc(o, lv){
   if (o.pas) return o.pas === 'surv' ? '패시브 · 전투마다 한 번, 쓰러질 공격을 체력 1로 버텨요' : `패시브 · ${XPASN[o.pas]} ${o.pas === 'def' ? '-' : '+'}${Math.round(XPAS[o.pas] * 100 * lv)}%`;
   const L = Math.max(1, lv), mp = o.mp ? ` · MP ${xSkMp(o, L)}` : '';
+  if (o.t === 'leap') return `곧바로 다시 행동 + 나 속도 +${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)${mp}`;
+  if (o.t === 'tstop') return `아군은 바로 행동하고 적은 ${xTs(L)}초 멈춰요${mp}`;
+  if (o.t === 'heal' && o.pct && !o.ds) return `${o.tg === 'all' ? '아군 전체' : '아군 하나'}의 체력을 ${Math.round(xPct(o, L) * 100)}% 되돌려요${mp}`;
   if (o.ds){ if (o.t === 'dmg' && o.p) return `${o.tg === 'all' ? '적 전체' : '적 하나'} ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)}${o.hits > 1 ? ` ×${o.hits}회` : ''} · ${o.ds}${mp}`; return o.ds + mp; }
   const who = { one: '적 하나', all: o.t === 'heal' || o.t === 'buff' || o.t === 'mp' ? '아군 전체' : '적 전체', self: '나' }[o.tg];
   const sc = { dmg: `${who}에게 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 피해${o.w ? ' (쓰고 나면 한참 쉬어요)' : ''}`, heal: `${o.tg === 'all' ? '아군 전체' : '아군 하나'} 치유 ×${(o.p * xPw(o, L)).toFixed(1)}`, revive: '쓰러진 동료 하나를 체력 절반으로 살려요', buff: `${who} ${o.key === 'atk' ? '공격' : o.key === 'spd' ? '속도' : '받는 피해'} ${o.key === 'dmgIn' ? '-' : '+'}${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, deb: `${who} ${o.key === 'slow' ? '속도' : '공격'} -${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, dot: `${who}에게 8초 동안 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 지속 피해`, stun: `적 하나를 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 피해 + 행동 늦추기`, mp: `아군 전체 MP ${Math.round(xEfv(o, L) * 100)}% 회복` }[o.t];
@@ -2055,7 +2060,7 @@ const XMPP = { melee: [20, 1.6], ranged: [30, 3], heal: [40, 4.4] }, XMPC = { me
 const xMmp = (job, L) => Math.round(XMPP[XROLE[job]][0] + XMPP[XROLE[job]][1] * L), xSkMp = (o, lv) => o.mp ? Math.round(o.mp * xMpK(lv) * XMPC[XROLE[o.job]]) : o.mp;
 const xMkUnit = (job, L, name, ai, hp, mp, sk) => { sk = sk || xAiSk(L); const u = { av: ai ? World.Avatar.fromLook(ORDER_J.indexOf(job) * 131 + 7) : me.av, sks: [], pas: {}, fx: {}, dr: 0, vamp: 0, crit: 0, id: name, job, name, ic: XJ[job].ic, L, ai, team: 'a', mhp: xSt(job, L, 'hp'), mmp: xMmp(job, L), atk: xSt(job, L, 'atk'), mag: xSt(job, L, 'mag'), heal: xSt(job, L, 'heal'), spd: xSt(job, L, 'spd'), g: Math.random() * 40 };
   { const sp = ai ? xAiSp(job, L) : (xEx().sp || {}); u.mhp += (sp.hp || 0) * XSPV.hp; u.atk += (sp.atk || 0) * XSPV.atk; u.mag += (sp.mag || 0) * XSPV.mag; u.heal += (sp.heal || 0) * XSPV.heal; u.spd += (sp.spd || 0) * XSPV.spd; u.mmp += (sp.mag || 0) * 1.5; ['mhp', 'mmp', 'atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k]); }); }   // 스탯 포인트
-  xAll(job).forEach(o => { const lv = sk[o.b + '_' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, mp0: o.mp, mp: xSkMp(o, lv), sv: o.sv == null ? o.sv : o.sv * xPw(o, lv), pet: o.pet ? { ...o.pet, k: o.pet.k * xPw(o, lv) } : o.pet, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv) }); });
+  xAll(job).forEach(o => { const lv = sk[o.b + '_' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, mp0: o.mp, mp: xSkMp(o, lv), sv: o.sv == null ? o.sv : o.sv * xPw(o, lv), pet: o.pet ? { ...o.pet, k: o.pet.k * xPw(o, lv) } : o.pet, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv), pct: o.pct == null || o.ds || o.t !== 'heal' ? o.pct : xPct(o, lv) }); });   // 설명이 고정된 소생 스킬은 그대로
   const P = u.pas; ['hp', 'atk', 'mag', 'spd'].forEach(k => { if (P[k]) u[k === 'hp' ? 'mhp' : k] = Math.round(u[k === 'hp' ? 'mhp' : k] * (1 + P[k])); }); u.wp = ai ? Math.min(4, Math.floor((L - 1) / 12)) : (xEx().wp || 0); const wm = (1 + .08 * u.wp) * (!ai && dbuff('dfire') ? 1.05 : 1); ['atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k] * wm); });   // 무기 강화 한 단계마다 +8%
   u.dr = P.def || 0; u.vamp = P.vamp || 0; u.crit = P.crit || 0; u.dodge = P.dodge || 0; u.survLeft = P.surv ? 1 : 0; u.pets = [];
   u.hp = hp ?? u.mhp; u.mp = mp ?? u.mmp; return u; };
@@ -2772,8 +2777,8 @@ function xAct0(u, sk, tgt){   // 한 번 행동
   else if (sk.t === 'stun') fs().forEach(t => { xHit(u, t, u[sk.st] * sk.p * (.85 + Math.random() * .3) * mult, '#ffd866'); t.g = Math.min(t.g, -60); });
   else if (sk.t === 'summon'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'buff', [u], u); u.pets = u.pets || []; if (u.pets.length >= 3) u.pets.shift(); const lv = sk.lv || 1, mh = Math.round((u.mhp * .3 + 16) * (1 + .25 * (lv - 1)) * (sk.pet.hpm || 1)); u.pets.push({ ...sk.pet, st: sk.st, t: sk.pet.sec * (1 + .1 * (lv - 1)), acc: 0, lv, hp: mh, mhp: mh }); }
   else if (sk.t === 'recall'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'heal', [u], u); const n = (u.pets || []).length; u.pets = []; const t = xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]; if (n && t){ const h = Math.round(t.mhp * .12 * n); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); } else B.log = '돌려보낼 소환수가 없어요'; }
-  else if (sk.t === 'leap'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'time', [u], u); xFloat(u.id, '가속!', '#9ad8ff'); }
-  else if (sk.t === 'tstop'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'time', xAlive(B.foes), u); xAlive(B.party).forEach(a => { xFill(a); xFloat(a.id, '행동!', '#9ad8ff'); }); xAlive(B.foes).forEach(f => { f.g = Math.min(f.g, -150); xFloat(f.id, '정지', '#d0a0ff'); }); }
+  else if (sk.t === 'leap'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'time', [u], u); if (sk.v) u.fx.spd = { v: sk.v, t: sk.sec }; xFloat(u.id, '가속!', '#9ad8ff'); }
+  else if (sk.t === 'tstop'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'time', xAlive(B.foes), u); xAlive(B.party).forEach(a => { xFill(a); xFloat(a.id, '행동!', '#9ad8ff'); }); xAlive(B.foes).forEach(f => { f.g = Math.min(f.g, -150 * xTs(sk.lv) / 4); xFloat(f.id, '정지', '#d0a0ff'); }); }
   else if (sk.t === 'encore'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'buff', [u], u); const last = u.lastSk; if (last && last.t !== 'encore'){ B.log = `앙코르! ${last.n}`; xAct0(u, { ...last, mp: 0 }, tgt); return; } else { u.mp += sk.mp; B.log = '다시 쓸 스킬이 없어요'; } }
   else if (sk.t === 'mp'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'buff', xAlive(B.party), u); B.party.forEach(t => { if (t.hp > 0){ t.mp = Math.min(t.mmp, t.mp + t.mmp * sk.v); xFloat(t.id, 'MP↑', '#6aa8ff'); } }); }
   u.g = sk.w ?? 0; if (u.g >= 100){ u.g = 0; xFill(u); }
