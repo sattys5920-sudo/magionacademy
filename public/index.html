@@ -434,6 +434,7 @@ body:not(.inworld) #storyui{display:none}
 #tform button{height:44px;min-width:44px;border:0;border-radius:22px;background:var(--accent);color:#2A1506;font-family:var(--f-pxb);font-size:var(--fs-s);padding:0 12px;flex:none}
 #tform #cH,#tform #cE{background:var(--panel2);color:var(--text);border:1px solid var(--line2);padding:0 10px}#tform #cE{padding:0 8px}
 .bubble{position:absolute;transform:translate(-50%,-100%);background:var(--panel);color:var(--text);padding:8px 12px;border-radius:12px;font-size:var(--fs-s);line-height:1.45;border:1px solid var(--line2);white-space:nowrap;text-align:center;z-index:4}
+.bubble .bbtns{display:flex;gap:6px;justify-content:center}.bubble .bbtns button{margin:6px 0 0}.bubble button.sub{background:var(--panel2,#3a2e5a);color:var(--text)}
 .bubble button{display:block;margin:6px auto 0;font-family:var(--f-pxb);font-size:var(--fs-s);background:var(--accent);border:0;border-radius:10px;min-height:44px;padding:0 14px;color:#2A1506}
 #fade{position:absolute;inset:0;background:#0E0916;opacity:0;pointer-events:none;transition:opacity .35s;z-index:5;display:flex;align-items:center;justify-content:center;font-family:var(--f-pxb);font-size:var(--fs-h);color:var(--gold)}
 #mapv{position:absolute;inset:0;background:rgba(14,9,22,.96);z-index:8;display:none;flex-direction:column;padding:12px;color:var(--text)}
@@ -6209,13 +6210,13 @@ function renderRanch(){
 let dormMsg = '', furnCat = '전체';
 const myRoomId = () => HOUSE_DORM[me.house].replace('dorm_', 'myroom_');
 const inMyRoom = () => World.where() === myRoomId() && !!World.roomOwner()?.own;
-function syncRoom(){ World.setFurniture((me.room || []).map(r => ({ id: r.id, k: FIDX[r.f], x: r.x, y: r.y }))); }
+function syncRoom(){ World.setFurniture((me.room || []).map(r => ({ id: r.id, k: FIDX[r.f], x: r.x, y: r.y, r: r.r ? 1 : 0 }))); }
 // 가구 놓기: 내 방이 아니면 먼저 내 방으로 가요
 function placeFurn(fid){
   if (!(me.fbag[fid] > 0)) return;
-  const go = () => World.place(FIDX[fid], (x, y) => {
+  const go = () => World.place(FIDX[fid], (x, y, r) => {
     if (!(me.fbag[fid] > 0)) return;
-    me.fbag[fid]--; me.room.push({ id: crId(), f: fid, x, y }); save(); syncRoom();
+    me.fbag[fid]--; me.room.push({ id: crId(), f: fid, x, y, ...(r ? { r: 1 } : {}) }); save(); syncRoom();
     toast(`${withJosa(FURN_BY[fid].name, '을', '를')} 놓았어요! 아늑함 ${cozyOf(me)}`);
   });
   closeSheet();
@@ -6225,15 +6226,18 @@ World.onFurn = id => {
   const v = World.roomOwner();
   if (v && !v.own){ const f = (v.furn || []).find(x => x.id === id), F_ = f && FURN[f.k]; return F_ ? `<b>${F_.name}</b><br>${esc(v.name)}의 가구 · 아늑함 +${F_.pts}` : null; }
   const r = me.room.find(x => x.id === id); if (!r) return null; const F_ = FURN_BY[r.f];
-  return { text: `<b>${F_.name}</b><br>아늑함 +${F_.pts}`, btn: '가방에 넣기', fn: () => {
+  return { text: `<b>${F_.name}</b><br>아늑함 +${F_.pts}`, btn: [['돌리기', () => {   // 같은 자리에서 돌려요 (칸이 모자라면 못 돌려요)
+    const nr = r.r ? 0 : 1; if (!World.canPlaceAt(FIDX[r.f], r.x, r.y, id, nr)) return toast('자리가 좁아서 돌릴 수 없어요');
+    if (nr) r.r = 1; else delete r.r; save(); syncRoom(); World.hideBubble(); sfx('pop');
+  }], ['가방에 넣기', () => {
     me.room = me.room.filter(x => x.id !== id); me.fbag[r.f] = (me.fbag[r.f] || 0) + 1; save(); syncRoom(); World.cancelPlace();
     toast(`${withJosa(F_.name, '을', '를')} 가방에 넣었어요`);
-  } };
+  }]] };
 };
 // 기숙사 복도: 기숙사마다 학생 3명의 방 (들어온 순서대로 문 번호)
 const houseMembers = h => solo ? (h === me.house ? ['me'] : []) : Object.keys({ ...playersList, [uid]: me }).filter(id => (id === uid ? me : playersList[id])?.house === h).sort().slice(0, HOUSE_CAP);
 const playerOf = id => id === 'me' || id === uid ? me : playersList[id];
-const roomFurn = p => (p.room || []).filter(r => FURN_BY[r.f]).map(r => ({ id: r.id, k: FIDX[r.f], x: r.x, y: r.y }));
+const roomFurn = p => (p.room || []).filter(r => FURN_BY[r.f]).map(r => ({ id: r.id, k: FIDX[r.f], x: r.x, y: r.y, r: r.r ? 1 : 0 }));
 function syncHallNames(){ World.setHallNames(Object.fromEntries(HOUSE_KEYS.map(h => [h, houseMembers(h).map(id => playerOf(id)?.nick || '친구')]))); }
 World.onRoomDoor = (h, i) => {
   const id = houseMembers(h)[i]; if (!id) return `<b>빈 방</b><br>아직 주인이 없어요`;
@@ -7329,7 +7333,7 @@ function babyInRoom(room, k, key, mine){   // 방 가구 위에서 놀아요 (�
     if (!r || Date.now() > babyRoomAt.until){ const pool = fs.length > 1 && r ? fs.filter(q => q !== r) : fs; r = pool[Math.floor(Math.random() * pool.length)]; babyRoomAt = { id: r.id, until: Date.now() + 12000 + Math.random() * 10000, act: true }; } }
   else r = fs[Math.floor(Date.now() / 20000) % fs.length];
   const it = FURN_BY[r.f];
-  return { map: key, x: r.x, y: r.y, ox: it.spot[0], oy: it.spot[1], pose: it.pose, top: true };
+  return { map: key, x: r.x, y: r.y, ox: r.r ? -it.spot[0] : it.spot[0], oy: it.spot[1], pose: it.pose, top: true };   // 돌린 가구면 좌우가 바뀌어요
 }
 function babyWorld(){
   const L = [], b = me && me.baby, rk = babyRoomKey();
