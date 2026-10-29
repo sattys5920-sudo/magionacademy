@@ -5380,8 +5380,8 @@ const jnTags = c => [...(c?.time || []).map(t => BAND_KO[t]), ...(c?.weather || 
 const jnJosa = (k, a, b) => [1, 6, 7, 8, 10].includes(k) ? a : b;   // ♥1·6·7·8·10은 받침이 있어요
 function babyTodoHTML(){
   const b = me.baby; if (!b || b.adopt) return '';
-  const t = b.st >= 5 ? (b.fin ? '이름 지어 주기' : '품에 안고 사육장으로 데려가기') : `${BABY_STAGE[b.st]} · ${ITEM[BABY_NEED[b.k][b.st][0]]} ${BABY_NEED[b.k][b.st][1]}개`;
-  return `<section class="sec">${secH('길 잃은 아기 동물', `${Math.min(b.st, 5)}/5`)}<div class="box px"><div class="bbtodo">${babyPic(b.k, 2)}<b>${BABY.NAMES[b.k]}</b><span>${t}</span></div></div></section>`;
+  const t = b.st >= 5 ? (b.fin ? '이름 짓기' : '사육장으로') : `${ITEM[BABY_NEED[b.k][b.st][0]]} ${BABY_NEED[b.k][b.st][1]}개`;
+  return `<section class="sec">${secH('아기 동물', `${Math.min(b.st, 5)}/5`)}<div class="box px"><div class="bbtodo">${babyPic(b.k, 2)}<b>${BABY.NAMES[b.k]}</b><span>${t}</span></div></div></section>`;
 }
 function jnTodoHTML(){
   const left = me.orders.filter(o => !o.done).length;
@@ -7239,7 +7239,6 @@ function gtTravel(ms){
 const BABY = { NAMES: ['아기 오리', '아기 고양이', '아기 강아지', '아기 토끼', '아기 다람쥐', '아기 고슴도치', '아기 박쥐', '아기 부엉이', '아기 여우', '아기 너구리', '아기 개구리', '아기 병아리'],
   SPOTS: [['town', 34, 82], ['town', 26, 33], ['campus', 42, 78], ['campus', 22, 88], ['campus', 48, 95], ['campus', 18, 14], ['campus', 52, 26], ['town', 65, 48], ['town', 16, 77], ['town', 21, 59], ['town', 26, 94], ['town', 76, 42]] };   // 오리 잔교 · 고양이 시장 뒷골목 · 강아지 기숙사 거리 · 토끼 호박밭 · 다람쥐 풍차 숲 · 고슴도치 언덕 숲 · 박쥐 시계탑 아래 · 부엉이 우체국 옆 · 여우 묘지 · 너구리 생선 가게 뒤 · 개구리 늪지 · 병아리 호박 빵집
 const BABY_NEED = [[['g_wheat',3],['g_cotton',2],['f_minnow',2],['herb',3],['d_cornsoup',1]],[['milk',2],['wool',2],['f_crucian',2],['p_fluff',1],['d_moontrout',1]],[['hegg',2],['g2_straw',3],['g2_chest',2],['p_vigor',1],['d_minnowfry',1]],[['g_carrot',3],['g2_straw',2],['g_straw',3],['g_clover',2],['d_carrotmuffin',1]],[['g2_acorn',3],['g2_ginkgo',3],['g2_walnut',2],['g_mint',2],['d_chestnut',1]],[['g2_rasp',3],['g2_maple',3],['g_blueb',2],['p_red',1],['d_bluepie',1]],[['g2_crab',2],['silk',2],['g2_wild',2],['drop',3],['d_jamtoast',1]],[['f_seedbit',2],['g_pine',3],['g2_sseed',3],['p_blue',1],['d_killiomelet',1]],[['hegg',2],['wool',2],['g2_blue',2],['g_ginger',1],['d_mushskewer',1]],[['f_crucian',2],['g2_cone',3],['g_tomato',2],['g_chamo',2],['d_crucianstew',1]],[['g2_lady',1],['g2_moss',3],['g_pea',3],['herb',2],['d_jellyjelly',1]],[['g2_pseed',3],['g2_straw',2],['g_sunf',2],['g_chamo',1],['d_pseedsoup',1]]];   // 동물마다 5단계 [재료, 개수] (tools/baby_needs.json)
-const BABY_STAGE = ['첫 밥', '잠자리', '간식', '몸 돌보기', '특별한 하루'];
 // 울음소리: [경계, 조심, 친해짐] — 말은 못 해요
 const BABY_SND = [[['꽥!! 꽤액!!', '꽉! 꽉!'], ['꽥....?', '꾸악....'], ['꽥꽥♪', '꾸왁~']], [['하악!!', '캬아악!'], ['냐....?', '미야....'], ['냐앙♪', '골골골....']], [['왈! 왈왈!', '으르르릉....'], ['낑....?', '멍....?'], ['멍멍♪', '헥헥♪']],
   [['쿵! 쿵!', '킁킁!!'], ['킁....?', '뿌....'], ['뿌우♪', '킁킁♪']], [['찍찍찍!!', '치익!'], ['찍....?', '쮸....'], ['쮸쮸♪', '찍찍♪']], [['칙! 치익!!', '푸쉭!'], ['킁....', '쀼....?'], ['쀼쀼♪', '킁킁♪']],
@@ -7367,27 +7366,27 @@ function renderBaby(){
   const b = me.baby; if (!b) return closeSheet();
   const stage = (k, snd, grr) => `<div class="bbstage">${babyPic(k, 6)}</div>${snd ? `<div class="bbsay${grr ? ' grr' : ''}">${esc(snd)}</div>` : ''}`;
   if (b.adopt){
-    frame(null, esc(b.name), BABY.NAMES[b.k], `<div class="bbwrap">${stage(b.k, babyMsg)}
+    frame(null, esc(b.name), '', `<div class="bbwrap">${stage(b.k, babyMsg)}
       <div class="bbbtns"><button class="bbcta" id="bbpet">쓰다듬기</button><button class="bbcta sub" id="bbfol">${b.follow ? '방에 두기' : '데리고 다니기'}</button></div></div>`);
     $('#bbpet').onclick = () => { babyMsg = babySnd(b.k, 2); World.babySay('mine', babyMsg); sfx('pop'); renderBaby(); };
-    $('#bbfol').onclick = () => { b.follow = !b.follow; save(); babyTick(); closeSheet(); toast(b.follow ? `${b.name}${josa(b.name, '이', '가')} 따라와요` : `${b.name}${josa(b.name, '은', '는')} 방에서 기다려요`); };
+    $('#bbfol').onclick = () => { b.follow = !b.follow; save(); babyTick(); closeSheet(); };
     return;
   }
   if (b.st >= 5){
-    frame(null, BABY.NAMES[b.k], '이름 짓기', `<div class="bbwrap">${stage(b.k, babyMsg || babySnd(b.k, 2))}
+    frame(null, BABY.NAMES[b.k], '', `<div class="bbwrap">${stage(b.k, babyMsg || babySnd(b.k, 2))}
       <input class="bbinput" id="bbnm" maxlength="8" placeholder="이름을 지어 주세요" autocomplete="off">
       <div class="bbbtns"><button class="bbcta" id="bbok">입양하기</button></div></div>`);
     $('#bbok').onclick = () => { const v = ($('#bbnm').value || '').trim().replace(/[<>]/g, ''); if (!v) return toast('이름을 지어 주세요'); if (v.length > 8) return toast('이름은 8글자까지예요');
-      b.adopt = true; b.name = v; b.follow = false; b.at = now2(); delete b.fin; save(); closeSheet(); sfx('win'); toast(`${v}${josa(v, '을', '를')} 입양했어요! 내 방에서 기다리고 있어요`); babyTick(); };
+      b.adopt = true; b.name = v; b.follow = false; b.at = now2(); delete b.fin; save(); closeSheet(); sfx('win'); toast(`${v}${josa(v, '을', '를')} 입양했어요!`); babyTick(); };
     return;
   }
   const [k, n] = BABY_NEED[b.k][b.st], have = me.inv[k] || 0, mood = babyMood(b);
-  frame(null, BABY.NAMES[b.k], BABY_STAGE[b.st], `<div class="bbwrap">${stage(b.k, babyMsg || babySnd(b.k, mood), mood === 0)}
+  frame(null, BABY.NAMES[b.k], '', `<div class="bbwrap">${stage(b.k, babyMsg || babySnd(b.k, mood), mood === 0)}
     <div class="bbdots">${[0, 1, 2, 3, 4].map(i => `<i class="${i < b.st ? 'on' : i === b.st ? 'now' : ''}"></i>`).join('')}</div>
     <div class="bbneed">${ic(k)}<b>${esc(ITEM[k] || k)}</b><span class="${have >= n ? 'ok' : ''}">${Math.min(have, n)}/${n}</span></div>
     <div class="bbbtns"><button class="bbcta" id="bbgive" ${have >= n ? '' : 'disabled'}>주기</button></div></div>`);
   $('#bbgive').onclick = () => { if ((me.inv[k] || 0) < n) return; me.inv[k] -= n; if (!me.inv[k]) delete me.inv[k]; b.st++; saveSure(); babyMsg = babySnd(b.k, babyMood(b)); sfx('pop');
-    if (b.st >= 5){ closeSheet(); babyTick(); setTimeout(() => World.babySay('mine', babySnd(b.k, 2)), 300); setTimeout(() => { World.say('me', '이제 돌아가자!'); toast(`${BABY.NAMES[b.k]}${josa(BABY.NAMES[b.k], '을', '를')} 안고 사육장으로 가요`); }, 1500); return; }
+    if (b.st >= 5){ closeSheet(); babyTick(); setTimeout(() => World.babySay('mine', babySnd(b.k, 2)), 300); setTimeout(() => World.say('me', '이제 돌아가자!'), 1500); return; }
     World.babySay('mine', babyMsg); babyTick(); renderBaby(); };
 }
 function adminBabyHTML(){
