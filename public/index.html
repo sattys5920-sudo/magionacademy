@@ -2126,6 +2126,7 @@ const xpPut = id => GDB.upd(`xparty/${id}/p/${myId()}`, xpMe()).catch(e => errRe
 function xpWatch(id){ xpRoom = id; xpFix = 0; xpT0 = now2(); xpOff?.(); xpOff = GDB.on('xparty/' + id, v => { if (xpRoom !== id) return;
   if (v && v.st === 'lobby' && v.p && !v.p[myId()] && xpFix < 3 && Object.keys(v.p).length < XP_MAX){ xpFix++; if (now2() - xpT0 > 8000) xpLog(`대기실 명단에서 빠져서 다시 넣음 (${xpFix})`, v); xpPut(id); return; }   // 나가기를 누르지 않았는데 빠졌으면 다시 들어가요
   if (!v || v.st === 'end' || !v.p?.[myId()]){ if (!v) xpLog('방이 사라짐', xpV); else if (v.st !== 'end') xpLog('명단에서 내 이름이 빠짐', v); xpRoom = null; xpV = null; xpOff?.(); xpOff = null; xcoStop(); xcoWasHost = false; } else { if (xpV && xpV.host === myId() && v.host !== myId()){ xpLog('방장이 다른 사람으로 바뀜', v); if (xb && !xb.mirror){ xb = null; clearInterval(xTick); xv = { view: 'march' }; if (xM) xM.st = 'busy'; } } if (v.st === 'run' && xpV?.st === 'lobby') xpRunAt = now2(); xpV = v; if (v.st === 'run') xcoEnter(id, v); const h = v.host === myId(); if (xcoOn() && h && !xcoWasHost && xM && xcoOff.length) xcoTakeover(); xcoWasHost = xcoOn() && h; } xpRefresh(); }); }
+const xRunNow = () => { const r = me && me.ex && me.ex.run; return !!(r && (!r.end || now2() < r.end + 3e5)); };   // 탐사 중(창을 닫아 둬도): 이벤트 장면·알림은 끝나고 나서 · 시간이 지나 남은 탐사 기록은 막지 않아요
 const XDAY = 10;   // 탐사는 한 사람이 하루에 10번까지 (혼자·파티 모두)
 function xpCreate(){
   if (xEx().n >= XDAY) return toast(`탐사는 하루에 ${XDAY}번까지예요`);
@@ -7391,7 +7392,7 @@ function babyMeetTick(){
 }
 // ---- 첫 장면: 밤길에 수레가 넘어지고 먼지 뭉치 그림자 12개가 흩어져요 (접속해 있으면 바로, 나중에 들어오면 들어오자마자) ----
 async function babyIntro(){
-  if (babyCutOn || evOn || sheetOn || mqArriving || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '')) return;
+  if (xRunNow() || babyCutOn || evOn || sheetOn || mqArriving || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '')) return;
   babyCutOn = true; const id = babyCtl.id;
   try {
     const ld = f => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = 'art/' + f + '?v=5aad28cf'; });
@@ -7427,7 +7428,7 @@ async function babyIntro(){
 // ---- 마지막 장면: 품에 안고 사육장 레오에게 → 안 떨어지려 해요 → 「네가 데려가서 키워」 → 이름 짓기 ----
 let babyFinOn = false;
 async function babyFinale(){
-  const b = me.baby; if (!b || b.adopt || b.st < 5 || b.fin || babyFinOn || World.where() !== 'barn' || babyCutOn || evOn || sheetOn || mqArriving || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '')) return;
+  const b = me.baby; if (!b || b.adopt || b.st < 5 || b.fin || babyFinOn || xRunNow() || World.where() !== 'barn' || babyCutOn || evOn || sheetOn || mqArriving || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '')) return;
   babyFinOn = true;
   try {
     const leo = npcGet('leo'), cling = BABY_CLING[b.k], X = 21, Y = 28;
@@ -7582,7 +7583,7 @@ const snowCast = ['madeleine', 'stella', 'leo', 'sera'];
 // 순간이동: 다른 이동 중이면 World.teleport가 콜백 없이 끝나요 → 잠깐 기다렸다 다시 해요
 async function tpSafe(m, xy){ for (let i = 0; i < 6; i++){ const ok = await Promise.race([new Promise(r => World.teleport(m, xy, () => r(true))), sleep(1500).then(() => false)]); if (ok) return true; await sleep(500); } return false; }
 const snowSpawn = (id, x, y, dir = 'up') => { const n = npcGet(id); return n ? { cmd: 'spawn', who: id, name: n.name, av: npcAv(n), x, y, dir } : { cmd: 'wait', sec: 0 }; };
-const snowBusy = () => snowCutOn || babyCutOn || evOn || sheetOn || mqArriving || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '');
+const snowBusy = () => xRunNow() || snowCutOn || babyCutOn || evOn || sheetOn || mqArriving || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '');
 async function snowPlay(cmds, mark){
   snowCutOn = true; const [X, Y] = SNOW.SPOT;
   try {
@@ -7718,7 +7719,7 @@ function renderMorph(){
 }
 // ---- 장면: 솥 대폭발 (이벤트를 열면) · 원래대로 (다 모으면) ----
 const morphSpawn = (id, x, y, dir = 'up') => { const n = npcGet(id); return n ? { cmd: 'spawn', who: id, name: n.name, ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float, flap: n.flap }), x, y, dir } : { cmd: 'wait', sec: 0 }; };
-const morphBusy = () => morphCutOn || snowCutOn || babyCutOn || evOn || sheetOn || mqArriving || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '');
+const morphBusy = () => xRunNow() || morphCutOn || snowCutOn || babyCutOn || evOn || sheetOn || mqArriving || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '');
 async function morphPlay(cmds, hooks, mark){
   morphCutOn = true; const [X, Y] = MORPH.LAB;
   try {
@@ -8687,7 +8688,7 @@ function tutNpcs(){
   return [{ id: 'tut:senior', name: TUT.name, map: TUT.map, x: TUT.x, y: TUT.y, r: 1, mark, wander: true, dir: 'down', av: tutAv() }];
 }
 var tutAuto = false;
-const uiBusy = () => !!(document.getElementById('tr2') || evOn || sheetOn || mqArriving || fishing || cooking || lesson || (typeof sgOn !== 'undefined' && sgOn) || (World.cutBusy && World.cutBusy()) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || $('#fishui').classList.contains('on'));   // 장면·미니게임·창이 떠 있으면 다른 알림은 기다려요
+const uiBusy = () => !!(xRunNow() || document.getElementById('tr2') || evOn || sheetOn || mqArriving || fishing || cooking || lesson || (typeof sgOn !== 'undefined' && sgOn) || (World.cutBusy && World.cutBusy()) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || $('#fishui').classList.contains('on'));   // 장면·미니게임·창이 떠 있으면 다른 알림은 기다려요
 function tutGreet(){   // 들어오면 코니 선배가 먼저 말을 걸어요 (다른 장면이 끝날 때까지 기다렸다가 한 번만)
   if (tutAuto || !tutOn() || !me || !(!me.tut.g || me.tut.ok)) return; tutAuto = true; let n = 0;
   const iv = setInterval(() => { if (!tutOn() || ++n > 90) return clearInterval(iv); if (!uiBusy()){ clearInterval(iv); tutTalk(); } }, 1500);
@@ -9329,7 +9330,7 @@ let mqArriving = false;
 const MQ_DAY_MAX = 3;   // 하루에 받을 수 있는 이야기 의뢰 단계 수
 const mqDayFull = () => { const d = mqState().dd; return !!d && d.d === todayKey() && d.n >= MQ_DAY_MAX; };
 async function mqArrive(){
-  const s = mqState(), q = mqQuest(); if (!q || s.ph !== 'arrive' || mqDayFull() || mqArriving || evOn || sheetOn || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy())) return;
+  const s = mqState(), q = mqQuest(); if (!q || s.ph !== 'arrive' || mqDayFull() || mqArriving || xRunNow() || evOn || sheetOn || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy())) return;
   mqArriving = true;
   try {
     const sc = await mqScene(q.id, 1, 'request'); if (!sc){ mqArriving = false; return; }
