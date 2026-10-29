@@ -3458,15 +3458,15 @@ function adminExamHTML(){
   if (F && db && !(key in AD.examBd)){ AD.examBd[key] = null; AD.offs.push(F.onValue(F.ref(db, 'exam/' + key), s => { AD.examBd[key] = s.val() || {}; if (AD.tab === 'exam') adminRender(); })); }
   const raw = AD.examBd[key] || {}, P = AD.players || {}, nm = u => P[u]?.nick || u.slice(0, 6), hs = u => HOUSES[P[u]?.house]?.name || '';
   const rows = Object.entries(raw).map(([u, v]) => [u, examVal(v, key)]).filter(([, v]) => typeof v === 'number').sort((a, b) => b[1] - a[1]);
-  const onBd = new Set(rows.map(([u]) => u));
+  const onBd = new Set(rows.map(([u]) => u)), rk = examRanks(rows);
   const took = Object.keys(P).filter(u => P[u]?.exam?.week === key && !onBd.has(u));   // 시험은 봤는데 게시판에는 안 뜨는 학생
   const [y, m, d] = key.split('-').map(Number), dn = examDayName[new Date(y, m - 1, d).getDay()], today = key === examKey(), open = today && examOpenKey();
   const when = today ? (open ? `지금 시험 중 (${EXAM_TO}시까지) · 게시판에는 내일 0시부터 떠요` : kNow().getHours() < EXAM_FROM ? `${EXAM_FROM}시에 열려요` : '오늘 시험 끝 · 게시판에는 내일 0시부터 떠요') : (examBoardKey() === key ? '지금 성적 게시판에 떠 있어요' : '지난 시험');
   const avg = rows.length ? Math.round(rows.reduce((t, [, v]) => t + Math.floor(v), 0) / rows.length) : 0;
   return `<div class="adseg">${days.map(k => { const [, mm, dd] = k.split('-'); return `<button data-adexd="${k}" class="${k === key ? 'on' : ''}">${mm}/${dd}</button>`; }).join('')}</div>
     <div class="adcard"><b>${m}월 ${d}일(${dn}) 쪽지시험</b><div class="s">${when}</div><div class="s">응시 ${rows.length + took.length}명 · 게시판 ${rows.length}명${rows.length ? ` · 평균 ${avg}점` : ''}</div></div>
-    <div class="adcard"><b>게시판에 뜰 순서</b>${rows.length ? `<div class="adlist">${rows.map(([u, v], i) => `<div><b style="display:inline-block;width:28px">${i + 1}</b> ${esc(nm(u))} <span class="tm">${esc(hs(u))}</span> · <b>${Math.floor(v)}점</b> (${gradeOf(Math.floor(v))})${i < 3 ? ` · 등수 장학금 +${EXAM_TOP[i]}G` : ''}${P[u]?.exam?.reward ? ` <span class="tm">(받은 보상: ${esc(P[u].exam.reward)})</span>` : ''}</div>`).join('')}</div>` : '<div class="s">아직 낸 사람이 없어요</div>'}
-      <div class="s" style="margin-top:6px">같은 점수면 먼저 낸 사람이 앞서요. 1·2·3등 장학금은 게시판이 뜬 뒤 그 학생이 게시판을 열면 들어가요.</div></div>
+    <div class="adcard"><b>게시판에 뜰 순서</b>${rows.length ? `<div class="adlist">${rows.map(([u, v], i) => `<div><b style="display:inline-block;width:28px">${rk[i]}</b> ${esc(nm(u))} <span class="tm">${esc(hs(u))}</span> · <b>${Math.floor(v)}점</b> (${gradeOf(Math.floor(v))})${rk[i] <= 3 ? ` · 등수 장학금 +${EXAM_TOP[rk[i] - 1]}G` : ''}${P[u]?.exam?.reward ? ` <span class="tm">(받은 보상: ${esc(P[u].exam.reward)})</span>` : ''}</div>`).join('')}</div>` : '<div class="s">아직 낸 사람이 없어요</div>'}
+      <div class="s" style="margin-top:6px">같은 점수는 같은 등수예요(1등이 셋이면 다음은 4등). 1·2·3등 장학금은 게시판이 뜬 뒤 그 학생이 게시판을 열면 들어가요.</div></div>
     ${took.length ? `<div class="adcard"><b>봤지만 게시판에 안 뜨는 학생</b><div class="adlist">${took.map(u => { const e = P[u].exam; return `<div>${esc(nm(u))} <span class="tm">${esc(hs(u))}</span> · ${e.done ? `${e.score || 0}점` : `푸는 중 (지금 ${e.score || 0}점)`}${e.done ? ' · 시험 시간 밖에 냈거나 아직 올라오는 중' : ''}</div>`; }).join('')}</div></div>` : ''}`;
 }
 // 관리자 메뉴: 현황 · 운영 · 게임 세 묶음 (폰은 위쪽 두 줄, 넓은 화면은 왼쪽 목록)
@@ -6669,6 +6669,7 @@ function examVal(v, key){ if (typeof v === 'number') return solo ? v : null; if 
 
 // ---- 성적 게시판: 시험 다음 날부터 붙어요. 1·2·3등은 장학금을 더 받아요 ----
 let examBdOff = null, examBd = null, examBdKey = null;
+const examRanks = rows => rows.reduce((r, [, v], i) => (r.push(i && Math.floor(v) === Math.floor(rows[i - 1][1]) ? r[i - 1] : i + 1), r), []);   // 같은 점수는 같은 등수 (1등 셋이면 다음은 4등)
 function renderExamBoard(){
   const key = examBoardKey(), tabs = [['subj', '과목'], ['exam', '쪽지시험'], ['board', '성적 게시판']];
   const head = segRow('ktab', classTab, tabs), pos = key ? (() => { const [y, m, d] = key.split('-').map(Number), dt = new Date(y, m - 1, d); return `${m}월 ${d}일(${examDayName[dt.getDay()]}) 시험`; })() : '';
@@ -6676,10 +6677,11 @@ function renderExamBoard(){
     if (!(sheetOn && sub === 'class' && classTab === 'board' && !lesson)) return;
     const raw = key ? (solo ? (me.exam && me.exam.week === key ? { me: me.exam.score + .5 } : {}) : (examBd || {})) : {}, me_ = myId();
     const rows = Object.entries(raw).map(([u, v]) => [u, examVal(v, key)]).filter(([, v]) => typeof v === 'number').sort((a, b) => b[1] - a[1]), mine = rows.findIndex(([u]) => u === (solo ? 'me' : me_));
+    const rk = examRanks(rows), myRk = mine >= 0 ? rk[mine] : 0;
     let msg = ''; me.examBonus = me.examBonus || {};
-    if (!solo && key && mine >= 0 && mine < 3 && !me.examBonus[key]){ me.examBonus[key] = 1; me.coin += EXAM_TOP[mine]; save(); hud(); sfx('heart'); msg = `${mine + 1}등 장학금 +${EXAM_TOP[mine]}G`; }
+    if (!solo && key && myRk >= 1 && myRk <= 3 && !me.examBonus[key]){ me.examBonus[key] = 1; me.coin += EXAM_TOP[myRk - 1]; save(); hud(); sfx('heart'); msg = `${myRk}등 장학금 +${EXAM_TOP[myRk - 1]}G`; }
     const list = rows.length ? rows.map(([u, v], i) => { const nm = solo ? me.nick : (playersList[u] && playersList[u].nick) || '학생', you = i === mine;
-      return `<div class="li" style="${you ? 'background:rgba(255,200,80,.16)' : ''}"><span class="b" style="width:34px;text-align:center;font-size:${i < 3 ? 20 : 14}px;color:${i === 0 ? 'var(--gold)' : i < 3 ? 'var(--text)' : 'var(--sub)'}">${i + 1}</span><div class="main"><span class="t">${esc(nm)}</span></div><span class="b">${Math.floor(v)}점</span>${i < 3 && !solo ? `<span class="s sub" style="min-width:56px;text-align:right">+${EXAM_TOP[i]}G</span>` : ''}</div>`; }).join('') : `<div class="hint">${key ? '응시한 학생이 없어요' : '아직 시험이 없었어요'}</div>`;
+      return `<div class="li" style="${you ? 'background:rgba(255,200,80,.16)' : ''}"><span class="b" style="width:34px;text-align:center;font-size:${rk[i] <= 3 ? 20 : 14}px;color:${rk[i] === 1 ? 'var(--gold)' : rk[i] <= 3 ? 'var(--text)' : 'var(--sub)'}">${rk[i]}</span><div class="main"><span class="t">${esc(nm)}</span></div><span class="b">${Math.floor(v)}점</span>${rk[i] <= 3 && !solo ? `<span class="s sub" style="min-width:56px;text-align:right">+${EXAM_TOP[rk[i] - 1]}G</span>` : ''}</div>`; }).join('') : `<div class="hint">${key ? '응시한 학생이 없어요' : '아직 시험이 없었어요'}</div>`;
     frame('class', '수업', pos, `${head}<section class="sec">${secH('성적 게시판', rows.length ? `${rows.length}명 응시` : '')}${msg ? `<div class="hint on px">${msg}</div>` : ''}<div class="box px">${list}</div></section>`);
     on('[data-ktab]', b => { classTab = b.dataset.ktab; renderClass(); });
   };
