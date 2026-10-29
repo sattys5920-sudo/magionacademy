@@ -258,9 +258,19 @@ body.admin #shell{max-width:none}
 .adside{display:none}
 #adminv .adth{border-radius:10px;box-shadow:0 0 0 1px #E2D8EE;padding:6px}#adminv .adth canvas{border-radius:6px}#adminv .admapw{border-radius:10px;box-shadow:0 0 0 1px #E2D8EE}#adminv .adgrid{padding:0}
 #adminv .adbody{padding:12px;gap:10px}
-.bbtop{display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0}.bbpic{display:block;background-image:url(art/babies.png);image-rendering:pixelated}
-.bbsnd{font-size:20px;font-weight:700;color:var(--ink,#2A1E3A)}.bbsnd.grr{animation:bbgrr .35s steps(2) infinite}@keyframes bbgrr{50%{transform:translateX(2px)}}
-.bbtop~.frow,.bbneed~.frow,.bbname~.frow{justify-content:center}.bbneed{display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px}.bbneed span{font-weight:700}.bbname{display:flex;align-items:center;gap:8px;justify-content:center}.bbname input{font-size:16px;padding:8px 10px;border-radius:10px;border:1px solid #CFC2E2;width:160px}
+.bbtodo{display:flex;align-items:center;gap:10px;padding:6px 4px}.bbtodo span{margin-left:auto;font-size:13px;opacity:.85}
+.bbwrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 16px 12px;text-align:center}
+.bbstage{width:156px;height:156px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 50% 58%,rgba(255,214,140,.32) 0,rgba(196,160,255,.16) 52%,rgba(196,160,255,0) 72%)}
+.bbpic{display:block;background-image:url(art/babies.png);image-rendering:pixelated}
+.bbsay{position:relative;background:#FFFDF6;color:#2A1E3A;border:2px solid #2A1E3A;border-radius:14px;padding:8px 18px;font-size:19px;font-weight:800;margin-top:-6px}
+.bbsay::before{content:'';position:absolute;left:50%;top:-9px;margin-left:-8px;border:8px solid transparent;border-top:0;border-bottom:9px solid #2A1E3A}.bbsay::after{content:'';position:absolute;left:50%;top:-6px;margin-left:-6px;border:6px solid transparent;border-top:0;border-bottom:7px solid #FFFDF6}
+.bbsay.grr{animation:bbgrr .35s steps(2) infinite}@keyframes bbgrr{50%{transform:translateX(2px)}}
+.bbdots{display:flex;gap:8px}.bbdots i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.18)}.bbdots i.on{background:#FFA53A}.bbdots i.now{background:transparent;box-shadow:inset 0 0 0 2px #FFA53A}
+.bbneed{display:flex;align-items:center;justify-content:center;gap:10px;min-width:230px;padding:10px 16px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);font-size:15px}.bbneed span{font-weight:800;opacity:.7}.bbneed span.ok{color:#8CE6A8;opacity:1}
+.bbbtns{display:flex;flex-direction:column;align-items:stretch;gap:10px;width:100%;max-width:300px;margin-top:4px}
+.bbcta{height:54px;border:0;border-radius:16px;font:inherit;font-size:17px;font-weight:800;background:#FFA53A;color:#2A1600;box-shadow:0 4px 0 #C2741C;cursor:pointer}.bbcta:active{transform:translateY(2px);box-shadow:0 2px 0 #C2741C}
+.bbcta:disabled{background:rgba(255,255,255,.1);color:rgba(255,255,255,.4);box-shadow:none;cursor:default}.bbcta.sub{background:transparent;color:inherit;border:2px solid rgba(255,255,255,.28);box-shadow:none}
+.bbinput{width:100%;max-width:300px;height:50px;border-radius:14px;border:2px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:inherit;font:inherit;font-size:17px;text-align:center}.bbinput:focus{outline:none;border-color:#FFA53A}
 #adminv .adbaby{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px 12px}#adminv .adbaby label{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:13px}
 #adminv .adcard{border:1px solid #E2D8EE;border-radius:12px;padding:12px 14px;gap:6px;box-shadow:0 1px 3px rgba(34,24,63,.06)}
 #adminv .adcard>b:first-child{font-size:15px}
@@ -5368,9 +5378,14 @@ function jnGo(map, x, y){
 }
 const jnTags = c => [...(c?.time || []).map(t => BAND_KO[t]), ...(c?.weather || []).map(w => WX_KO[w]), c?.moon === 'full' ? '보름' : ''].filter(Boolean);
 const jnJosa = (k, a, b) => [1, 6, 7, 8, 10].includes(k) ? a : b;   // ♥1·6·7·8·10은 받침이 있어요
+function babyTodoHTML(){
+  const b = me.baby; if (!b || b.adopt) return '';
+  const t = b.st >= 5 ? (b.fin ? '이름 지어 주기' : '품에 안고 사육장으로 데려가기') : `${BABY_STAGE[b.st]} · ${ITEM[BABY_NEED[b.k][b.st][0]]} ${BABY_NEED[b.k][b.st][1]}개`;
+  return `<section class="sec">${secH('길 잃은 아기 동물', `${Math.min(b.st, 5)}/5`)}<div class="box px"><div class="bbtodo">${babyPic(b.k, 2)}<b>${BABY.NAMES[b.k]}</b><span>${t}</span></div></div></section>`;
+}
 function jnTodoHTML(){
   const left = me.orders.filter(o => !o.done).length;
-  return `<section class="sec">${secH('오늘의 의뢰', !me.orders.length ? '' : left ? `${left}건 남음` : '다 전했어요')}
+  return babyTodoHTML() + `<section class="sec">${secH('오늘의 의뢰', !me.orders.length ? '' : left ? `${left}건 남음` : '다 전했어요')}
     ${me.orders.length ? `<div class="box px">${me.orders.map((o, i) => { const have = me.inv[o.p] || 0, ok = have >= o.n;
       return `<div class="li ${o.done ? 'done' : ''}">${ic(o.p)}<div class="main"><span class="t">${ITEM[o.p]} ×${o.n}</span><span class="d">${esc(o.from)} · 가진 것 <span class="num">${have} / ${o.n}</span></span></div>
         ${o.done ? '<span class="tag">완료</span>' : ok ? `<button class="btn sm go" data-deliver="${i}">전하기 +${payOf(o)}G</button>` : `<span class="tag num">${payOf(o)}G</span>`}</div>`; }).join('')}</div>` : '<div class="hint">오늘은 들어온 의뢰가 없어요</div>'}
@@ -7230,13 +7245,16 @@ const BABY_SND = [[['꽥!! 꽤액!!', '꽉! 꽉!'], ['꽥....?', '꾸악....'], 
   [['쿵! 쿵!', '킁킁!!'], ['킁....?', '뿌....'], ['뿌우♪', '킁킁♪']], [['찍찍찍!!', '치익!'], ['찍....?', '쮸....'], ['쮸쮸♪', '찍찍♪']], [['칙! 치익!!', '푸쉭!'], ['킁....', '쀼....?'], ['쀼쀼♪', '킁킁♪']],
   [['끼익!!', '키이익!'], ['끽....?', '찌....'], ['끼끽♪', '찌찌♪']], [['후욱!! 훅!', '카악!'], ['부....?', '후....'], ['부엉♪', '후후♪']], [['캉! 캬앙!', '크르르....'], ['캥....?', '컹....'], ['캥캥♪', '꺙♪']],
   [['크르릉!', '캭!'], ['끄응....?', '낑....'], ['끼잉♪', '쿠웅♪']], [['개굴!! 개굴!', '꾸르륵!'], ['개....굴?', '꾸....'], ['개굴개굴♪', '꾸르♪']], [['삐약!! 삐약!', '삑!'], ['삐....?', '삐약....'], ['삐약삐약♪', '삐삐♪']]];
+// 헤어지기 싫을 때 (레오에게 돌려주려 하면)
+const BABY_CLING = ['꽥....!! 꽥꽥....!!', '냐아앙....!!', '낑낑....!! 낑....', '킁....!! 킁킁....!!', '찌이익....!!', '쀼우....!!', '끼이잉....!!', '부우....!! 부엉....', '캥....!! 캐앵....', '끼잉....!! 끼이잉....', '개구울....!!', '삐약....!! 삐이약....!!'];
 const babyMood = b => !b ? 2 : b.adopt || b.st >= 4 ? 2 : b.st >= 2 ? 1 : 0;
 const babySnd = (k, mood) => { const L = BABY_SND[k][mood]; return L[Math.floor(Math.random() * L.length)]; };
 const babyPic = (k, z = 5) => `<i class="bbpic" style="width:${14 * z}px;height:${14 * z}px;background-position:${-k * 14 * z}px 0;background-size:${168 * z}px ${14 * z}px"></i>`;
-let babyCtl = null, babyPickV = null, babyOffs = [], babyMsg = '', babyCutOn = false, babySig = '';
+let babyCtl, babyPickV, babyOffs = [], babyMsg = '', babyCutOn = false, babySig = '';
 // 이벤트 상태 맞추기: 시작되면 배정받은 동물이 숨은 자리에 생기고, 끝나면 입양 못 한 동물은 사라져요
 function babyState(){
-  if (!me) return; const b = me.baby, c = babyCtl && babyCtl.open ? babyCtl : null;
+  if (!me || babyCtl === undefined || babyPickV === undefined) return;   // 둘 다 받은 뒤에만 (먼저 온 쪽만 보고 진행을 지우면 안 돼요)
+  const b = me.baby, c = babyCtl && babyCtl.open ? babyCtl : null;
   if (b && b.adopt) return;
   if (!c || babyPickV === null || babyPickV === undefined){ if (b){ delete me.baby; save(); } return; }
   if (!b || b.ev !== c.id){ me.baby = { ev: c.id, k: babyPickV, st: 0 }; save(); return; }
@@ -7244,7 +7262,7 @@ function babyState(){
 }
 function babyListen(){
   if (solo || !F || !db || babyOffs.length) return;
-  babyOffs.push(F.onValue(F.ref(db, 'baby/ctl'), s => { babyCtl = s.val(); babyState(); babyTick(); }));
+  babyOffs.push(F.onValue(F.ref(db, 'baby/ctl'), s => { babyCtl = s.val() || null; babyState(); babyTick(); }));
   babyOffs.push(F.onValue(F.ref(db, 'baby/pick/' + uid), s => { const v = s.val(); babyPickV = typeof v === 'number' ? v : null; babyState(); babyTick(); }));
   World.setBabyImg('art/babies.png?v=e1e83df0');
   setInterval(babyTick, 2000);
@@ -7258,17 +7276,19 @@ function babyInRoom(room, k, key){   // 방 가구 위에 (가구가 여럿이�
 }
 function babyWorld(){
   const L = [], b = me && me.baby, rk = babyRoomKey();
-  if (b && !b.adopt){ const [m, x, y] = BABY.SPOTS[b.k]; L.push({ id: 'mine', k: b.k, map: m, x, y, grr: babyMood(b) === 0 }); }
+  if (b && !b.adopt && b.st >= 5) L.push({ id: 'mine', k: b.k, follow: 'me', carry: true });   // 다섯 단계를 다 하면 품에 안아요
+  else if (b && !b.adopt){ const [m, x, y] = BABY.SPOTS[b.k]; L.push({ id: 'mine', k: b.k, map: m, x, y, grr: babyMood(b) === 0 }); }
   if (b && b.adopt){ if (b.follow) L.push({ id: 'mine', k: b.k, follow: 'me' }); else if (rk && rk.endsWith(':' + uid)) L.push({ id: 'mine', k: b.k, ...babyInRoom(me.room, b.k, rk) }); }
   if (rk && !rk.endsWith(':' + uid)){ const ow = rk.split(':')[1], p = playersList[ow]; if (p && p.baby && p.baby.adopt && !p.baby.follow) L.push({ id: 'room:' + ow, k: p.baby.k, ...babyInRoom(p.room, p.baby.k, rk) }); }
   Object.entries(onlineList).forEach(([id, o]) => { if (id !== uid && o && typeof o.bb === 'number') L.push({ id: 'peer:' + id, k: o.bb, follow: id }); });
   const sig = JSON.stringify(L); if (sig !== babySig){ babySig = sig; World.setBabies(L); }
 }
 function babyTick(){
-  if (!me) return; babyState(); babyWorld();
+  if (!me) return; babyState(); babyWorld(); if (World.setMarks && typeof mqSetMarks === 'function') mqSetMarks(mqMarkList);
   const want = me.baby && me.baby.adopt && me.baby.follow ? me.baby.k : null, have = onlineList[uid] ? onlineList[uid].bb ?? null : null;
   if (!solo && F && db && uid && want !== have && onlineList[uid]) F.update(F.ref(db, 'online/' + uid), { bb: want }).catch(() => {});
   if (babyCtl && babyCtl.open && me.babySeen !== babyCtl.id) babyIntro();
+  else if (me.baby && !me.baby.adopt && me.baby.st >= 5 && !me.baby.fin) babyFinale();
 }
 // ---- 첫 장면: 밤길에 수레가 넘어지고 먼지 뭉치 그림자 12개가 흩어져요 (접속해 있으면 바로, 나중에 들어오면 들어오자마자) ----
 async function babyIntro(){
@@ -7306,10 +7326,38 @@ async function babyIntro(){
   } catch(e){ console.error(e); World.setProps('town', [], 'babycut'); World.setView(null); me.babySeen = id; save(); }
   babyCutOn = false;
 }
+// ---- 마지막 장면: 품에 안고 사육장 레오에게 → 안 떨어지려 해요 → 「네가 데려가서 키워」 → 이름 짓기 ----
+let babyFinOn = false;
+async function babyFinale(){
+  const b = me.baby; if (!b || b.adopt || b.st < 5 || b.fin || babyFinOn || World.where() !== 'barn' || babyCutOn || evOn || sheetOn || mqArriving || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '')) return;
+  babyFinOn = true;
+  try {
+    const leo = npcGet('leo'), cling = BABY_CLING[b.k], X = 21, Y = 28;
+    closeSheet(); npcClose(); await sleep(500); World.setView(150);
+    let skip = false; const sk = document.createElement('button'); sk.className = 'btn sm mqskip'; sk.textContent = '건너뛰기'; sk.onclick = () => { skip = true; }; $('#stage').appendChild(sk);
+    const bb = t => ({ cmd: 'sfx', id: '__bb:' + t });
+    await World.cut([{ cmd: 'spawn', who: 'leo', name: leo ? leo.name : '레오', av: leo ? npcAv(leo) : null, x: X, y: Y, dir: 'down' }, { cmd: 'cam', x: X, y: Y + 2 },
+      { cmd: 'say', who: 'player', text: '레오 씨! 찾았어요!', ms: 1800 }, { cmd: 'walk', who: 'player', x: X, y: Y + 2, dir: 'up' },
+      { cmd: 'emote', who: 'leo', icon: 4 }, { cmd: 'say', who: 'leo', text: '그, 그 녀석.... 찾아 줬구나!', ms: 2000 },
+      { cmd: 'say', who: 'leo', text: '사실 그 수레에는 아기 동물들이 타고 있었어. 겁이 많아서 다 흩어져 버렸지.', ms: 3200 },
+      { cmd: 'say', who: 'leo', text: '정말 고마워. 이제 이리 줘. 사육장에서 잘 돌볼게.', ms: 2400 },
+      { cmd: 'walk', who: 'player', x: X, y: Y + 1, dir: 'up' }, bb(cling), { cmd: 'wait', sec: 1.6 }, bb(cling), { cmd: 'wait', sec: 1.4 },
+      { cmd: 'say', who: 'player', text: '어....? 안 떨어지려고 해요.', ms: 2000 }, { cmd: 'wait', sec: .4 },
+      { cmd: 'say', who: 'leo', text: '.......', ms: 1400 }, { cmd: 'say', who: 'leo', text: '허, 이 녀석 좀 봐라.', ms: 1800 },
+      { cmd: 'say', who: 'leo', text: '이미 너랑 너무 친해진 것 같은데.', ms: 2200 },
+      { cmd: 'say', who: 'leo', text: '....좋아. 네가 데려가서 키워 줘.', ms: 2400 }, bb(babySnd(b.k, 2)), { cmd: 'emote', who: 'player', icon: 7 },
+      { cmd: 'say', who: 'leo', text: '대신 잘 돌봐 줘야 한다. 약속이야.', ms: 2400 }, { cmd: 'wait', sec: .5 }, { cmd: 'end' }],
+      { sfx: k => { if (String(k).startsWith('__bb:')) World.babySay('mine', String(k).slice(5)); else sfx(k); }, skip: () => skip });
+    sk.remove(); World.setView(null);
+    b.fin = true; save(); babyMsg = babySnd(b.k, 2); setTimeout(() => openSheet('dorm', 'baby'), 300);
+  } catch(e){ console.error(e); World.setView(null); b.fin = true; save(); }
+  babyFinOn = false;
+}
 // ---- 누르면: 숨은 자리에서는 돌보기, 입양한 뒤에는 쓰다듬기 · 데리고 다니기 ----
 World.onBaby = id => {
   if (id !== 'mine'){ const k = id.startsWith('peer:') ? (onlineList[id.slice(5)] || {}).bb : (playersList[id.slice(5)] || {}).baby?.k; if (typeof k === 'number') World.babySay(id, babySnd(k, 2)); return; }
   const b = me.baby; if (!b) return;
+  if (!b.adopt && b.st >= 5){ World.babySay('mine', babySnd(b.k, 2)); if (!b.fin) return; babyMsg = ''; return openSheet('dorm', 'baby'); }
   if (!b.adopt){ const [m, x, y] = BABY.SPOTS[b.k], p = World.myPos();
     if (World.where() !== m || Math.abs(p.x - x) + Math.abs(p.y - y) > 3){ World.babySay('mine', babySnd(b.k, babyMood(b))); World.walkToTile(x + 1, y + 1); return; }
     World.babySay('mine', babySnd(b.k, babyMood(b))); }
@@ -7317,28 +7365,30 @@ World.onBaby = id => {
 };
 function renderBaby(){
   const b = me.baby; if (!b) return closeSheet();
+  const stage = (k, snd, grr) => `<div class="bbstage">${babyPic(k, 6)}</div>${snd ? `<div class="bbsay${grr ? ' grr' : ''}">${esc(snd)}</div>` : ''}`;
   if (b.adopt){
-    frame(null, esc(b.name), BABY.NAMES[b.k], `<div class="bbtop">${babyPic(b.k)}${babyMsg ? `<div class="bbsnd">${esc(babyMsg)}</div>` : ''}</div>
-      <div class="frow"><button class="btn go" id="bbpet">쓰다듬기</button><button class="btn" id="bbfol">${b.follow ? '방에 두기' : '데리고 다니기'}</button></div>${backBtn}`);
-    $('#back').onclick = closeSheet;
+    frame(null, esc(b.name), BABY.NAMES[b.k], `<div class="bbwrap">${stage(b.k, babyMsg)}
+      <div class="bbbtns"><button class="bbcta" id="bbpet">쓰다듬기</button><button class="bbcta sub" id="bbfol">${b.follow ? '방에 두기' : '데리고 다니기'}</button></div></div>`);
     $('#bbpet').onclick = () => { babyMsg = babySnd(b.k, 2); World.babySay('mine', babyMsg); sfx('pop'); renderBaby(); };
     $('#bbfol').onclick = () => { b.follow = !b.follow; save(); babyTick(); closeSheet(); toast(b.follow ? `${b.name}${josa(b.name, '이', '가')} 따라와요` : `${b.name}${josa(b.name, '은', '는')} 방에서 기다려요`); };
     return;
   }
   if (b.st >= 5){
-    frame(null, BABY.NAMES[b.k], '입양', `<div class="bbtop">${babyPic(b.k)}<div class="bbsnd">${esc(babyMsg || babySnd(b.k, 2))}</div></div>
-      <label class="bbname">이름 <input id="bbnm" maxlength="8" placeholder="이름을 지어 주세요"></label><div class="frow"><button class="btn go" id="bbok">입양하기</button></div>${backBtn}`);
-    $('#back').onclick = closeSheet;
+    frame(null, BABY.NAMES[b.k], '이름 짓기', `<div class="bbwrap">${stage(b.k, babyMsg || babySnd(b.k, 2))}
+      <input class="bbinput" id="bbnm" maxlength="8" placeholder="이름을 지어 주세요" autocomplete="off">
+      <div class="bbbtns"><button class="bbcta" id="bbok">입양하기</button></div></div>`);
     $('#bbok').onclick = () => { const v = ($('#bbnm').value || '').trim().replace(/[<>]/g, ''); if (!v) return toast('이름을 지어 주세요'); if (v.length > 8) return toast('이름은 8글자까지예요');
-      b.adopt = true; b.name = v; b.follow = false; b.at = now2(); save(); closeSheet(); sfx('win'); toast(`${v}${josa(v, '을', '를')} 입양했어요! 내 방에서 기다리고 있어요`); babyTick(); };
+      b.adopt = true; b.name = v; b.follow = false; b.at = now2(); delete b.fin; save(); closeSheet(); sfx('win'); toast(`${v}${josa(v, '을', '를')} 입양했어요! 내 방에서 기다리고 있어요`); babyTick(); };
     return;
   }
   const [k, n] = BABY_NEED[b.k][b.st], have = me.inv[k] || 0, mood = babyMood(b);
-  frame(null, BABY.NAMES[b.k], `${b.st + 1}/5 · ${BABY_STAGE[b.st]}`, `<div class="bbtop">${babyPic(b.k)}<div class="bbsnd${mood === 0 ? ' grr' : ''}">${esc(babyMsg || babySnd(b.k, mood))}</div></div>
-    <div class="bbneed">${ic(k)}<b>${esc(ITEM[k] || k)}</b><span>${Math.min(have, n)}/${n}</span></div>
-    <div class="frow"><button class="btn go" id="bbgive" ${have >= n ? '' : 'disabled'}>주기</button></div>${backBtn}`);
-  $('#back').onclick = closeSheet;
-  $('#bbgive').onclick = () => { if ((me.inv[k] || 0) < n) return; me.inv[k] -= n; if (!me.inv[k]) delete me.inv[k]; b.st++; saveSure(); babyMsg = babySnd(b.k, babyMood(b)); World.babySay('mine', babyMsg); sfx('pop'); babyTick(); renderBaby(); };
+  frame(null, BABY.NAMES[b.k], BABY_STAGE[b.st], `<div class="bbwrap">${stage(b.k, babyMsg || babySnd(b.k, mood), mood === 0)}
+    <div class="bbdots">${[0, 1, 2, 3, 4].map(i => `<i class="${i < b.st ? 'on' : i === b.st ? 'now' : ''}"></i>`).join('')}</div>
+    <div class="bbneed">${ic(k)}<b>${esc(ITEM[k] || k)}</b><span class="${have >= n ? 'ok' : ''}">${Math.min(have, n)}/${n}</span></div>
+    <div class="bbbtns"><button class="bbcta" id="bbgive" ${have >= n ? '' : 'disabled'}>주기</button></div></div>`);
+  $('#bbgive').onclick = () => { if ((me.inv[k] || 0) < n) return; me.inv[k] -= n; if (!me.inv[k]) delete me.inv[k]; b.st++; saveSure(); babyMsg = babySnd(b.k, babyMood(b)); sfx('pop');
+    if (b.st >= 5){ closeSheet(); babyTick(); setTimeout(() => World.babySay('mine', babySnd(b.k, 2)), 300); setTimeout(() => { World.say('me', '이제 돌아가자!'); toast(`${BABY.NAMES[b.k]}${josa(BABY.NAMES[b.k], '을', '를')} 안고 사육장으로 가요`); }, 1500); return; }
+    World.babySay('mine', babyMsg); babyTick(); renderBaby(); };
 }
 function adminBabyHTML(){
   const pk = AD.bbpick || {}, ids = Object.keys(AD.players || {}).filter(id => AD.players[id]?.nick).sort((a, b) => AD.players[a].nick.localeCompare(AD.players[b].nick, 'ko'));
@@ -8847,7 +8897,9 @@ function mqCheck(quiet){
 function mqDeadline(){ const s = mqState(); if (!s.q || s.ph !== 'go' || !s.dl) return; if (me.day > s.dl){ const st = mqStage(); s.dl = me.day + (st.deadline || 5); Object.keys(s.prog).filter(k => k.startsWith('craft:')).forEach(k => delete s.prog[k]); save(); toast('기한이 지나 제조를 처음부터 다시 해요'); } }
 // 조사 지점(clue)을 맵에 띄워요
 let mqMarkSig = null;
-const mqSetMarks = list => { const g = JSON.stringify(list); if (g === mqMarkSig) return; mqMarkSig = g; World.setMarks(list); };   // 바뀔 때만 다시 그려요
+let mqMarkList = [];
+const babyMarks = () => { const b = me && me.baby; return b && !b.adopt && b.st >= 5 && !b.fin ? [{ id: 'baby:barn', map: 'campus', x: 69, y: 91, label: '사육장' }] : []; };
+const mqSetMarks = list => { mqMarkList = list; list = [...list, ...babyMarks()]; const g = JSON.stringify(list); if (g === mqMarkSig) return; mqMarkSig = g; World.setMarks(list); };   // 바뀔 때만 다시 그려요
 // 되돌려진 진행 대비: 이번 단계에 전할 물건이 없으면, 다시 만드는 데 필요한 재료(앞 단계에서 캐던 것)의 자리를 다시 띄워요
 function mqLostMats(){ const q = mqQuest(), st = mqStage(); if (!q || !st) return {}; const R = {}; (q.recipes || []).forEach(r => { R[r.id] = r; }); const need = {};
   const want = (k, n) => { const lack = n - (me.inv[k] || 0); if (lack <= 0) return; const r = R[k]; if (!r) { need[k] = (need[k] || 0) + lack; return; } Object.entries(r.mats || {}).forEach(([m, c]) => want(m, c * lack)); };
@@ -8857,7 +8909,7 @@ function mqMarks(){ if (!World.setMarks) return; const s = mqState(); if (!s.q |
   mqObjs().forEach((o, i) => { if (o.type === 'collect' && o.source && !mqObjState(o, i).done){ const p = mqPlace(o.source.place ? { place: o.source.place, x: o.source.x, y: o.source.y } : o.source); if (p) list.push({ id: 'buy:' + o.item, map: p.map, x: p.x, y: p.y, label: o.source.label || `${ITEM[o.item]} ${o.source.price ? '사기' : '줍기'}` }); return; }
     if (o.type !== 'clue') return; (o.spots || []).forEach(sp => { if (s.prog['clue:' + sp.id]) return; const p = mqPlace(sp.place ? { place: sp.place, x: sp.x, y: sp.y } : sp); if (p) list.push({ id: sp.id, map: p.map, x: p.x, y: p.y, label: sp.label || '조사하기' }); }); });
   mqSetMarks(list); }
-World.onMark = id => { const s = mqState(); let hit = null;
+World.onMark = id => { if (String(id).startsWith('baby:')) return; const s = mqState(); let hit = null;
   if (id.startsWith('buy:')){ const item = id.slice(4), o = mqObjs().find(x => x.type === 'collect' && x.item === item) || (mqQuest()?.stages || []).flatMap(x => x.objectives || []).find(x => x.type === 'collect' && x.item === item && x.source); if (!o) return; const pr = o.source.price || 0; if (me.coin < pr) return toast(`골드가 모자라요 (${pr}G)`); me.coin -= pr; mqGive(item, 1); save(); hud(); sfx('pop'); toast(`${ITEM[item]} ${pr ? `샀어요 (−${pr}G)` : '얻었어요'} · ${me.inv[item]} / ${o.count}`); if ((me.inv[item] || 0) >= o.count) mqMarks(); mqCheck(); return; } mqObjs().forEach(o => { if (o.type === 'clue') (o.spots || []).forEach(sp => { if (sp.id === id) hit = sp; }); }); if (!hit || s.prog['clue:' + id]) return;
   s.prog['clue:' + id] = 1; save(); mqMarks(); const o = mqObjs().find(x => x.type === 'clue' && (x.spots || []).includes(hit)), st = mqObjState(o, mqObjs().indexOf(o));
   mqPanelText(hit.title || '단서', fillVars(hit.text || ''), `<span class="tag">${st.cur} / ${st.need}</span>`); if (hit.item) mqGive(hit.item, 1); mqCheck(); };

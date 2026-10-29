@@ -297,7 +297,7 @@ let started = false;
 // 같은 곳에 있는 친구들 (실시간 위치). 다른 사람 화면에서는 내가 이렇게 보여요
 const peers = {}; let peerList = [];
 // 이름표는 캔버스에 그려요 (DOM을 매 프레임 옮기지 않아요). tags[i] = { t: 글, k: 종류(me·peer·npc·''), ev: 이벤트 표시 }
-function retag(){ tags = people.map(p => p.pet || p.baby || (p.npc && p.npc.cut && !p.name) ? null : { t: (p.npc && p.npc.mark ? '❗' : '') + p.name, k: p.me ? 'me' : p.peer ? 'peer' : p.npc ? 'npc' : '', ev: !!(p.npc && p.npc.mark) }); }
+function retag(){ tags = people.map(p => p.pet || p.baby || p.cutHide || (p.npc && p.npc.cut && !p.name) ? null : { t: (p.npc && p.npc.mark ? '❗' : '') + p.name, k: p.me ? 'me' : p.peer ? 'peer' : p.npc ? 'npc' : '', ev: !!(p.npc && p.npc.mark) }); }
 const TAG_COL = { me: '#FFD866', peer: '#9CF0FF', npc: '#F6F0FF', '': '#F6F0FF' }, tagW = new Map();
 let dpr = 1;
 function drawTag(tag, sx, sy, now, below){   // sx, sy: 세계 픽셀(이름표 아래 가운데, below면 위쪽 가운데). 화면 좌표계(setTransform 1)에서 불러요
@@ -397,19 +397,20 @@ function syncBabies(){
 }
 function stepBaby(p, dt){
   const h = babyHost(p.baby); p.moving = false; if (!h) return;
+  if (p.baby.carry){ p.x = h.x + .02; p.y = h.y + .02; p.flip = h.view === World.Avatar.meta.dirs.right; return; }   // 품에 안고 있어요
   const dx = h.x - p.x, dy = h.y - p.y, d = Math.hypot(dx, dy);
   if (d > 12){ p.x = h.x; p.y = h.y + .7; return; }   // 순간 이동하면 같이
   if (d > 1.05){ const v = Math.max(SPEED * .9, d * 5) * dt, k = Math.min(1, v / (d - .9)); p.x += dx * k * (d - .9) / d; p.y += dy * k * (d - .9) / d; p.moving = true; p.t += dt; if (Math.abs(dx - dy) > .05) p.flip = dx - dy > 0; }
 }
 World.babySay = (id, text) => { const p = people.find(q => q.baby && q.baby.id === id); if (!p || !text) return; sayOff(p); const d = document.createElement('div'); d.className = 'say'; d.textContent = text; world.appendChild(d); p.say = { el: d, until: performance.now() + 2600 }; says.push(p); p.hop = performance.now(); };
-const babyXY = p => { const [sx, sy] = P(p.x + .5, p.y + .5), d = p.baby; return d.follow ? [sx, sy] : [sx + (d.ox || 0), sy + (d.oy || 0)]; };
+const babyXY = p => { const [sx, sy] = P(p.x + .5, p.y + .5), d = p.baby; return d.carry ? (() => { const h = babyHost(d), D = World.Avatar.meta.dirs, v = h ? h.view : 0; return [sx + (v === D.left ? -3 : v === D.right ? 3 : 0), sy - 9]; })() : d.follow ? [sx, sy] : [sx + (d.ox || 0), sy + (d.oy || 0)]; };
 function drawBaby(p){
-  if (!BABY_IMG) return; const cx = out, d = p.baby, [sx, sy] = babyXY(p), k = KPX, pose = d.follow ? 'normal' : d.pose || 'normal';
+  if (!BABY_IMG) return; const cx = out, d = p.baby, [sx, sy] = babyXY(p), k = KPX * (d.carry ? .6 : 1),   /* 품에 안으면 작게 */ pose = d.follow ? 'normal' : d.pose || 'normal';
   const ch = pose === 'peek' ? 9 : pose === 'float' ? 11 : 14, t = performance.now();
-  let bob = p.moving ? Math.round(Math.abs(Math.sin(p.t * 12)) * 2) : 0; if (p.hop && t - p.hop < 500) bob += Math.round(Math.sin((t - p.hop) / 500 * Math.PI) * 4);
+  const hh = d.carry && babyHost(d); let bob = p.moving || (hh && hh.path.length) ? Math.round(Math.abs(Math.sin((hh ? hh.t : p.t) * 12)) * (d.carry ? 1 : 2)) : 0; if (p.hop && t - p.hop < 500) bob += Math.round(Math.sin((t - p.hop) / 500 * Math.PI) * 4);
   const shake = d.grr && !d.follow ? Math.round(Math.sin(t / 45)) * (Math.floor(t / 900) % 3 === 0 ? 1 : 0) : 0;
-  if (pose !== 'flip' && pose !== 'float'){ cx.fillStyle = 'rgba(10,5,20,.28)'; cx.beginPath(); cx.ellipse(sx, sy, 4, 1.5, 0, 0, Math.PI * 2); cx.fill(); }
-  const dx = Math.round((sx - camIX + shake) * k), oyy = pose === 'flip' ? 2 : pose === 'peek' ? 8 : pose === 'float' ? 10 + Math.round(Math.sin(t / 500)) : 12, dy = Math.round((sy - camIY - oyy - bob) * k), w = 14 * k;
+  if (pose !== 'flip' && pose !== 'float' && !d.carry){ cx.fillStyle = 'rgba(10,5,20,.28)'; cx.beginPath(); cx.ellipse(sx, sy, 4, 1.5, 0, 0, Math.PI * 2); cx.fill(); }
+  const dx = Math.round((sx - camIX + shake) * KPX), oyy = pose === 'flip' ? 2 : pose === 'peek' ? 8 : pose === 'float' ? 10 + Math.round(Math.sin(t / 500)) : 12, dy = Math.round((sy - camIY - bob) * KPX - oyy * k), w = 14 * k;
   cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); cx.imageSmoothingEnabled = false;
   if (pose === 'flip'){ cx.translate(dx, dy + ch * k); cx.scale(1, -1); cx.drawImage(BABY_IMG, d.k * 14, 0, 14, ch, -w / 2, 0, w, ch * k); }
   else if (p.flip){ cx.translate(dx, dy); cx.scale(-1, 1); cx.drawImage(BABY_IMG, d.k * 14, 0, 14, ch, -w / 2, 0, w, ch * k); }
@@ -789,6 +790,7 @@ const cheerHop = (p, cp) => p.cheer && p.cheer > performance.now() ? Math.round(
 function drawPerson(p){ const cx = out;
   if (p.pet) return drawPet(p);
   if (p.baby) return drawBaby(p);
+  if (p.cutHide) return;
   if (p.npc && p.npc.pix !== undefined){   // 조연 동물: 32칸 그림, 걸을 때 콩콩 뛰어요
     const [sx, sy] = P(p.x + .5, p.y + .5); cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 5, 2, 0, 0, Math.PI * 2); cx.fill();
     if (!PIX_IMG || !PIX_IMG.complete) return; const cp = KPX * ASC, w = 32 * cp, hop = p.path.length ? Math.abs(Math.sin(p.t * 9)) * 2 * cp : 0;
@@ -851,6 +853,7 @@ function frame(now){
     let idx = 0; list.forEach((it, i) => { if (it.o && sOver(R(it.o), pr) && behind(it.o.box, pb)) idx = i + 1; });
     list.splice(idx, 0, { p });
   });
+  list.filter(it => it.p && it.p.baby && it.p.baby.carry).forEach(it => { const h = babyHost(it.p.baby), j = list.findIndex(q => q.p === h); if (j < 0) return; list.splice(list.indexOf(it), 1); list.splice(list.findIndex(q => q.p === h) + (h.view === World.Avatar.meta.dirs.up ? 0 : 1), 0, it); });   // 품에 안긴 아기는 안은 사람 바로 앞에 (등을 보이면 뒤에)
   list.forEach(it => { if (it.o) cx.drawImage(it.o.img || (it.o.furn ? FURN_IMG : OB), it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.sw, it.o.sh); else drawPerson(it.p); });
   // 가구 놓기: 고른 자리에 반투명하게 미리 보여 줘요
   if (placing && placing.at){ const it = FURN.items[placing.k], [gx, gy] = placing.at, ok = canPlace(placing.k, gx, gy), [px, py] = P(gx, gy);
@@ -1042,7 +1045,7 @@ World.cut = async (cmds, hooks = {}) => {   // hooks: { sfx(id), skip() → true
     for (const c of cmds || []){
       if (skip()) break;
       const k = c.cmd, who = c.who;
-      if (k === 'spawn'){ const [x, y] = spawnAt(c.x, c.y); const p = cutMk(who, c, x, y); cutActors[who] = p; people.push(p); retag(); }
+      if (k === 'spawn'){ const [x, y] = spawnAt(c.x, c.y); people.forEach(q => { if (q.npc && q.npc.id === who && !q.npc.cut) q.cutHide = true; }); const p = cutMk(who, c, x, y); cutActors[who] = p; people.push(p); retag(); }   // 같은 NPC가 원래 자리에 서 있으면 장면 동안 숨겨요
       else if (k === 'despawn'){ const p = cutActors[who]; if (p){ const i = people.indexOf(p); if (i >= 0) people.splice(i, 1); sayOff(p); delete cutActors[who]; retag(); } }
       else if (k === 'walk'){ const p = personOf(who); if (p){ const t = spawnAt(c.x, c.y); if (c.run) p.run = true; p.slow = c.speed || 0;   /* speed: 타일/초 (수레를 끄는 것처럼 천천히) */ if (goto(p, t[0], t[1])){ if (c.wait !== false) await walkDone(p, (c.timeout || 12) * 1000); } else { p.x = t[0]; p.y = t[1]; } p.run = false; p.slow = 0; if (c.dir) p.view = World.Avatar.meta.dirs[c.dir] || p.view; } }
       else if (k === 'face'){ const p = personOf(who), q = personOf(c.to); if (p && q){ const DV = World.Avatar.meta.dirs, dx = q.x - p.x, dy = q.y - p.y; p.view = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? DV.right : DV.left) : (dy < 0 ? DV.up : DV.down); } }
@@ -1060,7 +1063,7 @@ World.cut = async (cmds, hooks = {}) => {   // hooks: { sfx(id), skip() → true
     }
   } catch(e){ console.error('cut', e); }
   // 정리: 임시 배우는 keep이 아니면 지워요
-  Object.keys(cutActors).forEach(id => { const p = cutActors[id]; if (!p.npc.keep){ const i = people.indexOf(p); if (i >= 0) people.splice(i, 1); sayOff(p); delete cutActors[id]; } });
+  people.forEach(q => { if (q.cutHide){ q.cutHide = false; } }); Object.keys(cutActors).forEach(id => { const p = cutActors[id]; if (!p.npc.keep){ const i = people.indexOf(p); if (i >= 0) people.splice(i, 1); sayOff(p); delete cutActors[id]; } });
   crowdPeople.forEach(p => { const i = people.indexOf(p); if (i >= 0) people.splice(i, 1); sayOff(p); }); crowdPeople = [];
   camTarget = null; cutOn = false; busy = false; fadeEl.style.opacity = 0; retag(); World.nearRefresh();
   return true;
