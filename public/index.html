@@ -7478,7 +7478,7 @@ function snowTick(){
   if (snowRoll && (!snowOn() || snowCoolLeft() || !snowOutdoor())) snowRoll = false;
   if (snowRoll){ const t = World.meTile && World.meTile(); if (t){ const k = t.m + ':' + t.x + ',' + t.y; if (snowLast && k !== snowLast && m.ball < SNOW.MAX){ m.ball++; if (m.ball % 5 === 0 || m.ball >= SNOW.MAX) save(); if (m.ball >= SNOW.MAX){ snowRoll = false; sfx('pop'); } } snowLast = k; } }
   World.setSnowball && World.setSnowball(snowOn() && snowOutdoor() && (snowRoll || m.ball) ? m.ball || 1 : 0);
-  snowBtn();
+  snowBtn(); if (World.setMarks && typeof mqSetMarks === 'function') mqSetMarks(mqMarkList);
   if (snowOn() && snowCtl.id && m.seen !== snowCtl.id) snowIntro();
   if (snowSt && snowSt.done && snowSt.at && m.seenDone !== snowSt.at && m.seen) snowFinale();
 }
@@ -9079,7 +9079,8 @@ function mqDeadline(){ const s = mqState(); if (!s.q || s.ph !== 'go' || !s.dl) 
 let mqMarkSig = null;
 let mqMarkList = [];
 const babyMarks = () => { const b = me && me.baby; return b && !b.adopt && b.st >= 5 && !b.fin ? [{ id: 'baby:barn', map: 'campus', x: 69, y: 91, label: '사육장' }] : []; };
-const mqSetMarks = list => { mqMarkList = list; list = [...list, ...babyMarks()]; const g = JSON.stringify(list); if (g === mqMarkSig) return; mqMarkSig = g; World.setMarks(list); };   // 바뀔 때만 다시 그려요
+const snowMarks = () => { if (typeof snowStage !== 'function' || !snowOn()) return []; const g = snowStage(snowSt); return g === 'done' ? [] : [{ id: 'snow:spot', map: 'campus', x: SNOW.SPOT[0], y: SNOW.SPOT[1] + 1, label: g === 'deco' ? '눈사람 장식하기' : '눈사람 자리' }]; };
+const mqSetMarks = list => { mqMarkList = list; list = [...list, ...babyMarks(), ...snowMarks()]; const g = JSON.stringify(list); if (g === mqMarkSig) return; mqMarkSig = g; World.setMarks(list); };   // 바뀔 때만 다시 그려요
 // 되돌려진 진행 대비: 이번 단계에 전할 물건이 없으면, 다시 만드는 데 필요한 재료(앞 단계에서 캐던 것)의 자리를 다시 띄워요
 function mqLostMats(){ const q = mqQuest(), st = mqStage(); if (!q || !st) return {}; const R = {}; (q.recipes || []).forEach(r => { R[r.id] = r; }); const need = {};
   const want = (k, n) => { const lack = n - (me.inv[k] || 0); if (lack <= 0) return; const r = R[k]; if (!r) { need[k] = (need[k] || 0) + lack; return; } Object.entries(r.mats || {}).forEach(([m, c]) => want(m, c * lack)); };
@@ -9089,7 +9090,7 @@ function mqMarks(){ if (!World.setMarks) return; const s = mqState(); if (!s.q |
   mqObjs().forEach((o, i) => { if (o.type === 'collect' && o.source && !mqObjState(o, i).done){ const p = mqPlace(o.source.place ? { place: o.source.place, x: o.source.x, y: o.source.y } : o.source); if (p) list.push({ id: 'buy:' + o.item, map: p.map, x: p.x, y: p.y, label: o.source.label || `${ITEM[o.item]} ${o.source.price ? '사기' : '줍기'}` }); return; }
     if (o.type !== 'clue') return; (o.spots || []).forEach(sp => { if (s.prog['clue:' + sp.id]) return; const p = mqPlace(sp.place ? { place: sp.place, x: sp.x, y: sp.y } : sp); if (p) list.push({ id: sp.id, map: p.map, x: p.x, y: p.y, label: sp.label || '조사하기' }); }); });
   mqSetMarks(list); }
-World.onMark = id => { if (String(id).startsWith('baby:')) return; const s = mqState(); let hit = null;
+World.onMark = id => { if (String(id).startsWith('baby:')) return; if (String(id).startsWith('snow:')) return snowTap(); const s = mqState(); let hit = null;
   if (id.startsWith('buy:')){ const item = id.slice(4), o = mqObjs().find(x => x.type === 'collect' && x.item === item) || (mqQuest()?.stages || []).flatMap(x => x.objectives || []).find(x => x.type === 'collect' && x.item === item && x.source); if (!o) return; const pr = o.source.price || 0; if (me.coin < pr) return toast(`골드가 모자라요 (${pr}G)`); me.coin -= pr; mqGive(item, 1); save(); hud(); sfx('pop'); toast(`${ITEM[item]} ${pr ? `샀어요 (−${pr}G)` : '얻었어요'} · ${me.inv[item]} / ${o.count}`); if ((me.inv[item] || 0) >= o.count) mqMarks(); mqCheck(); return; } mqObjs().forEach(o => { if (o.type === 'clue') (o.spots || []).forEach(sp => { if (sp.id === id) hit = sp; }); }); if (!hit || s.prog['clue:' + id]) return;
   s.prog['clue:' + id] = 1; save(); mqMarks(); const o = mqObjs().find(x => x.type === 'clue' && (x.spots || []).includes(hit)), st = mqObjState(o, mqObjs().indexOf(o));
   mqPanelText(hit.title || '단서', fillVars(hit.text || ''), `<span class="tag">${st.cur} / ${st.need}</span>`); if (hit.item) mqGive(hit.item, 1); mqCheck(); };
