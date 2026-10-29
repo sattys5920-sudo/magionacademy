@@ -132,7 +132,7 @@ def main():
     sprites, meta = [], []
     for k, (fid, name, draw, spot, pose) in enumerate(ITEMS):
         R = Room(6, 6, 60); R.obj(fid, [(1, 1)], lambda img, d, draw=draw: draw(R, img, d))
-        o = R.objs[-1]; ax, ay = R.P(1.5, 1.5)
+        o = R.objs[-1]; ax, ay = R.P(1, 1)   # 놓은 칸의 위 꼭짓점 (spot은 칸 가운데 기준)
         sprites.append(o['img']); meta.append(dict(id=fid, name=name, cat='아기 동물', price=PRICE.get(fid, 60), pts=2, w=1, d=1, solid=1, flat=0, sw=o['img'].width, sh=o['img'].height, ax=round(ax - o['x']), ay=round(ay - o['y']), baby=k if k < 12 else (k - 12) // 2, spot=list(spot), pose=pose))
     W = sum(s.width + 1 for s in sprites); Hh = max(s.height for s in sprites)
     sheet = Image.new('RGBA', (W, Hh), (0, 0, 0, 0)); x = 0

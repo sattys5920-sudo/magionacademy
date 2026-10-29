@@ -258,6 +258,9 @@ body.admin #shell{max-width:none}
 .adside{display:none}
 #adminv .adth{border-radius:10px;box-shadow:0 0 0 1px #E2D8EE;padding:6px}#adminv .adth canvas{border-radius:6px}#adminv .admapw{border-radius:10px;box-shadow:0 0 0 1px #E2D8EE}#adminv .adgrid{padding:0}
 #adminv .adbody{padding:12px;gap:10px}
+.bbtop{display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0}.bbpic{display:block;background-image:url(art/babies.png);image-rendering:pixelated}
+.bbsnd{font-size:20px;font-weight:700;color:var(--ink,#2A1E3A)}.bbsnd.grr{animation:bbgrr .35s steps(2) infinite}@keyframes bbgrr{50%{transform:translateX(2px)}}
+.bbtop~.frow,.bbneed~.frow,.bbname~.frow{justify-content:center}.bbneed{display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px}.bbneed span{font-weight:700}.bbname{display:flex;align-items:center;gap:8px;justify-content:center}.bbname input{font-size:16px;padding:8px 10px;border-radius:10px;border:1px solid #CFC2E2;width:160px}
 #adminv .adbaby{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px 12px}#adminv .adbaby label{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:13px}
 #adminv .adcard{border:1px solid #E2D8EE;border-radius:12px;padding:12px 14px;gap:6px;box-shadow:0 1px 3px rgba(34,24,63,.06)}
 #adminv .adcard>b:first-child{font-size:15px}
@@ -3419,7 +3422,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.examBd = {}; AD.day = AD.day || todayKey(); sgListen(); if (!noticeOff && F && db) noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); if (AD.tab === 'gift' && !adminTyping()) adminRender(); });
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = k === 'players' ? fbBack(s.val() || {}) : s.val() || {}; if (adminTyping()) return; adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
   adminRender();
 }
 const adminTyping = () => { const a = document.activeElement; return (AD.tab === 'npc' || AD.tab === 'gift' || AD.tab === 'story') && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
@@ -5056,6 +5059,7 @@ function render(){
   if (sub === 'avatar') return renderAvatar();
   if (sub === 'clothes') return renderClothes();
   if (sub === 'class') return renderClass();
+  if (sub === 'baby') return renderBaby();
   if (sub === 'dorm') return renderDorm();
   if (sub === 'common') return renderCommon();
   if (sub === 'visit') return renderVisit();
@@ -6191,7 +6195,7 @@ function renderDorm(){
   const cozy = cozyOf(me), H = HOUSES[me.house];
   const guest = Object.entries(myGuest).sort((a, b) => b[1].at - a[1].at);
   const bag = Object.entries(me.fbag).filter(([k, n]) => n > 0 && FURN_BY[k]), bagN = bag.reduce((a, [, n]) => a + n, 0);
-  const shop = FURN.filter(x => !x.ev && (furnCat === '전체' || x.cat === furnCat));
+  const shop = FURN.filter(x => !x.ev && (x.baby === undefined || (me.baby && me.baby.adopt && me.baby.k === x.baby)) && (furnCat === '전체' || x.cat === furnCat));   // 아기 동물 가구: 입양한 내 동물 것만
   const placed = Object.entries(me.room.reduce((a, r) => (FURN_BY[r.f] && (a[r.f] = (a[r.f] || 0) + 1), a), {}));
   fbagPage = clampP(fbagPage, bag.length, 12); fshopPage = clampP(fshopPage, shop.length, 9); guestPage = clampP(guestPage, guest.length, 5);
   const tabs = [['room', '내 방'], ['bag', `가구 가방${bagN ? ` ${bagN}` : ''}`], ['shop', '가구 가게'], ...(solo ? [] : [['guest', `방명록${guest.length ? ` ${guest.length}` : ''}`]])];
@@ -6225,7 +6229,7 @@ function renderDorm(){
   } else if (dormTab === 'shop'){
     body = `<section class="sec">
       ${secH('가구 가게', `${shop.length}종`)}
-      <div class="seg scroll">${FURN_CATS.map(c => `<button data-fcat="${c}" class="${furnCat === c ? 'on' : ''}">${c}</button>`).join('')}</div>
+      <div class="seg scroll">${FURN_CATS.filter(c => c !== '아기 동물' || (me.baby && me.baby.adopt)).map(c => `<button data-fcat="${c}" class="${furnCat === c ? 'on' : ''}">${c}</button>`).join('')}</div>
       <div class="grid" style="grid-template-columns:repeat(3,1fr)">${pageOf(shop, fshopPage, 9).map(x => `<button class="cell" data-buyf="${x.id}" ${me.coin >= x.price ? '' : 'disabled'} style="min-height:96px">${furnPic(x.id, 44)}<span class="s">${x.name}</span><span class="s b num" style="color:var(--gold)">${x.price}G · ♥${x.pts}</span></button>`).join('')}</div>
       ${pager('shoppg', fshopPage, shop.length, 9)}
       ${hint(dormMsg, '')}
@@ -7219,12 +7223,134 @@ function gtTravel(ms){
 // ===== 이벤트 「길 잃은 아기 동물」: 학생마다 한 마리 (관리자가 고르면 baby/pick/<uid> = 번호) · 숨는 곳은 고정 =====
 const BABY = { NAMES: ['아기 오리', '아기 고양이', '아기 강아지', '아기 토끼', '아기 다람쥐', '아기 고슴도치', '아기 박쥐', '아기 부엉이', '아기 여우', '아기 너구리', '아기 개구리', '아기 병아리'],
   SPOTS: [['town', 34, 82], ['town', 26, 33], ['campus', 42, 78], ['campus', 22, 88], ['campus', 48, 95], ['campus', 18, 14], ['campus', 52, 26], ['town', 65, 48], ['town', 16, 77], ['town', 21, 59], ['town', 26, 94], ['town', 76, 42]] };   // 오리 잔교 · 고양이 시장 뒷골목 · 강아지 기숙사 거리 · 토끼 호박밭 · 다람쥐 풍차 숲 · 고슴도치 언덕 숲 · 박쥐 시계탑 아래 · 부엉이 우체국 옆 · 여우 묘지 · 너구리 생선 가게 뒤 · 개구리 늪지 · 병아리 호박 빵집
+const BABY_NEED = [[['g_wheat',3],['g_cotton',2],['f_minnow',2],['herb',3],['d_cornsoup',1]],[['milk',2],['wool',2],['f_crucian',2],['p_fluff',1],['d_moontrout',1]],[['hegg',2],['g2_straw',3],['g2_chest',2],['p_vigor',1],['d_minnowfry',1]],[['g_carrot',3],['g2_straw',2],['g_straw',3],['g_clover',2],['d_carrotmuffin',1]],[['g2_acorn',3],['g2_ginkgo',3],['g2_walnut',2],['g_mint',2],['d_chestnut',1]],[['g2_rasp',3],['g2_maple',3],['g_blueb',2],['p_red',1],['d_bluepie',1]],[['g2_crab',2],['silk',2],['g2_wild',2],['drop',3],['d_jamtoast',1]],[['f_seedbit',2],['g_pine',3],['g2_sseed',3],['p_blue',1],['d_killiomelet',1]],[['hegg',2],['wool',2],['g2_blue',2],['g_ginger',1],['d_mushskewer',1]],[['f_crucian',2],['g2_cone',3],['g_tomato',2],['g_chamo',2],['d_crucianstew',1]],[['g2_lady',1],['g2_moss',3],['g_pea',3],['herb',2],['d_jellyjelly',1]],[['g2_pseed',3],['g2_straw',2],['g_sunf',2],['g_chamo',1],['d_pseedsoup',1]]];   // 동물마다 5단계 [재료, 개수] (tools/baby_needs.json)
+const BABY_STAGE = ['첫 밥', '잠자리', '간식', '몸 돌보기', '특별한 하루'];
+// 울음소리: [경계, 조심, 친해짐] — 말은 못 해요
+const BABY_SND = [[['꽥!! 꽤액!!', '꽉! 꽉!'], ['꽥....?', '꾸악....'], ['꽥꽥♪', '꾸왁~']], [['하악!!', '캬아악!'], ['냐....?', '미야....'], ['냐앙♪', '골골골....']], [['왈! 왈왈!', '으르르릉....'], ['낑....?', '멍....?'], ['멍멍♪', '헥헥♪']],
+  [['쿵! 쿵!', '킁킁!!'], ['킁....?', '뿌....'], ['뿌우♪', '킁킁♪']], [['찍찍찍!!', '치익!'], ['찍....?', '쮸....'], ['쮸쮸♪', '찍찍♪']], [['칙! 치익!!', '푸쉭!'], ['킁....', '쀼....?'], ['쀼쀼♪', '킁킁♪']],
+  [['끼익!!', '키이익!'], ['끽....?', '찌....'], ['끼끽♪', '찌찌♪']], [['후욱!! 훅!', '카악!'], ['부....?', '후....'], ['부엉♪', '후후♪']], [['캉! 캬앙!', '크르르....'], ['캥....?', '컹....'], ['캥캥♪', '꺙♪']],
+  [['크르릉!', '캭!'], ['끄응....?', '낑....'], ['끼잉♪', '쿠웅♪']], [['개굴!! 개굴!', '꾸르륵!'], ['개....굴?', '꾸....'], ['개굴개굴♪', '꾸르♪']], [['삐약!! 삐약!', '삑!'], ['삐....?', '삐약....'], ['삐약삐약♪', '삐삐♪']]];
+const babyMood = b => !b ? 2 : b.adopt || b.st >= 4 ? 2 : b.st >= 2 ? 1 : 0;
+const babySnd = (k, mood) => { const L = BABY_SND[k][mood]; return L[Math.floor(Math.random() * L.length)]; };
+const babyPic = (k, z = 5) => `<i class="bbpic" style="width:${14 * z}px;height:${14 * z}px;background-position:${-k * 14 * z}px 0;background-size:${168 * z}px ${14 * z}px"></i>`;
+let babyCtl = null, babyPickV = null, babyOffs = [], babyMsg = '', babyCutOn = false, babySig = '';
+// 이벤트 상태 맞추기: 시작되면 배정받은 동물이 숨은 자리에 생기고, 끝나면 입양 못 한 동물은 사라져요
+function babyState(){
+  if (!me) return; const b = me.baby, c = babyCtl && babyCtl.open ? babyCtl : null;
+  if (b && b.adopt) return;
+  if (!c || babyPickV === null || babyPickV === undefined){ if (b){ delete me.baby; save(); } return; }
+  if (!b || b.ev !== c.id){ me.baby = { ev: c.id, k: babyPickV, st: 0 }; save(); return; }
+  if (b.k !== babyPickV && b.st === 0){ b.k = babyPickV; save(); }
+}
+function babyListen(){
+  if (solo || !F || !db || babyOffs.length) return;
+  babyOffs.push(F.onValue(F.ref(db, 'baby/ctl'), s => { babyCtl = s.val(); babyState(); babyTick(); }));
+  babyOffs.push(F.onValue(F.ref(db, 'baby/pick/' + uid), s => { const v = s.val(); babyPickV = typeof v === 'number' ? v : null; babyState(); babyTick(); }));
+  World.setBabyImg('art/babies.png?v=e1e83df0');
+  setInterval(babyTick, 2000);
+}
+const babyRoomKey = () => { const k = World.placeKey(); return k && /^myroom_/.test(k) ? k : null; };
+function babyInRoom(room, k, key){   // 방 가구 위에 (가구가 여럿이면 20초마다 옮겨 다녀요)
+  const fs = (room || []).filter(r => FURN_BY[r.f] && FURN_BY[r.f].baby === k);
+  if (!fs.length) return { map: key, x: 8, y: 9 };
+  const r = fs[Math.floor(Date.now() / 20000) % fs.length], it = FURN_BY[r.f];
+  return { map: key, x: r.x, y: r.y, ox: it.spot[0], oy: it.spot[1], pose: it.pose, top: true };
+}
+function babyWorld(){
+  const L = [], b = me && me.baby, rk = babyRoomKey();
+  if (b && !b.adopt){ const [m, x, y] = BABY.SPOTS[b.k]; L.push({ id: 'mine', k: b.k, map: m, x, y, grr: babyMood(b) === 0 }); }
+  if (b && b.adopt){ if (b.follow) L.push({ id: 'mine', k: b.k, follow: 'me' }); else if (rk && rk.endsWith(':' + uid)) L.push({ id: 'mine', k: b.k, ...babyInRoom(me.room, b.k, rk) }); }
+  if (rk && !rk.endsWith(':' + uid)){ const ow = rk.split(':')[1], p = playersList[ow]; if (p && p.baby && p.baby.adopt && !p.baby.follow) L.push({ id: 'room:' + ow, k: p.baby.k, ...babyInRoom(p.room, p.baby.k, rk) }); }
+  Object.entries(onlineList).forEach(([id, o]) => { if (id !== uid && o && typeof o.bb === 'number') L.push({ id: 'peer:' + id, k: o.bb, follow: id }); });
+  const sig = JSON.stringify(L); if (sig !== babySig){ babySig = sig; World.setBabies(L); }
+}
+function babyTick(){
+  if (!me) return; babyState(); babyWorld();
+  const want = me.baby && me.baby.adopt && me.baby.follow ? me.baby.k : null, have = onlineList[uid] ? onlineList[uid].bb ?? null : null;
+  if (!solo && F && db && uid && want !== have && onlineList[uid]) F.update(F.ref(db, 'online/' + uid), { bb: want }).catch(() => {});
+  if (babyCtl && babyCtl.open && me.babySeen !== babyCtl.id) babyIntro();
+}
+// ---- 첫 장면: 밤길에 수레가 넘어지고 먼지 뭉치 그림자 12개가 흩어져요 (접속해 있으면 바로, 나중에 들어오면 들어오자마자) ----
+async function babyIntro(){
+  if (babyCutOn || evOn || sheetOn || mqArriving || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '')) return;
+  babyCutOn = true; const id = babyCtl.id;
+  try {
+    const ld = f => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = 'art/' + f + '?v=e1e83df0'; });
+    const meta = await (await fetch('art/cart.json?v=e1e83df0')).json(), I = {};
+    for (const k of ['up', 'tilt', 'fall']) I[k] = await ld('cart_' + k + '.png'); I.tarp = await ld('cart_tarp.png'); I.puff = await ld('cart_puff.png'); I.sh = await ld('cart_shadows.png');
+    const cv = (im, sx, sy, sw, sh, a = 1) => { const c = document.createElement('canvas'); c.width = sw; c.height = sh; const g = c.getContext('2d'); g.globalAlpha = a; g.drawImage(im, sx, sy, sw, sh, 0, 0, sw, sh); return [c, g]; };
+    const P = {}, cart = (k, x, y, dy = 0) => { const m = meta[k], [c, g] = cv(I[k], 0, 0, m.sw, m.sh); P.cart = { id: 'cart', x, y, img: c, pxc: g, sw: m.sw, sh: m.sh, ax: m.ax, ay: m.ay + dy, solid: false, light: k === 'up' ? { r: 26, c: [255, 170, 80], a: .55 } : null }; };
+    const D = [...Array(12)].map((_, j) => { const a = j / 12 * 6.283 + .3, r = 1.1 + (j % 3) * .35; return [Math.cos(a) * r, Math.sin(a) * r]; });
+    const scene = t => {
+      if (t < 3.75) cart('up', 42, Math.max(62, 68 - 1.6 * t), Math.floor(t * 8) % 2); else if (t < 3.95) cart('up', 42, 62, -5); else if (t < 4.25) cart('tilt', 42.15, 62);
+      else { cart('fall', 42, 62); const k = Math.min(1, (t - 4.25) / .6), [c, g] = cv(I.tarp, 0, 0, 40, 30); P.tarp = { id: 'tarp', x: 42.6 + k * .9, y: 61.6 - k * .7, img: c, pxc: g, sw: 40, sh: 30, ax: 20, ay: 22 + Math.round(Math.sin(k * 3.14) * 14), solid: false };
+        const f = t < 4.35 ? 0 : t < 4.45 ? 1 : t < 4.55 ? 2 : -1; if (f < 0) delete P.puff; else { const [c2, g2] = cv(I.puff, f * 48, 0, 48, 28); P.puff = { id: 'puff', x: 42.4, y: 62, img: c2, pxc: g2, sw: 48, sh: 28, ax: 24, ay: 22, solid: false }; } }
+      if (t >= 4.9){ const k = (t - 4.9) / 1.7; D.forEach(([dx, dy], j) => { const tt = Math.max(0, Math.min(1, k * 1.5 - j * .05)), a = k < .8 ? 1 : Math.max(0, (1 - k) / .2), key = 's' + j; if (tt <= 0 || a <= 0){ delete P[key]; return; } const [c, g] = cv(I.sh, j * 14, 0, 14, 14, a); P[key] = { id: key, x: 42.6 + dx * tt * 4, y: 62 + dy * tt * 4, img: c, pxc: g, sw: 14, sh: 14, ax: 7, ay: 13, solid: false }; }); }
+      World.setProps('town', Object.values(P), 'babycut');
+    };
+    closeSheet(); npcClose(); await new Promise(r => World.teleport('town', [46, 58], r)); await sleep(300);
+    let skip = false, t0 = performance.now(), raf = 0; const sk = document.createElement('button'); sk.className = 'btn sm mqskip'; sk.textContent = '건너뛰기'; sk.onclick = () => { skip = true; }; $('#stage').appendChild(sk);
+    World.setView(150);   // 가까이서 봐요
+    const loop = () => { scene((performance.now() - t0) / 1000); raf = requestAnimationFrame(loop); }; loop();
+    const leo = npcGet('leo');
+    await World.cut([{ cmd: 'spawn', who: 'leo', name: leo ? leo.name : '레오', av: leo ? npcAv(leo) : null, x: 42, y: 65, dir: 'up' }, { cmd: 'player', x: 46, y: 58, dir: 'left' }, { cmd: 'cam', x: 43, y: 62 },
+      { cmd: 'walk', who: 'leo', x: 42, y: 59, speed: 1.6, dir: 'up' }, { cmd: 'wait', sec: .5 }, { cmd: 'walk', who: 'leo', x: 42, y: 59, dir: 'down' }, { cmd: 'emote', who: 'leo', icon: 4 },
+      { cmd: 'say', who: 'leo', text: '으, 으앗.......!', ms: 1800, big: true }, { cmd: 'say', who: 'leo', text: '안, 안 돼.... 다 어디 간 거야.......!', ms: 2200 },
+      { cmd: 'walk', who: 'player', x: 44, y: 59 }, { cmd: 'say', who: 'player', text: '괜찮으세요?', ms: 1600 },
+      { cmd: 'say', who: 'leo', text: '나, 나는 괜찮아. 그런데.... 실려 있던 게.......', ms: 2400 }, { cmd: 'say', who: 'leo', text: '....없어졌어. 하나도 안 남고.', ms: 2400 },
+      { cmd: 'say', who: 'player', text: '뭐가요?', ms: 1500 }, { cmd: 'say', who: 'leo', text: '그, 그건 지금은 말 못 해!', ms: 2000 },
+      { cmd: 'say', who: 'leo', text: '부탁이야. 마을 곳곳을 좀 찾아봐 줄래?', ms: 2800 }, { cmd: 'wait', sec: .6 }, { cmd: 'end' }], { sfx: k => sfx(k), skip: () => skip });
+    cancelAnimationFrame(raf); sk.remove(); World.setProps('town', [], 'babycut'); World.setView(null);
+    me.babySeen = id; save();
+    if (me.baby && !me.baby.adopt) setTimeout(() => toast(`어디선가 「${babySnd(me.baby.k, 0)}」 소리가 들려요`), 600);
+  } catch(e){ console.error(e); World.setProps('town', [], 'babycut'); World.setView(null); me.babySeen = id; save(); }
+  babyCutOn = false;
+}
+// ---- 누르면: 숨은 자리에서는 돌보기, 입양한 뒤에는 쓰다듬기 · 데리고 다니기 ----
+World.onBaby = id => {
+  if (id !== 'mine'){ const k = id.startsWith('peer:') ? (onlineList[id.slice(5)] || {}).bb : (playersList[id.slice(5)] || {}).baby?.k; if (typeof k === 'number') World.babySay(id, babySnd(k, 2)); return; }
+  const b = me.baby; if (!b) return;
+  if (!b.adopt){ const [m, x, y] = BABY.SPOTS[b.k], p = World.myPos();
+    if (World.where() !== m || Math.abs(p.x - x) + Math.abs(p.y - y) > 3){ World.babySay('mine', babySnd(b.k, babyMood(b))); World.walkToTile(x + 1, y + 1); return; }
+    World.babySay('mine', babySnd(b.k, babyMood(b))); }
+  babyMsg = ''; openSheet('dorm', 'baby');
+};
+function renderBaby(){
+  const b = me.baby; if (!b) return closeSheet();
+  if (b.adopt){
+    frame(null, esc(b.name), BABY.NAMES[b.k], `<div class="bbtop">${babyPic(b.k)}${babyMsg ? `<div class="bbsnd">${esc(babyMsg)}</div>` : ''}</div>
+      <div class="frow"><button class="btn go" id="bbpet">쓰다듬기</button><button class="btn" id="bbfol">${b.follow ? '방에 두기' : '데리고 다니기'}</button></div>${backBtn}`);
+    $('#back').onclick = closeSheet;
+    $('#bbpet').onclick = () => { babyMsg = babySnd(b.k, 2); World.babySay('mine', babyMsg); sfx('pop'); renderBaby(); };
+    $('#bbfol').onclick = () => { b.follow = !b.follow; save(); babyTick(); closeSheet(); toast(b.follow ? `${b.name}${josa(b.name, '이', '가')} 따라와요` : `${b.name}${josa(b.name, '은', '는')} 방에서 기다려요`); };
+    return;
+  }
+  if (b.st >= 5){
+    frame(null, BABY.NAMES[b.k], '입양', `<div class="bbtop">${babyPic(b.k)}<div class="bbsnd">${esc(babyMsg || babySnd(b.k, 2))}</div></div>
+      <label class="bbname">이름 <input id="bbnm" maxlength="8" placeholder="이름을 지어 주세요"></label><div class="frow"><button class="btn go" id="bbok">입양하기</button></div>${backBtn}`);
+    $('#back').onclick = closeSheet;
+    $('#bbok').onclick = () => { const v = ($('#bbnm').value || '').trim().replace(/[<>]/g, ''); if (!v) return toast('이름을 지어 주세요'); if (v.length > 8) return toast('이름은 8글자까지예요');
+      b.adopt = true; b.name = v; b.follow = false; b.at = now2(); save(); closeSheet(); sfx('win'); toast(`${v}${josa(v, '을', '를')} 입양했어요! 내 방에서 기다리고 있어요`); babyTick(); };
+    return;
+  }
+  const [k, n] = BABY_NEED[b.k][b.st], have = me.inv[k] || 0, mood = babyMood(b);
+  frame(null, BABY.NAMES[b.k], `${b.st + 1}/5 · ${BABY_STAGE[b.st]}`, `<div class="bbtop">${babyPic(b.k)}<div class="bbsnd${mood === 0 ? ' grr' : ''}">${esc(babyMsg || babySnd(b.k, mood))}</div></div>
+    <div class="bbneed">${ic(k)}<b>${esc(ITEM[k] || k)}</b><span>${Math.min(have, n)}/${n}</span></div>
+    <div class="frow"><button class="btn go" id="bbgive" ${have >= n ? '' : 'disabled'}>주기</button></div>${backBtn}`);
+  $('#back').onclick = closeSheet;
+  $('#bbgive').onclick = () => { if ((me.inv[k] || 0) < n) return; me.inv[k] -= n; if (!me.inv[k]) delete me.inv[k]; b.st++; saveSure(); babyMsg = babySnd(b.k, babyMood(b)); World.babySay('mine', babyMsg); sfx('pop'); babyTick(); renderBaby(); };
+}
 function adminBabyHTML(){
   const pk = AD.bbpick || {}, ids = Object.keys(AD.players || {}).filter(id => AD.players[id]?.nick).sort((a, b) => AD.players[a].nick.localeCompare(AD.players[b].nick, 'ko'));
   const cnt = BABY.NAMES.map((_, i) => ids.filter(id => pk[id] === i).length);
-  return `<div class="adcard"><b>이벤트 「길 잃은 아기 동물」 배정 · ${ids.filter(id => pk[id] !== undefined).length}/${ids.length}명</b>
-    <div class="adbaby">${ids.map(id => `<label>${esc(AD.players[id].nick)} <select data-bbu="${id}"><option value="">-</option>${BABY.NAMES.map((n, i) => `<option value="${i}" ${pk[id] === i ? 'selected' : ''}>${n}${cnt[i] ? ` (${cnt[i]})` : ''}</option>`).join('')}</select></label>`).join('') || '<div class="s">학생이 없어요</div>'}</div></div>`;
+  const c = AD.bbctl || {}, st = id => { const b = AD.players[id].baby; return !b ? '' : b.adopt ? ' · 입양' : b.ev === c.id ? ` · ${b.st}/5` : ''; };
+  return `<div class="adcard"><b>이벤트 「길 잃은 아기 동물」 · ${c.open ? '진행 중' : '닫혀 있어요'} · 배정 ${ids.filter(id => pk[id] !== undefined).length}/${ids.length}명</b>
+    <div class="frow">${c.open ? '<button class="btn sm" data-bba="close">이벤트 끝내기</button>' : '<button class="btn sm go" data-bba="open">이벤트 시작</button>'}</div>
+    <div class="adbaby">${ids.map(id => `<label>${esc(AD.players[id].nick)}${st(id)} <select data-bbu="${id}"><option value="">-</option>${BABY.NAMES.map((n, i) => `<option value="${i}" ${pk[id] === i ? 'selected' : ''}>${n}${cnt[i] ? ` (${cnt[i]})` : ''}</option>`).join('')}</select></label>`).join('') || '<div class="s">학생이 없어요</div>'}</div></div>`;
 }
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-bba]'); if (!b || !F || !db) return;
+  if (b.dataset.bba === 'open'){ if (confirm('이벤트를 시작할까요? 접속한 학생에게 첫 장면이 바로 나와요')) F.set(F.ref(db, 'baby/ctl'), { open: true, id: now2() }); }
+  else if (confirm('이벤트를 끝낼까요? 입양을 못 한 동물은 사라져요')) F.set(F.ref(db, 'baby/ctl'), { open: false }); });
 document.addEventListener('change', e => { const t = e.target.closest && e.target.closest('[data-bbu]'); if (!t || !F || !db) return; F.set(F.ref(db, 'baby/pick/' + t.dataset.bbu), t.value === '' ? null : +t.value).catch(ex => toast('저장 실패: ' + (ex.code || ex.message))); });
 function adminGtrainHTML(){
   const c = AD.gtctl || {}, ph = gtPhase(c), rd = Object.values((AD.gtride || {})[c.id] || {}), PH = { off: '닫혀 있어요', board: '승강장에 서 있어요', out: '목적지로 가는 중', dest: '목적지에서 채집 중', in: '돌아오는 중', back: '돌아왔어요', done: '쉬는 중 (다시 부를 수 있어요)' };
@@ -8471,7 +8597,7 @@ async function boot(){
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       F.onValue(F.ref(db, 'adm/reset/' + uid), s => { const v = +s.val() || 0; if (!v) return; let seen = 0; try { seen = +localStorage.getItem('magion-rs-' + uid) || 0; } catch(e){}
         if (v > seen && v > bootT - 5000){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
-      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen();
+      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); const sg = Object.entries(gameList).map(([id, r]) => r ? id + r.st + Object.keys(r.p || {}).length : '').join('|'); if (sub === 'games' && sg !== gamesSig) render(); gamesSig = sg; });   // 점수가 오를 때마다가 아니라 방이 열리고 닫히고 사람이 드나들 때만 다시 그려요
       F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       const recWatch = () => { const wk = weekKey(); if (recWatch.wk === wk) return; recWatch.wk = wk; (recWatch.offs || []).forEach(f => f()); recList = {}; recWatch.offs = Object.keys(GAMES).map(g => F.onValue(F.ref(db, `records/${g}/${wk}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); })); };
