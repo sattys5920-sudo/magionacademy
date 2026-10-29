@@ -1863,7 +1863,7 @@ function xExpMove(ex){   // 레벨이 내려가지 않게: 예전 표의 레벨�
   let t = 0; for (let l = 1; l < L; l++) t += xNeed(l); if (L < XCAP) t += Math.round(e / xNeed0(L) * xNeed(L)); ex.exp = t; ex.xv = 2;
 }
 const xLv = exp => { let L = 1, e = exp; while (L < XCAP && e >= xNeed(L)){ e -= xNeed(L); L++; } return { L, cur: e, need: L >= XCAP ? 0 : xNeed(L) }; };
-const xLvA = ex => { if (ex.xv === 2) return xLvA(ex); const c = { exp: ex.exp || 0 }; xExpMove(c); return xLv(c.exp); };   // 관리자 화면: 아직 새 표로 안 옮긴 학생도 같은 레벨로
+const xLvA = ex => { if (ex.xv === 2) return xLv(ex.exp || 0); const c = { exp: ex.exp || 0 }; xExpMove(c); return xLv(c.exp); };   // 관리자 화면: 아직 새 표로 안 옮긴 학생도 같은 레벨로
 const XJ = {   // 직업: 체력·공격·마공·치유·속도 [기본, 레벨당] · ic는 art/jobs.png 상징
   warrior: { n: '전사', ic: `<span class="jic" style="--i:0"></span>`, d: '근접 딜러 · 큰 한 방', hp: [135, 15], atk: [14, 2.2], mag: [2, .2], heal: [2, .2], spd: [8, .25] },
   black: { n: '흑마법사', ic: `<span class="jic" style="--i:1"></span>`, d: '원거리 마법 · 광역', hp: [70, 8], atk: [4, .4], mag: [16, 2.4], heal: [3, .3], spd: [10, .3] },
@@ -3537,6 +3537,14 @@ document.addEventListener('click', e => { if (e.target.closest && e.target.close
 // 관리자 화면: 그리다 오류가 나도 위쪽 탭은 계속 눌리고, 오류 내용을 화면에 보여 줘요
 // 관리자 화면 다시 그리기: 손가락이 닿아 있는 동안(과 뗀 직후)에는 학생 데이터로 다시 그리지 않아요.
 //   누르는 사이에 버튼이 새로 바뀌면 아이폰은 클릭을 취소해요. 데이터로 그리는 건 1초에 한 번으로 묶고, 클릭한 결과는 바로 그려요
+// 관리자 화면 버튼 보험: 손가락을 뗐는데 클릭이 안 오면(아이폰이 취소한 경우) 같은 버튼을 직접 눌러 줘요. 그 사이에 버튼이 새로 그려졌으면 같은 버튼을 찾아서요
+let adPress = null, adSynth = false;
+const adBtnSig = el => el.tagName + '|' + (el.id || '') + '|' + JSON.stringify(el.dataset || {}) + '|' + (el.textContent || '').trim().slice(0, 30);
+document.addEventListener('pointerdown', e => { if (!document.body.classList.contains('admin')) return; const el = e.target.closest && e.target.closest('#adminv button, #adminv [data-adfollow], #adminv [data-adth]'); adPress = el ? { el, sig: adBtnSig(el), x: e.clientX, y: e.clientY, done: false } : null; }, true);
+document.addEventListener('pointercancel', () => { adPress = null; }, true);
+document.addEventListener('pointerup', e => { const p = adPress; if (!p) return; if (Math.hypot(e.clientX - p.x, e.clientY - p.y) > 14){ adPress = null; return; }
+  setTimeout(() => { if (adPress !== p || p.done) return; let el = p.el; if (!el.isConnected) el = [...document.querySelectorAll('#adminv button, #adminv [data-adfollow], #adminv [data-adth]')].find(b => adBtnSig(b) === p.sig); p.done = true; p.synth = performance.now(); if (el){ adSynth = true; try { el.click(); } finally { adSynth = false; } } }, 350); }, true);
+document.addEventListener('click', e => { const p = adPress; if (!p || adSynth) return; if (p.synth){ if (performance.now() - p.synth < 1500){ e.stopImmediatePropagation(); e.preventDefault(); } return; } if (p.el === e.target || p.el.contains(e.target)) p.done = true; }, true);   // 늦게 온 진짜 클릭은 두 번 눌리지 않게 버려요
 let adLast = 0, adTimer = null, adClick = false, adPtr = false, adUp = 0, adDown = 0;
 document.addEventListener('pointerdown', () => { adPtr = true; adDown = performance.now(); }, true);
 ['pointerup', 'pointercancel'].forEach(k => document.addEventListener(k, () => { adPtr = false; adUp = performance.now(); }, true));
