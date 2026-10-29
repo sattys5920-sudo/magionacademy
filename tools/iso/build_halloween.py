@@ -36,6 +36,10 @@ QROOMS = {'vamp_manor': 'main_01_dracula', 'museum': 'main_05_mummy', 'lab_tower
 D = json.load(open(I + '/out/dcave.json'))      # dcave.py: 지켜 낸 용들이 사는 동굴 (학교 북쪽 문)
 D.update(indoor=True, vw=185, spawnIn=[16, 22], fill='#0C0715', bgSrc='art/iso/dcave_bg.png', objSrc='art/iso/dcave_obj.png', title='용의 동굴', sub='지켜 낸 용들이 살아요 · 남쪽 문으로 학교에 돌아가요', lazy=True)
 MAPS = {'campus': {'meta': camp}, 'town': {'meta': town}, 'lab': {'meta': L}, 'quarter': {'meta': Q}, 'arena': {'meta': A}, 'dcave': {'meta': D}}
+GT_SUB = {'lake': '유령 열차 목적지 · 물결 자리에서 낚시해요'}   # gtrain_maps.py: 유령 열차 목적지 5곳 (탈 때 불러와요)
+for _k in ('lake', 'field', 'grave', 'forest', 'cave'):
+    _m = json.load(open(I + '/out/gt_%s.json' % _k)); _m.update(bgSrc='art/iso/gt_%s_bg.png' % _k, objSrc='art/iso/gt_%s_obj.png' % _k, sub=GT_SUB.get(_k, '유령 열차 목적지 · 반짝이를 주워요'), fill='#140E1E', lazy=True, gt=_k)
+    MAPS['gt_' + _k] = {'meta': _m}
 DOORMAP = {tuple(map(int, k.split(','))): v for k, v in json.load(open(I + '/out/door_map.json')).items()}
 ALLO, ALLA = camp['objs'] + town['objs'], camp['areas'] + town['areas']
 for k in QROOMS: MAPS[k] = {'meta': dict(json.load(open(I + '/out/%s.json' % k)), lazy=True)}
@@ -94,6 +98,6 @@ open(OUT, 'w').write(t); print('wrote', OUT, len(t))
 
 # 지도 그림(png + 무손실 webp)을 public/art/iso에 복사해요
 from PIL import Image
-for nm in ['hw_bg', 'town_bg', 'hw_obj', 'quarter_bg', 'quarter_obj', 'dcave_bg', 'dcave_obj'] + [k + sfx for k in QROOMS for sfx in ('_bg', '_obj')]:
+for nm in ['hw_bg', 'town_bg', 'hw_obj', 'quarter_bg', 'quarter_obj', 'dcave_bg', 'dcave_obj'] + ['gt_%s%s' % (k, x) for k in ('lake', 'field', 'grave', 'forest', 'cave') for x in ('_bg', '_obj')] + [k + sfx for k in QROOMS for sfx in ('_bg', '_obj')]:
     im = Image.open(I + '/out/%s.png' % nm); d = os.path.join(_PUBD, 'art', 'iso')
     im.save(os.path.join(d, nm + '.png')); im.save(os.path.join(d, nm + '.webp'), lossless=True)

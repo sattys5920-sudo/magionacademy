@@ -122,7 +122,9 @@
       ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
       "$house": {
         ".write": "auth != null",
-        "$uid": { ".validate": "newData.val() === 1" }
+        "$uid": {
+          ".validate": "newData.val() === 1"
+        }
       }
     },
     "houses": {
@@ -330,6 +332,23 @@
     "school": {
       ".read": "auth != null",
       ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'"
+    },
+    "gtrain": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+      "ride": {
+        "$id": {
+          "$u": {
+            ".write": "auth != null && (auth.uid === $u || auth.token.email === 'magionadmin@magionacademy.app')",
+            ".validate": "!newData.exists() || (newData.child('n').isString() && newData.child('n').val().length <= 8 && newData.child('at').isNumber())"
+          }
+        }
+      },
+      "gold": {
+        "$id": {
+          ".write": "auth != null && ((!data.exists() && newData.child('u').val() === auth.uid) || auth.token.email === 'magionadmin@magionacademy.app')"
+        }
+      }
     }
   }
 }

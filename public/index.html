@@ -760,6 +760,10 @@ button.cell:not(:disabled):active{background:var(--line)}
 #wallet{flex:none;padding:0 8px 0 6px;gap:6px;font-size:13px}
 .mtile .main .d{white-space:normal}
 @media (max-width:370px){.hudname{display:none}}
+#gtbtn{position:absolute;right:10px;top:66px;z-index:7;min-height:40px;padding:0 14px;border-radius:20px;border:2px solid #0e2a2a;background:#7AE0E0;color:#0e2a2a;font-family:var(--f-pxb);font-size:var(--fs);box-shadow:0 0 14px rgba(122,224,224,.7)}
+#gtpanel{position:absolute;left:10px;right:10px;bottom:10px;z-index:8;background:rgba(20,13,30,.95);border:2px solid #7AE0E0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}#gtpanel .gth{display:flex;justify-content:space-between;align-items:center;gap:8px}#gtpanel .gth b{font-family:var(--f-pxb);font-size:17px;color:#7AE0E0}#gtpanel .gth span{font-family:var(--f-pxb);color:var(--gold)}#gtpanel .s{color:var(--sub)}#gtpanel .btn{min-height:44px}
+body.gtride #bar,body.gtride #chat,body.gtride #ctx,body.gtride .corner{opacity:.35;pointer-events:none}
+#gtv{position:absolute;inset:0;z-index:60;background:#100b22;display:flex;align-items:center;justify-content:center;overflow:hidden}#gtv canvas{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}#gtv .gtvt{position:absolute;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%);background:rgba(20,13,30,.92);border:2px solid #7AE0E0;border-radius:12px;padding:8px 18px;font-family:var(--f-pxb);font-size:16px;white-space:nowrap}#gtv .gtvt span{color:#7AE0E0;display:inline-block;width:2em;text-align:left}
 #sessoff{position:fixed;inset:0;z-index:99999;background:rgba(14,8,32,.86);display:flex;align-items:center;justify-content:center;padding:16px}#sessoff .card{max-width:340px;display:flex;flex-direction:column;gap:10px;text-align:center}
 </style>
 </head>
@@ -1414,6 +1418,7 @@ function posLoad(){
   try {
     const q = JSON.parse(localStorage.getItem(posKey()) || 'null'); if (!q || typeof q.m !== 'string' || !Number.isFinite(q.x) || !Number.isFinite(q.y)) return null;
     if (q.m === 'pen' || q.m.startsWith('pen:')) return { m: 'barn', x: 21, y: 31 };
+    if (q.m.startsWith('gt_')) return { m: 'town', x: 12, y: 54 };   // 유령 열차 목적지에서 껐으면 강가 승강장 (열차가 아직 거기 있으면 다시 데려가요)
     if (q.m.includes(':') || !World.meta(q.m)) return null;   // 개인 방(주인마다 다름)·없어진 곳은 처음 자리로
     if (q.m === 'campus' && q.v !== 2){ const t = legToNew(q.x, q.y); q.m = t[0]; q.x = t[1]; q.y = t[2]; }   // 지도를 학교·마을로 나누기 전에 저장한 자리
     return POS_SKIP.includes(q.m) ? null : q;
@@ -1443,7 +1448,7 @@ let spotTimer = 0;
 const EMOS = ['손인사', '웃음', '깔깔', '하트눈', '놀람', '눈물', '화남', '하트', '엄지척', '반짝', '호박', '유령'];   // art/emo.png 순서 (tools/iso/emotes.py)
 const emoI = i => `<i class="emi" style="background-position:-${i * 32}px 0" title="${EMOS[i]}"></i>`;
 let lastPos = '', heard = {}, onlineKeys = '';
-const peersOf = () => Object.entries(onlineList).filter(([id, o]) => id !== uid && o && o.m && o.nick).map(([id, o]) => ({ uid: id, name: o.nick, av: avOf(o), m: o.m, x: o.x | 0, y: o.y | 0 }));
+const peersOf = () => Object.entries(onlineList).filter(([id, o]) => id !== uid && o && o.m && o.nick && !o.gt).map(([id, o]) => ({ uid: id, name: o.nick, av: avOf(o), m: o.m, x: o.x | 0, y: o.y | 0 }));
 // 채팅: 평소에 보이는 건 최근 5줄, 이력은 최대 50개까지만 저장해 두고 「이력」을 눌러 봐요
 const CHAT_MAX = 50, CHAT_SHOW = 5, chatKey = () => 'magion-chat:' + (typeof uid !== 'undefined' && uid ? uid : 'solo');
 let chatLog = null;
@@ -1572,6 +1577,13 @@ const FORAGE = FORAGE_LIST.map(([id, name, z], i) => ({ id, name, i, z, w: Math.
 const CATCH_INFO = Object.fromEntries([...FISH, ...JUNK].map(x => [x.id, { ...x, sheet: 'fish', n: 103 }]).concat(FORAGE.map(x => [x.id, { ...x, sheet: 'forage', n: 50 }])));
 const CATCH = Object.keys(CATCH_INFO);
 CATCH.forEach(k => { ITEM[k] = CATCH_INFO[k].name; });
+// 유령 열차 새 물건 15종 (그림 art/gtrain.png, tools/iso/gtrain_icons.py) · 유령 열차 목적지에서만 나와요
+const GT_ITEMS = [['gt_dandel', '별빛 민들레', 2, 'field'], ['gt_meteorfluff', '유성 솜털', 3, 'field'], ['gt_cometfeather', '혜성 깃털', 4, 'field'],
+  ['gt_wraithmoss', '망령 이끼', 2, 'grave'], ['gt_netherlily', '저승 백합', 3, 'grave'], ['gt_rustbell', '녹슨 기적 종', 4, 'grave'],
+  ['gt_upmush', '거꾸로 버섯', 2, 'forest'], ['gt_upacorn', '물구나무 도토리', 3, 'forest'], ['gt_fairylamp', '숲요정 등불', 4, 'forest'],
+  ['gt_cavecrystal', '동굴 수정', 2, 'cave'], ['gt_echostone', '메아리 돌', 3, 'cave'], ['gt_stalactite', '빛나는 종유석', 4, 'cave'],
+  ['gt_mistminnow', '안개 송사리', 2, 'lake', [8, 32]], ['gt_ghostcarp', '유령 잉어', 3, 'lake', [20, 60]], ['gt_mistlantern', '안개 등롱어', 4, 'lake', [12, 40]]];
+GT_ITEMS.forEach(([id, name, grade, dest, cm], i) => { CATCH_INFO[id] = { id, name, i: 300 + i, si: i, grade, gt: dest, cm, pay: (cm ? { 2: 45, 3: 130, 4: 300 } : { 2: 30, 3: 100, 4: 260 })[grade], sheet: 'gtrain', n: GT_ITEMS.length }; CATCH.push(id); ITEM[id] = name; });
 // 낚싯대: 좋을수록 입질이 빠르고, 희귀한 물고기가 잘 오고, 맞히는 칸이 넓고, 쓰레기가 덜 걸려요
 const RODS = [
   { name: '나무 낚싯대', price: 0, desc: '처음 받은 낚싯대' },
@@ -1596,6 +1608,7 @@ function fishSpotAt(x, y){
   const rv = m?.river; return rv && x >= rv[0] - 1 && x < rv[2] + 1 ? FISH_SPOT.river : FISH_SPOT.lake;
 }
 function rollFish(cap = 99){
+  if (fishing && fishing.gt !== null && fishing.gt !== undefined) return gtFishRoll(fishing.gt);
   const L = rodLv() + sgFx('rare_fish') * 5 + (buffOn('rare') ? 1.5 : 0) + (me.perk?.rod_bonus ? .5 : 0);   // 요리 효과: 드문 물고기 · 캇파 ♥10 낚싯대 보너스
   if (Math.random() < .12 - L * .025) return JUNK[Math.floor(Math.random() * JUNK.length)];
   return pickW(FISH.filter(f => fishNow(f) && f.i <= cap).map(f => ({ ...f, w: f.w * (1 + L * 1.4 * f.i / 99) * (f.id === 'f_lord' && me.perk?.lord_hint && isFullMoon() ? 3 : 1) })));   // 캇파 ♥10: 보름 밤엔 호수의 주인이 가까이
@@ -1612,7 +1625,8 @@ function fishEnd(){ if (!fishing) return; clearTimeout(fishing.timer); cancelAni
 function fishShow(html){ const u = fishUI(); u.innerHTML = `<div class="fpan px">${html}</div>`; u.classList.add('on'); }
 World.onWater = (x, y) => {
   if (!me || fishing) return;
-  World.busyFish = true; World.hideBubble(); fishing = { x, y, st: 'wait', spot: fishSpotAt(x, y) }; World.setBobber({ x, y });
+  let gk = null; if (String(World.where()).startsWith('gt_')){ if (!gtLake() || (gk = gtCastTake()) === null) return; }   // 유령 열차 안개 호수: 낚시 15번
+  World.busyFish = true; World.hideBubble(); fishing = { x, y, st: 'wait', spot: gk !== null ? { name: '안개 호수', cap: 99 } : fishSpotAt(x, y), gt: gk }; World.setBobber({ x, y });
   fishShow(`<b>${rodIc(rodLv(), 24)} 찌를 던졌어요 · ${fishing.spot.name}</b><span class="s">찌가 쏙 들어가면 화면을 눌러요. 그다음엔 찌를 낚이는 쪽(초록 칸)에 두고 버텨요${me.perk?.lord_hint && houseNow() === 'moon' ? `<br>캇파의 힌트: ${isFullMoon() ? '오늘 같은 보름 밤엔 호수의 주인이 가까이 와요' : '호수의 주인은 밤에 나와요. 보름이면 더 잘 와요'}` : ''}</span><button class="btn sm" data-fx="stop">그만하기</button>`);
   fishing.timer = setTimeout(fishBite, (1800 + Math.random() * (5200 - rodLv() * 600)) * (buffOn('bite') ? .55 : 1) * (me.perk?.bait ? .85 : 1));   // 나비 ♥10 미끼
 };
@@ -1710,9 +1724,10 @@ function syncSpots(){
   if (!me) return;
   if (!me.fg || me.fg.d !== todayKey()) me.fg = { d: todayKey(), got: [] };
   if (!Array.isArray(me.fg.got)) me.fg.got = Object.values(me.fg.got || {});   // Firebase는 빈 배열을 저장하지 않아서, 불러오면 got이 없어요
-  const all = spotsToday(); World.setSpots('campus', all.map((s, i) => ({ ...s, i })).filter(s => !me.fg.got.includes(s.i)));
+  const all = spotsToday(); World.setSpots('campus', all.map((s, i) => ({ ...s, i })).filter(s => !me.fg.got.includes(s.i)).concat(typeof gtSpotList === 'function' ? gtSpotList() : []));   // 유령 열차 목적지 반짝이는 뒤에 (앞 번호가 안 바뀌게)
 }
 World.onSpot = (si, spot) => {
+  if (spot && spot.gt) return gtPick(spot);
   if (G && G.g === 'pumpkin') return pkPick(spot);
   if (!me.fg || me.fg.d !== todayKey()){ syncSpots(); return toast('날짜가 바뀌어서 채집 자리가 새로 생겼어요'); }   // 자정을 넘기면 어제 기록으로 다른 자리를 캐지 않게
   const all = spotsToday(), live = all.map((s, i) => ({ ...s, i })).filter(s => !me.fg.got.includes(s.i)), sp = live[si]; if (!sp) return;
@@ -3403,7 +3418,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.examBd = {}; AD.day = AD.day || todayKey(); sgListen(); if (!noticeOff && F && db) noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); if (AD.tab === 'gift' && !adminTyping()) adminRender(); });
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = k === 'players' ? fbBack(s.val() || {}) : s.val() || {}; if (adminTyping()) return; adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
   adminRender();
 }
 const adminTyping = () => { const a = document.activeElement; return (AD.tab === 'npc' || AD.tab === 'gift' || AD.tab === 'story') && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
@@ -5024,7 +5039,7 @@ document.querySelectorAll('#bar [data-nav]').forEach(b => { if (b.dataset.nav ==
   b.onclick = async () => { const s = b.dataset.nav; if (document.body.classList.contains('focus') && sub === 'class' && !await confirmBox('수업 중이에요. 다른 화면으로 갈까요?', '갈게요', '수업 계속')) return; if (sheetOn && sub === s) return closeSheet(); openSheet('home', s); }; });   // 수업 중에 아래 메뉴를 잘못 눌러도 바로 나가지 않게
 // 단축키: I 가방 · M 지도 · R 관계 · J 일지 · Esc 닫기·메뉴 (입력창에서는 안 먹어요)
 document.addEventListener('keydown', e => {
-  if (!me || !document.body.classList.contains('inworld') || e.target.matches?.('input,textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (!me || !document.body.classList.contains('inworld') || document.body.classList.contains('gtride') || e.target.matches?.('input,textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
   const k = (e.key || '').toLowerCase();
   if (k === 'escape'){ if ($('#confirm').classList.contains('on')) return; if (sheetOn) closeSheet(); else if ($('#mapv').classList.contains('on')) $('#mClose').click(); else if (document.activeElement === $('#tin')) $('#tin').blur(); else openSheet('home', 'menu'); return; }
   const map = { i: 'bag', r: 'rel', j: 'journal' }; if (map[k]){ e.preventDefault(); sheetOn && sub === map[k] ? closeSheet() : openSheet('home', map[k]); }
@@ -6965,7 +6980,256 @@ function adminEventHTMLSrv(){
     <div class="frow">${!open ? `<button class="btn sm go" data-dfa="open">이벤트 열기</button><button class="btn sm" data-dfa="local">이 화면에서 직접 진행 (예비)</button>` : `${ph === 'ready' ? (c.cut ? '<span class="s">시작 연출이 나오고 있어요</span>' : '<button class="btn sm go" data-dfa="start">시작 송출 (연출)</button>') : ''}${ph === 'ready' || ph === 'rest' ? '<button class="btn sm" data-dfa="force">웨이브 강제 시작</button>' : ''}${ph !== 'ready' && ph !== 'over' ? `<button class="btn sm" data-dfa="pause">${c.pause ? '다시 진행' : '잠깐 멈춤'}</button>` : ''}<button class="btn sm" data-dfa="reset">처음으로</button><button class="btn sm" data-dfa="close">이벤트 닫기</button>${dead ? '<button class="btn sm go" data-dfa="wake">서버 다시 깨우기</button>' : ''}`}</div></div>
   <div class="adcard"><b>자리</b> (학생이 웨이브 사이에 골라요)${zl.map(t => `<div class="s">${t}</div>`).join('')}</div>`;
 }
-function adminEventHTML(){ return adminEventOverview() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
+// ===== 이벤트 「유령 열차」: 관리자가 부르면 등불 마을 다리 남쪽 강가에 열차가 와요 =====
+// gtrain/ctl = { open, id, dest(lake·field·grave·forest·cave), t0 도착, go 출발 } · gtrain/ride/<id>/<uid> = { n, at } 탄 사람 · gtrain/gold/<id> = { u, n } 금빛 상자를 연 사람
+// 시간(서버 시각, 출발 go 기준): 출발 → 8초 이동 → 목적지 5분(반짝이는 4분 40초까지 생겨요) → 8초 이동 → 강가 승강장
+// 내 기록 me.gt = { id, got:[주운 반짝이 번호], casts 낚시 횟수, gold 금빛 상자 받음 } — 반짝이·낚시 결과는 (열차 번호, 나, 번호)로 정해져서 껐다 켜도 같아요
+const GT = { ST: [12, 54], CAM: [9, 49], BOARD: 300e3, TRAVEL: 8e3, STAY: 300e3, REGEN: 280e3, N: 15, N0: 3, GOLD: 150e3, BACK: 20e3,
+  DEST: { lake: '안개 호수', field: '별똥 들판', grave: '잊힌 묘지역', forest: '거꾸로 숲', cave: '수정 동굴역' },
+  ART: { train: { x: 5, y: 61, sw: 173, sh: 108, ax: 22, ay: 106 }, train_in: { x: 5, y: 61, sw: 173, sh: 108, ax: 22, ay: 106 }, platform: { x: 11, y: 57, sw: 68, sh: 60, ax: 19, ay: 58 } } };
+// 반짝이(낚시) 하나에서 나오는 것 (%) · 새 물건 ★2 10 · ★3 2 · ★4 0.3
+const GT_TAB = {
+  lake: [['gt_mistminnow', 10], ['gt_ghostcarp', 2], ['gt_mistlantern', .3], ['f_batcat', 24], ['f_trout', 20], ['f_ghostsquid', 16], ['f_weel', 8.75], ['f_piranha', 5], ['f_seahorse', .8], ['f_shadow', .5], ['f_jellyqueen', .35], ['f_abyssjelly', .1], ['f_mirrorsquid', .07], ['f_lord', .13], ['junk', 12]],
+  field: [['gt_dandel', 10], ['gt_meteorfluff', 2], ['gt_cometfeather', .3], ['g2_daisy', 22], ['g2_clover3', 20], ['g2_eve', 12], ['g2_lady', 11], ['g2_sseed', 11], ['g2_pseed', 10.2], ['g2_bfly', .7], ['g2_shiny', .4], ['g2_stardust', .2], ['g2_starfall', .12], ['g2_unicorn', .08]],
+  grave: [['gt_wraithmoss', 10], ['gt_netherlily', 2], ['gt_rustbell', .3], ['g2_crowf', 40.17], ['g2_batleaf', 20], ['g2_spider', 20], ['g2_spegg', 2], ['g2_ghostf', 2], ['g2_skullf', 1.7], ['g2_amethyst', .8], ['g2_moonst', .7], ['g2_pumpmoon', .33]],
+  forest: [['gt_upmush', 10], ['gt_upacorn', 2], ['gt_fairylamp', .3], ['g2_acorn', 20], ['g2_mushpine', 16], ['g2_bell', 14], ['g2_blue', 13.27], ['g2_mushred', 12], ['g2_snail', 10], ['g2_stag', .8], ['g2_moonm', .7], ['g2_amber', .33], ['g2_fairy', .2], ['g2_wolf', .2], ['g2_gacorn', .1], ['g2_unicorn', .1]],
+  cave: [['gt_cavecrystal', 10], ['gt_echostone', 2], ['gt_stalactite', .3], ['g2_pebble', 30], ['g2_moss', 20], ['g2_firefly', 17], ['g2_snail', 17.4], ['g2_shiny', 1], ['g2_rmoss', .8], ['g2_fossil', .5], ['g2_amethyst', .5], ['g2_moonst', .4], ['g2_starfall', .1]] };
+let gtCtl = null, gtRide = {}, gtGoldV = null, gtOffs = [], gtSubId = null, gtWant = false, gtSeen = {}, gtPos = {}, gtSpotSig = '', gtPropSig = '', gtTravelOn = false, gtMoving = false;
+const gtGo = (c = gtCtl) => c ? (c.go || c.t0 + GT.BOARD) : 0;
+function gtPhase(c = gtCtl){
+  if (!c || !c.open || !c.id) return 'off'; const t = now2(), go = gtGo(c);
+  if (t < go) return 'board'; const e = t - go;
+  return e < GT.TRAVEL ? 'out' : e < GT.TRAVEL + GT.STAY ? 'dest' : e < GT.TRAVEL * 2 + GT.STAY ? 'in' : e < GT.TRAVEL * 2 + GT.STAY + GT.BACK ? 'back' : 'done';
+}
+const gtDestT = () => now2() - gtGo() - GT.TRAVEL;     // 목적지에 내린 뒤 지난 시간
+const gtMap = () => gtCtl && GT.DEST[gtCtl.dest] ? 'gt_' + gtCtl.dest : null;
+const gtRider = () => !!(gtCtl && gtCtl.id && gtRide[myId()]);
+const gtMine = () => { if (!me.gt || me.gt.id !== gtCtl.id) me.gt = { id: gtCtl.id, got: [], casts: 0, gold: 0 }; me.gt.got = me.gt.got || []; return me.gt; };
+const gtAvail = () => { const t = gtDestT(); return t < 0 ? 0 : Math.min(GT.N, GT.N0 + Math.floor(t / (GT.REGEN / (GT.N - GT.N0)))); };   // 지금까지 생긴 반짝이 수 (4분 40초에 15개)
+const gtMmss = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+function gtRollItem(dest, k){
+  const T = GT_TAB[dest] || [], r = seedRand(`gt|${gtCtl.id}|${myId()}|${k}`)() * T.reduce((a, x) => a + x[1], 0);
+  let acc = 0; for (const [id, w] of T){ acc += w; if (r < acc) return id; } return T[0][0];
+}
+const gtImgs = {};
+const gtImg = k => gtImgs[k] || (gtImgs[k] = Object.assign(new Image(), { src: `art/gtrain_${k}.png?v=1` }));
+function gtProp(k, alpha = 1, dy = 0){
+  const A = GT.ART[k], im = gtImg(k); if (!im.complete || !im.naturalWidth) return null;
+  const c = document.createElement('canvas'); c.width = A.sw; c.height = A.sh; const g = c.getContext('2d'); g.globalAlpha = alpha; g.drawImage(im, 0, 0);
+  return { id: 'gt_' + k, x: A.x, y: A.y + dy, img: c, pxc: g, sw: A.sw, sh: A.sh, ax: A.ax, ay: A.ay, solid: false };
+}
+function gtListen(){
+  if (solo || !F || !db || gtOffs.length) return;
+  gtOffs.push(F.onValue(F.ref(db, 'gtrain/ctl'), s => {
+    const v = s.val(), was = gtCtl; gtCtl = v;
+    if (v && v.open && v.id && (!was || was.id !== v.id) && gtPhase(v) === 'board' && !gtSeen['arr' + v.id]){ gtSeen['arr' + v.id] = 1; toast('뿌우— 유령 열차가 왔어요! 다리 남쪽 강가에 열차가 도착했어요'); sfx('pop'); }
+    gtSub(); gtTick();
+  }));
+  const prev = World.onProp; World.onProp = id => id === 'gtgold' ? (gtGoldOpen(), null) : prev ? prev(id) : null;
+  setInterval(gtTick, 1000);
+}
+function gtSub(){   // 지금 열차의 승객·금빛 상자만 들어요
+  const id = gtCtl && gtCtl.open && gtCtl.id; if (id === gtSubId) return;
+  (gtSub.offs || []).forEach(f => f()); gtSub.offs = []; gtRide = {}; gtGoldV = null; gtSubId = id; gtPos = {};
+  if (!id) return;
+  gtSub.offs.push(F.onValue(F.ref(db, `gtrain/ride/${id}`), s => { gtRide = s.val() || {}; gtPropSig = ''; gtTick(); }));
+  gtSub.offs.push(F.onValue(F.ref(db, `gtrain/gold/${id}`), s => { gtGoldV = s.val(); gtTick(); }));
+}
+// ---- 등불 마을 강가: 승강장·열차 그림 ----
+function gtTown(ph){
+  let sig = 'none', list = [];
+  const plat = () => gtProp('platform'), riders = Object.keys(gtRide).length;
+  if (ph === 'board'){ sig = 'b' + (riders ? 1 : 0); list = [gtProp(riders ? 'train_in' : 'train'), plat()]; }
+  else if (ph === 'out' && now2() - gtGo() < 3000){ const k = Math.min(1, (now2() - gtGo()) / 3000); sig = 'o' + Math.round(k * 6); list = [gtProp('train_in', 1 - k * .85, -Math.round(k * 8)), plat()]; }   // 떠나는 열차: 강을 따라 흐려져요
+  else if (ph === 'back'){ const e = now2() - gtGo() - GT.TRAVEL * 2 - GT.STAY, k = Math.min(1, e / 2500), f = e > GT.BACK - 3000 ? Math.max(0, (GT.BACK - e) / 3000) : 1; sig = 'k' + Math.round(k * 5) + Math.round(f * 5); list = [gtProp('train', k * f * .9 + .1), plat()]; }   // 돌아온 열차: 안개 속에서 나타났다가 사라져요
+  else if (ph !== 'off') { sig = 'p'; list = [plat()]; }
+  if (list.some(p => !p)){ setTimeout(gtTick, 300); return; }   // 그림을 아직 받는 중
+  if (sig === gtPropSig) return; gtPropSig = sig; World.setProps('town', list);
+  if (sig[0] === 'o' || sig[0] === 'k'){ clearTimeout(gtTown.t); gtTown.t = setTimeout(gtTick, 250); }
+}
+// ---- 매초: 단계에 맞춰 화면·위치를 맞춰요 ----
+function gtTick(){
+  if (!me || solo || !World.where) return;
+  const ph = gtPhase(), where = World.where(), onGt = String(where || '').startsWith('gt_'), rider = gtRider() && ph !== 'off';
+  gtTown(ph);
+  gtChip(ph, rider);
+  if (!rider){   // 안 탄 사람: 목적지에 남아 있으면(끊겼다 들어옴 등) 마을로
+    gtRideUi(false);
+    if (onGt && !gtMoving) gtHome(ph === 'off' ? '' : '유령 열차가 등불 마을에 돌아왔어요');
+    if (ph === 'out' && !gtSeen['dep' + gtCtl.id] && where === 'town'){ gtSeen['dep' + gtCtl.id] = 1; toast('유령 열차가 떠났어요'); }
+    if (gtWant && ph === 'board' && gtNear()){ gtWant = false; gtBoard(); }
+    gtSpots(false); return;
+  }
+  const M = gtMap();
+  if (ph === 'board'){
+    if (where !== 'town'){ if (!gtMoving){ gtMoving = true; World.teleport('town', GT.ST, () => { gtMoving = false; }); } return; }
+    gtRideUi(true); gtSpots(false);
+  } else if (ph === 'out'){
+    gtRideUi(true); gtTravel(GT.TRAVEL - (now2() - gtGo()));
+  } else if (ph === 'dest'){
+    if (where !== M){ if (!gtMoving && !gtTravelOn){ gtMoving = true; gtRideUi(false); World.ride(false); World.teleport(M, World.meta(M)?.start || [7, 10], () => { gtMoving = false; gtTick(); }); } return; }
+    gtRideUi(false); gtSpots(true); gtGold(); gtDestNotes();
+  } else if (ph === 'in'){
+    gtSpots(false); if (!gtSeen['whistle' + gtCtl.id]){ gtSeen['whistle' + gtCtl.id] = 1; toast('뿌우— 기적이 울렸어요! 모두 열차에 타요'); }
+    if (where === M) gtTravel(GT.TRAVEL * 2 + GT.STAY - (now2() - gtGo()));
+  } else {   // back · done: 마을로
+    gtSpots(false); if (onGt && !gtMoving) gtHome('유령 열차가 등불 마을에 돌아왔어요');
+  }
+}
+function gtHome(msg){
+  gtMoving = true; gtRideUi(false); World.ride(false); gtSetGold(null);
+  World.teleport('town', GT.ST, () => { gtMoving = false; if (msg) toast(msg); syncSpots(); });
+}
+const gtNear = () => { const p = World.myPos ? World.myPos() : null; return !!(p && p.m === 'town' && p.x >= 8 && p.x <= 15 && p.y >= 49 && p.y <= 60); };
+// 왼쪽 위 버튼: 남은 시간 · 누르면 승강장으로 가서 타요
+function gtChip(ph, rider){
+  let b = $('#gtbtn'); const dest = ph === 'dest' && rider && World.where() === gtMap();
+  const show = (ph === 'board' && !rider) || dest;
+  if (!show){ if (b) b.remove(); return; }
+  if (!b){ b = document.createElement('button'); b.id = 'gtbtn'; b.onclick = () => { if (gtPhase() !== 'board' || gtRider()) return; if (gtNear()) gtBoard(); else { gtWant = true; if (World.where() === 'town') World.walkToTile(GT.ST[0], GT.ST[1]); else toast('등불 마을 다리 남쪽 강가로 가면 탈 수 있어요'); } }; $('#shell').appendChild(b); }
+  const t = dest ? `돌아가기까지 ${gtMmss(GT.TRAVEL + GT.STAY - (now2() - gtGo()))}` : gtNear() ? `탑승하기 · ${gtMmss(gtGo() - now2())}` : `유령 열차 ${gtMmss(gtGo() - now2())}`;
+  if (b.textContent !== t) b.textContent = t;
+}
+async function gtBoard(){
+  if (gtPhase() !== 'board' || gtRider() || gtBoard.busy) return; gtBoard.busy = true;
+  try {
+    if (sheetOn) closeSheet(); gtMine(); if (!await saveSure()) return toast('지금은 저장이 안 돼요. 잠시 뒤에 다시 해 주세요');
+    await GDB.set(`gtrain/ride/${gtCtl.id}/${myId()}`, { n: me.nick, at: now2() });
+    gtRide[myId()] = { n: me.nick }; sfx('pop'); gtTick();
+  } catch(e){ toast('타지 못했어요. 잠시 뒤에 다시 해 주세요'); } finally { gtBoard.busy = false; }
+}
+function gtLeave(){
+  if (gtPhase() !== 'board' || !gtRider()) return;
+  GDB.set(`gtrain/ride/${gtCtl.id}/${myId()}`, null); delete gtRide[myId()]; gtRideUi(false); World.ride(false); gtTick();
+}
+// 탄 동안: 내 모습은 창문 그림자, 화면은 승강장, 다른 건 못 해요 (아래 메뉴·대화 막힘)
+function gtRideUi(on){
+  const was = document.body.classList.contains('gtride'); document.body.classList.toggle('gtride', !!on);
+  if (!solo && F && db && uid && on !== was) F.update(F.ref(db, 'online/' + uid), { gt: on ? 1 : null }).catch(() => {});
+  let p = $('#gtpanel');
+  if (!on){ if (p) p.remove(); if (was) World.ride(false); return; }
+  if (!was) World.ride(true, GT.CAM);
+  const n = Object.keys(gtRide).length, ph = gtPhase(), t = ph === 'board' ? `출발까지 ${gtMmss(gtGo() - now2())}` : '곧 출발해요';
+  if (!p){ p = document.createElement('div'); p.id = 'gtpanel'; p.innerHTML = '<div class="gth"><b>유령 열차에 탔어요</b><span id="gtpt"></span></div><span class="s">출발을 기다리는 동안은 다른 걸 할 수 없어요</span><button class="btn" id="gtleave">내리기</button>'; $('#stage').appendChild(p); $('#gtleave').onclick = gtLeave; }
+  const tt = `${t} · 승객 ${n}명`, pt = $('#gtpt'); if (pt.textContent !== tt) pt.textContent = tt; $('#gtleave').hidden = ph !== 'board';
+}
+// ---- 목적지: 사람마다 반짝이 15개 (처음 3개, 4분 40초까지 천천히) · 안개 호수는 낚시 15번 ----
+function gtSpotList(){
+  if (!gtSpots.on) return [];
+  const M = gtMap(), meta = World.meta(M); if (!meta || gtCtl.dest === 'lake') return [];
+  const g = gtMine(), av = gtAvail(), F_ = meta.forage || [], out = [], used = new Set();
+  const order = F_.map((p, i) => [p, seedRand(`gtp|${gtCtl.id}|${myId()}|${i}`)()]).sort((a, b) => a[1] - b[1]).map(x => x[0]);
+  for (let k = 0; k < av; k++){
+    if (g.got.includes(k)) continue;
+    if (!gtPos[k] || used.has(gtPos[k].join())){ const f = order.find(p => !used.has(p.join())) || order[k % order.length]; gtPos[k] = f; }
+    used.add(gtPos[k].join()); out.push({ x: gtPos[k][0], y: gtPos[k][1], m: M, gt: 1, gk: k });
+  }
+  return out;
+}
+function gtSpots(on){
+  gtSpots.on = on && gtCtl && gtCtl.dest !== 'lake';
+  const sig = gtSpots.on ? gtCtl.id + ':' + gtAvail() + ':' + (me.gt?.got || []).join() : '';
+  if (sig === gtSpotSig) return; gtSpotSig = sig; syncSpots();
+}
+function gtPick(sp){
+  if (gtPhase() !== 'dest' || !gtRider()) return; const g = gtMine(), k = sp.gk;
+  if (g.got.includes(k) || k >= gtAvail()) return;
+  const id = gtRollItem(gtCtl.dest, k), C = CATCH_INFO[id]; g.got.push(k);
+  const isNew = dexAdd(id); if (isNew) me.mana += C.grade || 1; save(); hud(); gtSpotSig = ''; gtSpots(true);
+  if (C.grade >= 3) speak(`${C.name} 찾았다!`);
+  toast(`${withJosa(C.name, '을', '를')} 주웠어요! ${STARS(C.grade)}${isNew ? ` · 새 채집물! 마력 +${C.grade}` : ''}`); sfx('pick');
+}
+const gtLake = () => World.where && World.where() === 'gt_lake';
+function gtCastTake(){   // 안개 호수: 낚시 한 번 = 하나 (4분 40초까지 15번)
+  if (gtPhase() !== 'dest' || !gtRider()) { toast('열차가 곧 떠나요'); return null; }
+  const g = gtMine(), left = gtAvail() - (g.casts || 0); if (left <= 0){ toast(gtAvail() >= GT.N ? '이번 여행의 낚시를 다 했어요' : '물결이 잔잔해요. 조금 뒤에 다시 던져요'); return null; }
+  const k = g.casts || 0; g.casts = k + 1; save(); return k;
+}
+function gtFishRoll(k){
+  const id = gtRollItem('lake', k);
+  return id === 'junk' ? JUNK[Math.floor(seedRand(`gtj|${gtCtl.id}|${myId()}|${k}`)() * JUNK.length)] : CATCH_INFO[id];
+}
+function gtDestNotes(){
+  const t = gtDestT();
+  if (t >= GT.REGEN && !gtSeen['regen' + gtCtl.id]){ gtSeen['regen' + gtCtl.id] = 1; toast('반짝이가 더 생기지 않아요. 20초 뒤에 열차가 떠나요'); }
+  if (gtLake()){ const left = Math.max(0, gtAvail() - (gtMine().casts || 0)); const b = $('#gtbtn'); if (b) b.textContent = `돌아가기까지 ${gtMmss(GT.TRAVEL + GT.STAY - (now2() - gtGo()))} · 낚시 ${left}번`; }
+}
+// 금빛 큰 반짝이: 2분 30초에 나타나고, 누가 열면 그곳에 있는 사람 모두 한 번씩 받아요 (200G · 그 목적지 ★2 새 물건 · 마력 +30 · 지식 +10)
+function gtSetGold(on){
+  const M = gtMap(), meta = M && World.meta(M), sig = on && meta ? M : '';
+  if (sig === gtSetGold.sig) return; gtSetGold.sig = sig;
+  if (gtSetGold.m && gtSetGold.m !== M) World.setProps(gtSetGold.m, []);
+  if (!sig){ if (M) World.setProps(M, []); return; }
+  gtSetGold.m = M; const c = document.createElement('canvas'); c.width = 28; c.height = 34; const g = c.getContext('2d');
+  g.fillStyle = 'rgba(255,216,102,.25)'; g.beginPath(); g.ellipse(14, 17, 13, 13, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#FFD866'; g.beginPath(); [[14, 3], [17, 13], [27, 17], [17, 21], [14, 31], [11, 21], [1, 17], [11, 13]].forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.closePath(); g.fill();
+  g.fillStyle = '#FFF6C8'; g.fillRect(12, 9, 3, 6);
+  World.setProps(M, [{ id: 'gtgold', x: meta.gold[0], y: meta.gold[1], img: c, pxc: g, sw: 28, sh: 34, ax: 14, ay: 38, solid: false, light: { r: 30, c: [255, 216, 102], a: .6 } }]);
+}
+function gtGold(){
+  const g = gtMine();
+  const on = gtDestT() >= GT.GOLD && !gtGoldV && !g.gold; gtSetGold(on);
+  if (on && !gtSeen['gold' + gtCtl.id]){ gtSeen['gold' + gtCtl.id] = 1; toast('금빛 큰 반짝이가 나타났어요! 누가 열면 모두 받아요'); sfx('pop'); }
+  if (gtGoldV && !g.gold){   // 열렸어요: 나도 받아요 (한 번만)
+    g.gold = 1; const nw = GT_ITEMS.find(x => x[3] === gtCtl.dest && x[2] === 2)[0], kn = addKnow(10);
+    me.coin += 200; me.inv[nw] = (me.inv[nw] || 0) + 1; me.mana = (me.mana || 0) + 30; saveSure(); hud(); sfx('heart');
+    toast(`${gtGoldV.u === myId() ? '금빛 상자를 열었어요!' : `${gtGoldV.n || '친구'}님이 금빛 상자를 열었어요!`} 200G · ${ITEM[nw]} · 마력 +30 · 지식 +10`);
+    if (kn.length) setTimeout(() => toast(kn.join(' · ')), 2400);
+  }
+}
+async function gtGoldOpen(){
+  if (gtPhase() !== 'dest' || !gtRider() || gtGoldV || gtDestT() < GT.GOLD) return;
+  const r = await GDB.tx(`gtrain/gold/${gtCtl.id}`, cur => cur ? undefined : { u: myId(), n: me.nick }).catch(() => null);
+  if (r && r.committed){ gtGoldV = { u: myId(), n: me.nick }; gtTick(); }
+}
+// ---- 이동 연출 8초: 별빛 강 · 등불 구름 · 거대한 달과 떠 있는 섬 · 오로라 ----
+function gtTravel(ms){
+  if (gtTravelOn || ms <= 300) return; gtTravelOn = true;
+  const el = document.createElement('div'); el.id = 'gtv'; el.innerHTML = '<canvas></canvas><div class="gtvt">열차가 이동하고 있어요<span></span></div>'; $('#shell').appendChild(el);
+  const W_ = 200, H_ = Math.max(220, Math.min(460, Math.round(W_ * (el.clientHeight || 844) / (el.clientWidth || 390))));   // 화면 비율에 맞춰 세로를 늘려요 (열차는 늘 가운데·온전히)
+  const cv = el.querySelector('canvas'); cv.width = W_; cv.height = H_; const g = cv.getContext('2d'), dots = el.querySelector('.gtvt span'), img = gtImg('train_in'), t0 = performance.now() - (GT.TRAVEL - ms);
+  const R = seedRand('gtv'), stars = Array.from({ length: 140 }, () => [R(), R(), R() < .25 ? 2 : 1, .3 + R() * .7]), lant = Array.from({ length: 26 }, () => [R() * 1.4 - .2, R() * 1.2, .6 + R() * .8]), isle = Array.from({ length: 6 }, () => [R() * 1.3, .1 + R() * .8, .7 + R() * .6]);
+  const flow = (x, y, t, sp, ww = 1, hh = 1) => [((x + 2 * sp * t / 100) % ww + ww) % ww, ((y - sp * t / 100) % hh + hh) % hh];
+  const seg = (t, a, b, f = .45) => t < a - f || t > b + f ? 0 : t < a ? (t - (a - f)) / f : t > b ? 1 - (t - b) / f : 1;
+  const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+  const draw = now => {
+    const t = (now - t0) / 1000; if (t >= GT.TRAVEL / 1000){ el.remove(); gtTravelOn = false; gtTick(); return; }
+    [[16, 11, 34], [20, 14, 42], [24, 17, 50], [28, 20, 58], [32, 22, 66]].forEach((c, k) => { g.fillStyle = rgba(c, 1); g.fillRect(0, k ? H_ * (k - 1) / 4 + H_ * .1 : 0, W_, H_); });
+    stars.forEach(([x, y, s, b]) => { const [nx, ny] = flow(x, y, t, 1.2), tw = .6 + .4 * Math.sin(t * 3 + x * 40), v = Math.round(230 * b * tw); g.fillStyle = `rgb(${v},${v},255)`; g.fillRect(Math.floor(nx * W_), Math.floor(ny * H_), s, s); });
+    const a1 = seg(t, 0, 2); if (a1){ g.fillStyle = rgba([60, 120, 150], .27 * a1); g.beginPath(); g.moveTo(0, H_ * .74); g.lineTo(W_, H_ * .52); g.lineTo(W_, H_ * .62); g.lineTo(0, H_ * .86); g.fill(); for (let k = 0; k < 60; k++){ const [nx, ny] = flow((k * 37 % 200) / 200, (k * 53 % 100) / 100, t, 9); g.fillStyle = rgba([122, 224, 224], .8 * a1); g.fillRect(nx * W_ * 1.2 - 20, H_ * .62 + ny * H_ * .3 - nx * W_ * .25, 2 + k % 3, 1); } }
+    const a2 = seg(t, 2, 4); if (a2) lant.forEach(([x, y, s]) => { const [nx, ny] = flow(x, y, t - 2, 14 * s, 1.4, 1.3), px = nx * W_ - 20, py = ny * H_ - 20, r = 2 + s * 2; g.fillStyle = rgba([255, 160, 70], .12 * a2); g.beginPath(); g.arc(px, py, r * 3, 0, 7); g.fill(); g.fillStyle = rgba([255, 154, 58], a2); g.fillRect(px - r, py - r * 1.4, r * 2, r * 2.4); g.fillStyle = rgba([255, 224, 138], a2); g.fillRect(px - r + 1, py - r * 1.4 + 1, r * 2 - 2, r * 1.2); });
+    const a3 = seg(t, 4, 6); if (a3){ const mx = W_ * .62 - (t - 4) * 4, my = H_ * .26 + (t - 4) * 2; [[52, .12], [44, .24]].forEach(([rr, al]) => { g.fillStyle = rgba([255, 216, 102], al * a3); g.beginPath(); g.arc(mx, my, rr, 0, 7); g.fill(); }); g.fillStyle = rgba([255, 230, 150], a3); g.beginPath(); g.arc(mx, my, 38, 0, 7); g.fill(); g.fillStyle = rgba([232, 200, 120], a3); g.fillRect(mx - 20, my - 14, 12, 10); g.fillRect(mx + 6, my + 8, 14, 10);
+      isle.forEach(([x, y, s]) => { const [nx, ny] = flow(x, y, t - 4, 7 * s, 1.4, 1), px = nx * W_ - 30, py = ny * H_, w = 12 * s; g.fillStyle = rgba([42, 30, 70], a3); g.beginPath(); g.moveTo(px - w, py); g.lineTo(px + w, py); g.lineTo(px, py + w * 1.1); g.fill(); g.fillStyle = rgba([62, 78, 58], a3); g.fillRect(px - w, py - 2, w * 2, 2); g.fillStyle = rgba([46, 62, 54], a3); g.beginPath(); g.arc(px, py - 9 * s, 4 * s, 0, 7); g.fill(); }); }
+    const a4 = seg(t, 6, 8.5); if (a4) [[[111, 230, 170], .18, 10], [[176, 132, 255], .28, 14], [[122, 224, 224], .36, 8]].forEach(([c, yb, amp], band) => { for (let x = 0; x < W_; x += 2){ const y = H_ * yb + Math.sin(x / 18 + t * 2 + band) * amp; g.fillStyle = rgba(c, .18 * a4); g.fillRect(x, y, 2, 26); g.fillStyle = rgba(c, .55 * a4); g.fillRect(x, y, 2, 3); } });
+    g.strokeStyle = 'rgba(200,240,255,.35)'; g.lineWidth = 1; for (let k = 0; k < 10; k++){ const [nx, ny] = flow((k * .137) % 1, (k * .291) % 1, t, 30); g.beginPath(); g.moveTo(nx * W_, ny * H_); g.lineTo(nx * W_ + 10, ny * H_ - 5); g.stroke(); }
+    const bob = Math.round(Math.sin(t * 2.4) * 2), tx = Math.round((W_ - 173) / 2 + 6), ty = Math.round(H_ / 2 - 54 + bob);
+    if (img.complete && img.naturalWidth) g.drawImage(img, tx, ty);
+    for (let k = 0; k < 7; k++){ const ox = (t * 14 + k * 9) % 70; g.fillStyle = `rgba(210,200,240,${Math.max(0, 70 - ox) / 255})`; g.beginPath(); g.ellipse(tx + 50 + ox * 1.6, ty + 86 - ox * .8, 20, 6, 0, 0, 7); g.fill(); }
+    const fade = Math.max(0, 1 - t / .4, (t - (GT.TRAVEL / 1000 - .5)) / .5); if (fade > 0){ g.fillStyle = `rgba(10,6,22,${Math.min(1, fade)})`; g.fillRect(0, 0, W_, H_); }
+    dots.textContent = '.'.repeat(1 + Math.floor(t * 2) % 3);
+    requestAnimationFrame(draw);
+  };
+  requestAnimationFrame(draw);
+}
+// ---- 관리자 ----
+function adminGtrainHTML(){
+  const c = AD.gtctl || {}, ph = gtPhase(c), rd = Object.values((AD.gtride || {})[c.id] || {}), PH = { off: '닫혀 있어요', board: '승강장에 서 있어요', out: '목적지로 가는 중', dest: '목적지에서 채집 중', in: '돌아오는 중', back: '돌아왔어요', done: '쉬는 중 (다시 부를 수 있어요)' };
+  const busy = ['out', 'dest', 'in'].includes(ph), sel = AD.gtdest || 'rand';
+  const left = ph === 'board' ? ` · 출발까지 ${gtMmss(gtGo(c) - now2())}` : ph === 'dest' ? ` · 돌아오기까지 ${gtMmss(gtGo(c) + GT.TRAVEL + GT.STAY - now2())}` : '';
+  return `<div class="adcard"><b>이벤트 「유령 열차」</b> · ${PH[ph]}${c.open && c.dest ? ` · ${GT.DEST[c.dest]}` : ''}${left}
+    <div class="s">${c.open && c.id ? `탄 학생 ${rd.length}명${rd.length ? ': ' + rd.map(r => esc(r.n || '')).join(', ') : ''}` : '열차를 부르면 등불 마을 다리 남쪽 강가에 와요. 5분 뒤(또는 「지금 출발」) 떠나서, 목적지에서 5분 있다가 돌아와요'}</div>
+    <div class="frow">${[['rand', '무작위'], ...Object.entries(GT.DEST)].map(([k, n]) => `<button class="btn sm${sel === k ? ' go' : ''}" data-gtd="${k}">${n}</button>`).join('')}</div>
+    <div class="frow"><button class="btn sm go" data-gta="call" ${busy ? 'disabled' : ''}>열차 부르기</button>${ph === 'board' ? '<button class="btn sm" data-gta="go">지금 출발</button>' : ''}${c.open ? '<button class="btn sm" data-gta="close">이벤트 닫기</button>' : ''}</div></div>`;
+}
+document.addEventListener('click', e => {
+  const d = e.target.closest && e.target.closest('[data-gtd]'); if (d){ AD.gtdest = d.dataset.gtd; adminRender(); return; }
+  const bt = e.target.closest && e.target.closest('[data-gta]'); if (!bt || !F || !db) return; const a = bt.dataset.gta, c = AD.gtctl || {};
+  if (a === 'call'){ const keys = Object.keys(GT.DEST), dest = AD.gtdest && GT.DEST[AD.gtdest] ? AD.gtdest : keys[Math.floor(Math.random() * keys.length)], t = now2(); F.set(F.ref(db, 'gtrain/ctl'), { open: true, id: t, dest, t0: t, go: t + GT.BOARD }); }
+  else if (a === 'go'){ if (gtPhase(c) === 'board') F.update(F.ref(db, 'gtrain/ctl'), { go: now2() }); }
+  else if (a === 'close'){ if (confirm('유령 열차 이벤트를 닫을까요? 목적지에 있는 학생은 등불 마을로 돌아와요.')) F.set(F.ref(db, 'gtrain/ctl'), { open: false }); }
+});
+setInterval(() => { if (document.body.classList.contains('admin') && AD.tab === 'event' && AD.gtctl && AD.gtctl.open && !adminTyping()) { const el = document.querySelector('[data-gta]')?.closest('.adcard'); if (el) el.outerHTML = adminGtrainHTML(); } }, 1000);
+function adminEventHTML(){ return adminEventOverview() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
 // 이벤트 한눈에: 열려 있는지 · 진행도 · 참가한 학생 수
 function adminEventOverview(){
   const sum = o => Object.values(o || {}).reduce((a, n) => a + (+n || 0), 0), n = o => Object.keys(o || {}).length;
@@ -6977,6 +7241,7 @@ function adminEventOverview(){
     ${row('보물 지도 퍼즐', !!pz.open, `맞춘 조각 ${n(AD.pzboard)}/50 · 조각 가진 학생 ${pzOwners.size}명${n(AD.pzchest) ? ` · 상자 ${n(AD.pzchest)}개 열림` : ''}`)}
     ${row('유령 등불', !!ln.open, `${sum(AD.lncnt)}/60 · 모은 학생 ${n(AD.lncnt)}명`)}
     ${row('호박밭 같이 가꾸기', !!pk.open, `${pkT}/${pkGoalN} (${Math.min(100, Math.round(pkT / pkGoalN * 100))}%) · 돌본 학생 ${n(AD.pkpts)}명`)}
+    ${row('유령 열차', !!(AD.gtctl && AD.gtctl.open), AD.gtctl && AD.gtctl.open ? `${GT.DEST[AD.gtctl.dest] || ''} · 탄 학생 ${n((AD.gtride || {})[AD.gtctl.id])}명` : '-')}
     ${row('별 보는 밤', !!sg.open, sg.open ? `${({ gather: '모이는 중', assign: '별 나눠 줌', light: '별 켜는 중', sky: '하늘 보기', done: '이야기 중', end: '끝' })[sg.ph] || ''} · 참가 ${n(sgJoin)}명 · 켜진 별 ${n(sgLit)}/12` : '-')}
   </div></div>`;
 }
@@ -8192,7 +8457,7 @@ async function boot(){
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       F.onValue(F.ref(db, 'adm/reset/' + uid), s => { const v = +s.val() || 0; if (!v) return; let seen = 0; try { seen = +localStorage.getItem('magion-rs-' + uid) || 0; } catch(e){}
         if (v > seen && v > bootT - 5000){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
-      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen();
+      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); const sg = Object.entries(gameList).map(([id, r]) => r ? id + r.st + Object.keys(r.p || {}).length : '').join('|'); if (sub === 'games' && sg !== gamesSig) render(); gamesSig = sg; });   // 점수가 오를 때마다가 아니라 방이 열리고 닫히고 사람이 드나들 때만 다시 그려요
       F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       const recWatch = () => { const wk = weekKey(); if (recWatch.wk === wk) return; recWatch.wk = wk; (recWatch.offs || []).forEach(f => f()); recList = {}; recWatch.offs = Object.keys(GAMES).map(g => F.onValue(F.ref(db, `records/${g}/${wk}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); })); };

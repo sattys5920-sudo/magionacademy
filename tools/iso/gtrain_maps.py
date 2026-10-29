@@ -319,7 +319,7 @@ def build(kind):
     for k in keys: sheet.paste(SPR[k], pos[k])
     sheet.save(f'out/gt_{kind}_obj.png')
     meta = [dict(name=o['name'], box=o['box'], sx=pos[o['spr']][0], sy=pos[o['spr']][1], sw=SPR[o['spr']].width, sh=SPR[o['spr']].height, x=o['x'], y=o['y'], door=o['door'], solid=o['solid'], act=o['act']) for o in objs]
-    json.dump(dict(W=W, H=H, NX=NX, NY=NY, OX=OX, OY=OY, objs=meta, lights=lights, water=water, forage=forage, gold=[gx, gy],
+    json.dump(dict(W=W, H=H, NX=NX, NY=NY, OX=OX, OY=OY, objs=meta, lights=lights, **({'water': water} if water else {}), forage=forage, gold=[gx, gy],
                    areas=[dict(n=TITLE[kind], t=[15, 10])], start=SPAWN, title=TITLE[kind]), open(f'out/gt_{kind}.json', 'w'), ensure_ascii=False)
     print(kind, 'objs', len(objs), 'sheet', sheet.size)
 
