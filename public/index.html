@@ -5034,7 +5034,7 @@ const FLAVOR = {
 };
 // 기능이 있는 것만 눌려요: 요리·판매·침대 같은 곳 + 아래 목록. 분위기용 소품(소파·벤치·문구만 나오던 것)은 누를 수 없어요
 const ACT_REAL = new Set(['용 만나기', '쉬기', '잠자고 내일로', '방명록 보기', '휴게실 꾸미기', '말 걸기', '오늘의 실습 보기', '앉아서 수업 듣기', '놀이 고르기', '요리하기', '카라멜 젓기', '요리책 보기', '과자 만들기', '채소 팔기', '물고기 팔기', '소원 빌기', '박쥐 돌보기']);
-World.actOk = (o, a, mapId) => ACT_REAL.has(a[1]) || !!ACT_GO[a[1]] || mapId === 'pen' || (a[1] === '쓰다듬기' && o.name === 'blackcat');
+World.actOk = (o, a, mapId) => ACT_REAL.has(a[1]) || !!ACT_GO[a[1]] || mapId === 'pen';
 World.onAct = (mapId, o, a) => {
   if (!me) return;
   if (a[1] === '용 만나기'){ const i = +String(o.name).replace('dragon', ''), D = DF_DRAG[i]; if (!D) return; setTimeout(() => dfDragonOffer(i), 900); return `<b>${D.n} · ${D.t}</b><br>${['크르릉.......', '크르르.......', '크릉! 크르릉~'][Math.floor(Math.random() * 3)]}`; }
@@ -5054,7 +5054,6 @@ World.onAct = (mapId, o, a) => {
   if (label === '요리책 보기' || label === '과자 만들기'){ ckPot = null; ckTab = 'book'; ckMsg = ''; return openSheet('home', 'cook'); }
   if (label === '채소 팔기'){ vgMsg = ''; return openSheet('home', 'veg'); }
   if (label === '물고기 팔기'){ fsTab = 'sell'; fsMsg = ''; return openSheet('home', 'fish'); }
-  if (label === '쓰다듬기' && o.name === 'blackcat') return openSheet('ranch');
   if (mapId === 'pen'){ ranchTab = label === '부화실 보기' ? 'hatch' : 'pen'; ranchMsg = ''; return openSheet('ranch'); }
   if (ACT_GO[label]) return openSheet(ACT_GO[label]);
   const f = FLAVOR[a[0]] || FLAVOR[label];
