@@ -278,6 +278,10 @@ body.admin #shell{max-width:none}
 #adminv .abtable{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px 16px}#adminv .abrow{display:grid;grid-template-columns:72px 92px 1fr;align-items:center;gap:8px;padding:5px 2px;border-bottom:1px solid #F0EAF6;font-size:13px}
 #adminv .abn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}#adminv .abrow select{width:100%}#adminv .abs{display:flex;align-items:center;gap:6px;color:#5A4B72}#adminv .abs.dim{color:#A99CBE}#adminv .abs.ok{color:#2E8A55;font-weight:700}#adminv .abs.go{color:#C2741C;font-weight:700}
 #adminv .abs .dots{display:inline-flex;gap:3px}#adminv .abs .dots b{width:7px;height:7px;border-radius:50%;background:#E2D8EE}#adminv .abs .dots b.on{background:#F5A13A}
+#morphbtn{position:absolute;left:12px;bottom:64px;z-index:6;min-height:44px;padding:0 16px;border-radius:22px;border:2px solid #2A1E3A;background:#F6E7FF;color:#2A1E3A;font-family:var(--f-pxb);font-size:var(--fs);box-shadow:0 3px 0 #B9A0D8}#morphbtn[hidden]{display:none}
+.molist{display:flex;flex-direction:column;gap:6px;padding:6px 0}.morow{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.06)}.morow.ok{opacity:.6}.morow b{display:block}.morow span{font-size:13px;opacity:.75}.morow em{font-style:normal;font-size:13px;color:#FFD866;text-align:right}.morow.ok em{color:#8CE6A8}.mofm{width:34px;height:34px;background:url(art/morph.png?v=1) no-repeat;background-size:408px 34px;image-rendering:pixelated}
+#adminv .moadm{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:2px 16px;margin-top:6px}#adminv .moadm>div{display:grid;grid-template-columns:72px 80px 1fr;gap:6px;font-size:13px;align-items:center}#adminv .moadm>div.ok span:nth-child(2){color:#2E8B57;font-weight:700}
+.bdlist{display:flex;flex-direction:column;gap:10px;padding:8px 2px}.bdpost{position:relative;padding:12px 14px 12px;border-radius:6px;background:#FFF8E8;color:#3A2A1E;box-shadow:0 3px 0 rgba(0,0,0,.25)}.bdpost::before{content:'';position:absolute;top:-5px;left:50%;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:#E84A5A;box-shadow:0 1px 0 #8A2030}.bdpost.new{outline:2px solid #FFD866}.bdhead{display:flex;align-items:center;gap:8px;margin-bottom:6px}.bdtag{padding:2px 8px;border-radius:4px;background:#C0392B;color:#fff;font-family:var(--f-pxb);font-size:13px}.bdday{font-size:13px;color:#8A7A6A}.bdpost p{margin:0;white-space:pre-wrap;line-height:1.55;font-family:var(--f-pxb)}.bdnone{padding:20px;text-align:center;opacity:.7}
 #snowbtn{position:absolute;left:12px;bottom:64px;z-index:6;min-height:44px;padding:0 16px;border-radius:22px;border:2px solid #2A1E3A;background:#F2F4FF;color:#2A1E3A;font-family:var(--f-pxb);font-size:var(--fs);box-shadow:0 3px 0 #A9B3DA}#snowbtn.on{background:#BFE6FF}#snowbtn.cold{background:#DDE3F2;color:#7A7F98;box-shadow:none}#snowbtn[hidden]{display:none}
 .snlist{display:flex;flex-direction:column;gap:8px;padding:6px 0}.snrow{display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.06)}.snrow.ok{opacity:.65}.snneed{display:flex;flex-wrap:wrap;gap:8px}.snneed span{display:flex;align-items:center;gap:4px}.snneed i{font-style:normal;font-size:13px}.sndone{color:#8CE6A8;font-weight:800;padding:0 10px}
 #adminv .snadm{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 16px}#adminv .snadm>div{display:grid;grid-template-columns:44px 1fr 64px;align-items:center;gap:8px;font-size:13px}#adminv .snbar{height:8px;border-radius:4px;background:#EEE8F5;overflow:hidden}#adminv .snbar i{display:block;height:100%;background:#7AB8E8}
@@ -1513,10 +1517,10 @@ function onOnline(){
   });
 }
 function speak(t, e, to){
-  t = String(t || '').trim().slice(0, 40); if (!t) return;
+  t = String(t || '').trim().slice(0, 40); if (!t) return; const t0 = t; if (!e && typeof morphVoice === 'function') t = morphVoice(t);   // 변해 있으면 그 변신의 소리로
   World.say('me', t, e ? e - 1 : null); if (!e) pushLog(me.nick, t, true);
   if (!solo) F.update(F.ref(db, 'online/' + uid), { s: { t, e: e || 0, at: now2(), m: World.placeKey() || '', ...(to ? { to } : {}) } }).catch(() => {});
-  if (!solo) F.push(F.ref(db, 'chat/' + todayKey()), { u: uid, n: me.nick, t: e ? `[${t}]` : t, m: World.placeKey() || '', at: now2(), ...(to ? { to } : {}) }).catch(() => {});   // 관리자 대화 기록
+  if (!solo) F.push(F.ref(db, 'chat/' + todayKey()), { u: uid, n: me.nick, t: e ? `[${t}]` : t !== t0 ? `${t} (${t0})` : t, m: World.placeKey() || '', at: now2(), ...(to ? { to } : {}) }).catch(() => {});   // 관리자 대화 기록
 }
 function presTick(){
   if (solo || !uid) return;
@@ -3452,7 +3456,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.examBd = {}; AD.day = AD.day || todayKey(); sgListen(); if (!noticeOff && F && db) noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); if (AD.tab === 'gift' && !adminTyping()) adminRender(); });
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = k === 'players' ? fbBack(s.val() || {}) : s.val() || {}; if (adminTyping()) return; adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('morph/ctl', 'moctl'); L('morph/st', 'most'); L('morph/form', 'moform'); L('board', 'board'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
   adminRender();
 }
 const adminTyping = () => { const a = document.activeElement; return (AD.tab === 'npc' || AD.tab === 'gift' || AD.tab === 'story') && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
@@ -3561,7 +3565,7 @@ function adminRender(){
   }
   if (AD.tab === 'story') body = typeof adminStoryHTML === 'function' ? adminStoryHTML() : '<div class="adcard">이야기 미션은 다음 업데이트에서 열려요.</div>';
   if (AD.tab === 'event') body = adminEventHTML();
-  if (AD.tab === 'gift') body = adminGiftHTML();
+  if (AD.tab === 'gift') body = adminBoardHTML() + adminGiftHTML();
   if (AD.tab === 'reset') body = `<div class="adcard" style="border-color:#c0392b"><b>모든 진행 상황 초기화</b><div class="s">학생 ${ids.length}명 전원이 처음부터 다시 시작해요. 이름·모습·기숙사·직업은 그대로예요.</div><div class="s">지워지는 것: 레벨·골드·가방·요리·낚시·사육장·방·친구·호감도·이야기와 메인 의뢰 진행·기숙사 단계·놀이 기록·시장·방명록·<b>채팅 내역 전체</b>·이벤트 진행</div><div class="s">남는 것: 가입(승인)·캐릭터·NPC 편집 내용</div><div class="frow"><button class="btn sm" id="adresetall" style="background:#c0392b;color:#fff">모두 초기화하기</button></div></div>`;
   if (AD.tab === 'err') body = adminErrHTML();
   if (AD.tab === 'exam') body = adminExamHTML();
@@ -5095,6 +5099,8 @@ function render(){
   if (sub === 'class') return renderClass();
   if (sub === 'baby') return renderBaby();
   if (sub === 'snow') return renderSnow();
+  if (sub === 'morph') return renderMorph();
+  if (sub === 'board') return renderBoard();
   if (sub === 'dorm') return renderDorm();
   if (sub === 'common') return renderCommon();
   if (sub === 'visit') return renderVisit();
@@ -7604,6 +7610,177 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
   if (a === 'open'){ if (confirm('눈사람 이벤트를 시작할까요? 접속한 학생에게 첫눈 장면이 바로 나와요')) F.set(F.ref(db, 'snow/ctl'), { open: true, id: now2() }); }
   else if (a === 'close'){ if (confirm('이벤트를 끝낼까요? 눈이 그치고, 만든 눈사람은 그대로 있어요')) F.set(F.ref(db, 'snow/ctl'), { open: false }); }
   else if (a === 'reset'){ if (confirm('눈사람을 지우고 처음부터 다시 만들까요?')) { F.set(F.ref(db, 'snow/st'), null); F.set(F.ref(db, 'snow/who'), null); } } });
+// ===== 이벤트 「마녀 솥 대폭발」: 물약 교실 솥이 터져서 학생들이 마법 물건으로 변해요 =====
+// DB: morph/ctl { open, id } (관리자) · morph/st { s: { 칸: 1 열림 · 2 모음 }, w: { 칸: 연 학생 }, g: { 칸: 모은 학생 }, done, at } · morph/form/<uid> { k, id }
+//   장애물마다 그 변신만 열 수 있어요. 그 변신인 학생이 지금 접속해 있지 않으면 누구나 열 수 있어요. 연 곳의 재료는 누구나 주워요. 12개가 다 모이면 다 같이 원래대로
+const MORPH = {
+  F: [['호박', '데굴데굴'], ['유령 시트', '부우~'], ['젤리 슬라임', '뽀잉'], ['양초', '화륵'], ['빗자루', '쉬익'], ['찻주전자', '칙칙폭폭'], ['해골', '덜그럭'], ['수정구슬', '우우웅'], ['마법책', '팔락팔락'], ['버섯', '뽀옥'], ['종', '딩동'], ['거울', '반짝']],
+  O: [[32, 82, '바위 무더기', '데굴데굴 굴러서 바위를 밀어냈어요!', '호박밭 옆'], [20, 15, '가시덤불', '스르륵 덤불을 통과했어요!', '용의 동굴 앞 숲'], [56, 16, '연잎', '퐁퐁 물 위를 건너갔어요!', '본관 옆 연못'],
+    [40, 100, '짙은 어둠', '불을 밝혀 어둠을 걷어냈어요!', '독초 온실 뒤 숲'], [78, 22, '마른 나무 둥지', '쉬익 날아올라 둥지에 닿았어요!', '교실 뒤'], [85, 44, '얼음 덩어리', '김을 뿜어 얼음을 녹였어요!', '마을 가는 길 강가'],
+    [6, 46, '녹슨 철창문', '철창 틈으로 덜그럭 들어갔어요!', '지하 묘지 가는 서쪽 길'], [72, 70, '흐릿한 마법진', '숨어 있던 재료를 찾아냈어요!', '기숙사 거리 동쪽 잔디'], [28, 46, '수수께끼 석판', '석판의 수수께끼를 읽어 냈어요!', '과자 교실 근처'],
+    [12, 90, '시든 덩굴', '포자를 뿌려 덩굴을 살렸어요!', '기숙사 서쪽 숲'], [39, 74, '잠든 석상', '딩동! 석상이 깨어나서 길을 비켜 줬어요!', '기숙사 거리 가운데'], [65, 86, '봉인된 상자', '빛을 비춰 봉인을 풀었어요!', '사육장 앞']],
+  KEY: ['pumpkin', 'ghost', 'slime', 'candle', 'broom', 'teapot', 'skull', 'orb', 'book', 'mushroom', 'bell', 'mirror'], N: 12, LAB: [13, 8] };
+let morphCtl = null, morphSt = null, morphForm = {}, morphOffs = [], morphCutOn = false, morphArt = null, morphSig = '';
+const morphOn = () => !!(morphCtl && morphCtl.open);
+const morphMe = () => (me.morph = me.morph || {});
+const morphS = k => +(((morphSt || {}).s || {})[k] || 0);
+const morphGot = st => Object.values((st || {}).s || {}).filter(v => +v === 2).length;
+const morphK = id => { const f = morphForm[id]; return f && morphCtl && f.id === morphCtl.id ? f.k : null; };   // 이번 이벤트에서 받은 변신
+// 나는 시작 장면을 본 뒤부터 · 끝 장면을 보기 전까지 변해 있어요 (끝났어도 끝 장면을 아직 안 봤으면 그대로)
+const morphMine = () => { if (!me || !morphCtl || !morphCtl.id) return null; const m = morphMe(); if (m.seen !== morphCtl.id) return null; if (morphSt && morphSt.done) return m.seenDone === morphSt.at ? null : morphK(uid); return morphOn() ? morphK(uid) : null; };
+const morphHolders = k => Object.keys(onlineList).filter(id => id !== uid && morphK(id) === k);   // 지금 접속해 있는 그 변신 친구
+function morphListen(){
+  if (solo || !F || !db || morphOffs.length) return;
+  morphOffs.push(F.onValue(F.ref(db, 'morph/ctl'), s => { morphCtl = s.val() || null; morphSig = ''; morphProps(); morphTick(); }));
+  morphOffs.push(F.onValue(F.ref(db, 'morph/st'), s => { morphSt = s.val() || null; morphProps(); morphTick(); if (sheetOn && sub === 'morph') renderMorph(); }));
+  morphOffs.push(F.onValue(F.ref(db, 'morph/form'), s => { morphForm = s.val() || {}; morphTick(); }));
+  World.setMorphImg('art/morph.png?v=1');
+  Promise.all([new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = 'art/morph_obst.png?v=1'; }), fetch('art/morph_obst.json?v=1').then(r => r.json()).catch(() => null)]).then(([img, meta]) => { if (img && meta){ morphArt = { img, meta }; morphSig = ''; morphProps(); boardProps(); } });
+  const prev = World.onProp; World.onProp = id => String(id).startsWith('mo:') ? (morphTap(+String(id).slice(3)), null) : prev ? prev(id) : null;
+  setInterval(morphTick, 300);
+}
+const morphCell = name => { const [x, y, w, h, ax, ay] = morphArt.meta[name], c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.drawImage(morphArt.img, x, y, w, h, 0, 0, w, h); return { img: c, pxc: g, sw: w, sh: h, ax, ay }; };
+function morphProps(){
+  if (!morphArt) return; const live = morphOn() && !(morphSt && morphSt.done);
+  const sig = live ? MORPH.O.map((_, k) => morphS(k)).join('') : ''; if (sig === morphSig) return; morphSig = sig;
+  if (!live) return World.setProps('campus', [], 'morph');
+  World.setProps('campus', MORPH.O.map(([x, y], k) => { const s = morphS(k); if (s >= 2) return null; const c = morphCell(s ? 'f' + k : 'o_' + MORPH.KEY[k]); return { id: 'mo:' + k, x, y, ...c, ay: c.ay + (s ? 0 : 2), solid: k !== 2 && !s, light: s ? { r: 18, c: [255, 240, 180], a: .5 } : null }; }).filter(Boolean), 'morph');
+}
+function morphBtn(){
+  let b = $('#morphbtn'); const show = me && morphOn() && !(morphSt && morphSt.done) && morphMe().seen === morphCtl.id && !sheetOn && !morphCutOn && !(World.cutBusy && World.cutBusy());
+  if (!show){ if (b) b.hidden = true; return; }
+  if (!b){ b = document.createElement('button'); b.id = 'morphbtn'; $('#stage').appendChild(b); b.onclick = () => openSheet('home', 'morph'); }
+  const sb = $('#snowbtn'); b.style.bottom = sb && !sb.hidden ? '116px' : '';
+  const k = morphMine(), label = `${k != null ? MORPH.F[k][0] + ' · ' : ''}해독 재료 ${morphGot(morphSt)}/${MORPH.N}`; if (b.textContent !== label) b.textContent = label; b.hidden = false;
+}
+let morphPeerSig = '';
+function morphTick(){
+  if (!me) return;
+  const mine = morphMine(), live = morphOn() && !(morphSt && morphSt.done), m = {};
+  if (mine != null) m.me = mine; if (live) Object.keys(onlineList).forEach(id => { const k = morphK(id); if (id !== uid && k != null) m[id] = k; });
+  const sg = JSON.stringify(m); if (sg !== morphPeerSig){ morphPeerSig = sg; World.setMorphs(m); }
+  morphBtn();
+  if (morphOn() && morphCtl.id && morphMe().seen !== morphCtl.id && !(morphSt && morphSt.done)) morphIntro();
+  else if (morphSt && morphSt.done && morphSt.at && morphMe().seenDone !== morphSt.at && morphCtl && morphCtl.id) morphFinale();   // 닫힌 뒤에 들어와도 끝 장면은 바로 봐요
+}
+// 변신 정하기: 지금 접속한 친구들과 최대한 안 겹치게
+async function morphPick(){
+  if (morphK(uid) != null) return morphK(uid);
+  const cnt = Array(MORPH.N).fill(0); Object.keys(onlineList).forEach(id => { const k = morphK(id); if (id !== uid && k != null) cnt[k]++; });
+  const all = Array(MORPH.N).fill(0); Object.keys(morphForm).forEach(id => { const k = morphK(id); if (id !== uid && k != null) all[k]++; });
+  const lo = Math.min(...cnt), c1 = cnt.map((n, i) => n === lo ? i : -1).filter(i => i >= 0), lo2 = Math.min(...c1.map(i => all[i])), c2 = c1.filter(i => all[i] === lo2), k = c2[Math.floor(Math.random() * c2.length)];
+  morphForm[uid] = { k, id: morphCtl.id }; await F.set(F.ref(db, 'morph/form/' + uid), { k, id: morphCtl.id }).catch(() => {}); return k;
+}
+// 말풍선·채팅: 변해 있는 동안은 그 변신의 소리로 나가요
+const morphVoice = t => { const k = morphMine(); if (k == null) return t; const v = MORPH.F[k][1], n = Math.max(1, Math.min(3, Math.ceil(String(t).length / 6))); return Array(n).fill(v).join(' ') + (/[?？]$/.test(t) ? '?' : /[!！]$/.test(t) ? '!' : ''); };
+async function morphTap(k){
+  const o = MORPH.O[k], t = World.meTile && World.meTile(); if (!o || !morphOn() || (morphSt && morphSt.done)) return;
+  if (!t || t.m !== 'campus' || Math.abs(t.x - o[0]) + Math.abs(t.y - o[1]) > 4){ const c = World.freeNear(o[0], o[1], 2).sort((a, b) => Math.hypot(a[0] - o[0], a[1] - o[1]) - Math.hypot(b[0] - o[0], b[1] - o[1]))[0]; if (c) World.walkToTile(c[0], c[1]); return; }
+  if (morphMe().seen !== morphCtl.id) return;
+  const s = morphS(k), mine = morphMine();
+  if (s === 0){
+    const hold = morphHolders(k);
+    if (mine !== k && hold.length) return toast(`${MORPH.F[k][0]}만 열 수 있어요 · 지금 ${hold.map(id => onlineList[id]?.nick || '친구').join(', ')}`);
+    const r = await F.runTransaction(F.ref(db, 'morph/st'), c => { c = c || {}; c.s = c.s || {}; if (+(c.s[k] || 0) > 0) return; c.s[k] = 1; c.w = c.w || {}; c.w[k] = me.nick; return c; }).catch(() => null);
+    if (!r || !r.committed) return;
+    World.say('me', mine != null ? MORPH.F[mine][1] : '영차!'); sfx('magic'); toast(mine === k ? o[3] : `${withJosa(o[2], '을', '를')} 열었어요!`); return;
+  }
+  if (s === 1){
+    let got = 0; const r = await F.runTransaction(F.ref(db, 'morph/st'), c => { if (!c || !c.s || +c.s[k] !== 1) return; c.s[k] = 2; c.g = c.g || {}; c.g[k] = me.nick; got = Object.values(c.s).filter(v => +v === 2).length; if (got >= MORPH.N && !c.done){ c.done = true; c.at = Date.now(); } return c; }).catch(() => null);
+    if (!r || !r.committed) return;
+    sfx('sparkle'); toast(got >= MORPH.N ? '해독 재료가 다 모였어요!' : `해독 재료를 주웠어요 (${got}/${MORPH.N})`);
+  }
+}
+function renderMorph(){
+  const st = morphSt || {}; if (!morphOn() || st.done) return closeSheet();
+  const mine = morphMine(), sp = k => `<i class="mofm" style="background-position:${-k * 17 * 2}px 0"></i>`;
+  const rows = MORPH.O.map((o, k) => { const s = morphS(k), hold = morphHolders(k);
+    return `<div class="morow ${s === 2 ? 'ok' : ''}">${sp(k)}<div><b>${o[2]}</b><span>${o[4]}</span></div><em>${s === 2 ? `✓ ${esc((st.g || {})[k] || '')}` : s === 1 ? '열림' : mine === k ? '내 차례' : hold.length ? esc(hold.map(id => onlineList[id]?.nick || '').join(', ')) : '누구나'}</em></div>`; }).join('');
+  frame(null, `해독 재료 ${morphGot(st)}/${MORPH.N}`, mine != null ? `나는 지금 ${MORPH.F[mine][0]}` : '', `<div class="molist">${rows}</div>`);
+}
+// ---- 장면: 솥 대폭발 (이벤트를 열면) · 원래대로 (다 모으면) ----
+const morphSpawn = (id, x, y, dir = 'up') => { const n = npcGet(id); return n ? { cmd: 'spawn', who: id, name: n.name, ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float, flap: n.flap }), x, y, dir } : { cmd: 'wait', sec: 0 }; };
+const morphBusy = () => morphCutOn || snowCutOn || babyCutOn || evOn || sheetOn || mqArriving || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '');
+async function morphPlay(cmds, hooks, mark){
+  morphCutOn = true; const [X, Y] = MORPH.LAB;
+  try {
+    closeSheet(); npcClose(); await tpSafe('lab', [X, Y + 3]); await sleep(300); World.setView(130);
+    let skip = false; const sk = document.createElement('button'); sk.className = 'btn sm mqskip'; sk.textContent = '건너뛰기'; sk.onclick = () => { skip = true; }; $('#stage').appendChild(sk);
+    await World.cut(cmds, { sfx: k => hooks[k] ? hooks[k]() : sfx(k), skip: () => skip }); sk.remove();
+  } catch(e){ console.error(e); }
+  World.setView(null); mark(); save(); morphCutOn = false; morphTick();
+}
+async function morphIntro(){
+  if (morphBusy()) return; const [X, Y] = MORPH.LAB, id = morphCtl.id; morphCutOn = true;
+  const k = await morphPick().catch(() => 0); morphCutOn = false; if (morphBusy()) return;
+  const voice = MORPH.F[k][1];
+  morphPlay([morphSpawn('aula', X + 1, Y, 'down'), morphSpawn('madeleine', X + 3, Y + 2, 'left'), { cmd: 'player', x: X, y: Y + 3, dir: 'up' }, { cmd: 'cam', x: X, y: Y + 1 },
+    { cmd: 'wait', sec: .8 }, { cmd: 'say', who: 'aula', text: '반짝 가루는 아주 조금만 넣어야 해요....', ms: 2200 },
+    { cmd: 'say', who: 'madeleine', text: '이 정도면 조금이죠? 한 숟가락 더....', ms: 2000 }, { cmd: 'sfx', id: 'bubble' }, { cmd: 'emote', who: 'aula', icon: 4 },
+    { cmd: 'sfx', id: 'explosion' }, { cmd: 'fx', kind: 'lightning' }, { cmd: 'sfx', id: '__morph' }, { cmd: 'fx', kind: 'bats', sec: 2 }, { cmd: 'wait', sec: 1.2 },
+    { cmd: 'say', who: 'player', text: voice + '!', ms: 1600 }, { cmd: 'say', who: 'madeleine', text: '어....? 다들 왜 그렇게 됐어.......', ms: 2200 },
+    { cmd: 'say', who: 'aula', text: '솥이 터지면서 다들 물건으로 변해 버렸어요.......', ms: 2400 },
+    { cmd: 'say', who: 'aula', text: '해독 물약 재료 열두 개가 학교 곳곳으로 날아갔어요.', ms: 2400 },
+    { cmd: 'say', who: 'aula', text: '변한 모습마다 할 수 있는 게 달라요. 서로 도와서 모아 와요!', ms: 2600 }, { cmd: 'wait', sec: .4 }, { cmd: 'end' }],
+    { __morph: () => { morphMe().seen = id; morphTick(); sfx('magic'); } }, () => { morphMe().seen = id; });
+}
+function morphFinale(){
+  if (morphBusy()) return; const [X, Y] = MORPH.LAB, at = morphSt.at;
+  morphPlay([morphSpawn('aula', X + 1, Y, 'down'), morphSpawn('madeleine', X + 3, Y + 2, 'left'), morphSpawn('sera', X - 3, Y + 3, 'right'), { cmd: 'player', x: X, y: Y + 3, dir: 'up' }, { cmd: 'cam', x: X, y: Y + 1 },
+    { cmd: 'wait', sec: .8 }, { cmd: 'say', who: 'aula', text: '재료가 다 모였어요! 이제 끓이기만 하면 돼요.', ms: 2400 }, { cmd: 'sfx', id: 'bubble' }, { cmd: 'wait', sec: .6 }, { cmd: 'sfx', id: 'bubble' },
+    { cmd: 'sfx', id: 'chime' }, { cmd: 'fx', kind: 'lightning' }, { cmd: 'sfx', id: '__back' }, { cmd: 'fx', kind: 'confetti', sec: 6 }, { cmd: 'sfx', id: 'win' },
+    { cmd: 'cheer', list: [['aula', ['star', 'clap']], ['madeleine', ['heart', 'clap']], ['sera', ['heart', 'clap']], ['player', ['heart', 'star']]], sec: 6 },
+    { cmd: 'say', who: 'player', text: '돌아왔다.......!', ms: 1600 },
+    { cmd: 'say', who: 'sera', text: '다친 데는 없지? ....다행이다.', ms: 2000 },
+    { cmd: 'say', who: 'madeleine', text: '솔직히 변했을 때 조금 귀여웠는데....', ms: 2200 },
+    { cmd: 'say', who: 'aula', text: '반짝 가루는 이제 제가 보관할게요.', ms: 2200 }, { cmd: 'wait', sec: .6 }, { cmd: 'end' }],
+    { __back: () => { morphMe().seenDone = at; morphTick(); } }, () => { morphMe().seenDone = at; });
+}
+function adminMorphHTML(){
+  const c = AD.moctl || {}, st = AD.most || {}, fm = AD.moform || {}, got = morphGot(st), ids = Object.keys(AD.players || {}).filter(id => AD.players[id]?.nick);
+  const seenIn = c.id ? ids.filter(id => AD.players[id].morph && AD.players[id].morph.seen === c.id).length : 0, seenEnd = st.at ? ids.filter(id => AD.players[id].morph && AD.players[id].morph.seenDone === st.at).length : 0;
+  const by = Array.from({ length: MORPH.N }, (_, k) => ids.filter(id => fm[id] && fm[id].id === c.id && fm[id].k === k).map(id => AD.players[id].nick));
+  return `<div class="adcard"><div class="abhead"><b>이벤트 「마녀 솥 대폭발」</b>${c.open ? '<button class="btn sm" data-moa="close">이벤트 끝내기</button>' : '<button class="btn sm go" data-moa="open">이벤트 시작</button>'}</div>
+    <div class="abchips"><span>${c.open ? (st.done ? '다 모음' : '진행 중') : '닫힘'}</span><span>해독 재료 <b>${got}</b>/${MORPH.N}</span><span>시작 장면 <b>${seenIn}</b>/${ids.length}</span>${st.done ? `<span>끝 장면 <b>${seenEnd}</b>/${ids.length}</span>` : ''}</div>
+    ${c.id ? `<div class="moadm">${MORPH.O.map((o, k) => { const s = +((st.s || {})[k] || 0); return `<div class="${s === 2 ? 'ok' : ''}"><b>${MORPH.F[k][0]}</b><span>${s === 2 ? `✓ ${esc((st.g || {})[k] || '')}` : s === 1 ? '열림' : '잠김'}</span><span class="tm">${by[k].length ? '변신: ' + by[k].map(esc).join(', ') : ''}</span></div>`; }).join('')}</div>` : ''}</div>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-moa]'); if (!b || !F || !db) return;
+  if (b.dataset.moa === 'open'){ if (confirm('마녀 솥 대폭발을 시작할까요? 접속한 학생에게 폭발 장면이 바로 나와요')){ F.set(F.ref(db, 'morph/st'), null); F.set(F.ref(db, 'morph/form'), null); F.set(F.ref(db, 'morph/ctl'), { open: true, id: now2() }); } }
+  else if (confirm('이벤트를 끝낼까요? 다 못 모았어도 모두 원래대로 돌아와요')) F.set(F.ref(db, 'morph/ctl'), { open: false, id: (AD.moctl || {}).id || 0 }); });
+
+// ===== 광장 게시판: 관리자가 쓴 글이 본관 앞 게시판에 공지로 붙어요 · DB: board/<id> { t, at } =====
+const BOARD = { SPOT: [47, 39] };
+let boardPosts = {}, boardOff = null;
+const boardList = () => Object.entries(boardPosts).map(([id, p]) => ({ id, ...p })).filter(p => p.t).sort((a, b) => b.at - a.at);
+const boardSeen = () => { try { return +localStorage.getItem('magion-board') || 0; } catch(e){ return 0; } };
+const boardNew = () => { const l = boardList(); return l.length && l[0].at > boardSeen(); };
+function boardListen(){
+  if (solo || !F || !db || boardOff) return;
+  boardOff = F.onValue(F.ref(db, 'board'), s => { const was = boardNew(), first = !Object.keys(boardPosts).length; boardPosts = s.val() || {}; if (!was && boardNew() && !first) toast('광장 게시판에 새 공지가 붙었어요'); if (World.setMarks && typeof mqSetMarks === 'function') mqSetMarks(mqMarkList); if (sheetOn && sub === 'board') renderBoard(); });
+  const prev = World.onProp; World.onProp = id => id === 'board' ? (boardTap(), null) : prev ? prev(id) : null;
+  boardProps();
+}
+function boardProps(){ if (!morphArt) return; World.setProps('campus', [{ id: 'board', x: BOARD.SPOT[0], y: BOARD.SPOT[1], ...morphCell('board'), solid: true }], 'board'); }
+function boardTap(){
+  const t = World.meTile && World.meTile(); if (!t || t.m !== 'campus' || Math.abs(t.x - BOARD.SPOT[0]) + Math.abs(t.y - BOARD.SPOT[1]) > 4){ World.walkToTile(BOARD.SPOT[0], BOARD.SPOT[1] + 1); return; }
+  openSheet('home', 'board');
+}
+function renderBoard(){
+  const l = boardList(), seen = boardSeen(); if (l.length) try { localStorage.setItem('magion-board', String(l[0].at)); } catch(e){}
+  if (World.setMarks && typeof mqSetMarks === 'function') mqSetMarks(mqMarkList);
+  const day = at => { const d = new Date(at); return `${d.getMonth() + 1}월 ${d.getDate()}일`; };
+  frame(null, '광장 게시판', '', l.length ? `<div class="bdlist">${l.map(p => `<div class="bdpost${p.at > seen ? ' new' : ''}"><div class="bdhead"><span class="bdtag">공지</span><span class="bdday">${day(p.at)}</span></div><p>${esc(p.t)}</p></div>`).join('')}</div>` : '<div class="bdlist"><div class="bdnone">아직 붙은 공지가 없어요</div></div>');
+}
+const boardMarks = () => boardNew() ? [{ id: 'board:new', map: 'campus', x: BOARD.SPOT[0], y: BOARD.SPOT[1] + 1, label: '새 공지' }] : [];
+function adminBoardHTML(){
+  const l = Object.entries(AD.board || {}).map(([id, p]) => ({ id, ...p })).filter(p => p.t).sort((a, b) => b.at - a.at);
+  return `<div class="adcard"><b>광장 게시판</b><span class="s sub">본관 앞 게시판에 공지로 붙어요</span>
+    <div class="frow"><textarea id="adbd" maxlength="300" rows="3" placeholder="학생들에게 알릴 내용" style="flex:1"></textarea></div><div class="frow"><button class="btn sm go" data-adbd="post">붙이기</button></div>
+    ${l.length ? `<div class="adlist">${l.map(p => `<div><span class="tm">${new Date(p.at).toLocaleString('ko-KR')}</span> ${esc(p.t)} <button class="btn sm" data-adbd="del" data-id="${p.id}">떼기</button></div>`).join('')}</div>` : ''}</div>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-adbd]'); if (!b || !F || !db) return;
+  if (b.dataset.adbd === 'post'){ const el = $('#adbd'), t = (el && el.value || '').trim(); if (!t) return; F.push(F.ref(db, 'board'), { t, at: now2() }).then(() => { el.value = ''; }).catch(ex => toast('저장 실패: ' + (ex.code || ex.message))); }
+  else if (confirm('이 공지를 뗄까요?')) F.set(F.ref(db, 'board/' + b.dataset.id), null); });
 function adminBabyHTML(){
   const pk = AD.bbpick || {}, c = AD.bbctl || {}, ids = Object.keys(AD.players || {}).filter(id => AD.players[id]?.nick).sort((a, b) => AD.players[a].nick.localeCompare(AD.players[b].nick, 'ko'));
   const bOf = id => { const b = AD.players[id].baby; return b && (b.adopt || b.ev === c.id) ? b : null; };
@@ -7637,7 +7814,7 @@ document.addEventListener('click', e => {
   else if (a === 'close'){ if (confirm('유령 열차 이벤트를 닫을까요? 목적지에 있는 학생은 등불 마을로 돌아와요.')) F.set(F.ref(db, 'gtrain/ctl'), { open: false }); }
 });
 setInterval(() => { if (document.body.classList.contains('admin') && AD.tab === 'event' && AD.gtctl && AD.gtctl.open && !adminTyping()) { const el = document.querySelector('[data-gta]')?.closest('.adcard'); if (el) el.outerHTML = adminGtrainHTML(); } }, 1000);
-function adminEventHTML(){ return adminEventOverview() + adminSnowHTML() + adminBabyHTML() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
+function adminEventHTML(){ return adminEventOverview() + adminMorphHTML() + adminSnowHTML() + adminBabyHTML() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
 // 이벤트 한눈에: 열려 있는지 · 진행도 · 참가한 학생 수
 // 이벤트마다 장면을 본 학생(또는 보상을 받은 학생) 수 → 다 봤는지 보고 닫아요
 function adminSeen(){
@@ -7659,6 +7836,7 @@ function adminEventOverview(){
     ${row('보물 지도 퍼즐', !!pz.open, `맞춘 조각 ${n(AD.pzboard)}/50 · 조각 가진 학생 ${pzOwners.size}명${n(AD.pzchest) ? ` · 상자 ${n(AD.pzchest)}개 열림` : ''} · 보상 받은 학생 ${SN.pzEnd}/${SN.all}`)}
     ${row('유령 등불', !!ln.open, `${sum(AD.lncnt)}/60 · 모은 학생 ${n(AD.lncnt)}명 · 보상 받은 학생 ${SN.lnEnd}/${SN.all}`)}
     ${row('호박밭 같이 가꾸기', !!pk.open, `${pkT}/${pkGoalN} (${Math.min(100, Math.round(pkT / pkGoalN * 100))}%) · 돌본 학생 ${n(AD.pkpts)}명 · 완성 보상 받은 학생 ${SN.pkEnd}/${SN.all}`)}
+    ${row('마녀 솥 대폭발', !!(AD.moctl && AD.moctl.open), (() => { const c = AD.moctl || {}, st = AD.most || {}, ids = Object.keys(AD.players || {}).filter(id => AD.players[id]?.nick), si = c.id ? ids.filter(id => AD.players[id].morph && AD.players[id].morph.seen === c.id).length : 0, se = st.at ? ids.filter(id => AD.players[id].morph && AD.players[id].morph.seenDone === st.at).length : 0; return `해독 재료 ${morphGot(st)}/${MORPH.N} · 시작 장면 본 학생 ${si}/${ids.length}${st.done ? ` · 끝 장면 본 학생 ${se}/${ids.length}` : ''}`; })())}
     ${row('눈사람', !!(AD.snowctl && AD.snowctl.open), `첫눈 장면 본 학생 ${SN.snowIn}/${SN.all}${(AD.snowst || {}).done ? ` · 완성 장면 본 학생 ${SN.snowEnd}/${SN.all}` : ''}`)}
     ${row('길 잃은 아기 동물', !!(AD.bbctl && AD.bbctl.open), `첫 장면 본 학생 ${SN.babyIn}/${SN.all} · 입양 ${SN.babyEnd}명`)}
     ${row('유령 열차', !!(AD.gtctl && AD.gtctl.open), AD.gtctl && AD.gtctl.open ? `${GT.DEST[AD.gtctl.dest] || ''} · 탄 학생 ${n((AD.gtride || {})[AD.gtctl.id])}명` : '-')}
@@ -8878,7 +9056,7 @@ async function boot(){
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       F.onValue(F.ref(db, 'adm/reset/' + uid), s => { const v = +s.val() || 0; if (!v) return; let seen = 0; try { seen = +localStorage.getItem('magion-rs-' + uid) || 0; } catch(e){}
         if (v > seen && v > bootT - 5000){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
-      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); snowListen();
+      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); snowListen(); morphListen(); boardListen();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); const sg = Object.entries(gameList).map(([id, r]) => r ? id + r.st + Object.keys(r.p || {}).length : '').join('|'); if (sub === 'games' && sg !== gamesSig) render(); gamesSig = sg; });   // 점수가 오를 때마다가 아니라 방이 열리고 닫히고 사람이 드나들 때만 다시 그려요
       F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       const recWatch = () => { const wk = weekKey(); if (recWatch.wk === wk) return; recWatch.wk = wk; (recWatch.offs || []).forEach(f => f()); recList = {}; recWatch.offs = Object.keys(GAMES).map(g => F.onValue(F.ref(db, `records/${g}/${wk}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); })); };
@@ -9131,7 +9309,7 @@ let mqMarkSig = null;
 let mqMarkList = [];
 const babyMarks = () => { const b = me && me.baby; return b && !b.adopt && b.st >= 5 && !b.fin ? [{ id: 'baby:barn', map: 'campus', x: 69, y: 91, label: '사육장' }] : []; };
 const snowMarks = () => { if (typeof snowStage !== 'function' || !snowOn()) return []; const g = snowStage(snowSt); return g === 'done' ? [] : [{ id: 'snow:spot', map: 'campus', x: SNOW.SPOT[0], y: SNOW.SPOT[1] + 1, label: g === 'deco' ? '눈사람 장식하기' : '눈사람 자리' }]; };
-const mqSetMarks = list => { mqMarkList = list; list = [...list, ...babyMarks(), ...snowMarks()]; const g = JSON.stringify(list); if (g === mqMarkSig) return; mqMarkSig = g; World.setMarks(list); };   // 바뀔 때만 다시 그려요
+const mqSetMarks = list => { mqMarkList = list; list = [...list, ...babyMarks(), ...snowMarks(), ...(typeof boardMarks === 'function' ? boardMarks() : [])]; const g = JSON.stringify(list); if (g === mqMarkSig) return; mqMarkSig = g; World.setMarks(list); };   // 바뀔 때만 다시 그려요
 // 되돌려진 진행 대비: 이번 단계에 전할 물건이 없으면, 다시 만드는 데 필요한 재료(앞 단계에서 캐던 것)의 자리를 다시 띄워요
 function mqLostMats(){ const q = mqQuest(), st = mqStage(); if (!q || !st) return {}; const R = {}; (q.recipes || []).forEach(r => { R[r.id] = r; }); const need = {};
   const want = (k, n) => { const lack = n - (me.inv[k] || 0); if (lack <= 0) return; const r = R[k]; if (!r) { need[k] = (need[k] || 0) + lack; return; } Object.entries(r.mats || {}).forEach(([m, c]) => want(m, c * lack)); };
@@ -9141,7 +9319,7 @@ function mqMarks(){ if (!World.setMarks) return; const s = mqState(); if (!s.q |
   mqObjs().forEach((o, i) => { if (o.type === 'collect' && o.source && !mqObjState(o, i).done){ const p = mqPlace(o.source.place ? { place: o.source.place, x: o.source.x, y: o.source.y } : o.source); if (p) list.push({ id: 'buy:' + o.item, map: p.map, x: p.x, y: p.y, label: o.source.label || `${ITEM[o.item]} ${o.source.price ? '사기' : '줍기'}` }); return; }
     if (o.type !== 'clue') return; (o.spots || []).forEach(sp => { if (s.prog['clue:' + sp.id]) return; const p = mqPlace(sp.place ? { place: sp.place, x: sp.x, y: sp.y } : sp); if (p) list.push({ id: sp.id, map: p.map, x: p.x, y: p.y, label: sp.label || '조사하기' }); }); });
   mqSetMarks(list); }
-World.onMark = id => { if (String(id).startsWith('baby:')) return; if (String(id).startsWith('snow:')) return snowTap(); const s = mqState(); let hit = null;
+World.onMark = id => { if (String(id).startsWith('baby:')) return; if (String(id).startsWith('snow:')) return snowTap(); if (String(id).startsWith('board:')) return boardTap(); const s = mqState(); let hit = null;
   if (id.startsWith('buy:')){ const item = id.slice(4), o = mqObjs().find(x => x.type === 'collect' && x.item === item) || (mqQuest()?.stages || []).flatMap(x => x.objectives || []).find(x => x.type === 'collect' && x.item === item && x.source); if (!o) return; const pr = o.source.price || 0; if (me.coin < pr) return toast(`골드가 모자라요 (${pr}G)`); me.coin -= pr; mqGive(item, 1); save(); hud(); sfx('pop'); toast(`${ITEM[item]} ${pr ? `샀어요 (−${pr}G)` : '얻었어요'} · ${me.inv[item]} / ${o.count}`); if ((me.inv[item] || 0) >= o.count) mqMarks(); mqCheck(); return; } mqObjs().forEach(o => { if (o.type === 'clue') (o.spots || []).forEach(sp => { if (sp.id === id) hit = sp; }); }); if (!hit || s.prog['clue:' + id]) return;
   s.prog['clue:' + id] = 1; save(); mqMarks(); const o = mqObjs().find(x => x.type === 'clue' && (x.spots || []).includes(hit)), st = mqObjState(o, mqObjs().indexOf(o));
   mqPanelText(hit.title || '단서', fillVars(hit.text || ''), `<span class="tag">${st.cur} / ${st.need}</span>`); if (hit.item) mqGive(hit.item, 1); mqCheck(); };

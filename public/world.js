@@ -397,6 +397,21 @@ function drawSnowball(){
 // ---------- 아기 동물 (이벤트 「길 잃은 아기 동물」): 숨은 자리 · 방 가구 위 · 따라다니기 ----------
 // World.setBabies([{ id, k(그림 칸), map(placeKey), x, y, ox, oy(px), pose(normal·float·flip·peek), top(가구 위면 앞에 그려요), follow('me'·친구 uid), grr(경계하면 부르르) }])
 let BABY_IMG = null, babyData = [];
+// 변신(마녀 솥 대폭발): World.setMorphs({ me: 칸, <uid>: 칸 }) → 아바타 대신 art/morph.png 칸(17×17)을 그려요
+let MORPH_IMG = null, morphs = {};
+World.setMorphImg = src => { const i = new Image(); i.onload = () => { MORPH_IMG = i; }; i.src = src; };
+World.setMorphs = m => { morphs = m || {}; };
+const morphOf = p => p.me ? morphs.me : p.peer ? morphs[p.peer] : undefined;
+function drawMorph(p, k){
+  const cx = out, [sx, sy] = P(p.x + .5, p.y + .5), t = performance.now(), sc = KPX * 1.3, w = 17 * sc;
+  cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 5, 2, 0, 0, Math.PI * 2); cx.fill();
+  if (!MORPH_IMG) return;
+  const bob = p.path.length ? Math.round(Math.abs(Math.sin(p.t * 11)) * 3) : Math.round((Math.sin(t / 400 + p.x) + 1) * .5);
+  const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY - bob) * KPX - 16 * sc), left = p.view === World.Avatar.meta.dirs.left;
+  cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); cx.imageSmoothingEnabled = false;
+  if (left){ cx.translate(dx, dy); cx.scale(-1, 1); cx.drawImage(MORPH_IMG, k * 17, 0, 17, 17, -w / 2, 0, w, w); } else cx.drawImage(MORPH_IMG, k * 17, 0, 17, 17, Math.round(dx - w / 2), dy, w, w);
+  cx.restore();
+}
 World.onBaby = null;   // (id) 아기 동물을 눌렀을 때
 World.setBabyImg = src => { const i = new Image(); i.onload = () => { BABY_IMG = i; }; i.src = src; };
 World.setBabies = list => { babyData = list || []; if (started && M) syncBabies(); };
@@ -815,6 +830,7 @@ function drawPerson(p){ const cx = out;
   if (p.pet) return drawPet(p);
   if (p.baby) return drawBaby(p);
   if (p.cutHide) return;
+  { const mk_ = morphOf(p); if (mk_ !== undefined && mk_ !== null) return drawMorph(p, mk_); }
   if (p.npc && p.npc.pix !== undefined){   // 조연 동물: 32칸 그림, 걸을 때 콩콩 뛰어요
     const [sx, sy] = P(p.x + .5, p.y + .5); cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 5, 2, 0, 0, Math.PI * 2); cx.fill();
     if (!PIX_IMG || !PIX_IMG.complete) return; const cp = KPX * ASC, w = 32 * cp, hop = p.path.length ? Math.abs(Math.sin(p.t * 9)) * 2 * cp : 0;
@@ -950,7 +966,7 @@ function frame(now){
   marks.forEach(mk_ => { if ((mk_.map !== map && mk_.map !== rmap) || !mk_.label) return; if (Math.abs(mk_.x - me.x) + Math.abs(mk_.y - me.y) > 14) return; const [sx, sy] = P(mk_.x + .5, mk_.y + .5); if (sx > view.x && sx < view.x + view.w && sy > view.y && sy < view.y + view.h) drawTag({ t: mk_.label, k: 'npc', ev: true }, sx, sy - 18, now); });   // 할 일 표시 위에 무엇을 하는 곳인지 글자로
   people.forEach((p, i) => { if (rideOn && p.me) return; const [sx, sy] = P(p.x + .5, p.y + .5); if (sx > view.x - 40 && sx < view.x + view.w + 40 && sy > view.y && sy < view.y + view.h + 60) drawTag(tags[i], sx, sy + 2, now, true); });   // 이름표는 발밑에: 머리 위는 말풍선·표시가 쓰고, 뒤 사람이나 물건을 덜 가려요
   const tn = performance.now();
-  for (let i = says.length - 1; i >= 0; i--){ const p = says[i]; if (tn > p.say.until || (!p.me && !people.includes(p))){ sayOff(p); continue; } const [sx, sy] = p.baby ? babyXY(p) : P(p.x + .5, p.y + .5); p.say.el.style.left = (sx - ix) * k + 'px'; p.say.el.style.top = (sy - (p.baby ? 18 : World.Avatar.FH * ASC + 2) - iy) * k + 'px'; }
+  for (let i = says.length - 1; i >= 0; i--){ const p = says[i]; if (tn > p.say.until || (!p.me && !people.includes(p))){ sayOff(p); continue; } const [sx, sy] = p.baby ? babyXY(p) : P(p.x + .5, p.y + .5); p.say.el.style.left = (sx - ix) * k + 'px'; p.say.el.style.top = (sy - (p.baby ? 18 : morphOf(p) != null ? 26 : World.Avatar.FH * ASC + 2) - iy) * k + 'px'; }
   if (bubble){ const o = bubble.o; bubble.el.style.left = Math.max(90, Math.min(cv.clientWidth - 90, (o.x + o.sw / 2 - ix) * k)) + 'px'; bubble.el.style.top = Math.max(70, (o.y - 2 - iy) * k) + 'px'; }
   if ((clockTick = (clockTick + 1) % 30) === 0){ const d = World.kNow ? World.kNow() : new Date(), t = World.clockText ? World.clockText(d) : `🌕 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · 보름밤`; if (t !== clockLast){ clockLast = t; clockEl.textContent = t; } }
   requestAnimationFrame(frame);
