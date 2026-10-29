@@ -5131,6 +5131,7 @@ function bagInfo(k){
   if (np) uses.push(`물약 재료 ${np}종`); if (nd) uses.push(`요리 재료 ${nd}종`); if (gift) uses.push(gift);
   const C = CATCH_INFO[k];
   if (C){ if (C.junk) return { desc: '호수에서 건진 쓰레기예요. 팔면 1G', use: uses.join(' · ') || '쓸모는 없지만 호수가 깨끗해졌어요' };
+    if (C.gt) return { desc: `${STARS(C.grade)} · 유령 열차 「${GT.DEST[C.gt]}」에서만 나와요 · 지금 팔면 ${sellPay(k, C.pay)}G`, use: uses.join(' · ') || '모아 두는 기념품 · 팔 수 있어요' };   // 채집 구역(z)이 없어요
     if (C.sheet === 'fish') return { desc: `${STARS(C.grade)} · ${C.cm[0]}~${C.cm[1]}cm · ${C.time || C.wx ? [C.time && TIME_NAME[C.time], C.wx && '비 오는 날'].filter(Boolean).join(' · ') + '에만' : '아무 때나'} 잡혀요 · 지금 팔면 ${sellPay(k, C.pay)}G`, use: uses.join(' · ') || '요리 재료 · 선물용' };
     return { desc: `${STARS(C.grade)} · ${[...C.z].map(z => BAG_ZONE[z]).join('·')}에서 주워요 · 지금 팔면 ${sellPay(k, C.pay)}G`, use: uses.join(' · ') || '물약·요리 재료' }; }
   const G = SEED_INFO[k]; if (G) return { desc: `온실에서 기르는 식물 재료 · ${G.tier + 1}등급 · ${timeText(G.mins * 6e4)} 자라요`, use: uses.join(' · ') || '물약 재료' };
