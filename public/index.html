@@ -258,6 +258,7 @@ body.admin #shell{max-width:none}
 .adside{display:none}
 #adminv .adth{border-radius:10px;box-shadow:0 0 0 1px #E2D8EE;padding:6px}#adminv .adth canvas{border-radius:6px}#adminv .admapw{border-radius:10px;box-shadow:0 0 0 1px #E2D8EE}#adminv .adgrid{padding:0}
 #adminv .adbody{padding:12px;gap:10px}
+#adminv .adbaby{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px 12px}#adminv .adbaby label{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:13px}
 #adminv .adcard{border:1px solid #E2D8EE;border-radius:12px;padding:12px 14px;gap:6px;box-shadow:0 1px 3px rgba(34,24,63,.06)}
 #adminv .adcard>b:first-child{font-size:15px}
 #adminv .adcard h4{margin:8px 0 2px;font-size:13px;color:#7A6A9A;font-weight:700}
@@ -3418,7 +3419,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.examBd = {}; AD.day = AD.day || todayKey(); sgListen(); if (!noticeOff && F && db) noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); if (AD.tab === 'gift' && !adminTyping()) adminRender(); });
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = k === 'players' ? fbBack(s.val() || {}) : s.val() || {}; if (adminTyping()) return; adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event') adminRender(); })); }
   adminRender();
 }
 const adminTyping = () => { const a = document.activeElement; return (AD.tab === 'npc' || AD.tab === 'gift' || AD.tab === 'story') && a && $('#adminv')?.contains(a) && a.matches('input,textarea,select'); };   // 편집 중에는 새로 그리지 않아요
@@ -7215,6 +7216,16 @@ function gtTravel(ms){
   requestAnimationFrame(draw);
 }
 // ---- 관리자 ----
+// ===== 이벤트 「길 잃은 아기 동물」: 학생마다 한 마리 (관리자가 고르면 baby/pick/<uid> = 번호) · 숨는 곳은 고정 =====
+const BABY = { NAMES: ['아기 오리', '아기 고양이', '아기 강아지', '아기 토끼', '아기 다람쥐', '아기 고슴도치', '아기 박쥐', '아기 부엉이', '아기 여우', '아기 너구리', '아기 개구리', '아기 병아리'],
+  SPOTS: [['town', 34, 82], ['town', 26, 33], ['campus', 42, 78], ['campus', 22, 88], ['campus', 48, 95], ['campus', 18, 14], ['campus', 52, 26], ['town', 65, 48], ['town', 16, 77], ['town', 21, 59], ['town', 26, 94], ['town', 76, 42]] };   // 오리 잔교 · 고양이 시장 뒷골목 · 강아지 기숙사 거리 · 토끼 호박밭 · 다람쥐 풍차 숲 · 고슴도치 언덕 숲 · 박쥐 시계탑 아래 · 부엉이 우체국 옆 · 여우 묘지 · 너구리 생선 가게 뒤 · 개구리 늪지 · 병아리 호박 빵집
+function adminBabyHTML(){
+  const pk = AD.bbpick || {}, ids = Object.keys(AD.players || {}).filter(id => AD.players[id]?.nick).sort((a, b) => AD.players[a].nick.localeCompare(AD.players[b].nick, 'ko'));
+  const cnt = BABY.NAMES.map((_, i) => ids.filter(id => pk[id] === i).length);
+  return `<div class="adcard"><b>이벤트 「길 잃은 아기 동물」 배정 · ${ids.filter(id => pk[id] !== undefined).length}/${ids.length}명</b>
+    <div class="adbaby">${ids.map(id => `<label>${esc(AD.players[id].nick)} <select data-bbu="${id}"><option value="">-</option>${BABY.NAMES.map((n, i) => `<option value="${i}" ${pk[id] === i ? 'selected' : ''}>${n}${cnt[i] ? ` (${cnt[i]})` : ''}</option>`).join('')}</select></label>`).join('') || '<div class="s">학생이 없어요</div>'}</div></div>`;
+}
+document.addEventListener('change', e => { const t = e.target.closest && e.target.closest('[data-bbu]'); if (!t || !F || !db) return; F.set(F.ref(db, 'baby/pick/' + t.dataset.bbu), t.value === '' ? null : +t.value).catch(ex => toast('저장 실패: ' + (ex.code || ex.message))); });
 function adminGtrainHTML(){
   const c = AD.gtctl || {}, ph = gtPhase(c), rd = Object.values((AD.gtride || {})[c.id] || {}), PH = { off: '닫혀 있어요', board: '승강장에 서 있어요', out: '목적지로 가는 중', dest: '목적지에서 채집 중', in: '돌아오는 중', back: '돌아왔어요', done: '쉬는 중 (다시 부를 수 있어요)' };
   const busy = ['out', 'dest', 'in'].includes(ph), sel = AD.gtdest || 'rand';
@@ -7232,7 +7243,7 @@ document.addEventListener('click', e => {
   else if (a === 'close'){ if (confirm('유령 열차 이벤트를 닫을까요? 목적지에 있는 학생은 등불 마을로 돌아와요.')) F.set(F.ref(db, 'gtrain/ctl'), { open: false }); }
 });
 setInterval(() => { if (document.body.classList.contains('admin') && AD.tab === 'event' && AD.gtctl && AD.gtctl.open && !adminTyping()) { const el = document.querySelector('[data-gta]')?.closest('.adcard'); if (el) el.outerHTML = adminGtrainHTML(); } }, 1000);
-function adminEventHTML(){ return adminEventOverview() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
+function adminEventHTML(){ return adminEventOverview() + adminBabyHTML() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
 // 이벤트 한눈에: 열려 있는지 · 진행도 · 참가한 학생 수
 function adminEventOverview(){
   const sum = o => Object.values(o || {}).reduce((a, n) => a + (+n || 0), 0), n = o => Object.keys(o || {}).length;
