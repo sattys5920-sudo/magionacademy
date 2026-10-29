@@ -6,7 +6,7 @@ window.tarotMock = function(){
   const st = document.createElement('style'); st.textContent = `
   #tr2{position:absolute;inset:0;z-index:50;background:radial-gradient(ellipse at 50% 40%,rgba(58,36,99,.96),rgba(12,8,24,.97));overflow:hidden;font-family:var(--f-pxb);color:#F1E9FF}
   #tr2 h2{position:absolute;top:28px;left:0;right:0;text-align:center;margin:0;font-size:20px;color:#FFD866}
-  #tr2 .trtip{position:absolute;bottom:40px;left:0;right:0;text-align:center;font-size:15px;opacity:0;transition:opacity .4s}
+  #tr2 .trtip{position:absolute;left:50%;top:calc(50% + 150px);transform:translateX(-50%);white-space:nowrap;padding:9px 18px;border-radius:20px;background:rgba(20,12,36,.85);border:2px solid #8A6AC8;font-size:15px;color:#FFE9A0;opacity:0;transition:opacity .4s}
   #tr2 .c{position:absolute;left:50%;top:50%;width:${W}px;height:${H}px;margin:-${H/2}px 0 0 -${W/2}px;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.3,1.2,.5,1),opacity .4s,filter .3s;cursor:pointer}
   #tr2 .c i{position:absolute;inset:0;backface-visibility:hidden;image-rendering:pixelated;background:url(art/tarot.png) 0 0/${23*W}px ${H}px;filter:drop-shadow(0 3px 0 rgba(0,0,0,.35))}
   #tr2 .c i.b{background-position:-${22*W}px 0}#tr2 .c i.f{transform:rotateY(180deg)}
@@ -15,7 +15,7 @@ window.tarotMock = function(){
   #tr2 .ok{display:block;margin:14px auto 0;min-height:48px;padding:0 34px;border-radius:24px;border:2px solid #2A1E3A;background:#FFD866;color:#2A1E3A;font-family:var(--f-pxb);font-size:16px;box-shadow:0 3px 0 #B8862E}
   #tr2 .glow{position:absolute;left:50%;top:44%;width:260px;height:260px;margin:-130px;border-radius:50%;background:radial-gradient(circle,rgba(255,216,102,.45),rgba(255,216,102,0) 70%);opacity:0;transition:opacity .6s}`;
   document.head.appendChild(st);
-  const v = document.createElement('div'); v.id = 'tr2'; v.innerHTML = '<h2>오늘의 운세</h2><div class="glow"></div><div class="trtip">마음이 가는 카드를 한 장 골라요</div><div class="res"></div>'; document.querySelector('#stage').appendChild(v);
+  const v = document.createElement('div'); v.id = 'tr2'; v.innerHTML = '<h2>오늘의 운세</h2><div class="glow"></div><div class="trtip">한 장을 골라요</div><div class="res"></div>'; document.querySelector('#stage').appendChild(v);
   const deck = [...Array(N).keys()].sort(() => Math.random() - .5);   // 섞인 순서 (뒤집으면 나오는 카드)
   const cs = deck.map((k, i) => { const c = document.createElement('div'); c.className = 'c'; c.innerHTML = `<i class="b"></i><i class="f" style="background-position:-${k*W}px 0"></i>`; c.style.transform = `translate(0px,${-i*.6}px)`; c.dataset.k = k; v.appendChild(c); return c; });
   const VW = v.clientWidth, VH = v.clientHeight;
