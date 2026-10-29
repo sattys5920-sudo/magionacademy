@@ -282,6 +282,7 @@ body.admin #shell{max-width:none}
 .molist{display:flex;flex-direction:column;gap:6px;padding:6px 0}.morow{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.06)}.morow.ok{opacity:.6}.morow b{display:block}.morow span{font-size:13px;opacity:.75}.morow em{font-style:normal;font-size:13px;color:#FFD866;text-align:right}.morow.ok em{color:#8CE6A8}.mofm{width:34px;height:34px;background:url(art/morph.png?v=1) no-repeat;background-size:408px 34px;image-rendering:pixelated}
 #adminv .moadm{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:2px 16px;margin-top:6px}#adminv .moadm>div{display:grid;grid-template-columns:72px 80px 1fr;gap:6px;font-size:13px;align-items:center}#adminv .moadm>div.ok span:nth-child(2){color:#2E8B57;font-weight:700}
 .bdlist{display:flex;flex-direction:column;gap:10px;padding:8px 2px}.bdpost{position:relative;padding:12px 14px 12px;border-radius:6px;background:#FFF8E8;color:#3A2A1E;box-shadow:0 3px 0 rgba(0,0,0,.25)}.bdpost::before{content:'';position:absolute;top:-5px;left:50%;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:#E84A5A;box-shadow:0 1px 0 #8A2030}.bdpost.new{outline:2px solid #FFD866}.bdhead{display:flex;align-items:center;gap:8px;margin-bottom:6px}.bdtag{padding:2px 8px;border-radius:4px;background:#C0392B;color:#fff;font-family:var(--f-pxb);font-size:13px}.bdday{font-size:13px;color:#8A7A6A}.bdpost p{margin:0;white-space:pre-wrap;line-height:1.55;font-family:var(--f-pxb)}.bdnone{padding:20px;text-align:center;opacity:.7}
+#bbgo{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:7;min-height:44px;padding:0 22px;border-radius:22px;border:2px solid #2A1E3A;background:#FFD866;color:#2A1E3A;font-family:var(--f-pxb);font-size:var(--fs);box-shadow:0 3px 0 #B8862E;animation:bbgoP 1.6s ease-in-out infinite}#bbgo[hidden]{display:none}@keyframes bbgoP{50%{transform:translateX(-50%) translateY(-3px)}}
 #snowbtn{position:absolute;left:12px;bottom:64px;z-index:6;min-height:44px;padding:0 16px;border-radius:22px;border:2px solid #2A1E3A;background:#F2F4FF;color:#2A1E3A;font-family:var(--f-pxb);font-size:var(--fs);box-shadow:0 3px 0 #A9B3DA}#snowbtn.on{background:#BFE6FF}#snowbtn.cold{background:#DDE3F2;color:#7A7F98;box-shadow:none}#snowbtn[hidden]{display:none}
 .snlist{display:flex;flex-direction:column;gap:8px;padding:6px 0}.snrow{display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.06)}.snrow.ok{opacity:.65}.snneed{display:flex;flex-wrap:wrap;gap:8px}.snneed span{display:flex;align-items:center;gap:4px}.snneed i{font-style:normal;font-size:13px}.sndone{color:#8CE6A8;font-weight:800;padding:0 10px}
 #adminv .snadm{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 16px}#adminv .snadm>div{display:grid;grid-template-columns:44px 1fr 64px;align-items:center;gap:8px;font-size:13px}#adminv .snbar{height:8px;border-radius:4px;background:#EEE8F5;overflow:hidden}#adminv .snbar i{display:block;height:100%;background:#7AB8E8}
@@ -7305,7 +7306,7 @@ function babyListen(){
   babyOffs.push(F.onValue(F.ref(db, 'baby/pick/' + uid), s => { const v = s.val(); babyPickV = typeof v === 'number' ? v : null; babyState(); babyTick(); }));
   setInterval(babyMeetTick, 1000);
   World.setBabyImg('art/babies.png?v=5aad28cf');
-  setInterval(babyTick, 2000);
+  setInterval(babyTick, 2000); setInterval(babyGoBtn, 500);
 }
 const babyRoomKey = () => { const k = World.placeKey(); return k && /^myroom_/.test(k) ? k : null; };
 let babyRoomAt = null;   // 내 방: 지금 놀고 있는 가구 { id, until }
@@ -7329,6 +7330,14 @@ function babyWorld(){
   const sig = JSON.stringify(L); if (sig !== babySig){ babySig = sig; World.setBabies(L); }
   if (babyRoomAt && babyRoomAt.act && b && b.adopt){ babyRoomAt.act = false; const f = ((me.room || []).find(q => q.id === babyRoomAt.id) || {}).f || '';
     setTimeout(() => World.babySay('mine', /2$/.test(f) ? '냠냠' : /3$/.test(f) ? babySnd(b.k, 2) : Math.random() < .5 ? 'Zzz' : babySnd(b.k, 2)), 700); }
+}
+// 다섯 단계를 마치고 품에 안고 있으면: 화면 위에 「사육장 가기」 → 누르면 사육장 안으로 (들어가면 마지막 장면)
+function babyGoBtn(){
+  let el = $('#bbgo'); const b = me && me.baby;
+  const show = b && !b.adopt && b.st >= 5 && !b.fin && document.body.classList.contains('inworld') && World.where && World.where() !== 'barn' && !sheetOn && !babyCutOn && !babyFinOn && !(World.cutBusy && World.cutBusy()) && !evOn && !mqArriving;
+  if (!show){ if (el) el.hidden = true; return; }
+  if (!el){ el = document.createElement('button'); el.id = 'bbgo'; el.textContent = '사육장 가기'; el.onclick = async () => { el.hidden = true; await tpSafe('barn', [21, 31]); babyTick(); }; $('#stage').appendChild(el); }
+  el.hidden = false;
 }
 function babyTick(){
   if (!me) return; babyState(); babyWorld(); if (World.setMarks && typeof mqSetMarks === 'function') mqSetMarks(mqMarkList);
