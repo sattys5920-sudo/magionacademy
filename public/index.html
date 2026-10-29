@@ -7725,14 +7725,11 @@ async function morphIntro(){
 function morphFinale(){
   if (morphBusy()) return; const [X, Y] = MORPH.LAB, at = morphSt.at;
   morphPlay([morphSpawn('aula', X + 1, Y, 'down'), morphSpawn('madeleine', X + 3, Y + 2, 'left'), morphSpawn('sera', X - 3, Y + 3, 'right'), { cmd: 'player', x: X, y: Y + 3, dir: 'up' }, { cmd: 'cam', x: X, y: Y + 1 },
-    { cmd: 'wait', sec: .8 }, { cmd: 'say', who: 'aula', text: '재료가 다 모였어요! 이제 끓이기만 하면 돼요.', ms: 2400 }, { cmd: 'sfx', id: 'bubble' }, { cmd: 'wait', sec: .6 }, { cmd: 'sfx', id: 'bubble' },
-    { cmd: 'sfx', id: 'chime' }, { cmd: 'fx', kind: 'lightning' }, { cmd: 'sfx', id: '__back' }, { cmd: 'fx', kind: 'confetti', sec: 6 }, { cmd: 'sfx', id: 'win' },
-    { cmd: 'cheer', list: [['aula', ['star', 'clap']], ['madeleine', ['heart', 'clap']], ['sera', ['heart', 'clap']], ['player', ['heart', 'star']]], sec: 6 },
-    { cmd: 'say', who: 'player', text: '돌아왔다.......!', ms: 1600 },
-    { cmd: 'say', who: 'sera', text: '다친 데는 없지? ....다행이다.', ms: 2000 },
-    { cmd: 'say', who: 'madeleine', text: '솔직히 변했을 때 조금 귀여웠는데....', ms: 2200 },
-    { cmd: 'say', who: 'aula', text: '반짝 가루는 이제 제가 보관할게요.', ms: 2200 }, { cmd: 'wait', sec: .6 }, { cmd: 'end' }],
-    { __back: () => { morphMe().seenDone = at; morphTick(); } }, () => { morphMe().seenDone = at; });
+    { cmd: 'wait', sec: .8 }, { cmd: 'say', who: 'aula', text: '재료가 다 모였어요! 이제 끓이기만 하면 돼요.', ms: 2400 }, { cmd: 'cam', x: 13, y: 5 }, { cmd: 'sfx', id: 'bubble' }, { cmd: 'wait', sec: .6 }, { cmd: 'sfx', id: 'bubble' }, { cmd: 'wait', sec: .6 },
+    { cmd: 'sfx', id: 'magic' }, { cmd: 'fx', kind: 'smoke', col: 'magic' }, { cmd: 'wait', sec: 1.4 },
+    { cmd: 'say', who: 'aula', text: '이제 됐어요.......', ms: 2000 },
+    { cmd: 'say', who: 'aula', text: '연기가 걷히면 다들 원래대로 돌아와 있을 거예요.', ms: 2600 }, { cmd: 'wait', sec: .4 }, { cmd: 'end' }],
+    {}, () => { morphMe().seenDone = at; morphTick(); setTimeout(() => { World.fx({ kind: 'smoke', off: true }); World.fx({ kind: 'confetti', sec: 5 }); sfx('win'); }, 250); });   // 연기가 걷히면 이미 돌아와 있어요
 }
 function adminMorphHTML(){
   const c = AD.moctl || {}, st = AD.most || {}, fm = AD.moform || {}, got = morphGot(st), ids = Object.keys(AD.players || {}).filter(id => AD.players[id]?.nick);

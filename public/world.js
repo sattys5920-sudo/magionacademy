@@ -1131,7 +1131,8 @@ async function crowdDo(c){
 // 효과: bats 박쥐 떼 · bell 종소리 번쩍 · lightning 번개 · wind 바람(안개 빠르게) · dark 어둡게 / light 원래대로
 let fxBats = 0, fxDark = 0, skyN = 1, partyCfg = null, confettiUntil = 0, smokeCfg = null;
 // 뭉게뭉게 연기: 화면을 다 덮어요 (말풍선은 위에 보여요). { kind: 'smoke' } 켜기 · { kind: 'smoke', off: true } 천천히 걷혀요
-const SMOKE_COL = [['#3E3356', '#8E84A4', '#A79DBC', '#C3BBD4'], ['#4A3E62', '#B2A8C6', '#CFC7DD', '#EEEAF4']];   // 뒤 구름 · 앞 구름: [윤곽, 그늘, 몸, 밝은 면]
+const SMOKE_COL = { '': { bg: '#7A7092', c: [['#3E3356', '#8E84A4', '#A79DBC', '#C3BBD4'], ['#4A3E62', '#B2A8C6', '#CFC7DD', '#EEEAF4']] },   // 뒤 구름 · 앞 구름: [윤곽, 그늘, 몸, 밝은 면]
+  magic: { bg: '#4A2E6E', c: [['#24123A', '#5A3688', '#7448A8', '#9468C8'], ['#2E1848', '#8656C0', '#A27AD8', '#D2BAF2']] } };   // 보라 마법 연기
 // 구름 하나 = 크고 작은 둥근 덩이 여러 개. 윤곽은 덩이를 다 합친 바깥에만 둘러서 비눗방울이 아니라 뭉게구름처럼 보여요
 const CLOUDS = Array.from({ length: 30 }, (_, i) => { const n = 4 + (i % 3), lobes = [];
   for (let j = 0; j < n; j++){ const u = n > 1 ? j / (n - 1) - .5 : 0; lobes.push([u * 1.7 + Math.sin(i * 7.3 + j) * .12, -(1 - Math.abs(u) * 1.3) * .55 + Math.cos(i * 3.1 + j * 2.7) * .08, .55 + (1 - Math.abs(u) * 1.4) * .45 + ((i + j) % 3) * .06]); }
@@ -1148,9 +1149,9 @@ function drawSmoke(now){
   const c = smokeCfg; if (!c) return; if (c.off && now - c.off >= 1400){ smokeCfg = null; return; } const a = Math.max(0, Math.min(1, (now - c.t0) / 350)) * (c.off ? Math.min(1, 1 - (now - c.off) / 1400) : 1); if (a <= 0) return;   // 프레임 시각이 켠 시각보다 살짝 앞설 수 있어요
   const W = out.canvas.width, H = out.canvas.height, k = Math.max(1, Math.round(KPX)), w = Math.ceil(W / k), h = Math.ceil(H / k), t = now / 1000, grow = Math.max(0, Math.min(1, (now - c.t0) / 600));   // 게임 픽셀 한 칸 = 연기 도트 한 칸
   if (!smokeCv) smokeCv = document.createElement('canvas'); if (smokeCv.width !== w || smokeCv.height !== h){ smokeCv.width = w; smokeCv.height = h; }
-  const g = smokeCv.getContext('2d'), u = Math.min(w, h) / 100, lift = c.off ? (now - c.off) / 60 * u : 0; g.fillStyle = '#7A7092'; g.fillRect(0, 0, w, h);
+  const g = smokeCv.getContext('2d'), u = Math.min(w, h) / 100, lift = c.off ? (now - c.off) / 60 * u : 0; const pal = SMOKE_COL[c.col] || SMOKE_COL['']; g.fillStyle = pal.bg; g.fillRect(0, 0, w, h);
   CLOUDS.forEach(cl => { const bx = cl.x * (w + 40 * u) - 20 * u, by = cl.y * (h + 30 * u) - 15 * u, x = w / 2 + (bx - w / 2) * grow + Math.sin(t * .4 + cl.ph) * 4 * u, y = h / 2 + (by - h / 2) * grow + Math.cos(t * .3 + cl.ph) * 2 * u - lift * (cl.back ? .6 : 1);
-    smokeCloud(g, cl.lobes, x, y, (cl.back ? 20 : 17) * cl.s * (.35 + .65 * grow) * u, SMOKE_COL[cl.back ? 0 : 1]); });
+    smokeCloud(g, cl.lobes, x, y, (cl.back ? 20 : 17) * cl.s * (.35 + .65 * grow) * u, pal.c[cl.back ? 0 : 1]); });
   out.save(); out.setTransform(1, 0, 0, 1, 0, 0); out.imageSmoothingEnabled = false; out.globalAlpha = a; out.drawImage(smokeCv, 0, 0, w * k, h * k); out.restore();
 }
 // 꽃가루: 화면 가득 떨어져요 (실내·실외 어디서나)
@@ -1219,7 +1220,7 @@ function drawPartyAir(now){
   g.restore();
 }
 
-function fxDo(c){ const k = c.kind; if (k === 'bats') fxBats = performance.now() + (c.sec || 4) * 1000; else if (k === 'lightning' || k === 'bell') flashT = performance.now() + 260; else if (k === 'dark') fxDark = c.v ?? .45; else if (k === 'light') fxDark = 0; else if (k === 'party') partyCfg = c.off ? null : { t0: performance.now(), x: c.x, y: c.y, tx: c.tx ?? c.x, ty: c.ty ?? c.y }; else if (k === 'smoke') smokeCfg = c.off ? (smokeCfg && !smokeCfg.off ? { ...smokeCfg, off: performance.now() } : smokeCfg) : { t0: performance.now(), off: 0 }; else if (k === 'confetti') confettiUntil = performance.now() + (c.sec || 4) * 1000; else if (k === 'wind'){ fogs.forEach(f => f.v *= 4); setTimeout(() => fogs.forEach(f => f.v /= 4), (c.sec || 4) * 1000); } }
+function fxDo(c){ const k = c.kind; if (k === 'bats') fxBats = performance.now() + (c.sec || 4) * 1000; else if (k === 'lightning' || k === 'bell') flashT = performance.now() + 260; else if (k === 'dark') fxDark = c.v ?? .45; else if (k === 'light') fxDark = 0; else if (k === 'party') partyCfg = c.off ? null : { t0: performance.now(), x: c.x, y: c.y, tx: c.tx ?? c.x, ty: c.ty ?? c.y }; else if (k === 'smoke') smokeCfg = c.off ? (smokeCfg && !smokeCfg.off ? { ...smokeCfg, off: performance.now() } : smokeCfg) : { t0: performance.now(), off: 0, col: c.col || '' }; else if (k === 'confetti') confettiUntil = performance.now() + (c.sec || 4) * 1000; else if (k === 'wind'){ fogs.forEach(f => f.v *= 4); setTimeout(() => fogs.forEach(f => f.v /= 4), (c.sec || 4) * 1000); } }
 // 조사 지점: 물음표가 떠 있고, 옆에 가면 상황 버튼 「조사하기」
 World.setMarks = list => { marks = list || []; World.nearRefresh(); };
 World.onMark = null;
