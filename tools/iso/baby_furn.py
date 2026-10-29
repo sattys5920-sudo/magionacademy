@@ -126,12 +126,14 @@ ITEMS += [
   ('bf_frog2', '개구리 무당벌레 접시', bowl('#5EAA7A', f_bug), (-5, 0), 'normal'), ('bf_frog3', '개구리 버섯 의자', mushstool, (3, -11), 'normal'),
   ('bf_chick2', '병아리 모이통', bowl('#E8C050', f_seed), (-5, 0), 'normal'), ('bf_chick3', '병아리 달걀 껍질 침대', eggbed, (0, -4), 'normal')]
 
+PRICE = {'bf_duck': 180, 'bf_cat': 160, 'bf_dog': 260, 'bf_rabbit': 170, 'bf_squirrel': 150, 'bf_hedgehog': 120, 'bf_bat': 160, 'bf_owl': 200, 'bf_fox': 200, 'bf_raccoon': 150, 'bf_frog': 220, 'bf_chick': 170, 'bf_duck3': 140, 'bf_cat3': 220, 'bf_dog3': 150, 'bf_rabbit3': 190, 'bf_squirrel3': 240, 'bf_hedgehog3': 230, 'bf_bat3': 210, 'bf_owl3': 180, 'bf_fox3': 140, 'bf_raccoon3': 250, 'bf_frog3': 160, 'bf_chick3': 150}   # 밥그릇(…2)은 모두 60G
+
 def main():
     sprites, meta = [], []
     for k, (fid, name, draw, spot, pose) in enumerate(ITEMS):
         R = Room(6, 6, 60); R.obj(fid, [(1, 1)], lambda img, d, draw=draw: draw(R, img, d))
         o = R.objs[-1]; ax, ay = R.P(1.5, 1.5)
-        sprites.append(o['img']); meta.append(dict(id=fid, name=name, cat='아기 동물', price=0, pts=2, w=1, d=1, solid=1, flat=0, sw=o['img'].width, sh=o['img'].height, ax=round(ax - o['x']), ay=round(ay - o['y']), baby=k if k < 12 else (k - 12) // 2, spot=list(spot), pose=pose))
+        sprites.append(o['img']); meta.append(dict(id=fid, name=name, cat='아기 동물', price=PRICE.get(fid, 60), pts=2, w=1, d=1, solid=1, flat=0, sw=o['img'].width, sh=o['img'].height, ax=round(ax - o['x']), ay=round(ay - o['y']), baby=k if k < 12 else (k - 12) // 2, spot=list(spot), pose=pose))
     W = sum(s.width + 1 for s in sprites); Hh = max(s.height for s in sprites)
     sheet = Image.new('RGBA', (W, Hh), (0, 0, 0, 0)); x = 0
     for s, m in zip(sprites, meta): sheet.paste(s, (x, Hh - s.height)); m['sx'] = x; m['ay'] += Hh - s.height; m['sh'] = Hh; x += s.width + 1
