@@ -1756,15 +1756,16 @@ function pgNav(attr, pg, n, per){ const last = Math.ceil(n / per) - 1; if (last 
 function renderFish(){
   const D = me.fdex || {}, nf = FISH.filter(f => D[f.id]).length, ng = FORAGE.filter(f => D[f.id]).length, now = houseNow(), L = rodLv();
   const tabs = [['dex', '도감'], ['rod', '낚싯대'], ['today', '오늘'], ['sell', '가게']];
-  const where = x => x.time || x.wx ? `${[x.time && TIME_NAME[x.time], x.wx && '비 오는 날'].filter(Boolean).join(' · ')}에만 나와요` : x.z ? `${[...x.z].map(c => ZONE_NAME[c]).join('·')}에서 주워요` : '언제나 나와요';
-  const cell = x => { const d = D[x.id]; return `<button class="cell fcell ${d ? '' : 'unk'} ${fsSel === x.id ? 'sel' : ''}" data-fsel="${x.id}"><span class="fno">${x.i + 1}</span>${d ? ic(x.id) : '<span class="q">?</span>'}<span class="s">${d ? esc(x.name) : '???'}</span><span class="fst">${'★'.repeat(x.grade)}</span></button>`; };
+  const GTL = GT_ITEMS.map(g => CATCH_INFO[g[0]]), ngt = GTL.filter(x => D[x.id]).length, no = x => x.gt ? x.i - 299 : x.i + 1;   // 유령 열차 15종
+  const where = x => x.gt ? `유령 열차 「${GT.DEST[x.gt]}」에서만 나와요` : x.time || x.wx ? `${[x.time && TIME_NAME[x.time], x.wx && '비 오는 날'].filter(Boolean).join(' · ')}에만 나와요` : x.z ? `${[...x.z].map(c => ZONE_NAME[c]).join('·')}에서 주워요` : '언제나 나와요';
+  const cell = x => { const d = D[x.id]; return `<button class="cell fcell ${d ? '' : 'unk'} ${fsSel === x.id ? 'sel' : ''}" data-fsel="${x.id}"><span class="fno">${no(x)}</span>${d ? ic(x.id) : '<span class="q">?</span>'}<span class="s">${d ? esc(x.name) : '???'}</span><span class="fst">${'★'.repeat(x.grade)}</span></button>`; };
   let body = '';
   if (fsTab === 'dex'){
-    const list = fsKind === 'fish' ? FISH : FORAGE, PER = 20; fsPg = pgClamp(fsPg, list.length, PER);
+    const list = fsKind === 'fish' ? FISH : fsKind === 'gt' ? GTL : FORAGE, PER = 20; fsPg = pgClamp(fsPg, list.length, PER);
     const sel = fsSel && CATCH_INFO[fsSel], sd = sel && D[sel.id];
-    const detail = sel ? `<div class="fdet">${sd ? ic(sel.id) : '<span class="q fcell" style="min-height:0;padding:0;border:0;background:none">?</span>'}<div class="main"><span class="t">No.${sel.i + 1} ${sd ? esc(sel.name) : '???'} <span class="fst">${STARS(sel.grade)}</span></span><span class="d">${sd ? (sel.cm ? `최고 기록 ${sd.cm}cm · ${sd.n}마리 낚음` : `${sd.n}개 주움`) + ' · ' + where(sel) + ` · 지금 가게에서 ${sellPay(sel.id, sel.pay)}G` : '아직 못 찾았어요'}</span></div></div>`
+    const detail = sel ? `<div class="fdet">${sd ? ic(sel.id) : '<span class="q fcell" style="min-height:0;padding:0;border:0;background:none">?</span>'}<div class="main"><span class="t">No.${no(sel)} ${sd ? esc(sel.name) : '???'} <span class="fst">${STARS(sel.grade)}</span></span><span class="d">${sd ? (sel.cm ? `최고 기록 ${sd.cm}cm · ${sd.n}마리 낚음` : `${sd.n}개 주움`) + ' · ' + where(sel) + ` · 지금 가게에서 ${sellPay(sel.id, sel.pay)}G` : '아직 못 찾았어요'}</span></div></div>`
       : hint(fsMsg, '');
-    body = `<div class="seg" style="grid-template-columns:1fr 1fr"><button data-fsk="fish" class="${fsKind === 'fish' ? 'on' : ''}">물고기 ${nf}/${FISH.length}</button><button data-fsk="forage" class="${fsKind === 'forage' ? 'on' : ''}">채집물 ${ng}/50</button></div>
+    body = `<div class="seg" style="grid-template-columns:1fr 1fr 1fr"><button data-fsk="fish" class="${fsKind === 'fish' ? 'on' : ''}">물고기 ${nf}/${FISH.length}</button><button data-fsk="forage" class="${fsKind === 'forage' ? 'on' : ''}">채집물 ${ng}/50</button><button data-fsk="gt" class="${fsKind === 'gt' ? 'on' : ''}">유령 열차 ${ngt}/${GTL.length}</button></div>
       ${detail}<div class="grid fgrid">${pgSlice(list, fsPg, PER).map(cell).join('')}</div>${pgNav('fspg', fsPg, list.length, PER)}`;
   }
   if (fsTab === 'rod'){ const cur = RODS[L], nx = RODS[L + 1];
@@ -5198,6 +5199,7 @@ const PF_DEX = {
   fish: ['물고기', () => FISH.map(f => f.id), k => !!me.fdex?.[k]?.n, k => ITEM[k], k => `${ITEM[k]} ${STARS(CATCH_INFO[k].grade)} · ${me.fdex[k].n}마리 잡음${me.fdex[k].cm ? ` · 최고 ${me.fdex[k].cm}cm` : ''}`],
   forage: ['채집물', () => FORAGE.map(f => f.id), k => !!me.fdex?.[k]?.n, k => ITEM[k], k => `${ITEM[k]} ${STARS(CATCH_INFO[k].grade)} · ${me.fdex[k].n}개 주움`],
   dish: ['요리', () => DISH.map(d => d.id), k => !!me.cdex?.[k], k => ITEM[k], k => `${ITEM[k]} · 최고 ${'★'.repeat(me.cdex[k])} · ${effText(DISH_INFO[k], me.cdex[k] >= 3)}`],
+  gtrain: ['유령 열차', () => GT_ITEMS.map(x => x[0]), k => !!me.fdex?.[k]?.n, k => ITEM[k], k => `${ITEM[k]} ${STARS(CATCH_INFO[k].grade)} · ${GT.DEST[CATCH_INFO[k].gt]} · ${me.fdex[k].n}${CATCH_INFO[k].cm ? '마리 잡음' : '개 주움'}${me.fdex[k].cm ? ` · 최고 ${me.fdex[k].cm}cm` : ''}`],   // 유령 열차 목적지에서만 나오는 15종
 };
 const pfCount = key => { const [, all, has] = PF_DEX[key]; return all().filter(has).length; };
 // 다음 단계: 10종 단위 (마지막은 전부 모으기)
@@ -5231,6 +5233,7 @@ function pfStatsHTML(){
     ${pfStatRow('물약', pot, POTIONS.length, dexDesc(pot, POTIONS.length, '종'))}
     ${pfStatRow('물고기 도감', fish, FISH.length, dexDesc(fish, FISH.length, '종'))}
     ${pfStatRow('채집물 도감', forage, FORAGE.length, dexDesc(forage, FORAGE.length, '종'))}
+    ${pfStatRow('유령 열차 도감', pfCount('gtrain'), GT_ITEMS.length, dexDesc(pfCount('gtrain'), GT_ITEMS.length, '종'))}
     ${pfStatRow('온실 화단', plots, PLOT_MAX, plots >= PLOT_MAX ? '화단을 다 늘렸어요!' : `한 칸 더: 지식 ${plotNext()[0]} · ${plotNext()[1]}G`)}
     ${pfStatRow('사육장', cr, PEN_MAX, cr >= PEN_MAX ? '사육장이 꽉 찼어요' : `${PEN_MAX - cr}마리 더 키울 수 있어요`)}
   </div>`;
@@ -5240,7 +5243,7 @@ function pfDexHTML(){
   pfPage = Math.min(pfPage, pages - 1);
   const got = all.filter(has).length, list = all.slice(pfPage * per, (pfPage + 1) * per);
   return `
-    <div class="seg" style="grid-template-columns:repeat(4,1fr)">${Object.entries(PF_DEX).map(([k, [l]]) => `<button data-pfdex="${k}" class="${pfDex === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+    <div class="seg" style="grid-template-columns:repeat(${Object.keys(PF_DEX).length},1fr)">${Object.entries(PF_DEX).map(([k, [l]]) => `<button data-pfdex="${k}" class="${pfDex === k ? 'on' : ''}">${l}</button>`).join('')}</div>
     <section class="sec">
       <div class="sec-h"><h3>${name} 도감 <span class="meta num">${got} / ${all.length}</span></h3>
         ${pages > 1 ? `<div class="pfpager"><button class="icbtn" data-pfpage="-1" aria-label="이전 쪽" ${pfPage ? '' : 'disabled'}>◀</button><span class="s num">${pfPage + 1} / ${pages}</span><button class="icbtn" data-pfpage="1" aria-label="다음 쪽" ${pfPage < pages - 1 ? '' : 'disabled'}>▶</button></div>` : ''}</div>
