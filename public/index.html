@@ -3530,7 +3530,20 @@ function adminErrHTML(){   // 같은 오류끼리 묶어서 많이·최근에 �
       ${g.e.s || g.e.ua ? `<details style="margin-top:6px"><summary class="s">자세히</summary><div style="font-family:monospace;font-size:11px;white-space:pre-wrap;word-break:break-all;opacity:.8">${esc(g.e.s || '')}\n${esc(g.e.ua || '')}</div></details>` : ''}</div>`).join('') : '<div class="adcard">아직 모인 오류가 없어요 🎉</div>'}`;
 }
 const adOnline = () => Object.fromEntries(Object.entries(AD.online || {}).filter(([, o]) => o && o.nick));   // 이름 없는 접속 표시(끊겼다 다시 붙으며 남은 찌꺼기)는 빼요
+// 관리자 화면: 그리다 오류가 나도 위쪽 탭은 계속 눌리고, 오류 내용을 화면에 보여 줘요
 function adminRender(){
+  try { adminRender0(); }
+  catch(e){
+    console.error(e); let root = $('#adminv'); if (!root){ root = document.createElement('div'); root.id = 'adminv'; $('#shell').appendChild(root); }
+    try { errReport('admin', e.message, e.stack || ''); } catch(e2){}
+    let nav = ''; try { nav = adminNavHTML([['map', '지도'], ['students', '학생'], ['join', '가입 신청'], ['chat', '대화'], ['dorm', '기숙사'], ['story', '이야기·미션'], ['npc', 'NPC 호감도'], ['event', '이벤트'], ['exam', '쪽지시험'], ['gift', '지급·공지'], ['err', '오류'], ['reset', '초기화']]); } catch(e3){}
+    root.innerHTML = `<div class="adhead"><b>호박달 마녀학교 · 관리자</b><button class="btn sm" id="adout2">나가기</button></div>${nav}<div class="adbody"><div class="adcard" style="border-color:#c0392b"><b>이 탭을 그리다 오류가 났어요</b><div class="s">다른 탭은 그대로 쓸 수 있어요. 이 화면을 캡처해서 알려 주세요.</div><pre class="s" style="white-space:pre-wrap;font-size:11px">${esc(String(e && e.message))}\n${esc(String(e && e.stack || '').split('\n').slice(0, 6).join('\n'))}</pre></div></div>`;
+    root.querySelectorAll('[data-adgrp]').forEach(b => b.onclick = () => { const g = AD_GROUPS.find(x => x[0] === b.dataset.adgrp); AD.tab = (AD.grpLast || {})[g[0]] || g[2][0]; adminRender(); });
+    root.querySelectorAll('[data-adtab]').forEach(b => b.onclick = () => { AD.tab = b.dataset.adtab; if (AD.tab === 'gift') try { adminMailLoad(); } catch(e4){} adminRender(); });
+    const o = $('#adout2'); if (o) o.onclick = () => { document.body.classList.remove('admin'); location.reload(); };
+  }
+}
+function adminRender0(){
   if (!document.body.classList.contains('admin')) return;
   { const fa = document.activeElement; if (fa && fa.matches?.('textarea,input:not([type=checkbox]):not([type=radio]):not([type=range])') && fa.closest?.('#adminv')){ if (!adminRender.wait){ adminRender.wait = true; fa.addEventListener('blur', () => setTimeout(() => { adminRender.wait = false; adminRender(); }, 400), { once: true }); } return; } }   // 글을 쓰는 중에는 새로 그리지 않아요 (키패드가 내려가지 않게) · 다 쓰고 나면 그려요
   const P = AD.players, O = adOnline(), ids = Object.keys(P).filter(id => P[id]?.nick);
