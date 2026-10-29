@@ -1757,13 +1757,12 @@ function renderFish(){
   const D = me.fdex || {}, nf = FISH.filter(f => D[f.id]).length, ng = FORAGE.filter(f => D[f.id]).length, now = houseNow(), L = rodLv();
   const tabs = [['dex', '도감'], ['rod', '낚싯대'], ['today', '오늘'], ['sell', '가게']];
   const GTL = GT_ITEMS.map(g => CATCH_INFO[g[0]]), ngt = GTL.filter(x => D[x.id]).length, no = x => x.gt ? x.i - 299 : x.i + 1;   // 유령 열차 15종
-  const where = x => x.gt ? `유령 열차 「${GT.DEST[x.gt]}」에서만 나와요` : x.time || x.wx ? `${[x.time && TIME_NAME[x.time], x.wx && '비 오는 날'].filter(Boolean).join(' · ')}에만 나와요` : x.z ? `${[...x.z].map(c => ZONE_NAME[c]).join('·')}에서 주워요` : '언제나 나와요';
   const cell = x => { const d = D[x.id]; return `<button class="cell fcell ${d ? '' : 'unk'} ${fsSel === x.id ? 'sel' : ''}" data-fsel="${x.id}"><span class="fno">${no(x)}</span>${d ? ic(x.id) : '<span class="q">?</span>'}<span class="s">${d ? esc(x.name) : '???'}</span><span class="fst">${'★'.repeat(x.grade)}</span></button>`; };
   let body = '';
   if (fsTab === 'dex'){
     const list = fsKind === 'fish' ? FISH : fsKind === 'gt' ? GTL : FORAGE, PER = 20; fsPg = pgClamp(fsPg, list.length, PER);
     const sel = fsSel && CATCH_INFO[fsSel], sd = sel && D[sel.id];
-    const detail = sel ? `<div class="fdet">${sd ? ic(sel.id) : '<span class="q fcell" style="min-height:0;padding:0;border:0;background:none">?</span>'}<div class="main"><span class="t">No.${no(sel)} ${sd ? esc(sel.name) : '???'} <span class="fst">${STARS(sel.grade)}</span></span><span class="d">${sd ? (sel.cm ? `최고 기록 ${sd.cm}cm · ${sd.n}마리 낚음` : `${sd.n}개 주움`) + ' · ' + where(sel) + ` · 지금 가게에서 ${sellPay(sel.id, sel.pay)}G` : '아직 못 찾았어요'}</span></div></div>`
+    const detail = sel ? `<div class="fdet">${sd ? ic(sel.id) : '<span class="q fcell" style="min-height:0;padding:0;border:0;background:none">?</span>'}<div class="main"><span class="t">No.${no(sel)} ${sd ? esc(sel.name) : '???'} <span class="fst">${STARS(sel.grade)}</span></span></div></div>`
       : hint(fsMsg, '');
     body = `<div class="seg" style="grid-template-columns:1fr 1fr 1fr"><button data-fsk="fish" class="${fsKind === 'fish' ? 'on' : ''}">물고기 ${nf}/${FISH.length}</button><button data-fsk="forage" class="${fsKind === 'forage' ? 'on' : ''}">채집물 ${ng}/50</button><button data-fsk="gt" class="${fsKind === 'gt' ? 'on' : ''}">유령 열차 ${ngt}/${GTL.length}</button></div>
       ${detail}<div class="grid fgrid">${pgSlice(list, fsPg, PER).map(cell).join('')}</div>${pgNav('fspg', fsPg, list.length, PER)}`;
@@ -5261,7 +5260,7 @@ function renderProfile(){
   if (pfTab === 'dex'){
     on('[data-pfdex]', b => { pfDex = b.dataset.pfdex; pfPage = 0; renderProfile(); });
     on('[data-pfpage]', b => { pfPage += +b.dataset.pfpage; renderProfile(); });
-    on('[data-pfcell]', b => { const k = b.dataset.pfcell, [name, , has, , info] = PF_DEX[pfDex]; toast(has(k) ? info(k) : `아직 모르는 ${name}이에요`); });
+    on('[data-pfcell]', () => {});   // 도감은 그림·이름만 (설명 없음)
   }
 }
 // 전신 미리보기: 꾸미기 화면과 같은 방식으로 걷는 모습을 그려요 (◀ ▶ 로 돌려 보기)
