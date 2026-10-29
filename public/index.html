@@ -7480,7 +7480,7 @@ function snowTick(){
   World.setSnowball && World.setSnowball(snowOn() && snowOutdoor() && (snowRoll || m.ball) ? m.ball || 1 : 0);
   snowBtn(); if (World.setMarks && typeof mqSetMarks === 'function') mqSetMarks(mqMarkList);
   if (snowOn() && snowCtl.id && m.seen !== snowCtl.id) snowIntro();
-  if (snowSt && snowSt.done && snowSt.at && m.seenDone !== snowSt.at && m.seen) snowFinale();
+  else if (snowSt && snowSt.done && snowSt.at && m.seenDone !== snowSt.at) snowFinale();   // 닫힌 뒤에 들어와도 완성 장면은 바로 봐요
 }
 async function snowTap(){
   const t = World.meTile && World.meTile(); if (!t || t.m !== 'campus' || Math.abs(t.x - SNOW.SPOT[0]) + Math.abs(t.y - SNOW.SPOT[1]) > 6){ World.walkToTile(SNOW.SPOT[0], SNOW.SPOT[1] + 2); return; }
@@ -7555,7 +7555,7 @@ function adminSnowHTML(){
   const c = AD.snowctl || {}, st = AD.snowst || {}, g = snowStage(st), who = Object.values(AD.snowwho || {}).sort((a, b) => (b.b + b.d) - (a.b + a.d));
   const pct = (v, n) => `<div class="snbar"><i style="width:${Math.min(100, (v || 0) / n * 100)}%"></i></div><span>${v || 0}/${n}</span>`;
   return `<div class="adcard"><div class="abhead"><b>이벤트 「눈사람」</b>${c.open ? '<button class="btn sm" data-sna="close">이벤트 끝내기</button>' : '<button class="btn sm go" data-sna="open">이벤트 시작</button>'}</div>
-    <div class="abchips"><span>${c.open ? '눈 오는 중' : '닫힘'}</span><span>${{ none: '아직 시작 전', body: '몸통 만드는 중', head: '머리 만드는 중', deco: '장식 모으는 중', done: '완성' }[g]}</span><span>참여 <b>${who.length}</b>명</span></div>
+    <div class="abchips"><span>${c.open ? '눈 오는 중' : '닫힘'}</span><span>${{ none: '아직 시작 전', body: '몸통 만드는 중', head: '머리 만드는 중', deco: '장식 모으는 중', done: '완성' }[g]}</span><span>참여 <b>${who.length}</b>명</span><span>첫눈 장면 <b>${adminSeen().snowIn}</b>/${adminSeen().all}</span>${st.done ? `<span>완성 장면 <b>${adminSeen().snowEnd}</b>/${adminSeen().all}</span>` : ''}</div>
     <div class="snadm"><div><b>몸통</b>${pct(st.body, SNOW.BODY)}</div><div><b>머리</b>${pct(st.head, SNOW.HEAD)}</div>
     ${SNOW.DECO.map(([k, nm, need]) => `<div><b>${nm}</b>${pct(Object.entries(need).reduce((t, [i, n]) => t + Math.min(n, (((st.deco || {})[k] || {})[i] || 0)), 0), Object.values(need).reduce((a, b) => a + b, 0))}</div>`).join('')}</div>
     ${who.length ? `<div class="s">${who.slice(0, 12).map(w => `${esc(w.n || '')} 눈 ${w.b || 0}·장식 ${w.d || 0}`).join(' · ')}</div>` : ''}
@@ -7574,7 +7574,7 @@ function adminBabyHTML(){
     if (b.st >= 5) return `<span class="abs go">${b.fin ? '이름 짓는 중' : '사육장으로'}</span>`;
     return `<span class="abs">${b.met ? `<i class="dots">${[0, 1, 2, 3, 4].map(i => `<b class="${i < b.st ? 'on' : ''}"></b>`).join('')}</i>${b.st}/5` : '아직 못 만남'}</span>`; };
   return `<div class="adcard"><div class="abhead"><b>이벤트 「길 잃은 아기 동물」</b>${c.open ? '<button class="btn sm" data-bba="close">이벤트 끝내기</button>' : '<button class="btn sm go" data-bba="open">이벤트 시작</button>'}</div>
-    <div class="abchips"><span>${c.open ? '진행 중' : '닫힘'}</span><span>배정 <b>${ids.filter(id => pk[id] !== undefined).length}</b>/${ids.length}</span><span>돌보는 중 <b>${going.length}</b></span><span>입양 <b>${adopted.length}</b></span></div>
+    <div class="abchips"><span>${c.open ? '진행 중' : '닫힘'}</span><span>배정 <b>${ids.filter(id => pk[id] !== undefined).length}</b>/${ids.length}</span><span>돌보는 중 <b>${going.length}</b></span><span>입양 <b>${adopted.length}</b></span><span>첫 장면 본 학생 <b>${adminSeen().babyIn}</b>/${adminSeen().all}</span></div>
     <div class="abtable">${ids.map(id => `<div class="abrow"><span class="abn">${esc(AD.players[id].nick)}</span><select data-bbu="${id}" ${bOf(id)?.adopt ? 'disabled' : ''}><option value="">-</option>${BABY.NAMES.map((n, i) => `<option value="${i}" ${(bOf(id)?.adopt ? bOf(id).k : pk[id]) === i ? 'selected' : ''}>${n.replace('아기 ', '')}</option>`).join('')}</select>${stat(id)}</div>`).join('') || '<div class="s">학생이 없어요</div>'}</div></div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-bba]'); if (!b || !F || !db) return;
@@ -7600,16 +7600,28 @@ document.addEventListener('click', e => {
 setInterval(() => { if (document.body.classList.contains('admin') && AD.tab === 'event' && AD.gtctl && AD.gtctl.open && !adminTyping()) { const el = document.querySelector('[data-gta]')?.closest('.adcard'); if (el) el.outerHTML = adminGtrainHTML(); } }, 1000);
 function adminEventHTML(){ return adminEventOverview() + adminSnowHTML() + adminBabyHTML() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
 // 이벤트 한눈에: 열려 있는지 · 진행도 · 참가한 학생 수
+// 이벤트마다 장면을 본 학생(또는 보상을 받은 학생) 수 → 다 봤는지 보고 닫아요
+function adminSeen(){
+  const P = Object.values(AD.players || {}).filter(p => p && p.nick), all = P.length, c = (f) => P.filter(p => { try { return f(p); } catch(e){ return false; } }).length;
+  const sc = AD.snowctl || {}, ss = AD.snowst || {}, bc = AD.bbctl || {}, pk = AD.pkctl || {}, ln = AD.lnctl || {}, pz = AD.pzctl || {};
+  return { all,
+    snowIn: sc.id ? c(p => p.snow && p.snow.seen === sc.id) : 0, snowEnd: ss.at ? c(p => p.snow && p.snow.seenDone === ss.at) : 0,
+    babyIn: bc.id ? c(p => p.babySeen === bc.id) : 0, babyEnd: c(p => p.baby && p.baby.adopt),
+    pkEnd: pk.id ? c(p => p.pk && p.pk.id === pk.id && p.pk.fin) : 0, lnEnd: ln.id ? c(p => p.lnr && p.lnr.id === ln.id) : 0, pzEnd: pz.id ? c(p => p.pz && p.pz.id === pz.id) : 0 };
+}
 function adminEventOverview(){
+  const SN = adminSeen();
   const sum = o => Object.values(o || {}).reduce((a, n) => a + (+n || 0), 0), n = o => Object.keys(o || {}).length;
   const df = AD.dfctl || {}, pz = AD.pzctl || {}, ln = AD.lnctl || {}, pk = AD.pkctl || {}, sg = sgCtl || {};
   const pzOwners = new Set(Object.values(AD.pzown || {})), pkGoalN = pk.goal || PK.GOAL, pkT = sum(AD.pkpts);
   const row = (name, on, info) => `<div class="li"><div class="main"><span class="t">${name}</span><span class="d">${info}</span></div><span class="tag" style="${on ? 'background:var(--gold);color:var(--ink)' : ''}">${on ? '열림' : '닫힘'}</span></div>`;
   return `<div class="adcard"><b>이벤트 한눈에</b><div class="box px">
     ${row('용의 알 지키기', !!df.open, df.open ? `${DF_PH[df.ph] || ''} · 웨이브 ${df.w || 0}/15 · 자리 잡은 학생 ${n(AD.dfpick)}명` : '-')}
-    ${row('보물 지도 퍼즐', !!pz.open, `맞춘 조각 ${n(AD.pzboard)}/50 · 조각 가진 학생 ${pzOwners.size}명${n(AD.pzchest) ? ` · 상자 ${n(AD.pzchest)}개 열림` : ''}`)}
-    ${row('유령 등불', !!ln.open, `${sum(AD.lncnt)}/60 · 모은 학생 ${n(AD.lncnt)}명`)}
-    ${row('호박밭 같이 가꾸기', !!pk.open, `${pkT}/${pkGoalN} (${Math.min(100, Math.round(pkT / pkGoalN * 100))}%) · 돌본 학생 ${n(AD.pkpts)}명`)}
+    ${row('보물 지도 퍼즐', !!pz.open, `맞춘 조각 ${n(AD.pzboard)}/50 · 조각 가진 학생 ${pzOwners.size}명${n(AD.pzchest) ? ` · 상자 ${n(AD.pzchest)}개 열림` : ''} · 보상 받은 학생 ${SN.pzEnd}/${SN.all}`)}
+    ${row('유령 등불', !!ln.open, `${sum(AD.lncnt)}/60 · 모은 학생 ${n(AD.lncnt)}명 · 보상 받은 학생 ${SN.lnEnd}/${SN.all}`)}
+    ${row('호박밭 같이 가꾸기', !!pk.open, `${pkT}/${pkGoalN} (${Math.min(100, Math.round(pkT / pkGoalN * 100))}%) · 돌본 학생 ${n(AD.pkpts)}명 · 완성 보상 받은 학생 ${SN.pkEnd}/${SN.all}`)}
+    ${row('눈사람', !!(AD.snowctl && AD.snowctl.open), `첫눈 장면 본 학생 ${SN.snowIn}/${SN.all}${(AD.snowst || {}).done ? ` · 완성 장면 본 학생 ${SN.snowEnd}/${SN.all}` : ''}`)}
+    ${row('길 잃은 아기 동물', !!(AD.bbctl && AD.bbctl.open), `첫 장면 본 학생 ${SN.babyIn}/${SN.all} · 입양 ${SN.babyEnd}명`)}
     ${row('유령 열차', !!(AD.gtctl && AD.gtctl.open), AD.gtctl && AD.gtctl.open ? `${GT.DEST[AD.gtctl.dest] || ''} · 탄 학생 ${n((AD.gtride || {})[AD.gtctl.id])}명` : '-')}
     ${row('별 보는 밤', !!sg.open, sg.open ? `${({ gather: '모이는 중', assign: '별 나눠 줌', light: '별 켜는 중', sky: '하늘 보기', done: '이야기 중', end: '끝' })[sg.ph] || ''} · 참가 ${n(sgJoin)}명 · 켜진 별 ${n(sgLit)}/12` : '-')}
   </div></div>`;
