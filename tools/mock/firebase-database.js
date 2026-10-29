@@ -21,6 +21,6 @@ export const update = async (r, v) => { Object.entries(v).forEach(([k, x]) => fb
 export const remove = async r => { setAt(r.p, null); notify(r.p); };
 let n = 0; export const push = async (r, v) => { const id = 'k' + (++n); setAt(r.p + '/' + id, v); notify(r.p); return { key: id }; };
 export const onValue = (r, cb) => { const l = { p: r.p, cb }; ls.push(l); setTimeout(() => cb(snap(r.p)), 0); return () => ls.splice(ls.indexOf(l), 1); };
-export const onDisconnect = () => ({ remove() {} });
+export const onDisconnect = () => ({ remove() {}, cancel() {} }); export const goOffline = () => {};
 export const runTransaction = async (r, fn) => { const v = fn(getAt(r.p)); if (v === undefined) return { committed: false }; fbCheck(v, r.p); setAt(r.p, v); notify(r.p); return { committed: true }; };
 export const serverTimestamp = () => Date.now();

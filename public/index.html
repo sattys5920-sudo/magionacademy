@@ -760,6 +760,7 @@ button.cell:not(:disabled):active{background:var(--line)}
 #wallet{flex:none;padding:0 8px 0 6px;gap:6px;font-size:13px}
 .mtile .main .d{white-space:normal}
 @media (max-width:370px){.hudname{display:none}}
+#sessoff{position:fixed;inset:0;z-index:99999;background:rgba(14,8,32,.86);display:flex;align-items:center;justify-content:center;padding:16px}#sessoff .card{max-width:340px;display:flex;flex-direction:column;gap:10px;text-align:center}
 </style>
 </head>
 <body>
@@ -1220,17 +1221,30 @@ const setSaveDot = s => { saveState = s; const d = $('#saveDot'); if (d) d.class
 // 저장: 바꾼 건 바로 화면에, 서버에는 1.5 초 뒤에 한 번에 (연달아 바꾸면 한 번만 써요). 화면을 떠날 때는 바로 써요
 let haltSave = false; const SAVE_SID = Math.random().toString(36).slice(2, 10), saveTried = new Set();   // 이 화면이 보낸 저장 번호들 (끊겼다 붙으면 내 저장이 먼저 들어가 있을 수 있어요)   // 관리자가 내 데이터를 리셋했을 때 옛 데이터로 덮어쓰지 않도록
 function saveNow(){
-  clearTimeout(saveTimer); saveTimer = 0; if (!me || haltSave) return;
-  if (solo) { try { localStorage.setItem('magion-solo', JSON.stringify(me)); } catch(e){} setSaveDot(''); return; }
+  clearTimeout(saveTimer); saveTimer = 0; if (!me || haltSave) return Promise.resolve(false);
+  if (solo) { try { localStorage.setItem('magion-solo', JSON.stringify(me)); } catch(e){} setSaveDot(''); return Promise.resolve(true); }
   // 다른 기기·옛 화면이 열려 있으면 그쪽이 먼저 저장한 최신 진행을 옛 상태로 덮어쓸 수 있어요 → 저장할 때마다 번호(rv)를 올리고, 서버 번호가 내가 아는 것보다 크면 덮어쓰지 않고 최신으로 새로 불러와요
   me.rv = knownRv + 1; me.sid = SAVE_SID; saveTried.add(me.rv);
   const body = fbKeep(fbClean(me));   // Firebase가 거절하는 값(undefined·NaN·이름에 . # $ / [ ])이 있으면 저장 전체가 실패해요 → 미리 정리해요
-  F.runTransaction(F.ref(db, 'players/' + uid), cur => { const crv = (cur && cur.rv) || 0; if (crv <= knownRv){ body.rv = knownRv + 1; return body; } if (cur.sid === SAVE_SID && saveTried.has(crv)){ body.rv = crv + 1; saveTried.add(body.rv); return body; } return undefined; }).then(r => {   // 서버 번호가 더 커도, 연결이 끊긴 사이 들어간 「이 화면의」 저장이면 다른 기기가 아니에요
-    if (r.committed){ knownRv = me.rv = body.rv; saveTried.clear(); setSaveDot(''); if (typeof mailDone !== 'undefined') mailDone.splice(0).forEach(id => F.set(F.ref(db, `mail/${uid}/${id}/c`), 1).catch(() => {})); return; }
-    me.rv = knownRv; haltSave = true; errReport('save', '다른 기기·창이 먼저 저장해서 이 화면의 최근 진행을 버리고 새로 불러옴', ''); toast('다른 기기에서 먼저 진행했어요. 최신 상태로 새로 불러와요'); setTimeout(() => location.reload(), 1800);
+  let curSid = '';
+  return F.runTransaction(F.ref(db, 'players/' + uid), cur => { const crv = (cur && cur.rv) || 0; curSid = (cur && cur.sid) || ''; if (crv <= knownRv){ body.rv = knownRv + 1; return body; } if (cur.sid === SAVE_SID && saveTried.has(crv)){ body.rv = crv + 1; saveTried.add(body.rv); return body; } return undefined; }).then(r => {   // 서버 번호가 더 커도, 연결이 끊긴 사이 들어간 「이 화면의」 저장이면 다른 기기가 아니에요
+    if (r.committed){ knownRv = me.rv = body.rv; saveTried.clear(); setSaveDot(''); sessOk = true; if (typeof mailDone !== 'undefined') mailDone.splice(0).forEach(id => F.set(F.ref(db, `mail/${uid}/${id}/c`), 1).catch(() => {})); return true; }
+    me.rv = knownRv; if (curSid && curSid !== SAVE_SID && sessOk){ sessKicked(); return false; }   // 다른 기기·창이 새로 들어왔어요 → 이 화면은 멈춰요 (서로 번갈아 다시 불러오지 않게)
+    haltSave = true; errReport('save', '다른 기기·창이 먼저 저장해서 이 화면의 최근 진행을 버리고 새로 불러옴', ''); toast('다른 기기에서 먼저 진행했어요. 최신 상태로 새로 불러와요'); setTimeout(() => location.reload(), 1800); return false;
   }).catch(e => { me.rv = knownRv; setSaveDot('off'); if (!saveNow.retry){ saveNow.retry = setTimeout(() => { saveNow.retry = 0; save(); }, 5000); } if ((e.code || e.message) === 'disconnect') return;   // 잠깐 끊긴 건 5초 뒤 다시 저장해요
-    toast('저장에 실패했어요: ' + (e.code || e.message)); errReport('save', '저장 실패: ' + (e.code || e.message), e.stack); });
+    toast('저장에 실패했어요: ' + (e.code || e.message)); errReport('save', '저장 실패: ' + (e.code || e.message), e.stack); return false; });
 }
+// 한 계정은 한 화면에서만: 새 기기·창이 들어오면 저장 표시(sid)가 바뀌고, 옛 화면은 그 자리에서 멈춰요 (옛 상태로 이벤트·장터를 하다 되돌려지면 보상이 사라지거나 두 번 생겨요)
+let sessOk = false, sessOff = false;
+function sessKicked(){
+  if (sessOff) return; sessOff = true; haltSave = true; clearTimeout(saveTimer); saveTimer = 0;
+  try { F.onDisconnect(F.ref(db, 'online/' + uid)).cancel?.(); } catch(e){}   // 내가 나가도 새 화면의 접속 표시는 지우지 않게
+  try { F.goOffline?.(db); } catch(e){}
+  const d = document.createElement('div'); d.id = 'sessoff'; d.innerHTML = '<div class="card px"><b>다른 기기에서 접속했어요</b><span class="s">이 화면은 멈췄어요. 여기서 하던 진행은 저장되지 않아요.</span><button class="btn go" id="sessgo">이 화면에서 계속하기</button></div>';
+  document.body.appendChild(d); $('#sessgo').onclick = () => location.reload();
+}
+// 일 하나가 서버(장터·이벤트)와 내 가방에 같이 걸리면 가방을 먼저 저장하고 서버 쪽을 해요 → 중간에 끊겨도 두 번 받지 않아요
+const saveSure = () => saveNow();
 // ---- 오류 모으기: 학생 화면에서 난 오류를 errs/ 에 남겨 관리자 「오류」 탭에서 봐요 (같은 오류는 한 번, 한 번 켤 때 15개까지) ----
 const ERR_BUILD = '__BUILD__';
 const errQ = [], errSeen = new Set(); let errN = 0;
@@ -1262,8 +1276,9 @@ function fbClean(o){
   return fix(o);
 }
 function save(){ if (!saveTimer) setSaveDot('busy'); clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 1500); if (typeof bagBadge === 'function' && !sheetOn) bagBadge(); }
-addEventListener('pagehide', () => { if (saveTimer) saveNow(); });
-document.addEventListener('visibilitychange', () => { if (document.hidden && saveTimer) saveNow(); });
+const xHideKeep = () => { try { if (typeof xb !== 'undefined' && xb && !xb.over && !xb.mirror && me && me.ex && me.ex.run && !me.ex.run.co){ xSaveParty(); if (me.ex.run.p) me.ex.run.p.forEach(u => { u.hp = Math.max(1, u.hp); }); save(); } } catch(e){} };   // 혼자 전투 중에 끄면 지금 체력을 남겨요 (껐다 켜서 처음 체력으로 다시 싸우지 않게)
+addEventListener('pagehide', () => { xHideKeep(); if (saveTimer) saveNow(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden){ xHideKeep(); if (saveTimer) saveNow(); } });
 addEventListener('online', () => { if (saveState === 'off') saveNow(); }); addEventListener('offline', () => setSaveDot('off'));
 // 알림: 화면 위쪽에 2 초씩, 여러 개면 쌓지 않고 차례로 (같은 글이 연달아 오면 한 번만)
 const toastQ = []; let toastBusy = false, toastLast = '';
@@ -3048,6 +3063,7 @@ const GAMES = {
   ghost: { name: '유령 막기', ic: '', coop: true, min: 2, max: 8, dur: 150, desc: '구역을 나눠 맡아 몰려오는 유령을 막아요 · 웨이브 10' },
   stars: { name: '별자리 잇기', ic: '', coop: true, min: 2, max: 8, dur: 180, desc: '내 별 번호를 외워 다 같이 1번부터 순서대로 이어요' },
 };
+const GAME_DAY = 6;
 const PCOL = ['#FF6A8A', '#6AB8FF', '#8CE6B0', '#FFD866', '#C08AFF', '#FF9A4A', '#7AE0E0', '#F0F0F0'];
 let gameList = {}, room = null, roomV = null, roomOff = null, G = null, gameMsg = '';
 const myId = () => uid || 'me';
@@ -3160,7 +3176,9 @@ function gameOver(fail){
   }
   me.gdone = me.gdone || {};
   if (G.g === 'pumpkin' && me.perk?.pumpkin_race) coin = Math.round(coin * 1.3);   // 스트로 ♥10: 호박 줍기 경주 보너스
-  if (!me.gdone[G.id]){ me.gdone = { [G.id]: 1 }; me.coin += coin; me.mana += mana; save(); hud(); recordBest(G.g, rec); storyHook('game', { g: G.g, ok: Gm.coop ? !!(G.result ? G.result().ok : !fail) : true, score: Math.max(0, G.score) }); }
+  if (!me.gdone[G.id]){ if (!me.gday || me.gday.d !== todayKey()) me.gday = { d: todayKey(), n: 0 };   // 놀이 보상은 하루 6판까지 (짧은 판을 계속 돌려 골드를 찍어 내지 않게)
+    if (me.gday.n >= GAME_DAY){ coin = 0; mana = 0; reward = (reward ? reward + ' · ' : '') + `오늘 놀이 보상 ${GAME_DAY}판을 다 받았어요`; } else me.gday.n++;
+    me.gdone = { [G.id]: 1 }; me.coin += coin; me.mana += mana; save(); hud(); recordBest(G.g, rec); storyHook('game', { g: G.g, ok: Gm.coop ? !!(G.result ? G.result().ok : !fail) : true, score: Math.max(0, G.score) }); }
   if (roomV && roomV.host === myId()) GDB.upd('games/' + G.id, { st: 'end' });
   const g = G.g; gameEnd();
   gameShow(`<div class="gpan px"><b class="gt">${GAMES[g].ic} ${title}</b>${reward ? `<span class="s">${reward}</span>` : ''}
@@ -3718,7 +3736,7 @@ const buffOn = k => (me?.buffs?.[k] || 0) > now2() || (me?.buffs?.all || 0) > no
 function eatDish(k){
   const d = DISH_INFO[k]; if (!d || !(me.inv[k] > 0)) return;
   me.inv[k]--; const v = d.best ? d.v * 2 : d.v; me.buffs = me.buffs || {};
-  if (TIMED.includes(d.e) || d.e === 'all'){ const key = d.e; me.buffs[key] = Math.max(now2(), me.buffs[key] || 0) + v * 6e4; if (d.e === 'all') me.mana += 50; }
+  if (TIMED.includes(d.e) || d.e === 'all'){ const key = d.e; me.buffs[key] = Math.min(now2() + 120 * 6e4, Math.max(now2(), me.buffs[key] || 0) + v * 6e4);   /* 같은 요리를 여러 번 먹어도 남은 시간은 2시간까지 */ if (d.e === 'all') me.mana += 50; }
   if (d.e === 'mana') me.mana += v;
   if (d.e === 'know'){ const got = addKnow(v); if (got.length) setTimeout(() => toast(got.join(' · ')), 1200); }
   if (d.e === 'spot'){ if (!me.fg || me.fg.d !== todayKey()) me.fg = { d: todayKey(), got: [] }; me.fg.got = me.fg.got || []; me.fg.extra = (me.fg.extra || 0) + v; syncSpots(); }
@@ -4863,8 +4881,8 @@ document.addEventListener('click', e => {
   const a = b.dataset.stc;
   if (a === 'talk') storyAdd(c, k, 1, ok => { toast(ok ? '함께했어요! 반 전체 기여 +1' : '이미 함께했어요'); setTimeout(() => storyPanel(c), 300); });
   if (a === 'give1' || a === 'giveall'){ const want = a === 'give1' ? 1 : (me.inv[st.item] || 0), left = st.goal - stTotal(c, k), amt = Math.min(want, left, me.inv[st.item] || 0); if (amt <= 0) return;
-    me.inv[st.item] -= amt; save();
-    storyAdd(c, k, amt, ok => { if (!ok){ me.inv[st.item] += amt; save(); toast('이미 다 모였어요!'); } else toast(`${ITEM[st.item]} ${amt}개를 건넸어요!`); setTimeout(() => storyPanel(c), 300); }); }
+    me.inv[st.item] -= amt; saveSure().then(sv => { if (!sv){ me.inv[st.item] += amt; save(); return toast('지금은 저장이 안 돼요. 잠시 뒤에 다시 해 주세요'); }   // 가방에서 뺀 걸 먼저 저장하고 반 기여를 올려요
+    storyAdd(c, k, amt, ok => { if (!ok){ me.inv[st.item] += amt; saveSure(); toast('이미 다 모였어요!'); } else toast(`${ITEM[st.item]} ${amt}개를 건넸어요!`); setTimeout(() => storyPanel(c), 300); }); }); }
   if (a === 'games'){ npcClose(); openSheet('home', 'games'); }
 });
 // ---------- 관리자: 송출 · 진행 보기 · 단계 넘기기 ----------
@@ -6203,9 +6221,10 @@ function renderDorm(){
   on('[data-shoppg]', b => { fshopPage = +b.dataset.shoppg; redraw(); });
   on('[data-guestpg]', b => { guestPage = +b.dataset.guestpg; redraw(); });
   on('[data-claim]', async b => {
-    const g = myGuest[b.dataset.claim]; if (!g || !g.gift || g.claimed) return;
-    await F.update(F.ref(db, `guest/${uid}/${b.dataset.claim}`), { claimed: true });
-    me.inv[g.gift] = (me.inv[g.gift] || 0) + 1; save(); toast(`${g.nick}의 선물 ${withJosa(ITEM[g.gift], '을', '를')} 받았어요!`);
+    const g = myGuest[b.dataset.claim]; if (!g || !g.gift || g.claimed || b.disabled) return; b.disabled = true;
+    const r = await F.runTransaction(F.ref(db, `guest/${uid}/${b.dataset.claim}/claimed`), c => c ? undefined : true).catch(() => null);   // 빠르게 두 번 눌러도 한 번만 받아요
+    if (!r || !r.committed){ b.disabled = false; return; }
+    g.claimed = true; me.inv[g.gift] = (me.inv[g.gift] || 0) + 1; saveSure(); toast(`${g.nick}의 선물 ${withJosa(ITEM[g.gift], '을', '를')} 받았어요!`);
   });
   on('[data-fcat]', b => { furnCat = b.dataset.fcat; fshopPage = 0; redraw(); });
   on('[data-buyf]', b => {
@@ -6331,12 +6350,13 @@ async function donate(k, want){
   if (solo){ me.common = apply(me.common) || me.common; }
   else {
     take(n);   // 먼저 빼 두고 남는 만큼 돌려줘요 (빠르게 여러 번 눌러도 가진 것보다 많이 나가지 않게)
+    if (!await saveSure()){ take(-n); save(); return toast('지금은 저장이 안 돼요. 잠시 뒤에 다시 해 주세요'); }   // 뺀 걸 먼저 저장해요 (되돌려져서 두 번 넣지 않게)
     const r = await F.runTransaction(F.ref(db, 'houses/' + h), apply).catch(e => { toast('넣지 못했어요: ' + (e.code || e.message)); return null; });
     if (!r || !r.committed) gave = 0; take(gave - n);
   }
-  if (!gave) return;
+  if (!gave){ save(); return; }
   if (solo) take(gave);
-  save(); syncHalls();
+  saveSure(); syncHalls();
   toast(up ? `휴게실이 ${up}단계 「${HALL_NAMES[h][up - 1]}」가 됐어요!` : `${k === 'coin' ? gave + 'G' : ITEM[k] + ' ' + gave + '개'}를 넣었어요`);
   if (sub === 'common') renderCommon();
 }
@@ -6539,7 +6559,7 @@ function makeExam(){
 let exam = null;   // { qs, i, right, picked, t0 }
 function startExam(){
   if (examStarted()) return; if (!examOpenKey()) return toast('시험 시간이 아니에요');
-  me.exam = { week: examKey(), score: 0, done: false }; save();   // 도중에 나가도 한 번 본 걸로 쳐요
+  me.exam = { week: examKey(), score: 0, done: false }; saveSure();   // 도중에 나가도 한 번 본 걸로 쳐요
   exam = { qs: makeExam(), i: 0, right: 0, picked: null, t0: now2() };
   sub = 'exam'; render();
 }
@@ -7089,7 +7109,7 @@ function pzChests(){
   const take = async i => { if (busy || mineIdx() >= 0 || pzChest[i] !== undefined) return; busy = true; pzTaking = true; setTimeout(() => { pzTaking = false; }, 8000); const r = rew[i];
     const res = await GDB.tx('puzzle/chest/' + i, cur => cur ? undefined : myId()).catch(() => ({ committed: false })); busy = false;
     if (!res.committed){ toast('다른 친구가 먼저 가져갔어요. 다른 상자를 골라 보세요'); return; }
-    pzChest[i] = myId(); me.pz = { id: pzCtl.id, ch: i, g: r[0], m: r[1], sp: r[2] }; me.coin += r[0]; if (r[1]) me.inv.mana = (me.inv.mana || 0) + r[1]; if (r[2]){ const ex = xEx(); ex.spx = (ex.spx || 0) + r[2]; } save(); hud(); sfx('heart'); draw(); pzBtn(); };
+    pzChest[i] = myId(); me.pz = { id: pzCtl.id, ch: i, g: r[0], m: r[1], sp: r[2] }; me.coin += r[0]; if (r[1]) me.inv.mana = (me.inv.mana || 0) + r[1]; if (r[2]){ const ex = xEx(); ex.spx = (ex.spx || 0) + r[2]; } saveSure(); hud(); sfx('heart'); draw(); pzBtn(); };
   pzChestDraw = draw; draw();
 }
 // ---- 관리자 ----
@@ -7209,7 +7229,7 @@ function lnPick(){
     if (!await confirmBox(`${LN.NAMES[i]} 유령 등불을 가져갈까요?\n한 번 고르면 바꿀 수 없어요.`, '가져갈게요', '다시 볼래요')) return; busy = true;
     const res = await GDB.tx('lantern/color/' + i, cur => cur ? undefined : myId()).catch(() => ({ committed: false })); busy = false;
     if (!res.committed){ toast('다른 친구가 먼저 가져갔어요. 다른 색을 골라 보세요'); draw(); return; }
-    lnColor[i] = myId(); const fid = 'ghostlamp' + i; me.fbag[fid] = (me.fbag[fid] || 0) + 1; me.ln = { id: lnCtl.id, c: i }; save(); hud(); sfx('heart'); draw(); toast(`${LN.NAMES[i]} 유령 등불을 받았어요! 가방에서 방에 놓아 보세요`); };
+    lnColor[i] = myId(); const fid = 'ghostlamp' + i; me.fbag[fid] = (me.fbag[fid] || 0) + 1; me.ln = { id: lnCtl.id, c: i }; saveSure(); hud(); sfx('heart'); draw(); toast(`${LN.NAMES[i]} 유령 등불을 받았어요! 가방에서 방에 놓아 보세요`); };
   lnPickRedraw = draw; draw();
 }
 // ---- 관리자 ----
@@ -7284,13 +7304,18 @@ async function pkGain(n, kind){   // 점수를 더해요 (서버에는 내 점�
 async function pkAct(kind, mat){
   if (pkAct.busy) return; pkAct.busy = true; try { await pkAct0(kind, mat); } finally { pkAct.busy = false; }   // 빠르게 두 번 눌러도 한 번만
 }
-async function pkAct0(kind, mat){
+async function pkAct0(kind, mat){   // 기다리는 시간·쓴 재료를 먼저 저장하고 점수를 올려요 (되돌려져도 다시 줄 수 없게) · 점수를 못 올리면 되돌려 줘요
   const m = pkMy(); let g = 0;
-  if (kind === 'w'){ if (pkLeft(m.wAt, PK.WATER[1])) return; g = await pkGain(PK.WATER[0], 'w'); if (g){ m.wAt = now2(); sfx('pop'); toast(`물을 줬어요! 성장 +${g}`); } }
-  else if (kind === 't'){ if (pkLeft(m.tAt, PK.TALK[1])) return; g = await pkGain(PK.TALK[0], 't'); if (g){ m.tAt = now2(); sfx('heart'); toast(`호박에게 말을 걸었어요. 성장 +${g}`); } }
+  if (!pkCtl || !pkCtl.open || pkDone()) return;
+  if (kind === 'w' || kind === 't'){ const k = kind + 'At', was = m[k]; if (pkLeft(was, kind === 'w' ? PK.WATER[1] : PK.TALK[1])) return;
+    m[k] = now2(); if (!await saveSure()){ m[k] = was; save(); return toast('지금은 저장이 안 돼요. 잠시 뒤에 다시 해 주세요'); } g = await pkGain(kind === 'w' ? PK.WATER[0] : PK.TALK[0], kind);
+    if (!g){ m[k] = was; save(); return; }
+    if (kind === 'w'){ sfx('pop'); toast(`물을 줬어요! 성장 +${g}`); } else { sfx('heart'); toast(`호박에게 말을 걸었어요. 성장 +${g}`); } }
   else { const M_ = PK.MAT.find(x => x[0] === mat); if (!M_ || (me.inv[mat] || 0) < 1) return toast(`${M_ ? M_[1] : '재료'}이(가) 없어요`); if (typeof m.f !== 'object' || !m.f) m.f = {}; if ((m.f[mat] || 0) >= PK.FCAP) return toast(`${M_[1]} 거름은 ${PK.FCAP}번까지 줄 수 있어요`);
-    g = await pkGain(M_[2], 'f'); if (g){ me.inv[mat]--; m.f[mat] = (m.f[mat] || 0) + 1; sfx('pick'); toast(`${M_[1]}을(를) 거름으로 줬어요! 성장 +${g}`); } }
-  if (g){ save(); hud(); pkUi(); }
+    me.inv[mat]--; m.f[mat] = (m.f[mat] || 0) + 1; if (!await saveSure()){ me.inv[mat]++; m.f[mat]--; save(); return toast('지금은 저장이 안 돼요. 잠시 뒤에 다시 해 주세요'); } g = await pkGain(M_[2], 'f');
+    if (!g){ me.inv[mat]++; m.f[mat]--; save(); return; }
+    sfx('pick'); toast(`${M_[1]}을(를) 거름으로 줬어요! 성장 +${g}`); }
+  hud(); pkUi();
 }
 // 호박 이벤트 앞뒤 인사: 스트로가 호박밭에 뭔가 생겼다고 알려 주고, 다 자라면 알려 줘요 (이벤트마다 한 번씩)
 const PK_TALK = {
@@ -7783,22 +7808,22 @@ function renderMarket(){
   if (lb) lb.onclick = async () => {
     const price = Math.max(1, Math.min(9999, Math.floor(+$('#price').value || 0)));
     if (me.inv[sellPick] < 1 || lb.disabled) return; lb.disabled = true; const it = sellPick;
-    me.inv[it]--; save();
+    me.inv[it]--; if (!await saveSure()){ me.inv[it]++; save(); lb.disabled = false; return toast('지금은 저장이 안 돼요. 잠시 뒤에 다시 해 주세요'); }   // 가방에서 뺀 걸 먼저 저장해요 (안 그러면 되돌려졌을 때 물건이 두 개가 돼요)
     try { await F.push(F.ref(db, 'market'), { uid, nick: me.nick, look: me.look, item: it, qty: 1, price, at: now2(), ...(me.house === 'moon' && myTime() ? { moon: true } : {}) }); }
-    catch(e){ me.inv[it]++; save(); lb.disabled = false; return toast('가판대에 올리지 못했어요. 물건은 돌려받았어요'); }   // 실패하면 물건이 사라지지 않게
+    catch(e){ me.inv[it]++; saveSure(); lb.disabled = false; return toast('가판대에 올리지 못했어요. 물건은 돌려받았어요'); }   // 실패하면 물건이 사라지지 않게
     toast(`${withJosa(ITEM[sellPick], '을', '를')} ${price}G에 올렸어요.`); sellPick = null;
   };
   on('[data-cancel]', async b => {
     const l = marketList[b.dataset.cancel]; if (!l || l.buyer || b.disabled) return; b.disabled = true;
     const r = await F.runTransaction(F.ref(db, 'market/' + b.dataset.cancel), cur => cur && !cur.buyer ? null : undefined).catch(() => null);   // 누가 막 사 가는 중이면 내리지 않아요
     if (!r || !r.committed){ toast('방금 누가 샀어요. 「받기」로 골드를 받아요'); return; }
-    me.inv[l.item] = (me.inv[l.item] || 0) + l.qty; save(); toast('가판대에서 내렸어요.');
+    me.inv[l.item] = (me.inv[l.item] || 0) + l.qty; saveSure(); toast('가판대에서 내렸어요.');
   });
   on('[data-collect]', async b => {
     const l = marketList[b.dataset.collect]; if (!l || !l.buyer || b.disabled) return; b.disabled = true;
     let price = 0; const res = await F.runTransaction(F.ref(db, 'market/' + b.dataset.collect), cur => { if (!cur || !cur.buyer) return; price = cur.price || 0; return null; }).catch(() => null);   // 두 창에서 눌러도 한 번만 받아요
     if (!res || !res.committed){ b.disabled = false; return; }
-    me.coin += price; save(); toast(`판매 대금 ${price}G를 받았어요.`);
+    me.coin += price; saveSure(); toast(`판매 대금 ${price}G를 받았어요.`);
   });
   on('[data-buy]', async b => {
     const id = b.dataset.buy, l = marketList[id];
@@ -7809,13 +7834,14 @@ function renderMarket(){
       return { ...cur, buyer: uid, buyerNick: me.nick };
     }).catch(() => null);
     if (!res || !res.committed){ me.coin += l.price; return toast('한발 늦었어요. 다른 친구가 먼저 샀어요.'); }
-    me.inv[l.item] = (me.inv[l.item] || 0) + l.qty; save();
+    me.inv[l.item] = (me.inv[l.item] || 0) + l.qty; saveSure();
     toast(`${withJosa(ITEM[l.item], '을', '를')} 샀어요! -${l.price}G`);
   });
   const dn = $('#donate'); if (dn) dn.onclick = async () => {
     if (!((me.inv.p_purple || 0) >= 1)) return;
-    me.inv.p_purple--; save();
-    await F.runTransaction(F.ref(db, `coop/${coopWeek()}/${uid}`), c => (+c || 0) + 1);   // 빠르게 두 번 눌러도 두 개 다 세어요
+    if (dn.disabled) return; dn.disabled = true; me.inv.p_purple--; if (!await saveSure()){ me.inv.p_purple++; save(); dn.disabled = false; return toast('지금은 저장이 안 돼요. 잠시 뒤에 다시 해 주세요'); }
+    const r = await F.runTransaction(F.ref(db, `coop/${coopWeek()}/${uid}`), c => (+c || 0) + 1).catch(() => null); dn.disabled = false;   // 여러 번 내도 하나씩 다 세어요
+    if (!r || !r.committed){ me.inv.p_purple++; saveSure(); return toast('내지 못했어요. 물약은 돌려받았어요'); }
     toast('반짝 물약을 냈어요. 고마워요!');
   };
 }
@@ -8150,8 +8176,10 @@ async function boot(){
       const oref = F.ref(db, 'online/' + uid);
       World.myUid = uid;
       // 접속 표시: 연결이 끊기면 서버가 지워요. 다시 연결되면 이름까지 통째로 다시 써요 (안 그러면 위치만 남은 「undefined」 유령이 돌아다녀요)
-      const presFull = () => { const p = World.myPos ? World.myPos() : {}; lastPos = ''; F.onDisconnect(oref).remove(); return F.set(oref, { nick: me.nick, look: me.look, av: me.av, house: me.house, at: now2(), ...(p && p.m ? { m: p.m, x: p.x, y: p.y } : {}) }); };
+      const presFull = () => { if (sessOff) return Promise.resolve(); const p = World.myPos ? World.myPos() : {}; lastPos = ''; F.onDisconnect(oref).remove(); return F.set(oref, { nick: me.nick, look: me.look, av: me.av, house: me.house, at: now2(), ...(p && p.m ? { m: p.m, x: p.x, y: p.y } : {}) }); };
       presFull(); setInterval(presTick, 700);
+      me.sid = SAVE_SID; saveNow();   // 이 화면이 이 계정을 맡아요 (다른 화면은 멈춰요)
+      F.onValue(F.ref(db, 'players/' + uid + '/sid'), s => { const v = s.val(); if (sessOk && v && v !== SAVE_SID) sessKicked(); });
       F.onValue(F.ref(db, '.info/connected'), s => { if (s.val() === true) presFull().catch(() => {}); });
       F.onValue(F.ref(db, 'online'), s => { onlineList = s.val() || {}; onOnline(); const k = Object.keys(onlineList).sort().join(); if (k !== onlineKeys){ onlineKeys = k; if (tab === 'home' && !sub) render(); } });
       F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; });
