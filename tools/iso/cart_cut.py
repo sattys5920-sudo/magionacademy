@@ -131,10 +131,10 @@ def puffs():
 
 
 def shadows():
-    """먼지 뭉치 그림자 8개: 누군지 모르게 동글동글 털뭉치 + 노랗게 빛나는 두 눈 (크기·모양이 조금씩 달라요)"""
+    """먼지 뭉치 그림자 12개 (아기 동물 12마리): 누군지 모르게 동글동글 털뭉치 + 노랗게 빛나는 두 눈 (크기·모양이 조금씩 달라요)"""
     import random
-    out = Image.new('RGBA', (14 * 8, 14), (0, 0, 0, 0)); o = out.load()
-    for i in range(8):
+    out = Image.new('RGBA', (14 * 12, 14), (0, 0, 0, 0)); o = out.load()
+    for i in range(12):
         rnd = random.Random(i * 31 + 7); r = 3.6 + (i % 3) * .7; cx, cy = 7 + i * 14, 9.2 - (i % 3) * .4
         for y in range(14):
             for x in range(i * 14, i * 14 + 14):
