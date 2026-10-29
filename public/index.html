@@ -1873,7 +1873,7 @@ const XJ = {   // 직업: 체력·공격·마공·치유·속도 [기본, 레벨
 };
 // 스킬 트리: XT(직업 → 줄기 3 × 스킬 5, tools/skill_tree.py가 만든 데이터) + 코드 → 효과. 스킬 최대 Lv5, 레벨당 포인트 1
 const XDS = { warrior: 'atk', thief: 'atk', knight: 'atk', gadget: 'atk' }, XPAS = { def: .05, hp: .06, atk: .05, mag: .05, spd: .05, vamp: .06, crit: .06, surv: 1, dodge: .05 }, XPASN = { surv: '쓰러질 공격 버티기', dodge: '회피', def: '받는 피해', hp: '최대 체력', atk: '공격', mag: '마법', spd: '속도', vamp: '흡혈', crit: '치명타' };
-const XDP = [1.2, 1.6, 2.1, 2.7, 3.4], XHP = [2, 2.6, 3.2, 3.9, 4.6], XMAXLV = 5, XRESET = 800, xSkp = L => 2 * (L - 1);   // 레벨 업마다 2포인트 (탐사 보상 포인트 ex.spx 는 따로 더해요)
+const XDP = [1.2, 1.6, 2.1, 2.7, 3.4], XHP = [2, 2.6, 3.2, 3.9, 4.6], XMAXLV = 5, XRESET = 800, xSkp = L => L - 1;   // 레벨 업마다 1포인트 (ex.spx는 관리자가 따로 준 포인트)
 const xDefs = {};
 const XOV = {   // 스킬별 특수 효과 (직업.이름). t 종류 · key 효과 이름 · v 세기 · sec 지속(초) · ap 맞은 뒤 붙는 효과 [종류, 세기, 초] · hits 여러 번 타격 · exec 체력 낮은 적 추가 피해 · fcrit 반드시 치명타 · pct 체력 비율 · pet 소환수
   'warrior.대지 가르기': { ap: [['stun', 30]], ds: '적 전체에 피해 + 행동이 잠깐 늦어져요' },
@@ -2015,21 +2015,22 @@ const xSname = k => ({ atk: '공격', mag: '마법', heal: '치유' }[k]);
 // 스킬 칸 이름은 「줄기_칸」(예: 0_0). Firebase는 이름에 점(.)을 못 써서, 예전 「0.0」은 저장이 통째로 실패했어요
 function xSkEx(ex){ ex.sk = ex.sk || {}; Object.keys(ex.sk).forEach(k => { if (k.includes('.')){ const n = k.replace('.', '_'); ex.sk[n] = Math.max(ex.sk[n] || 0, ex.sk[k]); delete ex.sk[k]; } }); if (ex.job && !ex.sk['0_0']) ex.sk['0_0'] = 1; return ex.sk; }
 const xSkLv = (sk, b, r) => sk[b + '_' + r] || 0, xSpent = sk => Object.values(sk).reduce((a, v) => a + v, 0) - 1;
-const xPts = ex => xSkp(xLv(ex.exp).L) + (ex.spx || 0) - xSpent(xSkEx(ex));
+const xPts = ex => Math.max(0, xSkp(xLv(ex.exp).L) + (ex.spx || 0) - xSpent(xSkEx(ex)));   // 예전에 많이 받아 찍어 둔 스킬은 그대로 두고, 남은 포인트는 0부터
 function xAiSk(L){   // 동료는 줄을 가로로 훑으며 포인트를 쓰기
   const sk = { '0_0': 1 }; let pts = xSkp(L); for (let lv = 1; lv <= XMAXLV && pts > 0; lv++) for (let r = 0; r < 5 && pts > 0; r++) for (let b = 0; b < 3 && pts > 0; b++){ const k = b + '_' + r; if ((sk[k] || 0) < lv){ if (r > 0 && !sk[b + '.' + (r - 1)]) continue; sk[k] = lv; pts--; } } return sk;
 }
+const XFOE = 1.3;   // 몬스터 체력·공격 전체 배율 (너무 금방 세져서 30% 올렸어요)
 const XRG = [   // 탐사 지역: 입장료·시간·몬스터 레벨 범위 · 몬스터는 레벨 1 기준 체력·공격·속도 (lp = art/monsters_lpc.png 칸, tools/iso/lpc/monster_lpc.py)
   { n: '달빛 숲길', dir: '남', tier: '초보', ic: '', min: 20, fee: 50, need: 1, lv: [1, 12], clearExp: 200, kind: 'trees', pal: ['#1b1a3a', '#3a3a72', '#2c4a3a', '#35574a', '#16243a'], loot: ['herb', 'drop', 'mana', 'mush', 'g_dandel', 'g_mint', 'g_straw', 'g_carrot'], rare: ['mana', 'g_clover'],
     mon: [{ n: '숲 요정', lp: 17, hp: 32, atk: 8, spd: 13 }, { n: '들토끼', lp: 18, hp: 34, atk: 7, spd: 11 }, { n: '잠자리 도깨비', lp: 19, hp: 30, atk: 8, spd: 12 }, { n: '아기 멧돼지', lp: 20, hp: 44, atk: 7, spd: 7 }, { n: '고블린 정찰병', lp: 0, hp: 42, atk: 7, spd: 9 }, { n: '들쥐 도적', lp: 1, hp: 34, atk: 8, spd: 12 }, { n: '토끼 창병', lp: 2, hp: 38, atk: 7, spd: 10 }],
     elite: { n: '오크 두목', lp: 12, hp: 150, atk: 13, spd: 9, k: 3, sk: 'combo', skn: '연속 베기' }, boss: { n: '고블린 대왕', lp: 21, hp: 220, atk: 14, spd: 6, k: 8, aoe: true, big: 1, sk: 'rock', skn: '돌 던지기' } },
-  { n: '무너진 지하 묘지', dir: '서', tier: '중급', ic: '', min: 30, fee: 120, need: 8, lv: [10, 24], clearExp: 600, kind: 'graves', pal: ['#201830', '#4a3a62', '#3a3040', '#463a4c', '#1a1224'], loot: ['silk', 'whisker', 'herb', 'mana', 'mush', 'drop'], rare: ['mana', 'egg'],
+  { n: '무너진 지하 묘지', dir: '서', tier: '중급', ic: '', min: 30, fee: 120, need: 12, lv: [10, 24], clearExp: 600, kind: 'graves', pal: ['#201830', '#4a3a62', '#3a3040', '#463a4c', '#1a1224'], loot: ['silk', 'whisker', 'herb', 'mana', 'mush', 'drop'], rare: ['mana', 'egg'],
     mon: [{ n: '해골 병사', lp: 3, hp: 50, atk: 8, spd: 8 }, { n: '좀비', lp: 4, hp: 70, atk: 8, spd: 5 }, { n: '쥐 도굴꾼', lp: 5, hp: 44, atk: 9, spd: 11 }, { n: '해골 궁수', lp: 22, hp: 40, atk: 10, spd: 11 }, { n: '떠도는 유령', lp: 23, hp: 46, atk: 10, spd: 9 }, { n: '달빛 요정', lp: 24, hp: 36, atk: 10, spd: 13 }],
     elite: { n: '해골 기사', lp: 13, hp: 190, atk: 14, spd: 8, k: 3, sk: 'cleave', skn: '베어 넘기기' }, boss: { n: '묘지의 리치', lp: 15, hp: 250, atk: 15, spd: 7, k: 8, aoe: true, big: 1, sk: 'curse', skn: '죽음의 저주' } },
-  { n: '안개 호수 동굴', dir: '북', tier: '고급', ic: '', min: 45, fee: 250, need: 20, lv: [22, 38], clearExp: 1500, kind: 'cave', pal: ['#0f2a3a', '#1f5a6a', '#2a4a52', '#335a62', '#0c2030'], loot: ['slime', 'scale', 'herb', 'mana', 'drop', 'mush'], rare: ['mana', 'egg', 'g_clover'],
+  { n: '안개 호수 동굴', dir: '북', tier: '고급', ic: '', min: 45, fee: 250, need: 28, lv: [22, 38], clearExp: 1500, kind: 'cave', pal: ['#0f2a3a', '#1f5a6a', '#2a4a52', '#335a62', '#0c2030'], loot: ['slime', 'scale', 'herb', 'mana', 'drop', 'mush'], rare: ['mana', 'egg', 'g_clover'],
     mon: [{ n: '호수 도마뱀', lp: 25, hp: 58, atk: 9, spd: 10 }, { n: '아기 트롤', lp: 26, hp: 70, atk: 9, spd: 6 }, { n: '나비 쥐', lp: 27, hp: 42, atk: 10, spd: 12 }, { n: '멧돼지 전사', lp: 6, hp: 70, atk: 10, spd: 7 }, { n: '호수의 이방인', lp: 7, hp: 50, atk: 11, spd: 10 }],
     elite: { n: '늪 트롤 대장', lp: 8, hp: 210, atk: 15, spd: 7, k: 3, sk: 'cleave', skn: '휩쓸기' }, boss: { n: '리자드 왕', lp: 28, hp: 280, atk: 16, spd: 8, k: 8, aoe: true, big: 1, sk: 'venom', skn: '독침 세례' } },
-  { n: '호박달 고대 신전', dir: '동', tier: '초고급', ic: '', min: 60, fee: 500, need: 34, lv: [36, 50], clearExp: 3500, kind: 'temple', pal: ['#3a2418', '#a06a3a', '#6a5236', '#7a6040', '#3a2a1e'], loot: ['mana', 'scale', 'feather', 'egg'], rare: ['mana', 'egg'],
+  { n: '호박달 고대 신전', dir: '동', tier: '초고급', ic: '', min: 60, fee: 500, need: 38, lv: [36, 50], clearExp: 3500, kind: 'temple', pal: ['#3a2418', '#a06a3a', '#6a5236', '#7a6040', '#3a2a1e'], loot: ['mana', 'scale', 'feather', 'egg'], rare: ['mana', 'egg'],
     mon: [{ n: '청동 수호상', lp: 29, hp: 90, atk: 10, spd: 6 }, { n: '그림자 단원', lp: 30, hp: 60, atk: 12, spd: 13 }, { n: '불꽃 사제', lp: 31, hp: 54, atk: 12, spd: 10 }, { n: '도마뱀 병사', lp: 9, hp: 66, atk: 11, spd: 9 }, { n: '양 마법사', lp: 10, hp: 52, atk: 12, spd: 10 }, { n: '돼지 투사', lp: 11, hp: 78, atk: 11, spd: 7 }],
     elite: { n: '미노타우로스', lp: 14, hp: 240, atk: 16, spd: 9, k: 3, sk: 'combo', skn: '돌진 연타' }, boss: { n: '신전의 트롤 왕', lp: 16, hp: 310, atk: 17, spd: 7, k: 8, aoe: true, big: 1, sk: 'quake', skn: '땅 울리기' } },
 ];
@@ -2108,7 +2109,7 @@ function xEnd(how){   // how: clear · time · retreat · wipe
   if (run.co){ xcoStop(); xM = null; ex.coDone = [...(ex.coDone || []).filter(x => x !== run.co), run.co].slice(-10); } const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gold = how === 'wipe' ? 0 : partyMul(Math.round(lo.gold * mult * (1 + tarotVal('xgold')))), exp = how === 'wipe' ? 0 : Math.round((lo.exp * mult + (how === 'clear' ? xReg().clearExp : 0)) * (dbuff('dforest') ? 1.03 : 1) * (dbuff('pump') ? 1.1 : 1) * (1 + sgFx('exp_gain') + partyFx()));
   const items = how === 'wipe' ? {} : { ...lo.items }; if (how === 'clear') ex.chest = xChestMake(xReg());   // 끝까지 가면 보상 상자 셋 중 하나를 골라요
   const before = xLv(ex.exp).L; ex.exp += exp; me.coin += gold; Object.entries(items).forEach(([k, n]) => { me.inv[k] = (me.inv[k] || 0) + n; });
-  const after = xLv(ex.exp).L, sp = how === 'clear' ? 1 : 0; ex.spx = (ex.spx || 0) + sp; ex.run = null; xb = null; clearInterval(xTick); save(); hud();   // 스킬 포인트는 끝까지 간 탐사에서만
+  const after = xLv(ex.exp).L, sp = 0; ex.run = null; xb = null; clearInterval(xTick); save(); hud();   // 스킬 포인트는 레벨 업에서만
   xv = { view: 'result', how, gold, exp, items, up: after > before ? [before, after] : null, sp, prog: Math.floor(run.prog) };
   if (how !== 'wipe'){ pzDrop('explore'); lnDrop('explore'); }
   if (how !== 'wipe' && Math.random() < .02) setTimeout(() => recipePaper('explore'), 700);   // 탐사 보상: 레시피 종이 2%
@@ -2684,7 +2685,7 @@ function xcoMemberWin(B, rew){   // 이긴 보상: 경험치·골드는 같고, 
 // ----- 전투 -----
 function xStartBattle(kind, msg){
   const ex = xEx(), run = ex.run, R = xReg(), party = xcoHost() ? xcoPartyUnits() : xParty(), d = run.prog / 100, mL = Math.max(1, Math.min(Math.round(R.lv[0] + (R.lv[1] - R.lv[0]) * d), xLv(ex.exp).L + 3)),   // 내 레벨보다 3 높은 몬스터까지만
-    mk = (m, i, hm = 1) => { const k = m.k || 1, f = (1 + .35 * (mL - 1)) * hm * (k >= 3 ? R.ehm || 1 : R.hpm || 1), a = (1 + .25 * (mL - 1)) * (k >= 3 ? Math.sqrt(R.atkm || 1) : R.atkm || 1) * (k >= 8 ? R.bat || 1 : 1); return { id: 'e' + i, name: m.n, ic: '', lp: m.lp, big: m.big, sc: m.big ? 3 : k >= 3 ? 2 : 1, hh: 56 * (m.big ? 3 : k >= 3 ? 2 : 1), team: 'e', mhp: Math.round(m.hp * f), hp: Math.round(m.hp * f), atk: Math.round(m.atk * a), spd: m.spd, g: Math.random() * 60, k, aoe: !!m.aoe, sk: m.sk || '', skn: m.skn || '', mL, fx: {} }; };
+    mk = (m, i, hm = 1) => { const k = m.k || 1, f = (1 + .35 * (mL - 1)) * hm * (k >= 3 ? R.ehm || 1 : R.hpm || 1), a = (1 + .25 * (mL - 1)) * (k >= 3 ? Math.sqrt(R.atkm || 1) : R.atkm || 1) * (k >= 8 ? R.bat || 1 : 1); return { id: 'e' + i, name: m.n, ic: '', lp: m.lp, big: m.big, sc: m.big ? 3 : k >= 3 ? 2 : 1, hh: 56 * (m.big ? 3 : k >= 3 ? 2 : 1), team: 'e', mhp: Math.round(m.hp * f * XFOE), hp: Math.round(m.hp * f * XFOE), atk: Math.round(m.atk * a * XFOE), spd: m.spd, g: Math.random() * 60, k, aoe: !!m.aoe, sk: m.sk || '', skn: m.skn || '', mL, fx: {} }; };
   const sz = party.length, pool = run.pool || R.mon;   // 인원이 늘면 몬스터도 늘어요: 일반 = 인원+1 (혼자면 1마리) · 정예 = 정예 + (인원−1) · 보스 = 보스 + 졸개 (인원−1) · 체력도 조금 늘어요
   const foes = kind === 'boss' ? [mk(R.boss, 0, 1 + .4 * (sz - 1)), ...Array.from({ length: Math.min(4, sz - 1) }, (_, i) => mk(xRand(pool), i + 1))] : kind === 'elite' ? [mk(R.elite, 0, 1 + .5 * (sz - 1)), ...Array.from({ length: Math.min(4, sz - 1) }, (_, i) => mk(xRand(pool), i + 1))]
     : Array.from({ length: Math.min(6, sz >= 2 ? sz + 1 : 1) }, (_, i) => mk(i === 0 && run.nextMon ? run.nextMon : xRand(pool), i)); run.nextMon = null;
@@ -8062,7 +8063,7 @@ function pzEnd(){
   pzScene([['aula', '다 맞춰졌어요! 지도에 길이 나타나요!', 3, 3], ['cap', '오오.... 이 섬, 이 길.... 기억났다! 내 보물은 바로 이 학교 뒷산에 묻혀 있었군.', 0, 1], ['cap', '상자는 열두 개. 그중 딱 하나씩만 가져가게나. 욕심부리면 저주받는다네, 으흐흐.......'], ['aula', '열두 개 중에 하나만 고를 수 있어요! 신중하게 고르세요.', 1]], pzChests);
 }
 // 보물 상자 12개: 학생마다 안에 든 것이 섞여 있고, 딱 하나만 골라서 가져가요
-const PZ_REW = [[300, 3, 2], [400, 3, 2], [500, 3, 1], [600, 3, 1], [700, 2, 1], [800, 1, 1], [900, 0, 1], [1000, 0, 0], [1100, 0, 0], [1200, 0, 0], [1300, 0, 0], [1400, 0, 0]];   // [골드, 마나석, 스킬 포인트]: 돈이 적은 상자에 마나석·스킬 포인트가 얹혀요
+const PZ_REW = [[300, 3, 0], [400, 3, 0], [500, 3, 0], [600, 3, 0], [700, 2, 0], [800, 1, 0], [900, 0, 0], [1000, 0, 0], [1100, 0, 0], [1200, 0, 0], [1300, 0, 0], [1400, 0, 0]];   // [골드, 마나석, 스킬 포인트]: 돈이 적은 상자에 마나석·스킬 포인트가 얹혀요
 function pzShuffle(){ let h = 2166136261; for (const ch of 'pz|' + (pzCtl ? pzCtl.id : 0)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); const rnd = () => { h = (h + 0x6D2B79F5) | 0; let t = Math.imul(h ^ h >>> 15, 1 | h); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; const a = PZ_REW.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }   // 상자 안 내용은 반 전체가 똑같이 섞여 있어요
 const pzRewText = r => `${r[0]}G${r[1] ? ` · 마나석 ${r[1]}개` : ''}${r[2] ? ` · 스킬 포인트 ${r[2]}` : ''}`;
 const pzNick = u => u === myId() ? '나' : (playersList[u] && playersList[u].nick) || '친구';
@@ -8101,7 +8102,7 @@ function lnRegrant(){ if (lnTaking || !me || !lnCtl || !lnCtl.id || (me.ln && me
   me.fbag = me.fbag || {}; const fid = 'ghostlamp' + k; me.fbag[fid] = (me.fbag[fid] || 0) + 1; me.ln = { id: lnCtl.id, c: +k }; save(); toast(`${LN.NAMES[+k]} 유령 등불 장식을 다시 받았어요`); }
 let lnCtl = null, lnCnt = {}, lnColor = {}, lnOn = false, lnOffs = [], lnBoost = 0, lnBoostT = 0, lnTimer = 0;
 const LN = { GOAL: 60, MAX: 10, RATE: .05, NAMES: ['빨강', '주황', '노랑', '연두', '초록', '민트', '하늘', '파랑', '남색', '보라', '자홍', '분홍'] };
-const LN_REW = [null, [50, 0, 0], [100, 0, 0], [200, 0, 0], [300, 0, 0], [400, 0, 0], [500, 0, 0], [200, 0, 1], [300, 0, 2], [400, 1, 2], [500, 2, 2]];   // 모은 등불 수 → [골드, 마나석, 스킬 포인트]
+const LN_REW = [null, [50, 0, 0], [100, 0, 0], [200, 0, 0], [300, 0, 0], [400, 0, 0], [500, 0, 0], [200, 0, 0], [300, 0, 0], [400, 1, 0], [500, 2, 0]];   // 모은 등불 수 → [골드, 마나석, 스킬 포인트]
 const lnRewText = r => r ? `${r[0]}골드${r[1] ? ` · 마나석 ${r[1]}개` : ''}${r[2] ? ` · 스킬 포인트 ${r[2]}` : ''}` : '없음';
 const lnClaimed = () => !!(me.lnr && lnCtl && me.lnr.id === lnCtl.id);
 function lnClaim(){   // 내가 모은 등불 개수에 따른 개인 보상 (이벤트당 한 번)
@@ -8252,7 +8253,7 @@ function pkSync(){
 function pkAuto(){
   if (!pkCtl || !pkCtl.id || !me || !pkLoad.p || !pkLoad.w) return; const m = pkMy(), st = pkStage(); let got = [];
   if (st >= 1 && !m.st[1]){ m.st[1] = 1; me.sdt = (me.sdt || 0) + 2; got.push('씨앗 쿠폰 2장'); }
-  if (st >= 2 && !m.st[2]){ m.st[2] = 1; const ex = xEx(); ex.spx = (ex.spx || 0) + 1; got.push('스킬 포인트 1'); }
+  if (st >= 2 && !m.st[2]){ m.st[2] = 1; me.inv.mana = (me.inv.mana || 0) + 1; got.push('마나석 1개'); }   // 스킬 포인트는 레벨 업에서만
   if (st >= 3 && !m.st[3]){ m.st[3] = 1; me.inv.mana = (me.inv.mana || 0) + 1; got.push('마나석 1개'); }
   if (got.length){ save(); hud(); sfx('heart'); setTimeout(() => toast(`호박 성장 보상: ${got.join(', ')}을 받았어요!`), 700); }
   if (pkDone() && !m.fin && Object.keys(pkPts).length){
