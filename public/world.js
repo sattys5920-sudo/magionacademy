@@ -1131,16 +1131,24 @@ async function crowdDo(c){
 // 효과: bats 박쥐 떼 · bell 종소리 번쩍 · lightning 번개 · wind 바람(안개 빠르게) · dark 어둡게 / light 원래대로
 let fxBats = 0, fxDark = 0, skyN = 1, partyCfg = null, confettiUntil = 0, smokeCfg = null;
 // 뭉게뭉게 연기: 화면을 다 덮어요 (말풍선은 위에 보여요). { kind: 'smoke' } 켜기 · { kind: 'smoke', off: true } 천천히 걷혀요
-const SMOKE_COL = ['#CFC6DC', '#B9AFCB', '#E6E0EE', '#A89EBC'];
+const SMOKE_COL = [['#4A3E62', '#B9AFCB', '#DCD5E6'], ['#4A3E62', '#A89EBC', '#C8BFD8'], ['#4A3E62', '#CFC6DC', '#EEEAF4']];   // [윤곽, 몸, 밝은 면]
+let smokeCv = null;
+function smokeBlob(g, x, y, r, col){   // 도트 원: 줄마다 한 번에 칠해서 가장자리가 계단처럼 또렷해요
+  x = Math.round(x); y = Math.round(y); r = Math.round(r);
+  const disc = (rr, c, ox = 0, oy = 0) => { g.fillStyle = c; for (let d = -rr; d <= rr; d++){ const hw = Math.floor(Math.sqrt(rr * rr - d * d)); g.fillRect(x + ox - hw, y + oy + d, hw * 2 + 1, 1); } };
+  disc(r + 1, col[0]); disc(r, col[1]); disc(Math.max(1, Math.round(r * .55)), col[2], -Math.round(r * .3), -Math.round(r * .3));
+}
 function drawSmoke(now){
   const c = smokeCfg; if (!c) return; if (c.off && now - c.off >= 1400){ smokeCfg = null; return; } const a = Math.max(0, Math.min(1, (now - c.t0) / 350)) * (c.off ? Math.min(1, 1 - (now - c.off) / 1400) : 1); if (a <= 0) return;   // 프레임 시각이 켠 시각보다 살짝 앞설 수 있어요
-  const g = out, W = g.canvas.width, H = g.canvas.height, u = Math.min(W, H) / 200, t = now / 1000, grow = Math.max(0, Math.min(1, (now - c.t0) / 600));   // 화면 좌표로 그려요 (확대·화면 배율과 상관없이 다 덮어요)
-  g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = a * .92; g.fillStyle = '#9C92B0'; g.fillRect(0, 0, W, H); g.globalAlpha = a;
-  for (let i = 0; i < 46; i++){
-    const bx = ((i * 97) % 1000) / 1000 * W, by = ((i * 61 + 13) % 1000) / 1000 * H, x = W / 2 + (bx - W / 2) * grow + Math.sin(t * .7 + i) * 10 * u, y = H / 2 + (by - H / 2) * grow + Math.cos(t * .5 + i * 1.3) * 6 * u - (c.off ? (now - c.off) / 40 * u : 0);
-    const r = (22 + (i % 5) * 9) * (.4 + .6 * grow) * u; g.fillStyle = SMOKE_COL[i % 4]; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+  const W = out.canvas.width, H = out.canvas.height, k = Math.max(1, Math.round(KPX)), w = Math.ceil(W / k), h = Math.ceil(H / k), t = now / 1000, grow = Math.max(0, Math.min(1, (now - c.t0) / 600));   // 게임 픽셀 한 칸 = 연기 도트 한 칸
+  if (!smokeCv) smokeCv = document.createElement('canvas'); if (smokeCv.width !== w || smokeCv.height !== h){ smokeCv.width = w; smokeCv.height = h; }
+  const g = smokeCv.getContext('2d'); g.fillStyle = '#9C92B0'; g.fillRect(0, 0, w, h);
+  const u = Math.min(w, h) / 100;
+  for (let i = 0; i < 40; i++){
+    const bx = ((i * 97) % 1000) / 1000 * w, by = ((i * 61 + 13) % 1000) / 1000 * h, x = w / 2 + (bx - w / 2) * grow + Math.sin(t * .7 + i) * 4 * u, y = h / 2 + (by - h / 2) * grow + Math.cos(t * .5 + i * 1.3) * 3 * u - (c.off ? (now - c.off) / 80 * u : 0);
+    smokeBlob(g, x, y, (12 + (i % 5) * 5) * (.4 + .6 * grow) * u, SMOKE_COL[i % 3]);
   }
-  g.restore();
+  out.save(); out.setTransform(1, 0, 0, 1, 0, 0); out.imageSmoothingEnabled = false; out.globalAlpha = a; out.drawImage(smokeCv, 0, 0, w * k, h * k); out.restore();
 }
 World.fx = c => fxDo(c);
 // 응원: 둘러선 사람들이 폴짝폴짝 뛰며 하트·박쥐·별 같은 그림이 머리 위로 올라가요
