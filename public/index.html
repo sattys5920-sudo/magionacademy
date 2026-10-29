@@ -1240,7 +1240,16 @@ const COZY_MAX = 30;   // 쉬고 나서 마력에 쳐 주는 아늑함은 30까�
 // ===== 저장: 온라인이면 Firebase, 혼자 모드면 이 기기 =====
 let F = null, auth = null, db = null, uid = null, solo = false, me = null, saveTimer = 0;
 let onlineList = {}, marketList = {}, coop = {}, playersList = {}, myGuest = {};
-const coopWeek = () => 'w' + Math.floor(now2() / 604800000);
+const coopWeek = () => 'w' + Math.floor(now2() / 604800000);   // 매주 목요일 9시(한국)에 새 주
+const COOP_GOAL = 50, COOP_REW = { coin: 500, know: 10, exp: 300 };
+// 반 공동 의뢰를 다 채운 주에 한 병이라도 낸 학생은 보상을 한 번 받아요 (이번 주 · 지난주까지, 늦게 들어와도 받아요)
+function coopClaim(){
+  if (!me || solo || !uid) return; me.coopGot = me.coopGot || {}; const n0 = Math.floor(now2() / 604800000);
+  ['w' + n0, 'w' + (n0 - 1)].forEach(w => { const wk = coop[w] || {}, tot = Object.values(wk).reduce((a, b) => a + (+b || 0), 0);
+    if (tot < COOP_GOAL || !(+wk[uid] >= 1) || me.coopGot[w]) return;
+    me.coopGot[w] = 1; me.coin += COOP_REW.coin; me.know = (me.know || 0) + COOP_REW.know; xEx().exp += COOP_REW.exp; saveSure(); hud(); sfx('heart');
+    toast(`반 공동 의뢰 완료! +${COOP_REW.coin}G · 지식 +${COOP_REW.know} · 경험치 +${COOP_REW.exp}`); });
+}
 const setSaveDot = s => { saveState = s; const d = $('#saveDot'); if (d) d.className = s; };
 // 저장: 바꾼 건 바로 화면에, 서버에는 1.5 초 뒤에 한 번에 (연달아 바꾸면 한 번만 써요). 화면을 떠날 때는 바로 써요
 let haltSave = false; const SAVE_SID = Math.random().toString(36).slice(2, 10), saveTried = new Set();   // 이 화면이 보낸 저장 번호들 (끊겼다 붙으면 내 저장이 먼저 들어가 있을 수 있어요)   // 관리자가 내 데이터를 리셋했을 때 옛 데이터로 덮어쓰지 않도록
@@ -8271,8 +8280,9 @@ function renderMarket(){
     body = `<section class="sec">
       <div class="box px" style="padding:12px;display:flex;flex-direction:column;gap:10px">
         <div class="sec-h"><h3 style="color:var(--gold)">반 공동 의뢰</h3><span class="meta">반짝 물약 50병 · 매주 목요일 9시까지</span></div>
-        <div class="pbar" style="height:12px"><i style="width:${Math.min(100, coopTotal * 2)}%;background:var(--gold)"></i></div>
-        <div class="s sub num" style="display:flex;justify-content:space-between"><span>${coopTotal} / 50 · ${Object.keys(week).length}명 참여</span><span>내가 낸 것 ${week[uid] || 0}</span></div>
+        <div class="s">다 채우면 낸 학생 모두 ${COOP_REW.coin}G · 지식 ${COOP_REW.know} · 경험치 ${COOP_REW.exp}${(me.coopGot || {})[coopWeek()] ? ' · 받았어요' : ''}</div>
+        <div class="pbar" style="height:12px"><i style="width:${Math.min(100, coopTotal / COOP_GOAL * 100)}%;background:var(--gold)"></i></div>
+        <div class="s sub num" style="display:flex;justify-content:space-between"><span>${coopTotal} / ${COOP_GOAL} · ${Object.keys(week).length}명 참여</span><span>내가 낸 것 ${week[uid] || 0}</span></div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">${HOUSE_KEYS.map(k => { const n = Object.entries(week).filter(([id]) => playersList[id]?.house === k).reduce((t, [, v]) => t + (+v || 0), 0); return `<div style="background:var(--panel);border-radius:8px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;border-top:3px solid ${HOUSES[k].col}"><span class="s" style="color:${HOUSES[k].col}">${HOUSES[k].name}</span><span class="s" style="color:var(--gold);letter-spacing:-1px">${'★'.repeat(Math.min(5, Math.floor(n / 2))) || '·'}</span><span class="s sub num">${n}병</span></div>`; }).join('')}</div>
         
         <button class="btn go" id="donate" ${me.inv.p_purple > 0 ? '' : 'disabled'}>반짝 물약 1병 내기 (가진 것 ${me.inv.p_purple || 0})</button>
@@ -8676,7 +8686,7 @@ async function boot(){
       recWatch(); setInterval(recWatch, 60000);   // 주가 바뀌면 새 주 순위표를 봐요
       setInterval(syncInvites, 3000);
       F.onValue(F.ref(db, 'market'), s => { marketList = s.val() || {}; if (tab === 'market' && !typingNow()) render(); });
-      F.onValue(F.ref(db, 'coop'), s => { coop = s.val() || {}; if (tab === 'market') render(); });
+      F.onValue(F.ref(db, 'coop'), s => { coop = s.val() || {}; coopClaim(); if (tab === 'market') render(); });
       F.onValue(F.ref(db, 'players'), s => { playersList = fbBack(s.val() || {}); syncPens(); syncHallNames(); { const sg = Object.entries(playersList).map(([id, p]) => id + (p && p.nick) + (p && p.house)).join('|'); if (tab === 'home' && !sub && sg !== playersSig) render(); playersSig = sg; } penMigrate(); });   // 누가 저장할 때마다 다시 그리지 않고, 이름·기숙사가 바뀔 때만
       F.onValue(F.ref(db, 'pens'), s => { pensDb = s.val() || {}; syncPens(); penMigrate(); });
       F.onValue(F.query(F.ref(db, 'guest/' + uid), F.limitToLast(20)), s => { myGuest = s.val() || {}; if (sub === 'dorm') render(); });
