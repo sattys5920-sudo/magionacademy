@@ -660,7 +660,7 @@ function step(p, dt){
     p.vstart = false; p.flip = false;
   }
   if (p.pet && d > 0) p.flip = dx - dy > 0;   // 생물은 화면에서 오른쪽으로 가면 뒤집어요
-  const mv = (p.run ? RUN : (p.me || p.peer) && p.path.length > 10 ? RUN : (p.me || p.peer) ? SPEED : SPEED * (p.npc && !p.npc.cut ? .35 : .6)) * dt * (p.me ? speedK : 1); if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
+  const mv = (p.slow ? p.slow : p.run ? RUN : (p.me || p.peer) && p.path.length > 10 ? RUN : (p.me || p.peer) ? SPEED : SPEED * (p.npc && !p.npc.cut ? .35 : .6)) * dt * (p.me ? speedK : 1); if (d <= mv){ p.x = gx; p.y = gy; p.path.shift(); } else { p.x += dx / d * mv; p.y += dy / d * mv; } p.t += dt;
 }
 // 핼러윈 효과: 박쥐 떼, 보라 안개, 도깨비불
 const bats = Array.from({ length: 7 }, (_, i) => ({ x: 0, y: 0, vx: 0, vy: 0, ph: i, init: false }));
@@ -1002,7 +1002,7 @@ World.cut = async (cmds, hooks = {}) => {   // hooks: { sfx(id), skip() → true
       const k = c.cmd, who = c.who;
       if (k === 'spawn'){ const [x, y] = spawnAt(c.x, c.y); const p = cutMk(who, c, x, y); cutActors[who] = p; people.push(p); retag(); }
       else if (k === 'despawn'){ const p = cutActors[who]; if (p){ const i = people.indexOf(p); if (i >= 0) people.splice(i, 1); sayOff(p); delete cutActors[who]; retag(); } }
-      else if (k === 'walk'){ const p = personOf(who); if (p){ const t = spawnAt(c.x, c.y); if (c.run) p.run = true; if (goto(p, t[0], t[1])){ if (c.wait !== false) await walkDone(p, (c.timeout || 12) * 1000); } else { p.x = t[0]; p.y = t[1]; } p.run = false; if (c.dir) p.view = World.Avatar.meta.dirs[c.dir] || p.view; } }
+      else if (k === 'walk'){ const p = personOf(who); if (p){ const t = spawnAt(c.x, c.y); if (c.run) p.run = true; p.slow = c.speed || 0;   /* speed: 타일/초 (수레를 끄는 것처럼 천천히) */ if (goto(p, t[0], t[1])){ if (c.wait !== false) await walkDone(p, (c.timeout || 12) * 1000); } else { p.x = t[0]; p.y = t[1]; } p.run = false; p.slow = 0; if (c.dir) p.view = World.Avatar.meta.dirs[c.dir] || p.view; } }
       else if (k === 'face'){ const p = personOf(who), q = personOf(c.to); if (p && q){ const DV = World.Avatar.meta.dirs, dx = q.x - p.x, dy = q.y - p.y; p.view = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? DV.right : DV.left) : (dy < 0 ? DV.up : DV.down); } }
       else if (k === 'cam'){ if (who){ camTarget = { p: personOf(who) }; } else if (c.x !== undefined){ camTarget = { x: c.x, y: c.y }; } else camTarget = null; if (c.wait) await new Promise(r => setTimeout(r, c.wait * 1000)); }
       else if (k === 'say'){ const p = personOf(who); if (p) sayOn(p, c.text, c.ms || 2600, c.big); if (c.wait !== false) await new Promise(r => setTimeout(r, (c.ms || 2600) * .9)); }

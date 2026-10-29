@@ -131,15 +131,18 @@ def puffs():
 
 
 def shadows():
-    """아기 동물 실루엣: 몸은 그림자, 눈만 노랗게 빛나요 (누군지 모르게)"""
-    src = Image.open('out/babies.png').convert('RGBA'); w, h = src.size; out = Image.new('RGBA', (w, h), (0, 0, 0, 0))
-    a, o = src.load(), out.load()
-    for y in range(h):
-        for x in range(w):
-            r, g, b, al = a[x, y]
-            if not al: continue
-            eye = (r, g, b) == (255, 255, 255) and y + 1 < h and a[x, y + 1][:3] == (26, 16, 36)   # 눈의 반짝이만 (하얀 배는 그림자)
-            o[x, y] = (255, 230, 120, 255) if eye else (16, 10, 26, 235)
+    """먼지 뭉치 그림자 8개: 누군지 모르게 동글동글 털뭉치 + 노랗게 빛나는 두 눈 (크기·모양이 조금씩 달라요)"""
+    import random
+    out = Image.new('RGBA', (14 * 8, 14), (0, 0, 0, 0)); o = out.load()
+    for i in range(8):
+        rnd = random.Random(i * 31 + 7); r = 3.6 + (i % 3) * .7; cx, cy = 7 + i * 14, 9.2 - (i % 3) * .4
+        for y in range(14):
+            for x in range(i * 14, i * 14 + 14):
+                d = math.hypot((x + .5 - cx) / r, (y + .5 - cy) / (r * .9))
+                if d <= 1 or (d <= 1.35 and rnd.random() < .45):   # 가장자리가 보송보송 삐죽
+                    o[x, y] = (16, 10, 26, 235) if d <= 1 else (30, 20, 44, 190)
+        ey = int(cy - r * .25); ex = int(cx) - 2 + (i % 2)
+        for x in (ex, ex + 3 - (i % 3 == 2)): o[x, ey] = (255, 230, 120, 255)
     return out
 
 
