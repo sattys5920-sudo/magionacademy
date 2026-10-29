@@ -940,7 +940,7 @@ function frame(now){
       // 젓는 방향 안내 점선
       if (cook.guide){ cx.fillStyle = '#FFE070'; for (let i = 0; i < 12; i++){ if ((i + Math.floor(t * 8)) % 3) continue; const a = i / 12 * Math.PI * 2; cx.fillRect(Math.round(cxp + Math.cos(a) * 12), Math.round(top + 2 + Math.sin(a) * 5), 1, 1); } }
     } }
-  drawMarks(now, view); drawBats(now); drawPartyAir(now); drawGlyphs(now); if (fxDark){ cx.globalAlpha = fxDark; cx.fillStyle = '#05030A'; cx.fillRect(ix, iy, VW, VH); cx.globalAlpha = 1; }
+  drawMarks(now, view); drawBats(now); drawPartyAir(now); drawGlyphs(now); if (fxDark){ cx.globalAlpha = fxDark; cx.fillStyle = '#05030A'; cx.fillRect(ix, iy, VW, VH); cx.globalAlpha = 1; } drawSmoke(now);
   // 채집 지점: 밤에도 잘 보이게 빛 다음에 그려요
   spots.forEach((sp, i) => { if ((sp.m || spotMap) !== map) return; const [x, y] = P(sp.x + .5, sp.y + .5), t = now / 260 + i * 1.3, a = .6 + .4 * Math.sin(t), sy = y - 7 - Math.round(Math.sin(t * .7) * 2);
     if (x < view.x || x > view.x + view.w || y < view.y || y > view.y + view.h) return;
@@ -964,7 +964,7 @@ function frame(now){
   if (M.rooms) M.rooms.forEach((rm, i) => { const [sx, sy] = P(rm.door[0] + .5, rm.door[1] + .5); if (sx > view.x && sx < view.x + view.w) drawTag(roomTags[i], sx, sy - 52, now); });
   if (M.pens) M.pens.forEach((pn, i) => { const [sx, sy] = P(pn.sign[0] + .5, pn.sign[1] + .5); if (sx > view.x && sx < view.x + view.w) drawTag(penTags[i], sx, sy - 20, now); });
   marks.forEach(mk_ => { if ((mk_.map !== map && mk_.map !== rmap) || !mk_.label) return; if (Math.abs(mk_.x - me.x) + Math.abs(mk_.y - me.y) > 14) return; const [sx, sy] = P(mk_.x + .5, mk_.y + .5); if (sx > view.x && sx < view.x + view.w && sy > view.y && sy < view.y + view.h) drawTag({ t: mk_.label, k: 'npc', ev: true }, sx, sy - 18, now); });   // 할 일 표시 위에 무엇을 하는 곳인지 글자로
-  people.forEach((p, i) => { if (rideOn && p.me) return; const [sx, sy] = P(p.x + .5, p.y + .5); if (sx > view.x - 40 && sx < view.x + view.w + 40 && sy > view.y && sy < view.y + view.h + 60) drawTag(tags[i], sx, sy + 2, now, true); });   // 이름표는 발밑에: 머리 위는 말풍선·표시가 쓰고, 뒤 사람이나 물건을 덜 가려요
+  if (!(smokeCfg && !smokeCfg.off)) people.forEach((p, i) => { if (rideOn && p.me) return; const [sx, sy] = P(p.x + .5, p.y + .5); if (sx > view.x - 40 && sx < view.x + view.w + 40 && sy > view.y && sy < view.y + view.h + 60) drawTag(tags[i], sx, sy + 2, now, true); });   // 이름표는 발밑에: 머리 위는 말풍선·표시가 쓰고, 뒤 사람이나 물건을 덜 가려요
   const tn = performance.now();
   for (let i = says.length - 1; i >= 0; i--){ const p = says[i]; if (tn > p.say.until || (!p.me && !people.includes(p))){ sayOff(p); continue; } const [sx, sy] = p.baby ? babyXY(p) : P(p.x + .5, p.y + .5); p.say.el.style.left = (sx - ix) * k + 'px'; p.say.el.style.top = (sy - (p.baby ? 18 : morphOf(p) != null ? 26 : World.Avatar.FH * ASC + 2) - iy) * k + 'px'; }
   if (bubble){ const o = bubble.o; bubble.el.style.left = Math.max(90, Math.min(cv.clientWidth - 90, (o.x + o.sw / 2 - ix) * k)) + 'px'; bubble.el.style.top = Math.max(70, (o.y - 2 - iy) * k) + 'px'; }
@@ -1129,7 +1129,20 @@ async function crowdDo(c){
   crowdPeople.forEach(p => { const i = people.indexOf(p); if (i >= 0) people.splice(i, 1); sayOff(p); }); crowdPeople = []; retag();
 }
 // 효과: bats 박쥐 떼 · bell 종소리 번쩍 · lightning 번개 · wind 바람(안개 빠르게) · dark 어둡게 / light 원래대로
-let fxBats = 0, fxDark = 0, skyN = 1, partyCfg = null, confettiUntil = 0;
+let fxBats = 0, fxDark = 0, skyN = 1, partyCfg = null, confettiUntil = 0, smokeCfg = null;
+// 뭉게뭉게 연기: 화면을 다 덮어요 (말풍선은 위에 보여요). { kind: 'smoke' } 켜기 · { kind: 'smoke', off: true } 천천히 걷혀요
+const SMOKE_COL = ['#CFC6DC', '#B9AFCB', '#E6E0EE', '#A89EBC'];
+function drawSmoke(now){
+  const c = smokeCfg; if (!c) return; if (c.off && now - c.off >= 1400){ smokeCfg = null; return; } const a = Math.max(0, Math.min(1, (now - c.t0) / 350)) * (c.off ? Math.min(1, 1 - (now - c.off) / 1400) : 1); if (a <= 0) return;   // 프레임 시각이 켠 시각보다 살짝 앞설 수 있어요
+  const g = out, W = g.canvas.width, H = g.canvas.height, u = Math.min(W, H) / 200, t = now / 1000, grow = Math.max(0, Math.min(1, (now - c.t0) / 600));   // 화면 좌표로 그려요 (확대·화면 배율과 상관없이 다 덮어요)
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = a * .92; g.fillStyle = '#9C92B0'; g.fillRect(0, 0, W, H); g.globalAlpha = a;
+  for (let i = 0; i < 46; i++){
+    const bx = ((i * 97) % 1000) / 1000 * W, by = ((i * 61 + 13) % 1000) / 1000 * H, x = W / 2 + (bx - W / 2) * grow + Math.sin(t * .7 + i) * 10 * u, y = H / 2 + (by - H / 2) * grow + Math.cos(t * .5 + i * 1.3) * 6 * u - (c.off ? (now - c.off) / 40 * u : 0);
+    const r = (22 + (i % 5) * 9) * (.4 + .6 * grow) * u; g.fillStyle = SMOKE_COL[i % 4]; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+  }
+  g.restore();
+}
+World.fx = c => fxDo(c);
 // 응원: 둘러선 사람들이 폴짝폴짝 뛰며 하트·박쥐·별 같은 그림이 머리 위로 올라가요
 let cheers = [], glyphs = [];
 const GLYPH = {   // 작은 도트 그림 (한 글자 = 한 칸)
@@ -1189,7 +1202,7 @@ function drawPartyAir(now){
   g.restore();
 }
 
-function fxDo(c){ const k = c.kind; if (k === 'bats') fxBats = performance.now() + (c.sec || 4) * 1000; else if (k === 'lightning' || k === 'bell') flashT = performance.now() + 260; else if (k === 'dark') fxDark = c.v ?? .45; else if (k === 'light') fxDark = 0; else if (k === 'party') partyCfg = c.off ? null : { t0: performance.now(), x: c.x, y: c.y, tx: c.tx ?? c.x, ty: c.ty ?? c.y }; else if (k === 'confetti') confettiUntil = performance.now() + (c.sec || 4) * 1000; else if (k === 'wind'){ fogs.forEach(f => f.v *= 4); setTimeout(() => fogs.forEach(f => f.v /= 4), (c.sec || 4) * 1000); } }
+function fxDo(c){ const k = c.kind; if (k === 'bats') fxBats = performance.now() + (c.sec || 4) * 1000; else if (k === 'lightning' || k === 'bell') flashT = performance.now() + 260; else if (k === 'dark') fxDark = c.v ?? .45; else if (k === 'light') fxDark = 0; else if (k === 'party') partyCfg = c.off ? null : { t0: performance.now(), x: c.x, y: c.y, tx: c.tx ?? c.x, ty: c.ty ?? c.y }; else if (k === 'smoke') smokeCfg = c.off ? (smokeCfg && !smokeCfg.off ? { ...smokeCfg, off: performance.now() } : smokeCfg) : { t0: performance.now(), off: 0 }; else if (k === 'confetti') confettiUntil = performance.now() + (c.sec || 4) * 1000; else if (k === 'wind'){ fogs.forEach(f => f.v *= 4); setTimeout(() => fogs.forEach(f => f.v /= 4), (c.sec || 4) * 1000); } }
 // 조사 지점: 물음표가 떠 있고, 옆에 가면 상황 버튼 「조사하기」
 World.setMarks = list => { marks = list || []; World.nearRefresh(); };
 World.onMark = null;
