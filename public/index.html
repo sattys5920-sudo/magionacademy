@@ -2602,7 +2602,7 @@ function xcoLocalEffect(k, o){
   toast(xMsg); save(); xMHud();
 }
 function xcoLeaveRun(){   // 진행 중에 파티에서 나가요 (방장이면 다음 사람에게 넘겨요)
-  const id = xpRoom, v = xpV; if (!id || !v) return; xpLog('탐사 중 나가기', v); const rest = Object.keys(v.p || {}).filter(u => u !== myId() && !v.p[u].out).sort();
+  const id = xpRoom, v = xpV; if (!id || !v) return; const rest = Object.keys(v.p || {}).filter(u => u !== myId() && !v.p[u].out).sort();
   if (v.host === myId() && rest.length) GDB.upd('xparty/' + id, { host: rest[0], hn: v.p[rest[0]].n }); GDB.upd(`xparty/${id}/p/${myId()}`, { out: 1 }); if (!rest.length) setTimeout(() => GDB.upd('xparty/' + id, { st: 'end' }), 500);
   xpOff?.(); xpOff = null; xpRoom = null; xpV = null; xcoStop();
 }
@@ -7276,6 +7276,11 @@ const BABY_SND = [[['꽥!! 꽤액!!', '꽉! 꽉!'], ['꽥....?', '꾸악....'], 
 // 헤어지기 싫을 때 (레오에게 돌려주려 하면)
 const BABY_CLING = ['꽥....!! 꽥꽥....!!', '냐아앙....!!', '낑낑....!! 낑....', '킁....!! 킁킁....!!', '찌이익....!!', '쀼우....!!', '끼이잉....!!', '부우....!! 부엉....', '캥....!! 캐앵....', '끼잉....!! 끼이잉....', '개구울....!!', '삐약....!! 삐이약....!!'];
 const BABY_LOVE_MAX = 5;   // 친밀도 ♥5칸 (10점에 한 칸): 쓰다듬기 하루 3번 +1 · 밥 주기 하루 1번 +2 → 하루 최대 5점, 꽉 채우는 데 10일 · 그냥 귀여움 (효과 없음)
+// 이름이 같은 아이템(채집물·온실 작물)은 같은 걸로 쳐요: 온실 블루베리로도 여우 3단계를 채울 수 있어요
+const SAME_ITEM = [['g_blueb', 'g2_blue'], ['g_acorn', 'g2_acorn'], ['g_sunf', 'g2_sseed'], ['g_lily', 'g2_bell'], ['g_evening', 'g2_eve']];
+const sameOf = k => (SAME_ITEM.find(g => g.includes(k)) || [k]).sort((a, b) => (a === k ? -1 : b === k ? 1 : 0));
+const haveSame = k => sameOf(k).reduce((t, i) => t + (me.inv[i] || 0), 0);
+const takeSame = (k, n) => { for (const i of sameOf(k)){ const u = Math.min(n, me.inv[i] || 0); if (u){ me.inv[i] -= u; if (!me.inv[i]) delete me.inv[i]; n -= u; } if (!n) break; } };
 const babyMood = b => !b ? 2 : b.adopt || b.st >= 4 ? 2 : b.st >= 2 ? 1 : 0;
 const babySnd = (k, mood) => { const L = BABY_SND[k][mood]; return L[Math.floor(Math.random() * L.length)]; };
 const babyPic = (k, z = 5) => `<i class="bbpic" style="width:${14 * z}px;height:${14 * z}px;background-position:${-k * 14 * z}px 0;background-size:${168 * z}px ${14 * z}px"></i>`;
@@ -7402,13 +7407,13 @@ function renderBaby(){
   const b = me.baby; if (!b) return closeSheet();
   const stage = (k, snd, grr) => `<div class="bbstage">${babyPic(k, 6)}</div>${snd ? `<div class="bbsay${grr ? ' grr' : ''}">${esc(snd)}</div>` : ''}`;
   if (b.adopt){
-    const d = b.day && b.day.d === todayKey() ? b.day : (b.day = { d: todayKey(), p: 0, f: 0 }), food = BABY_NEED[b.k][0][0], hv = me.inv[food] || 0, love = b.love || 0, H = Math.min(BABY_LOVE_MAX, Math.floor(love / 10));
+    const d = b.day && b.day.d === todayKey() ? b.day : (b.day = { d: todayKey(), p: 0, f: 0 }), food = BABY_NEED[b.k][0][0], hv = haveSame(food), love = b.love || 0, H = Math.min(BABY_LOVE_MAX, Math.floor(love / 10));
     frame(null, esc(b.name), '', `<div class="bbwrap">${stage(b.k, babyMsg)}
       <div class="bbhearts">${[...Array(BABY_LOVE_MAX)].map((_, i) => `<i class="${i < H ? 'on' : ''}">♥</i>`).join('')}</div>
       <div class="bbbtns"><button class="bbcta" id="bbpet">쓰다듬기</button><button class="bbcta sub2" id="bbfeed" ${hv && d.f < 1 ? '' : 'disabled'}>밥 주기</button><button class="bbcta sub" id="bbfol">${b.follow ? '방에 두기' : '데리고 다니기'}</button></div></div>`);
     const up = n => { const h0 = Math.floor((b.love || 0) / 10); b.love = Math.min(BABY_LOVE_MAX * 10, (b.love || 0) + n); if (Math.floor(b.love / 10) > h0) setTimeout(() => World.babySay('mine', '♥'), 900); };
     $('#bbpet').onclick = () => { if (d.p < 3){ d.p++; up(1); } babyMsg = babySnd(b.k, 2); World.babySay('mine', babyMsg); sfx('pop'); save(); renderBaby(); };
-    $('#bbfeed').onclick = () => { if (!(me.inv[food] > 0) || d.f >= 1) return; me.inv[food]--; if (!me.inv[food]) delete me.inv[food]; d.f++; up(2); babyMsg = '냠냠'; World.babySay('mine', '냠냠'); sfx('pop'); save(); renderBaby(); };
+    $('#bbfeed').onclick = () => { if (!(haveSame(food) > 0) || d.f >= 1) return; takeSame(food, 1); d.f++; up(2); babyMsg = '냠냠'; World.babySay('mine', '냠냠'); sfx('pop'); save(); renderBaby(); };
     $('#bbfol').onclick = () => { b.follow = !b.follow; save(); babyTick(); closeSheet(); };
     return;
   }
@@ -7420,12 +7425,12 @@ function renderBaby(){
       b.adopt = true; b.name = v; b.follow = false; b.at = now2(); delete b.fin; save(); closeSheet(); sfx('win'); toast(`${v}${josa(v, '을', '를')} 입양했어요!`); babyTick(); };
     return;
   }
-  const [k, n] = BABY_NEED[b.k][b.st], have = me.inv[k] || 0, mood = babyMood(b);
+  const [k, n] = BABY_NEED[b.k][b.st], have = haveSame(k), mood = babyMood(b);
   frame(null, BABY.NAMES[b.k], '', `<div class="bbwrap">${stage(b.k, babyMsg || babySnd(b.k, mood), mood === 0)}
     <div class="bbdots">${[0, 1, 2, 3, 4].map(i => `<i class="${i < b.st ? 'on' : i === b.st ? 'now' : ''}"></i>`).join('')}</div>
     <div class="bbneed">${ic(k)}<b>${esc(ITEM[k] || k)}</b><span class="${have >= n ? 'ok' : ''}">${Math.min(have, n)}/${n}</span></div>
     <div class="bbbtns"><button class="bbcta" id="bbgive" ${have >= n ? '' : 'disabled'}>주기</button></div></div>`);
-  $('#bbgive').onclick = () => { if ((me.inv[k] || 0) < n) return; me.inv[k] -= n; if (!me.inv[k]) delete me.inv[k]; b.st++; saveSure(); babyMsg = babySnd(b.k, babyMood(b)); sfx('pop');
+  $('#bbgive').onclick = () => { if (haveSame(k) < n) return; takeSame(k, n); b.st++; saveSure(); babyMsg = babySnd(b.k, babyMood(b)); sfx('pop');
     if (b.st >= 5){ closeSheet(); babyTick(); setTimeout(() => World.babySay('mine', babySnd(b.k, 2)), 300); setTimeout(() => World.say('me', '이제 돌아가자!'), 1500); return; }
     World.babySay('mine', babyMsg); babyTick(); renderBaby(); };
 }
