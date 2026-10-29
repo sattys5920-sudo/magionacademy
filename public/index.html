@@ -269,7 +269,9 @@ body.admin #shell{max-width:none}
 .bbneed{display:flex;align-items:center;justify-content:center;gap:10px;min-width:230px;padding:10px 16px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);font-size:15px}.bbneed span{font-weight:800;opacity:.7}.bbneed span.ok{color:#8CE6A8;opacity:1}
 .bbbtns{display:flex;flex-direction:column;align-items:stretch;gap:10px;width:100%;max-width:300px;margin-top:4px}
 .bbcta{height:54px;border:0;border-radius:16px;font:inherit;font-size:17px;font-weight:800;background:#FFA53A;color:#2A1600;box-shadow:0 4px 0 #C2741C;cursor:pointer}.bbcta:active{transform:translateY(2px);box-shadow:0 2px 0 #C2741C}
-.bbcta:disabled{background:rgba(255,255,255,.1);color:rgba(255,255,255,.4);box-shadow:none;cursor:default}.bbcta.sub{background:transparent;color:inherit;border:2px solid rgba(255,255,255,.28);box-shadow:none}
+.bbcta:disabled{background:rgba(255,255,255,.1);color:rgba(255,255,255,.4);box-shadow:none;cursor:default}.bbhearts{display:flex;gap:4px;font-size:20px;line-height:1}.bbhearts i{font-style:normal;color:rgba(255,255,255,.18)}.bbhearts i.on{color:#FF7A9A}
+.bbcta.sub2{display:flex;align-items:center;justify-content:center;gap:6px;background:#FFE7C2;box-shadow:0 4px 0 #D9B27A}.bbcta.sub2 img,.bbcta.sub2 i{transform:scale(.8)}
+.bbcta.sub{background:transparent;color:inherit;border:2px solid rgba(255,255,255,.28);box-shadow:none}
 .bbinput{width:100%;max-width:300px;height:50px;border-radius:14px;border:2px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:inherit;font:inherit;font-size:17px;text-align:center}.bbinput:focus{outline:none;border-color:#FFA53A}
 #adminv .adbaby{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px 12px}#adminv .adbaby label{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:13px}
 #adminv .adcard{border:1px solid #E2D8EE;border-radius:12px;padding:12px 14px;gap:6px;box-shadow:0 1px 3px rgba(34,24,63,.06)}
@@ -5379,7 +5381,7 @@ function jnGo(map, x, y){
 const jnTags = c => [...(c?.time || []).map(t => BAND_KO[t]), ...(c?.weather || []).map(w => WX_KO[w]), c?.moon === 'full' ? '보름' : ''].filter(Boolean);
 const jnJosa = (k, a, b) => [1, 6, 7, 8, 10].includes(k) ? a : b;   // ♥1·6·7·8·10은 받침이 있어요
 function babyTodoHTML(){
-  const b = me.baby; if (!b || b.adopt) return '';
+  const b = me.baby; if (!b || b.adopt || !b.met) return '';   // 맵을 다니다 우연히 만나기 전에는 아무 단서도 없어요
   const t = b.st >= 5 ? (b.fin ? '이름 짓기' : '사육장으로') : `${ITEM[BABY_NEED[b.k][b.st][0]]} ${BABY_NEED[b.k][b.st][1]}개`;
   return `<section class="sec">${secH('아기 동물', `${Math.min(b.st, 5)}/5`)}<div class="box px"><div class="bbtodo">${babyPic(b.k, 2)}<b>${BABY.NAMES[b.k]}</b><span>${t}</span></div></div></section>`;
 }
@@ -7246,6 +7248,7 @@ const BABY_SND = [[['꽥!! 꽤액!!', '꽉! 꽉!'], ['꽥....?', '꾸악....'], 
   [['크르릉!', '캭!'], ['끄응....?', '낑....'], ['끼잉♪', '쿠웅♪']], [['개굴!! 개굴!', '꾸르륵!'], ['개....굴?', '꾸....'], ['개굴개굴♪', '꾸르♪']], [['삐약!! 삐약!', '삑!'], ['삐....?', '삐약....'], ['삐약삐약♪', '삐삐♪']]];
 // 헤어지기 싫을 때 (레오에게 돌려주려 하면)
 const BABY_CLING = ['꽥....!! 꽥꽥....!!', '냐아앙....!!', '낑낑....!! 낑....', '킁....!! 킁킁....!!', '찌이익....!!', '쀼우....!!', '끼이잉....!!', '부우....!! 부엉....', '캥....!! 캐앵....', '끼잉....!! 끼이잉....', '개구울....!!', '삐약....!! 삐이약....!!'];
+const BABY_LOVE_MAX = 5;   // 친밀도 ♥5칸 (10점에 한 칸): 쓰다듬기 하루 5번 +2 · 밥 주기 하루 2번 +5, 그냥 귀여움 (효과 없음)
 const babyMood = b => !b ? 2 : b.adopt || b.st >= 4 ? 2 : b.st >= 2 ? 1 : 0;
 const babySnd = (k, mood) => { const L = BABY_SND[k][mood]; return L[Math.floor(Math.random() * L.length)]; };
 const babyPic = (k, z = 5) => `<i class="bbpic" style="width:${14 * z}px;height:${14 * z}px;background-position:${-k * 14 * z}px 0;background-size:${168 * z}px ${14 * z}px"></i>`;
@@ -7267,20 +7270,27 @@ function babyListen(){
   setInterval(babyTick, 2000);
 }
 const babyRoomKey = () => { const k = World.placeKey(); return k && /^myroom_/.test(k) ? k : null; };
-function babyInRoom(room, k, key){   // 방 가구 위에 (가구가 여럿이면 20초마다 옮겨 다녀요)
+let babyRoomAt = null;   // 내 방: 지금 놀고 있는 가구 { id, until }
+function babyInRoom(room, k, key, mine){   // 방 가구 위에서 놀아요 (내 방은 12~22초마다 아무 가구나 골라 옮겨 가요, 친구 방은 20초마다 차례로)
   const fs = (room || []).filter(r => FURN_BY[r.f] && FURN_BY[r.f].baby === k);
   if (!fs.length) return { map: key, x: 8, y: 9 };
-  const r = fs[Math.floor(Date.now() / 20000) % fs.length], it = FURN_BY[r.f];
+  let r;
+  if (mine){ r = fs.find(q => babyRoomAt && q.id === babyRoomAt.id);
+    if (!r || Date.now() > babyRoomAt.until){ const pool = fs.length > 1 && r ? fs.filter(q => q !== r) : fs; r = pool[Math.floor(Math.random() * pool.length)]; babyRoomAt = { id: r.id, until: Date.now() + 12000 + Math.random() * 10000, act: true }; } }
+  else r = fs[Math.floor(Date.now() / 20000) % fs.length];
+  const it = FURN_BY[r.f];
   return { map: key, x: r.x, y: r.y, ox: it.spot[0], oy: it.spot[1], pose: it.pose, top: true };
 }
 function babyWorld(){
   const L = [], b = me && me.baby, rk = babyRoomKey();
   if (b && !b.adopt && b.st >= 5) L.push({ id: 'mine', k: b.k, follow: 'me', carry: true });   // 다섯 단계를 다 하면 품에 안아요
   else if (b && !b.adopt){ const [m, x, y] = BABY.SPOTS[b.k]; L.push({ id: 'mine', k: b.k, map: m, x, y, grr: babyMood(b) === 0 }); }
-  if (b && b.adopt){ if (b.follow) L.push({ id: 'mine', k: b.k, follow: 'me' }); else if (rk && rk.endsWith(':' + uid)) L.push({ id: 'mine', k: b.k, ...babyInRoom(me.room, b.k, rk) }); }
+  if (b && b.adopt){ if (b.follow) L.push({ id: 'mine', k: b.k, follow: 'me' }); else if (rk && rk.endsWith(':' + uid)) L.push({ id: 'mine', k: b.k, ...babyInRoom(me.room, b.k, rk, true) }); }
   if (rk && !rk.endsWith(':' + uid)){ const ow = rk.split(':')[1], p = playersList[ow]; if (p && p.baby && p.baby.adopt && !p.baby.follow) L.push({ id: 'room:' + ow, k: p.baby.k, ...babyInRoom(p.room, p.baby.k, rk) }); }
   Object.entries(onlineList).forEach(([id, o]) => { if (id !== uid && o && typeof o.bb === 'number') L.push({ id: 'peer:' + id, k: o.bb, follow: id }); });
   const sig = JSON.stringify(L); if (sig !== babySig){ babySig = sig; World.setBabies(L); }
+  if (babyRoomAt && babyRoomAt.act && b && b.adopt){ babyRoomAt.act = false; const f = ((me.room || []).find(q => q.id === babyRoomAt.id) || {}).f || '';
+    setTimeout(() => World.babySay('mine', /2$/.test(f) ? '냠냠' : /3$/.test(f) ? babySnd(b.k, 2) : Math.random() < .5 ? 'Zzz' : babySnd(b.k, 2)), 700); }
 }
 function babyTick(){
   if (!me) return; babyState(); babyWorld(); if (World.setMarks && typeof mqSetMarks === 'function') mqSetMarks(mqMarkList);
@@ -7321,7 +7331,6 @@ async function babyIntro(){
       { cmd: 'say', who: 'leo', text: '부탁이야. 마을 곳곳을 좀 찾아봐 줄래?', ms: 2800 }, { cmd: 'wait', sec: .6 }, { cmd: 'end' }], { sfx: k => sfx(k), skip: () => skip });
     cancelAnimationFrame(raf); sk.remove(); World.setProps('town', [], 'babycut'); World.setView(null);
     me.babySeen = id; save();
-    if (me.baby && !me.baby.adopt) setTimeout(() => toast(`어디선가 「${babySnd(me.baby.k, 0)}」 소리가 들려요`), 600);
   } catch(e){ console.error(e); World.setProps('town', [], 'babycut'); World.setView(null); me.babySeen = id; save(); }
   babyCutOn = false;
 }
@@ -7359,16 +7368,20 @@ World.onBaby = id => {
   if (!b.adopt && b.st >= 5){ World.babySay('mine', babySnd(b.k, 2)); if (!b.fin) return; babyMsg = ''; return openSheet('dorm', 'baby'); }
   if (!b.adopt){ const [m, x, y] = BABY.SPOTS[b.k], p = World.myPos();
     if (World.where() !== m || Math.abs(p.x - x) + Math.abs(p.y - y) > 3){ World.babySay('mine', babySnd(b.k, babyMood(b))); World.walkToTile(x + 1, y + 1); return; }
-    World.babySay('mine', babySnd(b.k, babyMood(b))); }
+    World.babySay('mine', babySnd(b.k, babyMood(b))); if (!b.met){ b.met = true; save(); } }
   babyMsg = ''; openSheet('dorm', 'baby');
 };
 function renderBaby(){
   const b = me.baby; if (!b) return closeSheet();
   const stage = (k, snd, grr) => `<div class="bbstage">${babyPic(k, 6)}</div>${snd ? `<div class="bbsay${grr ? ' grr' : ''}">${esc(snd)}</div>` : ''}`;
   if (b.adopt){
+    const d = b.day && b.day.d === todayKey() ? b.day : (b.day = { d: todayKey(), p: 0, f: 0 }), food = BABY_NEED[b.k][0][0], hv = me.inv[food] || 0, love = b.love || 0, H = Math.min(BABY_LOVE_MAX, Math.floor(love / 10));
     frame(null, esc(b.name), '', `<div class="bbwrap">${stage(b.k, babyMsg)}
-      <div class="bbbtns"><button class="bbcta" id="bbpet">쓰다듬기</button><button class="bbcta sub" id="bbfol">${b.follow ? '방에 두기' : '데리고 다니기'}</button></div></div>`);
-    $('#bbpet').onclick = () => { babyMsg = babySnd(b.k, 2); World.babySay('mine', babyMsg); sfx('pop'); renderBaby(); };
+      <div class="bbhearts">${[...Array(BABY_LOVE_MAX)].map((_, i) => `<i class="${i < H ? 'on' : ''}">♥</i>`).join('')}</div>
+      <div class="bbbtns"><button class="bbcta" id="bbpet">쓰다듬기</button><button class="bbcta sub2" id="bbfeed" ${hv && d.f < 2 ? '' : 'disabled'}>${ic(food)}밥 주기</button><button class="bbcta sub" id="bbfol">${b.follow ? '방에 두기' : '데리고 다니기'}</button></div></div>`);
+    const up = n => { const h0 = Math.floor((b.love || 0) / 10); b.love = Math.min(BABY_LOVE_MAX * 10, (b.love || 0) + n); if (Math.floor(b.love / 10) > h0) setTimeout(() => World.babySay('mine', '♥'), 900); };
+    $('#bbpet').onclick = () => { if (d.p < 5){ d.p++; up(2); } babyMsg = babySnd(b.k, 2); World.babySay('mine', babyMsg); sfx('pop'); save(); renderBaby(); };
+    $('#bbfeed').onclick = () => { if (!(me.inv[food] > 0) || d.f >= 2) return; me.inv[food]--; if (!me.inv[food]) delete me.inv[food]; d.f++; up(5); babyMsg = '냠냠'; World.babySay('mine', '냠냠'); sfx('pop'); save(); renderBaby(); };
     $('#bbfol').onclick = () => { b.follow = !b.follow; save(); babyTick(); closeSheet(); };
     return;
   }
