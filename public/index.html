@@ -7284,7 +7284,7 @@ const BABY_CLING = ['꽥....!! 꽥꽥....!!', '냐아앙....!!', '낑낑....!! �
 const BABY_LOVE_MAX = 5;   // 친밀도 ♥5칸 (10점에 한 칸): 쓰다듬기 하루 3번 +1 · 밥 주기 하루 1번 +2 → 하루 최대 5점, 꽉 채우는 데 10일 · 그냥 귀여움 (효과 없음)
 // 이름이 같은 아이템(채집물·온실 작물)은 같은 걸로 쳐요: 온실 블루베리로도 여우 3단계를 채울 수 있어요
 const SAME_ITEM = [['g_blueb', 'g2_blue'], ['g_acorn', 'g2_acorn'], ['g_sunf', 'g2_sseed'], ['g_lily', 'g2_bell'], ['g_evening', 'g2_eve']];
-const sameOf = k => (SAME_ITEM.find(g => g.includes(k)) || [k]).sort((a, b) => (a === k ? -1 : b === k ? 1 : 0));
+const sameOf = k => { const g = (SAME_ITEM.find(g => g.includes(k)) || [k]).sort((a, b) => (a === k ? -1 : b === k ? 1 : 0)); return [...g, ...g.map(i => i + '_s').filter(i => DISH_INFO[i])]; };   // 요리는 별 3개(최고의 맛 _s)도 같은 걸로 쳐요 · 보통 것부터 써요
 const haveSame = k => sameOf(k).reduce((t, i) => t + (me.inv[i] || 0), 0);
 const takeSame = (k, n) => { for (const i of sameOf(k)){ const u = Math.min(n, me.inv[i] || 0); if (u){ me.inv[i] -= u; if (!me.inv[i]) delete me.inv[i]; n -= u; } if (!n) break; } };
 const babyMood = b => !b ? 2 : b.adopt || b.st >= 4 ? 2 : b.st >= 2 ? 1 : 0;
