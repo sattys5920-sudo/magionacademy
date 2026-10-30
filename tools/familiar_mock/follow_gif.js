@@ -6,7 +6,7 @@ const spec = fs.readFileSync(path.join(__dirname, '../../tests/ui.spec.js'), 'ut
 const seed = eval('(' + spec.match(/const seed = (\{.*\});\n/)[1] + ')');
 const INJ = fs.readFileSync(path.join(__dirname, 'follow_inject.js'), 'utf8');
 const CLIPS = [
-  { n: 'g1', i: 0, col: '#5A8CFF', script: [[0, 'walk', [3, 2]], [26, 'walk', [-2, 1]], [52, 'say', '이 근처.... 마력이 고여 있어요.......']], len: 80 },
+  { n: 'g1', i: 0, col: '#5A8CFF', script: [[0, 'walk', [3, 2]], [26, 'walk', [-2, 1]], [40, 'say', '이 근처.... 마력이 고여 있어요.......']], len: 60 },
   { n: 'g2', i: 9, col: '#6A7CFF', night: 1, script: [[4, 'say', '별이 많은 밤엔.... 나도 조금 더 밝아져요.......']], len: 40 },
   { n: 'g3', i: 10, col: '#8A5AE0', script: [[0, 'walk', [-3, 2]], [30, 'say', '....조용히. 누가 지켜보고 있어요.......']], len: 56 },
 ];
