@@ -8853,10 +8853,10 @@ document.addEventListener('click', e => { const bt = e.target.closest && e.targe
   else if (a === 'reset'){ if (confirm('처음으로 되돌릴까요? 자란 호박과 모두의 기여 점수가 지워져요.')){ wipe(); F.set(F.ref(db, 'pumpkin/ctl'), { open: true, id, rate: (AD.pkctl && AD.pkctl.rate) || 1, goal: PK.GOAL }); } }
   else if (a[0] === 'r') F.update(F.ref(db, 'pumpkin/ctl'), { rate: +a.slice(1) }); });
 // ===== 이벤트 「별 보는 밤」: 스텔라와 함께 별을 하나씩 켜서 별자리를 완성해요 (관리자 화면이 진행을 맡고, 관리자도 같은 창으로 같이 봐요) =====
-//   stargaze/ctl { open, id, c: 별자리, round: 몇 번째 밤, ph: gather 모이기 · assign 별 나눠 주기 · light 별 켜기 · sky 하늘 보기 · done 이야기 · end 끝, at: 단계 시작 시각, asg: { 별: uid 또는 'stella' }, ord: 참가 순서, dn: 이야기 줄 수, gm·lm·bm: 기다림·켜기 제한·버프 시간(ms), sm: 이야기 줄 간격 }
+//   stargaze/ctl { open, id, c: 별자리, ph: gather 모이기 · assign 별 나눠 주기 · light 별 켜기 · sky 하늘 보기 · done 이야기 · end 끝, at: 단계 시작 시각, asg: { 별: uid 또는 'stella' }, ord: 참가 순서, dn: 이야기 줄 수, gm·lm·bm: 기다림·켜기 제한·버프 시간(ms), sm: 이야기 줄 간격 }
 //   stargaze/join/<uid> = { n, at } 참가 · stargaze/lit/<별> = 켠 시각 · stargaze/cfg · sched(예약) · hist(횟수)  /  버프는 me.buffs.buff_* = 끝나는 시각 (같은 종류는 새로 받으면 바뀌어요)
 var sgData = null, sgDlg = {}, sgCtl = null, sgJoin = {}, sgLit = {}, sgCfgV = {}, sgSched = {}, sgHist = {}, sgOffs = [], sgOn = false, sgPrev = null, sgRaf = 0, sgSig = '', sgNo = {}, sgAvC = {}, sgGot = '';
-const SG_LINE = 600, SG_STORY = 6000, SG_ASSIGN = 10000, SG_CFG = { buffH: 24, lightS: 60, gatherS: 180 };
+const SG_LINE = 600, SG_STORY = 6000, SG_ASSIGN = 10000, SG_CFG = { buffH: 24, lightS: 60, gatherS: 180, daily: '' };
 const sgAdmin = () => document.body.classList.contains('admin');
 const sgConst = id => sgData && sgData.find(c => c.id === id);
 const sgCfg = () => ({ ...SG_CFG, ...sgCfgV });
@@ -8888,10 +8888,10 @@ function sgSrc(){
   if (sgPrev){ const t = (now2() - sgPrev.t0) / 1000, C = sgConst(sgPrev.c), N = sgPrev.n, order = C.order.length, tl = 4, ta = 3, tp = .7, tL = N * tp + 2.5, tS = order * SG_LINE / 1000 + 3.5, step = 3.5;
     const joins = {}; for (let i = 0; i < N; i++) joins['p' + i] = { n: sgPrev.names[i], at: i };
     const stars = C.stars.map(s => s.id), asg = {}, ord = Object.keys(joins); stars.forEach((id, i) => { asg[id] = ord[i] || 'stella'; });
-    const dn = sgDoneLines(C, sgPrev.round).length; let ph, el;
+    const dn = sgDoneLines(C).length; let ph, el;
     if (t < tl){ ph = 'gather'; el = t; } else if (t < tl + ta){ ph = 'assign'; el = t - tl; } else if (t < tl + ta + tL){ ph = 'light'; el = t - tl - ta; } else if (t < tl + ta + tL + tS){ ph = 'sky'; el = t - tl - ta - tL; } else if (t < tl + ta + tL + tS + dn * step + 3){ ph = 'done'; el = t - tl - ta - tL - tS; } else { ph = 'end'; el = t - tl - ta - tL - tS - dn * step - 3; }
     const lit = {}; if (ph === 'light'){ const k = Math.floor(el / tp); stars.forEach((id, i) => { if (i < k || (asg[id] === 'stella' && el > tL - 1)) lit[id] = 1; }); } else if (ph === 'sky' || ph === 'done' || ph === 'end') stars.forEach(id => { lit[id] = 1; });
-    return { ctl: { open: true, c: C.id, round: sgPrev.round, ph, at: now2() - el * 1000, asg, ord, dn, sm: step * 1000, full: N >= 12 }, join: joins, lit, prev: true }; }
+    return { ctl: { open: true, c: C.id, ph, at: now2() - el * 1000, asg, ord, dn, sm: step * 1000, full: N >= 12 }, join: joins, lit, prev: true }; }
   return { ctl: sgCtl, join: sgJoin, lit: sgLit };
 }
 function sgPeople(src){   // 서 있는 순서: 별을 받은 순서(없으면 참가 순서) → 마지막에 스텔라
@@ -8908,13 +8908,13 @@ function sgModel(){
   const mine = Object.keys(asg).filter(k => asg[k] === me_ && !src.prev);
   return { src, c, C, el, ph, n, asg, lit, drawn, outline, title, crowd, mine, joined: !!src.join[me_], count: lit.length, prev: !!src.prev };
 }
-function sgDoneLines(C, round){
-  const D = sgDlg[C.id] || {}, K = sgDlg.common || {}, b = C.buff, rep = t => t.replace('{buff}', b.name).replace('{desc}', b.desc).replace('{hours}', sgHours(((sgCtl && sgCtl.bm) || sgCfg().buffH * 3600e3)));
-  return [...(D.done || []), ...(D.story || []), ...(D.buff || []).map(rep), ...((K.outro || {})[String(Math.min(4, round || 1))] || [])];
+function sgDoneLines(C){
+  const D = sgDlg[C.id] || {}, b = C.buff, rep = t => t.replace('{buff}', b.name).replace('{desc}', b.desc).replace('{hours}', sgHours(((sgCtl && sgCtl.bm) || sgCfg().buffH * 3600e3)));
+  return [...(D.done || []), ...(D.story || []), ...(D.buff || []).map(rep)];
 }
 function sgText(M){
   const D = sgDlg[M.C.id] || {}, K = sgDlg.common || {}, pick = (a, el, ms) => a && a.length ? a[Math.min(a.length - 1, Math.floor(el / ms))] : '', cyc = (a, el, ms) => a && a.length ? a[Math.floor(el / ms) % a.length] : '';
-  if (M.ph === 'gather'){ const L = [...((K.round || {})[String(Math.min(4, M.c.round || 1))] || []), ...(D.intro || [])]; return M.el < L.length * 5500 ? pick(L, M.el, 5500) : cyc(D.gatherIdle, M.el - L.length * 5500, 7000); }
+  if (M.ph === 'gather'){ const L = D.intro || []; return M.el < L.length * 5500 ? pick(L, M.el, 5500) : cyc(D.gatherIdle, M.el - L.length * 5500, 7000); }
   if (M.ph === 'assign'){ const L = [...(D.assign || [])]; if (M.c.full) L.push(...(K.full || [])); return pick(L, M.el, 3500); }
   if (M.ph === 'light'){
     if (M.mine.length && !M.src.lit[M.mine[0]]) return M.el < 3000 ? pick(K.guide, M.el, 3000) : (K.mine || [''])[0];
@@ -8923,7 +8923,7 @@ function sgText(M){
     if (sOn && M.el % 12000 < 6000) return cyc(D.stellaLit, M.el, 6000); if (!M.mine.length && M.el < 3500) return pick(K.guide, M.el, 3500);
     return cyc(D.lightIdle, M.el, 6000); }
   if (M.ph === 'sky') return M.el < M.n * SG_LINE ? pick(D.sky, M.el, 2200) : (D.done || [''])[0];
-  const L = sgDoneLines(M.C, M.c.round), sm = M.c.sm || SG_STORY; return pick(L, M.el, sm);
+  const L = sgDoneLines(M.C), sm = M.c.sm || SG_STORY; return pick(L, M.el, sm);
 }
 // ---- 화면 ----
 const sgAvPh = document.createElement('canvas'); sgAvPh.width = 1280; sgAvPh.height = 64;
@@ -8999,14 +8999,13 @@ document.addEventListener('click', e => {
   else if (a === 'view') sgOpen();
 });
 // ---- 관리자: 진행 ----
-const sgRound = () => Math.min(4, (+sgHist.total || 0) + 1);
 function sgAdminBtns(c){
   const ph = c.ph, b = (a, t, on) => `<button class="btn sm ${on ? 'go' : ''}" data-sga="${a}">${t}</button>`;
   return `${b('assign', '별 나눠 주기', ph === 'gather')}${b('sky', '하늘 보기 시작', ph === 'light')}${b('force', '강제 완성', ph === 'light' || ph === 'assign')}${b('end', '이벤트 끝내기')}`;
 }
 function sgUpd(o){ return F.update(F.ref(db, 'stargaze/ctl'), o); }
 function sgDoAssign(){
-  const C = sgConst(sgCtl.c), joins = Object.entries(sgJoin).sort((a, b) => (a[1].at || 0) - (b[1].at || 0)).map(([u]) => u).slice(0, 12), ids = C.stars.map(s => s.id), r = ((sgCtl.round || 1) - 1) * 3 % 12, sr = [...ids.slice(r), ...ids.slice(0, r)], asg = {};
+  const C = sgConst(sgCtl.c), joins = Object.entries(sgJoin).sort((a, b) => (a[1].at || 0) - (b[1].at || 0)).map(([u]) => u).slice(0, 12), ids = C.stars.map(s => s.id), r = Math.floor(Math.random() * 4) * 3, sr = [...ids.slice(r), ...ids.slice(0, r)], asg = {};
   sr.forEach((id, i) => { asg[id] = joins[i] || 'stella'; });
   F.set(F.ref(db, 'stargaze/lit'), null); return sgUpd({ ph: 'assign', at: now2(), asg, ord: joins, full: joins.length >= 12 });
 }
@@ -9015,8 +9014,8 @@ function sgLitAll(){ const C = sgConst(sgCtl.c), up = {}; C.stars.forEach(s => {
 function sgDoSky(){ return sgLitAll().then(() => sgUpd({ ph: 'sky', at: now2() })); }
 function sgDoEnd(){ const was = sgCtl.ph; return sgUpd({ ok: was === 'done' ? 1 : 0, ph: 'end', open: false }).then(() => { if (was === 'done'){ const C = sgConst(sgCtl.c); F.update(F.ref(db, 'stargaze/hist'), { total: (+sgHist.total || 0) + 1 }); F.set(F.ref(db, 'stargaze/hist/c/' + C.id), ((sgHist.c || {})[C.id] || 0) + 1); } }); }
 function sgDoOpen(cid){
-  const C = sgConst(cid), cfg = sgCfg(), id = now2(); F.set(F.ref(db, 'stargaze/join'), null); F.set(F.ref(db, 'stargaze/lit'), null);
-  return F.set(F.ref(db, 'stargaze/ctl'), { open: true, id, c: C.id, round: sgRound(), ph: 'gather', at: now2(), gm: cfg.gatherS * 1000, lm: cfg.lightS * 1000, bm: cfg.buffH * 3600e3, sm: SG_STORY });
+  const C = sgConst(cid), cfg = sgCfg(), id = now2(); F.set(F.ref(db, 'stargaze/join'), null); F.set(F.ref(db, 'stargaze/lit'), null); F.update(F.ref(db, 'stargaze/hist'), { last: C.id });
+  return F.set(F.ref(db, 'stargaze/ctl'), { open: true, id, c: C.id, ph: 'gather', at: now2(), gm: cfg.gatherS * 1000, lm: cfg.lightS * 1000, bm: cfg.buffH * 3600e3, sm: SG_STORY });
 }
 function sgAdminTick(force){
   if (!F || !db || !sgCtl || !sgCtl.open || sgPrev || !sgData || (!sgAdmin() && force !== true)) { sgSched && sgAdmin() && sgSchedTick(); return; }
@@ -9028,16 +9027,21 @@ function sgAdminTick(force){
     if (Object.keys(up).length) F.update(F.ref(db, 'stargaze/lit'), up);
     const all = C.stars.every(s => sgLit[s.id]); if (all){ const last = Math.max(...Object.values(sgLit)); if (now2() - last >= 1800) sgDoSky(); }
   }
-  else if (c.ph === 'sky' && el >= n * SG_LINE + 4000){ const dn = sgDoneLines(C, c.round).length; sgUpd({ ph: 'done', at: now2(), dn }); }
-  else if (c.ph === 'done' && el >= (c.dn || sgDoneLines(C, c.round).length) * (c.sm || SG_STORY) + 5000) sgDoEnd();
+  else if (c.ph === 'sky' && el >= n * SG_LINE + 4000){ const dn = sgDoneLines(C).length; sgUpd({ ph: 'done', at: now2(), dn }); }
+  else if (c.ph === 'done' && el >= (c.dn || sgDoneLines(C).length) * (c.sm || SG_STORY) + 5000) sgDoEnd();
 }
 function sgSchedTick(){
-  if (!F || !db || !sgData || sgCtl && sgCtl.open) return; const now = now2(), due = Object.entries(sgSched).filter(([, s]) => s.at <= now).sort((a, b) => a[1].at - b[1].at)[0];
+  if (!F || !db || !sgData || sgCtl && sgCtl.open) return; const now = now2(), dl = sgCfg().daily;
+  if (dl && /^\d\d:\d\d$/.test(dl) && !sgSchedTick.busy){   // 매일 자동 열기: 정한 시각부터 3시간 안에 하루 한 번, 어제와 다른 별자리로
+    const d = new Date(now), [h, m] = dl.split(':').map(Number), at = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m).getTime(), key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+    if (sgHist.day !== key && now >= at && now < at + 3 * 3600e3){ const pool = sgData.filter(c => c.id !== sgHist.last), C = pool[Math.floor(Math.random() * pool.length)] || sgData[0]; sgSchedTick.busy = 1; F.update(F.ref(db, 'stargaze/hist'), { day: key }).then(() => sgDoOpen(C.id)).finally(() => { sgSchedTick.busy = 0; }); return; }
+  }
+  const due = Object.entries(sgSched).filter(([, s]) => s.at <= now).sort((a, b) => a[1].at - b[1].at)[0];
   if (due && !sgSchedTick.busy){ sgSchedTick.busy = 1; F.set(F.ref(db, 'stargaze/sched/' + due[0]), null).then(() => sgDoOpen(due[1].c)).finally(() => { sgSchedTick.busy = 0; }); }
 }
 async function sgAdminAct(a, v){
   if (!F || !db || !sgData) return;
-  if (a === 'open'){ if (sgCtl && sgCtl.open && !confirm('이미 열려 있어요. 새로 열면 지금 진행이 지워져요. 열까요?')) return; const used = ((sgHist.c || {})[v] || 0) > 0; if (used && !confirm('이 별자리는 이미 쓴 적이 있어요. 그래도 열까요?')) return; sgSync.adm = false; await sgDoOpen(v); }
+  if (a === 'open'){ if (sgCtl && sgCtl.open && !confirm('이미 열려 있어요. 새로 열면 지금 진행이 지워져요. 열까요?')) return; sgSync.adm = false; await sgDoOpen(v); }
   else if (!sgCtl) return;
   else if (a === 'assign'){ if (!Object.keys(sgJoin).length && !confirm('참가자가 없어요. 스텔라 혼자 별을 켜게 될 거예요. 진행할까요?')) return; await sgDoAssign(); }
   else if (a === 'sky') await sgDoSky();
@@ -9047,13 +9051,15 @@ async function sgAdminAct(a, v){
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-sga]'); if (!b) return; const a = b.dataset.sga;
   if (a === 'view'){ if (sgCtl && sgCtl.open) sgOpen(); return; }
-  if (a === 'preview'){ const sel = $('#sgsel'), r = $('#sgprd'); sgOpen({ c: sel ? sel.value : 'pumpkin_cart', round: r ? +r.value : 1, n: 9, names: ['민준', '서연', '하준', '지우', '도윤', '수아', '예준', '하은', '시우'], t0: now2() }); return; }
+  if (a === 'preview'){ const sel = $('#sgsel'); sgOpen({ c: sel ? sel.value : 'pumpkin_cart', n: 9, names: ['민준', '서연', '하준', '지우', '도윤', '수아', '예준', '하은', '시우'], t0: now2() }); return; }
   if (a === 'open'){ sgAdminAct('open', $('#sgsel').value); return; }
   if (a === 'resv'){ const d = $('#sgdt').value; if (!d) return alert('날짜와 시각을 골라 주세요'); const at = new Date(d).getTime(); if (!(at > now2())) return alert('지금보다 뒤로 정해 주세요'); F.set(F.ref(db, 'stargaze/sched/' + at), { at, c: $('#sgsel').value }); return; }
+  if (a === 'dailyoff'){ F.update(F.ref(db, 'stargaze/cfg'), { daily: '' }); return; }
   if (a === 'delresv'){ F.set(F.ref(db, 'stargaze/sched/' + b.dataset.k), null); return; }
   sgAdminAct(a);
 });
-document.addEventListener('change', e => { const k = { sgsel: 'sgSel', sgprd: 'sgPrd', sgdt: 'sgDt' }[e.target.id]; if (k){ AD[k] = e.target.value; if (e.target.tagName === 'SELECT') e.target.blur(); } });   // 화면이 새로 그려져도 고른 별자리·밤·예약 시각을 기억해요
+document.addEventListener('change', e => { const k = { sgsel: 'sgSel', sgdt: 'sgDt' }[e.target.id]; if (k){ AD[k] = e.target.value; if (e.target.tagName === 'SELECT') e.target.blur(); } });   // 화면이 새로 그려져도 고른 별자리·예약 시각을 기억해요
+document.addEventListener('change', e => { if (e.target.id === 'sgdaily' && F && db) F.update(F.ref(db, 'stargaze/cfg'), { daily: e.target.value || '' }); });
 document.addEventListener('change', e => { const i = e.target.closest && e.target.closest('[data-sgc]'); if (!i || !F || !db) return; const v = Math.max(+i.min || 1, Math.min(+i.max || 9999, +i.value || 0)); F.update(F.ref(db, 'stargaze/cfg'), { [i.dataset.sgc]: v }); });
 function adminStargazeHTML(){
   if (!sgData){ sgLoad(); return `<div class="adcard"><b>이벤트 「별 보는 밤」</b></div>`; }
@@ -9062,14 +9068,14 @@ function adminStargazeHTML(){
   const sel = sgData.map(x => `<option value="${x.id}" ${AD.sgSel === x.id ? 'selected' : ''}>${esc(x.name)}${used[x.id] ? ` (사용함 ${used[x.id]}번)` : ''}${x.tag ? ` · ${x.tag}` : ''}</option>`).join('');
   const sch = Object.entries(sgSched).sort((a, b) => a[1].at - b[1].at).map(([k, s]) => `<div class="s">· ${new Date(s.at).toLocaleString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' })} · ${esc((sgConst(s.c) || {}).name || s.c)} <button class="btn sm" data-sga="delresv" data-k="${k}">취소</button></div>`).join('');
   const asg = open && c.asg ? Object.entries(c.asg).map(([k, u]) => `${k}:${nm(u)}${sgLit[k] ? '★' : ''}`).join(' · ') : '';
-  return `<div class="adcard"><b>이벤트 「별 보는 밤」</b> · ${open ? `${esc(C ? C.name : '')} · ${c.round}번째 밤 · ${PH[c.ph] || c.ph}` : sgCtl && sgCtl.ph === 'end' ? '지난 밤이 끝났어요' : '닫혀 있어요'}
+  return `<div class="adcard"><b>이벤트 「별 보는 밤」</b> · ${open ? `${esc(C ? C.name : '')} · ${PH[c.ph] || c.ph}` : sgCtl && sgCtl.ph === 'end' ? '지난 밤이 끝났어요' : '닫혀 있어요'}
     ${open ? `<div class="s">참가 ${Object.keys(sgJoin).length}명 · 켜진 별 ${Object.keys(sgLit).length}/12${!Object.keys(sgJoin).length ? ' · <b>참가자가 없어요</b>' : ''}${asg ? `<br>별 배정: ${asg}` : ''}</div>
       <div class="frow">${sgAdminBtns(c)}<button class="btn sm" data-sga="view">같이 보기</button></div>` : ''}
     <div class="frow"><select id="sgsel">${sel}</select><button class="btn sm go" data-sga="open">지금 열기</button><button class="btn sm" data-sga="preview">미리 보기</button></div>
-    <div class="frow"><select id="sgprd">${[1, 2, 3, 4].map(i => `<option value="${i}" ${+AD.sgPrd === i ? 'selected' : ''}>${i}번째 밤</option>`).join('')}</select></div>
     <div class="s"><b>예약</b></div><div class="frow"><input id="sgdt" type="datetime-local" value="${esc(AD.sgDt || '')}"><button class="btn sm" data-sga="resv">예약 추가</button></div>${sch || '<div class="s sub">예약이 없어요</div>'}
     <div class="s"><b>설정</b></div>
-    <div class="frow"><label class="s">버프 시간(시간) <input type="number" min="1" max="72" data-sgc="buffH" value="${cfg.buffH}" style="width:56px"></label><label class="s">별 켜기 제한(초) <input type="number" min="10" max="300" data-sgc="lightS" value="${cfg.lightS}" style="width:56px"></label><label class="s">모이기 기다림(초) <input type="number" min="10" max="900" data-sgc="gatherS" value="${cfg.gatherS}" style="width:56px"></label></div></div>`;
+    <div class="frow"><label class="s">버프 시간(시간) <input type="number" min="1" max="72" data-sgc="buffH" value="${cfg.buffH}" style="width:56px"></label><label class="s">별 켜기 제한(초) <input type="number" min="10" max="300" data-sgc="lightS" value="${cfg.lightS}" style="width:56px"></label><label class="s">모이기 기다림(초) <input type="number" min="10" max="900" data-sgc="gatherS" value="${cfg.gatherS}" style="width:56px"></label></div>
+    <div class="frow"><label class="s">매일 자동 열기 <input type="time" id="sgdaily" value="${esc(cfg.daily || '')}"></label>${cfg.daily ? `<button class="btn sm" data-sga="dailyoff">끄기</button>` : ''}</div><div class="s sub">${cfg.daily ? `매일 ${esc(cfg.daily)}에 어제와 다른 별자리로 열려요 (관리자 화면이 켜져 있어야 해요)` : '시각을 정하면 매일 그 시각에 별자리를 골라 저절로 열어요'}</div></div>`;
 }
 
 // ===== 관리자 지급·수정·공지: 우편함(mail/<uid>)에 넣어 두면 학생이 접속해 있든 아니든 그 학생 기기에서 받아요 =====
