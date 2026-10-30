@@ -8,9 +8,9 @@ const INJ = fs.readFileSync(path.join(__dirname, 'panel_inject.js'), 'utf8');
 const LN = id => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'lines', id + '.json'), 'utf8')); } catch (e) { return null; } };
 const cu = LN('vael'), dh = LN('ignis');
 const SHOTS = [
-  { f: 'p1_main', cfg: { view: 'main', i: 0, stage: 1, pts: 214, gifts: 2, line: cu ? cu.hint[0].replace('{item}', '달빛 이슬') : '....' } },
-  { f: 'p2_gift', cfg: { view: 'gift', i: 0, stage: 1, pts: 239, gifts: 3, giftLine: cu ? cu.gift.want[0] : '....' } },
-  { f: 'p3_danhwa', cfg: { view: 'main', i: 6, stage: 3, pts: 1312, gifts: 5, line: dh ? dh.idle[3][0] : '....' } },
+  { f: 'p1_main', cfg: { view: 'main', i: 0, stage: 1, pts: 163, today: 13, line: cu ? cu.hint['달빛 이슬'] : '....' } },
+  { f: 'p2_gift', cfg: { view: 'gift', i: 0, stage: 1, pts: 173, today: 23, giftLine: cu ? cu.gift.like[0][0] : '....' } },
+  { f: 'p3_danhwa', cfg: { view: 'main', i: 6, stage: 3, pts: 352, today: 30, line: dh ? dh.idle[3][0] : '....' } },
   { f: 'p4_list', cfg: { view: 'list', i: 0 } },
 ];
 (async () => {

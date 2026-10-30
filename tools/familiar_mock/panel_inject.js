@@ -5,7 +5,7 @@ const C = window.__famCfg || {}, L = window.__famLines || {};
 const NM = ['Vael','Ixi','Puck','Lotis','Sol','Lune','Ignis','Rill','Orbi','Eon','Nyx','Iris'], SUB = ['푸른 혼불','보라 나선불','초록 도깨비불','분홍 연꽃불','금빛 햇무리불','은빛 달불','붉은 불기둥','청록 물결불','주황 고리불','남색 성운불','칠흑 그림자불','오로라 무지갯불'];
 const MOOD = ['과묵한','장난꾸러기 쌍둥이','능글맞은','다정한','오만한','몽환적인','까칠한','느긋한','호기심 많은','늙은 현자','냉소적인','변덕쟁이'];
 const COL = ['#5A8CFF','#A070FF','#40D070','#FF6AB8','#FFC838','#C8D8FF','#FF5A28','#30D8C8','#FF9030','#7088FF','#9A60F0','#E0C8FF'];
-const STN = ['경계','관심','익숙','신뢰','맹약'], NEED = [0, 120, 400, 900, 1800];
+const STN = ['경계','관심','익숙','신뢰','맹약'], NEED = [0, 100, 200, 300, 400];
 const ABIL = [['걷기 속도가 조금 빨라져요','탐사에서 함정 칸을 미리 알려 줘요','낚시 입질이 잦아져요','탐사 전투에서 첫 공격을 한 번 막아 줘요'],,,,,,['탐사 공격력이 조금 올라요','요리 불 조절이 쉬워져요','탐사 전투 치명타가 잦아져요','탐사 보스에게 더 큰 피해']];
 const RARE = ['영혼 연꽃',,,,,,'화룡초'], RAREIC = [58,,,,,,43];
 const BAG = [['I19', 6, 1], [26, 2, 1], [35, 1, 1], ['I1', 4, 0], [24, 3, -1], [7, 5, 0]];   // [아이콘, 개수, 알게 된 취향 1좋아함 -1싫어함 0모름]
@@ -67,18 +67,18 @@ if (C.view === 'list'){
     NM.map((n, k) => { const o = own.includes(k); return `<div class="sp ${o ? '' : 'no'} ${k === i ? 'cur' : ''}"><canvas data-w="${k}" width="64" height="64"></canvas><b>${o ? n : '???'}</b><span>${o ? STN[[1, 0, 0, 0, 0, 0, 3, 0, 0, 2, 0, 0][k]] : '아직 만나지 못함'}</span></div>`; }).join('') + `</div></div>`;
 } else {
   const lo = NEED[st], hi = NEED[Math.min(4, st + 1)], pct = st >= 4 ? 100 : Math.round((pts - lo) / (hi - lo) * 100);
-  const gateTxt = st === 1 ? `<span style="flex:1">「익숙」으로 가는 공물</span>${icon(RAREIC[i])}<b style="color:#FFE9A0">${RARE[i]} × 3</b>` : st === 2 ? `<span style="flex:1">「신뢰」로 가는 공물</span><b style="color:#FFE9A0">꿈 조각 5 · 별가루 5</b>` : st === 3 ? `<span style="flex:1">「맹약」으로 가는 공물</span>${icon(RAREIC[i])}<b style="color:#FFE9A0">${RARE[i]} × 1</b>` : '';
+  const gateTxt = '';
   html = `<div class="fh"><b>사역마</b><button class="x">✕</button></div><div class="bd">
   <div class="hero">${stars}<canvas data-w="${i}" width="64" height="64"></canvas>${line ? `<div class="fsay">${line}</div>` : ''}<div class="nm"><b>${NM[i]}</b><span>${SUB[i]} · ${MOOD[i]}</span></div></div>
-  <div class="card"><div class="row"><span class="t">친밀도 · ${STN[st]}</span><span class="m">${pts} / ${hi}</span></div>
+  <div class="card"><div class="row"><span class="t">친밀도 · ${STN[st]}</span><span class="m">${st >= 4 ? pts : pts + ' / ' + hi}</span></div>
    <div class="pips">${STN.map((n, k) => `<div class="pip ${k <= st ? 'on' : ''} ${k === st ? 'cur' : ''}"><u></u>${n}</div>`).join('')}</div>
    <div class="fbar"><i style="width:${pct}%"></i></div>${gateTxt ? `<div class="gate">${gateTxt}</div>` : ''}</div>
-  <div class="card"><div class="row"><span class="t">선물하기</span><span class="m">오늘 ${C.gifts ?? 2} / 5</span></div>
+  <div class="card"><div class="row"><span class="t">선물하기</span><span class="m">오늘 친해진 정도 ${C.today ?? 13} / 30</span></div>
    <div class="gifts">${BAG.map(([n, c, k]) => `<div class="g">${k === 1 ? '<s style="color:' + col + '">♥</s>' : k === -1 ? '<s style="color:#8A7AAA">✕</s>' : ''}${icon(n)}<em>${c}</em></div>`).join('')}</div></div>
   <div class="card"><div class="row" style="margin-bottom:4px"><span class="t">함께하는 힘</span></div>
    ${(ABIL[i] || ABIL[0]).map((a, k) => `<div class="ab ${k + 1 <= st ? '' : 'lk'}"><b>${STN[k + 1]}</b><span>${k + 1 <= st ? a : '🔒 ' + STN[k + 1] + '이 되면 열려요'}</span></div>`).join('')}</div>
   <div class="btns"><button class="bt">정령 바꾸기</button><button class="bt go">따라다니는 중</button></div></div>`;
-  if (C.view === 'gift') html += `<div class="pop"><canvas data-w="${i}" width="64" height="64" style="width:160px;height:160px;image-rendering:pixelated"></canvas><div class="fsay" style="position:static;transform:none">${C.giftLine}</div><div class="row">${icon('I19')}<span class="plus">+25</span></div><div class="m">오늘 원하던 것이었어요</div></div>`;
+  if (C.view === 'gift') html += `<div class="pop"><canvas data-w="${i}" width="64" height="64" style="width:160px;height:160px;image-rendering:pixelated"></canvas><div class="fsay" style="position:static;transform:none">${C.giftLine}</div><div class="row">${icon('I19')}<span class="plus">+10</span></div></div>`;
 }
 v.innerHTML = `<div class="fp" style="position:relative">${html}</div>`;
 const SPR = new Image(); SPR.src = 'wisps3_anim.png';
