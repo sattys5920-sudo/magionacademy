@@ -6,9 +6,9 @@ const cv = document.getElementById('cv'), ov = document.createElement('canvas'),
 ov.style.cssText = 'position:fixed;pointer-events:none;z-index:5;image-rendering:pixelated'; document.body.appendChild(ov);
 const dark = document.createElement('div'); dark.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;transition:opacity 1.6s'; document.body.appendChild(dark);
 const top = document.createElement('canvas'); top.style.cssText = 'position:fixed;pointer-events:none;z-index:7;image-rendering:pixelated'; document.body.appendChild(top); const g2 = top.getContext('2d');
-const nameEl = document.createElement('div'); nameEl.style.cssText = 'position:fixed;left:0;right:0;z-index:8;text-align:center;font-family:var(--f-pxb);font-size:40px;letter-spacing:10px;color:#fff;pointer-events:none';
+const nameEl = document.createElement('div'); nameEl.style.cssText = 'position:fixed;left:0;right:0;z-index:26;text-align:center;font-family:var(--f-pxb);font-size:40px;letter-spacing:10px;color:#fff;pointer-events:none';
 document.body.appendChild(nameEl);
-const dlg = document.createElement('div'); dlg.style.cssText = 'position:fixed;left:0;right:0;bottom:64px;z-index:9;display:none;justify-content:center';
+const dlg = document.createElement('div'); dlg.style.cssText = 'position:fixed;left:0;right:0;bottom:64px;z-index:25;display:none;justify-content:center';
 dlg.innerHTML = '<div class="evwrap"><div class="evbox"><div class="evname"></div><div class="evtext"></div><div class="evch"></div><div class="evtap">▼</div></div></div>'; document.body.appendChild(dlg);
 const bub = document.createElement('div'); bub.style.cssText = 'position:fixed;z-index:9;display:none;gap:6px;transform:translate(-50%,-100%);padding:6px;border-radius:12px;background:rgba(20,13,30,.92);border:1px solid #5A8CFF;box-shadow:0 0 10px #5A8CFF88';
 bub.innerHTML = '<button class="encch" style="padding:0 12px;white-space:nowrap">사역마 창</button><button class="encch" style="padding:0 12px;white-space:nowrap">선물하기</button>'; document.body.appendChild(bub);
@@ -17,6 +17,27 @@ const GI = [['I19', '달빛 이슬', 6], [26, '은방울꽃', 2], [24, '고추',
 const gic = n => typeof n === 'string' ? `background:url(art/icons.png?v=4) ${-(+n.slice(1)) * 32}px 0 no-repeat` : `background:url(art/plants.png?v=4) ${-(n % 10) * 32}px ${-Math.floor(n / 10) * 32}px no-repeat`;
 gift.innerHTML = `<div style="width:100%;max-width:560px;margin:0 10px;background:#211733;border:1px solid #4E3C72;border-radius:16px;padding:12px;font-family:var(--f-px);color:#F1E9FF"><div style="display:flex;align-items:center"><b style="flex:1;font-family:var(--f-pxb);font-size:16px;color:#FFE9A0">Vael에게 선물하기</b><span style="font-size:13px;color:#BFB0E0">오늘 1번 줄 수 있어요</span></div>
 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px">${GI.map(([n, nm, c], i) => `<div class="encch" data-g="${i}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:74px;gap:2px"><span style="width:32px;height:32px;image-rendering:pixelated;${gic(n)}"></span><span style="font-size:13px">${nm} ×${c}</span></div>`).join('')}</div></div>`; document.body.appendChild(gift);
+const scene = document.createElement('div'); scene.style.cssText = 'position:fixed;inset:0;z-index:20;background:#05030A;display:none;opacity:0;transition:opacity .9s';
+const sc = document.createElement('canvas'); sc.width = 320; sc.height = 180; sc.style.cssText = 'position:absolute;left:50%;top:7%;height:58vh;transform:translateX(-50%);image-rendering:pixelated'; scene.appendChild(sc); document.body.appendChild(scene);
+const sg = sc.getContext('2d'); sg.imageSmoothingEnabled = false; const BG = new Image(); BG.src = 'familiar_altar.png';
+const fade = document.createElement('div'); fade.style.cssText = 'position:fixed;inset:0;z-index:30;background:#000;opacity:0;pointer-events:none;transition:opacity .9s'; document.body.appendChild(fade);
+const C = window.__encS = { on: 0, ember: [160, 60], sz: 10, hue: null, spirit: -1, burst: 0, sparks: [], av: null, dark: 0 };
+function sceneDraw(now){ requestAnimationFrame(sceneDraw); if (!C.on) return; sg.clearRect(0, 0, 320, 180); if (BG.complete) sg.drawImage(BG, 0, 0);
+  if (C.dark){ sg.fillStyle = `rgba(4,2,10,${.6 * C.dark})`; sg.fillRect(0, 0, 320, 180); }
+  // 룬이 숨 쉬듯
+  sg.globalCompositeOperation = 'lighter'; const rp = .25 + .35 * Math.abs(Math.sin(now / 700)) + (C.glow || 0) * .4; { const gr = sg.createRadialGradient(160, 110, 0, 160, 110, 22); gr.addColorStop(0, `rgba(90,128,200,${rp * .45})`); gr.addColorStop(1, 'rgba(0,0,0,0)'); sg.fillStyle = gr; sg.fillRect(130, 90, 60, 40); } sg.globalCompositeOperation = 'source-over';
+  if (C.av){ const fr = World.Avatar.meta.dirs.up * 64; sg.drawImage(C.av, fr, 0, 64, 64, 128, 118, 64, 64); }
+  const [ex, ey] = [C.ember[0], C.ember[1] + Math.sin(now / 380) * 1.2], col = C.spirit >= 0 ? '90,140,255' : '255,232,176';
+  sg.globalCompositeOperation = 'lighter'; const rad = C.sz * 2.4 * (.85 + .15 * Math.sin(now / 260));
+  let rg = sg.createRadialGradient(ex, ey, 0, ex, ey, rad); rg.addColorStop(0, C.hue !== null ? `hsla(${C.hue},90%,65%,.6)` : `rgba(${col},.55)`); rg.addColorStop(1, 'rgba(0,0,0,0)'); sg.fillStyle = rg; sg.beginPath(); sg.arc(ex, ey, rad, 0, 7); sg.fill();
+  if (C.burst){ const k = (now - C.burst) / 900; if (k < 1){ sg.strokeStyle = `rgba(200,225,255,${1 - k})`; sg.lineWidth = 2 * (1 - k); sg.beginPath(); sg.arc(ex, ey, 6 + k * 90, 0, 7); sg.stroke(); sg.fillStyle = `rgba(255,255,255,${.3 * (1 - k)})`; sg.fillRect(0, 0, 320, 180); } }
+  if (C.ritual) for (let i = 0; i < 2; i++) C.sparks.push({ x: ex + (Math.random() - .5) * 26, y: ey + 10, vy: -.015 - Math.random() * .03, t: now, life: 900 + Math.random() * 700, h: C.hue });
+  C.sparks = C.sparks.filter(p => now - p.t < p.life); for (const p of C.sparks){ const dt = now - p.t; sg.globalAlpha = 1 - dt / p.life; sg.fillStyle = p.h !== null && C.spirit < 0 ? `hsl(${p.h},90%,70%)` : '#A8D0FF'; sg.fillRect(Math.round(p.x), Math.round(p.y + p.vy * dt), 1, 1); }
+  sg.globalAlpha = 1; sg.globalCompositeOperation = 'source-over';
+  if (SPR.complete){ const fi = Math.floor(now / 110) % 8, sz = Math.round(C.sz * 1.9); sg.filter = C.spirit >= 0 ? 'none' : C.hue !== null ? `hue-rotate(${C.hue - 220}deg) saturate(1.6) brightness(1.15)` : 'saturate(0) brightness(1.7) sepia(.5)';
+    sg.drawImage(SPR, fi * 64, (C.spirit >= 0 ? C.spirit : 0) * 64, 64, 64, Math.round(ex - sz / 2), Math.round(ey - sz * .62), sz, sz); sg.filter = 'none'; }
+}
+requestAnimationFrame(sceneDraw);
 const css = document.createElement('style'); css.textContent = `.encch{min-height:44px;border-radius:12px;border:1px solid #4E3C72;background:#2E2248;color:#F1E9FF;font-family:var(--f-pxb);font-size:15px;transition:all .2s}.encch.on{background:#FF9A3C;border-color:#C86A1E;color:#2A1606;transform:scale(1.02)}
 .enclt{display:inline-block;opacity:0;transform:translateY(8px) scale(1.4);filter:blur(4px);transition:all .7s}.enclt.on{opacity:1;transform:none;filter:none;text-shadow:0 0 12px var(--c),0 0 26px var(--c)}`; document.head.appendChild(css);
 // 제단의 물음 10개 (실제 배정은 관리자가 미리 정해 두고, 물음은 분위기용. 매번 5개를 뽑아요)
@@ -88,44 +109,33 @@ function draw(now){
 }
 requestAnimationFrame(draw);
 window.__encGo = async (o) => {
-  const T = (x, y) => World.__P(x + .5, y + .5);
-  const a = T(36, 56); E.altar = [a[0], a[1]];   // 숲 가장자리 (캠퍼스 36,56)
-  const p1 = T(41, 48), me0 = World.meAt(); E.ember = [me0.x - 150, me0.y - 120]; await sleep(1500);
-  await flyTo(p1[0], p1[1] - 14, 2600); await sleep(600);
-  await say('', '....어디선가 하얀 불씨 하나가 다가와요. 나를 부르는 것 같아요.......');
-  dlg.style.display = 'none'; await sleep(600);
-  await walk(42, 50);
-  const p2 = T(39, 53); await flyTo(p2[0], p2[1] - 14, 1500); await sleep(700);
-  await walk(40, 55);
-  await flyTo(a[0], a[1] - 26, 1600); E.glow = 1; await sleep(500);
-  await walk(39, 61); await sleep(900);
-  await say('잊힌 제단', '돌에 새겨진 글씨가 희미하게 빛나요.... 「불씨가 묻는다」.......');
-  const pool = [...ENC_Q].sort(() => Math.random() - .5).slice(0, 5);
-  for (const q of pool) await say('잊힌 제단', q[0], q[1], Math.floor(Math.random() * 3));
-  await say('잊힌 제단', '....불씨가 너를 오래 바라봐요.......');
+  const T = (x, y) => World.__P(x + .5, y + .5), me0 = World.meAt();
+  // 1) 맵: 하얀 불씨가 다가와요 (말 없이, 내 머리 위에 「.......!」)
+  E.ember = [me0.x - 150, me0.y - 120]; await sleep(1500);
+  await flyTo(me0.x + 26, me0.y + 4, 2600); await sleep(500);
+  World.say('me', '.......!'); await sleep(1800);
+  // 2) 불씨가 멀어지고, 따라가요
+  const p2 = T(39, 53); await flyTo(p2[0], p2[1] - 14, 1800);
+  await walk(40, 51); const p3 = T(36, 57); await flyTo(p3[0], p3[1] - 14, 1600); await walk(38, 56); await sleep(300);
+  // 3) 어딘가로: 화면이 어두워지고 덩굴에 감긴 제단 (연출 컷)
+  fade.style.opacity = 1; await sleep(1100); E.ember = null;
+  C.av = World.Avatar.compose(o.av || World.__myAv); C.on = 1; C.ember = [130, 40]; scene.style.display = 'block'; scene.style.opacity = 1; fade.style.opacity = 0; await sleep(1200);
+  await new Promise(res => { const t0 = performance.now(), s0 = [...C.ember]; const st = () => { const k = Math.min(1, (performance.now() - t0) / 2200), e = ease(k); C.ember = [s0[0] + (160 - s0[0]) * e, s0[1] + (78 - s0[1]) * e - Math.sin(k * Math.PI) * 10]; if (k < 1) requestAnimationFrame(st); else res(); }; st(); });
+  C.glow = 1; await sleep(900);
+  for (const q of ENC_Q) await say('잊힌 제단', q[0], q[1], Math.floor(Math.random() * 3));
   dlg.style.display = 'none';
-  E.ritual = 1; dark.style.opacity = 1; await sleep(1200);
-  const t0 = performance.now(); E.hue = 0;
-  await new Promise(res => { const st = () => { const k = Math.min(1, (performance.now() - t0) / 4200); E.sz = 14 + 20 * ease(k); E.hue = (k < .8 ? (k / .8) * 720 : 720 + (k - .8) / .2 * 220) % 360; if (k < 1) requestAnimationFrame(st); else res(); }; st(); });
-  await sleep(500); E.burst = performance.now(); E.spirit = 0; E.hue = null; E.sz = 24; await sleep(900);
-  nameEl.style.setProperty('--c', '#5A8CFF'); nameEl.innerHTML = 'Vael'.split('').map(c => `<span class="enclt">${c}</span>`).join('');
+  // 4) 계약 의식
+  C.ritual = 1; { const t0 = performance.now(); await new Promise(res => { const st = () => { const k = Math.min(1, (performance.now() - t0) / 4200); C.dark = Math.min(1, k * 3); C.sz = 10 + 14 * ease(k); C.hue = (k < .8 ? (k / .8) * 720 : 720 + (k - .8) / .2 * 220) % 360; if (k < 1) requestAnimationFrame(st); else res(); }; st(); }); }
+  await sleep(400); C.burst = performance.now(); C.spirit = 0; C.hue = null; C.sz = 18; C.ritual = 0; await sleep(900);
+  nameEl.style.top = '9%'; nameEl.style.setProperty('--c', '#5A8CFF'); nameEl.innerHTML = 'Vael'.split('').map(c => `<span class="enclt">${c}</span>`).join('');
   for (const sp of nameEl.children){ await sleep(380); sp.classList.add('on'); }
-  await sleep(1600);
-  await say('Vael', o.first);
-  await sleep(400); nameEl.style.transition = 'opacity 1s'; nameEl.style.opacity = 0; dark.style.opacity = 0; E.ritual = 0; dlg.style.display = 'none';
-  // 만난 뒤: 작아져서 어깨 곁으로, 따라다니기
-  await sleep(600); { const t1 = performance.now(); await new Promise(res => { const st = () => { const k = Math.min(1, (performance.now() - t1) / 1200); E.sz = 24 - 15 * ease(k); if (k < 1) requestAnimationFrame(st); else res(); }; st(); }); }
-  E.follow = 1; await sleep(2200);
-  // 내 정령을 누르면: 사역마 창 / 선물하기
-  const pick = async (which) => { bub.style.display = 'flex'; bub.style.left = E.scr[0] + 'px'; bub.style.top = (E.scr[1] - 26) + 'px'; [...bub.children].forEach(c => c.classList.remove('on')); await sleep(1100); bub.children[which].classList.add('on'); await sleep(600); bub.style.display = 'none'; };
-  await pick(0);
-  window.__famCfg = { view: 'main', i: 0, stage: 0, pts: 0, today: 0, line: o.panel, fresh: 1 }; new Function(o.panelJs)(); await sleep(4200); document.getElementById('famv')?.remove();
-  await sleep(500); await walk(43, 57); await sleep(400);
-  await say('Vael', o.idle); dlg.style.display = 'none'; await sleep(900);
-  await pick(1);
-  gift.style.display = 'flex'; await sleep(1500); gift.querySelector('[data-g="0"]').classList.add('on'); await sleep(700); gift.style.display = 'none';
-  E.floats = [{ t: performance.now(), txt: '+30' }]; await sleep(500);
-  await say('Vael', o.like); dlg.style.display = 'none';
-  await sleep(1800); window.__encDone = true;
+  await sleep(1400);
+  await say('Vael', o.first); dlg.style.display = 'none';
+  // 5) 맵으로 돌아오면 정령이 곁에
+  fade.style.opacity = 1; await sleep(1100); scene.style.display = 'none'; C.on = 0; nameEl.innerHTML = '';
+  const m2 = World.meAt(); E.ember = [m2.x + 12, m2.y - 2]; E.sz = 9; E.spirit = 0; E.follow = 1; E.burst = performance.now();
+  fade.style.opacity = 0; await sleep(1600);
+  await walk(42, 52); await sleep(1500);
+  window.__encDone = true;
 };
 })();
