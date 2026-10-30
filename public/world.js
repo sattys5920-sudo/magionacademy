@@ -629,7 +629,7 @@ function drawPet(p){
 const clockEl = document.getElementById('clock'); let clockTick = 0, clockLast = '';
 // ---------- 사역마(정령불): 만남 이벤트의 하얀 불씨 · 주인 곁을 따라다니는 정령 ----------
 //   World.famLead(): 가장 가까운 지역 이동 길(학교↔마을↔그림자 골목)로 불씨가 몇 칸씩 앞장서요 · World.setMyFam(번호): 내 정령 · 친구 정령은 접속 정보 fk
-let WISP = null; { const i = new Image(); i.onload = () => { WISP = i; }; i.src = 'art/wisps.png?v=1'; }
+let WISP = null, WISPA = null; { const i = new Image(); i.onload = () => { WISP = i; }; i.src = 'art/wisps.png?v=1'; const a = new Image(); a.onload = () => { WISPA = a; }; a.src = 'art/wisps_awake.png?v=1'; }   // 12번부터는 각성한 모습 (k + 12)
 const FAM_RGB = [[90, 140, 255], [160, 112, 255], [64, 208, 112], [255, 106, 184], [255, 200, 56], [200, 216, 255], [255, 90, 40], [48, 216, 200], [255, 144, 48], [112, 136, 255], [154, 96, 240], [224, 200, 255]];
 let ember = null, famRelead = false; const famAt = new Map();
 World.onGate = null; World.onFamSeen = null;
@@ -652,10 +652,10 @@ function drawFam(now){
   if (famRelead && !ember && started && !busy) World.famLead();
   if (!WISP) return;
   const fi = Math.floor(now / 110) % 8;
-  const one = (x, y, k, sz, white) => { const c = white ? [255, 232, 176] : FAM_RGB[k] || [255, 255, 255], r = Math.round(sz * .95);
+  const one = (x, y, k0, sz, white) => { const aw = k0 >= 12 && WISPA, k = k0 % 12, c = white ? [255, 232, 176] : FAM_RGB[k] || [255, 255, 255], r = Math.round(sz * (aw ? 1.15 : .95));
     cx.globalCompositeOperation = 'lighter'; cx.globalAlpha = .65 + .15 * Math.sin(now / 260); cx.drawImage(glow(r, c), Math.round(x - r), Math.round(y - r)); cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
     if (white) cx.filter = 'saturate(0) brightness(1.7) sepia(.5)';
-    cx.drawImage(WISP, fi * 64, (white ? 0 : k) * 64, 64, 64, Math.round(x - sz / 2), Math.round(y - sz * .62), Math.round(sz), Math.round(sz)); cx.filter = 'none'; };
+    cx.drawImage(aw ? WISPA : WISP, fi * 64, (white ? 0 : k) * 64, 64, 64, Math.round(x - sz / 2), Math.round(y - sz * .62), Math.round(sz), Math.round(sz)); cx.filter = 'none'; };
   // 따라다니는 정령: 걸으면 주인이 조금 전 있던 자리 옆, 멈추면 어깨 뒤에서 맴돌아요
   const live = new Set();
   people.forEach(p => { const k = p.me ? me.fk : p.peer ? p.fk : undefined; if (typeof k !== 'number' || p.cutHide) return; const id = p.me ? 'me' : p.peer; live.add(id);

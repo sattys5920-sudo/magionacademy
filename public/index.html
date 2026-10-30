@@ -105,6 +105,8 @@ body.inworld #app.open{opacity:1;pointer-events:auto}
 .xch.on{background:#2f2458;box-shadow:inset 0 0 0 2px var(--gold),0 3px 0 #0e0a1c;transform:translateY(-6px)}.xch.on .t{color:var(--gold);font-family:var(--f-pxb)}.xch.off{opacity:.6;cursor:default}
 .xch.bob{animation:xchbob 2.4s steps(6) infinite}@keyframes xchbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 .xchr{display:flex;align-items:center;gap:12px;margin-top:10px;padding:12px 14px;box-shadow:inset 0 0 0 2px var(--gold)}.xchr>div{display:flex;flex-direction:column;gap:3px}.xchr b{font-family:var(--f-pxb);font-size:17px}.xchi .ic{transform:scale(1.5);margin:8px}
+#trbtn{position:absolute;right:10px;top:114px;z-index:6;display:flex;flex-direction:column;align-items:flex-start;max-width:210px;padding:5px 12px 6px 22px;border-radius:14px;border:2px solid #2A1E3A;background:rgba(20,13,34,.88);color:#F1E9FF;font-family:var(--f-px);font-size:var(--fs-s);text-align:left;line-height:1.35}#trbtn i{position:absolute;left:8px;top:11px;width:8px;height:8px;border-radius:4px;box-shadow:0 0 6px currentColor}#trbtn b{font-family:var(--f-pxb);font-size:var(--fs-s)}#trbtn span{opacity:.85}
+.trg{margin-top:8px}.trg .row{display:flex;justify-content:space-between;gap:8px;align-items:center}.trg .bar{margin-top:4px}.trg button{margin-top:6px;width:100%;min-height:44px;border-radius:12px;border:1px solid #C86A1E;background:#FF9A3C;color:#2A1606;font-family:var(--f-pxb);font-size:15px}.trg button:disabled{background:#2E2248;border-color:#4E3C72;color:#8A7AAA}
 #sgbtn{position:absolute;right:10px;top:66px;z-index:7;min-height:40px;padding:0 14px;border-radius:20px;border:2px solid #1a1440;background:#ffd866;color:#2a1a4a;font-family:var(--f-pxb);font-size:var(--fs);box-shadow:0 0 14px rgba(255,216,102,.7)}
 #pzbtn{position:absolute;left:10px;top:66px;z-index:7;min-height:40px;padding:0 14px;border-radius:20px;border:2px solid #2A1506;background:#6fd0c0;color:#0a2a26;font-family:var(--f-pxb);font-size:var(--fs);box-shadow:0 0 14px rgba(111,208,192,.7)}
 #pzv{position:absolute;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column}#pzv .dfh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;background:#1b1230;border-bottom:1px solid var(--line)}#pzv .dfh b{font-family:var(--f-pxb)}#pzv .pzw{padding:10px 10px 4px}#pzv canvas{width:100%;aspect-ratio:200/120;display:block;image-rendering:pixelated;border:3px solid #3a2a18;border-radius:4px;background:#241a34}#pzv .pzt{padding:4px 12px 8px}#pztray{display:flex;flex-wrap:wrap;gap:6px;padding:6px 10px;align-content:flex-start;flex:1;overflow:auto;touch-action:none}.pzp{width:80px;height:90px;background-size:800px 450px;image-rendering:pixelated;touch-action:none;cursor:grab;background-repeat:no-repeat;background-color:#2d2147;border-radius:8px}.pzp.shake{animation:dfs .3s}.pzfl{position:fixed;z-index:100;pointer-events:none;background-color:transparent;border-radius:0;filter:drop-shadow(0 4px 6px rgba(0,0,0,.6))}
@@ -1788,7 +1790,7 @@ function fishTap(){
 function fishCatch(){
   const f = fishing.f; cancelAnimationFrame(fishing.raf); fishing.st = 'done'; World.setBobber(null);
   const cm = f.junk ? 0 : Math.round((f.cm[0] + (f.cm[1] - f.cm[0]) * Math.random() ** 1.6) * 10) / 10;
-  const isNew = dexAdd(f.id, cm), rec = !f.junk && me.fdex[f.id].cm === cm && !isNew; if (!f.junk) prankEv('fish', { k: f.id });
+  const isNew = dexAdd(f.id, cm), rec = !f.junk && me.fdex[f.id].cm === cm && !isNew; if (!f.junk){ prankEv('fish', { k: f.id }); trEv('fish', { rare: f.grade >= 3, night: bandNow() === 'night', rain: weatherToday() === 'rain' }); if (isNew) trEv('dex'); }
   if (isNew && !f.junk){ me.mana += f.grade; }
   save(); hud();
   tutHook('fish');   // 쓰레기가 걸려도 낚시를 해 본 걸로 쳐요
@@ -1829,8 +1831,8 @@ World.onSpot = (si, spot) => {
   const all = spotsToday(), live = all.map((s, i) => ({ ...s, i })).filter(s => !me.fg.got.includes(s.i)), sp = live[si]; if (!sp) return;
   const pool = FORAGE.filter(x => x.z.includes(sp.z)).map(x => buffOn('fluck') ? { ...x, w: x.w ** .7 } : x); let r = sp.r * pool.reduce((t, x) => t + x.w, 0), it = pool[pool.length - 1];   // 요리 효과: 드문 채집물
   for (const x of pool){ r -= x.w; if (r <= 0){ it = x; break; } }
-  prankEv('forage', { k: it.id });
-  const isNew = dexAdd(it.id); if (dbuff('dforest') && Math.random() < .1) dexAdd(it.id); { const ex = sgMul(1, sgFx('gather_yield') + partyFx()) - 1; if (ex > 0) me.inv[it.id] = (me.inv[it.id] || 0) + ex; } me.fg.got.push(sp.i); if (isNew) me.mana += it.grade;   // 풍작의 별빛 · 친구와 함께
+  prankEv('forage', { k: it.id }); trEv('forage', { z: sp.z, night: bandNow() === 'night' });
+  const isNew = dexAdd(it.id); if (isNew) trEv('dex'); if (dbuff('dforest') && Math.random() < .1) dexAdd(it.id); { const ex = sgMul(1, sgFx('gather_yield') + partyFx()) - 1; if (ex > 0) me.inv[it.id] = (me.inv[it.id] || 0) + ex; } me.fg.got.push(sp.i); if (isNew) me.mana += it.grade;   // 풍작의 별빛 · 친구와 함께
   save(); hud(); syncSpots();
   pzDrop('forage'); lnDrop('forage');
   if (it.grade >= 3) speak(`${it.name} 찾았다!`);
@@ -1901,7 +1903,7 @@ function renderFish(){
   on('[data-fspg]', b => { fsPg = +b.dataset.fspg; renderFish(); });
   on('[data-fsspg]', b => { fsSellPg = +b.dataset.fsspg; renderFish(); });
   on('[data-fsel]', b => { fsSel = fsSel === b.dataset.fsel ? null : b.dataset.fsel; renderFish(); });
-  const sell = (k, n) => { n = Math.min(n, me.inv[k]); if (n <= 0) return 0; me.inv[k] -= n; const g = partyMul(sellPay(k, CATCH_INFO[k].pay) * n); me.coin += g; return g; };
+  const sell = (k, n) => { n = Math.min(n, me.inv[k]); if (n <= 0) return 0; me.inv[k] -= n; const g = partyMul(sellPay(k, CATCH_INFO[k].pay) * n); me.coin += g; trEv('sell', { g }); return g; };
   on('[data-fsell]', b => { const g = sell(b.dataset.fsell, 1); fsMsg = `${ITEM[b.dataset.fsell]} 1개를 팔았어요. +${g}G`; save(); renderFish(); });
   on('[data-fsall]', b => { const k = b.dataset.fsall, n = me.inv[k], g = sell(k, n); fsMsg = `${ITEM[k]} ${n}개를 팔았어요. +${g}G`; save(); renderFish(); });
   $('#fsAll') && ($('#fsAll').onclick = () => { let g = 0, n = 0; CATCH.forEach(k => { n += me.inv[k] || 0; g += sell(k, me.inv[k] || 0); }); fsMsg = `${n}개를 팔았어요. +${g.toLocaleString()}G`; save(); renderFish(); });
@@ -2172,7 +2174,7 @@ function xEnd(how){   // how: clear · time · retreat · wipe
   const before = xLv(ex.exp).L; ex.exp += exp; me.coin += gold; Object.entries(items).forEach(([k, n]) => { me.inv[k] = (me.inv[k] || 0) + n; });
   const after = xLv(ex.exp).L, sp = 0; ex.run = null; xb = null; clearInterval(xTick); save(); hud();   // 스킬 포인트는 레벨 업에서만
   xv = { view: 'result', how, gold, exp, items, up: after > before ? [before, after] : null, sp, prog: Math.floor(run.prog) };
-  if (how !== 'wipe'){ pzDrop('explore'); lnDrop('explore'); }
+  if (how !== 'wipe'){ pzDrop('explore'); lnDrop('explore'); } trEv('xend', { how, night: bandNow() === 'night' });
   if (how !== 'wipe' && Math.random() < .02) setTimeout(() => recipePaper('explore'), 700);   // 탐사 보상: 레시피 종이 2%
 }
 function xTime(run){ return Math.max(0, run.end - (run.co ? now2() : now2())); }   // 파티 탐사는 방장이 서버 시각으로 정해요
@@ -3287,7 +3289,7 @@ function gameStart(v){
   const tick = () => { if (!G) return; G.loop && G.loop(); if (G && now2() > G.end + 300 && !G.over) gameOver(); if (G) G.raf = requestAnimationFrame(tick); };
   G.raf = requestAnimationFrame(tick);
 }
-function gameEnd(){ if (!G) return; prankEv('game', { g: G.g }); cancelAnimationFrame(G.raf); G.timers.forEach(clearInterval); G.cleanup && G.cleanup(); G = null; }
+function gameEnd(){ if (!G) return; prankEv('game', { g: G.g }); trEv('game'); cancelAnimationFrame(G.raf); G.timers.forEach(clearInterval); G.cleanup && G.cleanup(); G = null; }
 const gLeft = () => Math.max(0, Math.ceil((G.end - now2()) / 1000));
 const gCount = () => { const t = (G.t0 - now2()) / 1000; return t > 0 ? Math.ceil(t) : 0; };
 const nameOf = id => esc(roomV?.p?.[id]?.n || '친구');
@@ -4010,7 +4012,7 @@ function cookStir(){
 function cookDone(){
   const C = cooking; if (!C) return;
   const total = C.sc[0] + C.sc[1] + C.sc[2], stars0 = total >= 8 ? 3 : total >= 5 ? 2 : 1, stars = stars0 < 3 && Math.random() < sgFx('craft_success') ? stars0 + 1 : stars0, best = stars === 3, k = C.d.id + (best ? '_s' : '');
-  const coX = coExtra(); me.inv[k] = (me.inv[k] || 0) + 1 + coX; prankEv('cook', { k }); if (coX) setTimeout(() => toast(`친구와 함께 만들어서 ${coX}개 더!`), 800); me.cdex = me.cdex || {}; const isNew = !me.cdex[C.d.id]; me.cdex[C.d.id] = Math.max(me.cdex[C.d.id] || 0, stars);
+  const coX = coExtra(); me.inv[k] = (me.inv[k] || 0) + 1 + coX; prankEv('cook', { k }); trEv('cook', { stars }); if (coX) setTimeout(() => toast(`친구와 함께 만들어서 ${coX}개 더!`), 800); me.cdex = me.cdex || {}; const isNew = !me.cdex[C.d.id]; me.cdex[C.d.id] = Math.max(me.cdex[C.d.id] || 0, stars);
   if (isNew){ const got = addKnow(1); if (got.length) setTimeout(() => toast(got.join(' · ')), 1500); }
   save(); hud();
   World.setCook({ x: C.pot.x, y: C.pot.y, soup: C.soup, heat: .15, steam: 5 });
@@ -4347,7 +4349,7 @@ function renderNpcGift(){
   $('#back').onclick = closeSheet;
   on('[data-ngive]', b => { const k = b.dataset.ngive; if (done || !(me.inv[k] > 0)) return; me.inv[k]--; st.g = todayKey();
     const kind = likes.includes(k) ? 'love' : dislikes.includes(k) ? 'hate' : 'like', d0 = { love: 40, like: 20, hate: -30 }[kind], d = d0 > 0 ? Math.round(d0 * (1 + sgFx('gift_affection'))) : d0;
-    me.giftLog = me.giftLog || {}; (me.giftLog[n.id] ||= {})[k] = kind; prankEv('gift', { id: n.id, k, kind });   // 관계 패널의 「알아낸 선물」
+    me.giftLog = me.giftLog || {}; (me.giftLog[n.id] ||= {})[k] = kind; prankEv('gift', { id: n.id, k, kind }); trEv('gift', { id: n.id });   // 관계 패널의 「알아낸 선물」
     const ls = P.gift?.[kind] || { love: ['우와, 이거 정말 좋아해요! 고마워요!'], like: ['고마워요, 잘 쓸게요.'], hate: ['으.... 이건 좀 별로예요.'] }[kind];
     npcMsg = ''; closeSheet(); npcAddA(n.id, d); save(); syncNpcs(); setTimeout(() => npcMenu(n, fillVars(ls[Math.floor(Math.random() * ls.length)], n.id)), 100); });
 }
@@ -5195,6 +5197,7 @@ World.onAct = (mapId, o, a) => {
   if (label === '물고기 팔기'){ fsTab = 'sell'; fsMsg = ''; return openSheet('home', 'fish'); }
   if (mapId === 'pen'){ ranchTab = label === '부화실 보기' ? 'hatch' : 'pen'; ranchMsg = ''; return openSheet('ranch'); }
   if (ACT_GO[label] && ACT_MAP[ACT_GO[label]].includes(mapId)) return openSheet(ACT_GO[label]);
+  if (label === '소원 빌기') trEv('wish', { day: todayKey() });
   const f = FLAVOR[a[0]] || FLAVOR[label];
   return `<b>${a[0]}</b><br>${f ? f[Math.floor(Math.random() * f.length)] : '.......'}`;
 };
@@ -5611,7 +5614,7 @@ function renderJournal(){
   if (jnTab === 'dream') dreamJournalBind();
   on('[data-deliver]', b => {
     const o = me.orders[+b.dataset.deliver]; if (!o || o.done || (me.inv[o.p] || 0) < o.n) return;
-    const pay = partyMul(payOf(o)); me.inv[o.p] -= o.n; me.coin += pay; o.done = true; save();
+    const pay = partyMul(payOf(o)); me.inv[o.p] -= o.n; me.coin += pay; o.done = true; trEv('order'); save();
     toast(`${o.from}에게 ${withJosa(ITEM[o.p], '을', '를')} 전했어요. +${pay}G`); render();
   });
   on('[data-jngo]', b => { const [m, x, y] = b.dataset.jngo.split(','); jnGo(m, +x, +y); });
@@ -5724,7 +5727,7 @@ function renderHome(){
     const o = me.orders[+b.dataset.deliver];
     if (!o || o.done || (me.inv[o.p] || 0) < o.n) return;   // 두 번 눌러도 한 번만
     const pay = partyMul(payOf(o));
-    me.inv[o.p] -= o.n; me.coin += pay; o.done = true; save();
+    me.inv[o.p] -= o.n; me.coin += pay; o.done = true; trEv('order'); save();
     toast(`${o.from}에게 ${withJosa(ITEM[o.p], '을', '를')} 전했어요. +${pay}G`); render();
   });
 }
@@ -6078,7 +6081,7 @@ function renderLab(){
     if (p){
       const coX = coExtra(); me.inv[p] = (me.inv[p] || 0) + 1 + coX; if (coX) setTimeout(() => toast(`친구와 함께 만들어서 ${coX}개 더!`), 900);
       const isNew = !me.found.includes(p);
-      if (isNew) me.found.push(p);
+      if (isNew) me.found.push(p); trEv('brew', { p, isNew });
       if (!me.hints.includes(p)) me.hints.push(p);
       msg = isNew ? '도감에 새로 적었어요!' : '완성!';
       dexSel = p; dexPage = Math.floor(POTIONS.indexOf(p) / DEX_PAGE); toast(`${ITEM[p]} 완성!`);
@@ -6196,7 +6199,7 @@ function renderVeg(){
   </section><div style="display:flex;gap:8px">${backBtn}</div>`);
   $('#back').onclick = closeSheet;
   on('[data-vgpg]', b => { vgPg = +b.dataset.vgpg; renderVeg(); });
-  const sell = (k, n) => { n = Math.min(n, me.inv[k]); if (n <= 0) return 0; me.inv[k] -= n; const g = partyMul(sellPay(k, cropBase(k)) * n); me.coin += g; return g; };
+  const sell = (k, n) => { n = Math.min(n, me.inv[k]); if (n <= 0) return 0; me.inv[k] -= n; const g = partyMul(sellPay(k, cropBase(k)) * n); me.coin += g; trEv('sell', { g }); return g; };
   on('[data-vsell]', b => { const g = sell(b.dataset.vsell, 1); vgMsg = `${ITEM[b.dataset.vsell]} 1개를 팔았어요. +${g}G`; save(); hud(); renderVeg(); });
   on('[data-vsall]', b => { const k = b.dataset.vsall, n = me.inv[k], g = sell(k, n); vgMsg = `${ITEM[k]} ${n}개를 팔았어요. +${g}G`; save(); hud(); renderVeg(); });
   $('#vgAll') && ($('#vgAll').onclick = () => { let g = 0, n = 0; have.forEach(k => { n += me.inv[k] || 0; g += sell(k, me.inv[k] || 0); }); vgMsg = `${n}개를 팔았어요. +${g.toLocaleString()}G`; save(); hud(); renderVeg(); });
@@ -6497,7 +6500,7 @@ function dreamGo(night){
   if (typeof Dream === 'undefined' || dreamDone() || document.getElementById('dreamv')) return;
   const D = dreamSt(), pool = Dream.LIST.filter(x => night || !x[3]).map(x => x[0]);
   Dream.run({ pool, onStart: () => { D.d = todayKey(); save(); }, isNew: k => !D.seen[k] }).then(({ k, got }) => {
-    D.seen[k] = (D.seen[k] || 0) + 1; D.sh += got; save(); hud();
+    D.seen[k] = (D.seen[k] || 0) + 1; D.sh += got; trEv('dream', { k }); save(); hud();
     if (me.rest) showRest(); else toast(`꿈 조각 +${got}`);
     if (sheetOn && sub === 'journal') render();
   });
@@ -6754,7 +6757,7 @@ function renderVisit(){
     if (giftPick) entry.gift = giftPick;
     try { await F.push(F.ref(db, 'guest/' + visitUid), entry); }
     catch(e){ send.disabled = false; return toast('방명록을 남기지 못했어요: ' + (e.code || e.message)); }
-    if (giftPick) me.inv[giftPick]--;
+    if (giftPick){ me.inv[giftPick]--; trEv('gift', { id: 'u:' + visitUid }); }
     me.wrote[visitUid] = todayKey(); giftPick = null; prankEv('guest', { to: visitUid }); save();
     toast('방명록을 남겼어요!'); renderVisit();
   };
@@ -7481,7 +7484,7 @@ const FAM = { N: ['Vael', 'Ixi', 'Puck', 'Lotis', 'Sol', 'Lune', 'Ignis', 'Rill'
     ['마지막으로, 너는 무엇이 되고 싶은가?', ['길을 비추는 빛', '곁을 지키는 불', '아무도 모르는 불씨']]] };
 let famCtl = null, famPickV = null, famOn = false, famOffs = [];
 function famListen(){
-  World.setMyFam(me && me.fam ? me.fam.k : null);
+  World.setMyFam(me && me.fam ? me.fam.k + (me.fam.aw ? 12 : 0) : null);
   World.onFamSeen = () => World.say('me', '.......!');
   World.onGate = door => { if (famOn) return true; if (!World.famEmber() || (me && me.fam) || typeof famPickV !== 'number') return false; famCut(); return true; };
   if (solo || !F || !db || famOffs.length) return;
@@ -7491,9 +7494,10 @@ function famListen(){
 }
 function famTick(){
   if (!me) return;
-  const k = me.fam ? me.fam.k : undefined;
+  const k = me.fam ? me.fam.k + (me.fam.aw ? 12 : 0) : undefined;
   if (!solo && F && db && uid && onlineList[uid] && onlineList[uid].fk !== k) F.update(F.ref(db, 'online/' + uid), { fk: typeof k === 'number' ? k : null }).catch(() => {});
   if (me.fam && !famSayOn && !famOn && !uiBusy() && !$('#fammod') && World.meAt && World.meAt() && now2() - (me.fam.tk || me.fam.at || 0) > 5 * 36e5) famChat();
+  trTick();
   const want = famCtl && famCtl.open && typeof famPickV === 'number' && !me.fam;
   if (!want){ if (World.famEmber() && !famOn) World.famEmberOff(); return; }
   if (!World.famEmber() && !famOn && !uiBusy()) World.famLead();
@@ -7578,7 +7582,7 @@ World.onFam = () => { if (!me.fam || uiBusy() || famSayOn || $('#fammod')) retur
   World.bubble(World.meAt(), `<b>${FAM.N[k]}</b><div class="pm"><button data-fm="panel">사역마 창</button><button data-fm="gift">${given ? '오늘 선물 완료' : '선물하기'}</button></div>`);
   document.querySelectorAll('.bubble [data-fm]').forEach(b => b.onclick = e => { e.stopPropagation(); World.hideBubble(); b.dataset.fm === 'gift' ? famGiftOpen() : famPanelOpen(); }); };
 function famModal(html){ $('#fammod')?.remove(); const v = document.createElement('div'); v.id = 'fammod'; v.style.setProperty('--c', FAM.C[me.fam.k]); v.style.setProperty('--cg', FAM.C[me.fam.k] + '38'); v.innerHTML = `<div class="fp">${html}</div>`; document.body.appendChild(v); v.onclick = e => { if (e.target === v || e.target.closest('[data-fx]')) v.remove(); }; return v; }
-function famSprite(cv){ const g = cv.getContext('2d'), sp = new Image(); sp.src = 'art/wisps.png?v=1'; const k = me.fam.k; const tick = now => { if (!cv.isConnected) return; requestAnimationFrame(tick); if (!sp.complete) return; g.clearRect(0, 0, 64, 64); g.drawImage(sp, Math.floor(now / 110) % 8 * 64, k * 64, 64, 64, 0, 0, 64, 64); }; requestAnimationFrame(tick); }
+function famSprite(cv){ const g = cv.getContext('2d'), sp = new Image(); sp.src = me.fam.aw ? 'art/wisps_awake.png?v=1' : 'art/wisps.png?v=1'; const k = me.fam.k; const tick = now => { if (!cv.isConnected) return; requestAnimationFrame(tick); if (!sp.complete) return; g.clearRect(0, 0, 64, 64); g.drawImage(sp, Math.floor(now / 110) % 8 * 64, k * 64, 64, 64, 0, 0, 64, 64); }; requestAnimationFrame(tick); }
 function famPanelOpen(){
   if (!me.fam) return; const f = me.fam, k = f.k, st = famStage(), pts = f.pts || 0, hi = Math.min(400, (st + 1) * 100), given = f.gd === todayKey(), kn = f.kn || {};
   const likes = Object.keys(kn).filter(x => kn[x] === 1), hates = Object.keys(kn).filter(x => kn[x] === -1);
@@ -7591,8 +7595,9 @@ function famPanelOpen(){
     <div class="card"><div class="row"><span class="t">알아낸 취향</span><span class="m">${given ? '오늘 선물 완료' : '오늘 1번 선물할 수 있어요'}</span></div>
       <div class="gg">${likes.map(x => `<button disabled style="opacity:1"><s style="color:${FAM.C[k]}">♥</s>${ic(x)}<em>${esc(ITEM[x] || x)}</em></button>`).join('')}${hates.map(x => `<button disabled style="opacity:1"><s style="color:#8A7AAA">✕</s>${ic(x)}<em>${esc(ITEM[x] || x)}</em></button>`).join('')}</div>${likes.length + hates.length ? '' : '<div class="m" style="margin-top:6px">선물을 주면 반응을 기억해 둬요</div>'}</div>
     <div class="card"><div class="row" style="margin-bottom:4px"><span class="t">함께하는 힘</span></div>${ab.map((a, i) => `<div class="ab ${i + 1 <= st ? '' : 'lk'}"><b>${FAM.ST[i + 1]}</b><span>${i + 1 <= st ? a : '🔒 ' + FAM.ST[i + 1] + '이 되면 열려요'}</span></div>`).join('')}</div>
+    ${trGoalHTML()}${f.aw ? `<div class="card"><div class="row"><span class="t">각성한 정령</span><span class="m">시련을 모두 끝냈어요</span></div></div>` : ''}
     <div class="btns"><button data-fx>닫기</button><button class="go" id="famgo" ${given ? 'disabled' : ''}>${given ? '오늘 선물 완료' : '선물하기'}</button></div>`);
-  famSprite(v.querySelector('canvas')); const go = v.querySelector('#famgo'); if (go) go.onclick = () => famGiftOpen();
+  famSprite(v.querySelector('canvas')); v.querySelectorAll('[data-trg]').forEach(b => b.onclick = () => trGive(+b.dataset.trg)); const go = v.querySelector('#famgo'); if (go) go.onclick = () => famGiftOpen();
 }
 function famGiftOpen(){
   if (!me.fam) return; const f = me.fam, k = f.k, kn = f.kn || {}, given = f.gd === todayKey(), list = famGiftable();
@@ -7614,6 +7619,151 @@ async function famChat(){   // 5시간에 한 번: 지금 상황과 단계에 �
   const pool = [...L.idle[st], L.still[st], L.greet[st]]; if (night) pool.push(L.night[st], L.night[st]);
   let line = famPickOne(pool); if (st >= 1 && Math.random() < .3) line = famPickOne(Object.values(L.hint));
   save(); await famSay(line);
+}
+// ----- 「정령의 시련」 (각성): 신뢰(300점)가 되면 정령이 먼저 부탁해요 · 3막, 막을 끝낸 다음 날 다음 막 · 3막을 끝내면 각성 연출 -----
+//   me.fam.tr = { a: 지금 막(0~2), said: 말을 꺼낸 막 수, fin: 이 막 끝남, dd: 막을 끝낸 날, c: [목표별 수], q: [목표별 {겹치지 않게 셀 열쇠}], st: 제자리 초, ir: { d, c, ok } 아이리스의 오늘 부탁 } · me.fam.aw: 각성함
+const TRN = n => Object.keys(ITEM).find(k => ITEM[k] === n) || n;
+const TRG = {   // on: 시련 사건 · n: 목표 · ok: 셀 조건 · q: 겹치지 않게 셀 열쇠 · add: 더할 양 · rs: 이러면 처음부터 · give: 바칠 재료 · still: 곁에 서 있을 초 · iris: 날마다 바뀌는 부탁
+  0: [[{ on: 'fish', n: 30, t: '낚시 성공' }, { on: 'fish', n: 3, ok: d => d.rare, t: '드문 물고기 (별 셋 이상)' }], [{ on: 'fish', n: 10, ok: d => d.night, t: '밤에 낚시 성공' }], [{ give: '영혼 연꽃', n: 1 }, { still: 180, n: 180, t: '말없이 곁에 서 있기 (초)' }]],
+  1: [[{ on: 'prank', n: 10, q: d => d.k, t: '서로 다른 장난 마법 걸기' }], [{ on: 'pranked', n: 5, q: d => d.by, t: '서로 다른 친구에게 장난 마법 당하기' }], [{ give: '거울 잎', n: 3 }]],
+  2: [[{ on: 'brew', n: 30, t: '물약 만들기' }, { on: 'brew', n: 10, q: d => d.p, t: '서로 다른 물약' }], [{ on: 'sell', n: 3000, add: d => d.g, t: '시장에 팔아 번 골드' }], [{ give: '황금 버섯', n: 3 }]],
+  3: [[{ on: 'gift', n: 7, q: d => d.id, t: '서로 다른 친구·마을 사람에게 선물' }], [{ on: 'cook', n: 15, t: '요리하기' }, { on: 'cook', n: 5, ok: d => d.stars >= 3, t: '별 셋 완벽한 요리' }], [{ give: '수정 장미', n: 3 }]],
+  4: [[{ on: 'order', n: 30, t: '주문 끝내기' }], [{ on: 'xend', n: 3, ok: d => d.how === 'clear', t: '탐사 우두머리 쓰러뜨리기' }], [{ give: '해님 호박', n: 3 }]],
+  5: [[{ on: 'dream', n: 7, t: '꿈나라 다녀오기' }, { on: 'dream', n: 5, q: d => d.k, t: '서로 다른 꿈' }], [{ on: 'forage', n: 20, ok: d => d.night, t: '밤에 채집' }], [{ give: '월하향', n: 3 }]],
+  6: [[{ on: 'cook', n: 30, t: '요리하기' }], [{ on: 'cook', n: 5, ok: d => d.stars >= 2, rs: d => d.stars < 2, t: '태우지 않고 연속 성공 (별 하나면 처음부터)' }], [{ give: '화룡초', n: 3 }]],
+  7: [[{ on: 'forage', n: 30, ok: d => d.z === 'l', t: '물가에서 채집' }], [{ on: 'fish', n: 3, ok: d => d.rare && d.rain, t: '비 오는 날 드문 물고기' }], [{ give: '바다 포도', n: 3 }]],
+  8: [[{ on: 'dex', n: 20, t: '도감 새 칸 채우기' }], [{ on: 'brew', n: 10, ok: d => d.isNew, t: '처음 만드는 물약' }], [{ give: '시간의 꽃', n: 1 }]],
+  9: [[{ on: 'wish', n: 7, q: d => d.day, t: '잭오랜턴에게 소원 빌기 (하루 한 번)' }], [{ on: 'stargaze', n: 2, q: d => d.id, t: '별 보는 밤 함께하기' }], [{ give: '혜성 씨앗', n: 3 }]],
+  10: [[{ on: 'xend', n: 5, ok: d => d.how === 'clear' && d.night, t: '밤에 탐사 끝까지 (전멸 없이)' }], [{ on: 'forage', n: 12, ok: d => d.night && d.z === 'g', t: '밤에 으스스한 곳에서 채집' }], [{ give: '그림자 버섯', n: 5 }]],
+  11: [[{ iris: 1, n: 7, t: '날마다 바뀌는 부탁 들어주기 (날)' }], [{ give: '무지개 콩', n: 5 }], [{ give: '오로라 꽃잎', n: 3 }]],
+};
+const TR_IRIS = [['fish', 3, '낚시 3번'], ['forage', 4, '채집 4번'], ['cook', 2, '요리 2번'], ['brew', 2, '물약 2개 만들기'], ['order', 2, '주문 2개 끝내기'], ['gift', 1, '마을 사람에게 선물 1번'], ['game', 1, '놀이 1판']];
+const trIrisToday = () => TR_IRIS[hash32((uid || me.nick) + 'iris' + todayKey()) % TR_IRIS.length];
+const TRL = {   // 막마다 [꺼내는 말 2줄], [끝냈을 때 1줄] · aw: 각성 컷의 한마디 · af: 각성 뒤 맵에서
+  0: { i: [['....부탁이 있어. 들어 줄래', '물가에서.... 서른 번. 깊은 데 사는 녀석도 셋은 낚아 와. 네 손이 보고 싶어.......'], ['....밤의 물은 달라. 차갑고, 조용해', '밤에만 열 번. 별 비치는 물에서 낚아 봐.......'], ['....마지막이야. 영혼 연꽃 하나', '그리고.... 아무 말 없이, 내 곁에 3분만 서 있어 줘.......']],
+    d: ['....잘했어. 손, 안 떨렸지. 내일 또 얘기해', '....밤이 너를 싫어하지 않네. 다행이다', '....고마워. 이제, 따라와'], aw: '....이제 안 꺼져. 네가 있으니까', af: '....뭘 봐. 똑같은 나야. 조금 더.... 밝아졌을 뿐' },
+  1: { i: [['「Ix」 놀자! 「Xi」 장난치자!', '「Ix」 장난 마법 열 가지! 「Xi」 다 다른 걸로! 똑같은 건 안 쳐 준다!'], ['「Ix」 이번엔 반대야! 「Xi」 네가 당할 차례!', '「Ix」 친구 다섯 명한테 장난 마법 맞기! 「Xi」 서로 다른 친구로!'], ['「Ix」 마지막은 거울 잎! 「Xi」 세 장!', '「Ix」 거울 속의 우리가 「Xi」 진짜 우리가 될 거야.......']],
+    d: ['「Ix」 열 개다! 「Xi」 넌 장난꾸러기 합격!', '「Ix」 다섯 명이나! 「Xi」 넌 친구가 많구나.... 부럽다.......', '「Ix」 다 모였다! 「Xi」 따라와, 보여 줄게!'], aw: '「Ix」 둘이 「Xi」 하나가 됐다! ....그래도 둘 다 너랑 놀 거야', af: '「Ix」 반짝반짝! 「Xi」 우리 멋있지? 멋있다고 해!' },
+  2: { i: [['어이, 손님. 나 사실 대단한 놈인 거 알지? 근데 증명하려면 좀 귀찮은 게 필요해', '물약 서른 개. 그중에 다른 종류로 열 개는 섞어 와. 뭐, 너라면 할 수 있겠지? 아마도.......'], ['다음은 장사야. 세상은 결국 골드거든', '시장에 팔아서 3,000골드. 싸게 넘기지 마라? 내 체면이 걸렸으니까.......'], ['마지막. 황금 버섯 세 개', '반짝이는 걸 좋아하는 게 나쁜 건 아니잖아? 자, 가져와 봐.......']],
+    d: ['오, 진짜 해 왔네. 역시 내 손님이야. 내 덕이지만', '3,000골드라.... 좋아, 너 꽤 쓸 만한데? 칭찬은 여기까지', '됐다, 됐어. 따라와. 최강이 뭔지 보여 줄게'], aw: '봤지? 이게 진짜 나야. 뭐, 원래 최강이었지만', af: '왜 그렇게 봐? 반했냐? ....알아, 나도 내가 멋있어' },
+  3: { i: [['학생, 부탁 하나 들어줄래요? 마음이 따뜻해지는 일이에요', '서로 다른 일곱 명에게 선물을 건네 주세요. 친구든 마을 사람이든 괜찮아요.......'], ['이번엔 정성을 담는 연습이에요', '요리를 열다섯 번 해 주세요. 그중 다섯 번은 별 셋, 완벽하게요.......'], ['마지막 부탁이에요. 수정 장미 세 송이', '피기까지 오래 걸리는 꽃이죠. 기다리는 마음도 선물이에요.......']],
+    d: ['일곱 명의 웃는 얼굴.... 저도 같이 보고 있었어요. 고마워요', '맛있는 냄새가 아직 남아 있어요.... 정말 잘했어요', '다 모였네요. 이제.... 같이 가 줄래요?'], aw: '활짝 피었어요.... 학생이 저를 이렇게 피워 줬어요', af: '조금 눈부시죠? 그래도 저는 여전히 학생 곁의 저예요' },
+  4: { i: [['그대여, 짐이 명하노라. 왕의 곁에 설 자격을 증명하라', '주문 서른 개를 끝내라. 백성의 부탁을 저버리지 않는 자만이 짐의 곁에 설 수 있노라.......'], ['다음은 용맹이다', '탐사 끝의 우두머리를 세 번 쓰러뜨려라. 왕의 기사라면 그 정도는 해내야 하지 않겠는가.......'], ['마지막 공물이다. 해님 호박 세 개를 바쳐라', '해를 닮은 열매만이 짐의 불꽃에 어울리노라.......']],
+    d: ['훌륭하다. 짐의 백성들이 그대를 칭송하겠구나', '세 번의 승리라.... 그대의 검에 해가 비치는구나', '받았노라. 따르라, 그대에게 짐의 진정한 모습을 보이겠노라'], aw: '보아라, 이것이 해의 왕이다. 그리고.... 그대가 깨운 왕이다', af: '눈이 부시느냐? 괜찮다, 짐은 그대에게만은 너그럽노라' },
+  5: { i: [['달이 그러는데.... 너, 꿈을 더 꿔야 한대', '꿈나라에 일곱 번. 서로 다른 꿈은 다섯 가지 이상. 꿈은 길이니까.......'], ['이번엔 밤의 땅을 걸어 봐', '밤에 채집 스무 번. 달빛 아래서만 보이는 게 있거든.......'], ['마지막은 월하향 세 송이', '밤에만 향기를 내는 꽃.... 나를 닮은 꽃이야.......']],
+    d: ['꿈속에서 너를 봤어.... 일곱 번 다', '달이 웃었어.... 네 손에 달빛이 묻었다고', '이제 됐어.... 달이 기다려. 같이 가자'], aw: '차오른 달처럼.... 이제 나는 다 찼어. 너 덕분에', af: '오늘 밤은 내가 달 대신 비춰 줄게.... 괜찮지' },
+  6: { i: [['....야. 부탁 하나만 하자. 딱히 너한테만 하는 건 아니고', '요리 서른 번. 불 다루는 거, 제대로 보고 싶어서 그래. 착각하지 마.......'], ['이번엔 진짜 실력이다', '다섯 번 연속으로 태우지 말고 성공해. 별 하나짜리는 탄 거다! 그럼 처음부터!'], ['마지막. 화룡초 세 개 가져와', '....불꽃을 품은 풀이야. 나한테 딱이지.......']],
+    d: ['흥, 서른 번이나 했냐. ....제법이네', '....한 번도 안 태웠어? 칭찬하는 거 아니다. 진짜 아니야', '....따라와. 보여 줄 게 있어'], aw: '....흥, 이게 나야. 멋있다고? ....알아, 나도', af: '뭘 봐. 똑같은 Ignis야. ....조금 더 뜨거워졌을 뿐이라고' },
+  7: { i: [['음.... 물소리가 그러는데.... 너랑 물가를 더 걷고 싶대', '물가에서 채집 서른 번.... 천천히 해도 돼. 물은 서두르지 않으니까.......'], ['비 오는 날의 물은.... 조금 달라', '비 오는 날 드문 물고기 세 마리.... 빗소리 들으면서 기다려 봐.......'], ['마지막은.... 바다 포도 세 송이', '바다를 한 알씩 담은 열매야.... 나도 언젠가 바다에 닿고 싶어.......']],
+    d: ['음.... 물이 너를 기억하게 됐어. 좋아.......', '음.... 비 냄새 좋다. 너랑 같이 맡으니까 더.......', '음.... 이제 흘러갈 때가 됐어. 같이 가자.......'], aw: '음.... 이제 강이 됐어. 네 쪽으로 흐르는 강.......', af: '물결이 반짝이지.... 너한테 보여 주고 싶었어.......' },
+  8: { i: [['조수! 대발견을 위한 연구 계획이 있어!', '도감에 새로운 칸 스무 개! 물고기든 채집물이든 처음 보는 걸로! 기록은 연구의 시작이야!'], ['다음 실험은 물약이야!', '처음 만드는 물약 열 종! 이미 아는 건 안 쳐 줘. 실험은 늘 새로워야 하거든!'], ['마지막 재료는 시간의 꽃 하나!', '시간을 품은 꽃.... 이걸로 내 연구가 완성돼!']],
+    d: ['스무 칸! 내 연구 노트가 두꺼워졌어, 조수!', '열 종 성공! 조수, 너 연구 재능이 있어!', '모든 재료 확보! 조수, 실험실로.... 아니, 따라와!'], aw: '대발견이야! 나 자신이 연구 결과가 됐어, 조수!', af: '이 고리 봐 봐! 빙글빙글! 기록해 둬, 조수!' },
+  9: { i: [['허허, 아가. 이 늙은 불이 부탁 하나 해도 되겠니', '잭오랜턴에게 소원을 빌어 다오. 하루 한 번씩, 일곱 날 동안. 소원은 쌓일수록 무거워지는 법이란다.......'], ['이번엔 별을 보자꾸나', '스텔라와 함께하는 별 보는 밤에 두 번. 별은 오래된 친구거든.......'], ['마지막이란다. 혜성 씨앗 세 개', '긴 시간을 날아온 씨앗이지.... 나처럼 말이다.......']],
+    d: ['일곱 개의 소원이라.... 허허, 하나쯤은 이루어지겠구나', '별들이 너를 알아보더구나.... 이 늙은이도 기뻤단다', '고맙다, 아가. 이제 따라오렴. 오래 기다린 걸 보여 주마'], aw: '허허.... 천 년을 기다린 보람이 있구나. 너를 만나서', af: '젊어 보이니? 허허, 마음만은 늘 이랬단다' },
+  10: { i: [['....귀찮지만 말해 두지. 넌 아직 어둠을 몰라', '밤에 탐사를 끝까지 다섯 번. 전멸은 안 쳐 준다.......'], ['....다음은 으스스한 곳이다', '밤에 으스스한 곳(묘지 쪽)에서 채집 열두 번. 그림자는 거기서 자라거든.......'], ['....마지막. 그림자 버섯 다섯 개', '빛 없이 자란 버섯이야. ....내 몫이지.......']],
+    d: ['....살아서 돌아왔군. 다섯 번 다. 나쁘지 않아', '....그림자가 널 덜 무서워하게 됐어. 이상한 녀석', '....따라와. 한 번만 보여 준다'], aw: '....이제 네 그림자는 내 거다. 아무도 못 건드려', af: '....뭐. 어둠도 반짝일 수 있다는 거, 이제 알았냐' },
+  11: { i: [['와아, 있잖아! 나 시련 할래! 근데 날마다 기분이 달라!', '일곱 날 동안 날마다 바뀌는 내 부탁 들어주기! 오늘 부탁은 시련 칸에 적어 둘게!'], ['이번엔 무지개 콩 다섯 개! 알록달록한 게 좋아!', '왜냐고? 그냥! 오늘 기분이 무지개거든.......'], ['마지막은 오로라 꽃잎 세 장!', '하늘 색이 다 들어 있는 꽃잎.... 그게 있으면 나도 다 될 수 있을 것 같아.......']],
+    d: ['일곱 날 다 들어줬어! 너 진짜 내 기분 담당이구나!', '알록달록하다! 기분 최고!', '다 됐다! 빨리빨리, 따라와!'], aw: '와아.... 나 지금 모든 색이야! 너랑 있으면 늘 이런 기분!', af: '오늘 기분? 당연히 최고지! 너 때문에!' },
+};
+const TR_ACT = ['1막 · 실력', '2막 · 조건이 붙은 도전', '3막 · 바치기'];
+const trSt = () => me && me.fam && !me.fam.aw ? me.fam.tr : null;
+const trGoals = () => { const t = trSt(); return t ? TRG[me.fam.k][t.a] : []; };
+const trGoalDone = (g, i) => { const t = trSt(); return (t.c[i] || 0) >= g.n; };
+let trQ = [], trCutOn = false, trStill = null;
+function trEv(on, d = {}){
+  const t = trSt(); if (!t || t.fin || t.said < t.a + 1) return; let ch = false;
+  trGoals().forEach((g, i) => {
+    if (g.iris){ const [ev, n] = trIrisToday(), td = todayKey(); if (on !== ev || (t.ir && t.ir.ok === td)) return; if (!t.ir || t.ir.d !== td) t.ir = { d: td, c: 0 }; t.ir.c++; if (t.ir.c >= n){ t.ir.ok = td; t.c[i] = (t.c[i] || 0) + 1; } ch = true; return; }
+    if (g.on !== on || trGoalDone(g, i)) return;
+    if (g.rs && g.rs(d)){ if (t.c[i]){ t.c[i] = 0; ch = true; } return; }
+    if (g.ok && !g.ok(d)) return;
+    if (g.q){ const key = String(g.q(d)), q = t.q[i] = t.q[i] || {}; if (q[key]) return; q[key] = 1; }
+    t.c[i] = Math.min(g.n, (t.c[i] || 0) + (g.add ? g.add(d) : 1)); ch = true;
+  });
+  if (ch){ trCheck(); save(); trChip(); }
+}
+function trCheck(){
+  const t = trSt(); if (!t || t.fin) return; if (!trGoals().every((g, i) => trGoalDone(g, i))) return;
+  t.fin = 1; t.dd = todayKey(); sfx('sparkle'); trQ.push({ s: TRL[me.fam.k].d[t.a], pt: TR_ACT[t.a] + ' 끝' }); if (t.a >= 2) trQ.push({ cut: 1 });
+}
+function trGive(i){
+  const t = trSt(); if (!t) return; const g = trGoals()[i]; if (!g || !g.give || trGoalDone(g, i)) return; const id = TRN(g.give);
+  if ((me.inv[id] || 0) < g.n) return toast(`${g.give}${josaPick(g.give, '이', '가')} ${g.n}개 필요해요`);
+  me.inv[id] -= g.n; t.c[i] = g.n; sfx('pop'); trCheck(); save(); hud(); trChip(); $('#fammod')?.remove(); if (!t.fin) trPanel();
+}
+function trTick(){   // famTick에서 불러요: 시작 · 다음 막 말 꺼내기 · 대사 차례 · 제자리 서 있기 · 각성 컷
+  if (!me || !me.fam || me.fam.aw) { trChip(); return; }
+  const f = me.fam; if (!f.tr && famStage() >= 3) { f.tr = { a: 0, said: 0, fin: 0, c: [], q: [] }; save(); }
+  const t = f.tr; if (!t) return trChip();
+  if (t.fin && t.a < 2 && t.dd !== todayKey()){ t.a++; t.fin = 0; t.c = []; t.q = []; t.st = 0; save(); }
+  if (t.said < t.a + 1 && !t.fin && !trQ.length){ TRL[f.k].i[t.a].forEach((s, j) => trQ.push({ s, pt: j ? '' : `${FAM.N[f.k]}의 시련 · ${TR_ACT[t.a]}` })); trQ.push({ mark: t.a + 1 }); }
+  const g = trGoals(), si = g.findIndex(x => x.still);   // Vael: 말없이 곁에 서 있기 (움직이거나 창을 열면 처음부터)
+  if (si >= 0 && t.said >= t.a + 1 && !t.fin && !trGoalDone(g[si], si)){ const p = World.myPos && World.myPos(), k2 = p ? p.m + ':' + p.x + ':' + p.y : '';
+    if (p && trStill && trStill.k === k2 && !uiBusy()){ t.c[si] = Math.min(g[si].n, (t.c[si] || 0) + Math.round((Date.now() - trStill.t) / 1000)); if (trGoalDone(g[si], si)) { trCheck(); save(); } }
+    else if (t.c[si]) t.c[si] = 0;
+    trStill = { k: k2, t: Date.now() }; }
+  if (trQ.length && !famSayOn && !famOn && !trCutOn && !uiBusy() && !$('#fammod') && World.meAt && World.meAt()){
+    const x = trQ.shift();
+    if (x.mark){ t.said = x.mark; save(); }
+    else if (x.cut) famAwaken();
+    else famSay(x.s, x.pt);
+  }
+  trChip();
+}
+function trChip(){
+  const t = trSt(), show = t && t.said >= t.a + 1 && !trCutOn && !famOn && World.meAt && World.meAt() && !uiBusy();
+  let b = $('#trbtn'); if (!show){ b && b.remove(); return; }
+  if (!b){ b = document.createElement('button'); b.id = 'trbtn'; b.onclick = () => trPanel(); $('#shell').appendChild(b); }
+  const g = trGoals(), k = me.fam.k, pr = t.fin ? '내일 이어져요' : g.map((x, i) => x.give ? (trGoalDone(x, i) ? '바침' : `${x.give} ${Math.min(me.inv[TRN(x.give)] || 0, x.n)}/${x.n}`) : `${(t.c[i] || 0).toLocaleString()}/${x.n.toLocaleString()}`).join(' · ');
+  const h = `<i style="background:${FAM.C[k]}"></i><b>${FAM.N[k]}의 시련 ${t.a + 1}막</b><span>${pr}</span>`; if (b.dataset.h !== h){ b.dataset.h = h; b.innerHTML = h; }
+}
+function trGoalHTML(){
+  const t = trSt(); if (!t) return ''; const k = me.fam.k;
+  if (t.said < t.a + 1) return '';
+  return `<div class="card"><div class="row"><span class="t">${FAM.N[k]}의 시련 · ${TR_ACT[t.a]}</span><span class="m">${t.a + 1} / 3막</span></div>
+    ${t.fin ? `<div class="m" style="margin-top:6px">이 막을 끝냈어요. 다음 막은 내일 이어져요</div>` : trGoals().map((g, i) => { const dn = trGoalDone(g, i);
+      if (g.give){ const have = me.inv[TRN(g.give)] || 0; return `<div class="trg"><div class="row"><span>${ic(TRN(g.give))} ${esc(g.give)} ${g.n}개 바치기</span><span class="m">${dn ? '바침' : `${Math.min(have, g.n)}/${g.n}`}</span></div>${dn ? '' : `<button class="go" data-trg="${i}" ${have >= g.n ? '' : 'disabled'}>바치기</button>`}</div>`; }
+      const c = t.c[i] || 0, ir = g.iris ? trIrisToday() : null, irc = ir && t.ir && t.ir.d === todayKey() ? t.ir.c : 0;
+      return `<div class="trg"><div class="row"><span>${esc(g.t)}</span><span class="m">${c.toLocaleString()} / ${g.n.toLocaleString()}</span></div><div class="bar"><i style="width:${Math.min(100, c / g.n * 100)}%"></i></div>${ir && !dn ? `<div class="m">오늘의 부탁: ${ir[2]} · ${t.ir && t.ir.ok === todayKey() ? '오늘은 들어줬어요' : `${Math.min(irc, ir[1])}/${ir[1]}`}</div>` : ''}</div>`; }).join('')}</div>`;
+}
+function trPanel(){
+  if (!trSt()) return; const v = famModal(`<div class="fh"><b>정령의 시련</b><button class="x" data-fx>✕</button></div>${trGoalHTML()}<div class="btns"><button data-fx>닫기</button></div>`);
+  v.querySelectorAll('[data-trg]').forEach(b => b.onclick = () => trGive(+b.dataset.trg));
+}
+async function famAwaken(){   // 각성 연출: 룬 고리 → 빛기둥 → 번쩍 → 각성한 모습 · 이름 · 한마디 → 맵으로
+  if (trCutOn || !me.fam) return; trCutOn = true; trChip(); const k = me.fam.k, col = FAM.C[k], L = TRL[k];
+  const v = document.createElement('div'); v.id = 'famcut'; v.innerHTML = `<canvas width="320" height="180"></canvas><div class="fname" style="--c:${col}"></div><div class="fline" style="--c:${col}"></div><div class="ffade"></div>`;
+  document.body.appendChild(v); World.hideBubble && World.hideBubble();
+  const cv = v.querySelector('canvas'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+  const BG = new Image(); BG.src = 'art/fam_altar.png?v=1'; const SP = new Image(); SP.src = 'art/wisps.png?v=1'; const SA = new Image(); SA.src = 'art/wisps_awake.png?v=1';
+  const rgb = [1, 3, 5].map(i => parseInt(col.slice(i, i + 2), 16)).join(','), S = { y: 78, sz: 12, ring: 0, dark: 0, pillar: 0, aw: 0, burst: 0, sp: [] }; let live = true;
+  const ease = q => q < .5 ? 2 * q * q : 1 - (-2 * q + 2) ** 2 / 2;
+  const draw = now => { if (!live) return; requestAnimationFrame(draw); g.clearRect(0, 0, 320, 180); if (BG.complete) g.drawImage(BG, 0, 0);
+    g.fillStyle = `rgba(4,2,10,${.65 * S.dark})`; g.fillRect(0, 0, 320, 180); g.globalCompositeOperation = 'lighter';
+    if (S.ring){ const q = now / 900; g.save(); g.translate(160, 140); g.scale(1, .32); for (let r = 0; r < 2; r++){ g.strokeStyle = `rgba(${rgb},${.55 * S.ring})`; g.lineWidth = 2; g.beginPath(); g.arc(0, 0, 44 + r * 10, q * (r ? -1 : 1), q * (r ? -1 : 1) + Math.PI * 1.7); g.stroke(); }
+      for (let i = 0; i < 8; i++){ const a = q + i / 8 * Math.PI * 2; g.fillStyle = `rgba(255,255,255,${S.ring})`; g.fillRect(Math.cos(a) * 49 - 1, Math.sin(a) * 49 - 1, 3, 3); } g.restore(); }
+    if (S.pillar){ const gr = g.createLinearGradient(0, 0, 0, 180); gr.addColorStop(0, `rgba(${rgb},0)`); gr.addColorStop(.6, `rgba(${rgb},${.35 * S.pillar})`); gr.addColorStop(1, `rgba(${rgb},0)`); g.fillStyle = gr; g.fillRect(160 - 20 * S.pillar, 0, 40 * S.pillar, 180); }
+    const ey = S.y + Math.sin(now / 380) * 1.2, rad = S.sz * 2.6, rg = g.createRadialGradient(160, ey, 0, 160, ey, rad); rg.addColorStop(0, `rgba(${rgb},.6)`); rg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = rg; g.beginPath(); g.arc(160, ey, rad, 0, 7); g.fill();
+    if (Math.random() < .7 * (S.ring + S.pillar)) S.sp.push({ x: 160 + (Math.random() - .5) * 60, y: 150, vy: -.04 - Math.random() * .05, t: now, life: 1400 });
+    S.sp = S.sp.filter(p => now - p.t < p.life); S.sp.forEach(p => { const dt = now - p.t; g.globalAlpha = 1 - dt / p.life; g.fillStyle = col; g.fillRect(Math.round(p.x), Math.round(p.y + p.vy * dt), 1, 1); }); g.globalAlpha = 1;
+    if (S.burst){ const q = (now - S.burst) / 1000; if (q < 1){ g.strokeStyle = `rgba(255,255,255,${1 - q})`; g.lineWidth = 3 * (1 - q); g.beginPath(); g.arc(160, ey, 8 + q * 110, 0, 7); g.stroke(); g.fillStyle = `rgba(255,255,255,${.45 * (1 - q)})`; g.fillRect(0, 0, 320, 180); } }
+    g.globalCompositeOperation = 'source-over';
+    const img = S.aw ? SA : SP; if (img.complete){ const fi = Math.floor(now / 110) % 8, sz = Math.round(S.sz * 1.9); g.drawImage(img, fi * 64, k * 64, 64, 64, Math.round(160 - sz / 2), Math.round(ey - sz * .62), sz, sz); } };
+  requestAnimationFrame(draw);
+  const fade = v.querySelector('.ffade'); fade.style.opacity = 1; requestAnimationFrame(() => v.classList.add('on')); await famSleep(900); fade.style.opacity = 0; await famSleep(1000);
+  const anim = (ms, fn) => new Promise(res => { const t0 = performance.now(); const st = () => { const q = Math.min(1, (performance.now() - t0) / ms); fn(ease(q), q); if (q < 1) requestAnimationFrame(st); else res(); }; st(); });
+  await anim(1500, e => { S.dark = e; S.ring = e; });
+  await anim(2000, e => { S.y = 78 - 16 * e; S.pillar = e; S.sz = 12 + 6 * e; });
+  await anim(1600, (e, q) => { S.sz = 18 + 6 * e + Math.sin(q * 30) * 1.5; });
+  S.burst = performance.now(); S.aw = 1; S.sz = 30; sfx('sparkle'); await famSleep(1100); await anim(900, e => { S.pillar = 1 - e * .6; });
+  const nm = v.querySelector('.fname'), fl = v.querySelector('.fline');
+  nm.innerHTML = FAM.N[k].split('').map(c => `<span>${c}</span>`).join(''); for (const sp of nm.children){ await famSleep(320); sp.classList.add('on'); }
+  await famSleep(1200); nm.style.opacity = .35;
+  fl.innerHTML = [...L.aw].map(c => `<span>${c === ' ' ? ' ' : esc(c)}</span>`).join(''); for (const sp of fl.children){ await famSleep(sp.textContent === '.' ? 150 : 105); sp.classList.add('on'); }
+  await famSleep(2600);
+  me.fam.aw = now2(); save(); World.setMyFam(k + 12); famTick();
+  fade.style.opacity = 1; await famSleep(1000); live = false; v.remove(); trCutOn = false; trChip();
+  await famSleep(1800); famSay(L.af);
 }
 function babyListen(){
   if (solo || !F || !db || babyOffs.length) return;
@@ -8267,7 +8417,7 @@ function prankSync(){
   Object.entries(pkLive || {}).forEach(([u, v]) => { if (v && PRANK_KO[v.k] && v.until > t) m[u === uid ? 'me' : u] = v.k; });
   World.setPranks && World.setPranks(m);
   const mine = pkLive && pkLive[uid], on = mine && PRANK_KO[mine.k] && mine.until > t;
-  if (on && mine.at > pkSeen && mine.by !== uid){ if (pkSeen) { toast(`${mine.n || '누군가'}${josaPick(mine.n || '누군가', '이', '가')} 나에게 『${PRANK_KO[mine.k]}』${josaPick(PRANK_KO[mine.k], '을', '를')} 걸었어요!`); sfx('magic'); } }
+  if (on && mine.at > pkSeen && mine.by !== uid){ if (pkSeen) { trEv('pranked', { by: mine.by }); toast(`${mine.n || '누군가'}${josaPick(mine.n || '누군가', '이', '가')} 나에게 『${PRANK_KO[mine.k]}』${josaPick(PRANK_KO[mine.k], '을', '를')} 걸었어요!`); sfx('magic'); } }
   if (on) pkSeen = Math.max(pkSeen, mine.at); else if (!pkSeen) pkSeen = 1;
   let c = $('#prme');
   if (!on || prankSync.hid === mine.at){ if (c) c.remove(); return; }   // 처음 한 번 뜨고, 닫으면 그 마법이 끝날 때까지 다시 안 떠요
@@ -8350,7 +8500,7 @@ function prankPad(o){
     if (pkUsed(k)){ tip(`『${PRANK_KO[k]}』${josaPick(PRANK_KO[k], '은', '는')} 오늘 이미 썼어요. 자정에 다시 쓸 수 있어요`); path = []; await sleep(500); lock = false; draw(); return; }
     const to = o.self ? uid : o.to;
     if (!o.self && (!o.to || !onlineList[o.to])){ tip('친구가 떠났어요.......'); lock = false; path = []; draw(); return; }
-    const t = now2(); p.u[k] = todayKey(); save();
+    const t = now2(); p.u[k] = todayKey(); if (!o.self) trEv('prank', { k }); save();
     GDB.set('prank/' + to, { k, by: uid, n: me.nick, at: t, until: t + PRANK_MIN * 6e4 }).catch(() => {});
     if (solo){ pkLive = { ...pkLive, [to]: { k, by: uid, n: me.nick, at: t, until: t + PRANK_MIN * 6e4 } }; prankSync(); }
     sfx('magic'); close(); toast(`${o.self ? '나' : tgt.nick}에게 『${PRANK_KO[k]}』${josaPick(PRANK_KO[k], '을', '를')} 걸었어요!`);
@@ -8390,7 +8540,7 @@ function adminFamHTML(){
     <div class="abchips"><span>${c.open ? '진행 중' : '닫힘'}</span><span>배정 <b>${ids.length - un.length}</b>/${ids.length}</span><span>만남 <b>${ids.filter(met).length}</b></span></div>
     <div class="frow" style="margin:8px 0;gap:6px;flex-wrap:wrap"><button class="btn sm" data-fma="fill" ${un.length ? '' : 'disabled'}>배정 안 된 ${un.length}명 고르게 채우기</button>
       <select data-fmf><option value="">모든 학생</option><option value="none" ${famFilter === 'none' ? 'selected' : ''}>아직 배정 안 됨 (${un.length})</option>${FAM_NAMES.map((n, k) => `<option value="${k}" ${famFilter === String(k) ? 'selected' : ''}>${n} (${cnt[k]})</option>`).join('')}</select></div>
-    <div class="abtable">${shown.map(id => { const m = met(id); return `<div class="abrow"><span class="abn">${esc(AD.players[id].nick)}</span><select data-fmu="${id}" ${m ? 'disabled' : ''}><option value="">-</option>${FAM_NAMES.map((n, k) => `<option value="${k}" ${(m ? m.k : pk[id]) === k ? 'selected' : ''}>${n}</option>`).join('')}</select><span class="abs">${m ? `<i style="width:8px;height:8px;border-radius:4px;background:${FAM_COL[m.k] || '#999'}"></i>만남` : pk[id] !== undefined ? `<i style="width:8px;height:8px;border-radius:4px;background:${FAM_COL[pk[id]]}"></i><span class="dim">아직 못 만남</span>` : ''}</span></div>`; }).join('') || '<div class="s">해당하는 학생이 없어요</div>'}</div>${c.open && un.length ? `<div class="s" style="margin-top:6px">배정 안 된 ${un.length}명은 불씨를 만나지 못해요</div>` : ''}</div>`;
+    <div class="abtable">${shown.map(id => { const m = met(id); return `<div class="abrow"><span class="abn">${esc(AD.players[id].nick)}</span><select data-fmu="${id}" ${m ? 'disabled' : ''}><option value="">-</option>${FAM_NAMES.map((n, k) => `<option value="${k}" ${(m ? m.k : pk[id]) === k ? 'selected' : ''}>${n}</option>`).join('')}</select><span class="abs">${m ? `<i style="width:8px;height:8px;border-radius:4px;background:${FAM_COL[m.k] || '#999'}"></i>${m.aw ? '각성' : m.tr ? `시련 ${(m.tr.a || 0) + 1}막${m.tr.fin ? ' 끝' : ''}` : `만남 · ${Math.min(400, m.pts || 0)}점`}` : pk[id] !== undefined ? `<i style="width:8px;height:8px;border-radius:4px;background:${FAM_COL[pk[id]]}"></i><span class="dim">아직 못 만남</span>` : ''}</span></div>`; }).join('') || '<div class="s">해당하는 학생이 없어요</div>'}</div>${c.open && un.length ? `<div class="s" style="margin-top:6px">배정 안 된 ${un.length}명은 불씨를 만나지 못해요</div>` : ''}</div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-fma]'); if (!b || !F || !db) return; const a = b.dataset.fma;
   if (a === 'open'){ if (confirm('사역마 이벤트를 시작할까요? 정령이 배정된 학생 중 아직 못 만난 학생에게 하얀 불씨가 나타나요')) F.set(F.ref(db, 'fam/ctl'), { open: true, id: now2() }); }
@@ -8957,7 +9107,7 @@ function sgSync(){
   if (sgAdmin() && AD.tab === 'event' && !adminTyping()) adminRender();
 }
 function sgGrant(){
-  const C = sgConst(sgCtl.c); if (!C) return; sgGot = sgCtl.id; const b = C.buff, until = now2() + (sgCtl.bm || sgCfg().buffH * 3600e3);
+  const C = sgConst(sgCtl.c); if (!C) return; sgGot = sgCtl.id; trEv('stargaze', { id: sgCtl.id }); const b = C.buff, until = now2() + (sgCtl.bm || sgCfg().buffH * 3600e3);
   me.buffs = me.buffs || {}; Object.keys(me.buffs).forEach(k => { if (k.startsWith('buff_')) delete me.buffs[k]; });   // 같은 종류의 별빛은 겹치지 않고 새것으로 바뀌어요
   me.buffs[b.id] = until; me.sgd = sgCtl.id; me.sgdex = me.sgdex || {}; me.sgdex[C.id] = now2(); save(); hud(); syncBuffs(); sfx('heart');
   setTimeout(() => toast(`「${b.name}」 별빛이 깃들었어요! ${b.desc}`), 800);
