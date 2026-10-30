@@ -58,23 +58,23 @@ TEAL = ramp('#02161A', '#0A5258', '#129290', '#30D0C4', '#A0FFF0', '#FFFFFF')
 ORNG = ramp('#200C02', '#7A3206', '#C8600C', '#F49420', '#FFD080', '#FFFFF0')
 NAVY = ramp('#020418', '#121C6A', '#2A3AAE', '#5468E0', '#A8B8FF', '#FFFFFF')
 VOID = ramp('#000000', '#0A0414', '#1A0C30', '#2C1650', '#120822', '#04020A')
-def w1():   # 청운 · 길게 휘감겨 오르는 푸른 혼불
+def w1():   # Vael · 길게 휘감겨 오르는 푸른 혼불
     f = flame(32, 46, 42, 12, 1, 1.2, 4, -6, 1.2); return sparks(render(f, BLUE, '#3A7CFF'), 101, 9, '#C8E8FF', 32, 4, 30)
-def w2():   # 자운 · 나선으로 꼬이며 오르는 보라 쌍불
+def w2():   # Ixi · 나선으로 꼬이며 오르는 보라 쌍불
     a = flame(32, 46, 42, 8, 2, .8, 0, 9, 1.6); b = flame(32, 46, 38, 8, 3, .8, 0, -9, 1.6)
     return sparks(render(np.maximum(a, b), PURP, '#8A50FF'), 102, 10, '#E8D4FF', 32, 4, 34)
-def w3():   # 도롱 · 흩어져 흐르는 초록 불덩이 무리
+def w3():   # Puck · 흩어져 흐르는 초록 불덩이 무리
     f = np.maximum.reduce([flame(30, 44, 26, 9, 4, 1.4, 2), flame(16, 32, 14, 5, 5, 1.2, -2) * .9, flame(46, 26, 14, 5, 6, 1.2, 3) * .9, flame(38, 12, 8, 3, 7, 1, 1) * .8, flame(20, 14, 7, 3, 8, 1) * .7])
     return sparks(render(f, GREEN, '#30C860'), 103, 12, '#D8FFD0', 32, 6, 48, 30, 2)
-def w4():   # 연화 · 꽃잎처럼 벌어지는 분홍 불꽃, 가운데서 솟는 심지
+def w4():   # Lotis · 꽃잎처럼 벌어지는 분홍 불꽃, 가운데서 솟는 심지
     f = np.maximum.reduce([flame(32 + dx, 48, 22 - abs(dx) * .3, 5, 10 + i, .7, dx * 1.6, 0, 1, 1.1) * .85 for i, dx in enumerate((-10, -5, 5, 10))] + [flame(32, 46, 40, 8, 9, .9, 0, 2)])
     return sparks(render(f, PINK, '#FF5AB0'), 104, 10, '#FFE0F0', 32, 2, 30)
-def w5():   # 휘황 · 햇무리처럼 빛살을 뿜는 금빛 불
+def w5():   # Sol · 햇무리처럼 빛살을 뿜는 금빛 불
     ang = np.arctan2(YY - 32, XX - 32); r = np.hypot(XX - 32, YY - 32)
     rays = np.clip((np.cos(ang * 8 + FRAC * 2 * math.pi / 8) * .5 + .5) ** 10 * (1 - r / 26), 0, 1) * .35
     f = np.maximum.reduce([flame(32, 42, 36, 11, 20, 1, 0, 2), orb(32, 36, 12) * .8, rays])
     return sparks(render(f, GOLD, '#FFC030', 1.3), 105, 8, '#FFF6D0', 32, 2, 50, 36, 1)
-def w6():   # 월영 · 초승달로 휘어 흐르는 차가운 은빛 불, 아래로 흩어지는 안개
+def w6():   # Lune · 초승달로 휘어 흐르는 차가운 은빛 불, 아래로 흩어지는 안개
     ang = np.arctan2(YY - 32, XX - 32); r = np.hypot(XX - 32, YY - 32)
     cres = np.clip(1 - np.abs(r - 15) / (7 * np.clip(np.cos((ang + 2.4) * .8), 0, 1) + .01), 0, 1) * (np.cos((ang + 2.4) * .8) > 0)
     tng = np.clip(1 - np.abs(r - 21) / 5, 0, 1) * np.clip(np.sin(ang * 9 + fbm(33) * 3) * .6, 0, 1) * (cres > 0).astype(float)
@@ -82,10 +82,10 @@ def w6():   # 월영 · 초승달로 휘어 흐르는 차가운 은빛 불, 아�
     f = np.clip(cres * 1.2 + fbm(30) * .25 * (cres > 0), 0, 1)
     flick = np.clip(1 - np.abs(r - 20) / 4, 0, 1) * (np.cos((ang + 2.4) * .8) > .3) * np.clip(fbm(34) * 1.5, 0, 1)
     return sparks(render(np.maximum(f, flick), SILV, '#B0C8FF'), 106, 12, '#FFFFFF', 30, 6, 56, 34, 1)
-def w7():   # 단화 · 사납게 갈라지며 치솟는 붉은 불길과 불티 기둥
+def w7():   # Ignis · 사납게 갈라지며 치솟는 붉은 불길과 불티 기둥
     f = np.maximum.reduce([flame(32, 48, 44, 13, 40, 1.8, 0, 0, 1, 1.1, .8), flame(22, 48, 28, 7, 41, 1.5, -6), flame(42, 48, 30, 7, 42, 1.5, 6)])
     return sparks(render(f, RED, '#FF4818'), 107, 22, '#FFC070', 32, 0, 30, 26, 3)
-def w8():   # 수련 · 물결 띠가 휘감아 도는 청록 불
+def w8():   # Rill · 물결 띠가 휘감아 도는 청록 불
     core = flame(32, 46, 36, 9, 50, .8, 0, 3)
     band = np.zeros((N, N))
     for ph in (0, math.pi):
@@ -93,13 +93,13 @@ def w8():   # 수련 · 물결 띠가 휘감아 도는 청록 불
         yb = 40 + 7 * np.sin((XX - 32) / 7 + ph) - (XX - 12) * .5
         band = np.maximum(band, np.clip(1 - np.abs(YY - yb) / 2.6, 0, 1) * np.clip(1 - np.abs(XX - 32) / 22, 0, 1) * 1.1)
     return sparks(render(np.maximum(core, band), TEAL, '#20D0C0'), 108, 10, '#E0FFFA', 32, 4, 56, 30, 1)
-def w9():   # 윤화 · 고리 모양으로 돌며 타는 주황 불, 가운데는 빈 하늘
+def w9():   # Orbi · 고리 모양으로 돌며 타는 주황 불, 가운데는 빈 하늘
     ang = np.arctan2(YY - 34, XX - 32); r = np.hypot(XX - 32, YY - 34)
     rr = np.clip(1 - np.abs(r - 13) / 4, 0, 1)
     tongues = np.clip(1 - np.abs(r - 13 - 4) / 6, 0, 1) * np.clip(np.sin(ang * 7 + fbm(60) * 2 + FRAC * 2 * math.pi) * .5 + .3, 0, 1) * (r > 13)
     f = np.clip(np.maximum(rr, tongues) + fbm(61) * .2 * (rr > 0), 0, 1)
     return sparks(render(f, ORNG, '#FF8020'), 109, 10, '#FFE8B0', 32, 6, 56, 34, 2)
-def w10():   # 성휘 · 성운처럼 일렁이는 남색 불, 안에 별빛이 반짝
+def w10():   # Eon · 성운처럼 일렁이는 남색 불, 안에 별빛이 반짝
     f = np.maximum(flame(32, 46, 42, 13, 70, 1.4, 4, 3, 1.3, 1.1, .4), orb(32, 38, 9) * .5); img = render(np.minimum(f, .78) * (.85 + fbm(71) * .3), NAVY, '#5068FF')
     r = np.random.RandomState(72)
     for _ in range(14):
@@ -108,18 +108,18 @@ def w10():   # 성휘 · 성운처럼 일렁이는 남색 불, 안에 별빛이 
         if f[y, x] > .4 and r.rand() < .4:
             for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)): img[y + dy, x + dx, :3] = hx('#A8B8FF'); img[y + dy, x + dx, 3] = 230
     return sparks(img, 110, 8, '#FFFFFF', 32, 2, 56, 40, 1)
-def w11():   # 묵영 · 빛을 삼키는 칠흑 불, 보랏빛 테두리와 흩어지는 그림자 연기
+def w11():   # Nyx · 빛을 삼키는 칠흑 불, 보랏빛 테두리와 흩어지는 그림자 연기
     f = np.maximum.reduce([flame(32, 46, 42, 12, 80, 1.6, 2, 3), flame(20, 46, 24, 6, 81, 1.4, -8), flame(44, 46, 26, 6, 82, 1.4, 8)])
     img = render(f, VOID, '#7A40E0', 1.2); e = (f > .02) & (f < .2); img[e, :3] = hx('#9A60F0'); img[e, 3] = 200
     return sparks(img, 111, 12, '#5A30A0', 32, 0, 30, 30, 3)
-def w12():   # 채운 · 오로라처럼 색이 흐르는 무지갯불
+def w12():   # Iris · 오로라처럼 색이 흐르는 무지갯불
     f = flame(32, 46, 42, 12, 90, 1.3, -3, 4); img = render(f, SILV, '#FFFFFF')
     cols = [hx(c) for c in ('#FF5A7A', '#FFA040', '#FFE060', '#60E080', '#50B0FF', '#A070FF')]
     h = ((YY - XX * .5 + fbm(91) * 10) / 5).astype(int) % 6; m = (img[..., 3] > 0) & (f < .75)
     for k in range(6): s = m & (h == k); img[s, :3] = img[s, :3] * .35 + cols[k] * .65
     return sparks(img, 112, 10, '#FFFFFF', 32, 2, 34)
-WS = [('푸른 혼불', '청운', w1), ('보라 나선불', '자운', w2), ('초록 도깨비불', '도롱', w3), ('분홍 연꽃불', '연화', w4), ('금빛 햇무리불', '휘황', w5), ('은빛 달불', '월영', w6),
-      ('붉은 불기둥', '단화', w7), ('청록 물결불', '수련', w8), ('주황 고리불', '윤화', w9), ('남색 성운불', '성휘', w10), ('칠흑 그림자불', '묵영', w11), ('오로라 무지갯불', '채운', w12)]
+WS = [('푸른 혼불', 'Vael', w1), ('보라 나선불', 'Ixi', w2), ('초록 도깨비불', 'Puck', w3), ('분홍 연꽃불', 'Lotis', w4), ('금빛 햇무리불', 'Sol', w5), ('은빛 달불', 'Lune', w6),
+      ('붉은 불기둥', 'Ignis', w7), ('청록 물결불', 'Rill', w8), ('주황 고리불', 'Orbi', w9), ('남색 성운불', 'Eon', w10), ('칠흑 그림자불', 'Nyx', w11), ('오로라 무지갯불', 'Iris', w12)]
 def frames(F=8):   # 12종 × F칸 애니메이션 (세로 = 정령, 가로 = 칸)
     global FRAC; rows = []
     for _, _, f in WS:

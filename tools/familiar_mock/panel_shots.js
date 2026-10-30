@@ -6,7 +6,7 @@ const spec = fs.readFileSync(path.join(__dirname, '../../tests/ui.spec.js'), 'ut
 const seed = eval('(' + spec.match(/const seed = (\{.*\});\n/)[1] + ')');
 const INJ = fs.readFileSync(path.join(__dirname, 'panel_inject.js'), 'utf8');
 const LN = id => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'lines', id + '.json'), 'utf8')); } catch (e) { return null; } };
-const cu = LN('chungun'), dh = LN('danhwa');
+const cu = LN('vael'), dh = LN('ignis');
 const SHOTS = [
   { f: 'p1_main', cfg: { view: 'main', i: 0, stage: 1, pts: 214, gifts: 2, line: cu ? cu.hint[0].replace('{item}', '달빛 이슬') : '....' } },
   { f: 'p2_gift', cfg: { view: 'gift', i: 0, stage: 1, pts: 239, gifts: 3, giftLine: cu ? cu.gift.want[0] : '....' } },

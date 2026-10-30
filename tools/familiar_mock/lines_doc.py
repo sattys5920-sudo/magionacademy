@@ -2,7 +2,7 @@
 import json, os, base64, io, html
 from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
-IDS = ['chungun','jaun','dorong','yeonhwa','hwihwang','wolyeong','danhwa','suryeon','yunhwa','seonghwi','mukyeong','chaeun']
+IDS = ['vael','ixi','puck','lotis','sol','lune','ignis','rill','orbi','eon','nyx','iris']
 SUB = ['푸른 혼불','보라 나선불','초록 도깨비불','분홍 연꽃불','금빛 햇무리불','은빛 달불','붉은 불기둥','청록 물결불','주황 고리불','남색 성운불','칠흑 그림자불','오로라 무지갯불']
 MOOD = ['과묵','쌍둥이 장난꾸러기','능글맞은 도깨비','다정한 언니','오만한 고대의 왕','몽환적인 예언자','츤데레 다혈질','느긋한 잠꾸러기','호기심 많은 꼬마 학자','늙은 별의 현자','냉소적인 그림자','변덕쟁이 하이텐션']
 COL = ['#5A8CFF','#A070FF','#40D070','#FF6AB8','#FFC838','#C8D8FF','#FF5A28','#30D8C8','#FF9030','#7088FF','#9A60F0','#E0C8FF']
