@@ -19,38 +19,42 @@ e = html.escape
 tabs, secs = [], []
 for k, sid in enumerate(IDS):
     d = json.load(open(os.path.join(HERE, 'lines', sid + '.json')))
-    tabs.append(f'<button data-t="{k}" style="--c:{COL[k]}"><img src="{img(k)}">{e(d["name"])}</button>')
-    rows = ''.join(f'<tr><th>{lab}</th>' + ''.join('<td>' + ('<br>'.join(e(x) for x in d[key][s]) if key == 'idle' else e(d[key][s])) + '</td>' for s in range(5)) + '</tr>' for key, lab in SIT)
-    gift = ''.join(f'<tr><th>{lab}</th>' + ''.join(f'<td>{e(d["gift"][key][t])}</td>' for t in range(3)) + '</tr>' for key, lab in GT)
-    hint = '<tr><th>원하는 것 암시</th>' + ''.join(f'<td>{e(d["hint"][t]).replace("{item}", "<mark>{재료}</mark>")}</td>' for t in range(3)) + '</tr>'
-    lv = ''.join(f'<tr><th>→ {STN[s + 1]}</th><td>{e(d["levelup"][s])}</td></tr>' for s in range(4))
-    secs.append(f'''<section data-s="{k}" style="--c:{COL[k]}"><div class="hd"><img src="{img(k)}"><div><h2>{e(d["name"])} <small>{SUB[k]}</small></h2><p class="mood">{MOOD[k]}</p>
+    tabs.append(f'<a href="#s{k}" style="--c:{COL[k]}"><img src="{img(k)}">{e(d["name"])}</a>')
+    def blk(lab, items):   # 상황 하나: 단계별 줄을 세로로
+        return f'<div class="bk"><h4>{lab}</h4>' + ''.join(f'<p><span class="st">{n}</span><span class="tx">{t}</span></p>' for n, t in items) + '</div>'
+    sit = ''.join(blk(lab, [(STN[s], '<br>'.join(e(x) for x in d[key][s]) if key == 'idle' else e(d[key][s])) for s in range(5)]) for key, lab in SIT)
+    hint = blk('원하는 것 암시', [(TIER[t], e(d['hint'][t]).replace('{item}', '<mark>{재료}</mark>')) for t in range(3)])
+    gift = ''.join(blk('선물: ' + lab, [(TIER[t], e(d['gift'][key][t])) for t in range(3)]) for key, lab in GT)
+    lv = blk('단계가 오를 때', [('→ ' + STN[s + 1], e(d['levelup'][s])) for s in range(4)])
+    secs.append(f'''<section id="s{k}" style="--c:{COL[k]}"><div class="hd"><img src="{img(k)}"><div><h2>{e(d["name"])} <small>{SUB[k]}</small></h2><p class="mood">{MOOD[k]}</p>
 <p><b>좋아함</b> {LIKE[k]}</p><p><b>싫어함</b> {HATE[k]}</p></div></div>
-<h3>상황별 대사 (친밀도 단계별)</h3><div class="sc"><table class="m"><tr><th></th>{''.join(f'<th>{n}</th>' for n in STN)}</tr>{rows}</table></div>
-<h3>선물 반응 · 암시</h3><div class="sc"><table class="m g"><tr><th></th>{''.join(f'<th>{n}</th>' for n in TIER)}</tr>{hint}{gift}</table></div>
-<h3>단계가 오를 때</h3><table class="m l">{lv}</table></section>''')
+<h3>상황별 대사</h3><div class="gr">{sit}</div><h3>선물 · 암시</h3><div class="gr">{hint}{gift}{lv}</div><a class="top" href="#top">▲ 맨 위로</a></section>''')
 doc = f'''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>사역마 대사집</title>
 <style>
-:root{{--bg:#120C1E;--pn:#1E1530;--ln:#3A2C58;--tx:#EDE6FA;--mu:#A898C8}}
-body{{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 Pretendard,system-ui,sans-serif}}
-header{{padding:20px 16px 8px;max-width:1100px;margin:auto}} h1{{margin:0 0 6px;font-size:22px;color:#FFE9A0}} header p{{margin:4px 0;color:var(--mu);font-size:14px}}
-.rule{{max-width:1100px;margin:8px auto;padding:0 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px}}
-.rule div{{background:var(--pn);border:1px solid var(--ln);border-radius:10px;padding:10px 12px;font-size:14px}} .rule b{{color:#FFE9A0}}
-nav{{position:sticky;top:0;z-index:2;background:var(--bg);padding:8px 16px;display:flex;gap:6px;overflow-x:auto;max-width:1100px;margin:auto}}
-nav button{{flex:none;display:flex;align-items:center;gap:4px;padding:4px 10px 4px 4px;border-radius:20px;border:1px solid var(--ln);background:var(--pn);color:var(--tx);font:inherit;cursor:pointer}}
-nav button img{{width:28px;height:28px;image-rendering:pixelated}} nav button.on{{border-color:var(--c);box-shadow:0 0 8px var(--c)}}
-section{{display:none;max-width:1100px;margin:auto;padding:8px 16px 40px}} section.on{{display:block}}
-.hd{{display:flex;gap:14px;align-items:center;background:var(--pn);border:1px solid var(--ln);border-radius:14px;padding:12px}}
-.hd img{{width:112px;height:112px;image-rendering:pixelated;flex:none;filter:drop-shadow(0 0 10px var(--c))}}
-h2{{margin:0;color:var(--c)}} h2 small{{font-size:14px;color:var(--mu);font-weight:400}} .mood{{margin:2px 0 6px;font-weight:700}} .hd p{{margin:2px 0;font-size:14px}} .hd b{{color:var(--mu);margin-right:6px}}
-h3{{font-size:16px;margin:20px 0 8px;color:#FFE9A0}}
-.sc{{overflow-x:auto}} table.m{{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}} table.g{{min-width:560px}} table.l{{min-width:0}}
-.m th,.m td{{border:1px solid var(--ln);padding:8px;vertical-align:top;text-align:left}} .m tr:first-child th{{background:#2A1E40;color:var(--c)}} .m th{{background:#1A1228;color:var(--mu);font-weight:600;white-space:nowrap}}
-mark{{background:none;color:var(--c);font-weight:700}}
+:root{{--bg:#120C1E;--pn:#1E1530;--ln:#3A2C58;--tx:#F2ECFC;--mu:#B8AAD6}}
+*{{box-sizing:border-box}} html{{scroll-behavior:smooth}}
+body{{margin:0;background:var(--bg);color:var(--tx);font:16px/1.65 Pretendard,system-ui,sans-serif;word-break:keep-all}}
+header,.rule,nav,section{{max-width:900px;margin:0 auto;padding-left:16px;padding-right:16px}}
+header{{padding-top:20px}} h1{{margin:0 0 6px;font-size:22px;color:#FFE9A0}} header p{{margin:4px 0;color:var(--mu);font-size:15px}}
+.rule{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-top:10px}}
+.rule div{{background:var(--pn);border:1px solid var(--ln);border-radius:10px;padding:10px 12px;font-size:15px}} .rule b{{color:#FFE9A0}}
+nav{{display:flex;flex-wrap:wrap;gap:6px;padding-top:14px;padding-bottom:6px}}
+nav a{{display:flex;align-items:center;gap:4px;padding:4px 12px 4px 4px;border-radius:20px;border:1px solid var(--c);background:var(--pn);color:var(--tx);text-decoration:none;font-weight:700}}
+nav a img{{width:30px;height:30px;image-rendering:pixelated}}
+section{{padding-top:24px;padding-bottom:16px;border-top:1px solid var(--ln);margin-top:18px}}
+.hd{{display:flex;gap:14px;align-items:center;background:var(--pn);border:1px solid var(--c);border-radius:14px;padding:12px}}
+.hd img{{width:96px;height:96px;image-rendering:pixelated;flex:none}}
+h2{{margin:0;color:var(--c);font-size:24px}} h2 small{{font-size:14px;color:var(--mu);font-weight:400}} .mood{{margin:2px 0 6px;font-weight:700}} .hd p{{margin:2px 0;font-size:15px}} .hd b{{color:var(--mu);margin-right:6px}}
+h3{{font-size:18px;margin:22px 0 10px;color:#FFE9A0}}
+.gr{{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}}
+.bk{{background:var(--pn);border:1px solid var(--ln);border-radius:12px;padding:10px 12px}}
+.bk h4{{margin:0 0 6px;font-size:15px;color:var(--c)}}
+.bk p{{display:flex;gap:10px;margin:0;padding:6px 0;border-top:1px solid #2C2244}} .bk p:first-of-type{{border-top:0}}
+.st{{flex:none;width:72px;font-size:13px;color:var(--mu);padding-top:2px}} .tx{{flex:1}}
+mark{{background:none;color:var(--c);font-weight:700}} .top{{display:block;margin-top:14px;color:var(--mu);font-size:14px;text-decoration:none}}
 </style></head><body>
-<header><h1>사역마 대사집 · 정령불 12종</h1><p>정령이 혼자 말을 걸어요(플레이어는 대답하지 않아요). 친밀도가 오를수록 말투가 풀리지만 성격은 그대로예요. 모두 {12 * 59}줄.</p></header>
+<header id="top"><h1>사역마 대사집 · 정령불 12종</h1><p>정령이 혼자 말을 걸어요(플레이어는 대답하지 않아요). 친밀도가 오를수록 말투가 풀리지만 성격은 그대로예요. 모두 {12 * 59}줄.</p></header>
 <div class="rule"><div><b>친밀도</b><br>경계 0 → 관심 120 → 익숙 400 → 신뢰 900 → 맹약 1800</div><div><b>선물(하루 5번)</b><br>오늘 원하던 것 +25 · 좋아하는 것 +8 · 그 밖 +1 · 싫어하는 것 −10</div><div><b>공물</b><br>익숙: 귀한 것 3개 · 신뢰: 꿈 조각 5 + 별가루 5 · 맹약: 정령마다 아주 귀한 재료 1개</div><div><b>원하는 것</b><br>좋아하는 것 6개 중 날마다 하나. 화면에 표시하지 않고 대사로만 암시해요</div></div>
 <nav>{''.join(tabs)}</nav>{''.join(secs)}
-<script>const B=[...document.querySelectorAll('nav button')],S=[...document.querySelectorAll('section')];function go(k){{B.forEach((b,i)=>b.classList.toggle('on',i==k));S.forEach((s,i)=>s.classList.toggle('on',i==k));}}B.forEach(b=>b.onclick=()=>go(+b.dataset.t));go(0);</script>
 </body></html>'''
 open(os.path.join(HERE, 'lines.html'), 'w').write(doc); print('ok')
