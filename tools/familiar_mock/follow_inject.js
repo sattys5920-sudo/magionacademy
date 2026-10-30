@@ -30,14 +30,14 @@ function frame(now){
   let rg = g.createRadialGradient(gx, gy, 0, gx, gy, 14 * K); rg.addColorStop(0, W.col + '60'); rg.addColorStop(1, W.col + '00');
   g.save(); g.translate(gx, gy); g.scale(1, .4); g.translate(-gx, -gy); g.fillStyle = rg; g.beginPath(); g.arc(gx, gy, 14 * K, 0, 7); g.fill(); g.restore();
   // 몸 둘레 빛
-  const [sx, sy] = S(wx, wy); rg = g.createRadialGradient(sx, sy, 0, sx, sy, 13 * K * pulse); rg.addColorStop(0, W.col + '80'); rg.addColorStop(1, W.col + '00'); g.fillStyle = rg; g.beginPath(); g.arc(sx, sy, 13 * K, 0, 7); g.fill();
+  const [sx, sy] = S(wx, wy); rg = g.createRadialGradient(sx, sy, 0, sx, sy, 11 * K * pulse); rg.addColorStop(0, W.col + '80'); rg.addColorStop(1, W.col + '00'); g.fillStyle = rg; g.beginPath(); g.arc(sx, sy, 11 * K, 0, 7); g.fill();
   // 남는 불티
   W.sparks = W.sparks.filter(p => now - p.t < p.life);
   for (const p of W.sparks){ const a = 1 - (now - p.t) / p.life, dt = now - p.t, [px, py] = S(p.x + p.vx * dt, p.y + p.vy * dt); g.fillStyle = W.col; g.globalAlpha = a; g.fillRect(Math.round(px), Math.round(py), Math.max(1, Math.round(K)), Math.max(1, Math.round(K))); }
   g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
   // 정령불 본체 (64칸 → 세계 30픽셀, 살짝 일렁이게 세로로 늘었다 줄었다)
-  if (SPR.complete){ const sz = 20 * K, st = 1 + .05 * Math.sin(now / 160); const fi = Math.floor(now / 110) % 8; g.drawImage(SPR, fi * 64, W.i * 64, 64, 64, Math.round(sx - sz / 2), Math.round(sy - sz * .62 * st), Math.round(sz), Math.round(sz * st)); }
-  if (W.say){ const s = cv.getBoundingClientRect().width / cv.width; bub.style.left = r.left + sx * s + 'px'; bub.style.top = r.top + (sy - 14 * K) * s + 'px'; }
+  if (SPR.complete){ const sz = 17 * K, st = 1 + .05 * Math.sin(now / 160); const fi = Math.floor(now / 110) % 8; g.drawImage(SPR, fi * 64, W.i * 64, 64, 64, Math.round(sx - sz / 2), Math.round(sy - sz * .62 * st), Math.round(sz), Math.round(sz * st)); }
+  if (W.say){ const s = cv.getBoundingClientRect().width / cv.width; bub.style.left = r.left + sx * s + 'px'; bub.style.top = r.top + (sy - 12 * K) * s + 'px'; }
 }
 requestAnimationFrame(frame);
 })();
