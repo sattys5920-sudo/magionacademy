@@ -1041,7 +1041,7 @@ async function openMap(want){
     mcv.style.width = w + 'px'; mcv.style.height = h + 'px'; inner.style.width = w + 'px'; inner.style.height = h + 'px';
     const Pm = (tx, ty) => [m.OX + (tx - ty) * 8, m.OY + (tx + ty) * 4];   // 보는 지역의 기준점 (지금 서 있는 지역과 달라도 맞아요)
     const lab = (t, txt, cls) => { const [x, y] = Pm(t[0] + .5, t[1] + .5); const d = document.createElement('div'); d.className = 'mlabel' + (cls ? ' ' + cls : ''); d.textContent = txt; d.style.left = x * k + 'px'; d.style.top = (y * k - 4) + 'px'; inner.appendChild(d); };
-    m.areas.forEach(a => lab(a.t, a.n)); if (here) lab([me.x, me.y], '나', 'me');
+    m.areas.forEach(a => lab(a.t, a.n)); (World.mapPins || []).filter(p => p.map === id).forEach(p => lab(p.t, p.n, p.cls)); if (here) lab([me.x, me.y], '나', 'me');
     const [px_, py_] = here ? Pm(me.x + .5, me.y + .5) : Pm(m.start[0] + .5, m.start[1] + .5); wrap.scrollLeft = px_ * k - wrap.clientWidth / 2; wrap.scrollTop = py_ * k - wrap.clientHeight / 2;
   });
 }
@@ -1053,7 +1053,7 @@ mcv.addEventListener('click', e => {   // 탭할 때만 (밀어서 볼 때는 �
     return;
   }
   // 가장 가까운 장소로, 없으면 누른 곳 근처 빈칸으로
-  let best = null, bd = 1e9; m.areas.forEach(a => { const [ax, ay] = P(a.t[0] + .5, a.t[1] + .5), d = Math.hypot(ax - x, ay - y); if (d < bd){ bd = d; best = a.t; } });
+  let best = null, bd = 1e9; [...m.areas, ...(World.mapPins || []).filter(p => p.map === id)].forEach(a => { const [ax, ay] = P(a.t[0] + .5, a.t[1] + .5), d = Math.hypot(ax - x, ay - y); if (d < bd){ bd = d; best = a.t; } });
   let tgt = bd < 30 ? best : [Math.floor(((x - m.OX) / 8 + (y - m.OY) / 4) / 2), Math.floor(((y - m.OY) / 4 - (x - m.OX) / 8) / 2)];
   for (let rr = 0; rr < 6 && !free(tgt[0], tgt[1]); rr++) for (const [dx, dy] of [[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,-1]]) if (free(tgt[0] + dx * rr, tgt[1] + dy * rr)){ tgt = [tgt[0] + dx * rr, tgt[1] + dy * rr]; break; }
   const door = m.objs.find(o => o.door && o.door.tile[0] === tgt[0] && o.door.tile[1] === tgt[1]);

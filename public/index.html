@@ -295,7 +295,7 @@ body.admin #shell{max-width:none}
 #pk9 .pkic{display:block;image-rendering:pixelated}#pk9 .pkmini{width:40px;height:40px}#pk9 .pkmini circle{fill:rgba(241,233,255,.4)}#pk9 .pkmini circle.st{fill:#FFD866}#pk9 .pkmini polyline{fill:none;stroke:#D8B4FF;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 #pk9 .pkfin{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:0 12px}#pk9 .pkfin b{font-size:20px;color:#FFD866}#pk9 .pkfin span{font-size:14px}#pk9 .ok{min-height:48px;padding:0 34px;border-radius:24px;border:2px solid #2A1E3A;background:#D8B4FF;color:#2A1E3A;font-family:var(--f-pxb);font-size:16px;box-shadow:0 3px 0 #7A48C8}
 #prme{position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:6px;padding:4px 4px 4px 14px;border-radius:22px;border:2px solid #2A1E3A;background:#E8D8FF;color:#2A1E3A;font-family:var(--f-pxb);font-size:14px;box-shadow:0 3px 0 #8A6AC8;white-space:nowrap}#prme button{min-height:36px;border:0;border-radius:18px;font-family:var(--f-pxb);font-size:13px;color:#2A1E3A}#prme .pkoff{padding:0 12px;background:#C8A8F8}#prme .pkx{width:36px;background:transparent;font-size:15px}
-.npcf.pkface{background:#1E1638 url(art/shady.png?v=1) 50% 30%/200% auto no-repeat;image-rendering:pixelated}
+.npcf.pkface{background:#1E1638 url(art/shady.png?v=2) 50% 30%/200% auto no-repeat;image-rendering:pixelated}
 #dreamv{position:fixed;inset:0;z-index:300;font-family:var(--f-pxb);color:#F1E9FF;touch-action:none;user-select:none;-webkit-user-select:none}#dreamv canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}#dreamv .dc{opacity:0;object-fit:contain;background:#0A0612}
 #dreamv .dt1,#dreamv .dt2,#dreamv .dgo{position:absolute;left:0;right:0;text-align:center;opacity:0;transition:opacity .4s;pointer-events:none}#dreamv .dt1{top:18%;font-size:24px;color:#FFE9A0}#dreamv .dt2{top:calc(18% + 36px);font-size:14px}#dreamv .dgo{top:42%;font-size:40px;color:#FFE9A0;text-shadow:0 2px 0 #2A1E3A}
 #dreamv .dcard{position:absolute;left:50%;top:50%;width:230px;height:120px;margin:-60px 0 0 -115px;border-radius:18px;background:rgba(20,12,36,.85);border:3px solid #C8A0FF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;opacity:0;transform:scale(.6);transition:opacity .4s,transform .4s cubic-bezier(.3,1.5,.5,1);pointer-events:none}#dreamv .dcard span{font-size:14px;color:#D8B4FF}#dreamv .dcard b{font-size:26px;color:#FFE9A0}#dreamv .dcard.on{transform:scale(1)}#dreamv .dcard.hit{transform:scale(1.12);border-color:#FFE070}
@@ -468,6 +468,7 @@ body:not(.inworld) #storyui{display:none}
 #minner{position:relative;margin:auto}
 #mcv{image-rendering:pixelated;flex-shrink:0}
 .mlabel{position:absolute;transform:translate(-50%,-100%);font-size:var(--fs-s);line-height:1.2;padding:3px 7px;border-radius:6px;background:var(--panel);color:var(--text);white-space:nowrap;pointer-events:none;border:1px solid var(--line2)}
+.mlabel.shady{background:#2A1E3A;color:#D8B4FF;border-color:#8A60D0}
 .mlabel.me{background:var(--gold);color:#2A1506;border-color:var(--gold)}
 .mhint{text-align:center;font-size:var(--fs-s);color:var(--sub);margin-top:8px}
 .px{}
@@ -7993,7 +7994,7 @@ function tarotUI(done){
 // 마법마다 하루 한 번(자정에 다시) · 처음엔 하나도 몰라요 · 조건은 안 보여요(???) · 배운 마법만 마법책에 문양이 보여요 · 몰라도 문양만 맞히면 아무 일도 안 일어나요
 // 내 진행: me.prank = { got { 이름: 1 }, s { 이름: 다 한 단계 수 }, c { 이름: 지금 단계에서 센 수 }, q { 이름: { 겹치면 안 되는 것: 1 } }, u { 이름: 쓴 날 }, hi 처음 만남 }
 // 걸린 마법: prank/<받는 사람 uid> = { k, by, n(건 사람 이름), at, until }
-const PRANK_SPOT = [71, 30];
+const PRANK_SPOT = [56, 30];   // 묘지 울타리 모퉁이 (지도 화면에도 표시)
 const PRANK = [   // [이름, 한국어 이름, 문양(점 번호 0~8, 위 줄부터)]
   ['rainbow', '무지개 다리', '63158'], ['catears', '고양이 귀', '6304258'], ['petals', '꽃비', '41375'], ['raincloud', '꼬마 비구름', '30125'],
   ['heartballoon', '하트 풍선', '403752'], ['starcrown', '반짝 왕관', '30425'], ['bunnyears', '토끼 귀', '630147'], ['bubbles', '비눗방울', '64258'],
@@ -8058,13 +8059,14 @@ let prankArt = null, pkLive = {}, pkTeach = null;
 function prankInit(){
   if (prankInit.on) return; prankInit.on = 1;
   fetch('art/prank.json?v=1').then(r => r.json()).then(at => World.setPrankImg('art/prank.png?v=1', at)).catch(() => {});
-  const i = new Image(); i.onload = () => { const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; const g = c.getContext('2d'); g.drawImage(i, 0, 0); prankArt = { img: c, pxc: g }; prankProps(); }; i.src = 'art/shady.png?v=1';
+  const i = new Image(); i.onload = () => { const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; const g = c.getContext('2d'); g.drawImage(i, 0, 0); prankArt = { img: c, pxc: g }; prankProps(); }; i.src = 'art/shady.png?v=2';
   const prev = World.onProp; World.onProp = id => id === 'prank' ? (prankTap(), null) : prev ? prev(id) : null;
   GDB.on('prank', v => { pkLive = v || {}; prankSync(); });
+  World.mapPins = [...(World.mapPins || []).filter(p => p.id !== 'prank'), { id: 'prank', map: 'quarter', t: [PRANK_SPOT[0], PRANK_SPOT[1] + 1], n: '의문의 인물', cls: 'shady' }];
   let tk = 0; setInterval(() => { if (!me) return; if (prankEv('tick') && ++tk % 12 === 0) save(); prankSync(); }, 5000);
 }
-function prankProps(){ if (!prankArt) return; const { img, pxc } = prankArt; World.setProps('quarter', [{ id: 'prank', x: PRANK_SPOT[0], y: PRANK_SPOT[1], img, pxc, sw: img.width, sh: img.height, ax: img.width / 2, ay: img.height - 1, solid: true, light: { r: 14, c: [190, 140, 255], a: .35 } }], 'prank'); }
-const prankMarks = () => me ? [{ id: 'prank:npc', map: 'quarter', x: PRANK_SPOT[0], y: PRANK_SPOT[1] + 1, label: '의문의 인물' }] : [];
+function prankProps(){ if (!prankArt) return; const { img, pxc } = prankArt; World.setProps('quarter', [{ id: 'prank', x: PRANK_SPOT[0], y: PRANK_SPOT[1], img, pxc, sw: img.width, sh: img.height, ax: img.width / 2, ay: img.height - 1, solid: true }], 'prank'); }
+const prankMarks = () => me ? [{ id: 'prank:npc', map: 'quarter', x: PRANK_SPOT[0] - 1, y: PRANK_SPOT[1] - 1, label: '의문의 인물' }] : [];   // 이름표가 얼굴을 덮지 않게 한 칸 뒤에
 // 지금 걸린 마법 → 화면에 그리기 · 나한테 걸리면 알려 주기 · 털어내기 칩
 let pkSeen = 0;
 function prankSync(){

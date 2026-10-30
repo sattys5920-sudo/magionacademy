@@ -5,13 +5,13 @@ from morph_obst import Spr, rect, H as C
 
 s = Spr(18, 28)
 cloak = {(x, y) for x in range(18) for y in range(10, 28) if abs(x - 8.5) <= 4.6 + (y - 10) * .24}
-s.add(cloak, C('#1C1626'))
+s.add(cloak, C('#2A2040'))
 s.dot([(x, y) for (x, y) in cloak if y >= 26 and (x % 3 == 0)], C('#0E0A16'))                       # 너덜너덜한 밑단
-s.dot([(x, y) for (x, y) in cloak if abs(x - 8.5) >= 3.6 + (y - 10) * .24 and x < 9], C('#352A48'))  # 왼쪽 가장자리 빛
+s.dot([(x, y) for (x, y) in cloak if abs(x - 8.5) >= 3.6 + (y - 10) * .24 and x < 9], C('#5A4880'))  # 왼쪽 가장자리 빛
 s.dot([(8, y) for y in range(15, 26)] + [(9, y) for y in range(15, 26)], C('#120E1C'))               # 앞섶
 hood = s.ell(8.5, 8, 6.6, 6.4) | {(x, y) for x in range(18) for y in range(0, 4) if abs(x - (10 + (3 - y) * .9)) <= .4 + y * .7}
-s.add(hood, C('#221A30'))
-s.dot([(x, y) for (x, y) in hood if x <= 4 and y <= 9], C('#3A2E50'))                                # 후드 빛
+s.add(hood, C('#30264A'))
+s.dot([(x, y) for (x, y) in hood if x <= 4 and y <= 9], C('#6A58A0'))                                # 후드 빛
 face = s.ell(8.5, 9, 3.8, 3.2); s.dot(face, C('#07040C'))
 s.dot([(6, 8), (11, 8)], C('#FFE45A')); s.dot([(6, 7), (11, 7)], C('#FFF6B0'))                          # 빛나는 눈
 s.dot([(6, 11), (7, 11), (10, 11), (11, 11), (8, 12), (9, 12)], C('#B8A8D8'))                         # 히죽 웃는 입
