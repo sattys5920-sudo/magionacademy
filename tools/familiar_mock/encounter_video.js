@@ -12,7 +12,7 @@ const INJ = fs.readFileSync(path.join(__dirname, 'encounter_inject.js'), 'utf8')
   await p.addInitScript(sd => { window.__seed = sd; window.__uid = 'me1'; }, seed);
   await p.goto(`http://localhost:${PORT}/`); await p.waitForTimeout(3500);
   for (let k = 0; k < 12; k++){ const bb = await p.$('#stnext'); if (!bb) break; await bb.click(); await p.waitForTimeout(100); }
-  await p.evaluate(() => { World.kNow = () => new Date(2026, 9, 30, 23, 20); World.zoomStep(-1); });
+  await p.evaluate(() => { World.kNow = () => new Date(2026, 9, 30, 23, 20); World.zoomStep(-1); World.teleport('campus', [76, 44]); }); await p.waitForTimeout(2500);
   await p.addScriptTag({ content: INJ }); await p.evaluate(() => { World.__myAv = __T.me().av; }); await p.waitForTimeout(1500);
   const start = (Date.now() - T0) / 1000;
   const L = JSON.parse(fs.readFileSync(path.join(__dirname, 'lines', 'vael.json'), 'utf8')), PJ = fs.readFileSync(path.join(__dirname, 'panel_inject.js'), 'utf8');

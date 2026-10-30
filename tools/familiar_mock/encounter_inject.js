@@ -116,13 +116,12 @@ window.__encGo = async (o) => {
   E.ember = [me0.x - 150, me0.y - 120]; await sleep(1500);
   await flyTo(me0.x + 26, me0.y + 4, 2600); await sleep(500);
   World.say('me', '.......!'); await sleep(1800);
-  // 2) 불씨가 가장 가까운 다른 구역 입구(여기선 본관 문 43,35)로 앞장서요: 몇 칸 가서 기다리고, 다가가면 또 앞으로
-  for (const [hx, hy] of [[45, 42], [43, 39]]){ const q = T(hx, hy); await flyTo(q[0], q[1] - 14, 1400); await sleep(500); await walk(hx + 1, hy + 2); await sleep(300); }
-  const dr = T(43, 35); await flyTo(dr[0], dr[1] - 16, 1300); await sleep(400);
-  // 문 앞에서 한 번 맴돌다 문 안으로 스며들어요
+  // 2) 불씨가 가장 가까운 「다른 지역」 입구로 앞장서요 (건물 실내 문은 빼고, 학교↔마을↔그림자 골목 같은 길만). 여기선 캠퍼스 동쪽 「마을·시장으로」(90,42)
+  for (const [hx, hy] of [[80, 43], [84, 42]]){ const q = T(hx, hy); await flyTo(q[0], q[1] - 14, 1400); await sleep(500); await walk(hx - 1, hy + 1); await sleep(300); }
+  const dr = T(90, 42); await flyTo(dr[0], dr[1] - 16, 1500); await sleep(400);
   { const t1 = performance.now(); await new Promise(res => { const st = () => { const k = Math.min(1, (performance.now() - t1) / 900); E.sz = 14 * (1 - k * .85); E.ember = [dr[0] + Math.sin(k * 9) * 6 * (1 - k), dr[1] - 16 + k * 12]; if (k < 1) requestAnimationFrame(st); else res(); }; st(); }); }
   E.burst = performance.now(); await sleep(700); E.ember = null; E.sz = 14;
-  await walk(43, 36); await sleep(300);
+  await walk(88, 42); await sleep(300);
   // 3) 어딘가로: 화면이 어두워지고 덩굴에 감긴 제단 (연출 컷)
   fade.style.opacity = 1; await sleep(1100); E.ember = null;
   C.av = World.Avatar.compose(o.av || World.__myAv); C.on = 1; C.ember = [130, 40]; scene.style.display = 'block'; scene.style.opacity = 1; fade.style.opacity = 0; await sleep(1200);
@@ -145,7 +144,7 @@ window.__encGo = async (o) => {
   fade.style.opacity = 1; await sleep(1100); scene.style.display = 'none'; C.on = 0; nameEl.innerHTML = '';
   const m2 = World.meAt(); E.ember = [m2.x + 12, m2.y - 2]; E.sz = 9; E.spirit = 0; E.follow = 1; E.burst = performance.now();
   fade.style.opacity = 0; await sleep(1600);
-  await walk(45, 39); await sleep(1500);
+  await walk(84, 44); await sleep(1500);
   window.__encDone = true;
 };
 })();
