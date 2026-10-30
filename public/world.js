@@ -402,6 +402,29 @@ let MORPH_IMG = null, morphs = {};
 World.setMorphImg = src => { const i = new Image(); i.onload = () => { MORPH_IMG = i; }; i.src = src; };
 World.setMorphs = m => { morphs = m || {}; };
 const morphOf = p => p.me ? morphs.me : p.peer ? morphs[p.peer] : undefined;
+// 장난 마법: World.setPranks({ me: 이름, <uid>: 이름 }) → art/prank.png 칸을 머리 위·주변·등 뒤에 그려요
+let PRANK_IMG = null, PRANK_AT = {}, pranks = {};
+World.setPrankImg = (src, at) => { const i = new Image(); i.onload = () => { PRANK_IMG = i; }; i.src = src; PRANK_AT = at || {}; };
+World.setPranks = m => { pranks = m || {}; };
+const PRANK_POS = { catears: 'head', bunnyears: 'head', starcrown: 'head', pumpkinhat: 'head', froghat: 'head', halo: 'halo', rainbow: 'above', raincloud: 'above', zapcloud: 'above', otumo: 'above', ghostpal: 'side', heartballoon: 'hold', batwings: 'back' };
+function drawPrank(p, sx, sy, layer){
+  const k = p.me ? pranks.me : p.peer ? pranks[p.peer] : null, R = k && PRANK_AT[k]; if (!R || !PRANK_IMG) return;
+  const pos = PRANK_POS[k] || 'around'; if ((pos === 'back') !== (layer === 'back')) return;
+  const t = performance.now(), cp = KPX * ASC, [x0, y0, w0, h0] = R, w = w0 * cp, h = h0 * cp, head = sy - 24.5, walk = p.path.length ? Math.round(Math.abs(Math.sin(p.t * 10))) : 0;
+  let bx = sx, by = head;   // 그림 아래 가운데가 닿을 세계 좌표
+  if (pos === 'head') by = head + 3 + walk * .5;
+  else if (pos === 'halo') by = head - 1.5 + Math.sin(t / 500) * .8;
+  else if (pos === 'above') by = head - 1 + Math.sin(t / 450 + p.x) * 1.2;
+  else if (pos === 'side'){ bx = sx + 9 + Math.sin(t / 700) * 1.5; by = head + 6 + Math.sin(t / 380) * 1.5; }
+  else if (pos === 'hold'){ bx = sx + 7; by = sy - 10 + Math.sin(t / 520) * 1; }
+  else if (pos === 'back'){ by = sy - 9; }
+  else { by = sy + 2 + Math.sin(t / 600 + p.y) * 1; }   // 주변: 몸을 감싸요
+  const dx = Math.round((bx - camIX) * KPX - w / 2), dy = Math.round((by - camIY) * KPX - h);
+  const cx = out; cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); cx.imageSmoothingEnabled = false;
+  if (pos === 'around') cx.globalAlpha = .85 + Math.sin(t / 250) * .15;
+  if (pos === 'back' && p.view === World.Avatar.meta.dirs.up) cx.globalAlpha = 1;
+  cx.drawImage(PRANK_IMG, x0, y0, w0, h0, dx, dy, w, h); cx.restore();
+}
 function drawMorph(p, k){
   const cx = out, [sx, sy] = P(p.x + .5, p.y + .5), t = performance.now(), sc = KPX * 1.3, w = 17 * sc;
   cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 5, 2, 0, 0, Math.PI * 2); cx.fill();
@@ -853,9 +876,11 @@ function drawPerson(p){ const cx = out;
   const WK = World.Avatar.meta.walk, f = p.path.length ? WK[Math.floor(p.t * (p.me || p.peer ? 10 : 7)) % WK.length] : 0, col = (p.view || 0) + f;
   const A = World.Avatar, S = A.compose(p.av), cp = KPX * ASC, w = A.FW * cp, h = A.FH * cp;
   const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - (A.FH - 1.5) * cp) - cheerHop(p, cp);
+  const bh = cheerHop(p, cp) / KPX; if (p.me || p.peer) drawPrank(p, sx, sy - bh, 'back');
   cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0);
   if (p.flip){ cx.translate(dx, dy); cx.scale(-1, 1); cx.drawImage(S, col * A.FW, 0, A.FW, A.FH, -w / 2, 0, w, h); } else cx.drawImage(S, col * A.FW, 0, A.FW, A.FH, Math.round(dx - w / 2), dy, w, h);
   cx.restore();
+  if (p.me || p.peer) drawPrank(p, sx, sy - bh, 'front');
 }
 function frame(now){
   const dt = Math.min(.05, (now - last) / 1000); last = now;

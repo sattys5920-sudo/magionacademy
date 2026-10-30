@@ -346,6 +346,13 @@
       "st": { ".write": "auth != null" },
       "form": { ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'", "$u": { ".write": "auth != null && (auth.uid === $u || auth.token.email === 'magionadmin@magionacademy.app')", ".validate": "!newData.exists() || (newData.child('k').isNumber() && newData.child('k').val() >= 0 && newData.child('k').val() <= 11)" } }
     },
+    "prank": {
+      ".read": "auth != null",
+      "$u": {
+        ".write": "auth != null && (newData.exists() ? newData.child('by').val() === auth.uid && $u !== auth.uid : (auth.uid === $u || data.child('by').val() === auth.uid))",
+        ".validate": "!newData.exists() || (newData.hasChildren(['k', 'by', 'at', 'until']) && newData.child('k').isString() && newData.child('k').val().length <= 16 && newData.child('at').isNumber() && newData.child('until').isNumber() && newData.child('until').val() <= now + 1900000 && (!newData.child('n').exists() || (newData.child('n').isString() && newData.child('n').val().length <= 8)))"
+      }
+    },
     "board": { ".read": "auth != null", ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'" },
     "baby": {
       ".read": "auth != null",
