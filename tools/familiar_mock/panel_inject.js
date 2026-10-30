@@ -74,7 +74,7 @@ if (C.view === 'list'){
    <div class="pips">${STN.map((n, k) => `<div class="pip ${k <= st ? 'on' : ''} ${k === st ? 'cur' : ''}"><u></u>${n}</div>`).join('')}</div>
    <div class="fbar"><i style="width:${pct}%"></i></div>${gateTxt ? `<div class="gate">${gateTxt}</div>` : ''}</div>
   <div class="card"><div class="row"><span class="t">선물하기</span><span class="m">오늘 친해진 정도 ${C.today ?? 13} / 30</span></div>
-   <div class="gifts">${BAG.map(([n, c, k]) => `<div class="g">${k === 1 ? '<s style="color:' + col + '">♥</s>' : k === -1 ? '<s style="color:#8A7AAA">✕</s>' : ''}${icon(n)}<em>${c}</em></div>`).join('')}</div></div>
+   <div class="gifts">${BAG.map(([n, c, k]) => `<div class="g">${C.fresh ? '' : k === 1 ? '<s style="color:' + col + '">♥</s>' : k === -1 ? '<s style="color:#8A7AAA">✕</s>' : ''}${icon(n)}<em>${c}</em></div>`).join('')}</div></div>
   <div class="card"><div class="row" style="margin-bottom:4px"><span class="t">함께하는 힘</span></div>
    ${(ABIL[i] || ABIL[0]).map((a, k) => `<div class="ab ${k + 1 <= st ? '' : 'lk'}"><b>${STN[k + 1]}</b><span>${k + 1 <= st ? a : '🔒 ' + STN[k + 1] + '이 되면 열려요'}</span></div>`).join('')}</div>
   <div class="btns"><button class="bt">정령 바꾸기</button><button class="bt go">따라다니는 중</button></div></div>`;

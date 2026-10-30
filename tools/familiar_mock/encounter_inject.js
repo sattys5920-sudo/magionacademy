@@ -10,6 +10,13 @@ const nameEl = document.createElement('div'); nameEl.style.cssText = 'position:f
 document.body.appendChild(nameEl);
 const dlg = document.createElement('div'); dlg.style.cssText = 'position:fixed;left:0;right:0;bottom:64px;z-index:9;display:none;justify-content:center';
 dlg.innerHTML = '<div class="evwrap"><div class="evbox"><div class="evname"></div><div class="evtext"></div><div class="evch"></div><div class="evtap">▼</div></div></div>'; document.body.appendChild(dlg);
+const bub = document.createElement('div'); bub.style.cssText = 'position:fixed;z-index:9;display:none;gap:6px;transform:translate(-50%,-100%);padding:6px;border-radius:12px;background:rgba(20,13,30,.92);border:1px solid #5A8CFF;box-shadow:0 0 10px #5A8CFF88';
+bub.innerHTML = '<button class="encch" style="padding:0 12px;white-space:nowrap">사역마 창</button><button class="encch" style="padding:0 12px;white-space:nowrap">선물하기</button>'; document.body.appendChild(bub);
+const gift = document.createElement('div'); gift.style.cssText = 'position:fixed;left:0;right:0;bottom:64px;z-index:9;display:none;justify-content:center';
+const GI = [['I19', '달빛 이슬', 6], [26, '은방울꽃', 2], [24, '고추', 3], [7, '당근', 5], [12, '해바라기 씨', 2], [44, '꿈꽃', 1]];
+const gic = n => typeof n === 'string' ? `background:url(art/icons.png?v=4) ${-(+n.slice(1)) * 32}px 0 no-repeat` : `background:url(art/plants.png?v=4) ${-(n % 10) * 32}px ${-Math.floor(n / 10) * 32}px no-repeat`;
+gift.innerHTML = `<div style="width:100%;max-width:560px;margin:0 10px;background:#211733;border:1px solid #4E3C72;border-radius:16px;padding:12px;font-family:var(--f-px);color:#F1E9FF"><div style="display:flex;align-items:center"><b style="flex:1;font-family:var(--f-pxb);font-size:16px;color:#FFE9A0">Vael에게 선물하기</b><span style="font-size:13px;color:#BFB0E0">오늘 1번 줄 수 있어요</span></div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px">${GI.map(([n, nm, c], i) => `<div class="encch" data-g="${i}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:74px;gap:2px"><span style="width:32px;height:32px;image-rendering:pixelated;${gic(n)}"></span><span style="font-size:13px">${nm} ×${c}</span></div>`).join('')}</div></div>`; document.body.appendChild(gift);
 const css = document.createElement('style'); css.textContent = `.encch{min-height:44px;border-radius:12px;border:1px solid #4E3C72;background:#2E2248;color:#F1E9FF;font-family:var(--f-pxb);font-size:15px;transition:all .2s}.encch.on{background:#FF9A3C;border-color:#C86A1E;color:#2A1606;transform:scale(1.02)}
 .enclt{display:inline-block;opacity:0;transform:translateY(8px) scale(1.4);filter:blur(4px);transition:all .7s}.enclt.on{opacity:1;transform:none;filter:none;text-shadow:0 0 12px var(--c),0 0 26px var(--c)}`; document.head.appendChild(css);
 // 제단의 물음 10개 (실제 배정은 관리자가 미리 정해 두고, 물음은 분위기용. 매번 5개를 뽑아요)
@@ -34,7 +41,7 @@ function flyTo(x, y, ms){ const s = [...E.ember], t0 = performance.now(); return
 async function walk(tx, ty){ World.walkToTile(tx, ty); await sleep(250); for (let i = 0; i < 80; i++){ const p = World.myPos(), m = World.meAt(); await sleep(100); const q = World.meAt(); if (Math.abs(q.x - m.x) < .1 && Math.abs(q.y - m.y) < .1) break; } }
 const meNear = d => { const m = World.meAt(); return Math.hypot(m.x - E.ember[0], m.y + 18 - E.ember[1]) < d; };
 function say(name, text, choices, pick){ return new Promise(async res => {
-  dlg.style.display = 'flex'; dlg.querySelector('.evname').textContent = name; const tx = dlg.querySelector('.evtext'), ch = dlg.querySelector('.evch'), tap = dlg.querySelector('.evtap');
+  dlg.style.display = 'flex'; const nm = dlg.querySelector('.evname'); nm.textContent = name; nm.style.display = name ? '' : 'none'; const tx = dlg.querySelector('.evtext'), ch = dlg.querySelector('.evch'), tap = dlg.querySelector('.evtap');
   tx.style.color = '#F1E9FF'; ch.innerHTML = ''; tap.style.display = 'none'; tx.textContent = '';
   for (let i = 1; i <= text.length; i++){ tx.textContent = text.slice(0, i); await sleep(45); }
   if (choices){ await sleep(350); ch.innerHTML = choices.map(c => `<button class="encch">${c}</button>`).join(''); await sleep(1500); ch.children[pick].classList.add('on'); await sleep(700); }
@@ -58,10 +65,13 @@ function draw(now){
   g.globalCompositeOperation = 'lighter';
   for (const p of E.trail){ const a = 1 - (now - p.t) / 7000, [px, py] = S(p.x, p.y); g.globalAlpha = a * (.6 + .4 * Math.sin(now / 150 + p.x)); g.fillStyle = '#FFE8B0'; g.fillRect(Math.round(px), Math.round(py), Math.max(1, Math.round(K)), Math.max(1, Math.round(K))); }
   g.globalAlpha = 1;
+  if (E.follow && E.ember){ const m = World.meAt(); E.fhist = E.fhist || []; E.fhist.push([now, m.x, m.y + 6]); while (E.fhist.length > 2 && E.fhist[1][0] < now - 600) E.fhist.shift();
+    const o = E.fhist[0], mv = Math.hypot(m.x - o[1], m.y + 6 - o[2]) > 3, ia = now / 1400, tx = mv ? o[1] + Math.sign(o[1] - m.x || 1) * 6 : m.x + 11 * Math.cos(ia), ty = mv ? o[2] - 6 : m.y - 2 + 2 * Math.sin(ia * 2);
+    E.ember[0] += (tx - E.ember[0]) * .06; E.ember[1] += (ty - E.ember[1]) * .06; }
   if (E.ember){ const [ex, ey] = S(E.ember[0], E.ember[1] + Math.sin(now / 380) * 1.5), col = E.spirit >= 0 ? '#5A8CFF' : '#FFE8B0', rad = (E.sz + 12) * K * (.85 + .15 * Math.sin(now / 260));
     const ctx = E.ritual ? g2 : g; ctx.globalCompositeOperation = 'lighter';
     let rg = ctx.createRadialGradient(ex, ey, 0, ex, ey, rad); rg.addColorStop(0, (E.hue !== null ? `hsla(${E.hue},90%,65%,.55)` : col + '88')); rg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(ex, ey, rad, 0, 7); ctx.fill();
-    if (E.burst){ const k = (now - E.burst) / 900; if (k < 1){ ctx.strokeStyle = `rgba(200,225,255,${1 - k})`; ctx.lineWidth = 3 * K * (1 - k); ctx.beginPath(); ctx.arc(ex, ey, (8 + k * 70) * K, 0, 7); ctx.stroke(); ctx.fillStyle = `rgba(255,255,255,${.7 * (1 - k)})`; ctx.fillRect(0, 0, top.width, top.height); } }
+    if (E.burst){ const k = (now - E.burst) / 900; if (k < 1){ ctx.strokeStyle = `rgba(200,225,255,${1 - k})`; ctx.lineWidth = 3 * K * (1 - k); ctx.beginPath(); ctx.arc(ex, ey, (8 + k * 70) * K, 0, 7); ctx.stroke(); ctx.fillStyle = `rgba(255,255,255,${.35 * (1 - k)})`; ctx.fillRect(0, 0, top.width, top.height); } }
     ctx.globalCompositeOperation = 'source-over';
     if (SPR.complete){ const fi = Math.floor(now / 110) % 8, sz = E.sz * K * 1.9, row = E.spirit >= 0 ? E.spirit : 0;
       ctx.filter = E.spirit >= 0 ? 'none' : E.hue !== null ? `hue-rotate(${E.hue - 220}deg) saturate(1.6) brightness(1.15)` : 'saturate(0) brightness(1.7) sepia(.5)';
@@ -70,6 +80,9 @@ function draw(now){
     E.sparks = E.sparks.filter(p => now - p.t < p.life); g2.globalCompositeOperation = 'lighter';
     for (const p of E.sparks){ const dt = now - p.t, [px, py] = S(p.x, p.y + p.vy * dt); g2.globalAlpha = 1 - dt / p.life; g2.fillStyle = p.h !== null && E.spirit < 0 ? `hsl(${p.h},90%,70%)` : '#A8D0FF'; g2.fillRect(Math.round(px), Math.round(py), Math.round(K), Math.round(K)); }
     g2.globalAlpha = 1; g2.globalCompositeOperation = 'source-over';
+    E.floats = (E.floats || []).filter(f => now - f.t < 1600);
+    for (const f of E.floats){ const k = (now - f.t) / 1600; g2.globalAlpha = 1 - k; g2.font = `bold ${Math.round(9 * K)}px G11B, sans-serif`; g2.textAlign = 'center'; g2.fillStyle = '#8AC4FF'; g2.fillText(f.txt, ex, ey - (14 + k * 16) * K); g2.globalAlpha = 1; }
+    E.scr = [r.left + ex * s, r.top + ey * s];
     if (E.ritual){ dark.style.background = `radial-gradient(circle at ${r.left + ex * s}px ${r.top + ey * s}px, rgba(4,2,10,0) 0, rgba(4,2,10,.55) 90px, rgba(4,2,10,.94) 260px)`; nameEl.style.top = (r.top + ey * s - 150) + 'px'; }
   }
 }
@@ -77,8 +90,10 @@ requestAnimationFrame(draw);
 window.__encGo = async (o) => {
   const T = (x, y) => World.__P(x + .5, y + .5);
   const a = T(36, 56); E.altar = [a[0], a[1]];   // 숲 가장자리 (캠퍼스 36,56)
-  const p1 = T(41, 48); E.ember = [p1[0], p1[1] - 14];
-  await sleep(2200);
+  const p1 = T(41, 48), me0 = World.meAt(); E.ember = [me0.x - 150, me0.y - 120]; await sleep(1500);
+  await flyTo(p1[0], p1[1] - 14, 2600); await sleep(600);
+  await say('', '....어디선가 하얀 불씨 하나가 다가와요. 나를 부르는 것 같아요.......');
+  dlg.style.display = 'none'; await sleep(600);
   await walk(42, 50);
   const p2 = T(39, 53); await flyTo(p2[0], p2[1] - 14, 1500); await sleep(700);
   await walk(40, 55);
@@ -98,6 +113,19 @@ window.__encGo = async (o) => {
   await sleep(1600);
   await say('Vael', o.first);
   await sleep(400); nameEl.style.transition = 'opacity 1s'; nameEl.style.opacity = 0; dark.style.opacity = 0; E.ritual = 0; dlg.style.display = 'none';
+  // 만난 뒤: 작아져서 어깨 곁으로, 따라다니기
+  await sleep(600); { const t1 = performance.now(); await new Promise(res => { const st = () => { const k = Math.min(1, (performance.now() - t1) / 1200); E.sz = 24 - 15 * ease(k); if (k < 1) requestAnimationFrame(st); else res(); }; st(); }); }
+  E.follow = 1; await sleep(2200);
+  // 내 정령을 누르면: 사역마 창 / 선물하기
+  const pick = async (which) => { bub.style.display = 'flex'; bub.style.left = E.scr[0] + 'px'; bub.style.top = (E.scr[1] - 26) + 'px'; [...bub.children].forEach(c => c.classList.remove('on')); await sleep(1100); bub.children[which].classList.add('on'); await sleep(600); bub.style.display = 'none'; };
+  await pick(0);
+  window.__famCfg = { view: 'main', i: 0, stage: 0, pts: 0, today: 0, line: o.panel, fresh: 1 }; new Function(o.panelJs)(); await sleep(4200); document.getElementById('famv')?.remove();
+  await sleep(500); await walk(43, 57); await sleep(400);
+  await say('Vael', o.idle); dlg.style.display = 'none'; await sleep(900);
+  await pick(1);
+  gift.style.display = 'flex'; await sleep(1500); gift.querySelector('[data-g="0"]').classList.add('on'); await sleep(700); gift.style.display = 'none';
+  E.floats = [{ t: performance.now(), txt: '+30' }]; await sleep(500);
+  await say('Vael', o.like); dlg.style.display = 'none';
   await sleep(1800); window.__encDone = true;
 };
 })();
