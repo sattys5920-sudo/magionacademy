@@ -1,5 +1,5 @@
 // 요정 시장 시안 영상 찍기: node market_video.js <포트> <저장 폴더> → market.webm + market.start (앞쪽 로딩은 ffmpeg로 잘라요)
-//   목업 사이트 폴더에 fairy_market.png가 있어야 해요 (cp fairy_market.png <사이트>/)
+//   목업 사이트 폴더에 fairy_market_bg.png · fairy_stalls.png가 있어야 해요 (cp fairy_market_bg.png fairy_stalls.png <사이트>/)
 const { chromium } = require('/opt/node-tools/node_modules/playwright');
 const fs = require('fs'), path = require('path');
 const PORT = process.argv[2] || 8813, OUT = process.argv[3] || '.';
@@ -16,10 +16,9 @@ const INJ = fs.readFileSync(path.join(__dirname, 'market_inject.js'), 'utf8');
   await p.evaluate(() => { World.kNow = () => new Date(2026, 9, 30, 23, 20); World.zoomStep(-1); World.teleport('campus', [76, 44]); }); await p.waitForTimeout(2500);
   await p.addScriptTag({ content: INJ }); await p.waitForTimeout(800);
   const start = (Date.now() - T0) / 1000;
-  p.evaluate(() => window.__fmGo());
+  p.evaluate(() => window.__fmGo(1));
   const click = async sel => { await p.waitForSelector(sel, { state: 'visible', timeout: 90000 }); await p.waitForTimeout(1300); await p.click(sel); };
-  await click('[data-fi="1"]'); await click('[data-mi="3"]');
-  await click('[data-fi="2"]'); await click('[data-mi="2"]');
+  await click('[data-fi="0"]'); await click('[data-mi="3"]');
   await p.waitForFunction(() => window.__fmDone, null, { timeout: 120000 });
   const v = p.video(); await ctx.close(); fs.renameSync(await v.path(), path.join(OUT, 'market.webm'));
   fs.writeFileSync(path.join(OUT, 'market.start'), String(start)); console.log('start', start);

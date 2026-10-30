@@ -1,6 +1,6 @@
-# 요정 시장 연출 컷 배경: 보름달 아래 숲 가장자리 빈터, 버섯 고리와 작은 노점 셋 (320×180)
+# 요정 시장 연출 컷 배경: 달 뜬 숲 가장자리 빈터와 버섯 고리 (320×180) + 요정이 펼치는 노점 셋 (따로 떼어 낸 그림)
 #   왼쪽 꿀 요정(호박빛 등불·벌집 상자) · 가운데 이슬 요정(큰 잎 차양·유리병) · 오른쪽 가시 요정(장미 덩굴 아치)
-#   python3 fairy_market.py → tools/iso/out/fairy_market.png (+ out/fairy_market_x4.png)
+#   python3 fairy_market.py → tools/iso/out/fairy_market.png (노점 셋 다 있는 그림) · fairy_market_bg.png (노점 없음) · fairy_stalls.png (노점 80×64 × 3, 투명 배경, 가운데 x=160 기준)
 import os, math
 import numpy as np
 from PIL import Image
@@ -70,36 +70,34 @@ def counter(x0, x1, y0, col='#5A3A28', top='#7A5236'):
 def lantern(x, y, col):
     gg = np.hypot(XX - x, YY - y) < 12; sel = gg & (D < np.clip((12 - np.hypot(XX - x, YY - y)) / 12, 0, 1) * .55); img[sel] = img[sel] * .55 + hx(col) * .45
     img[y - 2:y + 3, x - 1:x + 2] = hx(col); img[y - 1:y + 2, x] = hx('#FFFFFF'); img[y - 4:y - 2, x] = hx('#3E2618')
-# 1) 꿀 요정 노점 (왼쪽): 꽃잎 차양 + 벌집 상자
-cx = 72
-for t in range(-22, 23):
-    y = int(98 + (t / 22) ** 2 * 6); img[y:y + 3, cx + t] = hx('#E8A040' if (t // 4) % 2 else '#F4C870')
-img[100:122, cx - 20] = hx('#5A3A28'); img[100:122, cx + 20] = hx('#5A3A28')
-counter(cx - 22, cx + 23, 122)
-for (x, y) in [(cx - 15, 116), (cx - 4, 116), (cx + 8, 117)]:
-    hc = blob(x, y, 4, 3); ramp_fill(hc, np.clip(1 - (YY - y + 3) / 6, 0, 1), ['#A06A18', '#D49A2A', '#F4C860'])
-    img[y - 1, x - 2:x + 3:2] = hx('#7A4A10')
-lantern(cx - 20, 104, '#FFC060'); lantern(cx + 20, 104, '#FFC060')
-# 2) 이슬 요정 노점 (가운데): 큰 잎 차양 + 유리병
-cx = 160
-lf = blob(cx, 100, 30, 9) & (YY < 104); ramp_fill(lf, np.clip(1 - (YY - 91) / 13, 0, 1), ['#1E5A4A', '#2A7A62', '#3A9A7A', '#5ABA94'])
-for t in range(-28, 29, 2): img[int(100 - 7 * (1 - (t / 28) ** 2)), cx + t] = hx('#2A7A62')
-img[100:122, cx - 2:cx + 1] = hx('#3E2618')
-counter(cx - 24, cx + 25, 122, '#3A4A5A', '#5A6A7A')
-for i, (x, c) in enumerate([(cx - 17, '#90D8FF'), (cx - 8, '#B0A0FF'), (cx + 2, '#90FFD8'), (cx + 12, '#FFB0E0')]):
-    img[114:122, x - 2:x + 3] = hx(c) * .8; img[112:114, x - 1:x + 2] = hx('#C8D8E8'); img[115:117, x - 1] = hx('#FFFFFF')
-    gg = np.hypot(XX - x, YY - 118) < 6; sel = gg & (D < .3); img[sel] = img[sel] * .6 + hx(c) * .4
-lantern(cx - 26, 106, '#90D8FF'); lantern(cx + 26, 106, '#90D8FF')
-# 3) 가시 요정 노점 (오른쪽): 장미 덩굴 아치
-cx = 248
-for t in range(0, 180):
-    a = t / 180 * math.pi; x = int(cx - 22 * math.cos(a)); y = int(122 - 28 * math.sin(a))
-    img[y, x] = hx('#2E4A2A'); img[y, min(W - 1, x + 1)] = hx('#22381E')
-    if t % 14 == 0: rb = blob(x, y, 2, 2); img[rb] = hx(R.choice(['#C02858', '#E04878', '#8A1A40']))
-counter(cx - 22, cx + 23, 122, '#3A2034', '#5A3050')
-for (x, y) in [(cx - 14, 117), (cx - 2, 116), (cx + 10, 117)]:
-    img[y:y + 5, x - 2:x + 3] = hx('#4A2A44'); img[y - 2:y, x - 1:x + 2] = hx('#E04878')
-lantern(cx - 22, 104, '#E070C0'); lantern(cx + 22, 104, '#E070C0')
+# 노점 셋 (cx: 가운데 x)
+def stall_honey(cx):
+    for t in range(-22, 23):
+        y = int(98 + (t / 22) ** 2 * 6); img[y:y + 3, cx + t] = hx('#E8A040' if (t // 4) % 2 else '#F4C870')
+    img[100:122, cx - 20] = hx('#5A3A28'); img[100:122, cx + 20] = hx('#5A3A28')
+    counter(cx - 22, cx + 23, 122)
+    for (x, y) in [(cx - 15, 116), (cx - 4, 116), (cx + 8, 117)]:
+        hc = blob(x, y, 4, 3); ramp_fill(hc, np.clip(1 - (YY - y + 3) / 6, 0, 1), ['#A06A18', '#D49A2A', '#F4C860'])
+        img[y - 1, x - 2:x + 3:2] = hx('#7A4A10')
+    lantern(cx - 20, 104, '#FFC060'); lantern(cx + 20, 104, '#FFC060')
+def stall_dew(cx):
+    lf = blob(cx, 100, 30, 9) & (YY < 104); ramp_fill(lf, np.clip(1 - (YY - 91) / 13, 0, 1), ['#1E5A4A', '#2A7A62', '#3A9A7A', '#5ABA94'])
+    for t in range(-28, 29, 2): img[int(100 - 7 * (1 - (t / 28) ** 2)), cx + t] = hx('#2A7A62')
+    img[100:122, cx - 2:cx + 1] = hx('#3E2618')
+    counter(cx - 24, cx + 25, 122, '#3A4A5A', '#5A6A7A')
+    for i, (x, c) in enumerate([(cx - 17, '#90D8FF'), (cx - 8, '#B0A0FF'), (cx + 2, '#90FFD8'), (cx + 12, '#FFB0E0')]):
+        img[114:122, x - 2:x + 3] = hx(c) * .8; img[112:114, x - 1:x + 2] = hx('#C8D8E8'); img[115:117, x - 1] = hx('#FFFFFF')
+        gg = np.hypot(XX - x, YY - 118) < 6; sel = gg & (D < .3); img[sel] = img[sel] * .6 + hx(c) * .4
+    lantern(cx - 26, 106, '#90D8FF'); lantern(cx + 26, 106, '#90D8FF')
+def stall_thorn(cx):
+    for t in range(0, 180):
+        a = t / 180 * math.pi; x = int(cx - 22 * math.cos(a)); y = int(122 - 28 * math.sin(a))
+        img[y, x] = hx('#2E4A2A'); img[y, min(W - 1, x + 1)] = hx('#22381E')
+        if t % 14 == 0: rb = blob(x, y, 2, 2); img[rb] = hx(R.choice(['#C02858', '#E04878', '#8A1A40']))
+    counter(cx - 22, cx + 23, 122, '#3A2034', '#5A3050')
+    for (x, y) in [(cx - 14, 117), (cx - 2, 116), (cx + 10, 117)]:
+        img[y:y + 5, x - 2:x + 3] = hx('#4A2A44'); img[y - 2:y, x - 1:x + 2] = hx('#E04878')
+    lantern(cx - 22, 104, '#E070C0'); lantern(cx + 22, 104, '#E070C0')
 # 작은 나무 표지판 (왼쪽 앞): 「요정 시장」 대신 별·달 문양
 img[134:150, 26:28] = hx('#3E2618'); img[128:136, 18:36] = hx('#6A4A2E'); img[128, 18:36] = hx('#8A6A44')
 for (x, y) in [(22, 131), (23, 132), (22, 133), (30, 130), (31, 131), (29, 131), (30, 132), (31, 133)]: img[y, x] = hx('#FFE8A0')
@@ -108,6 +106,14 @@ for _ in range(30):
     x, y = R.randint(20, W - 20), R.randint(60, 165); img[y, x] = hx(R.choice(['#E0FFB0', '#FFE0F0', '#C0E0FF']))
 fog = (YY > 152) & (D < np.clip((YY - 152) / 36, 0, 1) * .45); img[fog] = img[fog] * .7 + hx('#5A6890') * .3
 v = np.clip(np.hypot((XX - 160) / 180, (YY - 105) / 120) - .55, 0, 1); dark = D < v * 1.6; img[dark] = img[dark] * .55
-im = Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
-im.save(os.path.join(OUT, 'fairy_market.png')); im.resize((W * 4, H * 4), Image.NEAREST).save(os.path.join(OUT, 'fairy_market_x4.png'))
+save = lambda a, n: Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).save(os.path.join(OUT, n))
+base = img.copy(); save(base, 'fairy_market_bg.png')
+strip = np.zeros((64, 80 * 3, 4), np.uint8)
+for i, f in enumerate([stall_honey, stall_dew, stall_thorn]):
+    img = base.copy(); f(160); ch = np.any(np.abs(img - base) > 1, axis=2)
+    cut = np.zeros((H, W, 4)); cut[..., :3] = img; cut[..., 3] = ch * 255
+    strip[:, i * 80:(i + 1) * 80] = np.clip(cut[80:144, 120:200], 0, 255).astype(np.uint8)
+Image.fromarray(strip).save(os.path.join(OUT, 'fairy_stalls.png'))
+img = base.copy(); stall_honey(72); stall_dew(160); stall_thorn(248); save(img, 'fairy_market.png')
+Image.open(os.path.join(OUT, 'fairy_market.png')).resize((W * 4, H * 4), Image.NEAREST).save(os.path.join(OUT, 'fairy_market_x4.png'))
 print('ok')
