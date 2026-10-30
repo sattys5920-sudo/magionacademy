@@ -1,0 +1,55 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>@font-face{font-family:G;src:url(../Galmuri11-Bold.ttf)}body{margin:0;background:#000;font-family:G;color:#F1E9FF}
+#ph{width:390px;height:844px;position:relative;overflow:hidden;background:#0C0715}canvas{position:absolute;left:0;top:0;width:390px;height:844px;image-rendering:pixelated}
+.t{position:absolute;left:0;right:0;text-align:center;opacity:0;transition:opacity .5s}.big{font-size:24px;color:#FFE9A0;text-shadow:0 2px 0 #2A1E3A}.sub{font-size:14px}
+#card{position:absolute;left:50%;top:50%;width:230px;height:120px;margin:-60px 0 0 -115px;border-radius:18px;background:rgba(20,12,36,.85);border:3px solid #C8A0FF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;opacity:0;transform:scale(.6);transition:opacity .4s,transform .4s cubic-bezier(.3,1.5,.5,1)}
+#card span{font-size:14px;color:#D8B4FF}#card b{font-size:26px;color:#FFE9A0}
+.pill{display:inline-flex;background:rgba(20,12,36,.72);border:2px solid rgba(255,255,255,.18);border-radius:18px;padding:6px 12px;font-size:14px}
+</style></head><body><div id="ph"><canvas id="c" width="130" height="281"></canvas><canvas id="o" width="130" height="281"></canvas>
+<div class="t big" id="t1" style="top:120px">스르륵....</div><div class="t sub" id="t2" style="top:156px">꿈속으로 빠져들어요</div>
+<div id="card"><span>오늘의 꿈</span><b id="nm">???</b></div>
+<div class="t" id="t3" style="bottom:70px"><span class="pill">오늘 꿀 수 있는 꿈 0 / 1</span></div>
+<div class="t big" id="go" style="top:360px;font-size:40px">시작!</div></div>
+<script>const D={};</script><script src="lib.js"></script><script src="old3.js"></script><script src="d9.js"></script>
+<script>
+const g=document.getElementById('c').getContext('2d'),o=document.getElementById('o').getContext('2d');
+const NAMES=['구름 위 폴짝','과자 나라','거꾸로 바다','별똥별 줍기','양 세기','작아진 나','별빛 기차','무지개 미끄럼틀','비눗방울 톡톡','장난감 상자','달토끼 떡방아','날아라 침대'];
+const PICK=4; // 무작위로 고른 꿈 (시안: 양 세기)
+const $=id=>document.getElementById(id), show=(id,v)=>{$(id).style.opacity=v?1:0;};
+function room(t){
+ grad(g,[18,12,46],[58,40,110]);for(let i=0;i<40;i++){const tw=(Math.sin(t*3+i)+1)/2;P(g,[[(i*37)%W,(i*53)%170]],tw>.5?'#FFF8C8':'#6A5AA8');}
+ R(g,40,60,50,40,'#2A1E4A');[[40,60,50,2],[40,98,50,2],[40,60,2,40],[88,60,2,40],[64,60,2,40],[40,79,50,2]].forEach(a=>R(g,...a,'#6A4A34'));
+ disc(g,77,70,6,'#FFE9A0');disc(g,80,68,5,'#2A1E4A');
+ R(g,0,190,W,H-190,'#3A2A50');for(let x=0;x<W;x+=10)R(g,x,190,1,H-190,'#32244A');
+ R(g,28,178,74,26,'#8A5A3A');R(g,28,178,74,3,'#B4805A');R(g,24,160,8,44,'#6A4A34');R(g,98,168,8,36,'#6A4A34');
+ sleepy(g,66,176);
+ for(let i=0;i<3;i++){const k=((t*.6+i/3)%1),x=84+k*22+Math.sin(k*9)*3,y=168-k*50,s=2+Math.floor(k*3),c=`rgba(232,220,255,${1-k})`;R(g,x,y,s+2,1,c);for(let j=0;j<s;j++)P(g,[[x+s+1-j|0,y+1+j|0]],c);R(g,x,y+s+1,s+2,1,c);}
+}
+function lids(k){ // 눈꺼풀: 0 열림 → 1 감김
+ o.clearRect(0,0,W,H);const h=Math.round(H/2*k);o.fillStyle='#0A0612';o.fillRect(0,0,W,h);o.fillRect(0,H-h,W,h);
+ if(k>0&&k<1){o.fillStyle='#2A1E3A';o.fillRect(0,h-1,W,1);o.fillRect(0,H-h,W,1);}
+}
+function swirl(t,k){ // 별이 소용돌이치며 가운데로
+ R(g,0,0,W,H,'#0A0612');
+ for(let i=0;i<90;i++){const a=i*2.4+t*2.2,r=(1-((i/90+t*.35)%1))*110*(1-k*.3);const x=W/2+Math.cos(a)*r,y=H/2+Math.sin(a)*r*1.1;const c=['#FFF8C8','#C8A0FF','#9AD8FF','#FFB0D0'][i%4];P(g,[[x|0,y|0]],c);if(i%6==0)star(g,x|0,y|0,c);}
+}
+function bubble(t,r){ // 꿈 방울이 커져요
+ swirl(t,1);const cx=W/2,cy=H/2;
+ for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++){const d=x*x+y*y;if(d<=r*r){const h=(Math.atan2(y,x)/6.28+t*.2+d/(r*r)*.3)%1;g.fillStyle=`hsl(${h*360|0},70%,${78-d/(r*r)*12}%)`;g.fillRect(cx+x,cy+y,1,1);}}
+ g.strokeStyle='rgba(255,255,255,.9)';g.beginPath();g.arc(cx+.5,cy+.5,r,0,6.3);g.stroke();if(r>6){P(g,[[cx-r*.5|0,cy-r*.5|0],[cx-r*.5+1|0,cy-r*.5|0],[cx-r*.5|0,cy-r*.5+1|0]],'#FFFFFF');}
+}
+let t0=null;
+function frame(now){if(!t0)t0=now;const t=(now-t0)/1000;
+ if(t<2.2){room(t);lids(0);show('t3',t>.3);}
+ else if(t<3.4){room(t);lids(Math.min(1,(t-2.2)/1.0));show('t3',0);}
+ else if(t<5.2){lids(0);swirl(t,(t-3.4)/1.8);show('t1',1);show('t2',t>3.9);}
+ else if(t<6.4){show('t1',0);show('t2',0);bubble(t,Math.round(4+(t-5.2)/1.2*40));}
+ else if(t<9.4){bubble(t,44);const c=$('card');c.style.opacity=1;c.style.transform='scale(1)';
+   const k=t-6.6;if(k<2){const sp=Math.max(0,k)*(14-k*5);$('nm').textContent=k<0?'???':NAMES[Math.floor(k*k*3+k*12)%12];}else $('nm').textContent=NAMES[PICK];
+   if(t>8.6){c.style.transform='scale(1.12)';c.style.borderColor='#FFE070';}}
+ else if(t<10.6){const c=$('card');c.style.opacity=0;const k=Math.min(1,(t-9.4)/.9);bubble(t,Math.round(44+k*130));if(k>=1){D.sheep(g);} }
+ else if(t<12.2){D.sheep(g);show('go',t<11.8);}
+ else {D.sheep(g);show('go',0);if(t>12.6&&!window.done){window.done=1;}}
+ requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+</script></body></html>
