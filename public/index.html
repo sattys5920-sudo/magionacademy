@@ -110,7 +110,7 @@ body.inworld #app.open{opacity:1;pointer-events:auto}
 #fysay{position:absolute;left:10px;right:10px;bottom:calc(24px + env(safe-area-inset-bottom));display:none}#fysay .evbox{position:relative;max-width:560px;margin:0 auto;background:rgba(20,13,34,.96);border:2px solid var(--c);border-radius:14px;padding:14px 14px 12px}
 #fysay .evtext{font-size:15px;line-height:22px;min-height:44px;color:#F1E9FF}#fysay .fqn{position:absolute;left:10px;top:-14px;background:var(--c);color:#14081E;border-radius:8px;padding:2px 10px;font-family:var(--f-pxb);font-size:var(--fs-s)}
 #fypick{position:absolute;left:10px;right:10px;bottom:calc(24px + env(safe-area-inset-bottom));display:none}#fypick .box{max-width:560px;margin:0 auto;background:rgba(20,13,34,.96);border:2px solid #6A5A9A;border-radius:14px;padding:12px}
-#fypick .h{font-family:var(--f-pxb);font-size:15px;margin-bottom:8px;color:#FFE8A0}
+#fypick .h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-family:var(--f-pxb);font-size:15px;margin-bottom:8px;color:#FFE8A0}#fypick .h .fyreg{font-family:var(--f-px);font-size:12px;color:#C8B8F0}
 #fypick .items{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}#fypick .it{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:12px;border:2px solid var(--c);background:#241A3C;color:#F1E9FF;font-family:var(--f-pxb);font-size:13px;min-height:44px}
 #fypick .it small{font-family:var(--f-px);opacity:.8;font-size:12px}#fypick .it.on{background:#3A2C5A;box-shadow:0 0 12px var(--c)}
 #fypick .mem{display:flex;flex-direction:column;gap:6px}#fypick .mem button{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:12px;border:1px solid #4E3C72;background:#2E2248;color:#F1E9FF;font-family:var(--f-px);font-size:14px;text-align:left}
@@ -7780,14 +7780,14 @@ async function famAwaken(){   // 각성 연출: 룬 고리 → 빛기둥 → 번
   await famSleep(1800); famSay(L.af);
 }
 // ===== 이벤트 「요정 시장」: 관리자가 요정 한 명을 골라 열면, 그 요정이 학생마다 날아와 노점을 펼쳐요 · 오늘의 기억 하나를 내고 물건 하나와 바꿔요 (한 번 열릴 때 한 번) =====
-//   fairy/ctl = { open, id, f: 요정 번호, items: [물건 이름 3개] } · me.fairy = { id: 바꾼 회차 } · me.mem = { d: 날, l: [[기억, 결, 썼는지]] } (오늘 한 일, 최대 12개)
+//   fairy/ctl = { open, id, f: 요정 번호, items: [물건 이름 3개] } · me.fairy = { id: 바꾼 회차, lk: { 요정: 좋아하는 기억 준 수 }, fu: { 요정: 단골 가구 받음 } } · 좋아하는 기억 15번이면 그 요정 가구 · me.mem = { d: 날, l: [[기억, 결, 썼는지]] } (오늘 한 일, 최대 12개)
 const FY = [   // 문장 끝은 늘 . ! ? 또는 ....... · 문장 가운데 말줄임은 ....
-  { n: '미엘', c: '#FFC060', like: ['따뜻함', '기쁨'], pool: ['별사과', '해님 호박', '황금 버섯', '구름 목화'], ln: { hi: ['어머, 사람 아이다! 오늘은 내가 장을 열었어요.', '여기선 골드는 안 받아요. 오늘 있었던 일 하나면 돼요.'], like: '어머어머, 따뜻해라! 이런 기억은 꿀보다 달아요. 하나 더 얹어 줄게요.', meh: '음, 나쁘지 않은 맛이에요. 고마워요.', bye: '또 올게요. 기억은 매일 새로 생기니까요!' } },
-  { n: '로웬', c: '#90D8FF', like: ['고요'], pool: ['꿈꽃', '월하향', '영혼 연꽃', '서리 딸기', '꿈 조각'], ln: { hi: ['....찾았다. 잠깐만, 펼칠게.', '골드는 필요 없어. 오늘 있었던 일, 하나만 주면 돼.'], like: '....조용한 시간이었구나. 좋은 기억이야. 아껴 쓸게.', meh: '....응, 받을게. 조금 시끄럽지만.......', bye: '....또 올게. 그때까지 좋은 기억 많이 만들어 둬.' } },
-  { n: '시슬', c: '#E070C0', like: ['장난'], pool: ['그림자 버섯', '거울 잎', '번개 콩', '화룡초'], ln: { hi: ['키키! 내 가게가 열렸다!', '돈은 됐고, 오늘 있었던 일 하나 내놔! 재미없는 기억은 사절이다!'], like: '키키키! 이거 맛있다! 들킬 뻔했지? 하나 더 얹어 주지!', meh: '흥, 착한 기억은 싱거워.... 그래도 받아 두지.', bye: '키키, 다음엔 더 짓궂은 걸로 가져와라!' } },
+  { n: '미엘', c: '#FFC060', furn: 'fy_honey', like: ['따뜻함', '기쁨'], pool: ['별사과', '해님 호박', '황금 버섯', '구름 목화'], ln: { hi: ['어머, 사람 아이다! 오늘은 내가 장을 열었어요.', '여기선 골드는 안 받아요. 오늘 있었던 일 하나면 돼요.'], like: '어머어머, 따뜻해라! 이런 기억은 꿀보다 달아요. 하나 더 얹어 줄게요.', meh: '음, 나쁘지 않은 맛이에요. 고마워요.', bye: '또 올게요. 기억은 매일 새로 생기니까요!', reg: '어머, 벌써 열다섯 번째예요! 이제 진짜 단골이네요. 이건 내 선물이에요!' } },
+  { n: '로웬', c: '#90D8FF', furn: 'fy_dew', like: ['고요'], pool: ['꿈꽃', '월하향', '영혼 연꽃', '서리 딸기', '꿈 조각'], ln: { hi: ['....찾았다. 잠깐만, 펼칠게.', '골드는 필요 없어. 오늘 있었던 일, 하나만 주면 돼.'], like: '....조용한 시간이었구나. 좋은 기억이야. 아껴 쓸게.', meh: '....응, 받을게. 조금 시끄럽지만.......', bye: '....또 올게. 그때까지 좋은 기억 많이 만들어 둬.', reg: '....열다섯 번. 너는 이제 내 단골이야. 이거, 가져가.' } },
+  { n: '시슬', c: '#E070C0', furn: 'fy_arch', like: ['장난'], pool: ['그림자 버섯', '거울 잎', '번개 콩', '화룡초'], ln: { hi: ['키키! 내 가게가 열렸다!', '돈은 됐고, 오늘 있었던 일 하나 내놔! 재미없는 기억은 사절이다!'], like: '키키키! 이거 맛있다! 들킬 뻔했지? 하나 더 얹어 주지!', meh: '흥, 착한 기억은 싱거워.... 그래도 받아 두지.', bye: '키키, 다음엔 더 짓궂은 걸로 가져와라!', reg: '키키! 열다섯 번이나! 넌 이제 내 단골이다! 이건 특별히 주는 거야!' } },
 ];
 const FY_RARE = ['오로라 꽃잎', '무지개 콩', '혜성 씨앗', '시간의 꽃'];
-const FY_QUIET = ['아무 일 없던 조용한 하루', '고요'];
+const FY_QUIET = ['아무 일 없던 조용한 하루', '고요'], FY_REG = 15;
 function memSt(){ const m = me.mem; if (!m || m.d !== todayKey() || !Array.isArray(m.l)) me.mem = { d: todayKey(), l: [] }; return me.mem; }
 function memLog(on, d = {}){   // trEv에서 불러요: 오늘 한 일을 기억으로 남겨요 (같은 기억은 한 번만)
   if (!me) return; const nn = id => (typeof npcGet === 'function' && npcGet(id) || {}).name;
@@ -7850,7 +7850,8 @@ async function fairyGo(c){
   for (const t of f.ln.hi) await talk(t, 900);
   const icOf = n => n === '꿈 조각' ? '<i class="fyshard">✦</i>' : ic(TRN(n));
   pick.style.display = 'block';
-  box.innerHTML = `<div class="h">무엇과 바꿀까요?</div><div class="items">${items.map((n, i) => `<button class="it" style="--c:${f.c}" data-fyi="${i}">${icOf(n)}${esc(n)}<small>${FY_RARE.includes(n) ? '특별한 물건 · ' : ''}기억 1개</small></button>`).join('')}</div>`;
+  const fz = me.fairy || {}, lk0 = (fz.lk || {})[c.f] || 0, reg0 = (fz.fu || {})[c.f];
+  box.innerHTML = `<div class="h">무엇과 바꿀까요?<span class="fyreg">${reg0 ? `${f.n}의 단골` : `${f.n}의 단골까지 ${lk0}/${FY_REG}`}</span></div><div class="items">${items.map((n, i) => `<button class="it" style="--c:${f.c}" data-fyi="${i}">${icOf(n)}${esc(n)}<small>${FY_RARE.includes(n) ? '특별한 물건 · ' : ''}기억 1개</small></button>`).join('')}</div>`;
   const it = items[+(await wait('[data-fyi]')).dataset.fyi];
   const m = memSt(), list = m.l.map((x, i) => [x, i]).filter(([x]) => !x[2]).slice(-6), quiet = !list.length;
   box.innerHTML = `<div class="h">어떤 기억을 건넬까요?</div><div class="mem">${quiet ? `<button data-fym="-1">${FY_QUIET[0]}<span>${FY_QUIET[1]}</span></button>` : list.map(([x, i]) => `<button data-fym="${i}">${esc(x[0])}<span>${x[1]}</span></button>`).join('')}</div>`;
@@ -7862,9 +7863,12 @@ async function fairyGo(c){
   const like = f.like.includes(mem[1]), n = like ? 2 : 1;
   if (mi >= 0) m.l[mi][2] = 1;
   if (it === '꿈 조각') dreamSt().sh += 3 * n; else { const id = TRN(it); me.inv[id] = (me.inv[id] || 0) + n; }
-  me.fairy = { id: c.id }; save(); hud();
+  const fz2 = me.fairy = { ...(me.fairy || {}), id: c.id }, lk = fz2.lk = { ...(fz2.lk || {}) }, fu = fz2.fu = { ...(fz2.fu || {}) }; let reg = false;
+  if (like){ lk[c.f] = (lk[c.f] || 0) + 1; if (lk[c.f] >= FY_REG && !fu[c.f] && FURN_BY[f.furn]){ fu[c.f] = 1; reg = true; me.fbag = me.fbag || {}; me.fbag[f.furn] = (me.fbag[f.furn] || 0) + 1; } }
+  save(); hud();
   await talk(like ? f.ln.like : f.ln.meh, 1400);
   got.innerHTML = `${icOf(it)}${esc(it)} ×${it === '꿈 조각' ? 3 * n : n}`; got.classList.add('on'); sfx('heart'); await sleep(2000); got.classList.remove('on'); await sleep(400);
+  if (reg){ await talk(f.ln.reg, 1400); got.innerHTML = `${furnPic(f.furn, 44)}「${esc(FURN_BY[f.furn].name)}」<small style="font-family:var(--f-px);font-size:12px;opacity:.85">내 방 가구 가방에 넣었어요</small>`; got.classList.add('on'); sfx('sparkle'); await sleep(2600); got.classList.remove('on'); await sleep(400); }
   await talk(f.ln.bye, 1200);
   await anim(700, e => { S.open = 1 - e; }); S.open = 0; await anim(1200, e => { S.fx = 160 + 200 * e; S.fy = 96 - 60 * e; });
   fade.style.opacity = 1; await sleep(1000); live = false; v.remove(); fade.style.opacity = 0; await sleep(900); fade.remove(); fyOn = false;
