@@ -12,6 +12,19 @@ const dlg = document.createElement('div'); dlg.style.cssText = 'position:fixed;l
 dlg.innerHTML = '<div class="evwrap"><div class="evbox"><div class="evname"></div><div class="evtext"></div><div class="evch"></div><div class="evtap">▼</div></div></div>'; document.body.appendChild(dlg);
 const css = document.createElement('style'); css.textContent = `.encch{min-height:44px;border-radius:12px;border:1px solid #4E3C72;background:#2E2248;color:#F1E9FF;font-family:var(--f-pxb);font-size:15px;transition:all .2s}.encch.on{background:#FF9A3C;border-color:#C86A1E;color:#2A1606;transform:scale(1.02)}
 .enclt{display:inline-block;opacity:0;transform:translateY(8px) scale(1.4);filter:blur(4px);transition:all .7s}.enclt.on{opacity:1;transform:none;filter:none;text-shadow:0 0 12px var(--c),0 0 26px var(--c)}`; document.head.appendChild(css);
+// 제단의 물음 10개 (실제 배정은 관리자가 미리 정해 두고, 물음은 분위기용. 매번 5개를 뽑아요)
+const ENC_Q = [
+  ['어둠 속에서 길을 잃었다. 너는?', ['가만히 기다린다', '크게 소리친다', '더듬어 걷는다']],
+  ['「열지 마시오」라고 적힌 낡은 상자가 있다.', ['그대로 둔다', '살짝 열어 본다', '누군가에게 묻는다']],
+  ['밤하늘에서 가장 먼저 찾는 것은?', ['가장 밝은 별', '둥근 달', '별 사이의 어둠']],
+  ['꿈속에서 누군가 네 이름을 부른다.', ['대답한다', '숨는다', '소리 나는 쪽으로 간다']],
+  ['불 하나만 가질 수 있다면?', ['흔들리지 않는 촛불', '타닥이는 모닥불', '떠도는 도깨비불']],
+  ['거울 속의 네가 먼저 웃었다.', ['같이 웃어 준다', '거울을 덮는다', '말을 걸어 본다']],
+  ['오래된 숲의 나무가 길을 막아섰다.', ['돌아서 간다', '지나가도 되냐고 묻는다', '틈을 비집고 지난다']],
+  ['잃어버려도 괜찮은 것 하나를 고른다면?', ['기억 한 조각', '하루 동안의 목소리', '내 그림자']],
+  ['비가 그치지 않는 밤, 너는 어디에 있는가?', ['창가에 앉아', '이불 속에', '빗속 한가운데']],
+  ['마지막으로, 너는 무엇이 되고 싶은가?', ['길을 비추는 빛', '곁을 지키는 불', '아무도 모르는 불씨']],
+];
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const E = window.__enc = { ember: null, sz: 14, hue: null, spirit: -1, sparks: [], trail: [], altar: null, glow: 0, burst: 0, grey: 1 };
 const ease = t => t < .5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
@@ -37,6 +50,7 @@ function draw(now){
   if (E.altar){ const [ax, ay] = S(E.altar[0], E.altar[1]), u = K;
     const R = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(ax + x * u), Math.round(ay + y * u), Math.ceil(w * u), Math.ceil(h * u)); };
     R(-13, -3, 26, 6, 'rgba(0,0,0,.35)'); R(-10, -14, 20, 13, '#4A4658'); R(-10, -14, 20, 2, '#6A6680'); R(-10, -3, 20, 2, '#2E2A3A'); R(-12, -18, 24, 5, '#5C5872'); R(-12, -18, 24, 1, '#8A86A2'); R(-12, -14, 24, 1, '#34304A');
+    R(-20, -26, 6, 24, '#4A4658'); R(-20, -26, 6, 2, '#6A6680'); R(-20, -4, 6, 2, '#2E2A3A'); R(-19, -20, 1, 6, '#8AC4FF55'); R(14, -22, 5, 20, '#4A4658'); R(14, -22, 5, 2, '#6A6680'); R(14, -4, 5, 2, '#2E2A3A'); R(15, -16, 1, 5, '#8AC4FF55');
     R(-7, -21, 14, 3, '#3A364C'); R(-6, -22, 12, 1, '#6A6680'); R(-10, -8, 4, 2, '#3E6A3A'); R(5, -12, 5, 2, '#3E6A3A'); R(-12, -16, 3, 2, '#4E7A44');
     const rg = .4 + .6 * Math.abs(Math.sin(now / 700)) * (E.glow ? 1 : .35); g.globalAlpha = rg; R(-6, -11, 1, 4, '#8AC4FF'); R(-7, -10, 3, 1, '#8AC4FF'); R(5, -11, 1, 4, '#8AC4FF'); R(4, -9, 3, 1, '#8AC4FF'); g.globalAlpha = 1; }
   // 불티 자국 (몇 초 동안 땅 위에 남아 반짝)
@@ -61,20 +75,19 @@ function draw(now){
 }
 requestAnimationFrame(draw);
 window.__encGo = async (o) => {
-  const m = World.myPos(), T = (dx, dy) => World.__P(m.x + dx + .5, m.y + dy + .5);
-  const W1 = [-4, -2], W2 = [-8, 0], AL = [-10, 4], ST = [-9, 3];
-  const a = T(AL[0], AL[1]); E.altar = [a[0], a[1]];
-  const p1 = T(W1[0], W1[1]); E.ember = [p1[0], p1[1] - 14];
+  const T = (x, y) => World.__P(x + .5, y + .5);
+  const a = T(36, 56); E.altar = [a[0], a[1]];   // 숲 가장자리 (캠퍼스 36,56)
+  const p1 = T(41, 48); E.ember = [p1[0], p1[1] - 14];
   await sleep(2200);
-  await walk(m.x + W1[0] + 2, m.y + W1[1] + 1);
-  const p2 = T(W2[0], W2[1]); await flyTo(p2[0], p2[1] - 14, 1500); await sleep(700);
-  await walk(m.x + W2[0] + 2, m.y + W2[1] + 1);
+  await walk(42, 50);
+  const p2 = T(39, 53); await flyTo(p2[0], p2[1] - 14, 1500); await sleep(700);
+  await walk(40, 55);
   await flyTo(a[0], a[1] - 26, 1600); E.glow = 1; await sleep(500);
-  await walk(m.x + ST[0], m.y + ST[1]); await sleep(900);
+  await walk(39, 61); await sleep(900);
   await say('잊힌 제단', '돌에 새겨진 글씨가 희미하게 빛나요.... 「불씨가 묻는다」.......');
-  await say('잊힌 제단', '어둠 속에서 길을 잃었다. 너는?', ['가만히 기다린다', '크게 소리친다', '더듬어 걷는다'], 0);
-  await say('잊힌 제단', '「열지 마시오」라고 적힌 낡은 상자가 있다.', ['그대로 둔다', '바로 열어 본다', '누군가에게 묻는다'], 0);
-  await say('잊힌 제단', '밤하늘에서 가장 먼저 찾는 것은?', ['가장 밝은 별', '둥근 달', '별 사이의 어둠'], 0);
+  const pool = [...ENC_Q].sort(() => Math.random() - .5).slice(0, 5);
+  for (const q of pool) await say('잊힌 제단', q[0], q[1], Math.floor(Math.random() * 3));
+  await say('잊힌 제단', '....불씨가 너를 오래 바라봐요.......');
   dlg.style.display = 'none';
   E.ritual = 1; dark.style.opacity = 1; await sleep(1200);
   const t0 = performance.now(); E.hue = 0;
