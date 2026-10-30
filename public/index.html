@@ -5353,7 +5353,7 @@ function renderBag(){
     : `<div class="hint" style="padding:24px 8px">${{ all: '아직 가방이 비어 있어요', mat: '재료가 없어요. 온실·호숫가·사육장에서 모아요', potion: '물약이 없어요. 연구실 솥에서 만들어요', dish: '요리가 없어요. 솥 앞에서 요리해요', gift: '친구들이 좋아하는 물건이 아직 없어요', cloth: '산 옷이 없어요. 옷 가게에 가 봐요', key: '' }[bagTab]}</div>`;
   const pager = pages > 1 ? `<div class="bag-pager"><button class="btn sm" data-bpage="-1" ${bagPage ? '' : 'disabled'}>◀</button><span class="num">${bagPage + 1} / ${pages}</span><button class="btn sm" data-bpage="1" ${bagPage < pages - 1 ? '' : 'disabled'}>▶</button></div>` : '';
   frame(null, '가방', `${bagInvIds().length}종 · ${BAG_TABS.find(([k]) => k === bagTab)[1]} ${all.length}칸`, `${tabs}${grid}${pager}${bagDetailHTML(sel)}`);
-  const redraw = () => renderBag();
+  const redraw = () => keepScroll(renderBag);
   on('[data-btab]', b => { bagTab = b.dataset.btab; bagPage = 0; bagSel = null; bagPick = false; bagMsg = ''; redraw(); });
   on('[data-bpage]', b => { bagPage += +b.dataset.bpage; bagPick = false; redraw(); });
   on('[data-bsel]', b => { bagSel = bagSel === b.dataset.bsel ? null : b.dataset.bsel; bagPick = false; bagMsg = ''; redraw(); });
@@ -6381,7 +6381,8 @@ const pageOf = (list, page, per) => list.slice(page * per, (page + 1) * per);
 const clampP = (page, total, per) => Math.max(0, Math.min(page, pageN(total, per) - 1));
 const pager = (attr, page, total, per) => pageN(total, per) > 1 ? `<div class="pgr"><button class="btn sm" data-${attr}="${page - 1}" ${page <= 0 ? 'disabled' : ''} aria-label="이전 쪽">‹</button><span class="s num">${page + 1} / ${pageN(total, per)}</span><button class="btn sm" data-${attr}="${page + 1}" ${page >= pageN(total, per) - 1 ? 'disabled' : ''} aria-label="다음 쪽">›</button></div>` : '';
 // 패널 스크롤 위치를 지키며 다시 그려요
-const keepScroll = fn => { const pn = app.querySelector('.panel'), y = pn?.scrollTop; fn(); if (pn) { const n = app.querySelector('.panel'); if (n) n.scrollTop = y; } };
+const HSCROLL = '.crstrip, .bag-who, .bag-tabs, .matrow';   // 옆으로 넘기는 줄: 다시 그려도 보던 자리 그대로
+const keepScroll = fn => { const pn = app.querySelector('.panel'), y = pn?.scrollTop, hx = [...app.querySelectorAll(HSCROLL)].map(e => e.scrollLeft); fn(); if (pn) { const n = app.querySelector('.panel'); if (n) n.scrollTop = y; } app.querySelectorAll(HSCROLL).forEach((e, i) => { if (hx[i]) e.scrollLeft = hx[i]; }); };
 function renderDorm(){
   const cozy = cozyOf(me), H = HOUSES[me.house];
   const guest = Object.entries(myGuest).sort((a, b) => b[1].at - a[1].at);
