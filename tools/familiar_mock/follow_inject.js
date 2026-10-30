@@ -1,6 +1,6 @@
 // 시안: 실제 맵 위에서 정령불 사역마가 플레이어 뒤를 따라다니는 모습 (world.js 의 World.__cam 손잡이가 필요해요)
 (function(){
-const SPR = new Image(); SPR.src = 'wisps3.png';
+const SPR = new Image(); SPR.src = 'wisps3_anim.png';   // 세로 = 정령 12종, 가로 = 일렁임 8칸
 const cv = document.getElementById('cv'), ov = document.createElement('canvas'), g = ov.getContext('2d');
 ov.style.cssText = 'position:fixed;pointer-events:none;z-index:5;image-rendering:pixelated'; document.body.appendChild(ov);
 const bub = document.createElement('div');
@@ -36,7 +36,7 @@ function frame(now){
   for (const p of W.sparks){ const a = 1 - (now - p.t) / p.life, dt = now - p.t, [px, py] = S(p.x + p.vx * dt, p.y + p.vy * dt); g.fillStyle = W.col; g.globalAlpha = a; g.fillRect(Math.round(px), Math.round(py), Math.max(1, Math.round(K)), Math.max(1, Math.round(K))); }
   g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
   // 정령불 본체 (64칸 → 세계 30픽셀, 살짝 일렁이게 세로로 늘었다 줄었다)
-  if (SPR.complete){ const sz = 34 * K, st = 1 + .05 * Math.sin(now / 160); g.drawImage(SPR, W.i * 64, 0, 64, 64, Math.round(sx - sz / 2), Math.round(sy - sz * .62 * st), Math.round(sz), Math.round(sz * st)); }
+  if (SPR.complete){ const sz = 34 * K, st = 1 + .05 * Math.sin(now / 160); const fi = Math.floor(now / 110) % 8; g.drawImage(SPR, fi * 64, W.i * 64, 64, 64, Math.round(sx - sz / 2), Math.round(sy - sz * .62 * st), Math.round(sz), Math.round(sz * st)); }
   if (W.say){ const s = cv.getBoundingClientRect().width / cv.width; bub.style.left = r.left + sx * s + 'px'; bub.style.top = r.top + (sy - 22 * K) * s + 'px'; }
 }
 requestAnimationFrame(frame);

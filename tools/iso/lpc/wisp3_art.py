@@ -9,10 +9,11 @@ N = 64
 YY, XX = np.mgrid[0:N, 0:N] + .5
 BAYER = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]) / 16
 DITH = np.tile(BAYER, (N // 4, N // 4))
+FRAC = 0.   # 애니메이션 진행(0~1): 잡음을 위로 흘려 불꽃이 타오르게, 한 바퀴 돌면 처음과 이어져요
 def noise(seed, s):
-    r = np.random.RandomState(seed); g = r.rand(N // s + 3, N // s + 3)
-    im = Image.fromarray((g * 255).astype(np.uint8)).resize(((N // s + 3) * s, (N // s + 3) * s), Image.BICUBIC)
-    return np.array(im)[s:s + N, s:s + N] / 127.5 - 1
+    r = np.random.RandomState(seed); R = N // s + 3; g = np.tile(r.rand(R, R), (3, 1))
+    im = np.array(Image.fromarray((g * 255).astype(np.uint8)).resize((R * s, 3 * R * s), Image.BICUBIC)); P = R * s; y0 = P + int(round(FRAC * P)) % P
+    return im[y0:y0 + N, s:s + N] / 127.5 - 1
 def fbm(seed): return noise(seed, 12) * .55 + noise(seed + 1, 6) * .3 + noise(seed + 2, 3) * .15
 def flame(cx, base, h, w, seed, turb=1., lean=0., curl=0., k=1.5, p=1.25, br=.35):
     """일렁이는 불꽃 하나 → 세기(0~1). 위로 갈수록 가늘어지고 잡음으로 흔들리며 끝이 갈라져요"""
@@ -40,7 +41,7 @@ def stack(*layers):   # 뒤 → 앞 순서로 겹치기 (빛은 더해지는 느
 def sparks(img, seed, n, c, cx=32, top=4, bot=40, spread=18, trail=3):
     r = np.random.RandomState(seed); C = hx(c)
     for _ in range(n):
-        x, y = cx + r.randn() * spread * .5, r.uniform(top, bot); sw = r.uniform(-1, 1)
+        x, y = cx + r.randn() * spread * .5, r.uniform(top, bot); sw = r.uniform(-1, 1); y = top + (y - top - FRAC * (bot - top) * r.uniform(.6, 1.4)) % (bot - top)
         for j in range(trail):
             xi, yi = int(x + sw * j * .6), int(y + j)
             if 0 <= xi < N and 0 <= yi < N and img[yi, xi, 3] < 150: img[yi, xi, :3] = C; img[yi, xi, 3] = 255 - j * 80
@@ -70,7 +71,7 @@ def w4():   # 연화 · 꽃잎처럼 벌어지는 분홍 불꽃, 가운데서 �
     return sparks(render(f, PINK, '#FF5AB0'), 104, 10, '#FFE0F0', 32, 2, 30)
 def w5():   # 휘황 · 햇무리처럼 빛살을 뿜는 금빛 불
     ang = np.arctan2(YY - 32, XX - 32); r = np.hypot(XX - 32, YY - 32)
-    rays = np.clip((np.cos(ang * 8) * .5 + .5) ** 10 * (1 - r / 26), 0, 1) * .35
+    rays = np.clip((np.cos(ang * 8 + FRAC * 2 * math.pi / 8) * .5 + .5) ** 10 * (1 - r / 26), 0, 1) * .35
     f = np.maximum.reduce([flame(32, 42, 36, 11, 20, 1, 0, 2), orb(32, 36, 12) * .8, rays])
     return sparks(render(f, GOLD, '#FFC030', 1.3), 105, 8, '#FFF6D0', 32, 2, 50, 36, 1)
 def w6():   # 월영 · 초승달로 휘어 흐르는 차가운 은빛 불, 아래로 흩어지는 안개
@@ -95,7 +96,7 @@ def w8():   # 수련 · 물결 띠가 휘감아 도는 청록 불
 def w9():   # 윤화 · 고리 모양으로 돌며 타는 주황 불, 가운데는 빈 하늘
     ang = np.arctan2(YY - 34, XX - 32); r = np.hypot(XX - 32, YY - 34)
     rr = np.clip(1 - np.abs(r - 13) / 4, 0, 1)
-    tongues = np.clip(1 - np.abs(r - 13 - 4) / 6, 0, 1) * np.clip(np.sin(ang * 7 + fbm(60) * 2) * .5 + .3, 0, 1) * (r > 13)
+    tongues = np.clip(1 - np.abs(r - 13 - 4) / 6, 0, 1) * np.clip(np.sin(ang * 7 + fbm(60) * 2 + FRAC * 2 * math.pi) * .5 + .3, 0, 1) * (r > 13)
     f = np.clip(np.maximum(rr, tongues) + fbm(61) * .2 * (rr > 0), 0, 1)
     return sparks(render(f, ORNG, '#FF8020'), 109, 10, '#FFE8B0', 32, 6, 56, 34, 2)
 def w10():   # 성휘 · 성운처럼 일렁이는 남색 불, 안에 별빛이 반짝
@@ -119,7 +120,15 @@ def w12():   # 채운 · 오로라처럼 색이 흐르는 무지갯불
     return sparks(img, 112, 10, '#FFFFFF', 32, 2, 34)
 WS = [('푸른 혼불', '청운', w1), ('보라 나선불', '자운', w2), ('초록 도깨비불', '도롱', w3), ('분홍 연꽃불', '연화', w4), ('금빛 햇무리불', '휘황', w5), ('은빛 달불', '월영', w6),
       ('붉은 불기둥', '단화', w7), ('청록 물결불', '수련', w8), ('주황 고리불', '윤화', w9), ('남색 성운불', '성휘', w10), ('칠흑 그림자불', '묵영', w11), ('오로라 무지갯불', '채운', w12)]
+def frames(F=8):   # 12종 × F칸 애니메이션 (세로 = 정령, 가로 = 칸)
+    global FRAC; rows = []
+    for _, _, f in WS:
+        cs = []
+        for k in range(F): FRAC = k / F; cs.append(np.clip(f(), 0, 255).astype(np.uint8))
+        rows.append(np.concatenate(cs, axis=1))
+    FRAC = 0.; return np.concatenate(rows, axis=0)
 if __name__ == '__main__':
+    Image.fromarray(frames()).save(os.path.join(HERE, '..', 'out', 'wisps3_anim.png'))
     cells = [np.clip(f(), 0, 255).astype(np.uint8) for _, _, f in WS]
     Image.fromarray(np.concatenate(cells, axis=1)).save(os.path.join(HERE, '..', 'out', 'wisps3.png'))
     if len(sys.argv) > 1:
