@@ -19,7 +19,7 @@ const INJ = fs.readFileSync(path.join(__dirname, 'seed_inject.js'), 'utf8');
   p.evaluate(() => window.__sdGo());
   const click = async sel => { await p.waitForSelector(sel + ':not([disabled])', { state: 'visible', timeout: 90000 }); await p.waitForTimeout(2600); await p.click(sel); };   // 씨앗 기분 말풍선을 읽을 틈을 줘요
   for (const k of ['water', 'moon', 'moon', 'moon']) await click(`[data-sc="${k}"]`);
-  await click('[data-sv="1"]');
+  await click('[data-sv="7"]');
   await p.waitForFunction(() => window.__sdDone, null, { timeout: 120000 });
   const v = p.video(); await ctx.close(); fs.renameSync(await v.path(), path.join(OUT, 'seed.webm'));
   fs.writeFileSync(path.join(OUT, 'seed.start'), String(start)); console.log('start', start);
