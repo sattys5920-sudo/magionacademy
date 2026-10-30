@@ -341,6 +341,7 @@ World.say = (id, text, big) => {   // big: 이모티콘 번호(art/emo.png 칸)�
   world.appendChild(d); p.say = { el: d, until: performance.now() + (emo !== null ? 3500 : 5500) }; says.push(p);
 };
 World.onPeer = null;   // (친구 uid) 친구를 눌렀을 때
+World.meAt = () => started && M ? { get x(){ return P(me.x + .5, me.y + .5)[0]; }, get y(){ return P(me.x + .5, me.y + .5)[1] - World.Avatar.FH * ASC + 2; }, sw: 0 } : null;
 World.peerAt = id => { const p = peers[id]; if (!p) return null; return { get x(){ return P(p.x + .5, p.y + .5)[0]; }, get y(){ return P(p.x + .5, p.y + .5)[1] - World.Avatar.FH * ASC + 2; }, sw: 0 }; };   // 친구를 따라 움직여요
 // 칸으로 걸어가요 (같은 맵일 때). 목적지에 작은 표시가 떠요
 let dest = null;
@@ -713,6 +714,8 @@ cv.addEventListener('pointerdown', e => {
   // 이야기 NPC를 누르면 (판정은 발부터 머리 위 이름표까지: 얼굴을 눌러도 잡혀요)
   const np = people.filter(p => p.npc && (() => { const [sx, sy] = P(p.x + .5, p.y + .5), h = World.Avatar.FH * ASC + 10; return x >= sx - 10 && x <= sx + 10 && y >= sy - h && y <= sy + 3; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
   if (np && World.onNpc){ const n = np.npc, d = Math.abs(Math.round(me.x) - np.x) + Math.abs(Math.round(me.y) - np.y); if (d <= 1) World.onNpc(n.id); else { const c = near([[np.x, np.y]])[0]; if (c && goto(me, c[0], c[1])) pending = { npcTalk: n.id }; } return; }
+  // 내 캐릭터 몸통을 누르면 (발밑 칸은 그대로 걷기)
+  { const [mx, my] = P(me.x + .5, me.y + .5); if (World.onMe && !me.path.length && x >= mx - 8 && x <= mx + 8 && y >= my - World.Avatar.FH * ASC && y <= my - 7){ World.onMe(); return; } }
   // 친구를 누르면 (겹치면 앞에 있는 사람)
   const pr = people.filter(p => p.peer && (() => { const [sx, sy] = P(p.x + .5, p.y + .5); return x >= sx - 9 && x <= sx + 9 && y >= sy - World.Avatar.FH * ASC - 10 && y <= sy + 3; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
   if (pr && World.onPeer){ World.onPeer(pr.peer); return; }

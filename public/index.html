@@ -7993,7 +7993,7 @@ function prankEv(on, d = {}){
       if (p.got[k]) continue; const L = PRANK_STEPS[k], i = p.s[k] || 0, st = L[i]; if (!st || st.on !== on || (st.ok && !st.ok(d))) continue;
       if (st.q){ const key = String(st.q(d)); const q = p.q[k] = p.q[k] || {}; if (q[key]) continue; q[key] = 1; }
       const c = (p.c[k] || 0) + (st.add ? st.add(d) : 1);
-      if (c >= (st.n || 1)){ p.s[k] = i + 1; p.c[k] = 0; delete p.q[k]; if (p.s[k] >= L.length) setTimeout(() => toast('어디선가 쿡쿡쿡.... 웃음소리가 들려요'), 600); }
+      if (c >= (st.n || 1)){ p.s[k] = i + 1; p.c[k] = 0; delete p.q[k]; }
       else p.c[k] = c;
       ch = true;
     }
@@ -8066,8 +8066,8 @@ function prankPad(o){
   }
   if (o.book) return book();
   // 판 그리기
-  const tgt = o.to && onlineList[o.to];
-  v.innerHTML = head(o.teach ? `『${PRANK_KO[o.teach]}』 배우기` : '장난 마법', o.teach ? '잘 보고 따라 그려요' : tgt ? `${tgt.nick}에게 걸 문양을 그려요` : '') + `<div class="pkpad"><canvas></canvas></div><div class="pktip"></div>${o.teach ? '' : '<button class="pkbk">마법책</button>'}`;
+  const tgt = o.self ? { nick: me.nick } : o.to && onlineList[o.to];
+  v.innerHTML = head(o.teach ? `『${PRANK_KO[o.teach]}』 배우기` : '장난 마법', o.teach ? '잘 보고 따라 그려요' : o.self ? '나에게 걸 문양을 그려요' : tgt ? `${tgt.nick}에게 걸 문양을 그려요` : '') + `<div class="pkpad"><canvas></canvas></div><div class="pktip"></div>${o.teach ? '' : '<button class="pkbk">마법책</button>'}`;
   bind(); if (!o.teach) v.querySelector('.pkbk').onclick = () => book();
   const cv = v.querySelector('canvas'), box = v.querySelector('.pkpad'), S = Math.min(300, box.clientWidth || 300), dpr = window.devicePixelRatio || 1;
   cv.width = S * dpr; cv.height = S * dpr; cv.style.width = cv.style.height = S + 'px'; const g = cv.getContext('2d'); g.scale(dpr, dpr);
@@ -8101,18 +8101,21 @@ function prankPad(o){
     const sp = PRANK.find(x => x[2] === pat), k = sp && sp[0];
     if (!k || !p.got[k]){ tip('아무 일도 일어나지 않았어요.......'); sfx('creak'); path = []; await sleep(500); lock = false; draw(); return; }
     if (pkUsed(k)){ tip(`『${PRANK_KO[k]}』${josaPick(PRANK_KO[k], '은', '는')} 오늘 이미 썼어요. 자정에 다시 쓸 수 있어요`); path = []; await sleep(500); lock = false; draw(); return; }
-    if (!o.to || !onlineList[o.to]){ tip('친구가 떠났어요.......'); lock = false; path = []; draw(); return; }
+    const to = o.self ? uid : o.to;
+    if (!o.self && (!o.to || !onlineList[o.to])){ tip('친구가 떠났어요.......'); lock = false; path = []; draw(); return; }
     const t = now2(); p.u[k] = todayKey(); save();
-    GDB.set('prank/' + o.to, { k, by: uid, n: me.nick, at: t, until: t + PRANK_MIN * 6e4 }).catch(() => {});
-    if (solo){ pkLive = { ...pkLive, [o.to]: { k, by: uid, n: me.nick, at: t, until: t + PRANK_MIN * 6e4 } }; prankSync(); }
-    sfx('magic'); close(); toast(`${tgt.nick}에게 『${PRANK_KO[k]}』${josaPick(PRANK_KO[k], '을', '를')} 걸었어요!`);
+    GDB.set('prank/' + to, { k, by: uid, n: me.nick, at: t, until: t + PRANK_MIN * 6e4 }).catch(() => {});
+    if (solo){ pkLive = { ...pkLive, [to]: { k, by: uid, n: me.nick, at: t, until: t + PRANK_MIN * 6e4 } }; prankSync(); }
+    sfx('magic'); close(); toast(`${o.self ? '나' : tgt.nick}에게 『${PRANK_KO[k]}』${josaPick(PRANK_KO[k], '을', '를')} 걸었어요!`);
   }
   draw();
   if (o.teach){ tip('쿡쿡쿡.... 한 번만 보여 줄 거야.......'); setTimeout(() => show(PRANK.find(x => x[0] === o.teach)[2]).then(() => tip('따라 그려요 (0 / 2)')), 500); }
   else if (!Object.keys(p.got).length) tip('아직 아는 장난 마법이 없어요');
 }
 let PRANK_ATLAS = null; fetch('art/prank.json?v=1').then(r => r.json()).then(a => { PRANK_ATLAS = a; }).catch(() => {});
-function prankCast(id){ if (!me) return; World.hideBubble(); if (uiBusy()) return; prankPad({ to: id }); }
+function prankCast(id){ if (!me) return; World.hideBubble(); if (uiBusy()) return; prankPad(id === 'me' ? { self: true } : { to: id }); }
+// 내 캐릭터를 누르면: 나에게도 장난 마법을 걸 수 있어요
+World.onMe = () => { const at = World.meAt && World.meAt(); if (!me || !at || uiBusy()) return; World.bubble(at, `<b>${esc(me.nick)}</b><div class="pm"><button data-pm="prank" style="grid-column:1/3">장난 마법</button></div>`); document.querySelectorAll('.bubble [data-pm]').forEach(b => b.onclick = e => { e.stopPropagation(); prankCast('me'); }); };
 function adminBabyHTML(){
   const pk = AD.bbpick || {}, c = AD.bbctl || {}, ids = Object.keys(AD.players || {}).filter(id => AD.players[id]?.nick).sort((a, b) => AD.players[a].nick.localeCompare(AD.players[b].nick, 'ko'));
   const bOf = id => { const b = AD.players[id].baby; return b && (b.adopt || b.ev === c.id) ? b : null; };
