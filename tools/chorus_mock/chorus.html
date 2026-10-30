@@ -1,0 +1,102 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:G;src:url(../Galmuri11-Bold.ttf)}
+body{margin:0;background:#111;font-family:G;color:#F1E9FF}
+.ph{width:390px;height:844px;position:relative;overflow:hidden;background:#140D22}
+.ph>canvas.bg{position:absolute;left:0;top:0;width:390px;height:844px;image-rendering:pixelated}
+.top{position:absolute;left:0;right:0;top:0;padding:16px 16px 0;display:flex;justify-content:space-between;align-items:center}
+.pill{background:rgba(20,12,36,.78);border:2px solid rgba(255,255,255,.18);border-radius:18px;padding:6px 12px;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+.t{position:absolute;left:0;right:0;text-align:center}
+.h1{font-size:24px;color:#FFE9A0;text-shadow:0 2px 0 #2A1E3A}.sub{font-size:13px;opacity:.85}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 26px;border-radius:24px;border:2px solid #2A1E3A;background:#FFD866;color:#2A1E3A;font-size:16px;box-shadow:0 3px 0 #B8862E}
+.btn.g{background:rgba(255,255,255,.12);color:#F1E9FF;border-color:rgba(255,255,255,.3);box-shadow:none}
+.beat{position:absolute;left:16px;right:16px;top:64px;height:46px;border-radius:14px;background:rgba(10,6,20,.75);border:2px solid rgba(200,160,255,.35)}
+.beat i{position:absolute;top:13px;width:16px;height:16px;border-radius:50%;background:#C8A0FF}.beat i.on{background:#FFE070;box-shadow:0 0 10px #FFE070}
+.beat b{position:absolute;left:46px;top:4px;bottom:4px;width:4px;border-radius:2px;background:#FFFFFF}
+.lane{position:absolute;left:16px;right:16px;top:170px;height:420px;border-radius:22px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.12)}
+.lane .tag{position:absolute;left:50%;top:-16px;transform:translateX(-50%);background:#7A48C8;border:2px solid #2A1E3A;border-radius:14px;padding:5px 14px;font-size:15px;white-space:nowrap}
+.team{position:absolute;left:16px;right:16px;bottom:96px;display:flex;justify-content:space-between}
+.mate{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px}
+.mate .ring{width:52px;height:52px;border-radius:50%;border:4px solid #9AE07A;display:flex;align-items:center;justify-content:center;background:rgba(20,12,36,.8)}
+.mate .ring.mid{border-color:#FFD866}.mate .ring.bad{border-color:#FF8080}.mate .ring.me{box-shadow:0 0 0 3px #C8A0FF}
+.mate canvas,.card .ring canvas{width:36px;height:36px;image-rendering:pixelated}
+.harm{position:absolute;left:16px;right:16px;bottom:40px;display:flex;align-items:center;gap:10px;font-size:14px}
+.harm .bar{flex:1;height:16px;border-radius:8px;background:rgba(255,255,255,.12);overflow:hidden}.harm .bar i{display:block;height:100%;background:linear-gradient(90deg,#C8A0FF,#FFE070)}
+.card{position:absolute;border-radius:16px;background:rgba(20,12,36,.88);border:2px solid #8A60D0;padding:14px}
+.seat{display:flex;flex-direction:column;align-items:center;gap:6px;width:64px;font-size:12px}
+.seat .box{width:60px;height:60px;border-radius:14px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center}
+.seat canvas{width:48px;height:48px;image-rendering:pixelated}
+.el{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0 22px}
+.el div{height:86px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:14px;border:3px solid rgba(0,0,0,.3)}
+.seq{display:flex;gap:10px;justify-content:center}.seq span{width:54px;height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2)}
+.seq span.ok{background:rgba(154,224,122,.25);border-color:#9AE07A}.seq span.now{background:rgba(255,216,102,.25);border-color:#FFD866;transform:scale(1.12)}
+.chip{display:inline-block;padding:4px 10px;border-radius:10px;background:rgba(255,255,255,.1);font-size:12px;margin:2px}
+</style></head><body><div id="out"></div>
+<script src="lib.js"></script>
+<script>
+const out=document.getElementById('out');
+function phone(id,html,draw){const d=document.createElement('div');d.className='ph';d.id=id;const c=document.createElement('canvas');c.className='bg';c.width=W;c.height=H;d.appendChild(c);d.insertAdjacentHTML('beforeend',html);out.appendChild(d);if(draw)draw(c.getContext('2d'));return d;}
+const HAIR=['#D8482E','#3A2A20','#E8C060','#6A4AC8','#2A2A3A'],CAPE=['#5A3496','#2A6AB8','#C8443A','#3A8A5A','#7A7A9A'];
+function face(i,ghost){const c=document.createElement('canvas');c.width=16;c.height=16;const g=c.getContext('2d');if(ghost){disc(g,8,8,6,'#E8E8FF');R(g,2,9,12,5,'#E8E8FF');P(g,[[6,7],[10,7]],'#2A1E3A');P(g,[[4,14],[8,14],[12,14]],'#140D22');return c;}
+ R(g,4,4,8,8,'#F6D2B0');R(g,3,2,10,3,HAIR[i]);R(g,3,4,2,4,HAIR[i]);R(g,11,4,2,3,HAIR[i]);P(g,[[6,8],[9,8]],'#2A1E3A');P(g,[[5,10],[10,10]],'#F4A0A0');R(g,4,12,8,4,CAPE[i]);return c;}
+function team(states){const nm=['민준','서연','하준','지우','유령 단원'];return `<div class="team">${nm.map((n,i)=>`<div class="mate"><div class="ring ${states[i]}" data-f="${i}"></div><span>${n}</span></div>`).join('')}</div>`;}
+function fillFaces(root){root.querySelectorAll('[data-f]').forEach(r=>r.appendChild(face(+r.dataset.f,+r.dataset.f===4)));}
+const beat=(on)=>`<div class="beat">${[60,110,150,200,250,290,330].map((x,i)=>`<i style="left:${x}px" class="${i===on?'on':''}"></i>`).join('')}<b></b></div>`;
+const hud=(nm,st,tm)=>`<div class="top"><span class="pill">♪ ${nm} <span style="color:#FFD866">${st}</span></span><span class="pill">⌛ ${tm}</span></div>`;
+const harm=p=>`<div class="harm"><span>하모니</span><div class="bar"><i style="width:${p}%"></i></div><b>${p}%</b></div>`;
+const stageBg=g=>{grad(g,[30,18,52],[16,10,30]);R(g,0,0,W,40,'#5A1E3A');for(let x=0;x<W;x+=10){R(g,x,0,5,40,'#7A2A4A');}for(let x=0;x<W;x+=13)disc(g,x+6,40,5,'#5A1E3A');R(g,0,200,W,H-200,'#4A2E1E');for(let y=200;y<H;y+=8)R(g,0,y,W,1,'#3A2416');for(let i=0;i<5;i++){const x=14+i*26;ell(g,x,200,10,3,'rgba(255,230,150,.25)');}};
+// 1 대기실
+{const d=phone('c1',`<div class="t h1" style="top:56px">합창 주문</div><div class="t sub" style="top:90px">놀이 마당 무대 · 다섯 명이 한 박자에 주문을 외워요</div>
+<div class="card" style="left:16px;right:16px;top:150px"><div style="display:flex;justify-content:space-between">${['민준','서연','하준','지우','빈자리'].map((n,i)=>`<div class="seat"><div class="box" ${i<4?`data-f="${i}"`:''}>${i<4?'':'<span style="font-size:22px;opacity:.5">+</span>'}</div><span>${n}</span></div>`).join('')}</div>
+<div class="sub" style="margin-top:12px;text-align:center">시작할 때 빈자리는 유령 단원이 채워요 (정확도 60%)</div></div>
+<div class="card" style="left:16px;right:16px;top:330px"><b>오늘의 악보</b><div style="margin-top:8px;display:flex;align-items:center;gap:12px"><span style="font-size:34px">🔥</span><div><div style="color:#FFE9A0;font-size:18px">불꽃비</div><div class="sub">★★☆☆☆ · 주문 3개 · 5분</div></div></div></div>
+<div class="card" style="left:16px;right:16px;top:470px;display:flex;justify-content:space-between;align-items:center"><span>쉬운 모드 <span class="sub">(악보 전체 보기 · 판정 넓게)</span></span><span class="pill" style="background:#7A48C8">켜짐</span></div>
+<div class="t" style="bottom:130px"><span class="btn">시작!</span></div><div class="t" style="bottom:56px"><span class="btn g">혼자 연습 (봇 4명)</span></div>`,stageBg);fillFaces(d);}
+// 2 악보 확인
+{const d=phone('c2',`${hud('불꽃비','★★☆','0:10')}<div class="t h1" style="top:84px">악보 확인</div>
+<div class="card" style="left:22px;right:22px;top:130px;background:#F6EAD2;color:#4A3424;border-color:#6A4A34"><div style="text-align:center;font-size:20px;color:#C84A2E">「불꽃비」</div>
+<div style="margin-top:12px;display:grid;grid-template-columns:auto 1fr;gap:8px 12px;font-size:14px">
+<span>리듬</span><span>♩ ♩ ♪♪ ♩ (4박)</span><span style="color:#7A48C8">방향 ◀ 나</span><span style="color:#7A48C8">↗ → ↑</span><span>속성</span><span>불 · 불 · 바람</span><span>세기</span><span>대형 (3박째에 놓기)</span><span>모양</span><span>비 (물방울 룬)</span></div></div>
+<div class="card" style="left:22px;right:22px;top:400px"><b>내 파트: 방향</b><div class="seq" style="margin-top:12px"><span>↗</span><span>→</span><span>↑</span></div><div class="sub" style="margin-top:10px;text-align:center">박자에 맞춰 화살표 순서대로 밀어요</div></div>
+<div class="card" style="left:22px;right:22px;top:610px"><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="chip">👍</span><span class="chip">3박째 같이!</span><span class="chip">천천히</span><span class="chip">준비 완료</span></div></div>
+<div class="t" style="bottom:28px"><span class="sub">리허설 20초 → 본 공연 30초</span></div>`,g=>{grad(g,[40,24,70],[20,12,36]);});}
+// 3~7 본 공연 파트별
+function perf(id,part,laneHTML,laneDraw,states,on,h){const d=phone(id,`${hud('불꽃비','★★☆','0:2'+(id.slice(1)))}${beat(on)}<div class="lane"><span class="tag">내 파트: ${part}</span>${laneHTML}</div>${team(states)}${harm(h)}`,g=>{grad(g,[30,18,52],[16,10,30]);for(let i=0;i<30;i++)P(g,[[(i*37)%W,(i*53)%H]],'#5A4A8A');});fillFaces(d);if(laneDraw){const c=document.createElement('canvas');c.width=118;c.height=140;c.style.cssText='position:absolute;left:0;top:0;width:354px;height:420px;image-rendering:pixelated';d.querySelector('.lane').prepend(c);laneDraw(c.getContext('2d'));}}
+perf('c3','리듬',`<div class="t" style="top:300px"><span class="sub">선에 닿을 때 톡!</span></div><div style="position:absolute;left:40px;right:40px;top:250px;height:6px;border-radius:3px;background:#FFFFFF"></div>
+<div style="position:absolute;left:50%;top:330px;transform:translateX(-50%);width:120px;height:60px;border-radius:30px;background:#FFD866;color:#2A1E3A;display:flex;align-items:center;justify-content:center;font-size:20px;border:3px solid #2A1E3A">톡!</div>
+<div style="position:absolute;right:24px;top:236px;font-size:18px;color:#FFE070">퍼펙트!</div>`,g=>{[[59,20],[59,48],[59,64],[59,86]].forEach(([x,y],i)=>{disc(g,x,y,7,i===3?'#FFE070':'#C8A0FF');disc(g,x,y,3,'#FFFFFF');});},['me','','mid','','bad'],2,78);
+perf('c4','방향',`<div class="seq" style="position:absolute;left:0;right:0;top:40px"><span class="ok">↗</span><span class="now">→</span><span>↑</span></div><div class="t sub" style="top:110px">박자에 맞춰 밀어요</div>`,g=>{// 밀기 궤적
+ for(let i=0;i<40;i++){const x=24+i*1.8,y=95-Math.sin(i/40*3)*4;disc(g,x|0,y|0,2,`rgba(200,160,255,${i/40})`);} disc(g,96,95,5,'#FFE070');disc(g,96,95,2,'#FFFFFF');P(g,[[100,91],[102,93],[100,99],[102,97]],'#FFFFFF');},['','me','','mid',''],3,81);
+perf('c5','속성',`<div class="seq" style="position:absolute;left:0;right:0;top:30px"><span class="ok">🔥</span><span class="now">🔥</span><span>🌀</span></div>
+<div class="el" style="position:absolute;left:0;right:0;top:140px"><div style="background:#E85A3A">🔥<span>불</span></div><div style="background:#3A8AE0">💧<span>물</span></div><div style="background:#6AC8A0">🌀<span>바람</span></div><div style="background:#A8784A">🪨<span>땅</span></div><div style="background:#F2D060;color:#4A3424">✨<span>빛</span></div><div style="background:#4A3A6A">🌑<span>어둠</span></div></div>`,null,['','','me','',''],4,74);
+perf('c6','세기',`<div class="t sub" style="top:40px">꾹 누르고 있다가 3박째에 놓아요</div><div class="t" style="top:372px;font-size:18px;color:#FFE070">대형!</div>`,g=>{const cx=59,cy=80;for(let a=0;a<360;a+=2){const r=a*Math.PI/180,k=a/360;const x=cx+Math.cos(r-Math.PI/2)*34,y=cy+Math.sin(r-Math.PI/2)*34;disc(g,x|0,y|0,2,k<.72?'#C8A0FF':'rgba(255,255,255,.15)');}
+ for(let a=230;a<270;a+=2){const r=a*Math.PI/180;disc(g,(cx+Math.cos(r-Math.PI/2)*40)|0,(cy+Math.sin(r-Math.PI/2)*40)|0,1,'#9AE07A');} disc(g,cx,cy,24,'#E85A3A');disc(g,cx,cy,18,'#FF8A5A');disc(g,cx-6,cy-6,4,'#FFD0A0');},['','','','me',''],5,80);
+perf('c7','모양',`<div class="t sub" style="top:30px">룬을 한 번에 그려요 · 물방울 룬</div>`,g=>{const pts=[[59,30],[40,70],[44,96],[59,106],[74,96],[78,70],[59,30]];
+ pts.forEach(([x,y])=>disc(g,x,y,4,'rgba(255,255,255,.3)'));for(let i=0;i<4;i++){const [a,b]=pts[i],[c,d]=pts[i+1];for(let t=0;t<=1;t+=.05)disc(g,(a+(c-a)*t)|0,(b+(d-b)*t)|0,2,'#C8A0FF');}
+ for(let i=4;i<6;i++){const [a,b]=pts[i],[c,d]=pts[i+1];for(let t=0;t<=1;t+=.1)P(g,[[(a+(c-a)*t)|0,(b+(d-b)*t)|0]],'rgba(255,255,255,.35)');} disc(g,74,96,5,'#FFE070');},['','','','','me'],6,77);
+// 8 결과: 대성공
+{const d=phone('c8',`<div class="t h1" style="top:60px">대성공!</div><div class="t sub" style="top:94px">하모니 92% · 「불꽃비」가 학교 하늘을 물들였어요</div>`,g=>{grad(g,[20,12,50],[60,30,80]);
+ R(g,20,150,90,70,'#6A5A8A');R(g,20,150,90,6,'#8A7AB0');for(let x=26;x<110;x+=12)R(g,x,165,6,10,'#FFE9A0');R(g,58,130,14,30,'#5A4A7A');for(let i=0;i<5;i++)P(g,[[64+i%2,128-i]],'#5A4A7A');R(g,0,220,W,H-220,'#3A5A3A');
+ for(let i=0;i<26;i++){const x=(i*29)%W,y=(i*47)%130+20;for(let k=0;k<6;k++)P(g,[[x-k,y-k*2]],k<2?'#FFF0A0':'rgba(255,140,60,'+(1-k/6)+')');disc(g,x,y,1,'#FFD060');}
+ for(let i=0;i<5;i++)kid(g,30+i*18,250,'jump',CAPE[i]);});}
+// 9 결과: 불협화음(카오스)
+{const d=phone('c9',`<div class="t h1" style="top:60px;color:#FFB0B0">불협화음!</div><div class="t sub" style="top:94px">하모니 61% · 주문이 엉뚱하게 날아갔어요</div>
+<div class="card" style="left:22px;right:22px;bottom:150px;text-align:center"><div style="font-size:12px;color:#FFD866">새 카오스 발견! · 레어</div><div style="font-size:20px;margin:6px 0;color:#FFE9A0">오리 모양 불꽃 부메랑</div><div class="sub">방향이 엇나가고 모양이 흔들렸어요 → 교장 동상 모자에 명중</div></div>
+<div class="t" style="bottom:70px"><span class="btn">결과 보기</span></div>`,g=>{grad(g,[30,18,52],[50,30,70]);R(g,0,200,W,H-200,'#3A5A3A');
+ // 교장 동상
+ R(g,82,150,26,50,'#8A8494');R(g,78,196,34,8,'#6A6474');disc(g,95,140,9,'#9A94A6');R(g,85,124,20,6,'#3A3048');R(g,89,112,12,13,'#3A3048');
+ // 불꽃 오리 (부메랑 궤적)
+ for(let i=0;i<30;i++){const a=i/30*Math.PI*1.4,x=20+Math.cos(a)*-40+60,y=150-Math.sin(a)*60;disc(g,x|0,y|0,1,`rgba(255,160,60,${i/30})`);}
+ const dx=96,dy=110;ell(g,dx,dy,8,5,'#FF8A3A');disc(g,dx+7,dy-5,4,'#FF8A3A');R(g,dx+10,dy-5,4,2,'#FFD040');P(g,[[dx+8,dy-6]],'#2A1E3A');for(let k=0;k<5;k++)P(g,[[dx-9-k,dy-2+k%2]],'#FFD040');
+ P(g,[[84,104],[88,100],[104,100],[108,104],[96,96]],'#FFFFFF');
+ // 놀란 단원들
+ for(let i=0;i<5;i++)kid(g,14+i*26,178,'stand',CAPE[i]);});}
+// 10 시상 + 카오스 도감
+{const d=phone('c10',`<div class="t h1" style="top:40px">오늘의 합창단</div>
+<div class="card" style="left:16px;right:16px;top:90px;display:flex;gap:12px;align-items:center"><div class="ring" data-f="1" style="width:56px;height:56px;border-radius:50%;border:4px solid #FFD866;display:flex;align-items:center;justify-content:center"></div><div><div style="color:#FFD866;font-size:13px">오늘의 MVP 단원</div><div style="font-size:18px">서연 · 방향 97%</div></div></div>
+<div class="card" style="left:16px;right:16px;top:190px;display:flex;gap:12px;align-items:center;border-color:#5A4A78"><div class="ring" data-f="2" style="width:56px;height:56px;border-radius:50%;border:4px solid #C8A0FF;display:flex;align-items:center;justify-content:center"></div><div><div style="color:#C8A0FF;font-size:13px">오늘의 불협화음</div><div style="font-size:16px">하준 · 덕분에 오리 부메랑을 찾았어요!</div></div></div>
+<div class="card" style="left:16px;right:16px;top:300px"><div style="display:flex;justify-content:space-between"><b>카오스 도감</b><span class="sub">3 / 24</span></div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px">${['🦆🔥','🌫️','🔁','???','???','???','???','???','???','???','???','???'].map(x=>`<div style="height:62px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:${x==='???'?14:22}px;background:${x==='???'?'rgba(255,255,255,.04)':'rgba(120,80,200,.25)'};border:2px ${x==='???'?'dashed rgba(255,255,255,.15)':'solid #8A60D0'}">${x}</div>`).join('')}</div>
+<div class="sub" style="margin-top:8px">실패해야 열리는 칸도 있어요</div></div>
+<div class="t" style="bottom:50px"><span class="btn">다음 주문</span> <span class="btn g">나가기</span></div>`,g=>{grad(g,[40,24,70],[20,12,36]);});fillFaces(d);}
+</script></body></html>
