@@ -375,14 +375,14 @@ function run(opt){   // opt = { pool: [이름...], onStart(k), isNew(k) } → Pr
    requestAnimationFrame(fr); }; requestAnimationFrame(fr); });
   // 2) 꿈 미니게임
   const Gm = GAMES[k], st = { t: 0, got: 0, inv: 0, fx: [], pop: [], hp: Gm.hp || 0, over: 0 }, I = { L: 0, R: 0, taps: [] };
-  Gm.init(st); Gm.draw(g, st);
+  Gm.init(st); Gm.draw(g, st); window.Dream._st = st;
   q('.dn').textContent = NAME[k]; q('.dtip .pill').textContent = LIST.find(x => x[0] === k)[2]; show('.dhud', 1); ov.querySelectorAll('.dhud').forEach(e => e.classList.add('on')); show('.dtip', 1); if (Gm.lr) show('.dbtns', 1); if (!Gm.hp) q('.dhp').style.display = 'none';
   show('.dgo', 1); await sleepP(900); show('.dgo', 0);
   const hold = (b, key) => { const on = e => { e.preventDefault(); I[key] = 1; }, off = () => { I[key] = 0; }; b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off); };
   hold(q('.dl'), 'L'); hold(q('.dr'), 'R');
   const kd = e => { if (e.key === 'ArrowLeft') I.L = e.type === 'keydown' ? 1 : 0; if (e.key === 'ArrowRight') I.R = e.type === 'keydown' ? 1 : 0; if (e.type === 'keydown' && (e.key === ' ' || e.key === 'ArrowUp')) I.taps.push({ x: 65, y: 140 }); };
   addEventListener('keydown', kd); addEventListener('keyup', kd);
-  cv.addEventListener('pointerdown', e => { e.preventDefault(); const r = cv.getBoundingClientRect(), k2 = Math.min(r.width / W, r.height / H), ox = r.left + (r.width - W * k2) / 2, oy = r.top + (r.height - H * k2) / 2, x = (e.clientX - ox) / k2, y = (e.clientY - oy) / k2;   // object-fit: contain I.taps.push({ x, y });
+  cv.addEventListener('pointerdown', e => { e.preventDefault(); const r = cv.getBoundingClientRect(), k2 = Math.min(r.width / W, r.height / H), ox = r.left + (r.width - W * k2) / 2, oy = r.top + (r.height - H * k2) / 2, x = (e.clientX - ox) / k2, y = (e.clientY - oy) / k2; I.taps.push({ x, y });   // 캔버스는 object-fit: contain
    if (Gm.lr && k !== 'train'){ const key = x < W / 2 ? 'L' : 'R'; I[key] = 1; const up = () => { I[key] = 0; removeEventListener('pointerup', up); }; addEventListener('pointerup', up); } });
   await new Promise(res => { let last = performance.now(); const fr = now => { const dt = Math.min(.05, Math.max(0, now - last) / 1000); last = now; st.t += dt; if (st.inv > 0) st.inv -= dt;
    Gm.step(st, dt, I); I.taps = []; Gm.draw(g, st);
