@@ -1898,7 +1898,7 @@ function renderFish(){
   on('[data-rod]', b => { const i = +b.dataset.rod, r = RODS[i]; if (me.coin < r.price || i !== rodLv() + 1) return; me.coin -= r.price; me.rod = i; fsMsg = `${withJosa(r.name, '을', '를')} 샀어요! ${r.desc}`; save(); renderFish(); });
 }
 // ===== 탐사 (혼자 · 시간 게이지 전투, 협동은 준비 중) · 설계서: docs/exploration_design.md =====
-const XCAP = 50, xNeed = L => Math.round((5250 + 13.5 * L ** 2.3) / 10) * 10;   // 레벨 L → L+1 경험치 (끝까지 간 탐사 6~12번에 1레벨)
+const XCAP = 50, XNEED_LO = [0, 1500, 2000, 2600, 3300, 4200], xNeed = L => L <= 5 ? XNEED_LO[L] : Math.round((5250 + 13.5 * L ** 2.3) / 10) * 10;   // 레벨 L → L+1 경험치 (6레벨까지는 빨리: 1→2 탐사 2~3번 · 그 뒤는 끝까지 간 탐사 6~12번에 1레벨)
 const xNeed2 = L => Math.round((3500 + 9 * L ** 2.3) / 10) * 10;   // 바로 앞 표 (경험치를 새 표로 옮길 때만)
 const xNeed0 = L => Math.round(14 * L ** 2.3 / 10) * 10;   // 예전 표: 예전 경험치를 새 표로 옮길 때만 써요
 function xExpMove(ex){   // 레벨이 내려가지 않게: 예전 표의 레벨과 그 안에서 간 만큼을 새 표에 그대로 옮겨요 (한 번만)
