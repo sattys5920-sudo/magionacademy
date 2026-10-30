@@ -38,7 +38,9 @@ function sceneDraw(now){ requestAnimationFrame(sceneDraw); if (!C.on) return; sg
     sg.drawImage(SPR, fi * 64, (C.spirit >= 0 ? C.spirit : 0) * 64, 64, 64, Math.round(ex - sz / 2), Math.round(ey - sz * .62), sz, sz); sg.filter = 'none'; }
 }
 requestAnimationFrame(sceneDraw);
+const fl = document.createElement('div'); fl.style.cssText = 'position:fixed;left:16px;right:16px;top:66%;z-index:26;text-align:center;font-family:var(--f-pxb);font-size:22px;line-height:34px;color:#EAF2FF;pointer-events:none;transition:opacity .9s;word-break:keep-all'; document.body.appendChild(fl);
 const css = document.createElement('style'); css.textContent = `.encch{min-height:44px;border-radius:12px;border:1px solid #4E3C72;background:#2E2248;color:#F1E9FF;font-family:var(--f-pxb);font-size:15px;transition:all .2s}.encch.on{background:#FF9A3C;border-color:#C86A1E;color:#2A1606;transform:scale(1.02)}
+.encfl{display:inline-block;opacity:0;transform:translateY(6px);filter:blur(3px);transition:all .5s;white-space:pre}.encfl.on{opacity:1;transform:none;filter:none;text-shadow:0 0 8px #5A8CFF,0 0 18px #5A8CFF}
 .enclt{display:inline-block;opacity:0;transform:translateY(8px) scale(1.4);filter:blur(4px);transition:all .7s}.enclt.on{opacity:1;transform:none;filter:none;text-shadow:0 0 12px var(--c),0 0 26px var(--c)}`; document.head.appendChild(css);
 // 제단의 물음 10개 (실제 배정은 관리자가 미리 정해 두고, 물음은 분위기용. 매번 5개를 뽑아요)
 const ENC_Q = [
@@ -130,7 +132,11 @@ window.__encGo = async (o) => {
   nameEl.style.top = '9%'; nameEl.style.setProperty('--c', '#5A8CFF'); nameEl.innerHTML = 'Vael'.split('').map(c => `<span class="enclt">${c}</span>`).join('');
   for (const sp of nameEl.children){ await sleep(380); sp.classList.add('on'); }
   await sleep(1400);
-  await say('Vael', o.first); dlg.style.display = 'none';
+  // 첫 만남 대사: 대화창 대신 화면 가운데에 한 글자씩 떠올라요
+  nameEl.style.transition = 'opacity .8s'; nameEl.style.opacity = .35;
+  fl.innerHTML = [...o.first].map(c => c === ' ' ? '<span class="encfl sp"> </span>' : `<span class="encfl">${c}</span>`).join(''); fl.style.opacity = 1;
+  for (const sp of fl.children){ await sleep(sp.textContent === '.' ? 160 : 120); sp.classList.add('on'); }
+  await sleep(2600); fl.style.opacity = 0; nameEl.style.opacity = 0; await sleep(900); fl.innerHTML = ''; nameEl.style.opacity = 1;
   // 5) 맵으로 돌아오면 정령이 곁에
   fade.style.opacity = 1; await sleep(1100); scene.style.display = 'none'; C.on = 0; nameEl.innerHTML = '';
   const m2 = World.meAt(); E.ember = [m2.x + 12, m2.y - 2]; E.sz = 9; E.spirit = 0; E.follow = 1; E.burst = performance.now();
