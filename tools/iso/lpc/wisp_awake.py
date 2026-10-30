@@ -109,6 +109,6 @@ if __name__ == '__main__':
             d.rounded_rectangle([x, y, x + cw - 14, y + ch - 14], 10, fill=(14, 10, 22), outline=(52, 42, 72), width=2)
             b = Image.fromarray(before[:, i * 64:(i + 1) * 64]).resize((112, 112), Image.NEAREST); a = Image.fromarray(cells[i]).resize((144, 144), Image.NEAREST)
             pv.alpha_composite(b, (x + 8, y + 30)); pv.alpha_composite(a, (x + 130, y + 6)); d.text((x + 120, y + 86), '→', font=FT, fill=(160, 140, 200), anchor='mm')
-            d.text((x + 64, y + 160), W.WS[i][1], font=FT, fill=(230, 220, 240), anchor='mm'); d.text((x + 202, y + 160), TITLE[i], font=F2, fill=(200, 180, 240), anchor='mm')
+            d.text((x + 64, y + 160), W.WS[i][1], font=FT, fill=(230, 220, 240), anchor='mm'); d.text((x + 202, y + 160), W.WS[i][1] + ' (각성)', font=F2, fill=(200, 180, 240), anchor='mm')
         pv.convert('RGB').save(sys.argv[1])
     print('ok')

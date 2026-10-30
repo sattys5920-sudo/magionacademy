@@ -51,11 +51,11 @@ window.__awGo = async o => {
   await anim(1600, (e, k) => { S.sz = 18 + 6 * e + Math.sin(k * 30) * 1.5; });
   S.burst = performance.now(); S.aw = 1; S.sz = 30; await sleep(1100); await anim(900, e => { S.pillar = 1 - e * .6; });
   const tt = v.querySelector('.tt'); tt.innerHTML = NAME.split('').map(c => `<span>${c}</span>`).join(''); for (const s of tt.children){ await sleep(300); s.classList.add('on'); }
-  const st = v.querySelector('.st'); st.textContent = `「${TITLE}」로 각성했어요`; st.style.opacity = 1; await sleep(1600);
+  await sleep(1200);
   const fl = v.querySelector('.fl'); fl.innerHTML = [...o.line].map(c => `<span>${c === ' ' ? ' ' : c}</span>`).join(''); for (const s of fl.children){ await sleep(s.textContent === '.' ? 150 : 105); s.classList.add('on'); }
   await sleep(2600);
   fade.style.opacity = 1; await sleep(1000); live = false; v.remove();
-  World.__setWisp('wisps_awake_anim.png'); World.__fsz = 24; fade.style.opacity = 0; await sleep(1500);
+  World.__setWisp('wisps_awake_anim.png'); fade.style.opacity = 0; await sleep(1500);
   World.walkToTile(World.myPos().x + 3, World.myPos().y + 2); await sleep(3000);
   await talk('....뭘 봐. 멋있다고? ....알아, 나도.', 1600);
   await sleep(800); window.__awDone = true;
