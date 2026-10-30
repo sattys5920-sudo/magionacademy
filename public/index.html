@@ -1593,6 +1593,14 @@ $('#tin').addEventListener('keydown', e => { if (e.key === 'Escape') $('#tin').b
 $('#tin').addEventListener('focus', () => { $('#chist').hidden = true; $('#temo').hidden = true; });
 $('#temo').addEventListener('click', () => { $('#temo').hidden = true; });
 document.addEventListener('pointerdown', e => { if (!e.target.closest('#chat')){ $('#chist').hidden = true; $('#temo').hidden = true; } });
+// 컴퓨터에서도 옆으로 넘기는 줄(사육장 생물·가방 칸·재료 줄 등)을 넘길 수 있게: 마우스 휠 → 옆으로, 마우스로 끌어서 넘기기 (끈 뒤의 클릭은 무시)
+const hScroller = t => { for (let el = t; el && el !== document.body; el = el.parentElement){ if (el.scrollWidth > el.clientWidth + 2){ const ox = getComputedStyle(el).overflowX; if (ox === 'auto' || ox === 'scroll') return el; } } return null; };
+document.addEventListener('wheel', e => { if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; const el = hScroller(e.target); if (!el || el.scrollHeight > el.clientHeight + 2) return; const before = el.scrollLeft; el.scrollLeft += e.deltaY; if (el.scrollLeft !== before) e.preventDefault(); }, { passive: false });
+let hDrag = null, hDragged = false;
+document.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' || e.button !== 0) return; const el = hScroller(e.target); hDrag = el ? { el, x: e.clientX, sl: el.scrollLeft } : null; hDragged = false; }, true);
+document.addEventListener('pointermove', e => { if (!hDrag || !(e.buttons & 1)) return; const dx = e.clientX - hDrag.x; if (Math.abs(dx) > 6) hDragged = true; if (hDragged) hDrag.el.scrollLeft = hDrag.sl - dx; });
+document.addEventListener('pointerup', () => { hDrag = null; }, true);
+document.addEventListener('click', e => { if (hDragged){ hDragged = false; e.stopPropagation(); e.preventDefault(); } }, true);
 // 키패드가 올라와도 입력창이 가려지지 않게: 화면 높이를 눈에 보이는 영역에 맞춰요 (아래 탭은 키패드가 열린 동안 숨겨요)
 if (window.visualViewport){ const vv = window.visualViewport, fit = () => { const r = document.documentElement.style; r.setProperty('--vvh', Math.round(vv.height) + 'px'); r.setProperty('--vvt', Math.round(vv.offsetTop) + 'px'); document.body.classList.toggle('kb', vv.height < window.innerHeight * .78); }; vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); fit(); }
 // ===== 낚시 · 채집: 물고기 40 + 쓰레기 3, 채집물 50, 낚싯대 5 =====
@@ -5074,7 +5082,8 @@ function adminStoryAct(v){
   const [a, n] = v.split(':'), c = +n;
   if (a === 'mq'){ if (c > (AD.story.mq?.n ?? 0) && !confirm(`${c}장 「${MQ.q[MQ.list[c - 1]]?.name || c}」을(를) 송출할까요?`)) return; F.set(F.ref(db, 'story/mq'), { n: c, at: now2() }); }
 }
-const ACT_GO = { '물약 끓이기':'lab', '재료함 열기':'lab', '재료 꺼내기':'lab', '레시피 노트 보기':'lab', '시장 보기':'market', '박쥐 돌보기':'ranch', '모이 주기':'ranch', '독초 돌보기':'green', '물 주기':'green' };
+const ACT_GO = { '물약 끓이기':'lab', '재료함 열기':'lab', '재료 꺼내기':'lab', '레시피 노트 보기':'lab', '시장 보기':'market', '박쥐 돌보기':'ranch', '독초 돌보기':'green', '물 주기':'green' };
+const ACT_MAP = { lab: ['lab'], market: ['town'], ranch: ['pen'], green: ['toxic'] };
 const FLAVOR = {
   // 그림자 골목 집 안 (물건 이름으로 찾아요)
   '돌 가고일': ['눈이 붉게 빛난 것 같아요. 돌이라서 괜찮겠죠?', '날개에 박쥐가 한 마리 앉아 졸고 있어요'],
@@ -5116,6 +5125,7 @@ const FLAVOR = {
   '차 마시기': ['따끈한 호박차를 한 모금.... 포근해요', '찻잔에서 김이 모락모락'],
   '들여다보기': ['초록 연기 속에서 누가 키득거려요', '아무도 안 비쳐요.... 나도요!'],
   '쓰다듬기': ['골골골.... 기분이 좋은가 봐요'],
+  '사육부 까마귀': ['까마귀가 모이를 콕콕 쪼아 먹고 「까악」 하고 고개를 까딱해요', '반짝이는 단추를 물고 와서 자랑해요. 주인은 따로 있는 것 같아요'],
   '먹이 주기': ['쩝쩝이가 파리를 꿀꺽 삼켰어요'],
   '미래 엿보기': ['"오늘은 물약 운이 좋아요"', '"주문서를 확인해 봐요"', '"보름달 아래 행운이......."'],
   '타 보기': ['빗자루가 쌩 하고 도망갔어요'],
@@ -5150,7 +5160,7 @@ World.onAct = (mapId, o, a) => {
   if (label === '채소 팔기'){ vgMsg = ''; return openSheet('home', 'veg'); }
   if (label === '물고기 팔기'){ fsTab = 'sell'; fsMsg = ''; return openSheet('home', 'fish'); }
   if (mapId === 'pen'){ ranchTab = label === '부화실 보기' ? 'hatch' : 'pen'; ranchMsg = ''; return openSheet('ranch'); }
-  if (ACT_GO[label]) return openSheet(ACT_GO[label]);
+  if (ACT_GO[label] && ACT_MAP[ACT_GO[label]].includes(mapId)) return openSheet(ACT_GO[label]);
   const f = FLAVOR[a[0]] || FLAVOR[label];
   return `<b>${a[0]}</b><br>${f ? f[Math.floor(Math.random() * f.length)] : '.......'}`;
 };
