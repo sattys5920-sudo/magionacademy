@@ -317,7 +317,7 @@ World.placeKey = () => started ? placeKey() : null;
 World.myPos = () => { const t = me.path.length ? me.path[me.path.length - 1] : [Math.round(me.x), Math.round(me.y)]; return { m: placeKey(), x: t[0], y: t[1] }; };
 World.setPeers = list => { peerList = list || []; if (started && M) syncPeers(); };
 const peerSpot = q => free(q.x, q.y) ? [q.x, q.y] : [Math.round(me.x), Math.round(me.y)];
-function addPeer(q){ const [x, y] = peerSpot(q), p = mk(q.name, q.av, x, y, false); p.peer = q.uid; peers[q.uid] = p; people.push(p); }
+function addPeer(q){ const [x, y] = peerSpot(q), p = mk(q.name, q.av, x, y, false); p.peer = q.uid; p.fk = q.fk; peers[q.uid] = p; people.push(p); }
 function syncPeers(){
   const key = placeKey(), here = peerList.filter(q => q.m === key && q.uid !== World.myUid);
   let changed = false;
@@ -326,7 +326,7 @@ function syncPeers(){
     const p = peers[q.uid];
     if (!p){ addPeer(q); changed = true; return; }
     if (p.name !== q.name){ p.name = q.name; changed = true; }
-    p.av = q.av;
+    p.av = q.av; p.fk = q.fk;
     const [tx, ty] = peerSpot(q), g = p.path.length ? p.path[p.path.length - 1] : [Math.round(p.x), Math.round(p.y)];
     if (g[0] !== tx || g[1] !== ty){ if (Math.hypot(tx - p.x, ty - p.y) > 25 || !goto(p, tx, ty)){ p.x = tx; p.y = ty; p.path = []; } }
   });
@@ -513,6 +513,7 @@ function rebuildObjs(){   // 지도 물건 + (개인 방이면) 놓은 가구 + 
 }
 let gates = [];   // 길 끝에서 다음 지역으로 넘어가는 문 (door.walk): 사이를 걸어가면 자동으로 넘어가요
 function setMap(id, spawn){
+  if (ember){ ember = null; famRelead = true; }
   if (!MAPS[real(id)].bg){ ensureMap(id).then(() => setMap(id, spawn)).catch(() => {}); return; }   // 기숙사 단계가 막 바뀌어 새 방 그림이 아직 안 왔으면 받고 나서 옮겨요
   map = id; rmap = real(id); M = MAPS[rmap].meta; resize(); placing = null;
   if (M.objs.some(o => o.req) || M.all){ M.all = M.all || M.objs; M.objs = M.all.filter(o => !o.req || (World.reqOk && World.reqOk(o.req))); MAPS[rmap].order = null; }   // req 가 있는 물건: 용의 동굴의 용 · 깨진 알껍데기
@@ -626,6 +627,61 @@ function drawPet(p){
   cx.restore();
 }
 const clockEl = document.getElementById('clock'); let clockTick = 0, clockLast = '';
+// ---------- 사역마(정령불): 만남 이벤트의 하얀 불씨 · 주인 곁을 따라다니는 정령 ----------
+//   World.famLead(): 가장 가까운 지역 이동 길(학교↔마을↔그림자 골목)로 불씨가 몇 칸씩 앞장서요 · World.setMyFam(번호): 내 정령 · 친구 정령은 접속 정보 fk
+let WISP = null; { const i = new Image(); i.onload = () => { WISP = i; }; i.src = 'art/wisps.png?v=1'; }
+const FAM_RGB = [[90, 140, 255], [160, 112, 255], [64, 208, 112], [255, 106, 184], [255, 200, 56], [200, 216, 255], [255, 90, 40], [48, 216, 200], [255, 144, 48], [112, 136, 255], [154, 96, 240], [224, 200, 255]];
+let ember = null, famRelead = false; const famAt = new Map();
+World.onGate = null; World.onFamSeen = null;
+World.setMyFam = k => { me.fk = typeof k === 'number' ? k : undefined; };
+World.famEmber = () => ember;
+World.famEmberOff = () => { ember = null; famRelead = false; };
+const famGates = () => gates.filter(o => o.door.to && o.door.explore === undefined && !o.door.lock);
+World.famLead = () => {
+  famRelead = false; if (!started || !M) return false; const gs = famGates(); if (!gs.length){ famRelead = true; return false; }
+  const g = gs.slice().sort((a, b) => Math.hypot(a.door.tile[0] - me.x, a.door.tile[1] - me.y) - Math.hypot(b.door.tile[0] - me.x, b.door.tile[1] - me.y))[0];
+  const [mx, my] = P(me.x + .5, me.y + .5);
+  ember = { x: mx - 140, y: my - 120, st: 'come', gate: g, tx: me.x + 1.4, ty: me.y - .6, fly: null, t: performance.now(), sparks: [] };
+  return true;
+};
+function famFly(tx, ty, ms){ ember.fly = { x0: ember.x, y0: ember.y, tx, ty, t0: performance.now(), ms }; }
+function drawFam(now){
+  const cx = out;
+  if (famRelead && !ember && started && !busy) World.famLead();
+  if (!WISP) return;
+  const fi = Math.floor(now / 110) % 8;
+  const one = (x, y, k, sz, white) => { const c = white ? [255, 232, 176] : FAM_RGB[k] || [255, 255, 255], r = Math.round(sz * .95);
+    cx.globalCompositeOperation = 'lighter'; cx.globalAlpha = .65 + .15 * Math.sin(now / 260); cx.drawImage(glow(r, c), Math.round(x - r), Math.round(y - r)); cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
+    if (white) cx.filter = 'saturate(0) brightness(1.7) sepia(.5)';
+    cx.drawImage(WISP, fi * 64, (white ? 0 : k) * 64, 64, 64, Math.round(x - sz / 2), Math.round(y - sz * .62), Math.round(sz), Math.round(sz)); cx.filter = 'none'; };
+  // 따라다니는 정령: 걸으면 주인이 조금 전 있던 자리 옆, 멈추면 어깨 뒤에서 맴돌아요
+  const live = new Set();
+  people.forEach(p => { const k = p.me ? me.fk : p.peer ? p.fk : undefined; if (typeof k !== 'number' || p.cutHide) return; const id = p.me ? 'me' : p.peer; live.add(id);
+    const [ox, oy0] = P(p.x + .5, p.y + .5), oy = oy0 - 20; let f = famAt.get(id); if (!f){ f = { x: ox + 10, y: oy, h: [] }; famAt.set(id, f); }
+    f.h.push([now, ox, oy]); while (f.h.length > 2 && f.h[1][0] < now - 600) f.h.shift();
+    const o = f.h[0], mv = Math.hypot(ox - o[1], oy - o[2]) > 3, a = now / 1400 + (p.me ? 0 : p.x);
+    const tx = mv ? o[1] + Math.sign(o[1] - ox || 1) * 6 : ox + 11 * Math.cos(a), ty = mv ? o[2] - 4 : oy - 2 + 2 * Math.sin(a * 2);
+    if (Math.hypot(tx - f.x, ty - f.y) > 120){ f.x = tx; f.y = ty; } f.x += (tx - f.x) * .06; f.y += (ty - f.y) * .06;
+    one(f.x, f.y + Math.sin(now / 420) * 1.5, k, 17); });
+  famAt.forEach((_, id) => { if (!live.has(id)) famAt.delete(id); });
+  // 만남 이벤트의 하얀 불씨
+  if (!ember) return;
+  const e = ember, tile = (tx, ty) => { const [x, y] = P(tx + .5, ty + .5); return [x, y - 14]; };
+  if (e.fly){ const k = Math.min(1, (now - e.fly.t0) / e.fly.ms), q = k < .5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2, [X, Y] = tile(e.fly.tx, e.fly.ty);
+    e.x = e.fly.x0 + (X - e.fly.x0) * q; e.y = e.fly.y0 + (Y - e.fly.y0) * q - Math.sin(k * Math.PI) * 12; if (Math.random() < .8) e.sparks.push({ x: e.x + (Math.random() - .5) * 3, y: e.y + 9, t: now });
+    if (k >= 1){ e.cx = e.fly.tx; e.cy = e.fly.ty; e.fly = null; } }
+  const dMe = e.cx !== undefined ? Math.hypot(e.cx - me.x, e.cy - me.y) : 99, gt = e.gate.door.tile;
+  if (e.st === 'come' && !e.fly){ if (e.cx === undefined) famFly(e.tx, e.ty, 2400); else { e.st = 'wait'; e.t = now; if (World.onFamSeen) World.onFamSeen(); } }
+  else if (e.st === 'wait' && now - e.t > 2200) e.st = 'lead';
+  else if (e.st === 'lead' && !e.fly && dMe < 4.5){   // 다가오면 길 쪽으로 몇 칸 더
+    const dx = gt[0] - e.cx, dy = gt[1] - e.cy, d = Math.hypot(dx, dy);
+    if (d < .8) e.st = 'gate'; else { const s = Math.min(1, 5 / d); famFly(e.cx + dx * s, e.cy + dy * s, 1300); } }
+  e.sparks = e.sparks.filter(p => now - p.t < 6000);
+  cx.globalCompositeOperation = 'lighter'; cx.fillStyle = '#FFE8B0';
+  e.sparks.forEach(p => { cx.globalAlpha = (1 - (now - p.t) / 6000) * (.6 + .4 * Math.sin(now / 150 + p.x)); cx.fillRect(Math.round(p.x), Math.round(p.y), 1, 1); });
+  cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
+  one(e.x, e.y + Math.sin(now / 380) * 1.5, 0, e.st === 'gate' ? 11 + Math.sin(now / 200) : 14, true);
+}
 let tags = [], bubble = null, pending = null, busy = false, camX = null, camY = null, forceNight = null, backStack = [];
 function showBubble(o, text, btn, fn){
   hideBubble();
@@ -670,6 +726,10 @@ World.doNear = () => { const t = nearT; if (!t) return; hideBubble();
   else if (t.kind === 'act'){ useObj(t.o, actOf(t.o)); }
   else if (t.kind === 'water'){ World.faceTo(t.wx, t.wy); World.onWater && World.onWater(t.wx, t.wy); } };
 function goDoor(door, o){
+  if (door.walk && door.to && door.explore === undefined && !door.lock && World.onGate && World.onGate(door)){   // 사역마 만남: 지역 길을 타면 이동 대신 제단 연출 · 길 위에 서 있지 않게 한 칸 안쪽으로
+    me.path = []; pending = null; const onG = (x, y) => gates.some(o => { const d = o.door; if (d.spanX) return y === d.tile[1] && x >= d.spanX[0] && x <= d.spanX[1]; const sp = d.span || [d.tile[1], d.tile[1]]; return x === d.tile[0] && y >= sp[0] && y <= sp[1]; });
+    const rx = Math.round(me.x), ry = Math.round(me.y), c = [[1, 0], [-1, 0], [0, 1], [0, -1], [2, 0], [-2, 0], [0, 2], [0, -2]].map(([a, b]) => [rx + a, ry + b]).filter(([a, b]) => free(a, b) && !onG(a, b)).sort((p, q) => Math.hypot(q[0] - M.NX / 2, q[1] - M.NY / 2) - Math.hypot(p[0] - M.NX / 2, p[1] - M.NY / 2)).pop();
+    if (c){ me.x = c[0]; me.y = c[1]; } return; }
   if (door.explore !== undefined){   // 탐사장 가는 길: 기둥 사이를 지나면 그 지역 탐사 창이 열리고, 나는 한 걸음 물러나 있어요
     if (door.back){ me.x = door.back[0]; me.y = door.back[1]; me.path = []; }
     if (World.onExplore) World.onExplore(door.explore, door); return;
@@ -992,6 +1052,7 @@ function frame(now){
     cx.globalCompositeOperation = 'lighter'; cx.globalAlpha = .55 * a; cx.drawImage(glow(10, [255, 220, 120]), x - 10, sy - 10); cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
     cx.fillStyle = `rgba(255,250,215,${a})`; cx.fillRect(Math.round(x), sy - 3, 1, 7); cx.fillRect(Math.round(x) - 3, sy, 7, 1); cx.fillRect(Math.round(x) - 1, sy - 1, 3, 3);
     if (Math.sin(t * 1.7) > .5){ cx.fillRect(Math.round(x) + 5, sy - 5, 1, 1); cx.fillRect(Math.round(x) - 5, sy + 3, 1, 1); } });
+  drawFam(now);
   if (!M.indoor) spooky(now, dt, view);
   drawSky(now);
   out.setTransform(1, 0, 0, 1, 0, 0);
