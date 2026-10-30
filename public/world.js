@@ -61,7 +61,7 @@ World.Avatar = (() => {
     if (!f) return Promise.resolve();
     if (imgs[f]) return imgs[f].p;
     const e = imgs[f] = { data: null };
-    e.p = new Promise(r => { const i = new Image(); i.onload = () => { const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; const g = c.getContext('2d'); g.drawImage(i, 0, 0); e.data = g.getImageData(0, 0, i.width, i.height); cache.clear(); heads.clear(); subs.forEach(fn => fn()); r(); }; i.onerror = () => r(); i.src = webp(f); });
+    e.p = new Promise(r => { const i = new Image(); i.onload = () => { const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; const g = c.getContext('2d'); g.drawImage(i, 0, 0); e.data = g.getImageData(0, 0, i.width, i.height); cache.clear(); heads.clear(); subs.forEach(fn => fn()); r(); }; i.onerror = () => { e.fail = (e.fail || 0) + 1; setTimeout(() => { if (imgs[f] === e && !e.data) delete imgs[f]; }, Math.min(30000, 2000 * e.fail)); r(); }; i.src = webp(f); });   // 못 받으면 잠시 뒤 다시 받아요 (안 그러면 옷 없이 계속 그려져요)
     return e.p;
   }
   const ready = load(AVM.parts.body[0].f);
@@ -164,6 +164,7 @@ World.Avatar = (() => {
   // 부품 그림이 다 오면 resolve (캐릭터 꾸미기 화면 썸네일 전에)
   const need = av => Promise.all(layersOf(fix(av)).map(l => load(l.f)));
   const preload = cats => Promise.all(cats.flatMap(c => (AVM.parts[c] || []).filter(p => p.f).map(p => load(p.f))));
+  let blankC = null; const blank = () => { if (!blankC){ blankC = document.createElement('canvas'); blankC.width = FW * NF; blankC.height = FH; } return blankC; };
   function compose(av){
     av = fix(av); const key = JSON.stringify(av); if (cache.has(key)) return cache.get(key);
     const W = FW * NF, out = new ImageData(W, FH), o = out.data; let done = true;
@@ -185,6 +186,7 @@ World.Avatar = (() => {
     legFix(o, own, W); drawMouth(o, W, FW, av.lip || 0); lastOwn = own;
     const c = document.createElement('canvas'); c.width = W; c.height = FH; c.getContext('2d').putImageData(out, 0, 0);
     if (done) cache.set(key, c);
+    else return blank();   // 옷 그림이 다 오기 전엔 알몸 대신 아무것도 안 그려요
     return c;
   }
   // 얼굴 동그라미용 (정면 서기 프레임의 머리 부분)
