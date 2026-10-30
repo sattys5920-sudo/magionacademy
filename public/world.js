@@ -635,6 +635,8 @@ let ember = null, famRelead = false; const famAt = new Map();
 World.onGate = null; World.onFamSeen = null;
 World.setMyFam = k => { me.fk = typeof k === 'number' ? k : undefined; };
 World.famEmber = () => ember;
+World.onFam = null;
+World.famAtMe = () => ({ get x(){ const f = famAt.get('me'); return f ? f.x : P(me.x + .5, me.y + .5)[0]; }, get y(){ const f = famAt.get('me'); return f ? f.y - 12 : P(me.x + .5, me.y + .5)[1] - 30; }, sw: 0 });   // 말풍선 자리
 World.famEmberOff = () => { ember = null; famRelead = false; };
 const famGates = () => gates.filter(o => o.door.to && o.door.explore === undefined && !o.door.lock);
 World.famLead = () => {
@@ -777,6 +779,7 @@ cv.addEventListener('pointerdown', e => {
   const np = people.filter(p => p.npc && (() => { const [sx, sy] = P(p.x + .5, p.y + .5), h = World.Avatar.FH * ASC + 10; return x >= sx - 10 && x <= sx + 10 && y >= sy - h && y <= sy + 3; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
   if (np && World.onNpc){ const n = np.npc, d = Math.abs(Math.round(me.x) - np.x) + Math.abs(Math.round(me.y) - np.y); if (d <= 1) World.onNpc(n.id); else { const c = near([[np.x, np.y]])[0]; if (c && goto(me, c[0], c[1])) pending = { npcTalk: n.id }; } return; }
   // 내 캐릭터 몸통을 누르면 (발밑 칸은 그대로 걷기)
+  { const f = famAt.get('me'); if (World.onFam && f && typeof me.fk === 'number' && Math.hypot(x - f.x, y - (f.y - 3)) < 11){ World.onFam(); return; } }   // 내 정령을 누르면
   { const [mx, my] = P(me.x + .5, me.y + .5); if (World.onMe && !me.path.length && x >= mx - 8 && x <= mx + 8 && y >= my - World.Avatar.FH * ASC && y <= my - 7){ World.onMe(); return; } }
   // 친구를 누르면 (겹치면 앞에 있는 사람)
   const pr = people.filter(p => p.peer && (() => { const [sx, sy] = P(p.x + .5, p.y + .5); return x >= sx - 9 && x <= sx + 9 && y >= sy - World.Avatar.FH * ASC - 10 && y <= sy + 3; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
