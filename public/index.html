@@ -3629,6 +3629,7 @@ function adminRender(){
 }
 function adminRender0(){
   if (!document.body.classList.contains('admin')) return;
+  { const a = document.activeElement; if (AD.selAt && Date.now() - AD.selAt < 20000 && a && a.matches?.('select') && a.closest?.('#adminv')){ AD.skip = true; return; } }   // 드롭다운을 펼친 동안은 어떤 이유로든 다시 그리지 않아요 (고르면 그때 그려요)
   { const fa = document.activeElement; if (fa && fa.matches?.('textarea,input:not([type=checkbox]):not([type=radio]):not([type=range])') && fa.closest?.('#adminv')){ if (!adminRender.wait){ adminRender.wait = true; fa.addEventListener('blur', () => setTimeout(() => { adminRender.wait = false; adminRender(); }, 400), { once: true }); } return; } }   // 글을 쓰는 중에는 새로 그리지 않아요 (키패드가 내려가지 않게) · 다 쓰고 나면 그려요
   const P = AD.players, O = adOnline(), ids = Object.keys(P).filter(id => P[id]?.nick);
   const tabs = [['map', `지도 ${Object.keys(O).length}명 접속`], ['students', `학생 ${ids.length}`], ['join', `가입 신청${Object.keys(AD.pending || {}).length ? ' ' + Object.keys(AD.pending).length : ''}`], ['chat', '대화'], ['dorm', '기숙사'], ['story', '이야기·미션'], ['npc', 'NPC 호감도'], ['event', '이벤트'], ['exam', '쪽지시험'], ['gift', '지급·공지'], ['err', `오류${Object.keys(AD.errs || {}).length ? ' ' + Object.keys(AD.errs).length : ''}`], ['reset', '초기화']];
