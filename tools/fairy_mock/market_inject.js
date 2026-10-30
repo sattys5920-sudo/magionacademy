@@ -3,10 +3,10 @@
 (function(){
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const ease = t => t < .5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
-const FY = [   // 요정 셋: 이름 · 색 · 노점 자리(320×180) · 좋아하는 기억 · 파는 것
-  { n: '미엘', c: '#FFC060', like: '따뜻함', items: ['별사과', '황금 버섯', '구름 목화'], ln: { hi: ['어머, 사람 아이다! 오늘은 내가 장을 열었어요~', '여기선 골드는 안 받아요. 오늘 있었던 일 하나면 돼요~'], like: '어머어머, 따뜻해라.... 이런 기억은 꿀보다 달아요! 하나 더 얹어 줄게요~', meh: '음~ 나쁘지 않은 맛이에요. 고마워요~', bye: '다음 보름달에 또 와요~ 기억은 매일 새로 생기니까요' } },
-  { n: '로웬', c: '#90D8FF', like: '고요', items: ['꿈꽃', '월하향', '영혼 연꽃'], ln: { hi: ['....찾았다. 잠깐만, 펼칠게', '골드는 필요 없어.... 오늘 있었던 일, 하나만 주면 돼'], like: '....조용한 밤이었구나. 좋은 기억이야. 아껴 쓸게', meh: '....응. 받을게. 조금 시끄럽지만.......', bye: '....또 올게. 그때까지 좋은 기억 많이 만들어 둬' } },
-  { n: '시슬', c: '#E070C0', like: '장난', items: ['그림자 버섯', '거울 잎', '번개 콩'], ln: { hi: ['키키! 내 가게가 열렸다!', '돈은 됐고, 오늘 있었던 일 하나 내놔! 재미없는 기억은 사절이다!'], like: '키키키! 이거 맛있다! 들킬 뻔했지? 하나 더 얹어 주지!', meh: '흥, 착한 기억은 싱거워.... 그래도 받아 두지', bye: '키키, 다음엔 더 짓궂은 걸로 가져와라!' } },
+const FY = [   // 요정 셋: 이름 · 색 · 좋아하는 기억 · 노점 물건 · 대사 (문장 끝은 늘 . ! ? 또는 ....... · 문장 가운데 말줄임은 ....)
+  { n: '미엘', c: '#FFC060', like: '따뜻함', items: ['별사과', '황금 버섯', '구름 목화'], ln: { hi: ['어머, 사람 아이다! 오늘은 내가 장을 열었어요.', '여기선 골드는 안 받아요. 오늘 있었던 일 하나면 돼요.'], like: '어머어머, 따뜻해라! 이런 기억은 꿀보다 달아요. 하나 더 얹어 줄게요.', meh: '음, 나쁘지 않은 맛이에요. 고마워요.', bye: '또 올게요. 기억은 매일 새로 생기니까요!' } },
+  { n: '로웬', c: '#90D8FF', like: '고요', items: ['꿈꽃', '월하향', '영혼 연꽃'], ln: { hi: ['....찾았다. 잠깐만, 펼칠게.', '골드는 필요 없어. 오늘 있었던 일, 하나만 주면 돼.'], like: '....조용한 밤이었구나. 좋은 기억이야. 아껴 쓸게.', meh: '....응, 받을게. 조금 시끄럽지만.......', bye: '....또 올게. 그때까지 좋은 기억 많이 만들어 둬.' } },
+  { n: '시슬', c: '#E070C0', like: '장난', items: ['그림자 버섯', '거울 잎', '번개 콩'], ln: { hi: ['키키! 내 가게가 열렸다!', '돈은 됐고, 오늘 있었던 일 하나 내놔! 재미없는 기억은 사절이다!'], like: '키키키! 이거 맛있다! 들킬 뻔했지? 하나 더 얹어 주지!', meh: '흥, 착한 기억은 싱거워.... 그래도 받아 두지.', bye: '키키, 다음엔 더 짓궂은 걸로 가져와라!' } },
 ];
 const MEM = [['연못에서 은빛 붕어를 낚았다', '기쁨'], ['Ignis에게 화룡초를 선물했다', '따뜻함'], ['민준에게 몰래 장난 마법을 걸었다', '장난'], ['혼자 언덕에서 별을 봤다', '고요']];
 const css = document.createElement('style'); css.textContent = `
@@ -37,7 +37,7 @@ async function mapLight(f){
     if (boom){ g.fillStyle = `rgba(255,255,255,${Math.max(0, .8 - (now - boom) / 700)})`; g.fillRect(0, 0, cv.width, cv.height); }
     g.fillStyle = '#fff'; g.fillRect(Math.round(l.x) - 1, Math.round(l.y) - 1, 3, 3); g.globalCompositeOperation = 'source-over'; };
   requestAnimationFrame(draw);
-  await sleep(2600); World.say('me', '......!'); await sleep(2200); boom = performance.now(); await sleep(500);
+  await sleep(2600); World.say('me', '.......!'); await sleep(2200); boom = performance.now(); await sleep(500);
   fade.style.opacity = 1; await sleep(900); live = false; cv.remove();
 }
 window.__fmGo = async (fi = 1) => {
@@ -70,7 +70,7 @@ window.__fmGo = async (fi = 1) => {
   pick.style.display = 'block';
   box.innerHTML = `<div class="h">무엇과 바꿀까요?</div><div class="items">${f.items.map((n, i) => `<button class="it" style="--c:${f.c}" data-fi="${i}">${__T.ic(__T.itemId(n))}${n}<small>기억 1개</small></button>`).join('')}</div>`;
   const it = f.items[+(await wait('[data-fi]')).dataset.fi];
-  box.innerHTML = `<div class="h">오늘의 기억 하나를 건네요</div><div class="mem">${MEM.map(([t, tag], i) => `<button data-mi="${i}">${t}<span>${tag}</span></button>`).join('')}</div>`;
+  box.innerHTML = `<div class="h">어떤 기억을 건넬까요?</div><div class="mem">${MEM.map(([t, tag], i) => `<button data-mi="${i}">${t}<span>${tag}</span></button>`).join('')}</div>`;
   const bi = await wait('[data-mi]'), mi = +bi.dataset.mi, [mt, tag] = MEM[mi], r = bi.getBoundingClientRect();
   const fl = document.createElement('div'); fl.className = 'fmfly'; fl.textContent = mt; fl.style.left = r.left + 12 + 'px'; fl.style.top = r.top + 12 + 'px'; document.body.appendChild(fl);
   pick.style.display = 'none'; const cr = cv.getBoundingClientRect(), fx = cr.left + S.fx / 320 * cr.width, fy = cr.top + S.fy / 180 * cr.height;
