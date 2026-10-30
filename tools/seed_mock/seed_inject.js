@@ -4,9 +4,9 @@
 (function(){
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const iga = w => { const c = w.charCodeAt(w.length - 1) - 0xAC00; return c >= 0 && c % 28 ? '이' : '가'; };
-const CARE = [['water', '물 주기', '#5AB8F0'], ['sun', '햇빛 쬐기', '#FFC838'], ['song', '노래 불러 주기', '#B070F0'], ['moon', '달빛 비추기', '#D8E0FF']];
-const MOOD = { water: '....목말라.', sun: '....추워. 따뜻했으면.', song: '....심심해.', moon: '....눈부셔. 조용한 빛이 좋아.' };
-const FINAL = ['물방울 백합', '햇살 왕관꽃', '노래하는 종꽃', '달빛 장미', '무지개 꽃', '불꽃 튤립', '별사탕 열매나무', '유령 난초', '호박 덩굴꽃', '박쥐 날개 고사리', '구름 솜꽃', '수정 선인장'], MINE = 3;   // 그림 칸: 0 씨앗 · 1 새싹 · 2 잎 · 3+i 꽃봉오리 · 15+i 최종 꽃
+const CARE = [['water', '밤이슬 주기', '#5AB8F0'], ['sun', '촛불 쬐기', '#FF9A3C'], ['song', '으스스한 노래', '#B070F0'], ['moon', '달빛 비추기', '#D8E0FF']];
+const MOOD = { water: '....목말라. 밤이슬.......', sun: '....추워. 촛불 곁이 좋아.', song: '....심심해. 무서운 노래.......', moon: '....달빛이 그리워.' };
+const FINAL = ['잭오랜턴 호박꽃', '박쥐 날개 고사리', '유령 난초', '해골 양귀비', '거미줄 백합', '마녀 모자 버섯', '눈알 열매덩굴', '사탕옥수수 튤립', '도깨비불 등불초', '검은 장미', '독사과 나무', '뱀파이어 송곳니 끈끈이'], MINE = 3;   // 그림 칸: 0 씨앗 · 1 새싹 · 2 잎 · 3+i 꽃봉오리 · 15+i 최종 꽃
 const css = document.createElement('style'); css.textContent = `
 #sdsay{position:fixed;left:10px;right:10px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:320;display:none}#sdsay .evbox{position:relative;max-width:560px;margin:0 auto;background:rgba(20,13,34,.96);border:2px solid #6ACA5A;border-radius:14px;padding:14px 14px 12px}
 #sdsay .evtext{font-size:15px;line-height:22px;min-height:44px;color:#F1E9FF;font-family:var(--f-px)}#sdsay .fqn{position:absolute;left:10px;top:-14px;background:#6ACA5A;color:#102010;border-radius:8px;padding:2px 10px;font-family:var(--f-pxb);font-size:var(--fs-s)}
@@ -31,8 +31,8 @@ function paintIcons(){ return paintIcons0(); }
 const paintIcons0 = () => document.querySelectorAll('canvas[data-sp]').forEach(c => { const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(SP, +c.dataset.sp * 40, 0, 40, 56, 0, 0, 40, 56); });
 window.__sdGo = async () => {
   await sleep(1200);
-  await talk('학생! 오늘 아주 신기한 씨앗이 들어왔어요.'); await talk('닷새 동안 정성껏 돌보면, 무슨 꽃이 필지는 아무도 몰라요.'); await talk('하루에 한 번만 돌볼 수 있어요. 씨앗 기분을 잘 살펴봐요!', 1500);
-  await showCard(`${plantIcon(0)}수수께끼 씨앗<small>맨디에게 받았어요</small>`, 2000); paintIcons();
+  await talk('학생! 할로윈 밤에만 싹트는 씨앗이 들어왔어요.'); await talk('닷새 동안 돌보면 무슨 꽃이 필지 아무도 몰라요. 조금 무서운 꽃일 수도 있고요.......'); await talk('하루에 한 번만 돌볼 수 있어요. 씨앗 기분을 잘 살펴봐요!', 1500);
+  await showCard(`${plantIcon(0)}할로윈 씨앗<small>맨디에게 받았어요</small>`, 2000); paintIcons();
   // 돌보기 창
   const v = document.createElement('div'); v.id = 'sdv'; v.innerHTML = `<div class="p"><div class="hd"><b>마법 씨앗</b><span></span></div><canvas width="320" height="180"></canvas><div class="st"></div><div class="msg"></div><div class="bt">${CARE.map(([k, n, c]) => `<button data-sc="${k}" style="--c:${c}">${n}</button>`).join('')}</div></div>`; document.body.appendChild(v);
   const cv = v.querySelector('canvas'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
@@ -41,7 +41,7 @@ window.__sdGo = async () => {
     const bob = Math.sin(now / 600) * (S.stage ? .6 : 0); if (SP.complete) g.drawImage(SP, S.stage * 40, 0, 40, 56, 124, 18 + bob, 72, 101);
     if (S.fx){ const q = (now - S.fx.t) / 1400; if (q > 1) S.fx = null; else { const k = S.fx.k; g.save();
       if (k === 'water') for (let i = 0; i < 14; i++){ const x = 150 + (i * 37 % 24), y = 40 + ((q * 90 + i * 13) % 60); g.fillStyle = '#7AC8F8'; g.fillRect(x, y, 1, 3); }
-      else if (k === 'sun'){ g.globalAlpha = .5 * Math.sin(q * Math.PI); const gr = g.createRadialGradient(160, 30, 0, 160, 30, 90); gr.addColorStop(0, '#FFE070'); gr.addColorStop(1, 'rgba(255,224,112,0)'); g.fillStyle = gr; g.fillRect(0, 0, 320, 180); }
+      else if (k === 'sun'){ g.globalAlpha = .55 * Math.sin(q * Math.PI); const gr = g.createRadialGradient(160, 90, 0, 160, 90, 80); gr.addColorStop(0, '#FFA040'); gr.addColorStop(1, 'rgba(255,160,64,0)'); g.fillStyle = gr; g.fillRect(0, 0, 320, 180); }
       else if (k === 'song') for (let i = 0; i < 5; i++){ const x = 130 + i * 15 + Math.sin(q * 8 + i) * 4, y = 90 - q * 60 - i * 4; g.fillStyle = '#D8A8FF'; g.fillRect(x, y, 2, 2); g.fillRect(x + 1, y - 5, 1, 5); g.fillRect(x + 2, y - 5, 2, 1); }
       else { g.globalAlpha = .6 * Math.sin(q * Math.PI); g.fillStyle = 'rgba(20,20,60,.6)'; g.fillRect(0, 0, 320, 180); g.globalAlpha = Math.sin(q * Math.PI); for (let i = 0; i < 20; i++){ g.fillStyle = '#E8ECFF'; g.fillRect(140 + (i * 53 % 40), 50 + (i * 31 % 60) - q * 10, 1, 1); } }
       g.restore(); } }
@@ -68,14 +68,14 @@ window.__sdGo = async () => {
   msg.textContent = `「${FINAL[MINE]}」${iga(FINAL[MINE])} 피었어요! 반짝임 ${shine}개`; await sleep(2600);
   v.classList.remove('on'); await sleep(500); live = false; v.remove();
   // 광장 전시 · 투표
-  await talk('열두 명 모두 다른 꽃이 피었어요! 광장에 전시해 둘게요.'); await talk('가장 마음에 드는 꽃에 하트를 하나 눌러 줘요. 자기 꽃은 안 돼요!', 1500);
+  await talk('열두 명 모두 다른 꽃이 피었어요! 할로윈 광장에 전시해 둘게요.'); await talk('가장 마음에 드는 꽃에 하트를 하나 눌러 줘요. 자기 꽃은 안 돼요!', 1500);
   const ex = document.createElement('div'); ex.id = 'sdv'; const NM = ['민준 (나)', '하늘', '서연', '도윤', '지우', '수아', '예준', '하은', '시우', '유나', '지호', '서아'], SPC = [3, 4, 1, 2, 9, 0, 6, 11, 7, 5, 10, 8], HT = [0, 9, 5, 7, 3, 4, 2, 6, 1, 3, 2, 4];
-  ex.innerHTML = `<div class="p"><div class="hd"><b>광장 꽃 전시</b><span>하트는 한 번만</span></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:2px 8px 8px">${NM.map((n, i) => `<div style="display:flex;flex-direction:column;align-items:center;background:#2A2040;border-radius:10px;padding:4px 1px">${plantIcon(15 + SPC[i], 46)}<b style="font-family:var(--f-pxb);font-size:11px">${n}</b><span style="font-size:10px;color:#C8B8F0;white-space:nowrap">${FINAL[SPC[i]]}</span><button data-sv="${i}" ${i === 0 ? 'disabled' : ''} style="margin-top:3px;min-height:30px;min-width:56px;border-radius:9px;border:1px solid #6A4A8A;background:#3A2C52;color:#FFB0D0;font-family:var(--f-pxb);font-size:12px">♥ <span>${HT[i]}</span></button></div>`).join('')}</div><div class="msg"></div></div>`;
+  ex.innerHTML = `<div class="p"><div class="hd"><b>할로윈 꽃 전시</b><span>하트는 한 번만</span></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:2px 8px 8px">${NM.map((n, i) => `<div style="display:flex;flex-direction:column;align-items:center;background:#2A2040;border-radius:10px;padding:4px 1px">${plantIcon(15 + SPC[i], 46)}<b style="font-family:var(--f-pxb);font-size:11px">${n}</b><span style="font-size:10px;color:#C8B8F0;white-space:nowrap">${FINAL[SPC[i]]}</span><button data-sv="${i}" ${i === 0 ? 'disabled' : ''} style="margin-top:3px;min-height:30px;min-width:56px;border-radius:9px;border:1px solid #6A4A8A;background:#3A2C52;color:#FFB0D0;font-family:var(--f-pxb);font-size:12px">♥ <span>${HT[i]}</span></button></div>`).join('')}</div><div class="msg"></div></div>`;
   document.body.appendChild(ex); paintIcons(); requestAnimationFrame(() => ex.classList.add('on'));
   await new Promise(res => ex.querySelectorAll('[data-sv]').forEach(b => b.onclick = () => { const s = b.querySelector('span'); s.textContent = +s.textContent + 1; b.style.background = '#6A3A6A'; ex.querySelectorAll('[data-sv]').forEach(x => x.disabled = true); res(); }));
   ex.querySelector('.msg').textContent = '하트를 눌렀어요. 저녁에 결과가 나와요.'; await sleep(2200);
   dayEl.textContent = '그날 저녁'; dayEl.style.opacity = 1; await sleep(1100); dayEl.style.opacity = 0;
-  ex.querySelector('.msg').innerHTML = '1등 하늘 · 무지개 꽃 ♥9 · 공동 2등 도윤 · 노래하는 종꽃 ♥7, 하은 · 수정 선인장 ♥7'; await sleep(2600);
+  ex.querySelector('.msg').innerHTML = '1등 하늘 · 거미줄 백합 ♥9 · 공동 2등 도윤 · 유령 난초 ♥7, 하은 · 뱀파이어 송곳니 끈끈이 ♥7'; await sleep(2600);
   ex.classList.remove('on'); await sleep(500); ex.remove();
   await showCard(`${plantIcon(15 + MINE)}「${FINAL[MINE]} 화분」<small>참가 선물 · 내 방 가구 가방에 넣었어요</small>`, 2600); paintIcons();
   await sleep(600); window.__sdDone = true;
