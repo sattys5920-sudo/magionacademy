@@ -2884,12 +2884,14 @@ function xAmb(g, kind, now){   // 분위기 입자: 반딧불 · 안개 · 포�
   else if (kind === 'cave') for (let i = 0; i < 22; i++){ const t = (now / 38 + i * 37) % 170, x = 24 + i * 17 + Math.sin(now / 1100 + i) * 7, y = 206 - t; R(x, y, 2, 2, '#9afff0', .65 * (1 - t / 170)); }
   else for (let i = 0; i < 24; i++){ const t = (now / 46 + i * 29) % 260, x = (i * 53 + t * .6) % XCW, y = 30 + t * .6 + (i % 3) * 10; R(x, y, 2, 2, '#ffe6a8', .55 * Math.sin(t / 260 * Math.PI)); }
 }
+const XGND = 132;   // 발이 닿는 가장 위쪽 (배경 땅이 122부터 시작)
 function xLayout(B){
   const norm = B.foes.filter(u => !(u.k >= 3)), e = B.foes.some(f => f.k >= 3), bo = B.foes.some(f => f.big);
   B.foes.forEach(u => { if (u.big) [u.bx, u.by] = XBOSS_AT; else if (u.k >= 3) [u.bx, u.by] = [136, 184]; else { const i = norm.indexOf(u); [u.bx, u.by] = bo ? (XFB[i] || XFB[0]) : e ? (XFE[i] || XFE[0]) : (XFS[Math.min(5, norm.length - 1)][i] || XFS[0][0]); } });
   if (B.party.some(u => u.row)){   // 파티: 앞열은 적 쪽, 뒤열은 그 뒤에 줄을 세워요
     [B.party.filter(u => u.row === 'f'), B.party.filter(u => u.row !== 'f')].forEach((arr, r) => arr.forEach((u, i) => { const n = arr.length; u.bx = (r ? 342 : 290) - (i % 2) * 20; u.by = n === 1 ? 152 : Math.round(108 + 98 * i / (n - 1)); }));
   } else B.party.forEach((u, i) => { [u.bx, u.by] = XPS[i] || XPS[0]; });
+  [...B.foes, ...B.party].forEach(u => { if (!u.big) u.by = Math.round(XGND + (u.by - 104) * (206 - XGND) / 102); });   // 모두 땅(배경 땅 높이 122) 위에 서게: 자리 높이 104~206을 땅~206으로 옮겨요
   [...B.foes, ...B.party].forEach(u => { u.bx = XCW - u.bx; u.sx = u.bx; u.sy = u.by; });   // 아군은 왼쪽, 적은 오른쪽 (행군하는 쪽과 같아요)
 }
 function xFxDraw(g, f, x, y, now){
