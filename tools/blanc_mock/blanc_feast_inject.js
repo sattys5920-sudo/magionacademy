@@ -315,7 +315,7 @@ window.__bfFinale = async () => {
   await yell('잘 먹었네, {player}. 정말로 맛있었어.......', 2600); await yell('봉 아페티.......', 2000);
   await sleep(1000); visionStop(); await sleep(700);
   await showCard(`<canvas width="32" height="32" data-bfdi="16" style="width:72px;height:72px"></canvas>「블랑의 레시피 노트」<small>조리대에 노트 한 권이 남아 있어요<br>펼치면 블랑이 맛본 장면 17개를 다시 볼 수 있어요</small>`, drawDishes, 3200);
-  SND.cue('star', 3); await showCard(`칭호 「블랑의 마지막 손님」<small>무슈 블랑이 편히 돌아갔어요</small>`, null, 2600);
+  SND.cue('star', 3); await showCard(`무슈 블랑이 편히 돌아갔어요<small>레시피 노트는 가방의 「일지」에서 언제든 펼칠 수 있어요</small>`, null, 2600);
   SND.bgm(true); await sleep(1500); window.__bfDone = true;
 };
 window.__bfPeak = async i => {   // 장면 모음용: 환상 + 첫 외침 + 제목을 한 화면에
