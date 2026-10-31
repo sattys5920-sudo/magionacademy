@@ -2230,10 +2230,16 @@ function xpLeave(why){
   xpRefresh();
 }
 const xpCantGo = v => { const R = XRG[v.rg] || XRG[0], ex = xEx(); if (ex.run && ex.run.co !== xpRoom) return '지금 하고 있는 탐사를 먼저 끝내요'; if (!(ex.run && ex.run.co === xpRoom) && ex.n >= XDAY) return `탐사는 하루에 ${XDAY}번까지예요 (오늘 다 다녀왔어요)`; if (me.coin < R.fee) return `입장료 ${R.fee}G가 모자라요 (지금 ${me.coin}G)`; if (xLv(ex.exp).L < R.need) return `레벨 ${R.need}부터 갈 수 있어요`; return ''; };
+// 진행 중인 방이 살아 있나: 안 나간 사람 중 누가 1분 안에 신호(hb)를 보냈어야 해요. 다 꺼 버린 방은 「진행 중」에 남지 않게, 5분 지나면 끝난 방으로 정리해요
+function xpAlive(id, r){
+  const t = now2(), live = Object.entries(r.p || {}).some(([u, p]) => u !== myId() && !p.out && t - (p.hb || r.t0 || r.at || 0) < 60000);
+  if (!live && t - Math.max(r.t0 || 0, ...Object.values(r.p || {}).map(p => p.hb || 0)) > 300000 && !xpAlive.done?.[id]){ (xpAlive.done = xpAlive.done || {})[id] = 1; GDB.upd('xparty/' + id, { st: 'end', how: 'gone' }).catch(() => {}); }
+  return live;
+}
 function xpPanel(lv){
   if (!XCOOP) return '';
   const mineRoom = xpV ? [xpRoom, xpV] : null, open = Object.entries(xpList).filter(([id, r]) => r && r.st === 'lobby' && !r.p?.[myId()] && now2() - r.at < 600000).sort((a, b) => b[1].at - a[1].at);
-  const back = Object.entries(xpList).filter(([id, r]) => r && r.st === 'run' && r.p?.[myId()]?.out);
+  const back = Object.entries(xpList).filter(([id, r]) => r && r.st === 'run' && r.p?.[myId()]?.out && xpAlive(id, r));
   if (!mineRoom) return !open.length && !back.length ? '' : `<section class="sec"><div class="box px">
     ${open.map(([id, r]) => `<div class="li"><div class="main"><span class="t">${esc(r.hn)}의 파티</span><span class="d">${XRG[r.rg]?.n || ''} · ${Object.keys(r.p || {}).length} / ${XP_MAX}명</span></div><button class="btn sm" data-xp="join" data-id="${id}">참가</button></div>`).join('')}
     ${back.map(([id, r]) => `<div class="li"><div class="main"><span class="t">${esc(r.hn)}의 파티 (진행 중)</span><span class="d">다시 들어갈 수 있어요</span></div><button class="btn sm go" data-xp="join" data-id="${id}">돌아가기</button></div>`).join('')}
