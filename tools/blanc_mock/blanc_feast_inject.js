@@ -21,7 +21,9 @@ document.head.appendChild(css);
 const el = (id, html) => { const d = document.createElement('div'); d.id = id; if (html) d.innerHTML = html; document.body.appendChild(d); return d; };
 const say = el('bfsay', '<div class="bx"><div class="fc"><canvas width="32" height="32"></canvas></div><div><b>무슈 블랑</b><p></p></div></div>');
 const vis = el('bfv', '<canvas></canvas>'), shout = el('bfshout'), title = el('bftitle'), card = el('bfcard');
-const cv = vis.querySelector('canvas'), g = cv.getContext('2d');
+const cv = vis.querySelector('canvas'), G0 = cv.getContext('2d'); let g = G0;
+// 우리 그림체: 환상 장면은 1/3 크기 캔버스에 그리고 픽셀 그대로 3배로 키워요 (블랑 스프라이트가 원래 도트 크기로 맞아요)
+const LO = 3, lo = document.createElement('canvas'), LG = lo.getContext('2d');
 const SH = new Image(); SH.src = 'blanc_lpc.png'; const DI = new Image(); DI.src = 'seed_dishes.png';
 let R = null; const ready = fetch('blanc_reactions.json').then(r => r.json()).then(j => { R = j; });
 const fill = t => t.replace(/\{player\}/g, PLAYER);
@@ -33,7 +35,7 @@ const talk = async (t, hold = 1400) => { const q = say.querySelector('canvas').g
   say.style.display = 'block'; const p = say.querySelector('p'); p.textContent = ''; const s = fill(t); for (let k = 1; k <= s.length; k++){ p.textContent = s.slice(0, k); await sleep(32); } await sleep(hold); say.style.display = 'none'; await sleep(140); };
 const showCard = async (html, draw, ms) => { card.innerHTML = html; draw && draw(); card.classList.add('on'); await sleep(ms); card.classList.remove('on'); await sleep(420); };
 // ---- 입자 그림 (점 하나 = P 픽셀) ----
-const P = 4;
+const P = 3;   // 입자 점 하나 = 작은 캔버스 1 픽셀
 const px = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x + w * 0), Math.round(y), w * P, h * P); };
 const at = (ox, oy) => (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(ox + x * P), Math.round(oy + y * P), w * P, h * P); };
 const SPR = {
@@ -63,11 +65,19 @@ function spawn(D){
     parts.push({ k, a, r: 20 + Math.random() * 40, sp: .4 + Math.random() * .9, x: Math.random() * W(), y: Math.random() * H(), d: Math.random() * 1.5, s: .8 + Math.random() * .7, w: Math.random() * 6 }); }
 }
 // ---- 환상 장면: 배경 + 블랑의 자세(날기·튜브·회전·튀기...) + 소품 · 웃기게 ----
-const lg = (y0, y1, a, b) => { const q = g.createLinearGradient(0, y0, 0, y1); q.addColorStop(0, a); q.addColorStop(1, b); return q; };
+const hx2 = c => { const m = /^#([0-9a-f]{6})$/i.exec(c); return m ? [0, 2, 4].map(i => parseInt(m[1].slice(i, i + 2), 16)) : null; };
+const shade = (c, k) => { const v = hx2(c); if (!v) return c; return '#' + v.map(x => Math.max(0, Math.min(255, Math.round(k > 1 ? x + (255 - x) * (k - 1) : x * k))).toString(16).padStart(2, '0')).join(''); };
+const mix = (a, b, t) => { const A = hx2(a), B = hx2(b); if (!A || !B) return a; return '#' + A.map((x, i) => Math.round(x + (B[i] - x) * t).toString(16).padStart(2, '0')).join(''); };
+const lg = (y0, y1, a, b, n = 7) => { const q = g.createLinearGradient(0, y0, 0, y1); for (let i = 0; i < n; i++){ const c = mix(a, b, i / (n - 1)); q.addColorStop(i / n, c); q.addColorStop((i + 1) / n - .0001, c); } return q; };   // 띠처럼 끊어진 그러데이션 (도트 느낌)
 const rect = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
-const circ = (x, y, r, c) => { g.fillStyle = c; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); };
-const ell = (x, y, rx, ry, c) => { g.fillStyle = c; g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 7); g.fill(); };
-const cloud = (x, y, s, c = '#FFFFFF') => { ell(x, y, 30 * s, 14 * s, c); ell(x - 22 * s, y + 4 * s, 18 * s, 10 * s, c); ell(x + 24 * s, y + 3 * s, 20 * s, 11 * s, c); ell(x + 4 * s, y - 9 * s, 18 * s, 12 * s, c); };
+const flat = (x, y, rx, ry, c) => { g.fillStyle = c; g.beginPath(); g.ellipse(x, y, Math.max(.5, rx), Math.max(.5, ry), 0, 0, 7); g.fill(); };
+// 동그란 소품: 진한 테두리 → 어두운 면(오른쪽 아래) → 기본색 → 밝은 점(왼쪽 위) · 색이 #RRGGBB가 아니면 그냥 칠해요
+const blob = (x, y, rx, ry, c) => { if (!hx2(c) || rx < 4) return flat(x, y, rx, ry, c); const o = LO;
+  flat(x, y, rx + o, ry + o, shade(c, .3)); flat(x, y, rx, ry, shade(c, .72)); flat(x - o * .7, y - o * .7, rx - o, ry - o, c); flat(x - rx * .35, y - ry * .38, rx * .32, ry * .28, shade(c, 1.35)); };
+const circ = (x, y, r, c) => blob(x, y, r, r, c);
+const ell = (x, y, rx, ry, c) => blob(x, y, rx, ry, c);
+const CLP = s => [[0, 0, 30, 14], [-22, 4, 18, 10], [24, 3, 20, 11], [4, -9, 18, 12]].map(([a, b, c, d]) => [a * s, b * s, c * s, d * s]);
+const cloud = (x, y, s, c = '#FFFFFF') => { const L = CLP(s), o = LO; L.forEach(([a, b, rx, ry]) => flat(x + a, y + b, rx + o, ry + o, hx2(c) ? mix(c, '#3A2A5A', .55) : c)); L.forEach(([a, b, rx, ry]) => flat(x + a, y + b + o, rx, ry, hx2(c) ? mix(c, '#8A7AB8', .35) : c)); L.forEach(([a, b, rx, ry]) => flat(x + a, y + b - o * .4, rx - o, ry - o, c)); };
 // 블랑 그리기: x, y = 발 밑 가운데 · s 배율 · o = { rot, fx 좌우 뒤집기(-1~1), glasses, crown, towel, veil, clip(발 쪽 자르기 0~1), arms 만세, cart }
 function blanc(x, y, s, o = {}){
   const w = 64 * s; g.save(); g.translate(x, y); g.rotate(o.rot || 0); g.scale(o.fx ?? 1, 1);
@@ -90,13 +100,13 @@ const SCENE = {
   sky(t, w, h){ g.fillStyle = lg(0, h, '#5AB8FF', '#FFE0B0'); g.fillRect(0, 0, w, h); circ(w * .82, h * .12, 34, '#FFF2A0');
     for (let i = 0; i < 6; i++) cloud(((i * 170 - t * 160) % (w + 200) + w + 200) % (w + 200) - 100, 80 + i * 70 % 300, .8 + (i % 3) * .3);
     for (let i = 0; i < 14; i++){ const x = ((i * 60 - t * 260) % (w + 80) + w + 80) % (w + 80) - 40; g.save(); g.translate(x, h * .86 + (i % 2) * 18); SPR.pumpkin(at(-12, -12)); g.restore(); } rect(0, h * .9, w, h * .1, '#3A6A2A');
-    const x = w * .45 + Math.sin(t * 1.3) * 30, y = h * .5 + Math.sin(t * 2.2) * 24; g.strokeStyle = '#E83A3A'; g.lineWidth = 6; g.beginPath(); for (let k = 0; k < 8; k++) g.lineTo(x - 30 - k * 16, y - 150 + Math.sin(t * 8 + k) * 8); g.stroke();
+    const x = w * .45 + Math.sin(t * 1.3) * 30, y = h * .5 + Math.sin(t * 2.2) * 24; g.strokeStyle = '#4A0A10'; g.lineWidth = 12; g.beginPath(); for (let k = 0; k < 8; k++) g.lineTo(x - 30 - k * 16, y - 150 + Math.sin(t * 8 + k) * 8); g.stroke(); g.strokeStyle = '#E83A3A'; g.lineWidth = 6; g.beginPath(); for (let k = 0; k < 8; k++) g.lineTo(x - 30 - k * 16, y - 150 + Math.sin(t * 8 + k) * 8); g.stroke();
     blanc(x, y, 3.2, { rot: -.35, arms: 1 }); speed(t); },
   beach(t, w, h){ g.fillStyle = lg(0, h * .45, '#4AC8FF', '#BFF0FF'); g.fillRect(0, 0, w, h * .45); circ(w * .2, h * .1, 30, '#FFE860');
     rect(0, h * .45, w, h * .3, '#2A8AD8'); for (let i = 0; i < 9; i++){ const y = h * .47 + i * 26, o = (t * 40 + i * 30) % 40; for (let x = -40 + o; x < w; x += 40) rect(x, y, 18, 3, 'rgba(255,255,255,.45)'); }
     rect(0, h * .75, w, h * .25, '#F0D890'); rect(w * .78, h * .5, 10, h * .27, '#8A5A2A'); for (let k = 0; k < 5; k++){ g.save(); g.translate(w * .78 + 5, h * .5); g.rotate(-1.4 + k * .7); ell(30, 0, 34, 8, '#3AA83A'); g.restore(); }
     const by = h * .6 + Math.sin(t * 2) * 10; blanc(w * .42, by + 6, 3, { glasses: 1, clip: 1, rot: Math.sin(t * 1.5) * .08, cup: 1 });
-    g.strokeStyle = '#FF6A3A'; g.lineWidth = 18; g.beginPath(); g.ellipse(w * .42, by - 60, 62, 16, 0, -.1, Math.PI + .1); g.stroke(); g.strokeStyle = '#FFFFFF'; g.lineWidth = 18; g.setLineDash([16, 22]); g.beginPath(); g.ellipse(w * .42, by - 60, 62, 16, 0, -.1, Math.PI + .1); g.stroke(); g.setLineDash([]);
+    g.strokeStyle = '#4A1408'; g.lineWidth = 26; g.beginPath(); g.ellipse(w * .42, by - 60, 62, 16, 0, -.1, Math.PI + .1); g.stroke(); g.strokeStyle = '#FF6A3A'; g.lineWidth = 18; g.beginPath(); g.ellipse(w * .42, by - 60, 62, 16, 0, -.1, Math.PI + .1); g.stroke(); g.strokeStyle = '#FFB08A'; g.lineWidth = 4; g.beginPath(); g.ellipse(w * .42, by - 64, 58, 12, 0, .3, Math.PI - .3); g.stroke(); g.strokeStyle = '#FFFFFF'; g.lineWidth = 18; g.setLineDash([16, 22]); g.beginPath(); g.ellipse(w * .42, by - 60, 62, 16, 0, -.1, Math.PI + .1); g.stroke(); g.setLineDash([]);
     for (let i = 0; i < 3; i++){ const x = (t * 60 + i * 140) % (w + 60) - 30, y = h * .15 + i * 40 + Math.sin(t * 4 + i) * 8; g.strokeStyle = '#333'; g.lineWidth = 3; g.beginPath(); g.moveTo(x - 10, y); g.lineTo(x, y + 6); g.lineTo(x + 10, y); g.stroke(); }
     const cx = (t * 50) % (w + 40) - 20; ell(cx, h * .88, 12, 8, '#E83A2A'); rect(cx - 16, h * .86, 6, 3, '#E83A2A'); rect(cx + 10, h * .86, 6, 3, '#E83A2A'); },
   space(t, w, h){ g.fillStyle = lg(0, h, '#0A0A2A', '#2A1050'); g.fillRect(0, 0, w, h); for (let i = 0; i < 70; i++){ const a = .4 + .6 * Math.abs(Math.sin(t * 2 + i)); rect((i * 73) % w, (i * 131) % h, 2, 2, `rgba(255,255,255,${a})`); }
@@ -106,7 +116,7 @@ const SCENE = {
     for (let k = 0; k < 3; k++){ const x = w * (.2 + k * .3); rect(x - 1, 0, 2, 50, '#C8A040'); circ(x, 60, 22, '#FFE8A0'); for (let j = 0; j < 6; j++) circ(x - 20 + j * 8, 76, 3, '#FFF6C8'); }
     blanc(w / 2, h * .66, 3.3, { fx: Math.cos(t * 7), rot: Math.sin(t * 7) * .1 }); },
   coaster(t, w, h){ g.fillStyle = lg(0, h, '#1A1040', '#C83A6A'); g.fillRect(0, 0, w, h); const Y = x => h * .55 + Math.sin(x / w * Math.PI * 3 - 1) * h * .18;
-    g.strokeStyle = '#E8C890'; g.lineWidth = 6; g.beginPath(); for (let x = 0; x <= w; x += 6) g.lineTo(x, Y(x)); g.stroke(); for (let x = 0; x < w; x += 24){ rect(x, Y(x), 3, h - Y(x), 'rgba(232,200,144,.35)'); }
+    g.strokeStyle = '#3A2410'; g.lineWidth = 12; g.beginPath(); for (let x = 0; x <= w; x += 6) g.lineTo(x, Y(x)); g.stroke(); g.strokeStyle = '#E8C890'; g.lineWidth = 6; g.beginPath(); for (let x = 0; x <= w; x += 6) g.lineTo(x, Y(x)); g.stroke(); for (let x = 0; x < w; x += 24){ rect(x, Y(x), 3, h - Y(x), 'rgba(232,200,144,.35)'); }
     const x = (t * 160) % (w + 100) - 50, y = Y(x), a = Math.atan2(Y(x + 4) - y, 4); g.save(); g.translate(x, y); g.rotate(a); rect(-50, -30, 100, 30, '#E83A3A'); rect(-50, -30, 100, 6, '#FFD84A'); g.restore();
     blanc(x, y - 18, 2.4, { rot: a, arms: 1 }); speed(t, 'rgba(255,255,255,.35)'); },
   bounce(t, w, h){ g.fillStyle = lg(0, h, '#6A3AB8', '#2A0A40'); g.fillRect(0, 0, w, h); const ph = (t * 1.6) % 1, hit = ph > .9, sq = hit ? 1 + Math.sin((ph - .9) * 31) * .25 : 1;
@@ -149,10 +159,14 @@ const SCENE = {
 const MONT = ['sky', 'beach', 'space', 'disco', 'rocket', 'parade'];
 const POPC = ['#FFE860', '#FF6AA0', '#6AE8FF', '#9AF07A'];
 function drawVision(t){
-  const D = vD, w = W(), h = H(); if (cv.width !== w * 2){ cv.width = w * 2; cv.height = h * 2; } g.setTransform(2, 0, 0, 2, 0, 0); g.imageSmoothingEnabled = false;
-  const sx = shakeK ? (Math.random() - .5) * 6 * shakeK : 0, sy = shakeK ? (Math.random() - .5) * 6 * shakeK : 0; g.translate(sx, sy);
+  const D = vD, w = W(), h = H(); if (cv.width !== w * 2){ cv.width = w * 2; cv.height = h * 2; } const lw = Math.ceil(w / LO), lh = Math.ceil(h / LO); if (lo.width !== lw){ lo.width = lw; lo.height = lh; }
+  g = LG; g.setTransform(1 / LO, 0, 0, 1 / LO, 0, 0); g.imageSmoothingEnabled = false; g.clearRect(0, 0, w, h);
   const sc = D.scene === 'montage' ? MONT[Math.floor(t / 1.7) % MONT.length] : D.scene; (SCENE[sc] || SCENE.sky)(t, w, h);
-  parts.forEach((q, i) => { if (i % 2) return; const T = t - q.d; if (T < 0) return; const x = q.x + Math.sin(T * 2 + q.w) * 14, y = -30 + ((T * 70 * q.sp + q.y) % (h + 60)); g.save(); g.translate(x, y); g.scale(q.s * .8, q.s * .8); SPR[q.k](at(-9, -9)); g.restore(); });   // 요리 재료가 조금씩 흩날려요
+  parts.forEach((q, i) => { if (i % 2) return; const T = t - q.d; if (T < 0) return; const x = q.x + Math.sin(T * 2 + q.w) * 14, y = -30 + ((T * 70 * q.sp + q.y) % (h + 60)); g.save(); g.translate(Math.round(x / LO) * LO, Math.round(y / LO) * LO); SPR[q.k](at(-9, -9)); g.restore(); });   // 요리 재료가 조금씩 흩날려요
+  g = G0; g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false; g.clearRect(0, 0, cv.width, cv.height);
+  const sx = shakeK ? Math.round((Math.random() - .5) * 4 * shakeK) * LO * 2 : 0, sy = shakeK ? Math.round((Math.random() - .5) * 4 * shakeK) * LO * 2 : 0;
+  g.drawImage(lo, 0, 0, lw, lh, sx - 6, sy - 6, lw * LO * 2 + 12, lh * LO * 2 + 12);
+  g.setTransform(2, 0, 0, 2, 0, 0);
   (D.pop || []).forEach((p, i) => { const T = (t * .7 + i * .5) % 1.6; if (T > 1) return; const x = w * (.18 + ((i * 37) % 64) / 100), y = h * (.32 + ((i * 23) % 30) / 100) - T * 30, s = 1 + Math.min(T * 4, 1) * .6;
     g.save(); g.translate(x, y); g.rotate((i % 2 ? 1 : -1) * .18); g.scale(s, s); g.font = '22px G9, monospace'; g.textAlign = 'center'; g.lineWidth = 6; g.strokeStyle = '#1A0A24'; g.strokeText(p + '!', 0, 0); g.fillStyle = POPC[i % POPC.length]; g.fillText(p + '!', 0, 0); g.restore(); });
   g.setTransform(1, 0, 0, 1, 0, 0);
