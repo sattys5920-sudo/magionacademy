@@ -237,17 +237,23 @@ function dayCopy(src){
   x.putImageData(id, 0, 0); return c;
 }
 // willReadFrequently 캔버스는 CPU 메모리에만 있어서, 매 프레임 그리면 느려요. 화면에 그릴 그림은 일반 캔버스(그래픽 가속)로 한 번 옮겨 둬요
-function gpuCopy(c){ const g = document.createElement('canvas'); g.width = c.width; g.height = c.height; g.getContext('2d').drawImage(c, 0, 0); return g; }
+function gpuCopy(c, drop){ const g = document.createElement('canvas'); g.width = c.width; g.height = c.height; g.getContext('2d').drawImage(c, 0, 0); if (drop) cfree(c); return g; }
+// 아이폰은 캔버스 메모리 한도가 작아서, 다 쓴 캔버스는 크기를 0 으로 줄여 바로 돌려줘요 (안 그러면 다음 그림을 만들 때 InvalidStateError)
+function cfree(c){ if (c && c.width !== undefined && !(c instanceof Image)){ c.width = 0; c.height = 0; } }
 // 밤↔낮 사이는 12단계로 미리 섞어 둔 그림을 하나만 그려요 (프레임마다 두 장을 겹쳐 그리면 느려요). 쓰는 단계 앞뒤 3장만 갖고 있어요
 const DAYN = 12;
 function dayLevel(m, k){
   m.lv = m.lv || {}; if (m.lv[k]) return m.lv[k];
-  Object.keys(m.lv).forEach(q => { if (Math.abs(q - k) > 1) delete m.lv[q]; });
+  Object.keys(m.lv).forEach(q => { if (Math.abs(q - k) > 1){ cfree(m.lv[q].bg); cfree(m.lv[q].obj); delete m.lv[q]; } });
   const mix = (a, b) => { const c = document.createElement('canvas'); c.width = a.width; c.height = a.height; const g = c.getContext('2d'); g.drawImage(a, 0, 0); g.globalCompositeOperation = 'source-atop'; g.globalAlpha = k / DAYN; g.drawImage(b, 0, 0); return c; };
   return m.lv[k] = { bg: mix(m.bg, m.bgDay), obj: mix(m.obj, m.objDay) };
 }
-function makeDay(m){ if (m.meta.indoor || !m.bg || !m.obj) return; m.bgDay = gpuCopy(dayCopy(m.bg)); m.objDay = gpuCopy(dayCopy(m.obj)); m.lv = {}; }
-World.retuneDay = () => Object.values(MAPS).forEach(makeDay);
+// 낮 그림은 지금 있는 맵 것만 갖고 있어요. 다른 맵 것은 떠날 때 돌려줘요 (아이폰 메모리)
+function dropDay(m){ if (!m) return; cfree(m.bgDay); cfree(m.objDay); Object.values(m.lv || {}).forEach(v => { cfree(v.bg); cfree(v.obj); }); m.bgDay = m.objDay = null; m.lv = {}; }
+function makeDay(m){ if (m.meta.indoor || !m.bg || !m.obj) return; dropDay(m);
+  try { m.bgDay = gpuCopy(dayCopy(m.bg), true); m.objDay = gpuCopy(dayCopy(m.obj), true); } catch (e){ dropDay(m); }   // 못 만들면 낮 밝기 없이 밤 그림 그대로 보여요
+}
+World.retuneDay = () => { const A = rmap && MAPS[rmap]; if (A) makeDay(A); };
 function mapFail(){ fadeEl.textContent = '연결이 약해서 못 갔어요. 다시 눌러 주세요'; setTimeout(() => { fadeEl.style.opacity = 0; busy = false; }, 1400); }   // 검은 화면에 갇히지 않게
 async function ensureMap(id){
   const m = MAPS[real(id)]; if (m.bg) return;
@@ -257,11 +263,10 @@ async function ensureMap(id){
     m.px = px; m.obj = obj; m.bg = bg;
     if (!m.meta.indoor){   // 바깥 맵: 그림에 칠해진 어두운 빈 땅(#140E1E)을 투명하게 → 그 자리에 시간대 하늘색이 보여요
       const bc = document.createElement('canvas'); bc.width = bg.width; bc.height = bg.height; const bx = bc.getContext('2d', { willReadFrequently: true }); bx.drawImage(bg, 0, 0);
-      const id = bx.getImageData(0, 0, bc.width, bc.height), d = id.data, hx = m.meta.fill || '#140E1E', R = parseInt(hx.slice(1, 3), 16), G = parseInt(hx.slice(3, 5), 16), B = parseInt(hx.slice(5, 7), 16);
-      for (let i = 0; i < d.length; i += 4) if (d[i] === R && d[i + 1] === G && d[i + 2] === B) d[i + 3] = 0;
-      bx.putImageData(id, 0, 0); m.bg = gpuCopy(bc);
+      try { const id = bx.getImageData(0, 0, bc.width, bc.height), d = id.data, hx = m.meta.fill || '#140E1E', R = parseInt(hx.slice(1, 3), 16), G = parseInt(hx.slice(3, 5), 16), B = parseInt(hx.slice(5, 7), 16);
+        for (let i = 0; i < d.length; i += 4) if (d[i] === R && d[i + 1] === G && d[i + 2] === B) d[i + 3] = 0;
+        bx.putImageData(id, 0, 0); m.bg = gpuCopy(bc, true); } catch (e){ cfree(bc); }   // 메모리가 모자라면 하늘 뚫기 없이 원래 그림 그대로
     }
-    makeDay(m);
   })();
   m.loading.catch(() => { m.loading = null; });   // 실패한 걸 붙잡고 있지 않게: 다음에 다시 받아요
   return m.loading;
@@ -515,7 +520,8 @@ let gates = [];   // 길 끝에서 다음 지역으로 넘어가는 문 (door.wa
 function setMap(id, spawn){
   if (ember){ ember = null; famRelead = true; }
   if (!MAPS[real(id)].bg){ ensureMap(id).then(() => setMap(id, spawn)).catch(() => {}); return; }   // 기숙사 단계가 막 바뀌어 새 방 그림이 아직 안 왔으면 받고 나서 옮겨요
-  map = id; rmap = real(id); M = MAPS[rmap].meta; resize(); placing = null;
+  if (rmap && rmap !== real(id)) dropDay(MAPS[rmap]);
+  map = id; rmap = real(id); M = MAPS[rmap].meta; resize(); placing = null; if (!MAPS[rmap].bgDay) makeDay(MAPS[rmap]);
   if (M.objs.some(o => o.req) || M.all){ M.all = M.all || M.objs; M.objs = M.all.filter(o => !o.req || (World.reqOk && World.reqOk(o.req))); MAPS[rmap].order = null; }   // req 가 있는 물건: 용의 동굴의 용 · 깨진 알껍데기
   rebuildObjs(); gates = M.objs.filter(o => o.door && o.door.walk);
   if (!spawn || !free(spawn[0], spawn[1])) spawn = M.spawnIn || M.start || spawn;
