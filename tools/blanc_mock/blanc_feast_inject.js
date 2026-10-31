@@ -176,24 +176,94 @@ function visionStop(){ vis.classList.remove('on'); setTimeout(() => cancelAnimat
 const yell = async (t, ms = 2300) => { shout.textContent = fill(t); shout.classList.add('on'); await sleep(ms); shout.classList.remove('on'); await sleep(260); };
 const dishCanvas = (i, size) => `<canvas width="32" height="32" data-bfdi="${i}" style="width:${size}px;height:${size}px"></canvas>`;
 const drawDishes = () => card.querySelectorAll('canvas[data-bfdi]').forEach(c => { const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(DI, +c.dataset.bfdi * 32, 0, 32, 32, 0, 0, 32, 32); });
+// ---- 소리: 환상이 나오는 동안은 배경 음악을 잠깐 끄고, 장면마다 어울리는 효과음·짧은 음악을 합성해요 ----
+//   게임에서는 BGM.hold('blanc') / BGM.release('blanc') + 이 합성기 · 시안 영상에서는 같은 합성기를 OfflineAudioContext로 다시 그려 영상에 붙여요
+const SND = (() => {
+  let AC = null, T0 = 0; const log = [];
+  const mk = (C, D) => {
+    const tone = (f, at, d, type = 'triangle', v = .4, f2) => { const o = C.createOscillator(), gn = C.createGain(); o.type = type; o.frequency.setValueAtTime(f, at); if (f2) o.frequency.exponentialRampToValueAtTime(f2, at + d);
+      gn.gain.setValueAtTime(.0001, at); gn.gain.exponentialRampToValueAtTime(v, at + .015); gn.gain.exponentialRampToValueAtTime(.0001, at + d); o.connect(gn); gn.connect(D); o.start(at); o.stop(at + d + .05); };
+    let NB = null; const nbuf = () => { if (NB && NB.sampleRate === C.sampleRate) return NB; NB = C.createBuffer(1, C.sampleRate * 2, C.sampleRate); const a = NB.getChannelData(0); for (let i = 0; i < a.length; i++) a[i] = Math.random() * 2 - 1; return NB; };
+    const noise = (at, d, v = .3, f = 1500, kind = 'lowpass', f2, atk = .02) => { const s = C.createBufferSource(); s.buffer = nbuf(); s.loop = true; const fl = C.createBiquadFilter(); fl.type = kind; fl.frequency.setValueAtTime(f, at); if (f2) fl.frequency.exponentialRampToValueAtTime(f2, at + d);
+      const gn = C.createGain(); gn.gain.setValueAtTime(.0001, at); gn.gain.exponentialRampToValueAtTime(v, at + atk); gn.gain.exponentialRampToValueAtTime(.0001, at + d); s.connect(fl); fl.connect(gn); gn.connect(D); s.start(at); s.stop(at + d + .05); };
+    const notes = (seq, at, step, type = 'triangle', v = .3, len = .9) => seq.forEach((n, i) => { if (n) tone(440 * Math.pow(2, (n - 69) / 12), at + i * step, step * len * 1.6, type, v); });
+    const kick = at => tone(130, at, .18, 'sine', .7, 45), snare = at => noise(at, .12, .35, 3500, 'highpass'), hat = at => noise(at, .04, .12, 8000, 'highpass');
+    const SC = {
+      sky(a, d){ for (let k = 0; k < d; k += 1.6) noise(a + k, 1.8, .18, 700, 'bandpass', 1400, .5); for (let k = .3; k < d; k += 2.2) noise(a + k, .5, .3, 3000, 'bandpass', 600, .05); notes([72, 76, 79, 84, 79, 76, 72, 0], a, .3, 'sine', .12); },
+      beach(a, d){ for (let k = 0; k < d; k += 2.4) noise(a + k, 2.4, .32, 500, 'lowpass', 1600, 1.1); for (let k = .8; k < d; k += 1.9) { tone(1700, a + k, .22, 'sine', .14, 2300); tone(2100, a + k + .25, .3, 'sine', .12, 1500); } notes([67, 71, 74, 71, 67, 71, 74, 76], a + .2, .38, 'triangle', .1); },
+      space(a, d){ tone(110, a, d, 'sine', .14); tone(165, a + .1, d, 'sine', .08); for (let k = 0; k < d; k += .45) tone(1500 + Math.random() * 1500, a + k, .5, 'sine', .07); },
+      ballroom(a, d){ const bar = [[48, 64, 67], [55, 64, 67], [53, 65, 69], [55, 62, 67]]; let i = 0; for (let k = 0; k < d; k += 1.2, i++){ const [b, x, y] = bar[i % 4]; notes([b], a + k, .4, 'triangle', .22); notes([0, x, x], a + k, .4, 'triangle', .1); notes([0, y, y], a + k, .4, 'triangle', .08); notes([76 + (i % 2) * 2, 0, 74], a + k, .4, 'sine', .14); } },
+      coaster(a, d){ for (let k = 0; k < Math.min(1.6, d); k += .1) tone(900, a + k, .03, 'square', .08); tone(400, a + 1.6, 1.4, 'sawtooth', .12, 1400); noise(a + 1.6, 2, .35, 800, 'bandpass', 3000, .3); for (let k = 3.2; k < d; k += 2.6){ noise(a + k, 1.6, .3, 600, 'bandpass', 2600, .2); tone(500, a + k, 1, 'sawtooth', .08, 1600); } },
+      bounce(a, d){ for (let k = .55; k < d; k += 1 / 1.6) tone(160, a + k, .35, 'sine', .45, 520); for (let k = .1; k < d; k += 1.25) tone(620, a + k, .12, 'square', .06); },
+      hotspring(a, d){ for (let k = 0; k < d; k += .22) tone(300 + Math.random() * 500, a + k, .08, 'sine', .1, 900); noise(a + .3, 1.6, .16, 400, 'lowpass', 200, .4); for (let k = 1.5; k < d; k += 1.7) tone(1800, a + k, .15, 'sine', .12, 900); notes([62, 0, 66, 0, 69, 0, 74], a, .45, 'triangle', .08); },
+      cloud(a, d){ for (let k = 0; k < d; k += 1.6) notes([60, 64, 67, 72, 76, 79], a + k, .12, 'triangle', .1); tone(98, a, d, 'sine', .08); },
+      drum(a, d){ for (let k = 0, i = 0; k < d; k += .25, i++){ if (i % 4 === 0) kick(a + k); if (i % 4 === 2) snare(a + k); hat(a + k + .125); if (i % 8 === 7) tone(880, a + k, .06, 'square', .08); } notes([45, 0, 45, 48, 0, 45, 43, 0], a, .25, 'sawtooth', .1); },
+      balloon(a, d){ tone(200, a, Math.min(3.5, d), 'square', .08, 900); for (let k = 0; k < Math.min(3.5, d); k += .35) noise(a + k, .2, .1, 2500, 'bandpass'); for (let k = 3.6; k < d; k += 1.1) tone(900, a + k, .5, 'sine', .1, 600); },
+      rocket(a, d){ [0, .6, 1.2].forEach((k, i) => tone(i < 2 ? 660 : 990, a + k, .2, 'square', .12)); noise(a + 1.5, d - 1.5, .5, 300, 'lowpass', 2500, .3); tone(80, a + 1.5, d - 1.5, 'sawtooth', .15, 240); },
+      wedding(a, d){ for (let k = 0; k < d; k += 1.4){ tone(880, a + k, 1.2, 'triangle', .18); tone(1320, a + k + .05, 1, 'triangle', .1); tone(660, a + k + .7, 1, 'triangle', .12); } notes([67, 72, 72, 72, 67, 74, 71, 72], a + .2, .45, 'sine', .1); },
+      surf(a, d){ for (let k = 0; k < d; k += 1.8) noise(a + k, 1.8, .4, 400, 'lowpass', 2400, .6); for (let k = 0; k < d; k += .3) tone(250 + Math.random() * 300, a + k, .07, 'sine', .08, 700); notes([64, 67, 71, 74, 71, 67, 64, 62], a, .3, 'square', .05); },
+      disco(a, d){ for (let k = 0, i = 0; k < d; k += .25, i++){ kick(a + k); if (i % 2) snare(a + k); hat(a + k + .125); } notes([40, 52, 40, 52, 43, 55, 43, 55], a, .25, 'sawtooth', .12); notes([76, 0, 79, 0, 81, 0, 79, 76], a + 1, .25, 'square', .05); },
+      throne(a, d){ notes([60, 0, 64, 67, 72, 0, 0, 72], a, .22, 'sawtooth', .12, 1.2); notes([48, 0, 52, 55, 60], a, .22, 'sawtooth', .1, 1.4); tone(2600, a + 2.2, .6, 'triangle', .14); tone(3100, a + 2.25, .5, 'triangle', .1); tone(196, a + .5, d, 'triangle', .06); },
+      parade(a, d){ for (let k = 0, i = 0; k < d; k += .3, i++){ if (i % 2 === 0) kick(a + k); else snare(a + k); } for (let k = .4; k < d; k += 1.1){ tone(300, a + k, .4, 'sine', .08, 1200); noise(a + k + .4, .6, .35, 2500, 'lowpass', 400, .01); } noise(a, d, .08, 900, 'bandpass'); notes([72, 72, 74, 76, 74, 72, 71, 72], a + .3, .3, 'square', .06); },
+    };
+    const CUE = {
+      appear: a => noise(a, 1.2, .2, 500, 'bandpass', 2000, .5),
+      card: a => [1047, 1319, 1568].forEach((f, i) => tone(f, a + i * .07, .3, 'triangle', .14)),
+      sniff: a => [0, .25].forEach(k => noise(a + k, .14, .25, 1800, 'bandpass', 3500, .03)),
+      bite: a => { noise(a, .08, .5, 3000, 'highpass'); noise(a + .12, .07, .4, 2500, 'highpass'); },
+      jump: a => tone(300, a, .25, 'square', .12, 900),
+      title: a => { tone(70, a, .7, 'sine', .7, 40); noise(a, .5, .5, 800, 'lowpass', 120, .005); [1568, 2093, 2637].forEach((f, i) => tone(f, a + .2 + i * .06, .5, 'triangle', .12)); },
+      star: (a, n) => { for (let i = 0; i < n; i++) tone(1047 + i * 262, a + i * .18, .3, 'triangle', .16); },
+      reward: a => [784, 988, 1175, 1568].forEach((f, i) => tone(f, a + i * .08, .35, 'triangle', .14)),
+    };
+    return { SC, CUE };
+  };
+  const now = () => (performance.now() - T0) / 1000;
+  return {
+    start(){ T0 = performance.now(); log.length = 0; },
+    ctx(){ try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); return AC; } catch(e){ return null; } },
+    scene(k, dur){ log.push({ t: now(), k, dur, s: 1 }); const C = this.ctx(); if (C) mk(C, C.destination).SC[k]?.(C.currentTime + .02, dur); },
+    cue(k, n){ log.push({ t: now(), k, n }); const C = this.ctx(); if (C) mk(C, C.destination).CUE[k]?.(C.currentTime + .02, n); },
+    bgm(on){ log.push({ t: now(), k: on ? 'bgm_on' : 'bgm_off' }); },
+    async render(total, bgmUrl){   // 영상용: 같은 합성을 처음부터 다시 그려서 WAV(base64)로
+      const R = 44100, C = new OfflineAudioContext(2, Math.ceil(R * total), R), M = C.createGain(); M.gain.value = .9; M.connect(C.destination); const S = mk(C, M);
+      if (bgmUrl){ try { const buf = await C.decodeAudioData(await (await fetch(bgmUrl)).arrayBuffer()); const src = C.createBufferSource(); src.buffer = buf; src.loop = true; const gn = C.createGain(); gn.gain.setValueAtTime(.32, 0);
+        log.filter(e => e.k === 'bgm_off' || e.k === 'bgm_on').forEach(e => { gn.gain.setValueAtTime(gn.gain.value, e.t); if (e.k === 'bgm_off') gn.gain.linearRampToValueAtTime(.0001, e.t + .4); else { gn.gain.setValueAtTime(.0001, e.t); gn.gain.linearRampToValueAtTime(.32, e.t + 1.6); } });
+        src.connect(gn); gn.connect(M); src.start(0); } catch(e){} }
+      log.forEach(e => { if (e.s) S.SC[e.k]?.(e.t + .02, e.dur); else S.CUE[e.k]?.(e.t + .02, e.n); });
+      const out = await C.startRendering(), L = out.getChannelData(0), Rr = out.getChannelData(1), n = L.length, b = new DataView(new ArrayBuffer(44 + n * 4));
+      const ws = (o, s) => [...s].forEach((c, i) => b.setUint8(o + i, c.charCodeAt(0))); ws(0, 'RIFF'); b.setUint32(4, 36 + n * 4, true); ws(8, 'WAVEfmt '); b.setUint32(16, 16, true); b.setUint16(20, 1, true); b.setUint16(22, 2, true); b.setUint32(24, R, true); b.setUint32(28, R * 4, true); b.setUint16(32, 4, true); b.setUint16(34, 16, true); ws(36, 'data'); b.setUint32(40, n * 4, true);
+      for (let i = 0; i < n; i++){ b.setInt16(44 + i * 4, Math.max(-1, Math.min(1, L[i])) * 32767, true); b.setInt16(46 + i * 4, Math.max(-1, Math.min(1, Rr[i])) * 32767, true); }
+      let s = ''; const u = new Uint8Array(b.buffer); for (let i = 0; i < u.length; i += 32768) s += String.fromCharCode.apply(null, u.subarray(i, i + 32768)); return btoa(s);
+    },
+  };
+})();
+window.__bfSnd = SND;
+const REWARD = ['호박 이름표', '사탕 말풍선', '묘비 말풍선', '물약 이름표', '유령 말풍선', '사탕옥수수 이름표', '거미줄 이름표', '해골 이름표', '박쥐 이름표', '마녀 말풍선', '물약 말풍선', '잭오랜턴 말풍선',
+  '가구 「블랑의 대솥 조리대」', '가구 「유령 파티 미러볼」', '가구 「백작의 붉은 촛대」', '가구 「사탕 사과 수레」', '옷 「블랑의 요리사 모자」 + 1000 G'];
 async function taste(i, first = true){
   const D = R.dishes[i];
-  await showCard(`${dishCanvas(i, 96)}${D.name}<small>무슈 블랑에게 건넸어요${D.kind ? ` · ${D.kind} 요리` : ''}</small>`, drawDishes, 1700);
-  await talk(D.sniff, 1200);
-  await talk(D.bite, 700);
-  clearInterval(bob); for (let k = 0; k < 6; k++){ place(k % 2 ? 0 : 2, 1); await sleep(110); }   // 들썩
-  visionStart(D); await sleep(500);
-  for (const v of D.vision) await yell(v, D.long ? 2800 : 2300);
-  title.style.setProperty('--g', D.bg[0]); title.innerHTML = `<small>무슈 블랑의 맛 표현</small><span>「${D.title}」</span>`; title.classList.add('on'); if (D.shake){ shakeK = 2.5; setTimeout(() => shakeK = D.shake ? .6 : 0, 700); }
-  await sleep(D.long ? 3000 : 2200); title.classList.remove('on'); await sleep(300); visionStop(); await sleep(600);
+  SND.cue('card'); await showCard(`${dishCanvas(i, 96)}${D.name}<small>무슈 블랑에게 건넸어요${D.kind ? ` · ${D.kind} 요리` : ''}</small>`, drawDishes, 1700);
+  SND.cue('sniff'); await talk(D.sniff, 1200);
+  SND.cue('bite'); await talk(D.bite, 700);
+  SND.cue('jump'); clearInterval(bob); for (let k = 0; k < 6; k++){ place(k % 2 ? 0 : 2, 1); await sleep(110); }   // 들썩
+  const yellMs = D.long ? 2800 : 2300, titleMs = D.long ? 3000 : 2200, vdur = .5 + D.vision.length * (yellMs + 260) / 1000 + titleMs / 1000 + .3;
+  SND.bgm(false); visionStart(D);   // 환상 동안 배경 음악은 잠깐 꺼요
+  if (D.scene === 'montage') MONT.forEach((k, j) => setTimeout(() => SND.scene(k, 1.75), j * 1700)), setTimeout(() => SND.scene(MONT[0], vdur - 10.2), 10200);
+  else SND.scene(D.scene, vdur);
+  await sleep(500);
+  for (const v of D.vision) await yell(v, yellMs);
+  title.style.setProperty('--g', D.bg[0]); title.innerHTML = `<small>무슈 블랑의 맛 표현</small><span>「${D.title}」</span>`; title.classList.add('on'); SND.cue('title'); if (D.shake){ shakeK = 2.5; setTimeout(() => shakeK = D.shake ? .6 : 0, 700); }
+  await sleep(titleMs); title.classList.remove('on'); await sleep(300); visionStop(); SND.bgm(true); await sleep(600);
   bobOn();
   if (!first) await talk(R.repeat[i % R.repeat.length], 1300);
   for (const a of D.after) await talk(a, 1400);
-  await showCard(`<div class="st">${'★'.repeat(D.stars)}${'☆'.repeat(3 - D.stars)}</div>무슈 블랑의 한 줄 평<small>「${D.review}」</small>`, null, 2400);
+  SND.cue('star', D.stars); await showCard(`<div class="st">${'★'.repeat(D.stars)}${'☆'.repeat(3 - D.stars)}</div>무슈 블랑의 한 줄 평<small>「${D.review}」</small>`, null, 2400);
+  SND.cue('reward'); await showCard(first ? `처음 맛본 요리 보상<div class="st" style="font-size:18px;letter-spacing:0">${REWARD[i]}</div><small>무슈 블랑이 맛본 요리 ${i + 1} / 17</small>` : `다시 가져온 요리<div class="st" style="font-size:20px;letter-spacing:0">${[0, 30, 60, 100][D.stars]} G</div>`, null, 2400);
 }
 window.__bfGo = async (list = [0]) => {
-  await ready; await sleep(1200);
-  for (let k = 1; k <= 10; k++){ place(0, k / 10); await sleep(110); } bobOn();
+  await ready; SND.start(); await sleep(1200);
+  SND.cue('appear'); for (let k = 1; k <= 10; k++){ place(0, k / 10); await sleep(110); } bobOn();
   await talk('오, 또 왔군. 오늘은 무엇을 가져왔나.', 1200);
   for (const i of list) await taste(i);
   clearInterval(bob); await sleep(800); window.__bfDone = true;

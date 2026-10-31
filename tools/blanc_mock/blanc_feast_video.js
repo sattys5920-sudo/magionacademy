@@ -1,4 +1,4 @@
-// 무슈 블랑 맛 표현 시안 영상: node blanc_feast_video.js <포트> <저장 폴더> [요리 번호 쉼표] → feast.webm + feast.start
+// 무슈 블랑 맛 표현 시안 영상: node blanc_feast_video.js <포트> <저장 폴더> [요리 번호 쉼표] → feast.webm + feast.wav(소리) + feast.start
 //   목업 사이트 폴더에 blanc_lpc.png · seed_dishes.png · blanc_reactions.json이 있어야 해요
 const { chromium } = require('/opt/node-tools/node_modules/playwright');
 const fs = require('fs'), path = require('path');
@@ -18,6 +18,9 @@ const INJ = fs.readFileSync(path.join(__dirname, 'blanc_feast_inject.js'), 'utf8
   const start = (Date.now() - T0) / 1000;
   p.evaluate(l => window.__bfGo(l), LIST);
   await p.waitForFunction(() => window.__bfDone, null, { timeout: 300000 });
+  const total = (Date.now() - T0) / 1000 - start + 1;
+  const wav = await p.evaluate(t => window.__bfSnd.render(t, 'audio/bgm_main.mp3'), total);   // 영상에는 소리가 안 담겨서 같은 합성을 다시 그려 붙여요
+  fs.writeFileSync(path.join(OUT, 'feast.wav'), Buffer.from(wav, 'base64'));
   const v = p.video(); await ctx.close(); fs.renameSync(await v.path(), path.join(OUT, 'feast.webm'));
   fs.writeFileSync(path.join(OUT, 'feast.start'), String(start)); console.log('start', start);
   await b.close();
