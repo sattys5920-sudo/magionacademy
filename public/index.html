@@ -874,6 +874,16 @@ body.gtride #bar,body.gtride #chat,body.gtride #ctx,body.gtride .corner{opacity:
 #adminv .sdarow{display:grid;grid-template-columns:72px 1fr;gap:8px;padding:8px 0;border-top:1px solid #EEE6F6;font-size:12px;color:#3A2A5A}#adminv .sdarow .nm b{display:block;font-size:13px}#adminv .sdarow .nm span{font-size:11px;color:#8A7AA8}
 #adminv .sdarow .ln{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}#adminv .sdarow .tag{border-radius:6px;padding:1px 6px;font-size:11px;background:#EEE6F6;color:#4A3A6A}#adminv .sdarow .tag.g{background:#FFF0B0;color:#7A5A00}#adminv .sdarow .tag.r{background:#FFE0E4;color:#A0203A}#adminv .sdarow .tag.ok{background:#E0F6E4;color:#1A6A2A}
 #adminv .sdarow .dots{display:flex;gap:2px;flex-wrap:wrap}#adminv .sdarow .dots i{width:9px;height:9px;border-radius:2px;background:#E6DEF0}#adminv .sdarow .dots i.on{background:#7A4AC8}#adminv .sdarow .dots i.sp.on{background:#E8A020}
+
+.blfbox{background:#1E2A44}.blfc{width:48px;height:48px;image-rendering:pixelated}
+.blgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:6px 0;max-height:40vh;overflow:auto}.blit{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:12px;border:2px solid #4E3C72;background:#2A2040;color:#F1E9FF;font-family:var(--f-pxb);font-size:12px;text-align:center}.blit small{font-family:var(--f-px);font-size:10px;color:#C8B8F0}
+.blcos{display:flex;flex-direction:column;gap:6px;margin:6px 0}.blcos b{font-size:12px;color:var(--gold)}.blcos div{display:flex;flex-wrap:wrap;gap:6px}.blcos button{border:2px solid #4E3C72;background:#2A2040;color:#F1E9FF;border-radius:999px;padding:6px 10px;font:inherit;font-size:12px;min-height:36px}.blcos button.on{border-color:#FFD866;color:#FFD866}
+.say.bb-ghost{background:#EEF4FF;color:#3A3A6A;box-shadow:0 0 0 2px #5A6A9A;border-radius:10px 10px 4px 4px}.say.bb-ghost::after{border-top-color:#5A6A9A}
+.say.bb-jack{background:#FF9A3A;color:#3A1404;box-shadow:0 0 0 2px #7A3408;border-radius:10px}.say.bb-jack::after{border-top-color:#7A3408}
+.say.bb-witch{background:#3A1E5A;color:#F4E8FF;box-shadow:0 0 0 2px #C8A0FF}.say.bb-witch::after{border-top-color:#C8A0FF}
+.say.bb-slime{background:#7AE86A;color:#0E3A0E;box-shadow:0 0 0 2px #1E5A1E;border-radius:10px}.say.bb-slime::after{border-top-color:#1E5A1E}
+.say.bb-tomb{background:#9A96A8;color:#1E1A2A;box-shadow:0 0 0 2px #3A3648;border-radius:12px 12px 2px 2px}.say.bb-tomb::after{border-top-color:#3A3648}
+.say.bb-candy{background:#FFE8F0;color:#7A1A3A;box-shadow:0 0 0 2px #C83A6A;border-radius:12px}.say.bb-candy::after{border-top-color:#C83A6A}
 </style>
 </head>
 <body>
@@ -1574,7 +1584,7 @@ let spotTimer = 0;
 const EMOS = ['손인사', '웃음', '깔깔', '하트눈', '놀람', '눈물', '화남', '하트', '엄지척', '반짝', '호박', '유령'];   // art/emo.png 순서 (tools/iso/emotes.py)
 const emoI = i => `<i class="emi" style="background-position:-${i * 32}px 0" title="${EMOS[i]}"></i>`;
 let lastPos = '', heard = {}, onlineKeys = '';
-const peersOf = () => Object.entries(onlineList).filter(([id, o]) => id !== uid && o && o.m && o.nick && !o.gt).map(([id, o]) => ({ uid: id, name: o.nick, av: avOf(o), m: o.m, x: o.x | 0, y: o.y | 0, fk: typeof o.fk === 'number' ? o.fk : undefined }));
+const peersOf = () => Object.entries(onlineList).filter(([id, o]) => id !== uid && o && o.m && o.nick && !o.gt).map(([id, o]) => ({ uid: id, name: o.nick, av: avOf(o), m: o.m, x: o.x | 0, y: o.y | 0, fk: typeof o.fk === 'number' ? o.fk : undefined, tg: o.tg || '', bb: o.bb || '' }));
 // 채팅: 평소에 보이는 건 최근 5줄, 이력은 최대 50개까지만 저장해 두고 「이력」을 눌러 봐요
 const CHAT_MAX = 50, CHAT_SHOW = 5, chatKey = () => 'magion-chat:' + (typeof uid !== 'undefined' && uid ? uid : 'solo');
 let chatLog = null;
@@ -5700,12 +5710,15 @@ function renderJournal(){
   const left = me.orders.filter(o => !o.done).length, N = me.mq && me.mq.q && (me.mq.ph === 'pre' || me.mq.ph === 'ready');
   const tabs = [['todo', `할 일${left ? ` ${left}` : ''}`], ['story', `이야기${N ? ' ●' : ''}`]];
   if (typeof Dream !== 'undefined') tabs.push(['dream', '꿈 일기장']);
+  if (me.seed && me.seed.note) tabs.push(['blanc', '레시피 노트']);
   if (jnTab === 'heart') jnTab = 'todo';
-  const body = jnTab === 'story' ? mqJournalHTML() : jnTab === 'dream' ? dreamJournalHTML() : jnTodoHTML();
-  frame(null, '일지', { todo: '오늘의 의뢰', story: '메인 이야기', heart: '오늘 열린 하트 이벤트', dream: '꿈에서 본 것들' }[jnTab], `<div class="seg jn-seg" style="grid-template-columns:repeat(${tabs.length},1fr)">${tabs.map(([k, l]) => `<button data-jnt="${k}" class="${jnTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>${body}`);
+  if (jnTab === 'blanc' && !(me.seed && me.seed.note)) jnTab = 'todo';
+  const body = jnTab === 'story' ? mqJournalHTML() : jnTab === 'dream' ? dreamJournalHTML() : jnTab === 'blanc' ? blNoteHTML() : jnTodoHTML();
+  frame(null, '일지', { todo: '오늘의 의뢰', story: '메인 이야기', heart: '오늘 열린 하트 이벤트', dream: '꿈에서 본 것들', blanc: '무슈 블랑이 맛본 요리' }[jnTab], `<div class="seg jn-seg" style="grid-template-columns:repeat(${tabs.length},1fr)">${tabs.map(([k, l]) => `<button data-jnt="${k}" class="${jnTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>${body}`);
   on('[data-jnt]', b => { jnTab = b.dataset.jnt; render(); });
   if (jnTab === 'story') mqJournalBind();
   if (jnTab === 'dream') dreamJournalBind();
+  if (jnTab === 'blanc') blNoteBind();
   on('[data-deliver]', b => {
     const o = me.orders[+b.dataset.deliver]; if (!o || o.done || (me.inv[o.p] || 0) < o.n) return;
     const pay = partyMul(payOf(o)); me.inv[o.p] -= o.n; me.coin += pay; o.done = true; trEv('order'); save();
@@ -8688,6 +8701,78 @@ document.addEventListener('click', e => {
   else if (a === 'close'){ if (confirm('씨앗 대회를 끝낼까요? 이미 심은 화분은 계속 키울 수 있어요.')) GDB.upd('seed/ctl', { open: false }); }
 });
 
+// ===== 무슈 블랑: 저녁·밤에 과자 교실에 나타나요 · 할로윈 요리를 하루 1번 받아서 맛 연출(blanc_fx.js) · 처음 주는 요리는 상품, 다시 주면 골드 · 17가지 다 주면 마지막 인사 =====
+//   me.seed.bl { 요리 번호: 1 } · me.seed.bd 요리 준 날 · me.seed.fin 마지막 인사 · me.cos = { tag: {}, bub: {} } 가진 꾸미기 · me.cosOn = { tg, bb } 끼운 것
+const BL_SPOT = [14, 11], BL_TAG = { pumpkin: '호박 이름표', bat: '박쥐 이름표', web: '거미줄 이름표', candy: '사탕옥수수 이름표', bone: '해골 이름표', slime: '물약 이름표' }, BL_BUB = { ghost: '유령 말풍선', jack: '잭오랜턴 말풍선', witch: '마녀 말풍선', slime: '물약 말풍선', tomb: '묘비 말풍선', candy: '사탕 말풍선' };
+let blOn = false, blSig = '', blBob = null, blFxLoad = null;
+const blHere = () => !!(me && me.seed && SEED && !me.seed.fin && ['evening', 'night'].includes(bandNow()));
+function blSync(){
+  const want = blHere() && !blOn ? 1 : 0, sig = want + ':' + (blOn ? 'cut' : '');
+  if (blOn) return; if (sig === blSig) return; blSig = sig; clearInterval(blBob); blBob = null;
+  if (!want){ World.setProps('candy', [], 'blanc'); return; }
+  let i = 0; const put = () => { const img = blancFrame(1 + (i++ % 4)); World.setProps('candy', [{ id: 'blanc', x: BL_SPOT[0], y: BL_SPOT[1], img, pxc: img.getContext('2d'), sw: 32, sh: 32, ax: 16, ay: 30, solid: true }], 'blanc'); };
+  if (BLANC_SH.complete) put(); else BLANC_SH.onload = put; blBob = setInterval(() => { const t = World.meTile && World.meTile(); if (t && t.m === 'candy') put(); }, 320);
+}
+const blDishes = () => Object.keys(me.inv || {}).filter(k => /^hw_d\d+(_s)?$/.test(k) && me.inv[k] > 0);
+const blFace = () => `<canvas width="32" height="32" class="blfc"></canvas>`;
+const blDrawFace = () => document.querySelectorAll('canvas.blfc').forEach(c => { const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(BLANC_SH, 16, 6, 32, 32, 0, 0, 32, 32); });
+function blTap(){
+  const t = World.meTile && World.meTile(); if (!t || t.m !== 'candy' || Math.abs(t.x - BL_SPOT[0]) + Math.abs(t.y - BL_SPOT[1]) > 2){ World.walkToTile(BL_SPOT[0], BL_SPOT[1] + 1); return; }
+  if (uiBusy() || blOn) return; blPanel();
+}
+function blPanel(line, view){
+  const s = me.seed, n = Object.keys(s.bl || {}).length, today = s.bd === todayKey(), list = blDishes(), cos = me.cos || {}, hasCos = Object.keys(cos.tag || {}).length + Object.keys(cos.bub || {}).length;
+  const txt = line || (today ? '오늘은 배가 부르다네. 내일 또 오게.' : list.length ? '오, 왔군. 오늘은 무엇을 가져왔나.' : n ? '오늘은 빈손이로군. 열매로 요리를 만들어 오게. 기다리겠네.' : '할로윈 열매로 만든 요리를 가져오게. 맛을 볼 수만 있다면.... 섭섭지 않게 보답하겠네.');
+  let body = '';
+  if (view === 'give') body = `<div class="blgrid">${list.map(k => { const i = +k.slice(4).replace('_s', ''); return `<button class="blit" data-blg="${k}">${ic(k)}<span>${esc(ITEM[k])}</span><small>${s.bl && s.bl[i] ? '다시 · 골드' : '처음 · 상품'} ×${me.inv[k]}</small></button>`; }).join('')}</div>`;
+  else if (view === 'cos') body = `<div class="blcos"><b>이름표</b><div>${[['', '기본'], ...Object.keys(cos.tag || {}).map(k => [k, BL_TAG[k]])].map(([k, nm]) => `<button class="${(me.cosOn?.tg || '') === k ? 'on' : ''}" data-blc="tg:${k}">${esc(nm)}</button>`).join('')}</div><b>말풍선</b><div>${[['', '기본'], ...Object.keys(cos.bub || {}).map(k => [k, BL_BUB[k]])].map(([k, nm]) => `<button class="${(me.cosOn?.bb || '') === k ? 'on' : ''}" data-blc="bb:${k}">${esc(nm)}</button>`).join('')}</div></div>`;
+  npcUI().dataset.id = 'blanc'; npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf blfbox">${blFace()}</div><div><b>무슈 블랑</b><span class="s sub">맛본 요리 ${n} / 17</span></div><button class="sx" data-blp="close">✕</button></div>
+    <div class="npct">${esc(txt)}</div>${body}
+    <div class="frow">${view === 'give' ? '' : `<button class="btn sm go" data-blp="give" ${today || !list.length ? 'disabled' : ''}>요리 건네기</button>`}${hasCos && view !== 'cos' ? '<button class="btn sm" data-blp="cos">꾸미기</button>' : ''}${view ? '<button class="btn sm" data-blp="back">뒤로</button>' : ''}<button class="btn sm" data-blp="close">닫기</button></div></div>`;
+  npcUI().classList.add('on'); blDrawFace();
+}
+function blFx(){ return blFxLoad || (blFxLoad = new Promise((res, rej) => { if (window.BlancFX) return res(); const sc = document.createElement('script'); sc.src = 'blanc_fx.js?v=1'; sc.onload = () => res(); sc.onerror = () => { blFxLoad = null; rej(new Error('blanc_fx')); }; document.head.appendChild(sc); })); }
+const blOpts = extra => ({ player: me.nick, vol: typeof SET !== 'undefined' ? SET.sfx : 1, bgm: on => on ? BGM.release('blanc') : BGM.hold('blanc'),
+  place: (i, a = 1) => { const img = blancFrame(i, a); World.setProps('candy', [{ id: 'blanc', x: BL_SPOT[0], y: BL_SPOT[1], img, pxc: img.getContext('2d'), sw: 32, sh: 32, ax: 16, ay: 30, solid: true }], 'blanc'); }, ...extra });
+function blGrant(i, D){   // 처음 준 요리의 상품 → 카드 글
+  const [kind, id] = SEED.reward[i] || [];
+  if (kind === 'tag' || kind === 'bub'){ me.cos = me.cos || {}; const box = me.cos[kind] = me.cos[kind] || {}; box[id] = 1; me.cosOn = me.cosOn || {}; const k = kind === 'tag' ? 'tg' : 'bb'; if (!me.cosOn[k]) me.cosOn[k] = id; return `${kind === 'tag' ? BL_TAG[id] : BL_BUB[id]}<small>꾸미기 상품 · 무슈 블랑에게 「꾸미기」로 바꿔 끼울 수 있어요</small>`; }
+  if (kind === 'furn'){ me.fbag = me.fbag || {}; me.fbag[id] = (me.fbag[id] || 0) + 1; return `가구 「${esc((FURN_BY[id] || {}).name || id)}」<small>내 방 가구 가방에 들어갔어요</small>`; }
+  if (kind === 'hat'){ me.closet = me.closet || {}; me.closet['hat:' + id] = 1; me.coin += 1000; return `옷 「블랑의 요리사 모자」 + 1000 G<small>가방의 옷에서 쓸 수 있어요</small>`; }
+  return '';
+}
+async function blGive(k){
+  const s = me.seed, i = +k.slice(4).replace('_s', ''), D = SEED.reactions[i]; if (!D || s.bd === todayKey() || !(me.inv[k] > 0)) return;
+  npcClose(); blOn = true; clearInterval(blBob); blBob = null;
+  const first = !(s.bl && s.bl[i]); me.inv[k]--; s.bl = s.bl || {}; s.bl[i] = 1; s.bd = todayKey(); let got = '';
+  if (first) got = blGrant(i, D); else { const g = [0, 30, 60, 100][D.stars] || 30; me.coin += g; got = `${g} G<small>다시 가져온 요리 · 별 ${D.stars}개</small>`; }
+  save(); hud(); syncCos();
+  try {
+    await blFx(); await BlancFX.taste(i, D, blOpts({ first, repeat: SEED.repeat[i % SEED.repeat.length] }));
+    sfx('chest'); await famCard(`${first ? '처음 맛본 요리 보상' : '다시 가져온 요리'}<div class="st" style="font-size:18px;letter-spacing:0">${got}</div><small>무슈 블랑이 맛본 요리 ${Object.keys(s.bl).length} / 17</small>`, null, 2600);
+    if (Object.keys(s.bl).length >= 17 && !s.fin){ await BlancFX.finale(blOpts({ hide: () => World.setProps('candy', [], 'blanc') })); s.fin = 1; s.note = 1; save(); }
+  } catch(e){ errReport('blanc', '무슈 블랑 연출 오류: ' + e.message, e.stack || ''); toast(`무슈 블랑이 ${ITEM[k] || '요리'}${josaPick(ITEM[k] || '요리', '을', '를')} 맛있게 먹었어요`); }
+  finally { blOn = false; blSig = ''; BGM.release('blanc'); blSync(); }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-blp],[data-blg],[data-blc]'); if (!b || !npcUI().contains(b)) return;
+  if (b.dataset.blg) return blGive(b.dataset.blg);
+  if (b.dataset.blc){ const [k, v] = b.dataset.blc.split(':'); me.cosOn = me.cosOn || {}; me.cosOn[k] = v || null; save(); syncCos(); sfx('pop'); return blPanel(null, 'cos'); }
+  const a = b.dataset.blp; if (a === 'close') return npcClose(); if (a === 'back') return blPanel();
+  if (a === 'give') return blPanel(null, 'give'); if (a === 'cos') return blPanel('어떤 꾸미기를 해 볼 텐가.', 'cos');
+});
+// 꾸미기(이름표·말풍선): 내 화면에 바로, 친구 화면엔 접속 정보(online)로
+function syncCos(){ const tg = me?.cosOn?.tg || '', bb = me?.cosOn?.bb || ''; World.setMyCos && World.setMyCos(tg, bb);
+  if (!solo && F && db && uid && onlineList[uid] && ((onlineList[uid].tg || '') !== tg || (onlineList[uid].bb || '') !== bb)) F.update(F.ref(db, 'online/' + uid), { tg: tg || null, bb: bb || null }).catch(() => {}); }
+// 일지 「레시피 노트」: 블랑이 맛본 장면 다시 보기
+function blNoteHTML(){ const s = me.seed || {}, bl = s.bl || {}; if (!SEED) { sdData().then(() => { if (sheetOn && sub === 'journal') render(); }); return '<div class="hint on px">불러오는 중.......</div>'; }
+  return `<section class="sec"><div class="box px">${SEED.reactions.map((D, i) => bl[i] ? `<div class="li">${ic('hw_d' + i)}<div class="main"><span class="t">${esc(D.name)}</span><span class="d">「${esc(D.title)}」 · ${'★'.repeat(D.stars)}</span></div><button class="btn sm" data-blr="${i}">다시 보기</button></div>` : `<div class="li unk"><div class="main"><span class="t">???</span></div></div>`).join('')}</div></section>`; }
+function blNoteBind(){ on('[data-blr]', async b => { const i = +b.dataset.blr; try { await blFx(); closeSheet(); await BlancFX.replay(i, SEED.reactions[i], blOpts({})); } catch(e){} }); }
+function blancListen(){
+  const prev = World.onProp; World.onProp = id => id === 'blanc' ? (blTap(), null) : prev ? prev(id) : null;
+  setInterval(() => { if (!me) return; blSync(); syncCos(); }, 1500);
+}
+
 // ===== 장난 마법: 그림자 골목 구석의 「의문의 인물」이 가르쳐 줘요 · 친구에게 9점 문양을 그려 걸면 30분 동안 머리 위·주변에 효과가 떠요 =====
 // 마법마다 하루 한 번(자정에 다시) · 처음엔 하나도 몰라요 · 조건은 안 보여요(???) · 배운 마법만 마법책에 문양이 보여요 · 몰라도 문양만 맞히면 아무 일도 안 일어나요
 // 내 진행: me.prank = { got { 이름: 1 }, s { 이름: 다 한 단계 수 }, c { 이름: 지금 단계에서 센 수 }, q { 이름: { 겹치면 안 되는 것: 1 } }, u { 이름: 쓴 날 }, hi 처음 만남 }
@@ -10200,7 +10285,7 @@ async function boot(){
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       F.onValue(F.ref(db, 'adm/reset/' + uid), s => { const v = +s.val() || 0; if (!v) return; let seen = 0; try { seen = +localStorage.getItem('magion-rs-' + uid) || 0; } catch(e){}
         if (v > seen && v > bootT - 5000){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
-      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); famListen(); fairyListen(); seedListen(); snowListen(); morphListen(); boardListen(); tarotInit(); prankInit();
+      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); famListen(); fairyListen(); seedListen(); blancListen(); snowListen(); morphListen(); boardListen(); tarotInit(); prankInit();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); const sg = Object.entries(gameList).map(([id, r]) => r ? id + r.st + Object.keys(r.p || {}).length : '').join('|'); if (sub === 'games' && sg !== gamesSig) render(); gamesSig = sg; });   // 점수가 오를 때마다가 아니라 방이 열리고 닫히고 사람이 드나들 때만 다시 그려요
       F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       const recWatch = () => { const wk = weekKey(); if (recWatch.wk === wk) return; recWatch.wk = wk; (recWatch.offs || []).forEach(f => f()); recList = {}; recWatch.offs = Object.keys(GAMES).map(g => F.onValue(F.ref(db, `records/${g}/${wk}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); })); };
