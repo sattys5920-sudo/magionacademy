@@ -1888,7 +1888,7 @@ function renderFish(){
       ` : ''}
       <div class="rods">${RODS.map((r, i) => `<span class="${i <= L ? 'on' : ''}" title="${r.name}">${rodIc(i, 32)}</span>`).join('')}</div>`; }
   if (fsTab === 'today'){
-    const fg = me.fg?.d === todayKey() ? me.fg : { got: [], extra: 0 }, total = 16 + (fg.extra || 0), left = total - fg.got.length, nowFish = FISH.filter(fishNow).length, onlyNow = FISH.filter(f => f.time === now).length;
+    const fg = me.fg?.d === todayKey() ? me.fg : { got: [], extra: 0 }, total = spotsToday().length, left = total - fg.got.length, nowFish = FISH.filter(fishNow).length, onlyNow = FISH.filter(f => f.time === now).length;
     const buffs = Object.entries(me.buffs || {}).filter(([, t]) => t > now2()).map(([k, t]) => `${k === 'all' ? '만찬' : BUFF_NAME[k]} ${Math.ceil((t - now2()) / 6e4)}분`);
     const tips = [['', '물가를 누르면 찌를 던져요. 찌가 쏙 들어가면 바로 누르고, 그다음엔 ◀ ▶를 눌러 찌를 초록 칸 안에 두고 버텨요. 칸 밖에 오래 있으면 놓쳐요.'], ['', '반짝이는 곳은 날마다 자리가 바뀌어요. 숲·묘지·호숫가·들판마다 나오는 것이 달라요.'], ['', '물고기는 시간대마다 달라요. 밤에만 나오는 물고기도 있어요.']];
     if (buffs.length) tips.unshift(['', `요리 효과 중: ${buffs.join(' · ')}`]);

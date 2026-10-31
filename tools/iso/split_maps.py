@@ -304,7 +304,7 @@ def run(g):
             for y in range(2, NY - 2):
                 if (x, y) in occupied or T[(x, y)] not in ('grass', 'grave') or (x * 7 + y * 3) % 5: continue
                 lx, ly = (x - M) / SX + S['lo'], (y - M) / SY
-                FOR.append([x, y, FORAGEZONE(int(max(0, min(LNX - 1, lx))), int(max(0, min(LNY - 1, ly))))])
+                FOR.append([x, y, 'g' if T[(x, y)] == 'grave' else FORAGEZONE(int(max(0, min(LNX - 1, lx))), int(max(0, min(LNY - 1, ly))))])   # 묘지 칸은 묘지 채집 (옛 좌표로 구역을 찾으면 묘지가 빠져요)
         areas = []
         for a in AREAS_L:
             ax, ay = a['t']
