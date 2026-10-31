@@ -2396,7 +2396,7 @@ const xcoHpOf = u => { const b = xcoBuilds[u] || {}; return (xcoHost() ? xcoHp[u
 const xcoPv = () => (xpV ? xcoActive() : [myId()]).filter(u => xcoBuilds[u]).map(u => { const b = xcoBuilds[u], c = xcoHpOf(u); return { id: u, uid: u, name: b.name, job: b.job, L: b.L, av: b.av, hp: c[0], mhp: b.mhp, mp: c[1], mmp: b.mmp, g: 0 }; });
 function xMHud(){
   const st = $('#xmstat'); if (!st) return; const P = xcoOn() ? xcoPv() : xParty(), B = { party: P, turn: null };
-  st.innerHTML = xStatHtml(B); headFix(); xStatUpdate(B);
+  st.className = 'xstat xn' + Math.min(5, P.length); st.innerHTML = xStatHtml(B); headFix(); xStatUpdate(B);
   const run = xEx().run; if (!run) return; const pg = $('#xmpg'); if (pg) pg.style.width = Math.min(100, run.prog) + '%'; const pt = $('#xmpt'); if (pt) pt.textContent = `${Math.floor(run.prog)}%`;
   const lo = $('#xmloot'); if (lo) lo.textContent = `골드 ${run.loot.gold} · 경험치 ${run.loot.exp}${Object.keys(run.loot.items).length ? ' · ' + Object.entries(run.loot.items).map(([k, n]) => `${ITEM[k] || k}×${n}`).join(' ') : ''}${run.buff ? ` · 가호 ${run.buff}회` : ''}`;
 }
@@ -2409,7 +2409,7 @@ function xMarchView(run, head){
     .xmf{display:grid;gap:8px;align-content:center}.xmf:empty{display:none}.xmf2{grid-template-columns:1fr 1fr}.xmf button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:84px;padding:8px;color:#fff;font:inherit;font-weight:800;background:linear-gradient(#3b2f78,#251b52);border:2px solid #0c0818;border-radius:8px;box-shadow:inset 0 0 0 2px #6a5ab0,0 2px 0 #000}.xmf button:active{transform:translateY(1px)}.xmf .big{font-size:30px}.xmf small{font-weight:600;font-size:11px;color:#b9a8ff}
     .xmf .hz{min-height:96px;font-size:22px;background:linear-gradient(#ff9a3a,#e0661a);box-shadow:inset 0 0 0 2px #ffd08a,0 2px 0 #000;animation:xhz .5s infinite alternate}@keyframes xhz{to{transform:scale(1.03)}}
     .xmw{display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:13px;min-height:96px}
-    .xhud{display:flex;flex-direction:column;gap:8px}.xstat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+    .xhud{display:flex;flex-direction:column;gap:8px}.xstat{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}/* 같이 가는 사람이 4~5명이면 한 줄에 다 들어가게 작게 */.xstat.xn4,.xstat.xn5{gap:4px}.xn4 .xs,.xn5 .xs{padding:4px;gap:2px}.xn4 .xs1,.xn5 .xs1{gap:4px}.xn4 .xport{width:24px;height:24px}.xn5 .xport{width:20px;height:20px}.xn4 .xs2 b{font-size:11px}.xn5 .xs2 b{font-size:10px}.xn4 .xj,.xn5 .xj{font-size:9px}.xn4 .xjn,.xn5 .xjn{display:none}.xn4 .xbr,.xn5 .xbr{height:9px}.xn4 .xbr em{font-size:8px;line-height:8px}.xn5 .xbr em{font-size:7px;line-height:8px}.xn4 .xbr.gg,.xn5 .xbr.gg{height:4px}
     .xs{display:flex;flex-direction:column;gap:3px;padding:6px;background:linear-gradient(#2b2150,#1b1438);border:2px solid #0c0818;border-radius:6px;box-shadow:inset 0 0 0 2px #4a3c86;min-width:0}
     .xs1{display:flex;gap:6px;align-items:center}.xport{width:34px;height:34px;flex:none;border:2px solid #0c0818;border-radius:4px;background:#3a2e6a;overflow:hidden;box-shadow:0 0 0 1px #6a5ab0}.xport img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
     .xs2{min-width:0;display:flex;flex-direction:column;line-height:1.15}.xs2 b{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.xj{font-size:10px;color:#b9a8ff}
@@ -3087,7 +3087,7 @@ function xHitTest(e){
   return bd < 22 * 22 ? best : null;
 }
 function xStatHtml(B){   // 아래쪽 파티 카드: 얼굴 · 이름 · 체력 · 마력 · 행동 게이지
-  return B.party.map(u => `<div class="xs" data-cu="${u.id}"><div class="xs1"><span class="xport">${headImg(u.av)}</span><div class="xs2"><b>${esc(u.name)}</b><span class="xj">${XJ[u.job].n} Lv ${u.L}</span></div></div><div class="xbr hp"><i data-b="h"></i><em data-t="h"></em></div><div class="xbr mp"><i data-b="m"></i><em data-t="m"></em></div><div class="xbr gg"><i data-b="g"></i></div></div>`).join('');
+  return B.party.map(u => `<div class="xs" data-cu="${u.id}"><div class="xs1"><span class="xport">${headImg(u.av)}</span><div class="xs2"><b>${esc(u.name)}</b><span class="xj"><span class="xjn">${XJ[u.job].n} </span>Lv ${u.L}</span></div></div><div class="xbr hp"><i data-b="h"></i><em data-t="h"></em></div><div class="xbr mp"><i data-b="m"></i><em data-t="m"></em></div><div class="xbr gg"><i data-b="g"></i></div></div>`).join('');
 }
 function xStatUpdate(B){
   B.party.forEach(u => { const c = document.querySelector(`[data-cu="${u.id}"]`); if (!c) return; c.classList.toggle('xdead', u.hp <= 0); c.classList.toggle('xturn', xRdy(u));
@@ -3098,7 +3098,7 @@ function xRenderBattle(){
   const B = xb, run = xEx().run; B.menu = 'main'; B.ck = '';
   frame(null, B.kind === 'boss' ? '보스!' : B.kind === 'elite' ? '강한 몬스터' : '전투', `진행 ${Math.floor(run.prog)}% · 남은 시간 ${timeText(xTime(run))}`, `<style>
     #xcv{display:block;width:100%;aspect-ratio:16/9;image-rendering:pixelated;border:3px solid #0c0818;border-radius:6px;box-shadow:0 0 0 2px #5a4a9a;background:#000;touch-action:manipulation}
-    .xhud{display:flex;flex-direction:column;gap:8px}.xstat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+    .xhud{display:flex;flex-direction:column;gap:8px}.xstat{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}/* 같이 가는 사람이 4~5명이면 한 줄에 다 들어가게 작게 */.xstat.xn4,.xstat.xn5{gap:4px}.xn4 .xs,.xn5 .xs{padding:4px;gap:2px}.xn4 .xs1,.xn5 .xs1{gap:4px}.xn4 .xport{width:24px;height:24px}.xn5 .xport{width:20px;height:20px}.xn4 .xs2 b{font-size:11px}.xn5 .xs2 b{font-size:10px}.xn4 .xj,.xn5 .xj{font-size:9px}.xn4 .xjn,.xn5 .xjn{display:none}.xn4 .xbr,.xn5 .xbr{height:9px}.xn4 .xbr em{font-size:8px;line-height:8px}.xn5 .xbr em{font-size:7px;line-height:8px}.xn4 .xbr.gg,.xn5 .xbr.gg{height:4px}
     .xs{display:flex;flex-direction:column;gap:3px;padding:6px;background:linear-gradient(#2b2150,#1b1438);border:2px solid #0c0818;border-radius:6px;box-shadow:inset 0 0 0 2px #4a3c86;min-width:0}
     .xs.xturn{box-shadow:inset 0 0 0 2px #4fd8ff,0 0 10px #4fd8ff99;animation:xpulse 1s infinite}@keyframes xpulse{50%{box-shadow:inset 0 0 0 2px #9af0ff,0 0 14px #4fd8ffcc}}.xs.xdead{filter:grayscale(1);opacity:.5}
     .xs1{display:flex;gap:6px;align-items:center}.xport{width:34px;height:34px;flex:none;border:2px solid #0c0818;border-radius:4px;background:#3a2e6a;overflow:hidden;box-shadow:0 0 0 1px #6a5ab0}.xport img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
@@ -3109,7 +3109,7 @@ function xRenderBattle(){
     .xb{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:6px 8px;color:#fff;font:inherit;font-weight:800;font-size:14px;background:linear-gradient(#3b2f78,#251b52);border:2px solid #0c0818;border-radius:6px;box-shadow:inset 0 0 0 2px #6a5ab0,0 2px 0 #000;text-shadow:0 1px 0 #000}.xb:active{transform:translateY(1px)}.xb.atk{background:linear-gradient(#2a6ab8,#1a3f80);box-shadow:inset 0 0 0 2px #4fd8ff,0 2px 0 #000}
     .xb:disabled{opacity:.4}.xb.sk{grid-column:span 1;font-size:12px;justify-content:flex-start}.xb .sic{width:26px;height:26px;flex:none}.xb small{display:block;font-size:10px;font-weight:600;color:#9fd0ff}.xskh{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;font-weight:800;color:#ffd866}.xsk2{grid-template-columns:repeat(2,1fr)}
   </style>
-    <canvas id="xcv" width="${XCW}" height="${XCH}"></canvas><div class="hint on px" id="xlog" style="text-align:center">${esc(B.log || '전투 시작!')}</div><div class="xhud"><div class="xstat" id="xstat">${xStatHtml(B)}</div><div id="xcmd" class="xcmd"></div></div>`);
+    <canvas id="xcv" width="${XCW}" height="${XCH}"></canvas><div class="hint on px" id="xlog" style="text-align:center">${esc(B.log || '전투 시작!')}</div><div class="xhud"><div class="xstat xn${Math.min(5, B.party.length)}" id="xstat">${xStatHtml(B)}</div><div id="xcmd" class="xcmd"></div></div>`);
   xLayout(B); B.fxs = []; B.floats = []; B.proj = []; xWpnSheet(); B.party.forEach(u => World.Avatar.need(u.av)); xLpcSheet(); xPetSheet(); xStSheet(); headFix(); xStatUpdate(B);
   $('#xcv').onpointerdown = e => { if (!B.pick) return; const t = xHitTest(e); if (t){ const go = B.pick.go; B.pick = null; go(t); } };
   clearInterval(xTick); B.last = performance.now(); xTick = setInterval(xLoop, 100); cancelAnimationFrame(xRaf); xRaf = 0; xDraw(); xCmd();
