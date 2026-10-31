@@ -431,8 +431,29 @@ let PRANK_IMG = null, PRANK_AT = {}, pranks = {};
 World.setPrankImg = (src, at) => { const i = new Image(); i.onload = () => { PRANK_IMG = i; }; i.src = src; PRANK_AT = at || {}; };
 World.setPranks = m => { pranks = m || {}; };
 const PRANK_POS = { catears: 'head', bunnyears: 'head', starcrown: 'head', pumpkinhat: 'head', froghat: 'head', halo: 'halo', rainbow: 'above', raincloud: 'above', zapcloud: 'above', otumo: 'above', ghostpal: 'side', heartballoon: 'hold', batwings: 'back' };
+// 꽃비 · 눈송이 · 사탕 비: 머리 위 작은 구름 아래에서 큼직한 조각이 흔들리며 계속 떨어져요 (발끝까지)
+const PRANK_RAIN = {
+  petals: { n: 16, sp: 1700, c: ['#FF8AB0', '#FFB8CF', '#FF6A98', '#FFD6E4'], cloud: '#FFE3EE', draw: (cx, x, y, u, c, t, i) => { const r = Math.sin(t / 260 + i) > 0; cx.fillStyle = '#3A1A2A'; cx.fillRect(x - u, y - u, (r ? 5 : 4) * u, (r ? 4 : 5) * u); cx.fillStyle = c; cx.fillRect(x, y, (r ? 3 : 2) * u, (r ? 2 : 3) * u); cx.fillStyle = '#FFFFFF'; cx.fillRect(x, y, u, u); } },
+  snowflakes: { n: 16, sp: 2300, c: ['#FFFFFF', '#E4F2FF', '#CFE6FF'], cloud: '#E8F0FA', draw: (cx, x, y, u, c) => { cx.fillStyle = '#2A3A5A'; cx.fillRect(x - u, y - 2 * u, 3 * u, 5 * u); cx.fillRect(x - 2 * u, y - u, 5 * u, 3 * u); cx.fillStyle = c; cx.fillRect(x, y - u, u, 3 * u); cx.fillRect(x - u, y, 3 * u, u); cx.fillStyle = '#FFFFFF'; cx.fillRect(x, y, u, u); } },
+  candyrain: { n: 15, sp: 1500, c: ['#FF5A7A', '#FFD84A', '#6AE0FF', '#9AE07A', '#C88AFF'], cloud: '#FFE9F4', draw: (cx, x, y, u, c) => { cx.fillStyle = '#2A1A30'; cx.fillRect(x - u, y - u, 5 * u, 5 * u); cx.fillStyle = c; cx.fillRect(x, y, 3 * u, 3 * u); cx.fillStyle = '#FFFFFF'; cx.fillRect(x, y, u, u); cx.fillRect(x + 2 * u, y + 2 * u, u, u); } },
+};
+function drawPrankRain(k, p, sx, sy){
+  const Rn = PRANK_RAIN[k], t = performance.now(), cp = KPX * ASC, u = Math.max(3, Math.round(cp * 2.1)), head = sy - 24.5, top = head - 16, cx = out;
+  cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); cx.imageSmoothingEnabled = false;
+  // 머리 위 작은 구름
+  const cxp = Math.round((sx - camIX) * KPX), cyp = Math.round((top - camIY) * KPX) + Math.round(Math.sin(t / 500) * u);
+  cx.globalAlpha = .92; cx.fillStyle = '#2A2040'; cx.fillRect(cxp - 13 * u, cyp - 2 * u, 26 * u, 5 * u); cx.fillRect(cxp - 8 * u, cyp - 4 * u, 15 * u, 3 * u);
+  cx.fillStyle = Rn.cloud; cx.fillRect(cxp - 12 * u, cyp - u, 24 * u, 3 * u); cx.fillRect(cxp - 7 * u, cyp - 3 * u, 13 * u, 3 * u); cx.fillStyle = '#FFFFFF'; cx.fillRect(cxp - 4 * u, cyp - 3 * u, 3 * u, u);
+  for (let i = 0; i < Rn.n; i++){
+    const ph = ((t / Rn.sp) + i / Rn.n + (p.x || 0) * .13) % 1, fall = 40 * ph, y = top + 2 + fall, ox = ((i * 37) % 32) - 16, x = sx + ox + Math.sin(t / 420 + i * 1.7) * 3;
+    const px = Math.round((x - camIX) * KPX), py = Math.round((y - camIY) * KPX); cx.globalAlpha = ph > .82 ? Math.max(0, 1 - (ph - .82) / .18) : Math.min(1, ph * 6);
+    Rn.draw(cx, px, py, u, Rn.c[i % Rn.c.length], t, i);
+  }
+  cx.restore();
+}
 function drawPrank(p, sx, sy, layer){
   const k = p.me ? pranks.me : p.peer ? pranks[p.peer] : null, R = k && PRANK_AT[k]; if (!R || !PRANK_IMG) return;
+  if (PRANK_RAIN[k]){ if (layer === 'front') drawPrankRain(k, p, sx, sy); return; }
   const pos = PRANK_POS[k] || 'around'; if ((pos === 'back') !== (layer === 'back')) return;
   const t = performance.now(), cp = KPX * ASC, [x0, y0, w0, h0] = R, w = w0 * cp, h = h0 * cp, head = sy - 24.5, walk = p.path.length ? Math.round(Math.abs(Math.sin(p.t * 10))) : 0;
   let bx = sx, by = head;   // 그림 아래 가운데가 닿을 세계 좌표
