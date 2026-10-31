@@ -1,20 +1,25 @@
 // 하트 이야기를 실제 엔진(evPlay)으로 처음부터 끝까지 자동으로 넘겨서, 중간에 멈추는 이야기를 찾아요
-//   node tools/story_run.js <목업 포트> [동시에 띄울 창 수=5] [선택지: first|last|mix]
+//   node tools/story_run.js <목업 포트> [동시에 띄울 창 수=5] [선택지: first|last|mix] [NPC 목록 쉼표로 · 비우면 전부] [처음 ♥ 번호=1]
 //   목업: bash tools/ui_mock.sh <저장소> <포트> (window.__T.evPlay · npcGet 손잡이)
 const { chromium } = require('/opt/node-tools/node_modules/playwright'); const fs = require('fs'), path = require('path');
 const PORT = process.argv[2] || 8820, PAR = +(process.argv[3] || 5), MODE = process.argv[4] || 'mix';
 const spec = fs.readFileSync(path.join(__dirname, '../tests/ui.spec.js'), 'utf8'); const seed = eval('(' + spec.match(/const seed = (\{.*\});\n/)[1] + ')');
 const NPCS = ['nabi', 'batri', 'kappa', 'aula', 'mandi', 'jipsin', 'sera', 'madeleine', 'stella', 'leo'];
-const jobs = []; NPCS.forEach(n => { for (let k = 1; k <= 10; k++) jobs.push([n, k]); });
+const ONLY = (process.argv[5] || '').split(',').filter(Boolean), FROM = +(process.argv[6] || 1);
+const jobs = []; NPCS.filter(n => !ONLY.length || ONLY.includes(n)).forEach((n, i) => { for (let k = (i === 0 && ONLY.length ? FROM : 1); k <= 10; k++) jobs.push([n, k]); });
 const res = [];
+async function boot(p){ await p.goto(`http://localhost:${PORT}/`); await p.waitForTimeout(3500); for (let k = 0; k < 12; k++){ const bb = await p.$('#stnext'); if (!bb) break; await bb.click(); await p.waitForTimeout(100); } await p.waitForTimeout(1500); }
 async function worker(b, wi){
   const p = await b.newPage({ viewport: { width: 390, height: 844 } }); const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.addInitScript(sd => { window.__seed = sd; window.__uid = 'me1'; }, seed);
-  await p.goto(`http://localhost:${PORT}/`); await p.waitForTimeout(3500);
-  for (let k = 0; k < 12; k++){ const bb = await p.$('#stnext'); if (!bb) break; await bb.click(); await p.waitForTimeout(100); }
-  await p.waitForTimeout(1500);
+  await boot(p);
   while (jobs.length){
     const [n, k] = jobs.shift(); errs.length = 0;
+    try { await runOne(p, n, k, errs); } catch(e){ console.log(`${n} ♥${k}: 창이 새로 고쳐져서 다시 해요 (${String(e.message).slice(0, 40)})`); jobs.push([n, k]); await p.waitForTimeout(1500); try { await boot(p); } catch(e2){} }
+  }
+}
+async function runOne(p, n, k, errs){
+  {
     await p.evaluate(async ([n, k]) => { const ev = await (await fetch(`data/npc/${n}/events/heart_${String(k).padStart(2, '0')}.json?t=${Date.now()}`)).json(); window.__evDone = false; __T.evPlay(__T.npcGet(n), k, ev, {}); }, [n, k]);
     await p.waitForTimeout(800);
     let last = '', since = Date.now(), steps = 0, status = 'ok', where = '';
