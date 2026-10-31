@@ -1,0 +1,62 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>전투 스킬 시안</title>
+<style>
+@font-face{font-family:'G11';src:url(fonts/Galmuri11.sub.woff2) format('woff2')}
+:root{--sub:#b9a8ff;--gold:#ffd866}
+body{margin:0;background:#140e24;color:#fff;font-family:G11,sans-serif;display:flex;justify-content:center}
+#app{width:390px;min-height:844px;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;gap:8px}
+h1{font-size:15px;margin:4px 0;color:var(--gold)}
+.field{aspect-ratio:16/9;border:3px solid #0c0818;border-radius:6px;box-shadow:0 0 0 2px #5a4a9a;background:url(art/iso/hw_bg.png) center/cover;position:relative;image-rendering:pixelated}
+.field::after{content:'(전투 화면)';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff8;font-size:12px;background:#0006}
+.log{text-align:center;font-size:13px;color:#e0d4ff;background:#241a44;border-radius:8px;padding:6px}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.s{padding:6px;background:linear-gradient(#2b2150,#1b1438);border:2px solid #0c0818;border-radius:6px;box-shadow:inset 0 0 0 2px #4a3c86;font-size:12px}.s.on{box-shadow:inset 0 0 0 2px #4fd8ff,0 0 10px #4fd8ff99}
+.bar{height:8px;background:#120c26;border-radius:3px;overflow:hidden;margin-top:3px}.bar i{display:block;height:100%}.hp i{background:#3fb858}.mp i{background:#3a78d8}
+.cmd{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.xb{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:6px 8px;color:#fff;font:inherit;font-size:14px;background:linear-gradient(#3b2f78,#251b52);border:2px solid #0c0818;border-radius:6px;box-shadow:inset 0 0 0 2px #6a5ab0,0 2px 0 #000;text-shadow:0 1px 0 #000;cursor:pointer;position:relative}
+.xb.atk{background:linear-gradient(#2a6ab8,#1a4a8a)}.xb:disabled{opacity:.4}
+.xb small{display:block;font-size:10px;color:#9fd0ff}
+.sic{display:inline-block;width:26px;height:26px;flex:none;background:url(art/skills.png?v=2) 0 0/1500% 1200%;background-position:calc(var(--c)*100%/14) calc(var(--r)*100%/11);image-rendering:pixelated}
+.qrow{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.q{flex-direction:column;gap:2px;min-height:64px;font-size:11px;padding:4px 2px;background:linear-gradient(#4a2f78,#2b1b52);box-shadow:inset 0 0 0 2px #a07af0,0 2px 0 #000}
+.q .sic{width:30px;height:30px}.q .cd{position:absolute;inset:0;border-radius:4px;background:#000a;display:flex;align-items:center;justify-content:center;font-size:16px;color:#ffd866}
+.q.empty{opacity:.5;font-size:10px;color:#cbb8ff}
+.all{grid-column:1/-1;min-height:40px;font-size:13px}
+.hd{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;color:var(--gold);font-size:14px}
+.tabs{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.tab{padding:7px 2px;border-radius:999px;border:2px solid #4a3c86;background:#1e1640;color:#cbb8ff;font:inherit;font-size:12px;cursor:pointer}.tab.on{background:#ffd866;color:#2a1a08;border-color:#ffd866}
+.li{grid-column:1/-1;display:flex;align-items:center;gap:8px;justify-content:flex-start;min-height:48px;text-align:left}
+.li .nm{flex:1;font-size:13px}.li .pin{min-width:40px;min-height:40px;border-radius:8px;border:2px solid #6a5ab0;background:#1e1640;color:#8a7ab8;font-size:18px;display:flex;align-items:center;justify-content:center}.li .pin.on{color:#ffd866;border-color:#ffd866;background:#3a2c18}
+.li.off{opacity:.45}.sep{grid-column:1/-1;font-size:11px;color:var(--sub);margin-top:2px}
+.note{font-size:12px;color:#cbb8ff;line-height:18px;background:#1e1640;border-radius:8px;padding:8px}
+</style></head><body><div id="app"><h1 id="ttl">전투 스킬 시안 · 흑마법사 Lv 18</h1>
+<div class="field"></div><div class="log" id="log">불꽃 슬라임이 나타났다!</div>
+<div class="stat"><div class="s on">민준<div class="bar hp"><i style="width:80%"></i></div><div class="bar mp"><i style="width:55%"></i></div></div><div class="s">하늘<div class="bar hp"><i style="width:64%"></i></div><div class="bar mp"><i style="width:70%"></i></div></div><div class="s">레오<div class="bar hp"><i style="width:90%"></i></div><div class="bar mp"><i style="width:40%"></i></div></div></div>
+<div class="cmd" id="cmd"></div><div class="note" id="note"></div></div>
+<script>
+const XT = [["화염",[["불꽃탄","d","fire"],["화염구","D","fireball"],["불씨","F","ember"],["지옥불","D","skull"],["메테오","D","rock"]]],["냉기와 번개",[["서리 화살","d","arrow"],["얼음 창","d","spear"],["번개","d","bolt"],["연쇄 번개","D","chain"],["눈보라","S","ice"]]],["암흑",[["마력 흡수","M","moon"],["약점 간파","w","eye"],["암흑 구체","d","orb"],["공허의 손","Z","claw"],["마력 폭주","P:mag","star"]]]], MP = 22, LV = { '0_0': 3, '0_1': 2, '0_2': 1, '0_3': 1, '1_0': 2, '1_1': 1, '1_2': 2, '1_3': 1, '2_0': 1, '2_1': 1, '2_2': 1, '2_3': 1, '2_4': 1, '0_4': 1, '1_4': 1 };
+const MPC = [4, 7, 11, 16, 22], CD = { '0_3': 2, '1_3': 1 };
+const SK = XT.flatMap(([bn, L], b) => L.map(([n, code], r) => ({ k: b + '_' + r, b, r, n, mp: MPC[r], i: b * 5 + r, bn })));
+let quick = ['0_1', '1_2', '2_0', '0_3'], view = 'main', tab = 0;
+const ok = s => s.mp <= MP && !CD[s.k];
+const ic = s => '<span class="sic" style="--c:' + s.i + ';--r:1"></span>';
+function render(){
+  const el = document.getElementById('cmd'), note = document.getElementById('note'); let h = '';
+  if (view === 'main'){
+    h += '<button class="xb atk">공격</button><button class="xb">아이템</button><button class="xb">방어</button><div class="qrow">';
+    for (let j = 0; j < 4; j++){ const s = SK.find(x => x.k === quick[j]); h += s ? '<button class="xb q" ' + (s.mp > MP ? 'disabled' : '') + '>' + ic(s) + '<span>' + s.n + '<small>' + (CD[s.k] ? '' : 'MP ' + s.mp) + '</small></span>' + (CD[s.k] ? '<i class="cd">' + CD[s.k] + '턴</i>' : '') + '</button>' : '<button class="xb q empty">빈칸<br>＋</button>'; }
+    h += '</div><button class="xb all" data-go="all">✦ 전체 스킬 ' + SK.length + '개</button>';
+    note.innerHTML = '첫 화면에 <b>빠른 스킬 4칸</b>이 바로 보여요. 한 번 누르면 바로 써요 (대상이 필요하면 화면에서 고르기). 쿨타임은 칸 위에 남은 턴 수, MP가 모자라면 흐리게.';
+  } else {
+    h += '<div class="hd"><span>✦ 전체 스킬</span><button class="xb" data-go="main" style="min-height:34px;padding:2px 12px">뒤로</button></div><div class="tabs">' + XT.map(([bn], b) => '<button class="tab ' + (b === tab ? 'on' : '') + '" data-tab="' + b + '">' + bn + '</button>').join('') + '</div>';
+    const L = SK.filter(s => s.b === tab), A = L.filter(ok), B = L.filter(s => !ok(s));
+    const row = s => '<div class="xb li ' + (ok(s) ? '' : 'off') + '">' + ic(s) + '<span class="nm">' + s.n + ' <small>Lv ' + LV[s.k] + ' · ' + (CD[s.k] ? '쿨타임 ' + CD[s.k] + '턴' : s.mp > MP ? 'MP ' + s.mp + ' (모자람)' : 'MP ' + s.mp) + '</small></span><button class="pin ' + (quick.includes(s.k) ? 'on' : '') + '" data-pin="' + s.k + '">' + (quick.includes(s.k) ? '★' : '☆') + '</button></div>';
+    h += A.map(row).join('') + (B.length ? '<div class="sep">지금은 못 써요</div>' + B.map(row).join('') : '');
+    note.innerHTML = '줄기 탭 3개로 나눠서 한 번에 5개만 보여요. 지금 쓸 수 있는 스킬이 위, 못 쓰는 스킬은 아래에 흐리게. <b>★</b>를 누르면 빠른 칸에 넣고 빼요 (4칸이 꽉 차면 가장 오래된 칸과 바꿔요). 스킬을 누르면 바로 써요.';
+  }
+  el.innerHTML = h;
+  el.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { view = b.dataset.go; render(); });
+  el.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = +b.dataset.tab; render(); });
+  el.querySelectorAll('[data-pin]').forEach(b => b.onclick = e => { e.stopPropagation(); const k = b.dataset.pin; if (quick.includes(k)) quick = quick.filter(x => x !== k); else { if (quick.length >= 4) quick.shift(); quick.push(k); } render(); });
+}
+window.__set = (v, t) => { view = v; tab = t || 0; render(); }; window.__pin = k => { if (quick.length >= 4) quick.shift(); quick.push(k); render(); };
+render();
+</script></body></html>
