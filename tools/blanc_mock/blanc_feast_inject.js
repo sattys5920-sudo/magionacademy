@@ -200,7 +200,13 @@ const SND = (() => {
       drum(a, d){ for (let k = 0; k < d; k += .18 + Math.random() * .3) tone(700 + Math.random() * 900, a + k, .05, 'square', .09); for (let k = .4; k < d; k += 2.1) noise(a + k, 1.4, .22, 1000, 'bandpass', 1600, .3); for (let k = 1; k < d; k += 1.7) noise(a + k, .3, .3, 2200, 'highpass'); },   // 해골 뼈 따닥따닥 · 관객 와아 · 심벌 챙
       balloon(a, d){ tone(200, a, Math.min(3.5, d), 'square', .08, 900); for (let k = 0; k < Math.min(3.5, d); k += .35) noise(a + k, .2, .1, 2500, 'bandpass'); for (let k = 3.6; k < d; k += 1.1) tone(900, a + k, .5, 'sine', .1, 600); },
       rocket(a, d){ [0, .6, 1.2].forEach((k, i) => tone(i < 2 ? 660 : 990, a + k, .2, 'square', .12)); noise(a + 1.5, d - 1.5, .5, 300, 'lowpass', 2500, .3); tone(80, a + 1.5, d - 1.5, 'sawtooth', .15, 240); },
-      wedding(a, d){ for (let k = 0; k < d; k += 1.4){ tone(880, a + k, 1.2, 'triangle', .18); tone(1320, a + k + .05, 1, 'triangle', .1); tone(660, a + k + .7, 1, 'triangle', .12); } },
+      wedding(a, d){   // 축하곡(직접 만든 가락): 땡그랑 종 + 밝은 3박자 가락 + 화음 + 박수
+        const B = .5, MEL = [72, 76, 79, 77, 76, 74, 76, 72, 74, 76, 74, 71, 72, 0, 79, 81, 79, 77, 76, 74, 72, 76, 74, 72], CH = [[60, 64, 67], [65, 69, 72], [67, 71, 74], [60, 64, 67]];
+        for (let k = 0, i = 0; k < d; k += B, i++){ const t = a + k, n = MEL[i % MEL.length];
+          if (n){ tone(440 * Math.pow(2, (n - 69) / 12), t, B * 1.1, 'triangle', .16); tone(440 * Math.pow(2, (n - 57) / 12), t, B * .6, 'sine', .05); }
+          if (i % 3 === 0) CH[(i / 3 | 0) % 4].forEach(c => tone(440 * Math.pow(2, (c - 69) / 12), t, B * 2.8, 'sine', .06)); }
+        for (let k = 0; k < d; k += 2) { tone(1046, a + k, 1.4, 'triangle', .14); tone(1568, a + k + .04, 1.1, 'triangle', .08); }
+        for (let k = d - 2.4; k < d; k += .06) noise(a + k + Math.random() * .03, .05, .1, 2500, 'bandpass'); },
       surf(a, d){ for (let k = 0; k < d; k += 1.8) noise(a + k, 1.8, .4, 400, 'lowpass', 2400, .6); for (let k = 0; k < d; k += .3) tone(250 + Math.random() * 300, a + k, .07, 'sine', .08, 700); },
       disco(a, d){   // 요란한 EDM: 짧은 빌드업 → 드롭(쿵쿵 킥 · 넓은 화음 · 펌핑 베이스 · 하이햇)
         const B = .47, up = Math.min(2.8, d * .25);
@@ -214,7 +220,13 @@ const SND = (() => {
           if (i % 8 === 7) [0, .12, .24].forEach(x => tone(1760, t + x, .1, 'square', .08)); }
       },
       throne(a, d){ tone(2600, a + 2.2, .6, 'triangle', .14); tone(3100, a + 2.25, .5, 'triangle', .1); tone(196, a + .5, d, 'triangle', .06); },
-      parade(a, d){ for (let k = 0, i = 0; k < d; k += .3, i++){ if (i % 2 === 0) kick(a + k); else snare(a + k); } for (let k = .4; k < d; k += 1.1){ tone(300, a + k, .4, 'sine', .08, 1200); noise(a + k + .4, .6, .35, 2500, 'lowpass', 400, .01); } noise(a, d, .08, 900, 'bandpass'); },
+      parade(a, d){   // 행진곡(직접 만든 가락): 둥 짝 둥 짝 북 + 금관 가락 + 화음, 사이사이 폭죽과 환호
+        const B = .42, MEL = [67, 0, 72, 72, 74, 72, 71, 72, 76, 0, 74, 72, 71, 69, 67, 0, 69, 71, 72, 69, 67, 72, 76, 79, 77, 76, 74, 71, 72, 0, 72, 0], BAS = [48, 55, 48, 55, 53, 57, 55, 50];
+        for (let k = 0, i = 0; k < d; k += B / 2, i++){ const t = a + k; if (i % 2 === 0) kick(t); else snare(t); if (i % 4 === 3) noise(t + B / 4, .05, .2, 3500, 'highpass');
+          const n = MEL[i % MEL.length]; if (n){ tone(440 * Math.pow(2, (n - 69) / 12), t, B * .45, 'sawtooth', .09); tone(440 * Math.pow(2, (n - 69) / 12) * 2, t, B * .3, 'square', .03); }
+          if (i % 2 === 0) tone(440 * Math.pow(2, (BAS[(i / 2 | 0) % 8] - 69) / 12), t, B * .4, 'triangle', .16); }
+        for (let k = 1.2; k < d; k += 2.3){ tone(300, a + k, .4, 'sine', .07, 1200); noise(a + k + .4, .6, .3, 2500, 'lowpass', 400, .01); }
+        noise(a, d, .06, 900, 'bandpass'); },
     };
     const CUE = {
       appear: a => noise(a, 1.2, .2, 500, 'bandpass', 2000, .5),
