@@ -7678,7 +7678,7 @@ FAM.A = ['낚시 입질', '놀이 보상', '물약 제조 성공률', '쉬기 �
 FAM.B = ['걷기 속도', '채집 하나 더 나올 확률', '낚시 기다리는 시간 단축', '작물 자라는 속도', '사육장 생산 속도', '드문 물고기 확률', '요리 버프 시간', '드문 채집 확률', '도감 첫 등록 보상', '소원·등불 이벤트 보상', '물약 팔 때 값', '날마다 바뀌는 생활 분야'];
 FAM.X = ['탐사 행동 속도 +5%', '탐사 재료 획득 +10%', '탐사 주 능력치 +8%', '탐사에서 받는 회복량 +10%', '탐사 최대 체력 +8%', '탐사 상태 이상 저항 +15%', '보스전 주 능력치 +10%', '탐사 보상 코인 +10%', '탐사 경험치 +10%', '탐사에서 받는 피해 −8%', '탐사 회피 +5%', '탐사마다 다른 정령의 맹약 능력 하나'];
 FAM.ST = ['경계', '관심', '익숙', '신뢰', '맹약'];
-const famLines = {}, famLoad = k => famLines[k] ? Promise.resolve(famLines[k]) : fetch(`data/fam/${FAM.ID[k]}.json?v=1`).then(r => r.json()).then(d => (famLines[k] = d)).catch(() => null);
+const famLines = {}, famLoad = k => famLines[k] ? Promise.resolve(famLines[k]) : fetch(`data/fam/${FAM.ID[k]}.json?v=2`).then(r => r.json()).then(d => (famLines[k] = d)).catch(() => null);
 const famStage = () => Math.min(4, Math.floor(((me.fam && me.fam.pts) || 0) / 100)), famTier = s => s <= 1 ? 0 : s <= 3 ? 1 : 2, famPickOne = a => a[Math.floor(Math.random() * a.length)];
 const famGiftable = () => [...new Set([...POTIONS, ...MATS, ...CATCH, ...DISHES])].filter(k => me.inv[k] > 0 && ITEM[k]);
 function famHate(k){   // Iris는 싫어하는 게 날마다 바뀌어요 (그날 정해진 둘)
@@ -7733,7 +7733,7 @@ async function famGive(item){
   if (s1 > s0 && L){ sfx('sparkle'); await famSay(L.levelup[s1 - 1], FAM.ST[s1]); }
 }
 async function famChat(){   // 5시간에 한 번: 지금 상황과 단계에 맞는 줄 중 무작위
-  const f = me.fam; f.tk = now2(); const L = await famLoad(f.k); if (!L) return; const st = famStage(), h = new Date().getHours(), night = h >= 21 || h < 5;
+  const f = me.fam; f.tk = now2(); const L = await famLoad(f.k); if (!L) return; const st = famStage(), h = kNow().getHours(), night = h >= 21 || h < 5;
   const pool = [...L.idle[st], L.still[st], L.greet[st]]; if (night) pool.push(L.night[st], L.night[st]);
   let line = famPickOne(pool); if (st >= 1 && Math.random() < .3) line = famPickOne(Object.values(L.hint));
   save(); await famSay(line);
