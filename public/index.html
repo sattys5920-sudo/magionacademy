@@ -1283,7 +1283,7 @@ function normalize(p){
   if (p.furn){ p.fbag = p.fbag || {}; Object.entries(p.furn).forEach(([k, st]) => { if (st?.own && OLD_FURN[k]) p.fbag[OLD_FURN[k]] = (p.fbag[OLD_FURN[k]] || 0) + 1; }); delete p.furn; }
   p.fbag = p.fbag || {}; Object.entries({ bed: 'coffinsofa', plant: 'monstera' }).forEach(([o, n]) => { if (p.fbag[o]){ p.fbag[n] = (p.fbag[n] || 0) + p.fbag[o]; delete p.fbag[o]; } }); Object.keys(p.fbag).forEach(k => { if (!FURN_BY[k]) delete p.fbag[k]; }); p.room = (p.room || []).filter(r => FURN_BY[r.f]);   /* 이야기 보상 가구 이름이 틀렸던 것(bed·plant)을 바로잡아요 */ p.common = p.common || { stage: 1, pool: {} }; p.common.pool = p.common.pool || {};
   p.orders = p.orders || []; p.know = p.know || 0; p.hints = p.hints || []; if (!p.hints.includes('p_vigor')) p.hints.push('p_vigor');   // 전투에서 쓰는 두 물약(치유·활력)은 처음부터 만들 수 있어요
-  p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look)); p.closet = p.closet || {}; p.rod = p.rod || 0; p.fdex = p.fdex || {}; p.buffs = p.buffs || {}; p.cdex = p.cdex || {}; p.npc = p.npc || {}; Object.values(p.npc).forEach(x => { if (x && x.seen && typeof x.seen === 'object' && x.seen[0] !== undefined){ if (Array.isArray(x.seen)) x.seen = Object.fromEntries(x.seen.map((v, i) => [i, v]).filter(([, v]) => v != null)); delete x.seen[0]; } });   /* 10/28~ 저장 오류로 번호가 한 칸 당겨진 하트 기록: 0번(있을 수 없는 칸)을 지워요 */ p.story = p.story || { seen: {}, got: {} }; p.story.seen = p.story.seen || {}; p.story.got = p.story.got || {};   // rod 낚싯대 단계, fdex 낚시·채집 도감 { id: { n, cm } }   // closet: 옷 가게에서 산 옷 { '부위:부품id': 1 }
+  p.av = World.Avatar.fix(p.av || World.Avatar.fromLook(p.look)); p.closet = p.closet || {}; p.rod = p.rod || 0; p.fdex = p.fdex || {}; p.buffs = p.buffs || {}; p.cdex = p.cdex || {}; p.npc = p.npc || {}; Object.values(p.npc).forEach(x => { if (x && x.seen && typeof x.seen === 'object' && x.seen[0] !== undefined){ const o = Array.isArray(x.seen) ? Object.fromEntries(x.seen.map((v, i) => [i, v]).filter(([, v]) => v != null)) : x.seen; x.seen = Object.fromEntries(Object.entries(o).map(([k, v]) => [/^\d+$/.test(k) ? String(+k + 1) : k, v])); } });   /* 10/28~ 저장 오류로 번호가 한 칸 당겨진 하트 기록: 0번이 있으면 모두 한 칸씩 제자리로 옮겨요 (하트 이야기는 1번부터 차례로 봐요) */ p.story = p.story || { seen: {}, got: {} }; p.story.seen = p.story.seen || {}; p.story.got = p.story.got || {};   // rod 낚싯대 단계, fdex 낚시·채집 도감 { id: { n, cm } }   // closet: 옷 가게에서 산 옷 { '부위:부품id': 1 }
   const pn = Math.max(p.plotN || 0, Array.isArray(p.plots) ? p.plots.length : Math.max(0, ...Object.keys(p.plots || {}).map(k => +k + 1)));   // 빈 화단은 Firebase에 안 남아서 늘린 칸 수를 따로 기억해요
   p.plots = Array.isArray(p.plots) ? [...p.plots] : Array.from({ length: pn }, (_, i) => (p.plots || {})[i]);
   p.plots = Array.from({ length: Math.max(pn, p.plots.length) }, (_, i) => p.plots[i]).map(x => {
@@ -3739,7 +3739,7 @@ function adminRender0(){
     const ups = {};
     if (del){ ups['players/' + id] = null; ups['approved/' + id] = null; ups['pending/' + id] = null; ups['online/' + id] = null; if (p.ex && p.ex.job) ups['jobs/' + p.ex.job] = null; if (p.house) ups['hmem/' + p.house + '/' + id] = null; }
     else ups['players/' + id] = adFresh(p);
-    ups['adm/reset/' + id] = now2();
+    ups['adm/reset/' + id] = now2(); ups['hseen/' + id] = null;
     try {
       const pens = (await F.get(F.ref(db, 'pens'))).val() || {}; Object.entries(pens).forEach(([i, o]) => { if (o === id) ups['pens/' + i] = null; });
       await F.update(F.ref(db, '/'), ups); alert(del ? `${who}의 가입 데이터를 지웠어요.` : `${who}의 진행을 리셋했어요.`);
@@ -3751,7 +3751,7 @@ function adminRender0(){
     if (prompt("정말 모두 초기화할까요? 아래에 '초기화' 라고 입력해요.") !== '초기화') return alert('취소했어요.');
     const ups = {}, now = now2(); dfHostStop();
     const jobs = {}; ids.forEach(id => { const p = AD.players[id]; if (p.ex && p.ex.job) jobs[p.ex.job] = id; ups['players/' + id] = adFresh(p); ups['adm/reset/' + id] = now; }); ups['jobs'] = Object.keys(jobs).length ? jobs : null;   // jobs와 jobs/x를 한 번에 쓰면 거절돼요
-    ['chat', 'story', 'houses', 'games', 'xparty', 'xrun', 'events', 'coop', 'exam', 'market', 'guest', 'records', 'pens', 'defense'].forEach(k => { ups[k] = null; });
+    ['chat', 'story', 'houses', 'games', 'xparty', 'xrun', 'events', 'coop', 'exam', 'market', 'guest', 'records', 'pens', 'defense', 'hseen'].forEach(k => { ups[k] = null; });
     try { await F.update(F.ref(db, '/'), ups); alert('모든 진행 상황과 채팅 내역을 초기화했어요.'); } catch(e){ alert('실패했어요: ' + (e.code || e.message)); }
   };
   const ar = $('#adresetall'); if (ar) ar.onclick = adResetAll;
@@ -4251,7 +4251,7 @@ function hideState(id){
   const st = npcSt(id), c = ev.conditions;
   if (!st.hide){ if (hearts(id) < c.minHeart || daysSince(st.evDay) < (c.afterDays || 0)) return null; st.hide = { k, d: todayKey() }; save(); }
   if (daysSince(st.hide.d) >= (h.days || 3)){   // 못 찾았어요
-    st.seen[k] = 'fail'; st.ev = todayKey(); st.evDay = todayKey(); st.hide = null; st.failK = k; npcAddA(id, h.fail || -50); save(); return null; }
+    st.seen[k] = 'fail'; heartBackup(id, k, 'fail'); st.ev = todayKey(); st.evDay = todayKey(); st.hide = null; st.failK = k; npcAddA(id, h.fail || -50); save(); return null; }
   return { k, ev };
 }
 // 지금 NPC가 서 있을 곳: 이벤트 장소 > 숨바꼭질 > 루틴
@@ -4710,9 +4710,15 @@ async function evRun(ctx, sc){
 }
 const PERK_KO = { cat_furniture: '내 방 고양이 가구', bait: '나비의 낚시 미끼(입질이 빨라요)', free_post: '배트리의 매일 무료 소포', rod_bonus: '캇파의 낚싯대 보너스', lord_hint: '호수의 주인 힌트', potion_hint: '물약 힌트', know_bonus: '지식 보너스',
   greenhouse_growth: '온실 성장 보너스', pumpkin_race: '호박 줍기 경주 보너스', scarecrow_hat: '허수아비 모자', tasty_potion: '맛있는 치유 물약 (전투에서 체력 70%·MP 20%)', cake_recipe: '호박달 케이크 레시피', fortune: '스텔라의 운세', rare_egg: '희귀 생물 알' };
+const heartBackup = (id, k, v) => { if (!solo && F && db && uid) F.set(F.ref(db, `hseen/${uid}/${id}/h${k}`), v).catch(() => {}); };   // 본 하트 이야기는 전체 저장과 따로 바로 남겨요 (전체 저장이 되돌려져도 들어올 때 되살려요)
+async function heartRestore(){
+  if (solo || !F || !db || !uid || !me) return; let v; try { v = (await F.get(F.ref(db, 'hseen/' + uid))).val(); } catch(e){ return; } if (!v || typeof v !== 'object') return;
+  const fixed = []; Object.entries(v).forEach(([id, ks]) => { if (!ks || typeof ks !== 'object') return; const st = npcSt(id); Object.entries(ks).forEach(([hk, val]) => { const k = hk.replace(/^h/, ''); if (/^\d+$/.test(k) && !st.seen[k] && typeof val === 'string'){ st.seen[k] = val; fixed.push(id + ':' + k); } }); });
+  if (!fixed.length) return; save(); syncNpcs(); errReport('heart', '사라졌던 하트 이야기 기록을 되살림: ' + fixed.join(' '), 'rv ' + (me.rv || 0));
+}
 function evFinish(ctx){
   const { n, k, ev } = ctx, st = npcSt(n.id), got = [];
-  st.seen[k] = ctx.cold ? 'cold' : 'ok'; st.cold = ctx.cold; st.ev = todayKey(); st.evDay = todayKey(); st.evAt = now2(); st.hide = null;
+  st.seen[k] = ctx.cold ? 'cold' : 'ok'; heartBackup(n.id, k, st.seen[k]); st.cold = ctx.cold; st.ev = todayKey(); st.evDay = todayKey(); st.evAt = now2(); st.hide = null;
   npcAddA(n.id, ctx.sum);
   const r = ev.rewards || {};
   if (r.coin){ me.coin += r.coin; got.push(`${r.coin}G`); } if (r.mana){ me.mana += r.mana; got.push(`마력 +${r.mana}`); } if (r.know){ got.push(`지식 +${r.know}`, ...addKnow(r.know)); }
@@ -9968,7 +9974,7 @@ async function boot(){
       $('#wout').onclick = () => { stop?.(); F.signOut(auth); };
       const stop = F.onValue(F.ref(db, 'school/ctl'), s => { const v = s.val(); if (v && v.open === false) return; stop?.(); delete me.wait; save(); enter(); });
     };
-    if (snap.exists()) { me = normalize(snap.val()); knownRv = me.rv || 0; if (!me.house) showHousePick(await houseCounts(), gate); else gate(); }
+    if (snap.exists()) { me = normalize(snap.val()); knownRv = me.rv || 0; setTimeout(heartRestore, 2500); if (!me.house) showHousePick(await houseCounts(), gate); else gate(); }
     else waitApproval(user, async () => showCreate(async p => { me = p; if (await closed()) me.wait = 1; save(); gate(); }, await houseCounts(), await jobsTaken()));
   });
 }
