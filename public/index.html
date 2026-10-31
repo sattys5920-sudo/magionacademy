@@ -5441,7 +5441,7 @@ function bagDetailHTML(e){
   if (e.kind === 'cloth'){
     const c = bagCloth().find(x => x.key === e.id), label = SHOP_CATS.find(([k]) => k === c.cat)?.[1] || c.cat, body = World.Avatar.meta.bodies[me.av.body || 0], can = !!c.p.L[body], onNow = me.av[c.cat] === c.i;
     return `<div class="bag-dt">${hd(`${label} · ${c.p.k === 'pj' ? '잠옷' : '사복'}`)}<div class="d u">${onNow ? '지금 입고 있어요' : can ? '입으면 바로 바뀌어요' : '지금 체형엔 맞지 않아요'}</div>
-      <div class="acts"><button class="btn sm go" data-bwear="${esc(e.id)}" ${can && !onNow ? '' : 'disabled'}>${onNow ? '입는 중' : '입기'}</button><button class="btn sm" data-bavatar="1">꾸미기로</button></div></div>`;
+      <div class="acts">${onNow && BAG_OFF.includes(c.cat) ? `<button class="btn sm go" data-boff="${c.cat}">벗기</button>` : `<button class="btn sm go" data-bwear="${esc(e.id)}" ${can && !onNow ? '' : 'disabled'}>${onNow ? '입는 중' : '입기'}</button>`}<button class="btn sm" data-bavatar="1">꾸미기로</button></div></div>`;
   }
   if (e.kind === 'rod'){ const r = RODS[me.rod || 0]; return `<div class="bag-dt">${hd(`낚싯대 ${(me.rod || 0) + 1}단계`)}<div class="d">${esc(r.desc)}</div></div>`; }
   if (e.kind === 'egg'){ const eg = me.eggs[e.i], left = eggLeft(eg); return `<div class="bag-dt">${hd(left > 0 ? `${timeText(left)} 뒤에 깨어나요` : '지금 깨어날 수 있어요!')}<div class="d">${esc(CREATURES[eg.k]?.baby || '아기 생물')}이(가) 들어 있어요. 사육장 부화실에 있어요.</div><div class="d u">사육장 → 부화실에서 깨워요</div></div>`; }
@@ -5469,6 +5469,7 @@ function renderBag(){
   on('[data-btrash]', async b => { const k = b.dataset.btrash; if (!(me.inv[k] > 0)) return;
     if (!await confirmBox(`${withJosa(ITEM[k] || k, '을', '를')} 하나 버릴까요? 되돌릴 수 없어요.`, '버리기', '아니요', true)) return;
     me.inv[k] = Math.max(0, (me.inv[k] || 0) - 1); bagMsg = `${withJosa(ITEM[k] || k, '을', '를')} 하나 버렸어요.`; toast(bagMsg); save(); redraw(); });
+  on('[data-boff]', b => { const cat = b.dataset.boff, n = World.Avatar.meta.parts[cat].findIndex(p => p.f === null); if (n < 0) return; me.av[cat] = n; me.av = World.Avatar.fix(me.av); delete me.av.house; save(); World.setPlayer(me.nick, avOf(me)); const hf = $('#hudFace'); if (hf) delete hf.dataset.k; toast('벗었어요'); sfx('pop'); redraw(); });   // 모자 · 장신구 · 목 장식 · 망토는 벗을 수 있어요
   on('[data-bwear]', b => { const c = bagCloth().find(x => x.key === b.dataset.bwear); if (!c) return; me.av[c.cat] = c.i; me.av = World.Avatar.fix(me.av); delete me.av.house; save(); World.setPlayer(me.nick, avOf(me)); const hf = $('#hudFace'); if (hf) delete hf.dataset.k; toast(`${withJosa(c.p.n, '을', '를')} 입었어요`); redraw(); });
   on('[data-bavatar]', () => { avDraft = null; openSheet('home', 'avatar'); });
   // 보여 준 칸은 '본 것'으로
@@ -10338,6 +10339,7 @@ function renderAvatar(){
 }
 // 옷 가게 (마을의 옷 가게 문, 캐릭터 꾸미기에서도 열려요): 입어 보고 사서 입기
 let shopTry = null, shopKind = 'cas', shopMsg = '';
+const BAG_OFF = ['hat', 'acc', 'neck', 'cape'];
 const SHOP_CATS = [['top', '상의'], ['legs', '하의'], ['feet', '신발'], ['hat', '모자'], ['acc', '액세서리'], ['neck', '목걸이'], ['cape', '망토']];
 // 그림자 골목 의뢰인 집: 그 사람의 의뢰가 3단계에 닿았거나 끝난 뒤에 들어갈 수 있어요. 안에서 의뢰인을 만나요 (tools/iso/quarter_rooms.py)
 const QHOME = { main_01_dracula: ['blady', 'vamp_manor', 18, 9], main_05_mummy: ['nefer', 'museum', 18, 12], main_06_frankenstein: ['piece', 'lab_tower', 17, 11], main_03_witch: ['beatrix', 'witch_hut', 16, 10], main_04_werewolf: ['ur', 'wolf_cabin', 16, 10], main_07_jack: ['jack', 'jack_hut', 16, 10] };
