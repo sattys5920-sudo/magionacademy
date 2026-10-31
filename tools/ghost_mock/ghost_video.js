@@ -13,11 +13,12 @@ const INJ = fs.readFileSync(path.join(__dirname, 'ghost_inject.js'), 'utf8');
   await p.addInitScript(sd => { window.__seed = sd; window.__uid = 'me1'; }, seed);
   await p.goto(`http://localhost:${PORT}/`); await p.waitForTimeout(3500);
   for (let k = 0; k < 12; k++){ const bb = await p.$('#stnext'); if (!bb) break; await bb.click(); await p.waitForTimeout(100); }
-  await p.evaluate(() => { World.kNow = () => new Date(2026, 9, 30, 15, 20); World.zoomStep(-1); World.teleport('classroom', [15, 12]); }); await p.waitForTimeout(2500);
+  await p.evaluate(() => { World.kNow = () => new Date(2026, 9, 30, 21, 40); World.zoomStep(-1); World.tagsOff(true); World.setNpcs([]); World.teleport('campus', [44, 46]); }); await p.waitForTimeout(2500);
   await p.addScriptTag({ content: INJ }); await p.waitForTimeout(800);
   const start = (Date.now() - T0) / 1000;
   p.evaluate(() => window.__ghGo());
   await p.waitForFunction(() => window.__ghDone, null, { timeout: 300000 });
+  fs.writeFileSync(path.join(OUT, 'ghost_log.json'), JSON.stringify(await p.evaluate(() => window.__ghLog)));
   const v = p.video(); await ctx.close(); fs.renameSync(await v.path(), path.join(OUT, 'ghost.webm'));
   fs.writeFileSync(path.join(OUT, 'ghost.start'), String(start)); console.log('start', start);
   await b.close();
