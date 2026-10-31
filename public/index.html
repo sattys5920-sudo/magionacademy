@@ -8790,7 +8790,7 @@ const PRANK_MIN = 30;
 const PK_FLOWER = new Set(['g_dandel', 'g_chamo', 'g_lav', 'g_rose', 'g_sunf', 'g_lily', 'g_lotus', 'g_tulip', 'g_morning', 'g_firefly', 'g_snow', 'g_evening', 'g_bell', 'g_dream', 'g_aurora', 'g_moonf', 'g_crystal', 'g_time', 'g_soul', 'g2_daisy', 'g2_bell', 'g2_eve', 'g2_ghostf', 'g2_skullf']);
 const PK_SWEET = new Set(['d_acorncookie', 'd_jamtoast', 'd_carrotmuffin', 'd_spidermac', 'd_bluepie', 'd_chestnut', 'd_ghostmallow', 'd_poisoncandy', 'd_jellyjelly', 'd_cottonpudding', 'd_starcookie', 'd_fairycake', 'd_moonmochi', 'd_auroraparfait', 'd_pmooncake']);
 const pkBase = k => String(k || '').replace(/_s$/, '');
-const pkWx = () => weatherToday(), pkNight = () => bandNow() === 'night', pkMap = () => (World.meTile && World.meTile() || {}).m || '';
+const pkWx = () => weatherToday(), pkNight = () => { const b = bandNow(), h = kNow().getHours(); return b === 'night' || (b === 'evening' && h >= 19); }, pkMap = () => (World.meTile && World.meTile() || {}).m || '';
 const pkAt = (pid, r = 3) => { const p = NL.places[pid], t = World.meTile && World.meTile(); return !!(p && t && t.m === p.map && Math.abs(t.x - p.x) <= (p.r || 0) + r && Math.abs(t.y - p.y) <= (p.r || 0) + r); };
 const pkOut = () => ['campus', 'town', 'quarter'].includes(pkMap());
 const pkFish = k => !!(CATCH_INFO[k] && CATCH_INFO[k].sheet === 'fish' && !CATCH_INFO[k].junk);
@@ -8829,7 +8829,7 @@ function prankEv(on, d = {}){
       if (p.got[k]) continue; const L = PRANK_STEPS[k], i = p.s[k] || 0, st = L[i]; if (!st || st.on !== on || (st.ok && !st.ok(d))) continue;
       if (st.q){ const key = String(st.q(d)); const q = p.q[k] = p.q[k] || {}; if (q[key]) continue; q[key] = 1; }
       const c = (p.c[k] || 0) + (st.add ? st.add(d) : 1);
-      if (c >= (st.n || 1)){ p.s[k] = i + 1; p.c[k] = 0; delete p.q[k]; }
+      if (c >= (st.n || 1)){ p.s[k] = i + 1; p.c[k] = 0; delete p.q[k]; const full = p.s[k] >= L.length; setTimeout(() => toast(full ? '어디선가 쿡쿡 웃음소리가 들려요. 그림자 골목의 의문의 인물을 찾아가 보세요.' : '어디선가 희미한 마법의 기운이 느껴져요.......'), 600); }
       else p.c[k] = c;
       ch = true;
     }
