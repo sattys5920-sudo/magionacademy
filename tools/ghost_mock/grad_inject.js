@@ -1,5 +1,5 @@
 // 시안: 마틸다 졸업식 (5 일째) — 단상 · 개근상 · 추억 조각 4 장 · 「졸업 축하해」 선택 · 아껴 둔 비밀 인사 · 빛이 되어 떠남 · 졸업 모자 · 보상
-//   목업 사이트 폴더에 ghost_lpc.png · ghost_photo.png · ghost_buttons.png · hat_grad.png · skel_lpc.png · mem0~3.png가 있어야 해요 · window.__grGo()
+//   목업 사이트 폴더에 ghost_lpc.png · ghost_photo.png · ghost_buttons.png · hat_grad.png · diploma.png · skel_lpc.png · mem0~3.png가 있어야 해요 · window.__grGo()
 //   예시 선택: 부르는 이름 「틸다」 · 비밀 인사 하이파이브 · 바다 약속 함께 가기 · 단추 같이 찾기 · 무서운 것 나눔
 (function(){
 const sleep = ms => new Promise(r => setTimeout(r, ms)), LOG = window.__ghLog = [], T0 = performance.now(), mark = k => LOG.push([(performance.now() - T0) / 1000, k]);
@@ -56,7 +56,7 @@ window.__grGo = async () => {
   await talk('해골 선생님', '지금부터 1926 년 입학생, 마틸다의 졸업식을 시작하겠네.');
   await talk('해골 선생님', '마틸다. 100 년 동안 결석 없이 학교를 지켰으니.... 개근상도 같이 주지.');
   await talk('마틸다', '개, 개근상이요? ....푸하하. 경을 칠 노릇이네!', 900); World.say('me', '노릇이네!'); mark('quip'); await sleep(1500);
-  await showCard(`<canvas id="grd" width="64" height="40" style="width:192px;height:120px"></canvas>졸업장<small>「위 학생은 호박달 마녀학교의 모든 과정을 마치고<br>100 년 개근하였기에 이 졸업장을 줍니다.」</small>`, () => { const g = document.querySelector('#grd').getContext('2d'); g.fillStyle = '#E8DCC0'; g.fillRect(8, 6, 48, 28); g.fillStyle = '#C8B890'; g.fillRect(4, 4, 6, 32); g.fillRect(54, 4, 6, 32); g.fillStyle = '#C83A3A'; g.fillRect(28, 30, 8, 8); g.fillStyle = '#7A6A4A'; for (let k = 0; k < 4; k++) g.fillRect(16, 12 + k * 4, 32 - k * 4, 1); }, 2600);
+  await showCard(`<img src="diploma.png" style="width:240px;height:168px;image-rendering:pixelated;filter:drop-shadow(0 0 10px rgba(232,216,160,.5))">졸업장<small>「위 학생은 호박달 마녀학교의 모든 과정을 마치고<br>100 년 개근하였기에 이 졸업장을 줍니다.」</small>`, null, 2600);
   await talk('마틸다', '(손이 졸업장을 통과한다) ....앗.', 600); await talk('해골 선생님', '쯧, 내가 들고 있지.', 900);
   ttl.innerHTML = '추억 되돌아보기'; ttl.classList.add('on'); await sleep(1400); ttl.classList.remove('on');
   await memCard(0, '시계탑에서 틸다라고 처음 불러 줬던 날.');
