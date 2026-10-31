@@ -878,6 +878,7 @@ body.gtride #bar,body.gtride #chat,body.gtride #ctx,body.gtride .corner{opacity:
 .blfbox{background:#1E2A44}.blfc{width:48px;height:48px;image-rendering:pixelated}
 .blgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:6px 0;max-height:40vh;overflow:auto}.blit{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:12px;border:2px solid #4E3C72;background:#2A2040;color:#F1E9FF;font-family:var(--f-pxb);font-size:12px;text-align:center}.blit small{font-family:var(--f-px);font-size:10px;color:#C8B8F0}
 .blcos{display:flex;flex-direction:column;gap:6px;margin:6px 0}.blcos b{font-size:12px;color:var(--gold)}.blcos div{display:flex;flex-wrap:wrap;gap:6px}.blcos button{border:2px solid #4E3C72;background:#2A2040;color:#F1E9FF;border-radius:999px;padding:6px 10px;font:inherit;font-size:12px;min-height:36px}.blcos button.on{border-color:#FFD866;color:#FFD866}
+.say.bb-snow{background:#F4FAFF;color:#2A3A6A;box-shadow:0 0 0 2px #8AB8E8,0 0 10px rgba(180,215,255,.7);border-radius:12px}.say.bb-snow::after{border-top-color:#8AB8E8}.say.bb-snow::before{content:'❄';position:absolute;left:-7px;top:-9px;font-size:13px;color:#8AB8E8}
 .say.bb-ghost{background:#EEF4FF;color:#3A3A6A;box-shadow:0 0 0 2px #5A6A9A;border-radius:10px 10px 4px 4px}.say.bb-ghost::after{border-top-color:#5A6A9A}
 .say.bb-jack{background:#FF9A3A;color:#3A1404;box-shadow:0 0 0 2px #7A3408;border-radius:10px}.say.bb-jack::after{border-top-color:#7A3408}
 .say.bb-witch{background:#3A1E5A;color:#F4E8FF;box-shadow:0 0 0 2px #C8A0FF}.say.bb-witch::after{border-top-color:#C8A0FF}
@@ -3613,7 +3614,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.examBd = {}; AD.day = AD.day || todayKey(); sgListen(); if (!noticeOff && F && db) noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); if (AD.tab === 'gift' && !adminTyping()) adminRender(); });
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = k === 'players' ? fbBack(s.val() || {}) : s.val() || {}; if (adminTyping()){ AD.skip = true; return; } adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('fam/pick', 'fampick'); L('fam/ctl', 'famctl'); L('fairy/ctl', 'fairyctl'); L('seed/ctl', 'seedctl'); L('tilda/ctl', 'tlctl'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('morph/ctl', 'moctl'); L('morph/st', 'most'); L('morph/form', 'moform'); L('board', 'board'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event'){ if (adminTyping()) AD.skip = true; else adminRender(); } })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('fam/pick', 'fampick'); L('fam/ctl', 'famctl'); L('fairy/ctl', 'fairyctl'); L('seed/ctl', 'seedctl'); L('tilda/ctl', 'tlctl'); L('wish/ctl', 'wsctl'); L('wish/list', 'wslist'); L('wish/cheer', 'wscheer'); L('wish/own', 'wsown'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('morph/ctl', 'moctl'); L('morph/st', 'most'); L('morph/form', 'moform'); L('board', 'board'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event'){ if (adminTyping()) AD.skip = true; else adminRender(); } })); }
   adminRender();
 }
 // 관리자: 고르는 칸(드롭다운)을 펼친 동안은 새로 그리지 않아요 (학생 접속 정보가 자주 바뀌어도 닫히지 않게) · 고르거나 닫으면 밀린 걸 그려요
@@ -4233,7 +4234,7 @@ const WX_KO = { clear: '맑음', rain: '비', fog: '안개', snow: '눈' };
 let wxForce = null;   // 관리자가 정한 오늘 날씨 (story/wx)
 let bandForce = null;   // 관리자가 정한 오늘 시간대 (story/band) — 이야기·NPC 루틴 시험용
 function weatherToday(){
-  if (window.__snowOn) return 'snow';   // 눈사람 이벤트 중에는 늘 눈
+  if (window.__snowOn || window.__wishOn) return 'snow';   // 눈사람 · 첫눈의 소원 이벤트 중에는 늘 눈
   if (wxForce && wxForce.d === todayKey()) return wxForce.w;
   const r = hash32('wx' + todayKey()) / 4294967296, m = kNow().getMonth();
   return r < .25 ? ([11, 0, 1].includes(m) && r < .14 ? 'snow' : 'rain') : r < .40 ? 'fog' : 'clear';
@@ -5718,16 +5719,19 @@ function renderJournal(){
   if (typeof Dream !== 'undefined') tabs.push(['dream', '꿈 일기장']);
   if (me.seed && me.seed.note) tabs.push(['blanc', '레시피 노트']);
   if (me.tilda && me.tilda.d0) tabs.push(['tilda', '틸다와의 추억']);
+  if (wsLive() || (wsDone() && me.wishSeen === wsCtl.id)) tabs.push(['wish', '첫눈의 소원']);
   if (jnTab === 'heart') jnTab = 'todo';
   if (jnTab === 'blanc' && !(me.seed && me.seed.note)) jnTab = 'todo';
   if (jnTab === 'tilda' && !(me.tilda && me.tilda.d0)) jnTab = 'todo';
-  const body = jnTab === 'story' ? mqJournalHTML() : jnTab === 'dream' ? dreamJournalHTML() : jnTab === 'blanc' ? blNoteHTML() : jnTab === 'tilda' ? tlNoteHTML() : jnTodoHTML();
-  frame(null, '일지', { todo: '오늘의 의뢰', story: '메인 이야기', heart: '오늘 열린 하트 이벤트', dream: '꿈에서 본 것들', blanc: '무슈 블랑이 맛본 요리', tilda: '마틸다와 함께한 닷새' }[jnTab], `<div class="seg jn-seg" style="grid-template-columns:repeat(${tabs.length},1fr)">${tabs.map(([k, l]) => `<button data-jnt="${k}" class="${jnTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>${body}`);
+  if (jnTab === 'wish' && !tabs.some(t => t[0] === 'wish')) jnTab = 'todo';
+  const body = jnTab === 'story' ? mqJournalHTML() : jnTab === 'dream' ? dreamJournalHTML() : jnTab === 'blanc' ? blNoteHTML() : jnTab === 'tilda' ? tlNoteHTML() : jnTab === 'wish' ? wsNoteHTML() : jnTodoHTML();
+  frame(null, '일지', { todo: '오늘의 의뢰', story: '메인 이야기', heart: '오늘 열린 하트 이벤트', dream: '꿈에서 본 것들', blanc: '무슈 블랑이 맛본 요리', tilda: '마틸다와 함께한 닷새', wish: '이름 없는 소원과 응원' }[jnTab], `<div class="seg jn-seg" style="grid-template-columns:repeat(${tabs.length},1fr)">${tabs.map(([k, l]) => `<button data-jnt="${k}" class="${jnTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>${body}`);
   on('[data-jnt]', b => { jnTab = b.dataset.jnt; render(); });
   if (jnTab === 'story') mqJournalBind();
   if (jnTab === 'dream') dreamJournalBind();
   if (jnTab === 'blanc') blNoteBind();
   if (jnTab === 'tilda') tlNoteBind();
+  if (jnTab === 'wish') wsNoteBind();
   on('[data-deliver]', b => {
     const o = me.orders[+b.dataset.deliver]; if (!o || o.done || (me.inv[o.p] || 0) < o.n) return;
     const pay = partyMul(payOf(o)); me.inv[o.p] -= o.n; me.coin += pay; o.done = true; trEv('order'); save();
@@ -7601,7 +7605,7 @@ const FAM = { N: ['Vael', 'Ixi', 'Puck', 'Lotis', 'Sol', 'Lune', 'Ignis', 'Rill'
     ['마지막으로, 너는 무엇이 되고 싶은가?', ['길을 비추는 빛', '곁을 지키는 불', '아무도 모르는 불씨']]] };
 // ===== 처음 온 학생도 덜 정신없게: 이벤트 연출 차례 =====
 //   1 코니 선배 입문이 끝날 때까지 메인 의뢰·이벤트 연출은 기다려요 (공지·우편은 그대로) · 2 입문이 끝나면 메인 의뢰 손님이 먼저 · 3 그 뒤 열린 이벤트를 정한 순서대로 하나씩, 사이에 몇 초 쉬어요
-const EVQ = ['snow', 'morph', 'baby', 'fam', 'fairy', 'seed', 'tilda', 'sg'];   // 이벤트 연출 순서: 눈사람 · 마녀 솥 · 아기 동물 · 사역마 불씨 · 요정 시장 · 별 보는 밤
+const EVQ = ['snow', 'morph', 'baby', 'fam', 'fairy', 'seed', 'tilda', 'wish', 'sg'];   // 이벤트 연출 순서: 눈사람 · 마녀 솥 · 아기 동물 · 사역마 불씨 · 요정 시장 · 별 보는 밤
 const EVQ_GAP = 6000; let evqWant = {}, evqGapUntil = 0, evqWasBusy = false;
 const mqWaiting = () => typeof MQ !== 'undefined' && MQ.loaded && me && me.mq && me.mq.q && me.mq.ph === 'arrive' && !mqDayFull();
 function evTurn(k){   // 이 이벤트 연출을 지금 띄워도 되는지: 입문 중이 아니고, 메인 의뢰 손님이 기다리지 않고, 쉬는 틈이 지났고, 띄우려는 것 중 가장 앞 차례일 때
@@ -8895,9 +8899,119 @@ document.addEventListener('click', e => {
   else if (a === 'close'){ if (confirm('「수상한 기척」을 끝낼까요? 이미 만난 학생은 졸업까지 계속해요.')) GDB.upd('tilda/ctl', { open: false }); }
 });
 
+// ===== 「첫눈의 소원」: 관리자가 열면 눈이 오고 하늘에서 소원 쪽지가 내려요 · 주워서 응원(응원 글 50 자) · 내 소원 하나 날려 보내기 · 관리자가 끝내면 별자리 연출 + 모든 소원과 응원 글 공개 (연출은 wish.js) =====
+//   wish/ctl = { open, id, at, end 끝낸 시각 } · wish/list/<소원> = { t, at, ev, hide } · wish/own/<uid> = 내 소원 번호(나 · 관리자만 읽어요) · wish/cheer/<소원>/<uid> = { m 응원 글, at, hide }
+//   me.wish = { ev, got { 날: [주운 자리] }, ch { 소원: 1 } 응원한 것, ln 내 소원 응원 수(알림용), seen 별자리 본 회차 }
+let wsCtl = null, wsList = {}, wsCheer = {}, wsMine = null, wsOn = false, wsLoad = null, wsSpotSig = '';
+const wsFx = () => wsLoad || (wsLoad = new Promise((res, rej) => { if (window.WishFX) return res(); const sc = document.createElement('script'); sc.src = 'wish.js?v=1'; sc.onload = () => res(); sc.onerror = () => { wsLoad = null; rej(); }; document.head.appendChild(sc); }));
+const wsApi = () => ({ W: World, vol: typeof SET !== 'undefined' ? SET.sfx : 1, bgm: on => { try { on ? BGM.hold('wish') : BGM.release('wish'); } catch(e){} } });
+const wsLive = () => !!(wsCtl && wsCtl.open && wsCtl.id), wsDone = () => !!(wsCtl && !wsCtl.open && wsCtl.end && wsCtl.id);
+const wsSt = () => { const s = me.wish = me.wish && me.wish.ev === (wsCtl && wsCtl.id) ? me.wish : { ev: wsCtl && wsCtl.id, got: {}, ch: {}, ln: 0 }; s.got = s.got || {}; s.ch = s.ch || {}; return s; };
+const wsVis = () => Object.entries(wsList || {}).filter(([id, w]) => w && !w.hide && w.ev === wsCtl?.id && typeof w.t === 'string');
+const wsCheers = id => Object.entries((wsCheer || {})[id] || {}).filter(([u, c]) => c && !c.hide);
+// 글 검사: 친구 이름 · 욕 · 전화번호 · 주소 · 누리집 주소는 못 써요
+const WS_BAD = ['씨발', '시발', 'ㅅㅂ', 'ㅆㅂ', '병신', 'ㅂㅅ', '개새', '새끼', '꺼져', '닥쳐', '죽어', '죽을래', '미친', 'ㅁㅊ', '바보', '멍청', '찐따', '존나', 'ㅈㄴ', '엿먹', '꼴통'];
+function wsCheck(t){
+  const s = String(t || '').replace(/\s+/g, ''); if (!s) return '';
+  if (/\d[\d\-\s]{6,}\d/.test(t) || /@|https?:|www\.|\.com|\.kr/i.test(t)) return '전화번호나 주소 같은 개인 정보는 쓸 수 없어요.';
+  if (WS_BAD.some(w => s.includes(w))) return '고운 말로 써 줄래요?';
+  const nicks = [...Object.values(playersList || {}), ...Object.values(onlineList || {})].map(p => p && p.nick).filter(n => n && n.length >= 2);
+  if (nicks.some(n => s.includes(n.replace(/\s+/g, '')))) return '친구 이름은 쓸 수 없어요. 이름 없이도 마음은 닿아요.';
+  return '';
+}
+// 땅에 떨어진 쪽지: 날마다 10 자리 (교정 · 등불 마을 채집 자리 중에서) · 주운 자리는 그날 다시 안 생겨요
+function wsSpots(){
+  const pool = wsVis().filter(([id]) => id !== wsMine).map(([id]) => id).sort(); if (!pool.length) return [];
+  const C = ['campus', 'town'].flatMap(k => (World.meta(k)?.forage || []).map(c => [c[0], c[1], k])), R = seedRand((uid || me.nick) + todayKey() + 'wish'); const out = [];
+  for (let k = 0; k < 10 && C.length; k++){ const c = C.splice(Math.floor(R() * C.length), 1)[0]; out.push({ i: k, x: c[0], y: c[1], m: c[2], id: pool[Math.floor(R() * pool.length)] }); }
+  return out;
+}
+function wsProps(){
+  const t = World.meTile && World.meTile(), m = t ? t.m : ''; let list = [];
+  if (wsLive() && me && t && !wsOn){ const S = wsSt(), got = S.got[todayKey()] || []; list = wsSpots().filter(p => p.m === m && !got.includes(p.i)).map(p => ({ id: 'wsn' + p.i, x: p.x, y: p.y, img: window.WishFX ? WishFX.NOTE : null, pxc: window.WishFX ? WishFX.NOTE.getContext('2d') : null, sw: 24, sh: 24, ax: 12, ay: 18, solid: false, light: { r: 14, c: [210, 230, 255], a: .6 } })).filter(p => p.img); }
+  const sig = m + ':' + list.map(x => x.id).join(','); if (sig === wsSpotSig) return; const pm = wsSpotSig.split(':')[0]; wsSpotSig = sig;
+  if (pm && pm !== m) World.setProps(pm, [], 'wsnote'); if (m) World.setProps(m, list, 'wsnote');
+}
+async function wsTap(id){
+  const i = +id.slice(3), p = wsSpots().find(s => s.i === i); if (!p) return; const t = World.meTile && World.meTile();
+  if (!t || t.m !== p.m || Math.abs(t.x - p.x) + Math.abs(t.y - p.y) > 2){ World.walkToTile(p.x, p.y + 1); return; }
+  if (wsOn || uiBusy()) return; const S = wsSt(), d = todayKey(); S.got[d] = [...(S.got[d] || []), i]; save(); wsSpotSig = ''; wsProps(); sfx('pick');
+  const w = wsList[p.id]; if (!w) return; wsOn = true;
+  try { await wsFx(); const mine = (wsCheer[p.id] || {})[uid];
+    const r = await WishFX.read(wsApi(), { t: w.t, n: wsCheers(p.id).length, my: S.ch[p.id] || mine ? { m: mine ? mine.m : '' } : null, check: wsCheck });
+    if (r && r.cheer){ S.ch[p.id] = 1; save(); await GDB.set(`wish/cheer/${p.id}/${uid}`, { m: r.m || '', at: now2() }).catch(() => {}); toast('응원 별을 보냈어요 ★'); }
+  } catch(e){ errReport('wish', '소원 쪽지 오류: ' + e.message, e.stack || ''); } finally { wsOn = false; }
+}
+// 내 소원 쓰기 (일지 탭에서) · 한 사람 하나 · 끝나기 전까지 고칠 수 있어요
+async function wsWrite(text){
+  const t = String(text || '').trim().slice(0, 40), bad = wsCheck(t); if (!t) return '소원을 써 주세요.'; if (bad) return bad;
+  const id = wsMine || (now2().toString(36) + Math.random().toString(36).slice(2, 7));
+  await GDB.upd('wish', { ['own/' + uid]: id, ['list/' + id]: { t, at: now2(), ev: wsCtl.id } }); wsMine = id;
+  wsOn = true; try { closeSheet(); await wsFx(); await WishFX.send(wsApi()); toast('내 소원이 별이 됐어요. 누가 응원하면 알려 줄게요'); } finally { wsOn = false; }
+  return '';
+}
+let wsTk = 0;
+function wsTick(){
+  if (!me) return; const on = wsLive(); if (window.__wishOn !== on){ window.__wishOn = on; World.setWeather && World.setWeather(weatherToday()); }
+  if (on && !window.WishFX){ wsFx().then(() => { wsSpotSig = ''; }).catch(() => {}); return; }
+  wsProps(); if (wsOn) return;
+  if (on){ const S = wsSt();
+    if (!S.hi){ if (uiBusy() || !World.meAt || !World.meAt() || !evTurn('wish')) return; S.hi = 1; save(); wsOn = true; WishFX.intro(wsApi()).finally(() => { wsOn = false; toast('하늘에서 소원 쪽지가 내려요. 주워서 응원해 보세요. 내 소원은 일지에서 쓸 수 있어요'); }); return; }
+    if (wsMine){ const n = wsCheers(wsMine).length; if (n > (S.ln || 0)){ S.ln = n; save(); toast(`누군가 내 소원을 응원했어요 ★ ${n}`); sfx('sparkle'); } }
+  }
+  // 관리자가 끝내면: 별자리 연출 (한 번) + 보상 · 그 뒤로 모든 소원과 응원 글을 일지에서 볼 수 있어요
+  if (wsDone() && !(me.wishSeen === wsCtl.id)){ if (uiBusy() || !World.meAt || !World.meAt() || !evTurn('wish')) return;
+    const V = wsVis(), nC = V.reduce((a, [id]) => a + wsCheers(id).length, 0), my = Object.keys(wsSt().ch || {}).length, wl = V.map(([, w]) => w.t).sort(() => Math.random() - .5).slice(0, 8);
+    const joined = !!(wsMine || my); let rw = '';
+    if (joined){ me.cos = me.cos || {}; (me.cos.bub = me.cos.bub || {}).snow = 1; if (my >= 10) (me.cos.tag = me.cos.tag || {}).star = 1; syncCos();
+      rw = `<span style="font-size:34px">❄</span>첫눈의 선물<small>말풍선 꾸미기 「눈송이 말풍선」${my >= 10 ? '<br>응원을 10 번 넘게 해서 이름표 「별지기 이름표」도!' : ''}<br>「내 정보」에서 바꿔 끼울 수 있어요 · 모든 소원과 응원 글은 일지에서 볼 수 있어요</small>`; }
+    me.wishSeen = wsCtl.id; save(); wsOn = true;
+    wsFx().then(() => WishFX.finale(wsApi(), { wishes: wl, nW: V.length, nC, reward: rw })).catch(e => errReport('wish', '별자리 오류: ' + (e && e.message), '')).finally(() => { wsOn = false; });
+  }
+}
+let wsOffs = [];
+function wishListen(){
+  if (wsOffs.length) return;
+  wsOffs.push(GDB.on('wish/ctl', v => { wsCtl = v || null; wsSpotSig = ''; }));
+  wsOffs.push(GDB.on('wish/list', v => { wsList = v || {}; wsSpotSig = ''; }));
+  wsOffs.push(GDB.on('wish/cheer', v => { wsCheer = v || {}; }));
+  wsOffs.push(GDB.on('wish/own/' + uid, v => { wsMine = typeof v === 'string' ? v : null; wsSpotSig = ''; }));
+  const prev = World.onProp; World.onProp = id => String(id).startsWith('wsn') ? (wsTap(id), null) : prev ? prev(id) : null;
+  setInterval(() => { try { wsTick(); } catch(e){ errReport('wish', '첫눈의 소원 tick 오류: ' + e.message, e.stack || ''); } }, 1500);
+}
+// 일지 탭: 열려 있을 때 = 내 소원 쓰기 · 응원 수 / 끝난 뒤 = 내 소원에 달린 응원 글 + 모든 소원과 응원 글
+function wsNoteHTML(){
+  const mine = wsMine && wsList[wsMine], cnt = wsMine ? wsCheers(wsMine).length : 0;
+  if (wsLive()) return `<section class="sec">${secH('내 소원', mine ? `응원 ★ ${cnt}` : '')}<div class="box" style="padding:12px">
+      <textarea id="wsIn" maxlength="40" style="width:100%;box-sizing:border-box;min-height:64px;border-radius:10px;border:2px solid #B8D8FF;background:#FBF6EA;color:#3A2C4A;font-family:var(--f-px);font-size:15px;line-height:22px;padding:8px 10px;resize:none" placeholder="소원을 써요 (40 자까지 · 이름은 안 보여요)">${esc(mine ? mine.t : '')}</textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><span class="s sub" id="wsErr">${mine ? '끝나기 전까지 고칠 수 있어요' : '한 사람에 소원 하나'}</span><button class="btn sm go" id="wsGo">${mine ? '고쳐서 다시 보내기' : '날려 보내기'}</button></div></div></section>
+    <section class="sec"><div class="hint on">응원 글은 관리자가 이벤트를 끝내면 열어 볼 수 있어요. 그때 모든 소원과 응원 글도 같이 공개돼요.</div></section>`;
+  if (!wsDone()) return '<div class="hint">지금은 첫눈의 소원이 열려 있지 않아요</div>';
+  const V = wsVis().sort((a, b) => wsCheers(b[0]).length - wsCheers(a[0]).length), card = ([id, w], me1) => { const C = wsCheers(id).filter(([, c]) => c.m); return `<div class="box" style="padding:12px;margin-bottom:8px${me1 ? ';border:2px solid #FFE9A0' : ''}"><div style="background:#FBF6EA;color:#3A2C4A;border-radius:6px;padding:10px;font-size:15px;line-height:22px">「${esc(w.t)}」</div><div class="s sub" style="margin:6px 0 4px">${me1 ? '내 소원 · ' : ''}응원 ★ ${wsCheers(id).length}</div>${C.map(([, c]) => `<div style="font-size:13px;line-height:19px;padding:4px 0;border-top:1px dashed rgba(184,216,255,.25)">★ ${esc(c.m)}</div>`).join('')}</div>`; };
+  return `${mine ? `<section class="sec">${secH('내 소원에 온 응원')}${card([wsMine, mine], true)}</section>` : ''}<section class="sec">${secH('모든 소원', `${V.length} 개`)}${V.filter(([id]) => id !== wsMine).map(x => card(x)).join('') || '<div class="hint">소원이 없어요</div>'}</section>`;
+}
+function wsNoteBind(){ const b = $('#wsGo'); if (!b) return; b.onclick = async () => { const e = await wsWrite($('#wsIn').value); if (e){ const er = $('#wsErr'); if (er){ er.textContent = e; er.style.color = '#FF9A9A'; } } }; }
+// 관리자: 이벤트 탭 카드 · 시작 / 끝내기 · 소원과 응원 글 보기(쓴 학생 이름 보임) · 숨기기
+function adminWishHTML(){
+  const c = AD.wsctl || {}, P = AD.players || {}, L = AD.wslist || {}, CH = AD.wscheer || {}, OWN = AD.wsown || {}, by = Object.fromEntries(Object.entries(OWN).map(([u, id]) => [id, u])), nk = u => esc((P[u] && P[u].nick) || '?');
+  const V = Object.entries(L).filter(([, w]) => w && w.ev === c.id).sort((a, b) => (b[1].at || 0) - (a[1].at || 0)), nC = V.reduce((a, [id]) => a + Object.keys(CH[id] || {}).length, 0);
+  const rows = V.map(([id, w]) => { const C = Object.entries(CH[id] || {}); return `<div class="sdarow" style="display:block"><div class="ln" style="justify-content:space-between"><span><b>${nk(by[id])}</b> · 「${esc(w.t)}」 · ★ ${C.length}</span><button class="btn sm" data-wsh="list/${id}">${w.hide ? '다시 보이기' : '숨기기'}</button></div>
+      ${C.map(([u, x]) => `<div class="ln" style="justify-content:space-between;margin-top:3px;${x.hide ? 'opacity:.45' : ''}"><span>└ ${nk(u)}: ${x.m ? '「' + esc(x.m) + '」' : '(응원만)'}</span>${x.m ? `<button class="btn sm" data-wsh="cheer/${id}/${u}">${x.hide ? '보이기' : '숨기기'}</button>` : ''}</div>`).join('')}</div>`; }).join('');
+  return `<div class="adcard sdad"><div class="abhead"><b>이벤트 「첫눈의 소원」</b>${c.open ? '<button class="btn sm" data-wsa="close">이벤트 끝내기</button>' : '<button class="btn sm go" data-wsa="open">이벤트 시작</button>'}</div>
+    <div class="abchips"><span>${c.open ? '여는 중 · 눈이 와요' : c.end ? '끝남 · 모두 공개됨' : '닫힘'}</span><span>소원 <b>${V.length}</b></span><span>응원 <b>${nC}</b></span></div>
+    ${rows || '<div class="s">아직 소원이 없어요</div>'}
+    <div class="s" style="margin-top:6px">시작하면 눈이 오고 쪽지가 내려요. 학생은 이름 없이 소원 하나를 쓰고, 주운 쪽지에 응원(글 50 자)을 달아요. 친구 이름 · 욕 · 전화번호는 쓸 때 막혀요. 끝내면 별자리 연출이 나오고 모든 소원과 응원 글이 일지에 공개돼요. 여기서는 누가 썼는지 보이고 숨길 수 있어요.</div></div>`;
+}
+document.addEventListener('click', e => {
+  const h = e.target.closest && e.target.closest('[data-wsh]'); if (h){ const p = 'wish/' + h.dataset.wsh, cur = p.split('/').slice(1).reduce((o, k) => o && o[k], { list: AD.wslist, cheer: AD.wscheer }); GDB.upd(p, { hide: cur && cur.hide ? null : true }); return; }
+  const b = e.target.closest && e.target.closest('[data-wsa]'); if (!b) return; const a = b.dataset.wsa;
+  if (a === 'open'){ if (confirm('「첫눈의 소원」을 시작할까요? 눈이 오고 소원 쪽지가 내려요.')) GDB.set('wish/ctl', { open: true, id: now2(), at: now2() }).then(() => toast('첫눈의 소원을 시작했어요')); }
+  else if (a === 'close'){ if (confirm('「첫눈의 소원」을 끝낼까요? 별자리 연출이 나오고 모든 소원과 응원 글이 공개돼요.')) GDB.upd('wish/ctl', { open: false, end: now2() }); }
+});
+
 // ===== 무슈 블랑: 저녁·밤에 과자 교실에 나타나요 · 할로윈 요리를 하루 1번 받아서 맛 연출(blanc_fx.js) · 처음 주는 요리는 상품, 다시 주면 골드 · 17가지 다 주면 마지막 인사 =====
 //   me.seed.bl { 요리 번호: 1 } · me.seed.bd 요리 준 날 · me.seed.fin 마지막 인사 · me.cos = { tag: {}, bub: {} } 가진 꾸미기 · me.cosOn = { tg, bb } 끼운 것
-const BL_SPOT = [14, 11], BL_TAG = { attend: '개근상 이름표', pumpkin: '호박 이름표', bat: '박쥐 이름표', web: '거미줄 이름표', candy: '사탕옥수수 이름표', bone: '해골 이름표', slime: '물약 이름표' }, BL_BUB = { ghost: '유령 말풍선', jack: '잭오랜턴 말풍선', witch: '마녀 말풍선', slime: '물약 말풍선', tomb: '묘비 말풍선', candy: '사탕 말풍선' };
+const BL_SPOT = [14, 11], BL_TAG = { star: '별지기 이름표', attend: '개근상 이름표', pumpkin: '호박 이름표', bat: '박쥐 이름표', web: '거미줄 이름표', candy: '사탕옥수수 이름표', bone: '해골 이름표', slime: '물약 이름표' }, BL_BUB = { snow: '눈송이 말풍선', ghost: '유령 말풍선', jack: '잭오랜턴 말풍선', witch: '마녀 말풍선', slime: '물약 말풍선', tomb: '묘비 말풍선', candy: '사탕 말풍선' };
 let blOn = false, blSig = '', blBob = null, blFxLoad = null;
 const blHere = () => !!(me && me.seed && SEED && !me.seed.fin && ['evening', 'night'].includes(bandNow()));
 function blSync(){
@@ -9223,7 +9337,7 @@ document.addEventListener('click', e => {
   else if (a === 'close'){ if (confirm('유령 열차 이벤트를 닫을까요? 목적지에 있는 학생은 등불 마을로 돌아와요.')) F.set(F.ref(db, 'gtrain/ctl'), { open: false }); }
 });
 setInterval(() => { if (document.body.classList.contains('admin') && AD.tab === 'event' && AD.gtctl && AD.gtctl.open && !adminTyping()) { const el = document.querySelector('[data-gta]')?.closest('.adcard'); if (el){ const t = document.createElement('div'); t.innerHTML = adminGtrainHTML(); const n = t.firstElementChild; el.replaceWith(n); adFold(n); } } }, 1000);
-function adminEventHTML(){ return adminEventOverview() + adminMorphHTML() + adminSnowHTML() + adminBabyHTML() + adminFamHTML() + adminFairyHTML() + adminSeedHTML() + adminTildaHTML() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
+function adminEventHTML(){ return adminEventOverview() + adminMorphHTML() + adminSnowHTML() + adminBabyHTML() + adminFamHTML() + adminFairyHTML() + adminSeedHTML() + adminTildaHTML() + adminWishHTML() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
 // 이벤트 한눈에: 열려 있는지 · 진행도 · 참가한 학생 수
 // 이벤트마다 장면을 본 학생(또는 보상을 받은 학생) 수 → 다 봤는지 보고 닫아요
 function adminSeen(){
@@ -10014,7 +10128,7 @@ function tutNpcs(){
   return [{ id: 'tut:senior', name: TUT.name, map: TUT.map, x: TUT.x, y: TUT.y, r: 1, mark, wander: true, dir: 'down', av: tutAv() }];
 }
 var tutAuto = false;
-const uiBusy = () => !!(xRunNow() || document.getElementById('tr2') || document.getElementById('dreamv') || document.getElementById('pk9') || evOn || sheetOn || mqArriving || fishing || cooking || lesson || (typeof sgOn !== 'undefined' && sgOn) || (typeof tlOn !== 'undefined' && tlOn) || (World.cutBusy && World.cutBusy()) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || $('#fishui').classList.contains('on'));   // 장면·미니게임·창이 떠 있으면 다른 알림은 기다려요
+const uiBusy = () => !!(xRunNow() || document.getElementById('tr2') || document.getElementById('dreamv') || document.getElementById('pk9') || evOn || sheetOn || mqArriving || fishing || cooking || lesson || (typeof sgOn !== 'undefined' && sgOn) || (typeof tlOn !== 'undefined' && tlOn) || (typeof wsOn !== 'undefined' && wsOn) || (World.cutBusy && World.cutBusy()) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || $('#fishui').classList.contains('on'));   // 장면·미니게임·창이 떠 있으면 다른 알림은 기다려요
 function tutGreet(){   // 들어오면 코니 선배가 먼저 말을 걸어요 (다른 장면이 끝날 때까지 기다렸다가 한 번만)
   if (tutAuto || !tutOn() || !me || !(!me.tut.g || me.tut.ok)) return; tutAuto = true; let n = 0;
   const iv = setInterval(() => { if (!tutOn() || ++n > 90) return clearInterval(iv); if (!uiBusy()){ clearInterval(iv); tutTalk(); } }, 1500);
@@ -10486,7 +10600,7 @@ async function boot(){
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       F.onValue(F.ref(db, 'adm/reset/' + uid), s => { const v = +s.val() || 0; if (!v) return; let seen = 0; try { seen = +localStorage.getItem('magion-rs-' + uid) || 0; } catch(e){}
         if (v > seen && v > bootT - 5000){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
-      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); famListen(); fairyListen(); seedListen(); tildaListen(); blancListen(); snowListen(); morphListen(); boardListen(); tarotInit(); prankInit();
+      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); famListen(); fairyListen(); seedListen(); tildaListen(); wishListen(); blancListen(); snowListen(); morphListen(); boardListen(); tarotInit(); prankInit();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); const sg = Object.entries(gameList).map(([id, r]) => r ? id + r.st + Object.keys(r.p || {}).length : '').join('|'); if (sub === 'games' && sg !== gamesSig) render(); gamesSig = sg; });   // 점수가 오를 때마다가 아니라 방이 열리고 닫히고 사람이 드나들 때만 다시 그려요
       F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       const recWatch = () => { const wk = weekKey(); if (recWatch.wk === wk) return; recWatch.wk = wk; (recWatch.offs || []).forEach(f => f()); recList = {}; recWatch.offs = Object.keys(GAMES).map(g => F.onValue(F.ref(db, `records/${g}/${wk}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); })); };
