@@ -3782,10 +3782,7 @@ function adminRender0(){
   if (scs) SCS.forEach((q, i) => root.querySelectorAll(q).forEach((e, j) => { const v = scs[i][j]; if (v){ e.scrollLeft = v[0]; e.scrollTop = v[1]; } }));
   if (AD.tab === 'event'){   // 이벤트 카드는 제목만 보이게 접어 두고, 제목을 누르면 펼쳐요 (펼친 건 기억해요)
     AD.evOpen = AD.evOpen || {};
-    root.querySelectorAll('.adbody > .adcard').forEach((c, i) => { const h = c.firstElementChild; if (!h || c.children.length < 2) return; const key = ((h.matches('b') ? h : h.querySelector('b')) || h).textContent.trim().slice(0, 30);
-      if (i === 0 && !(key in AD.evOpen)) AD.evOpen[key] = true;
-      c.classList.add('adfold'); h.classList.add('adfh'); c.classList.toggle('shut', !AD.evOpen[key]);
-      h.onclick = e => { if (e.target.closest('button,select,input,a,label')) return; AD.evOpen[key] = !c.classList.toggle('shut'); }; });
+    root.querySelectorAll('.adbody > .adcard').forEach((c, i) => adFold(c, i));
   }
   { const nb = root.querySelector('.adbody'); if (nb){ if (AD.tab === 'chat' && (!keep || keep.bot)) nb.scrollTop = nb.scrollHeight; else if (keep) nb.scrollTop = keep.top; AD.sc = { tab: AD.tab }; } }
   { const c = root.querySelector('[data-aderrclr]'); if (c) c.onclick = () => { if (!F || !db || !confirm('모은 오류 기록을 모두 지울까요?')) return; F.set(F.ref(db, 'errs'), null).then(() => toast('오류 기록을 지웠어요')).catch(e => toast('지우지 못했어요: ' + (e.code || e.message))); }; }
@@ -9202,6 +9199,12 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
     if (Object.keys(up).length && confirm(`${Object.keys(up).length}명에게 정령을 고르게 나눠 줄까요?`)) F.update(F.ref(db, 'fam/pick'), up).catch(ex => toast('저장 실패: ' + (ex.code || ex.message))); } });
 document.addEventListener('change', e => { const f = e.target.closest && e.target.closest('[data-fmf]'); if (f){ famFilter = f.value; adminRender(); return; }
   const t = e.target.closest && e.target.closest('[data-fmu]'); if (!t || !F || !db) return; F.set(F.ref(db, 'fam/pick/' + t.dataset.fmu), t.value === '' ? null : +t.value).catch(ex => toast('저장 실패: ' + (ex.code || ex.message))); });
+function adFold(c, i = 1){   // 이벤트 카드 접기: 펼친 건 AD.evOpen에 기억 (카드를 새로 갈아 끼워도 다시 불러요)
+  const h = c.firstElementChild; if (!h || c.children.length < 2) return; AD.evOpen = AD.evOpen || {}; const key = ((h.matches('b') ? h : h.querySelector('b')) || h).textContent.trim().slice(0, 30);
+  if (i === 0 && !(key in AD.evOpen)) AD.evOpen[key] = true;
+  c.classList.add('adfold'); h.classList.add('adfh'); c.classList.toggle('shut', !AD.evOpen[key]);
+  h.onclick = e => { if (e.target.closest('button,select,input,a,label')) return; AD.evOpen[key] = !c.classList.toggle('shut'); };
+}
 function adminGtrainHTML(){
   const c = AD.gtctl || {}, ph = gtPhase(c), rd = Object.values((AD.gtride || {})[c.id] || {}), PH = { off: '닫혀 있어요', board: '승강장에 서 있어요', out: '목적지로 가는 중', dest: '목적지에서 채집 중', in: '돌아오는 중', back: '돌아왔어요', done: '쉬는 중 (다시 부를 수 있어요)' };
   const busy = ['out', 'dest', 'in'].includes(ph), sel = AD.gtdest || 'rand';
@@ -9218,7 +9221,7 @@ document.addEventListener('click', e => {
   else if (a === 'go'){ if (gtPhase(c) === 'board') F.update(F.ref(db, 'gtrain/ctl'), { go: now2() }); }
   else if (a === 'close'){ if (confirm('유령 열차 이벤트를 닫을까요? 목적지에 있는 학생은 등불 마을로 돌아와요.')) F.set(F.ref(db, 'gtrain/ctl'), { open: false }); }
 });
-setInterval(() => { if (document.body.classList.contains('admin') && AD.tab === 'event' && AD.gtctl && AD.gtctl.open && !adminTyping()) { const el = document.querySelector('[data-gta]')?.closest('.adcard'); if (el) el.outerHTML = adminGtrainHTML(); } }, 1000);
+setInterval(() => { if (document.body.classList.contains('admin') && AD.tab === 'event' && AD.gtctl && AD.gtctl.open && !adminTyping()) { const el = document.querySelector('[data-gta]')?.closest('.adcard'); if (el){ const t = document.createElement('div'); t.innerHTML = adminGtrainHTML(); const n = t.firstElementChild; el.replaceWith(n); adFold(n); } } }, 1000);
 function adminEventHTML(){ return adminEventOverview() + adminMorphHTML() + adminSnowHTML() + adminBabyHTML() + adminFamHTML() + adminFairyHTML() + adminSeedHTML() + adminTildaHTML() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
 // 이벤트 한눈에: 열려 있는지 · 진행도 · 참가한 학생 수
 // 이벤트마다 장면을 본 학생(또는 보상을 받은 학생) 수 → 다 봤는지 보고 닫아요
