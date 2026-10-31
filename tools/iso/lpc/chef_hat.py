@@ -19,12 +19,12 @@ for i in range(20):
     if not cell.any(): continue
     ys, xs = np.nonzero(cell); top, cx = ys.min(), int(round(xs.mean())); w = xs.max() - xs.min() + 1
     side = i >= 10   # 옆모습은 모자를 뒤로 살짝
-    puff = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); d = ImageDraw.Draw(puff); rx = max(7, w // 2 + 1); top += 5   # 띠가 이마 위 머리카락을 덮게
-    d.rectangle([cx - rx, top - 3, cx + rx, top + 2], fill=W1 + (255,)); d.rectangle([cx - rx, top - 3, cx - rx + 2, top + 2], fill=W0 + (255,)); d.line([(cx - rx, top + 2), (cx + rx, top + 2)], fill=W2 + (255,))   # 띠
+    puff = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); d = ImageDraw.Draw(puff); rx = max(7, w // 2); top += 5   # 띠가 이마 위 머리카락을 덮게
+    d.rectangle([cx - rx, top - 2, cx + rx, top + 2], fill=W1 + (255,)); d.rectangle([cx - rx, top - 2, cx - rx + 2, top + 2], fill=W0 + (255,)); d.line([(cx - rx, top + 2), (cx + rx, top + 2)], fill=W2 + (255,))   # 띠
     sh = (-1 if i < 15 else 1) * 2 if side else 0
-    for dx, dy, r in ((-rx * .5, -7, rx * .66), (rx * .5, -7, rx * .66), (0, -11, rx * .72)): d.ellipse([cx + sh + dx - r, top + dy - r * .78, cx + sh + dx + r, top + dy + r * .78], fill=W1 + (255,))
-    for dx, dy, r in ((-rx * .55, -8, rx * .44), (-rx * .1, -12, rx * .44)): d.ellipse([cx + sh + dx - r, top + dy - r * .65, cx + sh + dx + r * .7, top + dy + r * .5], fill=W0 + (255,))
-    for dx in (-rx * .35, rx * .35): d.line([(cx + sh + dx, top - 4), (cx + sh + dx, top - 9)], fill=W2 + (255,))
+    for dx, dy, r in ((-rx * .42, -5, rx * .52), (rx * .42, -5, rx * .52), (0, -8, rx * .58)): d.ellipse([cx + sh + dx - r, top + dy - r * .72, cx + sh + dx + r, top + dy + r * .72], fill=W1 + (255,))   # 부푼 윗부분을 낮고 작게
+    for dx, dy, r in ((-rx * .45, -6, rx * .36), (-rx * .05, -9, rx * .36)): d.ellipse([cx + sh + dx - r, top + dy - r * .6, cx + sh + dx + r * .7, top + dy + r * .45], fill=W0 + (255,))
+    for dx in (-rx * .3, rx * .3): d.line([(cx + sh + dx, top - 4), (cx + sh + dx, top - 6)], fill=W2 + (255,))
     p = np.array(puff); al = p[..., 3] > 0; ring = np.zeros_like(al)
     ring[1:] |= al[:-1]; ring[:-1] |= al[1:]; ring[:, 1:] |= al[:, :-1]; ring[:, :-1] |= al[:, 1:]; ring &= ~al
     under = np.zeros_like(al); under[top + 3:top + 4, :] = True   # 띠 아래 줄은 머리카락 위에 얹히니까 테두리를 그려요
