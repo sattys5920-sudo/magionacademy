@@ -937,7 +937,8 @@ const ICONS = ['coin','mana','p_red','p_blue','p_green','p_purple','herb','mush'
 // 씨앗 대회 열매 12종 (art/hw_fruits.png · 식물 순서와 같아요)
 const SF_IDS = ['jack', 'bat', 'ghost', 'skull', 'web', 'witch', 'eye', 'candy', 'wisp', 'rose', 'apple', 'fang'], SF_NAMES = ['잭오랜턴 열매', '박쥐 날개 꼬투리', '유령 꿀방울', '해골 씨주머니', '거미줄 솜열매', '마녀 모자 포자', '눈알 열매', '사탕옥수수 알', '도깨비불 꽈리', '검은 장미 열매', '독사과', '피빛 송곳니 열매'];
 const SF_INFO = Object.fromEntries(SF_IDS.map((k, i) => ['sf_' + k, { i, name: SF_NAMES[i] }]));
-const ic = (k, extra='') => { if (SF_INFO[k]) return `<i class="ic" style="background:url(art/hw_fruits.png?v=1) ${-32 * SF_INFO[k].i}px 0/${32 * 12}px 32px no-repeat;${extra}"></i>`; const P = POTION_INFO[k], G = !ICONS.includes(k) && typeof SEED_INFO !== 'undefined' && SEED_INFO[k], C = typeof CATCH_INFO !== 'undefined' && CATCH_INFO[k];
+const TL_ITEM = { tl_btn0: ['마틸다의 녹슨 단추', '100 년 동안 호숫가 흙 속에 있던 단추. 마틸다의 교복 무늬와 같아요. 귀에 대면 계단이 「삐걱.」 하는 소리가 나는 것 같아요.'], tl_btn1: ['되돌아온 내 단추', '마틸다에게 건넸던 내 단추. 졸업식 날 하늘에서 떨어져 돌아왔어요. 「마음 주머니에 넣어 뒀었어.」'], tl_btn2: ['단춧구멍 브로치', '단추 없는 단춧구멍에 리본을 단 브로치. 「단추 하나 없어도 예뻐.」 그 말이 제일 좋은 졸업 선물이었대요.'] };
+const ic = (k, extra='') => { if (TL_ITEM[k]) return `<i class="ic" style="background:url(art/tilda_buttons.png?v=1) ${-32 * +k.slice(6)}px 0/96px 32px no-repeat;${extra}"></i>`; if (SF_INFO[k]) return `<i class="ic" style="background:url(art/hw_fruits.png?v=1) ${-32 * SF_INFO[k].i}px 0/${32 * 12}px 32px no-repeat;${extra}"></i>`; const P = POTION_INFO[k], G = !ICONS.includes(k) && typeof SEED_INFO !== 'undefined' && SEED_INFO[k], C = typeof CATCH_INFO !== 'undefined' && CATCH_INFO[k];
   if (C) return `<i class="ic" style="background:url(art/${C.sheet}.png?v=${FISH_ART_V}) ${-32 * (C.si ?? C.i)}px 0/${32 * C.n}px 32px no-repeat;${extra}"></i>`;
   const D = typeof DISH_INFO !== 'undefined' && DISH_INFO[k]; if (D) return `<i class="ic" style="background:url(art/dishes.png?v=${DISH_ART_V}) ${-32 * D.i}px 0/${32 * DISH.length}px 32px no-repeat;${extra}"></i>`;
   if (G) return `<i class="ic" style="background-image:url(art/plants.png?v=4);background-position:${-32 * (G.ic % 10)}px ${-32 * Math.floor(G.ic / 10)}px;${extra}"></i>`;
@@ -947,7 +948,7 @@ const ITEM = {
   herb:'약초', drop:'달빛 이슬', mush:'보라 버섯', mana:'마나석', wool:'양털', scale:'도마뱀 비늘', uhair:'토끼털', egg:'용 알 껍질',
   whisker:'고양이 수염', slime:'두꺼비 점액', honey:'벌꿀', silk:'거미줄 실', feather:'부엉이 깃털', milk:'염소젖', hegg:'달걀',
 };
-Object.entries(SF_INFO).forEach(([k, v]) => { ITEM[k] = v.name; });
+Object.entries(SF_INFO).forEach(([k, v]) => { ITEM[k] = v.name; }); Object.entries(TL_ITEM).forEach(([k, v]) => { ITEM[k] = v[0]; });
 const SHORT = { herb:'약초', drop:'이슬', mush:'버섯', mana:'마나석', wool:'털', scale:'비늘', uhair:'토끼털', egg:'알 껍질', hegg:'달걀', slime:'점액', milk:'염소젖' };
 // 씨앗 60종: 심으면 같은 id의 식물 재료가 나와요. know 지식이 이만큼 있어야 심을 수 있어요, price 씨앗 값 (자라는 시간은 아래 GROW_RANGE)
 // 아이콘은 art/plants.png (10×6칸, 이 표의 순서대로). 약초·이슬·버섯·마나석은 원래 아이콘을 써요.
@@ -1617,7 +1618,7 @@ function onOnline(){
 }
 function speak(t, e, to){
   t = String(t || '').trim().slice(0, 40); if (!t) return; const t0 = t; if (!e && typeof morphVoice === 'function') t = morphVoice(t);   // 변해 있으면 그 변신의 소리로
-  World.say('me', t, e ? e - 1 : null); if (!e) pushLog(me.nick, t, true);
+  World.say('me', t, e ? e - 1 : null); if (!e) pushLog(me.nick, t, true); else try { tlEmo(); } catch(e2){}
   if (!solo) F.update(F.ref(db, 'online/' + uid), { s: { t, e: e || 0, at: now2(), m: World.placeKey() || '', ...(to ? { to } : {}) } }).catch(() => {});
   if (!solo) F.push(F.ref(db, 'chat/' + todayKey()), { u: uid, n: me.nick, t: e ? `[${t}]` : t !== t0 ? `${t} (${t0})` : t, m: World.placeKey() || '', at: now2(), ...(to ? { to } : {}) }).catch(() => {});   // 관리자 대화 기록
 }
@@ -3612,7 +3613,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.examBd = {}; AD.day = AD.day || todayKey(); sgListen(); if (!noticeOff && F && db) noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); if (AD.tab === 'gift' && !adminTyping()) adminRender(); });
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = k === 'players' ? fbBack(s.val() || {}) : s.val() || {}; if (adminTyping()){ AD.skip = true; return; } adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('fam/pick', 'fampick'); L('fam/ctl', 'famctl'); L('fairy/ctl', 'fairyctl'); L('seed/ctl', 'seedctl'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('morph/ctl', 'moctl'); L('morph/st', 'most'); L('morph/form', 'moform'); L('board', 'board'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event'){ if (adminTyping()) AD.skip = true; else adminRender(); } })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('fam/pick', 'fampick'); L('fam/ctl', 'famctl'); L('fairy/ctl', 'fairyctl'); L('seed/ctl', 'seedctl'); L('tilda/ctl', 'tlctl'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('morph/ctl', 'moctl'); L('morph/st', 'most'); L('morph/form', 'moform'); L('board', 'board'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event'){ if (adminTyping()) AD.skip = true; else adminRender(); } })); }
   adminRender();
 }
 // 관리자: 고르는 칸(드롭다운)을 펼친 동안은 새로 그리지 않아요 (학생 접속 정보가 자주 바뀌어도 닫히지 않게) · 고르거나 닫으면 밀린 걸 그려요
@@ -5414,6 +5415,7 @@ function bagEntries(t){
 }
 // 설명과 쓰임새
 function bagInfo(k){
+  if (TL_ITEM[k]) return { desc: TL_ITEM[k][1], use: '수상한 기척 · 졸업 선물' };
   const L = bagLikers(k), gift = L.length ? `선물용 (${withJosa(bagNames(L), '이', '가')} 좋아해요)` : '';
   const uses = [];
   const P = POTION_INFO[k]; if (P){ uses.push(P.use ? `마시면 ${P.use}` : `주문 보상 ${P.pay}G`); if (gift) uses.push(gift); return { desc: P.desc || `${P.name} · 물약 도감 ${P.ic + 1}번`, use: uses.join(' · ') }; }
@@ -5437,7 +5439,7 @@ function bagDetailHTML(e){
     const useBtn = D ? `<button class="btn sm go" data-buse="${k}">먹기</button>` : P?.use ? `<button class="btn sm go" data-buse="${k}">마시기</button>` : '';
     return `<div class="bag-dt">${hd(`${me.inv[k]}개${L.length ? ' · ♥ ' + esc(bagNames(L)) : ''}`)}
       ${bagMsg ? `<div class="d on">${esc(bagMsg)}</div>` : `<div class="d">${esc(D || P ? fxShort(k) : I.desc)}</div>`}
-      <div class="acts">${useBtn}<button class="btn sm ghost" data-btrash="${k}">버리기</button></div></div>`;
+      <div class="acts">${useBtn}${TL_ITEM[k] ? "" : `<button class="btn sm ghost" data-btrash="${k}">버리기</button>`}</div></div>`;
   }
   if (e.kind === 'cloth'){
     const c = bagCloth().find(x => x.key === e.id), label = SHOP_CATS.find(([k]) => k === c.cat)?.[1] || c.cat, body = World.Avatar.meta.bodies[me.av.body || 0], can = !!c.p.L[body], onNow = me.av[c.cat] === c.i;
@@ -5510,8 +5512,14 @@ function pfProfileHTML(){
     <div class="box"><div class="li"><div class="main">
       <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="t b" style="font-size:var(--fs)">경험치</span><span class="s num sub">지식 ${L.cur} / ${L.need}</span></div>
       <div class="pbar"><i style="width:${Math.min(100, L.cur / L.need * 100)}%"></i></div></div></div></div>
-    <button class="btn go" id="pfDress">꾸미기</button>`;
+    <button class="btn go" id="pfDress">꾸미기</button>${pfCosHTML()}`;
 }
+function pfCosHTML(){   // 이벤트로 받은 이름표 · 말풍선 바꿔 끼우기 (블랑 · 수상한 기척 등)
+  const cos = me.cos || {}, on = me.cosOn || {}, T = Object.keys(cos.tag || {}), B = Object.keys(cos.bub || {}); if (!T.length && !B.length) return '';
+  const row = (k, nm, list, names) => `<b>${nm}</b><div>${[['', '기본'], ...list.map(x => [x, names[x] || x])].map(([x, n]) => `<button class="${(on[k] || '') === x ? 'on' : ''}" data-pfcos="${k}:${x}">${esc(n)}</button>`).join('')}</div>`;
+  return `<div class="blcos" style="margin-top:10px">${T.length ? row('tg', '이름표', T, BL_TAG) : ''}${B.length ? row('bb', '말풍선', B, BL_BUB) : ''}</div>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-pfcos]'); if (!b) return; const [k, v] = b.dataset.pfcos.split(':'); me.cosOn = me.cosOn || {}; me.cosOn[k] = v || null; save(); syncCos(); sfx('pop'); renderProfile(); });
 function pfStatsHTML(){
   const L = levelOf(), rod = rodLv(), nextRod = RODS[rod + 1];
   const cook = Object.keys(me.cdex || {}).length, pot = me.found.length, fish = pfCount('fish'), forage = pfCount('forage');
@@ -5711,14 +5719,17 @@ function renderJournal(){
   const tabs = [['todo', `할 일${left ? ` ${left}` : ''}`], ['story', `이야기${N ? ' ●' : ''}`]];
   if (typeof Dream !== 'undefined') tabs.push(['dream', '꿈 일기장']);
   if (me.seed && me.seed.note) tabs.push(['blanc', '레시피 노트']);
+  if (me.tilda && me.tilda.d0) tabs.push(['tilda', '틸다와의 추억']);
   if (jnTab === 'heart') jnTab = 'todo';
   if (jnTab === 'blanc' && !(me.seed && me.seed.note)) jnTab = 'todo';
-  const body = jnTab === 'story' ? mqJournalHTML() : jnTab === 'dream' ? dreamJournalHTML() : jnTab === 'blanc' ? blNoteHTML() : jnTodoHTML();
-  frame(null, '일지', { todo: '오늘의 의뢰', story: '메인 이야기', heart: '오늘 열린 하트 이벤트', dream: '꿈에서 본 것들', blanc: '무슈 블랑이 맛본 요리' }[jnTab], `<div class="seg jn-seg" style="grid-template-columns:repeat(${tabs.length},1fr)">${tabs.map(([k, l]) => `<button data-jnt="${k}" class="${jnTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>${body}`);
+  if (jnTab === 'tilda' && !(me.tilda && me.tilda.d0)) jnTab = 'todo';
+  const body = jnTab === 'story' ? mqJournalHTML() : jnTab === 'dream' ? dreamJournalHTML() : jnTab === 'blanc' ? blNoteHTML() : jnTab === 'tilda' ? tlNoteHTML() : jnTodoHTML();
+  frame(null, '일지', { todo: '오늘의 의뢰', story: '메인 이야기', heart: '오늘 열린 하트 이벤트', dream: '꿈에서 본 것들', blanc: '무슈 블랑이 맛본 요리', tilda: '마틸다와 함께한 닷새' }[jnTab], `<div class="seg jn-seg" style="grid-template-columns:repeat(${tabs.length},1fr)">${tabs.map(([k, l]) => `<button data-jnt="${k}" class="${jnTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>${body}`);
   on('[data-jnt]', b => { jnTab = b.dataset.jnt; render(); });
   if (jnTab === 'story') mqJournalBind();
   if (jnTab === 'dream') dreamJournalBind();
   if (jnTab === 'blanc') blNoteBind();
+  if (jnTab === 'tilda') tlNoteBind();
   on('[data-deliver]', b => {
     const o = me.orders[+b.dataset.deliver]; if (!o || o.done || (me.inv[o.p] || 0) < o.n) return;
     const pay = partyMul(payOf(o)); me.inv[o.p] -= o.n; me.coin += pay; o.done = true; trEv('order'); save();
@@ -5877,7 +5888,7 @@ function gainKnow(){
 function startSubject(id){
   if (classLeft() < 1) return;
   if (me.classDay !== todayKey()){ me.classDay = todayKey(); me.classCnt = 0; }
-  me.classCnt++; save();
+  me.classCnt++; save(); try { tlEv('class'); } catch(e){}
   stopLesson();
   lesson = { s: id, round: 1, earned: 0, phase: 'play', msg: '', log: [] };
   nextRound(true);
@@ -6188,7 +6199,7 @@ function renderLab(){
     if (p){
       const coX = coExtra(); me.inv[p] = (me.inv[p] || 0) + 1 + coX; if (coX) setTimeout(() => toast(`친구와 함께 만들어서 ${coX}개 더!`), 900);
       const isNew = !me.found.includes(p);
-      if (isNew) me.found.push(p); trEv('brew', { p, isNew });
+      if (isNew) me.found.push(p); trEv('brew', { p, isNew }); try { tlEv('brew'); } catch(e){}
       if (!me.hints.includes(p)) me.hints.push(p);
       msg = isNew ? '도감에 새로 적었어요!' : '완성!';
       dexSel = p; dexPage = Math.floor(POTIONS.indexOf(p) / DEX_PAGE); toast(`${ITEM[p]} 완성!`);
@@ -6196,6 +6207,7 @@ function renderLab(){
       const back = slots[Math.floor(Math.random() * slots.length)]; me.inv[back]++;
       msg = `보라색 연기만 피어올랐어요.... 그래도 Emberkiln의 낮이라 ${withJosa(ITEM[back], '을', '를')} 건졌어요.`;
     } else msg = '보라색 연기만 피어올랐어요.... 재료는 사라졌어요.';
+    if (!p) try { tlFail(); } catch(e){}
     const again = p && used.every(k => (me.inv[k] || 0) >= used.filter(x => x === k).length);
     brewDone = { p, msg, again }; brewMsg = null; slots = []; save(); hud(); renderLab();
   };
@@ -7591,7 +7603,7 @@ const FAM = { N: ['Vael', 'Ixi', 'Puck', 'Lotis', 'Sol', 'Lune', 'Ignis', 'Rill'
     ['마지막으로, 너는 무엇이 되고 싶은가?', ['길을 비추는 빛', '곁을 지키는 불', '아무도 모르는 불씨']]] };
 // ===== 처음 온 학생도 덜 정신없게: 이벤트 연출 차례 =====
 //   1 코니 선배 입문이 끝날 때까지 메인 의뢰·이벤트 연출은 기다려요 (공지·우편은 그대로) · 2 입문이 끝나면 메인 의뢰 손님이 먼저 · 3 그 뒤 열린 이벤트를 정한 순서대로 하나씩, 사이에 몇 초 쉬어요
-const EVQ = ['snow', 'morph', 'baby', 'fam', 'fairy', 'seed', 'sg'];   // 이벤트 연출 순서: 눈사람 · 마녀 솥 · 아기 동물 · 사역마 불씨 · 요정 시장 · 별 보는 밤
+const EVQ = ['snow', 'morph', 'baby', 'fam', 'fairy', 'seed', 'tilda', 'sg'];   // 이벤트 연출 순서: 눈사람 · 마녀 솥 · 아기 동물 · 사역마 불씨 · 요정 시장 · 별 보는 밤
 const EVQ_GAP = 6000; let evqWant = {}, evqGapUntil = 0, evqWasBusy = false;
 const mqWaiting = () => typeof MQ !== 'undefined' && MQ.loaded && me && me.mq && me.mq.q && me.mq.ph === 'arrive' && !mqDayFull();
 function evTurn(k){   // 이 이벤트 연출을 지금 띄워도 되는지: 입문 중이 아니고, 메인 의뢰 손님이 기다리지 않고, 쉬는 틈이 지났고, 띄우려는 것 중 가장 앞 차례일 때
@@ -8701,9 +8713,193 @@ document.addEventListener('click', e => {
   else if (a === 'close'){ if (confirm('씨앗 대회를 끝낼까요? 이미 심은 화분은 계속 키울 수 있어요.')) GDB.upd('seed/ctl', { open: false }); }
 });
 
+// ===== 「수상한 기척」: 관리자가 열면 학생마다 어느 날 갑자기 마틸다(100 년 전 학생 유령)가 나타나요 · 날짜로 닷새 · 날마다 부탁 · 밤 이야기와 선택지 · 5 일째 졸업식 (연출은 tilda.js) =====
+//   tilda/ctl = { open, id, at } · tilda/mem/<uid>/<날> = 그날 밤 이야기 때 찍은 추억 조각 사진(jpeg)
+//   me.tilda = { ev, d0 시작 날, dd 아침 인사 본 날, c { 목표: 수 }, q { 목표: { 열쇠: 1 } }, nt { 날: 1 } 밤 이야기 본 날, nm hi sea quip btn fear last 고른 것, dug 단추 찾음, gone 졸업한 날, lt 편지 받은 날 }
+//   마틸다는 나에게만 보여요 (다른 학생 화면에는 절대 안 나와요 · 서버에 위치를 보내지 않아요)
+const TL_PLACE = { 1: 'clock_tower', 2: 'dorm_street', 3: 'clock_tower', 4: 'village_square', 5: 'village_square' };
+const TL_PAGE = [['lab', 20, 7], ['lab', 13, 6], ['campus', 46, 76], ['town', 17, 78], ['campus', 41, 38]];   // 일기장 조각: 도서관 서고 · 본관 복도 · 기숙사 거리 · 묘지 · 시계탑
+const TL_DIG = ['town', 17, 85];   // 호숫가 반짝이 (함께 찾기로 한 단추)
+const TL_GOALS = {
+  1: [{ k: 'p_main_hall', t: '본관 구경', pl: 'main_hall' }, { k: 'p_library_stacks', t: '도서관 서고 구경', pl: 'library_stacks' }, { k: 'p_clock_tower', t: '시계탑 구경', pl: 'clock_tower' }, { k: 'p_ghost_lake_pier', t: '유령 호수 잔교 구경', pl: 'ghost_lake_pier' }, { k: 'p_cemetery', t: '묘지 구경', pl: 'cemetery' }],
+  2: [{ k: 'cook', t: '서로 다른 요리 만들기', n: 3, on: 'cook', q: d => String(d.k || '').replace(/_s$/, '') }, { k: 'class', t: '수업 듣기', n: 2, on: 'class' }, { k: 'brew', t: '물약 완성하기', n: 3, on: 'brew' }],
+  3: [{ k: 'page', t: '일기장 조각 찾기', n: 5, on: 'page', q: d => d.i }],
+  4: [{ k: 'hi', t: '친구에게 인사하기', n: 5, on: 'hi', q: d => d.to }, { k: 'room', t: '친구 방에 놀러 가기', n: 2, on: 'room', q: d => d.u }, { k: 'emo', t: '친구 곁에서 표정 짓기', n: 3, on: 'emo' }, { k: 'dig', t: '호숫가에서 단추 찾기', on: 'dig', need: T => T.btn === 0 }],
+  5: [{ k: 'grad', t: '광장 졸업식에 가기', pl: 'village_square' }],
+};
+let tlCtl = null, tlOn = false, tlLoad = null;
+const tlLive = () => !!(me && me.tilda && me.tilda.d0 && !me.tilda.gone);
+const tlDay = () => Math.min(5, Math.max(1, Math.round(dayNo(todayKey()) - dayNo(me.tilda.d0)) + 1));
+const tlGoals = d => (TL_GOALS[d] || []).filter(g => !g.need || g.need(me.tilda));
+const tlCnt = g => (me.tilda.c && me.tilda.c[g.k]) || 0, tlDoneG = g => tlCnt(g) >= (g.n || 1), tlAll = d => tlGoals(d).every(tlDoneG);
+const tlFx = () => tlLoad || (tlLoad = new Promise((res, rej) => { if (window.TildaFX) return res(); const sc = document.createElement('script'); sc.src = 'tilda.js?v=1'; sc.onload = () => res(); sc.onerror = () => { tlLoad = null; rej(); }; document.head.appendChild(sc); }));
+const tlApi = () => ({ W: World, me, t: () => me.tilda, vol: typeof SET !== 'undefined' ? SET.sfx : 1, calm: false,
+  bgm: on => { try { on ? BGM.hold('tilda') : BGM.release('tilda'); } catch(e){} },
+  gh: { show: (m, x, y, dir, a) => { tlGh.man = { m, x, y, dir, a }; tlGhDraw(); }, hide: () => { tlGh.man = { hide: 1 }; tlGhDraw(); } },
+  mem: tlMemGet, grant: tlGrant });
+// ---------- 마틸다 그리기 (반 크기 · 은은한 빛 · 둥실) ----------
+const TL_IMG = new Image(); TL_IMG.src = 'art/tilda.png?v=1';
+let tlGh = { m: '', x: 0, y: 0, dir: 0, tr: [], t: 0, man: null, last: '' }, tlFr = [];
+function tlFrame(i){ if (tlFr[i]) return tlFr[i]; if (!TL_IMG.complete || !TL_IMG.naturalWidth) return null; const c = document.createElement('canvas'); c.width = c.height = 48; const q = c.getContext('2d');
+  const rg = q.createRadialGradient(24, 26, 2, 24, 26, 22); rg.addColorStop(0, 'rgba(190,225,255,.45)'); rg.addColorStop(1, 'rgba(190,225,255,0)'); q.fillStyle = rg; q.fillRect(0, 0, 48, 48);
+  q.imageSmoothingQuality = 'high'; q.drawImage(TL_IMG, i * 64, 0, 64, 64, 8, 8, 32, 32); q.globalCompositeOperation = 'lighter'; q.globalAlpha = .25; q.drawImage(TL_IMG, i * 64, 0, 64, 64, 8, 8, 32, 32); return (tlFr[i] = c); }
+function tlGhDraw(){
+  const t = World.meTile && World.meTile(); let want = null;
+  if (tlGh.man){ if (!tlGh.man.hide) want = { m: tlGh.man.m, x: tlGh.man.x, y: tlGh.man.y, dir: tlGh.man.dir, a: tlGh.man.a }; }
+  else if (tlLive() && t && !tlOn){
+    const now = performance.now(); if (t.m !== tlGh.m){ tlGh.m = t.m; tlGh.x = t.x - 1; tlGh.y = t.y; tlGh.tr = []; }
+    const L = tlGh.tr; if (!L.length || L[L.length - 1][0] !== t.x || L[L.length - 1][1] !== t.y) L.push([t.x, t.y, now]); while (L.length > 2 && now - L[1][2] > 1400) L.shift();
+    const old = L.find(p => now - p[2] < 1400) || L[0], tx = old[0] - 1, ty = old[1], dx = tx - tlGh.x, dy = ty - tlGh.y;
+    if (Math.abs(dx) + Math.abs(dy) > .05) tlGh.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 3 : 2) : (dy < 0 ? 1 : 0);
+    tlGh.x += dx * .3; tlGh.y += dy * .3; want = { m: t.m, x: tlGh.x, y: tlGh.y, dir: tlGh.dir, a: 1 };
+  }
+  tlGh.t += 90;
+  if (!want){ if (tlGh.last){ World.setProps(tlGh.last, [], 'tilda'); tlGh.last = ''; } return; }
+  if (tlGh.last && tlGh.last !== want.m) World.setProps(tlGh.last, [], 'tilda');
+  const moving = tlGh.man ? false : Math.abs((tlGh.tr[tlGh.tr.length - 1] || [0, 0, 0])[2] - performance.now()) < 1600;
+  const img = tlFrame(want.dir * 5 + (moving ? 1 + Math.floor(tlGh.t / 260) % 4 : 0)); if (!img) return;
+  const rx = Math.round(want.x), ry = Math.round(want.y), fx = want.x - rx, fy = want.y - ry;
+  World.setProps(want.m, [{ id: 'tilda', x: rx, y: ry, img, pxc: img.getContext('2d'), sw: 48, sh: 48, ax: 24 + Math.round((fx - fy) * 8), ay: 38 + Math.round(Math.sin(tlGh.t / 300) * 1.5) - Math.round((fx + fy) * 4), solid: false, light: { r: 26, c: [190, 225, 255], a: .55 } }], 'tilda');
+  tlGh.last = want.m;
+}
+// 일기장 조각 · 호숫가 반짝이 (그날만 · 내 화면에만)
+const TL_PG = (() => { const c = document.createElement('canvas'); c.width = c.height = 24; const q = c.getContext('2d'); const rg = q.createRadialGradient(12, 13, 1, 12, 13, 11); rg.addColorStop(0, 'rgba(255,240,190,.7)'); rg.addColorStop(1, 'rgba(255,240,190,0)'); q.fillStyle = rg; q.fillRect(0, 0, 24, 24); q.fillStyle = '#3A2414'; q.fillRect(7, 6, 11, 13); q.fillStyle = '#F4E6C4'; q.fillRect(8, 7, 9, 11); q.fillStyle = '#B89A62'; for (let k = 0; k < 3; k++) q.fillRect(9, 9 + k * 3, 7 - k * 2, 1); return c; })();
+const TL_SP = (() => { const c = document.createElement('canvas'); c.width = c.height = 24; const q = c.getContext('2d'); const rg = q.createRadialGradient(12, 14, 1, 12, 14, 10); rg.addColorStop(0, 'rgba(255,250,210,.8)'); rg.addColorStop(1, 'rgba(255,250,210,0)'); q.fillStyle = rg; q.fillRect(0, 0, 24, 24); q.fillStyle = '#FFF6C0'; q.fillRect(11, 7, 2, 10); q.fillRect(7, 11, 10, 2); return c; })();
+let tlSpotSig = '';
+function tlSpots(){
+  const t = World.meTile && World.meTile(); const T = me.tilda; let list = [], m = t ? t.m : '';
+  if (tlLive() && t && !tlOn){ const d = tlDay();
+    if (d === 3) TL_PAGE.forEach(([pm, x, y], i) => { if (pm === m && !(T.q && T.q.page && T.q.page[i])) list.push({ id: 'tlpg' + i, x, y, img: TL_PG, pxc: TL_PG.getContext('2d'), sw: 24, sh: 24, ax: 12, ay: 18, solid: false, light: { r: 16, c: [255, 236, 180], a: .55 } }); });
+    if (d === 4 && T.btn === 0 && !T.dug && TL_DIG[0] === m) list.push({ id: 'tldig', x: TL_DIG[1], y: TL_DIG[2], img: TL_SP, pxc: TL_SP.getContext('2d'), sw: 24, sh: 24, ax: 12, ay: 18, solid: false, light: { r: 14, c: [255, 250, 210], a: .5 } });
+  }
+  const sig = m + ':' + list.map(x => x.id).join(','); if (sig === tlSpotSig) return; const pm = tlSpotSig.split(':')[0]; tlSpotSig = sig;
+  if (pm && pm !== m) World.setProps(pm, [], 'tlspot'); if (m) World.setProps(m, list, 'tlspot');
+}
+function tlNear(x, y, r = 2){ const t = World.meTile && World.meTile(); return t && Math.abs(t.x - x) + Math.abs(t.y - y) <= r; }
+// ---------- 부탁 세기 ----------
+function tlEv(on, d = {}){
+  if (!tlLive() || tlOn) return; const T = me.tilda, day = tlDay(); T.c = T.c || {}; T.q = T.q || {}; let hit = null;
+  for (const g of tlGoals(day)){ if (g.on !== on || tlDoneG(g)) continue;
+    if (g.q){ const key = String(g.q(d)); const q = T.q[g.k] = T.q[g.k] || {}; if (q[key]) continue; q[key] = 1; }
+    T.c[g.k] = tlCnt(g) + 1; hit = g; break; }
+  if (!hit) return; save();
+  const n = hit.n || 1, c = tlCnt(hit); toast(`마틸다의 부탁 · ${hit.t}${n > 1 ? ` ${c} / ${n}` : ' ✔'}`);
+  if (['cook', 'class', 'brew', 'hi'].includes(hit.k)) tlReact(hit.k, c - 1); else if (['room', 'emo', 'dig'].includes(hit.k)) tlReact(hit.k);
+  if (tlAll(day) && day < 5) setTimeout(() => toast(`오늘 부탁을 다 했어요. 밤 이야기는 「${NL.places[TL_PLACE[day]]?.name || ''}」에서`), 1500);
+}
+let tlReactQ = Promise.resolve();
+function tlReact(key, i){ tlReactQ = tlReactQ.then(() => tlFx()).then(() => { if (uiBusy() && !lesson && !cooking && !sheetOn) return; return TildaFX.say(tlApi(), '마틸다', typeof TildaFX.REACT[key] === 'string' || !Array.isArray(TildaFX.REACT[key]) ? TildaFX.REACT[key] : TildaFX.REACT[key][Math.min(i || 0, TildaFX.REACT[key].length - 1)], 900); }).catch(() => {}); }
+function tlFail(){ if (!tlLive() || tlDay() !== 2) return; tlFx().then(() => TildaFX.react(tlApi(), 'fail')).catch(() => {}); }
+function tlEmo(){ if (!tlLive() || tlDay() !== 4) return; const t = World.meTile && World.meTile(), here = World.placeKey && World.placeKey(); if (!t) return;
+  const near = Object.entries(onlineList || {}).some(([id, o]) => id !== uid && o && o.m === here && Math.abs((o.x || 0) - t.x) + Math.abs((o.y || 0) - t.y) <= 5); if (near) tlEv('emo'); }
+// ---------- 추억 조각 사진 (밤 이야기 때 내 화면을 찍어요 · 이름표 없이) ----------
+async function tlCapture(day){
+  let data = null;
+  try { World.tagsOff(true); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const cv = $('#cv'); if (!cv) return; const w = cv.width, h = cv.height, cw = Math.round(Math.min(w * .72, h * .5)), ch = Math.round(cw * 2 / 3);
+    const o = document.createElement('canvas'); o.width = 360; o.height = 240; o.getContext('2d').drawImage(cv, Math.round((w - cw) / 2), Math.round(h * .47 - ch * .55), cw, ch, 0, 0, 360, 240); data = o.toDataURL('image/jpeg', .72);
+  } catch(e){ errReport('tilda', '추억 조각 사진 오류: ' + e.message, e.stack || ''); } finally { World.tagsOff(false); }
+  if (!data) return; try { localStorage.setItem(`tlmem:${uid}:${day}`, data); } catch(e){}
+  GDB.set(`tilda/mem/${uid}/${day}`, data).catch(() => {});
+}
+function tlMemGet(day){ let v = null; try { v = localStorage.getItem(`tlmem:${uid}:${day}`); } catch(e){} if (v) return Promise.resolve(v);
+  return new Promise(res => { let off = null, done = false; const fin = x => { if (done) return; done = true; setTimeout(() => off && off(), 0); res(x || null); }; off = GDB.on(`tilda/mem/${uid}/${day}`, fin); setTimeout(() => fin(null), 4000); }); }
+// ---------- 보상 (골드 없음) ----------
+function tlGrant(last){
+  const T = me.tilda, b = T.btn ?? 2; T.last = last;
+  me.fbag = me.fbag || {}; me.fbag.tl_photo = (me.fbag.tl_photo || 0) + 1;
+  me.closet = me.closet || {}; me.closet['hat:hat_grad'] = 1;
+  const bk = 'tl_btn' + b; me.inv[bk] = (me.inv[bk] || 0) + 1;
+  me.cos = me.cos || {}; (me.cos.tag = me.cos.tag || {}).attend = 1; me.cosOn = me.cosOn || {}; if (!me.cosOn.tg) me.cosOn.tg = 'attend';
+  save(); syncCos(); hud();
+  return `<div style="display:flex;gap:14px;align-items:flex-end;justify-content:center"><canvas id="tlbtn" width="32" height="32" style="width:64px;height:64px"></canvas></div>졸업 선물<small>방 가구 「빛바랜 졸업 사진」 · 옷 「마틸다의 졸업 모자」<br>「${esc(ITEM[bk])}」 · 이름표 「개근상 이름표」<br>꾸미기는 「내 정보」에서 바꿔 끼울 수 있어요</small>`;
+}
+// ---------- 마틸다를 누르면 ----------
+function tlPanel(){
+  if (!tlLive() || uiBusy()) return; const T = me.tilda, d = tlDay(), G = tlGoals(d), all = tlAll(d), pl = NL.places[TL_PLACE[d]]?.name || '';
+  const lines = window.TildaFX ? TildaFX.REACT.idle : ['밤이 유령의 낮이야.'], line = (d === 5 ? '광장에 가면 졸업식이 시작될 거야. ....조금만 천천히 가자.' : all && !(T.nt && T.nt[d]) ? `오늘 부탁 다 했다! 밤 이야기는 ${pl}에서 하자.` : lines[Math.floor(Math.random() * lines.length)]).replace('{nm}', (window.TildaFX ? TildaFX.NAMES : ['마틸다'])[T.nm ?? 0]);
+  npcUI().dataset.id = 'tilda'; npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf"><canvas width="32" height="32" class="tlfc" style="width:100%;height:100%;image-rendering:pixelated"></canvas></div><div><b>마틸다</b><span class="s sub">수상한 기척 · ${d} / 5 일째</span></div><button class="sx" data-tlp="close">✕</button></div>
+    <div class="npct">${esc(line)}</div><div class="sdrow" style="flex-direction:column;align-items:stretch;gap:4px">${G.map(g => `<span>${tlDoneG(g) ? '✔' : '☐'} ${esc(g.t)}${(g.n || 1) > 1 ? ` <small>${Math.min(tlCnt(g), g.n)} / ${g.n}</small>` : ''}</span>`).join('')}${d < 5 ? `<span>${T.nt && T.nt[d] ? '✔' : '☐'} 밤 이야기 <small>${esc(pl)}</small></span>` : ''}</div>
+    <div class="frow"><button class="btn sm" data-tlp="close">닫기</button></div></div>`;
+  npcUI().classList.add('on'); const q = npcUI().querySelector('.tlfc').getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(TL_IMG, 16, 4, 32, 32, 0, 0, 32, 32);
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-tlp]'); if (!b || !npcUI().contains(b)) return; npcClose(); });
+// ---------- 장면 돌리기 ----------
+async function tlRun(fn, key){
+  tlOn = true; const zoom = ['intro', 'night', 'grad'].includes(key), z0 = World.zoomLevel ? World.zoomLevel() : 1; if (zoom && World.zoomStep) World.zoomStep(-2);   // 장면 동안만 가까이
+  try { await tlFx(); return await fn(TildaFX, tlApi()); } catch(e){ console.error('tilda', key, e); errReport('tilda', `수상한 기척 ${key} 오류: ` + (e && e.message), (e && e.stack) || ''); } finally { tlOn = false; tlGh.man = null; tlGh.m = ''; if (zoom && World.zoomStep && World.zoomLevel) World.zoomStep(z0 - World.zoomLevel()); }
+}
+function tlTick(){
+  if (!me || tlOn) return; tlSpots();
+  const T = me.tilda, c = tlCtl;
+  // 처음: 관리자가 열었고 아직 안 만났으면 → 어느 날 갑자기 등장
+  if ((!T || T.ev !== (c && c.id)) && c && c.open && !(T && T.d0 && !T.gone)){
+    if (T && T.gone) return;   // 한 번 졸업한 학생은 다시 시작하지 않아요
+    if (uiBusy() || !World.meAt || !World.meAt() || !evTurn('tilda')) return;
+    tlRun(async (X, api) => { await X.intro(api); me.tilda = { ev: c.id, d0: todayKey(), dd: todayKey(), c: {}, q: {}, nt: {} }; save(); const d = tlDay(); await X.morning(api, d, tlGoals(d), false, true); }, 'intro');
+    return;
+  }
+  if (!T) return;
+  // 졸업 다음 날: 편지
+  if (T.gone && T.gone !== todayKey() && !T.lt){ if (uiBusy() || !World.meAt || !World.meAt() || !evTurn('tilda')) return; tlRun(async (X, api) => { await X.letter(api); T.lt = todayKey(); save(); }, 'letter'); return; }
+  if (!tlLive()) return; const d = tlDay();
+  if (uiBusy() || !World.meAt || !World.meAt()) return;
+  // 그날 처음: 아침 인사 + 오늘 부탁
+  if (T.dd !== todayKey()){ if (!evTurn('tilda')) return; const skipped = T.dd && dayNo(todayKey()) - dayNo(T.dd) > 1; T.dd = todayKey(); save(); tlRun((X, api) => X.morning(api, d, tlGoals(d), skipped), 'morning'); return; }
+  // 장소 부탁 (1 일째 구경 · 5 일째 졸업식)
+  for (const g of tlGoals(d)) if (g.pl && !tlDoneG(g) && pkAt(g.pl, 3)){
+    if (d === 5){ tlRun(async (X, api) => { const r = await X.grad(api); T.c.grad = 1; T.gone = todayKey(); T.last = r ? r.last : T.last; save(); }, 'grad'); return; }
+    T.c = T.c || {}; T.c[g.k] = 1; save(); toast(`마틸다의 부탁 · ${g.t} ✔`); tlReact(g.pl); if (tlAll(d)) setTimeout(() => toast(`오늘 부탁을 다 했어요. 밤 이야기는 「${NL.places[TL_PLACE[d]]?.name || ''}」에서`), 1500); return; }
+  // 친구 방 (4 일째)
+  if (d === 4){ const ro = World.roomOwner && World.roomOwner(); if (ro && !ro.own && ro.uid) tlEv('room', { u: ro.uid }); }
+  // 밤 이야기: 부탁을 다 하고 그날 장소에 가면
+  if (d < 5 && tlAll(d) && !(T.nt && T.nt[d]) && pkAt(TL_PLACE[d], 3)){
+    tlRun(async (X, api) => { api.gh.show(World.meTile().m, World.meTile().x + 1, World.meTile().y, 2, 1); await new Promise(r => setTimeout(r, 600)); await tlCapture(d); const r = await X.night(api, d) || {}; Object.assign(T, r); T.nt = T.nt || {}; T.nt[d] = 1; save(); toast(`추억 조각을 얻었어요 (${d} / 4)`); }, 'night'); }
+}
+const tlTap = id => {
+  if (!tlLive()) return; const t = World.meTile && World.meTile();
+  if (id === 'tilda') return tlPanel();
+  if (id.startsWith('tlpg')){ const i = +id.slice(4), [m, x, y] = TL_PAGE[i]; if (!tlNear(x, y)) return World.walkToTile(x, y + 1); if (tlOn || uiBusy()) return;
+    tlEv('page', { i }); const n = tlCnt(TL_GOALS[3][0]); tlRun((X, api) => X.page(api, i, n), 'page'); return; }
+  if (id === 'tldig'){ if (!tlNear(TL_DIG[1], TL_DIG[2])) return World.walkToTile(TL_DIG[1], TL_DIG[2] + 1); if (tlOn || uiBusy()) return; me.tilda.dug = 1; sfx('pick'); tlEv('dig'); }
+};
+let tlOffs = [];
+function tildaListen(){
+  if (tlOffs.length) return;
+  tlOffs.push(GDB.on('tilda/ctl', v => { tlCtl = v || null; }));
+  const prev = World.onProp; World.onProp = id => (id === 'tilda' || id === 'tldig' || String(id).startsWith('tlpg')) ? (tlTap(id), null) : prev ? prev(id) : null;
+  setInterval(() => { try { tlGhDraw(); } catch(e){} }, 90); setInterval(() => { try { tlTick(); } catch(e){ errReport('tilda', '수상한 기척 tick 오류: ' + e.message, e.stack || ''); } }, 1500);
+}
+// 일지: 틸다와의 추억 (추억 조각 사진 · 둘만의 것 · 편지)
+function tlNoteHTML(){
+  const T = me.tilda || {}, N = ['마틸다', '틸다', '틸'], H = ['하이파이브', '새끼손가락', '이마 콩'];
+  const rows = [['부르는 이름', T.nm != null ? N[T.nm] : null], ['비밀 인사', T.hi != null ? H[T.hi] : null], ['바다 약속', T.sea != null ? ['함께 가기', '사진으로', '약속 안 함'][T.sea] : null], ['말버릇', T.quip != null ? ['「경을 칠 노릇이네」 같이 씀', '안 씀'][T.quip] : null], ['단추', T.btn != null ? ['같이 찾기' + (T.dug ? ' · 찾았어요' : ''), '내 단추를 줌', '「없어도 예뻐」'][T.btn] : null], ['무서운 것', T.fear != null ? ['반씩 나눔', '또 만날 거야', '웃으며 넘김'][T.fear] : null]].filter(r => r[1]);
+  return `<section class="sec"><div class="tlmems" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${[1, 2, 3, 4].map(i => `<div style="aspect-ratio:3/2;border-radius:6px;background:#2A2040;border:4px solid #F4ECDC;overflow:hidden"><img data-tlmem="${i}" style="width:100%;height:100%;object-fit:cover;filter:sepia(.45) saturate(.85);display:none"></div>`).join('')}</div></section>
+    <section class="sec">${secH('둘만의 것')}<div class="box">${rows.map(([a, b]) => `<div class="li"><div class="main"><span class="t">${a}</span><span class="d">${esc(b)}</span></div></div>`).join('') || '<div class="hint">아직 아무것도 정하지 않았어요</div>'}</div></section>
+    ${T.lt && window.TildaFX ? `<section class="sec">${secH('마틸다의 편지')}<div class="box" style="background:#F4E6C4;color:#3A2414;padding:14px;white-space:pre-line;font-size:14px;line-height:22px">${esc(TildaFX.letterText(T, me.nick))}</div></section>` : ''}`;
+}
+function tlNoteBind(){ document.querySelectorAll('[data-tlmem]').forEach(im => tlMemGet(+im.dataset.tlmem).then(src => { if (src){ im.src = src; im.style.display = 'block'; } })); if (me.tilda && me.tilda.lt && !window.TildaFX) tlFx().then(() => render()).catch(() => {}); }
+// 관리자: 이벤트 탭 카드
+function adminTildaHTML(){
+  const c = AD.tlctl || {}, P = AD.players || {}, ids = Object.keys(P).filter(id => P[id]?.nick), S = id => P[id].tilda && (!c.id || P[id].tilda.ev === c.id) ? P[id].tilda : null, IN = ids.filter(id => S(id));
+  const N = ['마틸다', '틸다', '틸'], dayOf = s => s.gone ? 6 : Math.min(5, Math.max(1, Math.round(dayNo(todayKey()) - dayNo(s.d0)) + 1));
+  const rows = IN.map(id => { const s = S(id), d = dayOf(s), G = d <= 5 ? (TL_GOALS[d] || []).filter(g => !g.need || g.need(s)) : [], done = G.filter(g => ((s.c || {})[g.k] || 0) >= (g.n || 1)).length;
+    return `<div class="sdarow"><div class="nm"><b>${esc(P[id].nick)}</b><span>${s.nm != null ? N[s.nm] : '이름 아직'}</span></div><div><div class="ln">${s.gone ? `<span class="tag ok">졸업 (${esc(s.gone)})</span>${s.lt ? '<span>편지 받음</span>' : ''}` : `<span class="tag">${d} / 5 일째</span><span>오늘 부탁 ${done} / ${G.length}</span><span>밤 이야기 ${Object.keys(s.nt || {}).length} / 4</span>`}</div></div></div>`; }).join('');
+  return `<div class="adcard sdad"><div class="abhead"><b>이벤트 「수상한 기척 · 마틸다」</b>${c.open ? '<button class="btn sm" data-tla="close">이벤트 끝내기</button>' : '<button class="btn sm go" data-tla="open">이벤트 시작</button>'}</div>
+    <div class="abchips"><span>${c.open ? '여는 중' : '닫힘'}</span><span>만남 <b>${IN.length}</b>/${ids.length}</span></div>
+    <div class="sdasum"><div><b>${IN.filter(id => !S(id).gone).length}</b>함께 다니는 중</div><div><b>${IN.filter(id => S(id).gone).length}</b>졸업</div><div><b>${IN.filter(id => S(id).lt).length}</b>편지 받음</div></div>
+    ${rows || '<div class="s">아직 마틸다를 만난 학생이 없어요</div>'}
+    <div class="s" style="margin-top:6px">시작하면 학생이 다음에 게임에 있을 때 마틸다가 나타나요(밤에 여는 걸 추천). 날짜로 닷새를 세고, 5 일째 광장에서 혼자 졸업식을 봐요. 마틸다는 그 학생에게만 보여요.</div></div>`;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-tla]'); if (!b) return; const a = b.dataset.tla;
+  if (a === 'open'){ if (confirm('「수상한 기척」을 시작할까요? 학생마다 마틸다가 나타나요.')) GDB.set('tilda/ctl', { open: true, id: now2(), at: now2() }).then(() => toast('수상한 기척을 시작했어요')); }
+  else if (a === 'close'){ if (confirm('「수상한 기척」을 끝낼까요? 이미 만난 학생은 졸업까지 계속해요.')) GDB.upd('tilda/ctl', { open: false }); }
+});
+
 // ===== 무슈 블랑: 저녁·밤에 과자 교실에 나타나요 · 할로윈 요리를 하루 1번 받아서 맛 연출(blanc_fx.js) · 처음 주는 요리는 상품, 다시 주면 골드 · 17가지 다 주면 마지막 인사 =====
 //   me.seed.bl { 요리 번호: 1 } · me.seed.bd 요리 준 날 · me.seed.fin 마지막 인사 · me.cos = { tag: {}, bub: {} } 가진 꾸미기 · me.cosOn = { tg, bb } 끼운 것
-const BL_SPOT = [14, 11], BL_TAG = { pumpkin: '호박 이름표', bat: '박쥐 이름표', web: '거미줄 이름표', candy: '사탕옥수수 이름표', bone: '해골 이름표', slime: '물약 이름표' }, BL_BUB = { ghost: '유령 말풍선', jack: '잭오랜턴 말풍선', witch: '마녀 말풍선', slime: '물약 말풍선', tomb: '묘비 말풍선', candy: '사탕 말풍선' };
+const BL_SPOT = [14, 11], BL_TAG = { attend: '개근상 이름표', pumpkin: '호박 이름표', bat: '박쥐 이름표', web: '거미줄 이름표', candy: '사탕옥수수 이름표', bone: '해골 이름표', slime: '물약 이름표' }, BL_BUB = { ghost: '유령 말풍선', jack: '잭오랜턴 말풍선', witch: '마녀 말풍선', slime: '물약 말풍선', tomb: '묘비 말풍선', candy: '사탕 말풍선' };
 let blOn = false, blSig = '', blBob = null, blFxLoad = null;
 const blHere = () => !!(me && me.seed && SEED && !me.seed.fin && ['evening', 'night'].includes(bandNow()));
 function blSync(){
@@ -8822,7 +9018,7 @@ const pkSt = () => { const p = me.prank = me.prank || {}; ['got', 's', 'c', 'q',
 const pkReady = k => { const p = pkSt(); return !p.got[k] && (p.s[k] || 0) >= PRANK_STEPS[k].length; };
 const pkUsed = k => pkSt().u[k] === todayKey();
 function prankEv(on, d = {}){
-  if (!me) return; let ch = false;
+  if (!me) return; let ch = false; if (on !== 'tick') try { tlEv(on, d); } catch(e){}
   try {
     const p = pkSt();
     for (const [k] of PRANK){
@@ -9023,7 +9219,7 @@ document.addEventListener('click', e => {
   else if (a === 'close'){ if (confirm('유령 열차 이벤트를 닫을까요? 목적지에 있는 학생은 등불 마을로 돌아와요.')) F.set(F.ref(db, 'gtrain/ctl'), { open: false }); }
 });
 setInterval(() => { if (document.body.classList.contains('admin') && AD.tab === 'event' && AD.gtctl && AD.gtctl.open && !adminTyping()) { const el = document.querySelector('[data-gta]')?.closest('.adcard'); if (el) el.outerHTML = adminGtrainHTML(); } }, 1000);
-function adminEventHTML(){ return adminEventOverview() + adminMorphHTML() + adminSnowHTML() + adminBabyHTML() + adminFamHTML() + adminFairyHTML() + adminSeedHTML() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
+function adminEventHTML(){ return adminEventOverview() + adminMorphHTML() + adminSnowHTML() + adminBabyHTML() + adminFamHTML() + adminFairyHTML() + adminSeedHTML() + adminTildaHTML() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
 // 이벤트 한눈에: 열려 있는지 · 진행도 · 참가한 학생 수
 // 이벤트마다 장면을 본 학생(또는 보상을 받은 학생) 수 → 다 봤는지 보고 닫아요
 function adminSeen(){
@@ -9814,7 +10010,7 @@ function tutNpcs(){
   return [{ id: 'tut:senior', name: TUT.name, map: TUT.map, x: TUT.x, y: TUT.y, r: 1, mark, wander: true, dir: 'down', av: tutAv() }];
 }
 var tutAuto = false;
-const uiBusy = () => !!(xRunNow() || document.getElementById('tr2') || document.getElementById('dreamv') || document.getElementById('pk9') || evOn || sheetOn || mqArriving || fishing || cooking || lesson || (typeof sgOn !== 'undefined' && sgOn) || (World.cutBusy && World.cutBusy()) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || $('#fishui').classList.contains('on'));   // 장면·미니게임·창이 떠 있으면 다른 알림은 기다려요
+const uiBusy = () => !!(xRunNow() || document.getElementById('tr2') || document.getElementById('dreamv') || document.getElementById('pk9') || evOn || sheetOn || mqArriving || fishing || cooking || lesson || (typeof sgOn !== 'undefined' && sgOn) || (typeof tlOn !== 'undefined' && tlOn) || (World.cutBusy && World.cutBusy()) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || $('#fishui').classList.contains('on'));   // 장면·미니게임·창이 떠 있으면 다른 알림은 기다려요
 function tutGreet(){   // 들어오면 코니 선배가 먼저 말을 걸어요 (다른 장면이 끝날 때까지 기다렸다가 한 번만)
   if (tutAuto || !tutOn() || !me || !(!me.tut.g || me.tut.ok)) return; tutAuto = true; let n = 0;
   const iv = setInterval(() => { if (!tutOn() || ++n > 90) return clearInterval(iv); if (!uiBusy()){ clearInterval(iv); tutTalk(); } }, 1500);
@@ -10285,7 +10481,7 @@ async function boot(){
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       F.onValue(F.ref(db, 'adm/reset/' + uid), s => { const v = +s.val() || 0; if (!v) return; let seen = 0; try { seen = +localStorage.getItem('magion-rs-' + uid) || 0; } catch(e){}
         if (v > seen && v > bootT - 5000){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
-      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); famListen(); fairyListen(); seedListen(); blancListen(); snowListen(); morphListen(); boardListen(); tarotInit(); prankInit();
+      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); famListen(); fairyListen(); seedListen(); tildaListen(); blancListen(); snowListen(); morphListen(); boardListen(); tarotInit(); prankInit();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); const sg = Object.entries(gameList).map(([id, r]) => r ? id + r.st + Object.keys(r.p || {}).length : '').join('|'); if (sub === 'games' && sg !== gamesSig) render(); gamesSig = sg; });   // 점수가 오를 때마다가 아니라 방이 열리고 닫히고 사람이 드나들 때만 다시 그려요
       F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       const recWatch = () => { const wk = weekKey(); if (recWatch.wk === wk) return; recWatch.wk = wk; (recWatch.offs || []).forEach(f => f()); recList = {}; recWatch.offs = Object.keys(GAMES).map(g => F.onValue(F.ref(db, `records/${g}/${wk}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); })); };
