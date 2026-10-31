@@ -1,4 +1,4 @@
-// 시안: 관리자 「씨앗 대회 · 무슈 블랑」 진행도 카드 (목업 전용 · 예시 학생 데이터)
+// 시안: 관리자 「이벤트」 탭의 접는 카드 「씨앗 대회 · 무슈 블랑」 (다른 이벤트 카드처럼 제목을 누르면 펼쳐요) · 목업 전용 · 예시 학생 데이터
 (function(){
 const css = document.createElement('style'); css.textContent = `
 #sdad{margin:10px 0}#sdad .hd{display:flex;justify-content:space-between;align-items:center;gap:8px}#sdad .hd b{font-size:15px}#sdad .sum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}
@@ -16,10 +16,10 @@ const S = [   // 이름 · 식물 · 단계(0~5) · 오늘 물 · 오늘 말 · 
   ['레오', '박쥐 날개 고사리', 3, 2, 1, 1, [0, 0], [], 0], ['이로하', '눈알 열매덩굴', 4, 0, 0, 2, [0, 0], [], 0], ['세나', '사탕옥수수 튤립', 5, 2, 2, 0, [4, 1], [0, 3, 7], 0],
   ['도윤', '해골 양귀비', 1, 0, 1, 3, [0, 0], [], 0]];
 const gold = r => r[2] === 5 && r[5] === 0;
-let f = 'all';
+let f = 'all', open = false;
 function html(){
   const L = S.filter(r => f === 'all' || (f === 'need' && (r[3] < 2 || r[4] < 2) && r[2] < 5) || (f === 'bloom' && r[2] === 5) || (f === 'done' && r[8]));
-  return `<div class="adcard" id="sdad"><div class="hd"><b>씨앗 대회 · 무슈 블랑</b><span class="s">10월 27일 시작 · 5일째</span></div>
+  return `<div class="adcard adfold${open ? '' : ' shut'}" id="sdad"><div class="abhead adfh hd"><b>이벤트 「씨앗 대회 · 무슈 블랑」</b><span class="s">여는 중 · 5일째</span></div>
   <div class="sum"><div><b>${S.filter(r => r[2] === 5).length}/${S.length}</b>꽃 피움</div><div><b>${S.filter(gold).length}</b>금화분</div><div><b>${S.reduce((a, r) => a + r[7].length, 0)}</b>블랑에게 준 요리</div><div><b>${S.filter(r => r[8]).length}</b>마지막 인사</div></div>
   <div class="flt">${[['all', '전체'], ['need', '오늘 덜 돌봄'], ['bloom', '꽃 핀 학생'], ['done', '17가지 다 줌']].map(([k, n]) => `<button class="${f === k ? 'on' : ''}" data-sdf="${k}">${n}</button>`).join('')}</div>
   ${L.map(r => `<div class="row"><div class="nm"><b>${r[0]}</b><span>${r[1]}</span></div><div>
@@ -29,6 +29,7 @@ function html(){
   </div></div>`).join('') || '<div class="s">해당하는 학생이 없어요</div>'}
   <div class="btns"><button>이벤트 닫기</button><button>학생 한 명 진행 맞추기</button><button>식물 다시 나눠 주기</button></div></div>`;
 }
-function paint(){ let el = document.getElementById('sdad'); const host = document.querySelector('.adcard')?.parentNode || document.body; if (el) el.outerHTML = html(); else host.insertAdjacentHTML('afterbegin', html()); document.querySelectorAll('[data-sdf]').forEach(b => b.onclick = () => { f = b.dataset.sdf; paint(); }); }
-window.__sdAdPaint = paint; window.__sdAdF = k => { f = k; paint(); }; paint();
+function paint(){ let el = document.getElementById('sdad'); const first = document.querySelector('.adbody > .adcard'); if (el) el.outerHTML = html(); else if (first) first.insertAdjacentHTML('afterend', html()); else document.querySelector('.adbody')?.insertAdjacentHTML('afterbegin', html());
+  document.querySelectorAll('[data-sdf]').forEach(b => b.onclick = () => { f = b.dataset.sdf; paint(); }); const h = document.querySelector('#sdad > .adfh'); if (h) h.onclick = () => { open = !open; paint(); }; }
+window.__sdAdPaint = paint; window.__sdAdF = k => { f = k; paint(); }; window.__sdAdOpen = v => { open = v; paint(); }; paint();
 })();
