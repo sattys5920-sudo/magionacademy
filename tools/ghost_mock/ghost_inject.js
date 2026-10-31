@@ -15,9 +15,9 @@ const css = document.createElement('style'); css.textContent = `
 document.head.appendChild(css);
 const el = (id, h) => { const d = document.createElement('div'); d.id = id; if (h) d.innerHTML = h; document.body.appendChild(d); return d; };
 const say = el('ghsay', '<div class="bx"><div class="fc"><canvas width="32" height="32"></canvas></div><div><b></b><p></p></div></div>'), card = el('ghcard'), chip = el('ghchip'), dim = el('ghdim');
-const GH = new Image(); GH.src = 'ghost_lpc.png';
+const GH = new Image(); GH.src = 'ghost_lpc.png'; const SKL = new Image(); SKL.src = 'skel_lpc.png';
 const talk = async (who, t, hold = 1400) => { const q = say.querySelector('canvas').getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, 32, 32);
-  if (who === '마틸다'){ say.style.setProperty('--bc', '#B8D8FF'); q.drawImage(GH, 16, 4, 32, 32, 0, 0, 32, 32); } else { say.style.setProperty('--bc', '#FFE9A0'); q.fillStyle = '#E8E0CC'; q.fillRect(9, 6, 14, 12); q.fillRect(11, 18, 10, 6); q.fillStyle = '#1A1020'; q.fillRect(12, 10, 3, 3); q.fillRect(18, 10, 3, 3); q.fillRect(15, 15, 2, 2); }
+  if (who === '마틸다'){ say.style.setProperty('--bc', '#B8D8FF'); q.drawImage(GH, 16, 4, 32, 32, 0, 0, 32, 32); } else { say.style.setProperty('--bc', '#FFE9A0'); q.fillStyle = '#2A2238'; q.fillRect(0, 0, 32, 32); q.drawImage(SKL, 16, 8, 32, 32, 0, 0, 32, 32); }
   say.querySelector('b').textContent = who; say.style.display = 'block'; const p = say.querySelector('p'); p.textContent = ''; for (let k = 1; k <= t.length; k++){ p.textContent = t.slice(0, k); await sleep(32); } await sleep(hold); say.style.display = 'none'; await sleep(150); };
 const showCard = async (h, ms) => { card.innerHTML = h; card.classList.add('on'); await sleep(ms); card.classList.remove('on'); await sleep(450); };
 // 마틸다 그리기 (반 크기 · 둥실) — 맵 소품으로
