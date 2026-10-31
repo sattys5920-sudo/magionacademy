@@ -156,6 +156,13 @@ const SCENE = {
     rect(0, h * .8, w, h * .2, '#4A3A5A'); const x = w / 2 + Math.sin(t * .8) * 30; rect(x - 80, h * .72, 160, 40, '#F07A18'); rect(x - 80, h * .72, 160, 8, '#FFD84A'); circ(x - 50, h * .8, 14, '#333'); circ(x + 50, h * .8, 14, '#333');
     blanc(x, h * .73, 2.8, { arms: Math.sin(t * 6) > 0 }); },
 };
+SCENE.ascend = (t, w, h) => {   // 마지막 인사: 빛기둥 속으로 둥실 떠오르며 사라져요
+  g.fillStyle = lg(0, h, '#2A1E4A', '#120A24'); g.fillRect(0, 0, w, h); for (let i = 0; i < 50; i++) rect((i * 73) % w, (i * 131) % h, 2, 2, `rgba(255,246,200,${.3 + .5 * Math.abs(Math.sin(t * 2 + i))})`);
+  const pw = 90 + Math.sin(t * 2) * 6; g.fillStyle = 'rgba(255,240,190,.18)'; g.fillRect(w / 2 - pw, 0, pw * 2, h); g.fillStyle = 'rgba(255,248,220,.28)'; g.fillRect(w / 2 - pw * .55, 0, pw * 1.1, h); g.fillStyle = 'rgba(255,255,240,.35)'; g.fillRect(w / 2 - pw * .2, 0, pw * .4, h);
+  for (let i = 0; i < 24; i++){ const y = h - ((t * 70 + i * 47) % (h + 40)), x = w / 2 + Math.sin(t * 2 + i) * pw * .9; rect(x, y, 3, 3, '#FFF6C8'); if (i % 3 === 0){ rect(x - 3, y + 1, 9, 1, '#FFF6C8'); rect(x + 1, y - 3, 1, 9, '#FFF6C8'); } }
+  const y = h * .72 - Math.max(0, t - 1) * 55, a = Math.max(0, Math.min(1, 1 - (t - 3.2) / 1.6)); g.globalAlpha = a; blanc(w / 2, y, 3.2, { rot: Math.sin(t * 2) * .06, arms: t > 1.4 }); g.globalAlpha = 1;
+  if (t > 3.6){ const hy = y - 220 + Math.min(1, (t - 3.6) / 1.4) * 260; g.globalAlpha = Math.min(1, (t - 3.6) * 2) * .9; ell(w / 2 + Math.sin(t * 3) * 20, hy, 26, 10, '#F4F0E6'); ell(w / 2 + Math.sin(t * 3) * 20, hy - 14, 20, 16, '#FFFFFF'); g.globalAlpha = 1; }   // 모자만 살랑살랑 내려와요
+};
 const MONT = ['sky', 'beach', 'space', 'disco', 'rocket', 'parade'];
 const POPC = ['#FFE860', '#FF6AA0', '#6AE8FF', '#9AF07A'];
 function drawVision(t){
@@ -238,6 +245,9 @@ const SND = (() => {
       title: a => { tone(70, a, .7, 'sine', .7, 40); noise(a, .5, .5, 800, 'lowpass', 120, .005); [1568, 2093, 2637].forEach((f, i) => tone(f, a + .2 + i * .06, .5, 'triangle', .12)); },
       star: (a, n) => { for (let i = 0; i < n; i++) tone(1047 + i * 262, a + i * .18, .3, 'triangle', .16); },
       reward: a => [784, 988, 1175, 1568].forEach((f, i) => tone(f, a + i * .08, .35, 'triangle', .14)),
+      farewell: (a, d) => { const M = [72, 76, 79, 77, 76, 72, 74, 0, 71, 74, 77, 76, 74, 71, 72, 0, 69, 72, 76, 74, 72, 69, 71, 0, 67, 71, 74, 72, 0, 0];   // 마지막 인사: 오르골 가락(직접 만든) — 0.42초 간격
+        for (let k = 0, i = 0; k < d; k += .42, i++){ const n = M[i % M.length]; if (n){ tone(440 * Math.pow(2, (n - 57) / 12), a + k, 1.2, 'sine', .14); tone(440 * Math.pow(2, (n - 45) / 12), a + k, .8, 'triangle', .04); } if (i % 4 === 0) tone(440 * Math.pow(2, (48 - 69) / 12), a + k, 1.6, 'sine', .06); } },
+      ascend: a => { for (let i = 0; i < 12; i++) tone(1046 * Math.pow(2, i / 12), a + i * .12, .6, 'triangle', .08); noise(a, 2.6, .12, 2000, 'bandpass', 6000, 1.2); },
     };
     return { SC, CUE };
   };
@@ -291,6 +301,22 @@ window.__bfGo = async (list = [0]) => {
   await talk('오, 또 왔군. 오늘은 무엇을 가져왔나.', 1200);
   for (const i of list) await taste(i);
   clearInterval(bob); await sleep(800); window.__bfDone = true;
+};
+// 요리 17가지를 다 맛본 뒤: 잘 먹었다고 인사하고, 빛이 되어 돌아가요 (배경 음악 대신 오르골)
+window.__bfFinale = async () => {
+  await ready; SND.start(); await sleep(1000);
+  SND.cue('appear'); for (let k = 1; k <= 10; k++){ place(0, k / 10); await sleep(110); } bobOn(420);
+  SND.cue('reward'); await showCard(`<div class="st" style="font-size:20px;letter-spacing:0">열일곱 가지 모두</div>무슈 블랑이 맛본 요리 17 / 17<small>열두 밤 만찬까지 다 가져다줬어요</small>`, null, 2400);
+  SND.bgm(false); SND.cue('farewell', 30);   // 배경 음악은 잠깐 끄고 오르골 (게임에선 BGM.hold('blanc'))
+  const L = ['....열일곱 가지. 정말로 다 먹었군.', '백 년 동안 아무 맛도 못 느꼈는데, 그대 덕분에 열일곱 번이나 놀라고, 울고, 춤췄네.', '{player}. 잘 먹었네. 진심으로.', '이제.... 돌아갈 시간이야. 걱정 말게. 슬퍼서 가는 게 아니라, 배가 불러서 가는 거니까.', '식당 문은 열어 두겠네. 내 생각이 나면, 오늘 만든 요리를 누군가에게 대접해 주게.', '그럼 이만. 봉 아페티.......'];
+  for (const t of L) await talk(t, 1500);
+  clearInterval(bob); World.setProps('candy', [], 'blanc'); SND.cue('ascend');
+  visionStart({ scene: 'ascend', bg: ['#FFF6D8', '#3A2A5A'], p: ['sparkle'], m: 'rise', pop: [] }); shakeK = 0; await sleep(1200);
+  await yell('잘 먹었네, {player}. 정말로 맛있었어.......', 2600); await yell('봉 아페티.......', 2000);
+  await sleep(1000); visionStop(); await sleep(700);
+  await showCard(`<canvas width="32" height="32" data-bfdi="16" style="width:72px;height:72px"></canvas>「블랑의 레시피 노트」<small>조리대에 노트 한 권이 남아 있어요<br>펼치면 블랑이 맛본 장면 17개를 다시 볼 수 있어요</small>`, drawDishes, 3200);
+  SND.cue('star', 3); await showCard(`칭호 「블랑의 마지막 손님」<small>무슈 블랑이 편히 돌아갔어요</small>`, null, 2600);
+  SND.bgm(true); await sleep(1500); window.__bfDone = true;
 };
 window.__bfPeak = async i => {   // 장면 모음용: 환상 + 첫 외침 + 제목을 한 화면에
   await ready; const D = R.dishes[i]; visionStart(D); shakeK = 0; shout.textContent = fill(D.vision[0]); shout.classList.add('on');

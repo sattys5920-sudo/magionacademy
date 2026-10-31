@@ -16,7 +16,7 @@ const INJ = fs.readFileSync(path.join(__dirname, 'blanc_feast_inject.js'), 'utf8
   await p.evaluate(() => { World.kNow = () => new Date(2026, 9, 30, 23, 20); World.zoomStep(-1); World.teleport('candy', [16, 13]); }); await p.waitForTimeout(2500);
   await p.addScriptTag({ content: INJ }); await p.waitForTimeout(800);
   const start = (Date.now() - T0) / 1000;
-  p.evaluate(l => window.__bfGo(l), LIST);
+  if (process.argv[4] === 'finale') p.evaluate(() => window.__bfFinale()); else p.evaluate(l => window.__bfGo(l), LIST);
   await p.waitForFunction(() => window.__bfDone, null, { timeout: 300000 });
   const total = (Date.now() - T0) / 1000 - start + 1;
   const wav = await p.evaluate(t => window.__bfSnd.render(t, 'audio/bgm_main.mp3'), total);   // 영상에는 소리가 안 담겨서 같은 합성을 다시 그려 붙여요
