@@ -2469,6 +2469,8 @@ function xcoMirrorStep(M, run, dt, now){   // 멤버: 방장이 올린 상태를
   else if (M.st === 'res' && M.res && now - M.res.t0 >= M.res.dur){ M.res = null; M.st = 'walk'; }
 }
 function xMStep(M, run, dt, now){
+  // 「준비 중」(전투 들어가는 중)에 8초 넘게 갇혀 있으면 다시 걷게 해요 → 보스 자리(99.8%)면 보스가 다시 나와요. 99%에서 계속 걷기만 하던 문제
+  if (M.st === 'busy' && !xb){ M.busyAt = M.busyAt || now; if (now - M.busyAt > (run.co && !xcoHost() ? 12000 : 8000)){ M.busyAt = 0; M.st = 'walk'; errReport('explore', `탐사가 준비 중에 멈춰서 다시 걸어요 (${Math.floor(run.prog)}%${run.co ? ' · 파티' : ''})`, ''); } } else M.busyAt = 0;
   if (run.co && !xcoHost()) return xcoMirrorStep(M, run, dt, now);
   const co = !!run.co;
   if (M.st === 'walk' && xFxOn(now)) return;   // 연출 동안은 멈춰서 구경해요
@@ -2480,7 +2482,7 @@ function xMStep(M, run, dt, now){
     else if (M.wt >= M.nextEnc){ const el = run.prog > 20 && Math.random() < .12; M.nextEnc = M.wt + 12 + Math.random() * 12; const mo = el ? xReg().elite : xRand(run.pool && run.pool.length ? run.pool : xReg().mon); if (!el) run.nextMon = mo; M.st = 'alert'; M.alert = { t0: now, dur: 1200, kind: el ? 'elite' : 'battle', lp: mo.lp, txt: el ? '강한 몬스터가 나타났어요!' : '몬스터가 나타났어요!' }; sfx('enc'); if (co) xcoPub({ st: 'alert', alert: { kind: M.alert.kind, lp: mo.lp, txt: M.alert.txt, t0: now2(), dur: 1200 } }); }
     else if (M.wt >= M.nextHaz){ M.nextHaz = M.wt + 22 + Math.random() * 18; const ty = xRand(XM_HAZ); M.st = 'haz'; M.haz = { ty, tyi: XM_HAZ.indexOf(ty), hid: now2(), t0: now, dur: 3600, done: false, ok: false }; sfx('haz'); if (co) xcoPub({ st: 'haz', haz: { hid: M.haz.hid, ty: M.haz.tyi, t0: now2(), dur: 3600 } }); }
   } else if (M.st === 'alert'){
-    if (now - M.alert.t0 >= M.alert.dur){ const k = M.alert.kind; M.alert = null; M.st = 'busy'; xSaveParty(); save(); xStartBattle(k); }
+    if (now - M.alert.t0 >= M.alert.dur){ const k = M.alert.kind; M.alert = null; M.st = 'busy'; xSaveParty(); save(); try { xStartBattle(k); } catch(e){ errReport('explore', `전투를 못 열었어요 (${k}): ${e.message}`, e.stack || ''); xb = null; M.st = 'walk'; M.wt = Math.max(0, M.wt - 3); } }   // 실패하면 걷다가 다시 시도해요
   } else if (M.st === 'fork'){
     if (co) xcoForkTick(M, now); else if (now - M.fork.t0 > XM_VOTE) xMPick(Math.floor(Math.random() * M.fork.opts.length));
   } else if (M.st === 'haz'){
