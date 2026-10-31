@@ -1,13 +1,13 @@
 // 시안: 씨앗 대회 처음 연출 — 관리자가 이벤트를 열면 학생 화면에서 한 번
 //   ① 광장에 무슈 블랑이 스르륵 → ② 씨앗 열두 개가 빙글빙글 → 한 개가 나를 골라 날아옴 → ③ 씨앗이 첫마디(성격대로)
-//   → ④ 블랑이 키우는 법 안내 → ⑤ 내 방으로 이동, 화분이 놓여 있음 → ⑥ 화분 카드(물 0/2 · 말 0/2 · 6시간 간격 · 1/5일째)
+//   → ④ 블랑이 키우는 법 안내 → ⑤ 내 방으로 이동, 화분이 놓여 있음 → ⑥ 화분 카드(물 0/2 · 말 0/2 · 6 시간 간격 · 1/5 일째)
 //   목업 사이트 폴더에 blanc_lpc.png · seed_plants.png가 있어야 해요 · window.__soGo(plant 번호)
 (function(){
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const PL = [['잭오랜턴 호박꽃', '#FF8A2A'], ['박쥐 날개 고사리', '#8A5AC8'], ['유령 난초', '#E8F0FF'], ['해골 양귀비', '#F0E8D8'], ['거미줄 백합', '#C8C4E0'], ['마녀 모자 버섯', '#7A4AB8'],
   ['눈알 열매덩굴', '#E8486A'], ['사탕옥수수 튤립', '#FFD84A'], ['도깨비불 등불초', '#6AE8FF'], ['검은 장미', '#5A2A4A'], ['독사과 나무', '#7AE05A'], ['뱀파이어 송곳니 끈끈이', '#C81E3A']];
 const FIRST = {   // 씨앗이 나를 고를 때 첫마디 (seed_plant_lines.json 말투 그대로)
-  0: ['야아아아! 너다! 너로 정했어! 내가 골랐어! 최고의 선택이야!', '빨리 가자! 방 어디야?! 나 달려갈게! 다리는 없지만!'],
+  0: ['야아아아! 너다! 너로 정했어! 내가 골랐어! 최고의 선택이야!', '빨리 가자! 방 어디야? 나 달려갈게! 다리는 없지만!'],
   1: ['어.... 여기가 어디야? 아, 너한테 떨어졌구나. 일부러 그런 거야. 아마.', '나 씨앗 맞지? 아까 블랑 아저씨가 그렇다고 했어. 그럼 맞아.'],
   4: ['어머, 하필 너야? ....뭐, 다른 애들은 더 별로였으니까.', '열심히 키워 봐. 기대는 안 할게. 실망하기 싫거든.'],
   6: ['....드디어 만났네. 사실 아까부터 계속 보고 있었어.', '....네 방 가는 길 알아. 침대 밑에 뭐 있는지도 알아.']
@@ -77,7 +77,7 @@ window.__soGo = async (mine = 4) => {
   await talk('무슈 블랑', '여기 열두 개의 씨앗이 있네. 성미가 아주 고약한 녀석들이라.... 주인은 씨앗이 직접 고른다네.', 1700);
   title.innerHTML = '마법 씨앗 대회<small>씨앗이 주인을 고르는 중.......</small>'; title.classList.add('on');
   await swirl(mine); title.classList.remove('on');
-  World.say('me', '?!'); await sleep(900);
+  World.say('me', '!'); await sleep(900);
   card.innerHTML = `<canvas width="32" height="32" id="sopot" style="width:112px;height:112px"></canvas>${nm} 씨앗<small>이 씨앗이 나를 골랐어요</small>`;
   card.classList.add('on'); { const g = document.getElementById('sopot').getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(PI, 4, 24, 32, 32, 0, 0, 32, 32); } await sleep(2200); card.classList.remove('on'); await sleep(450);
   await talk(nm, L1, 1600, col);
@@ -93,8 +93,8 @@ window.__soGo = async (mine = 4) => {
   for (let k = 0; k < 8; k++){ putPot(); await sleep(60); } const potT = setInterval(putPot, 120);
   World.walkToTile(9, 8); await sleep(1400);
   await sleep(900); World.say('me', '화분이다.'); await sleep(1400);
-  await talk(nm, mine === 4 ? '어머, 방이 생각보다 좁네. 뭐, 너한테 딱 맞는 크기다.' : mine === 0 ? '여기가 우리 집이야?! 좋아! 완전 좋아! 창문도 있어!' : mine === 1 ? '여기 어디야? 아, 화분이구나. 흙 맛있다.' : '....좋은 방이네. 잘 보여. 전부 다.', 1600, col);
-  card.innerHTML = `<canvas width="32" height="32" id="sopot2" style="width:80px;height:80px"></canvas>${nm}<small>씨앗 · 1 / 5일째</small><div class="rw"><i>💧 물 0 / 2<em>6시간 간격</em></i><i>💬 말 0 / 2<em>6시간 간격</em></i></div><small>둘 다 채우면 자정에 자라요</small>`;
+  await talk(nm, mine === 4 ? '어머, 방이 생각보다 좁네. 뭐, 너한테 딱 맞는 크기다.' : mine === 0 ? '여기가 우리 집이야? 좋아! 완전 좋아! 창문도 있어!' : mine === 1 ? '여기 어디야? 아, 화분이구나. 흙 맛있다.' : '....좋은 방이네. 잘 보여. 전부 다.', 1600, col);
+  card.innerHTML = `<canvas width="32" height="32" id="sopot2" style="width:80px;height:80px"></canvas>${nm}<small>씨앗 · 1 / 5 일째</small><div class="rw"><i>💧 물 0 / 2<em>6 시간 간격</em></i><i>💬 말 0 / 2<em>6 시간 간격</em></i></div><small>둘 다 채우면 자정에 자라요</small>`;
   card.classList.add('on'); { const g = document.getElementById('sopot2').getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(PI, 4, 24, 32, 32, 0, 0, 32, 32); } await sleep(3600); card.classList.remove('on');
   await sleep(1000); clearInterval(potT); window.__soDone = true;
 };
