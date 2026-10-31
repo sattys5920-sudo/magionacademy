@@ -62,13 +62,15 @@ const mid = () => { const r = (document.getElementById('cv') || document.body).g
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 // ================= 처음: 눈 사이로 쪽지가 같이 내려와요 =================
 async function intro(api){ VOL = api.vol ?? 1; layer(true); for (let i = 0; i < 14; i++) falling.push({ x: Math.random(), y: -Math.random() * 1.2, v: .03 + Math.random() * .03, sw: Math.random() * 6, r: Math.random() * 6 }); SND.fall(); await sleep(1500); api.W.say('me', '....어, 눈 사이에 뭐가 같이 내려와.'); await sleep(4500); }
+// ================= 누가 새 소원을 쓰면: 쪽지 몇 장이 하늘에서 내려와요 =================
+async function fall(api){ VOL = api.vol ?? 1; layer(true); for (let i = 0; i < 6; i++) falling.push({ x: .2 + Math.random() * .6, y: -Math.random() * .4, v: .09 + Math.random() * .05, sw: Math.random() * 6, r: Math.random() * 6 }); SND.fall(); await sleep(2600); }
 // ================= 쪽지 읽기 + 응원 (응원 글 50 자) =================
 // o = { t 소원, n 응원 수, my { m } 이미 응원했으면, check(text) → 막을 까닭 또는 '' }  → { cheer: true, m } 또는 null
 function read(api, o){ VOL = api.vol ?? 1; SND.open(); return new Promise(res => {
   const v = document.createElement('div'); v.id = 'wsread';
-  v.innerHTML = `<div class="bx"><div class="pp">「${esc(o.t)}」<small>어느 학생의 소원 · 응원 ★ ${o.n}</small></div>
+  v.innerHTML = `<div class="bx"><div class="pp">「${esc(o.t)}」<small>익명의 소원 · 응원 ★ ${o.n}</small></div>
     ${o.my ? `<div class="mine">내가 보낸 응원 ★${o.my.m ? `<br>「${esc(o.my.m)}」` : ''}</div><div class="bt"><button data-x>닫기</button></div>`
-      : `<textarea maxlength="50" placeholder="응원 한마디 (안 써도 돼요 · 50 자까지)"></textarea><div class="cnt">0 / 50</div><div class="err"></div><div class="bt"><button class="go" data-go>★ 응원하기</button><button data-x>다음에</button></div>`}</div>`;
+      : `<textarea maxlength="50" placeholder="응원 한마디 (익명 · 안 써도 돼요 · 50 자까지)"></textarea><div class="cnt">0 / 50</div><div class="err"></div><div class="bt"><button class="go" data-go>★ 응원하기</button><button data-x>다음에</button></div>`}</div>`;
   document.body.appendChild(v); const ta = v.querySelector('textarea'), cnt = v.querySelector('.cnt'), err = v.querySelector('.err');
   if (ta) ta.oninput = () => { cnt.textContent = `${ta.value.length} / 50`; err.textContent = ''; };
   const close = r => { v.remove(); res(r); };
@@ -94,5 +96,5 @@ async function finale(api, o){   // o = { wishes: [글 8 개], nW 소원 수, nC
     if (o.reward){ SND.card(); rw.innerHTML = o.reward; rw.classList.add('on'); await sleep(3800); rw.classList.remove('on'); await sleep(500); }
   } finally { sky = null; musicbox(false); ttl.remove(); rw.remove(); document.querySelectorAll('.wsw').forEach(x => x.remove()); api.bgm(false); }
 }
-window.WishFX = { intro, read, send, finale, NOTE, SND };
+window.WishFX = { intro, fall, read, send, finale, NOTE, SND };
 })();

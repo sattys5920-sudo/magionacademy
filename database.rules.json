@@ -394,16 +394,29 @@
         ".read": "auth != null",
         "$id": {
           ".write": "auth != null && newData.parent().parent().child('own').child(auth.uid).val() === $id",
-          ".validate": "auth.token.email === 'magionadmin@magionacademy.app' || (newData.child('t').isString() && newData.child('t').val().length <= 40 && !newData.child('hide').exists())"
+          ".validate": "auth.token.email === 'magionadmin@magionacademy.app' || (newData.child('t').isString() && newData.child('t').val().length <= 100 && !newData.child('hide').exists())"
         }
       },
       "cheer": {
         ".read": "auth != null",
         "$w": {
-          "$u": {
-            ".write": "auth != null && auth.uid === $u",
+          "$k": {
+            ".write": "auth != null && !data.exists() && newData.parent().parent().parent().child('cby').child($k).val() === auth.uid",
             ".validate": "auth.token.email === 'magionadmin@magionacademy.app' || (newData.child('m').isString() && newData.child('m').val().length <= 50 && !newData.child('hide').exists())"
           }
+        }
+      },
+      "cby": {
+        ".read": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+        "$k": {
+          ".write": "auth != null && !data.exists() && newData.val() === auth.uid"
+        }
+      },
+      "cmine": {
+        ".read": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+        "$u": {
+          ".read": "auth != null && auth.uid === $u",
+          ".write": "auth != null && auth.uid === $u"
         }
       }
     },

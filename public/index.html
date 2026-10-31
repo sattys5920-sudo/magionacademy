@@ -3614,7 +3614,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.examBd = {}; AD.day = AD.day || todayKey(); sgListen(); if (!noticeOff && F && db) noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); if (AD.tab === 'gift' && !adminTyping()) adminRender(); });
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = k === 'players' ? fbBack(s.val() || {}) : s.val() || {}; if (adminTyping()){ AD.skip = true; return; } adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('fam/pick', 'fampick'); L('fam/ctl', 'famctl'); L('fairy/ctl', 'fairyctl'); L('seed/ctl', 'seedctl'); L('tilda/ctl', 'tlctl'); L('wish/ctl', 'wsctl'); L('wish/list', 'wslist'); L('wish/cheer', 'wscheer'); L('wish/own', 'wsown'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('morph/ctl', 'moctl'); L('morph/st', 'most'); L('morph/form', 'moform'); L('board', 'board'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event'){ if (adminTyping()) AD.skip = true; else adminRender(); } })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('fam/pick', 'fampick'); L('fam/ctl', 'famctl'); L('fairy/ctl', 'fairyctl'); L('seed/ctl', 'seedctl'); L('tilda/ctl', 'tlctl'); L('wish/ctl', 'wsctl'); L('wish/list', 'wslist'); L('wish/cheer', 'wscheer'); L('wish/own', 'wsown'); L('wish/cby', 'wscby'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('morph/ctl', 'moctl'); L('morph/st', 'most'); L('morph/form', 'moform'); L('board', 'board'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event'){ if (adminTyping()) AD.skip = true; else adminRender(); } })); }
   adminRender();
 }
 // 관리자: 고르는 칸(드롭다운)을 펼친 동안은 새로 그리지 않아요 (학생 접속 정보가 자주 바뀌어도 닫히지 않게) · 고르거나 닫으면 밀린 걸 그려요
@@ -4234,7 +4234,7 @@ const WX_KO = { clear: '맑음', rain: '비', fog: '안개', snow: '눈' };
 let wxForce = null;   // 관리자가 정한 오늘 날씨 (story/wx)
 let bandForce = null;   // 관리자가 정한 오늘 시간대 (story/band) — 이야기·NPC 루틴 시험용
 function weatherToday(){
-  if (window.__snowOn || window.__wishOn) return 'snow';   // 눈사람 · 첫눈의 소원 이벤트 중에는 늘 눈
+  if (window.__snowOn) return 'snow';   // 눈사람 이벤트 중에는 늘 눈
   if (wxForce && wxForce.d === todayKey()) return wxForce.w;
   const r = hash32('wx' + todayKey()) / 4294967296, m = kNow().getMonth();
   return r < .25 ? ([11, 0, 1].includes(m) && r < .14 ? 'snow' : 'rain') : r < .40 ? 'fog' : 'clear';
@@ -8900,13 +8900,14 @@ document.addEventListener('click', e => {
 });
 
 // ===== 「첫눈의 소원」: 관리자가 열면 눈이 오고 하늘에서 소원 쪽지가 내려요 · 주워서 응원(응원 글 50 자) · 내 소원 하나 날려 보내기 · 관리자가 끝내면 별자리 연출 + 모든 소원과 응원 글 공개 (연출은 wish.js) =====
-//   wish/ctl = { open, id, at, end 끝낸 시각 } · wish/list/<소원> = { t, at, ev, hide } · wish/own/<uid> = 내 소원 번호(나 · 관리자만 읽어요) · wish/cheer/<소원>/<uid> = { m 응원 글, at, hide }
-//   me.wish = { ev, got { 날: [주운 자리] }, ch { 소원: 1 } 응원한 것, ln 내 소원 응원 수(알림용), seen 별자리 본 회차 }
-let wsCtl = null, wsList = {}, wsCheer = {}, wsMine = null, wsOn = false, wsLoad = null, wsSpotSig = '';
+//   wish/ctl = { open, id, at, end 끝낸 시각 } · wish/list/<소원> = { t, at, ev, hide } (쓴 사람 없음) · wish/own/<uid> = 내 소원 번호(나 · 관리자만)
+//   wish/cheer/<소원>/<응원 번호> = { m 응원 글, at, hide } (응원한 사람 없음 · 익명) · wish/cby/<응원 번호> = uid (관리자만 읽어요) · wish/cmine/<uid>/<소원> = 응원 번호 (나 · 관리자만)
+//   me.wish = { ev, hi 처음 연출 봄, ln 내 소원 응원 수(알림용) } · me.wishSeen = 별자리 본 회차   ※ 누가 무엇을 응원했는지는 학생끼리 절대 알 수 없어요
+let wsCtl = null, wsList = {}, wsCheer = {}, wsMine = null, wsCm = {}, wsOn = false, wsLoad = null, wsSpotSig = '', wsSeenIds = null;
 const wsFx = () => wsLoad || (wsLoad = new Promise((res, rej) => { if (window.WishFX) return res(); const sc = document.createElement('script'); sc.src = 'wish.js?v=1'; sc.onload = () => res(); sc.onerror = () => { wsLoad = null; rej(); }; document.head.appendChild(sc); }));
 const wsApi = () => ({ W: World, vol: typeof SET !== 'undefined' ? SET.sfx : 1, bgm: on => { try { on ? BGM.hold('wish') : BGM.release('wish'); } catch(e){} } });
 const wsLive = () => !!(wsCtl && wsCtl.open && wsCtl.id), wsDone = () => !!(wsCtl && !wsCtl.open && wsCtl.end && wsCtl.id);
-const wsSt = () => { const s = me.wish = me.wish && me.wish.ev === (wsCtl && wsCtl.id) ? me.wish : { ev: wsCtl && wsCtl.id, got: {}, ch: {}, ln: 0 }; s.got = s.got || {}; s.ch = s.ch || {}; return s; };
+const wsSt = () => { const s = me.wish = me.wish && me.wish.ev === (wsCtl && wsCtl.id) ? me.wish : { ev: wsCtl && wsCtl.id, ln: 0 }; delete s.got; delete s.ch; return s; };
 const wsVis = () => Object.entries(wsList || {}).filter(([id, w]) => w && !w.hide && w.ev === wsCtl?.id && typeof w.t === 'string');
 const wsCheers = id => Object.entries((wsCheer || {})[id] || {}).filter(([u, c]) => c && !c.hide);
 // 글 검사: 친구 이름 · 욕 · 전화번호 · 주소 · 누리집 주소는 못 써요
@@ -8919,49 +8920,50 @@ function wsCheck(t){
   if (nicks.some(n => s.includes(n.replace(/\s+/g, '')))) return '친구 이름은 쓸 수 없어요. 이름 없이도 마음은 닿아요.';
   return '';
 }
-// 땅에 떨어진 쪽지: 날마다 10 자리 (교정 · 등불 마을 채집 자리 중에서) · 주운 자리는 그날 다시 안 생겨요
+// 땅에 떨어진 쪽지: 내 소원만 빼고 모든 소원이 학생마다 다른 자리에 하나씩 (교정 · 등불 마을 채집 자리 중에서) · 읽고 응원하면 사라져요
 function wsSpots(){
-  const pool = wsVis().filter(([id]) => id !== wsMine).map(([id]) => id).sort(); if (!pool.length) return [];
-  const C = ['campus', 'town'].flatMap(k => (World.meta(k)?.forage || []).map(c => [c[0], c[1], k])), R = seedRand((uid || me.nick) + todayKey() + 'wish'); const out = [];
-  for (let k = 0; k < 10 && C.length; k++){ const c = C.splice(Math.floor(R() * C.length), 1)[0]; out.push({ i: k, x: c[0], y: c[1], m: c[2], id: pool[Math.floor(R() * pool.length)] }); }
-  return out;
+  const ids = wsVis().map(([id]) => id).filter(id => id !== wsMine && !wsCm[id]).sort(); if (!ids.length) return [];
+  const C = ['campus', 'town'].flatMap(k => (World.meta(k)?.forage || []).map(c => [c[0], c[1], k])); if (!C.length) return []; const used = new Set();
+  return ids.map(id => { const R = seedRand((uid || me.nick) + ':' + id); let c, n = 0; do { c = C[Math.floor(R() * C.length)]; } while (used.has(c.join()) && ++n < 20); used.add(c.join()); return { i: id, x: c[0], y: c[1], m: c[2], id }; });
 }
 function wsProps(){
   const t = World.meTile && World.meTile(), m = t ? t.m : ''; let list = [];
-  if (wsLive() && me && t && !wsOn){ const S = wsSt(), got = S.got[todayKey()] || []; list = wsSpots().filter(p => p.m === m && !got.includes(p.i)).map(p => ({ id: 'wsn' + p.i, x: p.x, y: p.y, img: window.WishFX ? WishFX.NOTE : null, pxc: window.WishFX ? WishFX.NOTE.getContext('2d') : null, sw: 24, sh: 24, ax: 12, ay: 18, solid: false, light: { r: 14, c: [210, 230, 255], a: .6 } })).filter(p => p.img); }
+  if (wsLive() && me && t && !wsOn){ list = wsSpots().filter(p => p.m === m).map(p => ({ id: 'wsn' + p.i, x: p.x, y: p.y, img: window.WishFX ? WishFX.NOTE : null, pxc: window.WishFX ? WishFX.NOTE.getContext('2d') : null, sw: 24, sh: 24, ax: 12, ay: 18, solid: false, light: { r: 14, c: [210, 230, 255], a: .6 } })).filter(p => p.img); }
   const sig = m + ':' + list.map(x => x.id).join(','); if (sig === wsSpotSig) return; const pm = wsSpotSig.split(':')[0]; wsSpotSig = sig;
   if (pm && pm !== m) World.setProps(pm, [], 'wsnote'); if (m) World.setProps(m, list, 'wsnote');
 }
 async function wsTap(id){
-  const i = +id.slice(3), p = wsSpots().find(s => s.i === i); if (!p) return; const t = World.meTile && World.meTile();
+  const i = id.slice(3), p = wsSpots().find(s => s.i === i); if (!p) return; const t = World.meTile && World.meTile();
   if (!t || t.m !== p.m || Math.abs(t.x - p.x) + Math.abs(t.y - p.y) > 2){ World.walkToTile(p.x, p.y + 1); return; }
-  if (wsOn || uiBusy()) return; const S = wsSt(), d = todayKey(); S.got[d] = [...(S.got[d] || []), i]; save(); wsSpotSig = ''; wsProps(); sfx('pick');
+  if (wsOn || uiBusy()) return; sfx('pick');
   const w = wsList[p.id]; if (!w) return; wsOn = true;
-  try { await wsFx(); const mine = (wsCheer[p.id] || {})[uid];
-    const r = await WishFX.read(wsApi(), { t: w.t, n: wsCheers(p.id).length, my: S.ch[p.id] || mine ? { m: mine ? mine.m : '' } : null, check: wsCheck });
-    if (r && r.cheer){ S.ch[p.id] = 1; save(); await GDB.set(`wish/cheer/${p.id}/${uid}`, { m: r.m || '', at: now2() }).catch(() => {}); toast('응원 별을 보냈어요 ★'); }
+  try { await wsFx();
+    const r = await WishFX.read(wsApi(), { t: w.t, n: wsCheers(p.id).length, my: null, check: wsCheck });
+    if (r && r.cheer){ const k = now2().toString(36) + Math.random().toString(36).slice(2, 8); wsCm[p.id] = k; wsSpotSig = '';   // 응원 번호만 남기고 이름은 안 남겨요 (누가 했는지는 관리자만)
+      await GDB.upd('wish', { ['cby/' + k]: uid, ['cmine/' + uid + '/' + p.id]: k, ['cheer/' + p.id + '/' + k]: { m: r.m || '', at: now2() } }).catch(e => errReport('wish', '응원 저장 오류: ' + e.message, '')); toast('응원 별을 보냈어요 ★'); }
   } catch(e){ errReport('wish', '소원 쪽지 오류: ' + e.message, e.stack || ''); } finally { wsOn = false; }
 }
 // 내 소원 쓰기 (일지 탭에서) · 한 사람 하나 · 끝나기 전까지 고칠 수 있어요
 async function wsWrite(text){
-  const t = String(text || '').trim().slice(0, 40), bad = wsCheck(t); if (!t) return '소원을 써 주세요.'; if (bad) return bad;
+  const t = String(text || '').trim().slice(0, 100), bad = wsCheck(t); if (!t) return '소원을 써 주세요.'; if (bad) return bad;
   const id = wsMine || (now2().toString(36) + Math.random().toString(36).slice(2, 7));
   await GDB.upd('wish', { ['own/' + uid]: id, ['list/' + id]: { t, at: now2(), ev: wsCtl.id } }); wsMine = id;
   wsOn = true; try { closeSheet(); await wsFx(); await WishFX.send(wsApi()); toast('내 소원이 별이 됐어요. 누가 응원하면 알려 줄게요'); } finally { wsOn = false; }
   return '';
 }
-let wsTk = 0;
+let wsTk = 0, wsFall = 0; window.__wsSpots = () => wsSpots().map(p => [p.id, p.m, p.x, p.y]);
 function wsTick(){
-  if (!me) return; const on = wsLive(); if (window.__wishOn !== on){ window.__wishOn = on; World.setWeather && World.setWeather(weatherToday()); }
+  if (!me) return; const on = wsLive();
   if (on && !window.WishFX){ wsFx().then(() => { wsSpotSig = ''; }).catch(() => {}); return; }
   wsProps(); if (wsOn) return;
   if (on){ const S = wsSt();
     if (!S.hi){ if (uiBusy() || !World.meAt || !World.meAt() || !evTurn('wish')) return; S.hi = 1; save(); wsOn = true; WishFX.intro(wsApi()).finally(() => { wsOn = false; toast('하늘에서 소원 쪽지가 내려요. 주워서 응원해 보세요. 내 소원은 일지에서 쓸 수 있어요'); }); return; }
+    if (wsFall && !wsOn && !uiBusy() && World.meAt && World.meAt()){ wsFall = 0; wsOn = true; WishFX.fall(wsApi()).finally(() => { wsOn = false; wsSpotSig = ''; toast('새 소원 쪽지가 어딘가에 떨어졌어요'); }); return; }
     if (wsMine){ const n = wsCheers(wsMine).length; if (n > (S.ln || 0)){ S.ln = n; save(); toast(`누군가 내 소원을 응원했어요 ★ ${n}`); sfx('sparkle'); } }
   }
   // 관리자가 끝내면: 별자리 연출 (한 번) + 보상 · 그 뒤로 모든 소원과 응원 글을 일지에서 볼 수 있어요
   if (wsDone() && !(me.wishSeen === wsCtl.id)){ if (uiBusy() || !World.meAt || !World.meAt() || !evTurn('wish')) return;
-    const V = wsVis(), nC = V.reduce((a, [id]) => a + wsCheers(id).length, 0), my = Object.keys(wsSt().ch || {}).length, wl = V.map(([, w]) => w.t).sort(() => Math.random() - .5).slice(0, 8);
+    const V = wsVis(), nC = V.reduce((a, [id]) => a + wsCheers(id).length, 0), my = Object.keys(wsCm || {}).length, wl = V.map(([, w]) => w.t).sort(() => Math.random() - .5).slice(0, 8);
     const joined = !!(wsMine || my); let rw = '';
     if (joined){ me.cos = me.cos || {}; (me.cos.bub = me.cos.bub || {}).snow = 1; if (my >= 10) (me.cos.tag = me.cos.tag || {}).star = 1; syncCos();
       rw = `<span style="font-size:34px">❄</span>첫눈의 선물<small>말풍선 꾸미기 「눈송이 말풍선」${my >= 10 ? '<br>응원을 10 번 넘게 해서 이름표 「별지기 이름표」도!' : ''}<br>「내 정보」에서 바꿔 끼울 수 있어요 · 모든 소원과 응원 글은 일지에서 볼 수 있어요</small>`; }
@@ -8973,7 +8975,8 @@ let wsOffs = [];
 function wishListen(){
   if (wsOffs.length) return;
   wsOffs.push(GDB.on('wish/ctl', v => { wsCtl = v || null; wsSpotSig = ''; }));
-  wsOffs.push(GDB.on('wish/list', v => { wsList = v || {}; wsSpotSig = ''; }));
+  wsOffs.push(GDB.on('wish/list', v => { wsList = v || {}; wsSpotSig = ''; const ids = Object.keys(wsList); if (wsSeenIds && ids.some(id => !wsSeenIds.has(id) && id !== wsMine && wsList[id]?.ev === wsCtl?.id)) wsFall = 1; wsSeenIds = new Set(ids); }));   // 누가 새 소원을 쓰면 쪽지가 내려오는 연출
+  wsOffs.push(GDB.on('wish/cmine/' + uid, v => { wsCm = v || {}; wsSpotSig = ''; }));
   wsOffs.push(GDB.on('wish/cheer', v => { wsCheer = v || {}; }));
   wsOffs.push(GDB.on('wish/own/' + uid, v => { wsMine = typeof v === 'string' ? v : null; wsSpotSig = ''; }));
   const prev = World.onProp; World.onProp = id => String(id).startsWith('wsn') ? (wsTap(id), null) : prev ? prev(id) : null;
@@ -8983,24 +8986,24 @@ function wishListen(){
 function wsNoteHTML(){
   const mine = wsMine && wsList[wsMine], cnt = wsMine ? wsCheers(wsMine).length : 0;
   if (wsLive()) return `<section class="sec">${secH('내 소원', mine ? `응원 ★ ${cnt}` : '')}<div class="box" style="padding:12px">
-      <textarea id="wsIn" maxlength="40" style="width:100%;box-sizing:border-box;min-height:64px;border-radius:10px;border:2px solid #B8D8FF;background:#FBF6EA;color:#3A2C4A;font-family:var(--f-px);font-size:15px;line-height:22px;padding:8px 10px;resize:none" placeholder="소원을 써요 (40 자까지 · 이름은 안 보여요)">${esc(mine ? mine.t : '')}</textarea>
+      <textarea id="wsIn" maxlength="100" style="width:100%;box-sizing:border-box;min-height:64px;border-radius:10px;border:2px solid #B8D8FF;background:#FBF6EA;color:#3A2C4A;font-family:var(--f-px);font-size:15px;line-height:22px;padding:8px 10px;resize:none" placeholder="소원을 써요 (100 자까지 · 익명으로 올라가요)">${esc(mine ? mine.t : '')}</textarea>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><span class="s sub" id="wsErr">${mine ? '끝나기 전까지 고칠 수 있어요' : '한 사람에 소원 하나'}</span><button class="btn sm go" id="wsGo">${mine ? '고쳐서 다시 보내기' : '날려 보내기'}</button></div></div></section>
-    <section class="sec"><div class="hint on">응원 글은 관리자가 이벤트를 끝내면 열어 볼 수 있어요. 그때 모든 소원과 응원 글도 같이 공개돼요.</div></section>`;
+    <section class="sec"><div class="hint on">소원과 응원은 모두 익명이에요. 친구들은 누가 썼는지 알 수 없어요.</div></section>`;
   if (!wsDone()) return '<div class="hint">지금은 첫눈의 소원이 열려 있지 않아요</div>';
-  const V = wsVis().sort((a, b) => wsCheers(b[0]).length - wsCheers(a[0]).length), card = ([id, w], me1) => { const C = wsCheers(id).filter(([, c]) => c.m); return `<div class="box" style="padding:12px;margin-bottom:8px${me1 ? ';border:2px solid #FFE9A0' : ''}"><div style="background:#FBF6EA;color:#3A2C4A;border-radius:6px;padding:10px;font-size:15px;line-height:22px">「${esc(w.t)}」</div><div class="s sub" style="margin:6px 0 4px">${me1 ? '내 소원 · ' : ''}응원 ★ ${wsCheers(id).length}</div>${C.map(([, c]) => `<div style="font-size:13px;line-height:19px;padding:4px 0;border-top:1px dashed rgba(184,216,255,.25)">★ ${esc(c.m)}</div>`).join('')}</div>`; };
+  const V = wsVis().sort((a, b) => wsCheers(b[0]).length - wsCheers(a[0]).length), card = ([id, w], me1) => { const C = wsCheers(id).filter(([, c]) => c.m); return `<div class="box" style="padding:12px;margin-bottom:8px${me1 ? ';border:2px solid #FFE9A0' : ''}"><div style="background:#FBF6EA;color:#3A2C4A;border-radius:6px;padding:10px;font-size:15px;line-height:22px;word-break:keep-all">「${esc(w.t)}」</div><div class="s sub" style="margin:6px 0 4px">${me1 ? '내 소원 · ' : '익명의 소원 · '}응원 ★ ${wsCheers(id).length}</div>${C.map(([, c]) => `<div style="font-size:13px;line-height:19px;padding:4px 0;border-top:1px dashed rgba(184,216,255,.25)"><span class="s sub">익명</span> ★ ${esc(c.m)}</div>`).join('')}</div>`; };
   return `${mine ? `<section class="sec">${secH('내 소원에 온 응원')}${card([wsMine, mine], true)}</section>` : ''}<section class="sec">${secH('모든 소원', `${V.length} 개`)}${V.filter(([id]) => id !== wsMine).map(x => card(x)).join('') || '<div class="hint">소원이 없어요</div>'}</section>`;
 }
 function wsNoteBind(){ const b = $('#wsGo'); if (!b) return; b.onclick = async () => { const e = await wsWrite($('#wsIn').value); if (e){ const er = $('#wsErr'); if (er){ er.textContent = e; er.style.color = '#FF9A9A'; } } }; }
 // 관리자: 이벤트 탭 카드 · 시작 / 끝내기 · 소원과 응원 글 보기(쓴 학생 이름 보임) · 숨기기
 function adminWishHTML(){
-  const c = AD.wsctl || {}, P = AD.players || {}, L = AD.wslist || {}, CH = AD.wscheer || {}, OWN = AD.wsown || {}, by = Object.fromEntries(Object.entries(OWN).map(([u, id]) => [id, u])), nk = u => esc((P[u] && P[u].nick) || '?');
+  const c = AD.wsctl || {}, P = AD.players || {}, L = AD.wslist || {}, CH = AD.wscheer || {}, OWN = AD.wsown || {}, CBY = AD.wscby || {}, by = Object.fromEntries(Object.entries(OWN).map(([u, id]) => [id, u])), nk = u => esc((P[u] && P[u].nick) || '?');
   const V = Object.entries(L).filter(([, w]) => w && w.ev === c.id).sort((a, b) => (b[1].at || 0) - (a[1].at || 0)), nC = V.reduce((a, [id]) => a + Object.keys(CH[id] || {}).length, 0);
   const rows = V.map(([id, w]) => { const C = Object.entries(CH[id] || {}); return `<div class="sdarow" style="display:block"><div class="ln" style="justify-content:space-between"><span><b>${nk(by[id])}</b> · 「${esc(w.t)}」 · ★ ${C.length}</span><button class="btn sm" data-wsh="list/${id}">${w.hide ? '다시 보이기' : '숨기기'}</button></div>
-      ${C.map(([u, x]) => `<div class="ln" style="justify-content:space-between;margin-top:3px;${x.hide ? 'opacity:.45' : ''}"><span>└ ${nk(u)}: ${x.m ? '「' + esc(x.m) + '」' : '(응원만)'}</span>${x.m ? `<button class="btn sm" data-wsh="cheer/${id}/${u}">${x.hide ? '보이기' : '숨기기'}</button>` : ''}</div>`).join('')}</div>`; }).join('');
+      ${C.map(([k, x]) => `<div class="ln" style="justify-content:space-between;margin-top:3px;${x.hide ? 'opacity:.45' : ''}"><span>└ ${nk(CBY[k])}: ${x.m ? '「' + esc(x.m) + '」' : '(응원만)'}</span>${x.m ? `<button class="btn sm" data-wsh="cheer/${id}/${k}">${x.hide ? '보이기' : '숨기기'}</button>` : ''}</div>`).join('')}</div>`; }).join('');
   return `<div class="adcard sdad"><div class="abhead"><b>이벤트 「첫눈의 소원」</b>${c.open ? '<button class="btn sm" data-wsa="close">이벤트 끝내기</button>' : '<button class="btn sm go" data-wsa="open">이벤트 시작</button>'}</div>
-    <div class="abchips"><span>${c.open ? '여는 중 · 눈이 와요' : c.end ? '끝남 · 모두 공개됨' : '닫힘'}</span><span>소원 <b>${V.length}</b></span><span>응원 <b>${nC}</b></span></div>
+    <div class="abchips"><span>${c.open ? '여는 중' : c.end ? '끝남 · 모두 공개됨' : '닫힘'}</span><span>소원 <b>${V.length}</b></span><span>응원 <b>${nC}</b></span></div>
     ${rows || '<div class="s">아직 소원이 없어요</div>'}
-    <div class="s" style="margin-top:6px">시작하면 눈이 오고 쪽지가 내려요. 학생은 이름 없이 소원 하나를 쓰고, 주운 쪽지에 응원(글 50 자)을 달아요. 친구 이름 · 욕 · 전화번호는 쓸 때 막혀요. 끝내면 별자리 연출이 나오고 모든 소원과 응원 글이 일지에 공개돼요. 여기서는 누가 썼는지 보이고 숨길 수 있어요.</div></div>`;
+    <div class="s" style="margin-top:6px">시작하면 학생마다 소원 쪽지가 서로 다른 자리에 떨어져요(내 소원만 빼고 전부 · 응원하면 사라져요). 소원은 100 자, 응원 글은 50 자 · 모두 익명이고 친구 이름 · 욕 · 전화번호는 쓸 때 막혀요. 끝내면 별자리 연출이 나오고 모든 소원과 응원 글이 일지에 공개돼요. 누가 썼는지는 이 카드에서만 보여요.</div></div>`;
 }
 document.addEventListener('click', e => {
   const h = e.target.closest && e.target.closest('[data-wsh]'); if (h){ const p = 'wish/' + h.dataset.wsh, cur = p.split('/').slice(1).reduce((o, k) => o && o[k], { list: AD.wslist, cheer: AD.wscheer }); GDB.upd(p, { hide: cur && cur.hide ? null : true }); return; }
