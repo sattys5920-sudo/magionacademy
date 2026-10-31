@@ -4088,7 +4088,7 @@ function renderCook(){
 // 동물은 art/npcs.png (tools/iso/npc_art.py) 그림, 사람은 아바타. 관리자 페이지에서 고친 내용(npcs/<id>)이 이 기본값 위에 덮여요
 // 호감도 100점 = ♥1, ♥10까지 (예전엔 3점 = ♥1). me.npc[id] = { p 옛 점수, t 대화한 날, g 선물한 날, s 본 장면 [2,5,…] }
 const NPC_ART_V = 6;
-const NPC_DATA_V = 2;   // data/npc 캐시 버전
+const NPC_DATA_V = 3;   // data/npc 캐시 버전
 // LPC NPC 그림(art/npcs.png: 한 줄 = 한 명, 64칸 20개)에서 얼굴 부분만 크게 (초상화)
 const NPC_FACE = { 0: [13, 14, 31], 1: [18, 12, 29], 2: [20, 16, 28], 3: [17, 18, 31], 4: [19, 23, 32], 5: [12, 9, 39] };   // 동물·허수아비는 사람과 머리 위치가 달라요 (나비·배트리·캇파·아울라·맨디·스트로 얼굴 틀: x, y, 크기)
 const npcFace = (spr, size = 48) => {   // 액자 크기가 CSS로 바뀌어도(관계 화면 40px 등) 얼굴이 가운데에 오도록 그림 크기·위치를 퍼센트로 계산해요
@@ -4639,6 +4639,7 @@ async function evShow(ctx, who, at){
 }
 function evFace(){ const as = Object.values(STG.actors).filter(a => a.kind !== 'img'); as.forEach(a => { if (a.walk) return; const others = as.filter(b => b !== a); if (!others.length){ a.face = 'down'; return; } const avg = others.reduce((t, b) => t + b.x, 0) / others.length; a.face = avg > a.x + 4 ? 'right' : avg < a.x - 4 ? 'left' : 'down'; }); }
 function evWalk(id, to){ const a = STG.actors[id]; if (!a) return Promise.resolve(); const x1 = POSX[to] ?? 160;
+  if (a.walk && a.walk.done) a.walk.done();   // 걷던 중에 새로 걸으라고 하면 앞 걸음은 끝난 걸로 (안 그러면 앞 걸음을 기다리다 이야기가 멈춰요)
   return new Promise(done => { a.face = x1 > a.x ? 'right' : 'left'; a.walk = { x0: a.x, x1, t0: performance.now(), dur: Math.max(200, Math.abs(x1 - a.x) / 95 * 1000), done }; }); }
 async function evFadeTo(v, ms = 300){ const s = STG.fade, t0 = performance.now(); while (true){ const k = Math.min(1, (performance.now() - t0) / ms); STG.fade = s + (v - s) * k; if (k >= 1) break; await sleep(16); } }
 function evSay(ctx, name, text, narr){
@@ -4683,13 +4684,14 @@ async function evRun(ctx, sc){
     else if (c === 'if_flag'){ const v = flagOn(s.flag); const t = v ? s.then : s.else; if (t in lab) i = lab[t]; }
     else if (c === 'if_heart'){ const v = hearts(s.npc || ctx.n.id) >= s.min; const t = v ? s.then : s.else; if (t in lab) i = lab[t]; }
     else if (c === 'move' || c === 'follow'){
-      if (c === 'follow'){ await Promise.all([evWalk(s.who, 'far_right'), sleep(300).then(() => evWalk('player', 'far_right'))]); }   // 둘이 같은 방향으로 걸어가요 (화면 밖으로 나갔다 반대쪽으로 들어오지 않아요)
+      const fw = s.who === 'player' ? ctx.n && ctx.n.id : s.who;   // 「플레이어를 따라가요」로 적힌 경우: 이야기 주인공 NPC가 따라와요
+      if (c === 'follow'){ await Promise.all([evWalk(fw, 'far_right'), sleep(300).then(() => evWalk('player', 'far_right'))]); }   // 둘이 같은 방향으로 걸어가요 (화면 밖으로 나갔다 반대쪽으로 들어오지 않아요)
       if (s.transition !== 'cut') await evFadeTo(1, 280);
       await stageBg(s.to, s.time || STG.time, s.weather || STG.wxBase);
       if (s.clear) Object.keys(STG.actors).forEach(k => { if (k !== 'player') delete STG.actors[k]; });
-      if (c === 'follow'){ const a = STG.actors[s.who], p = STG.actors.player; if (a) a.x = POSX.far_left - 24; if (p) p.x = POSX.far_left - 96; }   // 이미 걷던 모양 그대로, 캇파가 앞에 · 서로 겹치지 않게
+      if (c === 'follow'){ const a = STG.actors[fw], p = STG.actors.player; if (a) a.x = POSX.far_left - 24; if (p) p.x = POSX.far_left - 96; }   // 이미 걷던 모양 그대로, 캇파가 앞에 · 서로 겹치지 않게
       if (s.transition !== 'cut') await evFadeTo(0, 280); else STG.fade = 0;
-      if (c === 'follow') await Promise.all([evWalk(s.who, 'right'), evWalk('player', 'left')]);
+      if (c === 'follow') await Promise.all([evWalk(fw, 'right'), evWalk('player', 'left')]);
       evFace(); }
     else if (c === 'walk'){ if (!STG.actors[s.who]){ await evShow(ctx, s.who, (POSX[s.to] ?? 160) > 160 ? 'off_right' : 'off_left'); } await evWalk(s.who, s.to); evFace(); }
     else if (c === 'show'){ await evShow(ctx, s.who, s.at || 'center'); evFace(); }
