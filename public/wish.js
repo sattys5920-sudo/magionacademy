@@ -70,12 +70,12 @@ function read(api, o){ VOL = api.vol ?? 1; SND.open(); return new Promise(res =>
   const v = document.createElement('div'); v.id = 'wsread';
   v.innerHTML = `<div class="bx"><div class="pp">「${esc(o.t)}」<small>익명의 소원 · 응원 ★ ${o.n}</small></div>
     ${o.my ? `<div class="mine">내가 보낸 응원 ★${o.my.m ? `<br>「${esc(o.my.m)}」` : ''}</div><div class="bt"><button data-x>닫기</button></div>`
-      : `<textarea maxlength="50" placeholder="응원 한마디 (익명 · 안 써도 돼요 · 50 자까지)"></textarea><div class="cnt">0 / 50</div><div class="err"></div><div class="bt"><button class="go" data-go>★ 응원하기</button><button data-x>다음에</button></div>`}</div>`;
+      : `<textarea maxlength="50" placeholder="응원 한마디를 꼭 써 주세요 (익명 · 50 자까지)"></textarea><div class="cnt">0 / 50</div><div class="err"></div><div class="bt"><button class="go" data-go>★ 응원하기</button><button data-x>다음에</button></div>`}</div>`;
   document.body.appendChild(v); const ta = v.querySelector('textarea'), cnt = v.querySelector('.cnt'), err = v.querySelector('.err');
   if (ta) ta.oninput = () => { cnt.textContent = `${ta.value.length} / 50`; err.textContent = ''; };
   const close = r => { v.remove(); res(r); };
   v.querySelector('[data-x]').onclick = () => close(null); v.onclick = e => { if (e.target === v) close(null); };
-  const go = v.querySelector('[data-go]'); if (go) go.onclick = async () => { const m = ta.value.trim().slice(0, 50), bad = m && o.check ? o.check(m) : ''; if (bad){ err.textContent = bad; return; }
+  const go = v.querySelector('[data-go]'); if (go) go.onclick = async () => { const m = ta.value.trim().slice(0, 50); if (!m){ err.textContent = '응원 한마디를 써 주세요.'; ta.focus(); return; } const bad = o.check ? o.check(m) : ''; if (bad){ err.textContent = bad; return; }
     v.remove(); SND.cheer(); const [x, y] = mid(); fly({ kind: 'star', x0: x, y0: y, x1: x + 30 - Math.random() * 60, y1: 18, d: 1400, arc: 20 }); res({ cheer: true, m }); };
 }); }
 // ================= 내 소원: 쪽지가 접혀서 하늘로 → 별 =================

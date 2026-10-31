@@ -8998,14 +8998,23 @@ function wsNoteBind(){ const b = $('#wsGo'); if (!b) return; b.onclick = async (
 function adminWishHTML(){
   const c = AD.wsctl || {}, P = AD.players || {}, L = AD.wslist || {}, CH = AD.wscheer || {}, OWN = AD.wsown || {}, CBY = AD.wscby || {}, by = Object.fromEntries(Object.entries(OWN).map(([u, id]) => [id, u])), nk = u => esc((P[u] && P[u].nick) || '?');
   const V = Object.entries(L).filter(([, w]) => w && w.ev === c.id).sort((a, b) => (b[1].at || 0) - (a[1].at || 0)), nC = V.reduce((a, [id]) => a + Object.keys(CH[id] || {}).length, 0);
-  const rows = V.map(([id, w]) => { const C = Object.entries(CH[id] || {}); return `<div class="sdarow" style="display:block"><div class="ln" style="justify-content:space-between"><span><b>${nk(by[id])}</b> · 「${esc(w.t)}」 · ★ ${C.length}</span><button class="btn sm" data-wsh="list/${id}">${w.hide ? '다시 보이기' : '숨기기'}</button></div>
+  const rows = V.map(([id, w]) => { const C = Object.entries(CH[id] || {}); return `<div class="sdarow" style="display:block"><div class="ln" style="justify-content:space-between"><span>쓴 사람 <b>${nk(by[id])}</b> · 「${esc(w.t)}」 · ★ ${C.length}</span><button class="btn sm" data-wsh="list/${id}">${w.hide ? '다시 보이기' : '숨기기'}</button></div>
       ${C.map(([k, x]) => `<div class="ln" style="justify-content:space-between;margin-top:3px;${x.hide ? 'opacity:.45' : ''}"><span>└ ${nk(CBY[k])}: ${x.m ? '「' + esc(x.m) + '」' : '(응원만)'}</span>${x.m ? `<button class="btn sm" data-wsh="cheer/${id}/${k}">${x.hide ? '보이기' : '숨기기'}</button>` : ''}</div>`).join('')}</div>`; }).join('');
   return `<div class="adcard sdad"><div class="abhead"><b>이벤트 「첫눈의 소원」</b>${c.open ? '<button class="btn sm" data-wsa="close">이벤트 끝내기</button>' : '<button class="btn sm go" data-wsa="open">이벤트 시작</button>'}</div>
     <div class="abchips"><span>${c.open ? '여는 중' : c.end ? '끝남 · 모두 공개됨' : '닫힘'}</span><span>소원 <b>${V.length}</b></span><span>응원 <b>${nC}</b></span></div>
-    ${rows || '<div class="s">아직 소원이 없어요</div>'}
-    <div class="s" style="margin-top:6px">시작하면 학생마다 소원 쪽지가 서로 다른 자리에 떨어져요(내 소원만 빼고 전부 · 응원하면 사라져요). 소원은 100 자, 응원 글은 50 자 · 모두 익명이고 친구 이름 · 욕 · 전화번호는 쓸 때 막혀요. 끝내면 별자리 연출이 나오고 모든 소원과 응원 글이 일지에 공개돼요. 누가 썼는지는 이 카드에서만 보여요.</div></div>`;
+    <div class="sdaflt">${[['wish', '소원별로 보기'], ['who', '누가 뭐라고 썼는지']].map(([k, n]) => `<button class="${(AD.wsV || 'wish') === k ? 'on' : ''}" data-wsv="${k}">${n}</button>`).join('')}</div>
+    ${(AD.wsV || 'wish') === 'who' ? (wsWhoHTML(V, CH, by, CBY, nk) || '<div class="s">아직 아무도 안 썼어요</div>') : (rows || '<div class="s">아직 소원이 없어요</div>')}
+    <div class="s" style="margin-top:6px">시작하면 학생마다 소원 쪽지가 서로 다른 자리에 떨어져요(내 소원만 빼고 전부 · 응원하면 사라져요). 소원은 100 자, 응원 한마디는 꼭 써야 하고 50 자까지 · 모두 익명이고 친구 이름 · 욕 · 전화번호는 쓸 때 막혀요. 끝내면 별자리 연출이 나오고 모든 소원과 응원 글이 일지에 공개돼요. 누가 썼는지는 이 카드에서만 보여요.</div></div>`;
+}
+window.__adWish = () => adminWishHTML();   // 시험용
+function wsWhoHTML(V, CH, by, CBY, nk){   // 관리자: 시간순으로 「누가 · 무엇을(소원 / 응원) · 어느 소원에」
+  const ev = []; V.forEach(([id, w]) => { ev.push({ at: w.at || 0, u: by[id], k: '소원', t: w.t, hide: w.hide }); Object.entries(CH[id] || {}).forEach(([k, x]) => ev.push({ at: x.at || 0, u: CBY[k], k: '응원', t: x.m, to: w.t, hide: x.hide })); });
+  const hm = t => { if (!t) return ''; const d = new Date(t + 9 * 3600e3); return `${d.getUTCMonth() + 1}/${d.getUTCDate()} ${d.getUTCHours()}:${String(d.getUTCMinutes()).padStart(2, '0')}`; };
+  return ev.sort((a, b) => b.at - a.at).map(e => `<div class="sdarow" style="display:block;${e.hide ? 'opacity:.45' : ''}"><div class="ln"><b>${nk(e.u)}</b><span class="tag ${e.k === '소원' ? 'ok' : ''}">${e.k}</span><span class="s">${hm(e.at)}</span>${e.hide ? '<span class="tag r">숨김</span>' : ''}</div>
+    <div style="margin-top:3px">「${esc(e.t || '(빈 응원)')}」</div>${e.to ? `<div class="s" style="margin-top:2px">→ 소원 「${esc(e.to.length > 30 ? e.to.slice(0, 30) + '....' : e.to)}」</div>` : ''}</div>`).join('');
 }
 document.addEventListener('click', e => {
+  const v = e.target.closest && e.target.closest('[data-wsv]'); if (v && v.closest('#adminv')){ AD.wsV = v.dataset.wsv; adminRender(); return; }
   const h = e.target.closest && e.target.closest('[data-wsh]'); if (h){ const p = 'wish/' + h.dataset.wsh, cur = p.split('/').slice(1).reduce((o, k) => o && o[k], { list: AD.wslist, cheer: AD.wscheer }); GDB.upd(p, { hide: cur && cur.hide ? null : true }); return; }
   const b = e.target.closest && e.target.closest('[data-wsa]'); if (!b) return; const a = b.dataset.wsa;
   if (a === 'open'){ if (confirm('「첫눈의 소원」을 시작할까요? 눈이 오고 소원 쪽지가 내려요.')) GDB.set('wish/ctl', { open: true, id: now2(), at: now2() }).then(() => toast('첫눈의 소원을 시작했어요')); }
