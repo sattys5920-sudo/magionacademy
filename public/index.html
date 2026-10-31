@@ -5773,7 +5773,7 @@ const SUBJECTS = [
 ];
 const SUBJ = Object.fromEntries(SUBJECTS.map(x => [x.id, x]));
 const RUNES = ['star','drop','herb','scale'], RUNE_KO = { star:'별', drop:'물', herb:'잎', scale:'불' };
-const classLeft = () => me.classDay === me.day ? Math.max(0, CLASS_MAX - (me.classCnt || 0)) : CLASS_MAX;
+const classLeft = () => me.classDay === todayKey() ? Math.max(0, CLASS_MAX - (me.classCnt || 0)) : CLASS_MAX;   // 교시 수는 한국 자정에 돌아와요 (학기 날짜 me.day에 묶으면 날이 안 넘어간 기기에서 안 돌아와요)
 const knowToNext = () => KNOW_PER_HINT - ((me.know || 0) % KNOW_PER_HINT);
 let lesson = null, lessonTimer = 0, lessonIv = 0, flyRaf = 0, flyKey = null;
 document.addEventListener('keydown', e => { if (flyKey && sub === 'class') flyKey(e); });
@@ -5799,7 +5799,7 @@ function gainKnow(){
 }
 function startSubject(id){
   if (classLeft() < 1) return;
-  if (me.classDay !== me.day){ me.classDay = me.day; me.classCnt = 0; }
+  if (me.classDay !== todayKey()){ me.classDay = todayKey(); me.classCnt = 0; }
   me.classCnt++; save();
   stopLesson();
   lesson = { s: id, round: 1, earned: 0, phase: 'play', msg: '', log: [] };
