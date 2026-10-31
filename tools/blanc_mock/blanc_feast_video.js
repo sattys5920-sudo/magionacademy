@@ -21,6 +21,8 @@ const INJ = fs.readFileSync(path.join(__dirname, 'blanc_feast_inject.js'), 'utf8
   const total = (Date.now() - T0) / 1000 - start + 1;
   const wav = await p.evaluate(t => window.__bfSnd.render(t, 'audio/bgm_main.mp3'), total);   // 영상에는 소리가 안 담겨서 같은 합성을 다시 그려 붙여요
   fs.writeFileSync(path.join(OUT, 'feast.wav'), Buffer.from(wav, 'base64'));
+  fs.writeFileSync(path.join(OUT, 'feast_log.json'), JSON.stringify(await p.evaluate(() => window.__bfSnd.log())));
+  fs.writeFileSync(path.join(OUT, 'feast_bgm.wav'), Buffer.from(await p.evaluate(t => window.__bfSnd.render(t, 'audio/bgm_main.mp3', true), total), 'base64'));
   const v = p.video(); await ctx.close(); fs.renameSync(await v.path(), path.join(OUT, 'feast.webm'));
   fs.writeFileSync(path.join(OUT, 'feast.start'), String(start)); console.log('start', start);
   await b.close();

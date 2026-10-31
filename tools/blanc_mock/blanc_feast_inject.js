@@ -189,25 +189,26 @@ const SND = (() => {
     const notes = (seq, at, step, type = 'triangle', v = .3, len = .9) => seq.forEach((n, i) => { if (n) tone(440 * Math.pow(2, (n - 69) / 12), at + i * step, step * len * 1.6, type, v); });
     const kick = at => tone(130, at, .18, 'sine', .7, 45), snare = at => noise(at, .12, .35, 3500, 'highpass'), hat = at => noise(at, .04, .12, 8000, 'highpass');
     const SC = {
-      sky(a, d){ for (let k = 0; k < d; k += 1.6) noise(a + k, 1.8, .18, 700, 'bandpass', 1400, .5); for (let k = .3; k < d; k += 2.2) noise(a + k, .5, .3, 3000, 'bandpass', 600, .05); notes([72, 76, 79, 84, 79, 76, 72, 0], a, .3, 'sine', .12); },
-      beach(a, d){ for (let k = 0; k < d; k += 2.4) noise(a + k, 2.4, .32, 500, 'lowpass', 1600, 1.1); for (let k = .8; k < d; k += 1.9) { tone(1700, a + k, .22, 'sine', .14, 2300); tone(2100, a + k + .25, .3, 'sine', .12, 1500); } notes([67, 71, 74, 71, 67, 71, 74, 76], a + .2, .38, 'triangle', .1); },
+      sky(a, d){ for (let k = 0; k < d; k += 1.6) noise(a + k, 1.8, .18, 700, 'bandpass', 1400, .5); for (let k = .3; k < d; k += 2.2) noise(a + k, .5, .3, 3000, 'bandpass', 600, .05); },
+      beach(a, d){ for (let k = 0; k < d; k += 2.4) noise(a + k, 2.4, .32, 500, 'lowpass', 1600, 1.1); for (let k = .8; k < d; k += 1.9) { tone(1700, a + k, .22, 'sine', .14, 2300); tone(2100, a + k + .25, .3, 'sine', .12, 1500); } },
       space(a, d){ tone(110, a, d, 'sine', .14); tone(165, a + .1, d, 'sine', .08); for (let k = 0; k < d; k += .45) tone(1500 + Math.random() * 1500, a + k, .5, 'sine', .07); },
       ballroom(a, d){ const bar = [[48, 64, 67], [55, 64, 67], [53, 65, 69], [55, 62, 67]]; let i = 0; for (let k = 0; k < d; k += 1.2, i++){ const [b, x, y] = bar[i % 4]; notes([b], a + k, .4, 'triangle', .22); notes([0, x, x], a + k, .4, 'triangle', .1); notes([0, y, y], a + k, .4, 'triangle', .08); notes([76 + (i % 2) * 2, 0, 74], a + k, .4, 'sine', .14); } },
       coaster(a, d){ for (let k = 0; k < Math.min(1.6, d); k += .1) tone(900, a + k, .03, 'square', .08); tone(400, a + 1.6, 1.4, 'sawtooth', .12, 1400); noise(a + 1.6, 2, .35, 800, 'bandpass', 3000, .3); for (let k = 3.2; k < d; k += 2.6){ noise(a + k, 1.6, .3, 600, 'bandpass', 2600, .2); tone(500, a + k, 1, 'sawtooth', .08, 1600); } },
       bounce(a, d){ for (let k = .55; k < d; k += 1 / 1.6) tone(160, a + k, .35, 'sine', .45, 520); for (let k = .1; k < d; k += 1.25) tone(620, a + k, .12, 'square', .06); },
-      hotspring(a, d){ for (let k = 0; k < d; k += .22) tone(300 + Math.random() * 500, a + k, .08, 'sine', .1, 900); noise(a + .3, 1.6, .16, 400, 'lowpass', 200, .4); for (let k = 1.5; k < d; k += 1.7) tone(1800, a + k, .15, 'sine', .12, 900); notes([62, 0, 66, 0, 69, 0, 74], a, .45, 'triangle', .08); },
+      hotspring(a, d){ for (let k = 0; k < d; k += .22) tone(300 + Math.random() * 500, a + k, .08, 'sine', .1, 900); noise(a + .3, 1.6, .16, 400, 'lowpass', 200, .4); for (let k = 1.5; k < d; k += 1.7) tone(1800, a + k, .15, 'sine', .12, 900); },
       cloud(a, d){ for (let k = 0; k < d; k += 1.6) notes([60, 64, 67, 72, 76, 79], a + k, .12, 'triangle', .1); tone(98, a, d, 'sine', .08); },
       drum(a, d){ for (let k = 0, i = 0; k < d; k += .25, i++){ if (i % 4 === 0) kick(a + k); if (i % 4 === 2) snare(a + k); hat(a + k + .125); if (i % 8 === 7) tone(880, a + k, .06, 'square', .08); } notes([45, 0, 45, 48, 0, 45, 43, 0], a, .25, 'sawtooth', .1); },
       balloon(a, d){ tone(200, a, Math.min(3.5, d), 'square', .08, 900); for (let k = 0; k < Math.min(3.5, d); k += .35) noise(a + k, .2, .1, 2500, 'bandpass'); for (let k = 3.6; k < d; k += 1.1) tone(900, a + k, .5, 'sine', .1, 600); },
       rocket(a, d){ [0, .6, 1.2].forEach((k, i) => tone(i < 2 ? 660 : 990, a + k, .2, 'square', .12)); noise(a + 1.5, d - 1.5, .5, 300, 'lowpass', 2500, .3); tone(80, a + 1.5, d - 1.5, 'sawtooth', .15, 240); },
-      wedding(a, d){ for (let k = 0; k < d; k += 1.4){ tone(880, a + k, 1.2, 'triangle', .18); tone(1320, a + k + .05, 1, 'triangle', .1); tone(660, a + k + .7, 1, 'triangle', .12); } notes([67, 72, 72, 72, 67, 74, 71, 72], a + .2, .45, 'sine', .1); },
-      surf(a, d){ for (let k = 0; k < d; k += 1.8) noise(a + k, 1.8, .4, 400, 'lowpass', 2400, .6); for (let k = 0; k < d; k += .3) tone(250 + Math.random() * 300, a + k, .07, 'sine', .08, 700); notes([64, 67, 71, 74, 71, 67, 64, 62], a, .3, 'square', .05); },
+      wedding(a, d){ for (let k = 0; k < d; k += 1.4){ tone(880, a + k, 1.2, 'triangle', .18); tone(1320, a + k + .05, 1, 'triangle', .1); tone(660, a + k + .7, 1, 'triangle', .12); } },
+      surf(a, d){ for (let k = 0; k < d; k += 1.8) noise(a + k, 1.8, .4, 400, 'lowpass', 2400, .6); for (let k = 0; k < d; k += .3) tone(250 + Math.random() * 300, a + k, .07, 'sine', .08, 700); },
       disco(a, d){ for (let k = 0, i = 0; k < d; k += .25, i++){ kick(a + k); if (i % 2) snare(a + k); hat(a + k + .125); } notes([40, 52, 40, 52, 43, 55, 43, 55], a, .25, 'sawtooth', .12); notes([76, 0, 79, 0, 81, 0, 79, 76], a + 1, .25, 'square', .05); },
-      throne(a, d){ notes([60, 0, 64, 67, 72, 0, 0, 72], a, .22, 'sawtooth', .12, 1.2); notes([48, 0, 52, 55, 60], a, .22, 'sawtooth', .1, 1.4); tone(2600, a + 2.2, .6, 'triangle', .14); tone(3100, a + 2.25, .5, 'triangle', .1); tone(196, a + .5, d, 'triangle', .06); },
-      parade(a, d){ for (let k = 0, i = 0; k < d; k += .3, i++){ if (i % 2 === 0) kick(a + k); else snare(a + k); } for (let k = .4; k < d; k += 1.1){ tone(300, a + k, .4, 'sine', .08, 1200); noise(a + k + .4, .6, .35, 2500, 'lowpass', 400, .01); } noise(a, d, .08, 900, 'bandpass'); notes([72, 72, 74, 76, 74, 72, 71, 72], a + .3, .3, 'square', .06); },
+      throne(a, d){ tone(2600, a + 2.2, .6, 'triangle', .14); tone(3100, a + 2.25, .5, 'triangle', .1); tone(196, a + .5, d, 'triangle', .06); },
+      parade(a, d){ for (let k = 0, i = 0; k < d; k += .3, i++){ if (i % 2 === 0) kick(a + k); else snare(a + k); } for (let k = .4; k < d; k += 1.1){ tone(300, a + k, .4, 'sine', .08, 1200); noise(a + k + .4, .6, .35, 2500, 'lowpass', 400, .01); } noise(a, d, .08, 900, 'bandpass'); },
     };
     const CUE = {
       appear: a => noise(a, 1.2, .2, 500, 'bandpass', 2000, .5),
+      cut: a => { tone(440, a, .45, 'sawtooth', .18, 60); noise(a + .05, .6, .35, 300, 'bandpass', 4000, .2); },   // 음악이 끊기는 순간: 테이프가 멈추듯 뚝 + 휘익
       card: a => [1047, 1319, 1568].forEach((f, i) => tone(f, a + i * .07, .3, 'triangle', .14)),
       sniff: a => [0, .25].forEach(k => noise(a + k, .14, .25, 1800, 'bandpass', 3500, .03)),
       bite: a => { noise(a, .08, .5, 3000, 'highpass'); noise(a + .12, .07, .4, 2500, 'highpass'); },
@@ -225,12 +226,13 @@ const SND = (() => {
     scene(k, dur){ log.push({ t: now(), k, dur, s: 1 }); const C = this.ctx(); if (C) mk(C, C.destination).SC[k]?.(C.currentTime + .02, dur); },
     cue(k, n){ log.push({ t: now(), k, n }); const C = this.ctx(); if (C) mk(C, C.destination).CUE[k]?.(C.currentTime + .02, n); },
     bgm(on){ log.push({ t: now(), k: on ? 'bgm_on' : 'bgm_off' }); },
-    async render(total, bgmUrl){   // 영상용: 같은 합성을 처음부터 다시 그려서 WAV(base64)로
+    log: () => log.slice(),
+    async render(total, bgmUrl, onlyBgm){   // 영상용: 같은 합성을 처음부터 다시 그려서 WAV(base64)로
       const R = 44100, C = new OfflineAudioContext(2, Math.ceil(R * total), R), M = C.createGain(); M.gain.value = .9; M.connect(C.destination); const S = mk(C, M);
       if (bgmUrl){ try { const buf = await C.decodeAudioData(await (await fetch(bgmUrl)).arrayBuffer()); const src = C.createBufferSource(); src.buffer = buf; src.loop = true; const gn = C.createGain(); gn.gain.setValueAtTime(.32, 0);
         log.filter(e => e.k === 'bgm_off' || e.k === 'bgm_on').forEach(e => { gn.gain.setValueAtTime(gn.gain.value, e.t); if (e.k === 'bgm_off') gn.gain.linearRampToValueAtTime(.0001, e.t + .4); else { gn.gain.setValueAtTime(.0001, e.t); gn.gain.linearRampToValueAtTime(.32, e.t + 1.6); } });
         src.connect(gn); gn.connect(M); src.start(0); } catch(e){} }
-      log.forEach(e => { if (e.s) S.SC[e.k]?.(e.t + .02, e.dur); else S.CUE[e.k]?.(e.t + .02, e.n); });
+      if (!onlyBgm) log.forEach(e => { if (e.s) S.SC[e.k]?.(e.t + .02, e.dur); else S.CUE[e.k]?.(e.t + .02, e.n); });
       const out = await C.startRendering(), L = out.getChannelData(0), Rr = out.getChannelData(1), n = L.length, b = new DataView(new ArrayBuffer(44 + n * 4));
       const ws = (o, s) => [...s].forEach((c, i) => b.setUint8(o + i, c.charCodeAt(0))); ws(0, 'RIFF'); b.setUint32(4, 36 + n * 4, true); ws(8, 'WAVEfmt '); b.setUint32(16, 16, true); b.setUint16(20, 1, true); b.setUint16(22, 2, true); b.setUint32(24, R, true); b.setUint32(28, R * 4, true); b.setUint16(32, 4, true); b.setUint16(34, 16, true); ws(36, 'data'); b.setUint32(40, n * 4, true);
       for (let i = 0; i < n; i++){ b.setInt16(44 + i * 4, Math.max(-1, Math.min(1, L[i])) * 32767, true); b.setInt16(46 + i * 4, Math.max(-1, Math.min(1, Rr[i])) * 32767, true); }
@@ -248,7 +250,7 @@ async function taste(i, first = true){
   SND.cue('bite'); await talk(D.bite, 700);
   SND.cue('jump'); clearInterval(bob); for (let k = 0; k < 6; k++){ place(k % 2 ? 0 : 2, 1); await sleep(110); }   // 들썩
   const yellMs = D.long ? 2800 : 2300, titleMs = D.long ? 3000 : 2200, vdur = .5 + D.vision.length * (yellMs + 260) / 1000 + titleMs / 1000 + .3;
-  SND.bgm(false); visionStart(D);   // 환상 동안 배경 음악은 잠깐 꺼요
+  SND.bgm(false); SND.cue('cut'); visionStart(D);   // 환상 동안 배경 음악은 잠깐 꺼요
   if (D.scene === 'montage') MONT.forEach((k, j) => setTimeout(() => SND.scene(k, 1.75), j * 1700)), setTimeout(() => SND.scene(MONT[0], vdur - 10.2), 10200);
   else SND.scene(D.scene, vdur);
   await sleep(500);
