@@ -7506,6 +7506,17 @@ const FAM = { N: ['Vael', 'Ixi', 'Puck', 'Lotis', 'Sol', 'Lune', 'Ignis', 'Rill'
     ['꿈속에서 누군가 네 이름을 부른다.', ['대답한다', '숨는다', '소리 나는 쪽으로 간다']], ['불 하나만 가질 수 있다면?', ['흔들리지 않는 촛불', '타닥이는 모닥불', '떠도는 도깨비불']], ['거울 속의 네가 먼저 웃었다.', ['같이 웃어 준다', '거울을 덮는다', '말을 걸어 본다']],
     ['오래된 숲의 나무가 길을 막아섰다.', ['돌아서 간다', '지나가도 되냐고 묻는다', '틈을 비집고 지난다']], ['잃어버려도 괜찮은 것 하나를 고른다면?', ['기억 한 조각', '하루 동안의 목소리', '내 그림자']], ['비가 그치지 않는 밤, 너는 어디에 있는가?', ['창가에 앉아', '이불 속에', '빗속 한가운데']],
     ['마지막으로, 너는 무엇이 되고 싶은가?', ['길을 비추는 빛', '곁을 지키는 불', '아무도 모르는 불씨']]] };
+// ===== 처음 온 학생도 덜 정신없게: 이벤트 연출 차례 =====
+//   1 코니 선배 입문이 끝날 때까지 메인 의뢰·이벤트 연출은 기다려요 (공지·우편은 그대로) · 2 입문이 끝나면 메인 의뢰 손님이 먼저 · 3 그 뒤 열린 이벤트를 정한 순서대로 하나씩, 사이에 몇 초 쉬어요
+const EVQ = ['snow', 'morph', 'baby', 'fam', 'fairy', 'sg'];   // 이벤트 연출 순서: 눈사람 · 마녀 솥 · 아기 동물 · 사역마 불씨 · 요정 시장 · 별 보는 밤
+const EVQ_GAP = 6000; let evqWant = {}, evqGapUntil = 0, evqWasBusy = false;
+const mqWaiting = () => typeof MQ !== 'undefined' && MQ.loaded && me && me.mq && me.mq.q && me.mq.ph === 'arrive' && !mqDayFull();
+function evTurn(k){   // 이 이벤트 연출을 지금 띄워도 되는지: 입문 중이 아니고, 메인 의뢰 손님이 기다리지 않고, 쉬는 틈이 지났고, 띄우려는 것 중 가장 앞 차례일 때
+  if (!me || tutOn() || mqWaiting()) return false;
+  const now = Date.now(); evqWant[k] = now; if (now < evqGapUntil) return false;
+  return EVQ.find(x => evqWant[x] && now - evqWant[x] < 6000) === k;
+}
+setInterval(() => { const b = !!(me && uiBusy()); if (evqWasBusy && !b) evqGapUntil = Date.now() + EVQ_GAP; evqWasBusy = b; }, 300);   // 장면이 끝나면 몇 초 쉬었다가 다음 연출
 let famCtl = null, famPickV = null, famOn = false, famOffs = [];
 function famListen(){
   World.setMyFam(me && me.fam ? me.fam.k + (me.fam.aw ? 12 : 0) : null);
@@ -7524,7 +7535,7 @@ function famTick(){
   trTick();
   const want = famCtl && famCtl.open && typeof famPickV === 'number' && !me.fam;
   if (!want){ if (World.famEmber() && !famOn) World.famEmberOff(); return; }
-  if (!World.famEmber() && !famOn && !uiBusy()) World.famLead();
+  if (!World.famEmber() && !famOn && !uiBusy() && evTurn('fam')) World.famLead();
 }
 const famSleep = ms => new Promise(r => setTimeout(r, ms));
 async function famCut(){
@@ -7815,7 +7826,7 @@ function fairyListen(){
 }
 function fairyTick(){
   const c = fyCtl; if (!me || !c || !c.open || !FY[c.f] || fyOn || (me.fairy && me.fairy.id === c.id)) return;
-  if (uiBusy() || famSayOn || famOn || trCutOn || $('#fammod') || !World.meAt || !World.meAt()) return;
+  if (uiBusy() || famSayOn || famOn || trCutOn || $('#fammod') || !World.meAt || !World.meAt() || !evTurn('fairy')) return;
   fairyGo(c);
 }
 async function fairyGo(c){
@@ -7927,7 +7938,7 @@ function babyTick(){
   if (!me) return; babyState(); babyWorld(); if (World.setMarks && typeof mqSetMarks === 'function') mqSetMarks(mqMarkList);
   const want = me.baby && me.baby.adopt && me.baby.follow ? me.baby.k : null, have = onlineList[uid] ? onlineList[uid].bb ?? null : null;
   if (!solo && F && db && uid && want !== have && onlineList[uid]) F.update(F.ref(db, 'online/' + uid), { bb: want }).catch(() => {});
-  if (babyCtl && babyCtl.open && me.babySeen !== babyCtl.id) babyIntro();
+  if (babyCtl && babyCtl.open && me.babySeen !== babyCtl.id && evTurn('baby')) babyIntro();
   else if (me.baby && !me.baby.adopt && me.baby.st >= 5 && !me.baby.fin) babyFinale();
 }
 // ---- 산책 모임: 데리고 다니는 아기끼리 3칸 안에 5초 있으면 모여서 놀아요 (보이기만 · 효과 없음) ----
@@ -8116,7 +8127,7 @@ function snowTick(){
   if (snowRoll){ const t = World.meTile && World.meTile(); if (t){ const k = t.m + ':' + t.x + ',' + t.y; if (snowLast && k !== snowLast && m.ball < SNOW.MAX){ m.ball++; if (m.ball % 5 === 0 || m.ball >= SNOW.MAX) save(); if (m.ball >= SNOW.MAX){ snowRoll = false; sfx('pop'); } } snowLast = k; } }
   World.setSnowball && World.setSnowball(snowOn() && snowOutdoor() && (snowRoll || m.ball) ? m.ball || 1 : 0);
   snowBtn(); if (World.setMarks && typeof mqSetMarks === 'function') mqSetMarks(mqMarkList);
-  if (snowOn() && snowCtl.id && m.seen !== snowCtl.id) snowIntro();
+  if (snowOn() && snowCtl.id && m.seen !== snowCtl.id && evTurn('snow')) snowIntro();
   else if (snowSt && snowSt.done && snowSt.at && m.seenDone !== snowSt.at) snowFinale();   // 닫힌 뒤에 들어와도 완성 장면은 바로 봐요
 }
 async function snowTap(){
@@ -8252,7 +8263,7 @@ function morphTick(){
   if (mine != null) m.me = mine; if (live) Object.keys(onlineList).forEach(id => { const k = morphK(id); if (id !== uid && k != null) m[id] = k; });
   const sg = JSON.stringify(m); if (sg !== morphPeerSig){ morphPeerSig = sg; World.setMorphs(m); }
   morphBtn();
-  if (morphOn() && morphCtl.id && morphMe().seen !== morphCtl.id && !(morphSt && morphSt.done)) morphIntro();
+  if (morphOn() && morphCtl.id && morphMe().seen !== morphCtl.id && !(morphSt && morphSt.done) && evTurn('morph')) morphIntro();
   else if (morphSt && morphSt.done && morphSt.at && morphMe().seenDone !== morphSt.at && morphCtl && morphCtl.id) morphFinale();   // 닫힌 뒤에 들어와도 끝 장면은 바로 봐요
 }
 // 변신 정하기: 지금 접속한 친구들과 최대한 안 겹치게
@@ -9221,7 +9232,7 @@ function sgAv(u, src){
 }
 function sgPop(){
   let p = $('#sgpop'); const M = sgModel(), c = sgCtl;
-  const base = !sgOn && !sgAdmin() && c && c.open && M && sgData && !uiBusy() && now2() > sgPop.t0, show = base && !(sgPop.no > now2());
+  const base = !sgOn && !sgAdmin() && c && c.open && M && sgData && !uiBusy() && now2() > sgPop.t0 && evTurn('sg'), show = base && !(sgPop.no > now2());
   { let b = $('#sgbtn'); if (base && !show){ if (!b){ b = document.createElement('button'); b.id = 'sgbtn'; b.textContent = '별 보는 밤'; b.onclick = () => { sgPop.no = 0; sgPop(); }; $('#shell').appendChild(b); } } else if (b) b.remove(); }   // 「나중에」를 눌러도 언제든 다시 들어갈 수 있게
   if (!show){ if (p) p.remove(); return; }
   if (!p){ p = document.createElement('div'); p.id = 'sgpop'; document.body.appendChild(p); }
@@ -10138,7 +10149,7 @@ let mqArriving = false;
 const MQ_DAY_MAX = 3;   // 하루에 받을 수 있는 이야기 의뢰 단계 수
 const mqDayFull = () => { const d = mqState().dd; return !!d && d.d === todayKey() && d.n >= MQ_DAY_MAX; };
 async function mqArrive(){
-  const s = mqState(), q = mqQuest(); if (!q || s.ph !== 'arrive' || mqDayFull() || mqArriving || xRunNow() || evOn || sheetOn || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy())) return;
+  const s = mqState(), q = mqQuest(); if (!q || s.ph !== 'arrive' || mqDayFull() || tutOn() || mqArriving || xRunNow() || evOn || sheetOn || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy())) return;
   mqArriving = true;
   try {
     const sc = await mqScene(q.id, 1, 'request'); if (!sc){ mqArriving = false; return; }
