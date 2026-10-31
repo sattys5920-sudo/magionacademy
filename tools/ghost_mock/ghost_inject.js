@@ -35,26 +35,26 @@ window.__ghGo = async () => {
   gmap = 'classroom'; gx = 22; gy = 3; ga = 0; gdir = 2; startLoop();
   for (let k = 0; k <= 20; k++){ ga = Math.min(.95, k / 14); gx = 22 - k * .3; gy = 3 + k * .35; await sleep(90); } gdir = 0;
   World.say('me', '.......!'); await sleep(1100);
-  await talk('마틸다', '아, 안녕하세요. 저는 마틸다예요. 1926 년에 입학했어요.');
-  await talk('마틸다', '....그러니까 꽤 오래 다닌 셈이죠. 졸업을 못 해서요.');
+  await talk('마틸다', '아, 안녕. 나는 마틸다야. 1926 년에 입학했어.');
+  await talk('마틸다', '....그러니까 꽤 오래 다닌 셈이지. 졸업을 못 해서.');
   for (let k = 0; k <= 10; k++){ gx += (15 - gx) * .25; gy += (11 - gy) * .25; await sleep(90); }
-  await talk('마틸다', '옆자리 비었어요? 거기 앉아도 돼요? ....아, 저는 의자를 통과하니까 그냥 서 있을게요.', 1600);
+  await talk('마틸다', '옆자리 비었어? 거기 앉아도 돼? ....아, 나는 의자를 통과하니까 그냥 서 있을게.', 1600);
   await talk('해골 선생님', '흠흠. 마틸다는 앞으로 닷새 동안 자네를 따라다닐 걸세. 학교를 잘 보여 주게.', 1500);
   await showCard(`마틸다의 부탁 · 1 일째<small>「전학생이 왔어요」 · 학교 구경시켜 주기</small><ul><li>본관<span>☐</span></li><li>북쪽 연못<span>☐</span></li><li>시계탑<span>☐</span></li></ul>`, 3000);
   dim.style.opacity = 0;
   // 학교 밖: 따라다니기
   World.setProps('classroom', [], 'nuri'); World.teleport('campus', [44, 38]); await sleep(2200);
   gmap = 'campus'; gx = 43; gy = 38; trail = []; follow = true; chip.style.display = 'block'; chip.textContent = '마틸다의 부탁 0 / 3 · 본관 · 북쪽 연못 · 시계탑';
-  await talk('마틸다', '와, 계단이 아직도 삐걱거려요. 반가워라.', 1200);
+  await talk('마틸다', '와, 계단이 아직도 삐걱거리네. 반가워라.', 1200);
   chip.textContent = '마틸다의 부탁 1 / 3 · ✔ 본관 · 북쪽 연못 · 시계탑';
   World.walkToTile(50, 30); await sleep(3500);
   World.say('me', '♪'); await sleep(2000);
-  await talk('마틸다', '(따라서) ♪ ....따라 하는 거 재밌어요.', 1100);
+  await talk('마틸다', '(따라서) ♪ ....따라 하는 거 재밌다.', 1100);
   World.walkToTile(55, 22); await sleep(4200);
-  await talk('마틸다', '이 길, 옛날엔 흙길이었어요. 비 오면 장화가 쑥 빠졌어요.', 1400);
+  await talk('마틸다', '이 길, 옛날엔 흙길이었어. 비 오면 장화가 쑥 빠졌지.', 1400);
   World.walkToTile(56, 19); await sleep(2500);
   chip.textContent = '마틸다의 부탁 2 / 3 · ✔ 본관 · ✔ 북쪽 연못 · 시계탑';
-  await talk('마틸다', '여기서 개구리 잡다가 선생님께 혼났어요. 100 년 전에요.', 1600);
+  await talk('마틸다', '여기서 개구리 잡다가 선생님께 혼났어. 100 년 전에.', 1600);
   await sleep(1200); follow = false; window.__ghDone = true;
 };
 })();
