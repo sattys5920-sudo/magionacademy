@@ -192,17 +192,27 @@ const SND = (() => {
       sky(a, d){ for (let k = 0; k < d; k += 1.6) noise(a + k, 1.8, .18, 700, 'bandpass', 1400, .5); for (let k = .3; k < d; k += 2.2) noise(a + k, .5, .3, 3000, 'bandpass', 600, .05); },
       beach(a, d){ for (let k = 0; k < d; k += 2.4) noise(a + k, 2.4, .32, 500, 'lowpass', 1600, 1.1); for (let k = .8; k < d; k += 1.9) { tone(1700, a + k, .22, 'sine', .14, 2300); tone(2100, a + k + .25, .3, 'sine', .12, 1500); } },
       space(a, d){ tone(110, a, d, 'sine', .14); tone(165, a + .1, d, 'sine', .08); for (let k = 0; k < d; k += .45) tone(1500 + Math.random() * 1500, a + k, .5, 'sine', .07); },
-      ballroom(a, d){ const bar = [[48, 64, 67], [55, 64, 67], [53, 65, 69], [55, 62, 67]]; let i = 0; for (let k = 0; k < d; k += 1.2, i++){ const [b, x, y] = bar[i % 4]; notes([b], a + k, .4, 'triangle', .22); notes([0, x, x], a + k, .4, 'triangle', .1); notes([0, y, y], a + k, .4, 'triangle', .08); notes([76 + (i % 2) * 2, 0, 74], a + k, .4, 'sine', .14); } },
+      ballroom(a, d){ for (let k = 0; k < d; k += .55){ noise(a + k, .35, .16, 900, 'bandpass', 2600, .12); tone(1900, a + k + .2, .04, 'square', .07); tone(1500, a + k + .35, .04, 'square', .06); } for (let k = 2.6; k < d; k += 2.8) for (let c = 0; c < 18; c++) noise(a + k + c * .05 + Math.random() * .03, .05, .12, 2500, 'bandpass'); },   // 치맛자락 휘익 · 구두 또각 · 박수
       coaster(a, d){ for (let k = 0; k < Math.min(1.6, d); k += .1) tone(900, a + k, .03, 'square', .08); tone(400, a + 1.6, 1.4, 'sawtooth', .12, 1400); noise(a + 1.6, 2, .35, 800, 'bandpass', 3000, .3); for (let k = 3.2; k < d; k += 2.6){ noise(a + k, 1.6, .3, 600, 'bandpass', 2600, .2); tone(500, a + k, 1, 'sawtooth', .08, 1600); } },
       bounce(a, d){ for (let k = .55; k < d; k += 1 / 1.6) tone(160, a + k, .35, 'sine', .45, 520); for (let k = .1; k < d; k += 1.25) tone(620, a + k, .12, 'square', .06); },
       hotspring(a, d){ for (let k = 0; k < d; k += .22) tone(300 + Math.random() * 500, a + k, .08, 'sine', .1, 900); noise(a + .3, 1.6, .16, 400, 'lowpass', 200, .4); for (let k = 1.5; k < d; k += 1.7) tone(1800, a + k, .15, 'sine', .12, 900); },
       cloud(a, d){ for (let k = 0; k < d; k += 1.6) notes([60, 64, 67, 72, 76, 79], a + k, .12, 'triangle', .1); tone(98, a, d, 'sine', .08); },
-      drum(a, d){ for (let k = 0, i = 0; k < d; k += .25, i++){ if (i % 4 === 0) kick(a + k); if (i % 4 === 2) snare(a + k); hat(a + k + .125); if (i % 8 === 7) tone(880, a + k, .06, 'square', .08); } notes([45, 0, 45, 48, 0, 45, 43, 0], a, .25, 'sawtooth', .1); },
+      drum(a, d){ for (let k = 0; k < d; k += .18 + Math.random() * .3) tone(700 + Math.random() * 900, a + k, .05, 'square', .09); for (let k = .4; k < d; k += 2.1) noise(a + k, 1.4, .22, 1000, 'bandpass', 1600, .3); for (let k = 1; k < d; k += 1.7) noise(a + k, .3, .3, 2200, 'highpass'); },   // 해골 뼈 따닥따닥 · 관객 와아 · 심벌 챙
       balloon(a, d){ tone(200, a, Math.min(3.5, d), 'square', .08, 900); for (let k = 0; k < Math.min(3.5, d); k += .35) noise(a + k, .2, .1, 2500, 'bandpass'); for (let k = 3.6; k < d; k += 1.1) tone(900, a + k, .5, 'sine', .1, 600); },
       rocket(a, d){ [0, .6, 1.2].forEach((k, i) => tone(i < 2 ? 660 : 990, a + k, .2, 'square', .12)); noise(a + 1.5, d - 1.5, .5, 300, 'lowpass', 2500, .3); tone(80, a + 1.5, d - 1.5, 'sawtooth', .15, 240); },
       wedding(a, d){ for (let k = 0; k < d; k += 1.4){ tone(880, a + k, 1.2, 'triangle', .18); tone(1320, a + k + .05, 1, 'triangle', .1); tone(660, a + k + .7, 1, 'triangle', .12); } },
       surf(a, d){ for (let k = 0; k < d; k += 1.8) noise(a + k, 1.8, .4, 400, 'lowpass', 2400, .6); for (let k = 0; k < d; k += .3) tone(250 + Math.random() * 300, a + k, .07, 'sine', .08, 700); },
-      disco(a, d){ for (let k = 0, i = 0; k < d; k += .25, i++){ kick(a + k); if (i % 2) snare(a + k); hat(a + k + .125); } notes([40, 52, 40, 52, 43, 55, 43, 55], a, .25, 'sawtooth', .12); notes([76, 0, 79, 0, 81, 0, 79, 76], a + 1, .25, 'square', .05); },
+      disco(a, d){   // 요란한 EDM: 짧은 빌드업 → 드롭(쿵쿵 킥 · 넓은 화음 · 펌핑 베이스 · 하이햇)
+        const B = .47, up = Math.min(2.8, d * .25);
+        noise(a, up, .35, 400, 'bandpass', 7000, up * .9); for (let k = 0, s2 = .5; k < up; k += s2, s2 = Math.max(.07, s2 * .78)) snare(a + k);
+        tone(220, a, up, 'sawtooth', .12, 1760); tone(70, a + up - .05, .5, 'sine', .8, 35); noise(a + up, .6, .5, 6000, 'highpass');
+        const CH = [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]], st = a + up;
+        for (let k = 0, i = 0; st + k < a + d; k += B, i++){ const t = st + k; kick(t); kick(t);   // 두 번 겹쳐 더 세게
+          hat(t + B / 2); hat(t + B * .75); if (i % 2) { snare(t); noise(t, .1, .25, 1800, 'bandpass'); }
+          const c = CH[Math.floor(i / 4) % 4]; c.forEach(n => [-.06, 0, .06].forEach(dt => { const f = 440 * Math.pow(2, (n - 57 + dt) / 12) * 2; tone(f, t + .1, B * .8, 'sawtooth', .045); }));   // 쿵 뒤에 화음이 부풀어요(펌핑)
+          tone(440 * Math.pow(2, (c[0] - 69) / 12), t + .1, B * .8, 'sawtooth', .16);
+          if (i % 8 === 7) [0, .12, .24].forEach(x => tone(1760, t + x, .1, 'square', .08)); }
+      },
       throne(a, d){ tone(2600, a + 2.2, .6, 'triangle', .14); tone(3100, a + 2.25, .5, 'triangle', .1); tone(196, a + .5, d, 'triangle', .06); },
       parade(a, d){ for (let k = 0, i = 0; k < d; k += .3, i++){ if (i % 2 === 0) kick(a + k); else snare(a + k); } for (let k = .4; k < d; k += 1.1){ tone(300, a + k, .4, 'sine', .08, 1200); noise(a + k + .4, .6, .35, 2500, 'lowpass', 400, .01); } noise(a, d, .08, 900, 'bandpass'); },
     };
