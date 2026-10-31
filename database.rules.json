@@ -398,8 +398,9 @@
         }
       },
       "cheer": {
-        ".read": "auth != null",
+        ".read": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
         "$w": {
+          ".read": "auth != null && root.child('wish/own/' + auth.uid).val() === $w",
           "$k": {
             ".write": "auth != null && !data.exists() && newData.parent().parent().parent().child('cby').child($k).val() === auth.uid",
             ".validate": "auth.token.email === 'magionadmin@magionacademy.app' || (newData.child('m').isString() && newData.child('m').val().length >= 1 && newData.child('m').val().length <= 50 && !newData.child('hide').exists())"

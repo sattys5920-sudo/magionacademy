@@ -1,4 +1,4 @@
-// 「첫눈의 소원」 화면과 연출 (index.html이 필요할 때 불러요) — 처음 쪽지가 내리는 장면 · 쪽지 읽기와 응원(50 자 응원 글) · 내 소원 날려 보내기 · 마지막 별자리와 보상
+// 「별빛 소원」 화면과 연출 (index.html이 필요할 때 불러요) — 처음 쪽지가 내리는 장면 · 쪽지 읽기와 응원(50 자 응원 글) · 내 소원 날려 보내기 · 마지막 별자리와 보상
 //   window.WishFX = { intro, read, write, send, finale, note }
 (function(){
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -33,13 +33,14 @@ const css = document.createElement('style'); css.textContent = `
 #wsread .pp{position:relative;background:#FBF6EA;border:3px solid #3A2C4A;border-radius:4px;padding:22px 16px 14px;box-shadow:0 0 0 3px #CFE0F4,0 0 26px rgba(190,220,255,.7);font-family:var(--f-px);color:#3A2C4A;font-size:16px;line-height:25px;text-align:center;word-break:keep-all}
 #wsread .pp:before{content:'';position:absolute;left:0;right:0;top:0;height:8px;background:repeating-linear-gradient(90deg,#CFE0F4 0 6px,transparent 6px 12px)}
 #wsread .pp small{display:block;margin-top:8px;font-size:12px;color:#8A7AA0}
+#wsread .shh{margin-top:10px;background:rgba(30,22,52,.96);border:2px dashed #FFE9A0;border-radius:10px;padding:7px 10px;font-family:var(--f-px);font-size:12px;line-height:18px;color:#FFF3C8}#wsread .shh b{font-family:var(--f-pxb);color:#FFE9A0;margin-right:3px}
 #wsread textarea{display:block;width:100%;box-sizing:border-box;margin-top:10px;min-height:58px;resize:none;border-radius:10px;border:2px solid #B8D8FF;background:rgba(30,22,52,.96);color:#F1E9FF;font-family:var(--f-px);font-size:14px;line-height:20px;padding:8px 10px}
 #wsread .cnt{text-align:right;font-family:var(--f-px);font-size:11px;color:#C8B8E8;margin-top:3px}#wsread .err{font-family:var(--f-px);font-size:12px;color:#FF9A9A;margin-top:4px;min-height:16px}
 #wsread .bt{display:flex;gap:8px;margin-top:6px}#wsread .bt button{flex:1;min-height:44px;border-radius:12px;font-family:var(--f-pxb);font-size:14px;border:2px solid #B8D8FF;background:rgba(30,22,52,.96);color:#F1E9FF}
 #wsread .bt button.go{background:#FFE9A0;color:#3A2414;border-color:#E8B84A}#wsread .bt button:disabled{opacity:.55}
 #wsread .mine{margin-top:10px;background:rgba(30,22,52,.96);border:2px solid #FFE9A0;border-radius:10px;padding:8px 10px;font-family:var(--f-px);font-size:13px;color:#FFF3C8;line-height:19px}
 #wsttl{position:fixed;left:0;right:0;top:9%;z-index:440;text-align:center;font-family:var(--f-pxb);color:#EAF4FF;font-size:24px;text-shadow:0 0 14px #9CC8FF,0 2px 0 #1A1440;opacity:0;transition:opacity 1s;pointer-events:none}#wsttl small{display:block;font-family:var(--f-px);font-size:13px;color:#D8E4FF;margin-top:6px;text-shadow:none}#wsttl.on{opacity:1}
-.wsw{position:fixed;z-index:438;transform:translate(-50%,-160%);font-family:var(--f-px);font-size:13px;color:#EAF2FF;text-shadow:0 0 8px #8FB8FF,0 1px 0 #1A1440;white-space:nowrap;opacity:0;transition:opacity .7s,transform 2.6s;pointer-events:none;max-width:70vw;overflow:hidden;text-overflow:ellipsis}.wsw.on{opacity:.95;transform:translate(-50%,-230%)}
+.wsw{position:fixed;z-index:438;transform:translate(-50%,-160%);font-family:var(--f-px);font-size:13px;color:#EAF2FF;text-shadow:0 0 8px #8FB8FF,0 1px 0 #1A1440;white-space:nowrap;opacity:0;transition:opacity .7s,transform 2.6s;pointer-events:none;max-width:70vw;overflow:hidden;text-overflow:ellipsis}.wsw.on{opacity:.95;transform:translate(-50%,-230%)}.wsw.wsme{white-space:normal;width:min(80vw,320px);text-align:center;font-size:15px;line-height:22px;color:#FFF3C8;text-shadow:0 0 10px #E8B84A,0 1px 0 #1A1440}
 #wsrw{position:fixed;left:50%;top:44%;z-index:441;transform:translate(-50%,-50%) scale(.6);opacity:0;transition:all .5s;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 18px;border-radius:16px;background:rgba(20,13,34,.97);border:2px solid #B8D8FF;font-family:var(--f-pxb);color:#F1E9FF;box-shadow:0 0 22px rgba(184,216,255,.45);pointer-events:none;width:min(86vw,320px);text-align:center}#wsrw.on{opacity:1;transform:translate(-50%,-50%) scale(1)}#wsrw small{font-family:var(--f-px);font-size:13px;color:#E0D4F4;line-height:19px}`;
 document.head.appendChild(css);
 // 하늘 레이어 (쪽지가 내리고 · 별이 날아가요)
@@ -68,7 +69,7 @@ async function fall(api){ VOL = api.vol ?? 1; layer(true); for (let i = 0; i < 6
 // o = { t 소원, n 응원 수, my { m } 이미 응원했으면, check(text) → 막을 까닭 또는 '' }  → { cheer: true, m } 또는 null
 function read(api, o){ VOL = api.vol ?? 1; SND.open(); return new Promise(res => {
   const v = document.createElement('div'); v.id = 'wsread';
-  v.innerHTML = `<div class="bx"><div class="pp">「${esc(o.t)}」<small>익명의 소원 · 응원 ★ ${o.n}</small></div>
+  v.innerHTML = `<div class="bx"><div class="pp">「${esc(o.t)}」<small>익명의 소원</small></div><div class="shh"><b>쉿!</b> 읽은 소원은 비밀이에요. 누구 소원인지 짐작하거나 다른 곳에서 말하지 않기로 약속해요.</div>
     ${o.my ? `<div class="mine">내가 보낸 응원 ★${o.my.m ? `<br>「${esc(o.my.m)}」` : ''}</div><div class="bt"><button data-x>닫기</button></div>`
       : `<textarea maxlength="50" placeholder="응원 한마디를 꼭 써 주세요 (익명 · 50 자까지)"></textarea><div class="cnt">0 / 50</div><div class="err"></div><div class="bt"><button class="go" data-go>★ 응원하기</button><button data-x>다음에</button></div>`}</div>`;
   document.body.appendChild(v); const ta = v.querySelector('textarea'), cnt = v.querySelector('.cnt'), err = v.querySelector('.err');
@@ -80,8 +81,8 @@ function read(api, o){ VOL = api.vol ?? 1; SND.open(); return new Promise(res =>
 }); }
 // ================= 내 소원: 쪽지가 접혀서 하늘로 → 별 =================
 async function send(api){ VOL = api.vol ?? 1; SND.send(); const [x, y] = mid(); api.W.say('me', '닿아라.......'); await fly({ kind: 'note', x0: x, y0: y + 10, x1: x + 10, y1: 14, d: 2600, arc: 30 }); SND.star(); }
-// ================= 마지막 밤: 첫눈 별자리 + 보상 =================
-async function finale(api, o){   // o = { wishes: [글 8 개], nW 소원 수, nC 응원 수, reward: html }
+// ================= 마지막 밤: 내 소원 별자리 (내 소원 · 내게 온 응원만) + 보상 =================
+async function finale(api, o){   // o = { mine 내 소원 글, cheers [내게 온 응원 글], n 응원 수, reward: html } · 다른 친구의 소원과 응원은 안 보여요
   VOL = api.vol ?? 1; api.bgm(true); musicbox(true, true); layer(true); fx.style.zIndex = 400;
   const PTS = [[.5, .28], [.5, .40], [.5, .52], [.5, .64], [.38, .46], [.62, .46], [.30, .40], [.70, .40], [.30, .54], [.70, .54], [.40, .32], [.60, .32], [.40, .60], [.60, .60]];
   const LINES = [[0, 1], [1, 2], [2, 3], [1, 4], [1, 5], [4, 6], [5, 7], [2, 8], [2, 9], [0, 10], [0, 11], [3, 12], [3, 13]];
@@ -91,8 +92,9 @@ async function finale(api, o){   // o = { wishes: [글 8 개], nW 소원 수, nC
       PTS.forEach(([x, y], i) => { const k = Math.min(1, Math.max(0, (t - .8 - i * .18) / .5)); if (k > 0) star(c, x * W, y * H, i === 2 ? 3 : 2, '#FFE9A0', k); });
       c.strokeStyle = 'rgba(255,233,160,.55)'; c.lineWidth = 1; LINES.forEach(([a, b], j) => { const k = Math.min(1, Math.max(0, (t - 3.6 - j * .15) / .4)); if (k <= 0) return; const [x0, y0] = PTS[a], [x1, y1] = PTS[b]; c.beginPath(); c.moveTo(x0 * W, y0 * H); c.lineTo((x0 + (x1 - x0) * k) * W, (y0 + (y1 - y0) * k) * H); c.stroke(); }); } };
     await sleep(6600);
-    for (let i = 0; i < Math.min(8, o.wishes.length); i++){ const [x, y] = PTS[[6, 7, 8, 9, 10, 11, 12, 13][i]], d = document.createElement('div'); d.className = 'wsw'; d.textContent = o.wishes[i]; d.style.left = '50%'; d.style.top = (y * 100) + '%'; document.body.appendChild(d); requestAnimationFrame(() => d.classList.add('on')); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 900); }, 1900); await sleep(950); }
-    await sleep(1800); SND.title(); ttl.innerHTML = `첫눈 별자리<small>소원 ${o.nW} 개 · 응원 별 ${o.nC} 개</small>`; ttl.classList.add('on'); await sleep(3600); ttl.classList.remove('on'); await sleep(700);
+    if (o.mine){ const d = document.createElement('div'); d.className = 'wsw wsme'; d.textContent = `「${o.mine}」`; d.style.left = '50%'; d.style.top = '20%'; document.body.appendChild(d); requestAnimationFrame(() => d.classList.add('on')); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 900); }, 3200); await sleep(3400); }
+    for (let i = 0; i < Math.min(8, o.cheers.length); i++){ const [x, y] = PTS[[6, 7, 8, 9, 10, 11, 12, 13][i]], d = document.createElement('div'); d.className = 'wsw'; d.textContent = '★ ' + o.cheers[i]; d.style.left = '50%'; d.style.top = (y * 100) + '%'; document.body.appendChild(d); requestAnimationFrame(() => d.classList.add('on')); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 900); }, 1900); await sleep(950); }
+    await sleep(1800); SND.title(); ttl.innerHTML = o.mine ? `나의 별빛 소원<small>응원 별 ${o.n} 개 · 쉿, 나만 보는 별자리</small>` : `별빛 소원<small>친구들의 소원이 별이 되어 올라갔어요</small>`; ttl.classList.add('on'); await sleep(3600); ttl.classList.remove('on'); await sleep(700);
     if (o.reward){ SND.card(); rw.innerHTML = o.reward; rw.classList.add('on'); await sleep(3800); rw.classList.remove('on'); await sleep(500); }
   } finally { sky = null; musicbox(false); ttl.remove(); rw.remove(); document.querySelectorAll('.wsw').forEach(x => x.remove()); api.bgm(false); }
 }
