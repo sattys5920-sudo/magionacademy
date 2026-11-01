@@ -8434,7 +8434,7 @@ const MORPH = {
   O: [[32, 82, '바위 무더기', '데굴데굴 굴러서 바위를 밀어냈어요!', '호박밭 옆'], [20, 15, '가시덤불', '스르륵 덤불을 통과했어요!', '용의 동굴 앞 숲'], [56, 16, '연잎', '퐁퐁 물 위를 건너갔어요!', '본관 옆 연못'],
     [40, 100, '짙은 어둠', '불을 밝혀 어둠을 걷어냈어요!', '독초 온실 뒤 숲'], [78, 22, '마른 나무 둥지', '쉬익 날아올라 둥지에 닿았어요!', '교실 뒤'], [85, 44, '얼음 덩어리', '김을 뿜어 얼음을 녹였어요!', '마을 가는 길 강가'],
     [6, 46, '녹슨 철창문', '철창 틈으로 덜그럭 들어갔어요!', '지하 묘지 가는 서쪽 길'], [72, 70, '흐릿한 마법진', '숨어 있던 재료를 찾아냈어요!', '기숙사 거리 동쪽 잔디'], [28, 46, '수수께끼 석판', '석판의 수수께끼를 읽어 냈어요!', '과자 교실 근처'],
-    [12, 90, '시든 덩굴', '포자를 뿌려 덩굴을 살렸어요!', '기숙사 서쪽 숲'], [39, 74, '잠든 석상', '딩동! 석상이 깨어나서 길을 비켜 줬어요!', '기숙사 거리 가운데'], [71, 92, '봉인된 상자', '빛을 비춰 봉인을 풀었어요!', '사육장 앞']],
+    [17, 90, '시든 덩굴', '포자를 뿌려 덩굴을 살렸어요!', '호박밭 서쪽 끝'], [39, 74, '잠든 석상', '딩동! 석상이 깨어나서 길을 비켜 줬어요!', '기숙사 거리 가운데'], [71, 92, '봉인된 상자', '빛을 비춰 봉인을 풀었어요!', '사육장 앞']],
   KEY: ['pumpkin', 'ghost', 'slime', 'candle', 'broom', 'teapot', 'skull', 'orb', 'book', 'mushroom', 'bell', 'mirror'], N: 12, LAB: [13, 8] };
 let morphCtl = null, morphSt = null, morphForm = {}, morphOffs = [], morphCutOn = false, morphArt = null, morphSig = '';
 const morphOn = () => !!(morphCtl && morphCtl.open);
@@ -8460,7 +8460,7 @@ function morphProps(){
   if (!morphArt) return; const live = morphOn() && !(morphSt && morphSt.done);
   const sig = live ? MORPH.O.map((_, k) => morphS(k)).join('') : ''; if (sig === morphSig) return; morphSig = sig;
   if (!live) return World.setProps('campus', [], 'morph');
-  World.setProps('campus', MORPH.O.map(([x, y], k) => { const s = morphS(k); if (s >= 2) return null; const c = morphCell(s ? 'f' + k : 'o_' + MORPH.KEY[k]); return { id: 'mo:' + k, x, y, ...c, ay: c.ay + (s ? 0 : 2), solid: k !== 2 && !s, light: s ? { r: 18, c: [255, 240, 180], a: .5 } : null }; }).filter(Boolean), 'morph');
+  World.setProps('campus', MORPH.O.map(([x, y], k) => { const s = morphS(k); if (s >= 2) return null; const c = morphCell(s ? 'f' + k : 'o_' + MORPH.KEY[k]); return { id: 'mo:' + k, x, y, ...c, ay: c.ay + (s ? 0 : 2), solid: k !== 2 && !s, light: s ? { r: 18, c: [255, 240, 180], a: .5 } : { r: 20, c: [200, 170, 255], a: .5 } }; }).filter(Boolean), 'morph');
 }
 function morphBtn(){
   let b = $('#morphbtn'); const show = me && morphOn() && !(morphSt && morphSt.done) && morphMe().seen === morphCtl.id && !sheetOn && !morphCutOn && !(World.cutBusy && World.cutBusy());
