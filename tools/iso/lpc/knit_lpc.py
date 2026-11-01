@@ -9,7 +9,9 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'
 s = open(os.path.join(ROOT, 'public', 'world.js')).read(); i = s.index('const AVM = ') + 12; AVM, _ = json.JSONDecoder().raw_decode(s[i:])
 CL = AVM['pal']['cloth']; hx = lambda h: tuple(int(h[k:k + 2], 16) for k in (1, 3, 5))
 RAMP = {k: [hx(c) for c in v] for k, v in CL.items()}
-YARN = {'빨강': 'red', '하양': 'white', '파랑': 'blue', '노랑': 'p_mustard', '초록': 'green', '분홍': 'p_pink', '남색': 'navy'}
+YARN = {'하양': 'white', '빨강': 'red', '분홍': 'pink', '주황': 'orange', '노랑': 'p_mustard', '초록': 'green', '하늘': 'sky', '파랑': 'blue', '보라': 'purple', '갈색': 'brown', '남색': 'navy'}
+# 털실 색 10 종 · 물들이는 채집물 (하양은 그대로)
+DYE = [('하양', '그대로 (양털)'), ('빨강', '산딸기'), ('분홍', '꽃사과'), ('주황', '빨간 단풍잎'), ('노랑', '노란 은행잎'), ('초록', '촉촉 이끼'), ('하늘', '은방울꽃'), ('파랑', '블루베리'), ('보라', '달맞이꽃'), ('갈색', '도토리')]
 def L(c): return .3 * c[0] + .59 * c[1] + .11 * c[2]
 def frame(path, row=0, col=0, lpc=False):
     im = Image.open(path).convert('RGBA')
@@ -153,4 +155,23 @@ for i, (nm, cost, fn) in enumerate(ITEMS):
     for j, (a, b) in enumerate(COMBOS):
         r_ = fn(a, b); im = over(r_[1], r_[2]) if isinstance(r_, tuple) else over(base, r_); im = im.crop((12, 2, 52, 64)).resize((120, 186), Image.NEAREST); img.paste(im, (x + 20, y + 86 + j * 222), im)
         d.text((x + 30, y + 274 + j * 222), f'{a} · {b}', font=F2, fill=(140, 124, 170))
-os.makedirs(OUTD, exist_ok=True); img.save(os.path.join(OUTD, 'knit_lpc_preview.png')); print('ok')
+os.makedirs(OUTD, exist_ok=True); img.save(os.path.join(OUTD, 'knit_lpc_preview.png'))
+# ---------- 털실 색 10 종: 털실 뭉치 · 물들이는 채집물 · 모자 + 목도리 쓴 모습 ----------
+def yarn_ball(col):
+    o = Image.new('RGBA', (16, 16), (0, 0, 0, 0)); pts = [(x, y) for y in range(16) for x in range(16) if ((x - 7.5) / 6) ** 2 + ((y - 8) / 5.6) ** 2 <= 1]; lpc_fill(o, pts, RAMP[YARN[col]]); P = o.load(); r = RAMP[YARN[col]]
+    for k in range(3, 14, 3):
+        for x in range(2, 14):
+            y = int(8 + (x - 7.5) * .35 + (k - 8) * .9)
+            if (x, y) in pts: P[x, y] = r[2] + (255,)
+    P[13, 12] = r[3] + (255,); P[14, 13] = r[3] + (255,); P[15, 13] = r[3] + (255,)   # 실 끝
+    return o
+img2 = Image.new('RGB', (1000, 560), BG); d = ImageDraw.Draw(img2); d.rounded_rectangle([16, 16, 984, 544], 14, fill=PAN, outline=(58, 46, 88), width=2)
+d.text((32, 28), '털실 색 10 종 · 털실 만들 때 채집물 1 개로 물들여요 (하양은 그대로)', font=F, fill=GOLD)
+for i, (nm, dye) in enumerate(DYE):
+    x = 36 + (i % 5) * 190; y = 66 + (i // 5) * 238
+    b2 = '하양' if nm != '하양' else '빨강'
+    av = over(base, mk_hat(nm, b2), mk_scarf(nm, b2)[2]) if False else None
+    w_ = over(NECK_W, mk_scarf(nm, b2)[2]); w_ = over(w_, mk_hat(nm, b2)); im = w_.crop((12, 2, 52, 64)).resize((100, 155), Image.NEAREST); img2.paste(im, (x + 70, y), im)
+    yb = yarn_ball(nm).resize((56, 56), Image.NEAREST); img2.paste(yb, (x + 6, y + 40), yb)
+    d.text((x + 8, y + 164), nm, font=F, fill=INK); d.text((x + 8, y + 186), dye, font=F2, fill=SUB)
+img2.save(os.path.join(OUTD, 'knit_colors_preview.png')); print('ok')
