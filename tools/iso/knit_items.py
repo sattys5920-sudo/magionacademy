@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # 시안: 겨울 뜨개질 아이템 그림 (요리 아이콘과 같은 32×32 도구 상자 · 같은 화풍)
-#   목도리 · 방울 모자 · 벙어리장갑 · 포근 숄 (두 색 조합) + 아바타가 입은 모습 + NPC 뜨개 인형 10 종
+#   목도리 · 방울 모자 · 손모아장갑 · 포근 숄 (두 색 조합) + 아바타가 입은 모습 + NPC 뜨개 인형 10 종
 #   python3 tools/iso/knit_items.py <아바타 정면 png> <저장 폴더>
 import os, sys, math
 from PIL import Image, ImageDraw, ImageFont
@@ -45,7 +45,7 @@ def shawl(c, a, b):
     for i in range(0, 15, 2):   # 가장자리 술
         c.fill(line(2 + i, 8 + int(i * 1.35), 1 + i, 11 + int(i * 1.35)), H(YC[b])); c.fill(line(30 - i, 8 + int(i * 1.35), 31 - i, 11 + int(i * 1.35)), H(YC[b]))
     c.fill(circ(16, 13, 2.2), H('#ffd860')); c.px(15, 12, H('#fff6c0'))   # 브로치
-ICONS = [('목도리', scarf), ('방울 모자', beanie), ('벙어리장갑', mittens), ('포근 숄', shawl)]
+ICONS = [('목도리', scarf), ('방울 모자', beanie), ('손모아장갑', mittens), ('포근 숄', shawl)]
 # ---------- NPC 뜨개 인형 (머리 크고 몸 작은 아미구루미) ----------
 def eyes(c, y=15, x0=12, x1=19, col='#2a1c38'):
     for x in (x0, x1): c.fill(rect(x, y, x, y + 1), H(col))
@@ -146,12 +146,12 @@ for i, (nm, fn) in enumerate(ICONS):
     for j, (a, b) in enumerate(combos):
         im = icon(fn, a, b).resize((96, 96), Image.NEAREST); img.paste(im, (x + j * 108, y + 50), im)
     d.text((x, y + 160), nm, font=F, fill=INK); d.text((x, y + 184), f"털실 {15 if nm == '포근 숄' else 10} 뭉치", font=F2, fill=SUB)
-    d.text((x, y + 204), {'목도리': '목 칸 · 두 색 줄무늬 · 끝에 술', '방울 모자': '모자 칸 · 고무단 · 방울', '벙어리장갑': '손 · 고무단 · 끈으로 이은 한 쌍', '포근 숄': '망토 칸 · 술 · 금빛 브로치'}[nm], font=F2, fill=SUB)
+    d.text((x, y + 204), {'목도리': '목 칸 · 두 색 줄무늬 · 끝에 술', '방울 모자': '모자 칸 · 고무단 · 방울', '손모아장갑': '손 · 고무단 · 끈으로 이은 한 쌍', '포근 숄': '망토 칸 · 술 · 금빛 브로치'}[nm], font=F2, fill=SUB)
     d.text((x, y + 224), '빨강 · 하양 / 파랑 · 노랑', font=F2, fill=(140, 124, 170))
 d.text((40, y + 262), '색은 털실 만들 때 물들인 색 (빨강 · 하양 · 파랑 · 노랑 · 초록) 두 개를 골라요', font=F2, fill=SUB)
 # 2) 입은 모습
 y = 376; panel(16, y, Wd - 32, 330); d.text((32, y + 12), '입은 모습 (내 아바타)', font=F, fill=GOLD)
-for i, (k, nm) in enumerate([('scarf', '목도리'), ('beanie', '방울 모자'), ('mitten', '벙어리장갑'), ('shawl', '포근 숄'), ('all', '다 같이')]):
+for i, (k, nm) in enumerate([('scarf', '목도리'), ('beanie', '방울 모자'), ('mitten', '손모아장갑'), ('shawl', '포근 숄'), ('all', '다 같이')]):
     a, b = combos[0] if i % 2 == 0 else combos[1]
     if k == 'all': a, b = '빨강', '하양'
     im = worn(base, k, a, b).crop((12, 4, 52, 64)).resize((160, 240), Image.NEAREST); x = 40 + i * 196; img.paste(im, (x, y + 44), im); d.text((x + 40, y + 292), nm, font=F, fill=INK)
