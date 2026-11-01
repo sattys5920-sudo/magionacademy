@@ -33,6 +33,7 @@ GENDER = re.compile(r'(?<![가-힣])(그녀|그는|그가|그를|그의|아저�
 NAMES = ['세라', '루카스', '마들렌', '스텔라', '레오']
 AUTO = re.compile(r'[a-z]+_(h\d+|was_cold)')
 PERKS = {'cat_furniture', 'bait', 'free_post', 'rod_bonus', 'lord_hint', 'potion_hint', 'know_bonus', 'greenhouse_growth', 'pumpkin_race', 'scarecrow_hat', 'tasty_potion', 'cake_recipe', 'fortune', 'rare_egg'}
+ENGINE_FLAGS = {'otumo_romance'}   # 엔진이 정해 주는 플래그 (이야기 안에서 만들지 않아요)
 VAR = re.compile(r'\{([a-z_]+)(?:\.([a-z_]+))?(?:\|([^{}]*))?\}')
 
 def texts_of(o):
@@ -117,8 +118,8 @@ def check_event(npc, k, ev, flags_set, flags_used, prof_cast, errs):
     if not ev.get('title'): errs.append(f'{w}: 제목 없음')
     cd = ev.get('conditions') or {}
     if cd.get('minHeart') != k: errs.append(f'{w}: conditions.minHeart = {k}')
-    loc = cd.get('location')
-    if loc not in PLACES or not PLACES[loc]['stand']: errs.append(f'{w}: conditions.location은 서 있을 수 있는 장소(stand) 「{loc}」')
+    loc = cd.get('location')   # 'any': NPC가 지금 있는 곳에서 바로 시작 (오투모 ♥1)
+    if loc != 'any' and (loc not in PLACES or not PLACES[loc]['stand']): errs.append(f'{w}: conditions.location은 서 있을 수 있는 장소(stand) 「{loc}」')
     for t in cd.get('time', []):
         if t not in TIMES: errs.append(f'{w}: 시간대 「{t}」')
     for t in cd.get('weather', []):
@@ -214,9 +215,17 @@ def check_profile(npc, p, errs):
     for k in ('love', 'like', 'hate'):
         if len((p.get('gift') or {}).get(k, [])) < 3: errs.append(f'{w}: 선물 반응 {k} 3 줄 이상')
     if len(p.get('recall') or {}) < 5: errs.append(f'{w}: recall(하트 이벤트를 본 뒤 떠올리는 평소 대사) 5 개 이상의 하트에')
+    if 'daily_romance' in p:   # 설렘 버전 (선택): 일상 대사와 같은 기준
+        for st in 'ABCD':
+            n = len((p.get('daily_romance') or {}).get(st, []))
+            if n < 12: errs.append(f'{w}: daily_romance {st} 단계 {n} 줄 (12 줄 이상)')
+    if 'gift_romance' in p:
+        for k in ('love', 'like', 'hate'):
+            if len((p.get('gift_romance') or {}).get(k, [])) < 3: errs.append(f'{w}: gift_romance {k} 3 줄 이상')
     for it in (p.get('likes') or []) + (p.get('dislikes') or []):
         if it not in ITEMS: errs.append(f'{w}: 아이템 id 「{it}」')
-    for t in texts_of({'d': p.get('daily'), 'a': p.get('ambient'), 'g': p.get('gift'), 'r': p.get('recall'), 'title': p.get('title')}):
+    for t in texts_of({'d': p.get('daily'), 'a': p.get('ambient'), 'g': p.get('gift'), 'r': p.get('recall'), 'title': p.get('title'),
+                       'dr': p.get('daily_romance'), 'gr': p.get('gift_romance'), 'kr': p.get('knit_romance')}):
         korean(w, t, npc in HUMAN, errs)
     return p.get('cast') or {}
 
@@ -249,7 +258,7 @@ def main(ids):
     for f, ws in all_set.items():
         if f and f not in all_used: print(f'  ✗ 플래그 「{f}」를 만들었는데 쓰는 곳이 없어요 ({ws[0]})'); total += 1
     for f, ws in all_used.items():
-        if f not in all_set and f.split('_')[0] in ids: print(f'  ✗ 플래그 「{f}」를 쓰는데 만드는 곳이 없어요 ({ws[0]})'); total += 1
+        if f not in all_set and f not in ENGINE_FLAGS and f.split('_')[0] in ids: print(f'  ✗ 플래그 「{f}」를 쓰는데 만드는 곳이 없어요 ({ws[0]})'); total += 1
     # 1-1 분기 한정 표현: 한 선택지 분기에서만 나온 말을 그 분기 플래그 없이 되받는 대사 (경고 — 사람이 읽고 판단)
     for w in all_warns: print('  ⚠', w)
     if all_warns: print(f'경고(분기 한정 표현 의심) {len(all_warns)} 건')
