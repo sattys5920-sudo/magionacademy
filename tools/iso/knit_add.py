@@ -49,7 +49,7 @@ blank = Image.new('RGBA', (40, 40), (0, 0, 0, 0))
 W2 = x0 + ph.width + 2 + 40; H2 = max(atlas.height, ph.height, 40); g = Image.new('RGBA', (W2, H2), (0, 0, 0, 0)); g.alpha_composite(atlas, (0, 0)); g.alpha_composite(ph, (x0, 0)); atlas = g
 FURN['items'].append({'id': 'kn_basket', 'name': '뜨개 바구니', 'cat': '뜨개', 'w': 1, 'd': 1, 'solid': 1, 'flat': 0, 'sw': ph.width, 'sh': ph.height, 'ax': round(ax - o['x']), 'ay': round(ay - o['y']), 'price': 0, 'pts': 2, 'sx': x0, 'ev': 1, 'knit': 1})
 bx0 = x0 + ph.width + 2
-DOLLS = [('leo', '레오'), ('sera', '세라 선생님'), ('madeleine', '마들렌'), ('stella', '스텔라'), ('nabi', '나비'), ('batri', '배트리'), ('kappa', '캇파'), ('aula', '아울라'), ('mandi', '맨디'), ('jipsin', '스트로')]
+DOLLS = [('leo', '레오'), ('sera', '세라 선생님'), ('madeleine', '마들렌'), ('stella', '스텔라'), ('nabi', '나비'), ('batri', '배트리'), ('kappa', '캇파'), ('aula', '아울라'), ('mandi', '맨디'), ('jipsin', '스트로'), ('otumo', '오투모')]
 for nid, nm in DOLLS:
     FURN['items'].append({'id': 'kn_doll_' + nid, 'name': nm + ' 뜨개 인형', 'cat': '뜨개', 'w': 1, 'd': 1, 'solid': 1, 'flat': 0, 'sw': 40, 'sh': 40, 'ax': 20, 'ay': 36, 'price': 0, 'pts': 2, 'sx': bx0, 'ev': 1, 'knit': 1, 'dyn': nid})
 atlas.save(ATLAS); atlas.save(ATLAS.replace('.png', '.webp'), lossless=True)

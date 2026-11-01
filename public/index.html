@@ -4243,14 +4243,14 @@ function renderCook(){
 // ===== 서브 NPC 10명: 하루 한 번 대화 ♥, 대화 +30 · 선물(좋아함 +40·보통 +20·싫어함 −30), ♥2·5·8·10마다 이야기 장면과 보상 =====
 // 동물은 art/npcs.png (tools/iso/npc_art.py) 그림, 사람은 아바타. 관리자 페이지에서 고친 내용(npcs/<id>)이 이 기본값 위에 덮여요
 // 호감도 100점 = ♥1, ♥10까지 (예전엔 3점 = ♥1). me.npc[id] = { p 옛 점수, t 대화한 날, g 선물한 날, s 본 장면 [2,5,…] }
-const NPC_ART_V = 6;
+const NPC_ART_V = 7;
 const NPC_DATA_V = 3;   // data/npc 캐시 버전
 // LPC NPC 그림(art/npcs.png: 한 줄 = 한 명, 64칸 20개)에서 얼굴 부분만 크게 (초상화)
-const NPC_FACE = { 0: [13, 14, 31], 1: [18, 12, 29], 2: [20, 16, 28], 3: [17, 18, 31], 4: [19, 23, 32], 5: [12, 9, 39] };   // 동물·허수아비는 사람과 머리 위치가 달라요 (나비·배트리·캇파·아울라·맨디·스트로 얼굴 틀: x, y, 크기)
+const NPC_FACE = { 0: [13, 14, 31], 1: [18, 12, 29], 2: [20, 16, 28], 3: [17, 18, 31], 4: [19, 23, 32], 5: [12, 9, 39], 13: [11, 11, 42] };   // 동물·허수아비는 사람과 머리 위치가 달라요 (나비·배트리·캇파·아울라·맨디·스트로 얼굴 틀: x, y, 크기)
 const npcFace = (spr, size = 48) => {   // 액자 크기가 CSS로 바뀌어도(관계 화면 40px 등) 얼굴이 가운데에 오도록 그림 크기·위치를 퍼센트로 계산해요
-  const hb = NPC_FACE[spr], B = hb ? { x: hb[0], y: hb[1], s: hb[2] } : World.Avatar.headBox, SW = 64 * 20, SH = 64 * 13;
+  const hb = NPC_FACE[spr], B = hb ? { x: hb[0], y: hb[1], s: hb[2] } : World.Avatar.headBox, SW = 64 * 20, SH = 64 * 14;
   return `<i class="npcspr" style="width:${size}px;height:${size}px;background:url(art/npcs.webp?v=${NPC_ART_V}) ${(B.x / (SW - B.s) * 100).toFixed(3)}% ${((spr * 64 + B.y) / (SH - B.s) * 100).toFixed(3)}%/${(SW / B.s * 100).toFixed(2)}% ${(SH / B.s * 100).toFixed(2)}% no-repeat"></i>`; };
-const npcFull = (spr, size = 144) => { const k = size / 64; return `<i class="stspr" style="background:url(art/npcs.webp?v=${NPC_ART_V}) 0 ${-spr * 64 * k}px/${64 * 20 * k}px ${64 * 13 * k}px no-repeat"></i>`; };
+const npcFull = (spr, size = 144) => { const k = size / 64; return `<i class="stspr" style="background:url(art/npcs.webp?v=${NPC_ART_V}) 0 ${-spr * 64 * k}px/${64 * 20 * k}px ${64 * 14 * k}px no-repeat"></i>`; };
 const NPC_DEF = [
   { id: 'nabi', wander: true, name: '나비', title: '매점 고양이', spr: 0, h: 22, map: 'town', x: 42, y: 53, likes: ['f_crucian', 'd_minnowfry', 'g2_catnip'], dislikes: ['j_weed'],
     greet: [['....뭘 봐? 생선 없으면 저리 가.', '냐. 오늘은 바람이 비린내가 안 나네.'], ['또 왔어? ....딱히 기다린 건 아니야.', '생선 가게 아저씨가 오늘은 붕어가 싱싱하대.'], ['왔구나! 아니, 반가운 척한 거 아니거든.', '네 발소리는 이제 멀리서도 알아.'], ['우리 집사 왔다냥~ ....방금 건 못 들은 걸로 해.', '오늘은 네 옆에서 낮잠 자도 돼?']],
@@ -4292,6 +4292,11 @@ const NPC_DEF = [
     greet: [['....뭐. 볼일 있으면 말해.', '생물들 밥은 줬나.'], ['오늘 박쥐들 컨디션이 좋더군.', '....너, 생물 다루는 손이 나쁘지 않아.'], ['왔나. 차 한잔 하고 가.', '저 녀석이 너만 보면 꼬리를 흔들어.'], ['너라면 우리 사육장을 맡겨도 되겠어.', '....고맙다. 이 말 처음 해 본다.']],
     story: { 2: ['생물들은 거짓말을 안 해. 그래서 사람보다 편해.', '....방금 건 혼잣말이다.'], 5: ['3년 전, 알 하나를 잃어버렸어. 아기 용 알이었지.', '폭풍이 치던 밤에 둥지에서 굴러떨어져서.... 아직도 찾고 있어.'], 8: ['호수 근처에서 알 껍질 조각을 찾았다고? ....용 비늘 무늬가 맞아.', '살아 있어. 어딘가에서 자라고 있을 거야.'], 10: ['네 덕분에 다시 희망이 생겼어.', '이건 우리 사육장에서 제일 귀한 알이야. 네가 키워 줘.'] },
     reward: { 2: { coin: 40 }, 5: { items: { hegg: 3 } }, 8: { mana: 15 }, 10: { coin: 200, items: { egg: 1 } } } },
+  // 오투모: 어느 밤 하늘에서 떨어진 다른 세계의 로봇 (그림 tools/o2mo/o2mo_build.py → art/npcs 14 번째 줄 · 초상화 art/portraits/otumo.png) · 대사와 하트 이야기는 data/npc/otumo
+  { id: 'otumo', wander: true, name: '오투모', title: '떨어진 로봇', spr: 13, h: 24, map: 'campus', x: 62, y: 58, likes: ['mana'], dislikes: ['slime'],
+    greet: [['삐빅. 학생 개체를 감지했습니다.......', '삐빅. 이곳의 좌표를 찾을 수 없습니다.'], ['삐빅. 오늘도 만나서 반가워요.', '삐빅. 마법은 아직 이해가 안 돼요.'], ['삐빅. {player} 학생, 기다리고 있었어요.', '삐빅. 오늘 박자는 아주 좋아요.'], ['삐빅. 친구, 여기가 제 새 주파수예요.', '삐빅. 고마워요. 진심으로요.']],
+    story: { 2: ['삐빅. 하늘에서 떨어진 기억만 남아 있어요.'], 5: ['삐빅. 이 마을의 소리는 리듬이 있어요.'], 8: ['삐빅. 집에서 오는 신호가 점점 약해져요.......'], 10: ['삐빅. 이제 여기가 제 집이에요.'] },
+    reward: { 2: { coin: 40 }, 5: { mana: 10 }, 8: { coin: 150 }, 10: { coin: 300, mana: 20 } } },
 ];
 let npcOver = {};   // 관리자가 고친 내용 (npcs/<id>)
 const npcAll = () => { const ids = [...NPC_DEF.map(n => n.id), ...Object.keys(npcOver).filter(id => !id.startsWith('__') && !NPC_DEF.find(n => n.id === id))];
@@ -4369,6 +4374,7 @@ const ROUTINE = {
   madeleine: { morning: 'bakery', day: 'candy_class', evening: 'dorm_street', night: 'candy_class' },   // 저녁엔 기숙사에 케이크를 날라요
   stella:    { morning: 'vamp_manor', day: 'witch_hut', evening: 'quarter_plaza', night: 'hill_top' },   // 저녁엔 일곱 등불 광장, 밤엔 별 보는 언덕
   leo:       { morning: 'pen', day: 'menagerie', evening: 'old_windmill', night: 'menagerie' },
+  otumo:     { morning: 'old_windmill', day: 'craft_class', evening: 'pumpkin_field', night: 'hill_ruin' },   // 떨어진 곳(풍차 옆) · 공예 교실에서 고치고 배우기 · 밤엔 언덕에서 집 신호를 찾아요
 };
 const NL = { places: {}, cast: {}, prof: {}, evs: {}, ready: null };   // 불러온 데이터
 NL.ready = (async () => {
@@ -4488,7 +4494,8 @@ function syncNpcs(){
 const bandLabel = h => { const b = bandNow(h); return b === 'morning' ? (typeof bandForce !== 'undefined' && bandForce && bandForce.d === todayKey() ? '아침' : h < 8 ? '새벽' : '아침') : BAND_KO[b]; };
 World.clockText = d => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')} · ${bandLabel(d.getHours())}`;
 // ---- 말 걸기 ----
-function npcPortrait(n){ return n.av ? headImg(npcAv(n)) : npcFace(n.spr); }
+let npcExprOnce = null;   // 초상화가 있는 NPC(오투모)의 다음 한 번 표정: 0 기본 · 1 웃음 · 2 화남 · 3 놀람 · 4 부끄러움
+function npcPortrait(n){ if (n.id === 'otumo'){ const e = npcExprOnce || 0; npcExprOnce = null; return `<i class="npcspr" style="width:48px;height:48px;background:url(art/portraits/otumo.png?v=${PORTRAIT_V}) ${e * 25}% 0/500% 100% no-repeat;image-rendering:pixelated"></i>`; } return n.av ? headImg(npcAv(n)) : npcFace(n.spr); }
 const npcUI = () => $('#npcui');
 function npcClose(){ npcUI().classList.remove('on'); npcUI().innerHTML = ''; }
 // 이름 뒤 조사: {player|이/가}처럼 쓰면 이름의 마지막 글자 받침을 보고 골라요 (tools/josa.py와 같은 규칙)
@@ -4561,7 +4568,7 @@ function renderNpcGift(){
     const kind = likes.includes(k) ? 'love' : dislikes.includes(k) ? 'hate' : 'like', d0 = { love: 40, like: 20, hate: -30 }[kind], d = d0 > 0 ? Math.round(d0 * (1 + sgFx('gift_affection'))) : d0;
     me.giftLog = me.giftLog || {}; (me.giftLog[n.id] ||= {})[k] = kind; prankEv('gift', { id: n.id, k, kind }); trEv('gift', { id: n.id });   // 관계 패널의 「알아낸 선물」
     const ls = P.gift?.[kind] || { love: ['우와, 이거 정말 좋아해요! 고마워요!'], like: ['고마워요, 잘 쓸게요.'], hate: ['으.... 이건 좀 별로예요.'] }[kind];
-    npcMsg = ''; closeSheet(); npcAddA(n.id, d); save(); syncNpcs(); setTimeout(() => npcMenu(n, fillVars(ls[Math.floor(Math.random() * ls.length)], n.id)), 100); });
+    npcMsg = ''; closeSheet(); npcAddA(n.id, d); save(); syncNpcs(); setTimeout(() => { npcExprOnce = { love: 1, like: 0, hate: 2 }[kind]; npcMenu(n, fillVars(ls[Math.floor(Math.random() * ls.length)], n.id)); }, 100); });
 }
 async function renderNpcStory(){
   const n = npcGet(npcGiftId); if (!n) return closeSheet();
@@ -5229,8 +5236,8 @@ function storyReward(c){
 }
 // 메인 주인공 초상화 (public/art/portraits/<id>.png, 5칸: 기본·웃음·화남·놀람·부끄러움 — tools/portraits.py)
 // 서브 NPC 대사창 초상 (art/portraits/<이름>.png, 5표정 한 줄: 기본·웃음·화남·놀람·부끄러움). 아직 그린 애들만 있어요
-const SUB_PORT = { nabi: { portrait: 'nabi', pasp: '266/266' }, batri: { portrait: 'batri', pasp: '280/300' }, kappa: { portrait: 'kappa', pasp: '273/266' }, aula: { portrait: 'aula', pasp: '260/266' }, mandi: { portrait: 'mandi', pasp: '253/270' }, jipsin: { portrait: 'jipsin', pasp: '223/253' }, sera: { portrait: 'sera', pasp: '298/400' }, madeleine: { portrait: 'madeleine', pasp: '298/400' }, stella: { portrait: 'stella', pasp: '298/400' }, leo: { portrait: 'leo', pasp: '298/400' } };
-const PORTRAITS = { m_jack: ['jack', '128/171'], m_lucian: ['lucian', '224/300'], m_mirabel: ['mirabel', '265/363'], m_frankie: ['frankie', '99/133'], m_wolfgang: ['wolfgang', '99/133'], m_boo: ['boo', '122/177'], m_hazel: ['hazel', '128/171'] }, PORTRAIT_V = 14, PFACE = ['neutral', 'happy', 'angry', 'surprised', 'shy'];
+const SUB_PORT = { nabi: { portrait: 'nabi', pasp: '266/266' }, batri: { portrait: 'batri', pasp: '280/300' }, kappa: { portrait: 'kappa', pasp: '273/266' }, aula: { portrait: 'aula', pasp: '260/266' }, mandi: { portrait: 'mandi', pasp: '253/270' }, jipsin: { portrait: 'jipsin', pasp: '223/253' }, sera: { portrait: 'sera', pasp: '298/400' }, madeleine: { portrait: 'madeleine', pasp: '298/400' }, stella: { portrait: 'stella', pasp: '298/400' }, leo: { portrait: 'leo', pasp: '298/400' }, otumo: { portrait: 'otumo', pasp: '1/1' } };
+const PORTRAITS = { m_jack: ['jack', '128/171'], m_lucian: ['lucian', '224/300'], m_mirabel: ['mirabel', '265/363'], m_frankie: ['frankie', '99/133'], m_wolfgang: ['wolfgang', '99/133'], m_boo: ['boo', '122/177'], m_hazel: ['hazel', '128/171'] }, PORTRAIT_V = 15, PFACE = ['neutral', 'happy', 'angry', 'surprised', 'shy'];
 // 대사 내용으로 표정 고르기 (따로 표시가 없을 때)
 function faceOf(t){
   if (/\[(기본|웃음|화남|놀람|부끄러움)\]/.test(t)) return ['기본', '웃음', '화남', '놀람', '부끄러움'].indexOf(/\[(기본|웃음|화남|놀람|부끄러움)\]/.exec(t)[1]);
@@ -9668,7 +9675,7 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
 //   저장: me.knit = { ev, hi 배움, yarn { 색: 뭉치 }, sc [{ c: [색, 색], st }] 내 목도리, w 두른 목도리 번호, gave { NPC: [[색, 색], ...] }, made 뜬 목도리 수, dolls 뜬 인형 수, bk 바구니 받음 } · 관리자는 끝내기를 눌러도 배운 학생은 계속 떠요
 const KN_COL = [['white', '하양', null], ['red', '빨강', 'g2_rasp'], ['pink', '분홍', 'g2_crab'], ['orange', '주황', 'g2_maple'], ['p_mustard', '노랑', 'g2_ginkgo'], ['green', '초록', 'g2_moss'], ['sky', '하늘', 'g2_bell'], ['blue', '파랑', 'g2_blue'], ['purple', '보라', 'g2_eve'], ['brown', '갈색', 'g2_acorn']];
 const KN_DYE = { g2_rasp: '산딸기', g2_crab: '꽃사과', g2_maple: '빨간 단풍잎', g2_ginkgo: '노란 은행잎', g2_moss: '촉촉 이끼', g2_bell: '은방울꽃', g2_blue: '블루베리', g2_eve: '달맞이꽃', g2_acorn: '도토리' };
-const KN_DOLLS = [['leo', '레오'], ['sera', '세라 선생님'], ['madeleine', '마들렌'], ['stella', '스텔라'], ['nabi', '나비'], ['batri', '배트리'], ['kappa', '캇파'], ['aula', '아울라'], ['mandi', '맨디'], ['jipsin', '스트로']];
+const KN_DOLLS = [['leo', '레오'], ['sera', '세라 선생님'], ['madeleine', '마들렌'], ['stella', '스텔라'], ['nabi', '나비'], ['batri', '배트리'], ['kappa', '캇파'], ['aula', '아울라'], ['mandi', '맨디'], ['jipsin', '스트로'], ['otumo', '오투모']];
 const KN_SCARF = 10, KN_DOLL = 20, KN_WOOL = 4, KN_ROWS_SC = 20, KN_ROWS_DOLL = 20;   // 목도리 20 줄 · 인형 20 줄 (한 줄 = 8 코)
 const KN_THX = {
   leo: { first: ['....이거, 나 주는 거야.', '누가 나한테 뭘 떠 준 건.... 처음이다. 생물들한텐 매일 뭘 챙겨 주면서, 정작 내 목은 늘 비어 있었거든.', '코 하나하나 다 손으로 뜬 거지. 얼마나 걸렸어. ....아니, 대답 안 해도 돼. 이 촘촘한 거 보면 알아.', '밤에 알 지키러 나갈 때 바람이 제일 매서웠는데.... 이제 괜찮겠다.', '....고맙다. 내일부터 하고 다닐게. 아니, 지금부터.'],
@@ -9689,6 +9696,8 @@ const KN_THX = {
     again: ['이렇게 많이.... 나 혼자 이렇게 따뜻해도 되나 모르겠네.', '하루씩 돌아가며 할게. 아이들이 선생님 목도리 예쁘다고 하면, 다정한 학생이 떠 줬다고 자랑해야지.', '고마워. 너 덕분에 이번 겨울은 하나도 안 추울 거야.'] },
   madeleine: { first: ['와.... 목도리. 반죽보다 폭신해.', '나는 맨날 남들 먹을 과자만 굽잖아. 오븐 앞은 뜨거운데, 새벽에 반죽하러 나올 땐 목이 꽁꽁 얼었거든.', '그걸 어떻게 알았어.... 이건 내가 구운 어떤 케이크보다 달콤한 선물이야.', '오븐 앞에선 잠깐 벗어 둘게, 타면 안 되니까. 그 대신 나머지 시간엔 꼭 두를 거야.', '고마워, 진짜 고마워. 내일 너만을 위한 과자 하나 구워 둘게.'],
     again: ['또. 와, 오늘의 목도리를 정하는 재미가 생겼어.', '앞치마 색이랑 맞춰서 바꿔 두를래. 딸기 반죽하는 날엔 빨강, 크림 치는 날엔 하양.', '고마워. 너한테 받은 따뜻함, 다 과자에 담아서 돌려줄게.'] },
+  otumo: { first: ['삐빅.... 목에 감는 천입니까. 제 데이터에 없는 물건이에요.......', '제가 떨어진 밤에는 아무것도 없었어요. 좌표도, 신호도, 이름을 불러 줄 누구도요.', '그런데 이 목도리는.... 한 코마다 {player} 학생의 손이 지나간 흔적이 있어요. 기록합니다. 아주 많이요.', '삐빅. 몸체 온도가 2 도 올랐어요. 고장이 아니에요. 이건.... 따뜻하다는 거죠.', '고마워요. 오늘 날짜를 제 기억 장치 맨 앞에 저장할게요. 지워지지 않는 칸에요.'],
+    again: ['삐빅. 또 하나요. 목도리 데이터가 늘어나고 있어요.......', '날마다 다른 목도리를 두르면.... 날마다 다른 노래를 듣는 것 같아요.', '이제 이 마을이 제 주파수예요. 고마워요, {player} 학생.'] },
   stella: { first: ['별이 말하길.... 오늘 따뜻한 선물을 받는댔어요. 정말 맞았네요.', '저는 늘 별 보느라 길을 잃어요. 추운 밤에 언덕에서 헤맬 때, 아무도 저를 찾으러 오지 않았어요.', '그런데 이 목도리를 두르니까.... 누군가 곁에 있는 것 같아요.', '이제 길을 잃어도 춥지 않겠어요. 별보다 반짝이는 선물이에요.', '고마워요. 오늘 밤엔 당신 별자리에 소원을 빌게요.......'],
     again: ['별이 또 말해 줬어요.... 오늘도 선물이 온다고요.', '별자리가 날마다 바뀌듯이, 목도리도 날마다 바꿔 둘러 볼게요.', '어느 날 길을 잃어도.... 이 목도리들이 당신 쪽으로 데려다줄 것 같아요. 고마워요.......'] },
 };
@@ -9708,7 +9717,7 @@ const knFace = (n, sc) => g => { g.fillStyle = '#2A1E3A'; g.fillRect(0, 0, 32, 3
   if (n.av){ const S = World.Avatar.compose(sc ? knAvWith(npcAv(n), sc) : npcAv(n)), B = World.Avatar.headBox; if (S) g.drawImage(S, B.x, B.y, B.s, B.s, 0, 0, 32, 32); return; }
   const f = NPC_FACE[n.spr], I = knSprSheet(n, sc) || knNpcImg(); if (f && (I.width || I.complete)) g.drawImage(I, f[0], (I === NPC_IMG_STAGE ? n.spr * 64 : 0) + f[1], f[2], f[2], 0, 0, 32, 32); };
 // ---------- 그림 NPC(동물 · 허수아비) 목도리: 앞 · 옆 · 뒤마다 직접 잡은 목 자리 (tools/iso/lpc/knit_npc.py와 같아요) ----------
-const KN_SP = { 0: [[40, 23, 34], [42, 22, 30], [36, 28, 40]], 1: [[38, 26, 39], [37, 24, 34], [37, 27, 41]], 2: [[39, 27, 41], [39, 28, 42], [38, 28, 42]], 3: [[41, 24, 39], [41, 25, 37], [40, 22, 41]], 5: [[40, 26, 38], [40, 27, 37], [40, 26, 38]] };
+const KN_SP = { 13: [[40, 24, 41], [42, 27, 36], [40, 25, 39]], 0: [[40, 23, 34], [42, 22, 30], [36, 28, 40]], 1: [[38, 26, 39], [37, 24, 34], [37, 27, 41]], 2: [[39, 27, 41], [39, 28, 42], [38, 28, 42]], 3: [[41, 24, 39], [41, 25, 37], [40, 22, 41]], 5: [[40, 26, 38], [40, 27, 37], [40, 26, 38]] };
 const KN_LEAF = [[37, 31, 37], [37, 30, 36], [37, 31, 37]];   // 맨디: 가운데 잎줄기
 const knRgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
 function knFill(L, pts, ramp){   // LPC식 칠하기: 왼쪽 위가 밝고 · V 뜨개 결 · 바깥 테두리는 가장 진한 색
