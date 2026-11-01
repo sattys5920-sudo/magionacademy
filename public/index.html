@@ -9794,7 +9794,7 @@ async function knIntro(){
     await famCard(`<div class="knyc"><i style="background:${knHex('red')}"></i><i style="background:${knHex('red')}"></i><i style="background:${knHex('white')}"></i><i style="background:${knHex('white')}"></i></div><b>털실 4 뭉치</b><small>빨강 2 · 하양 2</small>`, null, 2200);
     await say('털실 네 뭉치 줄게. 다 쓰면 양털로 물레 돌려서 만들어.', 1500);
     await say('양털 네 개면 한 뭉치. 색을 넣고 싶으면 채집물 하나씩 같이 넣고. 목도리는 열 뭉치면 떠.', 1800);
-    await say('....물레는 내 옆에 있어. 바늘은 나한테 말 걸면 되고.', 1300);
+    await say('....물레는 저기 벽 끝에 있어. 바늘은 나한테 말 걸면 되고.', 1300);
     toast('사육장 물레를 누르면 털실을, 레오에게 말을 걸면 뜨개질을 할 수 있어요');
   } catch(e){ errReport('knit', '겨울 뜨개질 시작 연출 오류: ' + e.message, e.stack || ''); if (!(me.knit && me.knit.hi) && knCtl){ me.knit = knNew(); save(); } }
   finally { $('#blsay') && ($('#blsay').style.display = 'none'); document.querySelectorAll('#gdask,#knplay').forEach(x => x.remove()); if (dim){ dim.style.opacity = 0; setTimeout(() => dim.remove(), 700); } knOn = false; }
@@ -9812,7 +9812,7 @@ function knRender(){
     const col = KN_COL.find(x => x[0] === knYc) || KN_COL[0], dye = col[2], wool = me.inv.wool || 0, can = Math.min(Math.floor(wool / KN_WOOL), dye ? (me.inv[dye] || 0) : 999);
     body = `<div class="s">가진 털실 ${knTot()} 뭉치 · 양털 ${wool} 개</div>${yarnRow(knYc)}
       <div class="box"><b>${col[1]} 털실 1 뭉치</b><span>양털 ${KN_WOOL} 개${dye ? ` + ${KN_DYE[dye]} 1 개 (가진 것 ${me.inv[dye] || 0} 개)` : ''}</span>
-      ${barn ? `<div class="frow"><button class="btn sm go" data-kn="spin1" ${can < 1 ? 'disabled' : ''}>1 뭉치 만들기</button><button class="btn sm" data-kn="spinmax" ${can < 2 ? 'disabled' : ''}>${can > 1 ? can + ' 뭉치 다' : '한 번에 만들기'}</button></div>` : '<span class="s">물레는 사육장 레오 옆에 있어요</span>'}</div>
+      ${barn ? `<div class="frow"><button class="btn sm go" data-kn="spin1" ${can < 1 ? 'disabled' : ''}>1 뭉치 만들기</button><button class="btn sm" data-kn="spinmax" ${can < 2 ? 'disabled' : ''}>${can > 1 ? can + ' 뭉치 다' : '한 번에 만들기'}</button></div>` : '<span class="s">물레는 사육장 왼쪽 벽 끝에 있어요</span>'}</div>
       <div class="s sub">양털은 사육장 양(뭉게)에게서 모여요. 이미 만든 털실은 다시 물들일 수 없어요</div>`;
   } else if (knTab === 'k' && K.wip){
     const w = K.wip, doll = w.kind === 'doll', R = doll ? KN_ROWS_DOLL : KN_ROWS_SC, done_ = w.snap ? w.snap.rows.length : 0;
@@ -9905,7 +9905,7 @@ async function knGive(n, i){
   finally { $('#blsay') && ($('#blsay').style.display = 'none'); knOn = false; }
   toast(`${withJosa(n.name, '이', '가')} 목도리를 둘렀어요`);
 }
-// ---------- 사육장 물레: 레오 옆에 놓여 있어요 (누르면 털실 만들기) ----------
+// ---------- 사육장 물레: 왼쪽 벽 끝(입구 쪽 모퉁이 화분 옆)에 놓여 있어요 (누르면 털실 만들기) ----------
 let knWheelAt = null;
 function knWheelImg(){
   const c = document.createElement('canvas'); c.width = 34; c.height = 42; const g = c.getContext('2d'), P = (x, y, col) => { g.fillStyle = col; g.fillRect(x, y, 1, 1); }, R = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
@@ -9925,8 +9925,8 @@ function knWheelImg(){
 }
 function knWheel(){
   if (World.where() !== 'barn' || knWheelAt || !World.isFree) return;
-  const spot = [[23, 30], [23, 32], [19, 30], [19, 32], [22, 29], [20, 29], [24, 31], [18, 31], [22, 33], [20, 33]].find(([x, y]) => World.isFree(x, y)); if (!spot) return;
-  knWheelAt = spot; const img = knWheelImg(); World.setProps('barn', [{ id: 'knwheel', x: spot[0], y: spot[1], img, pxc: img.getContext('2d'), sw: 34, sh: 42, ax: 17, ay: 38, solid: true, light: true }], 'knwheel');
+  const spot = [[0, 30], [0, 29], [0, 31], [0, 28], [1, 30], [1, 29]].find(([x, y]) => World.isFree(x, y)); if (!spot) return;
+  knWheelAt = spot; const img = knWheelImg(); World.setProps('barn', [{ id: 'knwheel', x: spot[0], y: spot[1], img, pxc: img.getContext('2d'), sw: 34, sh: 42, ax: 17, ay: 38, solid: true, light: { r: 22, c: [255, 220, 170], a: .45 } }], 'knwheel');
 }
 function knWheelTap(){ if (me.knit && me.knit.hi) return knOpen('y'); if (knCtl && knCtl.open) return knLeo(); toast('양털을 실로 잣는 물레예요'); }
 // ---------- 레오 대화 단추 · 뜨개 바구니 ----------
