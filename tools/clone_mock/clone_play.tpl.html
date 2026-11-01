@@ -1,0 +1,335 @@
+<title>꼬마 복제 소동</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+/* 한 화면 게임: 위 상태 줄 · 가운데 마을 캔버스 · 아래 행동 버튼 (밤 마을 한 가지 모습) */
+:root{--bg:#1A1328;--ink:#22183F;--paper:#FFF8EC;--accent:#FFB13B;--pink:#FF6FA0;--line:#3A2C5C;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--paper);font-family:'Gowun Dodum',system-ui,sans-serif;overflow:hidden}
+body{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+#wrap{position:relative;max-width:440px;height:100%;margin:0 auto;display:flex;flex-direction:column}
+#hud{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--ink);font-size:15px}
+#hud b{color:var(--accent)}
+#hud .sp{flex:1}
+#bagbtn{background:#3A2C5C;border:0;color:#fff;font:inherit;padding:8px 12px;border-radius:10px;min-height:40px}
+#stage{position:relative;flex:1;overflow:hidden}
+canvas#cv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
+#tools{display:flex;gap:8px;padding:10px 16px;background:var(--ink)}
+#tools button{flex:1;min-height:46px;border:0;border-radius:12px;background:#FFB13B;color:#22183F;font:700 15px 'Gowun Dodum',sans-serif}
+#tools button:disabled{opacity:.4}
+#dlg{position:absolute;left:12px;right:12px;bottom:12px;background:var(--paper);color:var(--ink);border:3px solid var(--ink);border-radius:14px;padding:12px 14px 12px 92px;min-height:96px;display:none;box-shadow:0 6px 0 rgba(0,0,0,.35)}
+#dlg.on{display:block}
+#dlg canvas{position:absolute;left:10px;top:10px;width:72px;height:72px;image-rendering:pixelated;background:#EFE4F6;border-radius:10px}
+#dlg b{display:block;font-size:15px;color:#7A3FB0;margin-bottom:4px}
+#dlg p{margin:0;font-size:16px;line-height:1.55}
+#dlg i{position:absolute;right:12px;bottom:6px;font-style:normal;font-size:13px;color:#8A7AA8}
+#toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:rgba(34,24,63,.92);border:2px solid var(--accent);padding:8px 14px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90%;text-align:center}
+#toast.on{opacity:1}
+#bag{position:absolute;inset:0;background:rgba(20,14,32,.88);display:none;padding:16px;overflow:auto}
+#bag.on{display:block}
+#bag h3{margin:0 0 10px;font-size:18px}
+#bag .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+#bag .c{background:#2B2048;border-radius:10px;padding:6px;text-align:center;font-size:12px;min-height:84px}
+#bag .c canvas{width:48px;height:48px;image-rendering:pixelated}
+#bag .c.got{outline:2px solid var(--accent)}
+#bag .c.ret{opacity:.45}
+#bag button{margin-top:14px;width:100%;min-height:46px;border:0;border-radius:12px;background:#FFB13B;color:#22183F;font:700 15px 'Gowun Dodum',sans-serif}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
+</style>
+<div id="wrap">
+  <div id="hud"><span>잡은 꼬마 <b id="nGot">0</b></span><span>돌려준 꼬마 <b id="nRet">0</b> / 11</span><span class="sp"></span><button id="bagbtn">꼬마 바구니</button></div>
+  <div id="stage"><canvas id="cv"></canvas><div id="flash"></div><div id="toast"></div>
+    <div id="dlg"><canvas id="dp" width="64" height="64"></canvas><b id="dn"></b><p id="dt"></p><i>눌러서 넘기기</i></div>
+    <div id="bag"><h3>꼬마 바구니</h3><div class="grid" id="bagg"></div><button id="bagx">닫기</button></div>
+  </div>
+  <div id="tools"><button id="fish">생선 내려놓기</button><button id="stay">가만히 있기</button></div>
+</div>
+<script>
+const SHEET = new Image(); SHEET.src = 'data:image/webp;base64,__SHEET__';
+const W = 360, H = 520;
+const cv = document.getElementById('cv'), g = cv.getContext('2d');
+cv.width = W; cv.height = H; g.imageSmoothingEnabled = false;
+const $ = s => document.querySelector(s);
+const NPC = [
+  { id: 'nabi', name: '나비', row: 0, home: [52, 120], type: 'flee', area: [20, 60, 140, 200], speed: 1.8,
+    tell: '사실.... 생선보다 학생들 무릎이 더 좋다냥.', back: '그, 그건 꼬마가 지어낸 말이다냥. 무릎은.... 가끔만 좋다냥.......' },
+  { id: 'batri', name: '배트리', row: 1, home: [300, 90], type: 'fly', area: [120, 30, 340, 140], speed: 1.6,
+    tell: '편지 배달하다가.... 몰래 읽어 본 거 하나 있어.', back: '안 읽었어. 봉투가 살짝 비쳤을 뿐이야.......' },
+  { id: 'kappa', name: '캇파', row: 2, home: [180, 300], type: 'pond', area: [160, 236, 200, 268], speed: 0,
+    tell: '머리 접시 물, 사실 매일 아침 수돗물로 채워.', back: '....연못물은 아침에 너무 차갑다. 그뿐이다.......' },
+  { id: 'aula', name: '아울라', row: 3, home: [320, 220], type: 'sleep', area: [292, 160, 330, 200], speed: 0,
+    tell: '도서관 책 중에 한 권은.... 아직 다 못 읽었어요. 어려워서.', back: '쉿.... 사서의 비밀이에요. 언젠가는 다 읽을 거예요.......' },
+  { id: 'mandi', name: '맨디', row: 4, home: [40, 300], type: 'bury', area: [60, 360, 120, 400], speed: 2.2,
+    tell: '비명 지르는 거.... 사실 조금 재밌어요.', back: '히익.... 아, 아니에요. 아주 조금이에요.......' },
+  { id: 'jipsin', name: '스트로', row: 5, home: [130, 470], type: 'fake', area: [230, 400, 330, 440], speed: 0,
+    tell: '까마귀랑 사실 친구야. 쫓는 척만 해.', back: '....말하면 안 됐는데. 까마귀한테는 비밀로 해 줘.......' },
+  { id: 'sera', name: '세라 선생님', row: 6, home: [100, 210], type: 'nurse', area: [40, 200, 320, 460], speed: .9,
+    tell: '쓴 약은.... 선생님도 못 먹어.', back: '어머.... 선생님도 사람이란다. 대신 너희 약은 달게 만들게.......' },
+  { id: 'madeleine', name: '마들렌', row: 7, home: [250, 200], type: 'cookie', area: [216, 160, 260, 200], speed: 0,
+    tell: '제일 맛있는 쿠키는.... 내가 몰래 먹어.', back: '간을 본 거야, 간을. 제빵사는 원래 그래.......' },
+  { id: 'stella', name: '스텔라', row: 8, home: [330, 330], type: 'warp', area: [40, 120, 330, 460], speed: 0,
+    tell: '별이 말해 준다는 거.... 반은 감이에요.', back: '나머지 반은 진짜예요. 별이 그렇게 말했어요.......' },
+  { id: 'leo', name: '레오', row: 9, home: [230, 470], type: 'follow', area: [120, 120, 260, 260], speed: 1.2,
+    tell: '아침에.... 양한테 또 차였어.', back: '....그 양이 원래 성격이 그래. 나를 싫어하는 게 아니야.......' },
+  { id: 'otumo', name: '오투모', row: 10, home: [180, 150], type: 'march', area: [100, 400, 260, 460], speed: .8,
+    tell: '삐빅. 복제기는.... 사실 친구가 더 있었으면 해서 만들었습니다.', back: '' }
+];
+const ME = { x: 180, y: 200, tx: 180, ty: 200, dir: 0, step: 0, still: 0 };
+let minis = [], fish = null, dlgQ = [], dlgCb = null, started = false, t0 = performance.now(), shake = 0;
+const got = new Set(), ret = new Set();
+const rnd = (a, b) => a + Math.random() * (b - a);
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+function frame(row, col, x, y, s, flip, alpha){
+  g.save(); g.globalAlpha = alpha == null ? 1 : alpha; g.translate(Math.round(x), Math.round(y));
+  if (flip) g.scale(-1, 1);
+  g.drawImage(SHEET, col * 64, row * 64, 64, 64, -32 * s, -56 * s, 64 * s, 64 * s); g.restore();
+}
+function colOf(dx, dy, walking, step){
+  const base = Math.abs(dx) > Math.abs(dy) ? 10 : dy < 0 ? 5 : 0;
+  return base + (walking ? 1 + (Math.floor(step) % 4) : 0);
+}
+function setupMinis(){
+  minis = [];
+  NPC.forEach(n => {
+    const [x0, y0, x1, y1] = n.area;
+    if (n.id === 'otumo'){ for (let k = 0; k < 3; k++) minis.push({ n, k, x: x0 + 20 + k * 22, y: y0 + 20, vx: 1, vy: 0, step: 0, st: 'go', t: 0 }); return; }
+    const m = { n, x: rnd(x0, x1), y: rnd(y0, y1), vx: 0, vy: 0, step: 0, st: 'idle', t: rnd(0, 3000), warps: 0 };
+    if (n.type === 'fake'){ m.x = x0 + 50; m.y = y0 + 20; m.fakes = [[x0 + 10, y0 + 20], [x0 + 90, y0 + 20]]; m.real = Math.floor(Math.random() * 3); }
+    if (n.type === 'bury'){ m.st = 'buried'; }
+    if (n.type === 'cookie'){ m.tower = 0; }
+    minis.push(m);
+  });
+}
+function drawMap(now){
+  g.fillStyle = '#6FBF73'; g.fillRect(0, 0, W, H);
+  for (let i = 0; i < 160; i++){ const x = (i * 97) % W, y = (i * 53) % H; g.fillStyle = i % 3 ? '#62B067' : '#7FCB7E'; g.fillRect(x, y, 2, 2); }
+  g.fillStyle = '#E8D3A6'; g.fillRect(0, 230, W, 44); g.fillRect(158, 0, 44, H);
+  g.fillStyle = '#D9C08E'; for (let x = 0; x < W; x += 12) g.fillRect(x, 250, 6, 2); for (let y = 0; y < H; y += 12) g.fillRect(178, y, 2, 6);
+  // 분수 (캇파)
+  g.fillStyle = '#7C8AA8'; g.beginPath(); g.ellipse(180, 252, 34, 18, 0, 0, 7); g.fill();
+  g.fillStyle = '#5FB8E8'; g.beginPath(); g.ellipse(180, 250, 28, 13, 0, 0, 7); g.fill();
+  g.fillStyle = '#A8E0FF'; const ph = Math.sin(now / 300); g.fillRect(176, 230 + ph * 2, 8, 16); g.fillRect(172, 228 + ph * 2, 16, 4);
+  // 생선 가게 (나비)
+  g.fillStyle = '#B5653A'; g.fillRect(14, 40, 96, 46); g.fillStyle = '#FF7A6A'; for (let i = 0; i < 6; i++) g.fillRect(14 + i * 16, 32, 16, 12);
+  g.fillStyle = '#FFF8EC'; g.font = '12px Gowun Dodum'; g.fillText('생선 가게', 34, 68);
+  // 지붕들 (배트리)
+  [[150, 20], [230, 30], [300, 18]].forEach(([x, y]) => { g.fillStyle = '#8A4E9C'; g.beginPath(); g.moveTo(x - 30, y + 30); g.lineTo(x, y); g.lineTo(x + 30, y + 30); g.fill(); g.fillStyle = '#E8D8C8'; g.fillRect(x - 24, y + 30, 48, 34); g.fillStyle = '#5A3E2A'; g.fillRect(x - 6, y + 46, 12, 18); });
+  // 큰 나무 (아울라)
+  g.fillStyle = '#6A4428'; g.fillRect(304, 170, 12, 34); g.fillStyle = '#3F8F4E'; g.beginPath(); g.arc(310, 160, 30, 0, 7); g.fill(); g.fillStyle = '#4FA35C'; g.beginPath(); g.arc(300, 150, 16, 0, 7); g.fill();
+  // 쿠키 탁자 (마들렌)
+  g.fillStyle = '#C8925A'; g.fillRect(208, 186, 60, 10); g.fillRect(212, 196, 4, 14); g.fillRect(260, 196, 4, 14);
+  // 텃밭 (맨디)
+  g.fillStyle = '#8A5A36'; g.fillRect(50, 350, 84, 60); g.fillStyle = '#7A4E2E'; for (let i = 0; i < 4; i++) g.fillRect(50, 356 + i * 14, 84, 3);
+  // 허수아비 밭
+  g.fillStyle = '#D8B860'; g.fillRect(220, 412, 120, 40);
+  // 복제기 잔해
+  g.fillStyle = '#4A5068'; g.fillRect(166, 124, 28, 24); g.fillStyle = '#FFD24A'; g.fillRect(172, 118, 4, 6); g.fillStyle = '#9AA8C8'; g.fillRect(170, 128, 20, 8);
+  for (let i = 0; i < 3; i++){ const p = ((now / 1400) + i / 3) % 1; g.globalAlpha = (1 - p) * .5; g.fillStyle = '#C8C4D8'; g.beginPath(); g.arc(180 + Math.sin(i * 2 + now / 600) * 4, 118 - p * 26, 3 + p * 6, 0, 7); g.fill(); }
+  g.globalAlpha = 1;
+}
+function drawBig(now){
+  NPC.forEach(n => {
+    if (n.id === 'otumo') return;
+    const [x, y] = n.home, near = Math.hypot(ME.x - x, ME.y - y) < 40, has = got.has(n.id) && !ret.has(n.id);
+    frame(n.row, 0, x, y, .78);
+    if (has){ g.fillStyle = '#FFB13B'; g.beginPath(); g.arc(x, y - 52 + Math.sin(now / 200) * 2, 7, 0, 7); g.fill(); g.fillStyle = '#22183F'; g.font = 'bold 11px sans-serif'; g.fillText('!', x - 2, y - 48 + Math.sin(now / 200) * 2); }
+    if (near){ g.fillStyle = 'rgba(34,24,63,.85)'; const w = g.measureText(n.name).width + 12; g.fillRect(x - w / 2, y + 2, w, 16); g.fillStyle = '#fff'; g.font = '12px Gowun Dodum'; g.fillText(n.name, x - w / 2 + 6, y + 14); }
+  });
+  frame(10, 0, 180, 170, .7);
+}
+function stepMini(m, now, dt){
+  const n = m.n, [x0, y0, x1, y1] = n.area, d = Math.hypot(ME.x - m.x, ME.y - m.y);
+  m.t += dt;
+  const clamp = () => { m.x = Math.max(x0, Math.min(x1, m.x)); m.y = Math.max(y0, Math.min(y1, m.y)); };
+  const wander = sp => { if (m.t > 1200 || (!m.vx && !m.vy)){ m.t = 0; const a = rnd(0, 6.28); m.vx = Math.cos(a) * sp; m.vy = Math.sin(a) * sp; } m.x += m.vx; m.y += m.vy; if (m.x < x0 || m.x > x1) m.vx *= -1; if (m.y < y0 || m.y > y1) m.vy *= -1; clamp(); m.step += .15; };
+  if (n.type === 'flee'){
+    if (fish && m.st !== 'eat'){ const fd = Math.hypot(fish.x - m.x, fish.y - m.y); if (fd < 6){ m.st = 'eat'; m.t = 0; } else { m.vx = (fish.x - m.x) / fd * 1.6; m.vy = (fish.y - m.y) / fd * 1.6; m.x += m.vx; m.y += m.vy; m.step += .2; } }
+    else if (m.st === 'eat'){ m.vx = m.vy = 0; if (m.t > 4500){ m.st = 'idle'; fish = null; } }
+    else if (d < 60){ m.vx = (m.x - ME.x) / d * n.speed; m.vy = (m.y - ME.y) / d * n.speed; m.x += m.vx; m.y += m.vy; m.step += .3; if (m.x <= x0 || m.x >= x1 || m.y <= y0 || m.y >= y1){ m.x = rnd(x0, x1); m.y = rnd(y0, y1); } clamp(); if (m.t > 1500){ m.t = 0; say(m, ['냥냥냥', '못 잡는다냥', '생선 냄새가 안 난다냥'][Math.floor(Math.random() * 3)]); } }
+    else wander(.6);
+  } else if (n.type === 'fly'){
+    if (m.st === 'perch'){ m.vx = m.vy = 0; if (m.t > 1800){ m.st = 'fly'; m.t = 0; } }
+    else { m.st = 'fly'; m.x += Math.cos(now / 500 + 1) * 1.6; m.y += Math.sin(now / 340) * .9; clamp(); m.step += .3; if (m.t > 3600){ m.st = 'perch'; m.t = 0; const r = [[150, 52], [230, 62], [300, 50]][Math.floor(Math.random() * 3)]; m.x = r[0]; m.y = r[1]; } }
+  } else if (n.type === 'pond'){
+    m.st = (m.t % 4000) < 1100 ? 'up' : 'down'; m.x = 180; m.y = 258;
+  } else if (n.type === 'nurse'){
+    wander(n.speed);
+  } else if (n.type === 'cookie'){
+    if (m.st === 'cry'){ if (m.t > 2200){ m.st = 'idle'; m.t = 0; m.tower = 0; } }
+    else if (m.t > 650){ m.t = 0; m.tower++; if (m.tower > 5){ m.st = 'cry'; m.t = 0; say(m, '으앙.... 쿠키 탑이.......'); } }
+    m.x = 238; m.y = 180;
+  } else if (n.type === 'warp'){
+    if (m.warps < 3 && d < 36){ m.warps++; sparkle(m.x, m.y); m.x = rnd(x0, x1); m.y = rnd(y0, y1); say(m, m.warps < 3 ? '반짝.... 여기예요.......' : '하아.... 별도 지쳤어요.......'); }
+    else if (m.warps < 3) wander(.4);
+  } else if (n.type === 'follow'){
+    if (d > 24){ m.vx = (ME.x - m.x) / d * n.speed; m.vy = (ME.y - m.y) / d * n.speed; m.x += m.vx; m.y += m.vy; m.step += .25; } else { m.vx = m.vy = 0; }
+  } else if (n.type === 'march'){
+    if (m.t > 900){ m.t = 0; }
+    const ph = Math.floor(now / 2400) % 4, dirs = [[1, 0], [0, .4], [-1, 0], [0, -.4]];
+    m.vx = dirs[ph][0] * n.speed; m.vy = dirs[ph][1] * n.speed; m.x += m.vx; m.y += m.vy; clamp(); m.step += .12;
+  } else if (n.type === 'bury'){
+    if (m.st === 'run'){ wander(n.speed); if (m.t > 5000){ m.st = 'buried'; m.t = 0; say(m, '....다시 숨을래요'); } }
+  }
+}
+const bubbles = [], sparks = [];
+function say(m, text){ bubbles.push({ m, text, t: performance.now() }); }
+function sparkle(x, y){ for (let i = 0; i < 10; i++) sparks.push({ x, y, a: i / 10 * 6.28, t: performance.now() }); }
+function drawMini(m, now){
+  const n = m.n, s = .4, moving = Math.abs(m.vx) + Math.abs(m.vy) > .05;
+  const col = colOf(m.vx || 0, m.vy || 1, moving, m.step), flip = m.vx > .05 && Math.abs(m.vx) > Math.abs(m.vy);
+  const bob = Math.sin(now / 160 + m.x) * (moving ? 1.5 : .6);
+  if (n.type === 'pond'){ if (m.st !== 'up') { g.fillStyle = 'rgba(255,255,255,.5)'; g.fillRect(176, 252 + Math.sin(now / 200) * 2, 8, 2); return; } frame(n.row, 0, m.x, m.y + 4, s); return; }
+  if (n.type === 'bury' && m.st === 'buried'){ g.fillStyle = '#5FB85A'; const wob = Math.sin(now / 300) * 2; g.fillRect(m.x - 5 + wob, m.y - 8, 4, 8); g.fillRect(m.x + 1 - wob, m.y - 10, 4, 10); g.fillStyle = '#4A9A48'; g.fillRect(m.x - 2, m.y - 12, 4, 12); return; }
+  if (n.type === 'fake'){
+    m.spots = [m.fakes[0], [m.fakes[0][0] + 40, m.fakes[0][1]], m.fakes[1]];
+    m.spots.forEach(([x, y], i) => { g.fillStyle = '#6A4428'; g.fillRect(x - 1, y - 30, 2, 30); g.fillRect(x - 10, y - 22, 20, 2);
+      if (i === m.real){ frame(n.row, 0, x, y, s); if ((now % 2600) < 160){ g.fillStyle = '#C89060'; g.fillRect(x - 6, y - 21, 12, 3); } }
+      else { g.fillStyle = '#D8A050'; g.beginPath(); g.arc(x, y - 22, 7, 0, 7); g.fill(); g.fillStyle = '#B5653A'; g.fillRect(x - 10, y - 30, 20, 4); g.fillStyle = '#9A3A3A'; g.fillRect(x - 6, y - 14, 12, 10); } });
+    return;
+  }
+  if (n.type === 'cookie'){ for (let i = 0; i < m.tower; i++){ g.fillStyle = i % 2 ? '#E8B060' : '#C88A40'; g.fillRect(250, 184 - i * 5, 12, 4); } if (m.st === 'cry'){ g.fillStyle = '#C88A40'; [[244, 196], [256, 199], [262, 194]].forEach(([x, y]) => g.fillRect(x, y, 6, 3)); } }
+  if (n.type === 'nurse' && m.patch){ g.fillStyle = '#FFE0E0'; g.fillRect(ME.x - 4, ME.y - 30, 8, 3); }
+  if (n.type === 'fly' && m.st === 'perch'){ frame(n.row, 0, m.x, m.y, s); } else frame(n.row, col, m.x, m.y + bob, s, flip);
+  if (n.type === 'sleep'){ g.fillStyle = '#fff'; g.font = '10px sans-serif'; g.fillText('z', m.x + 8, m.y - 26 - (now / 400 % 6)); g.fillText('Z', m.x + 12, m.y - 34 - (now / 500 % 6)); }
+  if (n.type === 'cookie' && m.st === 'cry'){ g.fillStyle = '#8AD0FF'; g.fillRect(m.x - 6, m.y - 18 + (now / 90 % 8), 2, 3); g.fillRect(m.x + 4, m.y - 18 + ((now / 90 + 4) % 8), 2, 3); }
+}
+function catchable(m){
+  const n = m.n;
+  if (n.type === 'flee') return m.st === 'eat';
+  if (n.type === 'fly') return m.st === 'perch';
+  if (n.type === 'pond') return m.st === 'up';
+  if (n.type === 'bury') return m.st === 'run';
+  if (n.type === 'cookie') return m.st === 'cry';
+  if (n.type === 'warp') return m.warps >= 3;
+  if (n.type === 'follow') return ME.still > 1500;
+  if (n.type === 'fake') return false;
+  return true;
+}
+function tryCatch(now){
+  for (const m of minis){
+    if (m.caught) continue;
+    const pos = m.n.type === 'fake' ? null : m;
+    if (!pos) continue;
+    const d = Math.hypot(ME.x - m.x, ME.y - m.y);
+    if (d < 22 && catchable(m)) return doCatch(m);
+    if (d < 22 && !catchable(m) && (!m.lastNo || now - m.lastNo > 2200)){
+      m.lastNo = now;
+      const no = { fly: '날고 있을 땐 못 잡아. 메롱', pond: '....첨벙', bury: '', cookie: '조금만, 탑 하나만 더 쌓고.......', flee: '', follow: '같이 걷는 거 좋아.......' }[m.n.type];
+      if (no) say(m, no);
+      if (m.n.type === 'nurse'){ m.patch = 1; }
+    }
+  }
+}
+function doCatch(m){
+  m.caught = true; const n = m.n;
+  if (n.id === 'otumo'){
+    const left = minis.filter(x => x.n.id === 'otumo' && !x.caught).length;
+    sparkle(m.x, m.y);
+    if (left > 0){ toast(`꼬마 오투모를 잡았어요. 아직 ${left} 명 더 있어요`); return; }
+  }
+  got.add(n.id); sparkle(m.x, m.y); upd();
+  talk([[n.row, `꼬마 ${n.name}`, n.tell], [11, '나', `....들었다. 「${n.name}」한테 돌려줘야겠다.`]]);
+}
+function upd(){ $('#nGot').textContent = got.size; $('#nRet').textContent = ret.size; }
+function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2400); }
+function talk(lines, cb){ dlgQ = lines.slice(); dlgCb = cb || null; nextLine(); }
+function nextLine(){
+  const el = $('#dlg'); if (!dlgQ.length){ el.classList.remove('on'); const c = dlgCb; dlgCb = null; c && c(); return; }
+  const [row, name, text] = dlgQ.shift(); el.classList.add('on'); $('#dn').textContent = name; $('#dt').textContent = text;
+  const pc = $('#dp').getContext('2d'); pc.imageSmoothingEnabled = false; pc.clearRect(0, 0, 64, 64);
+  if (row != null) pc.drawImage(SHEET, 0, row * 64, 64, 64, -8, 4, 80, 80);
+}
+$('#dlg').addEventListener('click', nextLine);
+function giveBack(n){
+  ret.add(n.id); upd(); sparkle(n.home[0], n.home[1] - 20);
+  const lines = [[n.row, n.name, n.back]];
+  if (ret.size === 10 && got.has('otumo')) lines.push([10, '오투모', '삐빅. 거의 다 모였습니다. ....꼬마 오투모는 제가 받겠습니다. 운동장 기계 옆으로 와 주세요.']);
+  talk(lines);
+}
+function ending(){
+  ret.add('otumo'); upd();
+  talk([
+    [10, '오투모', '삐빅.... 꼬마 열한 명, 회수 완료. 모두 원본으로 돌아갔습니다.'],
+    [10, '오투모', '복제기를 만든 진짜 이유를 말하겠습니다. 친구가 더 있으면.... 덜 외로울 줄 알았습니다.'],
+    [9, '레오', '복제 안 해도 여기 다 있잖아.'],
+    [0, '나비', '꼬마는 시끄러웠다냥. 원본 하나면 충분하다냥.'],
+    [7, '마들렌', '사과 파티 하자. 쿠키는.... 이번엔 내가 먼저 안 먹을게.'],
+    [10, '오투모', '....회로가 따뜻합니다. 진단해 보니 고장이 아닙니다.'],
+    [10, '오투모', '마지막 꼬마 오투모는 학생에게 드리겠습니다. 방에서 박자를 맞출 겁니다. 하나, 둘, 하나, 둘.'],
+    [null, '', '「꼬마 오투모 인형」을 받았어요. 시안은 여기까지예요. 처음부터 다시 하려면 화면을 새로 고쳐 주세요.']
+  ]);
+}
+cv.addEventListener('pointerdown', e => {
+  if ($('#dlg').classList.contains('on') || !started) return;
+  const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width, y = (e.clientY - r.top) * H / r.height;
+  for (const n of NPC){
+    const [hx, hy] = n.id === 'otumo' ? [180, 170] : n.home;
+    if (Math.hypot(x - hx, y - (hy - 20)) < 22){
+      if (Math.hypot(ME.x - hx, ME.y - hy) > 44){ ME.tx = hx; ME.ty = hy + 16; return; }
+      if (n.id === 'otumo'){
+        if (ret.size >= 10 && got.has('otumo') && !ret.has('otumo')) return ending();
+        return talk([[10, '오투모', got.size ? '삐빅. 꼬마는 원본에게 돌려주십시오. 원본이 어디 있는지는.... 다들 평소 자리에 있습니다.' : '삐빅. 꼬마를 잡아 주십시오. 꼬마마다 잡는 방법이 다릅니다. 계산상은요.']]);
+      }
+      if (got.has(n.id) && !ret.has(n.id)) return giveBack(n);
+      return talk([[n.row, n.name, ret.has(n.id) ? '꼬마는.... 다시는 안 나왔으면 좋겠어.' : `내 꼬마가 어딘가 돌아다닌대. 무슨 말을 하고 다닐지.......`]]);
+    }
+  }
+  const mm = minis.find(m => m.n.type === 'bury' && m.st === 'buried' && !m.caught && Math.hypot(x - m.x, y - m.y) < 18);
+  if (mm){ if (Math.hypot(ME.x - mm.x, ME.y - mm.y) < 46){ mm.st = 'run'; mm.t = 0; say(mm, '히익!'); shake = 300; return; } }
+  const fk = minis.find(m => m.n.type === 'fake' && !m.caught && m.spots);
+  if (fk){ for (let i = 0; i < 3; i++){ const [sx, sy] = fk.spots[i]; if (Math.hypot(x - sx, y - (sy - 16)) < 16){
+    if (Math.hypot(ME.x - sx, ME.y - sy) > 46){ ME.tx = sx; ME.ty = sy + 14; return; }
+    if (i === fk.real){ fk.x = sx; fk.y = sy; return doCatch(fk); }
+    toast('....그냥 허수아비예요. 진짜는 눈을 깜빡여요'); fk.real = Math.floor(Math.random() * 3); return; } } }
+  ME.tx = Math.max(10, Math.min(W - 10, x)); ME.ty = Math.max(20, Math.min(H - 6, y));
+});
+$('#fish').onclick = () => { if (!started) return; fish = { x: ME.x + 14, y: ME.y }; toast('생선을 내려놓았어요. 꼬마 나비가 냄새를 맡을지도'); };
+$('#stay').onclick = () => { ME.tx = ME.x; ME.ty = ME.y; toast('가만히 서 있어요'); };
+$('#bagbtn').onclick = () => {
+  $('#bagg').innerHTML = NPC.map(n => `<div class="c ${got.has(n.id) ? 'got' : ''} ${ret.has(n.id) ? 'ret' : ''}"><canvas data-r="${n.row}" width="64" height="64"></canvas><div>꼬마 ${n.name}</div><div>${ret.has(n.id) ? '돌려줌' : got.has(n.id) ? '잡음' : '?'}</div></div>`).join('');
+  document.querySelectorAll('#bagg canvas').forEach(c => { const q = c.getContext('2d'); q.imageSmoothingEnabled = false; const n = NPC.find(x => x.row === +c.dataset.r); if (got.has(n.id)) q.drawImage(SHEET, 0, n.row * 64, 64, 64, 0, 0, 64, 64); else { q.globalAlpha = .25; q.filter = 'brightness(0)'; q.drawImage(SHEET, 0, n.row * 64, 64, 64, 0, 0, 64, 64); } });
+  $('#bag').classList.add('on');
+};
+$('#bagx').onclick = () => $('#bag').classList.remove('on');
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(50, now - last); last = now;
+  const dx = ME.tx - ME.x, dy = ME.ty - ME.y, d = Math.hypot(dx, dy);
+  if (d > 1.5){ const sp = 1.9; ME.x += dx / d * Math.min(sp, d); ME.y += dy / d * Math.min(sp, d); ME.step += .2; ME.dx = dx; ME.dy = dy; ME.still = 0; } else { ME.still += dt; }
+  if (started) minis.forEach(m => { if (!m.caught) stepMini(m, now, dt); });
+  if (started) tryCatch(now);
+  g.save(); if (shake > 0){ shake -= dt; g.translate(Math.random() * 4 - 2, Math.random() * 4 - 2); }
+  drawMap(now);
+  if (fish){ g.fillStyle = '#9AC8E8'; g.beginPath(); g.ellipse(fish.x, fish.y, 7, 3, 0, 0, 7); g.fill(); g.fillRect(fish.x + 6, fish.y - 3, 3, 6); }
+  const objs = [];
+  NPC.forEach(n => { if (n.id !== 'otumo') objs.push({ y: n.home[1], f: () => {} }); });
+  drawBig(now);
+  minis.filter(m => !m.caught).sort((a, b) => a.y - b.y).forEach(m => drawMini(m, now));
+  const mv = d > 1.5; frame(11, colOf(ME.dx || 0, ME.dy || 1, mv, ME.step), ME.x, ME.y, .72, mv && (ME.dx || 0) > 0 && Math.abs(ME.dx) > Math.abs(ME.dy || 0));
+  for (let i = bubbles.length - 1; i >= 0; i--){ const b = bubbles[i], age = now - b.t; if (age > 1800 || b.m.caught){ bubbles.splice(i, 1); continue; }
+    g.font = '12px Gowun Dodum'; const w = g.measureText(b.text).width + 12, bx = Math.max(4, Math.min(W - w - 4, b.m.x - w / 2)), by = b.m.y - 46;
+    g.fillStyle = '#FFF8EC'; g.fillRect(bx, by, w, 18); g.fillStyle = '#22183F'; g.fillText(b.text, bx + 6, by + 13); }
+  for (let i = sparks.length - 1; i >= 0; i--){ const s = sparks[i], age = (now - s.t) / 600; if (age > 1){ sparks.splice(i, 1); continue; } g.fillStyle = `rgba(255,236,140,${1 - age})`; g.fillRect(s.x + Math.cos(s.a) * age * 22, s.y - 20 + Math.sin(s.a) * age * 16, 3, 3); }
+  g.restore();
+  requestAnimationFrame(loop);
+}
+function intro(){
+  talk([
+    [10, '오투모', '삐빅. 발표합니다. 고향 기술로 「친구 복제기」를 만들었습니다.'],
+    [10, '오투모', '친구가 하나면 둘로, 둘이면 넷으로. 계산상 문제없습니다. ....계산상은요.'],
+    [null, '', '기계가 「삐-삐-삐-」 점점 빨라진다.......']
+  ], () => {
+    shake = 700; const f = $('#flash'); f.style.opacity = 1; setTimeout(() => f.style.opacity = 0, 260);
+    setupMinis(); minis.forEach(m => { m.x = 180 + rnd(-10, 10); m.y = 150 + rnd(-10, 10); });
+    const goal = minis.map(m => { const [x0, y0, x1, y1] = m.n.area; return m.n.type === 'fake' ? [m.fakes ? x0 + 50 : 0, y0 + 20] : m.n.type === 'pond' ? [180, 258] : m.n.type === 'cookie' ? [238, 180] : [rnd(x0, x1), rnd(y0, y1)]; });
+    let k = 0; const fly = setInterval(() => { k++; minis.forEach((m, i) => { m.x += (goal[i][0] - m.x) * .12; m.y += (goal[i][1] - m.y) * .12; }); if (k > 30){ clearInterval(fly); started = true;
+      talk([
+        [10, '오투모', '....오류. 친구가 열한 명 늘었습니다. 크기가 7 % 입니다.'],
+        [10, '오투모', '잡아 주십시오. 꼬마들은 원본이 제일 숨기고 싶은 마음을 복사해 갔습니다.'],
+        [null, '', '화면을 눌러 걸어가요. 꼬마마다 잡는 방법이 달라요. 잡은 꼬마는 원본 NPC를 눌러 돌려줘요.']
+      ]); } }, 30);
+  });
+}
+const boot = () => { requestAnimationFrame(loop); setTimeout(intro, 400); };
+if (SHEET.complete && SHEET.naturalWidth) boot(); else SHEET.onload = boot;
+</script>
