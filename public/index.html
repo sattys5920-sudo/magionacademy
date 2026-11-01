@@ -880,6 +880,7 @@ body.gtride #bar,body.gtride #chat,body.gtride #ctx,body.gtride .corner{opacity:
 .blgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:6px 0;max-height:40vh;overflow:auto}.blit{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:12px;border:2px solid #4E3C72;background:#2A2040;color:#F1E9FF;font-family:var(--f-pxb);font-size:12px;text-align:center}.blit small{font-family:var(--f-px);font-size:10px;color:#C8B8F0}
 .blcos{display:flex;flex-direction:column;gap:6px;margin:6px 0}.blcos b{font-size:12px;color:var(--gold)}.blcos div{display:flex;flex-wrap:wrap;gap:6px}.blcos button{border:2px solid #4E3C72;background:#2A2040;color:#F1E9FF;border-radius:999px;padding:6px 10px;font:inherit;font-size:12px;min-height:36px}.blcos button.on{border-color:#FFD866;color:#FFD866}
 .say.bb-snow{background:#1E2048;color:#FFF3C8;box-shadow:0 0 0 2px #FFE9A0,0 0 10px rgba(255,233,160,.6);border-radius:12px}.say.bb-snow::after{border-top-color:#FFE9A0}.say.bb-snow::before{content:'★';position:absolute;left:-7px;top:-9px;font-size:12px;color:#FFE9A0;text-shadow:0 0 6px #FFE9A0}
+.adknit{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;margin:8px 0;padding:8px;border-radius:10px;background:rgba(255,184,168,.08)}.adknit>div:first-child{display:flex;flex-direction:column;align-items:center;gap:4px}.adknit [data-knitdoll]{width:192px;height:192px;display:block;background:#2A1E3A;border-radius:10px}.adknit canvas{image-rendering:pixelated;display:block}.adknit small{font-size:11px;opacity:.75;max-width:200px;text-align:center}.adknitall{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;flex:1;min-width:200px}.adknitall span{display:flex;flex-direction:column;align-items:center;font-size:11px;gap:2px}.adknitall i{width:96px;height:96px;background:#2A1E3A;border-radius:8px;display:block}
 .say.bb-garden{background:#E8FFD8;color:#1E3A14;box-shadow:0 0 0 2px #5AA84A;border-radius:12px}.say.bb-garden::after{border-top-color:#5AA84A}.say.bb-garden::before{content:'';position:absolute;right:-6px;top:-8px;width:10px;height:8px;background:#5AA84A;border-radius:8px 0 8px 0}
 #gdv{position:fixed;left:50%;top:calc(50% + 4px);transform:translate(-50%,-50%) scale(.92);opacity:0;transition:all .35s cubic-bezier(.2,1.3,.4,1);z-index:330;width:min(94vw,380px);max-height:calc(100vh - 150px);overflow:auto;background:rgba(20,13,34,.97);border:2px solid #9AE07A;border-radius:16px;padding:10px;font-family:var(--f-px);color:#F1E9FF;box-shadow:0 0 24px rgba(154,224,122,.3);overscroll-behavior:contain}
 #gdv.on{opacity:1;transform:translate(-50%,-50%) scale(1)}#gdv .hd{display:flex;justify-content:space-between;align-items:center}#gdv .hd b{font-family:var(--f-pxb);font-size:16px;color:#CFF5B8}#gdv .hd button{width:36px;height:36px;border-radius:18px;border:0;background:rgba(255,255,255,.08);color:#F1E9FF;font-size:15px}
@@ -4277,6 +4278,31 @@ const npcAll = () => { const ids = [...NPC_DEF.map(n => n.id), ...Object.keys(np
   return ids.map(id => ({ ...(NPC_DEF.find(n => n.id === id) || { id, av: true, look: 1, map: 'campus', x: 44, y: 47, likes: [], dislikes: [], greet: [[], [], [], []], story: {}, reward: {} }), ...(npcOver[id] || {}) })).filter(n => !n.off); };
 const npcGet = id => npcAll().find(n => n.id === id);
 const npcAv = n => n.av ? (n.avData ? World.Avatar.fix(n.avData) : World.Avatar.fromLook(n.look || 1)) : null;
+// 뜨개 인형: NPC 정면 그림(저장한 생김새 그대로) → 머리 크게 · 몸 작게 · 뜨개 결 (겨울 뜨개질 인형 가구 · 관리자 미리보기)
+function knitDoll(n, k = 3){
+  const A = World.Avatar, src = document.createElement('canvas'); src.width = src.height = 64; const s = src.getContext('2d'); s.imageSmoothingEnabled = false;
+  if (n.av){ const av = n.avData ? A.fix(n.avData) : A.fromLook(n.look || 1); A.need && A.need(av); if (!A.head(av)) return null; const S = A.compose(av), HB = A.meta.head; if (!S) return null; s.drawImage(S, Math.floor(HB.x / A.FW) * A.FW, Math.floor(HB.y / A.FH) * A.FH, 64, 64, 0, 0, 64, 64); }
+  else { const I = NPC_IMG_STAGE || (NPC_IMG_STAGE = Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` })); if (!I.complete || !I.naturalWidth) return null; s.drawImage(I, 0, (n.spr || 0) * 64, 64, 64, 0, 0, 64, 64); }
+  const D = s.getImageData(0, 0, 64, 64).data; let x0 = 64, y0 = 64, x1 = -1, y1 = -1;
+  for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) if (D[(y * 64 + x) * 4 + 3]){ x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  if (x1 < 0) return null;
+  const W = x1 - x0 + 1, hh = Math.round((y1 - y0 + 1) * .44), neck = y0 + hh, bh = y1 - neck + 1, bw2 = Math.max(1, Math.round(W * .9)), bh2 = Math.max(1, Math.round(bh * .55));
+  const o = document.createElement('canvas'); o.width = o.height = 64; const g = o.getContext('2d'); g.imageSmoothingEnabled = false; const ox = Math.floor((64 - W) / 2), oy = 64 - hh - bh2 - 4;
+  g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(32, 61, 12, 2.5, 0, 0, 7); g.fill();
+  g.drawImage(src, x0, neck, W, bh, ox + Math.floor((W - bw2) / 2), oy + hh - 1, bw2, bh2); g.drawImage(src, x0, y0, W, hh, ox, oy, W, hh);
+  const im = g.getImageData(0, 0, 64, 64), P = im.data;
+  for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++){ const i = (y * 64 + x) * 4; if (P[i + 3] < 200) continue; const l = .3 * P[i] + .59 * P[i + 1] + .11 * P[i + 2];
+    if (l < 40){ P[i] = 58; P[i + 1] = 36; P[i + 2] = 52; continue; }   // 테두리는 진한 털실색
+    if ((x % 2 === 0 && y % 2 === 0) || (x % 2 === 1 && y % 2 === 1 && (x + y) % 4 === 2)){ P[i] *= .9; P[i + 1] *= .9; P[i + 2] *= .92; } }   // V 모양 뜨개 결
+  g.putImageData(im, 0, 0);
+  const c = document.createElement('canvas'); c.width = c.height = 64 * k; const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(o, 0, 0, 64 * k, 64 * k); return c;
+}
+function adKnitDraw(d, tries = 0){   // 관리자: 고치는 중인 NPC 인형 + 모든 NPC 인형
+  const one = document.querySelector('[data-knitdoll]'), all = [...document.querySelectorAll('[data-knitall]')]; let miss = false;
+  if (one){ const c = knitDoll(d, 3); if (c){ one.innerHTML = ''; one.appendChild(c); } else miss = true; }
+  all.forEach(el => { if (el.firstChild) return; const n = el.dataset.knitall === (d && d.id) ? d : npcGet(el.dataset.knitall); const c = n && knitDoll(n, 1.5); if (c) el.appendChild(c); else miss = true; });
+  if (miss && tries < 20) setTimeout(() => adKnitDraw(d, tries + 1), 300);
+}
 // ===== NPC의 하루와 마음: 시간대 · 날씨 · 루틴 · 호감도(100점 = ♥1) · 하트 이벤트 =====
 // 데이터: data/npc/places.json(장소) · cast.json(등장인물) · <id>/profile.json(말투·일상 대사) · <id>/events/heart_XX.json (형식: tools/npc_story_format.md)
 // 내 진행: me.npc[id] = { a 호감도, t 마지막 대화 날, g 마지막 선물 날, seen { k: 'ok'|'cold'|'fail' }, cold 앞 이벤트가 서먹했는지, ev 이벤트 본 날, evAt, hide 숨바꼭질, dk 줄어듦 계산한 날 }
@@ -4955,6 +4981,7 @@ function adminNpcHTML(){
     const subs = `<div class="adseg">${[['base', '기본'], ['routine', '루틴'], ['lines', '평소 대사'], ['events', '하트 이벤트']].map(([k, l]) => `<button data-adsub="${k}" class="${adSub === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
     let body = '';
     if (adSub === 'base') body = `${d.av ? `<div class="adav"><img src="${avThumb(World.Avatar.fix(d.avData || World.Avatar.fromLook(d.look || 1)))}" alt=""><div class="adavc">${['body', 'skinC', 'hair', 'hairC', 'eyeC', 'face', 'lip', 'top', 'topC', 'legs', 'legsC', 'feet', 'feetC', 'hat', 'hatC', 'acc', 'accC', 'neck', 'cape'].map(k => `<span>${k}<button data-adavk="${k}" data-adavd="-1">◀</button><button data-adavk="${k}" data-adavd="1">▶</button></span>`).join('')}<button data-adavrand="1">무작위</button></div></div>` : `<div class="s">그림 NPC는 생김새를 바꿀 수 없어요</div>`}
+      <div class="adknit"><div><b>뜨개 인형 미리보기</b><span data-knitdoll="1"></span><small>겨울 뜨개질 인형 가구 · 지금 생김새 그대로 (저장한 캐릭터)</small></div><div class="adknitall">${npcAll().map(n => `<span title="${esc(n.name || n.id)}"><i data-knitall="${n.id}"></i>${esc(n.name || n.id)}</span>`).join('')}</div></div>${(setTimeout(() => adKnitDraw({ ...d, id: adNpc }), 40), '')}
       <label>이름 <input data-adf="name" value="${esc(d.name || '')}"></label><label>직업 <input data-adf="title" value="${esc(d.title || '')}"></label>
       <label>좋아하는 것 (이름, 쉼표) <input data-adf="likes" value="${esc((d.likes || []).map(k => ITEM[k] || k).join(', '))}"></label>
       <label>싫어하는 것 <input data-adf="dislikes" value="${esc((d.dislikes || []).map(k => ITEM[k] || k).join(', '))}"></label>
