@@ -344,16 +344,42 @@
     },
     "snow": {
       ".read": "auth != null",
-      "ctl": { ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'" },
-      "st": { ".write": "auth != null",
-        ".validate": "!newData.exists() || ((!newData.child('body').exists() || (newData.child('body').isNumber() && newData.child('body').val() >= 0 && newData.child('body').val() <= 600)) && (!newData.child('head').exists() || (newData.child('head').isNumber() && newData.child('head').val() >= 0 && newData.child('head').val() <= 400)))" },
-      "who": { ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'", "$u": { ".write": "auth != null && (auth.uid === $u || auth.token.email === 'magionadmin@magionacademy.app')" } }
+      "ctl": {
+        ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'"
+      },
+      "st": {
+        ".write": "auth != null",
+        ".validate": "!newData.exists() || ((!newData.child('body').exists() || (newData.child('body').isNumber() && newData.child('body').val() >= 0 && newData.child('body').val() <= 600)) && (!newData.child('head').exists() || (newData.child('head').isNumber() && newData.child('head').val() >= 0 && newData.child('head').val() <= 400)))"
+      },
+      "who": {
+        ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+        "$u": {
+          ".write": "auth != null && (auth.uid === $u || auth.token.email === 'magionadmin@magionacademy.app')"
+        }
+      }
     },
     "morph": {
       ".read": "auth != null",
-      "ctl": { ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'" },
-      "st": { ".write": "auth != null" },
-      "form": { ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'", "$u": { ".write": "auth != null && (auth.uid === $u || auth.token.email === 'magionadmin@magionacademy.app')", ".validate": "!newData.exists() || (newData.child('k').isNumber() && newData.child('k').val() >= 0 && newData.child('k').val() <= 11)" } }
+      "ctl": {
+        ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'"
+      },
+      "st": {
+        ".write": "auth != null"
+      },
+      "form": {
+        ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+        "$u": {
+          ".write": "auth != null && (auth.uid === $u || auth.token.email === 'magionadmin@magionacademy.app')",
+          ".validate": "!newData.exists() || (newData.child('k').isNumber() && newData.child('k').val() >= 0 && newData.child('k').val() <= 11)"
+        }
+      },
+      "claim": {
+        ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+        "$k": {
+          ".write": "auth != null && (auth.token.email === 'magionadmin@magionacademy.app' || !data.exists() || data.child('u').val() === auth.uid || data.child('id').val() !== root.child('morph/ctl/id').val())",
+          ".validate": "!newData.exists() || newData.child('u').val() === auth.uid || auth.token.email === 'magionadmin@magionacademy.app'"
+        }
+      }
     },
     "prank": {
       ".read": "auth != null",
@@ -362,7 +388,10 @@
         ".validate": "!newData.exists() || (newData.hasChildren(['k', 'by', 'at', 'until']) && newData.child('k').isString() && newData.child('k').val().length <= 16 && newData.child('at').isNumber() && newData.child('until').isNumber() && newData.child('until').val() <= now + 1900000 && (!newData.child('n').exists() || (newData.child('n').isString() && newData.child('n').val().length <= 8)))"
       }
     },
-    "board": { ".read": "auth != null", ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'" },
+    "board": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'"
+    },
     "hseen": {
       "$u": {
         ".read": "auth != null && (auth.uid === $u || auth.token.email === 'magionadmin@magionacademy.app')",
@@ -444,12 +473,20 @@
     "fam": {
       ".read": "auth != null",
       ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
-      "pick": { "$u": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 11 && newData.val() % 1 === 0" } }
+      "pick": {
+        "$u": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 11 && newData.val() % 1 === 0"
+        }
+      }
     },
     "baby": {
       ".read": "auth != null",
       ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
-      "pick": { "$u": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 11 && newData.val() % 1 === 0" } }
+      "pick": {
+        "$u": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 11 && newData.val() % 1 === 0"
+        }
+      }
     },
     "gtrain": {
       ".read": "auth != null",

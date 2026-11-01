@@ -8479,13 +8479,16 @@ function morphTick(){
   if (morphOn() && morphCtl.id && morphMe().seen !== morphCtl.id && !(morphSt && morphSt.done) && evTurn('morph')) morphIntro();
   else if (morphSt && morphSt.done && morphSt.at && morphMe().seenDone !== morphSt.at && morphCtl && morphCtl.id) morphFinale();   // 닫힌 뒤에 들어와도 끝 장면은 바로 봐요
 }
-// 변신 정하기: 지금 접속한 친구들과 최대한 안 겹치게
+// 변신 정하기: 학생마다 다른 변신 · morph/claim/<변신> = { u, id } 를 먼저 찜한 학생만 그 변신이 돼요 (동시에 골라도 안 겹쳐요)
+//   12 개가 다 찜되면(학생이 12 명보다 많으면) 그때만 가장 적게 겹치는 변신으로
 async function morphPick(){
   if (morphK(uid) != null) return morphK(uid);
-  const cnt = Array(MORPH.N).fill(0); Object.keys(onlineList).forEach(id => { const k = morphK(id); if (id !== uid && k != null) cnt[k]++; });
-  const all = Array(MORPH.N).fill(0); Object.keys(morphForm).forEach(id => { const k = morphK(id); if (id !== uid && k != null) all[k]++; });
-  const lo = Math.min(...cnt), c1 = cnt.map((n, i) => n === lo ? i : -1).filter(i => i >= 0), lo2 = Math.min(...c1.map(i => all[i])), c2 = c1.filter(i => all[i] === lo2), k = c2[Math.floor(Math.random() * c2.length)];
-  morphForm[uid] = { k, id: morphCtl.id }; await F.set(F.ref(db, 'morph/form/' + uid), { k, id: morphCtl.id }).catch(() => {}); return k;
+  const id = morphCtl.id, all = Array(MORPH.N).fill(0); Object.keys(morphForm).forEach(u => { const k = morphK(u); if (u !== uid && k != null) all[k]++; });
+  const order = [...Array(MORPH.N).keys()].sort(() => Math.random() - .5).sort((a, b) => all[a] - all[b]);
+  let k = null;
+  for (const c of order){ if (all[c]) continue; const r = await GDB.tx('morph/claim/' + c, cur => (!cur || cur.id !== id || cur.u === uid) ? { u: uid, id } : undefined).catch(() => ({ committed: false })); if (r && r.committed){ k = c; break; } }
+  if (k == null){ const lo = Math.min(...all); const c2 = all.map((n, i) => n === lo ? i : -1).filter(i => i >= 0); k = c2[Math.floor(Math.random() * c2.length)]; }
+  morphForm[uid] = { k, id }; await F.set(F.ref(db, 'morph/form/' + uid), { k, id }).catch(() => {}); return k;
 }
 // 말풍선·채팅: 변해 있는 동안은 그 변신의 소리로 나가요
 const morphVoice = t => { const k = morphMine(); if (k == null) return t; const v = MORPH.F[k][1], n = Math.max(1, Math.min(3, Math.ceil(String(t).length / 6))); return Array(n).fill(v).join(' ') + (/[?？]$/.test(t) ? '?' : /[!！]$/.test(t) ? '!' : ''); };
@@ -8556,7 +8559,7 @@ function adminMorphHTML(){
     ${c.id ? `<div class="moadm">${MORPH.O.map((o, k) => { const s = +((st.s || {})[k] || 0); return `<div class="${s === 2 ? 'ok' : ''}"><b>${MORPH.F[k][0]}</b><span>${s === 2 ? `✓ ${esc((st.g || {})[k] || '')}` : s === 1 ? '열림' : '잠김'}</span><span class="tm">${by[k].length ? '변신: ' + by[k].map(esc).join(', ') : ''}</span></div>`; }).join('')}</div>` : ''}</div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-moa]'); if (!b || !F || !db) return;
-  if (b.dataset.moa === 'open'){ if (confirm('마녀 솥 대폭발을 시작할까요? 접속한 학생에게 폭발 장면이 바로 나와요')){ F.set(F.ref(db, 'morph/st'), null); F.set(F.ref(db, 'morph/form'), null); F.set(F.ref(db, 'morph/ctl'), { open: true, id: now2() }); } }
+  if (b.dataset.moa === 'open'){ if (confirm('마녀 솥 대폭발을 시작할까요? 접속한 학생에게 폭발 장면이 바로 나와요')){ F.set(F.ref(db, 'morph/st'), null); F.set(F.ref(db, 'morph/form'), null); F.set(F.ref(db, 'morph/claim'), null); F.set(F.ref(db, 'morph/ctl'), { open: true, id: now2() }); } }
   else if (confirm('이벤트를 끝낼까요? 다 못 모았어도 모두 원래대로 돌아와요')) F.set(F.ref(db, 'morph/ctl'), { open: false, id: (AD.moctl || {}).id || 0 }); });
 
 // ===== 광장 게시판: 관리자가 쓴 글이 본관 앞 게시판에 공지로 붙어요 · DB: board/<id> { t, at } =====
