@@ -433,6 +433,11 @@ body:not(.inworld) #npcui{display:none}
 .npcsc{display:block;color:#9480B4;font-size:var(--fs-s);font-family:var(--f-body)}
 .npcp .frow{display:flex;gap:6px;flex-wrap:wrap}.npcp .frow .btn{flex:1}
 .adtbl.npc>div{grid-template-columns:72px repeat(16,74px);align-items:center}
+.evread{display:flex;flex-direction:column;gap:3px;max-height:65vh;overflow:auto;border:2px solid #22183F;padding:8px;background:#FBF8FD;margin:6px 0}
+.evr{background:#fff;padding:6px 8px;border-left:4px solid #D8CCE8;font-size:15px;line-height:1.5}.evr b{color:#22183F;margin-right:6px}.evr small{color:#8A7AA8;margin-right:6px;font-size:13px}
+.evr.nar{color:#5A4C74;font-style:italic}.evr.sys{color:#8A7AA8;font-size:14px}.evr.cho span{display:block;margin-left:8px}
+.evr.love{border-left-color:#FF6FA0;background:#FFF1F6}.evr.friend{border-left-color:#5AB0E0;background:#F0F8FD}.evr.pick{border-left-color:#FFB13B}.evr.yes,.evr.no{border-left-color:#9AD08A}
+.evr-h{font:700 14px var(--f-body);padding:6px 4px 2px;color:#22183F}.evr-h.love{color:#D0306A}.evr-h.friend{color:#2A7AB0}.evr-h.pick{color:#B06A00}.evr-h.join{color:#A89AC0;font-weight:400}.evr-h.fork{color:#6A4CA8;border-top:1px dashed #C8B8E0;margin-top:4px}
 .evtbl{display:flex;flex-direction:column;gap:2px;max-height:60vh;overflow:auto;border:2px solid #22183F;padding:4px;background:#F6F0FA}
 .evrow{display:flex;gap:4px;align-items:flex-start;background:#fff;padding:3px;border-left:4px solid #C8B8E0}
 .evrow.line{border-left-color:#6AB8FF}.evrow.choice{border-left-color:#FF9A4A}.evrow.label{border-left-color:#8CE6B0;background:#EFFFF4}.evrow.narration{border-left-color:#C08AFF}
@@ -4968,7 +4973,30 @@ function koCheck(t, human){
   return w;
 }
 const koTexts = o => typeof o === 'string' ? [o] : Array.isArray(o) ? o.flatMap(koTexts) : o && typeof o === 'object' ? Object.entries(o).flatMap(([k, v]) => ['text', 'title'].includes(k) || typeof v === 'object' ? koTexts(v) : []) : [];
-let adNpc = null, adNpcDraft = null, adSub = 'base', adEvK = 0, adEvDraft = null, adWarn = [];
+let adNpc = null, adNpcDraft = null, adSub = 'base', adEvK = 0, adEvDraft = null, adWarn = [], adEvMode = 'read';
+// 하트 이벤트 대본 보기: 명령 줄을 읽기 쉬운 대본으로 바꿔요 (갈림길 · 연애 / 우정 버전 · 선택지 결과를 이름표로)
+const AD_FLAG_KO = { romance: '연애 상대', was_cold: '1 장에서 차갑게 대함' };
+const AD_FACE_KO = { neutral: '보통', happy: '기쁨', smile: '미소', laugh: '웃음', sad: '슬픔', cry: '울음', angry: '화남', annoyed: '언짢음', surprised: '놀람', shy: '수줍음', embarrassed: '부끄러움', worried: '걱정', tired: '지침', sleepy: '졸림', serious: '진지', scared: '겁먹음', proud: '뿌듯', smug: '으쓱', thinking: '생각', determined: '결심', soft: '다정', pain: '아픔' };
+const adFlagKo = f => { const m = /^[a-z]+_(.+)$/.exec(f || ''); return (m && AD_FLAG_KO[m[1]]) || (/_h(\d+)$/.test(f) ? `♥${/_h(\d+)$/.exec(f)[1]} 이야기를 봤음` : f); };
+function adEvReadHTML(e){
+  const S = e.script || [], tag = {}, put = (l, t, c) => { if (l && !tag[l]) tag[l] = { t, c }; };
+  S.forEach(n => { if (n.cmd === 'if_flag'){ const ro = /_romance$/.test(n.flag); put(n.then, ro ? '💗 연애 버전' : `「${adFlagKo(n.flag)}」일 때`, ro ? 'love' : 'yes'); put(n.else, ro ? '우정 버전' : `「${adFlagKo(n.flag)}」이 아닐 때`, ro ? 'friend' : 'no'); }
+    if (n.cmd === 'if_heart'){ put(n.then, `♥${n.min || n.heart || ''} 이상일 때`, 'yes'); put(n.else, '아닐 때', 'no'); }
+    if (n.cmd === 'choice') (n.options || []).forEach((o, j) => put(o.next, `선택 ${j + 1}: ${o.text}${o.affinity ? ` (호감 ${o.affinity > 0 ? '+' : ''}${o.affinity})` : ''}`, 'pick')); });
+  let cur = '', out = '';
+  S.forEach(n => {
+    if (n.label !== undefined){ const g = tag[n.label]; cur = g ? g.c : ''; out += g ? `<div class="evr-h ${g.c}">${esc(g.t)}</div>` : `<div class="evr-h join">── 이어서 ──</div>`; return; }
+    const c = n.cmd || 'line', cls = `evr ${cur}`;
+    if (c === 'line') out += `<div class="${cls}"><b>${esc(adWhoName(n.who))}</b>${n.face ? `<small>${esc(AD_FACE_KO[n.face] || n.face)}</small>` : ''}<span>${esc(fillVars(n.text || '', adNpc))}</span></div>`;
+    else if (c === 'narration') out += `<div class="${cls} nar">${esc(fillVars(n.text || '', adNpc))}</div>`;
+    else if (c === 'choice') out += `<div class="${cls} cho"><b>고르기</b>${(n.options || []).map((o, j) => `<span>${j + 1}. ${esc(o.text)}</span>`).join('')}</div>`;
+    else if (c === 'if_flag' || c === 'if_heart') out += `<div class="evr-h fork">◆ 여기서 갈려요: ${c === 'if_flag' ? `「${esc(adFlagKo(n.flag))}」` : `♥${esc(n.min || n.heart || '')}`}</div>`;
+    else if (c === 'goto') return;
+    else if (c === 'set_flag') out += `<div class="${cls} sys">기억해 둬요: ${esc(adFlagKo(n.flag))}</div>`;
+    else if (c === 'give_item' || c === 'take_item') out += `<div class="${cls} sys">${c === 'give_item' ? '받는 것' : '건네는 것'}: ${esc(ITEM[n.item] || n.item || '')}${n.n > 1 ? ` ×${n.n}` : ''}</div>`;
+  });
+  return `<div class="evread">${out}</div>`;
+}
 const AD_CMDS = ['line', 'narration', 'choice', 'label', 'goto', 'if_flag', 'if_heart', 'move', 'follow', 'walk', 'show', 'hide', 'emote', 'camera', 'flash', 'sfx', 'bgm', 'wait', 'give_item', 'take_item', 'set_flag', 'affinity', 'fade_in', 'fade_out'];
 const AD_CMD_KO = { line: '대사', narration: '지문', choice: '선택지', label: '라벨', goto: '이동(goto)', if_flag: '플래그 분기', if_heart: '하트 분기', move: '장면 이동', follow: '따라가기', walk: '걷기', show: '등장', hide: '퇴장', emote: '감정 아이콘', camera: '카메라', flash: '번쩍', sfx: '효과음', bgm: '음악', wait: '침묵', give_item: '아이템 주기', take_item: '아이템 가져가기', set_flag: '플래그 켜기', affinity: '호감도', fade_in: '밝아지기', fade_out: '어두워지기' };
 const AD_FACES = ['', 'neutral', 'happy', 'smile', 'laugh', 'sad', 'cry', 'angry', 'annoyed', 'surprised', 'shy', 'embarrassed', 'worried', 'tired', 'sleepy', 'serious', 'scared', 'proud', 'smug', 'thinking', 'determined', 'soft', 'pain'];
@@ -5006,7 +5034,8 @@ function adminEvHTML(){
   return `<label>제목 <input data-evf="title" value="${esc(e.title || '')}"></label>
     <label>열리는 조건 (JSON · location은 장소 id, time morning/day/evening/night, weather clear/rain/fog/snow) <textarea data-evj="conditions" rows="3" class="mono">${J(e.conditions)}</textarea></label>
     <label>보상 (JSON) <textarea data-evj="rewards" rows="2" class="mono">${J(e.rewards)}</textarea></label>
-    <div class="evtbl">${(e.script || []).map(adEvRow).join('')}<button data-evop="add" data-i="${(e.script || []).length - 1}">＋ 맨 끝에 한 줄</button></div>
+    <div class="adseg"><button data-evmode="read" class="${adEvMode === 'read' ? 'on' : ''}">대본 보기</button><button data-evmode="edit" class="${adEvMode === 'edit' ? 'on' : ''}">고치기</button></div>
+    ${adEvMode === 'read' ? adEvReadHTML(e) : `<div class="evtbl">${(e.script || []).map(adEvRow).join('')}<button data-evop="add" data-i="${(e.script || []).length - 1}">＋ 맨 끝에 한 줄</button></div>`}
     <label>서먹한 결말 (호감도 합 −30 이하, JSON 노드 배열) <textarea data-evj="cold" rows="4" class="mono">${J(e.cold)}</textarea></label>
     ${adWarn.length ? `<div class="adwarn"><b>국어 검사 ${adWarn.length} 건</b>${adWarn.slice(0, 40).map(w => `<div>${esc(w)}</div>`).join('')}</div>` : ''}
     <div class="frow"><button class="btn sm" data-evprev="1">▶ 미리 보기</button><button class="btn sm go" data-evsave="1">이벤트 저장</button><button class="btn sm" data-evreset="1">이벤트 기본값으로</button></div>`;
@@ -10823,6 +10852,7 @@ function adminMailSend(u, e){
   if (!F || !db || !u) return Promise.resolve(); const id = now2() + '_' + Math.random().toString(36).slice(2, 5), sum = [e.coin && `골드 ${e.coin}`, e.mana && `마력 ${e.mana}`, e.stone && `마나석 ${e.stone}`, e.sp && `SP ${e.sp}`, ...Object.entries(e.items || {}).map(([k, n]) => `${ITEM[k]} ×${n}`), ...Object.entries(e.yarn || {}).map(([c, n]) => `${(KN_COL.find(x => x[0] === c) || [, c])[1]} 털실 ${n} 뭉치`), e.set && e.set.coin !== undefined && `골드를 ${e.set.coin}으로`, e.set && e.set.sp !== undefined && `남은 스킬 포인트를 ${e.set.sp}개로`, ...Object.entries((e.set && e.set.items) || {}).map(([k, n]) => `${ITEM[k]}을(를) ${n}개로`), (e.delBuff || []).length && `버프 제거`, e.resetExam && '쪽지시험 기록 지움', e.skReset && '스킬 되돌리기', e.stReset && '스탯 되돌리기', e.wpReset && '무기 되돌리기', e.hseen && `하트 이야기: ${Object.entries(e.hseen).map(([k, n]) => `${(npcGet(k) || {}).name || k} ${n}개`).join(' · ')}`, e.set && e.set.lv !== undefined && `탐사 레벨을 ${e.set.lv}로`, e.set && e.set.st !== undefined && `남은 스탯 포인트를 ${e.set.st}개로`].filter(Boolean).join(', ');
   return F.set(F.ref(db, `mail/${u}/${id}`), { at: now2(), sum, ...e }).then(() => adminMailLoad());
 }
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-evmode]'); if (!b) return; if (adEvMode === 'edit') adminEvRead(); adEvMode = b.dataset.evmode; adminRender(); });
 document.addEventListener('change', e => { const h = e.target.closest && e.target.closest('[data-hsn]'); if (h){ AD.hsp = AD.hsp || {}; AD.hsp[AD.gu + ':' + h.dataset.hsn] = +h.value; } });   // 화면이 새로 그려져도 고르던 숫자를 기억해요
 document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('#admqp'); if (s){ AD.mqp = s.value; adminRender(); } });
 document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('#adgu'); if (s){ AD.gu = s.value; adminMailLog = []; adminMailLoad(); adminRender(); } });
