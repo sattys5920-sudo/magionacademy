@@ -5,7 +5,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms)), LOG = window.__gdLog = 
 const img = s => Object.assign(new Image(), { src: s }), BG = img('gi_bg.png'), IT = img('gi_items.png'), GU = img('gi_guests.png'), GF = img('art/forage.png');
 let GI = null; fetch('gi.json').then(r => r.json()).then(j => { GI = j; });   // 쿼터뷰 마당 (방 가구와 같은 도구 · 같은 화풍)
 const CW = 144, CH = 88, CY = 8, PP = (tx, ty) => [GI.OX + (tx - ty) * 8, GI.OY + (tx + ty) * 4 - CY];
-const ITEMS = { pond: 0, lamp: 1, feeder: 2, swing: 3, pumpkin: 4, bell: 5 }, GUESTS = { snail: 0, shroom: 1, fluff: 2, moth: 3, mole: 4, jelly: 5 }, GIFTS = { shiny: 38, acorn: 0, glow: 24, star: 46 };   // 손님 = gi_guests.png (정원 전용 · 2 칸씩) · 선물 = art/forage.png 칸
+const ITEMS = { pond: 0, lamp: 1, feeder: 2, swing: 3, pumpkin: 4, bell: 5 }, GUESTS = { sparrow: 0, magpie: 1, bluebird: 2, woodpecker: 3, pigeon: 4, parrot: 5, hummingbird: 6, robin: 7, flamingo: 8, peacock: 9, mouse: 10, hamster: 11, otter: 12, fawn: 13, redpanda: 14, badger: 15, lizard: 16, mole: 17, turtle: 18, snail: 19 }, GIFTS = { shiny: 38, acorn: 0, glow: 24, star: 46 };   // 손님 = gi_guests.png (정원 전용 · 2 칸씩) · 선물 = art/forage.png 칸
 const NAME = { pond: '작은 연못', lamp: '등불', feeder: '먹이 접시', swing: '그네', pumpkin: '호박 의자', bell: '바람 종' };
 const css = document.createElement('style'); css.textContent = `
 #gdv{position:fixed;left:50%;top:50%;transform:translate(-50%,-52%) scale(.9);opacity:0;transition:all .45s cubic-bezier(.2,1.3,.4,1);z-index:350;width:min(94vw,380px);background:rgba(20,13,34,.97);border:2px solid #9AE07A;border-radius:16px;padding:10px;box-shadow:0 0 24px rgba(154,224,122,.35);font-family:var(--f-px);color:#F1E9FF}
@@ -35,13 +35,13 @@ function drawGarden(c, t, opt = {}){
   all.forEach(o => { const [x, y] = PP(o.tx, o.ty);
     if (o.kind === 'item'){ const m = GI.items[o.k], d = drops.find(q => q.k === o.k); let dy = 0; if (d){ const k = Math.min(1, (t - d.t0) / 450); dy = -24 * (1 - k) * (1 - k); }
       g.drawImage(IT, m.sx, 0, m.sw, m.sh, Math.round(x - m.ax), Math.round(y - m.ay + dy), m.sw, m.sh); }
-    else { const fl = o.k === 'moth' || o.k === 'jelly' || o.k === 'fluff', bob = Math.round(Math.abs(Math.sin(t / (o.k === 'moth' ? 160 : 420))) * (fl ? 2 : 1)), lift = o.lift || 0, fr = (GUESTS[o.k] * 2 + (Math.floor(t / (o.k === 'moth' ? 150 : 450)) % 2)) * 14; g.globalAlpha = o.a ?? 1;
+    else { const fl = !!o.fly, bob = Math.round(Math.abs(Math.sin(t / (fl ? 160 : 420))) * (fl ? 2 : 1)), lift = o.lift || 0, fr = (GUESTS[o.k] * 2 + (Math.floor(t / (fl ? 150 : 450)) % 2)) * 14; g.globalAlpha = o.a ?? 1;
       g.fillStyle = 'rgba(20,12,24,.35)'; g.beginPath(); g.ellipse(x, y, 5, 2, 0, 0, 7); g.fill();
       if (o.flip){ g.save(); g.translate(Math.round(x), 0); g.scale(-1, 1); g.drawImage(GU, fr, 0, 14, 14, -7, Math.round(y - 13 - bob - lift), 14, 14); g.restore(); }
       else g.drawImage(GU, fr, 0, 14, 14, Math.round(x - 7), Math.round(y - 13 - bob - lift), 14, 14);
       g.globalAlpha = 1;
-      if (o.k === 'jelly'){ for (let i = 0; i < 5; i++){ g.fillStyle = `rgba(255,246,190,${.4 + .4 * Math.sin(t / 200 + i)})`; g.fillRect(Math.round(x - 10 + Math.sin(t / 400 + i * 2) * 9), Math.round(y - 14 + Math.cos(t / 500 + i) * 5), 1, 1); } }
-      if (o.k === 'moth'){ g.fillStyle = `rgba(255,236,120,${.25 + .2 * Math.sin(t / 200)})`; g.beginPath(); g.arc(x, y - 7 - lift, 8, 0, 7); g.fill(); } } });
+      if (o.k === 'peacock'){ for (let i = 0; i < 5; i++){ g.fillStyle = `rgba(255,246,190,${.4 + .4 * Math.sin(t / 200 + i)})`; g.fillRect(Math.round(x - 10 + Math.sin(t / 400 + i * 2) * 9), Math.round(y - 14 + Math.cos(t / 500 + i) * 5), 1, 1); } }
+      if (false){ g.fillStyle = `rgba(255,236,120,${.25 + .2 * Math.sin(t / 200)})`; g.beginPath(); g.arc(x, y - 7 - lift, 8, 0, 7); g.fill(); } } });
   (opt.gifts || gifts).forEach(gg => { const [x, y] = PP(gg.tx, gg.ty); const s = (Math.sin(t / 180 + x) + 1) / 2; g.drawImage(GF, GIFTS[gg.k] * 32, 0, 32, 32, x - 6, y - 12 + Math.round(Math.sin(t / 350)), 12, 12); g.fillStyle = `rgba(255,250,210,${.5 + s * .5})`; g.fillRect(x + 5, y - 14, 1, 3); g.fillRect(x + 4, y - 13, 3, 1); });
   for (let i = 0; i < 6; i++){ const x = (i * 29 + t / 60) % CW, y = 30 + Math.sin(t / 700 + i * 2) * 10 + i * 6; g.fillStyle = `rgba(230,255,140,${.3 + .5 * Math.abs(Math.sin(t / 300 + i))})`; g.fillRect(Math.round(x), Math.round(y), 1, 1); }
 }
@@ -64,7 +64,7 @@ async function photo(guest, at, giftK, line){ card.innerHTML = `<canvas width="8
 window.__gdGo = async () => {
   // 내 방: 창가로
   await sleep(800); World.say('me', '창밖이 좀 허전한데.......'); await sleep(2000);
-  title = '창밖 정원'; sub = '손님 도감 0 / 30'; openView(tray()); drawTray(); mark('open'); await sleep(1400);
+  title = '창밖 정원'; sub = '손님 도감 0 / 20'; openView(tray()); drawTray(); mark('open'); await sleep(1400);
   v.querySelector('.gtip').textContent = '물건을 놓으면, 내가 없을 때 손님이 놀러 와요'; await sleep(2200);
   await place('pond', 1.6, 3.6); await place('lamp', 1, 1.6); await place('feeder', 5, 4.6); await place('swing', 5.2, 1);
   await sleep(800); await closeView();
@@ -74,27 +74,27 @@ window.__gdGo = async () => {
   night.style.opacity = 0; await sleep(700);
   await toast('정원에 손님이 다녀갔어요 ★ 2');
   prints = [[0.4, 4.2], [0.9, 4], [1.4, 4.2], [4.6, 5.6], [4.9, 5.2], [5.2, 5.5]]; gifts = [{ k: 'shiny', tx: 2.6, ty: 4 }, { k: 'acorn', tx: 4.2, ty: 5.2 }];
-  sub = '손님 도감 0 / 30'; openView('<div class="gtip">발자국이 남아 있어요. 반짝이는 걸 눌러 볼까요?</div>'); mark('open'); await sleep(2600);
-  gifts = gifts.filter(x => x.k !== 'shiny'); await photo('snail', [2.3, 3.9], 'shiny', '이끼 달팽이가 연못가에서 쉬다 갔어요'); sub = '손님 도감 1 / 30';
-  gifts = []; await photo('mole', [4.3, 5], 'acorn', '꼬마 두더지가 먹이를 먹고 갔어요'); sub = '손님 도감 2 / 30'; prints = [];
+  sub = '손님 도감 0 / 20'; openView('<div class="gtip">발자국이 남아 있어요. 반짝이는 걸 눌러 볼까요?</div>'); mark('open'); await sleep(2600);
+  gifts = gifts.filter(x => x.k !== 'shiny'); await photo('snail', [2.3, 3.9], 'shiny', '이끼 달팽이가 연못가에서 쉬다 갔어요'); sub = '손님 도감 1 / 20';
+  gifts = []; await photo('mole', [4.3, 5], 'acorn', '꼬마 두더지가 먹이를 먹고 갔어요'); sub = '손님 도감 2 / 20'; prints = [];
   openView('<div class="gtip">쉿....... 지금 누가 와 있어요</div>'); await sleep(600);
   // 지금 와 있는 손님: 꼬마 박쥐가 그네에
-  visitors = [{ k: 'moth', tx: -2, ty: 0, lift: 30 }]; mark('fly'); for (let i = 0; i <= 30; i++){ visitors[0].tx = -2 + i * .12; visitors[0].ty = 0 + i * .073; visitors[0].lift = 30 - i * .6; await sleep(40); } await sleep(2400);
-  v.querySelector('.gtip').textContent = '반딧불 나방을 만났어요! 손님 도감 3 / 30'; sub = '손님 도감 3 / 30'; mark('meet'); await sleep(1600);
-  for (let i = 0; i <= 25; i++){ visitors[0].tx += .14; visitors[0].ty -= .08; visitors[0].lift += 1.2; await sleep(40); } visitors = []; gifts = [{ k: 'glow', tx: 1.4, ty: 2 }]; mark('drop'); await sleep(1600);
+  visitors = [{ k: 'bluebird', tx: -2, ty: 0, lift: 30, fly: 1 }]; mark('fly'); for (let i = 0; i <= 30; i++){ visitors[0].tx = -2 + i * .12; visitors[0].ty = 0 + i * .073; visitors[0].lift = 30 - i * .6; await sleep(40); } await sleep(2400);
+  visitors[0].fly = 0; v.querySelector('.gtip').textContent = '파랑새를 만났어요! 손님 도감 3 / 20'; sub = '손님 도감 3 / 20'; mark('meet'); await sleep(1600);
+  visitors[0].fly = 1; for (let i = 0; i <= 25; i++){ visitors[0].tx += .14; visitors[0].ty -= .08; visitors[0].lift += 1.2; await sleep(40); } visitors = []; gifts = [{ k: 'glow', tx: 1.4, ty: 2 }]; mark('drop'); await sleep(1600);
   await closeView(); gifts = [];
   // 손님 도감
-  const B = [['snail', '이끼 달팽이', '연못 · 비 온 뒤'], ['mole', '꼬마 두더지', '먹이 그루터기 · 아침'], ['moth', '반딧불 나방', '등불 · 밤']];
-  const HINT = ['??? · 바람 부는 날 · 바람 종 + 그네', '??? · 호박 의자 · 안개 낀 아침', '??? · 아주 드문 손님 · 보름달 밤의 연못'];
-  book.innerHTML = `<div class="hd"><b>정원 손님 도감</b><span>3 / 30</span></div><div class="gr">${Array.from({ length: 15 }, (_, i) => `<div class="${i < 3 ? 'on' : ''}">${i < 3 ? '<canvas width="24" height="24"></canvas>' : '?'}</div>`).join('')}</div><div class="ht">이끼 달팽이 · 비 온 뒤 연못가에 와요 · 선물: 반짝 돌</div>`;
+  const B = [['snail', '이끼 달팽이', '연못 · 비 온 뒤'], ['mole', '꼬마 두더지', '먹이 그루터기 · 아침'], ['bluebird', '파랑새', '등불 · 저녁']];
+  const HINT = ['??? · 바람 부는 날 · 바람 종 + 그네', '??? · 먹이 그루터기 + 호박 의자 · 아침', '??? · 아주 드문 손님 · 맑은 날 연못 + 바람 종'];
+  book.innerHTML = `<div class="hd"><b>정원 손님 도감</b><span>3 / 20</span></div><div class="gr">${Array.from({ length: 15 }, (_, i) => `<div class="${i < 3 ? 'on' : ''}">${i < 3 ? '<canvas width="24" height="24"></canvas>' : '?'}</div>`).join('')}</div><div class="ht">이끼 달팽이 · 비 온 뒤 연못가에 와요 · 선물: 반짝 돌</div>`;
   book.querySelectorAll('.gr canvas').forEach((c, i) => { const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(GU, GUESTS[B[i][0]] * 28, 0, 14, 14, 5, 5, 14, 14); });
   book.classList.add('on'); mark('book'); await sleep(2400);
   const cells = book.querySelectorAll('.gr div'); for (const [i, h] of [[3, HINT[0]], [4, HINT[1]], [5, HINT[2]]]){ cells.forEach(x => x.classList.remove('sel')); cells[i].classList.add('sel'); book.querySelector('.ht').textContent = h; mark('pick'); await sleep(1700); }
   book.classList.remove('on'); await sleep(500);
   // 친구 정원: 드문 손님
-  title = '하늘의 정원'; sub = '친구 방 창밖'; placed = [{ k: 'pumpkin', tx: 1.4, ty: 4.6 }, { k: 'lamp', tx: 1, ty: 1.4 }, { k: 'bell', tx: 5.8, ty: 2.2 }, { k: 'pond', tx: 4.4, ty: 4.4 }]; drops = []; visitors = [{ k: 'jelly', tx: 4.4, ty: 4.2, a: 0, lift: 8 }];
+  title = '하늘의 정원'; sub = '친구 방 창밖'; placed = [{ k: 'pumpkin', tx: 1.4, ty: 4.6 }, { k: 'lamp', tx: 1, ty: 1.4 }, { k: 'bell', tx: 5.8, ty: 2.2 }, { k: 'pond', tx: 4.4, ty: 4.4 }]; drops = []; visitors = [{ k: 'peacock', tx: 3.4, ty: 3.4, a: 0 }];
   World.say('me', '하늘이 정원에도 가 볼까?'); await sleep(1600); openView('<div class="gtip"></div>'); mark('open'); await sleep(900);
-  for (let i = 0; i <= 20; i++){ visitors[0].a = i / 20; await sleep(60); } mark('rare'); v.querySelector('.gtip').textContent = '★ 드문 손님 「달빛 해파리」가 연못 위에 떠 있어요!'; await sleep(3000);
+  for (let i = 0; i <= 20; i++){ visitors[0].a = i / 20; await sleep(60); } mark('rare'); v.querySelector('.gtip').textContent = '★ 드문 손님 「공작새」가 꼬리를 펼쳤어요!'; await sleep(3000);
   await closeView(); window.__gdDone = true;
 };
 })();
