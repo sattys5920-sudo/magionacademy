@@ -219,13 +219,20 @@ def check_profile(npc, p, errs):
         for st in 'ABCD':
             n = len((p.get('daily_romance') or {}).get(st, []))
             if n < 12: errs.append(f'{w}: daily_romance {st} 단계 {n} 줄 (12 줄 이상)')
+    if 'daily_romance_h' in p:   # 하트별 설렘 일상 대사 (선택): 키 "1"~"10", 각 3 줄 이상
+        drh = p.get('daily_romance_h') or {}
+        for k in drh:
+            if k not in {str(x) for x in range(1, 11)}: errs.append(f'{w}: daily_romance_h 키는 "1"~"10" 「{k}」')
+        for k in range(1, 11):
+            v = drh.get(str(k))
+            if not isinstance(v, list) or len(v) < 3 or not all(isinstance(x, str) for x in v): errs.append(f'{w}: daily_romance_h.{k} 문자열 3 줄 이상')
     if 'gift_romance' in p:
         for k in ('love', 'like', 'hate'):
             if len((p.get('gift_romance') or {}).get(k, [])) < 3: errs.append(f'{w}: gift_romance {k} 3 줄 이상')
     for it in (p.get('likes') or []) + (p.get('dislikes') or []):
         if it not in ITEMS: errs.append(f'{w}: 아이템 id 「{it}」')
     for t in texts_of({'d': p.get('daily'), 'a': p.get('ambient'), 'g': p.get('gift'), 'r': p.get('recall'), 'title': p.get('title'),
-                       'dr': p.get('daily_romance'), 'gr': p.get('gift_romance'), 'kr': p.get('knit_romance')}):
+                       'dr': p.get('daily_romance'), 'gr': p.get('gift_romance'), 'kr': p.get('knit_romance'), 'drh': p.get('daily_romance_h')}):
         korean(w, t, npc in HUMAN, errs)
     return p.get('cast') or {}
 

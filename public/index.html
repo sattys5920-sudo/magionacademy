@@ -4528,7 +4528,7 @@ function npcPanel(n, text, btns){
 World.onNpc = id => { if (!me) return; World.hideBubble(); if (String(id).startsWith('mq:')) return mqTalk(id.slice(3)); if (String(id).startsWith('t:')) return townTalk(id); if (id === 'tut:senior') return tutTalk(); const c = STORY.findIndex(S => S.npc.id === id) + 1; if (c) return storyPanel(c); const n = npcGet(id); if (n) npcMenu(n); };
 // 평소 대사: 말투 단계 + (가끔) 날씨·시간대 + (가끔) 지난 이벤트 회상
 function npcLine(n){
-  const P0 = npcProf(n.id), P = romanceOn(n.id) && P0.daily_romance ? { ...P0, daily: P0.daily_romance } : P0, h = hearts(n.id), r = Math.random();
+  const P0 = npcProf(n.id), h = hearts(n.id), RH = romanceOn(n.id) && P0.daily_romance_h && P0.daily_romance_h[String(Math.max(1, h))], P = romanceOn(n.id) && P0.daily_romance ? { ...P0, daily: RH && Math.random() < .5 ? { A: RH, B: RH, C: RH, D: RH } : P0.daily_romance } : P0, r = Math.random();   // 연애 상대: 하트마다 조금씩 달라지는 말 반 · 말투 단계 말 반
   const daily = P.daily?.[toneOf(h)] || ((n.greet || [])[Math.min(3, Math.floor(h / 3))]) || ['.......'];
   const rec = Object.entries(P.recall || {}).filter(([k]) => k.startsWith('flag:') ? flagOn(k.slice(5)) : npcSt(n.id).seen[k]).flatMap(([, v]) => v);
   if (typeof mqNpcExtra === 'function') rec.push(...mqNpcExtra(n.id));
@@ -9993,39 +9993,61 @@ function otCell(col, mode){   // NPC 그림 14 번째 줄의 한 칸 → 64 × 6
     if (mode === 'glitch'){ g.globalCompositeOperation = 'source-atop'; g.fillStyle = Math.random() < .5 ? 'rgba(120,255,240,.35)' : 'rgba(255,90,120,.3)'; const y = Math.floor(Math.random() * 40) + 10; g.fillRect(0, y, 64, 2 + Math.floor(Math.random() * 3)); g.globalCompositeOperation = 'source-over'; } }
   return c;
 }
-async function otIntro(){
-  otOn = true; const t = World.meTile(), mapId = t.m; let dim = null, bang = null;
+const OT_UFO = [42, 95], OT_LAND = [44, 97];   // 낡은 풍차 옆 빈터 (독초 온실 아래): 부서진 비행선 · 오투모가 엎어진 자리
+let otUfoCv = null, otUfoT = 0, otUfoOn = false;
+function otUfoDraw(t){   // 반쯤 묻혀 연기 나는 비행선 (80 × 60)
+  const c = otUfoCv || (otUfoCv = Object.assign(document.createElement('canvas'), { width: 80, height: 60 })), g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, 80, 60);
+  const b = document.createElement('canvas'); b.width = 80; b.height = 60; const q = b.getContext('2d');
+  const ell = (cx, cy, rx, ry, col, top) => { q.fillStyle = col; for (let y = Math.floor(cy - ry); y <= cy + ry; y++) for (let x = Math.floor(cx - rx); x <= cx + rx; x++){ if (top && y > cy) continue; if (((x + .5 - cx) / rx) ** 2 + ((y + .5 - cy) / ry) ** 2 <= 1) q.fillRect(x, y, 1, 1); } };
+  ell(40, 34, 31, 10, '#1a1024'); ell(40, 34, 30, 9, '#7a8498'); ell(40, 33, 30, 8, '#b8c4d8'); ell(40, 31, 26, 5, '#e4ecf8'); q.fillStyle = '#1a1024'; q.fillRect(10, 35, 60, 1);   // 몸체 · 가운데 띠
+  [[16, 36], [26, 38], [40, 39], [54, 38], [64, 36]].forEach(([x, y], i) => { const on = i === 1 ? Math.floor(t / 400) % 2 : i === 3 ? 0 : 1; q.fillStyle = '#1a1024'; q.fillRect(x - 1, y - 1, 4, 3); q.fillStyle = i === 1 ? (on ? '#ff5a6a' : '#5a2030') : on ? '#8af0ff' : '#2a3a48'; q.fillRect(x, y, 2, 1); });   // 테두리 불빛 (하나는 깨지고 하나는 빨갛게 깜빡)
+  ell(40, 27, 14, 11, '#1a1024', true); ell(40, 27, 13, 10, '#5aa0d0', true); ell(37, 23, 7, 5, '#a8e0ff', true);   // 유리 돔
+  q.fillStyle = '#ffffff'; [[38, 19], [39, 20], [40, 21], [41, 21], [42, 22], [41, 23], [43, 24], [44, 25]].forEach(([x, y]) => q.fillRect(x, y, 1, 1));   // 금
+  q.fillStyle = '#1a1024'; q.fillRect(46, 12, 1, 6); q.fillRect(47, 11, 3, 1); q.fillStyle = '#ffd24a'; q.fillRect(49, 10, 2, 2);   // 휜 안테나
+  g.save(); g.setTransform(1, .18, 0, 1, 0, -6); g.drawImage(b, 0, 0); g.restore();   // 비스듬히 박혀 있어요
+  const m = (cx, cy, rx, ry, col) => { g.fillStyle = col; for (let y = Math.floor(cy - ry); y <= cy + ry; y++) for (let x = Math.floor(cx - rx); x <= cx + rx; x++) if (((x + .5 - cx) / rx) ** 2 + ((y + .5 - cy) / ry) ** 2 <= 1) g.fillRect(x, y, 1, 1); };
+  m(30, 52, 26, 6, '#1a1024'); m(30, 51, 25, 5, '#5a3a22'); m(28, 49, 18, 3, '#7a5432'); [[8, 54], [52, 55], [60, 52], [14, 47]].forEach(([x, y]) => { g.fillStyle = '#1a1024'; g.fillRect(x - 1, y - 1, 4, 3); g.fillStyle = '#7a5432'; g.fillRect(x, y, 2, 1); });   // 흙더미 · 흙덩이
+  for (let i = 0; i < 4; i++){ const ph = ((t / 1400) + i / 4) % 1, x = 44 + Math.sin(i * 2.1 + t / 700) * 3 + ph * 6, y = 18 - ph * 16, r = 2 + ph * 4; g.globalAlpha = (1 - ph) * .55; g.fillStyle = '#c8c4d8'; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }   // 연기
+  g.globalAlpha = 1; if (Math.floor(t / 180) % 5 === 0){ const sx = 58 + Math.floor((t / 37) % 8), sy = 36 + Math.floor((t / 53) % 4); g.fillStyle = '#fff3a0'; g.fillRect(sx, sy, 1, 1); g.fillRect(sx - 1, sy + 1, 3, 1); g.fillRect(sx, sy + 2, 1, 1); }   // 지지직 불꽃
+  return c;
+}
+function otUfoProp(ay = 50){ const c = otUfoDraw(performance.now()); World.setProps('campus', [{ id: 'otufo', x: OT_UFO[0], y: OT_UFO[1], img: c, pxc: c.getContext('2d'), sw: 80, sh: 60, ax: 40, ay, solid: true, light: { r: 26, c: [140, 220, 255], a: .35 } }], 'otufo'); }
+setInterval(() => { if (!otUfoOn || !otUfoCv) return; otUfoDraw(performance.now()); }, 200);   // 같은 그림을 다시 그려서 연기 · 불빛이 움직여요
+function otUfoSync(){ const want = otMet() || otOn; if (want === otUfoOn) return; otUfoOn = want; if (want) otUfoProp(); else World.setProps('campus', [], 'otufo'); }
+async function otIntro(){   // 풍차 옆 빈터: 비행선이 휙 → 철푸덕 → 오투모가 튕겨 나와 엎어짐 → 가 보면 꿈틀 → 지지직 삐리삐리
+  otOn = true; const t = World.meTile(); let dim = null, bang = null;
   const I = NPC_IMG_STAGE || (NPC_IMG_STAGE = Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` }));
   if (!I.complete) await new Promise(r => { I.addEventListener('load', r, { once: true }); setTimeout(r, 3000); });
-  const cand = World.freeNear(t.x, t.y, 3).filter(([x, y]) => { const d = Math.hypot(x - t.x, y - t.y); return d >= 1.9 && d <= 3; }).sort((a, b) => Math.hypot(a[0] - t.x - 2, a[1] - t.y) - Math.hypot(b[0] - t.x - 2, b[1] - t.y)), spot = cand[0] || [t.x + 2, t.y];
-  const place = (c, ay = 58) => World.setProps(mapId, [{ id: 'otfall', x: spot[0], y: spot[1], img: c, pxc: c.getContext('2d'), sw: 64, sh: 64, ax: 32, ay, solid: true }], 'otumo');
+  const spot = OT_LAND, place = (c, ay = 58) => World.setProps('campus', [{ id: 'otfall', x: spot[0], y: spot[1], img: c, pxc: c.getContext('2d'), sw: 64, sh: 64, ax: 32, ay, solid: true }], 'otumo');
   try {
-    // 하늘에서 휙 → 철푸덕
-    const down = otCell(5, 'down'); for (let k = 0; k <= 8; k++){ place(down, 58 + (8 - k) * 22); await famSleep(35); }
+    toast('하늘에서 뭔가 빛나는 게 떨어져요.......'); sfx('magic'); await famSleep(700);
+    otUfoOn = true; for (let k = 0; k <= 12; k++){ otUfoProp(50 + (12 - k) * 26); await famSleep(40); }   // 휙
     sfx('hit'); const cv = $('#cv'); if (cv){ cv.classList.add('otshake'); setTimeout(() => cv.classList.remove('otshake'), 500); }
     bang = document.createElement('div'); bang.id = 'otbang'; bang.textContent = '철푸덕!'; document.body.appendChild(bang); requestAnimationFrame(() => bang.classList.add('on'));
-    await famSleep(900); bang.classList.remove('on'); World.say('me', '.......!'); await famSleep(900);
-    World.walkToTile(spot[0] + (t.x < spot[0] ? -1 : 1), spot[1]); await famSleep(1500);   // 가 보면
+    const down = otCell(5, 'down'); for (let k = 0; k <= 8; k++){ place(down, 58 + Math.round(Math.sin(k / 8 * Math.PI) * 30)); await famSleep(45); }   // 비행선에서 튕겨 나와 엎어져요
+    sfx('pop'); await famSleep(800); bang.classList.remove('on'); World.say('me', '.......!'); await famSleep(900);
+    World.walkToTile(spot[0] + 1, spot[1] + 1); await famSleep(1800);   // 가 보면
     for (let k = 0; k < 4; k++){ place(otCell(5, k % 2 ? 'twitch' : 'down')); await famSleep(k % 2 ? 160 : 520); }   // 꿈틀
     dim = document.createElement('div'); dim.className = 'bldim'; document.body.appendChild(dim); requestAnimationFrame(() => dim.style.opacity = .35);
-    // 일어나서 고장 난 것처럼 지지직 · 삐리삐리
-    for (let k = 0; k < 18; k++){ place(otCell([0, 10, 15, 0][k % 4], 'glitch')); if (k % 3 === 0) sfx('pick'); await famSleep(90); }
+    for (let k = 0; k < 18; k++){ place(otCell([0, 10, 15, 0][k % 4], 'glitch')); if (k % 3 === 0) sfx('pick'); await famSleep(90); }   // 일어나며 지지직
     place(otCell(0)); toast('삐리.... 삐리삐리.......'); sfx('pop');
     for (let k = 0; k < 10; k++){ place(otCell(0, k % 2 ? 'glitch' : null)); await famSleep(k % 2 ? 80 : 260); if (k === 5) sfx('pick'); }
     place(otCell(0)); await famSleep(900);
   } catch(e){ errReport('otumo', '오투모 등장 연출 오류: ' + e.message, e.stack || ''); }
   finally {
-    me.otumo = { met: 1, at: now2(), id: otCtl && otCtl.id, spot: [mapId, spot[0], spot[1]] };
+    me.otumo = { met: 1, at: now2(), id: otCtl && otCtl.id, spot: ['campus', spot[0], spot[1]] };
     const st = npcSt('otumo'); if ((st.a || 0) < 100) st.a = 100;   // 처음부터 하트 1 개
-    save(); World.setProps(mapId, [], 'otumo'); bang && bang.remove(); if (dim){ dim.style.opacity = 0; setTimeout(() => dim.remove(), 600); }
-    npcSig = ''; syncNpcs(); otOn = false; toast('하늘에서 떨어진 로봇이 있어요. 말을 걸어 봐요');
+    save(); World.setProps('campus', [], 'otumo'); bang && bang.remove(); if (dim){ dim.style.opacity = 0; setTimeout(() => dim.remove(), 600); }
+    otOn = false; otUfoOn = false; otUfoSync(); npcSig = ''; syncNpcs(); toast('비행선에서 떨어진 로봇이 있어요. 말을 걸어 봐요');
   }
 }
+let otNudgeT = 0;
 function otTick(){
-  if (!me || otOn || otMet() || !otCtl || !otCtl.open) return;
-  const w = World.where && World.where() || '';
-  if (/^(gt_|arena|myroom|room_)/.test(w) || uiBusy() || !(World.meAt && World.meAt())) return;
-  if (evTurn('otumo')) otIntro();
+  if (!me) return; otUfoSync(); if (otOn || otMet() || !otCtl || !otCtl.open) return;
+  const t = World.meTile && World.meTile(); if (!t || t.m !== 'campus' || uiBusy() || !(World.meAt && World.meAt())) return;
+  const d = Math.hypot(t.x - OT_UFO[0], t.y - OT_UFO[1]);
+  if (d <= 12){ if (evTurn('otumo')) otIntro(); return; }
+  if (Date.now() - otNudgeT > 120000){ otNudgeT = Date.now(); toast('낡은 풍차 옆 빈터 쪽 하늘이 이상하게 반짝여요.......'); }   // 아직 못 본 학생에게 가끔 알려 줘요
 }
 function otumoListen(){
   if (otOffs.length) return; otOffs.push(GDB.on('otumo/ctl', v => { otCtl = v || null; }));
@@ -10035,11 +10057,13 @@ window.__ot = { intro: () => otIntro(), ctl: () => otCtl };   // 시험용
 window.__adOtumo = () => adminOtumoHTML();   // 시험용
 function adminOtumoHTML(){
   const c = AD.otctl || {}, P = AD.players || {}, ids = Object.keys(P).filter(id => P[id]?.nick), IN = ids.filter(id => P[id].otumo && P[id].otumo.met), not = ids.filter(id => !(P[id].otumo && P[id].otumo.met));
-  const h = id => Math.floor(((P[id].npc || {}).otumo || {}).a / 100) || 0;
+  const o = id => (P[id].npc || {}).otumo || {}, h = id => Math.floor((o(id).a || 0) / 100), seen = id => Object.keys(o(id).seen || {}).map(Number).sort((a, b) => a - b), rom = (npcOver.__romance || {}).otumo;
+  const dt = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  const rows = IN.sort((a, b) => h(b) - h(a)).map(id => `<div class="sdarow"><span><b>${esc(P[id].nick)}</b>${rom === id ? ' <span class="s">(연애)</span>' : ''}</span><span class="s">등장 ${P[id].otumo.at ? dt(P[id].otumo.at) : '본'} · ♥${h(id)} · 본 이야기 ${seen(id).length ? seen(id).map(k => k + '장').join(' ') : '없음'}</span></div>`).join('');
   return `<div class="adcard sdad"><div class="abhead"><b>오투모 등장</b>${c.open ? '<button class="btn sm" data-ota="close">시작 연출 끝내기</button>' : '<button class="btn sm go" data-ota="open">시작하기</button>'}</div>
-    <div class="abchips"><span>${c.open ? '여는 중' : '닫힘'}</span><span>만난 학생 <b>${IN.length}</b> / ${ids.length}</span></div>${c.open && not.length ? `<div class="s">아직 못 만난 학생: ${not.map(id => esc(P[id].nick)).join(', ')}</div>` : ''}
-    ${IN.length ? `<div class="s">${IN.map(id => `${esc(P[id].nick)} ♥${h(id)}`).join(' · ')}</div>` : ''}
-    <div class="s" style="margin-top:6px">시작하면 학생마다 걷고 있던 자리 옆에 오투모가 철푸덕 떨어져요. 만나기 전에는 오투모가 안 보이고, 만나면 바로 하트 1 개 · 1 장 이야기를 언제 어디서나 볼 수 있어요. 끝내기를 눌러도 이미 만난 학생은 그대로예요.</div></div>`;
+    <div class="abchips"><span>${c.open ? '여는 중' : '닫힘'}</span><span>등장을 본 학생 <b>${IN.length}</b> / ${ids.length}</span></div>
+    ${rows || '<div class="s">아직 등장을 본 학생이 없어요</div>'}${not.length ? `<div class="s" style="margin-top:4px">아직 못 본 학생: ${not.map(id => esc(P[id].nick)).join(', ')}</div>` : ''}
+    <div class="s" style="margin-top:6px">시작하면 학생이 낡은 풍차 옆 빈터에 가까이 갔을 때 비행선과 함께 오투모가 철푸덕 떨어져요 (못 본 학생에게는 2 분마다 하늘이 반짝인다고 알려 줘요). 만나면 바로 하트 1 개 · 1 장 이야기는 언제 어디서나. 부서진 비행선은 그 자리에 계속 남아요. 끝내기를 눌러도 이미 만난 학생은 오투모와 계속 이어 가요.</div></div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-ota]'); if (!b) return;
   if (b.dataset.ota === 'open'){ if (confirm('「오투모 등장」을 시작할까요? 학생마다 걷던 자리 옆에 오투모가 떨어져요.')) GDB.set('otumo/ctl', { open: true, id: (AD.otctl && AD.otctl.id) || now2(), at: now2() }).then(() => toast('오투모 등장을 시작했어요')); }
