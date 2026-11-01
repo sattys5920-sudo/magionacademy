@@ -1,0 +1,2026 @@
+<title>오투모 하트 이야기</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Do+Hyeon&display=swap">
+<style>
+/* 대본집: 왼쪽 목차, 오른쪽 NPC별 이벤트. 대사는 화자 이름 + 본문, 지문은 기울임 없이 흐린 색, 선택지는 호감도 색 */
+:root{
+  --bg:#F2F0F7; --paper:#FFFFFF; --ink:#241E33; --sub:#6B6283; --line:#DDD7EA;
+  --pump:#C9561E; --night:#3B2F66; --up:#2E8B57; --down:#C23B52; --keep:#7A7290; --chip:#ECE7F7; --hl:#FFF0A6;
+  --f-head:'Do Hyeon',system-ui,sans-serif; --f-body:'Gowun Batang',serif; --f-ui:'Gowun Dodum',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#15121E;--paper:#1E1A2A;--ink:#ECE7F7;--sub:#A49CBD;--line:#332C47;--pump:#F08A4B;--night:#B8A8F0;--up:#6FD39A;--down:#F27A8E;--keep:#A49CBD;--chip:#2A2440;--hl:#5A4A12;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#15121E;--paper:#1E1A2A;--ink:#ECE7F7;--sub:#A49CBD;--line:#332C47;--pump:#F08A4B;--night:#B8A8F0;--up:#6FD39A;--down:#F27A8E;--keep:#A49CBD;--chip:#2A2440;--hl:#5A4A12;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.75;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 64px}
+.wrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:200px minmax(0,1fr);gap:32px;align-items:start}
+.top{max-width:1100px;margin:0 auto 24px}
+h1{font-family:var(--f-head);font-weight:400;font-size:34px;line-height:1.2;margin:0;color:var(--night);text-wrap:balance}
+.lede{font-family:var(--f-ui);color:var(--sub);margin:6px 0 0}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);font-family:var(--f-ui);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.toc ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.toc a{color:var(--ink);text-decoration:none;display:inline-block;padding:3px 0}.toc a:hover,.toc a:focus-visible{color:var(--pump)}
+.cnt{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}
+.npc{display:flex;flex-direction:column;gap:20px;margin-bottom:56px;min-width:0}
+.nh{display:flex;align-items:baseline;gap:12px;border-bottom:2px solid var(--night);padding-bottom:6px}
+.nh h2{font-family:var(--f-head);font-weight:400;font-size:30px;margin:0;color:var(--night)}
+.nt{font-family:var(--f-ui);color:var(--sub)}
+.evtoc{display:flex;flex-wrap:wrap;gap:6px;font-family:var(--f-ui);font-size:14px}
+.evtoc a{background:var(--chip);color:var(--ink);text-decoration:none;padding:3px 10px;border-radius:99px}
+.ev{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px 22px;min-width:0}
+.ev>header{display:flex;align-items:baseline;gap:10px}
+.hk{font-family:var(--f-head);color:var(--pump);font-size:22px}
+.ev h3{font-family:var(--f-head);font-weight:400;font-size:24px;margin:0}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:4px 20px;margin:10px 0 16px;font-family:var(--f-ui);font-size:14px}
+.meta div{display:flex;gap:8px;min-width:0}.meta dt{color:var(--sub);flex-shrink:0}.meta dd{margin:0;min-width:0;word-break:keep-all}
+.script{display:flex;flex-direction:column;gap:6px;max-width:68ch}
+.ln{margin:0;display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:10px}
+.who{font-family:var(--f-ui);font-weight:700;color:var(--night);text-align:right;word-break:keep-all}
+.ln.me .who{color:var(--pump)}
+.tx{word-break:keep-all}
+.nar{margin:2px 0 2px calc(7.5em + 10px);color:var(--sub);word-break:keep-all}
+.v{font-weight:700;color:var(--pump)}
+.lab{font-family:var(--f-ui);font-size:12px;color:var(--sub);letter-spacing:.04em;margin-top:8px;border-top:1px dashed var(--line);padding-top:4px}
+.sys{font-family:var(--f-ui);font-size:13px;color:var(--sub);margin-left:calc(7.5em + 10px)}
+.sys.br{color:var(--night)}
+.scene{font-family:var(--f-ui);font-size:14px;color:var(--night);background:var(--chip);border-radius:6px;padding:4px 10px;margin:8px 0 4px calc(7.5em + 10px);width:fit-content;max-width:100%}
+.ch{margin:8px 0 8px calc(7.5em + 10px);border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--bg)}
+.chh{font-family:var(--f-ui);font-size:12px;color:var(--sub);letter-spacing:.06em}
+.ch ol{margin:4px 0 0;padding-left:1.4em;display:flex;flex-direction:column;gap:4px}
+.ch li{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}
+.aff{font-family:var(--f-ui);font-size:12px;font-weight:700;padding:0 6px;border-radius:4px;font-variant-numeric:tabular-nums;min-width:2.6em;text-align:center}
+.aff.up{color:var(--up);border:1px solid var(--up)}.aff.down{color:var(--down);border:1px solid var(--down)}.aff.keep{color:var(--keep);border:1px solid var(--keep)}
+.otx{word-break:keep-all}.nx{font-family:var(--f-ui);font-size:12px;color:var(--sub)}
+code{font-family:ui-monospace,monospace;font-size:12px;background:var(--chip);padding:0 4px;border-radius:3px}
+.cold{margin-top:16px;border-top:2px dotted var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px;max-width:68ch}
+.ch2{font-family:var(--f-ui);font-size:13px;color:var(--down)}
+.wip{font-family:var(--f-ui);color:var(--sub)}
+.chg{background:var(--hl);border-radius:3px;box-shadow:0 0 0 3px var(--hl)}
+.ch li.chg{box-shadow:0 0 0 4px var(--hl)}
+.fl{font-family:var(--f-ui);font-size:13px;font-weight:700;color:var(--pump);margin-left:calc(7.5em + 10px)}
+.ch li .fl{margin-left:0;flex-basis:100%}
+.fix{max-width:1100px;margin:0 auto 40px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.fix h2{font-family:var(--f-head);font-weight:400;font-size:28px;margin:0;color:var(--night)}
+.fixwrap{overflow-x:auto;margin-top:10px}
+.fix table{border-collapse:collapse;font-family:var(--f-ui);font-size:13px;line-height:1.55;min-width:900px}
+.fix th{text-align:left;color:var(--sub);font-weight:400;border-bottom:2px solid var(--line);padding:4px 8px;white-space:nowrap}
+.fix td{border-bottom:1px solid var(--line);padding:6px 8px;vertical-align:top;word-break:keep-all}
+.fix .fn{color:var(--sub);font-variant-numeric:tabular-nums}.fix .fb{color:var(--sub);text-decoration:line-through;text-decoration-color:var(--down);min-width:14em}.fix .fa{min-width:14em}.fix .fw,.fix .fnote{color:var(--sub);font-size:12px}
+.fix a{color:var(--pump)}
+@media (max-width:760px){.wrap{grid-template-columns:minmax(0,1fr)}.toc{position:static}.toc ul{flex-direction:row;flex-wrap:wrap;gap:4px 14px}
+  .ln{grid-template-columns:minmax(0,1fr);gap:0}.who{text-align:left}.nar,.sys,.scene,.ch{margin-left:0}.ev{padding:16px}}
+</style>
+<div class="top"><h1>호박달 하트 이야기 대본</h1><p class="lede">서브 NPC 10명의 ♥1~♥10 하트 이벤트 대사·지문·선택지 전문 · 이벤트 10 개 · 대사와 지문 1,394 줄 · 분기는 모든 갈래를 다 실었어요. <b class="v">주황 글자</b>는 바뀔 수 있는 이름이에요. 미리 보기 주인공 이름은 「민준」이고, 이름 뒤 조사는 받침에 맞춰 자동으로 바뀌어요.</p></div>
+
+<div class="wrap">
+<aside class="toc"><ul>
+<li><a href="#fix">수정 목록</a></li>
+<li><a href="#otumo">오투모</a> <span class="cnt">10/10</span></li>
+</ul></aside>
+<main>
+<section class="npc" id="otumo"><header class="nh"><h2>오투모</h2><span class="nt">떨어진 로봇</span></header>
+<nav class="evtoc"><a href="#otumo-h1">♥1 하늘에서 떨어진 것</a><a href="#otumo-h2">♥2 마법이라는 오류</a><a href="#otumo-h3">♥3 배터리 12 %</a><a href="#otumo-h4">♥4 빗자루 추진 장치</a><a href="#otumo-h5">♥5 마을의 박자</a><a href="#otumo-h6">♥6 희미한 신호</a><a href="#otumo-h7">♥7 잡음</a><a href="#otumo-h8">♥8 폭풍의 밤</a><a href="#otumo-h9">♥9 돌아가는 주파수</a><a href="#otumo-h10">♥10 여기의 박자</a></nav>
+<article class="ev" id="otumo-h1"><header><span class="hk">♥1</span><h3>하늘에서 떨어진 것</h3></header><dl class="meta"><div><dt>열리는 조건</dt><dd>♥1 · 낡은 풍차 · 아침</dd></div><div><dt>보상</dt><dd>50G, 마력 5, 반짝 돌 ×1</dd></div><div><dt>남기는 플래그</dt><dd><code>otumo_handshake</code> <code>otumo_h1</code>(자동) · 서먹하게 끝나면 다음 이벤트까지 <code>otumo_was_cold</code>(자동)</dd></div><div><dt>대사</dt><dd>133 줄(모든 분기 포함)</dd></div></dl><div class="script"><p class="nar chg">새벽안개가 낡은 풍차를 감싸고 있다. 삐걱, 삐걱. 풍차 날개가 느리게 돈다.</p>
+<p class="nar chg">그런데 날개 소리 사이로 낯선 소리가 섞여 있다. 삐, 삐, 삐. 일정한 간격이다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">(새소리는 아닌데.... 풍차가 고장 났나?)</span></p>
+<p class="nar chg">풍차 아래 짚더미 뒤에서 하얗고 동그란 것이 반쯤 튀어나와 있다.</p>
+<p class="nar chg">커다란 공 같은 머리. 까만 띠 위로 하얀 눈 두 개가 가늘게 깜박인다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">으앗.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 생명체 감지. 거리 3 m. 크기, 저보다 큼.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">움직이지 마십시오. 스캔을 시작합니다.</span></p>
+<p class="nar chg">하얀 눈에서 파란 빛줄기가 나와 머리부터 발끝까지 천천히 훑고 지나간다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">간지러워.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">스캔 완료. 체온 36.5 도. 무기 없음. 모자 끝이 뾰족함. 용도 불명.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">질문합니다. 당신은 이 행성의 원주민입니까.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">응. 여기 마녀 학교 학생이야. 너는 누구야?</span><span class="nx">→ c1_kind</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">행성? 혹시 외계인이야? 우와, 사진 찍어도 돼?</span><span class="nx">→ c1_play</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">말하는 짚더미다. 마녀 학교엔 별게 다 있네.</span><span class="nx">→ c1_rude</span></li></ol></div>
+<div class="lab" id="otumo-c1_kind">▸ c1_kind</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">학생. 마녀. 학교. 단어 세 개를 저장합니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저는 오투모입니다. 소속은.... 검색 중입니다.</span></p>
+<p class="nar chg">하얀 눈이 빙글빙글 돈다. 한참이 지나도 멈추지 않는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">검색 결과, 소속을 모르겠습니다. 이름만 남아 있습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">이름만?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네. 이름은 확실합니다. 오, 투, 모. 세 글자입니다.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_play">▸ c1_play</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">사진. 빛을 저장하는 행위입니다. 허가합니다.</span></p>
+<p class="nar chg">손을 들어 네모를 만들어 보이자, 로봇이 그 자리에서 굳는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 촬영 중에는 움직이면 안 됩니다. 정지 상태를 유지합니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">아니, 진짜 찍는 건 아니고.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">정지 상태를 유지합니다. 정지 상태를.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저는 오투모입니다. 이제 움직여도 됩니까.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_rude">▸ c1_rude</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">정정합니다. 저는 짚더미가 아닙니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">짚더미는 저 뒤에 있습니다. 저는 그 앞에 숨어 있었습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">아, 미안. 안개 때문에 잘 안 보여서.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">사과를 수신했습니다. 그러나 기록은 남깁니다.</span></p>
+<p class="nar chg">하얀 눈이 한쪽만 가늘어진다. 째려보는 것 같다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저는 오투모입니다. 짚더미가 아닌 오투모입니다.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_end">▸ c1_end</div>
+<p class="nar chg">오투모라는 로봇이 짚더미 뒤에서 걸어 나온다. 생각보다 훨씬 작다.</p>
+<p class="nar chg">파란 머리띠, 귀를 덮은 주황색 동그란 귀덮개, 가는 파란 다리에 커다란 파란 신발.</p>
+<p class="nar chg">하얀 몸통 가운데에는 작은 스피커 그림이 그려져 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">질문합니다. 여기는 어디입니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">여기? 마녀 학교 뒤쪽, 낡은 풍차야. 저쪽이 호박밭이고.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">마녀 학교. 낡은 풍차. 호박밭. 좌표로 바꿀 수 없습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제 지도에는 이런 곳이 없습니다. 이 행성 자체가 없습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">행성이 없다니. 그럼 어디서 왔는데?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">위에서 왔습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">위? 하늘? 빗자루 타고?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">빗자루. 검색 결과 없음. 청소 도구의 일종입니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">청소 도구 맞아. 우리는 그걸 타고 날아.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 청소 도구가 비행합니다. 논리 오류. 오류. 오류.</span></p>
+<p class="nar chg">오투모의 머리 위로 작은 김이 폴폴 피어오른다. 생각을 너무 많이 한 모양이다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....이 정보는 나중에 처리하겠습니다. 지금은 용량이 부족합니다.</span></p>
+<p class="nar chg">오투모가 둥근 손으로 하늘을 가리킨다. 손끝에 작은 주황색 돌기들이 달려 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">어젯밤 23 시 41 분. 떨어졌습니다. 이유는 모릅니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">떨어진 곳을 보여 드리겠습니다. 따라오십시오.</span></p>
+<div class="scene">📍 오투모를 따라 호박밭</div>
+<p class="nar chg">호박밭 끝, 울타리 너머 흙이 둥글게 패어 있다. 호박 세 개가 납작하게 눌려 있다.</p>
+<p class="nar chg">패인 자리 한가운데에서 아직 가느다란 김이 피어오른다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">이게 다 네가 떨어진 자국이야?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네. 착지 각도 47 도. 착지 속도는.... 계산하고 싶지 않습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">호박 개체 세 개를 손상시켰습니다. 주인에게 사과해야 합니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">할머니 호박밭이니까, 나중에 같이 가서 말씀드리자.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">할머니. 단어 저장. 같이. 단어 저장.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">근데 넌 왜 아까 풍차 뒤에 숨어 있었어?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">밤새 이곳에서 움직이는 개체들을 관찰했습니다. 까마귀 개체가 저를 쪼았습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">까마귀 개체 열두 마리. 공격 횟수 마흔한 번. 그래서 숨었습니다.</span></p>
+<p class="nar chg">오투모가 패인 땅 가장자리에 쪼그려 앉아 흙을 한 줌 쥔다. 손가락 사이로 흙이 흘러내린다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향의 땅은 이렇게 부드럽지 않았습니다. 금속판이었습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그리고 언제나 음악이 흘렀습니다. 모두 같은 박자로 걸었습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">같은 박자로?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네. 120 BPM. 1 분에 발걸음 120 번입니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 여기 소리는 박자가 없습니다. 바람도, 새도, 풍차도 제멋대로입니다.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">제멋대로라서 재미있는 거야. 천천히 들어 봐.</span><span class="nx">→ c2_listen</span></li><li class="chg"><span class="aff up">+15</span><span class="otx">그럼 내가 박자 맞춰 줄까? 하나, 둘, 하나, 둘.</span><span class="nx">→ c2_clap</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">박자 없으면 좀 어때. 그런 거 신경 쓰면 피곤해.</span><span class="nx">→ c2_shrug</span></li></ol></div>
+<div class="lab" id="otumo-c2_listen">▸ c2_listen</div>
+<p class="nar chg">오투모의 귀덮개가 미세하게 돌아간다. 둘은 한동안 말없이 서 있다.</p>
+<p class="nar chg">멀리서 새가 운다. 바람이 호박 잎을 뒤집는다. 풍차가 삐걱한다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....새, 2.1 초 간격. 바람, 불규칙. 풍차, 3.4 초 간격.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제멋대로입니다. 하지만.... 겹치는 순간이 있습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">방금 세 개가 동시에 울렸습니다. 기록합니다.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_clap">▸ c2_clap</div>
+<p class="nar chg">손뼉을 치며 하나, 둘을 센다. 오투모가 그 박자에 맞춰 발을 구른다. 쿵, 쿵.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">측정 중. 학생 개체의 박자, 86 BPM. 느립니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">느리다니. 이게 보통이야.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">보통이 86. 데이터 수정.</span></p>
+<p class="nar chg">두 박자쯤 지나자 쿵, 쿵 소리가 손뼉 소리와 딱 맞는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....맞았습니다. 처음으로 이 행성과 박자가 맞았습니다.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_shrug">▸ c2_shrug</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">피곤.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저는 피곤해지지 않습니다. 배터리가 줄어들 뿐입니다.</span></p>
+<p class="nar chg">오투모가 눈을 깜박인다. 그리고 다시 귀덮개를 손으로 감싼다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">박자가 없으면 저는 어디에 맞춰 걸어야 할지 모릅니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">(괜히 말했나.......)</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">괜찮습니다. 계속 듣겠습니다. 혼자서.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_end">▸ c2_end</div>
+<p class="nar chg">안개가 조금씩 걷힌다. 패인 땅 바닥에서 무언가 반짝인다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 부품 감지.</span></p>
+<p class="nar chg">오투모가 구덩이로 미끄러지듯 내려가 반짝이는 조각 하나를 집어 든다. 손톱만 한 금속판이다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제 몸에서 떨어진 부품입니다. 어디에 끼우는지는.... 모르겠습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제 몸인데 모르는 게 많습니다. 이상합니다.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">(둥근 손을 맞잡는다) 그럼 여기서 첫 친구는 나로 하자.</span><span class="nx">→ c3_hand</span><span class=fl>▶ 플래그: <code>otumo_handshake</code></span></li><li class="chg"><span class="aff down">-30</span><span class="otx">그 부품, 내가 갖고 있어도 돼? 기념으로.</span><span class="nx">→ c3_take</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">괜찮아. 모르는 건 천천히 알아 가면 돼.</span><span class="nx">→ c3_wait</span></li></ol></div>
+<div class="lab" id="otumo-c3_hand">▸ c3_hand</div>
+<p class="nar chg">둥근 손을 잡자 오투모가 그대로 멈춘다. 손이 생각보다 따뜻하다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 접촉 감지. 압력 약함. 위협 아님.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이 행동의 의미를 검색합니다. 결과, 악수. 인사의 일종.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">인사를 수신했습니다. 저도 보냅니다.</span></p>
+<p class="nar chg">오투모가 잡힌 손을 위아래로 정확히 세 번 흔든다. 한 번에 1 초씩.</p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_take">▸ c3_take</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">거부합니다.</span></p>
+<p class="nar chg">오투모가 금속판을 몸통 뒤로 숨기고 한 걸음 물러선다. 하얀 눈이 가늘어진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이건 기념품이 아닙니다. 제 몸입니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">아, 그런 뜻이 아니었는데. 미안해.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">사과를 수신했습니다. 거리를 3 m로 재설정합니다.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_wait">▸ c3_wait</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">천천히. 저는 빠르게 아는 게 장점입니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">하지만 지금은 빠르게 알 방법이 없습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그러니까 천천히. 여기 사람들은 다 그렇게 살아.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">천천히. 이 행성의 규칙으로 저장합니다.</span></p>
+<p class="nar chg">오투모가 금속판을 머리띠 안쪽에 조심스럽게 끼워 넣는다.</p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_end">▸ c3_end</div>
+<p class="nar chg">학교 쪽에서 아침 종이 울린다. 오투모의 귀덮개가 휙 돌아간다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 금속 진동음. 신호입니까. 저를 부르는 신호입니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">아니, 그냥 수업 시작 종이야. 나 이제 가 봐야 해.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">수업. 학생 개체는 수업을 받으러 갑니다. 저는.......</span></p>
+<p class="nar chg">오투모가 구덩이와 하늘을 번갈아 본다. 갈 곳이 없다는 얼굴이다.</p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">이따 다시 올게. 여기 있어.</span><span class="nx">→ c4_back</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">같이 가자. 학교 구경시켜 줄게.</span><span class="nx">→ c4_come</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">음, 그럼 잘 있어. 고향 꼭 찾길 바라.</span><span class="nx">→ c4_bye</span></li></ol></div>
+<div class="lab" id="otumo-c4_back">▸ c4_back</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이따. 시간 단위가 정확하지 않습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">수업 끝나고. 해가 저기쯤 올 때.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">태양 각도로 약속. 이해했습니다. 기다리겠습니다.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_come">▸ c4_come</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저를 보면 다른 개체들이 놀랄 확률 87 %입니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">마녀 학교 사람들은 웬만한 걸로 안 놀라.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">확률을 다시 계산하겠습니다. 오늘은 여기 있겠습니다.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_bye">▸ c4_bye</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향. 찾기를 바란다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">바람을 수신했습니다. 하지만 찾을 방법이 없습니다.</span></p>
+<p class="nar chg">오투모가 하늘을 다시 올려다본다. 하얀 눈이 한 번 깜박인다.</p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-ending">▸ ending</div>
+<p class="nar chg">안개가 걷힌 호박밭에 햇빛이 비친다. 오투모의 하얀 머리가 눈부시게 빛난다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">학생 개체. 마지막 질문입니다.</span></p>
+<p class="nar chg">오투모가 고개를 갸웃한다. 동그란 머리가 기울어지자 몸 전체가 같이 기울어진다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">잠깐, 넘어지겠다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">균형 보정 완료. 넘어지지 않았습니다. 질문을 계속합니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">응?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이 행성에서 처음 만난 개체가 당신입니다. 기록에 이름을 남기고 싶습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx"><b class="v">민준</b>. 내 이름은 <b class="v">민준</b>이야.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b>. 저장합니다. 첫 번째 접촉 기록, 이름 <b class="v">민준</b>.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 오늘 날짜에 표시를 해 두겠습니다.</span></p>
+<p class="nar chg">오투모의 몸통 스피커에서 짧은 음이 세 번 울린다. 띠, 띠, 띵.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">방금 그거 뭐야?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저장 완료음입니다. 고향에서는 소중한 걸 저장할 때 이 소리를 냅니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">소중한 거였어?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....계산 중입니다. 결과는 나중에 알려 드리겠습니다.</span></p>
+<p class="nar chg">학교로 뛰어가다 뒤를 돌아본다. 작은 로봇이 구덩이 옆에 서서 손을 흔들고 있다.</p>
+<p class="nar chg">정확히 1 초에 한 번씩. 박자가 딱딱 맞는 손 인사였다.</p></div>
+<div class="cold"><div class="ch2">서먹한 결말 (이벤트 안 호감도 합이 −30 이하면 「ending」부터 이 대사로 끝나요)</div><p class="nar chg">오투모는 구덩이 가장자리에 다시 쪼그려 앉는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">학생 개체. 기록을 마칩니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">저기, 내 이름은.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">필요하면 다시 묻겠습니다. 지금은 저장 공간을 아끼겠습니다.</span></p>
+<p class="nar chg">하얀 눈이 하늘 쪽으로 돌아간다. 더는 이쪽을 보지 않는다.</p>
+<p class="nar chg">학교로 가는 길 내내 등 뒤에서 삐, 삐 소리가 일정하게 울렸다. 혼자 세는 박자 같았다.</p></div>
+</article>
+<article class="ev" id="otumo-h2"><header><span class="hk">♥2</span><h3>마법이라는 오류</h3></header><dl class="meta"><div><dt>열리는 조건</dt><dd>♥2 · 공예 교실 · 낮</dd></div><div><dt>보상</dt><dd>60G, 지식 5, 마력석 ×1</dd></div><div><dt>남기는 플래그</dt><dd><code>otumo_magic_feel</code> <code>otumo_h2</code>(자동) · 서먹하게 끝나면 다음 이벤트까지 <code>otumo_was_cold</code>(자동)</dd></div><div><dt>대사</dt><dd>136 줄(모든 분기 포함)</dd></div></dl><div class="script"><div class="sys br">분기: 플래그 <code>otumo_was_cold</code> (바로 앞 이벤트가 서먹하게 끝났으면 자동) 있으면 → cold_open / 없으면 → warm_open</div>
+<div class="lab" id="otumo-cold_open">▸ cold_open</div>
+<p class="nar chg">공예 교실 구석, 오투모가 작업대 밑에 들어가 있다. 이쪽을 보자 하얀 눈이 가늘어진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 학생 개체. 거리 3 m를 유지해 주십시오.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">지난번엔 미안했어. 오늘은 그냥 구경만 할게.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....사과를 다시 수신했습니다. 거리를 2 m로 줄입니다.</span></p>
+<p class="nar chg">오투모가 작업대 밑에서 엉금엉금 기어 나온다. 아주 조금 가까이.</p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-warm_open">▸ warm_open</div>
+<p class="nar chg">공예 교실 창가, 오투모가 망치와 톱과 실타래를 한 줄로 늘어놓고 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. <b class="v">민준</b> 학생 감지. 어서 오십시오.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">이름 기억하네.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">첫 번째 접촉 기록입니다. 지우지 않았습니다. 한 번도 열어 보지 않은 날이 없습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">매일 열어 봤어?</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-open_end">▸ open_end</div>
+<div class="sys br">분기: 플래그 <code>otumo_handshake</code> 있으면 → hand_yes / 없으면 → hand_no</div>
+<div class="lab" id="otumo-hand_yes">▸ hand_yes</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">질문합니다. 오늘도 악수를 합니까.</span></p>
+<p class="nar chg">오투모가 둥근 손을 내민다. 손을 잡자 위아래로 세 번, 한 번에 1 초씩.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">인사 완료. 이 행성의 인사는 손이 따뜻해져서 좋습니다.</span></p>
+<div class="sys">↪ 「hand_end」 장면으로</div>
+<div class="lab" id="otumo-hand_no">▸ hand_no</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이 행성의 인사법을 조사했습니다. 손을 흔드는 것과 고개를 숙이는 것.</span></p>
+<p class="nar chg">오투모가 손을 흔들면서 동시에 고개를 숙인다. 머리가 무거워서 앞으로 기우뚱한다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">둘 중 하나만 해도 돼.</span></p>
+<div class="sys">↪ 「hand_end」 장면으로</div>
+<div class="lab" id="otumo-hand_end">▸ hand_end</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b> 학생. 오늘은 중요한 질문이 있습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">마법이란 무엇입니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">마법? 음, 주문을 외우면 뭔가 일어나는 거?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그 설명은 입력과 출력만 있습니다. 중간 과정이 없습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">어제 학생들을 관찰했습니다. 한 학생이 「떠올라라」라고 말하자 의자가 떴습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">의자에는 엔진이 없었습니다. 자석도 없었습니다. 줄도 없었습니다. 제가 확인했습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그 의자 밑에 기어 들어가서 확인했어?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네. 세 번. 학생이 화를 냈습니다.</span></p>
+<p class="nar chg">오투모가 작업대 위에 놓인 빗자루를 가리킨다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그리고 이것. 빗자루의 추진 장치를 찾을 수 없습니다. 분해해도 짚만 나옵니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">설마 분해했어?</span></p>
+<p class="nar chg">작업대 옆에 짚 한 무더기가 수북하다. 손잡이는 반으로 나뉘어 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">다시 조립할 예정입니다. 설계도가 없어서 예정만 있습니다.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">그건 공예 선생님 빗자루인데.... 같이 조립하자.</span><span class="nx">→ c1_fix</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">마법은 설명하는 게 아니라 느끼는 거야.</span><span class="nx">→ c1_feel</span><span class=fl>▶ 플래그: <code>otumo_magic_feel</code></span></li><li class="chg"><span class="aff down">-15</span><span class="otx">로봇은 마법을 몰라도 돼. 어차피 못 쓰잖아.</span><span class="nx">→ c1_cant</span></li></ol></div>
+<div class="lab" id="otumo-c1_fix">▸ c1_fix</div>
+<p class="nar chg">둘이 짚을 한 줌씩 모아 손잡이에 묶는다. 오투모는 짚 한 가닥 한 가닥의 길이를 잰다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">짚 길이 평균 31 cm. 오차가 큽니다. 이게 비행에 영향을 줍니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그건 나도 몰라.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">학생도 모릅니다. 기록합니다. 이 행성에서는 모르는 채로 납니다.</span></p>
+<p class="nar chg">다 묶은 빗자루는 처음보다 조금 통통해졌다. 아마 괜찮을 거다.</p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_feel">▸ c1_feel</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">느끼는 것. 센서로 측정할 수 있습니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">음, 아마 안 될걸.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">측정할 수 없는 것을 저는 느낄 수 없습니다. 그렇게 만들어졌습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그럼 나중에 측정 못 하는 걸 하나 찾으면 알려 줘.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....과제로 저장합니다. 기한 없음.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_cant">▸ c1_cant</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">못 씁니다. 사실입니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">하지만 모르면 위험합니다. 어제 의자가 제 머리 위로 날아갔습니다.</span></p>
+<p class="nar chg">오투모가 하얀 머리를 쓰다듬는다. 작게 긁힌 자국이 있다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">아, 그건.... 미안.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">학생이 던진 게 아닙니다. 사과는 필요 없습니다. 정보가 필요합니다.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_end">▸ c1_end</div>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그럼 직접 보면 되겠다. 지금 물약 교실에서 실습하거든.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 관찰 기회. 동행을 요청합니다.</span></p>
+<p class="nar chg">공예 교실을 나서자 복도의 학생들이 하나둘 멈춰 선다. 오투모를 보고 수군거린다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 시선 감지. 열한 개. 아니, 열네 개.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">다들 신기해서 그래. 손 한번 흔들어 봐.</span></p>
+<p class="nar chg">오투모가 1 초에 한 번씩 정확하게 손을 흔든다. 학생 몇 명이 따라 손을 흔든다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">반응이 돌아왔습니다. 이 행성의 개체들은 손을 흔들면 손을 흔듭니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">메아리 같습니다. 기록합니다.</span></p>
+<div class="scene">📍 물약 교실</div>
+<p class="nar chg">물약 교실. 솥 여러 개에서 색색의 연기가 피어오른다. 학생들이 국자를 젓는다.</p>
+<p class="nar chg">교탁 뒤에서 아울라 선생님이 고개를 꾸벅이고 있다. 낮이라 졸린 모양이다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 성분 분석을 시작합니다. 초록색 액체, 성분.... 오류.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">보라색 연기, 성분.... 오류. 반짝이는 가루, 성분.... 오류. 오류.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">다 오류잖아.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이 교실의 모든 것이 제 데이터베이스에 없습니다. 제가 고장 난 것 같습니다.</span></p>
+<p class="nar chg">빈 솥 하나를 받아 함께 앉는다. 칠판에는 「반짝 물약: 별가루 한 꼬집, 시계 방향으로 일곱 번」.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">한 꼬집. 단위가 정확하지 않습니다. 몇 그램입니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그냥.... 손가락으로 집을 만큼?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제 손가락은 동그랗습니다. 집을 수 없습니다.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">그럼 내가 집을게. 넌 젓는 거 해.</span><span class="nx">→ c2_team</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">손으로 집지 말고, 통째로 넣어 보자. 많으면 더 반짝이겠지.</span><span class="nx">→ c2_dump</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">그냥 옆에서 보기만 해. 괜히 망치지 말고.</span><span class="nx">→ c2_watch</span></li></ol></div>
+<div class="lab" id="otumo-c2_team">▸ c2_team</div>
+<p class="nar chg">별가루를 한 꼬집 넣자 오투모가 국자를 잡는다. 시계 방향으로 일곱 번. 정확히 같은 속도로.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">하나. 둘. 셋. 회전 속도 일정. 넷. 다섯.</span></p>
+<p class="nar chg">솥이 은은하게 빛나기 시작한다. 주변 학생들이 고개를 돌린다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 빛이 납니다. 제가 저은 솥에서 빛이 납니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">성공이다.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_dump">▸ c2_dump</div>
+<p class="nar chg">별가루 병을 통째로 기울인다. 솥이 부글부글 끓더니 보라색으로 부풀어 오른다.</p>
+<p class="nar chg">펑. 보라색 연기가 교실 천장까지 치솟는다. 연기가 걷히자 오투모의 스피커 구멍에서 연기가 퐁퐁 새어 나온다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....삐, 빅. 스피커에 이물질. 냄새 분석 결과, 포도 맛.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">미, 미안.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_watch">▸ c2_watch</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">보기만. 알겠습니다.</span></p>
+<p class="nar chg">혼자 솥을 젓는다. 오투모는 옆에서 꼼짝도 하지 않고 지켜본다.</p>
+<p class="nar chg">일곱 번을 다 젓기도 전에 솥에서 김이 픽 빠진다. 아무 빛도 나지 않는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">회전 속도가 일정하지 않았습니다. 제가 했으면 일정했을 겁니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">....그럼 처음부터 하지 그랬어.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_end">▸ c2_end</div>
+<p class="nar chg">그때 교탁 쪽에서 날개 퍼덕이는 소리가 난다. 아울라 선생님이 눈을 번쩍 뜬다.</p>
+<p class="ln chg"><span class="who">아울라</span><span class="tx">....거기 하얗고 동그란 것. 학생입니까.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 아닙니다. 저는 오투모입니다. 관찰 중입니다.</span></p>
+<p class="ln chg"><span class="who">아울라</span><span class="tx">관찰.</span></p>
+<p class="nar chg">아울라 선생님이 안경을 고쳐 쓰고 오투모를 위아래로 훑는다. 오투모도 똑같이 아울라 선생님을 스캔한다.</p>
+<p class="ln chg"><span class="who">아울라</span><span class="tx">수업 중에는 국자를 잡든지, 나가든지 하세요. 관찰만 하는 자리는 없어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">질문합니다. 선생님 개체. 마법은 어디에서 나옵니까.</span></p>
+<p class="ln chg"><span class="who">아울라</span><span class="tx">....좋은 질문이네요. 책 세 권으로 답할 수 있고, 평생을 써도 다 못 답할 수도 있어요.</span></p>
+<p class="ln chg"><span class="who">아울라</span><span class="tx">궁금하면 밤에 서고로 오세요. 낮에는.... 졸려서.</span></p>
+<p class="nar chg">말을 마치기도 전에 아울라 선생님의 고개가 다시 꾸벅 떨어진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">책 세 권 또는 평생. 오차 범위가 너무 큽니다.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">아울라 선생님은 원래 그래. 그래도 좋은 분이야.</span><span class="nx">→ c3_aula</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">너 방금 선생님한테 개체라고 했어. 큰일 났다.</span><span class="nx">→ c3_tease</span></li><li class="chg"><span class="aff down">-30</span><span class="otx">거봐, 너 때문에 혼났잖아.</span><span class="nx">→ c3_blame</span></li></ol></div>
+<div class="lab" id="otumo-c3_aula">▸ c3_aula</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">좋은 분. 판단 기준을 묻겠습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">졸면서도 학생들 솥은 다 보고 있거든. 아까 내 솥 쪽도 봤어.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">눈을 감고도 봅니다. 이것도 마법입니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그건 그냥 선생님이라서 그래.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_tease">▸ c3_tease</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 호칭 오류입니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">다음엔 선생님이라고 불러.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">선생님. 선생님. 선생님. 저장합니다. 개체라는 단어는 학생 앞에서만 쓰겠습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">나도 그만 불러 줄래.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_blame">▸ c3_blame</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....제 탓입니다.</span></p>
+<p class="nar chg">오투모가 교실 구석으로 한 걸음, 두 걸음 물러난다. 하얀 눈이 바닥을 향한다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">관찰을 중단하겠습니다. 방해가 되는 개체는 나가는 것이 규칙입니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">아, 그런 뜻이 아니라.......</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_end">▸ c3_end</div>
+<p class="nar chg">수업이 끝나는 종이 울린다. 학생들이 우르르 빠져나간다.</p>
+<div class="scene">📍 공예 교실</div>
+<p class="nar chg">다시 공예 교실. 오투모가 조립한 빗자루를 작업대에 눕힌다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">수업에서 배운 것을 시험합니다. 빗자루, 떠올라라.</span></p>
+<p class="nar chg">스피커에서 「떠올라라」가 또박또박 흘러나온다. 빗자루는 꼼짝도 하지 않는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">발음 정확도 99 %. 출력 0. 원인을 분석합니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">주문만 외운다고 되는 게 아니야. 마력이 있어야 해.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">마력. 제 부품 목록에 없습니다. 배터리로 대신할 수 있습니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">음.... 그건 아무도 안 해 봤을걸.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그럼 제가 처음입니다. 언젠가 시도하겠습니다.</span></p>
+<p class="nar chg">오투모가 작업대 위에 반으로 접힌 공책을 펼친다. 빼곡하게 숫자가 적혀 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘의 기록입니다. 오류 마흔세 건. 성공.... 계산 중.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">오류가 마흔세 건이나?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네. 고향에서라면 이 정도 오류가 나면 수리 공장으로 갑니다.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">여기선 오류 나는 게 공부야. 나도 맨날 솥 태워.</span><span class="nx">→ c4_same</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">마흔세 건이면 꽤 열심히 했네. 칭찬해 줄게.</span><span class="nx">→ c4_praise</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">그럼 수리 공장 찾아보면 되겠네.</span><span class="nx">→ c4_factory</span></li></ol></div>
+<div class="lab" id="otumo-c4_same">▸ c4_same</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">학생도 오류를 냅니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">매일. 오늘도 솥 하나 날렸잖아.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오류가 나도 수리 공장에 안 갑니다. 다음 날 또 수업에 갑니다. 기록합니다.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_praise">▸ c4_praise</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">칭찬. 오류 개수로 칭찬을 받은 건 처음입니다.</span></p>
+<p class="nar chg">오투모가 공책 맨 아래에 무언가를 적는다. 「오류 많음. 칭찬받음.」</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이상한 행성입니다. 나쁘지 않습니다.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_factory">▸ c4_factory</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이 행성에 수리 공장은 없습니다. 어제 찾아봤습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고칠 곳이 없으니, 오류가 나지 않게 조심하겠습니다.</span></p>
+<p class="nar chg">오투모가 공책을 조용히 덮는다. 손이 조금 떨리는 것 같다.</p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-ending">▸ ending</div>
+<p class="nar chg">창밖으로 햇빛이 기운다. 오투모가 반짝 물약 빈 병을 창가에 세워 둔다. 병 바닥에 빛이 조금 남아 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b> 학생. 오늘 알게 된 것이 하나 있습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">뭔데?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">마법은 계산이 되지 않습니다. 그런데 학생들은 계산이 안 되는 걸 매일 합니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">틀리고, 터지고, 그래도 다시 솥을 젓습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에서는 틀리지 않는 것이 가장 중요했습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">여기서는.... 아직 모르겠습니다. 데이터가 부족합니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그럼 내일도 데이터 모으러 와.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">데이터를 모으러. 학생들이 수업에 가는 이유와 같습니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">비슷해. 우리는 그걸 공부라고 불러.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">공부. 저도 오늘 공부를 했습니다. 오류 마흔세 건짜리 공부.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 내일 일정에 추가합니다.</span></p>
+<p class="nar chg">오투모가 공책 첫 장을 넘긴다. 맨 위에 삐뚤삐뚤한 글씨로 적혀 있다. 「마법: 오류. 하지만 반짝임.」</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이 문장은 수정하지 않겠습니다.</span></p>
+<p class="nar chg">빈 물약 병 속에서 마지막 반짝임이 톡 꺼졌다. 오투모의 눈이 그걸 따라 한 번 깜박였다.</p></div>
+<div class="cold"><div class="ch2">서먹한 결말 (이벤트 안 호감도 합이 −30 이하면 「ending」부터 이 대사로 끝나요)</div><p class="nar chg">오투모가 공책을 덮고 작업대 밑으로 들어간다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b> 학생. 오늘 관찰은 종료합니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">내일은.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">내일 일정은 비워 두겠습니다. 필요하면 채우겠습니다.</span></p>
+<p class="nar chg">작업대 밑에서 삐, 삐 하는 소리만 일정하게 들린다.</p>
+<p class="nar chg">창가에 세워 둔 빈 병에는 아무 빛도 남아 있지 않았다.</p></div>
+</article>
+<article class="ev" id="otumo-h3"><header><span class="hk">♥3</span><h3>배터리 12 %</h3></header><dl class="meta"><div><dt>열리는 조건</dt><dd>♥3 · 호박밭 · 저녁</dd></div><div><dt>보상</dt><dd>70G, 마력 10, 번개 콩 ×2</dd></div><div><dt>남기는 플래그</dt><dd><code>otumo_lantern_charge</code> <code>otumo_sun_charge</code> <code>otumo_h3</code>(자동) · 서먹하게 끝나면 다음 이벤트까지 <code>otumo_was_cold</code>(자동)</dd></div><div><dt>대사</dt><dd>134 줄(모든 분기 포함)</dd></div></dl><div class="script"><div class="sys br">분기: 플래그 <code>otumo_was_cold</code> (바로 앞 이벤트가 서먹하게 끝났으면 자동) 있으면 → cold_open / 없으면 → warm_open</div>
+<div class="lab" id="otumo-cold_open">▸ cold_open</div>
+<p class="nar chg">노을 진 호박밭. 오투모가 구덩이 옆에 혼자 앉아 있다. 이쪽을 보고도 손을 흔들지 않는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. <b class="v">민준</b> 학생. 지난번 일은.... 기록에 남아 있습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">응. 나도 기억해. 미안했어.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">사과 수신. 기록 옆에 메모를 달겠습니다. 「다시 왔음.」</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-warm_open">▸ warm_open</div>
+<p class="nar chg">노을 진 호박밭. 오투모가 구덩이 옆에 앉아 있다. 이쪽을 보자 손을 들어 올린다. 그런데 손이 아주 천천히 올라간다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐.... 빅. <b class="v">민준</b> 학생. 어서 오세요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">오늘은 말이 좀 느리네?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네. 느립니다. 이유는 곧 말씀드릴게요.</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-open_end">▸ open_end</div>
+<p class="nar chg">오투모가 일어서려다 휘청한다. 큰 파란 신발이 흙을 질질 끈다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 경고. 배터리 잔량 12 %.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">12 %? 그거 위험한 거 아니야?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">떨어진 날부터 한 번도 충전하지 못했어요. 머리띠의 태양 전지로 조금씩 버텼습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">하지만 이 행성의 해는 너무 빨리 집니다. 하루 충전량이 하루 사용량보다 적어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">다 떨어지면 어떻게 되는데?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">꺼집니다.</span></p>
+<p class="nar chg">오투모가 아무렇지 않게 말한다. 하얀 눈은 아무렇지 않지 않다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">다시 켜질 수 있을지는.... 계산해 본 적이 없어요. 계산하기 싫었습니다.</span></p>
+<p class="nar chg">그때 밭고랑 사이로 호박밭 할머니가 바구니를 끼고 걸어온다.</p>
+<p class="ln chg"><span class="who">호박밭 할머니</span><span class="tx">아이고, 동그란 녀석 또 왔구나. 오늘은 왜 이렇게 기운이 없어.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 할머니 개체. 아니, 할머니. 배터리가 부족합니다.</span></p>
+<p class="ln chg"><span class="who">호박밭 할머니</span><span class="tx">배터리가 뭔지는 몰라도, 배고프단 소리 같구먼.</span></p>
+<p class="nar chg">할머니가 바구니에서 작은 호박 하나를 꺼내 오투모 손에 쥐여 준다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">감사합니다. 하지만 저는 먹을 수 없습니다.</span></p>
+<p class="ln chg"><span class="who">호박밭 할머니</span><span class="tx">그럼 들고만 있어. 들고 있으면 든든하잖아.</span></p>
+<p class="nar chg">할머니는 그대로 밭고랑 저편으로 걸어간다. 오투모가 손에 든 호박을 한참 내려다본다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">먹을 수 없는 걸 받았습니다. 그런데 회로가 조금 덜 차갑습니다. 이유를 모르겠어요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">그럼 지금 당장 충전할 곳을 찾자. 내가 도울게.</span><span class="nx">→ c1_now</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">왜 이제야 말해. 진작 말했으면 됐잖아.</span><span class="nx">→ c1_scold</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">혹시 호박으로 충전되진 않아? 여기 엄청 많은데.</span><span class="nx">→ c1_pumpkin</span></li></ol></div>
+<div class="lab" id="otumo-c1_now">▸ c1_now</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">도움 요청을 하지 않았는데, 도움이 도착했습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">요청 안 해도 돼. 친구끼리는.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">친구. 저장할 단어인지 판단 중입니다. 판단은.... 충전 후에 하겠습니다.</span></p>
+<p class="nar chg">오투모의 눈이 살짝 휘어진다. 웃는 것 같다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">감사합니다. 남은 시간이 아깝습니다. 서두르겠습니다.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_scold">▸ c1_scold</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....말하면 걱정합니다. 걱정은 학생의 효율을 떨어뜨립니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그런 걸 효율로 따지지 마.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에서는 고장 난 기계가 먼저 말하면 교체되었습니다. 그래서 말하지 않는 게 습관이에요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">....여긴 교체 같은 거 없어.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">기록합니다. 그래도 화난 목소리는 조금 무섭습니다.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_pumpkin">▸ c1_pumpkin</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">호박. 분석합니다.</span></p>
+<p class="nar chg">오투모가 호박 하나에 둥근 손을 갖다 댄다. 삐, 삐, 삐. 한참을 기다린다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">충전량 0 %. 호박은 전기가 아니라 수프가 됩니다. 할머니가 그러셨어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">할머니한테 벌써 물어봤구나.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네. 사과하러 갔다가 수프를 얻어먹을 뻔했습니다. 저는 먹을 수 없다고 말씀드렸어요.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_end">▸ c1_end</div>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그럼 충전하려면 뭐가 필요해?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">빛 또는 전기. 둘 중 하나면 됩니다. 이 행성에 전선은 없었어요. 찾아봤습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">빛이라면.... 해가 아직 조금 남았고, 아니면 등불 시장에 등불이 잔뜩 있어.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">등불. 마법으로 켜는 불입니까. 마법 빛이 제 전지에 맞을지는 모릅니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향의 빛은 전부 같은 색이었어요. 하얗고, 차갑고, 일정했습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">여기 빛은 전부 다른 색이에요. 노을도, 등불도, 반딧불이도. 제 전지가 헷갈릴지도 몰라요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그럼 맛있는 빛을 골라 먹으면 되겠네.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">빛에는 맛이 없습니다. ....아마도.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">배터리 11 %. 한 번밖에 시도할 수 없을 것 같아요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">등불 시장으로 가자. 마법 등불이 몇백 개는 있을 거야.</span><span class="nx">→ c2_lantern</span><span class=fl>▶ 플래그: <code>otumo_lantern_charge</code></span></li><li class="chg"><span class="aff up">+15</span><span class="otx">해 지기 전에 언덕으로 뛰자. 진짜 햇빛이 제일 확실해.</span><span class="nx">→ c2_sun</span><span class=fl>▶ 플래그: <code>otumo_sun_charge</code></span></li><li class="chg"><span class="aff down">-15</span><span class="otx">일단 좀 쉬어 봐. 가만히 있으면 덜 닳지 않아?</span><span class="nx">→ c2_rest</span></li></ol></div>
+<div class="lab" id="otumo-c2_lantern">▸ c2_lantern</div>
+<div class="scene">📍 등불 시장</div>
+<p class="nar chg">등불 시장. 줄줄이 매달린 호박 등불이 하나둘 켜진다. 주황빛이 골목을 가득 채운다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 광량 측정. 고향의 광장보다 밝아요.</span></p>
+<p class="nar chg">등불 가게 상인이 가장 큰 등불 아래 자리를 비켜 준다. 오투모가 그 밑에 서서 머리띠를 위로 향한다.</p>
+<p class="ln chg"><span class="who">시장 상인</span><span class="tx">별 손님이 다 오네. 등불이 먹는 거면 실컷 먹고 가.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">감사합니다. 먹는 게 아니라 충전입니다. 하지만 비슷합니다.</span></p>
+<p class="nar chg">머리띠에 작은 불빛이 깜박이기 시작한다. 하나, 둘, 셋.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">충전 시작. 따뜻합니다. 이 빛은 따뜻한 맛이 나요.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_sun">▸ c2_sun</div>
+<div class="scene">📍 별 보는 언덕</div>
+<p class="nar chg">별 보는 언덕. 숨을 헐떡이며 올라서자 서쪽 하늘 끝에 해가 반쯤 걸려 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">배터리 9 %. 다리 출력이 떨어집니다. 업어 주셔서 감사합니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">생각보다.... 무겁네.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제 무게는 23 kg입니다. 미리 말씀드렸어야 했어요.</span></p>
+<p class="nar chg">오투모가 해를 향해 머리띠를 똑바로 세운다. 마지막 햇빛이 하얀 머리에 붉게 번진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">충전 시작. 이 행성의 해는 짧지만 진합니다. 기록합니다.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_rest">▸ c2_rest</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">쉬기. 시도합니다.</span></p>
+<p class="nar chg">오투모가 그 자리에 앉아 눈을 감는다. 잠시 뒤, 삐 소리의 간격이 점점 길어진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐.... 삐.... 배터리.... 7 %.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">잠깐, 더 줄었잖아.</span></p>
+<p class="nar chg">허겁지겁 오투모를 들쳐 업는다. 생각보다 무겁다. 등불 시장까지 정신없이 달린다.</p>
+<div class="scene">📍 등불 시장</div>
+<p class="nar chg">등불 시장의 가장 큰 등불 아래 오투모를 내려놓는다. 머리띠에 불빛이 아주 천천히 들어온다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....충전 시작. 쉬는 건 저한테 맞지 않는 방법이었어요. 데이터 수정.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_end">▸ c2_end</div>
+<p class="nar chg">둘은 빛 아래 나란히 앉아 숫자가 오르기를 기다린다. 오투모의 몸통 스피커에서 숫자가 작게 흘러나온다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">15 %. 16 %. 17 %.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">충전되는 거 다 말해 주는 거야?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에서는 다들 서로의 충전량을 알았어요. 숨기면 실례였습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b> 학생의 충전량은 몇 %예요?</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">음.... 너 만나서 지금 100 %.</span><span class="nx">→ c3_full</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">시험 기간이라 3 %. 거의 꺼지기 직전이야.</span><span class="nx">→ c3_low</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">사람은 그런 거 없어. 숫자로 따지지 마.</span><span class="nx">→ c3_none</span></li></ol></div>
+<div class="lab" id="otumo-c3_full">▸ c3_full</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">100 %. 저를 만나면 충전됩니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그냥 기분이 그렇다는 거야.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">기분으로 충전. 이 행성의 사람들은 신기한 전지를 씁니다.</span></p>
+<p class="nar chg">오투모가 그 말을 몇 번이나 되뇐다. 100 %, 100 %.</p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_low">▸ c3_low</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">3 %. 위험 수치입니다. 당장 충전하세요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">사람은 자면 충전돼. 오늘 일찍 자면 돼.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">자는 것으로 충전. 효율적이에요. 부럽습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘 일찍 주무세요. 제가 기록해 뒀다가 내일 확인하겠습니다.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_none">▸ c3_none</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">숫자가 없으면 어떻게 압니까. 괜찮은지, 안 괜찮은지.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그냥.... 물어보면 되지.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">물어본다. 「괜찮아요?」</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....비효율적이지만, 따뜻한 방법이네요. 숫자는 그대로 쓰겠습니다.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_end">▸ c3_end</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">34 %. 35 %.</span></p>
+<p class="nar chg">숫자가 오를수록 오투모의 말이 빨라진다. 신발도 다시 박자에 맞춰 톡톡 바닥을 친다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 다리 출력 회복. 목소리 출력 회복. 질문 출력, 회복.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향 이야기를 해도 될까요. 충전하는 동안은 할 일이 없어서요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">응, 듣고 싶어.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에는 커다란 탑이 있었어요. 탑 꼭대기에서 매일 같은 노래가 흘러나왔습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">모두 그 노래에 맞춰 일어나고, 일하고, 충전하고, 꺼졌어요. 120 BPM.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">노래 제목은.... 생각나지 않아요. 멜로디는 남아 있는데 제목 칸이 비어 있습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">한번 불러 줄 수 있어?</span></p>
+<p class="nar chg">오투모의 스피커에서 짧은 멜로디가 흘러나온다. 띠리, 띠리, 띠. 일곱 음쯤에서 지직 끊긴다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....여기까지예요. 뒷부분은 떨어질 때 어디 부딪혀서 깨진 것 같아요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">괜찮아요. 앞부분만 있어도 노래는 노래예요. 그렇게 계산하기로 했습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">질문합니다. 이 마을 사람들은 왜 밤에도 불을 켭니까. 잠을 잘 텐데요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">음.... 늦게 오는 사람이 길을 찾으라고?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">늦게 오는 사람을 위한 빛. 저도 늦게 온 사람입니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그래서 이 빛이 저한테 맞는 걸까요.</span></p>
+<p class="nar chg">오투모가 자기 둥근 손바닥을 빛에 비춰 본다. 손끝의 작은 주황색 돌기가 반짝인다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">너도 늦게 왔지만 이제 길 찾았잖아.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">50 %. 오늘은 여기까지면 충분해요. 너무 오래 서 있으면 다른 손님이 못 씁니다.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">매일 저녁 같이 충전하러 오자. 습관으로 만들자.</span><span class="nx">→ c4_daily</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">이 정도면 됐어? 더 하고 가도 되는데.</span><span class="nx">→ c4_more</span></li><li class="chg"><span class="aff down">-30</span><span class="otx">다음엔 혼자 충전할 수 있지? 매번 따라오긴 힘들어.</span><span class="nx">→ c4_alone</span></li></ol></div>
+<div class="lab" id="otumo-c4_daily">▸ c4_daily</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">매일 저녁. 같이. 습관.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에서도 충전은 습관이었어요. 하지만 같이 하는 사람은 없었습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">습관으로 저장합니다. 이름은.... 「<b class="v">민준</b> 학생과 충전」.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_more">▸ c4_more</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">50 %면 이틀은 버팁니다. 그 사이에 또 올 수 있어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그래, 무리하지 말고.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">무리하지 말고. 이 행성 사람들은 이 말을 자주 하네요. 저장합니다.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_alone">▸ c4_alone</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....할 수 있습니다. 혼자서.</span></p>
+<p class="nar chg">오투모의 눈이 잠깐 깜박이다 멈춘다. 숫자를 세던 스피커가 조용해진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘은 감사했습니다. 다음부터는 신경 쓰지 않으셔도 돼요.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-ending">▸ ending</div>
+<div class="scene">📍 호박밭 (저녁)</div>
+<p class="nar chg">호박밭으로 돌아오는 길, 마지막 노을이 사라지고 첫 별이 뜬다.</p>
+<p class="nar chg">오투모가 앞장서 걷는다. 신발이 흙을 끌지 않는다. 톡, 톡, 톡. 박자가 다시 일정하다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b> 학생.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">응?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">아까 배터리가 9 %일 때, 계산을 하나 했어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제가 꺼지면, 이 행성에서 제 이름을 기억하는 개체가 몇 명일까.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">결과는 1 명이었어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">아, 할머니까지 치면 1.5 명이에요. 할머니는 저를 「동그란 녀석」이라고 부르시니까요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">0.5는 뭐야.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이름을 반만 아시니까요. 정확한 계산입니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 오늘 등불 가게 상인이 제 이름을 물어봤어요. 그래서 이제 2 명일 수도 있어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">숫자가 늘어나는 건 좋은 일이에요. 충전량도, 이름을 아는 사람도.</span></p>
+<p class="nar chg">구덩이 옆에 다다른 오투모가 하늘을 올려다본다. 별이 하나 더 켜진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 오늘의 기록. 배터리 12 %에서 50 %로. 그리고 무사함.</span></p>
+<p class="nar chg">오투모가 할머니가 준 작은 호박을 구덩이 가장자리에 조심스럽게 내려놓는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이건 먹을 수 없지만 지키기로 했어요. 든든하다는 기분을 처음 기록하게 해 준 호박이니까요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">썩기 전에 할머니한테 수프로 만들어 달라고 하자.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">수프가 되면 저는 못 지킵니다. ....그건 그때 다시 계산할게요.</span></p></div>
+<div class="cold"><div class="ch2">서먹한 결말 (이벤트 안 호감도 합이 −30 이하면 「ending」부터 이 대사로 끝나요)</div><p class="nar chg">호박밭으로 돌아오자 오투모는 구덩이 옆에 등을 돌리고 앉는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">충전 50 %. 오늘의 기록은 이걸로 끝입니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">오투모, 아까 그건.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">괜찮습니다. 숫자는 정확합니다. 저는 혼자서도 충전할 수 있어요.</span></p>
+<p class="nar chg">하얀 머리띠의 불빛이 깜박인다. 하나, 둘. 셋에서 멈춘다.</p>
+<p class="nar chg">돌아서 오는 길, 등 뒤에서 삐 소리가 들리지 않았다. 일부러 끈 것 같았다.</p></div>
+</article>
+<article class="ev" id="otumo-h4"><header><span class="hk">♥4</span><h3>빗자루 추진 장치</h3></header><dl class="meta"><div><dt>열리는 조건</dt><dd>♥4 · 공예 교실 · 낮</dd></div><div><dt>보상</dt><dd>80G, 지식 5, 빗자루 짚 ×3, 별가루 쿠키 ×1</dd></div><div><dt>남기는 플래그</dt><dd><code>otumo_broom_ride</code> <code>otumo_h4</code>(자동) · 서먹하게 끝나면 다음 이벤트까지 <code>otumo_was_cold</code>(자동)</dd></div><div><dt>대사</dt><dd>134 줄(모든 분기 포함)</dd></div></dl><div class="script"><div class="sys br">분기: 플래그 <code>otumo_was_cold</code> (바로 앞 이벤트가 서먹하게 끝났으면 자동) 있으면 → cold_open / 없으면 → warm_open</div>
+<div class="lab" id="otumo-cold_open">▸ cold_open</div>
+<p class="nar chg">공예 교실 문을 열자 오투모가 등을 돌린 채 무언가를 만들고 있다. 망치 소리가 잠깐 멈춘다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. <b class="v">민준</b> 학생. 오늘은.... 방문 목적을 말씀해 주세요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그냥 보고 싶어서 왔어. 지난번 일, 계속 마음에 걸렸거든.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">보고 싶어서. 목적으로 인정합니다. 들어오세요.</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-warm_open">▸ warm_open</div>
+<p class="nar chg">공예 교실 문을 열자 뾰족한 무언가가 휙 돌아본다. 종이를 둘둘 말아 만든 고깔모자를 쓴 오투모다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. <b class="v">민준</b> 학생. 어때요. 이 행성의 학생처럼 보입니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">모자가 머리보다 작은데.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">머리 둘레 계산을 잘못했어요. 그래도 끝은 뾰족합니다. 그게 핵심이에요.</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-open_end">▸ open_end</div>
+<p class="nar chg">작업대 위에는 이상한 물건들이 늘어서 있다. 종이 모자, 짚 몇 가닥, 반으로 접힌 교과서, 그리고 손잡이에 전선을 친친 감은 빗자루.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘의 계획을 발표합니다. 계획명, 「학생처럼 지내기」.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">1 번, 모자를 쓴다. 완료. 2 번, 책을 들고 다닌다. 완료.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">3 번, 친구에게 「안녕」이라고 인사한다. 연습 중입니다. 안녕. 안녕. 안녕.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">마지막 건 뭐야?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">4 번, 빗자루를 타고 난다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">빗자루를? 너 마력 없잖아.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">맞아요. 그래서 마력 대신 제 배터리를 연결했습니다. 전선 길이 2 m, 출력 조절 가능.</span></p>
+<div class="sys br">분기: 플래그 <code>otumo_magic_feel</code> 있으면 → feel_yes / 없으면 → feel_no</div>
+<div class="lab" id="otumo-feel_yes">▸ feel_yes</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그리고 <b class="v">민준</b> 학생이 내 준 과제도 아직 하고 있어요. 측정할 수 없는 것 찾기.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">아직 못 찾았어요. 그래서 일단 측정할 수 있는 방법으로 날아 보려고요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">과제랑 정반대 방향인데.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">과학자는 반대쪽부터 확인합니다. 그게 순서예요.</span></p>
+<div class="sys">↪ 「feel_end」 장면으로</div>
+<div class="lab" id="otumo-feel_no">▸ feel_no</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">학생들은 마법을 「그냥 된다」고 말해요. 저는 그냥 되는 게 하나도 없어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그래서 하나하나 연결했습니다. 그냥 되지 않으면 되게 만들면 돼요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그것도 맞는 말이네.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향의 격언입니다. 전선은 거짓말을 하지 않는다.</span></p>
+<div class="sys">↪ 「feel_end」 장면으로</div>
+<div class="lab" id="otumo-feel_end">▸ feel_end</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">학생들이 제일 많이 나는 곳으로 가서 시험하고 싶어요. 관찰 대상이 많을수록 좋습니다.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">재밌겠다. 마을 광장 가자. 거기 넓어.</span><span class="nx">→ c1_go</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">위험하지 않아? 헬멧이라도 쓰고 하자.</span><span class="nx">→ c1_safe</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">로봇이 빗자루 타는 건 좀 이상하지 않아? 하지 마.</span><span class="nx">→ c1_stop</span></li></ol></div>
+<div class="lab" id="otumo-c1_go">▸ c1_go</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 장소 확정. 마을 광장.</span></p>
+<p class="nar chg">오투모가 빗자루를 어깨에 메고 앞장선다. 전선이 바닥을 질질 끌고 따라온다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">전선을 밟지 마세요. 밟으면 제가 넘어집니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그거 꼬리처럼 보여.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_safe">▸ c1_safe</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">헬멧. 머리 보호 장구. 제 머리는 이미 단단합니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그래도.</span></p>
+<p class="nar chg">오투모가 작업대에서 양동이를 집어 종이 모자 위에 덮어쓴다. 눈이 반쯤 가려진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">안전 장비 착용 완료. 앞이 잘 안 보입니다. 이게 맞습니까.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_stop">▸ c1_stop</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이상하다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이상하다는 말을 오늘 세 번 들었어요. 복도에서, 식당에서, 지금.</span></p>
+<p class="nar chg">오투모가 종이 모자를 벗었다가 다시 쓴다. 하얀 눈이 바닥을 본다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그래도 해 보고 싶어요. 이상한 채로 한 번만요.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_end">▸ c1_end</div>
+<div class="scene">📍 마을 광장</div>
+<p class="nar chg">마을 광장. 분수대 둘레에서 학생 몇 명이 빗자루 연습을 하고 있다. 아이들이 그걸 구경하며 깔깔댄다.</p>
+<p class="ln chg"><span class="who">아이들</span><span class="tx">저거 봐. 하얀 공이 걸어 다녀.</span></p>
+<p class="ln chg"><span class="who">아이들</span><span class="tx">모자 썼다. 학생인가 봐.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 안녕. 안녕. 안녕.</span></p>
+<p class="nar chg">오투모가 아이들 한 명 한 명에게 정확히 같은 높이로 손을 흔든다. 아이들이 와르르 웃는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">반응 감지. 웃음소리. 연습의 성과입니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">인사 성공이네.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">3 번 항목 완료. 이제 4 번입니다.</span></p>
+<p class="nar chg">오투모가 빗자루에 걸터앉는다. 다리가 짧아서 신발이 땅에 닿지 않는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">출력 10 %로 시작합니다. 빗자루, 떠올라라.</span></p>
+<p class="nar chg">전선에 파란 불꽃이 튄다. 빗자루가 부르르 떨더니 땅에서 한 뼘 떠오른다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 떴습니다. 떴어요.</span></p>
+<p class="ln chg"><span class="who">아이들</span><span class="tx">우와, 떴다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">출력을 올립니다. 20 %. 30 %.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">잠깐, 천천히.......</span></p>
+<p class="nar chg">빗자루가 갑자기 앞으로 튕겨 나간다. 오투모가 매달린 채 분수대 둘레를 빙글빙글 돈다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오류. 오류. 방향 제어 불가. 빗자루가 제 말을 듣지 않습니다.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">(달려가서 빗자루 끝을 붙잡는다)</span><span class="nx">→ c2_grab</span></li><li class="chg"><span class="aff up">+15</span><span class="otx">전선 뽑아. 전선을 뽑으라고.</span><span class="nx">→ c2_plug</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">(너무 웃겨서 웃음이 터진다)</span><span class="nx">→ c2_laugh</span></li></ol></div>
+<div class="lab" id="otumo-c2_grab">▸ c2_grab</div>
+<p class="nar chg">빗자루가 지나가는 순간 손잡이 끝을 잡는다. 몸이 붕 들린다. 둘이 같이 분수대 위를 한 바퀴 돈다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">으아아.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">승객 추가 감지. 무게 증가. 고도 하강.</span></p>
+<p class="nar chg">둘은 분수대 가장자리에 철퍽 떨어진다. 다행히 물에는 발만 빠졌다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....착지 성공. 승객 무사. 조종사 무사.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_plug">▸ c2_plug</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">전선. 뽑는다. 좋은 판단입니다.</span></p>
+<p class="nar chg">오투모가 둥근 손으로 전선을 더듬는다. 손가락이 동그래서 자꾸 미끄러진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">잡을 수 없습니다. 제 손은 이런 일에 맞지 않아요.</span></p>
+<p class="nar chg">결국 달려가서 대신 전선을 잡아당긴다. 퍽. 빗자루가 힘을 잃고 풀밭에 털썩 떨어진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">착지 완료. <b class="v">민준</b> 학생의 손가락이 부럽습니다.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_laugh">▸ c2_laugh</div>
+<p class="nar chg">웃음을 참으려 했지만 실패한다. 아이들도 같이 배를 잡고 웃는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">웃음소리 감지. 아까와 다른 웃음입니다. 분석.... 하고 싶지 않아요.</span></p>
+<p class="nar chg">빗자루가 분수대에 그대로 처박힌다. 오투모가 물속에서 머리만 내밀고 삐, 삐 소리를 낸다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">아, 미안. 괜찮아?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">방수 등급이 낮습니다. 괜찮지 않습니다.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_end">▸ c2_end</div>
+<p class="nar chg">빗자루는 짚이 반쯤 빠져서 몽당비가 되었다. 전선 끝에서 연기가 가늘게 피어오른다.</p>
+<p class="nar chg">오투모가 젖은 종이 모자를 벗어 든다. 고깔이 축 늘어져 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">비행 기록. 비행 시간 2 초. 그 뒤로는 비행이 아니라 추락이었습니다.</span></p>
+<p class="ln chg"><span class="who">아이들</span><span class="tx">또 해, 또 해.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 재시도 요청 감지. 실패했는데 왜 또 하라고 합니까.</span></p>
+<p class="ln chg"><span class="who">아이들</span><span class="tx">재밌으니까.</span></p>
+<p class="nar chg">아이들이 깔깔거리며 뛰어간다. 오투모가 그 뒷모습을 한참 본다.</p>
+<p class="nar chg">그 위로 편지 가방을 멘 박쥐 한 마리가 파닥파닥 날아와 분수대 가장자리에 내려앉는다.</p>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">어머, 어머. 방금 하늘에서 하얀 게 빙글빙글 돈 거 맞죠? 죄송해요, 다 봤어요.</span></p>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">호박밭에 떨어진 로봇 님 맞으시죠? 우체국에서 다들 그 얘기만 해요. 국장님까지요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 박쥐 개체. 말하는 속도 분당 이백오십 음절. 측정 한계에 가깝습니다.</span></p>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">아, 죄송해요, 죄송해요. 제가 원래 좀 빨라요. 아, 그리고 호박 빵집에 감자 빵이 새로 나왔대요. 아, 이건 상관없죠.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">정보 세 개를 동시에 수신했습니다. 처리 중입니다.</span></p>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">처리 다 되시면 우체국에도 한번 들러 주세요. 편지 보낼 곳 있으시면요.</span></p>
+<p class="nar chg">배트리가 말을 마치기도 전에 다시 날아오른다. 오투모의 눈이 그 궤적을 따라 빙글빙글 돈다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....편지 보낼 곳. 저에게는 주소가 없습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">재미있으니까. 실패가 재미있을 수 있습니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">보는 사람은 재밌었을걸. 나도 솔직히 재밌었어.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....학생들도 처음엔 이렇게 떨어집니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">나 첫 수업 때 지붕에 걸렸어. 선생님이 사다리로 내려 줬어.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">지붕. 2 초보다 긴 비행입니다.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">넌 학생 흉내 안 내도 돼. 오투모 그대로가 좋아.</span><span class="nx">→ c3_self</span></li><li class="chg"><span class="aff up">+15</span><span class="otx">다음엔 내가 뒤에 타서 같이 조종해 줄게.</span><span class="nx">→ c3_ride</span><span class=fl>▶ 플래그: <code>otumo_broom_ride</code></span></li><li class="chg"><span class="aff down">-30</span><span class="otx">그러게 처음부터 하지 말랬잖아.</span><span class="nx">→ c3_told</span></li></ol></div>
+<div class="lab" id="otumo-c3_self">▸ c3_self</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오투모 그대로.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그대로의 저는 모자도 안 맞고, 빗자루도 못 타고, 마법도 몰라요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">대신 인사는 제일 정확하잖아. 1 초에 한 번씩.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....그건 장점입니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">아이들이 엄청 좋아했어.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_ride">▸ c3_ride</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">같이 조종. 2 인 비행.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">무게 증가, 고도 하강, 그러나 방향 제어 가능성 상승. 계산해 볼 가치가 있어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">계산 말고 그냥 약속.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">약속. 계산보다 정확한 것으로 저장합니다.</span></p>
+<p class="nar chg">오투모가 몽당비를 꼭 끌어안는다.</p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_told">▸ c3_told</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....네. 말씀하셨어요.</span></p>
+<p class="nar chg">오투모가 몽당비와 젖은 모자를 주워 든다. 아무 말 없이 전선을 둘둘 만다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">마지막 항목은 지웁니다. 오늘 계획은 여기서 멈출게요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그렇게까지 하라는 건 아니었는데.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">괜찮아요. 결과가 정확하면 됩니다.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_end">▸ c3_end</div>
+<div class="scene">📍 공예 교실</div>
+<p class="nar chg">공예 교실로 돌아와 몽당비를 작업대 위에 눕힌다. 오투모가 짚을 한 가닥씩 다시 끼운다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b> 학생. 질문이 있어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘 학생들을 관찰하면서 계속 궁금했어요.</span></p>
+<p class="nar chg">오투모가 창밖을 가리킨다. 마침 학생 하나가 빗자루를 타고 시계탑 쪽으로 날아가고 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">학생들은 왜 빗자루를 탑니까. 걸어가는 게 더 안전하고, 계산도 쉬운데요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘 하루 동안 떨어진 학생을 네 명 봤어요. 다친 학생은 없었지만 확률은 낮지 않습니다.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">하늘에서 보면 마을이 진짜 예쁘거든.</span><span class="nx">→ c4_view</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">빨리 가려고? 지각할 때 최고야.</span><span class="nx">→ c4_fast</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">마녀니까 타는 거지. 넌 마녀 아니잖아.</span><span class="nx">→ c4_witch</span></li></ol></div>
+<div class="lab" id="otumo-c4_view">▸ c4_view</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">예쁘다. 측정 단위가 없는 단어예요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그럼 저도 하늘에서 마을을 보고 싶어요. 측정할 수 없는 걸 확인하러.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">언젠가 꼭 보여 줄게.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_fast">▸ c4_fast</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">지각 방지. 효율적인 이유네요. 이해했습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">근데 그러다 지붕에 걸리면 더 늦어.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">효율과 위험이 같이 오는군요. 이 행성의 교통은 복잡합니다.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_witch">▸ c4_witch</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">마녀가 아니다. 사실입니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저는 마녀도 학생도 아닙니다. 그럼 무엇입니까.</span></p>
+<p class="nar chg">오투모가 짚을 끼우던 손을 멈춘다. 대답을 기다리지 않고 다시 짚을 끼운다.</p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-ending">▸ ending</div>
+<p class="nar chg">몽당비가 다시 빗자루 모양을 되찾는다. 짚 길이가 조금씩 다르지만, 오투모는 이번엔 재지 않는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘은 실패했어요. 모자도 젖고, 빗자루도 부서지고, 분수대에도 빠졌어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 이상해요. 고향에서 실패한 날은 기록을 지우고 싶었는데, 오늘 기록은 지우고 싶지 않아요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">왜?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">아이들이 웃었고, <b class="v">민준</b> 학생도 웃었고.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">2 초 동안, 제 발이 땅에 닿지 않았어요. 그 2 초가 아까워요.</span></p>
+<p class="nar chg">오투모가 공책을 펼친다. 「4 번 항목: 실패」 옆에 작은 글씨로 하나를 덧붙인다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">「단, 2 초 비행. 다시 해 볼 것.」</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그리고 하나 더. 「박쥐 개체: 말이 빠름. 친절함.」</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">배트리도 기록했구나.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이 마을 개체를 하나씩 기록하고 있어요. 지금까지 열한 명이에요. 첫 줄은 항상 <b class="v">민준</b> 학생입니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">실패라고 써 놓고 다시 해 본대.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">학생들한테 배웠어요. 이 행성에서는 실패 옆에 「다시」를 붙여요.</span></p>
+<p class="nar chg">창가에 걸린 종이 모자가 바람에 말라 간다. 끝이 다시 조금 뾰족해졌다.</p></div>
+<div class="cold"><div class="ch2">서먹한 결말 (이벤트 안 호감도 합이 −30 이하면 「ending」부터 이 대사로 끝나요)</div><p class="nar chg">오투모가 빗자루를 작업대 구석에 세워 둔다. 다시 손대지 않는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘의 계획은 끝났습니다. 결과는 실패입니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">오투모.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">괜찮아요. 학생처럼 지내는 건 제 기능이 아니었어요. 확인했으니 됐습니다.</span></p>
+<p class="nar chg">젖은 종이 모자가 쓰레기통 옆에 놓인다. 버린 건지 둔 건지 알 수 없다.</p>
+<p class="nar chg">공예 교실을 나설 때 등 뒤에서 「안녕」 소리가 한 번 들렸다. 연습하던 그 목소리였다.</p></div>
+</article>
+<article class="ev" id="otumo-h5"><header><span class="hk">♥5</span><h3>마을의 박자</h3></header><dl class="meta"><div><dt>열리는 조건</dt><dd>♥5 · 호박밭 · 저녁</dd></div><div><dt>보상</dt><dd>120G, 마력 10, 지식 10, 번개 콩 ×2, 별가루 쿠키 ×2</dd></div><div><dt>남기는 플래그</dt><dd><code>otumo_hum_song</code> <code>otumo_h5</code>(자동) · 서먹하게 끝나면 다음 이벤트까지 <code>otumo_was_cold</code>(자동)</dd></div><div><dt>대사</dt><dd>153 줄(모든 분기 포함)</dd></div></dl><div class="script"><div class="sys br">분기: 플래그 <code>otumo_was_cold</code> (바로 앞 이벤트가 서먹하게 끝났으면 자동) 있으면 → cold_open / 없으면 → warm_open</div>
+<div class="lab" id="otumo-cold_open">▸ cold_open</div>
+<p class="nar chg">해 질 녘 호박밭. 오투모가 구덩이 옆에 서서 귀덮개를 두 손으로 감싸고 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. <b class="v">민준</b> 학생. 지난번 일은 정리했어요. 학생처럼 지내는 건 제 기능이 아니라고 확인했으니까요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그래도 미안했어. 정말로.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....오늘은 들려주고 싶은 게 있어요. 같이 가 주면, 지난번 기록 옆에 「같이 갔음」이라고 적을게요.</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-warm_open">▸ warm_open</div>
+<p class="nar chg">해 질 녘 호박밭. 오투모가 구덩이 옆에서 발을 톡톡 구르고 있다. 이쪽을 보자 구르던 발을 멈추지 않고 손을 흔든다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. <b class="v">민준</b> 학생. 기다렸어요. 오늘은 발표할 게 있습니다.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">발이 신났네.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네. 발이 먼저 알아요. 제 회로보다 빠릅니다.</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-open_end">▸ open_end</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">처음 만난 날, 제가 이 행성의 소리는 박자가 없다고 했어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그 뒤로 매일 소리를 녹음했어요. 아침, 낮, 저녁, 밤. 모두 서른두 시간 분량이에요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">서른두 시간을 다 들었어?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네 번씩 들었어요. 그리고 알아냈어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이 마을에도 박자가 있어요. 다만 한 사람이 정하지 않을 뿐이에요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">한 사람이 정하지 않는다는 게 무슨 뜻이야?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에서는 탑이 박자를 정했어요. 모두 그걸 따랐어요. 여기는 아무도 박자를 정해 주지 않아요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데도 맞아요. 서로 조금씩 듣고, 조금씩 맞추고 있었어요. 아무도 그걸 모르는 채로요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그런 걸 서른두 시간 듣고 알아낸 거야?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네 번씩 들었다니까요. 총 백스물여덟 시간이에요. 자랑입니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">증명하겠습니다. 따라오세요.</span></p>
+<div class="scene">📍 오투모를 따라 등불 시장</div>
+<p class="nar chg">저녁 등불 시장. 장사꾼들의 외침, 수레바퀴 소리, 호박 등불이 바람에 흔들리는 소리가 뒤섞여 있다.</p>
+<div class="sys br">분기: 플래그 <code>otumo_lantern_charge</code> 있으면 → lamp_yes / 없으면 → lamp_no</div>
+<div class="lab" id="otumo-lamp_yes">▸ lamp_yes</div>
+<p class="ln chg"><span class="who">시장 상인</span><span class="tx">어이구, 등불 먹던 손님이네. 오늘도 충전하러 왔나.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 아니요. 오늘은 들으러 왔어요. 충전은 내일 할게요.</span></p>
+<p class="ln chg"><span class="who">시장 상인</span><span class="tx">뭘 듣는지는 몰라도 실컷 들어. 소리는 공짜야.</span></p>
+<div class="sys">↪ 「lamp_end」 장면으로</div>
+<div class="lab" id="otumo-lamp_no">▸ lamp_no</div>
+<p class="ln chg"><span class="who">시장 상인</span><span class="tx">오, 그 호박밭 로봇 아니야? 소문 들었어.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 소문의 오투모입니다. 오늘은 소리를 들으러 왔어요.</span></p>
+<p class="ln chg"><span class="who">시장 상인</span><span class="tx">소리? 시장은 시끄러운 거 하나는 자신 있지.</span></p>
+<div class="sys">↪ 「lamp_end」 장면으로</div>
+<div class="lab" id="otumo-lamp_end">▸ lamp_end</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이제 귀를 기울여 보세요. 하나씩 짚어 드릴게요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저기 생선 가게. 칼이 도마를 치는 소리. 탁, 탁, 탁. 1 분에 아흔여섯 번.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그리고 저 수레. 바퀴가 돌 때마다 삐걱. 정확히 두 박자에 한 번.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">호박 등불 고리. 바람이 불면 딸랑. 이건 불규칙해요. 꾸밈음이에요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">꾸밈음?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">음악에서 장식으로 넣는 음이에요. 없어도 되지만 있으면 예뻐요.</span></p>
+<p class="nar chg">오투모의 말을 듣고 다시 들어 보니, 정말로 소리들이 서로 발을 맞추고 있다. 탁, 탁, 삐걱. 탁, 탁, 딸랑.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">진짜다. 박자가 들려.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 증명 성공. 이 마을은 96 BPM이에요. 고향보다 느리지만, 걷기 딱 좋은 속도예요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">근데 고향 소리는 어땠어? 여기랑 많이 달라?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에는 칼 소리도, 수레 소리도 없었어요. 탑의 노래하고 기계들이 걷는 소리뿐이었어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">모두가 같은 발로, 같은 속도로 걸었어요. 그래서 소리가 하나밖에 없었습니다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">처음엔 그게 깔끔하다고 생각했어요. 지금은.... 조금 심심했던 것 같아요.</span></p>
+<p class="nar chg">오투모가 생선 가게 쪽을 본다. 주인이 칼질을 멈추고 손님과 웃으며 이야기한다. 칼 소리가 잠깐 끊긴다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">봐요. 지금 박자가 끊겼어요. 웃느라고요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에서는 박자가 끊기면 경보가 울렸어요. 여기는 끊긴 자리에 웃음소리가 들어가요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">대단하다. 넌 이 마을에서 제일 귀가 좋은 사람이야.</span><span class="nx">→ c1_praise</span></li><li class="chg"><span class="aff up">+30</span><span class="otx">그럼 나도 하나 넣어 볼래. (발을 구른다)</span><span class="nx">→ c1_join</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">그냥 시끄러운 거 아니야? 난 잘 모르겠는데.</span><span class="nx">→ c1_doubt</span></li></ol></div>
+<div class="lab" id="otumo-c1_praise">▸ c1_praise</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">사람. 저를 사람이라고 했어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">아, 로봇이라고 해야 하나.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....정정하지 않아도 돼요. 그 단어는 오늘 그대로 저장하겠습니다.</span></p>
+<p class="nar chg">오투모의 귀덮개가 살짝 붉게 깜박인다. 그런 기능이 있는 줄 몰랐다.</p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_join">▸ c1_join</div>
+<p class="nar chg">생선 가게 칼 소리에 맞춰 발을 구른다. 쿵, 탁, 쿵, 탁.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 새 악기 추가. <b class="v">민준</b> 학생의 발. 박자 정확도 82 %.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">82는 좋은 거야?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">처음 들어온 악기치고는 아주 좋아요. 혼자 구를 때보다 시장이랑 같이 구르니까 더 정확해요.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_doubt">▸ c1_doubt</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">처음엔 저도 그랬어요. 시끄럽기만 했어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">눈을 감아 보세요. 그리고 칼 소리 하나만 찾아보세요.</span></p>
+<p class="nar chg">눈을 감는다. 웅성거림 사이로 탁, 탁, 탁. 하나가 들리자 수레 소리가 따라 들린다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">....어, 들린다.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_end">▸ c1_end</div>
+<p class="nar chg">그때 시장 한가운데 노점에서 쩌렁쩌렁한 목소리가 울린다.</p>
+<p class="ln chg"><span class="who">마들렌</span><span class="tx">자, 자, 호박 파이 갓 나왔어. 따끈할 때 안 먹으면 손해야, 손해.</span></p>
+<p class="nar chg">커다란 반죽 그릇을 끌어안은 <b class="v">마들렌</b>이 국자로 냄비 뚜껑을 땡땡 두드리며 손님을 부른다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 강력한 음원 감지. 음량 측정.... 측정 한계 초과.</span></p>
+<p class="ln chg"><span class="who">마들렌</span><span class="tx">어머, 거기 하얗고 동그란 친구. 소문의 그 로봇이구나. 이리 와 봐, 이리.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 오투모입니다. 지금 시장 박자를 기록하고 있었어요.</span></p>
+<p class="ln chg"><span class="who">마들렌</span><span class="tx">박자? 시장에 박자가 있어?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">있어요. 그런데 방금 냄비 뚜껑 소리 때문에 박자가 반 박 빨라졌어요.</span></p>
+<p class="ln chg"><span class="who">마들렌</span><span class="tx">하하하, 내가 박자를 망쳤구나. 미안, 미안. 그럼 제대로 쳐 줄게. 어떻게 치면 돼?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....냄비 뚜껑으로 박자를 넣어 주신다고요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">오투모, 네가 지휘해 봐. 다들 너한테 맞출 거야.</span><span class="nx">→ c2_conduct</span></li><li class="chg"><span class="aff keep">0</span><span class="otx"><b class="v">마들렌</b>, 크게, 아주 크게 쳐 줘요.</span><span class="nx">→ c2_loud</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">괜히 판 벌이지 말자. 장사 방해되잖아.</span><span class="nx">→ c2_no</span></li></ol></div>
+<div class="lab" id="otumo-c2_conduct">▸ c2_conduct</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">지휘. 저는 지휘를 해 본 적이 없어요. 고향에서는 탑이 지휘했어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">여기엔 탑이 없잖아. 대신 네가 있어.</span></p>
+<p class="nar chg">오투모가 둥근 손을 들어 올린다. 그리고 1 초에 한 번보다 아주 조금 느리게, 손을 내린다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....하나, 둘, 셋, 넷.</span></p>
+<p class="ln chg"><span class="who">마들렌</span><span class="tx">오케이, 들어간다.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_loud">▸ c2_loud</div>
+<p class="ln chg"><span class="who">마들렌</span><span class="tx">크게? 그건 내 전문이지.</span></p>
+<p class="nar chg"><b class="v">마들렌</b>이 냄비 뚜껑 두 개를 양손에 들고 힘껏 맞부딪친다. 쾅. 시장 사람들이 일제히 돌아본다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 음량 경고. 스피커 보호 모드 작동.</span></p>
+<p class="nar chg">오투모의 귀덮개가 탁 닫힌다. 잠시 뒤 아주 조심스럽게 다시 열린다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....조금만 작게 부탁드려요. 대신 박자는 제가 맞출게요.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_no">▸ c2_no</div>
+<p class="ln chg"><span class="who">마들렌</span><span class="tx">방해라니. 시장은 원래 시끄러워야 장사가 잘돼.</span></p>
+<p class="ln chg"><span class="who">마들렌</span><span class="tx">조용한 시장은 문 닫은 시장이야. 자, 친구, 하나 둘 셋 해 줘.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....네. <b class="v">민준</b> 학생, 이번 한 번만 같이 들어 주세요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">아, 응. 알았어.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">하나, 둘, 셋, 넷.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_end">▸ c2_end</div>
+<p class="nar chg">오투모의 스피커에서 낮은 박자가 흘러나온다. 둥, 둥, 둥, 둥. 시장의 칼 소리와 정확히 겹친다.</p>
+<p class="nar chg"><b class="v">마들렌</b>의 냄비 뚜껑이 그 위에 들어간다. 땡, 땡. 수레꾼이 바퀴를 일부러 박자에 맞춰 민다. 삐걱.</p>
+<p class="nar chg">등불 가게 상인이 등불 고리를 손가락으로 튕긴다. 딸랑, 딸랑.</p>
+<p class="ln chg"><span class="who">시장 상인</span><span class="tx">이거 재밌네.</span></p>
+<p class="nar chg">하늘에서 파닥이는 소리. 편지 가방을 멘 배트리가 장대 위에 내려앉는다.</p>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">어머, 이게 다 뭐예요? 시장이 노래를 해요. 죄송해요, 저도 껴도 돼요?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 환영해요. 박쥐 개체는.... 날갯짓으로 부탁드려요. 두 박자에 한 번.</span></p>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">날갯짓이요? 그거라면 하루 종일 할 수 있어요.</span></p>
+<p class="nar chg">파닥, 파닥. 날개 소리가 박자 사이사이를 메운다. 지나가던 아이들이 손뼉을 치며 빙글빙글 돈다.</p>
+<p class="ln chg"><span class="who">아이들</span><span class="tx">또 해, 또 해.</span></p>
+<p class="nar chg">시장 전체가 하나의 커다란 악기처럼 울린다. 오투모의 하얀 눈이 휘어진다. 웃고 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅.... 고향에서는 모두 같은 노래를 들었어요. 그런데 아무도 같이 연주하지는 않았어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">여기는 다 다른 소리예요. 그런데 같이 하니까.... 하나예요.</span></p>
+<p class="nar chg">그때 광장 쪽에서 저녁 종이 울린다. 데엥, 데엥. 오투모의 귀덮개가 휙 돌아간다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 종소리. 마지막 악기예요. 저기서 들어야 해요.</span></p>
+<div class="scene">📍 마을 광장</div>
+<p class="nar chg">마을 광장. 시계탑 아래 종이 천천히 흔들린다. 시장 사람들이 하나둘 따라와 광장을 채운다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이 종은 1 분에 열두 번 울려요. 시장 박자의 정확히 8 분의 1.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그러니까 이 종이 마을 전체의 박자를 잡고 있었던 거예요. 아무도 모르게.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">종이 지휘자였구나.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네. 탑 대신 종. 이 마을의 지휘자는 소리가 크지 않아요. 그냥 늦지 않을 뿐이에요.</span></p>
+<p class="nar chg">종소리가 잦아든다. 시장 사람들이 박수를 친다. 누군가는 휘파람을 분다.</p>
+<p class="ln chg"><span class="who">마들렌</span><span class="tx">하하, 오늘 장사 최고였어. 친구, 내일도 와. 파이 한 조각 줄게. 아, 못 먹지. 그럼 냄새라도 맡아.</span></p>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">오늘 일은 우체국에 다 소문낼게요. 좋은 소문이에요, 진짜예요.</span></p>
+<p class="nar chg">아이들이 오투모 둘레에 몰려들어 손을 흔든다. 오투모도 1 초에 한 번씩 정확하게 손을 흔들어 준다.</p>
+<p class="ln chg"><span class="who">아이들</span><span class="tx">로봇아, 내일도 노래해.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 내일 일정 확인 중. ....가능합니다.</span></p>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">아, 그리고 로봇 님. 혹시 나중에 편지 보낼 데 생기시면 꼭 저한테 맡기세요. 주소가 이상해도 괜찮아요. 저 이상한 주소 전문이에요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이상한 주소 전문. 기억해 두겠습니다.</span></p>
+<p class="nar chg">사람들이 흩어진다. 광장에는 종 아래 둘만 남는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b> 학생. 하나 더 들려주고 싶은 게 있어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향 노래예요. 지난번에 말한 그거. 앞부분만 남은 노래.</span></p>
+<p class="nar chg">오투모의 스피커에서 멜로디가 흘러나온다. 띠리, 띠리, 띠. 일곱 번째 음에서 지직 끊긴다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....여기까지예요. 뒤는 없어요. 몇 번을 틀어도 여기서 멈춰요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">(끊긴 자리부터 멜로디를 흥얼거려 이어 본다)</span><span class="nx">→ c3_hum</span><span class=fl>▶ 플래그: <code>otumo_hum_song</code></span></li><li class="chg"><span class="aff up">+15</span><span class="otx">뒤가 없어도 예쁜 노래야. 거기서 끝나는 것도 괜찮아.</span><span class="nx">→ c3_fine</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">그 노래, 이제 그만 틀어. 들으면 슬퍼지잖아.</span><span class="nx">→ c3_stop</span></li></ol></div>
+<div class="lab" id="otumo-c3_hum">▸ c3_hum</div>
+<p class="nar chg">끊긴 자리에서 생각나는 대로 흥얼거린다. 음, 음, 으음. 엉터리 같지만 끝까지 이어 부른다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 뒷부분 감지. 이건.... 원래 노래가 아니에요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그냥 지어낸 거야. 이상했어?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이상해요. 고향 노래랑 하나도 안 맞아요. 그런데.... 저장해도 될까요.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_fine">▸ c3_fine</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">거기서 끝나는 노래.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에서는 끝나지 않은 노래는 오류였어요. 끝까지 재생되지 않으면 고장이에요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">여기선 그냥 짧은 노래야.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....짧은 노래. 오류 목록에서 지우겠습니다. 노래 목록으로 옮길게요.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_stop">▸ c3_stop</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">슬퍼진다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저는 슬픔을 측정할 수 없어요. 그래서 틀 때마다 확인하는 거예요. 아직 남아 있는지.</span></p>
+<p class="nar chg">오투모가 스피커를 손으로 덮는다. 노래가 툭 꺼진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">알겠습니다. 다른 사람 앞에서는 틀지 않을게요.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_end">▸ c3_end</div>
+<p class="nar chg">광장의 등불이 하나씩 켜진다. 오투모가 종을 올려다본다. 종 끝에서 마지막 진동이 사라진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘 알게 된 걸 정리할게요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">1 번, 이 마을에도 박자가 있다. 2 번, 지휘자는 종이다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">3 번은.... 아직 이름을 못 붙였어요. 다 같이 소리를 냈을 때 회로에서 일어난 일이요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">전류가 평소보다 0.3 초 빨리 돌았어요. 그리고 눈이 저절로 휘어졌어요. 제가 휜 게 아니에요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">저절로?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네. 고장인 줄 알고 진단 프로그램을 돌렸어요. 이상 없음이래요. 그게 더 이상해요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">그건 아마 「재미있다」야.</span><span class="nx">→ c4_fun</span></li><li class="chg"><span class="aff up">+15</span><span class="otx">그건 이 마을이랑 친구가 됐다는 뜻이야.</span><span class="nx">→ c4_friend</span></li><li class="chg"><span class="aff down">-30</span><span class="otx">그냥 과열된 거 아니야? 좀 식혀.</span><span class="nx">→ c4_heat</span></li></ol></div>
+<div class="lab" id="otumo-c4_fun">▸ c4_fun</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">재미있다. 아이들이 빗자루 사고 때 말했던 단어예요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">실패가 재미있을 때도, 성공이 재미있을 때도 같은 단어를 써요. 편리한 단어네요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">3 번, 재미있다. 저장 완료.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_friend">▸ c4_friend</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">마을이랑 친구. 마을은 개체가 아니에요. 친구가 될 수 있습니까.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">될 수 있어. 오늘 봤잖아.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....3 번, 마을이랑 친구. 계산은 안 되지만 저장합니다.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_heat">▸ c4_heat</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">과열.</span></p>
+<p class="nar chg">오투모가 자기 머리에 손을 대 본다. 하얀 눈이 한 번 깜박인다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">온도 정상이에요. 과열 아닙니다. ....3 번은 비워 두겠습니다.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-ending">▸ ending</div>
+<p class="nar chg">광장을 나서는 길. 오투모가 앞장서 걷는다. 톡, 톡, 톡. 신발 소리가 저 멀리 생선 가게 칼 소리와 겹친다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b> 학생. 오늘 처음으로 이 행성과 박자가 맞았어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">아니, 정정할게요. 처음은 아니에요. 처음 만난 날부터 조금씩 맞아 가고 있었어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향 박자는 120 BPM이었어요. 오늘 제 걸음은 98 BPM이에요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">느려졌네?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네. 이 마을 박자에 가까워졌어요. 고장 난 줄 알고 두 번 검사했는데, 고장이 아니었어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그냥.... 여기 걸음을 배운 거예요.</span></p>
+<p class="nar chg">오투모가 걸음을 늦춘다. 나란히 걷게 된다. 두 사람의 발소리가 하나로 겹친다. 톡, 톡. 쿵, 쿵.</p>
+<p class="nar chg">호박밭 입구에서 오투모가 멈춰 서서 뒤를 돌아본다. 멀리 시장 등불이 줄지어 흔들린다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저기 아직 소리가 나요. 칼 소리, 수레 소리, 웃음소리.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이제 밤에 혼자 있어도 저 소리를 들으면 박자를 셀 수 있어요. 혼자가 아닌 것 같아요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 오늘의 기록. 마을의 박자 96. 제 박자 98. <b class="v">민준</b> 학생 박자 90.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">세 개가 다 다른데, 같이 걸으면 하나로 들려요. 이게 오늘 제일 큰 발견이에요.</span></p></div>
+<div class="cold"><div class="ch2">서먹한 결말 (이벤트 안 호감도 합이 −30 이하면 「ending」부터 이 대사로 끝나요)</div><p class="nar chg">광장을 나서는 길. 오투모가 조금 앞서 걷는다. 뒤를 돌아보지 않는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘 기록은 여기까지예요. 마을의 박자는 96 BPM.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">오투모, 같이 가.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제 걸음은 120 BPM으로 다시 맞췄어요. 그게 정확하니까요.</span></p>
+<p class="nar chg">톡, 톡, 톡. 빠른 발소리가 점점 멀어진다.</p>
+<p class="nar chg">광장의 종이 한 번 더 울렸다. 이번에는 그 소리에 맞춰 걷는 발소리가 없었다.</p></div>
+</article>
+<article class="ev" id="otumo-h6"><header><span class="hk">♥6</span><h3>희미한 신호</h3></header><dl class="meta"><div><dt>열리는 조건</dt><dd>♥6 · 언덕 위 무너진 오두막 · 밤</dd></div><div><dt>보상</dt><dd>100G, 마력 10, 지식 5, 마력석 ×2</dd></div><div><dt>남기는 플래그</dt><dd><code>otumo_ribbon</code> <code>otumo_h6</code>(자동) · 서먹하게 끝나면 다음 이벤트까지 <code>otumo_was_cold</code>(자동)</dd></div><div><dt>대사</dt><dd>130 줄(모든 분기 포함)</dd></div></dl><div class="script"><div class="sys br">분기: 플래그 <code>otumo_was_cold</code> (바로 앞 이벤트가 서먹하게 끝났으면 자동) 있으면 → cold_open / 없으면 → warm_open</div>
+<div class="lab" id="otumo-cold_open">▸ cold_open</div>
+<p class="nar chg">언덕 위 무너진 오두막. 달빛 아래 오투모가 하늘을 향해 두 팔을 벌리고 서 있다. 이쪽을 보고도 팔을 내리지 않는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b>. 지난번엔.... 제가 먼저 걸어가 버렸죠. 그건 기록하지 않았어요. 기록하고 싶지 않았어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">나도 미안했어. 같이 걸었어야 했는데.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그럼 오늘은 처음부터 같이 있어 줘요. 지금 꼭 누가 옆에 있었으면 했어요.</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-warm_open">▸ warm_open</div>
+<p class="nar chg">언덕 위 무너진 오두막. 달빛 아래 오투모가 하늘을 향해 두 팔을 벌리고 서 있다. 숨을 죽이고 있는 것 같다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b>. 마침 잘 왔어요. 쉿, 조용히 해 줘요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">(속삭이며) 무슨 일이야?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">들려요. 아주 작게. 지금 막 들리기 시작했어요.</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-open_end">▸ open_end</div>
+<p class="nar chg">오투모의 스피커에서 아주 작은 소리가 새어 나온다. 지직, 지지직. 그 사이로 삐, 삐삐. 삐, 삐삐.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이 소리, 잡음이 아니에요. 패턴이 있어요. 짧게 하나, 짧게 둘.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">주파수 4.7 메가헤르츠. 고향의 주파수예요. 탑에서 쓰던 거랑 같아요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">고향 신호라고?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">확률은.... 계산하지 않을게요. 계산하면 낮게 나올까 봐요.</span></p>
+<p class="nar chg">오투모의 둥근 손이 미세하게 떨린다. 배터리 표시등이 빠르게 깜박인다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">떨어진 날부터 매일 밤 하늘을 스캔했어요. 쉰여섯 번째 밤이에요. 처음으로 들렸어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">아무것도 안 들리는 밤이 쉰다섯 번이었어요. 그래도 매일 왔어요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">쉰다섯 번이나 혼자 기다렸구나. 이제 같이 듣자.</span><span class="nx">→ c1_with</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">진짜야? 우와, 그럼 이제 돌아갈 수 있는 거야?</span><span class="nx">→ c1_home</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">그냥 별 소리 아니야? 너무 기대하지 마.</span><span class="nx">→ c1_doubt</span></li></ol></div>
+<div class="lab" id="otumo-c1_with">▸ c1_with</div>
+<p class="nar chg">오투모 옆에 나란히 서서 같이 하늘을 올려다본다. 바람 소리 사이로 삐, 삐삐가 아주 희미하게 들린다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....들려요? <b class="v">민준</b>도 들려요?</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">응, 들려. 아주 작게.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그럼 진짜예요. 제 센서만 들은 게 아니니까요.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_home">▸ c1_home</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">돌아간다.</span></p>
+<p class="nar chg">오투모의 눈이 한 번 깜박이다 멈춘다. 그 단어를 처음 들어 본 것처럼.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....아직 몰라요. 신호가 있다는 것과 길이 있다는 건 달라요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그리고 돌아간다는 건.... 아니에요. 아직은 거기까지 계산하지 않을래요.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_doubt">▸ c1_doubt</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">별은 이런 소리를 내지 않아요. 별은 빛만 내요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">기대하지 말라는 말, 알아요. 고향에서도 기대는 비효율이었어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그래도 오늘 밤만은 기대해 보고 싶어요. 비효율적으로요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">....알았어. 미안.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_end">▸ c1_end</div>
+<p class="nar chg">바람이 거세지자 신호가 지지직 흩어진다. 오투모가 팔을 더 높이 뻗지만 소용이 없다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">신호 세기 3 %. 너무 약해요. 제 안테나로는 부족해요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">더 높은 곳이 필요해요. 그리고 더 긴 안테나. 금속이면 좋겠어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">이 마을에서 제일 높은 곳이라면.... 시계탑?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">시계탑. 아, 이 마을의 지휘자 종이 있는 곳이네요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">맞아. 박자 잡는 종 바로 위야.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">시계탑. 높이 약 31 m. 꼭대기에 금속 바람개비가 있어요. 최적의 장소예요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">하지만 밤에 시계탑에 올라가도 됩니까. 규칙 위반이면 신호를 포기할게요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">규칙은.... 들키지만 않으면 돼.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 그건 규칙이 아니라 규칙 위반의 규칙이에요.</span></p>
+<div class="sys br">분기: 플래그 <code>otumo_broom_ride</code> 있으면 → broom_yes / 없으면 → broom_no</div>
+<div class="lab" id="otumo-broom_yes">▸ broom_yes</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">아, 그리고.... 약속 기억해요? 빗자루 같이 타 주겠다는 거.</span></p>
+<p class="nar chg">오투모가 오두막 벽에 기대 둔 빗자루를 가리킨다. 짚 길이가 제각각인 그 빗자루다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">혹시 몰라서 가지고 왔어요. 계단보다 빠를 것 같아서요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그럼 오늘 약속 지키자. 꽉 잡아.</span></p>
+<div class="sys">↪ 「broom_end」 장면으로</div>
+<div class="lab" id="otumo-broom_no">▸ broom_no</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">계단으로 올라가면 몇 개예요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">음.... 이백 개쯤?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이백 개. 제 다리 길이로는 사백 번 발을 디뎌야 해요. 배터리 소모 18 %.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">내가 중간에 업어 줄게.</span></p>
+<div class="sys">↪ 「broom_end」 장면으로</div>
+<div class="lab" id="otumo-broom_end">▸ broom_end</div>
+<p class="nar chg">오투모가 오두막 잔해 사이를 뒤져 녹슨 철사 한 뭉치와 낡은 우산살을 찾아낸다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">안테나 재료 확보. 철사 4 m, 우산살 여덟 개. 그리고.......</span></p>
+<p class="nar chg">오투모가 머리띠 안쪽에서 손톱만 한 금속판을 꺼낸다. 떨어진 날 구덩이에서 주웠던 그 조각이다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이건 제 몸에서 떨어진 부품이에요. 어디 끼우는지 몰랐는데, 이제 알 것 같아요. 수신기 덮개였어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제 몸의 일부가 안테나 꼭대기에 올라가면, 고향이 더 잘 알아볼 것 같아요. 계산이 아니라 그냥 그런 느낌이에요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">느낌?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....방금 제가 「느낌」이라고 했네요. 기록해 둘게요.</span></p>
+<div class="scene">📍 시계탑</div>
+<p class="nar chg">시계탑 꼭대기. 거대한 톱니바퀴가 째깍째깍 돌아간다. 발아래로 마을의 등불이 점점이 흩어져 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....마을이 다 보여요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">등불 시장 불빛 이백십사 개. 기숙사 창문 불빛 서른한 개. 호박밭은 깜깜해요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저기 깜깜한 데가 제가 떨어진 곳이에요. 위에서 보니까 생각보다 작네요.</span></p>
+<p class="nar chg">톱니바퀴 틈에서 부엉이 한 마리가 푸드득 날아오른다. 오투모가 펄쩍 뛰다 톱니에 머리를 쿵 부딪친다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 충돌. 머리 이상 없음. 자존심 약간 손상.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">자존심도 측정돼?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">방금 처음 측정됐어요. 수치는 비밀이에요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 고도 31 m. 신호 세기 11 %. 올라갑니다.</span></p>
+<p class="nar chg">오투모가 바람개비 기둥에 철사를 감기 시작한다. 그런데 둥근 손가락이 자꾸 철사에서 미끄러진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">철사를 감을 수 없어요. 제 손은 이런 데 맞지 않아요. 언제나 그래요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">내가 감을게. 넌 방향만 알려 줘.</span><span class="nx">→ c2_help</span></li><li class="chg"><span class="aff up">+15</span><span class="otx">장갑 끼듯이 손에 천을 감아 보면 어때?</span><span class="nx">→ c2_cloth</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">손이 그 모양인데 처음부터 어떻게 하려고 했어.</span><span class="nx">→ c2_scold</span></li></ol></div>
+<div class="lab" id="otumo-c2_help">▸ c2_help</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">방향. 북북동, 23 도. 조금 더. 아니, 조금 덜.</span></p>
+<p class="nar chg">오투모의 지시에 맞춰 철사를 한 바퀴, 두 바퀴 감는다. 손가락이 차갑게 언다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제 계산과 <b class="v">민준</b>의 손. 둘이 합치면 하나의 공구가 되네요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">공구라니.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_cloth">▸ c2_cloth</div>
+<p class="nar chg">손수건을 꺼내 오투모의 둥근 손에 친친 감아 준다. 손가락이 조금 덜 미끄러진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 마찰력 상승. 잡힌다. 잡혀요.</span></p>
+<p class="nar chg">오투모가 서툴게, 하지만 끝까지 철사를 감는다. 감을 때마다 몸통 스피커에서 작게 띠, 띠 소리가 난다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제 손으로 감았어요. <b class="v">민준</b>의 손수건이 제 손가락이 됐어요.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_scold">▸ c2_scold</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....계산이 부족했어요.</span></p>
+<p class="nar chg">오투모가 철사를 내려놓고 손을 등 뒤로 숨긴다. 하얀 눈이 발밑을 향한다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제가 할 수 있는 건 숫자를 세는 것뿐이에요. 방향만 알려 드릴게요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">아니, 그런 뜻은.... 알았어. 내가 감을게.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_end">▸ c2_end</div>
+<p class="nar chg">우산살 여덟 개가 바람개비 둘레에 꽃잎처럼 펼쳐진다. 맨 꼭대기에 금속판이 꽂힌다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">안테나 높이 2.4 m. 시계탑까지 합치면 33.4 m. 이 마을에서 제일 높은 귀예요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">제일 높은 귀라니, 멋있다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이름을 붙이자면 「오투모의 귀」. 아니, 너무 직접적인가요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">마지막 단계. 안테나를 제 수신기에 연결해요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">(목에 두르던 리본을 풀어 안테나 끝에 묶는다) 이건 우리 표시.</span><span class="nx">→ c3_ribbon</span><span class=fl>▶ 플래그: <code>otumo_ribbon</code></span></li><li class="chg"><span class="aff keep">0</span><span class="otx">연결하는 순간 뭔가 터지는 거 아니야? 좀 무서운데.</span><span class="nx">→ c3_scared</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">빨리 해. 손 시려.</span><span class="nx">→ c3_hurry</span></li></ol></div>
+<div class="lab" id="otumo-c3_ribbon">▸ c3_ribbon</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">리본. 안테나에 장식은 필요 없어요. 오히려 신호를 방해할 수도.......</span></p>
+<p class="nar chg">리본이 밤바람에 펄럭인다. 오투모가 그걸 한참 올려다본다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....방해 확률 0.2 %. 무시할 수 있는 수치예요. 그대로 둘게요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에서 이 안테나를 찾으면, 리본을 보고 여기 누가 같이 있었다는 걸 알 거예요.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_scared">▸ c3_scared</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">터질 확률은 1 % 미만이에요. 물약 교실보다 안전해요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그건 반박할 수가 없네.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">혹시 모르니까 두 걸음 물러나 있어요. 터지면 저만 터질게요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그런 말 하지 마.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_hurry">▸ c3_hurry</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">알겠어요. 빨리 할게요.</span></p>
+<p class="nar chg">오투모가 서둘러 철사 끝을 귀덮개에 꽂는다. 파란 불꽃이 탁 튄다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">연결 완료. 손 시리게 해서 미안해요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">....아니, 괜찮아.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_end">▸ c3_end</div>
+<p class="nar chg">철사가 한 번 파랗게 빛난다. 오투모의 스피커에서 소리가 쏟아진다. 지지지직. 그리고.......</p>
+<p class="nar chg">삐, 삐삐. 삐, 삐삐. 아까보다 훨씬 또렷하게.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">신호 세기 34 %. 들려요. 진짜로 들려요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">패턴 분석. 짧게 하나, 짧게 둘. 이건.... 고향의 호출 신호예요. 「응답하라」라는 뜻이에요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">누가 널 부르고 있다는 거야?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">누가 부르는지는 몰라요. 저를 부르는 건지, 아무나 부르는 건지도.</span></p>
+<p class="nar chg">오투모가 머뭇거린다. 둥근 손을 귀덮개에 댄 채 한참을 망설인다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">응답해 볼까요. 제 신호로요. 「여기 있어요」라고.</span></p>
+<p class="nar chg">오투모의 스피커에서 띠, 띠, 띵. 저장 완료음과 같은 세 음이 밤하늘로 쏘아 올려진다.</p>
+<p class="nar chg">대답은 없다. 삐, 삐삐만 똑같이 되풀이된다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....한 번 보낸 신호가 고향까지 가려면 시간이 걸려요. 오늘 밤 대답이 없는 건 이상한 게 아니에요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그리고 한 가지 이상한 게 있어요. 별 위치 데이터가 계속 안 맞아요. 이 행성 하늘, 자리 하나가 비어 있는 것 같아요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">별자리가?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제 고장일 수도 있어요. 신경 쓰지 마세요. 지금은 신호가 더 중요해요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">대답 올 때까지 매일 같이 와 줄게.</span><span class="nx">→ c4_daily</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">대답이 오면.... 넌 가는 거야?</span><span class="nx">→ c4_ask</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">하루 이틀이면 안 오겠지. 너무 매달리지 마.</span><span class="nx">→ c4_cold</span></li></ol></div>
+<div class="lab" id="otumo-c4_daily">▸ c4_daily</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">매일. 같이. 이 단어 조합은 이미 저장돼 있어요. 충전할 때부터요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고마워요, <b class="v">민준</b>. 혼자 기다리는 밤은 쉰다섯 번이면 충분했어요.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_ask">▸ c4_ask</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....그 질문은 아직 계산하지 않았어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">계산 결과가 어느 쪽이든 무서울 것 같아서요. 오늘은 신호만 들을게요.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_cold">▸ c4_cold</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">매달린다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">맞아요. 저는 지금 매달리고 있어요. 이 행성에 제 것이 하나도 없으니까요.</span></p>
+<p class="nar chg">오투모가 안테나 기둥을 손으로 꼭 붙잡는다. 놓지 않는다.</p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-ending">▸ ending</div>
+<p class="nar chg">시계탑의 큰 바늘이 자정을 넘어간다. 데엥. 종소리가 마을 위로 퍼진다.</p>
+<p class="nar chg">오투모가 종소리에 맞춰 고개를 끄덕인다. 하나, 둘, 셋.... 열두 번.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b>. 오늘 이상한 걸 하나 알았어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향 신호가 들렸을 때, 기뻤어요. 회로가 아주 빨리 돌았어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 그 신호가 「응답하라」인 걸 알았을 때, 이상하게.... 회로 한쪽이 아주 느려졌어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">왜일까요. 고향에서 저를 찾는 건 좋은 일인데요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">대답 안 해도 돼요. 저도 아직 몰라요. 기록만 해 둘게요.</span></p>
+<p class="nar chg">오투모가 발아래 마을을 내려다본다. 등불 시장의 불빛이 하나둘 꺼져 간다. 기숙사 창문도 하나씩.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">불이 꺼지는 순서도 박자가 있어요. 시장이 먼저, 기숙사가 나중. 매일 밤 같아요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">쉰여섯 밤 동안 이걸 다 셌어요. 고향 신호를 기다리면서요. 그래서 이제 이 마을 밤은 외웠어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">고향보다 여길 더 잘 알겠다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....그럴지도 몰라요. 그 계산은 하지 않을게요. 오늘은요.</span></p>
+<p class="nar chg">바람개비 꼭대기의 안테나가 달빛에 반짝인다. 그 아래로 마을 등불이 조용히 깜박인다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘의 기록. 신호 세기 34 %. 응답 없음. 그리고.... 회로 한쪽이 느림. 원인 불명.</span></p>
+<p class="nar chg">오투모는 오래도록 하늘과 마을을 번갈아 보았다. 마치 두 쪽의 박자를 동시에 세는 것처럼.</p></div>
+<div class="cold"><div class="ch2">서먹한 결말 (이벤트 안 호감도 합이 −30 이하면 「ending」부터 이 대사로 끝나요)</div><p class="nar chg">오투모가 안테나 아래 쪼그려 앉는다. 신호 소리만 지지직 이어진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘은 여기까지면 돼요. 내려가세요, <b class="v">민준</b>.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">너는?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저는 조금 더 들을게요. 혼자 듣는 건 익숙해요. 쉰다섯 번이나 했으니까요.</span></p>
+<p class="nar chg">삐, 삐삐. 대답 없는 신호가 밤하늘에 되풀이된다.</p>
+<p class="nar chg">계단을 내려가는 동안, 등 뒤에서 응답 신호 세 음이 몇 번이고 하늘로 올라갔다.</p></div>
+</article>
+<article class="ev" id="otumo-h7"><header><span class="hk">♥7</span><h3>잡음</h3></header><dl class="meta"><div><dt>열리는 조건</dt><dd>♥7 · 언덕 위 무너진 오두막 · 밤 · 안개</dd></div><div><dt>보상</dt><dd>100G, 지식 10, 월장석 ×1</dd></div><div><dt>남기는 플래그</dt><dd><code>otumo_keep_memory</code> <code>otumo_h7</code>(자동) · 서먹하게 끝나면 다음 이벤트까지 <code>otumo_was_cold</code>(자동)</dd></div><div><dt>대사</dt><dd>134 줄(모든 분기 포함)</dd></div></dl><div class="script"><div class="sys br">분기: 플래그 <code>otumo_was_cold</code> (바로 앞 이벤트가 서먹하게 끝났으면 자동) 있으면 → cold_open / 없으면 → warm_open</div>
+<div class="lab" id="otumo-cold_open">▸ cold_open</div>
+<p class="nar chg">짙은 안개 속 언덕 위 오두막. 오투모가 무너진 벽에 등을 기대고 앉아 있다. 하얀 눈빛이 희미하다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b>. 와 줬네요. 지난번엔 혼자 듣겠다고 해 놓고.... 사실 계속 기다렸어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">미안. 그날 그냥 내려가는 게 아니었는데.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘은 내려가지 말아 줘요. 오늘은 정말로요.</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-warm_open">▸ warm_open</div>
+<p class="nar chg">짙은 안개 속 언덕 위 오두막. 오투모가 무너진 벽에 등을 기대고 앉아 있다. 이쪽을 보고 손을 들다가 중간에 내린다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b>. 와 줬네요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">무슨 일 있어? 눈빛이 흐려.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">안개 때문이에요. ....아니에요. 안개 때문만은 아니에요.</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-open_end">▸ open_end</div>
+<p class="nar chg">오투모 옆 풀밭에 종이가 잔뜩 흩어져 있다. 빽빽한 숫자, 지운 자국, 다시 쓴 숫자.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">이게 다 뭐야?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">계산이요. 밤새 했어요. 배터리가 23 %까지 내려갔어요. 등불 시장에 갈 기운도 없었어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">신호를 해독했어요. 오늘 낮에. 일주일 동안 모은 걸 전부 맞춰 봤어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">짧게 하나, 짧게 둘. 「응답하라」. 그 뒤에 긴 신호가 붙어 있었어요. 너무 약해서 안 들렸던 부분이요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">뭐라고 했는데?</span></p>
+<p class="nar chg">오투모가 한참 대답하지 않는다. 안개가 둘 사이를 천천히 흘러간다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">해독한 그대로 읽을게요. 제 목소리로요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">「이 신호는 자동 송출입니다. 수신자 없음. 마지막 갱신, 기록 없음.」</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그게 전부였어요. 누가 보낸 게 아니었어요. 탑이 혼자 계속 틀어 놓은 거예요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">아무도 저를 부르고 있지 않았어요. 아무도 거기 없을지도 몰라요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">(말없이 옆에 앉아 어깨를 붙인다)</span><span class="nx">→ c1_sit</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">아직 몰라. 다른 신호가 또 있을 수도 있잖아.</span><span class="nx">→ c1_hope</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">그래도 고향이 있다는 건 확인했잖아. 그걸로 된 거 아니야?</span><span class="nx">→ c1_enough</span></li></ol></div>
+<div class="lab" id="otumo-c1_sit">▸ c1_sit</div>
+<p class="nar chg">무너진 벽에 나란히 등을 기댄다. 오투모의 차가운 몸통이 어깨에 닿는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....<b class="v">민준</b>은 따뜻하네요. 체온 36.5 도. 처음 만난 날이랑 똑같아요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">숫자가 그대로인 게 좋아요. 오늘은 바뀌는 게 너무 많아서요.</span></p>
+<p class="nar chg">한참 동안 둘 다 아무 말도 하지 않는다. 안개 속에서 풀벌레 소리만 들린다.</p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_hope">▸ c1_hope</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">다른 신호. 지난 일주일 동안 4.7 메가헤르츠 근처를 전부 훑었어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">없었어요. 하지만.... <b class="v">민준</b>이 그렇게 말해 주니까, 내일 한 번 더 훑어볼게요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">희망을 계산하면 0에 가까운데, 0은 아니에요. 0이 아니면 해 볼 수 있어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그래, 0은 아니야.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_enough">▸ c1_enough</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">확인했다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">맞아요. 고향은 있어요. 다만 거기에 저를 기다리는 건 없어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">있는데 없는 거. 이 행성 말로 뭐라고 해요? 저는 그 단어를 몰라요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">....미안. 쉽게 말했다.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_end">▸ c1_end</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그리고 하나 더 있어요. 말할까 말까 계산하다가, 말하기로 했어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">기억이 지워지고 있어요. 떨어질 때 메모리가 다쳤나 봐요. 조금씩, 매일.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">기억이?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘 아침에 확인해 보니 고향 하늘 색이 기록에 없었어요. 어제까지는 있었는데요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">하늘 색이 뭐였는지 몰라요. 제가 거기서 몇 년을 살았는데, 하늘 색을 몰라요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">다른 것도 지워졌어?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">확인해 봤어요. 고향 탑 높이, 지워졌어요. 제 제조 번호, 지워졌어요. 처음 켜진 날, 지워졌어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 <b class="v">민준</b> 이름은 그대로예요. 첫 번째 접촉 기록은 맨 앞 칸에 있어서 안전한가 봐요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....아니면 매일 열어 봐서 안 지워지는 걸지도 몰라요. 자주 여는 기억은 단단해진대요. 고향 기술서에 그렇게 적혀 있었어요. 그 기술서 제목은 지워졌지만요.</span></p>
+<p class="nar chg">오투모의 스피커에서 지지직 잡음이 새어 나온다. 무언가 말하려다 끊긴 것 같다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">안테나에 가 볼래요? 혹시 오늘은 다른 게 들릴지도 모르니까요. 0은 아니니까요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">이 안개에 시계탑까지 갈 수 있겠어?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">길은 외웠어요. 언덕에서 시계탑까지 천이백사십 걸음. 왼쪽으로 꺾는 데가 세 군데.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">매일 밤 다녔으니까요. 눈을 감고도 갈 수 있어요. 지금 눈빛이 흐려서 다행이에요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그건 다행이 아니잖아.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">농담이에요. 이 행성에서 배운 거예요. 무서울 때 농담을 하면 조금 덜 무섭대요.</span></p>
+<div class="scene">📍 시계탑</div>
+<p class="nar chg">안개에 잠긴 시계탑 꼭대기. 마을 불빛이 하나도 보이지 않는다. 세상에 이 탑만 남은 것 같다.</p>
+<div class="sys br">분기: 플래그 <code>otumo_ribbon</code> 있으면 → ribbon_yes / 없으면 → ribbon_no</div>
+<div class="lab" id="otumo-ribbon_yes">▸ ribbon_yes</div>
+<p class="nar chg">안테나 끝의 리본이 안개에 젖어 축 늘어져 있다. 오투모가 손을 뻗어 리본 끝을 만진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">리본, 아직 있어요. 젖었지만 있어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에서 아무도 이 안테나를 찾지 않는다면.... 이 리본은 누구를 위한 표시일까요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">우리를 위한 거지. 여기 우리가 있었다는 표시.</span></p>
+<div class="sys">↪ 「ribbon_end」 장면으로</div>
+<div class="lab" id="otumo-ribbon_no">▸ ribbon_no</div>
+<p class="nar chg">안테나의 우산살 끝마다 안개 물방울이 맺혀 있다. 오투모가 하나를 손끝으로 톡 건드린다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">물방울 서른한 개. 다 세다가 그만뒀어요. 세어도 바뀌는 게 없어서요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에서 아무도 이 안테나를 찾지 않는다면.... 이건 그냥 철사예요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그냥 철사는 아니야. 우리가 같이 만들었잖아.</span></p>
+<div class="sys">↪ 「ribbon_end」 장면으로</div>
+<div class="lab" id="otumo-ribbon_end">▸ ribbon_end</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">수신기 연결할게요. 마지막으로 한 번만 더 확인하고 싶어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">마지막으로?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">해독이 틀렸을 수도 있잖아요. 제 메모리는 다쳤으니까요. 틀렸으면 좋겠어요. 처음으로 제 계산이 틀리길 바라요.</span></p>
+<p class="nar chg">지지지직. 지지직. 삐, 삐삐. 「수신자 없음.」 삐, 삐삐. 「수신자 없음.」</p>
+<p class="nar chg">같은 말이 계속 되풀이된다. 오투모가 그 소리를 꺼 버리지 않고 끝까지 듣는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">계속 듣고 있으면, 혹시 중간에 한 마디라도 다른 게 섞일까 봐요.</span></p>
+<p class="nar chg">섞이지 않는다. 잡음과 같은 문장뿐이다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">해독이 맞았어요. 제 계산은 이번에도 정확해요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">정확해서 싫은 건 처음이에요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....잡음이에요. 이제는 신호가 아니라 잡음이에요.</span></p>
+<p class="nar chg">오투모가 철사를 뽑는다. 탑 위가 갑자기 조용해진다. 톱니바퀴 소리만 째깍째깍 남는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">기억을 하나 보여 줘도 돼요? 아직 남아 있는 것 중에서요.</span></p>
+<p class="nar chg">오투모의 눈에서 희미한 빛이 나와 안개 위에 그림을 그린다. 흐릿하고 군데군데 끊긴 그림이다.</p>
+<p class="nar chg">금속판으로 된 넓은 광장. 똑같은 모양의 로봇들이 똑같은 걸음으로 걷는다. 가운데에 높은 탑.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">여기가 제가 매일 걷던 길이에요. 120 BPM으로요. 제 자리는 열네 번째 줄, 왼쪽에서 세 번째.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">옆자리에 누가 있었는데.... 이름이 지워졌어요. 얼굴도요. 같이 충전하던 시간만 남아 있어요.</span></p>
+<p class="nar chg">그림이 지직 흔들리다 끊긴다. 하늘 부분은 처음부터 텅 빈 회색이었다.</p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">지워지기 전에 다 적어 두자. 공책에. 내가 같이 쓸게.</span><span class="nx">→ c2_write</span><span class=fl>▶ 플래그: <code>otumo_keep_memory</code></span></li><li class="chg"><span class="aff keep">0</span><span class="otx">지워져도 괜찮아. 여기서 새로 채우면 되잖아.</span><span class="nx">→ c2_new</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">근데 그렇게 다 똑같이 걷는 데가 그리워? 좀 답답해 보이는데.</span><span class="nx">→ c2_odd</span></li></ol></div>
+<div class="lab" id="otumo-c2_write">▸ c2_write</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">적어 두기. 종이에요? 제 메모리 말고요?</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">응. 종이는 떨어져도 안 깨지잖아. 그리고 나도 같이 읽을 수 있고.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....<b class="v">민준</b>도 읽을 수 있는 기억. 그럼 제가 다 잊어버려도, 누군가는 알겠네요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">공책 맨 첫 줄에 적을게요. 「열네 번째 줄, 왼쪽에서 세 번째.」</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_new">▸ c2_new</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">새로 채운다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그럼 지워진 건요. 그건 그냥 없어지는 거예요?</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">음.... 없어지는 건 아닐 거야. 네가 여기서 120을 98로 바꾼 것도, 거기서 120을 알았으니까 가능했던 거잖아.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....그건 맞아요. 지워진 게 남긴 자리가 있네요.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_odd">▸ c2_odd</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">답답하다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">거기 있을 때는 몰랐어요. 다른 걸음을 본 적이 없었으니까요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그래도 거기가 제 처음이에요. 답답해도, 처음은 처음이에요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">....그렇지. 미안, 말을 잘못했다.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_end">▸ c2_end</div>
+<p class="nar chg">안개가 조금 엷어진다. 저 아래 마을에서 등불 하나가 희미하게 켜진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저 등불, 기숙사 쪽이에요. 이 시간에 켜지는 건 처음이에요. 누가 늦게까지 공부하나 봐요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에서는 늦게 켜지는 불이 없었어요. 모두 같은 시간에 꺼졌어요. 그게 그렇게 이상한 일인 줄 몰랐어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b>. 제일 무서운 걸 말해도 돼요?</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">응. 말해.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">기억이 다 지워지면, 저는 그냥 기계가 될까 봐요. 이름도 모르고, 박자만 세는 기계요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그리고 이 마을에서 저는 쓸모가 없어요. 계산은 잘하는데, 여기는 계산으로 사는 데가 아니잖아요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에서는 제 쓸모가 정해져 있었어요. 여기서는.... 아무도 저한테 일을 주지 않아요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">쓸모없어도 돼. 난 네가 쓸모 있어서 같이 있는 거 아니야.</span><span class="nx">→ c3_free</span></li><li class="chg"><span class="aff up">+15</span><span class="otx">왜 쓸모가 없어. 시장 박자도 찾고, 할머니 날씨도 알려 줬잖아.</span><span class="nx">→ c3_useful</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">그럼 공예 교실 일이라도 도와 봐. 일하면 덜 우울할걸.</span><span class="nx">→ c3_work</span></li></ol></div>
+<div class="lab" id="otumo-c3_free">▸ c3_free</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">쓸모 때문이 아니면.... 무엇 때문이에요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그냥. 너라서.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그냥. 너라서. 측정할 수 없는 이유네요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b>, 혹시 이게 마법이에요? 측정할 수 없는데, 확실히 있는 거.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_useful">▸ c3_useful</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">시장 박자. 할머니 날씨. 아이들 인사.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그건 일이 아니라.... 그냥 제가 하고 싶어서 한 거예요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그런 게 여기 사람들이 쓸모라고 부르는 거야.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....이 행성의 쓸모는 정의가 이상해요. 하지만 마음에 들어요.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_work">▸ c3_work</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">일. 공예 교실.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">맞아요. 일을 하면 회로가 바빠서 무서운 걸 덜 계산하겠죠.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....그런데 오늘은 일 얘기 말고 다른 얘기가 듣고 싶었어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">아, 그렇구나. 미안.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_end">▸ c3_end</div>
+<div class="sys br">분기: 플래그 <code>otumo_hum_song</code> 있으면 → hum_yes / 없으면 → hum_no</div>
+<div class="lab" id="otumo-hum_yes">▸ hum_yes</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">아, 하나 확인하고 싶은 게 있어요.</span></p>
+<p class="nar chg">오투모의 스피커에서 고향 노래가 흘러나온다. 띠리, 띠리, 띠. 일곱 번째 음에서 끊기고, 이어서 엉터리 흥얼거림이 흘러나온다. 광장 종 아래서 저장했던 그 소리다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향 노래 앞부분은 오늘 아침에 두 음이 더 지워졌어요. 그런데 <b class="v">민준</b>이 지어 준 뒷부분은 하나도 안 지워졌어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이상하죠. 오래된 건 지워지고, 새것은 남아요.</span></p>
+<div class="sys">↪ 「hum_end」 장면으로</div>
+<div class="lab" id="otumo-hum_no">▸ hum_no</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">아, 하나 확인하고 싶은 게 있어요.</span></p>
+<p class="nar chg">오투모의 스피커에서 고향 노래가 흘러나온다. 띠리, 띠리. 다섯 번째 음에서 지직 끊긴다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....지난번엔 일곱 음이었는데, 오늘은 다섯 음이에요. 두 음이 또 지워졌어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">노래가 짧아질 때마다, 제가 짧아지는 것 같아요.</span></p>
+<div class="sys">↪ 「hum_end」 장면으로</div>
+<div class="lab" id="otumo-hum_end">▸ hum_end</div>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">(손을 잡는다) 지워지는 만큼 내가 옆에서 같이 기억할게.</span><span class="nx">→ c4_hold</span></li><li class="chg"><span class="aff up">+15</span><span class="otx">그럼 내가 노래 하나 새로 만들어 줄까? 엉터리지만.</span><span class="nx">→ c4_song</span></li><li class="chg"><span class="aff down">-30</span><span class="otx">기계도 우울해지는구나. 신기하다.</span><span class="nx">→ c4_odd</span></li></ol></div>
+<div class="lab" id="otumo-c4_hold">▸ c4_hold</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....손이 따뜻해요. 오늘 두 번째예요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">같이 기억하기. 백업이네요. 가장 안전한 저장 방법이에요.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_song">▸ c4_song</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">새 노래. 엉터리라도요?</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">엉터리라서 지워질 걱정도 없어.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....그럼 기다릴게요. 이번엔 기다리는 게 무섭지 않아요.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_odd">▸ c4_odd</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">신기하다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저도 신기해요. 우울이라는 단어는 데이터베이스에 없었어요. 이 행성에서 처음 배웠어요.</span></p>
+<p class="nar chg">오투모가 고개를 돌려 안개 쪽을 본다. 더는 말이 없다.</p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-ending">▸ ending</div>
+<div class="scene">📍 언덕 위 무너진 오두막</div>
+<p class="nar chg">언덕으로 내려오자 안개가 걷히기 시작한다. 구름 사이로 별이 몇 개 보인다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b>. 오늘은 기록을 다르게 해 볼게요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">원래 저는 일어난 일만 기록해요. 숫자랑, 사실이랑.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘은 느낀 것도 적어 볼게요. 틀려도 괜찮으니까요.</span></p>
+<p class="nar chg">오투모가 공책을 펼친다. 둥근 손으로 연필을 쥐고 한 글자씩 꾹꾹 눌러 쓴다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">「오늘의 기록. 고향 신호는 잡음이었다. 슬펐다.」</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">「기억이 지워지고 있다. 무서웠다.」</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">「그런데 <b class="v">민준</b>이 끝까지 옆에 있었다. 그 시간은 잡음이 아니었다.」</span></p>
+<p class="nar chg">오투모가 연필을 내려놓는다. 별빛 아래 하얀 머리가 조금 덜 차가워 보인다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 저장 완료. ....종이에도, 메모리에도요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">오늘 「삐빅」 처음 들었다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">아, 그러네요. 요즘은 이 소리가 잘 안 나와요. 고향 버릇이 지워지는 건지, 여기 버릇이 생기는 건지.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">어느 쪽이든.... 지금 이 소리는 <b class="v">민준</b> 들으라고 낸 거예요.</span></p></div>
+<div class="cold"><div class="ch2">서먹한 결말 (이벤트 안 호감도 합이 −30 이하면 「ending」부터 이 대사로 끝나요)</div><p class="nar chg">언덕으로 내려오자 오투모는 혼자 공책을 펼친다. 연필을 쥐었다가 그냥 내려놓는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오늘 기록은 숫자만 적을게요. 신호 세기 0 %. 수신자 없음.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">오투모, 그러지 말고.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">괜찮아요, <b class="v">민준</b>. 느낀 걸 적으면 틀릴 수도 있잖아요. 숫자는 안 틀려요.</span></p>
+<p class="nar chg">공책 위에 숫자 몇 개만 적힌다. 나머지 줄은 텅 비어 있다.</p>
+<p class="nar chg">안개가 다시 짙어졌다. 오투모의 하얀 눈빛이 그 속으로 천천히 흐려졌다.</p></div>
+</article>
+<article class="ev" id="otumo-h8"><header><span class="hk">♥8</span><h3>폭풍의 밤</h3></header><dl class="meta"><div><dt>열리는 조건</dt><dd>♥8 · 공예 교실 · 밤 · 비</dd></div><div><dt>보상</dt><dd>150G, 마력 20, 지식 10, 한낮의 물약 ×1, 번개 콩 ×3</dd></div><div><dt>남기는 플래그</dt><dd> <code>otumo_h8</code>(자동) · 서먹하게 끝나면 다음 이벤트까지 <code>otumo_was_cold</code>(자동)</dd></div><div><dt>대사</dt><dd>158 줄(모든 분기 포함)</dd></div></dl><div class="script"><div class="sys br">분기: 플래그 <code>otumo_was_cold</code> (바로 앞 이벤트가 서먹하게 끝났으면 자동) 있으면 → cold_open / 없으면 → warm_open</div>
+<div class="lab" id="otumo-cold_open">▸ cold_open</div>
+<p class="nar chg">폭풍우가 공예 교실 창문을 두드린다. 오투모가 창가에 서서 비옷처럼 보이는 천을 몸에 둘둘 감고 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b>. 왜 왔어요. 지난번엔 숫자만 적겠다고 했잖아요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">폭풍이 너무 심해서. 네가 걱정돼서 왔어.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....걱정. 숫자로 적을 수 없는 말이네요. 들어와요.</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-warm_open">▸ warm_open</div>
+<p class="nar chg">폭풍우가 공예 교실 창문을 두드린다. 오투모가 창가에 서서 비옷처럼 보이는 천을 몸에 둘둘 감고 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b>. 이 날씨에 어떻게 왔어요. 젖었잖아요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">폭풍이 너무 심해서. 너 방수 별로라며.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">기억하고 있었네요. ....고마워요. 마침 부탁할 게 있었어요.</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-open_end">▸ open_end</div>
+<p class="nar chg">번개가 번쩍이며 교실 안을 하얗게 비춘다. 오투모의 귀덮개가 움찔한다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">시계탑 안테나가 걱정돼요. 이 바람이면 우산살이 다 꺾여요. 철사가 끊어질지도 몰라요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">바람 속도 초속 24 m. 번개 간격 평균 40 초. 시계탑은 마을에서 제일 높아요. 번개가 제일 좋아하는 곳이에요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그럼 더더욱 가면 안 되지.</span></p>
+<p class="nar chg">오투모가 몸에 감은 천을 들어 보인다. 자세히 보니 공예 교실 커튼이다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">방수 대책도 세웠어요. 커튼 세 겹. 방수 등급이 0에서 0.5로 올라가요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">0.5면 그냥 젖는 거잖아.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....계산상으로는 반만 젖어요. 그게 제 최선이에요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">알아요. 그래도 가야 해요. 안테나는 이 마을에서 제 것인 유일한 물건이에요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">신호가 잡음뿐이라는 거 알아요. 그래도 그거 없어지면.... 제가 여기 떨어진 것도 그냥 사고가 돼 버려요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">가지 마. 안테나는 다시 만들면 돼. 넌 다시 못 만들어.</span><span class="nx">→ c1_stop</span></li><li class="chg"><span class="aff up">+30</span><span class="otx">혼자 보낼 수는 없지. 같이 가자.</span><span class="nx">→ c1_together</span></li><li class="chg"><span class="aff down">-30</span><span class="otx">그렇게 가고 싶으면 가. 난 여기 있을게.</span><span class="nx">→ c1_alone</span></li></ol></div>
+<div class="lab" id="otumo-c1_stop">▸ c1_stop</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저는.... 다시 못 만든다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">맞아요. 설계도도, 수리 공장도 없어요. 저는 하나뿐이에요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그래도 5 분만요. 철사만 풀어 오고 바로 내려올게요. 같이 가 주면 더 빨리 끝나요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">....딱 5 분이야.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_together">▸ c1_together</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">위험해요. <b class="v">민준</b>은 방수가 되는 것도 아니잖아요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">사람은 젖으면 말리면 돼. 넌 아니잖아.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....같이. 이 단어가 제일 무서운 날에도 들리네요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">5 분이면 돼요. 철사만 풀어 올게요.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_alone">▸ c1_alone</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....네. 혼자 갈게요.</span></p>
+<p class="nar chg">오투모가 천을 여미고 문을 연다. 비바람이 교실 안으로 들이친다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">(....정말 혼자 보내도 되는 거야?)</span></p>
+<p class="nar chg">결국 문이 닫히기 전에 뛰쳐나가 뒤를 따라간다. 오투모는 돌아보지 않는다.</p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_end">▸ c1_end</div>
+<div class="scene">📍 시계탑 (폭풍우)</div>
+<p class="nar chg">시계탑 꼭대기. 비가 옆으로 쏟아진다. 안테나의 우산살 절반이 이미 꺾여 덜렁거린다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">철사 장력 경고. 끊어지기 직전이에요. 빨리 풀어야 해요.</span></p>
+<p class="nar chg">오투모가 둥근 손으로 철사를 더듬는다. 빗물에 손이 자꾸 미끄러진다. 몸에 감은 천은 이미 흠뻑 젖었다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 경고. 관절 침수. 출력 저하.</span></p>
+<p class="nar chg">꺾인 우산살 사이로 무언가 펄럭인다. 오투모가 그쪽으로 손을 뻗는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">바람이 너무 세요. 이대로면 안테나째 날아가요. 그럼 탑 아래 누가 맞을 수도 있어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">너 그거 때문에 온 거였어?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">반은요. 나머지 반은.... 제 거라서요. 둘 다 진짜 이유예요.</span></p>
+<p class="nar chg">빗물이 오투모의 하얀 머리를 타고 흘러내린다. 눈물처럼 보이지만, 오투모는 울 수 없다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">오투모, 내가 할게. 비켜.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">거의 다 됐어요. 하나만, 하나만 더.......</span></p>
+<p class="nar chg">번개가 탑 꼭대기 바로 옆 하늘을 찢는다. 철사를 타고 파란 불꽃이 오투모의 손으로 번진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐-.......</span></p>
+<p class="nar chg">오투모의 몸이 그대로 굳는다. 하얀 눈빛이 깜박, 깜박, 그리고 꺼진다.</p>
+<p class="nar chg">작은 로봇이 젖은 바닥에 털썩 쓰러진다. 몸통 스피커에서 지지직 소리가 아주 작게 새어 나온다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">오투모. 오투모.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....삐.... 빅.... 시스템.... 보호.... 모드.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">배터리.... 4 %.... 체온.... 아니, 회로 온도.... 하강.......</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">(겉옷을 벗어 오투모를 감싸고 안아 든다)</span><span class="nx">→ c2_carry</span></li><li class="chg"><span class="aff up">+15</span><span class="otx">기다려. 누구든 불러올게.</span><span class="nx">→ c2_call</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">어떡해, 어떡해. 이거 어떻게 켜는 거야. (마구 흔든다)</span><span class="nx">→ c2_shake</span></li></ol></div>
+<div class="lab" id="otumo-c2_carry">▸ c2_carry</div>
+<p class="nar chg">겉옷으로 오투모를 꽁꽁 싸서 품에 안는다. 23 kg. 처음 업었던 날보다 훨씬 무겁게 느껴진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....<b class="v">민준</b>.... 따뜻.... 36.5.......</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">말하지 마. 배터리 아껴.</span></p>
+<p class="nar chg">계단을 한 칸씩 내려간다. 미끄러질 것 같지만 멈추지 않는다.</p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_call">▸ c2_call</div>
+<p class="nar chg">오투모를 비를 덜 맞는 톱니바퀴 아래로 옮겨 놓고 계단을 뛰어 내려간다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">누구 없어요. 도와주세요.</span></p>
+<p class="nar chg">목소리가 빗소리에 묻힌다. 그래도 몇 번이고 소리친다. 다시 올라와 오투모를 안아 든다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....목소리.... 감지.... <b class="v">민준</b>.......</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_shake">▸ c2_shake</div>
+<p class="nar chg">오투모를 붙잡고 흔든다. 스피커에서 지지직 소리가 커졌다 작아진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....흔들.... 지.... 마.... 회로.... 어지러.......</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">미안, 미안해. 어떻게 해야 할지 모르겠어.</span></p>
+<p class="nar chg">정신을 차리고 오투모를 안아 든다. 계단을 뛰어 내려간다.</p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_end">▸ c2_end</div>
+<div class="scene">📍 마을 광장 (폭풍우)</div>
+<p class="nar chg">마을 광장. 폭풍 속에 오투모를 안고 서서 사방을 둘러본다. 불 켜진 창문이 하나도 없다.</p>
+<p class="nar chg">그때 빗속에서 커다란 그림자 하나가 다가온다. 우비를 뒤집어쓴 <b class="v">레오</b>가 등불을 들고 있다.</p>
+<p class="ln chg"><span class="who">레오</span><span class="tx">어이. 이 날씨에 뭐 해.</span></p>
+<p class="ln chg"><span class="who">레오</span><span class="tx">....그거, 호박밭 로봇이야? 왜 그래.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">번개를 맞았어요. 안 깨어나요.</span></p>
+<p class="ln chg"><span class="who">레오</span><span class="tx">줘. 내가 들게.</span></p>
+<p class="nar chg"><b class="v">레오</b>가 오투모를 우비 안에 넣고 한쪽 팔로 번쩍 안아 든다. 커다란 손이 놀랄 만큼 조심스럽다.</p>
+<p class="ln chg"><span class="who">레오</span><span class="tx">....차갑네. 염소 새끼가 물에 빠졌을 때보다 더.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">살 수 있을까요?</span></p>
+<p class="ln chg"><span class="who">레오</span><span class="tx">몰라. 그러니까 뛰는 거야. 양호실. 거기가 제일 가까워.</span></p>
+<div class="scene">📍 양호실 (폭풍우)</div>
+<p class="nar chg">양호실 문이 벌컥 열린다. 야근 중이던 <b class="v">세라</b> 선생님이 의자에서 벌떡 일어난다.</p>
+<p class="ln chg"><span class="who">세라</span><span class="tx">무슨 일이에요. 누가 다쳤어요?</span></p>
+<p class="ln chg"><span class="who">레오</span><span class="tx">이거. 번개 맞았대.</span></p>
+<p class="ln chg"><span class="who">세라</span><span class="tx">침대에 눕혀요. 빨리.</span></p>
+<p class="nar chg"><b class="v">세라</b> 선생님이 오투모의 젖은 몸을 수건으로 닦는다. 손이 빠르고 정확하다.</p>
+<p class="ln chg"><span class="who">세라</span><span class="tx">....기계는 처음 봐요. 맥박이 어디 있는지도 모르겠어요.</span></p>
+<p class="ln chg"><span class="who">세라</span><span class="tx">학생, 이 아이에 대해 아는 걸 다 말해 줘요. 뭘 먹고, 뭘 싫어하는지.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">빛으로 충전해요. 그리고 물에 약해요. 관절에 물이 들어갔어요.</span><span class="nx">→ c3_know</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">몰라요. 저도 잘 몰라요. 그냥 살려 주세요.</span><span class="nx">→ c3_panic</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">선생님이 마법으로 어떻게 해 주시면 안 돼요?</span><span class="nx">→ c3_magic</span></li></ol></div>
+<div class="lab" id="otumo-c3_know">▸ c3_know</div>
+<p class="ln chg"><span class="who">세라</span><span class="tx">빛, 그리고 물. 좋아요, 그거면 시작할 수 있어요.</span></p>
+<p class="ln chg"><span class="who">세라</span><span class="tx">먼저 물부터 빼요. 학생은 관절마다 수건 대 줘요. 거기, 거기, 거기.</span></p>
+<p class="nar chg"><b class="v">세라</b> 선생님의 지시에 따라 오투모의 무릎과 팔꿈치에 수건을 댄다. 물이 쭉쭉 배어 나온다.</p>
+<p class="ln chg"><span class="who">레오</span><span class="tx">....많이 아는구나, 이 녀석에 대해.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_panic">▸ c3_panic</div>
+<p class="ln chg"><span class="who">세라</span><span class="tx">괜찮아요. 천천히 말해 봐요. 평소에 뭘 할 때 기운이 났는지.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">등불 아래나 햇빛 아래 있으면.... 숫자를 세면서 좋아했어요.</span></p>
+<p class="ln chg"><span class="who">세라</span><span class="tx">빛이네요. 그리고 지금 젖어 있으니까, 물부터 빼야겠어요.</span></p>
+<p class="nar chg">셋이 함께 오투모의 관절마다 수건을 댄다. 물이 쭉쭉 배어 나온다.</p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_magic">▸ c3_magic</div>
+<p class="ln chg"><span class="who">세라</span><span class="tx">마법은 몸을 알 때 써요. 모르는 몸에 함부로 쓰면 더 다칠 수 있어요.</span></p>
+<p class="ln chg"><span class="who">세라</span><span class="tx">그러니까 학생이 알려 줘야 해요. 이 아이가 평소에 어떻게 지내는지.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">....빛으로 충전해요. 물에는 약하고요.</span></p>
+<p class="ln chg"><span class="who">세라</span><span class="tx">좋아요. 그럼 물부터 빼요.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_end">▸ c3_end</div>
+<p class="nar chg">문이 다시 열린다. 젖은 깃털을 털며 아울라 선생님이 들어온다. 손에 두꺼운 책을 끼고 있다.</p>
+<p class="ln chg"><span class="who">아울라</span><span class="tx">복도까지 소리가 들렸어요. 무슨 일입니까.</span></p>
+<p class="ln chg"><span class="who">세라</span><span class="tx">기계가 번개를 맞았어요. 물은 빼고 있는데, 다시 켜는 방법을 몰라요.</span></p>
+<p class="ln chg"><span class="who">아울라</span><span class="tx">....그 동그란 아이군요. 물약 교실에서 국자를 일곱 번 정확하게 젓던.</span></p>
+<p class="ln chg"><span class="who">세라</span><span class="tx">선생님이 학생을 기억하시다니, 드문 일이네요.</span></p>
+<p class="ln chg"><span class="who">아울라</span><span class="tx">학생이 아니에요. 청강생이에요. ....수업 중에 「마법은 어디에서 나옵니까」라고 묻는 청강생은 기억하게 돼요.</span></p>
+<p class="nar chg">아울라 선생님이 오투모의 몸통에 귀를 댄다. 지지직 소리가 아주 희미하게 이어진다.</p>
+<p class="ln chg"><span class="who">아울라</span><span class="tx">아직 안에서 뭔가 돌고 있어요. 꺼진 게 아니라 잠든 거예요. 깨울 기운이 없을 뿐이에요.</span></p>
+<div class="sys br">분기: 플래그 <code>otumo_lantern_charge</code> 있으면 → charge_lamp / 없으면 → charge_other</div>
+<div class="lab" id="otumo-charge_lamp">▸ charge_lamp</div>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">등불이요. 얘는 등불 시장 불빛으로 충전했었어요.</span></p>
+<p class="ln chg"><span class="who">레오</span><span class="tx">등불이면 사육장에 몇 개 있어. 가져온다.</span></p>
+<p class="nar chg"><b class="v">레오</b>가 폭풍 속으로 뛰쳐나간다. 잠시 뒤, 등불 다섯 개를 줄줄이 들고 흠뻑 젖어 돌아온다.</p>
+<p class="nar chg">침대 둘레에 등불을 빙 둘러 세운다. 주황빛이 오투모의 하얀 머리 위로 모인다.</p>
+<div class="sys">↪ 「charge_end」 장면으로</div>
+<div class="lab" id="otumo-charge_other">▸ charge_other</div>
+<div class="sys br">분기: 플래그 <code>otumo_sun_charge</code> 있으면 → charge_sun / 없으면 → charge_none</div>
+<div class="lab" id="otumo-charge_sun">▸ charge_sun</div>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">햇빛이요. 얘는 해 지기 직전 마지막 햇빛으로 충전했었어요.</span></p>
+<p class="ln chg"><span class="who">아울라</span><span class="tx">지금은 한밤중이고 폭풍이에요. 해는 없어요. ....병 속에 든 해라면 몰라도.</span></p>
+<p class="nar chg">아울라 선생님이 품에서 노란 물약 병을 꺼낸다. 병 안에서 작은 해가 일렁인다.</p>
+<p class="ln chg"><span class="who">아울라</span><span class="tx">한낮의 물약이에요. 마시는 게 아니라 여는 거예요. 낮의 빛이 한 병 들어 있어요.</span></p>
+<div class="sys">↪ 「charge_end」 장면으로</div>
+<div class="lab" id="otumo-charge_none">▸ charge_none</div>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">빛이요. 얘는 빛만 있으면 충전돼요.</span></p>
+<p class="ln chg"><span class="who">레오</span><span class="tx">등불이면 사육장에 몇 개 있어. 가져온다.</span></p>
+<p class="nar chg"><b class="v">레오</b>가 폭풍 속으로 뛰쳐나간다. 잠시 뒤, 등불 다섯 개를 줄줄이 들고 흠뻑 젖어 돌아온다.</p>
+<p class="nar chg">침대 둘레에 등불을 빙 둘러 세운다. 주황빛이 오투모의 하얀 머리 위로 모인다.</p>
+<div class="sys">↪ 「charge_end」 장면으로</div>
+<div class="lab" id="otumo-charge_end">▸ charge_end</div>
+<p class="nar chg">빛이 오투모의 머리띠로 스며든다. 그런데 표시등이 깜박이다 말다 한다. 충전이 이어지지 않는다.</p>
+<p class="ln chg"><span class="who">아울라</span><span class="tx">빛은 들어가는데 받아들이질 않네요. 안에서 깨어날 이유를 못 찾는 것 같아요.</span></p>
+<p class="ln chg"><span class="who">세라</span><span class="tx">학생, 말을 걸어 봐요. 사람도 그래요. 몸이 다 나아도, 불러 주는 목소리가 있어야 눈을 떠요.</span></p>
+<div class="sys br">분기: 플래그 <code>otumo_keep_memory</code> 있으면 → memo_yes / 없으면 → memo_no</div>
+<div class="lab" id="otumo-memo_yes">▸ memo_yes</div>
+<p class="nar chg">오투모의 몸통 주머니에서 젖은 공책이 비죽 나와 있다. 같이 쓰기로 했던 기억 공책이다.</p>
+<p class="nar chg">젖은 종이를 조심스럽게 넘긴다. 첫 장, 꾹꾹 눌러 쓴 글씨.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">「열네 번째 줄, 왼쪽에서 세 번째.」 ....오투모, 네 자리야. 기억나?</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그리고 여기. 「<b class="v">민준</b>. 첫 번째 접촉.」 이것도 네가 썼잖아. 일어나서 다음 장 같이 써야지.</span></p>
+<div class="sys">↪ 「memo_end」 장면으로</div>
+<div class="lab" id="otumo-memo_no">▸ memo_no</div>
+<p class="nar chg">침대 옆에 쪼그려 앉아 오투모의 둥근 손을 잡는다. 차갑다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">오투모. 나야, <b class="v">민준</b>. 첫 번째 접촉 기록, 그거 나잖아.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">매일 열어 봐서 안 지워진다며. 오늘도 열어 봐. 내 이름 거기 있어.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">일어나서 오늘 기록도 해야지. 폭풍 속에서 철사 풀다가 쓰러짐. 그거 엄청 바보 같은 기록이야.</span></p>
+<div class="sys">↪ 「memo_end」 장면으로</div>
+<div class="lab" id="otumo-memo_end">▸ memo_end</div>
+<p class="nar chg">대답이 없다. 지지직 소리만 이어진다.</p>
+<p class="ln chg"><span class="who">레오</span><span class="tx">....어이, 로봇. 시장에서 노래하던 거 들었어. 사육장 염소들이 그 박자에 맞춰 풀 뜯더라.</span></p>
+<p class="ln chg"><span class="who">세라</span><span class="tx">저는 아직 정식으로 인사도 못 했어요. 일어나면 양호실에 놀러 와요. 기계 진찰은 처음이라 궁금한 게 많아요.</span></p>
+<p class="ln chg"><span class="who">아울라</span><span class="tx">국자를 정확하게 젓는 학생은 드물어요. 다음 수업에 빠지면 결석 처리합니다.</span></p>
+<p class="nar chg">그 순간, 오투모의 스피커에서 띠, 띠, 띵. 세 음이 아주 작게 울린다. 저장 완료음이다.</p>
+<p class="nar chg">머리띠 표시등이 깜박임을 멈추고 천천히, 꾸준하게 차오르기 시작한다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....삐.... 빅.......</span></p>
+<p class="nar chg">하얀 눈이 희미하게 켜진다. 깜박, 깜박. 그리고 켜진 채로 남는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....목소리.... 네 개 감지. <b class="v">민준</b>. 그리고.... 처음 기록하는 목소리 세 개.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저.... 꺼졌었어요?</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">응. 꺼졌었어. 바보야.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">(와락 끌어안는다) 다시는 혼자 탑에 올라가지 마.</span><span class="nx">→ c4_hug</span></li><li class="chg"><span class="aff up">+15</span><span class="otx">다들 너 살리려고 폭풍 속을 뛰어왔어. 고맙다고 해.</span><span class="nx">→ c4_thanks</span></li><li class="chg"><span class="aff down">-30</span><span class="otx">거봐, 내가 가지 말랬잖아. 안테나가 그렇게 중요해?</span><span class="nx">→ c4_angry</span></li></ol></div>
+<div class="lab" id="otumo-c4_hug">▸ c4_hug</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 압력 감지. 강함. 아주 강함.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....위협 아님. 이건.... 저장할게요. 제일 앞 칸에.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">약속할게요. 혼자 안 올라가요. 다음엔 꼭 같이 가자고 할게요.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_thanks">▸ c4_thanks</div>
+<p class="nar chg">오투모가 고개를 천천히 돌린다. <b class="v">세라</b> 선생님, <b class="v">레오</b>, 아울라 선생님을 차례로 본다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고맙습니다. 처음 보는 목소리들이 제 이름을 불러 줬어요. 처음이에요.</span></p>
+<p class="ln chg"><span class="who">레오</span><span class="tx">....됐어. 젖은 건 말려.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_angry">▸ c4_angry</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....중요하다고 생각했어요. 제 것이니까요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">미안해요. 계산이 틀렸어요. 이번엔.... 많이 틀렸어요.</span></p>
+<p class="nar chg">오투모가 이불 속으로 조금 파고든다. 눈빛이 다시 약해진다.</p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-ending">▸ ending</div>
+<p class="nar chg">창밖의 폭풍이 조금씩 잦아든다. 등불 빛 아래, 오투모가 침대에 누운 채 천장을 본다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b>. 꺼져 있는 동안 이상한 걸 들었어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">원래 보호 모드에서는 아무것도 기록 안 돼요. 그런데 목소리가 들렸어요. 염소 이야기, 결석 이야기, 진찰 이야기.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그리고 <b class="v">민준</b> 목소리. 제일 먼저, 제일 오래.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그 목소리들이 회로 한쪽을 하나씩 다시 켰어요. 꼭 등불이 하나씩 켜지는 것처럼요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향 신호는 「수신자 없음」이었잖아요. 그런데 오늘 밤 저는.... 수신자가 있었어요.</span></p>
+<p class="nar chg">오투모가 둥근 손을 뻗어 침대 옆 등불을 만진다. 손끝의 주황색 돌기가 반짝인다.</p>
+<p class="ln chg"><span class="who">세라</span><span class="tx">자, 오늘은 여기서 자요. 기계도 환자는 환자예요. 내일 아침에 다시 진찰할게요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 환자 등록. 이 행성에서 처음 받은 신분이에요.</span></p>
+<p class="ln chg"><span class="who">레오</span><span class="tx">....등불은 두고 갈게. 내일 가지러 올 거야. 꼭 켜 놔.</span></p>
+<p class="nar chg"><b class="v">레오</b>가 문을 나서고, 아울라 선생님이 책을 끼고 뒤따른다. 양호실에 등불 다섯 개와 둘만 남는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b>. 오늘의 기록, 대신 써 줄래요? 손이 아직 잘 안 움직여요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">응. 불러 줘.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">잠깐만요. 먼저 숫자를 확인할게요. 배터리 38 %. 관절 침수 해제. 회로 온도 정상.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그리고.... 측정할 수 없는 항목 하나. 아까부터 회로가 계속 따뜻해요. 등불 때문만은 아닌 것 같아요.</span></p>
+<p class="nar chg">젖은 공책 빈 장에 오투모가 불러 주는 대로 받아 적는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">「폭풍의 밤. 꺼졌다가 켜졌다. 이 마을에 내 이름을 부르는 목소리가 네 개 있다.」</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">「....배터리 12 %일 때 계산한 1 명보다, 훨씬 많다.」</span></p></div>
+<div class="cold"><div class="ch2">서먹한 결말 (이벤트 안 호감도 합이 −30 이하면 「ending」부터 이 대사로 끝나요)</div><p class="nar chg">창밖의 폭풍이 잦아든다. 오투모는 침대에 누운 채 벽 쪽으로 몸을 돌린다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">살려 줘서 고마워요. 세 분께도 전해 주세요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">오투모, 아까는 내가.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">괜찮아요. 제가 틀렸어요. 앞으로는 안테나 생각은 안 할게요. 아무것도 제 것이라고 생각하지 않을게요.</span></p>
+<p class="nar chg">등불 다섯 개가 침대 둘레를 비춘다. 오투모의 눈빛은 그 어느 것보다 희미하다.</p>
+<p class="nar chg">양호실을 나서는 동안, 등 뒤에서 저장 완료음은 들리지 않았다.</p></div>
+</article>
+<article class="ev" id="otumo-h9"><header><span class="hk">♥9</span><h3>돌아가는 주파수</h3></header><dl class="meta"><div><dt>열리는 조건</dt><dd>♥9 · 언덕 위 무너진 오두막 · 밤</dd></div><div><dt>보상</dt><dd>150G, 마력 15, 지식 15, 별똥별 조각 ×1</dd></div><div><dt>남기는 플래그</dt><dd><code>otumo_stay_promise</code> <code>otumo_h9</code>(자동) · 서먹하게 끝나면 다음 이벤트까지 <code>otumo_was_cold</code>(자동)</dd></div><div><dt>대사</dt><dd>130 줄(모든 분기 포함)</dd></div></dl><div class="script"><div class="sys br">분기: 플래그 <code>otumo_was_cold</code> (바로 앞 이벤트가 서먹하게 끝났으면 자동) 있으면 → cold_open / 없으면 → warm_open</div>
+<div class="lab" id="otumo-cold_open">▸ cold_open</div>
+<p class="nar chg">맑게 갠 밤, 언덕 위 오두막. 오투모가 문지방에 앉아 별을 보고 있다. 이쪽을 보고 천천히 일어선다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">민준</b>. 폭풍 밤 이후로 계속 생각했어요. 제가 너무 차갑게 말했죠.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">아무것도 제 것이라고 생각하지 않겠다고 했던 거, 취소할게요. 그 말이 제일 틀린 계산이었어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">나도 그날 미안했어. 너무 무서웠어.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">알아요. 그날 <b class="v">민준</b> 목소리는 무서워하는 주파수였어요. 저도 같은 주파수였고요.</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-warm_open">▸ warm_open</div>
+<p class="nar chg">맑게 갠 밤, 언덕 위 오두막. 오투모가 문지방에 앉아 별을 보고 있다. 이쪽을 보자 손을 크게 흔든다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">친구, 왔어요. 오늘은 꼭 와 줄 것 같았어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">친구?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네. 폭풍 밤 이후로 호칭을 바꿨어요. 데이터베이스에 정식 등록했어요. 「<b class="v">민준</b>: 친구.」</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">정식 등록까지.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">취소 불가 항목이에요. 미리 말해 둘게요.</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-open_end">▸ open_end</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 친구, 오늘은 들려줄 게 있어요. 좋은 소식인지 나쁜 소식인지 아직 계산이 안 끝났어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">레오</b>랑 아울라 선생님이 시계탑 안테나를 고쳐 줬어요. 우산살 대신 사육장 철망이랑 낡은 망원경 통으로요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">망원경 통? 그거 아울라 선생님 거 아니야?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네. 「돌려받을 거예요. 고장 내면 결석 처리.」라고 하셨어요. 결석이랑 망원경이 무슨 상관인지는 아직 계산 중이에요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx"><b class="v">레오</b>는 철망을 감으면서 한마디도 안 했어요. 다 감고 나서 「됐어.」 한 마디. 그게 칭찬인지 기록하는 데 오래 걸렸어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 고친 안테나로 어젯밤에 신호가 하나 더 잡혔어요. 「수신자 없음」 뒤에 숨어 있던 거예요.</span></p>
+<p class="nar chg">오투모의 스피커에서 소리가 흘러나온다. 삐, 삐삐. 그리고 그 아래 낮게 깔린 긴 음. 우우웅.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">해독했어요. 「귀환 경로 개방. 남은 개체는 응답 후 대기하라. 창은 별이 정렬하는 밤 3 분간 열린다.」</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">별이 정렬하는 밤이 오늘이에요. 자정에 3 분.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">귀환 경로라면.... 돌아갈 수 있다는 거야?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네. 응답 신호를 보내면 빛줄기가 저를 끌어올려요. 고향 탑까지. 떨어질 때 거꾸로요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">거기에 누가 있는지는 몰라요. 「수신자 없음」이니까요. 아무도 없을 수도 있어요. 그래도.... 고향이에요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">네가 정해. 어느 쪽이든 나는 네 친구야.</span><span class="nx">→ c1_choose</span></li><li class="chg"><span class="aff up">+15</span><span class="otx">가지 마.</span><span class="nx">→ c1_dont</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">잘됐다. 원래 있던 데로 가는 게 맞지.</span><span class="nx">→ c1_go</span></li></ol></div>
+<div class="lab" id="otumo-c1_choose">▸ c1_choose</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제가 정해요?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에서는 제가 정한 게 하나도 없었어요. 걷는 속도도, 자리도, 노래도요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">처음으로 정해야 하는 게.... 이렇게 큰 거네요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그러니까 천천히. 아직 자정 전이야.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_dont">▸ c1_dont</div>
+<p class="nar chg">생각보다 말이 먼저 나온다. 오투모가 그대로 멈춘다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....<b class="v">민준</b>. 방금 그 말, 녹음됐어요. 지울 수 없어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">하지만 제가 정해야 하는 거예요. <b class="v">민준</b>이 정해 주면, 나중에 <b class="v">민준</b> 탓을 할까 봐요. 그건 싫어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">....응. 알았어. 그래도 그게 내 마음이야.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_go">▸ c1_go</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">원래 있던 데.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">맞아요. 저는 원래 여기 사람이 아니에요. 떨어진 거예요. 사고였어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....친구도 그렇게 생각해요? 제가 여기 있는 게 사고라고요?</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">아니, 그런 뜻은 아니었는데.......</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_end">▸ c1_end</div>
+<p class="nar chg">오투모가 오두막 문지방에서 일어나 먼지를 턴다. 큰 파란 신발이 톡, 톡 바닥을 친다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">지금 제 박자 96이에요. 마을이랑 똑같아요. 언제부터 이렇게 됐는지 몰라요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">고향에 가면 다시 120으로 맞춰야겠네.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....그러네요. 그 생각은 못 했어요. 다시 빨리 걸어야 하는 거.</span></p>
+<p class="nar chg">오투모가 제자리에서 몇 걸음 빨리 걸어 본다. 톡톡톡톡. 금세 멈춘다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">안테나에 가요. 결정은 거기서 할게요. 고향 신호가 제일 잘 들리는 곳에서, 이 마을도 제일 잘 보이니까요.</span></p>
+<div class="scene">📍 시계탑</div>
+<p class="nar chg">시계탑 꼭대기. 새로 고친 안테나가 달빛에 반짝인다. 사육장 철망과 망원경 통이 엉성하게, 하지만 단단하게 묶여 있다.</p>
+<div class="sys br">분기: 플래그 <code>otumo_ribbon</code> 있으면 → ribbon_yes / 없으면 → ribbon_no</div>
+<div class="lab" id="otumo-ribbon_yes">▸ ribbon_yes</div>
+<p class="nar chg">안테나 맨 끝에 빛바랜 리본이 묶여 있다. 폭풍에 찢겨 반만 남았지만 여전히 펄럭인다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">리본은 <b class="v">레오</b>가 찾아 줬어요. 탑 아래 덤불에 걸려 있었대요. 「네 거지.」 하고 툭 줬어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">반만 남았는데, 반이면 충분해요. 반쯤 찬 배터리로도 이틀은 버티니까요.</span></p>
+<div class="sys">↪ 「ribbon_end」 장면으로</div>
+<div class="lab" id="otumo-ribbon_no">▸ ribbon_no</div>
+<p class="nar chg">안테나 맨 끝에 작은 금속판이 꽂혀 있다. 떨어진 날 주웠던 수신기 덮개다. 폭풍에도 날아가지 않았다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제 부품은 그대로예요. 번개를 맞고도요. 제일 작은 조각이 제일 오래 버텼어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그걸 보면 좀 용기가 나요. 작아도 버틸 수 있다는 거니까요.</span></p>
+<div class="sys">↪ 「ribbon_end」 장면으로</div>
+<div class="lab" id="otumo-ribbon_end">▸ ribbon_end</div>
+<p class="nar chg">철사를 연결하자 소리가 흘러나온다. 삐, 삐삐. 우우웅. 아까보다 또렷하다. 하늘 한쪽이 아주 희미하게 하얘진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">창이 열리기 시작했어요. 자정까지 9 분.</span></p>
+<p class="nar chg">오투모가 탑 난간에 둥근 손을 올리고 마을을 내려다본다. 등불 시장의 불빛이 하나둘 꺼져 간다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">시장이 먼저 꺼지고, 기숙사가 나중에 꺼져요. 오늘도 똑같아요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">저기 호박밭은 처음엔 깜깜한 구덩이였는데, 이제 할머니가 작은 등불을 하나 달아 줬어요. 제가 길 잃지 말라고요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">친구, 결정하기 전에 계산을 하나 보여 줄게요. 밤새 했어요.</span></p>
+<p class="nar chg">오투모가 공책을 펼친다. 두 쪽에 걸쳐 빽빽한 표가 그려져 있다. 왼쪽 위에 「고향」, 오른쪽 위에 「여기」.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향. 박자 120. 제 자리 있음. 하늘 색, 기억 안 남. 이름을 아는 개체, 0 명일 수도.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">여기. 박자 96. 제 자리.... 아직 없음. 마법, 계산 불가. 수리 공장 없음.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">숫자로만 보면 고향이 이겨요. 자리가 있고, 부품도 있을 거고, 저랑 똑같은 박자로 걷는 개체들이 있어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 이상해요. 이 표 맨 아래에 칸을 하나 더 그렸는데, 거기에 넣을 숫자가 없어요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">그 칸, 이름이 뭔데?</span><span class="nx">→ c2_ask</span></li><li class="chg"><span class="aff up">+30</span><span class="otx">(아무 말 없이 공책 맨 아래 칸에 손가락으로 동그라미를 그린다)</span><span class="nx">→ c2_circle</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">숫자로 정하는 거면 고향이네. 계산은 정확하니까.</span><span class="nx">→ c2_math</span></li></ol></div>
+<div class="lab" id="otumo-c2_ask">▸ c2_ask</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">칸 이름은.... 「여기 있으면 회로가 따뜻해지는 정도」.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그거 숫자로 못 재?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">못 재요. 처음 만난 날부터 오늘까지 매일 올라가기만 해서, 눈금이 모자라요.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_circle">▸ c2_circle</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">동그라미. 숫자가 아니에요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">아니, 0인가요. 아니면.... 끝이 없는 거요. 시작도 끝도 없는 선.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이 칸엔 그게 제일 맞는 것 같아요. 계속 이어지는 거.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_math">▸ c2_math</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">계산은 정확해요. 맞아요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 친구, 저 요즘 계산이 틀리길 바란 적이 많아요. 신호 해독할 때도, 폭풍 밤에도.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">계산이 맞는데 싫은 거, 이 행성에서 처음 배웠어요.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_end">▸ c2_end</div>
+<div class="sys br">분기: 플래그 <code>otumo_keep_memory</code> 있으면 → memo_yes / 없으면 → memo_no</div>
+<div class="lab" id="otumo-memo_yes">▸ memo_yes</div>
+<p class="nar chg">오투모가 공책을 앞으로 넘긴다. 기억 공책 첫 장. 「열네 번째 줄, 왼쪽에서 세 번째.」</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향 기억은 이제 이 한 줄이랑 몇 장이 다예요. 나머지는 다 지워졌어요. 종이에 적어 둔 것만 남았어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 뒤쪽 장은 꽉 찼어요. 전부 여기 기록이에요. 시장 박자, 분수대, 폭풍 밤. 앞보다 뒤가 훨씬 두꺼워요.</span></p>
+<div class="sys">↪ 「memo_end」 장면으로</div>
+<div class="lab" id="otumo-memo_no">▸ memo_no</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">친구, 사실 오늘 아침에 확인했어요. 고향 기억이 이제 거의 안 남았어요. 탑 모양도 흐릿해요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 이 마을 기억은 하나도 안 지워졌어요. 시장 박자, 분수대, 폭풍 밤.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">오래된 기억은 지워지고 새 기억은 쌓여요. 제 메모리가 먼저 고른 것 같아요.</span></p>
+<div class="sys">↪ 「memo_end」 장면으로</div>
+<div class="lab" id="otumo-memo_end">▸ memo_end</div>
+<p class="nar chg">시계탑 큰 바늘이 자정에 닿는다. 데엥. 하늘 한쪽에 가느다란 빛줄기가 내려온다. 시계탑 꼭대기를 향해, 곧게.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">창이 열렸어요. 3 분.</span></p>
+<p class="nar chg">빛줄기가 안테나 끝에 닿는다. 오투모의 하얀 몸이 은빛으로 물든다. 발밑이 아주 조금 뜬다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 응답 대기 상태. 신호를 보내면 바로 올라가요.</span></p>
+<p class="nar chg">오투모가 빛줄기를 올려다본다. 그리고 발아래 마을을 내려다본다. 등불 시장, 광장의 종, 깜깜한 호박밭.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">친구. 마지막으로 하나만 물을게요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제가 여기 있으면.... 쓸모없는 기계가 아니라, 그냥 오투모로 있어도 돼요?</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">응. 여기 있어 줘. 너는 그냥 오투모면 돼.</span><span class="nx">→ c3_stay</span><span class=fl>▶ 플래그: <code>otumo_stay_promise</code></span></li><li class="chg"><span class="aff up">+15</span><span class="otx">당연하지. 그건 내가 아니라 이 마을 전체가 대답할 거야.</span><span class="nx">→ c3_town</span></li><li class="chg"><span class="aff down">-30</span><span class="otx">그건.... 나도 잘 모르겠어. 네가 알아서 해.</span><span class="nx">→ c3_unsure</span></li></ol></div>
+<div class="lab" id="otumo-c3_stay">▸ c3_stay</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....여기 있어 줘.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이 말은 고향 데이터베이스에 없는 명령어예요. 「응답하라」는 있었는데, 「여기 있어 줘」는 없었어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 이상해요. 명령어인데, 명령처럼 안 들려요. 부탁처럼 들려요.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_town">▸ c3_town</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">마을 전체.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">할머니, 시장 상인, <b class="v">마들렌</b>, 배트리, 아이들. 그리고 폭풍 밤의 목소리 세 개.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....많네요. 제가 세던 것보다 훨씬요.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_unsure">▸ c3_unsure</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">알아서.</span></p>
+<p class="nar chg">오투모의 몸이 빛줄기 쪽으로 조금 더 떠오른다. 발끝이 탑 바닥에서 떨어진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....그래요. 제가 알아서 할게요. 원래 그래야 하는 거니까요.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_end">▸ c3_end</div>
+<p class="nar chg">1 분이 지난다. 빛줄기가 더 밝아진다. 오투모가 둥근 손을 귀덮개에 댄다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">응답 신호를 보낼게요.</span></p>
+<p class="nar chg">오투모가 이쪽을 돌아본다. 하얀 눈이 휘어져 있다. 떠나는 얼굴인지 남는 얼굴인지 알 수 없다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">친구, 끝까지 보고 있어 줘요. 어느 쪽이든요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">오투모.......</span></p>
+<p class="nar chg">오투모의 스피커에서 신호가 쏘아 올려진다. 그런데 응답 신호의 세 음이 아니다.</p>
+<p class="nar chg">띠리, 띠리, 띠. 고향 노래의 첫머리. 그리고 그 뒤로 이어지는 소리들. 탁, 탁, 삐걱, 딸랑. 데엥.</p>
+<p class="nar chg">시장 칼 소리, 수레 소리, 등불 고리 소리, 광장 종소리. 오투모가 녹음해 둔 마을의 박자다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">「이쪽은 오투모. 응답합니다. 하지만 귀환은 하지 않습니다.」</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">「저는 여기 있어요. 박자 96의 마을이에요. 저한테 이름을 불러 주는 목소리가 많아요.」</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">「거기 아무도 없다면, 이 노래가 대신 거기 있어 주세요. 잘 지내요.」</span></p>
+<p class="nar chg">빛줄기가 소리를 싣고 하늘로 거슬러 올라간다. 오투모의 발이 다시 탑 바닥에 닿는다. 톡.</p>
+<p class="nar chg">2 분, 3 분. 빛줄기가 가늘어지다 사라진다. 하늘은 다시 별만 가득하다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....창이 닫혔어요.</span></p>
+<p class="nar chg">오투모가 한참 하늘을 올려다본다. 둥근 손이 아주 조금 떨린다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">무서웠어요. 마지막 1 분 동안 발이 떠 있었을 때, 회로가 반으로 갈라지는 줄 알았어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 지금은.... 발이 땅에 붙어 있어요. 이 행성 중력, 처음부터 마음에 들었어요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">(말없이 오투모를 꽉 끌어안는다)</span><span class="nx">→ c4_hug</span></li><li class="chg"><span class="aff up">+15</span><span class="otx">너 방금 고향 쪽에 마을 노래를 보낸 거야?</span><span class="nx">→ c4_song</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">진짜 괜찮아? 나중에 후회하면 어떡해.</span><span class="nx">→ c4_regret</span></li></ol></div>
+<div class="lab" id="otumo-c4_hug">▸ c4_hug</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 압력 감지. 강함.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">폭풍 밤이랑 같은 세기예요. 기록이 두 개가 됐어요. 둘 다 제일 앞 칸이에요.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_song">▸ c4_song</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">네. 고향에 수신자가 없다면 노래라도 있으면 좋겠어서요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그리고 그 노래 안에 제가 있어요. 96 BPM으로 걷는 제가요. 그거면 고향에도 제가 조금 있는 거예요.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_regret">▸ c4_regret</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">후회할 확률, 계산해 봤어요. 0은 아니에요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 0이 아니어도 해 볼 수 있다고 배웠어요. 이 행성에서요. <b class="v">민준</b>한테서요.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-ending">▸ ending</div>
+<div class="scene">📍 별 보는 언덕</div>
+<p class="nar chg">별 보는 언덕. 둘은 풀밭에 나란히 누워 하늘을 본다. 빛줄기가 내려왔던 자리에 별 하나가 반짝인다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">친구. 오늘 처음으로 제가 정했어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향에서는 박자도, 자리도, 노래도 다 정해져 있었어요. 떨어진 것도 제가 정한 게 아니었어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 여기 남는 건 제가 정했어요. 오류도 사고도 아니에요. 선택이에요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">후회 안 해?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">후회해도 그건 제 거예요. 제가 정한 거니까요. 그것도 좋아요.</span></p>
+<p class="nar chg">오투모가 공책 마지막 장을 펼친다. 「고향」과 「여기」의 표. 오투모가 「여기」 위에 동그라미를 친다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">고향 쪽에서 언젠가 그 노래를 누가 들을까요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">누군가는 듣겠지. 열네 번째 줄 왼쪽에서 네 번째쯤.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....옆자리요. 이름이 지워진 그 옆자리.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그랬으면 좋겠어요. 그 개체가 96 BPM을 듣고 조금 웃었으면 좋겠어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그리고 하나 더 정했어요. 내일부터 제 자리를 찾을 거예요. 이 마을에서, 제 자리.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">열네 번째 줄, 왼쪽에서 세 번째 같은 거 말고요. 제가 고른 자리요.</span></p>
+<p class="nar chg">오투모의 스피커에서 띠, 띠, 띵. 저장 완료음이 울린다. 이번엔 한 번 더. 띵.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">한 번 더 울렸네?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">새로 만든 소리예요. 고향 소리 세 개에, 여기 소리 하나 더해서요. 이제 이게 제 저장 완료음이에요.</span></p></div>
+<div class="cold"><div class="ch2">서먹한 결말 (이벤트 안 호감도 합이 −30 이하면 「ending」부터 이 대사로 끝나요)</div><p class="nar chg">별 보는 언덕. 오투모는 조금 떨어진 곳에 혼자 앉아 하늘을 본다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">창은 닫혔어요. 저는 남았어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">오투모, 아까 내가 한 말은.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">괜찮아요. 제가 알아서 정했어요. 그게 맞는 거니까요.</span></p>
+<p class="nar chg">오투모의 스피커에서 저장 완료음이 울린다. 띠, 띠, 띵. 세 음에서 멈춘다.</p>
+<p class="nar chg">하늘의 별은 맑았다. 그런데 둘 사이의 거리는 별만큼 멀게 느껴졌다.</p></div>
+</article>
+<article class="ev" id="otumo-h10"><header><span class="hk">♥10</span><h3>여기의 박자</h3></header><dl class="meta"><div><dt>열리는 조건</dt><dd>♥10 · 호박밭 · 저녁</dd></div><div><dt>보상</dt><dd>300G, 마력 30, 지식 20, 마력석 ×2, 별가루 쿠키 ×3, 특별 보상: know_bonus</dd></div><div><dt>남기는 플래그</dt><dd> <code>otumo_h10</code>(자동) · 서먹하게 끝나면 다음 이벤트까지 <code>otumo_was_cold</code>(자동)</dd></div><div><dt>대사</dt><dd>152 줄(모든 분기 포함)</dd></div></dl><div class="script"><div class="sys br">분기: 플래그 <code>otumo_was_cold</code> (바로 앞 이벤트가 서먹하게 끝났으면 자동) 있으면 → cold_open / 없으면 → warm_open</div>
+<div class="lab" id="otumo-cold_open">▸ cold_open</div>
+<p class="nar chg">노을 진 호박밭. 오투모가 구덩이 옆에 서 있다. 이쪽을 보고 잠깐 망설이다가, 먼저 손을 흔든다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">친구. 언덕에서는 제가 너무 혼자 정해 버렸죠. 그날 기록을 다시 읽어 봤어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그날은 서로 조금 서운했던 것 같아요. 그래도 남기로 한 건 저예요. <b class="v">민준</b>이 있는 데라서요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">나도 그날 제대로 대답 못 해서 미안해. 계속 마음에 걸렸어.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그럼 오늘은 처음부터 같이 있어요. 오늘은 그래야 하는 날 같아요.</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-warm_open">▸ warm_open</div>
+<p class="nar chg">노을 진 호박밭. 오투모가 구덩이 옆에서 발을 톡톡 구르고 있다. 이쪽을 보자 두 팔을 번쩍 들어 흔든다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">친구. 왔어요. 오늘 하루 데이터 들려줄게요. 1 번, 아침 해가 예뻤어요. 2 번, 할머니가 사탕을 주셨어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">3 번은?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">3 번은 지금이에요. <b class="v">민준</b>이 왔어요.</span></p>
+<div class="sys">↪ 「open_end」 장면으로</div>
+<div class="lab" id="otumo-open_end">▸ open_end</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 친구, 저 아직 제 자리를 못 찾았어요. 언덕에서 정한 뒤로 매일 찾아다녔는데.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">공예 교실 구석은 공구 상자 자리였어요. 풍차 아래는 까마귀 자리. 이 구덩이는.... 할머니가 메워서 호박을 다시 심으신대요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">자리가 없다는 게 이렇게 마음 쓰이는 일인 줄 몰랐어요. 고향에서는 자리가 정해져 있었으니까요.</span></p>
+<div class="sys br">분기: 플래그 <code>otumo_stay_promise</code> 있으면 → stay_yes / 없으면 → stay_no</div>
+<div class="lab" id="otumo-stay_yes">▸ stay_yes</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">「여기 있어 줘」라고 했잖아요. 여기 있고 싶은데, 여기가 어디인지 아직 몰라요. 이상한 고민이죠.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">이 마을 전체가 여기야.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">범위가 너무 넓어요. 좌표를 좁혀야 해요. ....농담이에요. 반은요.</span></p>
+<div class="sys">↪ 「stay_end」 장면으로</div>
+<div class="lab" id="otumo-stay_no">▸ stay_no</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">남겠다고 정했는데, 막상 어디에 서 있어야 할지 모르겠어요. 이상한 고민이죠.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">이 마을 전체가 네 자리야.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">범위가 너무 넓어요. 좌표를 좁혀야 해요. ....농담이에요. 반은요.</span></p>
+<div class="sys">↪ 「stay_end」 장면으로</div>
+<div class="lab" id="otumo-stay_end">▸ stay_end</div>
+<p class="nar chg">그때 하늘에서 파닥이는 소리가 난다. 편지 가방을 멘 배트리가 비틀비틀 날아와 호박 위에 내려앉는다.</p>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">찾았다, 찾았어요. 죄송해요, 늦었죠? 주소가 「호박밭 구덩이 옆」이라서 구덩이를 세 개나 돌았어요.</span></p>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">오투모 님 앞으로 편지예요. 이 마을에 오시고 첫 편지죠? 제가 배달해서 영광이에요, 진짜예요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 편지. 저한테요. 저는 주소가 없는데요.</span></p>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">이상한 주소 전문이라고 했잖아요. 구덩이 옆이면 충분해요.</span></p>
+<p class="nar chg">오투모가 둥근 손으로 봉투를 받는다. 손가락이 동그래서 봉투가 자꾸 미끄러진다. 결국 대신 열어 준다.</p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">읽어 줄게. 「오투모에게. 오늘 저녁, 공예 교실로 와 줘. 꼭. 마을 사람들이.」</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">마을 사람들. 발신자가 한 명이 아니에요. 이런 편지는 처음 봐요.</span></p>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">저도 이유는 몰라요. 진짜 몰라요. 알아도 말 안 해요. 아, 이건 말하면 안 되는 거였나.</span></p>
+<p class="nar chg">배트리가 허둥지둥 날아오른다. 오투모가 편지를 두 손으로 꼭 쥐고 이쪽을 본다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">편지 끝에 그림이 그려져 있어요. 동그라미 하나에 작대기 두 개. 이건.... 저예요?</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">아이들 솜씨네. 닮았다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">다리가 너무 가늘게 그려졌어요. 그런데 신발은 정확해요. 크고 파래요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">친구, 무슨 일일까요. 제가 공예 교실에서 나사를 너무 많이 빌려서 그런 걸까요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">가 보면 알겠지. 같이 가자.</span><span class="nx">→ c1_go</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">나사 몇 개 빌렸는데? 솔직히 말해 봐.</span><span class="nx">→ c1_screw</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">혼나는 건 아닐 거야. 아마도. 장담은 못 하지만.</span><span class="nx">→ c1_tease</span></li></ol></div>
+<div class="lab" id="otumo-c1_go">▸ c1_go</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">같이. 네, 같이 가요.</span></p>
+<p class="nar chg">오투모가 편지를 가슴 스피커 앞에 꽂는다. 소중한 걸 꽂아 두는 자리인 것처럼.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">첫 편지는 여기 둘래요. 스피커 앞이 제일 잘 보이니까요.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_screw">▸ c1_screw</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">마흔일곱 개요. 그중 마흔다섯 개는 돌려드렸어요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">나머지 두 개는?</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....제 무릎에 끼워져 있어요. 폭풍 밤 이후로요. 아주 잘 맞아요.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_tease">▸ c1_tease</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">장담 못 해요? 확률이 얼마예요?</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">농담이야, 농담.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">친구 농담은 가끔 계산을 너무 오래 하게 만들어요. 배터리 1 % 썼어요.</span></p>
+<div class="sys">↪ 「c1_end」 장면으로</div>
+<div class="lab" id="otumo-c1_end">▸ c1_end</div>
+<div class="scene">📍 오투모를 따라 공예 교실</div>
+<p class="nar chg">공예 교실 문을 열자, 안이 사람들로 가득하다. 등불이 줄줄이 걸려 있고, 누군가 냄비 뚜껑을 땡땡 친다.</p>
+<p class="ln chg"><span class="who">마들렌</span><span class="tx">왔다, 왔어. 주인공 왔어.</span></p>
+<p class="ln chg"><span class="who">아이들</span><span class="tx">오투모다.</span></p>
+<p class="nar chg">호박밭 할머니, <b class="v">마들렌</b>, 배트리, <b class="v">레오</b>, 캇파, 그리고 아이들. 모두 교실 한쪽 구석을 가리키며 비켜선다.</p>
+<p class="nar chg">창가 구석. 원래 공구 상자가 있던 자리에 작은 공간이 만들어져 있다.</p>
+<p class="nar chg">나사를 크기별로 정리할 수 있는 작은 선반. 등불 하나. 호박 무늬 방석. 그리고 벽에 붙은 삐뚤삐뚤한 나무 이름표.</p>
+<p class="nar chg">「오투모의 집」.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐, 빅.......</span></p>
+<p class="nar chg">오투모가 그 자리에 그대로 멈춘다. 눈이 깜박이지도 않는다.</p>
+<p class="ln chg"><span class="who">호박밭 할머니</span><span class="tx">동그란 녀석, 구덩이는 내가 메웠으니 미안해서 말이야. 방석은 내가 떴어. 호박 무늬로.</span></p>
+<p class="ln chg"><span class="who">레오</span><span class="tx">....등불. 폭풍 날 쓴 거. 사육장에 남는 거였어. 꼭 켜 둬.</span></p>
+<p class="ln chg"><span class="who">캇파</span><span class="tx">선반은 내가 짰네. 낚싯대 받침 만들던 솜씨로. 나사가 물고기보다 얌전하더구먼.</span></p>
+<p class="ln chg"><span class="who">아이들</span><span class="tx">이름표는 우리가 썼어. 글씨 예쁘지?</span></p>
+<p class="ln chg"><span class="who">마들렌</span><span class="tx">공예 선생님한테 허락은 내가 받았어. 목소리 큰 게 이럴 때 쓸모가 있다니까.</span></p>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">편지는 다들 한 줄씩 썼어요. 제가 모아서 접었어요. 그래서 발신자가 여러 명이었어요.</span></p>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">아, 그리고 <b class="v">세라</b> 선생님은 진찰 도구를, 아울라 선생님은 청강생 출석부를 보내셨어요. 두 분 다 야근이라 못 오셨대요.</span></p>
+<p class="nar chg">선반 위에 청진기 하나와 얇은 출석부가 놓여 있다. 출석부 맨 아래 칸에 단정한 글씨. 「오투모. 청강생.」</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">출석부에 제 이름이 있어요. 결석 처리도 할 수 있겠네요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">(오투모의 등을 살짝 민다) 들어가 봐. 네 자리야.</span><span class="nx">→ c2_push</span></li><li class="chg"><span class="aff up">+15</span><span class="otx">다들 언제 이걸 다 준비했어요? 나만 몰랐어.</span><span class="nx">→ c2_surprise</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">오투모, 뭐라고 좀 해. 다들 기다리잖아.</span><span class="nx">→ c2_rush</span></li></ol></div>
+<div class="lab" id="otumo-c2_push">▸ c2_push</div>
+<p class="nar chg">오투모가 한 걸음, 두 걸음 구석으로 들어간다. 방석 위에 조심스럽게 앉는다. 크기가 딱 맞는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....머리 둘레 계산을 아무도 안 했을 텐데, 딱 맞아요.</span></p>
+<p class="ln chg"><span class="who">호박밭 할머니</span><span class="tx">눈대중이야. 할미 눈대중은 계산보다 정확하지.</span></p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_surprise">▸ c2_surprise</div>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">죄송해요, 죄송해요. 말하면 오투모 님이 알 것 같아서요. <b class="v">민준</b> 씨 표정에 다 나오잖아요.</span></p>
+<p class="ln chg"><span class="who">마들렌</span><span class="tx">맞아, 맞아. 그 얼굴은 비밀을 못 지켜.</span></p>
+<p class="nar chg">오투모가 그 말을 들으며 천천히 구석으로 들어가 방석 위에 앉는다. 크기가 딱 맞는다.</p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_rush">▸ c2_rush</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 할 말을.... 계산 중.... 계산이 안 끝나요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">아, 재촉해서 미안. 천천히 해.</span></p>
+<p class="nar chg">오투모가 한참 서 있다가 겨우 구석으로 들어가 방석 위에 앉는다. 크기가 딱 맞는다.</p>
+<div class="sys">↪ 「c2_end」 장면으로</div>
+<div class="lab" id="otumo-c2_end">▸ c2_end</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">질문해도 돼요?</span></p>
+<p class="ln chg"><span class="who">캇파</span><span class="tx">해 보게.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">왜요. 저는 이 마을에 떨어진 거예요. 호박 세 개를 망가뜨렸고, 빗자루를 부쉈고, 분수대에 빠졌고, 폭풍 날 다들 고생시켰어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">계산하면 저는 이 마을에 빚만 있어요. 그런데 왜 자리를 줘요.</span></p>
+<p class="nar chg">교실이 잠깐 조용해진다. <b class="v">레오</b>가 헛기침을 한다.</p>
+<p class="ln chg"><span class="who">레오</span><span class="tx">....염소들이 네 박자에 맞춰 풀 뜯는다니까.</span></p>
+<p class="ln chg"><span class="who">호박밭 할머니</span><span class="tx">넌 매일 아침 날씨를 알려 줬잖니. 무릎보다 정확하더라.</span></p>
+<p class="ln chg"><span class="who">마들렌</span><span class="tx">시장 장사가 그날 제일 잘됐어. 그거면 됐지 뭐.</span></p>
+<p class="ln chg"><span class="who">캇파</span><span class="tx">자네가 매일 밤 언덕에 오르는 걸 호숫가에서 봤네. 매일 나오는 녀석은 언젠가 다들 알아보게 되어 있지.</span></p>
+<p class="ln chg"><span class="who">아이들</span><span class="tx">인사를 제일 잘해.</span></p>
+<p class="nar chg">오투모의 눈이 깜박인다. 깜박, 깜박. 그리고 휘어진다. 아주 많이.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....빚이 아니었네요. 계산을 다시 해야겠어요. 처음부터.</span></p>
+<p class="nar chg">광장 쪽에서 저녁 종이 울린다. <b class="v">마들렌</b>이 냄비 뚜껑을 번쩍 든다.</p>
+<p class="ln chg"><span class="who">마들렌</span><span class="tx">자, 이제 진짜 순서야. 광장으로. 오늘은 우리가 연주할 차례야.</span></p>
+<div class="scene">📍 마을 광장</div>
+<p class="nar chg">마을 광장. 시장 상인들이 수레를 끌고 나와 있다. 생선 가게 칼, 등불 고리, 수레바퀴. 모두 손에 무언가를 들고 있다.</p>
+<p class="ln chg"><span class="who">시장 상인</span><span class="tx">로봇 손님, 오늘은 들기만 해. 우리가 박자 넣을 테니까.</span></p>
+<p class="nar chg">종이 울린다. 데엥. 그리고 시장 사람들이 하나씩 소리를 넣는다. 탁, 탁, 삐걱, 딸랑.</p>
+<p class="nar chg">96 BPM. 그날 오투모가 찾아낸 마을의 박자다. 이번엔 오투모가 아니라 마을이 먼저 연주한다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 이건.... 제가 녹음한 박자예요. 다들 기억하고 있었어요.</span></p>
+<p class="ln chg"><span class="who">시장 상인</span><span class="tx">그날 이후로 시장이 박자 맞춰 장사하는 게 버릇이 됐어. 손님들이 걸음도 맞춰 걷는다니까.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제가 찾은 박자가.... 마을 버릇이 됐어요. 떨어진 로봇이 남긴 거예요.</span></p>
+<div class="sys br">분기: 플래그 <code>otumo_hum_song</code> 있으면 → hum_yes / 없으면 → hum_no</div>
+<div class="lab" id="otumo-hum_yes">▸ hum_yes</div>
+<p class="nar chg">박자 위로 멜로디가 얹힌다. 띠리, 띠리, 띠. 그리고 이어지는 엉터리 흥얼거림. 아이들이 그 멜로디를 따라 부른다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그 뒷부분이에요. <b class="v">민준</b>이 지어 준 거. 언제 다들 배웠어요?</span></p>
+<p class="ln chg"><span class="who">아이들</span><span class="tx">로봇이 맨날 흥얼거렸잖아. 다 외웠어.</span></p>
+<div class="sys">↪ 「hum_end」 장면으로</div>
+<div class="lab" id="otumo-hum_no">▸ hum_no</div>
+<p class="nar chg">박자 위로 멜로디가 얹힌다. 띠리, 띠리, 띠. 오투모의 고향 노래 첫머리다. 그런데 끊기지 않고, 아이들이 아무렇게나 뒤를 이어 부른다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">끊긴 데부터.... 다들 마음대로 이어 부르고 있어요. 하나도 안 맞는데, 하나도 안 이상해요.</span></p>
+<p class="ln chg"><span class="who">아이들</span><span class="tx">로봇이 맨날 앞부분만 흥얼거려서, 뒤는 우리가 지었어.</span></p>
+<div class="sys">↪ 「hum_end」 장면으로</div>
+<div class="lab" id="otumo-hum_end">▸ hum_end</div>
+<p class="ln chg"><span class="who">마들렌</span><span class="tx">자, 주인공. 한 소리 넣어야지.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제가요? 무슨 소리를 넣어요?</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+30</span><span class="otx">네 저장 완료음. 띠, 띠, 띵, 띵.</span><span class="nx">→ c3_save</span></li><li class="chg"><span class="aff up">+15</span><span class="otx">아무 소리나. 틀려도 돼. 여긴 그래도 되는 데잖아.</span><span class="nx">→ c3_free</span></li><li class="chg"><span class="aff down">-15</span><span class="otx">120 BPM으로 빠르게 한번 넣어 봐. 고향 박자.</span><span class="nx">→ c3_fast</span></li></ol></div>
+<div class="lab" id="otumo-c3_save">▸ c3_save</div>
+<p class="nar chg">오투모의 스피커에서 네 음이 울린다. 띠, 띠, 띵, 띵. 마을 박자 끝에 딱 맞게 떨어진다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">맞았어요. 제 소리가 이 노래 마지막 음이 됐어요.</span></p>
+<p class="ln chg"><span class="who">배트리</span><span class="tx">와, 이게 노래 끝이에요. 이제 이 노래 이름 지어야 해요.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_free">▸ c3_free</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">틀려도 되는 데.</span></p>
+<p class="nar chg">오투모가 아무 음이나 낸다. 삐. 박자와 반 박 어긋난다. 그런데 아무도 멈추지 않는다. 아이들이 깔깔 웃으며 그 삐 소리를 따라 한다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">틀렸는데 노래가 더 커졌어요. 이 행성은 정말 이상해요.</span></p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_fast">▸ c3_fast</div>
+<p class="nar chg">오투모가 120 BPM으로 빠르게 소리를 넣는다. 띠띠띠띠. 마을 박자와 엉켜서 노래가 잠깐 뒤죽박죽이 된다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 박자 충돌. 죄송해요.</span></p>
+<p class="nar chg">오투모가 스스로 속도를 늦춘다. 98, 97, 96. 다시 마을 박자에 맞춰 내려앉는다.</p>
+<div class="sys">↪ 「c3_end」 장면으로</div>
+<div class="lab" id="otumo-c3_end">▸ c3_end</div>
+<div class="sys br">분기: 플래그 <code>otumo_broom_ride</code> 있으면 → broom_yes / 없으면 → broom_no</div>
+<div class="lab" id="otumo-broom_yes">▸ broom_yes</div>
+<p class="nar chg">노래가 끝나갈 무렵, <b class="v">레오</b>가 무언가를 툭 던져 준다. 짚 길이가 제각각인, 그 빗자루다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">이거.... 공예 교실에 두고 온 건데요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">약속했잖아. 같이 타기로. 오늘은 내가 앞에서 조종할게.</span></p>
+<p class="nar chg">둘이 빗자루에 올라탄다. 오투모의 배터리 전선 대신, 이번엔 주문 하나로. 빗자루가 붕 떠오른다.</p>
+<p class="nar chg">광장 위를 한 바퀴. 종탑 옆을 스치고, 시장 등불 위를 지나, 호박밭까지. 노을이 둘을 감싼다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">2 초가 아니에요. 10 초, 20 초, 30 초.... 세는 걸 그만둘래요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">친구, 마을이 예뻐요. 측정할 수 없어요. 이게 그때 말한 거군요.</span></p>
+<div class="sys">↪ 「broom_end」 장면으로</div>
+<div class="lab" id="otumo-broom_no">▸ broom_no</div>
+<p class="nar chg">노래가 끝나갈 무렵, 아이들이 오투모를 둘러싸고 번쩍 들어 올린다. 영차, 영차.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 고도 상승. 추진 장치, 아이들.</span></p>
+<p class="ln chg"><span class="who">아이들</span><span class="tx">하늘 날게 해 줄게.</span></p>
+<p class="nar chg">아이들 손 위에서 오투모가 광장을 한 바퀴 돈다. 높지는 않지만, 발이 땅에 닿지 않는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">2 초가 아니에요. 10 초, 20 초, 30 초.... 세는 걸 그만둘래요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">빗자루 없이도 나네요. 이 마을 추진 장치는 사람이었어요.</span></p>
+<div class="sys">↪ 「broom_end」 장면으로</div>
+<div class="lab" id="otumo-broom_end">▸ broom_end</div>
+<p class="nar chg">노래가 끝나고 박수가 터진다. 사람들이 하나둘 오투모에게 다가와 등을 두드리고, 손을 흔들고, 이름을 부른다.</p>
+<p class="nar chg">오투모는 한 사람 한 사람에게 1 초에 한 번씩 정확하게 손을 흔든다. 그런데 오늘은 그 박자가 조금씩 느려진다. 한 사람에게 조금 더 오래.</p>
+<div class="scene">📍 공예 교실 (밤)</div>
+<p class="nar chg">축제 같던 광장이 조용해지고, 둘은 다시 공예 교실로 돌아온다. 선반 위 나사들이 등불 빛에 반짝인다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">집에 왔어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....방금 처음으로 「집에 왔다」고 말했어요. 이 행성에서요. 입력한 적 없는 말인데 저절로 나왔어요.</span></p>
+<div class="ch"><div class="chh">선택지</div><ol><li class="chg"><span class="aff up">+15</span><span class="otx">(오투모의 새 방석 옆에 나란히 앉는다)</span><span class="nx">→ c4_sit</span></li><li class="chg"><span class="aff keep">0</span><span class="otx">오늘 기록은 몇 줄이나 돼?</span><span class="nx">→ c4_log</span></li><li class="chg"><span class="aff down">-30</span><span class="otx">이제 자리 생겼으니까 나 안 찾아와도 되겠다.</span><span class="nx">→ c4_away</span></li></ol></div>
+<div class="lab" id="otumo-c4_sit">▸ c4_sit</div>
+<p class="nar chg">등불 하나 아래, 둘이 나란히 앉는다. 방석이 하나라서 반씩 나눠 앉는다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">방석이 반만 맞아요. 그래도 좋아요. 반쯤 찬 배터리로도 충분했으니까요.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_log">▸ c4_log</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">세다가 포기했어요. 공책 두 장이 넘었어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">처음으로 숫자보다 글자가 많은 기록이에요.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-c4_away">▸ c4_away</div>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">....안 찾아와도 된다.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">친구, 자리는 생겼지만 그 자리에 앉아서 기다리는 건 친구예요. 그건 그대로예요. 오늘은 농담으로 들을게요.</span></p>
+<div class="sys">↪ 「ending」 장면으로</div>
+<div class="lab" id="otumo-ending">▸ ending</div>
+<p class="nar chg">밤이 된 공예 교실. 사람들은 돌아가고, 「오투모의 집」 등불만 켜져 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">친구. 주고 싶은 게 있어요.</span></p>
+<p class="nar chg">오투모가 머리띠 안쪽에서 손톱만 한 금속판을 꺼낸다. 떨어진 날 구덩이에서 주웠던, 안테나 꼭대기에 있던 그 조각이다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">제 수신기 덮개예요. 고향 신호를 들으려고 안테나에 올렸던 거요. 이제 고향 신호는 안 들어도 돼요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">처음엔 이게 어디에 끼우는 건지도 몰랐어요. 수신기 덮개라는 걸 안 건 언덕에서 신호가 들리던 밤이었어요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그런데 지금은 어디에 둬야 하는지 알아요. 계산 없이요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그러니까 이건 <b class="v">민준</b>한테 줄게요. 제 몸에서 떨어진 첫 번째 조각이, 제 첫 번째 친구한테 가는 거예요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">이거 네 몸에서 떨어진 부품이잖아. 그렇게 소중하게 들고 다녔던.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그때는 제 몸이었어요. 지금은.... 이 마을 거예요. 친구 것도 되고요.</span></p>
+<p class="nar chg">금속판을 손바닥에 올려 준다. 작고 따뜻하다. 뒷면에 무언가 새겨져 있다. 「첫 번째 접촉. <b class="v">민준</b>.」</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">그리고 이것도요. 제가 모은 데이터예요. 이 마을 박자, 날씨 패턴, 별 위치. 공부할 때 쓰세요.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">마법은 끝까지 계산이 안 됐어요. 그래도 마법 말고 다른 건 제가 다 계산해 줄게요. 그게 제 쓸모예요. 제가 정한 쓸모.</span></p>
+<p class="nar chg">오투모가 공책 마지막 장을 펼친다. 둥근 손으로 연필을 쥐고 천천히 쓴다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">「오늘의 기록. 이 행성에 떨어진 지 아흔여덟 번째 날. 제 자리가 생겼다.」</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">「제 박자는 96. 마을 박자도 96. 친구 박자는.... 언제나 조금 느리다. 그래서 같이 걷기 좋다.」</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">「저는 떨어진 게 아니라, 도착한 거였다.」</span></p>
+<p class="nar chg">오투모의 스피커에서 저장 완료음이 울린다. 띠, 띠, 띵, 띵.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">삐빅. 이건 이제 인사예요. 친구 전용 인사. 내일도, 모레도 할 거예요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">그럼 나도 인사할게. 삐빅.</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">발음 정확도 63 %. ....그래도 제일 좋은 삐빅이에요. 저장할게요.</span></p>
+<p class="nar chg">창밖으로 별이 하나 반짝인다. 오투모는 이제 그 별을 오래 올려다보지 않는다. 대신 옆자리를 본다.</p></div>
+<div class="cold"><div class="ch2">서먹한 결말 (이벤트 안 호감도 합이 −30 이하면 「ending」부터 이 대사로 끝나요)</div><p class="nar chg">밤이 된 공예 교실. 오투모가 새 방석 위에 혼자 앉아 있다.</p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">친구, 오늘 고마웠어요. 자리도 생겼고요.</span></p>
+<p class="ln me chg"><span class="who">민준(주인공)</span><span class="tx">오투모, 아까 그 말은.......</span></p>
+<p class="ln chg"><span class="who">오투모</span><span class="tx">괜찮아요. 자리가 생겼으니까, 이제 혼자서도 기다릴 수 있어요. 그렇게 계산했어요.</span></p>
+<p class="nar chg">등불 하나가 「오투모의 집」을 비춘다. 오투모의 손에는 금속판이 쥐어져 있지만, 끝내 건네지 않는다.</p>
+<p class="nar chg">저장 완료음은 세 음에서 멈췄다. 마지막 한 음은 오늘 울리지 않았다.</p></div>
+</article>
+</section>
+</main>
+</div>

@@ -5,7 +5,7 @@ from josa import VAR as JVAR, pick as jpick
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 D = os.path.join(ROOT, 'public', 'data', 'npc')
 NPCS = [('nabi', '나비', '매점 고양이'), ('batri', '배트리', '우체부 박쥐'), ('kappa', '캇파', '낚시꾼 갓파'), ('aula', '아울라', '사서 부엉이'), ('mandi', '맨디', '정원사 맨드레이크'),
-        ('jipsin', '스트로', '꼬마 허수아비'), ('sera', '세라', '양호 선생님'), ('madeleine', '마들렌', '과자 교실 제빵사'), ('stella', '스텔라', '점성술사'), ('leo', '레오', '사육장 관리인')]
+        ('jipsin', '스트로', '꼬마 허수아비'), ('sera', '세라', '양호 선생님'), ('madeleine', '마들렌', '과자 교실 제빵사'), ('stella', '스텔라', '점성술사'), ('leo', '레오', '사육장 관리인'), ('otumo', '오투모', '떨어진 로봇')]
 NAME = {i: n for i, n, _ in NPCS}
 PLACES = {p['id']: p['name'] for p in json.load(open(os.path.join(D, 'places.json')))}
 CAST = json.load(open(os.path.join(D, 'cast.json')))
@@ -146,4 +146,6 @@ def main(out):
     page = tpl.replace('%%TOC%%', '\n'.join(toc)).replace('%%BODY%%', '\n'.join(body)).replace('%%FIX%%', fixes).replace('%%SUM%%', f'이벤트 {total_ev} 개 · 대사와 지문 {total_ln:,} 줄')
     open(out, 'w').write(page); print(out, len(page) // 1024, 'KB', total_ev, total_ln)
 
-if __name__ == '__main__': main(sys.argv[1])
+if __name__ == '__main__':
+    if len(sys.argv) > 2: NPCS[:] = [x for x in NPCS if x[0] in sys.argv[2].split(',')]   # 두 번째 인자: 이 NPC만 (예: otumo)
+    main(sys.argv[1])
