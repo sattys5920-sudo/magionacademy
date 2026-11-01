@@ -1,0 +1,192 @@
+<title>얼음 호수 스케이트</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gowun+Dodum&display=swap">
+<style>
+/* 한 화면 게임: 위에서 본 얼어붙은 북쪽 연못 · 손가락 쪽으로 밀면 미끄러지고 · 날 자국이 얼음에 남아요. 겨울밤 하나의 색으로만 (어두운 고정 화면) */
+:root{
+  --night:#0F1626; --panel:#16213A; --pad:#0B1220; --line:#2A3A5C;
+  --ink:#EAF3FF; --sub:#9FB4D6; --ice:#BFE3FF; --gold:#FFE9A0; --ok:#9AE0C0; --bad:#FF9A9A; --kappa:#9AD88A;
+  --f-disp:'Do Hyeon','Gowun Dodum',system-ui,sans-serif; --f-body:'Gowun Dodum',system-ui,sans-serif;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--night);color:var(--ink);font-family:var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;box-sizing:border-box;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+.wrap{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+h1{font-family:var(--f-disp);font-weight:400;font-size:22px;margin:0;color:var(--ice)}
+.top small{color:var(--sub);font-size:13px}
+#rink{display:block;width:100%;max-width:100%;aspect-ratio:180/232;image-rendering:pixelated;border-radius:12px;background:var(--pad);touch-action:none;border:2px solid var(--line)}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#step{font-family:var(--f-disp);font-size:19px;color:var(--gold);min-width:0}
+#judge{font-family:var(--f-disp);font-size:19px;min-width:80px;text-align:right;flex:none}
+.say{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border-radius:12px;padding:10px;font-size:14px;line-height:1.55;min-height:48px}
+.say b{color:var(--kappa);font-family:var(--f-disp);font-weight:400;flex:none}
+.row{display:flex;gap:8px;align-items:center}
+.prog{flex:1;height:8px;border-radius:4px;background:var(--pad);overflow:hidden}.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ice),var(--gold));transition:width .3s}
+#jump{font-family:var(--f-disp);font-size:18px;padding:10px 18px;border-radius:12px;border:0;background:var(--line);color:var(--sub);cursor:pointer;min-width:110px}
+#jump.on{background:var(--gold);color:#3A2A08}
+.stats{display:flex;gap:12px;font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums;flex-wrap:wrap}.stats b{color:var(--ink);font-weight:400}
+#start,#result{position:fixed;inset:0;background:rgba(6,10,20,.84);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5;overflow:auto}
+.dlg{background:var(--panel);border:2px solid var(--ice);border-radius:16px;padding:16px;max-width:390px;width:100%;display:flex;flex-direction:column;gap:12px;text-align:center}
+.dlg h2{font-family:var(--f-disp);font-weight:400;font-size:22px;margin:0;color:var(--ice)}
+.dlg p{margin:0;font-size:14px;line-height:1.6;color:var(--sub);text-align:left}
+.dlg .say{text-align:left}
+.go{font-family:var(--f-disp);font-size:18px;padding:10px 18px;border-radius:12px;border:0;background:var(--ice);color:#0F2236;cursor:pointer}
+.go.alt{background:var(--line);color:var(--ink)}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.score{font-family:var(--f-disp);font-size:44px;color:var(--gold);line-height:1}
+.parts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:13px;color:var(--sub)}.parts div{background:var(--pad);border-radius:10px;padding:8px 4px}.parts b{display:block;font-family:var(--f-disp);font-weight:400;font-size:20px;color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.prog i{transition:none}}
+</style>
+<div class="wrap">
+  <div class="top"><h1>얼음 호수 스케이트 대회</h1><small>북쪽 연못 · 심판 캇파</small></div>
+  <canvas id="rink" width="180" height="232" aria-label="얼어붙은 연못"></canvas>
+  <div class="bar"><span id="step">준비</span><span id="judge"></span></div>
+  <div class="say"><b>캇파</b><span id="tip">허허.... 연못이 꽁꽁 얼었구먼.</span></div>
+  <div class="row"><div class="prog"><i id="pg"></i></div><button id="jump" type="button">점프</button></div>
+  <div class="stats"><span>남은 시간 <b id="tm">75</b>초</span><span>기술 <b id="s0">0</b></span><span>점프 <b id="s1">0</b></span><span>스핀 <b id="s2">0</b></span></div>
+</div>
+<div id="start"><div class="dlg">
+  <h2>얼음 호수 스케이트 대회</h2>
+  <div class="say"><b>캇파</b><span>허허.... 연못이 꽁꽁 얼어서 낚시는 못 하겠구먼. 오늘은 내가 심판이야. 별 표시를 따라 그림을 그려 봐.......</span></div>
+  <p>화면을 누르고 있으면 그 쪽으로 밀고 나가요. 손을 떼면 얼음 위를 미끄러져요. 빛나는 점을 차례로 지나며 <b>동그라미 → 8 자 → 하트</b>를 그려요. 별에 닿으면 <b>점프</b>를 눌러요 (작아지는 고리가 발에 닿을 때). 마지막은 손가락으로 빙글빙글 돌려 <b>스핀</b>.</p>
+  <p>컴퓨터: 마우스를 누른 채 끌거나 방향키 · 점프는 스페이스바</p>
+  <button class="go" id="go" type="button">연기 시작</button>
+</div></div>
+<div id="result" hidden><div class="dlg">
+  <h2 id="rt">연기 끝</h2>
+  <div class="score" id="rs">0</div>
+  <div class="parts"><div>기술<b id="r0">0</b></div><div>점프<b id="r1">0</b></div><div>스핀<b id="r2">0</b></div></div>
+  <div class="say"><b>캇파</b><span id="rc"></span></div>
+  <button class="go" id="again" type="button">한 번 더</button>
+</div></div>
+<script>
+(() => {
+const W = 180, H = 232, cv = document.getElementById('rink'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+const $ = id => document.getElementById(id);
+// ---------- 연못 모양 (타원) ----------
+const PC = [90, 122], PR = [80, 100];
+const inPond = (x, y, m = 0) => ((x - PC[0]) / (PR[0] - m)) ** 2 + ((y - PC[1]) / (PR[1] - m)) ** 2 <= 1;
+// ---------- 그림 (빛나는 점 순서) ----------
+function figure(kind){ const pts = [];
+  if (kind === 'circle') for (let i = 0; i < 12; i++){ const a = -Math.PI / 2 + i * Math.PI * 2 / 12; pts.push([90 + Math.cos(a) * 46, 122 + Math.sin(a) * 46]); }
+  if (kind === 'heart') for (let i = 0; i < 14; i++){ const t = i / 14 * Math.PI * 2; const x = 16 * Math.sin(t) ** 3, y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)); pts.push([90 + x * 2.7, 116 + y * 2.7]); }
+  return pts; }
+// 8 자: 위 원과 아래 원을 이어서 (가운데서 교차)
+function eight(){ const pts = []; for (let i = 0; i < 8; i++){ const a = Math.PI / 2 - i * Math.PI * 2 / 8; pts.push([90 + Math.cos(a) * 32, 88 + Math.sin(a) * 32]); } for (let i = 0; i < 8; i++){ const a = -Math.PI / 2 + i * Math.PI * 2 / 8; pts.push([90 + Math.cos(a) * 32, 156 + Math.sin(a) * 32]); } return pts; }
+const PROG = [{ n: '동그라미', pts: figure('circle'), star: [6], tip: '발끝으로 밀고, 미끄러지게 둬. 동그라미는 천천히.......' },
+  { n: '8 자', pts: eight(), star: [8], tip: '가운데서 길을 바꿔. 얼음은 서두르면 삐끗해.......' },
+  { n: '하트', pts: figure('heart'), star: [7], tip: '끝은 뾰족하게. 허허, 낚싯바늘 같구먼.......' }];
+// ---------- 상태 ----------
+let S, pointer = null, keys = {}, raf = 0, last = 0, AC = null;
+function reset(){ S = { x: 90, y: 200, vx: 0, vy: 0, dir: -Math.PI / 2, fig: 0, gi: 0, t: 75, sc: [0, 0, 0], phase: 'skate', air: 0, jumpT: 0, ring: 0, spinA: 0, spinT: 0, spinLast: null, trail: [], snow: Array.from({ length: 40 }, () => [Math.random() * W, Math.random() * H, .2 + Math.random() * .5]), judgeT: 0, done: false, star: null }; trailCv.getContext('2d').clearRect(0, 0, W, H); ui(); }
+const trailCv = document.createElement('canvas'); trailCv.width = W; trailCv.height = H; const tg = trailCv.getContext('2d');
+// ---------- 소리 ----------
+const ac = () => { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch(e){} return AC; };
+function tone(f, d, type = 'triangle', v = .05, at = 0){ const C = ac(); if (!C) return; const t = C.currentTime + at, o = C.createOscillator(), gn = C.createGain(); o.type = type; o.frequency.value = f; gn.gain.setValueAtTime(v, t); gn.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(gn); gn.connect(C.destination); o.start(t); o.stop(t + d); }
+const SND = { gate: q => tone(q === 2 ? 1568 : 1175, .25), slip: () => tone(220, .2, 'square', .04), jump: () => [523, 784].forEach((f, k) => tone(f, .2, 'triangle', .05, k * .06)), land: q => q === 2 ? [1047, 1319, 1568].forEach((f, k) => tone(f, .4, 'triangle', .05, k * .07)) : tone(q ? 880 : 200, .25, q ? 'triangle' : 'square', .05), spin: () => tone(1800 + Math.random() * 400, .05, 'sine', .02), fig: () => [659, 784, 988].forEach((f, k) => tone(f, .5, 'triangle', .05, k * .1)), end: () => [523, 659, 784, 1047, 1319].forEach((f, k) => tone(f, 1.1, 'triangle', .05, k * .12)) };
+// ---------- 말 ----------
+let tipT = 0; const say = (t, ms = 2600) => { $('tip').textContent = t; tipT = performance.now() + ms; };
+function judge(t, col){ const J = $('judge'); J.textContent = t; J.style.color = col; S.judgeT = performance.now() + 900; }
+// ---------- 입력 ----------
+const cpos = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; };
+cv.addEventListener('pointerdown', e => { ac(); cv.setPointerCapture(e.pointerId); pointer = { id: e.pointerId, p: cpos(e) }; if (S.phase === 'spin') S.spinLast = null; });
+cv.addEventListener('pointermove', e => { if (pointer && pointer.id === e.pointerId) pointer.p = cpos(e); });
+const up = e => { if (pointer && pointer.id === e.pointerId) pointer = null; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+addEventListener('keydown', e => { if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault(); keys[e.code] = true; if (e.code === 'Space') doJump(); });
+addEventListener('keyup', e => { keys[e.code] = false; });
+$('jump').onclick = () => { ac(); doJump(); };
+// ---------- 점프: 별에 닿으면 고리가 작아져요 · 발에 닿을 때 누르면 완벽 ----------
+function doJump(){ if (S.phase !== 'skate' || !S.star || S.air) return; const r = S.ring, q = r < 4 ? 2 : r < 9 ? 1 : 0; S.air = 1; S.jumpT = performance.now(); S.star = null; SND.jump();
+  setTimeout(() => { S.air = 0; S.sc[1] += [4, 12, 20][q]; SND.land(q); judge(['삐끗.......', '착지', '완벽한 착지'][q], ['var(--bad)', 'var(--ok)', 'var(--gold)'][q]); if (!q){ S.vx *= .3; S.vy *= .3; } ui(); }, 650); }
+// ---------- 한 프레임 ----------
+function step(dt){
+  if (S.done) return;
+  S.t -= dt; if (S.t <= 0){ S.t = 0; return finish(); }
+  if (S.phase === 'spin'){ S.spinT -= dt; S.vx *= .9; S.vy *= .9;
+    if (pointer){ const a = Math.atan2(pointer.p[1] - S.y, pointer.p[0] - S.x); if (S.spinLast != null){ let d = a - S.spinLast; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; S.spinA += Math.abs(d); if (Math.abs(d) > .2) SND.spin(); } S.spinLast = a; }
+    if (keys.ArrowLeft || keys.ArrowRight){ S.spinA += dt * 9; }
+    S.dir += S.spinA > 0 ? dt * Math.min(30, 4 + S.spinA * .8) : 0;
+    S.sc[2] = Math.min(30, Math.floor(S.spinA / (Math.PI * 2)) * 2); if (S.spinT <= 0) return finish(); ui(); return; }
+  // 밀기: 손가락 쪽으로 · 손을 떼면 미끄러져요 (얼음이라 마찰이 아주 작아요)
+  let ax = 0, ay = 0; if (pointer && !S.air){ const dx = pointer.p[0] - S.x, dy = pointer.p[1] - S.y, d = Math.hypot(dx, dy); if (d > 4){ ax = dx / d * 70; ay = dy / d * 70; } }
+  if (keys.ArrowLeft) ax -= 70; if (keys.ArrowRight) ax += 70; if (keys.ArrowUp) ay -= 70; if (keys.ArrowDown) ay += 70;
+  S.vx += ax * dt; S.vy += ay * dt; const fr = Math.pow(S.air ? .99 : pointer || ax || ay ? .3 : .6, dt); S.vx *= fr; S.vy *= fr; const sp = Math.hypot(S.vx, S.vy); if (sp > 62){ S.vx *= 62 / sp; S.vy *= 62 / sp; }
+  const nx = S.x + S.vx * dt, ny = S.y + S.vy * dt;
+  if (!inPond(nx, ny, 6)){ S.vx *= -.4; S.vy *= -.4; SND.slip(); judge('쿵.......', 'var(--bad)'); } else { if (!S.air && sp > 6){ tg.strokeStyle = 'rgba(234,248,255,.55)'; tg.lineWidth = 1; tg.beginPath(); tg.moveTo(S.x, S.y + 3); tg.lineTo(nx, ny + 3); tg.stroke(); } S.x = nx; S.y = ny; }
+  if (sp > 3) S.dir = Math.atan2(S.vy, S.vx);
+  // 빛나는 점 지나기
+  const F = PROG[S.fig], p = F.pts[S.gi], d = Math.hypot(p[0] - S.x, p[1] - S.y);
+  if (d < 13 && !S.air){ const q = d < 6 ? 2 : 1; S.sc[0] += q === 2 ? 3 : 2; SND.gate(q); judge(q === 2 ? '정확해요' : '좋아요', q === 2 ? 'var(--gold)' : 'var(--ok)');
+    if (F.star.includes(S.gi)){ S.star = performance.now(); S.ring = 18; }
+    S.gi++; if (S.gi >= F.pts.length){ SND.fig(); S.sc[0] += 6; S.fig++; S.gi = 0; if (S.fig >= PROG.length){ S.phase = 'spin'; S.spinT = 5; S.spinA = 0; say('마지막은 스핀이야. 손가락으로 빙글빙글 돌려 봐.......', 5000); } else say(`${F.n} 끝. 다음은 ${PROG[S.fig].n}. ${PROG[S.fig].tip}`, 3200); }
+    ui(); }
+  if (S.star){ S.ring -= dt * 15; if (S.ring <= 0){ S.star = null; judge('점프를 놓쳤어요', 'var(--bad)'); ui(); } }
+  if (performance.now() > tipT && S.phase === 'skate') $('tip').textContent = PROG[S.fig].tip;
+}
+// ---------- 그리기 (낮은 해상도 픽셀 그림) ----------
+const R = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); };
+function draw(now){
+  g.setTransform(1, 0, 0, 1, 0, 0); R(0, 0, W, H, '#0B1220');
+  // 눈 쌓인 둑
+  g.fillStyle = '#DDE8F6'; g.beginPath(); g.ellipse(PC[0], PC[1], PR[0] + 6, PR[1] + 6, 0, 0, 7); g.fill(); g.fillStyle = '#B8C8DE'; g.beginPath(); g.ellipse(PC[0], PC[1] + 2, PR[0] + 3, PR[1] + 3, 0, 0, 7); g.fill();
+  // 얼음: 푸른 그라데이션 + 금
+  const gr = g.createRadialGradient(70, 90, 10, 90, 122, 110); gr.addColorStop(0, '#CFEAFF'); gr.addColorStop(1, '#6FA8D8'); g.fillStyle = gr; g.beginPath(); g.ellipse(PC[0], PC[1], PR[0], PR[1], 0, 0, 7); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1; [[40, 70, 58, 80, 52, 92], [120, 160, 136, 150, 142, 166], [60, 180, 74, 170, 86, 176]].forEach(([a, b, c, d, e, f]) => { g.beginPath(); g.moveTo(a, b); g.lineTo(c, d); g.lineTo(e, f); g.stroke(); });
+  g.drawImage(trailCv, 0, 0);   // 날 자국
+  // 그림 길잡이: 지금 그림의 점선 + 빛나는 점
+  const F = PROG[Math.min(S.fig, PROG.length - 1)];
+  if (S.phase === 'skate'){ F.pts.forEach((p, i) => { const on = i === S.gi, past = i < S.gi; if (past) return; const pul = on ? 1 + Math.sin(now / 150) * .5 : 0;
+      g.fillStyle = on ? '#FFE9A0' : 'rgba(255,255,255,.55)'; g.fillRect(Math.round(p[0]) - 1 - (on ? 1 : 0), Math.round(p[1]) - 1 - (on ? 1 : 0), on ? 4 : 2, on ? 4 : 2);
+      if (on){ g.strokeStyle = `rgba(255,233,160,${.4 + pul * .3})`; g.beginPath(); g.arc(p[0], p[1], 6 + pul * 2, 0, 7); g.stroke(); }
+      if (F.star.includes(i)){ g.fillStyle = '#FFD24A'; [[0, -4], [-1, -3], [1, -3], [-3, -1], [3, -1], [-2, 1], [2, 1], [0, -1], [-1, 0], [1, 0], [0, 0], [-1, -1], [1, -1], [-1, -2], [0, -2], [1, -2]].forEach(([dx, dy]) => g.fillRect(Math.round(p[0]) + dx, Math.round(p[1]) + dy - 5, 1, 1)); } }); }
+  // 점프 고리
+  if (S.star){ g.strokeStyle = 'rgba(255,233,160,.9)'; g.beginPath(); g.ellipse(S.x, S.y + 4, Math.max(1, S.ring), Math.max(1, S.ring * .5), 0, 0, 7); g.stroke(); g.strokeStyle = 'rgba(255,255,255,.5)'; g.beginPath(); g.ellipse(S.x, S.y + 4, 3, 1.5, 0, 0, 7); g.stroke(); }
+  // 스케이터 (점프하면 떠오르고 빙글)
+  const air = S.air ? Math.sin(Math.min(1, (now - S.jumpT) / 650) * Math.PI) : 0, spinning = S.air ? (now - S.jumpT) / 650 * Math.PI * 4 : 0;
+  g.fillStyle = 'rgba(20,40,70,.35)'; g.beginPath(); g.ellipse(S.x, S.y + 6, 6 - air * 2, 2.4, 0, 0, 7); g.fill();
+  skater(S.x, S.y - air * 9, S.dir + spinning, now);
+  // 캇파 심판 (둑 위 왼쪽 아래)
+  kappa(16, 214, now);
+  // 눈
+  S.snow.forEach(f => { f[1] += f[2] * .6; f[0] += Math.sin(now / 900 + f[1]) * .1; if (f[1] > H) { f[1] = -2; f[0] = Math.random() * W; } R(f[0], f[1], 1, 1, 'rgba(255,255,255,.8)'); });
+  if (S.phase === 'spin'){ g.fillStyle = 'rgba(255,233,160,.18)'; g.beginPath(); g.arc(S.x, S.y, 14 + Math.sin(now / 80) * 2, 0, 7); g.fill(); }
+}
+function skater(x, y, a, now){   // 위에서 본 작은 학생: 머리 · 목도리(펄럭) · 망토
+  g.save(); g.translate(Math.round(x), Math.round(y)); g.scale(1.6, 1.6); const fx = Math.cos(a), fy = Math.sin(a);
+  const sc = [-fx * 4 + Math.sin(now / 90) * .8, -fy * 4 + Math.cos(now / 90) * .8];
+  g.fillStyle = '#C8384A'; g.fillRect(Math.round(sc[0]) - 1, Math.round(sc[1]) - 1, 2, 2); g.fillRect(Math.round(sc[0] * 1.5) - 1, Math.round(sc[1] * 1.5) - 1, 2, 2);   // 목도리 끝
+  g.fillStyle = '#1a1024'; g.beginPath(); g.arc(0, 1, 4, 0, 7); g.fill(); g.fillStyle = '#4A3A8A'; g.beginPath(); g.arc(0, 1, 3, 0, 7); g.fill();   // 망토
+  g.fillStyle = '#1a1024'; g.beginPath(); g.arc(fx * .5, fy * .5 - 2, 3, 0, 7); g.fill(); g.fillStyle = '#5A3424'; g.beginPath(); g.arc(fx * .5, fy * .5 - 2, 2.2, 0, 7); g.fill();   // 머리
+  g.fillStyle = '#F4C8A0'; g.fillRect(Math.round(fx * 2) - 1, Math.round(fy * 2 - 2) - 1, 2, 2);   // 얼굴 쪽
+  g.fillStyle = '#C8384A'; g.fillRect(-2, 0, 4, 1);   // 목도리
+  g.restore();
+}
+function kappa(x0, y0, now){ const b = Math.sin(now / 400) > .6 ? 1 : 0; g.save(); g.translate(x0, y0); g.scale(1.5, 1.5); g.translate(-x0, -y0); const x = x0, y = y0;
+  R(x - 5, y - 8, 10, 10, '#1a1024'); R(x - 4, y - 7, 8, 8, '#5AA84A'); R(x - 4, y - 9, 8, 2, '#1a1024'); R(x - 3, y - 9, 6, 1, '#BFE3FF');   // 몸 · 접시
+  R(x - 2, y - 5, 1, 1, '#1a1024'); R(x + 1, y - 5, 1, 1, '#1a1024'); R(x - 1, y - 3, 3, 1, '#E8C060');
+  R(x + 5, y - 10 - b, 1, 8, '#E8DCC0'); R(x + 4, y - 11 - b, 3, 2, b ? '#FFE9A0' : '#E8DCC0');   // 점수 깃발
+  g.restore();
+}
+// ---------- 화면 글 ----------
+function ui(){ $('tm').textContent = Math.ceil(S.t); ['s0', 's1', 's2'].forEach((id, i) => $(id).textContent = S.sc[i]);
+  const total = PROG.reduce((n, f) => n + f.pts.length, 0) + 1, done_ = PROG.slice(0, S.fig).reduce((n, f) => n + f.pts.length, 0) + (S.phase === 'skate' ? S.gi : 0) + (S.phase === 'spin' ? 1 - S.spinT / 5 : 0);
+  $('pg').style.width = Math.min(100, done_ / total * 100) + '%';
+  $('step').textContent = S.phase === 'spin' ? `스핀 · ${Math.floor(S.spinA / (Math.PI * 2))} 바퀴` : `${PROG[S.fig].n} · ${S.gi} / ${PROG[S.fig].pts.length}`;
+  $('jump').classList.toggle('on', !!S.star); }
+// ---------- 끝 ----------
+function finish(){ if (S.done) return; S.done = true; cancelAnimationFrame(raf); SND.end();
+  const tech = Math.min(50, S.sc[0]), jmp = Math.min(20, S.sc[1]), spn = Math.min(30, S.sc[2]), bonus = S.fig >= PROG.length ? Math.round(S.t / 3) : 0, tot = Math.min(100, tech + jmp + spn + bonus);
+  $('r0').textContent = tech; $('r1').textContent = jmp; $('r2').textContent = spn; $('rs').textContent = tot;
+  $('rt').textContent = S.fig >= PROG.length ? '연기 끝' : '시간 끝';
+  $('rc').textContent = tot >= 85 ? '허허.... 물 위에선 내가 한 수 위지만, 얼음 위에선 자네가 위구먼. 만점에 가까워.' : tot >= 60 ? '좋았네. 8 자가 조금 흔들렸지만 하트는 아주 예뻤어. 내일 또 오게.......' : tot >= 30 ? '얼음은 기다림이야. 밀고, 기다리고, 또 밀고. 낚시랑 똑같지.......' : '허허, 넘어져도 괜찮아. 나도 처음엔 접시 물을 다 쏟았다네.......';
+  $('result').hidden = false; }
+// ---------- 시작 ----------
+function loop(now){ const dt = Math.min(.05, (now - (last || now)) / 1000); last = now; step(dt); draw(now); if (S.judgeT && now > S.judgeT){ $('judge').textContent = ''; S.judgeT = 0; } if (!S.done) raf = requestAnimationFrame(loop); }
+function start(){ ac(); reset(); $('start').hidden = true; $('result').hidden = true; last = 0; say(PROG[0].tip); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
+$('go').onclick = start; $('again').onclick = start;
+reset(); draw(0);
+})();
+</script>
