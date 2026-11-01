@@ -47,7 +47,7 @@ def tidy(im, cell=64):   # 작은 티 지우기 + 바깥 진한 테두리 한 �
 # ---------- 걷기 시트 (5 칸 × 4 줄: 앞 · 뒤 · 오른쪽 · 왼쪽 → 게임: 앞 · 뒤 · 왼쪽 · 오른쪽) ----------
 src = Image.open(os.path.join(D, 'gemini_source.png')).convert('RGBA'); W, H = src.size; cw, ch = W / 5, H / 4
 cells = [[cut(src.crop((int(c * cw), int(r * ch), int((c + 1) * cw), int((r + 1) * ch)))) for c in range(5)] for r in range(4)]
-k = 50 / max(cells[r][c].getbbox()[3] - cells[r][c].getbbox()[1] for r in range(4) for c in range(5))
+k = 42 / max(cells[r][c].getbbox()[3] - cells[r][c].getbbox()[1] for r in range(4) for c in range(5))
 sheet = Image.new('RGBA', (64 * 20, 64))
 for d, row in enumerate((0, 1, 3, 2)):
     fr = [cells[row][c] for c in range(5)]
