@@ -1,5 +1,5 @@
-// 시안: 창밖 정원 시작 연출 — 관리자가 「시작하기」를 누르면 피스(이어 붙인 거인)가 찾아와 정원을 시공해 줘요
-//   똑똑 → 피스 등장 → 「정원 하나 만들어 드릴까요?」 → 부탁해요 → 뚝딱뚝딱 시공 → 「다 됐어요」 → 정원 공개 → 피스 퇴장 → 창문 → 정원 창
+// 시안: 창밖 정원 시작 연출 — 관리자가 「시작하기」를 누르면 맨디(정원사 맨드레이크)가 찾아와 정원을 시공해 줘요
+//   똑똑 → 맨디 등장 → 「정원 하나 만들어 드려도 될까요?」 → 부탁해요 → 뚝딱뚝딱 시공 → 「다 됐어요」 → 정원 공개 → 맨디 퇴장 → 창문 → 정원 창
 //   목업 사이트 폴더에 gi_bg.png · gi_items.png · gi_guests.png · gi.json · window.__gbGo() · window.__gbLog
 (function(){
 const sleep = ms => new Promise(r => setTimeout(r, ms)), LOG = window.__gbLog = [], T0 = performance.now(), mark = k => { LOG.push([(performance.now() - T0) / 1000, k]); const d = document.getElementById('vmk'); if (d) d.style.background = LOG.length % 2 ? '#FF0000' : '#0000FF'; };
@@ -7,7 +7,7 @@ if (!document.getElementById('vmk')) document.body.insertAdjacentHTML('beforeend
 const img = s => Object.assign(new Image(), { src: s }), BG = img('gi_bg.png'), IT = img('gi_items.png'), GU = img('gi_guests.png'), NP = img('art/npcs.webp?v=' + (window.NPC_ART_V || 1));
 let GI = null; fetch('gi.json').then(r => r.json()).then(j => { GI = j; });
 const CW = 144, CH = 88, CY = 8, PP = (tx, ty) => [GI.OX + (tx - ty) * 8, GI.OY + (tx + ty) * 4 - CY];
-const SPR = 11, FW = 64;   // 피스 (npcs.webp 줄)
+const SPR = 4, FW = 64;   // 맨디 (npcs.webp 줄)
 const css = document.createElement('style'); css.textContent = `
 #gbdim{position:fixed;inset:0;background:rgba(10,6,20,.55);opacity:0;transition:opacity .6s;z-index:300;pointer-events:none}
 #gbsay{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);z-index:340;width:min(92vw,370px);display:none}
@@ -23,12 +23,12 @@ const css = document.createElement('style'); css.textContent = `
 document.head.appendChild(css);
 const el = (id, html = '') => { const d = document.createElement('div'); d.id = id; d.innerHTML = html; document.body.appendChild(d); return d; };
 const dim = el('gbdim'), say = el('gbsay', '<div class="bx"><div class="fc"><canvas width="32" height="32"></canvas></div><div><b></b><p></p></div></div>'), ask = el('gbask'), yard = el('gbyard'), bang = el('gbbang'), tst = el('gbtoast');
-// 피스 얼굴 (npcs.webp 정면 칸에서 머리만)
-const face = () => { const q = say.querySelector('canvas').getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, 32, 32); q.drawImage(NP, 16, SPR * FW + 6, 32, 32, 0, 0, 32, 32); };
-async function line(t, hold = 1500){ face(); say.querySelector('b').textContent = '피스'; say.style.display = 'block'; const p = say.querySelector('p'); p.textContent = ''; mark('line');
+// 맨디 얼굴 (npcs.webp 정면 칸)
+const face = () => { const q = say.querySelector('canvas').getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, 32, 32); q.drawImage(NP, 21, SPR * FW + 27, 28, 28, 2, 2, 28, 28); };
+async function line(t, hold = 1500){ face(); say.querySelector('b').textContent = '맨디'; say.style.display = 'block'; const p = say.querySelector('p'); p.textContent = ''; mark('line');
   for (let k = 1; k <= t.length; k++){ p.textContent = t.slice(0, k); await sleep(32); } await sleep(hold + t.length * 22); say.style.display = 'none'; await sleep(140); }
 const toast = async (t, ms = 2600) => { tst.textContent = t; tst.classList.add('on'); mark('toast'); await sleep(ms); tst.classList.remove('on'); await sleep(300); };
-// 방 안에 피스 세우기 (프롭)
+// 방 안에 맨디 세우기 (프롭)
 let pis = null, pisA = 0, pisCol = 0, pisRaf = 0;
 function pisDraw(){ if (!pis) return; const c = document.createElement('canvas'); c.width = FW; c.height = FW; const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.globalAlpha = pisA; q.drawImage(NP, pisCol * FW, SPR * FW, FW, FW, 0, 0, FW, FW);
   World.setProps(pis.m, [{ id: 'pis', x: pis.x, y: pis.y, img: c, pxc: q, sw: FW, sh: FW, ax: 32, ay: 58, solid: false }], 'gbpis'); }
@@ -52,12 +52,12 @@ window.__gbGo = async () => {
   const t = World.meTile(); pis = { m: t.m, x: t.x + 1, y: t.y - 1 };
   await sleep(500); mark('knock'); await toast('똑, 똑똑.......', 1800);
   dim.style.opacity = 1; for (let k = 1; k <= 12; k++){ pisA = k / 12; pisDraw(); await sleep(70); } World.say('me', '.......!'); await sleep(1100);
-  await line('안녕하세요.... {player} 님. 저 피스예요.'.replace('{player}', (window.__T && __T.me && __T.me().nick) || '민준'));
-  await line('요즘 밤마다 푹 자서요.... 힘이 남아돌아요. 그래서 학생들 방을 돌면서 작은 정원을 만들어 주고 있어요.', 1700);
-  await line('창밖 빈터가 풀만 무성하던데.... 정원 하나 만들어 드릴까요?', 1200);
+  await line('히익....! 아, 안녕하세요.... 저 정원사 맨디예요. 놀라게 해서 미안해요.......');
+  await line('창밖을 지나가다 봤는데요.... 빈터에 풀만 잔뜩 자라서, 흙이 너무 답답해 보였어요.', 1700);
+  await line('저.... 정원 하나 만들어 드려도 될까요?', 1200);
   ask.innerHTML = '<span>다음에요</span><span class="go">부탁해요</span>'; ask.style.display = 'flex'; await sleep(1300); const b = ask.querySelector('.go'); b.classList.add('hit'); mark('pick'); await sleep(200); ask.style.display = 'none';
   World.say('me', '부탁해요.......'); await sleep(1000);
-  await line('네.... 금방 해 드릴게요. 뚝딱뚝딱.......', 900);
+  await line('정말요? 헤헤.... 그럼 금방 할게요. 뚝딱뚝딱.......', 900);
   // 시공
   yard.innerHTML = '<b>창밖 빈터</b><canvas width="144" height="88"></canvas><div class="pb"><i></i></div>'; const yc = yard.querySelector('canvas'); yardLoop(yc); yard.classList.add('on'); mark('yard'); await sleep(1600);
   yard.querySelector('b').textContent = '시공 중.......'; st.dust = 1; const pb = yard.querySelector('.pb i');
@@ -67,9 +67,9 @@ window.__gbGo = async () => {
     await sleep(320); }
   st.dust = 0; st.weed = 0; yard.querySelector('b').textContent = '창밖 정원'; st.shine = 1; mark('done'); await sleep(1600);
   yard.classList.remove('on'); await sleep(500);
-  await line('후우.... 시공 다 됐어요.', 1100);
-  await line('먹이 접시에 요리를 올려 두면.... 손님이 찾아올 거예요. 손님마다 좋아하는 요리가 달라요.', 1700);
-  await line('호박 의자랑 등불은 덤이에요. 그럼.... 저는 다음 방으로 가 볼게요. 쿨.......', 1300);
+  await line('후우.... 다 됐어요. 비명 한 번도 안 질렀어요.......', 1200);
+  await line('먹이 접시에 요리를 올려 두면.... 숲 친구들이 놀러 올 거예요. 친구마다 좋아하는 요리가 달라요.', 1700);
+  await line('등불이랑 호박 의자는 제 선물이에요. 그럼.... 다음 방으로 가 볼게요. 안녕.......', 1300);
   for (let k = 12; k >= 0; k--){ pisA = k / 12; pisDraw(); await sleep(70); } World.setProps(pis.m, [], 'gbpis'); dim.style.opacity = 0; await sleep(600);
   await toast('창밖 정원이 생겼어요 · 내 방 창문을 누르면 볼 수 있어요', 2800);
   // 그 뒤: 창문을 누르면 정원 창
