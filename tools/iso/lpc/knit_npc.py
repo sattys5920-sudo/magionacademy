@@ -136,10 +136,10 @@ SP_ = {
  'npc3': {'': dict(hat=(24, 39, 24, 30), muff=[(21, 27), (42, 27)], neck=(41, 24, 39), hands=[(24, 46), (38, 46)]),
           '_side': dict(hat=(23, 40, 24, 30), muff=[(36, 28)], neck=(41, 25, 37), hands=[(24, 46)]),
           '_back': dict(hat=(21, 43, 24, 31), muff=[(21, 31), (43, 31)], mufftop=24, neck=(40, 22, 41), hands=[])},
- # 맨디: 목도리는 가운데 잎줄기에 두르고 끝이 팔랑 · 모자는 몸 윗부분(머리)에 쓰고 잎은 위로 · 귀마개는 눈 옆 · 장갑은 작은 손
- 'npc4': {'': dict(hat=(27, 41, 37, 43), muff=[(27, 46), (42, 46)], mufftop=39, leafneck=(37, 31, 37), hands=[(27, 49), (42, 49)], gr=1.7, leaves=True),
-          '_side': dict(hat=(25, 40, 37, 43), muff=[(36, 46)], mufftop=39, leafneck=(37, 30, 36), hands=[(25, 49)], gr=1.7, leaves=True),
-          '_back': dict(hat=(27, 42, 37, 43), muff=[(27, 46), (42, 46)], mufftop=39, leafneck=(37, 31, 37), hands=[(27, 49), (42, 49)], gr=1.7, leaves=True)},
+ # 맨디: 잎이 손 · 머리 — 목도리는 가운데 잎줄기 · 모자는 가운데 잎 끝에 걸치고 · 귀마개 솜방울과 장갑은 양쪽 잎 끝에 씌워요 (leafy = 왼쪽 잎 끝, 가운데 잎 꼭대기, 오른쪽 잎 끝)
+ 'npc4': {'': dict(hat=(27, 41, 37, 43), leafy=((24, 33), (34, 26), (45, 33)), leafneck=(37, 31, 37), hands=[(27, 49), (42, 49)]),
+          '_side': dict(hat=(25, 40, 37, 43), leafy=((23, 34), (33, 26), (42, 33)), leafneck=(37, 30, 36), hands=[(25, 49)]),
+          '_back': dict(hat=(27, 42, 37, 43), leafy=((22, 33), (34, 25), (45, 33)), leafneck=(37, 31, 37), hands=[(27, 49), (42, 49)])},
  'npc5': {'': dict(hat=(24, 40, 22, 31), muff=[(24, 33), (40, 33)], neck=(40, 26, 38), hands=[(18, 49), (45, 49)], strip=31, mufftop=14),   # 스트로: 털모자 쓸 땐 밀짚모자 벗고 · 귀마개는 밀짚모자 위로
           '_side': dict(hat=(25, 39, 22, 31), muff=[(35, 33)], neck=(40, 27, 37), hands=[(26, 49)], strip=31, mufftop=15),
           '_back': dict(hat=(24, 40, 22, 31), muff=[(24, 33), (40, 33)], neck=(40, 26, 38), hands=[(19, 48), (45, 48)], strip=31, mufftop=14)},
@@ -169,6 +169,7 @@ class SpriteView:
                 dome += [(x, y) for x in range(int(cx - w), int(cx + w) + 1)]
         return dome, band, cx, top
     def hat(s, a, b):
+        if 'leafy' in s.p: return s._leaf_hat(a, b)
         base0 = s.base
         if s.bare is not None and s.base is s.orig: s.base = s.stripped
         try: return s._hat(a, b)
@@ -197,6 +198,7 @@ class SpriteView:
                         if c[3]: O[x, y] = c
         return out
     def muff(s, a, b):
+        if 'leafy' in s.p: return s._leaf_muff(a, b)
         base0 = s.base
         try: return s._muff(a, b)
         finally: s.base = base0
@@ -248,7 +250,37 @@ class SpriteView:
         fx = max(x for x, _ in flap); fy = max(y for _, y in flap) + 1
         for x in (fx - 1, fx): P[x, fy] = rb[2] + (255,); P[x, fy + 1] = rb[3] + (255,)   # 술
         return over(s.base, lay)
+    def _leaf_hat(s, a, b):
+        """가운데 잎 끝에 쏙 걸친 작은 방울 모자 (살짝 기울어져요)"""
+        (_, _), (cx, cy), _ = s.p['leafy']; lay = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); P = lay.load(); ra, rb = RAMP[YARN[a]], RAMP[YARN[b]]
+        dome = [(x, y) for y in range(cy - 4, cy + 1) for x in range(64) if ((x - cx - (cy - y) * .25) / 4.2) ** 2 + ((y - cy) / 4.6) ** 2 <= 1]
+        lpc_fill(lay, dome, ra); band = [(x, y) for y in (cy + 1, cy + 2) for x in range(cx - 4, cx + 5)]
+        for x, y in band: P[x, y] = (rb[3] if x % 2 else rb[2]) + (255,)
+        for x in range(cx - 4, cx + 5): P[x, cy + 3] = rb[0] + (255,)
+        for y in (cy + 1, cy + 2): P[cx - 5, y] = rb[0] + (255,); P[cx + 5, y] = rb[0] + (255,)
+        pom = [(x, y) for y in range(64) for x in range(64) if ((x - cx - 2) / 1.8) ** 2 + ((y - (cy - 6)) / 1.6) ** 2 <= 1 and not P[x, y][3]]; lpc_fill(lay, pom, rb)
+        return over(s.base, lay)
+    def _leaf_mitt(s, lay, cx, cy, ra, rb, side):
+        """잎 끝에 씌운 털장갑 (엄지 하나 · 잎줄기 쪽에 고무단)"""
+        P = lay.load(); body = [(x, y) for y in range(64) for x in range(64) if ((x - cx) / 3.2) ** 2 + ((y - cy) / 2.6) ** 2 <= 1]
+        th = [(x, y) for y in range(64) for x in range(64) if ((x - (cx + side * 1)) / 1.3) ** 2 + ((y - (cy - 3)) / 1.3) ** 2 <= 1]
+        lpc_fill(lay, body + th, ra, light=(-side, -1)); inner = cx - side * 3
+        for y in range(cy - 2, cy + 3): P[inner, y] = rb[2 + (y % 2)] + (255,); P[inner - side, y] = rb[3] + (255,)
+    def _leaf_muff(s, a, b):
+        """양쪽 잎 끝에 솜방울 · 띠는 가운데 잎 꼭대기 위로"""
+        (lx, ly), (cx, cy), (rx, ry) = s.p['leafy']; lay = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); P = lay.load(); ra, rb = RAMP[YARN[a]], RAMP[YARN[b]]
+        for i in range(61):
+            t = i / 60; x = round((1 - t) ** 2 * lx + 2 * (1 - t) * t * cx + t * t * rx); y = round((1 - t) ** 2 * ly + 2 * (1 - t) * t * (cy - 8) + t * t * ry)
+            for dy in (0, 1): P[x, y + dy] = (rb[3] if (x + y) % 2 else rb[2]) + (255,)
+        for (px, py) in ((lx, ly), (rx, ry)):
+            puff = [(x, y) for y in range(64) for x in range(64) if ((x - px) / 2.6) ** 2 + ((y - py) / 3) ** 2 <= 1]
+            for q in puff: P[q] = (0, 0, 0, 0)
+            lpc_fill(lay, puff, ra, light=(-1 if px < 32 else 1, -1))
+        return over(s.base, lay)
     def gloves(s, a, b):
+        if 'leafy' in s.p:   # 맨디: 양쪽 잎에 장갑을 씌워요
+            (lx, ly), _, (rx, ry) = s.p['leafy']; lay = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); ra, rb = RAMP[YARN[a]], RAMP[YARN[b]]
+            s._leaf_mitt(lay, lx + 1, ly, ra, rb, -1); s._leaf_mitt(lay, rx - 1, ry, ra, rb, 1); return over(s.base, lay)
         if not s.p['hands']: return over(s.base)
         lay = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); P = lay.load(); ra, rb = RAMP[YARN[a]], RAMP[YARN[b]]
         for cx, cy in s.p['hands']:
@@ -260,7 +292,7 @@ NECK = {'npc0': 41, 'npc1': 41, 'npc2': 39, 'npc3': 42, 'npc4': 44, 'npc5': 37} 
 FB = '/tmp/claude-0/-home-user/d683bb50-b1f3-59a3-8e5f-5f21e64e8c5a/scratchpad/Galmuri11-Bold.ttf'
 F, F2, F3 = ImageFont.truetype(FB, 15), ImageFont.truetype(FB, 12), ImageFont.truetype(FB, 22)
 BG, PAN, INK, SUB, GOLD = (26, 18, 38), (37, 26, 54), (241, 233, 255), (184, 168, 216), (255, 233, 160)
-COLS = [('목도리', 'scarf', ('빨강', '하양')), ('방울 모자', 'hat', ('파랑', '노랑')), ('털 귀마개', 'muff', ('분홍', '하양')), ('손모아장갑', 'gloves', ('초록', '하양'))]
+COLS = [('목도리', 'scarf', ('빨강', '하양')), ('방울 모자', 'hat', ('파랑', '노랑')), ('털 귀마개', 'muff', ('분홍', '하양')), ('손모아장갑', 'gloves', ('주황', '하양'))]
 CW, RH = 120, 150; W_ = 150 + CW * 7 + 20; img = Image.new('RGB', (W_, 70 + RH * len(CAST) + 20), BG); d = ImageDraw.Draw(img)
 d.text((20, 14), 'NPC가 선물받은 뜨개 옷 (내 화면에서만 · 모자 칸은 방울 모자나 귀마개 하나 · 여러 개면 매일 바꿔 써요)', font=F2, fill=(255, 184, 168))
 for c, (nm, _, _) in enumerate(COLS): d.text((150 + c * CW + 20, 48), nm, font=F2, fill=GOLD)
@@ -282,6 +314,6 @@ for r, (nm, who, body) in enumerate(CAST):
         else:   # 그림 NPC: 모자 먼저(스트로는 밀짚모자 벗고) → 목도리
             hb = V_.hat('파랑', '노랑'); V_.orig_keep = V_.orig; V_.base = hb; V_.B = hb.load(); V_.bare = None
             V_.base = V_.scarf('빨강', '하양'); V_.B = V_.base.load()
-        g = V_.gloves('초록', '하양')
+        g = V_.gloves('주황', '하양')
         cell(g if g is not None else V_.base, 4 + c, r); V_.base = keep; V_.B = keep.load()
 os.makedirs(OUTD, exist_ok=True); img.save(os.path.join(OUTD, 'knit_npc_preview.png')); print('ok')
