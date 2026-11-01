@@ -1,0 +1,149 @@
+<title>광장 픽셀 벽화</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gowun+Dodum&display=swap">
+<style>
+/* 광장 담벼락에 걸린 커다란 픽셀 캔버스 · 벽돌 테두리 안 · 아래에 물감 팔레트와 남은 칸. 밤의 학교 한 가지 색으로 (어두운 고정 화면) */
+[hidden]{display:none!important}
+:root{
+  --night:#151020; --panel:#221a33; --pad:#120d1c; --line:#3a2e58; --brick:#6a3a2e; --brick2:#4a281e;
+  --ink:#F3ECFF; --sub:#B8A8D8; --gold:#FFE9A0; --ok:#9AE0A0; --bad:#FF9A9A; --paint:#FF8AB0;
+  --f-disp:'Do Hyeon','Gowun Dodum',system-ui,sans-serif; --f-body:'Gowun Dodum',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--night);color:var(--ink);font-family:var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;box-sizing:border-box;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+h1{font-family:var(--f-disp);font-weight:400;font-size:22px;margin:0;color:var(--gold)}
+.top small{color:var(--sub);font-size:13px}
+.wall{padding:10px;border-radius:6px;background:repeating-linear-gradient(0deg,var(--brick2) 0 2px,transparent 2px 12px),repeating-linear-gradient(90deg,var(--brick2) 0 2px,var(--brick) 2px 24px);box-shadow:inset 0 0 0 2px #2a1610}
+.view{position:relative;overflow:hidden;border:3px solid #2a1610;background:#0d0a14;touch-action:none;aspect-ratio:48/32;max-width:100%}
+#cv{position:absolute;left:0;top:0;width:100%;height:100%;image-rendering:pixelated;transform-origin:0 0}
+.pop{position:absolute;pointer-events:none;font-size:12px;background:rgba(18,13,28,.92);border:1px solid var(--line);color:var(--ink);padding:2px 6px;border-radius:8px;white-space:nowrap;transform:translate(-50%,-140%)}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bar .left{flex:1;min-width:0;font-size:14px;color:var(--sub);white-space:nowrap}
+.bar .left b{font-family:var(--f-disp);font-weight:400;font-size:20px;color:var(--paint)}
+.seg{display:flex;background:var(--pad);border-radius:10px;padding:3px;gap:3px}
+.seg button{font-family:var(--f-disp);font-size:15px;border:0;border-radius:8px;padding:7px 10px;background:transparent;color:var(--sub);cursor:pointer;min-height:36px}
+.seg button[aria-pressed="true"]{background:var(--line);color:var(--ink)}
+.pal{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+.pal button{aspect-ratio:1;border-radius:8px;border:3px solid transparent;cursor:pointer;box-shadow:inset 0 0 0 2px rgba(0,0,0,.35);min-height:34px}
+.pal button[aria-pressed="true"]{border-color:var(--gold)}
+.card{background:var(--panel);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.card h2{margin:0;font-family:var(--f-disp);font-weight:400;font-size:17px;color:var(--gold)}
+.card p{margin:0;font-size:13px;line-height:1.6;color:var(--sub)}
+.prog{height:8px;border-radius:4px;background:var(--pad);overflow:hidden}.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--paint),var(--gold));transition:width .4s}
+.vote{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.vote button{font-family:var(--f-body);font-size:12px;line-height:1.35;border-radius:10px;border:2px solid var(--line);background:var(--pad);color:var(--ink);padding:8px 4px;cursor:pointer;min-height:56px}
+.vote button[aria-pressed="true"]{border-color:var(--gold)}
+.vote span{display:block;color:var(--sub);margin-top:2px}.vote b{display:block;font-family:var(--f-disp);font-weight:400;font-size:15px;color:var(--gold)}
+.log{font-size:12px;color:var(--sub);display:flex;flex-direction:column;gap:2px;max-height:72px;overflow:hidden}
+.log span b{color:var(--ink);font-weight:400}
+.btn{font-family:var(--f-disp);font-size:15px;padding:8px 12px;border-radius:10px;border:0;background:var(--line);color:var(--ink);cursor:pointer;min-height:38px}
+.btn.go{background:var(--paint);color:#3a1020}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.prog i{transition:none}}
+</style>
+<div class="wrap">
+  <div class="top"><h1>광장 픽셀 벽화</h1><small>이번 주 그림 · 달밤의 부엉이</small></div>
+  <div class="wall"><div class="view" id="view"><canvas id="cv" width="48" height="32" aria-label="벽화 캔버스"></canvas></div></div>
+  <div class="bar">
+    <div class="left">오늘 남은 칸 <b id="left">20</b> / 20</div>
+    <div class="seg" role="group" aria-label="모드"><button id="mPaint" aria-pressed="true" type="button">칠하기</button><button id="mLook" aria-pressed="false" type="button">누가 칠했나</button></div>
+    <div class="seg" role="group" aria-label="보기"><button id="zoom" aria-pressed="false" type="button">크게</button><button id="guide" aria-pressed="true" type="button">밑그림</button></div>
+  </div>
+  <div class="pal" id="pal"></div>
+  <div class="card">
+    <h2>완성까지</h2>
+    <div class="prog"><i id="pg"></i></div>
+    <p id="pgt">밑그림과 같은 색으로 칠한 칸 0 / 0</p>
+    <div class="log" id="log"></div>
+  </div>
+  <div class="card">
+    <h2>다음 주 그림 투표</h2>
+    <div class="vote" id="vote">
+      <button type="button" aria-pressed="false" data-v="0"><b>학교 문장</b>호박달과 빗자루 <span>12 표</span></button>
+      <button type="button" aria-pressed="false" data-v="1"><b>눈 내리는 사육장</b>뭉게와 레오 <span>9 표</span></button>
+      <button type="button" aria-pressed="false" data-v="2"><b>우리 반 얼굴</b>한 칸씩 내 얼굴 <span>7 표</span></button>
+    </div>
+    <p>예시 화면이에요. 친구 이름과 칠한 칸은 시안용 예시예요.</p>
+  </div>
+  <div class="bar"><button class="btn" id="replay" type="button">타임랩스 보기</button><button class="btn" id="undo" type="button">방금 칸 되돌리기</button><button class="btn go" id="tomorrow" type="button">다음 날로 (시안)</button></div>
+</div>
+<script>
+(() => {
+const W = 48, H = 32, $ = id => document.getElementById(id), cv = $('cv'), g = cv.getContext('2d');
+// 물감 16 색 (게임 옷 색에서 골랐어요)
+const PAL = ['#14101e', '#2a2350', '#3d5aa8', '#7ab0e8', '#e8f0ff', '#ffe36a', '#f2a13a', '#c8562a', '#7a3c24', '#4a2a1a', '#3e7a2a', '#8ad05a', '#c83850', '#ff8ab0', '#a070e0', '#8a8a9a'];
+// ---------- 이번 주 밑그림: 달밤의 부엉이 (나뭇가지 · 보름달 · 별 · 호박) ----------
+const T = Array.from({ length: H }, () => Array(W).fill(1));
+const put = (x, y, c) => { if (x >= 0 && y >= 0 && x < W && y < H) T[y][x] = c; };
+for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (y < 8 && (x * 7 + y * 3) % 11 === 0) T[y][x] = 2;
+for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){ const d = Math.hypot(x - 34, y - 10); if (d <= 7.4) put(x, y, d > 6.4 ? 6 : 5); }
+[[4, 3], [10, 6], [17, 2], [24, 5], [44, 3], [41, 14], [7, 12], [20, 10]].forEach(([x, y]) => { put(x, y, 4); });
+for (let x = 2; x < 40; x++){ const y = 20 + Math.round(Math.sin(x / 6) * 1.2); put(x, y, 8); put(x, y + 1, 9); }
+for (let y = 8; y <= 19; y++) for (let x = 14; x <= 25; x++){ const e = ((x - 19.5) / 6) ** 2 + ((y - 14) / 6.2) ** 2; if (e <= 1) put(x, y, e > .78 ? 9 : 8); }
+[[15, 8], [16, 7], [23, 8], [24, 7]].forEach(([x, y]) => put(x, y, 9));   // 귀깃
+[[17, 12], [22, 12]].forEach(([cx, cy]) => { for (let y = cy - 2; y <= cy + 2; y++) for (let x = cx - 2; x <= cx + 2; x++) if (Math.hypot(x - cx, y - cy) <= 2.2) put(x, y, 4); put(cx, cy, 0); put(cx + 1, cy, 0); });
+put(19, 14, 6); put(20, 14, 6); put(19, 15, 7); put(20, 15, 7);   // 부리
+for (let y = 16; y <= 19; y++) for (let x = 17; x <= 22; x++) if ((x + y) % 2 === 0) put(x, y, 6);   // 가슴 무늬
+[[17, 20], [18, 20], [21, 20], [22, 20]].forEach(([x, y]) => put(x, y, 6));
+for (let y = 22; y < H; y++) for (let x = 0; x < W; x++) T[y][x] = y > 28 ? 9 : 10;
+[[8, 27], [29, 28], [42, 26]].forEach(([cx, cy]) => { for (let y = cy - 2; y <= cy + 2; y++) for (let x = cx - 3; x <= cx + 3; x++) if (((x - cx) / 3.3) ** 2 + ((y - cy) / 2.4) ** 2 <= 1) put(x, y, (x - cx) % 2 ? 6 : 7); put(cx, cy - 3, 11); put(cx - 1, cy, 5); put(cx + 1, cy, 5); });
+for (let x = 0; x < W; x += 3) put(x, 22, 11);
+// ---------- 벽 상태 (칸마다 색 · 칠한 사람) ----------
+const NAMES = ['하늘', '도윤', '서아', '지우', '유나', '하준', '라온'];
+const C = Array.from({ length: H }, () => Array(W).fill(-1)), WHO = Array.from({ length: H }, () => Array(W).fill(''));
+const HIST = [];
+const R = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
+// 미리 칠해 둔 칸 (예시): 밑그림의 40 % 정도
+for (let k = 0; k < W * H * .4; k++){ const x = Math.floor(R() * W), y = Math.floor(R() * H); if (C[y][x] >= 0) continue; place(x, y, R() < .93 ? T[y][x] : Math.floor(R() * 16), NAMES[Math.floor(R() * NAMES.length)], true); }
+function place(x, y, c, who, quiet){ HIST.push([x, y, c, who, C[y][x], WHO[y][x]]); C[y][x] = c; WHO[y][x] = who; if (!quiet){ draw(); prog(); } }
+// ---------- 내 상태 ----------
+let col = 5, mode = 'paint', zoom = 1, guide = true, left = 20, mine = [], pan = [0, 0];
+// ---------- 그리기 ----------
+function draw(){ const im = g.createImageData(W, H), d = im.data;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){ const i = (y * W + x) * 4, c = C[y][x];
+    if (c >= 0){ const v = parseInt(PAL[c].slice(1), 16); d[i] = v >> 16; d[i + 1] = v >> 8 & 255; d[i + 2] = v & 255; d[i + 3] = 255; }
+    else if (guide){ const v = parseInt(PAL[T[y][x]].slice(1), 16), k = (x + y) % 2 ? .28 : .18; d[i] = (v >> 16) * k + 14; d[i + 1] = (v >> 8 & 255) * k + 10; d[i + 2] = (v & 255) * k + 22; d[i + 3] = 255; }
+    else { const k = (x + y) % 2 ? 22 : 18; d[i] = k; d[i + 1] = k - 4; d[i + 2] = k + 10; d[i + 3] = 255; } }
+  g.putImageData(im, 0, 0);
+  cv.style.transform = `translate(${pan[0]}px,${pan[1]}px) scale(${zoom})`; }
+function prog(){ let ok = 0; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (C[y][x] === T[y][x]) ok++; const n = W * H;
+  $('pg').style.width = (ok / n * 100).toFixed(1) + '%'; $('pgt').textContent = `밑그림과 같은 색으로 칠한 칸 ${ok} / ${n} · ${Math.floor(ok / n * 100)} %`; $('left').textContent = left; }
+// ---------- 팔레트 ----------
+$('pal').innerHTML = PAL.map((c, i) => `<button type="button" style="background:${c}" aria-label="색 ${i + 1}" aria-pressed="${i === col}" data-c="${i}"></button>`).join('');
+$('pal').onclick = e => { const b = e.target.closest('button'); if (!b) return; col = +b.dataset.c; [...$('pal').children].forEach(x => x.setAttribute('aria-pressed', x === b)); };
+// ---------- 누르기 ----------
+const view = $('view');
+const cell = e => { const r = cv.getBoundingClientRect(); return [Math.floor((e.clientX - r.left) / r.width * W), Math.floor((e.clientY - r.top) / r.height * H)]; };
+let drag = null;
+view.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, p0: pan.slice(), moved: false }; view.setPointerCapture(e.pointerId); });
+view.addEventListener('pointermove', e => { if (!drag || zoom === 1) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 6) drag.moved = true; if (drag.moved){ const vw = view.clientWidth, vh = view.clientHeight; pan = [Math.min(0, Math.max(vw - vw * zoom, drag.p0[0] + dx)), Math.min(0, Math.max(vh - vh * zoom, drag.p0[1] + dy))]; draw(); } });
+view.addEventListener('pointerup', e => { const d = drag; drag = null; if (!d || d.moved) return; tap(e); });
+function popAt(e, text){ const r = view.getBoundingClientRect(), p = document.createElement('div'); p.className = 'pop'; p.textContent = text; p.style.left = (e.clientX - r.left) + 'px'; p.style.top = (e.clientY - r.top) + 'px'; view.appendChild(p); setTimeout(() => p.remove(), 1400); }
+function tap(e){ const [x, y] = cell(e); if (x < 0 || y < 0 || x >= W || y >= H) return;
+  if (mode === 'look'){ popAt(e, WHO[y][x] ? `${WHO[y][x]}이(가) 칠했어요` : '아직 빈칸이에요'); return; }
+  if (left <= 0){ popAt(e, '오늘 칸을 다 썼어요. 내일 20 칸이 또 생겨요'); return; }
+  if (C[y][x] === col){ popAt(e, '이미 같은 색이에요'); return; }
+  left--; mine.push([x, y]); place(x, y, col, '나'); popAt(e, C[y][x] === T[y][x] ? '밑그림이랑 딱 맞아요' : '칠했어요'); log('나', x, y);
+}
+function log(who, x, y){ const L = $('log'), s = document.createElement('span'); s.innerHTML = `<b>${who}</b> · (${x}, ${y}) 칸을 칠했어요`; L.prepend(s); while (L.children.length > 4) L.lastChild.remove(); }
+// ---------- 버튼 ----------
+const seg = (a, b, on) => { a.setAttribute('aria-pressed', on); b.setAttribute('aria-pressed', !on); };
+$('mPaint').onclick = () => { mode = 'paint'; seg($('mPaint'), $('mLook'), true); };
+$('mLook').onclick = () => { mode = 'look'; seg($('mPaint'), $('mLook'), false); };
+$('zoom').onclick = () => { zoom = zoom === 1 ? 2.5 : 1; pan = [0, 0]; if (zoom > 1){ const vw = view.clientWidth, vh = view.clientHeight; pan = [-(vw * zoom - vw) * .35, -(vh * zoom - vh) * .3]; } $('zoom').setAttribute('aria-pressed', zoom > 1); $('zoom').textContent = zoom > 1 ? '작게' : '크게'; draw(); };
+$('guide').onclick = () => { guide = !guide; $('guide').setAttribute('aria-pressed', guide); draw(); };
+$('undo').onclick = () => { const m = mine.pop(); if (!m) return; for (let i = HIST.length - 1; i >= 0; i--){ const h = HIST[i]; if (h[0] === m[0] && h[1] === m[1] && h[3] === '나'){ C[m[1]][m[0]] = h[4]; WHO[m[1]][m[0]] = h[5]; HIST.splice(i, 1); break; } } left++; draw(); prog(); };
+$('tomorrow').onclick = () => { left = 20; mine = []; for (let k = 0; k < 160; k++){ const x = Math.floor(R() * W), y = Math.floor(R() * H); if (C[y][x] === T[y][x]) continue; place(x, y, T[y][x], NAMES[Math.floor(R() * NAMES.length)], true); } draw(); prog(); log('친구들', '밤사이', '160'); $('log').firstChild.innerHTML = '<b>밤사이</b> · 친구들이 160 칸을 칠했어요'; };
+$('vote').onclick = e => { const b = e.target.closest('button'); if (!b) return; [...$('vote').children].forEach(x => { const on = x === b, sp = x.querySelector('span'), n = parseInt(sp.textContent); if (x.getAttribute('aria-pressed') === 'true' && !on) sp.textContent = (n - 1) + ' 표'; if (on && x.getAttribute('aria-pressed') !== 'true') sp.textContent = (n + 1) + ' 표'; x.setAttribute('aria-pressed', on); }); };
+// 타임랩스: 칠한 순서대로 다시 그려요
+let rp = 0; $('replay').onclick = () => { cancelAnimationFrame(rp); const save = C.map(r => r.slice()); for (let y = 0; y < H; y++) C[y].fill(-1); const gd = guide; guide = false; let i = 0;
+  const stepF = () => { for (let k = 0; k < 18 && i < HIST.length; k++, i++){ const h = HIST[i]; C[h[1]][h[0]] = h[2]; } draw(); if (i < HIST.length) rp = requestAnimationFrame(stepF); else { for (let y = 0; y < H; y++) C[y] = save[y]; guide = gd; draw(); } }; rp = requestAnimationFrame(stepF); };
+// 친구들이 지금도 칠하고 있어요 (예시)
+setInterval(() => { if (document.hidden) return; for (let t = 0; t < 30; t++){ const x = Math.floor(R() * W), y = Math.floor(R() * H); if (C[y][x] === T[y][x]) continue; const who = NAMES[Math.floor(R() * NAMES.length)]; place(x, y, T[y][x], who); log(who, x, y); break; } }, 2200);
+draw(); prog();
+})();
+</script>
