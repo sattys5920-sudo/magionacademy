@@ -9859,7 +9859,7 @@ function knThumb(c, id, tries = 0){   // 인형 칸 그림: 안 그려지면 그
 }
 function knSpin(n){
   const col = KN_COL.find(x => x[0] === knYc) || KN_COL[0], dye = col[2]; n = Math.min(n, Math.floor((me.inv.wool || 0) / KN_WOOL), dye ? haveSame(dye) : 999); if (n < 1) return toast('재료가 모자라요');
-  me.inv.wool -= KN_WOOL * n; if (dye) takeSame(dye, n);   // 채집한 것 · 온실에서 수확한 것 둘 다 써요 knY()[col[0]] = (knY()[col[0]] || 0) + n; save(); hud && hud(); sfx('sparkle');
+  me.inv.wool -= KN_WOOL * n; if (dye) takeSame(dye, n); knY()[col[0]] = (knY()[col[0]] || 0) + n; save(); hud && hud(); sfx('sparkle');
   const v = $('#knv'); if (v){ v.classList.add('spin'); setTimeout(() => v.classList.remove('spin'), 700); } toast(`물레가 윙윙.... ${col[1]} 털실 ${n} 뭉치를 만들었어요`); knRender();
 }
 // 뜨던 것: me.knit.wip = { kind: 'sc' | 'doll', a, b, doll, used { 색: 뭉치 }, snap 지금까지 뜬 것 } · 털실은 시작할 때 쓰고, 「풀기」를 누르면 돌려받아요
@@ -9961,7 +9961,7 @@ function knitListen(){
   const prev = World.onFurn; World.onFurn = id => { const r0 = prev ? prev(id) : null, ro = World.roomOwner && World.roomOwner(); if (ro && ro.own && r0 && typeof r0 === 'object'){ const r = (me.room || []).find(x => x.id === id); if (r && r.f === 'kn_basket' && me.knit && me.knit.hi) r0.btn = [['뜨개질', () => { World.hideBubble(); knOpen('k'); }], ...(r0.btn || [])]; } return r0; };
   setInterval(() => { try { knTick(); } catch(e){ errReport('knit', '겨울 뜨개질 tick 오류: ' + e.message, e.stack || ''); } }, 1500);
 }
-window.__kn = { intro: () => knIntro(), open: t => knOpen(t), play: (O, t) => knPlay(O, t), sheet: (id, sc) => knSprSheet(npcGet(id), sc), give: (id, i) => knGive(npcGet(id), i), ctl: () => knCtl };   // 시험용
+window.__kn = { intro: () => knIntro(), open: t => knOpen(t), play: (O, t) => knPlay(O, t), sheet: (id, sc) => knSprSheet(npcGet(id), sc), give: (id, i) => knGive(npcGet(id), i), spin: (c, k) => { knYc = c; knSpin(k); }, ctl: () => knCtl };   // 시험용
 window.__adKnit = () => adminKnitHTML();   // 시험용
 function adminKnitHTML(){
   const c = AD.knctl || {}, P = AD.players || {}, ids = Object.keys(P).filter(id => P[id]?.nick), IN = ids.filter(id => P[id].knit && P[id].knit.hi), not = ids.filter(id => !(P[id].knit && P[id].knit.hi));
@@ -10749,7 +10749,7 @@ function mailListen(){
   setInterval(() => { mailApply(); noticePop(); }, 2000);
 }
 const mailDone = [];
-const MAIL_KEYS = new Set(['at', 'sum', 'msg', 'c', 'coin', 'mana', 'stone', 'sp', 'items', 'set', 'delBuff', 'resetExam', 'skReset', 'stReset', 'wpReset', 'hseen']), MAIL_SET = new Set(['coin', 'items', 'lv', 'st', 'sp']);
+const MAIL_KEYS = new Set(['at', 'sum', 'msg', 'c', 'coin', 'mana', 'stone', 'sp', 'items', 'set', 'delBuff', 'resetExam', 'skReset', 'stReset', 'wpReset', 'hseen', 'yarn']), MAIL_SET = new Set(['coin', 'items', 'lv', 'st', 'sp']);
 function mailOld(){ try { if (sessionStorage.getItem('magion-mailold')) return; sessionStorage.setItem('magion-mailold', '1'); } catch(e){ return; } saveNow(); setTimeout(() => location.reload(), 1500); }
 function mailApply(){
   if (!me || !mailBox || !document.body.classList.contains('inworld')) return; me.mailGot = me.mailGot || {};
@@ -10763,6 +10763,7 @@ function mailApply(){
     if (e.stone){ me.inv.mana = Math.max(0, (me.inv.mana || 0) + num(e.stone)); got.push(`마나석 ${num(e.stone)}개`); }
     if (e.sp){ const ex = xEx(); ex.spx = (ex.spx || 0) + num(e.sp); got.push(`스킬 포인트 ${num(e.sp)}`); }
     Object.entries(e.items || {}).forEach(([k, n]) => { if (ITEM[k] === undefined) return; me.inv[k] = Math.max(0, (me.inv[k] || 0) + num(n)); got.push(`${ITEM[k]} ×${num(n)}`); });
+    Object.entries(e.yarn || {}).forEach(([c, n]) => { const col = KN_COL.find(x => x[0] === c); if (!col) return; const K = me.knit || (me.knit = {}), Y = K.yarn || (K.yarn = {}); Y[c] = Math.max(0, (Y[c] || 0) + num(n)); got.push(`${col[1]} 털실 ${num(n)} 뭉치`); });
     (e.delBuff || []).forEach(k => { if (me.buffs) delete me.buffs[k]; });
     if (e.resetExam) delete me.exam;
     Object.entries(e.hseen || {}).forEach(([nid, n]) => { if (!npcGet(nid)) return; n = Math.max(0, Math.min(10, num(n))); const st = npcSt(nid), bk = {};   // 본 하트 이야기 수 맞추기: 1~n번은 본 것으로(원래 기록이 있으면 그대로), 그 뒤는 안 본 것으로
@@ -10802,6 +10803,8 @@ function adminGiftHTML(){
       <div class="adfg"><label>골드<input id="adgc" type="number"></label><label>마력<input id="adgm" type="number"></label><label>마나석<input id="adgs" type="number"></label><label>스킬 포인트<input id="adgp" type="number"></label></div>
       <div class="frow"><select id="adgi" style="flex:1"><option value="">아이템 고르기</option>${adItemOpts()}</select><input id="adgn" type="number" min="1" value="1" style="width:64px"></div>
       <div class="frow"><input id="adgmsg" maxlength="40" placeholder="전할 말 (없어도 돼요)" style="flex:1"><button class="btn sm go" data-adg="send">보내기</button></div></div>
+    <div class="adcard"><b>털실 보내기</b><span class="s sub">뜨개질 털실 뭉치가 바로 들어가요 · 지금 가진 털실: ${Object.entries((p.knit && p.knit.yarn) || {}).filter(([, k]) => k > 0).map(([c, k]) => `${(KN_COL.find(x => x[0] === c) || [, c])[1]} ${k}`).join(' · ') || '없음'}</span>
+      <div class="frow"><select id="adgy" style="flex:1">${KN_COL.map(([c, nm]) => `<option value="${c}">${nm}</option>`).join('')}</select><input id="adgyn" type="number" min="1" value="10" style="width:64px"><button class="btn sm go" data-adg="yarn">보내기</button></div></div>
     <div class="adcard"><b>값 바꾸기</b><span class="s sub">적은 숫자로 바로 맞춰요</span>
       <div class="adfx">${fx('골드', 'adfc', 'setcoin')}${fx('남은 스킬 포인트', 'adfp', 'setsp')}${fx('남은 스탯 포인트', 'adft', 'setst')}${fx('탐사 레벨', 'adfl', 'setlv', `min="1" max="${XCAP}"`)}${fx('마나석', 'adfs', 'setstone')}</div>
       <div class="frow"><select id="adfi" style="flex:1"><option value="">아이템 고르기</option>${adItemOpts()}</select><input id="adfn" type="number" min="0" value="0" style="width:64px"><button class="btn sm" data-adg="setitem">개수로</button></div></div>
@@ -10817,7 +10820,7 @@ async function adminMailLoad(){
   adminMailLog = Object.values(v).sort((a, b) => b.at - a.at).slice(0, 5); if (AD.tab === 'gift') adminRender();
 }
 function adminMailSend(u, e){
-  if (!F || !db || !u) return Promise.resolve(); const id = now2() + '_' + Math.random().toString(36).slice(2, 5), sum = [e.coin && `골드 ${e.coin}`, e.mana && `마력 ${e.mana}`, e.stone && `마나석 ${e.stone}`, e.sp && `SP ${e.sp}`, ...Object.entries(e.items || {}).map(([k, n]) => `${ITEM[k]} ×${n}`), e.set && e.set.coin !== undefined && `골드를 ${e.set.coin}으로`, e.set && e.set.sp !== undefined && `남은 스킬 포인트를 ${e.set.sp}개로`, ...Object.entries((e.set && e.set.items) || {}).map(([k, n]) => `${ITEM[k]}을(를) ${n}개로`), (e.delBuff || []).length && `버프 제거`, e.resetExam && '쪽지시험 기록 지움', e.skReset && '스킬 되돌리기', e.stReset && '스탯 되돌리기', e.wpReset && '무기 되돌리기', e.hseen && `하트 이야기: ${Object.entries(e.hseen).map(([k, n]) => `${(npcGet(k) || {}).name || k} ${n}개`).join(' · ')}`, e.set && e.set.lv !== undefined && `탐사 레벨을 ${e.set.lv}로`, e.set && e.set.st !== undefined && `남은 스탯 포인트를 ${e.set.st}개로`].filter(Boolean).join(', ');
+  if (!F || !db || !u) return Promise.resolve(); const id = now2() + '_' + Math.random().toString(36).slice(2, 5), sum = [e.coin && `골드 ${e.coin}`, e.mana && `마력 ${e.mana}`, e.stone && `마나석 ${e.stone}`, e.sp && `SP ${e.sp}`, ...Object.entries(e.items || {}).map(([k, n]) => `${ITEM[k]} ×${n}`), ...Object.entries(e.yarn || {}).map(([c, n]) => `${(KN_COL.find(x => x[0] === c) || [, c])[1]} 털실 ${n} 뭉치`), e.set && e.set.coin !== undefined && `골드를 ${e.set.coin}으로`, e.set && e.set.sp !== undefined && `남은 스킬 포인트를 ${e.set.sp}개로`, ...Object.entries((e.set && e.set.items) || {}).map(([k, n]) => `${ITEM[k]}을(를) ${n}개로`), (e.delBuff || []).length && `버프 제거`, e.resetExam && '쪽지시험 기록 지움', e.skReset && '스킬 되돌리기', e.stReset && '스탯 되돌리기', e.wpReset && '무기 되돌리기', e.hseen && `하트 이야기: ${Object.entries(e.hseen).map(([k, n]) => `${(npcGet(k) || {}).name || k} ${n}개`).join(' · ')}`, e.set && e.set.lv !== undefined && `탐사 레벨을 ${e.set.lv}로`, e.set && e.set.st !== undefined && `남은 스탯 포인트를 ${e.set.st}개로`].filter(Boolean).join(', ');
   return F.set(F.ref(db, `mail/${u}/${id}`), { at: now2(), sum, ...e }).then(() => adminMailLoad());
 }
 document.addEventListener('change', e => { const h = e.target.closest && e.target.closest('[data-hsn]'); if (h){ AD.hsp = AD.hsp || {}; AD.hsp[AD.gu + ':' + h.dataset.hsn] = +h.value; } });   // 화면이 새로 그려져도 고르던 숫자를 기억해요
@@ -10830,6 +10833,7 @@ document.addEventListener('click', e => {
   if (!u) return; const nm = (AD.players[u] && AD.players[u].nick) || u;
   if (a === 'send'){ const e2 = {}; if (n('adgc')) e2.coin = n('adgc'); if (n('adgm')) e2.mana = n('adgm'); if (n('adgs')) e2.stone = n('adgs'); if (n('adgp')) e2.sp = n('adgp'); if (v('adgi') && n('adgn') > 0) e2.items = { [v('adgi')]: n('adgn') }; if (v('adgmsg')) e2.msg = v('adgmsg');
     if (!Object.keys(e2).filter(k => k !== 'msg').length) return alert('보낼 게 없어요'); if (!confirm(`${nm}에게 보낼까요?`)) return; adminMailSend(u, e2).then(() => { ['adgc', 'adgm', 'adgs', 'adgp', 'adgmsg'].forEach(i => { const x = $('#' + i); if (x) x.value = ''; }); }); return; }
+  if (a === 'yarn'){ const c = v('adgy'), k = n('adgyn'), col = KN_COL.find(x => x[0] === c); if (!col || k < 1) return alert('색과 뭉치 수를 골라 주세요'); if (confirm(`${nm}에게 ${col[1]} 털실 ${k} 뭉치를 보낼까요?`)) adminMailSend(u, { yarn: { [c]: k } }); return; }
   if (a === 'setst'){ if (v('adft') === '') return; const t = Math.max(0, n('adft')); if (confirm(`${nm}의 남은 스탯 포인트를 ${t}개로 바꿀까요? (찍어 둔 스탯은 그대로예요)`)) adminMailSend(u, { set: { st: t } }); return; }
   if (a === 'wpreset'){ if (confirm(`${nm}의 무기 강화를 처음(0단계)으로 되돌릴까요? 쓴 골드·마나석은 돌려주지 않아요.`)) adminMailSend(u, { wpReset: 1 }); return; }
   if (a === 'streset'){ if (confirm(`${nm}이(가) 찍은 스탯을 모두 되돌릴까요? 쓴 포인트는 남은 스탯 포인트로 돌아가요.`)) adminMailSend(u, { stReset: 1 }); return; }
