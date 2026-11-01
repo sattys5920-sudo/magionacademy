@@ -2687,7 +2687,7 @@ function xMDraw(){
     end.forEach(([ex, ey], i) => { const k = M.fork.opts[i], on = M.fork.my === i, im = xSpr(XM_FORK[k][0]), sz = on ? 46 : 40, nm = XM_FORK[k][1];
       if (on){ g.strokeStyle = '#ffd866'; g.lineWidth = 2; g.beginPath(); g.ellipse(ex + 4, ey + 24, 26, 8, 0, 0, 7); g.stroke(); }
       g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(ex + 4, ey + 24, 18, 5, 0, 0, 7); g.fill();
-      if (im.complete) g.drawImage(im, Math.round(ex + 4 - sz / 2), Math.round(ey + 24 - sz + bob * (i ? -1 : 1)), sz, sz);
+      if (im.complete && im.naturalWidth) g.drawImage(im, Math.round(ex + 4 - sz / 2), Math.round(ey + 24 - sz + bob * (i ? -1 : 1)), sz, sz);
       g.font = '9px G11B, Pretendard, sans-serif'; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText(nm, ex + 4, ey + 36); g.fillStyle = '#fff'; g.fillText(nm, ex + 4, ey + 36); });
     g.globalAlpha = 1;
     const left = Math.max(0, (XM_VOTE - (now - M.fork.t0)) / 1000), tx = xEx().run?.co ? `갈림길! 다수결로 정해요 (동점이면 파티장) · ${Math.ceil(left)}` : `갈림길! 누르면 그쪽으로 가요 · ${Math.ceil(left)}`; g.font = '11px G11B, Pretendard, sans-serif'; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText(tx, XCW / 2, 40); g.fillStyle = '#ffd866'; g.fillText(tx, XCW / 2, 40); }
@@ -2704,7 +2704,7 @@ function xForkFxDraw(g, px, py, now){
   const x = px + 62, y = py + 4, fade = Math.min(1, (XFX_MS / 1000 - e) / .4), spark = (cx, cy, n, c = '#fff4c8') => { for (let i = 0; i < n; i++){ const a = i / n * 6.28 + e * 3, r = 8 + ((e * 22 + i * 5) % 16); g.fillStyle = c; g.fillRect(Math.round(cx + Math.cos(a) * r), Math.round(cy + Math.sin(a) * r * .7), 2, 2); } };
   g.save(); g.globalAlpha = fade;
   g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(x, y, 20, 5, 0, 0, 7); g.fill();
-  const put = (n, sz = 52) => { const im = xSpr(n); if (im.complete) g.drawImage(im, Math.round(x - sz / 2), Math.round(y - sz + 4), sz, sz); };
+  const put = (n, sz = 52) => { const im = xSpr(n); if (im.complete && im.naturalWidth) g.drawImage(im, Math.round(x - sz / 2), Math.round(y - sz + 4), sz, sz); };
   if (F.k === 'camp'){ g.fillStyle = `rgba(255,170,60,${.16 + .05 * Math.sin(e * 9)})`; g.beginPath(); g.arc(x, y - 18, 46, 0, 7); g.fill(); put('fire' + (Math.floor(e * 7) % 3)); spark(x, y - 24, 5, '#ffd75c'); }
   else if (F.k === 'chest'){ put(e > .5 ? 'chest1' : 'chest0'); if (e > .5){ spark(x, y - 24, 8); const k = Math.min(1, (e - .5) / .8); g.fillStyle = '#ffd75c'; g.fillRect(x - 3, Math.round(y - 40 - k * 14), 6, 6); g.fillStyle = '#fff4a0'; g.fillRect(x - 1, Math.round(y - 39 - k * 14), 3, 3); } }
   else if (F.k === 'statue'){ if (e > .5){ g.fillStyle = `rgba(255,226,120,${.2 + .08 * Math.sin(e * 8)})`; g.beginPath(); g.arc(x, y - 22, 34, 0, 7); g.fill(); } put(e > .5 ? 'stat1' : 'stat0'); if (e > .5) spark(x, y - 26, 6); }
@@ -7817,7 +7817,7 @@ async function famCut(){
   const av = World.Avatar.compose(me.av), up = World.Avatar.meta.dirs.up * World.Avatar.FW;
   const S = { e: [130, 40], sz: 10, hue: null, sp: -1, burst: 0, dark: 0, glow: 0, rit: 0, sparks: [] }; let live = true;
   const ease = t => t < .5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
-  const draw = now => { if (!live) return; requestAnimationFrame(draw); g.clearRect(0, 0, 320, 180); if (BG.complete) g.drawImage(BG, 0, 0);
+  const draw = now => { if (!live) return; requestAnimationFrame(draw); g.clearRect(0, 0, 320, 180); if (BG.complete && BG.naturalWidth) g.drawImage(BG, 0, 0);
     if (S.dark){ g.fillStyle = `rgba(4,2,10,${.6 * S.dark})`; g.fillRect(0, 0, 320, 180); }
     g.globalCompositeOperation = 'lighter'; const rp = .25 + .35 * Math.abs(Math.sin(now / 700)) + S.glow * .4, gr = g.createRadialGradient(160, 110, 0, 160, 110, 22); gr.addColorStop(0, `rgba(90,128,200,${rp * .45})`); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(130, 90, 60, 40); g.globalCompositeOperation = 'source-over';
     g.drawImage(av, up, 0, World.Avatar.FW, World.Avatar.FH, 160 - World.Avatar.FW / 2, 182 - World.Avatar.FH, World.Avatar.FW, World.Avatar.FH);
@@ -8042,7 +8042,7 @@ async function famAwaken(){   // 각성 연출: 룬 고리 → 빛기둥 → 번
   const BG = new Image(); BG.src = 'art/fam_altar.png?v=1'; const SP = new Image(); SP.src = 'art/wisps.png?v=1'; const SA = new Image(); SA.src = 'art/wisps_awake.png?v=1';
   const rgb = [1, 3, 5].map(i => parseInt(col.slice(i, i + 2), 16)).join(','), S = { y: 78, sz: 12, ring: 0, dark: 0, pillar: 0, aw: 0, burst: 0, sp: [] }; let live = true;
   const ease = q => q < .5 ? 2 * q * q : 1 - (-2 * q + 2) ** 2 / 2;
-  const draw = now => { if (!live) return; requestAnimationFrame(draw); g.clearRect(0, 0, 320, 180); if (BG.complete) g.drawImage(BG, 0, 0);
+  const draw = now => { if (!live) return; requestAnimationFrame(draw); g.clearRect(0, 0, 320, 180); if (BG.complete && BG.naturalWidth) g.drawImage(BG, 0, 0);
     g.fillStyle = `rgba(4,2,10,${.65 * S.dark})`; g.fillRect(0, 0, 320, 180); g.globalCompositeOperation = 'lighter';
     if (S.ring){ const q = now / 900; g.save(); g.translate(160, 140); g.scale(1, .32); for (let r = 0; r < 2; r++){ g.strokeStyle = `rgba(${rgb},${.55 * S.ring})`; g.lineWidth = 2; g.beginPath(); g.arc(0, 0, 44 + r * 10, q * (r ? -1 : 1), q * (r ? -1 : 1) + Math.PI * 1.7); g.stroke(); }
       for (let i = 0; i < 8; i++){ const a = q + i / 8 * Math.PI * 2; g.fillStyle = `rgba(255,255,255,${S.ring})`; g.fillRect(Math.cos(a) * 49 - 1, Math.sin(a) * 49 - 1, 3, 3); } g.restore(); }
@@ -8116,7 +8116,7 @@ async function fairyGo(c){
   const v = document.createElement('div'); v.id = 'fycut'; v.innerHTML = `<canvas width="320" height="180"></canvas><div id="fysay"><div class="evbox"><div class="fqn"></div><div class="evtext"></div></div></div><div id="fypick"><div class="box"></div></div><div id="fygot"></div>`; document.body.appendChild(v); World.hideBubble && World.hideBubble();
   const cv = v.querySelector('canvas'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false; const BG = new Image(); BG.src = 'art/fairy_market_bg.png?v=1'; const ST = new Image(); ST.src = 'art/fairy_stalls.png?v=1';
   const S = { talk: 0, sp: [], pull: null, fx: -20, fy: 60, open: 0 }; let live = true;
-  const draw = now => { if (!live) return; requestAnimationFrame(draw); g.clearRect(0, 0, 320, 180); if (BG.complete) g.drawImage(BG, 0, 0);
+  const draw = now => { if (!live) return; requestAnimationFrame(draw); g.clearRect(0, 0, 320, 180); if (BG.complete && BG.naturalWidth) g.drawImage(BG, 0, 0);
     if (S.open && ST.complete){ const h = Math.max(1, Math.round(64 * S.open)); g.drawImage(ST, c.f * 80, 64 - h, 80, h, 120, 144 - h, 80, h); }
     const x = S.fx, y = S.fy + Math.sin(now / 420) * 2, on = S.talk, fl = Math.abs(Math.sin(now / (on ? 45 : 70)));
     g.globalCompositeOperation = 'lighter'; const r = on ? 16 : 11, rg = g.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, f.c + (on ? 'cc' : '88')); rg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = rg; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
@@ -9651,13 +9651,13 @@ document.addEventListener('click', e => {
   if (b.dataset.gds){ const i = +b.dataset.gds; gdSel = gdSel === i ? null : i; sfx('pop'); return gdRender(); }
 });
 // ---------- 시작 연출: 똑똑 → 맨디 → 부탁해요 → 뚝딱뚝딱 시공 → 정원 ----------
-const gdFace = g => { const I = NPC_IMG_STAGE || (NPC_IMG_STAGE = Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` })); g.fillStyle = '#1E2A20'; g.fillRect(0, 0, 32, 32); if (I.complete) g.drawImage(I, 21, 4 * 64 + 27, 28, 28, 2, 2, 28, 28); };
+const gdFace = g => { const I = NPC_IMG_STAGE || (NPC_IMG_STAGE = Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` })); g.fillStyle = '#1E2A20'; g.fillRect(0, 0, 32, 32); if (I.complete && I.naturalWidth) g.drawImage(I, 21, 4 * 64 + 27, 28, 28, 2, 2, 28, 28); };
 const gdSay = (t, hold = 1500) => blancSay('맨디', t, hold, gdFace);
 function gdAsk(a, b){ return new Promise(res => { const d = document.createElement('div'); d.id = 'gdask'; d.innerHTML = `<button data-k="0">${a}</button><button data-k="1" class="go">${b}</button>`; document.body.appendChild(d); d.onclick = e => { const x = e.target.closest('button'); if (!x) return; d.remove(); res(+x.dataset.k); }; }); }
 async function gdIntro(){
   gdOn = true; const t = World.meTile(), spot = [t.x + 1, t.y - 1], mapId = t.m; let dim = null, step = 0, bob = null, yRaf = 0;
   const I = NPC_IMG_STAGE || (NPC_IMG_STAGE = Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` }));
-  const place = (a, col = 0) => { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.globalAlpha = a; if (I.complete) q.drawImage(I, col * 64, 4 * 64, 64, 64, 0, 0, 64, 64); World.setProps(mapId, [{ id: 'mandi', x: spot[0], y: spot[1], img: c, pxc: q, sw: 64, sh: 64, ax: 32, ay: 58, solid: false }], 'gdmandi'); };
+  const place = (a, col = 0) => { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.globalAlpha = a; if (I.complete && I.naturalWidth) q.drawImage(I, col * 64, 4 * 64, 64, 64, 0, 0, 64, 64); World.setProps(mapId, [{ id: 'mandi', x: spot[0], y: spot[1], img: c, pxc: q, sw: 64, sh: 64, ax: 32, ay: 58, solid: false }], 'gdmandi'); };
   try {
     toast('똑, 똑똑.......'); sfx('knock'); await famSleep(1600);
     dim = document.createElement('div'); dim.className = 'bldim'; document.body.appendChild(dim); requestAnimationFrame(() => dim.style.opacity = 1);
