@@ -118,6 +118,110 @@ class View:
             for y in ys[:3]:
                 if L(P[x, y][:3]) > 30: P[x, y] = (rb[3] if x % 2 else rb[2]) + (255,)
         return over(s.base, g)
+# 그림 NPC(동물 등): 앞 · 옆 · 뒤마다 직접 잡은 자리 — 모자(dome x0, x1, 꼭대기 y, 챙 y) · 귀마개(솜방울 자리들) · 목(y, x0, x1) · 손(자리들)
+SP_ = {
+ 'npc0': {'': dict(hat=(21, 36, 23, 30), muff=[(20, 25), (37, 25)], neck=(40, 23, 34), hands=[(25, 55), (31, 55)]),            # 나비: 귀는 모자 밖으로 · 귀마개는 귀에
+          '_side': dict(hat=(19, 33, 23, 30), muff=[(30, 25)], neck=(40, 21, 32), hands=[(24, 55)]),
+          '_back': dict(hat=(25, 42, 21, 29), muff=[(23, 23), (43, 23)], neck=(36, 28, 40), hands=[])},
+ 'npc1': {'': dict(hat=(27, 38, 22, 28), muff=[(25, 21), (39, 21)], neck=(38, 26, 39), hands=[(17, 32), (48, 32)]),            # 배트리: 손 = 날개 끝 발톱
+          '_side': dict(hat=(24, 35, 22, 28), muff=[(33, 21)], neck=(38, 24, 35), hands=[]),
+          '_back': dict(hat=(27, 40, 20, 27), muff=[(25, 18), (42, 18)], neck=(37, 27, 41), hands=[])},
+ 'npc2': {'': dict(hat=(25, 43, 18, 27), muff=[(24, 33), (44, 33)], neck=(39, 27, 41), hands=[(25, 45), (43, 45)]),            # 캇파: 접시 위로 · 손은 양옆
+          '_side': dict(hat=(26, 44, 18, 27), muff=[(38, 32)], neck=(39, 28, 42), hands=[(28, 45)]),
+          '_back': dict(hat=(26, 44, 18, 26), muff=[(25, 32), (45, 32)], neck=(38, 28, 42), hands=[(26, 46), (44, 46)])},
+ 'npc3': {'': dict(hat=(24, 39, 24, 30), muff=[(21, 27), (42, 27)], neck=(41, 24, 39), hands=[(24, 46), (38, 46)]),            # 아울라: 손 = 책 든 날개 끝
+          '_side': dict(hat=(23, 40, 24, 30), muff=[(36, 28)], neck=(41, 24, 40), hands=[(24, 46)]),
+          '_back': dict(hat=(22, 41, 23, 29), muff=[(20, 27), (43, 27)], neck=(40, 22, 41), hands=[])},
+ 'npc4': {'': dict(hat=(27, 43, 36, 43), muff=[(27, 41), (43, 41)], neck=(52, 27, 43), hands=[(26, 52), (44, 52)], leaves=True),   # 맨디: 잎은 모자 위로 쏙
+          '_side': dict(hat=(25, 41, 36, 43), muff=[(37, 41)], neck=(52, 25, 41), hands=[(24, 52), (42, 52)], leaves=True),
+          '_back': dict(hat=(27, 44, 36, 43), muff=[(27, 41), (44, 41)], neck=(51, 27, 43), hands=[(26, 52), (44, 52)], leaves=True)},
+ 'npc5': {'': dict(hat=(24, 40, 22, 31), muff=[(24, 33), (40, 33)], neck=(40, 26, 38), hands=[(18, 49), (45, 49)], strip=31),   # 스트로: 밀짚모자 벗고 털모자
+          '_side': dict(hat=(25, 39, 22, 31), muff=[(35, 33)], neck=(40, 27, 37), hands=[(26, 49)], strip=31),
+          '_back': dict(hat=(24, 40, 22, 31), muff=[(24, 33), (40, 33)], neck=(40, 26, 38), hands=[(19, 48), (45, 48)], strip=31)},
+}
+class SpriteView:
+    def __init__(s, v, who):
+        s.v = v; s.who = who; s.p = SP_[who][v]; s.base = Image.open(os.path.join(AVD, f'av_{who}{v}.png')).convert('RGBA'); s.orig = s.base.copy(); s.bare = None
+        if 'strip' in s.p:
+            s.base = s.base.copy()   # 스트로: 밀짚모자(챙 아래 줄까지)를 지우고, 그 자리에 자루 천 머리를 그려 둬요 (털모자가 덮어요)
+            P = s.base.load(); x0, x1, top, brim = s.p['hat']
+            for y in range(0, brim + 1):   # 챙 줄까지: 얼굴 폭 밖(챙 끝)은 지우고, 위쪽은 다 지워요 (털모자가 덮어요 · 얼굴은 그대로)
+                for x in range(64):
+                    if y < brim - 2 or x < x0 - 1 or x > x1 + 1: P[x, y] = (0, 0, 0, 0)
+            # 모자 없이(귀마개만) 쓸 때 보일 자루 천 머리 윗부분
+            bare = s.base.copy(); d = ImageDraw.Draw(bare); cxh = (x0 + x1) / 2
+            d.ellipse([x0 - 1, top + 2, x1 + 1, brim + 10], fill=(58, 36, 28, 255)); d.ellipse([x0, top + 3, x1, brim + 9], fill=(196, 156, 100, 255)); d.ellipse([x0 + 2, top + 4, cxh, brim], fill=(218, 182, 124, 255))
+            for xx in range(x0 + 2, x1 - 1, 3): d.point((xx, brim - 1), fill=(150, 110, 70, 255))
+            bare.alpha_composite(s.base); s.bare = bare
+            s.stripped = s.base; s.base = s.orig
+        s.B = s.base.load()
+    def _hat_pts(s):
+        x0, x1, top, brim = s.p['hat']; cx = (x0 + x1) / 2; rx = (x1 - x0) / 2 + .5; dome, band = [], []
+        for y in range(top, brim + 1):
+            if y >= brim - 2: band += [(x, y) for x in range(x0 - 1, x1 + 2)]
+            else:
+                t = (brim - 2 - y) / max(1, brim - 2 - top); w = rx * (1 - t * t) ** .5 if t < 1 else 2
+                dome += [(x, y) for x in range(int(cx - w), int(cx + w) + 1)]
+        return dome, band, cx, top
+    def hat(s, a, b):
+        base0 = s.base
+        if s.bare is not None and s.base is s.orig: s.base = s.stripped
+        try: return s._hat(a, b)
+        finally: s.base = base0
+    def _hat(s, a, b):
+        lay = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); dome, band, cx, top = s._hat_pts(); lpc_fill(lay, dome, RAMP[YARN[a]]); P = lay.load(); rb = RAMP[YARN[b]]
+        for x, y in band: P[x, y] = (rb[3] if x % 2 else rb[2]) + (255,)
+        xs = [p[0] for p in band]; by = max(p[1] for p in band)
+        for x in range(min(xs), max(xs) + 1): P[x, by + 1] = rb[0] + (255,)
+        if s.p.get('leaves'):   # 잎이 모자를 뚫고 나와요: 원래 잎 픽셀을 모자 위에 다시
+            out = over(s.base, lay); O = out.load()
+            for y in range(0, top + 3):
+                for x in range(64):
+                    c = s.B[x, y]
+                    if c[3] and c[1] > c[0] + 20: O[x, y] = c
+            return out
+        pom = [(x, y) for y in range(64) for x in range(64) if ((x - cx) / 3) ** 2 + ((y - (top - 2)) / 2.6) ** 2 <= 1 and not P[x, y][3]]; lpc_fill(lay, pom, rb)
+        return over(s.base, lay)
+    def muff(s, a, b):
+        base0 = s.base
+        if s.bare is not None and s.base is s.orig: s.base = s.bare
+        try: return s._muff(a, b)
+        finally: s.base = base0
+    def _muff(s, a, b):
+        lay = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); P = lay.load(); ra, rb = RAMP[YARN[a]], RAMP[YARN[b]]; pts = s.p['muff']
+        if len(pts) == 2:   # 두 솜방울을 머리 위로 잇는 띠
+            (ax_, ay_), (bx_, by_) = pts; _, _, top, _ = s.p['hat']; topy = top - 1
+            for i in range(41):
+                t = i / 40; x = round(ax_ + (bx_ - ax_) * t); y = round((1 - t) ** 2 * ay_ + 2 * (1 - t) * t * (topy - 2) + t * t * by_)
+                for dy in (0, 1): P[x, y + dy] = (rb[3] if (x + y) % 2 else rb[2]) + (255,)
+        else:
+            (ax_, ay_), = pts; _, _, top, _ = s.p['hat']
+            for y in range(top - 1, ay_ - 2):
+                for dx in (0, 1): P[ax_ + dx, y] = (rb[3] if y % 2 else rb[2]) + (255,)
+        for (cx, cy) in pts:
+            puff = [(x, y) for y in range(64) for x in range(64) if ((x - cx) / 2.6) ** 2 + ((y - cy) / 3) ** 2 <= 1]
+            for q in puff: P[q] = (0, 0, 0, 0)
+            lpc_fill(lay, puff, ra, light=(-1 if cx < 32 else 1, -1))
+        return over(s.base, lay)
+    def scarf(s, a, b, neck=None):
+        y0, x0, x1 = s.p['neck']; lay = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); P = lay.load(); ra, rb = RAMP[YARN[a]], RAMP[YARN[b]]
+        band = [(x, y) for y in range(y0 - 1, y0 + 2) for x in range(x0, x1 + 1)]; tail = []
+        if s.v == '': tail = [(x, y) for y in range(y0 + 2, y0 + 8) for x in range(x1 - 4, x1 - 1)]
+        if s.v == '_back': m = (x0 + x1) // 2; tail = [(x, y) for y in range(y0 + 2, y0 + 7) for x in range(m - 1, m + 2)]
+        if s.v == '_side': tail = [(x, y) for y in range(y0 + 2, y0 + 6) for x in range(x1 - 2, x1 + 1)]
+        pts = band + tail; lpc_fill(lay, pts, ra)
+        for x, y in pts:
+            if (x // 2 + y // 3) % 2 and P[x, y][:3] != ra[0]: P[x, y] = rb[2 + ((x + y) % 2)] + (255,)
+        for x in range(x1 - 4, x1 - 1, 1):
+            if s.v == '': P[x, y0 + 8] = rb[2] + (255,)
+        return over(s.base, lay)
+    def gloves(s, a, b):
+        if not s.p['hands']: return over(s.base)
+        lay = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); P = lay.load(); ra, rb = RAMP[YARN[a]], RAMP[YARN[b]]
+        for cx, cy in s.p['hands']:
+            m = [(x, y) for y in range(64) for x in range(64) if ((x - cx) / 2.3) ** 2 + ((y - cy) / 2.3) ** 2 <= 1]; lpc_fill(lay, m, ra)
+            for x in range(cx - 2, cx + 3): P[x, cy - 3] = rb[2 + (x % 2)] + (255,)   # 손목 고무단
+        return over(s.base, lay)
 CAST = [('레오', 'leo', 'thin'), ('세라 선생님', 'sera', 'male'), ('마들렌', 'madeleine', 'male'), ('스텔라', 'stella', 'thin'), ('나비', 'npc0', None), ('배트리', 'npc1', None), ('캇파', 'npc2', None), ('아울라', 'npc3', None), ('맨디', 'npc4', None), ('스트로', 'npc5', None)]
 NECK = {'npc0': 41, 'npc1': 41, 'npc2': 39, 'npc3': 42, 'npc4': 44, 'npc5': 37}   # 그림 NPC 목 높이 (앞)
 FB = '/tmp/claude-0/-home-user/d683bb50-b1f3-59a3-8e5f-5f21e64e8c5a/scratchpad/Galmuri11-Bold.ttf'
@@ -125,7 +229,7 @@ F, F2, F3 = ImageFont.truetype(FB, 15), ImageFont.truetype(FB, 12), ImageFont.tr
 BG, PAN, INK, SUB, GOLD = (26, 18, 38), (37, 26, 54), (241, 233, 255), (184, 168, 216), (255, 233, 160)
 COLS = [('목도리', 'scarf', ('빨강', '하양')), ('방울 모자', 'hat', ('파랑', '노랑')), ('털 귀마개', 'muff', ('분홍', '하양')), ('손모아장갑', 'gloves', ('초록', '하양'))]
 CW, RH = 120, 150; W_ = 150 + CW * 7 + 20; img = Image.new('RGB', (W_, 70 + RH * len(CAST) + 20), BG); d = ImageDraw.Draw(img)
-d.text((20, 14), 'NPC가 선물받은 뜨개 옷을 입은 모습 (내가 준 것만 내 화면에서 보여요)', font=F3, fill=(255, 184, 168))
+d.text((20, 14), 'NPC가 선물받은 뜨개 옷 (내 화면에서만 · 모자 칸은 방울 모자나 귀마개 하나 · 여러 개면 매일 바꿔 써요)', font=F2, fill=(255, 184, 168))
 for c, (nm, _, _) in enumerate(COLS): d.text((150 + c * CW + 20, 48), nm, font=F2, fill=GOLD)
 for c, nm in enumerate(['다 같이 · 앞', '옆', '뒤']): d.text((150 + (4 + c) * CW + 24, 48), nm, font=F2, fill=GOLD)
 def cell(im, c, r):
@@ -134,12 +238,17 @@ def cell(im, c, r):
     t = crop.resize((int(crop.size[0] * k), int(crop.size[1] * k)), Image.NEAREST); img.paste(t, (150 + c * CW + (CW - t.size[0]) // 2, 70 + r * RH + (RH - t.size[1]) - 6), t)
 for r, (nm, who, body) in enumerate(CAST):
     y = 70 + r * RH; d.rounded_rectangle([12, y + 2, W_ - 12, y + RH - 4], 12, fill=PAN); d.text((22, y + RH // 2 - 10), nm, font=F, fill=INK)
-    VV = {v: View(v, who, body) for v, _ in VIEWS}
+    VV = {v: (View(v, who, body) if body else SpriteView(v, who)) for v, _ in VIEWS}
     for c, (_, fn, (a, b)) in enumerate(COLS):
-        im = VV[''].scarf(a, b, NECK.get(who)) if fn == 'scarf' else getattr(VV[''], fn)(a, b); cell(im, c, r)
-    for c, (v, _) in enumerate(VIEWS):   # 다 같이: 목도리 + 모자 (+ 장갑)
-        V_ = VV[v]; sc = V_.scarf('빨강', '하양', NECK.get(who) if v != '_side' else (NECK.get(who) and NECK.get(who)))
-        V_.base, keep = sc, V_.base; V_.B = V_.base.load(); h = V_.hat('파랑', '노랑'); g = V_.gloves('초록', '하양') if V_.glove is not None else None
-        if g is not None: h = over(h, g.crop((0, 0, 64, 64)) if False else Image.alpha_composite(Image.new('RGBA', (64, 64)), knit_recolor(V_.glove, lambda x, y: '초록')))
-        V_.base = keep; V_.B = keep.load(); cell(h, 4 + c, r)
+        im = getattr(VV[''], fn)(a, b); cell(im, c, r)
+    for c, (v, _) in enumerate(VIEWS):   # 다 같이: 목도리 + 모자 칸 하나(방울 모자) + 장갑
+        V_ = VV[v]; keep = V_.base
+        if isinstance(V_, View):
+            V_.base = V_.scarf('빨강', '하양'); V_.B = V_.base.load(); V_.neckW = V_.base; V_.neckL = Image.new('RGBA', (64, 64))
+            V_.base = V_.hat('파랑', '노랑'); V_.B = V_.base.load()
+        else:   # 그림 NPC: 모자 먼저(스트로는 밀짚모자 벗고) → 목도리
+            hb = V_.hat('파랑', '노랑'); V_.orig_keep = V_.orig; V_.base = hb; V_.B = hb.load(); V_.bare = None
+            V_.base = V_.scarf('빨강', '하양'); V_.B = V_.base.load()
+        g = V_.gloves('초록', '하양')
+        cell(g if g is not None else V_.base, 4 + c, r); V_.base = keep; V_.B = keep.load()
 os.makedirs(OUTD, exist_ok=True); img.save(os.path.join(OUTD, 'knit_npc_preview.png')); print('ok')
