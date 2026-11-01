@@ -4299,9 +4299,9 @@ const npcAll = () => { const ids = [...NPC_DEF.map(n => n.id), ...Object.keys(np
 const npcGet = id => npcAll().find(n => n.id === id);
 const npcAv = n => n.av ? (n.avData ? World.Avatar.fix(n.avData) : World.Avatar.fromLook(n.look || 1)) : null;
 // 뜨개 인형: NPC 정면 그림(저장한 생김새 그대로) → 머리 크게 · 몸 작게 · 뜨개 결 (겨울 뜨개질 인형 가구 · 관리자 미리보기)
-function knitDoll(n, k = 3, dir = 0){   // dir: 0 앞 · 10 옆 · 5 뒤 (그림 칸 순서)
+function knitDoll0(n, k = 3, dir = 0){   // dir: 0 앞 · 10 옆 · 5 뒤 (그림 칸 순서)
   const A = World.Avatar, src = document.createElement('canvas'); src.width = src.height = 64; const s = src.getContext('2d'); s.imageSmoothingEnabled = false;
-  if (n.av){ const av = n.avData ? A.fix(n.avData) : A.fromLook(n.look || 1); A.need && A.need(av); if (!A.head(av)) return null; const S = A.compose(av), HB = A.meta.head; if (!S) return null; s.drawImage(S, Math.floor(HB.x / A.FW) * A.FW + dir * A.FW, Math.floor(HB.y / A.FH) * A.FH, 64, 64, 0, 0, 64, 64); }
+  if (n.av){ const av = n.avData ? A.fix(n.avData) : A.fromLook(n.look || 1); A.need && A.need(av); if (!A.head(av)) return null; const S = A.compose(av), HB = A.meta.head; if (!S || !S.width) return null; s.drawImage(S, Math.floor(HB.x / A.FW) * A.FW + dir * A.FW, Math.floor(HB.y / A.FH) * A.FH, 64, 64, 0, 0, 64, 64); }
   else { const I = NPC_IMG_STAGE || (NPC_IMG_STAGE = Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` })); if (!I.complete || !I.naturalWidth) return null; s.drawImage(I, dir * 64, (n.spr || 0) * 64, 64, 64, 0, 0, 64, 64); }
   const D = s.getImageData(0, 0, 64, 64).data; let x0 = 64, y0 = 64, x1 = -1, y1 = -1;
   for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) if (D[(y * 64 + x) * 4 + 3]){ x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
@@ -4315,8 +4315,9 @@ function knitDoll(n, k = 3, dir = 0){   // dir: 0 앞 · 10 옆 · 5 뒤 (그림
     if (l < 40){ P[i] = 58; P[i + 1] = 36; P[i + 2] = 52; continue; }   // 테두리는 진한 털실색
     if ((x % 2 === 0 && y % 2 === 0) || (x % 2 === 1 && y % 2 === 1 && (x + y) % 4 === 2)){ P[i] *= .9; P[i + 1] *= .9; P[i + 2] *= .92; } }   // V 모양 뜨개 결
   g.putImageData(im, 0, 0);
-  const c = document.createElement('canvas'); c.width = c.height = 64 * k; const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(o, 0, 0, 64 * k, 64 * k); return c;
+  const c = document.createElement('canvas'); c.width = c.height = 64 * k; const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(o, 0, 0, 64 * k, 64 * k); src.width = src.height = 0; o.width = o.height = 0; return c;
 }
+function knitDoll(n, k = 3, dir = 0){ try { return knitDoll0(n, k, dir); } catch(e){ return null; } }   // 아이폰 사파리: 그림이 덜 오거나 메모리가 모자라면 getImageData가 오류를 내요 → 다음에 다시
 let adKnitTok = 0; const adKnitCache = {};   // 그린 인형 그림을 기억해 두면 관리자 화면이 다시 그려져도 깜빡이지 않아요
 const adKnitKey = (n, k) => n.id + ':' + k + ':' + (n.av ? JSON.stringify(npcAv(n)) : 's' + n.spr);
 const adKnitImgs = (n, k = 1) => { const c = n && adKnitCache[adKnitKey(n, k)]; return c ? c.map(u => `<img src="${u}" alt="">`).join('') : ''; };
