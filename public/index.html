@@ -8320,7 +8320,7 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
 // DB: morph/ctl { open, id } (관리자) · morph/st { s: { 칸: 1 열림 · 2 모음 }, w: { 칸: 연 학생 }, g: { 칸: 모은 학생 }, done, at } · morph/form/<uid> { k, id }
 //   장애물마다 그 변신만 열 수 있어요. 그 변신인 학생이 지금 접속해 있지 않으면 누구나 열 수 있어요. 연 곳의 재료는 누구나 주워요. 12개가 다 모이면 다 같이 원래대로
 const MORPH = {
-  F: [['호박', '데굴데굴'], ['유령 시트', '부우~'], ['젤리 슬라임', '뽀잉'], ['양초', '화륵'], ['빗자루', '쉬익'], ['찻주전자', '칙칙폭폭'], ['해골', '덜그럭'], ['수정구슬', '우우웅'], ['마법책', '팔락팔락'], ['버섯', '뽀옥'], ['종', '딩동'], ['거울', '반짝']],
+  F: [['호박', '데굴데굴'], ['유령 시트', '부우우'], ['젤리 슬라임', '뽀잉'], ['양초', '화륵'], ['빗자루', '쉬익'], ['찻주전자', '칙칙폭폭'], ['해골', '덜그럭'], ['수정구슬', '우우웅'], ['마법책', '팔락팔락'], ['버섯', '뽀옥'], ['종', '딩동'], ['거울', '반짝']],
   O: [[32, 82, '바위 무더기', '데굴데굴 굴러서 바위를 밀어냈어요!', '호박밭 옆'], [20, 15, '가시덤불', '스르륵 덤불을 통과했어요!', '용의 동굴 앞 숲'], [56, 16, '연잎', '퐁퐁 물 위를 건너갔어요!', '본관 옆 연못'],
     [40, 100, '짙은 어둠', '불을 밝혀 어둠을 걷어냈어요!', '독초 온실 뒤 숲'], [78, 22, '마른 나무 둥지', '쉬익 날아올라 둥지에 닿았어요!', '교실 뒤'], [85, 44, '얼음 덩어리', '김을 뿜어 얼음을 녹였어요!', '마을 가는 길 강가'],
     [6, 46, '녹슨 철창문', '철창 틈으로 덜그럭 들어갔어요!', '지하 묘지 가는 서쪽 길'], [72, 70, '흐릿한 마법진', '숨어 있던 재료를 찾아냈어요!', '기숙사 거리 동쪽 잔디'], [28, 46, '수수께끼 석판', '석판의 수수께끼를 읽어 냈어요!', '과자 교실 근처'],
@@ -8406,7 +8406,7 @@ function renderMorph(){
 }
 // ---- 장면: 솥 대폭발 (이벤트를 열면) · 원래대로 (다 모으면) ----
 const morphSpawn = (id, x, y, dir = 'up') => { const n = npcGet(id); return n ? { cmd: 'spawn', who: id, name: n.name, ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float, flap: n.flap }), x, y, dir } : { cmd: 'wait', sec: 0 }; };
-const morphBusy = () => xRunNow() || morphCutOn || snowCutOn || babyCutOn || evOn || sheetOn || mqArriving || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '');
+const morphBusy = () => xRunNow() || morphCutOn || snowCutOn || babyCutOn || evOn || sheetOn || mqArriving || (typeof tlOn !== 'undefined' && tlOn) || (typeof wsOn !== 'undefined' && wsOn) || (typeof sdOn !== 'undefined' && sdOn) || (typeof famOn !== 'undefined' && famOn) || (typeof famSayOn !== 'undefined' && famSayOn) || (typeof trCutOn !== 'undefined' && trCutOn) || !!document.getElementById('pk9') || !!document.getElementById('dreamv') || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '');
 async function morphPlay(cmds, hooks, mark){
   morphCutOn = true; const [X, Y] = MORPH.LAB;
   try {
@@ -8420,8 +8420,8 @@ async function morphIntro(){
   if (morphBusy()) return; const [X, Y] = MORPH.LAB, id = morphCtl.id; morphCutOn = true;
   const k = await morphPick().catch(() => 0); morphCutOn = false; if (morphBusy()) return;
   morphPlay([morphSpawn('aula', X + 1, Y, 'down'), morphSpawn('madeleine', X + 3, Y + 2, 'left'), { cmd: 'player', x: X, y: Y + 3, dir: 'up' }, { cmd: 'cam', x: X, y: Y + 1 },
-    { cmd: 'wait', sec: .8 }, { cmd: 'say', who: 'aula', text: '반짝 가루는 아주 조금만 넣어야 해요....', ms: 2200 },
-    { cmd: 'say', who: 'madeleine', text: '이 정도면 조금이죠? 한 숟가락 더....', ms: 2000 }, { cmd: 'sfx', id: 'bubble' }, { cmd: 'emote', who: 'aula', icon: 4 },
+    { cmd: 'wait', sec: .8 }, { cmd: 'say', who: 'aula', text: '반짝 가루는 아주 조금만 넣어야 해요.......', ms: 2200 },
+    { cmd: 'say', who: 'madeleine', text: '이 정도면 조금이죠? 한 숟가락 더.......', ms: 2000 }, { cmd: 'sfx', id: 'bubble' }, { cmd: 'emote', who: 'aula', icon: 4 },
     { cmd: 'sfx', id: 'explosion' }, { cmd: 'fx', kind: 'lightning' }, { cmd: 'fx', kind: 'smoke' }, { cmd: 'wait', sec: 1.4 },
     { cmd: 'say', who: 'aula', text: '큰일이에요.... 어쩌면 좋지.......', ms: 2400 },
     { cmd: 'say', who: 'aula', text: '해독 물약 재료가 폭발에 다 날아가 버렸어요.......', ms: 2400 },
