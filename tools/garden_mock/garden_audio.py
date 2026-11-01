@@ -20,7 +20,7 @@ def pluck(t0, f, v=.1):   # 기타 줄 튕기는 소리 (간단한 카플러스-
     for i in range(n): o[i] = buf[i % p]; buf[i % p] = .5 * (buf[i % p] + buf[(i + 1) % p]) * .996
     add(t0, o * v)
 nt = lambda m: 440 * 2 ** ((m - 69) / 12)
-t_night = ev['night'][0]
+t_night = ev.get('night', [-99])[0]
 # 풀벌레 (밤 장면 빼고 내내)
 for k in range(int(D * 3)):
     t = k / 3 + np.random.rand() * .2
@@ -37,7 +37,8 @@ while t < D - .4:
     t += .42; i += 1
 for s in ev.get('open', []): [tone(s + k * .06, f, .4, .05, 'tri', 5) for k, f in enumerate((784, 988, 1175))]
 for s in ev.get('place', []): tone(s + .35, 140, .18, .25, 'sine', 18); noise(s + .35, .12, .15)
-for k in range(10): tone(t_night + .3 + k * .24, 1800 if k % 2 else 1500, .05, .06, 'square', 40)   # 째깍
+if t_night > 0:
+  for k in range(10): tone(t_night + .3 + k * .24, 1800 if k % 2 else 1500, .05, .06, 'square', 40)   # 째깍
 for s in ev.get('toast', []): [tone(s + k * .08, f, .6, .05, 'tri', 4) for k, f in enumerate((1047, 1319, 1568))]
 for s in ev.get('photo', []): noise(s, .08, .5, True); tone(s + .05, 2400, .05, .05, 'square', 50); [tone(s + .4 + k * .07, f, .6, .05, 'tri', 4) for k, f in enumerate((1568, 2093, 2637))]
 for s in ev.get('fly', []):
@@ -47,5 +48,7 @@ for s in ev.get('drop', []): tone(s, 2093, .3, .05, 'tri', 6)
 for s in ev.get('book', []): noise(s, .3, .08, True)
 for s in ev.get('pick', []): tone(s, 1318, .25, .04, 'tri', 7)
 for s in ev.get('rare', []): [tone(s + k * .1, 1046 * 2 ** (k / 12 * 2), 1.2, .05, 'sine', 2) for k in range(8)]
+for s in ev.get('tab', []): noise(s, .12, .1, True); tone(s + .02, 880, .15, .04, 'tri', 10)
+for s in ev.get('reward', []): [tone(s + k * .09, f, .9, .06, 'tri', 3) for k, f in enumerate((784, 988, 1175, 1568, 1976))]
 out = out / np.max(np.abs(out)) * .85
 w = wave.open(sys.argv[4], 'w'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(R); w.writeframes((out * 32767).astype(np.int16).tobytes()); w.close()
