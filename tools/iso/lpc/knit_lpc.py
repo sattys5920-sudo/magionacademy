@@ -121,7 +121,7 @@ def mk_gloves(a, b):
         for y in ys[:3]:
             if L(P[x, y][:3]) > 30: P[x, y] = (rb[3] if x % 2 else rb[2]) + (255,)
     return g
-ITEMS = [('목도리', '털실 10', mk_scarf), ('방울 모자', '털실 10', mk_hat), ('털 귀마개', '털실 10', mk_muff), ('벙어리장갑', '털실 10', mk_gloves)]
+ITEMS = [('목도리', '털실 10', mk_scarf), ('방울 모자', '털실 10', mk_hat), ('털 귀마개', '털실 10', mk_muff), ('손모아장갑', '털실 10', mk_gloves)]
 COMBOS = [('빨강', '하양'), ('파랑', '노랑'), ('초록', '하양')]
 # ---------- NPC 뜨개 인형: 정면 LPC 그림 → 머리 크게 · 몸 줄이기 · 뜨개 결 ----------
 def dollify(im):

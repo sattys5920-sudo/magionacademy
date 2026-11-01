@@ -76,7 +76,7 @@ window.__knGo = async () => {
   await pickC('빨강'); for (let i = 0; i <= 20; i++){ k = i / 20; v.querySelector('.pb i').style.width = (i * 5) + '%'; if (i % 5 === 0) mark('spin'); await sleep(90); } await toast('빨간 털실 1 뭉치를 만들었어요', 1600);
   await pickC('하양'); k = 0; for (let i = 0; i <= 20; i++){ k = i / 20; v.querySelector('.pb i').style.width = (i * 5) + '%'; if (i % 5 === 0) mark('spin'); await sleep(60); } await hide();
   // 2) 도안
-  const D = [['scarf', '줄무늬 목도리', '털실 2', 0], ['hat', '방울 털모자', '털실 2', 0], ['mit', '벙어리장갑', '털실 2', 0], ['sock', '털양말', '털실 2', 1], ['shawl', '포근 숄', '털실 4', 1], ['doll', '털실 양 인형', '털실 3', 1]];
+  const D = [['scarf', '줄무늬 목도리', '털실 2', 0], ['hat', '방울 털모자', '털실 2', 0], ['mit', '손모아장갑', '털실 2', 0], ['sock', '털양말', '털실 2', 1], ['shawl', '포근 숄', '털실 4', 1], ['doll', '털실 양 인형', '털실 3', 1]];
   show(`<h3>뜨개 도안</h3><div class="gr">${D.map(([kk, n, need, lk]) => `<div data-d="${kk}" class="${lk ? 'lk' : ''}"><canvas width="24" height="24" data-ic="${kk}"></canvas>${n}<small>${lk ? '레오와 더 친해지면' : need}</small></div>`).join('')}</div><small class="s">빨강 · 하양 털실로 떠요</small>`); mark('open');
   v.querySelectorAll('[data-ic]').forEach(c => icon(c, c.dataset.ic, [YC.빨강, YC.하양])); await sleep(1600); const ds = v.querySelector('[data-d="scarf"]'); ds.classList.add('on'); mark('pick'); await sleep(900); await hide();
   // 3) 진짜 뜨개질: 코 잡기 → 한 코마다 찔러 넣기 · 실 감기 · 빼내기 · 넘기기 → 한 줄 끝나면 뒤집기 → 실 바꾸기 → 코 막음 → 술 달기
