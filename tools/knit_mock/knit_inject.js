@@ -79,14 +79,65 @@ window.__knGo = async () => {
   const D = [['scarf', '줄무늬 목도리', '털실 2', 0], ['hat', '방울 털모자', '털실 2', 0], ['mit', '벙어리장갑', '털실 2', 0], ['sock', '털양말', '털실 2', 1], ['shawl', '포근 숄', '털실 4', 1], ['doll', '털실 양 인형', '털실 3', 1]];
   show(`<h3>뜨개 도안</h3><div class="gr">${D.map(([kk, n, need, lk]) => `<div data-d="${kk}" class="${lk ? 'lk' : ''}"><canvas width="24" height="24" data-ic="${kk}"></canvas>${n}<small>${lk ? '레오와 더 친해지면' : need}</small></div>`).join('')}</div><small class="s">빨강 · 하양 털실로 떠요</small>`); mark('open');
   v.querySelectorAll('[data-ic]').forEach(c => icon(c, c.dataset.ic, [YC.빨강, YC.하양])); await sleep(1600); const ds = v.querySelector('[data-d="scarf"]'); ds.classList.add('on'); mark('pick'); await sleep(900); await hide();
-  // 3) 뜨개 미니게임: 움직이는 점이 가운데에 올 때 누르기 · 한 칸마다 한 줄씩
-  show(`<h3>줄무늬 목도리 뜨는 중</h3><canvas class="st" width="160" height="100"></canvas><div class="bar"><div class="z"></div><div class="z2"></div><div class="m"></div></div><div class="jd"></div><div class="pb"><i></i></div>`); mark('open');
-  let rows = 0; const kc = v.querySelector('canvas'), m = v.querySelector('.m'), jd = v.querySelector('.jd'); loop(t => knit(kc, rows, t, [YC.빨강, YC.하양]));
-  const PLAN = [.5, .49, .44, .51, .5, .57, .5, .48, .5, .52, .5, .5], score = [];
-  for (let i = 0; i < PLAN.length; i++){ const tgt = PLAN[i], sp = 1.6 + i * .05; let x = 0, dir = 1; const t1 = performance.now();
-    while (true){ const e = (performance.now() - t1) / 1000; x = (e * sp) % 2; x = x > 1 ? 2 - x : x; m.style.left = `calc(${x * 100}% - 3px)`; if ((e > .5 && Math.abs(x - tgt) < .035) || e > 4) break; await sleep(16); }
-    const d = Math.abs(x - .5), j = d < .03 ? ['완벽!', 2] : d < .08 ? ['좋아요', 1] : ['삐끗.......', 0]; jd.textContent = j[0]; score.push(j[1]); mark(j[1] === 2 ? 'perfect' : j[1] ? 'good' : 'miss'); rows++; v.querySelector('.pb i').style.width = ((i + 1) / PLAN.length * 100) + '%'; await sleep(260); jd.textContent = ''; }
-  await sleep(600); cancelAnimationFrame(raf); await hide();
+  // 3) 진짜 뜨개질: 코 잡기 → 한 코마다 찔러 넣기 · 실 감기 · 빼내기 · 넘기기 → 한 줄 끝나면 뒤집기 → 실 바꾸기 → 코 막음 → 술 달기
+  const COLX = c => 48 + c * 13, NC = 8, cols2 = [YC.빨강, YC.하양];
+  const K = { rows: [], j: NC, cast: 0, cur: cols2[0], tipDX: 0, tipDY: 0, wrap: null, newLoop: 0, drop: null, flip: 1, bind: -1, fringe: 0, step: '' };
+  const dk = c => { const n = parseInt(c.slice(1), 16), f = .62; return `rgb(${(n >> 16 & 255) * f | 0},${(n >> 8 & 255) * f | 0},${(n & 255) * f | 0})`; };
+  function vSt(g, x, y, col){ const D = dk(col);   // 겉뜨기 한 코 = 통통한 V (두 다리가 가운데서 만나요)
+    for (let i = 0; i < 5; i++){ R(g, x - 6 + i, y + i, 4, 2, col); R(g, x + 3 - i, y + i, 4, 2, col); R(g, x - 6 + i, y + i + 1, 1, 1, D); R(g, x + 6 - i, y + i + 1, 1, 1, D); R(g, x - 3 + i, y + i, 1, 1, '#FFFFFF33'); } R(g, x, y + 5, 1, 1, D); }
+  function rowBg(g, y, col){ R(g, COLX(0) - 7, y - 1, NC * 13 + 1, 7, dk(col)); }
+  // 고리: 바늘이 고리 가운데를 꿰뚫어요 (뒤쪽 위 반 → 바늘 → 앞쪽 아래 반)
+  function lpBack(g, x, y, col, a = 1){ g.globalAlpha = a; R(g, x - 3, y - 7, 7, 2, '#1a1024'); R(g, x - 2, y - 6, 5, 1, dk(col)); g.globalAlpha = 1; }
+  function lp(g, x, y, col, a = 1){ g.globalAlpha = a; R(g, x - 4, y - 6, 2, 11, '#1a1024'); R(g, x + 3, y - 6, 2, 11, '#1a1024'); R(g, x - 3, y + 3, 7, 3, '#1a1024');
+    R(g, x - 3, y - 5, 1, 9, col); R(g, x + 3, y - 5, 1, 9, col); R(g, x - 2, y + 3, 5, 2, col); R(g, x - 2, y + 4, 5, 1, dk(col)); R(g, x - 3, y - 5, 1, 2, '#FFFFFF66'); g.globalAlpha = 1; }
+  function needle(g, x0, y0, x1, y1){ g.strokeStyle = '#1a1024'; g.lineWidth = 5; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); g.strokeStyle = '#D8C8A0'; g.lineWidth = 3; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); g.strokeStyle = '#F4ECD8'; g.lineWidth = 1; g.beginPath(); g.moveTo(x0, y0 - 1); g.lineTo(x1, y1 - 1); g.stroke(); R(g, x0 - 4, y0 - 4, 8, 8, '#1a1024'); R(g, x0 - 3, y0 - 3, 6, 6, '#B8804A'); }
+  function kDraw(c, t){ const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 192, 128); R(g, 0, 0, 192, 128, '#2A1E3A');
+    g.setTransform(K.flip, 0, 0, 1, K.flip < 0 ? 192 : 96 * (1 - K.flip), 0);
+    // 떠 놓은 천 (아래로 자라요 · 위가 최근 줄)
+    K.rows.forEach((col, k) => { const y = 38 + (K.rows.length - 1 - k) * 5; if (y > 112) return; rowBg(g, y, col); for (let cc = 0; cc < NC; cc++) vSt(g, COLX(cc), y, col); });
+    for (let cc = K.j; cc < NC && K.bind < 0 && !K.casting; cc++) vSt(g, COLX(cc), 32, K.cur);   // 이번 줄에 뜬 코
+    if (K.fringe) for (let cc = 0; cc < Math.min(NC, K.fringe); cc++){ const x = COLX(cc), y = 38 + K.rows.length * 5; [-2, 2].forEach(d => { R(g, x + d - 1, y, 3, 10, '#1a1024'); R(g, x + d, y, 1, 9, cols2[cc % 2]); }); }
+    if (K.bind >= 0){ for (let cc = 0; cc < NC; cc++) if (cc < K.bind){ R(g, COLX(cc) - 6, 33, 13, 4, '#1a1024'); R(g, COLX(cc) - 5, 34, 11, 2, K.cur); } }
+    // 왼쪽 바늘 (아직 안 뜬 코) · 오른쪽 바늘 (뜬 코)
+    const tipL = K.j > 0 ? COLX(K.j - 1) + 8 : 30, tipR = (K.j < NC ? COLX(K.j) - 7 : COLX(NC - 1) + 14) + K.tipDX;
+    if (K.bind < NC){ const n0 = Math.max(0, K.bind), n1 = K.cast ? K.cast : K.j; for (let cc = n0; cc < n1; cc++) if (!(K.drop && K.drop.c === cc)) lpBack(g, COLX(cc), 30, K.cur); needle(g, 4, 34, K.bind >= 0 || K.casting ? COLX(NC - 1) + 8 : tipL, 29); for (let cc = n0; cc < n1; cc++){ if (K.drop && K.drop.c === cc) continue; lp(g, COLX(cc), 30, K.cur); } }
+    if (K.bind < 0 && !K.casting){ for (let cc = K.j; cc < NC && !K.casting; cc++) lpBack(g, COLX(cc), 25, K.cur); needle(g, 188, 22, tipR, 27 + K.tipDY); for (let cc = K.j; cc < NC && !K.casting; cc++) lp(g, COLX(cc), 25, K.cur); }
+    if (K.newLoop) lp(g, tipR + 4, 26 + K.tipDY, K.cur, K.newLoop);
+    if (K.drop){ const cc = K.drop.c, p = K.drop.p; lp(g, COLX(cc), 30 + p * 6, K.cur, 1 - p * .7); }
+    // 실: 일하는 곳 → 털실 뭉치
+    const wx = K.wrap != null ? tipR + 2 + Math.cos(K.wrap) * 5 : tipR + 6, wy = K.wrap != null ? 27 + K.tipDY + Math.sin(K.wrap) * 5 : 30;
+    g.setTransform(1, 0, 0, 1, 0, 0); const sx = K.flip < 0 ? 192 - wx : wx;
+    g.strokeStyle = K.cur; g.lineWidth = 2; g.beginPath(); g.moveTo(sx, wy); g.quadraticCurveTo(170, 70 + Math.sin(t * 2) * 3, 176, 106); g.stroke(); ball(g, 178, 112, 10, K.cur); }
+  // 손가락 길잡이 (아래 칸): 점선 길 + 손가락 · 따라 그으면 한 동작
+  const PATH = { stab: [[150, 24], [96, 14]], wrap: 'c', pull: [[96, 14], [150, 30]], slip: [[52, 20], [150, 20]], swipe: [[40, 26], [100, 10], [120, 30], [160, 16]], tap: [[100, 20]], fringe: [[100, 12], [100, 30]], flip: [[150, 20], [50, 20]] };
+  const NAME = { stab: '↖ 찔러 넣기', wrap: '⟳ 실 감기', pull: '↘ 빼내기', slip: '→ 넘기기', swipe: '쓱 · 한 코', tap: '톡 · 코 잡기', fringe: '↓ 술 달기', flip: '← 뒤집기' };
+  function pad(c, k, p){ const g = c.getContext('2d'); g.clearRect(0, 0, 192, 40); g.fillStyle = 'rgba(255,255,255,.06)'; g.fillRect(0, 0, 192, 40); const P = PATH[k]; let fx, fy; g.strokeStyle = 'rgba(255,233,160,.5)'; g.setLineDash([3, 3]); g.lineWidth = 2; g.beginPath();
+    if (P === 'c'){ g.arc(96, 20, 12, 0, 7); fx = 96 + Math.cos(p * 6.28 - 1.57) * 12; fy = 20 + Math.sin(p * 6.28 - 1.57) * 12; } else { P.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); const n = P.length - 1, s = Math.min(n - 1e-6, p * n), i = Math.floor(s), f = s - i; [fx, fy] = n ? [P[i][0] + (P[i + 1][0] - P[i][0]) * f, P[i][1] + (P[i + 1][1] - P[i][1]) * f] : P[0]; }
+    g.stroke(); g.setLineDash([]); g.fillStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.arc(fx, fy, 8, 0, 7); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.arc(fx, fy, 4, 0, 7); g.fill(); }
+  show(`<h3>줄무늬 목도리 뜨는 중</h3><canvas class="st" width="192" height="128"></canvas><div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-family:var(--f-pxb);font-size:14px"><span class="nm">코 잡기</span><span class="jd2" style="color:#FFE9A0"></span></div><canvas class="st pad" width="192" height="40" style="margin-top:4px;background:#1a1228"></canvas><div class="pb"><i></i></div><small class="s ks">바늘에 코 8 개를 잡아요</small>`); mark('open');
+  const kc = v.querySelector('canvas'), pc = v.querySelector('.pad'), nm = v.querySelector('.nm'), jd2 = v.querySelector('.jd2'), ks = v.querySelector('.ks'), pbi = v.querySelector('.pb i'); loop(t => kDraw(kc, t));
+  const score = []; let fast = false;
+  async function gest(k, ms, onP){ nm.textContent = NAME[k]; const t1 = performance.now(); while (true){ const p = Math.min(1, (performance.now() - t1) / ms); pad(pc, k, p); onP && onP(p); if (p >= 1) break; await sleep(16); }
+    const r = Math.random(), j = r < .72 ? ['완벽!', 2, 'perfect'] : r < .95 ? ['좋아요', 1, 'good'] : ['삐끗.......', 0, 'miss']; jd2.textContent = j[0]; score.push(j[1]); mark(j[2]); await sleep(fast ? 60 : 160); jd2.textContent = ''; }
+  const TOTAL = 6; const prog = () => { pbi.style.width = Math.min(100, (K.rows.length + (NC - K.j) / NC) / TOTAL * 100) + '%'; };
+  // 코 잡기: 톡 누를 때마다 바늘에 고리 하나
+  K.casting = 1; K.cast = 0; K.j = 0; for (let i = 0; i < NC; i++){ await gest('tap', 260, null); K.cast = i + 1; } K.cast = 0; K.casting = 0; K.j = NC; ks.textContent = '한 코마다 진짜 뜨개질처럼 네 동작: 찔러 넣기 → 실 감기 → 빼내기 → 넘기기';
+  async function stitch(){ const c = K.j - 1;
+    if (!fast){
+      await gest('stab', 700, p => { K.tipDX = -(COLX(K.j) - 7 - COLX(c)) * p; K.tipDY = 4 * p; });
+      await gest('wrap', 800, p => { K.wrap = -1.57 + p * 6.28; }); K.wrap = null;
+      await gest('pull', 650, p => { K.tipDX = -(COLX(K.j) - 7 - COLX(c)) * (1 - p); K.tipDY = 4 * (1 - p); K.newLoop = p; });
+      await gest('slip', 600, p => { K.drop = { c, p }; }); }
+    else await gest('swipe', 340, p => { K.tipDX = -(COLX(K.j) - 7 - COLX(c)) * Math.sin(p * 3.14); K.tipDY = 4 * Math.sin(p * 3.14); K.wrap = p > .3 && p < .7 ? -1.57 + (p - .3) / .4 * 6.28 : null; K.newLoop = p > .5 ? 1 : 0; K.drop = p > .7 ? { c, p: (p - .7) / .3 } : null; });
+    K.drop = null; K.newLoop = 0; K.tipDX = 0; K.tipDY = 0; K.wrap = null; K.j--; mark('click'); prog(); }
+  async function flipRow(){ await gest('flip', 420, p => { K.flip = Math.cos(p * Math.PI); }); K.flip = 1; K.rows.push(K.cur); K.j = NC; mark('flip'); prog(); }
+  for (let i = 0; i < 3; i++) await stitch();
+  ks.textContent = '손에 익었어요! 이제 쓱 한 번에 한 코'; mark('learn'); fast = true; await sleep(700);
+  for (let r = 0; r < TOTAL; r++){ while (K.j > (r === 0 ? 0 : 0)) await stitch(); await flipRow(); if (r === 1 || r === 3){ K.cur = K.cur === cols2[0] ? cols2[1] : cols2[0]; ks.textContent = '실 바꾸기: 새 색 실을 묶어요'; mark('tie'); await sleep(500); } else ks.textContent = `${K.rows.length} 줄 · 다 뜨면 바늘을 뒤집어요`; if (r === 4) { /* 중간 */ } }
+  // 코 막음: 고리를 하나씩 넘겨 씌워 바늘에서 빼요 → 술 달기
+  ks.textContent = '코 막음: 앞 고리를 뒤 고리에 씌워서 빼요'; NAME.slip = '→ 코 막음'; K.bind = 0; K.j = NC; for (let i = 0; i < NC; i++){ await gest('slip', 220, null); K.bind = i + 1; mark('click'); }
+  K.rows.push(K.cur); K.bind = 99; ks.textContent = '술 달기: 끝에 실 술을 매달아요'; for (let i = 0; i < NC; i++){ await gest('fringe', 220, null); K.fringe = i + 1; }
+  await sleep(900); cancelAnimationFrame(raf); await hide();
   // 4) 완성
   const st = score.filter(s => s === 2).length >= 8 ? 3 : 2;
   show(`<h3>완성!</h3><canvas width="24" height="24" data-ic="scarf" style="width:120px;height:120px;image-rendering:pixelated"></canvas><div style="font-family:var(--f-pxb);font-size:16px;margin-top:4px">빨강 · 하양 줄무늬 목도리 <span style="color:#FFD866">${'★'.repeat(st)}</span></div><small class="s">완벽 ${score.filter(s => s === 2).length} · 좋아요 ${score.filter(s => s === 1).length} · 삐끗 ${score.filter(s => s === 0).length}</small><div class="btns"><span class="go" data-b="wear">두르기</span><span data-b="gift">선물하기</span></div>`); mark('done');

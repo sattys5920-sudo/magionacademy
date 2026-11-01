@@ -38,9 +38,13 @@ for s in ev.get('open', []): noise(s, .25, .06, True); tone(s + .05, 784, .3, .0
 for s in ev.get('pick', []): tone(s, 1318, .2, .05, 'tri', 8)
 for s in ev.get('spin', []):
     n = int(.5 * R); tt = np.arange(n) / R; add(s, np.sin(2 * np.pi * (180 + 40 * np.sin(tt * 30)) * tt) * np.hanning(n) * .05)
-for s in ev.get('perfect', []): tone(s, 2400, .03, .08, 'square', 80); tone(s + .02, 1800, .03, .06, 'square', 80); [tone(s + .05 + k * .05, f, .4, .05, 'tri', 6) for k, f in enumerate((1568, 2093))]
-for s in ev.get('good', []): tone(s, 2200, .03, .08, 'square', 80); tone(s + .03, 1700, .03, .06, 'square', 80)
+for s in ev.get('perfect', []): tone(s, 1568, .25, .025, 'tri', 10)
+for s in ev.get('good', []): tone(s, 1175, .2, .02, 'tri', 10)
 for s in ev.get('miss', []): tone(s, 180, .2, .1, 'square', 12)
+for s in ev.get('click', []): tone(s, 3000, .02, .05, 'square', 120); tone(s + .015, 2200, .02, .04, 'square', 120)   # 코가 바늘로 넘어가는 딸깍
+for s in ev.get('flip', []): noise(s, .25, .07); tone(s + .1, 523, .2, .03, 'tri', 8)
+for s in ev.get('tie', []): [tone(s + k * .06, f, .3, .04, 'tri', 6) for k, f in enumerate((659, 784))]
+for s in ev.get('learn', []): [tone(s + k * .08, f, .7, .05, 'tri', 3) for k, f in enumerate((784, 988, 1175, 1568))]
 for s in ev.get('done', []): [tone(s + k * .1, f, 1.2, .06, 'tri', 2.5) for k, f in enumerate((523, 659, 784, 1047, 1319))]
 for s in ev.get('wear', []): noise(s, .4, .06); [tone(s + .2 + k * .07, f, .8, .04, 'sine', 3) for k, f in enumerate((880, 1109, 1319))]
 for s in ev.get('gift', []): [tone(s + k * .08, f, .7, .05, 'tri', 3) for k, f in enumerate((784, 988, 1175, 1568))]
