@@ -5444,7 +5444,7 @@ World.onAct = (mapId, o, a) => {
   if (label === '쉬기' || label === '잠자고 내일로' || label === '방명록 보기'){
     const v = World.roomOwner();
     if (v && !v.own){ if (label === '방명록 보기'){ if (solo) return '<b>방명록</b><br>친구 방명록은 온라인에서 남길 수 있어요'; openSheet('home'); openVisit(v.uid); return; } return `<b>${esc(v.name)}의 침대</b><br>남의 침대에서는 잘 수 없어요`; }
-    if (label !== '방명록 보기') return rest(); openSheet('home', 'dorm'); return;
+    if (label !== '방명록 보기') return { text: '<b>내 침대</b><br>기본 침대예요', btn: [['쉬기', () => { World.hideBubble(); rest(); }], ['가방에 넣기', () => { World.hideBubble(); bedStore(); }]] }; openSheet('home', 'dorm'); return;
   }
   if (label === '휴게실 꾸미기'){
     if (dh && dh !== me.house) return `<b>${HOUSES[dh].name} 휴게실 게시판</b><br>${commonStage(dh)}단계 「${HALL_NAMES[dh][commonStage(dh) - 1]}」 · 이 기숙사 학생들이 꾸며요`;
@@ -6644,6 +6644,14 @@ World.onFurn = id => {
     toast(`${withJosa(F_.name, '을', '를')} 가방에 넣었어요`);
   }]] };
 };
+// 기본 침대: 가방에 넣으면 방에서 사라지고(me.bedOff), 가구 가방에서 누르면 원래 자리로 돌아와요
+function bedStore(){ me.bedOff = 1; save(); World.reqRefresh(); toast('기본 침대를 가방에 넣었어요. 쉬기는 내 방 화면에서 할 수 있어요'); }
+function bedPlace(){
+  const go = () => { const b = World.bedBox(); if (!b) return;
+    for (let x = Math.floor(b[0]); x < Math.ceil(b[2]); x++) for (let y = Math.floor(b[1]); y < Math.ceil(b[3]); y++) if (!World.isFree(x, y)) return toast('침대 자리에 다른 가구가 있어요. 먼저 치워 주세요');
+    delete me.bedOff; save(); World.reqRefresh(); sfx('pop'); toast('기본 침대를 원래 자리에 놓았어요'); };
+  closeSheet(); if (inMyRoom()) go(); else World.teleport(myRoomId(), null, go);
+}
 // 기숙사 복도: 기숙사마다 학생 3명의 방 (들어온 순서대로 문 번호)
 const houseMembers = h => solo ? (h === me.house ? ['me'] : []) : Object.keys({ ...playersList, [uid]: me }).filter(id => (id === uid ? me : playersList[id])?.house === h).sort().slice(0, HOUSE_CAP);
 const playerOf = id => id === 'me' || id === uid ? me : playersList[id];
@@ -6689,13 +6697,15 @@ function renderDorm(){
       ${hint(dormMsg, '')}
     </section>
     <section class="sec">
-      ${secH('놓은 가구', placed.length ? '눌러서 가방에 넣어요' : '')}
+      ${secH('놓은 가구', placed.length || !me.bedOff ? '눌러서 가방에 넣어요' : '')}
+      ${!me.bedOff ? `<div class="grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:6px"><button class="cell" data-bedoff="1" style="min-height:84px">${ic('bed')}<span class="s">기본 침대</span></button></div>` : ''}
       ${placed.length ? `<div class="grid" style="grid-template-columns:repeat(4,1fr)">${pageOf(placed, 0, 12).map(([fid, n]) => `<button class="cell" data-unplace="${fid}" style="min-height:84px">${furnPic(fid, 40)}<span class="s">${FURN_BY[fid].name}</span>${n > 1 ? `<span class="n">${n}</span>` : ''}</button>`).join('')}</div>${placed.length > 12 ? `<div class="hint">그 밖에 ${placed.length - 12}종 더</div>` : ''}`
         : '<div class="hint">놓은 가구가 없어요</div>'}
     </section>`;
   } else if (dormTab === 'bag'){
     body = `<section class="sec">
-      ${secH('가구 가방', bag.length ? `${bag.length}종 · 눌러서 방에 놓아요` : '')}
+      ${secH('가구 가방', bag.length || me.bedOff ? `${bag.length + (me.bedOff ? 1 : 0)}종 · 눌러서 방에 놓아요` : '')}
+      ${me.bedOff ? `<div class="grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:6px"><button class="cell" data-bedon="1" style="min-height:84px">${ic('bed')}<span class="s">기본 침대</span><span class="n">1</span></button></div>` : ''}
       ${bag.length ? `<div class="grid" style="grid-template-columns:repeat(4,1fr)">${pageOf(bag, fbagPage, 12).map(([fid, n]) => `<button class="cell" data-place="${fid}" style="min-height:84px">${furnPic(fid, 40)}<span class="s">${FURN_BY[fid].name}</span><span class="n">${n}</span></button>`).join('')}</div>${pager('fbagpg', fbagPage, bag.length, 12)}`
         : '<div class="hint">가방이 비었어요</div>'}
       ${hint(dormMsg, '')}
@@ -6733,6 +6743,8 @@ function renderDorm(){
     dormMsg = `${withJosa(x.name, '을', '를')} 샀어요! 가구 가방에서 눌러 방에 놓아요.`; redraw();
   });
   on('[data-place]', b => placeFurn(b.dataset.place));
+  on('[data-bedoff]', () => { bedStore(); dormMsg = '기본 침대를 가방에 넣었어요'; redraw(); });
+  on('[data-bedon]', () => bedPlace());
   on('[data-unplace]', b => {   // 방에 놓은 가구 중 같은 종류의 마지막 것을 가방에 넣어요
     const fid = b.dataset.unplace, i = me.room.map(r => r.f).lastIndexOf(fid); if (i < 0) return;
     me.room.splice(i, 1); me.fbag[fid] = (me.fbag[fid] || 0) + 1; save(); syncRoom();
@@ -7356,7 +7368,7 @@ function dfDraw(){
 let dfRes = null;   // defense/res = { id, eggs:[체력 0~100 ×3], win, at } — 이벤트가 끝날 때 관리자 기기가 남겨요
 const DF_DRAG = [{ k: 'dfire', n: '화륵이', t: '불의 용', fx: '탐사 공격 +5%' }, { k: 'dwater', n: '졸졸이', t: '물의 용', fx: '마력·MP 회복 +10%' }, { k: 'dforest', n: '무럭이', t: '숲의 용', fx: '채집·수확 때 10% 확률로 1개 더 · 경험치 +3%' }];
 const dfCaveOpen = () => !!(dfRes && dfRes.eggs && dfRes.eggs.some(e => e > 0));
-World.reqOk = key => { const [k, i] = String(key).split(':'), e = dfRes && dfRes.eggs ? dfRes.eggs[+i] : null; if (e == null) return false; return k === 'alive' ? e > 0 : e <= 0; };
+World.reqOk = key => { if (key === 'bedOn'){ const v = World.roomOwner(), p = !v || v.own ? me : playerOf(v.uid); return !(p && p.bedOff); } const [k, i] = String(key).split(':'), e = dfRes && dfRes.eggs ? dfRes.eggs[+i] : null; if (e == null) return false; return k === 'alive' ? e > 0 : e <= 0; };
 async function dfDragonOffer(i){
   const D = DF_DRAG[i]; if (!D || !me) return; const day = todayKey(); if (!me.dfb || me.dfb.day !== day) me.dfb = { day, n: 0 };
   const left = 2 - me.dfb.n, until = (me.buffs && me.buffs[D.k]) || 0;

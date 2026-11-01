@@ -593,6 +593,8 @@ function furnObjs(){
 }
 World.setFurniture = list => { furnData = list || []; if (M && M.furn && roomView.own){ rebuildObjs(); } };
 World.roomOwner = () => (M && M.furn) ? roomView : null;   // 지금 보고 있는 방 주인 { own, uid, name }
+Object.keys(MAPS).forEach(k => { if (/^myroom_/.test(k)) (MAPS[k].meta.objs || []).forEach(o => { if (o.name === 'bed') o.req = 'bedOn'; }); });   // 내 방 기본 침대: 가방에 넣으면 사라져요 (index.html의 World.reqOk)
+World.bedBox = () => { const o = M && M.furn && (M.all || M.objs).find(q => q.name === 'bed'); return o ? o.box : null; };
 World.onRoomDoor = null;   // (기숙사, 문 번호) → { own, uid, name, furn } 이면 들어가요, 글이면 말풍선
 let hallNames = {};
 World.setHallNames = names => { hallNames = names || {}; if (M && M.rooms) roomTags.forEach((t, i) => { t.t = (hallNames[M.house] || [])[M.rooms[i].i] || '빈 방'; }); };
@@ -745,7 +747,7 @@ const actOf = o => { const a = o.act || ACTS[o.name]; return a && (!World.actOk 
 // 물건을 쓰면 게임에 물어봐요: 글을 돌려주면 말풍선에 보여 주고, 아니면 (화면이 열렸으니) 말풍선을 닫아요
 function useObj(o, a){
   const r = World.onAct ? World.onAct(map, o, a) : null;
-  if (typeof r === 'string'){ if (bubble) bubble.el.innerHTML = r; else showBubble(o, r); } else hideBubble();
+  if (typeof r === 'string'){ if (bubble) bubble.el.innerHTML = r; else showBubble(o, r); } else if (r && r.text){ hideBubble(); showBubble(o, r.text, r.btn, r.fn); } else hideBubble();
 }
 // ---- 근처 대상(상황 버튼): 서 있는 칸에서 바로 닿는 NPC·채집 지점·물건·물가를 찾아 World.onNear(대상 | null)에 알려요 ----
 World.reqRefresh = () => { if (!M || !M.all) return; M.objs = M.all.filter(o => !o.req || (World.reqOk && World.reqOk(o.req))); MAPS[rmap].order = null; rebuildObjs(); gates = M.objs.filter(o => o.door && o.door.walk); };   // 용 정보가 바뀌면 동굴 안 모습도 바꿔요
