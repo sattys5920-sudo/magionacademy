@@ -39,17 +39,17 @@ function rewIcon(c, k){ const q = c.getContext('2d'); q.imageSmoothingEnabled = 
   if (k === 'bub'){ R(4, 3, 26, 12, '#1a1024'); R(5, 4, 24, 10, '#E8FFD8'); R(7, 15, 4, 3, '#1a1024'); R(8, 15, 2, 2, '#E8FFD8'); R(25, 2, 4, 4, '#5AA84A'); R(26, 1, 2, 1, '#9AE07A'); [9, 14, 19].forEach(x => R(x, 8, 2, 2, '#5AA84A')); }
   if (k === 'house'){ R(14, 12, 4, 10, '#6A4428'); R(8, 4, 16, 10, '#B87A3A'); R(7, 2, 18, 3, '#7A3A2A'); R(14, 7, 4, 4, '#2A1A10'); R(20, 9, 3, 1, '#6A4428'); q.drawImage(GU, 2 * 28, 0, 14, 14, 18, -2, 14, 14); } }
 // 사진 (정원 장면 속 손님)
-const PLACED = [{ k: 'pond', tx: 1.6, ty: 3.6 }, { k: 'lamp', tx: 1, ty: 1.6 }, { k: 'feeder', tx: 5, ty: 4.6 }, { k: 'swing', tx: 5.2, ty: 1 }];
+let NOG = 0, PLACED = [{ k: 'pond', tx: 1.6, ty: 3.6 }, { k: 'lamp', tx: 1, ty: 1.6 }, { k: 'feeder', tx: 5, ty: 4.6 }, { k: 'swing', tx: 5.2, ty: 1 }];
 function shot(c, gi, at){ const t = document.createElement('canvas'); t.width = CW; t.height = CH; const g = t.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(BG, 0, CY, CW, CH, 0, 0, CW, CH);
   PLACED.forEach(o => { const m = GI.items[o.k], [x, y] = PP(o.tx, o.ty); g.drawImage(IT, m.sx, 0, m.sw, m.sh, Math.round(x - m.ax), Math.round(y - m.ay), m.sw, m.sh); });
   const [x, y] = PP(at[0], at[1]); g.drawImage(GU, gi * 28 + (at[2] || 0) * 14, 0, 14, 14, Math.round(x - 7), Math.round(y - 13), 14, 14);
   const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(t, Math.max(0, Math.min(CW - 48, x - 24)), Math.max(0, Math.min(CH - 36, y - 26)), 48, 36, 0, 0, c.width, c.height); q.fillStyle = 'rgba(255,240,200,.12)'; q.fillRect(0, 0, c.width, c.height); }
 let raf = 0; function garden(c){ cancelAnimationFrame(raf); const loop = now => { if (!GI || !c.isConnected) return; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(BG, 0, CY, CW, CH, 0, 0, CW, CH);
   PLACED.forEach(o => { const m = GI.items[o.k], [x, y] = PP(o.tx, o.ty); g.drawImage(IT, m.sx, 0, m.sw, m.sh, Math.round(x - m.ax), Math.round(y - m.ay), m.sw, m.sh); });
-  const [x, y] = PP(4.4, 4.9); g.drawImage(GU, 11 * 28 + (Math.floor(now / 450) % 2) * 14, 0, 14, 14, Math.round(x - 7), Math.round(y - 13), 14, 14); raf = requestAnimationFrame(loop); }; raf = requestAnimationFrame(loop); }
+  if (!NOG){ const [x, y] = PP(4.4, 4.9); g.drawImage(GU, 11 * 28 + (Math.floor(now / 450) % 2) * 14, 0, 14, 14, Math.round(x - 7), Math.round(y - 13), 14, 14); } raf = requestAnimationFrame(loop); }; raf = requestAnimationFrame(loop); }
 const metN = Object.keys(MET).length; let RV = metN;   // 보상은 받은 것만 보여요
 function render(tab, sel){
-  const head = `<div class="hd"><b>창밖 정원</b><i>✕</i></div><div class="tabs"><span class="${tab === 'g' ? 'on' : ''}">정원</span><span class="${tab === 'd' ? 'on' : ''}">도감 ${metN} / 20</span></div>`;
+  const head = `<div class="hd"><b>창밖 정원</b><i>✕</i></div><div class="tabs"><span class="${tab === 'g' ? 'on' : ''}">정원</span><span class="${tab === 'd' ? 'on' : ''}">도감 ${window.__gxN ?? metN} / 20</span></div>`;
   if (tab === 'g'){ v.innerHTML = head + '<canvas class="g" width="144" height="88"></canvas>'; garden(v.querySelector('canvas.g')); return; }
   const rw = `<div class="rw">${REW.map(([n, kind, nm, ic]) => RV >= n ? `<div class="got"><b>${n} 종</b><canvas width="34" height="22" data-ri="${ic}"></canvas>${kind}<br>${nm}</div>` : `<div class="${(REW.find(r => r[0] > RV) || [])[0] === n ? 'next' : ''}"><b>${n} 종</b><span class="rq">?</span>???</div>`).join('')}</div><div class="bar"><i style="width:${metN / 20 * 100}%"></i></div>`;
   const grid = `<div class="gr">${G.map((g, i) => `<div class="${MET[i] ? 'on' : ''} ${sel === i ? 'sel' : ''}">${MET[i] ? `<canvas width="20" height="20" data-gi="${i}"></canvas>${MET[i].reg ? '<em>★</em>' : ''}` : '?'}</div>`).join('')}</div>`;
@@ -68,6 +68,7 @@ function render(tab, sel){
   const SPOT = { 12: [[2.3, 3.9, 0], [1.2, 4.4, 1], [2.6, 3.2, 0]], 11: [[4.4, 4.9, 0], [4.7, 5.3, 1], [3.9, 4.6, 0]] };
   v.querySelectorAll('[data-ph]').forEach(c => shot(c, sel, (SPOT[sel] || [[3, 3, 0], [3.5, 3.4, 1], [2.5, 2.8, 0]])[+c.dataset.ph]));
 }
+window.__gxShow = (pl, nog) => { if (pl) PLACED = pl; NOG = nog ? 1 : 0; render('g'); v.classList.add('on'); };
 window.__gxGo = async () => {
   await sleep(700); render('g'); v.classList.add('on'); mark('open'); await sleep(2400);
   render('d'); mark('tab'); await sleep(2800);

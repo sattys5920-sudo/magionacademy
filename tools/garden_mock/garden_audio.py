@@ -1,9 +1,12 @@
 # 손님이 찾아오는 정원 영상 소리: python3 garden_audio.py <garden_log.json> <영상 길이> <로그→영상 시각 차이> <출력.wav>
 #   저녁 풀벌레 · 느긋한 기타풍 가락(직접 만든 것) · 물건 놓는 소리 · 시계 · 선물 반짝 · 사진 찰칵 · 박쥐 날갯짓 · 도감 · 드문 손님
 import sys, json, wave, numpy as np
-R = 44100; L = json.load(open(sys.argv[1])); D = float(sys.argv[2]); OFF = float(sys.argv[3]); N = int(R * (D + 1)); out = np.zeros(N)
+R = 44100; L = json.load(open(sys.argv[1])); D = float(sys.argv[2]); OFF = sys.argv[3]; N = int(R * (D + 1)); out = np.zeros(N)
 ev = {}
-for t, k in L: ev.setdefault(k, []).append(t + OFF)
+if OFF.endswith('.json'):   # 로그 시각 → 영상 시각 짝 (영상 속 표시 점으로 잰 것)
+    MP = json.load(open(OFF)); fx = lambda t: float(np.interp(t, [a for a, b in MP], [b for a, b in MP]))
+else: fx = lambda t, o=float(OFF): t + o
+for t, k in L: ev.setdefault(k, []).append(fx(t))
 def add(t0, s):
     i = int(max(0, t0) * R); j = min(N, i + len(s)); out[i:j] += s[:j - i]
 def env(n, a=.005, r=3): t = np.arange(n) / R; return np.minimum(1, t / a) * np.exp(-t * r)
@@ -48,6 +51,10 @@ for s in ev.get('drop', []): tone(s, 2093, .3, .05, 'tri', 6)
 for s in ev.get('book', []): noise(s, .3, .08, True)
 for s in ev.get('pick', []): tone(s, 1318, .25, .04, 'tri', 7)
 for s in ev.get('rare', []): [tone(s + k * .1, 1046 * 2 ** (k / 12 * 2), 1.2, .05, 'sine', 2) for k in range(8)]
+for s in ev.get('knock', []): [noise(s + d, .05, .35) or tone(s + d, 180, .08, .2, 'sine', 30) for d in (0, .35, .5)]
+for s in ev.get('bonk', []): tone(s, 110 + np.random.rand() * 60, .12, .3, 'sine', 25); noise(s, .06, .25); tone(s + .01, 900, .04, .05, 'square', 60)
+for s in ev.get('line', []): [tone(s + k * .09, 300 + (k % 3) * 40, .05, .02, 'square', 40) for k in range(4)]
+for s in ev.get('done', []): [tone(s + k * .1, f, 1, .06, 'tri', 2.5) for k, f in enumerate((523, 659, 784, 1047, 1319))]
 for s in ev.get('tab', []): noise(s, .12, .1, True); tone(s + .02, 880, .15, .04, 'tri', 10)
 for s in ev.get('reward', []): [tone(s + k * .09, f, .9, .06, 'tri', 3) for k, f in enumerate((784, 988, 1175, 1568, 1976))]
 out = out / np.max(np.abs(out)) * .85
