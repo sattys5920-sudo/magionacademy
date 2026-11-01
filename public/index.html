@@ -3761,6 +3761,8 @@ function adminRender0(){
   if (AD.tab === 'students'){
     const sum = k => ids.reduce((t, id) => t + (+P[id][k] || 0), 0);
     body = `<div class="adsum"><button class="btn sm" data-adstripall="1">전체 학생 지급품 회수</button><button class="btn sm" data-adcrall="1">전체 학생 시작 생물 회수</button><span>골드 합계 <b>${sum('coin').toLocaleString()}</b></span><span>마력 합계 <b>${sum('mana')}</b></span><span>평균 지식 <b>${ids.length ? Math.round(sum('know') / ids.length) : 0}</b></span></div>
+      ${(() => { const done = ids.filter(id => !P[id].tut || P[id].tut.end), ing = ids.filter(id => P[id].tut && !P[id].tut.end), st = {}; ing.forEach(id => { const k = (P[id].tut.s || 0) + 1; st[k] = (st[k] || 0) + 1; });   // 입문(튜토리얼) 끝내고 시작한 학생 · 입문 중인 학생
+        return `<div class="adsum"><span>입문 끝내고 시작 <b>${done.length}</b> / ${ids.length} 명</span><span>입문 중 <b>${ing.length}</b> 명${ing.length ? ' (' + Object.keys(st).sort().map(k => `${k} 단계 ${st[k]}`).join(' · ') + ')' : ''}</span>${ing.length ? `<span class="s">입문 중: ${ing.map(id => esc(P[id].nick)).join(', ')}</span>` : ''}</div>`; })()}
       <div class="adsum">${Object.entries(XJ).map(([k, j]) => { const n = ids.filter(id => P[id].ex?.job === k).length; return `<span>${j.n} <b>${n}</b></span>`; }).join('')}<span>미선택 <b>${ids.filter(id => !XJ[P[id].ex?.job]).length}</b></span></div>
       <div class="adtbl"><div class="h"><span>학생</span><span>기숙사</span><span>직업</span><span>골드</span><span>마력</span><span>지식</span><span>날</span><span>물약 도감</span><span>물고기</span><span>채집</span><span>낚싯대</span><span>옷</span><span>생물</span><span>상태</span><span>관리</span></div>
       ${ids.sort((a, b) => (P[b].coin || 0) - (P[a].coin || 0)).map(id => { const p = P[id], d = p.fdex || {};
