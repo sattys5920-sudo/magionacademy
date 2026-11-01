@@ -6636,7 +6636,8 @@ World.onFurn = id => {
   const v = World.roomOwner();
   if (v && !v.own){ const f = (v.furn || []).find(x => x.id === id), F_ = f && FURN[f.k]; return F_ ? `<b>${F_.name}</b><br>${esc(v.name)}의 가구 · 아늑함 +${F_.pts}` : null; }
   const r = me.room.find(x => x.id === id); if (!r) return null; const F_ = FURN_BY[r.f];
-  return { text: `<b>${F_.name}</b><br>아늑함 +${F_.pts}`, btn: [['돌리기', () => {   // 같은 자리에서 돌려요 (칸이 모자라면 못 돌려요)
+  const sleepBtn = isBedFurn(F_) ? [['쉬기', () => { World.hideBubble(); rest(); }]] : [];   // 침대 가구에서도 잘 수 있어요
+  return { text: `<b>${F_.name}</b><br>아늑함 +${F_.pts}`, btn: [...sleepBtn, ['돌리기', () => {   // 같은 자리에서 돌려요 (칸이 모자라면 못 돌려요)
     const nr = r.r ? 0 : 1; if (!World.canPlaceAt(FIDX[r.f], r.x, r.y, id, nr)) return toast('자리가 좁아서 돌릴 수 없어요');
     if (nr) r.r = 1; else delete r.r; save(); syncRoom(); World.hideBubble(); sfx('pop');
   }], ['가방에 넣기', () => {
@@ -6644,6 +6645,7 @@ World.onFurn = id => {
     toast(`${withJosa(F_.name, '을', '를')} 가방에 넣었어요`);
   }]] };
 };
+const isBedFurn = F_ => !!F_ && F_.cat !== '아기 동물' && /침대/.test(F_.name);   // 구름 침대처럼 이름에 「침대」가 들어간 가구 (아기 동물 잠자리는 빼요)
 // 기본 침대: 가방에 넣으면 방에서 사라지고(me.bedOff), 가구 가방에서 누르면 원래 자리로 돌아와요
 function bedStore(){ me.bedOff = 1; save(); World.reqRefresh(); toast('기본 침대를 가방에 넣었어요. 쉬기는 내 방 화면에서 할 수 있어요'); }
 function bedPlace(){
