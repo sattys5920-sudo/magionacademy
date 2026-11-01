@@ -1,5 +1,6 @@
-# 시안: 정원 손님 6 종 (아기 동물과 같은 14×14 · 진보라 테두리 · 흰 반짝 눈 · 분홍 볼) → ../garden_mock/gi_guests.png (14×14 · 손님마다 2 칸)
-#   0 이끼 달팽이 · 1 버섯 꼬마 · 2 솜뭉치 정령 · 3 반딧불 나방 · 4 꼬마 두더지 · 5 달빛 해파리(드문 손님)
+# 시안: 정원 손님 20 종 (아기 동물과 같은 14×14 · 진보라 테두리 · 흰 반짝 눈 · 분홍 볼) → ../garden_mock/gi_guests.png (14×14 · 손님마다 2 칸)
+#   0 이끼 달팽이 · 1 버섯 꼬마 · 2 솜뭉치 정령 · 3 반딧불 나방 · 4 꼬마 두더지 · 5 달빛 해파리 · 6 꼬마 꿀벌 · 7 무당벌레 · 8 도토리 요정 · 9 이슬방울 정령
+#   10 잎새 애벌레 · 11 꼬마 거북 · 12 호박등 요정 · 13 별사탕 정령 · 14 꼬마 구름 · 15 밤송이 꼬마 · 16 튤립 요정 · 17 잠자리 · 18 촛불 도깨비 · 19 조약돌 골렘
 import os
 from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.join(HERE, '..', 'garden_mock')
@@ -97,6 +98,220 @@ G = [
   '....T..T..T...',
   '..............']),
 ]
+
+G += [
+ ('bee', {'Y': hx('#ffd24a'), 'B': hx('#3a2a1a'), 'L': hx('#e8f6ff', 220), 'y': hx('#e8a830')}, [
+  '..............',
+  '.....O...O....',
+  '......O.O.....',
+  '..OOO.OOO.OOO.',
+  '.OLLLOOOOOLLLO',
+  '.OLLOYYYYYOLLO',
+  '..OOYWYYWYYOO.',
+  '...OYKYYKYYO..',
+  '...OPYYYYPYO..',
+  '...OBBBBBBBO..',
+  '...OYYYYYYYO..',
+  '....OBBBBBO...',
+  '.....OOOOO....',
+  '..............']),
+ ('ladybug', {'R': hx('#e8443a'), 'r': hx('#b02a2a'), 'B': hx('#2a1a2a')}, [
+  '..............',
+  '.....OOOO.....',
+  '....OBBBBO....',
+  '...OBWBBWBO...',
+  '...OBKBBKBO...',
+  '..OOPBBBBPOO..',
+  '.ORRBRROBRRRO.',
+  '.ORRRRRORRRRO.',
+  '.ORBRRRORRBRO.',
+  '.ORRRRRORRRRO.',
+  '..OrrBrOrBrO..',
+  '...OOOOOOOO...',
+  '....O....O....',
+  '..............']),
+ ('acorn', {'c': hx('#7a4a22'), 'C': hx('#a8723a'), 'A': hx('#f0cf94'), 'a': hx('#c89a5a'), 'd': hx('#a85a3a')}, [
+  '.......O......',
+  '......OcO.....',
+  '...OOOOOOOO...',
+  '..OccCcCcccO..',
+  '.OcCcCcCcCcCO.',
+  '.OOOOOOOOOOOO.',
+  '..OAAAAAAAAO..',
+  '..OAWAAAAWAO..',
+  '..OAKAAAAKAO..',
+  '..OPAAAAAAPO..',
+  '...OAAddAAO...',
+  '....OaaaaO....',
+  '.....OOOO.....',
+  '..............']),
+ ('dew', {'S': hx('#8fd8ff', 225), 's': hx('#5ab0e8', 225), 'L': hx('#ffffff', 235), 'd': hx('#3a80c0')}, [
+  '......OO......',
+  '.....OSSO.....',
+  '....OSLSSO....',
+  '...OSLSSSSO...',
+  '..OSSSSSSSSO..',
+  '..OSSWSSWSSO..',
+  '.OSSSKSSKSSSO.',
+  '.OSSPSSSSPSSO.',
+  '.OSSSSddSSSSO.',
+  '..OsSSSSSSsO..',
+  '...OssssssO...',
+  '....OOOOOO....',
+  '..............',
+  '..............']),
+ ('worm', {'G': hx('#8ad65a'), 'g': hx('#5aa83a'), 'Y': hx('#f2e05a')}, [
+  '..............',
+  '..............',
+  '..O.O.........',
+  '...O.O........',
+  '..OOOOO.......',
+  '.OGGGGGO.OOO..',
+  '.OGWGGGOOGYGO.',
+  '.OGKGPGOGGGGGO',
+  '..OGGGOOGgGgGO',
+  '...OOOGGgGgGO.',
+  '.....OOOOOOO..',
+  '.....O.O.O.O..',
+  '..............',
+  '..............']),
+ ('turtle', {'H': hx('#8aa84a'), 'h': hx('#5a7a32'), 'S': hx('#c8e09a'), 's': hx('#9ab86a')}, [
+  '..............',
+  '..............',
+  '.....OOOOO....',
+  '....OHHhHHO...',
+  '...OHhHHHhHO..',
+  '.OOOHHHhHHHHO.',
+  'OSSOOOOOOOOOO.',
+  'OSWSSSSSSSSSO.',
+  'OSKSPSSSSSSO..',
+  '.OSSSO.OSsO...',
+  '..OOO...OOO...',
+  '..............',
+  '..............',
+  '..............']),
+ ('jack', {'o': hx('#f0882a'), 'q': hx('#c8601a'), 'Y': hx('#ffe27a'), 'L': hx('#fff8c8'), 'G': hx('#4a8a3a')}, [
+  '.......O......',
+  '......OGO.....',
+  '...OOOOOOOO...',
+  '..OoooqoqoooO.',
+  '.OoooooooooooO',
+  '.OoYYoooooYYoO',
+  '.OoYYoooooYYoO',
+  '.OoooooPoooooO',
+  '.OoYoYoYoYoYoO',
+  '..OqoYqYqYoqO.',
+  '...OOOOOOOOO..',
+  '..............',
+  '....O..O..O...',
+  '..............']),
+ ('starcandy', {'Y': hx('#fff0a0'), 'y': hx('#ffd060'), 'p': hx('#ff9ac8')}, [
+  '......OO......',
+  '.....OYYO.....',
+  '.....OYYO.....',
+  '.OOOOOYYOOOOO.',
+  '.OYYYYYYYYYYO.',
+  '..OYWYYYYWYO..',
+  '...OYKYYKYO...',
+  '...OPYpYYPO...',
+  '..OYYYYYYpYO..',
+  '..OyYYOOYYyO..',
+  '.OyyO....OyyO.',
+  '.OOO......OOO.',
+  '..............',
+  '..............']),
+ ('cloud', {'C': hx('#f4f6ff'), 'c': hx('#c8d0e8'), 'B': hx('#6ab8f0')}, [
+  '..............',
+  '....OOO.......',
+  '...OCCCOOO....',
+  '.OOCCCCCCCO...',
+  'OCCCCCCCCCCO..',
+  'OCCWCCCCWCCCO.',
+  'OCCKCCCCKCCCO.',
+  'OCPCCCCCCPCCO.',
+  '.OcCCCCCCCcO..',
+  '..OOOOOOOOO...',
+  '...B..B..B....',
+  '....B..B..B...',
+  '..............',
+  '..............']),
+ ('burr', {'G': hx('#6ab84a'), 'N': hx('#a8683a'), 'n': hx('#7a4a26'), 'd': hx('#5a3a20')}, [
+  '...O.O.O.O....',
+  '..OGOGOGOGO...',
+  '.OGGGGGGGGGO..',
+  '..OGNNNNNNGO..',
+  '.OGNNNNNNNNGO.',
+  '..ONWNNNNWNO..',
+  '.OGNKNNNNKNGO.',
+  '..ONPNNNNPNO..',
+  '.OGNNNddNNNGO.',
+  '..OGnnnnnnGO..',
+  '.OGOGOGOGOGO..',
+  '...O.O.O.O....',
+  '..............',
+  '..............']),
+ ('tulip', {'p': hx('#ff7aa8'), 'q': hx('#d84a80'), 'C': hx('#fff0dc'), 'G': hx('#6ac85a'), 'g': hx('#4a9a3a'), 'd': hx('#c86a6a')}, [
+  '...O.O..O.O...',
+  '..OpOpOOpOqO..',
+  '..OppppppppO..',
+  '..OpCCCCCCqO..',
+  '..OCWCCCCWCO..',
+  '..OCKCCCCKCO..',
+  '..OCPCCCCPCO..',
+  '...OCCddCCO...',
+  '....OOOOOO....',
+  '.....OGgO.....',
+  '...OOGGgGOO...',
+  '..OGgO.OGgO...',
+  '...OO...OO....',
+  '..............']),
+ ('dragonfly', {'L': hx('#c8f0ff', 200), 'B': hx('#3ab8a8'), 'b': hx('#2a8a7a')}, [
+  '..............',
+  '.OOO.OOOO.OOO.',
+  'OLLLOOBBOOLLLO',
+  'OLLLLOBBOLLLLO',
+  '.OOOOBWWBOOOO.',
+  '....OBKKBO....',
+  '.OOOOBPPBOOOO.',
+  'OLLLLObbOLLLLO',
+  'OLLLOObbOOLLLO',
+  '.OOO.OBBO.OOO.',
+  '.....ObbO.....',
+  '.....OBBO.....',
+  '......OO......',
+  '..............']),
+ ('candle', {'Y': hx('#ffcf4a'), 'L': hx('#fff6c0'), 'R': hx('#ff8a3a'), 'V': hx('#efe2d0'), 'v': hx('#c8b8a0')}, [
+  '......O.......',
+  '.....OYO......',
+  '....OYLYO.....',
+  '...OYLLLYO....',
+  '..ORYWLWYRO...',
+  '..ORYKLKYRO...',
+  '..ORPLLLPRO...',
+  '...ORRLRRO....',
+  '....OOOOO.....',
+  '....OVVvO.....',
+  '....OVVvO.....',
+  '...OOVVvOO....',
+  '...OvvvvvO....',
+  '...OOOOOOO....']),
+ ('pebble', {'R': hx('#a8a8b8'), 'r': hx('#7ab85a'), 'g': hx('#7a7a8a'), 'd': hx('#5a5a6a')}, [
+  '..............',
+  '....OOOOOO....',
+  '...ORRrrRRO...',
+  '..ORRRrRRRRO..',
+  '..ORWRRRRWRO..',
+  '..ORKRRRRKRO..',
+  '.OORPRRRRPROO.',
+  'ORgORRddRRORgO',
+  'ORRORRRRRRORRO',
+  '.OO.OgRRgO.OO.',
+  '....OROORO....',
+  '....OO..OO....',
+  '..............',
+  '..............']),
+]
+
 def render(rows, pal):
     im = Image.new('RGBA', (14, 14), (0, 0, 0, 0)); P = {**COMMON, **pal}
     for y, r in enumerate(rows):
@@ -106,12 +321,22 @@ def render(rows, pal):
 def frame2(k, rows):   # 두 번째 칸: 눈 깜빡 · 둥실 · 날개 반짝 · 촉수 흔들
     if k in ('fluff', 'jelly'): rows = rows[1:] + ['..............']
     if k == 'jelly': rows = rows[:8] + [r[1:] + '.' if i % 2 == 0 else '.' + r[:-1] for i, r in enumerate(rows[8:])]
-    if k == 'moth': rows = [r.replace('L', 'Y') for r in rows]
-    if k in ('snail', 'shroom', 'mole'): rows = [r.replace('W', 'K') if i in (8, 5) else r for i, r in enumerate(rows)]
+    if k in ('moth', 'bee', 'dragonfly'): rows = [r.replace('L', '.') if i in (2, 3, 4, 7, 8) and k != 'moth' else r.replace('L', 'Y') for i, r in enumerate(rows)] if k != 'moth' else [r.replace('L', 'Y') for r in rows]
+    if k in ('jack', 'candle', 'starcandy'): rows = [r.replace('Y', 'L') if k == 'jack' else r.replace('L', 'Y') for r in rows]
+    if k in ('cloud', 'dew'): rows = rows[1:] + ['..............']
+    if k in ('snail', 'shroom', 'mole', 'ladybug', 'acorn', 'worm', 'turtle', 'burr', 'tulip', 'pebble'): rows = [r.replace('W', 'K') for r in rows]
     if k == 'mole': rows = ['..............'] + rows[:-1]
     return rows
 sh = Image.new('RGBA', (14 * 2 * len(G), 14))
 for i, (k, pal, rows) in enumerate(G):
     sh.alpha_composite(render(rows, pal), (i * 28, 0)); sh.alpha_composite(render(frame2(k, rows), pal), (i * 28 + 14, 0))
 sh.save(os.path.join(OUT, 'gi_guests.png'))
-pv = Image.new('RGBA', (sh.width, 14), (40, 30, 56, 255)); pv.alpha_composite(sh, (0, 0)); pv.resize((sh.width * 8, 112), Image.NEAREST).save(os.path.join(OUT, 'gi_guests_preview.png')); print('ok')
+from PIL import ImageDraw, ImageFont
+NM = ['이끼 달팽이', '버섯 꼬마', '솜뭉치 정령', '반딧불 나방', '꼬마 두더지', '달빛 해파리', '꼬마 꿀벌', '무당벌레', '도토리 요정', '이슬방울 정령', '잎새 애벌레', '꼬마 거북', '호박등 요정', '별사탕 정령', '꼬마 구름', '밤송이 꼬마', '튤립 요정', '잠자리', '촛불 도깨비', '조약돌 골렘']
+F = ImageFont.truetype('/tmp/claude-0/-home-user/d683bb50-b1f3-59a3-8e5f-5f21e64e8c5a/scratchpad/Galmuri11-Bold.ttf', 12); CW, CHh = 150, 150
+pv = Image.new('RGBA', (CW * 5, CHh * 4), (40, 30, 56, 255)); d = ImageDraw.Draw(pv)
+for i in range(len(G)):
+    cx, cy = (i % 5) * CW, (i // 5) * CHh; d.rounded_rectangle([cx + 6, cy + 6, cx + CW - 6, cy + CHh - 6], 10, fill=(58, 44, 82, 255))
+    for f in (0, 1): pv.alpha_composite(sh.crop(((i * 2 + f) * 14, 0, (i * 2 + f) * 14 + 14, 14)).resize((56, 56), Image.NEAREST), (cx + 14 + f * 64, cy + 22))
+    d.text((cx + CW // 2, cy + 112), NM[i], font=F, fill=(255, 243, 200, 255), anchor='mm')
+pv.save(os.path.join(OUT, 'gi_guests_preview.png')); print('ok', len(G))
