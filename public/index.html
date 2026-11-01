@@ -9828,9 +9828,9 @@ function knRender(){
   const yarnRow = sel => `<div class="ycol">${KN_COL.map(([c, nm]) => `<button data-kny="${c}" class="${sel === c ? 'on' : ''}"><i style="background:${knHex(c)}"></i><span>${nm}</span><em>${Y[c] || 0}</em></button>`).join('')}</div>`;
   let body = '';
   if (knTab === 'y'){
-    const col = KN_COL.find(x => x[0] === knYc) || KN_COL[0], dye = col[2], wool = me.inv.wool || 0, can = Math.min(Math.floor(wool / KN_WOOL), dye ? (me.inv[dye] || 0) : 999);
+    const col = KN_COL.find(x => x[0] === knYc) || KN_COL[0], dye = col[2], wool = me.inv.wool || 0, can = Math.min(Math.floor(wool / KN_WOOL), dye ? haveSame(dye) : 999);
     body = `<div class="s">가진 털실 ${knTot()} 뭉치 · 양털 ${wool} 개</div>${yarnRow(knYc)}
-      <div class="box"><b>${col[1]} 털실 1 뭉치</b><span>양털 ${KN_WOOL} 개${dye ? ` + ${KN_DYE[dye]} 1 개 (가진 것 ${me.inv[dye] || 0} 개)` : ''}</span>
+      <div class="box"><b>${col[1]} 털실 1 뭉치</b><span>양털 ${KN_WOOL} 개${dye ? ` + ${KN_DYE[dye]} 1 개 (가진 것 ${haveSame(dye)} 개)` : ''}</span>
       ${barn ? `<div class="frow"><button class="btn sm go" data-kn="spin1" ${can < 1 ? 'disabled' : ''}>1 뭉치 만들기</button><button class="btn sm" data-kn="spinmax" ${can < 2 ? 'disabled' : ''}>${can > 1 ? can + ' 뭉치 다' : '한 번에 만들기'}</button></div>` : '<span class="s">물레는 사육장 왼쪽 벽 끝에 있어요</span>'}</div>
       <div class="s sub">양털은 사육장 양(뭉게)에게서 모여요. 이미 만든 털실은 다시 물들일 수 없어요</div>`;
   } else if (knTab === 'k' && K.wip){
@@ -9858,8 +9858,8 @@ function knThumb(c, id, tries = 0){   // 인형 칸 그림: 안 그려지면 그
   if (d){ const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, 38, 38); q.drawImage(d, 13, 22, 38, 38, 0, 0, 38, 38); } else if (n && tries < 40) setTimeout(() => knThumb(c, id, tries + 1), 500);
 }
 function knSpin(n){
-  const col = KN_COL.find(x => x[0] === knYc) || KN_COL[0], dye = col[2]; n = Math.min(n, Math.floor((me.inv.wool || 0) / KN_WOOL), dye ? (me.inv[dye] || 0) : 999); if (n < 1) return toast('재료가 모자라요');
-  me.inv.wool -= KN_WOOL * n; if (dye) me.inv[dye] -= n; knY()[col[0]] = (knY()[col[0]] || 0) + n; save(); hud && hud(); sfx('sparkle');
+  const col = KN_COL.find(x => x[0] === knYc) || KN_COL[0], dye = col[2]; n = Math.min(n, Math.floor((me.inv.wool || 0) / KN_WOOL), dye ? haveSame(dye) : 999); if (n < 1) return toast('재료가 모자라요');
+  me.inv.wool -= KN_WOOL * n; if (dye) takeSame(dye, n);   // 채집한 것 · 온실에서 수확한 것 둘 다 써요 knY()[col[0]] = (knY()[col[0]] || 0) + n; save(); hud && hud(); sfx('sparkle');
   const v = $('#knv'); if (v){ v.classList.add('spin'); setTimeout(() => v.classList.remove('spin'), 700); } toast(`물레가 윙윙.... ${col[1]} 털실 ${n} 뭉치를 만들었어요`); knRender();
 }
 // 뜨던 것: me.knit.wip = { kind: 'sc' | 'doll', a, b, doll, used { 색: 뭉치 }, snap 지금까지 뜬 것 } · 털실은 시작할 때 쓰고, 「풀기」를 누르면 돌려받아요
