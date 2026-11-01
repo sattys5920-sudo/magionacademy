@@ -42,7 +42,12 @@ const hands = { L: null, R: null };   // 누르고 있는 손가락 { id, x0, y0
 let keyGrip = false, mouseMode = false;
 const gripL = () => !!hands.L || keyGrip;
 function reset(){ K = { rows: [], j: 0, cast: 0, cur: YC[colA], flip: 1, bind: -1, fringe: 0, rt: RT0.slice(), lpull: 0, wrapA: 0, newLoop: 0, drop: null, inserted: false, castA: 0 };
-  score = [0, 0, 0]; phase = O.lesson ? 'knit' : 'cast'; if (O.lesson){ K.j = NC; } st = 'insert'; busy = false; rowQ = []; wobble = 0; msg = ''; learnDone = false; ui(); }
+  score = [0, 0, 0]; phase = O.lesson ? 'knit' : 'cast'; if (O.lesson){ K.j = NC; } st = 'insert'; busy = false; rowQ = []; wobble = 0; msg = ''; learnDone = false;
+  const R0 = O.resume; if (R0){ K.rows = R0.rows.map(r => ({ col: r.col, q: r.q.slice() })); K.j = R0.j; K.cast = R0.cast; K.cur = R0.cur; K.bind = R0.bind; K.fringe = R0.fringe; phase = R0.phase; rowQ = R0.rowQ.slice(); score = R0.score.slice(); learnDone = !!R0.learnDone; msg = '멈춘 데서 이어 떠요'; msgT = performance.now() + 2000; }
+  ui(); }
+// 이어 뜨기용: 지금까지 뜬 것 (뜨던 코는 처음부터)
+const snap = () => ({ rows: K.rows.map(r => ({ col: r.col, q: r.q.slice() })), j: K.j, cast: K.cast, cur: K.cur, bind: K.bind, fringe: K.fringe, phase: phase === 'done' ? 'fringe' : phase, rowQ: rowQ.slice(), score: score.slice(), learnDone });
+const saveNow = () => { if (O.onSave && !done) try { O.onSave(snap()); } catch(e){} };
 const leftTip = () => sub2(LT0, mul(UL, K.lpull));   // 왼손으로 밀면 끝이 손 쪽으로 물러나요
 const leftLoopPos = i => sub2(leftTip(), mul(UL, 9 + i * 10));
 const rightLoopPos = (rt, i) => sub2(rt, mul(UR, 9 + i * 10));
@@ -129,13 +134,13 @@ async function finishStitch(){ if (busy) return; busy = true; SND.slip(); if (ha
   score[q]++; SND[q === 2 ? 'perfect' : q === 1 ? 'good' : 'miss'](); showJudge(q); rowQ[K.j - 1] = q; K.j--; st = 'insert';
   const doneSt = K.rows.length * NC + (NC - K.j); if (!learnDone && doneSt >= LEARN){ learnDone = true; SND.learn(); say('손에 익었어요! 이제 리듬 있게: 쏙 · 빙글 · 쭉 · 툭', 2400); }
   if (K.j === 0 && O.lesson){ K.rows.push({ col: K.cur, q: rowQ.slice() }); phase = 'done'; say('한 줄 완성!', 2000); setTimeout(finish, 900); }
-  else if (K.j === 0){ phase = 'flip'; say('한 줄 끝! 두 손을 떼었다가 양손으로 동시에 다시 쥐면 바늘을 바꿔 쥐어요', 2600); }
+  else if (K.j === 0){ phase = 'flip'; setTimeout(saveNow, 0); say('한 줄 끝! 두 손을 떼었다가 양손으로 동시에 다시 쥐면 바늘을 바꿔 쥐어요', 2600); }
   busy = false; ui(); }
 async function doFlip(){ busy = true; SND.flip(); await tween(420, p => { K.flip = Math.cos(p * Math.PI); }); K.flip = 1; K.rows.push({ col: K.cur, q: rowQ.slice() }); rowQ = []; K.rt = RT0.slice();
   if (K.rows.length >= ROWS && O.lesson){ phase = 'done'; setTimeout(finish, 400); }
   else if (K.rows.length >= ROWS){ phase = 'bind'; K.bind = 0; K.j = NC; say('코 막음: 양손으로 쥐고 왼손을 아래로 밀 때마다 고리가 하나씩 빠져요', 2600); }
   else if (TIE.includes(K.rows.length)){ phase = 'tie'; K.j = NC; say('줄무늬 차례예요. 오른손으로 톡 눌러 새 색 실을 묶어요', 2400); } else { phase = 'knit'; K.j = NC; st = 'insert'; }
-  ['L', 'R'].forEach(s => { if (hands[s]){ hands[s].x0 = hands[s].x; hands[s].y0 = hands[s].y; hands[s].rt0 = K.rt.slice(); } }); busy = false; ui(); }
+  ['L', 'R'].forEach(s => { if (hands[s]){ hands[s].x0 = hands[s].x; hands[s].y0 = hands[s].y; hands[s].rt0 = K.rt.slice(); } }); busy = false; ui(); saveNow(); }
 async function bindOne(){ busy = true; SND.slip(); await tween(160, p => { K.drop = p; }); K.drop = null; K.bind++; if (K.bind >= NC){ K.bind = 99; if (O.fringe === false){ phase = 'done'; setTimeout(finish, 500); } else phase = 'fringe'; K.rows.push({ col: K.cur, q: Array(NC).fill(2) }); say('술 달기: 오른손으로 아래로 그을 때마다 실 술이 하나씩', 2400); } busy = false; ui(); }
 function keySlip(){ if (phase === 'knit' && st === 'slip') finishStitch(); else if (phase === 'bind') bindOne(); }
 const curRowColor = () => (TIE.filter(r => r <= K.rows.length).length % 2 ? YC[colB] : YC[colA]);
@@ -157,7 +162,7 @@ function ui(){ if (done) return; let n = '', tp = '';
 function finish(){ if (done) return; done = true; SND.done(); cancelAnimationFrame(raf); removeEventListener('keydown', kd); removeEventListener('keyup', ku); resolve({ score: score.slice(), rows: K.rows.map(r => ({ col: r.col, q: r.q.slice() })) }); }
 let raf = 0; const loop = now => { if (done) return; draw(now / 1000); if (performance.now() - jT > 800 && $('judge').textContent) $('judge').textContent = ''; if (msg && performance.now() > msgT){ msg = ''; ui(); } raf = requestAnimationFrame(loop); };
 reset(); raf = requestAnimationFrame(loop);
-return { result, stop: () => { if (done) return; done = true; cancelAnimationFrame(raf); removeEventListener('keydown', kd); removeEventListener('keyup', ku); resolve(null); } };
+return { result, snap, stop: () => { if (done) return; done = true; cancelAnimationFrame(raf); removeEventListener('keydown', kd); removeEventListener('keyup', ku); resolve(null); } };
 }
 window.KnitFX = { play };
 })();
