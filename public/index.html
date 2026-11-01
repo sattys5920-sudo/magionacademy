@@ -4425,7 +4425,8 @@ function npcDecay(){
     me.fortuneDay = today; const F = ['동쪽 시장에서 작은 행운이 기다려요', '호숫가에서 반가운 얼굴을 만나요', '오늘 고른 선물은 마음에 쏙 들 거예요', '길을 잃어도 괜찮아요, 별이 다시 알려 줘요', '조용한 곳에서 좋은 생각이 떠올라요'];
     me.coin += 20; save(); setTimeout(() => toast(`${nameVar(npcGet('stella'))}의 운세: ${F[hash32(today) % F.length]} (+20G)`), 2500); }
 }
-const flagOn = f => { const m = /^([a-z]+)_h(\d+)$/.exec(f); if (m) return !!me.npc?.[m[1]]?.seen?.[m[2]];
+const romanceOn = id => !!(uid && npcOver.__romance && npcOver.__romance[id] === uid);   // 관리자가 정한 한 명에게만 연애 이야기 (npcs/__romance/<npc> = 학생 uid)
+const flagOn = f => { const r = /^([a-z]+)_romance$/.exec(f); if (r) return romanceOn(r[1]); const m = /^([a-z]+)_h(\d+)$/.exec(f); if (m) return !!me.npc?.[m[1]]?.seen?.[m[2]];
   const c = /^([a-z]+)_was_cold$/.exec(f); if (c) return !!me.npc?.[c[1]]?.cold; return !!me.nflag?.[f]; };
 // ---- 하트 이벤트 조건 ----
 const nextHeart = id => { const s = npcSt(id).seen; for (let k = 1; k <= 10; k++) if (!s[k]) return k; return 0; };
@@ -4524,7 +4525,7 @@ function npcPanel(n, text, btns){
 World.onNpc = id => { if (!me) return; World.hideBubble(); if (String(id).startsWith('mq:')) return mqTalk(id.slice(3)); if (String(id).startsWith('t:')) return townTalk(id); if (id === 'tut:senior') return tutTalk(); const c = STORY.findIndex(S => S.npc.id === id) + 1; if (c) return storyPanel(c); const n = npcGet(id); if (n) npcMenu(n); };
 // 평소 대사: 말투 단계 + (가끔) 날씨·시간대 + (가끔) 지난 이벤트 회상
 function npcLine(n){
-  const P = npcProf(n.id), h = hearts(n.id), r = Math.random();
+  const P0 = npcProf(n.id), P = romanceOn(n.id) && P0.daily_romance ? { ...P0, daily: P0.daily_romance } : P0, h = hearts(n.id), r = Math.random();
   const daily = P.daily?.[toneOf(h)] || ((n.greet || [])[Math.min(3, Math.floor(h / 3))]) || ['.......'];
   const rec = Object.entries(P.recall || {}).filter(([k]) => k.startsWith('flag:') ? flagOn(k.slice(5)) : npcSt(n.id).seen[k]).flatMap(([, v]) => v);
   if (typeof mqNpcExtra === 'function') rec.push(...mqNpcExtra(n.id));
@@ -4567,7 +4568,7 @@ function renderNpcGift(){
   on('[data-ngive]', b => { const k = b.dataset.ngive; if (done || !(me.inv[k] > 0)) return; me.inv[k]--; st.g = todayKey();
     const kind = likes.includes(k) ? 'love' : dislikes.includes(k) ? 'hate' : 'like', d0 = { love: 40, like: 20, hate: -30 }[kind], d = d0 > 0 ? Math.round(d0 * (1 + sgFx('gift_affection'))) : d0;
     me.giftLog = me.giftLog || {}; (me.giftLog[n.id] ||= {})[k] = kind; prankEv('gift', { id: n.id, k, kind }); trEv('gift', { id: n.id });   // 관계 패널의 「알아낸 선물」
-    const ls = P.gift?.[kind] || { love: ['우와, 이거 정말 좋아해요! 고마워요!'], like: ['고마워요, 잘 쓸게요.'], hate: ['으.... 이건 좀 별로예요.'] }[kind];
+    const ls = (romanceOn(n.id) && P.gift_romance?.[kind]) || P.gift?.[kind] || { love: ['우와, 이거 정말 좋아해요! 고마워요!'], like: ['고마워요, 잘 쓸게요.'], hate: ['으.... 이건 좀 별로예요.'] }[kind];
     npcMsg = ''; closeSheet(); npcAddA(n.id, d); save(); syncNpcs(); setTimeout(() => { npcExprOnce = { love: 1, like: 0, hate: 2 }[kind]; npcMenu(n, fillVars(ls[Math.floor(Math.random() * ls.length)], n.id)); }, 100); });
 }
 async function renderNpcStory(){
@@ -5022,6 +5023,7 @@ function adminNpcHTML(){
     let body = '';
     if (adSub === 'base') body = `${d.av ? `<div class="adav"><img src="${avThumb(World.Avatar.fix(d.avData || World.Avatar.fromLook(d.look || 1)))}" alt=""><div class="adavc">${['body', 'skinC', 'hair', 'hairC', 'eyeC', 'face', 'lip', 'top', 'topC', 'legs', 'legsC', 'feet', 'feetC', 'hat', 'hatC', 'acc', 'accC', 'neck', 'cape'].map(k => `<span>${k}<button data-adavk="${k}" data-adavd="-1">◀</button><button data-adavk="${k}" data-adavd="1">▶</button></span>`).join('')}<button data-adavrand="1">무작위</button></div></div>` : `<div class="s">그림 NPC는 생김새를 바꿀 수 없어요</div>`}
       <div class="adknit"><div><b>뜨개 인형 미리보기</b><span data-knitdoll="1" data-k="${d && adKnitCache[adKnitKey({ ...d, id: adNpc }, 2)] ? adKnitKey({ ...d, id: adNpc }, 2) : ''}">${d ? adKnitImgs({ ...d, id: adNpc }, 2) : ''}</span><small>앞 · 옆 · 뒤 · 겨울 뜨개질 인형 가구 · 지금 생김새 그대로 (저장한 캐릭터)</small></div><div class="adknitall">${npcAll().map(n => `<span title="${esc(n.name || n.id)}"><i data-knitall="${n.id}">${adKnitImgs(n.id === adNpc ? { ...d, id: adNpc } : n)}</i>${esc(n.name || n.id)}</span>`).join('')}</div></div>${(setTimeout(() => adKnitDraw({ ...d, id: adNpc }), 40), '')}
+      ${adNpc === 'otumo' ? `<label>연애 이야기 상대 (이 학생만 설렘 버전 · 나머지는 우정 이야기) <select data-adrom="${adNpc}"><option value="">없음</option>${Object.keys(AD.players || {}).filter(id => AD.players[id]?.nick).map(id => `<option value="${id}" ${(npcOver.__romance || {})[adNpc] === id ? 'selected' : ''}>${esc(AD.players[id].nick)}</option>`).join('')}</select></label>` : ''}
       <label>이름 <input data-adf="name" value="${esc(d.name || '')}"></label><label>직업 <input data-adf="title" value="${esc(d.title || '')}"></label>
       <label>좋아하는 것 (이름, 쉼표) <input data-adf="likes" value="${esc((d.likes || []).map(k => ITEM[k] || k).join(', '))}"></label>
       <label>싫어하는 것 <input data-adf="dislikes" value="${esc((d.dislikes || []).map(k => ITEM[k] || k).join(', '))}"></label>
@@ -9429,6 +9431,7 @@ function adminFairyHTML(){
     <div class="frow" style="margin-top:8px;gap:6px"><select data-fyf>${FY.map((f, i) => `<option value="${i}" ${sel === i ? 'selected' : ''}>${f.n} · 좋아하는 기억: ${f.like.join('·')}</option>`).join('')}</select><button class="btn sm go" data-fya="open">${c.open ? '새로 열기' : '열기'}</button></div>
     <div class="s sub">고른 요정이 접속한 학생마다 날아와 노점을 펼쳐요. 한 번 열 때마다 학생마다 한 번 바꿀 수 있어요</div></div>`;
 }
+document.addEventListener('change', e => { const r = e.target.closest && e.target.closest('[data-adrom]'); if (!r || !F || !db) return; F.set(F.ref(db, 'npcs/__romance/' + r.dataset.adrom), r.value || null).then(() => toast(r.value ? `${AD.players[r.value]?.nick || ''} 학생에게만 연애 이야기가 나와요` : '연애 이야기 상대를 지웠어요')).catch(ex => toast('저장 실패: ' + (ex.code || ex.message))); });
 document.addEventListener('change', e => { const s0 = e.target.closest && e.target.closest('[data-fyf]'); if (s0){ AD.fySel = s0.value; s0.blur(); } });
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-fya]'); if (!b || !F || !db) return; const a = b.dataset.fya;
   if (a === 'open'){ const fi = +(document.querySelector('[data-fyf]')?.value || 0), f = FY[fi]; if (!confirm(`${f.n}의 요정 시장을 열까요? 접속한 학생마다 ${f.n}이 날아와 노점을 펼쳐요`)) return;
@@ -9911,7 +9914,7 @@ async function knGive(n, i){
   const K = me.knit, s = (K.sc || [])[i]; if (!s) return;
   const first = !((K.gave || {})[n.id] || []).length; K.sc.splice(i, 1); if (K.w === i){ K.w = null; me.av.neck = World.Avatar.meta.parts.neck.findIndex(p => p.f === null); me.av = World.Avatar.fix(me.av); delete me.av.house; World.setPlayer(me.nick, avOf(me)); } else if (K.w != null && K.w > i) K.w--;
   ((K.gave ||= {})[n.id] ||= []).push(s.c); npcAddA(n.id, first ? 80 : 40); save(); closeSheet(); npcSig = ''; syncNpcs(); sfx('heart');
-  const T = KN_THX[n.id], face = knFace(n, s.c); knOn = true;
+  const KR = romanceOn(n.id) && npcProf(n.id).knit_romance, T = KR ? { first: KR.first, again: KR.again } : KN_THX[n.id], face = knFace(n, s.c); knOn = true;
   try { if (n.av) await Promise.race([World.Avatar.need(knAvWith(npcAv(n), s.c)), famSleep(1500)]).catch(() => {}); else knSprSheet(n, s.c);
     for (const l of (first ? T.first : T.again)) await blancSay(n.name, fillVars(l, n.id), 1500, face); }
   finally { $('#blsay') && ($('#blsay').style.display = 'none'); knOn = false; }
