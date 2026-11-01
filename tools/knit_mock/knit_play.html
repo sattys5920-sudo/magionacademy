@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gowun+Dodum&display=swap">
 <style>
-/* 한 화면 게임: 위 = 바늘과 천 확대 그림, 아래 = 손가락으로 긋는 칸. 사육장 밤 · 벽난로 빛 (게임과 같은 어두운 화풍 하나로) */
+/* 한 화면 게임: 두 손으로 바늘 두 개를 쥐고 떠요. 화면 왼쪽 = 왼손(바늘 잡기 · 밀기), 오른쪽 = 오른손(바늘 끝이 손가락을 따라와요). 사육장 밤 · 벽난로 빛 */
 :root{
   --night:#1A1226; --panel:#251A36; --pad:#160F22; --line:#3A2E58;
   --ink:#F1E9FF; --sub:#B8A8D8; --yarn:#FFB8A8; --gold:#FFE9A0; --ok:#9AE07A; --bad:#FF8A8A;
@@ -12,26 +12,23 @@
 }
 html,body{height:100%}
 [hidden]{display:none!important}
-body{background:var(--night);color:var(--ink);font-family:var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;box-sizing:border-box;overscroll-behavior:none}
-.wrap{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
-h1{font-family:var(--f-disp);font-weight:400;font-size:24px;margin:0;color:var(--yarn);letter-spacing:.5px}
+body{background:var(--night);color:var(--ink);font-family:var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;box-sizing:border-box;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+.wrap{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+h1{font-family:var(--f-disp);font-weight:400;font-size:22px;margin:0;color:var(--yarn)}
 .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .top small{color:var(--sub);font-size:13px}
-.card{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:10px}
-canvas{display:block;width:100%;image-rendering:pixelated;border-radius:8px}
-#view{aspect-ratio:192/128;background:#2A1E3A}
-.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px}
-#step{font-family:var(--f-disp);font-size:20px;color:var(--gold)}
-#judge{font-family:var(--f-disp);font-size:20px;min-width:70px;text-align:right}
-#tip{font-size:14px;color:var(--sub);line-height:1.5;margin-top:4px;min-height:42px}
-#pad{aspect-ratio:192/90;background:var(--pad);touch-action:none;cursor:crosshair;border:2px dashed var(--line)}
+#view{display:block;width:100%;max-width:100%;aspect-ratio:240/230;image-rendering:pixelated;border-radius:12px;background:#2A1E3A;touch-action:none;border:2px solid var(--line)}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#step{font-family:var(--f-disp);font-size:19px;color:var(--gold);min-width:0}
+#judge{font-family:var(--f-disp);font-size:19px;min-width:70px;text-align:right;flex:none}
+#tip{font-size:14px;color:var(--sub);line-height:1.5;min-height:42px}
 .prog{height:8px;border-radius:4px;background:var(--pad);overflow:hidden}.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#FF8A8A,var(--gold));transition:width .3s}
-.stats{display:flex;gap:12px;font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums}
+.stats{display:flex;gap:12px;font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums;flex-wrap:wrap}
 .stats b{color:var(--ink);font-weight:400}
-#start,#result{position:fixed;inset:0;background:rgba(10,6,20,.82);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
-.dlg{background:var(--panel);border:2px solid var(--yarn);border-radius:16px;padding:16px;max-width:380px;width:100%;display:flex;flex-direction:column;gap:12px;text-align:center}
+#start,#result{position:fixed;inset:0;background:rgba(10,6,20,.84);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5;overflow:auto}
+.dlg{background:var(--panel);border:2px solid var(--yarn);border-radius:16px;padding:16px;max-width:390px;width:100%;display:flex;flex-direction:column;gap:12px;text-align:center}
 .dlg h2{font-family:var(--f-disp);font-weight:400;font-size:22px;margin:0;color:var(--yarn)}
-.dlg p{margin:0;font-size:14px;line-height:1.6;color:var(--sub)}
+.dlg p{margin:0;font-size:14px;line-height:1.6;color:var(--sub);text-align:left}
 .sw{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .sw button{width:40px;height:40px;border-radius:20px;border:3px solid transparent;cursor:pointer}
 .sw button[aria-pressed="true"]{border-color:var(--gold);box-shadow:0 0 0 2px var(--night) inset}
@@ -41,148 +38,195 @@ canvas{display:block;width:100%;image-rendering:pixelated;border-radius:8px}
 button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .leo{display:flex;gap:10px;align-items:flex-start;text-align:left;background:var(--pad);border-radius:12px;padding:10px;font-size:14px;line-height:1.55}
 .leo b{color:#FFD8A8;font-family:var(--f-disp);font-weight:400}
-#scarf{width:96px;height:auto;margin:0 auto;aspect-ratio:auto}
+.hands{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;line-height:1.5;text-align:left}
+.hands div{background:var(--pad);border-radius:10px;padding:8px}
+.hands b{display:block;font-family:var(--f-disp);font-weight:400;color:var(--gold);font-size:15px}
+#scarf{width:96px;height:auto;margin:0 auto;image-rendering:pixelated}
 @media (prefers-reduced-motion:reduce){.prog i{transition:none}}
 </style>
 
 <div class="wrap">
   <div class="top"><h1>레오의 뜨개 교실</h1><small>줄무늬 목도리 · 8 코 6 줄</small></div>
-  <div class="card">
-    <canvas id="view" width="192" height="128" aria-label="바늘과 천"></canvas>
-    <div class="bar"><span id="step">코 잡기</span><span id="judge"></span></div>
-    <div id="tip">아래 칸을 톡 눌러서 바늘에 고리를 하나씩 잡아요</div>
-  </div>
-  <canvas id="pad" width="192" height="90" aria-label="손가락으로 긋는 칸"></canvas>
+  <canvas id="view" width="240" height="230" aria-label="두 손으로 쥔 뜨개바늘"></canvas>
+  <div class="bar"><span id="step">코 잡기</span><span id="judge"></span></div>
+  <div id="tip"></div>
   <div class="prog"><i id="pg"></i></div>
-  <div class="stats"><span>완벽 <b id="s2">0</b></span><span>좋아요 <b id="s1">0</b></span><span>삐끗 <b id="s0">0</b></span><span>다시 <b id="sr">0</b></span></div>
+  <div class="stats"><span>뜬 코 <b id="sn">0</b></span><span>완벽 <b id="s2">0</b></span><span>좋아요 <b id="s1">0</b></span><span>삐끗 <b id="s0">0</b></span><span id="mouseHint" hidden>마우스: 왼손은 스페이스바를 누른 채 · 밀기는 ← 키</span></div>
 </div>
 
 <div id="start"><div class="dlg">
   <h2>겨울 뜨개질</h2>
-  <div class="leo"><canvas id="leoFace" width="16" height="16" style="width:44px;height:44px;flex:none"></canvas><div><b>레오</b><br>....뜨개질, 해 볼래. 가르쳐 주는 거 아니다. 그냥 같이 하는 거야.</div></div>
+  <div class="leo"><canvas id="leoFace" width="16" height="16" style="width:44px;height:44px;flex:none;image-rendering:pixelated"></canvas><div><b>레오</b><br>....바늘 두 개 쥐어. 왼손은 꽉, 오른손은 부드럽게. 가르쳐 주는 거 아니다.</div></div>
+  <div class="hands"><div><b>왼손 (화면 왼쪽)</b>누르고 있으면 왼쪽 바늘을 꽉 쥐어요. 아래로 밀면 헌 고리가 빠져요.</div><div><b>오른손 (화면 오른쪽)</b>누른 채 움직이면 오른쪽 바늘 끝이 따라와요. 동그랗게 돌리면 실이 감겨요.</div></div>
   <div class="sw" id="swA"><label>첫째 색</label></div>
   <div class="sw" id="swB"><label>둘째 색 (줄무늬)</label></div>
-  <p>아래 칸에서 점선을 따라 손가락(마우스)으로 그어요. 한 코는 찔러 넣기 → 실 감기 → 빼내기 → 넘기기. 손에 익으면 쓱 한 번에 한 코.</p>
-  <button class="go" id="goBtn">뜨기 시작</button>
+  <p>한 코: 왼손으로 잡고 → 오른쪽 바늘 끝을 첫 고리에 쏙 → 오른손 동그랗게 실 감기 → 오른쪽 아래로 당겨 빼내기 → 왼손을 아래로 밀어 헌 고리 빼기.</p>
+  <button class="go" id="goBtn">바늘 쥐기</button>
 </div></div>
 <div id="result" hidden><div class="dlg">
   <h2 id="rTitle">완성!</h2>
   <canvas id="scarf" width="40" height="120"></canvas>
-  <p id="rText"></p>
-  <div class="leo"><canvas width="16" height="16" class="leoF" style="width:44px;height:44px;flex:none"></canvas><div><b>레오</b><br><span id="rLeo"></span></div></div>
+  <p id="rText" style="text-align:center"></p>
+  <div class="leo"><canvas width="16" height="16" class="leoF" style="width:44px;height:44px;flex:none;image-rendering:pixelated"></canvas><div><b>레오</b><br><span id="rLeo"></span></div></div>
   <div style="display:flex;gap:8px;justify-content:center"><button class="go" id="again">다시 뜨기</button><button class="go alt" id="other">색 바꾸기</button></div>
 </div></div>
 
 <script>
 (() => {
 const YC = { 빨강: '#E0505A', 하양: '#F4F0E8', 파랑: '#5A8AE0', 노랑: '#F0C850', 초록: '#6AB85A' };
-const NC = 8, ROWS = 6, TIE = [2, 4], LEARN = 3;
-const $ = id => document.getElementById(id), V = $('view'), P = $('pad'), g = V.getContext('2d'), pg = P.getContext('2d');
+const NC = 8, ROWS = 6, TIE = [2, 4], LEARN = 3, W = 240, H = 230;
+const $ = id => document.getElementById(id), V = $('view'), g = V.getContext('2d');
 let colA = '빨강', colB = '하양';
-// 소리 (첫 터치 뒤부터)
+// ---------- 소리 ----------
 let AC = null; const ac = () => { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch(e){} return AC; };
 function tone(f, d, type = 'triangle', v = .06, at = 0){ const C = ac(); if (!C) return; const t = C.currentTime + at, o = C.createOscillator(), gn = C.createGain(); o.type = type; o.frequency.value = f; gn.gain.setValueAtTime(v, t); gn.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(gn); gn.connect(C.destination); o.start(t); o.stop(t + d); }
-const SND = { click: () => { tone(3000, .03, 'square', .03); tone(2200, .03, 'square', .025, .015); }, perfect: () => tone(1568, .25), good: () => tone(1175, .2), miss: () => tone(180, .2, 'square', .05), retry: () => tone(240, .12, 'square', .04),
-  flip: () => tone(523, .25, 'triangle', .05), tie: () => [659, 784].forEach((f, k) => tone(f, .3, 'triangle', .05, k * .06)), learn: () => [784, 988, 1175, 1568].forEach((f, k) => tone(f, .6, 'triangle', .05, k * .08)), done: () => [523, 659, 784, 1047, 1319].forEach((f, k) => tone(f, 1.2, 'triangle', .06, k * .1)) };
-// ---------- 그림 ----------
-const R = (c, x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
-const COLX = c => 48 + c * 13;
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch(e){} };
+const SND = { tick: () => { tone(2600, .03, 'square', .025); }, insert: () => { tone(900, .06, 'square', .03); tone(1400, .05, 'square', .02, .03); buzz(15); }, wrap: () => tone(700, .12, 'sine', .04), wrapped: () => [880, 1175].forEach((f, k) => tone(f, .2, 'triangle', .05, k * .05)),
+  pull: () => tone(520, .1, 'triangle', .05), slip: () => { tone(3000, .03, 'square', .03); tone(2200, .03, 'square', .025, .02); buzz(25); }, perfect: () => tone(1568, .3), good: () => tone(1175, .25), miss: () => tone(200, .2, 'square', .05),
+  warn: () => tone(240, .12, 'square', .04), flip: () => tone(523, .3, 'triangle', .05), tie: () => [659, 784].forEach((f, k) => tone(f, .3, 'triangle', .05, k * .06)), learn: () => [784, 988, 1175, 1568].forEach((f, k) => tone(f, .6, 'triangle', .05, k * .08)), done: () => [523, 659, 784, 1047, 1319].forEach((f, k) => tone(f, 1.2, 'triangle', .06, k * .1)) };
+// ---------- 바늘 모양 (1 인칭: 아래 양쪽에서 두 손이 바늘을 쥐고 있어요) ----------
+const LB = [14, 236], LT0 = [126, 104], RB = [226, 236], RT0 = [152, 100];
+const sub2 = (a, b) => [a[0] - b[0], a[1] - b[1]], add2 = (a, b) => [a[0] + b[0], a[1] + b[1]], mul = (a, k) => [a[0] * k, a[1] * k], len = a => Math.hypot(a[0], a[1]), nrm = a => mul(a, 1 / (len(a) || 1));
+const UL = nrm(sub2(LT0, LB)), UR = nrm(sub2(RT0, RB));   // 바늘 방향 (손 → 끝)
 const dk = c => { const n = parseInt(c.slice(1), 16), f = .62; return `rgb(${(n >> 16 & 255) * f | 0},${(n >> 8 & 255) * f | 0},${(n & 255) * f | 0})`; };
-function vSt(x, y, col, q){ const D = dk(col), o = q === 0 ? 1 : 0;   // 삐끗한 코는 한 칸 비뚤게
+const R = (c, x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
+function needle(b, t){ const d = nrm(sub2(t, b)), side = [-d[1], d[0]];
+  [[7, '#1a1024'], [5, '#C8B890'], [3, '#E8DCC0']].forEach(([w, c]) => { g.strokeStyle = c; g.lineWidth = w; g.lineCap = 'round'; g.beginPath(); g.moveTo(...b); g.lineTo(...sub2(t, mul(d, 6))); g.stroke(); });
+  g.fillStyle = '#1a1024'; g.beginPath(); g.moveTo(...add2(sub2(t, mul(d, 7)), mul(side, 3.5))); g.lineTo(...add2(t, mul(d, 1))); g.lineTo(...sub2(sub2(t, mul(d, 7)), mul(side, 3.5))); g.fill();
+  g.fillStyle = '#E8DCC0'; g.beginPath(); g.moveTo(...add2(sub2(t, mul(d, 6)), mul(side, 2))); g.lineTo(...t); g.lineTo(...sub2(sub2(t, mul(d, 6)), mul(side, 2))); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1; g.beginPath(); g.moveTo(...add2(b, mul(side, -1))); g.lineTo(...add2(sub2(t, mul(d, 8)), mul(side, -1))); g.stroke(); }
+// 고리: 바늘을 감싼 동그라미 (뒤쪽 반 → 바늘 → 앞쪽 반)
+function loopArc(p, u, col, front, a = 1, s = 1){ const ang = Math.atan2(u[1], u[0]); g.save(); g.globalAlpha = a; g.translate(...p); g.rotate(ang);
+  const st = front ? 0 : Math.PI, en = front ? Math.PI : 2 * Math.PI; [[4.5, '#1a1024'], [2.5, front ? col : dk(col)]].forEach(([w, c]) => { g.strokeStyle = c; g.lineWidth = w; g.beginPath(); g.ellipse(0, 0, 3.2 * s, 7 * s, 0, st, en); g.stroke(); }); g.restore(); }
+function hand(x, y, flip, grip){ g.save(); g.translate(x, y); g.scale(flip ? -1 : 1, 1);
+  g.fillStyle = '#1a1024'; g.beginPath(); g.ellipse(0, 0, 22, 16, -.6, 0, 7); g.fill(); g.fillStyle = grip ? '#F4C8A0' : '#E0B890'; g.beginPath(); g.ellipse(0, 0, 20, 14, -.6, 0, 7); g.fill();
+  g.fillStyle = grip ? '#FFD8B8' : '#E8C4A0'; g.beginPath(); g.ellipse(8, -10, 8, 5, -.9, 0, 7); g.fill(); g.strokeStyle = 'rgba(120,70,50,.5)'; g.lineWidth = 1; [[-6, -2], [-1, 2], [4, 6]].forEach(([a, b]) => { g.beginPath(); g.moveTo(a, b - 6); g.lineTo(a + 6, b - 3); g.stroke(); });
+  g.fillStyle = '#7A4AB8'; g.fillRect(-20, 6, 18, 12); g.fillStyle = '#5A3A90'; g.fillRect(-20, 6, 18, 3); g.restore(); }   // 소매
+function vSt(x, y, col, q){ const D = dk(col), o = q === 0 ? 1 : 0;
   for (let i = 0; i < 5; i++){ R(g, x - 6 + i + o, y + i, 4, 2, col); R(g, x + 3 - i + o, y + i + o, 4, 2, col); R(g, x - 6 + i + o, y + i + 1, 1, 1, D); R(g, x + 6 - i + o, y + i + 1, 1, 1, D); R(g, x - 3 + i, y + i, 1, 1, 'rgba(255,255,255,.2)'); } R(g, x, y + 5, 1, 1, D); }
-const rowBg = (y, col) => R(g, COLX(0) - 7, y - 1, NC * 13 + 1, 7, dk(col));
-function lpBack(x, y, col, a = 1){ g.globalAlpha = a; R(g, x - 3, y - 7, 7, 2, '#1a1024'); R(g, x - 2, y - 6, 5, 1, dk(col)); g.globalAlpha = 1; }
-function lp(x, y, col, a = 1){ g.globalAlpha = a; R(g, x - 4, y - 6, 2, 11, '#1a1024'); R(g, x + 3, y - 6, 2, 11, '#1a1024'); R(g, x - 3, y + 3, 7, 3, '#1a1024');
-  R(g, x - 3, y - 5, 1, 9, col); R(g, x + 3, y - 5, 1, 9, col); R(g, x - 2, y + 3, 5, 2, col); R(g, x - 2, y + 4, 5, 1, dk(col)); R(g, x - 3, y - 5, 1, 2, 'rgba(255,255,255,.4)'); g.globalAlpha = 1; }
-function needle(x0, y0, x1, y1){ [[5, '#1a1024'], [3, '#D8C8A0']].forEach(([w, c]) => { g.strokeStyle = c; g.lineWidth = w; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); }); g.strokeStyle = '#F4ECD8'; g.lineWidth = 1; g.beginPath(); g.moveTo(x0, y0 - 1); g.lineTo(x1, y1 - 1); g.stroke(); R(g, x0 - 4, y0 - 4, 8, 8, '#1a1024'); R(g, x0 - 3, y0 - 3, 6, 6, '#B8804A'); }
-function ball(c, cx, cy, r, col){ c.fillStyle = '#1a1024'; c.beginPath(); c.arc(cx, cy, r + 1, 0, 7); c.fill(); c.fillStyle = col; c.beginPath(); c.arc(cx, cy, r, 0, 7); c.fill(); c.strokeStyle = 'rgba(0,0,0,.18)'; c.lineWidth = 1; for (let k = -r + 2; k < r; k += 3){ c.beginPath(); c.moveTo(cx - r * .8, cy + k * .6 - 2); c.quadraticCurveTo(cx, cy + k, cx + r * .8, cy + k * .6 + 2); c.stroke(); } }
+function ball(cx, cy, r, col){ g.fillStyle = '#1a1024'; g.beginPath(); g.arc(cx, cy, r + 1, 0, 7); g.fill(); g.fillStyle = col; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fill(); g.strokeStyle = 'rgba(0,0,0,.18)'; g.lineWidth = 1; for (let k = -r + 2; k < r; k += 3){ g.beginPath(); g.moveTo(cx - r * .8, cy + k * .6 - 2); g.quadraticCurveTo(cx, cy + k, cx + r * .8, cy + k * .6 + 2); g.stroke(); } }
 // ---------- 상태 ----------
-let K, score, phase, sub, fast, busy, rowQ;
-function reset(){ K = { rows: [], j: 0, cast: 0, casting: 1, cur: YC[colA], tipDX: 0, tipDY: 0, wrap: null, newLoop: 0, drop: null, flip: 1, bind: -1, fringe: 0 }; score = [0, 0, 0, 0]; phase = 'cast'; sub = 0; fast = false; busy = false; rowQ = []; ui(); }
-const curRowColor = () => (TIE.filter(r => r <= K.rows.length).length % 2 ? YC[colB] : YC[colA]);
-function draw(t){ g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 192, 128); R(g, 0, 0, 192, 128, '#2A1E3A'); g.imageSmoothingEnabled = false;
-  g.setTransform(K.flip, 0, 0, 1, 96 * (1 - K.flip), 0);
-  K.rows.forEach((r, k) => { const y = 38 + (K.rows.length - 1 - k) * 5; if (y > 112) return; rowBg(y, r.col); for (let c = 0; c < NC; c++) vSt(COLX(c), y, r.col, r.q[c]); });
-  if (K.bind < 0 && !K.casting) for (let c = K.j; c < NC; c++) vSt(COLX(c), 32, K.cur, rowQ[c]);
-  if (K.fringe) for (let c = 0; c < K.fringe; c++){ const x = COLX(c), y = 38 + K.rows.length * 5; [-2, 2].forEach(d => { R(g, x + d - 1, y, 3, 10, '#1a1024'); R(g, x + d, y, 1, 9, c % 2 ? YC[colB] : YC[colA]); }); }
-  if (K.bind >= 0) for (let c = 0; c < Math.min(NC, K.bind); c++){ R(g, COLX(c) - 6, 33, 13, 4, '#1a1024'); R(g, COLX(c) - 5, 34, 11, 2, K.cur); }
-  const tipL = K.j > 0 ? COLX(K.j - 1) + 8 : 30, tipR = (K.j < NC ? COLX(K.j) - 7 : COLX(NC - 1) + 14) + K.tipDX;
-  if (K.bind < NC){ const n0 = Math.max(0, K.bind), n1 = K.casting ? K.cast : K.j; for (let c = n0; c < n1; c++) if (!(K.drop && K.drop.c === c)) lpBack(COLX(c), 30, K.cur); needle(4, 34, K.bind >= 0 || K.casting ? COLX(NC - 1) + 8 : tipL, 29); for (let c = n0; c < n1; c++) if (!(K.drop && K.drop.c === c)) lp(COLX(c), 30, K.cur); }
-  if (K.bind < 0 && !K.casting){ for (let c = K.j; c < NC; c++) lpBack(COLX(c), 25, K.cur); needle(188, 22, tipR, 27 + K.tipDY); for (let c = K.j; c < NC; c++) lp(COLX(c), 25, K.cur); }
-  if (K.newLoop) lp(tipR + 4, 26 + K.tipDY, K.cur, K.newLoop);
-  if (K.drop) lp(COLX(K.drop.c), 30 + K.drop.p * 6, K.cur, 1 - K.drop.p * .7);
-  const wx = K.wrap != null ? tipR + 2 + Math.cos(K.wrap) * 5 : tipR + 6, wy = K.wrap != null ? 27 + K.tipDY + Math.sin(K.wrap) * 5 : 30;
-  g.setTransform(1, 0, 0, 1, 0, 0); const sx = 96 + (wx - 96) * K.flip;
-  g.strokeStyle = K.cur; g.lineWidth = 2; g.beginPath(); g.moveTo(sx, wy); g.quadraticCurveTo(170, 70 + Math.sin(t * 2) * 3, 176, 106); g.stroke(); ball(g, 178, 112, 10, K.cur); }
-// ---------- 동작과 길잡이 ----------
-const G = { tap: { n: '톡 · 코 잡기', tip: '아래 칸을 톡 눌러서 바늘에 고리를 하나씩 잡아요', path: [[96, 45]] },
-  stab: { n: '↖ 찔러 넣기', tip: '오른쪽 아래에서 왼쪽 위로 그어서 오른쪽 바늘을 첫 고리에 찔러 넣어요', path: [[160, 70], [70, 22]], dir: [-.9, -.45] },
-  wrap: { n: '⟳ 실 감기', tip: '동그랗게 한 바퀴 그어서 실을 바늘에 감아요', circle: 1 },
-  pull: { n: '↘ 빼내기', tip: '왼쪽 위에서 오른쪽 아래로 그어서 감은 실을 고리 사이로 빼내요', path: [[70, 22], [160, 70]], dir: [.9, .45] },
-  slip: { n: '→ 넘기기', tip: '왼쪽에서 오른쪽으로 쭉 그어서 헌 고리를 넘겨요', path: [[30, 45], [165, 45]], dir: [1, 0] },
-  swipe: { n: '쓱 · 한 코', tip: '손에 익었어요. 왼쪽에서 오른쪽으로 쓱 한 번이면 한 코', path: [[30, 55], [80, 30], [115, 60], [165, 38]], dir: [1, 0], wide: 1 },
-  flip: { n: '← 뒤집기', tip: '한 줄 끝! 오른쪽에서 왼쪽으로 그어서 바늘을 뒤집어 쥐어요', path: [[165, 45], [30, 45]], dir: [-1, 0] },
-  tie: { n: '톡 · 실 바꾸기', tip: '줄무늬 차례예요. 톡 눌러서 새 색 실을 묶어요', path: [[96, 45]] },
-  bind: { n: '→ 코 막음', tip: '앞 고리를 뒤 고리에 씌워서 빼요. 왼쪽에서 오른쪽으로', path: [[30, 45], [165, 45]], dir: [1, 0] },
-  fringe: { n: '↓ 술 달기', tip: '위에서 아래로 그어서 목도리 끝에 실 술을 매달아요', path: [[96, 12], [96, 78]], dir: [0, 1] } };
-const want = () => phase === 'cast' ? 'tap' : phase === 'knit' ? (fast ? 'swipe' : ['stab', 'wrap', 'pull', 'slip'][sub]) : phase;
-let trail = [], ghostT = 0, lastAct = performance.now();
-function padDraw(now){ pg.clearRect(0, 0, 192, 90); const w = G[want()]; if (!w) return; pg.strokeStyle = 'rgba(255,233,160,.45)'; pg.lineWidth = 2; pg.setLineDash([4, 4]); pg.beginPath();
-  if (w.circle){ pg.arc(96, 45, 26, 0, 7); } else w.path.forEach(([x, y], i) => i ? pg.lineTo(x, y) : pg.moveTo(x, y)); pg.stroke(); pg.setLineDash([]);
-  if (!w.circle && w.path.length > 1){ const [a, b] = w.path.slice(-2), an = Math.atan2(b[1] - a[1], b[0] - a[0]); pg.fillStyle = 'rgba(255,233,160,.6)'; pg.beginPath(); pg.moveTo(b[0], b[1]); pg.lineTo(b[0] - 9 * Math.cos(an - .5), b[1] - 9 * Math.sin(an - .5)); pg.lineTo(b[0] - 9 * Math.cos(an + .5), b[1] - 9 * Math.sin(an + .5)); pg.fill(); }
-  // 가만히 있으면 손가락 그림자가 먼저 보여 줘요
-  if (!trail.length && now - lastAct > 1800){ const p = ((now - lastAct - 1800) / 1400) % 1; let fx, fy; if (w.circle){ fx = 96 + Math.cos(p * 6.28 - 1.57) * 26; fy = 45 + Math.sin(p * 6.28 - 1.57) * 26; } else { const n = w.path.length - 1, s = n ? Math.min(n - 1e-6, p * n) : 0, i = Math.floor(s), f = s - i; [fx, fy] = n ? [w.path[i][0] + (w.path[i + 1][0] - w.path[i][0]) * f, w.path[i][1] + (w.path[i + 1][1] - w.path[i][1]) * f] : w.path[0]; }
-    pg.fillStyle = 'rgba(255,255,255,.25)'; pg.beginPath(); pg.arc(fx, fy, 9, 0, 7); pg.fill(); pg.fillStyle = 'rgba(255,255,255,.7)'; pg.beginPath(); pg.arc(fx, fy, 4, 0, 7); pg.fill(); }
-  if (trail.length > 1){ pg.strokeStyle = K.cur; pg.lineWidth = 4; pg.lineCap = 'round'; pg.beginPath(); trail.forEach(([x, y], i) => i ? pg.lineTo(x, y) : pg.moveTo(x, y)); pg.stroke(); } }
-// 그은 모양 알아보기: 결과 2 완벽 · 1 좋아요 · 0 삐끗(그래도 떠져요) · -1 다시
-function judge(k, pts, ms){ const w = G[k]; const a = pts[0], b = pts[pts.length - 1], dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy);
-  let path = 0; for (let i = 1; i < pts.length; i++) path += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
-  if (k === 'tap' || k === 'tie') return path < 14 ? 2 : -1;
-  if (w.circle){ let turn = 0; for (let i = 2; i < pts.length; i++){ const a1 = Math.atan2(pts[i - 1][1] - pts[i - 2][1], pts[i - 1][0] - pts[i - 2][0]), a2 = Math.atan2(pts[i][1] - pts[i - 1][1], pts[i][0] - pts[i - 1][0]); let d = a2 - a1; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; turn += d; }
-    const deg = Math.abs(turn) * 180 / Math.PI; return path < 60 ? -1 : deg >= 320 ? 2 : deg >= 230 ? 1 : deg >= 160 ? 0 : -1; }
-  if (len < (w.wide ? 50 : 35)) return -1;
-  const [ex, ey] = w.dir, el = Math.hypot(ex, ey), cos = (dx * ex + dy * ey) / (len * el), ang = Math.acos(Math.max(-1, Math.min(1, cos))) * 180 / Math.PI;
-  if (ang > 70) return -1; const tol = w.wide ? 1.4 : 1; return ang < 22 * tol ? 2 : ang < 42 * tol ? 1 : 0; }
-// 동작이 맞으면 그림이 움직여요 (짧은 tween)
-const tween = (ms, fn) => new Promise(res => { const t0 = performance.now(); const f = now => { const p = Math.min(1, (now - t0) / ms); fn(p); if (p < 1) requestAnimationFrame(f); else res(); }; requestAnimationFrame(f); });
-async function act(k, q){ busy = true; const c = K.j - 1, reach = () => -(COLX(K.j) - 7 - COLX(c));
-  if (k === 'tap'){ K.cast++; SND.click(); if (K.cast >= NC){ K.casting = 0; K.j = NC; phase = 'knit'; } }
-  else if (k === 'stab'){ await tween(260, p => { K.tipDX = reach() * p; K.tipDY = 4 * p; }); sub = 1; }
-  else if (k === 'wrap'){ await tween(320, p => { K.wrap = -1.57 + p * 6.28; }); K.wrap = null; K.newLoop = .4; sub = 2; }
-  else if (k === 'pull'){ await tween(260, p => { K.tipDX = reach() * (1 - p); K.tipDY = 4 * (1 - p); K.newLoop = .4 + .6 * p; }); sub = 3; }
-  else if (k === 'slip' || k === 'swipe'){ if (k === 'swipe') await tween(240, p => { K.tipDX = reach() * Math.sin(p * 3.14); K.tipDY = 4 * Math.sin(p * 3.14); K.wrap = p > .25 && p < .65 ? -1.57 + (p - .25) / .4 * 6.28 : null; K.newLoop = p > .5 ? 1 : 0; });
-    K.wrap = null; await tween(200, p => { K.drop = { c, p }; }); K.drop = null; K.newLoop = 0; K.tipDX = 0; K.tipDY = 0; rowQ[c] = q; K.j--; sub = 0; SND.click();
-    const doneSt = K.rows.length * NC + (NC - K.j); if (!fast && doneSt >= LEARN){ fast = true; SND.learn(); flash('손에 익었어요! 이제 쓱 한 번에 한 코'); }
-    if (K.j === 0) phase = 'flip'; }
-  else if (k === 'flip'){ await tween(380, p => { K.flip = Math.cos(p * Math.PI); }); K.flip = 1; K.rows.push({ col: K.cur, q: rowQ.slice() }); rowQ = []; SND.flip();
-    if (K.rows.length >= ROWS){ phase = 'bind'; K.bind = 0; K.j = NC; } else if (TIE.includes(K.rows.length)){ phase = 'tie'; K.j = NC; } else { phase = 'knit'; K.j = NC; } }
-  else if (k === 'tie'){ K.cur = curRowColor(); SND.tie(); phase = 'knit'; }
-  else if (k === 'bind'){ K.bind++; SND.click(); if (K.bind >= NC){ K.bind = 99; phase = 'fringe'; } }
-  else if (k === 'fringe'){ K.fringe++; SND.click(); if (K.fringe >= NC){ phase = 'done'; setTimeout(finish, 600); } }
-  busy = false; ui(); }
-let flashT = 0, flashMsg = ''; const flash = m => { flashMsg = m; flashT = performance.now(); };
-function ui(){ const k = want(), w = G[k]; $('step').textContent = phase === 'done' ? '완성!' : w ? w.n : ''; $('tip').textContent = flashMsg && performance.now() - flashT < 2200 ? flashMsg : w ? w.tip : '';
-  const total = NC + ROWS * NC + 2 + NC * 2, done = (phase === 'cast' ? K.cast : NC) + K.rows.length * NC + (phase === 'knit' || phase === 'flip' ? NC - K.j : 0) + TIE.filter(r => r < K.rows.length || (r === K.rows.length && phase !== 'tie')).length + Math.min(NC, Math.max(0, K.bind)) + K.fringe;
-  $('pg').style.width = Math.min(100, done / total * 100) + '%'; ['s0', 's1', 's2', 'sr'].forEach((id, i) => $(id).textContent = score[i]); }
-let jT = 0; function showJudge(r){ const J = $('judge'); J.textContent = r === 2 ? '완벽!' : r === 1 ? '좋아요' : r === 0 ? '삐끗.......' : '다시'; J.style.color = r === 2 ? 'var(--gold)' : r === 1 ? 'var(--ok)' : r === 0 ? 'var(--bad)' : 'var(--sub)'; jT = performance.now(); }
+// st: insert(찔러 넣기) → wrap(실 감기) → pull(빼내기) → slip(헌 고리 빼기)
+let K, score, phase, st, busy, rowQ, stitchT, wobble, msg, msgT, learnDone;
+const hands = { L: null, R: null };   // 누르고 있는 손가락 { id, x0, y0, x, y }
+let keyGrip = false, mouseMode = false;
+const gripL = () => !!hands.L || keyGrip;
+function reset(){ K = { rows: [], j: 0, cast: 0, cur: YC[colA], flip: 1, bind: -1, fringe: 0, rt: RT0.slice(), lpull: 0, wrapA: 0, newLoop: 0, drop: null, inserted: false, castA: 0 };
+  score = [0, 0, 0]; phase = 'cast'; st = 'insert'; busy = false; rowQ = []; wobble = 0; msg = ''; learnDone = false; ui(); }
+const leftTip = () => sub2(LT0, mul(UL, K.lpull));   // 왼손으로 밀면 끝이 손 쪽으로 물러나요
+const leftLoopPos = i => sub2(leftTip(), mul(UL, 9 + i * 10));
+const rightLoopPos = (rt, i) => sub2(rt, mul(UR, 9 + i * 10));
+function draw(t){ g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); R(g, 0, 0, W, H, '#2A1E3A');
+  // 벽난로 빛
+  const gr = g.createRadialGradient(40, 20, 4, 40, 20, 140); gr.addColorStop(0, 'rgba(255,170,90,.18)'); gr.addColorStop(1, 'rgba(255,170,90,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  g.setTransform(K.flip, 0, 0, 1, (W / 2) * (1 - K.flip), 0);
+  const wob = wobble ? [Math.sin(t * 40) * wobble * 2, Math.cos(t * 33) * wobble] : [0, 0];
+  // 천 (가운데 아래로 늘어져요)
+  const fx = c => 120 - (NC - 1) * 6.5 + c * 13;
+  K.rows.forEach((r, k) => { const y = 132 + (K.rows.length - 1 - k) * 5; if (y > 214) return; R(g, fx(0) - 7, y - 1, NC * 13 + 1, 7, dk(r.col)); for (let c = 0; c < NC; c++) vSt(fx(c), y, r.col, r.q[c]); });
+  if (phase !== 'cast' && K.bind < 0) for (let c = K.j; c < NC; c++) vSt(fx(c), 126, K.cur, rowQ[c]);
+  if (K.fringe) for (let c = 0; c < K.fringe; c++){ const x = fx(c), y = 132 + K.rows.length * 5; [-2, 2].forEach(d => { R(g, x + d - 1, y, 3, 10, '#1a1024'); R(g, x + d, y, 1, 9, c % 2 ? YC[colB] : YC[colA]); }); }
+  // 왼쪽 바늘 + 고리
+  const lt = add2(leftTip(), wob), lb = add2(LB, wob), nL = phase === 'cast' ? K.cast : K.bind >= 0 ? Math.max(0, NC - K.bind) : K.j;
+  if (K.bind < 99){ for (let i = 0; i < nL; i++) if (!(K.drop && i === 0)) loopArc(add2(leftLoopPos(i), wob), UL, K.cur, false);
+    // 오른쪽 바늘이 첫 고리에 들어가 있으면 고리 뒤로 지나가요
+    if (K.inserted && phase === 'knit') drawRight(t);
+    needle(lb, lt); for (let i = 0; i < nL; i++) if (!(K.drop && i === 0)) loopArc(add2(leftLoopPos(i), wob), UL, K.cur, true); }
+  if (K.drop){ const p = K.drop; loopArc(add2(leftLoopPos(0), [0, p * 10]), UL, K.cur, true, 1 - p, 1 - p * .3); }
+  if (!(K.inserted && phase === 'knit') && phase !== 'cast' && K.bind < 99) drawRight(t);
+  // 실: 일하는 곳 → 털실 뭉치 (오른손 아래)
+  const wk = phase === 'cast' ? leftLoopPos(Math.max(0, K.cast)) : K.wrapA && K.inserted ? add2(K.rt, [Math.cos(K.wrapA) * 6, Math.sin(K.wrapA) * 6]) : add2(K.rt, mul(UR, -10));
+  g.setTransform(1, 0, 0, 1, 0, 0); const wx = W / 2 + (wk[0] - W / 2) * K.flip;
+  g.strokeStyle = K.cur; g.lineWidth = 2; g.beginPath(); g.moveTo(wx, wk[1]); g.quadraticCurveTo(220, 150 + Math.sin(t * 2) * 3, 214, 196); g.stroke(); ball(214, 200, 11, K.cur);
+  // 손
+  g.setTransform(K.flip, 0, 0, 1, (W / 2) * (1 - K.flip), 0);
+  hand(lb[0] + 26, lb[1] - 30, false, gripL()); const rb = add2(RB, sub2(K.rt, RT0)); if (phase !== 'cast') hand(rb[0] - 26, rb[1] - 30, true, !!hands.R); else hand(206, 196, true, !!hands.R);
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  // 손가락 표시
+  [['L', '#9AE07A'], ['R', '#FFE9A0']].forEach(([k, c]) => { const h = hands[k]; if (!h) return; g.strokeStyle = c; g.globalAlpha = .7; g.lineWidth = 2; g.beginPath(); g.arc(h.cx, h.cy, 10, 0, 7); g.stroke(); g.globalAlpha = 1; });
+  // 다음에 할 일 표시 (반짝)
+  const blink = (Math.sin(t * 6) + 1) / 2;
+  if (phase === 'knit' && st === 'insert' && K.j > 0){ const p = leftLoopPos(0), x = W / 2 + (p[0] - W / 2) * K.flip; g.strokeStyle = `rgba(255,233,160,${.3 + blink * .6})`; g.lineWidth = 1; g.beginPath(); g.arc(x, p[1], 11, 0, 7); g.stroke(); } }
+function drawRight(t){ const rt = K.rt, rb = add2(RB, sub2(rt, RT0)), n = NC - K.j;
+  if (phase === 'bind'){ needle(rb, rt); return; }
+  for (let i = 0; i < n; i++) loopArc(rightLoopPos(rt, i + (K.newLoop ? 1 : 0)), UR, K.cur, false); needle(rb, rt); for (let i = 0; i < n; i++) loopArc(rightLoopPos(rt, i + (K.newLoop ? 1 : 0)), UR, K.cur, true);
+  if (K.newLoop) loopArc(rightLoopPos(rt, 0), UR, K.cur, true, K.newLoop, .8); }
 // ---------- 손가락 ----------
-const ptOf = e => { const r = P.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * 192, (e.clientY - r.top) / r.height * 90]; };
-let downT = 0;
-P.addEventListener('pointerdown', e => { if (busy || phase === 'done') return; ac(); P.setPointerCapture(e.pointerId); trail = [ptOf(e)]; downT = performance.now(); lastAct = downT; });
-P.addEventListener('pointermove', e => { if (!trail.length) return; trail.push(ptOf(e)); });
-const up = e => { if (!trail.length) return; const pts = trail.slice(); trail = []; lastAct = performance.now(); if (busy) return; const k = want(), r = judge(k, pts, performance.now() - downT);
-  if (r < 0){ score[3]++; SND.retry(); showJudge(-1); ui(); return; }
-  const counted = !['tap', 'tie', 'flip'].includes(k); if (counted){ score[r]++; SND[r === 2 ? 'perfect' : r === 1 ? 'good' : 'miss'](); showJudge(r); }
-  act(k, r); };
-P.addEventListener('pointerup', up); P.addEventListener('pointercancel', () => { trail = []; });
+const scale = () => V.getBoundingClientRect().width / W;
+const cpos = e => { const r = V.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; };
+V.addEventListener('pointerdown', e => { ac(); if (e.pointerType === 'mouse'){ mouseMode = true; $('mouseHint').hidden = false; } const [x, y] = cpos(e), side = mouseMode ? 'R' : (x < W / 2 ? 'L' : 'R');
+  if (hands[side]) return; V.setPointerCapture(e.pointerId); hands[side] = { id: e.pointerId, x0: x, y0: y, x, y, cx: x, cy: y, lastA: null, turn: 0, rt0: K.rt.slice(), pts: [[x, y]] }; onDown(side); });
+V.addEventListener('pointermove', e => { const side = hands.L && hands.L.id === e.pointerId ? 'L' : hands.R && hands.R.id === e.pointerId ? 'R' : null; if (!side) return; const h = hands[side], [x, y] = cpos(e), dx = x - h.x, dy = y - h.y;
+  if (Math.hypot(dx, dy) > .6){ const a = Math.atan2(dy, dx); if (h.lastA != null){ let d = a - h.lastA; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; if (Math.abs(d) < 1.6) h.turn += d; } h.lastA = a; }
+  h.x = x; h.y = y; h.cx = x; h.cy = y; h.pts.push([x, y]); onMove(side, h); });
+const end = e => { ['L', 'R'].forEach(s => { if (hands[s] && hands[s].id === e.pointerId){ const h = hands[s]; hands[s] = null; onUp(s, h); } }); };
+V.addEventListener('pointerup', end); V.addEventListener('pointercancel', end);
+addEventListener('keydown', e => { if (e.code === 'Space'){ e.preventDefault(); if (!keyGrip){ keyGrip = true; onDown('L'); } } if (e.code === 'ArrowLeft' && gripL()){ e.preventDefault(); keySlip(); } });
+addEventListener('keyup', e => { if (e.code === 'Space'){ keyGrip = false; onUp('L', null); } });
+// ---------- 뜨개 규칙 ----------
+const say = (m, ms = 1600) => { msg = m; msgT = performance.now() + ms; ui(); };
+let jT = 0; function showJudge(r){ const J = $('judge'); J.textContent = r === 2 ? '완벽!' : r === 1 ? '좋아요' : '삐끗.......'; J.style.color = r === 2 ? 'var(--gold)' : r === 1 ? 'var(--ok)' : 'var(--bad)'; jT = performance.now(); }
+let bothT = 0;
+let rtTw = 0;
+function onDown(side){ if (side === 'R'){ rtTw++; if (hands.R) hands.R.rt0 = K.rt.slice(); } if (busy) return;
+  if (phase === 'flip' && gripL() && hands.R){ doFlip(); return; }
+  if (phase === 'tie' && side === 'R'){ K.cur = curRowColor(); SND.tie(); phase = 'knit'; st = 'insert'; say('새 색 실을 묶었어요'); }
+  if (phase === 'fringe' && side === 'R'){ /* 아래로 그으면 */ }
+  if (phase === 'knit' && st === 'insert' && side === 'R') stitchT = stitchT || performance.now();
+  ui(); }
+function onMove(side, h){ if (busy) return;
+  if (side === 'R' && phase === 'cast'){ if (!gripL()){ nag(); return; } if (Math.abs(h.turn) >= Math.PI * 1.75){ h.turn = 0; K.cast++; SND.tick(); if (K.cast >= NC){ phase = 'knit'; K.j = NC; st = 'insert'; say('코 8 개를 잡았어요. 이제 한 코씩 떠요', 2000); } ui(); } K.castA = h.turn; return; }
+  if (side === 'R' && (phase === 'knit' || phase === 'bind')){
+    if (K.inserted && st === 'wrap'){ K.wrapA = h.turn; if (Math.abs(h.turn) >= Math.PI * 1.7){ st = 'pull'; K.newLoop = .4; SND.wrapped(); h.x0 = h.x; h.y0 = h.y; ui(); } else if (Math.abs(h.turn) > .5 && Math.random() < .05) SND.wrap(); if (!gripL()) slipOut(); return; }
+    if (K.inserted && st === 'pull'){ const d = [h.x - h.x0, h.y - h.y0]; const pin = leftLoopPos(0); K.rt = add2(add2(pin, [-1, 1]), [Math.max(0, d[0]) * .9, Math.max(0, d[1]) * .9]); K.newLoop = Math.min(1, .4 + Math.max(0, d[0] + d[1]) / 40);
+      if (!gripL()){ slipOut(); return; } if (d[0] + d[1] > 22){ K.inserted = false; st = 'slip'; K.newLoop = 1; SND.pull(); ui(); } return; }
+    if (!K.inserted){ K.rt = clampRt(add2(h.rt0, [h.x - h.x0, h.y - h.y0]));
+      if (phase === 'knit' && st === 'insert' && K.j > 0){ const p = leftLoopPos(0), d = sub2(K.rt, p); if (len(d) < 11 && K.rt[0] < p[0] + 4){ if (!gripL()){ nag(); return; } K.inserted = true; st = 'wrap'; K.rt = add2(p, [-1, 1]); h.turn = 0; K.wrapA = 0; SND.insert(); ui(); } } } }
+  if (side === 'L' && hands.L){ const d = [h.x - h.x0, h.y - h.y0], push = Math.max(0, -(d[0] * UL[0] + d[1] * UL[1]));   // 손 쪽(아래 왼쪽)으로 미는 만큼
+    K.lpull = Math.min(14, push * .8);
+    if (phase === 'knit' && st === 'slip' && push > 14) finishStitch();
+    if (phase === 'bind' && push > 14 && hands.R && !busy){ bindOne(); h.x0 = h.x; h.y0 = h.y; } }
+  if (side === 'R' && phase === 'fringe' && h.y - h.y0 > 20){ h.y0 = h.y; K.fringe++; SND.tick(); if (K.fringe >= NC){ phase = 'done'; setTimeout(finish, 600); } ui(); } }
+function onUp(side, h){ if (side === 'L'){ K.lpull = 0; if (K.inserted) slipOut(); }
+  if (side === 'R' && !K.inserted && st !== 'pull'){ /* 오른쪽 바늘은 손을 떼면 제자리로 */ const from = K.rt.slice(), id = ++rtTw; tween(180, p => { if (id === rtTw) K.rt = add2(from, mul(sub2(RT0, from), p)); }); }
+  if (side === 'R' && phase === 'fringe' && h && h.pts.length < 4 ){ K.fringe++; SND.tick(); if (K.fringe >= NC){ phase = 'done'; setTimeout(finish, 600); } ui(); } }
+const clampRt = p => [Math.max(70, Math.min(214, p[0])), Math.max(60, Math.min(170, p[1]))];
+let nagT = 0; function nag(){ if (performance.now() - nagT < 900) return; nagT = performance.now(); wobble = 1; SND.warn(); say('왼손으로 바늘을 꽉 잡아요 (화면 왼쪽을 누른 채)'); setTimeout(() => { wobble = 0; }, 500); }
+function slipOut(){ K.inserted = false; st = 'insert'; K.newLoop = 0; K.wrapA = 0; wobble = 1; setTimeout(() => { wobble = 0; }, 500); K.missed = true; SND.warn(); say('왼손을 놓쳐서 바늘이 빠졌어요. 다시 찔러 넣어요'); ui(); }
+const tween = (ms, fn) => new Promise(res => { const t0 = performance.now(); const f = now => { const p = Math.min(1, (now - t0) / ms); fn(p); if (p < 1) requestAnimationFrame(f); else res(); }; requestAnimationFrame(f); });
+async function finishStitch(){ if (busy) return; busy = true; SND.slip(); if (hands.R){ hands.R.rt0 = K.rt.slice(); hands.R.x0 = hands.R.x; hands.R.y0 = hands.R.y; } await tween(220, p => { K.drop = p; }); K.drop = null; K.newLoop = 0; K.wrapA = 0;
+  const secs = (performance.now() - (stitchT || performance.now())) / 1000, q = K.missed ? 0 : secs < (learnDone ? 3.2 : 6) ? 2 : 1; stitchT = 0; K.missed = false;
+  score[q]++; SND[q === 2 ? 'perfect' : q === 1 ? 'good' : 'miss'](); showJudge(q); rowQ[K.j - 1] = q; K.j--; st = 'insert';
+  const doneSt = K.rows.length * NC + (NC - K.j); if (!learnDone && doneSt >= LEARN){ learnDone = true; SND.learn(); say('손에 익었어요! 이제 리듬 있게: 쏙 · 빙글 · 쭉 · 툭', 2400); }
+  if (K.j === 0){ phase = 'flip'; say('한 줄 끝! 두 손을 떼었다가 양손으로 동시에 다시 쥐면 바늘을 바꿔 쥐어요', 2600); }
+  busy = false; ui(); }
+async function doFlip(){ busy = true; SND.flip(); await tween(420, p => { K.flip = Math.cos(p * Math.PI); }); K.flip = 1; K.rows.push({ col: K.cur, q: rowQ.slice() }); rowQ = []; K.rt = RT0.slice();
+  if (K.rows.length >= ROWS){ phase = 'bind'; K.bind = 0; K.j = NC; say('코 막음: 양손으로 쥐고 왼손을 아래로 밀 때마다 고리가 하나씩 빠져요', 2600); }
+  else if (TIE.includes(K.rows.length)){ phase = 'tie'; K.j = NC; say('줄무늬 차례예요. 오른손으로 톡 눌러 새 색 실을 묶어요', 2400); } else { phase = 'knit'; K.j = NC; st = 'insert'; }
+  ['L', 'R'].forEach(s => { if (hands[s]){ hands[s].x0 = hands[s].x; hands[s].y0 = hands[s].y; hands[s].rt0 = K.rt.slice(); } }); busy = false; ui(); }
+async function bindOne(){ busy = true; SND.slip(); await tween(160, p => { K.drop = p; }); K.drop = null; K.bind++; if (K.bind >= NC){ K.bind = 99; phase = 'fringe'; K.rows.push({ col: K.cur, q: Array(NC).fill(2) }); say('술 달기: 오른손으로 아래로 그을 때마다 실 술이 하나씩', 2400); } busy = false; ui(); }
+function keySlip(){ if (phase === 'knit' && st === 'slip') finishStitch(); else if (phase === 'bind') bindOne(); }
+const curRowColor = () => (TIE.filter(r => r <= K.rows.length).length % 2 ? YC[colB] : YC[colA]);
+// ---------- 안내 ----------
+const STEP = { insert: ['쏙 · 찔러 넣기', '왼손으로 잡은 채, 오른손을 움직여 오른쪽 바늘 끝을 반짝이는 첫 고리에 넣어요'], wrap: ['빙글 · 실 감기', '오른손을 동그랗게 한 바퀴 돌려서 실을 바늘에 감아요'], pull: ['쭉 · 빼내기', '오른손을 오른쪽 아래로 당겨서 감은 실을 고리 사이로 빼내요'], slip: ['툭 · 헌 고리 빼기', '왼손을 아래로 밀어서 왼쪽 바늘의 헌 고리를 빼요'] };
+function ui(){ let n = '', tp = '';
+  if (phase === 'cast'){ n = '코 잡기'; tp = `왼손으로 바늘을 잡고, 오른손을 동그랗게 돌릴 때마다 고리가 하나씩 생겨요 (${K.cast} / ${NC})`; }
+  else if (phase === 'knit'){ [n, tp] = STEP[st]; if (learnDone) tp = ''; }
+  else if (phase === 'flip'){ n = '바늘 바꿔 쥐기'; tp = '두 손을 다 떼었다가 양쪽을 동시에 다시 눌러요'; }
+  else if (phase === 'tie'){ n = '실 바꾸기'; tp = '오른손으로 톡'; }
+  else if (phase === 'bind'){ n = '코 막음'; tp = `양손으로 쥐고 왼손을 아래로 밀어요 (${Math.max(0, K.bind)} / ${NC})`; }
+  else if (phase === 'fringe'){ n = '술 달기'; tp = `오른손으로 아래로 긋거나 톡 (${K.fringe} / ${NC})`; }
+  else n = '완성!';
+  $('step').textContent = n; $('tip').textContent = msg && performance.now() < msgT ? msg : tp;
+  const total = NC + ROWS * NC + NC * 2, done = (phase === 'cast' ? K.cast : NC) + K.rows.length * NC + (phase === 'knit' || phase === 'flip' ? NC - K.j : 0) + (phase === 'fringe' || phase === 'done' ? NC - NC : Math.max(0, Math.min(NC, K.bind))) + K.fringe;
+  $('pg').style.width = Math.min(100, done / total * 100) + '%'; $('sn').textContent = score[0] + score[1] + score[2]; ['s0', 's1', 's2'].forEach((id, i) => $(id).textContent = score[i]); }
 // ---------- 완성 ----------
-function finish(){ SND.done(); const n = score[0] + score[1] + score[2], st = score[2] >= n * .7 ? 3 : score[0] > n * .3 ? 1 : 2;
-  $('rTitle').innerHTML = `${colA} · ${colB} 줄무늬 목도리 <span style="color:var(--gold)">${'★'.repeat(st)}</span>`;
-  $('rText').textContent = `완벽 ${score[2]} · 좋아요 ${score[1]} · 삐끗 ${score[0]} · 다시 ${score[3]}${score[0] ? ' · 삐끗한 코는 목도리에 살짝 비뚤게 남았어요' : ''}`;
-  $('rLeo').textContent = st === 3 ? '....꽤 잘 떴네. 나보다 낫다. ....방금 건 혼잣말이다.' : st === 2 ? '처음치고 괜찮아. 비뚤어진 데도 손맛이야.' : '....따뜻하면 된 거야. 다음엔 천천히 해 봐.';
-  // 완성된 목도리: 실제로 뜬 코 그대로
-  const c = $('scarf'), q = c.getContext('2d'); c.width = NC * 4 + 8; c.height = ROWS * 3 * 4 + 24; q.imageSmoothingEnabled = false; q.clearRect(0, 0, c.width, c.height);
-  K.rows.forEach((r, i) => { for (let rep = 0; rep < 3; rep++) for (let x = 0; x < NC; x++){ const y = 4 + (i * 3 + rep) * 4, o = r.q[x] === 0 ? 1 : 0; q.fillStyle = r.col; q.fillRect(4 + x * 4 + o, y, 4, 4); q.fillStyle = dk(r.col); q.fillRect(4 + x * 4 + 2 + o, y + 2, 1, 2); } });
+function finish(){ SND.done(); const n = score[0] + score[1] + score[2], stars = score[2] >= n * .7 ? 3 : score[0] > n * .3 ? 1 : 2;
+  $('rTitle').innerHTML = `${colA} · ${colB} 줄무늬 목도리 <span style="color:var(--gold)">${'★'.repeat(stars)}</span>`;
+  $('rText').textContent = `${n} 코 · 완벽 ${score[2]} · 좋아요 ${score[1]} · 삐끗 ${score[0]}${score[0] ? ' · 삐끗한 코는 목도리에 살짝 비뚤게 남았어요' : ''}`;
+  $('rLeo').textContent = stars === 3 ? '....손이 빠르네. 바늘 쥐는 게 나보다 낫다. ....방금 건 혼잣말이다.' : stars === 2 ? '처음치고 괜찮아. 비뚤어진 데도 손맛이야.' : '....따뜻하면 된 거야. 왼손을 꽉 쥐어 봐.';
+  const c = $('scarf'), q = c.getContext('2d'), body = K.rows.slice(0, ROWS); c.width = NC * 4 + 8; c.height = ROWS * 3 * 4 + 24; q.imageSmoothingEnabled = false; q.clearRect(0, 0, c.width, c.height);
+  body.forEach((r, i) => { for (let rep = 0; rep < 3; rep++) for (let x = 0; x < NC; x++){ const y = 4 + (i * 3 + rep) * 4, o = r.q[x] === 0 ? 1 : 0; q.fillStyle = r.col; q.fillRect(4 + x * 4 + o, y, 4, 4); q.fillStyle = dk(r.col); q.fillRect(4 + x * 4 + 2 + o, y + 2, 1, 2); } });
   for (let x = 0; x < NC; x++){ q.fillStyle = x % 2 ? YC[colB] : YC[colA]; q.fillRect(5 + x * 4, c.height - 18, 1, 14); q.fillRect(7 + x * 4, c.height - 18, 1, 12); }
   $('result').hidden = false; }
 // ---------- 시작 화면 ----------
@@ -193,7 +237,8 @@ swatches('swA', () => colA, n => { colA = n; }); swatches('swB', () => colB, n =
 $('goBtn').onclick = () => { ac(); $('start').hidden = true; reset(); };
 $('again').onclick = () => { $('result').hidden = true; reset(); };
 $('other').onclick = () => { $('result').hidden = true; $('start').hidden = false; };
-reset(); K.casting = 1; K.cast = 3;   // 뒤 화면 미리보기
-const loop = now => { draw(now / 1000); padDraw(now); if (performance.now() - jT > 700 && $('judge').textContent) $('judge').textContent = ''; if (flashMsg && performance.now() - flashT > 2200){ flashMsg = ''; ui(); } requestAnimationFrame(loop); }; requestAnimationFrame(loop);
+reset(); K.cast = 4; K.j = 4; phase = 'cast';   // 뒤 화면 미리보기
+window.__kn = { get K(){ return K; }, get hands(){ return JSON.parse(JSON.stringify({ L: hands.L && { x0: hands.L.x0, x: hands.L.x }, R: hands.R && { x0: hands.R.x0, x: hands.R.x, y0: hands.R.y0, y: hands.R.y, rt0: hands.R.rt0 } })); }, get busy(){ return busy; }, get phase(){ return phase; }, get st(){ return st; }, LT0, RT0, UL, leftLoopPos: i => leftLoopPos(i) };   // 시험용
+const loop = now => { draw(now / 1000); if (performance.now() - jT > 800 && $('judge').textContent) $('judge').textContent = ''; if (msg && performance.now() > msgT){ msg = ''; ui(); } requestAnimationFrame(loop); }; requestAnimationFrame(loop);
 })();
 </script>
