@@ -120,22 +120,27 @@ class View:
         return over(s.base, g)
 # 그림 NPC(동물 등): 앞 · 옆 · 뒤마다 직접 잡은 자리 — 모자(dome x0, x1, 꼭대기 y, 챙 y) · 귀마개(솜방울 자리들) · 목(y, x0, x1) · 손(자리들)
 SP_ = {
- 'npc0': {'': dict(hat=(21, 36, 23, 30), muff=[(20, 25), (37, 25)], neck=(40, 23, 34), hands=[(25, 55), (31, 55)]),            # 나비: 귀는 모자 밖으로 · 귀마개는 귀에
-          '_side': dict(hat=(19, 33, 23, 30), muff=[(30, 25)], neck=(42, 22, 30), hands=[(24, 55)]),
-          '_back': dict(hat=(25, 42, 21, 29), muff=[(23, 23), (43, 23)], neck=(36, 28, 40), hands=[])},
- 'npc1': {'': dict(hat=(27, 38, 22, 28), muff=[(25, 21), (39, 21)], neck=(38, 26, 39), hands=[(17, 32), (48, 32)]),            # 배트리: 손 = 날개 끝 발톱
-          '_side': dict(hat=(24, 35, 22, 28), muff=[(33, 21)], neck=(37, 24, 34), hands=[]),
-          '_back': dict(hat=(27, 40, 20, 27), muff=[(25, 18), (42, 18)], neck=(37, 27, 41), hands=[])},
- 'npc2': {'': dict(hat=(25, 43, 18, 27), muff=[(24, 33), (44, 33)], neck=(39, 27, 41), hands=[(25, 45), (43, 45)]),            # 캇파: 접시 위로 · 손은 양옆
-          '_side': dict(hat=(26, 44, 18, 27), muff=[(38, 32)], neck=(39, 28, 42), hands=[(28, 45)]),
-          '_back': dict(hat=(26, 44, 18, 26), muff=[(25, 32), (45, 32)], neck=(38, 28, 42), hands=[(26, 46), (44, 46)])},
- 'npc3': {'': dict(hat=(24, 39, 24, 30), muff=[(21, 27), (42, 27)], neck=(41, 24, 39), hands=[(24, 46), (38, 46)]),            # 아울라: 손 = 책 든 날개 끝
+ # 나비: 모자가 머리 전체를 덮고 귀는 모자 위로 · 귀마개는 머리 옆(뺨 위)에 · 띠는 귀 사이 정수리
+ 'npc0': {'': dict(hat=(20, 36, 23, 30), muff=[(17, 31), (39, 31)], mufftop=25, neck=(40, 23, 34), hands=[(25, 55), (31, 55)]),
+          '_side': dict(hat=(18, 35, 23, 30), muff=[(29, 31)], mufftop=25, neck=(42, 22, 30), hands=[(24, 55)]),
+          '_back': dict(hat=(25, 43, 22, 29), muff=[(22, 31), (46, 31)], mufftop=23, neck=(36, 28, 40), hands=[])},
+ # 배트리: 모자는 정수리를 덮고 큰 귀는 모자 양옆 위로 · 귀마개는 머리 옆
+ 'npc1': {'': dict(hat=(27, 37, 22, 29), muff=[(22, 33), (42, 33)], mufftop=24, neck=(38, 26, 39), hands=[(17, 32), (48, 32)]),
+          '_side': dict(hat=(22, 33, 23, 30), muff=[(31, 32)], mufftop=24, neck=(37, 24, 34), hands=[]),
+          '_back': dict(hat=(26, 40, 22, 30), muff=[(22, 33), (43, 33)], mufftop=24, neck=(37, 27, 41), hands=[])},
+ # 캇파: 모자는 접시를 덮되 낮게 · 귀마개는 얼굴 양옆 (옆모습은 눈 뒤)
+ 'npc2': {'': dict(hat=(25, 43, 20, 27), muff=[(24, 32), (44, 32)], mufftop=20, neck=(39, 27, 41), hands=[(24, 46), (44, 46)]),
+          '_side': dict(hat=(26, 44, 20, 27), muff=[(41, 31)], mufftop=21, neck=(39, 28, 42), hands=[(28, 45)]),
+          '_back': dict(hat=(26, 44, 20, 27), muff=[(25, 32), (45, 32)], mufftop=20, neck=(38, 28, 42), hands=[(26, 46), (44, 46)])},
+ # 아울라: 뒷모습 모자는 넓고 낮게 · 귀마개는 머리 옆으로 조금 내려서
+ 'npc3': {'': dict(hat=(24, 39, 24, 30), muff=[(21, 27), (42, 27)], neck=(41, 24, 39), hands=[(24, 46), (38, 46)]),
           '_side': dict(hat=(23, 40, 24, 30), muff=[(36, 28)], neck=(41, 25, 37), hands=[(24, 46)]),
-          '_back': dict(hat=(22, 41, 23, 29), muff=[(20, 27), (43, 27)], neck=(40, 22, 41), hands=[])},
- 'npc4': {'': dict(hat=(27, 43, 36, 43), muff=[(27, 41), (43, 41)], neck=(52, 27, 43), hands=[(26, 52), (44, 52)], leaves=True),   # 맨디: 잎은 모자 위로 쏙
-          '_side': dict(hat=(25, 41, 36, 43), muff=[(37, 41)], neck=(52, 25, 41), hands=[(24, 52)], leaves=True),
-          '_back': dict(hat=(27, 44, 36, 43), muff=[(27, 41), (44, 41)], neck=(51, 27, 43), hands=[(26, 52), (44, 52)], leaves=True)},
- 'npc5': {'': dict(hat=(24, 40, 22, 31), muff=[(24, 33), (40, 33)], neck=(40, 26, 38), hands=[(18, 49), (45, 49)], strip=31, mufftop=14),   # 스트로: 밀짚모자 벗고 털모자
+          '_back': dict(hat=(21, 43, 24, 31), muff=[(21, 31), (43, 31)], mufftop=24, neck=(40, 22, 41), hands=[])},
+ # 맨디: 목도리는 가운데 잎줄기에 두르고 끝이 팔랑 · 모자는 몸 윗부분(머리)에 쓰고 잎은 위로 · 귀마개는 눈 옆 · 장갑은 작은 손
+ 'npc4': {'': dict(hat=(27, 41, 37, 43), muff=[(27, 46), (42, 46)], mufftop=39, leafneck=(37, 31, 37), hands=[(27, 49), (42, 49)], gr=1.7, leaves=True),
+          '_side': dict(hat=(25, 40, 37, 43), muff=[(36, 46)], mufftop=39, leafneck=(37, 30, 36), hands=[(25, 49)], gr=1.7, leaves=True),
+          '_back': dict(hat=(27, 42, 37, 43), muff=[(27, 46), (42, 46)], mufftop=39, leafneck=(37, 31, 37), hands=[(27, 49), (42, 49)], gr=1.7, leaves=True)},
+ 'npc5': {'': dict(hat=(24, 40, 22, 31), muff=[(24, 33), (40, 33)], neck=(40, 26, 38), hands=[(18, 49), (45, 49)], strip=31, mufftop=14),   # 스트로: 털모자 쓸 땐 밀짚모자 벗고 · 귀마개는 밀짚모자 위로
           '_side': dict(hat=(25, 39, 22, 31), muff=[(35, 33)], neck=(40, 27, 37), hands=[(26, 49)], strip=31, mufftop=15),
           '_back': dict(hat=(24, 40, 22, 31), muff=[(24, 33), (40, 33)], neck=(40, 26, 38), hands=[(19, 48), (45, 48)], strip=31, mufftop=14)},
 }
@@ -175,13 +180,22 @@ class SpriteView:
         for x in range(min(xs), max(xs) + 1): P[x, by + 1] = rb[0] + (255,)
         if s.p.get('leaves'):   # 잎이 모자를 뚫고 나와요: 원래 잎 픽셀을 모자 위에 다시
             out = over(s.base, lay); O = out.load()
-            for y in range(0, top + 3):
+            for y in range(0, top + 1):
                 for x in range(64):
                     c = s.B[x, y]
                     if c[3] and c[1] > c[0] + 20: O[x, y] = c
             return out
-        pom = [(x, y) for y in range(64) for x in range(64) if ((x - cx) / 3) ** 2 + ((y - (top - 2)) / 2.6) ** 2 <= 1 and not P[x, y][3]]; lpc_fill(lay, pom, rb)
-        return over(s.base, lay)
+        pom = [(x, y) for y in range(64) for x in range(64) if ((x - cx) / 3) ** 2 + ((y - (top - 2)) / 2.6) ** 2 <= 1 and not P[x, y][3]]
+        if not s.p.get('ears'): lpc_fill(lay, pom, rb)
+        out = over(s.base, lay)
+        if s.p.get('ears'):   # 귀가 모자 위로 쏙 (방울은 귀 사이가 좁아서 빼요)
+            O = out.load()
+            for (ex0, ey0, ex1, ey1) in s.p['ears']:
+                for y in range(ey0, ey1 + 1):
+                    for x in range(ex0, ex1 + 1):
+                        c = s.B[x, y]
+                        if c[3]: O[x, y] = c
+        return out
     def muff(s, a, b):
         base0 = s.base
         try: return s._muff(a, b)
@@ -204,6 +218,7 @@ class SpriteView:
         return over(s.base, lay)
     def scarf(s, a, b, neck=None):
         """몸 윤곽에 맞춰 감은 목도리: 띠는 몸이 있는 칸 + 양 끝 1 칸 두께 · 가운데가 1 칸 처져요 · 끝자락은 앞(앞모습 한쪽 · 옆모습 가슴 쪽)에만"""
+        if 'leafneck' in s.p: return s._leaf_scarf(a, b)
         y0, x0, x1 = s.p['neck']; lay = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); P = lay.load(); ra, rb = RAMP[YARN[a]], RAMP[YARN[b]]; B = s.B
         band = []; mid = (x0 + x1) / 2; half = max(1, (x1 - x0) / 2)
         for x in range(x0 - 1, x1 + 2):
@@ -221,12 +236,24 @@ class SpriteView:
             tx0 = min(x for x, _ in tail); ty = max(y for _, y in tail) + 1
             for x in range(tx0, tx0 + 3, 2): P[x, ty] = rb[2] + (255,); P[x, ty + 1] = rb[3] + (255,)
         return over(s.base, lay)
+    def _leaf_scarf(s, a, b):
+        """맨디: 가운데 잎줄기에 목도리를 두르고 끝자락이 옆으로 팔랑"""
+        y0, x0, x1 = s.p['leafneck']; lay = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); P = lay.load(); ra, rb = RAMP[YARN[a]], RAMP[YARN[b]]
+        ring = [(x, y) for y in range(y0 - 1, y0 + 2) for x in range(x0, x1 + 1)]
+        if s.v != '_back': flap = [(x, y) for y in range(y0 + 1, y0 + 6) for x in (x1 - 1, x1)] + [(x1 + 1, y0 + 2), (x1 + 1, y0 + 3)]   # 줄기에 감고 끝이 몸 앞으로 늘어져요
+        else: flap = [(x, y) for y in range(y0 + 1, y0 + 5) for x in (x0, x0 + 1)]
+        pts = ring + flap; lpc_fill(lay, pts, ra)
+        for x, y in pts:
+            if ((x // 2) % 2 if y <= y0 + 1 else (y // 2) % 2) and P[x, y][:3] != ra[0]: P[x, y] = rb[2 + ((x + y) % 2)] + (255,)
+        fx = max(x for x, _ in flap); fy = max(y for _, y in flap) + 1
+        for x in (fx - 1, fx): P[x, fy] = rb[2] + (255,); P[x, fy + 1] = rb[3] + (255,)   # 술
+        return over(s.base, lay)
     def gloves(s, a, b):
         if not s.p['hands']: return over(s.base)
         lay = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); P = lay.load(); ra, rb = RAMP[YARN[a]], RAMP[YARN[b]]
         for cx, cy in s.p['hands']:
-            m = [(x, y) for y in range(64) for x in range(64) if ((x - cx) / 2.3) ** 2 + ((y - cy) / 2.3) ** 2 <= 1]; lpc_fill(lay, m, ra)
-            for x in range(cx - 2, cx + 3): P[x, cy - 3] = rb[2 + (x % 2)] + (255,)   # 손목 고무단
+            gr = s.p.get('gr', 2.3); m = [(x, y) for y in range(64) for x in range(64) if ((x - cx) / gr) ** 2 + ((y - cy) / gr) ** 2 <= 1]; lpc_fill(lay, m, ra)
+            for x in range(cx - int(gr), cx + int(gr) + 1): P[x, cy - int(gr) - 1] = rb[2 + (x % 2)] + (255,)   # 손목 고무단
         return over(s.base, lay)
 CAST = [('레오', 'leo', 'thin'), ('세라 선생님', 'sera', 'male'), ('마들렌', 'madeleine', 'male'), ('스텔라', 'stella', 'thin'), ('나비', 'npc0', None), ('배트리', 'npc1', None), ('캇파', 'npc2', None), ('아울라', 'npc3', None), ('맨디', 'npc4', None), ('스트로', 'npc5', None)]
 NECK = {'npc0': 41, 'npc1': 41, 'npc2': 39, 'npc3': 42, 'npc4': 44, 'npc5': 37}   # 그림 NPC 목 높이 (앞)
