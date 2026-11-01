@@ -9998,7 +9998,7 @@ function otCell(col, mode){   // NPC 그림 14 번째 줄의 한 칸 → 64 × 6
     if (mode === 'glitch'){ g.globalCompositeOperation = 'source-atop'; g.fillStyle = Math.random() < .5 ? 'rgba(120,255,240,.35)' : 'rgba(255,90,120,.3)'; const y = Math.floor(Math.random() * 40) + 10; g.fillRect(0, y, 64, 2 + Math.floor(Math.random() * 3)); g.globalCompositeOperation = 'source-over'; } }
   return c;
 }
-const OT_UFO = [11, 5], OT_LAND = [13, 7], OT_START = [16, 9];   // 학교 북서쪽 숲 끝 외진 곳: 부서진 비행선 · 오투모가 처박힌 자리 · 연출이 시작될 때 주인공이 서 있는 자리
+const OT_UFO = [76, 4], OT_LAND = [78, 6], OT_START = [81, 8];   // 학교 북동쪽 호숫가 숲 끝 (어느 NPC 자리에서도 25 칸쯤 떨어진 가장 외진 곳): 부서진 비행선 · 오투모가 처박힌 자리 · 연출이 시작될 때 주인공이 서 있는 자리
 let otUfoCv = null, otUfoT = 0, otUfoOn = false;
 function otUfoDraw(t){   // 반쯤 묻혀 연기 나는 비행선 (80 × 60)
   const c = otUfoCv || (otUfoCv = Object.assign(document.createElement('canvas'), { width: 80, height: 60 })), g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, 80, 60);
@@ -10074,7 +10074,7 @@ function adminOtumoHTML(){
   return `<div class="adcard sdad"><div class="abhead"><b>오투모 등장</b>${c.open ? '<button class="btn sm" data-ota="close">시작 연출 끝내기</button>' : '<button class="btn sm go" data-ota="open">시작하기</button>'}</div>
     <div class="abchips"><span>${c.open ? '여는 중' : '닫힘'}</span><span>등장을 본 학생 <b>${IN.length}</b> / ${ids.length}</span></div>
     ${rows || '<div class="s">아직 등장을 본 학생이 없어요</div>'}${not.length ? `<div class="s" style="margin-top:4px">아직 못 본 학생: ${not.map(id => esc(P[id].nick)).join(', ')}</div>` : ''}
-    <div class="s" style="margin-top:6px">시작하면 학교 · 마을을 걷고 있던 학생이 화면이 어두워지며 학교 북서쪽 숲 끝으로 옮겨지고, 비행선과 함께 오투모가 철푸덕 떨어져요. 만나면 바로 하트 1 개 · 1 장 이야기는 언제 어디서나. 부서진 비행선은 그 자리에 계속 남아요. 끝내기를 눌러도 이미 만난 학생은 오투모와 계속 이어 가요.</div></div>`;
+    <div class="s" style="margin-top:6px">시작하면 학교 · 마을을 걷고 있던 학생이 화면이 어두워지며 학교 북동쪽 호숫가 숲 끝(가장 외진 곳)으로 옮겨지고, 비행선과 함께 오투모가 철푸덕 떨어져요. 만나면 바로 하트 1 개 · 1 장 이야기는 언제 어디서나. 부서진 비행선은 그 자리에 계속 남아요. 끝내기를 눌러도 이미 만난 학생은 오투모와 계속 이어 가요.</div></div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-ota]'); if (!b) return;
   if (b.dataset.ota === 'open'){ if (confirm('「오투모 등장」을 시작할까요? 학생마다 걷던 자리 옆에 오투모가 떨어져요.')) GDB.set('otumo/ctl', { open: true, id: (AD.otctl && AD.otctl.id) || now2(), at: now2() }).then(() => toast('오투모 등장을 시작했어요')); }
