@@ -882,6 +882,8 @@ body.gtride #bar,body.gtride #chat,body.gtride #ctx,body.gtride .corner{opacity:
 .say.bb-snow{background:#1E2048;color:#FFF3C8;box-shadow:0 0 0 2px #FFE9A0,0 0 10px rgba(255,233,160,.6);border-radius:12px}.say.bb-snow::after{border-top-color:#FFE9A0}.say.bb-snow::before{content:'★';position:absolute;left:-7px;top:-9px;font-size:12px;color:#FFE9A0;text-shadow:0 0 6px #FFE9A0}
 .adknit{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;margin:8px 0;padding:8px;border-radius:10px;background:rgba(255,184,168,.08)}.adknit>div:first-child{display:flex;flex-direction:column;align-items:center;gap:4px}.adknit [data-knitdoll]{min-width:384px;height:128px;display:flex;background:#2A1E3A;border-radius:10px}.adknit canvas,.adknit img,.adknitall canvas,.adknitall img{image-rendering:pixelated;display:block}.adknit small{font-size:11px;opacity:.75;max-width:384px;text-align:center}.adknitall{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;flex:1;min-width:200px}.adknitall span{display:flex;flex-direction:column;align-items:center;font-size:11px;gap:2px}.adknitall i{width:192px;height:64px;background:#2A1E3A;border-radius:8px;display:flex}
 .say.bb-garden{background:#E8FFD8;color:#1E3A14;box-shadow:0 0 0 2px #5AA84A;border-radius:12px}.say.bb-garden::after{border-top-color:#5AA84A}.say.bb-garden::before{content:'';position:absolute;right:-6px;top:-8px;width:10px;height:8px;background:#5AA84A;border-radius:8px 0 8px 0}
+#otbang{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.4) rotate(-8deg);opacity:0;z-index:345;font-family:var(--f-pxb);font-size:44px;color:#FFE9A0;text-shadow:3px 3px 0 #1a1024,-2px -2px 0 #1a1024;transition:all .25s cubic-bezier(.2,1.6,.4,1);pointer-events:none}#otbang.on{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-8deg)}
+#cv.otshake{animation:otshake .45s}@keyframes otshake{20%{transform:translate(-4px,3px)}40%{transform:translate(4px,-3px)}60%{transform:translate(-3px,-2px)}80%{transform:translate(2px,2px)}}
 #knv{position:fixed;left:50%;top:calc(50% + 4px);transform:translate(-50%,-50%) scale(.92);opacity:0;transition:all .35s cubic-bezier(.2,1.3,.4,1);z-index:330;width:min(94vw,390px);max-height:calc(100vh - 150px);overflow:auto;background:rgba(20,13,34,.97);border:2px solid #FFB8A8;border-radius:16px;padding:10px;font-family:var(--f-px);color:#F1E9FF;box-shadow:0 0 24px rgba(255,184,168,.3);overscroll-behavior:contain}
 #knv.on{opacity:1;transform:translate(-50%,-50%) scale(1)}#knv.spin{animation:knspin .7s}@keyframes knspin{30%{transform:translate(-50%,-50%) rotate(-1.5deg)}60%{transform:translate(-50%,-50%) rotate(1.5deg)}}
 #knv .hd,#knplay .hd{display:flex;justify-content:space-between;align-items:center}#knv .hd b,#knplay .hd b{font-family:var(--f-pxb);font-size:16px;color:#FFD8C8}#knv .hd button,#knplay .hd button{width:36px;height:36px;border-radius:18px;border:0;background:rgba(255,255,255,.08);color:#F1E9FF;font-size:15px}
@@ -3659,7 +3661,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.examBd = {}; AD.day = AD.day || todayKey(); sgListen(); if (!noticeOff && F && db) noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); if (AD.tab === 'gift' && !adminTyping()) adminRender(); });
   const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = k === 'players' ? fbBack(s.val() || {}) : s.val() || {}; if (adminTyping()){ AD.skip = true; return; } adminRender(); }));
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('fam/pick', 'fampick'); L('fam/ctl', 'famctl'); L('fairy/ctl', 'fairyctl'); L('seed/ctl', 'seedctl'); L('tilda/ctl', 'tlctl'); L('wish/ctl', 'wsctl'); L('wish/list', 'wslist'); L('wish/cheer', 'wscheer'); L('wish/own', 'wsown'); L('wish/cby', 'wscby'); L('garden/ctl', 'gdctl'); L('knit/ctl', 'knctl'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('morph/ctl', 'moctl'); L('morph/st', 'most'); L('morph/form', 'moform'); L('board', 'board'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event'){ if (adminTyping()) AD.skip = true; else adminRender(); } })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('fam/pick', 'fampick'); L('fam/ctl', 'famctl'); L('fairy/ctl', 'fairyctl'); L('seed/ctl', 'seedctl'); L('tilda/ctl', 'tlctl'); L('wish/ctl', 'wsctl'); L('wish/list', 'wslist'); L('wish/cheer', 'wscheer'); L('wish/own', 'wsown'); L('wish/cby', 'wscby'); L('garden/ctl', 'gdctl'); L('knit/ctl', 'knctl'); L('otumo/ctl', 'otctl'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('morph/ctl', 'moctl'); L('morph/st', 'most'); L('morph/form', 'moform'); L('board', 'board'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event'){ if (adminTyping()) AD.skip = true; else adminRender(); } })); }
   adminRender();
 }
 // 관리자: 고르는 칸(드롭다운)을 펼친 동안은 새로 그리지 않아요 (학생 접속 정보가 자주 바뀌어도 닫히지 않게) · 고르거나 닫으면 밀린 걸 그려요
@@ -4300,7 +4302,7 @@ const NPC_DEF = [
 ];
 let npcOver = {};   // 관리자가 고친 내용 (npcs/<id>)
 const npcAll = () => { const ids = [...NPC_DEF.map(n => n.id), ...Object.keys(npcOver).filter(id => !id.startsWith('__') && !NPC_DEF.find(n => n.id === id))];
-  return ids.map(id => ({ ...(NPC_DEF.find(n => n.id === id) || { id, av: true, look: 1, map: 'campus', x: 44, y: 47, likes: [], dislikes: [], greet: [[], [], [], []], story: {}, reward: {} }), ...(npcOver[id] || {}) })).filter(n => !n.off); };
+  return ids.map(id => ({ ...(NPC_DEF.find(n => n.id === id) || { id, av: true, look: 1, map: 'campus', x: 44, y: 47, likes: [], dislikes: [], greet: [[], [], [], []], story: {}, reward: {} }), ...(npcOver[id] || {}) })).filter(n => !n.off && !otHidden(n.id)); };
 const npcGet = id => npcAll().find(n => n.id === id);
 const npcAv = n => n.av ? (n.avData ? World.Avatar.fix(n.avData) : World.Avatar.fromLook(n.look || 1)) : null;
 // 뜨개 인형: NPC 정면 그림(저장한 생김새 그대로) → 머리 크게 · 몸 작게 · 뜨개 결 (겨울 뜨개질 인형 가구 · 관리자 미리보기)
@@ -4467,9 +4469,10 @@ function evWhyNot(id){
 }
 function npcSpot(n){
   const P = NL.places; let pid = null, mark = false;
+  if (n.id === 'otumo'){ const fs = otFallSpot(); if (fs) return { map: fs[0], x: fs[1], y: fs[2], r: 1, mark: !!evCond(n.id) }; }   // ♥1 전까지는 떨어진 자리
   const hd = NL.places && hideState(n.id);
   if (hd){ const c = hd.ev.conditions; if (c.time && c.time.length && !c.time.includes(bandNow())) return null; pid = c.location; }
-  else { const e = evCond(n.id); if (e){ pid = e.ev.conditions.location; mark = true; } else pid = (n.routine || ROUTINE[n.id] || {})[bandNow()]; }
+  else { const e = evCond(n.id); if (e && e.ev.conditions.location !== 'any'){ pid = e.ev.conditions.location; mark = true; } else { pid = (n.routine || ROUTINE[n.id] || {})[bandNow()]; mark = !!e; } }   // location any: 늘 있던 자리에서 바로
   const p = P[pid];
   if (!p) return { map: n.map, x: n.x, y: n.y, r: 2, mark };
   if (p.map === 'myroom') return { map: myRoomId(), x: p.x, y: p.y, r: p.r, mark, own: true, pid };
@@ -4538,7 +4541,7 @@ async function npcMenu(n, line){
   const st = npcSt(n.id);
   if (!line && typeof mqNpcHook === 'function'){ const ex = mqNpcHook(n); if (ex) line = ex; }
   if (st.failK){ const k = st.failK; st.failK = null; save(); const ev = await npcEvent(n.id, k); if (ev && ev.fail) return evPlay(n, k, { ...ev, script: [{ cmd: 'fade_in' }, ...ev.fail], cold: [] }, { fail: true }); }
-  const e = evCond(n.id), here = e && npcSpot(n)?.pid === e.ev.conditions.location;
+  const e = evCond(n.id), here = e && (e.ev.conditions.location === 'any' || npcSpot(n)?.pid === e.ev.conditions.location);
   const hd = hideState(n.id);
   if (hd){ npcPanel(n, '.......', `<button class="btn sm go" data-nx="ev" data-k="${hd.k}"> ♥${hd.k} 「${esc(fillVars(hd.ev.title, n.id))}」</button>`); npcUI().dataset.id = n.id; return; }
   const talked = st.t === todayKey(), gifted = st.g === todayKey();
@@ -4825,7 +4828,7 @@ async function evPlay(n, k, ev, opt){
   STG.cv = ui.querySelector('canvas'); STG.g = STG.cv.getContext('2d'); STG.actors = {}; STG.cam = { z: 1, x: 0, sh: 0 }; STG.fade = 1; STG.flash = 0; STG.speaker = null;
   NPC_IMG_STAGE = NPC_IMG_STAGE || Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` }); EMO_IMG = EMO_IMG || Object.assign(new Image(), { src: 'art/emo.png' });
   const sc = ev.scene || {};
-  await stageBg(ev.conditions?.location || 'village_square', sc.time || bandNow(), sc.weather || weatherToday());
+  await stageBg(ev.conditions?.location === 'any' ? placeNear() : ev.conditions?.location || 'village_square', sc.time || bandNow(), sc.weather || weatherToday());
   await evShow(ctx, n.id, 'center'); await evShow(ctx, 'player', 'left'); evFace();
   cancelAnimationFrame(STG.raf); STG.last = 0; STG.raf = requestAnimationFrame(stageDraw);
   if (opt.replay) ui.querySelector('.evskip').onclick = () => { ctx.stop = true; ctx.tapR && ctx.tapR(); };
@@ -7730,7 +7733,7 @@ const FAM = { N: ['Vael', 'Ixi', 'Puck', 'Lotis', 'Sol', 'Lune', 'Ignis', 'Rill'
     ['마지막으로, 너는 무엇이 되고 싶은가?', ['길을 비추는 빛', '곁을 지키는 불', '아무도 모르는 불씨']]] };
 // ===== 처음 온 학생도 덜 정신없게: 이벤트 연출 차례 =====
 //   1 코니 선배 입문이 끝날 때까지 메인 의뢰·이벤트 연출은 기다려요 (공지·우편은 그대로) · 2 입문이 끝나면 메인 의뢰 손님이 먼저 · 3 그 뒤 열린 이벤트를 정한 순서대로 하나씩, 사이에 몇 초 쉬어요
-const EVQ = ['snow', 'morph', 'baby', 'fam', 'fairy', 'seed', 'tilda', 'wish', 'garden', 'knit', 'sg'];   // 이벤트 연출 순서: 눈사람 · 마녀 솥 · 아기 동물 · 사역마 불씨 · 요정 시장 · 별 보는 밤
+const EVQ = ['otumo', 'snow', 'morph', 'baby', 'fam', 'fairy', 'seed', 'tilda', 'wish', 'garden', 'knit', 'sg'];   // 이벤트 연출 순서: 눈사람 · 마녀 솥 · 아기 동물 · 사역마 불씨 · 요정 시장 · 별 보는 밤
 const EVQ_GAP = 6000; let evqWant = {}, evqGapUntil = 0, evqWasBusy = false;
 const mqWaiting = () => typeof MQ !== 'undefined' && MQ.loaded && me && me.mq && me.mq.q && me.mq.ph === 'arrive' && !mqDayFull();
 function evTurn(k){   // 이 이벤트 연출을 지금 띄워도 되는지: 입문 중이 아니고, 메인 의뢰 손님이 기다리지 않고, 쉬는 틈이 지났고, 띄우려는 것 중 가장 앞 차례일 때
@@ -8528,7 +8531,7 @@ function renderMorph(){
 }
 // ---- 장면: 솥 대폭발 (이벤트를 열면) · 원래대로 (다 모으면) ----
 const morphSpawn = (id, x, y, dir = 'up') => { const n = npcGet(id); return n ? { cmd: 'spawn', who: id, name: n.name, ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float, flap: n.flap }), x, y, dir } : { cmd: 'wait', sec: 0 }; };
-const morphBusy = () => xRunNow() || morphCutOn || snowCutOn || babyCutOn || evOn || sheetOn || mqArriving || (typeof tlOn !== 'undefined' && tlOn) || (typeof wsOn !== 'undefined' && wsOn) || (typeof gdOn !== 'undefined' && gdOn) || (typeof knOn !== 'undefined' && knOn) || (typeof sdOn !== 'undefined' && sdOn) || (typeof famOn !== 'undefined' && famOn) || (typeof famSayOn !== 'undefined' && famSayOn) || (typeof trCutOn !== 'undefined' && trCutOn) || !!document.getElementById('pk9') || !!document.getElementById('dreamv') || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '');
+const morphBusy = () => xRunNow() || morphCutOn || snowCutOn || babyCutOn || evOn || sheetOn || mqArriving || (typeof tlOn !== 'undefined' && tlOn) || (typeof wsOn !== 'undefined' && wsOn) || (typeof gdOn !== 'undefined' && gdOn) || (typeof knOn !== 'undefined' && knOn) || (typeof otOn !== 'undefined' && otOn) || (typeof sdOn !== 'undefined' && sdOn) || (typeof famOn !== 'undefined' && famOn) || (typeof famSayOn !== 'undefined' && famSayOn) || (typeof trCutOn !== 'undefined' && trCutOn) || !!document.getElementById('pk9') || !!document.getElementById('dreamv') || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '');
 async function morphPlay(cmds, hooks, mark){
   morphCutOn = true; const [X, Y] = MORPH.LAB;
   try {
@@ -9971,7 +9974,77 @@ function adminKnitHTML(){
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-kna2]'); if (!b) return;
   if (b.dataset.kna2 === 'open'){ if (confirm('「겨울 뜨개질」을 시작할까요? 학생마다 사육장에서 레오가 뜨개질을 알려 줘요.')) GDB.set('knit/ctl', { open: true, id: (AD.knctl && AD.knctl.id) || now2(), at: now2() }).then(() => toast('겨울 뜨개질을 시작했어요')); }
   else if (confirm('시작 연출을 끝낼까요? 이미 배운 학생은 계속 뜰 수 있어요.')) GDB.upd('knit/ctl', { open: false }); });
-function adminEventHTML(){ return adminEventOverview() + adminMorphHTML() + adminSnowHTML() + adminBabyHTML() + adminFamHTML() + adminFairyHTML() + adminSeedHTML() + adminTildaHTML() + adminWishHTML() + adminGardenHTML() + adminKnitHTML() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
+// ===== 오투모 첫 등장: 관리자가 시작하면 학생마다 걷던 자리 옆에 「철푸덕」 떨어져요 → 일어나서 삐리삐리 → 말을 걸면 ♥1 이야기 (언제 어디서나) =====
+//   저장: me.otumo = { met 1, at, spot [지도, x, y] } · 만나기 전에는 오투모가 안 보여요 · 만나면 바로 하트 1 개 · ♥1 이야기를 볼 때까지 떨어진 자리에 있어요
+let otCtl = null, otOn = false, otOffs = [];
+function otMet(){ return !!(typeof me !== 'undefined' && me && me.otumo && me.otumo.met); }
+function otHidden(id){ return id === 'otumo' && typeof me !== 'undefined' && me && !window.__adm && !otMet(); }   // 만나기 전엔 지도 · 관계 목록에서 빼요
+function otFallSpot(){ const o = me && me.otumo; return o && o.spot && !me.npc?.otumo?.seen?.[1] ? o.spot : null; }   // ♥1 전까지는 떨어진 자리
+function placeNear(){   // 지금 서 있는 곳에서 가장 가까운 장소 (어디서나 열리는 이야기의 배경)
+  const t = World.meTile && World.meTile(); if (!t) return 'village_square'; let best = 'village_square', bd = 1e9;
+  Object.entries(NL.places || {}).forEach(([id, p]) => { const m = p.map === 'myroom' ? myRoomId() : p.map; if (m !== t.m) return; const d = Math.hypot(p.x - t.x, p.y - t.y); if (d < bd){ bd = d; best = id; } });
+  return best;
+}
+function otCell(col, mode){   // NPC 그림 14 번째 줄의 한 칸 → 64 × 64 · mode: 'down' 엎어짐 · 'twitch' 꿈틀 · 'glitch' 지지직
+  const I = NPC_IMG_STAGE || (NPC_IMG_STAGE = Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` })), c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+  if (!I.complete || !I.naturalWidth) return c;
+  if (mode === 'down' || mode === 'twitch'){ g.save(); g.translate(32, 50 + (mode === 'twitch' ? -1 : 0)); g.rotate(-Math.PI / 2 + (mode === 'twitch' ? .08 : 0)); g.drawImage(I, col * 64, 13 * 64, 64, 64, -50, -32, 64, 64); g.restore(); }
+  else { const jx = mode === 'glitch' ? Math.round(Math.random() * 4 - 2) : 0; g.drawImage(I, col * 64, 13 * 64, 64, 64, jx, 0, 64, 64);
+    if (mode === 'glitch'){ g.globalCompositeOperation = 'source-atop'; g.fillStyle = Math.random() < .5 ? 'rgba(120,255,240,.35)' : 'rgba(255,90,120,.3)'; const y = Math.floor(Math.random() * 40) + 10; g.fillRect(0, y, 64, 2 + Math.floor(Math.random() * 3)); g.globalCompositeOperation = 'source-over'; } }
+  return c;
+}
+async function otIntro(){
+  otOn = true; const t = World.meTile(), mapId = t.m; let dim = null, bang = null;
+  const I = NPC_IMG_STAGE || (NPC_IMG_STAGE = Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` }));
+  if (!I.complete) await new Promise(r => { I.addEventListener('load', r, { once: true }); setTimeout(r, 3000); });
+  const cand = World.freeNear(t.x, t.y, 3).filter(([x, y]) => { const d = Math.hypot(x - t.x, y - t.y); return d >= 1.9 && d <= 3; }).sort((a, b) => Math.hypot(a[0] - t.x - 2, a[1] - t.y) - Math.hypot(b[0] - t.x - 2, b[1] - t.y)), spot = cand[0] || [t.x + 2, t.y];
+  const place = (c, ay = 58) => World.setProps(mapId, [{ id: 'otfall', x: spot[0], y: spot[1], img: c, pxc: c.getContext('2d'), sw: 64, sh: 64, ax: 32, ay, solid: true }], 'otumo');
+  try {
+    // 하늘에서 휙 → 철푸덕
+    const down = otCell(5, 'down'); for (let k = 0; k <= 8; k++){ place(down, 58 + (8 - k) * 22); await famSleep(35); }
+    sfx('hit'); const cv = $('#cv'); if (cv){ cv.classList.add('otshake'); setTimeout(() => cv.classList.remove('otshake'), 500); }
+    bang = document.createElement('div'); bang.id = 'otbang'; bang.textContent = '철푸덕!'; document.body.appendChild(bang); requestAnimationFrame(() => bang.classList.add('on'));
+    await famSleep(900); bang.classList.remove('on'); World.say('me', '.......!'); await famSleep(900);
+    World.walkToTile(spot[0] + (t.x < spot[0] ? -1 : 1), spot[1]); await famSleep(1500);   // 가 보면
+    for (let k = 0; k < 4; k++){ place(otCell(5, k % 2 ? 'twitch' : 'down')); await famSleep(k % 2 ? 160 : 520); }   // 꿈틀
+    dim = document.createElement('div'); dim.className = 'bldim'; document.body.appendChild(dim); requestAnimationFrame(() => dim.style.opacity = .35);
+    // 일어나서 고장 난 것처럼 지지직 · 삐리삐리
+    for (let k = 0; k < 18; k++){ place(otCell([0, 10, 15, 0][k % 4], 'glitch')); if (k % 3 === 0) sfx('pick'); await famSleep(90); }
+    place(otCell(0)); toast('삐리.... 삐리삐리.......'); sfx('pop');
+    for (let k = 0; k < 10; k++){ place(otCell(0, k % 2 ? 'glitch' : null)); await famSleep(k % 2 ? 80 : 260); if (k === 5) sfx('pick'); }
+    place(otCell(0)); await famSleep(900);
+  } catch(e){ errReport('otumo', '오투모 등장 연출 오류: ' + e.message, e.stack || ''); }
+  finally {
+    me.otumo = { met: 1, at: now2(), id: otCtl && otCtl.id, spot: [mapId, spot[0], spot[1]] };
+    const st = npcSt('otumo'); if ((st.a || 0) < 100) st.a = 100;   // 처음부터 하트 1 개
+    save(); World.setProps(mapId, [], 'otumo'); bang && bang.remove(); if (dim){ dim.style.opacity = 0; setTimeout(() => dim.remove(), 600); }
+    npcSig = ''; syncNpcs(); otOn = false; toast('하늘에서 떨어진 로봇이 있어요. 말을 걸어 봐요');
+  }
+}
+function otTick(){
+  if (!me || otOn || otMet() || !otCtl || !otCtl.open) return;
+  const w = World.where && World.where() || '';
+  if (/^(gt_|arena|myroom|room_)/.test(w) || uiBusy() || !(World.meAt && World.meAt())) return;
+  if (evTurn('otumo')) otIntro();
+}
+function otumoListen(){
+  if (otOffs.length) return; otOffs.push(GDB.on('otumo/ctl', v => { otCtl = v || null; }));
+  setInterval(() => { try { otTick(); } catch(e){ errReport('otumo', '오투모 tick 오류: ' + e.message, e.stack || ''); } }, 1500);
+}
+window.__ot = { intro: () => otIntro(), ctl: () => otCtl };   // 시험용
+window.__adOtumo = () => adminOtumoHTML();   // 시험용
+function adminOtumoHTML(){
+  const c = AD.otctl || {}, P = AD.players || {}, ids = Object.keys(P).filter(id => P[id]?.nick), IN = ids.filter(id => P[id].otumo && P[id].otumo.met), not = ids.filter(id => !(P[id].otumo && P[id].otumo.met));
+  const h = id => Math.floor(((P[id].npc || {}).otumo || {}).a / 100) || 0;
+  return `<div class="adcard sdad"><div class="abhead"><b>오투모 등장</b>${c.open ? '<button class="btn sm" data-ota="close">시작 연출 끝내기</button>' : '<button class="btn sm go" data-ota="open">시작하기</button>'}</div>
+    <div class="abchips"><span>${c.open ? '여는 중' : '닫힘'}</span><span>만난 학생 <b>${IN.length}</b> / ${ids.length}</span></div>${c.open && not.length ? `<div class="s">아직 못 만난 학생: ${not.map(id => esc(P[id].nick)).join(', ')}</div>` : ''}
+    ${IN.length ? `<div class="s">${IN.map(id => `${esc(P[id].nick)} ♥${h(id)}`).join(' · ')}</div>` : ''}
+    <div class="s" style="margin-top:6px">시작하면 학생마다 걷고 있던 자리 옆에 오투모가 철푸덕 떨어져요. 만나기 전에는 오투모가 안 보이고, 만나면 바로 하트 1 개 · 1 장 이야기를 언제 어디서나 볼 수 있어요. 끝내기를 눌러도 이미 만난 학생은 그대로예요.</div></div>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-ota]'); if (!b) return;
+  if (b.dataset.ota === 'open'){ if (confirm('「오투모 등장」을 시작할까요? 학생마다 걷던 자리 옆에 오투모가 떨어져요.')) GDB.set('otumo/ctl', { open: true, id: (AD.otctl && AD.otctl.id) || now2(), at: now2() }).then(() => toast('오투모 등장을 시작했어요')); }
+  else if (confirm('시작 연출을 끝낼까요? 이미 만난 학생은 그대로예요.')) GDB.upd('otumo/ctl', { open: false }); });
+function adminEventHTML(){ return adminEventOverview() + adminMorphHTML() + adminSnowHTML() + adminBabyHTML() + adminFamHTML() + adminFairyHTML() + adminSeedHTML() + adminTildaHTML() + adminWishHTML() + adminGardenHTML() + adminKnitHTML() + adminOtumoHTML() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
 // 이벤트 한눈에: 열려 있는지 · 진행도 · 참가한 학생 수
 // 이벤트마다 장면을 본 학생(또는 보상을 받은 학생) 수 → 다 봤는지 보고 닫아요
 function adminSeen(){
@@ -10762,7 +10835,7 @@ function tutNpcs(){
   return [{ id: 'tut:senior', name: TUT.name, map: TUT.map, x: TUT.x, y: TUT.y, r: 1, mark, wander: true, dir: 'down', av: tutAv() }];
 }
 var tutAuto = false;
-const uiBusy = () => !!(xRunNow() || document.getElementById('tr2') || document.getElementById('dreamv') || document.getElementById('pk9') || evOn || sheetOn || mqArriving || fishing || cooking || lesson || (typeof sgOn !== 'undefined' && sgOn) || (typeof tlOn !== 'undefined' && tlOn) || (typeof wsOn !== 'undefined' && wsOn) || (typeof knOn !== 'undefined' && knOn) || (World.cutBusy && World.cutBusy()) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || $('#fishui').classList.contains('on'));   // 장면·미니게임·창이 떠 있으면 다른 알림은 기다려요
+const uiBusy = () => !!(xRunNow() || document.getElementById('tr2') || document.getElementById('dreamv') || document.getElementById('pk9') || evOn || sheetOn || mqArriving || fishing || cooking || lesson || (typeof sgOn !== 'undefined' && sgOn) || (typeof tlOn !== 'undefined' && tlOn) || (typeof wsOn !== 'undefined' && wsOn) || (typeof knOn !== 'undefined' && knOn) || (typeof otOn !== 'undefined' && otOn) || (World.cutBusy && World.cutBusy()) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || $('#fishui').classList.contains('on'));   // 장면·미니게임·창이 떠 있으면 다른 알림은 기다려요
 function tutGreet(){   // 들어오면 코니 선배가 먼저 말을 걸어요 (다른 장면이 끝날 때까지 기다렸다가 한 번만)
   if (tutAuto || !tutOn() || !me || !(!me.tut.g || me.tut.ok)) return; tutAuto = true; let n = 0;
   const iv = setInterval(() => { if (!tutOn() || ++n > 90) return clearInterval(iv); if (!uiBusy()){ clearInterval(iv); tutTalk(); } }, 1500);
@@ -11234,7 +11307,7 @@ async function boot(){
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       F.onValue(F.ref(db, 'adm/reset/' + uid), s => { const v = +s.val() || 0; if (!v) return; let seen = 0; try { seen = +localStorage.getItem('magion-rs-' + uid) || 0; } catch(e){}
         if (v > seen && v > bootT - 5000){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
-      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); famListen(); fairyListen(); seedListen(); tildaListen(); wishListen(); gardenListen(); knitListen(); blancListen(); snowListen(); morphListen(); boardListen(); tarotInit(); prankInit();
+      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); famListen(); fairyListen(); seedListen(); tildaListen(); wishListen(); gardenListen(); knitListen(); otumoListen(); blancListen(); snowListen(); morphListen(); boardListen(); tarotInit(); prankInit();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); const sg = Object.entries(gameList).map(([id, r]) => r ? id + r.st + Object.keys(r.p || {}).length : '').join('|'); if (sub === 'games' && sg !== gamesSig) render(); gamesSig = sg; });   // 점수가 오를 때마다가 아니라 방이 열리고 닫히고 사람이 드나들 때만 다시 그려요
       F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       const recWatch = () => { const wk = weekKey(); if (recWatch.wk === wk) return; recWatch.wk = wk; (recWatch.offs || []).forEach(f => f()); recList = {}; recWatch.offs = Object.keys(GAMES).map(g => F.onValue(F.ref(db, `records/${g}/${wk}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); })); };
