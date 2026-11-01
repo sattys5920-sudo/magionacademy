@@ -45,6 +45,11 @@ for s in ev.get('click', []): tone(s, 3000, .02, .05, 'square', 120); tone(s + .
 for s in ev.get('flip', []): noise(s, .25, .07); tone(s + .1, 523, .2, .03, 'tri', 8)
 for s in ev.get('tie', []): [tone(s + k * .06, f, .3, .04, 'tri', 6) for k, f in enumerate((659, 784))]
 for s in ev.get('learn', []): [tone(s + k * .08, f, .7, .05, 'tri', 3) for k, f in enumerate((784, 988, 1175, 1568))]
+for s in ev.get('insert', []): tone(s, 900, .06, .05, 'square', 40); tone(s + .03, 1400, .05, .04, 'square', 40)
+for s in ev.get('wrap', []): [tone(s + k * .05, 600 + k * 60, .1, .03, 'sine', 12) for k in range(5)]
+for s in ev.get('pull', []): tone(s, 520, .12, .05, 'tri', 10)
+for s in ev.get('slip', []): tone(s, 3000, .03, .05, 'square', 100); tone(s + .02, 2200, .03, .04, 'square', 100)
+for s in ev.get('card', []): [tone(s + k * .08, f, .7, .05, 'tri', 3) for k, f in enumerate((784, 988, 1175, 1568))]
 for s in ev.get('done', []): [tone(s + k * .1, f, 1.2, .06, 'tri', 2.5) for k, f in enumerate((523, 659, 784, 1047, 1319))]
 for s in ev.get('wear', []): noise(s, .4, .06); [tone(s + .2 + k * .07, f, .8, .04, 'sine', 3) for k, f in enumerate((880, 1109, 1319))]
 for s in ev.get('gift', []): [tone(s + k * .08, f, .7, .05, 'tri', 3) for k, f in enumerate((784, 988, 1175, 1568))]
