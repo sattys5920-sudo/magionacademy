@@ -9656,7 +9656,7 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
 const KN_COL = [['white', '하양', null], ['red', '빨강', 'g2_rasp'], ['pink', '분홍', 'g2_crab'], ['orange', '주황', 'g2_maple'], ['p_mustard', '노랑', 'g2_ginkgo'], ['green', '초록', 'g2_moss'], ['sky', '하늘', 'g2_bell'], ['blue', '파랑', 'g2_blue'], ['purple', '보라', 'g2_eve'], ['brown', '갈색', 'g2_acorn']];
 const KN_DYE = { g2_rasp: '산딸기', g2_crab: '꽃사과', g2_maple: '빨간 단풍잎', g2_ginkgo: '노란 은행잎', g2_moss: '촉촉 이끼', g2_bell: '은방울꽃', g2_blue: '블루베리', g2_eve: '달맞이꽃', g2_acorn: '도토리' };
 const KN_DOLLS = [['leo', '레오'], ['sera', '세라 선생님'], ['madeleine', '마들렌'], ['stella', '스텔라'], ['nabi', '나비'], ['batri', '배트리'], ['kappa', '캇파'], ['aula', '아울라'], ['mandi', '맨디'], ['jipsin', '스트로']];
-const KN_SCARF = 10, KN_DOLL = 20, KN_WOOL = 4;
+const KN_SCARF = 10, KN_DOLL = 20, KN_WOOL = 4, KN_ROWS_SC = 20, KN_ROWS_DOLL = 50;   // 목도리 20 줄 · 인형 50 줄 (한 줄 = 8 코)
 const KN_THX = {
   leo: { first: ['....이거, 나 주는 거야.', '누가 나한테 뭘 떠 준 건.... 처음이다. 생물들한텐 매일 뭘 챙겨 주면서, 정작 내 목은 늘 비어 있었거든.', '코 하나하나 다 손으로 뜬 거지. 얼마나 걸렸어. ....아니, 대답 안 해도 돼. 이 촘촘한 거 보면 알아.', '밤에 알 지키러 나갈 때 바람이 제일 매서웠는데.... 이제 괜찮겠다.', '....고맙다. 내일부터 하고 다닐게. 아니, 지금부터.'],
     again: ['또 떴어. ....손 안 아프냐.', '하나만 해도 충분히 따뜻했는데.... 이건 생물들 보러 갈 때, 이건 알 지키러 갈 때 할게.', '날마다 바꿔 두르면.... 날마다 네 생각이 나겠네. 고맙다.'] },
@@ -9806,7 +9806,7 @@ function knRender(){
       <div class="s sub">양털은 사육장 양(뭉게)에게서 모여요. 이미 만든 털실은 다시 물들일 수 없어요</div>`;
   } else if (knTab === 'k'){
     const two = knB && knB !== knA, need = two ? { [knA]: KN_SCARF / 2, [knB]: KN_SCARF / 2 } : { [knA]: KN_SCARF }, ok = Object.entries(need).every(([c, n]) => (Y[c] || 0) >= n);
-    body = `<div class="kinds"><button data-knk="sc" class="${knKind === 'sc' ? 'on' : ''}">목도리<small>털실 ${KN_SCARF} 뭉치</small></button><button data-knk="doll" class="${knKind === 'doll' ? 'on' : ''}">뜨개 인형<small>털실 ${KN_DOLL} 뭉치</small></button></div>`;
+    body = `<div class="kinds"><button data-knk="sc" class="${knKind === 'sc' ? 'on' : ''}">목도리<small>털실 ${KN_SCARF} 뭉치 · ${KN_ROWS_SC} 줄</small></button><button data-knk="doll" class="${knKind === 'doll' ? 'on' : ''}">뜨개 인형<small>털실 ${KN_DOLL} 뭉치 · ${KN_ROWS_DOLL} 줄</small></button></div>`;
     if (knKind === 'sc') body += `<div class="s">첫째 색</div><div class="ycol sm">${KN_COL.map(([c, nm]) => `<button data-kna="${c}" class="${knA === c ? 'on' : ''}"><i style="background:${knHex(c)}"></i><em>${Y[c] || 0}</em></button>`).join('')}</div>
       <div class="s">둘째 색 (줄무늬)</div><div class="ycol sm"><button data-knb="" class="${!two ? 'on' : ''}"><i class="none">한 색</i></button>${KN_COL.filter(([c]) => c !== knA).map(([c]) => `<button data-knb="${c}" class="${knB === c ? 'on' : ''}"><i style="background:${knHex(c)}"></i><em>${Y[c] || 0}</em></button>`).join('')}</div>
       <div class="box"><div class="prev">${knSw([knA, two ? knB : knA], 120, 22)}</div><span>${Object.entries(need).map(([c, n]) => `${knName(c)} ${n} 뭉치 (가진 것 ${Y[c] || 0})`).join(' · ')}</span><button class="btn go" data-kn="knit" ${ok ? '' : 'disabled'}>목도리 뜨기</button></div>`;
@@ -9830,7 +9830,7 @@ async function knKnitScarf(){
   const Y = knY(), two = knB && knB !== knA, need = two ? { [knA]: KN_SCARF / 2, [knB]: KN_SCARF / 2 } : { [knA]: KN_SCARF };
   if (!Object.entries(need).every(([c, n]) => (Y[c] || 0) >= n)) return toast('털실이 모자라요');
   Object.entries(need).forEach(([c, n]) => { Y[c] -= n; }); save(); knClose(); knOn = true;
-  let r = null; try { r = await knPlay({ a: knA, b: two ? knB : undefined, rows: 6, fringe: true }, '목도리 뜨기'); } catch(e){ errReport('knit', '뜨개 화면 오류: ' + e.message, e.stack || ''); }
+  let r = null; try { r = await knPlay({ a: knA, b: two ? knB : undefined, rows: KN_ROWS_SC, tie: [4, 8, 12, 16], fringe: true }, '목도리 뜨기'); } catch(e){ errReport('knit', '뜨개 화면 오류: ' + e.message, e.stack || ''); }
   if (!r){ Object.entries(need).forEach(([c, n]) => { Y[c] = (Y[c] || 0) + n; }); save(); knOn = false; toast('털실을 돌려받았어요'); return knOpen('k'); }
   const K = me.knit, st = knStars(r); (K.sc ||= []).push({ c: [knA, two ? knB : knA], st }); K.made = (K.made || 0) + 1; me.closet = me.closet || {}; me.closet['neck:neck_knit'] = 1; save(); sfx('win');
   await famCard(`<div class="prev">${knSw([knA, two ? knB : knA], 150, 28)}</div><b>목도리 완성 ${'★'.repeat(st)}</b><small>완벽 ${r.score[2]} · 좋아요 ${r.score[1]} · 삐끗 ${r.score[0]}</small>`, null, 2200);
@@ -9844,7 +9844,7 @@ async function knKnitDoll(){
   const Y = knY(), used = {}; let left = KN_DOLL;
   while (left > 0){ const c = Object.keys(Y).filter(k => Y[k] > 0).sort((a, b) => Y[b] - Y[a])[0]; if (!c) break; Y[c]--; used[c] = (used[c] || 0) + 1; left--; }
   const main = Object.keys(used).sort((a, b) => used[b] - used[a]), id = knDollPick, nm = (KN_DOLLS.find(d => d[0] === id) || KN_DOLLS[0])[1]; save(); knClose(); knOn = true;
-  let r = null; try { r = await knPlay({ a: main[0], b: main[1], rows: 6, fringe: false }, nm + ' 인형 뜨기'); } catch(e){ errReport('knit', '뜨개 화면 오류: ' + e.message, e.stack || ''); }
+  let r = null; try { r = await knPlay({ a: main[0], rows: KN_ROWS_DOLL, fringe: false }, nm + ' 인형 뜨기'); } catch(e){ errReport('knit', '뜨개 화면 오류: ' + e.message, e.stack || ''); }
   if (!r){ Object.entries(used).forEach(([c, n]) => { Y[c] = (Y[c] || 0) + n; }); save(); knOn = false; toast('털실을 돌려받았어요'); return knOpen('k'); }
   const fid = 'kn_doll_' + id; me.fbag[fid] = (me.fbag[fid] || 0) + 1; me.knit.dolls = (me.knit.dolls || 0) + 1; save(); knDollsDyn(); sfx('win');
   await famCard(`<canvas width="38" height="38" id="kndollc" style="width:114px;height:114px;image-rendering:pixelated"></canvas><b>${esc(nm)} 뜨개 인형</b><small>가구 가방에 들어갔어요</small>`, () => { const c = $('#kndollc'), n = npcGet(id), d = n && knitDoll(n, 1); if (c && d){ const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(d, 13, 22, 38, 38, 0, 0, 38, 38); } }, 2400);

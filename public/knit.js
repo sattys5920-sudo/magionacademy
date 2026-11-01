@@ -55,7 +55,7 @@ function draw(t){ g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); R(g
   const fx = c => 120 - (NC - 1) * 6.5 + c * 13;
   K.rows.forEach((r, k) => { const y = 132 + (K.rows.length - 1 - k) * 5; if (y > 214) return; R(g, fx(0) - 7, y - 1, NC * 13 + 1, 7, dk(r.col)); for (let c = 0; c < NC; c++) vSt(fx(c), y, r.col, r.q[c]); });
   if (phase !== 'cast' && K.bind < 0) for (let c = K.j; c < NC; c++) vSt(fx(c), 126, K.cur, rowQ[c]);
-  if (K.fringe) for (let c = 0; c < K.fringe; c++){ const x = fx(c), y = 132 + K.rows.length * 5; [-2, 2].forEach(d => { R(g, x + d - 1, y, 3, 10, '#1a1024'); R(g, x + d, y, 1, 9, c % 2 ? YC[colB] : YC[colA]); }); }
+  if (K.fringe) for (let c = 0; c < K.fringe; c++){ const x = fx(c), y = Math.min(132 + K.rows.length * 5, 214); [-2, 2].forEach(d => { R(g, x + d - 1, y, 3, 10, '#1a1024'); R(g, x + d, y, 1, 9, c % 2 ? YC[colB] : YC[colA]); }); }
   // 왼쪽 바늘 + 고리
   const lt = add2(leftTip(), wob), lb = add2(LB, wob), nL = phase === 'cast' ? K.cast : K.bind >= 0 ? Math.max(0, NC - K.bind) : K.j;
   if (K.bind < 99){ for (let i = 0; i < nL; i++) if (!(K.drop && i === 0)) loopArc(add2(leftLoopPos(i), wob), UL, K.cur, false);
