@@ -175,9 +175,9 @@ function journal(){
   const P = ST.pin && byId(ST.pin), mine = all().filter(b => ST.made[b.id]);
   const JT = [['story', '이야기'], ['heart', '하트 이야기'], ['blanc', '레시피 노트'], ['dream', '꿈 일기장'], ['wish', '별빛 소원']];
   const page = { story: ['일곱 등불의 의뢰', '첫 번째 등불 · 다 했어요', '두 번째 등불 · 다 했어요', '세 번째 등불 · 진행 중'], heart: ['아울라 ♥5 「밤의 도서관」', '맨디 ♥3 「온실의 아침」', '나비 ♥2 「매점 지붕 위」'], blanc: ['호박 크림 수프', '도토리 쿠키', '유령 피라미 튀김'], dream: ['구름 위 도서관에서 길을 잃은 꿈', '물고기가 하늘을 나는 꿈'], wish: ['별빛 소원 1 · 다 같이 졸업하기'] }[ST.jt];
-  $('#body').innerHTML = `<div class="jn"><div class="jnh"><b>일지</b><span>책갈피 꽂는 칸 · 오른쪽 위</span></div>
+  $('#body').innerHTML = `<div class="jn"><div class="jnh"><b>일지</b></div>
     <div class="chips2">${JT.map(([k, n]) => `<button data-jt="${k}" class="${ST.jt === k ? 'on' : ''}">${n}</button>`).join('')}</div>
-    <div class="jpage">${P ? `<div class="pin ${ST.drop ? 'drop' : ''}"><canvas id="pincv" width="36" height="92"></canvas></div>` : '<div class="pin empty">책갈피<br>꽂는 곳</div>'}
+    <div class="jpage">${P ? `<div class="pin ${ST.drop ? 'drop' : ''}"><canvas id="pincv" width="36" height="92"></canvas></div>` : ''}
       <div class="jbody"><h4>${JT.find(x => x[0] === ST.jt)[1]}</h4>${page.map(t => `<div class="jrow">${esc(t)}</div>`).join('')}</div></div>
     ${P ? `<div class="pinbar"><canvas id="pinmini" width="36" height="92"></canvas><div><b>${esc(P.n)}${P.npc ? ' 책갈피' : ''}</b><span class="fx">${esc(FX[P.id])}</span></div><button class="btn sm2" data-unpin="1">빼기</button></div>` : ''}
     <div class="lab">바꿔 꽂기 · 한 번에 하나만</div>
