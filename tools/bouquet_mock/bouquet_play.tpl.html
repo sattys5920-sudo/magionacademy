@@ -142,6 +142,12 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f-body);f
 .obword{position:absolute;left:10%;top:76%;font:400 12px var(--f-pxb);color:#B0405A;font-style:normal}
 .obtext{position:absolute;left:55%;right:19%;top:15%;margin:0;font:12px/1.75 var(--f-px);color:#5A4636}
 .obfrom{position:absolute;right:16%;bottom:13%;font-size:10px!important;color:#8A6E50!important}
+.tabs button.lock{opacity:.35}
+.quest{display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:12px;border:2px solid var(--gold);background:rgba(255,216,102,.08)}
+.quest b{font-family:var(--f-pxb);font-weight:400;color:var(--gold);font-size:var(--fs-h)}
+.quest span{font-size:var(--fs-s);color:var(--sub)}
+.quest .next{margin-top:2px}
+#stagebox[hidden]{display:none}
 input#card{width:100%;border:1px solid var(--line2);background:var(--panel2);color:var(--text);border-radius:10px;padding:10px;font:var(--fs) var(--f-body)}
 button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .hint{font-size:var(--fs-s);color:var(--sub);margin:0;text-align:center}
@@ -150,7 +156,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 
 <div class="pick"><label for="stu">시안 · 누구로 들어갈까요</label><select id="stu"><option value="0">학생 1</option><option value="1">학생 2</option><option value="2">학생 3</option><option value="3">학생 4</option><option value="4">학생 5</option><option value="5">학생 6</option><option value="6">학생 7</option><option value="7">학생 8</option><option value="8">학생 9</option><option value="9">학생 10</option><option value="10">학생 11</option><option value="11">학생 12</option></select></div>
 <div id="app">
-  <div class="shead"><div class="title"><b>꽃다발 공방</b></div><span class="stat" id="stat"></span></div>
+  <div class="shead"><div class="title"><b id="ttl">맨디의 꽃말 수첩</b></div><span class="stat" id="stat"></span></div>
   <nav class="tabs" id="tabs"><button data-t="note">수첩</button><button data-t="wrap" class="on">1 포장지</button><button data-t="flower">2 꽃</button><button data-t="deco">3 장식</button><button data-t="give">4 완성</button></nav>
   <div class="body">
     <section id="stagebox">
@@ -250,7 +256,7 @@ const NPCS = [
   { id: 'leo', n: '레오', row: 9, like: 'clover', hate: 'ghost', say: { like: '네잎클로버. 양들이 먼저 먹기 전에 잘 찾았네.......', hate: '유령 꽃. ....생물들이 밤에 무서워할 것 같다.', love: '....이거, 나한테 주는 거 맞지. 사육장 문에 걸어 둘게. 아니, 방에 둘게.', prank: '장난이네. 양들한테 보여 줘야겠다. 걔들 장난 좋아해.', base: '고맙다. 물병에 꽂아 둘게.' } },
   { id: 'otumo', n: '오투모', row: 10, like: 'bell', hate: 'skull', say: { like: '삐빅. 종꽃에서 소리가 납니다. 박자 96. 저장합니다. 제일 좋아하는 소리 목록 2 번 칸.......', hate: '경고. 해골 모양 감지. ....꽃이었습니다. 놀란 기록은 삭제합니다.', love: '꽃말 분석 중.... 결과: 고백. 냉각 팬이 최고 속도입니다. 오, 오류.......', prank: '장난 감지. 처리 방법: 웃음. 하, 하, 하. 맞습니까.', base: '꽃 데이터를 저장했습니다. 고맙습니다.' } }
 ];
-const S = { size: 5, slots: ['tulip', 'rose', 'lily', 'chamo', 'chamo'], wrap: { base: 'pink', pat: 'heart', cols: ['white', 'red'], n: 2 }, ribbon: 'white', deco: new Set(['baby', 'leaf']), card: '', tab: 'wrap', made: false };
+const S = { size: 5, slots: ['tulip', 'rose', 'lily', 'chamo', 'chamo'], wrap: { base: 'pink', pat: 'heart', cols: ['white', 'red'], n: 2 }, ribbon: 'white', deco: new Set(['baby', 'leaf']), card: '', tab: 'note', made: false };
 const cv = document.getElementById('cv'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
 const px = (q, x, y, w, h, c) => { q.fillStyle = c; q.fillRect(Math.round(x), Math.round(y), w, h); };
 // 꽃 그림: 게임 아이콘(art/plants.png · forage.png) 21 칸을 한 줄로 모은 그림
@@ -380,11 +386,45 @@ const INTRO = [
   ['', '「맨디의 꽃다발」과 「맨디의 꽃말 수첩」을 받았어요.', 'give']
 ];
 let introI = -1, introPose = 'fiddle', introT0 = performance.now();
+// ===== 첫 꽃말을 찾으면: 「맨디에게 가 보자」 → 약초 온실 연출 → 꽃다발 작업대 =====
+const MEET = [
+  ['', '약초 온실. 맨디가 화분 사이에서 물뿌리개를 기울이고 있다.', 'water'],
+  ['맨디', '아, 오셨어요. 수첩 봤어요. 벌써 꽃말을 하나 찾으셨네요.......', 'happy'],
+  ['맨디', '잘했네요. 히익, 제가 칭찬하니까 이상하죠. 그래도.... 정말 잘했어요.', 'shy'],
+  ['맨디', '저기.... 앞으로는 꽃말을 담아서, 누군가에게 선물할 꽃다발을 만들어 보는 건 어때요?', 'happy'],
+  ['맨디', '마음을 말로 하기 어려울 때.... 꽃이 대신 말해 주거든요. 제가 그랬던 것처럼요.......', 'shy'],
+  ['맨디', '여기에 작업대를 두고 갈게요. 언제든 와서 쓰세요. 포장지랑 리본도 조금 넣어 뒀어요.', 'bench'],
+  ['', '약초 온실에 「꽃다발 작업대」가 생겼어요. 작업대에서 꽃다발을 만들 수 있어요.', 'bench']
+];
+let CUR = null, sceneKind = 'craft', unlocked = false;
+function startMeet(){ CUR = MEET; sceneKind = 'green'; introI = -1; document.querySelector('.iscene').textContent = '약초 온실'; intro(); }
+function drawGreen(q, t, pose){
+  q.fillStyle = '#2E4A3A'; q.fillRect(0, 0, 160, 96);
+  q.fillStyle = '#9FD8C8'; for (let x = 4; x < 160; x += 26) q.fillRect(x, 6, 22, 40);
+  q.fillStyle = '#C8F0E4'; for (let x = 4; x < 160; x += 26) q.fillRect(x + 2, 8, 6, 3);
+  q.fillStyle = '#2A1A2E'; for (let x = 3; x < 160; x += 26) q.fillRect(x, 5, 1, 42); q.fillRect(0, 5, 160, 1); q.fillRect(0, 46, 160, 1); q.fillRect(0, 26, 160, 1);
+  q.fillStyle = '#6A5038'; q.fillRect(0, 58, 160, 38); q.fillStyle = '#5A4230'; for (let x = 0; x < 160; x += 12) q.fillRect(x, 70 + (x % 24 ? 0 : 6), 8, 1);
+  [[10, 50], [26, 52], [136, 50], [150, 52]].forEach(([x, y], i) => { q.fillStyle = '#2A1A2E'; q.fillRect(x - 5, y, 10, 8); q.fillStyle = '#B5653A'; q.fillRect(x - 4, y + 1, 8, 6); q.fillStyle = ['#6AAE5E', '#8CC86A', '#5E9A52', '#7CC07A'][i]; q.fillRect(x - 4, y - 6, 3, 6); q.fillRect(x, y - 9, 3, 9); q.fillRect(x + 2, y - 5, 3, 5); });
+  const benchOn = pose === 'bench';
+  if (benchOn){
+    const s = Math.min(1, t * 2.5), by = 52 + Math.round((1 - s) * -20);
+    q.fillStyle = '#2A1A2E'; q.fillRect(34, by, 54, 12); q.fillStyle = '#C8A06A'; q.fillRect(35, by + 1, 52, 4); q.fillStyle = '#9A7046'; q.fillRect(35, by + 5, 52, 6); q.fillStyle = '#6A4428'; q.fillRect(38, by + 11, 3, 14); q.fillRect(81, by + 11, 3, 14);
+    q.fillStyle = '#F4A6BE'; q.fillRect(40, by - 3, 10, 3); q.fillStyle = '#9AD4F0'; q.fillRect(52, by - 2, 8, 2); q.fillStyle = '#E2577E'; q.fillRect(64, by - 4, 2, 4); q.fillRect(62, by - 3, 6, 2);
+    if (FLIMG.complete){ q.drawImage(FLIMG, FIDX.lily * 32, 0, 32, 32, 70, by - 16, 16, 16); }
+    for (let i = 0; i < 5; i++){ if ((Math.floor(t * 6) + i) % 3) continue; q.fillStyle = '#FFF6C0'; const x = 38 + i * 11, y = by - 10 - (i % 2) * 4; q.fillRect(x, y - 1, 1, 3); q.fillRect(x - 1, y, 3, 1); }
+  }
+  const bob = pose === 'happy' ? Math.round(-Math.abs(Math.sin(t * 6)) * 3) : 0, col = pose === 'water' ? 10 : 0, mx = benchOn ? 116 : 84;
+  if (SHEET.complete) q.drawImage(SHEET, col * 64, 4 * 64, 64, 64, mx - 48, 90 - 90 + bob, 96, 96);
+  if (pose === 'water'){ q.fillStyle = '#2A1A2E'; q.fillRect(56, 50, 12, 8); q.fillStyle = '#7FB8E8'; q.fillRect(57, 51, 10, 6); q.fillRect(52, 50, 5, 2); for (let i = 0; i < 3; i++){ const p = (t * 2 + i / 3) % 1; q.fillStyle = '#A8E0FF'; q.fillRect(50 - p * 4, 52 + p * 10, 1, 2); } }
+  if (pose === 'shy') for (let i = 0; i < 3; i++){ const p = (t * .7 + i / 3) % 1; q.fillStyle = '#FF8FAF'; const hx = mx - 14 + i * 10, hy = 30 - p * 18; q.fillRect(hx, hy, 2, 2); q.fillRect(hx + 3, hy, 2, 2); q.fillRect(hx, hy + 1, 5, 2); q.fillRect(hx + 1, hy + 3, 3, 1); }
+}
+
 const scv = () => document.getElementById('scene');
 function intro(){
   const o = document.getElementById('intro'); introI++;
-  if (introI >= INTRO.length){ o.hidden = true; S.tab = 'note'; return refresh(); }
-  const [who, text, pose] = INTRO[introI]; o.hidden = false; introPose = pose; introT0 = performance.now();
+  const L = CUR || INTRO;
+  if (introI >= L.length){ o.hidden = true; if (L === MEET){ unlocked = true; S.tab = 'wrap'; noteMsg = ''; } else S.tab = 'note'; return refresh(); }
+  const [who, text, pose] = L[introI]; o.hidden = false; introPose = pose; introT0 = performance.now();
   document.getElementById('in').textContent = who; document.getElementById('it').textContent = text.replace('{name}', `학생 ${stu + 1}`);
   document.getElementById('in').hidden = !who;
 }
@@ -392,6 +432,7 @@ function intro(){
 function drawScene(now){
   const c = scv(); if (!c || document.getElementById('intro').hidden) return;
   const q = c.getContext('2d'); q.imageSmoothingEnabled = false; const t = (now - introT0) / 1000;
+  if (sceneKind === 'green') return drawGreen(q, t, introPose);
   q.fillStyle = '#3A2A55'; q.fillRect(0, 0, 160, 96); q.fillStyle = '#2B1F45'; for (let x = 0; x < 160; x += 16) q.fillRect(x, 0, 1, 58);
   q.fillStyle = '#5A3E6A'; q.fillRect(0, 58, 160, 38); q.fillStyle = '#4E3460'; for (let x = 0; x < 160; x += 20) q.fillRect(x + (Math.floor(x / 20) % 2) * 10, 66, 10, 1);
   q.fillStyle = '#7FB8E8'; q.fillRect(116, 10, 30, 26); q.fillStyle = '#2A1A2E'; q.fillRect(115, 9, 32, 1); q.fillRect(115, 36, 32, 1); q.fillRect(115, 9, 1, 28); q.fillRect(146, 9, 1, 28); q.fillRect(130, 9, 1, 28); q.fillRect(115, 22, 32, 1);
@@ -423,13 +464,13 @@ function drawScene(now){
 function hunt(kind){
   const left = FL.filter(f => !KNOWN.has(f.id) && PAGE[f.id][0] === kind);
   const loot = kind === '채집' ? ['들꽃', '고사리', '도토리', '촉촉 이끼', '산딸기'] : ['붕어', '피라미', '빈 깡통', '미꾸라지', '해초'];
-  if (left.length && Math.random() < .45){ const f = left[Math.floor(Math.random() * left.length)]; KNOWN.add(f.id); noteOpen = f.id; noteMsg = `<img src="${PAGE_IMG.src}" alt=""><span><b>꽃말 쪽지를 주웠어요</b><br>「${f.n}」 꽃말이 수첩에 적혔어요</span>`; }
+  if (left.length && Math.random() < .45){ const f = left[Math.floor(Math.random() * left.length)]; const first = !unlocked && KNOWN.size === 0; KNOWN.add(f.id); noteOpen = f.id; noteMsg = `<img src="${PAGE_IMG.src}" alt=""><span><b>꽃말 쪽지를 주웠어요</b><br>「${f.n}」 꽃말이 수첩에 적혔어요</span>`; if (first) noteMsg = noteMsg.replace('</span>', '<br><b>맨디에게 가 보자</b></span>'); }
   else { noteMsg = `${loot[Math.floor(Math.random() * loot.length)]}${kind === '채집' ? '을(를) 주웠어요' : '을(를) 낚았어요'}${left.length ? '. 쪽지는 없었어요' : `. ${kind} 쪽지는 다 모았어요`}`; }
   refresh();
 }
 function noteHTML(){
-  const n = KNOWN.size, f = noteOpen && FB[noteOpen], B = myB(), done = B.f.every(x => KNOWN.has(x));
-  return `<div class="grp">${row(`맨디의 꽃말 수첩 <b>${n} / 21</b>`, `<span class="cost free">채집 ${FL.filter(x => PAGE[x.id][0] === '채집' && KNOWN.has(x.id)).length} / 14 · 낚시 ${FL.filter(x => PAGE[x.id][0] === '낚시' && KNOWN.has(x.id)).length} / 7</span>`)}
+  const n = KNOWN.size, f = noteOpen && FB[noteOpen];
+  return `${!unlocked && n ? `<div class="quest"><b>맨디에게 가 보자</b><span>꽃말을 하나 찾았어요. 약초 온실에서 맨디가 기다리고 있어요</span><button class="next" data-meet="1">약초 온실로 가기</button></div>` : ''}<div class="grp">${row(`맨디의 꽃말 수첩 <b>${n} / 21</b>`, `<span class="cost free">채집 ${FL.filter(x => PAGE[x.id][0] === '채집' && KNOWN.has(x.id)).length} / 14 · 낚시 ${FL.filter(x => PAGE[x.id][0] === '낚시' && KNOWN.has(x.id)).length} / 7</span>`)}
     <div class="bar"><i style="width:${n / 21 * 100}%"></i></div></div>
     <div class="hunt"><button class="btn" data-hunt="채집">풀숲 뒤지기 · 채집</button><button class="btn" data-hunt="낚시">낚싯대 던지기 · 낚시</button></div>
     ${noteMsg ? `<p class="toast">${noteMsg}</p>` : '<p class="hint">시안용 버튼이에요. 게임에서는 원래 하던 채집 · 낚시 그대로, 가끔 쪽지가 섞여 나와요.</p>'}
@@ -473,8 +514,12 @@ const row = (label, cost) => `<div class="row"><span class="lab">${label}</span>
 const swatches = (attr, cur) => `<div class="sw">${COL.map(c => `<button data-${attr}="${c.id}" class="${cur === c.id ? 'on' : ''}" style="background:${c.hex}" aria-label="${c.n}" title="${c.n}"></button>`).join('')}</div>`;
 function panel(){
   const P = document.getElementById('panel'), W = S.wrap, PT = PB[W.pat], cnt = id => S.slots.filter(x => x === id).length;
+  if (!unlocked && S.tab !== 'note') S.tab = 'note';
+  document.getElementById('stagebox').hidden = S.tab === 'note';
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('lock', !unlocked && x.dataset.t !== 'note'));
+  document.getElementById('ttl').textContent = unlocked && S.tab !== 'note' ? '꽃다발 작업대 · 약초 온실' : '맨디의 꽃말 수첩';
   let html = '', next = null;
-  if (S.tab === 'note'){ html = noteHTML(); next = ['wrap', '꽃다발 만들러 가기']; }
+  if (S.tab === 'note'){ html = noteHTML(); next = unlocked ? ['wrap', '꽃다발 작업대로 가기'] : null; }
   else if (S.tab === 'wrap'){
     const extraN = PT.extra ? (PT.multi ? W.n - 1 : 1) : 0;
     html = `<div class="grp">${row(`바탕 색 <b>${CB[W.base].n}</b>`, costTag(CB[W.base].dye))}${swatches('base', W.base)}</div>
@@ -527,7 +572,8 @@ function refresh(){ renderSlots(); panel(); draw(); }
 document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || b.disabled) return; const d = b.dataset, W = S.wrap;
   if (d.go){ if (d.go === 'make'){ if (short().length) return; Object.entries(needs()).forEach(([k, v]) => INV[k] -= v.n); S.made = true; return panel(); } S.tab = d.go; panel(); document.getElementById('app').scrollIntoView({ block: 'start' }); return; }
-  if (d.t){ S.tab = d.t; panel(); return; }
+  if (d.t){ if (!unlocked && d.t !== 'note'){ noteMsg = '<span><b>아직 작업대가 없어요</b><br>꽃말을 하나 찾고 맨디에게 가 보세요</span>'; S.tab = 'note'; return panel(); } S.tab = d.t; panel(); return; }
+  if (d.meet) return startMeet();
   if (S.made && (d.base || d.pat || d.sn || d.pc0 || d.pc1 || d.size || d.f || d.rib || d.deco)) S.made = false;
   if (d.base){ W.base = d.base; return refresh(); }
   if (d.pat){ W.pat = d.pat; return refresh(); }
@@ -545,7 +591,7 @@ document.addEventListener('click', e => {
   if (d.pg){ noteOpen = d.pg; return panel(); }
 });
 const boot = () => { refresh(); intro(); };
-document.getElementById('stu').addEventListener('change', e => { stu = +e.target.value; KNOWN.clear(); noteOpen = null; noteMsg = ''; introI = -1; intro(); refresh(); });
+document.getElementById('stu').addEventListener('change', e => { stu = +e.target.value; KNOWN.clear(); noteOpen = 'dandel'; noteMsg = ''; unlocked = false; CUR = null; sceneKind = 'craft'; document.querySelector('.iscene').textContent = '공예 교실'; introI = -1; intro(); refresh(); });
 (function loop(now){ drawScene(now); requestAnimationFrame(loop); })(performance.now());
 if (FLIMG.complete) boot(); else FLIMG.onload = boot;
 document.getElementById('intro').addEventListener('click', intro);
