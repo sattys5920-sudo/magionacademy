@@ -1,0 +1,271 @@
+<title>꽃말 꽃다발 공방</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gaegu:wght@700&display=swap" rel="stylesheet">
+<style>
+/* 꽃집 작업대: 위 꽃다발 미리 보기 · 아래 단계 탭(꽃 · 포장 · 장식 · 선물) · 휴대폰 한 손 조작 */
+:root{
+  --bg:#FBF3EE; --card:#FFFFFF; --ink:#3B2A33; --sub:#8A6F7C; --line:#EADBD9; --accent:#E2577E; --leaf:#5E9A62; --chip:#F6E7EA;
+  --f-disp:'Gaegu','Gowun Dodum',system-ui,sans-serif; --f-body:'Gowun Dodum',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#1F171C;--card:#2A2026;--ink:#F6E9EE;--sub:#BFA3B0;--line:#43343C;--accent:#FF7EA0;--leaf:#8CC890;--chip:#3A2C34;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1F171C;--card:#2A2026;--ink:#F6E9EE;--sub:#BFA3B0;--line:#43343C;--accent:#FF7EA0;--leaf:#8CC890;--chip:#3A2C34;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px}
+#app{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+h1{font-family:var(--f-disp);font-size:28px;margin:0;line-height:1.1;text-wrap:balance}
+.lede{margin:2px 0 0;color:var(--sub);font-size:14px}
+#stagebox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px}
+#cv{width:100%;max-width:320px;aspect-ratio:1/1;image-rendering:pixelated;background:linear-gradient(var(--chip),var(--card));border-radius:12px}
+#msg{text-align:center;min-height:44px}
+#msg b{font-family:var(--f-disp);font-size:20px;color:var(--accent);display:block}
+#msg span{font-size:13px;color:var(--sub)}
+.slots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.slot{width:40px;height:40px;border-radius:10px;border:2px dashed var(--line);background:var(--bg);display:grid;place-items:center;padding:0;cursor:pointer}
+.slot canvas{width:32px;height:32px;image-rendering:pixelated}
+.slot.on{border-style:solid;border-color:var(--accent)}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--chip);padding:4px;border-radius:12px}
+.tabs button{border:0;background:none;padding:10px 4px;border-radius:9px;font:700 15px var(--f-body);color:var(--sub);min-height:44px;cursor:pointer}
+.tabs button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 0 var(--line)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.lab{font-size:13px;color:var(--sub);letter-spacing:.02em}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button,.chipb{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:8px 12px;font:15px var(--f-body);min-height:40px;cursor:pointer}
+.seg button.on,.chipb.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.fgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.fl{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;font:13px var(--f-body);color:var(--ink);cursor:pointer;min-height:84px}
+.fl canvas{width:36px;height:36px;image-rendering:pixelated}
+.fl small{color:var(--sub);font-size:11px}
+.fl .n{font-size:11px;color:var(--accent)}
+.sw{display:flex;gap:8px;flex-wrap:wrap}
+.sw button{width:40px;height:40px;border-radius:50%;border:3px solid var(--card);box-shadow:0 0 0 1px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--accent)}
+.npcs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.npc{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:4px;font:12px var(--f-body);color:var(--ink);display:flex;flex-direction:column;align-items:center;cursor:pointer;min-height:76px}
+.npc canvas{width:48px;height:48px;image-rendering:pixelated}
+#react{display:none;gap:10px;align-items:flex-start;background:var(--chip);border-radius:12px;padding:10px}
+#react.on{display:flex}
+#react canvas{width:64px;height:64px;image-rendering:pixelated;flex:none;background:var(--card);border-radius:10px}
+#react b{display:block;margin-bottom:2px}
+#react p{margin:0;line-height:1.55;min-width:0}
+#react .hearts{color:var(--accent);font-size:13px;margin-top:4px}
+input#card{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:10px;font:15px var(--f-body)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hint{font-size:13px;color:var(--sub);margin:0}
+</style>
+
+<div id="app">
+  <header><h1>꽃말 꽃다발 공방</h1><p class="lede">꽃을 고르면 꽃말이 모여 메시지가 돼요. 포장하고 장식해서 선물해 봐요.</p></header>
+  <section id="stagebox">
+    <canvas id="cv" width="160" height="160" aria-label="꽃다발 미리 보기"></canvas>
+    <div id="msg"></div>
+    <div class="slots" id="slots"></div>
+  </section>
+  <nav class="tabs" id="tabs"><button data-t="flower" class="on">꽃</button><button data-t="wrap">포장</button><button data-t="deco">장식</button><button data-t="give">선물</button></nav>
+  <section class="panel" id="panel"></section>
+</div>
+
+<script>
+const SHEET = new Image(); SHEET.src = 'data:image/webp;base64,__SHEET__';
+// 꽃 21 종: 모양(shape) · 색 · 꽃말 · 어디서 나는지
+const FL = [
+  { id: 'dandel', n: '민들레', from: '온실 0', w: '감사', shape: 'puff', c: ['#FFFFFF', '#F2F2F2'] },
+  { id: 'chamo', n: '카모마일', from: '온실 0', w: '힘내', shape: 'daisy', c: ['#FFFFFF', '#FFD23F'] },
+  { id: 'clover', n: '네잎클로버', from: '온실 0', w: '행운', shape: 'clover', c: ['#5EBA5E', '#3E8E46'] },
+  { id: 'lav', n: '라벤더', from: '온실 1', w: '기대', shape: 'spike', c: ['#A98BE0', '#7F63C4'] },
+  { id: 'rose', n: '들장미', from: '온실 1', w: '사랑', shape: 'rose', c: ['#F25C7A', '#C83A5C'] },
+  { id: 'lily', n: '은방울꽃', from: '온실 3 · 채집', w: '다시 찾아온 행복', shape: 'bells', c: ['#FFFFFF', '#DDE8DD'] },
+  { id: 'tulip', n: '튤립', from: '온실 3', w: '고백', shape: 'tulip', c: ['#FF7A9C', '#E84E78'] },
+  { id: 'morning', n: '나팔꽃', from: '온실 3', w: '기쁜 소식', shape: 'trumpet', c: ['#5B8DEF', '#E8F0FF'] },
+  { id: 'lotus', n: '연꽃', from: '온실 3', w: '순수한 마음', shape: 'lotus', c: ['#FFC4D6', '#FF96B6'] },
+  { id: 'firefly', n: '반딧불꽃', from: '온실 4', w: '길잡이', shape: 'glow', c: ['#FFF27A', '#C8E86A'] },
+  { id: 'snow', n: '눈송이 꽃', from: '온실 4', w: '첫 만남', shape: 'crystal', c: ['#CFEFFF', '#8FD3F4'] },
+  { id: 'eve', n: '달맞이꽃', from: '온실 4 · 채집', w: '기다림', shape: 'cup4', c: ['#FFE45C', '#F2B833'] },
+  { id: 'bell', n: '노래하는 종꽃', from: '온실 4', w: '축하해', shape: 'bigbell', c: ['#9FD5FF', '#5AA8E8'] },
+  { id: 'dream', n: '꿈꽃', from: '온실 5', w: '보고 싶어', shape: 'star5', c: ['#C79BFF', '#8E5BE0'] },
+  { id: 'aurora', n: '오로라 꽃잎', from: '온실 6', w: '기적', shape: 'aurora', c: ['#7CF0C8', '#C78BFF'] },
+  { id: 'time', n: '시간의 꽃', from: '온실 6', w: '영원히', shape: 'clock', c: ['#E85CE8', '#FFE08A'] },
+  { id: 'soul', n: '영혼 연꽃', from: '온실 6', w: '잘 가', shape: 'lotus', c: ['#EAF7C8', '#C8E098'] },
+  { id: 'daisy', n: '들꽃', from: '채집', w: '소박한 마음', shape: 'daisy', c: ['#FFB8D8', '#FFE070'] },
+  { id: 'clover3', n: '세잎클로버', from: '채집', w: '평범한 행복', shape: 'clover3', c: ['#7CC87C', '#4E9E52'] },
+  { id: 'ghost', n: '유령 꽃', from: '채집', w: '비밀', shape: 'ghost', c: ['#EEF0FF', '#A8B0E0'] },
+  { id: 'skull', n: '해골 꽃', from: '채집', w: '장난이야', shape: 'skull', c: ['#F4F0E4', '#3B2A33'] }
+];
+const FB = Object.fromEntries(FL.map(f => [f.id, f]));
+// 특별한 조합 (꽃 종류가 다 들어 있으면)
+const COMBO = [
+  { has: ['tulip', 'rose'], t: '좋아해요. 진심으로.', k: 'love' },
+  { has: ['tulip', 'time'], t: '평생 좋아할게요.', k: 'love' },
+  { has: ['lily', 'dandel'], t: '그때는 미안했어. 다시 웃자.', k: 'sorry' },
+  { has: ['soul', 'dream'], t: '떠나도 잊지 않을게.', k: 'bye' },
+  { has: ['skull', 'ghost'], t: '깜짝이야. 사실 장난 편지였지롱.', k: 'prank' },
+  { has: ['bell', 'morning'], t: '좋은 소식 축하해. 정말로.', k: 'cheer' },
+  { has: ['chamo', 'clover'], t: '힘든 날도 운이 따를 거야.', k: 'cheer' },
+  { has: ['snow', 'eve'], t: '처음 만난 날부터 기다렸어.', k: 'love' },
+  { has: ['skull', 'rose'], t: '좋아.... 하는 척 장난이야. 아니, 진짜인가.', k: 'prank' },
+  { has: ['firefly', 'dream'], t: '보고 싶으면 이 빛을 따라와.', k: 'miss' }
+];
+const SIZES = [[3, '작은 꽃다발'], [5, '보통 꽃다발'], [7, '큰 꽃다발']];
+const PAPER = [['#F7D6E0', '벚꽃'], ['#FFF6D8', '크림'], ['#CDE8F6', '하늘'], ['#D7EED2', '민트'], ['#E3D6F7', '라일락'], ['#3A3550', '밤하늘'], ['#C8B49A', '크라프트'], ['#FFFFFF', '하양']];
+const PATTERN = [['plain', '무지'], ['dot', '물방울'], ['stripe', '줄무늬'], ['check', '체크'], ['star', '별'], ['news', '신문지']];
+const RIBBON = [['#E2577E', '분홍'], ['#D9443B', '빨강'], ['#F2B833', '금색'], ['#4E7FD9', '파랑'], ['#FFFFFF', '하양'], ['#5E9A62', '초록']];
+const DECO = [['baby', '안개꽃'], ['leaf', '잎사귀'], ['pearl', '진주'], ['glitter', '반짝이'], ['bfly', '나비 장식'], ['card', '메시지 카드']];
+// 서브 NPC: 시트의 줄 번호 · 좋아하는 꽃 · 싫어하는 꽃 · 반응
+const NPCS = [
+  { id: 'nabi', n: '나비', row: 0, like: 'daisy', hate: 'lav', say: { like: '들꽃이다냥. 이 위에서 뒹굴어도 되냥.......', hate: '라벤더 냄새.... 코가 간질간질하다냥. 에취.', love: '이, 이런 걸 왜 나한테 주냥. ....꼬리가 멋대로 흔들린다냥.', prank: '해골이다냥. 무섭지 않다냥. ....조금 무섭다냥.', base: '꽃이다냥. 고맙다냥. 먹는 건 아니지냥.' } },
+  { id: 'batri', n: '배트리', row: 1, like: 'eve', hate: 'firefly', say: { like: '달맞이꽃. 밤에 피는 꽃이잖아. 나랑 같은 시간에 일하는 꽃이야.......', hate: '으악, 반짝반짝 눈부셔. 박쥐는 빛이 싫어.......', love: '이거.... 내가 배달하는 거 아니고, 나한테 온 거야. 처음이라 봉투가 없어서 어색하네.', prank: '하하, 장난 편지는 내가 전문이거든.', base: '꽃 배달은 해 봤어도 받는 건 처음이야. 고마워.' } },
+  { id: 'kappa', n: '캇파', row: 2, like: 'lotus', hate: 'skull', say: { like: '연꽃이다. 연못에 띄워 두겠다. ....매일 보러 갈 거다.', hate: '....해골. 낚시터에서 이런 걸 건져 올리면 그날은 끝이다.', love: '접시 물이 끓는다. 이건 꽃 때문이다. 다른 이유는 없다.......', prank: '....놀라지 않았다. 물이 조금 쏟아졌을 뿐이다.', base: '고맙다. 물에 꽂아 두겠다.' } },
+  { id: 'aula', n: '아울라', row: 3, like: 'lav', hate: 'bell', say: { like: '라벤더.... 도서관에 두면 다들 조용해질 거예요. 꽃말이 침묵이거든요.......', hate: '쉿.... 이 종꽃, 계속 노래해요. 도서관에서는 곤란해요.......', love: '책 속에서만 읽던 고백 꽃말이에요. 실제로 받으니.... 깃털이 다 서요.......', prank: '해골 꽃말은 「장난」.... 정확해요. 점수를 드릴게요.', base: '꽃말 사전을 펴 봐야겠어요. 고마워요.' } },
+  { id: 'mandi', n: '맨디', row: 4, like: 'lily', hate: 'skull', say: { like: '은방울꽃.... 저랑 같은 흙 냄새가 나요. 히익, 좋아서 그만.......', hate: '히이익.... 해골이에요. 해골이 웃고 있어요.......', love: '저, 저한테요.... 잎이 빨개졌어요. 맨드레이크는 원래 안 빨개지는데.......', prank: '히익.... 장난이었어요. 다행이에요.......', base: '꽃 친구들이 왔어요. 화분에 같이 심어도 돼요.' } },
+  { id: 'jipsin', n: '스트로', row: 5, like: 'dandel', hate: 'ghost', say: { like: '민들레. 밭에서 제일 먼저 날아오는 친구야. 후 불면 소원이 이뤄진대.......', hate: '유령 꽃은.... 까마귀도 무서워해. 나도 조금.......', love: '지푸라기 가슴이 바스락거려. 이런 소리 처음이야.......', prank: '헤헤, 깜짝 놀라서 짚이 다 빠질 뻔했어.', base: '고마워. 모자에 꽂아 둘래.' } },
+  { id: 'sera', n: '세라 선생님', row: 6, like: 'chamo', hate: 'skull', say: { like: '카모마일이구나. 차로 끓이면 마음이 편해져. 양호실에 둘게.......', hate: '해골 꽃이라니.... 양호실에는 조금 곤란하구나.......', love: '어머.... 선생님한테 이런 꽃말을. 고마워, 소중히 할게.......', prank: '후후, 선생님 놀라게 하려고 했구나. 다음엔 사탕도 같이 주렴.', base: '예쁘다. 오늘 양호실이 환해지겠네.' } },
+  { id: 'madeleine', n: '마들렌', row: 7, like: 'rose', hate: 'clover3', say: { like: '들장미. 장미 잼 만들고 싶어지는 색이야.......', hate: '세잎클로버.... 네잎이었으면 쿠키에 올렸을 텐데.......', love: '이건.... 반죽보다 손이 더 떨리네. 고마워.......', prank: '장난이었구나. 그럼 나도 장난으로 소금 쿠키 줄게.', base: '고마워. 가게 진열대에 꽂아 둘게.' } },
+  { id: 'stella', n: '스텔라', row: 8, like: 'aurora', hate: 'daisy', say: { like: '오로라 꽃잎.... 하늘 끝에서 떨어진 조각 같아요. 별이 질투할 거예요.......', hate: '들꽃.... 별이 이 꽃은 땅에 두라고 해요.......', love: '별이 오늘 이 꽃다발을 예언했어요. 저도 몰랐던 예언이에요.......', prank: '해골이 웃는 거.... 별점에 나와 있었어요. 반쯤은 감이었지만요.', base: '꽃말을 별자리처럼 읽어 볼게요. 고마워요.' } },
+  { id: 'leo', n: '레오', row: 9, like: 'clover', hate: 'ghost', say: { like: '네잎클로버. 양들이 먼저 먹기 전에 잘 찾았네.......', hate: '유령 꽃. ....생물들이 밤에 무서워할 것 같다.', love: '....이거, 나한테 주는 거 맞지. 사육장 문에 걸어 둘게. 아니, 방에 둘게.', prank: '장난이네. 양들한테 보여 줘야겠다. 걔들 장난 좋아해.', base: '고맙다. 물병에 꽂아 둘게.' } },
+  { id: 'otumo', n: '오투모', row: 10, like: 'bell', hate: 'skull', say: { like: '삐빅. 종꽃에서 소리가 납니다. 박자 96. 저장합니다. 제일 좋아하는 소리 목록 2 번 칸.......', hate: '경고. 해골 모양 감지. ....꽃이었습니다. 놀란 기록은 삭제합니다.', love: '꽃말 분석 중.... 결과: 고백. 냉각 팬이 최고 속도입니다. 오, 오류.......', prank: '장난 감지. 처리 방법: 웃음. 하, 하, 하. 맞습니까.', base: '꽃 데이터를 저장했습니다. 고맙습니다.' } }
+];
+const S = { size: 5, slots: [], paper: 0, pattern: 'dot', ribbon: 0, deco: new Set(['baby', 'leaf']), card: '', tab: 'flower', npc: null };
+S.slots = ['tulip', 'rose', 'baby_none', 'lily', 'chamo'].filter(x => FB[x]);
+const cv = document.getElementById('cv'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+const px = (q, x, y, w, h, c) => { q.fillStyle = c; q.fillRect(Math.round(x), Math.round(y), w, h); };
+// 꽃 머리 하나 그리기 (가운데 x, y · 크기 r)
+function drawHead(q, f, x, y, r){
+  const [a, b] = f.c, R = Math.round(r);
+  const disk = (cx, cy, rr, c) => { q.fillStyle = c; for (let j = -rr; j <= rr; j++) for (let i = -rr; i <= rr; i++) if (i * i + j * j <= rr * rr + rr * .6) q.fillRect(Math.round(cx + i), Math.round(cy + j), 1, 1); };
+  const ol = '#3B2A33';
+  switch (f.shape){
+    case 'daisy': for (let k = 0; k < 8; k++){ const t = k / 8 * 6.283; disk(x + Math.cos(t) * R * .75, y + Math.sin(t) * R * .75, Math.max(1, R * .38), a); } disk(x, y, Math.max(1, R * .38), b); break;
+    case 'puff': disk(x, y, R, b); for (let k = 0; k < 14; k++){ const t = k / 14 * 6.283; px(q, x + Math.cos(t) * R, y + Math.sin(t) * R, 1, 1, '#FFFFFF'); } disk(x, y, Math.max(1, R * .5), a); break;
+    case 'clover': case 'clover3': { const n = f.shape === 'clover' ? 4 : 3; for (let k = 0; k < n; k++){ const t = k / n * 6.283 - 1.57; disk(x + Math.cos(t) * R * .55, y + Math.sin(t) * R * .55, Math.max(1, R * .5), k % 2 ? b : a); } break; }
+    case 'spike': for (let k = 0; k < 6; k++){ disk(x + (k % 2 ? 1 : -1), y - R + k * R * .4, Math.max(1, R * .3), k % 2 ? b : a); } break;
+    case 'rose': disk(x, y, R, b); disk(x, y - 1, R * .75, a); px(q, x - R * .4, y - R * .2, Math.max(1, R * .6), 1, b); px(q, x - 1, y - R * .5, 1, Math.max(1, R * .6), b); disk(x + .5, y - .5, Math.max(1, R * .25), b); break;
+    case 'bells': for (let k = 0; k < 3; k++){ const bx = x - R * .6 + k * R * .6, by = y + (k === 1 ? -R * .3 : R * .1); disk(bx, by, Math.max(1, R * .38), a); px(q, bx - 1, by + R * .3, 3, 1, b); } px(q, x - R * .8, y - R * .7, R * 1.6, 1, '#5E9A62'); break;
+    case 'tulip': q.fillStyle = b; for (let j = 0; j <= R * 1.4; j++){ const w = Math.round(R * (j < R * .4 ? .7 + j / (R * 1.5) : 1) * (1 - Math.max(0, j - R) / (R * 1.4))); q.fillRect(Math.round(x - w), Math.round(y - R * .6 + j), w * 2 + 1, 1); } px(q, x - R * .3, y - R * .9, 2, R * .6, a); px(q, x + R * .1, y - R * .8, 2, R * .5, a); px(q, x - R, y - R * .6, 2, R * .8, a); px(q, x + R - 1, y - R * .6, 2, R * .8, a); break;
+    case 'trumpet': disk(x, y, R, a); disk(x, y, Math.max(1, R * .55), b); disk(x, y, Math.max(1, R * .2), '#FFF27A'); break;
+    case 'lotus': for (let k = -2; k <= 2; k++){ q.fillStyle = k % 2 ? b : a; for (let j = 0; j < R * 1.3; j++){ const w = Math.max(1, Math.round((R * .35) * Math.sin(j / (R * 1.3) * 3.14))); q.fillRect(Math.round(x + k * R * .38 - w / 2 + k * j * .12), Math.round(y + R * .5 - j), w, 1); } } break;
+    case 'glow': disk(x, y, R, 'rgba(255,242,122,.35)'); for (let k = 0; k < 6; k++){ const t = k / 6 * 6.283 + Date.now() / 900; disk(x + Math.cos(t) * R * .6, y + Math.sin(t) * R * .6, 1, k % 2 ? a : b); } disk(x, y, Math.max(1, R * .3), a); break;
+    case 'crystal': for (let k = 0; k < 6; k++){ const t = k / 6 * 6.283; for (let s = 0; s <= R; s++) px(q, x + Math.cos(t) * s, y + Math.sin(t) * s, 1, 1, s > R * .6 ? a : b); } disk(x, y, 1, '#FFFFFF'); break;
+    case 'cup4': for (let k = 0; k < 4; k++){ const t = k / 4 * 6.283 + .78; disk(x + Math.cos(t) * R * .5, y + Math.sin(t) * R * .5, Math.max(1, R * .55), a); } disk(x, y, Math.max(1, R * .25), b); break;
+    case 'bigbell': q.fillStyle = a; for (let j = 0; j <= R * 1.6; j++){ const w = Math.round(R * (.35 + j / (R * 1.6) * .75)); q.fillRect(Math.round(x - w), Math.round(y - R * .8 + j), w * 2 + 1, 1); } px(q, x - R * 1.1, y + R * .8, R * 2.2 + 1, 1, b); disk(x, y + R, 1, '#FFE08A'); break;
+    case 'star5': for (let k = 0; k < 5; k++){ const t = k / 5 * 6.283 - 1.57; for (let s = 0; s <= R; s++) disk(x + Math.cos(t) * s, y + Math.sin(t) * s, Math.max(0, Math.round((R - s) * .35)), a); } disk(x, y, Math.max(1, R * .3), b); break;
+    case 'aurora': for (let k = 0; k < 7; k++){ const t = k / 7 * 6.283; disk(x + Math.cos(t) * R * .7, y + Math.sin(t) * R * .7, Math.max(1, R * .4), k % 2 ? a : b); } disk(x, y, Math.max(1, R * .3), '#FFFFFF'); break;
+    case 'clock': for (let k = 0; k < 10; k++){ const t = k / 10 * 6.283; disk(x + Math.cos(t) * R * .75, y + Math.sin(t) * R * .75, Math.max(1, R * .32), a); } disk(x, y, Math.max(1, R * .45), b); px(q, x, y - R * .35, 1, R * .35, ol); px(q, x, y, R * .3, 1, ol); break;
+    case 'ghost': q.fillStyle = a; for (let j = 0; j <= R * 1.6; j++){ const w = Math.round(R * (j < R ? Math.sqrt(Math.max(0, 1 - ((R - j) / R) ** 2)) : 1)); q.fillRect(Math.round(x - w), Math.round(y - R + j), w * 2 + 1, 1); } px(q, x - R * .4, y - R * .2, 1, 2, ol); px(q, x + R * .3, y - R * .2, 1, 2, ol); px(q, x - R, y + R * .6, 1, 1, b); px(q, x + R, y + R * .6, 1, 1, b); break;
+    case 'skull': disk(x, y - 1, R, a); px(q, x - R * .5, y - R * .3, Math.max(1, R * .35), Math.max(1, R * .35), b); px(q, x + R * .2, y - R * .3, Math.max(1, R * .35), Math.max(1, R * .35), b); px(q, x - R * .4, y + R * .55, R * .9, 1, b); break;
+  }
+}
+const ICONS = {};
+function flowerIcon(f){
+  if (ICONS[f.id]) return ICONS[f.id];
+  const c = document.createElement('canvas'); c.width = c.height = 24; const q = c.getContext('2d'); q.imageSmoothingEnabled = false;
+  px(q, 11, 13, 2, 11, '#5E9A62'); px(q, 13, 17, 3, 2, '#5E9A62'); drawHead(q, f, 12, 10, 7); return (ICONS[f.id] = c);
+}
+// 포장지 무늬
+function patternFill(q, col, pat){
+  const c = document.createElement('canvas'); c.width = c.height = 8; const p = c.getContext('2d');
+  p.fillStyle = col; p.fillRect(0, 0, 8, 8);
+  const dark = col === '#3A3550', mk = dark ? 'rgba(255,255,255,.55)' : 'rgba(59,42,51,.18)';
+  if (pat === 'dot'){ p.fillStyle = dark ? '#FFE08A' : 'rgba(255,255,255,.9)'; p.fillRect(1, 1, 2, 2); p.fillRect(5, 5, 2, 2); if (!dark && col === '#FFFFFF'){ p.fillStyle = '#F2B8C8'; p.fillRect(1, 1, 2, 2); p.fillRect(5, 5, 2, 2); } }
+  if (pat === 'stripe'){ p.fillStyle = mk; p.fillRect(0, 0, 2, 8); p.fillRect(4, 0, 2, 8); }
+  if (pat === 'check'){ p.fillStyle = mk; p.fillRect(0, 0, 4, 4); p.fillRect(4, 4, 4, 4); }
+  if (pat === 'star'){ p.fillStyle = dark ? '#FFE08A' : '#F2B833'; p.fillRect(3, 1, 1, 3); p.fillRect(2, 2, 3, 1); p.fillRect(6, 6, 1, 1); }
+  if (pat === 'news'){ p.fillStyle = 'rgba(59,42,51,.35)'; p.fillRect(0, 1, 6, 1); p.fillRect(0, 3, 7, 1); p.fillRect(0, 5, 5, 1); }
+  return q.createPattern(c, 'repeat');
+}
+function draw(){
+  const q = g; q.clearRect(0, 0, 160, 160);
+  const n = S.slots.length, paper = PAPER[S.paper][0], rib = RIBBON[S.ribbon][0], cx = 80;
+  const LAY = { 3: [[80, 50], [64, 60], [96, 60]], 5: [[80, 42], [63, 52], [97, 52], [71, 66], [89, 66]], 7: [[80, 36], [64, 44], [96, 44], [50, 58], [110, 58], [70, 62], [90, 62]] };
+  const spread = S.size === 3 ? 24 : S.size === 5 ? 30 : 38, topY = S.size === 3 ? 58 : S.size === 5 ? 54 : 50, R = S.size === 3 ? 12 : S.size === 5 ? 11 : 10;
+  const pos = LAY[S.size].slice(0, n);
+  // 뒤쪽 포장지
+  q.fillStyle = patternFill(q, paper, S.pattern); q.beginPath(); q.moveTo(cx, 132); q.lineTo(cx - spread - 26, topY - 8); q.quadraticCurveTo(cx, topY - 22, cx + spread + 26, topY - 8); q.closePath(); q.fill();
+  q.fillStyle = 'rgba(0,0,0,.12)'; q.beginPath(); q.moveTo(cx, 132); q.lineTo(cx - spread - 26, topY - 8); q.lineTo(cx - spread - 18, topY - 4); q.closePath(); q.fill();
+  // 잎사귀 · 안개꽃 (뒤)
+  if (S.deco.has('leaf')) [[-1, 0], [1, 0], [-.6, -1], [.6, -1]].forEach(([s, u]) => { q.fillStyle = '#5E9A62'; for (let j = 0; j < 14; j++){ const w = Math.max(1, Math.round(3 * Math.sin(j / 14 * 3.14))); q.fillRect(Math.round(cx + s * (spread + 6) + s * j * .6 - w / 2), Math.round(topY + 18 + u * 10 - j), w, 1); } });
+  if (S.deco.has('baby')) for (let i = 0; i < 26; i++){ const t = i / 26, x = cx + (Math.sin(i * 7.3) * (spread + 14)), y = topY - 6 + (Math.cos(i * 3.1) * .5 + .5) * 30; px(q, x, y, 2, 2, '#FFFFFF'); px(q, x + 1, y + 2, 1, 1, '#D8E8D0'); }
+  // 줄기
+  pos.forEach(([x, y]) => { q.strokeStyle = '#4E8A52'; q.lineWidth = 1; q.beginPath(); q.moveTo(x, y + 4); q.lineTo(cx + (x - cx) * .15, 118); q.stroke(); });
+  // 꽃 머리 (뒤 줄부터)
+  pos.map((p, i) => [p, i]).sort((A, B) => A[0][1] - B[0][1]).forEach(([[x, y], i]) => drawHead(q, FB[S.slots[i]], x, y, R));
+  // 앞쪽 포장지
+  q.fillStyle = patternFill(q, paper, S.pattern); q.beginPath(); q.moveTo(cx, 140); q.lineTo(cx - spread - 10, topY + 30); q.lineTo(cx - 6, topY + 40); q.lineTo(cx + spread + 10, topY + 30); q.closePath(); q.fill();
+  q.strokeStyle = 'rgba(59,42,51,.35)'; q.lineWidth = 1; q.beginPath(); q.moveTo(cx - spread - 10, topY + 30); q.lineTo(cx, 140); q.lineTo(cx + spread + 10, topY + 30); q.stroke();
+  if (S.deco.has('pearl')) for (let i = 0; i <= 8; i++){ const t = i / 8, x = cx - spread - 10 + t * (spread * 2 + 20), y = topY + 30 + (t < .5 ? t * 20 : (1 - t) * 20) - 1; px(q, x - 1, y - 1, 3, 3, '#FFFFFF'); px(q, x, y, 1, 1, '#E8D8E0'); }
+  // 리본
+  const by = 116; q.fillStyle = rib; q.beginPath(); q.ellipse(cx - 9, by, 9, 5, -.3, 0, 7); q.fill(); q.beginPath(); q.ellipse(cx + 9, by, 9, 5, .3, 0, 7); q.fill();
+  px(q, cx - 4, by - 4, 8, 8, rib); q.fillStyle = 'rgba(0,0,0,.18)'; q.fillRect(cx - 4, by + 2, 8, 2);
+  q.fillStyle = rib; q.beginPath(); q.moveTo(cx - 3, by + 3); q.lineTo(cx - 12, by + 24); q.lineTo(cx - 7, by + 22); q.lineTo(cx - 2, by + 6); q.fill(); q.beginPath(); q.moveTo(cx + 3, by + 3); q.lineTo(cx + 12, by + 24); q.lineTo(cx + 7, by + 22); q.lineTo(cx + 2, by + 6); q.fill();
+  if (rib === '#FFFFFF'){ q.strokeStyle = 'rgba(59,42,51,.3)'; q.strokeRect(cx - 4, by - 4, 8, 8); }
+  if (S.deco.has('bfly')){ const t = Date.now() / 300, x = cx + spread + 4, y = topY + 4 + Math.sin(t) * 2, w = 3 + Math.abs(Math.sin(t * 2)) * 2; px(q, x - w, y - 2, w, 4, '#FFB13B'); px(q, x + 1, y - 2, w, 4, '#FFB13B'); px(q, x, y - 3, 1, 6, '#3B2A33'); }
+  if (S.deco.has('card')){ q.fillStyle = '#FFFDF6'; q.save(); q.translate(cx + 22, 124); q.rotate(.18); q.fillRect(0, 0, 26, 18); q.strokeStyle = 'rgba(59,42,51,.4)'; q.strokeRect(0, 0, 26, 18); q.fillStyle = '#E2577E'; q.fillRect(11, 6, 2, 2); q.fillRect(14, 6, 2, 2); q.fillRect(11, 8, 5, 2); q.fillRect(12, 10, 3, 1); q.restore(); q.strokeStyle = 'rgba(59,42,51,.4)'; q.beginPath(); q.moveTo(cx + 2, by + 2); q.lineTo(cx + 24, 125); q.stroke(); }
+  if (S.deco.has('glitter')){ const t = Date.now() / 200; for (let i = 0; i < 9; i++){ if ((Math.floor(t) + i) % 3) continue; const x = cx + Math.sin(i * 5.1) * (spread + 16), y = topY - 10 + (i * 13 % 60); px(q, x, y - 1, 1, 3, '#FFE08A'); px(q, x - 1, y, 3, 1, '#FFE08A'); } }
+}
+function meaning(){
+  const ids = S.slots, uniq = [...new Set(ids)];
+  if (!ids.length) return { head: '꽃을 골라 주세요', sub: `${S.size} 송이까지 들어가요` };
+  const combo = COMBO.find(c => c.has.every(h => uniq.includes(h)));
+  const cnt = {}; ids.forEach(i => cnt[i] = (cnt[i] || 0) + 1);
+  const main = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
+  const words = uniq.map(i => FB[i].w);
+  return { head: combo ? combo.t : `「${FB[main].w}」${uniq.length > 1 ? ' 그리고 ' + words.filter(w => w !== FB[main].w).slice(0, 2).map(w => `「${w}」`).join(' · ') : ''}`, sub: combo ? `특별한 조합 · ${uniq.map(i => FB[i].n).join(' + ')}` : `가장 많은 꽃 「${FB[main].n}」이 큰 목소리로 말해요`, kind: combo ? combo.k : null };
+}
+function renderSlots(){
+  const el = document.getElementById('slots'); el.innerHTML = '';
+  for (let i = 0; i < S.size; i++){
+    const b = document.createElement('button'); b.className = 'slot' + (S.slots[i] ? ' on' : ''); b.setAttribute('aria-label', S.slots[i] ? `${FB[S.slots[i]].n} 빼기` : '빈 자리');
+    if (S.slots[i]){ const c = document.createElement('canvas'); c.width = c.height = 24; const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(flowerIcon(FB[S.slots[i]]), 0, 0); b.appendChild(c); b.onclick = () => { S.slots.splice(i, 1); refresh(); }; }
+    el.appendChild(b);
+  }
+  const m = meaning(); document.getElementById('msg').innerHTML = `<b>${m.head}</b><span>${m.sub}</span>`;
+}
+function panel(){
+  const P = document.getElementById('panel'); const cnt = id => S.slots.filter(x => x === id).length;
+  if (S.tab === 'flower'){
+    P.innerHTML = `<div class="lab">꽃다발 크기</div><div class="seg">${SIZES.map(([n, l]) => `<button data-size="${n}" class="${S.size === n ? 'on' : ''}">${l} · ${n} 송이</button>`).join('')}</div>
+      <div class="lab">꽃 고르기 · 누르면 한 송이씩 들어가요 (같은 꽃 여러 송이도 돼요)</div>
+      <div class="fgrid">${FL.map(f => `<button class="fl" data-f="${f.id}"><canvas width="24" height="24" data-ic="${f.id}"></canvas>${f.n}<small>${f.w}</small>${cnt(f.id) ? `<span class="n">× ${cnt(f.id)}</span>` : `<small>${f.from}</small>`}</button>`).join('')}</div>`;
+    P.querySelectorAll('[data-ic]').forEach(c => { const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(flowerIcon(FB[c.dataset.ic]), 0, 0); });
+  } else if (S.tab === 'wrap'){
+    P.innerHTML = `<div class="lab">포장지 색</div><div class="sw">${PAPER.map(([c, l], i) => `<button data-paper="${i}" class="${S.paper === i ? 'on' : ''}" style="background:${c}" aria-label="${l}" title="${l}"></button>`).join('')}</div>
+      <div class="lab">포장지 무늬</div><div class="seg">${PATTERN.map(([k, l]) => `<button data-pat="${k}" class="${S.pattern === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <div class="lab">리본 색</div><div class="sw">${RIBBON.map(([c, l], i) => `<button data-rib="${i}" class="${S.ribbon === i ? 'on' : ''}" style="background:${c}" aria-label="${l}" title="${l}"></button>`).join('')}</div>`;
+  } else if (S.tab === 'deco'){
+    P.innerHTML = `<div class="lab">장식 · 여러 개 골라도 돼요</div><div class="seg">${DECO.map(([k, l]) => `<button data-deco="${k}" class="${S.deco.has(k) ? 'on' : ''}">${l}</button>`).join('')}</div>
+      ${S.deco.has('card') ? `<label class="lab" for="card">카드에 쓸 말 (20 자)</label><input id="card" maxlength="20" placeholder="예: 늘 고마워" value="${S.card.replace(/"/g, '&quot;')}">` : '<p class="hint">「메시지 카드」를 고르면 카드에 직접 한 줄을 쓸 수 있어요.</p>'}`;
+    const ci = P.querySelector('#card'); if (ci) ci.oninput = () => { S.card = ci.value; };
+  } else {
+    P.innerHTML = `<div class="lab">누구에게 줄까요</div><div class="npcs">${NPCS.map(n => `<button class="npc" data-npc="${n.id}"><canvas width="64" height="64" data-row="${n.row}"></canvas>${n.n}</button>`).join('')}</div>
+      <div id="react"><canvas width="64" height="64" id="rcv"></canvas><div><b id="rn"></b><p id="rt"></p><div class="hearts" id="rh"></div></div></div>
+      <p class="hint">NPC마다 좋아하는 꽃과 싫어하는 꽃이 있어요. 고백 · 장난 같은 특별한 조합에는 따로 반응해요.</p>`;
+    const draw1 = () => P.querySelectorAll('[data-row]').forEach(c => { const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, 64, 64); q.drawImage(SHEET, 0, +c.dataset.row * 64, 64, 64, 0, 0, 64, 64); });
+    if (SHEET.complete) draw1(); else SHEET.onload = draw1;
+  }
+}
+function give(id){
+  const n = NPCS.find(x => x.id === id); if (!S.slots.length) return;
+  const m = meaning(), has = S.slots.includes(n.like), bad = S.slots.includes(n.hate);
+  let line = m.kind === 'love' ? n.say.love : m.kind === 'prank' ? n.say.prank : has ? n.say.like : bad ? n.say.hate : n.say.base;
+  let h = 20 + (has ? 40 : 0) - (bad ? 30 : 0) + (m.kind === 'love' || m.kind === 'cheer' || m.kind === 'sorry' ? 20 : 0) + (S.deco.size * 3) + (S.size === 7 ? 15 : S.size === 5 ? 8 : 0);
+  if (S.card.trim()) line += ` ....카드도 있네. 「${S.card.trim()}」. 잘 간직할게.`;
+  const r = document.getElementById('react'); r.classList.add('on');
+  document.getElementById('rn').textContent = n.n; document.getElementById('rt').textContent = line;
+  document.getElementById('rh').textContent = `호감도 ${h >= 0 ? '+' : ''}${h}${has ? ' · 좋아하는 꽃' : ''}${bad ? ' · 싫어하는 꽃' : ''}`;
+  const q = document.getElementById('rcv').getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, 64, 64); q.drawImage(SHEET, 0, n.row * 64, 64, 64, 0, 0, 64, 64);
+  r.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+function refresh(){ renderSlots(); panel(); draw(); }
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
+  if (d.t){ S.tab = d.t; document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b)); return panel(); }
+  if (d.size){ S.size = +d.size; S.slots = S.slots.slice(0, S.size); return refresh(); }
+  if (d.f){ if (S.slots.length >= S.size) S.slots.shift(); S.slots.push(d.f); return refresh(); }
+  if (d.paper){ S.paper = +d.paper; return refresh(); }
+  if (d.pat){ S.pattern = d.pat; return refresh(); }
+  if (d.rib){ S.ribbon = +d.rib; return refresh(); }
+  if (d.deco){ S.deco.has(d.deco) ? S.deco.delete(d.deco) : S.deco.add(d.deco); return refresh(); }
+  if (d.npc) return give(d.npc);
+});
+refresh();
+setInterval(draw, 120);
+</script>
