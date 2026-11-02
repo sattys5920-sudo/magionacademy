@@ -35,6 +35,8 @@ __BASECSS__
 .trayw{display:flex;gap:14px 22px;overflow-x:auto;padding:12px 18px 10px;scrollbar-width:thin}.trayw .wd{flex:none}
 .slot.fr{box-shadow:0 0 0 1.5px #2A1A2E,inset 0 -3px 0 rgba(90,120,200,.35)}
 .feed{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font:12px var(--f-px);color:var(--sub)}.feed b{font:12px var(--f-pxb);color:var(--gold);margin-right:2px}.feed span{background:var(--panel2);padding:2px 8px;border-radius:8px}.feed i{font-style:normal;color:var(--text)}
+.book.read .txt{font-size:15px;line-height:2}.book.cv{background:#2A3A6A;box-shadow:inset 8px 0 0 #1E2A50,0 6px 0 #1A1430,0 8px 0 #2A1A2E;min-height:300px;display:flex;align-items:center;justify-content:center}.book.cv::after{border-color:#E8C468}
+.cover{display:flex;flex-direction:column;align-items:center;gap:10px;color:#E8C468;text-align:center}.cover b{font:28px var(--f-book);font-weight:700}.cover span{font:14px var(--f-book);color:#F6ECD6}.cover i{font:12px var(--f-px);color:#9AA8D8;font-style:normal}
 .book,.tray,.bagg{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .ghost{position:fixed;z-index:90;pointer-events:none;transform:translate(-50%,-60%) rotate(-4deg) scale(1.1)}
 #fin{position:fixed;inset:0;z-index:95;background:rgba(10,6,16,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}#fin[hidden]{display:none}
@@ -48,7 +50,9 @@ __BASECSS__
   <div class="tabs" id="tabs"></div>
   <div class="body" id="body"></div>
 </div>
-<section class="adm" id="adm"></section>
+<section class="adm"><div class="mock"><span>시안에서만 보이는 버튼</span><div class="row"><button class="btn sm2" data-x="cstart">시작 연출 (재채기)</button><button class="btn sm2" data-x="cend">끝 연출 (책이 돌아옴)</button></div></div></section>
+<div id="cine" hidden><div class="cwrap"><div class="cnm">한밤 도서관</div><button class="cskip" id="cskip">넘기기</button><canvas id="ccv" width="360" height="270"></canvas><div class="cvig"></div><div class="toastc" id="ctoast"></div></div></div>
+<div id="blsay"><div class="bx"><div class="fc"><canvas width="32" height="32"></canvas></div><div><b>아울라</b><p></p></div></div></div>
 <div id="fin" hidden><canvas id="fcv" width="160" height="160"></canvas><div class="cap" id="fcap"></div></div>
 <div id="gtoast"></div>
 
@@ -76,10 +80,18 @@ const tile = (w, cls = '', attr = '') => `<span class="wd ${cls}" style="--wc:${
 const sec = (title, body, aside = '') => `<section class="cd"><div class="cdh"><h3>${title}</h3>${aside}</div>${body}</section>`;
 
 function render(){
-  $('#tabs').innerHTML = [['bag', '내 가방 · 글자'], ['desk', '서재 책상 · 책 맞추기']].map(([k, n]) => `<button data-tab="${k}" class="${ST.tab === k ? 'on' : ''}">${n}</button>`).join('');
-  $('#body').innerHTML = ST.tab === 'bag' ? bagHTML() : deskHTML();
+  $('#tabs').innerHTML = [['bag', '가방 · 글자'], ['desk', '책 맞추기'], ['read', '서고에서 읽기']].map(([k, n]) => `<button data-tab="${k}" class="${ST.tab === k ? 'on' : ''}">${n}</button>`).join('');
+  $('#body').innerHTML = ST.tab === 'bag' ? bagHTML() : ST.tab === 'desk' ? deskHTML() : readHTML();
   document.querySelectorAll('[data-face]').forEach(c => face(c, +c.dataset.face));
   if (ST.tab === 'desk'){ const s = document.querySelector('.slot.on.last'); }
+}
+function readHTML(){
+  if (!ST.done) return `<div class="book"><div class="txt" style="text-align:center;color:#8A7060">책장이 하얘요.<br>반 전체가 글자를 다 맞추면, 서고 독서대에서 언제든 읽을 수 있어요.</div></div>`;
+  const n = PAGES.length + 1, p = Math.min(ST.rp || 0, n - 1);
+  const body = p === 0 ? `<div class="cover"><b>열두 개의 밤</b><span>아울라 씀</span><i>※ 이 책은 대출되지 않아요</i></div>` : `<div class="pgno"><span>『열두 개의 밤』</span><span>${p} / ${PAGES.length}</span></div><div class="txt">${PAGES[p - 1].map(l => esc(l.map(t => t.pre + t.w + t.post).join(' '))).join('<br>')}</div>`;
+  return `<div class="spot"><canvas data-face="3" width="32" height="32"></canvas><p>도서관 서고 · 아울라 독서대 위에 놓여 있어요. 언제든 와서 읽을 수 있어요.</p></div>
+    <div class="book read ${p === 0 ? 'cv' : ''}">${body}</div>
+    <div class="row"><button class="btn" data-rp="-1" ${p ? '' : 'disabled'} style="flex:1">이전 쪽</button><button class="btn go" data-rp="1" ${p < n - 1 ? '' : 'disabled'} style="flex:1">다음 쪽</button></div>`;
 }
 function bagHTML(){
   const mine = [...ST.mine];
@@ -119,7 +131,7 @@ document.addEventListener('pointerup', e => {
 function put(i, w){
   const pi = ST.page, was = pageOK(pi); ST.place[pi][i] = { w, by: '나' }; ST.feed.push({ by: '나', w }); ST.sel = null; const keep = $('#trayw')?.scrollLeft || 0; render(); const tw = $('#trayw'); if (tw) tw.scrollLeft = keep;
   if (!was && pageOK(pi)) gtoast(`${pi + 1} 쪽 글자가 다 돌아왔어요`);
-  if (allOK() && !ST.doneShown){ ST.doneShown = true; setTimeout(finale, 700); }
+  if (allOK() && !ST.doneShown){ ST.doneShown = true; setTimeout(playReturn, 700); }
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('button'), s = e.target.closest('.slot');
@@ -127,9 +139,12 @@ document.addEventListener('click', e => {
   if (!b) return; const D = b.dataset;
   if (D.tab){ ST.tab = D.tab; render(); return; }
   if (D.pg){ ST.page = +D.pg; render(); return; }
+  if (D.rp){ ST.rp = Math.max(0, (ST.rp || 0) + +D.rp); render(); return; }
+  if (D.x === 'cstart'){ playSneeze(); return; }
+  if (D.x === 'cend'){ playReturn(); return; }
   if (D.x === 'drop' || D.x === 'fish'){ const left = ALL.filter(w => !ST.mine.has(w)); if (!left.length) return gtoast('다 모았어요'); const w = left[Math.floor(Math.random() * left.length)]; ST.mine.add(w); ST.got.add(w); ST.fresh = new Set([w]); gtoast(`${D.x === 'drop' ? '덤불' : '물속'}에서 글자 「${w}」가 파닥파닥 날아왔어요`); render(); return; }
-  if (D.x === 'fillpage'){ slotsOf(ST.page).forEach((t, k) => { if (t.w){ ST.place[ST.page][k] = { w: t.w, by: '나' }; ST.got.add(t.w); } }); render(); gtoast(`${ST.page + 1} 쪽 글자가 다 돌아왔어요`); if (allOK() && !ST.doneShown){ ST.doneShown = true; setTimeout(finale, 700); } return; }
-  if (D.x === 'fillall'){ PAGES.forEach((_, pi) => slotsOf(pi).forEach((t, k) => { if (t.w){ ST.place[pi][k] = { w: t.w, by: '나' }; ST.got.add(t.w); } })); render(); if (!ST.doneShown){ ST.doneShown = true; setTimeout(finale, 700); } return; }
+  if (D.x === 'fillpage'){ slotsOf(ST.page).forEach((t, k) => { if (t.w){ ST.place[ST.page][k] = { w: t.w, by: '나' }; ST.got.add(t.w); } }); render(); gtoast(`${ST.page + 1} 쪽 글자가 다 돌아왔어요`); if (allOK() && !ST.doneShown){ ST.doneShown = true; setTimeout(playReturn, 700); } return; }
+  if (D.x === 'fillall'){ PAGES.forEach((_, pi) => slotsOf(pi).forEach((t, k) => { if (t.w){ ST.place[pi][k] = { w: t.w, by: '나' }; ST.got.add(t.w); } })); render(); if (!ST.doneShown){ ST.doneShown = true; setTimeout(playReturn, 700); } return; }
 });
 document.addEventListener('input', e => { if (e.target.id === 'q'){ ST.q = e.target.value.trim(); const pos = e.target.selectionStart; render(); const q = $('#q'); q.focus(); q.setSelectionRange(pos, pos); } });
 
@@ -157,6 +172,7 @@ function finale(){
   };
   requestAnimationFrame(step); f.onclick = () => { if (performance.now() - t0 > 3600) f.hidden = true; };
 }
+__CINE__
 render();
 SHEET.onload = () => render();
 </script>
