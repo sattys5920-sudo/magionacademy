@@ -528,6 +528,7 @@ function drawBaby(p){
 // ---------- 이야기 NPC: 한자리에 서 있어요. 사람은 아바타(av), 동물은 그림(spr: art 칸) ----------
 let npcList = [], NPC_IMG = null;
 World.onNpc = null;   // (npc id) 눌렀을 때
+World.onOverlay = null;   // (화면 캔버스, 세계→화면 좌표 함수, 배율) 매 장면 사람·물건 다음에 그려요
 let PIX_IMG = null;   // 조연 동물 그림 (32칸)
 World.setNpcs = (list, sprSrc, pixSrc) => { npcList = list || []; if (sprSrc && (!NPC_IMG || NPC_IMG.src.indexOf(webp(sprSrc)) < 0)){ NPC_IMG = new Image(); NPC_IMG.src = webp(sprSrc); } if (pixSrc && !PIX_IMG){ PIX_IMG = new Image(); PIX_IMG.src = webp(pixSrc); } if (started && M){ placeNpcs(); retag(); } };
 function placeNpcs(){
@@ -1052,6 +1053,8 @@ function frame(now){
   if (src && Math.random() < .2){ const bx = src.x + src.sw / 2, by = src.y + (src.name === 'fountain' ? 4 : 10); fx.push({ x: bx - 5 + Math.random() * 10, y: by, v: 8 + Math.random() * 8, life: 1.2, c: src.name === 'fountain' ? '#C8EEFF' : '#9CFFD0' }); }
   fx.forEach(b => { b.y -= b.v * dt; b.life -= dt; }); while (fx.length && fx[0].life <= 0) fx.shift();
   fx.forEach(b => { cx.fillStyle = b.c; cx.fillRect(Math.round(b.x), Math.round(b.y), 1, 1); });
+  // 이벤트 연출이 맵 위에 그림을 그려요 (화면 좌표로 바꾸는 함수 · 세계 1 픽셀의 화면 크기)
+  if (World.onOverlay){ cx.save(); try { cx.setTransform(1, 0, 0, 1, 0, 0); cx.imageSmoothingEnabled = false; World.onOverlay(cx, (x, y) => [Math.round((x - camIX) * KPX), Math.round((y - camIY) * KPX)], KPX); } catch(e){} cx.restore(); }
   // 빛: 실내는 늘 어둑, 바깥은 시간대에 따라
   if (SK.n > .02 || SK.c.some(v => v < 254)){
     const lb = M.indoor ? 0 : (World.lampBoost || 0);   // 이벤트: 모은 등불이 늘수록 학교 등불이 점점 밝아져요 (0~1)
