@@ -25,7 +25,7 @@ P = [
  ('main_hall', '본관', 'campus', 19, 27, 3, 1, (19, 22), None),
  ('potion_class', '물약 교실', 'lab', 15, 11, 3, 1, None, None),
  ('infirmary', '양호실', 'lab', 7, 9, 2, 1, None, 'warm'),
- ('library_stacks', '도서관 서고', 'lab', 21, 6, 1, 1, None, 'dim'),
+ ('library_stacks', '도서관 서고', 'library', 13, 4, 2, 1, (13, 5), 'dim'),   # 물약 교실 왼쪽 벽 문 → 한밤 도서관 (tools/iso/library.py) · 아울라 독서대 앞
  ('aula_study', '아울라 연구실', 'lab', 5, 15, 1, 1, None, 'warm'),
  ('poison_greenhouse', '독초 온실', 'toxic', 12, 10, 3, 1, None, None),
  ('pumpkin_field', '호박밭', 'campus', 9, 60, 1, 1, None, None),
