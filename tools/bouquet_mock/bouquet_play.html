@@ -16,7 +16,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f-body);f
 .shead .title b{font-family:var(--f-pxb);font-size:var(--fs-h);font-weight:400}
 .shead .title span{font-size:var(--fs-s);color:var(--sub)}
 .shead .stat{height:32px;padding:0 12px;border-radius:16px;background:var(--panel2);border:1px solid var(--line2);display:flex;align-items:center;font-family:var(--f-pxb);font-size:var(--fs-s);color:var(--gold);white-space:nowrap}
-.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:12px 14px 0;border-radius:12px;background:var(--panel2);padding:4px}
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:12px 14px 0;border-radius:12px;background:var(--panel2);padding:4px}
 .tabs button{border:0;border-radius:8px;background:transparent;min-height:44px;font-family:var(--f-pxb);font-size:var(--fs-s);color:var(--sub);cursor:pointer;line-height:1.2}
 .tabs button.on{background:var(--accent);color:#2A1506}
 .body{padding:14px;display:flex;flex-direction:column;gap:16px}
@@ -100,6 +100,28 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f-body);f
 .panel{gap:16px!important}
 #stagebox{padding:10px!important;gap:6px!important}
 #cv{max-width:240px!important}
+.bar{height:10px;border-radius:5px;background:var(--panel2);border:1px solid var(--line2);overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
+.hunt{display:grid;grid-template-columns:1fr 1fr;gap:6px}.hunt .btn{margin:0;font-size:var(--fs-s)}
+.toast{margin:0;padding:10px 12px;border-radius:10px;background:var(--soft);font-size:var(--fs-s)}.toast b{font-family:var(--f-pxb);font-weight:400;color:var(--gold)}
+.pagecard{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:12px;background:#F4EAD8;color:#3B2A1E;border:2px solid #C8A878}
+.pagecard canvas{width:48px;height:48px;image-rendering:pixelated;flex:none;background:#EADCC0;border-radius:8px}
+.pagecard b{font-family:var(--f-pxb);font-weight:400;font-size:var(--fs-h)}.pagecard em{font-style:normal;margin-left:6px;color:#B0405A;font-family:var(--f-pxb)}
+.pagecard p{margin:4px 0 2px;line-height:1.55;font-size:var(--fs-s)}.pagecard small{color:#8A6E50!important;font-size:11px}
+.notegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px}
+.pg{border:1px solid var(--line2);border-radius:8px;background:var(--panel2);color:var(--text);display:flex;align-items:center;gap:6px;padding:4px 6px;text-align:left;font-size:11px;min-height:44px;cursor:pointer;overflow:hidden}
+.pg canvas{width:28px;height:28px;image-rendering:pixelated;flex:none}.pg canvas.dim{filter:brightness(0) opacity(.35)}
+.pg span{font-family:var(--f-pxb);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pg em{font-style:normal;color:var(--sub);display:block;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pg:disabled{opacity:.6;cursor:default}.pg.sel{border:2px solid var(--accent)}
+.pg > div{min-width:0;display:flex;flex-direction:column}
+#intro{position:fixed;inset:0;z-index:20;background:rgba(10,6,16,.78);display:flex;align-items:flex-end;justify-content:center;padding:16px max(16px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px))}
+#intro[hidden]{display:none}
+.ibox{position:relative;width:100%;max-width:560px;background:rgba(20,13,30,.96);border:2px solid var(--accent);border-radius:12px;padding:12px 14px 22px 90px;min-height:96px;cursor:pointer}
+.iscene{position:absolute;left:12px;top:-30px;font-family:var(--f-pxb);font-size:var(--fs-s);color:var(--gold);background:var(--panel2);border:1px solid var(--line2);padding:3px 10px;border-radius:10px}
+.ibox canvas{position:absolute;left:12px;top:12px;width:66px;height:66px;image-rendering:pixelated;background:var(--panel2);border-radius:8px}
+.ibox b{font-family:var(--f-pxb);font-weight:400;color:var(--gold)}
+.ibox p{margin:4px 0 0;font-size:16px;line-height:1.6}
+.ibox span{position:absolute;right:12px;bottom:4px;font-size:11px;color:var(--sub)}
 input#card{width:100%;border:1px solid var(--line2);background:var(--panel2);color:var(--text);border-radius:10px;padding:10px;font:var(--fs) var(--f-body)}
 button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .hint{font-size:var(--fs-s);color:var(--sub);margin:0;text-align:center}
@@ -108,7 +130,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 
 <div id="app">
   <div class="shead"><div class="title"><b>꽃다발 공방</b></div><span class="stat" id="stat"></span></div>
-  <nav class="tabs" id="tabs"><button data-t="wrap" class="on">1 포장지</button><button data-t="flower">2 꽃</button><button data-t="deco">3 장식</button><button data-t="give">4 완성</button></nav>
+  <nav class="tabs" id="tabs"><button data-t="note">수첩</button><button data-t="wrap" class="on">1 포장지</button><button data-t="flower">2 꽃</button><button data-t="deco">3 장식</button><button data-t="give">4 완성</button></nav>
   <div class="body">
     <section id="stagebox">
       <canvas id="cv" width="128" height="128" aria-label="꽃다발 미리 보기"></canvas>
@@ -117,6 +139,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
     </section>
     <section class="panel" id="panel"></section>
   </div>
+  <div id="intro" hidden><div class="ibox"><div class="iscene">공예 교실</div><canvas id="ip" width="64" height="64"></canvas><b id="in"></b><p id="it"></p><span>눌러서 넘기기</span></div></div>
   <div class="foot"><button class="next" id="nextbtn"></button><button class="ghost" id="refill" data-refill="1" hidden>시안용 · 재료 다시 채우기</button></div>
 </div>
 
@@ -276,14 +299,76 @@ function draw(){
   if (S.deco.has('card')){ crisp(q, p => p.rect(cx + 16, 104, 20, 14), (x, y) => hex('#FFF6E4'), { shade: (x, y) => y > 115 }); q.fillStyle = '#E2577E'; q.fillRect(cx + 24, 109, 2, 2); q.fillRect(cx + 27, 109, 2, 2); q.fillRect(cx + 24, 111, 5, 1); q.fillRect(cx + 25, 112, 3, 1); q.fillStyle = OL; for (let i = 0; i < 12; i++) q.fillRect(cx + 4 + i, by + 4 + Math.round(i * .5), 1, 1); }
   if (S.deco.has('glitter')){ const t = Math.floor(Date.now() / 220); for (let i = 0; i < 10; i++){ if ((t + i) % 3) continue; const x = Math.round(cx + Math.sin(i * 5.1) * (sp + 2)), y = top - 12 + (i * 13 % 56); q.fillStyle = '#FFF6C0'; q.fillRect(x, y - 2, 1, 5); q.fillRect(x - 2, y, 5, 1); q.fillStyle = '#FFFFFF'; q.fillRect(x, y, 1, 1); } }
 }
+// ===== 맨디의 꽃말 수첩: 바람에 날아간 쪽지 21 장 · 채집 · 낚시에서 주우면 수첩에 바로 붙어요 =====
+const PAGE = {
+  dandel: ['채집', '후 불면 씨앗이 고맙다고 인사하며 날아가요. 그래서 꽃말이 감사래요.'],
+  chamo: ['채집', '밟혀도 다시 일어나는 꽃이에요. 저도.... 이 꽃처럼 되고 싶어요.'],
+  clover: ['채집', '네 번째 잎은 누가 몰래 붙여 둔 행운이래요. 히익, 진짜예요.'],
+  lav: ['채집', '향을 맡으면 다음 날이 기다려져요. 기대라는 꽃말이 딱이에요.'],
+  rose: ['채집', '가시가 있어도 다들 좋아하잖아요. 사랑은 원래 그런 거래요.......'],
+  lily: ['낚시', '작은 종을 흔들면 떠났던 행복이 돌아온대요. 연못가에 많이 피어요.'],
+  tulip: ['채집', '봉오리가 입을 꼭 다물고 있다가 한 번에 열려요. 고백할 때처럼요.'],
+  morning: ['채집', '아침마다 나팔을 불어서 좋은 소식을 알려 줘요. 조금 시끄러워요.'],
+  lotus: ['낚시', '진흙에서 피어도 하나도 안 더러워요. 순수한 마음이래요.'],
+  firefly: ['낚시', '밤 물가에서 반짝여요. 길을 잃으면 이 빛을 따라가면 돼요.'],
+  snow: ['낚시', '눈이 처음 내린 날 피어요. 처음 만난 날을 기억하는 꽃이에요.'],
+  eve: ['낚시', '달이 뜰 때까지 꼭 기다렸다가 피어요. 저도 기다리는 건 잘해요.......'],
+  bell: ['채집', '바람이 불면 노래해요. 축하할 일이 있을 때 들으면 더 크게 울려요.'],
+  dream: ['낚시', '잠들기 전에 생각난 사람이 꿈에 나온대요. 그래서 보고 싶다는 뜻이에요.'],
+  aurora: ['채집', '하늘 끝에서 떨어진 조각이래요. 이걸 주우면 기적이 하나 생긴대요.'],
+  time: ['채집', '시든 적이 한 번도 없는 꽃이에요. 그래서 영원히라는 꽃말이 붙었어요.'],
+  soul: ['낚시', '떠나는 사람에게 주는 꽃이에요. 쓸쓸해도.... 고맙다는 뜻도 같이 있어요.'],
+  daisy: ['채집', '어디에나 피는 꽃이에요. 소박해도 제일 먼저 웃어 줘요.'],
+  clover3: ['채집', '네잎이 아니어도 괜찮아요. 평범한 날이 제일 행복한 날이래요.'],
+  ghost: ['채집', '밤에만 보여요. 말하지 못한 비밀을 대신 들고 있대요. 히익.......'],
+  skull: ['채집', '무섭게 생겼지만 사실 장난꾸러기예요. 웃으라고 피는 꽃이에요.']
+};
+const KNOWN = new Set(['chamo']);
+const INTRO = [
+  ['맨디', '히익.... 오, 오셨어요. 공예 교실에 와 주셨네요.......'],
+  ['맨디', '오늘 꽃다발 만드는 법을 알려 드리려고 했는데요.... 창문을 열어 둔 사이에 바람이 확.......'],
+  ['맨디', '제 꽃말 수첩이.... 쪽지가 전부 날아갔어요. 스물한 장이 마을 여기저기로요.......'],
+  ['맨디', '풀숲에도 떨어지고, 연못에도 빠졌을 거예요. 채집하거나 낚시하다가 쪽지를 주우면.... 이 수첩에 저절로 붙어요. 제가 마법을 걸어 뒀거든요.'],
+  ['맨디', '저한테 가져오지 않아도 돼요. 줍기만 하면 바로 적혀요. 히익, 편하죠.......'],
+  ['맨디', '꽃말을 몰라도 꽃다발은 만들 수 있어요. 그래도.... 꽃말을 알면 마음이 더 잘 전해져요.......'],
+  ['', '「맨디의 꽃말 수첩」을 받았어요. 첫 장에는 카모마일이 적혀 있어요.']
+];
+let introI = -1, noteMsg = '', noteOpen = null;
+function intro(){
+  const o = document.getElementById('intro'); introI++;
+  if (introI >= INTRO.length){ o.hidden = true; S.tab = 'note'; return refresh(); }
+  const [who, text] = INTRO[introI]; o.hidden = false;
+  document.getElementById('in').textContent = who; document.getElementById('it').textContent = text;
+  const q = document.getElementById('ip').getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, 64, 64);
+  if (who && SHEET.complete) q.drawImage(SHEET, 0, 4 * 64, 64, 64, 0, 0, 64, 64);
+  document.getElementById('ip').style.visibility = who ? 'visible' : 'hidden';
+}
+// 채집 · 낚시 흉내: 가끔 그 장소 쪽지가 나와요
+function hunt(kind){
+  const left = FL.filter(f => !KNOWN.has(f.id) && PAGE[f.id][0] === kind);
+  const loot = kind === '채집' ? ['들꽃', '고사리', '도토리', '촉촉 이끼', '산딸기'] : ['붕어', '피라미', '빈 깡통', '미꾸라지', '해초'];
+  if (left.length && Math.random() < .45){ const f = left[Math.floor(Math.random() * left.length)]; KNOWN.add(f.id); noteOpen = f.id; noteMsg = `<b>꽃말 쪽지를 주웠어요</b> · 「${f.n}」 장이 수첩에 붙었어요`; }
+  else { noteMsg = `${loot[Math.floor(Math.random() * loot.length)]}${kind === '채집' ? '을(를) 주웠어요' : '을(를) 낚았어요'}${left.length ? '. 쪽지는 없었어요' : `. ${kind} 쪽지는 다 모았어요`}`; }
+  refresh();
+}
+function noteHTML(){
+  const n = KNOWN.size, f = noteOpen && FB[noteOpen];
+  return `<div class="grp">${row(`맨디의 꽃말 수첩 <b>${n} / 21</b>`, `<span class="cost free">채집 ${FL.filter(x => PAGE[x.id][0] === '채집' && KNOWN.has(x.id)).length} / 14 · 낚시 ${FL.filter(x => PAGE[x.id][0] === '낚시' && KNOWN.has(x.id)).length} / 7</span>`)}
+    <div class="bar"><i style="width:${n / 21 * 100}%"></i></div></div>
+    <div class="hunt"><button class="btn" data-hunt="채집">풀숲 뒤지기 · 채집</button><button class="btn" data-hunt="낚시">낚싯대 던지기 · 낚시</button></div>
+    ${noteMsg ? `<p class="toast">${noteMsg}</p>` : '<p class="hint">시안용 버튼이에요. 게임에서는 원래 하던 채집 · 낚시 그대로, 가끔 쪽지가 섞여 나와요.</p>'}
+    ${f ? `<div class="pagecard"><canvas width="32" height="32" data-ic="${f.id}"></canvas><div><b>${f.n}</b><em>「${f.w}」</em><p>${PAGE[f.id][1]}</p><small>${PAGE[f.id][0]}에서 주운 쪽지 · 맨디 글씨</small></div></div>` : ''}
+    <div class="notegrid">${FL.map(x => { const k = KNOWN.has(x.id); return `<button class="pg ${k ? 'on' : ''} ${noteOpen === x.id ? 'sel' : ''}" data-pg="${x.id}" ${k ? '' : 'disabled'}><canvas width="32" height="32" data-ic="${x.id}" class="${k ? '' : 'dim'}"></canvas><div><span>${k ? x.n : '???'}</span><em>${k ? x.w : PAGE[x.id][0] + '에서 찾기'}</em></div></button>`; }).join('')}</div>`;
+}
 function meaning(){
   const ids = S.slots, uniq = [...new Set(ids)];
   if (!ids.length) return { head: '꽃을 골라 주세요', sub: `${S.size} 송이까지 들어가요` };
   const combo = COMBO.find(c => c.has.every(h => uniq.includes(h)));
   const cnt = {}; ids.forEach(i => cnt[i] = (cnt[i] || 0) + 1);
   const main = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
-  const words = uniq.map(i => FB[i].w);
-  return { head: combo ? combo.t : `「${FB[main].w}」${uniq.length > 1 ? ' 그리고 ' + words.filter(w => w !== FB[main].w).slice(0, 2).map(w => `「${w}」`).join(' · ') : ''}`, sub: combo ? `특별한 조합 · ${uniq.map(i => FB[i].n).join(' + ')}` : `가장 많은 꽃 「${FB[main].n}」이 큰 목소리로 말해요`, kind: combo ? combo.k : null };
+  const W_ = i => KNOWN.has(i) ? FB[i].w : '?', words = uniq.map(W_);
+  if (combo && !combo.has.every(h => KNOWN.has(h))) return { head: words.map(w => `「${w}」`).slice(0, 3).join(' · '), sub: '모르는 꽃말이 있어요. 수첩을 채우면 숨은 뜻이 보여요', kind: combo.k };
+  return { head: combo ? combo.t : `「${W_(main)}」${uniq.length > 1 ? ' 그리고 ' + words.filter(w => w !== W_(main)).slice(0, 2).map(w => `「${w}」`).join(' · ') : ''}`, sub: combo ? `특별한 조합 · ${uniq.map(i => FB[i].n).join(' + ')}` : `가장 많은 꽃 「${FB[main].n}」이 큰 목소리로 말해요`, kind: combo ? combo.k : null };
 }
 function renderSlots(){
   const el = document.getElementById('slots'); el.innerHTML = '';
@@ -313,7 +398,8 @@ const swatches = (attr, cur) => `<div class="sw">${COL.map(c => `<button data-${
 function panel(){
   const P = document.getElementById('panel'), W = S.wrap, PT = PB[W.pat], cnt = id => S.slots.filter(x => x === id).length;
   let html = '', next = null;
-  if (S.tab === 'wrap'){
+  if (S.tab === 'note'){ html = noteHTML(); next = ['wrap', '꽃다발 만들러 가기']; }
+  else if (S.tab === 'wrap'){
     const extraN = PT.extra ? (PT.multi ? W.n - 1 : 1) : 0;
     html = `<div class="grp">${row(`바탕 색 <b>${CB[W.base].n}</b>`, costTag(CB[W.base].dye))}${swatches('base', W.base)}</div>
       <div class="grp">${row('무늬', PT.stamp ? costTag(PT.stamp) : '')}<div class="seg g4">${PATTERN.map(p => `<button data-pat="${p.id}" class="${W.pat === p.id ? 'on' : ''}">${p.n}</button>`).join('')}</div>
@@ -322,7 +408,7 @@ function panel(){
     next = ['flower', '다음 · 꽃 고르기'];
   } else if (S.tab === 'flower'){
     html = `<div class="seg g3">${SIZES.map(([n, l]) => `<button data-size="${n}" class="${S.size === n ? 'on' : ''}">${l.replace(' 꽃다발', '')} ${n} 송이</button>`).join('')}</div>
-      <div class="fgrid">${FL.map(f => { const have = INV['꽃 · ' + f.n] || 0, used = cnt(f.id); return `<button class="fl ${used ? 'on' : ''}" data-f="${f.id}" ${have - used <= 0 && !used ? 'disabled' : ''} title="${f.w}"><canvas width="32" height="32" data-ic="${f.id}"></canvas><span>${f.n}</span><i>${used ? used + '/' : ''}${have}</i></button>`; }).join('')}</div>`;
+      <div class="fgrid">${FL.map(f => { const have = INV['꽃 · ' + f.n] || 0, used = cnt(f.id); return `<button class="fl ${used ? 'on' : ''}" data-f="${f.id}" ${have - used <= 0 && !used ? 'disabled' : ''} title="${KNOWN.has(f.id) ? f.w : '꽃말 모름'}"><canvas width="32" height="32" data-ic="${f.id}"></canvas><span>${f.n}</span><i>${used ? used + '/' : ''}${have}</i></button>`; }).join('')}</div>`;
     next = ['deco', '다음 · 리본과 장식'];
   } else if (S.tab === 'deco'){
     html = `<div class="grp">${row(`리본 <b>${CB[S.ribbon].n}</b>`, costTag('털실 · ' + CB[S.ribbon].n))}${swatches('rib', S.ribbon)}</div>
@@ -378,7 +464,11 @@ document.addEventListener('click', e => {
   if (d.make){ if (short().length) return; Object.entries(needs()).forEach(([k, v]) => INV[k] -= v.n); S.made = true; return panel(); }
   if (d.refill){ INV = { ...INV0 }; S.made = false; return refresh(); }
   if (d.npc) return give(d.npc);
+  if (d.hunt) return hunt(d.hunt);
+  if (d.pg){ noteOpen = d.pg; return panel(); }
 });
-if (FLIMG.complete) refresh(); else FLIMG.onload = refresh;
+const boot = () => { refresh(); intro(); };
+if (FLIMG.complete) boot(); else FLIMG.onload = boot;
+document.getElementById('intro').addEventListener('click', intro);
 setInterval(draw, 160);
 </script>
