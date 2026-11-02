@@ -1733,7 +1733,7 @@ let spotTimer = 0;
 const EMOS = ['손인사', '웃음', '깔깔', '하트눈', '놀람', '눈물', '화남', '하트', '엄지척', '반짝', '호박', '유령'];   // art/emo.png 순서 (tools/iso/emotes.py)
 const emoI = i => `<i class="emi" style="background-position:-${i * 32}px 0" title="${EMOS[i]}"></i>`;
 let lastPos = '', heard = {}, onlineKeys = '';
-const peersOf = () => Object.entries(onlineList).filter(([id, o]) => id !== uid && o && o.m && o.nick && !o.gt).map(([id, o]) => ({ uid: id, name: o.nick, av: avOf(o), m: o.m, x: o.x | 0, y: o.y | 0, fk: typeof o.fk === 'number' ? o.fk : undefined, tg: o.tg || '', bb: o.bb || '' }));
+const peersOf = () => Object.entries(onlineList).filter(([id, o]) => id !== uid && o && o.m && o.nick && !o.gt).map(([id, o]) => ({ uid: id, name: o.nick, av: avOf(o), m: o.m, x: o.x | 0, y: o.y | 0, fk: typeof o.fk === 'number' ? o.fk : undefined, tg: o.tg || '', bb: o.sb || '' }));   // 말풍선 꾸미기는 sb (bb는 따라다니는 아기 동물)
 // 채팅: 평소에 보이는 건 최근 5줄, 이력은 최대 50개까지만 저장해 두고 「이력」을 눌러 봐요
 const CHAT_MAX = 50, CHAT_SHOW = 5, chatKey = () => 'magion-chat:' + (typeof uid !== 'undefined' && uid ? uid : 'solo');
 let chatLog = null;
@@ -9386,7 +9386,7 @@ document.addEventListener('click', e => {
 });
 // 꾸미기(이름표·말풍선): 내 화면에 바로, 친구 화면엔 접속 정보(online)로
 function syncCos(){ const tg = me?.cosOn?.tg || '', bb = me?.cosOn?.bb || ''; World.setMyCos && World.setMyCos(tg, bb);
-  if (!solo && F && db && uid && onlineList[uid] && ((onlineList[uid].tg || '') !== tg || (onlineList[uid].bb || '') !== bb)) F.update(F.ref(db, 'online/' + uid), { tg: tg || null, bb: bb || null }).catch(() => {}); }
+  if (!solo && F && db && uid && onlineList[uid] && ((onlineList[uid].tg || '') !== tg || (onlineList[uid].sb || '') !== bb)) F.update(F.ref(db, 'online/' + uid), { tg: tg || null, sb: bb || null }).catch(() => {}); }
 // 일지 「레시피 노트」: 블랑이 맛본 장면 다시 보기
 function blNoteHTML(){ const s = me.seed || {}, bl = s.bl || {}; if (!SEED) { sdData().then(() => { if (sheetOn && sub === 'journal') render(); }); return '<div class="hint on px">불러오는 중.......</div>'; }
   return `<section class="sec"><div class="box px">${SEED.reactions.map((D, i) => bl[i] ? `<div class="li">${ic('hw_d' + i)}<div class="main"><span class="t">${esc(D.name)}</span><span class="d">「${esc(D.title)}」 · ${'★'.repeat(D.stars)}</span></div><button class="btn sm" data-blr="${i}">다시 보기</button></div>` : `<div class="li unk"><div class="main"><span class="t">???</span></div></div>`).join('')}</div></section>`; }
