@@ -321,7 +321,7 @@ function recipeCookie(R){
 }
 
 // ===== 상태
-const ST = { tab: 'bake', step: -1, cur: null, inv: null, tray: [], box: { sel: [], c: 0, r: 0, p: 0 }, boxes: [], gsel: -1, heart: {}, found: {}, said: null, dex: { butter_circle: '맛있음' }, all: false, last: null, nick: '모모', day: 1, chat: [] };
+const ST = { tab: 'bake', step: -1, cur: null, inv: null, tray: [], box: { sel: [], c: 0, r: 0, p: 0 }, boxes: [], gsel: -1, heart: {}, found: {}, said: null, dex: { butter_circle: '맛있음' }, all: false, last: null, nick: '모모', day: 1, chat: [], evOn: true };
 function refill(){ ST.inv = { hegg: 12, g_wheat: 12 }; FL.forEach(f => ST.inv[f.it] = 3); }
 refill();
 let uid = 1;
@@ -634,6 +634,7 @@ document.addEventListener('click', e => {
   if (b.id === 'pack'){ const cks = ST.box.sel.map(id => ST.tray.find(x => x.id === id)); ST.tray = ST.tray.filter(x => !ST.box.sel.includes(x.id)); ST.boxes.push({ cks, c: ST.box.c, r: ST.box.r, p: ST.box.p }); ST.box.sel = []; gtoast('리본을 묶었어요. 쿠키 상자 완성'); ST.gsel = ST.boxes.length - 1; ST.tab = 'gift'; ST.said = null; render(); return; }
   if (D.gb){ ST.gsel = +D.gb; ST.said = null; render(); return; }
   if (D.npc){ giftTo(D.npc); return; }
+  if (b.id === 'evtoggle'){ ST.evOn = !ST.evOn; gtoast(ST.evOn ? '켰어요. 연출을 못 본 학생에게 나와요' : '껐어요. 연출을 본 학생은 계속 구울 수 있어요'); renderAdm(); return; }
   if (b.id === 'nextday'){ ST.day++; ST.said = null; if (ST.tab !== 'gift'){ ST.tab = 'gift'; } render(); gtoast(`${ST.day} 일째`); return; }
   if (b.id === 'refill'){ refill(); gtoast('재료를 채웠어요'); render(); return; }
   if (b.id === 'openall'){ ST.all = !ST.all; gtoast(ST.all ? '모든 틀을 열었어요' : '도감 수만큼만 열려요'); render(); renderAdm(); return; }
@@ -649,8 +650,10 @@ function renderAdm(){
   const fake = [42, 17, 88, 6, 63, 25, 120, 11, 54, 3, 97, 38];
   $('#adm').innerHTML = `<div class="mock"><span>시안에서만 보이는 버튼</span><div class="row"><button class="btn sm2" id="refill">재료 채우기</button><button class="btn sm2" id="openall">${ST.all ? '틀 잠금 되돌리기' : '모든 틀 열기'}</button><button class="btn sm2" id="nextday">다음 날로</button><button class="btn sm2" id="replay">연출 다시 보기</button></div></div>
     <section class="cd adm2"><div class="cdh"><h3>관리자 · 마들렌 쿠키</h3></div>
-    <p class="hint">켜 두면 학생이 과자 교실에 처음 들어갈 때 마들렌 연출이 나오고, 끝나면 오븐을 쓸 수 있어요. 언제든 다시 켜고 끌 수 있어요.</p>
-    <div class="row"><button class="btn go" style="flex:1">켜기</button><button class="btn" style="flex:1">연출 다시 보내기</button></div>
+    <p class="hint">켜 두면 아직 연출을 못 본 학생이 과자 교실에 들어갈 때 마들렌 연출이 나와요. 연출을 보면 오븐이 열리고, 꺼도 계속 구울 수 있어요.</p>
+    <p class="hint">끄면 새로 연출이 나오지 않아요. 이미 선물한 쿠키의 전체 채팅 냠냠은 5 일을 다 채워요.</p>
+    <div class="row"><button class="btn ${ST.evOn ? '' : 'go'}" id="evtoggle" style="flex:1">${ST.evOn ? '끄기' : '켜기'}</button><button class="btn" style="flex:1">연출 다시 보내기</button></div>
+    <p class="hint">지금: ${ST.evOn ? '켜짐' : '꺼짐'}</p>
     <div class="cnt">${fake.map((n, i) => `<span>학생 ${i + 1} <b>${n}</b></span>`).join('')}</div><p class="hint">학생별 도감 수 (예시 숫자) · 전체 ${DEX.length} 종</p></section>`;
 }
 
