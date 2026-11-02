@@ -643,8 +643,8 @@ function giftTo(id){
   ST.heart[id] = (ST.heart[id] || 0) + h; ST.boxes.splice(ST.gsel, 1); ST.gsel = -1; ST.said = { id, t };
   // 선물한 날부터 5 일 동안 하루 5 번 전체 채팅에 「(이름)이 준 쿠키 냠냠!」
   for (let d = 0; d < 5; d++){ const ts = new Set(); while (ts.size < 5) ts.add(8 * 60 + Math.floor(Math.random() * 14 * 60)); [...ts].forEach(m => ST.chat.push({ id, day: ST.day + d, m, from: ST.nick })); }
-  gtoast(`${n.n.replace(' 선생님', '')} 호감 ♥ +${h}${tier === 0 ? ' · 최고의 선물' : ''}`);
-  render(); const s = document.querySelector('.say'); if (s) s.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  const ck = best ? best.c : B.cks[0];
+  giftCine(n, B, tier, ck, t).then(() => { gtoast(`${n.n.replace(' 선생님', '')} 호감 ♥ +${h}${tier === 0 ? ' · 최고의 선물' : ''}`); render(); const s = document.querySelector('.said'); if (s) s.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
 }
 const josa = (w, a, b) => { const c = w.charCodeAt(w.length - 1); return w + (c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 ? a : b); };
 const hm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
@@ -711,6 +711,8 @@ async function madSay(L){ for (const t of L) await say(7, '마들렌', t); }
 function famCard(html, ck){ return new Promise(r => { const f = $('#fam'); $('#famin').innerHTML = html; f.hidden = false; after(); const c = f.querySelector('#rccv2'); if (c){ const q = c.getContext('2d'); drawCookie(q, ck, 0, 0, 3); } f.onclick = () => { f.hidden = true; r(); }; }); }
 
 __INTRO__
+
+__GIFT__
 
 render(); renderAdm();
 function boot(){ render(); setTimeout(playIntro, 300); }
