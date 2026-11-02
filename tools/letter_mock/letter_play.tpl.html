@@ -62,6 +62,18 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f-body);f
 .cnt{display:flex;flex-wrap:wrap;gap:4px}.cnt span{font:11px var(--f-pxb);padding:3px 8px;border-radius:8px;background:var(--panel2);color:var(--sub)}.cnt b{font-weight:400;color:var(--gold)}.cnt span.full{background:#2E4A3A;color:#C8F0B0}.cnt span.full b{color:#C8F0B0}
 .arows{display:flex;flex-direction:column;gap:4px}.arow{display:grid;grid-template-columns:52px repeat(3,1fr);gap:4px;align-items:center;padding:4px 6px;border-radius:8px;background:var(--panel2)}.arow .an{font:12px var(--f-pxb)}
 .arow select{min-height:36px;min-width:0;border-radius:8px;border:1px solid var(--line2);background:var(--panel);color:var(--text);font:12px var(--f-pxb);padding:0 4px}
+#cine{position:fixed;inset:0;z-index:50;background:#140E1E;display:flex;flex-direction:column;align-items:center;padding-top:env(safe-area-inset-top,0px)}#cine[hidden]{display:none}
+.cwrap{position:relative;width:100%;max-width:560px;flex:1;overflow:hidden}#ccv{width:100%;height:100%;image-rendering:pixelated;display:block}
+.cvig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 45%,rgba(160,200,255,0) 0,rgba(10,14,30,.55) 75%)}
+.cnm{position:absolute;left:12px;top:10px;z-index:2;font:13px var(--f-pxb);color:var(--gold);background:rgba(20,13,30,.85);border:1px solid var(--line2);padding:4px 10px;border-radius:10px}
+.toastc{position:absolute;left:50%;top:44px;transform:translateX(-50%);background:rgba(20,13,30,.94);color:var(--text);padding:10px 16px;border-radius:12px;border:1px solid var(--accent);font-size:13px;max-width:90%;text-align:center;opacity:0;transition:opacity .2s;pointer-events:none;z-index:3}.toastc.on{opacity:1}
+#blsay{position:fixed;left:10px;right:10px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:60;display:none}#blsay .bx{position:relative;max-width:560px;margin:0 auto;display:flex;gap:10px;background:rgba(20,13,34,.96);border:2px solid #9AC8F0;border-radius:14px;padding:12px;cursor:pointer}
+#blsay .fc{width:60px;height:60px;flex:none;border-radius:10px;background:#1E2A44;overflow:hidden}#blsay .fc canvas{width:60px;height:60px;image-rendering:pixelated}#blsay b{display:block;font:14px var(--f-pxb);color:#BFE0FF;margin-bottom:3px}#blsay p{margin:0;font:15px/22px var(--f-px);color:#F1E9FF;min-height:44px}
+.fold{position:relative;display:block;width:100%;max-width:260px;border:0;padding:0;background:none;cursor:pointer;text-align:left}.fold canvas{width:100%;aspect-ratio:160/90;image-rendering:pixelated;display:block}
+.fold .to{position:absolute;left:12%;top:18%;font:15px var(--f-pxb);color:#5A4636}.fold .tag{position:absolute;right:8px;bottom:8px;font:11px var(--f-pxb);padding:2px 8px;border-radius:8px;background:rgba(20,13,30,.85);color:var(--gold)}
+.rw textarea{width:100%;min-height:84px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);border-radius:10px;padding:10px;font:15px/1.6 var(--f-px);resize:vertical}.rw .row{display:flex;justify-content:space-between;align-items:center;gap:8px}.rw small{font-size:12px;color:var(--sub)}
+.mine{padding:10px 12px;border-radius:10px;background:var(--panel2);font:15px/1.6 var(--f-px);white-space:pre-wrap}
+.reps{display:flex;flex-direction:column;gap:4px}.reps div{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;padding:8px 10px;border-radius:8px;background:var(--panel2);font-size:13px}.reps b{font:12px var(--f-pxb);color:var(--gold);white-space:nowrap}.reps p{margin:0;white-space:pre-wrap}
 button:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 </style>
 
@@ -70,11 +82,13 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-
   <div class="body">
     <div class="pick"><label for="stu">시안 · 나는</label><select id="stu"></select><select id="day" aria-label="날짜"></select></div>
     <div class="say" id="intro"><canvas width="32" height="32" id="ifc"></canvas><div><b>배트리</b><p id="itx"></p></div></div>
-    <section class="sec"><div class="lab">오늘 주운 편지 · 다른 친구 앞으로 온 편지예요</div><div id="found"></div></section>
+    <section class="sec"><div class="lab">오늘 주운 편지 · 접힌 편지 첫 줄에 받는 사람이 보여요</div><div id="found"></div></section>
     <section class="sec"><div class="lab">내 방 바닥</div><div id="room"></div></section>
     <section class="sec"><div class="lab">편지함 · 간직한 편지</div><div id="box"></div></section>
   </div>
 </div>
+<div id="cine" hidden><div class="cwrap"><div class="cnm">학교 앞 마당</div><canvas id="ccv" width="360" height="270"></canvas><div class="cvig"></div><div class="toastc" id="ctoast"></div></div>
+  <div id="blsay"><div class="bx"><div class="fc"><canvas width="32" height="32"></canvas></div><div><b>배트리</b><p></p></div></div></div></div>
 <div id="lv" hidden><div class="lwrap">
   <div class="lhd"><b id="lttl"></b><button id="lx" aria-label="닫기">✕</button></div>
   <div class="paper" id="paper"></div>
@@ -162,6 +176,15 @@ function pxCanvas(key){
   const q = c.getContext('2d'); rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === '.') return; q.fillStyle = pal[ch]; q.fillRect(x * s, y * s, s, s); })); return c;
 }
 __LETTERS__
+const THANKS = { nabi: '답장 받았다냥. ....몇 번이나 읽은 건 아니다냥. 열 번쯤이다냥.', batri: '답장 받았어. 우체부가 자기 앞으로 온 편지를 받는 건 처음이야. 가방 맨 안쪽에 넣어 뒀어.', kappa: '답장을 받았다. 젖지 않게 접시 위에 올려 두었다. ....농담이다. 상자에 넣었다.', aula: '답장, 잘 받았어요. 제일 아끼는 책 사이에 끼워 두었어요.......', mandi: '히익.... 답장 받았어요. 화분 옆에 두고 매일 읽어요.......', jipsin: '답장 받았어! 모자 속에 넣고 다녀. 바람 불어도 안 날아가게.', sera: '답장 고마워. 양호실 책상 서랍에 넣어 뒀단다. 힘든 날 꺼내 볼게.', madeleine: '답장 받았어! 너무 좋아서 오늘 쿠키를 두 판이나 구웠어.', stella: '답장을 받았어요. 별들에게도 읽어 줬어요. 다들 반짝이더라고요.......', leo: '....답장 받았다. 사육장 벽에 붙여 뒀다. 양들이 못 먹게 높이.', otumo: '삐빅. 답장 수신 완료. 저장 위치: 제일 소중한 폴더. 반복 재생 중입니다.' };
+function foldCanvas(paper, line, open){
+  const c = document.createElement('canvas'); c.width = 160; c.height = 90; const q = c.getContext('2d');
+  q.fillStyle = '#2A1A2E'; q.fillRect(4, 4, 152, 82); q.fillStyle = paper; q.fillRect(6, 6, 148, 78);
+  q.fillStyle = line; for (let y = 30; y < 84; y += 10) q.fillRect(14, y, open ? 120 : 132, 1);
+  q.fillStyle = 'rgba(0,0,0,.12)'; q.fillRect(6, 44, 148, 2); q.fillStyle = 'rgba(255,255,255,.35)'; q.fillRect(6, 46, 148, 1);
+  q.fillStyle = 'rgba(0,0,0,.08)'; q.beginPath(); q.moveTo(154, 6); q.lineTo(138, 6); q.lineTo(154, 22); q.fill();
+  return c;
+}
 const SHIFT = [1, 5, 7];   
 const ST = { stu: 0, day: 0, deliv: {}, read: {}, reply: {} };
 const nm = i => `학생 ${i + 1}`;
@@ -177,8 +200,11 @@ function renderAdm(){
   el.innerHTML = `<div class="admh"><b>관리자 · 편지 보낼 NPC 정하기</b><span>학생마다 1 · 2 · 3 일째 편지를 쓸 NPC를 골라요. NPC 한 명은 편지 수만큼만 고를 수 있어요 (대부분 3 번 · 맨디 · 마들렌 · 스트로는 4 번). 다 정해진 NPC는 다른 칸 목록에서 빠져요.</span></div>
     <div class="cnt">${NPC.map(n => `<span class="${(C[n.id] || 0) >= CAP(n.id) ? 'full' : ''}">${n.n.replace(' 선생님', '')} <b>${C[n.id] || 0}</b>/${CAP(n.id)}</span>`).join('')}</div>
     <div class="arows">${ASSIGN.map((row, i) => `<div class="arow"><span class="an">학생 ${i + 1}</span>${row.map((cur, d) => `<select data-as="${i}:${d}" aria-label="학생 ${i + 1} ${d + 1} 일째"><option value="">비움</option>${NPC.filter(n => n.id === cur || ((C[n.id] || 0) < CAP(n.id) && !row.includes(n.id))).map(n => `<option value="${n.id}" ${n.id === cur ? 'selected' : ''}>${n.n.replace(' 선생님', '')}</option>`).join('')}</select>`).join('')}</div>`).join('')}</div>
+    <div class="admh" style="margin-top:6px"><b>학생 답장 (관리자만 봐요)</b></div><div class="reps">${Object.entries(ST.reply).map(([k, v]) => { const [a, b] = k.split(':').map(Number), L = letterOf(a, b); return `<div><b>학생 ${a + 1} → ${L.n.n} · ${b + 1} 일째</b><p></p></div>`; }).join('') || '<p class="hint">아직 보낸 답장이 없어요</p>'}</div>
     <p class="hint">빈칸 ${ASSIGN.flat().filter(x => !x).length} 개 · 편지 36 통으로 36 칸(12 명 × 3 일)이 꼭 맞아요. 빈칸이 생기면 배트리가 사과 쪽지를 대신 써요.</p>`;
+  fillReps();
 }
+function fillReps(){ const ps = document.querySelectorAll('.reps div p'); Object.values(ST.reply).forEach((v, k) => { if (ps[k]) ps[k].textContent = v; }); }
 document.addEventListener('change', e => { const sl = e.target.closest && e.target.closest('[data-as]'); if (!sl) return; const [i, d] = sl.dataset.as.split(':').map(Number); ASSIGN[i][d] = sl.value; renderAdm(); render(); });
 const finderOf = (i, d) => (i - SHIFT[d] + 12) % 12, foundFor = (i, d) => (i + SHIFT[d]) % 12;
 const face = (cv, row) => { const q = cv.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, cv.width, cv.height); if (SHEET.complete) q.drawImage(SHEET, 16, row * 64 + 10, 32, 32, 0, 0, cv.width, cv.height); };
@@ -193,18 +219,18 @@ function envCanvas(seed, open){
   q.fillStyle = open ? '#6FD08C' : '#C8343E'; q.beginPath(); q.arc(80, 50, 7, 0, 7); q.fill(); q.fillStyle = 'rgba(255,255,255,.4)'; q.fillRect(77, 46, 3, 2);
   return c;
 }
-const envHTML = (id, to, tag, seed, open) => `<button class="env" data-env="${id}"><span class="cv" data-seed="${seed}" data-open="${open ? 1 : 0}"></span><span class="to">받는 사람 · ${to}</span><span class="tag">${tag}</span></button>`;
-function paintEnvs(){ document.querySelectorAll('.env .cv').forEach(sp => { if (sp.firstChild) return; sp.appendChild(envCanvas(+sp.dataset.seed, sp.dataset.open === '1')); }); }
+const envHTML = (id, to, tag, L, open) => `<button class="fold" data-env="${id}"><span class="cv" data-p="${L.n.paper}" data-l="${L.n.line}" data-open="${open ? 1 : 0}"></span><span class="to" style="font-family:${L.n.font.replace(/"/g, '&quot;')},var(--f-pxb);color:${L.n.ink}">${to}에게</span><span class="tag">${tag}</span></button>`;
+function paintEnvs(){ document.querySelectorAll('.fold .cv').forEach(sp => { if (sp.firstChild) return; sp.appendChild(foldCanvas(sp.dataset.p, sp.dataset.l, sp.dataset.open === '1')); }); }
 function render(){
   const i = ST.stu, d = ST.day, tgt = foundFor(i, d), fk = `${tgt}:${d}`, mine = letterOf(i, d), by = finderOf(i, d), mk = mine.key;
-  document.getElementById('itx').textContent = d === 0 ? '으.... 미안해. 하늘에서 가방을 엎었어. 봉투에 받는 사람 이름은 남았는데, 보낸 사람 칸이 다 찢겨 나갔어. 주운 편지는 받는 친구 방에 살짝 놓아 줄래?' : `오늘도 하나씩 떨어져 있을 거야. 남은 편지는 ${3 - d} 통. 배달 부탁해.......`;
-  document.getElementById('found').innerHTML = `<div class="envs one">${envHTML('found', nm(tgt), ST.deliv[fk] ? '놓고 왔어요' : '오늘 주웠어요', tgt + d, ST.deliv[fk])}</div>
-    ${ST.deliv[fk] ? `<p class="hint ok">${nm(tgt)} 방 바닥에 살짝 놓고 왔어요. 보낸 사람은 찢겨서 아무도 몰라요.</p>` : `<button class="btn go" data-go="deliver">${nm(tgt)} 방에 놓고 오기</button>`}`;
+  document.getElementById('itx').textContent = d === 0 ? '으.... 미안해. 바람에 꽈당 넘어져서 편지가 다 날아갔어. 봉투도 다 벗겨졌고. 편지 첫 줄에 받는 사람 이름이 있으니까, 주우면 그 친구 방에 살짝 놓아 줄래?' : `오늘도 하나씩 떨어져 있을 거야. 남은 편지는 ${3 - d} 통. 배달 부탁해.......`;
+  document.getElementById('found').innerHTML = `${envHTML('found', nm(tgt), ST.deliv[fk] ? '놓고 왔어요' : '오늘 주웠어요 · 봉투 없음', letterOf(tgt, d), ST.deliv[fk])}
+    ${ST.deliv[fk] ? `<p class="hint ok">${nm(tgt)} 방 바닥에 살짝 놓고 왔어요. 봉투가 벗겨져서 누가 보냈는지는 아무도 몰라요.</p>` : `<button class="btn go" data-go="deliver">${nm(tgt)} 방에 놓고 오기</button>`}`;
   const arrived = ST.deliv[mk] || ST.auto;
-  document.getElementById('room').innerHTML = arrived ? `<div class="envs one">${envHTML('mine', nm(i), ST.read[mk] ? '읽었어요' : `${ST.deliv[mk] ? nm(by) : '배트리'}가 놓고 갔어요`, i + d + 7, ST.read[mk])}</div>`
+  document.getElementById('room').innerHTML = arrived ? `${envHTML('mine', nm(i), ST.read[mk] ? '읽었어요' : `${ST.deliv[mk] ? nm(by) : '배트리'}가 놓고 갔어요`, mine, ST.read[mk])}`
     : `<p class="hint">아직 아무도 놓고 가지 않았어요. 오늘 ${nm(by)}가 내 편지를 주웠어요.</p><button class="btn" data-go="sim">시안 · ${nm(by)}가 내 방에 놓고 간 걸로 하기</button>`;
   const kept = [0, 1, 2].filter(k => ST.read[`${i}:${k}`]);
-  document.getElementById('box').innerHTML = kept.length ? `<div class="kept">${kept.map(k => { const L = letterOf(i, k); return `<button data-keep="${k}"><i style="background:${L.n.paper};border-color:${L.n.line}"></i><span>${k + 1} 일째 편지</span><em>${ST.reply[`${i}:${k}`] ? '답장 보냄' : '답장 전'}</em></button>`; }).join('')}</div>` : '<p class="hint">읽은 편지는 여기에 간직해요. 다시 펼쳐 볼 수 있어요.</p>';
+  document.getElementById('box').innerHTML = kept.length ? `<div class="kept">${kept.map(k => { const L = letterOf(i, k); return `<button data-keep="${k}"><i style="background:${L.n.paper};border-color:${L.n.line}"></i><span>${k + 1} 일째 편지</span><em>${ST.reply[`${i}:${k}`] != null ? '답장 보냄' : '답장 전'}</em></button>`; }).join('')}</div>` : '<p class="hint">읽은 편지는 여기에 간직해요. 다시 펼쳐 볼 수 있어요.</p>';
   document.getElementById('stat').textContent = `받은 편지 ${kept.length} / 3`;
   paintEnvs();
 }
@@ -220,9 +246,10 @@ function openLetter(i, d){
   renderReply(); document.getElementById('lv').hidden = false; document.getElementById('lv').scrollTop = 0;
 }
 function renderReply(){
-  const { key, L, n } = cur, r = ST.reply[key], g = document.getElementById('reply');
-  g.innerHTML = r == null ? `<div class="q">답장 한 줄 · 배트리가 전해 줘요</div><div class="rep">${L.r.map((x, k) => `<button data-rep="${k}">${x[0]}</button>`).join('')}</div>`
-    : `<div class="q">보낸 답장 · 「${L.r[r][0]}」</div><div class="say ok"><canvas width="32" height="32" data-r="${n.row}"></canvas><div><b>다음에 ${n.n}에게 말을 걸면</b><p>${L.r[r][1].replace(/\{name\}/g, nm(cur.i))}</p></div></div><p class="hint">보낸 사람은 편지에 안 적혀 있지만, 답장을 받은 ${n.n}가 나중에 살짝 티를 내요.</p>`;
+  const { key, n } = cur, r = ST.reply[key], g = document.getElementById('reply'), who = n.id;
+  g.innerHTML = r == null ? `<div class="rw"><div class="q">답장 쓰기 · 배트리가 전해 줘요</div><textarea id="rtx" maxlength="80" placeholder="하고 싶은 말을 자유롭게 써요 (80 자)"></textarea><div class="row"><small>답장은 받는 NPC와 관리자만 볼 수 있어요</small><button class="btn go" data-go="send">답장 보내기</button></div></div>`
+    : `<div class="q">내가 보낸 답장</div><div class="mine"></div><div class="say ok"><canvas width="32" height="32" data-r="${n.row}"></canvas><div><b>다음에 ${n.n}에게 말을 걸면</b><p>${THANKS[who] || THANKS.batri}</p></div></div><p class="hint">답장 내용은 관리자만 볼 수 있어요.</p>`;
+  const m = g.querySelector('.mine'); if (m) m.textContent = r;
   g.querySelectorAll('.say canvas').forEach(c => face(c, +c.dataset.r));
 }
 document.addEventListener('click', e => {
@@ -231,13 +258,14 @@ document.addEventListener('click', e => {
   if (d.go === 'sim'){ ST.deliv[`${ST.stu}:${ST.day}`] = 1; return render(); }
   if (d.env === 'mine') return openLetter(ST.stu, ST.day);
   if (d.keep !== undefined) return openLetter(ST.stu, +d.keep);
-  if (d.rep !== undefined){ ST.reply[cur.key] = +d.rep; renderReply(); return render(); }
+  if (d.go === 'send'){ const v = (document.getElementById('rtx').value || '').trim(); if (!v) return; ST.reply[cur.key] = v.slice(0, 80); renderReply(); renderAdm(); return render(); }
   if (b.id === 'lx'){ document.getElementById('lv').hidden = true; return render(); }
 });
 document.getElementById('stu').innerHTML = Array.from({ length: 12 }, (_, i) => `<option value="${i}">학생 ${i + 1}</option>`).join('');
 document.getElementById('day').innerHTML = [0, 1, 2].map(k => `<option value="${k}">${k + 1} 일째</option>`).join('');
 document.getElementById('stu').addEventListener('change', e => { ST.stu = +e.target.value; render(); });
 document.getElementById('day').addEventListener('change', e => { ST.day = +e.target.value; render(); });
-const boot = () => { face(document.getElementById('ifc'), 1); render(); renderAdm(); };
+__INTRO__
+const boot = () => { face(document.getElementById('ifc'), 1); render(); renderAdm(); playIntro(); };
 if (SHEET.complete && SHEET.naturalWidth) boot(); else SHEET.onload = boot;
 </script>
