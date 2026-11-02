@@ -1351,7 +1351,7 @@ const CR_NEED = k => Math.round(3 * CR_HRS[k] + 3);   // 돌봄 점수: 열심�
 const crAdult = c => c.care !== undefined ? c.care >= CR_NEED(c.k) : now2() - c.bornAt >= CREATURES[c.k].grow * 6e4;
 const crCare = (c, n) => { const was = crAdult(c); c.care = (c.care || 0) + n; return !was && crAdult(c); };   // 어른이 됐으면 true
 const crKind = c => crAdult(c) ? CREATURES[c.k].kind : CREATURES[c.k].baby;
-const prodLeft = c => Math.max(0, (c.prodAt || 0) + CREATURES[c.k].prod * 6e4 - now2());
+const prodLeft = c => Math.max(0, (c.prodAt || 0) + CREATURES[c.k].prod * 6e4 / (1 + (typeof famV === 'function' ? famV('ranch') : 0)) - now2());   // 사역마: 사육장 생산 속도
 const eggLeft = e => Math.max(0, e.at + CREATURES[e.k].hatch * 6e4 - now2());
 const crSprite = (c, scale, egg) => `<div class="cr" style="background-position:${-120 * (egg ? EGG_CELL : c.k)}px 0;transform:scale(${egg ? scale * .9 : !crAdult(c) ? scale * .72 : scale});flex-shrink:0;${colorFilter(c.col) ? 'filter:' + colorFilter(c.col) : ''}"></div>`;
 const crId = () => Math.random().toString(36).slice(2, 9);
@@ -1410,7 +1410,7 @@ const dayNo = k => { const [y, m, d] = String(k || '').split('-').map(Number); r
 const roomNo = (house, key) => (HOUSE_KEYS.indexOf(house) + 1) * 100 + [...String(key)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 997, 7) % 12 + 1;
 const brewCost = () => me.house === 'ember' ? 4 : 5;
 const waterCost = () => me.house === 'dew' || Math.random() < -sgFx('stamina_cost') ? 0 : 1;
-const payOf = o => Math.round(o.pay * (me.house === 'moon' ? 1.1 : 1) * (typeof buffOn === 'function' && buffOn('coin') ? 1.2 : 1) * (1 + (typeof BM !== 'undefined' ? BM.val('order') : 0)));
+const payOf = o => Math.round(o.pay * Math.min(1.4, (me.house === 'moon' ? 1.1 : 1) * (typeof buffOn === 'function' && buffOn('coin') ? 1.2 : 1) * (1 + (typeof BM !== 'undefined' ? BM.val('order') : 0)) * (1 + (typeof famV === 'function' ? famV('order') : 0))));   // 다 겹쳐도 1.4 배까지
 
 const ORDER_FROM =['양호 선생님', '교장실', '같은 반 친구', '사육장 관리인', '도서관 사서', '천문탑'];
 
@@ -1922,7 +1922,7 @@ World.onWater = (x, y) => {
   let gk = null; if (String(World.where()).startsWith('gt_')){ if (!gtLake() || (gk = gtCastTake()) === null) return; }   // 유령 열차 안개 호수: 낚시 15번
   World.busyFish = true; World.hideBubble(); fishing = { x, y, st: 'wait', spot: gk !== null ? { name: '안개 호수', cap: 99 } : fishSpotAt(x, y), gt: gk }; World.setBobber({ x, y });
   fishShow(`<b>${rodIc(rodLv(), 24)} 찌를 던졌어요 · ${fishing.spot.name}</b><span class="s">찌가 쏙 들어가면 화면을 눌러요. 그다음엔 찌를 낚이는 쪽(초록 칸)에 두고 버텨요${me.perk?.lord_hint && houseNow() === 'moon' ? `<br>캇파의 힌트: ${isFullMoon() ? '오늘 같은 보름 밤엔 호수의 주인이 가까이 와요' : '호수의 주인은 밤에 나와요. 보름이면 더 잘 와요'}` : ''}</span><button class="btn sm" data-fx="stop">그만하기</button>`);
-  fishing.timer = setTimeout(fishBite, (1800 + Math.random() * (5200 - rodLv() * 600)) * (buffOn('bite') ? .55 : 1) * (me.perk?.bait ? .85 : 1) * (1 - (typeof BM !== 'undefined' ? BM.val('bite') : 0)));   // 나비 ♥10 미끼
+  fishing.timer = setTimeout(fishBite, (1800 + Math.random() * (5200 - rodLv() * 600)) * Math.max(.5, (buffOn('bite') ? .55 : 1) * (me.perk?.bait ? .85 : 1) * (1 - (typeof BM !== 'undefined' ? BM.val('bite') : 0)) * (1 - famV('bite'))));   // 다 겹쳐도 원래의 절반까지   // 나비 ♥10 미끼
 };
 function fishBite(){
   if (!fishing) return;
@@ -1987,7 +1987,7 @@ function fishCatch(){
   const f = fishing.f; cancelAnimationFrame(fishing.raf); fishing.st = 'done'; World.setBobber(null);
   const cm = f.junk ? 0 : Math.round((f.cm[0] + (f.cm[1] - f.cm[0]) * Math.random() ** (typeof BM !== 'undefined' && BM.val('fsize') ? 1.15 : 1.6)) * 10) / 10;
   const isNew = dexAdd(f.id, cm), rec = !f.junk && me.fdex[f.id].cm === cm && !isNew; if (!f.junk){ prankEv('fish', { k: f.id }); trEv('fish', { rare: f.grade >= 3, night: bandNow() === 'night', rain: weatherToday() === 'rain' }); if (isNew) trEv('dex'); }
-  if (isNew && !f.junk){ me.mana += f.grade; }
+  if (isNew && !f.junk){ me.mana += sgMul(f.grade, famV('dex')); }
   save(); hud();
   tutHook('fish');   // 쓰레기가 걸려도 낚시를 해 본 걸로 쳐요
   if (!f.junk){ pzDrop('fish'); lnDrop('fish'); if (typeof bqDrop === 'function') bqDrop('fish'); if (typeof BM !== 'undefined') BM.drop('fish'); }
@@ -2025,10 +2025,10 @@ World.onSpot = (si, spot) => {
   if (G && G.g === 'pumpkin') return pkPick(spot);
   if (!me.fg || me.fg.d !== todayKey()){ syncSpots(); return toast('날짜가 바뀌어서 채집 자리가 새로 생겼어요'); }   // 자정을 넘기면 어제 기록으로 다른 자리를 캐지 않게
   const all = spotsToday(), live = all.map((s, i) => ({ ...s, i })).filter(s => !me.fg.got.includes(s.i)), sp = live[si]; if (!sp) return;
-  const pool = FORAGE.filter(x => x.z.includes(sp.z)).map(x => buffOn('fluck') ? { ...x, w: x.w ** .7 } : x).map(x => typeof BM !== 'undefined' ? BM.spotW(x) : x); let r = sp.r * pool.reduce((t, x) => t + x.w, 0), it = pool[pool.length - 1];   // 요리 효과: 드문 채집물
+  const pool = FORAGE.filter(x => x.z.includes(sp.z)).map(x => buffOn('fluck') ? { ...x, w: x.w ** .7 } : x).map(x => typeof BM !== 'undefined' ? BM.spotW(x) : x).map(x => { const r = famV('rare') + (bandNow() === 'night' ? famV('nightrare') : 0); return r ? { ...x, w: x.w ** (1 - r) } : x; }); let r = sp.r * pool.reduce((t, x) => t + x.w, 0), it = pool[pool.length - 1];   // 요리 효과: 드문 채집물
   for (const x of pool){ r -= x.w; if (r <= 0){ it = x; break; } }
   prankEv('forage', { k: it.id }); trEv('forage', { z: sp.z, night: bandNow() === 'night' });
-  const isNew = dexAdd(it.id); if (isNew) trEv('dex'); if (dbuff('dforest') && Math.random() < .1) dexAdd(it.id); { const ex = sgMul(1, sgFx('gather_yield') + partyFx()) - 1; if (ex > 0) me.inv[it.id] = (me.inv[it.id] || 0) + ex; } if (typeof BM !== 'undefined') BM.spotExtra(it); me.fg.got.push(sp.i); if (isNew) me.mana += it.grade;   // 풍작의 별빛 · 친구와 함께 · 책갈피
+  const isNew = dexAdd(it.id); if (isNew) trEv('dex'); if (dbuff('dforest') && Math.random() < .1) dexAdd(it.id); { const ex = sgMul(1, sgFx('gather_yield') + partyFx()) - 1; if (ex > 0) me.inv[it.id] = (me.inv[it.id] || 0) + ex; } if (typeof BM !== 'undefined') BM.spotExtra(it); me.fg.got.push(sp.i); if (isNew) me.mana += sgMul(it.grade, famV('dex'));   // 풍작의 별빛 · 친구와 함께 · 책갈피
   save(); hud(); syncSpots();
   pzDrop('forage'); lnDrop('forage'); if (typeof bqDrop === 'function') bqDrop('forage'); if (typeof BM !== 'undefined') BM.drop('forage');
   if (it.grade >= 3) speak(`${it.name} 찾았다!`);
@@ -2038,7 +2038,7 @@ World.onSpot = (si, spot) => {
 // 파는 값은 시간대마다 달라요: 물건마다 잘 팔리는 시간대가 하나 있어요 (그 시간대 ×1.35, 반대쪽 ×0.75)
 const BANDS = ['dew', 'ember', 'dusk', 'moon'];
 const sellMul = k => { let h = 0; for (const c of k) h = (h * 31 + c.charCodeAt(0)) >>> 0; const d = (BANDS.indexOf(houseNow()) - h % 4 + 4) % 4; return [1.35, 1.05, .75, 1.05][d]; };
-const sellPay = (k, base) => Math.max(1, Math.round(base * sellMul(k) * (1 + (typeof BM !== 'undefined' ? BM.val('sell') : 0))));
+const sellPay = (k, base) => Math.max(1, Math.round(base * sellMul(k) * Math.min(1.3, (1 + (typeof BM !== 'undefined' ? BM.val('sell') : 0)) * (1 + (typeof famV === 'function' ? famV('sell') + (typeof POTION_INFO !== 'undefined' && POTION_INFO[k] ? famV('potsell') : 0) : 0)))));   // 책갈피 · 사역마 보너스는 1.3 배까지
 const sellTag = k => { const m = sellMul(k); return m > 1.2 ? '<b style="color:var(--ok)">▲ 비싸게 쳐줘요</b>' : m < .8 ? '<b style="color:var(--bad,#c55)">▼ 싸게 쳐줘요</b>' : '보통'; };
 const cropBase = k => { const x = SEED_INFO[k]; return x ? Math.max(2, Math.round(x.price * .5 + 2)) : 0; };
 const FISH_GO = [['유령 호수', 'town', [32, 78], FISH_SPOT.lake.cap + 1], ['등불 강', 'campus', [80, 33], FISH_SPOT.river.cap + 1], ['북쪽 연못', 'campus', [56, 17], FISH_SPOT.pond_n.cap + 1], ['북동 연못', 'town', [68, 18], FISH_SPOT.pond_ne.cap + 1], ['남동 연못', 'town', [70, 64], FISH_SPOT.pond_se.cap + 1], ['골목 연못', 'quarter', [20, 26], FISH_SPOT.pond_q.cap + 1]];   // [이름, 맵, 물가 자리, 낚이는 물고기 수]
@@ -2329,6 +2329,7 @@ const xMkUnit = (job, L, name, ai, hp, mp, sk) => { sk = sk || xAiSk(L); const u
   xAll(job).forEach(o => { const lv = sk[o.b + '_' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, mp0: o.mp, mp: xSkMp(o, lv, L), sv: o.sv == null ? o.sv : o.sv * xPw(o, lv), pet: o.pet ? { ...o.pet, k: o.pet.k * xPw(o, lv) } : o.pet, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv), pct: o.pct == null || o.ds || o.t !== 'heal' ? o.pct : xPct(o, lv) }); });   // 설명이 고정된 소생 스킬은 그대로
   const P = u.pas; ['hp', 'atk', 'mag', 'spd'].forEach(k => { if (P[k]) u[k === 'hp' ? 'mhp' : k] = Math.round(u[k === 'hp' ? 'mhp' : k] * (1 + P[k])); }); u.wp = ai ? Math.min(4, Math.floor((L - 1) / 12)) : (xEx().wp || 0); const wm = (1 + .08 * u.wp) * (!ai && dbuff('dfire') ? 1.05 : 1); ['atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k] * wm); });   // 무기 강화 한 단계마다 +8%
   u.dr = P.def || 0; u.vamp = P.vamp || 0; u.crit = P.crit || 0; u.dodge = P.dodge || 0; u.survLeft = P.surv ? 1 : 0; u.pets = [];
+  if (!ai){ const ms = XROLE[job] === 'melee' ? 'atk' : XROLE[job] === 'heal' ? 'heal' : 'mag'; u.spd = Math.round(u.spd * (1 + famV('xspd'))); u[ms] = Math.round(u[ms] * (1 + famV('xmain'))); u.mhp = Math.round(u.mhp * (1 + famV('xhp'))); u.dr += famV('xdr'); u.dodge += famV('xdodge'); u.res = famV('xres'); u.bossK = famV('xboss'); u.healIn = famV('xheal'); }   // 사역마 맹약
   u.hp = hp ?? u.mhp; u.mp = mp ?? u.mmp; return u; };
 let xv = null, xb = null, xMsg = '', xTick = 0;   // xv 화면 상태, xb 전투 상태
 function xParty(){ const ex = xEx(), L = xLv(ex.exp).L, run = ex.run; return [Object.assign(xMkUnit(ex.job, L, me.nick, false, run?.p?.[0]?.hp, run?.p?.[0]?.mp, xSkEx(ex)), { hum: true, uid: myId() })]; }   // 혼자일 땐 나 혼자 (AI 동료 없음, 협동은 같은 방 플레이어만)
@@ -2365,8 +2366,8 @@ function xChestHTML(){   // 상자 고르기 · 고른 뒤
 function xEnd(how){   // how: clear · time · retreat · wipe
   const ex = xEx(), run = ex.run; if (!run) return;
   if (run.co && how !== 'retreat' && xcoHost()){ xcoPub({ st: 'end', end: { how } }); const rid = run.co; setTimeout(() => GDB.upd('xparty/' + rid, { st: 'end', how }), 3500); }
-  if (run.co){ xcoStop(); xM = null; ex.coDone = [...(ex.coDone || []).filter(x => x !== run.co), run.co].slice(-10); } const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gm = how === 'retreat' ? .7 : 1, em = how === 'retreat' ? .5 : 1, gold = how === 'wipe' ? 0 : partyMul(Math.round(lo.gold * mult * gm * (1 + tarotVal('xgold')))), exp = how === 'wipe' ? 0 : Math.round((lo.exp * mult * em + (how === 'clear' ? xReg().clearExp : 0)) * (dbuff('dforest') ? 1.03 : 1) * (dbuff('pump') ? 1.1 : 1) * (1 + sgFx('exp_gain') + partyFx()));
-  const items = how === 'wipe' ? {} : { ...lo.items }; if (how === 'clear') ex.chest = xChestMake(xReg());   // 끝까지 가면 보상 상자 셋 중 하나를 골라요
+  if (run.co){ xcoStop(); xM = null; ex.coDone = [...(ex.coDone || []).filter(x => x !== run.co), run.co].slice(-10); } const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gm = how === 'retreat' ? .7 : 1, em = how === 'retreat' ? .5 : 1, gold = how === 'wipe' ? 0 : partyMul(Math.round(lo.gold * mult * gm * (1 + Math.min(.3, tarotVal('xgold') + famV('xgold'))))), exp = how === 'wipe' ? 0 : Math.round((lo.exp * mult * em + (how === 'clear' ? xReg().clearExp : 0)) * (dbuff('dforest') ? 1.03 : 1) * (dbuff('pump') ? 1.1 : 1) * (1 + sgFx('exp_gain') + partyFx()));
+  const items = how === 'wipe' ? {} : Object.fromEntries(Object.entries(lo.items || {}).map(([k, n]) => [k, sgMul(n, famV('xloot'))])); if (how === 'clear') ex.chest = xChestMake(xReg());   // 끝까지 가면 보상 상자 셋 중 하나를 골라요
   const before = xLv(ex.exp).L; ex.exp += exp; me.coin += gold; Object.entries(items).forEach(([k, n]) => { me.inv[k] = (me.inv[k] || 0) + n; });
   const after = xLv(ex.exp).L, sp = 0; ex.run = null; xb = null; clearInterval(xTick); save(); hud();   // 스킬 포인트는 레벨 업에서만
   xv = { view: 'result', how, gold, exp, items, up: after > before ? [before, after] : null, sp, prog: Math.floor(run.prog) };
@@ -2974,8 +2975,9 @@ const xFm = (u, k) => u.fx[k] ? u.fx[k].v : 0;
 let xSfxT = 0;
 function xHit(u, t, raw, col, opt){   // 피해 한 번: 치명타 · 약점(vuln) · 회피 · 받는 피해 감소 · 보호막 · 버티기 · 흡혈 · 반격
   opt = opt || {}; let dmg = raw; let isCrit = false; if (u && u.team === 'a' && (opt.fcrit || Math.random() < (u.crit || 0))){ dmg *= 1.6; isCrit = true; xFloat(t.id, '치명!', '#ffb84d'); }
+  if (u && u.team === 'a' && u.bossK && t.big) dmg *= 1 + u.bossK;   // 사역마: 보스전
   dmg *= 1 + xFm(t, 'vuln');   // 약점: 적은 내 디버프, 우리 편은 보스 저주
-  if (t.team === 'a'){ if (u && u.team === 'e' && xFm(t, 'dodge') + (t.dodge || 0) > Math.random()){ xFloat(t.id, '회피!', '#9fd0ff'); return 0; } dmg *= 1 - Math.min(.75, xFm(t, 'dmgIn') + (t.dr || 0)); }
+  if (t.team === 'a'){ if (u && u.team === 'e' && Math.min(.5, xFm(t, 'dodge') + (t.dodge || 0)) > Math.random()){ xFloat(t.id, '회피!', '#9fd0ff'); return 0; } dmg *= 1 - Math.min(.75, xFm(t, 'dmgIn') + (t.dr || 0)); }
   if (xb.def[t.id]) dmg /= 2; dmg = Math.max(1, Math.round(dmg));
   const sh = t.fx.shield; if (sh && sh.v > 0){ const a = Math.min(sh.v, dmg); sh.v -= a; dmg -= a; xFloat(t.id, '막음', '#9fd0ff'); if (sh.v <= 0) delete t.fx.shield; if (dmg <= 0) return 0; }
   t.hp = Math.max(0, t.hp - dmg); xFloat(t.id, '-' + dmg, col);
@@ -3011,7 +3013,8 @@ function xAct(u, sk, tgt){ if (!xb || xb.fin || !xAlive(u.team === 'a' ? xb.foes
 const xFoeTarget = () => { const A = xAlive(xb.party), tk = A.find(a => xFm(a, 'taunt')); if (tk && Math.random() < .8) return tk; const cv = A.find(a => xFm(a, 'cover')), fr = A.filter(a => a.row === 'f'), bk = A.filter(a => a.row === 'b'), pool = fr.length && bk.length ? (Math.random() < .8 ? fr : bk) : A, t = xRand(pool); return cv && t !== cv && Math.random() < .65 ? cv : t; };   // 도발 · 대신 맞기 · 앞열이 먼저 맞아요 (앞열 80 : 뒤열 20, 한쪽만 남으면 그쪽)
 const XFXN = { counter: '반격 태세', taunt: '도발!', cover: '대신 맞기', dodge: '회피↑', dmgIn: '방어↑', atk: '공격↑', spd: '속도↑' };
 function xApply(u, t, a, mult, st){   // 맞은 뒤 붙는 효과 [종류, 세기, 초]
-  const [k, v, sec] = a; if (k === 'stun'){ t.g = Math.min(t.g, -v); xFloat(t.id, '지연', '#ffd866'); } else if (k === 'dot'){ t.fx.dot = { v: Math.max(1, Math.round(u[st] * v * mult)), t: sec, acc: 0 }; xFloat(t.id, '지속 피해', '#ff9a4d'); } else if (k === 'bomb'){ t.fx.bomb = { v: Math.max(1, Math.round(u[st] * v * mult)), t: sec }; xFloat(t.id, '폭탄!', '#ffb040'); } else { t.fx[k] = { v, t: sec }; xFloat(t.id, { slow: '느려짐', weak: '약해짐', vuln: '약점', blind: '실명' }[k] || k, '#d0a0ff'); }
+  const [k, v, sec] = a; if (t.team === 'a' && t.res && Math.random() < t.res){ xFloat(t.id, '저항!', '#c8f0ff'); return; }
+  if (k === 'stun'){ t.g = Math.min(t.g, -v); xFloat(t.id, '지연', '#ffd866'); } else if (k === 'dot'){ t.fx.dot = { v: Math.max(1, Math.round(u[st] * v * mult)), t: sec, acc: 0 }; xFloat(t.id, '지속 피해', '#ff9a4d'); } else if (k === 'bomb'){ t.fx.bomb = { v: Math.max(1, Math.round(u[st] * v * mult)), t: sec }; xFloat(t.id, '폭탄!', '#ffb040'); } else { t.fx[k] = { v, t: sec }; xFloat(t.id, { slow: '느려짐', weak: '약해짐', vuln: '약점', blind: '실명' }[k] || k, '#d0a0ff'); }
 }
 function xPetHit(u, base){   // 적이 소환수를 노릴 때가 있어요 (체력이 다 닳으면 사라져요)
   const ps = []; xAlive(xb.party).forEach(o => (o.pets || []).forEach(p => { if (p.mhp) ps.push([o, p]); })); if (!ps.length || Math.random() > .3) return false;
@@ -3044,7 +3047,7 @@ function xAct0(u, sk, tgt){   // 한 번 행동
     if (sk.gold && u.uid && u.uid !== myId()){ B.stl = B.stl || {}; B.stl[u.uid] = (B.stl[u.uid] || 0) + 8 + u.L; xFloat(u.id, '골드+', '#ffd866'); }
     else if (sk.gold){ xEx().run.loot.gold += 8 + u.L; xFloat(u.id, '골드+', '#ffd866'); } }
   else if (sk.t === 'burst'){ fs().forEach(t => { const d = t.fx.dot; if (d){ const tot = Math.round(d.v * Math.max(1, Math.ceil(d.t / 2)) * 1.5); xHit(u, t, tot, '#ff9a4d'); delete t.fx.dot; } }); }
-  else if (sk.t === 'heal') as().forEach(t => { const h = Math.max(Math.round(u.heal * sk.p * (.9 + Math.random() * .2)), sk.pct ? Math.round(t.mhp * sk.pct) : 0); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); if (sk.cl) ['dot', 'slow', 'weak', 'blind', 'vuln', 'bomb'].forEach(k => delete t.fx[k]); if (sk.mpb){ t.mp = Math.min(t.mmp, t.mp + t.mmp * sk.mpb); xFloat(t.id, 'MP↑', '#6aa8ff'); } });
+  else if (sk.t === 'heal') as().forEach(t => { const h = Math.round(Math.max(Math.round(u.heal * sk.p * (.9 + Math.random() * .2)), sk.pct ? Math.round(t.mhp * sk.pct) : 0) * (1 + (t.healIn || 0))); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); if (sk.cl) ['dot', 'slow', 'weak', 'blind', 'vuln', 'bomb'].forEach(k => delete t.fx[k]); if (sk.mpb){ t.mp = Math.min(t.mmp, t.mp + t.mmp * sk.mpb); xFloat(t.id, 'MP↑', '#6aa8ff'); } });
   else if (sk.t === 'revive'){ const dead = sk.all ? B.party.filter(x => x.hp <= 0) : [tgt && tgt.hp <= 0 ? tgt : B.party.find(x => x.hp <= 0)].filter(Boolean);
     if (dead.length){ xFxAt(fxk, dead, u); dead.forEach(t => { t.hp = Math.max(1, Math.round(t.mhp * (sk.pct || .5))); t.dieAt = 0; xFloat(t.id, '부활!', '#fff'); }); if (sk.hl) xAlive(B.party).forEach(t => { const h = Math.round(u.heal * sk.hl); t.hp = Math.min(t.mhp, t.hp + h); xFloat(t.id, '+' + h, '#7affb0'); }); } else { u.mp += sk.mp; B.log = '쓰러진 동료가 없어요'; } }
   else if (sk.t === 'cleanse') as().forEach(t => { ['dot', 'slow', 'weak', 'blind', 'vuln', 'bomb'].forEach(k => delete t.fx[k]); xFloat(t.id, '정화', '#fff6c0'); if (sk.regen) t.fx.regen = { v: Math.round(u.heal * sk.regen), t: 10, acc: 0 }; });
@@ -3359,7 +3362,7 @@ const X_ITEMS = [['p_red', 'hp', '', '체력 50%', .5], ['p_vigor', 'mp', '', 'M
 function xItemUse(B, u, k, t){   // 효과만 적용 (개수는 쓰는 사람 기기에서 줄여요) · t: 받는 아군 (없으면 나)
   const it = X_ITEMS.find(x => x[0] === k); if (!it) return; t = t || u;
   const tasty = k === 'p_red' && (u.tasty || (u.uid === myId() && me.perk?.tasty_potion));   // 세라 ♥10: 맛있는 치유 물약 (체력 70% + MP 20%)
-  const sk = (u.uid === myId() && (me.buffs?.snow || 0) > now2() ? 1.2 : 1) * (u.uid === myId() && typeof BM !== 'undefined' ? 1 + BM.val('heal') : 1);   // 눈사람의 축복: 회복 +20%
+  const sk = Math.min(1.4, (t.uid === myId() && (me.buffs?.snow || 0) > now2() ? 1.2 : 1) * (t.uid === myId() && typeof BM !== 'undefined' ? 1 + BM.val('heal') : 1) * (1 + (t.healIn || 0)));   // 눈사람 · 책갈피 · 정령: 받는 사람 기준 · 1.4 배까지   // 눈사람의 축복: 회복 +20%
   const g = (kind, mx, was, set, f) => { const now = Math.min(mx, was + Math.round(mx * f * sk)); set(now); return Math.round(now - was); };
   const dh = it[1] !== 'mp' ? g('hp', t.mhp, t.hp, v => { t.hp = v; }, tasty ? .7 : it[4]) : 0, dm = it[1] !== 'hp' || tasty ? g('mp', t.mmp, t.mp, v => { t.mp = v; }, tasty ? .2 : it[4]) : 0;
   B.log = `${it[2]} ${u.name}이(가) ${t === u ? '' : t.name + '에게 '}${ITEM[k]}을(를) ${t === u ? '마셨어요' : '먹여 줬어요'}`; if (dh) xFloat(t.id, `+${dh}`, '#8af09a'); if (dm) xFloat(t.id, `+${dm}`, '#8ac4ff'); sfx('win'); u.g = 0;
@@ -3529,11 +3532,11 @@ function gameOver(fail){
   let reward = '', coin = 0, mana = 0, rec = 0, title = '';
   if (Gm.coop){
     const res = G.result ? G.result() : { ok: !fail, score: 0, text: '' }; rec = res.score;
-    coin = res.ok ? 80 + G.n * 5 : 15; mana = res.ok ? 5 : 0; if (buffOn('ggold')) coin = Math.round(coin * 1.5);
+    coin = res.ok ? 80 + G.n * 5 : 15; mana = res.ok ? 5 : 0; if (buffOn('ggold')) coin = Math.round(coin * 1.5); if (famV('game')) coin = Math.round(coin * (1 + famV('game')));
     title = res.ok ? '팀 성공!' : '아쉽게 실패.......'; reward = res.text;
   } else {
     const rank = 1 + ps.filter(([, p]) => (p.s || 0) > G.score).length; rec = Math.max(0, G.score);   // 같은 점수는 같은 등수
-    coin = ps.length === 1 ? Math.min(40, 10 + Math.floor(Math.max(0, G.score) / 2)) : G.score > 0 ? [0, 60, 40, 25][rank] || 10 : 10; mana = ps.length > 1 && G.score > 0 ? [0, 5, 3, 2][rank] || 0 : 0; if (buffOn('ggold')) coin = Math.round(coin * 1.5);   // 요리 효과
+    coin = ps.length === 1 ? Math.min(40, 10 + Math.floor(Math.max(0, G.score) / 2)) : G.score > 0 ? [0, 60, 40, 25][rank] || 10 : 10; mana = ps.length > 1 && G.score > 0 ? [0, 5, 3, 2][rank] || 0 : 0; if (buffOn('ggold')) coin = Math.round(coin * 1.5); if (famV('game')) coin = Math.round(coin * (1 + famV('game')));   // 요리 효과
     title = ps.length === 1 ? `혼자 기록 ${G.score}점` : `${rank}등!`;
   }
   me.gdone = me.gdone || {};
@@ -4197,7 +4200,7 @@ const buffOn = k => (me?.buffs?.[k] || 0) > now2() || (me?.buffs?.all || 0) > no
 function eatDish(k){
   const d = DISH_INFO[k]; if (!d || !(me.inv[k] > 0)) return;
   me.inv[k]--; const v = d.best ? d.v * 2 : d.v; me.buffs = me.buffs || {};
-  if (TIMED.includes(d.e) || d.e === 'all'){ const key = d.e; me.buffs[key] = Math.min(now2() + 120 * 6e4, Math.max(now2(), me.buffs[key] || 0) + v * 6e4);   /* 같은 요리를 여러 번 먹어도 남은 시간은 2시간까지 */ if (d.e === 'all') me.mana += 50; }
+  if (TIMED.includes(d.e) || d.e === 'all'){ const key = d.e; me.buffs[key] = Math.min(now2() + 120 * 6e4, Math.max(now2(), me.buffs[key] || 0) + v * 6e4 * (1 + famV('cookbuff')));   /* 같은 요리를 여러 번 먹어도 남은 시간은 2시간까지 */ if (d.e === 'all') me.mana += 50; }
   if (d.e === 'mana') me.mana += v;
   if (d.e === 'know'){ const got = addKnow(v); if (got.length) setTimeout(() => toast(got.join(' · ')), 1200); }
   if (d.e === 'spot'){ if (!me.fg || me.fg.d !== todayKey()) me.fg = { d: todayKey(), got: [] }; me.fg.got = me.fg.got || []; me.fg.extra = (me.fg.extra || 0) + v; syncSpots(); }
@@ -4209,7 +4212,7 @@ function eatDish(k){
 function syncBuffs(){
   const c = $('#buffChip'); if (!c || !me) return;
   const now = now2(), on = Object.entries(me.buffs || {}).filter(([, t]) => t > now);
-  World.setSpeedK && World.setSpeedK((buffOn('speed') ? 1.4 : 1) * (1 + sgFx('move_speed')));
+  World.setSpeedK && World.setSpeedK(Math.min(1.6, (buffOn('speed') ? 1.4 : 1) * (1 + sgFx('move_speed'))));   // 다 겹쳐도 1.6 배까지
   c.hidden = !on.length; if (on.length) c.textContent = '' + on.map(([k, t]) => `${k === 'all' ? '만찬' : BUFF_NAME[k]} ${(t - now) >= 72e5 ? Math.ceil((t - now) / 36e5) + ' 시간' : Math.ceil((t - now) / 6e4) + '분'}`).join(' · ');
 }
 // ---------- 요리하기: 솥 앞에서 ----------
@@ -6132,7 +6135,7 @@ function stopLesson(){ clearTimeout(lessonTimer); clearInterval(lessonIv); cance
 function endLesson(){ stopLesson(); lesson = null; }
 // 지식을 n 만큼 올려요. 지식 KNOW_PER_HINT마다 새 레시피 (어디서 얻든 똑같이) → 새로 알게 된 것 문구들
 function addKnow(n){
-  const out = []; { const kx = tarotVal('knowx') + (typeof BM !== 'undefined' ? BM.val('know') : 0); if (kx) n = sgMul(n | 0, kx); }   // 오늘의 운세(심판): 지식 얻는 양 +20%
+  const out = []; { const kx = Math.min(.4, tarotVal('knowx') + (typeof BM !== 'undefined' ? BM.val('know') : 0) + famV('know')); if (kx) n = sgMul(n | 0, kx); }   // 오늘의 운세(심판): 지식 얻는 양 +20%
   for (let i = 0; i < (n | 0); i++){
     me.know = (me.know || 0) + 1;
     if (me.know % KNOW_PER_HINT === 0){
@@ -6460,7 +6463,7 @@ function renderLab(){
     me.mana -= brewCost(); sfx('bubble');
     let msg;
     if (p){
-      const coX = coExtra(); me.inv[p] = (me.inv[p] || 0) + 1 + coX; if (coX) setTimeout(() => toast(`친구와 함께 만들어서 ${coX}개 더!`), 900);
+      const coX = coExtra(), fX = Math.random() < famV('brew') ? 1 : 0; me.inv[p] = (me.inv[p] || 0) + 1 + coX + fX; if (fX) setTimeout(() => toast('사역마 덕분에 하나 더!'), 1300); if (coX) setTimeout(() => toast(`친구와 함께 만들어서 ${coX}개 더!`), 900);
       const isNew = !me.found.includes(p);
       if (isNew) me.found.push(p); trEv('brew', { p, isNew }); try { tlEv('brew'); } catch(e){}
       if (!me.hints.includes(p)) me.hints.push(p);
@@ -6874,7 +6877,7 @@ function restPlan(){
   const since = me.lastSleepAt || 0, lv = xLv(xEx().exp).L;
   const guests = Math.min(3, new Set(Object.values(myGuest).filter(g => g.at > since).map(g => g.uid)).size);
   const cozy = Math.min(COZY_MAX, cozyOf(me)), hall = (commonStage(me.house) - 1) * 2, bonus = Math.floor(lv / 2), capLv = (lv - 1) * 2;   // 레벨이 오를수록 더 많이 차고 더 많이 담아요
-  const gain = Math.round((20 + cozy * 2 + guests * 3 + hall + bonus) * (dbuff('dwater') ? 1.1 : 1) * (1 + (typeof BM !== 'undefined' ? BM.val('rest') : 0))), cap = 50 + cozy * 2 + guests * 3 + hall + capLv;
+  const gain = Math.round((20 + cozy * 2 + guests * 3 + hall + bonus) * Math.min(1.3, (dbuff('dwater') ? 1.1 : 1) * (1 + (typeof BM !== 'undefined' ? BM.val('rest') : 0)) * (1 + famV('rest')))), cap = 50 + cozy * 2 + guests * 3 + hall + capLv;
   const why = `아늑함 +${cozy * 2}${hall ? `, 휴게실 +${hall}` : ''}${guests ? `, 손님 ${guests}명 +${guests * 3}` : ''}${bonus ? `, 레벨 +${bonus}` : ''}`;
   return { nap: { ms: REST_NAP, gain, cap, why, name: '낮잠' }, night: { ms: REST_NIGHT, gain: gain * 3, cap: cap + 50, why, name: '밤잠' } };
 }
@@ -6906,7 +6909,7 @@ function dreamGo(night){
   if (typeof Dream === 'undefined' || dreamDone() || document.getElementById('dreamv')) return;
   const D = dreamSt(), pool = Dream.LIST.filter(x => night || !x[3]).map(x => x[0]);
   Dream.run({ pool, onStart: () => { D.d = todayKey(); save(); }, isNew: k => !D.seen[k] }).then(({ k, got }) => {
-    D.seen[k] = (D.seen[k] || 0) + 1; D.sh += got; trEv('dream', { k }); save(); hud();
+    D.seen[k] = (D.seen[k] || 0) + 1; got = sgMul(got, famV('dream')); D.sh += got; trEv('dream', { k }); save(); hud();
     if (me.rest) showRest(); else toast(`꿈 조각 +${got}`);
     if (sheetOn && sub === 'journal') render();
   });
@@ -12120,7 +12123,7 @@ function pzBtn(){
 // 낚시·채집·탐사에서 가끔 조각이 나와요 (src: fish · forage · explore)
 function pzDrop(src){
   if (solo || !F || !db || !pzCtl || !pzCtl.open) return;
-  const p = ({ fish: .12, forage: .12, explore: .6 }[src] || 0) * (pzCtl.rate || 1); if (Math.random() >= p) return;
+  const p = ({ fish: .12, forage: .12, explore: .6 }[src] || 0) * (pzCtl.rate || 1) * (1 + famV('event')); if (Math.random() >= p) return;
   const held = Object.keys(pzOwn).filter(k => pzOwn[k] === myId() && pzBoard[k] === undefined).length; if (held >= PZ.HOLD) return;
   const free = []; for (let i = 0; i < PZ.C * PZ.R; i++) if (pzOwn[i] === undefined) free.push(i); if (!free.length) return;
   const tryGet = n => { const id = free[Math.random() * free.length | 0]; GDB.tx('puzzle/own/' + id, cur => cur ? undefined : myId()).then(r => { if (r.committed){ pzOwn[id] = myId(); setTimeout(() => { toast('젖은 보물 지도 조각을 찾았어요!'); sfx('pick'); }, 900); if (pzOn) pzUi(); } else if (n > 0){ free.splice(free.indexOf(id), 1); if (free.length) tryGet(n - 1); } }).catch(() => {}); };
@@ -12252,7 +12255,7 @@ function lnSync(){   // 단추와 학교 밝기
 // 낚시·채집·탐사에서 5% 확률로 등불이 저절로 모여요 (한 사람 10개까지, 60개가 차면 멈춰요)
 function lnDrop(src){
   if (solo || !F || !db || !lnCtl || !lnCtl.open || lnDone() || lnMine() >= LN.MAX) return;
-  if (Math.random() >= LN.RATE * (lnCtl.rate || 1)) return;
+  if (Math.random() >= LN.RATE * (lnCtl.rate || 1) * (1 + famV('event'))) return;
   GDB.tx('lantern/cnt/' + myId(), cur => (cur || 0) < LN.MAX ? (cur || 0) + 1 : undefined).then(r => { if (!r.committed) return; lnSync(); setTimeout(() => { toast(`유령 등불이 모였어요! 내 등불 ${lnMine()}/${LN.MAX}${lnMine() >= LN.MAX ? ' (다 모았어요!)' : ''}`); sfx('pick'); }, 900); if (lnOn) lnUi(); lnCheckCut(); }).catch(() => {});
 }
 function lnOpen(){
@@ -12495,7 +12498,26 @@ function sgListen(){
   if (sgAdmin()) setInterval(sgAdminTick, 500);
 }
 // ---- 효과: 별빛 버프의 수치는 별자리 데이터(effects)에서 읽어요 ----
-const sgFx = stat => tarotStat(stat) + sgFx0(stat) + (typeof BM !== 'undefined' ? BM.stat(stat) : 0);   // 일지에 꽂은 책갈피도   // 오늘의 운세 카드 효과도 같이
+
+// ===== 사역마 「함께하는 힘」 실제 효과: 관심 = A +5 % · 익숙 = B +5 % · 신뢰 = A +10 %(합계) · 맹약 = X · 12번째 칸은 날마다 다른 분야 =====
+const FAM_AK = ['bite', 'game', 'brew', 'rest', 'order', 'dream', 'cook', 'sell', 'know', 'sgtime', 'nightrare', 'day'];
+const FAM_BK = ['move', 'gather', 'bite', 'crop', 'ranch', 'rarefish', 'cookbuff', 'rare', 'dex', 'event', 'potsell', 'day'];
+const FAM_XK = ['xspd', 'xloot', 'xmain', 'xheal', 'xhp', 'xres', 'xboss', 'xgold', 'xexp', 'xdr', 'xdodge', 'day'], FAM_XV = [.05, .1, .08, .1, .08, .15, .1, .1, .1, .08, .05];
+const famDayIdx = () => { const d = todayKey(); let x = 0; for (const c of d) x = (x * 31 + c.charCodeAt(0)) % 9973; return x % 11; };
+function famV(key){
+  if (!me || !me.fam || typeof famStage !== 'function') return 0; const k = me.fam.k, st = famStage(), di = famDayIdx(); let v = 0;
+  const pick = (L, i) => i === 11 ? L[di] : L[i];
+  if (st >= 1 && pick(FAM_AK, k) === key) v += st >= 3 ? .1 : .05;
+  if (st >= 2 && pick(FAM_BK, k) === key) v += .05;
+  if (st >= 4 && pick(FAM_XK, k) === key) v += FAM_XV[k === 11 ? di : k];
+  return v;
+}
+const FAM_STAT = { move_speed: 'move', gather_yield: 'gather', crop_growth: 'crop', rare_fish: 'rarefish', craft_success: 'cook', exp_gain: 'xexp' };
+// 효과가 여러 곳(운세 · 별빛 · 책갈피 · 사역마)에서 겹쳐도 이 한도를 넘지 않아요
+const FX_CAP = { move_speed: .35, gather_yield: .4, rare_fish: .6, gift_affection: .4, exp_gain: .4, crop_growth: .4, craft_success: .4, party_reward: .2, co_craft_extra: 1 };
+const FX_MIN = { stamina_cost: -.6 };
+window.__fam = { famV: k => famV(k), sgFx: s => sgFx(s) };   // 시험용
+const sgFx = stat => { const v = tarotStat(stat) + sgFx0(stat) + (typeof BM !== 'undefined' ? BM.stat(stat) : 0) + (FAM_STAT[stat] ? famV(FAM_STAT[stat]) : 0); return FX_CAP[stat] !== undefined ? Math.min(FX_CAP[stat], v) : FX_MIN[stat] !== undefined ? Math.max(FX_MIN[stat], v) : v; };   // 운세 · 별빛 · 책갈피 · 사역마 (한도 있음)   // 오늘의 운세 카드 효과도 같이
 const sgFx0 = stat => { if (!me || !sgData) return 0; let v = 0; const t = now2(); sgData.forEach(C => { if (((me.buffs || {})[C.buff.id] || 0) > t) C.buff.effects.forEach(e => { if (e.stat === stat) v += e.value; }); }); return v; };
 const sgMul = (n, v) => { const x = n * (1 + v), f = Math.floor(x); return f + (Math.random() < x - f ? 1 : 0); };
 // 열두 친구의 별빛: 다른 학생과 같은 곳에 있으면 활동 보상 +10% · 같이 만들면 1개 더
@@ -12578,7 +12600,7 @@ function sgSync(){
   if (sgAdmin() && AD.tab === 'event' && !adminTyping()) adminRender();
 }
 function sgGrant(){
-  const C = sgConst(sgCtl.c); if (!C) return; sgGot = sgCtl.id; trEv('stargaze', { id: sgCtl.id }); const b = C.buff, until = now2() + (sgCtl.bm || sgCfg().buffH * 3600e3);
+  const C = sgConst(sgCtl.c); if (!C) return; sgGot = sgCtl.id; trEv('stargaze', { id: sgCtl.id }); const b = C.buff, until = now2() + (sgCtl.bm || sgCfg().buffH * 3600e3) * (1 + famV('sgtime'));
   me.buffs = me.buffs || {}; Object.keys(me.buffs).forEach(k => { if (k.startsWith('buff_')) delete me.buffs[k]; });   // 같은 종류의 별빛은 겹치지 않고 새것으로 바뀌어요
   me.buffs[b.id] = until; me.sgd = sgCtl.id; me.sgdex = me.sgdex || {}; me.sgdex[C.id] = now2(); save(); hud(); syncBuffs(); sfx('heart');
   setTimeout(() => toast(`「${b.name}」 별빛이 깃들었어요! ${b.desc}`), 800);
