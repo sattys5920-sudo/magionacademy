@@ -1008,7 +1008,7 @@ body.gtride #bar,body.gtride #chat,body.gtride #ctx,body.gtride .corner{opacity:
       <div class="chips"><span id="sub"></span><button class="chip ev" id="gameChip" hidden></button><div class="chip" id="buffChip" hidden></div></div>
       <div id="fade"></div>
     </div>
-    <div class="corner"><button id="tZoom" class="icbtn" aria-label="확대·축소">멀리</button><button id="tDay" hidden></button></div>
+    <div class="corner"><button id="tZoom" class="icbtn" aria-label="확대·축소">멀리</button><button id="tHome" class="icbtn" aria-label="내 방으로 가기">내 방</button><button id="tDay" hidden></button></div>
     <div id="ctx"></div>
     <div id="fishui"></div>
     <div id="npcui"></div>
@@ -6683,6 +6683,16 @@ function renderRanch(){
 // ===== 기숙사: 내 방 (가구 놓기) · 휴게실 (기숙사생이 함께 꾸미기) =====
 let dormMsg = '', furnCat = '전체';
 const myRoomId = () => HOUSE_DORM[me.house].replace('dorm_', 'myroom_');
+// 「내 방」 버튼: 어디서든 기숙사 복도 내 방 문 앞으로 옮겨서 바로 들어가요 (장면 · 놀이 · 탐사 · 유령 열차 중에는 안 돼요)
+function goMyRoom(){
+  if (!me || !me.house) return; const w = World.where() || '', ro = World.roomOwner && World.roomOwner();
+  if (/^myroom_/.test(w) && ro && ro.own) return toast('이미 내 방이에요');
+  if (uiBusy() || (World.cutBusy && World.cutBusy()) || xRunNow() || gameRet || /^(gt_|arena)/.test(w)) return toast('지금은 내 방으로 갈 수 없어요');
+  const i = roomIdxOf(typeof uid !== 'undefined' ? uid : null); if (i < 0) return toast('내 방을 찾지 못했어요. 기숙사 복도에서 문을 눌러 주세요');
+  if (typeof visitUid !== 'undefined' && visitUid && typeof leaveVisit === 'function') leaveVisit();
+  closeSheet(); sfx('door'); World.goRoom(me.house, i);
+}
+document.getElementById('tHome').onclick = () => goMyRoom();
 const inMyRoom = () => World.where() === myRoomId() && !!World.roomOwner()?.own;
 function syncRoom(){ World.setFurniture((me.room || []).map(r => ({ id: r.id, k: FIDX[r.f], x: r.x, y: r.y, r: r.r ? 1 : 0 }))); }
 // 가구 놓기: 내 방이 아니면 먼저 내 방으로 가요
