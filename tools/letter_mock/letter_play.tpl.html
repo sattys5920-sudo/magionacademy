@@ -166,17 +166,18 @@ const SHIFT = [1, 5, 7];
 const ST = { stu: 0, day: 0, deliv: {}, read: {}, reply: {} };
 const nm = i => `학생 ${i + 1}`;
 // 관리자 배정: ASSIGN[학생] = [NPC, NPC, NPC] (1 · 2 · 3 일째) · NPC 한 명당 최대 3 번 (편지 3 종) · 같은 NPC는 앞에서부터 1 · 2 · 3 번째 편지
-const ASSIGN = Array.from({ length: 12 }, (_, i) => [0, 1, 2].map(d => { const k = i * 3 + d; return k < 33 ? NPC[k % 11].id : ''; }));
+const ASSIGN = Array.from({ length: 12 }, (_, i) => [0, 1, 2].map(d => { const k = i * 3 + d; return k < 33 ? NPC[k % 11].id : ['mandi', 'madeleine', 'jipsin'][k - 33]; }));
 const useCount = () => { const c = {}; ASSIGN.flat().forEach(id => { if (id) c[id] = (c[id] || 0) + 1; }); return c; };
 const varOf = (i, d) => { const id = ASSIGN[i][d]; let v = 0; for (let a = 0; a < 12; a++) for (let b = 0; b < 3; b++){ if (a === i && b === d) return v; if (ASSIGN[a][b] === id) v++; } return v; };
 const BATRI_NOTE = { t: '{name}에게\n\n이번 편지는.... 내가 대신 써.\n가방을 엎는 바람에 네 앞으로 온 편지 한 통이\n바람에 날아가 버렸거든.\n\n대신 약속할게.\n다음 배달은 꼭, 제일 먼저 너한테 갈게.', r: [['괜찮아, 고마워', '괜찮다고 해 줘서.... 날개에 힘이 났어. 다음 배달은 너부터야.'], ['날아간 편지 같이 찾자', '같이 찾자고 했지. 바람 방향은 내가 잘 알아. 언젠가 꼭 찾을게.'], ['배트리 편지가 더 좋아', '내 편지가 더 좋다고? ....봉투를 또 엎을 뻔했어.']] };
-const letterOf = (i, d) => { const id = ASSIGN[i][d]; if (!id) return { n: NPC.find(x => x.id === 'batri'), v: 9, L: BATRI_NOTE, key: `${i}:${d}` }; const n = NPC.find(x => x.id === id), v = Math.min(2, varOf(i, d)); return { n, v, L: LETTERS[id][v], key: `${i}:${d}` }; };
+const CAP = id => LETTERS[id].length;
+const letterOf = (i, d) => { const id = ASSIGN[i][d]; if (!id) return { n: NPC.find(x => x.id === 'batri'), v: 9, L: BATRI_NOTE, key: `${i}:${d}` }; const n = NPC.find(x => x.id === id), v = Math.min(CAP(id) - 1, varOf(i, d)); return { n, v, L: LETTERS[id][v], key: `${i}:${d}` }; };
 function renderAdm(){
   const C = useCount(), el = document.getElementById('adm');
-  el.innerHTML = `<div class="admh"><b>관리자 · 편지 보낼 NPC 정하기</b><span>학생마다 1 · 2 · 3 일째 편지를 쓸 NPC를 골라요. NPC 한 명은 편지가 3 종이라 3 번까지만 고를 수 있어요. 3 번 다 정해진 NPC는 다른 칸 목록에서 빠져요. 비워 두면 배트리가 사과 쪽지를 대신 써요.</span></div>
-    <div class="cnt">${NPC.map(n => `<span class="${(C[n.id] || 0) >= 3 ? 'full' : ''}">${n.n.replace(' 선생님', '')} <b>${C[n.id] || 0}</b>/3</span>`).join('')}</div>
-    <div class="arows">${ASSIGN.map((row, i) => `<div class="arow"><span class="an">학생 ${i + 1}</span>${row.map((cur, d) => `<select data-as="${i}:${d}" aria-label="학생 ${i + 1} ${d + 1} 일째"><option value="">비움</option>${NPC.filter(n => n.id === cur || ((C[n.id] || 0) < 3 && !row.includes(n.id))).map(n => `<option value="${n.id}" ${n.id === cur ? 'selected' : ''}>${n.n.replace(' 선생님', '')}</option>`).join('')}</select>`).join('')}</div>`).join('')}</div>
-    <p class="hint">빈칸 ${ASSIGN.flat().filter(x => !x).length} 개 · 편지 33 통으로 36 칸(12 명 × 3 일)을 채우면 3 칸은 늘 남아요.</p>`;
+  el.innerHTML = `<div class="admh"><b>관리자 · 편지 보낼 NPC 정하기</b><span>학생마다 1 · 2 · 3 일째 편지를 쓸 NPC를 골라요. NPC 한 명은 편지 수만큼만 고를 수 있어요 (대부분 3 번 · 맨디 · 마들렌 · 스트로는 4 번). 다 정해진 NPC는 다른 칸 목록에서 빠져요.</span></div>
+    <div class="cnt">${NPC.map(n => `<span class="${(C[n.id] || 0) >= CAP(n.id) ? 'full' : ''}">${n.n.replace(' 선생님', '')} <b>${C[n.id] || 0}</b>/${CAP(n.id)}</span>`).join('')}</div>
+    <div class="arows">${ASSIGN.map((row, i) => `<div class="arow"><span class="an">학생 ${i + 1}</span>${row.map((cur, d) => `<select data-as="${i}:${d}" aria-label="학생 ${i + 1} ${d + 1} 일째"><option value="">비움</option>${NPC.filter(n => n.id === cur || ((C[n.id] || 0) < CAP(n.id) && !row.includes(n.id))).map(n => `<option value="${n.id}" ${n.id === cur ? 'selected' : ''}>${n.n.replace(' 선생님', '')}</option>`).join('')}</select>`).join('')}</div>`).join('')}</div>
+    <p class="hint">빈칸 ${ASSIGN.flat().filter(x => !x).length} 개 · 편지 36 통으로 36 칸(12 명 × 3 일)이 꼭 맞아요. 빈칸이 생기면 배트리가 사과 쪽지를 대신 써요.</p>`;
 }
 document.addEventListener('change', e => { const sl = e.target.closest && e.target.closest('[data-as]'); if (!sl) return; const [i, d] = sl.dataset.as.split(':').map(Number); ASSIGN[i][d] = sl.value; renderAdm(); render(); });
 const finderOf = (i, d) => (i - SHIFT[d] + 12) % 12, foundFor = (i, d) => (i + SHIFT[d]) % 12;
