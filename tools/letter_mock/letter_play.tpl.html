@@ -21,7 +21,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f-body);f
 .envs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .env{position:relative;border:0;padding:0;border-radius:10px;cursor:pointer;background:none;text-align:left}
 .env canvas{width:100%;aspect-ratio:160/100;image-rendering:pixelated;display:block;border-radius:8px}
-.env .to{position:absolute;left:10%;top:60%;font:13px var(--f-pxb);color:#5A4636}
+.env .to{position:absolute;left:10%;top:66%;font:13px var(--f-pxb);color:#5A4636}
 .env .tag{position:absolute;right:8px;top:6px;font:11px var(--f-pxb);padding:2px 8px;border-radius:8px;background:rgba(20,13,30,.85);color:var(--gold)}
 .env.done .tag{color:var(--ok)}
 .hint{font-size:13px;color:var(--sub);margin:0}
@@ -50,23 +50,30 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f-body);f
 .say b{display:block;font:13px var(--f-pxb);color:#BFE0FF}
 .say p{margin:0;font:14px/1.6 var(--f-px);color:#F1E9FF}
 .say.ok{border-color:var(--ok)}.say.ok b{color:#C8F0B0}
+.sec{display:flex;flex-direction:column;gap:8px}
+.envs.one{display:block;max-width:260px}
+.env .cv{display:block}
+.hint.ok{color:var(--ok)}
+.pick select#day{flex:0 0 96px}
+.kept{display:flex;flex-direction:column;gap:6px}.kept button{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line2);border-radius:10px;background:var(--panel2);color:var(--text);font:13px var(--f-pxb);cursor:pointer;text-align:left}.kept i{width:28px;height:20px;border-radius:3px;border:2px solid;flex:none}.kept span{flex:1}.kept em{font-style:normal;font-size:11px;color:var(--sub)}
+.rep{display:flex;flex-direction:column;gap:6px}.rep button{min-height:44px;border:1px solid var(--line2);border-radius:10px;background:var(--panel2);color:var(--text);font:14px var(--f-px);text-align:left;padding:8px 12px;cursor:pointer}.rep button:hover{border-color:var(--accent)}
 button:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 </style>
 
 <div id="app">
   <div class="shead"><b>배트리의 쏟아진 편지</b><span class="stat" id="stat"></span></div>
   <div class="body">
-    <div class="pick"><label for="stu">시안 · 받는 학생</label><select id="stu"></select></div>
-    <div class="say" id="intro"><canvas width="32" height="32" id="ifc"></canvas><div><b>배트리</b><p>으.... 미안해. 하늘에서 가방을 엎었어. 봉투에 받는 사람 이름은 남았는데, 보낸 사람 칸이 다 찢겨 나갔어. 글씨랑 편지지를 잘 보면 누가 썼는지 알 수 있을 거야.......</p></div></div>
-    <div class="lab">내 앞으로 온 편지 · 누르면 열어요</div>
-    <div class="envs" id="envs"></div>
-    <p class="hint">학생마다 NPC 11 명에게서 한 통씩, 똑같이 11 통을 받아요. 게임에서는 하루 3~4 통씩 마을 바닥에 떨어져 있어요.</p>
+    <div class="pick"><label for="stu">시안 · 나는</label><select id="stu"></select><select id="day" aria-label="날짜"></select></div>
+    <div class="say" id="intro"><canvas width="32" height="32" id="ifc"></canvas><div><b>배트리</b><p id="itx"></p></div></div>
+    <section class="sec"><div class="lab">오늘 주운 편지 · 다른 친구 앞으로 온 편지예요</div><div id="found"></div></section>
+    <section class="sec"><div class="lab">내 방 바닥</div><div id="room"></div></section>
+    <section class="sec"><div class="lab">편지함 · 간직한 편지</div><div id="box"></div></section>
   </div>
 </div>
 <div id="lv" hidden><div class="lwrap">
   <div class="lhd"><b id="lttl"></b><button id="lx" aria-label="닫기">✕</button></div>
   <div class="paper" id="paper"></div>
-  <div class="guess" id="guess"></div>
+  <div class="guess" id="reply"></div>
 </div></div>
 
 <script>
@@ -147,60 +154,69 @@ function pxCanvas(key){
   const [rows, pal, s] = PX[key], h = rows.length, w = rows[0].length, c = document.createElement('canvas'); c.width = w * s; c.height = h * s; c.className = 'dc';
   const q = c.getContext('2d'); rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === '.') return; q.fillStyle = pal[ch]; q.fillRect(x * s, y * s, s, s); })); return c;
 }
-const ST = { stu: 0, open: {}, guessed: {}, tries: {} };
-const name = () => `학생 ${ST.stu + 1}`;
-// 봉투 그림: 받는 사람 칸은 그대로, 보낸 사람 칸은 찢겨 나감
-function envCanvas(i, done){
+__LETTERS__
+const SHIFT = [1, 5, 7];   
+const ST = { stu: 0, day: 0, deliv: {}, read: {}, reply: {} };
+const nm = i => `학생 ${i + 1}`;
+const letterOf = (i, d) => { const k = i * 3 + d, n = NPC[k % 11], v = Math.floor(k / 11) % 3; return { n, v, L: LETTERS[n.id][v], key: `${i}:${d}` }; };
+const finderOf = (i, d) => (i - SHIFT[d] + 12) % 12, foundFor = (i, d) => (i + SHIFT[d]) % 12;
+const face = (cv, row) => { const q = cv.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, cv.width, cv.height); if (SHEET.complete) q.drawImage(SHEET, 16, row * 64 + 10, 32, 32, 0, 0, cv.width, cv.height); };
+function envCanvas(seed, open){
   const c = document.createElement('canvas'); c.width = 160; c.height = 100; const q = c.getContext('2d');
-  const P = ['#F4EAD8', '#EAF0F8', '#F6E8EE', '#EEF4E6'][i % 4];
+  const P = ['#F4EAD8', '#EAF0F8', '#F6E8EE', '#EEF4E6'][seed % 4];
   q.fillStyle = '#2A1A2E'; q.fillRect(0, 0, 160, 100); q.fillStyle = P; q.fillRect(2, 2, 156, 96);
   q.fillStyle = 'rgba(0,0,0,.06)'; q.beginPath(); q.moveTo(2, 2); q.lineTo(80, 52); q.lineTo(158, 2); q.fill();
   q.strokeStyle = 'rgba(90,70,50,.35)'; q.beginPath(); q.moveTo(2, 2); q.lineTo(80, 52); q.lineTo(158, 2); q.stroke();
-  q.fillStyle = '#C8B8A0'; q.fillRect(14, 64, 90, 1); q.fillRect(14, 78, 70, 1);
-  q.fillStyle = '#2A1A2E'; for (let x = 104; x < 158; x += 6){ const y = 10 + ((x / 6) % 2) * 4; q.fillRect(x, y, 6, 2); } q.fillStyle = '#140D1E'; q.beginPath(); q.moveTo(104, 2); for (let x = 104; x <= 158; x += 6) q.lineTo(x, 10 + ((x / 6) % 2) * 4); q.lineTo(158, 2); q.fill();
-  q.fillStyle = done ? '#6FD08C' : '#C8343E'; q.beginPath(); q.arc(80, 50, 7, 0, 7); q.fill(); q.fillStyle = 'rgba(255,255,255,.4)'; q.fillRect(77, 46, 3, 2);
+  q.fillStyle = '#C8B8A0'; q.fillRect(14, 84, 90, 1);
+  q.fillStyle = '#140D1E'; q.beginPath(); q.moveTo(104, 2); for (let x = 104; x <= 158; x += 6) q.lineTo(x, 10 + ((x / 6) % 2) * 4); q.lineTo(158, 2); q.fill();
+  q.fillStyle = open ? '#6FD08C' : '#C8343E'; q.beginPath(); q.arc(80, 50, 7, 0, 7); q.fill(); q.fillStyle = 'rgba(255,255,255,.4)'; q.fillRect(77, 46, 3, 2);
   return c;
 }
-function renderEnvs(){
-  const el = document.getElementById('envs'); el.innerHTML = '';
-  NPC.forEach((n, i) => { const done = !!ST.guessed[n.id], b = document.createElement('button'); b.className = 'env' + (done ? ' done' : ''); b.dataset.i = i;
-    b.appendChild(envCanvas(i, done)); b.insertAdjacentHTML('beforeend', `<span class="to">받는 사람 · ${name()}</span><span class="tag">${done ? `${n.n}의 편지` : ST.open[n.id] ? '읽었어요 · 누구?' : '새 편지'}</span>`); el.appendChild(b); });
-  document.getElementById('stat').textContent = `맞힌 편지 ${Object.keys(ST.guessed).length} / 11`;
+const envHTML = (id, to, tag, seed, open) => `<button class="env" data-env="${id}"><span class="cv" data-seed="${seed}" data-open="${open ? 1 : 0}"></span><span class="to">받는 사람 · ${to}</span><span class="tag">${tag}</span></button>`;
+function paintEnvs(){ document.querySelectorAll('.env .cv').forEach(sp => { if (sp.firstChild) return; sp.appendChild(envCanvas(+sp.dataset.seed, sp.dataset.open === '1')); }); }
+function render(){
+  const i = ST.stu, d = ST.day, tgt = foundFor(i, d), fk = `${tgt}:${d}`, mine = letterOf(i, d), by = finderOf(i, d), mk = mine.key;
+  document.getElementById('itx').textContent = d === 0 ? '으.... 미안해. 하늘에서 가방을 엎었어. 봉투에 받는 사람 이름은 남았는데, 보낸 사람 칸이 다 찢겨 나갔어. 주운 편지는 받는 친구 방에 살짝 놓아 줄래?' : `오늘도 하나씩 떨어져 있을 거야. 남은 편지는 ${3 - d} 통. 배달 부탁해.......`;
+  document.getElementById('found').innerHTML = `<div class="envs one">${envHTML('found', nm(tgt), ST.deliv[fk] ? '놓고 왔어요' : '오늘 주웠어요', tgt + d, ST.deliv[fk])}</div>
+    ${ST.deliv[fk] ? `<p class="hint ok">${nm(tgt)} 방 바닥에 살짝 놓고 왔어요. 보낸 사람은 찢겨서 아무도 몰라요.</p>` : `<button class="btn go" data-go="deliver">${nm(tgt)} 방에 놓고 오기</button>`}`;
+  const arrived = ST.deliv[mk] || ST.auto;
+  document.getElementById('room').innerHTML = arrived ? `<div class="envs one">${envHTML('mine', nm(i), ST.read[mk] ? '읽었어요' : `${ST.deliv[mk] ? nm(by) : '배트리'}가 놓고 갔어요`, i + d + 7, ST.read[mk])}</div>`
+    : `<p class="hint">아직 아무도 놓고 가지 않았어요. 오늘 ${nm(by)}가 내 편지를 주웠어요.</p><button class="btn" data-go="sim">시안 · ${nm(by)}가 내 방에 놓고 간 걸로 하기</button>`;
+  const kept = [0, 1, 2].filter(k => ST.read[`${i}:${k}`]);
+  document.getElementById('box').innerHTML = kept.length ? `<div class="kept">${kept.map(k => { const L = letterOf(i, k); return `<button data-keep="${k}"><i style="background:${L.n.paper};border-color:${L.n.line}"></i><span>${k + 1} 일째 편지</span><em>${ST.reply[`${i}:${k}`] ? '답장 보냄' : '답장 전'}</em></button>`; }).join('')}</div>` : '<p class="hint">읽은 편지는 여기에 간직해요. 다시 펼쳐 볼 수 있어요.</p>';
+  document.getElementById('stat').textContent = `받은 편지 ${kept.length} / 3`;
+  paintEnvs();
 }
-const face = (cv, row) => { const q = cv.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, cv.width, cv.height); if (SHEET.complete) q.drawImage(SHEET, 16, row * 64 + 10, 32, 32, 0, 0, cv.width, cv.height); };
 let cur = null;
-function openLetter(i){
-  const n = NPC[i]; cur = i; ST.open[n.id] = 1;
+function openLetter(i, d){
+  const { n, L, key } = letterOf(i, d); cur = { i, d, key, n, L }; ST.read[key] = 1;
   const p = document.getElementById('paper');
   p.style.background = `repeating-linear-gradient(${n.paper} 0 31px, ${n.line} 31px 32px)`; p.style.setProperty('--ink', n.ink);
-  p.innerHTML = `<div class="tx" style="font-family:${n.font},var(--f-body);font-size:${n.size}px;line-height:32px">${n.t.replace(/\{name\}/g, name())}</div>`;
+  p.innerHTML = `<div class="tx" style="font-family:${n.font},var(--f-body);font-size:${n.size}px;line-height:32px">${L.t.replace(/\{name\}/g, nm(i))}</div>`;
   const W = p.clientWidth || 380, H = Math.max(320, p.clientHeight || 360);
   n.deco.forEach(([k, x, y]) => { const c = pxCanvas(k); c.style.left = Math.min(x, W - c.width - 6) + 'px'; c.style.top = Math.min(y, H - c.height - 6) + 'px'; p.appendChild(c); });
-  if (n.id === 'stella'){ p.querySelector('.tx').style.color = n.ink; }
-  if (ST.guessed[n.id]) p.insertAdjacentHTML('beforeend', `<span class="stamp">${n.n}</span>`);
-  document.getElementById('lttl').textContent = `받는 사람 · ${name()} · 보낸 사람 ????`;
-  renderGuess(); document.getElementById('lv').hidden = false; document.getElementById('lv').scrollTop = 0;
+  document.getElementById('lttl').textContent = `받는 사람 · ${nm(i)}`;
+  renderReply(); document.getElementById('lv').hidden = false; document.getElementById('lv').scrollTop = 0;
 }
-function renderGuess(msg){
-  const n = NPC[cur], g = document.getElementById('guess'), done = ST.guessed[n.id], tried = ST.tries[n.id] || [];
-  g.innerHTML = `<div class="q">${done ? `${n.n}의 편지였어요` : '누가 썼을까?'}</div>
-    <div class="faces">${NPC.map(x => `<button data-g="${x.id}" class="${done && x.id === n.id ? 'yes' : tried.includes(x.id) ? 'no' : ''}" ${done || tried.includes(x.id) ? 'disabled' : ''}><canvas width="32" height="32" data-r="${x.row}"></canvas>${x.n.replace(' 선생님', '')}</button>`).join('')}</div>${msg || ''}`;
-  g.querySelectorAll('canvas[data-r]').forEach(c => face(c, +c.dataset.r));
+function renderReply(){
+  const { key, L, n } = cur, r = ST.reply[key], g = document.getElementById('reply');
+  g.innerHTML = r == null ? `<div class="q">답장 한 줄 · 배트리가 전해 줘요</div><div class="rep">${L.r.map((x, k) => `<button data-rep="${k}">${x[0]}</button>`).join('')}</div>`
+    : `<div class="q">보낸 답장 · 「${L.r[r][0]}」</div><div class="say ok"><canvas width="32" height="32" data-r="${n.row}"></canvas><div><b>다음에 ${n.n}에게 말을 걸면</b><p>${L.r[r][1].replace(/\{name\}/g, nm(cur.i))}</p></div></div><p class="hint">보낸 사람은 편지에 안 적혀 있지만, 답장을 받은 ${n.n}가 나중에 살짝 티를 내요.</p>`;
   g.querySelectorAll('.say canvas').forEach(c => face(c, +c.dataset.r));
 }
 document.addEventListener('click', e => {
-  const env = e.target.closest('.env'); if (env) return openLetter(+env.dataset.i);
-  if (e.target.closest('#lx')){ document.getElementById('lv').hidden = true; return renderEnvs(); }
-  const g = e.target.closest('[data-g]'); if (!g || g.disabled) return;
-  const n = NPC[cur], pick = NPC.find(x => x.id === g.dataset.g);
-  if (pick.id === n.id){ ST.guessed[n.id] = 1; document.getElementById('paper').insertAdjacentHTML('beforeend', `<span class="stamp">${n.n}</span>`);
-    renderGuess(`<div class="say ok"><canvas width="32" height="32" data-r="${n.row}"></canvas><div><b>${n.n}</b><p>${n.ok}</p></div></div>`); }
-  else { (ST.tries[n.id] ||= []).push(pick.id);
-    renderGuess(`<div class="say"><canvas width="32" height="32" data-r="1"></canvas><div><b>배트리</b><p>음.... ${pick.n.replace(' 선생님', ' 선생님')}은 아닌 것 같아. ${n.hint}</p></div></div>`); }
-  renderEnvs();
+  const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
+  if (d.go === 'deliver'){ ST.deliv[`${foundFor(ST.stu, ST.day)}:${ST.day}`] = 1; return render(); }
+  if (d.go === 'sim'){ ST.deliv[`${ST.stu}:${ST.day}`] = 1; return render(); }
+  if (d.env === 'mine') return openLetter(ST.stu, ST.day);
+  if (d.keep !== undefined) return openLetter(ST.stu, +d.keep);
+  if (d.rep !== undefined){ ST.reply[cur.key] = +d.rep; renderReply(); return render(); }
+  if (b.id === 'lx'){ document.getElementById('lv').hidden = true; return render(); }
 });
 document.getElementById('stu').innerHTML = Array.from({ length: 12 }, (_, i) => `<option value="${i}">학생 ${i + 1}</option>`).join('');
-document.getElementById('stu').addEventListener('change', e => { ST.stu = +e.target.value; ST.open = {}; ST.guessed = {}; ST.tries = {}; renderEnvs(); });
-const boot = () => { face(document.getElementById('ifc'), 1); renderEnvs(); };
+document.getElementById('day').innerHTML = [0, 1, 2].map(k => `<option value="${k}">${k + 1} 일째</option>`).join('');
+document.getElementById('stu').addEventListener('change', e => { ST.stu = +e.target.value; render(); });
+document.getElementById('day').addEventListener('change', e => { ST.day = +e.target.value; render(); });
+const boot = () => { face(document.getElementById('ifc'), 1); render(); };
 if (SHEET.complete && SHEET.naturalWidth) boot(); else SHEET.onload = boot;
 </script>
