@@ -95,17 +95,17 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-
 .bkg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .bk{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px 6px;border:2px solid transparent;border-radius:12px;background:var(--panel2);color:var(--text);font:11px var(--f-pxb);cursor:pointer}
 .bk canvas{width:54px;height:138px;image-rendering:pixelated}.bk.on{border-color:var(--accent)}.bk .own{position:absolute;top:4px;right:6px;font:10px var(--f-pxb);color:var(--ok)}
-.bk.lock canvas{filter:brightness(.35) saturate(0)}.bk .lk{position:absolute;top:44%;left:0;right:0;text-align:center;font:10px var(--f-pxb);color:var(--gold)}
+.bk.lock canvas{opacity:.75}.bk .lk{position:absolute;top:44%;left:0;right:0;text-align:center;font:10px var(--f-pxb);color:var(--gold)}
 .det{display:flex;gap:14px;align-items:flex-start}.det canvas{width:108px;height:276px;image-rendering:pixelated;flex:none}
 .det .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}.det h4{margin:0;font:18px var(--f-pxb);font-weight:400;color:var(--gold)}.det p{margin:0;font:13px/1.6 var(--f-px);color:var(--sub)}
 .fx{display:block;font:10px/1.35 var(--f-pxb);font-style:normal;color:var(--ok);text-align:center;min-height:27px}.det .fx{font-size:13px;text-align:left;min-height:0;padding:3px 8px;border-radius:8px;background:#22382C;align-self:flex-start}
 .jn{display:flex;flex-direction:column;gap:10px}.jnh{display:flex;justify-content:space-between;align-items:center}.jnh b{font:16px var(--f-pxb);font-weight:400}.jnh span{font:11px var(--f-pxb);color:var(--sub)}
 .chips2{display:flex;gap:6px;overflow-x:auto}.chips2 button{flex:none;min-height:34px;padding:0 12px;border:0;border-radius:17px;background:var(--panel2);color:var(--sub);font:12px var(--f-pxb)}.chips2 button.on{background:var(--accent);color:#2A1506}
-.jpage{position:relative;margin-top:58px}
+.jpage{position:relative;margin-top:150px}
 .jbody{position:relative;z-index:2;background:#F6ECD6;color:#3A2A40;border-radius:6px 14px 14px 6px;padding:16px 16px 18px 22px;box-shadow:inset 8px 0 0 #EADBBE,inset 10px 0 0 #D8C49E,0 6px 0 #6A4A2E,0 8px 0 #2A1A2E;min-height:220px}
 .jbody h4{margin:0 0 8px;font:15px var(--f-pxb);font-weight:400;color:#8A4A2A}.jrow{font:13px/1.6 var(--f-px);padding:7px 2px;border-bottom:1px dashed #D8C4A0}
-.pin{position:absolute;right:22px;top:-62px;z-index:1;transition:transform .55s cubic-bezier(.3,1.5,.5,1)}.pin canvas{width:54px;height:138px;image-rendering:pixelated;display:block}.pin.drop{transform:translateY(-70px)}
-.pin.empty{top:-34px;width:54px;height:44px;border:2px dashed var(--line2);border-bottom:0;border-radius:8px 8px 0 0;font:10px/1.3 var(--f-pxb);color:var(--sub);display:flex;align-items:center;justify-content:center;text-align:center}
+.pin{position:absolute;right:20px;top:-150px;z-index:1;transition:transform .55s cubic-bezier(.3,1.5,.5,1);filter:drop-shadow(0 0 10px rgba(255,216,102,.35))}.pin canvas{width:72px;height:184px;image-rendering:pixelated;display:block}.pin.drop{transform:translateY(-90px)}
+.pin.empty{top:-54px;width:72px;height:64px;filter:none;border:2px dashed var(--line2);border-bottom:0;border-radius:8px 8px 0 0;font:10px/1.3 var(--f-pxb);color:var(--sub);display:flex;align-items:center;justify-content:center;text-align:center}
 .pinbar{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;background:var(--panel)}.pinbar canvas{width:24px;height:62px;image-rendering:pixelated}.pinbar div{flex:1;min-width:0}.pinbar b{display:block;font:13px var(--f-pxb);font-weight:400}.pinbar .fx{text-align:left;min-height:0;font-size:12px}
 .pins{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.pins button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;border:2px solid transparent;border-radius:12px;background:var(--panel2);color:var(--text);font:11px var(--f-pxb)}.pins button.on{border-color:var(--ok)}.pins canvas{width:36px;height:92px;image-rendering:pixelated}
 .mats{display:flex;flex-direction:column;gap:4px}.mats div{display:flex;align-items:center;gap:6px;font:12px var(--f-pxb);padding:4px 8px;border-radius:8px;background:var(--panel2)}.mats b{margin-left:auto;font-weight:400}.mats .no b{color:var(--warn)}.mats .yes b{color:var(--ok)}
@@ -245,17 +245,19 @@ function render(){
   if (ST.tab === 'journal'){ journal(); return; }
   const L = ST.tab === 'basic' ? BASIC : ST.tab === 'npc' ? NPCB : all().filter(b => ST.made[b.id]);
   const B = byId(ST.sel) || L[0];
-  const det = B ? sec(B.npc ? 'NPC 책갈피' : '책갈피', `<div class="det"><canvas id="big" width="36" height="92"></canvas><div class="info"><h4>${esc(B.n)}${B.npc ? ' 책갈피' : ''}</h4><span class="fx">${esc(FX[B.id] || '')}</span><p>${esc(B.d)}</p>
+  const det = B ? sec(B.npc ? 'NPC 책갈피' : '책갈피', `<div class="det"><canvas id="big" width="36" height="92"></canvas><div class="info"><h4>${esc(B.n)}${B.npc ? ' 책갈피' : ''}</h4><span class="fx">${ST.made[B.id] ? esc(FX[B.id] || '') : '효과 ???'}</span><p>${ST.made[B.id] ? esc(B.d) : '만들면 무늬와 효과를 알 수 있어요.'}</p>
       <div class="mats">${Object.entries(B.m).map(([k, n]) => `<div class="${(ST.inv[k] || 0) >= n ? 'yes' : 'no'}">${ic(k)}${esc(NAMES[k][1])}<b>${ST.inv[k] || 0} / ${n}</b></div>`).join('')}</div>
       ${B.npc && (ST.heart[B.id] || 0) < 5 ? `<p style="color:var(--gold)">${esc(B.n)} 호감 ♥5부터 만들 수 있어요 · 지금 ♥${ST.heart[B.id] || 0}</p>` : ''}
       <button class="btn go wide" data-make="${B.id}" ${can(B) ? '' : 'disabled'}>${can(B) ? '만들기' : '재료가 모자라요'}${ST.made[B.id] ? ` · 가진 것 ${ST.made[B.id]}` : ''}</button></div></div>`) : '';
   $('#body').innerHTML = (ST.tab === 'mine' && !L.length ? '<p class="empty">아직 만든 책갈피가 없어요</p>' : det + sec(ST.tab === 'basic' ? '기본 책갈피 · 목화솜 + 무늬 재료' : ST.tab === 'npc' ? 'NPC 책갈피 · 그 NPC 호감 ♥5부터' : '내 책갈피',
-    `<div class="bkg">${L.map(b => { const lock = b.npc && (ST.heart[b.id] || 0) < 5; return `<button class="bk ${b.id === (B && B.id) ? 'on' : ''} ${lock ? 'lock' : ''}" data-bk="${b.id}"><canvas data-bkc="${b.id}" width="36" height="92"></canvas>${esc(b.n)}<em class="fx">${esc(FX[b.id] || '')}</em>${ST.made[b.id] ? `<span class="own">×${ST.made[b.id]}</span>` : ''}${lock ? '<span class="lk">♥5</span>' : ''}</button>`; }).join('')}</div>`))
+    `<div class="bkg">${L.map(b => { const lock = b.npc && (ST.heart[b.id] || 0) < 5; return `<button class="bk ${b.id === (B && B.id) ? 'on' : ''} ${lock ? 'lock' : ''}" data-bk="${b.id}"><canvas data-bkc="${b.id}" width="36" height="92"></canvas>${esc(b.n)}<em class="fx">${ST.made[b.id] ? esc(FX[b.id] || '') : '???'}</em>${ST.made[b.id] ? `<span class="own">×${ST.made[b.id]}</span>` : ''}${lock ? '<span class="lk">♥5</span>' : ''}</button>`; }).join('')}</div>`))
     + `<p class="hint">아울라 재채기 이후, 도서관 사서 책상에서 만들 수 있어요. 만든 책갈피 하나를 꽂아 두면 밑에 적힌 효과를 받아요. 한 번에 하나만 꽂을 수 있어요.</p>`;
   document.querySelectorAll('[data-face]').forEach(c => face(c, +c.dataset.face));
-  document.querySelectorAll('[data-bkc]').forEach(c => draw(c.getContext('2d'), byId(c.dataset.bkc)));
-  const bg = $('#big'); if (bg && B) draw(bg.getContext('2d'), B);
+  document.querySelectorAll('[data-bkc]').forEach(c => { draw(c.getContext('2d'), byId(c.dataset.bkc)); if (!ST.made[c.dataset.bkc]) sil(c); });
+  const bg = $('#big'); if (bg && B){ draw(bg.getContext('2d'), B); if (!ST.made[B.id]) sil(bg); }
 }
+// 아직 안 만든 책갈피는 실루엣 (모양만 보여요)
+function sil(c){ const q = c.getContext('2d'); q.globalCompositeOperation = 'source-atop'; q.fillStyle = '#3A2A55'; q.fillRect(0, 0, c.width, c.height); q.fillStyle = '#4E3C72'; q.fillRect(3, 13, 30, 2); q.globalCompositeOperation = 'source-over'; }
 function journal(){
   const P = ST.pin && byId(ST.pin), mine = all().filter(b => ST.made[b.id]);
   const JT = [['story', '이야기'], ['heart', '하트 이야기'], ['blanc', '레시피 노트'], ['dream', '꿈 일기장'], ['wish', '별빛 소원']];
