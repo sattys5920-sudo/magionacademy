@@ -148,6 +148,23 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f-body);f
 .quest span{font-size:var(--fs-s);color:var(--sub)}
 .quest .next{margin-top:2px}
 #stagebox[hidden]{display:none}
+#cine{position:fixed;inset:0;z-index:50;background:#140E1E;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:env(safe-area-inset-top,0px)}
+#cine[hidden]{display:none}
+.cwrap{position:relative;width:100%;max-width:560px;flex:1;overflow:hidden}
+#ccv{width:100%;height:100%;image-rendering:pixelated;display:block}
+.cvig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 45%,rgba(160,200,255,0) 0,rgba(10,14,30,.55) 75%)}
+.cnm{position:absolute;left:12px;top:10px;z-index:2;font-family:var(--f-pxb);font-size:13px;color:var(--gold);background:rgba(20,13,30,.85);border:1px solid var(--line2);padding:4px 10px;border-radius:10px}
+.toastc{position:absolute;left:50%;top:44px;transform:translateX(-50%);background:rgba(20,13,30,.94);color:var(--text);padding:10px 16px;border-radius:12px;border:1px solid var(--accent);font-size:13px;max-width:90%;text-align:center;opacity:0;transition:opacity .2s;pointer-events:none;z-index:3}
+.toastc.on{opacity:1}
+#cpop{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) scale(.9);opacity:0;transition:all .5s cubic-bezier(.2,1.3,.4,1);z-index:4;width:min(70vw,220px);background:rgba(20,13,34,.97);border:2px solid #FF8FAF;border-radius:16px;padding:10px;text-align:center;box-shadow:0 0 24px rgba(255,143,175,.3);pointer-events:none}
+#cpop.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#cpop b{display:block;font-family:var(--f-pxb);font-weight:400;font-size:15px;color:#FFE0EA;margin:2px 0 6px}
+#cpop canvas{width:100%;aspect-ratio:1/1;image-rendering:pixelated;background:radial-gradient(circle,#3E2F5E,#2B1F45 70%);border-radius:8px}
+#blsay{position:fixed;left:10px;right:10px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:60;display:none}
+#blsay .bx{position:relative;max-width:560px;margin:0 auto;display:flex;gap:10px;background:rgba(20,13,34,.96);border:2px solid #9AE07A;border-radius:14px;padding:12px;cursor:pointer}
+#blsay .fc{width:60px;height:60px;flex:none;border-radius:10px;background:#1E2A20;overflow:hidden}#blsay .fc canvas{width:60px;height:60px;image-rendering:pixelated}
+#blsay b{display:block;font-family:var(--f-pxb);font-weight:400;font-size:14px;color:#C8F0B0;margin-bottom:3px}
+#blsay p{margin:0;font-family:var(--f-px);font-size:15px;line-height:22px;color:#F1E9FF;min-height:44px}
 input#card{width:100%;border:1px solid var(--line2);background:var(--panel2);color:var(--text);border-radius:10px;padding:10px;font:var(--fs) var(--f-body)}
 button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .hint{font-size:var(--fs-s);color:var(--sub);margin:0;text-align:center}
@@ -166,7 +183,9 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
     </section>
     <section class="panel" id="panel"></section>
   </div>
-  <div id="intro" hidden><div class="ibox"><div class="iscene">공예 교실</div><canvas id="scene" width="160" height="96"></canvas><b id="in"></b><p id="it"></p><span>눌러서 넘기기</span></div></div>
+  <div id="cine" hidden><div class="cwrap"><div class="cnm" id="cnm"></div><canvas id="ccv" width="360" height="270"></canvas><div class="cvig"></div><div class="toastc" id="ctoast"></div>
+    <div id="cpop"><b></b><canvas width="128" height="128"></canvas></div></div>
+    <div id="blsay" class="plant"><div class="bx"><div class="fc"><canvas width="32" height="32"></canvas></div><div><b>맨디</b><p></p></div></div></div></div>
   <div class="foot"><button class="next" id="nextbtn"></button><button class="ghost" id="refill" data-refill="1" hidden>시안용 · 재료 다시 채우기</button></div>
 </div>
 
@@ -477,6 +496,119 @@ function noteHTML(){
     ${f ? (k => `<div class="openbook"><img src="${OPEN_IMG.src}" alt=""><canvas width="32" height="32" data-ic="${f.id}" class="obflower"></canvas><b class="obname">${f.n}</b><em class="obword">${k ? `「${f.w}」` : '「???」'}</em><p class="obtext ${k ? '' : 'unk'}">${k ? PAGE[f.id][1] : `아직 쪽지를 못 찾았어요. ${PAGE[f.id][0]}하다 보면 나올지도 몰라요.......`}</p><small class="obfrom">${k ? PAGE[f.id][0] + ' 쪽지' : ''}</small></div>`)(KNOWN.has(f.id)) : ''}
     <div class="notegrid">${FL.map(x => { const k = KNOWN.has(x.id); return `<button class="pg ${k ? 'on' : ''} ${noteOpen === x.id ? 'sel' : ''}" data-pg="${x.id}"><canvas width="32" height="32" data-ic="${x.id}"></canvas><div><span>${x.n}</span><em class="${k ? 'k' : ''}">${k ? x.w : '???'}</em></div></button>`; }).join('')}</div>`;
 }
+// ===== 연출: 게임처럼 실제 지도 위에서 (공예 교실 · 독초 온실) 캐릭터가 움직이고, 아래 대화창 · 말풍선 · 알림 =====
+const CMAP = {
+  craft: { img: Object.assign(new Image(), { src: 'data:image/png;base64,__MAPCRAFT__' }), OX: 164, OY: 82, title: '공예 교실' },
+  toxic: { img: Object.assign(new Image(), { src: 'data:image/png;base64,__MAPTOXIC__' }), OX: 212, OY: 76, title: '독초 온실' }
+};
+const BENCH_IMG = Object.assign(new Image(), { src: 'data:image/png;base64,__BENCH__' });
+const CV = { W: 180, H: 135 }, Z = 3;   // 보이는 세계 크기 (그림은 2 배로 그려요)
+let C = null;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const tp = (m, x, y) => [m.OX + (x - y) * 8, m.OY + (x + y) * 4];
+function actor(row, x, y, dir = 0){ return { row, x, y, dir, walk: false, step: 0, jump: 0, fiddle: false, hearts: 0, mark: 0, shake: 0 }; }
+function cineStart(kind){
+  const o = document.getElementById('cine'); o.hidden = false;
+  const cw = document.querySelector('.cwrap'), cc = document.getElementById('ccv'); cc.width = Math.round(cw.clientWidth); cc.height = Math.round(cw.clientHeight); CV.W = cc.width / Z; CV.H = cc.height / Z;
+  document.getElementById('cnm').textContent = CMAP[kind].title;
+  C = { kind, m: CMAP[kind], A: {}, props: [], fx: [], bub: null, cam: null, shake: 0, t0: performance.now(), petals: false, water: false, dust: 0, bang: null };
+  requestAnimationFrame(cineLoop);
+}
+function cineEnd(){ document.getElementById('cine').hidden = true; C = null; }
+function dirTo(a, b){ const dx = b.x - a.x, dy = b.y - a.y, sx = (dx - dy) * 8, sy = (dx + dy) * 4; return Math.abs(sx) > Math.abs(sy) ? (sx > 0 ? 15 : 10) : (sy > 0 ? 0 : 5); }
+async function walk(a, x, y, ms){ const x0 = a.x, y0 = a.y, t0 = performance.now(); a.dir = dirTo(a, { x, y }); a.walk = true;
+  await new Promise(r => { const f = now => { const k = Math.min(1, (now - t0) / ms); a.x = x0 + (x - x0) * k; a.y = y0 + (y - y0) * k; a.step = (now - t0) / 130; if (k < 1) requestAnimationFrame(f); else r(); }; requestAnimationFrame(f); });
+  a.walk = false; }
+function bubble(a, text, ms = 1600){ C.bub = { a, text, until: performance.now() + ms }; return sleep(ms); }
+function toast(t){ const el = document.getElementById('ctoast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2600); }
+// 대화창: 게임의 식물 대화창 (초록 테두리 · 맨디 얼굴) · 한 글자씩 · 누르면 넘어가요
+async function say(t, hold = 1400){
+  const v = document.getElementById('blsay'), p = v.querySelector('p'), s = t.replace('{name}', `학생 ${stu + 1}`);
+  const g = v.querySelector('canvas').getContext('2d'); g.imageSmoothingEnabled = false; g.fillStyle = '#1E2A20'; g.fillRect(0, 0, 32, 32); if (SHEET.complete) g.drawImage(SHEET, 21, 4 * 64 + 27, 28, 28, 2, 2, 28, 28);
+  v.style.display = 'block'; p.textContent = ''; let skip = false; v.onclick = () => { skip = true; };
+  for (let k = 1; k <= s.length && !skip; k++){ p.textContent = s.slice(0, k); await sleep(30); } p.textContent = s;
+  await new Promise(r => { let done = false; const go = () => { if (done) return; done = true; r(); }; v.onclick = go; setTimeout(go, hold + s.length * 45); });
+  v.style.display = 'none'; await sleep(120);
+}
+function popup(title, drawFn, col = '#FF8FAF'){ const v = document.getElementById('cpop'); v.querySelector('b').textContent = title; v.style.borderColor = col; const c = v.querySelector('canvas'), q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, c.width, c.height); drawFn(q, c); v.classList.add('on'); }
+const popClose = () => document.getElementById('cpop').classList.remove('on');
+function cineLoop(now){
+  if (!C) return; requestAnimationFrame(cineLoop);
+  const c = document.getElementById('ccv'), q = c.getContext('2d'); q.imageSmoothingEnabled = false; const t = (now - C.t0) / 1000;
+  const focus = C.cam || C.A.me || { x: 12, y: 12 }, [fx, fy] = tp(C.m, focus.x, focus.y);
+  const sh = C.shake > 0 ? (Math.random() * 4 - 2) : 0; C.shake = Math.max(0, C.shake - 16);
+  const ox = Math.round(fx - CV.W / 2 + sh), oy = Math.round(fy - CV.H * .42);
+  q.fillStyle = '#140E1E'; q.fillRect(0, 0, c.width, c.height);
+  if (C.m.img.complete) q.drawImage(C.m.img, -ox * Z, -oy * Z, C.m.img.width * Z, C.m.img.height * Z);
+  const W2 = (x, y) => { const [px, py] = tp(C.m, x, y); return [(px - ox) * Z, (py - oy) * Z]; };
+  const list = [...C.props.map(p => ({ y: p.x + p.y + 1, f: () => { const [px, py] = W2(p.x, p.y), s = p.scale ?? 1; if (s <= 0) return; const w = 27 * Z * s, h = 29 * Z * s; q.drawImage(BENCH_IMG, 0, 0, 27, 29, px - 9 * Z - (w - 27 * Z) / 2, py - 15 * Z - (h - 29 * Z), w, h); if (p.flowers && FLIMG.complete) [['lily', -6], ['rose', 8], ['chamo', 20]].forEach(([id, dx]) => q.drawImage(FLIMG, FIDX[id] * 32, 0, 32, 32, px + dx * Z / 2 - 4 * Z, py - 19 * Z, 8 * Z, 8 * Z)); } })),
+    ...Object.values(C.A).map(a => ({ y: a.x + a.y, f: () => drawActor(q, a, W2, t) }))];
+  list.sort((A, B) => A.y - B.y).forEach(o => o.f());
+  // 효과
+  const M = C.A.mandi;
+  if (M && C.petals){ const [px, py] = W2(M.x, M.y); for (let i = 0; i < 4; i++){ const p = (t * .9 + i / 4) % 1; q.fillStyle = ['#FF8FAF', '#FFD866', '#FFFFFF', '#9AD4F0'][i]; q.fillRect(px - 10 + Math.sin(i * 3 + t * 3) * 14, py - 44 - p * 30, 3, 3); } q.font = '12px G11, sans-serif'; q.fillStyle = '#FFF6C0'; if (Math.floor(t * 2.5) % 2) q.fillText('꼼지락꼼지락', px + 14, py - 62); }
+  if (M && C.water){ const [px, py] = W2(M.x, M.y); for (let i = 0; i < 4; i++){ const p = (t * 1.6 + i / 4) % 1; q.fillStyle = '#A8E0FF'; q.fillRect(px - 2 + i * 3 - p * 4, py - 66 - 10 + p * 18, 2, 3); } }
+  if (C.dust > 0 && C.dustAt){ const [px, py] = W2(C.dustAt.x, C.dustAt.y); for (let i = 0; i < 7; i++){ const ph = (t * 1.1 + i / 7) % 1, a = i * 2.1; q.globalAlpha = C.dust * (1 - ph) * .85; q.fillStyle = '#F4ECDA'; q.beginPath(); q.arc(px + Math.cos(a) * (14 + i * 4), py - 14 + Math.sin(a) * 8 - ph * 16, 4 + ph * 7, 0, 7); q.fill(); } q.globalAlpha = 1; }
+  if (C.bang){ const [px, py] = W2(C.dustAt.x, C.dustAt.y); q.font = '20px G11B, sans-serif'; q.textAlign = 'center'; q.lineWidth = 4; q.strokeStyle = '#3A2414'; q.strokeText(C.bang, px, py - 56); q.fillStyle = '#FFE9A0'; q.fillText(C.bang, px, py - 56); q.textAlign = 'left'; }
+  if (C.sparkle && C.dustAt){ const [px, py] = W2(C.dustAt.x, C.dustAt.y); for (let i = 0; i < 9; i++){ if ((Math.floor(t * 7) + i) % 3) continue; const x = px - 30 + (i * 17) % 60, y = py - 60 + (i * 11) % 40; q.fillStyle = '#FFF3C8'; q.fillRect(x, y - 2, 2, 6); q.fillRect(x - 2, y, 6, 2); } }
+  // 말풍선 (게임과 같은 흰 상자)
+  if (C.bub && now < C.bub.until){ const [px, py] = W2(C.bub.a.x, C.bub.a.y); q.font = '13px G11, sans-serif'; const w = Math.ceil(q.measureText(C.bub.text).width) + 16, bx = Math.round(Math.max(4, Math.min(c.width - w - 4, px - w / 2))), by = Math.round(py - 92);
+    q.fillStyle = '#22183F'; q.fillRect(bx - 2, by - 2, w + 4, 26); q.fillStyle = '#FFFFFF'; q.fillRect(bx, by, w, 22); q.fillStyle = '#22183F'; q.fillRect(Math.round(px) - 3, by + 24, 6, 2); q.fillRect(Math.round(px) - 1, by + 26, 2, 2); q.fillText(C.bub.text, bx + 8, by + 16); }
+}
+function drawActor(q, a, W2, t){
+  const [px, py] = W2(a.x, a.y), col = a.walk ? a.dir + 1 + (Math.floor(a.step) % 4) : a.fiddle ? a.dir + (Math.floor(t * 7) % 2 ? 1 : 3) : a.dir;
+  const shake = a.shake ? Math.round(Math.sin(t * 40) * 1) : 0, bob = a.fiddle ? Math.round(Math.sin(t * 9)) : 0;
+  q.fillStyle = 'rgba(0,0,0,.25)'; q.beginPath(); q.ellipse(px, py, 6 * Z, 2.5 * Z, 0, 0, 7); q.fill();
+  if (SHEET.complete) q.drawImage(SHEET, col * 64, a.row * 64, 64, 64, Math.round(px - 16 * Z + shake), Math.round(py - 28 * Z + a.jump + bob), 32 * Z, 32 * Z);
+  if (a.mark){ q.fillStyle = '#FFD866'; q.fillRect(px + 14, py - 70 + a.jump, 4, 10); q.fillRect(px + 14, py - 57 + a.jump, 4, 4); }
+  if (a.hearts) for (let i = 0; i < 3; i++){ const p = (t * .7 + i / 3) % 1, hx = px - 14 + i * 12, hy = py - 66 - p * 22; q.globalAlpha = 1 - p; q.fillStyle = '#FF8FAF'; q.fillRect(hx, hy, 3, 3); q.fillRect(hx + 4, hy, 3, 3); q.fillRect(hx, hy + 2, 7, 3); q.fillRect(hx + 2, hy + 5, 3, 2); q.globalAlpha = 1; }
+}
+// --- 공예 교실: 꼼지락 → 깜짝 → 숨기기 → 수줍게 꽃다발 ---
+async function cineCraft(){
+  cineStart('craft'); const M = C.A.mandi = actor(4, 17, 13, 5), ME = C.A.me = actor(11, 12, 17.4, 5);
+  M.fiddle = true; C.petals = true; C.cam = { x: 13.5, y: 11.5 };
+  await sleep(900); await walk(ME, 14.6, 15, 1500); await sleep(400);
+  await say('꿍싯꿍싯.... 이 꽃은 여기에.... 아니, 여기가 더 예뻐요.......');
+  await bubble(ME, '....?', 1200);
+  M.fiddle = false; C.petals = false; M.dir = dirTo(M, ME); M.mark = 1;
+  for (let k = 0; k <= 10; k++){ M.jump = -Math.round(Math.sin(k / 10 * Math.PI) * 14); await sleep(28); } M.jump = 0;
+  await say('히익!! 어, 언제 오셨어요.......'); M.mark = 0;
+  M.dir = 5; M.shake = 1; toast('맨디가 무언가를 등 뒤로 쏙 숨겼어요'); await sleep(1600); M.shake = 0;
+  M.dir = dirTo(M, ME); await sleep(500); await walk(M, 16.2, 13.8, 700); M.dir = dirTo(M, ME);
+  await say('저, 저기.... 이거요. {name} 생각하면서 만들었어요.......');
+  popup('맨디의 꽃다발', (q, c) => { draw(q, MANDI_ST()); }, '#FF8FAF'); await sleep(500);
+  await say('꽃 세 송이에.... 제 마음을 하나씩 담았어요.');
+  M.hearts = 1; await say('꽃말은.... 비밀이에요.'); popClose(); M.hearts = 0;
+  await bubble(ME, '비밀....?', 1300);
+  await say('궁금하시면.... 찾아보실래요? 바람에 날아간 제 꽃말 쪽지가 마을 여기저기에 있어요.');
+  await say('채집하거나 낚시하다가 쪽지를 주우면, 이 수첩에 저절로 적혀요. 히익, 그래도 가끔은 와 주세요.......');
+  popup('맨디의 꽃말 수첩', (q, c) => { q.drawImage(NOTE_IMG, 0, 0, 32, 32, (c.width - 96) / 2, (c.height - 96) / 2, 96, 96); }, '#9AE07A');
+  toast('「맨디의 꽃다발」과 「맨디의 꽃말 수첩」을 받았어요'); await sleep(2200); popClose(); await sleep(500);
+  cineEnd(); S.tab = 'note'; refresh();
+}
+// --- 독초 온실: 물 주는 맨디 → 칭찬 → 작업대 뚝딱 ---
+async function cineMeet(){
+  cineStart('toxic'); const M = C.A.mandi = actor(4, 16, 6.4, 5), ME = C.A.me = actor(11, 17, 22.4, 5);
+  C.water = true; C.cam = { x: 17, y: 10 };
+  await sleep(700); await walk(ME, 16.6, 10, 2200); C.cam = { x: 17.5, y: 8.5 }; await sleep(300);
+  C.water = false; M.dir = dirTo(M, ME); await sleep(300);
+  await say('아, 오셨어요. 수첩 봤어요. 벌써 꽃말을 하나 찾으셨네요.......');
+  M.hearts = 1; await say('잘했네요. 히익, 제가 칭찬하니까 이상하죠. 그래도.... 정말 잘했어요.'); M.hearts = 0;
+  await say('저기.... 앞으로는 꽃말을 담아서, 누군가에게 선물할 꽃다발을 만들어 보는 건 어때요?');
+  await bubble(ME, '좋아요.......', 1200);
+  await say('마음을 말로 하기 어려울 때.... 꽃이 대신 말해 주거든요. 제가 그랬던 것처럼요.......');
+  await say('여기에 작업대를 두고 갈게요. 잠깐만요.......');
+  await walk(M, 19.4, 7.2, 900); M.dir = 15; C.dustAt = { x: 21, y: 6.5 }; C.cam = { x: 19.5, y: 8 }; C.dust = 1;
+  const bench = { x: 21, y: 6, scale: 0, flowers: false }; C.props.push(bench);
+  const WD = ['뚝딱!', '쿵!', '뚝딱뚝딱!', '탕!', '쓱싹쓱싹', '뚝딱!'];
+  for (let i = 0; i < WD.length; i++){ C.bang = WD[i]; C.shake = 120; await sleep(260); C.bang = null; if (i >= 3){ for (let k = 0; k <= 6; k++){ bench.scale = Math.min(1.15, (i - 3) / 2 * .8 + k / 6 * .4); await sleep(28); } } await sleep(160); }
+  bench.scale = 1; bench.flowers = true; C.dust = 0; C.sparkle = true; await sleep(700);
+  M.dir = dirTo(M, ME);
+  await say('다 됐어요. 언제든 와서 쓰세요. 포장지랑 리본도 조금 넣어 뒀어요.');
+  toast('독초 온실에 「꽃다발 작업대」가 생겼어요'); await sleep(2000); C.sparkle = false;
+  cineEnd(); unlocked = true; S.tab = 'wrap'; noteMsg = ''; refresh();
+}
+
 function meaning(){
   const ids = S.slots, uniq = [...new Set(ids)];
   if (!ids.length) return { head: '꽃을 골라 주세요', sub: `${S.size} 송이까지 들어가요` };
@@ -573,7 +705,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || b.disabled) return; const d = b.dataset, W = S.wrap;
   if (d.go){ if (d.go === 'make'){ if (short().length) return; Object.entries(needs()).forEach(([k, v]) => INV[k] -= v.n); S.made = true; return panel(); } S.tab = d.go; panel(); document.getElementById('app').scrollIntoView({ block: 'start' }); return; }
   if (d.t){ if (!unlocked && d.t !== 'note'){ noteMsg = '<span><b>아직 작업대가 없어요</b><br>꽃말을 하나 찾고 맨디에게 가 보세요</span>'; S.tab = 'note'; return panel(); } S.tab = d.t; panel(); return; }
-  if (d.meet) return startMeet();
+  if (d.meet) return cineMeet();
   if (S.made && (d.base || d.pat || d.sn || d.pc0 || d.pc1 || d.size || d.f || d.rib || d.deco)) S.made = false;
   if (d.base){ W.base = d.base; return refresh(); }
   if (d.pat){ W.pat = d.pat; return refresh(); }
@@ -590,10 +722,9 @@ document.addEventListener('click', e => {
   if (d.hunt) return hunt(d.hunt);
   if (d.pg){ noteOpen = d.pg; return panel(); }
 });
-const boot = () => { refresh(); intro(); };
-document.getElementById('stu').addEventListener('change', e => { stu = +e.target.value; KNOWN.clear(); noteOpen = 'dandel'; noteMsg = ''; unlocked = false; CUR = null; sceneKind = 'craft'; document.querySelector('.iscene').textContent = '공예 교실'; introI = -1; intro(); refresh(); });
-(function loop(now){ drawScene(now); requestAnimationFrame(loop); })(performance.now());
+const boot = () => { refresh(); cineCraft(); };
+document.getElementById('stu').addEventListener('change', e => { stu = +e.target.value; KNOWN.clear(); noteOpen = 'dandel'; noteMsg = ''; unlocked = false; refresh(); if (!C) cineCraft(); });
+
 if (FLIMG.complete) boot(); else FLIMG.onload = boot;
-document.getElementById('intro').addEventListener('click', intro);
 setInterval(() => draw(), 160);
 </script>
