@@ -126,40 +126,40 @@ const $ = s => document.querySelector(s), esc = s => String(s).replace(/[&<>"]/g
 const ic = k => `<i class="ic" style="background-position:${-NAMES[k][0] * 24}px 0"></i>`;
 // ===== 책갈피 · 기본 20 종 (종이 = 목화솜 1 + 무늬마다 다른 재료) · NPC 11 종 (얼굴 + NPC 무늬 · 그 NPC 호감 ♥5부터)
 const BASIC = [
-  ['moon', '달밤', '#2A3268', '#E8C468', { drop: 1 }, '달빛 이슬로 그린 초승달. 밤에 읽는 책에 꽂아요.'],
-  ['star', '별자리', '#1E2448', '#9AC8F0', { g2_stardust: 1 }, '별가루를 콕콕 찍어 이은 별자리.'],
-  ['pumpkin', '호박등', '#F08A3A', '#2A1A2E', { g2_pseed: 2 }, '웃고 있는 호박등. 호박씨로 눈을 붙였어요.'],
-  ['bat', '박쥐', '#5A3A8A', '#E8C468', { g2_batleaf: 1 }, '박쥐 날개 잎을 눌러 만든 박쥐 그림자.'],
-  ['paw', '고양이 발자국', '#F6ECD6', '#C86A4A', { whisker: 1 }, '책 위를 지나간 고양이 발자국. 범인은 아마 그 애.'],
-  ['feather', '부엉이 깃털', '#E8DCC0', '#7A5A3A', { feather: 1 }, '진짜 부엉이 깃털을 붙였어요. 아울라가 제일 좋아해요.'],
-  ['clover', '네잎클로버', '#D8F0DC', '#3A8A4A', { g_clover: 1 }, '책 사이에 눌러 말린 네잎클로버.'],
-  ['rose', '들장미', '#FCE1E8', '#D84A6A', { g_rose: 1 }, '들장미 꽃잎 압화. 은은한 향이 나요.'],
-  ['lav', '라벤더', '#E6DDF8', '#7A5AB0', { g_lav: 1 }, '라벤더 한 줄기. 졸린 밤에 딱이에요.'],
-  ['maple', '단풍잎', '#FFE8C8', '#D8642A', { g_maple: 1 }, '붉게 물든 단풍잎을 그대로 눌렀어요.'],
-  ['lily', '은방울꽃', '#E8F4FA', '#3A7A5A', { g_lily: 1 }, '작은 종 같은 은방울꽃.'],
-  ['mush', '보라 버섯', '#2E4A3A', '#B87AE8', { mush: 1 }, '숲속 보라 버섯 셋. 먹으면 안 돼요.'],
-  ['hat', '마녀 모자', '#6A3A6A', '#2A1A2E', { silk: 1 }, '거미줄 실로 수놓은 마녀 모자.'],
-  ['potion', '물약병', '#2E6A6A', '#9AE8A8', { slime: 1 }, '보글보글 초록 물약병.'],
-  ['candle', '촛불', '#5A3A2A', '#FFD27A', { honey: 1 }, '밀랍으로 만든 촛불. 끝까지 읽게 지켜 줘요.'],
-  ['cloud', '구름', '#CFE6F8', '#FFFFFF', { g_cloud: 1 }, '구름 목화로 만든 몽실몽실 구름.'],
-  ['rainbow', '무지개', '#FBF6EE', '#E8645A', { g_rainbow: 1 }, '무지개 콩 즙으로 그린 무지개.'],
-  ['snow', '눈송이', '#DCEFF8', '#FFFFFF', { g_snow: 1 }, '녹지 않는 눈송이 꽃.'],
-  ['check', '체크무늬', '#C84A4A', '#F6ECD6', { wool: 1 }, '털실로 짠 따뜻한 체크무늬.'],
-  ['crystal', '수정', '#3A2E5A', '#C8B8F8', { mana: 1 }, '마나석 조각이 반짝여요.'],
-].map(([id, n, bg, fg, m, d]) => ({ id, n, bg, fg, m: { g_cotton: 1, ...m }, d }));
+  ['moon', '달밤', '#2A3268', '#E8C468', { drop: 3, g2_moonst: 1 }, '달빛 이슬로 그린 초승달. 밤에 읽는 책에 꽂아요.'],
+  ['star', '별자리', '#1E2448', '#9AC8F0', { g2_stardust: 2, drop: 2 }, '별가루를 콕콕 찍어 이은 별자리.'],
+  ['pumpkin', '호박등', '#F08A3A', '#2A1A2E', { g2_pseed: 5, honey: 1 }, '웃고 있는 호박등. 호박씨로 눈을 붙였어요.'],
+  ['bat', '박쥐', '#5A3A8A', '#E8C468', { g2_batleaf: 3, silk: 1 }, '박쥐 날개 잎을 눌러 만든 박쥐 그림자.'],
+  ['paw', '고양이 발자국', '#F6ECD6', '#C86A4A', { whisker: 3, wool: 2 }, '책 위를 지나간 고양이 발자국. 범인은 아마 그 애.'],
+  ['feather', '부엉이 깃털', '#E8DCC0', '#7A5A3A', { feather: 3, silk: 1 }, '진짜 부엉이 깃털을 붙였어요. 아울라가 제일 좋아해요.'],
+  ['clover', '네잎클로버', '#D8F0DC', '#3A8A4A', { g_clover: 3, herb: 2 }, '책 사이에 눌러 말린 네잎클로버.'],
+  ['rose', '들장미', '#FCE1E8', '#D84A6A', { g_rose: 4, honey: 1 }, '들장미 꽃잎 압화. 은은한 향이 나요.'],
+  ['lav', '라벤더', '#E6DDF8', '#7A5AB0', { g_lav: 4, g_chamo: 2 }, '라벤더 한 줄기. 졸린 밤에 딱이에요.'],
+  ['maple', '단풍잎', '#FFE8C8', '#D8642A', { g_maple: 4, honey: 1 }, '붉게 물든 단풍잎을 그대로 눌렀어요.'],
+  ['lily', '은방울꽃', '#E8F4FA', '#3A7A5A', { g_lily: 3, drop: 1 }, '작은 종 같은 은방울꽃.'],
+  ['mush', '보라 버섯', '#2E4A3A', '#B87AE8', { mush: 4, g2_moss: 2 }, '숲속 보라 버섯 셋. 먹으면 안 돼요.'],
+  ['hat', '마녀 모자', '#6A3A6A', '#2A1A2E', { silk: 3, mana: 1 }, '거미줄 실로 수놓은 마녀 모자.'],
+  ['potion', '물약병', '#2E6A6A', '#9AE8A8', { slime: 3, herb: 3 }, '보글보글 초록 물약병.'],
+  ['candle', '촛불', '#5A3A2A', '#FFD27A', { honey: 4, wool: 1 }, '밀랍으로 만든 촛불. 끝까지 읽게 지켜 줘요.'],
+  ['cloud', '구름', '#CFE6F8', '#FFFFFF', { g_cloud: 3, drop: 2 }, '구름 목화로 만든 몽실몽실 구름.'],
+  ['rainbow', '무지개', '#FBF6EE', '#E8645A', { g_rainbow: 2, g2_stardust: 1 }, '무지개 콩 즙으로 그린 무지개.'],
+  ['snow', '눈송이', '#DCEFF8', '#FFFFFF', { g_snow: 3, g_cloud: 1 }, '녹지 않는 눈송이 꽃.'],
+  ['check', '체크무늬', '#C84A4A', '#F6ECD6', { wool: 4, silk: 2 }, '털실로 짠 따뜻한 체크무늬.'],
+  ['crystal', '수정', '#3A2E5A', '#C8B8F8', { mana: 3, g2_moonst: 1 }, '마나석 조각이 반짝여요.'],
+].map(([id, n, bg, fg, m, d]) => ({ id, n, bg, fg, m: { g_cotton: 3, ...m }, d }));
 const NPCB = [
-  ['nabi', '나비', 0, '#F6E6C8', '#E8A060', { whisker: 2, f_minnow: 1 }, '생선 뼈 무늬. 나비가 보면 모른 척하며 가져갈지도.'],
-  ['batri', '배트리', 1, '#E6DDF8', '#6A4A9A', { g2_batleaf: 1, feather: 1 }, '우표와 봉투 무늬. 배달 가방에 꽂기 좋아요.'],
-  ['kappa', '캇파', 2, '#D8F0DC', '#3A8A5A', { g2_moss: 1, g_mint: 1 }, '연못 물결과 접시 무늬.'],
-  ['aula', '아울라', 3, '#1E2448', '#E8C468', { feather: 2 }, '책과 달 무늬. 사서의 책갈피.'],
-  ['mandi', '맨디', 4, '#E2F2D6', '#E86A8A', { g_rose: 1, g_dandel: 1 }, '들꽃이 가득한 무늬.'],
-  ['jipsin', '스트로', 5, '#F2E2A8', '#5A3A24', { g2_straw: 2 }, '들판과 까마귀 무늬.'],
-  ['sera', '세라 선생님', 6, '#FBFBF8', '#E05A5A', { herb: 2, g_chamo: 1 }, '하트와 반창고 무늬.'],
-  ['madeleine', '마들렌', 7, '#FCE1E8', '#B8743A', { g_wheat: 1, honey: 1 }, '쿠키와 거품기 무늬.'],
-  ['stella', '스텔라', 8, '#2A1E48', '#FFD866', { g2_stardust: 1, g2_moonst: 1 }, '별과 달 무늬.'],
-  ['leo', '레오', 9, '#DFF0C8', '#7A5A3A', { wool: 1, g_carrot: 1 }, '토끼와 당근 무늬.'],
-  ['otumo', '오투모', 10, '#C8D8E8', '#3A6AB0', { mana: 1, g_thunder: 1 }, '번개와 나사 무늬.'],
-].map(([id, n, row, bg, fg, m, d]) => ({ id, n, row, bg, fg, m: { g_cotton: 1, ...m }, d, npc: true }));
+  ['nabi', '나비', 0, '#F6E6C8', '#E8A060', { whisker: 4, f_minnow: 3 }, '생선 뼈 무늬. 나비가 보면 모른 척하며 가져갈지도.'],
+  ['batri', '배트리', 1, '#E6DDF8', '#6A4A9A', { g2_batleaf: 3, feather: 2, silk: 1 }, '우표와 봉투 무늬. 배달 가방에 꽂기 좋아요.'],
+  ['kappa', '캇파', 2, '#D8F0DC', '#3A8A5A', { g2_moss: 4, g_mint: 3 }, '연못 물결과 접시 무늬.'],
+  ['aula', '아울라', 3, '#1E2448', '#E8C468', { feather: 4, g2_moonst: 1, drop: 2 }, '책과 달 무늬. 사서의 책갈피.'],
+  ['mandi', '맨디', 4, '#E2F2D6', '#E86A8A', { g_rose: 3, g_dandel: 3, g_lily: 1 }, '들꽃이 가득한 무늬.'],
+  ['jipsin', '스트로', 5, '#F2E2A8', '#5A3A24', { g2_straw: 5, g2_pseed: 3 }, '들판과 까마귀 무늬.'],
+  ['sera', '세라 선생님', 6, '#FBFBF8', '#E05A5A', { herb: 4, g_chamo: 3, honey: 1 }, '하트와 반창고 무늬.'],
+  ['madeleine', '마들렌', 7, '#FCE1E8', '#B8743A', { g_wheat: 4, honey: 3 }, '쿠키와 거품기 무늬.'],
+  ['stella', '스텔라', 8, '#2A1E48', '#FFD866', { g2_stardust: 3, g2_moonst: 2 }, '별과 달 무늬.'],
+  ['leo', '레오', 9, '#DFF0C8', '#7A5A3A', { wool: 4, g_carrot: 4 }, '토끼와 당근 무늬.'],
+  ['otumo', '오투모', 10, '#C8D8E8', '#3A6AB0', { mana: 3, g_thunder: 2, slime: 1 }, '번개와 나사 무늬.'],
+].map(([id, n, row, bg, fg, m, d]) => ({ id, n, row, bg, fg, m: { g_cotton: 3, ...m }, d, npc: true }));
 // 꽂아 두면 받는 효과 (책갈피 밑에 짧게)
 const FX = {"moon": "밤 채집 가끔 +1", "star": "밤 낚시 입질 ↑", "pumpkin": "호박 수확 +1", "bat": "밤에 걸음 빨라짐", "paw": "낚시 입질 빨라짐", "feather": "쪽지시험 힌트 1번", "clover": "드문 채집물 ↑", "rose": "선물 호감도 +10 %", "lav": "쉬기 회복 ↑", "maple": "채집 기다림 ↓", "lily": "온실 수확 가끔 +1", "mush": "버섯 채집 ↑", "hat": "물약 판매가 +10 %", "potion": "물약 완벽 칸 넓게", "candle": "탐사 회복 +10 %", "cloud": "비 오는 날 낚시 ↑", "rainbow": "코인 +5 %", "snow": "요리 완벽 칸 넓게", "check": "생물 재료 가끔 +1", "crystal": "마나 +5 %", "nabi": "나비 호감 ↑ · 물고기 크기 ↑", "batri": "배트리 호감 ↑ · 걸음 빨라짐", "kappa": "캇파 호감 ↑ · 입질 ↑", "aula": "아울라 호감 ↑ · 수업 경험치 ↑", "mandi": "맨디 호감 ↑ · 온실 수확 ↑", "jipsin": "스트로 호감 ↑ · 호박 수확 ↑", "sera": "세라 선생님 호감 ↑ · 탐사 회복 ↑", "madeleine": "마들렌 호감 ↑ · 요리 완벽 칸 ↑", "stella": "스텔라 호감 ↑ · 운세 행운 ↑", "leo": "레오 호감 ↑ · 생물 재료 ↑", "otumo": "오투모 호감 ↑ · 마나 ↑"};
 const RIB = { moon: '#E8C468', star: '#9AC8F0', pumpkin: '#5A3A24', bat: '#E8C468', paw: '#C86A4A', feather: '#7A5A3A', clover: '#3A8A4A', rose: '#D84A6A', lav: '#7A5AB0', maple: '#D8642A', lily: '#3A7A5A', mush: '#B87AE8', hat: '#E8C468', potion: '#9AE8A8', candle: '#C8643A', cloud: '#7AA8D8', rainbow: '#6A9FE8', snow: '#7AA8D8', check: '#F6ECD6', crystal: '#C8B8F8' };
@@ -234,7 +234,7 @@ function npcMotif(q, B, P, C, BM){
 }
 // ===== 상태 · 화면
 const ST = { tab: 'basic', sel: BASIC[0].id, inv: {}, made: { moon: 1, clover: 1, paw: 1, mandi: 1 }, heart: { aula: 5, mandi: 6 }, pin: 'clover', jt: 'story', drop: 0 };
-function refill(){ Object.keys(NAMES).forEach(k => ST.inv[k] = 3); } refill(); ['g_rainbow', 'g_thunder', 'g2_moonst'].forEach(k => ST.inv[k] = 0);
+function refill(){ Object.keys(NAMES).forEach(k => ST.inv[k] = 6); } refill(); ['g_rainbow', 'g_thunder', 'g2_moonst'].forEach(k => ST.inv[k] = 0);
 const all = () => [...BASIC, ...NPCB], byId = id => all().find(b => b.id === id);
 const can = B => Object.entries(B.m).every(([k, n]) => (ST.inv[k] || 0) >= n) && (!B.npc || (ST.heart[B.id] || 0) >= 5);
 function gtoast(t){ const el = $('#gtoast'); el.textContent = t; el.classList.add('on'); clearTimeout(gtoast.t); gtoast.t = setTimeout(() => el.classList.remove('on'), 2200); }
@@ -249,7 +249,7 @@ function render(){
       <div class="mats">${Object.entries(B.m).map(([k, n]) => `<div class="${(ST.inv[k] || 0) >= n ? 'yes' : 'no'}">${ic(k)}${esc(NAMES[k][1])}<b>${ST.inv[k] || 0} / ${n}</b></div>`).join('')}</div>
       ${B.npc && (ST.heart[B.id] || 0) < 5 ? `<p style="color:var(--gold)">${esc(B.n)} 호감 ♥5부터 만들 수 있어요 · 지금 ♥${ST.heart[B.id] || 0}</p>` : ''}
       <button class="btn go wide" data-make="${B.id}" ${can(B) ? '' : 'disabled'}>${can(B) ? '만들기' : '재료가 모자라요'}${ST.made[B.id] ? ` · 가진 것 ${ST.made[B.id]}` : ''}</button></div></div>`) : '';
-  $('#body').innerHTML = (ST.tab === 'mine' && !L.length ? '<p class="empty">아직 만든 책갈피가 없어요</p>' : det + sec(ST.tab === 'basic' ? '기본 책갈피 · 목화솜 + 무늬 재료' : ST.tab === 'npc' ? 'NPC 책갈피 · 그 NPC 호감 ♥5부터' : '내 책갈피',
+  $('#body').innerHTML = (ST.tab === 'mine' && !L.length ? '<p class="empty">아직 만든 책갈피가 없어요</p>' : det + sec(ST.tab === 'basic' ? '기본 책갈피 · 목화솜 3 + 무늬 재료' : ST.tab === 'npc' ? 'NPC 책갈피 · 그 NPC 호감 ♥5부터' : '내 책갈피',
     `<div class="bkg">${L.map(b => { const lock = b.npc && (ST.heart[b.id] || 0) < 5; return `<button class="bk ${b.id === (B && B.id) ? 'on' : ''} ${lock ? 'lock' : ''}" data-bk="${b.id}"><canvas data-bkc="${b.id}" width="36" height="92"></canvas>${esc(b.n)}<em class="fx">${ST.made[b.id] ? esc(FX[b.id] || '') : '???'}</em>${ST.made[b.id] ? `<span class="own">×${ST.made[b.id]}</span>` : ''}${lock ? '<span class="lk">♥5</span>' : ''}</button>`; }).join('')}</div>`))
     + `<p class="hint">아울라 재채기 이후, 도서관 사서 책상에서 만들 수 있어요. 만든 책갈피 하나를 꽂아 두면 밑에 적힌 효과를 받아요. 한 번에 하나만 꽂을 수 있어요.</p>`;
   document.querySelectorAll('[data-face]').forEach(c => face(c, +c.dataset.face));
