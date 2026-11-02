@@ -57,7 +57,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 <div id="app">
   <header><h1>꽃말 꽃다발 공방</h1><p class="lede">꽃을 고르면 꽃말이 모여 메시지가 돼요. 포장하고 장식해서 선물해 봐요.</p></header>
   <section id="stagebox">
-    <canvas id="cv" width="160" height="160" aria-label="꽃다발 미리 보기"></canvas>
+    <canvas id="cv" width="128" height="128" aria-label="꽃다발 미리 보기"></canvas>
     <div id="msg"></div>
     <div class="slots" id="slots"></div>
   </section>
@@ -128,78 +128,65 @@ const S = { size: 5, slots: [], paper: 0, pattern: 'dot', ribbon: 0, deco: new S
 S.slots = ['tulip', 'rose', 'baby_none', 'lily', 'chamo'].filter(x => FB[x]);
 const cv = document.getElementById('cv'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
 const px = (q, x, y, w, h, c) => { q.fillStyle = c; q.fillRect(Math.round(x), Math.round(y), w, h); };
-// 꽃 머리 하나 그리기 (가운데 x, y · 크기 r)
-function drawHead(q, f, x, y, r){
-  const [a, b] = f.c, R = Math.round(r);
-  const disk = (cx, cy, rr, c) => { q.fillStyle = c; for (let j = -rr; j <= rr; j++) for (let i = -rr; i <= rr; i++) if (i * i + j * j <= rr * rr + rr * .6) q.fillRect(Math.round(cx + i), Math.round(cy + j), 1, 1); };
-  const ol = '#3B2A33';
-  switch (f.shape){
-    case 'daisy': for (let k = 0; k < 8; k++){ const t = k / 8 * 6.283; disk(x + Math.cos(t) * R * .75, y + Math.sin(t) * R * .75, Math.max(1, R * .38), a); } disk(x, y, Math.max(1, R * .38), b); break;
-    case 'puff': disk(x, y, R, b); for (let k = 0; k < 14; k++){ const t = k / 14 * 6.283; px(q, x + Math.cos(t) * R, y + Math.sin(t) * R, 1, 1, '#FFFFFF'); } disk(x, y, Math.max(1, R * .5), a); break;
-    case 'clover': case 'clover3': { const n = f.shape === 'clover' ? 4 : 3; for (let k = 0; k < n; k++){ const t = k / n * 6.283 - 1.57; disk(x + Math.cos(t) * R * .55, y + Math.sin(t) * R * .55, Math.max(1, R * .5), k % 2 ? b : a); } break; }
-    case 'spike': for (let k = 0; k < 6; k++){ disk(x + (k % 2 ? 1 : -1), y - R + k * R * .4, Math.max(1, R * .3), k % 2 ? b : a); } break;
-    case 'rose': disk(x, y, R, b); disk(x, y - 1, R * .75, a); px(q, x - R * .4, y - R * .2, Math.max(1, R * .6), 1, b); px(q, x - 1, y - R * .5, 1, Math.max(1, R * .6), b); disk(x + .5, y - .5, Math.max(1, R * .25), b); break;
-    case 'bells': for (let k = 0; k < 3; k++){ const bx = x - R * .6 + k * R * .6, by = y + (k === 1 ? -R * .3 : R * .1); disk(bx, by, Math.max(1, R * .38), a); px(q, bx - 1, by + R * .3, 3, 1, b); } px(q, x - R * .8, y - R * .7, R * 1.6, 1, '#5E9A62'); break;
-    case 'tulip': q.fillStyle = b; for (let j = 0; j <= R * 1.4; j++){ const w = Math.round(R * (j < R * .4 ? .7 + j / (R * 1.5) : 1) * (1 - Math.max(0, j - R) / (R * 1.4))); q.fillRect(Math.round(x - w), Math.round(y - R * .6 + j), w * 2 + 1, 1); } px(q, x - R * .3, y - R * .9, 2, R * .6, a); px(q, x + R * .1, y - R * .8, 2, R * .5, a); px(q, x - R, y - R * .6, 2, R * .8, a); px(q, x + R - 1, y - R * .6, 2, R * .8, a); break;
-    case 'trumpet': disk(x, y, R, a); disk(x, y, Math.max(1, R * .55), b); disk(x, y, Math.max(1, R * .2), '#FFF27A'); break;
-    case 'lotus': for (let k = -2; k <= 2; k++){ q.fillStyle = k % 2 ? b : a; for (let j = 0; j < R * 1.3; j++){ const w = Math.max(1, Math.round((R * .35) * Math.sin(j / (R * 1.3) * 3.14))); q.fillRect(Math.round(x + k * R * .38 - w / 2 + k * j * .12), Math.round(y + R * .5 - j), w, 1); } } break;
-    case 'glow': disk(x, y, R, 'rgba(255,242,122,.35)'); for (let k = 0; k < 6; k++){ const t = k / 6 * 6.283 + Date.now() / 900; disk(x + Math.cos(t) * R * .6, y + Math.sin(t) * R * .6, 1, k % 2 ? a : b); } disk(x, y, Math.max(1, R * .3), a); break;
-    case 'crystal': for (let k = 0; k < 6; k++){ const t = k / 6 * 6.283; for (let s = 0; s <= R; s++) px(q, x + Math.cos(t) * s, y + Math.sin(t) * s, 1, 1, s > R * .6 ? a : b); } disk(x, y, 1, '#FFFFFF'); break;
-    case 'cup4': for (let k = 0; k < 4; k++){ const t = k / 4 * 6.283 + .78; disk(x + Math.cos(t) * R * .5, y + Math.sin(t) * R * .5, Math.max(1, R * .55), a); } disk(x, y, Math.max(1, R * .25), b); break;
-    case 'bigbell': q.fillStyle = a; for (let j = 0; j <= R * 1.6; j++){ const w = Math.round(R * (.35 + j / (R * 1.6) * .75)); q.fillRect(Math.round(x - w), Math.round(y - R * .8 + j), w * 2 + 1, 1); } px(q, x - R * 1.1, y + R * .8, R * 2.2 + 1, 1, b); disk(x, y + R, 1, '#FFE08A'); break;
-    case 'star5': for (let k = 0; k < 5; k++){ const t = k / 5 * 6.283 - 1.57; for (let s = 0; s <= R; s++) disk(x + Math.cos(t) * s, y + Math.sin(t) * s, Math.max(0, Math.round((R - s) * .35)), a); } disk(x, y, Math.max(1, R * .3), b); break;
-    case 'aurora': for (let k = 0; k < 7; k++){ const t = k / 7 * 6.283; disk(x + Math.cos(t) * R * .7, y + Math.sin(t) * R * .7, Math.max(1, R * .4), k % 2 ? a : b); } disk(x, y, Math.max(1, R * .3), '#FFFFFF'); break;
-    case 'clock': for (let k = 0; k < 10; k++){ const t = k / 10 * 6.283; disk(x + Math.cos(t) * R * .75, y + Math.sin(t) * R * .75, Math.max(1, R * .32), a); } disk(x, y, Math.max(1, R * .45), b); px(q, x, y - R * .35, 1, R * .35, ol); px(q, x, y, R * .3, 1, ol); break;
-    case 'ghost': q.fillStyle = a; for (let j = 0; j <= R * 1.6; j++){ const w = Math.round(R * (j < R ? Math.sqrt(Math.max(0, 1 - ((R - j) / R) ** 2)) : 1)); q.fillRect(Math.round(x - w), Math.round(y - R + j), w * 2 + 1, 1); } px(q, x - R * .4, y - R * .2, 1, 2, ol); px(q, x + R * .3, y - R * .2, 1, 2, ol); px(q, x - R, y + R * .6, 1, 1, b); px(q, x + R, y + R * .6, 1, 1, b); break;
-    case 'skull': disk(x, y - 1, R, a); px(q, x - R * .5, y - R * .3, Math.max(1, R * .35), Math.max(1, R * .35), b); px(q, x + R * .2, y - R * .3, Math.max(1, R * .35), Math.max(1, R * .35), b); px(q, x - R * .4, y + R * .55, R * .9, 1, b); break;
+// 꽃 그림: 게임 아이콘(art/plants.png · forage.png) 21 칸을 한 줄로 모은 그림
+const FLIMG = new Image(); FLIMG.src = 'data:image/png;base64,__FLOWERS__';
+const FIDX = Object.fromEntries(FL.map((f, i) => [f.id, i]));
+const OL = '#2A1A2E';
+function flowerIcon(f){ const c = document.createElement('canvas'); c.width = c.height = 32; const q = c.getContext('2d'); q.imageSmoothingEnabled = false; if (FLIMG.complete) q.drawImage(FLIMG, FIDX[f.id] * 32, 0, 32, 32, 0, 0, 32, 32); return c; }
+const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const mix = (c, k) => c.map(v => Math.max(0, Math.min(255, Math.round(k > 0 ? v + (255 - v) * k : v * (1 + k)))));
+// 무늬 한 칸 (8 × 8): 게임처럼 또렷한 점
+function patPix(x, y, base, pat){
+  const dark = base[0] + base[1] + base[2] < 240, mk = dark ? mix(base, .35) : mix(base, -.14), xx = x & 7, yy = y & 7;
+  if (pat === 'dot' && ((xx === 1 || xx === 2) && (yy === 1 || yy === 2) || (xx === 5 || xx === 6) && (yy === 5 || yy === 6))) return dark ? hex('#FFE08A') : mix(base, .6);
+  if (pat === 'stripe' && (xx < 2)) return mk;
+  if (pat === 'check' && ((xx < 4) !== (yy < 4))) return mk;
+  if (pat === 'star' && ((xx === 3 && yy >= 1 && yy <= 3) || (yy === 2 && xx >= 2 && xx <= 4) || (xx === 6 && yy === 6))) return hex(dark ? '#FFE08A' : '#E8A830');
+  if (pat === 'news' && (yy === 1 && xx < 6 || yy === 3 && xx < 7 || yy === 5 && xx < 5)) return mix(base, -.35);
+  return base;
+}
+// 도형을 또렷한 픽셀로: 바깥 테두리 진하게 · 왼쪽 그늘 · 오른쪽 윗면 밝게
+function crisp(q, path, colFn, opt = {}){
+  const W = q.canvas.width, H = q.canvas.height, m = document.createElement('canvas'); m.width = W; m.height = H; const mg = m.getContext('2d');
+  mg.fillStyle = '#000'; mg.beginPath(); path(mg); mg.fill(); const md = mg.getImageData(0, 0, W, H).data, inside = (x, y) => x >= 0 && y >= 0 && x < W && y < H && md[(y * W + x) * 4 + 3] > 110;
+  const out = q.getImageData(0, 0, W, H), d = out.data;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+    if (!inside(x, y)) continue; let c;
+    if (!inside(x - 1, y) || !inside(x + 1, y) || !inside(x, y - 1) || !inside(x, y + 1)) c = hex(opt.ol || OL);
+    else { c = colFn(x, y); if (opt.shade && opt.shade(x, y)) c = mix(c, -.16); if (opt.lite && opt.lite(x, y)) c = mix(c, .3); }
+    const i = (y * W + x) * 4; d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = 255;
   }
-}
-const ICONS = {};
-function flowerIcon(f){
-  if (ICONS[f.id]) return ICONS[f.id];
-  const c = document.createElement('canvas'); c.width = c.height = 24; const q = c.getContext('2d'); q.imageSmoothingEnabled = false;
-  px(q, 11, 13, 2, 11, '#5E9A62'); px(q, 13, 17, 3, 2, '#5E9A62'); drawHead(q, f, 12, 10, 7); return (ICONS[f.id] = c);
-}
-// 포장지 무늬
-function patternFill(q, col, pat){
-  const c = document.createElement('canvas'); c.width = c.height = 8; const p = c.getContext('2d');
-  p.fillStyle = col; p.fillRect(0, 0, 8, 8);
-  const dark = col === '#3A3550', mk = dark ? 'rgba(255,255,255,.55)' : 'rgba(59,42,51,.18)';
-  if (pat === 'dot'){ p.fillStyle = dark ? '#FFE08A' : 'rgba(255,255,255,.9)'; p.fillRect(1, 1, 2, 2); p.fillRect(5, 5, 2, 2); if (!dark && col === '#FFFFFF'){ p.fillStyle = '#F2B8C8'; p.fillRect(1, 1, 2, 2); p.fillRect(5, 5, 2, 2); } }
-  if (pat === 'stripe'){ p.fillStyle = mk; p.fillRect(0, 0, 2, 8); p.fillRect(4, 0, 2, 8); }
-  if (pat === 'check'){ p.fillStyle = mk; p.fillRect(0, 0, 4, 4); p.fillRect(4, 4, 4, 4); }
-  if (pat === 'star'){ p.fillStyle = dark ? '#FFE08A' : '#F2B833'; p.fillRect(3, 1, 1, 3); p.fillRect(2, 2, 3, 1); p.fillRect(6, 6, 1, 1); }
-  if (pat === 'news'){ p.fillStyle = 'rgba(59,42,51,.35)'; p.fillRect(0, 1, 6, 1); p.fillRect(0, 3, 7, 1); p.fillRect(0, 5, 5, 1); }
-  return q.createPattern(c, 'repeat');
+  q.putImageData(out, 0, 0);
 }
 function draw(){
-  const q = g; q.clearRect(0, 0, 160, 160);
-  const n = S.slots.length, paper = PAPER[S.paper][0], rib = RIBBON[S.ribbon][0], cx = 80;
-  const LAY = { 3: [[80, 50], [64, 60], [96, 60]], 5: [[80, 42], [63, 52], [97, 52], [71, 66], [89, 66]], 7: [[80, 36], [64, 44], [96, 44], [50, 58], [110, 58], [70, 62], [90, 62]] };
-  const spread = S.size === 3 ? 24 : S.size === 5 ? 30 : 38, topY = S.size === 3 ? 58 : S.size === 5 ? 54 : 50, R = S.size === 3 ? 12 : S.size === 5 ? 11 : 10;
-  const pos = LAY[S.size].slice(0, n);
-  // 뒤쪽 포장지
-  q.fillStyle = patternFill(q, paper, S.pattern); q.beginPath(); q.moveTo(cx, 132); q.lineTo(cx - spread - 26, topY - 8); q.quadraticCurveTo(cx, topY - 22, cx + spread + 26, topY - 8); q.closePath(); q.fill();
-  q.fillStyle = 'rgba(0,0,0,.12)'; q.beginPath(); q.moveTo(cx, 132); q.lineTo(cx - spread - 26, topY - 8); q.lineTo(cx - spread - 18, topY - 4); q.closePath(); q.fill();
-  // 잎사귀 · 안개꽃 (뒤)
-  if (S.deco.has('leaf')) [[-1, 0], [1, 0], [-.6, -1], [.6, -1]].forEach(([s, u]) => { q.fillStyle = '#5E9A62'; for (let j = 0; j < 14; j++){ const w = Math.max(1, Math.round(3 * Math.sin(j / 14 * 3.14))); q.fillRect(Math.round(cx + s * (spread + 6) + s * j * .6 - w / 2), Math.round(topY + 18 + u * 10 - j), w, 1); } });
-  if (S.deco.has('baby')) for (let i = 0; i < 26; i++){ const t = i / 26, x = cx + (Math.sin(i * 7.3) * (spread + 14)), y = topY - 6 + (Math.cos(i * 3.1) * .5 + .5) * 30; px(q, x, y, 2, 2, '#FFFFFF'); px(q, x + 1, y + 2, 1, 1, '#D8E8D0'); }
+  const q = g, W = 128; q.clearRect(0, 0, W, W);
+  const n = S.slots.length, base = hex(PAPER[S.paper][0]), rib = hex(RIBBON[S.ribbon][0]), cx = 64;
+  const LAY = { 3: [[64, 42], [48, 50], [80, 50]], 5: [[64, 36], [46, 44], [82, 44], [55, 56], [73, 56]], 7: [[64, 30], [47, 38], [81, 38], [33, 50], [95, 50], [54, 54], [74, 54]] };
+  const sp = S.size === 3 ? 34 : S.size === 5 ? 40 : 46, top = S.size === 3 ? 44 : S.size === 5 ? 40 : 36, pos = LAY[S.size].slice(0, n);
+  const paper = (x, y) => patPix(x, y, base, S.pattern);
+  // 뒤쪽 포장지 (부채꼴)
+  crisp(q, p => { p.moveTo(cx, 112); p.lineTo(cx - sp, top); p.quadraticCurveTo(cx - sp * .5, top - 16, cx, top - 10); p.quadraticCurveTo(cx + sp * .5, top - 16, cx + sp, top); p.closePath(); }, (x, y) => mix(paper(x, y), -.1), { shade: (x, y) => x < cx - sp * .45 + (y - top) * .5 });
+  // 잎사귀
+  if (S.deco.has('leaf')) [[-1, 0], [1, 0], [-1, 1], [1, 1]].forEach(([s, k]) => crisp(q, p => { const bx = cx + s * (sp - 8 - k * 6), by = top + 12 + k * 8; p.moveTo(bx, by + 10); p.quadraticCurveTo(bx + s * 10, by, bx + s * 6, by - 12); p.quadraticCurveTo(bx - s * 4, by - 2, bx, by + 10); }, () => hex(k ? '#4E8A52' : '#6AAE5E'), { ol: '#1E3A24', lite: (x, y) => (x + y) % 5 === 0 }));
+  // 안개꽃
+  if (S.deco.has('baby')) for (let i = 0; i < 34; i++){ const x = Math.round(cx + Math.sin(i * 7.3) * (sp - 6)), y = Math.round(top - 6 + (Math.cos(i * 3.1) * .5 + .5) * 26); q.fillStyle = OL; q.fillRect(x - 1, y - 1, 4, 4); q.fillStyle = '#FFFFFF'; q.fillRect(x, y, 2, 2); q.fillStyle = '#D8D0E0'; q.fillRect(x + 1, y + 1, 1, 1); }
   // 줄기
-  pos.forEach(([x, y]) => { q.strokeStyle = '#4E8A52'; q.lineWidth = 1; q.beginPath(); q.moveTo(x, y + 4); q.lineTo(cx + (x - cx) * .15, 118); q.stroke(); });
-  // 꽃 머리 (뒤 줄부터)
-  pos.map((p, i) => [p, i]).sort((A, B) => A[0][1] - B[0][1]).forEach(([[x, y], i]) => drawHead(q, FB[S.slots[i]], x, y, R));
-  // 앞쪽 포장지
-  q.fillStyle = patternFill(q, paper, S.pattern); q.beginPath(); q.moveTo(cx, 140); q.lineTo(cx - spread - 10, topY + 30); q.lineTo(cx - 6, topY + 40); q.lineTo(cx + spread + 10, topY + 30); q.closePath(); q.fill();
-  q.strokeStyle = 'rgba(59,42,51,.35)'; q.lineWidth = 1; q.beginPath(); q.moveTo(cx - spread - 10, topY + 30); q.lineTo(cx, 140); q.lineTo(cx + spread + 10, topY + 30); q.stroke();
-  if (S.deco.has('pearl')) for (let i = 0; i <= 8; i++){ const t = i / 8, x = cx - spread - 10 + t * (spread * 2 + 20), y = topY + 30 + (t < .5 ? t * 20 : (1 - t) * 20) - 1; px(q, x - 1, y - 1, 3, 3, '#FFFFFF'); px(q, x, y, 1, 1, '#E8D8E0'); }
-  // 리본
-  const by = 116; q.fillStyle = rib; q.beginPath(); q.ellipse(cx - 9, by, 9, 5, -.3, 0, 7); q.fill(); q.beginPath(); q.ellipse(cx + 9, by, 9, 5, .3, 0, 7); q.fill();
-  px(q, cx - 4, by - 4, 8, 8, rib); q.fillStyle = 'rgba(0,0,0,.18)'; q.fillRect(cx - 4, by + 2, 8, 2);
-  q.fillStyle = rib; q.beginPath(); q.moveTo(cx - 3, by + 3); q.lineTo(cx - 12, by + 24); q.lineTo(cx - 7, by + 22); q.lineTo(cx - 2, by + 6); q.fill(); q.beginPath(); q.moveTo(cx + 3, by + 3); q.lineTo(cx + 12, by + 24); q.lineTo(cx + 7, by + 22); q.lineTo(cx + 2, by + 6); q.fill();
-  if (rib === '#FFFFFF'){ q.strokeStyle = 'rgba(59,42,51,.3)'; q.strokeRect(cx - 4, by - 4, 8, 8); }
-  if (S.deco.has('bfly')){ const t = Date.now() / 300, x = cx + spread + 4, y = topY + 4 + Math.sin(t) * 2, w = 3 + Math.abs(Math.sin(t * 2)) * 2; px(q, x - w, y - 2, w, 4, '#FFB13B'); px(q, x + 1, y - 2, w, 4, '#FFB13B'); px(q, x, y - 3, 1, 6, '#3B2A33'); }
-  if (S.deco.has('card')){ q.fillStyle = '#FFFDF6'; q.save(); q.translate(cx + 22, 124); q.rotate(.18); q.fillRect(0, 0, 26, 18); q.strokeStyle = 'rgba(59,42,51,.4)'; q.strokeRect(0, 0, 26, 18); q.fillStyle = '#E2577E'; q.fillRect(11, 6, 2, 2); q.fillRect(14, 6, 2, 2); q.fillRect(11, 8, 5, 2); q.fillRect(12, 10, 3, 1); q.restore(); q.strokeStyle = 'rgba(59,42,51,.4)'; q.beginPath(); q.moveTo(cx + 2, by + 2); q.lineTo(cx + 24, 125); q.stroke(); }
-  if (S.deco.has('glitter')){ const t = Date.now() / 200; for (let i = 0; i < 9; i++){ if ((Math.floor(t) + i) % 3) continue; const x = cx + Math.sin(i * 5.1) * (spread + 16), y = topY - 10 + (i * 13 % 60); px(q, x, y - 1, 1, 3, '#FFE08A'); px(q, x - 1, y, 3, 1, '#FFE08A'); } }
+  pos.forEach(([x, y]) => { const ex = cx + (x - cx) * .12, steps = 30; for (let s = 0; s <= steps; s++){ const t = s / steps, px1 = Math.round(x + (ex - x) * t), py1 = Math.round(y + 12 + (100 - y - 12) * t); q.fillStyle = '#1E3A24'; q.fillRect(px1 - 1, py1, 3, 1); q.fillStyle = '#5E9A52'; q.fillRect(px1, py1, 1, 1); } });
+  // 꽃 (아이콘 그대로)
+  if (FLIMG.complete) pos.map((p, i) => [p, i]).sort((A, B) => A[0][1] - B[0][1]).forEach(([[x, y], i]) => q.drawImage(FLIMG, FIDX[S.slots[i]] * 32, 0, 32, 32, x - 16, y - 16, 32, 32));
+  // 앞쪽 포장지 (감싸는 면)
+  crisp(q, p => { p.moveTo(cx, 116); p.lineTo(cx - sp + 6, top + 26); p.lineTo(cx - 4, top + 36); p.lineTo(cx + sp - 6, top + 26); p.closePath(); }, paper, { shade: (x, y) => x < cx - 2 && x > cx - sp + 6 + (y - top - 26) * .9 - 1 && (x - (cx - sp + 6)) < 6 + (y - top) * .2, lite: (x, y) => x > cx + 4 && x < cx + 7 });
+  // 접힌 선
+  q.fillStyle = OL; for (let y = top + 36; y < 112; y += 1){ const t = (y - top - 36) / (112 - top - 36); q.fillRect(Math.round(cx - 4 + t * 4), y, 1, 1); }
+  if (S.deco.has('pearl')) for (let i = 0; i <= 8; i++){ const t = i / 8, x = Math.round(cx - sp + 6 + t * (sp * 2 - 12)), y = Math.round(top + 26 + (t < .5 ? t * 20 : (1 - t) * 20)); q.fillStyle = OL; q.fillRect(x - 1, y - 1, 4, 4); q.fillStyle = '#FFFFFF'; q.fillRect(x, y, 2, 2); q.fillStyle = '#E0D0E8'; q.fillRect(x + 1, y + 1, 1, 1); }
+  // 리본 (테두리 · 그늘 · 반짝)
+  const by = 98, rc = (x, y) => rib, lite = (x, y) => y < by - 2;
+  crisp(q, p => { p.moveTo(cx - 3, by + 2); p.lineTo(cx - 12, by + 22); p.lineTo(cx - 7, by + 20); p.lineTo(cx - 1, by + 5); p.closePath(); p.moveTo(cx + 3, by + 2); p.lineTo(cx + 12, by + 22); p.lineTo(cx + 7, by + 20); p.lineTo(cx + 1, by + 5); p.closePath(); }, (x, y) => mix(rib, -.15));
+  crisp(q, p => { p.ellipse(cx - 9, by, 9, 5, -.3, 0, 7); p.moveTo(cx + 18, by); p.ellipse(cx + 9, by, 9, 5, .3, 0, 7); }, rc, { shade: (x, y) => y > by + 1, lite });
+  crisp(q, p => p.rect(cx - 4, by - 4, 8, 8), (x, y) => mix(rib, .1), { shade: (x, y) => y > by + 1 });
+  if (S.deco.has('bfly')){ const t = Date.now() / 300, x = cx + sp - 6, y = Math.round(top - 2 + Math.sin(t) * 2), w = 3 + Math.round(Math.abs(Math.sin(t * 2)) * 2); q.fillStyle = OL; q.fillRect(x - w - 1, y - 3, w * 2 + 3, 7); q.fillStyle = '#FFB13B'; q.fillRect(x - w, y - 2, w, 5); q.fillRect(x + 1, y - 2, w, 5); q.fillStyle = '#FFE08A'; q.fillRect(x - w, y - 2, 1, 2); q.fillRect(x + w, y - 2, 1, 2); q.fillStyle = OL; q.fillRect(x, y - 3, 1, 7); }
+  if (S.deco.has('card')){ crisp(q, p => p.rect(cx + 16, 104, 20, 14), (x, y) => hex('#FFF6E4'), { shade: (x, y) => y > 115 }); q.fillStyle = '#E2577E'; q.fillRect(cx + 24, 109, 2, 2); q.fillRect(cx + 27, 109, 2, 2); q.fillRect(cx + 24, 111, 5, 1); q.fillRect(cx + 25, 112, 3, 1); q.fillStyle = OL; for (let i = 0; i < 12; i++) q.fillRect(cx + 4 + i, by + 4 + Math.round(i * .5), 1, 1); }
+  if (S.deco.has('glitter')){ const t = Math.floor(Date.now() / 220); for (let i = 0; i < 10; i++){ if ((t + i) % 3) continue; const x = Math.round(cx + Math.sin(i * 5.1) * (sp + 2)), y = top - 12 + (i * 13 % 56); q.fillStyle = '#FFF6C0'; q.fillRect(x, y - 2, 1, 5); q.fillRect(x - 2, y, 5, 1); q.fillStyle = '#FFFFFF'; q.fillRect(x, y, 1, 1); } }
 }
 function meaning(){
   const ids = S.slots, uniq = [...new Set(ids)];
@@ -214,7 +201,7 @@ function renderSlots(){
   const el = document.getElementById('slots'); el.innerHTML = '';
   for (let i = 0; i < S.size; i++){
     const b = document.createElement('button'); b.className = 'slot' + (S.slots[i] ? ' on' : ''); b.setAttribute('aria-label', S.slots[i] ? `${FB[S.slots[i]].n} 빼기` : '빈 자리');
-    if (S.slots[i]){ const c = document.createElement('canvas'); c.width = c.height = 24; const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(flowerIcon(FB[S.slots[i]]), 0, 0); b.appendChild(c); b.onclick = () => { S.slots.splice(i, 1); refresh(); }; }
+    if (S.slots[i]){ const c = document.createElement('canvas'); c.width = c.height = 32; const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(flowerIcon(FB[S.slots[i]]), 0, 0); b.appendChild(c); b.onclick = () => { S.slots.splice(i, 1); refresh(); }; }
     el.appendChild(b);
   }
   const m = meaning(); document.getElementById('msg').innerHTML = `<b>${m.head}</b><span>${m.sub}</span>`;
@@ -224,7 +211,7 @@ function panel(){
   if (S.tab === 'flower'){
     P.innerHTML = `<div class="lab">꽃다발 크기</div><div class="seg">${SIZES.map(([n, l]) => `<button data-size="${n}" class="${S.size === n ? 'on' : ''}">${l} · ${n} 송이</button>`).join('')}</div>
       <div class="lab">꽃 고르기 · 누르면 한 송이씩 들어가요 (같은 꽃 여러 송이도 돼요)</div>
-      <div class="fgrid">${FL.map(f => `<button class="fl" data-f="${f.id}"><canvas width="24" height="24" data-ic="${f.id}"></canvas>${f.n}<small>${f.w}</small>${cnt(f.id) ? `<span class="n">× ${cnt(f.id)}</span>` : `<small>${f.from}</small>`}</button>`).join('')}</div>`;
+      <div class="fgrid">${FL.map(f => `<button class="fl" data-f="${f.id}"><canvas width="32" height="32" data-ic="${f.id}"></canvas>${f.n}<small>${f.w}</small>${cnt(f.id) ? `<span class="n">× ${cnt(f.id)}</span>` : `<small>${f.from}</small>`}</button>`).join('')}</div>`;
     P.querySelectorAll('[data-ic]').forEach(c => { const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(flowerIcon(FB[c.dataset.ic]), 0, 0); });
   } else if (S.tab === 'wrap'){
     P.innerHTML = `<div class="lab">포장지 색</div><div class="sw">${PAPER.map(([c, l], i) => `<button data-paper="${i}" class="${S.paper === i ? 'on' : ''}" style="background:${c}" aria-label="${l}" title="${l}"></button>`).join('')}</div>
@@ -266,6 +253,6 @@ document.addEventListener('click', e => {
   if (d.deco){ S.deco.has(d.deco) ? S.deco.delete(d.deco) : S.deco.add(d.deco); return refresh(); }
   if (d.npc) return give(d.npc);
 });
-refresh();
-setInterval(draw, 120);
+if (FLIMG.complete) refresh(); else FLIMG.onload = refresh;
+setInterval(draw, 160);
 </script>
