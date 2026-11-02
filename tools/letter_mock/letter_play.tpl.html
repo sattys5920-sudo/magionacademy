@@ -1,0 +1,206 @@
+<title>배트리의 쏟아진 편지</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link href="https://fonts.googleapis.com/css2?family=Hi+Melody&family=Poor+Story&family=Nanum+Brush+Script&family=Gowun+Batang:wght@400;700&family=Gamja+Flower&family=Single+Day&family=Nanum+Pen+Script&family=Yeon+Sung&family=East+Sea+Dokdo&family=Do+Hyeon&display=swap" rel="stylesheet">
+<style>
+/* 게임 안 화면(밤 보라): 위 봉투 꾸러미 · 편지를 누르면 편지지가 열리고 아래에서 「누가 썼을까」 */
+@font-face{font-family:'G11';font-display:swap;src:url(data:font/woff2;base64,__G11__) format('woff2')}
+@font-face{font-family:'G11B';font-display:swap;src:url(data:font/woff2;base64,__G11B__) format('woff2')}
+:root{--bg:#140D1E;--panel:#211733;--panel2:#2B1F45;--line:#3A2A55;--line2:#4E3C72;--accent:#FF9A3C;--ok:#6FD08C;--warn:#FF6B6B;--text:#F6F0FF;--sub:#BDB0D6;--gold:#FFD866;--pink:#FF8FAF;
+  --f-body:system-ui,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;--f-px:'G11',var(--f-body);--f-pxb:'G11B',var(--f-body);color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f-body);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px}
+#app{max-width:560px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.shead{display:flex;align-items:center;gap:8px;padding:10px 12px 10px 14px;border-bottom:1px solid var(--line)}
+.shead b{flex:1;font-family:var(--f-pxb);font-weight:400;font-size:16px}
+.stat{height:32px;padding:0 12px;border-radius:16px;background:var(--panel2);border:1px solid var(--line2);display:flex;align-items:center;font-family:var(--f-pxb);font-size:13px;color:var(--gold);white-space:nowrap}
+.body{padding:14px;display:flex;flex-direction:column;gap:14px}
+.pick{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--sub)}
+.pick select{flex:1;min-height:40px;border-radius:10px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);font:13px var(--f-pxb);padding:0 8px}
+.lab{font-family:var(--f-pxb);font-size:13px;color:var(--sub)}
+.envs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.env{position:relative;border:0;padding:0;border-radius:10px;cursor:pointer;background:none;text-align:left}
+.env canvas{width:100%;aspect-ratio:160/100;image-rendering:pixelated;display:block;border-radius:8px}
+.env .to{position:absolute;left:10%;top:60%;font:13px var(--f-pxb);color:#5A4636}
+.env .tag{position:absolute;right:8px;top:6px;font:11px var(--f-pxb);padding:2px 8px;border-radius:8px;background:rgba(20,13,30,.85);color:var(--gold)}
+.env.done .tag{color:var(--ok)}
+.hint{font-size:13px;color:var(--sub);margin:0}
+.btn{min-height:44px;border:2px solid var(--line2);border-radius:12px;background:var(--panel2);color:var(--text);font-family:var(--f-pxb);font-size:14px;cursor:pointer;padding:0 14px}
+.btn.go{background:var(--accent);border-color:var(--accent);color:#2A1506}
+/* 편지 창 */
+#lv{position:fixed;inset:0;z-index:40;background:rgba(10,6,16,.86);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:16px max(16px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px))}
+#lv[hidden]{display:none}
+.lwrap{width:100%;max-width:440px;display:flex;flex-direction:column;gap:12px}
+.lhd{display:flex;justify-content:space-between;align-items:center}
+.lhd b{font-family:var(--f-pxb);font-weight:400;color:var(--gold)}
+.lhd button{width:40px;height:40px;border-radius:20px;border:0;background:rgba(255,255,255,.1);color:var(--text);font-size:16px;cursor:pointer}
+.paper{position:relative;border-radius:6px;padding:34px 26px 30px;min-height:320px;box-shadow:0 8px 0 rgba(0,0,0,.35)}
+.paper .tx{position:relative;z-index:1;white-space:pre-line;color:var(--ink,#3B2A33)}
+.paper canvas.dc{position:absolute;image-rendering:pixelated;z-index:2;pointer-events:none}
+.paper .stamp{position:absolute;right:16px;bottom:14px;z-index:3;transform:rotate(-12deg);font:16px var(--f-pxb);color:#D9443B;border:3px solid #D9443B;border-radius:8px;padding:2px 10px;opacity:.9;background:rgba(255,255,255,.4)}
+.guess{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.guess .q{font-family:var(--f-pxb);font-size:14px}
+.faces{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.faces button{border:1px solid var(--line2);border-radius:8px;background:var(--panel2);color:var(--text);padding:2px;display:flex;flex-direction:column;align-items:center;font:10px var(--f-pxb);cursor:pointer;min-height:58px}
+.faces button canvas{width:36px;height:36px;image-rendering:pixelated}
+.faces button.no{opacity:.35}
+.faces button.yes{border:2px solid var(--ok)}
+.say{display:flex;gap:10px;align-items:flex-start;background:rgba(20,13,34,.96);border:2px solid #9AC8F0;border-radius:12px;padding:10px}
+.say canvas{width:48px;height:48px;image-rendering:pixelated;flex:none;background:#1E2A44;border-radius:8px}
+.say b{display:block;font:13px var(--f-pxb);color:#BFE0FF}
+.say p{margin:0;font:14px/1.6 var(--f-px);color:#F1E9FF}
+.say.ok{border-color:var(--ok)}.say.ok b{color:#C8F0B0}
+button:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+</style>
+
+<div id="app">
+  <div class="shead"><b>배트리의 쏟아진 편지</b><span class="stat" id="stat"></span></div>
+  <div class="body">
+    <div class="pick"><label for="stu">시안 · 받는 학생</label><select id="stu"></select></div>
+    <div class="say" id="intro"><canvas width="32" height="32" id="ifc"></canvas><div><b>배트리</b><p>으.... 미안해. 하늘에서 가방을 엎었어. 봉투에 받는 사람 이름은 남았는데, 보낸 사람 칸이 다 찢겨 나갔어. 글씨랑 편지지를 잘 보면 누가 썼는지 알 수 있을 거야.......</p></div></div>
+    <div class="lab">내 앞으로 온 편지 · 누르면 열어요</div>
+    <div class="envs" id="envs"></div>
+    <p class="hint">학생마다 NPC 11 명에게서 한 통씩, 똑같이 11 통을 받아요. 게임에서는 하루 3~4 통씩 마을 바닥에 떨어져 있어요.</p>
+  </div>
+</div>
+<div id="lv" hidden><div class="lwrap">
+  <div class="lhd"><b id="lttl"></b><button id="lx" aria-label="닫기">✕</button></div>
+  <div class="paper" id="paper"></div>
+  <div class="guess" id="guess"></div>
+</div></div>
+
+<script>
+const SHEET = new Image(); SHEET.src = 'data:image/webp;base64,__SHEET__';
+const NPC = [
+  { id: 'nabi', n: '나비', row: 0, font: "'Hi Melody'", size: 25, paper: '#FFF4E4', ink: '#5A3A2A', line: '#F2D8B8',
+    t: '{name}에게\n\n오늘도 매점 앞을 지나갔지냥.\n일부러 기다린 건 아니다냥.\n....그냥 햇볕이 좋아서 앉아 있었을 뿐이다냥.\n\n다음에 생선 남으면.... 나눠 줘도 된다냥.\n무릎도 빌려줄 수 있다냥.',
+    deco: [['paw', 22, 18], ['paw', 46, 40], ['paw', 300, 280], ['bone', 290, 30], ['hair', 200, 300]], hint: '이 편지.... 생선 냄새가 나. 구석에 털도 한 가닥 붙어 있고.', ok: '....들켰다냥. 아무한테도 말하지 마라냥. 특히 배트리한테는.' },
+  { id: 'batri', n: '배트리', row: 1, font: "'Poor Story'", size: 21, paper: '#F2EAF8', ink: '#3A2A55', line: '#D8C8EA',
+    t: '{name}!\n\n급해서 짧게 쓸게.\n배달하다 보면 하루에 편지를 백 통도 넘게 만지는데,\n내 이름으로 쓰는 건 처음이야.\n너한테 쓰고 싶었어.\n\n답장은.... 안 해도 돼.\n아니, 하면 내가 제일 먼저 배달할게.',
+    deco: [['wing', 8, 8], ['wing2', 300, 8], ['seal', 280, 270], ['stamp', 290, 60]], hint: '이 봉랍 도장.... 어디서 봤더라. 아, 내 가방에 있는 거랑 똑같네. 어?', ok: '으악, 들켰다. 내가 쓴 편지를 내가 흘리다니. ....그래도 잘 도착해서 다행이야.' },
+  { id: 'kappa', n: '캇파', row: 2, font: "'Nanum Brush Script'", size: 27, paper: '#EEF6EE', ink: '#1E3A2A', line: '#CFE6D2',
+    t: '{name}에게\n\n연못에 비친 달을 보다가\n네 생각이 났다.\n\n같이 낚시하던 날,\n물고기는 한 마리도 못 잡았지만.... 나쁘지 않았다.\n\n다음엔 오이를 두 개 가져가겠다.\n하나는 네 것이다.',
+    deco: [['drop', 30, 30], ['drop', 270, 120], ['drop', 60, 250], ['cucumber', 280, 270], ['wet', 160, 20]], hint: '종이가 축축하네. 물에 한 번 빠졌다 나온 것 같아. 연못 근처에서 쓴 건가.', ok: '....젖은 편지를 알아보다니. 다음 낚시 때 오이는 세 개 가져가겠다.' },
+  { id: 'aula', n: '아울라', row: 3, font: "'Gowun Batang'", size: 17, paper: '#FBF6E8', ink: '#2A2440', line: '#E8DCC0',
+    t: '{name} 님께\n\n도서관 서가 사이에서\n당신이 책을 고르는 모습을 몇 번 보았어요.\n고른 책들이 늘 좋았어요.\n\n다음에 추천하고 싶은 책이 있어요.\n\n※ 조용히 오셔야 해요. 도서관이니까요.',
+    deco: [['feather', 290, 20], ['ink', 40, 280], ['corner', 0, 0]], hint: '글씨가 엄청 반듯해. 각주까지 달려 있어. 책을 많이 읽는 사람 같은데.......', ok: '쉿.... 정답이에요. 각주에서 들킬 줄 알았어요. 책은 준비해 둘게요.......' },
+  { id: 'mandi', n: '맨디', row: 4, font: "'Gamja Flower'", size: 22, paper: '#F2F6E4', ink: '#3A4A22', line: '#DCE6C4',
+    t: '{name}....\n\n안녕하세요. 히익, 편지 쓰는 거 처음이라\n글씨가 삐뚤어요.\n\n화분 옆을 지나가실 때마다\n잎이 저절로 흔들려요.\n그건.... 바람 때문이 아니에요.......',
+    deco: [['soil', 40, 26], ['soil', 270, 260], ['sprout', 290, 30], ['petal', 50, 270], ['petal', 240, 40]], hint: '흙 묻은 손자국이 있어. 꽃잎도 눌려 있고.......', ok: '히익.... 들켰어요. 흙 자국 때문이죠. 다음엔 손 씻고 쓸게요.......' },
+  { id: 'jipsin', n: '스트로', row: 5, font: "'Single Day'", size: 24, paper: '#FFF2C8', ink: '#6A3A1A', line: '#F2D898',
+    t: '{name}!\n\n나 밭에서 매일 서 있잖아.\n근데 네가 지나가면 심심하지 않아.\n까마귀들도 너 좋대.\n\n해 그림 그렸어.\n너 줄게!',
+    deco: [['sun', 270, 30], ['crow', 40, 260], ['straw', 0, 150], ['straw2', 300, 200]], hint: '지푸라기가 끼어 있어. 크레용으로 해를 그렸네. 밭에 있는 누구인 것 같아.', ok: '헤헤, 맞혔다! 해 그림 마음에 들었어? 까마귀들한테도 자랑할래.' },
+  { id: 'sera', n: '세라 선생님', row: 6, font: "'Nanum Pen Script'", size: 25, paper: '#F4FAFF', ink: '#1E3A5A', line: '#D2E6F4',
+    t: '{name}에게\n\n요즘 무리하지는 않니?\n양호실 창밖으로 네가 뛰어다니는 걸 보면\n마음이 놓이면서도 조금 걱정돼.\n\n다치면 꼭 오렴.\n아프지 않아도 차 한 잔 하러 와도 좋아.',
+    deco: [['bandage', 280, 26], ['bandage', 30, 270], ['cross', 40, 30]], hint: '약 냄새가 살짝 나. 반창고가 붙어 있고. 아픈 사람을 잘 돌보는 누구겠지.', ok: '어머, 금방 알았구나. 선생님이 편지 쓴 건 비밀로 해 주렴. 차는 준비해 둘게.' },
+  { id: 'madeleine', n: '마들렌', row: 7, font: "'Yeon Sung'", size: 22, paper: '#FFF0F2', ink: '#6A2A3A', line: '#F6D2DA',
+    t: '{name}에게!\n\n오늘 새로 구운 쿠키가 제일 맛있게 나왔어.\n첫 번째로 생각난 사람이 너였어.\n그래서 이 편지에 냄새를 조금 묻혀 봤어.\n\n가게에 들르면\n한 개 숨겨 둔 거 줄게.',
+    deco: [['flour', 30, 20], ['cookie', 280, 26], ['cookie', 300, 270], ['ribbon', 150, 2]], hint: '달콤한 냄새가 나! 밀가루 손자국도 있고. 빵 굽는 누구 아닐까.', ok: '냄새로 들켰구나. 숨겨 둔 쿠키, 오늘 꼭 가져가.' },
+  { id: 'stella', n: '스텔라', row: 8, font: "'East Sea Dokdo'", size: 30, paper: '#1E1A3A', ink: '#E8DCFF', line: '#3A3260',
+    t: '{name}에게\n\n어젯밤 별이 당신 이름을 세 번 불렀어요.\n무슨 뜻인지는.... 아직 비밀이에요.\n\n길을 잃은 밤에는\n북쪽의 밝은 별을 보세요.\n제가 거기 앉혀 둔 별이에요.......',
+    deco: [['stars', 20, 20], ['moon', 290, 24], ['spark', 260, 260], ['spark', 50, 270]], hint: '반짝이 가루가 자꾸 떨어져. 별자리 점선까지 그려져 있어.......', ok: '별이 그러던데요.... 당신이 맞힐 거라고. 맞았네요.......' },
+  { id: 'leo', n: '레오', row: 9, font: "'Do Hyeon'", size: 21, paper: '#F2EEE2', ink: '#2A2A22', line: '#DCD4BC',
+    t: '{name}.\n\n편지 같은 거 잘 못 쓴다.\n\n생물들이 너를 좋아한다.\n나도.... 싫지 않다.\n그게 다다.\n\n사육장에 오면 양털 좀 털어 가.',
+    deco: [['grass', 30, 260], ['hoof', 280, 30], ['hoof', 300, 70], ['feather2', 270, 260]], hint: '풀물 얼룩이 있어. 짧고 무뚝뚝하게 썼네. 동물 발자국도 찍혀 있고.', ok: '....맞다. 다시는 편지 안 쓴다. ....아니, 가끔은 쓸게.' },
+  { id: 'otumo', n: '오투모', row: 10, font: "'G11'", size: 15, paper: '#E8F2FA', ink: '#1E3A5A', line: '#C8DCEC',
+    t: '수신: {name}\n\n삐빅. 편지 형식 학습 중입니다.\n\n오늘의 기록.\n{name} 개체를 만나면 냉각 팬이 빨라집니다.\n원인 분석 중.\n\n결과가 나오면 다시 송신하겠습니다.',
+    deco: [['barcode', 260, 20], ['chip', 20, 20], ['beep', 270, 270]], hint: '바코드가 찍혀 있어. 글씨가 네모네모하고.... 기계가 쓴 것 같아.', ok: '삐빅. 발신자 확인됨: 오투모. 들켰습니다. ....냉각 팬이 또 빨라집니다.' }
+];
+// 작은 픽셀 장식: 칸마다 글자 하나 = 색 하나 (. 은 빈칸)
+const PX = {
+  paw: [['..a.a..', '.a.a.a.', '..aaa..', '.aaaaa.', '.aaaaa.', '..aaa..'], { a: '#D88A9A' }, 4],
+  bone: [['a.....a', 'aaaaaaa', 'a.a.a.a', 'aaaaaaa', 'a.....a'], { a: '#B8B0A8' }, 4],
+  hair: [['a.......', '.a......', '..aa....', '....a...', '.....aa.'], { a: '#F0A040' }, 3],
+  wing: [['a.......', 'aa......', 'aaa.a...', 'aaaaaa..', 'aaaaaaaa', '.a.a.a.a'], { a: '#6A4A9A' }, 4],
+  wing2: [['.......a', '......aa', '...a.aaa', '..aaaaaa', 'aaaaaaaa', 'a.a.a.a.'], { a: '#6A4A9A' }, 4],
+  seal: [['..aaa..', '.abbba.', 'abbcbba', 'abcccba', 'abbcbba', '.abbba.', '..aaa..'], { a: '#8A1A2A', b: '#C8343E', c: '#F07070' }, 5],
+  stamp: [['abababa', 'bcccccb', 'acdddca', 'bcdedcb', 'acdddca', 'bcccccb', 'abababa'], { a: '#FFFFFF', b: '#E8E0F0', c: '#9AD4F0', d: '#6A4A9A', e: '#FFD866' }, 4],
+  drop: [['..a..', '.aba.', 'abbba', 'abbba', '.aaa.'], { a: '#5A9AD0', b: '#A8D8F8' }, 4],
+  cucumber: [['..aaaa..', '.abbbba.', 'abcbbcba', '.abbbba.', '..aaaa..'], { a: '#2E6A32', b: '#6AAE5E', c: '#CDEAB0' }, 4],
+  wet: [['..aaaaa..', '.aaaaaaa.', 'aaaaaaaaa', '.aaaaaaa.', '...aaa...'], { a: 'rgba(90,154,208,.18)' }, 6],
+  feather: [['......aa', '.....aba', '....abba', '...abba.', '..abba..', '.abba...', 'aaa.....', 'a.......'], { a: '#4A3A6A', b: '#C8C0E0' }, 4],
+  ink: [['.aaa.', 'aaaaa', 'aaaaa', '.aaa.', '..a..'], { a: '#2A2440' }, 4],
+  corner: [['aaaaaa', 'aaaaa.', 'aaaa..', 'aaa...', 'aa....', 'a.....'], { a: '#E0D2B0' }, 5],
+  soil: [['.aa.a', 'aaaaa', '.aaa.', 'a.aa.'], { a: 'rgba(120,84,50,.55)' }, 6],
+  sprout: [['a...a', 'aa.aa', '.aaa.', '..b..', '..b..', '.ccc.'], { a: '#6AAE5E', b: '#4E8A52', c: '#8A5A36' }, 4],
+  petal: [['.aa', 'aba', 'aa.'], { a: '#FF8FAF', b: '#FFD0DA' }, 5],
+  sun: [['a..a..a', '.aaaaa.', '.abbba.', 'aabbbaa', '.abbba.', '.aaaaa.', 'a..a..a'], { a: '#F2A030', b: '#FFD866' }, 4],
+  crow: [['..aa...', '.aaab..', 'aaaaa..', '.aaaaaa', '..a.a..'], { a: '#2A2A3A', b: '#F2A030' }, 4],
+  straw: [['a', 'b', 'a', 'b', 'a', 'b', 'a', 'b', 'a', 'b'], { a: '#D8B860', b: '#B8944A' }, 4],
+  straw2: [['a.', 'ab', '.a', 'ab', 'a.', 'ab', '.a'], { a: '#D8B860', b: '#B8944A' }, 4],
+  bandage: [['.aaaaaaa.', 'aabbabbaa', 'aababbaba', 'aabbabbaa', '.aaaaaaa.'], { a: '#F2C8A8', b: '#E0A888' }, 4],
+  cross: [['.aa.', 'aaaa', 'aaaa', '.aa.'], { a: '#FF8FAF' }, 4],
+  flour: [['.a.a.a.', 'aaaaaaa', 'aaaaaaa', '.aaaaa.', '..aaa..'], { a: 'rgba(255,255,255,.75)' }, 5],
+  cookie: [['.aaaa.', 'abbbba', 'abcbba', 'abbbca', 'abcbba', '.aaaa.'], { a: '#8A5A2A', b: '#D8A060', c: '#5A3A1A' }, 4],
+  ribbon: [['aa...aa', 'aaa.aaa', '.aabaa.', 'aaa.aaa', 'aa...aa'], { a: '#E2577E', b: '#FFB8C8' }, 5],
+  stars: [['a.........', '..b.......', '....a.....', '.......b..', '.........a'], { a: '#FFE9A0', b: '#C8B8FF' }, 5],
+  moon: [['..aaa.', '.aa...', 'aa....', 'aa....', '.aa...', '..aaa.'], { a: '#FFE9A0' }, 5],
+  spark: [['..a..', '..a..', 'aaaaa', '..a..', '..a..'], { a: '#FFF6C0' }, 3],
+  grass: [['a.a..a', 'aaa.aa', 'aaaaaa'], { a: 'rgba(94,154,82,.55)' }, 6],
+  hoof: [['aa.aa', 'aa.aa', 'aa.aa', '.a.a.'], { a: 'rgba(90,70,50,.6)' }, 4],
+  feather2: [['....a', '...ab', '..ab.', '.ab..', 'a....'], { a: '#8A7A5A', b: '#E8E0C8' }, 5],
+  barcode: [['a.aa.a.aaa.a.aa', 'a.aa.a.aaa.a.aa', 'a.aa.a.aaa.a.aa', 'a.aa.a.aaa.a.aa'], { a: '#1E3A5A' }, 3],
+  chip: [['a.a.a.a', 'bbbbbbb', 'bcccccb', 'bcdddcb', 'bcccccb', 'bbbbbbb', 'a.a.a.a'], { a: '#8A9AB0', b: '#2A3A5A', c: '#4A6A9A', d: '#8AF0FF' }, 4],
+  beep: [['aaaaaaaaaa', 'a........a', 'a.bb.bb..a', 'a........a', 'aaaaaaaaaa'], { a: '#3A8AD0', b: '#3A8AD0' }, 4]
+};
+function pxCanvas(key){
+  const [rows, pal, s] = PX[key], h = rows.length, w = rows[0].length, c = document.createElement('canvas'); c.width = w * s; c.height = h * s; c.className = 'dc';
+  const q = c.getContext('2d'); rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === '.') return; q.fillStyle = pal[ch]; q.fillRect(x * s, y * s, s, s); })); return c;
+}
+const ST = { stu: 0, open: {}, guessed: {}, tries: {} };
+const name = () => `학생 ${ST.stu + 1}`;
+// 봉투 그림: 받는 사람 칸은 그대로, 보낸 사람 칸은 찢겨 나감
+function envCanvas(i, done){
+  const c = document.createElement('canvas'); c.width = 160; c.height = 100; const q = c.getContext('2d');
+  const P = ['#F4EAD8', '#EAF0F8', '#F6E8EE', '#EEF4E6'][i % 4];
+  q.fillStyle = '#2A1A2E'; q.fillRect(0, 0, 160, 100); q.fillStyle = P; q.fillRect(2, 2, 156, 96);
+  q.fillStyle = 'rgba(0,0,0,.06)'; q.beginPath(); q.moveTo(2, 2); q.lineTo(80, 52); q.lineTo(158, 2); q.fill();
+  q.strokeStyle = 'rgba(90,70,50,.35)'; q.beginPath(); q.moveTo(2, 2); q.lineTo(80, 52); q.lineTo(158, 2); q.stroke();
+  q.fillStyle = '#C8B8A0'; q.fillRect(14, 64, 90, 1); q.fillRect(14, 78, 70, 1);
+  q.fillStyle = '#2A1A2E'; for (let x = 104; x < 158; x += 6){ const y = 10 + ((x / 6) % 2) * 4; q.fillRect(x, y, 6, 2); } q.fillStyle = '#140D1E'; q.beginPath(); q.moveTo(104, 2); for (let x = 104; x <= 158; x += 6) q.lineTo(x, 10 + ((x / 6) % 2) * 4); q.lineTo(158, 2); q.fill();
+  q.fillStyle = done ? '#6FD08C' : '#C8343E'; q.beginPath(); q.arc(80, 50, 7, 0, 7); q.fill(); q.fillStyle = 'rgba(255,255,255,.4)'; q.fillRect(77, 46, 3, 2);
+  return c;
+}
+function renderEnvs(){
+  const el = document.getElementById('envs'); el.innerHTML = '';
+  NPC.forEach((n, i) => { const done = !!ST.guessed[n.id], b = document.createElement('button'); b.className = 'env' + (done ? ' done' : ''); b.dataset.i = i;
+    b.appendChild(envCanvas(i, done)); b.insertAdjacentHTML('beforeend', `<span class="to">받는 사람 · ${name()}</span><span class="tag">${done ? `${n.n}의 편지` : ST.open[n.id] ? '읽었어요 · 누구?' : '새 편지'}</span>`); el.appendChild(b); });
+  document.getElementById('stat').textContent = `맞힌 편지 ${Object.keys(ST.guessed).length} / 11`;
+}
+const face = (cv, row) => { const q = cv.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, cv.width, cv.height); if (SHEET.complete) q.drawImage(SHEET, 16, row * 64 + 10, 32, 32, 0, 0, cv.width, cv.height); };
+let cur = null;
+function openLetter(i){
+  const n = NPC[i]; cur = i; ST.open[n.id] = 1;
+  const p = document.getElementById('paper');
+  p.style.background = `repeating-linear-gradient(${n.paper} 0 31px, ${n.line} 31px 32px)`; p.style.setProperty('--ink', n.ink);
+  p.innerHTML = `<div class="tx" style="font-family:${n.font},var(--f-body);font-size:${n.size}px;line-height:32px">${n.t.replace(/\{name\}/g, name())}</div>`;
+  const W = p.clientWidth || 380, H = Math.max(320, p.clientHeight || 360);
+  n.deco.forEach(([k, x, y]) => { const c = pxCanvas(k); c.style.left = Math.min(x, W - c.width - 6) + 'px'; c.style.top = Math.min(y, H - c.height - 6) + 'px'; p.appendChild(c); });
+  if (n.id === 'stella'){ p.querySelector('.tx').style.color = n.ink; }
+  if (ST.guessed[n.id]) p.insertAdjacentHTML('beforeend', `<span class="stamp">${n.n}</span>`);
+  document.getElementById('lttl').textContent = `받는 사람 · ${name()} · 보낸 사람 ????`;
+  renderGuess(); document.getElementById('lv').hidden = false; document.getElementById('lv').scrollTop = 0;
+}
+function renderGuess(msg){
+  const n = NPC[cur], g = document.getElementById('guess'), done = ST.guessed[n.id], tried = ST.tries[n.id] || [];
+  g.innerHTML = `<div class="q">${done ? `${n.n}의 편지였어요` : '누가 썼을까?'}</div>
+    <div class="faces">${NPC.map(x => `<button data-g="${x.id}" class="${done && x.id === n.id ? 'yes' : tried.includes(x.id) ? 'no' : ''}" ${done || tried.includes(x.id) ? 'disabled' : ''}><canvas width="32" height="32" data-r="${x.row}"></canvas>${x.n.replace(' 선생님', '')}</button>`).join('')}</div>${msg || ''}`;
+  g.querySelectorAll('canvas[data-r]').forEach(c => face(c, +c.dataset.r));
+  g.querySelectorAll('.say canvas').forEach(c => face(c, +c.dataset.r));
+}
+document.addEventListener('click', e => {
+  const env = e.target.closest('.env'); if (env) return openLetter(+env.dataset.i);
+  if (e.target.closest('#lx')){ document.getElementById('lv').hidden = true; return renderEnvs(); }
+  const g = e.target.closest('[data-g]'); if (!g || g.disabled) return;
+  const n = NPC[cur], pick = NPC.find(x => x.id === g.dataset.g);
+  if (pick.id === n.id){ ST.guessed[n.id] = 1; document.getElementById('paper').insertAdjacentHTML('beforeend', `<span class="stamp">${n.n}</span>`);
+    renderGuess(`<div class="say ok"><canvas width="32" height="32" data-r="${n.row}"></canvas><div><b>${n.n}</b><p>${n.ok}</p></div></div>`); }
+  else { (ST.tries[n.id] ||= []).push(pick.id);
+    renderGuess(`<div class="say"><canvas width="32" height="32" data-r="1"></canvas><div><b>배트리</b><p>음.... ${pick.n.replace(' 선생님', ' 선생님')}은 아닌 것 같아. ${n.hint}</p></div></div>`); }
+  renderEnvs();
+});
+document.getElementById('stu').innerHTML = Array.from({ length: 12 }, (_, i) => `<option value="${i}">학생 ${i + 1}</option>`).join('');
+document.getElementById('stu').addEventListener('change', e => { ST.stu = +e.target.value; ST.open = {}; ST.guessed = {}; ST.tries = {}; renderEnvs(); });
+const boot = () => { face(document.getElementById('ifc'), 1); renderEnvs(); };
+if (SHEET.complete && SHEET.naturalWidth) boot(); else SHEET.onload = boot;
+</script>
