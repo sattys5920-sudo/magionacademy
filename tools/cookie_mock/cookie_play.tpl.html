@@ -30,7 +30,7 @@ canvas{image-rendering:pixelated}
 .ic{display:inline-block;width:32px;height:32px;background-image:url(data:image/png;base64,__ICONS__);background-repeat:no-repeat;image-rendering:pixelated;flex:none}
 .ic.s{width:24px;height:24px;background-size:192px 24px}
 .steps{display:flex;gap:4px}.steps span{flex:1;text-align:center;font:11px var(--f-pxb);padding:4px 0;border-radius:8px;background:var(--panel2);color:var(--sub)}.steps span.on{background:#4A3418;color:var(--gold)}.steps span.done{color:var(--ok)}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.grid.g4{grid-template-columns:repeat(4,1fr)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.grid.g4{grid-template-columns:repeat(4,1fr)}.grid.g5{grid-template-columns:repeat(5,1fr)}.grid.g5 .opt{font-size:11px;padding:6px 2px}.grid.g5 .opt canvas{width:40px;height:40px}
 .opt{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:2px solid var(--line2);border-radius:12px;background:var(--panel2);color:var(--text);font:13px var(--f-pxb);cursor:pointer;min-height:44px}
 .opt small{font:11px var(--f-px);color:var(--sub)}
 .opt canvas{width:48px;height:48px}
@@ -95,12 +95,13 @@ canvas{image-rendering:pixelated}
 .opt.sel{border-color:var(--accent);background:#3A2A18}
 .opt .got{position:absolute;top:-8px;left:-4px;font:10px var(--f-pxb);background:var(--ok);color:#12301E;padding:1px 6px;border-radius:8px}
 .opt .lock{position:absolute;inset:auto 0 30% 0;font:10px var(--f-pxb);color:var(--text)}
-.dex{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}.dx{position:relative;display:flex;flex-direction:column;align-items:center;padding:4px 2px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)}
+.dex{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.dots{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;width:44px;margin-top:2px}.dots i{display:block;width:6px;height:6px;border-radius:2px;border:1px solid var(--line2)}.dlg{display:flex;flex-wrap:wrap;gap:4px 10px;font:11px var(--f-pxb);color:var(--sub)}.dlg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}.hidt{font:10px/1.4 var(--f-px);color:var(--sub);text-align:center;font-weight:400}.dx{position:relative;display:flex;flex-direction:column;align-items:center;padding:4px 2px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)}
 .dx canvas{width:40px;height:40px}.dx span{font:10px/1.3 var(--f-pxb);color:var(--sub);text-align:center;min-height:26px}.dx.on span{color:var(--text)}.dx em{position:absolute;top:2px;right:3px;font-style:normal;font:9px var(--f-pxb);color:var(--gold)}.dx.gold{border-color:var(--gold)}
 .resbox{display:flex;gap:14px;align-items:center;padding:12px;border-radius:14px;background:var(--panel2)}.resbox canvas{width:96px;height:96px;flex:none}
 .q{display:block;font:22px var(--f-pxb);font-weight:400}.q최고{color:var(--gold)}.q맛있음{color:var(--ok)}.q보통{color:var(--sub)}.q숯{color:var(--warn)}
 .rl{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.rl span{font:11px var(--f-pxb);padding:2px 8px;border-radius:8px;background:var(--panel)}.rl .g완벽{color:var(--ok)}.rl .g좋아{color:var(--gold)}.rl .g아쉬워,.rl .g탐{color:var(--warn)}
 .new{margin:6px 0 0;font:12px var(--f-pxb);color:var(--pink)}
+.chat{display:flex;flex-direction:column;gap:2px;background:rgba(10,6,16,.6);border:1px solid var(--line);border-radius:12px;padding:8px;max-height:260px;overflow:auto}.chat div{display:flex;align-items:center;gap:6px;font:13px var(--f-px)}.chat time{font:11px var(--f-pxb);color:var(--sub);font-variant-numeric:tabular-nums}.chat canvas{width:22px;height:22px;border-radius:5px;background:#1E2A44;flex:none}.chat b{font:12px var(--f-pxb);color:var(--gold);white-space:nowrap}.chat span{min-width:0}
 .cnt{display:flex;flex-wrap:wrap;gap:4px}.cnt span{font:11px var(--f-pxb);padding:3px 8px;border-radius:8px;background:var(--panel2);color:var(--sub)}.cnt b{font-weight:400;color:var(--gold)}
 button:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 </style>
@@ -127,18 +128,24 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
 // ===== 재료 (게임 아이템 그대로) · 아이콘 줄: 달걀 · 염소젖 · 벌꿀 · 밀 이삭 · 딸기 · 박하 잎 · 블루베리 · 호박씨
-const ITEM = { hegg: ['달걀', 0], milk: ['염소젖', 1], honey: ['벌꿀', 2], g_wheat: ['밀 이삭', 3], g_straw: ['딸기', 4], g_mint: ['박하 잎', 5], g_blueb: ['블루베리', 6], g2_pseed: ['호박씨', 7] };
-const ic = (k, sm) => `<i class="ic${sm ? ' s' : ''}" style="background-position:${-ITEM[k][1] * (sm ? 24 : 32)}px 0" title="${ITEM[k][0]}"></i>`;
+const ITEM = { hegg: ['달걀', 0], milk: ['염소젖', 1], honey: ['벌꿀', 2], g_wheat: ['밀 이삭', 3], g_straw: ['딸기', 4], g_mint: ['박하 잎', 5], g_blueb: ['블루베리', 6], g2_pseed: ['호박씨', 7], g_carrot: ['당근', 8], g_maple: ['단풍잎', 9], g_chamo: ['카모마일', 10], g2_rasp: ['산딸기', 11], g_lav: ['라벤더', 12], g2_chest: ['알밤', 13] };
+const ic = (k, sm) => `<i class="ic${sm ? ' s' : ''}" style="background-position:${-ITEM[k][1] * (sm ? 24 : 32)}px 0;background-size:${14 * (sm ? 24 : 32)}px ${sm ? 24 : 32}px" title="${ITEM[k][0]}"></i>`;
 const BASE = ['g_wheat', 'hegg'];
 const FL = [
   { id: 'butter', n: '버터', it: 'milk', c: '#F0CC86' },
-  { id: 'straw', n: '딸기', it: 'g_straw', c: '#F4A8B0' },
-  { id: 'mint', n: '박하', it: 'g_mint', c: '#AEDCB4' },
-  { id: 'honey', n: '꿀', it: 'honey', c: '#EEB056' },
-  { id: 'pseed', n: '호박씨', it: 'g2_pseed', c: '#DCAE72' },
-  { id: 'blueb', n: '블루베리', it: 'g_blueb', c: '#B4A4D8' },
+  { id: 'straw', n: '딸기', it: 'g_straw', c: '#F6AEB8' },
+  { id: 'mint', n: '박하', it: 'g_mint', c: '#B4E4BE' },
+  { id: 'honey', n: '꿀', it: 'honey', c: '#E8A848' },
+  { id: 'pseed', n: '호박씨', it: 'g2_pseed', c: '#C8C084' },
+  { id: 'blueb', n: '블루베리', it: 'g_blueb', c: '#8C88CC' },
+  { id: 'carrot', n: '당근', it: 'g_carrot', c: '#F08A4A' },
+  { id: 'maple', n: '단풍 시럽', it: 'g_maple', c: '#B86A3A' },
+  { id: 'chamo', n: '카모마일', it: 'g_chamo', c: '#F6EAB0' },
+  { id: 'rasp', n: '산딸기', it: 'g2_rasp', c: '#D8506E' },
+  { id: 'lav', n: '라벤더', it: 'g_lav', c: '#CDB0EE' },
+  { id: 'chest', n: '알밤', it: 'g2_chest', c: '#94683E' },
 ];
-const SH = [['heart', '하트'], ['star', '별'], ['circle', '동그라미'], ['cat', '고양이'], ['bat', '박쥐'], ['pumpkin', '호박'], ['moon', '달'], ['ghost', '유령']];
+const SH = [['circle', '동그라미'], ['heart', '하트'], ['moon', '달'], ['drop', '물방울'], ['cloud', '구름'], ['leaf', '나뭇잎'], ['star', '별'], ['ghost', '유령'], ['pumpkin', '호박'], ['mushroom', '버섯'], ['hat', '마녀 모자'], ['fish', '물고기'], ['flower', '꽃'], ['cat', '고양이'], ['bat', '박쥐'], ['bear', '곰'], ['rabbit', '토끼'], ['crown', '왕관'], ['bolt', '번개'], ['candy', '사탕']];
 const ICE = [['하양', '#FFF8F0'], ['분홍', '#FF9EC0'], ['민트', '#9FE8C8'], ['노랑', '#FFE27A'], ['하늘', '#9FD0FF'], ['초코', '#6A3A24']];
 const TOP = [['spr', '스프링클'], ['chip', '초코 칩'], ['pearl', '설탕 진주']];
 const BOXC = ['#F4A0B8', '#9FD0FF', '#B8E6A8', '#FFE08A', '#C8A8F0', '#F6F0E8'];
@@ -151,33 +158,33 @@ const NPC = [
     r: ['고양이 모양에 버터 냄새.... 이건 반칙이다냥. 귀는 아껴 두고 꼬리부터 먹을 거다냥.', '버터 냄새가 난다냥. ....하나만 먹을 거다냥. 아마도.', '쿠키다냥. 생선은 아니지만.... 받아 두겠다냥.', '까맣다냥. 숯인 줄 알았다냥. ....그래도 다 먹었다냥.'] },
   { id: 'batri', n: '배트리', row: 1, f: 'straw', s: 'bat', hint: '새콤한 빨간 열매를 좋아해요. 모양은.... 거울 보면 나오는 그거요.',
     r: ['박쥐 모양이다. 딸기 맛이고. 이거 나 주려고 구운 거 맞지? 날개 한쪽은 아껴 둘래.', '딸기 냄새 좋다. 배달 가방 맨 위에 넣어 둘게. 안 부서지게.', '고마워. 배달하다 배고플 때 먹을게.', '어.... 밤하늘 색이네. 나는 밤을 좋아하니까 괜찮아.'] },
-  { id: 'kappa', n: '캇파', row: 2, f: 'mint', s: 'circle', hint: '시원한 풀 향을 좋아해요. 모양은 머리 위에 있는 그거랑 닮은 거요.',
-    r: ['동그랗고 시원하다. ....접시 같군. 머리 위에 올려 두고 싶지만, 먹겠다.', '박하 향이 난다. 연못 바람 같다. 나쁘지 않다.', '쿠키군. 오이는 아니지만.... 고맙다.', '탔다. ....물에 적시면 괜찮을지도 모른다. 아니, 아니겠군.'] },
-  { id: 'aula', n: '아울라', row: 3, f: 'blueb', s: 'moon', hint: '밤에 깨어 있는 사람이라 밤하늘 닮은 걸 좋아해요. 보라색 열매 맛이요.',
-    r: ['달 모양 블루베리 쿠키.... 밤에 책 읽을 때 하나씩 꺼내 먹을게요. 서른 밤은 버틸 것 같아요.', '블루베리 향이네요. 책갈피 옆에 두고 아껴 먹을게요.', '고마워요. 부스러기가 책에 떨어지지 않게 조심할게요.', '....조금 탔네요. 괜찮아요. 오래된 책 냄새랑 비슷해서 오히려 좋아요.'] },
-  { id: 'mandi', n: '맨디', row: 4, f: 'honey', s: 'heart', hint: '꽃에서 온 달콤한 거면 다 좋아해요. 모양은.... 말 못 하는 마음 같은 거요.',
-    r: ['하트 모양에.... 꿀 맛. 이거 꽃말로 치면.... 아, 아니에요. 그냥 너무 좋아서요.', '꿀 냄새가 나요. 벌들이 따라오겠어요. 같이 나눠 먹어야겠다.', '고마워요. 온실 창가에 두고 보다가 먹을게요.', '앗.... 괜찮아요, 괜찮아요. 저도 꽃 말리다가 태운 적 있어요.'] },
+  { id: 'kappa', n: '캇파', row: 2, f: 'mint', s: 'fish', hint: '시원한 풀 향을 좋아해요. 모양은.... 연못에서 매일 못 잡는 그거요.',
+    r: ['물고기다. 시원하다. ....드디어 한 마리 잡았군. 먹겠다.', '박하 향이 난다. 연못 바람 같다. 나쁘지 않다.', '쿠키군. 오이는 아니지만.... 고맙다.', '탔다. ....물에 적시면 괜찮을지도 모른다. 아니, 아니겠군.'] },
+  { id: 'aula', n: '아울라', row: 3, f: 'lav', s: 'moon', hint: '밤에 깨어 있는 사람이라 밤하늘 닮은 걸 좋아해요. 잠 잘 오는 보라색 꽃 맛이요.',
+    r: ['달 모양 라벤더 쿠키.... 밤에 책 읽을 때 하나씩 꺼내 먹을게요. 서른 밤은 버틸 것 같아요.', '라벤더 향이네요. 책갈피 옆에 두고 아껴 먹을게요.', '고마워요. 부스러기가 책에 떨어지지 않게 조심할게요.', '....조금 탔네요. 괜찮아요. 오래된 책 냄새랑 비슷해서 오히려 좋아요.'] },
+  { id: 'mandi', n: '맨디', row: 4, f: 'chamo', s: 'flower', hint: '꽃잎 우린 차 같은 맛을 좋아해요. 모양도.... 온실에 가득한 그거요.',
+    r: ['꽃 모양에.... 카모마일 맛. 이거 꽃말로 치면.... 아, 아니에요. 그냥 너무 좋아서요.', '카모마일 향이 나요. 저녁에 차랑 같이 먹어야겠다.', '고마워요. 온실 창가에 두고 보다가 먹을게요.', '앗.... 괜찮아요, 괜찮아요. 저도 꽃 말리다가 태운 적 있어요.'] },
   { id: 'jipsin', n: '스트로', row: 5, f: 'pseed', s: 'pumpkin', hint: '머리에 쓴 거랑 같은 모양이면 좋아해요. 그 안에 든 씨앗 맛이면 더요.',
     r: ['호박이다. 호박씨로 만든 호박이다. 내 머리랑 사촌이다. 잘 먹겠다.', '호박씨. 고소하다. 들판 냄새가 난다.', '고맙다. 까마귀한테는 안 뺏기겠다.', '....까맣다. 까마귀가 좋아하겠다. 나도 먹겠다.'] },
-  { id: 'sera', n: '세라 선생님', row: 6, f: 'straw', s: 'heart', hint: '아픈 애들 돌보느라 마음이 말랑해요. 마음 모양, 빨간 열매 맛이요.',
-    r: ['하트 모양 딸기 쿠키네. 양호실 오는 애들 하나씩 주고 싶을 만큼 예쁘다. ....근데 내가 다 먹을 거야.', '딸기네. 비타민이 들었으니까 이건 약이야. 그렇게 치자.', '고마워. 단 건 하루에 하나만. 오늘 건 이걸로 할게.', '음.... 이건 진료가 필요하겠는데. 그래도 마음은 건강하게 받았어.'] },
-  { id: 'madeleine', n: '마들렌', row: 7, f: 'butter', s: 'moon', hint: '저요? ....제가 처음 구웠던 쿠키는 젖 넣은 기본 반죽이었어요. 밤에 구웠고요.',
-    r: ['달 모양 버터 쿠키.... 제가 처음 구웠던 쿠키랑 똑같아요. 어떻게 알았어요?', '버터 향이 좋아요. 반죽 잘했네요. 제자 하나 생긴 기분이에요.', '고마워요. 남이 구워 준 쿠키는.... 이상하게 더 맛있어요.', '....우리 동지네요. 괜찮아요. 저는 오늘 한 판을 통째로 태웠는걸요.'] },
+  { id: 'sera', n: '세라 선생님', row: 6, f: 'rasp', s: 'heart', hint: '아픈 애들 돌보느라 마음이 말랑해요. 마음 모양, 숲에서 따는 새콤한 빨간 열매 맛이요.',
+    r: ['하트 모양 산딸기 쿠키네. 양호실 오는 애들 하나씩 주고 싶을 만큼 예쁘다. ....근데 내가 다 먹을 거야.', '산딸기네. 비타민이 들었으니까 이건 약이야. 그렇게 치자.', '고마워. 단 건 하루에 하나만. 오늘 건 이걸로 할게.', '음.... 이건 진료가 필요하겠는데. 그래도 마음은 건강하게 받았어.'] },
+  { id: 'madeleine', n: '마들렌', row: 7, f: 'maple', s: 'crown', hint: '나? ....단풍 시럽 듬뿍. 모양은.... 과자 교실의 주인한테 어울리는 거.',
+    r: ['왕관 모양 단풍 쿠키.... 내가 과자 교실의 왕이라는 거지? 맞아. 오늘부터 이 쿠키가 내 왕관이야.', '단풍 시럽 향 좋다. 반죽 잘했네. 제자 하나 생긴 기분이야.', '고마워. 남이 구워 준 쿠키는.... 이상하게 더 맛있어.', '....우리 동지네. 괜찮아. 나도 오늘 아침에 한 판 태웠어.'] },
   { id: 'stella', n: '스텔라', row: 8, f: 'blueb', s: 'star', hint: '하늘에서 반짝이는 그 모양이요. 맛은.... 밤하늘 색 열매요.',
     r: ['별 모양 블루베리.... 밤하늘을 반죽한 맛이야. 오늘 운세에 달콤한 선물이 있었거든.', '별이다. 별은 언제 받아도 좋아. 하나는 망원경 옆에 둘게.', '고마워. 별 보면서 하나씩 먹을게.', '어머, 까만 쿠키네. 흑점 같아. ....별에도 그런 날이 있지.'] },
-  { id: 'leo', n: '레오', row: 9, f: 'butter', s: 'circle', hint: '젖 짜는 사람이라 젖 들어간 반죽이 최고래요. 모양은 꾸밈없이 동글게요.',
-    r: ['동그란 버터 쿠키! 우유랑 같이 먹으면 딱이겠다. 애들한테도 한 입씩.... 아니, 이건 내 거다.', '버터 냄새. 염소젖으로 만든 거지? 우리 매매가 기뻐하겠다.', '고마워. 사육장 애들 밥 주고 나서 먹을게.', '하하, 탔네. 닭들은 이런 거 좋아해. 아, 아니, 내가 먹을게.'] },
-  { id: 'otumo', n: '오투모', row: 10, f: 'honey', s: 'star', hint: '삐빅거리는 그 친구는 하늘에서 떨어졌잖아요. 떨어진 그 모양이랑, 꽃에서 온 단맛이요.',
-    r: ['삐빅. 별 모양, 꿀 성분 감지. 만족도 측정 불가. 측정기가 녹았습니다.......', '삐빅. 단맛 수치 높음. 연료로는 못 쓰지만 저장합니다.', '삐빅. 쿠키 수령. 감사 회로 작동 중.......', '경고. 탄소 함량 높음. ....그래도 먹습니다. 기분은 맛있음으로 기록.'] },
+  { id: 'leo', n: '레오', row: 9, f: 'carrot', s: 'rabbit', hint: '사육장 토끼들 간식을 매일 챙겨요. 그 간식 맛이랑, 그 친구들 모양이요.',
+    r: ['토끼 모양 당근 쿠키! 우리 애들 닮았다. 애들한테도 한 입씩.... 아니, 이건 내 거다.', '당근 냄새. 토끼들이 줄 서겠다. 나 먼저 먹을게.', '고마워. 사육장 애들 밥 주고 나서 먹을게.', '하하, 탔네. 닭들은 이런 거 좋아해. 아, 아니, 내가 먹을게.'] },
+  { id: 'otumo', n: '오투모', row: 10, f: 'honey', s: 'bolt', hint: '삐빅거리는 그 친구는 번개 콩을 좋아하잖아요. 번쩍하는 그 모양이랑, 꽃에서 온 단맛이요.',
+    r: ['삐빅. 번개 모양, 꿀 성분 감지. 만족도 측정 불가. 측정기가 녹았습니다.......', '삐빅. 단맛 수치 높음. 연료로는 못 쓰지만 저장합니다.', '삐빅. 쿠키 수령. 감사 회로 작동 중.......', '경고. 탄소 함량 높음. ....그래도 먹습니다. 기분은 맛있음으로 기록.'] },
 ];
 
 // ===== 쿠키 도감 50 종: 맛 6 × 모양 8 = 48 + 숨은 쿠키 2 · 별(난이도)은 모양 틀로 정해져요
-const SH_STAR = { circle: 1, heart: 1, moon: 1, star: 2, ghost: 2, pumpkin: 2, cat: 3, bat: 3 };
+const SH_STAR = { circle: 1, heart: 1, moon: 1, drop: 1, cloud: 1, leaf: 1, star: 2, ghost: 2, pumpkin: 2, mushroom: 2, hat: 2, fish: 2, flower: 2, cat: 3, bat: 3, bear: 3, rabbit: 3, crown: 3, bolt: 3, candy: 3 };
 const DEX = [];
 FL.forEach(f => SH.forEach(([s, sn]) => DEX.push({ id: f.id + '_' + s, f: f.id, s, n: `${f.n} ${sn} 쿠키`, star: SH_STAR[s] })));
 DEX.push({ id: 'coal', f: 'butter', s: 'circle', n: '숯 쿠키', star: 0, hid: '오븐에 너무 오래 두면.......', b: 100 });
 DEX.push({ id: 'moon_mad', f: 'honey', s: 'moon', n: '마들렌의 달빛 쿠키', star: 3, hid: '별 셋 쿠키를 「최고」로 구우면.......', b: 68, gold: true });
-const UNLOCK = { 1: 0, 2: 3, 3: 8 };
+const UNLOCK = { 1: 0, 2: 5, 3: 15 };
 const STEP_N = ['재료', '젓기', '밀기', '틀', '오븐', '꾸미기'];
 const GPT = { 완벽: 2, 좋아: 1, 아쉬워: 0, 탐: 0 };
 const TIPS = [
@@ -193,7 +200,20 @@ const N = 24;
 function inPoly(x, y, P){ let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++){ const [xi, yi] = P[i], [xj, yj] = P[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; }
 const STAR = Array.from({ length: 10 }, (_, i) => { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 6.4 : 12.2; return [11.5 + Math.cos(a) * r, 12.9 + Math.sin(a) * r]; });
 const BATL = [[8, 8], [0.5, 4.5], [1, 11], [3.5, 9.5], [3.5, 14], [6.5, 12.5], [8.5, 16.5]], BATR = BATL.map(([x, y]) => [23 - x, y]);
+const C = (x, y, cx, cy, r) => (x - cx) ** 2 + (y - cy) ** 2 <= r * r, E = (x, y, cx, cy, rx, ry) => ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1;
 const SHAPE_FN = {
+  drop: (x, y) => C(x, y, 11.5, 15, 7.6) || inPoly(x, y, [[11.5, 1], [4.4, 12.8], [18.6, 12.8]]),
+  cloud: (x, y) => C(x, y, 6.5, 14, 5.2) || C(x, y, 12, 10, 6.8) || C(x, y, 17.5, 13.5, 5.2) || (x >= 3 && x <= 20.5 && y >= 13 && y <= 19.2),
+  leaf: (x, y) => { const u = (x - 11.5 + y - 11.5) / 1.414, v = (x - y) / 1.414; return (u / 11.2) ** 2 + (v / 5.6) ** 2 <= 1; },
+  mushroom: (x, y) => (y <= 12.5 && E(x, y, 11.5, 12.5, 11.2, 10)) || (x >= 7.5 && x <= 15.5 && y > 12 && y <= 21.5),
+  hat: (x, y) => inPoly(x, y, [[13, 1], [6, 17], [17.5, 17], [15, 9], [19.5, 6]]) || E(x, y, 11.5, 18.5, 11.3, 3.4),
+  fish: (x, y) => E(x, y, 10, 12, 8.6, 6.4) || inPoly(x, y, [[16, 12], [22.8, 5.5], [22.8, 18.5]]),
+  flower: (x, y) => C(x, y, 11.5, 11.5, 4.4) || [0, 1, 2, 3, 4].some(i => { const a = -Math.PI / 2 + i * 1.2566; return C(x, y, 11.5 + Math.cos(a) * 6.6, 12 + Math.sin(a) * 6.6, 4.8); }),
+  bear: (x, y) => C(x, y, 11.5, 13.2, 8.8) || C(x, y, 4.6, 5.6, 3.7) || C(x, y, 18.4, 5.6, 3.7),
+  rabbit: (x, y) => C(x, y, 11.5, 16, 7.2) || E(x, y, 8.3, 6, 2.6, 6) || E(x, y, 14.7, 6, 2.6, 6),
+  crown: (x, y) => inPoly(x, y, [[1.5, 20], [1.5, 6.5], [7, 12.5], [11.5, 3], [16, 12.5], [21.5, 6.5], [21.5, 20]]),
+  bolt: (x, y) => inPoly(x, y, [[13.5, .5], [3.5, 13.5], [10.5, 13.5], [7.5, 23.5], [20, 9], [13, 9], [17, .5]]),
+  candy: (x, y) => E(x, y, 11.5, 11.5, 6.4, 5.8) || inPoly(x, y, [[6.5, 11.5], [.5, 5.5], [.5, 17.5]]) || inPoly(x, y, [[16.5, 11.5], [22.5, 5.5], [22.5, 17.5]]),
   circle: (x, y) => (x - 11.5) ** 2 + (y - 11.5) ** 2 <= 10.6 ** 2,
   heart: (x, y) => { const X = (x - 11.5) / 9.0, Y = -(y - 11.8) / 9.0; return (X * X + Y * Y - 1) ** 3 - X * X * Y * Y * Y <= 0; },
   star: (x, y) => inPoly(x, y, STAR),
@@ -211,7 +231,7 @@ function mask(s){
   const d = new Uint8Array(N * N); for (let y = 0; y < N; y++) for (let x = 0; x < N; x++){ if (!m[y * N + x]) continue; let k = 9; for (let r = 1; r <= 3 && k === 9; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (Math.abs(dx) + Math.abs(dy) <= r && !at(x + dx, y + dy)) k = Math.min(k, r); d[y * N + x] = k; }
   return MASKS[s] = { m, d };
 }
-const EYES = { cat: [[8, 13], [8, 14], [15, 13], [15, 14]], ghost: [[8, 10], [9, 10], [8, 11], [9, 11], [14, 10], [15, 10], [14, 11], [15, 11]], bat: [[10, 10], [13, 10]], pumpkin: [[11, 3], [12, 3]] };
+const EYES = { bear: [[8, 12], [15, 12], [11, 15], [12, 15]], rabbit: [[9, 16], [14, 16]], fish: [[6, 11]], cat: [[8, 13], [8, 14], [15, 13], [15, 14]], ghost: [[8, 10], [9, 10], [8, 11], [9, 11], [14, 10], [15, 10], [14, 11], [15, 11]], bat: [[10, 10], [13, 10]], pumpkin: [[11, 3], [12, 3]] };
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 const rgb = c => `rgb(${c[0]},${c[1]},${c[2]})`;
@@ -219,8 +239,8 @@ function grade(b){ return b < 40 ? 'raw' : b < 62 ? 'gold' : b < 75 ? 'perfect' 
 const GRADE_KO = { raw: '덜 익음', gold: '노릇', perfect: '완벽', burnt: '탐' };
 function doughCol(f, b, ring){
   const c = hex(FL.find(x => x.id === f).c), brown = [168, 104, 52], dark = [46, 28, 20];
-  let t = b < 40 ? b / 40 * .12 : b < 62 ? .12 + (b - 40) / 22 * .2 : b < 75 ? .34 : b < 86 ? .34 + (b - 75) / 11 * .14 : .5;
-  t += ring * (b < 40 ? .02 : .13);
+  let t = b < 40 ? b / 40 * .05 : b < 62 ? .05 + (b - 40) / 22 * .1 : b < 75 ? .16 : b < 86 ? .16 + (b - 75) / 11 * .14 : .32;
+  t += ring * (b < 40 ? .03 : .14);
   let o = mix(c, brown, Math.min(.7, t));
   if (b >= 86) o = mix(o, dark, Math.min(.92, .55 + (b - 86) / 14 * .35 + ring * .1));
   if (b < 25) o = mix(o, [250, 240, 225], .25 - b / 100);
@@ -234,7 +254,7 @@ function drawCookie(q, ck, ox, oy, z){
     if (d[k] === 1) c = OL;
     else if (ice[k]) c = ICE[ice[k] - 1][1];
     else if (eyes.some(([ex, ey]) => ex === x && ey === y)) c = OL;
-    else { const ring = d[k] === 2 || (ck.s === 'pumpkin' && (x === 7 || x === 16) && y > 8 && y < 20) ? 1 : 0, hi = d[k] >= 3 && x + y < 14 && (x + y) % 5 === 0 ? -.06 : 0; const key = ck.f + ck.b + ':' + ring + hi; c = cols[key] || (cols[key] = rgb(mix(doughCol(ck.f, ck.b, ring), [255, 250, 235], hi < 0 ? .18 : 0))); }
+    else { const ring = d[k] === 2 || (ck.s === 'pumpkin' && (x === 7 || x === 16) && y > 8 && y < 20) || (ck.s === 'candy' && (x === 6 || x === 17 || (x - y + 40) % 5 === 0 && x > 6 && x < 17)) || (ck.s === 'mushroom' && y === 12 && x > 7 && x < 16) ? 1 : 0, hi = d[k] >= 3 && x + y < 14 && (x + y) % 5 === 0 ? -.06 : 0; const key = ck.f + ck.b + ':' + ring + hi; c = cols[key] || (cols[key] = rgb(mix(doughCol(ck.f, ck.b, ring), [255, 250, 235], hi < 0 ? .18 : 0))); }
     q.fillStyle = c; q.fillRect(ox + x * z, oy + y * z, z, z);
   }
   if (ck.b >= 86){ q.fillStyle = 'rgba(20,10,8,.55)'; for (let i = 0; i < 9; i++){ const x = (i * 7 + 5) % 18 + 3, y = (i * 11 + 3) % 17 + 4; if (m[y * N + x] && d[y * N + x] > 1) q.fillRect(ox + x * z, oy + y * z, z, z); } }
@@ -255,8 +275,8 @@ function recipeCookie(R){
 }
 
 // ===== 상태
-const ST = { tab: 'bake', step: -1, cur: null, inv: null, tray: [], box: { sel: [], c: 0, r: 0, p: 0 }, boxes: [], gsel: -1, heart: {}, found: {}, said: null, dex: { butter_circle: '맛있음' }, all: false, last: null };
-function refill(){ ST.inv = { hegg: 8, g_wheat: 8, milk: 3, honey: 3, g_straw: 3, g_mint: 3, g_blueb: 3, g2_pseed: 3 }; }
+const ST = { tab: 'bake', step: -1, cur: null, inv: null, tray: [], box: { sel: [], c: 0, r: 0, p: 0 }, boxes: [], gsel: -1, heart: {}, found: {}, said: null, dex: { butter_circle: '맛있음' }, all: false, last: null, nick: '모모', day: 1, chat: [] };
+function refill(){ ST.inv = { hegg: 12, g_wheat: 12 }; FL.forEach(f => ST.inv[f.it] = 3); }
 refill();
 let uid = 1;
 const dexN = () => Object.keys(ST.dex).length;
@@ -266,7 +286,7 @@ const starTxt = n => '★'.repeat(n) + '☆'.repeat(3 - n);
 // ===== 화면
 function render(){
   stopMG();
-  const T = [['bake', '굽기'], ['box', '상자', ST.tray.length || ''], ['gift', '선물', ST.boxes.length || ''], ['dex', '도감', dexN() + '/50']];
+  const T = [['bake', '굽기'], ['box', '상자', ST.tray.length || ''], ['gift', '선물', ST.boxes.length || ''], ['dex', '도감', dexN() + '/' + DEX.length]];
   $('#tabs').innerHTML = T.map(([k, n, b]) => `<button data-tab="${k}" class="${ST.tab === k ? 'on' : ''}">${n}${b ? `<i>${b}</i>` : ''}</button>`).join('');
   $('#body').innerHTML = ST.tab === 'bake' ? bakeHTML() : ST.tab === 'box' ? boxHTML() : ST.tab === 'gift' ? giftHTML() : dexHTML();
   after();
@@ -280,10 +300,10 @@ function bakeHTML(){
   if (ST.step === -1){
     const f = ST.pickF || 'butter';
     return `<div class="lab">반죽 맛 · 밀 이삭 1 · 달걀 1 · 맛 재료 1 로 쿠키 2 개</div>${invHTML()}
-    <div class="grid">${FL.map(x => { const ok = BASE.every(k => ST.inv[k] > 0) && ST.inv[x.it] > 0; return `<button class="opt ${f === x.id ? 'sel' : ''}" data-fl="${x.id}" ${ok ? '' : 'disabled'}><span class="need">${ic(x.it, 1)}</span>${x.n}<small>${ITEM[x.it][0]} ${ST.inv[x.it] || 0}</small></button>`; }).join('')}</div>
+    <div class="grid g4">${FL.map(x => { const ok = BASE.every(k => ST.inv[k] > 0) && ST.inv[x.it] > 0; return `<button class="opt ${f === x.id ? 'sel' : ''}" data-fl="${x.id}" ${ok ? '' : 'disabled'}><span class="need">${ic(x.it, 1)}</span>${x.n}<small>${ITEM[x.it][0]} ${ST.inv[x.it] || 0}</small></button>`; }).join('')}</div>
     <div class="lab">모양 틀 · 별이 많을수록 어려워요</div>
-    <div class="grid g4">${SH.map(([k, n]) => { const s = SH_STAR[k], open = starOpen(s), got = ST.dex[f + '_' + k]; return `<button class="opt shp" data-sh="${k}" ${open ? '' : 'disabled'}><canvas data-ckpv="${f}:${k}" width="48" height="48"></canvas>${n}<small class="st">${starTxt(s)}</small>${got ? '<span class="got">도감</span>' : ''}${open ? '' : `<span class="lock">도감 ${UNLOCK[s]} 종</span>`}</button>`; }).join('')}</div>
-    <p class="hint">별 둘은 도감 3 종, 별 셋은 도감 8 종을 채우면 열려요.</p>`;
+    <div class="grid g5">${SH.map(([k, n]) => { const s = SH_STAR[k], open = starOpen(s), got = ST.dex[f + '_' + k]; return `<button class="opt shp" data-sh="${k}" ${open ? '' : 'disabled'}><canvas data-ckpv="${f}:${k}" width="48" height="48"></canvas>${n}<small class="st">${starTxt(s)}</small>${got ? '<span class="got">도감</span>' : ''}${open ? '' : `<span class="lock">도감 ${UNLOCK[s]} 종</span>`}</button>`; }).join('')}</div>
+    <p class="hint">별 둘은 도감 ${UNLOCK[2]} 종, 별 셋은 도감 ${UNLOCK[3]} 종을 채우면 열려요.</p>`;
   }
   const s = SH_STAR[cur.s], head = `<div class="row" style="justify-content:space-between"><span class="lab">${FL.find(f => f.id === cur.f).n} ${SH.find(x => x[0] === cur.s)[1]} 쿠키 <span class="st">${starTxt(s)}</span></span><span class="lab" id="mgst"></span></div>`;
   if (ST.step <= 4) return `${stepsHTML()}${head}${tipHTML(TIPS[ST.step](s))}
@@ -297,6 +317,23 @@ function bakeHTML(){
       <div class="tb"><button data-undo="1">토핑 빼기</button><button data-clr="1">다 지우기</button></div></div></div>
     <button class="btn go" id="decodone">다 됐어 · 쟁반에 올리기</button>`;
 }
+function boxHTML(){
+  const B = ST.box;
+  return `<div class="lab">쟁반 · 눌러서 상자에 담기 (최대 4 개)</div>
+    ${ST.tray.length ? `<div class="tray">${ST.tray.map(c => `<button class="ck ${B.sel.includes(c.id) ? 'in' : ''}" data-ck="${c.id}">${c.rec ? '<span class="tag">레시피</span>' : ''}<canvas data-ckc="${c.id}" width="48" height="48"></canvas>${FL.find(f => f.id === c.f).n} ${SH.find(s => s[0] === c.s)[1]}<em>${GRADE_KO[grade(c.b)]}</em></button>`).join('')}</div>` : '<p class="hint">아직 구운 쿠키가 없어요. 굽기 탭에서 구워요.</p>'}
+    <div class="boxed"><canvas id="bxcv" width="120" height="96"></canvas>
+      <div class="tools"><div class="lab">상자 색</div><div class="sw">${BOXC.map((c, i) => `<button data-bc="${i}" style="background:${c}" class="${B.c === i ? 'on' : ''}" aria-label="상자 색 ${i + 1}"></button>`).join('')}</div>
+      <div class="lab">리본</div><div class="sw">${RIB.map((c, i) => `<button data-rb="${i}" style="background:${c}" class="${B.r === i ? 'on' : ''}" aria-label="리본 ${i + 1}"></button>`).join('')}</div>
+      <div class="lab">무늬</div><div class="tb">${PAT.map(([k, n], i) => `<button data-pt="${i}" class="${B.p === i ? 'on' : ''}">${n}</button>`).join('')}</div></div></div>
+    <button class="btn go" id="pack" ${B.sel.length ? '' : 'disabled'}>리본 묶어서 포장하기 · ${B.sel.length} 개</button>`;
+}
+function giftHTML(){
+  if (!ST.boxes.length) return `<p class="hint">포장한 쿠키 상자가 없어요. 쟁반 · 상자 탭에서 포장해요.</p>${ST.said ? saidHTML() : ''}${chatHTML()}`;
+  return `<div class="lab">줄 상자</div><div class="boxes">${ST.boxes.map((b, i) => `<button data-gb="${i}" class="${ST.gsel === i ? 'on' : ''}"><canvas data-bxi="${i}" width="120" height="96"></canvas>${b.cks.length} 개</button>`).join('')}</div>
+    <div class="lab">누구한테 줄까</div><div class="npcs">${NPC.map(n => `<button data-npc="${n.id}" ${ST.gsel < 0 ? 'disabled' : ''}><canvas data-face="${n.row}" width="32" height="32"></canvas>${n.n.replace(' 선생님', '')}<i>${ST.heart[n.id] ? '♥ ' + ST.heart[n.id] : ''}</i></button>`).join('')}</div>
+    ${ST.said ? saidHTML() : ''}${chatHTML()}`;
+}
+function saidHTML(){ const n = NPC.find(x => x.id === ST.said.id); return `<div class="say"><canvas data-face="${n.row}" width="32" height="32"></canvas><div><b>${n.n}</b><p>${esc(ST.said.t)}</p></div></div>`; }
 function resultHTML(){
   const c = ST.cur, R = c.res, d = ST.last;
   return `<div class="resbox"><canvas id="rescv" width="96" height="96"></canvas><div><b class="q q${c.q}">${c.q === '숯' ? '숯 쿠키' : c.q}</b>
@@ -305,10 +342,13 @@ function resultHTML(){
     ${tipHTML(c.q === '최고' ? '와.... 이건 진열대 맨 앞에 둘 쿠키야. 나보다 잘 구운 거 아니야?' : c.q === '맛있음' ? '맛있다! 가장자리까지 고르게 잘 익었어.' : c.q === '보통' ? '먹을 만해. 다음엔 젓는 거랑 미는 거 조금만 더 꼼꼼히.' : '....괜찮아. 나도 오늘 아침에 한 판 태웠어. 이건 도감에 「숯 쿠키」로 남겨 둘게.')}
     <button class="btn go" id="todeco">꾸미러 가기</button>`;
 }
+const DEX_N = DEX.length;
 function dexHTML(){
-  return `<div class="lab">쿠키 도감 · 처음 구운 쿠키가 남아요 · ${dexN()} / 50</div>
-    <div class="dex">${DEX.map(d => { const g = ST.dex[d.id]; return `<div class="dx ${g ? 'on' : ''} ${d.gold ? 'gold' : ''}" title="${g ? d.n : '???'}"><canvas data-dex="${d.id}" width="48" height="48"></canvas><span>${g ? d.n.replace(' 쿠키', '') : d.star ? starTxt(d.star) : '???'}</span>${g ? `<em>${g}</em>` : ''}</div>`; }).join('')}</div>
-    <p class="hint">숨은 쿠키 2 종: ${DEX.slice(48).map(d => ST.dex[d.id] ? d.n : d.hid).join(' · ')}</p>
+  return `<div class="lab">쿠키 도감 · 처음 구운 쿠키가 남아요 · ${dexN()} / ${DEX_N}</div>
+    <div class="dex">${SH.map(([k, n]) => { const got = FL.filter(f => ST.dex[f.id + '_' + k]); return `<div class="dx ${got.length ? 'on' : ''}"><canvas data-dexs="${k}" width="48" height="48"></canvas><span>${n} <i class="st">${'★'.repeat(SH_STAR[k])}</i></span><b class="dots">${FL.map(f => `<i style="background:${ST.dex[f.id + '_' + k] ? f.c : 'transparent'}" title="${f.n}"></i>`).join('')}</b><em>${got.length}/12</em></div>`; }).join('')}</div>
+    <div class="dlg">${FL.map(f => `<span><i style="background:${f.c}"></i>${f.n}</span>`).join('')}</div>
+    <div class="lab">숨은 쿠키</div>
+    <div class="dex">${DEX.slice(-2).map(d => { const g = ST.dex[d.id]; return `<div class="dx ${g ? 'on' : ''} ${d.gold ? 'gold' : ''}"><canvas data-dex="${d.id}" width="48" height="48"></canvas><span>${g ? d.n : '???'}</span><b class="hidt">${g ? g : d.hid}</b></div>`; }).join('')}</div>
     <div class="lab">마들렌의 단골 수첩 · 선물해서 맞히면 채워져요</div>
     <div class="hints">${NPC.map(n => { const g = ST.found[n.id] || {}; return `<div><canvas data-face="${n.row}" width="32" height="32"></canvas><span class="bd">${n.n}<span class="${g.f ? 'got' : ''}">맛 ${g.f ? FL.find(f => f.id === n.f).n : '???'}</span><span class="${g.s ? 'got' : ''}">모양 ${g.s ? SH.find(s => s[0] === n.s)[1] : '???'}</span></span><p>${n.hint}</p></div>`; }).join('')}</div>`;
 }
@@ -317,6 +357,7 @@ function after(){
   document.querySelectorAll('[data-face]').forEach(c => face(c, +c.dataset.face));
   document.querySelectorAll('[data-ckpv]').forEach(c => { const [f, s] = c.dataset.ckpv.split(':'); drawCookie(c.getContext('2d'), { f, s, b: 0 }, 0, 0, 2); });
   document.querySelectorAll('[data-ckc]').forEach(c => { const ck = ST.tray.find(x => x.id === +c.dataset.ckc); drawCookie(c.getContext('2d'), ck, 0, 0, 2); });
+  document.querySelectorAll('[data-dexs]').forEach(c => { const k = c.dataset.dexs, f = FL.find(f => ST.dex[f.id + '_' + k]), q = c.getContext('2d'); drawCookie(q, { f: f ? f.id : 'butter', s: k, b: 62 }, 0, 0, 2); if (!f){ q.globalCompositeOperation = 'source-atop'; q.fillStyle = '#3A2A55'; q.fillRect(0, 0, 48, 48); q.globalCompositeOperation = 'source-over'; } });
   document.querySelectorAll('[data-dex]').forEach(c => { const d = DEX.find(x => x.id === c.dataset.dex), q = c.getContext('2d'); drawCookie(q, { f: d.f, s: d.s, b: d.b ?? 66, ice: d.gold ? goldIce(d.s) : null }, 0, 0, 2); if (!ST.dex[d.id]){ q.globalCompositeOperation = 'source-atop'; q.fillStyle = '#3A2A55'; q.fillRect(0, 0, 48, 48); q.globalCompositeOperation = 'source-over'; } });
   document.querySelectorAll('[data-bxi]').forEach(c => drawBox(c.getContext('2d'), ST.boxes[+c.dataset.bxi], true));
   if ($('#bxcv')) drawBox($('#bxcv').getContext('2d'), { cks: ST.box.sel.map(id => ST.tray.find(x => x.id === id)), c: ST.box.c, r: ST.box.r, p: ST.box.p }, false);
@@ -362,7 +403,7 @@ function startMG(step){
   const bar$ = $('#mgbar');
   // --- 1 재료 넣기
   if (step === 0){
-    const pool = ['milk', 'honey', 'hegg', 'g_wheat', 'g_straw', 'g_mint', 'g_blueb', 'g2_pseed'];
+    const pool = Object.keys(ITEM);
     const extra = ['milk', 'honey', 'hegg'].filter(k => k !== fl.it);
     G.need = s === 1 ? ['g_wheat', 'hegg', fl.it] : s === 2 ? ['g_wheat', 'hegg', extra[0], fl.it] : ['g_wheat', 'hegg', extra[0], fl.it, extra[1]];
     const shelf = [...new Set([...G.need, ...pool.filter(k => !G.need.includes(k)).sort(() => Math.random() - .5).slice(0, s === 1 ? 1 : s === 2 ? 2 : 3)])].sort(() => Math.random() - .5);
@@ -512,8 +553,18 @@ function giftTo(id){
   const g = ST.found[id] || (ST.found[id] = {}); B.cks.forEach(c => { if (grade(c.b) !== 'burnt'){ if (c.f === n.f) g.f = 1; if (c.s === n.s) g.s = 1; } });
   let t = n.r[tier]; if (tier < 3 && B.cks.some(c => c.ice && c.ice.some(v => v))) t += ' ' + (id === 'otumo' ? '그림도 감지. 저장.' : id === 'nabi' ? '....그림도 그렸냐냥.' : id === 'kappa' ? '그림도 있군.' : id === 'jipsin' ? '그림도 있다.' : '그림까지 그려 줬네.');
   ST.heart[id] = (ST.heart[id] || 0) + h; ST.boxes.splice(ST.gsel, 1); ST.gsel = -1; ST.said = { id, t };
+  // 선물한 날부터 5 일 동안 하루 5 번 전체 채팅에 「(이름)이 준 쿠키 냠냠!」
+  for (let d = 0; d < 5; d++){ const ts = new Set(); while (ts.size < 5) ts.add(8 * 60 + Math.floor(Math.random() * 14 * 60)); [...ts].forEach(m => ST.chat.push({ id, day: ST.day + d, m, from: ST.nick })); }
   gtoast(`${n.n.replace(' 선생님', '')} 호감 ♥ +${h}${tier === 0 ? ' · 최고의 선물' : ''}`);
   render(); const s = document.querySelector('.say'); if (s) s.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+const josa = (w, a, b) => { const c = w.charCodeAt(w.length - 1); return w + (c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 ? a : b); };
+const hm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+function chatHTML(){
+  const L = ST.chat.filter(c => c.day === ST.day).sort((a, b) => a.m - b.m), left = [...new Set(ST.chat.filter(c => c.day >= ST.day).map(c => c.id))];
+  return `<div class="lab">전체 채팅 · ${ST.day} 일째 ${left.length ? `· 냠냠 중: ${left.map(id => NPC.find(n => n.id === id).n.replace(' 선생님', '')).join(', ')}` : ''}</div>
+    <div class="chat">${L.length ? L.map(c => { const n = NPC.find(x => x.id === c.id); return `<div><time>${hm(c.m)}</time><canvas data-face="${n.row}" width="32" height="32"></canvas><b>${n.n}</b><span>${esc(josa(c.from, '이', '가'))} 준 쿠키 냠냠!</span></div>`; }).join('') : '<p class="hint">쿠키 상자를 선물하면, 받은 NPC가 5 일 동안 하루 5 번 전체 채팅에 자랑해요.</p>'}</div>
+    <div class="row"><button class="btn" id="nextday" style="flex:1">다음 날로 넘기기 (시안 전용)</button></div>`;
 }
 function gtoast(t){ const el = $('#gtoast'); el.textContent = t; el.classList.add('on'); clearTimeout(gtoast.t); gtoast.t = setTimeout(() => el.classList.remove('on'), 2200); }
 
@@ -541,6 +592,7 @@ document.addEventListener('click', e => {
   if (b.id === 'pack'){ const cks = ST.box.sel.map(id => ST.tray.find(x => x.id === id)); ST.tray = ST.tray.filter(x => !ST.box.sel.includes(x.id)); ST.boxes.push({ cks, c: ST.box.c, r: ST.box.r, p: ST.box.p }); ST.box.sel = []; gtoast('리본을 묶었어요. 쿠키 상자 완성'); ST.gsel = ST.boxes.length - 1; ST.tab = 'gift'; ST.said = null; render(); return; }
   if (D.gb){ ST.gsel = +D.gb; ST.said = null; render(); return; }
   if (D.npc){ giftTo(D.npc); return; }
+  if (b.id === 'nextday'){ ST.day++; ST.said = null; render(); return; }
   if (b.id === 'refill'){ refill(); gtoast('재료를 채웠어요 (시안 전용)'); render(); return; }
   if (b.id === 'openall'){ ST.all = !ST.all; gtoast(ST.all ? '별 셋까지 다 열었어요 (시안 전용)' : '도감 수만큼만 열려요'); render(); return; }
   if (b.id === 'replay'){ playIntro(); return; }
@@ -552,11 +604,11 @@ document.addEventListener('pointerup', () => { drawing = false; });
 
 // ===== 관리자 (시안: 반 전체 도감 현황)
 function renderAdm(){
-  const fake = [12, 7, 23, 3, 18, 9, 31, 5, 14, 2, 26, 11];
-  $('#adm').innerHTML = `<div class="admh"><b>관리자 · 쿠키 상자 주간</b><span>열면 학생이 과자 교실에 들어갈 때 마들렌 연출이 나와요. 연출이 끝나면 오븐을 쓸 수 있어요.</span></div>
+  const fake = [42, 17, 88, 6, 63, 25, 120, 11, 54, 3, 97, 38];
+  $('#adm').innerHTML = `<div class="admh"><b>관리자 · 쿠키 상자 주간</b><span>열면 학생이 과자 교실에 들어갈 때 마들렌 연출이 나와요. 연출이 끝나면 오븐을 쓸 수 있어요. NPC가 쿠키 상자를 받으면 5 일 동안 하루 5 번 전체 채팅에 자랑해요.</span></div>
     <div class="row"><button class="btn go" style="flex:1">이벤트 열기</button><button class="btn" style="flex:1">연출 다시 보내기</button></div>
     <div class="lab">학생 도감 (예시 숫자)</div>
-    <div class="cnt">${fake.map((n, i) => `<span>학생 ${i + 1} <b>${n}</b>/50</span>`).join('')}</div>`;
+    <div class="cnt">${fake.map((n, i) => `<span>학생 ${i + 1} <b>${n}</b>/${DEX.length}</span>`).join('')}</div>`;
 }
 
 // ===== 마들렌 말풍선 (게임 대화창)
