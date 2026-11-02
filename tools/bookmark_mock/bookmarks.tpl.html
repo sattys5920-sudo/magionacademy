@@ -19,7 +19,7 @@ __BASECSS__
   <div class="tabs" id="tabs"></div>
   <div class="body" id="body"></div>
 </div>
-<section class="adm"><div class="mock"><span>시안에서만 보이는 버튼</span><div class="row"><button class="btn sm2" id="refill">재료 채우기</button><button class="btn sm2" id="hearts">NPC 호감 ♥3 만들기</button></div></div></section>
+<section class="adm"><div class="mock"><span>시안에서만 보이는 버튼</span><div class="row"><button class="btn sm2" id="refill">재료 채우기</button><button class="btn sm2" id="hearts">NPC 호감 ♥5 만들기</button></div></div></section>
 <div id="gtoast"></div>
 
 <script>
@@ -27,7 +27,7 @@ const SHEET = new Image(); SHEET.src = 'data:image/webp;base64,__SHEET__';
 const NAMES = __NAMES__;
 const $ = s => document.querySelector(s), esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const ic = k => `<i class="ic" style="background-position:${-NAMES[k][0] * 24}px 0"></i>`;
-// ===== 책갈피 · 기본 20 종 (종이 = 목화솜 1 + 무늬마다 다른 재료) · NPC 11 종 (얼굴 + NPC 무늬 · 그 NPC 호감 ♥3부터)
+// ===== 책갈피 · 기본 20 종 (종이 = 목화솜 1 + 무늬마다 다른 재료) · NPC 11 종 (얼굴 + NPC 무늬 · 그 NPC 호감 ♥5부터)
 const BASIC = [
   ['moon', '달밤', '#2A3268', '#E8C468', { drop: 1 }, '달빛 이슬로 그린 초승달. 밤에 읽는 책에 꽂아요.'],
   ['star', '별자리', '#1E2448', '#9AC8F0', { g2_stardust: 1 }, '별가루를 콕콕 찍어 이은 별자리.'],
@@ -134,10 +134,10 @@ function npcMotif(q, B, P, C, BM){
   }
 }
 // ===== 상태 · 화면
-const ST = { tab: 'basic', sel: BASIC[0].id, inv: {}, made: {}, heart: { aula: 3, mandi: 4 } };
+const ST = { tab: 'basic', sel: BASIC[0].id, inv: {}, made: {}, heart: { aula: 5, mandi: 6 } };
 function refill(){ Object.keys(NAMES).forEach(k => ST.inv[k] = 3); } refill(); ['g_rainbow', 'g_thunder', 'g2_moonst'].forEach(k => ST.inv[k] = 0);
 const all = () => [...BASIC, ...NPCB], byId = id => all().find(b => b.id === id);
-const can = B => Object.entries(B.m).every(([k, n]) => (ST.inv[k] || 0) >= n) && (!B.npc || (ST.heart[B.id] || 0) >= 3);
+const can = B => Object.entries(B.m).every(([k, n]) => (ST.inv[k] || 0) >= n) && (!B.npc || (ST.heart[B.id] || 0) >= 5);
 function gtoast(t){ const el = $('#gtoast'); el.textContent = t; el.classList.add('on'); clearTimeout(gtoast.t); gtoast.t = setTimeout(() => el.classList.remove('on'), 2200); }
 const face = (cv, row) => { const q = cv.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, cv.width, cv.height); faceAt(q, row, 0, 0, cv.width); };
 const sec = (title, body, aside = '') => `<section class="cd"><div class="cdh"><h3>${title}</h3>${aside}</div>${body}</section>`;
@@ -147,10 +147,10 @@ function render(){
   const B = byId(ST.sel) || L[0];
   const det = B ? sec(B.npc ? 'NPC 책갈피' : '책갈피', `<div class="det"><canvas id="big" width="36" height="92"></canvas><div class="info"><h4>${esc(B.n)}${B.npc ? ' 책갈피' : ''}</h4><p>${esc(B.d)}</p>
       <div class="mats">${Object.entries(B.m).map(([k, n]) => `<div class="${(ST.inv[k] || 0) >= n ? 'yes' : 'no'}">${ic(k)}${esc(NAMES[k][1])}<b>${ST.inv[k] || 0} / ${n}</b></div>`).join('')}</div>
-      ${B.npc && (ST.heart[B.id] || 0) < 3 ? `<p style="color:var(--gold)">${esc(B.n)} 호감 ♥3부터 만들 수 있어요 · 지금 ♥${ST.heart[B.id] || 0}</p>` : ''}
+      ${B.npc && (ST.heart[B.id] || 0) < 5 ? `<p style="color:var(--gold)">${esc(B.n)} 호감 ♥5부터 만들 수 있어요 · 지금 ♥${ST.heart[B.id] || 0}</p>` : ''}
       <button class="btn go wide" data-make="${B.id}" ${can(B) ? '' : 'disabled'}>${can(B) ? '만들기' : '재료가 모자라요'}${ST.made[B.id] ? ` · 가진 것 ${ST.made[B.id]}` : ''}</button></div></div>`) : '';
-  $('#body').innerHTML = (ST.tab === 'mine' && !L.length ? '<p class="empty">아직 만든 책갈피가 없어요</p>' : det + sec(ST.tab === 'basic' ? '기본 책갈피 · 목화솜 + 무늬 재료' : ST.tab === 'npc' ? 'NPC 책갈피 · 그 NPC 호감 ♥3부터' : '내 책갈피',
-    `<div class="bkg">${L.map(b => { const lock = b.npc && (ST.heart[b.id] || 0) < 3; return `<button class="bk ${b.id === (B && B.id) ? 'on' : ''} ${lock ? 'lock' : ''}" data-bk="${b.id}"><canvas data-bkc="${b.id}" width="36" height="92"></canvas>${esc(b.n)}${ST.made[b.id] ? `<span class="own">×${ST.made[b.id]}</span>` : ''}${lock ? '<span class="lk">♥3</span>' : ''}</button>`; }).join('')}</div>`))
+  $('#body').innerHTML = (ST.tab === 'mine' && !L.length ? '<p class="empty">아직 만든 책갈피가 없어요</p>' : det + sec(ST.tab === 'basic' ? '기본 책갈피 · 목화솜 + 무늬 재료' : ST.tab === 'npc' ? 'NPC 책갈피 · 그 NPC 호감 ♥5부터' : '내 책갈피',
+    `<div class="bkg">${L.map(b => { const lock = b.npc && (ST.heart[b.id] || 0) < 5; return `<button class="bk ${b.id === (B && B.id) ? 'on' : ''} ${lock ? 'lock' : ''}" data-bk="${b.id}"><canvas data-bkc="${b.id}" width="36" height="92"></canvas>${esc(b.n)}${ST.made[b.id] ? `<span class="own">×${ST.made[b.id]}</span>` : ''}${lock ? '<span class="lk">♥5</span>' : ''}</button>`; }).join('')}</div>`))
     + `<p class="hint">아울라 재채기 이후, 도서관 사서 책상에서 만들 수 있어요. 만든 책갈피는 가방에 들어가고, NPC에게 선물할 수 있어요.</p>`;
   document.querySelectorAll('[data-face]').forEach(c => face(c, +c.dataset.face));
   document.querySelectorAll('[data-bkc]').forEach(c => draw(c.getContext('2d'), byId(c.dataset.bkc)));
@@ -161,7 +161,7 @@ document.addEventListener('click', e => { const b = e.target.closest('button'); 
   if (D.bk){ ST.sel = D.bk; render(); return; }
   if (D.make){ const B = byId(D.make); if (!can(B)) return; Object.entries(B.m).forEach(([k, n]) => ST.inv[k] -= n); ST.made[B.id] = (ST.made[B.id] || 0) + 1; gtoast(`「${B.n}${B.npc ? ' 책갈피' : ''}」를 만들었어요`); render(); return; }
   if (b.id === 'refill'){ refill(); gtoast('재료를 채웠어요'); render(); return; }
-  if (b.id === 'hearts'){ NPCB.forEach(n => ST.heart[n.id] = 3); gtoast('NPC 책갈피가 다 열렸어요'); render(); return; }
+  if (b.id === 'hearts'){ NPCB.forEach(n => ST.heart[n.id] = 5); gtoast('NPC 책갈피가 다 열렸어요'); render(); return; }
 });
 render(); SHEET.onload = () => render();
 </script>
