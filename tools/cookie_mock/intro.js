@@ -1,4 +1,4 @@
-// ===== 시작 연출: 과자 교실 · 쿠키 상자 주간 · 마들렌이랑 제일 쉬운 버터 동그라미 쿠키를 같이 굽는 튜토리얼 → 오븐 열림 · 쿠키 도감
+// ===== 시작 연출: 과자 교실 · 마들렌이랑 제일 쉬운 버터 동그라미 쿠키를 같이 굽는 튜토리얼 → 오븐 열림 · 쿠키 도감
 const CM = { OX: 164, OY: 82 };
 const IZ = 3;
 let IC = null;
@@ -77,8 +77,8 @@ async function playIntro(){
   iwalk(ME, 14.4, 9.6, 2000); await sleep(1200); if (!ok()) return;
   emo(M, '!', '#FFE9A0'); M.dir = 10; M.jump = true; await bub(M, '어, 왔다!', 1000); M.jump = false; await sleep(900); if (!ok()) return;
   ME.dir = 15;
-  if (!await ms('마침 잘 왔어! 이번 주는 과자 교실 쿠키 상자 주간이야.')) return;
-  if (!await ms('쿠키 구워서 예쁜 상자에 담고, 리본 묶어서 주고 싶은 사람한테 선물하는 거지.')) return;
+  if (!await ms('마침 잘 왔어! 오늘부터 과자 교실 오븐을 다 같이 쓰기로 했거든.')) return;
+  if (!await ms('쿠키 구워서 예쁜 상자에 담고, 리본 묶어서 주고 싶은 사람한테 선물하는 거야. 재밌겠지?')) return;
   if (!await ms('쿠키 구워 본 적 없지? 괜찮아. 제일 쉬운 걸로 같이 해 보자. 버터 동그라미 쿠키!')) return;
   // 1 반죽
   await Promise.all([iwalk(M, 18.7, 6.6, 900), iwalk(ME, 16.4, 8.8, 900)]); M.dir = 10; ME.dir = 5; IC.bowl = 1; await sleep(300); if (!ok()) return;
