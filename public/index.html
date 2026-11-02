@@ -11388,19 +11388,20 @@ const CK = (() => {
   function giftHTML(n){
     const L = (me.ck && me.ck.boxes) || []; if (!L.length || !NPCS[n.id]) return '';
     setTimeout(() => document.querySelectorAll('[data-ckgc]').forEach(c => boxTo(c, L[+c.dataset.ckgc], false)), 0);
-    return `<div class="kngift"><b>쿠키 상자</b><div class="row">${L.map((b, i) => `<button data-ckgive="${i}" aria-label="쿠키 상자 주기"><canvas width="60" height="48" data-ckgc="${i}" style="width:60px;height:48px;image-rendering:pixelated"></canvas></button>`).join('')}</div><span class="s sub">하루 한 번과 상관없이 줄 수 있어요 · 좋아하는 맛과 모양이면 더 기뻐해요</span></div>`;
+    return `<div class="kngift"><b>쿠키 상자</b><div class="row">${L.map((b, i) => `<button data-ckgive="${i}" aria-label="쿠키 상자 주기"><canvas width="60" height="48" data-ckgc="${i}" style="width:60px;height:48px;image-rendering:pixelated"></canvas></button>`).join('')}</div><span class="s sub">하루 한 번과 상관없이 줄 수 있어요 · 호감도는 NPC마다 처음 한 번만 올라요</span></div>`;
   }
   async function give(n, i){
     const K = ck(), B = (K.boxes || [])[i], X = NPCS[n.id]; if (!B || !X || ckOn) return;
     const cks = B.cks.map(dec).filter(Boolean); if (!cks.length) return;
     const sc = cks.map(c => ({ c, burnt: grade(c.b) === 'burnt', m: (c.f === X.f ? 1 : 0) + (c.s === X.s ? 1 : 0) })), best = sc.filter(x => !x.burnt).sort((a, b) => b.m - a.m)[0];
     let tier, h; if (!best){ tier = 3; h = 15; } else { tier = best.m === 2 ? 0 : best.m === 1 ? 1 : 2; h = [60, 40, 20][tier] + (best.m && best.c.q === '최고' ? 15 : 0); }
+    const had = !!((K.aff || {})[n.id] || (K.found || {})[n.id]);   // 전에 준 적 있으면 (예전 기록 포함)
     const g = (K.found ||= {})[n.id] || (K.found[n.id] = {}); cks.forEach(c => { if (grade(c.b) !== 'burnt'){ if (c.f === X.f) g.f = 1; if (c.s === X.s) g.s = 1; } });
     let line = X.r[tier]; if (tier < 3 && cks.some(c => c.ice && c.ice.some(v => v))) line += ' ' + (DRAWN[n.id] || '그림까지 그려 줬네.');
-    K.boxes.splice(i, 1); K.gave = (K.gave || 0) + 1; npcAddA(n.id, h); save(); closeSheet(); npcSig = ''; syncNpcs();
+    K.boxes.splice(i, 1); K.gave = (K.gave || 0) + 1; const firstAff = !had; (K.aff ||= {})[n.id] = 1; if (firstAff) npcAddA(n.id, h); save();   // 호감도는 NPC마다 처음 한 번만 closeSheet(); npcSig = ''; syncNpcs();
     yumAdd(n.id);
     await giftCine(n, B, cks, tier, best ? best.c : cks[0], line);
-    toast(`${withJosa(n.name, '이', '가')} 쿠키 상자를 받았어요 · 호감도 +${h}${tier === 0 ? ' · 최고의 선물' : ''}`);
+    toast(`${withJosa(n.name, '이', '가')} 쿠키 상자를 받았어요${firstAff ? ` · 호감도 +${h}${tier === 0 ? ' · 최고의 선물' : ''}` : ''}`);
   }
   async function giftCine(n, B, cks, tier, ckk, line){
     ckOn = true; const R = REACT[n.id] || REACT.nabi, big = tier === 0;
