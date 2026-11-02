@@ -112,7 +112,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f-body);f
 .pg canvas{width:28px;height:28px;image-rendering:pixelated;flex:none}.pg canvas.dim{filter:brightness(0) opacity(.35)}
 .pg span{font-family:var(--f-pxb);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pg em{font-style:normal;color:var(--sub);display:block;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pg:disabled{opacity:.6;cursor:default}.pg.sel{border:2px solid var(--accent)}
+.pg em{color:var(--sub)}.pg em.k{color:var(--pink)}.obtext.unk{color:#A89478!important}.pg.sel{border:2px solid var(--accent)}
 .pg > div{min-width:0;display:flex;flex-direction:column}
 #intro{position:fixed;inset:0;z-index:20;background:rgba(10,6,16,.78);display:flex;align-items:flex-end;justify-content:center;padding:16px max(16px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px))}
 #intro[hidden]{display:none}
@@ -348,7 +348,7 @@ const KNOWN = new Set();
 const NOTE_IMG = new Image(); NOTE_IMG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABwUlEQVR4nO2Xv2vCQBzFX0WhIAiCOIQOoUNpHVKhixS3lhY6dCxSanXq7B/g0MFdJ3cRiltnxTGIdCqCoThIBglFhELBqUM6FIIm900u5xWh9C3hvvnxPvm+XHIB/poyimZnFM3emrldf7aNu0duiCh1IVlAhjXaCQWQUTQ7ehpxxlcPuXCuY+Do5BjX9+8/4zJsAKBAIqyiTA2GTQyGTbKrzAh4ZJlzrv3W7pvvcSRASk1gYX6SJypq2mOoqGlg7OvnERkBZW6Zc8/dO3cb0JVQAJQ5j2kp3t4cIKUmSHO/WineRmtZ5AYgn4HVCNxGjXzBc3xF76xB8CowAh5zv7owgDsCHhMRiNCzQLaE3oT585rvWAoAKwIASHZj0PvVtZreryLZjQkBcM2CVX1cfgEAOrUnp1ao3jp1aQAsVfQOKmkNAJC7yTp1c2IAABrzUWiA0BFQJiLmgEAEr70pypgy92Uv9uUBUBIxEQKgPsezycJT2ztIyQegItjEjCWuF1FrWURrWXQWITxbVqdCAbhnQSne9qwBqO1Lz+DuVGAEs8kCZ6hzXWxVTgcOBQFkSVH9CZhr9d/4tQr6QfnX1vQNpIG44Lo4DIMAAAAASUVORK5CYII=';
 const PAGE_IMG = new Image(); PAGE_IMG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABjklEQVR4nO2UsUvDUBDGv4q7IOKQsYNgCp3E/AutS6E4OEgD3Qqlf0wRAg4Fi4ODi4vtLC4Rp0KrUxCHDKVIu3UQnkNtqW3uchciDvaDcJD38u6Xu+8esNEfK6P9wLbyhlobhD31edva5K3na59arx6dGy0EC8D9LfeNBoIEsK286Qfdtff+x4g8rB908fJ0j9OzphhiS7JJq9ubhrh6Kg8AgLO750ghJJX4lQosQ8RVggQYhL1MLluIXvTIQVBDqE0IzweKHcADUFvvxuHxScRpTRJQ1wLPnyXtFGdRUQlKOhPOkzIVWFUuW2BvSL0Jaw7ch5EoOTC7GzgPJDMhALddFwHEiQQgTfitq8pFKgBkb+IApErfAwpNhkGsB8RTcNeiZ5lSqdqI3cPe00nbMBkG2NnPLiLXBrEH3HYd5c8DEUCp2hAlZ2VbeWOmoTHT0FQuyz8i9YzfHyMj54FUK7D85/MI8JMgNiE396tJoyAosQCTYSDlW+ylYiKA8O1VDJBUsWOYRpJEU7DRv9EXaQQAx57Z27kAAAAASUVORK5CYII=';
 const OPEN_IMG = new Image(); OPEN_IMG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAABICAYAAAAuyXGLAAACTklEQVR4nO3dsUsCYRzG8d+FU0Mt0uAU0ZAFTVHQ0BwN/QnVEE3SIDRnc+AQQSAN1R8h0RgNFTkopBISDnGDuNTgasNxZycexXvevfe8PZ/lToXjvfvS62l4ZwnFZjGz3H89OvE9t3R6LHW7ZqlucyL0qEgrBgSXclcWM8t9nQP5z1SOvTvtptwNbF+tj3tcNMqr/6Hycd+Tft2uWZxCwRkdsFx6lHLpUfcwIuW9B9rtjs5xRCrJ+xZ2bKmgF653zkNtWJfPzru3vnGXExGRs82899z0zFzsY/K5ePI9/Otx3r3JjXze6Cn0P2BAcAwIjgE1aFSq0qhUx7KtwJMYikajUpXs5YGzvl+SrKyF2p5ywMZzWTKzC2K3m1qW2s8mFbnxhtdVWSLOV2krhXnfC7+d3n523mVyKh16ACp6X93AgL6PEXnn1Pu+ONgX1PDDHyNeCi3hV2kGYEBwDAiOAcExIDgGBMeA4BgQHAOCY0BwDAiOAcExIDgGBMeA4BgQHAOCY0BwDAiOAcExIDgGBMeA4BgQHAOCY0BwDAiOAcExIDjlgHa7Kb2vrrRqD7EvaUD594HZ1S0RGfxcK+4lOTiFgmNAcAwIjgHBMSA4BgTHgOAYMCGCrkb4GwZMgN2bnFzvnCtFZMAEcOOpXKOVARNAdfoUYcBECHN1ZAZMCNWIDAiOAcExILjAf+j+vO6mSUzbL/4FgmNAcIFT6OFtMc5xRMqkfRnmBfx46+ocR6RM3jejbzuQnp3SPYTI8T0QnHf3ZN6CFUuYO19TgnwD/+34iUVdv3IAAAAASUVORK5CYII=';
-let noteMsg = '', noteOpen = null;
+let noteMsg = '', noteOpen = 'dandel';
 // ===== 맨디의 꽃다발: 학생마다 다른 꽃 세 송이 = 맨디가 그 학생에게 가진 마음 세 가지 =====
 const MANDI_B = [
   { f: ['dandel', 'chamo', 'clover'], t: '늘 고마워요. 힘든 날에도 힘내요. 행운이 꼭 따라갈 거예요.......' },
@@ -423,19 +423,18 @@ function drawScene(now){
 function hunt(kind){
   const left = FL.filter(f => !KNOWN.has(f.id) && PAGE[f.id][0] === kind);
   const loot = kind === '채집' ? ['들꽃', '고사리', '도토리', '촉촉 이끼', '산딸기'] : ['붕어', '피라미', '빈 깡통', '미꾸라지', '해초'];
-  if (left.length && Math.random() < .45){ const f = left[Math.floor(Math.random() * left.length)]; KNOWN.add(f.id); noteOpen = f.id; noteMsg = `<img src="${PAGE_IMG.src}" alt=""><span><b>꽃말 쪽지를 주웠어요</b><br>「${f.n}」 장이 수첩에 붙었어요</span>`; }
+  if (left.length && Math.random() < .45){ const f = left[Math.floor(Math.random() * left.length)]; KNOWN.add(f.id); noteOpen = f.id; noteMsg = `<img src="${PAGE_IMG.src}" alt=""><span><b>꽃말 쪽지를 주웠어요</b><br>「${f.n}」 꽃말이 수첩에 적혔어요</span>`; }
   else { noteMsg = `${loot[Math.floor(Math.random() * loot.length)]}${kind === '채집' ? '을(를) 주웠어요' : '을(를) 낚았어요'}${left.length ? '. 쪽지는 없었어요' : `. ${kind} 쪽지는 다 모았어요`}`; }
   refresh();
 }
 function noteHTML(){
   const n = KNOWN.size, f = noteOpen && FB[noteOpen], B = myB(), done = B.f.every(x => KNOWN.has(x));
-  return `<div class="mcard"><canvas width="128" height="128" id="mbq"></canvas><div><b>맨디의 꽃다발</b><div class="m3">${B.f.map(x => `<span class="${KNOWN.has(x) ? 'k' : ''}"><canvas width="32" height="32" data-ic="${x}"></canvas>${KNOWN.has(x) ? FB[x].w : '?'}</span>`).join('')}</div><p>${done ? `「${B.t}」` : `꽃말 ${B.f.filter(x => KNOWN.has(x)).length} / 3 · 다 찾으면 맨디의 마음이 보여요`}</p></div></div>
-    <div class="grp">${row(`맨디의 꽃말 수첩 <b>${n} / 21</b>`, `<span class="cost free">채집 ${FL.filter(x => PAGE[x.id][0] === '채집' && KNOWN.has(x.id)).length} / 14 · 낚시 ${FL.filter(x => PAGE[x.id][0] === '낚시' && KNOWN.has(x.id)).length} / 7</span>`)}
+  return `<div class="grp">${row(`맨디의 꽃말 수첩 <b>${n} / 21</b>`, `<span class="cost free">채집 ${FL.filter(x => PAGE[x.id][0] === '채집' && KNOWN.has(x.id)).length} / 14 · 낚시 ${FL.filter(x => PAGE[x.id][0] === '낚시' && KNOWN.has(x.id)).length} / 7</span>`)}
     <div class="bar"><i style="width:${n / 21 * 100}%"></i></div></div>
     <div class="hunt"><button class="btn" data-hunt="채집">풀숲 뒤지기 · 채집</button><button class="btn" data-hunt="낚시">낚싯대 던지기 · 낚시</button></div>
     ${noteMsg ? `<p class="toast">${noteMsg}</p>` : '<p class="hint">시안용 버튼이에요. 게임에서는 원래 하던 채집 · 낚시 그대로, 가끔 쪽지가 섞여 나와요.</p>'}
-    ${f ? `<div class="openbook"><img src="${OPEN_IMG.src}" alt=""><canvas width="32" height="32" data-ic="${f.id}" class="obflower"></canvas><b class="obname">${f.n}</b><em class="obword">「${f.w}」</em><p class="obtext">${PAGE[f.id][1]}</p><small class="obfrom">${PAGE[f.id][0]} 쪽지</small></div>` : ''}
-    <div class="notegrid">${FL.map(x => { const k = KNOWN.has(x.id); return `<button class="pg ${k ? 'on' : ''} ${noteOpen === x.id ? 'sel' : ''}" data-pg="${x.id}" ${k ? '' : 'disabled'}><canvas width="32" height="32" data-ic="${x.id}" class="${k ? '' : 'dim'}"></canvas><div><span>${k ? x.n : '???'}</span><em>${k ? x.w : PAGE[x.id][0] + '에서 찾기'}</em></div></button>`; }).join('')}</div>`;
+    ${f ? (k => `<div class="openbook"><img src="${OPEN_IMG.src}" alt=""><canvas width="32" height="32" data-ic="${f.id}" class="obflower"></canvas><b class="obname">${f.n}</b><em class="obword">${k ? `「${f.w}」` : '「???」'}</em><p class="obtext ${k ? '' : 'unk'}">${k ? PAGE[f.id][1] : `아직 쪽지를 못 찾았어요. ${PAGE[f.id][0]}하다 보면 나올지도 몰라요.......`}</p><small class="obfrom">${k ? PAGE[f.id][0] + ' 쪽지' : ''}</small></div>`)(KNOWN.has(f.id)) : ''}
+    <div class="notegrid">${FL.map(x => { const k = KNOWN.has(x.id); return `<button class="pg ${k ? 'on' : ''} ${noteOpen === x.id ? 'sel' : ''}" data-pg="${x.id}"><canvas width="32" height="32" data-ic="${x.id}"></canvas><div><span>${x.n}</span><em class="${k ? 'k' : ''}">${k ? x.w : '???'}</em></div></button>`; }).join('')}</div>`;
 }
 function meaning(){
   const ids = S.slots, uniq = [...new Set(ids)];
