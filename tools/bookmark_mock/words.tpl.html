@@ -1,0 +1,155 @@
+<title>열두 개의 밤</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'G11';font-display:swap;src:url(data:font/woff2;base64,__G11__) format('woff2')}
+@font-face{font-family:'G11B';font-display:swap;src:url(data:font/woff2;base64,__G11B__) format('woff2')}
+__BASECSS__
+/* ===== 글자 아이템 · 책 맞추기 */
+:root{--paper:#F6ECD6;--paper2:#EADBBE;--ink:#3A2A40;--gilt:#E8C468;--f-book:'Gowun Batang','Nanum Myeongjo',serif}
+.wd{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:30px;padding:3px 12px 4px;border-radius:8px;font:14px var(--f-pxb);color:var(--ink);background:var(--wc,#FBF3DE);box-shadow:0 0 0 2px #2A1A2E,0 3px 0 2px #2A1A2E;white-space:nowrap;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.wd::before,.wd::after{content:'';position:absolute;top:2px;width:10px;height:12px;background:#fff;border:2px solid #2A1A2E;border-radius:10px 10px 2px 10px;z-index:-1}
+.wd::before{left:-9px;transform:rotate(-24deg);border-radius:10px 2px 10px 10px}
+.wd::after{right:-9px;transform:rotate(24deg)}
+.wd.flap::before{animation:flapL .5s ease-in-out infinite alternate}.wd.flap::after{animation:flapR .5s ease-in-out infinite alternate}
+@keyframes flapL{to{transform:rotate(-4deg) translateY(2px)}}@keyframes flapR{to{transform:rotate(4deg) translateY(2px)}}
+.wd.bob{animation:bob 2.4s ease-in-out infinite}@keyframes bob{50%{transform:translateY(-4px)}}
+.wd.nw::before,.wd.nw::after{display:none}
+.wd.new{box-shadow:0 0 0 2px #2A1A2E,0 3px 0 2px #2A1A2E,0 0 12px 3px rgba(255,216,102,.7)}
+.wd.sel{outline:3px solid var(--accent);outline-offset:3px}
+.wd small{position:absolute;right:-6px;top:-8px;font:10px var(--f-pxb);background:var(--pink);color:#3A1020;padding:0 5px;border-radius:7px}
+.bagg{display:flex;flex-wrap:wrap;gap:14px 20px;padding:10px 14px 6px}
+/* 책 */
+.book{position:relative;background:var(--paper);border-radius:6px 14px 14px 6px;padding:22px 20px 22px 26px;box-shadow:inset 8px 0 0 var(--paper2),inset 10px 0 0 #D8C49E,0 6px 0 #6A4A2E,0 8px 0 #2A1A2E;color:var(--ink)}
+.book::after{content:'';position:absolute;inset:8px 8px 8px 16px;border:1px solid #DCC8A0;border-radius:4px;pointer-events:none}
+.book.done{animation:glow 1.6s ease-in-out infinite}@keyframes glow{50%{box-shadow:inset 8px 0 0 var(--paper2),inset 10px 0 0 #D8C49E,0 6px 0 #6A4A2E,0 8px 0 #2A1A2E,0 0 26px 6px rgba(255,216,102,.65)}}
+.pgno{display:flex;justify-content:space-between;align-items:center;font:12px var(--f-pxb);color:#8A7060;margin-bottom:8px;position:relative;z-index:1}
+.txt{font:16px/2.25 var(--f-book);word-break:keep-all;position:relative;z-index:1}
+.slot{display:inline-block;min-width:3em;height:26px;line-height:24px;vertical-align:middle;margin:0 1px;border-bottom:2px dashed #B8A080;border-radius:4px;text-align:center;font:14px var(--f-pxb);color:transparent;transition:background .15s}
+.slot.hot{background:rgba(255,154,60,.25)}
+.slot.on{color:var(--ink);border-bottom:2px solid transparent;background:var(--wc,#FBF3DE);box-shadow:0 0 0 1.5px #2A1A2E;padding:0 6px}
+.book.done .slot.on{background:#FFF4C8;box-shadow:0 0 0 1.5px #C8A050,0 0 8px rgba(255,216,102,.8)}
+.pnav{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap}.pnav button{min-width:34px;min-height:34px;border:0;border-radius:10px;background:var(--panel2);color:var(--sub);font:12px var(--f-pxb)}.pnav button.on{background:var(--accent);color:#2A1506}.pnav button.ok{box-shadow:inset 0 0 0 2px var(--gold);color:var(--gold)}
+.tray{position:sticky;bottom:0;background:rgba(20,13,30,.97);border-top:2px solid var(--line2);padding:8px 0 calc(8px + env(safe-area-inset-bottom,0px));margin:0 -14px -14px;z-index:5}
+.trayh{display:flex;gap:8px;align-items:center;padding:0 14px 6px}.trayh input{flex:1;min-width:0;min-height:36px;border-radius:10px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);font:13px var(--f-px);padding:0 10px}.trayh span{font:12px var(--f-pxb);color:var(--sub);white-space:nowrap}
+.trayw{display:flex;gap:14px 22px;overflow-x:auto;padding:12px 18px 10px;scrollbar-width:thin}.trayw .wd{flex:none}
+.book,.tray,.bagg{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.ghost{position:fixed;z-index:90;pointer-events:none;transform:translate(-50%,-60%) rotate(-4deg) scale(1.1)}
+#fin{position:fixed;inset:0;z-index:95;background:rgba(10,6,16,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}#fin[hidden]{display:none}
+#fin canvas{width:min(92vw,420px);aspect-ratio:1;image-rendering:pixelated}
+#fin .cap{font:16px var(--f-pxb);color:var(--gold);text-align:center;opacity:0;transition:opacity .6s}#fin .cap.on{opacity:1}
+.spot{display:flex;gap:10px;align-items:center;padding:10px;border-radius:12px;background:var(--panel2)}.spot canvas{width:44px;height:44px;border-radius:10px;background:#1E2A44;flex:none}.spot p{margin:0;font:13px/1.5 var(--f-px);color:var(--sub)}
+</style>
+
+<div id="app">
+  <div class="shead"><canvas data-face="3" width="32" height="32"></canvas><b>열두 개의 밤</b></div>
+  <div class="tabs" id="tabs"></div>
+  <div class="body" id="body"></div>
+</div>
+<section class="adm" id="adm"></section>
+<div id="fin" hidden><canvas id="fcv" width="160" height="160"></canvas><div class="cap" id="fcap"></div></div>
+<div id="gtoast"></div>
+
+<script>
+const SHEET = new Image(); SHEET.src = 'data:image/webp;base64,__SHEET__';
+const $ = s => document.querySelector(s), esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const BOOK = __BOOK__;
+// 원고 → 쪽(문단) → 칸. 단어 앞뒤의 따옴표 · 말줄임 · 마침표는 칸 밖에 그대로 적혀 있어요
+const PAGES = BOOK.trim().split(/\n\s*\n/).map(par => par.split('\n').map(line => line.split(/\s+/).filter(Boolean).map(tok => { const m = tok.match(/^(["“.…]*)(.*?)(["”.,!?…]*)$/); return { pre: m[1], w: m[2], post: m[3] }; })));
+const ALL = [...new Set(PAGES.flat(2).map(t => t.w).filter(Boolean))];
+const WC = ['#FBF3DE', '#FCE1E8', '#DDF2E2', '#E6DDF8', '#DCECFA', '#FFF0C8'];
+const wc = w => WC[[...w].reduce((a, c) => a + c.charCodeAt(0), 0) % WC.length];
+// 시안: 반 전체가 모은 단어 (중복 없이) · 처음엔 85 % 정도 모은 상태
+const ST = { tab: 'bag', page: 0, got: new Set(ALL.filter((w, i) => (i * 37 % 100) < 86)), mine: new Set(ALL.filter((w, i) => (i * 53 % 100) < 22)), fresh: new Set(), place: PAGES.map(p => p.flat().map(() => null)), sel: null, q: '', doneShown: false };
+const slotsOf = pi => PAGES[pi].flat();
+const pageOK = pi => slotsOf(pi).every((t, k) => !t.w || ST.place[pi][k] === t.w);
+const allOK = () => PAGES.every((_, i) => pageOK(i));
+function gtoast(t){ const el = $('#gtoast'); el.textContent = t; el.classList.add('on'); clearTimeout(gtoast.t); gtoast.t = setTimeout(() => el.classList.remove('on'), 2200); }
+const face = (cv, row) => { const q = cv.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, cv.width, cv.height); if (SHEET.complete) q.drawImage(SHEET, 16, row * 64 + 10, 32, 32, 0, 0, cv.width, cv.height); };
+const tile = (w, cls = '', attr = '') => `<span class="wd ${cls}" style="--wc:${wc(w)}" ${attr}>${esc(w)}</span>`;
+const sec = (title, body, aside = '') => `<section class="cd"><div class="cdh"><h3>${title}</h3>${aside}</div>${body}</section>`;
+
+function render(){
+  $('#tabs').innerHTML = [['bag', '내 가방 · 글자'], ['desk', '서재 책상 · 책 맞추기']].map(([k, n]) => `<button data-tab="${k}" class="${ST.tab === k ? 'on' : ''}">${n}</button>`).join('');
+  $('#body').innerHTML = ST.tab === 'bag' ? bagHTML() : deskHTML();
+  document.querySelectorAll('[data-face]').forEach(c => face(c, +c.dataset.face));
+  if (ST.tab === 'desk'){ const s = document.querySelector('.slot.on.last'); }
+}
+function bagHTML(){
+  const mine = [...ST.mine];
+  return sec('채집 · 낚시에서 나온 글자', `<div class="row"><button class="btn go" data-x="drop" style="flex:1">채집해 보기 (시안)</button><button class="btn" data-x="fish" style="flex:1">낚시해 보기 (시안)</button></div><p class="hint">재채기에 날아간 단어가 날개를 달고 숨어 있어요. 단어는 한 번에 통째로 나와요.</p>`)
+    + sec('내가 모은 글자', `<div class="bagg">${mine.map(w => tile(w, `bob flap ${ST.fresh.has(w) ? 'new' : ''}`)).join('') || '<p class="empty">아직 없어요</p>'}</div>`, `<span class="aside">${mine.length} 개</span>`)
+    + `<div class="spot"><canvas data-face="3" width="32" height="32"></canvas><p>모은 글자는 도서관 사서 책상에 가져가면 반 전체 글자와 합쳐져요. 같은 단어는 한 번만 모여요.</p></div>`;
+}
+function deskHTML(){
+  const pi = ST.page, sl = slotsOf(pi), ok = pageOK(pi); let k = 0;
+  const lines = PAGES[pi].map(line => line.map(t => { const i = k++; const v = ST.place[pi][i]; if (!t.w) return esc(t.pre + t.post); return `${esc(t.pre)}<span class="slot ${v ? 'on' : ''}" data-slot="${i}" style="${v ? `--wc:${wc(v)};` : ''}min-width:${Math.max(2.2, [...t.w].length * 1.05)}em">${v ? esc(v) : '　'}</span>${esc(t.post)}`; }).join(' ')).join('<br>');
+  const filled = ST.place[pi].filter(Boolean).length, total = sl.filter(t => t.w).length;
+  const list = ALL.filter(w => ST.got.has(w) && (!ST.q || w.includes(ST.q))).sort((a, b) => a.localeCompare(b, 'ko'));
+  return `<div class="pnav">${PAGES.map((_, i) => `<button data-pg="${i}" class="${i === pi ? 'on' : ''} ${pageOK(i) ? 'ok' : ''}">${i + 1}</button>`).join('')}</div>
+    <div class="book ${ok ? 'done' : ''}"><div class="pgno"><span>『열두 개의 밤』</span><span>${pi + 1} 쪽 · ${filled} / ${total}</span></div><div class="txt">${lines}</div></div>
+    <p class="hint">${ok ? '이 쪽은 글자가 다 돌아왔어요. 반짝반짝.' : '아래 글자를 끌어다 빈칸에 놓아요. 칸을 누르면 빠져요. 틀려도 들어가지만, 맞아야 빛나요.'}</p>
+    <div class="row"><button class="btn" data-x="fillpage" style="flex:1">이 쪽 정답 채우기 (시안)</button><button class="btn" data-x="fillall" style="flex:1">전부 채우기 (시안)</button></div>
+    <div class="tray"><div class="trayh"><input id="q" placeholder="글자 찾기" value="${esc(ST.q)}" aria-label="글자 찾기"><span>반 전체 ${ST.got.size} / ${ALL.length}</span></div>
+      <div class="trayw" id="trayw">${list.map(w => tile(w, `flap ${ST.sel === w ? 'sel' : ''}`, `data-w="${esc(w)}"`)).join('')}</div></div>`;
+}
+// ---------- 끌어다 놓기 (손가락 · 마우스) · 눌러서 고르고 칸을 눌러도 돼요
+let drag = null;
+document.addEventListener('pointerdown', e => {
+  const t = e.target.closest('.trayw .wd'); if (!t) return; e.preventDefault(); window.getSelection && window.getSelection().removeAllRanges();
+  drag = { w: t.dataset.w, x0: e.clientX, y0: e.clientY, el: null, moved: false, id: e.pointerId };
+});
+document.addEventListener('pointermove', e => {
+  if (!drag) return; const d = Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0);
+  if (!drag.moved && d > 8){ drag.moved = true; drag.el = document.createElement('div'); drag.el.className = 'ghost'; drag.el.innerHTML = tile(drag.w, 'flap'); document.body.appendChild(drag.el); }
+  if (drag.el){ drag.el.style.left = e.clientX + 'px'; drag.el.style.top = e.clientY + 'px'; document.querySelectorAll('.slot.hot').forEach(s => s.classList.remove('hot')); const s = document.elementFromPoint(e.clientX, e.clientY)?.closest('.slot'); if (s) s.classList.add('hot'); }
+});
+document.addEventListener('pointerup', e => {
+  if (!drag) return; const D = drag; drag = null; if (D.el) D.el.remove(); document.querySelectorAll('.slot.hot').forEach(s => s.classList.remove('hot'));
+  if (!D.moved){ ST.sel = ST.sel === D.w ? null : D.w; render(); return; }
+  const s = document.elementFromPoint(e.clientX, e.clientY)?.closest('.slot'); if (s) put(+s.dataset.slot, D.w);
+});
+function put(i, w){
+  const pi = ST.page, was = pageOK(pi); ST.place[pi][i] = w; ST.sel = null; const keep = $('#trayw')?.scrollLeft || 0; render(); const tw = $('#trayw'); if (tw) tw.scrollLeft = keep;
+  if (!was && pageOK(pi)) gtoast(`${pi + 1} 쪽 글자가 다 돌아왔어요`);
+  if (allOK() && !ST.doneShown){ ST.doneShown = true; setTimeout(finale, 700); }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'), s = e.target.closest('.slot');
+  if (s && ST.tab === 'desk'){ const i = +s.dataset.slot; if (ST.sel){ put(i, ST.sel); } else if (ST.place[ST.page][i]){ ST.place[ST.page][i] = null; render(); } return; }
+  if (!b) return; const D = b.dataset;
+  if (D.tab){ ST.tab = D.tab; render(); return; }
+  if (D.pg){ ST.page = +D.pg; render(); return; }
+  if (D.x === 'drop' || D.x === 'fish'){ const left = ALL.filter(w => !ST.mine.has(w)); if (!left.length) return gtoast('다 모았어요'); const w = left[Math.floor(Math.random() * left.length)]; ST.mine.add(w); ST.got.add(w); ST.fresh = new Set([w]); gtoast(`${D.x === 'drop' ? '덤불' : '물속'}에서 글자 「${w}」가 파닥파닥 날아왔어요`); render(); return; }
+  if (D.x === 'fillpage'){ slotsOf(ST.page).forEach((t, k) => { if (t.w){ ST.place[ST.page][k] = t.w; ST.got.add(t.w); } }); render(); gtoast(`${ST.page + 1} 쪽 글자가 다 돌아왔어요`); if (allOK() && !ST.doneShown){ ST.doneShown = true; setTimeout(finale, 700); } return; }
+  if (D.x === 'fillall'){ PAGES.forEach((_, pi) => slotsOf(pi).forEach((t, k) => { if (t.w){ ST.place[pi][k] = t.w; ST.got.add(t.w); } })); render(); if (!ST.doneShown){ ST.doneShown = true; setTimeout(finale, 700); } return; }
+});
+document.addEventListener('input', e => { if (e.target.id === 'q'){ ST.q = e.target.value.trim(); const pos = e.target.selectionStart; render(); const q = $('#q'); q.focus(); q.setSelectionRange(pos, pos); } });
+
+// ---------- 완성 연출: 글자들이 반짝이며 모여 책 한 권이 돼요
+function finale(){
+  const f = $('#fin'), c = $('#fcv'), q = c.getContext('2d'), cap = $('#fcap'); f.hidden = false; cap.classList.remove('on'); q.imageSmoothingEnabled = false;
+  const W = 160, words = ALL.slice(0, 60).map((w, i) => ({ w, x: Math.random() * W, y: 170 + Math.random() * 60, vx: 0, t0: i * 40 })), t0 = performance.now();
+  const book = (k, glow) => { const bw = 70 * k, bh = 90 * k, x = 80 - bw / 2, y = 80 - bh / 2;
+    q.fillStyle = '#2A1A2E'; q.fillRect(x - 2, y - 2, bw + 4, bh + 4); q.fillStyle = '#2A3A6A'; q.fillRect(x, y, bw, bh); q.fillStyle = '#1E2A50'; q.fillRect(x, y, 6 * k, bh);
+    q.fillStyle = '#E8C468'; q.fillRect(x + 10 * k, y + 8 * k, bw - 16 * k, 2 * k); q.fillRect(x + 10 * k, y + bh - 10 * k, bw - 16 * k, 2 * k);
+    if (k > .6){ for (let i = 0; i < 12; i++){ const a = i / 12 * 6.283 - 1.57, r = 14 * k; q.fillStyle = i % 3 ? '#E8C468' : '#FFF4C8'; q.fillRect(80 + Math.cos(a) * r - 1, 76 + Math.sin(a) * r - 1, 2 * k, 2 * k); }
+      q.fillStyle = '#FFF4C8'; q.fillRect(78, 70, 4, 12); q.fillRect(74, 74, 12, 4); }
+    q.fillStyle = '#F6ECD6'; q.fillRect(x + bw, y + 3 * k, 3 * k, bh - 6 * k);
+    if (glow){ q.globalAlpha = glow; q.fillStyle = '#FFE9A0'; for (let i = 0; i < 18; i++){ const a = i / 18 * 6.283 + performance.now() / 900, r = 58 + Math.sin(performance.now() / 300 + i) * 4; q.fillRect(80 + Math.cos(a) * r, 80 + Math.sin(a) * r, 2, 2); } q.globalAlpha = 1; } };
+  const step = now => {
+    const t = now - t0; q.fillStyle = '#140D1E'; q.fillRect(0, 0, W, W);
+    if (t < 3200){
+      words.forEach((p, i) => { const k = Math.max(0, Math.min(1, (t - p.t0) / 2200)), e = k * k * (3 - 2 * k), x = p.x + (80 - p.x) * e, y = p.y + (80 - p.y) * e - Math.sin(k * Math.PI) * 40;
+        q.globalAlpha = 1 - Math.max(0, k - .85) * 6; q.font = '6px G11B, sans-serif'; q.textAlign = 'center'; q.fillStyle = '#2A1A2E'; q.fillText(p.w, x + 1, y + 1); q.fillStyle = k > .7 ? '#FFE9A0' : '#F6ECD6'; q.fillText(p.w, x, y); q.globalAlpha = 1;
+        if (i % 4 === 0){ q.fillStyle = '#FFE9A0'; q.fillRect(x - 8 + Math.sin(t / 90 + i) * 2, y - 6, 1, 1); } });
+      const g = Math.max(0, (t - 1800) / 1400); if (g > 0){ q.globalAlpha = Math.min(1, g); book(.4 + g * .6, 0); q.globalAlpha = 1; }
+      q.fillStyle = `rgba(255,240,180,${Math.max(0, 1 - Math.abs(t - 2900) / 300) * .8})`; q.fillRect(0, 0, W, W);
+    } else { book(1, Math.min(1, (t - 3200) / 600)); if (!cap.classList.contains('on')){ cap.innerHTML = '『열두 개의 밤』이 다시 책이 되었어요<br><span style="font-size:13px;color:var(--sub)">아울라 「....고마워요. 이번엔 코를 꼭 막고 읽을게요.」</span>'; cap.classList.add('on'); } }
+    if (!f.hidden) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step); f.onclick = () => { if (performance.now() - t0 > 3600) f.hidden = true; };
+}
+render();
+SHEET.onload = () => render();
+</script>
