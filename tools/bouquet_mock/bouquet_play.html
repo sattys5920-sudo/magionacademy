@@ -72,6 +72,34 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f-body);f
 #react b{display:block;font-family:var(--f-pxb);font-weight:400;color:var(--gold);margin-bottom:2px}
 #react p{margin:0;line-height:1.6;min-width:0;font-size:16px}
 #react .hearts{color:var(--pink);font-size:var(--fs-s);margin-top:4px;font-family:var(--f-pxb)}
+.grp{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.row .lab{margin:0;font-family:var(--f-pxb);font-size:var(--fs-s);color:var(--sub)}
+.row .lab b{font-weight:400;color:var(--text);margin-left:4px}
+.cost{font-size:12px;color:var(--sub);white-space:nowrap;font-family:var(--f-body)}
+.cost i{font-style:normal;margin-left:6px;padding:1px 6px;border-radius:8px;background:var(--panel);color:var(--gold);font-family:var(--f-pxb)}
+.cost.lack,.cost.lack i{color:var(--warn)}
+.cost.free{opacity:.8}
+.seg.g2{display:grid;grid-template-columns:1fr 1fr}.seg.g3{display:grid;grid-template-columns:repeat(3,1fr)}
+.fgrid{grid-template-columns:repeat(5,1fr)!important;gap:4px!important}
+.fl{min-height:0!important;padding:4px 2px 5px!important;gap:0!important;font-size:11px!important;line-height:1.25}
+.fl span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fl i{position:absolute;right:3px;top:2px;font-style:normal;font-family:var(--f-pxb);font-size:10px;color:var(--gold)}
+.fl.on{border:2px solid var(--accent);background:var(--line)}
+.dgrid{grid-template-columns:repeat(3,1fr)!important;gap:4px!important}
+.chipb{min-height:0!important;padding:8px!important;gap:3px!important;align-items:flex-start}
+.chipb span{font-family:var(--f-pxb)}
+.chipb .cost i{display:none}
+.need{gap:0!important;padding:2px 12px!important;display:block!important}
+.need li{display:flex!important;justify-content:space-between;gap:12px;padding:7px 0!important;border-top:0!important;font-size:var(--fs-s)}.need li + li{border-top:1px solid var(--line)!important}
+.need li b{font-family:var(--f-pxb);font-weight:400;color:var(--gold)}
+.need li b i{font-style:normal;color:var(--sub);margin-left:2px}
+.need li.lack b,.need li.lack b i{color:var(--warn)}
+.foot{padding:0 14px 14px;display:flex;flex-direction:column;gap:2px;position:sticky;bottom:0;background:linear-gradient(transparent,var(--panel) 30%)}
+.foot .next{width:100%}
+.panel{gap:16px!important}
+#stagebox{padding:10px!important;gap:6px!important}
+#cv{max-width:240px!important}
 input#card{width:100%;border:1px solid var(--line2);background:var(--panel2);color:var(--text);border-radius:10px;padding:10px;font:var(--fs) var(--f-body)}
 button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .hint{font-size:var(--fs-s);color:var(--sub);margin:0;text-align:center}
@@ -79,7 +107,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 
 
 <div id="app">
-  <div class="shead"><div class="title"><b>꽃다발 공방</b><span id="sub">포장지를 물들이고, 꽃을 골라 꽃말을 엮어요</span></div><span class="stat" id="stat"></span></div>
+  <div class="shead"><div class="title"><b>꽃다발 공방</b></div><span class="stat" id="stat"></span></div>
   <nav class="tabs" id="tabs"><button data-t="wrap" class="on">1 포장지</button><button data-t="flower">2 꽃</button><button data-t="deco">3 장식</button><button data-t="give">4 완성</button></nav>
   <div class="body">
     <section id="stagebox">
@@ -89,6 +117,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
     </section>
     <section class="panel" id="panel"></section>
   </div>
+  <div class="foot"><button class="next" id="nextbtn"></button><button class="ghost" id="refill" data-refill="1" hidden>시안용 · 재료 다시 채우기</button></div>
 </div>
 
 <script>
@@ -278,49 +307,45 @@ function needs(){
   return out;
 }
 const short = () => Object.entries(needs()).filter(([k, v]) => (INV[k] || 0) < v.n);
-const costTag = (k, n = 1) => k ? `<small class="${(INV[k] || 0) < n ? 'lack' : ''}">${k} ${n} (가진 것 ${INV[k] || 0})</small>` : '<small>재료 없음</small>';
-const swatches = (attr, cur, opts = {}) => `<div class="sw">${COL.map(c => `<button data-${attr}="${c.id}" class="${cur === c.id ? 'on' : ''}" style="background:${c.hex}" aria-label="${c.n}" title="${c.n}${c.dye ? ' · ' + c.dye : ''}"></button>`).join('')}</div>`;
+const costTag = (k, n = 1) => k ? `<span class="cost ${(INV[k] || 0) < n ? 'lack' : ''}">${k} ${n}<i>${INV[k] || 0}</i></span>` : '<span class="cost free">재료 없음</span>';
+const row = (label, cost) => `<div class="row"><span class="lab">${label}</span>${cost || ''}</div>`;
+const swatches = (attr, cur) => `<div class="sw">${COL.map(c => `<button data-${attr}="${c.id}" class="${cur === c.id ? 'on' : ''}" style="background:${c.hex}" aria-label="${c.n}" title="${c.n}"></button>`).join('')}</div>`;
 function panel(){
   const P = document.getElementById('panel'), W = S.wrap, PT = PB[W.pat], cnt = id => S.slots.filter(x => x === id).length;
+  let html = '', next = null;
   if (S.tab === 'wrap'){
     const extraN = PT.extra ? (PT.multi ? W.n - 1 : 1) : 0;
-    P.innerHTML = `<div class="step"><b>1</b>포장지 만들기 <span>목화솜 1 개로 포장지 한 장 · 색과 무늬마다 재료가 들어요</span></div>
-      <div class="lab">바탕 색 · ${CB[W.base].n}</div>${swatches('base', W.base)}${costTag(CB[W.base].dye)}
-      <div class="lab">무늬</div><div class="seg g4">${PATTERN.map(p => `<button data-pat="${p.id}" class="${W.pat === p.id ? 'on' : ''}">${p.n}</button>`).join('')}</div>
-      ${PT.multi ? `<div class="lab">줄무늬 색 수</div><div class="seg">${[2, 3].map(k => `<button data-sn="${k}" class="${W.n === k ? 'on' : ''}">${k} 색</button>`).join('')}</div>` : ''}
-      ${extraN ? [...Array(extraN)].map((_, i) => `<div class="lab">${PT.multi ? `줄 색 ${i + 1}` : PT.id === 'check' ? '체크 색' : `${PT.n} 색`} · ${CB[W.cols[i]].n}</div>${swatches('pc' + i, W.cols[i])}${costTag(CB[W.cols[i]].dye)}`).join('') : ''}
-      ${PT.stamp ? `<div class="lab">${PT.n} 무늬 도장</div>${costTag(PT.stamp)}` : ''}
-      <button class="next" data-t="flower">다음 · 꽃 고르기</button>`;
+    html = `<div class="grp">${row(`바탕 색 <b>${CB[W.base].n}</b>`, costTag(CB[W.base].dye))}${swatches('base', W.base)}</div>
+      <div class="grp">${row('무늬', PT.stamp ? costTag(PT.stamp) : '')}<div class="seg g4">${PATTERN.map(p => `<button data-pat="${p.id}" class="${W.pat === p.id ? 'on' : ''}">${p.n}</button>`).join('')}</div>
+      ${PT.multi ? `<div class="seg g2">${[2, 3].map(k => `<button data-sn="${k}" class="${W.n === k ? 'on' : ''}">${k} 색 줄무늬</button>`).join('')}</div>` : ''}</div>
+      ${[...Array(extraN)].map((_, i) => `<div class="grp">${row(`${PT.multi ? `줄 색 ${i + 1}` : '무늬 색'} <b>${CB[W.cols[i]].n}</b>`, costTag(CB[W.cols[i]].dye))}${swatches('pc' + i, W.cols[i])}</div>`).join('')}`;
+    next = ['flower', '다음 · 꽃 고르기'];
   } else if (S.tab === 'flower'){
-    P.innerHTML = `<div class="step"><b>2</b>꽃 고르기 <span>꽃 한 송이 = 가방의 꽃 하나</span></div>
-      <div class="lab">꽃다발 크기</div><div class="seg">${SIZES.map(([n, l]) => `<button data-size="${n}" class="${S.size === n ? 'on' : ''}">${l} · ${n} 송이</button>`).join('')}</div>
-      <div class="lab">누르면 한 송이씩 들어가요 · 위쪽 칸을 누르면 빠져요</div>
-      <div class="fgrid">${FL.map(f => { const have = INV['꽃 · ' + f.n] || 0, used = cnt(f.id); return `<button class="fl ${used > have ? 'over' : ''}" data-f="${f.id}" ${have - used <= 0 && !used ? 'disabled' : ''}><canvas width="32" height="32" data-ic="${f.id}"></canvas>${f.n}<small>${f.w}</small><span class="n">${used ? `${used} / ` : ''}가진 것 ${have}</span></button>`; }).join('')}</div>
-      <button class="next" data-t="deco">다음 · 리본과 장식</button>`;
-    P.querySelectorAll('[data-ic]').forEach(c => { const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(flowerIcon(FB[c.dataset.ic]), 0, 0); });
+    html = `<div class="seg g3">${SIZES.map(([n, l]) => `<button data-size="${n}" class="${S.size === n ? 'on' : ''}">${l.replace(' 꽃다발', '')} ${n} 송이</button>`).join('')}</div>
+      <div class="fgrid">${FL.map(f => { const have = INV['꽃 · ' + f.n] || 0, used = cnt(f.id); return `<button class="fl ${used ? 'on' : ''}" data-f="${f.id}" ${have - used <= 0 && !used ? 'disabled' : ''} title="${f.w}"><canvas width="32" height="32" data-ic="${f.id}"></canvas><span>${f.n}</span><i>${used ? used + '/' : ''}${have}</i></button>`; }).join('')}</div>`;
+    next = ['deco', '다음 · 리본과 장식'];
   } else if (S.tab === 'deco'){
-    P.innerHTML = `<div class="step"><b>3</b>리본과 장식 <span>리본은 털실 1 뭉치로 묶어요</span></div>
-      <div class="lab">리본 색 · ${CB[S.ribbon].n}</div>${swatches('rib', S.ribbon)}${costTag('털실 · ' + CB[S.ribbon].n)}
-      <div class="lab">장식 · 여러 개 골라도 돼요</div>
-      <div class="dgrid">${DECO.map(([k, l, cost]) => `<button class="chipb ${S.deco.has(k) ? 'on' : ''}" data-deco="${k}">${l}${cost.map(([m, n]) => costTag(m, n)).join('')}</button>`).join('')}</div>
-      ${S.deco.has('card') ? `<label class="lab" for="card">카드에 쓸 말 (20 자)</label><input id="card" maxlength="20" placeholder="예: 늘 고마워" value="${S.card.replace(/"/g, '&quot;')}">` : ''}
-      <button class="next" data-t="give">다음 · 완성하기</button>`;
-    const ci = P.querySelector('#card'); if (ci) ci.oninput = () => { S.card = ci.value; };
+    html = `<div class="grp">${row(`리본 <b>${CB[S.ribbon].n}</b>`, costTag('털실 · ' + CB[S.ribbon].n))}${swatches('rib', S.ribbon)}</div>
+      <div class="grp">${row('장식', '<span class="cost free">여러 개 고를 수 있어요</span>')}<div class="dgrid">${DECO.map(([k, l, cost]) => `<button class="chipb ${S.deco.has(k) ? 'on' : ''}" data-deco="${k}"><span>${l}</span>${cost.map(([m, n]) => costTag(m, n)).join('')}</button>`).join('')}</div></div>
+      ${S.deco.has('card') ? `<div class="grp">${row('카드에 쓸 말')}<input id="card" maxlength="20" placeholder="20 자까지" value="${S.card.replace(/"/g, '&quot;')}"></div>` : ''}`;
+    next = ['give', '다음 · 완성하기'];
   } else {
     const N = needs(), sh = short();
-    P.innerHTML = `<div class="step"><b>4</b>완성하고 선물하기</div>
-      <div class="lab">들어가는 재료</div>
-      <ul class="need">${Object.entries(N).map(([k, v]) => `<li class="${(INV[k] || 0) < v.n ? 'lack' : ''}"><span>${k}</span><span class="w">${v.why.join(' · ')}</span><span class="num">${v.n} / ${INV[k] || 0}</span></li>`).join('')}</ul>
-      ${S.made ? `<p class="ok">꽃다발 완성. 누구에게 줄까요</p><div class="npcs">${NPCS.map(n => `<button class="npc" data-npc="${n.id}"><canvas width="64" height="64" data-row="${n.row}"></canvas>${n.n}</button>`).join('')}</div>`
-        : `<button class="next big" data-make="1" ${sh.length || !S.slots.length ? 'disabled' : ''}>${!S.slots.length ? '꽃을 먼저 골라 주세요' : sh.length ? `재료가 모자라요 · ${sh.map(([k]) => k).slice(0, 2).join(', ')}${sh.length > 2 ? ' 외' : ''}` : '꽃다발 만들기'}</button>`}
-      <div id="react"><canvas width="64" height="64" id="rcv"></canvas><div><b id="rn"></b><p id="rt"></p><div class="hearts" id="rh"></div></div></div>
-      <button class="ghost" data-refill="1">시안용 · 가방 재료 다시 채우기</button>`;
-    const draw1 = () => P.querySelectorAll('[data-row]').forEach(c => { const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, 64, 64); q.drawImage(SHEET, 0, +c.dataset.row * 64, 64, 64, 0, 0, 64, 64); });
-    if (SHEET.complete) draw1(); else SHEET.onload = draw1;
+    html = S.made ? `<div class="grp">${row('누구에게 줄까요')}<div class="npcs">${NPCS.map(n => `<button class="npc" data-npc="${n.id}"><canvas width="64" height="64" data-row="${n.row}"></canvas>${n.n}</button>`).join('')}</div></div>`
+      : `<div class="grp">${row('들어가는 재료', `<span class="cost ${sh.length ? 'lack' : 'free'}">${sh.length ? `${sh.length} 가지 모자라요` : '다 있어요'}</span>`)}
+        <ul class="need">${Object.entries(N).map(([k, v]) => `<li class="${(INV[k] || 0) < v.n ? 'lack' : ''}"><span>${k}</span><b>${v.n}<i>/${INV[k] || 0}</i></b></li>`).join('')}</ul></div>`;
+    html += `<div id="react"><canvas width="64" height="64" id="rcv"></canvas><div><b id="rn"></b><p id="rt"></p><div class="hearts" id="rh"></div></div></div>`;
+    next = S.made ? null : ['make', !S.slots.length ? '꽃을 먼저 골라 주세요' : sh.length ? '재료가 모자라요' : '꽃다발 만들기', !S.slots.length || sh.length];
   }
+  P.innerHTML = html;
+  P.querySelectorAll('[data-ic]').forEach(c => { const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(flowerIcon(FB[c.dataset.ic]), 0, 0); });
+  const draw1 = () => P.querySelectorAll('[data-row]').forEach(c => { const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, 64, 64); q.drawImage(SHEET, 0, +c.dataset.row * 64, 64, 64, 0, 0, 64, 64); });
+  if (SHEET.complete) draw1(); else SHEET.onload = draw1;
+  const nb = document.getElementById('nextbtn'), rf = document.getElementById('refill');
+  if (next){ nb.hidden = false; nb.textContent = next[1]; nb.disabled = !!next[2]; nb.dataset.go = next[0]; } else nb.hidden = true;
+  rf.hidden = S.tab !== 'give';
   document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x.dataset.t === S.tab));
   document.getElementById('stat').textContent = `목화솜 ${INV['목화솜'] || 0}`;
-  document.getElementById('sub').textContent = { wrap: '1 · 포장지 만들기', flower: '2 · 꽃 고르기', deco: '3 · 리본과 장식', give: '4 · 완성하고 선물하기' }[S.tab];
 }
 function give(id){
   const n = NPCS.find(x => x.id === id); if (!S.made) return;
@@ -338,7 +363,8 @@ function give(id){
 function refresh(){ renderSlots(); panel(); draw(); }
 document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || b.disabled) return; const d = b.dataset, W = S.wrap;
-  if (d.t){ S.tab = d.t; panel(); document.getElementById('app').scrollIntoView({ block: 'start' }); return; }
+  if (d.go){ if (d.go === 'make'){ if (short().length) return; Object.entries(needs()).forEach(([k, v]) => INV[k] -= v.n); S.made = true; return panel(); } S.tab = d.go; panel(); document.getElementById('app').scrollIntoView({ block: 'start' }); return; }
+  if (d.t){ S.tab = d.t; panel(); return; }
   if (S.made && (d.base || d.pat || d.sn || d.pc0 || d.pc1 || d.size || d.f || d.rib || d.deco)) S.made = false;
   if (d.base){ W.base = d.base; return refresh(); }
   if (d.pat){ W.pat = d.pat; return refresh(); }
