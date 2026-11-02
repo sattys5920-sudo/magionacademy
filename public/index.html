@@ -4598,8 +4598,9 @@ function renderNpcGift(){
     <div class="pal">${items.map(k => `<button class="cell" style="width:52px;min-height:52px;padding:0" data-ngive="${k}" ${done ? 'disabled' : ''}>${ic(k)}<span class="n">${me.inv[k]}</span></button>`).join('') || '<div class="hint">줄 수 있는 물건이 없어요</div>'}</div>${typeof knGiftHTML === 'function' ? knGiftHTML(n) : ''}${typeof bqGiftHTML === 'function' ? bqGiftHTML(n) : ''}${backBtn}`);
   $('#back').onclick = closeSheet; on('[data-kngive]', b => { npcMsg = ''; knGive(n, +b.dataset.kngive); }); on('[data-bqgive]', b => { npcMsg = ''; bqGive(n, +b.dataset.bqgive); });
   on('[data-ngive]', b => { const k = b.dataset.ngive; if (done || !(me.inv[k] > 0)) return; me.inv[k]--; st.g = todayKey();
-    const kind = likes.includes(k) ? 'love' : dislikes.includes(k) ? 'hate' : 'like', d0 = { love: 40, like: 20, hate: -30 }[kind], d = d0 > 0 ? Math.round(d0 * (1 + sgFx('gift_affection'))) : d0;
-    me.giftLog = me.giftLog || {}; (me.giftLog[n.id] ||= {})[k] = kind; prankEv('gift', { id: n.id, k, kind }); trEv('gift', { id: n.id });   // 관계 패널의 「알아낸 선물」
+    const kb = /_s$/.test(k) && DISH_INFO[k] ? k.slice(0, -2) : k;   // 별 셋(최고의 맛) 요리도 같은 요리로 쳐요
+    const kind = likes.includes(kb) ? 'love' : dislikes.includes(kb) ? 'hate' : 'like', d0 = { love: 40, like: 20, hate: -30 }[kind], d = d0 > 0 ? Math.round(d0 * (1 + sgFx('gift_affection'))) : d0;
+    me.giftLog = me.giftLog || {}; (me.giftLog[n.id] ||= {})[kb] = kind; prankEv('gift', { id: n.id, k: kb, kind }); trEv('gift', { id: n.id });   // 관계 패널의 「알아낸 선물」
     const ls = (romanceOn(n.id) && P.gift_romance?.[kind]) || P.gift?.[kind] || { love: ['우와, 이거 정말 좋아해요! 고마워요!'], like: ['고마워요, 잘 쓸게요.'], hate: ['으.... 이건 좀 별로예요.'] }[kind];
     npcMsg = ''; closeSheet(); npcAddA(n.id, d); save(); syncNpcs(); setTimeout(() => { npcExprOnce = { love: 1, like: 0, hate: 2 }[kind]; npcMenu(n, fillVars(ls[Math.floor(Math.random() * ls.length)], n.id)); }, 100); });
 }
