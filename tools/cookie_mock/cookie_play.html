@@ -440,78 +440,125 @@ async function say(row, name, t, hold = 1400){
   v.style.display = 'none'; await sleep(100);
 }
 async function madSay(L){ for (const t of L) await say(7, '마들렌', t); }
-function famCard(html){ return new Promise(r => { const f = $('#fam'); $('#famin').innerHTML = html; f.hidden = false; after(); const c = f.querySelector('#rccv2'); if (c){ const q = c.getContext('2d'); drawCookie(q, recipeCookie(myRec()), 0, 0, 3); } f.onclick = () => { f.hidden = true; r(); }; }); }
+function famCard(html, ck){ return new Promise(r => { const f = $('#fam'); $('#famin').innerHTML = html; f.hidden = false; after(); const c = f.querySelector('#rccv2'); if (c){ const q = c.getContext('2d'); drawCookie(q, ck || recipeCookie(myRec()), 0, 0, 3); } f.onclick = () => { f.hidden = true; r(); }; }); }
 
-// ===== 시작 연출: 과자 교실 · 마들렌이 오븐 앞에서 리본만 고르다가 쿠키를 다 태움 → 플레이어가 들어옴 → 같이 굽자 · 레시피 카드
+// ===== 시작 연출: 과자 교실 · 쿠키 상자 주간 · 마들렌이랑 제일 쉬운 버터 동그라미 쿠키를 같이 굽는 튜토리얼 → 오븐 열림 · 쿠키 도감
 const CM = { OX: 164, OY: 82 };
 const IZ = 3;
 let IC = null;
 const ctp = (x, y) => [CM.OX + (x - y) * 8, CM.OY + (x + y) * 4];
-const OVEN = [288, 131];
+const OVEN = [288, 131], CT = [247, 162];
+const ICIMG = Object.assign(new Image(), { src: 'data:image/png;base64,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' });
 function introStart(){
   const o = $('#cine'); o.hidden = false;
   const cw = document.querySelector('.cwrap'), cc = $('#ccv'); cc.width = cw.clientWidth; cc.height = cw.clientHeight;
-  IC = { t0: performance.now(), me: { x: 10.6, y: 10.6, dir: 15, row: 11 }, mad: { x: 15.3, y: 1.9, dir: 5, row: 7, bob: true }, smoke: 0, puffs: [], last: 0, bang: null, shake: 0, bub: null, cloud: 0, emo: null, skip: false };
+  IC = { t0: performance.now(), me: { x: 10.4, y: 11.4, dir: 15, row: 11 }, mad: { x: 15.3, y: 1.9, dir: 5, row: 7 }, smoke: 0, puffs: [], last: 0, bang: null, shake: 0, bub: null, emo: null, words: [],
+    bowl: 0, flour: 0, fly: [], dough: 0, tray: null, glow: 0, carry: null, myTray: true };
   requestAnimationFrame(introLoop);
 }
+function cookieDot(q, x, y, b, z){ const c = rgb(doughCol('butter', b, 0)), r = rgb(doughCol('butter', b, 1)); q.fillStyle = '#3A2414'; q.fillRect(x - 3 * z, y - 2 * z, 6 * z, 4 * z); q.fillRect(x - 2 * z, y - 3 * z, 4 * z, 6 * z); q.fillStyle = r; q.fillRect(x - 2 * z, y - 2 * z, 4 * z, 4 * z); q.fillStyle = c; q.fillRect(x - 1 * z, y - 1 * z, 2 * z, 2 * z); }
+function trayDraw(q, x, y, b, z){ q.fillStyle = '#2A1A2E'; q.fillRect(x - 13 * z, y - 5 * z, 26 * z, 10 * z); q.fillStyle = '#B8B8C8'; q.fillRect(x - 12 * z, y - 4 * z, 24 * z, 8 * z); q.fillStyle = '#9898A8'; q.fillRect(x - 12 * z, y + 2 * z, 24 * z, 2 * z); [-7, 0, 7].forEach(dx => cookieDot(q, x + dx * z, y - z, b, z)); }
 function introLoop(now){
   if (!IC) return; requestAnimationFrame(introLoop);
   const c = $('#ccv'), q = c.getContext('2d'); q.imageSmoothingEnabled = false; const t = (now - IC.t0) / 1000;
   const sh = IC.shake > 0 ? Math.random() * 6 - 3 : 0; IC.shake = Math.max(0, IC.shake - 16);
-  const fx = 256, fy = 140, ox = fx - c.width / IZ / 2 + sh, oy = fy - c.height / IZ * .5;
+  const fx = 248, fy = 150, ox = fx - c.width / IZ / 2 + sh, oy = fy - c.height / IZ * .5;
   const S = (px, py) => [(px - ox) * IZ, (py - oy) * IZ], W2 = (x, y) => S(...ctp(x, y));
   q.fillStyle = '#120C18'; q.fillRect(0, 0, c.width, c.height);
   if (CANDY.complete) q.drawImage(CANDY, -ox * IZ, -oy * IZ, CANDY.width * IZ, CANDY.height * IZ);
   // 오븐 불빛
-  const [gx, gy] = S(...OVEN); q.fillStyle = `rgba(255,${IC.smoke > 1 ? 80 : 150},40,${.18 + Math.sin(t * 8) * .05 + IC.smoke * .08})`; q.beginPath(); q.arc(gx, gy + 6 * IZ, 16 * IZ, 0, 7); q.fill();
+  const [gx, gy] = S(...OVEN); q.fillStyle = `rgba(255,150,40,${.15 + Math.sin(t * 8) * .04 + IC.glow * .2})`; q.beginPath(); q.arc(gx, gy + 6 * IZ, (16 + IC.glow * 6) * IZ, 0, 7); q.fill();
+  // 작업대 위: 반죽 그릇 · 쟁반
+  const [bx, by] = S(...CT);
+  if (IC.bowl){ const wob = IC.bowl > 1 ? Math.round(Math.sin(t * 30)) * IZ : 0, R = (x, y, w, h, c) => { q.fillStyle = c; q.fillRect(bx + x * IZ + wob, by + y * IZ, w * IZ, h * IZ); };
+    R(-9, -5, 18, 3, '#2A1A2E'); R(-8, -2, 16, 2, '#2A1A2E'); R(-7, 0, 14, 2, '#2A1A2E'); R(-5, 2, 10, 2, '#2A1A2E'); R(-8, -4, 16, 1, '#C86A7A'); R(-7, -2, 14, 2, '#F49AAA'); R(-6, 0, 12, 1, '#F49AAA'); R(-6, 1, 12, 1, '#D87888'); R(-4, 2, 8, 1, '#D87888'); R(-6, -2, 3, 1, '#FFD0D8'); R(-8, -5, 16, 1, '#FFE8EC');
+    if (IC.dough){ R(-6, -6, 12, 2, '#3A2414'); R(-5, -6, 10, 2, '#F0CC86'); R(-3, -7, 6, 1, '#3A2414'); R(-2, -7, 4, 1, '#F8E0AA'); } }
+  if (IC.tray) trayDraw(q, ...S(CT[0] + 18, CT[1] + 6), IC.tray.b, IZ * .75);
+  // 밀가루 풀풀
+  if (IC.flour > 0){ for (let i = 0; i < 8; i++){ const a = t * 3 + i * .8, r = (t * 14 + i * 5) % 14; q.fillStyle = `rgba(255,255,255,${.7 - r / 20})`; q.fillRect(bx + Math.cos(a) * r * IZ, by - 6 * IZ - r * IZ * .6, IZ * 2, IZ * 2); } }
+  // 날아가는 재료
+  IC.fly = IC.fly.filter(f => t - f.t0 < f.dur + .1);
+  IC.fly.forEach(f => { const k = Math.min(1, (t - f.t0) / f.dur), x = f.x0 + (CT[0] - f.x0) * k, y = f.y0 + (CT[1] - 4 - f.y0) * k - Math.sin(k * Math.PI) * 18, [px, py] = S(x, y); if (ICIMG.complete) q.drawImage(ICIMG, f.i * 32, 0, 32, 32, px - 8 * IZ, py - 8 * IZ, 16 * IZ, 16 * IZ); });
   // 연기
   if (IC.smoke > 0 && now - IC.last > 140 / IC.smoke){ IC.last = now; IC.puffs.push({ x: OVEN[0] + (Math.random() * 8 - 4), y: OVEN[1], vx: -2 - Math.random() * 4, vy: -6 - Math.random() * 5, r: 2 + Math.random() * 2, t0: t, dark: IC.smoke > 1.2 }); }
   IC.puffs = IC.puffs.filter(p => t - p.t0 < 3.2);
-  IC.puffs.forEach(p => { const a = t - p.t0, [px, py] = S(p.x + p.vx * a, p.y + p.vy * a), r = (p.r + a * 3) * IZ; q.fillStyle = p.dark ? `rgba(48,40,44,${.75 - a * .22})` : `rgba(200,196,200,${.6 - a * .18})`; q.fillRect(Math.round(px - r), Math.round(py - r), Math.round(r * 2), Math.round(r * 2)); q.fillStyle = p.dark ? `rgba(80,70,74,${.5 - a * .15})` : `rgba(240,236,240,${.4 - a * .12})`; q.fillRect(Math.round(px - r * .5), Math.round(py - r * .9), Math.round(r), Math.round(r * .6)); });
+  IC.puffs.forEach(p => { const a = t - p.t0, [px, py] = S(p.x + p.vx * a, p.y + p.vy * a), r = (p.r + a * 3) * IZ; q.fillStyle = p.dark ? `rgba(60,50,54,${.7 - a * .2})` : `rgba(210,206,210,${.55 - a * .17})`; q.fillRect(Math.round(px - r), Math.round(py - r), Math.round(r * 2), Math.round(r * 2)); });
   // 사람들
   [IC.me, IC.mad].sort((a, b) => (a.x + a.y) - (b.x + b.y)).forEach(a => {
-    const [px, py] = W2(a.x, a.y), hop = a.bob ? Math.abs(Math.sin(t * 6)) * 1.5 * IZ : a.jump ? Math.abs(Math.sin(t * 14)) * 3 * IZ : 0;
+    const [px, py] = W2(a.x, a.y), hop = a.jump ? Math.abs(Math.sin(t * 12)) * 3 * IZ : a.nod ? Math.abs(Math.sin(t * 7)) * 1.5 * IZ : 0;
     q.fillStyle = 'rgba(0,0,0,.25)'; q.beginPath(); q.ellipse(px, py, 6 * IZ, 2.2 * IZ, 0, 0, 7); q.fill();
-    const col = a.walk ? a.dir + 1 + (Math.floor(t * 8) % 4) : a.bob ? a.dir + 1 + (Math.floor(t * 4) % 2) * 2 : a.dir;
+    const col = a.walk ? a.dir + 1 + (Math.floor(t * (a.run ? 14 : 8)) % 4) : a.dir;
     if (SHEET.complete) q.drawImage(SHEET, col * 64, a.row * 64, 64, 64, Math.round(px - 16 * IZ), Math.round(py - 28 * IZ - hop), 32 * IZ, 32 * IZ);
-    if (a.tray){ const ty = py - 10 * IZ; q.fillStyle = '#2A1A2E'; q.fillRect(px - 9 * IZ, ty - 1 * IZ, 18 * IZ, 5 * IZ); q.fillStyle = '#A8A8B8'; q.fillRect(px - 8 * IZ, ty, 16 * IZ, 3 * IZ); q.fillStyle = '#2A1C18'; [-6, -1, 4].forEach(dx => q.fillRect(px + dx * IZ, ty - 2 * IZ, 3 * IZ, 2 * IZ)); q.fillStyle = 'rgba(90,80,84,.6)'; q.fillRect(px - 4 * IZ, ty - (6 + (t * 6 % 4)) * IZ, 2 * IZ, 2 * IZ); }
+    if (a.carry) trayDraw(q, px, py - 11 * IZ - hop, a.carry.b, IZ * .6);
     if (a.sweat){ q.fillStyle = '#9AD4F0'; const dy = (t * 20) % 10; q.fillRect(px + 9 * IZ, py - 26 * IZ + dy, 2 * IZ, 3 * IZ); }
-    if (a.tear){ q.fillStyle = '#9AD4F0'; const dy = (t * 14) % 8; q.fillRect(px - 4 * IZ, py - 18 * IZ + dy, IZ, 2 * IZ); q.fillRect(px + 3 * IZ, py - 18 * IZ + (dy + 4) % 8, IZ, 2 * IZ); }
     if (IC.emo && IC.emo.a === a && now < IC.emo.until){ q.font = `${9 * IZ}px G11B, sans-serif`; q.textAlign = 'center'; q.lineWidth = 5; q.strokeStyle = '#3A2414'; q.strokeText(IC.emo.t, px, py - 32 * IZ); q.fillStyle = IC.emo.c || '#FFE9A0'; q.fillText(IC.emo.t, px, py - 32 * IZ); q.textAlign = 'left'; }
   });
-  if (IC.cloud > 0){ q.fillStyle = `rgba(40,32,36,${Math.min(.85, IC.cloud)})`; q.fillRect(0, 0, c.width, c.height); IC.cloud = Math.max(0, IC.cloud - .006); }
-  if (IC.bang){ q.font = `${12 * IZ}px G11B, sans-serif`; q.textAlign = 'center'; q.lineWidth = 7; q.strokeStyle = '#3A2414'; q.strokeText(IC.bang, gx, gy - 6 * IZ); q.fillStyle = '#FFB060'; q.fillText(IC.bang, gx, gy - 6 * IZ); q.textAlign = 'left'; }
-  if (IC.bub && now < IC.bub.until){ const [px, py] = W2(IC.bub.a.x, IC.bub.a.y); q.font = '14px G11, sans-serif'; const w = Math.ceil(q.measureText(IC.bub.text).width) + 16, bx = Math.max(4, Math.min(c.width - w - 4, px - w / 2)), by = py - 36 * IZ - 10;
-    q.fillStyle = '#22183F'; q.fillRect(bx - 2, by - 2, w + 4, 26); q.fillStyle = '#FFFFFF'; q.fillRect(bx, by, w, 22); q.fillStyle = '#22183F'; q.fillRect(px - 3, by + 24, 6, 2); q.fillText(IC.bub.text, bx + 8, by + 16); }
+  // 효과음 글자 (촵촵 · 뿅 · 띵)
+  IC.words = IC.words.filter(w => now < w.until);
+  IC.words.forEach(w => { const [px, py] = S(w.x, w.y), k = 1 - (w.until - now) / w.ms, rise = k * 10 * IZ; q.globalAlpha = Math.min(1, (1 - k) * 3); q.font = `${(w.big ? 11 : 8) * IZ}px G11B, sans-serif`; q.textAlign = 'center'; q.lineWidth = 6; q.strokeStyle = '#3A2414'; q.strokeText(w.t, px, py - rise); q.fillStyle = w.c || '#FFE9A0'; q.fillText(w.t, px, py - rise); q.textAlign = 'left'; q.globalAlpha = 1; });
+  if (IC.bub && now < IC.bub.until){ const [px, py] = W2(IC.bub.a.x, IC.bub.a.y); q.font = '14px G11, sans-serif'; const w = Math.ceil(q.measureText(IC.bub.text).width) + 16, bx2 = Math.max(4, Math.min(c.width - w - 4, px - w / 2)), by2 = py - 36 * IZ - 10;
+    q.fillStyle = '#22183F'; q.fillRect(bx2 - 2, by2 - 2, w + 4, 26); q.fillStyle = '#FFFFFF'; q.fillRect(bx2, by2, w, 22); q.fillStyle = '#22183F'; q.fillRect(px - 3, by2 + 24, 6, 2); q.fillText(IC.bub.text, bx2 + 8, by2 + 16); }
 }
-async function iwalk(a, x, y, ms){ const x0 = a.x, y0 = a.y, t0 = performance.now(), dx = x - x0, dy = y - y0, sx = (dx - dy) * 8, sy = (dx + dy) * 4; a.dir = Math.abs(sx) > Math.abs(sy) ? (sx > 0 ? 15 : 10) : (sy > 0 ? 0 : 5); a.walk = true; a.bob = false;
+async function iwalk(a, x, y, ms){ const x0 = a.x, y0 = a.y, t0 = performance.now(), dx = x - x0, dy = y - y0, sx = (dx - dy) * 8, sy = (dx + dy) * 4; a.dir = Math.abs(sx) > Math.abs(sy) ? (sx > 0 ? 15 : 10) : (sy > 0 ? 0 : 5); a.walk = true;
   await new Promise(r => { const f = now => { const k = Math.min(1, (now - t0) / ms); a.x = x0 + dx * k; a.y = y0 + dy * k; if (k < 1 && IC) requestAnimationFrame(f); else r(); }; requestAnimationFrame(f); }); a.walk = false; }
 function itoast(t){ const el = $('#ctoast'); el.textContent = t; el.classList.add('on'); clearTimeout(itoast.t); itoast.t = setTimeout(() => el.classList.remove('on'), 2400); }
 const bub = (a, text, ms = 1600) => { IC.bub = { a, text, until: performance.now() + ms }; return sleep(ms); };
 const emo = (a, t, c, ms = 900) => { IC.emo = { a, t, c, until: performance.now() + ms }; };
+const word = (t, x, y, c, big, ms = 900) => IC.words.push({ t, x, y, c, big, ms, until: performance.now() + ms });
 let introRun = 0;
 async function playIntro(){
   const run = ++introRun; introStart(); const M = IC.mad, ME = IC.me;
-  const alive = () => run === introRun && IC;
-  $('#cskip').onclick = () => { introRun++; IC = null; $('#cine').hidden = true; $('#blsay').style.display = 'none'; };
-  await sleep(600); if (!alive()) return;
-  itoast('과자 교실에서 달콤한 냄새가 나요'); await bub(M, '흥흥.... 리본은 분홍이 좋을까, 노랑이 좋을까.......', 2200); if (!alive()) return;
-  IC.smoke = .6; await bub(M, '아니야, 이 친구는 하늘색이야. 그럼 저 친구는.......', 2200); if (!alive()) return;
-  itoast('....아니, 타는 냄새예요'); IC.smoke = 1.6; await sleep(1600); if (!alive()) return;
-  IC.bang = '펑!'; IC.shake = 500; IC.cloud = .9; IC.smoke = 2.2; M.bob = false; M.jump = true; emo(M, '!', '#FF8A8A', 1200); await sleep(900); IC.bang = null; if (!alive()) return;
-  await bub(M, '콜록, 콜록.... 내 쿠키.......', 1500); M.jump = false; if (!alive()) return;
-  M.tray = true; M.dir = 0; IC.smoke = .7; M.tear = true; itoast('쟁반 위 쿠키가 전부 새까맣게 탔어요'); await sleep(1800); if (!alive()) return;
-  IC.smoke = .3; await iwalk(ME, 13.3, 4.5, 2200); ME.dir = 15; if (!alive()) return;
-  emo(M, '!', '#FFE9A0'); M.dir = 10; await sleep(700); M.tray = false; M.tear = false; M.sweat = true; if (!alive()) return;
-  for (const t of ['앗.... 언제부터 거기 있었어요.......', '이거요? ....쿠키예요. 아니, 쿠키였어요.', '반 친구들 한 명 한 명한테 다 다른 쿠키 상자를 만들어 주고 싶었는데.... 오븐 앞에서 리본만 고르다가 다 태워 버렸어요.']){ await say(7, '마들렌', t); if (!alive()) return; }
-  M.sweat = false;
-  await say(7, '마들렌', '그래서 말인데요.... 같이 구워 줄래요? 혼자 하면 또 리본만 고를 것 같아서요.'); if (!alive()) return;
-  await bub(ME, '좋아, 같이 굽자!', 1500); if (!alive()) return;
-  emo(M, '♥', '#FF9EC0', 1200); await say(7, '마들렌', '고마워요. 그럼.... 이거 받아요. 원래 당신 상자에 넣으려던 쿠키 레시피예요.'); if (!alive()) return;
-  const R = myRec();
-  await famCard(`<div class="rcard"><canvas id="rccv2" width="72" height="72"></canvas><div><b>${R.n}</b><p>${R.why}</p><small>${FL.find(f => f.id === R.f).n} 반죽 · ${SH.find(s => s[0] === R.s)[1]} 틀 · ${ICE[R.ice][0]} 아이싱 · ${TOP.find(t => t[0] === R.top)[1]}</small></div></div>`); if (!alive()) return;
-  for (const t of ['맛도, 모양도, 위에 올릴 것도.... 다 당신 생각하면서 골랐어요.', '첫 판은 이걸로 같이 구워요. 그다음엔 마음껏 구워서, 주고 싶은 사람한테 상자째 선물해요.', '아, 오븐 볼 때는.... 리본 고르지 말고요.']){ await say(7, '마들렌', t); if (!alive()) return; }
-  await sleep(300); if (run !== introRun) return; $('#cine').hidden = true; IC = null; ST.tab = 'note'; render();
+  const ok = () => run === introRun && IC;
+  const ms = async (t, hold) => { await say(7, '마들렌', t, hold); return ok(); };
+  $('#cskip').onclick = () => { introRun++; IC = null; $('#cine').hidden = true; $('#blsay').style.display = 'none'; $('#fam').hidden = true; };
+  await sleep(500); if (!ok()) return;
+  // 바쁘게 오가는 마들렌
+  itoast('과자 교실에서 고소한 냄새가 나요');
+  M.carry = { b: 60 }; M.run = true; await iwalk(M, 18.6, 5.2, 900); if (!ok()) return; M.carry = null; IC.tray = { b: 60 };
+  M.dir = 5; word('탁!', CT[0] + 18, CT[1], '#FFE9A0', false); await sleep(300);
+  await iwalk(M, 15.0, 1.4, 900); if (!ok()) return; M.dir = 5; IC.glow = 1; await bub(M, '한 판, 두 판, 세 판.... 좋아, 다음 판!', 1700); if (!ok()) return;
+  M.carry = { b: 0 }; await iwalk(M, 18.6, 5.2, 800); M.carry = null; M.run = false; IC.tray = null; if (!ok()) return;
+  // 플레이어 들어옴
+  iwalk(ME, 14.4, 9.6, 2000); await sleep(1200); if (!ok()) return;
+  emo(M, '!', '#FFE9A0'); M.dir = 10; M.jump = true; await bub(M, '어, 왔다!', 1000); M.jump = false; await sleep(900); if (!ok()) return;
+  ME.dir = 15;
+  if (!await ms('마침 잘 왔어! 이번 주는 과자 교실 쿠키 상자 주간이야.')) return;
+  if (!await ms('쿠키 구워서 예쁜 상자에 담고, 리본 묶어서 주고 싶은 사람한테 선물하는 거지.')) return;
+  if (!await ms('쿠키 구워 본 적 없지? 괜찮아. 제일 쉬운 걸로 같이 해 보자. 버터 동그라미 쿠키!')) return;
+  // 1 반죽
+  await Promise.all([iwalk(M, 18.7, 6.6, 900), iwalk(ME, 16.4, 8.8, 900)]); M.dir = 10; ME.dir = 5; IC.bowl = 1; await sleep(300); if (!ok()) return;
+  if (!await ms('먼저 반죽. 밀 이삭 가루에 달걀 하나, 염소젖 조금.')) return;
+  const t = (performance.now() - IC.t0) / 1000; [[3, -20], [0, -6], [1, 8]].forEach(([i, dx], k) => IC.fly.push({ i, t0: t + k * .35, dur: .7, x0: CT[0] + dx, y0: CT[1] - 34 }));
+  await sleep(1500); if (!ok()) return;
+  IC.bowl = 2; IC.flour = 1; IC.dough = 1; word('촵촵', CT[0], CT[1] - 12, '#FFFFFF', true, 1200); M.nod = true; await sleep(700); word('촵촵', CT[0] + 6, CT[1] - 14, '#FFFFFF', true, 1200); await sleep(900); IC.bowl = 1; IC.flour = 0; M.nod = false; if (!ok()) return;
+  await bub(ME, '촵촵.......', 1100); if (!ok()) return;
+  // 2 모양 틀
+  if (!await ms('반죽 다 됐다. 다음은 틀! 동그라미는 제일 쉬워. 꾹 눌렀다가.......')) return;
+  IC.tray = { b: 0 }; IC.dough = 0; word('뿅!', CT[0] + 18, CT[1] - 4, '#FFB0C8', true, 1000); IC.shake = 120; await sleep(1100); if (!ok()) return;
+  if (!await ms('뿅! 봐, 벌써 쿠키 같지?', 900)) return;
+  // 3 오븐
+  IC.tray = null; ME.carry = { b: 0 }; await Promise.all([iwalk(M, 14.8, 1.3, 1500), iwalk(ME, 17.7, 1.7, 1500)]); M.dir = 5; ME.dir = 5; if (!ok()) return;
+  ME.carry = null; ME.dir = 10; word('쏙', OVEN[0], OVEN[1] - 4, '#FFE9A0', false); IC.glow = 1.5; await sleep(600); M.dir = 15;
+  if (!await ms('이제부터가 진짜야. 노릇노릇해질 때 딱 꺼내야 해. 너무 일찍도, 너무 늦게도 안 돼.')) return;
+  await bub(ME, '지금?', 900); if (!ok()) return;
+  await bub(M, '....조금만 더.', 1300); if (!ok()) return;
+  await bub(M, '....지금!', 700); if (!ok()) return;
+  word('띵!', OVEN[0], OVEN[1] - 6, '#FFE9A0', true, 1100); IC.glow = 1; M.dir = 5; await sleep(500); M.carry = { b: 66 }; M.dir = 15; await sleep(700); if (!ok()) return;
+  // 4 맛보기
+  M.nod = true; await sleep(800); M.nod = false; emo(M, '♥', '#FF9EC0', 1200);
+  if (!await ms('음.... 합격! 처음인데 엄청 잘 구웠다. 가장자리 색 봐, 완전 노릇해.')) return;
+  M.carry = null;
+  if (!await ms('오늘부터 과자 교실 오븐은 마음대로 써. 맛도 바꾸고, 모양도 바꾸고, 아이싱으로 그림도 그리고.')) return;
+  await famCard(`<div class="rcard"><canvas id="rccv2" width="72" height="72"></canvas><div><b>쿠키 틀 세트 · 쿠키 도감</b><p>과자 교실 오븐을 쓸 수 있어요. 처음 구운 쿠키는 도감에 남아요.</p><small>버터 동그라미 쿠키 · 도감 1 / 50</small></div></div>`, { f: 'butter', s: 'circle', b: 66 }); if (!ok()) return;
+  if (!await ms('도감 다 채우면.... 나도 아직 못 본 쿠키가 나올지도 몰라. 그건 꼭 나한테 제일 먼저 보여 줘.')) return;
+  // 마들렌 쿠키가 탈 뻔
+  IC.smoke = 1.6; await sleep(900); if (!ok()) return;
+  emo(M, '!', '#FF8A8A', 1000); M.sweat = true; await bub(M, '아, 맞다. 내 쿠키!', 1000); if (!ok()) return;
+  M.dir = 5; M.jump = true; word('후다닥', OVEN[0] - 10, OVEN[1] + 6, '#FFE9A0', false, 800); await sleep(800); M.jump = false; IC.smoke = .3; M.carry = { b: 84 }; M.dir = 15; await sleep(500); if (!ok()) return;
+  if (!await ms('휴, 살았다. ....가장자리만 살짝 탔네. 이건 내가 먹을게. 비밀이야.')) return;
+  M.sweat = false; IC.smoke = 0;
+  itoast('이제 과자 교실 오븐에서 쿠키를 구울 수 있어요'); await sleep(2200);
+  if (run !== introRun) return; $('#cine').hidden = true; IC = null; render();
 }
 
 render(); renderAdm();
