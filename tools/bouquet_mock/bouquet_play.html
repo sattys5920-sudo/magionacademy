@@ -176,6 +176,8 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f-body);f
 .atype{display:grid;grid-template-columns:1fr auto;gap:4px 8px;padding:8px;border-top:1px solid var(--line)}
 .atype b{font-family:var(--f-pxb);font-weight:400;color:var(--pink)}.atype small{display:block;font-size:12px;color:var(--sub)}
 .atype p{grid-column:1/-1;margin:0;font-size:12px;line-height:1.6;color:var(--text)}
+#recall{display:flex;flex-direction:column;gap:8px}#recall[hidden]{display:none}
+.rcl{margin:0;min-height:44px;padding:10px 12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line2);font-size:15px;line-height:1.6}.rcl b{font-family:var(--f-pxb);font-weight:400;color:var(--gold);margin-right:6px}
 input#card{width:100%;border:1px solid var(--line2);background:var(--panel2);color:var(--text);border-radius:10px;padding:10px;font:var(--fs) var(--f-body)}
 button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .hint{font-size:var(--fs-s);color:var(--sub);margin:0;text-align:center}
@@ -687,7 +689,7 @@ function panel(){
     html = S.made ? `<div class="grp">${row('누구에게 줄까요')}<div class="npcs">${NPCS.map(n => `<button class="npc" data-npc="${n.id}"><canvas width="64" height="64" data-row="${n.row}"></canvas>${n.n}</button>`).join('')}</div></div>`
       : `<div class="grp">${row('들어가는 재료', `<span class="cost ${sh.length ? 'lack' : 'free'}">${sh.length ? `${sh.length} 가지 모자라요` : '다 있어요'}</span>`)}
         <ul class="need">${Object.entries(N).map(([k, v]) => `<li class="${(INV[k] || 0) < v.n ? 'lack' : ''}"><span>${k}</span><b>${v.n}<i>/${INV[k] || 0}</i></b></li>`).join('')}</ul></div>`;
-    html += `<div id="react"><canvas width="64" height="64" id="rcv"></canvas><div><b id="rn"></b><p id="rt"></p><div class="hearts" id="rh"></div></div></div>`;
+    html += `<div id="react"><canvas width="64" height="64" id="rcv"></canvas><div><b id="rn"></b><p id="rt"></p><div class="hearts" id="rh"></div></div></div><div id="recall" hidden><div class="row"><span class="lab">며칠 뒤 다시 말을 걸면</span><span class="cost free">평소 대사 사이에 가끔 나와요</span></div><div class="seg g3"><button data-rc="0">다음 날</button><button data-rc="1">3 일 뒤</button><button data-rc="2">일주일 뒤</button></div><p class="rcl" id="rcl"></p></div>`;
     next = S.made ? null : ['make', !S.slots.length ? '꽃을 먼저 골라 주세요' : sh.length ? '재료가 모자라요' : '꽃다발 만들기', !S.slots.length || sh.length];
   }
   P.innerHTML = html;
@@ -701,17 +703,39 @@ function panel(){
   document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x.dataset.t === S.tab));
   document.getElementById('stat').textContent = `목화솜 ${INV['목화솜'] || 0}`;
 }
+// 받은 꽃다발 이야기: 선물한 뒤 평소에 말을 걸면 가끔 (다음 날 · 3 일 뒤 · 일주일 뒤) · {꽃} 제일 많은 꽃 · {말} 그 꽃말 · {색} 포장지 색
+const RECALL = {
+  nabi: ['네가 준 {꽃}, 매점 창가에 뒀다냥. 손님들이 다 쳐다본다냥.', '{꽃이} 아직 싱싱하다냥. 매일 아침 물 갈아 준다냥. ....귀찮아서 하는 건 아니다냥.', '꽃은 시들었는데 {색} 포장지는 접어서 보관했다냥. 버리기 아까웠다냥.......'],
+  batri: ['어제 받은 꽃다발, 우편함 위에 꽂아 놨어. 배달 나갈 때마다 보여.', '{꽃} 꽃말이 「{말}」이라며. 배달하다가 계속 그 생각 했어.', '꽃은 말렸어. 편지 봉투에 한 장씩 넣어 줄까 해. 받는 사람들 좋아하겠지.......'],
+  kappa: ['{꽃}.... 연못 옆 바위에 꽂아 뒀다. 물고기들도 보러 온다.', '낚싯대보다 꽃다발을 더 자주 본다. 이상한 일이다.......', '시들기 전에 꽃잎 하나를 접시 물에 띄웠다. ....비밀이다.'],
+  aula: ['꽃다발은 사서 책상에 뒀어요. 책 읽다가 고개를 들면 {꽃이} 있어요.......', '{꽃}의 꽃말을 찾아봤어요. 「{말}」. ....책갈피에 적어 뒀어요.', '꽃잎 하나를 눌러서 꽃말 사전 사이에 끼웠어요. 이제 그 쪽을 펼 때마다 생각나요.......'],
+  mandi: ['히익.... 이번엔 제가 받은 꽃다발이에요. 화분 옆에 두고 매일 말을 걸어요.......', '{꽃이} 그러는데요, 아주 좋은 손이 묶어 줬대요. ....제가 물어봤어요.', '시든 꽃은 흙으로 돌려보냈어요. 그 자리에서 새싹이 나면.... 제일 먼저 보여 드릴게요.'],
+  jipsin: ['꽃다발을 모자에 꽂았어. 까마귀들이 무서워하지 않고 구경하러 와.', '밭에서 일하다가 {꽃} 냄새를 맡으면 힘이 나.', '꽃은 시들었는데, 지푸라기 가슴 안쪽에 한 송이 넣어 뒀어. 바스락거릴 때마다 생각나.'],
+  sera: ['양호실에 꽃병을 하나 꺼냈단다. {꽃이} 있으니 아이들이 덜 무서워하더구나.', '꽃은 매일 물을 갈아 주고 있단다. 선생님도 네 덕분에 기운이 나.', '{색} 포장지는 서랍에 넣어 뒀어. 힘든 날 꺼내 보려고.......'],
+  madeleine: ['꽃다발, 가게 진열대 맨 앞에 뒀어. 빵보다 손님들이 더 좋아하더라.', '{꽃} 색으로 아이싱을 해 봤어. 맛은.... 꽃다발만큼은 아니고.', '꽃잎을 말려서 차에 띄워 봤어. 다음에 오면 한 잔 줄게.......'],
+  stella: ['꽃다발을 천막 입구에 걸었어요. 별들이 오늘따라 반짝여요.......', '{꽃}의 꽃말 「{말}」.... 어젯밤 별자리랑 같은 말을 하고 있었어요.', '꽃은 시들었지만 별은 기억해요. 저도요.......'],
+  leo: ['꽃다발, 사육장 창문에 뒀다. 양들이 먹으려고 해서 높이 올렸어.', '{꽃} 아직 멀쩡하다. 생물들 밥 줄 때마다 같이 물 준다.', '시든 꽃은 말려서 둥지 깔개에 섞었어. 알들이 좋아하더라. ....너한테 고맙다고 전하래.'],
+  otumo: ['삐빅. 꽃다발 데이터 저장 완료. 위치: 제 머리 위. 균형 유지 중입니다.', '{꽃} 꽃말 「{말}」. 매일 아침 재생하고 있습니다. 냉각 팬이 조용해집니다.', '꽃은 시들었지만 기록은 시들지 않습니다. 제일 소중한 폴더에 넣었습니다.......']
+};
+let lastGift = null;
+function recallLine(i){
+  const g = lastGift; if (!g) return '';
+  const jong = w => { const c = w.charCodeAt(w.length - 1) - 0xAC00; return c >= 0 && c <= 11171 && c % 28 !== 0; };
+  return RECALL[g.npc][i].replace(/\{꽃이\}/g, g.flower + (jong(g.flower) ? '이' : '가')).replace(/\{꽃\}/g, g.flower).replace(/\{말\}/g, g.word).replace(/\{색\}/g, g.color);
+}
 function give(id){
   const n = NPCS.find(x => x.id === id); if (!S.made) return;
   const m = meaning(), has = S.slots.includes(n.like), bad = S.slots.includes(n.hate);
   let line = m.kind === 'love' ? n.say.love : m.kind === 'prank' ? n.say.prank : has ? n.say.like : bad ? n.say.hate : n.say.base;
   const h = 20 + (has ? 40 : 0) - (bad ? 30 : 0) + (m.kind === 'love' || m.kind === 'cheer' || m.kind === 'sorry' ? 20 : 0) + (S.deco.size * 3) + (S.size === 7 ? 15 : S.size === 5 ? 8 : 0) + (S.wrap.pat !== 'plain' ? 5 : 0);
   if (S.card.trim()) line += ` ....카드도 있네. 「${S.card.trim()}」. 잘 간직할게.`;
+  { const cnt = {}; S.slots.forEach(x => cnt[x] = (cnt[x] || 0) + 1); const main = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0]; lastGift = { npc: id, flower: FB[main].n, word: KNOWN.has(main) ? FB[main].w : FB[main].w, color: CB[S.wrap.base].n }; }
   S.made = false; panel();
   const r = document.getElementById('react'); r.classList.add('on');
   document.getElementById('rn').textContent = n.n; document.getElementById('rt').textContent = line;
   document.getElementById('rh').textContent = `호감도 ${h >= 0 ? '+' : ''}${h}${has ? ' · 좋아하는 꽃' : ''}${bad ? ' · 싫어하는 꽃' : ''}`;
   const q = document.getElementById('rcv').getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, 64, 64); q.drawImage(SHEET, 0, n.row * 64, 64, 64, 0, 0, 64, 64);
+  const rc = document.getElementById('recall'); rc.hidden = false; document.getElementById('rcl').textContent = '';
   r.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 function refresh(){ renderSlots(); panel(); draw(); }
@@ -734,6 +758,7 @@ document.addEventListener('click', e => {
   if (d.refill){ INV = { ...INV0 }; S.made = false; return refresh(); }
   if (d.npc) return give(d.npc);
   if (d.hunt) return hunt(d.hunt);
+  if (d.rc !== undefined && lastGift){ document.querySelectorAll('[data-rc]').forEach(x => x.classList.toggle('on', x === b)); document.getElementById('rcl').innerHTML = `<b>${NPCS.find(n => n.id === lastGift.npc).n}</b> ${recallLine(+d.rc)}`; return; }
   if (d.pg){ noteOpen = d.pg; return panel(); }
 });
 function renderAdm(){
