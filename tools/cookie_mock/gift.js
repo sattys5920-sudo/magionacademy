@@ -72,21 +72,22 @@ function giftLoop(now){
     if (isN && a.sweat){ bmp(q, 'sweat', px + 10 * GZ, py - 26 * GZ - lift + (t * 10 % 4), GZ); }
     // 상자: 플레이어 손 / NPC 손 / 머리 위
     const b = GC.box;
-    if ((b.st === 'held' && !isN) || (b.st === 'npc' && isN)){ const img = boxImg(GC.B, false); const bob = a.walk ? Math.abs(Math.sin(t * 16)) * GZ * .6 : b.st === 'npc' ? Math.sin(t * 5) * GZ * .4 : 0, face = a.dir === 15 ? 1 : a.dir === 10 ? -1 : 0; q.drawImage(img, px - 24 + face * 3 * GZ, py - 9 * GZ - 19 - hop - lift + bob, 48, 38); }
+    if (b.st === 'npc' && isN){ const img = boxImg(GC.B, false), bob = Math.sin(t * 3) * 2 * GZ, sx = Math.cos(t * 4); q.save(); q.translate(px + 3 * GZ, py - 27 * GZ - lift + bob); q.scale(Math.abs(sx) < .12 ? .12 * Math.sign(sx || 1) : sx, 1); q.drawImage(img, -24, -19, 48, 38); q.restore(); q.fillStyle = 'rgba(255,240,180,.5)'; for (let i = 0; i < 3; i++){ const an = t * 3 + i * 2.1; q.fillRect(px + 3 * GZ + Math.cos(an) * 12 * GZ, py - 27 * GZ - lift + bob + Math.sin(an) * 4 * GZ, GZ, GZ); } }
+    if (b.st === 'held' && !isN){ const img = boxImg(GC.B, false); const bob = a.walk ? Math.abs(Math.sin(t * 16)) * GZ * .6 : b.st === 'npc' ? Math.sin(t * 5) * GZ * .4 : 0, face = a.dir === 15 ? 1 : a.dir === 10 ? -1 : 0; q.drawImage(img, px - 24 + face * 3 * GZ, py - 9 * GZ - 19 - hop - lift + bob, 48, 38); }
     if (isN && GC.onHead){ const img = boxImg(GC.B, false), sway = Math.sin(t * 5) * 6 * GZ; q.save(); q.translate(px + sway * .3, py - 30 * GZ - lift); q.rotate(Math.sin(t * 5) * .25); q.drawImage(img, -30, -48, 60, 48); q.restore(); }
   });
   const b = GC.box;
-  if (b.st === 'fly'){ const k = Math.min(1, (now - b.t) / 600), x = mpx + (npx - mpx) * k, y = mpy + (npy - mpy) * k - 9 * GZ - Math.sin(k * Math.PI) * 6 * GZ; q.drawImage(boxImg(GC.B, false), x - 24 + (1 - 2 * k) * 3 * GZ, y - 19, 48, 38); }
-  if (b.st === 'open'){ const img = boxImg(GC.B, true); q.drawImage(img, npx - 36 - 2 * GZ, npy - 26, 72, 58); }
+  if (b.st === 'fly'){ const k = Math.min(1, (now - b.t) / 600), x = mpx + (npx - mpx) * k, y = mpy + (npy - mpy) * k - (9 + 18 * k) * GZ - Math.sin(k * Math.PI) * 8 * GZ; q.drawImage(boxImg(GC.B, false), x - 24 + (1 - 2 * k) * 3 * GZ, y - 19, 48, 38); }
+  if (b.st === 'open'){ const img = boxImg(GC.B, true), bob = Math.sin(t * 3) * 2 * GZ; q.drawImage(img, npx + 3 * GZ - 36, npy - 27 * GZ - 29 + bob, 72, 58); }
   // 떠오르는 쿠키
-  if (GC.cookie){ const k = Math.min(1, (now - GC.cookie.t) / 500), cy = npy - 30 * GZ - k * 8 * GZ, cx = npx - 18 * GZ; GC.cpos = [cx, cy]; const tmp = document.createElement('canvas'); tmp.width = 24; tmp.height = 24; const g = tmp.getContext('2d'); drawCookie(g, GC.ck, 0, 0, 1);
+  if (GC.cookie){ const k = Math.min(1, (now - GC.cookie.t) / 500), cy = npy - 36 * GZ - k * 8 * GZ, cx = npx + 3 * GZ; GC.cpos = [cx, cy]; const tmp = document.createElement('canvas'); tmp.width = 24; tmp.height = 24; const g = tmp.getContext('2d'); drawCookie(g, GC.ck, 0, 0, 1);
     if (GC.bites){ g.globalCompositeOperation = 'destination-out'; for (let i = 0; i < GC.bites; i++){ g.beginPath(); g.arc(22 - i * 2, 4 + i * 5, 4 + i, 0, 7); g.fill(); } g.globalCompositeOperation = 'source-over'; }
     if (GC.bites < 4){ q.fillStyle = 'rgba(255,240,180,.35)'; q.beginPath(); q.arc(cx, cy, 20 * GZ * .9, 0, 7); q.fill(); q.drawImage(tmp, cx - 24 * GZ / 2 * .9, cy - 24 * GZ / 2 * .9, 24 * GZ * .9, 24 * GZ * .9); } }
   GC.crumbs = GC.crumbs.filter(f => now - f.t < 700); GC.crumbs.forEach(f => { const a = (now - f.t) / 1000; q.fillStyle = f.c; q.fillRect(f.x + f.vx * a * 60, f.y + f.vy * a * 60 + 300 * a * a, GZ * 1.5, GZ * 1.5); });
   GC.fx.filter(f => !f.ground).forEach(f => drawFx(q, f, t, npx, npy));
   GC.fx = GC.fx.filter(f => t - f.t0 < f.life);
   if (GC.stamp){ const k = Math.min(1, (now - GC.stamp.at) / 200), s = 2.2 - k * 1.2; q.save(); q.translate(npx, npy - 44 * GZ); q.rotate(-.18); q.scale(s, s); q.font = `${9 * GZ}px G11B, sans-serif`; q.textAlign = 'center'; const w = q.measureText(GC.stamp.tx).width + 10 * GZ; q.strokeStyle = '#E8455A'; q.lineWidth = GZ * 1.2; q.strokeRect(-w / 2, -8 * GZ, w, 11 * GZ); q.fillStyle = '#E8455A'; q.fillText(GC.stamp.tx, 0, 0); q.restore(); q.textAlign = 'left'; }
-  if (GC.emo && now < GC.emo.until){ q.font = `${9 * GZ}px G11B, sans-serif`; q.textAlign = 'center'; q.lineWidth = 5; q.strokeStyle = '#3A2414'; const yy = npy - 34 * GZ - GC.lift * GZ; q.strokeText(GC.emo.t, npx, yy); q.fillStyle = GC.emo.c || '#FFE9A0'; q.fillText(GC.emo.t, npx, yy); q.textAlign = 'left'; }
+  if (GC.emo && now < GC.emo.until){ q.font = `${9 * GZ}px G11B, sans-serif`; q.textAlign = 'center'; q.lineWidth = 5; q.strokeStyle = '#3A2414'; const yy = npy - 30 * GZ - GC.lift * GZ, ex = npx + 15 * GZ; q.strokeText(GC.emo.t, ex, yy); q.fillStyle = GC.emo.c || '#FFE9A0'; q.fillText(GC.emo.t, ex, yy); q.textAlign = 'left'; }
   if (GC.bub && now < GC.bub.until){ const a = GC.bub.a, [px, py] = W2(a.x, a.y); q.font = '14px G11, sans-serif'; const w = Math.ceil(q.measureText(GC.bub.text).width) + 16, bx = Math.max(4, Math.min(c.width - w - 4, px - w / 2)), by = py - 40 * GZ - 10 - (a === GC.np ? GC.lift * GZ : 0);
     q.fillStyle = '#22183F'; q.fillRect(bx - 2, by - 2, w + 4, 26); q.fillStyle = '#FFFFFF'; q.fillRect(bx, by, w, 22); q.fillStyle = '#22183F'; q.fillRect(px - 3, by + 24, 6, 2); q.fillText(GC.bub.text, bx + 8, by + 16); }
 }
