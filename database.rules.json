@@ -512,6 +512,32 @@
     "bouquet": {
       ".read": "auth != null",
       ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'"
+    },
+    "ltr": {
+      ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+      "ctl": {
+        ".read": "auth != null"
+      },
+      "assign": {
+        ".read": "auth != null"
+      },
+      "drop": {
+        ".read": "auth != null",
+        "$to": {
+          "$d": {
+            ".write": "auth != null && (!data.exists() || auth.token.email === 'magionadmin@magionacademy.app') && newData.child('by').val() === auth.uid"
+          }
+        }
+      },
+      "reply": {
+        ".read": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+        "$uid": {
+          "$d": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.child('t').isString() && newData.child('t').val().length <= 80"
+          }
+        }
+      }
     }
   }
 }
