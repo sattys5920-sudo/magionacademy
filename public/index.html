@@ -4666,6 +4666,7 @@ document.addEventListener('click', async e => {
   if (act === 'story'){ npcClose(); npcGiftId = n.id; return openSheet('home', 'npcstory'); }
   if (act === 'knit'){ npcClose(); return knLeo(); }
   if (act === 'bqnote'){ npcClose(); return bqOpen('note'); }
+  if (act === 'bqmeet'){ npcClose(); if (!bqOn && me.bq && !me.bq.bench) bqMeet2(); return; }
   if (act === 'bqmind'){ npcClose(); return bqMind(); }
   if (act === 'ltbox'){ npcClose(); return ltBox(); }
   if (act === 'ckoven'){ npcClose(); return CK.open('bake'); }
@@ -10316,7 +10317,7 @@ function bqDrop(kind){
   if (!left.length || Math.random() > .3) return;
   const f = left[Math.floor(Math.random() * left.length)], first = !bqPgN(); me.bq.pg[f.id] = 1; bqOpenPg = f.id; save();
   setTimeout(() => { famCard(`<img src="art/bq_page.png?v=1" alt="" style="width:64px;height:64px;image-rendering:pixelated"><b>꽃말 쪽지</b><small>「${esc(f.n)}」 꽃말 「${esc(f.w)}」이 맨디의 수첩에 적혔어요</small>`, null, 2400); sfx('sparkle');
-    if (first && !me.bq.bench) setTimeout(() => toast('맨디에게 가 보자 · 공예 교실에서 맨디가 기다리고 있어요'), 2700); }, 1300);
+    if (first && !me.bq.bench) setTimeout(() => toast('맨디에게 가 보자 · 독초 온실(저녁엔 늪)에서 맨디가 기다리고 있어요'), 2700); }, 1300);
 }
 // ---------- 연출 도구 ----------
 const bqFace = g => { const I = NPC_IMG_STAGE || (NPC_IMG_STAGE = Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` })); g.fillStyle = '#1E2A20'; g.fillRect(0, 0, 32, 32); if (I.complete && I.naturalWidth) g.drawImage(I, 21, 4 * 64 + 27, 28, 28, 2, 2, 28, 28); };
@@ -10440,7 +10441,7 @@ function bqRender(){
   if (bqTab === 'note'){
     const f = BQ_FB[bqOpenPg] || BQ_FL[0], k = !!B.pg[f.id];
     body = `<div class="bqrow"><b>맨디의 꽃말 수첩 ${bqPgN()} / 21</b><span>채집 ${BQ_FL.filter(x => BQ_PAGE[x.id][0] === '채집' && B.pg[x.id]).length} / 14 · 낚시 ${BQ_FL.filter(x => BQ_PAGE[x.id][0] === '낚시' && B.pg[x.id]).length} / 7</span></div><div class="bqbar"><i style="width:${bqPgN() / 21 * 100}%"></i></div>
-      ${!B.bench && bqPgN() ? '<div class="bqquest"><b>맨디에게 가 보자</b><span>꽃말을 찾았어요. 공예 교실에서 맨디가 기다리고 있어요</span></div>' : ''}
+      ${!B.bench && bqPgN() ? '<div class="bqquest"><b>맨디에게 가 보자</b><span>꽃말을 찾았어요. 독초 온실(저녁엔 늪)에 있는 맨디에게 보여 주세요</span></div>' : ''}
       <div class="bqbook"><img src="art/bq_open.png?v=1" alt=""><span class="ic0">${ic(BQ_ITEM[f.id])}</span><b class="nm">${esc(f.n)}</b><em class="wd">「${k ? esc(f.w) : '???'}」</em><p class="tx ${k ? '' : 'unk'}">${k ? esc(BQ_PAGE[f.id][1]) : `아직 쪽지를 못 찾았어요. ${BQ_PAGE[f.id][0]}하다 보면 나올지도 몰라요.......`}</p></div>
       <div class="bqgrid">${BQ_FL.map(x => `<button data-bqpg="${x.id}" class="${bqOpenPg === x.id ? 'sel' : ''}">${ic(BQ_ITEM[x.id])}<span><b>${esc(x.n)}</b><em class="${B.pg[x.id] ? 'k' : ''}">${B.pg[x.id] ? esc(x.w) : '???'}</em></span></button>`).join('')}</div>
       ${B.bench ? (atBench ? '' : '<div class="s sub">꽃다발은 공예 교실 벽의 꽃다발 작업대에서 만들어요</div>') : ''}`;
@@ -10522,15 +10523,35 @@ function bqRecall(id){
   const jong = w => { const c = w.charCodeAt(w.length - 1) - 0xAC00; return c >= 0 && c <= 11171 && c % 28 !== 0; };
   return L[k].replace(/\{꽃이\}/g, g.f + (jong(g.f) ? '이' : '가')).replace(/\{꽃\}/g, g.f).replace(/\{말\}/g, g.w).replace(/\{색\}/g, g.c);
 }
+// ---------- 첫 꽃말을 찾고 맨디(독초 온실 · 저녁엔 늪)를 만나면: 칭찬 → 공예 교실 벽에 작업대를 두고 와요 ----------
+const bqMandiNear = () => { const n = World.npcAt && World.npcAt('mandi'), m = World.meAt && World.meAt(); return !!(n && m && Math.hypot(n.x - m.x, (n.y + 26) - m.y) < 70); };
+async function bqMeet2(){
+  bqOn = true; const bs = BQ_BENCH_SPOTS[0];
+  try {
+    closeSheet(); npcClose(); const np = World.npcAt('mandi'); if (np && World.meTile){ const t = World.meTile(); World.faceTo && World.faceTo(t.x + Math.sign(np.x - World.meAt().x), t.y); }
+    World.sayNpc && World.sayNpc('mandi', '아.......', 1600); await famSleep(900);
+    await bqSay('아, 오셨어요. 수첩 봤어요. 벌써 꽃말을 하나 찾으셨네요.......');
+    World.sayNpc && World.sayNpc('mandi', '♥', 1600); sfx('heart');
+    await bqSay('잘했네요. 히익, 제가 칭찬하니까 이상하죠. 그래도.... 정말 잘했어요.');
+    await bqSay('저기.... 앞으로는 꽃말을 담아서, 누군가에게 선물할 꽃다발을 만들어 보는 건 어때요?');
+    World.say('me', '좋아요.......'); await famSleep(1100);
+    await bqSay('마음을 말로 하기 어려울 때.... 꽃이 대신 말해 주거든요. 제가 그랬던 것처럼요.......', 1600);
+    await bqSay('공예 교실 벽에 꽃다발 작업대를 하나 두고 올게요. 포장지랑 리본 만드는 법도 적어 둘게요.');
+    me.bq.bench = bs; save(); bqBenchOn = ''; bqBench(); sfx('sparkle');
+    const img = bqBenchImg(); await famCard(`<canvas id="bqcard" width="34" height="40" style="width:68px;height:80px;image-rendering:pixelated"></canvas><b>꽃다발 작업대</b><small>공예 교실 벽에 생겼어요 · 작업대를 눌러 꽃다발을 만들어요</small>`, () => { const c = $('#bqcard'); if (c) c.getContext('2d').drawImage(img, 0, 0); }, 2600);
+    toast('공예 교실에 「꽃다발 작업대」가 생겼어요. 작업대를 눌러 꽃다발을 만들어요');
+  } catch(e){ errReport('bouquet', '꽃다발 작업대 연출 오류: ' + e.message, e.stack || ''); if (me.bq && !me.bq.bench){ me.bq.bench = bs; save(); } }
+  finally { $('#blsay') && ($('#blsay').style.display = 'none'); bqOn = false; bqBenchOn = ''; }
+}
 // ---------- 맨디 대화 단추 · 매 틱 ----------
-const bqMandiBtn = () => me && me.bq && me.bq.met ? `<button class="btn sm go" data-nx="bqnote">꽃말 수첩</button>${BQ_MANDI[me.bq.my].f.every(x => me.bq.pg[x]) ? '<button class="btn sm go" data-nx="bqmind">맨디의 마음</button>' : ''}` : '';
+const bqMandiBtn = () => me && me.bq && me.bq.met ? `${!me.bq.bench && bqPgN() ? '<button class="btn sm go" data-nx="bqmeet">꽃말 쪽지 보여 주기</button>' : ''}<button class="btn sm go" data-nx="bqnote">꽃말 수첩</button>${BQ_MANDI[me.bq.my].f.every(x => me.bq.pg[x]) ? '<button class="btn sm go" data-nx="bqmind">맨디의 마음</button>' : ''}` : '';
 function bqTick(){
   if (!me) return; bqBench(); if (bqOn) return; const where = World.where();
   if (where !== 'craft') bqSkip = false;
-  if (!bqCtl || !bqCtl.open || bqSkip || uiBusy() || !(World.meAt && World.meAt())) return;
+  if (bqSkip || uiBusy() || !(World.meAt && World.meAt())) return;
+  if (me.bq && me.bq.met && !me.bq.bench && bqPgN() >= 1){ if (bqMandiNear() && evTurn('bq')) bqMeet2(); return; }   // 첫 쪽지를 찾았으면 맨디 곁에 가면 (이벤트를 꺼도)
+  if (!bqCtl || !bqCtl.open) return;
   if (!(me.bq && me.bq.met)){ if (!/^(gt_|arena|room_)/.test(where) && evTurn('bq')) bqIntro(); return; }
-  if (where !== 'craft') return;
-  if (!me.bq.bench && bqPgN() >= 1 && evTurn('bq')) bqMeet();
 }
 function bqListen(){
   if (bqOffs.length) return; bqOffs.push(GDB.on('bouquet/ctl', v => { bqCtl = v || null; }), GDB.on('bouquet/assign', v => { bqAssign = v || {}; }));
@@ -10547,7 +10568,7 @@ function adminBqHTML(){
     <div class="s" style="margin:6px 0">맨디의 꽃다발 배정: 학생마다 어떤 친구인지 고르면 맞는 꽃 세 송이가 정해져요 (시작 연출 전에 정해 두세요 · 이미 받은 학생은 바뀌지 않아요)</div>
     ${ids.map(id => { const cur = P[id].bq && P[id].bq.met ? P[id].bq.my : (A[id] ?? ''); return `<div class="sdarow"><span><b>${esc(P[id].nick)}</b></span><select data-bqas="${id}" ${P[id].bq && P[id].bq.met ? 'disabled' : ''}><option value="">자동</option>${BQ_MANDI.map((m, k) => `<option value="${k}" ${String(cur) === String(k) ? 'selected' : ''}>${esc(m.n)}</option>`).join('')}</select><span class="s">${st(id)}</span></div>`; }).join('')}
     <details><summary class="s">꽃다발 12 종</summary>${BQ_MANDI.map(m => `<div class="s"><b>${esc(m.n)}</b> · ${esc(m.d)} · ${m.f.map(x => BQ_FB[x].n).join(' · ')}</div>`).join('')}</details>
-    <div class="s" style="margin-top:6px">시작하면 학생마다 바로 공예 교실로 옮겨져 맨디가 꽃다발을 건네는 연출이 나오고, 꽃말 쪽지는 채집 · 낚시에서 가끔 나와요. 첫 쪽지를 찾고 공예 교실에 다시 오면 맨디가 벽에 꽃다발 작업대를 놓아 줘요.</div></div>`;
+    <div class="s" style="margin-top:6px">시작하면 학생마다 바로 공예 교실로 옮겨져 맨디가 꽃다발을 건네는 연출이 나오고, 꽃말 쪽지는 채집 · 낚시에서 가끔 나와요. 첫 쪽지를 찾고 독초 온실(저녁엔 늪)의 맨디에게 가면, 맨디가 공예 교실 벽에 꽃다발 작업대를 놓아 줘요.</div></div>`;
 }
 document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('[data-bqas]'); if (!s) return; GDB.set('bouquet/assign/' + s.dataset.bqas, s.value === '' ? null : +s.value).then(() => toast('꽃다발 배정을 바꿨어요')); });
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-bqa]'); if (!b) return;
