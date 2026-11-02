@@ -4672,6 +4672,14 @@ document.addEventListener('click', async e => {
   if (act === 'ev'){ const k = +b.dataset.k, ev = await npcEvent(n.id, k); npcClose(); if (ev) evPlay(n, k, ev, {}); }
 });
 let npcGiftId = null, npcMsg = '';
+// 선물 대사: 물건 이름이 들어간 대사는 그 물건을 줬을 때만 · 아니면 이름 없는 대사에서 골라요
+function giftLine(ls, k, named, kind){
+  const sq = s => String(s || '').replace(/\s+/g, ''), nm = x => sq(ITEM[x] || ''), mine = nm(k), others = named.filter(x => x !== k).map(nm).filter(s => s.length >= 2);
+  const hit = ls.filter(l => mine.length >= 2 && sq(l).includes(mine)), plain = ls.filter(l => !others.some(o => sq(l).includes(o)) && !(mine.length >= 2 && sq(l).includes(mine)));
+  const pool = hit.length ? hit : plain.length ? plain : [{ love: '우와, 이거 정말 좋아해요! 고마워요!', like: '고마워요, 잘 쓸게요.', hate: '으.... 이건 좀 별로예요.' }[kind]];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+window.__giftLine = giftLine;   // 시험용
 function renderNpcGift(){
   const n = npcGet(npcGiftId); if (!n) return closeSheet();
   const st = npcSt(n.id), h = hearts(n.id), done = st.g === todayKey(), P = npcProf(n.id), likes = P.likes || n.likes || [], dislikes = P.dislikes || n.dislikes || [];
@@ -4684,7 +4692,8 @@ function renderNpcGift(){
     const kind = likes.includes(kb) ? 'love' : dislikes.includes(kb) ? 'hate' : 'like', d0 = { love: 40, like: 20, hate: -30 }[kind], d = d0 > 0 ? Math.round(d0 * (1 + sgFx('gift_affection'))) : d0;
     me.giftLog = me.giftLog || {}; (me.giftLog[n.id] ||= {})[kb] = kind; prankEv('gift', { id: n.id, k: kb, kind }); trEv('gift', { id: n.id });   // 관계 패널의 「알아낸 선물」
     const ls = (romanceOn(n.id) && P.gift_romance?.[kind]) || P.gift?.[kind] || { love: ['우와, 이거 정말 좋아해요! 고마워요!'], like: ['고마워요, 잘 쓸게요.'], hate: ['으.... 이건 좀 별로예요.'] }[kind];
-    npcMsg = ''; closeSheet(); npcAddA(n.id, d); save(); syncNpcs(); setTimeout(() => { npcExprOnce = { love: 1, like: 0, hate: 2 }[kind]; npcMenu(n, fillVars(ls[Math.floor(Math.random() * ls.length)], n.id)); }, 100); });
+    const line = giftLine(ls, kb, [...likes, ...dislikes], kind);
+    npcMsg = ''; closeSheet(); npcAddA(n.id, d); save(); syncNpcs(); setTimeout(() => { npcExprOnce = { love: 1, like: 0, hate: 2 }[kind]; npcMenu(n, fillVars(line, n.id)); }, 100); });
 }
 async function renderNpcStory(){
   const n = npcGet(npcGiftId); if (!n) return closeSheet();
