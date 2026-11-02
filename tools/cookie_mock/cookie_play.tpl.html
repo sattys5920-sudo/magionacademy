@@ -87,12 +87,27 @@ canvas{image-rendering:pixelated}
 #fam .in{width:100%;max-width:340px;animation:pop .35s ease-out;cursor:pointer}
 @keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
 #gtoast{position:fixed;left:50%;top:20px;transform:translateX(-50%);z-index:80;background:rgba(20,13,30,.96);color:var(--text);padding:10px 16px;border-radius:12px;border:1px solid var(--pink);font:13px var(--f-pxb);opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%;text-align:center}#gtoast.on{opacity:1}
+
+.say.tip{padding:8px}.say.tip canvas{width:40px;height:40px}.say.tip p{font-size:13px}
+.mgw{position:relative;border-radius:14px;overflow:hidden;border:2px solid #120A18}.mgw canvas{display:block;width:100%;aspect-ratio:160/112;touch-action:none;cursor:pointer}
+.mgmsg{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) scale(.8);font:22px var(--f-pxb);color:#FFE9A0;text-shadow:0 2px 0 #3A2414,2px 0 0 #3A2414,-2px 0 0 #3A2414,0 -2px 0 #3A2414;opacity:0;transition:all .15s;pointer-events:none;white-space:nowrap}.mgmsg.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.st{color:var(--gold);font-family:var(--f-pxb);letter-spacing:1px}.opt .st{font-size:11px}
+.opt.sel{border-color:var(--accent);background:#3A2A18}
+.opt .got{position:absolute;top:-8px;left:-4px;font:10px var(--f-pxb);background:var(--ok);color:#12301E;padding:1px 6px;border-radius:8px}
+.opt .lock{position:absolute;inset:auto 0 30% 0;font:10px var(--f-pxb);color:var(--text)}
+.dex{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}.dx{position:relative;display:flex;flex-direction:column;align-items:center;padding:4px 2px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)}
+.dx canvas{width:40px;height:40px}.dx span{font:10px/1.3 var(--f-pxb);color:var(--sub);text-align:center;min-height:26px}.dx.on span{color:var(--text)}.dx em{position:absolute;top:2px;right:3px;font-style:normal;font:9px var(--f-pxb);color:var(--gold)}.dx.gold{border-color:var(--gold)}
+.resbox{display:flex;gap:14px;align-items:center;padding:12px;border-radius:14px;background:var(--panel2)}.resbox canvas{width:96px;height:96px;flex:none}
+.q{display:block;font:22px var(--f-pxb);font-weight:400}.q최고{color:var(--gold)}.q맛있음{color:var(--ok)}.q보통{color:var(--sub)}.q숯{color:var(--warn)}
+.rl{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.rl span{font:11px var(--f-pxb);padding:2px 8px;border-radius:8px;background:var(--panel)}.rl .g완벽{color:var(--ok)}.rl .g좋아{color:var(--gold)}.rl .g아쉬워,.rl .g탐{color:var(--warn)}
+.new{margin:6px 0 0;font:12px var(--f-pxb);color:var(--pink)}
+.cnt{display:flex;flex-wrap:wrap;gap:4px}.cnt span{font:11px var(--f-pxb);padding:3px 8px;border-radius:8px;background:var(--panel2);color:var(--sub)}.cnt b{font-weight:400;color:var(--gold)}
 button:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 </style>
 
 <div id="app">
   <div class="shead"><b>마들렌의 쿠키 상자</b><button id="replay">처음 연출 보기</button></div>
-  <div class="pick"><label for="stu">시안 · 나는</label><select id="stu"></select><button class="btn" id="refill" style="min-height:40px;font-size:12px">재료 채우기</button></div>
+  <div class="pick"><span>시안 전용</span><button class="btn" id="refill" style="min-height:40px;font-size:12px;flex:1">재료 채우기</button><button class="btn" id="openall" style="min-height:40px;font-size:12px;flex:1">별 셋까지 열기</button></div>
   <div class="tabs" id="tabs"></div>
   <div class="body" id="body"></div>
 </div>
@@ -104,6 +119,7 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-
 <div id="gtoast"></div>
 
 <script>
+const ICIMG = Object.assign(new Image(), { src: 'data:image/png;base64,__ICONS__' });
 const SHEET = new Image(); SHEET.src = 'data:image/webp;base64,__SHEET__';
 const CANDY = Object.assign(new Image(), { src: 'data:image/png;base64,__CANDY__' });
 const $ = s => document.querySelector(s);
@@ -155,22 +171,22 @@ const NPC = [
     r: ['삐빅. 별 모양, 꿀 성분 감지. 만족도 측정 불가. 측정기가 녹았습니다.......', '삐빅. 단맛 수치 높음. 연료로는 못 쓰지만 저장합니다.', '삐빅. 쿠키 수령. 감사 회로 작동 중.......', '경고. 탄소 함량 높음. ....그래도 먹습니다. 기분은 맛있음으로 기록.'] },
 ];
 
-// ===== 학생마다 다른 「마들렌의 레시피」 (관리자가 배정)
-const RECIPE = [
-  { n: '햇살 별', f: 'honey', s: 'star', ice: 3, top: 'pearl', why: '웃을 때 반짝 빛나서요. 꿀처럼 따뜻하고요.' },
-  { n: '말랑 하트', f: 'straw', s: 'heart', ice: 1, top: 'spr', why: '인사할 때 늘 먼저 손 흔들어 줘서요.' },
-  { n: '시원한 동그라미', f: 'mint', s: 'circle', ice: 4, top: 'chip', why: '같이 있으면 머리가 맑아져요.' },
-  { n: '느긋한 고양이', f: 'butter', s: 'cat', ice: 0, top: 'chip', why: '어디서든 편하게 웃는 게 고양이 같아서요.' },
-  { n: '조용한 달', f: 'blueb', s: 'moon', ice: 0, top: 'pearl', why: '밤에 조용히 생각나는 사람이에요.' },
-  { n: '고소한 호박', f: 'pseed', s: 'pumpkin', ice: 5, top: 'spr', why: '알면 알수록 고소해서요.' },
-  { n: '장난꾸러기 박쥐', f: 'blueb', s: 'bat', ice: 2, top: 'pearl', why: '어디로 튈지 몰라서 재밌어요.' },
-  { n: '수줍은 유령', f: 'butter', s: 'ghost', ice: 0, top: 'spr', why: '가끔 쓱 나타나서 깜짝 놀라게 해요. 좋은 쪽으로요.' },
-  { n: '다정한 꿀 하트', f: 'honey', s: 'heart', ice: 3, top: 'chip', why: '다정한 말을 아끼지 않아서요.' },
-  { n: '반짝 박하 별', f: 'mint', s: 'star', ice: 2, top: 'pearl', why: '새로운 걸 제일 먼저 해 보는 사람이라서요.' },
-  { n: '포근한 달', f: 'butter', s: 'moon', ice: 3, top: 'spr', why: '같이 있으면 졸릴 만큼 편해요. 좋은 뜻이에요.' },
-  { n: '새침한 딸기 고양이', f: 'straw', s: 'cat', ice: 1, top: 'chip', why: '새침한 척하는데 다 티 나요.' },
+// ===== 쿠키 도감 50 종: 맛 6 × 모양 8 = 48 + 숨은 쿠키 2 · 별(난이도)은 모양 틀로 정해져요
+const SH_STAR = { circle: 1, heart: 1, moon: 1, star: 2, ghost: 2, pumpkin: 2, cat: 3, bat: 3 };
+const DEX = [];
+FL.forEach(f => SH.forEach(([s, sn]) => DEX.push({ id: f.id + '_' + s, f: f.id, s, n: `${f.n} ${sn} 쿠키`, star: SH_STAR[s] })));
+DEX.push({ id: 'coal', f: 'butter', s: 'circle', n: '숯 쿠키', star: 0, hid: '오븐에 너무 오래 두면.......', b: 100 });
+DEX.push({ id: 'moon_mad', f: 'honey', s: 'moon', n: '마들렌의 달빛 쿠키', star: 3, hid: '별 셋 쿠키를 「최고」로 구우면.......', b: 68, gold: true });
+const UNLOCK = { 1: 0, 2: 3, 3: 8 };
+const STEP_N = ['재료', '젓기', '밀기', '틀', '오븐', '꾸미기'];
+const GPT = { 완벽: 2, 좋아: 1, 아쉬워: 0, 탐: 0 };
+const TIPS = [
+  s => s === 1 ? '순서는 상관없어. 레시피에 있는 것만 그릇에 쏙쏙 넣어.' : s === 2 ? '이번엔 순서대로 넣어야 해. 순서 틀리면 반죽이 삐져.' : '순서대로, 시간 안에! 찬장에 헷갈리는 게 많으니까 잘 봐.',
+  s => s === 3 ? '그릇 안을 손가락으로 빙글빙글. 너무 세게 돌리면 반죽이 튀어.' : '그릇 안을 손가락으로 빙글빙글 저어. 손목으로!',
+  s => '밀대를 위아래로 밀어. 너무 얇으면 찢어지고, 너무 두꺼우면 안 익어. 초록 칸에서 멈춰.',
+  s => s === 1 ? '틀이 지나갈 때 콕. 겹치게 찍으면 못 써.' : s === 2 ? '틀이 조금 빨라. 사이를 띄워서 콕콕.' : '빨라도 침착하게. 네 개, 안 겹치게!',
+  s => s === 3 ? '별 셋은 노릇한 순간이 진짜 짧아. 눈 떼지 마.' : '노릇노릇할 때 딱 꺼내.',
 ];
-const ASSIGN = Array.from({ length: 12 }, (_, i) => i);
 
 // ===== 쿠키 도트 (24 × 24)
 const N = 24;
@@ -239,102 +255,215 @@ function recipeCookie(R){
 }
 
 // ===== 상태
-const ST = { stu: 0, tab: 'bake', step: 0, cur: null, inv: null, tray: [], box: { sel: [], c: 0, r: 0, p: 0 }, boxes: [], gsel: -1, heart: {}, found: {}, said: null, madeRec: false, seen: false };
+const ST = { tab: 'bake', step: -1, cur: null, inv: null, tray: [], box: { sel: [], c: 0, r: 0, p: 0 }, boxes: [], gsel: -1, heart: {}, found: {}, said: null, dex: { butter_circle: '맛있음' }, all: false, last: null };
 function refill(){ ST.inv = { hegg: 8, g_wheat: 8, milk: 3, honey: 3, g_straw: 3, g_mint: 3, g_blueb: 3, g2_pseed: 3 }; }
 refill();
-const myRec = () => RECIPE[ASSIGN[ST.stu]];
 let uid = 1;
+const dexN = () => Object.keys(ST.dex).length;
+const starOpen = s => ST.all || dexN() >= UNLOCK[s];
+const starTxt = n => '★'.repeat(n) + '☆'.repeat(3 - n);
 
 // ===== 화면
 function render(){
-  const T = [['bake', '굽기'], ['box', '상자', ST.tray.length || ''], ['gift', '선물', ST.boxes.length || ''], ['note', '수첩']];
+  stopMG();
+  const T = [['bake', '굽기'], ['box', '상자', ST.tray.length || ''], ['gift', '선물', ST.boxes.length || ''], ['dex', '도감', dexN() + '/50']];
   $('#tabs').innerHTML = T.map(([k, n, b]) => `<button data-tab="${k}" class="${ST.tab === k ? 'on' : ''}">${n}${b ? `<i>${b}</i>` : ''}</button>`).join('');
-  const el = $('#body');
-  el.innerHTML = ST.tab === 'bake' ? bakeHTML() : ST.tab === 'box' ? boxHTML() : ST.tab === 'gift' ? giftHTML() : noteHTML();
+  $('#body').innerHTML = ST.tab === 'bake' ? bakeHTML() : ST.tab === 'box' ? boxHTML() : ST.tab === 'gift' ? giftHTML() : dexHTML();
   after();
+  if (ST.tab === 'bake' && ST.step >= 0 && ST.step <= 4) startMG(ST.step);
 }
 function invHTML(){ return `<div class="inv">${Object.keys(ITEM).map(k => `<span>${ic(k, 1)}<b>${ST.inv[k] || 0}</b></span>`).join('')}</div>`; }
-function stepsHTML(){ return `<div class="steps">${['반죽', '모양', '오븐', '꾸미기'].map((n, i) => `<span class="${i === ST.step ? 'on' : i < ST.step ? 'done' : ''}">${i + 1} ${n}</span>`).join('')}</div>`; }
+function stepsHTML(){ const on = ST.step === 6 ? 5 : ST.step === 5 ? -9 : ST.step, dn = Math.min(5, ST.step); return `<div class="steps">${STEP_N.map((n, i) => `<span class="${i === on ? 'on' : i < dn ? 'done' : ''}">${n}</span>`).join('')}</div>`; }
+function tipHTML(t){ return `<div class="say tip"><canvas data-face="7" width="32" height="32"></canvas><div><b>마들렌</b><p>${t}</p></div></div>`; }
 function bakeHTML(){
-  const R = myRec(), cur = ST.cur;
-  if (ST.step === 0) return `${stepsHTML()}<div class="lab">반죽 맛 고르기 · 밀 이삭 1 · 달걀 1 · 맛 재료 1 로 쿠키 2 개</div>${invHTML()}
-    <div class="grid">${FL.map(f => { const ok = BASE.every(k => ST.inv[k] > 0) && ST.inv[f.it] > 0; return `<button class="opt ${R.f === f.id ? 'rec' : ''}" data-fl="${f.id}" ${ok ? '' : 'disabled'}><span class="need">${ic('g_wheat', 1)}${ic('hegg', 1)}${ic(f.it, 1)}</span>${f.n}<small>${ITEM[f.it][0]} ${ST.inv[f.it] || 0}</small></button>`; }).join('')}</div>
-    <p class="hint">레시피 표시는 마들렌이 나한테 준 쿠키예요. 아무 맛이나 구워도 돼요.</p>`;
-  if (ST.step === 1) return `${stepsHTML()}<div class="lab">모양 틀 고르기 · ${FL.find(f => f.id === cur.f).n} 반죽</div>
-    <div class="grid g4">${SH.map(([k, n]) => `<button class="opt ${R.s === k && R.f === cur.f ? 'rec' : ''}" data-sh="${k}"><canvas data-ckpv="${k}" width="48" height="48"></canvas>${n}</button>`).join('')}</div>`;
-  if (ST.step === 2) return `${stepsHTML()}<div class="lab">오븐 · 노릇노릇할 때 꺼내요</div>
-    <div class="oven"><canvas id="ovcv" width="240" height="120"></canvas></div>
-    <div class="gauge" id="gauge"><i style="width:40%;background:#E8DCC8"></i><i style="width:22%;background:#E8B868"></i><i style="width:13%;background:#6FD08C"></i><i style="width:11%;background:#E8B868"></i><i style="width:14%;background:#4A2A1E"></i><span class="nd" id="nd" style="left:0"></span></div>
-    <div class="glab"><span>덜 익음</span><span>노릇</span><span>완벽</span><span>노릇</span><span>탐</span></div>
-    <div class="res" id="ovres"></div>
-    <button class="btn go" id="ovbtn">오븐 켜기</button>`;
-  return `${stepsHTML()}<div class="lab">꾸미기 · 아이싱을 그리고 토핑을 올려요</div>
+  const cur = ST.cur;
+  if (ST.step === -1){
+    const f = ST.pickF || 'butter';
+    return `<div class="lab">반죽 맛 · 밀 이삭 1 · 달걀 1 · 맛 재료 1 로 쿠키 2 개</div>${invHTML()}
+    <div class="grid">${FL.map(x => { const ok = BASE.every(k => ST.inv[k] > 0) && ST.inv[x.it] > 0; return `<button class="opt ${f === x.id ? 'sel' : ''}" data-fl="${x.id}" ${ok ? '' : 'disabled'}><span class="need">${ic(x.it, 1)}</span>${x.n}<small>${ITEM[x.it][0]} ${ST.inv[x.it] || 0}</small></button>`; }).join('')}</div>
+    <div class="lab">모양 틀 · 별이 많을수록 어려워요</div>
+    <div class="grid g4">${SH.map(([k, n]) => { const s = SH_STAR[k], open = starOpen(s), got = ST.dex[f + '_' + k]; return `<button class="opt shp" data-sh="${k}" ${open ? '' : 'disabled'}><canvas data-ckpv="${f}:${k}" width="48" height="48"></canvas>${n}<small class="st">${starTxt(s)}</small>${got ? '<span class="got">도감</span>' : ''}${open ? '' : `<span class="lock">도감 ${UNLOCK[s]} 종</span>`}</button>`; }).join('')}</div>
+    <p class="hint">별 둘은 도감 3 종, 별 셋은 도감 8 종을 채우면 열려요.</p>`;
+  }
+  const s = SH_STAR[cur.s], head = `<div class="row" style="justify-content:space-between"><span class="lab">${FL.find(f => f.id === cur.f).n} ${SH.find(x => x[0] === cur.s)[1]} 쿠키 <span class="st">${starTxt(s)}</span></span><span class="lab" id="mgst"></span></div>`;
+  if (ST.step <= 4) return `${stepsHTML()}${head}${tipHTML(TIPS[ST.step](s))}
+    <div class="mgw"><canvas id="mg" width="480" height="336"></canvas><div class="mgmsg" id="mgmsg"></div></div>
+    <div class="row" id="mgbar"></div>`;
+  if (ST.step === 5) return `${stepsHTML()}${head}${resultHTML()}`;
+  return `${stepsHTML()}${head}<div class="lab">꾸미기 · 아이싱을 그리고 토핑을 올려요</div>
     <div class="deco"><canvas class="big" id="dcv" width="240" height="240"></canvas>
       <div class="tools"><div class="lab">아이싱</div><div class="sw">${ICE.map(([n, c], i) => `<button data-ice="${i}" style="background:${c}" class="${ST.tool === 'ice' + i ? 'on' : ''}" aria-label="${n}"></button>`).join('')}<button data-ice="x" style="background:var(--panel2);color:var(--text)" class="${ST.tool === 'erase' ? 'on' : ''}">지우개</button></div>
       <div class="lab">토핑 · 눌러서 콕</div><div class="tb">${TOP.map(([k, n]) => `<button data-top="${k}" class="${ST.tool === k ? 'on' : ''}">${n}</button>`).join('')}</div>
-      <div class="tb"><button data-undo="1">토핑 빼기</button><button data-clr="1">다 지우기</button></div>
-      <p class="hint">${R.f === cur.f && R.s === cur.s ? `레시피: ${ICE[R.ice][0]} 아이싱 · ${TOP.find(t => t[0] === R.top)[1]}` : `구운 정도: ${GRADE_KO[grade(cur.b)]}`}</p></div></div>
-    <button class="btn go" id="decodone">다 됐어요 · 쟁반에 올리기</button>`;
+      <div class="tb"><button data-undo="1">토핑 빼기</button><button data-clr="1">다 지우기</button></div></div></div>
+    <button class="btn go" id="decodone">다 됐어 · 쟁반에 올리기</button>`;
 }
-function boxHTML(){
-  const B = ST.box;
-  return `<div class="lab">쟁반 · 눌러서 상자에 담기 (최대 4 개)</div>
-    ${ST.tray.length ? `<div class="tray">${ST.tray.map(c => `<button class="ck ${B.sel.includes(c.id) ? 'in' : ''}" data-ck="${c.id}">${c.rec ? '<span class="tag">레시피</span>' : ''}<canvas data-ckc="${c.id}" width="48" height="48"></canvas>${FL.find(f => f.id === c.f).n} ${SH.find(s => s[0] === c.s)[1]}<em>${GRADE_KO[grade(c.b)]}</em></button>`).join('')}</div>` : '<p class="hint">아직 구운 쿠키가 없어요. 굽기 탭에서 구워요.</p>'}
-    <div class="boxed"><canvas id="bxcv" width="120" height="96"></canvas>
-      <div class="tools"><div class="lab">상자 색</div><div class="sw">${BOXC.map((c, i) => `<button data-bc="${i}" style="background:${c}" class="${B.c === i ? 'on' : ''}" aria-label="상자 색 ${i + 1}"></button>`).join('')}</div>
-      <div class="lab">리본</div><div class="sw">${RIB.map((c, i) => `<button data-rb="${i}" style="background:${c}" class="${B.r === i ? 'on' : ''}" aria-label="리본 ${i + 1}"></button>`).join('')}</div>
-      <div class="lab">무늬</div><div class="tb">${PAT.map(([k, n], i) => `<button data-pt="${i}" class="${B.p === i ? 'on' : ''}">${n}</button>`).join('')}</div></div></div>
-    <button class="btn go" id="pack" ${B.sel.length ? '' : 'disabled'}>리본 묶어서 포장하기 · ${B.sel.length} 개</button>`;
+function resultHTML(){
+  const c = ST.cur, R = c.res, d = ST.last;
+  return `<div class="resbox"><canvas id="rescv" width="96" height="96"></canvas><div><b class="q q${c.q}">${c.q === '숯' ? '숯 쿠키' : c.q}</b>
+    <div class="rl">${STEP_N.slice(0, 5).map((n, i) => `<span class="g${R[i]}">${n} ${R[i]}</span>`).join('')}</div>
+    ${d ? `<p class="new">도감 새로 등록 · ${esc(d)}</p>` : ''}</div></div>
+    ${tipHTML(c.q === '최고' ? '와.... 이건 진열대 맨 앞에 둘 쿠키야. 나보다 잘 구운 거 아니야?' : c.q === '맛있음' ? '맛있다! 가장자리까지 고르게 잘 익었어.' : c.q === '보통' ? '먹을 만해. 다음엔 젓는 거랑 미는 거 조금만 더 꼼꼼히.' : '....괜찮아. 나도 오늘 아침에 한 판 태웠어. 이건 도감에 「숯 쿠키」로 남겨 둘게.')}
+    <button class="btn go" id="todeco">꾸미러 가기</button>`;
 }
-function giftHTML(){
-  if (!ST.boxes.length) return `<p class="hint">포장한 쿠키 상자가 없어요. 쟁반 · 상자 탭에서 포장해요.</p>${ST.said ? saidHTML() : ''}`;
-  return `<div class="lab">줄 상자</div><div class="boxes">${ST.boxes.map((b, i) => `<button data-gb="${i}" class="${ST.gsel === i ? 'on' : ''}"><canvas data-bxi="${i}" width="120" height="96"></canvas>${b.cks.length} 개</button>`).join('')}</div>
-    <div class="lab">누구한테 줄까</div><div class="npcs">${NPC.map(n => `<button data-npc="${n.id}" ${ST.gsel < 0 ? 'disabled' : ''}><canvas data-face="${n.row}" width="32" height="32"></canvas>${n.n.replace(' 선생님', '')}<i>${ST.heart[n.id] ? '♥ ' + ST.heart[n.id] : ''}</i></button>`).join('')}</div>
-    ${ST.said ? saidHTML() : ''}`;
-}
-function saidHTML(){ const n = NPC.find(x => x.id === ST.said.id); return `<div class="say"><canvas data-face="${n.row}" width="32" height="32"></canvas><div><b>${n.n}</b><p>${esc(ST.said.t)}</p></div></div>`; }
-function noteHTML(){
-  const R = myRec();
-  return `<div class="lab">마들렌이 준 레시피 카드</div>
-    <div class="rcard"><canvas id="rccv" width="72" height="72"></canvas><div><b>${R.n}</b><p>${R.why}</p><small>${FL.find(f => f.id === R.f).n} 반죽 · ${SH.find(s => s[0] === R.s)[1]} 틀 · ${ICE[R.ice][0]} 아이싱 · ${TOP.find(t => t[0] === R.top)[1]}</small></div></div>
+function dexHTML(){
+  return `<div class="lab">쿠키 도감 · 처음 구운 쿠키가 남아요 · ${dexN()} / 50</div>
+    <div class="dex">${DEX.map(d => { const g = ST.dex[d.id]; return `<div class="dx ${g ? 'on' : ''} ${d.gold ? 'gold' : ''}" title="${g ? d.n : '???'}"><canvas data-dex="${d.id}" width="48" height="48"></canvas><span>${g ? d.n.replace(' 쿠키', '') : d.star ? starTxt(d.star) : '???'}</span>${g ? `<em>${g}</em>` : ''}</div>`; }).join('')}</div>
+    <p class="hint">숨은 쿠키 2 종: ${DEX.slice(48).map(d => ST.dex[d.id] ? d.n : d.hid).join(' · ')}</p>
     <div class="lab">마들렌의 단골 수첩 · 선물해서 맞히면 채워져요</div>
     <div class="hints">${NPC.map(n => { const g = ST.found[n.id] || {}; return `<div><canvas data-face="${n.row}" width="32" height="32"></canvas><span class="bd">${n.n}<span class="${g.f ? 'got' : ''}">맛 ${g.f ? FL.find(f => f.id === n.f).n : '???'}</span><span class="${g.s ? 'got' : ''}">모양 ${g.s ? SH.find(s => s[0] === n.s)[1] : '???'}</span></span><p>${n.hint}</p></div>`; }).join('')}</div>`;
 }
 const face = (cv, row) => { const q = cv.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, cv.width, cv.height); if (SHEET.complete) q.drawImage(SHEET, 16, row * 64 + 10, 32, 32, 0, 0, cv.width, cv.height); };
 function after(){
   document.querySelectorAll('[data-face]').forEach(c => face(c, +c.dataset.face));
-  document.querySelectorAll('[data-ckpv]').forEach(c => { const q = c.getContext('2d'); drawCookie(q, { f: ST.cur.f, s: c.dataset.ckpv, b: 0 }, 0, 0, 2); });
+  document.querySelectorAll('[data-ckpv]').forEach(c => { const [f, s] = c.dataset.ckpv.split(':'); drawCookie(c.getContext('2d'), { f, s, b: 0 }, 0, 0, 2); });
   document.querySelectorAll('[data-ckc]').forEach(c => { const ck = ST.tray.find(x => x.id === +c.dataset.ckc); drawCookie(c.getContext('2d'), ck, 0, 0, 2); });
+  document.querySelectorAll('[data-dex]').forEach(c => { const d = DEX.find(x => x.id === c.dataset.dex), q = c.getContext('2d'); drawCookie(q, { f: d.f, s: d.s, b: d.b ?? 66, ice: d.gold ? goldIce(d.s) : null }, 0, 0, 2); if (!ST.dex[d.id]){ q.globalCompositeOperation = 'source-atop'; q.fillStyle = '#3A2A55'; q.fillRect(0, 0, 48, 48); q.globalCompositeOperation = 'source-over'; } });
   document.querySelectorAll('[data-bxi]').forEach(c => drawBox(c.getContext('2d'), ST.boxes[+c.dataset.bxi], true));
   if ($('#bxcv')) drawBox($('#bxcv').getContext('2d'), { cks: ST.box.sel.map(id => ST.tray.find(x => x.id === id)), c: ST.box.c, r: ST.box.r, p: ST.box.p }, false);
-  if ($('#rccv')){ const q = $('#rccv').getContext('2d'); q.clearRect(0, 0, 72, 72); drawCookie(q, recipeCookie(myRec()), 0, 0, 3); }
-  if ($('#ovcv')) ovenDraw(0);
+  if ($('#rescv')){ const q = $('#rescv').getContext('2d'); q.clearRect(0, 0, 96, 96); drawCookie(q, ST.cur, 0, 0, 4); }
   if ($('#dcv')) decoDraw();
 }
+function goldIce(s){ const { m, d } = mask(s), a = new Uint8Array(N * N); for (let k = 0; k < N * N; k++) if (m[k] && d[k] === 2) a[k] = 4; return a; }
 
-// ===== 오븐 미니게임
-let OV = null;
-function ovenDraw(b){
-  const c = $('#ovcv'); if (!c) return; const q = c.getContext('2d'); q.imageSmoothingEnabled = false;
-  q.fillStyle = '#2A1410'; q.fillRect(0, 0, 240, 120);
-  const glow = OV && OV.on ? .5 + Math.sin(performance.now() / 120) * .1 : .15;
-  const g = q.createLinearGradient(0, 120, 0, 0); g.addColorStop(0, `rgba(255,120,40,${glow})`); g.addColorStop(1, 'rgba(255,120,40,0)'); q.fillStyle = g; q.fillRect(0, 0, 240, 120);
-  q.fillStyle = '#5A3A2E'; q.fillRect(20, 88, 200, 6); q.fillStyle = '#3A241C'; for (let x = 24; x < 220; x += 12) q.fillRect(x, 88, 2, 6);
-  const ck = { f: ST.cur.f, s: ST.cur.s, b };
-  drawCookie(q, ck, 34, 18, 3); drawCookie(q, ck, 134, 18, 3);
-  if (b >= 86){ q.fillStyle = `rgba(80,70,70,${Math.min(.5, (b - 86) / 20)})`; for (let i = 0; i < 6; i++){ const t = performance.now() / 600 + i; q.beginPath(); q.arc(70 + i * 22 + Math.sin(t) * 6, 30 - (t * 20 % 30), 7, 0, 7); q.fill(); } }
-  q.strokeStyle = '#1A0C08'; q.lineWidth = 6; q.strokeRect(3, 3, 234, 114);
-  q.fillStyle = 'rgba(255,255,255,.08)'; q.fillRect(10, 8, 60, 4);
+// ===== 미니게임 (작업대 위 도트 화면 160 × 112)
+const W = 160, H = 112, OL = '#3A2414';
+let MG = null;
+function stopMG(){ if (MG){ MG.dead = true; MG = null; } }
+function px(q, x, y, w, h, c){ q.fillStyle = c; q.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+function board(q){
+  px(q, 0, 0, W, H, '#E2BE8C'); for (let y = 0; y < H; y += 14){ px(q, 0, y, W, 1, '#C89C68'); for (let x = (y / 14 % 2) * 37 + 11; x < W; x += 74) px(q, x, y, 1, 14, '#C89C68'); }
+  px(q, 0, 0, W, 2, '#A87A4A');
 }
-function ovenStart(){
-  if (OV) return; OV = { on: true, b: 0, t: performance.now() }; $('#ovbtn').textContent = '꺼내기'; $('#ovres').textContent = '';
-  const f = now => { if (!OV || !OV.on) return; const dt = (now - OV.t) / 1000; OV.t = now; OV.b = Math.min(100, OV.b + dt * (11 + OV.b * .22)); if ($('#nd')) $('#nd').style.left = OV.b + '%'; ovenDraw(OV.b); if (OV.b >= 100){ ovenStop(); return; } requestAnimationFrame(f); };
-  requestAnimationFrame(f);
+function bowlBig(q, x, y, r, wob = 0){
+  x += wob; const rows = [[-r, -4, r * 2, 2], [-r + 1, -2, r * 2 - 2, 6], [-r + 3, 4, r * 2 - 6, 6], [-r + 7, 10, r * 2 - 14, 4]];
+  rows.forEach(([dx, dy, w, h]) => px(q, x + dx - 1, y + dy - 1, w + 2, h + 2, OL));
+  px(q, x - r, y - 4, r * 2, 2, '#FFE8EC'); px(q, x - r + 1, y - 2, r * 2 - 2, 6, '#F49AAA'); px(q, x - r + 3, y + 4, r * 2 - 6, 6, '#E4889A'); px(q, x - r + 7, y + 10, r * 2 - 14, 4, '#C86A7A'); px(q, x - r + 4, y, 6, 2, '#FFD0D8');
 }
-function ovenStop(){
-  const b = Math.round(OV.b); OV.on = false; ST.cur.b = b; ovenDraw(b); const g = grade(b);
-  $('#ovres').innerHTML = `<span style="color:${g === 'perfect' ? 'var(--ok)' : g === 'burnt' ? 'var(--warn)' : 'var(--gold)'}">${{ raw: '아직 말랑해요....', gold: '노릇노릇!', perfect: '완벽하게 구워졌어요!', burnt: '앗, 탔어요.......' }[g]}</span>`;
-  $('#ovbtn').textContent = '꾸미러 가기'; $('#ovbtn').dataset.next = '1'; OV = null;
+function bowlTop(q, x, y, rx, ry){ // 위에서 본 그릇 (젓기)
+  q.fillStyle = OL; q.beginPath(); q.ellipse(x, y, rx + 2, ry + 2, 0, 0, 7); q.fill(); q.fillStyle = '#F49AAA'; q.beginPath(); q.ellipse(x, y, rx, ry, 0, 0, 7); q.fill(); q.fillStyle = '#FFE8EC'; q.beginPath(); q.ellipse(x, y, rx - 4, ry - 3, 0, 0, 7); q.fill();
+}
+function icon(q, it, x, y, s = 16){ if (ICIMG.complete) q.drawImage(ICIMG, ITEM[it][1] * 32, 0, 32, 32, Math.round(x), Math.round(y), s, s); }
+function sheet(q, x, y, w, h, th, col){ const t = Math.max(1, Math.round(th / 5)); px(q, x - 1, y - 1, w + 2, h + t + 2, OL); px(q, x, y + h, w, t, rgb(mix(hex(col), [120, 70, 30], .35))); px(q, x, y, w, h, col); px(q, x + 2, y + 2, w - 4, 1, rgb(mix(hex(col), [255, 255, 255], .35))); }
+function pin(q, x, y, w){ px(q, x - w / 2 - 9, y - 3, w + 18, 7, OL); px(q, x - w / 2 - 8, y - 2, 8, 5, '#8A5A34'); px(q, x + w / 2, y - 2, 8, 5, '#8A5A34'); px(q, x - w / 2, y - 3, w, 7, OL); px(q, x - w / 2 + 1, y - 2, w - 2, 5, '#E8B878'); px(q, x - w / 2 + 1, y - 2, w - 2, 1, '#F8D8A8'); }
+function cutterAt(q, s, x, y, col = '#C8D0E0'){ const { m, d } = mask(s); for (let k = 0; k < N * N; k++) if (m[k] && d[k] === 1){ px(q, x + k % N - 12, y + (k / N | 0) - 12, 1, 1, col); } }
+function rawCut(q, f, s, x, y){ drawCookie(q, { f, s, b: 0 }, Math.round(x - 12), Math.round(y - 12), 1); }
+function mgText(q, t, x, y, c = '#FFE9A0', sz = 9){ q.font = `${sz}px G11B, sans-serif`; q.textAlign = 'center'; q.lineWidth = 3; q.strokeStyle = OL; q.strokeText(t, x, y); q.fillStyle = c; q.fillText(t, x, y); q.textAlign = 'left'; }
+function bar(q, x, y, w, h, k, col){ px(q, x - 1, y - 1, w + 2, h + 2, OL); px(q, x, y, w, h, '#4A3828'); px(q, x, y, Math.round(w * Math.max(0, Math.min(1, k))), h, col); }
+function mgPos(e){ const c = $('#mg'), r = c.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; }
+function mgMsg(t, ms = 900){ const el = $('#mgmsg'); if (!el) return; el.textContent = t; el.classList.add('on'); clearTimeout(mgMsg.t); mgMsg.t = setTimeout(() => el && el.classList.remove('on'), ms); }
+
+function startMG(step){
+  const c = $('#mg'); if (!c) return; const q = c.getContext('2d'); q.setTransform(3, 0, 0, 3, 0, 0); q.imageSmoothingEnabled = false;
+  const cur = ST.cur, s = SH_STAR[cur.s], fl = FL.find(f => f.id === cur.f), dc = fl.c;
+  MG = { step, q, t0: performance.now(), miss: 0, done: false, fx: [] };
+  const G = MG;
+  const finish = (grade, msg) => { if (G.done) return; G.done = true; cur.res[step] = grade; mgMsg(msg || grade, 1100); setTimeout(() => { if (G.dead) return; ST.step = step + 1; if (step === 4) settle(); render(); }, 1150); };
+  const gradeOf = m => m === 0 ? '완벽' : m === 1 ? '좋아' : '아쉬워';
+  const bar$ = $('#mgbar');
+  // --- 1 재료 넣기
+  if (step === 0){
+    const pool = ['milk', 'honey', 'hegg', 'g_wheat', 'g_straw', 'g_mint', 'g_blueb', 'g2_pseed'];
+    const extra = ['milk', 'honey', 'hegg'].filter(k => k !== fl.it);
+    G.need = s === 1 ? ['g_wheat', 'hegg', fl.it] : s === 2 ? ['g_wheat', 'hegg', extra[0], fl.it] : ['g_wheat', 'hegg', extra[0], fl.it, extra[1]];
+    const shelf = [...new Set([...G.need, ...pool.filter(k => !G.need.includes(k)).sort(() => Math.random() - .5).slice(0, s === 1 ? 1 : s === 2 ? 2 : 3)])].sort(() => Math.random() - .5);
+    G.shelf = shelf.map((k, i) => ({ k, x: 8 + i * (144 / shelf.length) + (144 / shelf.length - 18) / 2, y: 14, used: false }));
+    G.got = []; G.lim = s === 3 ? 10 : 0; G.fly = [];
+    G.tap = (x, y) => { if (G.done) return; const it = G.shelf.find(o => !o.used && x >= o.x - 2 && x <= o.x + 20 && y >= o.y - 2 && y <= o.y + 22); if (!it) return;
+      const want = s === 1 ? G.need.filter(k => !G.got.includes(k)) : [G.need[G.got.length]];
+      const cnt = G.need.filter(k => k === it.k).length, have = G.got.filter(k => k === it.k).length;
+      if (want.includes(it.k) && have < cnt){ G.got.push(it.k); if (G.got.filter(k => k === it.k).length >= cnt) it.used = true; G.fly.push({ k: it.k, x0: it.x, y0: it.y, t0: performance.now() }); if (G.got.length === G.need.length) setTimeout(() => finish(gradeOf(G.miss)), 500); }
+      else { G.miss++; G.shake = performance.now(); mgMsg(G.need.includes(it.k) ? '순서가 달라' : '그건 안 넣어'); } };
+    G.draw = now => { board(q); px(q, 0, 0, W, 40, '#C89C68'); px(q, 0, 38, W, 3, '#8A5A34'); px(q, 0, 41, W, 2, OL);
+      G.shelf.forEach(o => { if (!o.used) icon(q, o.k, o.x, o.y, 18); });
+      // 레시피 줄
+      G.need.forEach((k, i) => { const x = 6 + i * 14, y = 48; px(q, x - 1, y - 1, 14, 14, OL); px(q, x, y, 12, 12, '#FFF6E8'); icon(q, k, x, y, 12); if (i < G.got.length){ px(q, x, y, 12, 12, 'rgba(111,208,140,.55)'); mgText(q, '✓', x + 6, y + 10, '#FFFFFF', 9); } else if (s > 1 && i === G.got.length) { px(q, x - 1, y + 13, 14, 2, '#FF9A3C'); } });
+      const wob = G.shake && now - G.shake < 300 ? Math.sin(now / 20) * 2 : 0; bowlBig(q, 80, 86, 30, wob);
+      if (G.got.length) px(q, 80 - 22 + wob, 82, 44, 4, G.got.length === G.need.length ? dc : '#F4EAD8');
+      G.fly = G.fly.filter(f => now - f.t0 < 520); G.fly.forEach(f => { const k = (now - f.t0) / 500, x = f.x0 + (72 - f.x0) * k, y = f.y0 + (74 - f.y0) * k - Math.sin(k * Math.PI) * 24; icon(q, f.k, x, y, 18 - k * 6); });
+      if (G.lim && !G.done){ const left = G.lim - (now - G.t0) / 1000; bar(q, 100, 50, 54, 5, left / G.lim, left < 3 ? '#FF6B6B' : '#FFD866'); if (left <= 0){ G.miss += 2; finish('아쉬워', '시간 끝'); } } };
+  }
+  // --- 2 반죽 젓기
+  if (step === 1){
+    G.need = [3, 5, 7][s - 1]; G.turn = 0; G.ang = 0; G.prev = null; G.spill = 0; G.lastSpill = 0; G.drops = [];
+    const cx = 80, cy = 60;
+    G.move = (x, y, now) => { if (G.done) return; const a = Math.atan2(y - cy, (x - cx) * .8); if (G.prev){ let da = a - G.prev.a; if (da > Math.PI) da -= 7; if (da < -Math.PI) da += 7; const dt = Math.max(1, now - G.prev.t) / 1000, sp = Math.abs(da) / dt;
+        if (s === 3 && sp > 16){ if (now - G.lastSpill > 500){ G.lastSpill = now; G.miss++; mgMsg('철퍽! 살살'); for (let i = 0; i < 4; i++) G.drops.push({ x: cx + Math.cos(a) * 40, y: cy + Math.sin(a) * 26, vx: Math.cos(a + i) * 30, vy: -20 - i * 6, t0: now }); } }
+        else { G.turn += Math.abs(da) / 6.283; G.ang += da; } }
+      G.prev = { a, t: now }; if (G.turn >= G.need) finish(gradeOf(G.miss)); };
+    G.up = () => { G.prev = null; };
+    bar$.innerHTML = `<button class="btn" id="mgalt" style="flex:1">손가락이 어려우면 · 휘휘 젓기 버튼</button>`;
+    G.draw = now => { board(q); bowlTop(q, cx, cy, 52, 34);
+      const k = Math.min(1, G.turn / G.need), base = mix(hex('#F4EAD8'), hex(dc), k);
+      q.fillStyle = OL; q.beginPath(); q.ellipse(cx, cy + 2, 42, 26, 0, 0, 7); q.fill(); q.fillStyle = rgb(base); q.beginPath(); q.ellipse(cx, cy + 2, 40, 24, 0, 0, 7); q.fill();
+      q.strokeStyle = rgb(mix(base, [255, 255, 255], .4)); q.lineWidth = 2; for (let i = 0; i < 3; i++){ q.beginPath(); q.ellipse(cx, cy + 2, 30 - i * 9, 18 - i * 5.5, 0, G.ang + i * 2, G.ang + i * 2 + 2.2); q.stroke(); }
+      if (k < .6){ q.fillStyle = '#FFFFFF'; for (let i = 0; i < 6; i++){ const a = i * 1.1 + G.ang * .7; px(q, cx + Math.cos(a) * 20, cy + Math.sin(a) * 12, 3, 2, 'rgba(255,255,255,.8)'); } }
+      // 주걱
+      const wa = G.ang * 1; px(q, cx + Math.cos(wa) * 26 - 2, cy + Math.sin(wa) * 15 - 22, 4, 22, '#8A5A34'); px(q, cx + Math.cos(wa) * 26 - 4, cy + Math.sin(wa) * 15 - 2, 8, 6, OL); px(q, cx + Math.cos(wa) * 26 - 3, cy + Math.sin(wa) * 15 - 1, 6, 4, '#E8B878');
+      if (G.turn < .2){ q.strokeStyle = 'rgba(255,255,255,.85)'; q.setLineDash([3, 3]); q.lineWidth = 1.5; q.beginPath(); q.ellipse(cx, cy + 2, 34, 20, 0, now / 300, now / 300 + 5); q.stroke(); q.setLineDash([]); mgText(q, '빙글빙글', cx, cy + 5, '#FFFFFF', 9); }
+      G.drops = G.drops.filter(d => now - d.t0 < 700); G.drops.forEach(d => { const t = (now - d.t0) / 1000; px(q, d.x + d.vx * t, d.y + d.vy * t + 60 * t * t, 3, 3, dc); });
+      bar(q, 8, 102, 144, 5, k, '#6FD08C'); mgText(q, `${Math.min(G.need, Math.floor(G.turn))} / ${G.need} 바퀴`, 80, 98, '#FFFFFF', 8); };
+  }
+  // --- 3 밀대 밀기
+  if (step === 2){
+    G.th = 30; G.zone = [[7, 17], [9, 14], [10, 13]][s - 1]; G.py = 50; G.sw = null; G.flat = 0;
+    G.down = (x, y) => { G.sw = { y0: y, dir: 0 }; G.py = y; };
+    G.move = (x, y) => { if (!G.sw || G.done) return; G.py = Math.max(30, Math.min(92, y)); const d = y - G.sw.y0; if (Math.abs(d) > 22){ G.th = Math.max(2, G.th - (1 + (G.th - 8) * .2) * (.85 + Math.random() * .3)); G.flat = performance.now(); G.sw.y0 = y; if (G.th < G.zone[0]){ G.miss += 2; finish('아쉬워', '앗, 찢어졌어'); } } };
+    G.up = () => { G.sw = null; };
+    bar$.innerHTML = `<button class="btn" id="mgroll" style="flex:1">밀대 한 번 밀기</button><button class="btn go" id="mgok" style="flex:1">다 밀었어</button>`;
+    G.ok = () => { if (G.done) return; const [a, b] = G.zone; if (G.th > b){ G.miss++; mgMsg('아직 두꺼워'); if (G.miss >= 3) finish('아쉬워'); return; } finish(gradeOf(G.miss), G.th > a + (b - a) * .3 && G.th < b - (b - a) * .3 ? '딱 좋아' : null); };
+    G.draw = now => { board(q); const w = 70 + (30 - G.th) * 2.6, h = 30 + (30 - G.th) * 1.6; sheet(q, 70 - w / 2, 62 - h / 2, w, h, G.th, dc);
+      const bump = now - G.flat < 160 ? 2 : 0; pin(q, 70, G.py + bump, Math.min(118, w + 10));
+      // 두께 막대
+      const gx = 140, gy = 14, gh = 84, to = v => gy + gh - (v / 30) * gh; px(q, gx - 1, gy - 1, 12, gh + 2, OL); px(q, gx, gy, 10, gh, '#4A3828'); px(q, gx, to(G.zone[1]), 10, to(G.zone[0]) - to(G.zone[1]), '#6FD08C'); px(q, gx, to(G.zone[0]), 10, gy + gh - to(G.zone[0]), '#FF6B6B');
+      px(q, gx - 4, to(G.th) - 1, 18, 3, '#FFFFFF'); px(q, gx - 4, to(G.th) - 1, 2, 3, OL); mgText(q, '두께', gx + 5, gy - 3, '#FFFFFF', 7);
+      if (!G.sw && G.th === 30) mgText(q, '위아래로 쓱쓱', 70, 104, '#FFFFFF', 8); };
+  }
+  // --- 4 틀 찍기
+  if (step === 3){
+    G.need = [2, 3, 4][s - 1]; G.speed = [42, 62, 84][s - 1]; G.x = 30; G.dir = 1; G.cuts = []; G.last = performance.now(); G.stamp = 0;
+    G.tap = () => { if (G.done) return; const x = G.x, bad = G.cuts.some(c => Math.abs(c - x) < 25); G.stamp = performance.now();
+      if (bad){ G.miss++; mgMsg('겹쳤어'); } else { G.cuts.push(x); if (G.cuts.length >= G.need) finish(gradeOf(G.miss)); } };
+    G.draw = now => { const dt = (now - G.last) / 1000; G.last = now; if (!G.done){ G.x += G.dir * G.speed * dt; if (G.x > 136){ G.x = 136; G.dir = -1; } if (G.x < 24){ G.x = 24; G.dir = 1; } }
+      board(q); sheet(q, 10, 46, 140, 40, 11, dc);
+      G.cuts.forEach(cx => { rawCut(q, cur.f, cur.s, cx, 66); });
+      const press = now - G.stamp < 150 ? 6 : 0; cutterAt(q, cur.s, G.x, 66 - 22 + press, '#2A1A2E'); cutterAt(q, cur.s, G.x - 1, 65 - 22 + press, '#D8E0F0');
+      px(q, G.x - 1, 30 + press, 2, 12, '#8890A8'); px(q, G.x - 4, 28 + press, 8, 3, '#B8C0D8');
+      px(q, G.x - 1, 90, 2, 3, 'rgba(255,255,255,.7)');
+      mgText(q, `${G.cuts.length} / ${G.need}`, 80, 104, '#FFFFFF', 8); mgText(q, '화면을 콕', 80, 22, '#FFFFFF', 8); };
+  }
+  // --- 5 오븐
+  if (step === 4){
+    const pw = [13, 9, 6][s - 1], z = [[0, 40], [40, 62], [62, 62 + pw], [62 + pw, 86], [86, 100]];
+    G.z = z; G.b = 0; G.on = false; G.last = performance.now(); G.sp = [1, 1.2, 1.45][s - 1];
+    bar$.innerHTML = `<button class="btn go" id="mgoven" style="flex:1">오븐 켜기</button>`;
+    G.tap = () => { if (G.done) return; if (!G.on){ G.on = true; G.last = performance.now(); $('#mgoven').textContent = '꺼내기'; return; } G.on = false; take(); };
+    const take = () => { const b = Math.round(G.b); cur.b = b; const k = b < z[1][0] ? '아쉬워' : b < z[2][0] ? '좋아' : b < z[3][0] ? '완벽' : b < z[4][0] ? '좋아' : '탐'; finish(k, { 아쉬워: '아직 말랑해', 좋아: '노릇노릇', 완벽: '완벽하게 구워졌어', 탐: '앗, 탔어' }[k]); };
+    G.draw = now => { const dt = (now - G.last) / 1000; G.last = now; if (G.on && !G.done){ G.b = Math.min(100, G.b + dt * (11 + G.b * .22) * G.sp); if (G.b >= 100){ G.on = false; take(); } }
+      px(q, 0, 0, W, H, '#5A2E1E'); for (let y = 0; y < H; y += 8) for (let x = (y / 8 % 2) * 8; x < W; x += 16) px(q, x, y, 15, 7, '#6E3A26');
+      px(q, 14, 8, 132, 76, OL); px(q, 16, 10, 128, 72, '#2A1410');
+      const glow = G.on ? .5 + Math.sin(now / 120) * .1 : .15; const g = q.createLinearGradient(0, 82, 0, 10); g.addColorStop(0, `rgba(255,120,40,${glow})`); g.addColorStop(1, 'rgba(255,120,40,0)'); q.fillStyle = g; q.fillRect(16, 10, 128, 72);
+      px(q, 22, 66, 116, 4, '#9898A8'); const ck = { f: cur.f, s: cur.s, b: G.b }; drawCookie(q, ck, 38, 41, 1); drawCookie(q, ck, 68, 41, 1); drawCookie(q, ck, 98, 41, 1);
+      if (G.b > 86){ for (let i = 0; i < 5; i++){ const t = now / 600 + i; px(q, 40 + i * 20 + Math.sin(t) * 4, 34 - (t * 16 % 22), 6, 6, `rgba(70,60,60,${Math.min(.6, (G.b - 86) / 14)})`); } }
+      px(q, 16, 10, 128, 2, 'rgba(255,255,255,.08)');
+      const gx = 10, gy = 92, gw = 140, cols = ['#E8DCC8', '#E8B868', '#6FD08C', '#E8B868', '#4A2A1E']; px(q, gx - 1, gy - 1, gw + 2, 10, OL); z.forEach(([a, b], i) => px(q, gx + a / 100 * gw, gy, (b - a) / 100 * gw, 8, cols[i]));
+      px(q, gx + G.b / 100 * gw - 1, gy - 3, 3, 14, '#FFFFFF'); px(q, gx + G.b / 100 * gw - 1, gy - 3, 3, 1, OL); mgText(q, '완벽', gx + (62 + pw / 2) / 100 * gw, gy - 3, '#C8F0B0', 7); };
+  }
+  // 입력
+  c.onpointerdown = e => { c.setPointerCapture(e.pointerId); const [x, y] = mgPos(e); G.down && G.down(x, y); G.tap && step !== 4 && G.tap(x, y); G.move && step !== 2 && G.move(x, y, performance.now()); };
+  c.onpointermove = e => { if (!e.buttons && e.pointerType === 'mouse') return; const [x, y] = mgPos(e); G.move && G.move(x, y, performance.now()); };
+  c.onpointerup = () => { G.up && G.up(); };
+  if (step === 4) c.onpointerdown = () => G.tap();
+  const loop = now => { if (G.dead) return; G.draw(now); const st = $('#mgst'); if (st) st.textContent = G.miss ? `실수 ${G.miss}` : ''; requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+}
+// 결과 정리 · 도감 등록
+function settle(){
+  const c = ST.cur, R = c.res;
+  if (R[4] === '탐'){ c.q = '숯'; }
+  else { const p = R.reduce((a, g) => a + (GPT[g] ?? 0), 0); c.q = p >= 9 ? '최고' : p >= 6 ? '맛있음' : '보통'; }
+  ST.last = null; const add = (id, g) => { const d = DEX.find(x => x.id === id); if (!ST.dex[id]){ ST.dex[id] = g; ST.last = (ST.last ? ST.last + ' · ' : '') + d.n; } else if ((['보통', '맛있음', '최고'].indexOf(g)) > ['보통', '맛있음', '최고'].indexOf(ST.dex[id])) ST.dex[id] = g; };
+  if (c.q === '숯') add('coal', '숯'); else add(c.f + '_' + c.s, c.q);
+  if (c.q === '최고' && SH_STAR[c.s] === 3){ add('moon_mad', '최고'); }
 }
 
 // ===== 꾸미기
@@ -346,7 +475,6 @@ function decoAt(e){
   else if (e.type === 'pointerdown'){ if (ST.cur.top.length < 30) ST.cur.top.push({ k: t, x: Math.min(x, N - 2), y: Math.min(y, N - 2), c: ['#FF6B8A', '#6FD0FF', '#FFE27A', '#9FE8A8', '#C8A8F0'][ST.cur.top.length % 5], v: ST.cur.top.length % 2 }); }
   decoDraw();
 }
-
 // ===== 상자 그림
 function drawBox(q, B, closed){
   q.clearRect(0, 0, 120, 96); q.imageSmoothingEnabled = false;
@@ -380,7 +508,7 @@ function giftTo(id){
   const sc = B.cks.map(c => ({ c, burnt: grade(c.b) === 'burnt', m: (c.f === n.f ? 1 : 0) + (c.s === n.s ? 1 : 0) }));
   const ok = sc.filter(x => !x.burnt), best = ok.sort((a, b) => b.m - a.m)[0];
   let tier, h;
-  if (!best){ tier = 3; h = 1; } else { tier = best.m === 2 ? 0 : best.m === 1 ? 1 : 2; h = [3, 2, 1][tier] + (best.m && grade(best.c.b) === 'perfect' ? 1 : 0); }
+  if (!best){ tier = 3; h = 1; } else { tier = best.m === 2 ? 0 : best.m === 1 ? 1 : 2; h = [3, 2, 1][tier] + (best.m && best.c.q === '최고' ? 1 : 0); }
   const g = ST.found[id] || (ST.found[id] = {}); B.cks.forEach(c => { if (grade(c.b) !== 'burnt'){ if (c.f === n.f) g.f = 1; if (c.s === n.s) g.s = 1; } });
   let t = n.r[tier]; if (tier < 3 && B.cks.some(c => c.ice && c.ice.some(v => v))) t += ' ' + (id === 'otumo' ? '그림도 감지. 저장.' : id === 'nabi' ? '....그림도 그렸냐냥.' : id === 'kappa' ? '그림도 있군.' : id === 'jipsin' ? '그림도 있다.' : '그림까지 그려 줬네.');
   ST.heart[id] = (ST.heart[id] || 0) + h; ST.boxes.splice(ST.gsel, 1); ST.gsel = -1; ST.said = { id, t };
@@ -392,19 +520,20 @@ function gtoast(t){ const el = $('#gtoast'); el.textContent = t; el.classList.ad
 // ===== 입력
 document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return; const D = b.dataset;
-  if (D.tab){ ST.tab = D.tab; render(); return; }
-  if (D.fl){ BASE.forEach(k => ST.inv[k]--); ST.inv[FL.find(f => f.id === D.fl).it]--; ST.cur = { f: D.fl, s: null, b: 0, ice: new Uint8Array(N * N), top: [] }; ST.step = 1; render(); return; }
-  if (D.sh){ ST.cur.s = D.sh; ST.step = 2; render(); return; }
-  if (b.id === 'ovbtn'){ if (D.next){ ST.step = 3; ST.tool = 'ice' + (myRec().f === ST.cur.f && myRec().s === ST.cur.s ? myRec().ice : 0); render(); } else if (OV) ovenStop(); else ovenStart(); return; }
+  if (D.tab){ ST.tab = D.tab; if (D.tab === 'bake' && ST.step > 0 && ST.step < 6 && !ST.cur) ST.step = -1; render(); return; }
+  if (D.fl){ ST.pickF = D.fl; render(); return; }
+  if (D.sh){ const f = ST.pickF || 'butter', it = FL.find(x => x.id === f).it; if (!(BASE.every(k => ST.inv[k] > 0) && ST.inv[it] > 0)){ gtoast('재료가 모자라요'); return; }
+    BASE.forEach(k => ST.inv[k]--); ST.inv[it]--; ST.cur = { f, s: D.sh, b: 0, ice: new Uint8Array(N * N), top: [], res: [] }; ST.step = 0; render(); return; }
+  if (b.id === 'mgalt' && MG && MG.step === 1 && !MG.done){ MG.turn += .34; MG.ang += 2.1; if (MG.turn >= MG.need){ ST.cur.res[1] = MG.miss ? '좋아' : '완벽'; MG.done = true; mgMsg(ST.cur.res[1]); setTimeout(() => { ST.step = 2; render(); }, 900); } return; }
+  if (b.id === 'mgroll' && MG && MG.step === 2){ MG.down(0, 40); MG.move(0, 70); MG.up(); return; }
+  if (b.id === 'mgok' && MG && MG.step === 2){ MG.ok(); return; }
+  if (b.id === 'mgoven' && MG && MG.step === 4){ MG.tap(); return; }
+  if (b.id === 'todeco'){ ST.step = 6; ST.tool = 'ice0'; render(); return; }
   if (D.ice){ ST.tool = D.ice === 'x' ? 'erase' : 'ice' + D.ice; document.querySelectorAll('[data-ice],[data-top]').forEach(x => x.classList.toggle('on', x === b)); return; }
   if (D.top){ ST.tool = D.top; document.querySelectorAll('[data-ice],[data-top]').forEach(x => x.classList.toggle('on', x === b)); return; }
   if (D.undo){ ST.cur.top.pop(); decoDraw(); return; }
   if (D.clr){ ST.cur.ice.fill(0); ST.cur.top = []; decoDraw(); return; }
-  if (b.id === 'decodone'){ const R = myRec(), rec = R.f === ST.cur.f && R.s === ST.cur.s && grade(ST.cur.b) !== 'burnt';
-    for (let i = 0; i < 2; i++) ST.tray.push({ ...ST.cur, ice: ST.cur.ice.slice(), top: ST.cur.top.slice(), id: uid++, rec });
-    ST.step = 0; ST.cur = null; gtoast('쿠키 2 개가 쟁반에 올라갔어요'); render();
-    if (rec && !ST.madeRec){ ST.madeRec = true; madSay(['바로 그거예요. ....생각했던 것보다 훨씬 예쁘네요.', '이제 마음껏 구워요. 주고 싶은 사람이 생기면, 상자째로요.']); }
-    return; }
+  if (b.id === 'decodone'){ for (let i = 0; i < 2; i++) ST.tray.push({ ...ST.cur, ice: ST.cur.ice.slice(), top: ST.cur.top.slice(), id: uid++ }); ST.step = -1; ST.cur = null; gtoast('쿠키 2 개가 쟁반에 올라갔어요'); render(); return; }
   if (D.ck){ const id = +D.ck, S = ST.box.sel; if (S.includes(id)) S.splice(S.indexOf(id), 1); else if (S.length < 4) S.push(id); else gtoast('상자에는 4 개까지 들어가요'); render(); return; }
   if (D.bc){ ST.box.c = +D.bc; render(); return; }
   if (D.rb){ ST.box.r = +D.rb; render(); return; }
@@ -413,23 +542,22 @@ document.addEventListener('click', e => {
   if (D.gb){ ST.gsel = +D.gb; ST.said = null; render(); return; }
   if (D.npc){ giftTo(D.npc); return; }
   if (b.id === 'refill'){ refill(); gtoast('재료를 채웠어요 (시안 전용)'); render(); return; }
+  if (b.id === 'openall'){ ST.all = !ST.all; gtoast(ST.all ? '별 셋까지 다 열었어요 (시안 전용)' : '도감 수만큼만 열려요'); render(); return; }
   if (b.id === 'replay'){ playIntro(); return; }
 });
 let drawing = false;
 document.addEventListener('pointerdown', e => { if (e.target.id === 'dcv'){ drawing = true; e.target.setPointerCapture(e.pointerId); decoAt(e); } });
 document.addEventListener('pointermove', e => { if (drawing && e.target.id === 'dcv' && (ST.tool || 'ice0').match(/^ice|erase/)) decoAt(e); });
 document.addEventListener('pointerup', () => { drawing = false; });
-$('#stu').innerHTML = Array.from({ length: 12 }, (_, i) => `<option value="${i}">학생 ${i + 1}</option>`).join('');
-$('#stu').onchange = e => { ST.stu = +e.target.value; ST.madeRec = false; render(); };
 
-// ===== 관리자: 학생마다 레시피 배정 (한 레시피는 한 명만)
+// ===== 관리자 (시안: 반 전체 도감 현황)
 function renderAdm(){
-  const used = new Set(ASSIGN);
-  $('#adm').innerHTML = `<div class="admh"><b>관리자 · 마들렌 레시피 정하기</b><span>학생마다 마들렌이 건네줄 레시피 카드를 골라요. 이름은 마들렌이 그 학생을 보고 붙인 거예요. 한 레시피는 한 명에게만 줄 수 있어요.</span></div>
-    <div class="arows">${ASSIGN.map((cur, i) => `<div class="arow"><span class="an">학생 ${i + 1}</span><select data-as="${i}" aria-label="학생 ${i + 1} 레시피"><option value="-1">비움</option>${RECIPE.map((r, k) => k === cur || !used.has(k) ? `<option value="${k}" ${k === cur ? 'selected' : ''}>${r.n}</option>` : '').join('')}</select></div>`).join('')}</div>
-    <p class="hint">비워 두면 기본 레시피(포근한 달)를 받아요.</p>`;
+  const fake = [12, 7, 23, 3, 18, 9, 31, 5, 14, 2, 26, 11];
+  $('#adm').innerHTML = `<div class="admh"><b>관리자 · 쿠키 상자 주간</b><span>열면 학생이 과자 교실에 들어갈 때 마들렌 연출이 나와요. 연출이 끝나면 오븐을 쓸 수 있어요.</span></div>
+    <div class="row"><button class="btn go" style="flex:1">이벤트 열기</button><button class="btn" style="flex:1">연출 다시 보내기</button></div>
+    <div class="lab">학생 도감 (예시 숫자)</div>
+    <div class="cnt">${fake.map((n, i) => `<span>학생 ${i + 1} <b>${n}</b>/50</span>`).join('')}</div>`;
 }
-document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('[data-as]'); if (!s) return; ASSIGN[+s.dataset.as] = +s.value < 0 ? 10 : +s.value; renderAdm(); render(); });
 
 // ===== 마들렌 말풍선 (게임 대화창)
 async function say(row, name, t, hold = 1400){
@@ -440,7 +568,7 @@ async function say(row, name, t, hold = 1400){
   v.style.display = 'none'; await sleep(100);
 }
 async function madSay(L){ for (const t of L) await say(7, '마들렌', t); }
-function famCard(html, ck){ return new Promise(r => { const f = $('#fam'); $('#famin').innerHTML = html; f.hidden = false; after(); const c = f.querySelector('#rccv2'); if (c){ const q = c.getContext('2d'); drawCookie(q, ck || recipeCookie(myRec()), 0, 0, 3); } f.onclick = () => { f.hidden = true; r(); }; }); }
+function famCard(html, ck){ return new Promise(r => { const f = $('#fam'); $('#famin').innerHTML = html; f.hidden = false; after(); const c = f.querySelector('#rccv2'); if (c){ const q = c.getContext('2d'); drawCookie(q, ck, 0, 0, 3); } f.onclick = () => { f.hidden = true; r(); }; }); }
 
 __INTRO__
 

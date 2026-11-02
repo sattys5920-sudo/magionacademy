@@ -4,7 +4,6 @@ const IZ = 3;
 let IC = null;
 const ctp = (x, y) => [CM.OX + (x - y) * 8, CM.OY + (x + y) * 4];
 const OVEN = [288, 131], CT = [247, 162];
-const ICIMG = Object.assign(new Image(), { src: 'data:image/png;base64,__ICONS__' });
 function introStart(){
   const o = $('#cine'); o.hidden = false;
   const cw = document.querySelector('.cwrap'), cc = $('#ccv'); cc.width = cw.clientWidth; cc.height = cw.clientHeight;
