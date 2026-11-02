@@ -562,31 +562,73 @@ function decoAt(e){
   else if (e.type === 'pointerdown'){ if (ST.cur.top.length < 30) ST.cur.top.push({ k: t, x: Math.min(x, N - 2), y: Math.min(y, N - 2), c: ['#FF6B8A', '#6FD0FF', '#FFE27A', '#9FE8A8', '#C8A8F0'][ST.cur.top.length % 5], v: ST.cur.top.length % 2 }); }
   decoDraw();
 }
-// ===== 상자 그림
+// ===== 상자 그림 (도트 · 위 · 앞 · 옆이 보이는 입체)
+const BOX_OL = '#2A1A2E';
+function fillShape(g, inside, x0, y0, x1, y1, fn, edge){
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++){ if (!inside(x + .5, y + .5)) continue;
+    const e = edge && (!inside(x - .5, y + .5) || !inside(x + 1.5, y + .5) || !inside(x + .5, y - .5) || !inside(x + .5, y + 1.5));
+    const c = e ? edge : fn(x, y); if (c){ g.fillStyle = c; g.fillRect(x, y, 1, 1); } }
+}
+const HEART5 = ['01010', '11111', '11111', '01110', '00100'];
+function boxPat(P, u, v){
+  u = Math.floor(u); v = Math.floor(v);
+  if (P === 'dot'){ const r = Math.floor(v / 5), uu = (u + (r % 2) * 3) % 6, vv = ((v % 5) + 5) % 5; return (uu === 1 || uu === 2) && (vv === 1 || vv === 2); }
+  if (P === 'stripe') return ((u % 6) + 6) % 6 < 2;
+  if (P === 'heart'){ const r = Math.floor(v / 7), uu = ((u + (r % 2) * 4) % 8 + 8) % 8, vv = ((v % 7) + 7) % 7; return uu < 5 && vv < 5 && HEART5[vv][uu] === '1'; }
+  return false;
+}
+function boxCols(B){
+  const base = hex(BOXC[B.c]), lum = base[0] * .3 + base[1] * .59 + base[2] * .11, light = lum > 225;
+  const sh = (c, k) => rgb(mix(c, [60, 30, 50], k)), hi = (c, k) => rgb(mix(c, [255, 255, 255], k));
+  const motif = c => light ? rgb(mix(hex('#F4A0B8'), c, .25)) : rgb(mix(c, [255, 255, 255], .5));
+  const r = hex(RIB[B.r]);
+  return { top: hi(base, .25), front: rgb(base), side: sh(base, .22), lid: hi(base, .1), seam: sh(base, .35),
+    mTop: motif(mix(base, [255, 255, 255], .25)), mFront: motif(base), mSide: motif(mix(base, [60, 30, 50], .22)),
+    r: rgb(r), rTop: hi(r, .25), rSide: sh(r, .25), rDark: sh(r, .45), P: PAT[B.p][0] };
+}
+function drawBoxClosed(g, B){
+  const K = boxCols(B), P = K.P;
+  // 그림자
+  fillShape(g, (x, y) => ((x - 31) / 25) ** 2 + ((y - 43) / 3.2) ** 2 <= 1, 4, 39, 58, 47, () => 'rgba(0,0,0,.28)');
+  // 옆
+  fillShape(g, (x, y) => x >= 50 && x <= 57 && y >= 22 - (x - 50) * 10 / 7 && y <= 42 - (x - 50) * 10 / 7, 50, 11, 57, 42,
+    (x, y) => { const v = y - (22 - (x - 50) * 10 / 7); if (x >= 53 && x <= 55) return x === 55 ? K.rDark : K.rSide; if (v < 4) return v === 3 ? K.seam : K.side; return boxPat(P, x * 2, v) ? K.mSide : K.side; }, BOX_OL);
+  // 위
+  const topIn = (x, y) => y >= 12 && y <= 22 && x >= 8 + (22 - y) * .6 && x <= 50 + (22 - y) * .6 + .01;
+  fillShape(g, topIn, 8, 12, 57, 22, (x, y) => { const v = 22 - y, u = x - 8 - v * .6; if (u >= 19 && u < 24) return u >= 23 ? K.r : K.rTop; if (v >= 4 && v <= 6) return v === 4 ? K.r : K.rTop; return boxPat(P, u, v) ? K.mTop : K.top; }, BOX_OL);
+  // 앞
+  fillShape(g, (x, y) => x >= 8 && x <= 50.01 && y >= 22 && y <= 42, 8, 22, 50, 42, (x, y) => { const u = x - 8, v = y - 22;
+    if (u >= 19 && u < 24) return u === 23 ? K.rDark : K.r; if (v < 4) return v === 3 ? K.seam : (boxPat(P, u, v + 20) ? K.mFront : K.lid); return boxPat(P, u, v) ? K.mFront : K.front; }, BOX_OL);
+  // 리본 꼬리
+  const tail = (pts) => fillShape(g, (x, y) => inPoly(x, y, pts), 20, 14, 44, 32, () => K.r, BOX_OL);
+  tail([[30, 16], [33, 16], [27, 30], [25, 27]]); tail([[31, 16], [34, 16], [39, 27], [37, 30]]);
+  // 리본 고리
+  const loop = (cx) => fillShape(g, (x, y) => ((x - cx) / 6) ** 2 + ((y - 13) / 4) ** 2 <= 1, cx - 7, 8, cx + 7, 18, (x, y) => ((x - cx) / 3.2) ** 2 + ((y - 13) / 1.8) ** 2 <= 1 ? K.rDark : (y < 12 ? K.rTop : K.r), BOX_OL);
+  loop(26.5); loop(37.5);
+  fillShape(g, (x, y) => x >= 29.5 && x <= 34.5 && y >= 10.5 && y <= 16.5, 29, 10, 35, 17, (x, y) => y < 13 ? K.rTop : K.r, BOX_OL);
+  g.fillStyle = 'rgba(255,255,255,.7)'; g.fillRect(31, 12, 1, 1); g.fillRect(24, 11, 2, 1);
+}
+function drawBoxOpen(g, B){
+  const K = boxCols(B), P = K.P;
+  fillShape(g, (x, y) => ((x - 60) / 50) ** 2 + ((y - 87) / 5) ** 2 <= 1, 8, 80, 116, 93, () => 'rgba(0,0,0,.28)');
+  // 뚜껑 (뒤에 세워 둠)
+  fillShape(g, (x, y) => inPoly(x, y, [[34, 6], [108, 6], [110, 40], [32, 40]]), 31, 5, 111, 41, (x, y) => { const u = x - 33; if (u >= 36 && u < 42) return u === 41 ? K.rDark : K.r; if (y > 36) return K.seam; return boxPat(P, u, y) ? K.mTop : K.top; }, BOX_OL);
+  // 안쪽: 바닥 종이 · 안쪽 벽
+  const inner = (x, y) => y >= 38 && y <= 62 && x >= 14 + (62 - y) * .58 && x <= 92 + (62 - y) * .58;
+  fillShape(g, inner, 14, 38, 107, 62, (x, y) => y < 43 ? K.seam : x > 88 + (62 - y) * .58 ? K.seam : ((x + y) % 6 === 0 ? '#F0DCC6' : '#FFF6EC'), BOX_OL);
+  // 쿠키 2 × 2 (뒷줄 먼저)
+  [[34, 33], [62, 33], [24, 45], [52, 45]].forEach(([x, y], i) => { const ck = B.cks[i]; if (ck) drawCookie(g, ck, x, y, 1); else { g.fillStyle = 'rgba(120,80,60,.12)'; g.fillRect(x + 3, y + 8, 18, 10); } });
+  // 옆벽 · 앞벽
+  fillShape(g, (x, y) => x >= 92 && x <= 106 && y >= 62 - (x - 92) * 24 / 14 && y <= 86 - (x - 92) * 24 / 14, 92, 37, 106, 87, (x, y) => boxPat(P, x * 2, y - (92 - x)) ? K.mSide : K.side, BOX_OL);
+  fillShape(g, (x, y) => x >= 14 && x <= 92.01 && y >= 62 && y <= 86, 14, 62, 92, 86, (x, y) => { const u = x - 14, v = y - 62; if (v < 3) return K.lid; return boxPat(P, u, v) ? K.mFront : K.front; }, BOX_OL);
+  // 풀어 둔 리본
+  fillShape(g, (x, y) => y >= 85 + Math.sin(x / 5) * 2 && y <= 89 + Math.sin(x / 5) * 2 && x >= 66 && x <= 116, 66, 80, 116, 93, (x, y) => y > 87 + Math.sin(x / 5) * 2 ? K.rDark : K.r, BOX_OL);
+}
+const BOXOFF = document.createElement('canvas');
 function drawBox(q, B, closed){
-  q.clearRect(0, 0, 120, 96); q.imageSmoothingEnabled = false;
-  const col = hex(BOXC[B.c]), dk = rgb(mix(col, [40, 20, 30], .35)), lt = rgb(mix(col, [255, 255, 255], .35)), OL = '#2A1A2E';
-  const pat = (x, y, w, h) => { const P = PAT[B.p][0]; q.save(); q.beginPath(); q.rect(x, y, w, h); q.clip(); q.fillStyle = lt;
-    if (P === 'dot') for (let yy = y + 2; yy < y + h; yy += 8) for (let xx = x + 2 + ((yy - y) / 8 % 2) * 4; xx < x + w; xx += 8) q.fillRect(xx, yy, 2, 2);
-    if (P === 'stripe') for (let xx = x - h; xx < x + w; xx += 8){ q.beginPath(); q.moveTo(xx, y + h); q.lineTo(xx + h, y); q.lineTo(xx + h + 3, y); q.lineTo(xx + 3, y + h); q.fill(); }
-    if (P === 'heart') for (let yy = y + 3; yy < y + h; yy += 10) for (let xx = x + 3 + ((yy - y) / 10 % 2) * 5; xx < x + w; xx += 10){ q.fillRect(xx, yy, 2, 2); q.fillRect(xx + 3, yy, 2, 2); q.fillRect(xx, yy + 1, 5, 2); q.fillRect(xx + 1, yy + 3, 3, 1); q.fillRect(xx + 2, yy + 4, 1, 1); }
-    q.restore(); };
-  if (!closed){
-    q.fillStyle = OL; q.fillRect(4, 6, 112, 86); q.fillStyle = rgb(col); q.fillRect(6, 8, 108, 82); pat(6, 8, 108, 82);
-    q.fillStyle = dk; q.fillRect(12, 14, 96, 70); q.fillStyle = '#FFF6EC'; q.fillRect(14, 16, 92, 66);
-    q.fillStyle = '#F2E2D0'; for (let i = 0; i < 92; i += 6) q.fillRect(14 + i, 16, 3, 66);
-    [[22, 20], [62, 20], [22, 52], [62, 52]].forEach(([x, y], i) => { const ck = B.cks[i]; if (ck) drawCookie(q, ck, x + 4, y + 2, 1.25); else { q.fillStyle = 'rgba(0,0,0,.06)'; q.fillRect(x + 6, y + 4, 28, 26); } });
-    return;
-  }
-  q.fillStyle = 'rgba(0,0,0,.25)'; q.fillRect(10, 86, 100, 6);
-  q.fillStyle = OL; q.fillRect(8, 20, 104, 68); q.fillStyle = rgb(col); q.fillRect(10, 22, 100, 64); pat(10, 22, 100, 64);
-  q.fillStyle = dk; q.fillRect(10, 30, 100, 2);
-  const rb = RIB[B.r], rbd = rgb(mix(hex(rb), [40, 20, 30], .3));
-  q.fillStyle = rb; q.fillRect(54, 22, 12, 64); q.fillRect(10, 48, 100, 10); q.fillStyle = rbd; q.fillRect(54, 56, 12, 2); q.fillRect(64, 22, 2, 64);
-  q.fillStyle = OL; q.beginPath(); q.moveTo(60, 50); q.lineTo(34, 30); q.lineTo(32, 56); q.closePath(); q.fill(); q.beginPath(); q.moveTo(60, 50); q.lineTo(86, 30); q.lineTo(88, 56); q.closePath(); q.fill();
-  q.fillStyle = rb; q.beginPath(); q.moveTo(58, 50); q.lineTo(36, 34); q.lineTo(35, 53); q.closePath(); q.fill(); q.beginPath(); q.moveTo(62, 50); q.lineTo(84, 34); q.lineTo(85, 53); q.closePath(); q.fill();
-  q.fillStyle = OL; q.fillRect(53, 45, 14, 12); q.fillStyle = rb; q.fillRect(55, 47, 10, 8); q.fillStyle = rbd; q.fillRect(55, 53, 10, 2);
-  q.fillStyle = rb; q.fillRect(50, 56, 6, 16); q.fillRect(64, 56, 6, 16);
+  const w = closed ? 60 : 120, h = closed ? 48 : 96; BOXOFF.width = w; BOXOFF.height = h; const g = BOXOFF.getContext('2d'); g.clearRect(0, 0, w, h);
+  if (closed) drawBoxClosed(g, B); else drawBoxOpen(g, B);
+  q.imageSmoothingEnabled = false; q.clearRect(0, 0, q.canvas.width, q.canvas.height); q.drawImage(BOXOFF, 0, 0, w, h, 0, 0, q.canvas.width, q.canvas.height);
 }
 
 // ===== 선물
