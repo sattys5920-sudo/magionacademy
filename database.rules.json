@@ -513,6 +513,23 @@
       ".read": "auth != null",
       ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'"
     },
+    "bm": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+      "got": {
+        "$w": {
+          ".write": "auth != null && !data.exists() && newData.child('u').val() === auth.uid && root.child('bm/ctl/open').val() === true"
+        }
+      },
+      "place": {
+        "$s": {
+          ".write": "auth != null && root.child('bm/ctl/open').val() === true && !root.child('bm/done').exists() && (!newData.exists() || (newData.child('u').val() === auth.uid && newData.child('w').isNumber()))"
+        }
+      },
+      "done": {
+        ".write": "auth != null && !data.exists() && newData.exists()"
+      }
+    },
     "ck": {
       ".read": "auth != null",
       ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
