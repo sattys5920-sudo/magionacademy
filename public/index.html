@@ -9286,7 +9286,7 @@ async function wsWrite(text){
   const t = String(text || '').trim().slice(0, 100), bad = wsCheck(t); if (!t) return '소원을 써 주세요.'; if (bad) return bad;
   const id = wsMine || (now2().toString(36) + Math.random().toString(36).slice(2, 7));
   await GDB.upd('wish', { ['own/' + uid]: id, ['list/' + id]: { t, at: now2(), ev: wsCtl.id } }); wsMine = id;
-  wsOn = true; try { closeSheet(); await wsFx(); await WishFX.send(wsApi()); toast('내 소원이 별이 됐어요. 누가 응원하면 알려 줄게요'); } finally { wsOn = false; }
+  wsOn = true; try { closeSheet(); await wsFx(); await WishFX.send(wsApi()); toast('내 소원이 별이 됐어요. 응원 글은 이벤트가 끝나면 볼 수 있어요'); } finally { wsOn = false; }
   return '';
 }
 // 시작 연출: 스텔라가 와서 소원을 적어 보라고 해요 → 소원 종이 → 날려 보내면 하늘에서 쪽지들이 내려와요
@@ -9321,7 +9321,7 @@ function wsTick(){
   if (on){ const S = wsSt();
     if (!S.hi){ if (uiBusy() || !World.meAt || !World.meAt() || !evTurn('wish')) return; S.hi = 1; save(); wsOn = true; wsIntro().finally(() => { wsOn = false; wsSpotSig = ''; }); return; }
     if (wsFall && !wsOn && !uiBusy() && World.meAt && World.meAt()){ wsFall = 0; wsOn = true; WishFX.fall(wsApi()).finally(() => { wsOn = false; wsSpotSig = ''; toast('새 소원 쪽지가 어딘가에 떨어졌어요'); }); return; }
-    if (wsMine){ const n = wsCheers(wsMine).length; if (n > (S.ln || 0)){ S.ln = n; save(); toast(`누군가 내 소원을 응원했어요 ★ ${n}`); sfx('sparkle'); } }
+    if (wsMine){ const n = wsCheers(wsMine).length; if (n > (S.ln || 0)){ S.ln = n; save(); } }
   }
   // 관리자가 끝내면: 별자리 연출 (한 번) + 보상 · 그 뒤로 모든 소원과 응원 글을 일지에서 볼 수 있어요
   if (wsDone() && !(me.wishSeen === wsCtl.id)){ if (uiBusy() || !World.meAt || !World.meAt() || !evTurn('wish')) return;
