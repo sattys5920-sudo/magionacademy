@@ -9748,7 +9748,7 @@ function gdSim(){
   for (let s = Math.floor(from / GD_SLOT) + 1; s <= Math.floor(now / GD_SLOT); s++){ const t = s * GD_SLOT;
     if (G.log.filter(x => !x.seen).length >= 3) break;
     if (!G.feed || !(G.feed.at <= t && t < G.feed.at + GD_FEED)) continue;
-    const di = DISH.findIndex(d => d.id === G.feed.d), band = gdBand(t), R = seedRand(uid + ':gd:' + s + ':' + G.feed.d);
+    const di = DISH.findIndex(d => d.id === G.feed.d.replace(/_s$/, '')), band = gdBand(t), R = seedRand(uid + ':gd:' + s + ':' + G.feed.d);
     const C = GD_G.map((g, i) => [g, i]).filter(([g]) => g[3].includes(di) && g[2].includes(band) && gdOk(g, G.on || {})).sort(() => R() - .5);
     for (const [g, i] of C){ const reg = ((G.dex || {})[i]?.n || 0) >= GD_REG; if (R() < .1 * (g[5] ? .35 : 1) * (reg ? 1.8 : 1)){ G.log.push({ g: i, at: t, p: R() < .5 ? 0 : 1, d: G.feed.d }); n++; break; } }
   }
@@ -9785,7 +9785,7 @@ function gdRender(){
   const head = `<div class="hd"><b>창밖 정원</b><button data-gd="x" aria-label="닫기">✕</button></div><div class="tabs"><button data-gdt="g" class="${gdTab === 'g' ? 'on' : ''}">정원</button><button data-gdt="d" class="${gdTab === 'd' ? 'on' : ''}">도감 ${n} / 20</button></div>`;
   if (gdTab === 'g'){
     const f = G.feed && now2() < G.feed.at + GD_FEED ? G.feed : null, left = f ? Math.ceil((f.at + GD_FEED - now2()) / 3600e3) : 0;
-    const feed = gdPick ? gdPickHTML() : `<div class="fd">${f ? `${ic(f.d)}<span><b>먹이 접시</b>${esc(gdDish(DISH.findIndex(d => d.id === f.d)).name)} · ${left} 시간 남았어요</span>` : `<i class="em">?</i><span><b>먹이 접시</b>비어 있어요. 요리를 올려 두면 손님이 찾아와요</span>`}<button class="btn sm go" data-gd="pick">${f ? '바꾸기' : '요리 올리기'}</button></div>`;
+    const feed = gdPick ? gdPickHTML() : `<div class="fd">${f ? `${ic(f.d)}<span><b>먹이 접시</b>${esc(ITEM[f.d] || gdDish(DISH.findIndex(d => d.id === f.d.replace(/_s$/, ''))).name)} · ${left} 시간 남았어요</span>` : `<i class="em">?</i><span><b>먹이 접시</b>비어 있어요. 요리를 올려 두면 손님이 찾아와요</span>`}<button class="btn sm go" data-gd="pick">${f ? '바꾸기' : '요리 올리기'}</button></div>`;
     const tray = `<div class="tray">${GD_ORDER.map(k => { const [nm, pr] = GD_IT[k], own = G.own[k], on = G.on[k]; return `<button data-gdi="${k}" class="${on ? 'on' : own ? '' : 'buy'}"><canvas width="32" height="40" data-gdit="${k}"></canvas><span>${nm}</span><em>${on ? '놓았어요' : own ? '놓기' : pr.toLocaleString() + 'G'}</em></button>`; }).join('')}</div>`;
     v.innerHTML = head + '<canvas class="yd" width="144" height="88"></canvas>' + feed + tray;
     v.querySelectorAll('[data-gdit]').forEach(c => { const m = GD_GI.items[c.dataset.gdit], q = c.getContext('2d'); q.imageSmoothingEnabled = false; const s = Math.min(1, 38 / m.sh * 1.25); q.drawImage(gdImgs().it, m.sx, 0, m.sw, m.sh, (32 - m.sw * s) / 2, 40 - m.sh * s, m.sw * s, m.sh * s); });
@@ -9807,7 +9807,7 @@ function gdRender(){
   v.querySelectorAll('[data-gdg]').forEach(c => gdIcon(c, +c.dataset.gdg, c.classList.contains('big') ? 14 : 14)); v.querySelectorAll('[data-gdr]').forEach(c => gdRewIcon(c, c.dataset.gdr));
   v.querySelectorAll('[data-gdp]').forEach(c => gdShot(c, gdSel, +c.dataset.gdp));
 }
-function gdPickHTML(){ const L = DISH.filter(d => me.inv[d.id] > 0); return `<div class="pick"><div class="ph2"><b>먹이 접시에 올릴 요리</b><button class="btn sm" data-gd="unpick">취소</button></div>${L.length ? `<div class="pl">${L.map(d => `<button data-gdf="${d.id}">${ic(d.id)}<span>${esc(d.name)}</span><em>${me.inv[d.id]}</em></button>`).join('')}</div>` : '<div class="s">가방에 요리가 없어요. 요리를 먼저 만들어 와요</div>'}</div>`; }
+function gdPickHTML(){ const L = DISH.flatMap(d => [d, { ...d, id: d.id + '_s', name: ITEM[d.id + '_s'] || d.name }]).filter(d => me.inv[d.id] > 0); return `<div class="pick"><div class="ph2"><b>먹이 접시에 올릴 요리</b><button class="btn sm" data-gd="unpick">취소</button></div>${L.length ? `<div class="pl">${L.map(d => `<button data-gdf="${d.id}">${ic(d.id)}<span>${esc(d.name)}</span><em>${me.inv[d.id]}</em></button>`).join('')}</div>` : '<div class="s">가방에 요리가 없어요. 요리를 먼저 만들어 와요</div>'}</div>`; }
 function gdRewIcon(c, k){ const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, c.width, c.height); const R = (x, y, w, h, col) => { q.fillStyle = col; q.fillRect(x, y, w, h); }, GU = gdImgs().gu;
   if (k === 'tag'){ R(4, 7, 26, 9, '#1a1024'); R(5, 8, 24, 7, '#3A5A2A'); R(6, 9, 22, 1, '#9AE07A'); [8, 13, 18, 23].forEach(x => R(x, 11, 2, 2, '#F0D070')); R(1, 9, 3, 3, '#C8884A'); R(30, 9, 3, 3, '#C8884A'); }
   if (k === 'gd_frame'){ R(9, 2, 16, 18, '#2A1A10'); R(10, 3, 14, 16, '#5AA84A'); R(12, 5, 10, 12, '#BFE6F4'); q.drawImage(GU, 12 * 28, 0, 14, 14, 10, 4, 14, 14); }
@@ -9817,10 +9817,10 @@ function gdRewIcon(c, k){ const q = c.getContext('2d'); q.imageSmoothingEnabled 
 async function gdCollect(){
   const G = me.garden, un = G.log.filter(x => !x.seen); if (!un.length) return;
   for (const x of un){ const g = GD_G[x.g], d = G.dex[x.g] = G.dex[x.g] || { n: 0, fd: [0, 0], ph: 0 }, first = !d.n; d.n++; const reg = d.n >= GD_REG, k = FORAGE[g[4]].id, cnt = reg ? 3 : 2;
-    const j = g[3].findIndex(i => gdDish(i).id === x.d); if (j >= 0) d.fd[j] = 1; d.ph |= 1 << x.p; const special = reg && !(d.ph & 4); if (special) d.ph |= 4;
+    const j = g[3].findIndex(i => gdDish(i).id === x.d.replace(/_s$/, '')); if (j >= 0) d.fd[j] = 1; d.ph |= 1 << x.p; const special = reg && !(d.ph & 4); if (special) d.ph |= 4;
     me.inv[k] = (me.inv[k] || 0) + cnt; if (typeof dexAdd === 'function') dexAdd(k); if (first) addKnow(2); x.seen = 1; save();
     const tm = new Date(x.at + 9 * 3600e3 + (new Date).getTimezoneOffset() * 6e4);
-    await famCard(`<canvas width="96" height="72" id="gdcard" style="width:200px;height:150px;image-rendering:pixelated;border:3px solid #3A2C4A;border-radius:4px;background:#E8DCC4"></canvas><b>${withJosa(g[0], '이', '가')} 다녀갔어요</b><small>${tm.getHours()} 시 ${tm.getMinutes() ? tm.getMinutes() + ' 분' : ''} · ${esc(gdDish(DISH.findIndex(q => q.id === x.d)).name)}${j >= 0 ? '을(를) 맛있게 먹었어요' : ''}<br>선물 ${esc(FORAGE[g[4]].name)} ×${cnt}${first ? ' · 처음 온 손님! 지식 +2' : ''}${special ? '<br>★ 단골이 됐어요! 특별한 사진 한 장 더' : ''}</small>`, () => { const c = $('#gdcard'); if (c) gdShot(c, x.g, special ? 2 : x.p); sfx(first ? 'sparkle' : 'chime'); }, first || special ? 2600 : 1900);
+    await famCard(`<canvas width="96" height="72" id="gdcard" style="width:200px;height:150px;image-rendering:pixelated;border:3px solid #3A2C4A;border-radius:4px;background:#E8DCC4"></canvas><b>${withJosa(g[0], '이', '가')} 다녀갔어요</b><small>${tm.getHours()} 시 ${tm.getMinutes() ? tm.getMinutes() + ' 분' : ''} · ${esc(ITEM[x.d] || gdDish(DISH.findIndex(q => q.id === x.d.replace(/_s$/, ''))).name)}${j >= 0 ? '을(를) 맛있게 먹었어요' : ''}<br>선물 ${esc(FORAGE[g[4]].name)} ×${cnt}${first ? ' · 처음 온 손님! 지식 +2' : ''}${special ? '<br>★ 단골이 됐어요! 특별한 사진 한 장 더' : ''}</small>`, () => { const c = $('#gdcard'); if (c) gdShot(c, x.g, special ? 2 : x.p); sfx(first ? 'sparkle' : 'chime'); }, first || special ? 2600 : 1900);
   }
   gdReward(); gdRender();
 }
