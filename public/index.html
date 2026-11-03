@@ -1807,8 +1807,8 @@ function peerAct(id, act){
 $('#temo').innerHTML = EMOS.map((x, i) => `<button data-te="${i}">${emoI(i)}</button>`).join('');
 document.querySelectorAll('[data-te]').forEach(b => b.onclick = () => speak(EMOS[+b.dataset.te], +b.dataset.te + 1));
 $('#tform').onsubmit = e => { e.preventDefault(); if (shoutMode){ if (shout($('#tin').value)) $('#tin').value = ''; return; } speak($('#tin').value); $('#tin').value = ''; };
-// ===== 확성기: 반 전체에 말하기 (하루 5 번) · shout/<id> = { u, n, t, at } · 관리자가 끌 수 있어요 (shoutctl/off) =====
-const SHOUT_MAX = 5, SHOUT_CD = 60000; let shoutMode = false, shoutCtl = {}, shoutSeen = null, shoutQ = [], shoutBusy = false;
+// ===== 확성기: 반 전체에 말하기 (하루 10 번) · shout/<id> = { u, n, t, at } · 관리자가 끌 수 있어요 (shoutctl/off) =====
+const SHOUT_MAX = 10, SHOUT_CD = 60000; let shoutMode = false, shoutCtl = {}, shoutSeen = null, shoutQ = [], shoutBusy = false;
 const shoutWait = () => Math.max(0, ((me && me.shout && me.shout.last) || 0) + SHOUT_CD - now2());
 const shoutLeft = () => { const s = me && me.shout; return SHOUT_MAX - (s && s.d === todayKey() ? s.n || 0 : 0); };
 function shoutUi(){ const b = $('#cM'), i = $('#tin'); if (!b || !i) return; b.classList.toggle('on', shoutMode); i.placeholder = shoutMode ? `확성기 · 반 전체에 (오늘 ${Math.max(0, shoutLeft())}/${SHOUT_MAX})` : '말풍선 (40자)'; }
@@ -12111,7 +12111,7 @@ const BM = (() => {
 })();
 function adminShoutHTML(){
   const c = AD.shoutctl || {}, L = Object.entries(AD.shout || {}).sort((a, b) => (b[1].at || 0) - (a[1].at || 0)).slice(0, 10);
-  return `<div class="adcard"><div class="abhead"><b>확성기 (반 전체에 말하기 · 하루 5 번 · 1 분에 한 번)</b>${c.off ? '<button class="btn sm go" data-sha="on">켜기</button>' : '<button class="btn sm" data-sha="off">끄기</button>'}${L.length ? '<button class="btn sm" data-sha="clear">기록 지우기</button>' : ''}</div>
+  return `<div class="adcard"><div class="abhead"><b>확성기 (반 전체에 말하기 · 하루 10 번 · 1 분에 한 번)</b>${c.off ? '<button class="btn sm go" data-sha="on">켜기</button>' : '<button class="btn sm" data-sha="off">끄기</button>'}${L.length ? '<button class="btn sm" data-sha="clear">기록 지우기</button>' : ''}</div>
     <div class="s">${c.off ? '꺼져 있어요' : '켜져 있어요'} · 최근 ${L.length}개</div>${L.map(([id, x]) => `<div class="sdarow"><span><b>${esc(x.n || '')}</b></span><span class="s">${esc(x.t || '')} · ${new Date(x.at || 0).toLocaleString('ko-KR')}</span><button class="btn sm" data-shdel="${id}">지우기</button></div>`).join('')}</div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-sha],[data-shdel]'); if (!b || !F || !db) return;
