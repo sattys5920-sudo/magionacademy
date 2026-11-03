@@ -10262,15 +10262,32 @@ function knGiftHTML(n){
   const L = me.knit && me.knit.sc || []; if (!L.length || !KN_THX[n.id]) return '';
   return `<div class="kngift"><b>뜨개 목도리</b><div class="row">${L.map((s, i) => `<button data-kngive="${i}" aria-label="목도리 주기">${knSw(s.c, 44, 16)}</button>`).join('')}</div><span class="s sub">하루 한 번과 상관없이 줄 수 있어요 · 받은 NPC는 늘 둘러요</span></div>`;
 }
+// NPC마다 좋아하는 목도리 색 (힌트 없음 · 그 색이 들어간 목도리를 처음 줄 때만 호감도 +30 · 줄 때마다 그 색 대사)
+const KN_FAV = { nabi: 'red', batri: 'purple', kappa: 'green', aula: 'blue', mandi: 'pink', jipsin: 'orange', sera: 'white', madeleine: 'p_mustard', stella: 'purple', leo: 'brown', otumo: 'sky' };
+const KN_FAV_SAY = {
+  nabi: '....빨간색. 내 방울끈이랑 같은 색이다냥. 이건.... 아무한테도 안 보여 줄 거다냥.',
+  batri: '보라색이다! 내 날개랑 똑같아. 밤하늘 날 때 이거 두르면 아무도 못 알아보겠다. 그래서 좋아.',
+  kappa: '....초록이군. 연못 물빛이다. 접시가 마르지 않을 것 같은 색이야. 고맙다.',
+  aula: '파란 목도리.... 밤 도서관 창밖 색이네요. 책 읽을 때마다 두를게요. 졸지 않을게요. 아마도요.',
+  mandi: '부, 분홍색이에요....! 꽃잎 색이다.... 이거 두르면 저도 꽃처럼 보일까요. 히익, 아니에요. 그냥 너무 좋아서요.',
+  jipsin: '주황색. 호박 색이다. 밭이랑 같은 색이라 까마귀들이 나를 호박으로 볼지도 몰라. 그럼 더 좋아.',
+  sera: '하얀 목도리네. 양호실 가운이랑 세트야. ....이거 하고 있으면 아픈 애들이 덜 무서워하겠다.',
+  madeleine: '노란색! 잘 구운 쿠키 색이잖아. 이거 두르고 오븐 앞에 서면 완벽해. 진짜 고마워.',
+  stella: '보랏빛.... 새벽 직전 하늘 색이에요. 별이 이 색을 좋아한다고 했거든요. 저도요.',
+  leo: '....갈색. 흙이랑 털 색이다. 생물들이 나를 덜 낯설어하겠네. 이건.... 진짜 마음에 든다.',
+  otumo: '삐빅. 하늘색 감지. 제가 떨어진 하늘 색입니다. ....이제 하늘을 봐도 쓸쓸하지 않습니다.',
+};
 async function knGive(n, i){
   const K = me.knit, s = (K.sc || [])[i]; if (!s) return;
+  const isFav = !!KN_FAV[n.id] && s.c.includes(KN_FAV[n.id]), favFirst = isFav && !(K.favGot || {})[n.id];
   const first = !((K.gave || {})[n.id] || []).length; K.sc.splice(i, 1); if (K.w === i){ K.w = null; me.av.neck = World.Avatar.meta.parts.neck.findIndex(p => p.f === null); me.av = World.Avatar.fix(me.av); delete me.av.house; World.setPlayer(me.nick, avOf(me)); } else if (K.w != null && K.w > i) K.w--;
-  ((K.gave ||= {})[n.id] ||= []).push(s.c); npcAddA(n.id, first ? 80 : 40); save(); closeSheet(); npcSig = ''; syncNpcs(); sfx('heart');
+  ((K.gave ||= {})[n.id] ||= []).push(s.c); if (favFirst){ (K.favGot ||= {})[n.id] = 1; npcAddA(n.id, 30); } save(); closeSheet(); npcSig = ''; syncNpcs(); sfx('heart');
   const KR = romanceOn(n.id) && npcProf(n.id).knit_romance, T = KR ? { first: KR.first, again: KR.again } : KN_THX[n.id], face = knFace(n, s.c); knOn = true;
   try { if (n.av) await Promise.race([World.Avatar.need(knAvWith(npcAv(n), s.c)), famSleep(1500)]).catch(() => {}); else knSprSheet(n, s.c);
-    for (const l of (first ? T.first : T.again)) await blancSay(n.name, fillVars(l, n.id), 1500, face); }
+    for (const l of (first ? T.first : T.again)) await blancSay(n.name, fillVars(l, n.id), 1500, face);
+    if (isFav) await blancSay(n.name, fillVars(KN_FAV_SAY[n.id], n.id), 1700, face); }
   finally { $('#blsay') && ($('#blsay').style.display = 'none'); knOn = false; }
-  toast(`${withJosa(n.name, '이', '가')} 목도리를 둘렀어요`);
+  toast(`${withJosa(n.name, '이', '가')} 목도리를 둘렀어요${favFirst ? ' · 호감도 +30' : ''}`);
 }
 // ---------- 사육장 물레: 왼쪽 벽 끝(입구 쪽 모퉁이 화분 옆)에 놓여 있어요 (누르면 털실 만들기) ----------
 let knWheelAt = null;
@@ -10689,13 +10706,13 @@ async function bqGive(n, i){
   L.splice(i, 1); const K = me.bq.pg, uniq = [...new Set(s.slots)], combo = BQ_COMBO.find(c => c.has.every(h => uniq.includes(h)) && c.has.every(h => K[h]));
   const has = s.slots.includes(R.like), bad = s.slots.includes(R.hate);
   let line = combo && combo.k === 'love' ? R.say.love : combo && combo.k === 'prank' ? R.say.prank : has ? R.say.like : bad ? R.say.hate : R.say.base;
-  const h = 20 + (has ? 40 : 0) - (bad ? 30 : 0) + (combo && ['love', 'cheer', 'sorry'].includes(combo.k) ? 20 : 0) + (s.deco || []).length * 3 + (s.size === 7 ? 15 : s.size === 5 ? 8 : 0) + (s.pat !== 'plain' ? 5 : 0);
+  const favFirst = has && !((me.bq.favGot ||= {})[n.id]), h = favFirst ? 30 : 0; if (favFirst) me.bq.favGot[n.id] = 1;   // 좋아하는 꽃이 든 꽃다발을 처음 줄 때만 호감도 +30 (힌트 없음)
   const cnt = {}; s.slots.forEach(x => cnt[x] = (cnt[x] || 0) + 1); const main = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
   (me.bq.gift ||= {})[n.id] = { at: now2(), f: BQ_FB[main].n, w: BQ_FB[main].w, c: bqColName(s.base) };
-  npcAddA(n.id, h); save(); closeSheet(); npcSig = ''; syncNpcs(); sfx('heart'); bqOn = true;
+  if (h) npcAddA(n.id, h); save(); closeSheet(); npcSig = ''; syncNpcs(); sfx('heart'); bqOn = true;
   try { await blancSay(n.name, fillVars(line, n.id), 1600, knFace(n)); if (s.card && s.card.trim()) await blancSay(n.name, `....카드도 있네. 「${s.card.trim()}」. 잘 간직할게.......`, 1400, knFace(n)); }
   finally { $('#blsay') && ($('#blsay').style.display = 'none'); bqOn = false; }
-  toast(`${withJosa(n.name, '이', '가')} 꽃다발을 받았어요 · 호감도 ${h >= 0 ? '+' : ''}${h}`);
+  toast(`${withJosa(n.name, '이', '가')} 꽃다발을 받았어요${h ? ` · 호감도 +${h}` : ''}`);
 }
 function bqRecall(id){
   const g = me && me.bq && me.bq.gift && me.bq.gift[id], L = BQ_RECALL[id]; if (!g || !L) return null;
