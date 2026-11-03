@@ -11050,7 +11050,7 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
   else if (confirm('시작 연출을 끝낼까요? 이미 만난 학생은 그대로예요.')) GDB.upd('otumo/ctl', { open: false }); });
 // ===== 마들렌의 쿠키 상자: 관리자가 켜면 과자 교실에서 마들렌이랑 버터 동그라미 쿠키를 같이 굽는 연출(튜토리얼) → 과자 교실 오븐 열림
 //   굽기 미니게임 5 단계(재료 · 젓기 · 밀기 · 틀 · 오븐, 별이 많을수록 어려워요) → 아이싱 꾸미기 → 상자 포장 → NPC에게 선물 (NPC마다 받는 연출)
-//   ck/ctl { open, id } · ck/yum/<id> = { by, npc, from, at, ts: [시각 ×25] } (선물한 날부터 5 일 동안 하루 5 번 전체 채팅에 「(이름)이 준 쿠키 냠냠!」)
+//   ck/ctl { open, id } · ck/yum/<id> = { by, npc, from, at, ts: [시각 ×10] } (선물한 날부터 5 일 동안 하루 2 번, 모두 10 번 전체 채팅에 · 예전 기록 25 개짜리도 하루 2 번만 「(이름)이 준 쿠키 냠냠!」)
 //   me.ck = { ev 본 연출, met, dex { 맛_모양: 등급 }, tray [쿠키], boxes [{ c, r, p, cks }], found { npc: { f, s } }, gave }
 //   쿠키 = { f 맛, s 모양, b 구운 정도, q 등급, i 아이싱(줄인 글자), t 토핑 [[k, x, y, 색, 세로]] }
 let ckOn = false;
@@ -11493,17 +11493,17 @@ const CK = (() => {
     } catch(e){ errReport('cookie', '쿠키 선물 연출 오류: ' + e.message, e.stack || ''); }
     finally { OV = null; $('#blsay') && ($('#blsay').style.display = 'none'); ckOn = false; }
   }
-  // ---------- 전체 채팅 냠냠: 선물한 날부터 5 일 동안 하루 5 번 ----------
+  // ---------- 전체 채팅 냠냠: 선물한 날부터 5 일 동안 모두 10 번 (하루 2 번) ----------
   function yumAdd(npc){
     const now = now2(), d = kNow(), sinceMid = ((d.getHours() * 60 + d.getMinutes()) * 60 + d.getSeconds()) * 1000 + d.getMilliseconds(), mid = now - sinceMid, ts = [];
     for (let day = 0; day < 5; day++){ const lo = day === 0 ? Math.max(now + 6e4, mid + 8 * 36e5) : mid + day * 864e5 + 8 * 36e5, hi = mid + day * 864e5 + 22 * 36e5, a = new Set();
-      const span = Math.max(5 * 6e4, hi - lo); for (let k = 0; k < 5; k++) a.add(Math.round(lo + Math.random() * span)); ts.push(...[...a].sort((x, y) => x - y)); }
+      const span = Math.max(5 * 6e4, hi - lo); for (let k = 0; k < 2; k++) a.add(Math.round(lo + Math.random() * span)); ts.push(...[...a].sort((x, y) => x - y)); }
     const id = uid + '_' + now; GDB.set('ck/yum/' + id, { by: uid, npc, from: me.nick || '친구', at: now, ts }).catch(() => {});
   }
   function yumTick(){
     if (!me) return; const now = now2(), from = yumChk || now; yumChk = now; if (from === now) return;
     Object.values(yum || {}).forEach(y => { if (!y || !Array.isArray(y.ts) || now - (y.at || 0) > 6 * 864e5) return; const nn = npcGet(y.npc); if (!nn) return;
-      y.ts.forEach(t => { if (t > from && t <= now){ const msg = `${withJosa(String(y.from || '친구'), '이', '가')} 준 쿠키 냠냠!`; pushLog(nn.name, msg); World.sayNpc && World.sayNpc(y.npc, '냠냠!', 2400); } }); });
+      (y.ts.length > 10 ? y.ts.filter((t, i) => i % 5 < 2) : y.ts).forEach(t => { if (t > from && t <= now){ const msg = `${withJosa(String(y.from || '친구'), '이', '가')} 준 쿠키 냠냠!`; pushLog(nn.name, msg); World.sayNpc && World.sayNpc(y.npc, '냠냠!', 2400); } }); });
   }
   // ---------- 시작 연출 (과자 교실 · 튜토리얼) ----------
   const CANDY = { OX: 164, OY: 82 }, CT = [247, 162], OVEN = [288, 131];
@@ -11603,7 +11603,7 @@ const CK = (() => {
     return `<div class="adcard sdad"><div class="abhead"><b>마들렌의 쿠키 상자</b>${c.open ? '<button class="btn sm" data-cka="off">끄기</button>' : '<button class="btn sm go" data-cka="on">켜기</button>'}${c.open ? '<button class="btn sm" data-cka="again">연출 다시 보내기</button>' : ''}</div>
       <div class="abchips"><span>${c.open ? '켜짐' : '꺼짐'}</span><span>연출 본 학생 <b>${ids.filter(id => P[id].ck && P[id].ck.met).length}</b> / ${ids.length}</span></div>
       ${ids.map(id => `<div class="sdarow"><span><b>${esc(P[id].nick)}</b></span><span class="s">${st(id)}</span></div>`).join('')}
-      <div class="s" style="margin-top:6px">켜면 아직 연출을 못 본 학생은 바로 과자 교실로 옮겨져 마들렌이랑 버터 동그라미 쿠키를 같이 굽는 연출이 나와요. 연출을 보면 과자 교실 오븐이 열리고, 꺼도 계속 구울 수 있어요. 끄면 새로 연출이 나오지 않아요. NPC가 쿠키 상자를 받으면 5 일 동안 하루 5 번 전체 채팅에 「(이름)이 준 쿠키 냠냠!」이 떠요 (이미 받은 건 꺼도 5 일을 다 채워요).</div></div>`;
+      <div class="s" style="margin-top:6px">켜면 아직 연출을 못 본 학생은 바로 과자 교실로 옮겨져 마들렌이랑 버터 동그라미 쿠키를 같이 굽는 연출이 나와요. 연출을 보면 과자 교실 오븐이 열리고, 꺼도 계속 구울 수 있어요. 끄면 새로 연출이 나오지 않아요. NPC가 쿠키 상자를 받으면 5 일 동안 5 일 동안 모두 10 번(하루 2 번) 전체 채팅에 「(이름)이 준 쿠키 냠냠!」이 떠요 (이미 받은 건 꺼도 5 일을 다 채워요).</div></div>`;
   }
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-cka]'); if (!b) return; const a = b.dataset.cka, c = AD.ckctl || {};
     if (a === 'on'){ if (confirm('「마들렌의 쿠키 상자」를 켤까요? 아직 연출을 못 본 학생은 바로 과자 교실로 옮겨져 연출이 나와요.')) GDB.set('ck/ctl', { open: true, id: c.id || now2(), at: now2() }).then(() => toast('쿠키 상자를 켰어요')); }
