@@ -10177,7 +10177,7 @@ const KR_SHAPES = [
 ];
 const KR_BY = Object.fromEntries(KR_SHAPES.map(s => [s[0], s]));
 // NPC마다 다는 자리 (64 칸 그림 안 · 앞 0 · 뒤 5 · 왼쪽 10 · 오른쪽 15) — tools/knit_keyring/anchors.json
-const KR_ANCH = {"mq:blady": {"0": [39, 45], "5": [25, 44], "10": [26, 45], "15": [38, 45]}, "mq:yeoreum": {"0": [40, 44], "5": [24, 43], "10": [25, 44], "15": [39, 44]}, "mq:beatrix": {"0": [39, 45], "5": [26, 44], "10": [26, 45], "15": [38, 45]}, "mq:ur": {"0": [39, 44], "5": [25, 43], "10": [24, 44], "15": [40, 44]}, "mq:nefer": {"0": [37, 44], "5": [27, 44], "10": [30, 44], "15": [34, 44]}, "mq:piece": {"0": [39, 45], "5": [25, 45], "10": [27, 45], "15": [37, 45]}, "mq:jack": {"0": [39, 45], "5": [25, 45], "10": [27, 45], "15": [37, 45]}, "batri": {"0": [41, 45], "5": [27, 44], "10": [26, 44], "15": [38, 44]}, "nabi": {"0": [43, 41], "5": [18, 40], "10": [45, 41], "15": [19, 41]}, "mandi": {"0": [46, 31], "5": [21, 30], "10": [23, 31], "15": [41, 31]}, "otumo": {"0": [48, 29], "5": [15, 27], "10": [43, 27], "15": [22, 28]}, "kappa": {"0": [19, 21], "5": [19, 19], "10": [18, 18], "15": [46, 18]}, "jipsin": {"0": [46, 26], "5": [19, 27], "10": [20, 27], "15": [44, 27]}, "aula": {"0": [40, 47], "5": [24, 46], "10": [24, 47], "15": [40, 47]}, "sera": {"0": [38, 47], "5": [26, 46], "10": [26, 47], "15": [38, 47]}, "madeleine": {"0": [38, 47], "5": [26, 47], "10": [29, 48], "15": [36, 48]}, "stella": {"0": [38, 47], "5": [26, 46], "10": [27, 47], "15": [36, 47]}, "leo": {"0": [38, 47], "5": [26, 47], "10": [27, 47], "15": [37, 47]}};
+const KR_ANCH = {"mq:blady": {"0": [39, 45], "5": [25, 44], "10": [26, 45], "15": [38, 45]}, "mq:yeoreum": {"0": [40, 44], "5": [24, 43], "10": [25, 44], "15": [39, 44]}, "mq:beatrix": {"0": [38, 47], "5": [26, 46], "10": [26, 47], "15": [38, 47]}, "mq:ur": {"0": [39, 44], "5": [25, 43], "10": [24, 44], "15": [40, 44]}, "mq:nefer": {"0": [37, 44], "5": [27, 44], "10": [30, 44], "15": [34, 44]}, "mq:piece": {"0": [39, 45], "5": [25, 45], "10": [27, 45], "15": [37, 45]}, "mq:jack": {"0": [39, 45], "5": [25, 45], "10": [27, 45], "15": [37, 45]}, "batri": {"0": [41, 45], "5": [27, 44], "10": [26, 44], "15": [38, 44]}, "nabi": {"0": [43, 41], "5": [18, 40], "10": [45, 41], "15": [19, 41]}, "mandi": {"0": [46, 31], "5": [21, 30], "10": [23, 31], "15": [41, 31]}, "otumo": {"0": [48, 29], "5": [15, 27], "10": [43, 27], "15": [22, 28]}, "kappa": {"0": [19, 21], "5": [19, 19], "10": [18, 18], "15": [46, 18]}, "jipsin": {"0": [46, 26], "5": [19, 27], "10": [20, 27], "15": [44, 27]}, "aula": {"0": [40, 47], "5": [24, 46], "10": [24, 47], "15": [40, 47]}, "sera": {"0": [38, 47], "5": [26, 46], "10": [26, 47], "15": [38, 47]}, "madeleine": {"0": [38, 47], "5": [26, 47], "10": [29, 48], "15": [36, 48]}, "stella": {"0": [38, 47], "5": [26, 46], "10": [27, 47], "15": [36, 47]}, "leo": {"0": [38, 47], "5": [26, 47], "10": [27, 47], "15": [37, 47]}};
 const krHex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const krImgs = {};
 function krImg(s, c){   // 14 × 20: 고리 + 줄 + 8 × 8 뜨개 몸 (줄마다 밝고 어둡게 · V 자 코)
@@ -13637,7 +13637,8 @@ function mqNpcs(){
   if (!me || !MQ.loaded) return []; const s = mqState(), out = [], seen = {};
   const put = (id, pl, mark, dir, wander) => { const c = MQ.cast[id]; if (!c || seen[id]) return; const p = mqPlace(pl); if (!p) return; seen[id] = 1;
     const r = wander && typeof pl === 'string' && NL.places[pl] ? NL.places[pl].r || 0 : 0;
-    out.push({ id: 'mq:' + id, name: mqName(id), map: p.map, x: p.x, y: p.y, r, mark, wander: !!r, dir: dir || 'down', ...(c.av ? { av: World.Avatar.fix(c.av) } : { spr: c.spr, float: c.float, alpha: c.alpha }) }); };
+    const o = { id: 'mq:' + id, name: mqName(id), map: p.map, x: p.x, y: p.y, r, mark, wander: !!r, dir: dir || 'down', ...(c.av ? { av: World.Avatar.fix(c.av) } : { spr: c.spr, float: c.float, alpha: c.alpha }) };
+    out.push(MQ_KN[id] && typeof knNpcWear === 'function' ? knNpcWear({ id: 'mq:' + id, spr: o.spr, av: o.av }, o) : o); };
   if (s.q && MQ.q[s.q]){ const q = MQ.q[s.q], st = mqStage();
     if (s.ph !== 'arrive'){ const pl = (st && st.place) || q.place; put(q.client, pl, (s.ph === 'pre' && !mqDayFull()) || s.ph === 'ready' ? '❗' : '', st && st.dir); }
     (st && st.actors || []).forEach(a => put(a.id, a.place, a.mark ? '❗' : '', a.dir));
@@ -13856,7 +13857,44 @@ async function mqTalk(id){
   mqPanel(id, c.idle ? [].concat(c.idle).map(l => fillVars(l)).join(' ') : '.......');
 }
 function mqFace(id, size = 48){ const c = MQ.cast[id]; if (!c) return ''; if (c.portrait) return `<i class="mqport" style="width:${size}px;height:${size}px;background-image:url(art/portraits/${c.portrait}.png?v=${PORTRAIT_V})"></i>`; return c.av ? `<img src="${World.Avatar.head(World.Avatar.fix(c.av))}" alt="">` : c.spr !== undefined ? npcFace(c.spr, size) : ''; }
-function mqPanel(id, text, btns = ''){ const c = MQ.cast[id] || {}; npcUI().dataset.id = id; npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${mqFace(id)}</div><div><b>${esc(mqName(id))}</b><span class="s sub">${esc(c.title || '')}</span></div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(text)}</div><div class="frow">${btns}<button class="btn sm" data-nx="close">알겠어요</button></div></div>`; npcUI().dataset.id = 'mq:' + id; npcUI().classList.add('on'); }
+// ===== 뜨개 선물 (메인 의뢰인): 목도리 · 키링만 · 호감도 없음 · 받으면 내 화면에서 차고 다녀요 =====
+//   이미 만난 의뢰인(끝낸 의뢰 · 지금 의뢰에서 등장한 뒤)에게만 버튼이 떠요 → 아직 안 나온 의뢰인은 이름도 안 보여요
+const MQ_KN = {
+  blady: ['흠, 이 몸의 목을 감싸다니.... 따뜻하군. 특별히 매고 다녀 주지.', '작고 귀여운.... 아, 아니다. 품위 있는 장식이군. 허리에 달아 두지.'],
+  yeoreum: ['나한테 목도리? 추위는 못 느끼는데.... 이상하게 따뜻해.', '흘리지 않게 꼭 달고 다닐게. 흔들리는 게 좋아.'],
+  beatrix: ['어머, 손뜨개네. 바람 부는 길 위에선 이만한 게 없지.', '잃어버리면 안 되니까 허리에 단단히 달게.'],
+  ur: ['....고맙다. 숲 바람이 차서 쓸 일이 많겠군.', '허리끈에 달아 두지. 사냥감이 놀라겠지만.... 뭐, 괜찮다.'],
+  nefer: ['기록해 둘게요. 오늘, 따뜻한 목도리를 받았다.', '허리에 달게요. 서기는 받은 것을 잊지 않아요.'],
+  piece: ['목. 따뜻해. ....좋아.', '작아. 귀여워. 떨어뜨리지 않게, 조심.'],
+  jack: ['호박 머리에도 목은 있다고! 딱 맞네, 고마워.', '허리에 달면 반짝반짝 하겠다. 고마워!'],
+};
+const mqMet = id => { const s = mqState(); return MQ.list.some(k => { const q = MQ.q[k]; return q && q.client === id && (s.done[k] || (s.q === k && s.ph !== 'arrive')); }); };
+const mqKnHas = () => !!((me.knit && me.knit.sc || []).length || (me.knit && me.knit.kr && me.knit.kr.own || []).length);
+const mqKnBtn = id => MQ_KN[id] && mqMet(id) && mqKnHas() ? `<button class="btn sm go" data-mqkn="${id}">🧶 뜨개 선물</button>` : '';
+const mqKnFace = id => g => { const c = MQ.cast[id] || {}; if (!c.portrait) return; const im = new Image(), dr = () => { const fw = im.width / 5; g.fillStyle = '#2A1E3A'; g.fillRect(0, 0, 32, 32); g.drawImage(im, 0, 0, fw, fw, 0, 0, 32, 32); }; im.onload = dr; im.src = `art/portraits/${c.portrait}.png?v=${PORTRAIT_V}`; if (im.complete && im.width) dr(); };
+function mqKnOpen(id){
+  const c = MQ.cast[id] || {}, SC = me.knit && me.knit.sc || [], KR = me.knit && me.knit.kr && me.knit.kr.own || [];
+  npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${mqFace(id)}</div><div><b>${esc(mqName(id))}</b><span class="s sub">${esc(c.title || '')}</span></div><button class="sx" data-nx="close">✕</button></div><div class="npct">뜨개로 만든 것만 줄 수 있어요. 받으면 내 화면에서 차고 다녀요 · 여러 개면 날마다 바꿔요</div>
+    ${SC.length ? `<div class="kngift"><b>뜨개 목도리</b><div class="row">${SC.map((x, i) => `<button data-mqsc="${i}" aria-label="목도리 주기">${knSw(x.c, 44, 16)}</button>`).join('')}</div></div>` : ''}
+    ${KR.length ? `<div class="kngift"><b>뜨개 키링</b><div class="row">${KR.map((k, i) => `<button data-mqkr="${i}" aria-label="${esc(KR_BY[k.s] ? KR_BY[k.s][1] : '')} 키링 주기"><canvas width="14" height="18" data-mqkc="${i}" style="width:28px;height:36px;image-rendering:pixelated"></canvas></button>`).join('')}</div></div>` : ''}
+    <div class="frow"><button class="btn sm" data-nx="close">닫기</button></div></div>`;
+  npcUI().dataset.id = 'mq:' + id; npcUI().dataset.mqkn = id; npcUI().classList.add('on');
+  npcUI().querySelectorAll('[data-mqkc]').forEach(cv => { const k = KR[+cv.dataset.mqkc]; if (!k) return; const q = cv.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(krImg(k.s, k.c), 0, 0); });
+}
+async function mqKnGive(id, kind, i){
+  const K = me.knit, nm = mqName(id), key = 'mq:' + id; if (!K || !MQ_KN[id] || !mqMet(id)) return;
+  if (kind === 'sc'){ const x = (K.sc || [])[i]; if (!x) return; K.sc.splice(i, 1);
+    if (K.w === i){ K.w = null; me.av.neck = World.Avatar.meta.parts.neck.findIndex(p => p.f === null); me.av = World.Avatar.fix(me.av); delete me.av.house; World.setPlayer(me.nick, avOf(me)); } else if (K.w != null && K.w > i) K.w--;
+    ((K.gave ||= {})[key] ||= []).push(x.c); }
+  else { const R = krK(), k = R.own[i]; if (!k) return; R.own.splice(i, 1); ((R.gave ||= {})[key] ||= []).push({ s: k.s, c: k.c }); }
+  save(); npcClose(); npcSig = ''; syncNpcs(); sfx('heart'); knOn = true;
+  try { await blancSay(nm, MQ_KN[id][kind === 'sc' ? 0 : 1], 1600, mqKnFace(id)); } finally { $('#blsay') && ($('#blsay').style.display = 'none'); knOn = false; }
+  toast(`${withJosa(nm, '이', '가')} ${kind === 'sc' ? '목도리를 둘렀어요' : '키링을 달았어요'}`);
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-mqkn],[data-mqsc],[data-mqkr]'); if (!b || !npcUI().contains(b)) return;
+  if (b.dataset.mqkn) return mqKnOpen(b.dataset.mqkn); const id = npcUI().dataset.mqkn; if (!id) return;
+  mqKnGive(id, b.dataset.mqsc != null ? 'sc' : 'kr', +(b.dataset.mqsc ?? b.dataset.mqkr)); });
+function mqPanel(id, text, btns = ''){ const c = MQ.cast[id] || {}; btns = mqKnBtn(id) + btns; npcUI().dataset.id = id; npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${mqFace(id)}</div><div><b>${esc(mqName(id))}</b><span class="s sub">${esc(c.title || '')}</span></div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(text)}</div><div class="frow">${btns}<button class="btn sm" data-nx="close">알겠어요</button></div></div>`; npcUI().dataset.id = 'mq:' + id; delete npcUI().dataset.mqkn; npcUI().classList.add('on'); }
 function mqPanelText(title, text, extra = ''){ npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf"></div><div><b>${esc(title)}</b>${extra}</div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(text)}</div><div class="frow"><button class="btn sm" data-nx="close">알겠어요</button></div></div>`; npcUI().dataset.id = 'mq:'; npcUI().classList.add('on'); }
 // 서브 NPC와 이야기할 때(npcMenu) 의뢰 목표가 있으면 한마디 더
 function mqNpcHook(n){ const ex = mqOnTalk(n.id); return ex; }
