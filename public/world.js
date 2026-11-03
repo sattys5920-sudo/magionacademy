@@ -987,7 +987,7 @@ function drawPerson(p){ const cx = out;
     const [sx, sy] = P(p.x + .5, p.y + .5); cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 6, 2.5, 0, 0, Math.PI * 2); cx.fill();
     if (!NPC_IMG || !NPC_IMG.complete) return; const A = World.Avatar, cp = KPX * ASC, w = A.FW * cp, h = A.FH * cp, WK = A.meta.walk, col = (p.view || 0) + (p.path.length ? WK[Math.floor(p.t * 7) % WK.length] : p.npc.flap ? WK[Math.floor(performance.now() / 140) % WK.length] : 0);
     const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - (A.FH - 1.5) * cp) + (p.npc.float ? Math.round(Math.sin(performance.now() / 600 + p.npc.spr) * 2) * cp : 0) - cheerHop(p, cp);
-    cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); if (p.npc.alpha) cx.globalAlpha = p.npc.alpha; cx.drawImage(p.npc.sheet || NPC_IMG, col * A.FW, p.npc.sheet ? 0 : p.npc.spr * A.FH, A.FW, A.FH, Math.round(dx - w / 2), dy, w, h); cx.restore(); return;   // sheet: 선물받은 목도리를 두른 그림 (한 줄)
+    cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); if (p.npc.alpha) cx.globalAlpha = p.npc.alpha; cx.drawImage(p.npc.sheet || NPC_IMG, col * A.FW, p.npc.sheet ? 0 : p.npc.spr * A.FH, A.FW, A.FH, Math.round(dx - w / 2), dy, w, h); if (World.onNpcDrawn && !p.npc.cut) { try { cx.globalAlpha = 1; World.onNpcDrawn(cx, p.npc.id, Math.round(dx - w / 2), dy, cp, p.view || 0, p); } catch(e){} } cx.restore(); return;   // sheet: 선물받은 목도리를 두른 그림 (한 줄)
   }
   const [sx, sy] = P(p.x + .5, p.y + .5);
   cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 6, 2.5, 0, 0, Math.PI * 2); cx.fill();
@@ -997,6 +997,7 @@ function drawPerson(p){ const cx = out;
   const bh = cheerHop(p, cp) / KPX; if (p.me || p.peer) drawPrank(p, sx, sy - bh, 'back');
   cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0);
   if (p.flip){ cx.translate(dx, dy); cx.scale(-1, 1); cx.drawImage(S, col * A.FW, 0, A.FW, A.FH, -w / 2, 0, w, h); } else cx.drawImage(S, col * A.FW, 0, A.FW, A.FH, Math.round(dx - w / 2), dy, w, h);
+  if (p.npc && !p.npc.cut && !p.flip && World.onNpcDrawn){ try { World.onNpcDrawn(cx, p.npc.id, Math.round(dx - w / 2), dy, cp, p.view || 0, p); } catch(e){} }   // 선물받은 키링 같은 장식 (index.html)
   cx.restore();
   if (p.me || p.peer) drawPrank(p, sx, sy - bh, 'front');
 }

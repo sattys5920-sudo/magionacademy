@@ -921,6 +921,9 @@ body.gtride #bar,body.gtride #chat,body.gtride #ctx,body.gtride .corner{opacity:
 #bqcard{width:100%;margin-top:6px;border:1px solid #4E3C72;background:#2A2040;color:#F1E9FF;border-radius:10px;padding:10px}
 .bqneed{display:flex;flex-direction:column;margin:8px 0;background:#2A2040;border-radius:10px;padding:2px 10px}.bqneed div{display:flex;justify-content:space-between;padding:6px 0;font-size:12px}.bqneed div + div{border-top:1px solid #3A2A55}.bqneed b{font-family:var(--f-pxb);color:#FFD866}.bqneed b i{font-style:normal;color:#9A8AB8}.bqneed .lack,.bqneed .lack b{color:#FF6B6B}
 #bqv .btn{width:100%;margin-top:4px}
+#krv{position:fixed;inset:0;z-index:420;display:flex;align-items:center;justify-content:center;background:rgba(10,8,24,.6)}#krv .bx{width:min(92vw,340px);background:#1E1830;border:2px solid #E8C468;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px}#krv .hd{display:flex;justify-content:space-between;align-items:center}#krv .hd b{font:15px var(--f-pxb);font-weight:400;color:#FFE0A8}#krv .hd span{font:12px var(--f-pxb);color:#FF9EC0}
+#krv canvas{width:100%;aspect-ratio:240/220;image-rendering:pixelated;border-radius:12px}#krv .msg{min-height:20px;text-align:center;font:13px var(--f-pxb);color:var(--text)}#krv .bt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}#krv .bt button{min-height:58px;border:0;border-radius:12px;background:#F6ECD6;color:#2A1A2E;font:22px var(--f-pxb);touch-action:manipulation}#krv .bt button:active{transform:translateY(2px)}#krv .bt small{display:block;font:11px var(--f-pxb);color:#6A5A7A}#krv .quit{align-self:center;background:none;border:0;color:var(--sub);text-decoration:underline;font:12px var(--f-pxb)}
+.krgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.krgrid button,.krgrid .krm{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border:2px solid transparent;border-radius:10px;background:var(--panel2);color:var(--text);font:11px var(--f-pxb)}.krgrid button.on{border-color:var(--accent)}.krgrid canvas{width:28px;height:36px;image-rendering:pixelated}
 #ckv{position:fixed;left:50%;top:calc(50% + 4px);transform:translate(-50%,-50%) scale(.92);opacity:0;transition:all .35s cubic-bezier(.2,1.3,.4,1);z-index:330;width:min(94vw,440px);max-height:calc(100vh - 130px);overflow:auto;background:rgba(20,13,34,.97);border:2px solid #F0B868;border-radius:16px;padding:12px;box-shadow:0 10px 0 rgba(0,0,0,.35)}#ckv.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
 #ckv .hd{display:flex;justify-content:space-between;align-items:center}#ckv .hd b{font-family:var(--f-pxb);font-size:16px;color:#FFE0A8}#ckv .hd button{width:36px;height:36px;border-radius:18px;border:0;background:rgba(255,255,255,.08);color:#F1E9FF;font-size:15px}
 #ckv .tabs{display:flex;background:var(--panel);border-radius:12px;padding:4px;margin:8px 0}#ckv .tabs button{flex:1;min-height:38px;border:0;border-radius:9px;background:transparent;color:var(--sub);font:13px var(--f-pxb)}#ckv .tabs button.on{background:var(--panel2);color:var(--text);box-shadow:inset 0 -2px 0 var(--accent)}
@@ -4721,8 +4724,8 @@ function renderNpcGift(){
   const st = npcSt(n.id), h = hearts(n.id), done = st.g === todayKey(), P = npcProf(n.id), likes = P.likes || n.likes || [], dislikes = P.dislikes || n.dislikes || [];
   const items = [...new Set([...POTIONS, ...MATS, ...CATCH, ...DISHES])].filter(k => me.inv[k] > 0);
   frame(null, `${esc(n.name)}에게 선물`, `${heartBar(h)} · 하루 한 번`, `${hint(npcMsg, '')}
-    <div class="pal">${items.map(k => `<button class="cell" style="width:52px;min-height:52px;padding:0" data-ngive="${k}" ${done ? 'disabled' : ''}>${ic(k)}<span class="n">${me.inv[k]}</span></button>`).join('') || '<div class="hint">줄 수 있는 물건이 없어요</div>'}</div>${typeof knGiftHTML === 'function' ? knGiftHTML(n) : ''}${typeof bqGiftHTML === 'function' ? bqGiftHTML(n) : ''}${typeof CK !== 'undefined' ? CK.giftHTML(n) : ''}${backBtn}`);
-  $('#back').onclick = closeSheet; on('[data-kngive]', b => { npcMsg = ''; knGive(n, +b.dataset.kngive); }); on('[data-bqgive]', b => { npcMsg = ''; bqGive(n, +b.dataset.bqgive); }); on('[data-ckgive]', b => { npcMsg = ''; CK.give(n, +b.dataset.ckgive); });
+    <div class="pal">${items.map(k => `<button class="cell" style="width:52px;min-height:52px;padding:0" data-ngive="${k}" ${done ? 'disabled' : ''}>${ic(k)}<span class="n">${me.inv[k]}</span></button>`).join('') || '<div class="hint">줄 수 있는 물건이 없어요</div>'}</div>${typeof knGiftHTML === 'function' ? knGiftHTML(n) : ''}${typeof krGiftHTML === 'function' ? krGiftHTML(n) : ''}${typeof bqGiftHTML === 'function' ? bqGiftHTML(n) : ''}${typeof CK !== 'undefined' ? CK.giftHTML(n) : ''}${backBtn}`);
+  $('#back').onclick = closeSheet; on('[data-kngive]', b => { npcMsg = ''; knGive(n, +b.dataset.kngive); }); on('[data-krgive]', b => { npcMsg = ''; krGive(n, +b.dataset.krgive); }); on('[data-bqgive]', b => { npcMsg = ''; bqGive(n, +b.dataset.bqgive); }); on('[data-ckgive]', b => { npcMsg = ''; CK.give(n, +b.dataset.ckgive); });
   on('[data-ngive]', b => { const k = b.dataset.ngive; if (done || !(me.inv[k] > 0)) return; me.inv[k]--; st.g = todayKey();
     const kb = /_s$/.test(k) && DISH_INFO[k] ? k.slice(0, -2) : k;   // 별 셋(최고의 맛) 요리도 같은 요리로 쳐요
     const kind = likes.includes(kb) ? 'love' : dislikes.includes(kb) ? 'hate' : 'like', d0 = { love: 40, like: 20, hate: -30 }[kind], d = d0 > 0 ? Math.round(d0 * (1 + sgFx('gift_affection'))) : d0;
@@ -10068,8 +10071,11 @@ function knRender(){
     body = `<div class="box"><b>뜨던 ${doll ? esc((KN_DOLLS.find(d => d[0] === w.doll) || KN_DOLLS[0])[1]) + ' 인형' : '목도리'}</b>${doll ? '' : `<div class="prev">${knSw([w.a, w.b || w.a], 120, 22)}</div>`}<span>${Math.min(done_, R)} / ${R} 줄 떴어요${w.snap && w.snap.phase === 'bind' ? ' · 코 막음 중' : w.snap && w.snap.phase === 'fringe' ? ' · 술 다는 중' : ''}</span><button class="btn go" data-kn="resume">이어 뜨기</button><button class="btn sm" data-kn="unravel">풀기 (털실 돌려받기)</button></div><div class="s sub">뜨던 걸 다 뜨거나 풀어야 새로 뜰 수 있어요</div>`;
   } else if (knTab === 'k'){
     const two = knB && knB !== knA, need = two ? { [knA]: KN_SCARF / 2, [knB]: KN_SCARF / 2 } : { [knA]: KN_SCARF }, ok = Object.entries(need).every(([c, n]) => (Y[c] || 0) >= n);
-    body = `<div class="kinds"><button data-knk="sc" class="${knKind === 'sc' ? 'on' : ''}">목도리<small>털실 ${KN_SCARF} 뭉치 · ${KN_ROWS_SC} 줄</small></button><button data-knk="doll" class="${knKind === 'doll' ? 'on' : ''}">뜨개 인형<small>털실 ${KN_DOLL} 뭉치 · ${KN_ROWS_DOLL} 줄</small></button></div>`;
-    if (knKind === 'sc') body += `<div class="s">첫째 색</div><div class="ycol sm">${KN_COL.map(([c, nm]) => `<button data-kna="${c}" class="${knA === c ? 'on' : ''}"><i style="background:${knHex(c)}"></i><em>${Y[c] || 0}</em></button>`).join('')}</div>
+    body = `<div class="kinds"><button data-knk="sc" class="${knKind === 'sc' ? 'on' : ''}">목도리<small>털실 ${KN_SCARF} 뭉치 · ${KN_ROWS_SC} 줄</small></button><button data-knk="doll" class="${knKind === 'doll' ? 'on' : ''}">뜨개 인형<small>털실 ${KN_DOLL} 뭉치 · ${KN_ROWS_DOLL} 줄</small></button><button data-knk="kr" class="${knKind === 'kr' ? 'on' : ''}">키링<small>털실 ${KR_YARN} 뭉치 · 코바늘</small></button></div>`;
+    if (knKind === 'kr') body += `<div class="s">모양</div><div class="krgrid">${KR_SHAPES.map(([id, nm]) => `<button data-krs="${id}" class="${krShape === id ? 'on' : ''}"><canvas width="14" height="18" data-krpv="${id}"></canvas><span>${nm}</span></button>`).join('')}</div>
+      <div class="s">실 색</div><div class="ycol sm">${KN_COL.map(([c]) => `<button data-krc="${c}" class="${krCol === c ? 'on' : ''}"><i style="background:${knHex(c)}"></i><em>${Y[c] || 0}</em></button>`).join('')}</div>
+      <div class="box"><span>${esc(KR_BY[krShape][1])} 키링 · ${knName(krCol)} 털실 ${KR_YARN} 뭉치 (가진 것 ${Y[krCol] || 0})</span><button class="btn go" data-kn="kr" ${(Y[krCol] || 0) >= KR_YARN ? '' : 'disabled'}>코바늘로 뜨기</button></div><div class="s sub">코바늘은 대바늘보다 어려워요. 바늘이 코에 닿을 때 그 코에 적힌 뜨기(X · V · A)를 눌러요. 세 번 틀리면 실이 엉켜요 (털실은 다 떠야 써요)</div>`;
+    else if (knKind === 'sc') body += `<div class="s">첫째 색</div><div class="ycol sm">${KN_COL.map(([c, nm]) => `<button data-kna="${c}" class="${knA === c ? 'on' : ''}"><i style="background:${knHex(c)}"></i><em>${Y[c] || 0}</em></button>`).join('')}</div>
       <div class="s">둘째 색 (줄무늬)</div><div class="ycol sm"><button data-knb="" class="${!two ? 'on' : ''}"><i class="none">한 색</i></button>${KN_COL.filter(([c]) => c !== knA).map(([c]) => `<button data-knb="${c}" class="${knB === c ? 'on' : ''}"><i style="background:${knHex(c)}"></i><em>${Y[c] || 0}</em></button>`).join('')}</div>
       <div class="box"><div class="prev">${knSw([knA, two ? knB : knA], 120, 22)}</div><span>${Object.entries(need).map(([c, n]) => `${knName(c)} ${n} 뭉치 (가진 것 ${Y[c] || 0})`).join(' · ')}</span><button class="btn go" data-kn="knit" ${ok ? '' : 'disabled'}>목도리 뜨기</button></div>`;
     else { const owned = id => (me.fbag['kn_doll_' + id] || 0) + (me.room || []).filter(r => r.f === 'kn_doll_' + id).length;
@@ -10079,9 +10085,11 @@ function knRender(){
     const L = K.sc || [];
     body = L.length ? `<div class="mine">${L.map((s, i) => `<div class="li">${knSw(s.c, 56, 18)}<span>${esc(knName(s.c[0]) + (s.c[1] && s.c[1] !== s.c[0] ? ' · ' + knName(s.c[1]) : ''))} 목도리 ${'★'.repeat(s.st || 1)}</span>${K.w === i ? '<button class="btn sm" data-knw="off">벗기</button>' : `<button class="btn sm go" data-knw="${i}">두르기</button>`}</div>`).join('')}</div><div class="s sub">NPC에게 말을 걸고 「선물」을 누르면 목도리를 줄 수 있어요. 받은 NPC는 늘 두르고 다녀요</div>`
       : '<div class="hint">아직 뜬 목도리가 없어요. 「뜨기」에서 떠 봐요</div>';
+    const KL = krK().own; if (KL.length) body += `<div class="s" style="margin-top:8px">내 키링 ${KL.length}</div><div class="krgrid">${KL.map((k, i) => `<div class="krm"><canvas width="14" height="18" data-krmine="${i}"></canvas><span>${esc(KR_BY[k.s] ? KR_BY[k.s][1] : '')} ${'★'.repeat(k.st || 1)}</span></div>`).join('')}</div><div class="s sub">NPC에게 말을 걸고 「선물」에서 키링을 줄 수 있어요</div>`;
   }
   v.innerHTML = head + body;
   v.querySelectorAll('[data-kndc]').forEach(c => knThumb(c, c.dataset.kndc));
+  v.querySelectorAll('[data-krpv],[data-krmine]').forEach(c => { const k = c.dataset.krpv ? { s: c.dataset.krpv, c: c.dataset.krpv === krShape ? krCol : KR_BY[c.dataset.krpv][2] } : (krK().own[+c.dataset.krmine] || {}); if (!k.s) return; const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, 14, 18); q.drawImage(krImg(k.s, k.c), 0, 0); });
 }
 function knThumb(c, id, tries = 0){   // 인형 칸 그림: 안 그려지면 그 칸만 다시 (창 전체를 다시 그리지 않아요)
   if (!c.isConnected) return; const n = npcGet(id), d = n && knitDoll(n, 1);
@@ -10133,12 +10141,122 @@ document.addEventListener('click', e => {
   if (d.kna !== undefined){ knA = d.kna; if (knB === knA) knB = ''; return knRender(); }
   if (d.knb !== undefined){ knB = d.knb; return knRender(); }
   if (d.knd){ knDollPick = d.knd; return knRender(); }
+  if (d.krs){ krShape = d.krs; krCol = KR_BY[d.krs][2]; return knRender(); }
+  if (d.krc){ krCol = d.krc; return knRender(); }
+  if (d.kn === 'kr') return krKnit();
   if (d.kn === 'knit') return knStart('sc');
   if (d.kn === 'doll') return knStart('doll');
   if (d.kn === 'resume') return knResume();
   if (d.kn === 'unravel') return knUnravel();
   if (d.knw !== undefined) return knWear(d.knw);
 });
+// ===== 뜨개 키링: 코바늘(아미구루미)로 작은 키링을 떠서 NPC에게 줘요 · 받은 NPC는 내 화면에서 달고 다녀요 (여러 개면 날마다 하나씩 무작위) · 호감도 효과 없음 =====
+//   저장: me.knit.kr = { own [{ s 모양, c 실 색, st 별 }], gave { NPC: [{ s, c }] }, made 뜬 수 } · 모양 20 종 × 실 색 10 가지
+const KR_YARN = 3;   // 키링 하나 = 고른 색 털실 3 뭉치
+const KR_SHAPES = [
+  ['pumpkin', '호박', 'orange', '#4A8A3A', ['...2....', '.111111.', '11111111', '1e1111e1', '11111111', '11e1e1e1', '.111111.', '........']],
+  ['ghost', '유령', 'white', '#F49AB0', ['..1111..', '.111111.', '1e1111e1', '11122111', '11111111', '11111111', '1.11.1.1', '........']],
+  ['star', '별', 'p_mustard', '#FF9EC0', ['...11...', '...11...', '11111111', '.1e11e1.', '..1111..', '.111111.', '.11..11.', '11....11']],
+  ['heart', '하트', 'pink', '#FFFFFF', ['.11..11.', '11111111', '11111111', '11111111', '.111111.', '..1111..', '...11...', '........']],
+  ['moon', '달', 'p_mustard', '#FFFFFF', ['..111...', '.11.....', '11......', '11......', '11......', '111...1.', '.111111.', '..1111..']],
+  ['cat', '고양이', 'white', '#F49AB0', ['1......1', '11....11', '11111111', '1e1111e1', '11122111', '11111111', '.111111.', '.11..11.']],
+  ['owl', '부엉이', 'brown', '#E8D0A8', ['1......1', '11111111', '1e2112e1', '11111111', '12222221', '12222221', '.122221.', '..1..1..']],
+  ['mush', '버섯', 'red', '#F6ECD6', ['..1111..', '.111111.', '1e1111e1', '11122111', '.111111.', '...22...', '...22...', '..2222..']],
+  ['bat', '박쥐', 'purple', '#9A7AC8', ['1..11..1', '11.11.11', '11111111', '11e11e11', '.111111.', '1..11..1', '...11...', '........']],
+  ['fish', '물고기', 'sky', '#FFFFFF', ['........', '..1111.1', '.1111111', '1e111111', '11111111', '.1111111', '..1111.1', '........']],
+  ['snowman', '눈사람', 'white', '#F08A3A', ['..111...', '.1e1e1..', '.11211..', '..111...', '.11111..', '1112111.', '1111111.', '.11111..']],
+  ['clover', '클로버', 'green', '#3A8A4A', ['.11..11.', '1111111.', '1111111.', '.11111..', '1111111.', '1111111.', '.11.21..', '....2...']],
+  ['berry', '딸기', 'red', '#4A9A4A', ['..2222..', '.222222.', '11111111', '1e1111e1', '11111111', '.111111.', '..1111..', '...11...']],
+  ['rabbit', '토끼', 'white', '#F49AB0', ['.1...1..', '.1...1..', '.1...1..', '1111111.', '1e111e1.', '1112111.', '1111111.', '.11.11..']],
+  ['bear', '곰', 'brown', '#E8C8A0', ['11....11', '11111111', '.111111.', '1e1111e1', '11122111', '.111111.', '.111111.', '..1..1..']],
+  ['cloud', '구름', 'sky', '#FFFFFF', ['...111..', '..11111.', '.1111111', '11111111', '1e1111e1', '11111111', '.111111.', '........']],
+  ['daisy', '데이지', 'white', '#FFD24A', ['...11...', '.1.11.1.', '..1221..', '1122221.', '..1221..', '.1.11.1.', '...11...', '........']],
+  ['acorn', '도토리', 'brown', '#7A5A3A', ['..2222..', '.222222.', '22222222', '.111111.', '.1e11e1.', '.111111.', '..1111..', '...11...']],
+  ['duck', '오리', 'p_mustard', '#F08A3A', ['...111..', '..11111.', '..1e1122', '..11111.', '1111111.', '11111111', '.111111.', '........']],
+  ['hat', '마녀 모자', 'purple', '#FFD24A', ['....11..', '...111..', '...11...', '..1111..', '..1111..', '.222222.', '11111111', '.111111.']],
+];
+const KR_BY = Object.fromEntries(KR_SHAPES.map(s => [s[0], s]));
+// NPC마다 다는 자리 (64 칸 그림 안 · 앞 0 · 뒤 5 · 왼쪽 10 · 오른쪽 15) — tools/knit_keyring/anchors.json
+const KR_ANCH = {"batri": {"0": [41, 45], "5": [27, 44], "10": [26, 44], "15": [38, 44]}, "nabi": {"0": [43, 41], "5": [18, 40], "10": [45, 41], "15": [19, 41]}, "mandi": {"0": [46, 31], "5": [21, 30], "10": [23, 31], "15": [41, 31]}, "otumo": {"0": [48, 29], "5": [15, 27], "10": [43, 27], "15": [22, 28]}, "kappa": {"0": [19, 21], "5": [19, 19], "10": [18, 18], "15": [46, 18]}, "jipsin": {"0": [46, 26], "5": [19, 27], "10": [20, 27], "15": [44, 27]}, "aula": {"0": [40, 47], "5": [24, 46], "10": [24, 47], "15": [40, 47]}, "sera": {"0": [38, 47], "5": [26, 46], "10": [26, 47], "15": [38, 47]}, "madeleine": {"0": [38, 47], "5": [26, 47], "10": [29, 48], "15": [36, 48]}, "stella": {"0": [38, 47], "5": [26, 46], "10": [27, 47], "15": [36, 47]}, "leo": {"0": [38, 47], "5": [26, 47], "10": [27, 47], "15": [37, 47]}};
+const krHex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const krImgs = {};
+function krImg(s, c){   // 14 × 20: 고리 + 줄 + 8 × 8 뜨개 몸 (줄마다 밝고 어둡게 · V 자 코)
+  const key = s + ':' + c; if (krImgs[key]) return krImgs[key]; const S = KR_BY[s] || KR_SHAPES[0];
+  const cv = document.createElement('canvas'); cv.width = 14; cv.height = 18; const g = cv.getContext('2d'), img = g.createImageData(14, 18), D = img.data;
+  const put = (x, y, [r, gg, b]) => { if (x < 0 || y < 0 || x > 13 || y > 17) return; const i = (y * 14 + x) * 4; D[i] = r; D[i + 1] = gg; D[i + 2] = b; D[i + 3] = 255; };
+  const B = krHex(knHex(c)), A = krHex(S[3]), OL = [42, 26, 46], oy = 7, ox = 3, on = (x, y) => y >= 0 && y < 8 && x >= 0 && x < 8 && S[4][y][x] !== '.';
+  for (let y = -1; y <= 8; y++) for (let x = -1; x <= 8; x++){
+    if (on(x, y)){ const ch = S[4][y][x]; if (ch === 'e'){ put(x + ox, y + oy, OL); continue; } let k = y % 2 === 0 ? 1.08 : .9; if ((x % 2 === 1 && y % 2 === 0) || (x % 2 === 0 && y % 2 === 1)) k *= .86; const base = ch === '2' ? A : B; put(x + ox, y + oy, base.map(v => Math.max(0, Math.min(255, Math.round(v * k))))); }
+    else if (on(x + 1, y) || on(x - 1, y) || on(x, y + 1) || on(x, y - 1)) put(x + ox, y + oy, OL);
+  }
+  const top = (() => { for (let y = 0; y < 8; y++) if (on(3, y) || on(4, y)) return y; return 0; })() + oy - 1;
+  for (let y = 4; y < top; y++) put(7, y, y % 2 ? [184, 154, 80] : [122, 96, 48]);
+  [[6, 0], [7, 0], [8, 0], [5, 1], [9, 1], [5, 2], [9, 2], [6, 3], [7, 3], [8, 3]].forEach(([x, y]) => put(x, y, [232, 208, 128])); put(6, 1, [255, 244, 200]);
+  g.putImageData(img, 0, 0); return krImgs[key] = cv;
+}
+const krK = () => { const K = me.knit || (me.knit = {}); return K.kr || (K.kr = { own: [], gave: {}, made: 0 }); };
+const krToday = id => { const L = me && me.knit && me.knit.kr && me.knit.kr.gave && me.knit.kr.gave[id]; if (!L || !L.length) return null; let h = 0; for (const ch of todayKey() + id) h = (h * 31 + ch.charCodeAt(0)) % 99991; return L[h % L.length]; };   // 여러 개면 날마다 하나씩
+World.onNpcDrawn = (cx, id, x0, y0, cp, view, p) => {
+  const k = krToday(id), A = KR_ANCH[id]; if (!k || !A) return; const col = view >= 15 ? 15 : view >= 10 ? 10 : view >= 5 ? 5 : 0, a = A[col] || A[0];
+  const im = krImg(k.s, k.c), q = Math.max(1, Math.round(cp * .7)), t = performance.now() / 1000, mv = p && p.path && p.path.length;
+  const ang = Math.sin(t * (mv ? 7 : 2) + id.length) * (mv ? .3 : .12);
+  cx.save(); cx.imageSmoothingEnabled = false; cx.translate(Math.round(x0 + a[0] * cp), Math.round(y0 + a[1] * cp)); cx.rotate(ang); cx.drawImage(im, 0, 0, 14, 18, -7 * q, -1 * q, 14 * q, 18 * q); cx.restore();
+};
+// ---------- 코바늘 미니게임: 고리 둘레의 코마다 맞는 뜨기(X 짧은뜨기 · V 늘려뜨기 · A 줄여뜨기)를 바늘이 지날 때 눌러요 ----------
+function krPlay(s, c){ return new Promise(res => {
+  const v = document.createElement('div'); v.id = 'krv'; v.innerHTML = `<div class="bx"><div class="hd"><b>코바늘 키링 뜨기</b><span id="krst"></span></div><canvas id="krcv" width="240" height="220"></canvas><div class="msg" id="krmsg">바늘이 코에 닿을 때, 그 코에 적힌 뜨기를 눌러요</div>
+    <div class="bt"><button data-krk="X">X<small>짧은뜨기</small></button><button data-krk="V">V<small>늘려뜨기</small></button><button data-krk="A">A<small>줄여뜨기</small></button></div><button class="quit" data-krq>그만두기</button></div>`;
+  document.body.appendChild(v); const cv = v.querySelector('#krcv'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+  const R = [{ n: 6, sec: 1.05, pat: () => 'XXXXXX' }, { n: 9, sec: .82, pat: () => 'XXVXXVXXV' }, { n: 12, sec: .64, pat: () => [...Array(12)].map((_, i) => i % 4 === 3 ? 'V' : i % 5 === 2 ? 'A' : 'X').join('') }];
+  let ri = 0, slots = [], t0 = 0, hearts = 3, hit = 0, perf = 0, done = false, flash = null, msgT = 0;
+  const startRound = () => { const r = R[ri], p = r.pat(); slots = [...p].map((k, i) => ({ k, i, st: 0 })); t0 = performance.now() + 1500; setMsg(`${ri + 1} 단 · 코 ${r.n} 개`, 900); };
+  const setMsg = (t, ms = 700) => { const m = v.querySelector('#krmsg'); if (m) m.textContent = t; msgT = performance.now() + ms; };
+  const pos = () => { const r = R[ri]; return (performance.now() - t0) / 1000 / r.sec; };   // 지금 몇 번째 코 위치 (0 = 첫 코)
+  const judge = k => { if (done) return; const p = pos(), i = Math.round(p), sl = slots[i]; if (p < -.4) return; if (!sl || sl.st){ miss('너무 일러요'); return; } const d = Math.abs(p - i);
+    if (d > .34){ miss('타이밍이 어긋났어요'); sl.st = -1; return; } if (sl.k !== k){ miss(`${sl.k} 코였어요`); sl.st = -1; return; }
+    sl.st = d < .14 ? 2 : 1; hit++; if (sl.st === 2) perf++; flash = { i, t: performance.now(), ok: true }; sfx(sl.st === 2 ? 'sparkle' : 'pop'); setMsg(sl.st === 2 ? '완벽!' : '좋아요'); };
+  const miss = t => { hearts--; flash = { t: performance.now(), ok: false }; sfx('hurt'); setMsg(t + ` · 남은 실 ${'♥'.repeat(Math.max(0, hearts))}`, 1000); if (hearts <= 0) end(false); };
+  const end = ok => { if (done) return; done = true; setTimeout(() => { v.remove(); document.removeEventListener('keydown', kd); res(ok ? { ok: true, st: perf >= 22 ? 3 : perf >= 14 ? 2 : 1 } : { ok: false }); }, ok ? 900 : 1300); setMsg(ok ? '다 떴어요! 고리를 달아요' : '실이 엉켜 버렸어요.......', 1500); };
+  const kd = e => { const m = { x: 'X', j: 'X', '1': 'X', v: 'V', k: 'V', '2': 'V', a: 'A', l: 'A', '3': 'A' }[(e.key || '').toLowerCase()]; if (m){ e.preventDefault(); judge(m); } };
+  document.addEventListener('keydown', kd);
+  v.querySelectorAll('[data-krk]').forEach(b => b.onpointerdown = e => { e.preventDefault(); judge(b.dataset.krk); });
+  v.querySelector('[data-krq]').onclick = () => { done = true; v.remove(); document.removeEventListener('keydown', kd); res(null); };
+  const im = krImg(s, c);
+  const draw = () => { if (!v.isConnected) return; requestAnimationFrame(draw); const W = 240, H = 220, cx0 = 120, cy0 = 110, r = R[ri], p = pos();
+    g.fillStyle = '#2A2040'; g.fillRect(0, 0, W, H); g.fillStyle = '#3A2E58'; g.beginPath(); g.arc(cx0, cy0, 96, 0, 7); g.fill();
+    const prog = (ri + Math.max(0, Math.min(1, (p + .5) / r.n))) / R.length; g.globalAlpha = .25 + prog * .75; g.drawImage(im, 3, 6, 8, 10, cx0 - 24, cy0 - 30, 48, 60); g.globalAlpha = 1;   // 가운데: 떠 가는 키링
+    slots.forEach(sl => { const a = -Math.PI / 2 + sl.i / r.n * Math.PI * 2, x = cx0 + Math.cos(a) * 78, y = cy0 + Math.sin(a) * 78;
+      g.fillStyle = sl.st === 2 ? '#8AF09A' : sl.st === 1 ? '#C8E8A0' : sl.st < 0 ? '#E8455A' : '#F6ECD6'; g.beginPath(); g.arc(x, y, 12, 0, 7); g.fill(); g.strokeStyle = '#2A1A2E'; g.lineWidth = 2; g.stroke();
+      g.fillStyle = '#2A1A2E'; g.font = '13px G11B, sans-serif'; g.textAlign = 'center'; g.fillText(sl.k, x, y + 5); });
+    if (p > -1){ const a = -Math.PI / 2 + Math.min(r.n - .01, Math.max(-.5, p)) / r.n * Math.PI * 2, x = cx0 + Math.cos(a) * 96, y = cy0 + Math.sin(a) * 96;   // 바늘
+      g.strokeStyle = '#E8C468'; g.lineWidth = 4; g.beginPath(); g.moveTo(cx0 + Math.cos(a) * 60, cy0 + Math.sin(a) * 60); g.lineTo(x, y); g.stroke(); g.fillStyle = '#FFF4C8'; g.beginPath(); g.arc(x, y, 5, 0, 7); g.fill(); }
+    if (flash && performance.now() - flash.t < 250){ g.fillStyle = flash.ok ? 'rgba(138,240,154,.18)' : 'rgba(232,69,90,.25)'; g.fillRect(0, 0, W, H); }
+    const st = v.querySelector('#krst'); if (st) st.textContent = `${ri + 1} / ${R.length} 단 · ${'♥'.repeat(Math.max(0, hearts))}`;
+    if (!done){ slots.forEach(sl => { if (!sl.st && p - sl.i > .36){ sl.st = -1; miss('코를 놓쳤어요'); } }); if (!done && p > r.n - .5 + .4){ if (ri < R.length - 1){ ri++; startRound(); } else end(true); } }
+  };
+  startRound(); requestAnimationFrame(draw);
+}); }
+async function krKnit(){
+  const s = krShape, c = krCol, Y = knY(); if ((Y[c] || 0) < KR_YARN) return toast('털실이 모자라요'); knClose(); knOn = true;
+  let r = null; try { r = await krPlay(s, c); } catch(e){ errReport('knit', '코바늘 화면 오류: ' + e.message, e.stack || ''); }
+  knOn = false; if (!r){ return knOpen('k'); }
+  if (!r.ok){ toast('실이 엉켜서 다시 떠야 해요. 털실은 그대로예요'); return knOpen('k'); }
+  Y[c] -= KR_YARN; const K = krK(); K.own.push({ s, c, st: r.st }); K.made = (K.made || 0) + 1; save(); sfx('win');
+  await famCard(`<canvas id="krcard" width="14" height="18" style="width:84px;height:108px;image-rendering:pixelated"></canvas><b>${esc(KR_BY[s][1])} 키링 ${'★'.repeat(r.st)}</b><small>NPC에게 말을 걸고 「선물」에서 줄 수 있어요 · 받은 NPC는 달고 다녀요</small>`, () => { const cv = $('#krcard'); if (cv){ const q = cv.getContext('2d'); q.imageSmoothingEnabled = false; q.drawImage(krImg(s, c), 0, 0); } }, 2600);
+  knOpen('k');
+}
+const KR_THX = { leo: '....이거, 허리에 달면 되나. 생물들이 물어뜯지 않게 조심할게.', sera: '어머, 귀여워라. 가운에 달아 둘게요. 양호실 오는 애들이 좋아하겠네요.', madeleine: '키링이다! 앞치마에 달아야지. 밀가루 묻어도 털면 되지 뭐.', stella: '별이.... 아니 키링이 나를 골랐네요. 오늘부터 같이 다닐게요.', nabi: '....꼬리에 달아 주면 생각해 볼게. 흥, 이미 달았네.', batri: '와, 가방에 달아야지. 배달 갈 때마다 같이 날아다니겠다.', kappa: '허허, 낚싯대에 달아 두겠네. 고기들이 구경 오겠구먼.', aula: '책에 달아 둘게요. 읽다가 졸면.... 이게 깨워 주겠죠.', mandi: '히익, 귀, 귀여워요.... 잎에 달게요. 제일 잘 보이는 잎에요.', jipsin: '모자에 달았다. 까마귀들이 부러워하겠다.', otumo: '삐빅. 장식품 수신. 안테나에 장착 완료. 회로가 귀여워졌습니다.' };
+function krGiftHTML(n){
+  const L = (me.knit && me.knit.kr && me.knit.kr.own) || []; if (!L.length || !KR_ANCH[n.id]) return '';
+  setTimeout(() => document.querySelectorAll('[data-krgc]').forEach(cv => { const k = L[+cv.dataset.krgc]; if (!k) return; const q = cv.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, 14, 18); q.drawImage(krImg(k.s, k.c), 0, 0); }), 0);
+  return `<div class="kngift"><b>뜨개 키링</b><div class="row">${L.map((k, i) => `<button data-krgive="${i}" aria-label="${esc(KR_BY[k.s] ? KR_BY[k.s][1] : '')} 키링 주기"><canvas width="14" height="18" data-krgc="${i}" style="width:28px;height:36px;image-rendering:pixelated"></canvas></button>`).join('')}</div><span class="s sub">받은 NPC는 내 화면에서 달고 다녀요 · 여러 개면 날마다 바꿔 달아요</span></div>`;
+}
+async function krGive(n, i){
+  const K = krK(), k = K.own[i]; if (!k) return; K.own.splice(i, 1); ((K.gave ||= {})[n.id] ||= []).push({ s: k.s, c: k.c }); save(); closeSheet(); sfx('heart');
+  await blancSay(n.name, KR_THX[n.id] || '고마워요. 달고 다닐게요.', 1400, knFace(n));
+  toast(`${withJosa(n.name, '이', '가')} ${KR_BY[k.s][1]} 키링을 달았어요`);
+}
+let krShape = 'pumpkin', krCol = 'orange';
 // ---------- 선물: NPC 선물 창의 목도리 칸 → 그 NPC가 늘 둘러요 ----------
 function knGiftHTML(n){
   const L = me.knit && me.knit.sc || []; if (!L.length || !KN_THX[n.id]) return '';
