@@ -9289,13 +9289,37 @@ async function wsWrite(text){
   wsOn = true; try { closeSheet(); await wsFx(); await WishFX.send(wsApi()); toast('내 소원이 별이 됐어요. 누가 응원하면 알려 줄게요'); } finally { wsOn = false; }
   return '';
 }
+// 시작 연출: 스텔라가 와서 소원을 적어 보라고 해요 → 소원 종이 → 날려 보내면 하늘에서 쪽지들이 내려와요
+async function wsIntro(){
+  const n = npcGet('stella'), t = World.meTile && World.meTile();
+  try {
+    closeSheet(); npcClose();
+    if (n && t){ const sp = (World.freeNear(t.x, t.y, 3) || []).sort((a, b) => Math.hypot(b[0] - t.x, b[1] - t.y) - Math.hypot(a[0] - t.x, a[1] - t.y))[0] || [t.x + 2, t.y];
+      const say = (text, ms) => ({ cmd: 'say', who: 'stella', text, ms: ms || Math.max(2400, text.length * 100) });
+      await World.cut([{ cmd: 'spawn', who: 'stella', name: n.name, ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float, flap: n.flap }), x: sp[0], y: sp[1], dir: 'down' }, { cmd: 'walk', who: 'stella', x: t.x + 1, y: t.y }, { cmd: 'face', who: 'stella', to: 'player' }, { cmd: 'face', who: 'player', to: 'stella' },
+        say('별의 아이여, 오늘 밤은 별빛 소원이 내리는 밤이에요.'), say('응원받고 싶은 소원을 하나 적어 보세요. 이름은 적히지 않아요.', 3200), say('누가 썼는지는 별도, 저도 몰라요. 친구들이 몰래 응원만 남겨 줄 거예요.', 3600)], {});
+    }
+    const text = await new Promise(res => {
+      const v = document.createElement('div'); v.id = 'wsread';
+      v.innerHTML = `<div class="bx"><div class="pp"><canvas width="32" height="32" style="width:40px;height:40px;border-radius:10px;image-rendering:pixelated;display:block;margin:0 auto 8px;background:#2A1E48"></canvas>응원받고 싶은 소원을 적어 보세요<small>스텔라</small></div><div class="shh"><b>익명</b> 이름은 적히지 않아요. 누가 썼는지 아무에게도 밝혀지지 않아요. 친구들이 몰래 응원만 남겨 줘요.</div>
+        <textarea maxlength="100" placeholder="소원을 적어요 (100 자까지)"></textarea><div class="cnt">0 / 100</div><div class="err"></div><div class="bt"><button class="go" data-go>날려 보내기</button><button data-x>나중에 쓸게요</button></div></div>`;
+      document.body.appendChild(v); try { const g = v.querySelector('canvas').getContext('2d'); g.imageSmoothingEnabled = false; knFace(n)(g); } catch(e){}
+      const ta = v.querySelector('textarea'), cnt = v.querySelector('.cnt'), err = v.querySelector('.err'); ta.oninput = () => { cnt.textContent = `${ta.value.length} / 100`; err.textContent = ''; }; setTimeout(() => ta.focus(), 300);
+      v.querySelector('[data-x]').onclick = () => { v.remove(); res(null); };
+      v.querySelector('[data-go]').onclick = () => { const s = ta.value.trim(); if (!s){ err.textContent = '소원을 적어 주세요.'; return; } const bad = wsCheck(s); if (bad){ err.textContent = bad; return; } v.remove(); res(s); };
+    });
+    if (text){ const e = await wsWrite(text); if (e) toast(e); }
+    await WishFX.fall(wsApi());
+    toast(text ? '하늘에서 친구들의 소원 쪽지가 내려와요. 주워서 응원해 보세요' : '하늘에서 소원 쪽지가 내려와요. 주워서 응원해 보세요. 내 소원은 일지에서 쓸 수 있어요');
+  } catch(e){ errReport('wish', '별빛 소원 시작 연출 오류: ' + e.message, e.stack || ''); }
+}
 let wsTk = 0, wsFall = 0; window.__wsSpots = () => wsSpots().map(p => [p.id, p.m, p.x, p.y]);
 function wsTick(){
   if (!me) return; const on = wsLive();
   if (on && !window.WishFX){ wsFx().then(() => { wsSpotSig = ''; }).catch(() => {}); return; }
   wsProps(); if (wsOn) return;
   if (on){ const S = wsSt();
-    if (!S.hi){ if (uiBusy() || !World.meAt || !World.meAt() || !evTurn('wish')) return; S.hi = 1; save(); wsOn = true; WishFX.intro(wsApi()).finally(() => { wsOn = false; toast('하늘에서 소원 쪽지가 내려요. 주워서 응원해 보세요. 내 소원은 일지에서 쓸 수 있어요'); }); return; }
+    if (!S.hi){ if (uiBusy() || !World.meAt || !World.meAt() || !evTurn('wish')) return; S.hi = 1; save(); wsOn = true; wsIntro().finally(() => { wsOn = false; wsSpotSig = ''; }); return; }
     if (wsFall && !wsOn && !uiBusy() && World.meAt && World.meAt()){ wsFall = 0; wsOn = true; WishFX.fall(wsApi()).finally(() => { wsOn = false; wsSpotSig = ''; toast('새 소원 쪽지가 어딘가에 떨어졌어요'); }); return; }
     if (wsMine){ const n = wsCheers(wsMine).length; if (n > (S.ln || 0)){ S.ln = n; save(); toast(`누군가 내 소원을 응원했어요 ★ ${n}`); sfx('sparkle'); } }
   }
