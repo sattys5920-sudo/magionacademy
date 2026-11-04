@@ -11086,7 +11086,7 @@ function blnListen(){
   setInterval(() => { try { blnTick(); } catch(e){ errReport('balloon', '풍선 tick 오류: ' + e.message, e.stack || ''); } }, 1500);
 }
 window.__bl = { intro: () => blnIntro(), open: () => blnOpen(), play: id => blnPlay(id), img: id => blnImg(id), spots: () => blnSapSpots(), tap: id => blnSapTap(id), st: () => me.bln };   // 시험용
-function adminBlHTML(){
+function adminBlnHTML(){
   const c = AD.blnctl || {}, P = AD.players || {}, ids = Object.keys(P).filter(id => P[id]?.nick).sort((a, b) => P[a].nick.localeCompare(P[b].nick, 'ko'));
   const st = id => { const b = P[id].bln || {}, inv = P[id].inv || {}; const done = Object.entries(b.st || {}).filter(([, v]) => v && v.ph === 'done').map(([k]) => (npcGet(k) || {}).name || k); return b.hi ? `말랑 고무 ${inv.bl_rub || 0} · 만든 풍선 ${b.made || 0} · 터뜨림 ${b.pop || 0} · 이야기 완성 ${done.length} / ${Object.keys(BLN_STORY).length}${done.length ? ` (${done.join(', ')})` : ''}` : '아직 시작 연출 안 봄'; };
   return `<div class="adcard sdad"><div class="abhead"><b>마음 풍선</b>${c.open ? '<button class="btn sm" data-blna="close">이벤트 끝내기</button>' : '<button class="btn sm go" data-blna="open">시작하기</button>'}</div>
