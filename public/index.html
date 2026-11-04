@@ -3135,7 +3135,7 @@ const xFm = (u, k) => u.fx[k] ? u.fx[k].v : 0;
 let xSfxT = 0;
 function xHit(u, t, raw, col, opt){   // 피해 한 번: 치명타 · 약점(vuln) · 회피 · 받는 피해 감소 · 보호막 · 버티기 · 흡혈 · 반격
   opt = opt || {}; if (t.fx && t.fx.guard && u && u.team === 'a' && u.hp > 0){ const r = Math.max(1, Math.round(raw * .5)); u.hp = Math.max(0, u.hp - r); xFloat(u.id, '-' + r, '#9fd0ff'); xFloat(t.id, '튕김!', '#9fd0ff'); raw *= .15; }   // 승급 시험 방패 골렘
-  let dmg = raw; let isCrit = false; if (u && u.team === 'a' && (opt.fcrit || Math.random() < (u.crit || 0))){ dmg *= 1.6; isCrit = true; xFloat(t.id, '치명!', '#ffb84d'); }
+  let dmg = raw; let isCrit = false; if (u && u.grMe && xb && xb.gr && xb.gr.role === 'support') dmg *= .3; if (u && u.team === 'a' && (opt.fcrit || Math.random() < (u.crit || 0))){ dmg *= 1.6; isCrit = true; xFloat(t.id, '치명!', '#ffb84d'); }
   if (u && u.team === 'a' && u.bossK && t.big) dmg *= 1 + u.bossK;   // 사역마: 보스전
   dmg *= 1 + xFm(t, 'vuln');   // 약점: 적은 내 디버프, 우리 편은 보스 저주
   if (t.team === 'a'){ if (u && u.team === 'e' && Math.min(.5, xFm(t, 'dodge') + (t.dodge || 0)) > Math.random()){ xFloat(t.id, '회피!', '#9fd0ff'); return 0; } dmg *= 1 - Math.min(.75, xFm(t, 'dmgIn') + (t.dr || 0)); }
@@ -3171,7 +3171,8 @@ function xFxAt(k, list, u){ const sk = k.startsWith('sk:'); xcoEvPush({ k: 'fx',
 const xCdOf = sk => { const m = sk ? (sk.mp0 ?? sk.mp ?? 0) : 0; return m >= 18 ? 4 : m >= 14 ? 3 : m >= 8 ? 2 : m >= 4 ? 1 : 0; }, xCdLeft = (u, sk) => sk && u.cdn && u.cdn[sk.n] > 0 ? u.cdn[sk.n] : 0;
 function xCdTick(u, sk){ if (u.team !== 'a') return; const c = u.cdn || (u.cdn = {}); Object.keys(c).forEach(k => { if (c[k] > 0) c[k]--; if (c[k] <= 0) delete c[k]; }); const n = xCdOf(sk); if (n) c[sk.n] = n; }
 function xAct(u, sk, tgt){ if (!xb || xb.fin || !xAlive(u.team === 'a' ? xb.foes : xb.party).length) return; xDelay = 0; if (sk && xCdLeft(u, sk)) sk = null; try { xAct0(u, sk, tgt); } finally { xDelay = 0; xCdTick(u, sk); } }
-const xFoeTarget = () => { if (xb.gr && xb.gr.role === 'heal'){ const s = xb.party.find(u => u.dummy && u.hp > 0); if (s && Math.random() < .85) return s; } const A = xAlive(xb.party), tk = A.find(a => xFm(a, 'taunt')); if (tk && Math.random() < .8) return tk; const cv = A.find(a => xFm(a, 'cover')), fr = A.filter(a => a.row === 'f'), bk = A.filter(a => a.row === 'b'), pool = fr.length && bk.length ? (Math.random() < .8 ? fr : bk) : A, t = xRand(pool); return cv && t !== cv && Math.random() < .65 ? cv : t; };   // 도발 · 대신 맞기 · 앞열이 먼저 맞아요 (앞열 80 : 뒤열 20, 한쪽만 남으면 그쪽)
+const xFoeTarget = () => { if (xb.gr && xb.gr.role === 'heal'){ const s = xb.party.find(u => u.dummy && u.hp > 0); if (s && Math.random() < .85) return s; }
+  if (xb.gr && xb.gr.role === 'tank'){ const A = xAlive(xb.party), tk = A.find(a => xFm(a, 'taunt')), cv = A.find(a => xFm(a, 'cover')), s = A.find(a => a.dummy); if (tk && Math.random() < .8) return tk; if (cv && Math.random() < .65) return cv; if (s && Math.random() < .85) return s; return xRand(A); } const A = xAlive(xb.party), tk = A.find(a => xFm(a, 'taunt')); if (tk && Math.random() < .8) return tk; const cv = A.find(a => xFm(a, 'cover')), fr = A.filter(a => a.row === 'f'), bk = A.filter(a => a.row === 'b'), pool = fr.length && bk.length ? (Math.random() < .8 ? fr : bk) : A, t = xRand(pool); return cv && t !== cv && Math.random() < .65 ? cv : t; };   // 도발 · 대신 맞기 · 앞열이 먼저 맞아요 (앞열 80 : 뒤열 20, 한쪽만 남으면 그쪽)
 const XFXN = { counter: '반격 태세', taunt: '도발!', cover: '대신 맞기', dodge: '회피↑', dmgIn: '방어↑', atk: '공격↑', spd: '속도↑' };
 function xApply(u, t, a, mult, st){   // 맞은 뒤 붙는 효과 [종류, 세기, 초]
   const [k, v, sec] = a; if (t.team === 'a' && t.res && Math.random() < t.res){ xFloat(t.id, '저항!', '#c8f0ff'); return; }
@@ -3455,7 +3456,7 @@ function xStatUpdate(B){
 }
 function xRenderBattle(){
   const B = xb, run = xEx().run; B.menu = 'main'; B.ck = '';
-  frame(null, B.gr ? '승급 시험 · 역할 실기' : B.kind === 'boss' ? '보스!' : B.kind === 'elite' ? '강한 몬스터' : '전투', B.gr ? `제한 ${Math.round(B.gr.lim / 1000)}초 · ${{ melee: '방패 골렘 쓰러뜨리기', ranged: '골렘 셋 쓰러뜨리기', heal: '허수아비 친구 지키기' }[B.gr.role]}` : `진행 ${Math.floor(run.prog)}% · 남은 시간 ${timeText(xTime(run))}`, `<style>
+  frame(null, B.gr ? '승급 시험 · 역할 실기' : B.kind === 'boss' ? '보스!' : B.kind === 'elite' ? '강한 몬스터' : '전투', B.gr ? `제한 ${Math.round(B.gr.lim / 1000)}초 · ${{ melee: '방패 골렘 쓰러뜨리기', ranged: '골렘 셋 쓰러뜨리기', tank: '허수아비 친구 막아 주기', support: '동료 도와 골렘 쓰러뜨리기', heal: '허수아비 친구 지키기' }[B.gr.role]}` : `진행 ${Math.floor(run.prog)}% · 남은 시간 ${timeText(xTime(run))}`, `<style>
     #xcv{display:block;width:100%;aspect-ratio:16/9;image-rendering:pixelated;border:3px solid #0c0818;border-radius:6px;box-shadow:0 0 0 2px #5a4a9a;background:#000;touch-action:manipulation}
     .xhud{display:flex;flex-direction:column;gap:8px}.xstat{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}/* 같이 가는 사람이 4~5명이면 한 줄에 다 들어가게 작게 */.xstat.xn4,.xstat.xn5{gap:4px}.xn4 .xs,.xn5 .xs{padding:4px;gap:2px}.xn4 .xs1,.xn5 .xs1{gap:4px}.xn4 .xport{width:24px;height:24px}.xn5 .xport{width:20px;height:20px}.xn4 .xs2 b{font-size:11px}.xn5 .xs2 b{font-size:10px}.xn4 .xj,.xn5 .xj{font-size:9px}.xn4 .xjn,.xn5 .xjn{display:none}.xn4 .xbr,.xn5 .xbr{height:9px}.xn4 .xbr em{font-size:8px;line-height:8px}.xn5 .xbr em{font-size:7px;line-height:8px}.xn4 .xbr.gg,.xn5 .xbr.gg{height:4px}
     .xs{display:flex;flex-direction:column;gap:3px;padding:6px;background:linear-gradient(#2b2150,#1b1438);border:2px solid #0c0818;border-radius:6px;box-shadow:inset 0 0 0 2px #4a3c86;min-width:0}
@@ -14657,7 +14658,8 @@ const GR_NQ = { 2: 5, 3: 7, 4: 10 };   // 학년별 문제 수 (물약 · 생물
 const GR_REQ = { 2: 1, 3: 20, 4: 35 }, GR_MIN = { 2: 15, 3: 18, 4: 22 }, GR_GOLD = { A: 1500, B: 800, C: 400 };
 const GR_CAPE = { 2: 'navy', 3: 'purple', 4: 'maroon' }, GR_TRIM = { A: 'yellow', B: 'white', C: 'orange' }, GR_YN = { 2: '남색', 3: '보라', 4: '진홍' }, GR_GN = { A: '금테', B: '은테', C: '구리테' };
 const grGrade = s => s >= 90 ? 'A' : s >= 80 ? 'B' : s >= 70 ? 'C' : '';
-const GR_ROLE = j => XROLE[j] === 'melee' ? 'melee' : XROLE[j] === 'heal' ? 'heal' : 'ranged';
+const GR_ROLE = j => ({ warrior: 'melee', thief: 'melee', knight: 'tank', bard: 'support', time: 'support', white: 'heal', druid: 'heal', cleric: 'heal' })[j] || 'ranged';   // 역할 실기 다섯 갈래
+const GR_RN = { melee: '근접 딜러', ranged: '원거리 딜러', tank: '탱커', support: '서포터', heal: '치유' };
 // 학년 혜택 (쌓여요 · 전투 능력치는 안 올라가요)
 const grExp = () => [0, 0, .1, .2, .3][grY()], grDisc = () => grY() >= 4 ? .15 : grY() >= 2 ? .1 : 0;
 const xDayMax = () => XDAY + Math.max(0, grY() - 1);
@@ -14690,7 +14692,7 @@ function grOpen(){
   const o = document.createElement('div'); o.id = 'grx'; document.body.appendChild(o);
   o.innerHTML = `<div class="grbox"><div class="grhd"><b>승급 실기 시험</b><button class="icbtn" data-grx="x">✕</button></div>
     <div class="grsay">${npcPortrait(npcGet('aula'))}<p><b>아울라</b>부엉. ${tgt} 학년 승급 실기 시험이에요. 과제는 여섯 개예요. 한 번 지나간 과제는 다시 못 해요. 시간은 ${GR_MIN[tgt]} 분이고, 시작하면 끝까지 봐야 해요. 기회는 한 번뿐이니 차분하게 해요.</p></div>
-    <div class="grinfo"><span>지금 <b>${y} 학년</b> → ${tgt} 학년 시험</span><span>내 레벨 ${L} · ${job ? XJ[job].n + ' (' + { melee: '근접', ranged: '원거리', heal: '치유' }[GR_ROLE(job)] + ')' : '직업 없음'}</span></div>
+    <div class="grinfo"><span>지금 <b>${y} 학년</b> → ${tgt} 학년 시험</span><span>내 레벨 ${L} · ${job ? XJ[job].n + ' (' + GR_RN[GR_ROLE(job)] + ')' : '직업 없음'}</span></div>
     <div class="grlist"><div>1 물약 실기 · ${GR_NQ[tgt]} 문제</div><div>2 요리 · 불 맞추기 3 번</div><div>3 생물 돌보기 · ${GR_NQ[tgt]} 문제</div><div>4 채집물 감별 · ${GR_NQ[tgt]} 문제</div><div>5 주문 문양 · ${GR_NQ[tgt]} 문제</div><div>6 역할 실기 (혼자 전투)</div></div><div class="grnote">문제마다 제한 시간이 있어요. 시간이 다 되면 그때까지 한 것으로 채점해요.</div>
     ${why ? `<div class="grwhy">${why}</div>` : ''}
     <div class="grbtns"><button class="btn go" data-grgo="${tgt}" ${can ? '' : 'disabled'}>${tgt} 학년 승급 시험 보기</button><button class="btn ghost" data-grx="x">다음에 볼게요</button></div>
@@ -14799,26 +14801,35 @@ function grSigil(){
   };
   go();
 }
-// 6) 역할 실기: 혼자 싸워요 · 근접 = 방패 골렘 · 원거리 = 골렘 셋 · 치유 = 허수아비 친구 지키기 (숫자는 tools 모의 전투로 맞춰요)
+// 6) 역할 실기: 근접 딜러 = 방패 골렘 · 원거리 딜러 = 골렘 셋 · 탱커 = 도발·막아서기로 허수아비 친구 지키기 · 서포터 = 허수아비 전사를 도와 골렘 쓰러뜨리기 (내 공격은 30%) · 치유 = 허수아비 친구 지키기 (숫자는 tools 모의 전투로 맞춰요)
 const GR_GOLEM = {   // 학년별 [체력 배율, 공격 배율, 제한 초]  (몬스터 레벨 = 내 레벨)
   melee: { 2: [5.0, 1.15, 70], 3: [6.2, 1.3, 70], 4: [7.4, 1.45, 75] },
   ranged: { 2: [2.2, .9, 75], 3: [2.7, 1.0, 75], 4: [3.2, 1.1, 80] },
-  heal: { 2: [3.0, 1.0, 50], 3: [3.4, 1.15, 55], 4: [3.8, 1.3, 60] } };
+  heal: { 2: [3.0, 1.0, 50], 3: [3.4, 1.15, 55], 4: [3.8, 1.3, 60] },
+  tank: { 2: [3.0, 1.0, 55], 3: [3.4, 1.15, 60], 4: [3.8, 1.3, 65] },
+  support: { 2: [2.6, .9, 75], 3: [3.0, 1.0, 75], 4: [3.4, 1.1, 80] } };
 function grBattle(){
-  const role = G2.role, say = { melee: ' 방패 골렘을 시간 안에 쓰러뜨려요. 방패를 들었을 때 때리면 튕겨 나와요!', ranged: ' 골렘 셋을 시간 안에 모두 쓰러뜨려요. 누구부터 칠지가 중요해요.', heal: ' 허수아비 친구를 지켜요. 골렘은 허수아비만 노려요. 시간이 끝날 때까지 버티면 통과예요.' }[role];
+  const role = G2.role, say = { melee: ' 방패 골렘을 시간 안에 쓰러뜨려요. 방패를 들었을 때 때리면 튕겨 나와요!', ranged: ' 골렘 셋을 시간 안에 모두 쓰러뜨려요. 누구부터 칠지가 중요해요.', heal: ' 허수아비 친구를 지켜요. 골렘은 허수아비만 노려요. 시간이 끝날 때까지 버티게 해 줘요.', tank: ' 골렘 셋이 뒤에 있는 허수아비 친구를 노려요. 도발·막아서기·대신 맞기로 공격을 내 쪽으로 끌어와 시간이 끝날 때까지 지켜요.', support: ' 허수아비 전사와 함께 싸워요. 내 공격은 약하게 들어가요. 버프·감속으로 전사를 도와 시간 안에 골렘을 쓰러뜨려요.' }[role];
   grFrame('역할 실기', say, `<div class="grnote">시험용 물약을 2 개 줘요 (치유 물약 1 개 · 활력 물약 1 개). 가방에 있는 물약은 쓸 수 없어요.</div><button class="btn go" id="grbgo" style="width:100%;padding:16px">전투 시작</button>`);
   $('#grbgo').onclick = () => grBattleStart();
 }
-const GR_JOB = { 2:{warrior:0.26,thief:0.48,knight:0.17,black:0.93,summon:0.64,gadget:0.56,alch:0.46,time:0.67,white:3.15,druid:2.38,cleric:0.61,bard:0.51},3:{warrior:0.35,thief:0.61,knight:0.2,black:1.07,summon:0.89,gadget:0.7,alch:0.67,time:0.93,white:2.07,druid:2.49,cleric:0.22,bard:0.51},4:{warrior:0.51,thief:0.61,knight:0.35,black:1.23,summon:1.07,gadget:0.85,alch:0.81,time:1.18,white:1.97,druid:1.97,cleric:0.17,bard:0.53}};   // 직업마다 세기 맞춤 (모의 전투: 그 학년 즈음 레벨·장비로 직업마다 승률 반쯤 · tools 모의 전투)
+const GR_JOB = { 2:{warrior:0.4,thief:0.67,black:1.02,summon:0.74,gadget:0.74,alch:0.53,knight:0.22,bard:1.97,time:2.07,white:3.3,druid:3.15,cleric:0.93},3:{warrior:0.48,thief:0.81,black:1.23,summon:0.98,gadget:0.85,alch:0.77,knight:0.26,bard:2.49,time:2.61,white:3.8,druid:3.46,cleric:0.46},4:{warrior:0.7,thief:0.85,black:1.36,summon:1.18,gadget:0.98,alch:0.98,knight:0.29,bard:2.87,time:3.46,white:3.15,druid:2.87,cleric:0.24} };   // 직업마다 세기 맞춤 (모의 전투: 그 학년 즈음 레벨·장비로 직업마다 실기 평균 점수 70 점쯤)
 function grFoes(role, y, L, job){
   const js_ = (GR_JOB[y] || {})[job] || 1, [hm0, am0] = GR_GOLEM[role][y], hm = hm0 * js_, am = am0 * Math.sqrt(js_), f = (1 + .35 * (L - 1)) * XFOE, a = (1 + .25 * (L - 1)) * XFOE_A, mk = (i, name, hp, atk, spd, sc, lp, extra) => ({ id: 'e' + i, name, ic: '', lp, big: sc >= 3 ? 1 : 0, sc, hh: 56 * sc, team: 'e', mhp: Math.round(hp * f * hm), hp: Math.round(hp * f * hm), atk: Math.round(atk * a * am), spd, g: Math.random() * 60, k: sc >= 3 ? 8 : 3, aoe: false, sk: '', skn: '', mL: L, fx: {}, ...extra });
   if (role === 'melee') return [mk(0, '방패 골렘', 60, 9, 7, 2, 29, { grShield: 1 })];
   if (role === 'ranged') return [mk(0, '큰 골렘', 50, 9, 6, 2, 29), mk(1, '작은 골렘', 26, 8, 10, 1, 29), mk(2, '작은 골렘', 26, 8, 10, 1, 29)];
+  if (role === 'tank') return [mk(0, '심술 골렘', 40, 8, 8, 2, 29), mk(1, '돌멩이 골렘', 22, 7, 10, 1, 29), mk(2, '돌멩이 골렘', 22, 7, 10, 1, 29)];
+  if (role === 'support') return [mk(0, '큰 골렘', 50, 9, 6, 2, 29), mk(1, '작은 골렘', 26, 8, 10, 1, 29)];
   return [mk(0, '심술 골렘', 40, 8, 8, 2, 29), mk(1, '돌멩이 골렘', 26, 7, 10, 1, 29)];
+}
+function grAllies(role, L){   // 허수아비 친구(가만히 있어요) · 허수아비 전사(알아서 싸워요)
+  if (role === 'heal' || role === 'tank'){ const s = xMkUnit('knight', Math.max(1, L - 4), '허수아비 친구', true); Object.assign(s, { id: 'scare', dummy: true, row: 'b', mhp: Math.round(s.mhp * .55), sks: [], g: 0, cdn: {} }); s.hp = s.mhp; return [s]; }
+  if (role === 'support'){ const w = xMkUnit('warrior', L, '허수아비 전사', true); Object.assign(w, { id: 'ally', row: 'f', cdn: {} }); return [w]; }
+  return [];
 }
 function grBattleStart(){
   const ex = xEx(), L = xLv(ex.exp).L, role = G2.role, party = xParty(); party.forEach(u => { u.hp = u.mhp; u.mp = u.mmp; u.cdn = {}; u.row = XROLE[u.job] === 'melee' ? 'f' : 'b'; });
-  if (role === 'heal'){ const s = xMkUnit('knight', Math.max(1, L - 4), '허수아비 친구', true); Object.assign(s, { id: 'scare', dummy: true, row: 'f', mhp: Math.round(s.mhp * .55), sks: [], g: 0, cdn: {} }); s.hp = s.mhp; party.push(s); }
+  party.forEach(u => { u.grMe = 1; }); party.push(...grAllies(role, L));
   const lim = GR_GOLEM[role][G2.tgt][2] * 1000;
   G2.battle = true; xb = { party, foes: grFoes(role, G2.tgt, L, ex.job), kind: 'elite', log: '역할 실기 시작!', turn: null, pick: null, over: false, last: performance.now(), buff: false, def: {}, fxs: [], floats: [], proj: [], n0: 1, gr: { role, end: performance.now() + lim, lim, t0: performance.now(), inv: { p_red: 1, p_vigor: 1 } } };   // 시험용 물약: 체력 1 · MP 1
   xv = { view: 'battle' }; const o = $('#grx'); if (o) o.style.display = 'none'; openSheet('home', 'explore');
@@ -14826,15 +14837,15 @@ function grBattleStart(){
 function grBattleTick(B, now){   // 전투 고리에서 불러요: 방패 · 시간 끝 · 허수아비
   const G = B.gr; if (!G || B.fin || B.over) return false;
   B.foes.forEach(f => { if (!f.grShield || f.hp <= 0) return; f.gsT = (f.gsT || 0) + .25; if (!f.fx.guard && f.gsT > 4.2){ f.fx.guard = { v: 1, t: 1.8 }; f.gsT = 0; xFloat(f.id, '방패!', '#9fd0ff'); B.log = '골렘이 방패를 들었어요! 지금 때리면 튕겨 나와요'; } });
-  const s = B.party.find(u => u.dummy); if (s && s.hp <= 0){ B.fin = now + 900; B.grLost = 1; return true; }
-  if (now >= G.end){ if (G.role === 'heal'){ B.foes.forEach(f => { f.hp = 0; }); } B.fin = now + 900; return true; }
+  const s = B.party.find(u => u.dummy), mine = B.party.find(u => u.grMe); if ((s && s.hp <= 0) || (mine && mine.hp <= 0)){ B.fin = now + 900; B.grLost = 1; return true; }
+  if (now >= G.end){ if (G.role === 'heal' || G.role === 'tank'){ B.foes.forEach(f => { f.hp = 0; }); } B.fin = now + 900; return true; }
   return false;
 }
 function grBattleEnd(win){
   const B = xb; if (!B || !B.gr) return; B.over = true; clearInterval(xTick); const G = B.gr, now = performance.now(), me_ = B.party.find(u => u.hum), s = B.party.find(u => u.dummy);
   let sc;
-  if (G.role === 'heal'){ const sv = s && s.hp > 0 && me_ && me_.hp > 0 && !B.grLost; sc = sv ? 100 : 95 * Math.min(1, (now - G.t0) / G.lim); }   // 치유: 끝까지 지키면 100 · 못 지키면 버틴 시간만큼
-  else { const dealt = B.foes.reduce((a, f) => a + (f.mhp - Math.max(0, f.hp)), 0) / B.foes.reduce((a, f) => a + f.mhp, 0); sc = win && !xAlive(B.foes).length ? 100 : Math.min(95, 100 * dealt); }   // 근접·원거리: 골렘 체력을 깎은 만큼 (다 쓰러뜨리면 100)
+  if (G.role === 'heal' || G.role === 'tank'){ const sv = s && s.hp > 0 && me_ && me_.hp > 0 && !B.grLost; sc = sv ? 100 : 95 * Math.min(1, (now - G.t0) / G.lim); }   // 치유·탱커: 끝까지 지키면 100 · 못 지키면 버틴 시간만큼
+  else { const dealt = B.foes.reduce((a, f) => a + (f.mhp - Math.max(0, f.hp)), 0) / B.foes.reduce((a, f) => a + f.mhp, 0); sc = win && !xAlive(B.foes).length ? 100 : Math.min(95, 100 * dealt); }   // 근접·원거리·서포터: 골렘 체력을 깎은 만큼 (다 쓰러뜨리면 100)
   xb = null; xv = null; G2.battle = false; closeSheet(); const o = $('#grx'); if (o) o.style.display = '';
   toast('역할 실기 끝! 수고했어요'); grDone(sc, G2.tok);
 }
