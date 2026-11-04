@@ -3858,7 +3858,7 @@ function adminErrHTML(){   // 같은 오류끼리 묶어서 많이·최근에 �
     <div style="margin-top:8px"><button class="btn sm" data-aderrclr ${list.length ? '' : 'disabled'}>모두 지우기</button></div></div>
     ${list.length ? list.map(g => `<div class="adcard"><b>${esc(K[g.k] || g.k || '오류')} · ${g.n}번 · ${g.who.size}명</b><div style="font-family:monospace;white-space:pre-wrap;word-break:break-all;margin:6px 0">${esc(g.m)}</div>
       <div class="s">마지막 ${t(g.last)} · ${esc([...g.who].slice(0, 8).join(', '))}${g.who.size > 8 ? ' 외' : ''}${g.e.w ? ` · 화면: ${esc(g.e.w)}` : ''}${g.e.b ? ` · 버전 ${esc(g.e.b)}` : ''}</div>
-      ${g.e.s || g.e.ua ? `<details style="margin-top:6px"><summary class="s">자세히</summary><div style="font-family:monospace;font-size:11px;white-space:pre-wrap;word-break:break-all;opacity:.8">${esc(g.e.s || '')}\n${esc(g.e.ua || '')}</div></details>` : ''}</div>`).join('') : '<div class="adcard">아직 모인 오류가 없어요 🎉</div>'}`;
+      ${g.e.s || g.e.ua ? `<details style="margin-top:6px"><summary class="s">자세히</summary><div style="font-family:monospace;font-size:11px;white-space:pre-wrap;word-break:break-all;opacity:.8">${esc(g.e.s || '')}\n${esc(g.e.ua || '')}</div></details>` : ''}</div>`).join('') : '<div class="adcard">아직 모인 오류가 없어요</div>'}`;
 }
 const adOnline = () => Object.fromEntries(Object.entries(AD.online || {}).filter(([, o]) => o && o.nick));   // 이름 없는 접속 표시(끊겼다 다시 붙으며 남은 찌꺼기)는 빼요
 // 탭을 옮길 때는 눌려 있던 입력칸을 놓아요 (휴대폰은 키보드를 내려도 입력 중으로 남아서 화면이 안 바뀌던 것)
@@ -5134,7 +5134,7 @@ const AD_FACE_KO = { neutral: '보통', happy: '기쁨', smile: '미소', laugh:
 const adFlagKo = f => { const m = /^[a-z]+_(.+)$/.exec(f || ''); return (m && AD_FLAG_KO[m[1]]) || (/_h(\d+)$/.test(f) ? `♥${/_h(\d+)$/.exec(f)[1]} 이야기를 봤음` : f); };
 function adEvReadHTML(e){
   const S = e.script || [], tag = {}, put = (l, t, c) => { if (l && !tag[l]) tag[l] = { t, c }; };
-  S.forEach(n => { if (n.cmd === 'if_flag'){ const ro = /_romance$/.test(n.flag); put(n.then, ro ? '💗 연애 버전' : `「${adFlagKo(n.flag)}」일 때`, ro ? 'love' : 'yes'); put(n.else, ro ? '우정 버전' : `「${adFlagKo(n.flag)}」이 아닐 때`, ro ? 'friend' : 'no'); }
+  S.forEach(n => { if (n.cmd === 'if_flag'){ const ro = /_romance$/.test(n.flag); put(n.then, ro ? '♥ 연애 버전' : `「${adFlagKo(n.flag)}」일 때`, ro ? 'love' : 'yes'); put(n.else, ro ? '우정 버전' : `「${adFlagKo(n.flag)}」이 아닐 때`, ro ? 'friend' : 'no'); }
     if (n.cmd === 'if_heart'){ put(n.then, `♥${n.min || n.heart || ''} 이상일 때`, 'yes'); put(n.else, '아닐 때', 'no'); }
     if (n.cmd === 'choice') (n.options || []).forEach((o, j) => put(o.next, `선택 ${j + 1}: ${o.text}${o.affinity ? ` (호감 ${o.affinity > 0 ? '+' : ''}${o.affinity})` : ''}`, 'pick')); });
   let cur = '', out = '';
@@ -5521,7 +5521,7 @@ function adminMqPlayerHTML(ps){   // 학생 한 명을 골라 메인 의뢰가 �
       out += `<div style="margin-top:6px"><b>지금: ${list.indexOf(q.id) + 1}장 「${esc(q.name)}」 ${m.st || 1} / ${(q.stages || []).length}단계${st?.title ? ` · ${esc(st.title)}` : ''}</b></div><div class="s">${PH[m.ph] || esc(m.ph || '')}</div>`;
       if (st && (m.ph === 'go' || m.ph === 'ready')){
         const keep = me; let rows = '';
-        try { me = structuredClone(p); me.inv = me.inv || {}; rows = (st.objectives || []).map((o, i) => { const r = mqObjState(o, i); if (m.ph === 'ready') r.done = true, r.cur = r.need; return `<div class="s">${r.done ? '✅' : '⬜'} ${esc(r.text)}${r.need > 1 ? ` (${Math.min(r.cur, r.need)}/${r.need})` : ''}</div>`; }).join(''); }
+        try { me = structuredClone(p); me.inv = me.inv || {}; rows = (st.objectives || []).map((o, i) => { const r = mqObjState(o, i); if (m.ph === 'ready') r.done = true, r.cur = r.need; return `<div class="s">${r.done ? '✔' : '☐'} ${esc(r.text)}${r.need > 1 ? ` (${Math.min(r.cur, r.need)}/${r.need})` : ''}</div>`; }).join(''); }
         catch(e){ rows = '<div class="s">목표를 읽지 못했어요</div>'; } finally { me = keep; }
         out += rows;
       }
@@ -8064,7 +8064,7 @@ function famPanelOpen(){
       <div class="bar"><i style="width:${st >= 4 ? 100 : (pts - st * 100)}%"></i></div></div>
     <div class="card"><div class="row"><span class="t">알아낸 취향</span><span class="m">${given ? '오늘 선물 완료' : '오늘 1번 선물할 수 있어요'}</span></div>
       <div class="gg">${likes.map(x => `<button disabled style="opacity:1"><s style="color:${FAM.C[k]}">♥</s>${ic(x)}<em>${esc(ITEM[x] || x)}</em></button>`).join('')}${hates.map(x => `<button disabled style="opacity:1"><s style="color:#8A7AAA">✕</s>${ic(x)}<em>${esc(ITEM[x] || x)}</em></button>`).join('')}</div>${likes.length + hates.length ? '' : '<div class="m" style="margin-top:6px">선물을 주면 반응을 기억해 둬요</div>'}</div>
-    <div class="card"><div class="row" style="margin-bottom:4px"><span class="t">함께하는 힘</span></div>${ab.map((a, i) => `<div class="ab ${i + 1 <= st ? '' : 'lk'}"><b>${FAM.ST[i + 1]}</b><span>${i + 1 <= st ? a : '🔒 ' + FAM.ST[i + 1] + '이 되면 열려요'}</span></div>`).join('')}</div>
+    <div class="card"><div class="row" style="margin-bottom:4px"><span class="t">함께하는 힘</span></div>${ab.map((a, i) => `<div class="ab ${i + 1 <= st ? '' : 'lk'}"><b>${FAM.ST[i + 1]}</b><span>${i + 1 <= st ? a : '' + FAM.ST[i + 1] + '이 되면 열려요'}</span></div>`).join('')}</div>
     ${trGoalHTML()}${f.aw ? `<div class="card"><div class="row"><span class="t">각성한 정령</span><span class="m">시련을 모두 끝냈어요</span></div></div>` : ''}
     <div class="btns"><button data-fx>닫기</button><button class="go" id="famgo" ${given ? 'disabled' : ''}>${given ? '오늘 선물 완료' : '선물하기'}</button></div>`);
   famSprite(v.querySelector('canvas')); v.querySelectorAll('[data-trg]').forEach(b => b.onclick = () => trGive(+b.dataset.trg)); const go = v.querySelector('#famgo'); if (go) go.onclick = () => famGiftOpen();
@@ -8946,7 +8946,7 @@ function sdPanel(msg){
   const face = `<i class="sdface" style="background-position:${-sdFrame() * 40 * 1.5 + 6}px ${me.seed.st >= 3 ? -24 : -34}px"></i>`;
   npcUI().dataset.id = 'seed'; npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf sdfbox">${face}</div><div><b>${esc(P.name)}</b><span class="s sub">${s.gold ? '★ 금화분 · ' : ''}${SD_ST[s.st]}${s.st < 5 ? ` · ${s.st + 1} / 5 일째` : ''}${s.miss ? ` · 빠진 날 ${s.miss}` : ''}</span></div><button class="sx" data-sdp="close">✕</button></div>
     <div class="npct">${esc(line)}</div>
-    ${s.st < 5 ? `<div class="sdrow"><span>💧 물 ${Math.min(2, W.length)} / 2 <small>${wTxt}</small></span><span>💬 말 ${Math.min(2, T.length)} / 2 <small>${tTxt}</small></span></div><div class="sdhint">둘 다 채우면 자정에 자라요 · 한 번 하고 6 시간 뒤에 다음 번</div>` : `<div class="sdrow"><span>열매 딴 수 ${s.hv || 0}</span><span>${s.fr === todayKey() ? '오늘 열매는 땄어요' : '오늘 열매가 열렸어요'}</span></div>`}
+    ${s.st < 5 ? `<div class="sdrow"><span>💧 물 ${Math.min(2, W.length)} / 2 <small>${wTxt}</small></span><span>말 ${Math.min(2, T.length)} / 2 <small>${tTxt}</small></span></div><div class="sdhint">둘 다 채우면 자정에 자라요 · 한 번 하고 6 시간 뒤에 다음 번</div>` : `<div class="sdrow"><span>열매 딴 수 ${s.hv || 0}</span><span>${s.fr === todayKey() ? '오늘 열매는 땄어요' : '오늘 열매가 열렸어요'}</span></div>`}
     <div class="frow">${s.st < 5 ? `<button class="btn sm go" data-sdp="water">물 주기</button><button class="btn sm go" data-sdp="talk">말 걸기</button>` : `<button class="btn sm go" data-sdp="fruit">열매 따기</button><button class="btn sm" data-sdp="talk">말 걸기</button>`}<button class="btn sm" data-sdp="close">닫기</button></div></div>`;
   npcUI().classList.add('on');
 }
@@ -9037,7 +9037,7 @@ function adminSeedHTML(){
   const f = AD.sdF || 'all', L = IN.filter(id => { const s = S(id), w = cnt(s.w, adToday()), t = cnt(s.t, adToday()); return f === 'all' || (f === 'need' && s.st < 5 && (w < 2 || t < 2)) || (f === 'bloom' && s.st >= 5) || (f === 'done' && s.fin); });
   const rows = L.map(id => { const s = S(id), w = cnt(s.w, adToday()), t = cnt(s.t, adToday()), bl = s.bl || {}, n = Object.keys(bl).length;
     return `<div class="sdarow"><div class="nm"><b>${esc(P[id].nick)}</b><span>${NM[s.p] || ''}</span></div><div>
-      <div class="ln"><span class="tag ${s.st >= 5 ? (s.gold ? 'g' : 'ok') : ''}">${s.gold ? '★ 금화분 · ' : ''}${SD_ST[Math.min(5, s.st)]}${s.st < 5 ? ` (${s.st + 1}/5 일째)` : ''}</span>${s.st < 5 ? `<span>💧 ${w}/2</span><span>💬 ${t}/2</span>${s.miss ? `<span class="tag r">빠진 날 ${s.miss}</span>` : ''}` : `<span>열매 딴 수 ${s.hv || 0}</span>`}</div>
+      <div class="ln"><span class="tag ${s.st >= 5 ? (s.gold ? 'g' : 'ok') : ''}">${s.gold ? '★ 금화분 · ' : ''}${SD_ST[Math.min(5, s.st)]}${s.st < 5 ? ` (${s.st + 1}/5 일째)` : ''}</span>${s.st < 5 ? `<span>물 ${w}/2</span><span>말 ${t}/2</span>${s.miss ? `<span class="tag r">빠진 날 ${s.miss}</span>` : ''}` : `<span>열매 딴 수 ${s.hv || 0}</span>`}</div>
       <div class="ln" style="margin-top:4px"><span>블랑 ${n}/17</span><span class="dots">${Array.from({ length: 17 }, (_, i) => `<i class="${bl[i] ? (i >= 12 ? 'sp on' : 'on') : ''}"></i>`).join('')}</span>${s.fin ? '<span class="tag ok">마지막 인사 봄</span>' : ''}</div></div></div>`; }).join('');
   return `<div class="adcard sdad"><div class="abhead"><b>이벤트 「씨앗 대회 · 무슈 블랑」</b>${c.open ? '<button class="btn sm" data-sda="close">이벤트 끝내기</button>' : '<button class="btn sm go" data-sda="open">이벤트 시작</button>'}</div>
     <div class="abchips"><span>${c.open ? '여는 중' : '닫힘'}</span><span>참여 <b>${IN.length}</b>/${ids.length}</span></div>
@@ -13870,7 +13870,7 @@ const MQ_KN = {
 };
 const mqMet = id => { const s = mqState(); return MQ.list.some(k => { const q = MQ.q[k]; return q && q.client === id && (s.done[k] || (s.q === k && s.ph !== 'arrive')); }); };
 const mqKnHas = () => !!((me.knit && me.knit.sc || []).length || (me.knit && me.knit.kr && me.knit.kr.own || []).length);
-const mqKnBtn = id => MQ_KN[id] && mqMet(id) && mqKnHas() ? `<button class="btn sm go" data-mqkn="${id}">🧶 뜨개 선물</button>` : '';
+const mqKnBtn = id => MQ_KN[id] && mqMet(id) && mqKnHas() ? `<button class="btn sm go" data-mqkn="${id}">뜨개 선물</button>` : '';
 const mqKnFace = id => g => { const c = MQ.cast[id] || {}; if (!c.portrait) return; const im = new Image(), dr = () => { const fw = im.width / 5; g.fillStyle = '#2A1E3A'; g.fillRect(0, 0, 32, 32); g.drawImage(im, 0, 0, fw, fw, 0, 0, 32, 32); }; im.onload = dr; im.src = `art/portraits/${c.portrait}.png?v=${PORTRAIT_V}`; if (im.complete && im.width) dr(); };
 function mqKnOpen(id){
   const c = MQ.cast[id] || {}, SC = me.knit && me.knit.sc || [], KR = me.knit && me.knit.kr && me.knit.kr.own || [];
