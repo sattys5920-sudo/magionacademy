@@ -10,7 +10,7 @@ window.__raidFx = async (o) => {
   document.getElementById('raidov')?.remove();
   const ov = document.createElement('div'); ov.id = 'raidov';
   const hpPct = { tele: 63, side: 58, all: 47, big: 21 }[sc], ph = sc === 'big' ? 3 : sc === 'all' ? 2 : 2;
-  const log = { tele: `<b style="color:${BS.c}">${sc === 'tele' ? '큰 기술' : ''}</b> 준비 중! 끊기 게이지를 채우면 취소돼요`, side: `${BS.n}의 <b style="color:${BS.c}">${BS.side}</b>! 뒤쪽 파티 · 하랑 「완벽하게 피했어요」`, all: `${BS.n}의 <b style="color:${BS.c}">${BS.all}</b>! 12 명 모두 · 나 「조금 늦었어요」 피해 60 %`, big: `3 단계 · ${BS.n}의 <b style="color:${BS.c}">${BS.big}</b>! 끊기에 실패했어요....` }[sc];
+  const log = { tele: '', side: `${BS.n}의 <b style="color:${BS.c}">${BS.side}</b>! 뒤쪽 파티 · 하랑 「완벽하게 피했어요」`, all: `${BS.n}의 <b style="color:${BS.c}">${BS.all}</b>! 12 명 모두 · 나 「조금 늦었어요」 피해 60 %`, big: `3 단계 · ${BS.n}의 <b style="color:${BS.c}">${BS.big}</b>! 끊기에 실패했어요....` }[sc];
   ov.innerHTML = `<style>
 #raidov{position:fixed;inset:0;z-index:99999;background:#140e22;color:#f4ecff;font-family:G11,Pretendard,sans-serif;display:flex;flex-direction:column;gap:6px;padding:10px 8px}#raidov>*{flex:none}
 #raidov .rtop{display:flex;align-items:center;gap:8px;font-family:G11B,Pretendard,sans-serif;font-size:13px}
@@ -30,8 +30,8 @@ window.__raidFx = async (o) => {
 </style>
 <div class="rtop">${BS.n}<div class="bar"><i></i><u></u><b>${hpPct} %</b></div><span style="color:#9fd8ff">${ph} 단계</span></div>
 <canvas id="rcv" width="${W}" height="${H}"></canvas>
-<div class="log">${log}</div>
-${sc === 'tele' ? `<div class="dodge"><div class="ring"><div class="o"></div><div class="z"></div><div class="btn">피하기</div></div><p><b>${BS.warnA}</b><br>바깥 원이 하얀 고리에 닿을 때 눌러요<br><small>완벽 피해 20 % · 조금 어긋남 60 % · 놓침 100 % · 너무 일찍 누르면 실패</small></p></div>` : ''}`;
+${log ? `<div class="log">${log}</div>` : ''}
+${sc === 'tele' ? `<div class="dodge"><div class="ring"><div class="o"></div><div class="z"></div><div class="btn">피하기</div></div><p><b>${BS.warnA}</b></p></div>` : ''}`;
   document.body.appendChild(ov);
   const cv = ov.querySelector('#rcv'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
   const R = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(7 + b * 31 + sc.length);

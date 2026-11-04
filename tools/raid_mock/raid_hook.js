@@ -35,10 +35,10 @@ window.__raidMock = async () => {
 </style>
 <div class="rtop">얼음 거인<div class="bar"><i></i><b>63 %</b></div><span class="ph">2 단계</span></div>
 
-<div style="display:grid;grid-template-columns:1fr auto 1fr;font-size:11px;color:#b9a8d8"><span>앞쪽 파티 6 명</span><span style="color:#ffe07a">남은 시간 4 분 12 초</span><span style="text-align:right">뒤쪽 파티 6 명</span></div>
+<div style="text-align:center;font-size:11px;color:#ffe07a">남은 시간 4 분 12 초</div>
 <canvas id="rcv" width="${W}" height="${H}"></canvas>
 <div class="log">얼음 거인이 <b style="color:#9fd8ff">눈보라</b>를 준비해요.... 뒤쪽을 보고 있어요! &nbsp;· 루나의 치유 +42</div>
-<div class="pk">치유할 친구를 눌러요 · 치유의 빛<small>캔버스의 사람을 눌러도 돼요 · 취소</small></div>
+<div class="pk">치유할 친구를 눌러요 · 치유의 빛</div>
 <div class="cards" id="rcards"></div>
 <div class="cmd"><button>공격<small>기본</small></button><button style="border-color:#ffd866;background:#4a3a18">치유의 빛<small>MP 6</small></button><button>보호막<small>MP 10</small></button><button>물약<small>×2</small></button></div>`;
   document.body.appendChild(ov);
@@ -76,7 +76,7 @@ window.__raidMock = async () => {
   const hp = [78, 90, 64, 78, 40, 82, 70, 95, 22, 77, 88, 58], fx = { 1: '보호', 6: '도발', 8: '독' };
   for (const p of pos){ const y = p.y - FH * .8 - 14; g.fillStyle = '#1a1024'; g.fillRect(p.x - 6, y - 1, 13, 8); g.fillStyle = '#ffd866'; g.fillRect(p.x - 5, y, 11, 3); g.fillRect(p.x - 3, y + 3, 7, 2); g.fillRect(p.x - 1, y + 5, 3, 1); }
   const card = i => { const p = pos[i]; return `<div class="rc pick${i === 3 ? ' mine' : ''}${hp[i] <= 30 || hp[i] <= 40 ? ' low' : ''}"><div class="h">${headImg(p.av)}<span><b>${names[i]}</b><span class="j">${XJ[jobs[i]].n}</span></span></div><div class="hb"><i style="width:${hp[i]}%"></i></div><div class="mb"><i style="width:${[50, 30, 70, 55, 80, 60, 40, 90, 65, 35, 75, 50][i]}%"></i></div>${fx[i] ? `<span class="rst">${fx[i]}</span>` : ''}</div>`; };
-  const grp = (t, a) => `<div class="side"><b>${t}</b><div class="sg">${a.map(card).join('')}</div></div>`;
+  const grp = (t, a) => `<div class="side"><div class="sg">${a.map(card).join('')}</div></div>`;
   ov.querySelector('#rcards').innerHTML = grp('앞쪽 파티', [0, 1, 2, 3, 4, 5]) + grp('뒤쪽 파티', [6, 7, 8, 9, 10, 11]);
   return 1;
 };
