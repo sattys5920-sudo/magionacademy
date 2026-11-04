@@ -323,7 +323,7 @@ const TAG_SKIN = {
 World.setMyCos = (tg, bb) => { me.tg = tg || ''; me.bb = bb || ''; if (started) retag(); };
 function drawTag(tag, sx, sy, now, below){   // sx, sy: 세계 픽셀(이름표 아래 가운데, below면 위쪽 가운데). 화면 좌표계(setTransform 1)에서 불러요
   if (!tag) return;
-  const f = Math.round(13 * dpr), px = Math.round(5 * dpr), py = Math.round(3 * dpr), r = Math.round(4 * dpr);
+  const f = Math.round((tag.gy >= 2 ? 11 : 13) * dpr), px = Math.round((tag.gy >= 2 ? 7 : 5) * dpr), py = Math.round((tag.gy >= 2 ? 3.5 : 3) * dpr), r = Math.round(4 * dpr);   // 학년 이름표는 글자를 조금 작게 (테두리·별 자리를 남겨요)
   out.font = `${f}px G11, Pretendard, sans-serif`; let w = tagW.get(tag.t + f); if (w === undefined){ w = Math.ceil(out.measureText(tag.t).width); tagW.set(tag.t + f, w); }
   const x = Math.round((sx - camIX) * KPX - w / 2 - px), y = Math.round((sy - camIY) * KPX - (below ? 0 : f + py * 2)), W = w + px * 2, H = f + py * 2;
   const SK = tag.sk && TAG_SKIN[tag.sk];
