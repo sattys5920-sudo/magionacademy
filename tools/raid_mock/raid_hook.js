@@ -9,16 +9,25 @@ window.__raidMock = async () => {
 #raidov .bar b{position:absolute;inset:0;text-align:center;font-size:10px;line-height:14px;color:#1a1024}
 #raidov .ph{font-size:11px;color:#9fd8ff}
 #raidov canvas{width:100%;image-rendering:pixelated;border:2px solid #2a1838;border-radius:4px}
-#raidov .row{display:flex;gap:6px}
-#raidov .me{flex:1.2;background:#22183a;border:2px solid #4fd8ff;border-radius:6px;padding:6px;font-size:11px}
-#raidov .me .n{font-family:G11B;font-size:13px}
-#raidov .hp,#raidov .mp{height:8px;background:#3a2440;border-radius:2px;margin-top:4px;overflow:hidden}
-#raidov .hp i{display:block;height:100%;width:78%;background:#7affb0}
-#raidov .mp i{display:block;height:100%;width:55%;background:#6ab8ff}
-#raidov .al{flex:1;background:#1c1430;border-radius:6px;padding:5px;font-size:10px;display:grid;grid-template-columns:1fr 1fr;gap:2px 6px}
-#raidov .al span{display:flex;align-items:center;gap:3px;white-space:nowrap;overflow:hidden}
-#raidov .al em{font-style:normal;flex:1;height:5px;background:#3a2440;border-radius:2px;overflow:hidden}
-#raidov .al em i{display:block;height:100%;background:#7affb0}
+#raidov .pk{background:#3a2a10;border:2px solid #ffd866;border-radius:6px;padding:6px 8px;font-size:12px;color:#ffe9a8;font-family:G11B;display:flex;justify-content:space-between}
+#raidov .pk small{font-family:G11;color:#d8c08a;font-size:10px}
+#raidov .cards{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#raidov .side{background:#1c1430;border-radius:6px;padding:4px}
+#raidov .side>b{display:block;font-size:10px;color:#b9a8d8;padding:0 2px 3px}
+#raidov .sg{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+#raidov .rc{background:#2a1f42;border:2px solid #3a2e56;border-radius:5px;padding:3px;font-size:9px;position:relative}
+#raidov .rc .h{display:flex;align-items:center;gap:3px;white-space:nowrap;overflow:hidden}
+#raidov .rc img{width:18px;height:18px;image-rendering:pixelated;border-radius:3px;background:#1a1024}
+#raidov .rc b{font-family:G11B;font-size:10px}
+#raidov .rc .j{display:block;color:#9f90c0;font-size:8px}
+#raidov .rc .hb,#raidov .rc .mb{height:4px;background:#3a2440;border-radius:2px;margin-top:2px;overflow:hidden}
+#raidov .rc .hb i{display:block;height:100%;background:#7affb0}
+#raidov .rc .mb i{display:block;height:100%;background:#6ab8ff}
+#raidov .rc.low .hb i{background:#ff6a4a}
+#raidov .rc.mine{border-color:#4fd8ff}
+#raidov .rc.pick{border-color:#ffd866;box-shadow:0 0 0 1px #ffd866,0 0 8px rgba(255,216,102,.55)}
+#raidov .rc.pick.low{animation:none;border-color:#ff9a6a;box-shadow:0 0 0 1px #ffd866,0 0 10px rgba(255,120,80,.8)}
+#raidov .rc .rst{position:absolute;right:-2px;top:-7px;border:1px solid #ffd866;font-size:8px;line-height:1;padding:1px 2px;border-radius:2px;background:#1a1024;color:#ffd866}
 #raidov .cmd{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
 #raidov .cmd button{background:#2e2248;color:#f4ecff;border:2px solid #4a3a6a;border-radius:6px;padding:9px 2px;font-family:G11B;font-size:12px}
 #raidov .cmd button small{display:block;font-family:G11;font-size:9px;color:#b9a8d8}
@@ -29,9 +38,9 @@ window.__raidMock = async () => {
 <div style="display:grid;grid-template-columns:1fr auto 1fr;font-size:11px;color:#b9a8d8"><span>앞쪽 파티 6 명</span><span style="color:#ffe07a">남은 시간 4 분 12 초</span><span style="text-align:right">뒤쪽 파티 6 명</span></div>
 <canvas id="rcv" width="${W}" height="${H}"></canvas>
 <div class="log">얼음 거인이 <b style="color:#9fd8ff">눈보라</b>를 준비해요.... 뒤쪽을 보고 있어요! &nbsp;· 루나의 치유 +42</div>
-<div class="row"><div class="me"><div class="n">나 · 흑마법사 Lv 31</div><div>체력 312 / 400</div><div class="hp"><i></i></div><div style="margin-top:3px">MP 22 / 40</div><div class="mp"><i></i></div></div>
-<div class="al">${['지호', '루나', '하늘', '미르', '서아', '도윤', '별이', '하랑', '유나', '라온', '새봄'].map((n, i) => `<span>${n}<em><i style="width:${[78, 90, 64, 40, 82, 70, 95, 22, 77, 88, 58][i]}%;${[40, 22].includes([78, 90, 64, 40, 82, 70, 95, 22, 77, 88, 58][i]) ? 'background:#ff6a4a' : ''}"></i></em></span>`).join('')}</div></div>
-<div class="cmd"><button>공격<small>기본</small></button><button>얼음 창<small>MP 8</small></button><button>어둠 폭발<small>MP 14</small></button><button>물약<small>×2</small></button></div>`;
+<div class="pk">치유할 친구를 눌러요 · 치유의 빛<small>캔버스의 사람을 눌러도 돼요 · 취소</small></div>
+<div class="cards" id="rcards"></div>
+<div class="cmd"><button>공격<small>기본</small></button><button style="border-color:#ffd866;background:#4a3a18">치유의 빛<small>MP 6</small></button><button>보호막<small>MP 10</small></button><button>물약<small>×2</small></button></div>`;
   document.body.appendChild(ov);
   const cv = ov.querySelector('#rcv'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
   // 배경: 얼음 동굴 (하늘 · 얼음 기둥 · 눈 바닥)
@@ -49,13 +58,13 @@ window.__raidMock = async () => {
   // 뒤쪽을 노리는 표시 (빨간 화살표)
   g.fillStyle = '#ff6a4a'; g.globalAlpha = .85; g.beginPath(); g.moveTo(W / 2 + 62, 80); g.lineTo(W / 2 + 84, 90); g.lineTo(W / 2 + 62, 100); g.fill(); g.globalAlpha = 1;
   // 12 명: 왼쪽 6 (오른쪽 보기), 오른쪽 6 (왼쪽 보기) · 앞열 3 + 뒷열 3
-  const jobs = ['knight', 'warrior', 'thief', 'black', 'white', 'bard', 'knight', 'warrior', 'summon', 'alch', 'druid', 'time'];   // 앞열 3 = 앞에서 막고 · 뒷열 3 = 뒤에서 쏘고 고쳐요
+  const jobs = ['knight', 'warrior', 'thief', 'white', 'black', 'bard', 'knight', 'warrior', 'summon', 'alch', 'druid', 'time'];   // 앞열 3 = 앞에서 막고 · 뒷열 3 = 뒤에서 쏘고 고쳐요
   const names = ['지호', '루나', '하늘', '나', '미르', '서아', '도윤', '별이', '하랑', '유나', '라온', '새봄'];
   const meJ = { 0: 'black' }; const FW = A.FW, FH = A.FH, dirL = A.meta.dirs.left;
   const pos = []; for (let i = 0; i < 12; i++){ const side = i >= 6 ? 1 : 0, j = i % 6, front = j < 3, k = j % 3, xo = (front ? 160 : 80) + (k - 1) * -16; pos.push({ i, side, x: side ? W - xo : xo, y: 168 + k * 34 }); }
   for (const p of pos.slice().sort((a, b) => a.y - b.y)){ const i = p.i;
     const job = jobs[i], av = A.fromLook(ORDER_J.indexOf(job) * 131 + 7 + i * 3); try { await A.need(av); } catch (e) {}
-    const sp = A.compose(av); g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(p.x, p.y, 11, 3, 0, 0, 7); g.fill();
+    p.av = av; const sp = A.compose(av); g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(p.x, p.y, 11, 3, 0, 0, 7); g.fill();
     if (i === 3){ g.strokeStyle = '#4fd8ff'; g.lineWidth = 2; g.beginPath(); g.ellipse(p.x, p.y, 18, 5.5, 0, 0, 7); g.stroke(); }
     const s = .8, w = FW * s, h = FH * s;
     if (sp){ g.save(); g.translate(p.x, 0); if (!p.side) g.scale(-1, 1); g.drawImage(sp, dirL * FW, 0, FW, FH, -w / 2, p.y - h + 5, w, h); g.restore(); }
@@ -65,5 +74,10 @@ window.__raidMock = async () => {
   }
   // 숫자 띄우기
   g.font = '12px G11B, Pretendard, sans-serif'; g.textAlign = 'center'; [['-128', W / 2 - 40, 90, '#ffe07a'], ['-96', W / 2 + 34, 112, '#ffe07a'], ['+42', 120, 150, '#7affb0']].forEach(([t, x, y, c]) => { g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText(t, x, y); g.fillStyle = c; g.fillText(t, x, y); });
+  const hp = [78, 90, 64, 78, 40, 82, 70, 95, 22, 77, 88, 58], fx = { 1: '보호', 6: '도발', 8: '독' };
+  for (const p of pos){ const y = p.y - FH * .8 - 14; g.fillStyle = '#1a1024'; g.fillRect(p.x - 6, y - 1, 13, 8); g.fillStyle = '#ffd866'; g.fillRect(p.x - 5, y, 11, 3); g.fillRect(p.x - 3, y + 3, 7, 2); g.fillRect(p.x - 1, y + 5, 3, 1); }
+  const card = i => { const p = pos[i]; return `<div class="rc pick${i === 3 ? ' mine' : ''}${hp[i] <= 30 || hp[i] <= 40 ? ' low' : ''}"><div class="h">${headImg(p.av)}<span><b>${names[i]}</b><span class="j">${XJ[jobs[i]].n}</span></span></div><div class="hb"><i style="width:${hp[i]}%"></i></div><div class="mb"><i style="width:${[50, 30, 70, 55, 80, 60, 40, 90, 65, 35, 75, 50][i]}%"></i></div>${fx[i] ? `<span class="rst">${fx[i]}</span>` : ''}</div>`; };
+  const grp = (t, a) => `<div class="side"><b>${t}</b><div class="sg">${a.map(card).join('')}</div></div>`;
+  ov.querySelector('#rcards').innerHTML = grp('앞쪽 파티', [0, 1, 2, 3, 4, 5]) + grp('뒤쪽 파티', [6, 7, 8, 9, 10, 11]);
   return 1;
 };
