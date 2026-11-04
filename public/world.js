@@ -328,12 +328,15 @@ function drawTag(tag, sx, sy, now, below){   // sx, sy: 세계 픽셀(이름표 
   const x = Math.round((sx - camIX) * KPX - w / 2 - px), y = Math.round((sy - camIY) * KPX - (below ? 0 : f + py * 2)), W = w + px * 2, H = f + py * 2;
   const SK = tag.sk && TAG_SKIN[tag.sk];
   if (SK){ const u = Math.max(1, Math.round(dpr)); out.fillStyle = SK.bg; out.beginPath(); out.roundRect(x, y, W, H, r); out.fill(); out.strokeStyle = SK.bd; out.lineWidth = u; out.beginPath(); out.roundRect(x + u / 2, y + u / 2, W - u, H - u, r); out.stroke(); SK.deco(out, x, y, W, H, u); }   // 할로윈 이름표 (무슈 블랑 보상)
-  else if (tag.gy >= 2){ const GC = [null, null, ['#22305E', '#6A8CE8'], ['#3A2260', '#B48AF0'], ['#4E1A24', '#F07A86']][tag.gy] || ['#22305E', '#6A8CE8'], u = Math.max(1, Math.round(dpr)); out.fillStyle = GC[0]; out.beginPath(); out.roundRect(x, y, W, H, r); out.fill(); out.strokeStyle = GC[1]; out.lineWidth = u * 1.5; out.beginPath(); out.roundRect(x + u / 2, y + u / 2, W - u, H - u, r); out.stroke(); }   // 2학년부터 학년 색 이름표 (승급 시험)
+  else if (tag.gy >= 2){ const GC = [null, null, ['#2E4890', '#16224A', '#8FB0FF'], ['#5A3496', '#2A1650', '#D2B0FF'], ['#8A2A3A', '#3E0E18', '#FF9AA6']][tag.gy], u = Math.max(1, Math.round(dpr));   // 2학년부터 학년 색 이름표 (승급 시험): 위가 밝은 그라데이션 · 금빛 테두리 · 모서리 별
+    const gr = out.createLinearGradient(0, y, 0, y + H); gr.addColorStop(0, GC[0]); gr.addColorStop(1, GC[1]); out.fillStyle = gr; out.beginPath(); out.roundRect(x, y, W, H, r + u); out.fill();
+    out.strokeStyle = '#E8C060'; out.lineWidth = u * 1.5; out.beginPath(); out.roundRect(x + u * .75, y + u * .75, W - u * 1.5, H - u * 1.5, r + u); out.stroke();
+    out.strokeStyle = GC[2]; out.globalAlpha = .55; out.lineWidth = u; out.beginPath(); out.moveTo(x + r + u * 2, y + u * 2.5); out.lineTo(x + W - r - u * 2, y + u * 2.5); out.stroke(); out.globalAlpha = 1;
+    const star = (cx, cy, s) => { out.fillStyle = '#FFE9A0'; out.fillRect(cx - u, cy - s, u * 2, s * 2); out.fillRect(cx - s, cy - u, s * 2, u * 2); out.fillStyle = '#FFFFFF'; out.fillRect(cx - u / 2, cy - u / 2, u, u); };
+    star(x + u, y + u, u * 2.5); star(x + W - u, y + H - u, u * 2.5); if (tag.gy >= 3) star(x + W - u, y + u, u * 2); if (tag.gy >= 4) star(x + u, y + H - u, u * 2); }
   else { out.fillStyle = 'rgba(20,13,30,.8)'; out.beginPath(); out.roundRect(x, y, W, H, r); out.fill(); }
   if ((tag.k === 'peer' && !SK && !(tag.gy >= 2)) || tag.ev){ out.strokeStyle = tag.ev ? '#FFD866' : '#4FB8D8'; out.lineWidth = dpr; if (!tag.ev || Math.floor(now / 600) % 2 === 0) out.stroke(); }
-  out.fillStyle = tag.ev ? '#FFD866' : SK ? SK.tx : TAG_COL[tag.k]; out.textBaseline = 'top'; out.textAlign = 'left'; out.fillText(tag.t, x + px, y + py + Math.round(dpr));
-  if (tag.gy >= 2){ const bt = tag.gy + '학년', bf = Math.round(10 * dpr); out.font = `${bf}px G11B, G11, Pretendard, sans-serif`; const bw = Math.ceil(out.measureText(bt).width) + Math.round(6 * dpr), bh = bf + Math.round(4 * dpr), bx = x + W + Math.round(2 * dpr), by = y + Math.round((H - bh) / 2);   // 승급 시험 학년 배지 (index.html)
-    out.fillStyle = ['', '', '#3A5AA8', '#7A4AC8', '#B8303A'][tag.gy] || '#3A5AA8'; out.beginPath(); out.roundRect(bx, by, bw, bh, Math.round(3 * dpr)); out.fill(); out.strokeStyle = '#FFD866'; out.lineWidth = dpr; out.stroke(); out.fillStyle = '#FFF4C8'; out.fillText(bt, bx + Math.round(3 * dpr), by + Math.round(2 * dpr)); }
+  out.fillStyle = tag.ev ? '#FFD866' : SK ? SK.tx : tag.gy >= 2 ? (tag.k === 'me' ? '#FFE9A0' : '#FFFFFF') : TAG_COL[tag.k]; out.textBaseline = 'top'; out.textAlign = 'left'; out.fillText(tag.t, x + px, y + py + Math.round(dpr));
 }
 // 지금 있는 곳 열쇠: 개인 방은 방 주인마다 달라요
 const placeKey = () => map + (M && M.furn ? ':' + (roomView.own ? World.myUid : roomView.uid) : map === 'pen' ? ':' + World.myUid : '');   // 내 우리 안은 사람마다 따로예요
