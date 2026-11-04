@@ -14944,36 +14944,36 @@ World.onAct = (prev => (m, o, a) => {
 //   탑에는 하루에 세 번 (자정에 다시) · 4 ~ 12 명이 같이 · 거울을 지날 때는 거울 통과 연출 (rdPass)
 const RD_FL = [{ f: 1, n: '얼음 거인', L: 15, c: '#7FE6FF' }, { f: 2, n: '불꽃 용', L: 25, c: '#FF8A3A' }, { f: 3, n: '그림자 마녀', L: 35, c: '#C08AFF' }, { f: 4, n: '시계탑 골렘', L: 45, c: '#FFD24A' }];
 const RD_DAY = 3, RD_MIN = 4, RD_MAX = 12;
-let rdCtl = null, rdOff = null, rdBusy = false;
+let rdCtl = null, rdOff = null, rdBusy = false, rdGot = false;   // rdGot: 열림 상태를 받아 왔어요
 const rdSt = () => { me.raid = me.raid || {}; const S = me.raid; if (S.d !== todayKey()){ S.d = todayKey(); S.n = 0; } return S; };
 const rdOpen = () => !!(rdCtl && rdCtl.open);
 const rdSeen = () => rdOpen() && String(rdSt().seen) === String(rdCtl.id);
 const rdLeft = () => Math.max(0, RD_DAY - (rdSt().n || 0));
-function rdBg(){ const m = World.meta('library'); if (m && m.raidBg) World.setMapBg('library', rdOpen() && rdSeen() ? m.raidBg : null); }
+function rdBg(){ if (!me) return; const m = World.meta('library'); if (m && m.raidBg) World.setMapBg('library', rdOpen() && rdSeen() ? m.raidBg : null); }
 function rdListen(){
   if (rdOff) return;
-  rdOff = GDB.on('raid/ctl', v => { const was = rdOpen(); rdCtl = v || null; rdBg();
+  rdOff = GDB.on('raid/ctl', v => { const was = rdOpen(); rdCtl = v || null; rdGot = true; rdBg();
     if (me && rdOpen() && !was && !rdSeen()) setTimeout(() => toast('한밤 도서관 쪽에서 이상한 빛이 새어 나와요....'), 1500);
     if (!rdOpen() && World.where() === 'mirrorland' && !rdBusy) setTimeout(() => rdPass('library'), 600); });
   setInterval(() => { try { rdTick(); } catch(e){} }, 1200);
 }
-function rdTick(){ if (!me || !rdOpen() || rdSeen() || rdBusy || sheetOn || World.cutBusy() || World.where() !== 'library') return; rdIntro(); }
+function rdTick(){ if (!me || !rdGot || rdBusy || World.cutBusy()) return; if (!rdOpen()){ if (World.where() === 'mirrorland') rdPass('library'); return; } if (rdSeen() || sheetOn || World.where() !== 'library') return; rdIntro(); }   // 닫힌 뒤 거울 너머에 남아 있으면 도서관으로
 // ---------- 처음 연출: 거울이 생겨나고 아울라가 당부해요 ----------
 async function rdIntro(){
   if (rdBusy) return; rdBusy = true; const n = npcGet('aula'), m = World.meta('library');
   const A = { who: 'aula', name: n ? n.name : '아울라', ...(n && n.av ? { av: npcAv(n) } : { spr: n ? n.spr : 3, float: n && n.float, flap: n && n.flap }) };
   const say = t => ({ cmd: 'say', who: 'aula', text: t, ms: 3600 });
   try {
-    await World.cut([{ cmd: 'player', x: 17, y: 5, dir: 'up' }, { cmd: 'cam', x: 17, y: 2 }, { cmd: 'wait', sec: .8 }, { cmd: 'fx', kind: 'dark', v: .55 }, { cmd: 'sfx', id: 'wind' }, { cmd: 'wait', sec: 1.2 }, { cmd: 'fx', kind: 'lightning' }, { cmd: 'sfx', id: 'magic' }], { sfx: id => sfx(id) });
+    await World.cut([{ cmd: 'player', x: 14, y: 5, dir: 'up' }, { cmd: 'cam', x: 15, y: 3 }, { cmd: 'wait', sec: .8 }, { cmd: 'fx', kind: 'dark', v: .55 }, { cmd: 'sfx', id: 'wind' }, { cmd: 'wait', sec: 1.2 }, { cmd: 'fx', kind: 'lightning' }, { cmd: 'sfx', id: 'magic' }], { sfx: id => sfx(id) });
     if (m && m.raidBg) await World.setMapBg('library', m.raidBg);   // 번쩍! 벽에 거울이 생겨요
-    await World.cut([{ cmd: 'fx', kind: 'light' }, { cmd: 'sfx', id: 'sparkle' }, { cmd: 'wait', sec: 1 }, { cmd: 'spawn', ...A, x: 13, y: 4, dir: 'right' }, { cmd: 'walk', who: 'aula', x: 15, y: 4 }, { cmd: 'face', who: 'aula', to: 'player' }, { cmd: 'face', who: 'player', to: 'aula' },
+    await World.cut([{ cmd: 'fx', kind: 'light' }, { cmd: 'sfx', id: 'sparkle' }, { cmd: 'wait', sec: 1 }, { cmd: 'spawn', ...A, x: 10, y: 7, dir: 'right' }, { cmd: 'walk', who: 'aula', x: 12, y: 6 }, { cmd: 'face', who: 'aula', to: 'player' }, { cmd: 'face', who: 'player', to: 'aula' },
       say('쉿.... 놀라지 마요. 백 년 동안 잠들어 있던 거울이 깨어났어요.'),
       say('이 거울 너머에는 「거울 탑」이 있어요. 1\u00a0층부터 4\u00a0층까지, 올라갈수록 더 강한 것이 살아요.'),
       say('혼자서는 절대 못 이겨요. 4\u00a0명부터 12\u00a0명까지 같이 갈 수 있으니까, 꼭 여러 친구와 함께 가요.'),
       say('탑에는 하루에 세\u00a0번만 오를 수 있어요. 자정이 지나면 다시 세\u00a0번이에요.'),
       say('....거울 너머는 이곳과 달라요. 부디 조심해요.......'),
       { cmd: 'despawn', who: 'aula' }, { cmd: 'cam' }], { sfx: id => sfx(id) });
-    rdSt().seen = rdCtl ? rdCtl.id : 1; save(); toast('이상한 거울이 열렸어요');
+    rdSt().seen = rdCtl ? rdCtl.id : 1; save();
   } finally { rdBusy = false; rdBg(); }
 }
 // ---------- 거울 통과 연출: 물결이 번지고 하얗게 빛난 뒤 건너편에 서 있어요 ----------
@@ -15005,15 +15005,15 @@ World.onAct = (prev => (m, o, a) => {
 // ---------- 거울 탑: 층 고르기 (1 층이 가장 약해요) ----------
 function rdTower(){
   if (!rdOpen()) return toast('거울이 닫혀 있어요');
-  const L = xLv(xEx().exp).L, left = rdLeft();
+  const left = rdLeft();
   const o = $('#rdx') || document.body.appendChild(Object.assign(document.createElement('div'), { id: 'rdx' }));
   o.innerHTML = `<div class="rdbox"><div class="rdhd"><b>거울 탑</b><span>오늘 ${left} / ${RD_DAY}</span><button class="rdcl" data-rdx="x">✕</button></div>
     ${RD_FL.slice().reverse().map(F => `<div class="rdfl" style="--c:${F.c}"><i class="rdboss" style="background-position:${-(F.f - 1) * 2 * 64}px 0"></i><div class="rdfi"><b>${F.f} 층 · ${F.n}</b><span>권장 레벨 ${F.L}</span></div><button class="btn go" data-rdf="${F.f}" ${left > 0 ? '' : 'disabled'}>오르기</button></div>`).join('')}
-    <div class="rdft">${RD_MIN} ~ ${RD_MAX} 명 · 내 레벨 ${L}</div></div>`;
+    </div>`;
 }
 document.addEventListener('click', e => {
   const x = e.target.closest && e.target.closest('[data-rdx]'); if (x){ const o = $('#rdx'); if (o) o.remove(); return; }
-  const f = e.target.closest && e.target.closest('[data-rdf]'); if (f){ if (rdLeft() <= 0) return toast('오늘은 세 번 다 올랐어요. 자정이 지나면 다시 올라요'); toast(`${f.dataset.rdf} 층 · 친구 모으기는 곧 열려요`); }
+  const f = e.target.closest && e.target.closest('[data-rdf]'); if (f){ if (rdLeft() <= 0) return toast('오늘은 다 올랐어요'); toast('곧 열려요'); }
 });
 (() => { const st = document.createElement('style'); st.textContent = `#rdx{position:fixed;inset:0;z-index:9000;background:rgba(8,6,20,.72);display:flex;align-items:center;justify-content:center;padding:16px}
 .rdbox{width:min(420px,100%);background:#1c1430;border:2px solid #4a3a6a;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;color:#f4ecff}
@@ -15025,11 +15025,11 @@ document.addEventListener('click', e => {
 function adminRaidHTML(){
   const c = AD.rdctl || {}, P = AD.players || {}, ids = Object.keys(P).filter(id => P[id]?.nick), seen = ids.filter(id => c.open && P[id].raid && String(P[id].raid.seen) === String(c.id)).length;
   return `<div class="adcard sdad"><div class="abhead"><b>레이드 · 거울 너머</b>${c.open ? '<button class="btn sm" data-rda="close">닫기</button>' : '<button class="btn sm go" data-rda="open">레이드 열기</button>'}</div>
-    <div class="abchips"><span>${c.open ? '열림' : '닫힘'}</span>${c.open ? `<span>연출 본 학생 <b>${seen}</b> / ${ids.length}</span>` : ''}<span>하루 ${RD_DAY} 번 · ${RD_MIN} ~ ${RD_MAX} 명</span></div></div>`;
+    <div class="abchips"><span>${c.open ? '열림' : '닫힘'}</span>${c.open ? `<span>연출 본 학생 <b>${seen}</b> / ${ids.length}</span>` : ''}</div></div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-rda]'); if (!b) return; const a = b.dataset.rda;
-  if (a === 'open'){ if (confirm('레이드를 열까요? 한밤 도서관에 이상한 거울이 생기고, 학생마다 도서관에 오면 아울라의 당부를 본 뒤 들어갈 수 있어요.')) GDB.set('raid/ctl', { open: true, id: now2(), at: now2() }).then(() => toast('레이드를 열었어요')); }
-  else if (a === 'close'){ if (confirm('레이드를 닫을까요? 거울이 사라지고, 거울 너머에 있던 학생은 도서관으로 돌아와요.')) GDB.upd('raid/ctl', { open: false }).then(() => toast('레이드를 닫았어요')); }
+  if (a === 'open'){ if (confirm('레이드를 열까요?')) GDB.set('raid/ctl', { open: true, id: now2(), at: now2() }).then(() => toast('레이드를 열었어요')); }
+  else if (a === 'close'){ if (confirm('레이드를 닫을까요?')) GDB.upd('raid/ctl', { open: false }).then(() => toast('레이드를 닫았어요')); }
 });
 
 </script>
