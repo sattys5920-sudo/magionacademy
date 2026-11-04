@@ -226,7 +226,7 @@ def lounge3_room():
     R.obj('shelf', tiles(1, 0, 4, 1), senior_shelf(R, 1, 0, 4), act=('선배의 책장', '책 읽기'))
     R.obj('sofa', tiles(8, 0, 3, 1), big_sofa(R, 8, 0, 3, '#8A2E5E'), act=('휴게실 소파', '쉬기'))
     R.obj('teatable', tiles(8, 3, 3, 1), tea_table(R, 8.4, 3.15), act=('찻상', '차 마시기'))
-    R.obj('board', [(0, y) for y in range(12, 16)], notice_board(R, 'L', 18, 34, 30, 28), act=('3학년 게시판', '선배 의뢰 보기'))
+    R.obj('board', [(0, y) for y in range(12, 16)], notice_board(R, 'L', 18, 34, 30, 28), act=('3 학년 게시판', '선배 의뢰 보기'))
     R.obj('arm', [(3, 5)], armchair(R, 3, 5, '#9A3A5A', 'far'), act=('안락의자', '불 쬐기'))
     R.obj('arm', [(3, 9)], armchair(R, 3, 9, '#9A3A5A', 'near'), act=('안락의자', '불 쬐기'))
     R.obj('side', [(3, 7)], side_table(R, 3, 7, 'candle')); R.light(3.5, 7.5, -20, 18, [255, 200, 120], .45, 1)
