@@ -51,7 +51,7 @@ for k, (t, sub, back) in SUB.items():
     d.update(title=t, sub=sub, bgSrc='art/iso/%s_bg.png?v=%s' % (k, ver(ART + k + '_bg.png')), objSrc='art/iso/%s_obj.png?v=%s' % (k, ver(ART + k + '_obj.png')), lazy=True)
     M[k] = {'meta': d}
 L = M['lab']['meta']; L['objs'] = [o for o in L['objs'] if o['name'] not in ('g3door', 'g4door')]
-L['objs'] += [dict(name='g3door', box=[0, 18, 1, 19], sx=0, sy=0, sw=0, sh=0, x=-99, y=-99, solid=False, act=None, door=dict(tile=[0, 18], to='lounge3', label='3학년 휴게실', spawn=[11, 16], lock='gr3', back=[1, 18])),
+L['objs'] += [dict(name='g3door', box=[0, 18, 1, 19], sx=0, sy=0, sw=0, sh=0, x=-99, y=-99, solid=False, act=None, door=dict(tile=[0, 18], to='lounge3', label='보라색 문', spawn=[11, 16], lock='gr3', back=[1, 18])),
               dict(name='g4door', box=[23, 0, 24, 1], sx=0, sy=0, sw=0, sh=0, x=-99, y=-99, solid=False, act=None, door=dict(tile=[23, 0], to='observatory', label='시계탑 계단', spawn=[11, 16], lock='gr4', back=[23, 1]))]
 L['bgSrc'] = 'art/iso/pclass_bg.png?v=' + ver(bgp)
 s = s[:a] + json.dumps(M, ensure_ascii=False) + s[b:]
