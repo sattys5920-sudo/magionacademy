@@ -20,7 +20,7 @@ PAL.update({
   'cocoa':    [(48, 24, 16), (94, 52, 32), (142, 90, 58), (192, 142, 104)],
   'lantern':  [(130, 38, 10), (222, 88, 20), (255, 148, 48), (255, 222, 140)],
   'snow':     [(104, 136, 180), (176, 204, 232), (226, 238, 252), (255, 255, 255)],
-  'owl':      [(54, 34, 22), (108, 70, 40), (166, 118, 70), (222, 190, 140)],
+  'owl':      [(64, 40, 24), (124, 82, 46), (186, 138, 84), (236, 208, 160)],
   'cream':    [(138, 98, 68), (206, 168, 118), (244, 222, 178), (255, 248, 226)],
   'ice':      [(48, 108, 160), (108, 188, 230), (184, 234, 250), (240, 253, 255)],
   'mistviolet': [(88, 78, 120), (138, 128, 170), (188, 180, 214), (234, 230, 248)],
@@ -174,14 +174,16 @@ def f_frostcarp(c):        # 서리 붕어 (base 1) — 서리 하늘색, 잎은
 def f_leafloach(c):        # 낙엽 미꾸라지 (base 4) — 단풍 주황-갈색 + 잎 무늬
     c = recolor(c, 'autumn'); px = c.load()
     R, Y, V = (196, 40, 24), (255, 200, 60), (120, 24, 14)
-    for (x, y) in [(9, 13), (16, 14), (21, 19)]:     # 몸통 위 작은 잎 (마름모 + 잎맥)
-        for dx, dy, col in ((0, -1, R), (-1, 0, R), (1, 0, R), (0, 1, R), (0, 0, V), (1, -1, Y)):
-            if (x + dx, y + dy) in interior(c) or (dx, dy) == (0, 0): put(px, x + dx, y + dy, col)
-    # 위쪽 빈 곳에 떨어지는 단풍잎 하나
-    leaf = grid([".r.r.",
+    inn = interior(c)
+    for (x, y) in [(8, 13), (14, 13), (19, 17), (24, 21)]:     # 몸통 위 작은 잎 (빨간 잎 + 노란 잎맥)
+        for dx, dy, col in ((0, -1, R), (-1, 0, R), (1, 0, R), (0, 1, V), (0, 0, Y)):
+            if (x + dx, y + dy) in inn: put(px, x + dx, y + dy, col)
+    # 위쪽 빈 곳에 떨어지는 단풍잎 하나 (세 갈래 잎 + 꼭지)
+    leaf = grid(["..r..",
+                 "r.r.r",
                  "rrYrr",
                  ".rYr.",
-                 "..b.."], 22, 3, {'r': (222, 70, 30), 'Y': (255, 196, 70), 'b': (120, 60, 30)})
+                 "..b.."], 22, 2, {'r': (222, 70, 30), 'Y': (255, 196, 70), 'b': (120, 60, 30)})
     shape(c, leaf)
     return c
 
@@ -223,24 +225,20 @@ def f_mufflerkilli(c):     # 목도리 송사리 (base 3) — 은청색 + 빨간
     c = recolor(c, 'killi'); px = c.load()
     R, R2, W = (214, 40, 46), (150, 22, 34), (250, 240, 228)
     pts = {}
-    for y in range(10, 22):
-        stripe = R if (y // 2) % 2 == 0 else W
+    for y in range(11, 22):                              # 목에 감긴 띠: 빨강 바탕 + 흰 가로 줄
+        stripe = W if y % 3 == 1 else R
         for x in (9, 10, 11):
             col = stripe
-            if x == 11 and stripe == R: col = R2
-            if x == 11 and stripe == W: col = (214, 200, 196)
+            if x == 11: col = R2 if stripe == R else (214, 196, 196)
+            if x == 9 and stripe == R: col = (240, 80, 80)
             pts[(x, y)] = col
-    # 뒤로 날리는 끝자락
-    tail = [(12, 9), (13, 8), (14, 8), (15, 7), (16, 7), (13, 9), (14, 9), (15, 8), (16, 8)]
-    for i, p in enumerate(sorted(tail)):
-        pts[p] = R if (p[0] // 2) % 2 == 0 else W
-    pts[(17, 7)] = R2
-    # 술(끝 장식)
-    for p in ((18, 6), (18, 8)): pts[p] = R
+    # 배 아래로 늘어진 끝자락 (뒤로 살짝 휘날림)
+    end = [(11, 22), (12, 22), (12, 23), (13, 23), (13, 24), (14, 24), (14, 25), (15, 25)]
+    for p in end: pts[p] = W if (p[1] % 3 == 1) else (R2 if p[0] - p[1] == -10 else R)
+    for p in ((14, 26), (16, 25), (16, 26)): pts[p] = (250, 220, 210)     # 술
     shape(c, pts)
-    for y in (9, 22):                                    # 몸 위아래로 감긴 윤곽
-        for x in (9, 10, 11):
-            if px[x, y][3] == 0: put(px, x, y, OUT)
+    for x in (9, 10, 11):                                # 등 위 윤곽 정리
+        if px[x, 10][3] == 0 or not is_out(px[x, 10]): put(px, x, 10, OUT)
     return c
 
 def f_yuzupuff(c):         # 유자 복어 (base 16) — 유자 노랑 + 귤껍질 점 + 꼭지 잎
@@ -254,8 +252,9 @@ def f_yuzupuff(c):         # 유자 복어 (base 16) — 유자 노랑 + 귤껍�
 
 def f_cocoaeel(c):         # 코코아 뱀장어 (base 21) — 코코아 갈색 + 크림(마시멜로) 점 + 김
     c = recolor(c, 'cocoa'); px = c.load()
-    dots(c, [(6, 15), (10, 12), (14, 9), (19, 9), (22, 12), (25, 15), (17, 11), (8, 17)], (250, 236, 210))
-    dots(c, [(7, 15), (15, 9), (23, 12), (26, 16)], (232, 210, 180))
+    cream = [(6, 16), (10, 13), (13, 10), (17, 9), (21, 11), (24, 14), (27, 18), (8, 18), (15, 12), (25, 19)]
+    for (x, y) in cream:
+        dots(c, [(x, y)], (252, 240, 216)); dots(c, [(x + 1, y)], (226, 200, 166))
     for (x, y, a) in ((10, 6, 140), (11, 5, 170), (10, 4, 120), (11, 3, 90), (19, 4, 150), (18, 3, 120), (19, 2, 90)):
         put(px, x, y, (245, 240, 236), a)
     return c
@@ -296,6 +295,8 @@ def f_owlcat(c):           # 부엉이 메기 (base 8) — 갈색 깃털 무늬 
         for (dx, dy) in ((-1, -1), (0, 0), (1, -1)):
             if (x0 + dx, y0 + dy) in inn: put(px, x0 + dx, y0 + dy, D)
         if (x0, y0 - 1) in inn: put(px, x0, y0 - 1, L)
+    for (x, y) in inn:                                   # 가슴 쪽 밝은 솜털
+        if y >= 19 and x < 20 and (x + y) % 2 == 0: blend(px, x, y, L, 120)
     eye = grid([".OOO.",
                 "OYYYO",
                 "OYkYO",
@@ -344,7 +345,8 @@ def f_icehorse(c):         # 얼음 해마 (base 36) — 얼음 투명 하늘색
     c = recolor(c, 'ice'); px = c.load()
     inn = interior(c)
     for (x, y) in inn:                                   # 사선 결정 면
-        if (x + y) % 7 == 0: blend(px, x, y, WHITE, 170)
+        if (x + y) % 6 == 0: blend(px, x, y, WHITE, 190)
+        elif (x + y) % 6 == 1: blend(px, x, y, (210, 245, 255), 110)
     translucent(c, 210)
     plus_spark(c, 28, 16); plus_spark(c, 4, 4, force=False)
     return c
@@ -358,19 +360,20 @@ def f_mistjelly(c):        # 안개 해파리 (base 11) — 희뿌연 보라-회
 
 def f_stormocto(c):        # 빗줄기 문어 (base 30) — 짙은 남색 + 빗방울 무늬 + 빗줄기
     c = recolor(c, 'storm'); px = c.load()
-    D, D2 = (150, 210, 255), (230, 246, 255)
+    D, D2, D3 = (120, 190, 250), (230, 246, 255), (80, 140, 220)
     for (x, y) in [(11, 8), (20, 7), (15, 4), (9, 20), (24, 19), (17, 22)]:
-        for dx, dy, col in ((0, 0, D2), (-1, 1, D), (0, 1, D2), (1, 1, D), (0, 2, D)):
+        for dx, dy, col in ((0, 0, D), (-1, 1, D), (0, 1, D2), (1, 1, D), (-1, 2, D3), (0, 2, D), (1, 2, D3)):
             put(px, x + dx, y + dy, col)
-    for (x, y) in [(3, 2), (6, 4), (2, 12), (28, 18), (26, 27), (1, 26)]:   # 사선 빗줄기
-        if empty_near(c, x, y, 1):
-            put(px, x, y, (170, 210, 250), 200); put(px, x - 1, y + 1, (170, 210, 250), 120)
+    for (x, y) in [(4, 2), (8, 1), (2, 10), (29, 17), (27, 26), (2, 24)]:   # 사선 빗줄기
+        for k in range(3):
+            if inb(x - k, y + k) and px[x - k, y + k][3] == 0: put(px, x - k, y + k, (170, 210, 250), 220 - k * 60)
     return c
 
 def f_wintermarlin(c):     # 겨울 청새치 (base 44) — 은청색 + 서리 테두리 + 반짝
     c = strip_small(c, 6)
     c = recolor(c, 'silverblue')
-    top_rim(c, (240, 250, 255), 200)
+    top_rim(c, (240, 250, 255), 220)
+    dots(c, [(12, 14), (17, 11), (20, 15), (24, 12), (15, 17)], WHITE)
     snowflake(c, 4, 4); plus_spark(c, 5, 26); plus_spark(c, 20, 28)
     return c
 
@@ -382,7 +385,7 @@ def f_frostwhale(c):       # 서리 꼬마 고래 (base 51) — 흰-하늘 + 눈
     c = strip_small(c, 4)
     c = recolor(c, 'whitesky')
     top_rim(c, WHITE, 180)
-    soft_glow(c, (190, 235, 255), 100)
+    soft_glow(c, (190, 235, 255), 130, ring2=False)
     snowflake(c, 5, 5); plus_spark(c, 13, 3, force=True); plus_spark(c, 28, 28, force=True)
     return c
 
@@ -393,11 +396,12 @@ def f_mistlord(c):         # 안개 호수의 정령 (base 58) — 안개빛 + �
             r, g, b, a = px[x, y]
             if a and lum((r, g, b)) < 90 and b > r + 10 and (r, g, b) != OUT: aura.add((x, y))
     c = recolor(c, 'fog'); px = c.load()
-    for (x, y) in aura: put(px, x, y, (226, 234, 244), 110)
+    for (x, y) in aura: px[x, y] = (0, 0, 0, 0)
+    c = strip_small(c, 6); px = c.load()
     for (x, y) in interior(c):
         if (x, y) not in aura and px[x, y][3] == 255: px[x, y] = px[x, y][:3] + (225,)
-    soft_glow(c, (220, 236, 255), 90)
-    fog_wisp(c, 0, 28, 14, a=150); fog_wisp(c, 18, 30, 14, a=140)
+    soft_glow(c, (220, 236, 255), 130, ring2=False)
+    fog_wisp(c, 0, 27, 13, a=160); fog_wisp(c, 17, 29, 14, a=150); fog_wisp(c, 20, 2, 11, a=130); fog_wisp(c, 0, 4, 9, a=120)
     return c
 
 def f_wispshark(c):        # 도깨비불 상어 (base 54) — 검푸른 + 청록 불꽃 + 도깨비불 구슬
@@ -426,7 +430,13 @@ def f_winterking(c):       # 겨울 잉어왕 (base 59) — 은백색 + 금빛 �
     px = c.load()
     for x in range(3, 9):
         if px[x, 9][3] and not is_out(px[x, 9]): put(px, x, 9, OUT)
+    px = c.load(); spots = set()
+    for (x, y) in body_mask(c):                         # 주황 무늬 자리 → 얼음 파랑 무늬
+        r, g, b, a = px[x, y]
+        if r > 180 and b < 120 and r - b > 90: spots.add((x, y))
     c = recolor(c, 'silver'); px = c.load()
+    for (x, y) in spots:
+        L = lum(px[x, y]); px[x, y] = ((96, 150, 226, 255) if L < 200 else (150, 196, 246, 255))
     crown = grid(["y..y..y",
                   "yY.yY.y",
                   "GYGYGYG",
@@ -434,7 +444,7 @@ def f_winterking(c):       # 겨울 잉어왕 (base 59) — 은백색 + 금빛 �
                   "ggggggg"], 3, 4, {'y': (255, 240, 150), 'Y': (255, 210, 70), 'G': (232, 170, 40),
                                      'g': (170, 110, 26), 'r': (220, 40, 60), 'b': (70, 140, 240)})
     shape(c, crown)
-    soft_glow(c, (255, 236, 160), 100)
+    soft_glow(c, (255, 232, 150), 120, ring2=False)
     return c
 
 FUNCS = [f_frostcarp, f_leafloach, f_mistsmelt, f_chestcrab, f_mufflerkilli, f_yuzupuff, f_cocoaeel, f_lanternsquid,
