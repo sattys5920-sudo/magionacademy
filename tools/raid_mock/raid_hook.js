@@ -51,10 +51,9 @@ window.__raidMock = async () => {
   // 가운데 얼음 마법진
   g.strokeStyle = 'rgba(160,220,255,.7)'; g.lineWidth = 1; g.beginPath(); g.ellipse(W / 2, 210, 74, 18, 0, 0, 7); g.stroke(); g.beginPath(); g.ellipse(W / 2, 210, 50, 12, 0, 0, 7); g.stroke();
   // 보스 (얼음빛을 입힌 돌 거인 ×3)
-  const lpc = xLpcSheet(); if (!lpc.complete) await new Promise(r => { lpc.onload = r; });
-  const bc = document.createElement('canvas'); bc.width = bc.height = 64; const bq = bc.getContext('2d'); bq.drawImage(lpc, 22 * 64, 0, 64, 64, 0, 0, 64, 64); bq.globalCompositeOperation = 'source-atop'; bq.globalCompositeOperation = 'saturation'; bq.fillStyle = '#888'; bq.fillRect(0, 0, 64, 64); bq.globalCompositeOperation = 'color'; bq.fillStyle = 'rgba(120,200,255,.75)'; bq.fillRect(0, 0, 64, 64); bq.globalCompositeOperation = 'destination-in'; bq.drawImage(lpc, 22 * 64, 0, 64, 64, 0, 0, 64, 64); bq.globalCompositeOperation = 'source-atop'; bq.fillStyle = 'rgba(200,235,255,.15)'; bq.fillRect(0, 0, 64, 64);
-  g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(W / 2, 210, 40, 9, 0, 0, 7); g.fill();
-  g.save(); g.translate(W / 2, 0); g.scale(-1, 1); g.drawImage(bc, 0, 0, 64, 64, -96, 210 - 192 + 12, 192, 192); g.restore();
+  const bim = await new Promise(r => { const im = new Image(); im.onload = () => r(im); im.src = 'art/raid_bosses.png?v=' + Date.now(); });   // LPC 보스 (tools/iso/lpc/raid_boss_lpc.py)
+  g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(W / 2, 214, 40, 9, 0, 0, 7); g.fill();
+  g.drawImage(bim, 64, 0, 64, 64, W / 2 - 80, 214 - 160 + 6, 160, 160);
   // 뒤쪽을 노리는 표시 (빨간 화살표)
   g.fillStyle = '#ff6a4a'; g.globalAlpha = .85; g.beginPath(); g.moveTo(W / 2 + 62, 80); g.lineTo(W / 2 + 84, 90); g.lineTo(W / 2 + 62, 100); g.fill(); g.globalAlpha = 1;
   // 12 명: 왼쪽 6 (오른쪽 보기), 오른쪽 6 (왼쪽 보기) · 앞열 3 + 뒷열 3
