@@ -336,7 +336,7 @@ def icicle(c):
     m = set()
     for x, y in FI._pts():
         px, py = x + .5, y + .5
-        ytop = y0 + 1.6 * abs(math.sin(px * .9)) + (1.4 if 12 < px < 15 else 0)   # 부러진 윗면
+        ytop = y0 + 1.2 * abs(math.sin(px * .55 + .4)) + (1.0 if 18 < px < 21 else 0)   # 부러진 윗면
         if py < ytop or py > y1:
             continue
         cx, w = cxw(py)
@@ -499,16 +499,23 @@ def mistcap(c):
         if rr.random() < .12 and c.p[q] in (CAPM[1], CAPM[2]):
             c.put(q[0], q[1], CAPM[0])
     c.pts([(9, 9), (10, 8), (12, 7), (11, 7)], H('#eef4ff'))
-    # 안개 띠 (윤곽선 위에 얹는 반투명 띠)
-    MIST = [(232, 238, 255, 200), (210, 220, 245, 150)]
-    for (pl, w, w1) in [([(0.5, 26.5), (6, 23.5), (9, 29), (12, 27.5)], 2.4, .6),
-                        ([(31.5, 27.5), (26, 24.5), (23, 30), (20, 28.5)], 2.4, .6),
-                        ([(31, 9), (28, 5.5), (25, 6), (23, 3.5)], 1.8, .5),
-                        ([(1, 13), (3, 9), (6, 8.5), (7, 5.5)], 1.6, .5)]:
-        mm = LN(bez3(pl[0], pl[1], pl[2], pl[3], 24), w, w1) - dilate(set(c.p), 1)
-        for q in mm:
-            if 0 <= q[0] < S and 0 <= q[1] < S:
-                c.top[q] = MIST[0] if (q[0] + q[1]) % 3 else MIST[1]
+    # 안개 (밑동을 감싸는 뭉게 안개 — 몸 위에서는 섞은 색, 바깥은 반투명)
+    MC = (226, 234, 252)
+    puffs = [(E(6, 27.6, 5.2, 2.4) | E(13.5, 28.6, 5.4, 2.0) | E(21, 27.4, 6.0, 2.4) | E(27.5, 28.6, 4.2, 1.9)) & RC(0, 0, 32, 31),
+             E(26.5, 8.0, 3.6, 1.3) | E(29, 7.0, 2.2, 1.1), E(4.5, 12.5, 3.2, 1.2)]
+    body = set(c.p)
+    edge = ring(body)
+    for k, pm in enumerate(puffs):
+        core = erode(pm, 1)
+        for q in pm:
+            t = .62 if q in core else .38
+            if q in body:
+                b = c.p[q]
+                c.top[q] = lerpc(b, MC + (255,), t)
+            elif q in edge:
+                c.top[q] = lerpc(OL, MC + (255,), t)
+            else:
+                c.top[q] = MC + (int(255 * (t + .2)),)
     glow_ring(c, H('#c8d4f0'), 2.4, 110)
     c.dot(4, 6, H('#e4ecff'))
 
@@ -563,19 +570,26 @@ def ghostpine(c):
     GP = R4('#f0fff8', '#b4f4dc', '#78d8d0', '#4aa4b8')
     NE = [H('#e0fff0'), H('#a8f0d8'), H('#80dcd8'), H('#64bcd8')]
     br = bez3((4, 29), (10, 22), (17, 14), (27, 4), 30)
-    c.fill(LN(br, 1.8), H('#8ab8c8'))
-    rr = c.rng
-    for i in range(3, 29, 2):
-        x, y = br[i]
-        for sg in (-1, 1):
-            ang = math.radians(-45 + sg * 62 - 10)
-            dx, dy = br[min(i + 1, 30)][0] - br[i - 1][0], br[min(i + 1, 30)][1] - br[i - 1][1]
-            base = math.atan2(dy, dx)
-            a = base + sg * math.radians(48)
-            ln = 6.5 - abs(i - 15) * .14
-            e = (x + math.cos(a) * ln, y + math.sin(a) * ln)
-            col = NE[(i // 2 + (sg > 0)) % 3]
-            c.fill(LN([(x, y), e], 1.0), col)
+    # 곁가지
+    sides = [(bez((11, 21.5), (8, 15), (4, 11), 10)), (bez((17, 14.5), (22, 15), (28, 17), 10))]
+    needles = []
+    for path, n0, n1 in [(br, 2, 29), (sides[0], 1, 10), (sides[1], 1, 10)]:
+        for i in range(n0, n1):
+            x, y = path[i]
+            j0, j1 = max(i - 1, 0), min(i + 1, len(path) - 1)
+            base = math.atan2(path[j1][1] - path[j0][1], path[j1][0] - path[j0][0])
+            for sg in (-1, 1):
+                a = base + sg * math.radians(42)
+                ln = 5.2 if path is br else 4.0
+                ln *= .65 + .35 * math.sin(math.pi * (i - n0 + 1) / (n1 - n0 + 1))
+                needles.append(((x, y), (x + math.cos(a) * ln, y + math.sin(a) * ln), (i + (sg > 0)) % 3))
+    for (p, e, k) in needles:
+        c.fill(LN([p, e], 1.0), NE[k + 1] if k < 2 else NE[1])
+    for (p, e, k) in needles[::3]:
+        c.put(int(e[0]), int(e[1]), NE[0])
+    for path in [br] + sides:
+        c.fill(LN(path, 1.4), H('#5c9cb4'))
+        c.fill(LN([(x - .4, y - .4) for x, y in path], .6), H('#8cd0dc'))
     # 끝 새순
     c.fill(LN([(26, 5), (29, 1.5)], 1.2), NE[0])
     glow_ring(c, H('#8ff0e0'), 2.8, 120)
@@ -739,7 +753,7 @@ def candycap(c):
         dx, dy = q[0] + .5 - ctr[0], (q[1] + .5 - ctr[1]) * 1.35
         r = math.hypot(dx, dy)
         th = math.atan2(dy, dx)
-        ph = (th / (2 * math.pi) * 6 + r * .07) % 1.0
+        ph = (th / (2 * math.pi) * 7 + r * .06) % 1.0
         k = CP.index(c.p[q])
         if ph < .5:
             c.put(q[0], q[1], CW[k])
@@ -784,8 +798,8 @@ def wisp(c):
 # ======================================================================= 21 은사시 잎
 @icon2
 def silverleaf(c):
-    SL = R4('#ffffff', '#d8dee8', '#9ea8bc', '#626c86')
-    SL2 = R4('#f0f4ff', '#bcc6da', '#8490aa', '#525a78')
+    SL = R4('#ffffff', '#dce6f4', '#a2b0cc', '#66729a')
+    SL2 = R4('#f4f8ff', '#c4d0e8', '#8a98bc', '#545e88')
     st = LN(bez((16, 30.5), (16, 25), (15, 21), 8), 1.4)
     c.bevel(st, R4('#c8c0a0', '#968a68', '#6a6048', '#423c2c'))
     lv = [((14.5, 21.5), (3.5, 6.5), 6.0, SL2, -1), ((16.5, 21), (28, 4.5), 6.6, SL, 1)]
@@ -806,6 +820,13 @@ def silverleaf(c):
         for i, q in enumerate(sorted(m - erode(m, 1))):
             if i % 3 == 0:
                 c.put(q[0], q[1], ramp[3])
+        # 은빛 반짝 결
+        rr = c.rng
+        for q in sorted(erode(m, 1)):
+            if c.p[q] == ramp[1] and rr.random() < .12:
+                c.put(q[0], q[1], ramp[0])
+            elif c.p[q] == ramp[2] and rr.random() < .08:
+                c.put(q[0], q[1], H('#c8d8f4'))
     c.pts([(22, 9), (23, 8), (21, 10)], WHITE)
     c.pts([(7, 9), (8, 10)], WHITE)
     c.spark(24, 13, WHITE, 1, WHITE)
@@ -955,9 +976,9 @@ def kfont(size):
     for f in cands:
         try:
             ft = ImageFont.truetype(f, size)
-            if ft.getmask('가').getbbox() and ft.getmask('가').size != ft.getmask('￿').size or True:
-                if ft.getbbox('가') != ft.getbbox('\U000F0000'):
-                    return ft
+            # 한글 글리프가 실제로 있는지 (없는 글자 상자와 모양이 다른지) 확인
+            if ft.getbbox('가') != ft.getbbox('\U000F0000'):
+                return ft
         except Exception:
             pass
     return None
