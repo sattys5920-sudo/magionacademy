@@ -1,7 +1,7 @@
 # 레이드 보스 기념품 아이콘 4 종을 LPC 부품에서 잘라 만들어요 (캐릭터 · 보스와 같은 화풍) → tools/raid_mock/raid_acc.png (32 칸 × 4)
 #   0 얼음 왕관 (왕관) · 1 용 비늘 망토 (망토 뒷모습) · 2 그림자 모자 (마법사 모자) · 3 톱니 시계 목걸이 (사슬 + 둥근 장식)
 #   python3 raid_acc_lpc.py <LPC 저장소 경로> [미리보기.png]
-import sys, os, subprocess, colorsys
+import sys, os, subprocess, colorsys, math
 sys.argv = sys.argv[:3]
 import numpy as np
 from PIL import Image
@@ -56,10 +56,25 @@ I0 = icon(cr, lambda c: None, 32)
 P(I0, [(3, 6), (28, 5), (29, 24), (2, 25)], np.array([255, 255, 255, 255], np.uint8))
 # 1 용 비늘 망토 (뒷모습: 위쪽을 보는 칸)
 cp = np.zeros((64, 64, 4), np.uint8); over(cp, frame(F['cape_bg'], 'up')); over(cp, frame(F['cape_fg'], 'up')); cp = hueL(cp, .01, 1.25, 1.05)
-def scales(c):
-    ys, xs = np.nonzero((c[..., 3] > 0) & ~(c == OL).all(-1))
+def scales(c):   # 용 비늘: 반달 비늘이 엇갈려 겹치고 (위는 밝게 · 테두리는 어둡게) · 목깃은 금빛 · 아래 자락은 불꽃빛
+    body = (c[..., 3] > 0) & ~(c == OL).all(-1); ys, xs = np.nonzero(body); y0, y1 = ys.min(), ys.max()
+    DK, MD, LT, HI = (120, 24, 30), (190, 44, 40), (232, 84, 56), (255, 150, 110)
     for y, x in zip(ys, xs):
-        if (x + (y // 3) * 2) % 4 == 0 and y % 3 == 0: c[y, x, :3] = (255, 160, 110)
+        if y < y0 + 3: continue
+        r = (y - y0 - 3) // 4; ox = (r % 2) * 3; u = (x - ox) % 6; v = (y - y0 - 3) % 4
+        d = math.hypot((u - 2.5) / 3, (v + .5) / 4.2)                 # 위에 매달린 반달 모양
+        col = DK if d > .86 else HI if (v == 0 and 1.5 <= u <= 3.5) else LT if d < .5 else MD
+        k = (y - y0) / max(1, y1 - y0); fold = .7 + .55 * (int(c[y, x, 0]) + int(c[y, x, 1]) + int(c[y, x, 2])) / 3 / 255   # 망토 원래 주름 명암을 살려요
+        col = tuple(min(255, int(cc * (1.05 - .25 * k) * fold)) for cc in col)
+        c[y, x, :3] = col
+    for y, x in zip(ys, xs):
+        if y < y0 + 3: c[y, x, :3] = (240, 192, 64) if y < y0 + 2 else (176, 120, 32)          # 금빛 목깃
+        elif y >= y1 - 2: c[y, x, :3] = (255, 176, 64) if (x + y) % 3 else (255, 230, 140)     # 불꽃빛 자락
+    cx = int(round(xs.mean()))
+    for y in range(y0 + 4, y1 - 2, 4):   # 가운데 등줄기 금빛 비늘판
+        for dy in range(3):
+            for dx in range(-(2 - dy), 3 - dy):
+                if body[y + dy, cx + dx]: c[y + dy, cx + dx, :3] = (255, 214, 96) if dy == 0 else (216, 150, 40) if dy == 1 else (150, 90, 24)
 I1 = icon(cp, scales)
 # 2 그림자 모자
 I2 = icon(tintL(frame(F['hat']), (120, 70, 190), .8), lambda c: P(c, [(x, y) for x in range(12, 20) for y in (22,)], np.array([192, 138, 255, 255], np.uint8)))
