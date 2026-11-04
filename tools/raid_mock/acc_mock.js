@@ -7,9 +7,9 @@ window.__accLoad = () => new Promise(r => { const im = new Image(); im.onload = 
 window.__accIc = (k, own = true) => __accIcs[k + own];
 window.__ACC = [   // 장신구마다 능력 하나 · 별(★1~5)이 오를수록 커져요
   { k: 'crown', n: '얼음 왕관', b: '얼음 거인', st: 2, cp: 1, own: true, on: true, e: s => `MP 사용량 −${4 + s * 3} %` },
-  { k: 'cape', n: '용 비늘 망토', b: '불꽃 용', st: 1, cp: 0, own: true, e: s => `공격·마법 +${2 + s * 3} %` },
+  { k: 'cape', n: '용 비늘 망토', b: '불꽃 용', st: 1, cp: 0, own: true, e: s => `쓰러질 때 한 번 버티기 ${10 + s * 10} %` },
   { k: 'hat', n: '그림자 모자', b: '그림자 마녀', own: false, e: s => `MP 회복량 +${5 + s * 5} %` },
-  { k: 'neck', n: '톱니 시계 목걸이', b: '시계탑 골렘', own: false, e: s => `행동 속도 +${1 + s * 2} %` }];
+  { k: 'neck', n: '톱니 시계 목걸이', b: '시계탑 골렘', own: false, e: s => `스킬 재사용 대기 −${2 + s * 3} %` }];
 window.__accMock = async (mode) => {
   await __accLoad();
   const ex = window.__T.meRaw().ex = Object.assign(window.__T.meRaw().ex || {}, { job: 'black', exp: 60000, ar: 2, wp: 2, n: 0, xv: 3 });
