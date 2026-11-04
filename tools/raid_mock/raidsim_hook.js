@@ -4,11 +4,11 @@
 window.__raidSim = (o) => {
   const N = o.n || 40, L = o.L, lim = o.lim || 300, res = { win: 0, t: [], left: [], dead: [], acts: 0 };
   const JOBS = ['knight', 'warrior', 'thief', 'white', 'black', 'bard', 'knight', 'summon', 'alch', 'druid', 'time', 'cleric', 'gadget', 'warrior'].slice(0, 0);
-  const SIDE = [['knight', 'warrior', 'thief', 'white', 'black', 'bard'], ['gadget', 'summon', 'alch', 'druid', 'time', 'cleric']];
+  const SIDE = [['knight', 'white', 'black', 'warrior', 'thief', 'bard'], ['cleric', 'summon', 'druid', 'time', 'alch', 'gadget']];   // 적은 인원도 치유사가 들어가게
   const dodge = () => { const r = Math.random(); return r < .3 ? .2 : r < .7 ? .6 : 1; };
   for (let it = 0; it < N; it++){
     const party = [];
-    SIDE.forEach((js, side) => js.forEach((job, j) => {
+    const SZ = o.size || 12; SIDE.forEach((js, side) => js.slice(0, side ? Math.floor(SZ / 2) : Math.ceil(SZ / 2)).forEach((job, j) => {
       const sk = { '0_0': 1 }; { let pts = xSkp(L); for (let lv = 1; lv <= XMAXLV && pts > 0; lv++) for (let r = 0; r < 5 && pts > 0; r++) for (let b = 0; b < 3 && pts > 0; b++){ const k = b + '_' + r; if ((sk[k] || 0) < lv){ sk[k] = lv; pts--; } } }
       const u = xMkUnit(job, L, job + side + j, true, undefined, undefined, sk); u.id = 'p' + side + j;
       const wm = (1 + .08 * (o.wp || 0)) / (1 + .08 * Math.min(4, Math.floor((L - 1) / 12))); ['atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k] * wm); });
