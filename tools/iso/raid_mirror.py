@@ -177,7 +177,7 @@ def mirrorland():
         for k in range(-9, 10):
             x0 = cx + k * 3.6; L = 4 + (k * 7 % 6)
             d.polygon([(x0 - 1.5, top_y + 4), (x0 + 1.5, top_y + 4), (x0, top_y + 4 + L)], fill=hexc('#E8F6FF'))
-    R.obj('tower', [(x, y) for x in range(3, 8) for y in range(3, 8)], tower, act=('얼어붙은 탑', '들어가기'))
+    R.obj('tower', [(x, y) for x in range(3, 8) for y in range(3, 8)], tower, act=('거울 탑', '올라가기'))
     R.light(5, 5, -110, 60, [110, 220, 255], .4, 1); R.light(7.5, 7.5, -10, 40, [110, 220, 255], .55, 1)
     def crystal(tx, ty, s):
         def f(img, d):
@@ -213,8 +213,8 @@ def mirrorland():
     for (x, y) in ((1, 4), (4, 1), (1, 14), (14, 1), (3, 17), (17, 3), (6, 20), (20, 6), (12, 1), (1, 12)): R.obj('tree', [(x, y)], tree(x, y))
     for (x, y) in ((11, 14), (14, 11), (15, 18), (18, 15)): R.obj('lantern', [(x, y)], lantern(x, y)); R.light(x + .5, y + .5, -30, 22, [127, 230, 255], .6, 1)
     R.extra = dict(night=True, indoor=False, fill='#0E1430', spawnIn=[18, 18])
-    R.save('mirrorland', '거울 너머', '얼어붙은 탑 · 파란 원과 보라 원에 서서 같이 들어가요', [17, 1])
-    m = json.load(open('out/mirrorland.json')); ex = [o for o in m['objs'] if o['name'] == 'exit'][0]; ex['box'] = [20, 21, 21, 22]; ex['door']['tile'] = [20, 21]; json.dump(m, open('out/mirrorland.json', 'w'), ensure_ascii=False)   # 나가는 곳: 앞 모서리 (돌아가는 거울 옆)
+    R.save('mirrorland', '거울 너머', '거울 탑 1 ~ 4 층 · 친구들과 같이 올라가요', [17, 1])
+    m = json.load(open('out/mirrorland.json')); ex = [o for o in m['objs'] if o['name'] == 'exit'][0]; ex['box'] = [20, 21, 21, 22]; ex['door']['tile'] = [20, 21]; ex['door']['lock'] = 'raidback'; ex['door']['label'] = '돌아가는 거울'; json.dump(m, open('out/mirrorland.json', 'w'), ensure_ascii=False)   # 나가는 곳: 앞 모서리 (돌아가는 거울 옆)
     return R
 
 def preview(key, out, scale=2, dark=.62):
