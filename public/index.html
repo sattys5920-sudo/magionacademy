@@ -9083,11 +9083,12 @@ const tlLive = () => !!(me && me.tilda && me.tilda.d0 && !me.tilda.gone);
 const tlDay = () => Math.min(5, Math.max(1, Math.round(dayNo(todayKey()) - dayNo(me.tilda.d0)) + 1));
 const tlGoals = d => (TL_GOALS[d] || []).filter(g => !g.need || g.need(me.tilda));
 const tlCnt = g => (me.tilda.c && me.tilda.c[g.k]) || 0, tlDoneG = g => tlCnt(g) >= (g.n || 1), tlAll = d => tlGoals(d).every(tlDoneG);
-const tlFx = () => tlLoad || (tlLoad = new Promise((res, rej) => { if (window.TildaFX) return res(); const sc = document.createElement('script'); sc.src = 'tilda.js?v=1'; sc.onload = () => res(); sc.onerror = () => { tlLoad = null; rej(); }; document.head.appendChild(sc); }));
+const tlFx = () => tlLoad || (tlLoad = new Promise((res, rej) => { if (window.TildaFX) return res(); const sc = document.createElement('script'); sc.src = 'tilda.js?v=2'; sc.onload = () => res(); sc.onerror = () => { tlLoad = null; rej(); }; document.head.appendChild(sc); }));
 const tlApi = () => ({ W: World, me, t: () => me.tilda, vol: typeof SET !== 'undefined' ? SET.sfx : 1, calm: false,
   bgm: on => { try { on ? BGM.hold('tilda') : BGM.release('tilda'); } catch(e){} },
   gh: { show: (m, x, y, dir, a) => { tlGh.man = { m, x, y, dir, a }; tlGhDraw(); }, hide: () => { tlGh.man = { hide: 1 }; tlGhDraw(); } },
-  mem: tlMemGet, grant: tlGrant });
+  mem: tlMemGet, grant: tlGrant,
+  keep: (day, r) => { const T = me.tilda; if (!T) return; Object.assign(T, r); const need = { 1: ['nm', 'hi'], 2: ['sea', 'quip'], 3: ['btn'], 4: ['fear'] }[day] || []; if (need.length && need.every(k => T[k] != null)){ T.nt = T.nt || {}; T.nt[day] = 1; } saveNow(); } });   // 밤 이야기에서 고르는 순간 바로 저장 (중간에 새로고침해도 같은 장면이 다시 안 나오게)
 // ---------- 마틸다 그리기 (반 크기 · 은은한 빛 · 둥실) ----------
 const TL_IMG = new Image(); TL_IMG.src = 'art/tilda.png?v=1';
 let tlGh = { m: '', x: 0, y: 0, dir: 0, tr: [], t: 0, man: null, last: '' }, tlFr = [];
@@ -9187,7 +9188,7 @@ function tlTick(){
   if ((!T || T.ev !== (c && c.id)) && c && c.open && !(T && T.d0 && !T.gone)){
     if (T && T.gone) return;   // 한 번 졸업한 학생은 다시 시작하지 않아요
     if (uiBusy() || !World.meAt || !World.meAt() || !evTurn('tilda')) return;
-    tlRun(async (X, api) => { await X.intro(api); me.tilda = { ev: c.id, d0: todayKey(), dd: todayKey(), c: {}, q: {}, nt: {} }; save(); const d = tlDay(); await X.morning(api, d, tlGoals(d), false, true); }, 'intro');
+    tlRun(async (X, api) => { await X.intro(api); me.tilda = { ev: c.id, d0: todayKey(), dd: todayKey(), c: {}, q: {}, nt: {} }; saveNow(); const d = tlDay(); await X.morning(api, d, tlGoals(d), false, true); }, 'intro');
     return;
   }
   if (!T) return;
@@ -9205,7 +9206,7 @@ function tlTick(){
   if (d === 4){ const ro = World.roomOwner && World.roomOwner(); if (ro && !ro.own && ro.uid) tlEv('room', { u: ro.uid }); }
   // 밤 이야기: 부탁을 다 하고 그날 장소에 가면
   if (d < 5 && tlAll(d) && !(T.nt && T.nt[d]) && pkAt(TL_PLACE[d], 3)){
-    tlRun(async (X, api) => { api.gh.show(World.meTile().m, World.meTile().x + 1, World.meTile().y, 2, 1); await new Promise(r => setTimeout(r, 600)); await tlCapture(d); const r = await X.night(api, d) || {}; Object.assign(T, r); T.nt = T.nt || {}; T.nt[d] = 1; save(); toast(`추억 조각을 얻었어요 (${d} / 4)`); }, 'night'); }
+    tlRun(async (X, api) => { api.gh.show(World.meTile().m, World.meTile().x + 1, World.meTile().y, 2, 1); await new Promise(r => setTimeout(r, 600)); await tlCapture(d); const r = await X.night(api, d) || {}; Object.assign(me.tilda || T, r); const T2 = me.tilda || T; T2.nt = T2.nt || {}; T2.nt[d] = 1; saveNow(); toast(`추억 조각을 얻었어요 (${d} / 4)`); }, 'night'); }
 }
 const tlTap = id => {
   if (!tlLive()) return; const t = World.meTile && World.meTile();
