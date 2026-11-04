@@ -31,9 +31,9 @@ window.__accMock = async (mode) => {
   const sub = [...document.querySelectorAll('*')].find(e => e.children.length === 0 && /흑마법사 ·/.test(e.textContent)); if (sub) sub.textContent = '보스 기념품 · 한 번에 하나만 찰 수 있어요';
   const sec = document.querySelector('.sec .box.px'); const A = __ACC, on = A[0];
   sec.innerHTML = `<div style="display:flex;gap:14px;align-items:center"><div class="xarbox t4" style="display:flex;align-items:center;justify-content:center"><img class="acbig" src="${__accIc(on.k)}"></div>
-    <div style="flex:1"><b>${on.n}</b> ${stars(on.st)}<div class="s" style="margin-top:4px">${on.e(on.st)}</div><div class="s sub" style="margin-top:6px">★${on.st + 1} 이면 ${on.e(on.st + 1)} · 같은 기념품 ${on.cp} / ${on.st}</div><div class="acbar"><i style="width:${on.cp / on.st * 100}%"></i></div></div></div>
-    <div class="aclist">${A.map(a => `<div class="acrow${a.on ? ' on' : ''}${a.own ? '' : ' no'}"><img class="acic" src="${__accIc(a.k, a.own)}"><div style="flex:1;min-width:0"><b>${a.own ? a.n : '???'}</b> ${a.own ? stars(a.st) : ''}<div class="s ${a.own ? '' : 'sub'}">${a.own ? a.e(a.st) : `${a.b} 레이드에서 얻어요`}</div></div>${a.on ? '<span class="actag">차는 중</span>' : a.own ? '<button class="btn go" style="padding:6px 12px">차기</button>' : ''}</div>`).join('')}</div>
-    <div class="s sub" style="margin-top:10px">한 번에 하나만 찰 수 있어요 · 탐사와 레이드에서 모두 효과가 있어요</div>`;
+    <div style="flex:1"><b>${on.n}</b> ${stars(on.st)}<div class="s" style="margin-top:4px">${on.e(on.st)}</div><div class="s sub" style="margin-top:6px">★${on.st + 1} 이면 ${on.e(on.st + 1)}</div><div class="acbar"><i style="width:${on.cp / on.st * 100}%"></i></div></div></div>
+    <div class="aclist">${A.map(a => `<div class="acrow${a.on ? ' on' : ''}${a.own ? '' : ' no'}"><img class="acic" src="${__accIc(a.k, a.own)}"><div style="flex:1;min-width:0"><b>${a.own ? a.n : '???'}</b> ${a.own ? stars(a.st) : ''}${a.own ? `<div class="s">${a.e(a.st)}</div>` : ''}</div>${a.on ? '<span class="actag">차는 중</span>' : a.own ? '<button class="btn go" style="padding:6px 12px">차기</button>' : ''}</div>`).join('')}</div>
+`;
   const ok = document.getElementById('aok'); if (ok) ok.textContent = '돌아가기';
   return 1;
 };
