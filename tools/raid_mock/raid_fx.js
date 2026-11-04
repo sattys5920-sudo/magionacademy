@@ -1,5 +1,5 @@
 // 레이드 스킬 이펙트 시안: 모의 사이트 index.html 끝에 붙여서 window.__raidFx({ b: 0~3, sc: 'tele' | 'side' | 'all' | 'big', t: 0~1 }) 로 장면을 그려요
-//   보스 그림: art/raid_bosses.png (96 칸 × 2 동작 × 4 종, tools/iso/raid_bosses.py)
+//   보스 그림: art/raid_bosses.png (LPC 64 칸 × 2 동작 × 4 종, tools/iso/lpc/raid_boss_lpc.py)
 window.__raidFx = async (o) => {
   const A = World.Avatar, W = 480, H = 270, b = o.b || 0, sc = o.sc || 'tele', T = o.t ?? .5;
   const BS = [
@@ -64,8 +64,8 @@ ${sc === 'tele' ? `<div class="dodge"><div class="ring"><div class="o"></div><di
   } };
   // ---- 보스 ----
   const bim = await new Promise(r => { const im = new Image(); im.onload = () => r(im); im.src = 'art/raid_bosses.png?v=' + Date.now(); });
-  const cast = sc !== 'side' && sc !== 'all' ? 1 : 1, BX = W / 2, BY = 214, BW = 150;
-  const drawBoss = (x, y, a = 1, fr = cast) => { g.save(); g.globalAlpha = a; g.drawImage(bim, (b * 2 + fr) * 96, 0, 96, 96, x - BW / 2, y - BW + 8, BW, BW); g.restore(); };
+  const cast = sc !== 'side' && sc !== 'all' ? 1 : 1, BX = W / 2, BY = 216, BW = 160;
+  const drawBoss = (x, y, a = 1, fr = cast) => { g.save(); g.globalAlpha = a; g.drawImage(bim, (b * 2 + fr) * 64, 0, 64, 64, x - BW / 2, y - BW + 6, BW, BW); g.restore(); };
   g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(BX, BY, 40, 9, 0, 0, 7); g.fill();
   if (sc === 'big' && b === 2){ drawBoss(BX - 92, BY - 6, .45, 0); drawBoss(BX + 92, BY - 6, .45, 0); }   // 분신
   // 큰 기술 · 예고 때 머리 위 끊기 게이지
