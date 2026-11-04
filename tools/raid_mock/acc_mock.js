@@ -1,24 +1,17 @@
 // 보스 기념품(장신구) 시안: 모의 사이트에서 window.__accMock('lobby' | 'view' | 'pick') 로 화면을 보여 줘요
-window.__accIc = (() => { const C = {}; return (k, own = true) => { const key = k + own; if (C[key]) return C[key];
-  const c = document.createElement('canvas'); c.width = c.height = 20; const g = c.getContext('2d'), P = (x, y, f) => { g.fillStyle = f; g.fillRect(x, y, 1, 1); }, R = (x, y, w, h, f) => { g.fillStyle = f; g.fillRect(x, y, w, h); };
-  const pix = (rows, pal) => rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch !== '.') P(x, y + 1, pal[ch]); }));
-  const A = {
-    crown: [['....................', '..o.....o..o.....o..', '.olo...olo.olo...olo', '.ollo.ollo.ollo.ollo', '.olllolllllllllollo.', '.olllllllllllllllo..', '.ollwllllgllllwlllo.', '.olllllllllllllllo..', '.oddddddddddddddddo.', '.odlddglddddgldddlo.', '.oddddddddddddddddo.', '..oooooooooooooooo..'], { o: '#1a1420', l: '#c8ecff', d: '#7ab8e8', w: '#ffffff', g: '#7fe6ff' }],
-    cape: [['......oooooooo......', '.....oyyyyyyyyo.....', '....odlllllllldo....', '...odllllllllllddo..', '...odlllsllsllllddo.', '..odllllllllllllldo.', '..odlllsllllsllllddo', '..odllllllllllllllddo', '.odlllllsllllslllldo', '.odllllllllllllllldo', '.odddlddlddlddldddo.', '..ooo.ooo.ooo.oooo..'], { o: '#1a1420', l: '#e0483a', d: '#8a2028', s: '#ff9a6a', y: '#f0c040' }],
-    hat: [['.........oo.........', '........oddo........', '.......odlldo.......', '......odllldo.......', '.....odlllldo.......', '.....odllllldo......', '....odlllllldo......', '...oppppppppppo.....', '..odllllllllllldo...', '.odddddddddddddddo..', 'oooooooooooooooooo..'], { o: '#1a1420', l: '#5a3288', d: '#28143e', p: '#c08aff' }],
-    neck: [['..o..............o..', '...o............o...', '....o..........o....', '.....o........o.....', '......oo....oo......', '.......oooooo.......', '......oyyyyyyo......', '.....oyccccccyo.....', '.....oycckcccyo.....', '.....oyckkcccyo.....', '.....oycccccc yo....', '......oyyyyyyo......', '.......oooooo.......'], { o: '#1a1420', y: '#e8b858', c: '#fff4d0', k: '#4a2e10', ' ': '#e8b858' }],
-  }[k];
-  if (k === 'crown') pix(['....................', '..o......oo......o..', '.oLo....oLLo....oLo.', '.oLo...oLLLLo...oLo.', '.oLLo.oLLLLLLo.oLLo.', '.oLLLoLLLLLLLLoLLLo.', '.oLLLLLLLLLLLLLLLLo.', '.oLLWLLLLLLLLLLWLLo.', '.oLLLLLLLLLLLLLLLLo.', '.oooooooooooooooooo.', '.oDDDGDDDDDDDDGDDDo.', '.oDDDDDDDCCDDDDDDDo.', '.oDDDGDDDCCDDDDGDDo.', '.oooooooooooooooooo.'], { o: '#1a1420', L: '#c8ecff', W: '#ffffff', D: '#7ab8e8', G: '#ffffff', C: '#7fe6ff' });
-  else if (k === 'cape'){ for (let y = 2; y < 19; y++){ const hw = 3 + (y - 2) * .42, cx = 10; for (let x = Math.round(cx - hw); x <= Math.round(cx + hw); x++){ const e = x === Math.round(cx - hw) || x === Math.round(cx + hw) || y === 18; P(x, y, e ? '#1a1420' : (x < cx - hw + 2.2 ? '#8a2028' : (x + y) % 5 === 0 ? '#ff9a6a' : '#e0483a')); } } R(7, 1, 7, 2, '#1a1420'); R(8, 1, 5, 1, '#f0c040'); P(10, 3, '#f0c040'); for (let x = 3; x < 18; x += 3) P(x, 18, '#00000000'); }
-  else pix(...A);
-  if (!own){ const d = g.getImageData(0, 0, 20, 20); for (let i = 0; i < d.data.length; i += 4) if (d.data[i + 3]) { d.data[i] = d.data[i + 1] = d.data[i + 2] = 60; d.data[i + 3] = 160; } g.putImageData(d, 0, 0); }
-  return (C[key] = c.toDataURL()); }; })();
+//   기념품 그림: art/raid_acc.png (LPC 부품에서 잘라 만든 32 칸 × 4, tools/iso/lpc/raid_acc_lpc.py)
+window.__accIcs = {};
+window.__accLoad = () => new Promise(r => { const im = new Image(); im.onload = () => { ['crown', 'cape', 'hat', 'neck'].forEach((k, i) => [true, false].forEach(own => { const c = document.createElement('canvas'); c.width = c.height = 32; const g = c.getContext('2d'); g.drawImage(im, i * 32, 0, 32, 32, 0, 0, 32, 32);
+  if (!own){ const d = g.getImageData(0, 0, 32, 32); for (let j = 0; j < d.data.length; j += 4) if (d.data[j + 3]) { d.data[j] = d.data[j + 1] = d.data[j + 2] = 60; d.data[j + 3] = 160; } g.putImageData(d, 0, 0); }
+  __accIcs[k + own] = c.toDataURL(); })); r(); }; im.src = 'art/raid_acc.png?v=' + Date.now(); });
+window.__accIc = (k, own = true) => __accIcs[k + own];
 window.__ACC = [
   { k: 'crown', n: '얼음 왕관', b: '얼음 거인', st: 2, cp: 1, own: true, on: true, e: s => `전투 처음 3 턴 받는 피해 −${6 + s * 2} %`, x: '눈보라에 덜 얼어요' },
   { k: 'cape', n: '용 비늘 망토', b: '불꽃 용', st: 1, cp: 0, own: true, e: s => `공격·마법 +${3 + s * 2} %`, x: '화상에 안 걸려요' },
   { k: 'hat', n: '그림자 모자', b: '그림자 마녀', own: false, e: s => `피하기 「완벽」 고리 조금 넓게 · 치명타 +${3 + s * 2} %`, x: '그림자 손에 안 붙잡혀요' },
   { k: 'neck', n: '톱니 시계 목걸이', b: '시계탑 골렘', own: false, e: s => `행동 게이지 +${4 + s * 2} %`, x: '시간 멈춤에 안 걸려요' }];
 window.__accMock = async (mode) => {
+  await __accLoad();
   const ex = window.__T.meRaw().ex = Object.assign(window.__T.meRaw().ex || {}, { job: 'black', exp: 60000, ar: 2, wp: 2, n: 0, xv: 3 });
   window.__T.openSheet('home', 'explore'); await new Promise(r => setTimeout(r, 600));
   const hideToast = () => [...document.querySelectorAll('*')].filter(e => e.children.length === 0 && /희미한 마법/.test(e.textContent)).forEach(e => { let q = e; while (q.parentElement && q.parentElement !== document.body) q = q.parentElement; q.style.display = 'none'; }); hideToast(); setTimeout(hideToast, 300);
