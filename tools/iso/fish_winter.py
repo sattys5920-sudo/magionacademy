@@ -27,7 +27,7 @@ PAL.update({
   'storm':    [(14, 20, 52), (28, 44, 100), (54, 84, 156), (112, 154, 214)],
   'silverblue': [(38, 54, 96), (88, 114, 164), (158, 184, 222), (230, 240, 252)],
   'whitesky': [(78, 128, 190), (138, 190, 236), (204, 232, 252), (255, 255, 255)],
-  'fog':      [(92, 108, 124), (148, 164, 178), (202, 214, 224), (244, 250, 252)],
+  'fog':      [(66, 86, 120), (124, 150, 182), (192, 212, 234), (246, 252, 255)],
   'wisp':     [(8, 16, 30), (18, 40, 66), (36, 74, 106), (82, 132, 164)],
   'silver':   [(88, 98, 128), (158, 168, 196), (216, 224, 240), (255, 255, 255)],
 })
@@ -96,6 +96,26 @@ def strip_small(im, maxn=12):
                     if q in m and q not in seen: seen.add(q); comp.append(q); st.append(q)
         if len(comp) <= maxn:
             for q in comp: px[q] = (0, 0, 0, 0)
+    return im
+
+def keep_main(im, minsize=30):
+    """윤곽선 아닌 칸끼리(4방향) 이어진 덩어리 중 큰 것만 남기고, 그 덩어리에 붙은 윤곽선만 남겨요
+    (몸통에서 떨어진 별가루·기운·반짝이를 지울 때)"""
+    px = im.load(); m = body_mask(im)
+    fill = {p for p in m if not is_out(px[p])}; seen = set(); keep = set()
+    for p in fill:
+        if p in seen: continue
+        comp = [p]; seen.add(p); st = [p]
+        while st:
+            x, y = st.pop()
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                q = (x + dx, y + dy)
+                if q in fill and q not in seen: seen.add(q); comp.append(q); st.append(q)
+        if len(comp) >= minsize: keep.update(comp)
+    for p in m:
+        if p in keep: continue
+        if is_out(px[p]) and any((p[0] + dx, p[1] + dy) in keep for dx in (-1, 0, 1) for dy in (-1, 0, 1)): continue
+        px[p] = (0, 0, 0, 0)
     return im
 
 def soft_glow(im, col, a=110, ring2=True):
@@ -179,11 +199,12 @@ def f_leafloach(c):        # 낙엽 미꾸라지 (base 4) — 단풍 주황-갈�
         for dx, dy, col in ((0, -1, R), (-1, 0, R), (1, 0, R), (0, 1, V), (0, 0, Y)):
             if (x + dx, y + dy) in inn: put(px, x + dx, y + dy, col)
     # 위쪽 빈 곳에 떨어지는 단풍잎 하나 (세 갈래 잎 + 꼭지)
-    leaf = grid(["..r..",
-                 "r.r.r",
-                 "rrYrr",
-                 ".rYr.",
-                 "..b.."], 22, 2, {'r': (222, 70, 30), 'Y': (255, 196, 70), 'b': (120, 60, 30)})
+    leaf = grid(["...r...",
+                 "r.rRr.r",
+                 "RrrYrrR",
+                 ".rrYrr.",
+                 "rr.Y.rr",
+                 "...b..."], 21, 1, {'r': (222, 70, 30), 'R': (255, 130, 50), 'Y': (255, 196, 70), 'b': (120, 60, 30)})
     shape(c, leaf)
     return c
 
@@ -252,9 +273,10 @@ def f_yuzupuff(c):         # 유자 복어 (base 16) — 유자 노랑 + 귤껍�
 
 def f_cocoaeel(c):         # 코코아 뱀장어 (base 21) — 코코아 갈색 + 크림(마시멜로) 점 + 김
     c = recolor(c, 'cocoa'); px = c.load()
-    cream = [(6, 16), (10, 13), (13, 10), (17, 9), (21, 11), (24, 14), (27, 18), (8, 18), (15, 12), (25, 19)]
-    for (x, y) in cream:
-        dots(c, [(x, y)], (252, 240, 216)); dots(c, [(x + 1, y)], (226, 200, 166))
+    inn = interior(c)
+    for (x, y) in sorted(inn):                           # 고르게 흩뿌린 크림 점
+        if (x * 3 + y * 5) % 9 == 0 and lum(px[x, y]) < 150 and x > 6:
+            put(px, x, y, (252, 240, 216))
     for (x, y, a) in ((10, 6, 140), (11, 5, 170), (10, 4, 120), (11, 3, 90), (19, 4, 150), (18, 3, 120), (19, 2, 90)):
         put(px, x, y, (245, 240, 236), a)
     return c
@@ -347,7 +369,11 @@ def f_icehorse(c):         # 얼음 해마 (base 36) — 얼음 투명 하늘색
     for (x, y) in inn:                                   # 사선 결정 면
         if (x + y) % 6 == 0: blend(px, x, y, WHITE, 190)
         elif (x + y) % 6 == 1: blend(px, x, y, (210, 245, 255), 110)
-    translucent(c, 210)
+    translucent(c, 190)
+    for (x, y) in body_mask(c):                          # 윤곽선도 얼음빛(짙은 청록)으로 — 유리처럼
+        if px[x, y][:3] == OUT: px[x, y] = (34, 74, 120, 255)
+    for (x, y) in ((13, 0), (17, 1), (21, 3)):           # 머리·등의 얼음 가시
+        if px[x, y][3] == 0: put(px, x, y, (220, 248, 255))
     plus_spark(c, 28, 16); plus_spark(c, 4, 4, force=False)
     return c
 
@@ -378,11 +404,7 @@ def f_wintermarlin(c):     # 겨울 청새치 (base 44) — 은청색 + 서리 �
     return c
 
 def f_frostwhale(c):       # 서리 꼬마 고래 (base 51) — 흰-하늘 + 눈꽃 반짝 + 빛
-    erase(c, 2, 2, 8, 9); px = c.load()
-    for (x, y) in list(body_mask(c)):                     # 남은 노란 별가루 지우기
-        r, g, b, a = px[x, y]
-        if r > 200 and g > 120 and b < 90 and y < 12: px[x, y] = (0, 0, 0, 0)
-    c = strip_small(c, 4)
+    c = keep_main(c, 30)                                  # 별 지팡이·별가루 떼기
     c = recolor(c, 'whitesky')
     top_rim(c, WHITE, 180)
     soft_glow(c, (190, 235, 255), 130, ring2=False)
@@ -390,14 +412,10 @@ def f_frostwhale(c):       # 서리 꼬마 고래 (base 51) — 흰-하늘 + 눈
     return c
 
 def f_mistlord(c):         # 안개 호수의 정령 (base 58) — 안개빛 + 빛남, 체크무늬 기운은 안개로
-    px = c.load(); aura = set()
-    for y in range(N):
-        for x in range(N):
-            r, g, b, a = px[x, y]
-            if a and lum((r, g, b)) < 90 and b > r + 10 and (r, g, b) != OUT: aura.add((x, y))
-    c = recolor(c, 'fog'); px = c.load()
-    for (x, y) in aura: px[x, y] = (0, 0, 0, 0)
-    c = strip_small(c, 6); px = c.load()
+    c = keep_main(c, 30)                                  # 체크무늬 기운·빛줄기 떼고 몸만
+    px = c.load(); gold = {p for p in body_mask(c) if px[p][0] > 190 and px[p][2] < 130}
+    c = recolor(c, 'fog'); px = c.load(); aura = set()
+    for p in gold: px[p] = (255, 250, 214, 255) if lum(px[p]) > 200 else (214, 232, 255, 255)   # 왕관은 진줏빛
     for (x, y) in interior(c):
         if (x, y) not in aura and px[x, y][3] == 255: px[x, y] = px[x, y][:3] + (225,)
     soft_glow(c, (220, 236, 255), 130, ring2=False)
@@ -414,11 +432,6 @@ def f_wispshark(c):        # 도깨비불 상어 (base 54) — 검푸른 + 청�
         y0 = top[x] - 1
         for k in range(2 + i % 2):
             put(px, x, y0 - k, T3 if k == 0 else T, 255 if k == 0 else 210)
-    eye_done = False
-    for (x, y) in m:                                     # 눈을 청록으로 번뜩이게
-        r, g, b, a = px[x, y]
-        if not eye_done and 6 <= x <= 10 and 14 <= y <= 17 and lum((r, g, b)) < 40 and (r, g, b) != OUT:
-            pass
     soft_glow(c, (60, 220, 200), 100)
     for (x, y) in ((4, 4), (3, 27), (28, 28)):           # 도깨비불 구슬
         put(px, x, y, T3); put(px, x + 1, y, T2); put(px, x, y + 1, T2); put(px, x + 1, y + 1, T)
@@ -531,4 +544,4 @@ if __name__ == '__main__':
     elif '--apply' in a:
         apply()
     else:
-        print(__doc__ or 'usage: fish_winter.py --preview DIR | --apply')
+        print('usage: fish_winter.py --preview DIR | --apply')
