@@ -112,7 +112,7 @@ def mirrorland():
     def flo(fx, fy):
         n = math.sin(fx * 1.3 + fy * .7) + math.sin(fx * .4 - fy * 1.1) * 1.2 + math.sin(fx * 2.3 + fy * 1.9) * .4
         c = hexc('#E6F2FC') if n > .9 else hexc('#A8CCEA') if n > -.6 else hexc('#8CB6DE')
-        if abs(fx - fy) < 2.2 and fx + fy > 13:                               # 탑으로 가는 거울 길 (화면 가운데로 곧게)
+        if abs(fx - fy) < 2.2 and fx + fy > 12:                               # 탑으로 가는 거울 길 (화면 가운데로 곧게)
             c = hexc('#C4E4FA') if (int(fx * 2) + int(fy * 2)) % 2 else hexc('#94C4EC')
             if abs(abs(fx - fy) - 2.1) < .14: c = hexc('#F4FAFF')
         for (cx, cy, col) in ((9, 16.5, '#5FD0FF'), (16.5, 9, '#C08AFF')):    # 모이는 곳: 왼쪽(파랑) · 오른쪽(보라)
@@ -165,14 +165,30 @@ def mirrorland():
         for yy in range(int(top_y - 66), int(top_y - 4), 8): d.line([(cx - (top_y - 4 - yy) * .0 - (yy - (top_y - 70)) * tw * .7 / 66, yy), (cx + (yy - (top_y - 70)) * tw * .7 / 66, yy)], fill=hexc('#6A9ACC'))
         gy = top_y - 92
         d.polygon([(cx, gy - 14), (cx + 8, gy), (cx, gy + 14), (cx - 8, gy)], fill=hexc('#7FE6FF')); d.polygon([(cx, gy - 14), (cx - 8, gy), (cx, gy + 14)], fill=hexc('#C8F6FF')); d.line([(cx, gy - 10), (cx, gy + 10)], fill=hexc('#FFFFFF'))
-        # 창문
-        for (dx, h) in ((-20, 60), (8, 60), (-8, 110), (18, 140), (-18, 150)):
-            wx, wy = cx + dx, by - h
-            d.rectangle([wx - 3, wy - 8, wx + 3, wy + 4], fill=hexc('#2A4A7A')); d.rectangle([wx - 2, wy - 7, wx + 2, wy + 3], fill=hexc('#7FE6FF')); d.ellipse([wx - 3, wy - 11, wx + 3, wy - 5], fill=hexc('#7FE6FF'))
-        # 문 (앞 아래)
-        gx = cx - 6; d.rectangle([gx - 13, by - 36 + 14, gx + 13, by + 14], fill=hexc('#24365E')); d.ellipse([gx - 13, by - 36, gx + 13, by - 8], fill=hexc('#24365E'))
-        d.rectangle([gx - 10, by - 24 + 14, gx + 10, by + 14], fill=hexc('#3A6AA8')); d.ellipse([gx - 10, by - 32, gx + 10, by - 12], fill=hexc('#3A6AA8'))
-        for k in range(-8, 9, 4): d.line([(gx + k, by - 26), (gx + k, by + 13)], fill=hexc('#5FD0FF'))
+        # 창문: 게임 건물 창문과 같은 모양 (둥근 윗부분 · 테두리 · 가운데 창살) · 얼음빛
+        TRIM = hexc('#5A7AA8')
+        for (dx, h) in ((-20, 64), (14, 64), (-4, 104), (16, 132), (-18, 140)):
+            wx, wy, ww, wh = int(cx + dx - 3), int(by - h - 12), 7, 12
+            for vv in range(wh):
+                for uu in range(ww):
+                    top = ww / 2
+                    if vv < top and (uu + .5 - ww / 2) ** 2 + (vv - top) ** 2 > (ww / 2) ** 2: continue
+                    edge = uu == 0 or uu == ww - 1 or vv == wh - 1 or (vv < top and (uu + .5 - ww / 2) ** 2 + (vv - top) ** 2 > (ww / 2 - 1.2) ** 2)
+                    c = shade(TRIM, .6) if edge or uu == ww // 2 else (hexc('#BFEFFF') if (uu + vv) % 7 else hexc('#F0FCFF'))
+                    d.point((wx + uu, wy + vv), fill=c)
+        # 문: 게임 건물 문과 같은 모양 (둥근 아치 나무 문 · 테두리 · 가운데 줄 · 금빛 손잡이) · 길 한가운데에 맞춰요
+        dw, dh = 22, 30; gx0, gy0 = int(cx - dw // 2), int(by + 9 - dh)
+        for vv in range(dh):
+            for uu in range(dw):
+                top = dw / 2
+                if vv < top and (uu + .5 - dw / 2) ** 2 + (vv - top) ** 2 > (dw / 2) ** 2: continue
+                inner = 1 < uu < dw - 2 and vv > 1 and not (vv < top and (uu + .5 - dw / 2) ** 2 + (vv - top) ** 2 > (dw / 2 - 2) ** 2)
+                c = hexc('#5A3420') if inner else shade(TRIM, .55)
+                if inner and uu % 4 == 1: c = hexc('#4A2A18')           # 나무 판자 줄
+                if inner and uu in (dw // 2 - 1, dw // 2): c = hexc('#3E2216')   # 가운데 (두 짝 문)
+                if vv == dh - 13 and uu in (dw // 2 - 3, dw // 2 + 2): c = hexc('#E0C070')   # 손잡이
+                d.point((gx0 + uu, gy0 + vv), fill=c)
+        for k in range(-2, 3): d.point((cx + k * 5, gy0 - 2 + abs(k)), fill=hexc('#E8F6FF'))   # 문 위 얼음 장식
         # 고드름 (꼭대기 아래)
         for k in range(-9, 10):
             x0 = cx + k * 3.6; L = 4 + (k * 7 % 6)

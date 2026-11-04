@@ -14,10 +14,10 @@ M = json.loads(s[a:b])
 d = json.load(open(I + '/out/mirrorland.json'))
 for o in d['objs']:
     if o.get('door'): o['door']['spawn'] = [17, 1]
-d.update(bgSrc='art/iso/mirrorland_bg.png?v=' + ver(ART + 'mirrorland_bg.png'), objSrc='art/iso/mirrorland_obj.png?v=' + ver(ART + 'mirrorland_obj.png'), lazy=True, indoor=True, night=True, spawnIn=[18, 18])
+d.update(bgSrc='art/iso/mirrorland_bg.png?v=' + ver(ART + 'mirrorland_bg.png'), objSrc='art/iso/mirrorland_obj.png?v=' + ver(ART + 'mirrorland_obj.png'), lazy=True, indoor=True, night=True, spawnIn=[20, 20])
 M['mirrorland'] = {'meta': d}
 L = M['library']['meta']; L['objs'] = [o for o in L['objs'] if o['name'] != 'raidmirror']
-L['objs'].append(dict(name='raidmirror', box=[17, 0, 18, 1], sx=0, sy=0, sw=0, sh=0, x=-99, y=-99, solid=False, act=None, door=dict(tile=[17, 0], to='mirrorland', label='이상한 거울', spawn=[18, 18], lock='raid', back=[17, 1])))
+L['objs'].append(dict(name='raidmirror', box=[17, 0, 18, 1], sx=0, sy=0, sw=0, sh=0, x=-99, y=-99, solid=False, act=None, door=dict(tile=[17, 0], to='mirrorland', label='이상한 거울', spawn=[20, 20], lock='raid', back=[17, 1])))
 L['raidBg'] = 'art/iso/library_mg_bg.png?v=' + ver(ART + 'library_mg_bg.png')
 s = s[:a] + json.dumps(M, ensure_ascii=False) + s[b:]
 open(WJ, 'w').write(s)
