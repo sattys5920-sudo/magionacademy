@@ -338,7 +338,7 @@ World.placeKey = () => started ? placeKey() : null;
 World.myPos = () => { const t = me.path.length ? me.path[me.path.length - 1] : [Math.round(me.x), Math.round(me.y)]; return { m: placeKey(), x: t[0], y: t[1] }; };
 World.setPeers = list => { peerList = list || []; if (started && M) syncPeers(); };
 const peerSpot = q => free(q.x, q.y) ? [q.x, q.y] : [Math.round(me.x), Math.round(me.y)];
-function addPeer(q){ const [x, y] = peerSpot(q), p = mk(q.name, q.av, x, y, false); p.peer = q.uid; p.fk = q.fk; p.tg = q.tg || ''; p.bb = q.bb || ''; peers[q.uid] = p; people.push(p); }
+function addPeer(q){ const [x, y] = peerSpot(q), p = mk(q.name, q.av, x, y, false); p.peer = q.uid; p.fk = q.fk; p.tg = q.tg || ''; p.bb = q.bb || ''; p.bl = q.bl || ''; peers[q.uid] = p; people.push(p); }
 function syncPeers(){
   const key = placeKey(), here = peerList.filter(q => q.m === key && q.uid !== World.myUid);
   let changed = false;
@@ -348,7 +348,7 @@ function syncPeers(){
     if (!p){ addPeer(q); changed = true; return; }
     if (p.name !== q.name){ p.name = q.name; changed = true; }
     if ((p.tg || '') !== (q.tg || '')){ p.tg = q.tg || ''; changed = true; } p.bb = q.bb || '';
-    p.av = q.av; p.fk = q.fk;
+    p.av = q.av; p.fk = q.fk; p.bl = q.bl || '';
     const [tx, ty] = peerSpot(q), g = p.path.length ? p.path[p.path.length - 1] : [Math.round(p.x), Math.round(p.y)];
     if (g[0] !== tx || g[1] !== ty){ if (Math.hypot(tx - p.x, ty - p.y) > 25 || !goto(p, tx, ty)){ p.x = tx; p.y = ty; p.path = []; } }
   });
@@ -998,6 +998,7 @@ function drawPerson(p){ const cx = out;
   cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0);
   if (p.flip){ cx.translate(dx, dy); cx.scale(-1, 1); cx.drawImage(S, col * A.FW, 0, A.FW, A.FH, -w / 2, 0, w, h); } else cx.drawImage(S, col * A.FW, 0, A.FW, A.FH, Math.round(dx - w / 2), dy, w, h);
   if (p.npc && !p.npc.cut && !p.flip && World.onNpcDrawn){ try { World.onNpcDrawn(cx, p.npc.id, Math.round(dx - w / 2), dy, cp, p.view || 0, p); } catch(e){} }   // 선물받은 키링 같은 장식 (index.html)
+  if ((p.me || p.peer) && !p.flip && World.onCharDrawn){ try { World.onCharDrawn(cx, p, Math.round(dx - w / 2), dy, cp, p.view || 0); } catch(e){} }   // 들고 다니는 풍선 (index.html)
   cx.restore();
   if (p.me || p.peer) drawPrank(p, sx, sy - bh, 'front');
 }
