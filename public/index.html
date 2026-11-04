@@ -3490,7 +3490,7 @@ function xQsSet(i, key){ const ex = xEx(); ex.qs = [0, 1, 2, 3].map(j => (ex.qs 
 function xCmd(){
   const B = xb, u = xMine(B), el = $('#xcmd'); if (!el) return;
   const wait = B.over ? '' : u.hp <= 0 ? '쓰러졌어요.... 동료가 싸워요' : !xRdy(u) ? '게이지가 차면 행동해요' : null;
-  const key = wait !== null ? 'w' + wait : B.pick ? 'pick' : B.menu + ':' + (B.skTab || 0) + ':' + (xEx().qs || []).join() + ':' + u.sks.map(s => (Math.ceil(s.mp) <= Math.floor(u.mp) ? 1 : 0) + '' + xCdLeft(u, s)).join('') + X_ITEMS.map(x => me.inv[x[0]] || 0).join();
+  const key = wait !== null ? 'w' + wait : B.pick ? 'pick' : B.menu + ':' + (B.skTab || 0) + ':' + (xEx().qs || []).join() + ':' + u.sks.map(s => (Math.ceil(s.mp) <= Math.floor(u.mp) ? 1 : 0) + '' + xCdLeft(u, s)).join('') + X_ITEMS.map(x => xInv(B)[x[0]] || 0).join();
   if (el.dataset.k === key) return; el.dataset.k = key; el.classList.toggle('xsk2', key.startsWith('skills')); el.classList.toggle('xm4', key.startsWith('items'));
   if (wait !== null){ el.innerHTML = `<div class="xwait">${wait}</div>`; return; }
   if (B.pick) el.innerHTML = '<div class="xskh" style="grid-column:1/-1">' + ([...B.pick.set].some(id => B.party.some(p => p.id === id)) ? '화면이나 아래 카드에서 대상을 눌러요' : '화면에서 대상을 눌러요') + '</div><button class="xb" data-xc="cancel" style="grid-column:1/-1">취소</button>';
@@ -3498,7 +3498,7 @@ function xCmd(){
     const can = s => !(Math.ceil(s.mp) > Math.floor(u.mp) || xCdLeft(u, s)), L = u.sks.map((s, i) => [s, i]).filter(([s]) => s.b === cur), A = L.filter(([s]) => can(s)), Z = L.filter(([s]) => !can(s));
     const row = ([s, i]) => `<div class="xsrow"><button class="xb sk" data-xc="s${i}" ${can(s) ? '' : 'disabled'}>${xIc(s)}<span>${s.n}<small>Lv ${s.lv} · ${xCdLeft(u, s) ? `쿨타임 ${xCdLeft(u, s)}턴` : (s.mp ? 'MP ' + s.mp : '무료') + (xCdOf(s) ? ' · 쿨 ' + xCdOf(s) + '턴' : '')}</small></span></button><button class="xb xpin${qk.has(xQsKey(s)) ? ' on' : ''}" data-xq="${xQsKey(s)}" aria-label="빠른 칸">${qk.has(xQsKey(s)) ? '★' : '☆'}</button></div>`;
     el.innerHTML = `<div class="xskh"><span>✦ 전체 스킬</span><button class="xb" data-xc="m_back" style="min-height:32px;padding:2px 12px">뒤로</button></div>${br.length > 1 ? `<div class="xstab">${br.map(b => `<button class="${b === cur ? 'on' : ''}" data-xt="${b}">${XT[u.job][b][0]}</button>`).join('')}</div>` : ''}${A.map(row).join('')}${Z.length ? `<div class="xsep">지금은 못 써요</div>${Z.map(row).join('')}` : ''}` || '<div class="xwait">배운 스킬이 없어요</div>'; }
-  else if (B.menu === 'items') el.innerHTML = X_ITEMS.map(x => `<button class="xb" data-xc="i_${x[0]}" ${(me.inv[x[0]] || 0) > 0 ? '' : 'disabled'}><span>${x[2]} ${x[3]}<small>${ITEM[x[0]]} ×${me.inv[x[0]] || 0}</small></span></button>`).join('') + '<button class="xb" data-xc="m_back">뒤로</button>';
+  else if (B.menu === 'items') el.innerHTML = X_ITEMS.filter(x => !B.gr || x[0] in B.gr.inv).map(x => `<button class="xb" data-xc="i_${x[0]}" ${(xInv(B)[x[0]] || 0) > 0 ? '' : 'disabled'}><span>${x[2]} ${x[3]}<small>${B.gr ? '시험용 ' : ''}${ITEM[x[0]]} ×${xInv(B)[x[0]] || 0}</small></span></button>`).join('') + '<button class="xb" data-xc="m_back">뒤로</button>';
   else { const Q = xQuick(u.sks);
     el.innerHTML = `<button class="xb atk" data-xc="atk">공격</button><button class="xb" data-xc="m_items">아이템</button><button class="xb" data-xc="def">방어</button>${u.sks.length ? `<div class="xqrow">${Q.map(x => { if (!x) return '<span class="xb xq empty">빈칸</span>'; const s = x.o, i = u.sks.indexOf(s), cd = xCdLeft(u, s); return `<button class="xb xq" data-xc="s${i}" ${Math.ceil(s.mp) > Math.floor(u.mp) || cd ? 'disabled' : ''}>${xIc(s)}<span>${s.n}<small>${s.mp ? 'MP ' + s.mp : '무료'}</small></span>${cd ? `<i class="xqcd">${cd}턴</i>` : ''}</button>`; }).join('')}</div><button class="xb xall" data-xc="m_skills">✦ 전체 스킬 ${u.sks.length}개</button>` : ''}`; }
   el.querySelectorAll('[data-xc]').forEach(b => b.onclick = () => xChoose(b.dataset.xc));
@@ -3510,8 +3510,8 @@ function xChoose(k){
   const B = xb, u = xMine(B); if (!xRdy(u) || B.fin || B.over) return;
   if (k === 'm_skills'){ B.menu = 'skills'; return xCmd(); } if (k === 'm_back'){ B.menu = 'main'; return xCmd(); }
   if (k === 'm_items'){ B.menu = 'items'; return xCmd(); }
-  if (k.startsWith('i_')){ const id = k.slice(2); if (!(me.inv[id] > 0)) return;
-    const go = t => { if (!(me.inv[id] > 0)) return; me.inv[id]--; save(); B.pick = null; B.menu = 'main'; if (B.mirror) return xcoCmdSend(B, u, { a: 'item', k: id, tg: t.id }); xItemUse(B, u, id, t); xUp(); };
+  if (k.startsWith('i_')){ const id = k.slice(2), INV = xInv(B); if (!(INV[id] > 0)) return;
+    const go = t => { if (!(INV[id] > 0)) return; INV[id]--; if (!B.gr) save(); B.pick = null; B.menu = 'main'; if (B.mirror) return xcoCmdSend(B, u, { a: 'item', k: id, tg: t.id }); xItemUse(B, u, id, t); xUp(); };
     const al = xAlive(B.party); if (al.length <= 1) return go(u); B.pick = { sk: null, go, set: new Set(al.map(a => a.id)) }; return xCmd(); }
   if (k === 'cancel'){ B.pick?.unpick?.(); B.pick = null; return xCmd(); }
   if (k === 'def'){ if (B.mirror) return xcoCmdSend(B, u, { a: 'def' }); B.def[u.id] = 1; B.log = `${u.name}이(가) 방어 태세`; u.g = 0; return xUp(); }
@@ -3526,6 +3526,7 @@ function xUp(){   // 글·상태 갱신 (그림은 xDraw가 알아서 그려요)
   xStatUpdate(B); const lg = $('#xlog'); if (lg && lg.textContent !== B.log) lg.textContent = B.log; xCmd();
 }
 const XPETI = ['불 정령', '물 정령', '바람 정령', '대지 정령', '정령왕', '늑대', '곰', '날개 도마뱀', '호박 토끼', '용', '번개 쥐', '수호 쥐', '광선 도마뱀', '철갑 멧돼지'];   // art/pets.png 칸 순서 (tools/iso/lpc/pet_lpc.py)
+const xInv = B => (B && B.gr && B.gr.inv) || me.inv;   // 승급 시험 실기는 시험용 물약 (가방 물약은 안 써요)
 const X_ITEMS = [['p_red', 'hp', '', '체력 50%', .5], ['p_vigor', 'mp', '', 'MP 50%', .5], ['p_dawn', 'both', '', '체력·MP 70%', .7]];   // 전투 중 쓰는 물약 (한 턴을 써요 · 아군을 골라 줄 수 있어요) · 모두 물약 교실에서 만들어요 (새벽빛 물약은 새벽·아침에만)
 function xItemUse(B, u, k, t){   // 효과만 적용 (개수는 쓰는 사람 기기에서 줄여요) · t: 받는 아군 (없으면 나)
   const it = X_ITEMS.find(x => x[0] === k); if (!it) return; t = t || u;
@@ -14805,7 +14806,7 @@ const GR_GOLEM = {   // 학년별 [체력 배율, 공격 배율, 제한 초]  (�
   heal: { 2: [3.0, 1.0, 50], 3: [3.4, 1.15, 55], 4: [3.8, 1.3, 60] } };
 function grBattle(){
   const role = G2.role, say = { melee: ' 방패 골렘을 시간 안에 쓰러뜨려요. 방패를 들었을 때 때리면 튕겨 나와요!', ranged: ' 골렘 셋을 시간 안에 모두 쓰러뜨려요. 누구부터 칠지가 중요해요.', heal: ' 허수아비 친구를 지켜요. 골렘은 허수아비만 노려요. 시간이 끝날 때까지 버티면 통과예요.' }[role];
-  grFrame('역할 실기', say, `<button class="btn go" id="grbgo" style="width:100%;padding:16px">전투 시작</button>`);
+  grFrame('역할 실기', say, `<div class="grnote">시험용 물약을 2 개 줘요 (치유 물약 1 개 · 활력 물약 1 개). 가방에 있는 물약은 쓸 수 없어요.</div><button class="btn go" id="grbgo" style="width:100%;padding:16px">전투 시작</button>`);
   $('#grbgo').onclick = () => grBattleStart();
 }
 const GR_JOB = { 2:{warrior:0.26,thief:0.48,knight:0.17,black:0.93,summon:0.64,gadget:0.56,alch:0.46,time:0.67,white:3.15,druid:2.38,cleric:0.61,bard:0.51},3:{warrior:0.35,thief:0.61,knight:0.2,black:1.07,summon:0.89,gadget:0.7,alch:0.67,time:0.93,white:2.07,druid:2.49,cleric:0.22,bard:0.51},4:{warrior:0.51,thief:0.61,knight:0.35,black:1.23,summon:1.07,gadget:0.85,alch:0.81,time:1.18,white:1.97,druid:1.97,cleric:0.17,bard:0.53}};   // 직업마다 세기 맞춤 (모의 전투: 그 학년 즈음 레벨·장비로 직업마다 승률 반쯤 · tools 모의 전투)
@@ -14819,7 +14820,7 @@ function grBattleStart(){
   const ex = xEx(), L = xLv(ex.exp).L, role = G2.role, party = xParty(); party.forEach(u => { u.hp = u.mhp; u.mp = u.mmp; u.cdn = {}; u.row = XROLE[u.job] === 'melee' ? 'f' : 'b'; });
   if (role === 'heal'){ const s = xMkUnit('knight', Math.max(1, L - 4), '허수아비 친구', true); Object.assign(s, { id: 'scare', dummy: true, row: 'f', mhp: Math.round(s.mhp * .55), sks: [], g: 0, cdn: {} }); s.hp = s.mhp; party.push(s); }
   const lim = GR_GOLEM[role][G2.tgt][2] * 1000;
-  G2.battle = true; xb = { party, foes: grFoes(role, G2.tgt, L, ex.job), kind: 'elite', log: '역할 실기 시작!', turn: null, pick: null, over: false, last: performance.now(), buff: false, def: {}, fxs: [], floats: [], proj: [], n0: 1, gr: { role, end: performance.now() + lim, lim, t0: performance.now() } };
+  G2.battle = true; xb = { party, foes: grFoes(role, G2.tgt, L, ex.job), kind: 'elite', log: '역할 실기 시작!', turn: null, pick: null, over: false, last: performance.now(), buff: false, def: {}, fxs: [], floats: [], proj: [], n0: 1, gr: { role, end: performance.now() + lim, lim, t0: performance.now(), inv: { p_red: 1, p_vigor: 1 } } };   // 시험용 물약: 체력 1 · MP 1
   xv = { view: 'battle' }; const o = $('#grx'); if (o) o.style.display = 'none'; openSheet('home', 'explore');
 }
 function grBattleTick(B, now){   // 전투 고리에서 불러요: 방패 · 시간 끝 · 허수아비
