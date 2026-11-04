@@ -2143,8 +2143,8 @@ function renderFish(){
   on('[data-fsel]', b => { fsSel = fsSel === b.dataset.fsel ? null : b.dataset.fsel; renderFish(); });
   const sell = (k, n) => { n = Math.min(n, me.inv[k]); if (n <= 0) return 0; me.inv[k] -= n; const g = partyMul(sellPay(k, CATCH_INFO[k].pay) * n); me.coin += g; trEv('sell', { g }); return g; };
   on('[data-fsell]', b => { const g = sell(b.dataset.fsell, 1); fsMsg = `${ITEM[b.dataset.fsell]} 1개를 팔았어요. +${g}G`; save(); renderFish(); });
-  on('[data-fsall]', b => { const k = b.dataset.fsall, n = me.inv[k], g = sell(k, n); fsMsg = `${ITEM[k]} ${n}개를 팔았어요. +${g}G`; save(); renderFish(); });
-  $('#fsAll') && ($('#fsAll').onclick = () => { let g = 0, n = 0; CATCH.forEach(k => { n += me.inv[k] || 0; g += sell(k, me.inv[k] || 0); }); fsMsg = `${n}개를 팔았어요. +${g.toLocaleString()}G`; save(); renderFish(); });
+  on('[data-fsall]', async b => { const k = b.dataset.fsall, n = me.inv[k]; if (!(n > 0)) return; if (!await confirmBox(`${ITEM[k] || k} ${n}개를 전부 팔까요? 되돌릴 수 없어요.`, '다 팔기', '아니요', true)) return; if (!((me.inv[k] || 0) >= n)) return; const g = sell(k, n); fsMsg = `${ITEM[k]} ${n}개를 팔았어요. +${g}G`; save(); renderFish(); });
+  $('#fsAll') && ($('#fsAll').onclick = async () => { const cnt = CATCH.reduce((t, k) => t + (me.inv[k] || 0), 0); if (!cnt) return; if (!await confirmBox(`생선 가게에 낚은 것 ${cnt}개를 전부 팔까요? 되돌릴 수 없어요.`, '전부 팔기', '아니요', true)) return; let g = 0, n = 0; CATCH.forEach(k => { n += me.inv[k] || 0; g += sell(k, me.inv[k] || 0); }); fsMsg = `${n}개를 팔았어요. +${g.toLocaleString()}G`; save(); renderFish(); });
   on('[data-rod]', b => { const i = +b.dataset.rod, r = RODS[i]; if (me.coin < r.price || i !== rodLv() + 1) return; me.coin -= r.price; me.rod = i; fsMsg = `${withJosa(r.name, '을', '를')} 샀어요! ${r.desc}`; save(); renderFish(); });
 }
 // ===== 탐사 (혼자 · 시간 게이지 전투, 협동은 준비 중) · 설계서: docs/exploration_design.md =====
@@ -6644,8 +6644,8 @@ function renderVeg(){
   on('[data-vgpg]', b => { vgPg = +b.dataset.vgpg; renderVeg(); });
   const sell = (k, n) => { n = Math.min(n, me.inv[k]); if (n <= 0) return 0; me.inv[k] -= n; const g = partyMul(sellPay(k, cropBase(k)) * n); me.coin += g; trEv('sell', { g }); return g; };
   on('[data-vsell]', b => { const g = sell(b.dataset.vsell, 1); vgMsg = `${ITEM[b.dataset.vsell]} 1개를 팔았어요. +${g}G`; save(); hud(); renderVeg(); });
-  on('[data-vsall]', b => { const k = b.dataset.vsall, n = me.inv[k], g = sell(k, n); vgMsg = `${ITEM[k]} ${n}개를 팔았어요. +${g}G`; save(); hud(); renderVeg(); });
-  $('#vgAll') && ($('#vgAll').onclick = () => { let g = 0, n = 0; have.forEach(k => { n += me.inv[k] || 0; g += sell(k, me.inv[k] || 0); }); vgMsg = `${n}개를 팔았어요. +${g.toLocaleString()}G`; save(); hud(); renderVeg(); });
+  on('[data-vsall]', async b => { const k = b.dataset.vsall, n = me.inv[k]; if (!(n > 0)) return; if (!await confirmBox(`${ITEM[k] || k} ${n}개를 전부 팔까요? 되돌릴 수 없어요.`, '다 팔기', '아니요', true)) return; if (!((me.inv[k] || 0) >= n)) return; const g = sell(k, n); vgMsg = `${ITEM[k]} ${n}개를 팔았어요. +${g}G`; save(); hud(); renderVeg(); });
+  $('#vgAll') && ($('#vgAll').onclick = async () => { const cnt = have.reduce((t, k) => t + (me.inv[k] || 0), 0); if (!cnt) return; if (!await confirmBox(`채소 가게에 ${cnt}개를 전부 팔까요? 되돌릴 수 없어요.`, '전부 팔기', '아니요', true)) return; let g = 0, n = 0; have.forEach(k => { n += me.inv[k] || 0; g += sell(k, me.inv[k] || 0); }); vgMsg = `${n}개를 팔았어요. +${g.toLocaleString()}G`; save(); hud(); renderVeg(); });
 }
 
 // ===== 사육장 =====
