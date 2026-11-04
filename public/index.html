@@ -25,6 +25,7 @@
 html.big{--fs:17px;--fs-s:15px;--fs-h:18px;--fs-talk:19px}
 .jic{display:inline-block;width:1.5em;height:1.5em;vertical-align:middle;background:url(art/jobs.png?v=1) 0 0/1200% 100%;background-position:calc(var(--i)*100%/11) 0;image-rendering:pixelated}
 @media (max-height:760px){#xcv,#xmcv{width:auto!important;max-width:100%;max-height:30vh;margin:0 auto}}
+.xarbox{width:92px;height:92px;display:grid;place-items:center;border-radius:12px;background:radial-gradient(circle,rgba(255,255,255,.08),rgba(0,0,0,.25));border:2px solid rgba(255,255,255,.12);flex:none}.xarbox.t3{border-color:#c8d0d8}.xarbox.t4{border-color:#f0c040}.xarbox.t5{border-color:#9fe8ff;box-shadow:0 0 12px rgba(159,232,255,.35)}.xarneed{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.xarq{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.22);font-size:13px;min-width:0}.xarq span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.xarq b{color:#ff9a8a;font-size:12px}.xarq.ok b{color:#8af09a}.xarq .ic{width:22px;height:22px;flex:none}.xarg{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;background:#f0c040;color:#3a2a14;font-weight:800;font-size:12px;flex:none}.xarstep .xar0{height:32px;display:grid;place-items:center;color:var(--sub)}.xarstep img{display:block}
 .big .jic{width:34px;height:34px}.wstep{display:flex;align-items:center;justify-content:space-between;gap:2px;margin-top:12px}.wstep>div{position:relative;display:flex;flex-direction:column;align-items:center;flex:1;padding:4px 0;border:2px solid transparent;border-radius:10px;opacity:.55}.wstep>div.done{opacity:.85}.wstep>div.on{opacity:1;border-color:var(--gold);background:rgba(255,184,77,.14)}.wstep .wic{width:58px;height:58px}.wstep b{font-size:11px}.wstep small{font-size:10px;opacity:.8}.wstep i{position:absolute;top:-8px;font-style:normal;font-size:10px;font-weight:800;background:var(--gold);color:#2b1b3a;border-radius:6px;padding:0 5px}.wstep i.nx{background:#9fd0ff}.wstep em{font-style:normal;opacity:.5}
 .wbg{background-image:url(art/weapons_big.png?v=2)!important}
 .wic{display:inline-block;width:96px;height:96px;background:url(art/weapons_big.png?v=2) 0 0/500% 1200%;background-position:calc(var(--t)*100%/4) calc(var(--r)*100%/11);image-rendering:pixelated;flex:none}
@@ -1099,7 +1100,7 @@ const ICONS = ['coin','mana','p_red','p_blue','p_green','p_purple','herb','mush'
 const SF_IDS = ['jack', 'bat', 'ghost', 'skull', 'web', 'witch', 'eye', 'candy', 'wisp', 'rose', 'apple', 'fang'], SF_NAMES = ['잭오랜턴 열매', '박쥐 날개 꼬투리', '유령 꿀방울', '해골 씨주머니', '거미줄 솜열매', '마녀 모자 포자', '눈알 열매', '사탕옥수수 알', '도깨비불 꽈리', '검은 장미 열매', '독사과', '피빛 송곳니 열매'];
 const SF_INFO = Object.fromEntries(SF_IDS.map((k, i) => ['sf_' + k, { i, name: SF_NAMES[i] }]));
 const TL_ITEM = { tl_btn0: ['마틸다의 녹슨 단추', '100 년 동안 호숫가 흙 속에 있던 단추. 마틸다의 교복 무늬와 같아요. 귀에 대면 계단이 「삐걱.」 하는 소리가 나는 것 같아요.'], tl_btn1: ['되돌아온 내 단추', '마틸다에게 건넸던 내 단추. 졸업식 날 하늘에서 떨어져 돌아왔어요. 「마음 주머니에 넣어 뒀었어.」'], tl_btn2: ['단춧구멍 브로치', '단추 없는 단춧구멍에 리본을 단 브로치. 「단추 하나 없어도 예뻐.」 그 말이 제일 좋은 졸업 선물이었대요.'] };
-const ic = (k, extra='') => { if (k === 'cap_letter' && typeof capIc === 'function') return capIc(extra); if (typeof k === 'string' && k.startsWith('bl_') && typeof blnIc === 'function') return blnIc(k, extra); if (TL_ITEM[k]) return `<i class="ic" style="background:url(art/tilda_buttons.png?v=1) ${-32 * +k.slice(6)}px 0/96px 32px no-repeat;${extra}"></i>`; if (SF_INFO[k]) return `<i class="ic" style="background:url(art/hw_fruits.png?v=1) ${-32 * SF_INFO[k].i}px 0/${32 * 12}px 32px no-repeat;${extra}"></i>`; const P = POTION_INFO[k], G = !ICONS.includes(k) && typeof SEED_INFO !== 'undefined' && SEED_INFO[k], C = typeof CATCH_INFO !== 'undefined' && CATCH_INFO[k];
+const ic = (k, extra='') => { if (k === 'cap_letter' && typeof capIc === 'function') return capIc(extra); if (typeof k === 'string' && k.startsWith('bl_') && typeof blnIc === 'function') return blnIc(k, extra); if (typeof k === 'string' && k.startsWith('ar_') && typeof arIc === 'function') return arIc(k, extra); if (TL_ITEM[k]) return `<i class="ic" style="background:url(art/tilda_buttons.png?v=1) ${-32 * +k.slice(6)}px 0/96px 32px no-repeat;${extra}"></i>`; if (SF_INFO[k]) return `<i class="ic" style="background:url(art/hw_fruits.png?v=1) ${-32 * SF_INFO[k].i}px 0/${32 * 12}px 32px no-repeat;${extra}"></i>`; const P = POTION_INFO[k], G = !ICONS.includes(k) && typeof SEED_INFO !== 'undefined' && SEED_INFO[k], C = typeof CATCH_INFO !== 'undefined' && CATCH_INFO[k];
   if (C) return `<i class="ic" style="background:url(art/${C.sheet}.png?v=${FISH_ART_V}) ${-32 * (C.si ?? C.i)}px 0/${32 * C.n}px 32px no-repeat;${extra}"></i>`;
   const D = typeof DISH_INFO !== 'undefined' && DISH_INFO[k]; if (D) return `<i class="ic" style="background:url(art/dishes.png?v=${DISH_ART_V}) ${-32 * D.i}px 0/${32 * DISH.length}px 32px no-repeat;${extra}"></i>`;
   if (G) return `<i class="ic" style="background-image:url(art/plants.png?v=4);background-position:${-32 * (G.ic % 10)}px ${-32 * Math.floor(G.ic / 10)}px;${extra}"></i>`;
@@ -2362,6 +2363,91 @@ const xSpUsed = ex => Object.values(ex.sp || {}).reduce((a, v) => a + v, 0), xSp
 const xAiSp = (job, L) => { const T = 3 * (L - 1); return { hp: Math.round(T * .3), [XMAIN[job]]: Math.round(T * .5), spd: Math.round(T * .2) }; };   // 동료: 체력 30% · 주 스탯 50% · 속도 20%
 const xStTot = (ex, k) => xSt(ex.job, xLv(ex.exp).L, k) + ((ex.sp || {})[k] || 0) * XSPV[k];
 const XWN = { warrior: '전투 도끼', black: '구부러진 지팡이', thief: '단검', bard: '레이피어', time: '고리 지팡이', alch: '연금 지팡이', white: '수정 지팡이', druid: '나무 지팡이', cleric: '철퇴와 방패', knight: '롱소드와 방패', summon: '다이아 지팡이', gadget: '석궁' }, XWT = ['기본', '청동', '강철', '황금', '미스릴'], XWC = [[500, 3], [1800, 6], [5000, 12], [14000, 25]];   // 강화 비용: 골드 · 마나석
+// ===== 방어구: 한 칸 · 직업마다 이름과 생김새가 달라요 (몸에는 안 입고 능력치만 올라요) =====
+//   ex.ar = 단계(0~5) · 효능은 모의 전투로 맞췄어요 (신전의 트롤 왕 · Lv50 5인 파티 승률 23% → 34 · 45 · 55 · 60 · 65%)
+const XAN = { warrior: '전사의 판금 갑옷', knight: '기사의 은빛 갑옷', cleric: '성직자의 사슬 갑옷', black: '흑마법사의 로브', white: '백마법사의 로브', time: '시간술사의 로브', alch: '연금술사의 로브', summon: '소환사의 로브', druid: '드루이드의 잎새 로브', thief: '도적의 가죽옷', bard: '음유시인의 가죽 조끼', gadget: '기계공의 가죽 작업복' };
+const XAK = { warrior: 'plate', knight: 'plate', cleric: 'plate', black: 'robe', white: 'robe', time: 'robe', alch: 'robe', summon: 'robe', druid: 'robe', thief: 'leather', bard: 'leather', gadget: 'leather' };
+const XAT = ['없음', '견습', '숙련', '정예', '영웅', '전설'], XAMAX = 5;
+const XAV = [[0, 0], [.07, .02], [.11, .04], [.16, .055], [.19, .065], [.22, .075]];   // [최대 체력, 받는 피해 감소]
+const XAC = [   // 다음 단계로: 레벨 · 골드 · 재료 · 성공 확률 (실패하면 골드와 증표·문장·심장석 절반을 잃어요)
+  { L: 10, g: 1000, it: { mana: 3, silk: 6, ar_mark: 3 }, p: 1 },
+  { L: 20, g: 3000, it: { mana: 6, slime: 8, ar_mark: 6, ar_crest: 1 }, p: 1 },
+  { L: 30, g: 8000, it: { mana: 10, scale: 10, ar_mark: 10, ar_crest: 3 }, p: .8 },
+  { L: 40, g: 16000, it: { mana: 15, feather: 10, ar_mark: 14, ar_crest: 5, ar_heart: 1 }, p: .6 },
+  { L: 48, g: 28000, it: { mana: 25, egg: 6, ar_mark: 20, ar_crest: 8, ar_heart: 3 }, p: .4 } ];
+ITEM.ar_mark = '정예의 증표'; ITEM.ar_crest = '보스의 문장'; ITEM.ar_heart = '트롤 왕의 심장석';
+const xArV = () => XAV[Math.min(XAMAX, xEx().ar || 0)];
+// 방어구 재료 드롭: 증표는 강한 몬스터(숲길 20% · 그 밖 45%) · 문장은 묘지부터 보스(60%) · 심장석은 신전 보스만(25%)
+function xArDrop(kind, ri){ const o = {}; if (kind === 'elite' && Math.random() < (ri ? .45 : .2)) o.ar_mark = 1; if (kind === 'boss' && ri >= 1 && Math.random() < .6) o.ar_crest = 1; if (kind === 'boss' && ri === 3 && Math.random() < .25) o.ar_heart = 1; return o; }
+// 도트: 17×16 · 반쪽만 그리고 거울로 (o 테두리 · b 바탕 · d 그늘 · l 밝음 · t 단계 장식 · k 아주 어두움 · s 셔츠)
+const XA_MASK = {
+  plate: ['.ooo.....', 'otllooooo', 'otlllbbbb', 'ottlbbbbb', '.ootdbbbb', '..odbbbbb', '..odbbbbb', '..odbbbbb', '..odbbbbb', '..odbbbbb', '..otttttt', '..odbbbbb', '..odbblbb', '...odbbbb', '...ottttt', '....ooooo'],
+  robe: ['......ooo', '.....oddd', '....odddd', '....odkkk', '....odkkk', '...otdbbb', '..odbbbbt', '.odbbbbbt', 'odbbbbbbt', 'odlbbbbbt', 'otodbbbbt', '.o.odbbbt', '...odbbbt', '..odbbbbt', '..otttttt', '..ooooooo'],
+  leather: ['..ooo....', '.oddlo...', 'odlbblsss', 'odbbbbdss', 'odbbbbdss', 'odbbbbdss', 'odbtbbdss', '.odbtbdss', '..odbtdss', '..odbbdss', '..otttttt', '..odbbbtk', '..odbbbbb', '..odbbblb', '..odbbbbb', '..ooooooo'] };
+const XA_EY = { plate: 4, robe: 7, leather: 3 };   // 문양 5×5 위쪽 줄
+const XA_JOB = {   // 바탕 · 그늘 · 밝음 · 문양 색 · 문양 (a 문양 색 · w 흰색 · k 어두움)
+  warrior: ['#6a6f7a', '#474a54', '#a07850', '#d84a3a', ['aa.k.', 'aaak.', 'aa.k.', '...k.', '...k.']],
+  knight: ['#b8c2d0', '#7c8698', '#e8eef6', '#3a6ad8', ['aaaaa', 'aawaa', 'awwwa', '.awa.', '..a..']],
+  cleric: ['#9aa0aa', '#6a707a', '#f2ecd8', '#e8b830', ['..a..', '..a..', 'aaaaa', '..a..', '..a..']],
+  black: ['#3a2a5a', '#24183c', '#5a4680', '#ff8a3a', ['..a..', '.aa..', '.aaa.', 'aawaa', '.aaa.']],
+  white: ['#e6e6f0', '#b0b0c8', '#ffffff', '#e8b830', ['..a..', '.aaa.', 'aaaaa', '.aaa.', '.a.a.']],
+  time: ['#2a4a7a', '#1a3050', '#4a70a8', '#7ae0ff', ['.aaa.', 'a.k.a', 'a.kka', 'a...a', '.aaa.']],
+  alch: ['#4a6a3a', '#2e4824', '#6e9050', '#ff6ab0', ['.kkk.', '..k..', '.kak.', 'kaaak', 'kkkkk']],
+  summon: ['#5a2a6a', '#3a1846', '#7c4a8e', '#7af0ff', ['..a..', '.awa.', 'aawaa', '.aaa.', '..a..']],
+  druid: ['#3a6a3a', '#244824', '#5e9a4a', '#a8e060', ['...aa', '..aaa', '.aaa.', 'aaa..', 'k....']],
+  thief: ['#4a3a3e', '#2c2228', '#6a5458', '#d0d8e0', ['....w', '...w.', 'a.w..', '.a...', 'a.a..']],
+  bard: ['#8a3e34', '#5c2620', '#b0604c', '#ffd866', ['..aa.', '..a.a', '..a..', 'aaa..', 'aa...']],
+  gadget: ['#6a5038', '#463424', '#8e7050', '#e0a040', ['.a.a.', 'aaaaa', 'aa.aa', 'aaaaa', '.a.a.']] };
+const XA_TRIM = ['#5a5a66', '#9a7a5a', '#b87333', '#c8d0d8', '#f0c040', '#9fe8ff'];
+const xArImgC = {};
+function xArImg(job, t){   // 방어구 그림 (dataURL)
+  const key = job + t; if (xArImgC[key]) return xArImgC[key];
+  const W = 17, H = 16, P = 2, c = document.createElement('canvas'); c.width = (W + P * 2); c.height = (H + P * 2); const g = c.getContext('2d'), J = XA_JOB[job] || XA_JOB.warrior, kind = XAK[job] || 'plate', M = XA_MASK[kind].map(r => r + r.slice(0, 8).split('').reverse().join(''));
+  const col = { o: '#1a1420', b: J[0], d: J[1], l: J[2], t: XA_TRIM[t] || XA_TRIM[0], k: '#120c18', s: '#e8dcc0' };
+  if (job === 'cleric') col.s = '#f2ecd8';
+  const px = (x, y, f) => { g.fillStyle = f; g.fillRect(x + P, y + P, 1, 1); };
+  M.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === '.') return; let f = col[ch]; if (job === 'cleric' && ch === 'b' && (x + y) % 2) f = col.d; px(x, y, f); }));   // 성직자: 사슬 무늬
+  const ey = XA_EY[kind]; J[4].forEach((r, y) => [...r].forEach((ch, x) => { if (ch === '.') return; px(6 + x, ey + y, ch === 'a' ? J[3] : ch === 'w' ? '#ffffff' : '#1a1420'); }));
+  if (job === 'druid') [[3, 13], [6, 13], [10, 13], [13, 13], [4, 12], [12, 12]].forEach(([x, y]) => px(x, y, '#a8e060'));   // 잎새 자락
+  if (job === 'warrior') [[1, 1], [2, 1], [14, 1], [15, 1], [1, 2], [15, 2]].forEach(([x, y]) => px(x, y, '#c89a60'));   // 털 어깨
+  if (job === 'gadget') [[3, 3], [13, 3]].forEach(([x, y]) => px(x, y, '#e0a040'));   // 나사
+  if (job === 'bard') [[7, 2], [8, 3], [9, 2]].forEach(([x, y]) => px(x, y, '#ffffff'));   // 레이스 깃
+  if (job === 'black'){ px(8, -1, J[1]); px(8, -2, '#1a1420'); px(7, -1, '#1a1420'); px(9, -1, '#1a1420'); }   // 뾰족 두건
+  if (job === 'alch') [[5, 12], [11, 12]].forEach(([x, y]) => { px(x, y - 1, '#1a1420'); px(x, y, '#ff6ab0'); });   // 허리 약병
+  if (job === 'summon') [[2, 9], [14, 9]].forEach(([x, y]) => px(x, y, '#7af0ff'));   // 소매 보석
+  if (job === 'white') [[6, 5], [10, 5], [7, 5], [9, 5]].forEach(([x, y]) => px(x, y, '#e8b830'));   // 금빛 깃
+  if (job === 'time') [[3, 13], [13, 13]].forEach(([x, y]) => px(x, y, '#7ae0ff'));   // 시곗바늘 자락
+  if (t >= 3){ const ty = kind === 'robe' ? 14 : 10; for (let x = 3; x <= 13; x += 2) if (M[ty][x] === 't') px(x, ty, '#ffffff'); }   // 정예부터 장식에 징
+  if (t >= 4) [[kind === 'robe' ? 5 : 1, kind === 'robe' ? 5 : 1], [kind === 'robe' ? 11 : 15, kind === 'robe' ? 5 : 1]].forEach(([x, y]) => px(x, y, XA_TRIM[t]));   // 영웅부터 어깨·두건 끝 장식
+  if (t >= 5) [[0, 0], [16, 3], [1, 9], [15, 12], [8, -1]].forEach(([x, y]) => { px(x, y, '#ffffff'); });   // 전설: 반짝
+  return (xArImgC[key] = c.toDataURL());
+}
+const xArPic = (job, t, sz = 84, extra = '') => `<img class="xarimg" src="${xArImg(job, t)}" width="${sz}" height="${Math.round(sz * 20 / 21)}" alt="" style="image-rendering:pixelated;${t >= 4 ? `filter:drop-shadow(0 0 ${t >= 5 ? 6 : 3}px ${XA_TRIM[t]}88);` : ''}${extra}">`;
+const arIc = (() => { const u = {}; const draw = k => { const c = document.createElement('canvas'); c.width = c.height = 16; const g = c.getContext('2d'), R = (x, y, w, h, f) => { g.fillStyle = f; g.fillRect(x, y, w, h); };
+    if (k === 'ar_mark'){ R(5, 1, 6, 4, '#3a6ad8'); R(6, 1, 1, 4, '#d84a3a'); R(9, 1, 1, 4, '#d84a3a'); R(4, 5, 8, 8, '#1a1420'); R(5, 6, 6, 6, '#c8d0d8'); R(6, 7, 4, 4, '#ffffff'); R(7, 8, 2, 2, '#9aa0aa'); }
+    else if (k === 'ar_crest'){ R(3, 2, 10, 1, '#1a1420'); R(2, 3, 12, 6, '#1a1420'); R(3, 9, 10, 2, '#1a1420'); R(5, 11, 6, 2, '#1a1420'); R(7, 13, 2, 1, '#1a1420'); R(3, 3, 10, 6, '#b8303a'); R(4, 9, 8, 2, '#b8303a'); R(6, 11, 4, 1, '#b8303a'); R(7, 4, 2, 6, '#f0c040'); R(5, 6, 6, 2, '#f0c040'); }
+    else { R(5, 1, 6, 1, '#1a1420'); R(3, 2, 10, 2, '#1a1420'); R(2, 4, 12, 5, '#1a1420'); R(3, 9, 10, 3, '#1a1420'); R(5, 12, 6, 2, '#1a1420'); R(4, 3, 8, 1, '#ffb040'); R(3, 4, 10, 5, '#e07020'); R(4, 9, 8, 3, '#b04810'); R(6, 12, 4, 1, '#b04810'); R(5, 4, 3, 3, '#ffe0a0'); R(6, 5, 1, 1, '#ffffff'); }
+    return c.toDataURL(); };
+  return (k, extra = '') => `<i class="ic" style="background:url(${u[k] || (u[k] = draw(k))}) 0 0/100% 100% no-repeat;image-rendering:pixelated;${extra}"></i>`; })();
+function xArmorView(frame, ex, job){   // 탐사 → 방어구 강화 창
+  const ar = Math.min(XAMAX, ex.ar || 0), nx = ar < XAMAX ? XAC[ar] : null, L = xLv(ex.exp).L, V = XAV[ar];
+  const have = k => k === 'gold' ? me.coin : (me.inv[k] || 0), need = nx ? [['gold', nx.g], ...Object.entries(nx.it)] : [];
+  const okL = nx && L >= nx.L, okAll = nx && okL && need.every(([k, n]) => have(k) >= n);
+  const pct = v => `${Math.round(v * 1000) / 10}%`, eff = i => i ? `체력 +${pct(XAV[i][0])} · 피해 −${pct(XAV[i][1])}` : '효과 없음';
+  const row = ([k, n]) => `<div class="xarq${have(k) >= n ? ' ok' : ''}">${k === 'gold' ? '<span class="xarg">G</span>' : ic(k)}<span>${k === 'gold' ? '골드' : esc(ITEM[k] || k)}</span><b>${have(k)} / ${n}</b></div>`;
+  frame(null, '방어구 강화', `${job.n} · ${XAN[ex.job]}`, `<section class="sec"><div class="box px" style="padding:14px"><div style="display:flex;gap:14px;align-items:center"><div class="xarbox t${ar}">${xArPic(ex.job, Math.max(0, ar), 84, ar ? '' : 'opacity:.35;filter:grayscale(1)')}</div><div style="flex:1"><b>${ar ? `${XAT[ar]} ${XAN[ex.job]}` : `${XAN[ex.job]} (아직 없어요)`}</b><div class="s sub">강화 ${ar} / ${XAMAX} · ${eff(ar)}</div>${nx ? `<div class="s" style="margin-top:6px">다음: <b>${XAT[ar + 1]}</b> (${eff(ar + 1)})</div>` : '<div class="s" style="margin-top:6px;color:var(--gold)">최고 단계예요!</div>'}</div></div>
+    ${nx ? `<div class="s" style="margin-top:10px">${okL ? '' : `<b style="color:#ff9a8a">레벨 ${nx.L} 이상이어야 해요 (지금 ${L})</b> · `}성공 확률 <b>${Math.round(nx.p * 100)}%</b>${nx.p < 1 ? ' · 실패하면 골드와 증표·문장·심장석 절반을 잃어요' : ''}</div><div class="xarneed">${need.map(row).join('')}</div>
+    <button class="btn go" id="aup" style="width:100%;margin-top:8px" ${okAll ? '' : 'disabled'}>${okAll ? `${XAT[ar + 1]} 단계로 강화${nx.p < 1 ? ` (${Math.round(nx.p * 100)}%)` : ''}` : !okL ? `레벨 ${nx.L} 이상이에요` : '재료가 모자라요'}</button>` : ''}
+    <div class="s sub" style="margin-top:8px">증표는 강한 몬스터, 문장은 묘지부터 보스, 심장석은 호박달 신전의 트롤 왕에게서만 가끔 나와요. 탐사를 끝까지 마쳐야 가방에 들어와요.</div>
+    <div class="wstep xarstep">${XAT.map((n, i) => `<div class="${i === ar ? 'on' : i < ar ? 'done' : ''}">${i ? xArPic(ex.job, i, 34) : '<span class="xar0">–</span>'}<b>${n}</b><small>${i ? `+${Math.round(XAV[i][0] * 100)}%` : '기본'}</small>${i === ar ? '<i>지금</i>' : i === ar + 1 ? '<i class="nx">다음</i>' : ''}</div>`).join('<em>›</em>')}</div></div></section><div style="display:flex;gap:8px"><button class="btn" id="aok" style="flex:1">돌아가기</button></div>`);
+  const up = $('#aup'); if (up) up.onclick = async () => { if (!okAll) return; if (nx.p < 1 && !(await confirmBox(`성공 확률은 ${Math.round(nx.p * 100)}%예요. 실패하면 골드 ${nx.g}와 증표·문장·심장석의 절반을 잃어요. 강화할까요?`, '강화하기', '그만둘래요', true))) return;
+    if (!need.every(([k, n]) => have(k) >= n)) return toast('재료가 모자라요');
+    me.coin -= nx.g; const win = Math.random() < nx.p;
+    Object.entries(nx.it).forEach(([k, n]) => { const lose = win ? n : k.startsWith('ar_') ? Math.ceil(n / 2) : 0; me.inv[k] = Math.max(0, (me.inv[k] || 0) - lose); });
+    if (win){ ex.ar = ar + 1; sfx('pop'); toast(`${XAT[ar + 1]} ${XAN[ex.job]} 완성!`); } else { sfx('lose'); toast('강화에 실패했어요....... 재료 일부가 부서졌어요'); }
+    saveNow(); hud(); renderExplore(); };
+  $('#aok').onclick = () => { xv = { view: 'lobby' }; renderExplore(); };
+}
 const xRand = a => a[Math.floor(Math.random() * a.length)];
 function xEx(){ me.ex = me.ex || { exp: 0, d: '', n: 0, xv: 3 }; xExpMove(me.ex); if (me.ex.d !== todayKey()){ me.ex.d = todayKey(); me.ex.n = 0; } const r = me.ex.run; if (r){ r.loot = r.loot || {}; r.loot.gold = r.loot.gold || 0; r.loot.exp = r.loot.exp || 0; r.loot.items = r.loot.items || {}; r.pool = r.pool || []; } if (me.ex.sk) xSkEx(me.ex); return me.ex; }
 const xSt = (job, L, k) => Math.round(XJ[job][k][0] + XJ[job][k][1] * (L - 1));
@@ -2374,7 +2460,7 @@ const xMkUnit = (job, L, name, ai, hp, mp, sk) => { sk = sk || xAiSk(L); const u
   xAll(job).forEach(o => { const lv = sk[o.b + '_' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, mp0: o.mp, mp: xSkMp(o, lv, L), sv: o.sv == null ? o.sv : o.sv * xPw(o, lv), pet: o.pet ? { ...o.pet, k: o.pet.k * xPw(o, lv) } : o.pet, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv), pct: o.pct == null || o.ds || o.t !== 'heal' ? o.pct : xPct(o, lv) }); });   // 설명이 고정된 소생 스킬은 그대로
   const P = u.pas; ['hp', 'atk', 'mag', 'spd'].forEach(k => { if (P[k]) u[k === 'hp' ? 'mhp' : k] = Math.round(u[k === 'hp' ? 'mhp' : k] * (1 + P[k])); }); u.wp = ai ? Math.min(4, Math.floor((L - 1) / 12)) : (xEx().wp || 0); const wm = (1 + .08 * u.wp) * (!ai && dbuff('dfire') ? 1.05 : 1); ['atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k] * wm); });   // 무기 강화 한 단계마다 +8%
   u.dr = P.def || 0; u.vamp = P.vamp || 0; u.crit = P.crit || 0; u.dodge = P.dodge || 0; u.survLeft = P.surv ? 1 : 0; u.pets = [];
-  if (!ai){ const ms = XROLE[job] === 'melee' ? 'atk' : XROLE[job] === 'heal' ? 'heal' : 'mag'; u.spd = Math.round(u.spd * (1 + famV('xspd'))); u[ms] = Math.round(u[ms] * (1 + famV('xmain'))); u.mhp = Math.round(u.mhp * (1 + famV('xhp'))); u.dr += famV('xdr'); u.dodge += famV('xdodge'); u.res = famV('xres'); u.bossK = famV('xboss'); u.healIn = famV('xheal'); }   // 사역마 맹약
+  if (!ai){ const ms = XROLE[job] === 'melee' ? 'atk' : XROLE[job] === 'heal' ? 'heal' : 'mag'; u.spd = Math.round(u.spd * (1 + famV('xspd'))); u[ms] = Math.round(u[ms] * (1 + famV('xmain'))); u.mhp = Math.round(u.mhp * (1 + famV('xhp'))); u.dr += famV('xdr'); u.dodge += famV('xdodge'); u.res = famV('xres'); u.bossK = famV('xboss'); u.healIn = famV('xheal'); { const A = xArV(); u.mhp = Math.round(u.mhp * (1 + A[0])); u.dr += A[1]; } }   // 사역마 맹약
   u.hp = hp ?? u.mhp; u.mp = mp ?? u.mmp; return u; };
 let xv = null, xb = null, xMsg = '', xTick = 0;   // xv 화면 상태, xb 전투 상태
 function xParty(){ const ex = xEx(), L = xLv(ex.exp).L, run = ex.run; return [Object.assign(xMkUnit(ex.job, L, me.nick, false, run?.p?.[0]?.hp, run?.p?.[0]?.mp, xSkEx(ex)), { hum: true, uid: myId() })]; }   // 혼자일 땐 나 혼자 (AI 동료 없음, 협동은 같은 방 플레이어만)
@@ -2515,13 +2601,13 @@ function renderExplore(){
     frame(null, '탐사', `오늘 ${Math.min(ex.n, XDAY)} / ${XDAY}회 다녀왔어요`, `${head}<section class="sec">${secH('가는 곳')}<div class="box px"><div class="li"><div class="main"><span class="t">${R.n} · ${R.tier}</span><span class="d" style="white-space:normal">${R.dir}쪽 길 · ${R.min}분 · 입장 ${R.fee}G · 몬스터 Lv ${R.lv[0]}~${R.lv[1]}${lv.L < R.need ? ` · 내 레벨 ${R.need} 이상` : ''}</span></div></div>
       </div>
       ${xpPanel(lv)}
-      <button class="btn" id="xwp" style="width:100%">무기 강화 · ${XWN[ex.job]} (${XWT[ex.wp || 0]})</button><button class="btn" id="xst" style="width:100%">스탯${xSpPts(ex) > 0 ? ` · 남은 포인트 ${xSpPts(ex)}` : ''}</button><button class="btn" id="xtree" style="width:100%">스킬 트리${xPts(ex) > 0 ? ` · 남은 포인트 ${xPts(ex)}` : ''}</button>${xpV ? '' : `<div class="frow" style="display:flex;gap:8px"><button class="btn go" id="xgo" style="flex:1" ${me.coin < R.fee || !okL || ex.n >= XDAY ? 'disabled' : ''}>${ex.n >= XDAY ? `오늘은 다 다녀왔어요 (${XDAY}회)` : !okL ? `레벨 ${R.need} 이상이에요` : me.coin < R.fee ? `골드가 모자라요 (${R.fee}G)` : `${XCOOP ? '혼자 가기' : '출발하기'} · ${R.fee}G`}</button><button class="btn" data-xp="create" style="flex:1" ${!okL ? 'disabled' : ''}>파티 모집하기</button></div>`}${hint(xMsg, '')}</section><div style="display:flex;gap:8px">${back}</div>`);
+      <div style="display:flex;gap:8px"><button class="btn" id="xwp" style="flex:1;min-width:0">무기 강화 · ${XWT[ex.wp || 0]}</button><button class="btn" id="xar" style="flex:1;min-width:0">방어구 강화 · ${XAT[Math.min(XAMAX, ex.ar || 0)]}</button></div><button class="btn" id="xst" style="width:100%">스탯${xSpPts(ex) > 0 ? ` · 남은 포인트 ${xSpPts(ex)}` : ''}</button><button class="btn" id="xtree" style="width:100%">스킬 트리${xPts(ex) > 0 ? ` · 남은 포인트 ${xPts(ex)}` : ''}</button>${xpV ? '' : `<div class="frow" style="display:flex;gap:8px"><button class="btn go" id="xgo" style="flex:1" ${me.coin < R.fee || !okL || ex.n >= XDAY ? 'disabled' : ''}>${ex.n >= XDAY ? `오늘은 다 다녀왔어요 (${XDAY}회)` : !okL ? `레벨 ${R.need} 이상이에요` : me.coin < R.fee ? `골드가 모자라요 (${R.fee}G)` : `${XCOOP ? '혼자 가기' : '출발하기'} · ${R.fee}G`}</button><button class="btn" data-xp="create" style="flex:1" ${!okL ? 'disabled' : ''}>파티 모집하기</button></div>`}${hint(xMsg, '')}</section><div style="display:flex;gap:8px">${back}</div>`);
     on('[data-xr]', b => { xRgSel = +b.dataset.xr; if (xpRoom && xpV?.host === myId() && xpV.st === 'lobby') GDB.upd('xparty/' + xpRoom, { rg: xRgSel }); renderExplore(); });
     xpWire();
     $('#back').onclick = closeSheet;
     $('#xst').onclick = () => { xv = { view: 'stats', sel: XMAIN[ex.job] }; renderExplore(); };
     $('#xtree').onclick = () => { xv = { view: 'tree', sel: '0_0' }; renderExplore(); };
-    $('#xwp').onclick = () => { xv = { view: 'weapon' }; renderExplore(); };
+    $('#xwp').onclick = () => { xv = { view: 'weapon' }; renderExplore(); }; $('#xar').onclick = () => { xv = { view: 'armor' }; renderExplore(); };
     const go = $('#xgo'); if (go) go.onclick = () => { if (ex.n >= XDAY) return toast(`탐사는 하루에 ${XDAY}번까지예요`); me.coin -= xReg().fee; ex.n++; ex.run = { rg: xRgSel, mod: xRand(XMODS), pool: xShuffle(xReg().mon).slice(0, 4), start: now2(), end: now2() + xReg().min * 6e4, prog: 0, loot: { gold: 0, exp: 0, items: {} }, buff: 0, p: null, node: null }; save(); hud(); xv = { view: 'march' }; xMsg = ''; xM = null; renderExplore(); };
     return;
   }
@@ -2542,6 +2628,7 @@ function renderExplore(){
     $('#srs').onclick = () => confirmBox(`스탯 포인트를 모두 돌려받아요. ${XSRESET}G가 들어요.`, '초기화', '그만둘래요').then(ok => { if (!ok) return; if (xSpUsed(ex) === 0) return toast('찍은 포인트가 없어요'); if (me.coin < XSRESET) return toast('골드가 모자라요'); me.coin -= XSRESET; ex.sp = {}; save(); hud(); renderExplore(); });
     $('#sok').onclick = () => { xv = { view: 'lobby' }; renderExplore(); }; return;
   }
+  if (v === 'armor') return xArmorView(frame, ex, job);
   if (v === 'weapon'){
     const wp = ex.wp || 0, ri = ORDER_J.indexOf(ex.job), nx = wp < 4 ? XWC[wp] : null, mana = me.inv.mana || 0, ok = nx && me.coin >= nx[0] && mana >= nx[1];
     frame(null, '무기 강화', `${job.n} · ${XWN[ex.job]}`, `<section class="sec"><div class="box px" style="padding:14px"><div style="display:flex;gap:14px;align-items:center"><span class="wic wbg" style="--t:${wp};--r:${ri}"></span><div style="flex:1"><b>${XWT[wp]} ${XWN[ex.job]}</b><div class="s sub">강화 ${wp} / 4 · 공격·마법·치유 +${wp * 8}%</div>${nx ? `<div class="s" style="margin-top:6px">다음: <b>${XWT[wp + 1]}</b> (+${(wp + 1) * 8}%)</div>` : '<div class="s" style="margin-top:6px;color:var(--gold)">최고 단계예요!</div>'}</div></div>
@@ -2998,7 +3085,7 @@ function xcoOnBt(v){
 }
 function xcoMemberWin(B, rew){   // 이긴 보상: 경험치·골드는 같고, 드롭은 사람마다 따로 굴려요
   B.rewarded = true; const run = xEx().run; if (!run || !rew) return; const rm = (run.mod?.rew || 1) * (.9 + Math.random() * .2); run.loot.exp += Math.round(rew.exp * rm); run.loot.gold += Math.round(rew.gold * rm) + (+rew.st?.[myId()] || 0); let drop = '';
-  if (Math.random() < (rew.kind === 'battle' ? .3 : .8)){ const it = xDrop(rew.kind === 'boss' ? xReg().rare : xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; drop = ` · ${ITEM[it] || it}`; }
+  if (Math.random() < (rew.kind === 'battle' ? .3 : .8)){ const it = xDrop(rew.kind === 'boss' ? xReg().rare : xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; drop = ` · ${ITEM[it] || it}`; } Object.entries(xArDrop(rew.kind === 'boss' ? 'boss' : rew.kind === 'elite' ? 'elite' : '', XRG.indexOf(xReg()))).forEach(([k, c]) => { run.loot.items[k] = (run.loot.items[k] || 0) + c; drop += ` · ${ITEM[k]}`; });
   save(); $('#xlog') && ($('#xlog').textContent = `승리! 골드 +${rew.gold} · 경험치 +${rew.exp}${drop}`); const el = $('#xcmd'); if (el) el.innerHTML = '<div class="xwait">잠시 뒤 다시 걸어요.......</div>';
 }
 // ----- 전투 -----
@@ -3451,7 +3538,7 @@ function xLoop0(){
 function xWin(){
   sfx('win'); const B = xb, run = xEx().run; B.over = true; clearInterval(xTick); const mL = B.foes[0].mL; let exp = 0, gold = 0; B.foes.forEach(f => { exp += Math.round(8 * (1 + .45 * (mL - 1)) * f.k); gold += Math.round(6 * (1 + .3 * (mL - 1)) * f.k * (.8 + Math.random() * .4)); });
   { const n = B.n0 || 1, sc = n > 1 ? (1 + .15 * (n - 1)) / n : 1; exp = Math.round(exp * sc); gold = Math.round(gold * sc); }   // 몬스터가 인원만큼 늘었으니 보상은 나눠서 (파티 보너스 +15%/명)
-  const rm = (run.mod?.rew || 1) * (.9 + Math.random() * .2); run.loot.exp += Math.round(exp * rm); run.loot.gold += Math.round(gold * rm); let drop = ''; if (Math.random() < (B.kind === 'battle' ? .3 : .8)){ const it = xDrop(B.kind === 'boss' ? xReg().rare : xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; drop = ` · ${ITEM[it] || it}`; }
+  const rm = (run.mod?.rew || 1) * (.9 + Math.random() * .2); run.loot.exp += Math.round(exp * rm); run.loot.gold += Math.round(gold * rm); let drop = ''; if (Math.random() < (B.kind === 'battle' ? .3 : .8)){ const it = xDrop(B.kind === 'boss' ? xReg().rare : xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; drop = ` · ${ITEM[it] || it}`; } Object.entries(xArDrop(B.kind === 'boss' ? 'boss' : B.kind === 'elite' ? 'elite' : '', XRG.indexOf(xReg()))).forEach(([k, c]) => { run.loot.items[k] = (run.loot.items[k] || 0) + c; drop += ` · ${ITEM[k]}`; });
   xSaveParty(); B.party.forEach(u => { if (u.hp <= 0 && !u.gone) u.hp = Math.max(1, Math.round(u.mhp * .2)); }); run.p = B.party.map(u => ({ hp: u.hp, mp: u.mp }));
   if (run.co){ B.party.forEach(u => { if (!u.gone) xcoHp[u.uid] = [u.hp, u.mp]; }); const mu = xMine(B); run.p = [{ hp: mu.hp, mp: mu.mp }]; B.won = true; B.rew = { exp, gold, kind: B.kind, st: B.stl || null }; }
   const kind = B.kind; delete run.bt; xAdd(kind === 'boss' ? 'boss' : kind); save();
