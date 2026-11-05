@@ -15043,6 +15043,8 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
 //   raid/run/<방> = { u 사람마다 전투 능력치, in 명령·피하기, bt 방장이 올리는 전투 장면 (rd = 레이드 상태: 예고·남은 시간) }
 //   보스 세기: 인원과 상관없이 늘 12 명 기준 (tools/raid_mock/raid_balance.json · 12 명 모의 전투 승률 50 %) · 많이 모여야 이길 수 있어요
 const RD_BOSS = [[65782, 333], [205367, 552], [439322, 1154], [805499, 1432]], RD_LIM = 300e3, RD_SIDE = 6;
+const RD_CAL = [[15, 25.69, 2.901], [25, 50.34, 3.093], [35, 78.47, 4.763], [45, 113.17, 4.679]];   // 12 명 모의 전투로 맞춘 세기 (레벨 → 체력 배율 · 공격 배율) · 사이와 바깥은 이어서 그려요
+function rdScale(L){ const C = RD_CAL; let i = C.findIndex(c => c[0] >= L); if (i <= 0) i = i === 0 ? 1 : C.length - 1; const [a, b] = [C[i - 1], C[i]], k = (L - a[0]) / (b[0] - a[0]); return [a[1] + (b[1] - a[1]) * k, Math.max(a[2], b[2]) === b[2] && L > b[0] ? b[2] : a[2] + (b[2] - a[2]) * k]; }
 const RD_SAY = [
   { side: '눈보라', all: '얼음 비', big: '빙하 내려찍기', warn: '얼음 거인이 숨을 크게 들이마셔요....', c: '#7FE6FF', fx: t => { t.fx.slow = { v: .3, t: 8 }; } },
   { side: '불꽃 숨결', all: '불비', big: '화산 포효', warn: '불꽃 용의 목이 붉게 달아올라요....', c: '#FF8A3A', fx: (t, b) => { t.fx.dot = { v: Math.max(1, Math.round(b.atk * .25)), t: 8, acc: 0 }; } },
@@ -15118,8 +15120,9 @@ function rdEnterRun(){
 function rdStartBattle(){
   if (!rdIsHost() || (xb && xb.raid && !xb.over)) return; const v = RD.v, f = v.f, [H, A] = RD_BOSS[f - 1];
   const party = xcoActive().map(u => xcoUnitFromBuild(u)); if (!party.length) return setTimeout(rdStartBattle, 800); party.forEach(u => { u.cdn = {}; });
-  const n = Math.max(1, party.length), F = RD_FL[f - 1], hp = H;
-  const boss = { id: 'e0', name: F.n, ic: '', rb: f - 1, lp: 16, big: 1, sc: 2.5, hh: 150, team: 'e', mhp: hp, hp, atk: A, spd: 12, g: 30, k: 8, aoe: false, sk: '', skn: '', mL: F.L, fx: {} };
+  const n = Math.max(1, party.length), F = RD_FL[f - 1], avgL = Math.round(party.reduce((s, u) => s + (u.L || 1), 0) / n), bL = Math.max(F.L, avgL);   // 레벨 높은 학생끼리 가도 늘 12 명 기준: 보스 레벨 = 층 레벨과 평균 레벨 중 높은 쪽
+  const [sK, aK] = rdScale(bL), hp = bL === F.L ? H : Math.round(310 * (1 + .35 * (bL - 1)) * XFOE * sK), atkV = bL === F.L ? A : Math.round(17 * (1 + .25 * (bL - 1)) * XFOE_A * aK);
+  const boss = { id: 'e0', name: F.n, ic: '', rb: f - 1, lp: 16, big: 1, sc: 2.5, hh: 150, team: 'e', mhp: hp, hp, atk: atkV, spd: 12, g: 30, k: 8, aoe: false, sk: '', skn: '', mL: bL, fx: {} };
   xb = { party, foes: [boss], kind: 'raid', log: `${F.f} 층 · ${F.n}`, turn: null, pick: null, over: false, last: performance.now(), buff: false, def: {}, fxs: [], floats: [], proj: [], n0: n, raid: { f, end: v.end || now2() + RD_LIM, tele: null, boom: null, bc: 0, seq: 0, n, lg: 30 } };
   xb.bn = Math.round(now2()) * 10 + (++xcoBn % 10); xb.tn = 0; xcoEv = []; xcoEvN = 0; rdShowBattle(); xcoPubBt(true);
 }

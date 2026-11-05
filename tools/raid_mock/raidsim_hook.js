@@ -13,7 +13,7 @@ window.__raidSim = (o) => {
       const u = xMkUnit(job, L, job + side + j, true, undefined, undefined, sk); u.id = 'p' + side + j;
       const wm = (1 + .08 * (o.wp || 0)) / (1 + .08 * Math.min(4, Math.floor((L - 1) / 12))); ['atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k] * wm); });
       const A = XAV[o.ar || 0]; u.mhp = Math.round(u.mhp * (1 + A[0])); u.dr += A[1]; u.hp = u.mhp; u.mp = u.mmp; u.cdn = {}; u.row = XROLE[job] === 'melee' ? 'f' : 'b'; u.pot = 2; u.side = side; party.push(u); }));
-    const f = (1 + .35 * (L - 1)) * XFOE, a = (1 + .25 * (L - 1)) * XFOE_A;
+    const bL = o.bL || L, f = (1 + .35 * (bL - 1)) * XFOE, a = (1 + .25 * (bL - 1)) * XFOE_A;   // bL: 보스 레벨 (층 레벨) · L: 학생 레벨
     const boss = { id: 'e0', name: '보스', ic: '', lp: 16, big: 1, sc: 3, hh: 168, team: 'e', mhp: Math.round(o.hpK * f * o.s), atk: Math.round(o.atK * a * (o.am ?? Math.sqrt(o.s))), spd: o.spd || 12, g: 30, k: 8, aoe: false, sk: '', skn: '', mL: L, fx: {} };
     boss.hp = boss.mhp;
     const B = xb = { party, foes: [boss], kind: 'boss', log: '', turn: null, pick: null, over: false, last: 0, buff: false, def: {}, fxs: [], floats: [], proj: [], n0: 1 };
