@@ -236,7 +236,7 @@ def warm_room():
     R.floor(planks(['#B8865A', '#AC7C52', '#C08E60', '#B28256'], '#7A5234'))
     R.walls('#F4E2CC', '#EAD2B8', '#A8784E', trim='#E8B880')
     R.window('L', 40, w=18, glass=('#F0B060', '#F8D088', '#FFF0C8'), frame='#8A5A34', moon=False); curtains(R, 'L', 40, w=18, col='#E8A0B0')
-    gift_shelf(R, 'R', 20); cross_sign(R, 'R', 66)
+    med_cabinet(R, 'R', 24); cross_sign(R, 'R', 66)
     R.window('R', 88, w=18, glass=('#F0B060', '#F8D088', '#FFF0C8'), frame='#8A5A34', moon=False); curtains(R, 'R', 88, w=18, col='#E8A0B0')
     for i, x in enumerate((3.5, 7.8, 12.1)):
         R.obj('bed', [(int(x), 1), (int(x), 2)], bed(R, x, .4, frame='#F4F0E8', blanket=['#F0A0A8', '#9AC8E8', '#F4D088'][i], sheet='#FFFFFF'),
