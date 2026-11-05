@@ -18,7 +18,7 @@ window.__raidSim = (o) => {
     boss.hp = boss.mhp;
     const B = xb = { party, foes: [boss], kind: 'boss', log: '', turn: null, pick: null, over: false, last: 0, buff: false, def: {}, fxs: [], floats: [], proj: [], n0: 1 };
     let t = 0, fin = '', bc = 0, big = null; const dt = .25;
-    const hitSome = (L2, k, fx) => L2.forEach(tg => { if (tg.hp <= 0) return; xHit(boss, tg, boss.atk * k * (.85 + Math.random() * .3) * dodge(), '#ff6a6a'); if (tg.hp > 0 && fx) fx(tg); });
+    const hitSome = (L2, k, fx) => L2.forEach(tg => { if (tg.hp <= 0) return; xHit(boss, tg, boss.atk * k / party.length * (.85 + Math.random() * .3) * dodge(), '#ff6a6a'); if (tg.hp > 0 && fx) fx(tg); });   // 다인 공격: 참여한 수만큼 나눠 맞아요
     const bfx = [t2 => { t2.fx.slow = { v: .3, t: 8 }; }, t2 => { t2.fx.dot = { v: Math.max(1, Math.round(boss.atk * .25)), t: 8, acc: 0 }; }, t2 => { t2.fx.vuln = { v: .15, t: 8 }; }, t2 => { t2.g = Math.min(t2.g, -20); }][o.b || 0];
     while (t < lim){ t += dt;
       if (!xAlive(party).length){ fin = 'wipe'; break; }
@@ -34,7 +34,7 @@ window.__raidSim = (o) => {
           if (ph === 3 && bc % 4 === 0){ big = { at: t + 6, hp0: boss.hp }; continue; }                 // 큰 기술 준비 (6 초)
           if (ph >= 2 && bc % 3 === 0){ hitSome(A2, .55, bfx); continue; }                              // 전체 공격
           if (bc % 2 === 0){ const sd = Math.random() < .5 ? 0 : 1; hitSome(A2.filter(p => p.side === sd), .9, bfx); continue; }   // 한쪽 공격
-          const tg = xFoeTarget() || A2[0]; if (!tg || tg.hp <= 0) continue; xHit(boss, tg, boss.atk * 1.5 * (.85 + Math.random() * .3) * dodge(), '#ff6a6a'); continue; }   // 한 명 세게
+          const fr = A2.filter(p => !p.side), tg = (fr.length ? fr : A2)[Math.floor(Math.random() * (fr.length || A2.length))]; if (!tg || tg.hp <= 0) continue; xHit(boss, tg, boss.atk * (.85 + Math.random() * .3) * dodge(), '#ff6a6a'); continue; }   // 일반 공격: 앞줄부터
         if (x.pot > 0 && x.hp / x.mhp < .35){ x.pot--; x.hp = Math.min(x.mhp, x.hp + Math.round(x.mhp * .5)); x.g = 0; } else xAI(x);
         if (boss.hp <= 0) break; }
       if (!acted && boss.g < g0 - 8) boss.g = g0 - 8;   // 지연을 여러 번 맞아도 한 번에 8 칸까지만 밀려요
