@@ -1,4 +1,4 @@
-# 친구 인형 「겹이」: 우리 반 열두 색 조각보 인형 (누비와 같은 32 칸 · 같은 틀) · 짜이는 단계 3 칸 (실 공 → 반쯤 → 다 짜임)
+# 친구 인형 「겹이」: 우리 반 열두 색 조각보 인형 (누비와 같은 32 칸 · 같은 틀) · 세라 선생님이 꿰매는 단계 3 칸 (실 공 → 반쯤 → 다 됨)
 #   python3 nubi_friend.py → public/art/nubi_friend.png (96×32) · tools/nubi_mock/nubi_friend_prev.png
 import os, sys
 import numpy as np
