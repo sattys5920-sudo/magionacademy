@@ -1,0 +1,115 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>누비 화면</title>
+<style>
+@font-face{font-family:G11;src:url(../../public/fonts/Galmuri11.full.woff2)}
+@font-face{font-family:G11B;src:url(../../public/fonts/Galmuri11-Bold.full.woff2)}
+@font-face{font-family:Pretendard;src:url(../../public/fonts/Pretendard-Regular.woff2)}
+:root{--bg:#140D1E;--panel:#211733;--panel2:#2B1F45;--line2:#4E3C72;--accent:#FF9A3C;--text:#F6F0FF;--sub:#BDB0D6;--gold:#FFD866;--f-body:Pretendard,system-ui,sans-serif;--f-pxb:G11B,monospace;--f-px:G11,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:#0b0712;font-family:var(--f-body);color:var(--text);display:flex;gap:18px;padding:18px;width:max-content}
+.ph{position:relative;width:360px;height:640px;background:var(--bg);overflow:hidden;border-radius:18px;flex:none}
+.cap{position:absolute;left:0;right:0;top:-0px;font:12px var(--f-px);color:#8a7aa8;text-align:center;padding:6px;z-index:9}
+.scene{position:absolute;left:0;top:30px;width:360px;height:430px;background:url(scene_old.png) -194px -64px/592px 516px no-repeat;image-rendering:pixelated}
+.scene.warm{background-image:url(scene_warm.png)}
+.nb{position:absolute;left:148px;top:148px;width:64px;height:64px;background:url(../../public/art/nubi_s.png) 0 0/768px 192px no-repeat;image-rendering:pixelated}
+.dark{position:absolute;left:0;top:30px;width:360px;height:430px;background:radial-gradient(circle at 186px 168px,rgba(0,0,0,0) 0 14px,rgba(6,3,14,.82) 60px)}
+.npcui{position:absolute;left:0;right:0;bottom:0;padding:0 10px 14px}
+.npcp{background:var(--panel);border:1px solid var(--line2);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.npch{display:flex;align-items:center;gap:8px}.npch b{font-family:var(--f-pxb)}.npch small{display:block;color:#9480B4;font-size:13px}
+.npcf{width:48px;height:48px;background:#3A2E5A;border-radius:12px;overflow:hidden;flex-shrink:0;position:relative}
+.npcf i{position:absolute;inset:0;background:url(../../public/art/nubi_s.png) 0 -6px/576px 144px no-repeat;image-rendering:pixelated}
+.npct{background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;min-height:46px;line-height:1.55;font-size:17px}
+.frow{display:flex;gap:6px}.btn{flex:1;background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:10px;text-align:center;font:14px var(--f-pxb);color:var(--text)}
+.btn.go{background:var(--accent);border-color:#C86A1E;color:#2A1506}
+.card{position:absolute;left:24px;right:24px;top:70px;background:#efe6d2;color:#3a2c26;border-radius:10px;padding:14px 16px;box-shadow:0 0 0 3px #b8a888, 0 10px 30px rgba(0,0,0,.6)}
+.card h3{margin:0 0 8px;font:16px var(--f-pxb);color:#5a3a2a}
+.card li{list-style:none;font-size:14px;line-height:1.9;border-bottom:1px dashed #c8b898}
+.card ul{margin:0;padding:0}
+.sheet{position:absolute;inset:30px 0 0 0;background:var(--panel);display:flex;flex-direction:column}
+.sh-h{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line2)}
+.sh-h b{font:17px var(--f-pxb)}.sh-h span{font:13px var(--f-pxb);color:var(--gold)}
+canvas{display:block;margin:14px auto 0;border-radius:10px}
+.gauge{margin:14px 16px 0;height:14px;background:#140D1E;border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+.gauge i{display:block;height:100%;background:linear-gradient(90deg,#8ad8c8,#ffe9a8)}
+.gl{display:flex;justify-content:space-between;margin:6px 16px 0;font:12px var(--f-pxb);color:var(--sub)}
+.stars{position:absolute;left:0;top:30px;width:360px;height:430px;pointer-events:none}
+.top100{position:absolute;left:12px;right:12px;top:40px;background:rgba(33,23,51,.9);border:1px solid var(--line2);border-radius:12px;padding:8px 12px;display:flex;align-items:center;gap:10px}
+.top100 .gauge{flex:1;margin:0}.top100 b{font:13px var(--f-pxb);color:var(--gold)}
+</style></head><body>
+
+<!-- 1 첫 만남 -->
+<div class="ph"><div class="cap">처음 · 관리자가 연 날 밤</div>
+  <div class="scene"></div><i class="nb" style="background-position:-256px -128px"></i><div class="dark"></div>
+  <div class="npcui"><div class="npcp">
+    <div class="npch"><div class="npcf"><i></i></div><div><b>누비</b><small>낡은 양호실</small></div></div>
+    <div class="npct">이르믄.</div>
+    <div class="frow"><div class="btn go">이름을 말한다</div><div class="btn">....넌 뭐야?</div></div>
+  </div></div>
+</div>
+
+<!-- 2 7 일째 반전 -->
+<div class="ph"><div class="cap">7 일째 · 터진 날</div>
+  <div class="scene"></div><i class="nb" style="background-position:-448px -128px"></i>
+  <div style="position:absolute;left:0;top:30px;width:360px;height:430px;background:rgba(6,3,14,.55)"></div>
+  <div class="card"><h3>{나}의 바늘땀</h3><ul>
+    <li>얼음 거인에게 쓰러진 날</li><li>물약을 일곱 번 망친 날</li><li>무서운 꿈을 꾼 밤</li><li>그냥 조금 지친 날</li></ul></div>
+  <div class="npcui"><div class="npcp">
+    <div class="npch"><div class="npcf"><i style="background-position:-336px -102px"></i></div><div><b>누비</b><small>낡은 양호실</small></div></div>
+    <div class="npct">....들켰다.......</div>
+  </div></div>
+</div>
+
+<!-- 3 바늘땀 풀기 -->
+<div class="ph"><div class="cap">9 일째 · 바늘땀 풀기</div>
+  <div class="sheet">
+    <div class="sh-h"><b>바늘땀 풀기</b><span>???의 바늘땀</span></div>
+    <canvas id="cv" width="320" height="300"></canvas>
+    <div class="gauge"><i style="width:58%"></i></div>
+    <div class="gl"><span>우리 반</span><span>7 / 12</span></div>
+    <div class="npcui"><div class="npcp">
+      <div class="npch"><div class="npcf"><i style="background-position:-384px -54px"></i></div><div><b>누비</b><small>낡은 양호실</small></div></div>
+      <div class="npct">....네 꺼는. 여기.</div>
+    </div></div>
+  </div>
+</div>
+
+<!-- 4 100 % -->
+<div class="ph"><div class="cap">10 일째 · 100 %</div>
+  <div class="scene warm"></div><i class="nb" style="background-position:-512px 0"></i><canvas class="stars" id="st" width="360" height="430"></canvas>
+  <div class="top100"><b>우리 반</b><div class="gauge"><i style="width:100%"></i></div><b>12 / 12</b></div>
+  <div class="npcui"><div class="npcp">
+    <div class="npch"><div class="npcf"><i style="background-position:-384px -6px"></i></div><div><b>누비</b><small>따뜻한 양호실</small></div></div>
+    <div class="npct">....아. 아, 아. 누비. ....말이, 똑바로 나와.</div>
+  </div></div>
+</div>
+
+<script>
+// 바늘땀 풀기 창: 헝겊 조각 가까이 · 바늘땀 줄 (앞쪽은 이미 빠져서 구멍만) · 바늘과 빠져나오는 실
+const c = document.getElementById('cv'), g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+const S = 4; const W = 80, H = 75;   // 4 배 도트
+const px = (x, y, col) => { g.fillStyle = col; g.fillRect(x * S, y * S, S, S); };
+for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){ const n = ((x * 7 + y * 13) % 5); px(x, y, (x + y) % 2 ? ['#8d8683','#857e7c','#918a87'][n % 3] : ['#7d7674','#878080','#827b79'][n % 3]); }
+for (let x = 0; x < W; x++){ px(x, 0, '#5a5452'); px(x, H - 1, '#5a5452'); } for (let y = 0; y < H; y++){ px(0, y, '#5a5452'); px(W - 1, y, '#5a5452'); }
+// 바늘땀 경로 (지그재그)
+const pts = []; for (let i = 0; i <= 12; i++) pts.push([10 + i * 5, 34 + (i % 2 ? -8 : 8)]);
+const done = 7;
+for (let i = 0; i < 12; i++){
+  const [x0, y0] = pts[i], [x1, y1] = pts[i + 1], n = 10;
+  for (let k = 0; k <= n; k++){ const x = Math.round(x0 + (x1 - x0) * k / n), y = Math.round(y0 + (y1 - y0) * k / n);
+    if (i < done){ if (k === 0 || k === n) px(x, y, '#3a3436'); }                       // 빠진 자리: 바늘구멍만
+    else { px(x, y, '#1e181c'); if (k % 3 === 0) px(x, y - 1, '#4e484b'); } }
+}
+// 이름 (가려짐)
+g.fillStyle = '#5a5452'; g.font = '16px G11B'; g.fillText('? ? ?', 128, 270);
+// 빠져나오는 실 (구부러져 위로)
+const [nx, ny] = pts[done]; g.strokeStyle = '#2a2428'; g.lineWidth = 4; g.beginPath(); g.moveTo(nx * S, ny * S); g.bezierCurveTo(nx * S - 20, ny * S - 70, nx * S - 70, ny * S - 60, nx * S - 60, ny * S - 120); g.stroke();
+// 바늘
+g.save(); g.translate(nx * S + 6, ny * S - 4); g.rotate(-0.7); g.fillStyle = '#e8e8f0'; g.fillRect(0, -3, 46, 6); g.fillStyle = '#a8a8b8'; g.fillRect(36, -3, 10, 6); g.fillStyle = '#7a7a8a'; g.fillRect(40, -1, 4, 2); g.restore();
+// 별가루
+for (const [x, y] of [[40, 60], [60, 120], [30, 150], [90, 80], [70, 40]]){ g.fillStyle = '#ffe9a8'; g.fillRect(x, y, 4, 4); g.fillStyle = '#fff'; g.fillRect(x + 1, y + 1, 2, 2); }
+// 손가락 안내 (점선 화살표 없이 손끝 동그라미만)
+g.strokeStyle = 'rgba(255,233,168,.9)'; g.lineWidth = 3; g.beginPath(); g.arc(pts[done + 1][0] * S, pts[done + 1][1] * S, 14, 0, 7); g.stroke();
+// 100 %: 별가루
+const s = document.getElementById('st').getContext('2d');
+for (let i = 0; i < 70; i++){ const x = (i * 97) % 360, y = (i * 53) % 420, r = i % 3 + 1; s.fillStyle = i % 4 ? '#ffe9a8' : '#ffffff'; s.globalAlpha = .5 + (i % 5) / 10; s.fillRect(x, y, r * 2, r * 2); }
+</script>
+</body></html>
