@@ -2659,6 +2659,7 @@ function renderExplore(){
   }
   if (v === 'armor') return xArmorView(frame, ex, job);
   if (v === 'acc') return rdAccView(frame);
+  if (v === 'rdres') return rdResView(frame);
   if (v === 'weapon'){
     const wp = ex.wp || 0, ri = ORDER_J.indexOf(ex.job), nx = wp < 4 ? XWC[wp] : null, mana = me.inv.mana || 0, ok = nx && me.coin >= nx[0] && mana >= nx[1];
     frame(null, '무기 강화', `${job.n} · ${XWN[ex.job]}`, `<section class="sec"><div class="box px" style="padding:14px"><div style="display:flex;gap:14px;align-items:center"><span class="wic wbg" style="--t:${wp};--r:${ri}"></span><div style="flex:1"><b>${XWT[wp]} ${XWN[ex.job]}</b><div class="s sub">강화 ${wp} / 4 · 공격·마법·치유 +${wp * 8}%</div>${nx ? `<div class="s" style="margin-top:6px">다음: <b>${XWT[wp + 1]}</b> (+${(wp + 1) * 8}%)</div>` : '<div class="s" style="margin-top:6px;color:var(--gold)">최고 단계예요!</div>'}</div></div>
@@ -15010,7 +15011,7 @@ World.onAct = (prev => (m, o, a) => {
   return prev ? prev(m, o, a) : undefined; })(World.onAct);
 // ---------- 거울 탑: 층 고르기 (1 층이 가장 약해요) ----------
 function rdTower(){
-  if (!rdOpen()) return toast('거울이 닫혀 있어요'); if (xb && xb.raid && !xb.over) return rdShowBattle(); if (RD.id){ RD.showLobby = true; rdListRooms(); return rdLobbyRender(); }
+  if (!rdOpen()) return toast('거울이 닫혀 있어요'); if (xb && xb.raid && !xb.over) return rdShowBattle(); if (xb && xb.raid && xb.rdCh && xb.rdCh.pick.length < xb.rdCh.n){ xv = { view: 'rdres' }; return openSheet('home', 'explore'); } if (RD.id){ RD.showLobby = true; rdListRooms(); return rdLobbyRender(); }
   const left = rdLeft();
   const o = $('#rdx') || document.body.appendChild(Object.assign(document.createElement('div'), { id: 'rdx' }));
   o.innerHTML = `<div class="rdbox"><div class="rdhd"><b>거울 탑</b><span>오늘 ${left} / ${RD_DAY}</span><button class="rdcl" data-rdx="x">✕</button></div>
@@ -15175,11 +15176,16 @@ function rdEnd(win){
   const lg = $('#xlog'); if (lg) lg.textContent = B.log; const el = $('#xcmd');
   const boss = B.foes[0], R = win ? null : rdReward(B.raid.f, win, boss ? Math.max(0, boss.hp) / boss.mhp : 1);
   if (!win){ if (el){ el.dataset.k = 'rdend'; el.innerHTML = ''; } const sum = Object.entries(R.got).map(([id, c]) => `${id === 'gold' ? '골드' : ITEM[id] || id} ×${c}`).join(' · '); setTimeout(() => { if (xb === B){ rdQuit(); if (sum) toast(sum); } }, 2500); return; }   // 지면 잠깐 뒤 모두 나가요 (깎은 만큼 받은 건 알림으로)
-  B.rdCh = rdChestMake(B.raid.f); rdChestDraw(B);
+  B.rdCh = rdChestMake(B.raid.f); if (el){ el.dataset.k = 'rdend'; el.innerHTML = ''; } setTimeout(() => { if (xb === B){ xv = { view: 'rdres' }; if (sheetOn && sub === 'explore') renderExplore(); else openSheet('home', 'explore'); } }, 1500);   // 이기면 결과 창에서 보물상자 고르기
 }
-function rdChestDraw(B){ const el = $('#xcmd'); if (!el || !B.rdCh) return; const C = B.rdCh, done = C.pick.length >= C.n; el.dataset.k = 'rdend';
-  el.innerHTML = rdChestHtml(C) + `<button class="btn go" id="rdout" style="grid-column:1/-1" ${done ? '' : 'disabled'}>거울 너머로 돌아가기</button>`;
-  el.querySelectorAll('[data-rdch]').forEach(b => b.onclick = () => { rdChestPick(C, +b.dataset.rdch); rdChestDraw(B); }); $('#rdout').onclick = rdQuit; }
+function rdResView(frame){   // 레이드 결과 창 (탐사 결과처럼): 보물상자 6 개 중 3 개
+  const B = xb, C = B && B.rdCh; if (!C){ xv = null; return renderExplore(); } const F = RD_FL[B.raid.f - 1], left = C.n - C.pick.length, done = left <= 0;
+  const box = (x, i) => { const mine = C.pick.includes(i), show = mine || done; return `<button class="xch${mine ? ' on' : ''}${done && !mine ? ' off' : ''}${show ? '' : ' bob'}" data-rdch="${i}" ${show ? 'disabled' : ''} style="animation-delay:${i * .2}s"><img src="art/xchest_${!show ? 'closed' : mine ? 'open' : 'open_dim'}.png" width="80" height="80" alt="">${show ? `${rdChestIc(x, !mine)}<span class="t">${esc(rdChestName(x))}</span>` : '<span class="q">?</span>'}</button>`; };
+  frame(null, '레이드 결과', `거울 탑 ${F.f} 층`, `<section class="sec"><div class="box px" style="padding:14px;text-align:center"><b>${F.n}${josa(F.n, '을', '를')} 쓰러뜨렸어요!</b>${C.acc ? `<div class="s" style="margin-top:6px;color:var(--gold)">${rdAccIc(C.acc[0], 24)} ${RD_ACC.find(d => d.k === C.acc[0]).n} 새로 얻었어요!</div>` : ''}</div></section>
+    <section class="sec"><div class="xchh">${done ? '상자를 열었어요!' : `보물상자를 ${left} 개 골라요`}</div><div class="xchg">${C.o.map(box).join('')}</div></section>
+    <div style="display:flex;gap:8px"><button class="btn go" id="rdout" style="flex:1" ${done ? '' : 'disabled'}>${done ? '거울 너머로' : '상자를 골라요'}</button></div>`);
+  document.querySelectorAll('[data-rdch]').forEach(b => b.onclick = () => { rdChestPick(C, +b.dataset.rdch); renderExplore(); }); $('#rdout').onclick = rdQuit;
+}
 function rdQuit(){ const C = xb && xb.rdCh; if (C) while (C.pick.length < C.n){ const left = C.o.map((_, i) => i).filter(i => !C.pick.includes(i)); rdChestPick(C, left[Math.floor(Math.random() * left.length)]); }   // 다 안 고르고 나가면 남은 건 아무거나 열어 줘요
   const id = RD.id; rdDrop(); if (id) RD.id = null; xb = null; xv = null; closeSheet(); }
 // ---------- 화면: 배치 · 보스 · 예고 · 위쪽 막대 · 카드 ----------
@@ -15267,10 +15273,6 @@ function rdChestPick(C, i){ if (!C || C.pick.includes(i) || C.pick.length >= C.n
   if (x.id.startsWith('acc:')){ const r = rdAccGain(x.id.slice(4)); x.r = r; } else if (x.id === 'gold') me.coin += x.c; else me.inv[x.id] = (me.inv[x.id] || 0) + x.c; save(); hud(); sfx('chest'); }
 const rdChestName = x => x.id === 'gold' ? `골드 ×${x.c}` : x.id.startsWith('acc:') ? RD_ACC.find(d => d.k === x.id.slice(4)).n : `${ITEM[x.id] || x.id} ×${x.c}`;
 const rdChestIc = (x, dim) => x.id === 'gold' ? '<b class="xarg">G</b>' : x.id.startsWith('acc:') ? rdAccIc(x.id.slice(4), 24) : x.id === 'rd_shard' ? rdShardIc(dim ? 'opacity:.55' : '') : ic(x.id, dim ? 'opacity:.55' : '');
-function rdChestHtml(C){ const done = C.pick.length >= C.n;
-  return `<div class="rdchs"><div class="rdchh">보물상자 ${C.n - C.pick.length > 0 ? `${C.n - C.pick.length} 개 더 골라요` : ''}</div>${C.o.map((x, i) => { const mine = C.pick.includes(i), show = mine || done;
-    return `<button class="xch${mine ? ' on' : ''}${done && !mine ? ' off' : ''}${show ? '' : ' bob'}" data-rdch="${i}" ${show ? 'disabled' : ''} style="animation-delay:${i * .2}s"><img src="art/xchest_${!show ? 'closed' : mine ? 'open' : 'open_dim'}.png" width="56" height="56" alt="">${show ? `${rdChestIc(x, !mine)}<span class="t">${esc(rdChestName(x))}</span>` : '<span class="q">?</span>'}</button>`; }).join('')}
-    ${C.acc ? `<div class="rdrew"><span class="acc">${rdAccIc(C.acc[0], 24)}${RD_ACC.find(d => d.k === C.acc[0]).n} 새로 얻었어요!</span></div>` : ''}</div>`; }
 const rdRewHtml = R => `<div class="rdrew">${Object.entries(R.got).map(([id, c]) => `<span>${id === 'gold' ? '<b class="xarg">G</b>' : id === 'rd_shard' ? rdShardIc() : ic(id)}${id === 'gold' ? '골드' : esc(ITEM[id] || id)} ×${c}</span>`).join('')}${R.acc ? `<span class="acc">${rdAccIc(R.acc[0], 24)}${RD_ACC.find(d => d.k === R.acc[0]).n}${{ new: ' 새로 얻었어요!', up: ' 별이 올랐어요!', cp: '', max: '' }[R.acc[1]]}</span>` : ''}</div>`;
 // ---------- 장신구 창 (탐사 화면) ----------
 function rdAccView(frame){

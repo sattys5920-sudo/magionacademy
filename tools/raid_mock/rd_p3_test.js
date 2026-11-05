@@ -40,7 +40,7 @@ const JOBS = ['knight', 'white', 'black', 'warrior', 'bard', 'thief', 'druid', '
     if (st && st.tele === 'all' && all < 1){ await P[0].screenshot({ path: D + '/p2_all.png' }); all++; }
     if (LOW && Date.now() - t0 > (+process.argv[8] || 45000)) await P[0].evaluate(() => { const B = window.__T.xbGet(); if (B && B.foes[0].hp > 50) B.foes[0].hp = 50; });
     if (!st || st.over) break; }
-  await P[0].waitForTimeout(1500); await P[0].screenshot({ path: D + '/p2_host_end.png' }); await P[1].screenshot({ path: D + '/p2_mem_end.png' });
+  await P[0].waitForTimeout(3200); await P[0].screenshot({ path: D + '/p2_host_end.png' }); await P[1].screenshot({ path: D + '/p2_mem_end.png' });
   if (await P[1].$('[data-rdch]')){ for (const i of [0, 3, 5]){ await P[1].click(`[data-rdch="${i}"]`).catch(() => {}); await P[1].waitForTimeout(300); } await P[1].screenshot({ path: D + '/p3_chest_done.png' }); console.log('chest', await P[1].evaluate(() => document.querySelector('#rdout') && !document.querySelector('#rdout').disabled)); }
   console.log('room', await P[0].evaluate(() => JSON.stringify(window.__tree.raid && window.__tree.raid.room && Object.values(window.__tree.raid.room).map(r => [r.st, r.win]))));
   console.log('count', await P[1].evaluate(() => JSON.stringify(window.__T.me().raid)));
