@@ -1,0 +1,278 @@
+<title>스트로의 비밀 친구</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gowun+Dodum&display=swap">
+<style>
+/* 한 화면씩 넘겨 보는 시안: 위 단계 칩 (시작 · 1~6 일째 · 공개) → 그 단계 화면. 밤 호박밭 하나의 색으로만 (어두운 고정 화면) */
+:root{
+  --night:#17131F; --panel:#231C2E; --pad:#120E19; --line:#3A2F48;
+  --ink:#F4ECDD; --sub:#B9AA98; --straw:#E8C46A; --strawd:#9C7A2E; --crayon:#D9534F; --crow:#8FA3C8; --ok:#9AD8A0;
+  --f-disp:'Do Hyeon','Gowun Dodum',system-ui,sans-serif; --f-body:'Gowun Dodum',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{min-height:100%}
+body{background:var(--night);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 28px;box-sizing:border-box}
+*{box-sizing:border-box}
+.wrap{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+h1{font-family:var(--f-disp);font-weight:400;font-size:24px;margin:0;color:var(--straw);text-wrap:balance}
+.top small{display:block;color:var(--sub);font-size:13px}
+.steps{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.steps button{flex:none;font-family:var(--f-disp);font-size:15px;padding:8px 12px;border-radius:10px;border:2px solid var(--line);background:var(--pad);color:var(--sub);cursor:pointer;min-height:40px}
+.steps button.on{border-color:var(--straw);color:var(--straw);background:var(--panel)}
+.steps button:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--straw);outline-offset:2px}
+.scene{display:flex;flex-direction:column;gap:12px}
+.say{display:flex;gap:12px;align-items:flex-end;background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:10px 12px;min-height:96px}
+.say img{width:72px;height:auto;image-rendering:pixelated;flex:none;align-self:flex-end}
+.say div{min-width:0}
+.say b{display:block;font-family:var(--f-disp);font-weight:400;color:var(--straw);font-size:16px}
+.say p{margin:2px 0 0}
+.next{align-self:flex-end;font-family:var(--f-disp);font-size:16px;padding:9px 18px;border-radius:12px;border:0;background:var(--straw);color:#2A1E08;cursor:pointer;min-height:44px}
+.next[disabled]{background:var(--line);color:var(--sub);cursor:default}
+/* 제비뽑기: 스트로의 소매에서 지푸라기가 삐죽 */
+.draw{position:relative;height:210px;background:radial-gradient(ellipse at 50% 120%,#3a2a1c 0,var(--pad) 70%);border-radius:14px;border:2px solid var(--line);overflow:hidden}
+.sleeve{position:absolute;left:50%;bottom:-6px;width:150px;height:84px;transform:translateX(-50%);background:repeating-linear-gradient(90deg,#9E2E2E 0 10px,#7E2222 10px 20px);border-radius:40px 40px 6px 6px;border:3px solid #2A1414}
+.straw{position:absolute;bottom:60px;width:10px;border-radius:5px 5px 2px 2px;background:linear-gradient(90deg,var(--strawd),var(--straw) 45%,#F6DE98 55%,var(--strawd));border:2px solid #4A3410;cursor:pointer;transition:transform .5s cubic-bezier(.3,1.4,.6,1),opacity .4s;transform-origin:bottom center}
+.straw:hover{transform:translateY(-6px)}
+.straw.pulled{transform:translateY(-140px) rotate(8deg);opacity:0}
+.straw.gone{opacity:.25;pointer-events:none}
+.paper{position:absolute;left:50%;top:50%;width:min(300px,86%);transform:translate(-50%,-50%) scaleX(.05);opacity:0;background:#F3E3BC;color:#3A2A14;border:3px solid #6A4A1C;border-radius:6px;padding:14px 12px;text-align:center;transition:transform .6s cubic-bezier(.2,1.2,.4,1),opacity .3s;box-shadow:0 6px 0 rgba(0,0,0,.35);pointer-events:none;z-index:2}
+.paper.open{transform:translate(-50%,-50%) scaleX(1);opacity:1}
+.paper small{display:block;font-size:13px;color:#7A5A2A}
+.paper strong{display:block;font-family:var(--f-disp);font-weight:400;font-size:34px;color:var(--crayon);letter-spacing:2px}
+.hint{color:var(--sub);font-size:13px;text-align:center}
+/* 일지 탭 */
+.card{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.card h2{font-family:var(--f-disp);font-weight:400;font-size:18px;margin:0;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.card h2 span{font-family:var(--f-body);font-size:13px;color:var(--sub)}
+.target{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--sub)}
+.target b{font-family:var(--f-disp);font-weight:400;font-size:20px;color:var(--crayon)}
+.stamps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.stamps div{border:2px dashed var(--line);border-radius:10px;text-align:center;padding:6px 0;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}
+.stamps div.done{border-style:solid;border-color:var(--crayon);color:var(--crayon);font-family:var(--f-disp);font-size:14px}
+.stamps div.today{border-color:var(--straw);color:var(--straw)}
+.mission{background:var(--pad);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.mission .t{font-family:var(--f-disp);font-size:20px;color:var(--straw)}
+.mission .d{font-size:14px;color:var(--sub);margin-top:-6px}
+.items{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.items button,.choice button,.faces button{font:inherit;font-size:14px;color:var(--ink);background:var(--panel);border:2px solid var(--line);border-radius:10px;padding:8px 6px;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;text-align:center;line-height:1.3}
+.items button.on,.choice button.on,.faces button.on{border-color:var(--straw);background:#3A2E1C}
+.items i{width:12px;height:12px;border-radius:3px;flex:none;border:2px solid #2A1E10}
+.choice{display:flex;flex-direction:column;gap:6px}
+.choice button{justify-content:flex-start;text-align:left;padding:10px 12px}
+textarea{width:100%;min-height:84px;resize:none;border-radius:10px;border:2px solid var(--strawd);background:#F3E3BC;color:#3A2A14;font-family:var(--f-body);font-size:16px;line-height:1.5;padding:8px 10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.cnt{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}
+.err{color:var(--crayon);font-size:13px;min-height:1em}
+.send{font-family:var(--f-disp);font-size:16px;padding:9px 16px;border-radius:12px;border:0;background:var(--straw);color:#2A1E08;cursor:pointer;min-height:44px}
+.send[disabled]{background:var(--line);color:var(--sub);cursor:default}
+.doneMsg{font-family:var(--f-disp);font-size:16px;color:var(--ok)}
+.feed{display:flex;flex-direction:column;gap:8px}
+.it{display:flex;gap:10px;align-items:flex-start;background:var(--pad);border-radius:10px;padding:10px}
+.it .ic{flex:none;width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-family:var(--f-disp);font-size:13px;color:#2A1E08;background:var(--straw)}
+.it .ic.crow{background:var(--crow)}
+.it .ic.note{background:#F3E3BC}
+.it div{min-width:0;font-size:14px}
+.it small{display:block;color:var(--sub);font-size:12px}
+.it .crayon{font-family:var(--f-disp);font-size:16px;color:#F3E3BC;line-height:1.45}
+.empty{color:var(--sub);font-size:14px;text-align:center;padding:6px}
+.faces{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.faces button{flex-direction:column;gap:2px;padding:6px 2px}
+.faces .av{width:30px;height:30px;border-radius:50%;border:2px solid #2A1E10}
+.clues{display:flex;flex-wrap:wrap;gap:6px}
+.clues span{font-size:13px;background:var(--pad);border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--ink)}
+/* 공개 */
+#ring{display:block;width:100%;max-width:100%;aspect-ratio:1/1;border-radius:14px;border:2px solid var(--line);background:var(--pad);image-rendering:pixelated}
+.result{text-align:center;display:flex;flex-direction:column;gap:6px}
+.result .big{font-family:var(--f-disp);font-size:24px;color:var(--straw);text-wrap:balance}
+.result .sm{color:var(--sub);font-size:14px}
+.rewards{display:flex;flex-direction:column;gap:6px}
+.rewards div{display:flex;justify-content:space-between;gap:8px;background:var(--pad);border-radius:10px;padding:8px 12px;font-size:14px}
+.rewards div span:last-child{color:var(--sub);text-align:right}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:#2E2338;border:2px solid var(--crow);color:var(--ink);border-radius:12px;padding:10px 14px;font-size:14px;transition:all .3s;pointer-events:none;max-width:calc(100% - 32px);text-align:center;z-index:9}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="top"><h1>스트로의 비밀 친구</h1><small>시안 · 위 단계를 눌러 하루씩 넘겨 봐요 · 나는 「민준」</small></div>
+  <div class="steps" id="steps"></div>
+  <div class="scene" id="scene"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/*STRO*/
+const NAMES = ['민준','서아','도윤','하린','시우','유나','다은','준서','수아','예준','채원','지호'];   // 고리 순서: 앞 사람이 뒷사람을 챙겨요 (마지막 지호 → 민준)
+const COL = ['#E8A04C','#F28BA8','#7FB8E8','#9AD88A','#C9A2F0','#F0D26A','#E87F6A','#6FD0C0','#B8C4D8','#D8A07A','#A0D8F0','#8FA3C8'];
+const ME = 0, TARGET = 1, GIVER = 11;
+const S = { step: 'intro', sent: {}, guess: null, introI: 0, drawn: false };
+const STEPS = [['intro','시작'],['d1','1 일째'],['d2','2 일째'],['d3','3 일째'],['d4','4 일째'],['d5','5 일째'],['d6','6 일째'],['rev','7 일째 밤']];
+const $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+let tt = 0; const toast = t => { const e = $('#toast'); e.textContent = t; e.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => e.classList.remove('on'), 2400); };
+const say = (face, text) => `<div class="say"><img src="${STRO[face]}" alt="스트로"><div><b>스트로</b><p>${text}</p></div></div>`;
+
+// 지호(내 비밀 친구)가 날마다 보낸 것 · 까마귀 소문
+const GOT = {
+  1: { k: '선물', ic: '', t: '호박 쿠키 ×2', s: '창가에 짚으로 묶은 꾸러미가 놓여 있었어요' },
+  2: { k: '쪽지', ic: 'note', t: '어제 광장에서 넘어질 뻔한 거 봤어. 다친 데 없지? 오늘도 힘내!', crayon: 1 },
+  3: { k: '방', ic: '', t: '짚 꾸러미 (은방울꽃 한 송이)', s: '내 방 바닥에서 주웠어요' },
+  4: { k: '힌트', ic: 'note', t: '나는 듀모른 기숙사야', crayon: 1 },
+  5: { k: '편지', ic: 'note', t: '닷새 동안 몰래 챙기느라 두근두근했어. 내가 누군지 맞힐 수 있을까? 힌트는 아침형 인간!', crayon: 1 },
+};
+const RUMOR = { 1: '오늘 아침에 낚시를 했대', 2: '오늘 물약을 두 번 끓였대', 3: '밤에 탐사를 다녀왔대', 4: '낮에 요리를 했대', 5: '오늘 채집을 아주 많이 했대' };
+const MISSION = {
+  1: ['몰래 선물', '가방에서 하나 골라요. 까마귀가 서아 방 창가에 놓고 가요'],
+  2: ['응원 쪽지', '50 자까지 · 이름이나 개인 정보는 쓸 수 없어요'],
+  3: ['방에 몰래 두고 오기', '서아 방에 놀러 가서 짚 꾸러미를 두고 와요'],
+  4: ['나에 대한 힌트 하나', '진짜 내 정보 세 개 중 하나를 골라 보내요'],
+  5: ['마지막 편지', '80 자까지 · 맞혀 보라고 해도 좋아요'],
+};
+const BAG = [['호박 쿠키', '#E8A04C'], ['은방울꽃', '#F4F0E0'], ['달빛 이슬', '#9FC8F0'], ['구운 밤', '#9C6A3A'], ['네잎클로버', '#7FC86A'], ['별사과', '#E8564C']];
+const CLUE = ['나는 엠버킬른 기숙사야', '탐사에서 나는 기사야', '나는 캇파랑 제일 친해'];
+const BAD = ['바보', '멍청', '미친', '꺼져', '죽어', '씨발', 'ㅅㅂ', '병신'];
+function check(t){
+  const s = t.replace(/\s+/g, ''); if (!s) return '내용을 써 주세요.';
+  if (/\d[\d\-\s]{6,}\d/.test(t) || /@|https?:|\.com|\.kr/i.test(t)) return '전화번호나 주소 같은 개인 정보는 쓸 수 없어요.';
+  if (BAD.some(w => s.includes(w))) return '고운 말로 써 줄래요?';
+  if (NAMES.some(n => s.includes(n))) return '친구 이름은 쓸 수 없어요. 들키면 안 되잖아요.';
+  return '';
+}
+
+function steps(){
+  $('#steps').innerHTML = STEPS.map(([k, n]) => `<button data-st="${k}" class="${S.step === k ? 'on' : ''}">${n}</button>`).join('');
+  document.querySelectorAll('[data-st]').forEach(b => b.onclick = () => { S.step = b.dataset.st; render(); });
+  const on = $('#steps .on'); if (on) on.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+}
+function render(){ steps(); cancelAnimationFrame(ringRaf); ({ intro, rev }[S.step] || day)(); }
+
+// ---------- 시작 연출 + 제비뽑기 ----------
+const INTRO = [
+  [4, '저, 저기.... 잠깐만.'],
+  [0, '나 밤마다 호박밭에 서서 다들 보거든. 누가 늦게까지 물약 끓이는지, 누가 낚시하다 졸았는지.......'],
+  [1, '근데 그렇게 몰래 지켜보는 거, 생각보다 따뜻한 일이더라.'],
+  [3, '그래서 말인데.... 우리 다 같이 해 볼래? 몰래 지켜 주는 친구 놀이.'],
+  [0, '내 소매에서 지푸라기 하나만 뽑아 줘. 거기 적힌 친구가 네 비밀 친구야.'],
+];
+function intro(){
+  const i = S.introI, last = i >= INTRO.length - 1;
+  $('#scene').innerHTML = `${S.drawn ? say(1, '서아구나. 쉿, 아무한테도 말하면 안 돼. 선물이랑 쪽지는 내 까마귀들이 몰래 날라 줄게. 걔들 입은 무거워.') : say(INTRO[i][0], INTRO[i][1])}
+    ${last ? `<div class="draw" id="draw"><div class="sleeve"></div>${[0, 1, 2, 3, 4].map(k => `<button class="straw" data-k="${k}" aria-label="지푸라기 ${k + 1}" style="left:calc(50% - 50px + ${k * 22}px);height:${70 + (k * 37 % 5) * 9}px;transform:rotate(${(k - 2) * 7}deg)"></button>`).join('')}
+      <div class="paper" id="paper"><small>내가 몰래 챙겨 줄 친구</small><strong>서아</strong><small>엿새 동안 · 들키지 않게</small></div></div>
+      <div class="hint">${S.drawn ? '이제 1 일째로 넘어가 봐요' : '지푸라기 하나를 눌러 뽑아요'}</div>` : ''}
+    ${last ? (S.drawn ? '<button class="next" id="go1">1 일째로</button>' : '') : '<button class="next" id="nx">다음</button>'}`;
+  const nx = $('#nx'); if (nx) nx.onclick = () => { S.introI++; intro(); };
+  const g1 = $('#go1'); if (g1) g1.onclick = () => { S.step = 'd1'; render(); };
+  if (S.drawn){ $('#paper').classList.add('open'); document.querySelectorAll('.straw').forEach(b => b.classList.add('gone')); return; }
+  document.querySelectorAll('.straw').forEach(b => b.onclick = () => {
+    b.classList.add('pulled'); document.querySelectorAll('.straw').forEach(o => o !== b && o.classList.add('gone'));
+    setTimeout(() => { S.drawn = true; intro(); }, 650);
+  });
+}
+
+// ---------- 1 ~ 6 일째: 일지 「비밀 친구」 탭 ----------
+function day(){
+  const d = +S.step.slice(1);
+  const stamps = [1, 2, 3, 4, 5].map(k => `<div class="${S.sent[k] ? 'done' : k === d ? 'today' : ''}">${S.sent[k] ? '완료' : k + ' 일째'}</div>`).join('');
+  const recv = [1, 2, 3, 4, 5].filter(k => k <= Math.min(d, 5)).map(k => {
+    const g = GOT[k], r = RUMOR[k];
+    const a = `<div class="it"><span class="ic ${g.ic}">${g.k}</span><div>${g.crayon ? `<span class="crayon">${esc(g.t)}</span>` : esc(g.t)}<small>${k} 일째 · 비밀 친구${g.s ? ' · ' + g.s : ''}</small></div></div>`;
+    const b = `<div class="it"><span class="ic crow">소문</span><div>까악. 네 비밀 친구는 ${r}.<small>${k} 일째 · 까마귀</small></div></div>`;
+    return k < d || d === 6 ? a + b : a;
+  }).reverse().join('');
+  $('#scene').innerHTML = `
+    <div class="card"><h2>내가 챙기는 친구 <span>들키지 않게 · 쉿</span></h2>
+      <div class="target"><span class="av" style="width:34px;height:34px;border-radius:50%;background:${COL[TARGET]};border:2px solid #2A1E10;flex:none"></span><b>서아</b><span>에게 오늘도 몰래</span></div>
+      <div class="stamps">${stamps}</div></div>
+    ${d <= 5 ? missionHTML(d) : guessHTML()}
+    <div class="card"><h2>나에게 온 것 <span>보낸 친구는 7 일째 밤에 밝혀져요</span></h2><div class="feed">${recv || '<div class="empty">아직 아무것도 안 왔어요</div>'}</div></div>`;
+  bindMission(d);
+}
+function missionHTML(d){
+  const [t, desc] = MISSION[d], done = S.sent[d];
+  let body = '';
+  if (done) body = `<div class="doneMsg">${done}</div>`;
+  else if (d === 1) body = `<div class="items">${BAG.map(([n, c], i) => `<button data-it="${i}"><i style="background:${c}"></i>${n}</button>`).join('')}</div><div class="row"><span class="err" id="err"></span><button class="send" id="send" disabled>까마귀에게 맡기기</button></div>`;
+  else if (d === 2 || d === 5){ const mx = d === 2 ? 50 : 80; body = `<textarea id="ta" maxlength="${mx}" placeholder="${d === 2 ? '서아에게 응원 한마디 (이름 없이)' : '마지막 편지를 써요'}"></textarea><div class="row"><span class="cnt" id="cnt">0 / ${mx}</span><span class="err" id="err"></span><button class="send" id="send">보내기</button></div><div class="hint">시험해 보기: 친구 이름이나 「바보」를 넣으면 막혀요</div>`; }
+  else if (d === 3) body = `${say(0, '서아 방에 들어가면 「짚 꾸러미 두고 오기」 버튼이 생겨. 바닥 빈칸에 살짝 놓고 나오면 돼.')}<div class="row"><span class="err" id="err"></span><button class="send" id="send">서아 방에 두고 오기</button></div>`;
+  else if (d === 4) body = `<div class="choice">${CLUE.map((c, i) => `<button data-cl="${i}">${c}</button>`).join('')}</div><div class="row"><span class="err" id="err"></span><button class="send" id="send" disabled>이 힌트 보내기</button></div><div class="hint">기숙사 · 탐사 직업 · 가장 친한 NPC · 많이 하는 일 · 레벨대 중에서 세 개가 나와요</div>`;
+  return `<div class="card"><h2>오늘의 비밀 임무 <span>${d} 일째</span></h2><div class="mission"><div class="t">${t}</div><div class="d">${desc}</div>${body}</div></div>`;
+}
+function bindMission(d){
+  if (d === 6){ document.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { S.guess = +b.dataset.g; day(); toast(`${NAMES[S.guess]}로 골랐어요 · 공개 전까지 바꿀 수 있어요`); }); return; }
+  const send = $('#send'); if (!send) return; let pick = null;
+  const fin = (msg, tmsg) => { S.sent[d] = msg; day(); toast(tmsg); };
+  if (d === 1){ document.querySelectorAll('[data-it]').forEach(b => b.onclick = () => { document.querySelectorAll('[data-it]').forEach(o => o.classList.remove('on')); b.classList.add('on'); pick = +b.dataset.it; send.disabled = false; });
+    send.onclick = () => fin(`${BAG[pick][0]}을(를) 까마귀가 물고 갔어요`, '까악! 까마귀가 서아 방 창가로 날아갔어요'); }
+  if (d === 2 || d === 5){ const ta = $('#ta'), cnt = $('#cnt'), err = $('#err'); ta.oninput = () => { cnt.textContent = `${ta.value.length} / ${ta.maxLength}`; err.textContent = ''; };
+    send.onclick = () => { const e = check(ta.value); if (e){ err.textContent = e; return; } fin(`「${ta.value.trim()}」 짚 종이에 접어 보냈어요`, '까마귀가 쪽지를 물고 갔어요'); }; }
+  if (d === 3) send.onclick = () => fin('서아 방 바닥에 짚 꾸러미를 두고 나왔어요', '들키지 않고 빠져나왔어요');
+  if (d === 4){ document.querySelectorAll('[data-cl]').forEach(b => b.onclick = () => { document.querySelectorAll('[data-cl]').forEach(o => o.classList.remove('on')); b.classList.add('on'); pick = +b.dataset.cl; send.disabled = false; });
+    send.onclick = () => fin(`힌트 「${CLUE[pick]}」를 보냈어요`, '힌트를 보냈어요. 너무 쉬웠으려나?'); }
+}
+function guessHTML(){
+  const clues = ['듀모른 기숙사', '아침에 낚시', '물약 두 번', '밤에 탐사', '낮에 요리', '채집 많이', '아침형 인간'];
+  return `<div class="card"><h2>내 비밀 친구는 누구일까? <span>공개 전까지 바꿀 수 있어요</span></h2>
+    <div class="clues">${clues.map(c => `<span>${c}</span>`).join('')}</div>
+    <div class="faces">${NAMES.map((n, i) => i === ME ? '' : `<button data-g="${i}" class="${S.guess === i ? 'on' : ''}"><span class="av" style="background:${COL[i]}"></span>${n}</button>`).join('')}</div>
+    <div class="hint">${S.guess == null ? '모은 힌트를 보고 한 명을 골라요' : `지금 고른 친구: ${NAMES[S.guess]}`}</div></div>`;
+}
+
+// ---------- 7 일째 밤: 고리 공개 ----------
+let ringRaf = 0;
+function rev(){
+  stroDone = false;
+  $('#scene').innerHTML = `${say(0, '다들.... 모여 줘서 고마워. 이제 실을 이어 볼게.')}<canvas id="ring" width="240" height="240" aria-label="12 명이 이어진 비밀 친구 고리"></canvas><div class="result" id="res"><div class="sm">등불이 하나씩 켜지고 있어요.......</div></div><button class="next" id="again">처음부터 다시 보기</button>`;
+  $('#again').onclick = () => rev();
+  const cv = $('#ring'), g = cv.getContext('2d'), W = 240, C = W / 2, R = 80, N = 12, t0 = performance.now(), STEP = 520;
+  const P = i => { const a = -Math.PI / 2 + i * Math.PI * 2 / N; return [Math.round(C + Math.cos(a) * R), Math.round(C + Math.sin(a) * R)]; };
+  const stars = Array.from({ length: 40 }, (_, i) => [(i * 97) % W, (i * 53) % W, i % 3]);
+  let shown = false;
+  const lantern = (x, y, lit, col, big) => {
+    const s = big ? 1.4 : 1;
+    if (lit){ const gr = g.createRadialGradient(x, y, 2, x, y, 18 * s); gr.addColorStop(0, 'rgba(255,214,120,.55)'); gr.addColorStop(1, 'rgba(255,214,120,0)'); g.fillStyle = gr; g.fillRect(x - 20 * s, y - 20 * s, 40 * s, 40 * s); }
+    g.fillStyle = '#4A3410'; g.fillRect(x - 6 * s, y - 8 * s, 12 * s, 15 * s);
+    g.fillStyle = lit ? '#FFD678' : '#5A4A38'; g.fillRect(x - 4 * s, y - 6 * s, 8 * s, 11 * s);
+    g.fillStyle = '#9C7A2E'; g.fillRect(x - 6 * s, y - 10 * s, 12 * s, 3 * s); g.fillRect(x - 1, y - 13 * s, 2, 3 * s);
+    if (col){ g.fillStyle = col; g.fillRect(x - 2, y + 9 * s, 4, 3); }
+  };
+  const frame = now => {
+    const k = (now - t0) / STEP, lit = Math.min(N, Math.floor(k) + 1);
+    g.fillStyle = '#120E19'; g.fillRect(0, 0, W, W);
+    stars.forEach(([x, y, b]) => { g.fillStyle = b ? '#5A5070' : '#8A80A0'; g.fillRect(x, y, 1, 1); });
+    g.fillStyle = '#2A1E14'; g.fillRect(0, W - 26, W, 26); g.fillStyle = '#3A2A1C'; for (let x = 0; x < W; x += 6) g.fillRect(x, W - 28 + (x * 7 % 4), 3, 3);
+    // 실: 챙긴 사람 → 받은 사람
+    for (let i = 0; i < N; i++){
+      const p = Math.min(1, Math.max(0, k - i)); if (p <= 0) continue;
+      const [x1, y1] = P(i), [x2, y2] = P((i + 1) % N), done = k >= N + .3, mine = i === GIVER || i === ME;
+      g.strokeStyle = done ? (mine ? '#FFE9A0' : '#D9534F') : '#B8323A'; g.lineWidth = mine && done ? 3 : 2;
+      g.beginPath(); g.moveTo(x1, y1); g.lineTo(x1 + (x2 - x1) * p, y1 + (y2 - y1) * p); g.stroke();
+    }
+    for (let i = 0; i < N; i++){ const [x, y] = P(i); lantern(x, y, i < lit, COL[i]); }
+    g.font = '11px "Gowun Dodum", sans-serif'; g.textAlign = 'center';
+    for (let i = 0; i < N; i++){ const [x, y] = P(i), dx = x - C, dy = y - C, L = Math.hypot(dx, dy); g.fillStyle = i === ME || i === GIVER ? '#FFE9A0' : '#C8B8A0'; g.fillText(NAMES[i], Math.round(x + dx / L * 22), Math.round(y + dy / L * 22 + 4)); }
+    const end = k >= N + 1.5;
+    if (end){ const a = Math.min(1, (k - N - 1.5) / 1.2); g.globalAlpha = a; lantern(C, C, true, '#E8C46A', true); g.fillStyle = '#E8C46A'; g.fillText('스트로', C, C + 30); g.globalAlpha = 1; }
+    if (k >= N + .3 && !shown){ shown = true; result(); }
+    if (end && k > N + 3) stroEnd();
+    if (k < N + 3.2) ringRaf = requestAnimationFrame(frame);
+  };
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce){ const t = performance.now(); const f = frame; ringRaf = 0; f(t + STEP * (N + 3.3)); } else ringRaf = requestAnimationFrame(frame);
+}
+function result(){
+  const ok = S.guess === GIVER, gt = S.guess == null ? '' : ok ? '<div class="sm" style="color:var(--ok)">맞혔어! 듀모른 기숙사 힌트가 결정적이었지?</div>' : `<div class="sm">${NAMES[S.guess]}라고 생각했구나. 아깝다!</div>`;
+  const n = Object.keys(S.sent).length;
+  $('#res').innerHTML = `<div class="big">네 비밀 친구는 지호였어!</div>${gt}<div class="sm">그리고 서아는.... 끝까지 너를 몰랐어. 완벽한 비밀 친구!</div>
+    <div class="rewards">
+      <div><span>방 가구 「짚 인형 스트로」</span><span>${n >= 3 ? '받았어요' : `임무 ${n} / 3 · 3 개 하면 받아요`}</span></div>
+      <div><span>말풍선 꾸미기 「지푸라기 말풍선」</span><span>${ok ? '받았어요' : '맞힌 친구만'}</span></div>
+      <div><span>이름표 「완벽한 비밀 친구」</span><span>받았어요</span></div>
+      <div><span>스트로 호감도</span><span>+1 하트</span></div>
+    </div>`;
+}
+let stroDone = false;
+function stroEnd(){ if (stroDone) return; stroDone = true; const s = document.querySelector('.say'); if (s) s.outerHTML = say(4, '사실.... 나도 몰래 다들 지켜봤어. 그러니까 나도, 끼워 줄래?'); }
+
+render();
+</script>
