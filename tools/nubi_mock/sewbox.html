@@ -1,0 +1,81 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>누비 반짇고리</title>
+<style>
+@font-face{font-family:G11;src:url(../../public/fonts/Galmuri11.full.woff2)}
+@font-face{font-family:G11B;src:url(../../public/fonts/Galmuri11-Bold.full.woff2)}
+@font-face{font-family:Pretendard;src:url(../../public/fonts/Pretendard-Regular.woff2)}
+:root{--bg:#140D1E;--panel:#211733;--panel2:#2B1F45;--line2:#4E3C72;--accent:#FF9A3C;--text:#F6F0FF;--sub:#BDB0D6;--gold:#FFD866;--f-body:Pretendard,system-ui,sans-serif;--f-pxb:G11B,monospace;--f-px:G11,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:#0b0712;font-family:var(--f-body);color:var(--text);display:flex;gap:18px;padding:18px;width:max-content}
+.ph{position:relative;width:360px;height:640px;background:var(--bg);overflow:hidden;border-radius:18px;flex:none}
+.cap{font:12px var(--f-px);color:#8a7aa8;text-align:center;padding:6px}
+.sheet{position:absolute;inset:30px 0 0 0;background:var(--panel);display:flex;flex-direction:column}
+.sh-h{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line2)}
+.sh-h b{font:17px var(--f-pxb)}
+.sec{padding:12px 16px 0}.sec h4{margin:0 0 8px;font:13px var(--f-pxb);color:var(--sub)}
+.th{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:5px 8px;font-size:13px}
+.chip.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.chip i{width:14px;height:14px;border-radius:3px;display:block}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.cell{background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:6px 4px 5px;text-align:center;font-size:12px}
+.cell.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.cell canvas{display:block;margin:0 auto 3px;image-rendering:pixelated}
+.prev{display:flex;gap:12px;align-items:center;background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:10px;margin:12px 16px 0}
+.prev canvas{image-rendering:pixelated;background:#140D1E;border-radius:8px}
+.need{font-size:13px;line-height:1.8}.need span{color:var(--gold);font-family:var(--f-pxb)}
+.btn{display:block;margin:12px 16px 0;background:var(--accent);border:1px solid #C86A1E;border-radius:12px;padding:12px;text-align:center;font:15px var(--f-pxb);color:#2A1506}
+.scene{position:absolute;left:0;top:30px;width:360px;height:430px;background:url(scene_warm.png) -194px -64px/592px 516px no-repeat;image-rendering:pixelated}
+#nb{position:absolute;left:148px;top:148px;width:64px;height:64px;image-rendering:pixelated}
+.npcui{position:absolute;left:0;right:0;bottom:0;padding:0 10px 14px}
+.npcp{background:var(--panel);border:1px solid var(--line2);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.npch{display:flex;align-items:center;gap:8px}.npch b{font-family:var(--f-pxb)}.npch small{display:block;color:#9480B4;font-size:13px}
+.npcf{width:48px;height:48px;background:#3A2E5A;border-radius:12px;overflow:hidden;flex-shrink:0}
+.npcf canvas{image-rendering:pixelated}
+.npct{background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;line-height:1.55;font-size:16px}
+</style></head><body>
+<div class="ph"><div class="cap">엔딩 뒤 · 누비 반짇고리</div>
+  <div class="sheet">
+    <div class="sh-h"><b>누비 반짇고리</b></div>
+    <div class="sec"><h4>내 실</h4><div class="th">
+      <span class="chip on"><i style="background:#E86A6A"></i>하린</span><span class="chip on"><i style="background:#6AA8E8"></i>도윤</span>
+      <span class="chip on"><i style="background:#F0C040"></i>서아</span><span class="chip"><i style="background:#8AD08A"></i>지호</span><span class="chip"><i style="background:#9c9696"></i>누비</span></div></div>
+    <div class="sec"><h4>만들기</h4><div class="grid" id="grid"></div></div>
+    <div class="prev"><canvas id="pv" width="64" height="64" style="width:96px;height:96px"></canvas>
+      <div class="need"><b style="font-family:var(--f-pxb)">작은 목도리</b><br>실 3 <span>5</span> · 털실 2 <span>4</span></div></div>
+    <div class="btn">만들기</div>
+  </div>
+</div>
+<div class="ph"><div class="cap">누비에게 주면</div>
+  <div class="scene"></div><canvas id="nb" width="32" height="32"></canvas>
+  <div class="npcui"><div class="npcp">
+    <div class="npch"><div class="npcf"><canvas id="pf" width="32" height="32" style="width:48px;height:48px"></canvas></div><div><b>누비</b><small>따뜻한 양호실</small></div></div>
+    <div class="npct">목이.... 따뜻해. 하린 색이랑 도윤 색이랑 서아 색이 같이 있네. ....겹쳐 있으니까 따뜻하다.</div>
+  </div></div>
+</div>
+<script>
+const COLS = ['#E86A6A', '#6AA8E8', '#F0C040'];
+const P = (g, s) => (x, y, c) => { g.fillStyle = c; g.fillRect(x * s, y * s, s, s); };
+const sh = (c, k) => { const n = parseInt(c.slice(1), 16); const f = v => Math.max(0, Math.min(255, Math.round(v * k))); return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`; };
+const ICON = {   // 16×16 도트 · 실 색으로 무늬
+  scarf(p, C){ for (let x = 2; x < 14; x++) for (let y = 4; y < 8; y++) p(x, y, C[Math.floor(x / 2) % C.length]); for (let y = 8; y < 14; y++) for (let x = 9; x < 12; x++) p(x, y, C[Math.floor(y / 2) % C.length]); for (const x of [9, 11]) p(x, 14, '#fff8e8'); },
+  button(p, C){ for (let y = 3; y < 13; y++) for (let x = 3; x < 13; x++) if ((x - 7.5) ** 2 + (y - 7.5) ** 2 < 22) p(x, y, C[0]); for (let y = 3; y < 13; y++) for (let x = 3; x < 13; x++) if ((x - 7.5) ** 2 + (y - 7.5) ** 2 < 22 && (x - 7.5) ** 2 + (y - 7.5) ** 2 > 14) p(x, y, sh(C[0], .7)); p(6, 7, '#2a1a20'); p(9, 7, '#2a1a20'); p(6, 9, '#2a1a20'); p(9, 9, '#2a1a20'); },
+  blanket(p, C){ for (let y = 3; y < 13; y++) for (let x = 2; x < 14; x++) p(x, y, C[(Math.floor(x / 3) + Math.floor(y / 3)) % C.length]); for (let x = 2; x < 14; x++){ p(x, 3, '#fff8e8'); p(x, 12, '#fff8e8'); } },
+  brooch(p, C){ for (const [dx, dy] of [[0, -3], [3, 0], [0, 3], [-3, 0]]) for (let y = -1; y <= 1; y++) for (let x = -1; x <= 1; x++) p(8 + dx + x, 8 + dy + y, C[(Math.abs(dx) + Math.abs(dy)) % C.length]); for (let y = 7; y <= 9; y++) for (let x = 7; x <= 9; x++) p(x, y, '#ffe9a8'); },
+  yarn(p, C){ for (let y = 3; y < 14; y++) for (let x = 3; x < 14; x++) if ((x - 8) ** 2 + (y - 8.5) ** 2 < 28) p(x, y, C[Math.floor((x + y) / 3) % C.length]); p(13, 12, C[0]); p(14, 13, C[0]); },
+  pillow(p, C){ for (let y = 5; y < 12; y++) for (let x = 2; x < 14; x++) p(x, y, '#fff8e8'); for (let x = 3; x < 13; x++) p(x, 8, C[x % C.length]); for (const x of [2, 13]) for (const y of [5, 11]) p(x, y, C[0]); },
+};
+const NAMES = [['scarf', '작은 목도리'], ['button', '새 단추'], ['blanket', '조각 담요'], ['brooch', '꽃 브로치'], ['yarn', '털실 공'], ['pillow', '작은 베개']];
+const grid = document.getElementById('grid');
+NAMES.forEach(([k, n], i) => { const d = document.createElement('div'); d.className = 'cell' + (i === 0 ? ' on' : ''); const c = document.createElement('canvas'); c.width = 16; c.height = 16; c.style.width = c.style.height = '40px'; ICON[k](P(c.getContext('2d'), 1), COLS); d.appendChild(c); d.appendChild(document.createTextNode(n)); grid.appendChild(d); });
+ICON.scarf(P(document.getElementById('pv').getContext('2d'), 4), COLS);
+// 누비 (고쳐진 + 리본) 위에 목도리를 둘러요
+const img = new Image(); img.onload = () => {
+  for (const [id] of [['nb'], ['pf']]){
+    const g = document.getElementById(id).getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(img, 256, 0, 32, 32, 0, 0, 32, 32);
+    const p = P(g, 1), ox = 9, oy = 11;
+    for (let x = 3; x < 11; x++){ p(ox + x, oy + 10, COLS[Math.floor(x / 2) % 3]); p(ox + x, oy + 11, sh(COLS[Math.floor(x / 2) % 3], .8)); }
+    for (let y = 11; y < 15; y++) p(ox + 9, oy + y, COLS[y % 3]); p(ox + 2, oy + 10, '#231c22'); p(ox + 11, oy + 10, '#231c22');
+  }
+}; img.src = '../../public/art/nubi_s.png';
+</script>
+</body></html>
