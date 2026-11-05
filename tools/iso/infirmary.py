@@ -1,4 +1,5 @@
-# 양호실 두 방 (시안): 세라 선생님의 양호실 (본관 물약 교실에서 들어가요) · 그 안쪽 잠긴 문 너머 낡은 양호실 (누비)
+# 낡은 양호실 (누비) · 물약 교실 구석 책장 문 뒤에 숨은 방 · 마지막 날 따뜻한 양호실
+#   (sera_room 은 쓰지 않는 예전 시안이에요)
 #   python3 infirmary.py → out/infirmary_* · out/old_infirmary_* · tools/nubi_mock/infirmary_prev.png
 import os, sys, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -187,7 +188,7 @@ def sera_room():
 
 def old_room():
     R = Room(NX, NY, wall=80)
-    R.exit_to, R.exit_label = 'infirmary', '양호실'
+    R.exit_to, R.exit_label = 'lab', '물약 교실'
     R.floor(planks(['#5E5448', '#544A40', '#665A4C', '#5A5044'], '#2E2822'))
     R.walls('#5A6A64', '#4E5C56', '#4A3E34', trim='#6A5A48', dark=(.8, .92))
     peel(R, 'L'); peel(R, 'R')
@@ -231,7 +232,7 @@ def gift_shelf(R, side, u0):   # 누비 선반: 학생들이 준 선물 (목도�
 
 def warm_room():
     R = Room(NX, NY, wall=80)
-    R.exit_to, R.exit_label = 'infirmary', '양호실'
+    R.exit_to, R.exit_label = 'lab', '물약 교실'
     R.floor(planks(['#B8865A', '#AC7C52', '#C08E60', '#B28256'], '#7A5234'))
     R.walls('#F4E2CC', '#EAD2B8', '#A8784E', trim='#E8B880')
     R.window('L', 40, w=18, glass=('#F0B060', '#F8D088', '#FFF0C8'), frame='#8A5A34', moon=False); curtains(R, 'L', 40, w=18, col='#E8A0B0')
@@ -249,7 +250,7 @@ def warm_room():
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__))); os.makedirs('out', exist_ok=True)
-    rooms = [('infirmary', sera_room()), ('old_infirmary', old_room()), ('warm_infirmary', warm_room())]
+    rooms = [('old_infirmary', old_room()), ('warm_infirmary', warm_room())]
     ims = []
     for key, R in rooms:
         bg = Image.open('out/%s_bg.png' % key).convert('RGBA'); sh = Image.open('out/%s_obj.png' % key).convert('RGBA')
