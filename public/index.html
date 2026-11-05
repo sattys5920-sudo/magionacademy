@@ -15173,11 +15173,15 @@ function rdEnd(win){
   sfx(win ? 'win' : 'lose');
   B.log = win ? `${RD_FL[B.raid.f - 1].n}${josa(RD_FL[B.raid.f - 1].n, '을', '를')} 쓰러뜨렸어요!` : B.log && /끊겼|시간/.test(B.log) ? B.log : '모두 쓰러졌어요.......';
   const lg = $('#xlog'); if (lg) lg.textContent = B.log; const el = $('#xcmd');
-  const boss = B.foes[0], R = rdReward(B.raid.f, win, boss ? Math.max(0, boss.hp) / boss.mhp : 1);
+  const boss = B.foes[0], R = win ? null : rdReward(B.raid.f, win, boss ? Math.max(0, boss.hp) / boss.mhp : 1);
   if (!win){ if (el){ el.dataset.k = 'rdend'; el.innerHTML = ''; } const sum = Object.entries(R.got).map(([id, c]) => `${id === 'gold' ? '골드' : ITEM[id] || id} ×${c}`).join(' · '); setTimeout(() => { if (xb === B){ rdQuit(); if (sum) toast(sum); } }, 2500); return; }   // 지면 잠깐 뒤 모두 나가요 (깎은 만큼 받은 건 알림으로)
-  if (el){ el.dataset.k = 'rdend'; el.innerHTML = rdRewHtml(R) + '<button class="btn go" id="rdout" style="grid-column:1/-1">거울 너머로 돌아가기</button>'; $('#rdout').onclick = rdQuit; }
+  B.rdCh = rdChestMake(B.raid.f); rdChestDraw(B);
 }
-function rdQuit(){ const id = RD.id; rdDrop(); if (id) RD.id = null; xb = null; xv = null; closeSheet(); }
+function rdChestDraw(B){ const el = $('#xcmd'); if (!el || !B.rdCh) return; const C = B.rdCh, done = C.pick.length >= C.n; el.dataset.k = 'rdend';
+  el.innerHTML = rdChestHtml(C) + `<button class="btn go" id="rdout" style="grid-column:1/-1" ${done ? '' : 'disabled'}>거울 너머로 돌아가기</button>`;
+  el.querySelectorAll('[data-rdch]').forEach(b => b.onclick = () => { rdChestPick(C, +b.dataset.rdch); rdChestDraw(B); }); $('#rdout').onclick = rdQuit; }
+function rdQuit(){ const C = xb && xb.rdCh; if (C) while (C.pick.length < C.n){ const left = C.o.map((_, i) => i).filter(i => !C.pick.includes(i)); rdChestPick(C, left[Math.floor(Math.random() * left.length)]); }   // 다 안 고르고 나가면 남은 건 아무거나 열어 줘요
+  const id = RD.id; rdDrop(); if (id) RD.id = null; xb = null; xv = null; closeSheet(); }
 // ---------- 화면: 배치 · 보스 · 예고 · 위쪽 막대 · 카드 ----------
 function rdLayout(B){
   const boss = B.foes[0]; if (boss){ boss.bx = 192; boss.by = 206; }
@@ -15254,6 +15258,19 @@ function rdReward(f, win, left){   // 내 기기에서 나만 뽑아요
   let acc = null; if (win && (first || Math.random() < [.03, .05, .07, .1][f - 1])){ const k = RD_ACC[f - 1].k; acc = [k, rdAccGain(k)]; }
   if (win){ S.win = S.win || {}; S.win[f] = (S.win[f] || 0) + 1; } save(); hud(); return { got, acc };
 }
+function rdChestMake(f){   // 이기면: 보물상자 6 개 · 3 개 고르기 (처음 이긴 층의 기념품은 따로 꼭) · 그다음부터는 기념품이 상자 하나에 들어 있을 때가 있어요
+  const S = rdSt(), first = !((S.win || {})[f] > 0), o = Array.from({ length: 6 }, () => { const [id, c] = rdRoll(f); return { id, c }; });
+  let acc = null; if (first){ const k = RD_ACC[f - 1].k; acc = [k, rdAccGain(k)]; } else if (Math.random() < [.03, .05, .07, .1][f - 1] * 2) o[Math.floor(Math.random() * 6)] = { id: 'acc:' + RD_ACC[f - 1].k, c: 1 };
+  S.win = S.win || {}; S.win[f] = (S.win[f] || 0) + 1; save(); return { o, n: 3, pick: [], acc };
+}
+function rdChestPick(C, i){ if (!C || C.pick.includes(i) || C.pick.length >= C.n) return; C.pick.push(i); const x = C.o[i];
+  if (x.id.startsWith('acc:')){ const r = rdAccGain(x.id.slice(4)); x.r = r; } else if (x.id === 'gold') me.coin += x.c; else me.inv[x.id] = (me.inv[x.id] || 0) + x.c; save(); hud(); sfx('chest'); }
+const rdChestName = x => x.id === 'gold' ? `골드 ×${x.c}` : x.id.startsWith('acc:') ? RD_ACC.find(d => d.k === x.id.slice(4)).n : `${ITEM[x.id] || x.id} ×${x.c}`;
+const rdChestIc = (x, dim) => x.id === 'gold' ? '<b class="xarg">G</b>' : x.id.startsWith('acc:') ? rdAccIc(x.id.slice(4), 24) : x.id === 'rd_shard' ? rdShardIc(dim ? 'opacity:.55' : '') : ic(x.id, dim ? 'opacity:.55' : '');
+function rdChestHtml(C){ const done = C.pick.length >= C.n;
+  return `<div class="rdchs"><div class="rdchh">보물상자 ${C.n - C.pick.length > 0 ? `${C.n - C.pick.length} 개 더 골라요` : ''}</div>${C.o.map((x, i) => { const mine = C.pick.includes(i), show = mine || done;
+    return `<button class="xch${mine ? ' on' : ''}${done && !mine ? ' off' : ''}${show ? '' : ' bob'}" data-rdch="${i}" ${show ? 'disabled' : ''} style="animation-delay:${i * .2}s"><img src="art/xchest_${!show ? 'closed' : mine ? 'open' : 'open_dim'}.png" width="56" height="56" alt="">${show ? `${rdChestIc(x, !mine)}<span class="t">${esc(rdChestName(x))}</span>` : '<span class="q">?</span>'}</button>`; }).join('')}
+    ${C.acc ? `<div class="rdrew"><span class="acc">${rdAccIc(C.acc[0], 24)}${RD_ACC.find(d => d.k === C.acc[0]).n} 새로 얻었어요!</span></div>` : ''}</div>`; }
 const rdRewHtml = R => `<div class="rdrew">${Object.entries(R.got).map(([id, c]) => `<span>${id === 'gold' ? '<b class="xarg">G</b>' : id === 'rd_shard' ? rdShardIc() : ic(id)}${id === 'gold' ? '골드' : esc(ITEM[id] || id)} ×${c}</span>`).join('')}${R.acc ? `<span class="acc">${rdAccIc(R.acc[0], 24)}${RD_ACC.find(d => d.k === R.acc[0]).n}${{ new: ' 새로 얻었어요!', up: ' 별이 올랐어요!', cp: '', max: '' }[R.acc[1]]}</span>` : ''}</div>`;
 // ---------- 장신구 창 (탐사 화면) ----------
 function rdAccView(frame){
@@ -15306,7 +15323,7 @@ function rdBoomFx(g, B, bm, p){
 (() => { const st = document.createElement('style'); st.textContent = `.rdai{display:inline-block;flex:none;background-image:url(art/raid_acc.png);background-repeat:no-repeat;image-rendering:pixelated;vertical-align:middle}
 .rdst{color:#ffd24a;letter-spacing:1px;font-size:12px}.rdst i{color:#4a3e60;font-style:normal}.rdbar{height:8px;border-radius:4px;background:#2a2040;overflow:hidden;margin-top:4px}.rdbar i{display:block;height:100%;background:linear-gradient(90deg,#7fe6ff,#c08aff,#ffd24a)}
 .rdal{display:flex;flex-direction:column;gap:6px;margin-top:12px}.rdar{display:flex;align-items:center;gap:10px;border:2px solid var(--line,#3a2e56);border-radius:10px;padding:6px 10px}.rdar.on{border-color:#7fe6ff}.rdar.no{opacity:.6}.rdar b{font-size:13px}.rdtag{font-size:10px;padding:1px 6px;border-radius:8px;background:#7fe6ff;color:#14202e}
-.rdrew{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:6px 0}.rdrew span{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.06);border-radius:8px;padding:4px 8px;font-size:12px}.rdrew span.acc{border:1px solid #ffd24a}.rdrew .ic{width:20px;height:20px}.rdrew .xarg{font-size:12px}`; document.head.appendChild(st); })();
+.rdchs{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.rdchh{grid-column:1/-1;text-align:center;font-family:G11B,Pretendard,sans-serif;color:#ffd24a;font-size:13px}.rdchs .xch{min-height:104px;padding:6px 2px}.rdchs .xch .ic,.rdchs .xch .rdai{width:22px;height:22px}.rdchs .xch .t{font-size:11px}.rdchs .xch .q{line-height:22px}.rdrew{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:6px 0}.rdrew span{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.06);border-radius:8px;padding:4px 8px;font-size:12px}.rdrew span.acc{border:1px solid #ffd24a}.rdrew .ic{width:20px;height:20px}.rdrew .xarg{font-size:12px}`; document.head.appendChild(st); })();
 
 </script>
 </body>
