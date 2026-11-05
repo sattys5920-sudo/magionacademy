@@ -9448,7 +9448,7 @@ function wsSpots(){
   return ids.map(id => { const R = seedRand((uid || me.nick) + ':' + id); let c, n = 0; do { c = C[Math.floor(R() * C.length)]; } while (used.has(c.join()) && ++n < 20); used.add(c.join()); return { i: id, x: c[0], y: c[1], m: c[2], id }; });
 }
 function wsProps(){
-  const t = World.meTile && World.meTile(), m = t ? t.m : ''; let list = [];
+  const t = World.meTile && World.meTile(), m = t ? t.m : ''; let list = []; wsAll = wsLive() && me && t ? wsSpots() : [];
   if (wsLive() && me && t && !wsOn){ list = wsSpots().filter(p => p.m === m).map(p => ({ id: 'wsn' + p.i, x: p.x, y: p.y, img: window.WishFX ? WishFX.NOTE : null, pxc: window.WishFX ? WishFX.NOTE.getContext('2d') : null, sw: 24, sh: 24, ax: 12, ay: 18, solid: false, light: { r: 14, c: [210, 230, 255], a: .6 } })).filter(p => p.img); }
   const sig = m + ':' + list.map(x => x.id).join(','); if (sig === wsSpotSig) return; const pm = wsSpotSig.split(':')[0]; wsSpotSig = sig;
   if (pm && pm !== m) World.setProps(pm, [], 'wsnote'); if (m) World.setProps(m, list, 'wsnote');
@@ -9496,6 +9496,24 @@ async function wsIntro(){
     toast(text ? '하늘에서 친구들의 소원 쪽지가 내려와요. 주워서 응원해 보세요' : '하늘에서 소원 쪽지가 내려와요. 주워서 응원해 보세요. 내 소원은 일지에서 쓸 수 있어요');
   } catch(e){ errReport('wish', '별빛 소원 시작 연출 오류: ' + e.message, e.stack || ''); }
 }
+// 쪽지 방향 화살표: 지금 맵에서 가장 가까운 쪽지가 화면 밖이면 화면 가장자리에 화살표 · 화면 안이면 쪽지 위에 작은 표시 · 이 맵에 없으면 다른 맵 안내 (한 번)
+let wsAll = [], wsOther = '';
+function wsArrow(q, toS, k){
+  if (!wsLive() || wsOn || !wsAll.length || !World.tilePx) return; const t = World.meTile && World.meTile(), mp = World.meAt && World.meAt(); if (!t || !mp) return;
+  const here = wsAll.filter(p => p.m === t.m);
+  if (!here.length){ const o = wsAll.filter(p => p.m !== t.m), nm = { campus: '교정', town: '등불 마을' }; const sig = t.m + ':' + o.length; if (o.length && (t.m === 'campus' || t.m === 'town') && wsOther !== sig){ wsOther = sig; toast(`이곳엔 소원 쪽지가 없어요 · ${nm[o[0].m] || ''}에 ${o.length} 장`); } return; }
+  wsOther = '';
+  const n = here.reduce((a, p) => Math.hypot(p.x - t.x, p.y - t.y) < Math.hypot(a.x - t.x, a.y - t.y) ? p : a), w = World.tilePx(n.x, n.y); if (!w) return;
+  const cv = q.canvas, d = cv.clientWidth ? cv.width / cv.clientWidth : 1, W = cv.width, H = cv.height, [nx, ny] = toS(w[0], w[1]), [mx, my] = toS(mp.x, mp.y), u = Math.max(2, Math.round(2 * d)), bob = Math.round(Math.sin(performance.now() / 260) * 2 * u);
+  const L = 30 * d, R = W - 30 * d, T = 96 * d, B = H - 108 * d;   // 위 HUD · 아래 메뉴는 피해요
+  const tri = (x, y, a, s) => { q.save(); q.translate(Math.round(x), Math.round(y)); q.rotate(a); q.beginPath(); q.moveTo(s, 0); q.lineTo(-s * .7, -s * .75); q.lineTo(-s * .35, 0); q.lineTo(-s * .7, s * .75); q.closePath(); q.lineJoin = 'round'; q.lineWidth = u * 1.5; q.strokeStyle = '#22183F'; q.stroke(); q.fillStyle = '#FFE9A0'; q.fill(); q.restore(); };
+  if (nx > L && nx < R && ny > T && ny < B){ tri(nx, ny - 26 * d + bob, Math.PI / 2, 7 * d); return; }   // 화면 안: 쪽지 위에서 콕콕
+  const a = Math.atan2(ny - my, nx - mx), c = Math.cos(a), s = Math.sin(a); let f = Infinity;
+  if (c > 0) f = Math.min(f, (R - mx) / c); if (c < 0) f = Math.min(f, (L - mx) / c); if (s > 0) f = Math.min(f, (B - my) / s); if (s < 0) f = Math.min(f, (T - my) / s);
+  if (!isFinite(f) || f < 0) return; const ex = mx + c * f, ey = my + s * f;
+  q.save(); q.fillStyle = 'rgba(20,13,34,.6)'; q.strokeStyle = 'rgba(184,216,255,.9)'; q.lineWidth = u; q.beginPath(); q.arc(Math.round(ex - c * 6 * d), Math.round(ey - s * 6 * d), 19 * d, 0, Math.PI * 2); q.fill(); q.stroke(); q.restore();
+  tri(ex - c * (6 * d - bob), ey - s * (6 * d - bob), a, 13 * d);
+}
 let wsTk = 0, wsFall = 0; window.__wsSpots = () => wsSpots().map(p => [p.id, p.m, p.x, p.y]);
 function wsTick(){
   if (!me) return; const on = wsLive();
@@ -9519,6 +9537,7 @@ function wsTick(){
 let wsOffs = [];
 function wishListen(){
   if (wsOffs.length) return;
+  const po = World.onOverlay; World.onOverlay = (q, toS, k) => { try { wsArrow(q, toS, k); } catch(e){} if (po) po(q, toS, k); };
   wsOffs.push(GDB.on('wish/ctl', v => { wsCtl = v || null; wsSpotSig = ''; }));
   wsOffs.push(GDB.on('wish/list', v => { wsList = v || {}; wsSpotSig = ''; const ids = Object.keys(wsList); if (wsSeenIds && ids.some(id => !wsSeenIds.has(id) && id !== wsMine && wsList[id]?.ev === wsCtl?.id)) wsFall = 1; wsSeenIds = new Set(ids); }));   // 누가 새 소원을 쓰면 쪽지가 내려오는 연출
   wsOffs.push(GDB.on('wish/cmine/' + uid, v => { wsCm = v || {}; wsSpotSig = ''; }));

@@ -371,6 +371,7 @@ World.say = (id, text, big) => {   // big: 이모티콘 번호(art/emo.png 칸)�
   world.appendChild(d); p.say = { el: d, until: performance.now() + (emo !== null ? 3500 : 5500) }; says.push(p);
 };
 World.onPeer = null;   // (친구 uid) 친구를 눌렀을 때
+World.tilePx = (x, y) => M ? P(x + .5, y + .5) : null;   // 칸 가운데의 세계 좌표 (onOverlay 의 toS 에 넣어요)
 World.meAt = () => started && M ? { get x(){ return P(me.x + .5, me.y + .5)[0]; }, get y(){ return P(me.x + .5, me.y + .5)[1] - World.Avatar.FH * ASC + 2; }, sw: 0 } : null;
 World.peerAt = id => { const p = peers[id]; if (!p) return null; return { get x(){ return P(p.x + .5, p.y + .5)[0]; }, get y(){ return P(p.x + .5, p.y + .5)[1] - World.Avatar.FH * ASC + 2; }, sw: 0 }; };   // 친구를 따라 움직여요
 // 칸으로 걸어가요 (같은 맵일 때). 목적지에 작은 표시가 떠요
