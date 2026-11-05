@@ -15,10 +15,10 @@ window.__raidSim = (o) => {
       const A = XAV[o.ar || 0]; u.mhp = Math.round(u.mhp * (1 + A[0])); u.dr += A[1]; u.hp = u.mhp; u.mp = u.mmp; u.cdn = {}; u.row = XROLE[job] === 'melee' ? 'f' : 'b'; u.pot = 2; u.side = side; party.push(u); }));
     const bL = o.bL || L, f = (1 + .35 * (bL - 1)) * XFOE, a = (1 + .25 * (bL - 1)) * XFOE_A;   // bL: 보스 레벨 (층 레벨) · L: 학생 레벨
     const boss = { id: 'e0', name: '보스', ic: '', lp: 16, big: 1, sc: 3, hh: 168, team: 'e', mhp: Math.round(o.hpK * f * o.s), atk: Math.round(o.atK * a * (o.am ?? Math.sqrt(o.s))), spd: o.spd || 12, g: 30, k: 8, aoe: false, sk: '', skn: '', mL: L, fx: {} };
-    boss.hp = boss.mhp;
+    boss.hp = boss.mhp; if (o.atkAbs) boss.atk = o.atkAbs; boss.matk = o.matk || boss.atk; const MK = o.mk || { side: .9, all: .55, big: 2 };
     const B = xb = { party, foes: [boss], kind: 'boss', log: '', turn: null, pick: null, over: false, last: 0, buff: false, def: {}, fxs: [], floats: [], proj: [], n0: 1 };
     let t = 0, fin = '', bc = 0, big = null; const dt = .25;
-    const hitSome = (L2, k, fx) => L2.forEach(tg => { if (tg.hp <= 0) return; xHit(boss, tg, boss.atk * k / party.length * (.85 + Math.random() * .3) * dodge(), '#ff6a6a'); if (tg.hp > 0 && fx) fx(tg); });   // 다인 공격: 참여한 수만큼 나눠 맞아요
+    const hitSome = (L2, k, fx) => L2.forEach(tg => { if (tg.hp <= 0) return; xHit(boss, tg, boss.matk * k / party.length * (.85 + Math.random() * .3) * dodge(), '#ff6a6a'); if (tg.hp > 0 && fx) fx(tg); });   // 다인 공격: 참여한 수만큼 나눠 맞아요
     const bfx = [t2 => { t2.fx.slow = { v: .3, t: 8 }; }, t2 => { t2.fx.dot = { v: Math.max(1, Math.round(boss.atk * .25)), t: 8, acc: 0 }; }, t2 => { t2.fx.vuln = { v: .15, t: 8 }; }, t2 => { t2.g = Math.min(t2.g, -20); }][o.b || 0];
     while (t < lim){ t += dt;
       if (!xAlive(party).length){ fin = 'wipe'; break; }
@@ -26,14 +26,14 @@ window.__raidSim = (o) => {
       // 레이드 보스 저항: 느려짐 15 % · 약해짐 15 % · 실명 10 % 까지만 들어가요 (12 명이 겹쳐 걸어도)
       [['slow', .15], ['weak', .15], ['blind', .1]].forEach(([k, m]) => { if (boss.fx[k] && boss.fx[k].v > m) boss.fx[k].v = m; });
       if (big && t >= big.at){   // 큰 기술: 준비 중에 체력 8 % 이상 깎으면 끊겨요
-        if (big.hp0 - boss.hp >= boss.mhp * .08){ boss.g = 0; } else hitSome(xAlive(party), 2.0, bfx);
+        if (big.hp0 - boss.hp >= boss.mhp * .08){ boss.g = 0; } else hitSome(xAlive(party), MK.big, bfx);
         big = null; }
       const g0 = boss.g; let acted = false;
       for (const x of party.concat(B.foes)){ if (x.hp <= 0 || x.g < 100) continue;
         if (x.team === 'e'){ x.g = 0; acted = true; if (big) continue; bc++; const ph = boss.hp / boss.mhp > .7 ? 1 : boss.hp / boss.mhp > .35 ? 2 : 3, A2 = xAlive(party);
           if (ph === 3 && bc % 4 === 0){ big = { at: t + 6, hp0: boss.hp }; continue; }                 // 큰 기술 준비 (6 초)
-          if (ph >= 2 && bc % 3 === 0){ hitSome(A2, .55, bfx); continue; }                              // 전체 공격
-          if (bc % 2 === 0){ const sd = Math.random() < .5 ? 0 : 1; hitSome(A2.filter(p => p.side === sd), .9, bfx); continue; }   // 한쪽 공격
+          if (ph >= 2 && bc % 3 === 0){ hitSome(A2, MK.all, bfx); continue; }                              // 전체 공격
+          if (bc % 2 === 0){ const sd = Math.random() < .5 ? 0 : 1; hitSome(A2.filter(p => p.side === sd), MK.side, bfx); continue; }   // 한쪽 공격
           const fr = A2.filter(p => !p.side), tg = (fr.length ? fr : A2)[Math.floor(Math.random() * (fr.length || A2.length))]; if (!tg || tg.hp <= 0) continue; xHit(boss, tg, boss.atk * (.85 + Math.random() * .3) * dodge(), '#ff6a6a'); continue; }   // 일반 공격: 앞줄부터
         if (x.pot > 0 && x.hp / x.mhp < .35){ x.pot--; x.hp = Math.min(x.mhp, x.hp + Math.round(x.mhp * .5)); x.g = 0; } else xAI(x);
         if (boss.hp <= 0) break; }
