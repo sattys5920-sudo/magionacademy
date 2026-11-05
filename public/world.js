@@ -555,6 +555,7 @@ let propsData = {};   // 이벤트 소품: World.setProps(지도 id, [{ id, x, y
 const propsOf = id => Object.values(propsData[id] || {}).flat();
 function propObjs(){ return propsOf(rmap).map(p => { const [px, py] = P(p.x + .5, p.y + .5); return { name: 'prop', pid: p.id, prop: p, img: p.img, pxc: p.pxc, box: [p.x, p.y, p.x + 1, p.y + 1], x: px - p.ax, y: py - p.ay, sx: 0, sy: 0, sw: p.sw, sh: p.sh, solid: p.solid !== false }; }); }
 World.setProps = (id, list, layer = '_') => { (propsData[id] = propsData[id] || {})[layer] = list || []; if (M && rmap === id) rebuildObjs(); };   // layer: 기능마다 따로 (유령 열차 · 호박 · 아기 동물이 같은 맵에 함께 놓여요)
+World.propsAt = (id, skip) => Object.entries(propsData[id] || {}).filter(([l]) => l !== skip).flatMap(([, v]) => v || []);   // 그 맵에 놓인 이벤트 소품 (skip 층은 빼고)
 function rebuildObjs(){   // 지도 물건 + (개인 방이면) 놓은 가구 + 이벤트 소품
   const fo = [...(M.furn ? furnObjs() : []), ...propObjs()];
   blocked = new Set(M.water ? M.water.map(w => w[0] + ',' + w[1]) : []); [...M.objs, ...fo].forEach(o => { if (o.solid !== false) for (let x = Math.floor(o.box[0]); x < Math.ceil(o.box[2]); x++) for (let y = Math.floor(o.box[1]); y < Math.ceil(o.box[3]); y++) blocked.add(x + ',' + y); });

@@ -9445,7 +9445,9 @@ function wsCheck(t){
 function wsSpots(){
   const ids = wsVis().map(([id]) => id).filter(id => id !== wsMine && !wsCm[id]).sort(); if (!ids.length) return [];
   const C = ['campus', 'town'].flatMap(k => (World.meta(k)?.forage || []).map(c => [c[0], c[1], k])); if (!C.length) return []; const used = new Set();
-  return ids.map(id => { const R = seedRand((uid || me.nick) + ':' + id); let c, n = 0; do { c = C[Math.floor(R() * C.length)]; } while (used.has(c.join()) && ++n < 20); used.add(c.join()); return { i: id, x: c[0], y: c[1], m: c[2], id }; });
+  const blk = {}; ['campus', 'town'].forEach(k => { blk[k] = World.propsAt ? World.propsAt(k, 'wsnote').map(o => [o.x, o.y]) : []; });   // 눈사람 같은 이벤트 소품 곁(3 칸)엔 안 떨어져요: 그림에 가려 눌리지 않아요
+  const near = c => blk[c[2]].some(([x, y]) => Math.abs(x - c[0]) <= 3 && Math.abs(y - c[1]) <= 3);
+  return ids.map(id => { const R = seedRand((uid || me.nick) + ':' + id); let c, n = 0; do { c = C[Math.floor(R() * C.length)]; } while ((used.has(c.join()) || near(c)) && ++n < 40); used.add(c.join()); return { i: id, x: c[0], y: c[1], m: c[2], id }; });
 }
 function wsProps(){
   const t = World.meTile && World.meTile(), m = t ? t.m : ''; let list = []; wsAll = wsLive() && me && t ? wsSpots() : [];
