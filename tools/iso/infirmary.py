@@ -3,6 +3,7 @@
 import os, sys, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from interiors import Room, hexc, shade, up, checker, planks, plant_draw, chair_draw, ImageDraw
+from dorms import curtains
 from PIL import Image
 NX, NY = 18, 14
 OLD_U = 112   # 오른쪽 벽 낡은 문 자리 (x=14)
@@ -206,18 +207,59 @@ def old_room():
     R.save('old_infirmary', '낡은 양호실', '100 년 동안 닫혀 있던 방', [14, 1])
     return R
 
+
+def gift_shelf(R, side, u0):   # 누비 선반: 학생들이 준 선물 (목도리 · 단추 · 담요 · 브로치 · 털실 공 · 베개)
+    COL = ['#E86A6A', '#6AA8E8', '#F0C040', '#8AD08A', '#C88AE8', '#F4A0C0', '#7AD8D8', '#F0A060']
+    def f(u, v):
+        uu = u - u0
+        if not (0 <= uu < 40 and 26 <= v < 64): return None
+        if v in (26, 27, 44, 45) : return hexc('#8A5A34')
+        if uu in (0, 1, 38, 39): return hexc('#6A4228')
+        row = 0 if v < 44 else 1; k = uu // 6 + row * 7; vv = (v - 28) if row == 0 else (v - 46)
+        if uu % 6 in (1, 2, 3, 4) and 2 <= vv <= 12:
+            c = hexc(COL[k % len(COL)])
+            kind = k % 6
+            if kind == 0 and vv > 6: return c                                   # 목도리 (아래 늘어짐)
+            if kind == 1 and (uu % 6 - 2.5) ** 2 + (vv - 9) ** 2 < 4: return c   # 단추
+            if kind == 2 and vv > 5: return shade(c, .8 if (uu + vv) % 2 else 1)  # 조각 담요
+            if kind == 3 and (uu % 6 - 2.5) ** 2 + (vv - 8) ** 2 < 3: return c   # 브로치
+            if kind == 4 and (uu % 6 - 2.5) ** 2 + (vv - 9) ** 2 < 5: return c   # 털실 공
+            if kind == 5 and vv > 7: return hexc('#FFFFFF') if vv == 8 else c    # 베개
+        return None
+    R.wall_fill(side, f)
+    R.wall_fill(side, hexc('#F4E8C8'), u0 + 12, u0 + 28, 66, 72); R.wall_fill(side, hexc('#8A5A34'), u0 + 13, u0 + 27, 68, 70)   # 이름표 판
+
+def warm_room():
+    R = Room(NX, NY, wall=80)
+    R.exit_to, R.exit_label = 'infirmary', '양호실'
+    R.floor(planks(['#B8865A', '#AC7C52', '#C08E60', '#B28256'], '#7A5234'))
+    R.walls('#F4E2CC', '#EAD2B8', '#A8784E', trim='#E8B880')
+    R.window('L', 40, w=18, glass=('#F0B060', '#F8D088', '#FFF0C8'), frame='#8A5A34', moon=False); curtains(R, 'L', 40, w=18, col='#E8A0B0')
+    gift_shelf(R, 'R', 20); cross_sign(R, 'R', 66)
+    R.window('R', 88, w=18, glass=('#F0B060', '#F8D088', '#FFF0C8'), frame='#8A5A34', moon=False); curtains(R, 'R', 88, w=18, col='#E8A0B0')
+    for i, x in enumerate((3.5, 7.8, 12.1)):
+        R.obj('bed', [(int(x), 1), (int(x), 2)], bed(R, x, .4, frame='#F4F0E8', blanket=['#F0A0A8', '#9AC8E8', '#F4D088'][i], sheet='#FFFFFF'),
+              act=('따뜻한 침대', '누워서 쉬기') if i != 1 else ('누비 침대', '누비 옆에 앉기'))
+    R.obj('sink', [(16, 1)], sink(R, 16, 1))
+    R.obj('stool', [(9, 6)], stool(R, 9, 6))
+    for (x, y) in ((1, 12), (16, 12)): R.obj('plant', [(x, y)], plant_draw(R, x, y, '#4E8A5E', '#F8C4D0'))
+    R.light(8.5, 2, -24, 44, [255, 200, 140], .45, 1); R.light(4, 9, -30, 30, [255, 190, 120], .3, 1)
+    R.save('warm_infirmary', '따뜻한 양호실', '누비가 지키는 방', [14, 1])
+    return R
+
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__))); os.makedirs('out', exist_ok=True)
-    rooms = [('infirmary', sera_room()), ('old_infirmary', old_room())]
+    rooms = [('infirmary', sera_room()), ('old_infirmary', old_room()), ('warm_infirmary', warm_room())]
     ims = []
     for key, R in rooms:
         bg = Image.open('out/%s_bg.png' % key).convert('RGBA'); sh = Image.open('out/%s_obj.png' % key).convert('RGBA')
         import json; meta = json.load(open('out/%s.json' % key))
         for o in sorted(meta['objs'], key=lambda o: o['box'][1] + o['box'][0]):
             if o['sw']: bg.alpha_composite(sh.crop((o['sx'], o['sy'], o['sx'] + o['sw'], o['sy'] + o['sh'])), (o['x'], o['y']))
-        if key == 'old_infirmary':   # 가운데 침대 위 누비
-            nb = Image.open('../../public/art/nubi_s.png').convert('RGBA').crop((0, 0, 32, 32)); x, y = R.P(8.45, 1.6); bg.alpha_composite(nb, (int(x) - 16, int(y) - 41))
-            dark = Image.new('RGBA', bg.size, (10, 6, 24, 90)); bg.alpha_composite(dark)
+        if key in ('old_infirmary', 'warm_infirmary'):   # 가운데 침대 위 누비
+            fr = 0 if key == 'old_infirmary' else 8
+            nb = Image.open('../../public/art/nubi_s.png').convert('RGBA').crop((fr * 32, 0, fr * 32 + 32, 32)); x, y = R.P(8.45, 1.6); bg.alpha_composite(nb, (int(x) - 16, int(y) - 41))
+            if key == 'old_infirmary': bg.alpha_composite(Image.new('RGBA', bg.size, (10, 6, 24, 90)))
         ims.append(bg)
     W = sum(i.width for i in ims); H = max(i.height for i in ims); pv = Image.new('RGBA', (W, H), hexc('#140D1E')); x = 0
     for i in ims: pv.alpha_composite(i, (x, 0)); x += i.width
