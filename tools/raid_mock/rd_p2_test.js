@@ -39,5 +39,5 @@ const JOBS = ['knight', 'white', 'black', 'warrior', 'bard', 'thief', 'druid', '
   await P[0].waitForTimeout(1500); await P[0].screenshot({ path: D + '/p2_host_end.png' }); await P[1].screenshot({ path: D + '/p2_mem_end.png' });
   console.log('room', await P[0].evaluate(() => JSON.stringify(window.__tree.raid && window.__tree.raid.room && Object.values(window.__tree.raid.room).map(r => [r.st, r.win]))));
   console.log('count', await P[1].evaluate(() => JSON.stringify(window.__T.me().raid)));
-  if (fs.existsSync(D + '/p2_mem_end.png')){ await P[1].click('#rdout').catch(() => {}); await P[1].waitForTimeout(800); console.log('after out', await P[1].evaluate(() => [World.where(), !!window.__T.xbGet()].join(' '))); }
+  if (fs.existsSync(D + '/p2_mem_end.png')){ await P[1].click('#rdout', { timeout: 1500 }).catch(() => {}); await P[0].waitForTimeout(3000); console.log('host after', await P[0].evaluate(() => [World.where(), !!window.__T.xbGet(), !!document.querySelector('#xcv')].join(' '))); console.log('after out', await P[1].evaluate(() => [World.where(), !!window.__T.xbGet()].join(' '))); }
   console.log('errs', JSON.stringify(errs.slice(0, 10))); await b.close(); })();
