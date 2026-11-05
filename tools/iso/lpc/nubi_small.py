@@ -119,9 +119,8 @@ VIEWS = [('front', grid(FRONT)), ('left', LEFT), ('right', grid(RIGHT)), ('back'
 if __name__ == '__main__':
     cells = [draw(g, f, v, r) for f, r in ((False, False), (False, True), (True, True)) for v, g in VIEWS]
     sh = np.concatenate(cells, 1); Image.fromarray(sh).save(os.path.join(ROOT, 'public', 'art', 'nubi_s.png'))
-    # 미리보기: 학생(캐릭터 한 칸)과 나란히
-    big = Image.open(os.path.join(ROOT, 'public', 'art', 'npcs.png')).convert('RGBA').crop((0, 64 * 10, 64, 64 * 11))
-    pv = Image.new('RGBA', (64 + 32 * 12 + 16, 64), (250, 241, 226, 255)); pv.alpha_composite(big, (0, 0))
-    for i, c in enumerate(cells): pv.alpha_composite(Image.fromarray(c), (80 + i * 32, 32))
-    pv.resize((pv.width * 5, pv.height * 5), Image.NEAREST).save(os.path.join(ROOT, 'tools', 'nubi_mock', 'nubi_small_prev.png'))
+    # 미리보기: 누비 12 칸만
+    pv = Image.new('RGBA', (32 * 12, 32), (250, 241, 226, 255))
+    for i, c in enumerate(cells): pv.alpha_composite(Image.fromarray(c), (i * 32, 0))
+    pv.crop((0, 8, pv.width, 32)).resize((pv.width * 5, 24 * 5), Image.NEAREST).save(os.path.join(ROOT, 'tools', 'nubi_mock', 'nubi_small_prev.png'))
     print('ok')
