@@ -298,7 +298,20 @@ body.admin #shell{max-width:none}
 .bbcta.sub{background:transparent;color:inherit;border:2px solid rgba(255,255,255,.28);box-shadow:none}
 .bbinput{width:100%;max-width:300px;height:50px;border-radius:14px;border:2px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:inherit;font:inherit;font-size:17px;text-align:center}.bbinput:focus{outline:none;border-color:#FFA53A}
 #adminv .adfold>.adfh{cursor:pointer}#adminv .adfold.shut>:not(.adfh){display:none!important}#adminv .adfold>.adfh b:first-child::after,#adminv .adfold>b.adfh::after{content:' ▾';color:#9a8ab8}#adminv .adfold.shut>.adfh b:first-child::after,#adminv .adfold.shut>b.adfh::after{content:' ▸'}
-#adminv .abhead{display:flex;align-items:center;justify-content:space-between;gap:8px}#adminv .abchips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px}#adminv .abchips span{font-size:12px;padding:3px 9px;border-radius:999px;background:#F3EEF9;color:#5A4B72}#adminv .abchips b{color:#2A1E3A}
+#adminv .abhead{display:flex;align-items:center;justify-content:space-between;gap:8px}#adminv .grad{display:flex;flex-direction:column;margin-top:4px}
+#adminv .grr{padding:8px 2px;border-top:1px solid #EEE6F6;display:flex;flex-direction:column;gap:6px}
+#adminv .grr .h{display:flex;align-items:center;gap:8px}
+#adminv .grr .h b{flex:1;min-width:0;font-size:14px;color:#2A1E3A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#adminv .grr .yr,#adminv .grr .st{flex:none;white-space:nowrap;font-size:12px;border-radius:999px;padding:2px 9px;background:#F3EEF9;color:#5A4B72}
+#adminv .grr .st{background:#F4F2F7;color:#9A90AA}
+#adminv .grr .st.ok{background:#E0F6E4;color:#1A6A2A}
+#adminv .grr .st.no{background:#FFE0E4;color:#A0203A}
+#adminv .grr .sc{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+#adminv .grr .sc span{display:flex;flex-direction:column;align-items:center;background:#FAF7FD;border-radius:8px;padding:3px 0;font-size:13px;color:#2A1E3A;font-variant-numeric:tabular-nums}
+#adminv .grr .sc small{font-size:10px;color:#8A7AA8}
+#adminv .grr .sc .tot{background:#FFF0B0;color:#7A5A00;font-weight:700}
+#adminv .grr .nt{font-size:11px;color:#8A7AA8}
+#adminv .abchips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px}#adminv .abchips span{font-size:12px;padding:3px 9px;border-radius:999px;background:#F3EEF9;color:#5A4B72}#adminv .abchips b{color:#2A1E3A}
 #adminv .abtable{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px 16px}#adminv .abrow{display:grid;grid-template-columns:72px 92px 1fr;align-items:center;gap:8px;padding:5px 2px;border-bottom:1px solid #F0EAF6;font-size:13px}
 #adminv .abn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}#adminv .abrow select{width:100%}#adminv .abs{display:flex;align-items:center;gap:6px;color:#5A4B72}#adminv .abs.dim{color:#A99CBE}#adminv .abs.ok{color:#2E8A55;font-weight:700}#adminv .abs.go{color:#C2741C;font-weight:700}
 #adminv .abs .dots{display:inline-flex;gap:3px}#adminv .abs .dots b{width:7px;height:7px;border-radius:50%;background:#E2D8EE}#adminv .abs .dots b.on{background:#F5A13A}
@@ -14944,7 +14957,8 @@ function adminGrHTML(){
   const mine = id => { const p = P[id].gr && P[id].gr.pend; return p && String(p.cid) === String(c.id) ? p : null; }, took = ids.filter(mine), passN = took.filter(id => mine(id).g).length;
   return `<div class="adcard sdad"><div class="abhead"><b>승급 실기 시험</b>${!c.open || c.pub ? '<button class="btn sm go" data-gra="open">승급 시험 시작</button>' : ''}${live ? '<button class="btn sm" data-gra="close">일찍 끝내기</button>' : ''}${ended ? '<button class="btn sm go" data-gra="pub">결과 공개</button>' : ''}</div>
     <div class="abchips"><span>${live ? `시험 중 · 남은 시간 ${hm}` : ended ? '시험 끝 · 결과 공개 전' : c.pub ? '결과 공개함' : '시작 전'}</span>${c.open ? `<span>응시 <b>${took.length}</b> / ${ids.length}</span><span>합격 <b>${passN}</b></span>` : ''}${cnt.map((n, i) => `<span>${i + 1} 학년 <b>${n}</b></span>`).join('')}</div>
-    ${ids.map(id => { const p = mine(id); return `<div class="sdarow" style="flex-direction:column;align-items:stretch"><div style="display:flex;justify-content:space-between;gap:6px;align-items:center"><b>${esc(P[id].nick)}</b><span class="tag">${Y(id)} 학년</span><span class="s">${c.open ? (p ? (p.g ? `합격 · ${p.g} 등급` : '불합격') + (p.shown ? ' · 편지 읽음' : '') : '아직 안 봄') : ''}</span></div>${p ? `<div class="s">${p.y} 학년 시험 · ${p.t.join(' / ')} · 총점 ${p.tot} 점${p.cut ? ' (도중에 나감)' : ''}</div>` : ''}</div>`; }).join('')}
+    <div class="grad">${[...took, ...ids.filter(id => !mine(id))].map(id => { const p = mine(id), st = !c.open ? '' : !p ? '<span class="st">아직 안 봄</span>' : p.g ? `<span class="st ok">합격 · ${p.g}</span>` : '<span class="st no">불합격</span>';
+      return `<div class="grr${p ? ' took' : ''}"><div class="h"><b>${esc(P[id].nick)}</b><span class="yr">${Y(id)} 학년</span>${st}</div>${p ? `<div class="sc">${['물약', '요리', '생물', '감별', '문양', '실기'].map((n, i) => `<span><small>${n}</small>${p.t[i] ?? '-'}</span>`).join('')}<span class="tot"><small>총점</small>${p.tot}</span></div><div class="nt">${p.y} 학년 시험${p.cut ? ' · 도중에 나감' : ''}${p.shown ? ' · 편지 읽음' : ''}</div>` : ''}</div>`; }).join('')}</div>
     <div class="s" style="margin-top:6px">「승급 시험 시작」을 누르면 그때부터 12 시간 동안 학생마다 한 번씩 한밤 도서관의 아울라에게서 시험을 봐요 (한 학년씩만 · 재시험 없음 · 시작하면 끝까지). 결과는 학생에게 바로 보이지 않고 여기에만 쌓여요. 12 시간이 지나면 「결과 공개」를 눌러 주세요. 학생마다 편지 봉투가 날아가 성적표가 열리고, 합격한 학생은 그때 학년 이름표와 망토가 붙어요. 과제 점수는 물약 / 요리 / 생물 / 감별 / 문양 / 실기 순서 · 70 점 C · 80 점 B · 90 점 A.</div></div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-gra]'); if (!b) return; const a = b.dataset.gra;
