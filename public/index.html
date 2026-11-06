@@ -10225,7 +10225,7 @@ const knFace = (n, sc) => g => { g.fillStyle = '#2A1E3A'; g.fillRect(0, 0, 32, 3
   if (n.av){ const S = World.Avatar.compose(sc ? knAvWith(npcAv(n), sc) : npcAv(n)), B = World.Avatar.headBox; if (S) g.drawImage(S, B.x, B.y, B.s, B.s, 0, 0, 32, 32); return; }
   const f = NPC_FACE[n.spr], I = knSprSheet(n, sc) || knNpcImg(); if (f && (I.width || I.complete)) g.drawImage(I, f[0], (I === NPC_IMG_STAGE ? n.spr * 64 : 0) + f[1], f[2], f[2], 0, 0, 32, 32); };
 // ---------- 그림 NPC(동물 · 허수아비) 목도리: 앞 · 옆 · 뒤마다 직접 잡은 목 자리 (tools/iso/lpc/knit_npc.py와 같아요) ----------
-const KN_SP = { 14: [[43, 24, 36], [38, 26, 36], [41, 27, 39]], 15: [[36, 23, 40], [36, 26, 38], [35, 23, 40]], 16: [[34, 21, 42], [34, 25, 39], [34, 21, 42]], 6: [[35, 21, 42], [35, 25, 37], [34, 21, 42]], 7: [[39, 26, 37], [36, 25, 43], [39, 26, 37]], 8: [[37, 23, 40], [35, 24, 40], [36, 23, 40]], 9: [[34, 24, 39], [36, 26, 36], [33, 24, 39]], 10: [[35, 24, 39], [36, 27, 36], [34, 24, 39]], 11: [[34, 21, 42], [35, 26, 38], [33, 21, 42]], 12: [[34, 21, 42], [35, 26, 38], [33, 21, 42]], 13: [[42, 23, 40], [44, 28, 36], [43, 23, 38]], 0: [[40, 23, 34], [42, 22, 30], [36, 28, 40]], 1: [[38, 26, 39], [37, 24, 34], [37, 27, 41]], 2: [[39, 27, 41], [39, 28, 42], [38, 28, 42]], 3: [[41, 24, 39], [41, 25, 37], [40, 22, 41]], 5: [[40, 26, 38], [40, 27, 37], [40, 26, 38]] };
+const KN_SP = { 14: [[45, 24, 34], [45, 25, 35], [43, 25, 37]], 15: [[36, 23, 40], [36, 26, 38], [35, 23, 40]], 16: [[34, 21, 42], [34, 25, 39], [34, 21, 42]], 6: [[35, 21, 42], [35, 25, 37], [34, 21, 42]], 7: [[39, 26, 37], [36, 25, 43], [39, 26, 37]], 8: [[37, 23, 40], [35, 24, 40], [36, 23, 40]], 9: [[34, 24, 39], [36, 26, 36], [33, 24, 39]], 10: [[35, 24, 39], [36, 27, 36], [34, 24, 39]], 11: [[34, 21, 42], [35, 26, 38], [33, 21, 42]], 12: [[34, 21, 42], [35, 26, 38], [33, 21, 42]], 13: [[42, 23, 40], [44, 28, 36], [43, 23, 38]], 0: [[40, 23, 34], [42, 22, 30], [36, 28, 40]], 1: [[38, 26, 39], [37, 24, 34], [37, 27, 41]], 2: [[39, 27, 41], [39, 28, 42], [38, 28, 42]], 3: [[41, 24, 39], [41, 25, 37], [40, 22, 41]], 5: [[40, 26, 38], [40, 27, 37], [40, 26, 38]] };
 const KN_LEAF = [[37, 31, 37], [37, 30, 36], [37, 31, 37]];   // 맨디: 가운데 잎줄기
 const knRgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
 function knFill(L, pts, ramp){   // LPC식 칠하기: 왼쪽 위가 밝고 · V 뜨개 결 · 바깥 테두리는 가장 진한 색
@@ -10276,12 +10276,12 @@ function knNpcWear(n, o){   // syncNpcs: 내가 선물한 목도리를 두른 �
   const sh = knSprSheet(n, sc); if (!sh){ const I = knNpcImg(); if (!(I.complete && I.naturalWidth) && !knNpcWait){ knNpcWait = true; I.addEventListener('load', () => { knNpcWait = false; syncNpcs(); }, { once: true }); } return o; }
   return { ...o, sheet: sh, kn: sc.join(',') };
 }
-// ---------- 뜨개 인형 가구: 저장한 생김새로 그때그때 그려요 ----------
+// ---------- 뜨개 인형 가구: 저장한 생김새로 그때그때 그려요 (친구 방의 새 친구 인형은 내가 아직 못 만났어도 그려요) ----------
 function knDollsDyn(){
   if (!me || !World.furnDyn) return; let made = false, miss = false;
   const have = new Set([...(me.room || []).map(r => r.f), ...Object.keys(me.fbag || {}).filter(k => me.fbag[k] > 0)]);
   const ro = World.roomOwner && World.roomOwner(); if (ro && !ro.own) (ro.furn || []).forEach(f => { const F_ = FURN[f.k]; if (F_) have.add(F_.id); });
-  KN_DOLLS.forEach(([id]) => { const fid = 'kn_doll_' + id; if (!have.has(fid) || World.furnDyn[fid]) return; const n = npcGet(id) || (NEWNPC.includes(id) ? NPC_DEF.find(x => x.id === id) : null);   // 친구 방의 새 친구 인형은 내가 아직 못 만났어도 그려요 const c = n && knitDoll(n, .6); if (c){ World.furnDyn[fid] = c; made = true; } else miss = true; });
+  KN_DOLLS.forEach(([id]) => { const fid = 'kn_doll_' + id; if (!have.has(fid) || World.furnDyn[fid]) return; const n = npcGet(id) || (NEWNPC.includes(id) ? NPC_DEF.find(x => x.id === id) : null); const c = n && knitDoll(n, .6); if (c){ World.furnDyn[fid] = c; made = true; } else miss = true; });
   if (made && typeof syncRoom === 'function') syncRoom();
   return miss;
 }
@@ -11526,7 +11526,7 @@ const capIc = (() => { let u = null; return (extra = '') => { if (!u){ const c =
 // ===== 배트리의 쏟아진 편지: 배트리가 돌풍에 꽈당 → 봉투 벗겨진 편지가 흩어짐 → 3 일 동안 하루 한 통 주워서 받는 친구 방에 놓기 → 내 방에서 내 편지 읽고 답장 =====
 //   ltr/ctl { open, id, d0 시작한 날 번호 } · ltr/assign/<uid> = [NPC, NPC, NPC] · ltr/drop/<받는 uid>/<날> = { by, x, y, at } · ltr/reply/<uid>/<날> = { n, t, at } (관리자만 읽어요)
 //   me.ltr = { ev, met 연출 봄, held { d, to } 들고 있는 편지, dlv { 날: 1 } 배달함, got { 날: 1 } 받아 읽음, rep { 날: { n, at } } 답장 보냄 }
-// NPC 11 명 × 편지 3 종 · 편지마다 답장 3 개와, 그 답장을 받은 NPC가 다음에 말을 걸면 하는 말
+// NPC 14 명 × 편지 3 종 (새 친구 셋은 만난 학생에게만) · 편지마다 답장 3 개와, 그 답장을 받은 NPC가 다음에 말을 걸면 하는 말
 const LT_LETTERS = {
   nabi: [
     { t: '{name}에게\n\n오늘도 매점 앞을 지나갔지냥.\n일부러 기다린 건 아니다냥.\n....그냥 햇볕이 좋아서 앉아 있었을 뿐이다냥.\n\n다음에 생선 남으면.... 나눠 줘도 된다냥.',
@@ -11621,6 +11621,30 @@ const LT_LETTERS = {
       r: [['다음엔 진짜 씌워 줄게', '삐빅. 우산 약속 수신. 비 오는 날 일정에 당신 이름을 넣었습니다.'], ['상상 기능 생긴 거 축하해', '삐빅. 축하 수신. 새 기능 이름: {name} 상상. 저장 완료.'], ['감기 걸리지 마', '삐빅. 로봇은 감기에 안 걸립니다. 그래도 걱정해 준 기록은 지우지 않겠습니다.']] },
     { t: '수신: {name}\n\n삐빅. 비밀 데이터 전송.\n저는 밤마다 고향 신호를 찾습니다.\n\n그런데 요즘은 신호를 찾다가\n이 마을 소리를 더 오래 듣습니다.\n특히 당신 목소리요.',
       r: [['나도 오투모 목소리 좋아', '삐빅. 제 목소리가 좋다는 답장 수신. 볼륨을 1 칸 올렸습니다.'], ['고향 신호 꼭 찾길', '삐빅. 응원 수신. 찾더라도 이 마을 주파수는 계속 켜 두겠습니다.'], ['여기도 네 집이야', '삐빅. 「여기도 집」 수신. ....냉각 팬이 멈췄다가 다시 돌았습니다.']] }
+  ],
+  dodo: [
+    { t: '{name} 손님께\n\n자아, 편지 경매를 시작합니다.\n출품작은 이 편지 한 장.\n시작가는 호박씨 한 알.\n\n....더 없습니까.\n그럼 {name} 손님께 낙찰입니다.\n답장으로 값을 치러 주십시오.',
+      r: [['호박씨 한 알 보낼게', '호박씨 한 알로 낙찰하셨지요. 제 경매 역사상 가장 싼 값에, 가장 비싼 물건이 팔렸습니다.'], ['더 비싸게 살게', '더 비싸게 사시겠다고요. 손님, 그건 경매가 아니라 고집입니다. ....기분은 아주 좋습니다.'], ['도도 글씨 귀엽다', '귀엽다니요. 경매사 글씨는 위엄이 생명입니다. ....그 말은 모자 속에 넣어 두겠습니다.']] },
+    { t: '{name} 손님께\n\n오늘의 내기 결과를 알려 드립니다.\n「손님이 시계탑을 올려다본다」에 호박씨 셋.\n\n결과는.... 제가 이겼습니다.\n오후 세 시 십 분, 분명히 보셨습니다.\n\n다음에도 올려다봐 주십시오.\n제가 계속 이기게요.',
+      r: [['일부러 또 올려다볼게', '일부러 올려다보시겠다고요. 그건 승부 조작입니다. ....이번만 눈감아 드리겠습니다.'], ['손 흔들어 줄게', '손을 흔드신다고 했지요. 저는 날개를 흔들겠습니다. 짧아서 잘 안 보이겠지만요.'], ['나도 도도한테 걸었어', '손님도 저한테 거셨다고요. 이 판은 둘 다 이긴 걸로 하겠습니다. 처음 보는 결과입니다.']] },
+    { t: '{name} 손님께\n\n비밀을 하나 출품합니다.\n저는 시계탑 시계를 1 분씩 늦춰 둡니다.\n시간이 늦게 가면 끝도 늦게 올 것 같아서요.\n\n....그런데 손님이랑 내기를 하다 보면\n그 1 분이 너무 빨리 갑니다.\n이건 계산에 없던 일입니다.',
+      r: [['그 1 분 같이 쓰자', '그 1 분을 같이 쓰자고 하셨지요. 그럼 늦춰 둔 보람이 있었습니다. 내일은 2 분 늦춰 볼까요. 농담입니다.'], ['비밀 지켜 줄게', '비밀을 지켜 주신다고요. 손님 입은 경매대 금고보다 무겁군요. 고맙습니다.'], ['끝은 아직 멀었어', '끝은 아직 멀었다고 하셨지요. 그 말에 호박씨 전부를 걸겠습니다. 이번엔 꼭 이기고 싶습니다.']] }
+  ],
+  selin: [
+    { t: '{name}에게\n\n계약서는 아니야.\n그래도 조건부터 적을게.\n\n첫째, 소매가 해지면 가져올 것.\n둘째, 단추가 떨어지면 가져올 것.\n셋째, 아무 일 없어도 올 것.\n\n....셋째는 실수로 쓴 거 아니야.',
+      r: [['아무 일 없어도 갈게', '아무 일 없어도 온다고 했지. 셋째 조항 이행 확인. 차는 준비해 둘게. 값은 나중에.'], ['조항 하나 더 추가해', '조항을 하나 더 추가하라고. ....넷째, 오면 오래 있을 것. 이걸로 할게.'], ['셀린 글씨 반듯하다', '글씨가 반듯하다고. 스승님한테 배운 거야. 그 칭찬은.... 장부 말고 다른 데 적어 둘게.']] },
+    { t: '{name}에게\n\n오늘 골목에 비가 왔어.\n수선집 처마 밑에서 고양이 셋, 박쥐 하나가 비를 피했어.\n자릿값은 안 받았어.\n\n너도 비 오는 날 지나가면 들어와.\n자릿값은.... 그때 가서 정해.',
+      r: [['비 오는 날 꼭 들를게', '비 오는 날 들른다고 했지. 처마 밑 제일 마른 자리, 네 이름으로 잡아 둘게.'], ['자릿값은 내가 낼게', '자릿값을 낸다고. 그럼 값은 이야기 하나. 비 그칠 때까지 들려줘.'], ['박쥐는 배트리지', '박쥐가 배트리냐고. 맞아. 날개 말린 값으로 편지 세 통을 대신 배달해 줬어. 셈은 맞아.']] },
+    { t: '{name}에게\n\n이건 장부에 없는 이야기야.\n밤마다 외상 장부를 한 줄씩 지워.\n받을 수 없는 돈을 장부에 두면 셈이 흐려지니까.\n\n맨 끝 줄은 아직 못 지웠어.\n내 이름이야.\n\n....누구한테 말한 건 처음이야.',
+      r: [['그 줄은 천천히 지워도 돼', '천천히 지워도 된다고 했지. 기한 없는 조항은 처음이야. ....나쁘지 않아.'], ['말해 줘서 고마워', '말해 줘서 고맙다고. 고맙다는 말은 값이 없어서.... 그냥 받을게. 처음으로.'], ['비밀 지킬게', '비밀을 지킨다고 했지. 계약 성립. 서명은 필요 없어. 너는 지킬 테니까.']] }
+  ],
+  bone: [
+    { t: '우리 길손 {name}에게\n\n「편지 한 장 접어 들고, 해골 하나 쓰는구나」\n\n노래로 쓰려니까 자꾸 길어져서\n이번만 그냥 쓸게.\n오늘 너를 만나서 축하해.\n어제도 만나서 축하했어.\n\n내일도 축하하게 해 줘.',
+      r: [['내일도 갈게', '내일도 온다고 했지. 그럼 내일 축하할 거리가 벌써 하나 생겼네. 「내일 오는 길손 하나, 미리미리 축하하세」.'], ['노래로도 써 줘', '노래로 써 달라고. 좋아, 다음 편지는 처음부터 끝까지 4 · 4 조로 쓸게. 각오해.'], ['나도 본 만나서 좋아', '나 만나서 좋다고. ....턱이 빠질 뻔했어. 기뻐서. 이건 진짜 축하할 일이야.']] },
+    { t: '우리 길손 {name}에게\n\n오늘 광장 공연 성적표야.\n웃음 넷, 박수 둘, 넘어짐 일곱.\n넘어짐은 일부러 한 게 셋, 진짜 넘어진 게 넷.\n\n제일 큰 웃음은\n네가 지나가다 웃어 준 거였어.\n공짜 관객이라 더 좋았어.',
+      r: [['다음 공연도 보러 갈게', '다음 공연도 본다고 했지. 첫 관객 자리, 맨 앞에 비워 둘게. 넘어지면 받아 줘.'], ['진짜 넘어진 건 괜찮아?', '진짜 넘어진 거 괜찮냐고 물었지. 뼈는 다 제자리야. 걱정해 준 건 오래 기억할게.'], ['웃음 다섯으로 고쳐 줘', '웃음 다섯으로 고치라고. 좋아, 네 웃음은 두 번 치기로 했어. 성적이 쑥 올랐어.']] },
+    { t: '{name}에게\n\n비밀 하나.\n나는 슬픈 사람 옆에서 늘 우스운 노래를 불렀어.\n위로하는 법을 몰라서.\n\n요즘은 조용히 있기를 연습해.\n기록은 12 초.\n\n....네 옆에서는\n조용해도 하나도 안 무서워.',
+      r: [['나도 옆에 있을게', '옆에 있겠다고 했지. 그럼 오늘은 13 초에 도전할게. 네가 있으니까.'], ['노래도 좋아', '노래도 좋다고 했지. 그럼 조용한 거 다음에, 한 소절만 불러 줄게. 아주 느리게.'], ['12 초면 대단한 거야', '12 초면 대단하다고. 축하해 줘서 고마워. 해골 인생 최고 기록이야.']] }
   ]
 };
 
@@ -11657,7 +11681,16 @@ const LT_NPC = [
     deco: [['grass', 30, 260], ['hoof', 280, 30], ['hoof', 300, 70], ['feather2', 270, 260]], hint: '풀물 얼룩이 있어. 짧고 무뚝뚝하게 썼네. 동물 발자국도 찍혀 있고.', ok: '....맞다. 다시는 편지 안 쓴다. ....아니, 가끔은 쓸게.' },
   { id: 'otumo', n: '오투모', row: 10, font: "'G11'", size: 15, paper: '#E8F2FA', ink: '#1E3A5A', line: '#C8DCEC',
     t: '수신: {name}\n\n삐빅. 편지 형식 학습 중입니다.\n\n오늘의 기록.\n{name} 개체를 만나면 냉각 팬이 빨라집니다.\n원인 분석 중.\n\n결과가 나오면 다시 송신하겠습니다.',
-    deco: [['barcode', 260, 20], ['chip', 20, 20], ['beep', 270, 270]], hint: '바코드가 찍혀 있어. 글씨가 네모네모하고.... 기계가 쓴 것 같아.', ok: '삐빅. 발신자 확인됨: 오투모. 들켰습니다. ....냉각 팬이 또 빨라집니다.' }
+    deco: [['barcode', 260, 20], ['chip', 20, 20], ['beep', 270, 270]], hint: '바코드가 찍혀 있어. 글씨가 네모네모하고.... 기계가 쓴 것 같아.', ok: '삐빅. 발신자 확인됨: 오투모. 들켰습니다. ....냉각 팬이 또 빨라집니다.' },
+  { id: 'dodo', n: '도도', row: 11, font: "'Black Han Sans'", size: 20, paper: '#FFF4D8', ink: '#3A2A1A', line: '#EAD6A2',
+    t: '{name} 손님께\n\n자아, 편지 경매를 시작합니다.\n출품작은 이 편지 한 장.\n시작가는 호박씨 한 알.\n\n....더 없습니까.\n그럼 {name} 손님께 낙찰입니다.\n답장으로 값을 치러 주십시오.',
+    deco: [['gavel', 300, 18], ['pseed', 8, 150], ['pseed', 10, 400], ['monocle', 360, 400], ['clock', 160, 6]], hint: '호박씨가 한 알 붙어 있어. 구석엔 작은 경매 망치 그림이 찍혀 있고. 무엇이든 내기에 거는 누구일까.', ok: '자아, 정답입니다. 손님의 감정 실력을 인정하겠습니다. 상품은.... 다음 내기 무료 참가권입니다.' },
+  { id: 'selin', n: '셀린', row: 12, font: "'Song Myung'", size: 21, paper: '#F4F0F6', ink: '#2A1E36', line: '#DCD2E6',
+    t: '{name}에게\n\n계약서는 아니야.\n그래도 조건부터 적을게.\n\n첫째, 소매가 해지면 가져올 것.\n둘째, 단추가 떨어지면 가져올 것.\n셋째, 아무 일 없어도 올 것.\n\n....셋째는 실수로 쓴 거 아니야.',
+    deco: [['needle', 300, 16], ['thread', 6, 150], ['button', 360, 400], ['button', 10, 400], ['spider', 160, 4]], hint: '조항마다 번호가 붙어 있어. 실 한 가닥이 끼어 있고, 단추도 하나 꿰매져 있네. 바느질하는 누구 같은데.', ok: '들켰네. 조항 번호에서 티가 났지. ....편지는 계약서가 아니라고 했잖아. 그래도 잘 받았다니 됐어.' },
+  { id: 'bone', n: '본', row: 13, font: "'Dokdo'", size: 24, paper: '#F6ECD8', ink: '#3A1E2A', line: '#E4D2B0',
+    t: '우리 길손 {name}에게\n\n「편지 한 장 접어 들고, 해골 하나 쓰는구나」\n\n노래로 쓰려니까 자꾸 길어져서\n이번만 그냥 쓸게.\n오늘 너를 만나서 축하해.\n어제도 만나서 축하했어.\n\n내일도 축하하게 해 줘.',
+    deco: [['note', 8, 14], ['note2', 360, 40], ['lute', 360, 400], ['note', 10, 400], ['feather2', 150, 4]], hint: '음표가 잔뜩 그려져 있어. 글 끝소리를 일부러 맞춘 것 같고. 노래 좋아하는 누구일까.', ok: '맞혔다. 축하해. 「편지 주인 맞힌 길손, 오늘 하루 주인공일세」.' }
 ];
 const LT_PX = {
   paw: [['..a.a..', '.a.a.a.', '..aaa..', '.aaaaa.', '.aaaaa.', '..aaa..'], { a: '#D88A9A' }, 4],
@@ -11693,9 +11726,20 @@ const LT_PX = {
   feather2: [['....a', '...ab', '..ab.', '.ab..', 'a....'], { a: '#8A7A5A', b: '#E8E0C8' }, 5],
   barcode: [['a.aa.a.aaa.a.aa', 'a.aa.a.aaa.a.aa', 'a.aa.a.aaa.a.aa', 'a.aa.a.aaa.a.aa'], { a: '#1E3A5A' }, 3],
   chip: [['a.a.a.a', 'bbbbbbb', 'bcccccb', 'bcdddcb', 'bcccccb', 'bbbbbbb', 'a.a.a.a'], { a: '#8A9AB0', b: '#2A3A5A', c: '#4A6A9A', d: '#8AF0FF' }, 4],
-  beep: [['aaaaaaaaaa', 'a........a', 'a.bb.bb..a', 'a........a', 'aaaaaaaaaa'], { a: '#3A8AD0', b: '#3A8AD0' }, 4]
+  beep: [['aaaaaaaaaa', 'a........a', 'a.bb.bb..a', 'a........a', 'aaaaaaaaaa'], { a: '#3A8AD0', b: '#3A8AD0' }, 4],
+  gavel: [['.aaaaaa.', '.abbbba.', '.aaaaaa.', '....c...', '....c...', '....c...', '...ccc..'], { a: '#5A3A1A', b: '#9A6A3A', c: '#B8884A' }, 4],
+  pseed: [['.aa.', 'abba', 'abba', 'abba', '.aa.'], { a: '#8A7A3A', b: '#EEE6B0' }, 4],
+  monocle: [['.aaa..', 'a...a.', 'a..ba.', 'a...a.', '.aaa..', '....a.', '.....a'], { a: '#C8A040', b: '#FFFFFF' }, 4],
+  clock: [['.aaaaa.', 'abbbbba', 'abbcbba', 'abbcbba', 'abbccba', 'abbbbba', '.aaaaa.'], { a: '#5A4A3A', b: '#FFF8E4', c: '#3A2A1A' }, 4],
+  needle: [['.....aa', '.....ab', '....b..', '...b...', '..b....', '.b.....', 'b......'], { a: '#7A6A8A', b: '#A8A0B8' }, 4],
+  thread: [['aaaaa', '.bbb.', '.bbb.', '.bbb.', 'aaaaa'], { a: '#8A5A3A', b: '#9A6AC8' }, 5],
+  button: [['.aaaa.', 'abbbba', 'abcbca', 'abbbba', 'abcbca', '.aaaa.'], { a: '#3A2A4A', b: '#B88AD8', c: '#3A2A4A' }, 4],
+  spider: [['a.a.a', '.aaa.', 'aabaa', '.aaa.', 'a.a.a'], { a: '#2A1E36', b: '#4AC8C8' }, 4],
+  note: [['..aa', '..a.', '..a.', 'aaa.', 'aaa.'], { a: '#3A1E2A' }, 4],
+  note2: [['.aaaa', '.a..a', '.a..a', 'aa.aa', 'aa.aa'], { a: '#A83A3A' }, 4],
+  lute: [['....a.', '...a..', '..b...', '.ccc..', 'ccdcc.', 'ccccc.', '.ccc..'], { a: '#5A3A1A', b: '#8A5A2A', c: '#C8884A', d: '#3A2A1A' }, 4]
 };
-const LT_THANKS = { nabi: '답장 받았다냥. ....몇 번이나 읽은 건 아니다냥. 열 번쯤이다냥.', batri: '답장 받았어. 우체부가 자기 앞으로 온 편지를 받는 건 처음이야. 가방 맨 안쪽에 넣어 뒀어.', kappa: '답장을 받았다. 젖지 않게 접시 위에 올려 두었다. ....농담이다. 상자에 넣었다.', aula: '답장, 잘 받았어요. 제일 아끼는 책 사이에 끼워 두었어요.......', mandi: '히익.... 답장 받았어요. 화분 옆에 두고 매일 읽어요.......', jipsin: '답장 받았어! 모자 속에 넣고 다녀. 바람 불어도 안 날아가게.', sera: '답장 고마워. 양호실 책상 서랍에 넣어 뒀단다. 힘든 날 꺼내 볼게.', madeleine: '답장 받았어! 너무 좋아서 오늘 쿠키를 두 판이나 구웠어.', stella: '답장을 받았어요. 별들에게도 읽어 줬어요. 다들 반짝이더라고요.......', leo: '....답장 받았다. 사육장 벽에 붙여 뒀다. 양들이 못 먹게 높이.', otumo: '삐빅. 답장 수신 완료. 저장 위치: 제일 소중한 폴더. 반복 재생 중입니다.' };
+const LT_THANKS = { nabi: '답장 받았다냥. ....몇 번이나 읽은 건 아니다냥. 열 번쯤이다냥.', batri: '답장 받았어. 우체부가 자기 앞으로 온 편지를 받는 건 처음이야. 가방 맨 안쪽에 넣어 뒀어.', kappa: '답장을 받았다. 젖지 않게 접시 위에 올려 두었다. ....농담이다. 상자에 넣었다.', aula: '답장, 잘 받았어요. 제일 아끼는 책 사이에 끼워 두었어요.......', mandi: '히익.... 답장 받았어요. 화분 옆에 두고 매일 읽어요.......', jipsin: '답장 받았어! 모자 속에 넣고 다녀. 바람 불어도 안 날아가게.', sera: '답장 고마워. 양호실 책상 서랍에 넣어 뒀단다. 힘든 날 꺼내 볼게.', madeleine: '답장 받았어! 너무 좋아서 오늘 쿠키를 두 판이나 구웠어.', stella: '답장을 받았어요. 별들에게도 읽어 줬어요. 다들 반짝이더라고요.......', leo: '....답장 받았다. 사육장 벽에 붙여 뒀다. 양들이 못 먹게 높이.', otumo: '삐빅. 답장 수신 완료. 저장 위치: 제일 소중한 폴더. 반복 재생 중입니다.', dodo: '답장 받았습니다. 경매대 금고 맨 안쪽에 넣었습니다. 이건 절대 출품하지 않습니다.', selin: '답장 받았어. 장부 말고 반짇고리 뚜껑 안쪽에 붙여 뒀어. 값은 안 적었어.', bone: '답장 받았어. 류트 통 안에 넣어 뒀어. 줄 튕길 때마다 같이 울려. 축하해, 내 류트.' };
 const LT_BATRI = { t: '{name}에게\n\n이번 편지는.... 내가 대신 써.\n가방을 엎는 바람에 네 앞으로 온 편지 한 통이\n바람에 날아가 버렸거든.\n\n대신 약속할게.\n다음 배달은 꼭, 제일 먼저 너한테 갈게.', r: [['괜찮아, 고마워', '괜찮다고 해 줘서.... 날개에 힘이 났어. 다음 배달은 너부터야.'], ['날아간 편지 같이 찾자', '같이 찾자고 했지. 바람 방향은 내가 잘 알아. 언젠가 꼭 찾을게.'], ['배트리 편지가 더 좋아', '내 편지가 더 좋다고? ....봉투를 또 엎을 뻔했어.']] };
 const LT_SHIFT = [1, 5, 7], LT_DAYS = 3;
 let ltCtl = null, ltAssign = {}, ltDrops = {}, ltOn = false, ltOffs = [], ltSkip = false, ltAskedFor = '', ltPropSig = '', ltFontOK = false;
@@ -11704,17 +11748,22 @@ const ltDay = () => ltCtl && ltCtl.d0 != null ? ltDayNum() - ltCtl.d0 : -1;
 const ltStudents = P => Object.keys(P || {}).filter(id => P[id] && P[id].nick).sort();
 const ltCap = id => (LT_LETTERS[id] || []).length;
 const ltNpc = id => LT_NPC.find(n => n.id === id);
-function ltAuto(S){ const out = {}; S.forEach((id, i) => { out[id] = [0, 1, 2].map(d => { const k = i * 3 + d; return k < 33 ? LT_NPC[k % 11].id : (['mandi', 'madeleine', 'jipsin'][k - 33] || ''); }); }); return out; }
-function ltTable(P, A){ const S = ltStudents(P), auto = ltAuto(S), T = {}; S.forEach(id => { T[id] = [0, 1, 2].map(d => { const a = A && A[id]; return a && a[d] !== undefined && a[d] !== null ? a[d] : auto[id][d]; }); }); return { S, T }; }
+const LT_OLD = LT_NPC.slice(0, 11).map(n => n.id);   // 원래 11 명 (자동 배정 순서를 그대로 지켜요)
+const ltT0 = () => (ltCtl && ltCtl.at) || (typeof AD !== 'undefined' && AD && AD.ltctl && AD.ltctl.at) || 0;   // 편지 이벤트를 시작한 시각: 그 뒤에 만난 새 친구는 이번 회차 자동 배정에 안 넣어요 (이미 받은 편지가 바뀌지 않게)
+const ltMetBy = (p, n) => { if (!nnMetIn(p, n)) return false; const at = NEWNPC.includes(n) && p.nnpc[n].at, t0 = ltT0(); return !at || !t0 || at <= t0; };
+function ltAuto(S, P){ const out = {}, used = {}; S.forEach((id, i) => { const row = []; for (let d = 0; d < 3; d++){ const k = i * 3 + d; if (k < 33){ row.push(LT_OLD[k % 11]); continue; }
+  const nn = NEWNPC.filter(n => LT_LETTERS[n] && (used[n] || 0) < ltCap(n) && ltMetBy(P && P[id], n) && !row.includes(n)).sort((a, b) => (used[a] || 0) - (used[b] || 0))[0];   // 새 친구: 만난 학생에게만 · 편지 수만큼
+  if (nn){ used[nn] = (used[nn] || 0) + 1; row.push(nn); } else row.push(['mandi', 'madeleine', 'jipsin'][k - 33] || ''); } out[id] = row; }); return out; }
+function ltTable(P, A){ const S = ltStudents(P), auto = ltAuto(S, P), T = {}; S.forEach(id => { T[id] = [0, 1, 2].map(d => { const a = A && A[id]; return a && a[d] !== undefined && a[d] !== null ? a[d] : auto[id][d]; }); }); return { S, T }; }
 function ltLetter(to, d, P = playersList, A = ltAssign){
-  const { S, T } = ltTable({ ...P, ...(uid && me ? { [uid]: me } : {}) }, A), id = (T[to] || [])[d];
-  if (!id || !LT_LETTERS[id]) return { n: ltNpc('batri'), L: LT_BATRI, id: 'batri' };
+  const PP = { ...P, ...(uid && me ? { [uid]: me } : {}) }, { S, T } = ltTable(PP, A), id = (T[to] || [])[d];
+  if (!id || !LT_LETTERS[id] || !nnMetIn(PP[to], id)) return { n: ltNpc('batri'), L: LT_BATRI, id: 'batri' };   // 받는 학생이 아직 못 만난 새 친구 편지는 배트리가 대신 써요
   let v = 0; for (const s of S){ for (let k = 0; k < 3; k++){ if (s === to && k === d) return { n: ltNpc(id), L: LT_LETTERS[id][Math.min(ltCap(id) - 1, v)], id }; if (T[s][k] === id) v++; } }
   return { n: ltNpc(id), L: LT_LETTERS[id][0], id };
 }
 function ltFinderTarget(d){ const S = ltStudents({ ...playersList, [uid]: me }), n = S.length, i = S.indexOf(uid); if (n < 2 || i < 0) return null; const sh = (LT_SHIFT[d] % (n - 1)) + 1; return S[(i + sh) % n]; }
 const ltName = id => (id === uid ? me : playersList[id] || {}).nick || '친구';
-function ltFonts(){ if (ltFontOK) return; ltFontOK = true; const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Hi+Melody&family=Poor+Story&family=Nanum+Brush+Script&family=Gowun+Batang&family=Gamja+Flower&family=Single+Day&family=Nanum+Pen+Script&family=Yeon+Sung&family=East+Sea+Dokdo&family=Do+Hyeon&display=swap'; document.head.appendChild(l); }
+function ltFonts(){ if (ltFontOK) return; ltFontOK = true; const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Hi+Melody&family=Poor+Story&family=Nanum+Brush+Script&family=Gowun+Batang&family=Gamja+Flower&family=Single+Day&family=Nanum+Pen+Script&family=Yeon+Sung&family=East+Sea+Dokdo&family=Do+Hyeon&family=Black+Han+Sans&family=Song+Myung&family=Dokdo&display=swap'; document.head.appendChild(l); }
 function ltPx(key){ const [rows, pal, s] = LT_PX[key], c = document.createElement('canvas'); c.width = rows[0].length * s; c.height = rows.length * s; c.className = 'ltdc'; const q = c.getContext('2d'); rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === '.') return; q.fillStyle = pal[ch]; q.fillRect(x * s, y * s, s, s); })); return c; }
 function ltPaperImg(paper, line){ const c = document.createElement('canvas'); c.width = 14; c.height = 10; const q = c.getContext('2d'); q.fillStyle = '#2A1A2E'; q.fillRect(0, 0, 14, 10); q.fillStyle = paper || '#FFF8EC'; q.fillRect(1, 1, 12, 8); q.fillStyle = line || '#C8B8A0'; q.fillRect(3, 3, 8, 1); q.fillRect(3, 6, 6, 1); q.fillStyle = 'rgba(0,0,0,.12)'; q.fillRect(1, 5, 12, 1); return c; }
 const ltFace = () => knFace(npcGet('batri'));
@@ -11843,9 +11892,9 @@ function adminLtHTML(){
   const reps = Object.entries(R).flatMap(([id, o]) => Object.entries(o || {}).map(([d, r]) => ({ id, d: +d, r }))).sort((a, b) => (b.r.at || 0) - (a.r.at || 0));
   return `<div class="adcard sdad"><div class="abhead"><b>배트리의 쏟아진 편지</b>${c.open ? '<button class="btn sm" data-lta="close">끝내기</button>' : '<button class="btn sm go" data-lta="open">시작하기</button>'}</div>
     <div class="abchips"><span>${c.open ? `여는 중 · ${Math.min(LT_DAYS, day + 1)} 일째` : '닫힘'}</span><span>연출 본 학생 <b>${S.filter(id => P[id].ltr && P[id].ltr.met).length}</b> / ${S.length}</span><span>답장 <b>${reps.length}</b></span></div>
-    <div class="s" style="margin:6px 0">편지 보낼 NPC 정하기 · 1 · 2 · 3 일째 (NPC마다 편지 수만큼만 · 다 차면 목록에서 빠져요 · 비우면 배트리가 대신 써요)</div>
+    <div class="s" style="margin:6px 0">편지 보낼 NPC 정하기 · 1 · 2 · 3 일째 (NPC마다 편지 수만큼만 · 다 차면 목록에서 빠져요 · 비우면 배트리가 대신 써요 · 새 친구 도도 · 셀린 · 본은 그 친구를 만난 학생에게만)</div>
     <div class="ltcnt">${LT_NPC.map(n => `<span class="${(cnt[n.id] || 0) >= ltCap(n.id) ? 'full' : ''}">${esc(n.n.replace(' 선생님', ''))} ${cnt[n.id] || 0}/${ltCap(n.id)}</span>`).join('')}</div>
-    ${S.map(id => `<div class="ltrow"><b>${esc(P[id].nick)}</b>${[0, 1, 2].map(d => { const cur = T[id][d]; return `<select data-ltas="${id}:${d}"><option value="">비움</option>${LT_NPC.filter(n => n.id === cur || ((cnt[n.id] || 0) < ltCap(n.id) && !T[id].includes(n.id))).map(n => `<option value="${n.id}" ${n.id === cur ? 'selected' : ''}>${esc(n.n.replace(' 선생님', ''))}</option>`).join('')}</select>`; }).join('')}<span class="s">${st(id)}</span></div>`).join('')}
+    ${S.map(id => `<div class="ltrow"><b>${esc(P[id].nick)}</b>${[0, 1, 2].map(d => { const cur = T[id][d]; return `<select data-ltas="${id}:${d}"><option value="">비움</option>${LT_NPC.filter(n => n.id === cur || ((cnt[n.id] || 0) < ltCap(n.id) && !T[id].includes(n.id) && nnMetIn(P[id], n.id))).map(n => `<option value="${n.id}" ${n.id === cur ? 'selected' : ''}>${esc(n.n.replace(' 선생님', ''))}</option>`).join('')}</select>`; }).join('')}<span class="s">${st(id)}</span></div>`).join('')}
     <details><summary class="s">학생 답장 ${reps.length} 개 (관리자만 봐요)</summary>${reps.map(x => `<div class="s"><b>${esc((P[x.id] || {}).nick || x.id)} → ${esc((ltNpc(x.r.n) || { n: x.r.n }).n)} · ${x.d + 1} 일째</b> ${esc(x.r.t || '')}</div>`).join('') || '<div class="s">아직 없어요</div>'}</details>
     <div class="s" style="margin-top:6px">시작하면 학생마다 배트리가 꽈당 넘어지는 연출이 나오고, 3 일 동안 하루 한 통씩 다른 친구 앞 편지가 학교 마당 어딘가에 떨어져 있어요. 친구 방에 놓아 주면 그 친구가 자기 방에서 읽어요. 아무도 못 놓아 준 편지는 다음 날 배트리가 대신 놓아 줘요.</div></div>`;
 }
@@ -12163,8 +12212,11 @@ const CK = (() => {
     stella: { f: 'blueb', s: 'star', hint: '하늘에서 반짝이는 그 모양이요. 맛은.... 밤하늘 색 열매요.', r: ['별 모양 블루베리.... 밤하늘을 반죽한 맛이야. 오늘 운세에 달콤한 선물이 있었거든.', '별이다. 별은 언제 받아도 좋아. 하나는 망원경 옆에 둘게.', '고마워. 별 보면서 하나씩 먹을게.', '어머, 까만 쿠키네. 흑점 같아. ....별에도 그런 날이 있지.'] },
     leo: { f: 'carrot', s: 'rabbit', hint: '사육장 토끼들 간식을 매일 챙겨요. 그 간식 맛이랑, 그 친구들 모양이요.', r: ['토끼 모양 당근 쿠키! 우리 애들 닮았다. 애들한테도 한 입씩.... 아니, 이건 내 거다.', '당근 냄새. 토끼들이 줄 서겠다. 나 먼저 먹을게.', '고마워. 사육장 애들 밥 주고 나서 먹을게.', '하하, 탔네. 닭들은 이런 거 좋아해. 아, 아니, 내가 먹을게.'] },
     otumo: { f: 'honey', s: 'bolt', hint: '삐빅거리는 그 친구는 번개 콩을 좋아하잖아요. 번쩍하는 그 모양이랑, 꽃에서 온 단맛이요.', r: ['삐빅. 번개 모양, 꿀 성분 감지. 만족도 측정 불가. 측정기가 녹았습니다.......', '삐빅. 단맛 수치 높음. 연료로는 못 쓰지만 저장합니다.', '삐빅. 쿠키 수령. 감사 회로 작동 중.......', '경고. 탄소 함량 높음. ....그래도 먹습니다. 기분은 맛있음으로 기록.'] },
+    dodo: { f: 'pseed', s: 'hat', hint: '시계탑 꼭대기 그 손님은 내기에 거는 씨앗 맛을 좋아해요. 모양은.... 호박씨가 열두 알 들어간다고 자랑하는 그거요.', r: ['자아, 모자 모양 호박씨 쿠키입니다. 제 모자랑 쌍둥이군요. 경매 최고가 갱신입니다. 낙찰.', '호박씨 향이 납니다. 판돈을 먹는 기분이군요. 맛있습니다.', '쿠키 상자군요. 감정가는 후하게 쳐 드리겠습니다. 고맙습니다.', '....까맣군요. 제가 이걸 다 먹는다에 호박씨 하나. ....이겼습니다.'] },
+    selin: { f: 'lav', s: 'circle', hint: '그림자 골목 재봉사는 단추처럼 동그란 걸 좋아해요. 맛은.... 앞치마랑 같은 보라색 꽃이요.', r: ['동그란 라벤더 쿠키. 단추 같네. ....이건 값을 못 매기겠어. 단추 상자 맨 위 칸에 뒀다가 아껴 먹을게.', '라벤더 향. 밤에 장부 볼 때 하나씩 먹을게.', '쿠키 상자. 받았어. 장부엔 안 적을게.', '탔네. 실 태운 냄새랑 비슷해. ....다 먹었어. 남기면 셈이 안 맞으니까.'] },
+    bone: { f: 'chest', s: 'ghost', hint: '축제를 좋아하는 해골 친구는 장터에서 굽는 가을 열매 맛을 좋아해요. 모양은.... 묘지에서 같이 사는 친구들 모양이요.', r: ['유령 모양 알밤 쿠키다. 「알밤 쿠키 유령 쿠키, 해골 눈이 반짝반짝」. 이건 묘지 친구들한테 자랑할 거야.', '알밤 냄새다. 축제 장터 냄새야. 맛은 지나가면서 살짝 스치거든. 그래도 다 알아.', '쿠키 상자 받았다. 받은 날이니까 축하해. 고마워, 길손.', '까맣다. 나랑 반대네. 나는 하얗고. 「까만 쿠키 하얀 해골, 둘이 서면 바둑판」. ....다 먹었어.'] },
   };
-  const DRAWN = { otumo: '그림도 감지. 저장.', nabi: '....그림도 그렸냐냥.', kappa: '그림도 있군.', jipsin: '그림도 있다.' };
+  const DRAWN = { otumo: '그림도 감지. 저장.', nabi: '....그림도 그렸냐냥.', kappa: '그림도 있군.', jipsin: '그림도 있다.', dodo: '그림까지 그리셨군요. 감정가 두 배입니다.', selin: '그림은 특약으로 적어 둘게.', bone: '그림까지. 이것도 축하해.' };
   const REACT = {
     nabi: { act: 'burst', fx: 'heart', emo: '냥!', say: '골골골.......' }, batri: { act: 'orbit', fx: 'bat', emo: '와!', say: '빙글빙글!' },
     kappa: { act: 'head', fx: 'drop', emo: '오.', say: '....균형 잡는 중이다.' }, aula: { act: 'fall', fx: 'feather', emo: '어머.', say: '부엉.......' },
@@ -12172,6 +12224,8 @@ const CK = (() => {
     sera: { act: 'stamp', fx: 'heart', emo: '어머', say: '진찰 결과.... 합격!', stamp: '건강 합격' }, madeleine: { act: 'stamp', fx: 'crown', emo: '오!', say: '심사 결과.......', stamp: '합격!' },
     stella: { act: 'orbit', fx: 'star', emo: '☆', say: '별이 반짝반짝.......' }, leo: { act: 'bunny', fx: 'bunny', emo: '하하!', say: '얘들아, 이거 봐라!' },
     otumo: { act: 'zap', fx: 'spark', emo: '삐빅!', say: '기쁨 회로 과열.......' },
+    dodo: { act: 'stamp', fx: 'star', emo: '탕!', say: '자아, 낙찰입니다.......', stamp: '낙찰!' }, selin: { act: 'stamp', fx: 'heart', emo: '....!', say: '계약 성립. 값은.... 없음.', stamp: '계약 성립' },
+    bone: { act: 'burst', fx: 'star', emo: '와아!', say: '오늘은 쿠키 잔치.......' },
   };
   // ---------- 쿠키 도트 (24 × 24) ----------
   const N = 24;
@@ -12331,7 +12385,7 @@ const CK = (() => {
     return `<div class="dexsum"><b>${n}</b><span>/ ${DEX.length}</span><div class="pgb one"><i style="width:${n / DEX.length * 100}%"></i></div></div>`
       + sec('모양별', `<div class="dex2">${SH.map(([k, nm]) => { const got = FL.filter(f => D[f.id + '_' + k]); return `<div class="dx2 ${got.length ? 'on' : ''}"><canvas data-ckdexs="${k}" width="48" height="48"></canvas><span>${nm}</span><b class="dots">${FL.map(f => `<i style="${D[f.id + '_' + k] ? `background:${f.c};border-color:${f.c}` : ''}" title="${f.n}"></i>`).join('')}</b></div>`; }).join('')}</div><div class="dlg">${FL.map(f => `<span><i style="background:${f.c}"></i>${f.n}</span>`).join('')}</div>`)
       + sec('숨은 쿠키', `<div class="hid2">${DEX.slice(-2).map(d => { const g = D[d.id]; return `<div class="${g ? 'on' : ''}"><canvas data-ckdex="${d.id}" width="48" height="48"></canvas><div><b>${g ? d.n : '???'}</b><p>${g ? g : d.hid}</p></div></div>`; }).join('')}</div>`)
-      + `<details class="cd note"><summary>마들렌의 단골 수첩</summary><div class="hints2">${Object.entries(NPCS).map(([id, x]) => { const g = found[id] || {}, nn = npcGet(id); return `<div><canvas data-cknf="${id}" width="32" height="32"></canvas><div><b>${esc(nn ? nn.name : id)}</b><span class="${g.f ? 'got' : ''}">${g.f ? flN(x.f) : '맛 ?'}</span><span class="${g.s ? 'got' : ''}">${g.s ? shN(x.s) : '모양 ?'}</span><p>${x.hint}</p></div></div>`; }).join('')}</div></details>`;
+      + `<details class="cd note"><summary>마들렌의 단골 수첩</summary><div class="hints2">${Object.entries(NPCS).filter(([id]) => !nnHide(id)).map(([id, x]) => { const g = found[id] || {}, nn = npcGet(id); return `<div><canvas data-cknf="${id}" width="32" height="32"></canvas><div><b>${esc(nn ? nn.name : id)}</b><span class="${g.f ? 'got' : ''}">${g.f ? flN(x.f) : '맛 ?'}</span><span class="${g.s ? 'got' : ''}">${g.s ? shN(x.s) : '모양 ?'}</span><p>${x.hint}</p></div></div>`; }).join('')}</div></details>`;
   }
   const faceTo = (cv, id) => { const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; try { knFace(npcGet(id))(g); } catch(e){} };
   function after(){
@@ -12761,6 +12815,9 @@ const BM = (() => {
     ['stella', '스텔라', 8, '#2A1E48', '#FFD866', { g2_stardust: 3, g2_moonst: 2 }, '별과 달 무늬.'],
     ['leo', '레오', 9, '#DFF0C8', '#7A5A3A', { wool: 4, g_carrot: 4 }, '토끼와 당근 무늬.'],
     ['otumo', '오투모', 10, '#C8D8E8', '#3A6AB0', { mana: 3, g_thunder: 2, slime: 1 }, '번개와 나사 무늬.'],
+    ['dodo', '도도', 11, '#F2EAD6', '#6A7A9A', { g2_pseed: 4, g2_gacorn: 1 }, '경매 망치와 호박씨 무늬. 내기에 질 때마다 끼워 두면 위로가 돼요.'],
+    ['selin', '셀린', 12, '#3A2E5A', '#C8A0E8', { silk: 3, g2_amethyst: 1 }, '바늘과 단추 무늬. 장부 사이에 끼우기 좋아요.'],
+    ['bone', '본', 13, '#F4E6C8', '#C83A3A', { g_bell: 2, feather: 2, d_ghostmallow: 1 }, '음표와 깃털 무늬. 노래가 끊기지 않게 지켜 줘요.'],
   ].map(([id, n, row, bg, fg, m, d]) => ({ id, n, row, bg, fg, m: { g_cotton: 3, ...m }, d, npc: true }));
   const RIB = { moon: '#E8C468', star: '#9AC8F0', pumpkin: '#5A3A24', bat: '#E8C468', paw: '#C86A4A', feather: '#7A5A3A', clover: '#3A8A4A', rose: '#D84A6A', lav: '#7A5AB0', maple: '#D8642A', lily: '#3A7A5A', mush: '#B87AE8', hat: '#E8C468', potion: '#9AE8A8', candle: '#C8643A', cloud: '#7AA8D8', rainbow: '#6A9FE8', snow: '#7AA8D8', check: '#F6ECD6', crystal: '#C8B8F8' };
   // ===== 도트 (36 × 92)
@@ -12829,6 +12886,9 @@ const BM = (() => {
       case 'madeleine': [[11, 66], [24, 72], [14, 80]].forEach(([x, y]) => { C(x, y, 4, OL); C(x, y, 3, '#E8B868'); [[-1, -1], [1, 1], [-2, 1]].forEach(([dx, dy]) => P(x + dx, y + dy, 1, 1, '#5A3420')); }); P(26, 58, 1, 8, '#A8A8B8'); for (let k = 0; k < 3; k++) P(24 + k * 2, 62 - k, 1, 6, '#C8C8D8'); break;
       case 'stella': [[8, 62], [26, 60], [14, 72], [24, 78], [10, 82], [18, 64]].forEach(([x, y], i) => { star(x, y, i % 2 ? f : lt); }); C(22, 70, 3, f); C(23, 69, 3, B.bg); break;
       case 'leo': BM(['.1...1.', '.1...1.', '.11111.', '1111111', '1.111.1', '1111111', '.11111.'], 8, 64, { 1: '#FFFFFF' }); P(10, 67, 1, 1, OL); P(13, 67, 1, 1, OL); P(22, 66, 3, 14, OL); P(23, 67, 1, 12, '#F08A4A'); P(20, 62, 2, 4, '#4A9A4A'); P(24, 61, 2, 5, '#4A9A4A'); break;
+      case 'dodo': P(8, 62, 11, 6, OL); P(9, 63, 9, 4, f); P(9, 63, 9, 1, lt); P(13, 68, 3, 14, OL); P(14, 68, 1, 13, '#C8884A'); [[24, 64], [21, 74], [26, 81]].forEach(([x, y]) => { C(x, y, 2, OL); C(x, y, 1, '#F2E8B0'); }); break;
+      case 'selin': for (let k = 0; k < 16; k++) P(9 + k, 82 - k, 1, 1, '#E8E0F0'); P(24, 66, 2, 2, '#E8E0F0'); P(24, 67, 1, 1, OL); for (let k = 0; k < 18; k++) P(25 + Math.round(Math.sin(k / 2.5) * 2), 68 + k, 1, 1, f); [[12, 64], [16, 78]].forEach(([x, y]) => { C(x, y, 3, OL); C(x, y, 2, f); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([dx, dy]) => P(x + dx, y + dy, 1, 1, OL)); }); break;
+      case 'bone': BM(['..11', '..1.', '..1.', '111.', '111.'], 8, 61, { 1: f }); BM(['.1111', '.1..1', '.1..1', '11.11', '11.11'], 20, 69, { 1: f }); for (let y = 0; y < 13; y++) P(10 + Math.round(y * .7), 85 - y, 2, 1, y % 3 ? '#E8C468' : lt); break;
       case 'otumo': BM(['..11', '.11.', '1111', '.11.', '11..'], 8, 62, { 1: '#FFE860' }); BM(['..11', '.11.', '1111', '.11.', '11..'], 24, 76, { 1: '#FFE860' }); [[22, 64], [12, 78]].forEach(([x, y]) => { C(x, y, 3, OL); C(x, y, 2, '#A8B8C8'); P(x - 1, y, 3, 1, OL); }); break;
     }
   }
@@ -12864,6 +12924,9 @@ const BM = (() => {
     stella: { t: "스텔라 호감 ↑ · 희귀 물고기 ↑", aff:'stella',s:{rare_fish:.15} },
     leo: { t: "레오 호감 ↑ · 채집 · 수확 가끔 +1", aff:'leo',s:{gather_yield:.05} },
     otumo: { t: "오투모 호감 ↑ · 물 주기 마력 가끔 0", aff:'otumo',s:{stamina_cost:-.12} },
+    dodo: { t: "도도 호감 ↑ · 팔 때 값 +3 %", aff:'dodo',v:{sell:.03} },
+    selin: { t: "셀린 호감 ↑ · 주문 납품 골드 +5 %", aff:'selin',v:{order:.05} },
+    bone: { t: "본 호감 ↑ · 친구 곁 보상 +3 %", aff:'bone',s:{party_reward:.03} },
     twelve: { t: "모든 NPC 호감 +10 %" },
   };
   const TWELVE = { id: 'twelve', n: '열두 개의 밤', bg: '#1E2448', fg: '#E8C468', m: {}, d: '다시 책이 된 날, 아울라가 반 전체에게 하나씩 준 책갈피.', gift: true };
@@ -12971,14 +13034,14 @@ const BM = (() => {
   }
   const canMake = B => !B.gift && !st().made[B.id] && Object.entries(B.m).every(([k, n]) => has(k) >= n) && (!B.npc || hearts(B.id) >= 5);
   function markHTML(){
-    const S = st(), L = W.bk === 'basic' ? BASIC : W.bk === 'npc' ? NPCB : all().filter(b => S.made[b.id]);
+    const S = st(), L = W.bk === 'basic' ? BASIC : W.bk === 'npc' ? NPCB.filter(b => !nnHide(b.id)) : all().filter(b => S.made[b.id]);
     const B = byId(W.bsel) && L.includes(byId(W.bsel)) ? byId(W.bsel) : L[0], P = pinned();
     const atDesk = World.where() === 'library';
     const det = B ? sec(B.npc ? 'NPC 책갈피' : '책갈피', `<div class="det"><canvas data-bkc="${B.id}" width="36" height="92"></canvas><div class="bminfo"><h4>${esc(bkName(B))}</h4><span class="bmfx">${S.made[B.id] ? esc(FX[B.id].t) : '효과 ???'}</span><p>${S.made[B.id] ? esc(B.d) : '만들면 무늬와 효과를 알 수 있어요.'}</p>
       ${B.gift ? '' : `<div class="mats">${Object.entries(B.m).map(([k, n]) => `<div class="${has(k) >= n ? 'yes' : 'no'}">${ic(k)}${esc(inm(k))}<b>${has(k)} / ${n}</b></div>`).join('')}</div>`}
       ${B.npc && hearts(B.id) < 5 ? `<p class="warn">${esc(B.n)} 호감 ♥5부터 만들 수 있어요 · 지금 ♥${hearts(B.id)}</p>` : ''}
       ${S.made[B.id] ? `<button class="btn ${P === B.id ? '' : 'go'} wide" data-bmpin="${B.id}">${P === B.id ? '일지에서 빼기' : '일지에 꽂기'}</button>` : `<button class="btn go wide" data-bmmake="${B.id}" ${canMake(B) && atDesk ? '' : 'disabled'}>${!atDesk ? '사서 책상에서 만들 수 있어요' : canMake(B) ? '만들기' : '재료가 모자라요'}</button>`}</div></div>`) : '';
-    return `<div class="seg">${[['basic', '기본 20'], ['npc', 'NPC 11'], ['mine', '내 책갈피']].map(([k, n]) => `<button data-bmbk="${k}" class="${W.bk === k ? 'on' : ''}">${n}</button>`).join('')}</div>`
+    return `<div class="seg">${[['basic', '기본 20'], ['npc', 'NPC ' + NPCB.filter(b => !nnHide(b.id)).length], ['mine', '내 책갈피']].map(([k, n]) => `<button data-bmbk="${k}" class="${W.bk === k ? 'on' : ''}">${n}</button>`).join('')}</div>`
       + (W.bk === 'mine' && !L.length ? '<p class="empty">아직 만든 책갈피가 없어요</p>' : det + `<div class="bkg">${L.map(b => { const lock = b.npc && hearts(b.id) < 5; return `<button class="bk ${b.id === (B && B.id) ? 'on' : ''} ${lock ? 'lock' : ''}" data-bmsel="${b.id}"><canvas data-bkc="${b.id}" width="36" height="92"></canvas>${esc(b.n)}<em class="bmfx">${S.made[b.id] ? esc(FX[b.id].t) : '???'}</em>${P === b.id ? '<span class="bmown">꽂음</span>' : ''}${lock ? '<span class="lk">♥5</span>' : ''}</button>`; }).join('')}</div>`)
       + `<p class="s">만든 책갈피 하나를 일지에 꽂아 두면 밑에 적힌 효과를 받아요. 한 번에 하나만 꽂을 수 있어요.</p>`;
   }
@@ -14606,9 +14669,10 @@ async function playEnding(){
   const G = {
     blady: ['bat', 'heart'], yeoreum: ['ghost', 'heart'], beatrix: ['star', 'note'], ur: ['heart', 'clap'], somi: ['heart', 'star'], nefer: ['star', 'clap'], piece: ['heart', 'clap'], jack: ['pumpkin', 'star'],
     madeleine: ['heart', 'clap'], kappa: ['note', 'clap'], sera: ['heart', 'clap'], aula: ['star', 'clap'], batri: ['bat', 'note'], mandi: ['heart', 'clap'], nabi: ['heart', 'note'], stella: ['star', 'heart'],
-    jipsin: ['pumpkin', 'clap'], leo: ['heart', 'clap'], principal: ['star', 'clap'], countess: ['heart', 'bat']
+    jipsin: ['pumpkin', 'clap'], leo: ['heart', 'clap'], principal: ['star', 'clap'], countess: ['heart', 'bat'],
+    dodo: ['star', 'clap'], selin: ['heart', 'clap'], bone: ['note', 'ghost']
   };
-  const order = ['blady', 'yeoreum', 'beatrix', 'ur', 'somi', 'nefer', 'piece', 'jack', 'madeleine', 'stella', 'nabi', 'kappa', 'sera', 'aula', 'batri', 'mandi', 'jipsin', 'leo', 'principal', 'countess'].filter(id => cast[id]);
+  const order = ['blady', 'yeoreum', 'beatrix', 'ur', 'somi', 'nefer', 'piece', 'jack', 'madeleine', 'stella', 'nabi', 'kappa', 'sera', 'aula', 'batri', 'mandi', 'jipsin', 'leo', 'principal', 'countess', 'dodo', 'selin', 'bone'].filter(id => cast[id]);
   const inner = order.slice(0, 10), outer = order.slice(10), slots = {};
   inner.forEach((id, i) => { const a = i / inner.length * Math.PI * 2 + .3; slots[id] = [Math.round(X + Math.cos(a) * 3.2), Math.round(Y + Math.sin(a) * 3.2)]; });
   outer.forEach((id, i) => { const a = (i + .5) / outer.length * Math.PI * 2; slots[id] = [Math.round(X + Math.cos(a) * 5.6), Math.round(Y + Math.sin(a) * 5.6)]; });
@@ -15678,6 +15742,9 @@ const NB_RUMOR = {
   stella: '별의 아이여. 실에 묶인 이름들이 보입니다. ....묶인 것이 저주인지, 다른 무엇인지는 아직 별도 말하지 않습니다.',
   leo: '....어. 그 인형. 동물들이 안 짖어. ....이상해.',
   otumo: '삐빅. 물약 교실 책장 뒤에서 반복 음성 신호를 감지했습니다. 신호 내용: 학생 개체 이름. 목적: 분석 불가.',
+  dodo: '자아, 들으셨습니까. 책장 뒤 인형이 밤마다 이름을 부른답니다. 누구 이름이 먼저 불릴지.... 아닙니다. 이건 내기에 걸면 안 되는 일 같군요.',
+  selin: '책장 뒤 인형 얘기, 골목까지 왔어. 이름을 수놓은 인형이라며. 바느질 솜씨는.... 한번 보고 싶긴 해. 값은 안 매기고.',
+  bone: '「밤마다 이름 부르는, 헝겊 인형 하나 있네」.... 아니, 이건 노래로 부를 일이 아니야. 그 인형, 외로워서 그러는 거 아닐까.',
 };
 function nbNpcLine(n){ const T = nbT(); if (!T || T.fin) return null;
   if (T.s >= 5 && T.s < 7 && NB_RUMOR[n.id]) return NB_RUMOR[n.id];
