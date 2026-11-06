@@ -15,14 +15,14 @@ def block_size(a):
     runs = [r for r in runs if 3 <= r <= 16]
     return max(set(runs), key=runs.count) if runs else 8
 # 가장자리에서 안 닿는 갇힌 배경(볼트와 목 사이 등): 그 안의 한 점을 (가로, 세로) 비율로 적어 두면 거기서도 지워요
-KEEP_WHITE = {'madeleine', 'leo'}
+KEEP_WHITE = {'madeleine', 'leo', 'selin', 'dodo'}
 FILL_EYES = {'leo'}
 POCKETS = {'hazel'}
 HOLES = {'frankie': [(.324, .576), (.675, .576)]}
 # 한 표정만 확대돼서 뽑혔을 때: 그 표정을 (배율, 왼쪽, 위)로 줄여 옮기고, 모든 표정을 같이 잘라요 (왼, 위, 오른, 아래)
 FIT = {'boo': {'happy': (.83, 59, 71)}}
-WHITE_MIN = {'mirabel': 253, 'nabi': 250, 'batri': 250, 'kappa': 250, 'aula': 250, 'mandi': 250, 'jipsin': 250, 'sera': 250, 'madeleine': 253, 'stella': 250, 'leo': 250}   # 붕대가 흰색에 가까워서, 배경(순백)만 지워지게 문턱을 높여요
-CROP = {'boo': (66, 0, 798, 1062), 'mirabel': (41, 0, 837, 1090), 'nabi': (30, 60, 830, 860), 'batri': (30, 70, 870, 970), 'kappa': (40, 100, 860, 900), 'aula': (60, 100, 840, 900), 'mandi': (80, 70, 840, 880), 'jipsin': (130, 80, 800, 840)}
+WHITE_MIN = {'selin': 250, 'dodo': 250, 'bone': 253, 'mirabel': 253, 'nabi': 250, 'batri': 250, 'kappa': 250, 'aula': 250, 'mandi': 250, 'jipsin': 250, 'sera': 250, 'madeleine': 253, 'stella': 250, 'leo': 250}   # 붕대가 흰색에 가까워서, 배경(순백)만 지워지게 문턱을 높여요
+CROP = {'selin': (90, 0, 810, 966), 'dodo': (30, 0, 870, 860), 'bone': (0, 0, 896, 1128), 'boo': (66, 0, 798, 1062), 'mirabel': (41, 0, 837, 1090), 'nabi': (30, 60, 830, 860), 'batri': (30, 70, 870, 970), 'kappa': (40, 100, 860, 900), 'aula': (60, 100, 840, 900), 'mandi': (80, 70, 840, 880), 'jipsin': (130, 80, 800, 840)}
 def fit(a, t):
     s, dx, dy = t; H, W = a.shape[:2]
     im = Image.fromarray(a).resize((round(W * s), round(H * s)), Image.NEAREST)
