@@ -14733,7 +14733,7 @@ function grReApply(){
   S.reAck = grReV; saveNow(); if (grLive()) toast('승급 시험을 다시 볼 수 있어요. 아울라에게 가 보세요');
 }
 function grTick(){
-  if (!me || !grCtl) return; const S = grSt();
+  if (!me || !grCtl) return; grReApply(); const S = grSt();   // 관리자 「다시 보게」: 접속 직후 데이터가 늦게 오면 놓칠 수 있어서 여기서도 다시 확인해요
   if (S.prog && !G2 && !(S.pend && String(S.pend.cid) === String(S.prog.cid))){ const sc = GR_TASKS.map((_, k) => S.prog.sc[k] || 0), tot = Math.round(sc.reduce((a, v) => a + v, 0) / GR_TASKS.length); S.pend = { cid: S.prog.cid, y: S.prog.y, t: sc, tot, g: grGrade(tot), at: now2(), cut: 1 }; S.last = { ...S.pend }; delete S.prog; saveNow(); }   // 시험 도중 앱을 닫았으면 본 데까지만
   const P = S.pend;
   if (P && !P.shown && (grCtl.pub || String(grCtl.id) !== String(P.cid))){ if (uiBusy() || $('#grx') || !(World.meAt && World.meAt()) || !evTurn('gr')) return; return grLetter(); }   // 결과 편지
@@ -14743,7 +14743,7 @@ function grTick(){
 }
 function grSync(){ if (solo || !F || !db || !uid || !me) return; const S = grSt(), v = { y: grY(), g: S.g[grY()] || '' }; const k = v.y + v.g; if (grSync.k === k) return; grSync.k = k; F.update(F.ref(db, 'online/' + uid), { gy: v.y > 1 ? v.y : null }).catch(() => { grSync.k = null; }); try { World.setMyGrade && World.setMyGrade(v.y); } catch(e){} }
 // 실기만 다시 보기: 방패 골렘 버그(방패를 거의 늘 들고 있었어요) 때문에 이번 시험을 본 근접 학생은 역할 실기만 한 번 더 · 둘 중 높은 점수
-const grReOk = () => { if (!grLive() || !me || !xEx().job || GR_ROLE(xEx().job) !== 'melee') return false; const S = grSt(); return !!(S.pend && String(S.pend.cid) === String(grCtl.id) && !(S.rt && S.rt[grCtl.id])); };
+const grReOk = () => { if (!grLive() || !me || !xEx().job || GR_ROLE(xEx().job) !== 'melee') return false; const S = grSt(); return !!(S.pend && !S.pend.cut && String(S.pend.cid) === String(grCtl.id) && !(S.rt && S.rt[grCtl.id])); };   // 도중에 나간 학생은 실기만이 아니라 관리자 「다시 보게」로 처음부터
 function grNpcBtn(n){ if (!me || n.id !== 'aula' || !grLive() || grY() >= 4) return ''; const left = grLeft(); if (left <= 0 && grReOk()) return '<button class="btn sm go" data-nx="grre">실기 다시 보기</button>'; return `<button class="btn sm ${left > 0 ? 'go' : ''}" data-nx="gr">승급 시험${left > 0 ? '' : ' (이미 봤어요)'}</button>`; }
 // ---------- 시험 열기 ----------
 function grOpen(){
