@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'
 import josa, npc_context
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 DATA = os.path.join(ROOT, 'public', 'data', 'npc')
-NPCS = ['nabi', 'batri', 'kappa', 'aula', 'mandi', 'jipsin', 'sera', 'madeleine', 'stella', 'leo', 'otumo']
+NPCS = ['nabi', 'batri', 'kappa', 'aula', 'mandi', 'jipsin', 'sera', 'madeleine', 'stella', 'leo', 'otumo', 'selin', 'dodo', 'bone']
 HUMAN = ['sera', 'madeleine', 'stella', 'leo']
 BIG = (5, 8, 10)
 PLACES = {p['id']: p for p in json.load(open(os.path.join(DATA, 'places.json')))}
