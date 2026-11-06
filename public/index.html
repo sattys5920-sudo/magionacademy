@@ -9065,6 +9065,19 @@ function tarotStat(stat){ const f = tarotFx(); return f && f.fx.s && f.fx.s[stat
 function tarotBuff(k){ const f = tarotFx(); return !!(f && f.fx.b === k); }
 function tarotVal(key){ const f = tarotFx(); return f && f.fx[key] ? (key === 'baby' ? f.fx[key] : f.fx[key] * f.m) : 0; }
 let tarotImg = null;
+// 시계탑 사다리: 본관 왼쪽 시계탑 앞 (37,36)에 기댄 사다리 · 누르면 (37,37) 문 칸으로 가서 꼭대기 방(도도의 경매장)으로 올라가요 (tools/iso/add_clock_roof.py)
+const CLOCK_LADDER = [37, 36];
+function clockLadderInit(){
+  if (clockLadderInit.on) return; clockLadderInit.on = 1;
+  const i = new Image(); i.onload = () => { const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; const g = c.getContext('2d'); g.drawImage(i, 0, 0);
+    World.setProps('campus', [{ id: 'clockladder', x: CLOCK_LADDER[0], y: CLOCK_LADDER[1], img: c, pxc: g, sw: c.width, sh: c.height, ax: c.width / 2, ay: c.height - 4, solid: true }], 'clockladder'); };
+  i.src = 'art/clock_ladder.png?v=1';
+  const prev = World.onProp; World.onProp = id => id === 'clockladder' ? (clockLadderTap(), null) : prev ? prev(id) : null;
+}
+function clockLadderTap(){
+  if (uiBusy()) return;
+  if (!World.walkDoorAt(CLOCK_LADDER[0], CLOCK_LADDER[1] + 1)) toast('거기까지는 길이 없어요');
+}
 function tarotInit(){
   if (tarotInit.on) return; tarotInit.on = 1; BUFF_NAME.tarot = '오늘의 운세';
   const i = new Image(); i.onload = () => { const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; const g = c.getContext('2d'); g.drawImage(i, 0, 0); tarotImg = { img: c, pxc: g }; tarotProps(); }; i.src = 'art/tarot_tent.png?v=1';
@@ -14450,7 +14463,7 @@ async function boot(){
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       F.onValue(F.ref(db, 'adm/reset/' + uid), s => { const v = +s.val() || 0; if (!v) return; let seen = 0; try { seen = +localStorage.getItem('magion-rs-' + uid) || 0; } catch(e){}
         if (v > seen && v > bootT - 5000){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
-      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); famListen(); fairyListen(); seedListen(); tildaListen(); nubiListen(); wishListen(); gardenListen(); knitListen(); bqListen(); blnListen(); capListen(); letterListen(); try { grListen(); } catch(e){} try { rdListen(); } catch(e){} CK.listen(); BM.listen(); shoutListen(); shoutUi(); otumoListen(); nnListen(); blancListen(); snowListen(); morphListen(); boardListen(); tarotInit(); prankInit();
+      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); famListen(); fairyListen(); seedListen(); tildaListen(); nubiListen(); wishListen(); gardenListen(); knitListen(); bqListen(); blnListen(); capListen(); letterListen(); try { grListen(); } catch(e){} try { rdListen(); } catch(e){} CK.listen(); BM.listen(); shoutListen(); shoutUi(); otumoListen(); nnListen(); blancListen(); snowListen(); morphListen(); boardListen(); tarotInit(); clockLadderInit(); prankInit();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); const sg = Object.entries(gameList).map(([id, r]) => r ? id + r.st + Object.keys(r.p || {}).length : '').join('|'); if (sub === 'games' && sg !== gamesSig) render(); gamesSig = sg; });   // 점수가 오를 때마다가 아니라 방이 열리고 닫히고 사람이 드나들 때만 다시 그려요
       F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       const recWatch = () => { const wk = weekKey(); if (recWatch.wk === wk) return; recWatch.wk = wk; (recWatch.offs || []).forEach(f => f()); recList = {}; recWatch.offs = Object.keys(GAMES).map(g => F.onValue(F.ref(db, `records/${g}/${wk}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); })); };
