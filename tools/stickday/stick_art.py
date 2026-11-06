@@ -1,5 +1,5 @@
-# 막대과자의 날 그림: 막대 6 맛 × 뿌리개 · 상자 6 무늬 × 리본 4 색 · 과자 탑 3 단계 · 막대 틀 소품
-#   python3 tools/stickday/stick_art.py → tools/stickday/out/*.png (+ 미리보기 preview.png)
+# 막대과자의 날 그림: 막대 10 맛 × 뿌리개 8 · 상자 무늬 9 × 색 8 × 리본 8 · 과자 탑 3 단계 · 책상 더미 · 막대 틀 · 가로등 장식 · 액자 · 배달 까마귀
+#   python3 tools/stickday/stick_art.py → public/art/stick.png · stick.webp (게임용 한 장) + tools/stickday/out/*.png (미리보기 preview.png)
 import os
 from PIL import Image, ImageDraw
 D = os.path.dirname(os.path.abspath(__file__)); O = D + '/out'; os.makedirs(O, exist_ok=True)
@@ -35,11 +35,16 @@ COL = {'cream': ('#F4F0E8', '#E8455A'), 'pink': ('#FFD6E4', '#F06A8A'), 'sky': (
 RIB = {'red': '#D8303A', 'pink': '#FF8EB8', 'gold': '#F2C040', 'sky': '#7FC8F0', 'purple': '#A06AE0', 'green': '#5AB060', 'white': '#F8F4EC', 'navy': '#3A4A90'}
 HEART = ['.##.##.', '#######', '#######', '.#####.', '..###..', '...#...']
 STAR = ['...#...', '..###..', '#######', '.#####.', '.##.##.', '#.....#']
-def box(pat, rib, choco='milk', top='rainbow', col='cream'):   # 상자 26 × 34: 앞면 무늬 · 위쪽 창으로 막대 끝 · 리본 띠와 나비 매듭
-    W, H = 26, 34; im = Image.new('RGBA', (W, H)); g = ImageDraw.Draw(im); a, b = hx(COL[col][0]), hx(COL[col][1])
-    for i in range(4):   # 막대 끝이 위로 삐죽
-        s = stick(choco, top, i); im.alpha_composite(s.crop((0, 0, 7, 12)), (2 + i * 4, 0 + (i % 2)))
-    x0, y0, x1, y1 = 1, 9, W - 2, H - 1
+def tops(choco, top, wob=False):   # 상자 위로 삐죽 나온 막대 끝 4 개 (26 × 12) · wob: 별 0 개면 삐뚤삐뚤
+    im = Image.new('RGBA', (26, 13))
+    for i in range(4):
+        s = stick(choco, top, i).crop((0, 0, 7, 12)); dy = (i % 2) + (([1, -1, 2, 0][i]) if wob else 0)
+        im.alpha_composite(s, (2 + i * 4 + ((1 if i == 3 else -1 if i == 0 else 0) if wob else 0), max(0, dy)))
+    return im
+
+def body(pat, col):   # 상자 몸통 26 × 25 (무늬 · 색) · 상자 그림의 9 ~ 33 줄
+    W, H = 26, 25; im = Image.new('RGBA', (W, H)); g = ImageDraw.Draw(im); a, b = hx(COL[col][0]), hx(COL[col][1])
+    x0, y0, x1, y1 = 1, 0, W - 2, H - 1
     g.rectangle([x0, y0, x1, y1], fill=a, outline=OL)
     for y in range(y0 + 1, y1):
         for x in range(x0 + 1, x1):
@@ -55,22 +60,25 @@ def box(pat, rib, choco='milk', top='rainbow', col='cream'):   # 상자 26 × 34
             elif pat == 'crest': on = (abs(u - 11) <= 5 and 5 <= v <= 14 and (abs(u - 11) == 5 or v == 5)) or (v > 14 and abs(u - 11) <= 5 - (v - 14)) and abs(u - 11) >= 5 - (v - 14) - 1 or (u == 11 and 7 <= v <= 13) or (v == 9 and 9 <= u <= 13)
             if on: im.putpixel((x, y), b)
     for x in range(x0 + 1, x1): im.putpixel((x, y0 + 1), sh(a, 1.12)); im.putpixel((x, y1 - 1), sh(a, .8))
-    r = hx(RIB[rib]); cx = (x0 + x1 + 1) // 2
+    return im
+
+def ribbon(rib):   # 리본 띠 · 나비 매듭만 (26 × 25 · 몸통 위에 겹쳐요)
+    W, H = 26, 25; im = Image.new('RGBA', (W, H)); r = hx(RIB[rib]); x0, y0, x1, y1 = 1, 0, W - 2, H - 1; cx = (x0 + x1 + 1) // 2
     for y in range(y0 + 1, y1): im.putpixel((cx - 1, y), r); im.putpixel((cx, y), sh(r, .85))   # 세로 띠
     for x in range(x0 + 1, x1): im.putpixel((x, y0 + 12), r)   # 가로 띠
     bow = [(-5, -2), (-4, -3), (-3, -3), (-2, -2), (-4, -1), (-3, -1), (-2, -1), (-5, -1), (4, -2), (3, -3), (2, -3), (1, -2), (3, -1), (2, -1), (1, -1), (4, -1), (0, -1), (-1, -1), (-1, 0), (0, 0), (-2, 1), (1, 1), (-3, 2), (2, 2)]
     for dx, dy in bow:
         x, y = cx + dx, y0 + 12 + dy
         if 0 <= x < W and 0 <= y < H: im.putpixel((x, y), r if dy < 1 or dx in (-1, 0) else sh(r, .8))
-    for dx, dy in bow:   # 매듭 외곽선
-        for ex, ey in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-            x, y = cx + dx + ex, y0 + 12 + dy + ey
-            if 0 <= x < W and 0 <= y < H and (dx + ex, dy + ey) not in bow and im.getpixel((x, y))[3] and im.getpixel((x, y)) not in (r, sh(r, .8)): pass
     return im
 
-def tower(n):   # 과자 탑: 1 단계 상자 4 · 2 단계 7 · 3 단계 10 (책상 위 가구 32 × 60)
+def box(pat, rib, choco='milk', top='rainbow', col='cream', wob=False):   # 상자 26 × 34 = 막대 끝 + 몸통 + 리본 (게임에서도 이 순서로 겹쳐 그려요)
+    im = Image.new('RGBA', (26, 34)); im.alpha_composite(tops(choco, top, wob), (0, 0)); im.alpha_composite(body(pat, col), (0, 9)); im.alpha_composite(ribbon(rib), (0, 9))
+    return im
+
+def tower(n, k=None):   # 과자 탑: 1 단계 상자 4 · 2 단계 7 · 3 단계 10 (가구 34 × 64) · k를 주면 그 개수만 (책상 위 작은 더미)
     W, H = 34, 64; im = Image.new('RGBA', (W, H)); order = PAT[1:]; ribs = list(RIB); cols = list(COL)
-    k = {1: 4, 2: 7, 3: 10}[n]; rows = [3, 3, 2, 1, 1]; i = 0; y = H - 1
+    k = k or {1: 4, 2: 7, 3: 10}[n]; rows = [3, 3, 2, 1, 1]; i = 0; y = H - 1
     for row, cnt in enumerate(rows):
         if i >= k: break
         cnt = min(cnt, k - i); bw = 11; x0 = (W - cnt * bw) // 2
@@ -99,7 +107,58 @@ def lamp_deco():   # 광장 가로등에 매다는 막대과자 장식 (14 × 20
         s = stick(c, 'rainbow', i).crop((1, 0, 6, 30)).resize((3, 15), Image.NEAREST); im.alpha_composite(s, (2 + i * 4, 5 + (i % 2)))
     return im
 
+def frame():   # 방 가구 「완벽한 막대」 액자 (24 × 32): 금테 · 남색 바탕에 금빛 막대 하나 · 별 셋 · 받침
+    im = Image.new('RGBA', (24, 32)); g = ImageDraw.Draw(im); gold, gd = hx('#E8B84A'), hx('#B07A2A')
+    g.line([(5, 27), (3, 31)], fill=OL, width=2); g.line([(18, 27), (20, 31)], fill=OL, width=2); g.line([(5, 27), (4, 30)], fill=hx('#8A5A2E')); g.line([(18, 27), (19, 30)], fill=hx('#8A5A2E'))
+    g.rectangle([1, 1, 22, 27], fill=gold, outline=OL); g.rectangle([2, 2, 21, 2], fill=hx('#FFE27A')); g.rectangle([2, 26, 21, 26], fill=gd)
+    g.rectangle([4, 4, 19, 22], fill=hx('#2E2A5A'), outline=gd)
+    st = stick('milk', 'gold', 1).rotate(-35, expand=True, resample=Image.NEAREST); bb = st.getbbox(); st = st.crop(bb)
+    st = st.resize((max(1, st.width * 2 // 3), max(1, st.height * 2 // 3)), Image.NEAREST); im.alpha_composite(st, (12 - st.width // 2, 13 - st.height // 2))
+    for x, y in ((6, 6), (16, 7), (7, 19)):
+        for dx, dy in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)): im.putpixel((x + dx, y + dy), hx('#FFE27A') if (dx, dy) != (0, 0) else hx('#FFFFFF'))
+    g.rectangle([8, 23, 15, 25], fill=hx('#FFF2B0'), outline=gd)   # 이름판
+    return im
+
+def crow(f):   # 배달 까마귀 (20 × 14) · 두 장 (날개 위 · 아래)
+    im = Image.new('RGBA', (20, 14)); g = ImageDraw.Draw(im); bd, dk = hx('#3E3454'), hx('#2A2238')
+    g.ellipse([5, 5, 14, 11], fill=bd, outline=OL); g.ellipse([12, 3, 17, 8], fill=bd, outline=OL)   # 몸 · 머리
+    g.polygon([(17, 5), (20, 6), (17, 7)], fill=hx('#F2C040'), outline=OL); im.putpixel((15, 5), hx('#FFFFFF'))   # 부리 · 눈
+    g.polygon([(5, 7), (1, 6), (1, 9), (5, 9)], fill=dk, outline=OL)   # 꼬리
+    if f == 0: g.polygon([(7, 7), (9, 0), (12, 1), (12, 7)], fill=dk, outline=OL)   # 날개 위
+    else: g.polygon([(7, 8), (9, 13), (12, 12), (12, 8)], fill=dk, outline=OL)   # 날개 아래
+    g.line([(9, 11), (9, 13)], fill=hx('#F2C040')); g.line([(11, 11), (11, 13)], fill=hx('#F2C040'))   # 발
+    return im
+
+def mini_stick(choco):   # NPC가 머리 위에 드는 막대 (4 × 16)
+    return stick(choco, 'rainbow', 2).crop((1, 0, 6, 30)).resize((4, 16), Image.NEAREST)
+
+def mini_box():   # 까마귀가 무는 작은 상자 (10 × 10)
+    im = Image.new('RGBA', (10, 10)); g = ImageDraw.Draw(im); g.rectangle([0, 2, 9, 9], fill=hx('#FFD6E4'), outline=OL)
+    g.line([(5, 3), (5, 8)], fill=hx('#D8303A')); g.line([(1, 5), (8, 5)], fill=hx('#D8303A')); g.point([(3, 1), (4, 2), (6, 2), (7, 1)], fill=hx('#D8303A')); g.point([(3, 0), (7, 0)], fill=OL)
+    return im
+
+# 게임용 한 장 (public/art/stick.png · .webp): 칸 위치는 index.html 「막대과자의 날」의 STK_ART 와 같아요
+#   y 0   몸통 무늬 9 × 색 8 (26 × 25, x = (무늬 × 8 + 색) × 26)
+#   y 25  리본 8 (26 × 25) · 그 옆 x 208 부터 막대 끝 (26 × 13, x = 208 + (맛 × 8 + 뿌리개) × 26 는 너무 길어서 아래 줄)
+#   y 50  막대 10 맛 × 뿌리개 8 (7 × 30, x = (맛 × 8 + 뿌리개) × 7)
+#   y 80  과자 탑 3 단계 (34 × 64) · 책상 위 더미 1 ~ 3 (34 × 64) · 막대 틀 (40 × 24) · 가로등 장식 (14 × 20) · 액자 (24 × 32) · 까마귀 2 (20 × 14) · 작은 막대 10 (4 × 16) · 작은 상자 (10 × 10)
+SHEET = {'body': (0, 0), 'rib': (0, 25), 'stick': (0, 50), 'tower': (0, 80), 'stack': (102, 80), 'mold': (204, 80), 'lamp': (244, 80), 'frame': (258, 80), 'crow': (282, 80), 'mini': (322, 80), 'mbox': (362, 80)}
+def sheet():
+    S = Image.new('RGBA', (len(PAT) * len(COL) * 26, 144))
+    for i, p in enumerate(PAT):
+        for j, c in enumerate(COL): S.alpha_composite(body(p, c), ((i * len(COL) + j) * 26, 0))
+    for j, r in enumerate(RIB): S.alpha_composite(ribbon(r), (j * 26, 25))
+    for i, c in enumerate(CHOCO):
+        for j, t in enumerate(TOP): S.alpha_composite(stick(c, t, j), ((i * len(TOP) + j) * 7, 50))
+    for n in (1, 2, 3): S.alpha_composite(tower(n), ((n - 1) * 34, 80)); S.alpha_composite(tower(1, n), (102 + (n - 1) * 34, 80))
+    S.alpha_composite(mold(), SHEET['mold']); S.alpha_composite(lamp_deco(), SHEET['lamp']); S.alpha_composite(frame(), SHEET['frame'])
+    for f in (0, 1): S.alpha_composite(crow(f), (SHEET['crow'][0] + f * 20, 80))
+    for i, c in enumerate(CHOCO): S.alpha_composite(mini_stick(c), (SHEET['mini'][0] + i * 4, 80))
+    S.alpha_composite(mini_box(), SHEET['mbox'])
+    return S
+
 if __name__ == '__main__':
+    A = os.path.join(D, '..', '..', 'public', 'art'); SH = sheet(); SH.save(A + '/stick.png', optimize=True); SH.save(A + '/stick.webp', lossless=True, quality=100, method=6)
     S = Image.new('RGBA', (len(CHOCO) * len(TOP) * 8, 30))
     for i, c in enumerate(CHOCO):
         for j, t in enumerate(TOP): S.alpha_composite(stick(c, t, j), ((i * len(TOP) + j) * 8, 0))
@@ -115,6 +174,8 @@ if __name__ == '__main__':
     for i, c in enumerate(cl): P.alpha_composite(box('heart', 'gold' if c in ('navy', 'wine') else 'red', ck[(i + 3) % 10], 'rainbow', c), (8 + i * 31, 86))
     for i, r in enumerate(rb): P.alpha_composite(box('plain', r, ck[(i + 5) % 10], 'star', 'cream' if r not in ('white',) else 'sky'), (8 + i * 31, 128))
     for n in (1, 2, 3): P.alpha_composite(tower(n), (8 + (n - 1) * 40, 176))
-    P.alpha_composite(mold(), (150, 210)); P.alpha_composite(lamp_deco(), (210, 206))
+    P.alpha_composite(mold(), (150, 210)); P.alpha_composite(lamp_deco(), (210, 206)); P.alpha_composite(frame(), (232, 196))
+    for f in (0, 1): P.alpha_composite(crow(f), (262 + f * 2, 200 + f * 22))
+    P.alpha_composite(mini_box(), (270, 236)); [P.alpha_composite(tower(1, k), (130 + (k - 1) * 14, 150)) for k in (1, 2, 3)]
     P.resize((P.width * 4, P.height * 4), Image.NEAREST).save(O + '/preview.png')
     print('ok')
