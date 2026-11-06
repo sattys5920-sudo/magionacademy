@@ -1,6 +1,6 @@
 # 시안: 새 NPC 셋 (셀린 · 도도 · 본)을 LPC 부품으로 조립해요 → out/newnpc_lpc.png (한 줄 = 한 명, 64×64 칸 20개) + 미리보기
 #   python3 newnpc_lpc.py <LPC 저장소 경로> [미리보기.png]
-#   셀린: 거미 재봉사 (검은 드레스 · 보라 앞치마 · 거미 목걸이 · 올림머리 · 비서 안경)
+#   셀린: 사람 재봉사 (검은 드레스 · 보라 앞치마 · 거미 목걸이 · 올림머리)
 #   도도: 도도새 경매사 (회색 깃털 날개 · 실크해트 · 외알 안경 · 크라바트 · 흰 머리)
 #   본: 해골 음유시인 (해골 몸 · 깃털 모자 · 알록달록 셔츠 · 해진 망토)
 import sys, os, subprocess
@@ -12,7 +12,7 @@ LPC = N.LPC; OUTD = os.path.join(HERE, '..', 'out'); SK, HR, CL = N.SK, N.HR, N.
 NPC = [
  ('셀린', 'female', [(10, 'body/bodies/teen', None, SK('light')), (100, 'head/heads/human/female', None, SK('light')), (105, 'eyes/human/adult/default', 'purple', None),
    (20, 'legs/skirts/straight', None, CL('black')), (35, 'torso/clothes/blouse_longsleeve', None, CL('black')), (40, 'torso/aprons/apron_half', None, CL('purple')),
-   (60, 'neck/amulet/spider', None, None), (15, 'feet/shoes/basic', None, CL('black')), (120, 'hair/bangs_bun', None, HR('black')), (130, 'facial/glasses/secretary', None, None)]),
+   (60, 'neck/amulet/spider', None, None), (15, 'feet/shoes/basic', None, CL('black')), (120, 'hair/bangs_bun', None, HR('black'))]),
  ('도도', 'male', [(5, 'body/wings/feathered/adult/bg', 'gray', None), (10, 'body/bodies/teen', None, SK('light')), (100, 'head/heads/human/male', None, SK('light')), (105, 'eyes/human/adult/default', 'blue', None),
    (20, 'legs/pants', None, CL('tan')), (35, 'torso/clothes/longsleeve/formal', None, CL('white')), (40, 'torso/jacket/collared', 'navy', None), (60, 'neck/cravat', None, CL('white')),
    (15, 'feet/shoes/basic', None, CL('brown')), (120, 'hair/plain', None, HR('white')), (126, 'hat/formal/tophat', None, CL('gray')), (130, 'facial/monocle/left', None, None), (105.5, 'body/wings/feathered/adult/fg', 'gray', None)]),
