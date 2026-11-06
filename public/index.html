@@ -15512,14 +15512,14 @@ function rdHostTick(B){
   if (T.k === 'big' && T.hp0 - boss.hp >= boss.mhp * .08){ B.log = `끊었어요! 「${S.big}」${josa(S.big, '이', '가')} 취소됐어요`; xFloat(boss.id, '끊김!', '#fff6c0'); R.boom = { k: 'cut', t: now2() }; boss.g = 0; xcoEvPush({ k: 'sfx', s: 'win' }); return; }
   const L = xAlive(B.party).filter(p => T.k !== 'side' || (p.side || 0) === T.sd), K = (RD_MK[R.f - 1] || RD_MK[1])[T.k];
   xDelay = 0; xFxAt(T.k === 'big' ? 'boom' : 'impact', L);
-  L.forEach(t => { const m = rdDodgeOf(t, T.id); xDelay = 0; if (m < 1) xFloat(t.id, m <= .2 ? '완벽!' : '조금 늦음', m <= .2 ? '#7affb0' : '#ffe07a'); xDelay = m < 1 ? 380 : 0; xHit(boss, t, (boss.matk || boss.atk) * K / Math.max(1, R.n || B.party.length) * (.85 + Math.random() * .3) * m, '#ff6a6a'); xDelay = 0; if (t.hp > 0 && m > .2) S.fx(t, boss); });   // 피한 글자 먼저, 숫자는 조금 뒤에
+  L.forEach(t => { const m = rdDodgeOf(t, T.id); xDelay = 0; if (m < 1) xFloat(t.id, m <= .2 ? '완벽!' : '아슬아슬', m <= .2 ? '#7affb0' : '#ffe07a'); xDelay = m < 1 ? 380 : 0; xHit(boss, t, (boss.matk || boss.atk) * K / Math.max(1, R.n || B.party.length) * (.85 + Math.random() * .3) * m, '#ff6a6a'); xDelay = 0; if (t.hp > 0 && m > .2) S.fx(t, boss); });   // 피한 글자 먼저, 숫자는 조금 뒤에
   B.log = `${boss.name}의 「${S[T.k]}」!`; R.boom = { k: T.k, sd: T.sd, t: now2() }; boss.g = 0;
 }
 // ---------- 피하기 (각자 기기): 바깥 원이 하얀 고리에 닿을 때 눌러요 ----------
 function rdTeleSeen(B){
   const T = B.raid && B.raid.tele; if (!T || T.id === RD.teleShown) return; RD.teleShown = T.id; const u = xMine(B); if (!u || u.hp <= 0 || u.uid !== myId()) return;
   if (T.k === 'side' && (u.side || 0) !== T.sd) return;
-  const hitAt = T.at - 450, show = Math.max(now2(), hitAt - 2000), id = T.id;
+  const hitAt = T.at - 900, show = Math.max(now2(), hitAt - 2000), id = T.id;
   setTimeout(() => rdDodgeUI(id, hitAt, T.at), Math.max(0, show - now2()));
 }
 function rdDodgeUI(id, hitAt, endAt){
@@ -15527,8 +15527,8 @@ function rdDodgeUI(id, hitAt, endAt){
   const o = document.createElement('div'); o.id = 'rddg'; o.innerHTML = '<div class="rdring"><i class="o"></i><i class="z"></i><button>피하기</button></div><b></b>'; document.body.appendChild(o);
   const ring = o.querySelector('.o'), txt = o.querySelector('b'), t0 = now2(), span = Math.max(600, hitAt - t0); let done = false;
   const tick = () => { if (!o.isConnected) return; const left = hitAt - now2(), s = 1 + Math.max(0, left) / span * 1.3; ring.style.transform = `scale(${s.toFixed(3)})`; ring.style.opacity = left < -500 ? .3 : 1; if (now2() >= endAt + 300){ o.remove(); return; } requestAnimationFrame(tick); }; requestAnimationFrame(tick);
-  o.querySelector('button').onpointerdown = e => { e.preventDefault(); if (done) return; done = true; const d = now2() - hitAt, r = d < -420 ? 1 : Math.abs(d) <= 170 ? .2 : d <= 420 ? .6 : 1;
-    txt.textContent = r <= .2 ? '완벽!' : r < 1 ? '조금 늦음' : '실패'; o.classList.add(r <= .2 ? 'ok' : r < 1 ? 'mid' : 'bad'); sfx(r < 1 ? 'pop' : 'miss');
+  o.querySelector('button').onpointerdown = e => { e.preventDefault(); if (done) return; const d = now2() - hitAt; if (d < -420){ txt.textContent = '아직이에요'; return; } done = true; const r = Math.abs(d) <= 170 ? .2 : d <= 420 ? .6 : 1;   // 너무 일찍 누르면 다시 누를 수 있어요
+    txt.textContent = r <= .2 ? '완벽!' : r < 1 ? (d < 0 ? '조금 빨라요' : '조금 늦음') : '실패'; o.classList.add(r <= .2 ? 'ok' : r < 1 ? 'mid' : 'bad'); sfx(r < 1 ? 'pop' : 'miss');
     if (xb && xb.mirror) xcoSend({ dg: { id, r } }); else RD.dg[id] = r; setTimeout(() => o.remove(), 700); };
 }
 // ---------- 끝 ----------
