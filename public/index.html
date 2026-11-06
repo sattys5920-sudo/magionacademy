@@ -449,7 +449,7 @@ body:not(.inworld) #npcui{display:none}
 .npct{background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:8px 10px;min-height:40px;line-height:1.55}
 .npcsc{display:block;color:#9480B4;font-size:var(--fs-s);font-family:var(--f-body)}
 .npcp .frow{display:flex;gap:6px;flex-wrap:wrap}.npcp .frow .btn{flex:1}
-.adtbl.npc>div{grid-template-columns:72px repeat(16,74px);align-items:center}
+.adtbl.npc>div{grid-template-columns:64px repeat(var(--n,16),56px);gap:3px;align-items:center}.adtbl.npc>div>span:first-child{position:sticky;left:0;z-index:1;background:inherit}.adtbl.npc{scrollbar-width:thin;padding-bottom:4px}
 .evread{display:flex;flex-direction:column;gap:3px;max-height:65vh;overflow:auto;border:2px solid #22183F;padding:8px;background:#FBF8FD;margin:6px 0}
 .evr{background:#fff;padding:6px 8px;border-left:4px solid #D8CCE8;font-size:15px;line-height:1.5}.evr b{color:#22183F;margin-right:6px}.evr small{color:#8A7AA8;margin-right:6px;font-size:13px}
 .evr.nar{color:#5A4C74;font-style:italic}.evr.sys{color:#8A7AA8;font-size:14px}.evr.cho span{display:block;margin-left:8px}
@@ -830,7 +830,7 @@ button.cell:not(:disabled):active{background:var(--line)}
 .rbed canvas{border-radius:12px}
 .rbox .btn{width:100%;margin-top:4px}
 /* @css:main */
-.adtbl.npc .adh{display:inline-flex;flex-direction:column;align-items:center;gap:3px;white-space:nowrap;color:#22183F}.adtbl.npc .adh .hv{font-weight:700}.adtbl.npc .adh .bt{display:flex;gap:4px}.adtbl.npc .adh button{width:30px;height:28px;padding:0;border-radius:7px;border:1px solid #7a6a9a;background:#f3eefc;color:#22183F;font-size:16px;font-weight:700;line-height:1;cursor:pointer}.adtbl.npc .adh .pend{color:#d9780a;margin-left:3px;font-weight:700}
+.adtbl.npc .adh{display:inline-flex;flex-direction:column;align-items:center;gap:3px;white-space:nowrap;color:#22183F}.adtbl.npc .adh .hv{font-weight:700}.adtbl.npc .adh .bt{display:flex;gap:4px}.adtbl.npc .adh button{width:25px;height:28px;padding:0;border-radius:7px;border:1px solid #7a6a9a;background:#f3eefc;color:#22183F;font-size:16px;font-weight:700;line-height:1;cursor:pointer}.adtbl.npc .adh .pend{color:#d9780a;margin-left:3px;font-weight:700}
 .evbox .evport{display:none;position:absolute;left:6px;bottom:calc(100% - 10px);width:34vw;max-width:150px;aspect-ratio:var(--asp,128/171);background-size:500% 100%;background-repeat:no-repeat;image-rendering:pixelated;pointer-events:none;z-index:0;filter:drop-shadow(0 2px 0 rgba(0,0,0,.5))}
 .evbox .evname,.evbox .evtext,.evbox .evch{position:relative;z-index:1}
 .evin{display:flex;gap:6px;margin-top:8px}.evin input{flex:1;min-width:0;height:44px;border:1px solid var(--line2);border-radius:10px;background:var(--panel2);color:var(--text);padding:0 12px;font-size:var(--fs)}
@@ -5419,7 +5419,7 @@ function adminEvHTML(){
 function adminNpcHTML(){
   const P = AD.players, ids = Object.keys(P).filter(id => P[id]?.nick), all = npcAll();
   const hOf = x => { if (!x) return 0; const a = x.a !== undefined ? x.a : Math.floor((x.p || 0) / 3) * 100; return Math.min(10, Math.floor(a / 100)); };
-  const table = `<div class="adtbl npc"><div class="h"><span>학생</span>${all.map(n => `<span>${esc(n.name)}</span>`).join('')}</div>
+  const table = `<div class="adtbl npc" style="--n:${all.length}"><div class="h"><span>학생</span>${all.map(n => `<span>${esc(n.name.replace(' 선생님', ''))}</span>`).join('')}</div>
     ${ids.map(id => `<div><span><b>${esc(P[id].nick)}</b></span>${all.map(n => { const x = P[id].npc?.[n.id], seen = Object.keys(x?.seen || {}).length, pend = +(AD.heart?.[id]?.[n.id] || 0), h = hOf(x); return `<span class="adh"><span class="hv">♥${h}${pend ? `<small class="pend">${pend > 0 ? '+' : ''}${pend}</small>` : ''}${seen ? ` <small>${seen}</small>` : ''}</span><span class="bt"><button data-adh="${id}|${n.id}|-1" title="하트 -1">−</button><button data-adh="${id}|${n.id}|1" title="하트 +1">+</button>${x?.ev === todayKey() ? `<button data-adev="${id}|${n.id}" title="오늘 하트 이야기를 한 번 더 볼 수 있게" class="evr">↺</button>` : ''}</span></span>`; }).join('')}</div>`).join('')}</div>
     <div class="s">− / + 를 누르면 그 학생이 접속해 있을 때 바로, 아니면 다음 접속 때 하트가 바뀌어요. ↺는 오늘 하트 이야기를 이미 본 칸에만 떠요. 누르면 그 학생이 오늘 그 NPC의 다음 하트 이야기를 한 번 더 볼 수 있어요. 숫자 옆 주황색 ±는 아직 적용 전인 조정이에요. ${Object.keys(AD.heart || {}).length ? `<button class="btn sm" data-adh="__clear">대기 중인 조정 모두 지우기</button>` : ''}</div>`;
   const wx = `<div class="adcard"><b>오늘 날씨</b><div class="adseg">${[['', '자동'], ['clear', '맑음'], ['rain', '비'], ['fog', '안개'], ['snow', '눈']].map(([k, l]) => `<button data-adwx="${k}" class="${(wxForce && wxForce.d === todayKey() ? wxForce.w : '') === k ? 'on' : ''}">${l}</button>`).join('')}</div><div class="s">지금: ${BAND_KO[bandNow()]} · ${WX_KO[weatherToday()]}${isFullMoon() ? ' · 보름' : ''} · 날씨를 바꾸면 비·안개 조건 이벤트를 바로 시험할 수 있어요</div>
