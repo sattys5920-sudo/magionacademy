@@ -90,11 +90,21 @@ textarea{width:100%;min-height:84px;resize:none;border-radius:10px;border:2px so
 .rewards div span:last-child{color:var(--sub);text-align:right}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:#2E2338;border:2px solid var(--crow);color:var(--ink);border-radius:12px;padding:10px 14px;font-size:14px;transition:all .3s;pointer-events:none;max-width:calc(100% - 32px);text-align:center;z-index:9}
 .toast.on{opacity:1;transform:translate(-50%,0)}
+.sc{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sc button{font:inherit;font-size:13px;line-height:1.35;text-align:left;color:var(--sub);background:var(--pad);border:2px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer;min-height:48px;display:flex;gap:8px;align-items:center}
+.sc button b{font-family:var(--f-disp);font-weight:400;font-size:18px;color:var(--sub);flex:none}
+.sc button.on{border-color:var(--straw);color:var(--ink);background:var(--panel)}.sc button.on b{color:var(--straw)}
+.dot{display:inline-block;width:26px;height:26px;border-radius:50%;border:2px solid #2A1E10;flex:none}
+.dot.big{width:40px;height:40px;align-self:center}
+.tag{font-style:normal;font-size:12px;color:#A8BCE0;border:1px solid #6A8AC8;border-radius:999px;padding:1px 8px}
+.glabel{font-size:13px;color:var(--sub);margin-bottom:-4px}
+.legend{display:flex;gap:14px;justify-content:center;font-size:13px;color:var(--sub)}.legend i{display:inline-block;width:14px;height:5px;margin-right:6px;vertical-align:middle}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
 <div class="wrap">
-  <div class="top"><h1>스트로의 비밀 친구</h1><small>시안 · 위 단계를 눌러 하루씩 넘겨 봐요 · 나는 「민준」</small></div>
+  <div class="top"><h1>스트로의 비밀 친구</h1><small>시안 2 · 학생 12 명 + 마을 NPC 11 명 · 경우를 고르고 하루씩 넘겨 봐요 · 나는 「민준」</small></div>
+  <div class="sc" id="sc"></div>
   <div class="steps" id="steps"></div>
   <div class="scene" id="scene"></div>
 </div>
@@ -102,63 +112,96 @@ textarea{width:100%;min-height:84px;resize:none;border-radius:10px;border:2px so
 
 <script>
 const STRO=Array(5).fill('data:image/png;base64,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');
-const NAMES = ['민준','서아','도윤','하린','시우','유나','다은','준서','수아','예준','채원','지호'];   // 고리 순서: 앞 사람이 뒷사람을 챙겨요 (마지막 지호 → 민준)
-const COL = ['#E8A04C','#F28BA8','#7FB8E8','#9AD88A','#C9A2F0','#F0D26A','#E87F6A','#6FD0C0','#B8C4D8','#D8A07A','#A0D8F0','#8FA3C8'];
-const ME = 0, TARGET = 1, GIVER = 11;
-const S = { step: 'intro', sent: {}, guess: null, introI: 0, drawn: false };
+const KIDS = ['민준','서아','도윤','하린','시우','유나','다은','준서','수아','예준','채원','지호'];
+const NPCS = ['나비','배트리','캇파','아울라','맨디','스트로','세라','마들렌','스텔라','레오','오투모'];
+const KCOL = ['#E8A04C','#F28BA8','#7FB8E8','#9AD88A','#C9A2F0','#F0D26A','#E87F6A','#6FD0C0','#B8C4D8','#D8A07A','#A0D8F0','#8FA3C8'];
+const NCOL = { 나비: '#3A3A44', 배트리: '#6A4A8A', 캇파: '#5AA84A', 아울라: '#9A7A5A', 맨디: '#8AC86A', 스트로: '#E8C46A', 세라: '#F4F0E8', 마들렌: '#E8B88A', 스텔라: '#6A7AD8', 레오: '#A8C86A', 오투모: '#B8C4D0' };
+const isNpc = n => NPCS.includes(n), colOf = n => isNpc(n) ? NCOL[n] : KCOL[KIDS.indexOf(n)];
+// 고리 (23 명, 앞 사람이 뒷사람을 챙겨요 · 0 번은 나 · 1 번은 내가 챙기는 쪽 · 마지막은 나를 챙기는 쪽)
+const RINGS = {
+  A: ['민준','서아','나비','도윤','하린','마들렌','시우','유나','레오','다은','준서','스텔라','수아','예준','배트리','맨디','채원','세라','지호','오투모','스트로','아울라','캇파'],
+  B: ['민준','아울라','서아','나비','도윤','하린','마들렌','시우','유나','레오','다은','준서','스텔라','수아','예준','배트리','맨디','채원','세라','오투모','스트로','캇파','지호'],
+};
+const S = { sc: 'A', step: 'intro', sent: {}, guess: null, introI: 0, drawn: false };
+const ring = () => RINGS[S.sc], TGT = () => ring()[1], GIV = () => ring()[ring().length - 1];
 const STEPS = [['intro','시작'],['d1','1 일째'],['d2','2 일째'],['d3','3 일째'],['d4','4 일째'],['d5','5 일째'],['d6','6 일째'],['rev','7 일째 밤']];
 const $ = s => document.querySelector(s);
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-let tt = 0; const toast = t => { const e = $('#toast'); e.textContent = t; e.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => e.classList.remove('on'), 2400); };
-const say = (face, text) => `<div class="say"><img src="${STRO[face]}" alt="스트로"><div><b>스트로</b><p>${text}</p></div></div>`;
+let tt = 0; const toast = t => { const e = $('#toast'); e.textContent = t; e.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => e.classList.remove('on'), 2600); };
+const say = (face, text, who = '스트로') => `<div class="say">${who === '스트로' ? `<img src="${STRO[face]}" alt="스트로">` : `<span class="dot big" style="background:${colOf(who)}"></span>`}<div><b>${who}</b><p>${text}</p></div></div>`;
+const josa = (w, a, b) => { const c = w.charCodeAt(w.length - 1); return c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 ? a : b; };
 
-// 지호(내 비밀 친구)가 날마다 보낸 것 · 까마귀 소문
+// 나를 챙기는 쪽이 보낸 것 (A: 캇파 · 말투를 숨기다 새요 / B: 반 친구 지호)
 const GOT = {
-  1: { k: '선물', ic: '', t: '호박 쿠키 ×2', s: '창가에 짚으로 묶은 꾸러미가 놓여 있었어요' },
-  2: { k: '쪽지', ic: 'note', t: '어제 광장에서 넘어질 뻔한 거 봤어. 다친 데 없지? 오늘도 힘내!', crayon: 1 },
-  3: { k: '방', ic: '', t: '짚 꾸러미 (은방울꽃 한 송이)', s: '내 방 바닥에서 주웠어요' },
-  4: { k: '힌트', ic: 'note', t: '나는 듀모른 기숙사야', crayon: 1 },
-  5: { k: '편지', ic: 'note', t: '닷새 동안 몰래 챙기느라 두근두근했어. 내가 누군지 맞힐 수 있을까? 힌트는 아침형 인간!', crayon: 1 },
+  A: {
+    1: { k: '선물', t: '싱싱한 오이 ×2', s: '창가에 짚으로 묶은 꾸러미 · 물방울이 맺혀 있었어요' },
+    2: { k: '쪽지', t: '감기 조심. 물은 많이 마셔라. ....마셔.', crayon: 1 },
+    3: { k: '방', t: '짚 꾸러미 (연꽃 한 송이)', s: '내 방 바닥에서 주웠어요 · 바닥이 조금 젖어 있었어요' },
+    4: { k: '힌트', t: '나는 물가를 좋아해', crayon: 1 },
+    5: { k: '편지', t: '닷새 동안 몰래 챙겼다. ....챙겼어. 말투 숨기는 게 낚시보다 어렵다. 맞혀 봐.', crayon: 1 },
+  },
+  B: {
+    1: { k: '선물', t: '호박 쿠키 ×2', s: '창가에 짚으로 묶은 꾸러미가 놓여 있었어요' },
+    2: { k: '쪽지', t: '어제 광장에서 넘어질 뻔한 거 봤어. 다친 데 없지? 오늘도 힘내!', crayon: 1 },
+    3: { k: '방', t: '짚 꾸러미 (은방울꽃 한 송이)', s: '내 방 바닥에서 주웠어요' },
+    4: { k: '힌트', t: '나는 듀모른 기숙사야', crayon: 1 },
+    5: { k: '편지', t: '닷새 동안 몰래 챙기느라 두근두근했어. 내가 누군지 맞힐 수 있을까? 힌트는 아침형 인간!', crayon: 1 },
+  },
 };
-const RUMOR = { 1: '오늘 아침에 낚시를 했대', 2: '오늘 물약을 두 번 끓였대', 3: '밤에 탐사를 다녀왔대', 4: '낮에 요리를 했대', 5: '오늘 채집을 아주 많이 했대' };
-const MISSION = {
-  1: ['몰래 선물', '가방에서 하나 골라요. 까마귀가 서아 방 창가에 놓고 가요'],
+const RUMOR = {
+  A: { 1: '오늘 아침 호숫가에 오래 있었대', 2: '오늘 연못에 발을 담그고 있었대', 3: '오늘 낚싯대를 손질했대', 4: '비 오는 걸 좋아한대', 5: '오늘도 호숫가에 있었대' },
+  B: { 1: '오늘 아침에 낚시를 했대', 2: '오늘 물약을 두 번 끓였대', 3: '밤에 탐사를 다녀왔대', 4: '낮에 요리를 했대', 5: '오늘 채집을 아주 많이 했대' },
+};
+const CLUES_SUM = { A: ['물가를 좋아해', '호숫가', '연못', '낚싯대', '비 좋아함', '말투가 「~다」'], B: ['듀모른 기숙사', '아침에 낚시', '물약 두 번', '밤에 탐사', '낮에 요리', '아침형 인간'] };
+// B: 아울라를 챙길 때 아울라의 반응 (다음에 말을 걸면)
+const AULA = {
+  1: g => g === '라벤더' ? '누가 대출 데스크에 라벤더를 두고 갔어요. 제가 좋아하는 걸 어떻게.... 깃털이 다 서요.......' : `누가 대출 데스크에 ${g}${josa(g, '을', '를')} 두고 갔어요. 쪽지도 없이요. ....반납 기한은 없는 거겠죠.......`,
+  2: () => '책갈피 사이에 쪽지가 끼워져 있었어요. 소리 내서 읽진 않을게요. 도서관이니까요.......',
+  3: () => '서가 아래에 짚 꾸러미가 있었어요. 분류 번호를 붙일 수가 없네요.......',
+  4: () => '힌트를 받았어요. 사서는 단서 모으는 걸 좋아해요. 각주까지 달아 뒀어요.......',
+  5: () => '편지는 제일 좋아하는 책 사이에 끼워 둘게요. 공개되는 밤까지요.......',
+};
+const MISSION = (d, t) => ({
+  1: ['몰래 선물', isNpc(t) ? `가방에서 하나 골라요. 까마귀가 ${t}가 있는 도서관 대출 데스크에 놓고 가요 · 좋아하는 걸 주면 하트가 더 올라요` : `가방에서 하나 골라요. 까마귀가 ${t} 방 창가에 놓고 가요`],
   2: ['응원 쪽지', '50 자까지 · 이름이나 개인 정보는 쓸 수 없어요'],
-  3: ['방에 몰래 두고 오기', '서아 방에 놀러 가서 짚 꾸러미를 두고 와요'],
+  3: ['몰래 두고 오기', isNpc(t) ? `${t}가 늘 있는 도서관에 가서 서가 아래 짚 꾸러미를 두고 와요` : `${t} 방에 놀러 가서 짚 꾸러미를 두고 와요`],
   4: ['나에 대한 힌트 하나', '진짜 내 정보 세 개 중 하나를 골라 보내요'],
   5: ['마지막 편지', '80 자까지 · 맞혀 보라고 해도 좋아요'],
-};
-const BAG = [['호박 쿠키', '#E8A04C'], ['은방울꽃', '#F4F0E0'], ['달빛 이슬', '#9FC8F0'], ['구운 밤', '#9C6A3A'], ['네잎클로버', '#7FC86A'], ['별사과', '#E8564C']];
+})[d];
+const BAG = [['호박 쿠키', '#E8A04C'], ['라벤더', '#B89AE0'], ['달빛 이슬', '#9FC8F0'], ['구운 밤', '#9C6A3A'], ['네잎클로버', '#7FC86A'], ['별사과', '#E8564C']];
 const CLUE = ['나는 엠버킬른 기숙사야', '탐사에서 나는 기사야', '나는 캇파랑 제일 친해'];
 const BAD = ['바보', '멍청', '미친', '꺼져', '죽어', '씨발', 'ㅅㅂ', '병신'];
 function check(t){
   const s = t.replace(/\s+/g, ''); if (!s) return '내용을 써 주세요.';
   if (/\d[\d\-\s]{6,}\d/.test(t) || /@|https?:|\.com|\.kr/i.test(t)) return '전화번호나 주소 같은 개인 정보는 쓸 수 없어요.';
   if (BAD.some(w => s.includes(w))) return '고운 말로 써 줄래요?';
-  if (NAMES.some(n => s.includes(n))) return '친구 이름은 쓸 수 없어요. 들키면 안 되잖아요.';
+  if (KIDS.some(n => s.includes(n))) return '친구 이름은 쓸 수 없어요. 들키면 안 되잖아요.';
   return '';
 }
 
-function steps(){
+function topBar(){
+  $('#sc').innerHTML = [['A', '반 친구를 챙기고 · NPC가 나를 챙길 때'], ['B', 'NPC를 챙기고 · 반 친구가 나를 챙길 때']].map(([k, n]) => `<button data-sc="${k}" class="${S.sc === k ? 'on' : ''}"><b>${k}</b>${n}</button>`).join('');
+  document.querySelectorAll('[data-sc]').forEach(b => b.onclick = () => { if (S.sc === b.dataset.sc) return; S.sc = b.dataset.sc; S.step = 'intro'; S.sent = {}; S.guess = null; S.drawn = false; S.introI = 0; render(); });
   $('#steps').innerHTML = STEPS.map(([k, n]) => `<button data-st="${k}" class="${S.step === k ? 'on' : ''}">${n}</button>`).join('');
   document.querySelectorAll('[data-st]').forEach(b => b.onclick = () => { S.step = b.dataset.st; render(); });
   const on = $('#steps .on'); if (on) on.scrollIntoView({ inline: 'nearest', block: 'nearest' });
 }
-function render(){ steps(); cancelAnimationFrame(ringRaf); ({ intro, rev }[S.step] || day)(); }
+function render(){ topBar(); cancelAnimationFrame(ringRaf); ({ intro, rev }[S.step] || day)(); }
 
 // ---------- 시작 연출 + 제비뽑기 ----------
 const INTRO = [
   [4, '저, 저기.... 잠깐만.'],
   [0, '나 밤마다 호박밭에 서서 다들 보거든. 누가 늦게까지 물약 끓이는지, 누가 낚시하다 졸았는지.......'],
   [1, '근데 그렇게 몰래 지켜보는 거, 생각보다 따뜻한 일이더라.'],
-  [3, '그래서 말인데.... 우리 다 같이 해 볼래? 몰래 지켜 주는 친구 놀이.'],
-  [0, '내 소매에서 지푸라기 하나만 뽑아 줘. 거기 적힌 친구가 네 비밀 친구야.'],
+  [3, '그래서 말인데.... 우리 다 같이 해 볼래? 몰래 지켜 주는 친구 놀이. 마을 친구들도 벌써 한 가닥씩 뽑아 갔어.'],
+  [0, '내 소매에서 지푸라기 하나만 뽑아 줘. 거기 적힌 이름이 네 비밀 친구야.'],
 ];
 function intro(){
-  const i = S.introI, last = i >= INTRO.length - 1;
-  $('#scene').innerHTML = `${S.drawn ? say(1, '서아구나. 쉿, 아무한테도 말하면 안 돼. 선물이랑 쪽지는 내 까마귀들이 몰래 날라 줄게. 걔들 입은 무거워.') : say(INTRO[i][0], INTRO[i][1])}
+  const i = S.introI, last = i >= INTRO.length - 1, t = TGT();
+  const after = isNpc(t) ? `${t}${josa(t, '이', '')}구나! 마을 친구를 뽑았네. 쉿, ${t}한테도 비밀이야. 선물은 내 까마귀들이 몰래 날라 줄게.` : `${t}${josa(t, '이', '')}구나. 쉿, 아무한테도 말하면 안 돼. 선물이랑 쪽지는 내 까마귀들이 몰래 날라 줄게. 걔들 입은 무거워.`;
+  $('#scene').innerHTML = `${S.drawn ? say(1, after) : say(INTRO[i][0], INTRO[i][1])}
     ${last ? `<div class="draw" id="draw"><div class="sleeve"></div>${[0, 1, 2, 3, 4].map(k => `<button class="straw" data-k="${k}" aria-label="지푸라기 ${k + 1}" style="left:calc(50% - 50px + ${k * 22}px);height:${70 + (k * 37 % 5) * 9}px;transform:rotate(${(k - 2) * 7}deg)"></button>`).join('')}
-      <div class="paper" id="paper"><small>내가 몰래 챙겨 줄 친구</small><strong>서아</strong><small>엿새 동안 · 들키지 않게</small></div></div>
+      <div class="paper" id="paper"><small>${isNpc(t) ? '내가 몰래 챙겨 줄 마을 친구' : '내가 몰래 챙겨 줄 친구'}</small><strong>${t}</strong><small>엿새 동안 · 들키지 않게</small></div></div>
       <div class="hint">${S.drawn ? '이제 1 일째로 넘어가 봐요' : '지푸라기 하나를 눌러 뽑아요'}</div>` : ''}
     ${last ? (S.drawn ? '<button class="next" id="go1">1 일째로</button>' : '') : '<button class="next" id="nx">다음</button>'}`;
   const nx = $('#nx'); if (nx) nx.onclick = () => { S.introI++; intro(); };
@@ -172,107 +215,106 @@ function intro(){
 
 // ---------- 1 ~ 6 일째: 일지 「비밀 친구」 탭 ----------
 function day(){
-  const d = +S.step.slice(1);
+  const d = +S.step.slice(1), t = TGT(), G = GOT[S.sc], R = RUMOR[S.sc];
   const stamps = [1, 2, 3, 4, 5].map(k => `<div class="${S.sent[k] ? 'done' : k === d ? 'today' : ''}">${S.sent[k] ? '완료' : k + ' 일째'}</div>`).join('');
   const recv = [1, 2, 3, 4, 5].filter(k => k <= Math.min(d, 5)).map(k => {
-    const g = GOT[k], r = RUMOR[k];
-    const a = `<div class="it"><span class="ic ${g.ic}">${g.k}</span><div>${g.crayon ? `<span class="crayon">${esc(g.t)}</span>` : esc(g.t)}<small>${k} 일째 · 비밀 친구${g.s ? ' · ' + g.s : ''}</small></div></div>`;
-    const b = `<div class="it"><span class="ic crow">소문</span><div>까악. 네 비밀 친구는 ${r}.<small>${k} 일째 · 까마귀</small></div></div>`;
+    const g = G[k];
+    const a = `<div class="it"><span class="ic ${g.crayon ? 'note' : ''}">${g.k}</span><div>${g.crayon ? `<span class="crayon">${esc(g.t)}</span>` : esc(g.t)}<small>${k} 일째 · 비밀 친구${g.s ? ' · ' + g.s : ''}</small></div></div>`;
+    const b = `<div class="it"><span class="ic crow">소문</span><div>까악. 네 비밀 친구는 ${R[k]}.<small>${k} 일째 · 까마귀</small></div></div>`;
     return k < d || d === 6 ? a + b : a;
   }).reverse().join('');
   $('#scene').innerHTML = `
-    <div class="card"><h2>내가 챙기는 친구 <span>들키지 않게 · 쉿</span></h2>
-      <div class="target"><span class="av" style="width:34px;height:34px;border-radius:50%;background:${COL[TARGET]};border:2px solid #2A1E10;flex:none"></span><b>서아</b><span>에게 오늘도 몰래</span></div>
+    <div class="card"><h2>내가 챙기는 ${isNpc(t) ? '마을 친구' : '친구'} <span>들키지 않게 · 쉿</span></h2>
+      <div class="target"><span class="dot big" style="background:${colOf(t)}"></span><b>${t}</b>${isNpc(t) ? '<em class="tag">마을 친구</em>' : ''}<span>${isNpc(t) ? '에게도 비밀로' : '에게 오늘도 몰래'}</span></div>
       <div class="stamps">${stamps}</div></div>
     ${d <= 5 ? missionHTML(d) : guessHTML()}
-    <div class="card"><h2>나에게 온 것 <span>보낸 친구는 7 일째 밤에 밝혀져요</span></h2><div class="feed">${recv || '<div class="empty">아직 아무것도 안 왔어요</div>'}</div></div>`;
+    <div class="card"><h2>나에게 온 것 <span>보낸 쪽은 7 일째 밤에 밝혀져요</span></h2><div class="feed">${recv || '<div class="empty">아직 아무것도 안 왔어요</div>'}</div></div>`;
   bindMission(d);
 }
 function missionHTML(d){
-  const [t, desc] = MISSION[d], done = S.sent[d];
+  const t = TGT(), [title, desc] = MISSION(d, t), done = S.sent[d];
   let body = '';
-  if (done) body = `<div class="doneMsg">${done}</div>`;
+  if (done) body = `<div class="doneMsg">${done.m}</div>${done.npc ? say(0, done.npc, t) : ''}`;
   else if (d === 1) body = `<div class="items">${BAG.map(([n, c], i) => `<button data-it="${i}"><i style="background:${c}"></i>${n}</button>`).join('')}</div><div class="row"><span class="err" id="err"></span><button class="send" id="send" disabled>까마귀에게 맡기기</button></div>`;
-  else if (d === 2 || d === 5){ const mx = d === 2 ? 50 : 80; body = `<textarea id="ta" maxlength="${mx}" placeholder="${d === 2 ? '서아에게 응원 한마디 (이름 없이)' : '마지막 편지를 써요'}"></textarea><div class="row"><span class="cnt" id="cnt">0 / ${mx}</span><span class="err" id="err"></span><button class="send" id="send">보내기</button></div><div class="hint">시험해 보기: 친구 이름이나 「바보」를 넣으면 막혀요</div>`; }
-  else if (d === 3) body = `${say(0, '서아 방에 들어가면 「짚 꾸러미 두고 오기」 버튼이 생겨. 바닥 빈칸에 살짝 놓고 나오면 돼.')}<div class="row"><span class="err" id="err"></span><button class="send" id="send">서아 방에 두고 오기</button></div>`;
+  else if (d === 2 || d === 5){ const mx = d === 2 ? 50 : 80; body = `<textarea id="ta" maxlength="${mx}" placeholder="${d === 2 ? `${t}에게 응원 한마디 (이름 없이)` : '마지막 편지를 써요'}"></textarea><div class="row"><span class="cnt" id="cnt">0 / ${mx}</span><span class="err" id="err"></span><button class="send" id="send">보내기</button></div><div class="hint">시험해 보기: 반 친구 이름이나 「바보」를 넣으면 막혀요</div>`; }
+  else if (d === 3) body = `${say(0, isNpc(t) ? `${t}는 낮엔 늘 도서관에 있어. 서가 아래 빈칸에 살짝 놓고 나오면 돼. 눈이 밝으니까 조심!` : `${t} 방에 들어가면 「짚 꾸러미 두고 오기」 버튼이 생겨. 바닥 빈칸에 살짝 놓고 나오면 돼.`)}<div class="row"><span class="err" id="err"></span><button class="send" id="send">${isNpc(t) ? '도서관에 두고 오기' : `${t} 방에 두고 오기`}</button></div>`;
   else if (d === 4) body = `<div class="choice">${CLUE.map((c, i) => `<button data-cl="${i}">${c}</button>`).join('')}</div><div class="row"><span class="err" id="err"></span><button class="send" id="send" disabled>이 힌트 보내기</button></div><div class="hint">기숙사 · 탐사 직업 · 가장 친한 NPC · 많이 하는 일 · 레벨대 중에서 세 개가 나와요</div>`;
-  return `<div class="card"><h2>오늘의 비밀 임무 <span>${d} 일째</span></h2><div class="mission"><div class="t">${t}</div><div class="d">${desc}</div>${body}</div></div>`;
+  return `<div class="card"><h2>오늘의 비밀 임무 <span>${d} 일째</span></h2><div class="mission"><div class="t">${title}</div><div class="d">${desc}</div>${body}</div></div>`;
 }
 function bindMission(d){
-  if (d === 6){ document.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { S.guess = +b.dataset.g; day(); toast(`${NAMES[S.guess]}로 골랐어요 · 공개 전까지 바꿀 수 있어요`); }); return; }
-  const send = $('#send'); if (!send) return; let pick = null;
-  const fin = (msg, tmsg) => { S.sent[d] = msg; day(); toast(tmsg); };
+  if (d === 6){ document.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { S.guess = b.dataset.g; day(); toast(`${S.guess}${josa(S.guess, '으로', '로')} 골랐어요 · 공개 전까지 바꿀 수 있어요`); }); return; }
+  const send = $('#send'); if (!send) return; let pick = null; const t = TGT(), npc = isNpc(t);
+  const fin = (m, tm, arg) => { S.sent[d] = { m, npc: npc ? AULA[d](arg) : '' }; day(); toast(tm); };
   if (d === 1){ document.querySelectorAll('[data-it]').forEach(b => b.onclick = () => { document.querySelectorAll('[data-it]').forEach(o => o.classList.remove('on')); b.classList.add('on'); pick = +b.dataset.it; send.disabled = false; });
-    send.onclick = () => fin(`${BAG[pick][0]}을(를) 까마귀가 물고 갔어요`, '까악! 까마귀가 서아 방 창가로 날아갔어요'); }
+    send.onclick = () => { const g = BAG[pick][0]; fin(`${g}${josa(g, '을', '를')} 까마귀가 물고 갔어요${npc && g === '라벤더' ? ' · 아울라가 좋아하는 거예요! 하트 +1' : ''}`, npc ? '까악! 까마귀가 도서관으로 날아갔어요 · 다음 날 아울라에게 말을 걸어 봐요' : `까악! 까마귀가 ${t} 방 창가로 날아갔어요`, g); }; }
   if (d === 2 || d === 5){ const ta = $('#ta'), cnt = $('#cnt'), err = $('#err'); ta.oninput = () => { cnt.textContent = `${ta.value.length} / ${ta.maxLength}`; err.textContent = ''; };
     send.onclick = () => { const e = check(ta.value); if (e){ err.textContent = e; return; } fin(`「${ta.value.trim()}」 짚 종이에 접어 보냈어요`, '까마귀가 쪽지를 물고 갔어요'); }; }
-  if (d === 3) send.onclick = () => fin('서아 방 바닥에 짚 꾸러미를 두고 나왔어요', '들키지 않고 빠져나왔어요');
+  if (d === 3) send.onclick = () => fin(npc ? '도서관 서가 아래에 짚 꾸러미를 두고 나왔어요' : `${t} 방 바닥에 짚 꾸러미를 두고 나왔어요`, '들키지 않고 빠져나왔어요');
   if (d === 4){ document.querySelectorAll('[data-cl]').forEach(b => b.onclick = () => { document.querySelectorAll('[data-cl]').forEach(o => o.classList.remove('on')); b.classList.add('on'); pick = +b.dataset.cl; send.disabled = false; });
     send.onclick = () => fin(`힌트 「${CLUE[pick]}」를 보냈어요`, '힌트를 보냈어요. 너무 쉬웠으려나?'); }
 }
 function guessHTML(){
-  const clues = ['듀모른 기숙사', '아침에 낚시', '물약 두 번', '밤에 탐사', '낮에 요리', '채집 많이', '아침형 인간'];
+  const face = n => `<button data-g="${n}" class="${S.guess === n ? 'on' : ''}"><span class="dot" style="background:${colOf(n)}"></span>${n}</button>`;
   return `<div class="card"><h2>내 비밀 친구는 누구일까? <span>공개 전까지 바꿀 수 있어요</span></h2>
-    <div class="clues">${clues.map(c => `<span>${c}</span>`).join('')}</div>
-    <div class="faces">${NAMES.map((n, i) => i === ME ? '' : `<button data-g="${i}" class="${S.guess === i ? 'on' : ''}"><span class="av" style="background:${COL[i]}"></span>${n}</button>`).join('')}</div>
-    <div class="hint">${S.guess == null ? '모은 힌트를 보고 한 명을 골라요' : `지금 고른 친구: ${NAMES[S.guess]}`}</div></div>`;
+    <div class="clues">${CLUES_SUM[S.sc].map(c => `<span>${c}</span>`).join('')}</div>
+    <div class="glabel">반 친구</div><div class="faces">${KIDS.slice(1).map(face).join('')}</div>
+    <div class="glabel">마을 친구</div><div class="faces">${NPCS.map(face).join('')}</div>
+    <div class="hint">${S.guess == null ? '모은 힌트를 보고 22 명 중 한 명을 골라요' : `지금 고른 쪽: ${S.guess}`}</div></div>`;
 }
 
-// ---------- 7 일째 밤: 고리 공개 ----------
-let ringRaf = 0;
+// ---------- 7 일째 밤: 고리 공개 (23 명) ----------
+let ringRaf = 0, stroDone = false;
 function rev(){
   stroDone = false;
-  $('#scene').innerHTML = `${say(0, '다들.... 모여 줘서 고마워. 이제 실을 이어 볼게.')}<canvas id="ring" width="240" height="240" aria-label="12 명이 이어진 비밀 친구 고리"></canvas><div class="result" id="res"><div class="sm">등불이 하나씩 켜지고 있어요.......</div></div><button class="next" id="again">처음부터 다시 보기</button>`;
+  $('#scene').innerHTML = `${say(0, '다들.... 모여 줘서 고마워. 마을 친구들까지 스물셋. 이제 실을 이어 볼게.')}<canvas id="ring" width="300" height="300" aria-label="23 명이 이어진 비밀 친구 고리"></canvas><div class="legend"><span><i style="background:#9C7A2E"></i>반 친구</span><span><i style="background:#6A8AC8"></i>마을 친구</span></div><div class="result" id="res"><div class="sm">등불이 하나씩 켜지고 있어요.......</div></div><button class="next" id="again">처음부터 다시 보기</button>`;
   $('#again').onclick = () => rev();
-  const cv = $('#ring'), g = cv.getContext('2d'), W = 240, C = W / 2, R = 80, N = 12, t0 = performance.now(), STEP = 520;
+  const RG = ring(), N = RG.length, cv = $('#ring'), g = cv.getContext('2d'), W = 300, C = W / 2, R = 104, t0 = performance.now(), STEP = 330, GI = N - 1;
   const P = i => { const a = -Math.PI / 2 + i * Math.PI * 2 / N; return [Math.round(C + Math.cos(a) * R), Math.round(C + Math.sin(a) * R)]; };
-  const stars = Array.from({ length: 40 }, (_, i) => [(i * 97) % W, (i * 53) % W, i % 3]);
+  const stars = Array.from({ length: 50 }, (_, i) => [(i * 97) % W, (i * 53) % W, i % 3]);
   let shown = false;
-  const lantern = (x, y, lit, col, big) => {
-    const s = big ? 1.4 : 1;
-    if (lit){ const gr = g.createRadialGradient(x, y, 2, x, y, 18 * s); gr.addColorStop(0, 'rgba(255,214,120,.55)'); gr.addColorStop(1, 'rgba(255,214,120,0)'); g.fillStyle = gr; g.fillRect(x - 20 * s, y - 20 * s, 40 * s, 40 * s); }
-    g.fillStyle = '#4A3410'; g.fillRect(x - 6 * s, y - 8 * s, 12 * s, 15 * s);
-    g.fillStyle = lit ? '#FFD678' : '#5A4A38'; g.fillRect(x - 4 * s, y - 6 * s, 8 * s, 11 * s);
-    g.fillStyle = '#9C7A2E'; g.fillRect(x - 6 * s, y - 10 * s, 12 * s, 3 * s); g.fillRect(x - 1, y - 13 * s, 2, 3 * s);
-    if (col){ g.fillStyle = col; g.fillRect(x - 2, y + 9 * s, 4, 3); }
+  const lantern = (x, y, lit, npc) => {
+    if (lit){ const gr = g.createRadialGradient(x, y, 2, x, y, 15); gr.addColorStop(0, 'rgba(255,214,120,.5)'); gr.addColorStop(1, 'rgba(255,214,120,0)'); g.fillStyle = gr; g.fillRect(x - 16, y - 16, 32, 32); }
+    g.fillStyle = '#4A3410'; g.fillRect(x - 5, y - 7, 10, 13);
+    g.fillStyle = lit ? '#FFD678' : '#5A4A38'; g.fillRect(x - 3, y - 5, 6, 9);
+    g.fillStyle = '#9C7A2E'; g.fillRect(x - 5, y - 9, 10, 3); g.fillRect(x - 1, y - 11, 2, 2);
+    g.fillStyle = npc ? '#6A8AC8' : '#9C7A2E'; g.fillRect(x - 6, y + 6, 12, 3);
   };
   const frame = now => {
     const k = (now - t0) / STEP, lit = Math.min(N, Math.floor(k) + 1);
     g.fillStyle = '#120E19'; g.fillRect(0, 0, W, W);
     stars.forEach(([x, y, b]) => { g.fillStyle = b ? '#5A5070' : '#8A80A0'; g.fillRect(x, y, 1, 1); });
-    g.fillStyle = '#2A1E14'; g.fillRect(0, W - 26, W, 26); g.fillStyle = '#3A2A1C'; for (let x = 0; x < W; x += 6) g.fillRect(x, W - 28 + (x * 7 % 4), 3, 3);
-    // 실: 챙긴 사람 → 받은 사람
+    g.fillStyle = '#2A1E14'; g.fillRect(0, W - 22, W, 22); g.fillStyle = '#3A2A1C'; for (let x = 0; x < W; x += 6) g.fillRect(x, W - 24 + (x * 7 % 4), 3, 3);
+    const done = k >= N + .3;
     for (let i = 0; i < N; i++){
       const p = Math.min(1, Math.max(0, k - i)); if (p <= 0) continue;
-      const [x1, y1] = P(i), [x2, y2] = P((i + 1) % N), done = k >= N + .3, mine = i === GIVER || i === ME;
-      g.strokeStyle = done ? (mine ? '#FFE9A0' : '#D9534F') : '#B8323A'; g.lineWidth = mine && done ? 3 : 2;
+      const [x1, y1] = P(i), [x2, y2] = P((i + 1) % N), mine = i === GI || i === 0;
+      g.strokeStyle = done ? (mine ? '#FFE9A0' : '#D9534F') : '#B8323A'; g.lineWidth = mine && done ? 3 : 1.5;
       g.beginPath(); g.moveTo(x1, y1); g.lineTo(x1 + (x2 - x1) * p, y1 + (y2 - y1) * p); g.stroke();
     }
-    for (let i = 0; i < N; i++){ const [x, y] = P(i); lantern(x, y, i < lit, COL[i]); }
-    g.font = '11px "Gowun Dodum", sans-serif'; g.textAlign = 'center';
-    for (let i = 0; i < N; i++){ const [x, y] = P(i), dx = x - C, dy = y - C, L = Math.hypot(dx, dy); g.fillStyle = i === ME || i === GIVER ? '#FFE9A0' : '#C8B8A0'; g.fillText(NAMES[i], Math.round(x + dx / L * 22), Math.round(y + dy / L * 22 + 4)); }
-    const end = k >= N + 1.5;
-    if (end){ const a = Math.min(1, (k - N - 1.5) / 1.2); g.globalAlpha = a; lantern(C, C, true, '#E8C46A', true); g.fillStyle = '#E8C46A'; g.fillText('스트로', C, C + 30); g.globalAlpha = 1; }
-    if (k >= N + .3 && !shown){ shown = true; result(); }
-    if (end && k > N + 3) stroEnd();
-    if (k < N + 3.2) ringRaf = requestAnimationFrame(frame);
+    for (let i = 0; i < N; i++){ const [x, y] = P(i); lantern(x, y, i < lit, isNpc(RG[i])); }
+    g.font = '10px "Gowun Dodum", sans-serif'; g.textAlign = 'center';
+    for (let i = 0; i < N; i++){ const [x, y] = P(i), dx = x - C, dy = y - C, L = Math.hypot(dx, dy); g.fillStyle = i === 0 || i === GI || i === 1 ? '#FFE9A0' : isNpc(RG[i]) ? '#A8BCE0' : '#C8B8A0'; g.fillText(RG[i], Math.round(x + dx / L * 21), Math.round(y + dy / L * 21 + 4)); }
+    if (done && !shown){ shown = true; result(); }
+    if (k > N + 2.5) stroEnd();
+    if (k < N + 2.7) ringRaf = requestAnimationFrame(frame);
   };
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduce){ const t = performance.now(); const f = frame; ringRaf = 0; f(t + STEP * (N + 3.3)); } else ringRaf = requestAnimationFrame(frame);
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) frame(performance.now() + STEP * (N + 2.8)); else ringRaf = requestAnimationFrame(frame);
 }
 function result(){
-  const ok = S.guess === GIVER, gt = S.guess == null ? '' : ok ? '<div class="sm" style="color:var(--ok)">맞혔어! 듀모른 기숙사 힌트가 결정적이었지?</div>' : `<div class="sm">${NAMES[S.guess]}라고 생각했구나. 아깝다!</div>`;
-  const n = Object.keys(S.sent).length;
-  $('#res').innerHTML = `<div class="big">네 비밀 친구는 지호였어!</div>${gt}<div class="sm">그리고 서아는.... 끝까지 너를 몰랐어. 완벽한 비밀 친구!</div>
+  const G = GIV(), T = TGT(), ok = S.guess === G, n = Object.keys(S.sent).length;
+  const gt = S.guess == null ? '' : ok ? '<div class="sm" style="color:var(--ok)">맞혔어!</div>' : `<div class="sm">${S.guess}${josa(S.guess, '이', '')}라고 생각했구나. 아깝다!</div>`;
+  const giverLine = isNpc(G) ? say(0, '....들켰나. 말투를 숨긴다고 숨겼는데. 오이는 맛있었나.', G) : '';
+  const tgtLine = isNpc(T) ? (S.sent[4] ? `${T}는 너를 맞혔어. 「기숙사 힌트에 각주를 달아 뒀거든요.......」` : `${T}는 끝까지 몰랐어. 완벽한 비밀 친구!`) : `${T}는.... 끝까지 너를 몰랐어. 완벽한 비밀 친구!`;
+  $('#res').innerHTML = `<div class="big">네 비밀 친구는 ${G}${josa(G, '이었어', '였어')}!</div>${gt}${giverLine}<div class="sm">그리고 ${tgtLine}</div>
+    <div class="sm">덤: 마들렌은 시우에게 매일 갓 구운 쿠키를 보냈대. 레오는 다은 방에 풀물 든 손수건을 두고 갔고.</div>
     <div class="rewards">
       <div><span>방 가구 「짚 인형 스트로」</span><span>${n >= 3 ? '받았어요' : `임무 ${n} / 3 · 3 개 하면 받아요`}</span></div>
-      <div><span>말풍선 꾸미기 「지푸라기 말풍선」</span><span>${ok ? '받았어요' : '맞힌 친구만'}</span></div>
-      <div><span>이름표 「완벽한 비밀 친구」</span><span>받았어요</span></div>
-      <div><span>스트로 호감도</span><span>+1 하트</span></div>
+      <div><span>말풍선 꾸미기 「지푸라기 말풍선」</span><span>${ok ? '받았어요' : '맞힌 학생만'}</span></div>
+      ${isNpc(T) ? `<div><span>${T} 하트 · 답장 편지</span><span>+2 하트${S.sent[1] && S.sent[1].m.includes('라벤더') ? ' +1 (좋아하는 선물)' : ''}</span></div>` : '<div><span>이름표 「완벽한 비밀 친구」</span><span>받았어요</span></div>'}
+      ${isNpc(G) ? `<div><span>${G} 하트</span><span>+1 하트</span></div>` : ''}
     </div>`;
 }
-let stroDone = false;
-function stroEnd(){ if (stroDone) return; stroDone = true; const s = document.querySelector('.say'); if (s) s.outerHTML = say(4, '사실.... 나도 몰래 다들 지켜봤어. 그러니까 나도, 끼워 줄래?'); }
+function stroEnd(){ if (stroDone) return; stroDone = true; const s = document.querySelector('.say'); if (s) s.outerHTML = say(1, '다들.... 고마워. 이렇게 한 바퀴 다 이어진 거, 호박밭에서 처음 봐.'); }
 
 render();
 </script>
