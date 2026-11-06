@@ -90,14 +90,15 @@ def tower(n, k=None):   # 과자 탑: 1 단계 상자 4 · 2 단계 7 · 3 단�
         g = ImageDraw.Draw(im); t = y - 2; g.polygon([(W // 2 - 4, t), (W // 2, t - 4), (W // 2 + 4, t)], fill=hx('#FFD24A'), outline=OL)
     return im
 
-def mold():   # 과자 교실 막대 틀 (오븐 옆 탁자 위 소품 40 × 24)
-    im = Image.new('RGBA', (40, 24)); g = ImageDraw.Draw(im)
-    g.polygon([(2, 12), (20, 3), (38, 12), (20, 21)], fill=hx('#B8B8C8'), outline=OL)
-    for k in range(5):
-        x = 9 + k * 5; y = 8 + k * 2 - 2
-        g.line([(x, y), (x + 9, y + 4)], fill=hx('#6A6A80'), width=2)
-        if k < 3: g.line([(x, y - 1), (x + 8, y + 3)], fill=hx(['#E8B868', '#8A5232', '#F08AA8'][k]), width=1)
-    g.polygon([(2, 12), (20, 21), (20, 23), (2, 14)], fill=hx('#7A7A90'), outline=OL); g.polygon([(20, 21), (38, 12), (38, 14), (20, 23)], fill=hx('#9A9AB0'), outline=OL)
+def mold():   # 과자 교실 막대 틀: 오븐 옆 작은 나무 탁자 위 막대 틀 (32 × 30)
+    im = Image.new('RGBA', (32, 30)); g = ImageDraw.Draw(im); wd, wl, wk = hx('#B07A4A'), hx('#D49A60'), hx('#8A5A2E')
+    for x in (4, 26): g.rectangle([x, 17, x + 2, 29], fill=wk, outline=OL)   # 다리
+    g.rectangle([1, 13, 30, 18], fill=wd, outline=OL); g.line([(2, 14), (29, 14)], fill=wl)   # 탁자 위
+    g.rectangle([3, 6, 28, 13], fill=hx('#C8C8D8'), outline=OL); g.line([(4, 7), (27, 7)], fill=hx('#E8E8F4'))   # 틀
+    for k in range(5): g.line([(6 + k * 5, 9), (6 + k * 5 + 3, 9)], fill=hx('#6A6A80'))   # 홈
+    for k, c in enumerate(['#E8B868', '#8A5232', '#F08AA8']): g.line([(6 + k * 5, 10), (6 + k * 5 + 3, 10)], fill=hx(c)); g.point((6 + k * 5, 9), fill=OL)
+    for x, c in ((9, '#F08AA8'), (13, '#7FB060'), (17, '#8A5232')):   # 막대 몇 개가 틀 위에 걸쳐 있어요
+        g.line([(x, 1), (x + 3, 6)], fill=OL, width=1); g.line([(x + 1, 1), (x + 3, 5)], fill=hx(c))
     return im
 
 def lamp_deco():   # 광장 가로등에 매다는 막대과자 장식 (14 × 20)
@@ -112,7 +113,7 @@ def frame():   # 방 가구 「완벽한 막대」 액자 (24 × 32): 금테 · 
     g.line([(5, 27), (3, 31)], fill=OL, width=2); g.line([(18, 27), (20, 31)], fill=OL, width=2); g.line([(5, 27), (4, 30)], fill=hx('#8A5A2E')); g.line([(18, 27), (19, 30)], fill=hx('#8A5A2E'))
     g.rectangle([1, 1, 22, 27], fill=gold, outline=OL); g.rectangle([2, 2, 21, 2], fill=hx('#FFE27A')); g.rectangle([2, 26, 21, 26], fill=gd)
     g.rectangle([4, 4, 19, 22], fill=hx('#2E2A5A'), outline=gd)
-    st = stick('milk', 'gold', 1).rotate(-35, expand=True, resample=Image.NEAREST); bb = st.getbbox(); st = st.crop(bb)
+    st = stick('caramel', 'gold', 1).rotate(-35, expand=True, resample=Image.NEAREST); bb = st.getbbox(); st = st.crop(bb)
     st = st.resize((max(1, st.width * 2 // 3), max(1, st.height * 2 // 3)), Image.NEAREST); im.alpha_composite(st, (12 - st.width // 2, 13 - st.height // 2))
     for x, y in ((6, 6), (16, 7), (7, 19)):
         for dx, dy in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)): im.putpixel((x + dx, y + dy), hx('#FFE27A') if (dx, dy) != (0, 0) else hx('#FFFFFF'))
@@ -141,8 +142,8 @@ def mini_box():   # 까마귀가 무는 작은 상자 (10 × 10)
 #   y 0   몸통 무늬 9 × 색 8 (26 × 25, x = (무늬 × 8 + 색) × 26)
 #   y 25  리본 8 (26 × 25) · 그 옆 x 208 부터 막대 끝 (26 × 13, x = 208 + (맛 × 8 + 뿌리개) × 26 는 너무 길어서 아래 줄)
 #   y 50  막대 10 맛 × 뿌리개 8 (7 × 30, x = (맛 × 8 + 뿌리개) × 7)
-#   y 80  과자 탑 3 단계 (34 × 64) · 책상 위 더미 1 ~ 3 (34 × 64) · 막대 틀 (40 × 24) · 가로등 장식 (14 × 20) · 액자 (24 × 32) · 까마귀 2 (20 × 14) · 작은 막대 10 (4 × 16) · 작은 상자 (10 × 10)
-SHEET = {'body': (0, 0), 'rib': (0, 25), 'stick': (0, 50), 'tower': (0, 80), 'stack': (102, 80), 'mold': (204, 80), 'lamp': (244, 80), 'frame': (258, 80), 'crow': (282, 80), 'mini': (322, 80), 'mbox': (362, 80)}
+#   y 80  과자 탑 3 단계 (34 × 64) · 책상 위 더미 1 ~ 3 (34 × 64) · 막대 틀 (32 × 30) · 가로등 장식 (14 × 20) · 액자 (24 × 32) · 까마귀 2 (20 × 14) · 작은 막대 10 (4 × 16) · 작은 상자 (10 × 10)
+SHEET = {'body': (0, 0), 'rib': (0, 25), 'stick': (0, 50), 'tower': (0, 80), 'stack': (102, 80), 'mold': (204, 80), 'lamp': (244, 80), 'frame': (258, 80), 'crow': (282, 80), 'mini': (322, 80), 'mbox': (362, 80)}   # 막대 틀 32 × 30
 def sheet():
     S = Image.new('RGBA', (len(PAT) * len(COL) * 26, 144))
     for i, p in enumerate(PAT):
