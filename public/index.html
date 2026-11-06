@@ -11974,17 +11974,17 @@ function nnFrame(spr, col, flipX){   // NPC 그림 한 칸 (64 × 64)
   const I = NPC_IMG_STAGE || (NPC_IMG_STAGE = Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` }));
   return nnCv(64, 64, (R, O, g) => { if (!I.complete || !I.naturalWidth) return; if (flipX){ g.translate(64, 0); g.scale(-1, 1); } g.drawImage(I, col * 64, spr * 64, 64, 64, 0, 0, 64, 64); });
 }
-const nnPr = (o, img, x, y, ax, ay) => { o.img = img; o.pxc = img.getContext('2d'); o.x = x; o.y = y; o.sw = img.width; o.sh = img.height; o.ax = ax; o.ay = ay; o.solid = false; return o; };
+const nnPr = (o, img, x, y, ax, ay, sc) => { o.img = img; o.pxc = img.getContext('2d'); o.x = x; o.y = y; o.sw = img.width; o.sh = img.height; o.ax = ax; o.ay = ay; o.solid = false; o.sc = sc || 1; return o; };   // sc .5: NPC 그림 칸 (캐릭터와 같은 크기)
 // 장면마다: 지도 · 주인공 자리 · 장면 (ctx: put 소품 다시 놓기 · PR 소품 · cut 컷신 · sp 등장 명령 · skip)
 const NN_ARR = {
-  dodo: { map: 'campus', pl: [19, 43], toast: '도도가 시계탑으로 갔어요. 저녁엔 등불 시장 경매대에 있대요',
+  dodo: { map: 'campus', pl: [20, 44], toast: '도도가 시계탑으로 갔어요. 저녁엔 등불 시장 경매대에 있대요',
     async play(C){ const W = [17, 39], L = [18, 41];
       C.PR.wagon = nnPr({ id: 'nnwagon' }, nnWagon(false), W[0], W[1], 30, 38); C.put();
-      await C.cut([{ cmd: 'player', x: 19, y: 43, dir: 'up' }, { cmd: 'cam', x: 18, y: 41 }, { cmd: 'wait', sec: 1 }, { cmd: 'say', who: 'player', text: '짐마차만 덩그러니 서 있네.......', ms: 2000 }]);
+      await C.cut([{ cmd: 'player', x: 20, y: 44, dir: 'up' }, { cmd: 'cam', x: 18, y: 42 }, { cmd: 'wait', sec: 1 }, { cmd: 'say', who: 'player', text: '짐마차만 덩그러니 서 있네.......', ms: 2000 }]);
       for (let k = 0; k < 14 && !C.skip(); k++){ C.PR.wagon = nnPr(C.PR.wagon, nnWagon(false, k % 2 ? 1 : -1, k % 3 ? 0 : -1), W[0], W[1], 30, 38); C.put(); if (k % 4 === 0) sfx('pick'); await famSleep(k < 7 ? 160 : 70); }   // 상자가 들썩들썩
       if (!C.skip()){ await C.cut([{ cmd: 'emote', who: 'player', icon: 4 }, { cmd: 'say', who: 'player', text: '....상자가 움직여요.......', ms: 1600 }]);
         sfx('pop'); C.PR.wagon = nnPr(C.PR.wagon, nnWagon(true), W[0], W[1], 30, 38);
-        const f = nnFrame(14, 0); for (let k = 0; k <= 12 && !C.skip(); k++){ const t = k / 12, x = W[0] + (L[0] - W[0]) * t, y = W[1] + (L[1] - W[1]) * t, up = Math.sin(t * Math.PI) * 34 + (1 - t) * 18; C.PR.dodo = nnPr({ id: 'nndodo' }, f, x, y, 32, 62 + up); C.put(); await famSleep(55); }   // 상자에서 튀어 올라 땅으로
+        const f = nnFrame(14, 0); for (let k = 0; k <= 12 && !C.skip(); k++){ const t = k / 12, x = W[0] + (L[0] - W[0]) * t, y = W[1] + (L[1] - W[1]) * t, up = Math.sin(t * Math.PI) * 34 + (1 - t) * 18; C.PR.dodo = nnPr({ id: 'nndodo' }, f, x, y, 32, 62 + up, .5); C.put(); await famSleep(55); }   // 상자에서 튀어 올라 땅으로
         delete C.PR.dodo; C.put(); }
       await C.cut([C.sp(L[0], L[1], 'down'), { cmd: 'sfx', id: 'pop' },
         { cmd: 'say', who: 'dodo', text: '자아, 도착입니다! 사과 상자 특급 배송, 손님 한 분 무사히 하차!', ms: 2800 },
@@ -12004,7 +12004,7 @@ const NN_ARR = {
       await C.cut([{ cmd: 'player', x: 20, y: 42, dir: 'up' }, { cmd: 'cam', x: 18, y: 39 }, { cmd: 'wait', sec: .6 }]);
       toast('막차가 들어와요.......'); sfx('step');
       for (let k = 0; k <= 20 && !C.skip(); k++){ const t = 1 - (1 - k / 20) ** 2; C.PR.coach = nnPr({ id: 'nncoach' }, cv, X, Y0 + (Y1 - Y0) * t, 32, 56); C.put(); await famSleep(70); }   // 천천히 멈춰요
-      C.PR.coach = nnPr(C.PR.coach || { id: 'nncoach' }, cv, X, Y1, 32, 56); C.PR.box = nnPr({ id: 'nnbox' }, nnSewBox(), 19, 40, 8, 10); C.put();
+      C.PR.coach = nnPr(C.PR.coach || { id: 'nncoach' }, cv, X, Y1, 32, 56); C.PR.box = nnPr({ id: 'nnbox' }, nnSewBox(), 19, 41, 8, 10); C.put();
       await C.cut([C.sp(18, 39, 'down'), { cmd: 'sfx', id: 'step' },
         { cmd: 'say', who: 'selin', text: '마차삯 은화 둘. 짐삯은 따로 안 냈어. 다행이야.', ms: 2600 }]);
       for (let k = 0; k <= 16 && !C.skip(); k++){ C.PR.coach = nnPr(C.PR.coach, cv, X - k * .7, Y1, 32, 56); C.put(); await famSleep(60); }   // 막차는 떠나요
@@ -12014,7 +12014,7 @@ const NN_ARR = {
         { cmd: 'say', who: 'selin', text: '공짜 도움은 안 받아. 계약으로 하자.', ms: 2200 },
         { cmd: 'say', who: 'selin', text: '조건 셋. 첫째, 반짇고리는 기울이지 말 것. 둘째, 장부는 펴 보지 말 것. 셋째, 삯은 동화 둘.', ms: 3800 },
         { cmd: 'say', who: 'selin', text: '서명은 여기. ....손가락으로 허공에 그어도 돼. 내가 봤으니까 유효해.', ms: 3000 },
-        { cmd: 'walk', who: 'player', x: 20, y: 40, dir: 'left' }]);
+        { cmd: 'walk', who: 'player', x: 20, y: 41, dir: 'left' }]);
       delete C.PR.box; C.put(); sfx('pick');   // 반짇고리를 들어요
       await C.cut([{ cmd: 'say', who: 'player', text: '....생각보다 무겁네요.......', ms: 1800 },
         { cmd: 'say', who: 'selin', text: '실이 이백 타래 들었어. 무거운 게 당연해.', ms: 2400 },
@@ -12028,7 +12028,7 @@ const NN_ARR = {
       World.fx({ kind: 'dark', v: .32 });   // 해 질 녘
       await C.cut([{ cmd: 'player', x: 21, y: 77, dir: 'right' }, { cmd: 'cam', x: 24, y: 75 }, { cmd: 'wait', sec: .8 }]);
       sfx('step'); const N = 34;
-      for (let k = 0; k <= N && !C.skip(); k++){ const x = X0 + (X1 - X0) * k / N; C.PR.bone = nnPr({ id: 'nnbone' }, nnFrame(16, dl + WK[k % WK.length]), x, Y, 32, 62); C.PR.cart = nnPr({ id: 'nncart' }, cart, x + 1.3, Y, 4, 26); C.put(); if (k % 8 === 0) sfx('step'); await famSleep(110); }   // 수레를 끌고 와요
+      for (let k = 0; k <= N && !C.skip(); k++){ const x = X0 + (X1 - X0) * k / N; C.PR.bone = nnPr({ id: 'nnbone' }, nnFrame(16, dl + WK[k % WK.length]), x, Y, 32, 62, .5); C.PR.cart = nnPr({ id: 'nncart' }, cart, x + 1.3, Y, 4, 26); C.put(); if (k % 8 === 0) sfx('step'); await famSleep(110); }   // 수레를 끌고 와요
       delete C.PR.bone; C.PR.cart = nnPr(C.PR.cart || { id: 'nncart' }, cart, X1 + 1.3, Y, 4, 26); C.put();
       await C.cut([C.sp(X1, Y, 'left'), { cmd: 'sfx', id: 'magic' },
         { cmd: 'say', who: 'bone', text: '도착, 도착! 「먼 길 돌아 수레 끌고, 오늘 여기 닿았다네」.', ms: 3000 },
@@ -12040,7 +12040,7 @@ const NN_ARR = {
         { cmd: 'say', who: 'bone', text: '「해골 하나 깃털 하나, 류트 하나 장단 하나」. 나는 본, 떠돌이 음유시인이야.', ms: 3400 },
         { cmd: 'say', who: 'bone', text: '오늘부터 여기 살 거야. 이웃이 많잖아. 다들 조용하지만.', ms: 2800 },
         { cmd: 'say', who: 'bone', text: '낮엔 광장에서 공연해. 아이들 웃음이 제일 좋은 반주야.', ms: 2800 },
-        { cmd: 'walk', who: 'bone', x: 19, y: 70, dir: 'up', timeout: 10 }, { cmd: 'walk', who: 'player', x: 22, y: 73, dir: 'up', timeout: 8 },
+        { cmd: 'walk', who: 'bone', x: 19, y: 70, dir: 'up', timeout: 10 }, { cmd: 'walk', who: 'player', x: 23, y: 72, dir: 'left', timeout: 8 },
         { cmd: 'wait', sec: 1.5 }, { cmd: 'say', who: 'bone', text: '.......', ms: 1800 }, { cmd: 'wait', sec: 1 },
         { cmd: 'say', who: 'bone', text: '....여기서는 노래 안 할게. 오늘은.......', ms: 2800 }, { cmd: 'wait', sec: 1 },
         { cmd: 'face', who: 'bone', to: 'player' }, { cmd: 'say', who: 'bone', text: '자, 길손. 해 지기 전에 가. 내일 광장에서 봐. 맨 앞줄은 비워 둘게.......', ms: 3200 },
@@ -12058,11 +12058,11 @@ async function nnIntro(id){
   if (!I.complete) await new Promise(r => { I.addEventListener('load', r, { once: true }); setTimeout(r, 3000); });
   let skip = false; const sk = document.createElement('button'); sk.className = 'btn sm mqskip'; sk.textContent = '건너뛰기'; sk.onclick = () => { skip = true; }; $('#stage').appendChild(sk);
   const PR = {}, C = { PR, put: () => World.setProps(S.map, Object.values(PR), 'nnarr'), skip: () => skip, sp: (x, y, dir) => ({ cmd: 'spawn', who: id, name: d.name, spr: d.spr, x, y, dir }),
-    cut: cmds => skip ? Promise.resolve() : World.cut(cmds, { sfx: k => sfx(k), skip: () => skip }) };
+    cut: cmds => skip ? Promise.resolve() : World.cut(cmds.flatMap(c => c.cmd === 'spawn' ? [c, { cmd: 'sfx', id: '__keep' }] : [c]), { sfx: k => k === '__keep' ? World.cutKeep(id) : sfx(k), skip: () => skip }) };   // 새 친구는 장면 사이에도 남아 있어요 (끝나면 cutClear)
   try { World.setView(150); await famSleep(300); unc(); await famSleep(500); await S.play(C); }
   catch(e){ errReport('newnpc', `새 친구(${id}) 도착 연출 오류: ` + e.message, e.stack || ''); }
   finally {
-    sk.remove(); World.setProps(S.map, [], 'nnarr'); World.fx({ kind: 'light' }); World.setView(null); $('#nncover')?.remove();
+    sk.remove(); World.cutClear && World.cutClear(); World.setProps(S.map, [], 'nnarr'); World.fx({ kind: 'light' }); World.setView(null); $('#nncover')?.remove();
     me.nnpc = me.nnpc || {}; me.nnpc[id] = { met: 1, at: now2(), id: (nnCtl[id] && nnCtl[id].id) || 0 };
     save(); nnOn = false; npcSig = ''; syncNpcs(); toast(S.toast);
   }

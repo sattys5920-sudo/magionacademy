@@ -551,9 +551,9 @@ World.busyFish = false;   // 낚시하는 동안은 바닥을 눌러도 안 걸�
 World.isFree = (x, y) => !!M && free(x, y);
 World.freeNear = (x, y, r = 3) => { const out = []; for (let a = x - r; a <= x + r; a++) for (let b = y - r; b <= y + r; b++) if (free(a, b)) out.push([a, b]); return out; };
 let crowd = {};
-let propsData = {};   // 이벤트 소품: World.setProps(지도 id, [{ id, x, y(칸), img(그림), sw, sh, ax, ay, solid, light }]) — 눌리면 World.onProp(id)
+let propsData = {};   // 이벤트 소품: World.setProps(지도 id, [{ id, x, y(칸), img(그림), sw, sh, ax, ay, solid, light, sc(크기 배율: .5면 캐릭터 그림과 같은 크기) }]) — 눌리면 World.onProp(id)
 const propsOf = id => Object.values(propsData[id] || {}).flat();
-function propObjs(){ return propsOf(rmap).map(p => { const [px, py] = P(p.x + .5, p.y + .5); return { name: 'prop', pid: p.id, prop: p, img: p.img, pxc: p.pxc, box: [p.x, p.y, p.x + 1, p.y + 1], x: px - p.ax, y: py - p.ay, sx: 0, sy: 0, sw: p.sw, sh: p.sh, solid: p.solid !== false }; }); }
+function propObjs(){ return propsOf(rmap).map(p => { const [px, py] = P(p.x + .5, p.y + .5); const k = p.sc || 1; return { name: 'prop', pid: p.id, prop: p, img: p.img, pxc: p.pxc, box: [p.x, p.y, p.x + 1, p.y + 1], x: px - p.ax * k, y: py - p.ay * k, ...(k !== 1 ? { dw: p.sw * k, dh: p.sh * k } : {}), sx: 0, sy: 0, sw: p.sw, sh: p.sh, solid: p.solid !== false }; }); }
 World.setProps = (id, list, layer = '_') => { (propsData[id] = propsData[id] || {})[layer] = list || []; if (M && rmap === id) rebuildObjs(); };   // layer: 기능마다 따로 (유령 열차 · 호박 · 아기 동물이 같은 맵에 함께 놓여요)
 World.propsAt = (id, skip) => Object.entries(propsData[id] || {}).filter(([l]) => l !== skip).flatMap(([, v]) => v || []);   // 그 맵에 놓인 이벤트 소품 (skip 층은 빼고)
 function rebuildObjs(){   // 지도 물건 + (개인 방이면) 놓은 가구 + 이벤트 소품
@@ -842,7 +842,7 @@ cv.addEventListener('pointerdown', e => {
   // 친구를 누르면 (겹치면 앞에 있는 사람)
   const pr = people.filter(p => p.peer && (() => { const [sx, sy] = P(p.x + .5, p.y + .5); return x >= sx - 9 && x <= sx + 9 && y >= sy - World.Avatar.FH * ASC - 10 && y <= sy + 3; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
   if (pr && World.onPeer){ World.onPeer(pr.peer); return; }
-  const hit = [...objOrder, ...flats.slice().reverse()].reverse().find(o => (o.door || actOf(o) || o.furn || o.prop) && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && (() => { const px = o.pxc || (o.furn ? FURN_PX : MAPS[rmap].px); const d = px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data; return d[3] > 0; })());
+  const hit = [...objOrder, ...flats.slice().reverse()].reverse().find(o => (o.door || actOf(o) || o.furn || (o.prop && !o.dw)) && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && (() => { const px = o.pxc || (o.furn ? FURN_PX : MAPS[rmap].px); const d = px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data; return d[3] > 0; })());
   if (hit && hit.prop){ const r = World.onProp ? World.onProp(hit.pid) : null; if (r) showBubble(hit, typeof r === 'string' ? r : r.text, r.btn, r.fn); return; }
   if (hit && hit.furn){   // 놓은 가구
     const r = World.onFurn ? World.onFurn(hit.fid) : null;
@@ -1052,7 +1052,7 @@ function frame(now){
     list.splice(idx, 0, { p });
   });
   list.filter(it => it.p && it.p.baby && it.p.baby.carry).forEach(it => { const h = babyHost(it.p.baby), j = list.findIndex(q => q.p === h); if (j < 0) return; list.splice(list.indexOf(it), 1); list.splice(list.findIndex(q => q.p === h) + (h.view === World.Avatar.meta.dirs.up ? 0 : 1), 0, it); });   // 품에 안긴 아기는 안은 사람 바로 앞에 (등을 보이면 뒤에)
-  list.forEach(it => { if (it.o) cx.drawImage(it.o.img || (it.o.furn ? FURN_IMG : OB), it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.sw, it.o.sh); else { drawPerson(it.p); if (it.p === me) drawSnowball(); } });
+  list.forEach(it => { if (it.o) cx.drawImage(it.o.img || (it.o.furn ? FURN_IMG : OB), it.o.sx, it.o.sy, it.o.sw, it.o.sh, it.o.x, it.o.y, it.o.dw || it.o.sw, it.o.dh || it.o.sh); else { drawPerson(it.p); if (it.p === me) drawSnowball(); } });
   // 가구 놓기: 고른 자리에 반투명하게 미리 보여 줘요
   if (placing && placing.at){ const it = FURN.items[placing.k], [gx, gy] = placing.at, r = placing.r, ok = canPlace(placing.k, gx, gy, null, r), [px, py] = P(gx, gy), W_ = r ? it.d : it.w, D_ = r ? it.w : it.d;
     cx.fillStyle = ok ? 'rgba(140,230,176,.45)' : 'rgba(230,90,110,.45)';
