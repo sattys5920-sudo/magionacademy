@@ -15353,8 +15353,9 @@ function rdPass(to){
   c.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;z-index:99990;pointer-events:all'; document.body.appendChild(c);
   const g = c.getContext('2d'), t0 = performance.now(), CX = W / 2, CY = H / 2, R = Math.hypot(W, H) / 2, shards = Array.from({ length: 26 }, (_, i) => ({ a: i / 26 * Math.PI * 2 + Math.random() * .2, d: .2 + Math.random() * .8, s: 6 + Math.random() * 14, r: Math.random() * 6 }));
   let arrived = 0, sent = false;
-  const draw = now => { const t = (now - t0) / 1000; g.clearRect(0, 0, W, H);
-    const inP = Math.min(1, t / .9), outP = arrived ? Math.min(1, (now - arrived) / 700) : 0, cover = arrived ? 1 - outP : inP;
+  const draw = now => { try { drawF(now); } catch(e){ c.remove(); rdBusy = false; errReport('raidpass', '거울 통과 연출 오류: ' + e.message, e.stack || ''); if (!sent){ sent = true; World.teleport(to, to === 'mirrorland' ? [20, 20] : [17, 2]); } } };
+  const drawF = now => { const t = Math.max(0, (now - t0) / 1000); g.clearRect(0, 0, W, H);   // 첫 프레임 시각이 t0보다 조금 앞설 수 있어요 (음수 반지름 오류)
+    const inP = Math.min(1, t / .9), outP = arrived ? Math.min(1, Math.max(0, now - arrived) / 700) : 0, cover = arrived ? 1 - outP : inP;
     g.fillStyle = `rgba(150,220,255,${.55 * cover})`; g.fillRect(0, 0, W, H);
     for (let k = 0; k < 6; k++){ const p = ((t * .9 + k / 6) % 1), r = p * R * 1.1; g.strokeStyle = `rgba(235,250,255,${(1 - p) * .8 * cover})`; g.lineWidth = 3 + (1 - p) * 5; g.beginPath(); g.ellipse(CX, CY, r, r * .82, 0, 0, 7); g.stroke(); }
     shards.forEach(s => { const d = (arrived ? 1 + outP * .6 : inP) * s.d * R * .9, x = CX + Math.cos(s.a + t * .3) * d, y = CY + Math.sin(s.a + t * .3) * d * .8; g.save(); g.translate(x, y); g.rotate(s.r + t * 2); g.fillStyle = `rgba(255,255,255,${.75 * cover})`; g.beginPath(); g.moveTo(0, -s.s); g.lineTo(s.s * .45, s.s * .3); g.lineTo(-s.s * .45, s.s * .3); g.fill(); g.restore(); });
