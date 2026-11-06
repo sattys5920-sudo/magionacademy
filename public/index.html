@@ -2157,7 +2157,7 @@ function renderFish(){
       <div class="rods">${RODS.map((r, i) => `<span class="${i <= L ? 'on' : ''}" title="${r.name}">${rodIc(i, 32)}</span>`).join('')}</div>`; }
   if (fsTab === 'today'){
     const fg = me.fg?.d === todayKey() ? me.fg : { got: [], extra: 0 }, total = spotsToday().length, left = total - fg.got.length, nowFish = FISH.filter(fishNow).length, onlyNow = FISH.filter(f => f.time === now).length;
-    const buffs = Object.entries(me.buffs || {}).filter(([, t]) => t > now2()).map(([k, t]) => `${k === 'all' ? '만찬' : BUFF_NAME[k]} ${Math.ceil((t - now2()) / 6e4)}분`);
+    const buffs = Object.entries(me.buffs || {}).filter(([, t]) => t > now2()).map(([k, t]) => `${k === 'all' ? '만찬' : (BUFF_NAME[k] || '특별한 효과')} ${Math.ceil((t - now2()) / 6e4)}분`);
     const tips = [['', '물가를 누르면 찌를 던져요. 찌가 쏙 들어가면 바로 누르고, 그다음엔 ◀ ▶를 눌러 찌를 초록 칸 안에 두고 버텨요. 칸 밖에 오래 있으면 놓쳐요.'], ['', '반짝이는 곳은 날마다 자리가 바뀌어요. 숲·묘지·호숫가·들판마다 나오는 것이 달라요.'], ['', '물고기는 시간대마다 달라요. 밤에만 나오는 물고기도 있어요.']];
     if (buffs.length) tips.unshift(['', `요리 효과 중: ${buffs.join(' · ')}`]);
     if (me.perk?.bait) tips.push(['', '나비의 미끼: 입질이 15% 빨라요']);
@@ -4400,7 +4400,7 @@ const DISH_LIST = [
 const EFF = { mana: v => `마력 +${v}`, know: v => `지식 +${v}`, spot: v => `오늘 반짝이 +${v}곳`, love: v => `생물 애정 +${v}`, grow: v => `온실 남은 시간 -${v * 2}%`,
   bite: v => `낚시 입질 빠르게 ${v}분`, rare: v => `드문 물고기 잘 와요 ${v}분`, fluck: v => `드문 채집물 잘 나와요 ${v}분`, speed: v => `걷기 빠르게 ${v}분`, coin: v => `주문 보상 +20% ${v}분`, ggold: v => `놀이 보상 +50% ${v}분`, all: v => `모든 좋은 효과 ${v}분 + 마력 +50` };
 const TIMED = ['bite', 'rare', 'fluck', 'speed', 'coin', 'ggold'];
-const BUFF_NAME = { dfire: '불의 용 가호', dwater: '물의 용 가호', dforest: '숲의 용 가호', bite: '입질↑', rare: '드문 물고기↑', fluck: '드문 채집↑', speed: '빠른 걸음', coin: '주문 보상↑', ggold: '놀이 보상↑' };
+const BUFF_NAME = { dfire: '불의 용 가호', dwater: '물의 용 가호', dforest: '숲의 용 가호', bite: '입질↑', rare: '드문 물고기↑', fluck: '드문 채집↑', speed: '빠른 걸음', coin: '주문 보상↑', ggold: '놀이 보상↑', pump: '호박의 축복' };
 const DISH = DISH_LIST.map(([id, name, r, e, v, g], i) => ({ id, name, r, e, v, i, grade: g || (i < 8 ? 1 : i < 18 ? 2 : i < 28 ? 3 : i < 36 ? 4 : 5), pay: g ? Math.round(14 * 1.09 ** [0, 4, 13, 23, 32, 38][g]) : Math.round(14 * 1.09 ** i) }));   // 새 요리는 등급으로 값을 정해요
 DISH.forEach(d => { if (!d.id.startsWith('hw_d')) return; const n = +d.id.slice(4); d.hw = true; d.grade = n < 12 ? 3 : n < 16 ? 4 : 5; d.pay = n < 12 ? 60 : n < 16 ? 120 : 400; });   // 할로윈 요리: 열매가 귀하니까 값을 정해 둬요
 const DISH_INFO = Object.fromEntries(DISH.flatMap(d => [[d.id, d], [d.id + '_s', { ...d, best: true }]]));
@@ -4437,7 +4437,7 @@ function syncBuffs(){
   const c = $('#buffChip'); if (!c || !me) return;
   const now = now2(), on = Object.entries(me.buffs || {}).filter(([, t]) => t > now);
   World.setSpeedK && World.setSpeedK(Math.min(1.6, (buffOn('speed') ? 1.4 : 1) * (1 + sgFx('move_speed'))));   // 다 겹쳐도 1.6 배까지
-  c.hidden = !on.length; if (on.length) c.textContent = '' + on.map(([k, t]) => `${k === 'all' ? '만찬' : BUFF_NAME[k]} ${(t - now) >= 72e5 ? Math.ceil((t - now) / 36e5) + ' 시간' : Math.ceil((t - now) / 6e4) + '분'}`).join(' · ');
+  c.hidden = !on.length; if (on.length) c.textContent = '' + on.map(([k, t]) => `${k === 'all' ? '만찬' : (BUFF_NAME[k] || '특별한 효과')} ${(t - now) >= 72e5 ? Math.ceil((t - now) / 36e5) + ' 시간' : Math.ceil((t - now) / 6e4) + '분'}`).join(' · ');
 }
 // ---------- 요리하기: 솥 앞에서 ----------
 let cooking = null;
@@ -4554,7 +4554,7 @@ function renderCook(){
   if (ckTab === 'eff'){
     const PER = 4; ckBagPg = pgClamp(ckBagPg, bag.length, PER);
     body = `${hint(ckMsg, '')}
-      ${secH('지금 효과', buffs.length ? '' : '없음')}${buffs.length ? `<div class="ckbuff">${buffs.map(([k, t]) => `<span>${k === 'all' ? '만찬' : BUFF_NAME[k]} ${Math.ceil((t - nowMs) / 6e4)}분</span>`).join('')}</div>` : ''}
+      ${secH('지금 효과', buffs.length ? '' : '없음')}${buffs.length ? `<div class="ckbuff">${buffs.map(([k, t]) => `<span>${k === 'all' ? '만찬' : (BUFF_NAME[k] || '특별한 효과')} ${Math.ceil((t - nowMs) / 6e4)}분</span>`).join('')}</div>` : ''}
       ${secH('내 요리', `${bag.reduce((t, k) => t + have(k), 0)}개`)}${bag.length ? `<div class="box px">${pgSlice(bag, ckBagPg, PER).map(k => { const d = DISH_INFO[k]; return `<div class="li">${ic(k)}<div class="main"><span class="t">${esc(ITEM[k])} ×${have(k)}</span><span class="d">${effText(d, d.best)}</span></div><button class="btn sm go" data-ckeat="${k}">먹기</button></div>`; }).join('')}</div>${pgNav('ckbpg', ckBagPg, bag.length, PER)}` : '<div class="hint">만든 요리가 없어요</div>'}`;
   }
   frame(null, '요리', ckPot ? '과자 교실 · 솥 앞' : '요리책', `<div class="seg" style="grid-template-columns:repeat(3,1fr)">${tabs.map(([k, l]) => `<button data-ckt="${k}" class="${ckTab === k ? 'on' : ''}">${l}</button>`).join('')}</div><section class="sec">${body}</section>
