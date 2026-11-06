@@ -3594,7 +3594,7 @@ const XGSPD = 1.65;   // 게이지 속도: 속도 10이면 약 6초에 한 번 (
 function xLoop0(){
   const B = xb; if (!B || B.over) return clearInterval(xTick); if ((!sheetOn || sub !== 'explore') && !(xEx().run?.co && xcoHost()) && !B.gr && !B.raid) return clearInterval(xTick);   // 파티 방장은 다른 창을 열어도 전투가 계속 돌아가요 (안 그러면 모두 멈춰요)
   const now = performance.now(), dt = Math.min(.25, (now - B.last) / 1000); B.last = now; if (B.fin){ if (now >= B.fin) return xAlive(B.foes).length ? xLose() : xWin(); return; }
-  if (B.gr && grBattleTick(B, now)) return xUp();
+  if (B.gr && grBattleTick(B, now, dt)) return xUp();
   B.party.concat(B.foes).forEach(u => { if (u.hp <= 0) return; if (u.team === 'a' && u.mp < u.mmp) u.mp = Math.min(u.mmp, u.mp + dt * (.6 + u.L * .03) * (1 + (u.mpReg || 0)) * (XMPR[XROLE[u.job]] || 1) * (!u.ai && dbuff('dwater') ? 1.1 : 1)); { const was = u.g; u.g = Math.min(100, u.g + u.spd * (1 + xFm(u, 'spd') - xFm(u, 'slow')) * XGSPD * dt); if (u.hum && was < 100 && u.g >= 100){ u.rt = (u.rt || 0) + 1; u.tdl = now + XRDY_MS; } } const f = u.fx; for (const k in f){ f[k].t -= dt; if (k === 'dot'){ f[k].acc += dt; while (f[k].acc >= 2 && f[k].t > -2){ f[k].acc -= 2; u.hp = Math.max(0, u.hp - f[k].v); xFloat(u.id, '-' + f[k].v, '#ff9a4d'); } } if (k === 'regen'){ f[k].acc += dt; while (f[k].acc >= 2){ f[k].acc -= 2; u.hp = Math.min(u.mhp, u.hp + f[k].v); xFloat(u.id, '+' + f[k].v, '#7affb0'); } } if (f[k].t <= 0){ if (k === 'bomb') xBomb(u, f[k]); delete f[k]; } } xPets(u, dt); });
   for (const u of B.party.concat(B.foes)){ if (u.hp <= 0 || u.g < 100 || u.hum) continue; if (u.dummy){ u.g = 0; continue; } if (u.team === 'e') xAct(u, null); else xAI(u); if (!xAlive(B.foes).length || !xAlive(B.party).length) break; }
   if (!xAlive(B.foes).length || !xAlive(B.party).length){ B.fin = performance.now() + 900; return xUp(); }
@@ -14886,9 +14886,9 @@ function grBattleStart(){
   G2.battle = true; xb = { party, foes: grFoes(role, G2.tgt, L, ex.job), kind: 'elite', log: '역할 실기 시작!', turn: null, pick: null, over: false, last: performance.now(), buff: false, def: {}, fxs: [], floats: [], proj: [], n0: 1, gr: { role, end: performance.now() + lim, lim, t0: performance.now(), inv: { p_red: 1, p_vigor: 1 } } };   // 시험용 물약: 체력 1 · MP 1
   xv = { view: 'battle' }; const o = $('#grx'); if (o) o.style.display = 'none'; openSheet('home', 'explore');
 }
-function grBattleTick(B, now){   // 전투 고리에서 불러요: 방패 · 시간 끝 · 허수아비
+function grBattleTick(B, now, dt = .1){   // 전투 고리에서 불러요: 방패 · 시간 끝 · 허수아비
   const G = B.gr; if (!G || B.fin || B.over) return false;
-  B.foes.forEach(f => { if (!f.grShield || f.hp <= 0) return; f.gsT = (f.gsT || 0) + .25; if (!f.fx.guard && f.gsT > 4.2){ f.fx.guard = { v: 1, t: 1.8 }; f.gsT = 0; xFloat(f.id, '방패!', '#9fd0ff'); B.log = '골렘이 방패를 들었어요! 지금 때리면 튕겨 나와요'; } });
+  B.foes.forEach(f => { if (!f.grShield || f.hp <= 0) return; f.gsT = (f.gsT || 0) + dt; if (!f.fx.guard && f.gsT > 4.2){   /* 4.2 초마다 1.8 초 방패 (예전엔 0.1 초마다 0.25 초씩 세서 거의 늘 들고 있었어요) */ f.fx.guard = { v: 1, t: 1.8 }; f.gsT = 0; xFloat(f.id, '방패!', '#9fd0ff'); B.log = '골렘이 방패를 들었어요! 지금 때리면 튕겨 나와요'; } });
   const s = B.party.find(u => u.dummy), mine = B.party.find(u => u.grMe); if ((s && s.hp <= 0) || (mine && mine.hp <= 0)){ B.fin = now + 900; B.grLost = 1; return true; }
   if (now >= G.end){ if (G.role === 'heal' || G.role === 'tank'){ B.foes.forEach(f => { f.hp = 0; }); } B.fin = now + 900; return true; }
   return false;
