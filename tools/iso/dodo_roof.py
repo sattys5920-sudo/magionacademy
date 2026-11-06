@@ -1,4 +1,4 @@
-# 시계탑 지붕 자리 (도도의 경매장) · 교정 시계탑 옆 사다리로 올라와요
+# 시계탑 꼭대기 방 (도도의 경매장) · 교정 시계탑에 기댄 사다리로 올라와요 · 사방 돌벽에 창문
 #   관측실(senior_rooms.py)의 시계판 · 난간 · 등불을 그대로 쓰고, 하늘은 낮 하늘 (별 · 달 없음)
 #   python3 dodo_roof.py → out/clock_roof_bg.png · _obj.png · .json
 import os, sys, math
@@ -38,6 +38,37 @@ def roof_view(R):   # 왼쪽: 낮은 돌 난간 너머로 낮 마을 지붕
             return hexc(['#B85A3E', '#9A6A8A', '#6A7AAA', '#C8945A'][S.hsh(b) % 4])
         return day_sky(1 - (v - 20) / (R.WALL - 20), (u, v))
     R.wall_fill('L', f)
+def stone_walls(R, wins):   # 양쪽 벽 모두 시계탑 돌벽 · 아치 창문 너머로 낮 하늘과 마을 지붕
+    def bldg(u):
+        b = u // 7; return 4 + S.hsh(b, 7) % 9
+    for side, dk in (('L', .86), ('R', 1.0)):
+        def f(u, v, side=side, dk=dk):
+            for (u0, w) in wins[side]:
+                v0, h = 30, 46
+                uu, vv = u - u0, v - v0
+                if not (0 <= uu < w and 0 <= vv < h): continue
+                cx = w / 2; top = h - cx; out = (uu + .5 - cx) ** 2 + (vv - top) ** 2
+                if vv > top and out > cx ** 2: continue
+                if uu < 2 or uu >= w - 2 or vv < 2 or (vv > top and out > (cx - 2) ** 2): return hexc('#2A2236')
+                if uu in (w // 2 - 1, w // 2) or vv == 22: return hexc('#3A3046')   # 창살
+                gu = u + (0 if side == 'L' else 300); hb = bldg(gu)
+                if vv - 2 < hb:
+                    if vv - 2 == hb - 1: return hexc('#C86A4A')
+                    return hexc(['#B85A3E', '#9A6A8A', '#6A7AAA', '#C8945A'][S.hsh(gu // 7) % 4])
+                c = day_sky(1 - vv / h, (u, v))
+                for ccx, ccy, rw in ((u0 + w * .35, v0 + h - 12, 6),):
+                    if ((u - ccx) / rw) ** 2 + ((v - ccy) / (rw * .4)) ** 2 < 1: c = hexc('#F4F8FF')
+                return c
+            if v >= R.WALL - 6:   # 처마 돌
+                return hexc('#8A8098') if v >= R.WALL - 2 else hexc('#6A6078') if (u // 10) % 2 else hexc('#5E5470')
+            if v < 4: return shade(hexc('#3A344A'), dk)   # 굽돌
+            row = v // 8; off = (row % 2) * 7; col = (u + off) // 14
+            if v % 8 == 0 or (u + off) % 14 == 0: return shade(hexc('#2A2638'), dk)
+            c = ['#4A4560', '#454058', '#504A66', '#423D56'][S.hsh(row, col, side == 'L') % 4]
+            return shade(hexc(c), dk * (.8 + .2 * v / R.WALL))
+        R.wall_fill(side, f)
+        for (u0, w) in wins[side]:   # 창으로 드는 햇빛
+            x, y = R.wall_px(side, u0 + w / 2, 50); R.lights.append(dict(p=(x, y), dy=0, r=30, c=[255, 240, 200], a=.3, f=0))
 def crate_jars(R, tx, ty):   # 사과 상자 위 내기 단지 셋 (호박씨 · 도토리 · 사탕)
     def f(img, d):
         R.box(img, tx + .05, ty + .05, .9, .9, 12, '#B07A44', '#7A4E28', '#8E5E32')
@@ -73,12 +104,10 @@ def roof():
         if (j % 2 == 0 and abs(a - .5) < .04): c = hexc('#4A4058')   # 슬레이트 엇갈림
         return c
     R.floor(flo)
-    S.tower_wall(R, 60, 52, 32)
-    roof_view(R)
+    stone_walls(R, {'L': [(12, 22), (46, 22)], 'R': [(10, 22), (38, 22), (66, 22)]})
     TOP = R.P(0, 0)
     for v in range(R.WALL):
-        for dd in (-1, 0, 1): R.put(TOP[0] + dd, TOP[1] - v, hexc('#3A3448') if dd else hexc('#5A5068'))
-    day_sky_bg(R)
+        for dd in (-1, 0, 1): R.put(TOP[0] + dd, TOP[1] - v, hexc('#2A2638') if dd else hexc('#3E3850'))
     R.obj('jars', [(9, 1)], crate_jars(R, 9, 1), act=('내기 단지', '들여다보기'))
     R.obj('podium', [(3, 2)], podium(R, 3, 2), act=('작은 경매대', '구경하기'))
     R.obj('ledger', [(10, 4)], S.scroll_pile(R, 10, 4))
@@ -86,8 +115,7 @@ def roof():
     R.obj('bench', [(1, 5), (2, 5)], S.stone_bench(R, 1, 5), act=('돌 벤치', '앉아서 마을 보기'))
     for (a, b) in ((0, ex - 1), (ex + 2, 12)):
         R.obj('rail', [(k, 9) for k in range(a, b)], S.railing(R, a, 10, b, 10))
-    R.obj('rail', [(11, k) for k in range(0, 9)], S.railing(R, 12, 0, 12, 9))
-    R.extra = dict(night=False)
-    R.save('clock_roof', '시계탑 지붕', '도도의 경매장 · 사다리로 내려가요', [41, 38])
+        R.extra = dict(night=False)
+    R.save('clock_roof', '시계탑 꼭대기', '도도의 경매장 · 사다리로 내려가요', [41, 38])
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__))); os.makedirs('out', exist_ok=True); roof()
