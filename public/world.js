@@ -553,7 +553,7 @@ World.freeNear = (x, y, r = 3) => { const out = []; for (let a = x - r; a <= x +
 let crowd = {};
 let propsData = {};   // 이벤트 소품: World.setProps(지도 id, [{ id, x, y(칸), img(그림), sw, sh, ax, ay, solid, light, sc(크기 배율: .5면 캐릭터 그림과 같은 크기) }]) — 눌리면 World.onProp(id)
 const propsOf = id => Object.values(propsData[id] || {}).flat();
-function propObjs(){ return propsOf(rmap).map(p => { const [px, py] = P(p.x + .5, p.y + .5); const k = p.sc || 1; return { name: 'prop', pid: p.id, prop: p, img: p.img, pxc: p.pxc, box: [p.x, p.y, p.x + 1, p.y + 1], x: px - p.ax * k, y: py - p.ay * k, ...(k !== 1 ? { dw: p.sw * k, dh: p.sh * k } : {}), sx: 0, sy: 0, sw: p.sw, sh: p.sh, solid: p.solid !== false }; }); }
+function propObjs(){ return propsOf(rmap).map(p => { const [px, py] = P(p.x + .5, p.y + .5); const k = p.sc || 1; return { name: 'prop', pid: p.id, prop: p, low: !!p.low, img: p.img, pxc: p.pxc, box: [p.x, p.y, p.x + 1, p.y + 1], x: px - p.ax * k, y: py - p.ay * k, ...(k !== 1 ? { dw: p.sw * k, dh: p.sh * k } : {}), sx: 0, sy: 0, sw: p.sw, sh: p.sh, solid: p.solid !== false }; }); }
 World.setProps = (id, list, layer = '_') => { (propsData[id] = propsData[id] || {})[layer] = list || []; if (M && rmap === id) rebuildObjs(); };   // layer: 기능마다 따로 (유령 열차 · 호박 · 아기 동물이 같은 맵에 함께 놓여요)
 World.propsAt = (id, skip) => Object.entries(propsData[id] || {}).filter(([l]) => l !== skip).flatMap(([, v]) => v || []);   // 그 맵에 놓인 이벤트 소품 (skip 층은 빼고)
 function rebuildObjs(){   // 지도 물건 + (개인 방이면) 놓은 가구 + 이벤트 소품
@@ -828,9 +828,10 @@ cv.addEventListener('pointerdown', e => {
     return;
   }
   hideBubble(); pending = null;
+  let low = null;   // 나를 따라다니는 것(내 정령 · 따라오는 아기 동물 · 마틸다)은 다른 누를 것(NPC · 친구 · 물건 · 채집 · 표시)이 없을 때만 눌려요
   // 아기 동물을 누르면
   const bb = people.filter(p => p.baby && (() => { const [bx2, by2] = babyXY(p); return Math.abs(x - bx2) <= 9 && y >= by2 - 16 && y <= by2 + 3; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
-  if (bb && World.onBaby){ World.onBaby(bb.baby.id); return; }
+  if (bb && World.onBaby){ if (bb.baby.follow) low = () => World.onBaby(bb.baby.id); else { World.onBaby(bb.baby.id); return; } }
   // 우리 안의 생물을 누르면 돌보기 화면
   const pet = people.find(p => p.pet && (() => { const [sx, sy] = P(p.x + .5, p.y + .5), w = p.pet.adult ? 11 : 8, h = p.pet.adult ? 18 : 13; return x >= sx - w && x <= sx + w && y >= sy - h && y <= sy + 2; })());
   if (pet && World.onPet){ World.onPet(pet.pet.id); return; }
@@ -838,12 +839,14 @@ cv.addEventListener('pointerdown', e => {
   const np = people.filter(p => p.npc && (() => { const [sx, sy] = P(p.x + .5, p.y + .5), h = World.Avatar.FH * ASC + 10; return x >= sx - 10 && x <= sx + 10 && y >= sy - h && y <= sy + 3; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
   if (np && World.onNpc){ const n = np.npc, d = Math.abs(Math.round(me.x) - np.x) + Math.abs(Math.round(me.y) - np.y); if (d <= 1) World.onNpc(n.id); else { const c = near([[np.x, np.y]])[0]; if (c && goto(me, c[0], c[1])) pending = { npcTalk: n.id }; } return; }
   // 내 캐릭터 몸통을 누르면 (발밑 칸은 그대로 걷기)
-  { const f = famAt.get('me'); if (World.onFam && f && typeof me.fk === 'number' && Math.hypot(x - f.x, y - (f.y - 3)) < 11){ World.onFam(); return; } }   // 내 정령을 누르면
+  { const f = famAt.get('me'); if (World.onFam && f && typeof me.fk === 'number' && Math.hypot(x - f.x, y - (f.y - 3)) < 9) low = low || (() => World.onFam()); }   // 내 정령을 누르면
   { const [mx, my] = P(me.x + .5, me.y + .5); if (World.onMe && !me.path.length && x >= mx - 8 && x <= mx + 8 && y >= my - World.Avatar.FH * ASC && y <= my - 7){ World.onMe(); return; } }
   // 친구를 누르면 (겹치면 앞에 있는 사람)
   const pr = people.filter(p => p.peer && (() => { const [sx, sy] = P(p.x + .5, p.y + .5); return x >= sx - 9 && x <= sx + 9 && y >= sy - World.Avatar.FH * ASC - 10 && y <= sy + 3; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
   if (pr && World.onPeer){ World.onPeer(pr.peer); return; }
-  const hit = [...objOrder, ...flats.slice().reverse()].reverse().find(o => (o.door || actOf(o) || o.furn || (o.prop && !o.dw)) && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && (() => { const px = o.pxc || (o.furn ? FURN_PX : MAPS[rmap].px); const d = px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data; return d[3] > 0; })());
+  const pxHit = (o, th) => { const px = o.pxc || (o.furn ? FURN_PX : MAPS[rmap].px); return px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data[3] > th; };
+  { const lp = objOrder.slice().reverse().find(o => o.prop && o.low && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && pxHit(o, 160)); if (lp) low = low || (() => { const r = World.onProp ? World.onProp(lp.pid) : null; if (r) showBubble(lp, typeof r === 'string' ? r : r.text, r.btn, r.fn); }); }   // 흐린 빛은 빼고 몸만
+  const hit = [...objOrder, ...flats.slice().reverse()].reverse().find(o => (o.door || actOf(o) || o.furn || (o.prop && !o.dw && !o.low)) && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && (() => { const px = o.pxc || (o.furn ? FURN_PX : MAPS[rmap].px); const d = px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data; return d[3] > 0; })());
   if (hit && hit.prop){ const r = World.onProp ? World.onProp(hit.pid) : null; if (r) showBubble(hit, typeof r === 'string' ? r : r.text, r.btn, r.fn); return; }
   if (hit && hit.furn){   // 놓은 가구
     const r = World.onFurn ? World.onFurn(hit.fid) : null;
@@ -863,6 +866,7 @@ cv.addEventListener('pointerdown', e => {
   { const mi = marks.map((q, i) => [i, (q.map === map || q.map === rmap) ? Math.hypot(q.x - tx, q.y - ty) : 99]).filter(([, d]) => d <= 1.5).sort((p1, p2) => p1[1] - p2[1]).map(([i]) => i)[0] ?? -1;
     if (mi >= 0){ const q = marks[mi]; if (Math.abs(Math.round(me.x) - q.x) + Math.abs(Math.round(me.y) - q.y) <= 1){ World.onMark && World.onMark(q.id); } else { const c = near([[q.x, q.y]])[0]; if (c && goto(me, c[0], c[1])) pending = { mark: q.id }; } return; } }
   if (si >= 0 && World.onSpot){ const sp = spots[si], dd = Math.abs(Math.round(me.x) - sp.x) + Math.abs(Math.round(me.y) - sp.y); if (dd === 0 || (dd <= 1 && !free(sp.x, sp.y))) World.onSpot(si, sp); else if (goto(me, sp.x, sp.y)) pending = { spot: si, sp }; else { const c = near([[sp.x, sp.y]])[0]; if (c && goto(me, c[0], c[1])) pending = { spot: si, sp }; } return; }   // 반짝이가 막힌 칸(바위 · 수정 · 나무)에 있으면 바로 옆 칸에서 캐요
+  if (low){ low(); return; }
   if (isWater(tx, ty) && World.onWater){   // 물가 바로 옆 칸, 없으면 가까운 물가로 (그 칸에서 낚시할 물을 다시 골라요)
     let wx = tx, wy = ty, st = near([[tx, ty]])[0];
     if (!st){ const c = World.freeNear(tx, ty, 4).sort((p1, p2) => Math.hypot(p1[0] - tx, p1[1] - ty) - Math.hypot(p2[0] - tx, p2[1] - ty)).find(([a, b]) => [[1,0],[-1,0],[0,1],[0,-1]].some(([dx, dy]) => isWater(a + dx, b + dy)));
