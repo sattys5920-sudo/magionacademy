@@ -916,7 +916,7 @@ body.gtride #bar,body.gtride #chat,body.gtride #ctx,body.gtride .corner{opacity:
 #stkv .need{display:flex;flex-wrap:wrap;gap:6px}#stkv .need span{display:flex;align-items:center;gap:4px;padding:4px 10px 4px 4px;border-radius:12px;background:var(--panel2);font:13px var(--f-pxb);color:var(--text)}#stkv .need span .ic{transform:scale(.75);margin:-4px}#stkv .need b{font-weight:400;color:var(--ok);margin-left:4px}#stkv .need .no b{color:var(--warn)}
 #stkv .pg{display:flex;flex-direction:column;gap:6px}#stkv .pgt{display:flex;align-items:center;gap:6px;font:14px var(--f-pxb)}#stkv .pgt b{font-weight:400}#stkv .pgn{margin-left:auto;color:var(--sub);font-size:13px}#stkv .pgb{display:flex;gap:4px}#stkv .pgb i{flex:1;height:4px;border-radius:2px;background:var(--panel2)}#stkv .pgb i.d{background:var(--ok)}#stkv .pgb i.o{background:#FF9EC0}
 #stkv .tip2{display:flex;gap:8px;align-items:center}#stkv .tip2 canvas{width:32px;height:32px;border-radius:8px;background:#1E2A44;flex:none;image-rendering:pixelated}#stkv .tip2 p{margin:0;flex:1;font:14px/1.5 var(--f-px);color:var(--sub);background:var(--panel);padding:8px 10px;border-radius:4px 12px 12px 12px}
-#stkv .mgw{position:relative;border-radius:12px;overflow:hidden;border:2px solid #120A18}#stkv .mgw canvas{display:block;width:100%;aspect-ratio:160/112;touch-action:none;image-rendering:pixelated;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#stkv .mgw{position:relative;border-radius:12px;overflow:hidden;border:2px solid #120A18;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:pointer}#stkv .mgw canvas{display:block;width:100%;aspect-ratio:160/112;touch-action:none;image-rendering:pixelated;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 #stkv .mgmsg{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%) scale(.8);font:22px var(--f-pxb);color:#FFE9A0;text-shadow:0 2px 0 #3A2414,2px 0 0 #3A2414,-2px 0 0 #3A2414,0 -2px 0 #3A2414;opacity:0;transition:all .15s;pointer-events:none;white-space:nowrap}#stkv .mgmsg.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
 #stkv .res2{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;background:var(--panel);border-radius:14px}#stkv .res2 canvas{width:96px;height:96px;image-rendering:pixelated}#stkv .stars{font:26px var(--f-pxb);font-weight:400;color:var(--gold);letter-spacing:4px}#stkv .stars span{color:#4A3A5E}
 #stkv .rl{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}#stkv .rl span{display:flex;gap:4px;font:13px var(--f-pxb);padding:2px 8px;border-radius:8px;background:var(--panel2);color:var(--sub)}#stkv .rl b{font-weight:400}#stkv .rl .g완벽 b{color:var(--ok)}#stkv .rl .g좋아 b{color:var(--gold)}#stkv .rl .g아쉬워 b,#stkv .rl .g탐 b{color:var(--warn)}
@@ -12860,13 +12860,12 @@ const STK = (() => {
   function closeWin(){ stopMG(); const v = $('#stkv'); if (v){ v.classList.remove('on'); setTimeout(() => v.remove(), 300); } stkOn = false; }
   const sec = (t, body, aside = '') => `<section class="cd"><div class="cdh"><h3>${t}</h3>${aside}</div>${body}</section>`;
   const tip = t => `<div class="tip2"><canvas data-stkface="1" width="32" height="32"></canvas><p>${t}</p></div>`;
-  const TIPS = ['꾹 누르고 있으면 반죽이 쭉 늘어나. 초록 칸에서 손을 떼.', '노릇노릇할 때 딱 꺼내. 막대는 얇아서 금방 타.', '누르고 있으면 초콜릿에 퐁당. 선까지만 담그고 떼. 손잡이는 깨끗하게.'];
-  const STEP_N = ['반죽 밀기', '굽기', '초콜릿 묻히기'];
+  const inMG = () => W.cur && W.step >= 0 && W.step < W.cur.plan.length, atRes = () => W.cur && W.step === W.cur.plan.length;
   function render(){
     const v = $('#stkv'); if (!v) return; stopMG(); const H = holdList();
     const T = [['bake', '굽기', ''], ['send', '보내기', H.length || '']];
     v.innerHTML = `<div class="hd"><b>막대 틀</b><button data-stkx="close" aria-label="닫기">✕</button></div><div class="tabs">${T.map(([k, n, b]) => `<button data-stktab="${k}" class="${W.tab === k ? 'on' : ''}">${n}${b ? `<i>${b}</i>` : ''}</button>`).join('')}</div><div class="bd">${W.tab === 'bake' ? bakeHTML() : sendHTML()}</div>`;
-    after(); if (W.tab === 'bake' && W.step >= 0 && W.step <= 2) startMG(W.step);
+    after(); if (W.tab === 'bake' && inMG()) startMG(W.step);
   }
   function bakeHTML(){
     if (W.step === -1){
@@ -12876,10 +12875,10 @@ const STK = (() => {
         + sec('재료', `<div class="need">${BASE.map(([k, n]) => `<span class="${has(k) >= n ? '' : 'no'}">${ic(k)}${esc(inm(k))} ${n}<b>${has(k)}</b></span>`).join('')}${CH[c][3] ? `<span class="${has(CH[c][3]) ? '' : 'no'}">${ic(CH[c][3])}${esc(inm(CH[c][3]))} 1<b>${has(CH[c][3])}</b></span>` : ''}</div>`, '<span class="aside">막대 5 개 · 상자 1 개</span>')
         + `<button class="btn go wide" data-stkx="start" ${ok && !full ? '' : 'disabled'}>${full ? `상자는 ${HOLD_MAX} 개까지 들 수 있어요` : ok ? `${CH[c][1]} 막대과자 굽기` : '재료가 모자라요'}</button>`;
     }
-    if (W.step <= 2) return `<div class="pg"><div class="pgt"><b>${CH[W.cur.c][1]} 막대과자</b><span class="pgn">${W.step + 1} / 3 · ${STEP_N[W.step]}</span></div><div class="pgb">${[0, 1, 2].map(k => `<i class="${k < W.step ? 'd' : k === W.step ? 'o' : ''}"></i>`).join('')}</div></div>
-      <div class="mgw"><canvas id="stkmg" width="480" height="336"></canvas><div class="mgmsg" id="stkmsg"></div></div>${tip(TIPS[W.step])}<div class="row" id="stkbar"></div>`;
-    const cur = W.cur;
-    if (W.step === 3) return `<div class="res2"><canvas id="stkres" width="96" height="96"></canvas><b class="stars">${'★'.repeat(cur.s)}<span>${'★'.repeat(3 - cur.s)}</span></b><div class="rl">${STEP_N.map((n, i) => `<span class="g${cur.res[i]}">${n}<b>${cur.res[i]}</b></span>`).join('')}</div></div>
+    const cur = W.cur, PL = cur.plan;
+    if (inMG()) return `<div class="pg"><div class="pgt"><b>${CH[cur.c][1]} 막대과자</b><span class="pgn">${W.step + 1} / ${PL.length} · ${STEPS[PL[W.step]].n}</span></div><div class="pgb">${PL.map((_, k) => `<i class="${k < W.step ? 'd' : k === W.step ? 'o' : ''}"></i>`).join('')}</div></div>
+      <div class="mgw" id="stkmgw"><canvas id="stkmg" width="480" height="336"></canvas><div class="mgmsg" id="stkmsg"></div></div>${tip(STEPS[PL[W.step]].tip)}`;
+    if (atRes()) return `<div class="res2"><canvas id="stkres" width="96" height="96"></canvas><b class="stars">${'★'.repeat(cur.s)}<span>${'★'.repeat(3 - cur.s)}</span></b><div class="rl">${PL.map((k, i) => `<span class="g${cur.res[i]}">${STEPS[k].n}<b>${cur.res[i]}</b></span>`).join('')}</div></div>
       ${tip(cur.s === 3 ? '와.... 다섯 개가 자로 잰 것처럼 똑같아. 이건 진열대 맨 앞에 둘 거야.' : cur.s === 2 ? '좋아, 노릇하고 초콜릿도 고르게 묻었어.' : cur.s === 1 ? '먹을 만해. 다음엔 조금만 더 꼼꼼히.' : '조금 삐뚤어도 괜찮아. 맛은 똑같아.')}<button class="btn go wide" data-stkx="todeco">꾸미러 가기</button>`;
     const d = W.d, B = { c: cur.c, s: cur.s, ...d }, n = (d.m || '').length;
     return `<div class="deco"><canvas id="stkdc" width="104" height="136"></canvas></div>
@@ -12908,7 +12907,8 @@ const STK = (() => {
     const rs = $('#stkres'); if (rs){ const g = rs.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, 96, 96); for (let i = 0; i < 5; i++){ const [sx, sy] = cut('stick', W.cur.c * 8); const wob = W.cur.s === 0 ? [2, -1, 3, 0, 1][i] : 0; g.drawImage(IMG, sx, sy, 7, 30, 8 + i * 17, 6 + wob * 2, 14, 60); } }
     const nt = $('#stknote'); if (nt) nt.oninput = () => { W.d.m = nt.value.slice(0, NOTE_MAX); W.err = ''; const er = $('#stkerr'); if (er) er.textContent = ''; const c = $('#stkcnt'); if (c) c.textContent = `${W.d.m.length} / ${NOTE_MAX} 자`; };
   }
-  // ---------- 굽기 미니게임 (작업대 도트 160 × 112 · 세 단계 합쳐 30 초 안쪽) ----------
+  // ---------- 굽기 미니게임 (작업대 도트 160 × 112) · 단계 8 가지 중 4 가지 (반죽 → 모양 → 굽기 → 초콜릿 → 마무리) · 한 판 25 ~ 35 초 ----------
+  //   판정은 손가락을 댄 · 뗀 순간(event.timeStamp)의 위치로 해요 (다음 그림 장면을 기다리지 않아요). 움직임은 모두 시간의 식이라 그 순간 위치를 바로 계산해요
   const MW = 160, MH = 112, OLC = '#2A1A2E', DOUGH = '#F0D8A8';
   const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)), mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t)), rgb = c => `rgb(${c[0]},${c[1]},${c[2]})`;
   const px = (q, x, y, w, h, c) => { q.fillStyle = c; q.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
@@ -12916,66 +12916,175 @@ const STK = (() => {
   function board(q){ px(q, 0, 0, MW, MH, '#E2BE8C'); for (let y = 0; y < MH; y += 14){ px(q, 0, y, MW, 1, '#C89C68'); for (let x = (y / 14 % 2) * 37 + 11; x < MW; x += 74) px(q, x, y, 1, 14, '#C89C68'); } }
   function msg(t, ms = 700){ const el = $('#stkmsg'); if (!el) return; el.textContent = t; el.classList.add('on'); clearTimeout(msg.t); msg.t = setTimeout(() => el && el.classList.remove('on'), ms); }
   function stopMG(){ if (MG){ MG.dead = true; MG = null; } }
-  const GP = { 완벽: 2, 좋아: 1, 아쉬워: 0, 탐: 0 };
-  function startMG(step){
-    const c = $('#stkmg'); if (!c) return; const q = c.getContext('2d'); q.setTransform(3, 0, 0, 3, 0, 0); q.imageSmoothingEnabled = false;
-    const cur = W.cur, choco = CH[cur.c][2]; MG = { step, done: false, last: performance.now() }; const G = MG, bar = $('#stkbar');
-    const finish = (gr, m) => { if (G.done) return; G.done = true; cur.res[step] = gr; msg(m || gr, 900); sfx(gr === '완벽' ? 'sparkle' : gr === '탐' ? 'hurt' : 'pop'); setTimeout(() => { if (G.dead) return; W.step = step + 1; if (step === 2) settle(); render(); }, 950); };
-    if (step === 0){   // 반죽 밀기: 누르고 있는 동안 길어져요 · 떼는 순간 길이가 정해져요 · 다섯 번
-      const zone = () => { const a = 62 + Math.floor(Math.random() * 44); return [a, a + 16]; };
-      Object.assign(G, { rep: 0, len: 0, hold: false, ok: 0, made: [], zone: zone(), wait: 0 });
-      G.down = () => { if (G.done || G.wait) return; G.hold = true; G.len = 0; };
-      G.up = () => { if (!G.hold) return; G.hold = false; judge(false); };
-      const judge = snap => { const [a, b] = G.zone, L = G.len, hit = !snap && L >= a && L <= b; if (hit) G.ok++; G.made.push({ L, hit }); msg(snap ? '뚝' : hit ? '좋아' : L < a ? '짧아' : '길어', 500); sfx(hit ? 'pop' : 'hurt'); G.rep++;
-        if (G.rep >= 5) return finish(G.ok >= 5 ? '완벽' : G.ok >= 3 ? '좋아' : '아쉬워', `${G.ok} / 5`); G.wait = performance.now() + 450; };
-      G.draw = now => { const dt = Math.min(.05, (now - G.last) / 1000); G.last = now;
-        if (G.wait && now > G.wait){ G.wait = 0; G.len = 0; G.zone = zone(); }
-        if (G.hold){ G.len += dt * (52 + G.len * .55); if (G.len >= 132){ G.len = 132; G.hold = false; judge(true); } }
-        board(q); const x0 = 16, y0 = 50, [a, b] = G.zone;
-        px(q, x0 - 1, 24, 134, 8, OLC); px(q, x0, 25, 132, 6, '#4A3828'); px(q, x0 + a, 25, b - a, 6, '#6FD08C'); for (let i = 0; i <= 132; i += 22) px(q, x0 + i, 31, 1, 2, '#4A3828');
-        if (G.len > 0) px(q, x0 + G.len - 1, 21, 3, 13, '#FFFFFF');
-        px(q, x0 - 9, y0 - 6, 12, 15, OLC); px(q, x0 - 8, y0 - 5, 10, 13, DOUGH); px(q, x0 - 7, y0 - 4, 4, 2, '#FFF0D0');
-        const L = G.wait ? 0 : G.len; if (L > 0){ px(q, x0, y0 - 1, L + 1, 6, OLC); px(q, x0, y0, L, 4, DOUGH); px(q, x0, y0, L, 1, '#FFF0D0'); }
-        G.made.forEach((m, i) => { const h = Math.max(6, Math.round(m.L / 132 * 26)), x = 40 + i * 18, y = 100 - h; px(q, x - 1, y - 1, 6, h + 2, OLC); px(q, x, y, 4, h, m.hit ? DOUGH : '#C8A878'); });
-        mgText(q, `${G.rep} / 5`, 140, 104, '#FFFFFF', 8); if (!G.rep && !G.hold && !G.len) mgText(q, '꾹 눌러서 쭉', 80, 76, '#FFFFFF', 8); };
-    }
-    if (step === 1){   // 굽기: 바늘이 노릇한 칸에 올 때 꺼내요 (쿠키 오븐과 같아요)
-      const z = [[0, 40], [40, 60], [60, 72], [72, 86], [86, 100]]; Object.assign(G, { b: 0, t0: performance.now() + 500 });
-      bar.innerHTML = '<button class="btn go" data-stkx="mgtake" style="flex:1">꺼내기</button>';
-      G.take = () => { if (G.done || performance.now() < G.t0) return; const b = Math.round(G.b), k = b < z[1][0] ? '아쉬워' : b < z[2][0] ? '좋아' : b < z[3][0] ? '완벽' : b < z[4][0] ? '좋아' : '탐'; cur.bk = b; finish(k, { 아쉬워: '덜 익었어', 탐: '탔어' }[k]); };
-      G.down = () => G.take();
-      G.draw = now => { const dt = Math.min(.05, (now - G.last) / 1000); G.last = now; if (!G.done && now > G.t0){ G.b = Math.min(100, G.b + dt * (14 + G.b * .25)); if (G.b >= 100) G.take(); }
-        px(q, 0, 0, MW, MH, '#5A2E1E'); for (let y = 0; y < MH; y += 8) for (let x = (y / 8 % 2) * 8; x < MW; x += 16) px(q, x, y, 15, 7, '#6E3A26');
-        px(q, 14, 8, 132, 72, OLC); px(q, 16, 10, 128, 68, '#2A1410'); const gl = .45 + Math.sin(now / 120) * .1, gr = q.createLinearGradient(0, 78, 0, 10); gr.addColorStop(0, `rgba(255,120,40,${gl})`); gr.addColorStop(1, 'rgba(255,120,40,0)'); q.fillStyle = gr; q.fillRect(16, 10, 128, 68);
-        px(q, 22, 60, 116, 4, '#9898A8'); const col = G.b < 60 ? mix(hex(DOUGH), [224, 168, 88], G.b / 60) : G.b < 86 ? mix([224, 168, 88], [176, 104, 48], (G.b - 60) / 26) : mix([176, 104, 48], [58, 34, 26], (G.b - 86) / 14);
-        for (let i = 0; i < 5; i++){ const x = 34 + i * 20; px(q, x - 1, 32, 6, 29, OLC); px(q, x, 33, 4, 27, rgb(col)); px(q, x, 33, 1, 27, rgb(mix(col, [255, 255, 255], .25))); }
-        if (G.b > 86) for (let i = 0; i < 4; i++){ const t = now / 600 + i; px(q, 36 + i * 24 + Math.sin(t) * 3, 28 - (t * 16 % 18), 5, 5, `rgba(70,60,60,${Math.min(.6, (G.b - 86) / 14)})`); }
-        const gx = 10, gy = 92, gw = 140, zc = ['#E8DCC8', '#E8B868', '#6FD08C', '#E8B868', '#4A2A1E']; px(q, gx - 1, gy - 1, gw + 2, 10, OLC); z.forEach(([a, b], i) => px(q, gx + a / 100 * gw, gy, (b - a) / 100 * gw, 8, zc[i]));
-        px(q, gx + G.b / 100 * gw - 1, gy - 3, 3, 14, '#FFFFFF'); };
-    }
-    if (step === 2){   // 초콜릿 묻히기: 누르는 동안 막대가 내려가요 · 선(21 칸)까지 담그고 떼요 · 25 칸을 넘으면 손잡이까지 묻어요
-      const SURF = 70, LEN = 30, TGT = 21, top0 = 18; Object.assign(G, { d: 0, hold: false, up0: 0 });
-      G.down = () => { if (G.done) return; G.hold = true; };
-      G.up = () => { if (!G.hold || G.done) return; G.hold = false; judge(); };
-      const dipped = () => Math.max(0, top0 + G.d + LEN - SURF);
-      const judge = () => { const k = dipped(), e = Math.abs(k - TGT); cur.dp = Math.round(k); G.up0 = performance.now(); if (k > 25) return finish('아쉬워', '손잡이까지 묻었어'); finish(e <= 2 ? '완벽' : e <= 5 ? '좋아' : '아쉬워', k < TGT - 5 ? '조금 모자라' : null); };
-      G.draw = now => { const dt = Math.min(.05, (now - G.last) / 1000); G.last = now; if (G.hold){ G.d += dt * 26; if (dipped() >= LEN){ G.hold = false; judge(); } }
-        const lift = G.up0 ? Math.min(14, (now - G.up0) / 40) : 0;
-        board(q); px(q, 30, SURF - 4, 100, 34, OLC); px(q, 32, SURF - 2, 96, 32, '#C8C8D8'); px(q, 34, SURF, 92, 4, choco); px(q, 34, SURF, 92, 1, rgb(mix(hex(choco), [255, 255, 255], .3))); px(q, 34, SURF + 4, 92, 24, rgb(mix(hex(choco), [40, 20, 20], .25)));
-        const dk = cur.dp != null ? cur.dp : 0, ytop = top0 + G.d - lift;
-        for (let i = 0; i < 5; i++){ const x = 54 + i * 11, y = ytop; px(q, x - 1, y - 1, 6, LEN + 2, OLC); px(q, x, y, 4, LEN, '#E0A858'); px(q, x, y, 1, LEN, '#F0C078');
-          if (dk > 0){ const h = Math.min(LEN, dk); px(q, x, y + LEN - h, 4, h, choco); px(q, x, y + LEN - h, 1, h, rgb(mix(hex(choco), [255, 255, 255], .3))); }
-          px(q, x - 2, y + LEN - TGT, 1, 1, '#FFFFFF'); px(q, x + 5, y + LEN - TGT, 1, 1, '#FFFFFF'); }
-        px(q, 50, ytop + LEN - TGT, 58, 1, 'rgba(255,255,255,.55)');
-        if (!G.hold && !G.d) mgText(q, '꾹 눌러서 퐁당', 80, 12, '#FFFFFF', 8); };
-    }
-    const pos = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * MW, (e.clientY - r.top) / r.height * MH]; };
-    c.onpointerdown = e => { e.preventDefault(); try { c.setPointerCapture(e.pointerId); } catch(_){} pos(e); G.down && G.down(); };
-    c.onpointerup = c.onpointercancel = () => { G.up && G.up(); };
-    const loop = now => { if (G.dead || !$('#stkmg')) return; G.draw(now); requestAnimationFrame(loop); }; requestAnimationFrame(loop);
+  const bakeCol = b => b < 60 ? mix(hex(DOUGH), [224, 168, 88], b / 60) : b < 86 ? mix([224, 168, 88], [176, 104, 48], (b - 60) / 26) : mix([176, 104, 48], [58, 34, 26], Math.min(1, (b - 86) / 14));
+  const DOTC = ['#FF6A6A', '#FFD24A', '#7ACB7A', '#7FB8FF', '#C48AF0', '#FFFFFF'];
+  function stickUp(q, x, y, h, cur, o = {}){   // 세운 막대 하나 (너비 4): 구운 색 → 초콜릿(위쪽) → 줄무늬 → 뿌리개
+    const b = cur.bk == null ? hex(DOUGH) : bakeCol(cur.bk), ch = Math.min(h - 4, Math.round((o.ch ?? cur.ch ?? 0) / 30 * h)), cc = hex(CH[cur.c][2]);
+    px(q, x - 1, y - 1, 6, h + 2, OLC); px(q, x, y, 4, h, rgb(b)); px(q, x, y, 1, h, rgb(mix(b, [255, 255, 255], .3)));
+    if (ch > 0){ px(q, x, y, 4, ch, rgb(cc)); px(q, x, y, 1, ch, rgb(mix(cc, [255, 255, 255], .3))); }
+    if ((o.dz ?? cur.dz) && ch > 4) for (let yy = 2; yy < ch - 1; yy += 4) px(q, x, y + yy, 4, 1, rgb(mix(cc, [255, 245, 230], .7)));
+    const nd = o.dots ?? 0; for (let k = 0; k < nd; k++) px(q, x + (k * 3) % 4, y + 2 + ((k * 5) % Math.max(4, ch - 2)), 1, 1, DOTC[(k + x) % DOTC.length]);
   }
-  function settle(){
-    const c = W.cur, p = c.res.reduce((a, g) => a + (GP[g] ?? 0), 0); c.s = p >= 5 ? 3 : p >= 3 ? 2 : p >= 1 ? 1 : 0;
+  const STEPS = {
+    // --- 반죽 ---
+    knead: { n: '반죽 치대기', tip: '동그라미가 반죽에 딱 닿을 때 톡. 쿵, 짝, 박자 맞춰서.', make(G, cur){
+      const N = 7, IV = 640, T0 = 700, beats = [...Array(N)].map((_, k) => T0 + k * IV), sc = Array(N).fill(null); let sq = -1e9;
+      const next = t => beats.findIndex((b, j) => sc[j] === null);
+      return {
+        down(t){ let k = -1, best = 1e9; beats.forEach((b, j) => { if (sc[j] !== null) return; const d = Math.abs(t - b); if (d < best){ best = d; k = j; } }); if (k < 0) return; const dt = t - beats[k];
+          if (dt < -240){ G.early(80, 26); return; } const s = Math.abs(dt) <= 110 ? 2 : Math.abs(dt) <= 220 ? 1 : 0; sc[k] = s; sq = t; G.judge(s, 80, 34); if (s) G.burst(80, 62, [DOUGH, '#FFFFFF'], 6); },
+        tick(t){ beats.forEach((b, j) => { if (sc[j] === null && t - b > 240){ sc[j] = 0; G.judge(0, 80, 34); } }); if (sc.every(v => v !== null)) G.finish(); },
+        draw(q, t){ board(q); const a = Math.max(0, 1 - (t - sq) / 180), w = 30 + a * 8, h = 18 - a * 6;
+          const el = (rx, ry, c) => { q.fillStyle = c; q.beginPath(); q.ellipse(80, 70 - h / 2, rx, ry, 0, 0, 7); q.fill(); }; el(w / 2 + 1, h / 2 + 1, OLC); el(w / 2, h / 2, DOUGH); px(q, 80 - w / 4, 70 - h + 3, w / 4, 2, '#FFF0D0'); px(q, 74, 70 - h / 2, 2, 1, '#E0C088'); px(q, 84, 70 - h / 2 + 2, 2, 1, '#E0C088');
+          const k = next(t); if (k >= 0){ const left = beats[k] - t; if (left < IV * 1.2){ const r = 15 + Math.max(0, left) / IV * 30; q.strokeStyle = left < 110 ? '#9AF0A0' : '#FFFFFF'; q.lineWidth = 2; q.beginPath(); q.ellipse(80, 62, r, r * .62, 0, 0, 7); q.stroke(); } }
+          q.strokeStyle = 'rgba(255,255,255,.35)'; q.lineWidth = 1; q.beginPath(); q.ellipse(80, 62, 15, 9.3, 0, 0, 7); q.stroke();
+          sc.forEach((v, j) => { px(q, 54 + j * 9, 98, 6, 6, OLC); px(q, 55 + j * 9, 99, 4, 4, v === null ? '#8A6A48' : v === 2 ? '#6FD08C' : v === 1 ? '#FFD24A' : '#E86A6A'); }); },
+        hint: () => { const k = next(); return k < 0 ? null : { type: 'tap', t: beats[k] }; }, edge: () => ({ win: [110, 220] }) }; } },
+    stretch: { n: '반죽 늘이기', tip: '꾹 누르고 있으면 반죽이 쭉 늘어나. 초록 칸에서 손을 떼.', make(G, cur){
+      const R = 3, lenAt = d => Math.min(132, 44 * d + 22 * d * d), zoneN = () => { const a = 58 + Math.floor(Math.random() * 46); return [a, a + 18]; };
+      let rep = 0, hold = null, wait = 0, zone = zoneN(), shown = 0; const made = [];
+      const judgeL = (L, t, snap) => { const [a, b] = zone, s = snap ? 0 : (L >= a - 3 && L <= b + 3) ? 2 : (L >= a - 10 && L <= b + 10) ? 1 : 0; shown = L; made.push(s); G.judge(s, Math.min(140, 18 + L), 40);
+        if (snap) G.pop('뚝', 120, 26, '#FFB0B0'); else if (!s) G.pop(L < a ? '짧아' : '길어', Math.min(140, 18 + L), 26, '#FFFFFF'); rep++; if (rep >= R) G.finish(); else wait = t + 450; };
+      return {
+        down(t){ if (hold !== null) return; if (wait && t < wait){ G.early(80, 26); return; } hold = t; },
+        up(t){ if (hold === null) return; const L = lenAt((t - hold) / 1000); hold = null; judgeL(L, t); },
+        tick(t){ if (wait && t >= wait){ wait = 0; shown = 0; zone = zoneN(); } if (hold !== null && lenAt((t - hold) / 1000) >= 132){ hold = null; judgeL(132, t, true); } },
+        draw(q, t){ board(q); const x0 = 18, y0 = 56, [a, b] = zone, L = hold !== null ? lenAt((t - hold) / 1000) : shown;
+          px(q, x0 - 1, 30, 134, 8, OLC); px(q, x0, 31, 132, 6, '#4A3828'); px(q, x0 + a, 31, b - a, 6, '#6FD08C'); for (let i = 0; i <= 132; i += 22) px(q, x0 + i, 37, 1, 2, '#4A3828');
+          if (L > 0) px(q, x0 + L - 1, 27, 3, 13, '#FFFFFF');
+          px(q, x0 - 10, y0 - 6, 12, 15, OLC); px(q, x0 - 9, y0 - 5, 10, 13, DOUGH);
+          if (L > 0){ const th = Math.max(3, 6 - L / 50); px(q, x0, y0 - 1, L + 1, th + 2, OLC); px(q, x0, y0, L, th, DOUGH); px(q, x0, y0, L, 1, '#FFF0D0'); }
+          made.forEach((s, i) => { px(q, 64 + i * 12, 86, 6, 18, OLC); px(q, 65 + i * 12, 87, 4, 16, s ? DOUGH : '#C8A878'); });
+          mgText(q, `${rep} / ${R}`, 140, 104, '#FFFFFF', 8); if (!rep && hold === null) mgText(q, '꾹 눌러서 쭉', 80, 80, '#FFFFFF', 8); },
+        hint: () => ({ type: 'hold', len: (zone[0] + zone[1]) / 2, zone: zone.slice(), lenAt, wait }) }; } },
+    // --- 모양 ---
+    cut: { n: '막대 자르기', tip: '칼이 금 위에 오면 톡. 길이가 똑같아야 예뻐.', make(G, cur){
+      const P = 2600, kx = t => { const u = ((Math.max(0, t) % P) + P) % P / P; return 20 + 120 * (u < .5 ? u * 2 : 2 - u * 2); }, marks = [40, 66, 92, 118], cuts = [];
+      let press = -1e9;
+      const done = () => cuts.length >= marks.length;
+      return {
+        down(t){ if (done()) return; const x = kx(t), left = marks.filter(m => !cuts.some(c => c.m === m)); const m = left.reduce((a, b) => Math.abs(b - x) < Math.abs(a - x) ? b : a); const d = Math.abs(m - x);
+          const s = d <= 4.5 ? 2 : d <= 10 ? 1 : 0; cuts.push({ m, x, s }); press = t; G.judge(s, m, 30); G.burst(x, 60, [DOUGH, '#FFFFFF'], 5); if (done()) G.finish(); },
+        tick(t){ if (t > 11000 && !done()){ marks.forEach(m => { if (!cuts.some(c => c.m === m)){ cuts.push({ m, x: m + 14, s: 0 }); G.judge(0, m, 30); } }); G.finish(); } },
+        draw(q, t){ board(q); px(q, 21, 55, 120, 10, OLC); const xs = [22, ...cuts.map(c => c.x).sort((a, b) => a - b), 140];
+          for (let i = 0; i < xs.length - 1; i++){ const g = i ? 1 : 0; px(q, xs[i] + g, 56, xs[i + 1] - xs[i] - g, 8, DOUGH); px(q, xs[i] + g, 56, xs[i + 1] - xs[i] - g, 1, '#FFF0D0'); }
+          cuts.forEach(c => px(q, c.x, 54, 1, 12, OLC)); marks.forEach(m => { const on = cuts.some(c => c.m === m); px(q, m - 2, 46, 5, 2, on ? '#8A6A48' : '#FFD24A'); px(q, m - 1, 48, 3, 2, on ? '#8A6A48' : '#FFD24A'); px(q, m, 50, 1, 2, on ? '#8A6A48' : '#FFD24A'); });
+          const x = kx(t), dn = t - press < 140 ? 8 : 0; px(q, x - 4, 16 + dn, 9, 10, OLC); px(q, x - 3, 17 + dn, 7, 8, '#8A5A34'); px(q, x - 3, 26 + dn, 7, 24, OLC); px(q, x - 2, 27 + dn, 5, 22, '#D8E0F0'); px(q, x - 2, 27 + dn, 1, 22, '#FFFFFF');
+          mgText(q, `${cuts.length} / ${marks.length}`, 140, 104, '#FFFFFF', 8); },
+        hint: () => { if (done()) return null; return { type: 'knife', marks: marks.filter(m => !cuts.some(c => c.m === m)), kx, P }; } }; } },
+    // --- 굽기 ---
+    oven: { n: '굽기', tip: '노릇노릇할 때 아무 데나 눌러서 꺼내. 막대는 금방 타.', make(G, cur){
+      const bAt = t => t <= 0 ? 0 : Math.min(100, 56 * (Math.exp(.25 * t / 1000) - 1)), tAt = v => Math.log(v / 56 + 1) / .25 * 1000; let took = null;
+      const z = [[0, 45], [45, 60], [60, 72], [72, 84], [84, 100]];
+      return {
+        down(t){ if (took !== null) return; const v = bAt(t); if (v < 25){ G.early(80, 26); return; } took = v; cur.bk = v; const s = v >= 58 && v <= 74 ? 2 : v >= 43 && v <= 86 ? 1 : 0; G.judge(s, 80, 30);
+          if (!s) G.pop(v < 50 ? '덜 익었어' : '탔어', 80, 48, '#FFFFFF'); G.finish(); },
+        tick(t){ if (took === null && bAt(t) >= 100){ took = 100; cur.bk = 100; G.judge(0, 80, 30); G.pop('탔어', 80, 48, '#FFFFFF'); G.finish(); } },
+        draw(q, t, now){ const v = took ?? bAt(t), ck = { ...cur, bk: v };
+          px(q, 0, 0, MW, MH, '#5A2E1E'); for (let y = 0; y < MH; y += 8) for (let x = (y / 8 % 2) * 8; x < MW; x += 16) px(q, x, y, 15, 7, '#6E3A26');
+          px(q, 14, 8, 132, 72, OLC); px(q, 16, 10, 128, 68, '#2A1410'); const gl = .45 + Math.sin(now / 120) * .1, gr = q.createLinearGradient(0, 78, 0, 10); gr.addColorStop(0, `rgba(255,120,40,${gl})`); gr.addColorStop(1, 'rgba(255,120,40,0)'); q.fillStyle = gr; q.fillRect(16, 10, 128, 68);
+          px(q, 22, 62, 116, 4, '#9898A8'); for (let i = 0; i < 5; i++) stickUp(q, 36 + i * 20, 34, 28, ck);
+          if (v > 84) for (let i = 0; i < 4; i++){ const tt = now / 600 + i; px(q, 38 + i * 24 + Math.sin(tt) * 3, 30 - (tt * 16 % 18), 5, 5, `rgba(70,60,60,${Math.min(.6, (v - 84) / 14)})`); }
+          const gx = 10, gy = 92, gw = 140, zc = ['#E8DCC8', '#E8B868', '#6FD08C', '#E8B868', '#4A2A1E']; px(q, gx - 1, gy - 1, gw + 2, 10, OLC); z.forEach(([a, b], i) => px(q, gx + a / 100 * gw, gy, (b - a) / 100 * gw, 8, zc[i]));
+          px(q, gx + v / 100 * gw - 1, gy - 3, 3, 14, '#FFFFFF'); },
+        hint: () => took === null ? { type: 'tap', t: tAt(66), tAt } : null }; } },
+    // --- 초콜릿 ---
+    dip: { n: '초콜릿 묻히기', tip: '누르고 있으면 초콜릿에 퐁당. 선까지만 담그고 떼.', make(G, cur){
+      const LEN = 30, TGT = 21, R = 2, dAt = d => Math.max(0, 26 * d - 10); let rep = 0, hold = null, wait = 0, last = 0, upAt = -1e9; const got = [];
+      const judgeK = (k, t) => { const e = Math.abs(k - TGT), s = k > 26.5 ? 0 : e <= 3.5 ? 2 : e <= 7 ? 1 : 0; last = k; upAt = t; got.push(Math.min(26, k)); cur.ch = got.reduce((a, b) => a + b, 0) / got.length; G.judge(s, 80, 26);
+        if (k > 26.5) G.pop('손잡이까지', 80, 42, '#FFFFFF'); else if (!s) G.pop('모자라', 80, 42, '#FFFFFF'); else G.burst(80, 70, [CH[cur.c][2], '#FFFFFF'], 6); rep++; if (rep >= R) G.finish(); else wait = t + 650; };
+      return {
+        down(t){ if (hold !== null) return; if (wait && t < wait){ G.early(80, 20); return; } hold = t; },
+        up(t){ if (hold === null) return; const k = dAt((t - hold) / 1000); hold = null; judgeK(k, t); },
+        tick(t){ if (wait && t >= wait){ wait = 0; last = 0; } if (hold !== null && dAt((t - hold) / 1000) >= LEN){ hold = null; judgeK(LEN, t); } },
+        draw(q, t){ const SURF = 72, cc = CH[cur.c][2], k = hold !== null ? dAt((t - hold) / 1000) : 0, lift = wait ? Math.min(14, (t - upAt) / 30) : 0;
+          board(q); px(q, 30, SURF - 4, 100, 34, OLC); px(q, 32, SURF - 2, 96, 32, '#C8C8D8'); px(q, 34, SURF, 92, 4, cc); px(q, 34, SURF, 92, 1, rgb(mix(hex(cc), [255, 255, 255], .3))); px(q, 34, SURF + 4, 92, 24, rgb(mix(hex(cc), [40, 20, 20], .25)));
+          const y0 = hold !== null ? SURF - LEN + k : SURF - LEN - (wait ? lift : 0), shownK = hold !== null ? k : wait ? last : 0;
+          for (let i = 0; i < 5; i++){ const x = 54 + i * 11, cb = rgb(bakeCol(cur.bk ?? 66)); px(q, x - 1, y0 - 1, 6, LEN + 2, OLC); px(q, x, y0, 4, LEN, cb);
+            if (shownK > 0){ const h = Math.min(LEN, shownK); px(q, x, y0 + LEN - h, 4, h, cc); } px(q, x - 2, y0 + LEN - TGT, 1, 1, '#FFFFFF'); px(q, x + 5, y0 + LEN - TGT, 1, 1, '#FFFFFF'); }
+          px(q, 50, y0 + LEN - TGT, 58, 1, 'rgba(255,255,255,.6)'); mgText(q, `${rep} / ${R}`, 140, 104, '#FFFFFF', 8); if (!rep && hold === null) mgText(q, '꾹 눌러서 퐁당', 80, 12, '#FFFFFF', 8); },
+        hint: () => ({ type: 'hold', ms: (TGT + 10) / 26 * 1000, wait }) }; } },
+    drizzle: { n: '초콜릿 줄무늬', tip: '점선을 따라 손가락으로 쭉 그어. 초콜릿 줄무늬가 생겨.', make(G, cur){
+      const pts = []; for (let x = 24; x <= 136; x += 2) pts.push([x, 50 + 13 * Math.sin((x - 24) / 112 * Math.PI * 3)]);
+      const cov = new Uint8Array(pts.length), trail = []; let down = false, end = false, lastP = null;
+      const mark = (x, y) => { let hit = false; pts.forEach(([a, b], i) => { if ((a - x) ** 2 + (b - y) ** 2 <= 81){ if (!cov[i]) hit = true; cov[i] = 1; } }); trail.push([x, y]); if (lastP && trail.length % 6 === 0 && hit) sfx('pick'); lastP = [x, y]; };
+      const pct = () => cov.reduce((a, b) => a + b, 0) / cov.length;
+      const fin = () => { if (end) return; end = true; const p = pct(); cur.ch = Math.max(cur.ch || 0, 18); cur.dz = 1; const s = p >= .82 ? 2 : p >= .5 ? 1 : 0; G.judge(s, 80, 26); G.finish(); };
+      return {
+        down(t, x, y){ down = true; lastP = null; mark(x, y); }, move(t, x, y){ if (!down) return; if (lastP){ const [a, b] = lastP, n = Math.ceil(Math.hypot(x - a, y - b) / 2); for (let i = 1; i < n; i++) mark(a + (x - a) * i / n, b + (y - b) * i / n); } mark(x, y); },
+        up(t){ down = false; lastP = null; if (pct() >= .95 || (cov[cov.length - 1] && pct() >= .4)) fin(); },
+        tick(t){ if (t > 8000) fin(); },
+        draw(q, t){ board(q); const cc = CH[cur.c][2], pr = pct(); for (let i = 0; i < 5; i++) stickUp(q, 32 + i * 24, 30, 44, cur, { ch: 0 });
+          pts.forEach(([a, b], i) => { if (i % 2 || cov[i]) return; px(q, a - 1, b - 1, 2, 2, OLC); px(q, a - 1, b - 1, 1, 1, '#FFFFFF'); });
+          q.strokeStyle = rgb(mix(hex(cc), [40, 20, 20], .1)); q.lineWidth = 3; q.lineCap = 'round'; q.beginPath(); trail.forEach(([a, b], i) => { if (i && Math.hypot(a - trail[i - 1][0], b - trail[i - 1][1]) < 6) q.lineTo(a, b); else q.moveTo(a, b); }); q.stroke();
+          px(q, 30, 96, 100, 6, OLC); px(q, 31, 97, 98 * pr, 4, pr >= .82 ? '#6FD08C' : '#FFD24A'); px(q, 30 + 100 * .82, 95, 1, 8, '#FFFFFF');
+          if (!trail.length) mgText(q, '점선을 따라 쭉', 80, 86, '#FFFFFF', 8); px(q, 22, pts[0][1] - 2, 4, 4, '#FFFFFF'); },
+        hint: () => ({ type: 'drag', pts }) }; } },
+    // --- 마무리 ---
+    sprinkle: { n: '뿌리개 뿌리기', tip: '막대가 통 아래 올 때 톡. 솔솔 떨어지게.', make(G, cur){
+      const N = 5, V = 32, GAP = 30, X0 = -12, xi = (t, i) => X0 + V * t / 1000 - i * GAP, best = Array(N).fill(null), dots = Array(N).fill(0); let shake = -1e9;
+      return {
+        down(t){ shake = t; let k = -1, d = 1e9; for (let i = 0; i < N; i++){ const dd = Math.abs(xi(t, i) - 80); if (dd < d){ d = dd; k = i; } }
+          if (d > 10){ G.pop('빗나감', 80, 30, '#FFFFFF'); G.burst(80, 40, DOTC, 5, 1); return; }
+          dots[k] += 4; G.burst(80, 34, DOTC, 7, 1); if (best[k] === null){ const s = d <= 4.5 ? 2 : 1; best[k] = s; G.judge(s, 80, 22); } else sfx('pick'); },
+        tick(t){ for (let i = 0; i < N; i++) if (best[i] === null && xi(t, i) > 92){ best[i] = 0; G.judge(0, 92, 22); } if (best.every(v => v !== null)) G.finish(); },
+        draw(q, t){ board(q); px(q, 0, 70, MW, 8, OLC); px(q, 0, 71, MW, 6, '#8A8AA0'); for (let x = -((t / 1000 * V) % 8); x < MW; x += 8) px(q, x, 72, 4, 1, '#B8B8C8');
+          for (let i = 0; i < N; i++){ const x = xi(t, i); if (x > -8 && x < MW + 8) stickUp(q, x - 2, 40, 30, cur, { dots: dots[i] }); }
+         
+          const sh = t - shake < 150 ? Math.sin((t - shake) / 15) * 2 : 0; px(q, 72 + sh, 8, 17, 18, OLC); px(q, 73 + sh, 9, 15, 16, '#FF9EC0'); px(q, 73 + sh, 9, 15, 4, '#FFD6E4'); [76, 80, 84].forEach(x => px(q, x + sh, 25, 1, 1, OLC));
+          q.strokeStyle = 'rgba(255,255,255,.35)'; q.setLineDash([2, 2]); q.beginPath(); q.moveTo(80.5, 28); q.lineTo(80.5, 40); q.stroke(); q.setLineDash([]); },
+        hint: () => { const k = best.findIndex(v => v === null); return k < 0 ? null : { type: 'tap', t: (80 - X0 + k * GAP) / V * 1000 }; } }; } },
+    cool: { n: '식히기', tip: '빨리빨리 눌러서 부채질. 식어야 초콜릿이 굳어.', make(G, cur){
+      const LIM = 5000, ADD = 9, DEC = 9; let gv = 0, gt = 0, end = false, spin = 0;
+      const val = t => Math.max(0, gv - DEC * (t - gt) / 1000);
+      return { guard: 60,
+        down(t){ if (end) return; gv = val(t) + ADD; gt = t; spin += 1; sfx('pop'); G.burst(40 + Math.random() * 80, 36, ['#FFFFFF', '#D8F0FF'], 2);
+          if (gv >= 100){ end = true; const s = t <= 3200 ? 2 : 1; G.judge(s, 80, 26); G.finish(); } },
+        tick(t){ if (!end && t > LIM){ end = true; const v = val(t), s = v >= 60 ? 1 : 0; G.judge(s, 80, 26); G.finish(); } },
+        draw(q, t, now){ board(q); const v = Math.min(100, end ? 100 : val(t)); for (let i = 0; i < 5; i++) stickUp(q, 36 + i * 20, 46, 30, cur);
+          for (let i = 0; i < 5; i++){ const a = (1 - v / 100); if (a <= .05) continue; const tt = now / 500 + i * .7; px(q, 38 + i * 20 + Math.sin(tt) * 2, 40 - (tt * 10 % 12), 3, 3, `rgba(255,255,255,${a * .7})`); }
+          const r = 12, cx = 80, cy = 22, an = spin * .9 + (now / 1000) * (v / 40); for (let k = 0; k < 4; k++){ const a = an + k * Math.PI / 2; q.fillStyle = k % 2 ? '#7FC8F0' : '#FF9EC0'; q.beginPath(); q.moveTo(cx, cy); q.arc(cx, cy, r, a, a + .9); q.closePath(); q.fill(); } px(q, cx - 2, cy - 2, 4, 4, OLC);
+          px(q, 20, 88, 120, 8, OLC); px(q, 21, 89, 118 * v / 100, 6, '#7FC8F0'); px(q, 20, 99, 120, 4, OLC); px(q, 21, 100, 118 * Math.max(0, 1 - Math.max(0, t) / LIM), 2, '#FFD24A'); },
+        hint: () => ({ type: 'mash' }) }; } },
+  };
+  function planOf(){   // 한 판에 4 단계: 반죽(둘 중 하나) → [자르기] → 굽기 → 초콜릿(둘 중 하나) → [마무리] · 자르기 · 뿌리개 · 식히기 중 하나가 더 들어가요
+    if (window.__seed && Array.isArray(window.__stkPlan)) return window.__stkPlan.filter(k => STEPS[k]).slice(0, 5);   // 모의 서버 시험용
+    const pick = a => a[Math.floor(Math.random() * a.length)]; let p, n = 0;
+    do { const ex = pick(['cut', 'sprinkle', 'cool']); p = [pick(['knead', 'stretch'])]; if (ex === 'cut') p.push('cut'); p.push('oven', pick(['dip', 'drizzle'])); if (ex !== 'cut') p.push(ex); } while (W.lastPlan === p.join() && ++n < 6);
+    W.lastPlan = p.join(); return p;
+  }
+  const evT = e => { const t = e && e.timeStamp; return typeof t === 'number' && t > 0 && t < performance.now() + 50 && t > performance.now() - 5000 ? t : performance.now(); };   // 누른 순간 (이벤트 시각이 이상하면 지금)
+  function startMG(i){
+    const c = $('#stkmg'); if (!c) return; const wrap = c.parentElement, q = c.getContext('2d'); q.setTransform(3, 0, 0, 3, 0, 0); q.imageSmoothingEnabled = false;
+    const cur = W.cur, key = cur.plan[i], D = STEPS[key];
+    const G = MG = { i, key, dead: false, done: false, t0: performance.now() + 900, pops: [], parts: [], pid: null, last: -1e9, scores: [] };
+    G.pop = (txt, x, y, col) => G.pops.push({ txt, x, y, col, t0: performance.now() });
+    G.burst = (x, y, cols, n, fall) => { for (let k = 0; k < n; k++) G.parts.push({ x, y, vx: (Math.random() - .5) * (fall ? 20 : 70), vy: fall ? 20 + Math.random() * 30 : -30 - Math.random() * 40, c: cols[k % cols.length], t0: performance.now() }); };
+    G.judge = (s, x, y) => { G.scores.push(s); G.pop(s >= 2 ? '완벽!' : s ? '좋아!' : '아쉬워', x, y, s >= 2 ? '#9AF0A0' : s ? '#FFE27A' : '#FFB8B8'); sfx(s >= 2 ? 'sparkle' : s ? 'pop' : 'hurt'); if (s >= 2) G.burst(x, y + 6, ['#FFF6C0', '#FFFFFF', '#9AF0A0'], 6); };
+    G.early = (x, y) => G.pop('아직이에요', x, y, '#FFFFFF');
+    G.finish = () => { if (G.done) return; G.done = true; const avg = G.scores.length ? G.scores.reduce((a, b) => a + b, 0) / G.scores.length : 0; cur.sc[i] = avg; cur.res[i] = avg >= 1.6 ? '완벽' : avg >= .8 ? '좋아' : '아쉬워';
+      setTimeout(() => { if (G.dead) return; msg(cur.res[i], 800); }, 350); setTimeout(() => { if (G.dead) return; W.step = i + 1; if (W.step >= cur.plan.length) settle(); render(); }, 1400); };
+    const S_ = G.s = D.make(G, cur), guard = S_.guard || 120;
+    const pos = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * MW, (e.clientY - r.top) / r.height * MH]; };
+    const rel = (e, t) => { if (G.pid === null || (e && e.pointerId !== G.pid)) return; G.pid = null; if (!G.done && S_.up) S_.up(t - G.t0); };
+    wrap.onpointerdown = e => { e.preventDefault(); if (G.dead) return; const t = evT(e);
+      if (G.pid !== null && e.pointerId !== G.pid) return;   // 두 번째 손가락은 무시
+      if (t - G.last < guard) return; G.last = t;              // 한 번 누른 게 두 번 들어오지 않게
+      try { wrap.setPointerCapture(e.pointerId); } catch(_){} G.pid = e.pointerId; if (G.done) return; if (t < G.t0){ G.early(80, 30); return; } const [x, y] = pos(e); S_.down && S_.down(t - G.t0, x, y); };
+    wrap.onpointermove = e => { if (e.pointerId !== G.pid || G.done || !S_.move) return; e.preventDefault(); const L = e.getCoalescedEvents ? e.getCoalescedEvents() : [e]; (L.length ? L : [e]).forEach(ev => { const [x, y] = pos(ev); S_.move(evT(ev) - G.t0, x, y); }); };
+    wrap.onpointerup = e => { e.preventDefault(); rel(e, evT(e)); };
+    wrap.onpointercancel = e => rel(e, evT(e)); wrap.onlostpointercapture = e => rel(e, evT(e));
+    wrap.oncontextmenu = e => e.preventDefault();
+    const loop = now => { if (G.dead || !$('#stkmg')) return; const t = now - G.t0; if (!G.done && t >= 0 && S_.tick) S_.tick(t);
+      q.save(); S_.draw(q, Math.max(0, t), now); q.restore();
+      if (t < 0){ const a = Math.min(1, -t / 300); px(q, 0, 40, MW, 26, `rgba(20,13,34,${.75 * Math.min(1, a + .3)})`); mgText(q, D.n, 80, 57, '#FFE9A0', 12); }
+      G.parts = G.parts.filter(p => now - p.t0 < 700); G.parts.forEach(p => { const a = (now - p.t0) / 1000; px(q, p.x + p.vx * a, p.y + p.vy * a + 90 * a * a, 2, 2, p.c); });
+      G.pops = G.pops.filter(p => now - p.t0 < 750); G.pops.forEach(p => { const a = (now - p.t0) / 750, sc = a < .2 ? .6 + a * 3 : 1.2 - Math.min(.2, (a - .2)); q.save(); q.globalAlpha = a > .7 ? (1 - a) / .3 : 1; q.translate(p.x, p.y - a * 10); q.scale(sc, sc); mgText(q, p.txt, 0, 0, p.col, 9); q.restore(); });
+      requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  }
+  function settle(){   // 별 = 단계 점수(완벽 2 · 좋아 1 · 아쉬워 0)의 평균
+    const c = W.cur, avg = c.sc.reduce((a, b) => a + (b || 0), 0) / Math.max(1, c.plan.length); c.s = avg >= 1.6 ? 3 : avg >= 1 ? 2 : avg >= .4 ? 1 : 0;
     const s = S(); s.made = (s.made || 0) + 1; s.best = Math.max(s.best || 0, c.s);
     if (c.s === 3 && !s.rw.frame){ s.rw.frame = 1; me.fbag = me.fbag || {}; me.fbag.stk_frame = (me.fbag.stk_frame || 0) + 1; setTimeout(() => toast('별 3 개! 방 가구 「완벽한 막대」 액자를 받았어요'), 1200); }
     save();
@@ -12983,17 +13092,16 @@ const STK = (() => {
   // ---------- 창 안 누르기 ----------
   document.addEventListener('click', async e => {
     const b = e.target.closest && e.target.closest('#stkv button'); if (!b || b.disabled) return; const D = b.dataset;
-    if (D.stktab){ if (W.step >= 0 && W.step <= 2) return; W.tab = D.stktab; render(); return; }
+    if (D.stktab){ if (inMG()) return; W.tab = D.stktab; render(); return; }
     if (D.stkc){ W.c = +D.stkc; render(); return; }
     if (D.stkt){ W.d.t = +D.stkt; render(); return; } if (D.stkb){ W.d.b = +D.stkb; render(); return; }
     if (D.stkk){ W.d.k = +D.stkk; render(); return; } if (D.stkr){ W.d.r = +D.stkr; render(); return; }
     if (D.stksel){ W.sel = D.stksel; render(); return; } if (D.stkto){ W.to = D.stkto; render(); return; }
     const x = D.stkx; if (!x) return;
     if (x === 'close') return closeWin();
-    if (x === 'mgtake' && MG && MG.take) return MG.take();
     if (x === 'start'){ const c = W.c; if (!open() || !canBake(c) || World.where() !== 'candy' || holdList().length >= HOLD_MAX) return; BASE.forEach(([k, n]) => take(k, n)); if (CH[c][3]) take(CH[c][3]); save();
-      W.cur = { c, res: [], s: 0 }; W.d = { t: 0, b: 0, k: 0, r: 0, m: '' }; W.step = 0; W.err = ''; sfx('pop'); render(); return; }
-    if (x === 'todeco'){ W.step = 4; render(); return; }
+      W.cur = { c, plan: planOf(), res: [], sc: [], s: 0 }; W.d = { t: 0, b: 0, k: 0, r: 0, m: '' }; W.step = 0; W.err = ''; sfx('pop'); render(); return; }
+    if (x === 'todeco'){ W.step = 99; render(); return; }
     if (x === 'pack'){ if (!W.cur) return; const m = String(W.d.m || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, NOTE_MAX), bad = m ? wsCheck(m) : '';
       if (bad){ W.err = bad; const er = $('#stkerr'); if (er) er.textContent = bad; return; }
       const it = TP[W.d.t][2]; if (it && !has(it)){ W.err = `${withJosa(inm(it), '이', '가')} 모자라요`; render(); return; } if (it) take(it);
@@ -13191,7 +13299,7 @@ const STK = (() => {
     else if (confirm('다시 열까요? 11월 11일 안에서만 열려요.')) GDB.set('stick/ctl', { stop: false, at: now2() }).then(() => toast('다시 열었어요'));
   });
   window.__stk = { W, open: () => open(), dayOn: () => dayOn(), openWin: t => openWin(t), viewer: id => viewer(id), intro: () => intro(), npcGive: (id, k) => npcGive(npcGet(id), k), npcPick: id => npcPick(npcGet(id)),
-    mg: () => MG ? { step: MG.step, len: MG.len, zone: MG.zone, rep: MG.rep, b: MG.b, d: MG.d, wait: MG.wait, done: MG.done, hold: MG.hold } : null, down: () => MG && MG.down && MG.down(), up: () => MG && MG.up && MG.up(), take: () => MG && MG.take && MG.take(),
+    mg: () => MG ? { i: MG.i, key: MG.key, t0: MG.t0, now: performance.now(), done: MG.done, scores: MG.scores.slice(), hint: MG.s.hint ? MG.s.hint() : null } : null, STEPS,
     state: () => ({ boxes, hold, mine, ctl, stkOn, stk: me && me.stk }), boxCv: B => boxCv(B), NP, desk: () => { deskSig = ''; desk(); }, props: () => { propSig = ''; lampSig = ''; props(); } };   // 시험용
   return { listen, npcBtn, npcPick, viewer, openWin, adminHTML, jnOn, jnHTML, jnBind, eatMad, stkIc };
 })();
