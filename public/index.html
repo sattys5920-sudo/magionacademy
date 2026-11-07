@@ -2366,7 +2366,7 @@ function xDef(job, b, r){   // 스킬 하나의 효과표 (Lv1 기준)
   else if (k === 'F') Object.assign(o, { t: 'dot', st, p: .5, tg: 'one', mp: 3 + r * 2 });
   else if (k === 'f') Object.assign(o, { t: 'dot', st, p: .4, tg: 'all', mp: 6 + r * 2 });
   else if (k === 'Z') Object.assign(o, { t: 'stun', st, p: d * .6, tg: 'one', mp: 5 + r * 2 });
-  else if (k === 'M') Object.assign(o, { t: 'mp', v: .25, tg: 'all', mp: 0 });
+  else if (k === 'M') Object.assign(o, { t: 'mp', v: .2, tg: 'all', mp: 0, cd: 3 });   // MP 채우기: MP는 안 들지만 내 차례 3 번 동안 다시 못 써요 (무한 MP 막기)
   const ov = XOV[job + '.' + n]; if (ov) Object.assign(o, ov);
   return xDefs[key] = o;
 }
@@ -2388,7 +2388,7 @@ function xDesc(o, lv){
   if (o.ds && o.v != null){ const a = Math.round(o.v * 100), b = Math.round(xEfv(o, L) * 100); if (a !== b && o.ds.includes(a + '%')) o = { ...o, ds: o.ds.split(a + '%').join(b + '%') }; }   // 설명이 고정된 스킬도 레벨에 따라 오르는 수치는 바꿔 보여 줘요 (실제 효과는 원래 레벨만큼 올라요)
   if (o.ds){ if (o.t === 'dmg' && o.p) return `${o.tg === 'all' ? '적 전체' : '적 하나'} ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)}${o.hits > 1 ? ` ×${o.hits}회` : ''} · ${o.ds}${mp}`; return o.ds + mp; }
   const who = { one: '적 하나', all: o.t === 'heal' || o.t === 'buff' || o.t === 'mp' ? '아군 전체' : '적 전체', self: '나' }[o.tg];
-  const sc = { dmg: `${who}에게 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 피해${o.w ? ' (쓰고 나면 한참 쉬어요)' : ''}`, heal: `${o.tg === 'all' ? '아군 전체' : '아군 하나'} 치유 ×${(o.p * xPw(o, L)).toFixed(1)}`, revive: '쓰러진 동료 하나를 체력 절반으로 살려요', buff: `${who} ${o.key === 'atk' ? '공격' : o.key === 'spd' ? '속도' : '받는 피해'} ${o.key === 'dmgIn' ? '-' : '+'}${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, deb: `${who} ${o.key === 'slow' ? '속도' : '공격'} -${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, dot: `${who}에게 8초 동안 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 지속 피해`, stun: `적 하나를 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 피해 + 행동 늦추기`, mp: `아군 전체 MP ${Math.round(xEfv(o, L) * 100)}% 회복` }[o.t];
+  const sc = { dmg: `${who}에게 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 피해${o.w ? ' (쓰고 나면 한참 쉬어요)' : ''}`, heal: `${o.tg === 'all' ? '아군 전체' : '아군 하나'} 치유 ×${(o.p * xPw(o, L)).toFixed(1)}`, revive: '쓰러진 동료 하나를 체력 절반으로 살려요', buff: `${who} ${o.key === 'atk' ? '공격' : o.key === 'spd' ? '속도' : '받는 피해'} ${o.key === 'dmgIn' ? '-' : '+'}${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, deb: `${who} ${o.key === 'slow' ? '속도' : '공격'} -${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, dot: `${who}에게 8초 동안 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 지속 피해`, stun: `적 하나를 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 피해 + 행동 늦추기`, mp: `아군 전체 MP ${Math.round(xEfv(o, L) * 100)}% 회복 · 내 차례 ${o.cd || 3} 번 뒤에 다시 써요` }[o.t];
   return sc + mp;
 }
 const xSname = k => ({ atk: '공격', mag: '마법', heal: '치유' }[k]);
@@ -3222,7 +3222,7 @@ function xAnimAtk(u, k, list){   // 무기 모션 + 날아가는 것. 닿는 데
 }
 function xFxAt(k, list, u){ const sk = k.startsWith('sk:'); xcoEvPush({ k: 'fx', f: k, tg: list.map(t => t.id), u: u ? u.id : null, dl: xDelay }); const now = performance.now(), dl = u ? (xDelay = xAnimAtk(u, k, list)) : xDelay; if (sk && list.length > 1 && u && (XFXJOB.SK[k.slice(3)] || {}).once) list = [u]; list.forEach((t, i) => xb.fxs.push({ k, n: i, id: t.id, t0: now + dl + i * 90, dur: sk ? XFXJOB.dur(k) : k === 'bolt' ? 520 : k === 'slash' || k === 'impact' ? 380 : k.indexOf(':b') > 0 ? 1150 : 760, seed: Math.random() * 100 })); if (u && ((k.indexOf(':b') > 0 && !/h$/.test(k)) || (sk && XFXJOB.grand(k)))) xb.shake = { t0: now + dl + 60, dur: sk ? 900 : 260, amp: sk ? 3 : 2 }; }
 // 스킬 쿨타임: 쓴 스킬은 내 다음 행동 n번 동안 못 써요 (MP가 클수록 길어요). 전투가 끝나면 사라져요
-const xCdOf = sk => { const m = sk ? (sk.mp0 ?? sk.mp ?? 0) : 0; return m >= 18 ? 4 : m >= 14 ? 3 : m >= 8 ? 2 : m >= 4 ? 1 : 0; }, xCdLeft = (u, sk) => sk && u.cdn && u.cdn[sk.n] > 0 ? u.cdn[sk.n] : 0;
+const xCdOf = sk => { if (sk && sk.cd != null) return sk.cd; const m = sk ? (sk.mp0 ?? sk.mp ?? 0) : 0; return m >= 18 ? 4 : m >= 14 ? 3 : m >= 8 ? 2 : m >= 4 ? 1 : 0; }, xCdLeft = (u, sk) => sk && u.cdn && u.cdn[sk.n] > 0 ? u.cdn[sk.n] : 0;
 function xCdTick(u, sk){ if (u.team !== 'a') return; const c = u.cdn || (u.cdn = {}); Object.keys(c).forEach(k => { if (c[k] > 0) c[k]--; if (c[k] <= 0) delete c[k]; }); let n = xCdOf(sk); if (n && u.cdr && Math.random() < u.cdr * n) n--; if (n) c[sk.n] = n; }   // 톱니 시계 목걸이: 평균으로 재사용 대기가 그만큼 줄어요
 function xAct(u, sk, tgt){ if (!xb || xb.fin || !xAlive(u.team === 'a' ? xb.foes : xb.party).length) return; xDelay = 0; if (sk && xCdLeft(u, sk)) sk = null; try { xAct0(u, sk, tgt); } finally { xDelay = 0; xCdTick(u, sk); } }
 const xFoeTarget = () => { if (xb.gr && xb.gr.role === 'heal'){ const s = xb.party.find(u => u.dummy && u.hp > 0); if (s && Math.random() < .85) return s; }
@@ -3287,7 +3287,7 @@ function xAct0(u, sk, tgt){   // 한 번 행동
   else if (sk.t === 'leap'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'time', [u], u); if (sk.v) u.fx.spd = { v: sk.v, t: sk.sec }; xFloat(u.id, '가속!', '#9ad8ff'); }
   else if (sk.t === 'tstop'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'time', xAlive(B.foes), u); xAlive(B.party).forEach(a => { xFill(a); xFloat(a.id, '행동!', '#9ad8ff'); }); xAlive(B.foes).forEach(f => { f.g = Math.min(f.g, -150 * xTs(sk.lv) / 4); xFloat(f.id, '정지', '#d0a0ff'); }); }
   else if (sk.t === 'encore'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'buff', [u], u); const last = u.lastSk; if (last && last.t !== 'encore'){ B.log = `앙코르! ${last.n}`; xAct0(u, { ...last, mp: 0 }, tgt); return; } else { u.mp += sk.mp; B.log = '다시 쓸 스킬이 없어요'; } }
-  else if (sk.t === 'mp'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'buff', xAlive(B.party), u); B.party.forEach(t => { if (t.hp > 0){ t.mp = Math.min(t.mmp, t.mp + t.mmp * sk.v); xFloat(t.id, 'MP↑', '#6aa8ff'); } }); }
+  else if (sk.t === 'mp'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'buff', xAlive(B.party), u); B.party.forEach(t => { if (t.hp > 0){ t.mp = Math.min(t.mmp, t.mp + t.mmp * xEfv(sk, sk.lv || 1)); xFloat(t.id, 'MP↑', '#6aa8ff'); } }); }
   u.g = sk.w ?? 0; if (u.g >= 100){ u.g = 0; xFill(u); }
 }
 function xAI(u){   // 동료 자동 행동 (쿨타임 중인 스킬은 안 써요)
