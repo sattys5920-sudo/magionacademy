@@ -13423,7 +13423,7 @@ const HIB = (() => {
   };
   const selPts = () => Object.entries(W.sel).reduce((t, [k, n]) => t + pts(W.a, W.tab, k) * n, 0);
   function openWin(a){
-    if (!me || !open()) return; if (uiBusy() && !hibOn) return; closeSheet(); npcClose();
+    if (!me || !open()) return; if (uiBusy() && !hibOn) return; closeSheet(); npcClose(); const mv = $('#hibmap'); if (mv) mv.remove();
     W = { a, tab: F_(a) < GOAL(a)[0] || B_(a) >= GOAL(a)[1] ? 'f' : 'b', sel: {}, msg: '', fx: null }; hibOn = true;
     let v = $('#hibv'); if (!v){ v = document.createElement('div'); v.id = 'hibv'; document.body.appendChild(v); }
     render(); requestAnimationFrame(() => v.classList.add('on')); sfx('pop');
@@ -13431,9 +13431,9 @@ const HIB = (() => {
   function closeWin(){ const v = $('#hibv'); if (v){ v.classList.remove('on'); setTimeout(() => v.remove(), 300); } if (!SC) hibOn = false; }
   const bar = (v, g, c) => `<div class="hbar"><i style="width:${Math.min(100, Math.round(v / g * 100))}%;background:${c}"></i></div>`;
   function render(){
-    const v = $('#hibv'); if (!v || !W.a) return; const a = W.a, [gf, gb] = GOAL(a), L = bagList(a, W.tab), rem = left(a), sp = selPts(), give = Math.min(sp, rem), done = W.tab === 'f' ? F_(a) >= gf : B_(a) >= gb;
+    const v = $('#hibv'); if (!v || !W.a) return; const a = W.a, [gf, gb] = GOAL(a), L = bagList(a, W.tab), rem = left(a), sp = selPts(), need = W.tab === 'f' ? gf - F_(a) : gb - B_(a), give = Math.max(0, Math.min(sp, rem, need)), done = need <= 0;
     v.innerHTML = `<div class="hd"><b>${esc(nm(a))}</b><button data-hibx="close" aria-label="닫기">✕</button></div>
-      <div class="hst"><canvas id="hibcv" width="${PW}" height="${PH}"></canvas><div class="hg"><span>먹이</span>${bar(F_(a), gf, '#E8A040')}<span>이불</span>${bar(B_(a), gb, '#8AB868')}<p class="s">${esc(D(a)[5])}</p></div></div>
+      <div class="hst"><canvas id="hibcv" width="${PW}" height="${PH}"></canvas><div class="hg"><span>먹이 ${Math.min(F_(a), gf)} / ${gf}</span>${bar(F_(a), gf, '#E8A040')}<span>이불 ${Math.min(B_(a), gb)} / ${gb}</span>${bar(B_(a), gb, '#8AB868')}<p class="s">${esc(D(a)[5])}</p></div></div>
       <div class="tabs"><button class="${W.tab === 'f' ? 'on' : ''}" data-hibt="f">먹이 넣기</button><button class="${W.tab === 'b' ? 'on' : ''}" data-hibt="b">이불감 넣기</button></div>
       <div class="hmsg">${W.msg ? esc(W.msg) : `오늘 더 넣을 수 있어요 · ${rem} 점`}</div>
       ${done ? `<p class="empty">${W.tab === 'f' ? '먹이' : '이불감'}는 가득 찼어요</p>` : !L.length ? `<p class="empty">가방에 넣을 만한 게 없어요</p>` : `<div class="hgrid">${L.map(k => { const bad = POISON.includes(k), n = W.sel[k] || 0, f = !bad && fav(a, W.tab, k);
@@ -13464,10 +13464,9 @@ const HIB = (() => {
       await incr('hib', { [`den/${a}/${kind}`]: p, [`give/${a}/${uid}`]: p, [`day/${uid}/${d}/${a}`]: p });   // 한 번에 (규칙: 세 숫자가 같이 늘어야 해요)
     } catch(err){ giving = false; W.msg = '넣지 못했어요. 잠시 뒤에 다시 해 봐요'; render(); errReport('hib', '겨울잠 넣기 오류: ' + (err && (err.code || err.message)), ''); return; }
     sel.forEach(([k, n]) => { me.inv[k] = Math.max(0, (me.inv[k] || 0) - n); });
-    day[d] = { ...(day[d] || {}), [a]: ((day[d] || {})[a] || 0) + p }; myGive[a] = (myGive[a] || 0) + p;
-    den[a] = { ...dv(a), [kind]: (kind === 'f' ? F_(a) : B_(a)) + p };
+    // 숫자(day · myGive · den)는 듣기에서 바로 바뀌어요 (서버 더하기가 끝나면 · 여기서 또 더하면 두 번 세요)
     const s = S(), rw = []; if (!s.rw.tag){ s.rw.tag = 1; me.cos = me.cos || {}; (me.cos.tag = me.cos.tag || {}).hib = 1; rw.push('이름표 「숲 지킴이」를'); }
-    if (!s.rw.frame && IDS.every(x => (myGive[x] || 0) > 0)){ s.rw.frame = 1; me.fbag = me.fbag || {}; me.fbag.hib_frame = (me.fbag.hib_frame || 0) + 1; rw.push('가구 「작은 굴 액자」를'); }
+    if (!s.rw.frame && IDS.every(x => (myGive[x] || 0) > 0 || x === a)){ s.rw.frame = 1; me.fbag = me.fbag || {}; me.fbag.hib_frame = (me.fbag.hib_frame || 0) + 1; rw.push('가구 「작은 굴 액자」를'); }
     saveSure(); giving = false; FX = { a, kind, t0: performance.now() }; sfx(kind === 'f' ? 'pop' : 'sparkle');
     W.sel = {}; W.msg = D(a)[8][kind === 'f' ? 0 : 1]; render();
     rw.forEach((t, i) => setTimeout(() => toast(`${t} 받았어요`), 900 + i * 1600));
@@ -13482,7 +13481,8 @@ const HIB = (() => {
     salamander: ['도롱뇽이 마지막 한 입을 할짝 먹었어요', '촉촉 이끼를 끌고 바위틈으로 들어가요'], ladybug: ['무당벌레 가족이 마지막 꽃잎을 나눠 먹었어요', '자작나무 껍질 밑으로 하나씩 들어가요'], bear: ['곰이 마지막 벌꿀을 핥아 먹었어요', '낙엽 이불을 한 아름 안고 굴로 들어가요'] };
   async function sleepScene(a){
     if (SC || !imgOK) return; const s = S(); s.seen[a] = 1; saveSure(); hibOn = true; closeSheet(); npcClose();
-    const top = await topOf(a), bear = a === 'bear', T = bear ? 12000 : 9000;
+    const [top, R] = await Promise.all([topOf(a), mapOf(D(a)[2]).catch(() => null)]), bear = a === 'bear', T = bear ? 12000 : 9000;
+    const bg = (() => { const [c0, q] = cv(160, 100); q.fillStyle = bear ? '#1E2238' : '#1E2A26'; q.fillRect(0, 0, 160, 100); if (R){ const m = R.meta, cx = m.OX + (D(a)[3] - D(a)[4]) * 8, cy = m.OY + (D(a)[3] + D(a)[4]) * 4; q.drawImage(R.canvas, Math.round(cx - 80), Math.round(cy - 70), 160, 100, 0, 0, 160, 100); q.globalCompositeOperation = 'multiply'; q.fillStyle = bear ? 'rgb(120,130,190)' : 'rgb(130,140,170)'; q.fillRect(0, 0, 160, 100); q.globalCompositeOperation = 'source-over'; } return c0; })();
     const L = [[0, CAP_TXT[a][0]], [1500, CAP_TXT[a][1]], [3200, '입구에서 돌아보고 고개를 꾸벅해요'], ...(top ? [[4300, '한 번 더 꾸벅했어요']] : []), [5200, '굴 입구가 낙엽으로 스르르 덮여요'], [7000, '쿨.... 쿨.......'], ...(bear ? [[9000, '숲의 다른 굴들도 함께 숨을 쉬어요. 첫눈이 내려요']] : [])];
     let v = document.createElement('div'); v.id = 'hibsc'; v.innerHTML = `<canvas width="160" height="100"></canvas><p class="cap"></p><div class="row"><button class="btn" data-hibs="skip">건너뛰기</button></div>`; document.body.appendChild(v);
     requestAnimationFrame(() => v.classList.add('on'));
@@ -13493,9 +13493,8 @@ const HIB = (() => {
     const flakes = Array.from({ length: 28 }, (_, i) => [((i * 53) % 160), ((i * 37) % 100), .4 + (i % 5) * .15]);
     await new Promise(res => { const step = () => { const ms = performance.now() - t0; if (end || ms > T){ res(); return; }
       const ln = L.filter(x => ms >= x[0]).length - 1; if (ln !== li){ li = ln; cap.textContent = L[ln][1]; if (L[ln][1].startsWith('쿨')) sfx('chime'); }
-      g.fillStyle = bear ? '#1E2238' : '#1E2A26'; g.fillRect(0, 0, 160, 100); g.fillStyle = bear ? '#2A3048' : '#2A3A2E'; g.fillRect(0, 70, 160, 30);
-      for (let i = 0; i < 6; i++){ g.fillStyle = '#16201C'; g.fillRect(4 + i * 28, 30 - (i % 2) * 6, 10, 42); g.fillStyle = '#24382C'; g.beginPath(); g.arc(9 + i * 28, 30 - (i % 2) * 6, 13, 0, Math.PI * 2); g.fill(); }
-      const ox = 56, oy = 44, cover = Math.max(0, Math.min(1, (ms - 5200) / 1500));
+      g.drawImage(bg, 0, 0);
+      const ox = 56, oy = 38, cover = Math.max(0, Math.min(1, (ms - 5200) / 1500));
       denImg(g, a, 2, ox, oy); if (cover > 0){ g.globalAlpha = cover; denImg(g, a, 3, ox, oy); g.globalAlpha = 1; }
       // 동물: 먹기 → 끌고 들어가기 → 돌아보고 꾸벅 → 들어가요
       if (ms < 1500){ const sq = Math.abs(Math.sin(ms / 150)) * .12; aniImg(g, a, ox + 40, oy + 35, { sq, flip: true }); if (ms < 900){ const k = ms / 900; g.fillStyle = '#E8A040'; g.fillRect(Math.round(ox + 58 - k * 14), Math.round(oy + 18 - Math.sin(k * Math.PI) * 10), 2, 2); } }
@@ -13536,21 +13535,25 @@ const HIB = (() => {
       if (a === 'salamander'){ const L = FISH.filter(f => f.grade === 3), f = L[Math.floor(Math.random() * L.length)] || FISH[20]; me.inv[f.id] = (me.inv[f.id] || 0) + 1; got[got.length - 1] = `${nm(a)} · ${f.name} 1 마리`; }
       if (a === 'ladybug'){ me.cos = me.cos || {}; (me.cos.bub = me.cos.bub || {}).lady = 1; }
       if (a === 'bear'){ me.inv.honey = (me.inv.honey || 0) + 3; me.fbag = me.fbag || {}; me.fbag.hib_bear = (me.fbag.hib_bear || 0) + 1; } });
-    saveSure(); sfx('heart'); doorSig = ''; door();
+    saveSure(); sfx('heart'); door();
     famCard(`<canvas id="hibgc" width="16" height="14" style="width:64px;height:56px;image-rendering:pixelated"></canvas><b>잠들기 전 선물</b><small>${got.map(esc).join('<br>')}</small>`, () => { const c = $('#hibgc'); if (c){ const g = c.getContext('2d'); g.imageSmoothingEnabled = false; put(g, 'parcel', 0, 0); } }, 3400);
     return null;
   }
   // ---------- 겨울잠 지도: 굴 여섯 곳 ----------
-  const MAPXY = { campus: [8, 8, 132, 96], town: [148, 8, 132, 96] };   // 지도 칸: 교내 · 마을 (작은 그림)
+  const MAPXY = { campus: [4, 4, 138, 84], town: [146, 4, 138, 84] }, mapC = {};   // 지도 칸: 교내 · 마을 (맵 전체를 작게)
+  const mapOf = async m => mapC[m] || (mapC[m] = await World.mapCanvas(m));
   function openMap(){
     if (!me) return; closeSheet(); npcClose(); hibOn = true;
     let v = $('#hibmap'); if (!v){ v = document.createElement('div'); v.id = 'hibmap'; document.body.appendChild(v); }
     const row = a => { const [gf, gb] = GOAL(a), st = stage(a); return `<div class="hrow"><canvas data-hibmc="${a}" width="24" height="20"></canvas><div class="main"><b>${esc(nm(a))}</b><span class="s">${esc(D(a)[5])}</span>${st === 3 ? '<span class="s zz">자고 있어요</span>' : `<span class="hbars">${bar(F_(a), gf, '#E8A040')}${bar(B_(a), gb, '#8AB868')}</span>`}</div>${open() || slept(a) ? `<button class="btn sm" data-hibgo="${a}">가기</button>` : ''}</div>`; };
-    v.innerHTML = `<div class="hd"><b>겨울잠 지도</b><button data-hibmx="1" aria-label="닫기">✕</button></div><canvas id="hibmcv" width="288" height="112"></canvas><div class="hlist">${IDS.map(row).join('')}</div>`;
+    v.innerHTML = `<div class="hd"><b>겨울잠 지도</b><button data-hibmx="1" aria-label="닫기">✕</button></div><canvas id="hibmcv" width="288" height="92"></canvas><div class="hlist">${IDS.map(row).join('')}</div>`;
     requestAnimationFrame(() => v.classList.add('on'));
     const c = $('#hibmcv'), g = c.getContext('2d'); g.imageSmoothingEnabled = false;
-    Object.entries(MAPXY).forEach(([m, [x, y, w, h]]) => { g.fillStyle = m === 'campus' ? '#2E3A30' : '#2E3040'; g.fillRect(x, y, w, h); g.strokeStyle = '#4A3E66'; g.strokeRect(x + .5, y + .5, w - 1, h - 1); g.fillStyle = '#B8A8D8'; g.font = '10px Galmuri11, sans-serif'; g.fillText(m === 'campus' ? '교내' : '마을', x + 4, y + h - 4); });
-    IDS.forEach(a => { const [, , m, tx, ty] = D(a), [x, y, w, h] = MAPXY[m], px = x + (tx - ty + 109) / 201 * w, py = y + (tx + ty) / 201 * h; put(g, 'pin', Math.round(px) - 5, Math.round(py) - 11); if (slept(a)) put(g, 'zzz', Math.round(px) + 2, Math.round(py) - 18); });
+    const paint = R => { g.clearRect(0, 0, c.width, c.height); Object.entries(MAPXY).forEach(([m, [x, y, w, h]]) => { const r = R[m]; g.fillStyle = '#1E2230'; g.fillRect(x, y, w, h); if (r){ g.imageSmoothingEnabled = true; g.drawImage(r.canvas, x, y, w, h); g.imageSmoothingEnabled = false; g.fillStyle = 'rgba(20,16,40,.35)'; g.fillRect(x, y, w, h); }
+        g.strokeStyle = '#4A3E66'; g.strokeRect(x + .5, y + .5, w - 1, h - 1); g.fillStyle = '#E8DCF8'; g.font = '10px Galmuri11, sans-serif'; g.fillText(m === 'campus' ? '교내' : '마을', x + 4, y + h - 4); });
+      IDS.forEach(a => { const [, , m, tx, ty] = D(a), [x, y, w, h] = MAPXY[m], mt = R[m] && R[m].meta, px = mt ? x + (mt.OX + (tx - ty) * 8) / mt.W * w : x + (tx - ty + 109) / 201 * w, py = mt ? y + (mt.OY + (tx + ty) * 4) / mt.H * h : y + (tx + ty) / 201 * h;
+        put(g, 'pin', Math.round(px) - 5, Math.round(py) - 11); if (slept(a)) put(g, 'zzz', Math.round(px) + 2, Math.round(py) - 18); }); };
+    paint({}); Promise.all(['campus', 'town'].map(mapOf)).then(([a, b]) => { if ($('#hibmcv') === c) paint({ campus: a, town: b }); }).catch(() => {});
     v.querySelectorAll('[data-hibmc]').forEach(cc => { const q = cc.getContext('2d'); q.imageSmoothingEnabled = false; aniImg(q, cc.dataset.hibmc, 12, 20); });
   }
   function closeMap(){ const v = $('#hibmap'); if (v){ v.classList.remove('on'); setTimeout(() => v.remove(), 300); } if (!SC && !$('#hibv')) hibOn = false; }
