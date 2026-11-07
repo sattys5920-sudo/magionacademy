@@ -1,5 +1,6 @@
 # 겨울잠 준비 그림 시안: 굴 6 곳 × 3 단계 (휑함 · 쌓임 · 낙엽으로 덮임) · 곰 (아기 동물 그림체) · 배고픔 · Z 표시 · 가구 3 종
-#   python3 tools/hibernate/hib_art.py → tools/hibernate/out/*.png + preview.png
+#   python3 tools/hibernate/hib_art.py → public/art/hib.png · hib.webp (게임용 한 장) + tools/hibernate/out/*.png + preview.png
+#   게임용 칸 위치는 index.html 「겨울잠 준비」의 SP 와 같아요 (굴 48 × 36 · 6 줄 × 4 단계 / 동물 24 × 20 칸 / 아이콘 · 가구)
 import os, math
 from PIL import Image, ImageDraw
 D = os.path.dirname(os.path.abspath(__file__)); O = D + '/out'; os.makedirs(O, exist_ok=True)
@@ -187,6 +188,29 @@ def frame():   # 가구 작은 굴 액자 (20 × 18)
     for (x, y) in ((6, 5), (12, 4), (14, 7)): im.putpixel((x, y), hx('#FFE27A'))
     return im
 
+
+def parcel():   # 방 앞 선물 꾸러미 (16 × 14): 큰 잎으로 싸고 풀줄기로 묶었어요
+    im = Image.new('RGBA', (16, 14)); g = ImageDraw.Draw(im)
+    g.ellipse([1, 3, 14, 13], fill=hx('#7A9A4A'), outline=OL); g.polygon([(3, 5), (8, 1), (12, 5)], fill=hx('#9ABA5A'), outline=OL)
+    g.line([(8, 2), (8, 12)], fill=hx('#C8A060')); g.line([(2, 8), (13, 8)], fill=hx('#C8A060')); g.line([(4, 6), (7, 9)], fill=hx('#5A7A34'))
+    im.putpixel((8, 8), hx('#F2D080')); im.putpixel((5, 5), hx('#C8E08A'))
+    return im
+
+def pin():   # 지도 표시 (10 × 12): 굴 모양 핀
+    im = Image.new('RGBA', (10, 12)); g = ImageDraw.Draw(im)
+    g.ellipse([0, 0, 9, 9], fill=hx('#E8A040'), outline=OL); g.polygon([(3, 8), (5, 11), (6, 8)], fill=hx('#E8A040'), outline=OL); g.pieslice([2, 3, 7, 9], 180, 360, fill=hx('#1A1220'))
+    return im
+
+ORDER = ['dormouse', 'badger', 'turtle', 'salamander', 'ladybug', 'bear']
+def game_sheet():   # 게임용 한 장 192 × 256
+    S = Image.new('RGBA', (192, 256))
+    for r, k in enumerate(ORDER):
+        for st in range(4): S.alpha_composite(den(k, st), (st * 48, r * 36))
+    for i, k in enumerate(ORDER):   # 동물: 24 × 20 칸 아래 가운데
+        a = ANI[k](); S.alpha_composite(a, (i * 24 + (24 - a.width) // 2, 216 + 20 - a.height))
+    for x, im in ((0, hungry()), (16, zzz()), (32, parcel()), (48, cushion()), (72, bear_doll()), (96, frame()), (120, pin())): S.alpha_composite(im, (x, 236))
+    return S
+
 ANI = {'dormouse': dormouse, 'badger': badger, 'turtle': turtle, 'salamander': salamander, 'ladybug': ladybugs, 'bear': bear}
 if __name__ == '__main__':
     kinds = list(KIND)
@@ -208,4 +232,5 @@ if __name__ == '__main__':
     y = 6 * 44 + 8
     for i, f in enumerate((cushion(), bear_doll(), frame())): P.alpha_composite(f, (10 + i * 40, y))
     P.resize((P.width * 4, P.height * 4), Image.NEAREST).save(O + '/preview.png')
+    A = ROOT + '/public/art'; SH = game_sheet(); SH.save(A + '/hib.png', optimize=True); SH.save(A + '/hib.webp', lossless=True, quality=100, method=6); SH.resize((192 * 3, 256 * 3), Image.NEAREST).save(O + '/sheet_x3.png')
     print('ok')

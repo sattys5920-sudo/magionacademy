@@ -715,6 +715,57 @@
           }
         }
       }
+    },
+    "hib": {
+      ".read": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+      ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
+      "ctl": {
+        ".read": "auth != null"
+      },
+      "den": {
+        ".read": "auth != null",
+        "$a": {
+          ".validate": "$a.matches(/^(dormouse|badger|turtle|salamander|ladybug|bear)$/)",
+          "f": {
+            ".write": "auth != null && root.child('hib/ctl/open').val() === true && newData.isNumber() && newData.val() - (data.exists() ? data.val() : 0) >= 1 && newData.val() - (data.exists() ? data.val() : 0) <= 15 && newData.parent().child('b').val() === data.parent().child('b').val() && newData.parent().parent().parent().child('give').child($a).child(auth.uid).val() - (root.child('hib/give').child($a).child(auth.uid).exists() ? root.child('hib/give').child($a).child(auth.uid).val() : 0) === newData.val() - (data.exists() ? data.val() : 0)",
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000 && newData.val() % 1 === 0"
+          },
+          "b": {
+            ".write": "auth != null && root.child('hib/ctl/open').val() === true && newData.isNumber() && newData.val() - (data.exists() ? data.val() : 0) >= 1 && newData.val() - (data.exists() ? data.val() : 0) <= 15 && newData.parent().child('f').val() === data.parent().child('f').val() && newData.parent().parent().parent().child('give').child($a).child(auth.uid).val() - (root.child('hib/give').child($a).child(auth.uid).exists() ? root.child('hib/give').child($a).child(auth.uid).val() : 0) === newData.val() - (data.exists() ? data.val() : 0)",
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000 && newData.val() % 1 === 0"
+          },
+          "slept": {
+            ".write": "auth != null && !data.exists() && newData.isNumber() && newData.val() <= now + 60000 && newData.val() >= now - 600000 && newData.parent().child('f').val() >= ($a === 'bear' ? 160 : 80) && newData.parent().child('b').val() >= ($a === 'bear' ? 80 : 40)",
+            ".validate": "newData.isNumber()"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "give": {
+        "$a": {
+          ".read": "auth != null && root.child('hib/den').child($a).child('slept').exists()",
+          ".validate": "$a.matches(/^(dormouse|badger|turtle|salamander|ladybug|bear)$/)",
+          "$u": {
+            ".read": "auth != null && auth.uid === $u",
+            ".write": "auth != null && auth.uid === $u && root.child('hib/ctl/open').val() === true && newData.isNumber() && newData.val() - (data.exists() ? data.val() : 0) >= 1 && newData.val() - (data.exists() ? data.val() : 0) <= 15 && ((newData.parent().parent().parent().child('den').child($a).child('f').exists() ? newData.parent().parent().parent().child('den').child($a).child('f').val() : 0) + (newData.parent().parent().parent().child('den').child($a).child('b').exists() ? newData.parent().parent().parent().child('den').child($a).child('b').val() : 0)) - ((root.child('hib/den').child($a).child('f').exists() ? root.child('hib/den').child($a).child('f').val() : 0) + (root.child('hib/den').child($a).child('b').exists() ? root.child('hib/den').child($a).child('b').val() : 0)) === newData.val() - (data.exists() ? data.val() : 0)",
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 === 0"
+          }
+        }
+      },
+      "day": {
+        "$u": {
+          ".read": "auth != null && auth.uid === $u",
+          "$d": {
+            ".validate": "$d.matches(/^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$/)",
+            "$a": {
+              ".write": "auth != null && auth.uid === $u && root.child('hib/ctl/open').val() === true && newData.isNumber() && newData.val() - (data.exists() ? data.val() : 0) >= 1 && newData.parent().parent().parent().parent().child('give').child($a).child($u).val() - (root.child('hib/give').child($a).child($u).exists() ? root.child('hib/give').child($a).child($u).val() : 0) === newData.val() - (data.exists() ? data.val() : 0)",
+              ".validate": "$a.matches(/^(dormouse|badger|turtle|salamander|ladybug|bear)$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 15 && newData.val() % 1 === 0"
+            }
+          }
+        }
+      }
     }
   }
 }
