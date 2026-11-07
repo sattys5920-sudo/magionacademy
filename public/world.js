@@ -998,9 +998,10 @@ function drawPerson(p){ const cx = out;
     cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); if (left){ cx.translate(dx, 0); cx.scale(-1, 1); cx.drawImage(PIX_IMG, p.npc.pix * 32, 0, 32, 32, -w / 2, dy, w, w); } else cx.drawImage(PIX_IMG, p.npc.pix * 32, 0, 32, 32, Math.round(dx - w / 2), dy, w, w); cx.restore(); return;
   }
   if (p.npc && p.npc.spr !== undefined){   // 이야기 NPC: LPC로 조립한 그림 (tools/iso/lpc/npc_lpc.py), 한 줄 = 한 명, 칸 배치는 캐릭터와 같아요
-    const [sx, sy] = P(p.x + .5, p.y + .5); cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 6, 2.5, 0, 0, Math.PI * 2); cx.fill();
+    const [sx, sy] = P(p.x + .5, p.y + .5); if (!p.npc.hang){ cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 6, 2.5, 0, 0, Math.PI * 2); cx.fill(); }
     if (!NPC_IMG || !NPC_IMG.complete) return; const A = World.Avatar, cp = KPX * ASC, w = A.FW * cp, h = A.FH * cp, WK = A.meta.walk, col = (p.view || 0) + (p.path.length ? WK[Math.floor(p.t * 7) % WK.length] : p.npc.flap ? WK[Math.floor(performance.now() / 140) % WK.length] : 0);
     const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - (A.FH - 1.5) * cp) + (p.npc.float ? Math.round(Math.sin(performance.now() / 600 + p.npc.spr) * 2) * cp : 0) - cheerHop(p, cp);
+    if (p.npc.hang){ const hy = dy - Math.round(p.npc.hang * cp) + Math.round(Math.sin(performance.now() / 900) * cp); cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); cx.translate(0, hy + h); cx.scale(1, -1); cx.drawImage(NPC_IMG, (p.npc.view0 || 0) * A.FW, p.npc.spr * A.FH, A.FW, A.FH, Math.round(dx - w / 2), 0, w, h); cx.restore(); return; }   // 거꾸로 매달려 졸아요 (겨울잠 준비: 곰이 잠든 뒤 하루 · 우체국 지붕) · hang = 들어 올릴 높이
     cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); if (p.npc.alpha) cx.globalAlpha = p.npc.alpha; cx.drawImage(p.npc.sheet || NPC_IMG, col * A.FW, p.npc.sheet ? 0 : p.npc.spr * A.FH, A.FW, A.FH, Math.round(dx - w / 2), dy, w, h); if (World.onNpcDrawn && !p.npc.cut) { try { cx.globalAlpha = 1; World.onNpcDrawn(cx, p.npc.id, Math.round(dx - w / 2), dy, cp, p.view || 0, p); } catch(e){} } cx.restore(); return;   // sheet: 선물받은 목도리를 두른 그림 (한 줄)
   }
   const [sx, sy] = P(p.x + .5, p.y + .5);

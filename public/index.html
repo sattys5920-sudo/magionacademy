@@ -4859,6 +4859,7 @@ function evWhyNot(id){
 }
 function npcSpot(n){
   const P = NL.places; let pid = null, mark = false;
+  if (n.id === 'batri' && typeof HIB !== 'undefined' && HIB.roof()) return { map: 'town', x: 64, y: 52, r: 0, mark: false, hang: 66 };   // 겨울잠 준비: 곰이 잠든 뒤 하루 동안 우체국 지붕에 거꾸로 매달려 졸아요
   if (n.id === 'otumo'){ const fs = otFallSpot(); if (fs) return { map: fs[0], x: fs[1], y: fs[2], r: 1, mark: !!evCond(n.id) }; }   // ♥1 전까지는 떨어진 자리
   const hd = NL.places && hideState(n.id);
   if (hd){ const c = hd.ev.conditions; if (c.time && c.time.length && !c.time.includes(bandNow())) return null; pid = c.location; }
@@ -4873,7 +4874,7 @@ function syncNpcs(){
   if (!me || !World.setNpcs) return;
   const list = [];
   npcAll().forEach(n => { const s = npcSpot(n); if (!s) return;
-    const o = { id: n.id, name: n.name, map: s.map, x: s.x, y: s.y, r: s.r, own: s.own, mark: s.mark, wander: true, dir: n.dir || 'down', ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float, flap: n.flap }) };
+    const o = { id: n.id, name: n.name, map: s.map, x: s.x, y: s.y, r: s.r, own: s.own, mark: s.mark, wander: true, dir: n.dir || 'down', ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float, flap: n.flap }), ...(s.hang ? { hang: s.hang, wander: false, flap: false, float: false } : {}) };
     list.push(typeof knNpcWear === 'function' ? knNpcWear(n, o) : o); });
   townList().forEach(o => list.push(o));
   if (typeof tutNpcs === 'function') tutNpcs().forEach(o => list.push(o));
@@ -13331,8 +13332,8 @@ const HIB = (() => {
   // [id, 이름, 맵, x, y, 자리 이름, 좋아하는 먹이, 좋아하는 이불감, 굴 모양 이름, 넣을 때 소리]
   const DEN = [
     ['dormouse', '겨울잠쥐', 'campus', 44, 99, '풍차 숲 나무 그루터기', ['g2_acorn', 'g_acorn', 'g2_chest', 'g2_walnut'], ['g2_reed'], ['오물오물....', '찍, 찍.......']],
-    ['badger', '오소리', 'campus', 13, 10, '언덕 숲 흙더미 굴', ['g2_mushpine', 'g2_wintermush', 'g2_rasp'], ['g2_frostleaf'], ['킁킁.... 킁.......', '흙흙.......']],
-    ['turtle', '거북이', 'town', 21, 97, '늪지 웅덩이 옆 진흙 둑', ['g2_blue', 'g_blueb', 'g2_fern', '*fish'], ['g2_moss'], ['....느릿느릿 냠.......', '뻐끔.......']],
+    ['badger', '오소리', 'campus', 11, 18, '언덕 숲 흙더미 굴', ['g2_mushpine', 'g2_wintermush', 'g2_rasp'], ['g2_frostleaf'], ['킁킁.... 킁.......', '흙흙.......']],
+    ['turtle', '거북이', 'town', 19, 94, '늪지 웅덩이 옆 진흙 둑', ['g2_blue', 'g_blueb', 'g2_fern', '*fish'], ['g2_moss'], ['....느릿느릿 냠.......', '뻐끔.......']],
     ['salamander', '도롱뇽', 'town', 18, 88, '호숫가 바위틈', ['g2_snail', 'g2_fern', 'g2_firefly'], ['g2_moss'], ['할짝.... 할짝.......', '꼬물꼬물.......']],
     ['ladybug', '무당벌레 가족', 'town', 14, 56, '묘지 뒤 쓰러진 통나무', ['g2_daisy', 'g2_bell', 'g_lily', 'g2_sseed', 'g_sunf'], ['g2_birch'], ['사각사각.......', '톡톡톡.......']],
     ['bear', '곰', 'campus', 52, 4, '북쪽 숲 끝 큰 굴', ['honey', '*fish', 'g2_mushpine', 'g2_rosehip'], ['g2_frostleaf', 'g2_birch'], ['우물우물.... 흐음.......', '크응.......']],
@@ -13367,7 +13368,7 @@ const HIB = (() => {
     if (typeof syncRoom === 'function' && me) syncRoom();
   }
   // ---------- 상태 ----------
-  let ctl = null, den = {}, myGive = {}, day = {}, offs = [], propSig = '', doorSig = '', pend = null, toasted = {}, denSeen = null, giving = false, W = { a: null, tab: 'f', sel: {}, msg: '', fx: null }, SC = null, FX = null;
+  let roofWas = false, ctl = null, den = {}, myGive = {}, day = {}, offs = [], propSig = '', doorSig = '', pend = null, toasted = {}, denSeen = null, giving = false, W = { a: null, tab: 'f', sel: {}, msg: '', fx: null }, SC = null, FX = null;
   const force = () => !!(window.__hibForce && window.__seed);   // 모의 서버 시험에서만 관리자 없이 열어요 (실제 서비스엔 __seed 가 없어요)
   const open = () => force() || !!(ctl && ctl.open);
   const evId = () => (ctl && ctl.id) || (force() ? 'force' : '');
@@ -13516,7 +13517,8 @@ const HIB = (() => {
   const GIFT = { dormouse: '가구 「겨울잠쥐 쿠션」', badger: '황금 도토리 1 개', turtle: '연꽃 씨앗 1 개', salamander: '드문 생선 1 마리', ladybug: '말풍선 「무당벌레 말풍선」', bear: '벌꿀 단지 3 개 · 가구 「잠든 곰 인형」' };
   const pending = () => me ? IDS.filter(a => slept(a) && (myGive[a] || 0) > 0 && !S().gift[a]) : [];
   function giftCheck(){
-    const P = pending(); P.forEach(a => { if (!toasted[a]){ toasted[a] = 1; setTimeout(() => toast(`${withJosa(nm(a), '이', '가')} 방 앞에 선물을 두고 갔어요`), 600); } });
+    const P = pending(); P.forEach(a => { if (!toasted[a] && me.hib && me.hib.seen && me.hib.seen[a]){   // 잠드는 장면을 본 뒤에 알려요
+ toasted[a] = 1; setTimeout(() => toast(`${withJosa(nm(a), '이', '가')} 방 앞에 선물을 두고 갔어요`), a === 'bear' ? 4200 : 600); } });
   }
   function door(){   // 내 방 문 옆 선물 꾸러미 (받을 게 있을 때만)
     if (!me || !me.house || !imgOK) return; const P = pending(), mapId = myRoomId(), show = P.length > 0 && inMyRoom();
@@ -13597,7 +13599,7 @@ const HIB = (() => {
   }
   const batriBtn = () => me && (open() || nSlept()) ? '<button class="btn sm go" data-nx="hibmap">겨울잠 지도</button>' : '';
   function overlay(q, toS, k){   // 곰이 잠든 뒤 하루: 배트리 머리 위에 Z
-    if (!imgOK || !bearNap()) return; const p = World.npcAt('batri'); if (!p) return; const [x, y] = toS(p.x, p.y), t = performance.now() / 1000, zy = y - 6 * k - ((t * 8) % 10) * k;
+    if (!imgOK || !bearNap()) return; const p = World.npcAt('batri'); if (!p) return; const [x, y] = toS(p.x, p.y), t = performance.now() / 1000, base = y + ((World.Avatar.FH + 1.5 - 66) / 2 - 2) * k, zy = base - 2 * k - ((t * 8) % 10) * k;   // 거꾸로 매달린 머리 옆에서 Z
     q.save(); q.globalAlpha = .6 + .4 * Math.sin(t * 2); q.imageSmoothingEnabled = false; q.drawImage(IMG, SP.zzz[0], SP.zzz[1], 12, 12, x + 2 * k, zy, 12 * k * .8, 12 * k * .8); q.restore();
   }
   // ---------- 일지 「겨울잠」 ----------
@@ -13612,7 +13614,8 @@ const HIB = (() => {
   function jnBind(){ on('[data-hibj]', () => openMap()); }
   // ---------- 듣기 · 틱 ----------
   function tick(){
-    if (!me) return; props(); door(); bearBuff();
+    if (!me) return; props(); door(); if (!SC && (!slept('bear') || (me.hib && me.hib.seen && me.hib.seen.bear))) bearBuff();   // 곰 효과 알림은 장면을 본 뒤에
+    const rf = bearNap(); if (rf !== roofWas){ roofWas = rf; if (typeof syncNpcs === 'function') syncNpcs(); }
     if (hibOn || uiBusy() || !(World.meAt && World.meAt())) return; const w = World.where() || '';
     if (/^(gt_|arena)/.test(w)) return;
     if (open() && evId() && !S().hi){ if (evTurn('hib')) intro(); return; }
@@ -13653,7 +13656,7 @@ const HIB = (() => {
     else if (confirm('「겨울잠 준비」를 시작할까요? 학생마다 배트리 연출이 나와요.')) GDB.set('hib/ctl', { open: true, id: c.id || now2(), at: now2() }).then(() => toast('겨울잠 준비를 시작했어요'));
   });
   window.__hib = { open: () => open(), state: () => ({ ctl, den, myGive, day, hib: me && me.hib, hibOn, SC: !!SC, W }), openWin: a => openWin(a), openMap: () => openMap(), intro: () => intro(), sleepScene: a => sleepScene(a), takeGift: () => takeGift(), pending: () => pending(), pts: (a, k, i) => pts(a, k, i), stage: a => stage(a), props: () => { propSig = ''; props(); }, door: () => { doorSig = ''; door(); }, line: id => line(npcGet(id)), DEN };   // 시험용
-  return { listen, adminHTML, jnOn, jnHTML, jnBind, openMap, line, batriBtn };
+  return { listen, adminHTML, jnOn, jnHTML, jnBind, openMap, line, batriBtn, roof: () => !!me && bearNap() };
 })();
 
 let bmOn = false;
