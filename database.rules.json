@@ -648,7 +648,7 @@
         "$to": {
           ".read": "auth != null && auth.uid === $to",
           "$id": {
-            ".write": "auth != null && ((!data.exists() && newData.exists() && now > 1794322500000 && now < 1794409500000 && root.child('stick/ctl/stop').val() !== true && (($to !== auth.uid && !newData.child('st').exists() && root.child('players').child($to).exists() && newData.parent().parent().parent().child('by').child($id).val() === auth.uid && newData.parent().parent().parent().child('mine').child(auth.uid).child($to).child('id').val() === $id) || ($to === auth.uid && newData.child('st').isString() && $id.matches(/^(mad|n_[a-z]+)$/)))) || (data.exists() && newData.exists() && auth.uid === $to && newData.child('c').val() === data.child('c').val() && newData.child('t').val() === data.child('t').val() && newData.child('b').val() === data.child('b').val() && newData.child('k').val() === data.child('k').val() && newData.child('r').val() === data.child('r').val() && newData.child('s').val() === data.child('s').val() && newData.child('at').val() === data.child('at').val() && newData.child('m').val() === data.child('m').val() && newData.child('st').val() === data.child('st').val() && newData.child('x').val() === data.child('x').val()))",
+            ".write": "auth != null && ((!data.exists() && newData.exists() && root.child('stick/ctl/open').val() === true && (($to !== auth.uid && !newData.child('st').exists() && root.child('players').child($to).exists() && newData.parent().parent().parent().child('by').child($id).val() === auth.uid && newData.parent().parent().parent().child('mine').child(auth.uid).child($to).child('id').val() === $id) || ($to === auth.uid && newData.child('st').isString() && $id.matches(/^(mad|n_[a-z]+)$/)))) || (data.exists() && newData.exists() && auth.uid === $to && newData.child('c').val() === data.child('c').val() && newData.child('t').val() === data.child('t').val() && newData.child('b').val() === data.child('b').val() && newData.child('k').val() === data.child('k').val() && newData.child('r').val() === data.child('r').val() && newData.child('s').val() === data.child('s').val() && newData.child('at').val() === data.child('at').val() && newData.child('m').val() === data.child('m').val() && newData.child('st').val() === data.child('st').val() && newData.child('x').val() === data.child('x').val()))",
             ".validate": "newData.hasChildren(['c', 't', 'b', 'k', 'r', 's', 'at'])",
             "c": {
               ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 9 && newData.val() % 1 === 0"
@@ -694,14 +694,14 @@
       },
       "by": {
         "$id": {
-          ".write": "auth != null && !data.exists() && newData.val() === auth.uid && now > 1794322500000 && now < 1794409500000 && root.child('stick/ctl/stop').val() !== true"
+          ".write": "auth != null && !data.exists() && newData.val() === auth.uid && root.child('stick/ctl/open').val() === true"
         }
       },
       "mine": {
         "$u": {
           ".read": "auth != null && auth.uid === $u",
           "$to": {
-            ".write": "auth != null && auth.uid === $u && $to !== $u && !data.exists() && newData.exists() && now > 1794322500000 && now < 1794409500000 && root.child('stick/ctl/stop').val() !== true",
+            ".write": "auth != null && auth.uid === $u && $to !== $u && !data.exists() && newData.exists() && root.child('stick/ctl/open').val() === true",
             ".validate": "newData.hasChildren(['id', 'at']) && newData.child('id').isString() && newData.child('id').val().length <= 30 && (!newData.child('m').exists() || (newData.child('m').isString() && newData.child('m').val().length <= 40))"
           }
         }

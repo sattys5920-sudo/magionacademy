@@ -12777,7 +12777,7 @@ const CK = (() => {
 })();
 // ===== 「막대과자의 날」: 11월 11일 하루(한국 시각)만 저절로 열려요 · 과자 교실 오븐 옆 「막대 틀」에서 굽고(미니게임 3 단계) 꾸며서 반 친구에게 몰래 보내요 · NPC에게도 줘요 · 받은 상자는 내 방 책상 위에 쌓여요
 //   기획: tools/stickday/stickday_plan.md · 그림: tools/stickday/stick_art.py → art/stick.png · .webp (칸 위치는 아래 SP)
-//   stick/ctl = { stop } (관리자는 멈추기 · 다시 열기만 · 여는 건 날짜로)
+//   stick/ctl = { open, at } (관리자가 열면 시작 연출 · 굽기 · 보내기가 열리고, 닫으면 굽기 · 보내기가 닫혀요 · 받은 상자는 남아요)
 //   stick/box/<받는 uid>/<번호> = { c 맛, t 뿌리개, b 무늬, k 상자 색, r 리본, s 별, m 쪽지, st 마들렌 · NPC 상자만 보낸 이름, at, hide 받은 학생이 숨김, x 관리자가 숨김, e 먹음 }   ※ 보낸 사람은 없어요
 //   stick/by/<번호> = 보낸 uid (관리자만 읽어요) · stick/mine/<uid>/<받는 uid> = { id, 꾸민 것, m, at } (나 · 관리자만) · stick/hold/<uid>/<번호> = 들고 있는 상자 (나 · 관리자만)
 //   me.stk = { ev 날, hi 시작 연출 봄, gv 마들렌 · NPC 상자 받음, made 구운 수, best 최고 별, sn 친구에게 보낸 수, npc { NPC: 맛 }, tw 받은 탑 단계, rw { bub, tag, frame, mad } }
@@ -12842,8 +12842,8 @@ const STK = (() => {
   // ---------- 상태 ----------
   let ctl = null, boxes = {}, hold = {}, mine = {}, offs = [], propSig = '', lampSig = '', deskSig = '', W = { tab: 'bake', step: -1, c: 0, cur: null, d: { t: 0, b: 0, k: 0, r: 0, m: '' }, sel: null, to: null, rv: null, err: '' }, MG = null, sending = false, boxSeen = null;
   const force = () => !!(window.__stkForce && window.__seed);   // 모의 서버 시험에서만 날짜와 상관없이 열어요 (실제 서비스엔 __seed 가 없어요)
-  const dayOn = () => force() || todayKey() === DAY;
-  const open = () => dayOn() && !(ctl && ctl.stop);
+  const dayOn = () => force() || !!(ctl && ctl.open);
+  const open = () => dayOn();
   const S = () => { const s = me.stk && me.stk.ev === DAY ? me.stk : (me.stk = { ev: DAY, npc: {}, rw: {} }); s.npc ||= {}; s.rw ||= {}; return s; };
   const has = k => typeof haveSame === 'function' ? haveSame(k) : (me.inv[k] || 0), take = (k, n = 1) => typeof takeSame === 'function' ? takeSame(k, n) : (me.inv[k] = Math.max(0, (me.inv[k] || 0) - n));
   const inm = k => ITEM[k] || k;
@@ -13278,25 +13278,25 @@ const STK = (() => {
   }
   // ---------- 관리자 카드 ----------
   function adminHTML(){
-    const c = AD.stkctl || {}, P = AD.players || {}, BX = AD.stkbox || {}, BY = AD.stkby || {}, MN = AD.stkmine || {}, nk = u => esc((P[u] && P[u].nick) || '?'), day = todayKey() === DAY;
+    const c = AD.stkctl || {}, P = AD.players || {}, BX = AD.stkbox || {}, BY = AD.stkby || {}, MN = AD.stkmine || {}, nk = u => esc((P[u] && P[u].nick) || '?'), day = !!c.open;
     const ids = Object.keys(P).filter(id => P[id] && P[id].nick).sort((a, b) => P[a].nick.localeCompare(P[b].nick, 'ko'));
     const got = id => Object.values(BX[id] || {}).filter(b => b && typeof b === 'object'), fr = id => got(id).filter(b => !b.st), sent = id => Object.keys(MN[id] || {}).length;
     const npcN = id => { const s = P[id].stk; return s && s.ev === DAY ? Object.keys(s.npc || {}).length : 0; };
     const total = ids.reduce((a, id) => a + sent(id), 0), zero = ids.filter(id => !fr(id).length);
     const notes = []; Object.entries(BX).forEach(([to, L]) => Object.entries(L || {}).forEach(([id, b]) => { if (b && b.m && !b.st) notes.push({ to, id, b, by: BY[id] }); })); notes.sort((a, b) => (b.b.at || 0) - (a.b.at || 0));
-    return `<div class="adcard sdad"><div class="abhead"><b>막대과자의 날</b>${c.stop ? '<button class="btn sm go" data-stka="go">다시 열기</button>' : '<button class="btn sm" data-stka="stop">멈추기</button>'}</div>
-      <div class="abchips"><span>${c.stop ? '멈춤' : day ? '열림 (오늘)' : '11월 11일에 저절로 열려요'}</span><span>보낸 상자 <b>${total}</b></span><span>친구에게 받은 상자 0 개 <b>${zero.length}</b> 명</span></div>
+    return `<div class="adcard sdad"><div class="abhead"><b>막대과자의 날</b>${c.open ? '<button class="btn sm" data-stka="stop">닫기</button>' : '<button class="btn sm go" data-stka="go">열기</button>'}</div>
+      <div class="abchips"><span>${day ? '열림' : '닫힘'}</span><span>보낸 상자 <b>${total}</b></span><span>친구에게 받은 상자 0 개 <b>${zero.length}</b> 명</span></div>
       ${zero.length ? `<div class="s">아직 못 받은 학생: ${zero.map(nk).join(', ')}</div>` : ''}
       ${ids.map(id => `<div class="sdarow"><span><b>${nk(id)}</b></span><span class="s">보냄 ${sent(id)} · NPC ${npcN(id)} · 받음 ${fr(id).length} (마들렌 · NPC 포함 ${got(id).length}) · 구움 ${(P[id].stk && P[id].stk.ev === DAY && P[id].stk.made) || 0}</span></div>`).join('')}
       <div class="s" style="margin:8px 0 2px">쪽지 ${notes.length} 개</div>
       ${notes.map(x => `<div class="sdarow" style="display:block;${x.b.x ? 'opacity:.45' : ''}"><div class="ln" style="justify-content:space-between"><span><b>${nk(x.by)}</b> → <b>${nk(x.to)}</b>${x.b.hide ? ' <span class="tag r">받은 학생이 숨김</span>' : ''}${x.b.x ? ' <span class="tag">숨김</span>' : ''}</span><button class="btn sm" data-stkh="${x.to}/${x.id}">${x.b.x ? '다시 보이기' : '숨기기'}</button></div><div style="margin-top:3px">「${esc(x.b.m)}」</div></div>`).join('')}
-      <div class="s" style="margin-top:6px">11월 11일 0 시부터 밤 11 시 59 분까지(한국 시각) 저절로 열려요. 멈추면 굽기 · 보내기가 바로 닫혀요. 보낸 사람은 이 카드에서만 보여요.</div></div>`;
+      <div class="s" style="margin-top:6px">열면 학생마다 마들렌 연출이 나오고 굽기 · 보내기를 할 수 있어요. 닫으면 굽기 · 보내기가 바로 닫히고, 받은 상자는 그대로예요. 보낸 사람은 이 카드에서만 보여요.</div></div>`;
   }
   document.addEventListener('click', e => {
     const h = e.target.closest && e.target.closest('[data-stkh]'); if (h && h.closest('#adminv')){ const [to, id] = h.dataset.stkh.split('/'), b = ((AD.stkbox || {})[to] || {})[id]; GDB.upd(`stick/box/${to}/${id}`, { x: b && b.x ? null : true }); return; }
     const b = e.target.closest && e.target.closest('[data-stka]'); if (!b) return;
-    if (b.dataset.stka === 'stop'){ if (confirm('「막대과자의 날」을 멈출까요? 굽기 · 보내기가 바로 닫혀요. 받은 상자는 그대로예요.')) GDB.set('stick/ctl', { stop: true, at: now2() }).then(() => toast('막대과자의 날을 멈췄어요')); }
-    else if (confirm('다시 열까요? 11월 11일 안에서만 열려요.')) GDB.set('stick/ctl', { stop: false, at: now2() }).then(() => toast('다시 열었어요'));
+    if (b.dataset.stka === 'stop'){ if (confirm('「막대과자의 날」을 닫을까요? 굽기 · 보내기가 바로 닫혀요. 받은 상자는 그대로예요.')) GDB.set('stick/ctl', { open: false, at: now2() }).then(() => toast('막대과자의 날을 닫았어요')); }
+    else if (confirm('「막대과자의 날」을 열까요? 학생마다 마들렌 연출이 나와요.')) GDB.set('stick/ctl', { open: true, at: now2() }).then(() => toast('막대과자의 날을 열었어요'));
   });
   window.__stk = { W, open: () => open(), dayOn: () => dayOn(), openWin: t => openWin(t), viewer: id => viewer(id), intro: () => intro(), npcGive: (id, k) => npcGive(npcGet(id), k), npcPick: id => npcPick(npcGet(id)),
     mg: () => MG ? { i: MG.i, key: MG.key, t0: MG.t0, now: performance.now(), done: MG.done, scores: MG.scores.slice(), hint: MG.s.hint ? MG.s.hint() : null } : null, STEPS,
