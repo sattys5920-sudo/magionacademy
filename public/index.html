@@ -10089,7 +10089,20 @@ const gdNeedTxt = g => [...g[1].map(k => k === 'few' ? '물건을 조금만' : G
 function gdOk(g, on){ return g[1].every(k => k === 'few' ? Object.keys(on).filter(x => on[x] && x !== 'feeder').length <= 1 : on[k]); }
 function gdRepair(G){   // 예전에 도감 번호가 당겨져 사라진 손님: 기록(log)에 남아 있으면 도감에 다시 넣어요
   if (Array.isArray(G.dex)){ const o = {}; G.dex.forEach((d, i) => { if (d) o[i] = d; }); G.dex = o; } G.dex = G.dex || {}; let fixed = false;
-  (G.log || []).forEach(x => { if (x && x.seen && GD_G[x.g] && !G.dex[x.g]){ G.dex[x.g] = { n: 1, fd: [0, 0], ph: 0 }; fixed = true; } }); if (fixed) save(); }
+  (G.log || []).forEach(x => { if (x && x.seen && GD_G[x.g] && !G.dex[x.g]){ G.dex[x.g] = { n: 1, fd: [0, 0], ph: 0 }; fixed = true; } });
+  Object.keys(G.dex).forEach(k => { const i = +k; if (!(Number.isInteger(i) && i >= 0 && i < GD_G.length && G.dex[k] && typeof G.dex[k] === 'object')){ delete G.dex[k]; fixed = true; } });   /* 이상한 칸은 지워요 */
+  if (!G.fx2){   /* 당겨졌던 칸을 원래 손님 자리로: 당겨진 칸은 0 번부터 빈틈없이 붙어 있고, 그 순서가 진짜 손님(기록에 남은) 번호 순서와 같아요 */
+    const T = [...new Set((G.log || []).filter(x => x && x.seen && GD_G[x.g]).map(x => +x.g))].sort((a, b) => a - b), K = Object.keys(G.dex).map(Number), n = T.length;
+    const block = Array.from({ length: n }, (_, m) => m), union = new Set([...T, ...block]);
+    if (n && block.every(m => G.dex[m]) && T.some((t, m) => t !== m) && K.length === union.size && K.every(k => union.has(k))){
+      const old = block.map(m => G.dex[m]), nd = {};
+      K.forEach(k => { if (T.includes(k) && !block.includes(k)) nd[k] = G.dex[k]; });
+      T.forEach((t, m) => { const a = old[m] || {}, b = nd[t] || {}; nd[t] = { n: Math.max(a.n || 0, b.n || 0, 1), fd: [0, 1].map(j => ((a.fd || [])[j] || (b.fd || [])[j]) ? 1 : 0), ph: (a.ph || 0) | (b.ph || 0) }; });
+      G.dex = nd; fixed = true;
+    }
+    G.fx2 = 1; fixed = true;
+  }
+  if (fixed) save(); }
 // 지난 시간을 30 분씩 나눠서 손님 계산 (시드 고정이라 다시 계산해도 같아요)
 function gdSim(){
   const G = me.garden; if (!G) return 0; gdRepair(G); const now = now2(); let from = Math.max(G.last || G.at || now, now - GD_FEED), n = 0; G.log = G.log || [];
