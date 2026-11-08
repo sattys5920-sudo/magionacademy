@@ -908,6 +908,7 @@ body.gtride #bar,body.gtride #chat,body.gtride #ctx,body.gtride .corner{opacity:
 .say.bb-garden{background:#E8FFD8;color:#1E3A14;box-shadow:0 0 0 2px #5AA84A;border-radius:12px}.say.bb-garden::after{border-top-color:#5AA84A}.say.bb-garden::before{content:'';position:absolute;right:-6px;top:-8px;width:10px;height:8px;background:#5AA84A;border-radius:8px 0 8px 0}
 .say.bb-stick{background:#5A3424;color:#FFF0DC;box-shadow:0 0 0 2px #FF9EC0;border-radius:12px}.say.bb-stick::after{border-top-color:#FF9EC0}.say.bb-stick::before{content:'';position:absolute;right:-5px;top:-11px;width:4px;height:13px;background:linear-gradient(#F08AA8 0 64%,#E8B868 64%);box-shadow:0 0 0 1px #2A1A2E;transform:rotate(18deg)}
 .say.bb-lady{background:#FFF4EC;color:#3A1A1A;box-shadow:0 0 0 2px #D8303A;border-radius:12px}.say.bb-lady::after{border-top-color:#D8303A}.say.bb-lady::before{content:'';position:absolute;right:-7px;top:-9px;width:12px;height:10px;border-radius:6px 6px 5px 5px;background:radial-gradient(circle at 3px 5px,#2A1A2E 1.5px,transparent 2px),radial-gradient(circle at 8px 6px,#2A1A2E 1.5px,transparent 2px),linear-gradient(90deg,#E83A3A 0 45%,#2A1A2E 45% 55%,#E83A3A 55%);box-shadow:0 0 0 1px #2A1A2E}
+.evsec{margin:22px 4px 8px;padding:6px 10px;border-left:4px solid #E8A040;font:17px var(--f-pxb);color:#2A1A3E}.evsec small{font-size:14px;color:#7A6A8A}.evwrap{margin-bottom:10px}.evbar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 10px;margin-bottom:-6px;border-radius:12px 12px 0 0;background:var(--panel2);font-size:13px;color:var(--sub)}
 #hibv,#hibmap{position:fixed;left:50%;top:calc(50% + 4px);transform:translate(-50%,-50%) scale(.92);opacity:0;transition:all .35s cubic-bezier(.2,1.3,.4,1);z-index:330;width:min(94vw,440px);max-height:calc(100vh - 110px);overflow:auto;background:rgba(18,16,30,.97);border:2px solid #E8A040;border-radius:16px;padding:12px;box-shadow:0 10px 0 rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px}#hibv.on,#hibmap.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
 #hibv .hd,#hibmap .hd{display:flex;justify-content:space-between;align-items:center;gap:8px}#hibv .hd b,#hibmap .hd b{font-family:var(--f-pxb);font-size:16px;color:#FFE2B0}#hibv .hd button,#hibmap .hd button{width:44px;height:44px;border-radius:22px;border:0;background:rgba(255,255,255,.08);color:#F1E9FF;font-size:15px}
 #hibv .hst{display:flex;gap:10px;align-items:center;background:#1E2A26;border-radius:12px;padding:8px}#hibv .hst canvas{width:144px;height:120px;image-rendering:pixelated;flex:none}#hibv .hg{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;font:13px var(--f-pxb);color:var(--sub)}
@@ -14532,7 +14533,18 @@ function adminShoutHTML(){
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-sha],[data-shdel]'); if (!b || !F || !db) return;
   if (b.dataset.shdel) return F.set(F.ref(db, 'shout/' + b.dataset.shdel), null).then(() => toast('지웠어요'));
   const a = b.dataset.sha; if (a === 'off') F.set(F.ref(db, 'shoutctl'), { off: true }).then(() => toast('확성기를 껐어요')); else if (a === 'on') F.set(F.ref(db, 'shoutctl'), null).then(() => toast('확성기를 켰어요')); else if (a === 'clear' && confirm('확성기 기록을 다 지울까요?')) F.set(F.ref(db, 'shout'), null).then(() => toast('기록을 지웠어요')); });
-function adminEventHTML(){ return adminEventOverview() + adminEvListHTML() + (typeof adminGrHTML === 'function' ? adminGrHTML() : '') + (typeof adminRaidHTML === 'function' ? adminRaidHTML() : '') + adminShoutHTML() + BM.adminHTML() + COLD.adminHTML() + HIB.adminHTML() + STK.adminHTML() + CK.adminHTML() + adminMorphHTML() + adminSnowHTML() + adminBabyHTML() + adminFamHTML() + adminFairyHTML() + adminSeedHTML() + adminTildaHTML() + adminNubiHTML() + adminWishHTML() + adminGardenHTML() + adminKnitHTML() + adminBqHTML() + adminBlnHTML() + adminCapHTML() + adminLtHTML() + adminOtumoHTML() + adminNewNpcHTML() + adminGtrainHTML() + adminEventHTML0() + adminPuzzleHTML() + adminLanternHTML() + adminPumpkinHTML() + adminStargazeHTML(); }
+function adminEventHTML(){
+  const G = f => { try { return typeof f === 'function' ? f() || '' : ''; } catch(e){ return ''; } };
+  const REP = [G(() => adminStargazeHTML()), G(() => adminGtrainHTML()), G(() => adminLanternHTML()), G(() => adminEventHTML0()), G(() => adminPuzzleHTML()), G(() => adminPumpkinHTML()), G(() => adminMorphHTML()), G(() => adminFairyHTML()), G(typeof adminGrHTML === 'function' ? adminGrHTML : null), G(typeof adminRaidHTML === 'function' ? adminRaidHTML : null)];
+  const ONCE = [['cold', () => COLD.adminHTML()], ['hib', () => HIB.adminHTML()], ['stick', () => STK.adminHTML()], ['ck', () => CK.adminHTML()], ['bm', () => BM.adminHTML()], ['snow', () => adminSnowHTML()], ['baby', () => adminBabyHTML()], ['fam', () => adminFamHTML()], ['seed', () => adminSeedHTML()], ['tilda', () => adminTildaHTML()],
+    ['nubi', () => adminNubiHTML()], ['wish', () => adminWishHTML()], ['garden', () => adminGardenHTML()], ['knit', () => adminKnitHTML()], ['bouquet', () => adminBqHTML()], ['balloon', () => adminBlnHTML()], ['capsule', () => adminCapHTML()], ['ltr', () => adminLtHTML()], ['otumo', () => adminOtumoHTML()], ['newnpc', () => adminNewNpcHTML()]];
+  const D = Object.fromEntries(EV_ONCE.map(([k, , d]) => [k, !!d])), card = ([k, f], done) => `<div class="evwrap"><div class="evbar"><span>일회성 · ${done ? '연 적 있어요' : '아직 안 열었어요'}</span><button class="btn sm${done ? '' : ' go'}" data-evd="${k}:${done ? 0 : 1}">${done ? '되돌리기' : '열었음'}</button></div>${G(f)}</div>`;
+  const done = ONCE.filter(([k]) => evDone(k, D[k])), todo = ONCE.filter(([k]) => !evDone(k, D[k])), H = (t, n) => `<div class="evsec">${t} <small>${n}</small></div>`;
+  return adminEventOverview() + adminShoutHTML()
+    + H('아직 안 연 일회성 이벤트', todo.length) + todo.map(x => card(x, false)).join('')
+    + H('여러 번 여는 이벤트', REP.filter(Boolean).length) + REP.join('')
+    + H('연 적 있는 일회성 이벤트', done.length) + done.map(x => card(x, true)).join('');
+}
 // 이벤트 한눈에: 열려 있는지 · 진행도 · 참가한 학생 수
 // 이벤트마다 장면을 본 학생(또는 보상을 받은 학생) 수 → 다 봤는지 보고 닫아요
 function adminSeen(){
@@ -14544,20 +14556,10 @@ function adminSeen(){
     pkEnd: pk.id ? c(p => p.pk && p.pk.id === pk.id && p.pk.fin) : 0, lnEnd: ln.id ? c(p => p.lnr && p.lnr.id === ln.id) : 0, pzEnd: pz.id ? c(p => p.pz && p.pz.id === pz.id) : 0 };
 }
 // 이벤트 분류: 여러 번 여는 이벤트 · 일회성 (연 적 있음 / 아직 안 엶) · 관리자가 체크하면 adm/evdone/<키> 에 남아요
-const EV_REPEAT = ['별 보는 밤', '유령 열차', '유령 등불 찾기', '용의 알 지키기', '유령 선장의 보물 지도', '호박밭 같이 가꾸기', '마녀 솥 대폭발', '요정 시장', '승급 실기 시험', '레이드 · 거울 너머'];
 const EV_ONCE = [['seed', '씨앗 대회 · 무슈 블랑', 1], ['tilda', '수상한 기척 · 마틸다', 1], ['nubi', '낡은 양호실의 누비', 1], ['newnpc', '새 친구 맞이하기', 1], ['ltr', '배트리의 쏟아진 편지', 1], ['cold', '양호실 겨울 감기', 1],
   ['baby', '길 잃은 아기 동물'], ['snow', '눈사람'], ['fam', '꺼지지 않는 불씨 (사역마)'], ['garden', '창밖 정원'], ['bm', '아울라의 한밤 도서관 · 열두 개의 밤'], ['balloon', '마음 풍선'], ['ck', '마들렌의 쿠키 상자'], ['otumo', '오투모 등장'],
   ['wish', '별빛 소원'], ['capsule', '시간 캡슐'], ['knit', '겨울 뜨개질'], ['bouquet', '꽃말 꽃다발 공방'], ['stick', '막대과자의 날'], ['hib', '겨울잠 준비']];
 const evDone = (k, d) => { const v = (AD.evdone || {})[k]; return v === undefined ? !!d : !!v; };
-function adminEvListHTML(){
-  const li = (t, btn) => `<div class="li"><div class="main"><span class="t">${t}</span></div>${btn || ''}</div>`;
-  const done = EV_ONCE.filter(([k, , d]) => evDone(k, d)), todo = EV_ONCE.filter(([k, , d]) => !evDone(k, d));
-  return `<div class="adcard"><b>이벤트 분류</b>
-    <div class="s">일회성 이벤트를 연 뒤 「열었음」을 눌러 두면 「연 적 있는 이벤트」로 옮겨져요.</div>
-    <b class="s">여러 번 여는 이벤트 (${EV_REPEAT.length})</b><div class="box px">${EV_REPEAT.map(t => li(esc(t))).join('')}</div>
-    <b class="s">연 적 있는 일회성 이벤트 (${done.length})</b><div class="box px">${done.map(([k, t]) => li(esc(t), `<button class="btn sm" data-evd="${k}:0">되돌리기</button>`)).join('') || '<div class="s">아직 없어요</div>'}</div>
-    <b class="s">아직 안 연 일회성 이벤트 (${todo.length})</b><div class="box px">${todo.map(([k, t]) => li(esc(t), `<button class="btn sm go" data-evd="${k}:1">열었음</button>`)).join('') || '<div class="s">모두 열었어요</div>'}</div></div>`;
-}
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-evd]'); if (!b || !window.__adm || !F || !db) return; const [k, v] = b.dataset.evd.split(':'); F.set(F.ref(db, 'adm/evdone/' + k), v === '1').catch(err => toast('저장하지 못했어요: ' + err.message)); });
 function adminEventOverview(){
   const SN = adminSeen();
