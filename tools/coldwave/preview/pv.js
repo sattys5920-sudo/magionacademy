@@ -72,7 +72,7 @@ window.__coldPv = (() => {
     // 맞는 물약
     v = win('레오 · 목감기', `<h4>건넬 물약을 골라요</h4><div class="g4">${Object.keys(POT).map(k => `<button data-cpp="${k}"><img src="art/cold/potion_${k}.png" style="width:32px;height:32px">${POT[k][0]}</button>`).join('')}</div>`); await famSleep(1400);
     await tap('[data-cpp="throat"]', 300); await closeW();
-    sfx('sparkle'); sick.leo = []; World.sayNpc('leo', '목이 시원해. ....쓰긴 쓰다. 그래도 고마워.', 3200); await famSleep(1800); toast('레오가 나았어요 · 하트 +20'); await famSleep(2600);
+    sfx('sparkle'); sick.leo = []; World.sayNpc('leo', '목이 시원하다. ....쓰긴 쓰네. 고맙다.', 3200); await famSleep(1800); toast('레오가 나았어요 · 하트 +20'); await famSleep(2600);
     sfx('win'); await textCard('이름표 「꼬마 간호사」', '처음으로 환자를 고쳤어요', 2600); await famSleep(600);
     await textCard('서로 다른 5 명을 고치면', '', 1600);
     await card('cabinet', '가구 「작은 약장」', '감기 물약 네 병이 들어 있어요', 66, 2600); await famSleep(400);
