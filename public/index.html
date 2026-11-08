@@ -14286,9 +14286,9 @@ const CAT = (() => {
       const cat = (k, x, y, a, bob) => { if (!a) return; g.globalAlpha = a; put(g, k, Math.round(x - 16), Math.round(y - 30 - (bob || 0))); g.globalAlpha = 1; };
       KS.forEach((k, i) => cat(k, SEAT[k][0], SEAT[k][1], A.show[k] || 0, A.wag[k] && now < A.wag[k] ? Math.round(Math.abs(Math.sin(now / 90)) * 2) : 0));
       if (A.show.nabi){ g.globalAlpha = A.show.nabi; if (NI.complete && NI.naturalWidth) g.drawImage(NI, 0, 0, 64, 64, NABI_AT[0] - 32 + (A.wrap ? -14 : 0), NABI_AT[1] - 60 - (A.tap && now < A.tap ? 1 : 0), 64, 64); g.globalAlpha = 1; }
-      if (A.wrap){ g.fillStyle = '#2F0C18'; const tail = [[-7, 0], [-6, 2], [-4, 3], [-1, 4], [2, 4], [5, 3], [7, 1], [8, -1]]; tail.forEach(([dx, dy]) => g.fillRect(160 + dx * 1.6 - 1, 152 + dy - 1, 4, 4)); g.fillStyle = '#F0A040'; tail.forEach(([dx, dy]) => g.fillRect(160 + dx * 1.6, 152 + dy, 2, 2)); }
       FR.forEach((f, i) => cat('baby3', FX[i], 158, A.fr, 0));
       if (A.show.baby) cat('baby' + A.baby, 160, 158, A.show.baby, A.hop && now < A.hop ? Math.round(Math.sin((A.hop - now) / 500 * Math.PI) * 6) : 0);
+      if (A.wrap){ const tail = [[150, 132], [149, 136], [149, 140], [150, 144], [151, 148], [152, 151], [154, 154], [157, 156], [161, 157], [165, 156], [168, 154], [170, 151]]; g.fillStyle = '#2F0C18'; tail.forEach(([x, y]) => g.fillRect(x - 1, y - 1, 4, 4)); g.fillStyle = '#F0A040'; tail.forEach(([x, y]) => g.fillRect(x, y, 2, 2)); g.fillStyle = '#FFE0B0'; g.fillRect(170, 151, 2, 1); }   /* 나비 꼬리로 아기 고양이를 감싸요 */
       requestAnimationFrame(draw); };
     const sleep = ms => new Promise(r => { const t0 = Date.now(); const k = () => (skip || Date.now() - t0 >= ms) ? r() : setTimeout(k, 50); k(); });
     const fade = async (k, ms = 500) => { const t0 = performance.now(); while (!skip){ const p = Math.min(1, (performance.now() - t0) / ms); if (k === 'fr') A.fr = p; else A.show[k] = p; if (p >= 1) break; await new Promise(r => requestAnimationFrame(r)); } if (k === 'fr') A.fr = 1; else A.show[k] = 1; };
@@ -14421,7 +14421,7 @@ const CAT = (() => {
       <div class="abchips"><span>${c.open ? '열림' : '닫힘'}</span><span>시작한 학생 <b>${ids.filter(st).length}</b> 명</span><span>끝낸 학생 <b>${ids.filter(id => st(id) && st(id).done).length}</b> 명</span></div>
       ${ids.map(row).join('')}
       <div class="s" style="margin:8px 0 4px">아기 고양이 이름 ${nl.length} 개</div>
-      ${nl.map(u => `<div class="sdarow"><span><b style="${HD[u] ? 'text-decoration:line-through;opacity:.5' : ''}">${esc(NM[u])}</b> <span class="s">${nk(u)}</span></span><button class="btn sm" data-cath="${esc(u)}:${HD[u] ? 0 : 1}">${HD[u] ? '보이기' : '숨기기'}</button></div>`).join('') || '<div class="s">아직 없어요</div>'}
+      ${nl.map(u => `<div class="sdarow" style="grid-template-columns:1fr auto;align-items:center"><span><b style="${HD[u] ? 'text-decoration:line-through;opacity:.5' : ''}">${esc(NM[u])}</b> <span class="s">${nk(u)}</span></span><button class="btn sm" style="width:auto;min-width:76px" data-cath="${esc(u)}:${HD[u] ? 0 : 1}">${HD[u] ? '보이기' : '숨기기'}</button></div>`).join('') || '<div class="s">아직 없어요</div>'}
       <div class="s" style="margin-top:6px">시작하면 학생마다 밤(21 ~ 4 시)에 아기 고양이 연출이 나와요. 학생마다 시작한 밤부터 5 일. 숨긴 이름은 끝 장면 · 일지 · 친구 방에서 안 보여요.</div></div>`;
   }
   document.addEventListener('click', e => {

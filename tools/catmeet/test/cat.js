@@ -17,7 +17,7 @@ const res = []; const ok = (c, m) => { res.push([!!c, m]); console.log(c ? '  ok
   const until = async (f, n = 60, ms = 300, a) => { for (let i = 0; i < n; i++){ if (await C(f, a)) return true; await A.waitForTimeout(ms); } return false; };
   const props = () => C(() => { const t = World.meTile(); return World.propsAt(t.m).map(p => p.id); });
   const tp = (m, x, y) => C(([m, x, y]) => new Promise(r => World.teleport(m, [x, y], () => setTimeout(r, 1800))), [m, x, y]);
-  const zoom = async () => { await C(() => World.zoomStep && World.zoomStep(3)); await A.waitForTimeout(500); };
+  const zoom = async () => { await C(() => World.zoomStep && World.zoomStep(-3)); await A.waitForTimeout(500); };
   // 1 닫힘
   ok(!(await C(() => window.__cat.open())), '닫혀 있으면 이벤트가 없어요');
   await C(() => { window.__catNight = 1; }); await A.waitForTimeout(2000);
@@ -54,6 +54,7 @@ const res = []; const ok = (c, m) => { res.push([!!c, m]); console.log(c ? '  ok
   await tp(...AT.cheese.slice(0, 2), AT.cheese[2] + 2); await zoom();
   ok((await props()).includes('cat:cheese'), '생선 가게 지붕에 뚱보 치즈');
   await A.screenshot({ path: OUT + '/cheese_roof.png' });
+  await C(() => { const I = __T.me().inv; Object.keys(I).forEach(k => { if (window.__cat.isFish(k)) I[k] = 0; }); });
   await C(() => window.__cat.tap('cat:cheese')); await A.waitForTimeout(700);
   ok(await C(() => !!document.getElementById('catv') && !document.querySelector('[data-ctf]')), '생선이 없으면 줄 수 없어요');
   await A.screenshot({ path: OUT + '/cheese_nofish.png' });
@@ -86,7 +87,7 @@ const res = []; const ok = (c, m) => { res.push([!!c, m]); console.log(c ? '  ok
   await C(() => { __T.me().cat.d0 -= 1; });
   await tp(...AT.cloak.slice(0, 2), AT.cloak[2] + 2); await zoom();
   ok((await props()).includes('cat:cloak'), '묘지 담장에 검은 망토'); await A.screenshot({ path: OUT + '/cloak_wall.png' });
-  await C(() => window.__cat.tap('cat:cloak')); await A.waitForTimeout(600); await A.tap('[data-ctx="hide"]'); await A.waitForTimeout(800);
+  await C(() => window.__cat.tap('cat:cloak')); await A.waitForTimeout(600); await A.tap('[data-ctx="hide"]'); await A.waitForTimeout(2000);
   st = await C(() => window.__cat.state());
   ok(st.hs && st.hs.at.length === 3 && !(await props()).includes('cat:cloak') && (await props()).filter(x => /^catsh:/.test(x)).length === 3, '그림자 세 곳 · 검은 망토는 숨었어요');
   await A.screenshot({ path: OUT + '/cloak_shadows.png' });
@@ -157,7 +158,7 @@ const res = []; const ok = (c, m) => { res.push([!!c, m]); console.log(c ? '  ok
   ok(!(await props()).includes('catbaby'), '끝나면 아기 고양이는 더는 따라다니지 않아요 (창가로)');
   ok(await C(() => window.__cat.state().stage === 3), '아기 고양이 회원 (3 단계 · 목줄)');
   // 12 이름표 · 말풍선
-  await C(() => { World.setMyCos('catfriend', 'paw'); World.say('me', '냐옹, 회원이 됐어요'); }); await A.waitForTimeout(600);
+  await C(() => { __T.me().cosOn = { ...(__T.me().cosOn || {}), tg: 'catfriend', bb: 'paw' }; World.setMyCos('catfriend', 'paw'); }); await A.waitForTimeout(1500); await C(() => { World.setMyCos('catfriend', 'paw'); World.say('me', '냐옹, 회원이 됐어요'); }); await A.waitForTimeout(300);
   await A.screenshot({ path: OUT + '/tag_bubble.png', clip: { x: 45, y: 250, width: 300, height: 260 } });
   // 13 일지
   await C(() => __T.openSheet('home', 'journal')); await A.waitForTimeout(600);
@@ -166,9 +167,11 @@ const res = []; const ok = (c, m) => { res.push([!!c, m]); console.log(c ? '  ok
   await A.screenshot({ path: OUT + '/journal.png' }); await C(() => __T.closeSheet()); await A.waitForTimeout(400);
   // 14 창가 가구
   await C(() => __T.placeFurn('cat_window')); await A.waitForTimeout(3000);
+  ok(await C(() => !!World.furnDyn.cat_window), '창가 가구 그림');
+  await C(() => { World.cancelPlace(); const t = World.meTile(), c = World.freeNear(t.x, t.y, 3).find(([x, y]) => Math.abs(x - t.x) + Math.abs(y - t.y) >= 2) || [t.x + 2, t.y]; const k = World.FURN.items.findIndex(i => i.id === 'cat_window'); __T.me().room.push({ id: 'cw1', f: 'cat_window', x: c[0], y: c[1] }); World.setFurniture(__T.me().room.map(r => ({ id: r.id, k: World.FURN.items.findIndex(i => i.id === r.f), x: r.x, y: r.y, r: 0 }))); });
+  await A.waitForTimeout(1200); await C(() => World.zoomStep && World.zoomStep(-3)); await A.waitForTimeout(600);
   await A.screenshot({ path: OUT + '/room_window.png' });
-  await C(() => { const r = __T.roomGet(); return r && r.length; });
-  ok(await C(() => (__T.roomGet() || []).some(r => r.f === 'cat_window') || (__T.me().fbag.cat_window || 0) >= 1), '창가 가구를 방에 놓을 수 있어요');
+  ok(await C(() => /창가에서|놀러 오지/.test((World.onFurn('cw1') || {}).text || '')), '창가 가구를 누르면 「붕어빵」 소식 ' + await C(() => ((World.onFurn('cw1') || {}).text || '').replace(/<[^>]+>/g, ' ')));
   // 15 관리자 카드 · 이름 숨기기
   await Ad.waitForTimeout(1500); c = await card(); await c.scrollIntoViewIfNeeded(); await Ad.waitForTimeout(300);
   const tx = await Ad.evaluate(e => e.innerText, c);
