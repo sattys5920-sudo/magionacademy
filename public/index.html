@@ -2394,6 +2394,7 @@ const xAll = job => Array.from({ length: 15 }, (_, i) => xDef(job, Math.floor(i 
 const xMpK = lv => 1 + .15 * (Math.max(1, lv) - 1);   // 스킬을 올릴수록 위력이 커지는 만큼 MP도 더 들어요 (Lv5는 1.6배)
 const xPw = (o, lv) => 1 + .18 * (lv - 1), xEfv = (o, lv) => o.t === 'deb' ? Math.min(.9, o.v * (1 + .15 * (lv - 1))) : o.v * (1 + .15 * (lv - 1));   // 느려짐·약해짐은 90%까지
 const xPct = (o, lv) => Math.min(.8, o.pct * (1 + .125 * (Math.max(1, lv) - 1))), xTs = lv => +(4 * (1 + .2 * (Math.max(1, lv) - 1))).toFixed(1);   // 체력 비율 회복 · 시간 정지 초
+const xMul = n => String(Math.round(n * 100) / 100);   /* 배율은 소수 둘째 자리까지 (×0.45 → ×0.5 처럼 반올림돼서 다음 레벨이 같아 보이던 것) */
 function xDesc(o, lv){
   if (o.pas) return o.pas === 'surv' ? '패시브 · 전투마다 한 번, 쓰러질 공격을 체력 1로 버텨요' : `패시브 · ${XPASN[o.pas]} ${o.pas === 'def' ? '-' : '+'}${Math.round(XPAS[o.pas] * 100 * lv)}%`;
   const L = Math.max(1, lv), mp = o.mp ? ` · MP ${xSkMp(o, L, me && me.ex ? xLv(me.ex.exp || 0).L : 1)}` : '';
@@ -2406,9 +2407,9 @@ function xDesc(o, lv){
     return `${Math.round(q.sec * (1 + .1 * (L - 1)) * 10) / 10}초간 ${q.n}${ga} ${q.every}초마다 ${what} · 소환수 체력 (내 최대 체력 ${Math.round(30 * (1 + .25 * (L - 1)) * (q.hpm || 1))}% + ${Math.round(16 * (1 + .25 * (L - 1)) * (q.hpm || 1))})${mp}`;
   }
   if (o.ds && o.v != null){ const a = Math.round(o.v * 100), b = Math.round(xEfv(o, L) * 100); if (a !== b && o.ds.includes(a + '%')) o = { ...o, ds: o.ds.split(a + '%').join(b + '%') }; }   // 설명이 고정된 스킬도 레벨에 따라 오르는 수치는 바꿔 보여 줘요 (실제 효과는 원래 레벨만큼 올라요)
-  if (o.ds){ if (o.t === 'dmg' && o.p) return `${o.tg === 'all' ? '적 전체' : '적 하나'} ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)}${o.hits > 1 ? ` ×${o.hits}회` : ''} · ${o.ds}${mp}`; return o.ds + mp; }
+  if (o.ds){ if (o.t === 'dmg' && o.p) return `${o.tg === 'all' ? '적 전체' : '적 하나'} ${xSname(o.st)} ×${xMul(o.p * xPw(o, L))}${o.hits > 1 ? ` ×${o.hits}회` : ''} · ${o.ds}${mp}`; return o.ds + mp; }
   const who = { one: '적 하나', all: o.t === 'heal' || o.t === 'buff' || o.t === 'mp' ? '아군 전체' : '적 전체', self: '나' }[o.tg];
-  const sc = { dmg: `${who}에게 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 피해${o.w ? ' (쓰고 나면 한참 쉬어요)' : ''}`, heal: `${o.tg === 'all' ? '아군 전체' : '아군 하나'} 치유 ×${(o.p * xPw(o, L)).toFixed(1)}`, revive: '쓰러진 동료 하나를 체력 절반으로 살려요', buff: `${who} ${o.key === 'atk' ? '공격' : o.key === 'spd' ? '속도' : '받는 피해'} ${o.key === 'dmgIn' ? '-' : '+'}${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, deb: `${who} ${o.key === 'slow' ? '속도' : '공격'} -${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, dot: `${who}에게 8초 동안 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 지속 피해`, stun: `적 하나를 ${xSname(o.st)} ×${(o.p * xPw(o, L)).toFixed(1)} 피해 + 행동 늦추기`, mp: `아군 전체 MP ${Math.round(xEfv(o, L) * 100)}% 회복 · 내 차례 ${o.cd || 3} 번 뒤에 다시 써요` }[o.t];
+  const sc = { dmg: `${who}에게 ${xSname(o.st)} ×${xMul(o.p * xPw(o, L))} 피해${o.w ? ' (쓰고 나면 한참 쉬어요)' : ''}`, heal: `${o.tg === 'all' ? '아군 전체' : '아군 하나'} 치유 ×${xMul(o.p * xPw(o, L))}`, revive: '쓰러진 동료 하나를 체력 절반으로 살려요', buff: `${who} ${o.key === 'atk' ? '공격' : o.key === 'spd' ? '속도' : '받는 피해'} ${o.key === 'dmgIn' ? '-' : '+'}${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, deb: `${who} ${o.key === 'slow' ? '속도' : '공격'} -${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, dot: `${who}에게 8초 동안 ${xSname(o.st)} ×${xMul(o.p * xPw(o, L))} 지속 피해`, stun: `적 하나를 ${xSname(o.st)} ×${xMul(o.p * xPw(o, L))} 피해 + 행동 늦추기`, mp: `아군 전체 MP ${Math.round(xEfv(o, L) * 100)}% 회복 · 내 차례 ${o.cd || 3} 번 뒤에 다시 써요` }[o.t];
   return sc + mp;
 }
 const xSname = k => ({ atk: '공격', mag: '마법', heal: '치유' }[k]);
