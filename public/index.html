@@ -5972,7 +5972,9 @@ function bagInvIds(){
   const order = [...MATS, ...CATCH, ...POTIONS, ...DISHES], set = new Set(order);
   return [...order, ...Object.keys(me.inv || {}).filter(k => !set.has(k) && ITEM[k])].filter(k => me.inv[k] > 0);
 }
-const bagCloth = () => Object.keys(me.closet || {}).map(key => { const [cat, pid] = key.split(':'); const list = World.Avatar.meta.parts[cat] || [], i = list.findIndex(p => p.id === pid); return i < 0 ? null : { key, cat, i, p: list[i] }; }).filter(Boolean);
+const bagCloth = () => { const L = Object.keys(me.closet || {}).map(key => { const [cat, pid] = key.split(':'); const list = World.Avatar.meta.parts[cat] || [], i = list.findIndex(p => p.id === pid); return i < 0 ? null : { key, cat, i, p: list[i] }; }).filter(Boolean);
+  ['hat', 'acc', 'neck', 'cape'].forEach(cat => { const list = World.Avatar.meta.parts[cat] || [], i = me.av && me.av[cat], p = list[i]; if (p && p.f != null && !L.some(c => c.cat === cat && c.i === i)) L.push({ key: cat + ':' + p.id, cat, i, p, worn: 1 }); });   // 옛 꾸미기에서 고른 모자 · 귀 · 꼬리처럼 옷장에 없지만 입고 있는 소품도 보여서 벗을 수 있게
+  return L; };
 // 탭별 칸 목록: { id, kind, n, name, ico }
 function bagEntries(t){
   const inv = k => ({ id: k, kind: 'inv', n: me.inv[k], name: ITEM[k] || k, ico: ic(k) });
@@ -6053,7 +6055,7 @@ function renderBag(){
   on('[data-btrash]', async b => { const k = b.dataset.btrash; if (!(me.inv[k] > 0)) return;
     if (!await confirmBox(`${withJosa(ITEM[k] || k, '을', '를')} 하나 버릴까요? 되돌릴 수 없어요.`, '버리기', '아니요', true)) return;
     me.inv[k] = Math.max(0, (me.inv[k] || 0) - 1); bagMsg = `${withJosa(ITEM[k] || k, '을', '를')} 하나 버렸어요.`; toast(bagMsg); save(); redraw(); });
-  on('[data-boff]', b => { const cat = b.dataset.boff, n = World.Avatar.meta.parts[cat].findIndex(p => p.f === null); if (n < 0) return; me.av[cat] = n; me.av = World.Avatar.fix(me.av); delete me.av.house; save(); World.setPlayer(me.nick, avOf(me)); const hf = $('#hudFace'); if (hf) delete hf.dataset.k; toast('벗었어요'); sfx('pop'); redraw(); });   // 모자 · 장신구 · 목 장식 · 망토는 벗을 수 있어요
+  on('[data-boff]', b => { const cat = b.dataset.boff, n = World.Avatar.meta.parts[cat].findIndex(p => p.f === null); if (n < 0) return; { const w = bagCloth().find(c => c.cat === cat && c.worn); if (w){ me.closet = me.closet || {}; me.closet[w.key] = 1; } }   /* 옷장에 없던 소품은 벗을 때 옷장에 넣어 둬요 (다시 입을 수 있게) */ me.av[cat] = n; me.av = World.Avatar.fix(me.av); delete me.av.house; save(); World.setPlayer(me.nick, avOf(me)); const hf = $('#hudFace'); if (hf) delete hf.dataset.k; toast('벗었어요'); sfx('pop'); redraw(); });   // 모자 · 장신구 · 목 장식 · 망토는 벗을 수 있어요
   on('[data-bwear]', b => { const c = bagCloth().find(x => x.key === b.dataset.bwear); if (!c) return; me.av[c.cat] = c.i; me.av = World.Avatar.fix(me.av); delete me.av.house; save(); World.setPlayer(me.nick, avOf(me)); const hf = $('#hudFace'); if (hf) delete hf.dataset.k; toast(`${withJosa(c.p.n, '을', '를')} 입었어요`); redraw(); });
   on('[data-bavatar]', () => { avDraft = null; openSheet('home', 'avatar'); });
   // 보여 준 칸은 '본 것'으로
