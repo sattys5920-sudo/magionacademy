@@ -13702,7 +13702,8 @@ const COLD = (() => {
   const LOOK = { fever: '얼굴이 빨갛고 비틀거려요', throat: '목소리가 쉬었어요', nose: '재채기 · 코가 빨개요', chill: '덜덜 떨고 웅크려요' };
   // 감기 물약: [아이템 id, 이름, 재료] · 꿀 목 물약은 「체리 물약」(벌꿀 · 산딸기 · 은방울꽃)과 겹쳐서 벌꿀을 두 개 넣어요
   const POT = { fever: ['cp_fever', '열 내림 물약', ['g2_moss', 'g2_fern', 'g2_eve']], throat: ['cp_throat', '꿀 목 물약', ['honey', 'honey', 'g2_rasp', 'g2_bell']], nose: ['cp_nose', '콧물 뚝 물약', ['g2_blue', 'g2_catnip', 'g2_daisy']], chill: ['cp_chill', '따끈 찜질 물약', ['g2_pseed', 'g2_frostleaf', 'g2_sseed']] };
-  const ALIAS = { g_blueb: 'g2_blue', g_lily: 'g2_bell', g_evening: 'g2_eve', g_sunf: 'g2_sseed' };   // 온실에서 나는 같은 이름 재료도 받아요
+  const ALIAS = { g_blueb: 'g2_blue', g_lily: 'g2_bell', g_evening: 'g2_eve', g_sunf: 'g2_sseed', g_moss: 'g2_moss' };   // 온실에서 나는 같은 이름 재료도 받아요
+  const ALT = { fever: ['g_mint', 'drop', 'g_moss'], throat: ['honey', 'milk', 'g_ginger'], nose: ['g_blueb', 'g_mint', 'g_chamo'], chill: ['g_ginger', 'g_wheat', 'wool'] };   /* 채집물 없이 온실 작물 · 생물 재료로 끓이는 레시피 (기존 물약과 안 겹쳐요) */
   const PID = Object.fromEntries(KS.map(k => [POT[k][0], k]));
   KS.forEach(k => { ITEM[POT[k][0]] = POT[k][1]; });
   const PIDS = ['nabi', 'batri', 'kappa', 'aula', 'mandi', 'jipsin', 'madeleine', 'stella', 'leo', 'otumo', 'dodo', 'selin', 'bone'];   // 세라 선생님은 빼요
@@ -13813,7 +13814,8 @@ const COLD = (() => {
     v.innerHTML = `<div class="hd"><b>${title}</b><button data-cdx="close" aria-label="닫기">✕</button></div><div class="cw">${body}</div>`; coldOn = true; return v;
   }
   function closeWin(){ const v = $('#coldv'); if (v){ v.classList.remove('on'); setTimeout(() => v.remove(), 300); } W = null; if (!SC) coldOn = false; }
-  const recipeLine = k => { const c = {}; POT[k][2].forEach(m => { c[m] = (c[m] || 0) + 1; }); return Object.entries(c).map(([m, n]) => `${esc(ITEM[m] || m)}${n > 1 ? ' × ' + n : ''}`).join(' · '); };
+  const lineOf = L => { const c = {}; L.forEach(m => { c[m] = (c[m] || 0) + 1; }); return Object.entries(c).map(([m, n]) => `${esc(ITEM[m] || m)}${n > 1 ? ' × ' + n : ''}`).join(' · '); };
+  const recipeLine = k => `${lineOf(POT[k][2])} / 또는 ${lineOf(ALT[k])}`;
   function chartHTML(){
     const s = S(), L = slots(s), today = dIdx(s), show = L.map((x, i) => ({ ...x, i })).filter(x => x.d === Math.min(today, DAYS - 1) || !done(s, x.i));
     return `${show.length ? `<h4>맡은 환자</h4>${show.map(x => `<div class="pt">${spI('bubble_' + x.k, 2)}<div>${esc(nm(x.id))}<small>${done(s, x.i) ? '다 나았어요' : x.d < today ? `${x.d + 1} 일째부터 아파요` : '아파요'}</small></div>${done(s, x.i) ? '<span class="ok">고침</span>' : '<span class="no">진료 전</span>'}</div>`).join('')}` : ''}
@@ -13947,7 +13949,7 @@ const COLD = (() => {
   // ---------- 물약 교실 솥 ----------
   function recipe(sl){   // 솥에 넣은 재료 → 감기 물약 id (열렸을 때만)
     if (!open() || !sl || sl.length < 3) return null; const key = sl.map(k => ALIAS[k] || k).sort().join(',');
-    return KS.map(k => POT[k]).find(P => P[2].slice().sort().join(',') === key)?.[0] || null;
+    const kk = KS.find(k => POT[k][2].slice().sort().join(',') === key || ALT[k].map(m => ALIAS[m] || m).sort().join(',') === key); return kk ? POT[kk][0] : null;
   }
   const rec = p => PID[p] ? POT[PID[p]][2] : null;
   const recipeRows = () => open() && me && me.cold && me.cold.hi ? KS.map(k => `<button class="li" data-recipe="${POT[k][0]}">${icon(POT[k][0])}<span class="main"><span class="t">${POT[k][1]}</span><span class="d">${recipeLine(k)}</span></span><span class="tag">감기</span></button>`).join('') : '';
