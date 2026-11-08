@@ -9276,7 +9276,7 @@ document.addEventListener('click', e => {
     if (T.length >= 2) return sdPanel(sdPick(P.done_talk)); if (T.length && now < T[T.length - 1] + SD_GAP) return sdPanel(sdPick(P.wait_talk));
     s.t = [...T, now]; save(); sfx('pop'); return sdPanel(P.talk[SD_STK[s.st]][Math.min(1, T.length)]); }
   if (a === 'fruit'){ if (s.st < 5) return; if (s.fr === todayKey()) return sdPanel(sdPick(P.fruit_done));
-    const k = 'sf_' + P.id; me.inv[k] = (me.inv[k] || 0) + 1; s.fr = todayKey(); s.hv = (s.hv || 0) + 1; save(); hud(); sfx('pick'); toast(`${ITEM[k]} +1`); return sdPanel(sdPick(P.fruit)); }
+    const k = 'sf_' + P.id; me.inv[k] = (me.inv[k] || 0) + 1; s.fr = todayKey(); s.hv = (s.hv || 0) + 1; save(); hud(); sfx('pick'); toast(`${ITEM[k]} +1`); return sdPanel(sdPick(P.fruit_done)); }   /* 딴 뒤 대사: 열매 이름(글자)에서 뽑던 것을 고쳤어요 */
 });
 // 처음 연출: 무슈 블랑이 내 곁에 스르륵 → 씨앗 열두 개가 빙글빙글 → 하나가 나를 골라요 → 내 방 화분에 심어져요
 const BLANC_SH = new Image(); BLANC_SH.src = 'art/blanc.png?v=1';
@@ -13852,11 +13852,12 @@ const COLD = (() => {
       if (allDone(s)){ hinted.end = 1; await famSleep(800); toast('맡은 환자를 다 고쳤어요. 세라 선생님을 찾아가 봐요'); }
       else if (teaReady(s) && !s.tea){ hinted.tea = 1; await famSleep(800); toast('세라 선생님이 차를 끓였대요. 찾아가 봐요'); } }, 350);
   }
+  const need10 = () => Math.max(5, Math.min(10, PIDS.filter(avail).length));   // 아직 못 만난 친구가 많으면 만날 수 있는 만큼만
   function rewards(s){   // 처음 고치기 · 서로 다른 5 명 · 10 명
     const rw = [], nd = Object.keys(s.cured).length; if (!nd) return rw;
     if (!s.rw.tag){ s.rw.tag = 1; me.cos = me.cos || {}; (me.cos.tag = me.cos.tag || {}).nurse = 1; rw.push(['이름표 「꼬마 간호사」', '처음으로 환자를 고쳤어요']); }
     if (!s.rw.cab && nd >= 5){ s.rw.cab = 1; me.fbag = me.fbag || {}; me.fbag.cold_cabinet = (me.fbag.cold_cabinet || 0) + 1; rw.push(['가구 「작은 약장」', '서로 다른 5 명을 고쳤어요', 'cabinet']); }
-    if (!s.rw.bub && nd >= 10){ s.rw.bub = 1; me.cos = me.cos || {}; (me.cos.bub = me.cos.bub || {}).bandage = 1; rw.push(['말풍선 「반창고 말풍선」', '서로 다른 10 명을 고쳤어요', 'bandage']); }
+    if (!s.rw.bub && nd >= need10()){ s.rw.bub = 1; me.cos = me.cos || {}; (me.cos.bub = me.cos.bub || {}).bandage = 1; rw.push(['말풍선 「반창고 말풍선」', `서로 다른 ${need10()} 명을 고쳤어요`, 'bandage']); }
     return rw;
   }
   // ---------- 세라 선생님 (끝 장면): 물약 네 가지를 하나씩 ----------
@@ -13963,7 +13964,7 @@ const COLD = (() => {
   const jnOn = () => !!me && open() && !!(me.cold && me.cold.ev === evId() && me.cold.hi);
   function jnHTML(){
     const s = S(), nd = Object.keys(s.cured).length;
-    const R = [['이름표 「꼬마 간호사」', s.rw.tag, '처음 고치면'], ['가구 「작은 약장」', s.rw.cab, `서로 다른 5 명 · ${Math.min(5, nd)} / 5`], ['말풍선 「반창고 말풍선」', s.rw.bub, `서로 다른 10 명 · ${Math.min(10, nd)} / 10`], ['가구 「양호실 담요」 · 물약 회복량 +10 %', s.rw.end, '마지막까지 돌보면']];
+    const R = [['이름표 「꼬마 간호사」', s.rw.tag, '처음 고치면'], ['가구 「작은 약장」', s.rw.cab, `서로 다른 5 명 · ${Math.min(5, nd)} / 5`], ['말풍선 「반창고 말풍선」', s.rw.bub, `서로 다른 ${need10()} 명 · ${Math.min(need10(), nd)} / ${need10()}`], ['가구 「양호실 담요」 · 물약 회복량 +10 %', s.rw.end, '마지막까지 돌보면']];
     return `<section class="sec"><button class="btn go px" data-cdj="chart" style="width:100%">진료 수첩</button></section>
       <section class="sec">${secH('진료', `${nCured(s)} / ${total(s)} 명`)}<div class="box px">${slots(s).map((x, i) => `<div class="li">${spI('bubble_' + x.k, 2)}<div class="main"><span class="t">${esc(nm(x.id))}</span><span class="d">${x.d + 1} 일째 · ${SYM[x.k]} · ${done(s, i) ? '다 나았어요' : '아파요'}</span></div></div>`).join('')}</div></section>
       <section class="sec">${secH('보상')}<div class="box px">${R.map(([t, got, how]) => `<div class="li"><div class="main"><span class="t">${t}</span><span class="d">${got ? '받았어요' : how}</span></div></div>`).join('')}</div></section>`;
