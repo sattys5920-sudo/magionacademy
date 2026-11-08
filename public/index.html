@@ -13827,7 +13827,8 @@ const COLD = (() => {
     const c = $('#cdface'); if (!c) return; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, c.width, c.height); const n = npcGet(id); if (!n) return;
     if (n.av){ const av = npcAv(n), A = World.Avatar; A.need && A.need(av); const S0 = A.compose(av); if (S0 && S0.width) g.drawImage(S0, 0, 0, 64, 64, 8, 18, 64, 64); }
     else { const I = NPCI || (NPCI = Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` })); if (I.complete && I.naturalWidth) g.drawImage(I, 0, (n.spr || 0) * 64, 64, 64, 8, 18, 64, 64); }
-    (L || []).forEach((k, i) => put(g, 'bubble_' + k, 40 - L.length * 9 + i * 18, 2));
+    let top = 18; try { const D = g.getImageData(0, 0, c.width, c.height).data; top = c.height; for (let y = 0; y < c.height && top === c.height; y++) for (let x = 0; x < c.width; x++) if (D[(y * c.width + x) * 4 + 3] > 40){ top = y; break; } } catch(e){}
+    (L || []).forEach((k, i) => put(g, 'bubble_' + k, 40 - L.length * 9 + i * 18, Math.max(0, Math.min(top, c.height - 20) - 17)));
   }
   function treat(id){
     if (!me || !open()) return; const L = sickOf(id); if (!L) return; closeSheet(); npcClose();
@@ -13844,15 +13845,19 @@ const COLD = (() => {
     const s = S(), pk = POT[q][0]; if (!has(pk)) return; me.inv[pk] = Math.max(0, has(pk) - 1);
     const i = slotOf(s, id); if (i < 0 || slots(s)[i].k !== q){ save(); wrong(id); setTimeout(() => toast(`${POT[q][1]}${josaPick(POT[q][1], '은', '는')} 돌려받지 못했어요`), 1800); return; }
     s.cs = s.cs.split('').map((c, j) => j === i ? '1' : c).join(''); s.cured[id] = (s.cured[id] || 0) + 1; npcAddA(id, 20);
-    const rw = [], nd = Object.keys(s.cured).length;
-    if (!s.rw.tag){ s.rw.tag = 1; me.cos = me.cos || {}; (me.cos.tag = me.cos.tag || {}).nurse = 1; rw.push(['이름표 「꼬마 간호사」', '처음으로 환자를 고쳤어요']); }
-    if (!s.rw.cab && nd >= 5){ s.rw.cab = 1; me.fbag = me.fbag || {}; me.fbag.cold_cabinet = (me.fbag.cold_cabinet || 0) + 1; rw.push(['가구 「작은 약장」', '서로 다른 5 명을 고쳤어요', 'cabinet']); }
-    if (!s.rw.bub && nd >= 10){ s.rw.bub = 1; me.cos = me.cos || {}; (me.cos.bub = me.cos.bub || {}).bandage = 1; rw.push(['말풍선 「반창고 말풍선」', '서로 다른 10 명을 고쳤어요', 'bandage']); }
+    const rw = rewards(s);
     saveSure(); if (typeof syncCos === 'function') syncCos(); if (typeof syncNpcs === 'function') syncNpcs(); closeWin(); sfx('sparkle');
     setTimeout(async () => { World.sayNpc(id, THANK[id] || '고마워.', 3400); toast(`${withJosa(nm(id), '이', '가')} 나았어요 · 하트 +20`);
       for (const [t, sub, img] of rw){ await famSleep(1600); sfx('win'); await famCard(`${img ? spI(img, 3) : ''}<b>${t}</b><small>${sub}</small>`, null, 2600); }
-      if (allDone(s)) { await famSleep(800); toast('맡은 환자를 다 고쳤어요. 세라 선생님께 알려 드려요'); }
-      else if (teaReady(s) && !s.tea){ await famSleep(800); toast('세라 선생님이 양호실에서 기다린대요'); } }, 350);
+      if (allDone(s)){ hinted.end = 1; await famSleep(800); toast('맡은 환자를 다 고쳤어요. 세라 선생님을 찾아가 봐요'); }
+      else if (teaReady(s) && !s.tea){ hinted.tea = 1; await famSleep(800); toast('세라 선생님이 차를 끓였대요. 찾아가 봐요'); } }, 350);
+  }
+  function rewards(s){   // 처음 고치기 · 서로 다른 5 명 · 10 명
+    const rw = [], nd = Object.keys(s.cured).length; if (!nd) return rw;
+    if (!s.rw.tag){ s.rw.tag = 1; me.cos = me.cos || {}; (me.cos.tag = me.cos.tag || {}).nurse = 1; rw.push(['이름표 「꼬마 간호사」', '처음으로 환자를 고쳤어요']); }
+    if (!s.rw.cab && nd >= 5){ s.rw.cab = 1; me.fbag = me.fbag || {}; me.fbag.cold_cabinet = (me.fbag.cold_cabinet || 0) + 1; rw.push(['가구 「작은 약장」', '서로 다른 5 명을 고쳤어요', 'cabinet']); }
+    if (!s.rw.bub && nd >= 10){ s.rw.bub = 1; me.cos = me.cos || {}; (me.cos.bub = me.cos.bub || {}).bandage = 1; rw.push(['말풍선 「반창고 말풍선」', '서로 다른 10 명을 고쳤어요', 'bandage']); }
+    return rw;
   }
   // ---------- 세라 선생님 (끝 장면): 물약 네 가지를 하나씩 ----------
   function seraWin(){
@@ -13894,7 +13899,7 @@ const COLD = (() => {
   }
   async function note(s){   // 2 ~ 5 일째 아침: 세라 선생님 쪽지
     const d = Math.min(DAYS - 1, dIdx(s)); s.nd = d; saveSure(); const L = days(s)[d] || [];
-    coldOn = true; try { sfx('chime'); await famCard(`${spI('chart', 2)}<b>세라 선생님의 쪽지</b><small>${d + 1} 일째. 오늘은 ${L.map(([id]) => esc(nm(id))).join(' · ')}${josaPick(nm((L[L.length - 1] || ['x'])[0]), '이', '가')} 아프대.<br>잘 부탁해, 꼬마 간호사님.</small>`, null, 3800); } finally { coldOn = false; }
+    coldOn = true; try { sfx('chime'); await famCard(`${spI('chart', 2)}<b>세라 선생님의 쪽지</b><small>${d + 1} 일째 환자란다.<br>${L.map(([id]) => esc(nm(id))).join(' · ')}<br>잘 부탁해, 꼬마 간호사님.</small>`, null, 3800); } finally { coldOn = false; }
   }
   async function tea(){   // 9 명을 고치면: 양호실에서 차 한잔
     const s = S(); if (coldOn) return; coldOn = true; SC = 'tea';
@@ -13965,16 +13970,18 @@ const COLD = (() => {
   }
   function jnBind(){ on('[data-cdj]', () => openChart()); }
   // ---------- 듣기 · 틱 ----------
-  const nearSera = (r = 7) => { if (World.where() !== 'lab') return false; const t = World.meTile && World.meTile(), n = npcGet('sera'); return !!(t && n) && Math.abs(t.x - n.x) + Math.abs(t.y - n.y) <= r; };
+  const spot = id => { const n = npcGet(id); return n ? npcSpot(n) : null; };
+  const nearSera = (r = 7) => { const t = World.meTile && World.meTile(), p = spot('sera'); return !!(t && p) && World.where() === p.map && Math.abs(t.x - p.x) + Math.abs(t.y - p.y) <= r + (p.r || 0); };
   function tick(){
     if (!me || !open() || !evId()) return; const s = S();
     if (plan(s)) saveSure();
+    { const rw = rewards(s); if (rw.length){ saveSure(); if (typeof syncCos === 'function') syncCos(); rw.forEach(([t], i) => setTimeout(() => toast(`${t}${josaPick(t.replace(/」$/, ''), '을', '를')} 받았어요`), 600 + i * 1600)); } }
     if (coldOn || uiBusy() || !(World.meAt && World.meAt())) return; const w = World.where() || '';
     if (/^(gt_|arena)/.test(w)) return;
     if (!s.hi){ if (evTurn('cold')) intro(); return; }
     const d = Math.min(DAYS - 1, dIdx(s)); if (d >= 1 && (s.nd || 0) < d){ if (evTurn('cold')) note(s); return; }
-    if (!s.end && allDone(s)){ if (nearSera()){ if (evTurn('cold')) ending1(); return; } if (!hinted.end){ hinted.end = 1; toast('세라 선생님이 양호실에서 기다려요'); } return; }
-    if (!s.tea && teaReady(s)){ if (nearSera()){ if (evTurn('cold')) tea(); return; } if (!hinted.tea){ hinted.tea = 1; toast('세라 선생님이 양호실에서 차를 끓였대요'); } }
+    if (!s.end && allDone(s)){ if (nearSera()){ if (evTurn('cold')) ending1(); return; } if (!hinted.end){ hinted.end = 1; toast('맡은 환자를 다 고쳤어요. 세라 선생님을 찾아가 봐요'); } return; }
+    if (!s.tea && teaReady(s)){ if (nearSera()){ if (evTurn('cold')) tea(); return; } if (!hinted.tea){ hinted.tea = 1; toast('세라 선생님이 차를 끓였대요. 찾아가 봐요'); } }
   }
   function listen(){
     if (offs.length || !uid) return;
@@ -14004,7 +14011,7 @@ const COLD = (() => {
   const adminRow = () => { const c = AD.coldctl || {}, P = AD.players || {}, ids = Object.keys(P).filter(id => P[id] && P[id].nick), st = id => { const s = P[id].cold; return s && c.id && s.ev === c.id && s.hi ? s : null; };
     return { open: !!c.open, info: c.id ? `시작 장면 본 학생 ${ids.filter(st).length}/${ids.length} · 끝 장면 본 학생 ${ids.filter(id => st(id) && st(id).end === 2).length}/${ids.length}` : '-' }; };
   window.__cold = { open: () => open(), state: () => ({ ctl, cold: me && me.cold, coldOn, SC, W, sick: sickMap() }), sick: id => sickOf(id), intro: () => intro(), openChart: () => openChart(), treat: id => treat(id), give: (id, k) => give(id, k), seraGive: k => seraGive(k),
-    tea: () => tea(), ending1: () => ending1(), plan: () => plan(S()), slots: () => slots(S()), recipe: sl => recipe(sl), line: id => line(npcGet(id)), tick: () => tick(), POT, KS, PIDS,
+    tea: () => tea(), ending1: () => ending1(), spot: id => spot(id), plan: () => plan(S()), planAll: () => { const s = JSON.parse(JSON.stringify(S())); s.d0 -= DAYS - 1; plan(s); return slots(s); }, slots: () => slots(S()), recipe: sl => recipe(sl), line: id => line(npcGet(id)), tick: () => tick(), POT, KS, PIDS,
     cureAll: () => { const s = S(); while (days(s).length < DAYS) assignDay(s, days(s).length); s.cs = '1'.repeat(slots(s).length); slots(s).forEach(x => { s.cured[x.id] = (s.cured[x.id] || 0) + 1; }); saveSure(); } };   // 시험용
   return { listen, adminHTML, adminRow, jnOn, jnHTML, jnBind, openChart, line, npcBtn, treat, recipe, rec, recipeRows, ic: icon };
 })();
