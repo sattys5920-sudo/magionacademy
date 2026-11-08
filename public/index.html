@@ -16249,7 +16249,8 @@ const RD_FL = [{ f: 1, n: '얼음 거인', L: 15, c: '#7FE6FF' }, { f: 2, n: '�
 const RD_DAY = 3, RD_MIN = 4, RD_MAX = 12;
 let rdCtl = null, rdOff = null, rdBusy = false, rdGot = false;   // rdGot: 열림 상태를 받아 왔어요
 const rdSt = () => { me.raid = me.raid || {}; const S = me.raid; if (S.d !== todayKey()){ S.d = todayKey(); S.n = 0; } return S; };
-const rdOpen = () => !!(rdCtl && rdCtl.open);
+const rdWknd = () => { const d = kNow().getDay(); return d === 0 || d === 6; };   // 거울은 토요일 · 일요일(한국 시각)에만 열려요
+const rdOpen = () => !!(rdCtl && rdCtl.open) && rdWknd();
 const rdSeen = () => rdOpen() && String(rdSt().seen) === String(rdCtl.id);
 const rdLeft = () => Math.max(0, RD_DAY - (rdSt().n || 0));
 function rdBg(){ if (!me) return; const m = World.meta('library'); if (m && m.raidBg) World.setMapBg('library', rdOpen() && rdSeen() ? m.raidBg : null); }
@@ -16260,7 +16261,7 @@ function rdListen(){
     if (!rdOpen() && World.where() === 'mirrorland' && !rdBusy) setTimeout(() => rdPass('library'), 600); });
   setInterval(() => { try { rdTick(); } catch(e){} }, 1200);
 }
-function rdTick(){ if (!me || !rdGot || rdBusy || World.cutBusy()) return; if (!rdOpen()){ if (World.where() === 'mirrorland') rdPass('library'); return; } if (rdSeen() || sheetOn || World.where() !== 'library') return; rdIntro(); }   // 닫힌 뒤 거울 너머에 남아 있으면 도서관으로
+function rdTick(){ if (!me || !rdGot || rdBusy || World.cutBusy()) return; { const o = rdOpen(); if (o !== rdTick.was){ rdTick.was = o; rdBg(); } } if (!rdOpen()){ if (World.where() === 'mirrorland' && !(xb && xb.raid && !xb.over) && !RD.id) rdPass('library'); return; } if (rdSeen() || sheetOn || World.where() !== 'library') return; rdIntro(); }   // 닫힌 뒤 거울 너머에 남아 있으면 도서관으로
 // ---------- 처음 연출: 거울이 생겨나고 아울라가 당부해요 ----------
 async function rdIntro(){
   if (rdBusy) return; rdBusy = true; const n = npcGet('aula'), m = World.meta('library');
@@ -16299,7 +16300,7 @@ function rdPass(to){
   requestAnimationFrame(draw);
 }
 World.canEnter = (prev => (q, door) => {
-  if (q === 'raid'){ if (!rdOpen()) return false; if (!rdSeen()){ rdIntro(); return false; } rdPass('mirrorland'); return false; }
+  if (q === 'raid'){ if (!rdOpen()){ if (rdCtl && rdCtl.open && !rdWknd()) toast('거울은 토요일 · 일요일에만 열려요'); return false; } if (!rdSeen()){ rdIntro(); return false; } rdPass('mirrorland'); return false; }
   if (q === 'raidback'){ rdPass('library'); return false; }
   return prev ? prev(q, door) : true; })(World.canEnter);
 World.actOk = (prev => (o, a, m) => (m === 'mirrorland' && (a[0] === '거울 탑' || a[0] === '돌아가는 거울')) || (prev ? prev(o, a, m) : false))(World.actOk);
@@ -16329,7 +16330,7 @@ document.addEventListener('click', e => {
 function adminRaidHTML(){
   const c = AD.rdctl || {}, P = AD.players || {}, ids = Object.keys(P).filter(id => P[id]?.nick), seen = ids.filter(id => c.open && P[id].raid && String(P[id].raid.seen) === String(c.id)).length;
   return `<div class="adcard sdad"><div class="abhead"><b>레이드 · 거울 너머</b>${c.open ? '<button class="btn sm" data-rda="close">닫기</button>' : '<button class="btn sm go" data-rda="open">레이드 열기</button>'}</div>
-    <div class="abchips"><span>${c.open ? '열림' : '닫힘'}</span>${c.open ? `<span>연출 본 학생 <b>${seen}</b> / ${ids.length}</span>` : ''}</div></div>`;
+    <div class="abchips"><span>${c.open ? (rdWknd() ? '열림' : '열어 둠 · 토 · 일에만 열려요') : '닫힘'}</span>${c.open ? `<span>연출 본 학생 <b>${seen}</b> / ${ids.length}</span>` : ''}</div></div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-rda]'); if (!b) return; const a = b.dataset.rda;
   if (a === 'open'){ if (confirm('레이드를 열까요?')) GDB.set('raid/ctl', { open: true, id: now2(), at: now2() }).then(() => toast('레이드를 열었어요')); }
