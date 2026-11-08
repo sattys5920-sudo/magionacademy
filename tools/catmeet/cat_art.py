@@ -156,6 +156,73 @@ def yarn():   # 털실 공 (16 × 16)
     for a, b in (((4, 6), (11, 12)), ((3, 9), (9, 4)), ((6, 13), (13, 7))): g.line([a, b], fill=hx('#FFB0C4'))
     g.line([(13, 12), (15, 15)], fill=hx('#E86A8A')); return outline(im)
 
+# ---------- 다시 그린 고양이 (나비 그림 바탕): 32 칸 하얀 고양이를 바탕으로 하니 귀가 작고 둥글어 쥐처럼 보여서, 나비 정면 그림(64 칸 · 뾰족한 귀 · 긴 꼬리)의 털색만 바꿔 써요 ----------
+import colorsys
+NABI = Image.open(ROOT + '/public/art/npcs.png').convert('RGBA').crop((15, 21, 45, 59))   # 나비 정면 30 × 38
+def _kind(p, x, y):
+    h, s, v = colorsys.rgb_to_hsv(*[c / 255 for c in p[:3]]); h *= 360
+    if 19 <= y <= 23 and 5 <= x <= 20 and (h >= 330 or h <= 12) and s > 0.55 and v < 0.65: return 'col', v   # 목줄
+    if 21 <= y <= 23 and 11 <= x <= 14 and 12 < h < 40 and s >= 0.55: return 'bell', v                    # 방울
+    if v < 0.45 and s > 0.3 and (h >= 330 or h <= 12): return 'ol', v
+    if v < 0.22: return 'ol', v
+    if 12 < h < 40 and s >= 0.55 and v >= 0.55: return 'pat', v
+    return 'fur', v
+def _mul(c, k): return tuple(max(0, min(255, int(x * k))) for x in c)
+def nabi_cat(fur, pat, col=None, eye=None, extra=None, scale=32 / 38, fat=1.0):
+    im = NABI.copy(); p = im.load(); F, P = hx(fur)[:3], hx(pat)[:3]
+    for y in range(im.height):
+        for x in range(im.width):
+            q = p[x, y]
+            if not q[3]: continue
+            k, v = _kind(q, x, y)
+            if k == 'fur': p[x, y] = _mul(F, v / 0.99) + (255,)
+            elif k == 'pat': p[x, y] = _mul(P, v / 0.98) + (255,)
+            elif k == 'col': p[x, y] = (_mul(hx(col)[:3], v / 0.6) + (255,)) if col else _mul(F, 0.8) + (255,)
+            elif k == 'bell': p[x, y] = (hx('#FFD040') if col else _mul(F, 0.9) + (255,))
+    if eye:
+        for x, y in ((7, 11), (8, 11), (7, 12), (8, 12), (16, 11), (17, 11), (16, 12), (17, 12)): p[x, y] = hx(eye)   # 두 칸씩 (줄일 때 한 줄이 빠져도 보이게)
+    if extra: extra(im)
+    if fat != 1.0:
+        top = im.crop((0, 0, im.width, 17)); body = im.crop((0, 17, im.width, im.height)); bw = round(im.width * fat)
+        w = Image.new('RGBA', (bw, im.height)); w.alpha_composite(top, ((bw - im.width) // 2, 0)); w.alpha_composite(body.resize((bw, body.height), Image.NEAREST), (0, 17)); im = w
+    W, H = round(im.width * scale), round(im.height * scale); W = min(W, 32)
+    sm = im.resize((W, H), Image.NEAREST); out = Image.new('RGBA', (32, 32)); out.alpha_composite(sm, ((32 - W) // 2, 32 - H)); return out
+def _on(im, pts, c):
+    for x, y in pts:
+        if 0 <= x < im.width and 0 <= y < im.height and im.getpixel((x, y))[3]: im.putpixel((x, y), hx(c))
+def cheese(): return nabi_cat('#FFE2A8', '#F49A30', '#4A8AE0', fat=1.25)
+def grandpa():
+    def ex(im):
+        for y in (25, 28, 31): _on(im, [(x, y) for x in range(6, 20) if im.getpixel((x, y))[:3] != OL[:3]], '#8A8492')
+        for x in (10, 12, 14): _on(im, [(x, 4), (x, 5), (x, 6)], '#5A5462')
+        _on(im, [(7, 10), (8, 10), (9, 10), (16, 10), (17, 10), (18, 10)], '#FFFFFF')   # 흰 눈썹
+    return nabi_cat('#D2CED6', '#8A8492', None, extra=ex)
+def cloak():
+    def ex(im):
+        g = ImageDraw.Draw(im); g.polygon([(7, 20), (19, 20), (23, 34), (3, 34)], fill=hx('#6A3A8A'), outline=hx('#3A1A52')); _on(im, [(12, 20), (13, 20), (14, 20)], '#FFD040')
+    return nabi_cat('#4A4058', '#2E2640', None, eye='#FFD040', extra=ex)
+def calico():
+    def ex(im):
+        _on(im, [(x, y) for y in range(2, 10) for x in range(15, 22) if im.getpixel((x, y))[:3] != OL[:3]], '#3A3040')
+        _on(im, [(x, y) for y in range(26, 30) for x in range(14, 19)], '#3A3040'); _on(im, [(x, y) for y in range(28, 32) for x in range(6, 9)], '#F09A40')
+    return nabi_cat('#FFFCF0', '#F09A40', '#D8303A', extra=ex)
+def princess():
+    def ex(im):
+        g = ImageDraw.Draw(im); g.polygon([(15, 2), (11, 0), (11, 4)], fill=hx('#F48AB0'), outline=OL); g.polygon([(15, 2), (19, 0), (19, 4)], fill=hx('#F48AB0'), outline=OL); im.putpixel((15, 2), hx('#D85A8A'))
+    return nabi_cat('#FFFFFF', '#ECE8F6', '#F48AB0', eye='#4A8AE0', extra=ex)
+def baby(stage):
+    fur, pat = (('#C8B8A8', '#8E7A6A') if stage < 3 else ('#E2D2C0', '#A8927C'))
+    out = nabi_cat(fur, pat, '#4A8AE0' if stage == 3 else None, scale=21 / 38)
+    if stage < 3:
+        p = out.load(); edge = [(x, y) for y in range(32) for x in range(32) if p[x, y][3]]
+        side = lambda yy, left: (min if left else max)([e for e in edge if e[1] == yy], key=lambda e: e[0])
+        T = [(side(14, True), (-1, -1)), (side(14, False), (1, -1)), (side(22, True), (-1, 0)), (side(23, False), (1, 0)), (side(28, True), (-1, 1)), (side(18, False), (1, -1)), (side(19, True), (-1, 0)), (side(27, False), (1, 1))]
+        for (x, y), (dx, dy) in T[: {1: 8, 2: 3}[stage]]:
+            for k in (1, 2):
+                q = (x + dx * k, y + dy * k)
+                if 0 <= q[0] < 32 and 0 <= q[1] < 32 and not p[q][3]: p[q] = hx('#5A4636') if k == 2 else hx(pat)
+    return out
+
 if __name__ == '__main__':
     C = [('baby1', baby(1), '아기 (부스스)'), ('baby2', baby(2), '아기 (조금 정리)'), ('baby3', baby(3), '아기 (회원)'),
          ('cheese', cheese(), '뚱보 치즈'), ('grandpa', grandpa(), '줄무늬 할배'), ('cloak', cloak(), '검은 망토'), ('calico', calico(), '방울 삼색이'), ('princess', princess(), '하얀 공주')]
