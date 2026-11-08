@@ -1,5 +1,5 @@
 // 버프 · 장비 최대 가정 밸런스 모의 전투 (게임 전투 코드를 그대로 써요)
-//   모의 사이트 index.html 의 큰 <script type="module"> 끝(</script> 바로 앞)에 붙여서 써요 → tools/balance/run_bal.js 가 알아서 붙여요
+//   모의 사이트 index.html 의 큰 <script type="module"> 안 (window.__T 앞)에 붙여서 써요 → tools/balance/run_bal.js 가 알아서 붙여요
 //   window.__bal.unit(job, L, cfg)   : 동료(AI) 방식 스킬 · 스탯 포인트로 만들고 cfg 의 장비 · 버프를 게임과 같은 순서로 얹어요
 //   window.__bal.xSim(o)             : 탐사 한 판 (일반 · 강한 몬스터 · 보스) 승률 · 남은 체력
 //   window.__bal.raidSim(o)          : 레이드 12 명 (tools/raid_mock/raidsim_hook.js 를 고쳐 씀: 버프 · 장비 · 물약 배율 · MP 회복 버프)
@@ -25,13 +25,14 @@ window.__bal = (() => {
   }
   const potOr = x => { if (x.pot > 0 && x.hp / x.mhp < .35){ x.pot--; x.hp = Math.min(x.mhp, x.hp + Math.round(x.mhp * x.potK * (1 + (x.healIn || 0)))); x.g = 0; return true; } return false; };
   // ---------- 탐사 한 판 ----------
-  //   o = { rg 지역, L 학생 레벨, mL 몬스터 레벨, kind battle·elite·boss, jobs [...], cfg, n 판 수, m { hpm, ehm, atkm, bat, bhm } (안 주면 지금 값), pot 사람마다 물약 수, lim 초 }
+  //   o = { rg 지역, cfgRole { melee·ranged·heal: cfg } 역할별 cfg, hostPotK 첫 사람 물약 배율, L 학생 레벨, mL 몬스터 레벨, kind battle·elite·boss, jobs [...], cfg, n 판 수, m { hpm, ehm, atkm, bat, bhm } (안 주면 지금 값), pot 사람마다 물약 수, lim 초 }
   function xSim(o){
     const R = XRG[o.rg], M = { hpm: R.hpm, ehm: R.ehm, atkm: R.atkm, bat: R.bat, bhm: R.bhm, ...(o.m || {}) }, N = o.n || 100, mL = o.mL, lim = o.lim || 240;
     const mk = (m, i, hm = 1) => { const k = m.k || 1, f = (1 + .35 * (mL - 1)) * hm * (k >= 3 ? M.ehm || 1 : M.hpm || 1) * (k >= 8 ? M.bhm || 1 : 1), a = (1 + .25 * (mL - 1)) * (k >= 3 ? Math.sqrt(M.atkm || 1) : M.atkm || 1) * (k >= 8 ? M.bat || 1 : 1); return { id: 'e' + i, name: m.n, ic: '', lp: m.lp, big: m.big, sc: 1, hh: 56, team: 'e', mhp: Math.round(m.hp * f * XFOE), hp: Math.round(m.hp * f * XFOE), atk: Math.round(m.atk * a * XFOE_A), spd: m.spd, g: Math.random() * 60, k, aoe: !!m.aoe, sk: m.sk || '', skn: m.skn || '', bm: m.bm || null, mL, fx: {} }; };
     let win = 0, hpl = 0, tt = 0, dead = 0;
     for (let it = 0; it < N; it++){
-      const party = o.jobs.map((j, i) => { const u = unit(j, o.L, o.cfg, j + i); u.id = 'p' + i; u.pot = o.pot ?? 1; u.g = Math.random() * 40; return u; }), sz = party.length, pool = R.mon;
+      const party = o.jobs.map((j, i) => { const u = unit(j, o.L, (o.cfgRole && o.cfgRole[XROLE[j]]) || o.cfg || {}, j + i); u.id = 'p' + i; u.pot = o.pot ?? 1; u.g = Math.random() * 40; return u; }), sz = party.length, pool = R.mon;
+      if (o.hostPotK) party[0].potK = o.hostPotK;   // 눈사람 · 책갈피 · 맛있는 물약은 방장(혼자면 나) 기기에서만 들어가요
       const foes = o.kind === 'boss' ? [mk(R.boss, 0, 1 + .4 * (sz - 1)), ...Array.from({ length: Math.min(4, sz - 1) }, (_, i) => mk(xRand(pool), i + 1))] : o.kind === 'elite' ? [mk(R.elite, 0, 1 + .5 * (sz - 1)), ...Array.from({ length: Math.min(4, sz - 1) }, (_, i) => mk(xRand(pool), i + 1))]
         : Array.from({ length: Math.min(6, sz >= 2 ? sz + 1 : 1) }, (_, i) => mk(xRand(pool), i));
       const B = xb = { party, foes, kind: o.kind, log: '', turn: null, pick: null, over: false, last: 0, buff: false, def: {}, fxs: [], floats: [], proj: [], n0: sz };
@@ -65,7 +66,7 @@ window.__bal = (() => {
     const MK = o.mk || { side: 1, all: 1, big: 2 };
     for (let it = 0; it < N; it++){
       const party = [], SZ = o.size || 12;
-      SIDE.forEach((js, side) => js.slice(0, side ? Math.floor(SZ / 2) : Math.ceil(SZ / 2)).forEach((job, j) => { const c = (o.cfgOf && o.cfgOf(job)) || o.cfg || {}; const u = unit(job, L, c, job + side + j); u.id = 'p' + side + j; u.pot = 2; u.side = side; u.g = Math.random() * 40; party.push(u); }));
+      SIDE.forEach((js, side) => js.slice(0, side ? Math.floor(SZ / 2) : Math.ceil(SZ / 2)).forEach((job, j) => { const c = (o.cfgRole && o.cfgRole[XROLE[job]]) || o.cfg || {}; const u = unit(job, L, c, job + side + j); u.id = 'p' + side + j; u.pot = 2; u.side = side; u.g = Math.random() * 40; party.push(u); }));
       if (o.hostPotK) party[0].potK = o.hostPotK;
       const boss = { id: 'e0', name: '보스', ic: '', lp: 16, big: 1, sc: 3, hh: 168, team: 'e', mhp: o.hpAbs, atk: o.atkAbs, spd: o.spd || 12, g: 30, k: 8, aoe: false, sk: '', skn: '', mL: L, fx: {} };
       boss.hp = boss.mhp; boss.matk = o.matk;

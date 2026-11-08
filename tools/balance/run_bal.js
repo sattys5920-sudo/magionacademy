@@ -1,10 +1,10 @@
 // 밸런스 모의 전투 돌리기: node tools/balance/run_bal.js <작업.js> [포트=8823]
-//   모의 사이트를 띄우고 (tools/ui_mock.sh) bal_hook.js 를 큰 module 스크립트 끝에 붙인 뒤, 작업 파일의 module.exports = async (ev, log) => {...} 를 돌려요
+//   모의 사이트를 띄우고 (tools/ui_mock.sh) bal_hook.js 를 큰 module 스크립트 안 (window.__T 앞)에 붙인 뒤, 작업 파일의 module.exports = async (ev, log) => {...} 를 돌려요
 //   ev(fn, arg) = page.evaluate(fn, arg) · 페이지에서는 window.__bal 을 써요
 const { chromium } = require('playwright'); const fs = require('fs'); const { execSync } = require('child_process'); const path = require('path');
 const ROOT = path.resolve(__dirname, '../..'), PORT = +(process.argv[3] || 8823);
 const out = execSync(`sh ${ROOT}/tools/ui_mock.sh ${ROOT} ${PORT}`).toString(); const site = out.match(/site: (.*)\)/)[1];
-{ const f = site + '/index.html', s = fs.readFileSync(f, 'utf8'), i = s.indexOf('<script type="module">'); const end = s.indexOf('</script>', i);
+{ const f = site + '/index.html', s = fs.readFileSync(f, 'utf8'), end = s.indexOf('window.__T = {');   // 큰 module 은 끝까지 가기 전에 await 로 멈춰 있어서, 시험용 손잡이(__T) 바로 앞에 붙여요
   const hook = fs.readFileSync(__dirname + '/bal_hook.js', 'utf8'); if (!s.includes('window.__bal =')) fs.writeFileSync(f, s.slice(0, end) + '\n' + hook + '\n' + s.slice(end)); }
 const seed = eval('(' + fs.readFileSync(ROOT + '/tests/ui.spec.js', 'utf8').match(/const seed = (\{.*\});/)[1] + ')');
 (async () => { const b = await chromium.launch(); const p = await b.newPage(); p.on('pageerror', e => console.log('PAGEERR', e.message));
