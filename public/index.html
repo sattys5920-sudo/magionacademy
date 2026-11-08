@@ -2282,23 +2282,23 @@ const XDS = { warrior: 'atk', thief: 'atk', knight: 'atk', gadget: 'atk' }, XPAS
 const XDP = [1.2, 1.6, 2.1, 2.7, 3.4], XHP = [2, 2.6, 3.2, 3.9, 4.6], XMAXLV = 5, XRESET = 800, xSkp = L => L - 1;   // 레벨 업마다 1포인트 (ex.spx는 관리자가 따로 준 포인트)
 const xDefs = {};
 const XOV = {   // 스킬별 특수 효과 (직업.이름). t 종류 · key 효과 이름 · v 세기 · sec 지속(초) · ap 맞은 뒤 붙는 효과 [종류, 세기, 초] · hits 여러 번 타격 · exec 체력 낮은 적 추가 피해 · fcrit 반드시 치명타 · pct 체력 비율 · pet 소환수
-  'warrior.대지 가르기': { ap: [['stun', 30]], ds: '적 전체에 피해 + 행동이 잠깐 늦어져요' },
+  'warrior.대지 가르기': { ap: [['stun', 30]], ds: '적 전체 피해 + 행동 늦추기 30' },
   'warrior.되받아치기': { t: 'buff', key: 'counter', v: .6, sec: 12, tg: 'self', mp: 5, ds: '12초간 맞으면 받은 피해의 60%를 되돌려줘요' },
-  'warrior.파쇄': { p: 1, ap: [['vuln', .3, 12]], ds: '적 하나에 피해 + 12초간 받는 피해 +30% (방어 파괴)' },
+  'warrior.파쇄': { p: 1, ap: [['vuln', .3, 12]], ds: '14초간 적 하나 공격 -30%' }   /* 코드 W라 t가 deb(약해짐)로 남아서 p · ap는 전투에서 안 쓰여요 */,
   'warrior.학살자': { exec: 1, ds: '체력이 40% 이하인 적에게는 피해 ×1.8' },
   'warrior.폭풍 도끼': { t: 'dmg', st: 'atk', tg: 'all', p: .7, hits: 3, mp: 18, ds: '적 전체를 3번 베요' },
   'black.지옥불': { ap: [['dot', .35, 8]], ds: '광역 피해 + 8초간 지속 화상' },
   'black.서리 화살': { ap: [['slow', .3, 8]], ds: '피해 + 8초간 속도 -30%' },
   'black.얼음 창': { ap: [['slow', .4, 8]], ds: '피해 + 8초간 속도 -40%' },
-  'black.번개': { ap: [['stun', 25]], ds: '피해 + 행동이 잠깐 늦어져요' },
+  'black.번개': { ap: [['stun', 25]], ds: '피해 + 행동 늦추기 25' },
   'black.눈보라': { t: 'dmg', st: 'mag', tg: 'all', p: .45, ap: [['slow', .45, 10]], mp: 14, ds: '광역 피해 + 10초간 속도 -45%' },
   'black.마력 흡수': { t: 'dmg', st: 'mag', tg: 'one', p: .7, drain: .2, mp: 2, ds: '적에게 피해 + 내 MP 20% 회복' },
   'black.약점 간파': { t: 'deb', key: 'vuln', v: .25, sec: 14, tg: 'all', mp: 8, ds: '14초간 적 전체가 받는 피해 +25%' },
   'thief.이중 베기': { hits: 2, p: .9, ds: '2번 베요' }, 'thief.칼춤': { hits: 2, p: .55, ds: '적 전체를 2번 베요' }, 'thief.연환': { hits: 3, p: .55, ds: '3번 연속 타격' },
   'thief.난도질': { t: 'dmg', st: 'atk', tg: 'one', hits: 5, p: .55, mp: 18, ds: '5번 연속 타격' },
   'thief.급소 찌르기': { fcrit: 1, ds: '반드시 치명타' }, 'thief.처형자': { exec: 1, ds: '체력이 40% 이하인 적에게는 피해 ×1.8' },
-  'thief.피 웅덩이': { t: 'burst', tg: 'all', p: 1, mp: 14, ds: '지속 피해를 받는 적에게 남은 피해를 한꺼번에 터뜨려요' },
-  'thief.연막': { t: 'deb', key: 'blind', v: .5, sec: 12, tg: 'all', mp: 8, ds: '12초간 적 전체의 공격이 절반은 빗나가요' },
+  'thief.피 웅덩이': { t: 'burst', tg: 'all', p: 1, mp: 14, ds: '지속 피해를 받는 적에게 남은 피해 ×1.5를 한꺼번에 터뜨려요' },
+  'thief.연막': { t: 'deb', key: 'blind', v: .5, sec: 12, tg: 'all', mp: 8, ds: '12초간 적 전체 공격이 50% 빗나가요' },
   'thief.그림자 걸음': { t: 'buff', key: 'dodge', v: .5, sec: 10, tg: 'self', mp: 7, ds: '10초간 공격을 50% 피해요' },
   'thief.훔치기': { steal: 1, ds: '피해 + 골드와 재료를 훔쳐요' },
   'bard.자장가': { t: 'buff', key: 'regen', v: .9, sec: 14, tg: 'all', mp: 8, ds: '14초간 아군 전체가 천천히 회복' },
@@ -2309,21 +2309,21 @@ const XOV = {   // 스킬별 특수 효과 (직업.이름). t 종류 · key 효�
   'bard.대합창': { ap: [['weak', .25, 12]], ds: '광역 피해 + 12초간 적 공격 -25%' },
   'time.시간 도약': { t: 'leap', tg: 'self', w: 100, mp: 8, key: 'spd', v: .2, sec: 10 },   // 곧바로 다시 행동 + 내 속도 (레벨마다 올라요)
   'time.가속 영역': { v: .5, sec: 18 },   // 연속 가속보다 세고 오래
-  'time.정지': { t: 'dmg', st: 'mag', tg: 'one', p: .5, ap: [['stun', 100]], mp: 8, ds: '적 하나를 잠깐 멈춰 세워요' },
+  'time.정지': { t: 'dmg', st: 'mag', tg: 'one', p: .5, ap: [['stun', 100]], mp: 8, ds: '적 하나 피해 + 행동 늦추기 100' },
   'time.시간 정체': { v: .5, sec: 15 },
   'time.되감기': { pct: .4 },   // 40% → Lv5 60%
-  'time.시계 소환': { t: 'dmg', st: 'mag', tg: 'all', p: .4, ap: [['stun', 45]], mp: 10, ds: '적 전체의 행동을 늦춰요' },
+  'time.시계 소환': { t: 'dmg', st: 'mag', tg: 'all', p: .4, ap: [['stun', 45]], mp: 10, ds: '적 전체 피해 + 행동 늦추기 45' },
   'time.시간 정지': { t: 'tstop', tg: 'all', w: 100, mp: 24 },   // 적이 멈추는 시간 4초 → Lv5 7.2초
   'alch.산성 플라스크': { ap: [['vuln', .2, 10]], ds: '피해 + 10초간 받는 피해 +20%' },
   'alch.불안정 용액': { t: 'deb', key: 'vuln', v: .25, sec: 12, tg: 'one', mp: 5, ds: '12초간 적 하나가 받는 피해 +25%' },
-  'alch.부식': { p: .8, ap: [['vuln', .3, 12], ['dot', .3, 8]], ds: '피해 + 받는 피해 +30% + 부식 지속 피해' },
+  'alch.부식': { p: .8, ap: [['vuln', .3, 12], ['dot', .3, 8]], ds: '14초간 적 하나 공격 -30%' }   /* 코드 W라 t가 deb(약해짐)로 남아서 p · ap는 전투에서 안 쓰여요 */,
   'alch.약점 증폭': { t: 'deb', key: 'vuln', v: .3, sec: 12, tg: 'all', mp: 10, ds: '12초간 적 전체가 받는 피해 +30%' },
   'alch.혼합 약': { t: 'buff', key: 'regen', v: 1.2, sec: 12, tg: 'one', mp: 7, ds: '12초간 아군 하나가 계속 회복' },
   'alch.엘릭서': { cl: 1, ds: '아군 전체 치유 + 나쁜 효과 제거' },
   'alch.점착 폭탄': { t: 'dmg', st: 'mag', tg: 'one', p: .5, ap: [['slow', .4, 8], ['bomb', 2.2, 5]], mp: 8, ds: '피해 + 속도 -40% + 5초 뒤 큰 폭발' },
   'alch.황금 폭발': { gold: 1, ds: '큰 피해 + 골드 보너스' },
   'white.신성한 비': { t: 'buff', key: 'regen', v: .8, sec: 14, tg: 'all', mp: 12, ds: '14초간 아군 전체가 계속 회복' },
-  'white.기적의 손길': { pct: .9, ds: '아군 하나의 체력을 90%까지 회복' },
+  'white.기적의 손길': { pct: .9, ds: '아군 하나 최대 체력의 90% 회복' },
   'white.완전 소생': { pct: 1, ds: '쓰러진 동료를 체력 100%로 살려요' },
   'white.전체 소생': { t: 'revive', all: 1, pct: .4, tg: 'all', mp: 24, ds: '쓰러진 동료 전부를 체력 40%로 살려요' },
   'white.천사의 숨결': { t: 'revive', all: 1, pct: .3, hl: 1.2, tg: 'all', mp: 28, ds: '쓰러진 동료를 살리고 아군 전체를 치유' },
@@ -2343,10 +2343,10 @@ const XOV = {   // 스킬별 특수 효과 (직업.이름). t 종류 · key 효�
   'cleric.해제': { t: 'cleanse', tg: 'all', mp: 8, ds: '아군 전체의 나쁜 효과를 지워요' },
   'cleric.축복': { t: 'cleanse', tg: 'all', regen: .5, mp: 10, ds: '나쁜 효과를 지우고 10초간 회복' },
   'cleric.구원의 빛': { pct: .6, ds: '쓰러진 동료를 체력 60%로 살려요' },
-  'cleric.응징': { t: 'buff', key: 'counter', v: 1, sec: 12, tg: 'self', mp: 8, ds: '12초간 받은 피해만큼 되돌려줘요' },
+  'cleric.응징': { t: 'buff', key: 'counter', v: 1, sec: 12, tg: 'self', mp: 8, ds: '12초간 받은 피해의 100%를 되돌려줘요' },
   'cleric.성스러운 낙인': { t: 'deb', key: 'vuln', v: .3, sec: 14, tg: 'one', mp: 8, ds: '14초간 적 하나가 받는 피해 +30%' },
   'knight.도발': { t: 'buff', key: 'taunt', v: 1, sec: 8, tg: 'self', mp: 4, also: [['dmgIn', .3]], ds: '8초간 적이 나만 노리고 받는 피해 -30%' },
-  'knight.방패 치기': { ap: [['stun', 35]], ds: '피해 + 행동이 늦어져요' },
+  'knight.방패 치기': { ap: [['stun', 35]], ds: '피해 + 행동 늦추기 35' },
   'knight.막아서기': { t: 'buff', key: 'cover', v: 1, sec: 12, tg: 'self', mp: 6, ds: '12초간 아군 대신 내가 맞아요' },
   'knight.반격 태세': { t: 'buff', key: 'counter', v: .8, sec: 10, tg: 'self', mp: 7, ds: '10초간 맞으면 받은 피해의 80%를 되돌려줘요' },
   'summon.불 정령': { t: 'summon', st: 'mag', tg: 'self', mp: 7, pet: { n: '불 정령', el: 'fire', kind: 'dmg', every: 3, sec: 15, k: .6 }, ds: '15초간 불 정령이 3초마다 적을 태워요' },
@@ -2367,9 +2367,9 @@ const XOV = {   // 스킬별 특수 효과 (직업.이름). t 종류 · key 효�
   'gadget.철갑 멧돼지': { t: 'summon', st: 'atk', tg: 'self', mp: 22, pet: { n: '철갑 멧돼지', el: 'turret', kind: 'dmgall', every: 3, sec: 22, k: .55 }, ds: '22초간 철갑 멧돼지가 3초마다 적 전체를 들이받아요' },
   'gadget.덫 설치': { t: 'dmg', st: 'atk', tg: 'one', p: .3, ap: [['slow', .6, 12], ['dot', .3, 8]], mp: 5, ds: '적 하나에 덫: 속도 -60% + 지속 피해' },
   'gadget.지뢰': { t: 'dmg', st: 'atk', tg: 'one', p: .1, ap: [['bomb', 2.6, 4]], mp: 8, ds: '4초 뒤 폭발하는 지뢰를 붙여요' },
-  'gadget.전기 그물': { t: 'dmg', st: 'atk', tg: 'all', p: .5, ap: [['stun', 35]], mp: 12, ds: '광역 피해 + 행동이 늦어져요' },
-  'gadget.접착탄': { ap: [['slow', .4, 8]], ds: '피해 + 속도 -40%' },
-  'gadget.연막탄': { t: 'deb', key: 'blind', v: .5, sec: 12, tg: 'all', mp: 8, ds: '12초간 적 전체의 공격이 절반은 빗나가요' },
+  'gadget.전기 그물': { t: 'dmg', st: 'atk', tg: 'all', p: .5, ap: [['stun', 35]], mp: 12, ds: '광역 피해 + 행동 늦추기 35' },
+  'gadget.접착탄': { ap: [['slow', .4, 8]], ds: '10초간 적 하나 속도 -50%' }   /* 코드 s라 t가 deb(느려짐)로 남아서 ap는 전투에서 안 쓰여요 */,
+  'gadget.연막탄': { t: 'deb', key: 'blind', v: .5, sec: 12, tg: 'all', mp: 8, ds: '12초간 적 전체 공격이 50% 빗나가요' },
   'gadget.시한폭탄': { t: 'dmg', st: 'atk', tg: 'one', p: .1, ap: [['bomb', 5, 6]], mp: 16, ds: '6초 뒤 아주 큰 폭발' },
   'gadget.집중 포화': { t: 'dmg', st: 'atk', tg: 'all', hits: 4, p: .6, mp: 22, ds: '적 전체에 4번 포격' },
 };
@@ -2407,22 +2407,38 @@ const xMpK = lv => 1 + .15 * (Math.max(1, lv) - 1);   // 스킬을 올릴수록 
 const xPw = (o, lv) => 1 + .18 * (lv - 1), xEfv = (o, lv) => o.t === 'deb' ? Math.min(.9, o.v * (1 + .15 * (lv - 1))) : o.v * (1 + .15 * (lv - 1));   // 느려짐·약해짐은 90%까지
 const xPct = (o, lv) => Math.min(.8, o.pct * (1 + .125 * (Math.max(1, lv) - 1))), xTs = lv => +(4 * (1 + .2 * (Math.max(1, lv) - 1))).toFixed(1);   // 체력 비율 회복 · 시간 정지 초
 const xMul = n => String(Math.round(n * 100) / 100);   /* 배율은 소수 둘째 자리까지 (×0.45 → ×0.5 처럼 반올림돼서 다음 레벨이 같아 보이던 것) */
-function xDesc(o, lv){
-  if (o.pas) return o.pas === 'surv' ? '패시브 · 전투마다 한 번, 쓰러질 공격을 체력 1로 버텨요' : `패시브 · ${XPASN[o.pas]} ${o.pas === 'def' ? '-' : '+'}${Math.round(XPAS[o.pas] * 100 * lv)}%`;
-  const L = Math.max(1, lv), mp = o.mp ? ` · MP ${xSkMp(o, L, me && me.ex ? xLv(me.ex.exp || 0).L : 1)}` : '';
-  if (o.t === 'leap') return `곧바로 다시 행동 + 나 속도 +${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)${mp}`;
-  if (o.t === 'tstop') return `아군은 바로 행동하고 적은 ${xTs(L)}초 멈춰요${mp}`;
-  if (o.t === 'heal' && o.pct && !o.ds) return `${o.tg === 'all' ? '아군 전체' : '아군 하나'}의 체력을 ${Math.round(xPct(o, L) * 100)}% 되돌려요${mp}`;
-  if (o.t === 'summon' && o.pet){   // 소환수: 레벨마다 힘 +18% · 머무는 시간 +10% · 체력 +25% (실제 계산은 xPets · summon 그대로)
-    const q = o.pet, w = xPw(o, L), f = n => (Math.round(n * 100) / 100).toString(), c = q.n.charCodeAt(q.n.length - 1), ga = c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 ? '이' : '가', sn = xSname(o.st);
-    const what = { dmg: `적 하나에 ${sn} ×${f(q.k * w)}`, dmgcover: `적 하나에 ${sn} ×${f(q.k * w)} · 적의 시선을 끌어요`, dmgall: `적 전체에 ${sn} ×${f(q.k * w * .8)}`, heal: `가장 약한 아군 치유 ×${f(q.k * w)}`, shield: `가장 약한 아군에 보호막 ×${f(q.k * w)} (8초)` }[q.kind] || '';
-    return `${Math.round(q.sec * (1 + .1 * (L - 1)) * 10) / 10}초간 ${q.n}${ga} ${q.every}초마다 ${what} · 소환수 체력 (내 최대 체력 ${Math.round(30 * (1 + .25 * (L - 1)) * (q.hpm || 1))}% + ${Math.round(16 * (1 + .25 * (L - 1)) * (q.hpm || 1))})${mp}`;
-  }
-  if (o.ds && o.v != null){ const a = Math.round(o.v * 100), b = Math.round(xEfv(o, L) * 100); if (a !== b && o.ds.includes(a + '%')) o = { ...o, ds: o.ds.split(a + '%').join(b + '%') }; }   // 설명이 고정된 스킬도 레벨에 따라 오르는 수치는 바꿔 보여 줘요 (실제 효과는 원래 레벨만큼 올라요)
-  if (o.ds){ if (o.t === 'dmg' && o.p) return `${o.tg === 'all' ? '적 전체' : '적 하나'} ${xSname(o.st)} ×${xMul(o.p * xPw(o, L))}${o.hits > 1 ? ` ×${o.hits}회` : ''} · ${o.ds}${mp}`; return o.ds + mp; }
-  const who = { one: '적 하나', all: o.t === 'heal' || o.t === 'buff' || o.t === 'mp' ? '아군 전체' : '적 전체', self: '나' }[o.tg];
-  const sc = { dmg: `${who}에게 ${xSname(o.st)} ×${xMul(o.p * xPw(o, L))} 피해${o.w ? ' (쓰고 나면 한참 쉬어요)' : ''}`, heal: `${o.tg === 'all' ? '아군 전체' : '아군 하나'} 치유 ×${xMul(o.p * xPw(o, L))}`, revive: '쓰러진 동료 하나를 체력 절반으로 살려요', buff: `${who} ${o.key === 'atk' ? '공격' : o.key === 'spd' ? '속도' : '받는 피해'} ${o.key === 'dmgIn' ? '-' : '+'}${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, deb: `${who} ${o.key === 'slow' ? '속도' : '공격'} -${Math.round(xEfv(o, L) * 100)}% (${o.sec}초)`, dot: `${who}에게 8초 동안 ${xSname(o.st)} ×${xMul(o.p * xPw(o, L))} 지속 피해`, stun: `적 하나를 ${xSname(o.st)} ×${xMul(o.p * xPw(o, L))} 피해 + 행동 늦추기`, mp: `아군 전체 MP ${Math.round(xEfv(o, L) * 100)}% 회복 · 내 차례 ${o.cd || 3} 번 뒤에 다시 써요` }[o.t];
-  return sc + mp;
+const xP = v => Math.round(Math.round(v * 1000) / 10);   /* 퍼센트는 정수로 (0.055 → 6) */
+const xCrownK = () => { const A = me && me.acc, s = A && A.on === 'crown' && A.own && A.own.crown ? A.own.crown.st || 1 : 0; return s ? (4 + s * 3) / 100 : 0; };   /* 얼음 왕관: 전투에서 MP가 그만큼 덜 들어요 (rdAccApply와 같은 식) */
+const xApD = ([k, v, s], st) => k === 'stun' ? `행동 늦추기 ${v}` : k === 'slow' ? `속도 -${xP(v)}% (${s}초)` : k === 'weak' ? `공격 -${xP(v)}% (${s}초)` : k === 'vuln' ? `받는 피해 +${xP(v)}% (${s}초)` : k === 'dot' ? `${s}초간 2초마다 ${xSname(st)} ×${xMul(v)}` : k === 'bomb' ? `${s}초 뒤 폭발 ${xSname(st)} ×${xMul(v)}` : '';   // 맞은 뒤 붙는 효과 (레벨과 상관없이 그대로)
+const xNb = t => t.replace(/ (\d)/g, '\u00a0$1');   /* 「MP 12」 · 「쿨 1턴」 · 「늦추기 25」가 줄 끝에서 갈라지지 않게 */
+function xDesc(o, lv){   // 설명은 전투 계산(xMkUnit · xAct0)과 같은 수치로 만들어요 · tools/balance/skill_desc_audit.js 로 맞는지 확인
+  const L = Math.max(1, lv);
+  if (o.pas){ const n = xP(XPAS[o.pas] * L); return xNb('패시브 · ' + ({ surv: '전투마다 한 번, 쓰러질 공격을 체력 1로 버텨요 (레벨을 올려도 같아요)', def: `받는 피해 -${n}%`, dodge: `적 공격 회피 +${n}%`, vamp: `준 피해의 ${n}%만큼 체력 회복`, crit: `치명타 확률 +${n}% (치명타는 피해 ×1.6)` }[o.pas] || `${XPASN[o.pas]} +${n}%`)); }
+  const myL = me && me.ex ? xLv(me.ex.exp || 0).L : 1, mpv = o.mp ? Math.ceil(xSkMp(o, L, myL) * (1 - xCrownK())) : 0, cd = xCdOf(o), tail = (mpv ? ` · MP ${mpv}` : '') + (cd ? ` · 쿨 ${cd}턴` : '');
+  const S = xSname(o.st), m = n => xMul(n * xPw(o, L)), ev = xP(xEfv(o, L)), foe = o.tg === 'all' ? '적 전체' : '적 하나', ally = o.tg === 'all' ? '아군 전체' : o.tg === 'self' ? '나' : '아군 하나', P = [];
+  if (o.t === 'dmg'){ P.push(`${foe} ${S} ×${m(o.p)}${o.hits > 1 ? ` ×${o.hits}회` : ''}`); if (o.exec) P.push('체력 40% 미만인 적에게 ×1.8'); if (o.fcrit) P.push('반드시 치명타 (×1.6)'); if (o.petb) P.push(`소환수 하나당 피해 +${xP(o.petb)}%`);
+    (o.ap || []).forEach(a => P.push(xApD(a, o.st))); if (o.drain) P.push(`내 MP ${xP(o.drain)}% 회복`); if (o.steal) P.push(`골드 +${5 + Math.round(myL * 1.2)} · 40% 확률로 재료도 훔쳐요`); if (o.gold) P.push(`골드 +${8 + myL}`); if (o.w < 0) P.push(`쓴 뒤 내 행동 늦추기 ${-o.w}`); }
+  else if (o.t === 'heal'){ P.push(o.pct ? `${ally} 치유 ×${m(o.p)} 또는 최대 체력의 ${xP(o.ds ? o.pct : xPct(o, L))}% 중 큰 쪽` : `${ally} 치유 ×${m(o.p)}`); if (o.cl) P.push('나쁜 효과 지우기'); if (o.mpb) P.push(`MP ${xP(o.mpb)}% 회복`); }
+  else if (o.t === 'revive'){ P.push(`쓰러진 동료 ${o.all ? '전부' : '하나'}를 체력 ${xP(o.pct || .5)}%로 살려요`); if (o.hl) P.push(`아군 전체 치유 ×${xMul(o.hl)}`); }
+  else if (o.t === 'buff'){ const k = o.key, sec = o.sec;
+    const my = o.tg === 'self';
+    P.push(k === 'shield' ? `${my ? '나에게' : ally} 보호막 (${xSname(o.st || 'heal')} ×${xMul((o.sv || 2) * xPw(o, L))} · ${sec}초)` : k === 'regen' ? `${ally} ${sec}초간 2초마다 치유 ×${xMul(xEfv(o, L))}` : k === 'counter' ? `${sec}초간 맞으면 받은 피해의 ${ev}%를 되돌려줘요` : k === 'taunt' ? `${sec}초간 적 공격의 80%가 나에게 와요` : k === 'cover' ? `${sec}초간 아군을 노린 공격의 65%를 내가 대신 맞아요` : k === 'dodge' ? `${my ? '내' : ally} 회피 ${Math.min(50, ev)}% (${sec}초${ev >= 50 ? ' · 최대치' : ''})` : `${my ? { atk: '내가 주는 피해', spd: '내 속도', dmgIn: '내가 받는 피해' }[k] : ally + ' ' + { atk: '주는 피해', spd: '속도', dmgIn: '받는 피해' }[k]} ${k === 'dmgIn' ? '-' : '+'}${ev}% (${sec}초)`);
+    (o.also || []).forEach(([k2, v2]) => P.push(k2 === 'dmgIn' ? `받는 피해 -${xP(v2)}%` : `${k2} ${xP(v2)}%`)); }
+  else if (o.t === 'deb') P.push(o.key === 'blind' ? `${foe} 공격이 ${ev}% 확률로 빗나가요 (${o.sec}초)` : `${foe} ${o.key === 'slow' ? '속도' : o.key === 'vuln' ? '받는 피해' : '공격'} ${o.key === 'vuln' ? '+' : '-'}${ev}% (${o.sec}초)`);
+  else if (o.t === 'dot') P.push(`${foe} 8초간 2초마다 ${S} ×${m(o.p)}`);
+  else if (o.t === 'stun') P.push(`${foe} ${S} ×${m(o.p)}`, '행동 늦추기 60');
+  else if (o.t === 'burst') P.push(`${foe}에 남은 지속 피해 ×1.5를 한꺼번에 터뜨려요`);
+  else if (o.t === 'cleanse'){ P.push(`${ally} 나쁜 효과 지우기`); if (o.regen) P.push(`10초간 2초마다 치유 ×${xMul(o.regen)}`); }
+  else if (o.t === 'encore') P.push('직전에 쓴 스킬을 MP 없이 한 번 더');
+  else if (o.t === 'recall') P.push('소환수를 모두 돌려보내고 가장 약한 아군 치유 (소환수 하나당 최대 체력의 12%)');
+  else if (o.t === 'leap') P.push('곧바로 다시 행동', `내 속도 +${ev}% (${o.sec}초)`);
+  else if (o.t === 'tstop') P.push('아군 전체 곧바로 행동', `적 전체 행동 늦추기 ${Math.round(150 * xTs(L) / 4)}`);
+  else if (o.t === 'mp') P.push(`아군 전체 MP ${xP(xEfv({ ...o, v: xEfv(o, L) }, L))}% 회복`);   /* 전투(xAct0)가 이미 레벨만큼 오른 v에 xEfv를 한 번 더 써서 그대로 보여 줘요 */
+  else if (o.t === 'summon' && o.pet){   // 소환수: 레벨마다 힘 +18% · 머무는 시간 +10% · 체력 +25% (실제 계산은 xPets · summon 그대로)
+    const q = o.pet, w = xPw(o, L), c = q.n.charCodeAt(q.n.length - 1), ga = c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 ? '이' : '가';
+    const what = { dmg: `적 하나에 ${S} ×${xMul(q.k * w)}`, dmgcover: `적 하나에 ${S} ×${xMul(q.k * w)} · 적의 시선을 끌어요`, dmgall: `적 전체에 ${S} ×${xMul(q.k * w * .8)}`, heal: `가장 약한 아군 치유 ×${xMul(q.k * w)}`, shield: `가장 약한 아군에 보호막 ×${xMul(q.k * w)} (8초)` }[q.kind] || '';
+    P.push(`${Math.round(q.sec * (1 + .1 * (L - 1)) * 10) / 10}초간 ${q.n}${ga} ${q.every}초마다 ${what} · 소환수 체력 (내 최대 체력 ${Math.round(30 * (1 + .25 * (L - 1)) * (q.hpm || 1))}% + ${Math.round(16 * (1 + .25 * (L - 1)) * (q.hpm || 1))})`); }
+  return xNb(P.join(' · ') + tail);
 }
 const xSname = k => ({ atk: '공격', mag: '마법', heal: '치유' }[k]);
 // 스킬 칸 이름은 「줄기_칸」(예: 0_0). Firebase는 이름에 점(.)을 못 써서, 예전 「0.0」은 저장이 통째로 실패했어요
@@ -2544,7 +2560,7 @@ function xArmorView(frame, ex, job){   // 탐사 → 방어구 강화 창
   const ar = Math.min(XAMAX, ex.ar || 0), nx = ar < XAMAX ? XAC[ar] : null, L = xLv(ex.exp).L, V = XAV[ar];
   const have = k => k === 'gold' ? me.coin : (me.inv[k] || 0), need = nx ? [['gold', nx.g], ...Object.entries(nx.it)] : [];
   const okL = nx && L >= nx.L, okAll = nx && okL && need.every(([k, n]) => have(k) >= n);
-  const pct = v => `${Math.round(v * 1000) / 10}%`, eff = i => i ? `체력 +${pct(XAV[i][0])} · 피해 −${pct(XAV[i][1])}` : '효과 없음';
+  const pct = v => `${xP(v)}%`, eff = i => i ? `체력 +${pct(XAV[i][0])} · 피해 −${pct(XAV[i][1])}` : '효과 없음';
   const row = ([k, n]) => `<div class="xarq${have(k) >= n ? ' ok' : ''}">${k === 'gold' ? '<span class="xarg">G</span>' : ic(k)}<span>${k === 'gold' ? '골드' : esc(ITEM[k] || k)}</span><b>${have(k)} / ${n}</b></div>`;
   frame(null, '방어구 강화', `${job.n} · ${XAN[ex.job]}`, `<section class="sec"><div class="box px" style="padding:14px"><div style="display:flex;gap:14px;align-items:center"><div class="xarbox t${ar}">${xArPic(ex.job, Math.max(0, ar), 84, ar ? '' : 'opacity:.35;filter:grayscale(1)')}</div><div style="flex:1"><b>${ar ? `${XAT[ar]} ${XAN[ex.job]}` : `${XAN[ex.job]} (아직 없어요)`}</b><div class="s sub">강화 ${ar} / ${XAMAX} · ${eff(ar)}</div>${nx ? `<div class="s" style="margin-top:6px">다음: <b>${XAT[ar + 1]}</b> (${eff(ar + 1)})</div>` : '<div class="s" style="margin-top:6px;color:var(--gold)">최고 단계예요!</div>'}</div></div>
     ${nx ? `<div class="s" style="margin-top:10px">${okL ? '' : `<b style="color:#ff9a8a">레벨 ${nx.L} 이상이어야 해요 (지금 ${L})</b> · `}성공 확률 <b>${Math.round(nx.p * 100)}%</b>${nx.p < 1 ? ' · 실패하면 골드와 증표·문장·심장석 절반을 잃어요' : ''}</div><div class="xarneed">${need.map(row).join('')}</div>
@@ -2708,7 +2724,7 @@ function renderExplore(){
     frame(null, '탐사', '직업을 골라요 (한 번 고르면 바뀌지 않아요)', `<section class="sec">${secH('직업 고르기', '12종')}<div class="box px">${Object.entries(XJ).map(([k, j]) => { const tk = Object.entries(playersList).find(([id, p]) => id !== uid && p && p.ex && p.ex.job === k); return `<div class="li"${tk ? ' style="opacity:.5"' : ''}>${j.ic ? `<span class="big">${j.ic}</span>` : ''}<div class="main"><span class="t">${j.n}</span><span class="d" style="white-space:normal">${tk ? `${esc(tk[1].nick || '친구')}가 골랐어요` : `${j.d}<br>${XT[k].map(b => b[0]).join(' · ')}`}</span></div><button class="btn sm go" data-xj="${k}" ${tk ? 'disabled' : ''}>고르기</button></div>`; }).join('')}</div></section><div style="display:flex;gap:8px">${back}</div>`);
     $('#back').onclick = closeSheet; on('[data-xj]', b => confirmBox(`${XJ[b.dataset.xj].n}(으)로 정할까요? 바꿀 수 없어요.`, '정했어요', '다시 볼래요').then(async ok => { if (!ok) return; if (!(await jobClaim(b.dataset.xj))) return toast('방금 다른 친구가 그 직업을 골랐어요'); ex.job = b.dataset.xj; xSkEx(ex); save(); renderExplore(); })); return;
   }
-  const head = `<div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center"><span class="big">${job.ic}</span><div style="flex:1"><b>${esc(me.nick)} · ${job.n} Lv ${lv.L}</b><div class="s sub">HP ${Math.round(xStTot(ex, 'hp'))} · 공 ${Math.round(xStTot(ex, 'atk'))} · 마 ${Math.round(xStTot(ex, 'mag'))} · 치 ${Math.round(xStTot(ex, 'heal'))} · 속 ${Math.round(xStTot(ex, 'spd') * 10) / 10}</div></div></div></div>`;
+  const head = `<div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center"><span class="big">${job.ic}</span><div style="flex:1"><b>${esc(me.nick)} · ${job.n} Lv ${lv.L}</b><div class="s sub">HP ${Math.round(xStTot(ex, 'hp'))} · 공 ${Math.round(xStTot(ex, 'atk'))} · 마 ${Math.round(xStTot(ex, 'mag'))} · 치 ${Math.round(xStTot(ex, 'heal'))} · 속 ${Math.round(xStTot(ex, 'spd'))}</div></div></div></div>`;
   if (v === 'lobby'){
     const R = xReg(), okL = lv.L >= R.need;
     frame(null, '탐사', `오늘 ${Math.min(ex.n, xDayMax())} / ${xDayMax()}회 다녀왔어요`, `${head}<section class="sec">${secH('가는 곳')}<div class="box px"><div class="li"><div class="main"><span class="t">${R.n} · ${R.tier}</span><span class="d" style="white-space:normal">${R.dir}쪽 길 · ${R.min}분 · 입장 ${R.fee}G · 몬스터 Lv ${R.lv[0]}~${R.lv[1]}${lv.L < R.need ? ` · 내 레벨 ${R.need} 이상` : ''}</span></div></div>
@@ -2731,8 +2747,8 @@ function renderExplore(){
     frame(null, '스탯', `${job.n} Lv ${L} · 남은 포인트 ${pts}`, `<style>.stree{display:flex;flex-direction:column;align-items:center;gap:0}.sroot{display:flex;align-items:center;gap:8px;padding:6px 14px;border:2px solid #f4efe6;border-radius:8px;background:#1b1438;box-shadow:0 0 0 2px #0c0818;font-weight:800}.sroot .jic{width:30px;height:30px}.sstem{width:2px;height:14px;background:#6a5ab0}.srow{position:relative;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;width:100%;padding-top:14px}.srow::before{content:'';position:absolute;top:0;left:10%;right:10%;height:2px;background:#6a5ab0}
       .sn{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;background:none;border:2px solid transparent;border-radius:10px;color:inherit;font:inherit}.sn::before{content:'';position:absolute;top:-14px;left:50%;width:2px;height:12px;background:#6a5ab0}.sn.has::before{background:var(--gold)}.sn.sel{border-color:var(--gold);background:rgba(255,184,77,.14)}.sn b{font-size:12px}.sn small{font-size:10px;opacity:.85}.sn i{position:absolute;right:2px;top:2px;font-style:normal;font-size:10px;font-weight:900;background:#2b1b3a;border-radius:6px;padding:0 4px;color:#ffd866}.stic{display:inline-block;width:46px;height:46px;background:url(art/stats.png?v=1) 0 0/500% 100%;background-position:calc(var(--i)*100%/4) 0;image-rendering:pixelated}
       .sdet{display:flex;gap:8px}.sdet .btn{flex:1;min-height:44px;font-size:16px;font-weight:800}</style>
-      <section class="sec"><div class="stree"><div class="sroot">${job.ic}<span>${esc(me.nick)} Lv ${L}</span></div><div class="sstem"></div><div class="srow">${XSTAT.map(([k, n], i) => `<button class="sn${k === cur ? ' sel' : ''}${(sp[k] || 0) > 0 ? ' has' : ''}" data-ss="${k}"><span class="stic" style="--i:${i}"></span><b>${n}</b><small>${Math.round(xStTot(ex, k) * 10) / 10}</small>${(sp[k] || 0) ? `<i>+${sp[k]}</i>` : ''}</button>`).join('')}</div></div></section>
-      <section class="sec"><div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center"><span class="stic" style="--i:${ci}"></span><div style="flex:1"><b>${cn}</b> <span class="s sub">${cd}</span><div class="s">지금 ${Math.round(xStTot(ex, ck) * 10) / 10} → 1포인트 더 ${Math.round((xStTot(ex, ck) + XSPV[ck]) * 10) / 10} <span class="sub">(포인트당 ${XSTU[ck]})</span></div></div></div>
+      <section class="sec"><div class="stree"><div class="sroot">${job.ic}<span>${esc(me.nick)} Lv ${L}</span></div><div class="sstem"></div><div class="srow">${XSTAT.map(([k, n], i) => `<button class="sn${k === cur ? ' sel' : ''}${(sp[k] || 0) > 0 ? ' has' : ''}" data-ss="${k}"><span class="stic" style="--i:${i}"></span><b>${n}</b><small>${Math.round(xStTot(ex, k))}</small>${(sp[k] || 0) ? `<i>+${sp[k]}</i>` : ''}</button>`).join('')}</div></div></section>
+      <section class="sec"><div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center"><span class="stic" style="--i:${ci}"></span><div style="flex:1"><b>${cn}</b> <span class="s sub">${cd}</span><div class="s">지금 ${Math.round(xStTot(ex, ck))} → 1포인트 더 ${Math.round(xStTot(ex, ck) + XSPV[ck])} <span class="sub">(포인트당 ${XSTU[ck]})</span></div></div></div>
         <div class="sdet" style="margin-top:10px"><button class="btn" id="sm1" ${cv > 0 && xv.add?.[ck] > 0 ? '' : 'disabled'}>−1</button><button class="btn go" id="sp1" ${pts > 0 ? '' : 'disabled'}>+1</button><button class="btn go" id="sp5" ${pts > 0 ? '' : 'disabled'}>+5</button><button class="btn" id="spa" ${pts > 0 ? '' : 'disabled'}>전부</button></div></div></section>
       <div style="display:flex;gap:8px"><button class="btn ghost" id="srs" style="flex:1">초기화 (${XSRESET}G)</button><button class="btn" id="sok" style="flex:1">돌아가기</button></div>`);
     const add = n => { n = Math.min(n, xSpPts(ex)); if (n <= 0) return; sp[ck] = (sp[ck] || 0) + n; xv.add = xv.add || {}; xv.add[ck] = (xv.add[ck] || 0) + n; sfx('pop'); save(); renderExplore(); };
@@ -2757,7 +2773,7 @@ function renderExplore(){
     frame(null, '스킬 트리', `${job.n} · 남은 포인트 ${pts}`, `<style>.tcol{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}.tcol .th{font-size:12px;font-weight:700;color:var(--gold)}.tn{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;background:none;border:2px solid transparent;border-radius:10px;color:inherit;font:inherit}.tn .sic{width:44px;height:44px}.tn small{font-size:10px;line-height:1.2;opacity:.85}.tn.lock{opacity:.4}.tn.ln::before{content:'';position:absolute;top:-8px;left:50%;width:2px;height:8px;background:#4a3c86}.tn.ln.lk::before{background:var(--gold)}.tcol{row-gap:10px}.tn.sel{border-color:var(--gold);background:rgba(255,184,77,.14)}.tn i{position:absolute;right:4px;top:2px;font-style:normal;font-size:11px;font-weight:900;background:#2b1b3a;border-radius:6px;padding:0 4px;color:#ffd866}.qs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.qsh{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--gold);margin:0 2px 4px}.qsh span{color:var(--sub);font-size:11px}.qc{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:10px;border:2px solid #6a4ab0;background:rgba(106,74,176,.18);font-size:10px;min-height:66px;color:inherit;font-family:inherit}.qc .sic{width:32px;height:32px}.qc.empty{border-style:dashed;opacity:.6;justify-content:center}.qc em{position:absolute;left:3px;top:2px;font-style:normal;font-size:9px;background:#3a2c18;color:#ffd866;border-radius:4px;padding:0 3px}.qc b.n{position:absolute;right:3px;top:2px;font-size:9px;color:#cbb8ff}.qc.pick{border-color:var(--gold);box-shadow:0 0 10px rgba(255,216,102,.6)}</style>
       ${(() => { const Q = xQuick(xAll(ex.job).filter(o => !o.pas && xSkLv(sk, o.b, o.r) > 0)); return `<section class="sec"><div class="qsh">빠른 스킬 4칸 <span>${xv.qpick ? '바꿀 칸을 눌러요' : '전투 첫 화면에 바로 나와요'}</span></div><div class="qs">${Q.map((x, i) => x ? `<button class="qc${xv.qpick ? ' pick' : ''}" data-qc="${i}">${x.auto ? '<em>자동</em>' : ''}<b class="n">${i + 1}</b>${xIc(x.o)}<span>${x.o.n}</span></button>` : `<button class="qc empty${xv.qpick ? ' pick' : ''}" data-qc="${i}">빈칸</button>`).join('')}</div></section>`; })()}
       <section class="sec"><div class="tcol">${[0, 1, 2].map(b => `<div class="th">${XT[ex.job][b][0]}</div>`).join('')}${[0, 1, 2, 3, 4].map(r => [0, 1, 2].map(b => { const o = xDef(ex.job, b, r), lv = xSkLv(sk, b, r), lock = r > 0 && !xSkLv(sk, b, r - 1); return `<button class="tn${lock ? ' lock' : ''}${r > 0 ? ' ln' : ''}${r > 0 && !lock ? ' lk' : ''}${xv.sel === b + '_' + r ? ' sel' : ''}" data-ts="${b}_${r}">${xIc(o)}<small>${o.n}</small><i>${lv}/${XMAXLV}</i></button>`; }).join('')).join('')}</div></section>
-      <section class="sec"><div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center">${xIc(so)}<div style="flex:1"><b>${so.n}</b> <span class="s sub">${slv ? `Lv ${slv}` : '아직 안 배웠어요'}</span></div></div><div class="s" style="margin-top:6px">${xDesc(so, Math.max(1, slv))}</div>${slv && slv < XMAXLV ? `<div class="s sub">다음 레벨: ${xDesc(so, slv + 1)}</div>` : ''}<button class="btn go" id="tup" style="width:100%;margin-top:8px" ${can(so) ? '' : 'disabled'}>${slv >= XMAXLV ? '최대 레벨' : sr > 0 && !xSkLv(sk, sb, sr - 1) ? '앞 스킬을 먼저 배워요' : pts < 1 ? '포인트가 없어요' : slv ? '레벨 올리기 (포인트 1)' : '배우기 (포인트 1)'}</button>${so.pas ? '' : (() => { const at = (ex.qs || []).indexOf(xv.sel); return `<button class="btn" id="tqs" style="width:100%;margin-top:6px" ${slv ? '' : 'disabled'}>${!slv ? '배운 스킬만 빠른 칸에 넣을 수 있어요' : at >= 0 ? `★ 빠른 칸 ${at + 1}번에서 빼기` : '☆ 빠른 칸에 넣기'}</button>`; })()}</div></section>
+      <section class="sec"><div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center">${xIc(so)}<div style="flex:1"><b>${so.n}</b> <span class="s sub">${slv ? `Lv ${slv}` : '아직 안 배웠어요'}</span></div></div><div class="s" style="margin-top:6px;word-break:keep-all">${xDesc(so, Math.max(1, slv))}</div>${slv && slv < XMAXLV ? `<div class="s sub" style="word-break:keep-all">다음 레벨: ${xDesc(so, slv + 1)}</div>` : ''}<button class="btn go" id="tup" style="width:100%;margin-top:8px" ${can(so) ? '' : 'disabled'}>${slv >= XMAXLV ? '최대 레벨' : sr > 0 && !xSkLv(sk, sb, sr - 1) ? '앞 스킬을 먼저 배워요' : pts < 1 ? '포인트가 없어요' : slv ? '레벨 올리기 (포인트 1)' : '배우기 (포인트 1)'}</button>${so.pas ? '' : (() => { const at = (ex.qs || []).indexOf(xv.sel); return `<button class="btn" id="tqs" style="width:100%;margin-top:6px" ${slv ? '' : 'disabled'}>${!slv ? '배운 스킬만 빠른 칸에 넣을 수 있어요' : at >= 0 ? `★ 빠른 칸 ${at + 1}번에서 빼기` : '☆ 빠른 칸에 넣기'}</button>`; })()}<div class="s sub" style="margin-top:8px;word-break:keep-all">행동 게이지가 100이면 차례예요 · 행동 늦추기 N: 게이지를 -N까지 되돌려요 · 속도 -%: 그동안 느리게 차요</div></div></section>
       <div style="display:flex;gap:8px"><button class="btn ghost" id="trs" style="flex:1">초기화 (${XRESET}G)</button><button class="btn" id="tok" style="flex:1">돌아가기</button></div>`);
     on('[data-ts]', b => { xv.sel = b.dataset.ts; xv.qpick = null; renderExplore(); });
     { const qb = $('#tqs'); if (qb) qb.onclick = () => { const qs = ex.qs || [], at = qs.indexOf(xv.sel); if (at >= 0){ xQsSet(-1, xv.sel); return renderExplore(); }
@@ -3588,11 +3604,11 @@ function xCmd(){
   if (B.pick) el.innerHTML = '<div class="xskh" style="grid-column:1/-1">' + ([...B.pick.set].some(id => B.party.some(p => p.id === id)) ? '화면이나 아래 카드에서 대상을 눌러요' : '화면에서 대상을 눌러요') + '</div><button class="xb" data-xc="cancel" style="grid-column:1/-1">취소</button>';
   else if (B.menu === 'skills'){ const tb = B.skTab || 0, br = [0, 1, 2].filter(b => u.sks.some(s => s.b === b)), cur = br.includes(tb) ? tb : br[0] ?? 0, qk = new Set(xQuick(u.sks).filter(x => x && !x.auto).map(x => xQsKey(x.o)));
     const can = s => !(Math.ceil(s.mp) > Math.floor(u.mp) || xCdLeft(u, s)), L = u.sks.map((s, i) => [s, i]).filter(([s]) => s.b === cur), A = L.filter(([s]) => can(s)), Z = L.filter(([s]) => !can(s));
-    const row = ([s, i]) => `<div class="xsrow"><button class="xb sk" data-xc="s${i}" ${can(s) ? '' : 'disabled'}>${xIc(s)}<span>${s.n}<small>Lv ${s.lv} · ${xCdLeft(u, s) ? `쿨타임 ${xCdLeft(u, s)}턴` : (s.mp ? 'MP ' + s.mp : '무료') + (xCdOf(s) ? ' · 쿨 ' + xCdOf(s) + '턴' : '')}</small></span></button><button class="xb xpin${qk.has(xQsKey(s)) ? ' on' : ''}" data-xq="${xQsKey(s)}" aria-label="빠른 칸">${qk.has(xQsKey(s)) ? '★' : '☆'}</button></div>`;
+    const row = ([s, i]) => `<div class="xsrow"><button class="xb sk" data-xc="s${i}" ${can(s) ? '' : 'disabled'}>${xIc(s)}<span>${s.n}<small>Lv ${s.lv} · ${xCdLeft(u, s) ? `쿨타임 ${xCdLeft(u, s)}턴` : (s.mp ? 'MP ' + Math.ceil(s.mp) : '무료') + (xCdOf(s) ? ' · 쿨 ' + xCdOf(s) + '턴' : '')}</small></span></button><button class="xb xpin${qk.has(xQsKey(s)) ? ' on' : ''}" data-xq="${xQsKey(s)}" aria-label="빠른 칸">${qk.has(xQsKey(s)) ? '★' : '☆'}</button></div>`;
     el.innerHTML = `<div class="xskh"><span>✦ 전체 스킬</span><button class="xb" data-xc="m_back" style="min-height:32px;padding:2px 12px">뒤로</button></div>${br.length > 1 ? `<div class="xstab">${br.map(b => `<button class="${b === cur ? 'on' : ''}" data-xt="${b}">${XT[u.job][b][0]}</button>`).join('')}</div>` : ''}${A.map(row).join('')}${Z.length ? `<div class="xsep">지금은 못 써요</div>${Z.map(row).join('')}` : ''}` || '<div class="xwait">배운 스킬이 없어요</div>'; }
   else if (B.menu === 'items') el.innerHTML = X_ITEMS.filter(x => !B.gr || x[0] in B.gr.inv).map(x => `<button class="xb" data-xc="i_${x[0]}" ${(xInv(B)[x[0]] || 0) > 0 ? '' : 'disabled'}><span>${x[2]} ${x[3]}<small>${B.gr ? '시험용 ' : ''}${ITEM[x[0]]} ×${xInv(B)[x[0]] || 0}</small></span></button>`).join('') + '<button class="xb" data-xc="m_back">뒤로</button>';
   else { const Q = xQuick(u.sks);
-    el.innerHTML = `<button class="xb atk" data-xc="atk">공격</button><button class="xb" data-xc="m_items">아이템</button><button class="xb" data-xc="def">방어</button>${u.sks.length ? `<div class="xqrow">${Q.map(x => { if (!x) return '<span class="xb xq empty">빈칸</span>'; const s = x.o, i = u.sks.indexOf(s), cd = xCdLeft(u, s); return `<button class="xb xq" data-xc="s${i}" ${Math.ceil(s.mp) > Math.floor(u.mp) || cd ? 'disabled' : ''}>${xIc(s)}<span>${s.n}<small>${s.mp ? 'MP ' + s.mp : '무료'}</small></span>${cd ? `<i class="xqcd">${cd}턴</i>` : ''}</button>`; }).join('')}</div><button class="xb xall" data-xc="m_skills">✦ 전체 스킬 ${u.sks.length}개</button>` : ''}`; }
+    el.innerHTML = `<button class="xb atk" data-xc="atk">공격</button><button class="xb" data-xc="m_items">아이템</button><button class="xb" data-xc="def">방어</button>${u.sks.length ? `<div class="xqrow">${Q.map(x => { if (!x) return '<span class="xb xq empty">빈칸</span>'; const s = x.o, i = u.sks.indexOf(s), cd = xCdLeft(u, s); return `<button class="xb xq" data-xc="s${i}" ${Math.ceil(s.mp) > Math.floor(u.mp) || cd ? 'disabled' : ''}>${xIc(s)}<span>${s.n}<small>${s.mp ? 'MP ' + Math.ceil(s.mp) : '무료'}</small></span>${cd ? `<i class="xqcd">${cd}턴</i>` : ''}</button>`; }).join('')}</div><button class="xb xall" data-xc="m_skills">✦ 전체 스킬 ${u.sks.length}개</button>` : ''}`; }
   el.querySelectorAll('[data-xc]').forEach(b => b.onclick = () => xChoose(b.dataset.xc));
   el.querySelectorAll('[data-xt]').forEach(b => b.onclick = () => { B.skTab = +b.dataset.xt; xCmd(); });
   el.querySelectorAll('[data-xq]').forEach(b => b.onclick = () => { const k = b.dataset.xq, Q = xQuick(u.sks), at = Q.findIndex(x => x && !x.auto && xQsKey(x.o) === k);
