@@ -3543,7 +3543,7 @@ function xRenderBattle(){
 }
 const XRDY_MS = 15000;   // 게이지가 다 찬 뒤 이만큼 고르지 않으면 자동 공격 (파티일 때)
 const xRdy = u => !!u && u.hum && u.hp > 0 && u.g >= 100 && !(xb && xb.mirror && u.sent === (u.rt || 0));   // 차례 없이: 내 게이지가 다 차면 언제든 행동해요
-const xMine = B => B.party.find(x => x.uid === myId()) || B.party[0];
+const xMine = B => B && B.party ? (B.party.find(x => x.uid === myId()) || B.party[0]) : null;
 function xcoCmdSend(B, u, c){ c.rt = u.rt || 0; c.bn = B.bn; xcoSend({ cmd: c }); u.sent = u.rt || 0; B.pick = null; B.menu = 'main'; xUp(); xCmd(); }
 // 빠른 스킬 4칸: ex.qs = 학생이 고른 칸(스킬 칸 이름 「줄기_칸」 · 빈칸은 null) · 빈칸은 많이 쓴 스킬(ex.su)부터 자동으로 채워요 · 새로 배운 스킬도 빈칸에 저절로 들어가요
 const xQsKey = o => o.b + '_' + o.r;
@@ -3555,7 +3555,7 @@ function xQuick(list){   // list: 배운(쓸 수 있는) 스킬들 → [{ o, aut
 }
 function xQsSet(i, key){ const ex = xEx(); ex.qs = [0, 1, 2, 3].map(j => (ex.qs || [])[j] || null); ex.qs = ex.qs.map(k => k === key ? null : k); if (i >= 0) ex.qs[i] = key; save(); }
 function xCmd(){
-  const B = xb, u = xMine(B), el = $('#xcmd'); if (!el) return;
+  const B = xb, u = xMine(B), el = $('#xcmd'); if (!el || !B || !u) return;   // 전투가 막 끝난 뒤 늦게 불린 경우
   const wait = B.over ? '' : u.hp <= 0 ? '쓰러졌어요.... 동료가 싸워요' : !xRdy(u) ? '게이지가 차면 행동해요' : null;
   const key = wait !== null ? 'w' + wait : B.pick ? 'pick' : B.menu + ':' + (B.skTab || 0) + ':' + (xEx().qs || []).join() + ':' + u.sks.map(s => (Math.ceil(s.mp) <= Math.floor(u.mp) ? 1 : 0) + '' + xCdLeft(u, s)).join('') + X_ITEMS.map(x => xInv(B)[x[0]] || 0).join();
   if (el.dataset.k === key) return; el.dataset.k = key; el.classList.toggle('xsk2', key.startsWith('skills')); el.classList.toggle('xm4', key.startsWith('items'));
@@ -16596,6 +16596,7 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
   const t = e.target.closest && e.target.closest('[data-rdshop]'); if (t) rdShop(); });
 // ---------- 보스마다 다른 이펙트 (맞는 순간 1 초) ----------
 function rdBoomFx(g, B, bm, p){
+  p = Math.max(0, Math.min(1, p || 0));   // 방장 기기 시계가 조금 앞서면 p가 음수가 돼서 반지름이 음수였어요
   const f = B.raid.f, al = 1 - p; let r = (bm.t % 9973) || 7; const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
   const L = B.party.filter(u => bm.k !== 'side' || (u.side || 0) === bm.sd), mx = 192, my = 96, x0 = bm.k === 'side' ? (bm.sd ? 210 : 0) : 0, x1 = bm.k === 'side' ? (bm.sd ? XCW : 174) : XCW;
   g.save(); g.globalAlpha = Math.max(0, al);
