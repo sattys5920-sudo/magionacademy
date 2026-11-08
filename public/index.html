@@ -14604,8 +14604,8 @@ let pzTaking = false, lnTaking = false;   // 고르는 중에는 「다시 받�
 function pzRegrant(){ if (pzTaking || !me || !pzCtl || !pzCtl.id || (me.pz && me.pz.id === pzCtl.id)) return; const k = Object.keys(pzChest).find(i => pzChest[i] === myId()); if (k === undefined) return;
   const r = pzShuffle()[+k]; if (!r) return; me.pz = { id: pzCtl.id, ch: +k, g: r[0], m: r[1], sp: r[2] }; me.coin += r[0]; if (r[1]) me.inv.mana = (me.inv.mana || 0) + r[1]; if (r[2]){ const ex = xEx(); ex.spx = (ex.spx || 0) + r[2]; } save(); hud(); toast(`보물 상자 보상을 다시 받았어요 · ${pzRewText(r)}`); }
 const pzMine = () => Object.keys(pzOwn).filter(k => pzOwn[k] === myId() && pzBoard[k] === undefined).map(Number).sort((a, b) => a - b);
-// 이벤트가 닫힌 뒤에도: 지도가 다 맞춰졌는데 아직 상자를 못 고른 학생은 상자를 받을 수 있어요
-const pzClaim = () => !!(pzCtl && pzCtl.id && !pzCtl.open && pzCount() >= PZ.C * PZ.R && !(me && me.pz && me.pz.id === pzCtl.id) && !Object.values(pzChest).includes(myId()) && Object.keys(pzChest).length < PZ_REW.length);
+// 이벤트가 닫힌 뒤에도 하루 동안은: 지도가 다 맞춰졌는데 아직 상자를 못 고른 학생은 상자를 받을 수 있어요 (그 뒤엔 버튼이 사라져요)
+const pzClaim = () => !!(pzCtl && pzCtl.id && !pzCtl.open && pzCtl.end && Date.now() - pzCtl.end < 86400e3 && pzCount() >= PZ.C * PZ.R && !(me && me.pz && me.pz.id === pzCtl.id) && !Object.values(pzChest).includes(myId()) && Object.keys(pzChest).length < PZ_REW.length);
 function pzBtn(){
   let b = $('#pzbtn'); const claim = pzClaim(), on = pzCtl && (pzCtl.open || claim) && !pzOn;
   if (on && !b){ b = document.createElement('button'); b.id = 'pzbtn'; b.onclick = () => pzClaim() ? pzChests() : pzOpen(); $('#shell').appendChild(b); } else if (!on && b) b.remove();
@@ -14706,7 +14706,7 @@ function adminPuzzleHTML(){
 }
 document.addEventListener('click', e => { const bt = e.target.closest && e.target.closest('[data-pza]'); if (!bt || !F || !db) return; const a = bt.dataset.pza, id = now2();
   if (a === 'open'){ F.set(F.ref(db, 'puzzle/board'), null); F.set(F.ref(db, 'puzzle/own'), null); F.set(F.ref(db, 'puzzle/chest'), null); F.set(F.ref(db, 'puzzle/ctl'), { open: true, id, rate: 1 }); }
-  else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 맞춘 조각 기록은 남아요.')) F.set(F.ref(db, 'puzzle/ctl'), { ...(AD.pzctl || {}), open: false }); }
+  else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 맞춘 조각 기록은 남아요.')) F.set(F.ref(db, 'puzzle/ctl'), { ...(AD.pzctl || {}), open: false, end: Date.now() }); }   /* 닫은 뒤 하루 동안만 「보물 상자 받기」 */
   else if (a === 'reset'){ if (confirm('처음으로 되돌릴까요? 맞춘 조각과 학생들이 가진 조각이 모두 지워져요.')){ F.set(F.ref(db, 'puzzle/board'), null); F.set(F.ref(db, 'puzzle/own'), null); F.set(F.ref(db, 'puzzle/chest'), null); F.set(F.ref(db, 'puzzle/ctl'), { open: true, id, rate: (AD.pzctl && AD.pzctl.rate) || 1 }); } }
   else if (a === 'free'){   // 조각을 들고 안 들어오는 학생 때문에 막히지 않게: 지금 접속 안 한 학생이 가진(아직 안 맞춘) 조각을 다시 나오게 해요
     const o = AD.pzown || {}, b = AD.pzboard || {}, on = adOnline(), ups = {}; Object.keys(o).forEach(k => { if (b[k] === undefined && !on[o[k]]) ups['puzzle/own/' + k] = null; });
