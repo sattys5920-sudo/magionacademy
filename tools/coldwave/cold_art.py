@@ -47,18 +47,30 @@ def thermo():   # 체온계 (7 × 14)
     g.rounded_rectangle([2, 0, 4, 10], radius=1, fill=hx('#F4F4F8')); g.ellipse([1, 9, 5, 13], fill=hx('#E8303A')); g.rectangle([3, 4, 3, 10], fill=hx('#E8303A'))
     return outline(im)
 
-def overlay(sym):   # 증상 덧그림 (얼굴 위 16 × 10 · 볼 · 코 · 땀 · 떨림 표시)
+def overlay(sym):   # 증상 덧그림: 얼굴 위는 아주 살짝만 (줄 · 띠 없이)
     im = Image.new('RGBA', (20, 14)); g = ImageDraw.Draw(im)
-    if sym == 'fever':   # 빨간 볼 + 땀
-        g.rectangle([2, 8, 5, 9], fill=hx('#F06A6A', 200)); g.rectangle([14, 8, 17, 9], fill=hx('#F06A6A', 200)); g.polygon([(17, 1), (15, 5), (19, 5)], fill=hx('#9ADCF8'))
-    elif sym == 'throat':   # 목도리 + 작아진 말줄임
-        g.rectangle([3, 11, 16, 13], fill=hx('#E8604A')); [im.putpixel((7 + i * 3, 3), OL) for i in range(3)]
-    elif sym == 'nose':   # 빨간 코 + 콧물 방울
-        g.rectangle([9, 7, 10, 8], fill=hx('#F05050')); g.ellipse([10, 9, 12, 12], fill=hx('#BFE8FF'))
-    elif sym == 'chill':   # 떨림 선
-        for x in (0, 18):
-            for y in range(2, 12, 3): im.putpixel((x, y), OL); im.putpixel((x + 1, y + 1), OL)
-        g.rectangle([3, 11, 16, 13], fill=hx('#8AA0D8'))
+    if sym == 'fever':   # 빨간 볼
+        for x in (2, 15): g.ellipse([x, 7, x + 3, 9], fill=hx('#F07070', 170))
+    elif sym == 'nose':   # 콧물 방울
+        g.ellipse([10, 8, 12, 11], fill=hx('#BFE8FF', 230)); im.putpixel((11, 8), hx('#FFFFFF'))
+    return im
+
+def bubble(sym):   # 머리 위 증상 말풍선 (16 × 15): 이걸 보고 증상을 골라요
+    im = Image.new('RGBA', (16, 15)); g = ImageDraw.Draw(im)
+    g.rounded_rectangle([0, 0, 15, 11], radius=4, fill=hx('#FFFFFF'), outline=OL); g.polygon([(5, 11), (7, 14), (8, 11)], fill=hx('#FFFFFF'), outline=OL); g.line([(6, 11), (7, 11)], fill=hx('#FFFFFF'))
+    if sym == 'fever':   # 불꽃
+        g.polygon([(8, 2), (5, 7), (6, 9), (10, 9), (11, 7)], fill=hx('#F06A3A')); g.polygon([(8, 5), (7, 8), (9, 8)], fill=hx('#FFD24A'))
+    elif sym == 'throat':   # 콜록 (기침 구름 세 개)
+        for cx in (4, 8, 12): g.ellipse([cx - 2, 4, cx + 1, 7], fill=hx('#B8B0C8'))
+    elif sym == 'nose':   # 에취 (튀는 물방울)
+        for x, y in ((4, 4), (8, 3), (12, 5), (6, 7), (10, 7)): g.ellipse([x - 1, y - 1, x, y], fill=hx('#7FC8F0'))
+    elif sym == 'chill':   # 눈송이
+        for dx, dy in ((0, 0), (-2, 0), (2, 0), (0, -2), (0, 2), (-1, -1), (1, 1), (-1, 1), (1, -1)): im.putpixel((8 + dx, 5 + dy), hx('#6A9AE8'))
+    return im
+
+def shiver(h):   # 오한일 때 몸 양옆 떨림 표시 (세로 h)
+    im = Image.new('RGBA', (4, h))
+    for y in range(2, h - 2, 4): im.putpixel((1, y), hx('#9ABCF0')); im.putpixel((2, y + 1), hx('#9ABCF0'))
     return im
 
 def chart():   # 진료 수첩 (24 × 28)
@@ -91,9 +103,11 @@ if __name__ == '__main__':
     P = Image.new('RGBA', (240, 150), hx('#1E1830'))
     for i, k in enumerate(K): P.alpha_composite(bottle(k), (8 + i * 40, 6))
     FACE = { 0: (13, 14, 31), 2: (20, 16, 28), 14: (21, 27, 21), 16: (16, 15, 30) }   # index.html NPC_FACE (x, y, 크기)
-    for i, (row, k) in enumerate(((2, 'fever'), (14, 'throat'), (0, 'nose'), (16, 'chill'))):   # 캇파 · 도도 · 나비 · 본 위에 증상 덧그림 (얼굴 틀 기준)
+    for i, (row, k) in enumerate(((2, 'fever'), (14, 'throat'), (0, 'nose'), (16, 'chill'))):   # 캇파 열 · 도도 목감기 · 나비 콧물 · 본 오한
         fr = npcs.crop((0, row * 64, 64, row * 64 + 64)); x0 = 4 + i * 58; P.alpha_composite(fr, (x0, 44)); fx, fy, fs = FACE[row]
-        P.alpha_composite(overlay(k), (x0 + fx + fs // 2 - 10, 44 + fy + int(fs * .35))); P.alpha_composite(breath(), (x0 + fx + fs - 2, 44 + fy + fs // 2)); P.alpha_composite(thermo(), (x0 + fx + fs, 44 + max(0, fy - 12)))
+        P.alpha_composite(overlay(k), (x0 + fx + fs // 2 - 10, 44 + fy + int(fs * .35))); P.alpha_composite(breath(), (x0 + fx + fs - 2, 44 + fy + fs // 2))
+        P.alpha_composite(bubble(k), (x0 + fx + fs // 2 - 8, 44 + max(0, fy - 16)))
+        if k == 'chill': P.alpha_composite(shiver(20), (x0 + fx - 6, 44 + fy + fs // 2)); P.alpha_composite(shiver(20), (x0 + fx + fs + 2, 44 + fy + fs // 2))
     P.alpha_composite(chart(), (10, 114)); P.alpha_composite(cabinet(), (50, 112)); P.alpha_composite(blanket(), (90, 124))
     P.resize((P.width * 4, P.height * 4), Image.NEAREST).save(O + '/preview.png')
     print('ok')
