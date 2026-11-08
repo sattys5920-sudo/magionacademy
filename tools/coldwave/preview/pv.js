@@ -49,8 +49,8 @@ window.__coldPv = (() => {
     toast('바람이 차가워졌어요.......'); await famSleep(1600);
     await World.cut([{ cmd: 'spawn', who: 'sera', name: n.name, av: npcAv(n), x: far[0], y: far[1], dir: 'down' },
       { cmd: 'walk', who: 'sera', x: near[0], y: near[1], run: true, timeout: 6 }, { cmd: 'face', who: 'sera', to: 'player' }, { cmd: 'face', who: 'player', to: 'sera' },
-      { cmd: 'emote', who: 'sera', icon: 4 }, say('아, 마침 잘 왔어. 손 좀 빌려줄래.'), say('어제부터 마을에 감기가 돌아. 레오는 콜록, 마들렌은 훌쩍, 캇파는 접시 물이 펄펄 끓어.', 4200),
-      say('증상을 잘 보고 맞는 물약을 갖다주면 돼. 쓴맛은.... 보장 못 하지만.', 3600), say('나? 난 괜찮아. 양호 선생님은 감기 안 걸려.', 3000), say('....에취.', 1800), { cmd: 'emote', who: 'sera', icon: 5 }, { cmd: 'wait', sec: 1 }]);
+      { cmd: 'emote', who: 'sera', icon: 4 }, say('어머, 마침 잘 왔구나. 선생님 좀 도와줄 수 있겠니?'), say('어제부터 마을에 감기가 돌고 있어. 레오는 콜록콜록, 마들렌은 훌쩍훌쩍.... 캇파는 접시 물이 펄펄 끓는단다.', 4200),
+      say('아파 보이는 친구를 잘 살펴보고, 맞는 물약을 갖다주렴. 맛은.... 보장 못 하지만.', 3600), say('선생님? 선생님은 괜찮아. 양호 선생님이 감기 걸리면 큰일이잖니.', 3000), say('....에취.', 1800), { cmd: 'emote', who: 'sera', icon: 5 }, { cmd: 'wait', sec: 1 }]);
     sfx('sparkle'); await card('chart', '진료 수첩', '감기 물약 레시피와 증상 표가 적혀 있어요', 72, 2600); toast('「진료 수첩」을 받았어요'); await famSleep(900);
     win('진료 수첩', chartHTML([['레오', 'throat', 0], ['캇파', 'fever', 0], ['나비', 'nose', 0]])); await famSleep(3200);
     const v = $('#hibv'); if (v) v.scrollTo({ top: 400, behavior: 'smooth' }); await famSleep(3000); await closeW(); await famSleep(800);
@@ -86,18 +86,18 @@ window.__coldPv = (() => {
     const p = npcP('sera'); if (!p) return 'no sera'; p.path = []; const sx = Math.round(p.x), sy = Math.round(p.y);
     World.teleport(World.where(), [sx + 2, sy]); await famSleep(2600);
     const say = (text, ms) => ({ cmd: 'say', who: 'sera', text, ms: ms || Math.max(2600, text.length * 105) });
-    await World.cut([{ cmd: 'face', who: 'sera', to: 'player' }, { cmd: 'face', who: 'player', to: 'sera' }, say('다 나았네. 이제 마을에 감기는....', 3000), { cmd: 'emote', who: 'sera', icon: 4 }, { cmd: 'wait', sec: .6 }]);
-    sick.sera = ['fever', 'throat', 'nose', 'chill']; sfx('pop'); World.sayNpc('sera', '....어라. 땅이 빙글빙글.......', 3000); await famSleep(3400);
-    World.sayNpc('sera', '에취. ....콜록. 이번엔 내 차례인가 봐.......', 3000); await famSleep(3600);
+    await World.cut([{ cmd: 'face', who: 'sera', to: 'player' }, { cmd: 'face', who: 'player', to: 'sera' }, say('다들 나았구나. 이제 마을에 감기는....', 3000), { cmd: 'emote', who: 'sera', icon: 4 }, { cmd: 'wait', sec: .6 }]);
+    sick.sera = ['fever', 'throat', 'nose', 'chill']; sfx('pop'); World.sayNpc('sera', '어머.... 바닥이 빙글빙글 도는구나.......', 3000); await famSleep(3400);
+    World.sayNpc('sera', '에취. ....콜록. 이번엔 선생님 차례인가 봐.......', 3000); await famSleep(3600);
     for (const k of ['fever', 'throat', 'nose', 'chill']){
       win('세라 선생님 · 물약 건네기', `<div class="g4">${Object.keys(POT).map(q => `<button data-cpp="${q}" ${sick.sera.includes(q) ? '' : 'style="opacity:.35"'}><img src="art/cold/potion_${q}.png" style="width:32px;height:32px">${POT[q][0]}</button>`).join('')}</div>`); await famSleep(900);
       await tap(`[data-cpp="${k}"]`, 200); await closeW(); sfx('sparkle'); sick.sera = sick.sera.filter(q => q !== k); toast(POT[k][0] + '을 건넸어요'); await famSleep(1500);
     }
-    await World.cut([{ cmd: 'emote', who: 'sera', icon: 6 }, say('....이렇게 쓴 걸 내가 매일 먹였구나. 미안해.......', 3600), say('그래도 잘 듣네. 내 물약이 맞다는 증거야.', 3400), { cmd: 'emote', who: 'sera', icon: 7 }, { cmd: 'wait', sec: 1 }]);
+    await World.cut([{ cmd: 'emote', who: 'sera', icon: 6 }, say('....이렇게 쓴 걸 선생님이 매일 먹였구나. 미안해.......', 3600), say('그래도 잘 듣네. 선생님 레시피가 맞았다는 증거야. 고마워, 꼬마 간호사님.', 3400), { cmd: 'emote', who: 'sera', icon: 7 }, { cmd: 'wait', sec: 1 }]);
     sfx('win'); await textCard('세라 선생님 하트 +60', '', 2000);
     await card('blanket', '가구 「양호실 담요」', '세라 선생님이 덮던 담요예요', 84, 2600);
     await textCard('3 일 동안 물약 회복량 +10 %', '세라 선생님의 처방이에요', 2400); await famSleep(800);
-    World.sayNpc('sera', '이 물약은.... 조금 덜 써. 정말이야.', 3000); await famSleep(3600);
+    World.sayNpc('sera', '후후, 이번 물약은.... 조금 덜 써. 정말이란다.', 3000); await famSleep(3600);
   }
   return { intro, treat, ending, sick };
 })();
