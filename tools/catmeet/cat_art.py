@@ -79,6 +79,71 @@ def window():   # 가구 「창가의 아기 고양이」 (28 × 30): 창틀 · 
     g.rectangle([1, 1, 26, 24], fill=hx('#1E2448'), outline=OL); g.ellipse([16, 4, 23, 11], fill=hx('#FFF2B8')); g.line([(13, 2), (13, 23)], fill=hx('#8A5A3A')); g.line([(2, 12), (25, 12)], fill=hx('#8A5A3A'))
     g.rectangle([0, 24, 27, 28], fill=hx('#B07A4A'), outline=OL)
     k = baby(3).crop((4, 6, 28, 32)).resize((16, 17), Image.NEAREST); im.alpha_composite(k, (6, 8)); return im
+def window_empty():   # 아기 고양이가 놀러 오지 않은 날의 창가
+    im = Image.new('RGBA', (28, 30)); g = ImageDraw.Draw(im)
+    g.rectangle([1, 1, 26, 24], fill=hx('#1E2448'), outline=OL); g.ellipse([16, 4, 23, 11], fill=hx('#FFF2B8')); g.line([(13, 2), (13, 23)], fill=hx('#8A5A3A')); g.line([(2, 12), (25, 12)], fill=hx('#8A5A3A'))
+    g.rectangle([0, 24, 27, 28], fill=hx('#B07A4A'), outline=OL); g.rectangle([9, 21, 18, 23], fill=hx('#E8DCC8'), outline=OL); return im   # 빈 방석
+def shadow():   # 숨바꼭질 그림자 (24 × 12): 일렁이는 검은 웅덩이
+    im = Image.new('RGBA', (24, 12)); g = ImageDraw.Draw(im); g.ellipse([0, 2, 23, 11], fill=(16, 10, 28, 150)); g.ellipse([4, 4, 19, 10], fill=(10, 6, 20, 200)); return im
+def roof_bg():   # 끝 장면 배경 (320 × 180): 보름달 · 밤하늘 · 광장 둘레 지붕들 · 앞쪽 큰 지붕 (고양이들이 앉는 용마루)
+    W, H = 320, 180; im = Image.new('RGBA', (W, H)); g = ImageDraw.Draw(im); R = random.Random(7)
+    top, bot = (14, 16, 44), (52, 40, 86)
+    for y in range(H):
+        t = min(1, y / 130); c = tuple(round(top[i] + (bot[i] - top[i]) * t) for i in range(3)); g.line([(0, y), (W, y)], fill=c + (255,))
+    for y in range(0, 130):   # 띠 경계는 점점이 섞어요 (도트 느낌)
+        if y % 13 == 12:
+            for x in range(0, W, 2): im.putpixel(((x + (y // 13) % 2), y), im.getpixel((x, y + 1)))
+    MX, MY, MR = 232, 46, 24
+    for r, a in ((MR + 18, 18), (MR + 11, 30), (MR + 5, 48)):   # 달무리 (테두리만 겹겹이)
+        lay = Image.new('RGBA', (W, H)); ImageDraw.Draw(lay).ellipse([MX - r, MY - r, MX + r, MY + r], fill=(255, 240, 190, a)); im.alpha_composite(lay)
+    g = ImageDraw.Draw(im); g.ellipse([MX - MR, MY - MR, MX + MR, MY + MR], fill=hx('#FFF4C8')); g.ellipse([MX - MR + 3, MY - MR + 2, MX + MR - 1, MY + MR - 2], fill=hx('#FFF8DC'))
+    for cx, cy, r in ((-8, -6, 5), (7, 4, 4), (-3, 10, 3), (10, -10, 2), (-12, 6, 2)): g.ellipse([MX + cx - r, MY + cy - r, MX + cx + r, MY + cy + r], fill=hx('#F2E2AE'))
+    for i in range(70):
+        x, y = R.randrange(W), R.randrange(4, 100)
+        if (x - MX) ** 2 + (y - MY) ** 2 < (MR + 18) ** 2: continue
+        c = hx('#FFF4C8') if i % 3 else hx('#BEC8FF'); im.putpixel((x, y), c)
+        if i % 9 == 0:
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)): im.putpixel((x + dx, y + dy), c[:3] + (150,))
+    # 먼 지붕들 (실루엣 · 불 켜진 창)
+    far = hx('#2A2350'); farL = hx('#4A4078')
+    x = 0
+    while x < W:
+        w = R.randrange(26, 44); h = R.randrange(26, 48); base = 128; peak = base - h
+        g.polygon([(x, base - h + 12), (x + w // 2, peak), (x + w, base - h + 12), (x + w, base), (x, base)], fill=far)
+        g.line([(x + w // 2, peak), (x + w, base - h + 12)], fill=farL)
+        if R.random() < .6: cx = x + R.randrange(4, w - 8); g.rectangle([cx, peak + 4, cx + 3, peak + 12], fill=far)   # 굴뚝
+        for k in range(R.randrange(1, 4)):
+            wx, wy = x + R.randrange(4, w - 6), R.randrange(base - h + 16, base - 6); g.rectangle([wx, wy, wx + 2, wy + 3], fill=hx('#FFC86A') if R.random() < .7 else hx('#3A3266'))
+        x += w - R.randrange(0, 6)
+    x = -10   # 가까운 집들 (조금 밝게 · 지붕 끝에 달빛)
+    while x < W:
+        w = R.randrange(34, 56); h = R.randrange(10, 22); base = 124; peak = base - h - 8
+        g.polygon([(x, base - h), (x + w // 2, peak), (x + w, base - h), (x + w, base), (x, base)], fill=hx('#362C60')); g.line([(x, base - h), (x + w // 2, peak)], fill=hx('#5A4E8A')); g.line([(x + w // 2, peak), (x + w, base - h)], fill=hx('#6A5E9A'))
+        for k in range(R.randrange(0, 3)):
+            wx = x + R.randrange(6, w - 8); g.rectangle([wx, base - h + 4, wx + 3, base - h + 8], fill=hx('#FFD27A')); g.line([(wx, base - h + 6), (wx + 3, base - h + 6)], fill=hx('#C8884A'))
+        x += w + R.randrange(-4, 8)
+    # 왼쪽 시계탑
+    g.rectangle([18, 52, 38, 128], fill=hx('#1E1A3C')); g.polygon([(14, 54), (28, 26), (42, 54)], fill=hx('#1E1A3C')); g.ellipse([22, 62, 34, 74], fill=hx('#FFE9A8')); g.ellipse([23, 63, 33, 73], outline=hx('#B89A5A'))
+    g.line([(28, 68), (28, 64)], fill=hx('#3A2A2A')); g.line([(28, 68), (31, 68)], fill=hx('#3A2A2A'))
+    # 앞쪽 큰 지붕: 용마루 y=122, 아래로 기와 줄
+    RT = 122
+    g.polygon([(0, RT + 4), (W, RT + 4), (W, H), (0, H)], fill=hx('#4A2E4E'))
+    for i, y in enumerate(range(RT + 8, H, 7)):
+        g.line([(0, y), (W, y)], fill=hx('#2F1A34'))
+        for x in range((i % 2) * 6, W, 12): g.line([(x, y - 6), (x, y)], fill=hx('#3A2240'))
+        g.line([(0, y + 1), (W, y + 1)], fill=hx('#6A4468'))
+    g.rectangle([0, RT, W, RT + 5], fill=hx('#6A4A6A')); g.line([(0, RT), (W, RT)], fill=OL); g.line([(0, RT + 1), (W, RT + 1)], fill=hx('#8A6A8A')); g.line([(0, RT + 6), (W, RT + 6)], fill=OL)
+    g.rectangle([286, 96, 302, RT + 2], fill=hx('#5A3A3A'), outline=OL); g.rectangle([284, 92, 304, 97], fill=hx('#6A4646'), outline=OL)   # 굴뚝
+    for k in range(3): g.rectangle([288 + k * 5, 100, 290 + k * 5, 101], fill=hx('#4A2E2E'))
+    # 달빛이 용마루에 비쳐요
+    for x in range(150, 310, 3): im.putpixel((x, RT + 1), hx('#C8AAC0'))
+    return im
+
+def sheet_game():   # public/art/cat.png 한 장 (320 × 244): 고양이 8 칸 · 창가 2 · 말풍선 · 털실 공 · 그림자 · 끝 장면 배경
+    S = Image.new('RGBA', (320, 244))
+    for i, im in enumerate([baby(1), baby(2), baby(3), cheese(), grandpa(), cloak(), calico(), princess()]): S.alpha_composite(im, (i * 32, 0))
+    S.alpha_composite(window(), (0, 32)); S.alpha_composite(window_empty(), (28, 32)); S.alpha_composite(paw_bubble(), (56, 32)); S.alpha_composite(yarn(), (82, 32)); S.alpha_composite(shadow(), (98, 32))
+    S.alpha_composite(roof_bg(), (0, 64)); return S
 def paw_bubble():   # 말풍선 「고양이 발자국 말풍선」 (26 × 18)
     im = Image.new('RGBA', (26, 18)); g = ImageDraw.Draw(im)
     g.rounded_rectangle([0, 0, 25, 13], radius=5, fill=hx('#FFF6EC'), outline=OL); g.polygon([(6, 13), (8, 17), (10, 13)], fill=hx('#FFF6EC'), outline=OL); g.line([(7, 13), (9, 13)], fill=hx('#FFF6EC'))
@@ -96,6 +161,7 @@ if __name__ == '__main__':
          ('cheese', cheese(), '뚱보 치즈'), ('grandpa', grandpa(), '줄무늬 할배'), ('cloak', cloak(), '검은 망토'), ('calico', calico(), '방울 삼색이'), ('princess', princess(), '하얀 공주')]
     S = Image.new('RGBA', (32 * len(C), 32))
     for i, (k, im, _) in enumerate(C): im.save(f'{O}/{k}.png'); S.alpha_composite(im, (i * 32, 0))
+    G = sheet_game(); G.save(ROOT + '/public/art/cat.png'); G.save(ROOT + '/public/art/cat.webp', lossless=True); roof_bg().save(O + '/roof_bg.png'); roof_bg().resize((960, 540), Image.NEAREST).save(O + '/roof_bg_x3.png')
     S.save(O + '/cats.png'); window().save(O + '/window.png'); paw_bubble().save(O + '/paw_bubble.png'); yarn().save(O + '/yarn.png')
     # 보기용 한 장
     from PIL import ImageFont
