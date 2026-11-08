@@ -2414,7 +2414,7 @@ const xNb = t => t.replace(/ (\d)/g, '\u00a0$1');   /* 「MP 12」 · 「쿨 1�
 function xDesc(o, lv){   // 설명은 전투 계산(xMkUnit · xAct0)과 같은 수치로 만들어요 · tools/balance/skill_desc_audit.js 로 맞는지 확인
   const L = Math.max(1, lv);
   if (o.pas){ const n = xP(XPAS[o.pas] * L); return xNb('패시브 · ' + ({ surv: '전투마다 한 번, 쓰러질 공격을 체력 1로 버텨요 (레벨을 올려도 같아요)', def: `받는 피해 -${n}%`, dodge: `적 공격 회피 +${n}%`, vamp: `준 피해의 ${n}%만큼 체력 회복`, crit: `치명타 확률 +${n}% (치명타는 피해 ×1.6)` }[o.pas] || `${XPASN[o.pas]} +${n}%`)); }
-  const myL = me && me.ex ? xLv(me.ex.exp || 0).L : 1, mpv = o.mp ? Math.ceil(xSkMp(o, L, myL) * (1 - xCrownK())) : 0, cd = xCdOf(o), tail = (mpv ? ` · MP ${mpv}` : '') + (cd ? ` · 쿨 ${cd}턴` : '');
+  const myL = me && me.ex ? xLv(me.ex.exp || 0).L : 1, mpv = o.mp ? Math.max(1, Math.round(xSkMp(o, L, myL) * (1 - xCrownK()))) : 0, cd = xCdOf(o), tail = (mpv ? ` · MP ${mpv}` : '') + (cd ? ` · 쿨 ${cd}턴` : '');
   const S = xSname(o.st), m = n => xMul(n * xPw(o, L)), ev = xP(xEfv(o, L)), foe = o.tg === 'all' ? '적 전체' : '적 하나', ally = o.tg === 'all' ? '아군 전체' : o.tg === 'self' ? '나' : '아군 하나', P = [];
   if (o.t === 'dmg'){ P.push(`${foe} ${S} ×${m(o.p)}${o.hits > 1 ? ` ×${o.hits}회` : ''}`); if (o.exec) P.push('체력 40% 미만인 적에게 ×1.8'); if (o.fcrit) P.push('반드시 치명타 (×1.6)'); if (o.petb) P.push(`소환수 하나당 피해 +${xP(o.petb)}%`);
     (o.ap || []).forEach(a => P.push(xApD(a, o.st))); if (o.drain) P.push(`내 MP ${xP(o.drain)}% 회복`); if (o.steal) P.push(`골드 +${5 + Math.round(myL * 1.2)} · 40% 확률로 재료도 훔쳐요`); if (o.gold) P.push(`골드 +${8 + myL}`); if (o.w < 0) P.push(`쓴 뒤 내 행동 늦추기 ${-o.w}`); }
@@ -17371,7 +17371,7 @@ const rdStatHtml = B => [0, 1].map(sd => `<div class="rdsg">${B.party.filter(u =
 //   me.acc = { on: 차고 있는 장신구, own: { crown|cape|hat|neck: { st 별 1~5, cp 모은 개수 } } } · 같은 기념품을 또 얻으면 별이 올라가요 (★n → ★n+1 에 n 개)
 //   보상 (사람마다 따로): 이기면 3 번 뽑기 · 지면 깎은 체력 30 % 마다 1 번 (최대 2 번) · 층이 높을수록 좋아요 · 기념품은 그 층을 처음 이기면 꼭, 그다음은 3 · 5 · 7 · 10 %
 const RD_ACC = [
-  { k: 'crown', n: '얼음 왕관', e: s => `MP 사용량 −${4 + s * 3} %`, ap: (u, s) => { u.sks.forEach(o => { o.mp = o.mp * (1 - (4 + s * 3) / 100); }); } },
+  { k: 'crown', n: '얼음 왕관', e: s => `MP 사용량 −${4 + s * 3} %`, ap: (u, s) => { u.sks.forEach(o => { if (o.mp) o.mp = Math.max(1, Math.round(o.mp * (1 - (4 + s * 3) / 100))); }); } },   /* MP는 소수점 첫째 자리에서 반올림 (4.99999 같은 값이 안 생기게) */
   { k: 'cape', n: '용 비늘 망토', e: s => `쓰러질 때 한 번 버티기 · 체력 ${15 + s * 10} % 남김`, ap: (u, s) => { u.lastStand = (15 + s * 10) / 100; } },
   { k: 'hat', n: '그림자 모자', e: s => `MP 회복량 +${5 + s * 5} %`, ap: (u, s) => { u.mpReg = (5 + s * 5) / 100; } },
   { k: 'neck', n: '톱니 시계 목걸이', e: s => `스킬 재사용 대기 −${2 + s * 3} %`, ap: (u, s) => { u.cdr = (2 + s * 3) / 100; } }];
