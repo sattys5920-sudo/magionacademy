@@ -87,6 +87,14 @@ def cabinet():   # 가구 작은 약장 (22 × 30)
     g.rectangle([9, 0, 12, 1], fill=hx('#E8303A')); g.rectangle([10, 19, 11, 22], fill=OL)
     return im
 
+def bandage():   # 말풍선 꾸미기 「반창고 말풍선」 (26 × 18)
+    im = Image.new('RGBA', (26, 18)); g = ImageDraw.Draw(im)
+    g.rounded_rectangle([0, 0, 25, 13], radius=5, fill=hx('#FFF8F4'), outline=OL); g.polygon([(6, 13), (8, 17), (10, 13)], fill=hx('#FFF8F4'), outline=OL); g.line([(7, 13), (9, 13)], fill=hx('#FFF8F4'))
+    g.polygon([(15, 1), (24, 5), (22, 9), (13, 5)], fill=hx('#F2C8A0'), outline=hx('#C08A60')); g.rectangle([17, 4, 19, 6], fill=hx('#FBE4CC'))
+    for x, y in ((14, 4), (22, 7)): im.putpixel((x, y), hx('#C08A60'))
+    g.ellipse([3, 4, 6, 7], fill=hx('#F07070', 200))
+    return im
+
 def blanket():   # 가구 양호실 담요 (28 × 16)
     im = Image.new('RGBA', (28, 16)); g = ImageDraw.Draw(im)
     g.polygon([(2, 8), (14, 2), (26, 8), (14, 14)], fill=hx('#9AB8E8'), outline=OL)
@@ -98,7 +106,7 @@ if __name__ == '__main__':
     K = ['fever', 'throat', 'nose', 'chill']
     S = Image.new('RGBA', (32 * 4, 32))
     for i, k in enumerate(K): S.alpha_composite(bottle(k), (i * 32, 0))
-    S.save(O + '/potions.png'); breath().save(O + '/breath.png'); thermo().save(O + '/thermo.png'); chart().save(O + '/chart.png'); cabinet().save(O + '/cabinet.png'); blanket().save(O + '/blanket.png')
+    S.save(O + '/potions.png'); breath().save(O + '/breath.png'); thermo().save(O + '/thermo.png'); chart().save(O + '/chart.png'); bandage().save(O + '/bandage.png'); [bubble(k).save(O + f'/bubble_{k}.png') for k in K]; [bottle(k).save(O + f'/potion_{k}.png') for k in K]; cabinet().save(O + '/cabinet.png'); blanket().save(O + '/blanket.png')
     npcs = Image.open(ROOT + '/public/art/npcs.png').convert('RGBA')
     P = Image.new('RGBA', (240, 150), hx('#1E1830'))
     for i, k in enumerate(K): P.alpha_composite(bottle(k), (8 + i * 40, 6))
