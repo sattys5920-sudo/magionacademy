@@ -1648,7 +1648,7 @@ let fbWarned = false;
 // → 학생 저장은 빈 것을 표시로 바꿔 저장하고({__a}·{__o}), 불러올 때 되돌려요. 배열 속 빈 칸(null)은 예전처럼 빼요 (코드가 빈 칸 없는 목록을 기대해요)
 // 번호가 키인 객체(하트 이야기 본 기록 npc.*.seen · 운세 카드 tarot.got)는 Firebase가 불러올 때 배열로 바꿔 줘요 → 빈 칸을 빼면 번호가 당겨져 기록이 사라져요
 //   저장할 때 {__k:1} 표시를 붙여 객체 그대로 남기고, 불러올 때 배열로 왔으면 번호 그대로 객체로 되돌려요
-const FB_INTOBJ = /(^|\/)(npc\/[^/]+\/seen|tarot\/got|gr\/g|gr\/used|tilda\/nt)$/;
+const FB_INTOBJ = /(^|\/)(npc\/[^/]+\/seen|tarot\/got|gr\/g|gr\/used|tilda\/nt|garden\/dex|garden\/rw|ltr\/(dlv|got|rep|found)|bln\/sap\/got)$/;   // 번호를 키로 쓰는 객체: 배열로 바뀌면 빈칸이 당겨져서 번호가 어긋나요 (정원 도감 손님이 다른 칸으로 옮겨 가던 문제)
 function fbKeep(v, path = ''){ if (Array.isArray(v)){ const a = v.filter(x => x !== null && x !== undefined); return a.length ? a.map(x => fbKeep(x, path)) : { __a: 1 }; } if (v && typeof v === 'object'){ const ks = Object.keys(v); if (!ks.length) return { __o: 1 }; const r = {}; ks.forEach(k => { r[k] = fbKeep(v[k], path + '/' + k); }); if (FB_INTOBJ.test(path) && ks.every(k => /^\d+$/.test(k))) r.__k = 1; return r; } return v; }
 function fbBack(v, path = ''){ if (Array.isArray(v)){ if (FB_INTOBJ.test(path)){ const r = {}; v.forEach((x, i) => { if (x !== null && x !== undefined) r[i] = fbBack(x, path + '/' + i); }); return r; } return v.map(x => fbBack(x, path)).filter(x => x !== null && x !== undefined); } if (v && typeof v === 'object'){ if (v.__a === 1 && Object.keys(v).length === 1) return []; if (v.__o === 1 && Object.keys(v).length === 1) return {}; if (v.__n === 1 && Object.keys(v).length === 1) return null; const r = {}; Object.keys(v).forEach(k => { if (k === '__k' && v[k] === 1) return; r[k] = fbBack(v[k], path + '/' + k); }); return r; } return v; }
 function fbClean(o){
@@ -10061,9 +10061,12 @@ const gdDish = i => DISH[i] || DISH[0];
 const gdMet = () => Object.keys((me.garden && me.garden.dex) || {}).length;
 const gdNeedTxt = g => [...g[1].map(k => k === 'few' ? '물건을 조금만' : GD_IT[k][0]), g[2].map(b => GD_BN[b]).join(' · ')].join(' + ').replace(/ \+ ([^+]*)$/, ' · $1');
 function gdOk(g, on){ return g[1].every(k => k === 'few' ? Object.keys(on).filter(x => on[x] && x !== 'feeder').length <= 1 : on[k]); }
+function gdRepair(G){   // 예전에 도감 번호가 당겨져 사라진 손님: 기록(log)에 남아 있으면 도감에 다시 넣어요
+  if (Array.isArray(G.dex)){ const o = {}; G.dex.forEach((d, i) => { if (d) o[i] = d; }); G.dex = o; } G.dex = G.dex || {}; let fixed = false;
+  (G.log || []).forEach(x => { if (x && x.seen && GD_G[x.g] && !G.dex[x.g]){ G.dex[x.g] = { n: 1, fd: [0, 0], ph: 0 }; fixed = true; } }); if (fixed) save(); }
 // 지난 시간을 30 분씩 나눠서 손님 계산 (시드 고정이라 다시 계산해도 같아요)
 function gdSim(){
-  const G = me.garden; if (!G) return 0; const now = now2(); let from = Math.max(G.last || G.at || now, now - GD_FEED), n = 0; G.log = G.log || [];
+  const G = me.garden; if (!G) return 0; gdRepair(G); const now = now2(); let from = Math.max(G.last || G.at || now, now - GD_FEED), n = 0; G.log = G.log || [];
   for (let s = Math.floor(from / GD_SLOT) + 1; s <= Math.floor(now / GD_SLOT); s++){ const t = s * GD_SLOT;
     if (G.log.filter(x => !x.seen).length >= 3) break;
     if (!G.feed || !(G.feed.at <= t && t < G.feed.at + GD_FEED)) continue;
