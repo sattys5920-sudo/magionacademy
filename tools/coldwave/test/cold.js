@@ -48,6 +48,7 @@ const res = []; const ok = (c, m) => { res.push([!!c, m]); console.log(c ? '  ok
   ok(await C(id => !!window.__cold.sick(id) && !!window.__cold.line(id), pid), `${pid} 아파요 (${sym}) · 대사 「${await C(id => window.__cold.line(id), pid)}」`);
   await C(id => { const n = window.__cold.spot(id); World.teleport(n.map, [n.x + 2, n.y + 1]); }, pid); await A.waitForTimeout(3500);
   await A.screenshot({ path: OUT + '/sick_npc.png' });
+  await A.screenshot({ path: OUT + '/sick_zoom.png', clip: { x: 55, y: 230, width: 280, height: 280 } });
   await C(id => __T.npcMenu(__T.npcGet(id)), pid); await A.waitForTimeout(600);
   ok(await C(() => !!document.querySelector('#npcui [data-nx="cold"]')), 'NPC 메뉴에 「진료하기」');
   await A.screenshot({ path: OUT + '/npc_menu.png' });
@@ -100,6 +101,7 @@ const res = []; const ok = (c, m) => { res.push([!!c, m]); console.log(c ? '  ok
   ok(await C(() => window.__cold.state().SC === 'end'), '15 명을 다 고치면 양호실에서 끝 장면이 나와요');
   for (let i = 0; i < 40; i++){ if (await C(() => (window.__cold.sick('sera') || []).length === 4)) break; await A.waitForTimeout(300); }
   await A.waitForTimeout(1500); await A.screenshot({ path: OUT + '/sera_sick.png' });
+  await A.screenshot({ path: OUT + '/sera_zoom.png', clip: { x: 55, y: 230, width: 280, height: 280 } });
   for (let i = 0; i < 40; i++){ if (await C(() => !window.__cold.state().coldOn)) break; await A.waitForTimeout(400); }
   ok(await C(() => window.__cold.state().cold.end === 1 && window.__cold.sick('sera').length === 4), '세라 선생님 머리 위에 증상 네 가지');
   await C(() => __T.npcMenu(__T.npcGet('sera'))); await A.waitForTimeout(500);
