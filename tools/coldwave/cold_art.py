@@ -61,7 +61,7 @@ def bubble(sym):   # 머리 위 증상 말풍선 (16 × 15): 이걸 보고 증�
     if sym == 'fever':   # 불꽃
         g.polygon([(8, 2), (5, 7), (6, 9), (10, 9), (11, 7)], fill=hx('#F06A3A')); g.polygon([(8, 5), (7, 8), (9, 8)], fill=hx('#FFD24A'))
     elif sym == 'throat':   # 콜록 (기침 구름 세 개)
-        for cx in (4, 8, 12): g.ellipse([cx - 2, 4, cx + 1, 7], fill=hx('#B8B0C8'))
+        for cx, cy, r in ((4, 7, 2), (8, 5, 2), (12, 3, 1)): g.ellipse([cx - r, cy - r, cx + r, cy + r], fill=hx('#C8C0D8'), outline=hx('#8A82A0'))   # 콜록: 크기가 다른 기침 구름 셋이 비스듬히
     elif sym == 'nose':   # 에취 (튀는 물방울)
         for x, y in ((4, 4), (8, 3), (12, 5), (6, 7), (10, 7)): g.ellipse([x - 1, y - 1, x, y], fill=hx('#7FC8F0'))
     elif sym == 'chill':   # 눈송이
