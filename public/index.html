@@ -14077,7 +14077,7 @@ const COLD = (() => {
 //   아기 고양이 · 동네 고양이는 내 화면에만 보여요 (서버에 위치를 보내지 않아요)
 let catOn = false;
 const CAT = (() => {
-  const ART = 'art/cat.webp?v=2', ART_PNG = 'art/cat.png?v=2', SW_ = 320, SH_ = 244;
+  const ART = 'art/cat.webp?v=4', ART_PNG = 'art/cat.png?v=4', SW_ = 320, SH_ = 244;
   const SP = { baby1: [0, 0, 32, 32], baby2: [32, 0, 32, 32], baby3: [64, 0, 32, 32], cheese: [96, 0, 32, 32], grandpa: [128, 0, 32, 32], cloak: [160, 0, 32, 32], calico: [192, 0, 32, 32], princess: [224, 0, 32, 32],
     win: [0, 32, 28, 30], win0: [28, 32, 28, 30], paw: [56, 32, 26, 18], yarn: [82, 32, 16, 16], shadow: [98, 32, 24, 12], roof: [0, 64, 320, 180] };
   const PIX = { baby1: 0, baby2: 1, baby3: 2, cheese: 3, grandpa: 4, cloak: 5, calico: 6, princess: 7 };   // 장면 배우(World.cut spawn pix)는 그림 첫 줄 32 칸
@@ -14121,13 +14121,15 @@ const CAT = (() => {
   const DEF_NAME = '꼬맹이';
   // ---------- 그림 ----------
   const IMG = new Image(); let imgOK = false; IMG.onload = () => { imgOK = true; furnDyn(); }; IMG.src = ART;
+  const IMG64 = new Image(); IMG64.src = 'art/cat64.webp?v=2';   /* 장면 · 지붕 위 고양이는 64 칸 그림 (화면 크기는 같고 더 또렷해요) */
+  const ok64 = () => IMG64.complete && IMG64.naturalWidth > 0;
   const cv = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; };
   const put = (g, k, x, y, w, h) => { if (!imgOK) return; const s = SP[k]; g.drawImage(IMG, s[0], s[1], s[2], s[3], x, y, w || s[2], h || s[3]); };
   const spI = (k, z = 2, extra = '') => { const s = SP[k]; return `<i class="cti" style="width:${s[2] * z}px;height:${s[3] * z}px;background:url(${ART_PNG}) ${-s[0] * z}px ${-s[1] * z}px/${SW_ * z}px ${SH_ * z}px no-repeat;${extra}"></i>`; };
   const CC = {};
   function catCv(k, flip){   // 고양이 한 칸 (좌우 뒤집기 따로 기억)
-    const key = k + (flip ? 'f' : ''); if (CC[key]) return CC[key]; if (!imgOK) return null; const [c, g] = cv(32, 32);
-    if (flip){ g.translate(32, 0); g.scale(-1, 1); } put(g, k, 0, 0); return (CC[key] = c);
+    const key = k + (flip ? 'f' : ''); if (CC[key]) return CC[key]; if (!ok64()) return null; const [c, g] = cv(64, 64);
+    if (flip){ g.translate(64, 0); g.scale(-1, 1); } g.drawImage(IMG64, PIX[k] * 64, 0, 64, 64, 0, 0, 64, 64); return (CC[key] = c);
   }
   const visitNow = () => { const d = kNow(); return (dayNum(todayKey()) + Math.floor(d.getHours() / 3)) % 3 !== 0; };   // 아기 고양이가 창가에 놀러 왔는지 (세 시간마다 바뀌어요 · 셋 중 둘)
   let visitSig = '';
@@ -14177,7 +14179,7 @@ const CAT = (() => {
     const img = catCv('baby' + want.st, fol.dir < 0); if (!img) return;
     const hop = want.mv ? Math.round(Math.abs(Math.sin(fol.t / (want.st === 1 ? 70 : 110))) * (want.st === 1 ? 3 : 2)) : 0, wob = want.st === 1 && want.mv ? Math.round(Math.sin(fol.t / 50)) : 0;
     const rx = Math.round(want.x), ry = Math.round(want.y), fx = want.x - rx, fy = want.y - ry;
-    World.setProps(want.m, [{ id: 'catbaby', x: rx, y: ry, img, pxc: img.getContext('2d'), sw: 32, sh: 32, ax: 16 + wob + Math.round((fx - fy) * 8), ay: 30 + hop - Math.round((fx + fy) * 4), solid: false, low: true, sc: .5 }], 'catbaby');
+    World.setProps(want.m, [{ id: 'catbaby', x: rx, y: ry, img, pxc: img.getContext('2d'), sw: 64, sh: 64, ax: 32 + 2 * (wob + Math.round((fx - fy) * 8)), ay: 62 + 2 * (hop - Math.round((fx + fy) * 4)), solid: false, low: true, sc: .25 }], 'catbaby');
     fol.last = want.m;
   }
   // ---------- 동네 고양이 · 숨바꼭질 그림자 (밤 · 내 화면에만) ----------
@@ -14186,7 +14188,7 @@ const CAT = (() => {
     const t = World.meTile && World.meTile(), m = t ? t.m : ''; let list = [];
     if (live() && t && night() && !SC && imgOK){
       const s = me.cat;
-      avail(s).forEach(k => { const [am, x, y, lift] = AT[k]; if (am !== m || (k === 'cloak' && hs)) return; const img = catCv(k, x > t.x); if (img) list.push({ id: 'cat:' + k, x, y, img, pxc: img.getContext('2d'), sw: 32, sh: 32, ax: 16, ay: 30 + lift, solid: false, sc: .5, light: { r: 18, c: [255, 236, 180], a: .35 } }); });
+      avail(s).forEach(k => { const [am, x, y, lift] = AT[k]; if (am !== m || (k === 'cloak' && hs)) return; const img = catCv(k, x > t.x); if (img) list.push({ id: 'cat:' + k, x, y, img, pxc: img.getContext('2d'), sw: 64, sh: 64, ax: 32, ay: 62 + 2 * lift, solid: false, sc: .25, light: { r: 18, c: [255, 236, 180], a: .35 } }); });
       if (hs && m === 'town'){ const c = SHC || (SHC = (() => { const [c0, g] = cv(24, 12); put(g, 'shadow', 0, 0); return c0; })()); hs.at.forEach(([x, y], i) => list.push({ id: 'catsh:' + i, x, y, img: c, pxc: c.getContext('2d'), sw: 24, sh: 12, ax: 12, ay: 8, solid: false, low: true })); }
     }
     const sig = m + ':' + list.map(x => x.id + x.x + ',' + x.y).join('|'); if (sig === spotSig) return; const pm = spotSig.split(':')[0]; spotSig = sig;
@@ -14254,7 +14256,7 @@ const CAT = (() => {
   async function peek(i){
     if (!hs) return; if (i !== hs.i){ sfx('pop'); toast('....그림자뿐이에요'); return; }
     hs.n++; const [x, y] = hs.at[i], n = hs.n; SC = 'peek'; catOn = true; spotSig = '';
-    try { await runCut([{ cmd: 'spawn', who: 'cat_cloak', name: CN.cloak, pix: PIX.cloak, pimg: IMG, x, y, dir: 'down' }, { cmd: 'sfx', id: 'cat' }, { cmd: 'face', who: 'player', to: 'cat_cloak' }, sayC('cat_cloak', n < 3 ? L.cloak.found[n - 1] : '....후후후.', 2600)]); }
+    try { await runCut([{ cmd: 'spawn', who: 'cat_cloak', name: CN.cloak, pix: PIX.cloak, pimg: IMG64, ps: 64, x, y, dir: 'down' }, { cmd: 'sfx', id: 'cat' }, { cmd: 'face', who: 'player', to: 'cat_cloak' }, sayC('cat_cloak', n < 3 ? L.cloak.found[n - 1] : '....후후후.', 2600)]); }
     catch(e){ errReport('cat', '고양이 집회 숨바꼭질 오류: ' + e.message, e.stack || ''); }
     finally { SC = null; catOn = false; }
     if (n >= 3){ hs = null; spotSig = ''; W = { k: 'cloak' }; recDone('cloak'); } else { shuffle(); toast(`찾았어요 ${n} / 3 · 또 숨었어요`); }
@@ -14269,7 +14271,7 @@ const CAT = (() => {
     if (sec < 30) return; wait = null; SC = 'wait'; catOn = true; spotSig = ''; spots(); folDraw();
     try {
       const [, px, py] = AT.princess, b0 = World.freeNear(t.x, t.y, 1).find(([x, y]) => x !== t.x || y !== t.y) || [t.x - 1, t.y], b1 = World.freeNear(px, py, 1).find(([x, y]) => x !== px || y !== py) || [px, py + 1];
-      await runCut([{ cmd: 'spawn', who: 'cat_princess', name: CN.princess, pix: PIX.princess, pimg: IMG, x: px, y: py, dir: 'down' }, { cmd: 'spawn', who: 'cat_baby', name: '', pix: PIX['baby' + stage(me.cat)], pimg: IMG, x: b0[0], y: b0[1], dir: 'down' },
+      await runCut([{ cmd: 'spawn', who: 'cat_princess', name: CN.princess, pix: PIX.princess, pimg: IMG64, ps: 64, x: px, y: py, dir: 'down' }, { cmd: 'spawn', who: 'cat_baby', name: '', pix: PIX['baby' + stage(me.cat)], pimg: IMG64, ps: 64, x: b0[0], y: b0[1], dir: 'down' },
         { cmd: 'wait', sec: .6 }, { cmd: 'walk', who: 'cat_baby', x: b1[0], y: b1[1], timeout: 6 }, { cmd: 'face', who: 'cat_baby', to: 'cat_princess' }, sayC('cat_baby', '냐....', 2000), { cmd: 'sfx', id: 'cat' }, { cmd: 'emote', who: 'cat_princess', icon: 6 }, { cmd: 'wait', sec: .6 }]);
     } catch(e){ errReport('cat', '고양이 집회 잔교 장면 오류: ' + e.message, e.stack || ''); }
     finally { SC = null; catOn = false; spotSig = ''; }
@@ -14288,7 +14290,7 @@ const CAT = (() => {
       const far = (World.freeNear(t.x, t.y, 5) || []).map(([x, y]) => [x, y, Math.abs(x - t.x) + Math.abs(y - t.y)]).filter(q => q[2] >= 3 && q[2] <= 5).sort((p, q) => (p[1] - q[1]) || (p[0] - q[0]))[0] || [t.x + 3, t.y - 1];
       const nb = (World.freeNear(t.x, t.y, 1) || []).filter(([x, y]) => x !== t.x || y !== t.y).sort((p, q) => (Math.abs(p[0] - far[0]) + Math.abs(p[1] - far[1])) - (Math.abs(q[0] - far[0]) + Math.abs(q[1] - far[1])))[0] || [t.x + 1, t.y];
       toast('지붕 위에서 무언가 툭 떨어졌어요'); sfx('pop'); await famSleep(1200);
-      await runCut([{ cmd: 'spawn', who: 'cat_baby', name: '', pix: PIX.baby1, pimg: IMG, x: nb[0], y: nb[1], dir: 'down' }, { cmd: 'sfx', id: 'cat' }, { cmd: 'face', who: 'player', to: 'cat_baby' }, { cmd: 'emote', who: 'player', icon: 4 }, sayC('cat_baby', '냐....', 1800),
+      await runCut([{ cmd: 'spawn', who: 'cat_baby', name: '', pix: PIX.baby1, pimg: IMG64, ps: 64, x: nb[0], y: nb[1], dir: 'down' }, { cmd: 'sfx', id: 'cat' }, { cmd: 'face', who: 'player', to: 'cat_baby' }, { cmd: 'emote', who: 'player', icon: 4 }, sayC('cat_baby', '냐....', 1800),
         { cmd: 'spawn', who: 'cat_nabi', name: n ? n.name : '나비', spr: n ? n.spr || 0 : 0, x: far[0], y: far[1], dir: 'down' }, { cmd: 'face', who: 'cat_nabi', to: 'player' }, { cmd: 'face', who: 'player', to: 'cat_nabi' },
         sayC('cat_nabi', INTRO[0]), sayC('cat_nabi', INTRO[1], 3600), { cmd: 'face', who: 'cat_nabi', to: 'cat_baby' }, sayC('cat_nabi', INTRO[2], 3200), { cmd: 'face', who: 'cat_nabi', to: 'player' }, sayC('cat_nabi', INTRO[3], 3800),
         { cmd: 'walk', who: 'cat_nabi', x: far[0], y: far[1] - 3, timeout: 4 }, { cmd: 'despawn', who: 'cat_nabi' }, { cmd: 'face', who: 'cat_baby', to: 'player' }, sayC('cat_baby', '냐.', 1600), { cmd: 'wait', sec: .4 }]);

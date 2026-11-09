@@ -223,11 +223,24 @@ def baby(stage):
                 if 0 <= q[0] < 32 and 0 <= q[1] < 32 and not p[q][3]: p[q] = hx('#5A4636') if k == 2 else hx(pat)
     return out
 
+# ---------- 제미나이가 그린 고양이 (tools/catmeet/gemini/cut.py 가 자른 것) · 작은 아이콘용 32 칸 ----------
+_G32 = Image.open(D + '/gemini/cats32.png').convert('RGBA'); _GO = ['cheese', 'grandpa', 'cloak', 'calico', 'princess', 'baby1', 'baby2', 'baby3']
+def _g(k): i = _GO.index(k); return _G32.crop((i * 32, 0, i * 32 + 32, 32))
+def cheese(): return _g('cheese')
+def grandpa(): return _g('grandpa')
+def cloak(): return _g('cloak')
+def calico(): return _g('calico')
+def princess(): return _g('princess')
+def baby(stage): return _g('baby' + str(stage))
+
 if __name__ == '__main__':
     C = [('baby1', baby(1), '아기 (부스스)'), ('baby2', baby(2), '아기 (조금 정리)'), ('baby3', baby(3), '아기 (회원)'),
          ('cheese', cheese(), '뚱보 치즈'), ('grandpa', grandpa(), '줄무늬 할배'), ('cloak', cloak(), '검은 망토'), ('calico', calico(), '방울 삼색이'), ('princess', princess(), '하얀 공주')]
     S = Image.new('RGBA', (32 * len(C), 32))
     for i, (k, im, _) in enumerate(C): im.save(f'{O}/{k}.png'); S.alpha_composite(im, (i * 32, 0))
+    _g64 = Image.open(D + '/gemini/cats64.png').convert('RGBA'); S64 = Image.new('RGBA', (64 * 8, 64))   # 장면 · 지붕 위 고양이는 64 칸 · 칸 순서는 게임(PIX)과 같게
+    for i, k in enumerate(['baby1', 'baby2', 'baby3', 'cheese', 'grandpa', 'cloak', 'calico', 'princess']): j = _GO.index(k); S64.alpha_composite(_g64.crop((j * 64, 0, j * 64 + 64, 64)), (i * 64, 0))
+    S64.save(ROOT + '/public/art/cat64.png'); S64.save(ROOT + '/public/art/cat64.webp', lossless=True)
     G = sheet_game(); G.save(ROOT + '/public/art/cat.png'); G.save(ROOT + '/public/art/cat.webp', lossless=True); roof_bg().save(O + '/roof_bg.png'); roof_bg().resize((960, 540), Image.NEAREST).save(O + '/roof_bg_x3.png')
     S.save(O + '/cats.png'); window().save(O + '/window.png'); paw_bubble().save(O + '/paw_bubble.png'); yarn().save(O + '/yarn.png')
     # 보기용 한 장
