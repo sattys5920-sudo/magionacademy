@@ -14121,7 +14121,7 @@ const CAT = (() => {
   const DEF_NAME = '꼬맹이';
   // ---------- 그림 ----------
   const IMG = new Image(); let imgOK = false; IMG.onload = () => { imgOK = true; furnDyn(); }; IMG.src = ART;
-  const IMG64 = new Image(); IMG64.src = 'art/cat64.webp?v=2';   /* 장면 · 지붕 위 고양이는 64 칸 그림 (화면 크기는 같고 더 또렷해요) */
+  const IMG64 = new Image(); IMG64.src = 'art/cat64.webp?v=3';   /* 장면 · 지붕 위 고양이는 64 칸 그림 (나비와 같은 픽셀 크기) */
   const ok64 = () => IMG64.complete && IMG64.naturalWidth > 0;
   const cv = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; };
   const put = (g, k, x, y, w, h) => { if (!imgOK) return; const s = SP[k]; g.drawImage(IMG, s[0], s[1], s[2], s[3], x, y, w || s[2], h || s[3]); };
@@ -14179,7 +14179,7 @@ const CAT = (() => {
     const img = catCv('baby' + want.st, fol.dir < 0); if (!img) return;
     const hop = want.mv ? Math.round(Math.abs(Math.sin(fol.t / (want.st === 1 ? 70 : 110))) * (want.st === 1 ? 3 : 2)) : 0, wob = want.st === 1 && want.mv ? Math.round(Math.sin(fol.t / 50)) : 0;
     const rx = Math.round(want.x), ry = Math.round(want.y), fx = want.x - rx, fy = want.y - ry;
-    World.setProps(want.m, [{ id: 'catbaby', x: rx, y: ry, img, pxc: img.getContext('2d'), sw: 64, sh: 64, ax: 32 + 2 * (wob + Math.round((fx - fy) * 8)), ay: 62 + 2 * (hop - Math.round((fx + fy) * 4)), solid: false, low: true, sc: .25 }], 'catbaby');
+    World.setProps(want.m, [{ id: 'catbaby', x: rx, y: ry, img, pxc: img.getContext('2d'), sw: 64, sh: 64, ax: 32 + wob + Math.round((fx - fy) * 8), ay: 62 + hop - Math.round((fx + fy) * 4), solid: false, low: true, sc: .5 }], 'catbaby');
     fol.last = want.m;
   }
   // ---------- 동네 고양이 · 숨바꼭질 그림자 (밤 · 내 화면에만) ----------
@@ -14188,7 +14188,7 @@ const CAT = (() => {
     const t = World.meTile && World.meTile(), m = t ? t.m : ''; let list = [];
     if (live() && t && night() && !SC && imgOK){
       const s = me.cat;
-      avail(s).forEach(k => { const [am, x, y, lift] = AT[k]; if (am !== m || (k === 'cloak' && hs)) return; const img = catCv(k, x > t.x); if (img) list.push({ id: 'cat:' + k, x, y, img, pxc: img.getContext('2d'), sw: 64, sh: 64, ax: 32, ay: 62 + 2 * lift, solid: false, sc: .25, light: { r: 18, c: [255, 236, 180], a: .35 } }); });
+      avail(s).forEach(k => { const [am, x, y, lift] = AT[k]; if (am !== m || (k === 'cloak' && hs)) return; const img = catCv(k, x > t.x); if (img) list.push({ id: 'cat:' + k, x, y, img, pxc: img.getContext('2d'), sw: 64, sh: 64, ax: 32, ay: 62 + lift, solid: false, sc: .5, light: { r: 18, c: [255, 236, 180], a: .35 } }); });
       if (hs && m === 'town'){ const c = SHC || (SHC = (() => { const [c0, g] = cv(24, 12); put(g, 'shadow', 0, 0); return c0; })()); hs.at.forEach(([x, y], i) => list.push({ id: 'catsh:' + i, x, y, img: c, pxc: c.getContext('2d'), sw: 24, sh: 12, ax: 12, ay: 8, solid: false, low: true })); }
     }
     const sig = m + ':' + list.map(x => x.id + x.x + ',' + x.y).join('|'); if (sig === spotSig) return; const pm = spotSig.split(':')[0]; spotSig = sig;

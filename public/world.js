@@ -995,8 +995,8 @@ function drawPerson(p){ const cx = out;
   { const mk_ = morphOf(p); if (mk_ !== undefined && mk_ !== null) return drawMorph(p, mk_); }
   if (p.npc && p.npc.pix !== undefined){   // 조연 동물: 32칸 그림, 걸을 때 콩콩 뛰어요
     const [sx, sy] = P(p.x + .5, p.y + .5); cx.fillStyle = 'rgba(10,5,20,.3)'; cx.beginPath(); cx.ellipse(sx, sy, 5, 2, 0, 0, Math.PI * 2); cx.fill();
-    const PI = p.npc.pimg || PIX_IMG; if (!PI || (PI.complete === false)) return; const PS = p.npc.ps || 32, cp = KPX * ASC, w = 32 * cp, hop = p.path.length ? Math.abs(Math.sin(p.t * 9)) * 2 * cp : 0;
-    const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - 31 * cp - hop - cheerHop(p, cp)), left = p.view === World.Avatar.meta.dirs.left;
+    const PI = p.npc.pimg || PIX_IMG; if (!PI || (PI.complete === false)) return; const PS = p.npc.ps || 32, cp = KPX * ASC, w = PS * cp, hop = p.path.length ? Math.abs(Math.sin(p.t * 9)) * 2 * cp : 0;
+    const dx = Math.round((sx - camIX) * KPX), dy = Math.round((sy - camIY) * KPX - (PS - 1) * cp - hop - cheerHop(p, cp)), left = p.view === World.Avatar.meta.dirs.left;
     cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); if (left){ cx.translate(dx, 0); cx.scale(-1, 1); cx.drawImage(PI, p.npc.pix * PS, 0, PS, PS, -w / 2, dy, w, w); } else cx.drawImage(PI, p.npc.pix * PS, 0, PS, PS, Math.round(dx - w / 2), dy, w, w); cx.restore(); return;
   }
   if (p.npc && p.npc.spr !== undefined){   // 이야기 NPC: LPC로 조립한 그림 (tools/iso/lpc/npc_lpc.py), 한 줄 = 한 명, 칸 배치는 캐릭터와 같아요

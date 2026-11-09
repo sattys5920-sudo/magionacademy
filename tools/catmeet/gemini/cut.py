@@ -3,7 +3,7 @@
 import sys
 from collections import deque
 from PIL import Image
-D = __file__.rsplit('/', 1)[0]; N = int(sys.argv[1]) if len(sys.argv) > 1 else 32
+D = __file__.rsplit('/', 1)[0]; N = int(sys.argv[1]) if len(sys.argv) > 1 else 32; TH = int(sys.argv[2]) if len(sys.argv) > 2 else N - 2   # TH: 가장 큰 어른 고양이 키 (나비와 같은 픽셀 크기면 64 칸에 44)
 OL = (47, 12, 24, 255)
 src = Image.open(D + '/source.webp').convert('RGB'); W, H = src.size; p = src.load()
 def bgish(c): r, g, b = c; return max(c) - min(c) < 22 and min(c) > 175
@@ -48,10 +48,11 @@ while x < W:
 print('segments', len(segs), segs)
 crops = [rgba.crop((a, 0, b, H)) for a, b in segs]; crops = [c.crop(c.getbbox()) for c in crops]
 tallest = max(c.height for c in crops[:5]); widest = max(c.width for c in crops)
-k = min((N - 2) / tallest, N / widest)   # 어른 고양이 중 가장 큰 고양이가 칸 높이에 맞게 · 아기는 같은 배율이라 작아요
+k = min(TH / tallest, N / widest)   # 어른 고양이 중 가장 큰 고양이가 칸 높이에 맞게 · 아기는 같은 배율이라 작아요
 out = []
-for c in crops:
-    w, h = max(1, round(c.width * k)), max(1, round(c.height * k))
+for ci, c in enumerate(crops):
+    kk = k * (.78 if ci >= 5 else 1)   # 아기 고양이 셋은 더 작게
+    w, h = max(1, round(c.width * kk)), max(1, round(c.height * kk))
     s = c.resize((w, h), Image.BOX)
     a = s.split()[3].point(lambda v: 255 if v > 110 else 0); s.putalpha(a)
     s = s.convert('RGB').quantize(colors=20 if N >= 48 else 14, method=Image.MEDIANCUT).convert('RGBA'); s.putalpha(a)
