@@ -95,5 +95,23 @@ window.__bal = (() => {
     xb = null; const avg = a => +(a.reduce((x, y) => x + y, 0) / a.length).toFixed(2);
     return { acts: +(res.acts / N).toFixed(1), win: res.win / N, t: avg(res.t), left: avg(res.left), dead: avg(res.dead) };
   }
-  return { unit, xSim, power, raidSim, arCap, FAMV, XRG_: () => XRG.map(r => ({ hpm: r.hpm, ehm: r.ehm, atkm: r.atkm, bat: r.bat, bhm: r.bhm })), RD_: () => ({ RD_BOSS, RD_MATK }) };
+  // ---------- 스킬 하나 실제로 써 보기 (tools/balance/skillfix_check.js) ----------
+  //   o = { job, n 스킬 이름, lv, L } → 적에게 준 피해 · 적에게 붙은 효과 · 회복한 MP 비율 · 버프 · 소생 체력 · 버티기 체력
+  function skCheck(o){
+    const L = o.L || 30, d = xAll(o.job).find(x => x.n === o.n), sk = {}; sk[d.b + '_' + d.r] = o.lv;
+    const u = xMkUnit(o.job, L, 'u', true, undefined, undefined, sk), a2 = xMkUnit('knight', L, 'a2', true, undefined, undefined, { '0_0': 1 });
+    [u, a2].forEach((x, i) => { x.hp = x.mhp; x.mp = x.mmp; x.cdn = {}; x.fx = {}; x.row = i ? 'b' : 'f'; x.g = 0; });
+    const f = { team: 'e', id: 'f', name: 'f', L, hp: 1e6, mhp: 1e6, atk: 10, spd: 10, fx: {}, g: 50 };
+    if (o.dot) f.fx.dot = { v: 10, t: 8, acc: 0 };
+    a2.hp = o.dead ? 0 : Math.round(a2.mhp * .3);
+    xb = { party: [u, a2], foes: [f], kind: 'battle', log: '', turn: null, pick: null, over: false, last: 0, buff: false, def: {}, fxs: [], floats: [], proj: [], n0: 2 };
+    const r = { stat: d.pas ? null : u[d.st || 'heal'], atk: u.atk, mag: u.mag, heal: u.heal, mhp2: a2.mhp };
+    if (d.pas === 'surv'){ const e = { team: 'e', hp: 1, id: 'e', fx: {} }; xHit(e, u, u.mhp * 5, '#fff'); r.surviveHp = u.hp / u.mhp; xb = null; return r; }
+    const s = u.sks.find(x => x.n === o.n); r.sk = { t: s.t, p: s.p, v: s.v, pct: s.pct, hl: s.hl, regen: s.regen, cd: s.cd, mp0: s.mp0 };
+    if (s.t === 'mp' || s.drain){ u.mp = 0; a2.mp = 0; u.mp = s.mp; }
+    const hp2 = a2.hp; xAct(u, s, s.t === 'revive' ? a2 : f);
+    r.dmg = 1e6 - f.hp; r.foeFx = JSON.parse(JSON.stringify(f.fx)); r.foeG = f.g; r.myFx = JSON.parse(JSON.stringify(u.fx)); r.mpGain = [u.mp / u.mmp, a2.mp / a2.mmp];
+    r.revHp = o.dead ? a2.hp / a2.mhp : null; r.healHp = a2.hp - hp2; r.cdLeft = u.cdn[s.n] || 0; r.a2fx = JSON.parse(JSON.stringify(a2.fx)); xb = null; return r;
+  }
+  return { unit, xSim, power, raidSim, arCap, FAMV, skCheck, XRG_: () => XRG.map(r => ({ hpm: r.hpm, ehm: r.ehm, atkm: r.atkm, bat: r.bat, bhm: r.bhm })), RD_: () => ({ RD_BOSS, RD_MATK }) };
 })();
