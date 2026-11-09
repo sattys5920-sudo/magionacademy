@@ -3179,7 +3179,7 @@ function xcoApplyCmd(B, u, c){
 }
 // ----- 전투 장면(bt) 올리기·받기 -----
 const XROW_F = ['warrior', 'knight', 'thief'], xRowAuto = job => XROW_F.includes(job) ? 'f' : 'b';   // 정하지 않으면 직업에 따라: 전사·기사·도적은 앞열, 나머지는 뒤열
-const xRowOf = uid => (rdRunOn() && xRowAuto((xcoBuilds[uid] || {}).job)) || (xpV && xpV.p && xpV.p[uid] && xpV.p[uid].row) || xRowAuto((xcoBuilds[uid] || (xpV && xpV.p && xpV.p[uid]) || {}).job);
+const xRowOf = uid => (rdRunOn() && ((RD.mode === 'day' && RD.v.p[uid] && RD.v.p[uid].row) || xRowAuto((xcoBuilds[uid] || {}).job))) || (xpV && xpV.p && xpV.p[uid] && xpV.p[uid].row) || xRowAuto((xcoBuilds[uid] || (xpV && xpV.p && xpV.p[uid]) || {}).job);
 function xcoUnitFromBuild(uid, hp, mp){
   const b = JSON.parse(JSON.stringify(xcoBuilds[uid])); b.row = xRowOf(uid); b.id = uid; b.uid = uid; b.hum = true; b.team = 'a'; b.fx = {}; b.pets = []; b.def = 0; b.g = Math.random() * 40; b.hp = hp ?? b.mhp; b.mp = mp ?? b.mmp; if (rdRunOn() && RD.v.p[uid]) b.side = RD.v.p[uid].side || 0; return b;
 }
@@ -17248,6 +17248,7 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
   if (!RD.id || !RD.v || RD.v.st !== 'lobby') return;
   if (a === 'side') GDB.upd(`${rdP()}/room/${RD.id}/p/${myId()}`, { side: +b.dataset.s });
   else if (a === 'ready') GDB.upd(`${rdP()}/room/${RD.id}/p/${myId()}`, { rdy: RD.v.p[myId()].rdy ? 0 : 1 });
+  else if (a === 'row') GDB.upd(`${rdP()}/room/${RD.id}/p/${myId()}`, { row: b.dataset.r === 'f' ? 'f' : 'b' });
   else if (a === 'start' && RD.v.host === myId()){ const t0 = now2() + 3000; GDB.upd(rdP() + '/room/' + RD.id, { st: 'run', t0, end: t0 + (RD.mode === 'day' ? DD_LIM : RD_LIM) }); }
 });
 setInterval(() => { if (!RD.id || !me) return; GDB.upd(`${rdP()}/room/${RD.id}/p/${myId()}`, { hb: now2() });   // 신호 · 방장이 끊기면 전투를 끝내요
@@ -17571,7 +17572,8 @@ function ddLobbyRender(){
       ${rooms.map(([id, r]) => `<div class="rdfl"><div class="rdfi"><b>${esc(r.hn)}</b><span>${rdPs(r).length} / ${DD_MAX} 명</span></div><button class="btn go" data-rdl="join" data-id="${id}">참가</button></div>`).join('')}
       <button class="btn go" data-rdl="make" style="width:100%">방 만들기</button>${ddLeft() ? '' : '<div class="rdft">오늘 보상은 다 받았어요 · 도우러 갈 수는 있어요</div>'}</div>`; return; }
   const v = RD.v; if (!v){ o.innerHTML = ''; return; } const host = v.host === myId(), ps = rdPs(v), mine = v.p[myId()] || {}, others = ps.filter(([u]) => u !== v.host), can = host && others.every(([, p]) => p.rdy) && v.st === 'lobby';
-  const row = r => { const A = ps.filter(([, p]) => xRowAuto(p.job) === r); return `<div class="rdcol"><b>${r === 'f' ? '앞열' : '뒷열'}</b>${A.map(([u, p]) => `<div class="rdp${u === myId() ? ' me' : ''}"><span>${esc(p.n)}</span><small>${p.job && XJ[p.job] ? XJ[p.job].n : ''} ${p.L}</small><i>${u === v.host ? '방장' : p.rdy ? '준비' : ''}</i></div>`).join('')}</div>`; };
+  const rowOf = p => p.row || xRowAuto(p.job);   // 탐사처럼 앞열 · 뒷열을 골라요 (안 고르면 직업에 따라)
+  const row = r => { const A = ps.filter(([, p]) => rowOf(p) === r); return `<div class="rdcol"><b>${r === 'f' ? '앞열' : '뒷열'}</b>${A.map(([u, p]) => `<div class="rdp${u === myId() ? ' me' : ''}"><span>${esc(p.n)}</span><small>${p.job && XJ[p.job] ? XJ[p.job].n : ''} ${p.L}</small><i>${u === v.host ? '방장' : p.rdy ? '준비' : ''}</i></div>`).join('')}${rowOf(mine) !== r && v.st === 'lobby' ? `<button class="btn sm" data-rdl="row" data-r="${r}">이쪽으로</button>` : ''}</div>`; };
   o.innerHTML = `<div class="rdbox" style="--c:${D.c}"><div class="rdhd"><b>${hd}</b><span>${ps.length} / ${DD_MAX}</span><button class="rdcl" data-rdl="leave">✕</button></div>
     <div class="rdcols">${row('f')}${row('b')}</div>
     ${v.st === 'run' ? '<div class="rdft">내려가요!</div>' : host ? `<button class="btn go" data-rdl="start" style="width:100%" ${can ? '' : 'disabled'}>내려가기</button>` : `<button class="btn ${mine.rdy ? '' : 'go'}" data-rdl="ready" style="width:100%">${mine.rdy ? '준비 취소' : '준비'}</button>`}</div>`;

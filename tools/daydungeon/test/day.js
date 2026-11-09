@@ -12,8 +12,11 @@ async function fight(p, w, lv, shot){
   await p.evaluate(() => __dd.panel()); await p.waitForTimeout(400);
   await p.click(`[data-ddl="${lv + 1}"]`); await p.waitForTimeout(500);
   await p.click('[data-rdl="make"]'); await p.waitForTimeout(800);
+  const back = w === 1;   // 화요일: 기사가 뒷열로 옮겨 봐요
+  if (back){ ok(await p.evaluate(() => !!document.querySelector('[data-rdl="row"][data-r="b"]')), '뒷열로 옮기는 버튼'); await p.click('[data-rdl="row"][data-r="b"]'); await p.waitForTimeout(600); if (shot) await p.screenshot({ path: `${SH}/lobby_row.png` }); }
   await p.click('[data-rdl="start"]'); await p.waitForTimeout(5000);
   let s = await st(p); ok(s.xb && s.xb.R.w === w && s.xb.R.lv === lv, `전투 시작 (요일 ${w})`); if (!s.xb) return null;
+  if (s.xb.party[0]) ok(s.xb.party[0][3] === (back ? 'b' : 'f'), `고른 줄로 싸워요 (요일 ${w}) ${s.xb.party[0][3]}`);
   ok(s.xb.foes.length === (w === 3 ? 2 : 1), `보스 수 (요일 ${w}) ${s.xb.foes.length}`);
   await p.evaluate(() => { const B = __T.xbGet(); B.party.forEach(u => { u.mhp = Math.max(u.mhp, 1e7); u.hp = u.mhp; }); }); await p.waitForTimeout(9000);
   s = await st(p); if (shot) await p.screenshot({ path: `${SH}/battle_${w}.png` });
