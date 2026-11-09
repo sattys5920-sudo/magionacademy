@@ -124,7 +124,7 @@ const res = []; const ok = (c, m) => { res.push([!!c, m]); console.log(c ? '  ok
   await C(() => __T.openSheet('home', 'journal')); await A.waitForTimeout(600);
   ok(await C(() => !!document.querySelector('[data-jnt="cold"]')), '일지에 「감기」 탭'); await A.tap('[data-jnt="cold"]'); await A.waitForTimeout(500); await A.screenshot({ path: OUT + '/journal.png' }); await C(() => __T.closeSheet()); await A.waitForTimeout(400);
   // 관리자 카드
-  await Ad.waitForTimeout(1200); c = await card(); await c.scrollIntoViewIfNeeded(); await Ad.waitForTimeout(300);
+  await Ad.evaluate(() => window.__adPoll && window.__adPoll()); await Ad.waitForTimeout(1200); c = await card();   // 관리자는 1 분마다 새로 받아요 → 바로 받기 await c.scrollIntoViewIfNeeded(); await Ad.waitForTimeout(300);
   ok((await Ad.evaluate(e => e.innerText, c)).includes('봄'), '관리자 카드: 학생별 며칠째 · 고친 수 · 끝 장면');
   await c.screenshot({ path: OUT + '/admin_card.png' });
   await Ad.click('[data-coldn="1"]'); await Ad.waitForTimeout(500); ok((await Ad.evaluate(() => window.__tree.cold.ctl.n)) === 4, '하루 환자 수 바꾸기');

@@ -1618,6 +1618,19 @@ function coopClaim(){
 const setSaveDot = s => { saveState = s; const d = $('#saveDot'); if (d) d.className = s; };
 // 저장: 바꾼 건 바로 화면에, 서버에는 1.5 초 뒤에 한 번에 (연달아 바꾸면 한 번만 써요). 화면을 떠날 때는 바로 써요
 let haltSave = false; const SAVE_SID = Math.random().toString(36).slice(2, 10), saveTried = new Set();   // 이 화면이 보낸 저장 번호들 (끊겼다 붙으면 내 저장이 먼저 들어가 있을 수 있어요)   // 관리자가 내 데이터를 리셋했을 때 옛 데이터로 덮어쓰지 않도록
+// ----- 다른 학생에게 보여 줄 작은 정보 pub/<uid> (서버 다운로드 줄이기): 학생 화면은 반 전체 저장 데이터(players)를 듣지 않고 이것만 들어요 -----
+//   친구 이름 · 기숙사 · 얼굴 · 방 가구 · 직업 · 아기 동물 · 이벤트에서 남의 진행을 보는 몇 가지만 · 방 구경처럼 다 필요할 때는 그때 한 번 받아요 (playersFull)
+const pubOf = p => { if (!p) return null; const nn = p.nnpc && typeof p.nnpc === 'object' ? Object.fromEntries(Object.entries(p.nnpc).map(([k, v]) => [k, { met: (v && v.met) || null, at: (v && v.at) || null }])) : null;
+  return { nick: p.nick, look: p.look, house: p.house || null, av: p.av || null, room: p.room || [], bedOff: p.bedOff || null, ex: p.ex ? { job: p.ex.job || null, wp: p.ex.wp || 0 } : null,
+    baby: p.baby ? { adopt: p.baby.adopt || null, follow: p.baby.follow || null, k: p.baby.k ?? null } : null, cat: p.cat ? { ev: p.cat.ev || null, done: p.cat.done ?? null } : null, nubi: p.nubi || null, nnpc: nn }; };
+let pubSig = '', pubDb = {}, pubMiss = {}, pubChecked = false; const playersFull = {};
+function pubSave(){ if (solo || !uid || !me || !F || !db) return; try { const o = fbKeep(fbClean(pubOf(me))), sg = JSON.stringify(o); if (sg === pubSig) return; pubSig = sg; F.set(F.ref(db, 'pub/' + uid), o).catch(() => { pubSig = ''; }); } catch(e){} }
+function pubMerge(){ playersList = { ...pubMiss, ...pubDb }; if (uid && me && !playersList[uid]) playersList[uid] = pubOf(me); }
+function pubFill(){   // 아직 pub 이 없는 학생(배포 뒤 아직 안 들어온 학생)은 한 번만 저장 데이터를 받아 와요
+  if (pubChecked || solo) return; pubChecked = true;
+  F.get(F.ref(db, 'approved')).then(s => { Object.keys(s.val() || {}).filter(id => id !== uid && !pubDb[id]).forEach(id => F.get(F.ref(db, 'players/' + id)).then(q => { const v = q.val(); if (v && !pubDb[id]){ pubMiss[id] = pubOf(fbBack(v)); pubMerge(); pubAfter(); } }).catch(() => {})); }).catch(() => {});
+}
+function pubAfter(){ syncPens(); syncHallNames(); { const sg = Object.entries(playersList).map(([id, p]) => id + (p && p.nick) + (p && p.house)).join('|'); if (tab === 'home' && !sub && sg !== playersSig) render(); playersSig = sg; } penMigrate(); }
 function saveNow(){
   clearTimeout(saveTimer); saveTimer = 0; if (!me || haltSave) return Promise.resolve(false);
   if (solo) { try { localStorage.setItem('magion-solo', JSON.stringify(me)); } catch(e){} setSaveDot(''); return Promise.resolve(true); }
@@ -1626,7 +1639,7 @@ function saveNow(){
   const body = fbKeep(fbClean(me));   // Firebase가 거절하는 값(undefined·NaN·이름에 . # $ / [ ])이 있으면 저장 전체가 실패해요 → 미리 정리해요
   let curSid = '';
   return F.runTransaction(F.ref(db, 'players/' + uid), cur => { const crv = (cur && cur.rv) || 0; curSid = (cur && cur.sid) || ''; if (crv <= knownRv){ body.rv = knownRv + 1; return body; } if (cur.sid === SAVE_SID && saveTried.has(crv)){ body.rv = crv + 1; saveTried.add(body.rv); return body; } return undefined; }).then(r => {   // 서버 번호가 더 커도, 연결이 끊긴 사이 들어간 「이 화면의」 저장이면 다른 기기가 아니에요
-    if (r.committed){ knownRv = me.rv = body.rv; saveTried.clear(); setSaveDot(''); sessOk = true; if (typeof mailDone !== 'undefined') mailDone.splice(0).forEach(id => F.set(F.ref(db, `mail/${uid}/${id}/c`), 1).catch(() => {})); return true; }
+    if (r.committed){ knownRv = me.rv = body.rv; saveTried.clear(); setSaveDot(''); sessOk = true; pubSave(); if (typeof mailDone !== 'undefined') mailDone.splice(0).forEach(id => F.set(F.ref(db, `mail/${uid}/${id}/c`), 1).catch(() => {})); return true; }
     me.rv = knownRv; if (curSid && curSid !== SAVE_SID && sessOk){ sessKicked(); return false; }   // 다른 기기·창이 새로 들어왔어요 → 이 화면은 멈춰요 (서로 번갈아 다시 불러오지 않게)
     haltSave = true; errReport('save', '다른 기기·창이 먼저 저장해서 이 화면의 최근 진행을 버리고 새로 불러옴', ''); toast('다른 기기에서 먼저 진행했어요. 최신 상태로 새로 불러와요'); setTimeout(() => location.reload(), 1800); return false;
   }).catch(e => { me.rv = knownRv; setSaveDot('off'); if (!saveNow.retry){ saveNow.retry = setTimeout(() => { saveNow.retry = 0; save(); }, 5000); } if ((e.code || e.message) === 'disconnect') return;   // 잠깐 끊긴 건 5초 뒤 다시 저장해요
@@ -2474,7 +2487,7 @@ const xJobGrid = (sel, taken = {}) => `<div class="jgrid">${Object.entries(XJ).m
 // 직업은 한 사람에 하나씩: 앞서 가입한 친구가 고른 직업은 뒤에 가입하는 사람이 못 골라요 (jobs/<직업> = 고른 사람, 동시에 고르는 것도 막아요)
 async function jobsTaken(){
   const t = {}; if (solo || !F || !db) return t;
-  try { const ps = (await F.get(F.ref(db, 'players'))).val() || {}; Object.entries(ps).forEach(([id, p]) => { const j = p && p.ex && p.ex.job; if (j && id !== uid) t[j] = p.nick || '친구'; });
+  try { const ps = (await F.get(F.ref(db, 'pub'))).val() || {}; Object.entries(ps).forEach(([id, p]) => { const j = p && p.ex && p.ex.job; if (j && id !== uid) t[j] = p.nick || '친구'; });
     const cl = (await F.get(F.ref(db, 'jobs'))).val() || {}; Object.entries(cl).forEach(([j, id]) => { if (id !== uid && !t[j]) t[j] = ps[id] && ps[id].nick || '친구'; }); } catch(e){}
   return t;
 }
@@ -3188,10 +3201,11 @@ function xcoPartyUnits(){
 }
 const xcoFoeStat = f => ({ id: f.id, name: f.name, lp: f.lp, big: f.big, sc: f.sc, hh: f.hh, k: f.k, mhp: f.mhp, team: 'e', ...(f.rb !== undefined ? { rb: f.rb } : {}), ...(f.db !== undefined ? { db: f.db, dh: f.dh || 0 } : {}), ...(f.mn ? { mn: 1 } : {}) });
 function xcoPubBt(force){
-  const B = xb, now = performance.now(); if (!B || !(B.raid ? rdIsHost() : xcoHost()) || B.mirror) return; if (!force && now - xcoLastBt < 180) return; xcoLastBt = now;
+  const B = xb, now = performance.now(); if (!B || !(B.raid ? rdIsHost() : xcoHost()) || B.mirror) return; if (!force && now - xcoLastBt < 320) return; xcoLastBt = now;
   const un = u => { const o = { h: Math.round(u.hp), m: Math.round(u.mp || 0), g: Math.round(u.g) }, f = {}; if (u.hum){ o.r = u.rt || 0; if (u.g >= 100 && u.tdl) o.d = Math.max(0, Math.round(u.tdl - now)); } for (const k in u.fx){ f[k] = u.fx[k] && u.fx[k].t !== undefined ? Math.round(u.fx[k].t) : 99; } if (Object.keys(f).length) o.f = f; if (u.pets && u.pets.length) o.p = u.pets.map(p => [p.n, Math.round(p.hp || 0), Math.round(p.mhp || 0), Math.round(p.t)]); if (u.cdn && Object.keys(u.cdn).length) o.c = { ...u.cdn }; return o; };
   const units = {}; [...B.party, ...B.foes].forEach(u => { units[u.id] = un(u); });
-  const bt = { n: (B.pn = (B.pn || 0) + 1), bn: B.bn, t: now2(), kind: B.kind, log: B.log || '', order: B.party.map(u => u.id), foes: B.foes.map(xcoFoeStat), units, ev: xcoEv.slice(-30), over: !!B.over, win: !!B.won, rew: B.rew || null, fin: !!B.fin };
+  const bt = { n: (B.pn = (B.pn || 0) + 1), bn: B.bn, t: now2(), kind: B.kind, log: B.log || '', order: B.party.map(u => u.id), foes: B.foes.map(xcoFoeStat), units, ev: xcoEv.filter(e => e.i > (B.evSent || 0) - 6).slice(-20), over: !!B.over, win: !!B.won, rew: B.rew || null, fin: !!B.fin };
+  B.evSent = xcoEvN;   // 이미 보낸 효과는 마지막 몇 개만 다시 보내요 (놓친 사람용)
   if (B.raid){ bt.rd = rdPub(B); return GDB.set(`${rdP()}/run/${RD.id}/bt`, bt); }
   GDB.set(`xrun/${xpRoom}/bt`, bt);
 }
@@ -4041,11 +4055,21 @@ function adminLogin(){
     catch (ex){ try { await F.createUserWithEmailAndPassword(auth, idEmail(ADMIN_ID), pwPad(ADMIN_CODE)); } catch (ex2){ err.textContent = `실패했어요. (${ex2.code || ex2.message})`; } }
   };
 }
+// 관리자: 학생 전체 데이터는 실시간으로 듣지 않고 1 분마다 · 화면을 다시 볼 때 · 관리자가 무언가 바꾼 뒤에 새로 받아요 (서버 다운로드 줄이기)
+function adPlayersPoll(){
+  const get = () => { if (!document.body.classList.contains('admin')) return; F.get(F.ref(db, 'players')).then(s => { AD.players = fbBack(s.val() || {}); adPubFix(); if (adminTyping()){ AD.skip = true; return; } adminRender(); }).catch(() => {}); };
+  get(); const t = setInterval(() => { if (document.visibilityState === 'visible') get(); }, 60e3), vis = () => { if (document.visibilityState === 'visible') get(); };
+  document.addEventListener('visibilitychange', vis); AD.pollNow = () => setTimeout(get, 800); window.__adPoll = get;   // 시험용: 바로 새로 받기 AD.offs.push(() => { clearInterval(t); document.removeEventListener('visibilitychange', vis); AD.pollNow = null; });
+}
+function adPubFix(){   // 아직 pub 이 없거나 다른 학생은 관리자가 대신 채워 줘요 (배포 직후 · 접속 안 한 학생)
+  if (adPubFix.busy) return; adPubFix.busy = 1; F.get(F.ref(db, 'pub')).then(s => { const cur = s.val() || {}, up = {}; Object.entries(AD.players || {}).forEach(([id, p]) => { if (!p || !p.nick) return; const o = fbKeep(fbClean(pubOf(p))); if (JSON.stringify(cur[id] || null) !== JSON.stringify(o)) up['pub/' + id] = o; }); if (Object.keys(up).length) return F.update(F.ref(db, '/'), up); }).catch(() => {}).finally(() => { setTimeout(() => { adPubFix.busy = 0; }, 5 * 60e3); });
+}
+document.addEventListener('click', e => { if (AD.pollNow && e.target.closest && e.target.closest('#adminv button')) AD.pollNow(); }, true);   // 관리자가 버튼을 누르면 잠깐 뒤 학생 데이터를 새로 받아요
 function showAdmin(){
   window.__adm = 1; try { BGM.hold('admin'); BGM.sync(0); } catch(e){}   // 관리자 화면에서는 음악·효과음이 나오지 않아요
   document.body.classList.remove('inworld'); document.body.classList.add('admin'); app.classList.remove('open'); sheetOn = false;
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.examBd = {}; AD.day = AD.day || todayKey(); sgListen(); if (!noticeOff && F && db) noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); if (AD.tab === 'gift' && !adminTyping()) adminRender(); });
-  const L = (p, k, q) => AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = k === 'players' ? fbBack(s.val() || {}) : s.val() || {}; if (adminTyping()){ AD.skip = true; return; } adminRender(); }));
+  const L = (p, k, q) => { if (k === 'players') return adPlayersPoll(); AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = s.val() || {}; if (adminTyping()){ AD.skip = true; return; } adminRender(); })); };
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
   if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('adm/evdone', 'evdone'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('fam/pick', 'fampick'); L('fam/ctl', 'famctl'); L('fairy/ctl', 'fairyctl'); L('seed/ctl', 'seedctl'); L('tilda/ctl', 'tlctl'); L('nubi/ctl', 'nbctl'); L('wish/ctl', 'wsctl'); L('wish/list', 'wslist'); L('wish/cheer', 'wscheer'); L('wish/own', 'wsown'); L('wish/cby', 'wscby'); L('garden/ctl', 'gdctl'); L('knit/ctl', 'knctl'); L('bouquet/ctl', 'bqctl'); L('bouquet/assign', 'bqas'); L('balloon/ctl', 'blnctl'); L('capsule/ctl', 'capctl'); L('promo/ctl', 'grctl'); L('promo/re', 'grre'); L('raid/ctl', 'rdctl'); L('day/ctl', 'dayctl'); L('capsule/who', 'capwho'); L('capsule/letter', 'caplt'); L('ltr/ctl', 'ltctl'); L('ck/ctl', 'ckctl'); L('stick/ctl', 'stkctl'); L('hib/ctl', 'hibctl'); L('cold/ctl', 'coldctl'); L('cat/ctl', 'catctl'); L('cat/names', 'catnames'); L('cat/hide', 'cathide'); L('hib/den', 'hibden'); L('hib/give', 'hibgive'); L('stick/box', 'stkbox'); L('stick/by', 'stkby'); L('stick/mine', 'stkmine'); L('shout', 'shout'); L('shoutctl', 'shoutctl'); L('bm/ctl', 'bmctl'); L('bm/got', 'bmgot'); L('bm/place', 'bmplace'); L('bm/done', 'bmdone'); L('ltr/assign', 'ltas'); L('ltr/reply', 'ltrep'); L('otumo/ctl', 'otctl'); L('newnpc', 'nnctl'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('morph/ctl', 'moctl'); L('morph/st', 'most'); L('morph/form', 'moform'); L('board', 'board'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event'){ if (adminTyping()) AD.skip = true; else adminRender(); } })); }
   adminRender();
@@ -7458,6 +7482,7 @@ function guestRow(id, g, mine){
 function openVisit(id){
   if (solo || !playersList[id] || id === uid) return;
   visitUid = id; visitGuest = {}; giftPick = null; vMine = null; vTheirs = null; sub = 'visit';
+  F.get(F.ref(db, 'players/' + id)).then(q => { const v = q.val(); if (v){ playersFull[id] = fbBack(v); if (visitUid === id && sub === 'visit' && !typingNow()) renderVisit(); } }).catch(() => {});   // 생물 짝꿍 등은 전체 정보가 필요해요 (방 구경할 때 한 번)
   visitOff?.();
   visitOff = F.onValue(F.query(F.ref(db, 'guest/' + id), F.limitToLast(20)), s => { visitGuest = s.val() || {}; if (sub === 'visit' && !typingNow()){ const t = $('#gtext')?.value; renderVisit(); if (t && $('#gtext')) $('#gtext').value = t; } });   // 쓰는 중이면 다시 그리지 않아요
   me.visited = me.visited || {};
@@ -7503,7 +7528,7 @@ function bindBreed(p){
 }
 const typingNow = () => { const a = document.activeElement; return !!a && a.matches?.('input,textarea,select') && !!a.closest?.('#app'); };   // 글을 쓰거나 값을 고르는 중
 function renderVisit(){
-  const p = playersList[visitUid];
+  const p = playersFull[visitUid] || playersList[visitUid];
   if (!p) return leaveVisit();
   if (visitTabFor !== visitUid){ visitTabFor = visitUid; visitTab = 'room'; visitPage = 0; }   // 다른 친구 방에 오면 첫 탭부터
   const H = HOUSES[p.house] || HOUSES.dew, cozy = cozyOf(p);
@@ -16022,13 +16047,13 @@ const houseCards = (pick, counts) => `<div style="display:flex;flex-direction:co
 async function houseCounts(){
   const c = {};
   if (solo) return c;
-  try { const snap = await F.get(F.ref(db, 'players')); Object.entries(snap.val() || {}).forEach(([id, p]) => { if (id !== uid && p?.house) c[p.house] = (c[p.house] || 0) + 1; }); } catch(e){}
+  try { const snap = await F.get(F.ref(db, 'pub')); Object.entries(snap.val() || {}).forEach(([id, p]) => { if (id !== uid && p?.house) c[p.house] = (c[p.house] || 0) + 1; }); } catch(e){}
   return c;
 }
 // 기숙사 자리: 동시에 가입해도 기숙사마다 3명을 넘지 않게, hmem/<기숙사> 에서 한 번에 한 사람씩 자리를 잡아요 (이미 입학한 학생도 센 자리에 들어가요)
 async function houseClaim(h){
   if (solo || !F || !db) return true;
-  let saved = []; try { const ps = (await F.get(F.ref(db, 'players'))).val() || {}; saved = Object.entries(ps).filter(([id, p]) => id !== uid && p && p.house === h).map(([id]) => id); } catch(e){}
+  let saved = []; try { const ps = (await F.get(F.ref(db, 'pub'))).val() || {}; saved = Object.entries(ps).filter(([id, p]) => id !== uid && p && p.house === h).map(([id]) => id); } catch(e){}
   const r = await GDB.tx('hmem/' + h, v => { const o = { ...(v || {}) }, ids = new Set([...Object.keys(o), ...saved]); if (!ids.has(myId()) && ids.size >= HOUSE_CAP) return undefined; o[myId()] = 1; return o; }).catch(() => null);
   return !r || r.committed || !!(r.v && r.v[myId()]);
 }
@@ -16314,7 +16339,8 @@ async function boot(){
       setInterval(syncInvites, 3000);
       F.onValue(F.ref(db, 'market'), s => { marketList = s.val() || {}; if (tab === 'market' && !typingNow()) render(); });
       F.onValue(F.ref(db, 'coop'), s => { coop = s.val() || {}; coopClaim(); if (tab === 'market') render(); });
-      F.onValue(F.ref(db, 'players'), s => { playersList = fbBack(s.val() || {}); syncPens(); syncHallNames(); { const sg = Object.entries(playersList).map(([id, p]) => id + (p && p.nick) + (p && p.house)).join('|'); if (tab === 'home' && !sub && sg !== playersSig) render(); playersSig = sg; } penMigrate(); });   // 누가 저장할 때마다 다시 그리지 않고, 이름·기숙사가 바뀔 때만
+      F.onValue(F.ref(db, 'pub'), s => { pubDb = fbBack(s.val() || {}); Object.keys(pubDb).forEach(id => { delete pubMiss[id]; }); pubMerge(); pubAfter(); pubFill(); }); pubSave();   // 반 전체 저장 데이터 대신 작은 pub 만 들어요 (서버 다운로드 줄이기)
+      F.onValue(F.ref(db, 'players/' + uid), () => {});   // 내 저장 데이터는 계속 들고 있어야 저장(트랜잭션)할 때 다시 받아 오지 않아요   // 누가 저장할 때마다 다시 그리지 않고, 이름·기숙사가 바뀔 때만
       F.onValue(F.ref(db, 'pens'), s => { pensDb = s.val() || {}; syncPens(); penMigrate(); });
       F.onValue(F.query(F.ref(db, 'guest/' + uid), F.limitToLast(20)), s => { myGuest = s.val() || {}; if (sub === 'dorm') render(); });
       F.onValue(F.ref(db, 'houses'), s => { const old = commonStage(me.house); halls = s.val() || {}; syncHalls(); if (commonStage(me.house) > old) toast(`우리 휴게실이 ${commonStage(me.house)}단계가 됐어요!`); if (sub === 'common') render(); });

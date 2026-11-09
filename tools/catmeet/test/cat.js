@@ -8,7 +8,7 @@ const res = []; const ok = (c, m) => { res.push([!!c, m]); console.log(c ? '  ok
 (async () => {
   const seed = eval('(' + spec.match(/const seed = (\{.*\});\n/)[1] + ')');
   const me = seed.players.me1; me.babySeen = 'x'; me.npc = { ...me.npc, nabi: { a: 120 } };
-  seed.players.fr1 = { ...JSON.parse(JSON.stringify(me)), nick: '서연' };
+  seed.players.fr1 = { ...JSON.parse(JSON.stringify(me)), nick: '서연' }; seed.approved = { me1: true, fr1: true };   // 학생 화면은 pub 만 들어요: pub 없는 친구는 approved 로 찾아 한 번 받아요
   const br = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' }); const ctx = await br.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
   const errs = [];
   const page = async (u, night) => { const p = await ctx.newPage(); p.on('pageerror', e => errs.push(u + ': ' + e.message)); p.on('dialog', d => d.accept()); await p.addInitScript(([sd, u, n]) => { window.__seed = sd; window.__uid = u; window.__catNight = n; }, [seed, u, night]); await p.goto('http://localhost:8822/'); await p.waitForTimeout(4000); for (let k = 0; k < 12; k++){ const bb = await p.$('#stnext'); if (!bb) break; await bb.click(); await p.waitForTimeout(100); } return p; };
@@ -138,7 +138,7 @@ const res = []; const ok = (c, m) => { res.push([!!c, m]); console.log(c ? '  ok
   await C(() => { __T.npcMenu(__T.npcGet('nabi')); }); await A.waitForTimeout(600); await A.screenshot({ path: OUT + '/nabi_hint.png' }); await C(() => document.querySelector('#npcui .sx, #npcui [data-nx="close"]') && document.querySelector('#npcui .sx, #npcui [data-nx="close"]').click()); await A.waitForTimeout(400);
   // 11 끝 장면: 같은 날 끝낸 친구 아기 고양이
   const nd = await C(() => window.__cat.nd());
-  await C(([id, nd]) => { __T.pkSet('players/fr1/cat', { ev: id, seen: 1, d0: nd - 4, rec: { cheese: 1, grandpa: 1, cloak: 1, calico: 1, princess: 1 }, names: [], name: '치즈볼', done: nd, rw: 'tfe' }); __T.pkSet('cat/names/fr1', '치즈볼'); }, [ctl.id, nd]);
+  await C(([id, nd]) => { __T.pkSet('players/fr1/cat', { ev: id, seen: 1, d0: nd - 4, rec: { cheese: 1, grandpa: 1, cloak: 1, calico: 1, princess: 1 }, names: [], name: '치즈볼', done: nd, rw: 'tfe' }); __T.pkSet('pub/fr1/cat', { ev: id, done: nd }); __T.pkSet('cat/names/fr1', '치즈볼'); }, [ctl.id, nd]);
   await A.waitForTimeout(1200);
   ok((await C(() => window.__cat.friends())).length === 1, '같은 날 끝낸 친구 아기 고양이 1 마리');
   await C(() => { window.__catNight = 1; }); await tp('town', 42, 49);
