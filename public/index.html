@@ -2266,13 +2266,13 @@ const XJ = {   // 직업: 체력·공격·마공·치유·속도 [기본, 레벨
   gadget: { n: '기공사', ic: `<span class="jic" style="--i:11"></span>`, d: '포탑과 폭탄 · 광역', hp: [80, 9], atk: [10, 1.6], mag: [8, 1.1], heal: [3, .3], spd: [9, .3] },
 };
 // 스킬 트리: XT(직업 → 줄기 3 × 스킬 5, tools/skill_tree.py가 만든 데이터) + 코드 → 효과. 스킬 최대 Lv5, 레벨당 포인트 1
-const XDS = { warrior: 'atk', thief: 'atk', knight: 'atk', gadget: 'atk' }, XPAS = { def: .05, hp: .06, atk: .05, mag: .05, spd: .05, vamp: .06, crit: .06, surv: 1, dodge: .05 }, XPASN = { surv: '쓰러질 공격 버티기', dodge: '회피', def: '받는 피해', hp: '최대 체력', atk: '공격', mag: '마법', spd: '속도', vamp: '흡혈', crit: '치명타' };
+const XDS = { warrior: 'atk', thief: 'atk', knight: 'atk', gadget: 'atk' }, XPAS = { def: .05, hp: .06, atk: .05, mag: .05, spd: .05, vamp: .06, crit: .06, surv: .05, dodge: .05 }, XPASN = { surv: '쓰러질 공격 버티기', dodge: '회피', def: '받는 피해', hp: '최대 체력', atk: '공격', mag: '마법', spd: '속도', vamp: '흡혈', crit: '치명타' };
 const XDP = [1.2, 1.6, 2.1, 2.7, 3.4], XHP = [2, 2.6, 3.2, 3.9, 4.6], XMAXLV = 5, XRESET = 800, xSkp = L => L - 1;   // 레벨 업마다 1포인트 (ex.spx는 관리자가 따로 준 포인트)
 const xDefs = {};
 const XOV = {   // 스킬별 특수 효과 (직업.이름). t 종류 · key 효과 이름 · v 세기 · sec 지속(초) · ap 맞은 뒤 붙는 효과 [종류, 세기, 초] · hits 여러 번 타격 · exec 체력 낮은 적 추가 피해 · fcrit 반드시 치명타 · pct 체력 비율 · pet 소환수
   'warrior.대지 가르기': { ap: [['stun', 30]], ds: '적 전체 피해 + 행동 늦추기 30' },
   'warrior.되받아치기': { t: 'buff', key: 'counter', v: .6, sec: 12, tg: 'self', mp: 5, ds: '12초간 맞으면 받은 피해의 60%를 되돌려줘요' },
-  'warrior.파쇄': { p: 1, ap: [['vuln', .3, 12]], ds: '14초간 적 하나 공격 -30%' }   /* 코드 W라 t가 deb(약해짐)로 남아서 p · ap는 전투에서 안 쓰여요 */,
+  'warrior.파쇄': { t: 'dmg', st: 'atk', tg: 'one', key: null, v: null, sec: null, p: 1, ap: [['vuln', .3, 12]], ds: '적 하나에 피해 + 12초간 받는 피해 +30% (방어 파괴)' },   /* 코드 W(약해짐)를 피해 스킬로 바꿔요 */
   'warrior.학살자': { exec: 1, ds: '체력이 40% 이하인 적에게는 피해 ×1.8' },
   'warrior.폭풍 도끼': { t: 'dmg', st: 'atk', tg: 'all', p: .7, hits: 3, mp: 18, ds: '적 전체를 3번 베요' },
   'black.지옥불': { ap: [['dot', .35, 8]], ds: '광역 피해 + 8초간 지속 화상' },
@@ -2280,14 +2280,14 @@ const XOV = {   // 스킬별 특수 효과 (직업.이름). t 종류 · key 효�
   'black.얼음 창': { ap: [['slow', .4, 8]], ds: '피해 + 8초간 속도 -40%' },
   'black.번개': { ap: [['stun', 25]], ds: '피해 + 행동 늦추기 25' },
   'black.눈보라': { t: 'dmg', st: 'mag', tg: 'all', p: .45, ap: [['slow', .45, 10]], mp: 14, ds: '광역 피해 + 10초간 속도 -45%' },
-  'black.마력 흡수': { t: 'dmg', st: 'mag', tg: 'one', p: .7, drain: .2, mp: 2, ds: '적에게 피해 + 내 MP 20% 회복' },
+  'black.마력 흡수': { t: 'dmg', st: 'mag', tg: 'one', p: .7, drain: .2, mp: 2, v: null, cd: 3, ds: '적에게 피해 + 내 MP 20% 회복' },
   'black.약점 간파': { t: 'deb', key: 'vuln', v: .25, sec: 14, tg: 'all', mp: 8, ds: '14초간 적 전체가 받는 피해 +25%' },
   'thief.이중 베기': { hits: 2, p: .9, ds: '2번 베요' }, 'thief.칼춤': { hits: 2, p: .55, ds: '적 전체를 2번 베요' }, 'thief.연환': { hits: 3, p: .55, ds: '3번 연속 타격' },
   'thief.난도질': { t: 'dmg', st: 'atk', tg: 'one', hits: 5, p: .55, mp: 18, ds: '5번 연속 타격' },
   'thief.급소 찌르기': { fcrit: 1, ds: '반드시 치명타' }, 'thief.처형자': { exec: 1, ds: '체력이 40% 이하인 적에게는 피해 ×1.8' },
   'thief.피 웅덩이': { t: 'burst', tg: 'all', p: 1, mp: 14, ds: '지속 피해를 받는 적에게 남은 피해 ×1.5를 한꺼번에 터뜨려요' },
   'thief.연막': { t: 'deb', key: 'blind', v: .5, sec: 12, tg: 'all', mp: 8, ds: '12초간 적 전체 공격이 50% 빗나가요' },
-  'thief.그림자 걸음': { t: 'buff', key: 'dodge', v: .5, sec: 10, tg: 'self', mp: 7, ds: '10초간 공격을 50% 피해요' },
+  'thief.그림자 걸음': { t: 'buff', key: 'dodge', v: .3125, sec: 10, tg: 'self', mp: 7, ds: '10초간 공격을 31% 피해요 (Lv5 50%)' },   /* 회피 상한 50%라 Lv5에 딱 닿게 (31 → 50%) */
   'thief.훔치기': { steal: 1, ds: '피해 + 골드와 재료를 훔쳐요' },
   'bard.자장가': { t: 'buff', key: 'regen', v: .9, sec: 14, tg: 'all', mp: 8, ds: '14초간 아군 전체가 천천히 회복' },
   'bard.영웅의 서사시': { v: .5, sec: 20, ds: '20초간 아군 전체 공격 +50%' },
@@ -2304,7 +2304,7 @@ const XOV = {   // 스킬별 특수 효과 (직업.이름). t 종류 · key 효�
   'time.시간 정지': { t: 'tstop', tg: 'all', w: 100, mp: 24 },   // 적이 멈추는 시간 4초 → Lv5 7.2초
   'alch.산성 플라스크': { ap: [['vuln', .2, 10]], ds: '피해 + 10초간 받는 피해 +20%' },
   'alch.불안정 용액': { t: 'deb', key: 'vuln', v: .25, sec: 12, tg: 'one', mp: 5, ds: '12초간 적 하나가 받는 피해 +25%' },
-  'alch.부식': { p: .8, ap: [['vuln', .3, 12], ['dot', .3, 8]], ds: '14초간 적 하나 공격 -30%' }   /* 코드 W라 t가 deb(약해짐)로 남아서 p · ap는 전투에서 안 쓰여요 */,
+  'alch.부식': { t: 'dmg', st: 'mag', tg: 'one', key: null, v: null, sec: null, p: .8, ap: [['vuln', .3, 12], ['dot', .3, 8]], ds: '피해 + 12초간 받는 피해 +30% + 8초간 부식 지속 피해' },   /* 코드 W(약해짐)를 피해 스킬로 바꿔요 */
   'alch.약점 증폭': { t: 'deb', key: 'vuln', v: .3, sec: 12, tg: 'all', mp: 10, ds: '12초간 적 전체가 받는 피해 +30%' },
   'alch.혼합 약': { t: 'buff', key: 'regen', v: 1.2, sec: 12, tg: 'one', mp: 7, ds: '12초간 아군 하나가 계속 회복' },
   'alch.엘릭서': { cl: 1, ds: '아군 전체 치유 + 나쁜 효과 제거' },
@@ -2312,7 +2312,7 @@ const XOV = {   // 스킬별 특수 효과 (직업.이름). t 종류 · key 효�
   'alch.황금 폭발': { gold: 1, ds: '큰 피해 + 골드 보너스' },
   'white.신성한 비': { t: 'buff', key: 'regen', v: .8, sec: 14, tg: 'all', mp: 12, ds: '14초간 아군 전체가 계속 회복' },
   'white.기적의 손길': { pct: .9, ds: '아군 하나 최대 체력의 90% 회복' },
-  'white.완전 소생': { pct: 1, ds: '쓰러진 동료를 체력 100%로 살려요' },
+  'white.완전 소생': { pct: .75, ds: '쓰러진 동료를 체력 75%로 살려요 (Lv5 100%)' },
   'white.전체 소생': { t: 'revive', all: 1, pct: .4, tg: 'all', mp: 24, ds: '쓰러진 동료 전부를 체력 40%로 살려요' },
   'white.천사의 숨결': { t: 'revive', all: 1, pct: .3, hl: 1.2, tg: 'all', mp: 28, ds: '쓰러진 동료를 살리고 아군 전체를 치유' },
   'white.정화': { t: 'cleanse', tg: 'all', mp: 8, ds: '아군 전체의 나쁜 효과를 지워요' },
@@ -2356,7 +2356,7 @@ const XOV = {   // 스킬별 특수 효과 (직업.이름). t 종류 · key 효�
   'gadget.덫 설치': { t: 'dmg', st: 'atk', tg: 'one', p: .3, ap: [['slow', .6, 12], ['dot', .3, 8]], mp: 5, ds: '적 하나에 덫: 속도 -60% + 지속 피해' },
   'gadget.지뢰': { t: 'dmg', st: 'atk', tg: 'one', p: .1, ap: [['bomb', 2.6, 4]], mp: 8, ds: '4초 뒤 폭발하는 지뢰를 붙여요' },
   'gadget.전기 그물': { t: 'dmg', st: 'atk', tg: 'all', p: .5, ap: [['stun', 35]], mp: 12, ds: '광역 피해 + 행동 늦추기 35' },
-  'gadget.접착탄': { ap: [['slow', .4, 8]], ds: '10초간 적 하나 속도 -50%' }   /* 코드 s라 t가 deb(느려짐)로 남아서 ap는 전투에서 안 쓰여요 */,
+  'gadget.접착탄': { t: 'dmg', st: 'atk', tg: 'one', key: null, v: null, sec: null, p: 1.6, ap: [['slow', .4, 8]], ds: '피해 + 8초간 속도 -40%' },   /* 코드 s(느려짐)를 피해 스킬로 · 같은 단계 얼음 창(×1.6 · 속도 -40% 8초)과 같은 세기 */
   'gadget.연막탄': { t: 'deb', key: 'blind', v: .5, sec: 12, tg: 'all', mp: 8, ds: '12초간 적 전체 공격이 50% 빗나가요' },
   'gadget.시한폭탄': { t: 'dmg', st: 'atk', tg: 'one', p: .1, ap: [['bomb', 5, 6]], mp: 16, ds: '6초 뒤 아주 큰 폭발' },
   'gadget.집중 포화': { t: 'dmg', st: 'atk', tg: 'all', hits: 4, p: .6, mp: 22, ds: '적 전체에 4번 포격' },
@@ -2386,13 +2386,14 @@ function xDef(job, b, r){   // 스킬 하나의 효과표 (Lv1 기준)
   else if (k === 'F') Object.assign(o, { t: 'dot', st, p: .5, tg: 'one', mp: 3 + r * 2 });
   else if (k === 'f') Object.assign(o, { t: 'dot', st, p: .4, tg: 'all', mp: 6 + r * 2 });
   else if (k === 'Z') Object.assign(o, { t: 'stun', st, p: d * .6, tg: 'one', mp: 5 + r * 2 });
-  else if (k === 'M') Object.assign(o, { t: 'mp', v: .2, tg: 'all', mp: 0, cd: 3 });   // MP 채우기: MP는 안 들지만 내 차례 3 번 동안 다시 못 써요 (무한 MP 막기)
+  else if (k === 'M') Object.assign(o, { t: 'mp', v: .25, tg: 'all', mp: 0, cd: 3 });   // MP 채우기 (25% → Lv5 40%: 레벨 배율이 두 번 곱해지던 때의 Lv2~3 값과 비슷하게): MP는 안 들지만 내 차례 3 번 동안 다시 못 써요 (무한 MP 막기)
   const ov = XOV[job + '.' + n]; if (ov) Object.assign(o, ov);
   return xDefs[key] = o;
 }
 const xAll = job => Array.from({ length: 15 }, (_, i) => xDef(job, Math.floor(i / 5), i % 5));
 const xMpK = lv => 1 + .15 * (Math.max(1, lv) - 1);   // 스킬을 올릴수록 위력이 커지는 만큼 MP도 더 들어요 (Lv5는 1.6배)
 const xPw = (o, lv) => 1 + .18 * (lv - 1), xEfv = (o, lv) => o.t === 'deb' ? Math.min(.9, o.v * (1 + .15 * (lv - 1))) : o.v * (1 + .15 * (lv - 1));   // 느려짐·약해짐은 90%까지
+const xRvPct = (o, lv) => { const b = o.pct || .5; return Math.min(b >= .75 ? 1 : .8, b * (1 + .1 * (Math.max(1, lv) - 1))); };   /* 소생 체력: 레벨마다 +10% (보통 최대 80% · 완전 소생은 100%) */
 const xPct = (o, lv) => Math.min(.8, o.pct * (1 + .125 * (Math.max(1, lv) - 1))), xTs = lv => +(4 * (1 + .2 * (Math.max(1, lv) - 1))).toFixed(1);   // 체력 비율 회복 · 시간 정지 초
 const xMul = n => String(Math.round(n * 100) / 100);   /* 배율은 소수 둘째 자리까지 (×0.45 → ×0.5 처럼 반올림돼서 다음 레벨이 같아 보이던 것) */
 const xP = v => Math.round(Math.round(v * 1000) / 10);   /* 퍼센트는 정수로 (0.055 → 6) */
@@ -2401,13 +2402,13 @@ const xApD = ([k, v, s], st) => k === 'stun' ? `행동 늦추기 ${v}` : k === '
 const xNb = t => t.replace(/ (\d)/g, '\u00a0$1');   /* 「MP 12」 · 「쿨 1턴」 · 「늦추기 25」가 줄 끝에서 갈라지지 않게 */
 function xDesc(o, lv){   // 설명은 전투 계산(xMkUnit · xAct0)과 같은 수치로 만들어요 · tools/balance/skill_desc_audit.js 로 맞는지 확인
   const L = Math.max(1, lv);
-  if (o.pas){ const n = xP(XPAS[o.pas] * L); return xNb('패시브 · ' + ({ surv: '전투마다 한 번, 쓰러질 공격을 체력 1로 버텨요 (레벨을 올려도 같아요)', def: `받는 피해 -${n}%`, dodge: `적 공격 회피 +${n}%`, vamp: `준 피해의 ${n}%만큼 체력 회복`, crit: `치명타 확률 +${n}% (치명타는 피해 ×1.6)` }[o.pas] || `${XPASN[o.pas]} +${n}%`)); }
+  if (o.pas){ const n = xP(XPAS[o.pas] * L); return xNb('패시브 · ' + ({ surv: `전투마다 한 번, 쓰러질 공격을 버티고 최대 체력의 ${n}%로 남아요`, def: `받는 피해 -${n}%`, dodge: `적 공격 회피 +${n}%`, vamp: `준 피해의 ${n}%만큼 체력 회복`, crit: `치명타 확률 +${n}% (치명타는 피해 ×1.6)` }[o.pas] || `${XPASN[o.pas]} +${n}%`)); }
   const myL = me && me.ex ? xLv(me.ex.exp || 0).L : 1, mpv = o.mp ? Math.max(1, Math.round(xSkMp(o, L, myL) * (1 - xCrownK()))) : 0, cd = xCdOf(o), tail = (mpv ? ` · MP ${mpv}` : '') + (cd ? ` · 쿨 ${cd}턴` : '');
   const S = xSname(o.st), m = n => xMul(n * xPw(o, L)), ev = xP(xEfv(o, L)), foe = o.tg === 'all' ? '적 전체' : '적 하나', ally = o.tg === 'all' ? '아군 전체' : o.tg === 'self' ? '나' : '아군 하나', P = [];
   if (o.t === 'dmg'){ P.push(`${foe} ${S} ×${m(o.p)}${o.hits > 1 ? ` ×${o.hits}회` : ''}`); if (o.exec) P.push('체력 40% 미만인 적에게 ×1.8'); if (o.fcrit) P.push('반드시 치명타 (×1.6)'); if (o.petb) P.push(`소환수 하나당 피해 +${xP(o.petb)}%`);
     (o.ap || []).forEach(a => P.push(xApD(a, o.st))); if (o.drain) P.push(`내 MP ${xP(o.drain)}% 회복`); if (o.steal) P.push(`골드 +${5 + Math.round(myL * 1.2)} · 40% 확률로 재료도 훔쳐요`); if (o.gold) P.push(`골드 +${8 + myL}`); if (o.w < 0) P.push(`쓴 뒤 내 행동 늦추기 ${-o.w}`); }
   else if (o.t === 'heal'){ P.push(o.pct ? `${ally} 치유 ×${m(o.p)} 또는 최대 체력의 ${xP(o.ds ? o.pct : xPct(o, L))}% 중 큰 쪽` : `${ally} 치유 ×${m(o.p)}`); if (o.cl) P.push('나쁜 효과 지우기'); if (o.mpb) P.push(`MP ${xP(o.mpb)}% 회복`); }
-  else if (o.t === 'revive'){ P.push(`쓰러진 동료 ${o.all ? '전부' : '하나'}를 체력 ${xP(o.pct || .5)}%로 살려요`); if (o.hl) P.push(`아군 전체 치유 ×${xMul(o.hl)}`); }
+  else if (o.t === 'revive'){ P.push(`쓰러진 동료 ${o.all ? '전부' : '하나'}를 체력 ${xP(xRvPct(o, L))}%로 살려요`); if (o.hl) P.push(`아군 전체 치유 ×${m(o.hl)}`); }
   else if (o.t === 'buff'){ const k = o.key, sec = o.sec;
     const my = o.tg === 'self';
     P.push(k === 'shield' ? `${my ? '나에게' : ally} 보호막 (${xSname(o.st || 'heal')} ×${xMul((o.sv || 2) * xPw(o, L))} · ${sec}초)` : k === 'regen' ? `${ally} ${sec}초간 2초마다 치유 ×${xMul(xEfv(o, L))}` : k === 'counter' ? `${sec}초간 맞으면 받은 피해의 ${ev}%를 되돌려줘요` : k === 'taunt' ? `${sec}초간 적 공격의 80%가 나에게 와요` : k === 'cover' ? `${sec}초간 아군을 노린 공격의 65%를 내가 대신 맞아요` : k === 'dodge' ? `${my ? '내' : ally} 회피 ${Math.min(50, ev)}% (${sec}초${ev >= 50 ? ' · 최대치' : ''})` : `${my ? { atk: '내가 주는 피해', spd: '내 속도', dmgIn: '내가 받는 피해' }[k] : ally + ' ' + { atk: '주는 피해', spd: '속도', dmgIn: '받는 피해' }[k]} ${k === 'dmgIn' ? '-' : '+'}${ev}% (${sec}초)`);
@@ -2416,12 +2417,12 @@ function xDesc(o, lv){   // 설명은 전투 계산(xMkUnit · xAct0)과 같은 
   else if (o.t === 'dot') P.push(`${foe} 8초간 2초마다 ${S} ×${m(o.p)}`);
   else if (o.t === 'stun') P.push(`${foe} ${S} ×${m(o.p)}`, '행동 늦추기 60');
   else if (o.t === 'burst') P.push(`${foe}에 남은 지속 피해 ×1.5를 한꺼번에 터뜨려요`);
-  else if (o.t === 'cleanse'){ P.push(`${ally} 나쁜 효과 지우기`); if (o.regen) P.push(`10초간 2초마다 치유 ×${xMul(o.regen)}`); }
+  else if (o.t === 'cleanse'){ P.push(`${ally} 나쁜 효과 지우기`); if (o.regen) P.push(`10초간 2초마다 치유 ×${m(o.regen)}`); }
   else if (o.t === 'encore') P.push('직전에 쓴 스킬을 MP 없이 한 번 더');
   else if (o.t === 'recall') P.push('소환수를 모두 돌려보내고 가장 약한 아군 치유 (소환수 하나당 최대 체력의 12%)');
   else if (o.t === 'leap') P.push('곧바로 다시 행동', `내 속도 +${ev}% (${o.sec}초)`);
   else if (o.t === 'tstop') P.push('아군 전체 곧바로 행동', `적 전체 행동 늦추기 ${Math.round(150 * xTs(L) / 4)}`);
-  else if (o.t === 'mp') P.push(`아군 전체 MP ${xP(xEfv({ ...o, v: xEfv(o, L) }, L))}% 회복`);   /* 전투(xAct0)가 이미 레벨만큼 오른 v에 xEfv를 한 번 더 써서 그대로 보여 줘요 */
+  else if (o.t === 'mp') P.push(`아군 전체 MP ${ev}% 회복`);
   else if (o.t === 'summon' && o.pet){   // 소환수: 레벨마다 힘 +18% · 머무는 시간 +10% · 체력 +25% (실제 계산은 xPets · summon 그대로)
     const q = o.pet, w = xPw(o, L), c = q.n.charCodeAt(q.n.length - 1), ga = c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 ? '이' : '가';
     const what = { dmg: `적 하나에 ${S} ×${xMul(q.k * w)}`, dmgcover: `적 하나에 ${S} ×${xMul(q.k * w)} · 적의 시선을 끌어요`, dmgall: `적 전체에 ${S} ×${xMul(q.k * w * .8)}`, heal: `가장 약한 아군 치유 ×${xMul(q.k * w)}`, shield: `가장 약한 아군에 보호막 ×${xMul(q.k * w)} (8초)` }[q.kind] || '';
@@ -2572,9 +2573,9 @@ const XMPP = { melee: [20, 1.6], ranged: [30, 3], heal: [40, 4.4] }, XMPC = { me
 const xMmp = (job, L) => Math.round(XMPP[XROLE[job]][0] + XMPP[XROLE[job]][1] * L), xSkMp = (o, lv, L = 1) => o.mp ? Math.round(o.mp * xMpK(lv) * XMPC[XROLE[o.job]] * (1 + .06 * (Math.max(1, L) - 1))) : o.mp;   // 내 레벨이 오를수록 소모도 늘어요 (최대 MP·회복이 느는 만큼 · Lv20 ×2.1 · Lv40 ×3.3)
 const xMkUnit = (job, L, name, ai, hp, mp, sk) => { sk = sk || xAiSk(L); const u = { av: ai ? World.Avatar.fromLook(ORDER_J.indexOf(job) * 131 + 7) : me.av, sks: [], pas: {}, fx: {}, dr: 0, vamp: 0, crit: 0, id: name, job, name, ic: XJ[job].ic, L, ai, team: 'a', mhp: xSt(job, L, 'hp'), mmp: xMmp(job, L), atk: xSt(job, L, 'atk'), mag: xSt(job, L, 'mag'), heal: xSt(job, L, 'heal'), spd: xSt(job, L, 'spd'), g: Math.random() * 40 };
   { const sp = ai ? xAiSp(job, L) : (xEx().sp || {}); u.mhp += (sp.hp || 0) * XSPV.hp; u.atk += (sp.atk || 0) * XSPV.atk; u.mag += (sp.mag || 0) * XSPV.mag; u.heal += (sp.heal || 0) * XSPV.heal; u.spd += (sp.spd || 0) * XSPV.spd; u.mmp += (sp.mag || 0) * 1.5; ['mhp', 'mmp', 'atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k]); }); }   // 스탯 포인트
-  xAll(job).forEach(o => { const lv = sk[o.b + '_' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, mp0: o.mp, mp: xSkMp(o, lv, L), sv: o.sv == null ? o.sv : o.sv * xPw(o, lv), pet: o.pet ? { ...o.pet, k: o.pet.k * xPw(o, lv) } : o.pet, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv), pct: o.pct == null || o.ds || o.t !== 'heal' ? o.pct : xPct(o, lv) }); });   // 설명이 고정된 소생 스킬은 그대로
+  xAll(job).forEach(o => { const lv = sk[o.b + '_' + o.r] || 0; if (!lv) return; if (o.pas){ u.pas[o.pas] = (u.pas[o.pas] || 0) + XPAS[o.pas] * lv; } else u.sks.push({ ...o, lv, mp0: o.mp, mp: xSkMp(o, lv, L), sv: o.sv == null ? o.sv : o.sv * xPw(o, lv), pet: o.pet ? { ...o.pet, k: o.pet.k * xPw(o, lv) } : o.pet, p: o.p == null ? o.p : o.p * xPw(o, lv), v: o.v == null ? o.v : xEfv(o, lv), pct: o.t === 'revive' ? xRvPct(o, lv) : o.pct == null || o.ds || o.t !== 'heal' ? o.pct : xPct(o, lv), hl: o.hl == null ? o.hl : o.hl * xPw(o, lv), regen: o.regen == null ? o.regen : o.regen * xPw(o, lv) }); });   /* 소생 체력 · 천사의 숨결 치유 · 축복 재생도 레벨만큼 */
   const P = u.pas; ['hp', 'atk', 'mag', 'spd'].forEach(k => { if (P[k]) u[k === 'hp' ? 'mhp' : k] = Math.round(u[k === 'hp' ? 'mhp' : k] * (1 + P[k])); }); u.wp = ai ? Math.min(4, Math.floor((L - 1) / 12)) : (xEx().wp || 0); const wm = (1 + .08 * u.wp) * (!ai && dbuff('dfire') ? 1.05 : 1); ['atk', 'mag', 'heal'].forEach(k => { u[k] = Math.round(u[k] * wm); });   // 무기 강화 한 단계마다 +8%
-  u.dr = P.def || 0; u.vamp = P.vamp || 0; u.crit = P.crit || 0; u.dodge = P.dodge || 0; u.survLeft = P.surv ? 1 : 0; u.pets = [];
+  u.dr = P.def || 0; u.vamp = P.vamp || 0; u.crit = P.crit || 0; u.dodge = P.dodge || 0; u.survLeft = P.surv ? 1 : 0; u.survK = P.surv || 0; u.pets = [];
   if (!ai){ const ms = XROLE[job] === 'melee' ? 'atk' : XROLE[job] === 'heal' ? 'heal' : 'mag'; u.spd = Math.round(u.spd * (1 + famV('xspd'))); u[ms] = Math.round(u[ms] * (1 + famV('xmain'))); u.mhp = Math.round(u.mhp * (1 + famV('xhp'))); u.dr += famV('xdr'); u.dodge += famV('xdodge'); u.res = famV('xres'); u.bossK = famV('xboss'); u.healIn = famV('xheal'); { const A = xArV(); u.mhp = Math.round(u.mhp * (1 + A[0])); u.dr += A[1]; } }   // 사역마 맹약
   if (!ai && me && me.inv && me.inv.nb_heart > 0) u.mhp = Math.round(u.mhp * 1.1);   // 누비의 하트 헝겊
   if (!ai) rdAccApply(u);   // 레이드 장신구
@@ -3237,7 +3238,7 @@ function xHit(u, t, raw, col, opt){   // 피해 한 번: 치명타 · 약점(vul
   t.hp = Math.max(0, t.hp - dmg); xFloat(t.id, '-' + dmg, col);
   { const now = performance.now(); if (now - xSfxT > 70){ xSfxT = now; setTimeout(() => sfx(isCrit ? 'crit' : 'hit'), xDelay || 0); xcoEvPush({ k: 'sfx', s: isCrit ? 'crit' : 'hit', dl: xDelay || 0 }); } }
   if (t.hp <= 0 && t.team === 'a' && t.lastStand && !t.lsUsed){ t.lsUsed = 1; t.hp = Math.max(1, Math.round(t.mhp * t.lastStand)); xFloat(t.id, '버텼다!', '#ffd24a'); }   // 용 비늘 망토
-  if (t.hp <= 0 && t.team === 'a' && (t.fx.survive || t.survLeft > 0)){ if (t.fx.survive) delete t.fx.survive; else t.survLeft--; t.hp = 1; xFloat(t.id, '버텼다!', '#ffffff'); }
+  if (t.hp <= 0 && t.team === 'a' && (t.fx.survive || t.survLeft > 0)){ const sk0 = t.fx.survive ? 0 : t.survK || 0; if (t.fx.survive) delete t.fx.survive; else t.survLeft--; t.hp = Math.max(1, Math.round(t.mhp * sk0)); xFloat(t.id, '버텼다!', '#ffffff'); }   /* 불굴 · 가호: 레벨마다 최대 체력 5%씩 남기고 버텨요 */
   if (u && u.vamp) u.hp = Math.min(u.mhp, u.hp + Math.round(dmg * u.vamp));
   if (t.team === 'a' && t.hp > 0 && t.fx.counter && u && u.team === 'e' && u.hp > 0){ const r = Math.max(1, Math.round(dmg * t.fx.counter.v)); u.hp = Math.max(0, u.hp - r); xFloat(u.id, '-' + r, '#ffd866'); }
   return dmg;
@@ -3327,7 +3328,7 @@ function xAct0(u, sk, tgt){   // 한 번 행동
   else if (sk.t === 'leap'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'time', [u], u); if (sk.v) u.fx.spd = { v: sk.v, t: sk.sec }; xFloat(u.id, '가속!', '#9ad8ff'); }
   else if (sk.t === 'tstop'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'time', xAlive(B.foes), u); xAlive(B.party).forEach(a => { xFill(a); xFloat(a.id, '행동!', '#9ad8ff'); }); xAlive(B.foes).forEach(f => { f.g = Math.min(f.g, -150 * xTs(sk.lv) / 4); xFloat(f.id, '정지', '#d0a0ff'); }); }
   else if (sk.t === 'encore'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'buff', [u], u); const last = u.lastSk; if (last && last.t !== 'encore'){ B.log = `앙코르! ${last.n}`; xAct0(u, { ...last, mp: 0 }, tgt); return; } else { u.mp += sk.mp; B.log = '다시 쓸 스킬이 없어요'; } }
-  else if (sk.t === 'mp'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'buff', xAlive(B.party), u); B.party.forEach(t => { if (t.hp > 0){ t.mp = Math.min(t.mmp, t.mp + t.mmp * xEfv(sk, sk.lv || 1)); xFloat(t.id, 'MP↑', '#6aa8ff'); } }); }
+  else if (sk.t === 'mp'){ xFxAt(fxk.startsWith('sk:') ? fxk : 'buff', xAlive(B.party), u); B.party.forEach(t => { if (t.hp > 0){ t.mp = Math.min(t.mmp, t.mp + t.mmp * sk.v); xFloat(t.id, 'MP↑', '#6aa8ff'); } }); }
   u.g = sk.w ?? 0; if (u.g >= 100){ u.g = 0; xFill(u); }
 }
 function xAI(u){   // 동료 자동 행동 (쿨타임 중인 스킬은 안 써요)

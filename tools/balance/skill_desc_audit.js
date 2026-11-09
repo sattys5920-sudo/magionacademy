@@ -13,7 +13,7 @@ const PAS = { def: .05, hp: .06, atk: .05, mag: .05, spd: .05, vamp: .06, crit: 
 // 전투가 실제로 하는 일 → 설명에 꼭 들어가야 할 조각들
 function real(o, sk, lv, pasV){
   const T = [], N = [];   // T: 설명에 있어야 할 글자 · N: 참고 (설명 검사는 안 하는 실제 값)
-  if (o.pas){ if (o.pas === 'surv') { T.push('체력 1로 버텨요'); N.push('레벨과 상관없이 한 번'); } else T.push(`${pct(pasV)}%`); return { T, N }; }
+  if (o.pas){ T.push(`${pct(pasV)}%`); if (o.pas === 'surv') T.push('버티고'); return { T, N }; }
   const foe = sk.tg === 'all' ? '적 전체' : '적 하나', ally = sk.tg === 'all' ? '아군 전체' : sk.tg === 'self' ? '나' : '아군 하나';
   if (sk.t === 'dmg'){ T.push(`${foe} ${SN[sk.st]} ×${mul(sk.p)}`); if (sk.hits > 1) T.push(`×${sk.hits}회`); if (sk.exec) T.push('40% 미만', '×1.8'); if (sk.fcrit) T.push('반드시 치명타');
     if (sk.petb) T.push(`+${pct(sk.petb)}%`);
@@ -34,7 +34,7 @@ function real(o, sk, lv, pasV){
   else if (sk.t === 'recall') T.push('12%');
   else if (sk.t === 'leap') T.push('곧바로 다시 행동', `속도 +${pct(sk.v)}% (${sk.sec}초)`);
   else if (sk.t === 'tstop'){ const ts = +(4 * (1 + .2 * (lv - 1))).toFixed(1); T.push('곧바로 행동', `행동 늦추기 ${Math.round(150 * ts / 4)}`); }
-  else if (sk.t === 'mp') T.push(`MP ${pct(sk.v * (1 + .15 * (lv - 1)))}%`);   // xAct0: t.mmp * xEfv(sk, sk.lv) (sk.v는 이미 레벨만큼 오른 값)
+  else if (sk.t === 'mp') T.push(`MP ${pct(sk.v)}%`);   // xAct0: t.mmp * sk.v
   else if (sk.t === 'summon'){ const q = sk.pet; T.push(`${Math.round(q.sec * (1 + .1 * (lv - 1)) * 10) / 10}초간`, `${q.every}초마다`, `×${mul(q.kind === 'dmgall' ? q.k * .8 : q.k)}`); }
   else N.push('알 수 없는 종류 ' + sk.t);
   if (sk.mp) T.push(`MP ${Math.ceil(sk.mp)}`);
@@ -42,12 +42,11 @@ function real(o, sk, lv, pasV){
   if (sk.t !== 'dmg' && sk.ap) N.push(`ap ${JSON.stringify(sk.ap)} 는 전투에서 안 쓰여요 (t=${sk.t})`);
   if (!['dmg', 'heal', 'stun', 'dot'].includes(sk.t) && o.p != null && o.t === 'deb') N.push(`p ${o.p} 는 전투에서 안 쓰여요 (t=${sk.t}, 피해 없음)`);
   if (sk.t === 'buff' && sk.key === 'dodge' && pct(sk.v) > 50) N.push(`회피는 최대 50%라 ${pct(sk.v)}%는 50%로 잘려요`);
-  if (sk.t === 'mp') N.push('xAct0이 레벨 배율을 두 번 곱해요 (sk.v가 이미 xEfv)');
   return { T, N };
 }
 // 레벨이 바뀌면 달라지는 실제 값: 그 종류의 스킬이 전투에서 실제로 쓰는 값만 (MP · lv 빼고)
 const sig = (sk, lv) => { const t = sk.t, k = sk.key;
-  const u = t === 'dmg' || t === 'dot' || t === 'stun' ? [sk.p] : t === 'heal' ? [sk.p, sk.pct] : t === 'buff' ? (k === 'shield' ? [sk.sv] : k === 'taunt' || k === 'cover' ? [] : k === 'dodge' ? [Math.min(.5, sk.v)] : [sk.v]) : t === 'deb' || t === 'leap' ? [sk.v] : t === 'tstop' || t === 'mp' ? [lv] : t === 'summon' ? [sk.pet.k, sk.pet.sec * (1 + .1 * (lv - 1))] : [];
+  const u = t === 'dmg' || t === 'dot' || t === 'stun' ? [sk.p] : t === 'heal' ? [sk.p, sk.pct] : t === 'buff' ? (k === 'shield' ? [sk.sv] : k === 'taunt' || k === 'cover' ? [] : k === 'dodge' ? [Math.min(.5, sk.v)] : [sk.v]) : t === 'deb' || t === 'leap' ? [sk.v] : t === 'tstop' ? [lv] : t === 'mp' ? [sk.v] : t === 'revive' ? [sk.pct, sk.hl] : t === 'cleanse' ? [sk.regen] : t === 'summon' ? [sk.pet.k, sk.pet.sec * (1 + .1 * (lv - 1))] : [];
   return JSON.stringify(u); };
 
 (async () => {
