@@ -32,9 +32,10 @@ print('segments', len(segs), segs)
 while len(segs) < 10:   # 붙어 있는 두 칸: 가장 넓은 덩어리를 가운데쯤 가장 얇은 세로줄에서 나눠요
     i = max(range(len(segs)), key=lambda j: segs[j][1] - segs[j][0]); a0, b0 = segs[i]; lo, hi = a0 + (b0 - a0) * 3 // 10, a0 + (b0 - a0) * 7 // 10
     cut = min(range(lo, hi), key=lambda x: cols[x]); segs[i:i + 1] = [(a0, cut), (cut, b0)]; print('split', a0, b0, 'at', cut)
+FLIP = {0, 1, 2, 3, 4, 5}   # 오른쪽을 보는 칸은 뒤집어 모두 왼쪽(파티 쪽)을 보게
 crops = []
 for a, b in segs:
-    c = rgba.crop((a, 0, b, H)); bb = c.getbbox(); crops.append(c.crop(bb) if bb else c)
+    c = rgba.crop((a, 0, b, H)); bb = c.getbbox(); c = c.crop(bb) if bb else c; crops.append(c.transpose(Image.FLIP_LEFT_RIGHT) if len(crops) in FLIP else c)
 k = min(62 / max(c.height for c in crops), 64 / max(c.width for c in crops))
 out = Image.new('RGBA', (640, 64))
 for i, c in enumerate(crops):

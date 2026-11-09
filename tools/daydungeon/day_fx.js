@@ -146,7 +146,7 @@ ${S.warn ? `<div class="dq-warn"><b style="color:#ffb090">폭주 직전....</b> 
   if (b === 0){
     if (sc === 'a'){   // 등껍질 방어 자세: 껍질 그림 + 초록 방패 기운 + 작은 숫자
       shadow(BX, BY, 52); await drawPeople();
-      aura(BX, BY - 50, 86, 62, 'rgba(160,240,140,A)', .38); drawSpr(1, BX, BY, 2, { fl: 1 });
+      aura(BX, BY - 50, 86, 62, 'rgba(160,240,140,A)', .38); drawSpr(1, BX, BY, 2);
       g.save(); g.strokeStyle = 'rgba(200,255,170,.85)'; g.lineWidth = 2; g.beginPath(); g.ellipse(BX, BY - 46, 76, 54, 0, Math.PI * 1.02, Math.PI * 1.98); g.stroke(); g.globalAlpha = .5; g.beginPath(); g.ellipse(BX, BY - 46, 84, 62, 0, Math.PI * 1.05, Math.PI * 1.95); g.stroke();
       for (let k = 0; k < 7; k++){ const a = Math.PI * (1.1 + k * .13), x = BX + Math.cos(a) * 76, y = BY - 46 + Math.sin(a) * 54; g.globalAlpha = .9; g.fillStyle = '#e8ffd0'; g.beginPath(); for (let j = 0; j < 6; j++){ const aa = j * Math.PI / 3; g.lineTo(x + Math.cos(aa) * 4, y + Math.sin(aa) * 4); } g.fill(); } g.restore();
       [['-18', BX - 46, 120], ['-21', BX - 10, 104], ['-16', BX + 28, 116]].forEach(([v, x, y]) => num(v, x, y, '#c8d8c0', 10));
@@ -156,7 +156,7 @@ ${S.warn ? `<div class="dq-warn"><b style="color:#ffb090">폭주 직전....</b> 
     }
     if (sc === 'b'){   // 껍질이 열렸어요: 서 있는 그림 · 빈틈 표시 · 큰 숫자
       shadow(BX, BY, 52); await drawPeople();
-      drawSpr(0, BX, BY, 2, { fl: 1 });
+      drawSpr(0, BX, BY, 2);
       g.save(); g.strokeStyle = '#ff9a6a'; g.lineWidth = 2; g.setLineDash([4, 3]); g.beginPath(); g.arc(BX - 6, BY - 46, 22, 0, 7); g.stroke(); g.restore();
       g.strokeStyle = '#ff9a6a'; g.lineWidth = 2; [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([dx, dy]) => { g.beginPath(); g.moveTo(BX - 6 + dx * 16, BY - 46 + dy * 16); g.lineTo(BX - 6 + dx * 28, BY - 46 + dy * 28); g.stroke(); });
       txt('빈틈', BX - 6, BY - 78, '#ff9a6a', 10);
@@ -178,7 +178,7 @@ ${S.warn ? `<div class="dq-warn"><b style="color:#ffb090">폭주 직전....</b> 
   }
   if (b === 1){
     if (sc === 'a'){   // 한입 물기: 기사에게 덥석, 큰 빨간 숫자
-      shadow(P[0].x + 66, P[0].y + 4, 40); drawSpr(3, P[0].x + 66, P[0].y + 10, 1.7, { fl: 1 }); await drawPeople();
+      shadow(P[0].x + 66, P[0].y + 4, 40); drawSpr(3, P[0].x + 66, P[0].y + 10, 1.7); await drawPeople();
       g.save(); g.fillStyle = '#ffffff'; for (const d of [-1, 1]){ for (let k = 0; k < 4; k++){ const x = P[0].x - 10 + k * 7, y = P[0].y - 26 + d * 12; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 3, y - d * 9); g.lineTo(x + 6, y); g.fill(); } } g.restore();
       g.strokeStyle = 'rgba(255,60,40,.95)'; g.lineWidth = 3; for (let k = 0; k < 3; k++){ g.beginPath(); g.moveTo(P[0].x - 16 + k * 8, P[0].y - 40); g.lineTo(P[0].x - 6 + k * 8, P[0].y - 12); g.stroke(); }
       num('-312', P[0].x - 2, P[0].hy - 10, '#ff4a3a', 22); txt('아파요', P[0].x - 2, P[0].hy - 32, '#ffb0a0', 9);
@@ -188,7 +188,7 @@ ${S.warn ? `<div class="dq-warn"><b style="color:#ffb090">폭주 직전....</b> 
       g.save(); g.fillStyle = 'rgba(255,40,30,.22)'; g.fillRect(70, 112, 70, 100); g.strokeStyle = 'rgba(255,80,60,.95)'; g.setLineDash([5, 3]); g.lineWidth = 2; g.strokeRect(70, 112, 70, 100); g.restore();
       await drawPeople();
       [P[0], P[1]].forEach(p => { g.fillStyle = 'rgba(255,60,40,.9)'; g.beginPath(); g.moveTo(p.x - 7, p.hy - 16); g.lineTo(p.x + 7, p.hy - 16); g.lineTo(p.x, p.hy - 6); g.fill(); txt('!', p.x, p.hy - 18, '#fff', 11); });
-      shadow(BX + 6, BY, 50); aura(BX, BY - 40, 80, 50, 'rgba(255,40,30,A)', .45); drawSpr(3, BX + 6, BY, 2, { fl: 1 });
+      shadow(BX + 6, BY, 50); aura(BX, BY - 40, 80, 50, 'rgba(255,40,30,A)', .45); drawSpr(3, BX + 6, BY, 2);
       g.save(); g.globalAlpha = .7; g.strokeStyle = '#ff5a4a'; g.lineWidth = 2; for (let k = 0; k < 3; k++){ g.beginPath(); g.ellipse(BX, BY - 46, 60 + k * 14, 40 + k * 10, 0, 0, 7); g.stroke(); } g.restore();
       for (let k = 0; k < 2; k++){ g.fillStyle = '#ff6a4a'; const x = 196 - k * 26; g.beginPath(); g.moveTo(x, 150); g.lineTo(x - 18, 160); g.lineTo(x, 170); g.fill(); }
       edge('rgba(255,60,30,A)', .5); txt('물어뜯기', BX, 40, '#ff5a4a', 14);
@@ -197,7 +197,7 @@ ${S.warn ? `<div class="dq-warn"><b style="color:#ffb090">폭주 직전....</b> 
       await drawPeople(); shadow(BX, BY, 46);
       aura(BX, BY - 64, 100, 90, 'rgba(255,30,20,A)', .6);
       for (let i = 0; i < 9; i++){ const x = BX - 50 + i * 12 + (R() - .5) * 6, h = 30 + R() * 50; g.fillStyle = 'rgba(255,90,50,.55)'; g.beginPath(); g.moveTo(x - 5, BY - 6); g.quadraticCurveTo(x, BY - 6 - h * 1.3, x + 5, BY - 6); g.fill(); }
-      drawSpr(2, BX, BY, 2, { fl: 1, tint: 'rgba(255,40,30,.18)' });
+      drawSpr(2, BX, BY, 2, { tint: 'rgba(255,40,30,.18)' });
       g.save(); g.strokeStyle = 'rgba(255,200,180,.75)'; g.lineWidth = 2; for (let k = 0; k < 4; k++){ g.globalAlpha = .9 - k * .2; g.beginPath(); g.arc(BX - 18, BY - 106, 16 + k * 18, Math.PI * .55, Math.PI * 1.45); g.stroke(); } g.restore();
       g.fillStyle = '#ff2a1a'; g.fillRect(BX - 22, BY - 110, 3, 2); g.fillRect(BX - 13, BY - 110, 3, 2);
       txt('공격 +20 %', BX + 36, 40, '#ffb0a0', 12); txt('▲', BX + 82, 40, '#ff5a4a', 12);
