@@ -49,7 +49,7 @@ async function fight(p, w, lv, shot){
       let s3 = await st(p); ok(s3.xb && s3.xb.over, `이겼어요 (요일 ${w}) ${s3.xb && s3.xb.log}`);
       await p.waitForTimeout(1500); const cards = await p.$$('[data-ddc]'); ok(cards.length === 3, `카드 셋 (요일 ${w}) ${cards.length}`);
       if (w === 0) await p.screenshot({ path: SH + '/cards.png' });
-      if (cards.length) { await p.evaluate(() => document.querySelectorAll('[data-ddc]')[1].click()); await p.waitForTimeout(500); }
+      if (cards.length) { await p.evaluate(() => document.querySelectorAll('[data-ddc]')[1].click()); await p.waitForTimeout(350); if (w === 0) await p.screenshot({ path: SH + '/cards_flip.png' }); await p.waitForTimeout(1800); }
       if (w === 0) await p.screenshot({ path: SH + '/cards_open.png' });
       const s4 = await st(p); ok(s4.left === left0 - 1, `횟수 하나 씀 (요일 ${w}) ${left0} → ${s4.left}`);
       const coin1 = await p.evaluate(() => __T.meRaw().coin); ok(coin1 > coin0, `골드 받음 (요일 ${w}) ${coin0} → ${coin1}`);
