@@ -57,11 +57,11 @@ async function fight(p, w, lv, shot){
       ok(!(await st(p)).xb, '우물 위로 나옴');
     }
     const s5 = await st(p); ok(s5.dd.fc && s5.dd.fc['0_0'] && s5.dd.fc['4_2'], '처음 보상 기록');
-    // 지면: 깎은 만큼 골드 (횟수는 그대로)
+    // 지면: 깎은 만큼 골드 · 진 판도 하루 3 번에서 하나 써요
     await p.evaluate(() => { __T.meRaw().dd.n = 0; __T.meRaw().dd.ln = 0; __T.pkSet('day/ctl', { open: false, at: 6, test: 2 }); }); await p.waitForTimeout(600);
     { await fight(p, 2, 0, false); const c0 = await p.evaluate(() => __T.meRaw().coin);
       await p.evaluate(() => { const B = __T.xbGet(); B.foes.forEach(f => { f.hp = Math.round(f.mhp / 2); }); B.party.forEach(u => { u.hp = 0; }); }); await p.waitForTimeout(6000);
-      const c1 = await p.evaluate(() => __T.meRaw().coin), s7 = await st(p); ok(c1 - c0 === 400, `진 판 골드 (쉬움 800 의 절반) ${c1 - c0}`); ok(s7.dd.n === 0 && s7.dd.ln === 1, `진 판은 횟수 그대로 · 진 판 골드 1 번 ${s7.dd.n} ${s7.dd.ln}`); ok(!s7.xb, '지면 우물 위로'); }
+      const c1 = await p.evaluate(() => __T.meRaw().coin), s7 = await st(p); ok(c1 - c0 === 400, `진 판 골드 (쉬움 800 의 절반) ${c1 - c0}`); ok(s7.dd.n === 1, `진 판도 횟수 하나 씀 ${s7.dd.n}`); ok(!s7.xb, '지면 우물 위로'); }
     // 오늘 3 번 다 쓰면: 도울 수는 있고 카드는 없어요
     await p.evaluate(() => { __T.meRaw().dd.n = 3; __T.pkSet('day/ctl', { open: false, at: 5, test: 1 }); }); await p.waitForTimeout(600);
     { await fight(p, 1, 0, false); await p.evaluate(() => { const B = __T.xbGet(); B.foes.forEach(f => { f.hp = 0; }); }); await p.waitForTimeout(5000);

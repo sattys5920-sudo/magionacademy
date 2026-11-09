@@ -17255,7 +17255,8 @@ setInterval(() => { if (!RD.id || !me) return; GDB.upd(`${rdP()}/room/${RD.id}/p
 // 올라가기: 각자 전투 능력치를 올리고 (하루 횟수 하나 씀) · 방장은 3 초 뒤 전투를 만들어요
 function rdEnterRun(){
   const id = RD.id, v = RD.v; RD.started = true; RD.showLobby = false; const o = $('#rdx'); if (o) o.remove();
-  if (RD.mode !== 'day'){ const S = rdSt(); if (S.used !== id){ S.used = id; S.n = (S.n || 0) + 1; save(); } }   // 요일 던전은 이긴 판만 셈
+  if (RD.mode !== 'day'){ const S = rdSt(); if (S.used !== id){ S.used = id; S.n = (S.n || 0) + 1; save(); } }
+  else { const S = ddSt(); if (S.used !== id){ S.used = id; if (ddLeft() > 0){ S.n = (S.n || 0) + 1; S.rw = id; } save(); } }   // 요일 던전: 내려갈 때 하루 3 번에서 하나 써요 (지든 이기든) · 다 쓴 학생은 도우러만 (보상 없음)
   xcoBuilds = {}; xcoIn = {}; RD.teleShown = 0; RD.dg = {}; RD.lastBt = 0;
   GDB.upd(`${rdP()}/run/${id}/u`, { [myId()]: xcoBuild() });
   RD.offs.push(GDB.on(`${rdP()}/run/${id}/u`, u => { xcoBuilds = u || {}; }));
@@ -17477,7 +17478,7 @@ function rdBoomFx(g, B, bm, p){
 
 // ===== 요일 던전 「마른 우물 아래」 (tools/daydungeon/day_plan.md): 묘지 뒤 마른 우물 · 월 ~ 금 요일마다 다른 보스 · 1 ~ 4 명 · 난이도 셋 =====
 //   day/ctl = { open, at, test 시험용 요일 0 월 ~ 4 금 } · me.dd = { seen 처음 연출 봄, d 날짜, n 오늘 이긴 횟수, fc { '요일_난이도': 1 } 처음 보상, wk 주 키, wsp 그 주 스킬 포인트 받음 }
-//   처음 연출을 끝까지 본 학생은 관리자가 닫아도 계속 들어가요 · 주말에는 판자로 덮여 있어요 · 하루 3 번 (이긴 판만 셈 · 다 쓴 친구도 도우러 갈 수 있어요)
+//   처음 연출을 끝까지 본 학생은 관리자가 닫아도 계속 들어가요 · 주말에는 판자로 덮여 있어요 · 하루 3 번 (내려갈 때 셈 · 지든 이기든 · 다 쓴 친구도 도우러 갈 수 있어요)
 //   방 · 같이 싸우기 · 피하기 · 끊기는 레이드 틀(RD)을 그대로 써요 (RD.mode = 'day' → day/room · day/run)
 const DD_W = [
   { n: '바위등', full: '철갑 거북 「바위등」', c: '#9fe08a', f: 0, bg: [['#2e3a30', '#1c241e'], ['#3a4636', '#1e261c']] },
@@ -17665,11 +17666,12 @@ function ddEnd(win){
   sfx(win ? 'win' : 'lose'); const R = B.raid, D = DD_W[R.w], L = DD_LV[R.lv], n = Math.max(1, R.n || B.party.length);
   B.log = win ? `${D.n}${josa(D.n, '을', '를')} 쓰러뜨렸어요!` : B.log && /시간/.test(B.log) ? B.log : '모두 쓰러졌어요.......'; const lg = $('#xlog'); if (lg) lg.textContent = B.log; const el = $('#xcmd'); if (el){ el.dataset.k = 'rdend'; el.innerHTML = ''; }
   const ex = xEx(), left = ddBossHp(B) / Math.max(1, ddBossMhp(B)), share = (1 + .15 * (n - 1)) / n, S = ddSt();
-  if (!win){   // 진 판: 깎은 만큼 경험치 · 골드 (골드는 오늘 횟수가 남아 있을 때만 · 진 판 골드도 하루 3 번까지)
-    const exp = Math.round(L.e * share * .5 * (1 - left)), gold = ddLeft() > 0 && (S.ln || 0) < DD_DAY ? Math.round(L.g * (1 - left) / 10) * 10 : 0; if (gold > 0){ S.ln = (S.ln || 0) + 1; me.coin += gold; }
+  const rew = !!RD.id && S.rw === RD.id;   // 이번 판에 횟수를 썼으면 보상 (다 쓴 학생은 도우러 온 거라 경험치 절반만)
+  if (!win){   // 진 판: 깎은 만큼 경험치 · 골드
+    const exp = Math.round(L.e * share * .5 * (1 - left) * (rew ? 1 : .5)), gold = rew ? Math.round(L.g * (1 - left) / 10) * 10 : 0; if (gold > 0) me.coin += gold;
     ex.exp += exp; save(); hud(); setTimeout(() => { if (xb === B){ ddQuit(); const t = [gold ? `골드 +${gold.toLocaleString()}` : '', exp ? `경험치 +${exp.toLocaleString()}` : ''].filter(Boolean).join(' · '); if (t) toast(t); } }, 2500); return; }
-  const rew = ddLeft() > 0; let gold = 0, exp = Math.round(L.e * share), fc = null;
-  if (rew){ S.n = (S.n || 0) + 1; gold = L.g; S.fc = S.fc || {}; const k = R.w + '_' + R.lv; if (!S.fc[k]){ S.fc[k] = 1; fc = R.lv === 2 ? ['rd_shard', DD_SHARD] : ['gold', [3000, 6000][R.lv]]; if (fc[0] === 'gold') gold += fc[1]; else me.inv.rd_shard = (me.inv.rd_shard || 0) + fc[1]; } }
+  let gold = 0, exp = Math.round(L.e * share), fc = null;
+  if (rew){ gold = L.g; S.fc = S.fc || {}; const k = R.w + '_' + R.lv; if (!S.fc[k]){ S.fc[k] = 1; fc = R.lv === 2 ? ['rd_shard', DD_SHARD] : ['gold', [3000, 6000][R.lv]]; if (fc[0] === 'gold') gold += fc[1]; else me.inv.rd_shard = (me.inv.rd_shard || 0) + fc[1]; } }
   else exp = Math.round(exp * .5);
   me.coin += gold; ex.exp += exp; B.ddCard = rew ? { o: ddCards(R.w, R.lv), pick: -1, extra: ddExtra(R.w, R.lv) } : null; B.ddRes = { gold, exp, fc, rew }; save(); hud();
   setTimeout(() => { if (xb === B){ xv = { view: 'rdres' }; if (sheetOn && sub === 'explore') renderExplore(); else openSheet('home', 'explore'); } }, 1500);
