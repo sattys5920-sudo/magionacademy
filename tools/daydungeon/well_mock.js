@@ -73,7 +73,7 @@
     const D = DAYS[di], o = document.getElementById('dwx') || document.body.appendChild(Object.assign(document.createElement('div'), { id: 'dwx' }));
     o.innerHTML = `<div class="dwbox" style="--c:${D.c}"><div class="dwhd"><b>마른 우물 아래</b><span>오늘 ${left} / 3</span><button class="dwcl">✕</button></div>
       <div class="dwwk">${DAYS.map((x, i) => `<i class="${i === di ? 'on' : ''}">${x.d}</i>`).join('')}</div>
-      <div class="dwbs"><i style="background-position:${-D.f * 80}px 0"></i><div><b>${D.d}요일 · ${D.n}</b><span>${D.k}</span></div></div>
+      <div class="dwbs"><i style="background-position:${-D.f * 80}px 0"></i><div><b>${D.d}요일 · ${D.n}</b></div></div>
       ${LV.map(([n, l, r], i) => `<div class="dwlv"><div><b>${n}</b><span>권장 레벨 ${l}</span>${done.includes(i) ? '<em class="done">처음 보상 받음</em>' : `<em>${r}</em>`}</div><button class="btn go">내려가기</button></div>`).join('')}
       <div class="dwft">1 ~ 4 명</div></div>`;
   };
