@@ -17665,7 +17665,9 @@ function ddEnd(win){
   sfx(win ? 'win' : 'lose'); const R = B.raid, D = DD_W[R.w], L = DD_LV[R.lv], n = Math.max(1, R.n || B.party.length);
   B.log = win ? `${D.n}${josa(D.n, '을', '를')} 쓰러뜨렸어요!` : B.log && /시간/.test(B.log) ? B.log : '모두 쓰러졌어요.......'; const lg = $('#xlog'); if (lg) lg.textContent = B.log; const el = $('#xcmd'); if (el){ el.dataset.k = 'rdend'; el.innerHTML = ''; }
   const ex = xEx(), left = ddBossHp(B) / Math.max(1, ddBossMhp(B)), share = (1 + .15 * (n - 1)) / n, S = ddSt();
-  if (!win){ const exp = Math.round(L.e * share * .5 * (1 - left)); ex.exp += exp; save(); hud(); setTimeout(() => { if (xb === B){ ddQuit(); if (exp) toast(`경험치 +${exp}`); } }, 2500); return; }
+  if (!win){   // 진 판: 깎은 만큼 경험치 · 골드 (골드는 오늘 횟수가 남아 있을 때만 · 진 판 골드도 하루 3 번까지)
+    const exp = Math.round(L.e * share * .5 * (1 - left)), gold = ddLeft() > 0 && (S.ln || 0) < DD_DAY ? Math.round(L.g * (1 - left) / 10) * 10 : 0; if (gold > 0){ S.ln = (S.ln || 0) + 1; me.coin += gold; }
+    ex.exp += exp; save(); hud(); setTimeout(() => { if (xb === B){ ddQuit(); const t = [gold ? `골드 +${gold.toLocaleString()}` : '', exp ? `경험치 +${exp.toLocaleString()}` : ''].filter(Boolean).join(' · '); if (t) toast(t); } }, 2500); return; }
   const rew = ddLeft() > 0; let gold = 0, exp = Math.round(L.e * share), fc = null;
   if (rew){ S.n = (S.n || 0) + 1; gold = L.g; S.fc = S.fc || {}; const k = R.w + '_' + R.lv; if (!S.fc[k]){ S.fc[k] = 1; fc = R.lv === 2 ? ['rd_shard', DD_SHARD] : ['gold', [3000, 6000][R.lv]]; if (fc[0] === 'gold') gold += fc[1]; else me.inv.rd_shard = (me.inv.rd_shard || 0) + fc[1]; } }
   else exp = Math.round(exp * .5);
