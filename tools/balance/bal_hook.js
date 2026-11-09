@@ -113,5 +113,28 @@ window.__bal = (() => {
     r.dmg = 1e6 - f.hp; r.foeFx = JSON.parse(JSON.stringify(f.fx)); r.foeG = f.g; r.myFx = JSON.parse(JSON.stringify(u.fx)); r.mpGain = [u.mp / u.mmp, a2.mp / a2.mmp];
     r.revHp = o.dead ? a2.hp / a2.mhp : null; r.healHp = a2.hp - hp2; r.cdLeft = u.cdn[s.n] || 0; r.a2fx = JSON.parse(JSON.stringify(a2.fx)); xb = null; return r;
   }
-  return { unit, xSim, power, raidSim, arCap, FAMV, skCheck, XRG_: () => XRG.map(r => ({ hpm: r.hpm, ehm: r.ehm, atkm: r.atkm, bat: r.bat, bhm: r.bhm })), RD_: () => ({ RD_BOSS, RD_MATK }) };
+  // ---------- 요일 던전 (게임의 ddFoes · ddFoeTurn · ddHostTick 을 그대로 써요 · 시계만 따로) ----------
+  //   o = { w 요일, lv 난이도, L 학생 레벨, jobs [...], n 판 수, K [체력, 공격] (안 주면 지금 값), cfgRole, hostPotK, lim 초 }
+  function ddSim(o){
+    const N = o.n || 40, lim = o.lim || 300, res = { win: 0, t: [], left: [], dead: [] }, dodge = () => { const r = Math.random(); return r < .3 ? .2 : r < .7 ? .6 : 1; };
+    for (let it = 0; it < N; it++){
+      const jobs = typeof o.jobs === 'function' ? o.jobs(it) : o.jobs, n = jobs.length;
+      const party = jobs.map((job, i) => { const u = unit(job, o.L, (o.cfgRole && o.cfgRole[XROLE[job]]) || o.cfg || {}, job + i); u.id = 'p' + i; u.pot = o.pot ?? 2; u.g = Math.random() * 40; u.row = XROW_F.includes(job) ? 'f' : 'b'; return u; });
+      if (o.hostPotK) party[0].potK = o.hostPotK;
+      const keep = DD_K[o.w][o.lv][n - 1]; if (o.K) DD_K[o.w][o.lv][n - 1] = o.K; const foes = ddFoes(o.w, o.lv, n); DD_K[o.w][o.lv][n - 1] = keep;
+      const B = xb = { party, foes, kind: 'raid', log: '', turn: null, pick: null, over: false, last: 0, buff: false, def: {}, fxs: [], floats: [], proj: [], n0: n, sim: 1, simT: 0, simDodge: dodge, raid: ddR(o.w, o.lv, n, 1e15) };
+      let t = 0, fin = ''; const dt = .25;
+      while (t < lim){ t += dt; B.simT = t * 1000; B.floats.length = 0;
+        if (!xAlive(party).length){ fin = 'wipe'; break; }
+        tick(B, dt); ddHostTick(B);
+        for (const x of party.concat(B.foes)){ if (x.hp <= 0 || x.g < 100) continue; xb = B;
+          if (x.team === 'e'){ ddFoeTurn(x); x.g = 0; continue; }
+          if (!potOr(x)) xAI(x); if (ddBossHp(B) <= 0) break; }
+        if (ddBossHp(B) <= 0){ fin = 'win'; break; } }
+      if (fin === 'win') res.win++; res.t.push(t); res.left.push(ddBossHp(B) / ddBossMhp(B)); res.dead.push(party.filter(p => p.hp <= 0).length);
+    }
+    xb = null; const avg = a => +(a.reduce((x, y) => x + y, 0) / a.length).toFixed(2);
+    return { win: res.win / N, t: avg(res.t), left: avg(res.left), dead: avg(res.dead) };
+  }
+  return { unit, xSim, power, raidSim, ddSim, DD_K_: () => DD_K, arCap, FAMV, skCheck, XRG_: () => XRG.map(r => ({ hpm: r.hpm, ehm: r.ehm, atkm: r.atkm, bat: r.bat, bhm: r.bhm })), RD_: () => ({ RD_BOSS, RD_MATK }) };
 })();
