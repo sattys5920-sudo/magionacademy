@@ -297,5 +297,5 @@
   Object.keys(T).forEach(k => { X.SK[k] = { dur: T[k].d, grand: T[k].g, once: T[k].once, v2: 1 }; });
   const base = X.drawSk;
   X.drawSk = (g, f, x, y, now) => { const key = f.k.slice(3), m = T[key]; return m ? draw(g, f, x, y, now, key, m) : base(g, f, x, y, now); };
-  X.T2 = T;
+  X.T2 = T; X.LIB2 = LIB; X.DRAW2 = draw;
 })();
