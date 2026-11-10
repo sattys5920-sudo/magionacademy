@@ -14508,38 +14508,41 @@ const CAT = (() => {
   return { listen, adminHTML, adminRow, jnOn, jnHTML, jnBind, line, ev };
 })();
 
-// ===== 「동물 운동회」 (tools/sports/sports_plan.md): 관리자가 열면 광장에 운동회 천막이 서요 · 사흘 동안 하루 한 종목 (달리기 → 공 굴리기 → 줄다리기) · 넷째 날 시상식 =====
-//   sports/ctl = { open, id, at 시작 시각 } · sports/rec/<id>/<날>/<uid> = { s 점수, h 기숙사, k 생물 종류, c 색, n 이름, nk 닉네임 } (그날 가장 좋은 기록만)
-//   me.spt = { id, t { 날: 그날 출전 횟수 }, cer 시상식 봄, rw 보상 받음 } · 하루 3 번까지 · 기숙사 점수 = 그날 출전한 학생 최고 기록의 평균 → 1 ~ 4 등에 4 · 3 · 2 · 1 점
+// ===== 「동물 운동회」 (tools/sports/sports_plan.md): 관리자가 열면 광장에 운동회 천막이 서요 · 하루에 여섯 종목 모두 · 관리자가 「시상식」을 누르면 다 같이 시상식 · 출전은 입양한 아기 동물 =====
+//   sports/ctl = { open, id, at 시작 시각, end 시상식 } · sports/rec/<id>/<종목>/<uid> = { s 점수, h 기숙사, k 아기 동물 종류, n 이름, nk 닉네임 } (그 종목 가장 좋은 기록만)
+//   me.spt = { id, t { 종목: 출전 횟수 }, hi 알림 봄, cer 시상식 봄, rw 보상 받음 } · 종목마다 3 번까지 · 반 전체(최대 12 명)가 같은 트랙에 함께 나와요
+//   기숙사 점수 = 그 종목에 나간 학생 최고 기록의 평균 → 1 ~ 4 등에 4 · 3 · 2 · 1 점 (여섯 종목 합계)
 const SPT = (() => {
   const EV = [
-    { k: 'run', n: '달리기', u: 'm', st: 'spd', d: '응원 버튼을 빠르게 눌러요' },
-    { k: 'ball', n: '공 굴리기', u: 'm', st: 'pow', d: '막대가 가운데 올 때 눌러요 · 세 번' },
-    { k: 'tug', n: '줄다리기', u: '점', st: 'str', d: '표시가 가운데 올 때 눌러요' }];
-  //   출전은 입양한 아기 동물 (me.baby) · 종류마다 (오리 고양이 강아지 토끼 다람쥐 고슴도치 박쥐 부엉이 여우 너구리 개구리 병아리) 잘하는 종목이 조금씩 달라요 (±10 % 안쪽 · 고를 수 없으니 차이는 작게)
+    { k: 'run', n: '달리기', u: 'm', st: 'spd', d: '응원 버튼을 빠르게 눌러요', b: '응원!', lim: 8000 },
+    { k: 'hurdle', n: '장애물 넘기', u: '점', st: 'spd', d: '장애물이 가까이 오면 눌러서 뛰어요', b: '점프!', lim: 10000 },
+    { k: 'ball', n: '공 굴리기', u: 'm', st: 'pow', d: '막대가 가운데 올 때 눌러요 · 세 번', b: '지금!', lim: 9000 },
+    { k: 'toss', n: '콩주머니 던지기', u: '점', st: 'pow', d: '바구니가 가운데 올 때 던져요', b: '던지기!', lim: 10000 },
+    { k: 'tug', n: '줄다리기', u: '점', st: 'str', d: '표시가 가운데 올 때 눌러요', b: '영차!', lim: 10000 },
+    { k: 'high', n: '높이뛰기', u: 'cm', st: 'str', d: '꾹 누르고 막대가 꼭대기일 때 떼요 · 세 번', b: '꾹 눌러요', lim: 12000 }];
+  //   아기 동물 종류마다 (오리 고양이 강아지 토끼 다람쥐 고슴도치 박쥐 부엉이 여우 너구리 개구리 병아리) 조금씩 달라요 (±10 % 안쪽 · 고를 수 없으니 작게 · 창에는 안 보여요)
   const STAT = { spd: [1, 1.05, 1.05, 1.1, 1.08, .92, 1.06, .95, 1.08, .97, 1, .98], pow: [.98, .97, 1.05, .95, .97, 1.08, .94, 1, 1, 1.05, 1.02, .95], str: [1, .95, 1.08, .95, .96, 1.05, .94, 1.02, .98, 1.08, .98, .92] };
-  const TRIES = 3, SPOT = [44, 46], HK = ['dew', 'ember', 'dusk', 'moon'];
-  let ctl = null, recs = {}, offs = [], got = false, busy = false, pick = null, pickD = -1, game = null, propSig = '';
+  const TRIES = 3, SPOT = [44, 46], HK = ['dew', 'ember', 'dusk', 'moon'], LANES = 12;
+  let ctl = null, recs = {}, offs = [], got = false, busy = false, game = null, propSig = '', sel = -1;
   const open = () => !!(ctl && ctl.open && ctl.id);
   const kd = t => Math.floor((t + 9 * 3600e3) / 864e5);
-  const day = () => open() ? Math.max(0, kd(now2()) - kd(ctl.at || now2())) : -1;   // 0 · 1 · 2 종목 · 3 부터 시상식
+  const cer = () => open() && !!ctl.end;   // 관리자가 시상식을 열었어요
+  const ALL = [0, 1, 2, 3, 4, 5];
   const S = () => { me.spt = me.spt && me.spt.id === ctl.id ? me.spt : { id: ctl.id, t: {} }; me.spt.t = me.spt.t || {}; return me.spt; };
-  const triesLeft = d => Math.max(0, TRIES - (S().t[d] || 0));
-  const statOf = (c, ev) => (STAT[EV[ev].st][c.k] || 1) * (.92 + .08 * Math.min(1, (c.love || 0) / (BABY_LOVE_MAX * 10)));   // 친밀도가 높을수록 조금 더 잘해요 (♥ 가득이면 +8.7 %)
+  const triesLeft = e => Math.max(0, TRIES - (S().t[e] || 0));
+  const statOf = (b, e) => (STAT[EV[e].st][b.k] || 1) * (.92 + .08 * Math.min(1, (b.love || 0) / (BABY_LOVE_MAX * 10)));   // 친밀도가 높을수록 조금 더 잘해요 (♥ 가득이면 +8.7 %)
   const myPet = () => me.baby && me.baby.adopt && me.baby.k !== undefined ? me.baby : null;
   const hearts = b => Math.min(BABY_LOVE_MAX, Math.floor((b.love || 0) / 10));
-  const myRec = d => recs[d] && recs[d][uid];
-  const H = h => HOUSES[h] || HOUSES.dew;
+  const myRec = e => recs[e] && recs[e][uid];
+  const Hs = h => HOUSES[h] || HOUSES.dew;
+  const fmt = (s, e) => EV[e].u === 'm' ? `${(+s).toFixed(1)} m` : `${Math.round(s)} ${EV[e].u}`;
   // ---------- 기숙사 점수 ----------
-  function dayRank(d){   // [{ h, avg, n }] 높은 순
-    const R = recs[d] || {}, by = {}; Object.values(R).forEach(r => { if (!r || !HK.includes(r.h)) return; (by[r.h] = by[r.h] || []).push(+r.s || 0); });
-    return HK.map(h => ({ h, n: (by[h] || []).length, avg: (by[h] || []).length ? by[h].reduce((a, b) => a + b, 0) / by[h].length : 0 })).sort((a, b) => b.avg - a.avg || b.n - a.n);
-  }
-  function total(upTo){   // 끝난 종목까지 합친 점수
-    const T = Object.fromEntries(HK.map(h => [h, 0]));
-    for (let d = 0; d <= Math.min(2, upTo); d++){ const r = dayRank(d).filter(x => x.n > 0); r.forEach((x, i) => { const same = r.findIndex(y => Math.abs(y.avg - x.avg) < 1e-9); T[x.h] += [4, 3, 2, 1][same]; }); }
-    return HK.map(h => ({ h, p: T[h] })).sort((a, b) => b.p - a.p);
-  }
+  function evRank(e){ const R = recs[e] || {}, by = {}; Object.values(R).forEach(r => { if (!r || !HK.includes(r.h)) return; (by[r.h] = by[r.h] || []).push(+r.s || 0); });
+    return HK.map(h => ({ h, n: (by[h] || []).length, avg: (by[h] || []).length ? by[h].reduce((a, b) => a + b, 0) / by[h].length : 0 })).sort((a, b) => b.avg - a.avg || b.n - a.n); }
+  function total(upToEv){ const T = Object.fromEntries(HK.map(h => [h, 0]));
+    for (let e = 0; e <= Math.min(5, upToEv); e++){ const r = evRank(e).filter(x => x.n > 0); r.forEach(x => { const same = r.findIndex(y => Math.abs(y.avg - x.avg) < 1e-9); T[x.h] += [4, 3, 2, 1][same]; }); }
+    return HK.map(h => ({ h, p: T[h] })).sort((a, b) => b.p - a.p); }
+  const classRank = e => { const L = Object.entries(recs[e] || {}).filter(([, x]) => x && x.s).sort((a, b) => b[1].s - a[1].s); return { i: L.findIndex(([u]) => u === uid) + 1, n: L.length }; };
   // ---------- 천막 (광장) ----------
   function tentCv(){
     const c = document.createElement('canvas'); c.width = 40; c.height = 40; const g = c.getContext('2d'), px = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
@@ -14557,108 +14560,132 @@ const SPT = (() => {
 #spv .sb{width:min(420px,100%);max-height:100%;overflow:auto;background:#1c1430;border:2px solid #4a3a6a;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;color:#f4ecff}#spv .sb>*{flex:none}
 #spv .hd{display:flex;align-items:center;gap:8px}#spv .hd b{font-family:G11B,Pretendard,sans-serif;font-size:16px;flex:1}#spv .hd span{font-size:12px;color:#cbbbe8}#spv .x{background:none;border:0;color:#cbbbe8;font-size:18px}
 #spv .days{display:flex;gap:4px}#spv .days i{flex:1;font-style:normal;text-align:center;font-size:11px;padding:4px 0;border-radius:6px;background:#2a1f44;color:#8a7aa8}#spv .days i.on{background:#ffd24a;color:#1c1430;font-family:G11B,Pretendard,sans-serif}#spv .days i.done{color:#cbbbe8}
-#spv .hs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}#spv .hs div{border-radius:8px;padding:6px 2px;text-align:center;background:rgba(255,255,255,.05);border:2px solid var(--c)}#spv .hs b{display:block;font-size:11px;color:var(--c)}#spv .hs span{font-family:G11B,Pretendard,sans-serif;font-size:16px}#spv .hs small{display:block;font-size:10px;color:#b9a8d8}
-#spv .sppet{display:flex;align-items:center;gap:12px;border:2px solid #ffd24a;border-radius:10px;padding:8px 12px;background:#2a1f44}#spv .sppet div{display:flex;flex-direction:column;gap:2px}#spv .sppet b{font-size:14px}#spv .sppet span{color:#ff7aa0;font-size:13px;letter-spacing:1px}#spv .sppet span i{font-style:normal;color:#4a3e60}#spv .sppet small{font-size:11px;color:#cbbbe8}
-#spv .crs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}#spv .crs button{position:relative;height:84px;border-radius:10px;border:2px solid #3a2e56;background:#2a1f44;overflow:hidden;padding:0;color:#f4ecff;font:inherit}#spv .crs button.on{border-color:#ffd24a;box-shadow:0 0 0 2px #ffd24a}
-#spv .crs .cr{position:absolute;left:50%;top:-6px;margin-left:-60px;transform-origin:50% 30%}#spv .crs span{position:absolute;left:0;right:0;bottom:3px;font-size:10px;text-align:center}#spv .crs em{position:absolute;right:3px;top:3px;font-style:normal;font-size:9px;color:#ffd24a}
-#spv .sptop{display:flex;flex-direction:column;gap:3px;position:static}#spv .sptop div{display:flex;gap:6px;align-items:center;font-size:12px;background:rgba(255,255,255,.04);border-radius:6px;padding:4px 8px}#spv .sptop div b{color:var(--c)}#spv .sptop div span{margin-left:auto;color:#ffd24a}
-#spv canvas{width:100%;image-rendering:pixelated;border-radius:8px;border:2px solid #0c0818;background:#5aa04a}
-#spv .big{min-height:64px;font-size:20px;font-family:G11B,Pretendard,sans-serif}#spv .s2{text-align:center;font-size:12px;color:#cbbbe8}
+#spv .hs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}#spv .hs div{border-radius:8px;padding:6px 2px;text-align:center;background:rgba(255,255,255,.05);border:2px solid var(--c)}#spv .hs b{display:block;font-size:11px;color:var(--c)}#spv .hs span{font-family:G11B,Pretendard,sans-serif;font-size:16px}
+#spv .evs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}#spv .evs button{border-radius:10px;border:2px solid #3a2e56;background:#2a1f44;color:#f4ecff;font:inherit;padding:8px 4px;display:flex;flex-direction:column;gap:2px;align-items:center}#spv .evs button.on{border-color:#ffd24a;box-shadow:0 0 0 2px #ffd24a}#spv .evs b{font-size:13px}#spv .evs small{font-size:11px;color:#cbbbe8}
+#spv .sppet{display:flex;align-items:center;gap:12px;border:2px solid #4a3a6a;border-radius:10px;padding:6px 12px;background:#2a1f44}#spv .sppet div{display:flex;flex-direction:column;gap:2px}#spv .sppet b{font-size:14px}#spv .sppet span{color:#ff7aa0;font-size:13px;letter-spacing:1px}#spv .sppet span i{font-style:normal;color:#4a3e60}
+#spv .sptop{display:flex;flex-direction:column;gap:3px;position:static}#spv .sptop div{display:flex;gap:6px;align-items:center;font-size:12px;background:rgba(255,255,255,.04);border-radius:6px;padding:4px 8px}#spv .sptop div.me{box-shadow:inset 0 0 0 2px #ffd24a}#spv .sptop div b{color:var(--c)}#spv .sptop div span{margin-left:auto;color:#ffd24a}
+#spv canvas{width:100%;image-rendering:pixelated;border-radius:8px;border:2px solid #0c0818;background:#5aa04a;touch-action:none}
+#spv .big{min-height:64px;font-size:20px;font-family:G11B,Pretendard,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}#spv .s2{text-align:center;font-size:12px;color:#cbbbe8}
 #spv .pod{display:flex;align-items:flex-end;justify-content:center;gap:6px;height:190px;padding-top:30px}#spv .pod div{width:22%;border-radius:8px 8px 0 0;background:var(--c);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:6px;color:#1c1430;font-family:G11B,Pretendard,sans-serif;font-size:12px;height:0;transition:height 1.2s cubic-bezier(.3,1.4,.5,1);position:relative}
 #spv .pod div b{font-size:22px}#spv .pod div i{position:absolute;top:-30px;font-style:normal;font-size:12px;color:#ffd24a;opacity:0;transition:opacity .4s 1.2s}#spv .pod.go div i{opacity:1}
 #spv .cf{position:fixed;inset:0;pointer-events:none;overflow:hidden}#spv .cf i{position:absolute;top:-10px;width:6px;height:10px;animation:spfall 2.6s linear infinite}@keyframes spfall{to{transform:translateY(110vh) rotate(540deg)}}`;
   document.head.appendChild(css);
   const box = () => $('#spv') || document.body.appendChild(Object.assign(document.createElement('div'), { id: 'spv' }));
   const closeV = () => { $('#spv')?.remove(); game = null; };
-  const petCard = (b, d) => { const v = STAT[EV[d].st][b.k] || 1; return `<div class="sppet">${babyPic(b.k, 5)}<div><b>${esc(b.name || BABY.NAMES[b.k])}</b><span>${'♥'.repeat(hearts(b))}<i>${'♥'.repeat(BABY_LOVE_MAX - hearts(b))}</i></span><small>${v >= 1.04 ? '이 종목을 잘해요' : v <= .96 ? '이 종목은 조금 서툴러요' : '이 종목은 보통이에요'}</small></div></div>`; };
   function view(){
-    if (!open()) return closeV(); const d = day(); if (d >= 3) return ceremony();
-    const E = EV[d], left = triesLeft(d), r = myRec(d), T = total(d - 1), R = dayRank(d), pet = myPet();
-    const top = Object.entries(recs[d] || {}).filter(([, x]) => x && x.s).sort((a, b) => b[1].s - a[1].s).slice(0, 3);
-    box().innerHTML = `<div class="sb"><div class="hd"><b>동물 운동회</b><span>오늘 ${left} / ${TRIES}</span><button class="x" data-spx="x" aria-label="닫기">✕</button></div>
-      <div class="days">${EV.map((e, i) => `<i class="${i === d ? 'on' : i < d ? 'done' : ''}">${i + 1} 일째 · ${e.n}</i>`).join('')}<i>시상식</i></div>
-      <div class="hs">${HK.map(h => { const t = T.find(x => x.h === h), q = R.find(x => x.h === h); return `<div style="--c:${H(h).col}"><b>${H(h).ko}</b><span>${t ? t.p : 0}</span><small>${q && q.n ? `오늘 ${E.u === 'm' ? q.avg.toFixed(1) : Math.round(q.avg)} ${E.u}` : '오늘 -'}</small></div>`; }).join('')}</div>
-      <div class="s2">${E.n} · ${E.d}${r ? ` · 내 기록 ${fmt(r.s, d)}` : ''}</div>
-      ${pet ? petCard(pet, d) : '<div class="s2">아기 동물을 입양해야 나갈 수 있어요</div>'}
-      <button class="btn go big" data-spx="go" ${left > 0 && pet ? '' : 'disabled'}>${left > 0 ? '출전!' : '오늘은 다 뛰었어요'}</button>
-      ${top.length ? `<div class="sptop">${top.map(([u, x], i) => `<div style="--c:${H(x.h).col}">${i + 1}. <b>${esc(x.nk || '친구')}</b> ${esc(x.n || '')}<span>${fmt(x.s, d)}</span></div>`).join('')}</div>` : ''}</div>`;
+    if (!open()) return closeV(); if (cer()) return ceremony();
+    if (!ALL.includes(sel)) sel = ALL.find(e => triesLeft(e) > 0) ?? 0;
+    const e = sel, E = EV[e], left = triesLeft(e), r = myRec(e), T = total(5), pet = myPet();
+    const top = Object.entries(recs[e] || {}).filter(([, x]) => x && x.s).sort((a, b) => b[1].s - a[1].s).slice(0, LANES);
+    box().innerHTML = `<div class="sb"><div class="hd"><b>동물 운동회</b><button class="x" data-spx="x" aria-label="닫기">✕</button></div>
+      <div class="hs">${T.map(t => `<div style="--c:${Hs(t.h).col}"><b>${Hs(t.h).ko}</b><span>${t.p}</span></div>`).join('')}</div>
+      <div class="evs">${ALL.map(i => `<button data-spe="${i}" class="${i === e ? 'on' : ''}"><b>${EV[i].n}</b><small>${myRec(i) ? fmt(myRec(i).s, i) : '아직'} · ${triesLeft(i)} / ${TRIES}</small></button>`).join('')}</div>
+      ${pet ? `<div class="sppet">${babyPic(pet.k, 4)}<div><b>${esc(pet.name || BABY.NAMES[pet.k])}</b><span>${'♥'.repeat(hearts(pet))}<i>${'♥'.repeat(BABY_LOVE_MAX - hearts(pet))}</i></span></div></div>` : '<div class="s2">아기 동물을 입양해야 나갈 수 있어요</div>'}
+      <div class="s2">${E.d}${r ? ` · 내 기록 ${fmt(r.s, e)}` : ''}</div>
+      <button class="btn go big" data-spx="go" ${left > 0 && pet ? '' : 'disabled'}>${left > 0 ? '출전!' : '이 종목은 다 뛰었어요'}</button>
+      ${top.length ? `<div class="sptop">${top.map(([u, x], i) => `<div class="${u === uid ? 'me' : ''}" style="--c:${Hs(x.h).col}">${i + 1}. <b>${esc(x.nk || '친구')}</b> ${esc(x.n || '')}<span>${fmt(x.s, e)}</span></div>`).join('')}</div>` : ''}</div>`;
   }
-  const fmt = (s, d) => EV[d].u === 'm' ? `${(+s).toFixed(1)} m` : `${Math.round(s)} 점`;
   // ---------- 미니게임 ----------
-  function rivals(d){   // 다른 기숙사 대표: 그날 그 기숙사 최고 기록 (없으면 운동장 친구들)
-    const R = recs[d] || {}, mh = me.house; return HK.filter(h => h !== mh).map((h, i) => { const b = Object.entries(R).filter(([u, x]) => x && x.h === h && u !== uid).sort((a, b) => b[1].s - a[1].s)[0]; return b ? { h, k: b[1].k, c: null, n: b[1].n, s: +b[1].s } : { h, k: [3, 2, 1][i], c: null, n: ['깡총', '멍멍', '야옹'][i], s: null }; });
-  }
-  let crImg = null; const crI = () => { if (!crImg){ crImg = new Image(); crImg.src = 'art/babies.png?v=5aad28cf'; } return crImg; };
-  function drawCr(g, k, col, x, y, sc, t){ const im = crI(); if (!im.complete) return; const z = Math.max(2, Math.round(sc * 8)), w = 14 * z, hop = Math.abs(Math.sin(t / 90)) * 2 * z; g.imageSmoothingEnabled = false; g.drawImage(im, k * 14, 0, 14, 14, Math.round(x - w / 2), Math.round(y - w - hop), w, w); }   // 아기 동물 (정면 그림)
+  let bbImg = null; const bbI = () => { if (!bbImg){ bbImg = new Image(); bbImg.src = 'art/babies.png?v=5aad28cf'; } return bbImg; };
+  function pet(g, k, x, y, z, t, jump = 0){ const im = bbI(); if (!im.complete) return; const w = 14 * z, hop = Math.abs(Math.sin(t / 90)) * 1.5 * z; g.imageSmoothingEnabled = false; g.drawImage(im, k * 14, 0, 14, 14, Math.round(x - w / 2), Math.round(y - w - hop - jump), w, w); }   // 아기 동물 (정면 그림)
+  function field(g){ const W = 360, H = 220; g.fillStyle = '#5aa04a'; g.fillRect(0, 0, W, H); g.fillStyle = 'rgba(255,255,255,.08)'; for (let x = 0; x < W; x += 24) g.fillRect(x, 0, 12, H);
+    g.fillStyle = '#86c8f0'; g.fillRect(0, 0, W, 22); for (let i = 0; i < 14; i++){ g.fillStyle = ['#E85A5A', '#5CCB8E', '#F0C040', '#7A66E0'][i % 4]; g.beginPath(); g.moveTo(i * 28, 6); g.lineTo(i * 28 + 14, 6); g.lineTo(i * 28 + 7, 16); g.fill(); } }
+  function bar(g, mk, y = 30){ const x = 60, w = 240; g.fillStyle = '#1a1024'; g.fillRect(x - 2, y - 2, w + 4, 14); g.fillStyle = '#3a2440'; g.fillRect(x, y, w, 10); g.fillStyle = '#ffd24a'; g.fillRect(x + w * .4, y, w * .2, 10); g.fillStyle = '#7affb0'; g.fillRect(x + w * .46, y, w * .08, 10); g.fillStyle = '#fff'; g.fillRect(Math.round(x + w * mk) - 2, y - 4, 4, 18); }
+  const txt = (g, t, x, y, col = '#fff', sz = 11, al = 'left') => { g.font = `${sz}px G11B, sans-serif`; g.textAlign = al; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText(t, x, y); g.fillStyle = col; g.fillText(t, x, y); };
+  function ghosts(e){ return Object.entries(recs[e] || {}).filter(([u, x]) => u !== uid && x && x.s).sort((a, b) => b[1].s - a[1].s).slice(0, LANES - 1).map(([u, x]) => ({ k: x.k ?? 3, n: x.nk || '친구', h: x.h, s: +x.s })); }
   function play(){
-    const d = day(), c = myPet(); if (!c || triesLeft(d) <= 0 || d > 2) return; const st = statOf(c, d), E = EV[d], RV = rivals(d);
-    box().innerHTML = `<div class="sb"><div class="hd"><b>${E.n}</b><span id="spt"></span></div><canvas id="spcv" width="360" height="220"></canvas><div class="s2" id="spmsg">${E.d}</div><button class="btn go big" id="spbtn">${d === 0 ? '응원!' : '지금!'}</button></div>`;
-    const cv = $('#spcv'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false; const t0 = performance.now();
-    game = { d, c, st, t0, taps: [], kicks: [], pulls: 0, good: 0, ph: 0, ballX: 0, rope: 0, done: false, RV, lim: d === 0 ? 8000 : d === 1 ? 9000 : 10000 };
+    const e = sel, b = myPet(); if (!b || cer() || !ALL.includes(e) || triesLeft(e) <= 0) return; const E = EV[e], st = statOf(b, e);
+    box().innerHTML = `<div class="sb"><div class="hd"><b>${E.n}</b><span id="spt"></span></div><canvas id="spcv" width="360" height="220"></canvas><div class="s2" id="spmsg">${E.d}</div><button class="btn go big" id="spbtn">${E.b}</button></div>`;
+    const cv = $('#spcv'), g = cv.getContext('2d'), t0 = performance.now();
+    game = { e, b, st, t0, lim: E.lim, taps: [], kicks: [], pulls: 0, good: 0, jumps: [], hit: 0, clr: 0, hits: 0, throws: [], hold: 0, highs: [], done: false, GH: ghosts(e), msg: '' };
+    const marker = (now, per = 1000) => { const p = ((now - t0) / per) % 2; return p < 1 ? p : 2 - p; };
+    const say = t => { const m = $('#spmsg'); if (m) m.textContent = t; };
     const btn = $('#spbtn');
-    btn.onpointerdown = e => { e.preventDefault(); if (!game || game.done) return; const now = performance.now(), G = game; sfx('pop');
-      if (G.d === 0){ G.taps.push(now); }
-      else { const m = marker(now), off = Math.abs(m - .5) * 2, acc = Math.max(0, 1 - off * 1.4);   // 가운데일수록 좋아요
-        if (G.d === 1){ if (G.kicks.length >= 3 || now - (G.lastKick || 0) < 700) return; G.lastKick = now; G.kicks.push(acc); $('#spmsg').textContent = acc > .8 ? '완벽!' : acc > .45 ? '좋아요' : '아쉬워요'; }
-        else { if (now - (G.lastPull || 0) < 260) return; G.lastPull = now; const v = acc > .75 ? 3 : acc > .35 ? 1 : -1; G.pulls += v; if (v === 3) G.good++; $('#spmsg').textContent = v === 3 ? '영차!' : v === 1 ? '영.... 차' : '미끄러졌어요'; } } };
-    const marker = now => { const p = ((now - t0) / (d === 1 ? 1100 : 900)) % 2; return p < 1 ? p : 2 - p; };
+    btn.onpointerdown = ev => { ev.preventDefault(); const G = game; if (!G || G.done) return; const now = performance.now(); sfx('pop');
+      if (e === 0) G.taps.push(now);
+      else if (e === 1){ if (now - (G.jumps[G.jumps.length - 1] || 0) > 650) G.jumps.push(now); }
+      else if (e === 2){ if (G.kicks.length >= 3 || now - (G.lastKick || 0) < 700) return; G.lastKick = now; const acc = Math.max(0, 1 - Math.abs(marker(now, 1100) - .5) * 2.8); G.kicks.push(acc); say(acc > .8 ? '완벽!' : acc > .45 ? '좋아요' : '아쉬워요'); }
+      else if (e === 3){ if (now - (G.lastThrow || 0) < 450) return; G.lastThrow = now; const m = marker(now, 850), hit = Math.abs(m - .5) < .1; G.throws.push({ t: now, m, hit }); if (hit) G.hits++; say(hit ? '쏙!' : '빗나갔어요'); }
+      else if (e === 4){ if (now - (G.lastPull || 0) < 260) return; G.lastPull = now; const acc = Math.max(0, 1 - Math.abs(marker(now, 900) - .5) * 2.8), v = acc > .75 ? 3 : acc > .35 ? 1 : -1; G.pulls += v; if (v === 3) G.good++; say(v === 3 ? '영차!' : v === 1 ? '영.... 차' : '미끄러졌어요'); }
+      else if (e === 5){ if (G.highs.length >= 3 || G.jumpAt) return; G.hold = now; } };
+    btn.onpointerup = btn.onpointercancel = btn.onpointerleave = () => { const G = game; if (!G || G.done || G.e !== 5 || !G.hold) return; const now = performance.now(), held = now - G.hold, p = (held / 900) % 2, c = p < 1 ? p : 2 - p; G.hold = 0;
+      const h = Math.round((40 + 90 * Math.pow(c, 1.5)) * G.st); G.highs.push(h); G.jumpAt = now; G.lastH = h; say(c > .9 ? `훌쩍! ${h} cm` : `${h} cm`); setTimeout(() => { if (game === G) G.jumpAt = 0; }, 1100); };
     const loop = () => { if (!game || game.done || !$('#spcv')) return; const now = performance.now(), G = game, el = now - t0, left = Math.max(0, G.lim - el); $('#spt').textContent = `${(left / 1000).toFixed(1)} 초`;
-      draw(g, G, now, el, marker(now)); if (el >= G.lim || (G.d === 1 && G.kicks.length >= 3 && now - G.lastKick > 1500)) return finish(); requestAnimationFrame(loop); };
+      draw(g, G, now, el, marker); if (el >= G.lim || (e === 2 && G.kicks.length >= 3 && now - G.lastKick > 1500) || (e === 5 && G.highs.length >= 3 && !G.jumpAt)) return finish(); requestAnimationFrame(loop); };
     requestAnimationFrame(loop);
   }
-  function score(G){
-    if (G.d === 0){ const rate = G.taps.length / (G.lim / 1000); return 40 + 60 * G.st * Math.min(1.4, .35 + rate / 8); }   // 대략 40 ~ 120 m
-    if (G.d === 1) return G.kicks.reduce((a, acc) => a + 12 * G.st * (.35 + acc), 0) * 1.0;   // 공 세 번
-    return Math.max(0, G.pulls) * 10 * G.st;
+  function score(G, now = performance.now()){
+    const e = G.e;
+    if (e === 0){ const rate = G.taps.length / (G.lim / 1000); return 40 + 60 * G.st * Math.min(1.4, .35 + rate / 8); }   // 약 40 ~ 120 m
+    if (e === 1) return Math.max(0, G.clr * 10 - G.hit * 4) * G.st;   // 넘은 장애물 × 10 · 걸리면 −4
+    if (e === 2) return G.kicks.reduce((a, acc) => a + 12 * G.st * (.35 + acc), 0);
+    if (e === 3) return G.hits * 10 * G.st;
+    if (e === 4) return Math.max(0, G.pulls) * 10 * G.st;
+    return G.highs.length ? Math.max(...G.highs) : 0;
   }
-  function draw(g, G, now, el, mk){
-    const W = 360, Hh = 220, mine = me.house, cols = [mine, ...G.RV.map(r => r.h)];
-    g.fillStyle = '#5aa04a'; g.fillRect(0, 0, W, Hh); g.fillStyle = 'rgba(255,255,255,.08)'; for (let x = 0; x < W; x += 24) g.fillRect(x, 0, 12, Hh);
-    g.fillStyle = '#86c8f0'; g.fillRect(0, 0, W, 26); g.fillStyle = '#e8d8b8'; for (let i = 0; i < 14; i++){ g.fillStyle = ['#E85A5A', '#5CCB8E', '#F0C040', '#7A66E0'][i % 4]; g.beginPath(); g.moveTo(i * 28, 8); g.lineTo(i * 28 + 14, 8); g.lineTo(i * 28 + 7, 18); g.fill(); }
-    g.strokeStyle = 'rgba(80,40,20,.5)'; g.beginPath(); g.moveTo(0, 8); g.lineTo(W, 8); g.stroke();
-    if (G.d === 0){   // 달리기: 네 줄 · 결승선
-      const fin = 330; g.fillStyle = '#fff'; for (let y = 30; y < Hh; y += 8){ g.fillRect(fin, y, 4, 4); g.fillRect(fin + 4, y + 4, 4, 4); }
-      const p = Math.min(1, el / G.lim), rate = G.taps.filter(t => now - t < 1500).length / 1.5, myS = score({ ...G, taps: G.taps }), myD = 20 + (fin - 20) * Math.min(1, (el / G.lim) * (myS / 120));
-      cols.forEach((h, i) => { const y = 66 + i * 46; g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(0, y + 2, W, 2); g.fillStyle = H(h).col; g.fillRect(4, y - 30, 8, 30);
-        const r = i ? G.RV[i - 1] : null, x = i === 0 ? myD : 20 + (fin - 20) * Math.min(1, p * ((r.s || 70) / 120));
-        drawCr(g, i ? r.k : G.c.k, null, x, y, .4, now + i * 77); g.font = '9px G11B, sans-serif'; g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(i ? r.n : (G.c.name || ''), x, y + 12); });
-      if (rate > 4){ g.fillStyle = '#ffd24a'; g.font = '12px G11B, sans-serif'; g.textAlign = 'left'; g.fillText('힘내!', myD + 16, 50); }
+  function draw(g, G, now, el, marker){
+    const e = G.e, b = G.b; field(g);
+    if (e === 0 || e === 1){   // 달리기 · 장애물 넘기: 반 전체 (최대 12 명) 한 트랙 · 줄마다 15 px
+      const fin = 340, top = 30, lh = 15, all = [{ me: 1, k: b.k, n: b.name || '나', h: me.house }, ...G.GH], p = Math.min(1, el / G.lim);
+      if (e === 0) { g.fillStyle = '#fff'; for (let y = top; y < 216; y += 6){ g.fillRect(fin, y, 3, 3); g.fillRect(fin + 3, y + 3, 3, 3); } }
+      all.forEach((r, i) => { const y = top + 6 + lh * (i + 1); g.fillStyle = 'rgba(255,255,255,.25)'; g.fillRect(0, y, 360, 1); g.fillStyle = Hs(r.h).col; g.fillRect(2, y - lh + 2, 4, lh - 2); });
+      if (e === 1){   // 장애물: 1.1 초마다 오른쪽에서 와요 · 내 줄에만
+        const sp = 110, y0 = top + 6 + lh, px = 70; G.next = G.next || 0;
+        for (let k = 0; k < 12; k++){ const at = 900 + k * 1100, x = px + (at - el) / 1000 * sp; if (x < -10 || x > 370) continue; g.fillStyle = '#E85A5A'; g.fillRect(x - 1, y0 - 12, 3, 12); g.fillStyle = '#fff'; g.fillRect(x - 5, y0 - 12, 11, 2);
+          if (!G['h' + k] && el >= at){ const j = G.jumps.find(t => t - G.t0 > at - 700 && t - G.t0 < at + 60); G['h' + k] = 1; if (j){ G.clr++; G.msg = '넘었어요!'; } else { G.hit++; G.msg = '걸렸어요'; G.trip = now; } const m = $('#spmsg'); if (m) m.textContent = G.msg; } }
+      }
+      all.forEach((r, i) => { const y = top + 6 + lh * (i + 1); let x;
+        if (r.me){ if (e === 0){ const s = score(G, now); x = 20 + (fin - 20) * Math.min(1, p * (s / 120)); } else x = 70; }
+        else x = e === 0 ? 20 + (fin - 20) * Math.min(1, p * (r.s / 120)) : 70 + Math.min(260, p * r.s * 2.2);
+        const jp = r.me && e === 1 && G.jumps.length && now - G.jumps[G.jumps.length - 1] < 600 ? Math.sin((now - G.jumps[G.jumps.length - 1]) / 600 * Math.PI) * 16 : 0, tr = r.me && G.trip && now - G.trip < 400;
+        pet(g, r.k, x + (tr ? -2 : 0), y, 2, now + i * 53, jp); txt(g, r.n, x + 16, y - 3, r.me ? '#ffd24a' : '#fff', 8); });
+      if (e === 1) txt(g, `넘은 장애물 ${G.clr}`, 300, 40, '#ffd24a', 10, 'right');
       return; }
-    if (G.d === 1){   // 공 굴리기: 내 생물이 공을 차요 · 위쪽 막대
-      const base = G.kicks.reduce((a, acc) => a + 12 * G.st * (.35 + acc), 0), x = 40 + Math.min(290, base * 3.2); drawCr(g, G.c.k, null, 34, 176, .6, now);
-      g.fillStyle = '#fff'; g.beginPath(); g.arc(x + 20, 158, 12, 0, 7); g.fill(); g.strokeStyle = '#E85A5A'; g.lineWidth = 3; g.beginPath(); g.arc(x + 20, 158, 8, now / 100, now / 100 + 3); g.stroke();
-      for (let m = 0; m <= 100; m += 20){ const xx = 60 + m * 3.2 * .9; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillRect(xx, 186, 2, 10); g.font = '9px G11B, sans-serif'; g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(m + ' m', xx, 206); }
-      bar(g, mk); g.fillStyle = '#fff'; g.font = '11px G11B, sans-serif'; g.textAlign = 'left'; g.fillText(`${G.kicks.length} / 3 번`, 10, 44); return; }
-    // 줄다리기: 가운데 깃발이 내 쪽으로
-    const pull = Math.max(-1, Math.min(1, G.pulls / 30)), cx = 180 - pull * 90; g.strokeStyle = '#c8a878'; g.lineWidth = 5; g.beginPath(); g.moveTo(40, 160); g.lineTo(320, 160); g.stroke();
-    g.fillStyle = '#E85A5A'; g.fillRect(cx - 3, 140, 6, 24); g.fillStyle = 'rgba(255,255,255,.5)'; g.fillRect(178, 120, 4, 80);
-    drawCr(g, G.c.k, null, 40, 182, .6, now); const r = G.RV[0]; drawCr(g, r.k, null, 320, 182, .6, now + 50); g.font = '9px G11B, sans-serif'; g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(G.c.name || '', 40, 198); g.fillText(r.n, 320, 198);
-    bar(g, mk); g.fillStyle = '#fff'; g.font = '11px G11B, sans-serif'; g.textAlign = 'left'; g.fillText(`영차 ${G.good} 번`, 10, 44);
+    if (e === 2){   // 공 굴리기
+      const base = G.kicks.reduce((a, acc) => a + 12 * G.st * (.35 + acc), 0), x = 40 + Math.min(290, base * 3.2); pet(g, b.k, 34, 176, 4, now);
+      g.fillStyle = '#fff'; g.beginPath(); g.arc(x + 20, 164, 10, 0, 7); g.fill(); g.strokeStyle = '#E85A5A'; g.lineWidth = 3; g.beginPath(); g.arc(x + 20, 164, 6, now / 100, now / 100 + 3); g.stroke();
+      for (let m = 0; m <= 100; m += 20){ const xx = 60 + m * 2.88; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillRect(xx, 186, 2, 10); txt(g, m + ' m', xx, 208, '#fff', 9, 'center'); }
+      bar(g, marker(now, 1100)); txt(g, `${G.kicks.length} / 3 번`, 10, 56); return; }
+    if (e === 3){   // 콩주머니 던지기: 바구니가 좌우로 · 가운데(초록)일 때 던지면 쏙
+      const m = marker(now, 850), bx = 60 + 240 * m; g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(156, 60, 48, 70); g.fillStyle = '#6a4428'; g.fillRect(bx - 1, 70, 3, 60); g.fillStyle = '#E8C878'; g.fillRect(bx - 14, 56, 28, 14); g.fillStyle = '#B8883A'; g.fillRect(bx - 14, 56, 28, 3);
+      G.throws.filter(t => now - t.t < 600).forEach(t => { const q = (now - t.t) / 600, tx = 180 + (60 + 240 * t.m - 180) * q, ty = 170 - Math.sin(q * Math.PI) * 120 - q * 40; g.fillStyle = t.hit ? '#E85A5A' : '#5A8AE8'; g.fillRect(Math.round(tx) - 3, Math.round(ty) - 3, 6, 6); });
+      pet(g, b.k, 180, 200, 4, now); txt(g, `쏙 ${G.hits} 번`, 10, 40, '#ffd24a'); return; }
+    if (e === 4){   // 줄다리기
+      const pull = Math.max(-1, Math.min(1, G.pulls / 30)), cx = 180 - pull * 90; g.strokeStyle = '#c8a878'; g.lineWidth = 5; g.beginPath(); g.moveTo(40, 160); g.lineTo(320, 160); g.stroke();
+      g.fillStyle = '#E85A5A'; g.fillRect(cx - 3, 140, 6, 24); g.fillStyle = 'rgba(255,255,255,.5)'; g.fillRect(178, 120, 4, 80);
+      const r = G.GH[0] || { k: 2, n: '멍멍' }; pet(g, b.k, 40, 182, 4, now); pet(g, r.k, 320, 182, 4, now + 50); txt(g, b.name || '', 40, 198, '#fff', 9, 'center'); txt(g, r.n, 320, 198, '#fff', 9, 'center');
+      bar(g, marker(now, 900)); txt(g, `영차 ${G.good} 번`, 10, 56); return; }
+    // 높이뛰기: 꾹 누르면 막대가 오르내려요 · 꼭대기에서 떼면 높이
+    const bx0 = 230; g.fillStyle = '#6a4428'; g.fillRect(bx0 - 30, 60, 3, 140); g.fillRect(bx0 + 30, 60, 3, 140);
+    const best = G.highs.length ? Math.max(...G.highs) : 0, yb = 200 - Math.min(140, best * .9); g.fillStyle = '#ffd24a'; g.fillRect(bx0 - 30, yb, 63, 3); txt(g, best ? `${best} cm` : '', bx0 + 38, yb + 4, '#ffd24a', 10);
+    const ja = G.jumpAt ? (now - G.jumpAt) / 1100 : 0, jh = G.jumpAt ? Math.sin(Math.min(1, ja) * Math.PI) * Math.min(140, (G.lastH || 0) * .9) : 0, jx = G.jumpAt ? 120 + Math.min(1, ja) * 110 : 120;
+    pet(g, b.k, jx, 200, 4, now, jh);
+    const c = G.hold ? (p => p < 1 ? p : 2 - p)(((now - G.hold) / 900) % 2) : 0; g.fillStyle = '#1a1024'; g.fillRect(28, 60, 14, 124); g.fillStyle = '#3a2440'; g.fillRect(30, 62, 10, 120); g.fillStyle = '#7affb0'; g.fillRect(30, 62, 10, 12); g.fillStyle = '#ffd24a'; g.fillRect(30, Math.round(182 - 120 * c), 10, Math.round(120 * c));
+    txt(g, `${G.highs.length} / 3 번`, 10, 40);
   }
-  function bar(g, mk){ const x = 60, w = 240, y = 52; g.fillStyle = '#1a1024'; g.fillRect(x - 2, y - 2, w + 4, 14); g.fillStyle = '#3a2440'; g.fillRect(x, y, w, 10); g.fillStyle = '#ffd24a'; g.fillRect(x + w * .4, y, w * .2, 10); g.fillStyle = '#7affb0'; g.fillRect(x + w * .46, y, w * .08, 10); g.fillStyle = '#fff'; g.fillRect(Math.round(x + w * mk) - 2, y - 4, 4, 18); }
   function finish(){
-    const G = game; if (!G || G.done) return; G.done = true; const s = Math.round(score(G) * 10) / 10, d = G.d, St = S();
-    St.t[d] = (St.t[d] || 0) + 1; const c = G.c, first = St.t[d] === 1, up = first && (c.love || 0) < BABY_LOVE_MAX * 10; if (up) c.love = (c.love || 0) + 1;   // 그날 처음 뛰면 친밀도 +1
-    const old = myRec(d), best = !old || s > (+old.s || 0);
-    if (best) GDB.set(`sports/rec/${ctl.id}/${d}/${uid}`, { s, h: me.house || 'dew', k: c.k, n: c.name || BABY.NAMES[c.k], nk: me.nick });
-    save(); sfx(best ? 'win' : 'pop');
-    const msg = $('#spmsg'); if (msg) msg.textContent = `${fmt(s, d)}${best ? ' · 내 최고 기록!' : ''}${up ? ` · ${esc(c.name || '')} 친밀도 +1` : ''}`;
-    const b = $('#spbtn'); if (b){ b.textContent = '천막으로'; b.onpointerdown = null; b.onclick = () => view(); }
+    const G = game; if (!G || G.done) return; G.done = true; const e = G.e, s = Math.round(score(G) * 10) / 10, St = S(), b = G.b;
+    St.t[e] = (St.t[e] || 0) + 1; const firstToday = !St.lv || St.lv !== todayKey(), up = firstToday && (b.love || 0) < BABY_LOVE_MAX * 10; if (firstToday) St.lv = todayKey(); if (up) b.love = (b.love || 0) + 1;   // 하루 처음 뛰면 친밀도 +1
+    const old = myRec(e), best = !old || s > (+old.s || 0);
+    if (best){ GDB.set(`sports/rec/${ctl.id}/${e}/${uid}`, { s, h: me.house || 'dew', k: b.k, n: b.name || BABY.NAMES[b.k], nk: me.nick }); recs[e] = recs[e] || {}; recs[e][uid] = { s, h: me.house || 'dew', k: b.k, n: b.name, nk: me.nick }; }
+    save(); sfx(best ? 'win' : 'pop'); const cr = classRank(e);
+    const msg = $('#spmsg'); if (msg) msg.textContent = `${fmt(s, e)}${best ? ' · 내 최고 기록!' : ''}${cr.i ? ` · 반 ${cr.i} 등 / ${cr.n} 명` : ''}${up ? ` · ${esc(b.name || '')} 친밀도 +1` : ''}`;
+    const bt = $('#spbtn'); if (bt){ bt.textContent = '천막으로'; bt.onpointerdown = bt.onpointerup = bt.onpointercancel = bt.onpointerleave = null; bt.onclick = () => view(); }
   }
   // ---------- 시상식 ----------
   function ceremony(){
-    const T = total(2), St = S(), joined = [0, 1, 2].some(d => myRec(d)), win = T[0] && T[0].p > 0 && T[0].h === me.house, rk = T.findIndex(x => x.h === me.house) + 1, rw = [];
+    const T = total(5), St = S(), joined = [0, 1, 2, 3, 4, 5].some(e => myRec(e)), win = T[0] && T[0].p > 0 && T[0].h === me.house, rk = T.findIndex(x => x.h === me.house) + 1, rw = [];
     if (!St.rw && joined){ St.rw = 1; me.coin += 500; me.cos = me.cos || {}; (me.cos.tag = me.cos.tag || {}).sports = 1; rw.push('500 G', '이름표 「운동회 선수」'); if (win){ me.coin += 1000; me.cos.tag.sportswin = 1; rw.push('우승 1,000 G', '이름표 「운동회 우승」'); } save(); hud(); }
     St.cer = 1; save(); const order = [T[1], T[0], T[2], T[3]].filter(Boolean), hgt = { 0: 150, 1: 120, 2: 95, 3: 75 };
     box().innerHTML = `<div class="sb"><div class="hd"><b>동물 운동회 시상식</b><button class="x" data-spx="x" aria-label="닫기">✕</button></div>
-      <div class="pod">${order.map(x => { const i = T.indexOf(x); return `<div style="--c:${H(x.h).col}" data-h="${hgt[i]}"><i>${i === 0 ? '우승' : ''}</i><b>${i + 1}</b>${H(x.h).ko}<span>${x.p} 점</span></div>`; }).join('')}</div>
+      <div class="pod">${order.map(x => { const i = T.indexOf(x); return `<div style="--c:${Hs(x.h).col}" data-h="${hgt[i]}"><i>${i === 0 ? '우승' : ''}</i><b>${i + 1}</b>${Hs(x.h).ko}<span>${x.p} 점</span></div>`; }).join('')}</div>
       <div class="s2">${rk ? `우리 기숙사 ${rk} 등` : ''}</div>${rw.length ? `<div class="s2" style="color:#ffd24a">${rw.join(' · ')}</div>` : joined ? '' : '<div class="s2">이번 운동회에는 나가지 않았어요</div>'}
       <button class="btn go" data-spx="x">닫기</button><div class="cf">${Array.from({ length: 40 }, (_, i) => `<i style="left:${(i * 37) % 100}%;background:${['#E85A5A', '#5CCB8E', '#F0C040', '#7A66E0', '#fff'][i % 5]};animation-delay:${(i % 13) * .2}s;animation-duration:${2 + (i % 5) * .4}s"></i>`).join('')}</div></div>`;
-    sfx('win'); requestAnimationFrame(() => setTimeout(() => { document.querySelectorAll('#spv .pod div').forEach(e => { e.style.height = e.dataset.h + 'px'; }); $('#spv .pod')?.classList.add('go'); }, 80));
+    sfx('win'); requestAnimationFrame(() => setTimeout(() => { document.querySelectorAll('#spv .pod div').forEach(el => { el.style.height = el.dataset.h + 'px'; }); $('#spv .pod')?.classList.add('go'); }, 80));
   }
-  document.addEventListener('click', e => {
-    const c = e.target.closest && e.target.closest('[data-spc]'); if (c){ pick = +c.dataset.spc; sfx('pop'); return view(); }
-    const b = e.target.closest && e.target.closest('[data-spx]'); if (!b) return; const a = b.dataset.spx;
+  document.addEventListener('click', ev => {
+    const c = ev.target.closest && ev.target.closest('[data-spe]'); if (c){ sel = +c.dataset.spe; sfx('pop'); return view(); }
+    const b = ev.target.closest && ev.target.closest('[data-spx]'); if (!b) return; const a = b.dataset.spx;
     if (a === 'x') return closeV(); if (a === 'go') return play();
   });
   function tap(){ if (open()) view(); }
@@ -14666,28 +14693,29 @@ const SPT = (() => {
   let lastRec = '';
   function listen(){
     if (offs.length || !uid) return;
-    offs.push(GDB.on('sports/ctl', v => { ctl = v || null; got = true; if (open()){ if (lastRec !== ctl.id){ lastRec = ctl.id; offs.push(GDB.on('sports/rec/' + ctl.id, r => { recs = r || {}; if ($('#spv') && !game) view(); })); } } props(); }));
+    offs.push(GDB.on('sports/ctl', v => { ctl = v || null; got = true; if (open() && lastRec !== ctl.id){ lastRec = ctl.id; offs.push(GDB.on('sports/rec/' + ctl.id, r => { recs = r || {}; if ($('#spv') && !game) view(); })); } props(); }));
     { const prev = World.onProp; World.onProp = id => id === 'sptent' ? (tap(), null) : prev ? prev(id) : null; }
     setInterval(() => { try { tick(); } catch(e){ errReport('sports', '운동회 tick 오류: ' + e.message, e.stack || ''); } }, 2000);
   }
   function tick(){
-    if (!me || !got) return; props(); if (!open() || busy || World.cutBusy() || sheetOn || $('#spv')) return; const d = day(), St = S();
-    if (!St.hi){ if (typeof evTurn === 'function' && !evTurn('spt')) return; St.hi = 1; save(); busy = true; famCard(`<b>동물 운동회가 열렸어요!</b><small>광장 천막에서 내 생물을 내보내요.<br>사흘 동안 달리기 · 공 굴리기 · 줄다리기</small>`, null, 3800).finally(() => { busy = false; }); return; }
-    if (d >= 3 && !St.cer && (typeof evTurn !== 'function' || evTurn('spt'))) ceremony();
+    if (!me || !got) return; props(); if (!open() || busy || World.cutBusy() || sheetOn || ($('#spv') && !(cer() && !game && !$('#spv .pod')))) return; const St = S();
+    if (!St.hi && !cer()){ if (typeof evTurn === 'function' && !evTurn('spt')) return; St.hi = 1; save(); busy = true; famCard(`<b>동물 운동회가 열렸어요!</b><small>광장 천막에서 내 아기 동물을 내보내요.<br>오늘 하루 여섯 종목</small>`, null, 3800).finally(() => { busy = false; }); return; }
+    if (cer() && !St.cer && (typeof evTurn !== 'function' || evTurn('spt'))) ceremony();   // 관리자가 시상식을 열면 모두에게
   }
   // ---------- 관리자 ----------
   function adminHTML(){
-    const c = AD.sportsctl || {}, on = !!(c.open && c.id), d = on ? Math.max(0, kd(now2()) - kd(c.at || now2())) : -1;
+    const c = AD.sportsctl || {}, on = !!(c.open && c.id);
     return `<div class="adcard sdad"><div class="abhead"><b>동물 운동회</b>${on ? '<button class="btn sm" data-spa="stop">닫기</button>' : '<button class="btn sm go" data-spa="go">시작</button>'}</div>
-      <div class="abchips"><span>${on ? (d >= 3 ? '시상식' : `${d + 1} 일째 · ${EV[d].n}`) : '닫힘'}</span>${on ? '<button class="btn sm" style="width:auto" data-spa="next">다음 날로 (시험용)</button>' : ''}</div>
-      <div class="s" style="margin-top:6px">시작하면 광장에 운동회 천막이 서요. 사흘 동안 하루 한 종목 · 넷째 날 시상식. 출전한 학생 최고 기록 평균으로 기숙사 순위를 매겨요.</div></div>`;
+      <div class="abchips"><span>${on ? (c.end ? '시상식 중' : '경기 중') : '닫힘'}</span>${on && !c.end ? '<button class="btn sm go" style="width:auto" data-spa="cer">시상식 열기</button>' : ''}${on && c.end ? '<button class="btn sm" style="width:auto" data-spa="uncer">경기로 되돌리기</button>' : ''}</div>
+      <div class="s" style="margin-top:6px">시작하면 광장에 운동회 천막이 서요. 하루에 여섯 종목(달리기 · 장애물 넘기 · 공 굴리기 · 콩주머니 던지기 · 줄다리기 · 높이뛰기)을 모두 해요. 다 끝나면 「시상식 열기」를 눌러요. 입양한 아기 동물로 나가요.</div></div>`;
   }
-  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-spa]'); if (!b || !b.closest('#adminv')) return; const a = b.dataset.spa, c = AD.sportsctl || {};
+  document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-spa]'); if (!b || !b.closest('#adminv')) return; const a = b.dataset.spa, c = AD.sportsctl || {};
     if (a === 'go'){ if (confirm('동물 운동회를 시작할까요?')) GDB.set('sports/ctl', { open: true, id: now2(), at: now2() }).then(() => toast('동물 운동회를 시작했어요')); }
     else if (a === 'stop'){ if (confirm('동물 운동회를 닫을까요? 천막이 사라져요.')) GDB.upd('sports/ctl', { open: false }).then(() => toast('운동회를 닫았어요')); }
-    else if (a === 'next') GDB.upd('sports/ctl', { at: (c.at || now2()) - 864e5 }).then(() => toast('하루 앞으로 당겼어요'));
+    else if (a === 'cer'){ if (confirm('시상식을 열까요? 경기가 끝나고 모두에게 시상식이 떠요.')) GDB.upd('sports/ctl', { end: now2() }).then(() => toast('시상식을 열었어요')); }
+    else if (a === 'uncer') GDB.upd('sports/ctl', { end: null }).then(() => toast('경기로 되돌렸어요'));
   });
-  window.__spt = { st: () => ({ ctl, day: day(), recs, spt: me && me.spt, game: game ? { d: game.d, taps: game.taps.length, kicks: game.kicks.length, pulls: game.pulls } : null, total: total(2), rank: [0, 1, 2].map(dayRank) }), view: () => view(), finish: () => finish(), play: () => play(), ceremony: () => ceremony() };   // 시험용
+  window.__spt = { st: () => ({ ctl, cer: cer(), sel, recs, spt: me && me.spt, game: game ? { e: game.e, taps: game.taps.length, kicks: game.kicks.length, pulls: game.pulls, clr: game.clr, hits: game.hits, highs: game.highs } : null, total: total(5), rank: [0, 1, 2, 3, 4, 5].map(evRank) }), view: () => view(), sel: e => { sel = e; view(); }, finish: () => finish(), play: () => play(), ceremony: () => ceremony() };   // 시험용
   return { listen, adminHTML };
 })();
 
