@@ -14705,8 +14705,30 @@ const SPT = (() => {
   }
   function tick(){
     if (!me || !got) return; props(); if (!open() || busy || World.cutBusy() || sheetOn || ($('#spv') && !(cer() && !game && !$('#spv .pod')))) return; const St = S();
-    if (!St.hi && !cer()){ if (typeof evTurn === 'function' && !evTurn('spt')) return; St.hi = 1; save(); busy = true; famCard(`<b>동물 운동회가 열렸어요!</b><small>광장 천막에서 내 아기 동물을 내보내요.<br>오늘 하루 여섯 종목</small>`, null, 3800).finally(() => { busy = false; }); return; }
+    if (!St.hi && !cer()){ if (typeof evTurn === 'function' && !evTurn('spt')) return; intro(); return; }
     if (cer() && !St.cer && (typeof evTurn !== 'function' || evTurn('spt'))) ceremony();   // 관리자가 시상식을 열면 모두에게
+  }
+  // ---------- 시작 연출: 사육장 레오가 광장에 나와 운동회를 열어요 ----------
+  async function intro(){
+    if (busy) return; busy = true; const St = S(); let skip = false; const n = npcGet('leo'), pet0 = myPet();
+    const A = { who: 'leo', name: n ? n.name : '레오', ...(n && n.av ? { av: npcAv(n) } : { spr: n ? n.spr : 0 }) }, say = (t, ms = 3200) => ({ cmd: 'say', who: 'leo', text: t, ms });
+    const sk = document.body.appendChild(Object.assign(document.createElement('button'), { className: 'btn sm ddskip', textContent: '건너뛰기' })); sk.onclick = () => { skip = true; sk.remove(); };
+    try {
+      if (World.where() !== 'town'){ World.teleport('town', [SPOT[0], SPOT[1] + 4]); await new Promise(r => setTimeout(r, 1800)); }
+      await World.cut([{ cmd: 'player', x: SPOT[0], y: SPOT[1] + 4, dir: 'up' }, { cmd: 'cam', x: SPOT[0], y: SPOT[1] + 2 }, { cmd: 'wait', sec: .8 },
+        { cmd: 'spawn', ...A, x: SPOT[0] - 5, y: SPOT[1] + 2, dir: 'right' }, { cmd: 'walk', who: 'leo', x: SPOT[0] - 1, y: SPOT[1] + 2 }, { cmd: 'face', who: 'leo', to: 'player' },
+        say('....어. 왔네.'),
+        say('요즘 아기들이 좀이 쑤시나 봐. 사육장 울타리를 자꾸 넘어.', 3600),
+        { cmd: 'face', who: 'leo', to: 'player' }, say('....그래서. 운동회를 열어 볼까 해.', 3400),
+        { cmd: 'emote', who: 'player' },
+        say(pet0 ? `(${pet0.name || '아기'}에게) 그래, 그래. 마음껏 뛰어 봐. 다치지만 말고.` : '(아기들에게) 그래, 그래. 마음껏 뛰어 봐. 다치지만 말고.', 3800),
+        say('종목은 여섯 개. 하나에 세 번까지.'),
+        say('1 등 못 해도 돼. ....잘 뛰면 그걸로 됐어.', 3600),
+        { cmd: 'fx', kind: 'confetti', sec: 3 }, { cmd: 'sfx', id: 'win' }, { cmd: 'wait', sec: 1.6 },
+        { cmd: 'walk', who: 'leo', x: SPOT[0] - 6, y: SPOT[1] + 2, timeout: 4 }, { cmd: 'despawn', who: 'leo' }, { cmd: 'cam' }], { sfx: id => sfx(id), skip: () => skip });
+      St.hi = 1; save();   // 건너뛰어도 본 걸로 쳐요
+    } finally { busy = false; sk.remove(); }
+    if (St.hi) view();
   }
   // ---------- 관리자 ----------
   function adminHTML(){
@@ -14721,7 +14743,7 @@ const SPT = (() => {
     else if (a === 'cer'){ if (confirm('시상식을 열까요? 경기가 끝나고 모두에게 시상식이 떠요.')) GDB.upd('sports/ctl', { end: now2() }).then(() => toast('시상식을 열었어요')); }
     else if (a === 'uncer') GDB.upd('sports/ctl', { end: null }).then(() => toast('경기로 되돌렸어요'));
   });
-  window.__spt = { st: () => ({ ctl, cer: cer(), sel, recs, spt: me && me.spt, game: game ? { e: game.e, taps: game.taps.length, kicks: game.kicks.length, pulls: game.pulls, clr: game.clr, hits: game.hits, highs: game.highs } : null, total: total(5), rank: [0, 1, 2, 3, 4, 5].map(evRank) }), view: () => view(), sel: e => { sel = e; view(); }, finish: () => finish(), play: () => play(), ceremony: () => ceremony() };   // 시험용
+  window.__spt = { st: () => ({ ctl, cer: cer(), sel, recs, spt: me && me.spt, game: game ? { e: game.e, taps: game.taps.length, kicks: game.kicks.length, pulls: game.pulls, clr: game.clr, hits: game.hits, highs: game.highs } : null, total: total(5), rank: [0, 1, 2, 3, 4, 5].map(evRank) }), view: () => view(), sel: e => { sel = e; view(); }, finish: () => finish(), play: () => play(), ceremony: () => ceremony(), intro: () => intro() };   // 시험용
   return { listen, adminHTML };
 })();
 

@@ -15,7 +15,9 @@ let pass = 0, fail = 0; const ok = (c, m) => { if (c) pass++; else { fail++; con
   const press = () => p.evaluate(() => { const b = document.querySelector('#spbtn'); b && b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); });
   const release = () => p.evaluate(() => { const b = document.querySelector('#spbtn'); b && b.dispatchEvent(new PointerEvent('pointerup', { bubbles: true })); });
   ok(await p.evaluate(() => World.propsAt('town').some(x => x.id === 'sptent')), '광장에 천막');
-  ok(await p.evaluate(() => !!(__T.meRaw().spt && __T.meRaw().spt.hi)), '처음 알림 카드'); await p.waitForTimeout(4500);
+  { let c = false; for (let i = 0; i < 20 && !c; i++){ c = await p.evaluate(() => World.cutBusy() && World.where() === 'town'); if (!c) await p.waitForTimeout(500); } ok(c, '레오 시작 연출 (광장)');
+    await p.waitForTimeout(6000); await p.screenshot({ path: SH + '/intro_leo.png' }); await p.evaluate(() => document.querySelector('.ddskip') && document.querySelector('.ddskip').click()); await p.waitForTimeout(4000);
+    ok(await p.evaluate(() => !!(__T.meRaw().spt && __T.meRaw().spt.hi) && !!document.querySelector('#spv')), '연출 뒤 출전 창 (건너뛰어도 본 걸로)'); await p.evaluate(() => document.querySelector('#spv [data-spx="x"]') && document.querySelector('#spv [data-spx="x"]').click()); }
   await p.evaluate(() => World.teleport('town', [44, 48])); await p.waitForTimeout(2000); await p.screenshot({ path: SH + '/tent.png' });
   await p.evaluate(() => window.__spt.view()); await p.waitForTimeout(600); await p.screenshot({ path: SH + '/view.png' });
   ok(await p.evaluate(() => document.querySelectorAll('[data-spe]').length === 6), '여섯 종목 한꺼번에');
