@@ -13030,7 +13030,8 @@ const STK = (() => {
     madeleine: { f: 'milk', r: ['밀크 초콜릿! 기본이 제일 어려운 거 알지? 이건 합격이야!', '와, 막대과자! 남이 구워 준 건 이상하게 더 맛있다니까. 고마워!'], bx: [0, 1, 4, 1, 2], m: '오늘은 다 같이 막대과자 굽는 날이야. 이건 내가 먼저 구운 거!' },
     stella: { f: 'blue', r: ['블루베리 맛.... 밤하늘을 한 입 먹는 기분이에요. 아껴 먹을게요.', '막대과자네요. 오늘 운세에 달콤한 선물이 있었는데, 이거였나 봐요.'], bx: [7, 6, 5, 6, 2], m: '오늘 별이 말했어요. 달콤한 상자가 그대에게 간다고.' },
     leo: { f: 'milk', r: ['밀크 초콜릿. ....염소젖 냄새 나. 좋아. 아주.', '....고마워. 동물들 거 아니어도 괜찮아.'], bx: [0, 0, 3, 4, 5], m: '....받아. 동물들 간식 아니야.' },
-    otumo: { f: 'caramel', r: ['삐빅. 캐러멜 성분 감지. 회로가 따뜻해집니다. 만족도 측정 불가.......', '삐빅. 막대과자 수령 완료. 감사 회로 작동 중.......'], bx: [6, 2, 1, 2, 3], m: '삐빅. 막대 다섯 개 포장 완료. 기쁨도 같이 넣었습니다.' },
+    otumo: { f: 'caramel', r: ['삐빅. 캐러멜 성분 감지. 회로가 따뜻해집니다. 만족도 측정 불가.......', '삐빅. 막대과자 수령 완료. 감사 회로 작동 중.......'], bx: [6, 2, 1, 2, 3], m: '삐빅. 막대 다섯 개 포장 완료. 기쁨도 같이 넣었습니다.',
+      mr: '삐빅. 고백 신호 송신. 좋아합니다. 이건 오류가 아니에요.', bxr: [6, 3, 4, 1, 1], rr: ['삐빅.... 연인에게서 막대과자 수령. 냉각 팬 최고 속도. 이건 고장이 아니라 사랑이에요.......', '삐빅. 막대과자 수령. 기억 장치 맨 앞 칸에 저장합니다. 당신이 준 거니까요.......'] },
     dodo: { ft: 'gold', r: ['금가루라니. 자아, 오늘의 최고가 물건입니다. 그리고 바로 제 품으로 낙찰.', '막대과자 한 상자, 감사합니다. 호박씨 다섯 알 값은 되겠군요. 아니, 일곱 알.'], bx: [1, 7, 8, 7, 2], m: '자아, 이 상자는 손님께 낙찰입니다. 값은 받지 않겠습니다.' },
     selin: { f: 'ghost', r: ['보라색 초콜릿. 앞치마랑 같은 색이네. ....값은 안 매길게. 받을게.', '받았어. 장부엔 안 적을게. 고마워.'], bx: [5, 0, 3, 5, 4], m: '조건 하나. 남기지 말 것. 값은 안 받을게.' },
     bone: { f: 'ghost', r: ['유령 보라 맛이다. 「보라 막대 하얀 해골, 둘이 서면 그림 같네」. 축하해.', '막대과자다. 받은 날이니까 무조건 잔칫날이야. 고마워, 길손.'], bx: [5, 2, 6, 7, 6], m: '「막대 하나 둘 셋 넷 다섯」. 다섯 개 다 길손 거야.' },
@@ -13384,7 +13385,9 @@ const STK = (() => {
     const s = S(); if (s.gv || solo || !uid) return; s.gv = 1; save();
     const at = now2(), upd = {}, mk = (id, nm, bx, m) => { upd[id] = { c: bx[0], t: bx[1], b: bx[2], k: bx[3], r: bx[4], s: 3, m, st: nm, at }; };
     const md = npcGet('madeleine'); mk('mad', md ? md.name : '마들렌', [0, 1, 4, 1, 2], NP.madeleine.m);
-    NPC_IDS.filter(id => id !== 'madeleine' && npcOk(id) && hearts(id) >= 3).sort((a, b) => hearts(b) - hearts(a)).slice(0, 3).forEach(id => { const n = npcGet(id); mk('n_' + id, n.name, NP[id].bx, NP[id].m); });
+    const RO = NPC_IDS.filter(id => id !== 'madeleine' && npcOk(id) && NP[id] && NP[id].mr && romanceOn(id));   // 연애 상대는 하트와 상관없이 고백 쪽지
+    NPC_IDS.filter(id => id !== 'madeleine' && !RO.includes(id) && npcOk(id) && hearts(id) >= 3).sort((a, b) => hearts(b) - hearts(a)).slice(0, 3).forEach(id => { const n = npcGet(id); mk('n_' + id, n.name, NP[id].bx, NP[id].m); });
+    RO.forEach(id => { const n = npcGet(id); mk('n_' + id, n.name, NP[id].bxr || NP[id].bx, NP[id].mr); });
     GDB.upd(`stick/box/${uid}`, upd).catch(err => { s.gv = 0; save(); errReport('stick', '마들렌 상자 오류: ' + (err && err.message), ''); });
   }
   // ---------- 시작 연출: 마들렌이 막대과자 한 아름을 들고 지금 서 있는 자리로 뛰어와요 ----------
@@ -13424,7 +13427,7 @@ const STK = (() => {
     const gn = Object.keys(s.npc).length; let extra = '';
     if (gn >= 5 && !s.rw.mad){ s.rw.mad = 1; npcAddA('madeleine', 50); extra = '마들렌 호감도 +50'; }
     saveSure(); syncNpcs(); npcClose();
-    await giveFx(n, B); npcExprOnce = fav ? 1 : 0; npcMenu(n, X.r[fav ? 0 : 1]);
+    await giveFx(n, B); npcExprOnce = fav ? 1 : 0; npcMenu(n, (X.rr && romanceOn(n.id) ? X.rr : X.r)[fav ? 0 : 1]);
     toast(`${withJosa(n.name, '이', '가')} 막대과자를 받았어요 · 호감도 +${h}`); if (extra) setTimeout(() => toast(`NPC 5 명에게 줬어요 · ${extra}`), 1800);
   }
   let GV = null;   // 상자가 내 품에서 NPC 머리 위로 날아가서 하트
