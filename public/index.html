@@ -14521,8 +14521,11 @@ const SPT = (() => {
     { k: 'tug', n: '줄다리기', u: '점', st: 'str', d: '표시가 가운데 올 때 눌러요', b: '영차!', lim: 10000 },
     { k: 'high', n: '높이뛰기', u: 'cm', st: 'str', d: '꾹 누르고 막대가 꼭대기일 때 떼요 · 세 번', b: '꾹 눌러요', lim: 12000 }];
   //   아기 동물 종류마다 (오리 고양이 강아지 토끼 다람쥐 고슴도치 박쥐 부엉이 여우 너구리 개구리 병아리) 조금씩 달라요 (±10 % 안쪽 · 고를 수 없으니 작게 · 창에는 안 보여요)
-  const STAT = { spd: [1, 1.05, 1.05, 1.1, 1.08, .92, 1.06, .95, 1.08, .97, 1, .98], pow: [.98, .97, 1.05, .95, .97, 1.08, .94, 1, 1, 1.05, 1.02, .95], str: [1, .95, 1.08, .95, .96, 1.05, .94, 1.02, .98, 1.08, .98, .92] };
+  const STAT0 = { spd: [1, 1.05, 1.05, 1.1, 1.08, .92, 1.06, .95, 1.08, .97, 1, .98], pow: [.98, .97, 1.05, .95, .97, 1.08, .94, 1, 1, 1.05, 1.02, .95], str: [1, .95, 1.08, .95, .96, 1.05, .94, 1.02, .98, 1.08, .98, .92] };
+  const STAT = Object.fromEntries(Object.entries(STAT0).map(([k, a]) => [k, a.map(v => 1 + (v - 1) * .5)]));   // 공정하게: 종류 차이는 ±5 % 안쪽으로 줄였어요
   const TRIES = 3, SPOT = [44, 46], HK = ['dew', 'ember', 'dusk', 'moon'], LANES = 12;
+  //   타이밍 종목 판정: 막대가 오가는 시간(per · 끝에서 끝까지 ms) · 초록(gz) · 노랑(yz) = 가운데에서 떨어진 거리 · 막대에 칠한 칸과 판정이 똑같아요 · 초록 칸은 약 ±0.1 초 (휴대폰 터치 지연까지 넉넉하게)
+  const TIM = { 2: { per: 1300, gz: .08, yz: .22 }, 3: { per: 1100, gz: .1, yz: .1 }, 4: { per: 1000, gz: .1, yz: .25 } }, TAP_MAX = 7, BAGS = 12;   // 달리기는 1 초에 7 번이면 최고 (그보다 빨리 눌러도 같아요 · 두 손가락 · 연타 앱 차이 줄이기) · 콩주머니 12 개
   let ctl = null, recs = {}, offs = [], got = false, busy = false, game = null, propSig = '', sel = -1;
   const open = () => !!(ctl && ctl.open && ctl.id);
   const kd = t => Math.floor((t + 9 * 3600e3) / 864e5);
@@ -14590,7 +14593,7 @@ const SPT = (() => {
   function pet(g, k, x, y, z, t, jump = 0){ const im = bbI(); if (!im.complete) return; const w = 14 * z, hop = Math.abs(Math.sin(t / 90)) * 1.5 * z; g.imageSmoothingEnabled = false; g.drawImage(im, k * 14, 0, 14, 14, Math.round(x - w / 2), Math.round(y - w - hop - jump), w, w); }   // 아기 동물 (정면 그림)
   function field(g){ const W = 360, H = 220; g.fillStyle = '#5aa04a'; g.fillRect(0, 0, W, H); g.fillStyle = 'rgba(255,255,255,.08)'; for (let x = 0; x < W; x += 24) g.fillRect(x, 0, 12, H);
     g.fillStyle = '#86c8f0'; g.fillRect(0, 0, W, 22); for (let i = 0; i < 14; i++){ g.fillStyle = ['#E85A5A', '#5CCB8E', '#F0C040', '#7A66E0'][i % 4]; g.beginPath(); g.moveTo(i * 28, 6); g.lineTo(i * 28 + 14, 6); g.lineTo(i * 28 + 7, 16); g.fill(); } }
-  function bar(g, mk, y = 30){ const x = 60, w = 240; g.fillStyle = '#1a1024'; g.fillRect(x - 2, y - 2, w + 4, 14); g.fillStyle = '#3a2440'; g.fillRect(x, y, w, 10); g.fillStyle = '#ffd24a'; g.fillRect(x + w * .4, y, w * .2, 10); g.fillStyle = '#7affb0'; g.fillRect(x + w * .46, y, w * .08, 10); g.fillStyle = '#fff'; g.fillRect(Math.round(x + w * mk) - 2, y - 4, 4, 18); }
+  function bar(g, mk, T, y = 30){ const x = 60, w = 240; g.fillStyle = '#1a1024'; g.fillRect(x - 2, y - 2, w + 4, 14); g.fillStyle = '#3a2440'; g.fillRect(x, y, w, 10); g.fillStyle = '#ffd24a'; g.fillRect(Math.round(x + w * (.5 - T.yz)), y, Math.round(w * T.yz * 2), 10); g.fillStyle = '#7affb0'; g.fillRect(Math.round(x + w * (.5 - T.gz)), y, Math.round(w * T.gz * 2), 10); g.fillStyle = '#fff'; g.fillRect(Math.round(x + w * mk) - 2, y - 4, 4, 18); }   // 칠한 칸 = 판정 칸
   const txt = (g, t, x, y, col = '#fff', sz = 11, al = 'left') => { g.font = `${sz}px G11B, sans-serif`; g.textAlign = al; g.lineWidth = 3; g.strokeStyle = '#1a1024'; g.strokeText(t, x, y); g.fillStyle = col; g.fillText(t, x, y); };
   function ghosts(e){ return Object.entries(recs[e] || {}).filter(([u, x]) => u !== uid && x && x.s).sort((a, b) => b[1].s - a[1].s).slice(0, LANES - 1).map(([u, x]) => ({ k: x.k ?? 3, n: x.nk || '친구', h: x.h, s: +x.s })); }
   function play(){
@@ -14601,23 +14604,25 @@ const SPT = (() => {
     const marker = (now, per = 1000) => { const p = ((now - t0) / per) % 2; return p < 1 ? p : 2 - p; };
     const say = t => { const m = $('#spmsg'); if (m) m.textContent = t; };
     const btn = $('#spbtn');
-    btn.onpointerdown = ev => { ev.preventDefault(); const G = game; if (!G || G.done) return; const now = performance.now(); sfx('pop');
+    const at = ev => { const t = ev && ev.timeStamp; return t && Math.abs(t - performance.now()) < 1000 ? t : performance.now(); };   // 손가락이 닿은 순간으로 판정해요 (화면이 바빠서 늦게 처리돼도 손해 없게)
+    btn.onpointerdown = ev => { ev.preventDefault(); const G = game; if (!G || G.done) return; const now = at(ev); sfx('pop');
       if (e === 0) G.taps.push(now);
       else if (e === 1){ if (now - (G.jumps[G.jumps.length - 1] || 0) > 650) G.jumps.push(now); }
-      else if (e === 2){ if (G.kicks.length >= 3 || now - (G.lastKick || 0) < 700) return; G.lastKick = now; const acc = Math.max(0, 1 - Math.abs(marker(now, 1100) - .5) * 2.8); G.kicks.push(acc); say(acc > .8 ? '완벽!' : acc > .45 ? '좋아요' : '아쉬워요'); }
-      else if (e === 3){ if (now - (G.lastThrow || 0) < 450) return; G.lastThrow = now; const m = marker(now, 850), hit = Math.abs(m - .5) < .1; G.throws.push({ t: now, m, hit }); if (hit) G.hits++; say(hit ? '쏙!' : '빗나갔어요'); }
-      else if (e === 4){ if (now - (G.lastPull || 0) < 260) return; G.lastPull = now; const acc = Math.max(0, 1 - Math.abs(marker(now, 900) - .5) * 2.8), v = acc > .75 ? 3 : acc > .35 ? 1 : -1; G.pulls += v; if (v === 3) G.good++; say(v === 3 ? '영차!' : v === 1 ? '영.... 차' : '미끄러졌어요'); }
-      else if (e === 5){ if (G.highs.length >= 3 || G.jumpAt) return; G.hold = now; } };
-    btn.onpointerup = btn.onpointercancel = btn.onpointerleave = () => { const G = game; if (!G || G.done || G.e !== 5 || !G.hold) return; const now = performance.now(), held = now - G.hold, p = (held / 900) % 2, c = p < 1 ? p : 2 - p; G.hold = 0;
+      else if (e === 2){ if (G.kicks.length >= 3 || now - (G.lastKick || 0) < 700) return; G.lastKick = now; const d = Math.abs(marker(now, TIM[2].per) - .5), acc = d <= TIM[2].gz ? 1 : d <= TIM[2].yz ? .65 : Math.max(0, .45 - (d - TIM[2].yz) * 1.6); G.kicks.push(acc); say(acc >= 1 ? '완벽!' : acc >= .65 ? '좋아요' : '아쉬워요'); }
+      else if (e === 3){ if (G.throws.length >= BAGS || now - (G.lastThrow || 0) < 450) return; G.lastThrow = now; const m = marker(now, TIM[3].per), hit = Math.abs(m - .5) <= TIM[3].gz; G.throws.push({ t: now, m, hit }); if (hit) G.hits++; say(hit ? '쏙!' : '빗나갔어요'); }
+      else if (e === 4){ if (now - (G.lastPull || 0) < 260) return; G.lastPull = now; const d = Math.abs(marker(now, TIM[4].per) - .5), v = d <= TIM[4].gz ? 3 : d <= TIM[4].yz ? 1 : -1; G.pulls += v; if (v === 3) G.good++; say(v === 3 ? '영차!' : v === 1 ? '영.... 차' : '미끄러졌어요'); }
+      else if (e === 5){ if (G.highs.length >= 3 || G.jumpAt || G.hold) return; G.hold = now; G.pid = ev.pointerId; } };   // 높이뛰기: 처음 누른 손가락만 (다른 손가락이 눌러도 다시 시작되지 않게)
+    btn.onpointerup = btn.onpointercancel = ev => { const G = game; if (!G || G.done || G.e !== 5 || !G.hold || (ev && G.pid !== undefined && ev.pointerId !== G.pid)) return; const now = at(ev), held = now - G.hold, p = (held / 900) % 2, c = p < 1 ? p : 2 - p; G.hold = 0;
       const h = Math.round((40 + 90 * Math.pow(c, 1.5)) * G.st); G.highs.push(h); G.jumpAt = now; G.lastH = h; say(c > .9 ? `훌쩍! ${h} cm` : `${h} cm`); setTimeout(() => { if (game === G) G.jumpAt = 0; }, 1100); };
+    try { btn.addEventListener('pointerdown', ev => { try { btn.setPointerCapture(ev.pointerId); } catch(_){} }); } catch(_){}   // 손가락이 버튼 밖으로 살짝 밀려도 떼기로 치지 않아요
     const loop = () => { if (!game || game.done || !$('#spcv')) return; const now = performance.now(), G = game, el = now - t0, left = Math.max(0, G.lim - el); $('#spt').textContent = `${(left / 1000).toFixed(1)} 초`;
-      draw(g, G, now, el, marker); if (el >= G.lim || (e === 2 && G.kicks.length >= 3 && now - G.lastKick > 1500) || (e === 5 && G.highs.length >= 3 && !G.jumpAt)) return finish(); requestAnimationFrame(loop); };
+      draw(g, G, now, el, marker); if (el >= G.lim || (e === 2 && G.kicks.length >= 3 && now - G.lastKick > 1500) || (e === 3 && G.throws.length >= BAGS && now - G.lastThrow > 700) || (e === 5 && G.highs.length >= 3 && !G.jumpAt)) return finish(); requestAnimationFrame(loop); };
     requestAnimationFrame(loop);
   }
   function score(G, now = performance.now()){
     const e = G.e;
-    if (e === 0){ const rate = G.taps.length / (G.lim / 1000); return 40 + 60 * G.st * Math.min(1.4, .35 + rate / 8); }   // 약 40 ~ 120 m
-    if (e === 1) return Math.max(0, G.clr * 10 - G.hit * 4) * G.st;   // 넘은 장애물 × 10 · 걸리면 −4
+    if (e === 0){ const rate = Math.min(TAP_MAX, G.taps.length / (G.lim / 1000)); return 40 + 60 * G.st * (.35 + 1.05 * rate / TAP_MAX); }   // 약 40 ~ 120 m · 1 초에 7 번이면 최고
+    if (e === 1) return Math.max(0, G.clr * 10 - G.hit * 4 - Math.max(0, G.jumps.length - G.clr) * 2) * G.st;   // 넘은 장애물 × 10 · 걸리면 −4 · 아무 데서나 뛰면 −2 (마구 누르기 막기)
     if (e === 2) return G.kicks.reduce((a, acc) => a + 12 * G.st * (.35 + acc), 0);
     if (e === 3) return G.hits * 10 * G.st;
     if (e === 4) return Math.max(0, G.pulls) * 10 * G.st;
@@ -14645,16 +14650,16 @@ const SPT = (() => {
       const base = G.kicks.reduce((a, acc) => a + 12 * G.st * (.35 + acc), 0), x = 40 + Math.min(290, base * 3.2); pet(g, b.k, 34, 176, 4, now);
       g.fillStyle = '#fff'; g.beginPath(); g.arc(x + 20, 164, 10, 0, 7); g.fill(); g.strokeStyle = '#E85A5A'; g.lineWidth = 3; g.beginPath(); g.arc(x + 20, 164, 6, now / 100, now / 100 + 3); g.stroke();
       for (let m = 0; m <= 100; m += 20){ const xx = 60 + m * 2.88; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillRect(xx, 186, 2, 10); txt(g, m + ' m', xx, 208, '#fff', 9, 'center'); }
-      bar(g, marker(now, 1100)); txt(g, `${G.kicks.length} / 3 번`, 10, 56); return; }
+      bar(g, marker(now, TIM[2].per), TIM[2]); txt(g, `${G.kicks.length} / 3 번`, 10, 56); return; }
     if (e === 3){   // 콩주머니 던지기: 바구니가 좌우로 · 가운데(초록)일 때 던지면 쏙
-      const m = marker(now, 850), bx = 60 + 240 * m; g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(156, 60, 48, 70); g.fillStyle = '#6a4428'; g.fillRect(bx - 1, 70, 3, 60); g.fillStyle = '#E8C878'; g.fillRect(bx - 14, 56, 28, 14); g.fillStyle = '#B8883A'; g.fillRect(bx - 14, 56, 28, 3);
+      const m = marker(now, TIM[3].per), bx = 60 + 240 * m; g.fillStyle = 'rgba(122,255,176,.35)'; g.fillRect(Math.round(180 - 240 * TIM[3].gz), 60, Math.round(480 * TIM[3].gz), 70);   // 초록 칸 = 들어가는 칸 g.fillStyle = '#6a4428'; g.fillRect(bx - 1, 70, 3, 60); g.fillStyle = '#E8C878'; g.fillRect(bx - 14, 56, 28, 14); g.fillStyle = '#B8883A'; g.fillRect(bx - 14, 56, 28, 3);
       G.throws.filter(t => now - t.t < 600).forEach(t => { const q = (now - t.t) / 600, tx = 180 + (60 + 240 * t.m - 180) * q, ty = 170 - Math.sin(q * Math.PI) * 120 - q * 40; g.fillStyle = t.hit ? '#E85A5A' : '#5A8AE8'; g.fillRect(Math.round(tx) - 3, Math.round(ty) - 3, 6, 6); });
-      pet(g, b.k, 180, 200, 4, now); txt(g, `쏙 ${G.hits} 번`, 10, 40, '#ffd24a'); return; }
+      pet(g, b.k, 180, 200, 4, now); txt(g, `쏙 ${G.hits} 번`, 10, 40, '#ffd24a'); txt(g, `남은 콩주머니 ${BAGS - G.throws.length}`, 350, 40, '#fff', 10, 'right'); return; }
     if (e === 4){   // 줄다리기
       const pull = Math.max(-1, Math.min(1, G.pulls / 30)), cx = 180 - pull * 90; g.strokeStyle = '#c8a878'; g.lineWidth = 5; g.beginPath(); g.moveTo(40, 160); g.lineTo(320, 160); g.stroke();
       g.fillStyle = '#E85A5A'; g.fillRect(cx - 3, 140, 6, 24); g.fillStyle = 'rgba(255,255,255,.5)'; g.fillRect(178, 120, 4, 80);
       const r = G.GH[0] || { k: 2, n: '멍멍' }; pet(g, b.k, 40, 182, 4, now); pet(g, r.k, 320, 182, 4, now + 50); txt(g, b.name || '', 40, 198, '#fff', 9, 'center'); txt(g, r.n, 320, 198, '#fff', 9, 'center');
-      bar(g, marker(now, 900)); txt(g, `영차 ${G.good} 번`, 10, 56); return; }
+      bar(g, marker(now, TIM[4].per), TIM[4]); txt(g, `영차 ${G.good} 번`, 10, 56); return; }
     // 높이뛰기: 꾹 누르면 막대가 오르내려요 · 꼭대기에서 떼면 높이
     const bx0 = 230; g.fillStyle = '#6a4428'; g.fillRect(bx0 - 30, 60, 3, 140); g.fillRect(bx0 + 30, 60, 3, 140);
     const best = G.highs.length ? Math.max(...G.highs) : 0, yb = 200 - Math.min(140, best * .9); g.fillStyle = '#ffd24a'; g.fillRect(bx0 - 30, yb, 63, 3); txt(g, best ? `${best} cm` : '', bx0 + 38, yb + 4, '#ffd24a', 10);
@@ -14670,7 +14675,8 @@ const SPT = (() => {
     if (best){ GDB.set(`sports/rec/${ctl.id}/${e}/${uid}`, { s, h: me.house || 'dew', k: b.k, n: b.name || BABY.NAMES[b.k], nk: me.nick }); recs[e] = recs[e] || {}; recs[e][uid] = { s, h: me.house || 'dew', k: b.k, n: b.name, nk: me.nick }; }
     save(); sfx(best ? 'win' : 'pop'); const cr = classRank(e);
     const msg = $('#spmsg'); if (msg) msg.textContent = `${fmt(s, e)}${best ? ' · 내 최고 기록!' : ''}${cr.i ? ` · 반 ${cr.i} 등 / ${cr.n} 명` : ''}${up ? ` · ${esc(b.name || '')} 친밀도 +1` : ''}`;
-    const bt = $('#spbtn'); if (bt){ bt.textContent = '천막으로'; bt.onpointerdown = bt.onpointerup = bt.onpointercancel = bt.onpointerleave = null; bt.onclick = () => view(); }
+    G.endAt = performance.now(); const bt = $('#spbtn'); if (bt){ bt.onpointerdown = bt.onpointerup = bt.onpointercancel = null; bt.style.visibility = 'hidden'; }   // 끝나면 큰 버튼을 치워요: 계속 연타하던 손가락이 다음 판을 시작하지 않게
+    const hd = $('#spv .hd'); if (hd) hd.insertAdjacentHTML('beforeend', '<button class="btn sm go" data-spx="back" style="width:auto">천막으로</button>');
   }
   // ---------- 시상식 ----------
   function ceremony(){
@@ -14686,7 +14692,7 @@ const SPT = (() => {
   document.addEventListener('click', ev => {
     const c = ev.target.closest && ev.target.closest('[data-spe]'); if (c){ sel = +c.dataset.spe; sfx('pop'); return view(); }
     const b = ev.target.closest && ev.target.closest('[data-spx]'); if (!b) return; const a = b.dataset.spx;
-    if (a === 'x') return closeV(); if (a === 'go') return play();
+    if (a === 'x') return closeV(); if (a === 'back') return view(); if (a === 'go'){ if (game && game.endAt && performance.now() - game.endAt < 1500) return; return play(); }   // 방금 끝난 판의 연타가 새 출전으로 이어지지 않게
   });
   function tap(){ if (open()) view(); }
   // ---------- 듣기 · 틱 ----------

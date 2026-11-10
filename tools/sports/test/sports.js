@@ -21,7 +21,7 @@ let pass = 0, fail = 0; const ok = (c, m) => { if (c) pass++; else { fail++; con
   ok(await p.evaluate(() => document.querySelectorAll('[data-spe]').length === 6), '여섯 종목 한꺼번에');
   ok(await p.evaluate(() => /토토/.test(document.querySelector('#spv .sppet').innerText) && !/잘해요|서툴러요|보통이에요/.test(document.querySelector('#spv').innerText)), '아기 동물 · 잘해요 같은 말 없음');
   // 0 달리기 (12 명 한 트랙)
-  const go = async e => { await p.evaluate(e => window.__spt.sel(e), e); await p.waitForTimeout(200); await p.click('[data-spx="go"]'); await p.waitForTimeout(300); };
+  const go = async e => { await p.waitForTimeout(1600); await p.evaluate(e => window.__spt.sel(e), e); await p.waitForTimeout(200); await p.click('[data-spx="go"]'); await p.waitForTimeout(300); };
   await go(0); for (let i = 0; i < 50; i++){ await press(); await p.waitForTimeout(110); if (i === 30) await p.screenshot({ path: SH + '/run.png' }); } await p.waitForTimeout(3000);
   let s = await st(); ok(s.recs[0] && s.recs[0].me1 && s.recs[0].me1.s > 60, '달리기 기록 ' + JSON.stringify(s.recs[0] && s.recs[0].me1));
   ok(await p.evaluate(() => /반 \d+ 등 \/ 12 명/.test(document.querySelector('#spmsg').textContent)), '반 등수 · 12 명 ' + await p.evaluate(() => document.querySelector('#spmsg').textContent));
