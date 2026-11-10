@@ -5,8 +5,8 @@ const seed0 = eval('(' + fs.readFileSync(R + '/tests/ui.spec.js', 'utf8').match(
 let pass = 0, fail = 0; const ok = (c, m) => { if (c) pass++; else { fail++; console.log('  실패:', m); } };
 (async () => {
   const b = await chromium.launch(); const seed = JSON.parse(JSON.stringify(seed0)), me = seed.players.me1, now = Date.now();
-  me.cr = [{ id: 'a1', k: 1, col: {}, name: '깡총', love: 10, care: 999, bornAt: 0, prodAt: 0, fedAt: 0, petAt: 0, bredAt: 0 }, { id: 'a2', k: 9, col: { n: '노을빛', p: .75, s: 2.6, h: -35, b: 1 }, name: '수염', love: 20, care: 999, bornAt: 0 }, { id: 'a3', k: 0, col: {}, name: '아기', love: 0, care: 0, bornAt: now }];
-  seed.sports = { ctl: { open: true, id: 777, at: now }, rec: { 777: { 0: { u2: { s: 80, h: 'ember', k: 4, c: null, n: '까망', nk: '서연' }, u3: { s: 60, h: 'moon', k: 8, c: null, n: '부엉', nk: '지호' } } } } };
+  me.baby = { k: 3, adopt: 1, name: '토토', love: 30 };   // 입양한 아기 토끼 · 친밀도 ♥3
+  seed.sports = { ctl: { open: true, id: 777, at: now }, rec: { 777: { 0: { u2: { s: 80, h: 'ember', k: 1, n: '까망', nk: '서연' }, u3: { s: 60, h: 'moon', k: 7, n: '부엉', nk: '지호' } } } } };
   const p = await b.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 }); const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.addInitScript(s => { window.__seed = s; window.__uid = 'me1'; }, seed); await p.goto(`http://localhost:${PORT}/`); await p.waitForFunction(() => window.__spt && window.__T, null, { timeout: 30000 }); await p.waitForTimeout(6000);
   const st = () => p.evaluate(() => window.__spt.st());
@@ -16,15 +16,15 @@ let pass = 0, fail = 0; const ok = (c, m) => { if (c) pass++; else { fail++; con
   await p.evaluate(() => World.teleport('town', [44, 48])); await p.waitForTimeout(2000); await p.screenshot({ path: SH + '/tent.png' });
   // 창
   await p.evaluate(() => window.__spt.view()); await p.waitForTimeout(600); await p.screenshot({ path: SH + '/view_day1.png' });
-  ok(await p.evaluate(() => document.querySelectorAll('[data-spc]').length === 3), '내 생물 셋이 보여요');
-  ok(await p.evaluate(() => document.querySelector('[data-spc].on')?.dataset.spc === '0'), '달리기는 토끼가 먼저 골라져요');
+  ok(await p.evaluate(() => !!document.querySelector('#spv .sppet') && /토토/.test(document.querySelector('#spv .sppet').innerText)), '내 아기 동물이 보여요');
+  ok(await p.evaluate(() => /잘해요/.test(document.querySelector('#spv .sppet').innerText)), '토끼는 달리기를 잘해요');
   // 1 일째 달리기: 응원 연타
   await p.click('[data-spx="go"]'); await p.waitForTimeout(300);
   const box = await p.evaluate(() => { const r = document.querySelector('#spbtn').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
   for (let i = 0; i < 50; i++){ await p.mouse.move(box.x, box.y); await p.mouse.down(); await p.mouse.up(); await p.waitForTimeout(110); if (i === 25) await p.screenshot({ path: SH + '/run.png' }); }
   await p.waitForTimeout(3000); let s = await st();
   ok(s.recs[0] && s.recs[0].me1 && s.recs[0].me1.s > 60, '달리기 기록 ' + JSON.stringify(s.recs[0] && s.recs[0].me1));
-  ok(s.spt.t[0] === 1, '하루 횟수 하나 씀'); ok(await p.evaluate(() => __T.meRaw().cr[0].love === 11), '처음 뛰면 애정 +1');
+  ok(s.spt.t[0] === 1, '하루 횟수 하나 씀'); ok(await p.evaluate(() => __T.meRaw().baby.love === 31), '처음 뛰면 친밀도 +1');
   await p.screenshot({ path: SH + '/run_end.png' });
   const r0 = s.recs[0].me1.s;
   // 두 번째: 거의 안 눌러요 → 기록은 그대로 (더 좋을 때만)
@@ -34,7 +34,7 @@ let pass = 0, fail = 0; const ok = (c, m) => { if (c) pass++; else { fail++; con
   // 2 일째 공 굴리기
   await p.evaluate(() => __T.pkSet('sports/ctl', { open: true, id: 777, at: Date.now() - 864e5 })); await p.waitForTimeout(800);
   await p.evaluate(() => window.__spt.view()); await p.waitForTimeout(400); await p.screenshot({ path: SH + '/view_day2.png' });
-  ok(await p.evaluate(() => document.querySelector('[data-spc].on')?.dataset.spc === '1'), '공 굴리기는 염소가 먼저 골라져요');
+  ok(await p.evaluate(() => /서툴러요/.test(document.querySelector('#spv .sppet').innerText)), '토끼는 공 굴리기가 조금 서툴러요');
   await p.click('[data-spx="go"]'); for (let k = 0; k < 3; k++){ await p.waitForFunction(() => { const s = window.__spt.st(); return true; }); await p.waitForTimeout(800); await p.evaluate(() => document.querySelector('#spbtn').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))); if (k === 1) await p.screenshot({ path: SH + '/ball.png' }); }
   await p.waitForTimeout(2500); s = await st(); ok(s.recs[1] && s.recs[1].me1 && s.recs[1].me1.s > 0, '공 굴리기 기록 ' + JSON.stringify(s.recs[1] && s.recs[1].me1));
   // 3 일째 줄다리기

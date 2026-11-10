@@ -14516,8 +14516,8 @@ const SPT = (() => {
     { k: 'run', n: '달리기', u: 'm', st: 'spd', d: '응원 버튼을 빠르게 눌러요' },
     { k: 'ball', n: '공 굴리기', u: 'm', st: 'pow', d: '막대가 가운데 올 때 눌러요 · 세 번' },
     { k: 'tug', n: '줄다리기', u: '점', st: 'str', d: '표시가 가운데 올 때 눌러요' }];
-  //   생물 종류마다 (양 토끼 도마뱀 닭 고양이 두꺼비 꿀벌 거미 부엉이 염소) 잘하는 종목이 달라요
-  const STAT = { spd: [.8, 1.25, 1.05, .9, 1.15, .85, 1.2, 1, .95, .9], pow: [1.2, .85, .9, .9, .95, 1.05, .8, .9, 1, 1.15], str: [1.05, .85, .9, .85, .9, 1, .8, 1.1, .95, 1.25] };
+  //   출전은 입양한 아기 동물 (me.baby) · 종류마다 (오리 고양이 강아지 토끼 다람쥐 고슴도치 박쥐 부엉이 여우 너구리 개구리 병아리) 잘하는 종목이 조금씩 달라요 (±10 % 안쪽 · 고를 수 없으니 차이는 작게)
+  const STAT = { spd: [1, 1.05, 1.05, 1.1, 1.08, .92, 1.06, .95, 1.08, .97, 1, .98], pow: [.98, .97, 1.05, .95, .97, 1.08, .94, 1, 1, 1.05, 1.02, .95], str: [1, .95, 1.08, .95, .96, 1.05, .94, 1.02, .98, 1.08, .98, .92] };
   const TRIES = 3, SPOT = [44, 46], HK = ['dew', 'ember', 'dusk', 'moon'];
   let ctl = null, recs = {}, offs = [], got = false, busy = false, pick = null, pickD = -1, game = null, propSig = '';
   const open = () => !!(ctl && ctl.open && ctl.id);
@@ -14525,7 +14525,9 @@ const SPT = (() => {
   const day = () => open() ? Math.max(0, kd(now2()) - kd(ctl.at || now2())) : -1;   // 0 · 1 · 2 종목 · 3 부터 시상식
   const S = () => { me.spt = me.spt && me.spt.id === ctl.id ? me.spt : { id: ctl.id, t: {} }; me.spt.t = me.spt.t || {}; return me.spt; };
   const triesLeft = d => Math.max(0, TRIES - (S().t[d] || 0));
-  const statOf = (c, ev) => { const b = STAT[EV[ev].st][c.k] || 1, adult = crAdult(c) ? 1 : .75; return b * adult * (.7 + .3 * Math.min(1, (c.love || 0) / LOVE_MAX)); };
+  const statOf = (c, ev) => (STAT[EV[ev].st][c.k] || 1) * (.92 + .08 * Math.min(1, (c.love || 0) / (BABY_LOVE_MAX * 10)));   // 친밀도가 높을수록 조금 더 잘해요 (♥ 가득이면 +8.7 %)
+  const myPet = () => me.baby && me.baby.adopt && me.baby.k !== undefined ? me.baby : null;
+  const hearts = b => Math.min(BABY_LOVE_MAX, Math.floor((b.love || 0) / 10));
   const myRec = d => recs[d] && recs[d][uid];
   const H = h => HOUSES[h] || HOUSES.dew;
   // ---------- 기숙사 점수 ----------
@@ -14556,6 +14558,7 @@ const SPT = (() => {
 #spv .hd{display:flex;align-items:center;gap:8px}#spv .hd b{font-family:G11B,Pretendard,sans-serif;font-size:16px;flex:1}#spv .hd span{font-size:12px;color:#cbbbe8}#spv .x{background:none;border:0;color:#cbbbe8;font-size:18px}
 #spv .days{display:flex;gap:4px}#spv .days i{flex:1;font-style:normal;text-align:center;font-size:11px;padding:4px 0;border-radius:6px;background:#2a1f44;color:#8a7aa8}#spv .days i.on{background:#ffd24a;color:#1c1430;font-family:G11B,Pretendard,sans-serif}#spv .days i.done{color:#cbbbe8}
 #spv .hs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}#spv .hs div{border-radius:8px;padding:6px 2px;text-align:center;background:rgba(255,255,255,.05);border:2px solid var(--c)}#spv .hs b{display:block;font-size:11px;color:var(--c)}#spv .hs span{font-family:G11B,Pretendard,sans-serif;font-size:16px}#spv .hs small{display:block;font-size:10px;color:#b9a8d8}
+#spv .sppet{display:flex;align-items:center;gap:12px;border:2px solid #ffd24a;border-radius:10px;padding:8px 12px;background:#2a1f44}#spv .sppet div{display:flex;flex-direction:column;gap:2px}#spv .sppet b{font-size:14px}#spv .sppet span{color:#ff7aa0;font-size:13px;letter-spacing:1px}#spv .sppet span i{font-style:normal;color:#4a3e60}#spv .sppet small{font-size:11px;color:#cbbbe8}
 #spv .crs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}#spv .crs button{position:relative;height:84px;border-radius:10px;border:2px solid #3a2e56;background:#2a1f44;overflow:hidden;padding:0;color:#f4ecff;font:inherit}#spv .crs button.on{border-color:#ffd24a;box-shadow:0 0 0 2px #ffd24a}
 #spv .crs .cr{position:absolute;left:50%;top:-6px;margin-left:-60px;transform-origin:50% 30%}#spv .crs span{position:absolute;left:0;right:0;bottom:3px;font-size:10px;text-align:center}#spv .crs em{position:absolute;right:3px;top:3px;font-style:normal;font-size:9px;color:#ffd24a}
 #spv .sptop{display:flex;flex-direction:column;gap:3px;position:static}#spv .sptop div{display:flex;gap:6px;align-items:center;font-size:12px;background:rgba(255,255,255,.04);border-radius:6px;padding:4px 8px}#spv .sptop div b{color:var(--c)}#spv .sptop div span{margin-left:auto;color:#ffd24a}
@@ -14567,29 +14570,28 @@ const SPT = (() => {
   document.head.appendChild(css);
   const box = () => $('#spv') || document.body.appendChild(Object.assign(document.createElement('div'), { id: 'spv' }));
   const closeV = () => { $('#spv')?.remove(); game = null; };
-  const crBtn = (c, i) => `<button data-spc="${i}" class="${pick === i ? 'on' : ''}">${crSprite(c, .55)}<span>${esc(c.name)}</span><em>${'★'.repeat(Math.max(1, Math.round(statOf(c, Math.min(2, day())) * 3 - 1)))}</em></button>`;
+  const petCard = (b, d) => { const v = STAT[EV[d].st][b.k] || 1; return `<div class="sppet">${babyPic(b.k, 5)}<div><b>${esc(b.name || BABY.NAMES[b.k])}</b><span>${'♥'.repeat(hearts(b))}<i>${'♥'.repeat(BABY_LOVE_MAX - hearts(b))}</i></span><small>${v >= 1.04 ? '이 종목을 잘해요' : v <= .96 ? '이 종목은 조금 서툴러요' : '이 종목은 보통이에요'}</small></div></div>`; };
   function view(){
     if (!open()) return closeV(); const d = day(); if (d >= 3) return ceremony();
-    const E = EV[d], left = triesLeft(d), r = myRec(d), T = total(d - 1), R = dayRank(d), crs = (me.cr || []).map((c, i) => [c, i]);
-    if (pick === null || !me.cr[pick] || pickD !== d){ pickD = d; const best = crs.slice().sort((a, b) => statOf(b[0], d) - statOf(a[0], d))[0]; pick = best ? best[1] : null; }
+    const E = EV[d], left = triesLeft(d), r = myRec(d), T = total(d - 1), R = dayRank(d), pet = myPet();
     const top = Object.entries(recs[d] || {}).filter(([, x]) => x && x.s).sort((a, b) => b[1].s - a[1].s).slice(0, 3);
     box().innerHTML = `<div class="sb"><div class="hd"><b>동물 운동회</b><span>오늘 ${left} / ${TRIES}</span><button class="x" data-spx="x" aria-label="닫기">✕</button></div>
       <div class="days">${EV.map((e, i) => `<i class="${i === d ? 'on' : i < d ? 'done' : ''}">${i + 1} 일째 · ${e.n}</i>`).join('')}<i>시상식</i></div>
       <div class="hs">${HK.map(h => { const t = T.find(x => x.h === h), q = R.find(x => x.h === h); return `<div style="--c:${H(h).col}"><b>${H(h).ko}</b><span>${t ? t.p : 0}</span><small>${q && q.n ? `오늘 ${E.u === 'm' ? q.avg.toFixed(1) : Math.round(q.avg)} ${E.u}` : '오늘 -'}</small></div>`; }).join('')}</div>
       <div class="s2">${E.n} · ${E.d}${r ? ` · 내 기록 ${fmt(r.s, d)}` : ''}</div>
-      ${crs.length ? `<div class="crs">${crs.map(([c, i]) => crBtn(c, i)).join('')}</div>` : '<div class="s2">사육장에 생물이 있어야 나갈 수 있어요</div>'}
-      <button class="btn go big" data-spx="go" ${left > 0 && pick !== null ? '' : 'disabled'}>${left > 0 ? '출전!' : '오늘은 다 뛰었어요'}</button>
+      ${pet ? petCard(pet, d) : '<div class="s2">아기 동물을 입양해야 나갈 수 있어요</div>'}
+      <button class="btn go big" data-spx="go" ${left > 0 && pet ? '' : 'disabled'}>${left > 0 ? '출전!' : '오늘은 다 뛰었어요'}</button>
       ${top.length ? `<div class="sptop">${top.map(([u, x], i) => `<div style="--c:${H(x.h).col}">${i + 1}. <b>${esc(x.nk || '친구')}</b> ${esc(x.n || '')}<span>${fmt(x.s, d)}</span></div>`).join('')}</div>` : ''}</div>`;
   }
   const fmt = (s, d) => EV[d].u === 'm' ? `${(+s).toFixed(1)} m` : `${Math.round(s)} 점`;
   // ---------- 미니게임 ----------
   function rivals(d){   // 다른 기숙사 대표: 그날 그 기숙사 최고 기록 (없으면 운동장 친구들)
-    const R = recs[d] || {}, mh = me.house; return HK.filter(h => h !== mh).map((h, i) => { const b = Object.entries(R).filter(([u, x]) => x && x.h === h && u !== uid).sort((a, b) => b[1].s - a[1].s)[0]; return b ? { h, k: b[1].k, c: b[1].c, n: b[1].n, s: +b[1].s } : { h, k: [1, 9, 4][i], c: null, n: ['깡총', '뿔뿔', '야옹'][i], s: null }; });
+    const R = recs[d] || {}, mh = me.house; return HK.filter(h => h !== mh).map((h, i) => { const b = Object.entries(R).filter(([u, x]) => x && x.h === h && u !== uid).sort((a, b) => b[1].s - a[1].s)[0]; return b ? { h, k: b[1].k, c: null, n: b[1].n, s: +b[1].s } : { h, k: [3, 2, 1][i], c: null, n: ['깡총', '멍멍', '야옹'][i], s: null }; });
   }
-  let crImg = null; const crI = () => { if (!crImg){ crImg = new Image(); crImg.src = 'art/creatures.png?v=11'; } return crImg; };
-  function drawCr(g, k, col, x, y, sc, t, right = true){ const im = crI(); if (!im.complete) return; g.save(); const f = colorFilter(col); if (f) g.filter = f; const w = 120 * sc, h = 102 * sc, hop = Math.abs(Math.sin(t / 90)) * 4 * (sc / .4); g.translate(Math.round(x), 0); if (right) g.scale(-1, 1); g.drawImage(im, k * 120, 0, 120, 102, Math.round(-w / 2), Math.round(y - h - hop), w, h); g.restore(); }   // 그림은 왼쪽을 봐요 · right 면 오른쪽을 보게
+  let crImg = null; const crI = () => { if (!crImg){ crImg = new Image(); crImg.src = 'art/babies.png?v=5aad28cf'; } return crImg; };
+  function drawCr(g, k, col, x, y, sc, t){ const im = crI(); if (!im.complete) return; const z = Math.max(2, Math.round(sc * 8)), w = 14 * z, hop = Math.abs(Math.sin(t / 90)) * 2 * z; g.imageSmoothingEnabled = false; g.drawImage(im, k * 14, 0, 14, 14, Math.round(x - w / 2), Math.round(y - w - hop), w, w); }   // 아기 동물 (정면 그림)
   function play(){
-    const d = day(), c = me.cr[pick]; if (!c || triesLeft(d) <= 0 || d > 2) return; const st = statOf(c, d), E = EV[d], RV = rivals(d);
+    const d = day(), c = myPet(); if (!c || triesLeft(d) <= 0 || d > 2) return; const st = statOf(c, d), E = EV[d], RV = rivals(d);
     box().innerHTML = `<div class="sb"><div class="hd"><b>${E.n}</b><span id="spt"></span></div><canvas id="spcv" width="360" height="220"></canvas><div class="s2" id="spmsg">${E.d}</div><button class="btn go big" id="spbtn">${d === 0 ? '응원!' : '지금!'}</button></div>`;
     const cv = $('#spcv'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false; const t0 = performance.now();
     game = { d, c, st, t0, taps: [], kicks: [], pulls: 0, good: 0, ph: 0, ballX: 0, rope: 0, done: false, RV, lim: d === 0 ? 8000 : d === 1 ? 9000 : 10000 };
@@ -14619,28 +14621,28 @@ const SPT = (() => {
       const p = Math.min(1, el / G.lim), rate = G.taps.filter(t => now - t < 1500).length / 1.5, myS = score({ ...G, taps: G.taps }), myD = 20 + (fin - 20) * Math.min(1, (el / G.lim) * (myS / 120));
       cols.forEach((h, i) => { const y = 66 + i * 46; g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(0, y + 2, W, 2); g.fillStyle = H(h).col; g.fillRect(4, y - 30, 8, 30);
         const r = i ? G.RV[i - 1] : null, x = i === 0 ? myD : 20 + (fin - 20) * Math.min(1, p * ((r.s || 70) / 120));
-        drawCr(g, i ? r.k : G.c.k, i ? r.c : G.c.col, x, y, .34, now + i * 77); g.font = '9px G11B, sans-serif'; g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(i ? r.n : G.c.name, x, y + 12); });
+        drawCr(g, i ? r.k : G.c.k, null, x, y, .4, now + i * 77); g.font = '9px G11B, sans-serif'; g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(i ? r.n : (G.c.name || ''), x, y + 12); });
       if (rate > 4){ g.fillStyle = '#ffd24a'; g.font = '12px G11B, sans-serif'; g.textAlign = 'left'; g.fillText('힘내!', myD + 16, 50); }
       return; }
     if (G.d === 1){   // 공 굴리기: 내 생물이 공을 차요 · 위쪽 막대
-      const base = G.kicks.reduce((a, acc) => a + 12 * G.st * (.35 + acc), 0), x = 40 + Math.min(290, base * 3.2); drawCr(g, G.c.k, G.c.col, 30, 170, .5, now);
+      const base = G.kicks.reduce((a, acc) => a + 12 * G.st * (.35 + acc), 0), x = 40 + Math.min(290, base * 3.2); drawCr(g, G.c.k, null, 34, 176, .6, now);
       g.fillStyle = '#fff'; g.beginPath(); g.arc(x + 20, 158, 12, 0, 7); g.fill(); g.strokeStyle = '#E85A5A'; g.lineWidth = 3; g.beginPath(); g.arc(x + 20, 158, 8, now / 100, now / 100 + 3); g.stroke();
       for (let m = 0; m <= 100; m += 20){ const xx = 60 + m * 3.2 * .9; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillRect(xx, 186, 2, 10); g.font = '9px G11B, sans-serif'; g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(m + ' m', xx, 206); }
       bar(g, mk); g.fillStyle = '#fff'; g.font = '11px G11B, sans-serif'; g.textAlign = 'left'; g.fillText(`${G.kicks.length} / 3 번`, 10, 44); return; }
     // 줄다리기: 가운데 깃발이 내 쪽으로
     const pull = Math.max(-1, Math.min(1, G.pulls / 30)), cx = 180 - pull * 90; g.strokeStyle = '#c8a878'; g.lineWidth = 5; g.beginPath(); g.moveTo(40, 160); g.lineTo(320, 160); g.stroke();
     g.fillStyle = '#E85A5A'; g.fillRect(cx - 3, 140, 6, 24); g.fillStyle = 'rgba(255,255,255,.5)'; g.fillRect(178, 120, 4, 80);
-    drawCr(g, G.c.k, G.c.col, 40, 182, .5, now); const r = G.RV[0]; drawCr(g, r.k, r.c, 320, 182, .5, now + 50, false); g.font = '9px G11B, sans-serif'; g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(G.c.name, 40, 198); g.fillText(r.n, 320, 198);
+    drawCr(g, G.c.k, null, 40, 182, .6, now); const r = G.RV[0]; drawCr(g, r.k, null, 320, 182, .6, now + 50); g.font = '9px G11B, sans-serif'; g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(G.c.name || '', 40, 198); g.fillText(r.n, 320, 198);
     bar(g, mk); g.fillStyle = '#fff'; g.font = '11px G11B, sans-serif'; g.textAlign = 'left'; g.fillText(`영차 ${G.good} 번`, 10, 44);
   }
   function bar(g, mk){ const x = 60, w = 240, y = 52; g.fillStyle = '#1a1024'; g.fillRect(x - 2, y - 2, w + 4, 14); g.fillStyle = '#3a2440'; g.fillRect(x, y, w, 10); g.fillStyle = '#ffd24a'; g.fillRect(x + w * .4, y, w * .2, 10); g.fillStyle = '#7affb0'; g.fillRect(x + w * .46, y, w * .08, 10); g.fillStyle = '#fff'; g.fillRect(Math.round(x + w * mk) - 2, y - 4, 4, 18); }
   function finish(){
     const G = game; if (!G || G.done) return; G.done = true; const s = Math.round(score(G) * 10) / 10, d = G.d, St = S();
-    St.t[d] = (St.t[d] || 0) + 1; const c = G.c, first = St.t[d] === 1, up = first && (c.love || 0) < LOVE_MAX; if (up) c.love = (c.love || 0) + 1;   // 그날 처음 뛰면 애정 +1
+    St.t[d] = (St.t[d] || 0) + 1; const c = G.c, first = St.t[d] === 1, up = first && (c.love || 0) < BABY_LOVE_MAX * 10; if (up) c.love = (c.love || 0) + 1;   // 그날 처음 뛰면 친밀도 +1
     const old = myRec(d), best = !old || s > (+old.s || 0);
-    if (best) GDB.set(`sports/rec/${ctl.id}/${d}/${uid}`, { s, h: me.house || 'dew', k: c.k, c: c.col || null, n: c.name, nk: me.nick });
+    if (best) GDB.set(`sports/rec/${ctl.id}/${d}/${uid}`, { s, h: me.house || 'dew', k: c.k, n: c.name || BABY.NAMES[c.k], nk: me.nick });
     save(); sfx(best ? 'win' : 'pop');
-    const msg = $('#spmsg'); if (msg) msg.textContent = `${fmt(s, d)}${best ? ' · 내 최고 기록!' : ''}${up ? ` · ${esc(c.name)} 애정 +1` : ''}`;
+    const msg = $('#spmsg'); if (msg) msg.textContent = `${fmt(s, d)}${best ? ' · 내 최고 기록!' : ''}${up ? ` · ${esc(c.name || '')} 친밀도 +1` : ''}`;
     const b = $('#spbtn'); if (b){ b.textContent = '천막으로'; b.onpointerdown = null; b.onclick = () => view(); }
   }
   // ---------- 시상식 ----------
@@ -14659,7 +14661,7 @@ const SPT = (() => {
     const b = e.target.closest && e.target.closest('[data-spx]'); if (!b) return; const a = b.dataset.spx;
     if (a === 'x') return closeV(); if (a === 'go') return play();
   });
-  function tap(){ if (!open()) return; if (!me.cr || !me.cr.length){ view(); return; } view(); }
+  function tap(){ if (open()) view(); }
   // ---------- 듣기 · 틱 ----------
   let lastRec = '';
   function listen(){
