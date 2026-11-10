@@ -89,6 +89,19 @@ const NEW = ['paladin', 'guardian', 'darkknight', 'dancer', 'sage', 'shaman', 'm
   await C(() => { __T.xEx_().run = { rg: 0, loot: { gold: 0, exp: 0, items: {} }, start: Date.now(), end: Date.now() + 6e5, prog: 0 }; });
   ok(!(await C(() => __T.xSwap_(0))) && (await C(() => __T.xEx_().cur)) === 1, '탐사 중에는 못 바꿔요');
   await C(() => { __T.xEx_().run = null; });
+  // 8.5 파티 로비: 바꾸면 방 기록도 바뀌고, 준비를 누르면 잠겨요
+  await C(() => __T.closeSheet()); await A.waitForTimeout(400); await C(() => World.onExplore(0)); await A.waitForTimeout(900);
+  await C(() => [...document.querySelectorAll('.panel button')].find(b => /파티 모집하기/.test(b.textContent)).click()); await A.waitForTimeout(1500);
+  const room = () => C(() => { const x = window.__tree.xparty || {}; const k = Object.keys(x).find(k => x[k].p && x[k].p.me1); return k ? x[k].p.me1 : null; });
+  ok(((await room()) || {}).job === 'shaman', '파티 방에 지금 직업(주술사) ' + JSON.stringify(await room()));
+  await C(() => document.querySelector('[data-x2="0"]') && document.querySelector('[data-x2="0"]').click()); await A.waitForTimeout(1200);
+  ok(((await room()) || {}).job === 'knight', '파티 로비에서 1차로 바꾸면 방 기록도 기사 ' + JSON.stringify(await room()));
+  const rk = await C(() => { const x = window.__tree.xparty; return Object.keys(x).find(k => x[k].p && x[k].p.me1); });
+  await C(k => __T.pkSet('xparty/' + k + '/p/me1/rdy', 1), rk); await A.waitForTimeout(800);
+  ok(!(await C(() => __T.xSwap_(1))) && (await C(() => __T.xEx_().cur)) === 0, '준비를 누르면 못 바꿔요');
+  await C(k => __T.pkSet('xparty/' + k + '/p/me1/rdy', 0), rk); await A.waitForTimeout(800);
+  ok(await C(() => __T.xSwap_(1)) && (await C(() => __T.xEx_().cur)) === 1, '준비를 풀면 다시 바꿀 수 있어요');
+  await C(k => __T.pkSet('xparty/' + k, null), rk); await A.waitForTimeout(600); await C(() => __T.closeSheet());
   // 9 전투: 주술사로 싸워요 (무기 · 스킬 이펙트 오류 없이)
   await C(() => __T.closeSheet()); await A.waitForTimeout(400);
   const bt = await C(async () => { const ex = __T.xEx_(); ex.sk = { '0_0': 3, '0_1': 2, '2_0': 2, '2_1': 1 }; World.onExplore(0); await new Promise(r => setTimeout(r, 800)); [...document.querySelectorAll('.panel button')].find(b => /혼자 가기|출발하기/.test(b.textContent)).click(); await new Promise(r => setTimeout(r, 1500)); __T.xSB('battle'); await new Promise(r => setTimeout(r, 4000)); const B = __T.xbGet(); return B ? { me: B.party[0] && B.party[0].job, sks: B.party[0] && B.party[0].sks.map(o => o.n) } : null; });
