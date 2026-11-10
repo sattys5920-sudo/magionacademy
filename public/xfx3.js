@@ -1,5 +1,5 @@
 // 새 직업 12 종 스킬 이펙트 (xfx2.js 뒤에 불러와요). xfx2 의 부품(LIB)에 새 부품을 더하고, 스킬마다 층을 겹쳐요.
-// 아직 게임에는 안 붙였어요. tools/newjobs/fx_run.js 가 모의 화면에서 영상으로 찍어요.
+// 게임: index.html 이 xfx2.js 뒤에 불러요 · 영상: tools/newjobs/fx_run2.js
 (function(){
   const X = window.XFXJOB; if (!X || !X.LIB2) return;
   const S = Math.sin, K = Math.cos, PI = Math.PI, L = X.LIB2, T = X.T2;
@@ -74,7 +74,7 @@
     '빛의 철퇴': [[['giant', { k: 'hammer', s: .7, t1: .7 }], ['ground', { c: Y, c2: W, s: .7, t0: .35 }], ['burst', { c: Y2, t0: .4, n: 10 }]]],
     '정화의 불꽃': [[['flame', { c: ['#fff6c0', '#ffe27a', '#ffb040'], n: 22 }], ['crossf', { c: Y2, s: .6, t0: .1 }], ['sparkle', { c: Y, n: 6, t0: .3 }]]],
     '심판': [[['beams', { c: Y2, n: 3 }], ['crossf', { c: Y, s: .8, t0: .25 }], ['burst', { c: Y, t0: .4, n: 8 }]]],
-    '신성 폭발': [[['dim', { a: .45 }], ['godray', { c: Y2 }], ['column', { c: Y, t0: .05, t1: .7 }], ['bigring', { c: Y, t0: .3, s: 1.1 }], ['burst', { c: Y, c2: W, n: 24, s: 2.2, t0: .35 }], flash(.3, '#fffbe0', .6)], GO],
+    '신성 폭발': [[['dim', { a: .45 }], ['godray', { c: Y2 }], ['column', { c: Y, t0: .05, t1: .7 }], ['bigring', { c: Y, t0: .3, s: 1.1 }], ['burst', { c: Y, c2: W, n: 24, s: 2.2, t0: .35 }], flash(.3, '#fffbe0', .6)], G],
     '수호의 빛': [[['shield', { c: Y }], ['ring', { c: Y2, t0: .2 }]]],
     '신성 방패': [[['dome', { c: Y, c2: W, s: 1.1 }], ['shield', { c: Y2, s: 1.2, t0: .1 }], ['sparkle', { c: W, n: 8, t0: .3 }]]],
     '헌신': [[['taunt', { c: Y }], ['wings', { c: Y2, s: .8, t0: .1 }], ['aura', { c: Y, n: 4, t0: .2 }]]],
@@ -106,12 +106,12 @@
     '생명 흡수': [[['drain', { c: BL, c2: P }], ['burst', { c: P, n: 8 }]]],
     '흡혈 일격': [[['cross', { c: BL, n: 2, w: 3 }], ['drain', { c: BL, c2: '#ff8aa0', t0: .25, n: 12 }]]],
     '영혼 착취': [[['skulls', { n: 3 }], ['drain', { c: P, c2: '#d09aff', t0: .2 }]]],
-    '피의 축제': [[['dim', { a: .5, c: '#200008' }], ['rune', { c: BL, c2: P, s: 2.4 }], ['cross', { c: BL, n: 4, s: 2, w: 4, t0: .2 }], ['drain', { c: BL, c2: '#ff8aa0', n: 30, t0: .3 }], ['bigring', { c: BL, t0: .35, s: 1.1 }], flash(.3, BL, .35)], GO],
+    '피의 축제': [[['dim', { a: .5, c: '#200008' }], ['rune', { c: BL, c2: P, s: 2.4 }], ['cross', { c: BL, n: 4, s: 2, w: 4, t0: .2 }], ['drain', { c: BL, c2: '#ff8aa0', n: 30, t0: .3 }], ['bigring', { c: BL, t0: .35, s: 1.1 }], flash(.3, BL, .35)], G],
     '암흑 파동': [[['ground', { c: P, c2: PD, s: .8 }], ['cloud', { c: PD, c2: P }]]],
     '저주': [[['rune', { c: P, c2: PD }], ['down', { c: P, t0: .2 }], ['skulls', { n: 2, t0: .2 }]]],
     '공포': [[['skulls', { n: 4 }], ['down', { c: '#8a3ac0', t0: .2 }]]],
     '그림자 속박': [[['chains', { c: P, c2: PD }], ['stars', { c: '#d09aff', t0: .4 }]]],
-    '어둠의 군주': [[['dim', { a: .55, c: '#0a0018' }], ['pillar', { c: PD, c2: P, w: 24, h: 150 }], ['skulls', { n: 6, t0: .15 }], ['bigring', { c: P, t0: .35, s: 1.2 }], ['burst', { c: P, c2: '#d09aff', n: 22, s: 2, t0: .4 }], flash(.35, '#8a3ac0', .4)], GO],
+    '어둠의 군주': [[['dim', { a: .55, c: '#0a0018' }], ['pillar', { c: PD, c2: P, w: 24, h: 150 }], ['skulls', { n: 6, t0: .15 }], ['bigring', { c: P, t0: .35, s: 1.2 }], ['burst', { c: P, c2: '#d09aff', n: 22, s: 2, t0: .4 }], flash(.35, '#8a3ac0', .4)], G],
     '피의 각성': [[['aura', { c: BL, c2: P, n: 5 }], ['flame', { c: [PD, BL, '#ff8aa0'], h: 36 }]]],
     '고통 인내': [[['cloud', { c: PD, c2: P }], ['shield', { c: P, t0: .1 }]]],
     '최후의 저항': [[['aura', { c: BL, n: 6 }], ['flame', { c: ['#200008', BL, '#ffd0d8'], h: 56, n: 24 }], ['ring', { c: BL, t0: .2, s: 1.2 }]]],
@@ -197,7 +197,7 @@
     '얼음 화살': [[['arrow', { c: '#9fe8ff', k: 'ice' }], ['shards', { c: '#9fe8ff', t0: .35 }], ['snow', { c: '#bfefff', t0: .35 }]]],
     '번개 화살': [[['arrow', { c: LT, k: 'bolt' }], ['chain', { c: LT, t0: .35 }]]],
     '폭발 화살': [[['arrow', { c: '#ff9a3a', k: 'fire' }], ['bloom', { c: '#ff9a3a', c2: '#ffd04a', t0: .35 }], ['burst', { c: '#ff5a2a', t0: .4 }]]],
-    '원소 폭풍': [[['dim', { a: .45 }], ['arrows', { c: '#ff7a2a', n: 8 }], ['arrows', { c: '#9fe8ff', n: 8, t0: .1 }], ['arrows', { c: LT, n: 8, t0: .2 }], ['bloom', { c: '#ff9a3a', s: 1.6, t0: .5 }], ['bigring', { c: AR, t0: .5 }]], GO],
+    '원소 폭풍': [[['dim', { a: .45 }], ['arrows', { c: '#ff7a2a', n: 8 }], ['arrows', { c: '#9fe8ff', n: 8, t0: .1 }], ['arrows', { c: LT, n: 8, t0: .2 }], ['bloom', { c: '#ff9a3a', s: 1.6, t0: .5 }], ['bigring', { c: AR, t0: .5 }]], G],
     '그물 화살': [[['arrow', { c: AR }], ['net', { c: '#c8a878', t0: .3 }]]],
     '약점 표시': [[['scope', { c: '#ff4a4a', v: 1 }], ['down', { c: '#ff7a6a', t0: .3 }]]],
     '사냥꾼의 집중': [[['scope', { c: AR, v: 1 }], ['aura', { c: AR, t0: .2 }]]],
@@ -226,7 +226,7 @@
     '불꽃 폭발': [[['bloom', { c: '#ff7a2a', c2: '#ffd04a' }], ['burst', { c: '#ff5a2a', n: 14, t0: .1 }]]],
     '불의 벽': [[['firewall', {}]]],
     '화염 폭풍': [[['swirl', { c: '#ff7a2a' }], ['flame', { c: FI, t0: .1 }]]],
-    '태양 화염': [[['dim', { a: .5, c: '#200800' }], ['meteors', { c: '#ff9a3a', c2: '#ff5a2a', n: 1, s: 2.4, t1: .7 }], ['bloom', { c: '#ff7a2a', c2: '#ffe07a', s: 2.6, t0: .3 }], ['flame', { c: FI, h: 70, n: 30, s: 2, t0: .32 }], ['bigring', { c: '#ff9a3a', t0: .32, s: 1.2 }], flash(.3, '#ffd8a0', .6)], GO],
+    '태양 화염': [[['dim', { a: .5, c: '#200800' }], ['meteors', { c: '#ff9a3a', c2: '#ff5a2a', n: 1, s: 2.4, t1: .7 }], ['bloom', { c: '#ff7a2a', c2: '#ffe07a', s: 2.6, t0: .3 }], ['flame', { c: FI, h: 70, n: 30, s: 2, t0: .32 }], ['bigring', { c: '#ff9a3a', t0: .32, s: 1.2 }], flash(.3, '#ffd8a0', .6)], G],
     '물결': [[['wave', { c: WA, c2: '#cfeeff' }]]],
     '얼음 감옥': [[['shards', { c: '#9fe8ff', s: 1.4 }], ['dome', { c: '#9fe8ff', c2: W, s: .9, t0: .2 }]]],
     '치유의 물': [[['fountain', { c: WA, c2: W }], ['bubbles', { c: WA, t0: .2 }], ['heal', { c: HL, t0: .3 }]]],
@@ -236,7 +236,7 @@
     '돌풍': [[['wind', { c: '#e8f8ff', n: 3 }], ['down', { c: WI, t0: .3 }]]],
     '회오리': [[['swirl', { c: WI }]]],
     '순풍': [[['haste', { c: WI }], ['feathers', { c: WI }]]],
-    '폭풍의 눈': [[['dim', { a: .45, c: '#041814' }], ['swirl', { c: WI, s: 2.6 }], ['wind', { c: W, n: 4, t0: .1 }], ['blades', { c: WI, n: 12, t0: .3 }], ['bigring', { c: WI, t0: .4 }]], GO],
+    '폭풍의 눈': [[['dim', { a: .45, c: '#041814' }], ['swirl', { c: WI, s: 2.6 }], ['wind', { c: W, n: 4, t0: .1 }], ['blades', { c: WI, n: 12, t0: .3 }], ['bigring', { c: WI, t0: .4 }]], G],
   });
   // 격투가
   const FT = '#ff7a3a', KI = '#7ae6ff';
@@ -249,7 +249,7 @@
     '기공파': [[['kiball', { c: KI, c2: '#e8fcff' }]]],
     '기 모으기': [[['mp', { c: KI }], ['aura', { c: KI, n: 5, t0: .2 }]]],
     '기공 장벽': [[['dome', { c: KI, c2: W }], ['aura', { c: KI, n: 3, t0: .1 }], ['mp', { c: KI, t0: .1 }]]],
-    '대기공포': [[['dim', { a: .45 }], ['laser', { c: KI, c2: '#c8f8ff', w: 10 }], ['bloom', { c: KI, s: 2, t0: .3 }], ['bigring', { c: KI, t0: .35 }], flash(.3, '#e0faff', .5)], GO],
+    '대기공포': [[['dim', { a: .45 }], ['laser', { c: KI, c2: '#c8f8ff', w: 10 }], ['bloom', { c: KI, s: 2, t0: .3 }], ['bigring', { c: KI, t0: .35 }], flash(.3, '#e0faff', .5)], G],
     '회축': [[['spin', { c: FT, c2: '#ffe07a', s: 1.2 }], ['ground', { c: FT, s: .5, t0: .3 }]]],
     '발차기': [[['arc', { c: '#ffe07a', v: 2, s: .8 }], ['fist', { c: FT, c2: '#8a5a3a', n: 1, t0: .1 }]]],
     '투지': [[['aura', { c: FT }], ['flame', { c: FI, h: 30, n: 12 }], ['shout', { c: FT, t0: .1 }]]],
@@ -261,7 +261,7 @@
     '쌍검 베기': [[['cross', { c: BD, n: 2, w: 3 }], ['burst', { c: W, t0: .3, n: 6 }]]],
     '회전 칼날': [[['spin', { c: BD, c2: '#9a8aff', s: 1.1 }], ['blades', { c: '#9a8aff', n: 4, t0: .2 }]]],
     '검의 비': [[['arrows', { c: '#9a8aff', n: 9, k: 'sword' }], ['shards', { c: BD, c2: '#9a8aff', t0: .5 }]]],
-    '천검무': [[['dim', { a: .5 }], ['arrows', { c: '#9a8aff', n: 16, k: 'sword' }], ['blades', { c: BD, n: 12, t0: .3 }], ['cross', { c: W, n: 5, s: 1.8, w: 3, t0: .5 }], ['bigring', { c: BD, t0: .55 }], flash(.55, '#f0eeff', .5)], GO],
+    '천검무': [[['dim', { a: .5 }], ['arrows', { c: '#9a8aff', n: 16, k: 'sword' }], ['blades', { c: BD, n: 12, t0: .3 }], ['cross', { c: W, n: 5, s: 1.8, w: 3, t0: .5 }], ['bigring', { c: BD, t0: .55 }], flash(.55, '#f0eeff', .5)], G],
     '그림자 돌진': [[['dash', { c: SH }], ['cross', { c: BD, n: 1, t0: .4 }]]],
     '기습': [[['smoke', { c: '#3a3050', c2: SH }], ['cross', { c: '#ff5a7a', n: 2, s: 1.3, w: 3, t0: .3 }], ['starburst', { c: W, t0: .4 }]]],
     '그림자 분신': [[['dash', { c: SH, v: 1 }], ['haste', { c: '#9a8aff', t0: .1 }]]],

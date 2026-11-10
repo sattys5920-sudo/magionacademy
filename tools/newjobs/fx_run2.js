@@ -20,7 +20,7 @@ const seed = eval('(' + fs.readFileSync(R + '/tests/ui.spec.js', 'utf8').match(/
     if (ONLY && ONLY !== jk) continue;
     const ctx = await b.newContext({ viewport: { width: 768, height: 432 }, recordVideo: { dir: OUT + '/vid', size: { width: 768, height: 432 } } }); const p = await ctx.newPage(); p.on('pageerror', e => errs.push(e.message));
     await p.addInitScript(s => { window.__seed = s; window.__uid = 'me1'; }, seed); await p.goto(`http://localhost:${PORT}/`); await p.waitForFunction(() => window.World && World.Avatar && window.XFXJOB, null, { timeout: 30000 }); await p.waitForTimeout(2500);
-    await p.addScriptTag({ path: __dirname + '/fx_mock.js' }); await p.addScriptTag({ path: __dirname + '/xfx3.js' }); await p.evaluate(() => __nj.load());
+    await p.addScriptTag({ path: __dirname + '/fx_mock.js' }); await p.addScriptTag({ path: __dirname + '/../../public/xfx3.js' }); await p.evaluate(() => __nj.load());
     await p.evaluate(() => { const c = document.createElement('canvas'); c.id = 'njv'; c.width = __nj.W; c.height = __nj.H; c.style.cssText = 'position:fixed;inset:0;width:768px;height:432px;z-index:99999;image-rendering:pixelated;background:#000'; document.body.appendChild(c); });
     const t0 = Date.now();
     const r = await p.evaluate(async ({ jk, list }) => {

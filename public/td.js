@@ -13,7 +13,7 @@
   ZONES.forEach(z => { z.d0 = z.slots.map(q => { let m = 1e9; for (let i = 1; i < z.path.length; i++) m = Math.min(m, segD(q[0], q[1], z.path[i - 1], z.path[i])); return Math.round(m * 10) / 10; }); });   // 자리마다 가장 가까운 길까지 거리
   const posAt = (z, s) => { const Z = ZONES[z]; s = Math.max(0, Math.min(Z.len, s)); for (let i = 0; i < Z.seg.length; i++){ if (s <= Z.seg[i] || i === Z.seg.length - 1){ const a = Z.path[i], b = Z.path[i + 1], t = Z.seg[i] ? s / Z.seg[i] : 0; return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; } s -= Z.seg[i]; } return Z.path[Z.path.length - 1]; };
   // 직업 → 역할 (근접 · 원거리 · 치유)
-  const CAT = { warrior: 'melee', knight: 'melee', thief: 'melee', black: 'ranged', summon: 'ranged', gadget: 'ranged', alch: 'ranged', time: 'ranged', white: 'heal', druid: 'heal', cleric: 'heal', bard: 'heal' };
+  const CAT = { paladin: 'melee', guardian: 'melee', darkknight: 'melee', fighter: 'melee', bladedancer: 'melee', sage: 'ranged', archer: 'ranged', gunner: 'ranged', elemental: 'ranged', dancer: 'heal', shaman: 'heal', miko: 'heal', warrior: 'melee', knight: 'melee', thief: 'melee', black: 'ranged', summon: 'ranged', gadget: 'ranged', alch: 'ranged', time: 'ranged', white: 'heal', druid: 'heal', cleric: 'heal', bard: 'heal' };
   // 이벤트 전용 스킬 2개 (직업·레벨·습득과 상관없이 모두 똑같아요) + 기본 공격
   //   1 가까운 한 명에게 센 공격 · 2 넓은 범위 모두에게 약한 공격. 올릴 수 있는 것: pow(공격력) · rng(사거리/범위) · cd(쿨타임 감소)
   const SKA = [{ n: '일격', t: 'hit', pow: 95, rng: 18, cd: 8 }, { n: '번개비', t: 'aoe', pow: 32, rng: 55, cd: 16 }];

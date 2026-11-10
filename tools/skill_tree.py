@@ -1,4 +1,4 @@
-# 탐사 스킬 트리 데이터(직업 12 × 줄기 3 × 스킬 5) → index.html의 XT 상수 + public/art/skills.png (15칸 × 12줄, 28px 타일 ×2)
+# 탐사 스킬 트리 데이터(직업 24 × 줄기 3 × 스킬 5) → index.html의 XT 상수 + public/art/skills.png (15칸 × 24줄, 28px 타일 ×2)
 # 사용: python3 tools/skill_tree.py   (코드 표: d 단일딜 D 광역딜 c 차지딜 h 단일힐 H 광역힐 r 부활 B 아군 공격↑ b 나 공격↑ G 아군 피해↓ g 나 피해↓
 #        X 아군 가속 x 나 가속 S 적 느리게 s 적 하나 느리게 W 적 하나 약화 w 적 전체 약화 F 지속피해 f 전체 지속피해 Z 기절 M 마력 회복 P:키 패시브)
 import json, math, re
@@ -41,6 +41,46 @@ T = {
             ('함정', [('덫 설치','s','gear'),('지뢰','d','bomb'),('전기 그물','S','bolt'),('연쇄 함정','D','gear'),('대지 폭파','D','burst')]),
             ('폭탄', [('수류탄','d','bomb'),('접착탄','s','bomb'),('연막탄','w','ghost'),('시한폭탄','c','bomb'),('집중 포화','D','bomb')])],
 }
+
+# ----- 새 직업 12 종 (2차 직업으로 고르는 직업 · tools/newjobs/skills_plan.md) -----
+T.update({
+ 'paladin': [('신성', [('신성 일격','d','cross'),('빛의 철퇴','d','hammer'),('정화의 불꽃','F','fire'),('심판','D','sun'),('신성 폭발','D','burst')]),
+             ('가호', [('수호의 빛','G','shield'),('신성 방패','g','tower'),('헌신','g','heart'),('굳건한 믿음','P:def','shield'),('수호천사','P:surv','heart')]),
+             ('치유', [('치유의 손','h','cross'),('축복의 빛','H','sun'),('신앙','P:hp','heart'),('되살리는 기도','r','wing'),('성역','G','crown')])],
+ 'guardian': [('위압', [('도발 외침','g','trumpet'),('시선 끌기','s','eye'),('위협','w','skull'),('집결','G','flag'),('불동','P:def','shield')]),
+              ('방패', [('방패벽','G','shield'),('막기 태세','g','tower'),('방패 밀치기','Z','fist'),('반사 방패','d','bubble'),('철의 요새','P:hp','heart')]),
+              ('창술', [('창 찌르기','d','spear'),('꿰뚫기','D','arrow'),('창 휘두르기','D','swirl'),('돌진 찌르기','c','spear'),('수호자의 창','c','crown')])],
+ 'darkknight': [('흡수', [('생명 흡수','d','drop'),('피의 계약','P:vamp','drop'),('흡혈 일격','d','claw'),('영혼 착취','D','ghost'),('피의 축제','D','burst')]),
+                ('어둠', [('암흑 파동','D','wave'),('저주','W','skull'),('공포','w','ghost'),('그림자 속박','Z','chain'),('어둠의 군주','D','crown')]),
+                ('각성', [('피의 각성','b','drop'),('고통 인내','g','shield'),('원한','P:atk','fist'),('불사의 몸','P:surv','heart'),('최후의 저항','b','fire')])],
+ 'dancer': [('마나의 춤', [('마나의 춤','M','note1'),('물결 춤','M','wave'),('회복의 춤','H','flower'),('영감','P:spd','wing'),('생명의 춤','H','heart')]),
+            ('열정', [('빠른 스텝','X','wing'),('열정의 춤','B','fire'),('전장의 무희','X','flag'),('불꽃 춤','B','sun'),('무대의 주인공','P:dodge','eye')]),
+            ('부채', [('부채 날리기','d','cross2'),('회오리 부채','D','swirl'),('홀리는 춤','s','note'),('매혹','w','heart'),('부채 폭풍','D','cloud')])],
+ 'sage': [('지혜', [('마나 나눔','M','orb'),('마나의 샘','M','drop'),('지혜의 룬','B','star'),('깨달음','P:mag','star'),('마력 폭류','M','wave')]),
+          ('룬', [('보호 룬','G','shield'),('신속 룬','X','wing'),('둔화 룬','S','hourglass'),('약화 룬','w','eye'),('대현자의 룬','B','crown')]),
+          ('비전', [('비전 화살','d','arrow'),('비전 폭발','D','burst'),('마력 구체','d','orb'),('별의 비','D','star'),('진리의 빛','c','sun')])],
+ 'shaman': [('토템', [('치유 토템','H','tower'),('마나 토템','M','tower'),('수호 토템','G','tower'),('바람 토템','X','tower'),('대지 토템','P:hp','heart')]),
+            ('영혼', [('정령의 비','H','cloud'),('물의 정령','h','drop'),('조상의 영혼','r','ghost'),('정화의 연기','H','cloud'),('생명의 고리','h','chain')]),
+            ('번개', [('번개 토템','d','bolt'),('천둥','D','bolt'),('연쇄 낙뢰','D','chain'),('폭풍 부름','S','cloud'),('원소 폭주','P:mag','star')])],
+ 'miko': [('정결', [('부정 씻기','H','wave'),('액막이','G','flag'),('신성한 물','h','drop'),('청정 결계','H','flower'),('신의 가호','P:surv','heart')]),
+          ('결계', [('결계','G','shield'),('봉인 부적','Z','flag'),('부적 화살','d','arrow'),('경계 부적','w','eye'),('신수의 결계','P:def','shield')]),
+          ('신령', [('혼 부르기','r','bell'),('방울 소리','H','bell'),('신령의 춤','B','note'),('여우불','D','fire'),('천상의 방울','H','star')])],
+ 'archer': [('사격', [('조준 사격','d','arrow'),('연발','d','arrow'),('꿰뚫는 화살','c','spear'),('화살비','D','arrow'),('일격필살','c','eye')]),
+            ('원소 화살', [('불화살','F','fire'),('얼음 화살','s','ice'),('번개 화살','D','bolt'),('폭발 화살','D','burst'),('원소 폭풍','D','swirl')]),
+            ('사냥꾼', [('날카로운 눈','P:crit','eye'),('바람 걸음','P:spd','wing'),('그물 화살','s','chain'),('약점 표시','W','eye'),('사냥꾼의 집중','b','up')])],
+ 'gunner': [('연사', [('연사','d','burst'),('쌍권총','d','cross2'),('난사','D','burst'),('탄막','D','cloud'),('마지막 한 발','c','star')]),
+            ('특수탄', [('산탄','D','burst'),('섬광탄','w','sun'),('냉각탄','s','ice'),('철갑탄','c','spear'),('폭발탄','D','bomb')]),
+            ('저격', [('저격','c','eye'),('조준','P:crit','eye'),('숨 고르기 사격','x','wing'),('급소 사격','d','eye'),('장전 숙련','P:spd','wing')])],
+ 'elemental': [('불', [('불덩이','d','fireball'),('불꽃 폭발','D','fire'),('불의 벽','F','fire'),('화염 폭풍','D','swirl'),('태양 화염','D','sun')]),
+               ('물', [('물결','D','wave'),('얼음 감옥','Z','ice'),('치유의 물','h','drop'),('해일','D','wave'),('서리','S','ice')]),
+               ('바람', [('바람 칼날','d','wing'),('돌풍','S','cloud'),('회오리','D','swirl'),('순풍','X','wing'),('폭풍의 눈','D','eye')])],
+ 'fighter': [('권법', [('연속 주먹','d','fist'),('정권','c','fist'),('올려치기','d','up'),('백열권','D','fire'),('필살 연타','c','burst')]),
+             ('기공', [('기공파','d','orb'),('기 모으기','b','star'),('기공 장벽','g','bubble'),('내공','P:hp','heart'),('대기공포','D','orb')]),
+             ('몸놀림', [('회축','D','swirl'),('발차기','d','fist'),('날쌘 몸','P:spd','wing'),('맷집','P:def','shield'),('투지','b','fire')])],
+ 'bladedancer': [('칼춤', [('검무','D','swirl'),('쌍검 베기','d','cross2'),('회전 칼날','D','swirl'),('검의 비','D','sword'),('천검무','D','crown')]),
+                 ('잔영', [('그림자 돌진','d','ghost'),('잔상 회피','P:dodge','eye'),('기습','c','dagger'),('그림자 분신','x','ghost'),('암살','c','skull')]),
+                 ('검기', [('검기 날리기','d','wave'),('칼바람','S','cloud'),('춤사위','x','note'),('예리함','P:crit','eye'),('일섬','c','sword')])],
+})
 OV = {  # 같은 직업 안에서 그림이 겹치지 않게 이름별로 모양을 바꿔요
  'warrior': {'강타':'fist','대지 가르기':'rock','분노의 일격':'fire','되받아치기':'spear','파쇄':'hammer','폭풍 도끼':'cloud','회전 베기':'swirl','전장의 포효':'trumpet'},
  'black': {'화염구':'fireball','불씨':'ember','지옥불':'skull','메테오':'rock','서리 화살':'arrow','얼음 창':'spear','연쇄 번개':'chain','암흑 구체':'orb','공허의 손':'claw'},
@@ -56,7 +96,9 @@ OV = {  # 같은 직업 안에서 그림이 겹치지 않게 이름별로 모양
  'gadget': {'보조 포탑':'tower','요새 포대':'rocket','덫 설치':'chain','지뢰':'mine','전기 그물':'wave','연쇄 함정':'swirl','접착탄':'bubble','연막탄':'cloud','집중 포화':'arrow'},
 }
 ORDER = ['warrior','black','thief','bard','time','alch','white','druid','cleric','knight','summon','gadget']
-BG = {'warrior':(196,74,74),'black':(110,66,170),'thief':(70,80,110),'bard':(214,130,60),'time':(60,140,160),'alch':(90,160,90),'white':(230,190,90),'druid':(70,130,70),'cleric':(150,160,200),'knight':(80,110,190),'summon':(150,70,140),'gadget':(140,110,80)}
+NEWJ = ['paladin','guardian','darkknight','dancer','sage','shaman','miko','archer','gunner','elemental','fighter','bladedancer']; ORDER = ORDER + NEWJ
+BG = {'warrior':(196,74,74),'black':(110,66,170),'thief':(70,80,110),'bard':(214,130,60),'time':(60,140,160),'alch':(90,160,90),'white':(230,190,90),'druid':(70,130,70),'cleric':(150,160,200),'knight':(80,110,190),'summon':(150,70,140),'gadget':(140,110,80),
+      'paladin':(200,165,70),'guardian':(60,110,170),'darkknight':(90,45,110),'dancer':(205,85,145),'sage':(55,145,185),'shaman':(85,140,75),'miko':(195,70,70),'archer':(115,145,60),'gunner':(170,110,50),'elemental':(70,115,180),'fighter':(190,90,50),'bladedancer':(105,95,165)}
 O = (43,27,58,255); S = 28; G = 24
 def glyph(g, d, fg, ac):
     P = lambda p, f=fg: d.polygon(p, fill=f, outline=O)
@@ -171,7 +213,7 @@ def tile(job, b, r, code, g, v):
     for i in range(r+1): d.rectangle([4+i*4, 25, 6+i*4, 25], fill=ac)
     mod(d, code, ac)
     return im
-sheet = Image.new('RGBA', (S*15, S*12))
+sheet = Image.new('RGBA', (S*15, S*len(ORDER)))
 seen = set()
 for ji, job in enumerate(ORDER):
     cnt = {}
@@ -183,7 +225,7 @@ for ji, job in enumerate(ORDER):
                 if all(k[3] != key[3] or k[0] != job for k in seen) : break
                 v += 1
             seen.add(key); sheet.paste(im, ((b*5+r)*S, ji*S))
-sheet.resize((S*15*2, S*12*2), Image.NEAREST).save('public/art/skills.png', optimize=True)
+sheet.resize((S*15*2, S*len(ORDER)*2), Image.NEAREST).save('public/art/skills.png', optimize=True)
 xt = {j: [[bn, [[n, c, OV.get(j, {}).get(n, g)] for n, c, g in sks]] for bn, sks in T[j]] for j in ORDER}
 js = 'const XT = ' + json.dumps(xt, ensure_ascii=False, separators=(',', ':')) + ';'
 p = 'public/index.html'; s = open(p, encoding='utf-8').read()
