@@ -13382,14 +13382,31 @@ const STK = (() => {
   function eatMad(){ if (!(me.inv.stk_mad > 0)) return; me.inv.stk_mad--; if (!me.inv.stk_mad) delete me.inv.stk_mad; speedUp(30); speak && speak('막대과자 냠냠!'); toast('마들렌의 막대과자를 먹었어요! 걷기 빠르게 30 분'); }
   // ---------- 아무도 못 받는 학생이 없게: 11일에 처음 들어오면 마들렌 상자 + 하트 3 이상 NPC 답례 상자 (3 개까지) ----------
   function autoGive(){
-    const s = S(); if (s.gv || solo || !uid) return; s.gv = 1; save();
+    const s = S(); if (s.gv || solo || !uid) return false; s.gv = 1; save();
     const at = now2(), upd = {}, mk = (id, nm, bx, m) => { upd[id] = { c: bx[0], t: bx[1], b: bx[2], k: bx[3], r: bx[4], s: 3, m, st: nm, at }; };
     const md = npcGet('madeleine'); mk('mad', md ? md.name : '마들렌', [0, 1, 4, 1, 2], NP.madeleine.m);
     const RO = NPC_IDS.filter(id => id !== 'madeleine' && npcOk(id) && NP[id] && NP[id].mr && romanceOn(id));   // 연애 상대는 하트와 상관없이 고백 쪽지
     NPC_IDS.filter(id => id !== 'madeleine' && !RO.includes(id) && npcOk(id) && hearts(id) >= 3).sort((a, b) => hearts(b) - hearts(a)).slice(0, 3).forEach(id => { const n = npcGet(id); mk('n_' + id, n.name, NP[id].bx, NP[id].m); });
     RO.forEach(id => { const n = npcGet(id); mk('n_' + id, n.name, NP[id].bxr || NP[id].bx, NP[id].mr); });
     GDB.upd(`stick/box/${uid}`, upd).catch(err => { s.gv = 0; save(); errReport('stick', '마들렌 상자 오류: ' + (err && err.message), ''); });
+    return true;
   }
+  // ---------- 답례: 상자를 받은 NPC 가 아직 상자를 안 줬으면 답례 상자를 내 방으로 (이미 준 NPC 는 또 안 줘요 · 연애 상대 오투모는 고백 쪽지) ----------
+  const repSent = new Set();
+  function replyId(id){
+    const ro = NP[id] && NP[id].mr && romanceOn(id), b = boxes['n_' + id];
+    if (!b) return 'n_' + id;
+    if (ro && b.m !== NP[id].mr && !boxes['n_' + id + 'love']) return 'n_' + id + 'love';   // 연애 상대인데 예전 쪽지를 받았으면 고백 상자를 따로
+    return null;
+  }
+  function reply(id, quiet){
+    if (solo || !uid || !boxSeen || repSent.has(id) || !NP[id]) return; const k = replyId(id); if (!k) return; repSent.add(id);
+    const n = npcGet(id), X = NP[id], ro = X.mr && romanceOn(id), bx = (ro && X.bxr) || X.bx;
+    GDB.upd(`stick/box/${uid}`, { [k]: { c: bx[0], t: bx[1], b: bx[2], k: bx[3], r: bx[4], s: 3, m: ro ? X.mr : X.m, st: n ? n.name : id, at: now2() } })
+      .then(() => { if (!quiet) setTimeout(() => toast(`${withJosa(n ? n.name : id, '이', '가')} 답례 상자를 보냈어요. 내 방 책상을 봐요`), 2600); })
+      .catch(err => { repSent.delete(id); errReport('stick', '답례 상자 오류: ' + (err && err.message), ''); });
+  }
+  function replyAll(){ if (!boxSeen) return; const G = S().npc || {}; Object.keys(G).forEach(id => { if (npcGet(id) && replyId(id)) reply(id); }); }
   // ---------- 시작 연출: 마들렌이 막대과자 한 아름을 들고 지금 서 있는 자리로 뛰어와요 ----------
   let INTRO = null;
   async function intro(){
@@ -13428,7 +13445,7 @@ const STK = (() => {
     if (gn >= 5 && !s.rw.mad){ s.rw.mad = 1; npcAddA('madeleine', 50); extra = '마들렌 호감도 +50'; }
     saveSure(); syncNpcs(); npcClose();
     await giveFx(n, B); npcExprOnce = fav ? 1 : 0; npcMenu(n, (X.rr && romanceOn(n.id) ? X.rr : X.r)[fav ? 0 : 1]);
-    toast(`${withJosa(n.name, '이', '가')} 막대과자를 받았어요 · 호감도 +${h}`); if (extra) setTimeout(() => toast(`NPC 5 명에게 줬어요 · ${extra}`), 1800);
+    toast(`${withJosa(n.name, '이', '가')} 막대과자를 받았어요 · 호감도 +${h}`); reply(n.id); if (extra) setTimeout(() => toast(`NPC 5 명에게 줬어요 · ${extra}`), 1800);
   }
   let GV = null;   // 상자가 내 품에서 NPC 머리 위로 날아가서 하트
   function giveFx(n, B){ return new Promise(res => { GV = { id: n.id, B, t0: performance.now() }; sfx('pop'); setTimeout(() => { sfx('heart'); }, 650); setTimeout(() => { GV = null; res(); }, 1300); }); }
@@ -13490,7 +13507,7 @@ const STK = (() => {
   function tick(){
     if (!me) return; props();
     if (!open()) return;
-    autoGive();
+    if (!autoGive()) replyAll();
     if (stkOn || S().hi || uiBusy() || !(World.meAt && World.meAt())) return; const w = World.where() || '';
     if (!/^(gt_|arena)/.test(w) && evTurn('stk')) intro();
   }
