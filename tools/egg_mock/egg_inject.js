@@ -17,9 +17,10 @@
   }
   // ---------- 맵에 놓기 (학교 안뜰) ----------
   let spot = null;
-  function place(stage = 0, aura = ''){
+  let placeMap = 'campus';
+  function place(stage = 0, aura = '', at, map){ if (at) spot = at; if (map) placeMap = map;
     if (!spot){ const c = [40, 42]; for (let r = 0; r < 8 && !spot; r++) for (let dx = -r; dx <= r && !spot; dx++) for (let dy = -r; dy <= r && !spot; dy++){ const x = c[0] + dx, y = c[1] + dy; if (World.isFree(x, y) && World.isFree(x + 1, y)) spot = [x, y]; } }
-    const cv = eggCv(stage, aura, 1); World.setProps('campus', [{ id: 'egg', x: spot[0], y: spot[1], img: cv, pxc: cv.getContext('2d'), sw: cv.width, sh: cv.height, ax: cv.width / 2, ay: cv.height - 8, solid: 1 }], 'egg');
+    const cv = eggCv(stage, aura, 1); World.setProps(placeMap, [{ id: 'egg', x: spot[0], y: spot[1], img: cv, pxc: cv.getContext('2d'), sw: cv.width, sh: cv.height, ax: cv.width / 2, ay: cv.height - 8, solid: 1 }], 'egg');
     return spot;
   }
   // ---------- 창 공통 ----------
