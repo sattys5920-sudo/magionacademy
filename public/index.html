@@ -2672,7 +2672,7 @@ const XJK = ['job', 'exp', 'xv', 'sk', 'spx', 'qs', 'su', 'wp', 'sp', 'stx'], X2
 const xHas2 = ex => !!(ex && ex.jo && ex.jo.job);
 const xLvMax = ex => !ex ? 1 : Math.max(xLv(ex.exp || 0).L, xHas2(ex) ? xLv(ex.jo.exp || 0).L : 1);   // 탐사 밖(쉬기 · 장난 마법 조건 등)에서 쓰는 레벨: 두 직업 중 높은 쪽
 const xJob1 = ex => ex && (ex.cur && xHas2(ex) ? ex.jo.job : ex.job) || null, xJob2 = ex => !xHas2(ex) ? null : ex.cur ? ex.job : ex.jo.job;
-function xGain(ex, n){ n = Math.round(n || 0); if (n <= 0) return 0; const base = n; if (ex.cur && xHas2(ex) && xLv(ex.exp || 0).L < X2BOOST) n *= 3; ex.exp = (ex.exp || 0) + n; if (xHas2(ex)) ex.jo.exp = (ex.jo.exp || 0) + Math.round(base * X2IDLE); return n; }
+function xGain(ex, n){ n = Math.round(n || 0); if (n <= 0) return 0; const base = n; if (ex.cur && xHas2(ex)){ n = Math.round(n * (1 + sgFx('j2_exp'))); if (xLv(ex.exp || 0).L < X2BOOST) n *= 3; } ex.exp = (ex.exp || 0) + n; if (xHas2(ex)) ex.jo.exp = (ex.jo.exp || 0) + Math.round(base * (X2IDLE + sgFx('idle_exp'))); return n; }   // 별자리: j2_exp 2차 경험치 · idle_exp 쉬는 직업 몫
 function xSwapWhy(){ const ex = xEx(); if (!xHas2(ex)) return '2차 직업이 없어요'; if (ex.run) return '탐사 중에는 바꿀 수 없어요'; if (xb) return '전투 중에는 바꿀 수 없어요';
   if (xpRoom && xpV && xpV.p && xpV.p[myId()] && (xpV.st !== 'lobby' || xpV.p[myId()].rdy)) return '준비를 풀면 바꿀 수 있어요';
   if (typeof RD !== 'undefined' && RD.id && RD.v && RD.v.p && RD.v.p[myId()] && (RD.v.st !== 'lobby' || RD.v.p[myId()].rdy)) return '준비를 풀면 바꿀 수 있어요'; return ''; }
@@ -2702,6 +2702,8 @@ const xMkUnit = (job, L, name, ai, hp, mp, sk) => { sk = sk || xAiSk(L); const u
   if (!ai){ const ms = XROLE[job] === 'melee' ? 'atk' : XROLE[job] === 'heal' ? 'heal' : 'mag'; u.spd = Math.round(u.spd * (1 + famV('xspd'))); u[ms] = Math.round(u[ms] * (1 + famV('xmain'))); u.mhp = Math.round(u.mhp * (1 + famV('xhp'))); u.dr += famV('xdr'); u.dodge += famV('xdodge'); u.res = famV('xres'); u.bossK = famV('xboss'); u.healIn = famV('xheal'); { const A = xArV(); u.mhp = Math.round(u.mhp * (1 + A[0])); u.dr += A[1]; } }   // 사역마 맹약
   if (!ai && me && me.inv && me.inv.nb_heart > 0) u.mhp = Math.round(u.mhp * 1.1);   // 누비의 하트 헝겊
   if (!ai) rdAccApply(u);   // 레이드 장신구
+  if (!ai){ const F = sgFx, ex = xEx(), j2 = !!(ex.cur && xHas2(ex)), ms = XROLE[job] === 'melee' ? 'atk' : XROLE[job] === 'heal' ? 'heal' : 'mag';   // 별자리 별빛 (전투 · 2차 직업)
+    u[ms] = Math.round(u[ms] * (1 + F('x_main') + (j2 ? F('j2_main') : 0))); u.mhp = Math.round(u.mhp * (1 + F('x_hp'))); u.dr += F('x_dr'); u.crit += F('x_crit'); u.spd = Math.round(u.spd * (1 + F('x_spd'))); u.healIn = (u.healIn || 0) + F('x_healin'); u.mpReg = (u.mpReg || 0) + F('x_mpreg'); }
   u.hp = hp ?? u.mhp; u.mp = mp ?? u.mmp; return u; };
 let xv = null, xb = null, xMsg = '', xTick = 0;   // xv 화면 상태, xb 전투 상태
 function xParty(){ const ex = xEx(), L = xLv(ex.exp).L, run = ex.run; return [Object.assign(xMkUnit(ex.job, L, me.nick, false, run?.p?.[0]?.hp, run?.p?.[0]?.mp, xSkEx(ex)), { hum: true, uid: myId() })]; }   // 혼자일 땐 나 혼자 (AI 동료 없음, 협동은 같은 방 플레이어만)
@@ -2738,8 +2740,8 @@ function xChestHTML(){   // 상자 고르기 · 고른 뒤
 function xEnd(how){   // how: clear · time · retreat · wipe
   const ex = xEx(), run = ex.run; if (!run) return;
   if (run.co && how !== 'retreat' && xcoHost()){ xcoPub({ st: 'end', end: { how } }); const rid = run.co; setTimeout(() => GDB.upd('xparty/' + rid, { st: 'end', how }), 3500); }
-  if (run.co){ xcoStop(); xM = null; ex.coDone = [...(ex.coDone || []).filter(x => x !== run.co), run.co].slice(-10); } const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gm = how === 'retreat' ? .7 : 1, em = how === 'retreat' ? .5 : 1, gold = how === 'wipe' ? 0 : partyMul(Math.round(lo.gold * mult * gm * (1 + Math.min(.3, tarotVal('xgold') + famV('xgold'))))), exp = how === 'wipe' ? 0 : Math.round((lo.exp * mult * em + (how === 'clear' ? xReg().clearExp : 0)) * (dbuff('dforest') ? 1.03 : 1) * (dbuff('pump') ? 1.1 : 1) * (1 + sgFx('exp_gain') + partyFx() + grExp()));
-  const items = how === 'wipe' ? {} : Object.fromEntries(Object.entries(lo.items || {}).map(([k, n]) => [k, sgMul(n, famV('xloot'))])); if (how === 'clear') ex.chest = xChestMake(xReg());   // 끝까지 가면 보상 상자 셋 중 하나를 골라요
+  if (run.co){ xcoStop(); xM = null; ex.coDone = [...(ex.coDone || []).filter(x => x !== run.co), run.co].slice(-10); } const lo = run.loot, mult = how === 'clear' ? 1.5 : 1, gm = how === 'retreat' ? .7 : 1, em = how === 'retreat' ? .5 : 1, gold = how === 'wipe' ? 0 : partyMul(Math.round(lo.gold * mult * gm * (1 + Math.min(.3, tarotVal('xgold') + famV('xgold')) + sgFx('x_gold')))), exp = how === 'wipe' ? 0 : Math.round((lo.exp * mult * em + (how === 'clear' ? xReg().clearExp : 0)) * (dbuff('dforest') ? 1.03 : 1) * (dbuff('pump') ? 1.1 : 1) * (1 + sgFx('exp_gain') + partyFx() + grExp()));
+  const items = how === 'wipe' ? {} : Object.fromEntries(Object.entries(lo.items || {}).map(([k, n]) => [k, sgMul(n, famV('xloot') + sgFx('x_loot'))])); if (how === 'clear') ex.chest = xChestMake(xReg());   // 끝까지 가면 보상 상자 셋 중 하나를 골라요
   const before = xLv(ex.exp).L; const expG = xGain(ex, exp); me.coin += gold; Object.entries(items).forEach(([k, n]) => { me.inv[k] = (me.inv[k] || 0) + n; });
   const after = xLv(ex.exp).L, sp = 0; ex.run = null; xb = null; clearInterval(xTick); save(); hud();   // 스킬 포인트는 레벨 업에서만
   xv = { view: 'result', how, gold, exp: expG, items, up: after > before ? [before, after] : null, sp, prog: Math.floor(run.prog) };
@@ -15965,7 +15967,7 @@ function famV(key){
 }
 const FAM_STAT = { move_speed: 'move', gather_yield: 'gather', crop_growth: 'crop', rare_fish: 'rarefish', craft_success: 'cook', exp_gain: 'xexp' };
 // 효과가 여러 곳(운세 · 별빛 · 책갈피 · 사역마)에서 겹쳐도 이 한도를 넘지 않아요
-const FX_CAP = { move_speed: .35, gather_yield: .4, rare_fish: .6, gift_affection: .4, exp_gain: .4, crop_growth: .4, craft_success: .4, party_reward: .2, co_craft_extra: 1 };
+const FX_CAP = { x_main: .2, x_hp: .2, x_dr: .15, x_crit: .15, x_spd: .15, x_healin: .3, x_mpreg: .5, j2_main: .2, j2_exp: .5, idle_exp: .2, x_gold: .4, x_loot: .3, move_speed: .35, gather_yield: .4, rare_fish: .6, gift_affection: .4, exp_gain: .4, crop_growth: .4, craft_success: .4, party_reward: .2, co_craft_extra: 1 };
 const FX_MIN = { stamina_cost: -.6 };
 window.__fam = { famV: k => famV(k), sgFx: s => sgFx(s) };   // 시험용
 const sgFx = stat => { const v = tarotStat(stat) + sgFx0(stat) + (typeof BM !== 'undefined' ? BM.stat(stat) : 0) + (FAM_STAT[stat] ? famV(FAM_STAT[stat]) : 0); return FX_CAP[stat] !== undefined ? Math.min(FX_CAP[stat], v) : FX_MIN[stat] !== undefined ? Math.max(FX_MIN[stat], v) : v; };   // 운세 · 별빛 · 책갈피 · 사역마 (한도 있음)   // 오늘의 운세 카드 효과도 같이
