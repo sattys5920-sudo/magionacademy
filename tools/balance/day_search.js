@@ -6,6 +6,7 @@
 //   1) 보스가 거의 안 때릴 때 잡는 데 평균 200 초가 걸리게 체력 배율 · 2) 그다음 이길 확률이 50 % 가 되게 공격 배율 (제한 300 초)
 //   결과: tools/balance/out/day_k.json · tools/daydungeon/day_balance.json
 const R = require('./raid_cfg.js'), fs = require('fs');
+const TGT = +(process.env.DD_TGT || .82);   // 목표 승률: 제일 좋은 조합이 82 % 쯤 이기게 (50 % 로 하면 조금만 약한 파티도 0 % 가 돼요)
 const ALL = ['warrior', 'knight', 'thief', 'black', 'summon', 'gadget', 'alch', 'time', 'white', 'druid', 'cleric', 'bard', 'paladin', 'guardian', 'darkknight', 'dancer', 'sage', 'shaman', 'miko', 'archer', 'gunner', 'elemental', 'fighter', 'bladedancer'];
 const HEAL = ['cleric', 'white', 'druid', 'bard', 'shaman', 'miko'];
 const PARTY = [null, ['knight'], ['knight', 'black'], ['warrior', 'knight', 'black']];   // + 힐러 한 명 (판마다 돌아가며)
@@ -18,7 +19,7 @@ module.exports = async (ev, log) => {
   for (let w = 0; w < 5; w++) for (let lv = 0; lv < 3; lv++) for (let n = 1; n <= 4; n++){
     if (ONLY && !ONLY.some(x => x[0] === w && x[1] === lv && x[2] === n)) continue;
     let lo = .02, hi = 50; for (let k = 0; k < 12; k++){ const m = Math.sqrt(lo * hi), r = await sim(w, lv, n, m, .001, 24, 2000); if (r.t < 200) lo = m; else hi = m; } const hK = +Math.sqrt(lo * hi).toFixed(3);
-    lo = .05; hi = 40; for (let k = 0; k < 11; k++){ const m = Math.sqrt(lo * hi), r = await sim(w, lv, n, hK, m, 60, 300); if (r.win > .5) lo = m; else hi = m; } const aK = +Math.sqrt(lo * hi).toFixed(3), v = await sim(w, lv, n, hK, aK, 300, 300);
+    lo = .05; hi = 40; for (let k = 0; k < 11; k++){ const m = Math.sqrt(lo * hi), r = await sim(w, lv, n, hK, m, 60, 300); if (r.win > TGT) lo = m; else hi = m; } const aK = +Math.sqrt(lo * hi).toFixed(3), v = await sim(w, lv, n, hK, aK, 300, 300);
     out[`${w}_${lv}_${n}`] = { hK, aK, ...v }; log(JSON.stringify({ w, lv, n, hK, aK, ...v })); fs.writeFileSync(OUTF, JSON.stringify(out));
   }
   if (!process.env.DD_OUT) fs.writeFileSync(__dirname + '/../daydungeon/day_balance.json', JSON.stringify(out, null, 1));
