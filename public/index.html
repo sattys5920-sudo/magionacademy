@@ -13460,11 +13460,11 @@ const STK = (() => {
     for (const id in G){ const p = World.npcAt(id); if (!p) continue; const [x, y] = toS(p.x, p.y), [sx, sy] = cut('mini', Math.max(0, (G[id] | 0) - 1)), bob = Math.sin(now / 400 + id.length) * k; q.save(); q.translate(x + 3 * k, y + 9 * k + bob); q.rotate(.35); q.drawImage(IMG, sx, sy, 4, 16, -2 * k, -16 * k, 4 * k, 16 * k); q.restore(); }
   }
   // ---------- 소품: 과자 교실 막대 틀 · 광장 가로등 장식 · 내 방 책상 위 상자 더미 ----------
-  const MOLD_SPOTS = [[18, 3], [16, 4], [19, 4], [18, 4], [20, 3], [15, 3]], LAMPS = [[12, 39], [24, 39], [36, 39], [48, 39], [60, 39], [72, 39], [15, 44], [66, 44]];
+  const MOLD_SPOTS = [[20, 8], [19, 8], [21, 8], [20, 7]], LAMPS = [[12, 39], [24, 39], [36, 39], [48, 39], [60, 39], [72, 39], [15, 44], [66, 44]];
   const sprite = k => { const [c, g] = cv(SP[k][2], SP[k][3]); put(g, k, 0, 0, 0); return c; };
   function props(){
     const where = World.where(), on = open() && imgOK;
-    const ms = on && where === 'candy' ? 'candy:' + (MOLD_SPOTS.find(([x, y]) => World.isFree(x, y) || (W.mold && W.mold[0] === x && W.mold[1] === y)) || [20, 3]).join(',') : '';
+    const ms = on && where === 'candy' ? 'candy:' + (MOLD_SPOTS.find(([x, y]) => World.isFree(x, y) || (W.mold && W.mold[0] === x && W.mold[1] === y)) || [20, 8]).join(',') : '';
     if (ms !== propSig){ propSig = ms; if (!ms) World.setProps('candy', [], 'stkmold'); else { const [x, y] = ms.slice(6).split(',').map(Number); W.mold = [x, y]; const img = sprite('mold'); World.setProps('candy', [{ id: 'stkmold', x, y, img, pxc: img.getContext('2d'), sw: 32, sh: 30, ax: 16, ay: 26, solid: true, light: { r: 14, c: [255, 220, 170], a: .35 } }], 'stkmold'); } }
     const ls = on ? 'on' : ''; if (ls !== lampSig){ lampSig = ls; if (!ls) World.setProps('campus', [], 'stklamp'); else { const img = sprite('lamp'); World.setProps('campus', LAMPS.map(([x, y], i) => ({ id: 'stklamp' + i, x: x + 1, y: y + 1, img, pxc: img.getContext('2d'), sw: 14, sh: 20, ax: 2, ay: 34, solid: false })), 'stklamp'); } }
     desk();
