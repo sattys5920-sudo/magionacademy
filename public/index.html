@@ -16797,13 +16797,13 @@ function renderMarket(){
     frame(null, '등불 시장', '친구들과 거래하는 곳', `<div class="hint on px">혼자 해 보기 모드에서는 시장이 열리지 않아요. 로그인하면 12명이 함께 거래할 수 있어요.</div>`);
     return;
   }
-  const items = Object.entries(marketList);
+  const items = Object.entries(marketList);   // 묶음 판매: qty 남은 개수 · price 1 개 값 · earn 팔려서 쌓인 골드 (예전 한 개짜리는 buyer 로 팔림 표시)
   const mine = items.filter(([, l]) => l.uid === uid);
-  const others = items.filter(([, l]) => l.uid !== uid && !l.buyer).sort((a, b) => (b[1].at || 0) - (a[1].at || 0));
+  const others = items.filter(([, l]) => l.uid !== uid && !l.buyer && (l.qty || 0) > 0).sort((a, b) => (b[1].at || 0) - (a[1].at || 0));
   const week = coop[coopWeek()] || {};
   const coopTotal = Object.values(week).reduce((a, b) => a + (+b || 0), 0);
   const sellable = [...new Set([...POTIONS, ...MATS, ...CATCH, ...DISHES])].filter(k => me.inv[k] > 0);
-  const sold = mine.filter(([, l]) => l.buyer).length;
+  const sold = mine.filter(([, l]) => l.buyer || l.earn > 0).length;
   const tabs = [['shop', `친구 가게${others.length ? ' ' + others.length : ''}`], ['mine', `내 가판대 ${mine.length}/4${sold ? ' ●' : ''}`], ['coop', '반 공동 의뢰']];
   let body = '';
   if (marketTab === 'shop'){
@@ -16811,18 +16811,18 @@ function renderMarket(){
     body = `<section class="sec">
       ${secH('친구들이 올린 물건', others.length + '개')}
       ${others.length ? `<div class="box px">${pageOf(others, marketPage, 5).map(([id, l]) => `<div class="li">${ic(l.item)}
-        <div class="main"><span class="t">${ITEM[l.item]}${l.qty > 1 ? ' ×' + l.qty : ''}${l.moon ? ' <span class="tag" style="background:var(--purple);color:#2A1506">달빛</span>' : ''}</span><button class="btn ghost" data-visit="${l.uid}" style="justify-content:flex-start;padding:0;min-height:44px;margin:-10px 0;text-decoration:underline">${esc(l.nick)}의 가게 · 방 구경</button></div>
-        <button class="btn sm go" data-buy="${id}" ${me.coin >= l.price ? '' : 'disabled'}>${ic('coin', 'transform:scale(.7);margin:0 -6px')}${l.price}</button></div>`).join('')}</div>${pager('mpg', marketPage, others.length, 5)}` : '<div class="hint">지금은 올라온 물건이 없어요</div>'}
+        <div class="main"><span class="t">${ITEM[l.item]}${l.qty > 1 ? ` · ${l.qty} 개 남음` : ''}${l.moon ? ' <span class="tag" style="background:var(--purple);color:#2A1506">달빛</span>' : ''}</span><button class="btn ghost" data-visit="${l.uid}" style="justify-content:flex-start;padding:0;min-height:44px;margin:-10px 0;text-decoration:underline">${esc(l.nick)}의 가게 · 방 구경</button></div>
+        <button class="btn sm go" data-buy="${id}" ${me.coin >= l.price ? '' : 'disabled'}>${ic('coin', 'transform:scale(.7);margin:0 -6px')}${l.price}${l.qty > 1 ? ' / 개' : ''}</button></div>`).join('')}</div>${pager('mpg', marketPage, others.length, 5)}` : '<div class="hint">지금은 올라온 물건이 없어요</div>'}
     </section>`;
   } else if (marketTab === 'mine'){
     body = `<section class="sec">
       ${secH('내 가판대', `${mine.length} / 4`)}
-      ${mine.length ? `<div class="box px">${mine.map(([id, l]) => `<div class="li">${ic(l.item)}<div class="main"><span class="t">${ITEM[l.item]} · ${l.price}G</span><span class="d">${l.buyer ? esc(l.buyerNick || '친구') + '님이 샀어요!' : '판매 중'}</span></div>
-        ${l.buyer ? `<button class="btn sm go" data-collect="${id}">받기</button>` : `<button class="btn sm" data-cancel="${id}">내리기</button>`}</div>`).join('')}</div>` : '<div class="hint">아직 올린 물건이 없어요</div>'}
+      ${mine.length ? `<div class="box px">${mine.map(([id, l]) => `<div class="li">${ic(l.item)}<div class="main"><span class="t">${ITEM[l.item]} · 1 개 ${l.price}G</span><span class="d">${l.buyer ? esc(l.buyerNick || '친구') + '님이 샀어요!' : `${l.qty > 0 ? `${l.qty} 개 남음` : '다 팔렸어요'}${l.earn > 0 ? ` · ${l.earn}G 쌓임` : ''}`}</span></div>
+        ${l.buyer || l.earn > 0 ? `<button class="btn sm go" data-collect="${id}">받기</button>` : ''}${!l.buyer && l.qty > 0 ? `<button class="btn sm" data-cancel="${id}">내리기</button>` : ''}</div>`).join('')}</div>` : '<div class="hint">아직 올린 물건이 없어요</div>'}
       ${mine.length < 4 ? `<div class="box px" style="padding:10px;display:flex;flex-direction:column;gap:8px">
         
         <div class="pal">${sellable.map(k => `<button class="cell ${sellPick === k ? 'sel' : ''}" style="width:48px;min-height:48px;padding:0" data-pick="${k}">${ic(k)}<span class="n">${me.inv[k]}</span></button>`).join('') || '<span class="s sub">팔 수 있는 물건이 없어요</span>'}</div>
-        ${sellPick ? `<div style="display:flex;gap:6px;align-items:center"><span class="s" style="flex:1">${ITEM[sellPick]} 1개</span><input id="price" type="number" min="1" max="9999" value="${PAY[sellPick] || CATCH_INFO[sellPick]?.pay || DISH_INFO[sellPick]?.pay || 20}" class="mkin"><span class="s">G</span><button class="btn sm go" id="list">올리기</button></div>` : ''}
+        ${sellPick ? `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="s" style="flex:1">${ITEM[sellPick]}</span><input id="qty" type="number" min="1" max="${Math.min(99, me.inv[sellPick] || 1)}" value="1" class="mkin" style="width:64px"><span class="s">개 · 1 개</span><input id="price" type="number" min="1" max="9999" value="${PAY[sellPick] || CATCH_INFO[sellPick]?.pay || DISH_INFO[sellPick]?.pay || 20}" class="mkin"><span class="s">G</span><button class="btn sm go" id="list">올리기</button></div>` : ''}
       </div>` : '<div class="hint">가판대가 꽉 찼어요 (4칸)</div>'}
     </section>`;
   } else {
@@ -16845,36 +16845,42 @@ function renderMarket(){
   on('[data-visit]', b => openVisit(b.dataset.visit));
   const lb = $('#list');
   if (lb) lb.onclick = async () => {
-    const price = Math.max(1, Math.min(9999, Math.floor(+$('#price').value || 0)));
-    if (me.inv[sellPick] < 1 || lb.disabled) return; lb.disabled = true; const it = sellPick;
-    me.inv[it]--; if (!await saveSure()){ me.inv[it]++; save(); lb.disabled = false; return toast('지금은 저장이 안 돼요. 잠시 뒤에 다시 해 주세요'); }   // 가방에서 뺀 걸 먼저 저장해요 (안 그러면 되돌려졌을 때 물건이 두 개가 돼요)
-    try { await F.push(F.ref(db, 'market'), { uid, nick: me.nick, look: me.look, item: it, qty: 1, price, at: now2(), ...(me.house === 'moon' && myTime() ? { moon: true } : {}) }); }
-    catch(e){ me.inv[it]++; saveSure(); lb.disabled = false; return toast('가판대에 올리지 못했어요. 물건은 돌려받았어요'); }   // 실패하면 물건이 사라지지 않게
-    toast(`${withJosa(ITEM[sellPick], '을', '를')} ${price}G에 올렸어요.`); sellPick = null;
+    const price = Math.max(1, Math.min(9999, Math.floor(+$('#price').value || 0))), it = sellPick, q = Math.max(1, Math.min(99, me.inv[it] || 0, Math.floor(+($('#qty') || {}).value || 1)));
+    if (!(me.inv[it] >= q) || lb.disabled) return; lb.disabled = true;
+    me.inv[it] -= q; if (!await saveSure()){ me.inv[it] += q; save(); lb.disabled = false; return toast('지금은 저장이 안 돼요. 잠시 뒤에 다시 해 주세요'); }   // 가방에서 뺀 걸 먼저 저장해요 (안 그러면 되돌려졌을 때 물건이 두 배가 돼요)
+    try { await F.push(F.ref(db, 'market'), { uid, nick: me.nick, look: me.look, item: it, qty: q, price, earn: 0, at: now2(), ...(me.house === 'moon' && myTime() ? { moon: true } : {}) }); }
+    catch(e){ me.inv[it] += q; saveSure(); lb.disabled = false; return toast('가판대에 올리지 못했어요. 물건은 돌려받았어요'); }   // 실패하면 물건이 사라지지 않게
+    toast(`${ITEM[it]} ${q} 개를 1 개 ${price}G에 올렸어요.`); sellPick = null;
   };
   on('[data-cancel]', async b => {
     const l = marketList[b.dataset.cancel]; if (!l || l.buyer || b.disabled) return; b.disabled = true;
-    const r = await F.runTransaction(F.ref(db, 'market/' + b.dataset.cancel), cur => cur && !cur.buyer ? null : undefined).catch(() => null);   // 누가 막 사 가는 중이면 내리지 않아요
-    if (!r || !r.committed){ toast('방금 누가 샀어요. 「받기」로 골드를 받아요'); return; }
-    me.inv[l.item] = (me.inv[l.item] || 0) + l.qty; saveSure(); toast('가판대에서 내렸어요.');
+    let got = null; const r = await F.runTransaction(F.ref(db, 'market/' + b.dataset.cancel), cur => { if (!cur || cur.buyer) return; got = { q: cur.qty || 0, g: cur.earn || 0 }; return null; }).catch(() => null);   // 누가 막 사 가는 중이면 그 뒤 남은 것만 돌려받아요
+    if (!r || !r.committed || !got){ toast('방금 누가 샀어요. 「받기」로 골드를 받아요'); return; }
+    me.inv[l.item] = (me.inv[l.item] || 0) + got.q; me.coin += got.g; saveSure(); toast(`가판대에서 내렸어요${got.g ? ` · 판매 대금 ${got.g}G` : ''}.`);
   });
   on('[data-collect]', async b => {
-    const l = marketList[b.dataset.collect]; if (!l || !l.buyer || b.disabled) return; b.disabled = true;
-    let price = 0; const res = await F.runTransaction(F.ref(db, 'market/' + b.dataset.collect), cur => { if (!cur || !cur.buyer) return; price = cur.price || 0; return null; }).catch(() => null);   // 두 창에서 눌러도 한 번만 받아요
+    const l = marketList[b.dataset.collect]; if (!l || !(l.buyer || l.earn > 0) || b.disabled) return; b.disabled = true;
+    let price = 0; const res = await F.runTransaction(F.ref(db, 'market/' + b.dataset.collect), cur => { if (!cur) return; if (cur.buyer){ price = cur.price || 0; return null; } if (!(cur.earn > 0)) return; price = cur.earn; return (cur.qty || 0) > 0 ? { ...cur, earn: 0 } : null; }).catch(() => null);   // 두 창에서 눌러도 한 번만 받아요 · 다 팔린 묶음은 가판대에서 내려가요
     if (!res || !res.committed){ b.disabled = false; return; }
     me.coin += price; saveSure(); toast(`판매 대금 ${price}G를 받았어요.`);
   });
   on('[data-buy]', async b => {
     const id = b.dataset.buy, l = marketList[id];
-    if (!l || me.coin < l.price) return;
-    me.coin -= l.price;   // 먼저 빼 두고 못 사면 돌려줘요 (빠르게 두 개를 눌러도 골드가 모자라지 않게)
+    if (!l || me.coin < l.price || b.disabled) return;
+    const most = Math.min(l.qty || 1, Math.floor(me.coin / l.price)); let k = 1;
+    if (l.earn !== undefined && most > 1){ const a = await nameBox(`몇 개 살까요 (1 ~ ${most} 개 · 1 개 ${l.price}G)`, '1', 2); if (a === null) return; k = Math.max(1, Math.min(most, Math.floor(+a || 0))); if (!k) return; }
+    const cost = k * l.price; if (me.coin < cost) return; b.disabled = true;
+    me.coin -= cost;   // 먼저 빼 두고 못 사면 돌려줘요 (빠르게 두 번 눌러도 골드가 모자라지 않게)
     const res = await F.runTransaction(F.ref(db, 'market/' + id), cur => {
-      if (!cur || cur.buyer) return;
-      return { ...cur, buyer: uid, buyerNick: me.nick };
+      if (!cur || cur.buyer || cur.price !== l.price) return;
+      if (cur.earn === undefined) return k === 1 && (cur.qty || 1) === 1 ? { ...cur, buyer: uid, buyerNick: me.nick } : undefined;   // 예전 한 개짜리
+      if ((cur.qty || 0) < k) return;
+      return { ...cur, qty: cur.qty - k, earn: (cur.earn || 0) + cost, bn: me.nick };
     }).catch(() => null);
-    if (!res || !res.committed){ me.coin += l.price; return toast('한발 늦었어요. 다른 친구가 먼저 샀어요.'); }
-    me.inv[l.item] = (me.inv[l.item] || 0) + l.qty; saveSure();
-    toast(`${withJosa(ITEM[l.item], '을', '를')} 샀어요! -${l.price}G`);
+    b.disabled = false;
+    if (!res || !res.committed){ me.coin += cost; return toast('한발 늦었어요. 다른 친구가 먼저 샀어요.'); }
+    me.inv[l.item] = (me.inv[l.item] || 0) + k; saveSure();
+    toast(`${ITEM[l.item]} ${k} 개를 샀어요! -${cost}G`);
   });
   const dn = $('#donate'); if (dn) dn.onclick = async () => {
     if (!((me.inv.p_purple || 0) >= 1)) return;
