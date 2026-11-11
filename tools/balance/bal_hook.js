@@ -136,5 +136,23 @@ window.__bal = (() => {
     xb = null; const avg = a => +(a.reduce((x, y) => x + y, 0) / a.length).toFixed(2);
     return { win: res.win / N, t: avg(res.t), left: avg(res.left), dead: avg(res.dead) };
   }
-  return { unit, xSim, power, raidSim, ddSim, DD_K_: () => DD_K, arCap, FAMV, skCheck, XRG_: () => XRG.map(r => ({ hpm: r.hpm, ehm: r.ehm, atkm: r.atkm, bat: r.bat, bhm: r.bhm })), RD_: () => ({ RD_BOSS, RD_MATK }) };
+  // ---------- 시련의 탑 한 층 (혼자) ----------
+  //   o = { f 층, K [체력, 공격] 배율, jobs [...], n 직업마다 판 수, lim 초, L 학생 레벨 (안 주면 그 층 기준), cfg (안 주면 twCfg(L)) }
+  //   twCfg(L): 그 레벨에 「그만큼 갖춘」 학생 · Lv 16 맨몸 → Lv 50 풀 장비 (무기 4 · 방어구 5 · 용 · 누비 · 사역마 · 왕관 별 5)
+  function twCfg(L){ const g = Math.max(0, Math.min(1, (L - 16) / 34)); const c = { wp: Math.round(4 * g), ar: Math.min(arCap(L), Math.round(5 * g)) };
+    if (g >= .5){ c.dfire = 1; c.dwater = 1; c.nb = 1; } if (g >= .3) c.fam = 'xmain'; if (g >= .6){ c.acc = 'crown'; c.accSt = Math.max(1, Math.round(5 * (g - .6) / .4)); } return c; }
+  function twSim(o){
+    const N = o.n || 8, lim = o.lim || 240, L = Math.round(o.L || twLv(o.f)), cfg = o.cfg || twCfg(L), per = {}; let win = 0, tt = 0, tot = 0;
+    for (const job of o.jobs) for (let it = 0; it < N; it++){
+      const u = unit(job, L, cfg, 'p0'); u.id = 'p0'; u.pot = o.pot ?? 1; u.g = Math.random() * 40; const party = [u], foes = twFoes(o.f, o.K, job, o.JM ? o.JM[job] : undefined);
+      const B = xb = { party, foes, kind: 'elite', log: '', turn: null, pick: null, over: false, last: 0, buff: false, def: {}, fxs: [], floats: [], proj: [], n0: 1 };
+      let t = 0; const dt = .25;
+      while (t < lim){ t += dt; tick(B, dt);
+        for (const x of party.concat(foes)){ if (x.hp <= 0 || x.g < 100) continue; if (x.team === 'e') xAct(x, null); else if (!potOr(x)) xAI(x); if (!xAlive(foes).length || !xAlive(party).length) break; }
+        if (!xAlive(foes).length || !xAlive(party).length) break; }
+      const w = !xAlive(foes).length && xAlive(party).length ? 1 : 0; win += w; tt += t; tot++; per[job] = (per[job] || 0) + w / N;
+    }
+    xb = null; return { win: +(win / tot).toFixed(3), t: +(tt / tot).toFixed(1), per };
+  }
+  return { unit, xSim, power, raidSim, ddSim, twSim, twCfg, twOk: (f, all) => all.filter(j => twFit(j, twFloor(f))[0] !== 'b'), twLv: f => twLv(f), DD_K_: () => DD_K, arCap, FAMV, skCheck, XRG_: () => XRG.map(r => ({ hpm: r.hpm, ehm: r.ehm, atkm: r.atkm, bat: r.bat, bhm: r.bhm })), RD_: () => ({ RD_BOSS, RD_MATK }) };
 })();

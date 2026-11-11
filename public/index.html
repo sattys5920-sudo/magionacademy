@@ -354,6 +354,7 @@ body.admin #shell{max-width:none}
 #famcut .sjc canvas{position:static;transform:none;left:auto;top:auto;width:36px;height:36px;flex:none}#famcut .sjc>span:last-child{min-width:0}#famcut .sjc b{display:block;font-size:13px;line-height:16px;white-space:nowrap}#famcut .sjc i{display:block;font-style:normal;font-size:10px;line-height:13px;color:var(--rc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#famcut .sjc.on{border-color:#FF9A3C;background:#3a2448;box-shadow:0 0 0 2px #FF9A3C55}#famcut .sjc.off{opacity:.38}#famcut .sjc.off i{color:#b8acd0}
 #famcut .bdg{display:inline-block;margin-left:4px;padding:0 4px;border-radius:6px;font-size:10px;line-height:14px;font-style:normal}#famcut .bdg.y{background:#3fae5a;color:#06210d}#famcut .bdg.n{background:#d04a4a;color:#fff}#famcut .sjdet .bdg{font-size:11px;line-height:16px;padding:0 6px}
 #famcut .sjdet{display:flex;align-items:center;gap:8px;min-height:44px}#famcut .sjdet .t{flex:1;font-size:14px;line-height:18px;word-break:keep-all}#famcut .sjdet .t small{display:block;font-size:11px;color:#c8bce0}#famcut .sjdet button{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid #C86A1E;background:#FF9A3C;color:#2A1506;font-family:var(--f-pxb);font-size:15px}#famcut .sjdet button.g{background:#2E2248;border-color:#4E3C72;color:#F1E9FF}
+#adminv .twt{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}#adminv .twt td,#adminv .twt th{border-bottom:1px solid #EEE6F4;padding:4px;text-align:left}
 #adminv .j2r{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid #EEE6F4}#adminv .j2r span{font-size:13px}
 #famcut .ffade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .9s}
 #dreamv{position:fixed;inset:0;z-index:300;font-family:var(--f-pxb);color:#F1E9FF;touch-action:none;user-select:none;-webkit-user-select:none}#dreamv canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}#dreamv .dc{opacity:0;object-fit:contain;background:#0A0612}#dreamv .do{pointer-events:none}
@@ -1628,7 +1629,7 @@ let haltSave = false; const SAVE_SID = Math.random().toString(36).slice(2, 10), 
 // ----- 다른 학생에게 보여 줄 작은 정보 pub/<uid> (서버 다운로드 줄이기): 학생 화면은 반 전체 저장 데이터(players)를 듣지 않고 이것만 들어요 -----
 //   친구 이름 · 기숙사 · 얼굴 · 방 가구 · 직업 · 아기 동물 · 이벤트에서 남의 진행을 보는 몇 가지만 · 방 구경처럼 다 필요할 때는 그때 한 번 받아요 (playersFull)
 const pubOf = p => { if (!p) return null; const nn = p.nnpc && typeof p.nnpc === 'object' ? Object.fromEntries(Object.entries(p.nnpc).map(([k, v]) => [k, { met: (v && v.met) || null, at: (v && v.at) || null }])) : null;
-  return { nick: p.nick, look: p.look, house: p.house || null, av: p.av || null, room: p.room || [], bedOff: p.bedOff || null, ex: p.ex ? { job: p.ex.job || null, wp: p.ex.wp || 0, j1: xJob1(p.ex), j2: xJob2(p.ex) } : null,
+  return { nick: p.nick, look: p.look, house: p.house || null, av: p.av || null, room: p.room || [], bedOff: p.bedOff || null, ex: p.ex ? { job: p.ex.job || null, wp: p.ex.wp || 0, j1: xJob1(p.ex), j2: xJob2(p.ex) } : null, tw: (p.tw && p.tw.best) || null,
     baby: p.baby ? { adopt: p.baby.adopt || null, follow: p.baby.follow || null, k: p.baby.k ?? null } : null, cat: p.cat ? { ev: p.cat.ev || null, done: p.cat.done ?? null } : null, nubi: p.nubi || null, nnpc: nn }; };
 let pubSig = '', pubDb = {}, pubMiss = {}, pubChecked = false; const playersFull = {};
 function pubSave(){ if (solo || !uid || !me || !F || !db) return; try { const o = fbKeep(fbClean(pubOf(me))), sg = JSON.stringify(o); if (sg === pubSig) return; pubSig = sg; F.set(F.ref(db, 'pub/' + uid), o).catch(() => { pubSig = ''; }); } catch(e){} }
@@ -3356,10 +3357,12 @@ const xFm = (u, k) => u.fx[k] ? u.fx[k].v : 0;
 let xSfxT = 0;
 function xHit(u, t, raw, col, opt){   // 피해 한 번: 치명타 · 약점(vuln) · 회피 · 받는 피해 감소 · 보호막 · 버티기 · 흡혈 · 반격
   opt = opt || {}; if (t.fx && t.fx.guard && u && u.team === 'a' && u.hp > 0){ const r = Math.max(1, Math.round(raw * .5)); u.hp = Math.max(0, u.hp - r); xFloat(u.id, '-' + r, '#9fd0ff'); xFloat(t.id, '튕김!', '#9fd0ff'); raw *= .15; }   // 승급 시험 방패 골렘
+  if (t.tw && t.tw.swift && u && u.team === 'a' && Math.random() < .33){ xFloat(t.id, '회피!', '#c8bcf0'); return 0; }   // 시련의 탑 날쌘: 셋 중 하나 피해요
   let dmg = raw; let isCrit = false; if (u && u.grMe && xb && xb.gr && xb.gr.role === 'support') dmg *= .3; if (u && u.team === 'a' && (opt.fcrit || Math.random() < (u.crit || 0))){ dmg *= 1.6; isCrit = true; xFloat(t.id, '치명!', '#ffb84d'); }
   if (u && u.team === 'a' && u.bossK && t.big) dmg *= 1 + u.bossK;   // 사역마: 보스전
   dmg *= 1 + xFm(t, 'vuln');   // 약점: 적은 내 디버프, 우리 편은 보스 저주
   if (t.ddK) dmg *= t.ddK;   // 요일 던전 바위등 등껍질
+  if (t.tw && t.tw.armor && u && u.team === 'a' && (opt.st ? opt.st === 'atk' : u.atk >= u.mag * .8)) dmg *= .6;   // 시련의 탑 철갑: 물리 피해 40 % 줄여요
   if (t.team === 'a'){ if (u && u.team === 'e' && Math.min(.5, xFm(t, 'dodge') + (t.dodge || 0)) > Math.random()){ xFloat(t.id, '회피!', '#9fd0ff'); return 0; } dmg *= 1 - Math.min(.75, xFm(t, 'dmgIn') + (t.dr || 0)); }
   if (xb.def[t.id]) dmg /= 2; dmg = Math.max(1, Math.round(dmg));
   const sh = t.fx.shield; if (sh && sh.v > 0){ const a = Math.min(sh.v, dmg); sh.v -= a; dmg -= a; xFloat(t.id, '막음', '#9fd0ff'); if (sh.v <= 0) delete t.fx.shield; if (dmg <= 0) return 0; }
@@ -3368,6 +3371,8 @@ function xHit(u, t, raw, col, opt){   // 피해 한 번: 치명타 · 약점(vul
   if (t.hp <= 0 && t.team === 'a' && t.lastStand && !t.lsUsed){ t.lsUsed = 1; t.hp = Math.max(1, Math.round(t.mhp * t.lastStand)); xFloat(t.id, '버텼다!', '#ffd24a'); }   // 용 비늘 망토
   if (t.hp <= 0 && t.team === 'a' && (t.fx.survive || t.survLeft > 0)){ const sk0 = t.fx.survive ? 0 : t.survK || 0; if (t.fx.survive) delete t.fx.survive; else t.survLeft--; t.hp = Math.max(1, Math.round(t.mhp * sk0)); xFloat(t.id, '버텼다!', '#ffffff'); }   /* 불굴 · 가호: 레벨마다 최대 체력 5%씩 남기고 버텨요 */
   if (u && u.vamp) u.hp = Math.min(u.mhp, u.hp + Math.round(dmg * u.vamp));
+  if (t.tw && t.tw.mirror && u && u.team === 'a' && u.hp > 0){ const r = Math.max(1, Math.round(dmg * .3)); u.hp = Math.max(1, u.hp - r); xFloat(u.id, '반사 -' + r, '#9fe8ff'); }   // 시련의 탑 반사: 30 % 되돌려요 (쓰러지지는 않아요)
+  if (u && u.tw && u.tw.drain && t.team === 'a' && t.mmp && t.hp > 0){ const m = Math.round(t.mmp * .12); if (m > 0 && t.mp > 0){ t.mp = Math.max(0, t.mp - m); xFloat(t.id, 'MP -' + m, '#b080ff'); } }   // 시련의 탑 마나 먹기
   if (t.team === 'a' && t.hp > 0 && t.fx.counter && u && u.team === 'e' && u.hp > 0){ const r = Math.max(1, Math.round(dmg * t.fx.counter.v)); u.hp = Math.max(0, u.hp - r); xFloat(u.id, '-' + r, '#ffd866'); }
   return dmg;
 }
@@ -3424,7 +3429,9 @@ function xFoeSkill(u, base, hit){   // 정예: 여러 명 베기·연속 공격 
 }
 function xAct0(u, sk, tgt){   // 한 번 행동
   const B = xb, foes = u.team === 'a' ? B.foes : B.party, mates = u.team === 'a' ? B.party : B.foes; u.lg = performance.now(); xcoEvPush({ k: 'lg', id: u.id });
-  if (u.team === 'e'){ if (!xAlive(B.party).length) return; if (B.raid){ (B.raid.dd ? ddFoeTurn : rdBossTurn)(u); u.g = 0; return; } if (xFm(u, 'blind') > Math.random()){ xFloat(u.id, '빗나감', '#d0a0ff'); B.log = `${u.name}의 공격이 빗나갔어요`; u.g = 0; return; } const base = u.atk * (1 - xFm(u, 'weak')), hit = t => xHit(u, t, base * (.85 + Math.random() * .3), '#ff6a6a');
+  if (u.team === 'e'){ if (!xAlive(B.party).length) return; if (B.raid){ (B.raid.dd ? ddFoeTurn : rdBossTurn)(u); u.g = 0; return; }
+    if (u.tw){ u.twN = (u.twN || 0) + 1; if (u.tw.regen && u.hp < u.mhp){ const r = Math.round(u.mhp * .07); u.hp = Math.min(u.mhp, u.hp + r); xFloat(u.id, '+' + r, '#7affb0'); } if (u.tw.rage && u.twN === 6){ xFloat(u.id, '광폭!', '#ff6a3a'); B.log = `${u.name}${josa(u.name, '이', '가')} 화가 났어요! 공격이 두 배예요`; } }   // 시련의 탑 재생 · 광폭 (5 차례 뒤부터 두 배)
+    if (xFm(u, 'blind') > Math.random()){ xFloat(u.id, '빗나감', '#d0a0ff'); B.log = `${u.name}의 공격이 빗나갔어요`; u.g = 0; return; } const base = u.atk * (1 - xFm(u, 'weak')) * (u.tw && u.tw.rage && u.twN > 5 ? 2 : 1), hit = t => xHit(u, t, base * (.85 + Math.random() * .3), '#ff6a6a');
     if (u.bm){ u.bc = (u.bc || 0) + 1; if (u.bc % 4 === 0 || u.bc % 4 === 2){ xBossMech(u, base, u.bc % 4 === 0 ? 'dot' : 'aim'); u.g = 0; return; } }   // 묘지·동굴·신전 보스: 두 번째마다 번갈아 지속 피해(최대 체력 10%씩 10초) · 노림수(2.5배) (치유·정화·도발이 있는 조합이 유리해요)
     if (u.sk && Math.random() < (u.k >= 8 ? .25 : .3)){ xFoeSkill(u, base, hit); u.g = 0; return; }   // 정예·보스 기술
     if (u.aoe && Math.random() < .3){ const L = xAlive(B.party); xDelay = 150; xFxAt('impact', L); L.forEach(hit); B.log = `${u.name}의 휘두르기!`; } else if (xPetHit(u, base)){ xDelay = 150; u.g = 0; return; } else { const t = xFoeTarget(); xDelay = 150; xFxAt('impact', [t]); hit(t); B.log = `${u.name} → ${t.name}`; } u.g = 0; return; }
@@ -3432,7 +3439,7 @@ function xAct0(u, sk, tgt){   // 한 번 행동
   if (!sk){ const t = tgt && tgt.hp > 0 ? tgt : xRand(xAlive(B.foes)); xFxAt('slash', [t], u); xHit(u, t, Math.max(u.atk, u.mag * .8) * (.85 + Math.random() * .3) * mult, '#ffd866'); B.log = `${u.name}의 공격`; u.g = 0; return; }
   u.mp -= sk.mp; B.log = `${sk.n}! ${u.name}`; const fxk = xFxKind(sk, u), one = () => tgt && tgt.hp > 0 ? tgt : xRand(xAlive(B.foes)), fs = () => { const L = sk.tg === 'all' ? xAlive(B.foes) : [one()]; xFxAt(fxk, L, u); return L; }, as = () => { const L = sk.tg === 'all' ? xAlive(B.party) : sk.tg === 'self' ? [u] : [tgt && tgt.hp > 0 ? tgt : xAlive(B.party).sort((a, b) => a.hp / a.mhp - b.hp / b.mhp)[0]]; xFxAt(fxk, L, u); return L; };
   if (!['encore'].includes(sk.t)) u.lastSk = sk;
-  if (sk.t === 'dmg'){ const L = fs(), pb = 1 + (sk.petb || 0) * (u.pets || []).length; L.forEach(t => { for (let h = 0; h < (sk.hits || 1); h++){ if (t.hp <= 0) break; let raw = u[sk.st] * sk.p * pb * (.85 + Math.random() * .3) * mult; if (sk.exec && t.hp / t.mhp < .4) raw *= 1.8; { const dd = xHit(u, t, raw, '#ffd866', { fcrit: sk.fcrit }); if (sk.lf && dd > 0 && u.hp > 0) u.hp = Math.min(u.mhp, u.hp + Math.round(dd * sk.lf)); } } (sk.ap || []).forEach(a => xApply(u, t, a, mult, sk.st)); });
+  if (sk.t === 'dmg'){ const L = fs(), pb = 1 + (sk.petb || 0) * (u.pets || []).length; L.forEach(t => { for (let h = 0; h < (sk.hits || 1); h++){ if (t.hp <= 0) break; let raw = u[sk.st] * sk.p * pb * (.85 + Math.random() * .3) * mult; if (sk.exec && t.hp / t.mhp < .4) raw *= 1.8; { const dd = xHit(u, t, raw, '#ffd866', { fcrit: sk.fcrit, st: sk.st }); if (sk.lf && dd > 0 && u.hp > 0) u.hp = Math.min(u.mhp, u.hp + Math.round(dd * sk.lf)); } } (sk.ap || []).forEach(a => xApply(u, t, a, mult, sk.st)); });
     if (sk.drain){ u.mp = Math.min(u.mmp, u.mp + u.mmp * sk.drain); xFloat(u.id, 'MP↑', '#6aa8ff'); }
     if (sk.steal && u.uid && u.uid !== myId()){ B.stl = B.stl || {}; B.stl[u.uid] = (B.stl[u.uid] || 0) + 5 + Math.round(u.L * 1.2); xFloat(u.id, '훔쳤다!', '#ffd866'); }   // 파티 친구가 훔친 건 그 친구 몫
     else if (sk.steal){ const run = xEx().run || { loot: { gold: 0, items: {} } }; run.loot.gold += 5 + Math.round(u.L * 1.2); if (Math.random() < .4){ const it = xDrop(xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; } xFloat(u.id, '훔쳤다!', '#ffd866'); }
@@ -3572,7 +3579,7 @@ function xDraw(){
       for (let k = 0; k < 6; k++){ const a = k * 1.047 + wp * 9; g.fillStyle = wa.c; g.fillRect(Math.round(u.bx + Math.cos(a) * r), Math.round(u.by + Math.sin(a) * r * .32), 2, 2); } g.restore(); }
     if (u.team === 'a' && xRdy(u) && u === xMine(B) && !B.pick && !dead){ g.save(); g.strokeStyle = '#4fd8ff'; g.lineWidth = 2; g.globalAlpha = .6 + .4 * Math.sin(now / 160); g.beginPath(); g.ellipse(u.bx, u.by, 24, 7.5, 0, 0, 7); g.stroke(); g.restore(); }
     g.globalAlpha = al; const tint = c => { tintC.width = c.w; tintC.height = c.h; const q = tintC.getContext('2d'); q.imageSmoothingEnabled = false; q.clearRect(0, 0, c.w, c.h); q.drawImage(c.img, c.sx, c.sy, c.w, c.h, 0, 0, c.w, c.h); q.globalCompositeOperation = 'source-atop'; q.fillStyle = 'rgba(255,255,255,.75)'; q.fillRect(0, 0, c.w, c.h); q.globalCompositeOperation = 'source-over'; return tintC; };
-    if (u.team === 'e' && u.rb !== undefined) rdDrawBoss(g, u, x, y, hit); else if (u.team === 'e' && u.db !== undefined) ddDrawBoss(g, u, x, y, hit); else if (u.team === 'e'){ if (lpc.complete){ const w = 64 * sc, c = { img: lpc, sx: u.lp * 64, sy: 0, w: 64, h: 64 }; g.save(); g.translate(x, 0); g.scale(-1, 1); g.drawImage(hit ? tint(c) : lpc, hit ? 0 : c.sx, 0, 64, 64, -w / 2, y - w + 4 * sc, w, w); g.restore(); } }
+    if (u.team === 'e' && u.rb !== undefined) rdDrawBoss(g, u, x, y, hit); else if (u.team === 'e' && u.db !== undefined) ddDrawBoss(g, u, x, y, hit); else if (u.team === 'e'){ const LS = u.tws ? twSheet() : lpc; if (LS.complete){ const w = 64 * sc, c = { img: LS, sx: u.lp * 64, sy: 0, w: 64, h: 64 }; g.save(); g.translate(x, 0); g.scale(-1, 1); g.drawImage(hit ? tint(c) : LS, hit ? 0 : c.sx, 0, 64, 64, -w / 2, y - w + 4 * sc, w, w); g.restore(); } }
     else { const sp = strip(u); if (sp){ const PAD = 48, oy = y - FH + 6, c = { img: sp, sx: dirL * FW, sy: 0, w: FW, h: FH };
       const q = xTmpCv || (xTmpCv = document.createElement('canvas')); q.width = FW + PAD * 2; q.height = FH + PAD * 2; const t = q.getContext('2d'); t.imageSmoothingEnabled = false;   // 무기 그림은 왼쪽을 보는 기준이라, 따로 그린 뒤 좌우로 뒤집어요
       xHandOf(u, sp); xArmLayer(t, u, PAD, PAD, st, 'b', now, sp, c.sx); t.drawImage(hit ? tint(c) : sp, hit ? 0 : c.sx, 0, FW, FH, PAD, PAD, FW, FH); xArmLayer(t, u, PAD, PAD, st, 'f', now, sp, c.sx);
@@ -3681,7 +3688,7 @@ function xStatUpdate(B){
 }
 function xRenderBattle(){
   const B = xb, run = xEx().run; B.menu = 'main'; B.ck = '';
-  frame(null, B.raid ? (B.raid.dd ? `요일 던전 · ${DD_LV[B.raid.lv].n}` : `거울 탑 ${B.raid.f} 층`) : B.gr ? '승급 시험 · 역할 실기' : B.kind === 'boss' ? '보스!' : B.kind === 'elite' ? '강한 몬스터' : '전투', B.raid ? '' : B.gr ? `제한 ${Math.round(B.gr.lim / 1000)}초 · ${{ melee: '방패 골렘 쓰러뜨리기', ranged: '골렘 셋 쓰러뜨리기', tank: '허수아비 친구 막아 주기', support: '동료 도와 골렘 쓰러뜨리기', heal: '허수아비 친구 지키기' }[B.gr.role]}` : `진행 ${Math.floor(run.prog)}% · 남은 시간 ${timeText(xTime(run))}`, `<style>
+  frame(null, B.tw ? `시련의 탑 ${B.tw.f} 층` : B.raid ? (B.raid.dd ? `요일 던전 · ${DD_LV[B.raid.lv].n}` : `거울 탑 ${B.raid.f} 층`) : B.gr ? '승급 시험 · 역할 실기' : B.kind === 'boss' ? '보스!' : B.kind === 'elite' ? '강한 몬스터' : '전투', B.tw ? B.tw.sub : B.raid ? '' : B.gr ? `제한 ${Math.round(B.gr.lim / 1000)}초 · ${{ melee: '방패 골렘 쓰러뜨리기', ranged: '골렘 셋 쓰러뜨리기', tank: '허수아비 친구 막아 주기', support: '동료 도와 골렘 쓰러뜨리기', heal: '허수아비 친구 지키기' }[B.gr.role]}` : `진행 ${Math.floor(run.prog)}% · 남은 시간 ${timeText(xTime(run))}`, `<style>
     #xcv{display:block;width:100%;aspect-ratio:16/9;image-rendering:pixelated;border:3px solid #0c0818;border-radius:6px;box-shadow:0 0 0 2px #5a4a9a;background:#000;touch-action:manipulation}
     .xhud{display:flex;flex-direction:column;gap:8px}.xstat{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}/* 같이 가는 사람이 4~5명이면 한 줄에 다 들어가게 작게 */.xstat.xn4,.xstat.xn5{gap:4px}.xn4 .xs,.xn5 .xs{padding:4px;gap:2px}.xn4 .xs1,.xn5 .xs1{gap:4px}.xn4 .xport{width:24px;height:24px}.xn5 .xport{width:20px;height:20px}.xn4 .xs2 b{font-size:11px}.xn5 .xs2 b{font-size:10px}.xn4 .xj,.xn5 .xj{font-size:9px}.xn4 .xjn,.xn5 .xjn{display:none}.xn4 .xbr,.xn5 .xbr{height:9px}.xn4 .xbr em{font-size:8px;line-height:8px}.xn5 .xbr em{font-size:7px;line-height:8px}.xn4 .xbr.gg,.xn5 .xbr.gg{height:4px}
     .xs{display:flex;flex-direction:column;gap:3px;padding:6px;background:linear-gradient(#2b2150,#1b1438);border:2px solid #0c0818;border-radius:6px;box-shadow:inset 0 0 0 2px #4a3c86;min-width:0}
@@ -3800,7 +3807,7 @@ function xLoop0(){
   xUp();
 }
 function xWin(){
-  if (xb && xb.gr) return grBattleEnd(true); if (xb && xb.raid) return rdEnd(true);
+  if (xb && xb.tw) return TW.end(true); if (xb && xb.gr) return grBattleEnd(true); if (xb && xb.raid) return rdEnd(true);
   sfx('win'); const B = xb, run = xEx().run; B.over = true; clearInterval(xTick); const mL = B.foes[0].mL; let exp = 0, gold = 0; B.foes.forEach(f => { exp += Math.round(8 * (1 + .45 * (mL - 1)) * f.k); gold += Math.round(6 * (1 + .3 * (mL - 1)) * f.k * (.8 + Math.random() * .4)); });
   { const n = B.n0 || 1, sc = n > 1 ? (1 + .15 * (n - 1)) / n : 1; exp = Math.round(exp * sc); gold = Math.round(gold * sc); }   // 몬스터가 인원만큼 늘었으니 보상은 나눠서 (파티 보너스 +15%/명)
   const rm = (run.mod?.rew || 1) * (.9 + Math.random() * .2); run.loot.exp += Math.round(exp * rm); run.loot.gold += Math.round(gold * rm); let drop = ''; if (Math.random() < (B.kind === 'battle' ? .3 : .8)){ const it = xDrop(B.kind === 'boss' ? xReg().rare : xReg().loot); run.loot.items[it] = (run.loot.items[it] || 0) + 1; drop = ` · ${ITEM[it] || it}`; } Object.entries(xArDrop(B.kind === 'boss' ? 'boss' : B.kind === 'elite' ? 'elite' : '', XRG.indexOf(xReg()))).forEach(([k, c]) => { run.loot.items[k] = (run.loot.items[k] || 0) + c; drop += ` · ${ITEM[k]}`; });
@@ -3812,7 +3819,7 @@ function xWin(){
   $('#xnext').onclick = next;
   if (run.co){ xcoPubBt(true); setTimeout(next, 2800); }
 }
-function xLose(){ if (!(xb && xb.raid)) nbBad('ko'); if (xb && xb.gr) return grBattleEnd(false); if (xb && xb.raid) return rdEnd(false); sfx('lose'); const B = xb; B.over = true; clearInterval(xTick); { const r = xEx().run; if (r && !r.co){ r.lost = 1; save(); } } if (xEx().run?.co){ B.won = false; xcoPubBt(true); setTimeout(() => { if (xb === B){ xEnd('wipe'); renderExplore(); } }, 3000); } $('#xlog') && ($('#xlog').textContent = '모두 쓰러졌어요.......'); const el = $('#xcmd'); if (el) el.innerHTML = '<button class="btn go" id="xnext" style="grid-column:1/-1">마을로 돌아가기</button>'; $('#xnext').onclick = () => { xEnd('wipe'); renderExplore(); }; }
+function xLose(){ if (xb && xb.tw) return TW.end(false); if (!(xb && xb.raid)) nbBad('ko'); if (xb && xb.gr) return grBattleEnd(false); if (xb && xb.raid) return rdEnd(false); sfx('lose'); const B = xb; B.over = true; clearInterval(xTick); { const r = xEx().run; if (r && !r.co){ r.lost = 1; save(); } } if (xEx().run?.co){ B.won = false; xcoPubBt(true); setTimeout(() => { if (xb === B){ xEnd('wipe'); renderExplore(); } }, 3000); } $('#xlog') && ($('#xlog').textContent = '모두 쓰러졌어요.......'); const el = $('#xcmd'); if (el) el.innerHTML = '<button class="btn go" id="xnext" style="grid-column:1/-1">마을로 돌아가기</button>'; $('#xnext').onclick = () => { xEnd('wipe'); renderExplore(); }; }
 
 // ===== 같이 하는 놀이: 등불 시장 「놀이 게시판」에서 방을 열고, 같은 곳 친구가 참가해요 =====
 // games/<방> = { g 놀이, host, hn 방장 이름, m 장소, st lobby·play·end, at, t0 시작 시각, seed, ord 참가 순서, p: { uid: { n, s 점수, d 끝남 } }, c 줍기·때리기 차지, co 협동 상태 }
@@ -4172,7 +4179,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.examBd = {}; AD.day = AD.day || todayKey(); sgListen(); if (!noticeOff && F && db) noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); if (AD.tab === 'gift' && !adminTyping()) adminRender(); });
   const L = (p, k, q) => { if (k === 'players') return adPlayersPoll(); AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = s.val() || {}; if (adminTyping()){ AD.skip = true; return; } adminRender(); })); };
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('adm/heart', 'heart'); L('adm/evdone', 'evdone'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('fam/pick', 'fampick'); L('fam/ctl', 'famctl'); L('fairy/ctl', 'fairyctl'); L('seed/ctl', 'seedctl'); L('tilda/ctl', 'tlctl'); L('nubi/ctl', 'nbctl'); L('wish/ctl', 'wsctl'); L('wish/list', 'wslist'); L('wish/cheer', 'wscheer'); L('wish/own', 'wsown'); L('wish/cby', 'wscby'); L('garden/ctl', 'gdctl'); L('knit/ctl', 'knctl'); L('bouquet/ctl', 'bqctl'); L('bouquet/assign', 'bqas'); L('balloon/ctl', 'blnctl'); L('capsule/ctl', 'capctl'); L('promo/ctl', 'grctl'); L('promo/re', 'grre'); L('raid/ctl', 'rdctl'); L('day/ctl', 'dayctl'); L('sports/ctl', 'sportsctl'); L('j2', 'j2'); L('capsule/who', 'capwho'); L('capsule/letter', 'caplt'); L('ltr/ctl', 'ltctl'); L('ck/ctl', 'ckctl'); L('stick/ctl', 'stkctl'); L('hib/ctl', 'hibctl'); L('cold/ctl', 'coldctl'); L('cat/ctl', 'catctl'); L('cat/names', 'catnames'); L('cat/hide', 'cathide'); L('hib/den', 'hibden'); L('hib/give', 'hibgive'); L('stick/box', 'stkbox'); L('stick/by', 'stkby'); L('stick/mine', 'stkmine'); L('stick/npc', 'stknpc'); L('stick/hold', 'stkhold'); L('shout', 'shout'); L('shoutctl', 'shoutctl'); L('bm/ctl', 'bmctl'); L('bm/got', 'bmgot'); L('bm/place', 'bmplace'); L('bm/done', 'bmdone'); L('ltr/assign', 'ltas'); L('ltr/reply', 'ltrep'); L('otumo/ctl', 'otctl'); L('newnpc', 'nnctl'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('morph/ctl', 'moctl'); L('morph/st', 'most'); L('morph/form', 'moform'); L('board', 'board'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event'){ if (adminTyping()) AD.skip = true; else adminRender(); } })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('tw/ctl', 'twctl'); L('adm/heart', 'heart'); L('adm/evdone', 'evdone'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('fam/pick', 'fampick'); L('fam/ctl', 'famctl'); L('fairy/ctl', 'fairyctl'); L('seed/ctl', 'seedctl'); L('tilda/ctl', 'tlctl'); L('nubi/ctl', 'nbctl'); L('wish/ctl', 'wsctl'); L('wish/list', 'wslist'); L('wish/cheer', 'wscheer'); L('wish/own', 'wsown'); L('wish/cby', 'wscby'); L('garden/ctl', 'gdctl'); L('knit/ctl', 'knctl'); L('bouquet/ctl', 'bqctl'); L('bouquet/assign', 'bqas'); L('balloon/ctl', 'blnctl'); L('capsule/ctl', 'capctl'); L('promo/ctl', 'grctl'); L('promo/re', 'grre'); L('raid/ctl', 'rdctl'); L('day/ctl', 'dayctl'); L('sports/ctl', 'sportsctl'); L('j2', 'j2'); L('capsule/who', 'capwho'); L('capsule/letter', 'caplt'); L('ltr/ctl', 'ltctl'); L('ck/ctl', 'ckctl'); L('stick/ctl', 'stkctl'); L('hib/ctl', 'hibctl'); L('cold/ctl', 'coldctl'); L('cat/ctl', 'catctl'); L('cat/names', 'catnames'); L('cat/hide', 'cathide'); L('hib/den', 'hibden'); L('hib/give', 'hibgive'); L('stick/box', 'stkbox'); L('stick/by', 'stkby'); L('stick/mine', 'stkmine'); L('stick/npc', 'stknpc'); L('stick/hold', 'stkhold'); L('shout', 'shout'); L('shoutctl', 'shoutctl'); L('bm/ctl', 'bmctl'); L('bm/got', 'bmgot'); L('bm/place', 'bmplace'); L('bm/done', 'bmdone'); L('ltr/assign', 'ltas'); L('ltr/reply', 'ltrep'); L('otumo/ctl', 'otctl'); L('newnpc', 'nnctl'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('morph/ctl', 'moctl'); L('morph/st', 'most'); L('morph/form', 'moform'); L('board', 'board'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event'){ if (adminTyping()) AD.skip = true; else adminRender(); } })); }
   adminRender();
 }
 // 관리자: 고르는 칸(드롭다운)을 펼친 동안은 새로 그리지 않아요 (학생 접속 정보가 자주 바뀌어도 닫히지 않게) · 고르거나 닫으면 밀린 걸 그려요
@@ -9896,7 +9903,7 @@ document.addEventListener('click', e => {
 
 // ===== 무슈 블랑: 저녁·밤에 과자 교실에 나타나요 · 할로윈 요리를 하루 1번 받아서 맛 연출(blanc_fx.js) · 처음 주는 요리는 상품, 다시 주면 골드 · 17가지 다 주면 마지막 인사 =====
 //   me.seed.bl { 요리 번호: 1 } · me.seed.bd 요리 준 날 · me.seed.fin 마지막 인사 · me.cos = { tag: {}, bub: {} } 가진 꾸미기 · me.cosOn = { tg, bb } 끼운 것
-const BL_SPOT = [14, 11], BL_TAG = { gfeed: '새 모이 이름표', star: '별지기 이름표', attend: '개근상 이름표', pumpkin: '호박 이름표', bat: '박쥐 이름표', web: '거미줄 이름표', candy: '사탕옥수수 이름표', bone: '해골 이름표', slime: '물약 이름표', stick: '달콤한 배달부', hib: '숲 지킴이', nurse: '꼬마 간호사', catfriend: '고양이 친구', sports: '운동회 선수', sportswin: '운동회 우승' }, BL_BUB = { garden: '정원 말풍선', snow: '별빛 말풍선', ghost: '유령 말풍선', jack: '잭오랜턴 말풍선', witch: '마녀 말풍선', slime: '물약 말풍선', tomb: '묘비 말풍선', candy: '사탕 말풍선', stick: '막대과자 말풍선', lady: '무당벌레 말풍선', bandage: '반창고 말풍선', paw: '고양이 발자국 말풍선' };
+const BL_SPOT = [14, 11], BL_TAG = { gfeed: '새 모이 이름표', star: '별지기 이름표', attend: '개근상 이름표', pumpkin: '호박 이름표', bat: '박쥐 이름표', web: '거미줄 이름표', candy: '사탕옥수수 이름표', bone: '해골 이름표', slime: '물약 이름표', stick: '달콤한 배달부', tower: '탑의 주인', hib: '숲 지킴이', nurse: '꼬마 간호사', catfriend: '고양이 친구', sports: '운동회 선수', sportswin: '운동회 우승' }, BL_BUB = { garden: '정원 말풍선', snow: '별빛 말풍선', ghost: '유령 말풍선', jack: '잭오랜턴 말풍선', witch: '마녀 말풍선', slime: '물약 말풍선', tomb: '묘비 말풍선', candy: '사탕 말풍선', stick: '막대과자 말풍선', lady: '무당벌레 말풍선', bandage: '반창고 말풍선', paw: '고양이 발자국 말풍선' };
 let blOn = false, blSig = '', blBob = null, blFxLoad = null;
 const blHere = () => !!(me && me.seed && SEED && !me.seed.fin && ['evening', 'night'].includes(bandNow()));
 function blSync(){
@@ -14986,6 +14993,156 @@ const J2 = (() => {
     else if (a === 'close') GDB.set('j2/open/' + id, null).then(() => toast('닫았어요')); });
   return { listen, adminHTML, can, cut };
 })();
+// ---------- 시련의 탑: 혼자 오르는 50 층 · 층마다 몬스터 부류 · 1차 / 2차 중 골라서 · 하루 3 번 ----------
+//   기준 레벨: 1 층 Lv 16 → 50 층 Lv 50 (층마다 약 0.7) · 그 레벨에 그만큼 갖춘 학생이 깰 수 있게 (tools/balance/tower_search.js → TW_K)
+//   부류 효과는 전투 코드(xHit · xAct0)에서 u.tw 로 처리해요 · 그림 art/tower_mon.png (64 칸 · 부류 8 + 보스) · tower_icons.png · tower_building.png
+const TW_T = [
+  { k: 'armor', n: '철갑', mon: '강철 딱정벌레', d: '물리 피해를 40 % 덜 받아요', hp: 1.2, atk: .9, spd: 6, good: j => XMAIN[j] === 'mag', bad: j => XMAIN[j] === 'atk' },
+  { k: 'giant', n: '거대', mon: '이끼 바위 거인', d: '체력이 세 배예요 · 느려요', hp: 3, atk: 1.1, spd: 4, big: 1, good: j => XROLE[j] === 'heal' || ['paladin', 'guardian', 'knight', 'darkknight'].includes(j), bad: () => false },
+  { k: 'swift', n: '날쌘', mon: '그림자 박쥐', d: '공격을 셋 중 하나 피해요', hp: .8, atk: 1, spd: 18, good: j => ['thief', 'fighter', 'bladedancer', 'gunner', 'archer'].includes(j), bad: j => XMAIN[j] === 'mag' },
+  { k: 'swarm', n: '무리', mon: '꼬마 슬라임', d: '작은 몬스터가 셋 나와요', hp: .45, atk: .5, spd: 10, cnt: 3, good: j => ['black', 'elemental', 'sage', 'bard', 'dancer'].includes(j), bad: j => XROLE[j] === 'melee' && !['warrior', 'bladedancer'].includes(j) },
+  { k: 'regen', n: '재생', mon: '덩굴 정령', d: '차례마다 체력이 7 % 차요', hp: 1.3, atk: .9, spd: 7, good: j => XMAIN[j] !== 'heal', bad: j => XMAIN[j] === 'heal' },
+  { k: 'drain', n: '마나 먹기', mon: '보라 도깨비불', d: '때릴 때마다 내 MP 를 빼앗아요', hp: 1, atk: 1, spd: 11, good: j => XMAIN[j] === 'atk', bad: j => XMAIN[j] === 'mag' },
+  { k: 'mirror', n: '반사', mon: '거울 수정', d: '받은 피해의 30 % 를 되돌려요', hp: 1.1, atk: .8, spd: 8, good: j => XMAIN[j] === 'heal' || ['darkknight', 'paladin'].includes(j), bad: j => ['warrior', 'fighter', 'bladedancer'].includes(j) },
+  { k: 'rage', n: '광폭', mon: '성난 뿔멧돼지', d: '5 차례 뒤 공격이 두 배가 돼요', hp: 1, atk: 1.3, spd: 9, good: j => XMAIN[j] !== 'heal', bad: j => XMAIN[j] === 'heal' },
+];
+const TW_N = 50, TW_DAY = 3, TW_BOSS = '탑지기 석상';
+const twLv = f => 16 + (f - 1) * 34 / 49;   // 1 층 Lv 16 · 2 층 16.7 · …… · 50 층 Lv 50
+const TW_K = [[1.101,1.209],[1.003,2.197],[0.382,3.348],[1.021,1.887],[1.865,0.798],[0.908,1.076],[1.217,1.64],[0.929,3.529],[1.392,1.458],[0.165,1.954],[0.515,3.83],[1.336,2.275],[1.669,0.536],[0.997,0.803],[1.476,1.669],[1.003,0.798],[1.887,0.562],[0.903,1.738],[0.562,4.157],[0.182,2.146],[2.249,0.562],[1.26,0.963],[1.822,1.843],[1.282,0.929],[2.649,0.71],[1.238,1.898],[0.827,5.161],[1.344,1.92],[2.68,0.686],[0.367,2.072],[2.329,2.21],[1.669,1.195],[3.066,0.749],[1.45,2.096],[1.021,5.377],[1.546,2.084],[3.407,0.832],[1.822,1.245],[2.712,2.68],[0.599,2.024],[3.676,0.803],[1.678,2.158],[1.101,5.668],[1.843,2.275],[4.28,0.784],[2.275,1.344],[3.407,2.892],[2.384,1.368],[4.433,0.866],[0.559,2.455]];   // 층마다 [체력, 공격] 배율 (밸런스 도구로 찾은 값 · 비어 있으면 1)
+const TW_JM = {gunner: 1.197, elemental: 0.975, fighter: 1.414, bladedancer: 1.258, gadget: 1.044, alch: 0.91, time: 1.703, white: 1.024, druid: 1.245, dancer: 1.004, sage: 1.065, shaman: 0.985, miko: 0.749, archer: 1.27, cleric: 0.477, bard: 0.756, paladin: 0.947, guardian: 0.928, darkknight: 1.197, warrior: 1.245, knight: 0.975, thief: 1.258, black: 1.414, summon: 0.994};   // 직업마다 몬스터 세기 배율: 혼자 싸울 때 직업끼리 힘 차이를 맞춰요 (치유 · 방패 직업은 약하게) · tools/balance/tower_job.js
+const twFloor = f => { if (f % 10 === 0) return { f, boss: 1, t: [TW_T[(f / 10) % 8], TW_T[(f / 10 + 3) % 8]] }; const a = TW_T[(f * 3) % 8], b = f > 12 ? TW_T[(f * 5 + 2) % 8] : null; return { f, boss: 0, t: b && b !== a ? [a, b] : [a] }; };
+const TW_FJ = ['warrior', 'knight', 'thief', 'black', 'summon', 'gadget', 'alch', 'time', 'white', 'druid', 'cleric', 'bard', 'paladin', 'guardian', 'darkknight', 'dancer', 'sage', 'shaman', 'miko', 'archer', 'gunner', 'elemental', 'fighter', 'bladedancer'];
+const TW_FIT = ['bbgbgnbnggggbbbbnngnggbg','ggnnnngngggngggbbggggbng','gggggnngbbgngggbbbgggngg','ngggggngbbbbbbnnnbnggngg','ngggggbgggnbnngbnbnggbng','nggbnnbngggbnnbnnngnnbng','ggggggnnbngbgggbbbbggbng','bgngggnngnggbbbbnggggnbn','nngbnnbbggngbnbbbnngggng','ggggnnngbnnbngnnngnggbng','gggggnngnngbgggnnbggnbgg','bggggggnbbbbbggnbbbggbng','gbgggggnggbgbbgnngbggggg','bbnbnnngggggbnbbnggnngbn','ggggggngbbnngggnnbbggngg','bnnnngnnggggnbbbngnnngnn','gbggnggbggbgbbggngbngggg','nnnbnnnnggngnnnbngggggng','ggngnnngbbgbgggbbbggnngn','ggngnnngngnngggnnnnngbnn','gbnggngbggbgbbggggnngggg','nnnngnnbgggnnnbbngnbngnn','ggggggggbbnngggnnbbggggg','bngbnnnnggggggbbnggnngnn','gbggnngbggbgbbgnngbggggg','gggbnnnnggnggggnnggngggn','ggngbnggbbgngngnbbgnbngn','ngnbnngnggngggnnnnnnngnn','gbggnngbggbgbbggngbggggg','ggngngnngggnggggnggnbbbb','ggggggngbbbbgggggnbggngg','nngnnnnbggngnnbgnggnggng','gbggnngbggbnbbggngbggggg','nggbgnbnggnggggnbggggnnn','ggngnnggbbgngggggngnnngb','nggbnnnnggnngggnngggngnn','gbggnngbggbgbbgnngbnggng','bngbgnnnggnggnnnnggnngbn','ggggngggbbbbgggnnbbngngn','nnngngggbbbbbnggnbbgbggg','gbnggngbggbgbbggngnngggg','ngnbnnnbggnnggggnggnngnb','ggngbnngbngngggnbngnbbgb','ngbbnngnggnngggnnggnngnn','gbgggngbggbgnbggggnngggg','bbnngngngggnnnngnggnngnn','ggngngggbbbbggggnnbnnngg','nnnbnngnggnggnngnggnggnn','gbngnngbggbgnbggggbngggg','ngbggngggggbggggggbnbgnb'];   // 층마다 직업별 뱃지 (TW_FJ 순서 · g 유리 b 불리 n 보통): 그 층 기준 레벨 · 장비 모의 전투 승률 85 % 이상 · 50 % 미만 (tools/balance/tower_fit.js)
+const twFit = (j, F) => { const c = (TW_FIT[F.f - 1] || '')[TW_FJ.indexOf(j)]; if (c) return c === 'g' ? ['g', '유리'] : c === 'b' ? ['b', '불리'] : ['n', '보통']; let s = 0; F.t.forEach(t => { if (t.good(j)) s++; else if (t.bad(j)) s--; }); return s > 0 ? ['g', '유리'] : s < 0 ? ['b', '불리'] : ['n', '보통']; };
+const twRew = f => { const b = f % 10 === 0, o = { g: (200 + f * 40) * (b ? 4 : 1), it: { ar_mark: 1 + (f / 5 | 0) } }; if (b) o.it.ar_crest = f / 10; if (f === 40 || f === 50) o.it.ar_heart = 1; return o; };
+let twImg = null; const twSheet = () => twImg || (twImg = Object.assign(new Image(), { src: 'art/tower_mon.png?v=2' }));
+function twFoes(f, K, job, jm){
+  const F = twFloor(f), L = twLv(f), k0 = K || TW_K[f - 1] || [1, 1], m = jm ?? (job && TW_JM[job]) ?? 1, k = [k0[0] * m, k0[1] * m], out = [];
+  const mk = (t, nm, li, o = {}) => { const H = Math.round(55 * (1 + .35 * (L - 1)) * XFOE * t.hp * k[0] * (o.hm || 1)), A = Math.round(10 * (1 + .25 * (L - 1)) * XFOE_A * t.atk * k[1] * (o.am || 1)), sc = o.boss || t.big ? 2 : 1;
+    const tw = {}; (o.tw || [t.k]).forEach(x => { tw[x] = 1; });
+    return { id: 'e' + out.length, name: nm, ic: '', lp: li, tws: 1, big: o.boss ? 1 : 0, sc, hh: 56 * sc, team: 'e', mhp: H, hp: H, atk: A, spd: t.spd, g: Math.random() * 60, k: o.boss ? 8 : t.big ? 3 : 1, aoe: !!(o.boss || t.big), sk: '', skn: '', bm: null, mL: Math.round(L), fx: {}, tw }; };
+  if (F.boss) out.push(mk({ hp: 6, atk: 1.4, spd: 7 }, TW_BOSS, 8, { boss: 1, tw: F.t.map(t => t.k) }));
+  else F.t.forEach(t => { for (let i = 0; i < (t.cnt || 1); i++) out.push(mk(t, t.mon, TW_T.indexOf(t), { hm: F.t.length > 1 ? .7 : 1 })); });
+  return out;
+}
+const TW = (() => {
+  let ctl = null, sig = '', spot = null; const offs = [];
+  const open = () => !!(ctl && ctl.open);
+  const S = () => { me.tw = me.tw || { best: 0, d: '', n: 0, rw: {} }; const s = me.tw; if (s.d !== todayKey()){ s.d = todayKey(); s.n = 0; } s.rw = s.rw || {}; return s; };
+  const left = () => Math.max(0, TW_DAY - S().n);
+  // ---------- 탑 그리기 (학교 안뜰) ----------
+  function props(){
+    const want = open() && me ? 'on' : ''; if (want === sig) return; sig = want;
+    if (!want) return World.setProps('campus', [], 'tower');
+    const im = new Image(); im.onload = () => { if (!spot){ const c = [40, 43]; for (let r = 0; r < 30 && !spot; r++) for (let dx = -r; dx <= r && !spot; dx++) for (let dy = -r; dy <= r && !spot; dy++){ const x = c[0] + dx, y = c[1] + dy; let ok = true; for (let a = -3; a <= 3 && ok; a++) for (let b = -6; b <= 2 && ok; b++) if (!World.isFree(x + a, y + b)) ok = false; if (ok) spot = [x, y]; } if (!spot) spot = c; }
+      const K = 1.5, cv = document.createElement('canvas'); cv.width = 56 * K; cv.height = 120 * K; const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(im, 0, 0, cv.width, cv.height);
+      if (sig) World.setProps('campus', [{ id: 'tower', x: spot[0], y: spot[1], img: cv, pxc: g, sw: cv.width, sh: cv.height, ax: cv.width / 2, ay: cv.height - 6 * K, solid: true, light: { r: 16, c: [180, 220, 255], a: .3 } }], 'tower'); };
+    im.src = 'art/tower_building.png?v=1';
+  }
+  // ---------- 창 ----------
+  const CSS = `<style>#twv{position:fixed;inset:0;z-index:300;background:rgba(10,6,24,.72);display:flex;align-items:flex-end;justify-content:center;font-family:var(--f-pxb);color:#F1E9FF}
+    #twv .card{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:#1c1530;border:2px solid #4E3C72;border-radius:18px 18px 0 0;padding:14px 14px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;box-sizing:border-box}
+    #twv .hd{display:flex;align-items:center;gap:8px}#twv .hd b{flex:1;font-size:18px}#twv .x{width:44px;height:44px;border-radius:12px;border:1px solid #4E3C72;background:#2E2248;color:#F1E9FF;font-size:18px}
+    #twv .sub{font-size:12px;color:#c8bce0}#twv .tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:12px;background:#2E2248;border:1px solid #4E3C72}
+    #twv .jobs{display:grid;grid-template-columns:1fr 1fr;gap:8px}#twv .job{background:#120c22;border:1px solid #2E2248;border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}#twv .job small{font-size:11px;color:#c8bce0}#twv .job b{font-size:15px}
+    #twv .lad{display:flex;flex-direction:column-reverse;gap:4px;max-height:46vh;overflow:auto;padding:4px;background:#120c22;border-radius:14px}
+    #twv .fl{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 10px;border-radius:10px;border:1px solid #2E2248;background:#1c1530;font-size:14px;color:#F1E9FF;font-family:var(--f-pxb);flex:none}
+    #twv .fl .no{width:44px;text-align:left}#twv .fl .lv{width:52px;font-size:11px;color:#9a8cb8;text-align:left}#twv .fl .ics{flex:1;display:flex;gap:4px;align-items:center}#twv .fl .ics i{width:20px;height:20px}#twv .fl small{font-size:11px;color:#9a8cb8}
+    #twv .fl.done{opacity:.6}#twv .fl.done small{color:#8adc9a}#twv .fl.now{border-color:#FF9A3C;background:#2a1c38;opacity:1}#twv .fl.now small{color:#FF9A3C}#twv .fl.lock{opacity:.35}#twv .fl.boss{border-style:dashed}
+    #twv i.ti{display:inline-block;width:28px;height:28px;background:url(art/tower_icons.png?v=1) 0 0/800% 100% no-repeat;image-rendering:pixelated;flex:none}
+    #twv .mons{display:flex;gap:6px;justify-content:center;background:radial-gradient(circle at 50% 70%,#3a2c5a,#120c22 70%);border-radius:14px;padding:6px}#twv .mons i{width:112px;height:112px;background:url(art/tower_mon.png?v=2) 0 0/900% 100% no-repeat;image-rendering:pixelated;transform:scaleX(-1)}
+    #twv .tr{display:flex;gap:8px;align-items:flex-start;background:#120c22;border-radius:12px;padding:8px 10px}#twv .tr b{font-size:15px}#twv .tr div{display:flex;flex-direction:column;gap:2px}
+    #twv .pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}#twv .pk{min-height:72px;border-radius:14px;border:2px solid #4E3C72;background:#2E2248;color:#F1E9FF;font-family:var(--f-pxb);font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}#twv .pk:disabled{opacity:.45}
+    #twv .bd{font-size:11px;padding:1px 8px;border-radius:999px}#twv .bd.g{background:#2E6A3E;color:#C8FFD0}#twv .bd.b{background:#7A2E3A;color:#FFD0D6}#twv .bd.n{background:#3A3458;color:#D8D0F0}#twv .pk.g{border-color:#5AC46E}
+    #twv .rw{display:flex;gap:6px;flex-wrap:wrap}#twv .rk{display:flex;flex-direction:column;gap:4px}#twv .rk div{display:flex;justify-content:space-between;font-size:13px;padding:4px 8px;background:#120c22;border-radius:8px}#twv .rk div.me{outline:1px solid #FF9A3C}
+    #twv .go{min-height:48px;border-radius:14px;border:1px solid #C86A1E;background:#FF9A3C;color:#2A1506;font-family:var(--f-pxb);font-size:16px}
+    #twv.res{align-items:center}#twv.res .card{border-radius:18px;max-width:360px;text-align:center;align-items:center}#twv.res .big{font-size:26px;color:#FFD878}</style>`;
+  const icon = t => `<i class="ti" style="background-position:${TW_T.indexOf(t) / 7 * 100}% 0" title="${t.n}"></i>`;
+  const monI = i => `<i style="background-position:${i / 8 * 100}% 0"></i>`;
+  const close = () => { const v = document.getElementById('twv'); if (v) v.remove(); };
+  const box = (html, cls = '') => { close(); const v = document.createElement('div'); v.id = 'twv'; v.className = cls; v.innerHTML = CSS + html; document.body.appendChild(v); v.addEventListener('click', e => { if (e.target === v || e.target.closest('[data-twx]')) close(); }); return v; };
+  const jobs = () => { const ex = xEx(), c = ex.cur ? 1 : 0, d = i => i === c ? ex : ex.jo, out = [0]; if (xHas2(ex)) out.push(1); return out.map(i => ({ i, job: d(i).job, L: xLv(d(i).exp || 0).L, t: i ? '2차' : '1차' })); };
+  const RK = { melee: '근접', ranged: '원거리', heal: '치유' };
+  const why = () => { const ex = xEx(); if (!open()) return '탑 문이 닫혀 있어요'; if (!ex.job) return '탐사에서 직업을 먼저 골라 주세요'; if (ex.run) return '탐사 중에는 오를 수 없어요'; if (xb && !(xb.tw && !xb.over)) return '전투 중이에요'; return ''; };
+  function win(){
+    if (!me) return; if (xb && xb.tw && !xb.over){ xv = { view: 'battle' }; openSheet('home', 'explore'); return; }
+    const w = why(); if (w) return toast(w);
+    const s = S(), now = Math.min(TW_N, s.best + 1), js = jobs();
+    const rank = Object.entries(playersList || {}).map(([id, p]) => [id, (id === uid ? s.best : p && p.tw) || 0, p && p.nick]).filter(r => r[1] > 0 && r[2]).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const rows = []; for (let f = 1; f <= TW_N; f++){ const F = twFloor(f), st = f <= s.best ? 'done' : f === now && s.best < TW_N ? 'now' : 'lock';
+      rows.push(`<button class="fl ${st}${F.boss ? ' boss' : ''}" data-twf="${f}" ${st === 'lock' ? 'disabled' : ''}><span class="no">${f} 층</span><span class="lv">Lv ${Math.round(twLv(f))}</span><span class="ics">${F.t.map(icon).join('')}${F.boss ? '<span class="tag">보스</span>' : ''}</span><small>${st === 'done' ? '깼어요' : st === 'now' ? '도전' : ''}</small></button>`); }
+    const v = box(`<div class="card"><div class="hd"><b>시련의 탑</b><span class="tag">오늘 도전 ${left()} / ${TW_DAY}</span><button class="x" data-twx aria-label="닫기">✕</button></div>
+      <div class="jobs">${js.map(j => `<div class="job"><small>${j.t} · ${RK[XROLE[j.job]] || ''}</small><b>${XJ[j.job].n} Lv ${j.L}</b></div>`).join('')}</div>
+      <div class="sub">${s.best ? `가장 높이 간 층 ${s.best} 층` : '1 층부터 올라가요'}${s.best >= TW_N ? ' · 탑의 주인' : ''}</div>
+      <div class="lad">${rows.join('')}</div>
+      ${rank.length ? `<div class="sub">반 순위</div><div class="rk">${rank.map(([id, b, n], i) => `<div class="${id === uid ? 'me' : ''}"><span>${i + 1}. ${esc(n)}</span><span>${b} 층</span></div>`).join('')}</div>` : ''}</div>`);
+    const n = v.querySelector('.fl.now'); if (n) n.scrollIntoView({ block: 'center' });
+    v.querySelectorAll('[data-twf]').forEach(b => b.onclick = () => card(+b.dataset.twf)); sfx('pop');
+  }
+  function card(f){
+    const s = S(), F = twFloor(f), js = jobs(), rw = twRew(f), done = f <= s.best, mi = F.boss ? [8] : F.t.map(t => TW_T.indexOf(t)), ln = left();
+    const rwT = [`골드 ${rw.g}`, ...Object.entries(rw.it).map(([k, c]) => `${ITEM[k]} ${c}`), ...(f === TW_N ? ['이름표 「탑의 주인」'] : [])];
+    const v = box(`<div class="card"><div class="hd"><b>${f} 층${F.boss ? ' · ' + TW_BOSS : ''}</b><span class="tag">추천 Lv ${Math.round(twLv(f))}</span><button class="x" data-twx aria-label="닫기">✕</button></div>
+      <div class="mons">${mi.map(monI).join('')}</div>
+      ${F.t.map(t => `<div class="tr">${icon(t)}<div><b>${t.n}${F.boss ? '' : ' · ' + t.mon}</b><span class="sub">${t.d}</span></div></div>`).join('')}
+      <div class="sub">${done ? '이미 깬 층이에요. 다시 올라도 보상은 없어요' : '처음 깨면'}</div>${done ? '' : `<div class="rw">${rwT.map(r => `<span class="tag">${r}</span>`).join('')}</div>`}
+      <div class="sub">${ln ? '어느 직업으로 오를까요' : '오늘 도전을 다 썼어요. 내일 다시 와요'}</div>
+      <div class="pick">${js.map(j => { const [c, w] = twFit(j.job, F); return `<button class="pk ${c}" data-twgo="${j.i}" ${ln ? '' : 'disabled'}><span>${j.t} ${XJ[j.job].n}</span><span class="sub">Lv ${j.L}</span><span class="bd ${c}">${w}</span></button>`; }).join('')}</div>
+      <button class="btn" data-twback style="min-height:44px">층 목록</button></div>`);
+    v.querySelector('[data-twback]').onclick = () => win();
+    v.querySelectorAll('[data-twgo]').forEach(b => b.onclick = () => go(f, +b.dataset.twgo));
+  }
+  // ---------- 전투 ----------
+  function go(f, ji){
+    const w = why(); if (w) return toast(w); const s = S(); if (!left()) return toast('오늘 도전을 다 썼어요'); if (f > s.best + 1) return;
+    const ex = xEx(); if ((ex.cur || 0) !== ji && !xSwap(ji)) return;
+    s.n++; saveSure(); close();
+    const party = xParty(); party.forEach(u => { u.hp = u.mhp; u.mp = u.mmp; u.cdn = {}; u.row = XROLE[u.job] === 'melee' ? 'f' : 'b'; });
+    const F = twFloor(f);
+    xb = { party, foes: twFoes(f, null, party[0].job), kind: F.boss ? 'boss' : 'elite', log: F.t.map(t => `${t.n}: ${t.d}`).join(' · '), turn: null, pick: null, over: false, last: performance.now(), buff: false, def: {}, fxs: [], floats: [], proj: [], n0: 1, tw: { f, sub: F.t.map(t => t.n).join(' · ') + (F.boss ? ' · 보스' : '') + ` · 추천 Lv ${Math.round(twLv(f))}` } };
+    xv = { view: 'battle' }; closeSheet(); openSheet('home', 'explore');
+  }
+  function end(won){
+    const B = xb; if (!B || !B.tw || B.over) return; B.over = true; clearInterval(xTick); const f = B.tw.f, s = S(); let msg = '', first = false;
+    if (won){ sfx('win'); if (f > s.best){ first = true; s.best = f; const rw = twRew(f); me.coin += rw.g; Object.entries(rw.it).forEach(([k, c]) => { me.inv[k] = (me.inv[k] || 0) + c; });
+        if (f === TW_N && !s.rw.tag){ s.rw.tag = 1; me.cos = me.cos || {}; (me.cos.tag = me.cos.tag || {}).tower = 1; }
+        msg = `${f} 층 돌파! 골드 +${rw.g} · ${Object.entries(rw.it).map(([k, c]) => `${ITEM[k]} +${c}`).join(' · ')}${f === TW_N ? ' · 이름표 「탑의 주인」' : ''}`; } else msg = `${f} 층을 다시 깼어요`; }
+    else { sfx('lose'); msg = `${f} 층에서 쓰러졌어요.......`; }
+    saveSure(); pubSave();
+    $('#xlog') && ($('#xlog').textContent = msg); const el = $('#xcmd'); if (el) el.innerHTML = '<button class="btn go" id="xnext" style="grid-column:1/-1">탑으로 돌아가기</button>';
+    const back = () => { if (xb !== B) return; xb = null; xv = null; closeSheet(); if (won && first) result(f); else win(); };
+    const nb = $('#xnext'); if (nb) nb.onclick = back; else setTimeout(back, 1500);
+  }
+  function result(f){
+    const s = S(), rw = twRew(f), nx = f < TW_N ? twFloor(f + 1) : null;
+    box(`<div class="card"><span class="sub">시련의 탑</span><div class="big">${f} 층 돌파</div>
+      <div class="rw" style="justify-content:center"><span class="tag">골드 ${rw.g}</span>${Object.entries(rw.it).map(([k, c]) => `<span class="tag">${ITEM[k]} ${c}</span>`).join('')}${f === TW_N ? '<span class="tag">이름표 「탑의 주인」</span>' : ''}</div>
+      <div class="sub">${nx ? `다음: ${f + 1} 층 · ${nx.t.map(t => t.n).join(' · ')}${nx.boss ? ' · 보스' : ''} · 추천 Lv ${Math.round(twLv(f + 1))}` : '탑 꼭대기까지 올랐어요'}</div>
+      <div class="sub">오늘 남은 도전 ${left()} / ${TW_DAY}</div>
+      <button class="go" data-twok style="width:100%">좋아요</button></div>`, 'res').querySelector('[data-twok]').onclick = () => win();
+    sfx('sparkle');
+  }
+  function listen(){
+    if (offs.length) return; if (solo){ ctl = window.__twForce ? { open: true } : null; }
+    else offs.push(GDB.on('tw/ctl', v => { ctl = v; props(); }));
+    const pp = World.onProp; World.onProp = id => id === 'tower' ? (win(), null) : pp ? pp(id) : null;
+    setInterval(() => { try { props(); } catch(e){} }, 2000);
+  }
+  // ---------- 관리자 ----------
+  function adminHTML(){
+    const c = AD.twctl || {}, P = AD.players || {}, td = todayKey();
+    const ids = Object.keys(P).filter(id => P[id] && P[id].nick && P[id].tw && P[id].tw.best).sort((a, b) => P[b].tw.best - P[a].tw.best);
+    return `<div class="adcard"><div class="abhead"><b>시련의 탑</b></div>
+      <div class="abchips"><span>${c.open ? '열려 있어요' : '닫혀 있어요'}</span><span>올라간 학생 ${ids.length} 명</span>${ids.length ? `<span>1 등 ${esc(P[ids[0]].nick)} ${P[ids[0]].tw.best} 층</span>` : ''}</div>
+      <div class="s" style="margin:6px 0">학교 안뜰에 탑이 생겨요. 학생마다 하루 3 번 · 1 층 Lv 16 → 50 층 Lv 50 기준이에요. 처음 깬 층만 보상이 있어요.</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap">${c.open ? '<button class="btn sm" data-twa="close">탑 닫기</button>' : '<button class="btn sm go" data-twa="open">탑 열기</button>'}</div>
+      ${ids.length ? `<table class="twt"><tr><th>학생</th><th>최고 층</th><th>오늘 도전</th></tr>${ids.map(id => { const t = P[id].tw; return `<tr><td>${esc(P[id].nick)}</td><td>${t.best} 층</td><td>${t.d === td ? t.n || 0 : 0} / ${TW_DAY}</td></tr>`; }).join('')}</table>` : ''}</div>`;
+  }
+  document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-twa]'); if (!b || !b.closest('#adminv')) return;
+    if (b.dataset.twa === 'open'){ if (confirm('시련의 탑을 열까요? 학교 안뜰에 탑이 생겨요.')) GDB.set('tw/ctl', { open: true, at: now2() }).then(() => toast('탑을 열었어요')); }
+    else if (confirm('시련의 탑을 닫을까요? 기록은 그대로 남아요.')) GDB.set('tw/ctl', { open: false, at: now2() }).then(() => toast('탑을 닫았어요')); });
+  return { listen, win, card, go, end, adminHTML, S, open: () => open(), force: v => { ctl = v ? { open: true } : null; sig = ''; props(); } };
+})();
 let bmOn = false;
 const BM = (() => {
   // ---------- 원고 「열두 개의 밤」 (tools/bookmark_mock/book.md) · 문단 = 쪽 · 단어 = 칸 ----------
@@ -15503,7 +15660,7 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
   const a = b.dataset.sha; if (a === 'off') F.set(F.ref(db, 'shoutctl'), { off: true }).then(() => toast('확성기를 껐어요')); else if (a === 'on') F.set(F.ref(db, 'shoutctl'), null).then(() => toast('확성기를 켰어요')); else if (a === 'clear' && confirm('확성기 기록을 다 지울까요?')) F.set(F.ref(db, 'shout'), null).then(() => toast('기록을 지웠어요')); });
 function adminEventHTML(){
   const G = f => { try { return typeof f === 'function' ? f() || '' : ''; } catch(e){ return ''; } };
-  const REP = [G(() => J2.adminHTML()), G(() => adminStargazeHTML()), G(() => adminGtrainHTML()), G(() => adminLanternHTML()), G(() => adminEventHTML0()), G(() => adminPuzzleHTML()), G(() => adminPumpkinHTML()), G(() => adminMorphHTML()), G(() => adminFairyHTML()), G(typeof adminGrHTML === 'function' ? adminGrHTML : null), G(typeof adminRaidHTML === 'function' ? adminRaidHTML : null), G(typeof adminDayHTML === 'function' ? adminDayHTML : null)];
+  const REP = [G(() => J2.adminHTML()), G(() => TW.adminHTML()), G(() => adminStargazeHTML()), G(() => adminGtrainHTML()), G(() => adminLanternHTML()), G(() => adminEventHTML0()), G(() => adminPuzzleHTML()), G(() => adminPumpkinHTML()), G(() => adminMorphHTML()), G(() => adminFairyHTML()), G(typeof adminGrHTML === 'function' ? adminGrHTML : null), G(typeof adminRaidHTML === 'function' ? adminRaidHTML : null), G(typeof adminDayHTML === 'function' ? adminDayHTML : null)];
   const ONCE = [['sports', () => SPT.adminHTML()], ['cat', () => CAT.adminHTML()], ['cold', () => COLD.adminHTML()], ['hib', () => HIB.adminHTML()], ['stick', () => STK.adminHTML()], ['ck', () => CK.adminHTML()], ['bm', () => BM.adminHTML()], ['snow', () => adminSnowHTML()], ['baby', () => adminBabyHTML()], ['fam', () => adminFamHTML()], ['seed', () => adminSeedHTML()], ['tilda', () => adminTildaHTML()],
     ['nubi', () => adminNubiHTML()], ['wish', () => adminWishHTML()], ['garden', () => adminGardenHTML()], ['knit', () => adminKnitHTML()], ['bouquet', () => adminBqHTML()], ['balloon', () => adminBlnHTML()], ['capsule', () => adminCapHTML()], ['ltr', () => adminLtHTML()], ['otumo', () => adminOtumoHTML()], ['newnpc', () => adminNewNpcHTML()]];
   const D = Object.fromEntries(EV_ONCE.map(([k, , d]) => [k, !!d])), card = ([k, f], done) => `<div class="evgrp"><div class="evbar"><span>일회성 · ${done ? '연 적 있어요' : '아직 안 열었어요'}</span><button class="btn sm${done ? '' : ' go'}" data-evd="${k}:${done ? 0 : 1}">${done ? '되돌리기' : '열었음'}</button></div>${G(f)}</div>`;
@@ -16809,7 +16966,7 @@ async function boot(){
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       F.onValue(F.ref(db, 'adm/reset/' + uid), s => { const v = +s.val() || 0; if (!v) return; let seen = 0; try { seen = +localStorage.getItem('magion-rs-' + uid) || 0; } catch(e){}
         if (v > seen && v > bootT - 5000){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
-      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); famListen(); fairyListen(); seedListen(); tildaListen(); nubiListen(); wishListen(); gardenListen(); knitListen(); bqListen(); blnListen(); capListen(); letterListen(); try { grListen(); } catch(e){} try { rdListen(); } catch(e){} try { ddListen(); } catch(e){} CK.listen(); STK.listen(); HIB.listen(); COLD.listen(); try { CAT.listen(); } catch(e){} try { J2.listen(); } catch(e){} try { SPT.listen(); } catch(e){} BM.listen(); shoutListen(); shoutUi(); otumoListen(); nnListen(); blancListen(); snowListen(); morphListen(); boardListen(); tarotInit(); clockLadderInit(); prankInit();
+      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); famListen(); fairyListen(); seedListen(); tildaListen(); nubiListen(); wishListen(); gardenListen(); knitListen(); bqListen(); blnListen(); capListen(); letterListen(); try { grListen(); } catch(e){} try { rdListen(); } catch(e){} try { ddListen(); } catch(e){} CK.listen(); STK.listen(); HIB.listen(); COLD.listen(); try { CAT.listen(); } catch(e){} try { J2.listen(); TW.listen(); } catch(e){} try { SPT.listen(); } catch(e){} BM.listen(); shoutListen(); shoutUi(); otumoListen(); nnListen(); blancListen(); snowListen(); morphListen(); boardListen(); tarotInit(); clockLadderInit(); prankInit();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); const sg = Object.entries(gameList).map(([id, r]) => r ? id + r.st + Object.keys(r.p || {}).length : '').join('|'); if (sub === 'games' && sg !== gamesSig) render(); gamesSig = sg; });   // 점수가 오를 때마다가 아니라 방이 열리고 닫히고 사람이 드나들 때만 다시 그려요
       F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       const recWatch = () => { const wk = weekKey(); if (recWatch.wk === wk) return; recWatch.wk = wk; (recWatch.offs || []).forEach(f => f()); recList = {}; recWatch.offs = Object.keys(GAMES).map(g => F.onValue(F.ref(db, `records/${g}/${wk}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); })); };

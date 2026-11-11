@@ -52,9 +52,9 @@ def swift(f=0):   # 날쌘: 그림자 박쥐 여우
     d.polygon([(30, 50), (22, 58), (34, 52)], fill=H('#2E2244'))   # 꼬리
     for i in range(3): R(d, 6 + i * 4, 52 + i, 3, 1, H('#8A7AC0', 140))   # 잔상
     return outline(im)
-def swarm():   # 무리: 꼬마 슬라임 셋
+def swarm():   # 무리: 꼬마 슬라임 (전투에는 셋이 나와요)
     im, d = cell()
-    for (x, y, s, c, c2) in ((6, 40, 16, '#7ED0FF', '#C8EEFF'), (24, 32, 20, '#5AB8F0', '#B0E4FF'), (42, 42, 15, '#8ADCFF', '#D4F4FF')):
+    for (x, y, s, c, c2) in ((20, 34, 24, '#5AB8F0', '#B0E4FF'),):
         E(d, x, y, x + s, y + s * 3 // 4 + 4, H(c)); E(d, x + 3, y + 2, x + s // 2, y + s // 3 + 1, H(c2))
         eye(d, x + s // 2, y + s // 3 + 2); eye(d, x + s // 2 + 4, y + s // 3 + 2)
         R(d, x + s // 2 + 1, y + s // 3 + 6, 3, 1, H('#2A5A80'))
