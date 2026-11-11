@@ -15006,7 +15006,7 @@ const TW_T = [
   { k: 'mirror', n: '반사', mon: '거울 수정', d: '받은 피해의 30 % 를 되돌려요', hp: 1.1, atk: .8, spd: 8, good: j => XMAIN[j] === 'heal' || ['darkknight', 'paladin'].includes(j), bad: j => ['warrior', 'fighter', 'bladedancer'].includes(j) },
   { k: 'rage', n: '광폭', mon: '성난 뿔멧돼지', d: '5 차례 뒤 공격이 두 배가 돼요', hp: 1, atk: 1.3, spd: 9, good: j => XMAIN[j] !== 'heal', bad: j => XMAIN[j] === 'heal' },
 ];
-const TW_N = 50, TW_DAY = 3, TW_BOSS = '탑지기 석상';
+const TW_N = 50, TW_BOSS = '탑지기 석상';   // 하루 제한 없음 (레벨이 모자라면 어차피 못 올라가요) · 경험치는 없어요 · 물약은 가진 만큼
 const twLv = f => 16 + (f - 1) * 34 / 49;   // 1 층 Lv 16 · 2 층 16.7 · …… · 50 층 Lv 50
 const TW_K = [[1.101,1.209],[1.003,2.197],[0.382,3.348],[1.021,1.887],[1.865,0.798],[0.908,1.076],[1.217,1.64],[0.929,3.529],[1.392,1.458],[0.165,1.954],[0.515,3.83],[1.336,2.275],[1.669,0.536],[0.997,0.803],[1.476,1.669],[1.003,0.798],[1.887,0.562],[0.903,1.738],[0.562,4.157],[0.182,2.146],[2.249,0.562],[1.26,0.963],[1.822,1.843],[1.282,0.929],[2.649,0.71],[1.238,1.898],[0.827,5.161],[1.344,1.92],[2.68,0.686],[0.367,2.072],[2.329,2.21],[1.669,1.195],[3.066,0.749],[1.45,2.096],[1.021,5.377],[1.546,2.084],[3.407,0.832],[1.822,1.245],[2.712,2.68],[0.599,2.024],[3.676,0.803],[1.678,2.158],[1.101,5.668],[1.843,2.275],[4.28,0.784],[2.275,1.344],[3.407,2.892],[2.384,1.368],[4.433,0.866],[0.559,2.455]];   // 층마다 [체력, 공격] 배율 (밸런스 도구로 찾은 값 · 비어 있으면 1)
 const TW_JM = {gunner: 1.197, elemental: 0.975, fighter: 1.414, bladedancer: 1.258, gadget: 1.044, alch: 0.91, time: 1.703, white: 1.024, druid: 1.245, dancer: 1.004, sage: 1.065, shaman: 0.985, miko: 0.749, archer: 1.27, cleric: 0.477, bard: 0.756, paladin: 0.947, guardian: 0.928, darkknight: 1.197, warrior: 1.245, knight: 0.975, thief: 1.258, black: 1.414, summon: 0.994};   // 직업마다 몬스터 세기 배율: 혼자 싸울 때 직업끼리 힘 차이를 맞춰요 (치유 · 방패 직업은 약하게) · tools/balance/tower_job.js
@@ -15014,7 +15014,11 @@ const twFloor = f => { if (f % 10 === 0) return { f, boss: 1, t: [TW_T[(f / 10) 
 const TW_FJ = ['warrior', 'knight', 'thief', 'black', 'summon', 'gadget', 'alch', 'time', 'white', 'druid', 'cleric', 'bard', 'paladin', 'guardian', 'darkknight', 'dancer', 'sage', 'shaman', 'miko', 'archer', 'gunner', 'elemental', 'fighter', 'bladedancer'];
 const TW_FIT = ['bbgbgnbnggggbbbbnngnggbg','ggnnnngngggngggbbggggbng','gggggnngbbgngggbbbgggngg','ngggggngbbbbbbnnnbnggngg','ngggggbgggnbnngbnbnggbng','nggbnnbngggbnnbnnngnnbng','ggggggnnbngbgggbbbbggbng','bgngggnngnggbbbbnggggnbn','nngbnnbbggngbnbbbnngggng','ggggnnngbnnbngnnngnggbng','gggggnngnngbgggnnbggnbgg','bggggggnbbbbbggnbbbggbng','gbgggggnggbgbbgnngbggggg','bbnbnnngggggbnbbnggnngbn','ggggggngbbnngggnnbbggngg','bnnnngnnggggnbbbngnnngnn','gbggnggbggbgbbggngbngggg','nnnbnnnnggngnnnbngggggng','ggngnnngbbgbgggbbbggnngn','ggngnnngngnngggnnnnngbnn','gbnggngbggbgbbggggnngggg','nnnngnnbgggnnnbbngnbngnn','ggggggggbbnngggnnbbggggg','bngbnnnnggggggbbnggnngnn','gbggnngbggbgbbgnngbggggg','gggbnnnnggnggggnnggngggn','ggngbnggbbgngngnbbgnbngn','ngnbnngnggngggnnnnnnngnn','gbggnngbggbgbbggngbggggg','ggngngnngggnggggnggnbbbb','ggggggngbbbbgggggnbggngg','nngnnnnbggngnnbgnggnggng','gbggnngbggbnbbggngbggggg','nggbgnbnggnggggnbggggnnn','ggngnnggbbgngggggngnnngb','nggbnnnnggnngggnngggngnn','gbggnngbggbgbbgnngbnggng','bngbgnnnggnggnnnnggnngbn','ggggngggbbbbgggnnbbngngn','nnngngggbbbbbnggnbbgbggg','gbnggngbggbgbbggngnngggg','ngnbnnnbggnnggggnggnngnb','ggngbnngbngngggnbngnbbgb','ngbbnngnggnngggnnggnngnn','gbgggngbggbgnbggggnngggg','bbnngngngggnnnngnggnngnn','ggngngggbbbbggggnnbnnngg','nnnbnngnggnggnngnggnggnn','gbngnngbggbgnbggggbngggg','ngbggngggggbggggggbnbgnb'];   // 층마다 직업별 뱃지 (TW_FJ 순서 · g 유리 b 불리 n 보통): 그 층 기준 레벨 · 장비 모의 전투 승률 85 % 이상 · 50 % 미만 (tools/balance/tower_fit.js)
 const twFit = (j, F) => { const c = (TW_FIT[F.f - 1] || '')[TW_FJ.indexOf(j)]; if (c) return c === 'g' ? ['g', '유리'] : c === 'b' ? ['b', '불리'] : ['n', '보통']; let s = 0; F.t.forEach(t => { if (t.good(j)) s++; else if (t.bad(j)) s--; }); return s > 0 ? ['g', '유리'] : s < 0 ? ['b', '불리'] : ['n', '보통']; };
-const twRew = f => { const b = f % 10 === 0, o = { g: (200 + f * 40) * (b ? 4 : 1), it: { ar_mark: 1 + (f / 5 | 0) } }; if (b) o.it.ar_crest = f / 10; if (f === 40 || f === 50) o.it.ar_heart = 1; return o; };
+const TW_JUNK = ['herb', 'slime', 'drop', 'mush', 'silk', 'g_straw'];
+const twRew = f => {   // 처음 깬 층만: 보통 층 = 골드 조금 · 잡템 몇 개 · 5 층마다 = 골드 많이 · 좋은 템 · 10 층마다 = 골드 10000 · 귀한 템
+  if (f % 10 === 0) return { g: 10000, it: { ar_heart: 1, ar_crest: 2, p_dawn: 2, ...(f >= 30 ? { g_aurora: 1 } : {}) }, k: 'boss' };
+  if (f % 5 === 0) return { g: 3000 + f * 40, it: { ar_mark: 3, ar_crest: 1, p_dawn: 1, feather: 2 }, k: 'good' };
+  return { g: 300 + f * 20, it: { [TW_JUNK[f % 6]]: 2, [TW_JUNK[(f + 2) % 6]]: 1 }, k: '' }; };
 let twImg = null; const twSheet = () => twImg || (twImg = Object.assign(new Image(), { src: 'art/tower_mon.png?v=2' }));
 function twFoes(f, K, job, jm){
   const F = twFloor(f), L = twLv(f), k0 = K || TW_K[f - 1] || [1, 1], m = jm ?? (job && TW_JM[job]) ?? 1, k = [k0[0] * m, k0[1] * m], out = [];
@@ -15029,16 +15033,35 @@ const TW = (() => {
   let ctl = null, sig = '', spot = null; const offs = [];
   const open = () => !!(ctl && ctl.open);
   const S = () => { me.tw = me.tw || { best: 0, d: '', n: 0, rw: {} }; const s = me.tw; if (s.d !== todayKey()){ s.d = todayKey(); s.n = 0; } s.rw = s.rw || {}; return s; };
-  const left = () => Math.max(0, TW_DAY - S().n);
-  // ---------- 탑 그리기 (학교 안뜰) ----------
+  // ---------- 학교 북쪽 강가의 「시련의 문」 → 문 너머 「시련의 언덕」 (지도 trialland · 탑 · 부류 석상 · 돌아가는 문) ----------
+  const GATE = [71, 10], BACK = [71, 12], LAND = [17, 17];
   function props(){
-    const want = open() && me ? 'on' : ''; if (want === sig) return; sig = want;
-    if (!want) return World.setProps('campus', [], 'tower');
-    const im = new Image(); im.onload = () => { if (!spot){ const c = [40, 43]; for (let r = 0; r < 30 && !spot; r++) for (let dx = -r; dx <= r && !spot; dx++) for (let dy = -r; dy <= r && !spot; dy++){ const x = c[0] + dx, y = c[1] + dy; let ok = true; for (let a = -3; a <= 3 && ok; a++) for (let b = -6; b <= 2 && ok; b++) if (!World.isFree(x + a, y + b)) ok = false; if (ok) spot = [x, y]; } if (!spot) spot = c; }
-      const K = 1.5, cv = document.createElement('canvas'); cv.width = 56 * K; cv.height = 120 * K; const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(im, 0, 0, cv.width, cv.height);
-      if (sig) World.setProps('campus', [{ id: 'tower', x: spot[0], y: spot[1], img: cv, pxc: g, sw: cv.width, sh: cv.height, ax: cv.width / 2, ay: cv.height - 6 * K, solid: true, light: { r: 16, c: [180, 220, 255], a: .3 } }], 'tower'); };
-    im.src = 'art/tower_building.png?v=1';
+    if (!me) return; const want = open() ? 'on' : '';
+    if (!want && World.where() === 'trialland' && !(xb && xb.tw && !xb.over) && !busy) return pass('campus');   // 탑이 닫히면 학교로 돌려보내요
+    if (want === sig) return; sig = want;
+    if (!want) return World.setProps('campus', [], 'twgate');
+    const im = new Image(); im.onload = () => { if (!sig) return; const K = 1.5, cv = document.createElement('canvas'); cv.width = 48 * K; cv.height = 72 * K; const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(im, 0, 0, cv.width, cv.height);
+      World.setProps('campus', [{ id: 'twgate', x: GATE[0], y: GATE[1], img: cv, pxc: g, sw: cv.width, sh: cv.height, ax: cv.width / 2, ay: cv.height - 8 * K, solid: true, light: { r: 16, c: [190, 130, 255], a: .45 } }], 'twgate'); };
+    im.src = 'art/tower_gate.png?v=1';
   }
+  // 문을 지나는 연출: 보랏빛 소용돌이가 화면을 덮었다가 건너편에서 걷혀요
+  let busy = false;
+  function pass(to){
+    if (busy) return; busy = true; sfx('magic'); close();
+    const c = document.createElement('canvas'), W = c.width = Math.round(innerWidth), H = c.height = Math.round(innerHeight); c.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;z-index:99990;pointer-events:all'; document.body.appendChild(c);
+    const g = c.getContext('2d'), t0 = performance.now(), CX = W / 2, CY = H / 2, R = Math.hypot(W, H) / 2; let arrived = 0, sent = false;
+    const fin = () => { c.remove(); busy = false; };
+    const draw = now => { try {
+      const t = Math.max(0, (now - t0) / 1000), cover = arrived ? 1 - Math.min(1, (now - arrived) / 700) : Math.min(1, t / .9); g.clearRect(0, 0, W, H);
+      g.fillStyle = `rgba(40,14,60,${.85 * cover})`; g.fillRect(0, 0, W, H);
+      for (let k = 0; k < 7; k++){ const p = (t * .7 + k / 7) % 1, r = (1 - p) * R; g.strokeStyle = `rgba(${200 + k * 6},${130 + k * 8},255,${p * .8 * cover})`; g.lineWidth = 2 + p * 6; g.beginPath(); g.ellipse(CX, CY, r, r * .8, t * 2 + k, 0, 5.4); g.stroke(); }
+      g.fillStyle = `rgba(255,170,90,${.9 * cover})`; g.beginPath(); g.arc(CX, CY, 6 + 14 * cover, 0, 7); g.fill();
+      if (!sent && t >= .9){ sent = true; World.teleport(to, to === 'trialland' ? LAND : BACK, () => { arrived = performance.now(); sfx('sparkle'); }); setTimeout(() => { if (!arrived) arrived = performance.now(); }, 4000); }
+      if (arrived && now - arrived > 720) return fin(); requestAnimationFrame(draw);
+    } catch(e){ fin(); errReport('tower', '시련의 문 연출 오류: ' + e.message, e.stack || ''); if (!sent){ sent = true; World.teleport(to, to === 'trialland' ? LAND : BACK); } } };
+    requestAnimationFrame(draw);
+  }
+  function gate(){ const w = why(); if (w && w !== '탐사 중에는 오를 수 없어요') return toast(w); if (xEx().run) return toast('탐사를 마치고 와요'); pass('trialland'); }
   // ---------- 창 ----------
   const CSS = `<style>#twv{position:fixed;inset:0;z-index:300;background:rgba(10,6,24,.72);display:flex;align-items:flex-end;justify-content:center;font-family:var(--f-pxb);color:#F1E9FF}
     #twv .card{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:#1c1530;border:2px solid #4E3C72;border-radius:18px 18px 0 0;padding:14px 14px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;box-sizing:border-box}
@@ -15071,7 +15094,7 @@ const TW = (() => {
     const rank = Object.entries(playersList || {}).map(([id, p]) => [id, (id === uid ? s.best : p && p.tw) || 0, p && p.nick]).filter(r => r[1] > 0 && r[2]).sort((a, b) => b[1] - a[1]).slice(0, 5);
     const rows = []; for (let f = 1; f <= TW_N; f++){ const F = twFloor(f), st = f <= s.best ? 'done' : f === now && s.best < TW_N ? 'now' : 'lock';
       rows.push(`<button class="fl ${st}${F.boss ? ' boss' : ''}" data-twf="${f}" ${st === 'lock' ? 'disabled' : ''}><span class="no">${f} 층</span><span class="lv">Lv ${Math.round(twLv(f))}</span><span class="ics">${F.t.map(icon).join('')}${F.boss ? '<span class="tag">보스</span>' : ''}</span><small>${st === 'done' ? '깼어요' : st === 'now' ? '도전' : ''}</small></button>`); }
-    const v = box(`<div class="card"><div class="hd"><b>시련의 탑</b><span class="tag">오늘 도전 ${left()} / ${TW_DAY}</span><button class="x" data-twx aria-label="닫기">✕</button></div>
+    const v = box(`<div class="card"><div class="hd"><b>시련의 탑</b><button class="x" data-twx aria-label="닫기">✕</button></div>
       <div class="jobs">${js.map(j => `<div class="job"><small>${j.t} · ${RK[XROLE[j.job]] || ''}</small><b>${XJ[j.job].n} Lv ${j.L}</b></div>`).join('')}</div>
       <div class="sub">${s.best ? `가장 높이 간 층 ${s.best} 층` : '1 층부터 올라가요'}${s.best >= TW_N ? ' · 탑의 주인' : ''}</div>
       <div class="lad">${rows.join('')}</div>
@@ -15080,21 +15103,21 @@ const TW = (() => {
     v.querySelectorAll('[data-twf]').forEach(b => b.onclick = () => card(+b.dataset.twf)); sfx('pop');
   }
   function card(f){
-    const s = S(), F = twFloor(f), js = jobs(), rw = twRew(f), done = f <= s.best, mi = F.boss ? [8] : F.t.map(t => TW_T.indexOf(t)), ln = left();
+    const s = S(), F = twFloor(f), js = jobs(), rw = twRew(f), done = f <= s.best, mi = F.boss ? [8] : F.t.map(t => TW_T.indexOf(t));
     const rwT = [`골드 ${rw.g}`, ...Object.entries(rw.it).map(([k, c]) => `${ITEM[k]} ${c}`), ...(f === TW_N ? ['이름표 「탑의 주인」'] : [])];
     const v = box(`<div class="card"><div class="hd"><b>${f} 층${F.boss ? ' · ' + TW_BOSS : ''}</b><span class="tag">추천 Lv ${Math.round(twLv(f))}</span><button class="x" data-twx aria-label="닫기">✕</button></div>
       <div class="mons">${mi.map(monI).join('')}</div>
       ${F.t.map(t => `<div class="tr">${icon(t)}<div><b>${t.n}${F.boss ? '' : ' · ' + t.mon}</b><span class="sub">${t.d}</span></div></div>`).join('')}
-      <div class="sub">${done ? '이미 깬 층이에요. 다시 올라도 보상은 없어요' : '처음 깨면'}</div>${done ? '' : `<div class="rw">${rwT.map(r => `<span class="tag">${r}</span>`).join('')}</div>`}
-      <div class="sub">${ln ? '어느 직업으로 오를까요' : '오늘 도전을 다 썼어요. 내일 다시 와요'}</div>
-      <div class="pick">${js.map(j => { const [c, w] = twFit(j.job, F); return `<button class="pk ${c}" data-twgo="${j.i}" ${ln ? '' : 'disabled'}><span>${j.t} ${XJ[j.job].n}</span><span class="sub">Lv ${j.L}</span><span class="bd ${c}">${w}</span></button>`; }).join('')}</div>
+      <div class="sub">${done ? '이미 깬 층이에요. 다시 올라도 보상은 없어요' : rw.k === 'boss' ? '처음 깨면 · 아주 좋은 보상' : rw.k === 'good' ? '처음 깨면 · 좋은 보상' : '처음 깨면'}</div>${done ? '' : `<div class="rw">${rwT.map(r => `<span class="tag">${r}</span>`).join('')}</div>`}
+      <div class="sub">어느 직업으로 오를까요</div>
+      <div class="pick">${js.map(j => { const [c, w] = twFit(j.job, F); return `<button class="pk ${c}" data-twgo="${j.i}"><span>${j.t} ${XJ[j.job].n}</span><span class="sub">Lv ${j.L}</span><span class="bd ${c}">${w}</span></button>`; }).join('')}</div>
       <button class="btn" data-twback style="min-height:44px">층 목록</button></div>`);
     v.querySelector('[data-twback]').onclick = () => win();
     v.querySelectorAll('[data-twgo]').forEach(b => b.onclick = () => go(f, +b.dataset.twgo));
   }
   // ---------- 전투 ----------
   function go(f, ji){
-    const w = why(); if (w) return toast(w); const s = S(); if (!left()) return toast('오늘 도전을 다 썼어요'); if (f > s.best + 1) return;
+    const w = why(); if (w) return toast(w); const s = S(); if (f > s.best + 1) return;
     const ex = xEx(); if ((ex.cur || 0) !== ji && !xSwap(ji)) return;
     s.n++; saveSure(); close();
     const party = xParty(); party.forEach(u => { u.hp = u.mhp; u.mp = u.mmp; u.cdn = {}; u.row = XROLE[u.job] === 'melee' ? 'f' : 'b'; });
@@ -15118,14 +15141,16 @@ const TW = (() => {
     box(`<div class="card"><span class="sub">시련의 탑</span><div class="big">${f} 층 돌파</div>
       <div class="rw" style="justify-content:center"><span class="tag">골드 ${rw.g}</span>${Object.entries(rw.it).map(([k, c]) => `<span class="tag">${ITEM[k]} ${c}</span>`).join('')}${f === TW_N ? '<span class="tag">이름표 「탑의 주인」</span>' : ''}</div>
       <div class="sub">${nx ? `다음: ${f + 1} 층 · ${nx.t.map(t => t.n).join(' · ')}${nx.boss ? ' · 보스' : ''} · 추천 Lv ${Math.round(twLv(f + 1))}` : '탑 꼭대기까지 올랐어요'}</div>
-      <div class="sub">오늘 남은 도전 ${left()} / ${TW_DAY}</div>
       <button class="go" data-twok style="width:100%">좋아요</button></div>`, 'res').querySelector('[data-twok]').onclick = () => win();
     sfx('sparkle');
   }
   function listen(){
     if (offs.length) return; if (solo){ ctl = window.__twForce ? { open: true } : null; }
     else offs.push(GDB.on('tw/ctl', v => { ctl = v; props(); }));
-    const pp = World.onProp; World.onProp = id => id === 'tower' ? (win(), null) : pp ? pp(id) : null;
+    const pp = World.onProp; World.onProp = id => id === 'twgate' ? (gate(), null) : pp ? pp(id) : null;
+    World.canEnter = (prev => (q, door) => q === 'twback' ? (pass('campus'), false) : prev ? prev(q, door) : true)(World.canEnter);
+    World.actOk = (prev => (o, a, m) => (m === 'trialland' && (a[0] === '시련의 탑' || a[0] === '돌아가는 문')) || (prev ? prev(o, a, m) : false))(World.actOk);
+    World.onAct = (prev => (m, o, a) => { if (m === 'trialland'){ if (a[0] === '돌아가는 문') return pass('campus'); if (a[0] === '시련의 탑') return win(); } return prev ? prev(m, o, a) : undefined; })(World.onAct);
     setInterval(() => { try { props(); } catch(e){} }, 2000);
   }
   // ---------- 관리자 ----------
@@ -15134,14 +15159,14 @@ const TW = (() => {
     const ids = Object.keys(P).filter(id => P[id] && P[id].nick && P[id].tw && P[id].tw.best).sort((a, b) => P[b].tw.best - P[a].tw.best);
     return `<div class="adcard"><div class="abhead"><b>시련의 탑</b></div>
       <div class="abchips"><span>${c.open ? '열려 있어요' : '닫혀 있어요'}</span><span>올라간 학생 ${ids.length} 명</span>${ids.length ? `<span>1 등 ${esc(P[ids[0]].nick)} ${P[ids[0]].tw.best} 층</span>` : ''}</div>
-      <div class="s" style="margin:6px 0">학교 안뜰에 탑이 생겨요. 학생마다 하루 3 번 · 1 층 Lv 16 → 50 층 Lv 50 기준이에요. 처음 깬 층만 보상이 있어요.</div>
+      <div class="s" style="margin:6px 0">학교 북쪽 강가에 「시련의 문」이 생기고, 문 너머 언덕에 탑이 있어요. 횟수 제한 없음 · 1 층 Lv 16 → 50 층 Lv 50 기준이에요. 처음 깬 층만 보상 (5 층마다 좋은 보상 · 10 층마다 골드 10000 과 귀한 템).</div>
       <div class="row" style="gap:6px;flex-wrap:wrap">${c.open ? '<button class="btn sm" data-twa="close">탑 닫기</button>' : '<button class="btn sm go" data-twa="open">탑 열기</button>'}</div>
-      ${ids.length ? `<table class="twt"><tr><th>학생</th><th>최고 층</th><th>오늘 도전</th></tr>${ids.map(id => { const t = P[id].tw; return `<tr><td>${esc(P[id].nick)}</td><td>${t.best} 층</td><td>${t.d === td ? t.n || 0 : 0} / ${TW_DAY}</td></tr>`; }).join('')}</table>` : ''}</div>`;
+      ${ids.length ? `<table class="twt"><tr><th>학생</th><th>최고 층</th><th>오늘 도전</th></tr>${ids.map(id => { const t = P[id].tw; return `<tr><td>${esc(P[id].nick)}</td><td>${t.best} 층</td><td>${t.d === td ? t.n || 0 : 0} 번</td></tr>`; }).join('')}</table>` : ''}</div>`;
   }
   document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-twa]'); if (!b || !b.closest('#adminv')) return;
-    if (b.dataset.twa === 'open'){ if (confirm('시련의 탑을 열까요? 학교 안뜰에 탑이 생겨요.')) GDB.set('tw/ctl', { open: true, at: now2() }).then(() => toast('탑을 열었어요')); }
+    if (b.dataset.twa === 'open'){ if (confirm('시련의 탑을 열까요? 학교 북쪽 강가에 「시련의 문」이 생겨요.')) GDB.set('tw/ctl', { open: true, at: now2() }).then(() => toast('탑을 열었어요')); }
     else if (confirm('시련의 탑을 닫을까요? 기록은 그대로 남아요.')) GDB.set('tw/ctl', { open: false, at: now2() }).then(() => toast('탑을 닫았어요')); });
-  return { listen, win, card, go, end, adminHTML, S, open: () => open(), force: v => { ctl = v ? { open: true } : null; sig = ''; props(); } };
+  return { listen, win, card, go, end, adminHTML, S, pass, gate, open: () => open(), force: v => { ctl = v ? { open: true } : null; sig = ''; props(); } };
 })();
 let bmOn = false;
 const BM = (() => {
