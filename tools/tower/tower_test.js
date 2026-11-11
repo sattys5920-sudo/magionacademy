@@ -14,6 +14,10 @@ seed.tw = { ctl: { open: true, at: 1 } }; seed.players.me1.x = 71; seed.players.
   await p.waitForTimeout(2500);
   ok(await C(() => __tw.TW().open()), '관리자가 열면 탑이 열려요');
   await C(() => new Promise(r => World.teleport('campus', [72, 15], () => setTimeout(r, 1500)))); await p.waitForTimeout(800);
+  ok(await C(() => !__tw.TW().S().seen), '처음엔 연출을 아직 안 봤어요');
+  await C(() => { __tw.TW().gate(); }); await p.waitForTimeout(9000); await p.screenshot({ path: __dirname + '/shot_t_intro.png' });
+  await p.waitForFunction(() => __tw.TW().S().seen, null, { timeout: 60000 }); await p.waitForTimeout(1500);
+  ok(await C(() => __tw.TW().S().seen === 1 && World.where() === 'campus'), '시작 연출을 보면 문이 열려요');
   await p.screenshot({ path: __dirname + '/shot_t_gate.png' });
   await C(() => World.onProp('twgate')); await p.waitForTimeout(3500);
   ok(await C(() => World.where()) === 'trialland', '시련의 문을 지나면 시련의 언덕으로 가요');
@@ -51,7 +55,7 @@ seed.tw = { ctl: { open: true, at: 1 } }; seed.players.me1.x = 71; seed.players.
   await C(() => __tw.TW().go(2, 0)); ok(await C(() => !!__tw.xb() && __tw.TW().S().n === 5), '하루 제한 없이 계속 도전할 수 있어요');
   await C(() => { const B = __tw.xb(); B.party.forEach(u => { u.hp = 0; }); }); await p.waitForTimeout(2500); await C(() => document.getElementById('xnext').click()); await p.waitForTimeout(500);
   const rw = await C(() => [4, 5, 10, 50].map(f => { __tw.TW().card(f); return f + ':' + document.querySelector('#twv .card').innerText.split('\n').filter(l => /골드|증표|문장|심장석|물약|깃털|오로라|이름표|보상/.test(l)).join(','); }));
-  ok(/5:.*좋은 보상.*골드 3200/.test(rw[1]) && /10:.*아주 좋은 보상.*골드 10000/.test(rw[2]) && /50:.*탑의 주인/.test(rw[3]), '보상: 5 층마다 좋은 보상 · 10 층마다 골드 10000 ' + JSON.stringify(rw));
+  ok(/5:.*골드 3200.*보스의 문장/.test(rw[1]) && /10:.*골드 10000.*심장석/.test(rw[2]) && /50:.*탑의 주인/.test(rw[3]), '보상: 5 층마다 좋은 보상 · 10 층마다 골드 10000 ' + JSON.stringify(rw));
   await C(() => { const v = document.getElementById('twv'); if (v) v.remove(); });
   // 층 구성 · 부류 효과
   const fl = await C(() => [1, 7, 12, 13, 20, 37, 50].map(f => ({ f, foes: __tw.twFoes(f).map(x => x.name + ':' + Object.keys(x.tw).join('+') + ':' + x.mhp + '/' + x.atk) })));

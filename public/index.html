@@ -15030,22 +15030,46 @@ function twFoes(f, K, job, jm){
   return out;
 }
 const TW = (() => {
-  let ctl = null, sig = '', spot = null; const offs = [];
+  let ctl = null, sig = '', busy = false; const offs = [];
   const open = () => !!(ctl && ctl.open);
   const S = () => { me.tw = me.tw || { best: 0, d: '', n: 0, rw: {} }; const s = me.tw; if (s.d !== todayKey()){ s.d = todayKey(); s.n = 0; } s.rw = s.rw || {}; return s; };
   // ---------- 학교 북쪽 강가의 「시련의 문」 → 문 너머 「시련의 언덕」 (지도 trialland · 탑 · 부류 석상 · 돌아가는 문) ----------
   const GATE = [71, 10], BACK = [71, 12], LAND = [17, 17];
+  let told = false;
   function props(){
-    if (!me) return; const want = open() ? 'on' : '';
+    if (!me) return; const want = open() ? (S().seen ? 'on' : 'wait') : '';
     if (!want && World.where() === 'trialland' && !(xb && xb.tw && !xb.over) && !busy) return pass('campus');   // 탑이 닫히면 학교로 돌려보내요
+    if (want === 'wait' && !busy && World.where() === 'campus'){ const t = World.meTile && World.meTile();
+      if (!told){ told = true; toast('북쪽 강가에서 땅이 울려요.......', 4000); }
+      if (t && Math.abs(t.x - GATE[0]) + Math.abs(t.y - GATE[1]) <= 8 && !uiBusy() && !World.cutBusy()) intro(); }
     if (want === sig) return; sig = want;
-    if (!want) return World.setProps('campus', [], 'twgate');
-    const im = new Image(); im.onload = () => { if (!sig) return; const K = 1.5, cv = document.createElement('canvas'); cv.width = 48 * K; cv.height = 72 * K; const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(im, 0, 0, cv.width, cv.height);
+    if (want !== 'on') return World.setProps('campus', [], 'twgate');
+    placeGate();
+  }
+  function placeGate(){ const im = new Image(); im.onload = () => { const K = 1.5, cv = document.createElement('canvas'); cv.width = 48 * K; cv.height = 72 * K; const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(im, 0, 0, cv.width, cv.height);
       World.setProps('campus', [{ id: 'twgate', x: GATE[0], y: GATE[1], img: cv, pxc: g, sw: cv.width, sh: cv.height, ax: cv.width / 2, ay: cv.height - 8 * K, solid: true, light: { r: 16, c: [190, 130, 255], a: .45 } }], 'twgate'); };
-    im.src = 'art/tower_gate.png?v=1';
+    im.src = 'art/tower_gate.png?v=1'; }
+  // 처음 연출 (한 번): 땅이 울리고 강가에서 돌문이 솟아요 · 아울라가 탑 이야기를 해 줘요
+  async function intro(){
+    if (busy) return; busy = true; const n = npcGet('aula');
+    const A = { who: 'aula', name: n ? n.name : '아울라', ...(n && n.av ? { av: npcAv(n) } : { spr: n ? n.spr : 3, float: n && n.float, flap: n && n.flap }) };
+    const say = t => ({ cmd: 'say', who: 'aula', text: t, ms: 3600 });
+    try {
+      closeSheet(); npcClose();
+      await World.cut([{ cmd: 'player', x: GATE[0] + 1, y: GATE[1] + 4, dir: 'up' }, { cmd: 'cam', x: GATE[0], y: GATE[1] + 1 }, { cmd: 'wait', sec: .6 }, { cmd: 'fx', kind: 'dark', v: .5 }, { cmd: 'sfx', id: 'wind' }, { cmd: 'fx', kind: 'smoke', col: '#6a4a8a' }, { cmd: 'wait', sec: 1.2 }, { cmd: 'fx', kind: 'lightning' }, { cmd: 'sfx', id: 'magic' }, { cmd: 'wait', sec: .5 }, { cmd: 'fx', kind: 'lightning' }, { cmd: 'wait', sec: .4 }], { sfx: id => sfx(id) });
+      placeGate();   // 쿵 · 돌문이 솟아요
+      await World.cut([{ cmd: 'fx', kind: 'smoke', off: 1 }, { cmd: 'fx', kind: 'lightning' }, { cmd: 'sfx', id: 'sparkle' }, { cmd: 'fx', kind: 'light' }, { cmd: 'wait', sec: 1.2 },
+        { cmd: 'spawn', ...A, x: GATE[0] - 3, y: GATE[1] + 4, dir: 'right' }, { cmd: 'walk', who: 'aula', x: GATE[0] - 1, y: GATE[1] + 4 }, { cmd: 'face', who: 'aula', to: 'player' }, { cmd: 'face', who: 'player', to: 'aula' },
+        say('쉿.... 방금 땅이 울렸죠. 백 년 만에 「시련의 문」이 열렸어요.'),
+        say('문 너머 언덕에 50 층짜리 시련의 탑이 있어요. 층마다 다른 괴물이 기다려요.'),
+        say('혼자 올라가야 해요. 그래도 직업이 둘이니까, 괴물에 맞는 쪽을 골라서 가요.'),
+        say('처음 오르는 층을 깨면 보상이 있어요. 5\u00a0층, 10\u00a0층마다 더 좋은 게 있고요.......'),
+        { cmd: 'despawn', who: 'aula' }, { cmd: 'cam' }], { sfx: id => sfx(id) });
+      S().seen = 1; saveSure();
+    } catch(e){ errReport('tower', '시련의 문 연출 오류: ' + e.message, e.stack || ''); S().seen = 1; save(); }
+    finally { busy = false; sig = ''; props(); }
   }
   // 문을 지나는 연출: 보랏빛 소용돌이가 화면을 덮었다가 건너편에서 걷혀요
-  let busy = false;
   function pass(to){
     if (busy) return; busy = true; sfx('magic'); close();
     const c = document.createElement('canvas'), W = c.width = Math.round(innerWidth), H = c.height = Math.round(innerHeight); c.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;z-index:99990;pointer-events:all'; document.body.appendChild(c);
@@ -15061,7 +15085,7 @@ const TW = (() => {
     } catch(e){ fin(); errReport('tower', '시련의 문 연출 오류: ' + e.message, e.stack || ''); if (!sent){ sent = true; World.teleport(to, to === 'trialland' ? LAND : BACK); } } };
     requestAnimationFrame(draw);
   }
-  function gate(){ const w = why(); if (w && w !== '탐사 중에는 오를 수 없어요') return toast(w); if (xEx().run) return toast('탐사를 마치고 와요'); pass('trialland'); }
+  function gate(){ if (!S().seen) return intro(); const w = why(); if (w && w !== '탐사 중에는 오를 수 없어요') return toast(w); if (xEx().run) return toast('탐사를 마치고 와요'); pass('trialland'); }
   // ---------- 창 ----------
   const CSS = `<style>#twv{position:fixed;inset:0;z-index:300;background:rgba(10,6,24,.72);display:flex;align-items:flex-end;justify-content:center;font-family:var(--f-pxb);color:#F1E9FF}
     #twv .card{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:#1c1530;border:2px solid #4E3C72;border-radius:18px 18px 0 0;padding:14px 14px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;box-sizing:border-box}
@@ -15096,7 +15120,7 @@ const TW = (() => {
       rows.push(`<button class="fl ${st}${F.boss ? ' boss' : ''}" data-twf="${f}" ${st === 'lock' ? 'disabled' : ''}><span class="no">${f} 층</span><span class="lv">Lv ${Math.round(twLv(f))}</span><span class="ics">${F.t.map(icon).join('')}${F.boss ? '<span class="tag">보스</span>' : ''}</span><small>${st === 'done' ? '깼어요' : st === 'now' ? '도전' : ''}</small></button>`); }
     const v = box(`<div class="card"><div class="hd"><b>시련의 탑</b><button class="x" data-twx aria-label="닫기">✕</button></div>
       <div class="jobs">${js.map(j => `<div class="job"><small>${j.t} · ${RK[XROLE[j.job]] || ''}</small><b>${XJ[j.job].n} Lv ${j.L}</b></div>`).join('')}</div>
-      <div class="sub">${s.best ? `가장 높이 간 층 ${s.best} 층` : '1 층부터 올라가요'}${s.best >= TW_N ? ' · 탑의 주인' : ''}</div>
+      ${s.best ? `<div class="sub">최고 ${s.best} 층</div>` : ''}
       <div class="lad">${rows.join('')}</div>
       ${rank.length ? `<div class="sub">반 순위</div><div class="rk">${rank.map(([id, b, n], i) => `<div class="${id === uid ? 'me' : ''}"><span>${i + 1}. ${esc(n)}</span><span>${b} 층</span></div>`).join('')}</div>` : ''}</div>`);
     const n = v.querySelector('.fl.now'); if (n) n.scrollIntoView({ block: 'center' });
@@ -15108,8 +15132,7 @@ const TW = (() => {
     const v = box(`<div class="card"><div class="hd"><b>${f} 층${F.boss ? ' · ' + TW_BOSS : ''}</b><span class="tag">추천 Lv ${Math.round(twLv(f))}</span><button class="x" data-twx aria-label="닫기">✕</button></div>
       <div class="mons">${mi.map(monI).join('')}</div>
       ${F.t.map(t => `<div class="tr">${icon(t)}<div><b>${t.n}${F.boss ? '' : ' · ' + t.mon}</b><span class="sub">${t.d}</span></div></div>`).join('')}
-      <div class="sub">${done ? '이미 깬 층이에요. 다시 올라도 보상은 없어요' : rw.k === 'boss' ? '처음 깨면 · 아주 좋은 보상' : rw.k === 'good' ? '처음 깨면 · 좋은 보상' : '처음 깨면'}</div>${done ? '' : `<div class="rw">${rwT.map(r => `<span class="tag">${r}</span>`).join('')}</div>`}
-      <div class="sub">어느 직업으로 오를까요</div>
+      <div class="sub">${done ? '깬 층 · 보상 없음' : '처음 깨면'}</div>${done ? '' : `<div class="rw">${rwT.map(r => `<span class="tag">${r}</span>`).join('')}</div>`}
       <div class="pick">${js.map(j => { const [c, w] = twFit(j.job, F); return `<button class="pk ${c}" data-twgo="${j.i}"><span>${j.t} ${XJ[j.job].n}</span><span class="sub">Lv ${j.L}</span><span class="bd ${c}">${w}</span></button>`; }).join('')}</div>
       <button class="btn" data-twback style="min-height:44px">층 목록</button></div>`);
     v.querySelector('[data-twback]').onclick = () => win();
@@ -15122,7 +15145,7 @@ const TW = (() => {
     s.n++; saveSure(); close();
     const party = xParty(); party.forEach(u => { u.hp = u.mhp; u.mp = u.mmp; u.cdn = {}; u.row = XROLE[u.job] === 'melee' ? 'f' : 'b'; });
     const F = twFloor(f);
-    xb = { party, foes: twFoes(f, null, party[0].job), kind: F.boss ? 'boss' : 'elite', log: F.t.map(t => `${t.n}: ${t.d}`).join(' · '), turn: null, pick: null, over: false, last: performance.now(), buff: false, def: {}, fxs: [], floats: [], proj: [], n0: 1, tw: { f, sub: F.t.map(t => t.n).join(' · ') + (F.boss ? ' · 보스' : '') + ` · 추천 Lv ${Math.round(twLv(f))}` } };
+    xb = { party, foes: twFoes(f, null, party[0].job), kind: F.boss ? 'boss' : 'elite', log: `${f} 층`, turn: null, pick: null, over: false, last: performance.now(), buff: false, def: {}, fxs: [], floats: [], proj: [], n0: 1, tw: { f, sub: F.t.map(t => t.n).join(' · ') + (F.boss ? ' · 보스' : '') + ` · 추천 Lv ${Math.round(twLv(f))}` } };
     xv = { view: 'battle' }; closeSheet(); openSheet('home', 'explore');
   }
   function end(won){
@@ -15159,7 +15182,7 @@ const TW = (() => {
     const ids = Object.keys(P).filter(id => P[id] && P[id].nick && P[id].tw && P[id].tw.best).sort((a, b) => P[b].tw.best - P[a].tw.best);
     return `<div class="adcard"><div class="abhead"><b>시련의 탑</b></div>
       <div class="abchips"><span>${c.open ? '열려 있어요' : '닫혀 있어요'}</span><span>올라간 학생 ${ids.length} 명</span>${ids.length ? `<span>1 등 ${esc(P[ids[0]].nick)} ${P[ids[0]].tw.best} 층</span>` : ''}</div>
-      <div class="s" style="margin:6px 0">학교 북쪽 강가에 「시련의 문」이 생기고, 문 너머 언덕에 탑이 있어요. 횟수 제한 없음 · 1 층 Lv 16 → 50 층 Lv 50 기준이에요. 처음 깬 층만 보상 (5 층마다 좋은 보상 · 10 층마다 골드 10000 과 귀한 템).</div>
+      <div class="s" style="margin:6px 0">학교 북쪽 강가에 「시련의 문」이 생겨요.</div>
       <div class="row" style="gap:6px;flex-wrap:wrap">${c.open ? '<button class="btn sm" data-twa="close">탑 닫기</button>' : '<button class="btn sm go" data-twa="open">탑 열기</button>'}</div>
       ${ids.length ? `<table class="twt"><tr><th>학생</th><th>최고 층</th><th>오늘 도전</th></tr>${ids.map(id => { const t = P[id].tw; return `<tr><td>${esc(P[id].nick)}</td><td>${t.best} 층</td><td>${t.d === td ? t.n || 0 : 0} 번</td></tr>`; }).join('')}</table>` : ''}</div>`;
   }
