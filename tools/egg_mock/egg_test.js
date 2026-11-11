@@ -51,6 +51,11 @@ seed.egg = { ctl: { open: true, d0: TD, at: 1 } };
   await p.screenshot({ path: __dirname + '/shot_e_vote.png' });
   await C(() => { const v = document.getElementById('eggv'); if (v) v.remove(); __tw.EG()._set({ open: true, d0: '2026-1-1', hd: '2026-1-1', kind: 1, vc: true, name: '몽실이' }); });
   ok(await C(() => __tw.EG().name()) === '몽실이', '투표가 끝나면 1 등 이름');
+  await C(() => World.onProp('eggpet')); await p.waitForTimeout(400);
+  const pb = await C(() => ({ pd: __tw.EG().S().pd, b: (document.getElementById('buffChip') || {}).textContent || '' }));
+  await C(() => World.onProp('eggpet')); await p.waitForTimeout(300);
+  ok(!!pb.pd && /입질/.test(pb.b), '아기를 누르면 하루 한 번 버프 (구름 고래 → 입질↑) ' + JSON.stringify(pb));
+  ok(await C(() => !document.querySelector('[data-egf]')), '같이 걷기는 없어요');
   ok(!errs.length, '페이지 오류 없음 ' + errs.slice(0, 3));
   // 관리자 카드
   await ad.evaluate(() => __T.showAdmin()); await ad.waitForTimeout(1500); await ad.evaluate(() => window.__adPoll && window.__adPoll()); await ad.waitForTimeout(800);
