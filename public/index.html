@@ -2924,7 +2924,7 @@ function renderExplore(){
     $('#tup').onclick = () => { if (!can(so)) return; sk[xv.sel] = slv + 1; sfx('pop'); save(); renderExplore(); };
     { const tm = $('#tmax'); if (tm) tm.onclick = () => { if (!can(so)) return; sk[xv.sel] = slv + Math.min(XMAXLV - slv, pts); sfx('pop'); save(); renderExplore(); }; }   // 남은 포인트로 이 스킬을 최대까지
     $('#trs').onclick = () => confirmBox(`스킬 포인트를 모두 돌려받아요. ${XRESET}G가 들어요.`, '초기화', '그만둘래요').then(ok => { if (!ok) return; if (me.coin < XRESET) return toast('골드가 모자라요'); me.coin -= XRESET; ex.sk = { '0.0': 1 }; save(); hud(); renderExplore(); });
-    $('#tok').onclick = () => { xv = { view: 'lobby' }; renderExplore(); }; return;
+    $('#tok').onclick = () => { if (twBack){ const f = twBack; twBack = 0; xv = { view: 'lobby' }; closeSheet(); return TW.card(f); } xv = { view: 'lobby' }; renderExplore(); }; return;
   }
   if (v === 'result'){
     const r = xv, chestWait = !!(ex.chest && ex.chest.p === undefined), T = { clear: '탐사 성공!', time: '시간이 다 됐어요', retreat: '탐사를 마쳤어요', wipe: '전멸했어요.......' }[r.how];
@@ -15052,7 +15052,8 @@ const TW_T = [
   { k: 'mirror', n: '반사', mon: '거울 수정', d: '받은 피해의 30 % 를 되돌려요', hp: 1.1, atk: .8, spd: 8, good: j => XMAIN[j] === 'heal' || ['darkknight', 'paladin'].includes(j), bad: j => ['warrior', 'fighter', 'bladedancer'].includes(j) },
   { k: 'rage', n: '광폭', mon: '성난 뿔멧돼지', d: '5 차례 뒤 공격이 두 배가 돼요', hp: 1, atk: 1.3, spd: 9, good: j => XMAIN[j] !== 'heal', bad: j => XMAIN[j] === 'heal' },
 ];
-const TW_N = 50, TW_BOSS = '탑지기 석상';   // 하루 제한 없음 (레벨이 모자라면 어차피 못 올라가요) · 경험치는 없어요 · 물약은 가진 만큼
+const TW_N = 50, TW_BOSS = '탑지기 석상';
+let twBack = 0;   // 탑 층 카드에서 「스킬 트리 고치기」로 갔으면 돌아가기를 누를 때 그 층 카드로 돌아와요   // 하루 제한 없음 (레벨이 모자라면 어차피 못 올라가요) · 경험치는 없어요 · 물약은 가진 만큼
 const twLv = f => 16 + (f - 1) * 34 / 49;   // 1 층 Lv 16 · 2 층 16.7 · …… · 50 층 Lv 50
 const TW_K = [[1.101,1.209],[1.003,2.197],[0.382,3.348],[1.021,1.887],[1.865,0.798],[0.908,1.076],[1.217,1.64],[0.929,3.529],[1.392,1.458],[0.165,1.954],[0.515,3.83],[1.336,2.275],[1.669,0.536],[0.997,0.803],[1.476,1.669],[1.003,0.798],[1.887,0.562],[0.903,1.738],[0.562,4.157],[0.21,2.665],[1.749,1.181],[1.209,1.555],[2.875,2.343],[1.175,1.611],[2.184,1.433],[1.195,3.121],[0.963,5.905],[1.297,3.013],[2.302,1.408],[0.369,3.157],[3.612,2.825],[1.62,2],[2.484,1.511],[1.368,3.367],[1.175,6.334],[1.484,3.549],[2.776,1.698],[1.738,2.197],[4.756,2.978],[0.67,2.603],[2.842,1.854],[1.611,3.83],[1.021,8.487],[1.749,4.084],[3.102,1.943],[2.084,2.37],[5.802,3.807],[2.275,2.469],[3.676,1.931],[0.536,4.538]];   // 층마다 [체력, 공격] 배율 (밸런스 도구로 찾은 값 · 비어 있으면 1)
 const TW_JM = {gunner: 1.197, elemental: 0.975, fighter: 1.414, bladedancer: 1.258, gadget: 1.044, alch: 0.91, time: 1.703, white: 1.024, druid: 1.245, dancer: 1.004, sage: 1.065, shaman: 0.985, miko: 0.749, archer: 1.27, cleric: 0.477, bard: 0.756, paladin: 0.947, guardian: 0.928, darkknight: 1.197, warrior: 1.245, knight: 0.975, thief: 1.258, black: 1.414, summon: 0.994};   // 직업마다 몬스터 세기 배율: 혼자 싸울 때 직업끼리 힘 차이를 맞춰요 (치유 · 방패 직업은 약하게) · tools/balance/tower_job.js
@@ -15149,6 +15150,7 @@ const TW = (() => {
     #twv .pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}#twv .pk{min-height:72px;border-radius:14px;border:2px solid #4E3C72;background:#2E2248;color:#F1E9FF;font-family:var(--f-pxb);font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}#twv .pk:disabled{opacity:.45}
     #twv .bd{font-size:11px;padding:1px 8px;border-radius:999px}#twv .bd.g{background:#2E6A3E;color:#C8FFD0}#twv .bd.b{background:#7A2E3A;color:#FFD0D6}#twv .bd.n{background:#3A3458;color:#D8D0F0}#twv .pk.g{border-color:#5AC46E}
     #twv .rw{display:flex;gap:6px;flex-wrap:wrap}#twv .rk{display:flex;flex-direction:column;gap:4px}#twv .rk div{display:flex;justify-content:space-between;font-size:13px;padding:4px 8px;background:#120c22;border-radius:8px}#twv .rk div.me{outline:1px solid #FF9A3C}
+    #twv .pss{display:flex;gap:6px;align-items:center;flex-wrap:wrap}#twv .pss span{font-size:12px;color:#c8bce0;width:30px}#twv .pss button{min-height:40px;padding:0 12px;border-radius:10px;border:1px solid #4E3C72;background:#2E2248;color:#F1E9FF;font-family:var(--f-pxb);font-size:13px}
     #twv .go{min-height:48px;border-radius:14px;border:1px solid #C86A1E;background:#FF9A3C;color:#2A1506;font-family:var(--f-pxb);font-size:16px}
     #twv.res{align-items:center}#twv.res .card{border-radius:18px;max-width:360px;text-align:center;align-items:center}#twv.res .big{font-size:26px;color:#FFD878}</style>`;
   const icon = t => `<i class="ti" style="background-position:${TW_T.indexOf(t) / 7 * 100}% 0" title="${t.n}"></i>`;
@@ -15181,9 +15183,21 @@ const TW = (() => {
       ${F.t.map(t => `<div class="tr">${icon(t)}<div><b>${t.n}${F.boss ? '' : ' · ' + t.mon}</b><span class="sub">${t.d}</span></div></div>`).join('')}
       <div class="sub">${done ? '깬 층 · 보상 없음' : '처음 깨면'}</div>${done ? '' : `<div class="rw">${rwT.map(r => `<span class="tag">${r}</span>`).join('')}</div>`}
       <div class="pick">${js.map(j => { const [c, w] = twFit(j.job, F); return `<button class="pk ${c}" data-twgo="${j.i}"><span>${j.t} ${XJ[j.job].n}</span><span class="sub">Lv ${j.L}</span><span class="bd ${c}">${w}</span></button>`; }).join('')}</div>
-      <button class="btn" data-twback style="min-height:44px">층 목록</button></div>`);
+      ${(() => { const ex = xEx(), rows = js.map(j => { const d = (ex.cur || 0) === j.i ? ex : ex.jo, ps = (d && d.ps) || {}, b = [0, 1, 2].filter(i => ps[i]).map(i => `<button data-twps="${j.i}:${i}">${esc(ps[i].n)}</button>`).join(''); return b ? `<div class="pss"><span>${j.t}</span>${b}</div>` : ''; }).join('');
+        return rows ? `<div class="sub">스킬 세트로 바꾸기</div>${rows}` : ''; })()}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn" data-twtree style="min-height:44px">스킬 트리 고치기</button><button class="btn" data-twback style="min-height:44px">층 목록</button></div></div>`);
+    v.querySelectorAll('[data-twps]').forEach(b => b.onclick = () => { const [ji, i] = b.dataset.twps.split(':').map(Number); psLoad(ji, i, f); });
+    v.querySelector('[data-twtree]').onclick = () => { twBack = f; close(); xv = { view: 'tree', sel: '0_0' }; openSheet('home', 'explore'); };
     v.querySelector('[data-twback]').onclick = () => win();
     v.querySelectorAll('[data-twgo]').forEach(b => b.onclick = () => go(f, +b.dataset.twgo));
+  }
+  // 탑 안에서 스킬 세트 바꾸기 (1차 · 2차 따로 · 쉬는 직업 세트도 바로 바꿔 둬요)
+  function psLoad(ji, i, f){
+    const w = xPsWhy(); if (w) return toast(w); const ex = xEx(), act = (ex.cur || 0) === ji, d = act ? ex : ex.jo, p = d && d.ps && d.ps[i]; if (!p) return;
+    const L = xLv(d.exp || 0).L, spU = Object.values(p.sp || {}).reduce((a, x) => a + x, 0);
+    if (xSpent(p.sk || { '0_0': 1 }) > xSkp(L) + (d.spx || 0) || spU > 3 * (L - 1) + (+d.stx || 0)) return toast('지금 포인트로는 이 세트를 쓸 수 없어요');
+    d.sk = JSON.parse(JSON.stringify(p.sk || { '0_0': 1 })); d.sp = { ...(p.sp || {}) }; if (p.qs) d.qs = JSON.parse(JSON.stringify(p.qs)); else delete d.qs; if (act) xSkEx(ex);
+    save(); sfx('pop'); toast(`${ji ? '2차' : '1차'} 「${p.n}」로 바꿨어요`); card(f);
   }
   // ---------- 전투 ----------
   function go(f, ji){
