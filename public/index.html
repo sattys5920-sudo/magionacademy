@@ -15260,10 +15260,10 @@ const EG = (() => {
   let wob = 0;
   function props(){
     if (!me) return; const T = tot(), st = stage(T), h = hatched(), k = h ? kind() : -1;
-    const want = !open() ? '' : !S().seen ? '' : h ? `b${k}` : `e${st}${lead(T)}${st >= 3 ? wob : ''}`;
+    const want = !open() ? '' : !S().seen ? '' : h ? `b${k}` : `e${st}${st >= 3 ? wob : ''}`;
     if (want !== sig){ sig = want;
       if (!want) World.setProps(MAP, [], 'egg');
-      else if (!h){ const cv = eggCv(st, T.n ? lead(T) : '', 1, wob * 90); World.setProps(MAP, [{ id: 'egg', x: SPOT[0], y: SPOT[1], img: cv, pxc: cv.getContext('2d'), sw: cv.width, sh: cv.height, ax: cv.width / 2, ay: cv.height - 8, solid: true }], 'egg'); }
+      else if (!h){ const cv = eggCv(st, '', 1, wob * 90); World.setProps(MAP, [{ id: 'egg', x: SPOT[0], y: SPOT[1], img: cv, pxc: cv.getContext('2d'), sw: cv.width, sh: cv.height, ax: cv.width / 2, ay: cv.height - 8, solid: true }], 'egg'); }
       else World.setProps(MAP, [], 'egg'); }
     if (st >= 3 && !h) wob = (wob + 1) % 4;
     mascot(h ? k : -1);
@@ -15291,14 +15291,14 @@ const EG = (() => {
     #eggv .vl{display:flex;flex-direction:column;gap:6px}#eggv .vr{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 10px;border-radius:12px;background:#120c22;border:1px solid #2E2248}#eggv .vr.on{border-color:#FF9A3C}#eggv .vr b{flex:1;font-size:16px}#eggv .vr small{font-size:12px;color:#c8bce0}#eggv .vr button{min-width:64px;min-height:40px;border-radius:10px;border:1px solid #4E3C72;background:#2E2248;color:#F1E9FF;font-family:var(--f-pxb)}#eggv .vr.on button{background:#FF9A3C;color:#2A1506;border-color:#C86A1E}</style>`;
   const close = () => { const v = document.getElementById('eggv'); if (v) v.remove(); };
   const box = html => { close(); const v = document.createElement('div'); v.id = 'eggv'; v.innerHTML = CSS + html; document.body.appendChild(v); v.addEventListener('click', e => { if (e.target === v || e.target.closest('[data-egx]')) close(); }); return v; };
-  const bars = T => { const t = Math.max(1, T.fire + T.wind + T.star); return `<div class="bars">${['fire', 'wind', 'star'].map(k => `<div class="bar" style="--c:${AURA[k][0]}"><span>${AURA[k][2]}</span><i><em style="--w:${Math.round(T[k] / t * 100)}%"></em></i><b>${T[k]}</b></div>`).join('')}<div class="sub">금 ${stage(T)} / 4 · 오늘 돌본 친구 ${T.today} 명</div></div>`; };
+  const bars = T => `<div class="bars"><div class="sub">금 ${stage(T)} / 4</div><div class="sub">오늘 돌본 친구 ${T.today} 명</div></div>`;   // 어떤 행동이 어떤 기운인지는 숨겨요 (태어날 때까지 비밀)
   function win(){
     if (!me || !open()) return; if (hatched()) return babyWin();
     const T = tot(), my = mine()[todayKey()], v = box(`<div class="card"><div class="hd"><b>광장의 거대 알 · ${day()} 일째</b><button class="x" data-egx aria-label="닫기">✕</button></div>
       <div class="stage"><span data-egg></span>${bars(T)}</div>
-      <div class="acts">${['fire', 'wind', 'star'].map(k => `<button class="act${my && my.k === k ? ' on' : ''}" data-ega="${k}" style="--c:${AURA[k][0]}" ${my ? 'disabled' : ''}>${AURA[k][1]}<small>${AURA[k][2]}</small></button>`).join('')}</div>
+      <div class="acts">${['fire', 'wind', 'star'].map(k => `<button class="act${my && my.k === k ? ' on' : ''}" data-ega="${k}" style="--c:#E8D8B0" ${my ? 'disabled' : ''}>${AURA[k][1]}</button>`).join('')}</div>
       <div class="sub" data-msg>${my ? '오늘은 돌봐 줬어요' : '하루 한 번'}</div><div data-story></div></div>`);
-    v.querySelector('[data-egg]').replaceWith(eggCv(stage(T), T.n ? lead(T) : '', 2));
+    v.querySelector('[data-egg]').replaceWith(eggCv(stage(T), '', 2));
     v.querySelectorAll('[data-ega]').forEach(b => b.onclick = () => { if (cared()) return; const k = b.dataset.ega;
       if (k === 'star'){ const st = v.querySelector('[data-story]'); st.innerHTML = `<textarea maxlength="30" placeholder="오늘 있었던 일 한 줄 (알만 들어요)"></textarea><button class="go" data-egs>들려주기</button>`; st.querySelector('[data-egs]').onclick = () => { const m = st.querySelector('textarea').value.trim().slice(0, 30); if (!m) return toast('한 줄 적어 줘요'); give('star', m); }; return; }
       give(k); });
@@ -15359,7 +15359,7 @@ const EG = (() => {
   async function hatchCut(){
     if (busy) return; busy = true; close(); await load(); const k = kind(), K = KIND[k], { v, g, say, fade, nm } = cutBase(); let live = true, st = 3, shake = 0, burst = 0, baby = 0; const t0 = performance.now();
     const draw = now => { if (!live) return; requestAnimationFrame(draw); yard(g, now - t0, false);
-      if (!baby){ const c = eggCv(st, k < 3 ? KIND[k].k : 'star', 1.6, now * (shake ? 3 : 1)); g.save(); g.translate(shake ? Math.sin(now / 30) * shake : 0, 0); g.drawImage(c, 160 - c.width / 2, 152 - c.height); g.restore(); }
+      if (!baby){ const c = eggCv(st, '', 1.6, now * (shake ? 3 : 1)); g.save(); g.translate(shake ? Math.sin(now / 30) * shake : 0, 0); g.drawImage(c, 160 - c.width / 2, 152 - c.height); g.restore(); }
       if (burst){ const q = (now - burst) / 1200; if (q < 1){ g.fillStyle = `rgba(255,255,255,${.7 * (1 - q) ** 2})`; g.fillRect(0, 0, 320, 180); for (let i = 0; i < 18; i++){ const a = i / 18 * 7, r = q * 70; g.fillStyle = i % 3 ? K.c : '#fff'; g.globalAlpha = 1 - q; g.fillRect(160 + Math.cos(a) * r, 120 + Math.sin(a) * r * .7, 3, 3); } g.globalAlpha = 1; } }
       if (baby && BABY){ const b = Math.abs(Math.sin(now / 260)) * 6, fr = Math.floor(now / 300) % 2; g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(160, 150, 16, 4, 0, 0, 7); g.fill(); g.drawImage(BABY, fr * 32, k * 32, 32, 32, 160 - 32, 150 - 64 - b, 64, 64); } };
     try {
@@ -15367,7 +15367,7 @@ const EG = (() => {
       await say('알이 아까부터 쉬지 않고 들썩여요.', 500); shake = 1.5; await sleep(1200); st = 4; shake = 3; await sleep(1400);
       burst = performance.now(); baby = 1; sfx('sparkle'); await sleep(900);
       nm.style.cssText = `color:${K.c};opacity:1;font-size:30px;letter-spacing:4px`; nm.innerHTML = [...K.n].map(c => `<span>${c === ' ' ? ' ' : c}</span>`).join(''); for (const s of nm.children){ await sleep(160); s.classList.add('on'); }
-      await sleep(900); nm.style.opacity = .35; await say(k === 3 ? '세 가지 기운이 고루 모여서.... 아주 드문 아이가 태어났어요.' : `${AURA[KIND[k].k][2]}이 가장 많이 모였어요.`, 900);
+      await sleep(900); nm.style.opacity = .35; await say(k === 3 ? '모두의 마음이 고루 모여서.... 아주 드문 아이가 태어났어요.' : '모두가 돌봐 준 마음이 모여 태어났어요.', 900);
       if (voteOn()) await say('이 아이에게 이름을 지어 줘요. 반 친구들 투표로 정해요.', 1400);
       fade.style.opacity = 1; await sleep(800);
     } catch(e){ errReport('egg', '알 부화 연출 오류: ' + e.message, e.stack || ''); }
