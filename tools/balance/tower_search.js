@@ -5,17 +5,19 @@
 //   환경 변수: TW_FL="1-10" 층 범위 · TW_OUT 결과 파일 이름 (기본 tw_k.json) → tools/balance/out/
 const fs = require('fs');
 const ALL = ['warrior', 'knight', 'thief', 'black', 'summon', 'gadget', 'alch', 'time', 'white', 'druid', 'cleric', 'bard', 'paladin', 'guardian', 'darkknight', 'dancer', 'sage', 'shaman', 'miko', 'archer', 'gunner', 'elemental', 'fighter', 'bladedancer'];
-const TGT = +(process.env.TW_TGT || .75), TT = +(process.env.TW_T || 45);
+const TGT0 = +(process.env.TW_TGT || .75), TT = +(process.env.TW_T || 45), POT = +(process.env.TW_POT || 1);
+//   TW_HARD=1: 20 층부터 「진짜 잘해야 깨게」 · 물약 넉넉히 (TW_POT, 기본 5) 가정 · 목표 승률 20 층 60 % → 50 층 40 %
+const TGT = f => process.env.TW_HARD && f >= 20 ? .6 - (f - 20) / 30 * .2 : TGT0;
 module.exports = async (ev, log) => {
   const [a, b] = (process.env.TW_FL || '1-50').split('-').map(Number), OUTF = __dirname + '/out/' + (process.env.TW_OUT || 'tw_k.json');
   const out = fs.existsSync(OUTF) ? JSON.parse(fs.readFileSync(OUTF)) : {};
   for (let f = a; f <= (b || a); f++){
     const ok = await ev(o => __bal.twOk(o.f, o.all), { f, all: ALL });
-    const sim = (K, n, lim, jobs) => ev(o => __bal.twSim(o), { f, K, n, lim, jobs: jobs || ok });
+    const sim = (K, n, lim, jobs) => ev(o => __bal.twSim(o), { f, K, n, lim, jobs: jobs || ok, pot: POT });
     let lo = .05, hi = 20; for (let k = 0; k < 10; k++){ const m = Math.sqrt(lo * hi), r = await sim([m, .001], 3, 2000); if (r.t < TT) lo = m; else hi = m; } const hK = +Math.sqrt(lo * hi).toFixed(3);
-    lo = .05; hi = 20; for (let k = 0; k < 10; k++){ const m = Math.sqrt(lo * hi), r = await sim([hK, m], 5, 300); if (r.win > TGT) lo = m; else hi = m; } const aK = +Math.sqrt(lo * hi).toFixed(3);
+    lo = .05; hi = 20; for (let k = 0; k < 10; k++){ const m = Math.sqrt(lo * hi), r = await sim([hK, m], 5, 300); if (r.win > TGT(f)) lo = m; else hi = m; } const aK = +Math.sqrt(lo * hi).toFixed(3);
     const v = await sim([hK, aK], 10, 300, ALL), okW = ok.reduce((s, j) => s + v.per[j], 0) / ok.length, bad = ALL.filter(j => !ok.includes(j)), badW = bad.length ? bad.reduce((s, j) => s + v.per[j], 0) / bad.length : null;
-    const lowL = await ev(o => __bal.twSim(o), { f, K: [hK, aK], n: 6, lim: 300, jobs: ok, L: Math.max(1, Math.round(16 + (f - 1) * 34 / 49) - 3) });
+    const lowL = await ev(o => __bal.twSim(o), { f, K: [hK, aK], n: 6, lim: 300, jobs: ok, pot: POT, L: Math.max(1, Math.round(16 + (f - 1) * 34 / 49) - 3) });
     out[f] = { hK, aK, ok: +okW.toFixed(2), bad: badW == null ? null : +badW.toFixed(2), all: v.win, t: v.t, low3: lowL.win };
     log(JSON.stringify({ f, ...out[f] })); fs.writeFileSync(OUTF, JSON.stringify(out));
   }
