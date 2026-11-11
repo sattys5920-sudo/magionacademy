@@ -2914,7 +2914,7 @@ function renderExplore(){
     frame(null, '스킬 트리', `${job.n} · 남은 포인트 ${pts}`, `${x2Tabs()}${xPsRow()}<style>.tcol{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}.tcol .th{font-size:12px;font-weight:700;color:var(--gold)}.tn{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;background:none;border:2px solid transparent;border-radius:10px;color:inherit;font:inherit}.tn .sic{width:44px;height:44px}.tn small{font-size:10px;line-height:1.2;opacity:.85}.tn.lock{opacity:.4}.tn.ln::before{content:'';position:absolute;top:-8px;left:50%;width:2px;height:8px;background:#4a3c86}.tn.ln.lk::before{background:var(--gold)}.tcol{row-gap:10px}.tn.sel{border-color:var(--gold);background:rgba(255,184,77,.14)}.tn i{position:absolute;right:4px;top:2px;font-style:normal;font-size:11px;font-weight:900;background:#2b1b3a;border-radius:6px;padding:0 4px;color:#ffd866}.qs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.qsh{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--gold);margin:0 2px 4px}.qsh span{color:var(--sub);font-size:11px}.qc{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:10px;border:2px solid #6a4ab0;background:rgba(106,74,176,.18);font-size:10px;min-height:66px;color:inherit;font-family:inherit}.qc .sic{width:32px;height:32px}.qc.empty{border-style:dashed;opacity:.6;justify-content:center}.qc em{position:absolute;left:3px;top:2px;font-style:normal;font-size:9px;background:#3a2c18;color:#ffd866;border-radius:4px;padding:0 3px}.qc b.n{position:absolute;right:3px;top:2px;font-size:9px;color:#cbb8ff}.qc.pick{border-color:var(--gold);box-shadow:0 0 10px rgba(255,216,102,.6)}</style>
       ${(() => { const Q = xQuick(xAll(ex.job).filter(o => !o.pas && xSkLv(sk, o.b, o.r) > 0)); return `<section class="sec"><div class="qsh">빠른 스킬 4칸 <span>${xv.qpick ? '바꿀 칸을 눌러요' : '전투 첫 화면에 바로 나와요'}</span></div><div class="qs">${Q.map((x, i) => x ? `<button class="qc${xv.qpick ? ' pick' : ''}" data-qc="${i}">${x.auto ? '<em>자동</em>' : ''}<b class="n">${i + 1}</b>${xIc(x.o)}<span>${x.o.n}</span></button>` : `<button class="qc empty${xv.qpick ? ' pick' : ''}" data-qc="${i}">빈칸</button>`).join('')}</div></section>`; })()}
       <section class="sec"><div class="tcol">${[0, 1, 2].map(b => `<div class="th">${XT[ex.job][b][0]}</div>`).join('')}${[0, 1, 2, 3, 4].map(r => [0, 1, 2].map(b => { const o = xDef(ex.job, b, r), lv = xSkLv(sk, b, r), lock = r > 0 && !xSkLv(sk, b, r - 1); return `<button class="tn${lock ? ' lock' : ''}${r > 0 ? ' ln' : ''}${r > 0 && !lock ? ' lk' : ''}${xv.sel === b + '_' + r ? ' sel' : ''}" data-ts="${b}_${r}">${xIc(o)}<small>${o.n}</small><i>${lv}/${XMAXLV}</i></button>`; }).join('')).join('')}</div></section>
-      <section class="sec"><div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center">${xIc(so)}<div style="flex:1"><b>${so.n}</b> <span class="s sub">${slv ? `Lv ${slv}` : '아직 안 배웠어요'}</span></div></div><div class="s" style="margin-top:6px;word-break:keep-all">${xDesc(so, Math.max(1, slv))}</div>${slv && slv < XMAXLV ? `<div class="s sub" style="word-break:keep-all">다음 레벨: ${xDesc(so, slv + 1)}</div>` : ''}<button class="btn go" id="tup" style="width:100%;margin-top:8px" ${can(so) ? '' : 'disabled'}>${slv >= XMAXLV ? '최대 레벨' : sr > 0 && !xSkLv(sk, sb, sr - 1) ? '앞 스킬을 먼저 배워요' : pts < 1 ? '포인트가 없어요' : slv ? '레벨 올리기 (포인트 1)' : '배우기 (포인트 1)'}</button>${so.pas ? '' : (() => { const at = (ex.qs || []).indexOf(xv.sel); return `<button class="btn" id="tqs" style="width:100%;margin-top:6px" ${slv ? '' : 'disabled'}>${!slv ? '배운 스킬만 빠른 칸에 넣을 수 있어요' : at >= 0 ? `★ 빠른 칸 ${at + 1}번에서 빼기` : '☆ 빠른 칸에 넣기'}</button>`; })()}<div class="s sub" style="margin-top:8px;word-break:keep-all">행동 게이지가 100이면 차례예요 · 행동 늦추기 N: 게이지를 <span style="white-space:nowrap">-N까지</span> 되돌려요 · 속도 -%: 그동안 느리게 차요</div></div></section>
+      <section class="sec"><div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center">${xIc(so)}<div style="flex:1"><b>${so.n}</b> <span class="s sub">${slv ? `Lv ${slv}` : '아직 안 배웠어요'}</span></div></div><div class="s" style="margin-top:6px;word-break:keep-all">${xDesc(so, Math.max(1, slv))}</div>${slv && slv < XMAXLV ? `<div class="s sub" style="word-break:keep-all">다음 레벨: ${xDesc(so, slv + 1)}</div>` : ''}<div style="display:flex;gap:6px;margin-top:8px"><button class="btn go" id="tup" style="flex:1" ${can(so) ? '' : 'disabled'}>${slv >= XMAXLV ? '최대 레벨' : sr > 0 && !xSkLv(sk, sb, sr - 1) ? '앞 스킬을 먼저 배워요' : pts < 1 ? '포인트가 없어요' : slv ? '레벨 올리기 (포인트 1)' : '배우기 (포인트 1)'}</button>${can(so) && Math.min(XMAXLV - slv, pts) > 1 ? `<button class="btn" id="tmax">최대로 (${Math.min(XMAXLV - slv, pts)})</button>` : ''}</div>${so.pas ? '' : (() => { const at = (ex.qs || []).indexOf(xv.sel); return `<button class="btn" id="tqs" style="width:100%;margin-top:6px" ${slv ? '' : 'disabled'}>${!slv ? '배운 스킬만 빠른 칸에 넣을 수 있어요' : at >= 0 ? `★ 빠른 칸 ${at + 1}번에서 빼기` : '☆ 빠른 칸에 넣기'}</button>`; })()}<div class="s sub" style="margin-top:8px;word-break:keep-all">행동 게이지가 100이면 차례예요 · 행동 늦추기 N: 게이지를 <span style="white-space:nowrap">-N까지</span> 되돌려요 · 속도 -%: 그동안 느리게 차요</div></div></section>
       <div style="display:flex;gap:8px"><button class="btn ghost" id="trs" style="flex:1">초기화 (${XRESET}G)</button><button class="btn" id="tok" style="flex:1">돌아가기</button></div>`);
     on('[data-ts]', b => { xv.sel = b.dataset.ts; xv.qpick = null; renderExplore(); });
     { const qb = $('#tqs'); if (qb) qb.onclick = () => { const qs = ex.qs || [], at = qs.indexOf(xv.sel); if (at >= 0){ xQsSet(-1, xv.sel); return renderExplore(); }
@@ -2922,6 +2922,7 @@ function renderExplore(){
         if (free !== undefined){ xQsSet(free, xv.sel); toast(`빠른 칸 ${free + 1}번에 넣었어요`); xv.qpick = null; } else xv.qpick = xv.sel; renderExplore(); }; }
     on('[data-qc]', b => { if (!xv.qpick) return; xQsSet(+b.dataset.qc, xv.qpick); toast(`빠른 칸 ${+b.dataset.qc + 1}번에 넣었어요`); xv.qpick = null; renderExplore(); });
     $('#tup').onclick = () => { if (!can(so)) return; sk[xv.sel] = slv + 1; sfx('pop'); save(); renderExplore(); };
+    { const tm = $('#tmax'); if (tm) tm.onclick = () => { if (!can(so)) return; sk[xv.sel] = slv + Math.min(XMAXLV - slv, pts); sfx('pop'); save(); renderExplore(); }; }   // 남은 포인트로 이 스킬을 최대까지
     $('#trs').onclick = () => confirmBox(`스킬 포인트를 모두 돌려받아요. ${XRESET}G가 들어요.`, '초기화', '그만둘래요').then(ok => { if (!ok) return; if (me.coin < XRESET) return toast('골드가 모자라요'); me.coin -= XRESET; ex.sk = { '0.0': 1 }; save(); hud(); renderExplore(); });
     $('#tok').onclick = () => { xv = { view: 'lobby' }; renderExplore(); }; return;
   }
@@ -4761,9 +4762,13 @@ function cookDone(){
   save(); hud();
   World.setCook({ x: C.pot.x, y: C.pot.y, soup: C.soup, heat: .15, steam: 5 });
   if (best) speak(`${C.d.name} 최고의 맛!`);
+  const need = {}; C.d.r.forEach(q => { need[q] = (need[q] || 0) + 1; }); const more = Math.min(20, ...Object.entries(need).map(([q, c]) => Math.floor((me.inv[q] || 0) / c)));
   cookShow(`${cookHead(C.d, 4)}<div class="ckres">${ic(k, 'transform:scale(1.5);margin:8px')}<div><b>${esc(C.d.name)}</b><span class="ckstar">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span>${best ? '<span class="ckbest">최고의 맛! 효과 2배</span>' : ''}${isNew ? '<span class="bad">새 요리! 지식 +1</span>' : ''}</div></div>
     <div class="ckef"><div><span>재료 · 불 · 젓기</span><span>+${C.sc[0]} · +${C.sc[1]} · +${C.sc[2]}</span></div><div><span>먹으면</span><span>${best ? `<s>${EFF[C.d.e](C.d.v)}</s> → ` : ''}<b>${effText(C.d, best)}</b></span></div></div>
-    <div class="ckrow"><button class="ckbt w" id="ckbag">가방에 넣기</button><button class="ckbt go" id="ckeat">바로 먹기</button></div>`);
+    <div class="ckrow"><button class="ckbt w" id="ckbag">가방에 넣기</button><button class="ckbt go" id="ckeat">바로 먹기</button></div>${more > 0 ? `<button class="ckbt w" id="ckmore" style="width:100%;margin-top:6px">같은 맛으로 ${more} 개 더 만들기</button>` : ''}`);
+  const mb = $('#ckmore'); if (mb) mb.onclick = () => {   // 남은 재료만큼 같은 별점으로 한 번에 (미니게임 없이)
+    const n = Math.min(more, ...Object.entries(need).map(([q, c]) => Math.floor((me.inv[q] || 0) / c))); if (n <= 0) return;
+    Object.entries(need).forEach(([q, c]) => { me.inv[q] -= c * n; }); me.inv[k] = (me.inv[k] || 0) + n; save(); hud(); sfx('bubble'); mb.remove(); toast(`${ITEM[k]} ${n} 개를 더 만들었어요`); };
   $('#ckbag').onclick = () => { cookEnd(); toast(`${withJosa(ITEM[k], '을', '를')} 가방에 넣었어요`); };
   $('#ckeat').onclick = () => { cookEnd(); eatDish(k); };
 }
@@ -6912,7 +6917,9 @@ function renderClass(){
 }
 
 // ===== 연구실 =====
-let slots = [], brewMsg = null;
+let slots = [], brewMsg = null, brewQuiet = false;
+// 같은 물약을 가진 재료 · 마력만큼 몇 번 더 끓일 수 있나요 (한 번에 끓이기는 30 번까지)
+const brewMax = p => { const r = POTION_INFO[p] ? POTION_INFO[p].r : null; if (!r) return 0; const need = {}; r.forEach(k => { need[k] = (need[k] || 0) + 1; }); return Math.min(30, Math.floor((me.mana || 0) / brewCost()), ...Object.entries(need).map(([k, n]) => Math.floor((me.inv[k] || 0) / n))); };
 const shortName = k => SHORT[k] || ITEM[k].replace(' 물약', '');
 let dexSel = null, dexPage = 0, matAll = false;
 const DEX_PAGE = 20;
@@ -6937,7 +6944,7 @@ function renderLab(){
         <div class="cauldron ${brewDone ? 'done' : slots.length >= 3 ? 'ready' : ''}" id="cauldron">
           <div class="cslots">${[0, 1, 2, 3, 4].map(i => slots[i] ? `<button class="cslot on" data-take="${i}" title="빼기">${ic(slots[i])}</button>` : `<div class="cslot"><span>${i + 1}</span></div>`).join('')}</div>
           <div class="cpot">${ic('cauldron', 'transform:scale(2.4)')}<i class="bub b1"></i><i class="bub b2"></i><i class="bub b3"></i></div>
-          ${brewDone ? `<div class="result"><div class="rcard">${ic(brewDone.p, 'transform:scale(1.6);margin:8px')}<b>${brewDone.p ? ITEM[brewDone.p] : '실패'}</b><span class="s">${esc(brewDone.msg)}</span><div class="frow"><button class="btn sm go" id="brewBag">가방에 넣기</button><button class="btn sm" id="brewAgain" ${brewDone.p && brewDone.again ? '' : 'disabled'}>한 번 더</button></div></div></div>` : ''}
+          ${brewDone ? `<div class="result"><div class="rcard">${ic(brewDone.p, 'transform:scale(1.6);margin:8px')}<b>${brewDone.p ? ITEM[brewDone.p] : '실패'}</b><span class="s">${esc(brewDone.msg)}</span><div class="frow"><button class="btn sm go" id="brewBag">가방에 넣기</button><button class="btn sm" id="brewAgain" ${brewDone.p && brewDone.again ? '' : 'disabled'}>한 번 더</button>${brewDone.p && POTION_INFO[brewDone.p] && brewMax(brewDone.p) > 1 ? `<button class="btn sm" id="brewMany">${brewMax(brewDone.p)} 번 더</button>` : ''}</div></div></div>` : ''}
         </div>
         <div class="s sub" style="text-align:center">${hit ? `${ITEM[hit]} 레시피예요` : slots.length ? `넣은 재료 ${slots.length} (3~5개)` : ''}</div>
         <button class="btn go" id="brew" ${slots.length >= 3 && me.mana >= brewCost() && !brewDone ? '' : 'disabled'}>${ic('cauldron', 'transform:scale(.7);margin:-6px')}끓이기 (마력 ${brewCost()})</button>
@@ -6979,6 +6986,11 @@ function renderLab(){
   const db_ = $('#dexBrew'); if (db_) db_.onclick = () => { labFill(dexSel); brewDone = null; labTab = 'brew'; renderLab(); };
   const bb = $('#brewBag'); if (bb) bb.onclick = () => { brewDone = null; renderLab(); };
   const ba = $('#brewAgain'); if (ba) ba.onclick = () => { const p = brewDone.p; brewDone = null; labFill(p); renderLab(); };
+  const bm = $('#brewMany'); if (bm) bm.onclick = () => {   // 있는 재료 · 마력만큼 한 번에 (하나씩 끓인 것과 같아요)
+    const p = brewDone.p, n = brewMax(p), c0 = me.inv[p] || 0; let k = 0; brewQuiet = true;
+    try { for (let i = 0; i < n; i++){ brewDone = null; labFill(p); if (slots.length < POTION_INFO[p].r.length) break; const b2 = $('#brew'); if (!b2) break; b2.onclick(); if (!brewDone || brewDone.p !== p) break; k++; } }
+    finally { brewQuiet = false; }
+    sfx('bubble'); toast(`${ITEM[p]} ${k} 번 끓였어요 · ${(me.inv[p] || 0) - c0} 개`); renderLab(); };
   // 끌어다 놓기: 재료 칸 → 솥 (마우스는 HTML 드래그, 손가락은 포인터로)
   const pot = $('#cauldron');
   if (pot){
@@ -7016,7 +7028,7 @@ function renderLab(){
       if (isNew) me.found.push(p); trEv('brew', { p, isNew }); try { tlEv('brew'); } catch(e){}
       if (!me.hints.includes(p)) me.hints.push(p);
       msg = isNew ? '도감에 새로 적었어요!' : '완성!';
-      dexSel = p; dexPage = Math.floor(POTIONS.indexOf(p) / DEX_PAGE); toast(`${ITEM[p]} 완성!`);
+      dexSel = p; dexPage = Math.floor(POTIONS.indexOf(p) / DEX_PAGE); if (!brewQuiet) toast(`${ITEM[p]} 완성!`);
     } else if (me.house === 'ember' && myTime()){
       const back = slots[Math.floor(Math.random() * slots.length)]; me.inv[back]++;
       msg = `보라색 연기만 피어올랐어요.... 그래도 Emberkiln의 낮이라 ${withJosa(ITEM[back], '을', '를')} 건졌어요.`;
@@ -7178,7 +7190,10 @@ function renderRanch(){
     const adult = c && crAdult(c), tier = c ? loveTier(c) : 0, T = LOVE_TIERS[tier];
     const fedLeft = c ? Math.max(0, (c.fedAt || 0) + FEED_CD - now) : 0, petLeft = c ? Math.max(0, (c.petAt || 0) + PET_CD - now) : 0;
     const mates = c ? me.cr.map((x, i) => [x, i]).filter(([x, i]) => i !== crSel && x.k === c.k && crAdult(x) && x.love >= BREED_LOVE) : [];
+    const canFeed = x => (x.fedAt || 0) + FEED_CD <= now, canPat = x => (x.petAt || 0) + PET_CD <= now, canHv = x => crAdult(x) && LOVE_TIERS[loveTier(x)].mat && prodLeft(x) <= 0;
+    const nF = me.cr.filter(canFeed).length, nP = me.cr.filter(canPat).length, nH = me.cr.filter(canHv).length;
     body = `
+    ${me.cr.length > 1 ? `<div class="grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:6px"><button class="btn gold sm" id="feedAll" ${nF ? '' : 'disabled'}>모두 먹이 ${nF}</button><button class="btn sm" id="patAll" ${nP ? '' : 'disabled'}>모두 쓰다듬기 ${nP}</button><button class="btn sm ${nH ? 'go' : ''}" id="hvAll" ${nH ? '' : 'disabled'}>모두 받기 ${nH}</button></div>` : ''}
     <div class="crstrip">
       ${me.cr.map((x, i) => `<button data-cr="${i}" class="cell ${i === crSel ? 'sel' : ''}" style="position:relative">${crSprite(x, .42)}${crAdult(x) && loveTier(x) && prodLeft(x) <= 0 ? '<span class="dot" style="background:var(--ok);right:3px;top:3px;bottom:auto"></span>' : ''}<span class="crname">${esc(x.name)} <span style="color:var(--pink)">♥${x.love}</span></span></button>`).join('') || '<div class="hint" style="flex:1">아직 생물이 없어요</div>'}
     </div>
@@ -7244,6 +7259,10 @@ function renderRanch(){
   const ac = $('#adoptCancel'); if (ac) ac.onclick = () => { placing = null; ranchMsg = ''; redraw(); };
   const ad = $('#adopt'); if (ad) ad.onclick = () => confirmBox(`${withJosa(c.name, '을', '를')} 입양 보낼까요? 돌아오지 않아요.`, '보내기', '아니요', true).then(ok => { if (!ok) return; ranchMsg = adoptOut(crSel); save(); redraw(); });
   const nm = $('#crnm'); if (nm) nm.onclick = () => crRename(c);
+  // 모두 돌보기: 지금 할 수 있는 아이들만 한 번에 (하나씩 누른 것과 같아요)
+  const fa = $('#feedAll'); if (fa) fa.onclick = () => { const t = now2(); let k = 0, grown = 0; me.cr.forEach(x => { if ((x.fedAt || 0) + FEED_CD > t) return; const n = 2 + (me.house === 'dusk' && myTime() ? 1 : 0); x.love = Math.min(LOVE_MAX, x.love + n); x.fedAt = t; if (crCare(x, n)) grown++; k++; }); if (!k) return; tutHook('feed'); ranchMsg = `${k} 마리에게 먹이를 줬어요${grown ? ` · ${grown} 마리가 어른이 됐어요!` : ''}`; save(); redraw(); };
+  const pa = $('#patAll'); if (pa) pa.onclick = () => { const t = now2(); let k = 0, grown = 0; me.cr.forEach(x => { if ((x.petAt || 0) + PET_CD > t) return; const n = me.house === 'dusk' ? 2 : 1; x.love = Math.min(LOVE_MAX, x.love + n); x.petAt = t; if (crCare(x, n)) grown++; k++; }); if (!k) return; ranchMsg = `${k} 마리를 쓰다듬었어요${grown ? ` · ${grown} 마리가 어른이 됐어요!` : ''}`; save(); redraw(); };
+  const ha = $('#hvAll'); if (ha) ha.onclick = () => { const got = {}; let g = 0; me.cr.forEach(x => { const T = LOVE_TIERS[loveTier(x)], dx = CREATURES[x.k]; if (!T.mat || prodLeft(x) > 0 || !crAdult(x)) return; me.inv[dx.mat] = (me.inv[dx.mat] || 0) + T.mat; got[dx.mat] = (got[dx.mat] || 0) + T.mat; const cg = Math.round(T.coin * dx.prod / 60); me.coin += cg; g += cg; x.prodAt = now2(); }); const ks = Object.keys(got); if (!ks.length) return; ranchMsg = `${ks.map(k => `「${ITEM[k]}」 ${got[k]}개`).join(' · ')}${g ? ` · ${g}G` : ''}를 받았어요!`; save(); redraw(); };
   const fd = $('#feed'); if (fd) fd.onclick = () => {
     const n = 2 + (me.house === 'dusk' && myTime() ? 1 : 0); c.love = Math.min(LOVE_MAX, c.love + n); c.fedAt = now2(); tutHook('feed'); const up1 = crCare(c, n);
     ranchMsg = `${withJosa(c.name, '이', '가')} ${withJosa(d.food, '을', '를')} 맛있게 먹었어요. 애정 +${n}${up1 ? ' · 어른이 됐어요!' : ''}`; save(); redraw();
@@ -16819,8 +16838,9 @@ function renderMarket(){
         <button class="btn sm go" data-buy="${id}" ${me.coin >= l.price ? '' : 'disabled'}>${ic('coin', 'transform:scale(.7);margin:0 -6px')}${l.price}${l.qty > 1 ? ' / 개' : ''}</button></div>`).join('')}</div>${pager('mpg', marketPage, others.length, 5)}` : '<div class="hint">지금은 올라온 물건이 없어요</div>'}
     </section>`;
   } else if (marketTab === 'mine'){
+    const coll = mine.filter(([, l]) => l.buyer || l.earn > 0);
     body = `<section class="sec">
-      ${secH('내 가판대', `${mine.length} / 4`)}
+      ${secH('내 가판대', `${mine.length} / 4`)}${coll.length > 1 ? `<button class="btn go" id="collAll" style="width:100%;margin-bottom:6px">모두 받기 · ${coll.reduce((t, [, l]) => t + (l.buyer ? l.price || 0 : l.earn || 0), 0)}G</button>` : ''}
       ${mine.length ? `<div class="box px">${mine.map(([id, l]) => `<div class="li">${ic(l.item)}<div class="main"><span class="t">${ITEM[l.item]} · 1 개 ${l.price}G</span><span class="d">${l.buyer ? esc(l.buyerNick || '친구') + '님이 샀어요!' : `${l.qty > 0 ? `${l.qty} 개 남음` : '다 팔렸어요'}${l.earn > 0 ? ` · ${l.earn}G 쌓임` : ''}`}</span></div>
         ${l.buyer || l.earn > 0 ? `<button class="btn sm go" data-collect="${id}">받기</button>` : ''}${!l.buyer && l.qty > 0 ? `<button class="btn sm" data-cancel="${id}">내리기</button>` : ''}</div>`).join('')}</div>` : '<div class="hint">아직 올린 물건이 없어요</div>'}
       ${mine.length < 4 ? `<div class="box px" style="padding:10px;display:flex;flex-direction:column;gap:8px">
@@ -16838,7 +16858,7 @@ function renderMarket(){
         <div class="s sub num" style="display:flex;justify-content:space-between"><span>${coopTotal} / ${COOP_GOAL} · ${Object.keys(week).length}명 참여</span><span>내가 낸 것 ${week[uid] || 0}</span></div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">${HOUSE_KEYS.map(k => { const n = Object.entries(week).filter(([id]) => playersList[id]?.house === k).reduce((t, [, v]) => t + (+v || 0), 0); return `<div style="background:var(--panel);border-radius:8px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;border-top:3px solid ${HOUSES[k].col}"><span class="s" style="color:${HOUSES[k].col}">${HOUSES[k].name}</span><span class="s" style="color:var(--gold);letter-spacing:-1px">${'★'.repeat(Math.min(5, Math.floor(n / 2))) || '·'}</span><span class="s sub num">${n}병</span></div>`; }).join('')}</div>
         
-        <button class="btn go" id="donate" ${me.inv.p_purple > 0 ? '' : 'disabled'}>반짝 물약 1병 내기 (가진 것 ${me.inv.p_purple || 0})</button>
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:6px"><button class="btn go" id="donate" ${me.inv.p_purple > 0 ? '' : 'disabled'}>1병 내기 (가진 것 ${me.inv.p_purple || 0})</button><button class="btn" id="donateAll" ${me.inv.p_purple > 1 ? '' : 'disabled'}>모두 내기</button></div>
       </div>
     </section>`;
   }
@@ -16862,12 +16882,16 @@ function renderMarket(){
     if (!r || !r.committed || !got){ toast('방금 누가 샀어요. 「받기」로 골드를 받아요'); return; }
     me.inv[l.item] = (me.inv[l.item] || 0) + got.q; me.coin += got.g; saveSure(); toast(`가판대에서 내렸어요${got.g ? ` · 판매 대금 ${got.g}G` : ''}.`);
   });
+  const collect1 = async id => { let price = 0; const res = await F.runTransaction(F.ref(db, 'market/' + id), cur => { if (!cur) return; if (cur.buyer){ price = cur.price || 0; return null; } if (!(cur.earn > 0)) return; price = cur.earn; return (cur.qty || 0) > 0 ? { ...cur, earn: 0 } : null; }).catch(() => null);   // 두 창에서 눌러도 한 번만 받아요 · 다 팔린 묶음은 가판대에서 내려가요
+    if (!res || !res.committed) return 0; me.coin += price; return price; };
   on('[data-collect]', async b => {
     const l = marketList[b.dataset.collect]; if (!l || !(l.buyer || l.earn > 0) || b.disabled) return; b.disabled = true;
-    let price = 0; const res = await F.runTransaction(F.ref(db, 'market/' + b.dataset.collect), cur => { if (!cur) return; if (cur.buyer){ price = cur.price || 0; return null; } if (!(cur.earn > 0)) return; price = cur.earn; return (cur.qty || 0) > 0 ? { ...cur, earn: 0 } : null; }).catch(() => null);   // 두 창에서 눌러도 한 번만 받아요 · 다 팔린 묶음은 가판대에서 내려가요
-    if (!res || !res.committed){ b.disabled = false; return; }
-    me.coin += price; saveSure(); toast(`판매 대금 ${price}G를 받았어요.`);
+    const price = await collect1(b.dataset.collect); if (!price){ b.disabled = false; return; }
+    saveSure(); toast(`판매 대금 ${price}G를 받았어요.`);
   });
+  const ca = $('#collAll'); if (ca) ca.onclick = async () => { if (ca.disabled) return; ca.disabled = true; let g = 0;
+    for (const [id, l] of Object.entries(marketList)) if (l.uid === uid && (l.buyer || l.earn > 0)) g += await collect1(id);
+    if (g){ saveSure(); toast(`판매 대금 ${g}G를 받았어요.`); } else ca.disabled = false; };
   on('[data-buy]', async b => {
     const id = b.dataset.buy, l = marketList[id];
     if (!l || me.coin < l.price || b.disabled) return;
@@ -16892,6 +16916,12 @@ function renderMarket(){
     const r = await F.runTransaction(F.ref(db, `coop/${coopWeek()}/${uid}`), c => (+c || 0) + 1).catch(() => null); dn.disabled = false;   // 여러 번 내도 하나씩 다 세어요
     if (!r || !r.committed){ me.inv.p_purple++; saveSure(); return toast('내지 못했어요. 물약은 돌려받았어요'); }
     toast('반짝 물약을 냈어요. 고마워요!');
+  };
+  const da = $('#donateAll'); if (da) da.onclick = async () => {
+    const n = me.inv.p_purple || 0; if (n < 1 || da.disabled) return; da.disabled = true; me.inv.p_purple -= n; if (!await saveSure()){ me.inv.p_purple += n; save(); da.disabled = false; return toast('지금은 저장이 안 돼요. 잠시 뒤에 다시 해 주세요'); }
+    const r = await F.runTransaction(F.ref(db, `coop/${coopWeek()}/${uid}`), c => Math.min(999, (+c || 0) + n)).catch(() => null); da.disabled = false;
+    if (!r || !r.committed){ me.inv.p_purple += n; saveSure(); return toast('내지 못했어요. 물약은 돌려받았어요'); }
+    toast(`반짝 물약 ${n}병을 냈어요. 고마워요!`);
   };
 }
 
