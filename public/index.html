@@ -15084,8 +15084,9 @@ const TW = (() => {
   function props(){
     if (!me) return; const want = open() ? (S().seen ? 'on' : 'wait') : '';
     if (!want && World.where() === 'trialland' && !(xb && xb.tw && !xb.over) && !busy) return pass('campus');   // 탑이 닫히면 학교로 돌려보내요
+    if (want === 'wait' && !told && !busy && !uiBusy() && !World.cutBusy() && !(xEx().run)){ told = true;   // 아직 연출을 못 본 학생: 어디에 있든 한 번 알려 주고 바로 데려가요
+      confirmBox('쿵.... 학교 북쪽 강가에서 땅이 울려요. 「시련의 문」이 열렸대요.', '가 보기', '나중에').then(go => { if (!go || busy) return; closeSheet(); World.teleport('campus', [GATE[0] + 1, GATE[1] + 5], () => setTimeout(() => intro(), 600)); }); }
     if (want === 'wait' && !busy && World.where() === 'campus'){ const t = World.meTile && World.meTile();
-      if (!told){ told = true; toast('북쪽 강가에서 땅이 울려요.......', 4000); }
       if (t && Math.abs(t.x - GATE[0]) + Math.abs(t.y - GATE[1]) <= 8 && !uiBusy() && !World.cutBusy()) intro(); }
     if (want === sig) return; sig = want;
     if (want !== 'on') return World.setProps('campus', [], 'twgate');
