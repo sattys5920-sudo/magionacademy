@@ -419,7 +419,7 @@ body.admin #shell{max-width:none}
 .adsum{display:flex;gap:10px;flex-wrap:wrap}
 .adsum b{font-family:var(--f-pxb)}
 .adtbl{display:flex;flex-direction:column;gap:2px;overflow-x:auto}
-.adtbl>div{display:grid;grid-template-columns:80px 150px 74px 64px 40px 40px 30px 56px 50px 50px 46px 30px 30px 150px 380px;gap:4px;background:#fff;padding:3px 6px;white-space:nowrap;min-width:max-content}
+.adtbl>div{display:grid;grid-template-columns:80px 150px 74px 44px 64px 40px 40px 30px 56px 50px 50px 46px 30px 30px 150px 380px;gap:4px;background:#fff;padding:3px 6px;white-space:nowrap;min-width:max-content}
 .adtbl>div.h{background:#22183F;color:#FFD866}
 .adcard{background:#fff;border:3px solid #22183F;padding:8px;display:flex;flex-direction:column;gap:3px}
 .ck-css{}
@@ -4328,9 +4328,9 @@ function adminRender0(){
       ${(() => { const done = ids.filter(id => !P[id].tut || P[id].tut.end), ing = ids.filter(id => P[id].tut && !P[id].tut.end), st = {}; ing.forEach(id => { const k = (P[id].tut.s || 0) + 1; st[k] = (st[k] || 0) + 1; });   // 입문(튜토리얼) 끝내고 시작한 학생 · 입문 중인 학생
         return `<div class="adsum"><span>입문 끝내고 시작 <b>${done.length}</b> / ${ids.length} 명</span><span>입문 중 <b>${ing.length}</b> 명${ing.length ? ' (' + Object.keys(st).sort().map(k => `${k} 단계 ${st[k]}`).join(' · ') + ')' : ''}</span>${ing.length ? `<span class="s">입문 중: ${ing.map(id => esc(P[id].nick)).join(', ')}</span>` : ''}</div>`; })()}
       <div class="adsum">${XJ1.map(k => { const n = ids.filter(id => xJob1(P[id].ex) === k).length; return `<span>${XJ[k].n} <b>${n}</b></span>`; }).join('')}<span>미선택 <b>${ids.filter(id => !XJ[xJob1(P[id].ex)]).length}</b></span></div><div class="adsum"><span>2차</span>${XJ2.map(k => { const w = ids.find(id => xJob2(P[id].ex) === k); return `<span>${XJ[k].n} <b>${w ? esc(P[w].nick) : '-'}</b></span>`; }).join('')}</div>
-      <div class="adtbl"><div class="h"><span>학생</span><span>기숙사</span><span>직업</span><span>골드</span><span>마력</span><span>지식</span><span>날</span><span>물약 도감</span><span>물고기</span><span>채집</span><span>낚싯대</span><span>옷</span><span>생물</span><span>상태</span><span>관리</span></div>
+      <div class="adtbl"><div class="h"><span>학생</span><span>기숙사</span><span>직업</span><span>탑</span><span>골드</span><span>마력</span><span>지식</span><span>날</span><span>물약 도감</span><span>물고기</span><span>채집</span><span>낚싯대</span><span>옷</span><span>생물</span><span>상태</span><span>관리</span></div>
       ${ids.sort((a, b) => (P[b].coin || 0) - (P[a].coin || 0)).map(id => { const p = P[id], d = p.fdex || {};
-        return `<div><span><b>${esc(p.nick)}</b></span><span><button class="btn sm" data-adhouse="${id}" style="color:${HOUSES[p.house]?.col || '#888'};font-weight:700">${HOUSES[p.house]?.name || '정하기'} ▾</button></span><span>${XJ[xJob1(p.ex)]?.n || '-'}${xJob2(p.ex) ? ` · <b>${XJ[xJob2(p.ex)].n}</b>` : ''}</span><span>${(p.coin || 0).toLocaleString()}</span><span>${p.mana || 0}</span><span>${p.know || 0}</span><span>${p.day || 1}</span><span>${(p.found || []).filter(k => POTION_INFO[k]).length}/${POTIONS.length}</span>
+        return `<div><span><b>${esc(p.nick)}</b></span><span><button class="btn sm" data-adhouse="${id}" style="color:${HOUSES[p.house]?.col || '#888'};font-weight:700">${HOUSES[p.house]?.name || '정하기'} ▾</button></span><span>${XJ[xJob1(p.ex)]?.n || '-'}${xJob2(p.ex) ? ` · <b>${XJ[xJob2(p.ex)].n}</b>` : ''}</span><span>${p.tw && p.tw.best ? p.tw.best + ' 층' : '-'}</span><span>${(p.coin || 0).toLocaleString()}</span><span>${p.mana || 0}</span><span>${p.know || 0}</span><span>${p.day || 1}</span><span>${(p.found || []).filter(k => POTION_INFO[k]).length}/${POTIONS.length}</span>
           <span>${FISH.filter(f => d[f.id]).length}/${FISH.length}</span><span>${FORAGE.filter(f => d[f.id]).length}/${FORAGE.length}</span><span>${RODS[p.rod || 0]?.name.split(' ')[0] || '-'}</span><span>${Object.keys(p.closet || {}).length}</span><span><button class="btn sm" data-adcrl="${id}" style="white-space:nowrap">${(p.cr || []).length}마리</button></span>
           <span>${O[id] ? `${adPlace(O[id].m)}` : p.rest ? '쉬는 중' : '외출'}</span><span><button class="btn sm" data-adstrip="${id}">지급품 회수</button> <button class="btn sm" data-adcr="${id}" ${starterCrIds(p.cr).size ? '' : 'disabled'}>시작 생물 회수 ${starterCrIds(p.cr).size}</button> <button class="btn sm" data-adreset="${id}">진행 리셋</button> <button class="btn sm" data-addel="${id}">가입 삭제</button></span></div>`; }).join('')}</div>`;
   }
@@ -15205,12 +15205,12 @@ const TW = (() => {
   // ---------- 관리자 ----------
   function adminHTML(){
     const c = AD.twctl || {}, P = AD.players || {}, td = todayKey();
-    const ids = Object.keys(P).filter(id => P[id] && P[id].nick && P[id].tw && P[id].tw.best).sort((a, b) => P[b].tw.best - P[a].tw.best);
+    const bst = id => (P[id].tw && P[id].tw.best) || 0, ids = Object.keys(P).filter(id => P[id] && P[id].nick).sort((a, b) => bst(b) - bst(a) || String(P[a].nick).localeCompare(String(P[b].nick)));
     return `<div class="adcard"><div class="abhead"><b>시련의 탑</b></div>
-      <div class="abchips"><span>${c.open ? '열려 있어요' : '닫혀 있어요'}</span><span>올라간 학생 ${ids.length} 명</span>${ids.length ? `<span>1 등 ${esc(P[ids[0]].nick)} ${P[ids[0]].tw.best} 층</span>` : ''}</div>
+      <div class="abchips"><span>${c.open ? '열려 있어요' : '닫혀 있어요'}</span><span>올라간 학생 ${ids.filter(bst).length} 명</span>${ids.length && bst(ids[0]) ? `<span>1 등 ${esc(P[ids[0]].nick)} ${bst(ids[0])} 층</span>` : ''}</div>
       <div class="s" style="margin:6px 0">학교 북쪽 강가에 「시련의 문」이 생겨요.</div>
       <div class="row" style="gap:6px;flex-wrap:wrap">${c.open ? '<button class="btn sm" data-twa="close">탑 닫기</button>' : '<button class="btn sm go" data-twa="open">탑 열기</button>'}</div>
-      ${ids.length ? `<table class="twt"><tr><th>학생</th><th>최고 층</th><th>오늘 도전</th></tr>${ids.map(id => { const t = P[id].tw; return `<tr><td>${esc(P[id].nick)}</td><td>${t.best} 층</td><td>${t.d === td ? t.n || 0 : 0} 번</td></tr>`; }).join('')}</table>` : ''}</div>`;
+      ${ids.length ? `<table class="twt"><tr><th>학생</th><th>최고 층</th><th>오늘 도전</th></tr>${ids.map(id => { const t = P[id].tw || {}; return `<tr><td>${esc(P[id].nick)}</td><td>${t.best ? t.best + ' 층' : '-'}</td><td>${t.d === td ? t.n || 0 : 0} 번</td></tr>`; }).join('')}</table>` : ''}</div>`;
   }
   document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-twa]'); if (!b || !b.closest('#adminv')) return;
     if (b.dataset.twa === 'open'){ if (confirm('시련의 탑을 열까요? 학교 북쪽 강가에 「시련의 문」이 생겨요.')) GDB.set('tw/ctl', { open: true, at: now2() }).then(() => toast('탑을 열었어요')); }
