@@ -22,16 +22,16 @@ function real(o, sk, lv, pasV){
   else if (sk.t === 'heal'){ T.push(`${ally} 치유 ×${mul(sk.p)}`); if (sk.pct) T.push(`최대 체력의 ${pct(sk.pct)}%`); if (sk.cl) T.push('나쁜 효과'); if (sk.mpb) T.push(`MP ${pct(sk.mpb)}%`); }
   else if (sk.t === 'revive'){ T.push(sk.all ? '전부' : '하나', `체력 ${pct(sk.pct || .5)}%`); if (sk.hl) T.push(`치유 ×${mul(sk.hl)}`); }
   else if (sk.t === 'buff'){ const k = sk.key; T.push(`${sk.sec}초`);
-    if (k === 'shield') T.push(`보호막 (${SN[sk.st || 'heal']} ×${mul(sk.sv || 2)}`); else if (k === 'regen') T.push(`2초마다 치유 ×${mul(sk.v)}`); else if (k === 'counter') T.push(`${pct(sk.v)}%`); else if (k === 'taunt') T.push('80%'); else if (k === 'cover') T.push('65%');
+    if (k === 'shield') T.push(`보호막 (${SN[sk.st || 'heal']} ×${mul(sk.sv || 2)}`); else if (k === 'regen') T.push(`2초마다 치유 ×${mul(sk.v)}`); else if (k === 'counter') T.push(`${pct(sk.v)}%`); else if (k === 'taunt') T.push(`${sk.sec}초간 적 공격의 80%`); else if (k === 'cover') T.push(`${sk.sec}초간 아군을 노린 공격의 65%`);
     else if (k === 'dodge') T.push(`회피 ${Math.min(50, pct(sk.v))}%`); else T.push(`${sk.tg === 'self' ? { atk: '내가 주는 피해 +', spd: '내 속도 +', dmgIn: '내가 받는 피해 -' }[k] : ally + ' ' + { atk: '주는 피해 +', spd: '속도 +', dmgIn: '받는 피해 -' }[k]}${pct(sk.v)}%`);
-    (sk.also || []).forEach(([k2, v2]) => T.push(`받는 피해 -${pct(v2)}%`)); }
+    (sk.also || []).forEach(([k2, v2]) => T.push(k2 === 'dmgIn' ? `받는 피해 -${pct(v2)}%` : `${{ atk: '주는 피해', spd: '속도', dodge: '회피' }[k2] || k2} +${pct(v2)}%`)); }
   else if (sk.t === 'deb'){ T.push(`${sk.sec}초`); T.push(sk.key === 'blind' ? `${pct(sk.v)}% 확률로 빗나가요` : `${foe} ${{ slow: '속도 -', weak: '공격 -', vuln: '받는 피해 +' }[sk.key]}${pct(sk.v)}%`); }
   else if (sk.t === 'dot') T.push(`${foe} 8초간 2초마다 ${SN[sk.st]} ×${mul(sk.p)}`);
   else if (sk.t === 'stun') T.push(`${foe} ${SN[sk.st]} ×${mul(sk.p)}`, '행동 늦추기 60');
-  else if (sk.t === 'burst') T.push('×1.5');
+  else if (sk.t === 'burst') T.push(`×${mul(1.5 * (sk.p || 1))}`);
   else if (sk.t === 'cleanse'){ T.push('나쁜 효과'); if (sk.regen) T.push(`10초간 2초마다 치유 ×${mul(sk.regen)}`); }
-  else if (sk.t === 'encore') T.push('MP 없이 한 번 더');
-  else if (sk.t === 'recall') T.push('12%');
+  else if (sk.t === 'encore') T.push(lv > 1 ? `세기 ×${mul(1 + ((sk.p || 1) - 1) * .5)}` : 'MP 없이 한 번 더');
+  else if (sk.t === 'recall') T.push(`${pct(.12 * (sk.p || 1))}%`);
   else if (sk.t === 'leap') T.push('곧바로 다시 행동', `속도 +${pct(sk.v)}% (${sk.sec}초)`);
   else if (sk.t === 'tstop'){ const ts = +(4 * (1 + .2 * (lv - 1))).toFixed(1); T.push('곧바로 행동', `행동 늦추기 ${Math.round(150 * ts / 4)}`); }
   else if (sk.t === 'mp') T.push(`MP ${pct(sk.v)}%`);   // xAct0: t.mmp * sk.v
