@@ -6166,7 +6166,8 @@ function render(){
 // 탭(전체·재료·물약·음식·선물·옷·중요) + 칸 격자(휴대폰 5열·PC 8열, 페이지 넘김) + 아래 상세(이름·설명·쓰임새·[사용][선물하기][버리기]).
 // 새 아이템 점: me.bagSeen = { 아이템: 본 개수 }. 칸을 보여 준 뒤 본 개수를 갱신해요.
 // 껍데기(shell)가 할 일: 인벤토리가 바뀐 뒤(채집·낚시·요리·제조·선물 등) bagBadge()를 불러 주면 하단 [가방]에 새 아이템 점이 켜져요.
-let bagTab = 'all', bagPage = 0, bagSel = null, bagPick = false, bagMsg = '', bagQ = '', bagSort = '';   // 가방 찾기 · 정렬 ('' 기본 · n 많은 순 · a 이름 순)
+let bagTab = 'all', bagPage = 0, bagSel = null, bagPick = false, bagMsg = '', bagQ = '', bagSort = '', bagSellM = false, bagSellS = {};   // 여러 개 팔기: 고른 재료를 가진 만큼 한 번에 (가게와 같은 값)
+const bagSellBase = k => CATCH_INFO[k] ? CATCH_INFO[k].pay : cropBase(k), bagCanSell = e => !!e && e.kind === 'inv' && me.inv[e.id] > 0 && bagSellBase(e.id) > 0;   // 가방 찾기 · 정렬 ('' 기본 · n 많은 순 · a 이름 순)
 const BAG_TABS = [['all', '전체'], ['mat', '재료'], ['potion', '물약'], ['dish', '음식'], ['gift', '선물'], ['cloth', '옷'], ['key', '중요']];
 const BAG_ZONE = { f: '숲', g: '묘지', l: '호숫가', p: '들판' };
 const bagCols = () => matchMedia('(min-width:900px)').matches ? 8 : 5;
@@ -6225,6 +6226,10 @@ function bagInfo(k){
   const cr = CREATURES.find(c => c.mat === k); if (cr) return { desc: `사육장 ${cr.kind}이(가) 주는 재료예요`, use: uses.join(' · ') || '물약·요리 재료' };
   return { desc: '', use: uses.join(' · ') };
 }
+function bagSellHTML(all){
+  const ks = Object.keys(bagSellS).filter(k => me.inv[k] > 0), cnt = ks.reduce((t, k) => t + me.inv[k], 0), g = ks.reduce((t, k) => t + partyMul(sellPay(k, bagSellBase(k)) * me.inv[k]), 0), can = all.filter(bagCanSell);
+  return `<div class="bag-dt" style="min-height:0"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="d" style="flex:1;min-width:120px">${ks.length ? `${ks.length}종 ${cnt}개 · ${g.toLocaleString()}G` : '팔 재료를 눌러 골라요'}</span>${can.length ? `<button class="btn sm" data-bsall="1">${can.every(e => bagSellS[e.id]) ? '모두 풀기' : '모두 고르기'}</button>` : ''}<button class="btn sm gold" data-bsgo="1" ${ks.length ? '' : 'disabled'}>팔기</button></div></div>`;
+}
 function bagDetailHTML(e){
   if (!e) return `<div class="bag-dt"></div>`;
   const hd = (sub) => `<div class="hd">${e.ico}<div class="main"><span class="b">${esc(e.name)}</span><span class="s sub">${sub}</span></div></div>`;
@@ -6253,18 +6258,24 @@ function renderBag(){
   if (bagSel && !all.find(e => e.id === bagSel)) bagSel = null;
   const sel = all.find(e => e.id === bagSel) || null, isNew = e => e.kind === 'inv' && me.inv[e.id] > (me.bagSeen[e.id] || 0);
   const tabs = `<div class="seg scroll bag-tabs">${BAG_TABS.map(([k, l]) => `<button data-btab="${k}" class="${bagTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
-  const grid = list.length ? `<div class="grid bag-grid">${list.map(e => `<button class="cell ${e.id === bagSel ? 'sel' : ''}" data-bsel="${esc(e.id)}" aria-label="${esc(e.name)}">${e.ico}${e.n ? `<span class="n num">${e.n}</span>` : ''}${isNew(e) ? '<i class="new"></i>' : ''}</button>`).join('')}</div>`
+  const grid = list.length ? `<div class="grid bag-grid">${list.map(e => `<button class="cell ${(bagSellM ? bagSellS[e.id] : e.id === bagSel) ? 'sel' : ''}" data-bsel="${esc(e.id)}" aria-label="${esc(e.name)}"${bagSellM && !bagCanSell(e) ? ' disabled style="opacity:.3"' : ''}>${e.ico}${e.n ? `<span class="n num">${e.n}</span>` : ''}${isNew(e) ? '<i class="new"></i>' : ''}</button>`).join('')}</div>`
     : `<div class="hint" style="padding:24px 8px">${{ all: '아직 가방이 비어 있어요', mat: '재료가 없어요. 온실·호숫가·사육장에서 모아요', potion: '물약이 없어요. 연구실 솥에서 만들어요', dish: '요리가 없어요. 솥 앞에서 요리해요', gift: '친구들이 좋아하는 물건이 아직 없어요', cloth: '산 옷이 없어요. 옷 가게에 가 봐요', key: '' }[bagTab]}</div>`;
   const pager = pages > 1 ? `<div class="bag-pager"><button class="btn sm" data-bpage="-1" ${bagPage ? '' : 'disabled'}>◀</button><span class="num">${bagPage + 1} / ${pages}</span><button class="btn sm" data-bpage="1" ${bagPage < pages - 1 ? '' : 'disabled'}>▶</button></div>` : '';
-  const tools = `<div class="bag-tools" style="display:flex;gap:6px;margin:6px 0"><input id="bagQ" placeholder="찾기" value="${esc(bagQ)}" autocomplete="off" style="flex:1;min-width:0;min-height:40px;padding:0 10px;border-radius:10px;border:2px solid var(--line);background:var(--panel2,#1b1230);color:inherit;font:inherit">${[['', '기본'], ['n', '많은 순'], ['a', '이름 순']].map(([k, l]) => `<button class="btn sm${bagSort === k ? ' go' : ''}" data-bsort="${k}">${l}</button>`).join('')}</div>`;
-  frame(null, '가방', `${bagInvIds().length}종 · ${BAG_TABS.find(([k]) => k === bagTab)[1]} ${all.length}칸`, `${tabs}${tools}${grid}${pager}${bagDetailHTML(sel)}`);
+  const tools = `<div class="bag-tools" style="display:flex;gap:6px;margin:6px 0"><input id="bagQ" placeholder="찾기" value="${esc(bagQ)}" autocomplete="off" style="flex:1;min-width:0;min-height:40px;padding:0 10px;border-radius:10px;border:2px solid var(--line);background:var(--panel2,#1b1230);color:inherit;font:inherit">${[['', '기본'], ['n', '많은 순'], ['a', '이름 순']].map(([k, l]) => `<button class="btn sm${bagSort === k ? ' go' : ''}" data-bsort="${k}">${l}</button>`).join('')}<button class="btn sm${bagSellM ? ' go' : ''}" id="bagSellM">팔기</button></div>`;
+  frame(null, '가방', `${bagInvIds().length}종 · ${BAG_TABS.find(([k]) => k === bagTab)[1]} ${all.length}칸`, `${tabs}${tools}${grid}${pager}${bagSellM ? bagSellHTML(all) : bagDetailHTML(sel)}`);
   const redraw = () => keepScroll(renderBag);
   on('[data-btab]', b => { bagTab = b.dataset.btab; bagPage = 0; bagSel = null; bagPick = false; bagMsg = ''; redraw(); });
   on('[data-bsort]', b => { bagSort = b.dataset.bsort; bagPage = 0; redraw(); });
   { const qi = $('#bagQ'); if (qi){ const upd = () => { bagQ = qi.value; bagPage = 0; const at = qi.selectionStart; redraw(); const q2 = $('#bagQ'); if (q2){ q2.focus(); try { q2.setSelectionRange(at, at); } catch(e){} } };   // 한글 조합 중에는 다시 그리지 않아요
     qi.oninput = e => { if (!e.isComposing) upd(); }; qi.addEventListener('compositionend', upd); } }
   on('[data-bpage]', b => { bagPage += +b.dataset.bpage; bagPick = false; redraw(); });
-  on('[data-bsel]', b => { bagSel = bagSel === b.dataset.bsel ? null : b.dataset.bsel; bagPick = false; bagMsg = ''; redraw(); });
+  on('[data-bsel]', b => { const id = b.dataset.bsel; if (bagSellM){ if (bagCanSell(all.find(e => e.id === id))){ if (bagSellS[id]) delete bagSellS[id]; else bagSellS[id] = 1; } return redraw(); } bagSel = bagSel === id ? null : id; bagPick = false; bagMsg = ''; redraw(); });
+  $('#bagSellM') && ($('#bagSellM').onclick = () => { bagSellM = !bagSellM; bagSellS = {}; bagSel = null; bagMsg = ''; redraw(); });
+  on('[data-bsall]', () => { const c = all.filter(bagCanSell); const every = c.length && c.every(e => bagSellS[e.id]); bagSellS = {}; if (!every) c.forEach(e => { bagSellS[e.id] = 1; }); redraw(); });
+  on('[data-bsgo]', async () => { const ks = Object.keys(bagSellS).filter(k => me.inv[k] > 0 && bagSellBase(k) > 0); if (!ks.length) return; const cnt = ks.reduce((t, k) => t + me.inv[k], 0);
+    if (!await confirmBox(`${ks.length}종 ${cnt}개를 모두 팔까요? 되돌릴 수 없어요.`, '팔기', '아니요', true)) return;
+    let g = 0, n = 0; ks.forEach(k => { const c = me.inv[k] || 0; if (c <= 0) return; me.inv[k] = 0; n += c; g += partyMul(sellPay(k, bagSellBase(k)) * c); }); if (!n) return;
+    me.coin += g; trEv('sell', { g }); bagSellS = {}; bagSellM = false; bagMsg = ''; save(); hud(); sfx('chime'); toast(`${n}개를 팔았어요. +${g.toLocaleString()}G`); redraw(); });
   on('[data-bcap]', () => { if (typeof capReadBag === 'function') capReadBag(); });
   on('[data-bstk]', () => { STK.eatMad(); bagMsg = ''; redraw(); });
   on('[data-bhold]', b => { if (typeof blnHold === 'function') blnHold(b.dataset.bhold); bagMsg = ''; redraw(); });
@@ -15266,16 +15277,20 @@ const TW = (() => {
         msg = `${f} 층 돌파! 골드 +${rw.g} · ${Object.entries(rw.it).map(([k, c]) => `${ITEM[k]} +${c}`).join(' · ')}${f === TW_N ? ' · 이름표 「탑의 주인」' : ''}`; } else msg = `${f} 층을 다시 깼어요`; }
     else { sfx('lose'); msg = `${f} 층에서 쓰러졌어요.......`; }
     saveSure(); pubSave();
-    $('#xlog') && ($('#xlog').textContent = msg); const el = $('#xcmd'); if (el) el.innerHTML = '<button class="btn go" id="xnext" style="grid-column:1/-1">탑으로 돌아가기</button>';
-    const back = () => { if (xb !== B) return; xb = null; xv = null; closeSheet(); if (won && first) result(f); else win(); };
+    $('#xlog') && ($('#xlog').textContent = msg); const el = $('#xcmd'), nf = won ? (f < TW_N ? f + 1 : 0) : f;   // 이기면 다음 층 · 지면 같은 층 카드로 바로
+    if (el) el.innerHTML = `${nf ? `<button class="btn go" id="xtwnx">${won ? `다음 층 (${nf} 층)` : '다시 도전'}</button>` : ''}<button class="btn" id="xnext" style="grid-column:${nf ? 'auto' : '1/-1'}">탑으로 돌아가기</button>`;
+    const leave = () => { if (xb !== B) return false; xb = null; xv = null; closeSheet(); return true; };
+    const back = () => { if (leave()){ if (won && first) result(f); else win(); } };
+    const nx = $('#xtwnx'); if (nx) nx.onclick = () => { if (leave()) card(nf); };
     const nb = $('#xnext'); if (nb) nb.onclick = back; else setTimeout(back, 1500);
   }
   function result(f){
     const s = S(), rw = twRew(f), nx = f < TW_N ? twFloor(f + 1) : null;
-    box(`<div class="card"><span class="sub">시련의 탑</span><div class="big">${f} 층 돌파</div>
+    const el = box(`<div class="card"><span class="sub">시련의 탑</span><div class="big">${f} 층 돌파</div>
       <div class="rw" style="justify-content:center"><span class="tag">골드 ${rw.g}</span>${Object.entries(rw.it).map(([k, c]) => `<span class="tag">${ITEM[k]} ${c}</span>`).join('')}${f === TW_N ? '<span class="tag">이름표 「탑의 주인」</span>' : ''}</div>
       <div class="sub">${nx ? `다음: ${f + 1} 층 · ${nx.t.map(t => t.n).join(' · ')}${nx.boss ? ' · 보스' : ''} · 추천 Lv ${Math.round(twLv(f + 1))}` : '탑 꼭대기까지 올랐어요'}</div>
-      <button class="go" data-twok style="width:100%">좋아요</button></div>`, 'res').querySelector('[data-twok]').onclick = () => win();
+      <div style="display:flex;gap:8px;width:100%">${nx ? '<button class="go" data-twnx style="flex:1">다음 층</button>' : ''}<button class="${nx ? 'pk' : 'go'}" data-twok style="flex:1;min-height:48px">좋아요</button></div></div>`, 'res'), nb = el.querySelector('[data-twnx]');
+    el.querySelector('[data-twok]').onclick = () => win(); if (nb) nb.onclick = () => card(f + 1);
     sfx('sparkle');
   }
   function listen(){
