@@ -46,7 +46,7 @@ const setReady = (S, uid, v) => { const p = S.players[uid]; if (p && (S.phase ==
 const allReady = S => { const a = Object.values(S.players); return a.length > 0 && a.every(q => q.ready); };
 function upgrade(S, uid, i, k){ const p = S.players[uid], c = p && upCost(p, i, k); if (!p || c == null || p.gold < c) return false; p.gold -= c; p.up[i][k]++; return true; }
   // 인원별 몬스터 체력 보정: 몇 명이 하든 승률이 60% 안팎이 되게 (tools/td_sim.js로 맞춘 값)
-  const HP_ADJ = [1, .2106, .4614, .9763, .9744, .9893, .9905, .9963, .9432, .9343, .9324, .9142, .8993, 0.898, 0.895, 0.8957, 0.8884, 0.883, 0.8786];   // 13~18 명도 60 % 로 다시 맞췄어요 (자리는 3 곳 × 6 = 18 자리)
+  const HP_ADJ = [1.0, .1682, .5683, 1.133, 1.1432, 1.0303, 1.0599, 1.0098, .9664, .9573, .9299, .897, .8993, .8859, .8734, .8836, .8623, .8342, .83];   // 웨이브 2 분 기준으로 1~18 명 모두 60 % 로 다시 맞췄어요 (자리는 3 곳 × 6 = 18 자리)
   const hpAdj = c => HP_ADJ[Math.max(1, Math.min(18, c))];
   function startWave(S){ if (S.phase === 'over' || S.wave >= 15) return false; S.wave++; Object.values(S.players).forEach(q => { q.ready = 0; }); { const c = Object.keys(S.players).length, n = c / 9, base = n >= 1 ? n : Math.max(.3, Math.pow(n, 1.15)); S.hpN = base * hpAdj(c); var cf = .85 + .15 * Math.min(2, Math.max(1, base)); } const d = waveDef(S.wave); S.phase = 'wave'; S.tier = d.tier; S.q = []; let t = 0; d.list.forEach(([type, n0, gap]) => { const n = n0; for (let i = 0; i < n; i++){ S.q.push({ at: t, type }); t += gap; } t += 1.5 * K.gap; }); S.q.sort((a, b) => a.at - b.at); S.wt = 0; S.spawned = 0; S.total = S.q.length; return true; }
   function spawn(S, type){ const m = MON[type], tier = S.tier, wk = 1 + ((S.wave - 1) % 5) * .06, hp = Math.round(m.hp * TIER_HP[tier] * wk * S.hpN * S.hpK * K.hp); S.mons.push({ id: S.nid++, type, zone: 0, s: 0, hp, mhp: hp, spd: m.spd * (1 + tier * .06), egg: m.egg * (1 + tier * .35), slow: 0, slowT: 0, gold: Math.round(TIER_GOLD[tier][type === 'n' ? 0 : type === 'e' ? 1 : 2] * K.gold) }); }
@@ -63,9 +63,13 @@ function upgrade(S, uid, i, k){ const p = S.players[uid], c = p && upCost(p, i, 
     else ts.forEach(m => hurt(S, m, s.pow, p, 2));   // 넓은 범위 모두에게 약한 공격
     p.cd[i] = s.cd; return true;
   }
+  function autoUp(S, p, dt){   // 「자동」이면 번 골드로 올리기도 알아서 (난이도가 올리기를 하는 걸로 맞춰져 있어요) · 쉬는 시간에도
+    if (!p.auto) return; p.upT = (p.upT || 0) - dt; if (p.upT > 0) return; p.upT = 2; const o = [];
+    for (let i = 0; i < 2; i++) for (const k of ['pow', 'rng', 'cd']){ const c = upCost(p, i, k); if (c != null && p.gold >= c) o.push([i, k]); }
+    if (o.length && Math.random() < .7){ const [i, k] = o[Math.floor(Math.random() * o.length)]; upgrade(S, p.uid, i, k); } }
   function step(S, dt){
     if (S.phase === 'over') return;
-    if (S.phase === 'ready' || S.phase === 'rest'){ if (S.autoReady) Object.values(S.players).forEach(q => { q.ready = 1; }); if (S.phase === 'rest'){ S.rest -= dt; if (S.rest <= 0) return void startWave(S); }   // 쉬는 시간이 끝나면 다 안 눌러도 다음 웨이브가 와요 (자리를 비운 친구 때문에 멈추지 않게)
+    if (S.phase === 'ready' || S.phase === 'rest'){ Object.values(S.players).forEach(p => autoUp(S, p, dt)); if (S.autoReady) Object.values(S.players).forEach(q => { q.ready = 1; }); if (S.phase === 'rest'){ S.rest -= dt; if (S.rest <= 0) return void startWave(S); }   // 쉬는 시간이 끝나면 다 안 눌러도 다음 웨이브가 와요 (자리를 비운 친구 때문에 멈추지 않게)
       if (allReady(S)) startWave(S); return; }   // 자리를 정하고 모두가 시작을 누르면 웨이브가 와요
     S.t += dt;
     if (S.phase === 'wave'){ S.wt += dt; while (S.q.length && S.q[0].at <= S.wt){ spawn(S, S.q.shift().type); S.spawned++; } }
@@ -80,7 +84,7 @@ function upgrade(S, uid, i, k){ const p = S.players[uid], c = p && upCost(p, i, 
       p.buff = Math.max(0, p.buff - dt); const pos = ZONES[p.zone].slots[p.slot], mult = p.buff > 0 ? 1.25 : 1;
       p.basic -= dt; if (p.basic <= 0){ const t = nearOf(S, p, K.reach).sort((a, b) => b.s - a.s)[0]; if (t){ hurt(S, t, K.basic * mult, p, 0); p.basic = 2; } else p.basic = .2; }   // 직업 상관없이 사거리 같고 2초에 한 번
       for (let i = 0; i < 2; i++){ p.cd[i] -= dt; if (p.auto && p.cd[i] <= 0) cast(S, p.uid, i); }
-      if (p.auto){ p.upT = (p.upT || 0) - dt; if (p.upT <= 0){ p.upT = 2; const o = []; for (let i = 0; i < 2; i++) for (const k of ['pow', 'rng', 'cd']){ const c = upCost(p, i, k); if (c != null && p.gold >= c) o.push([i, k]); } if (o.length && Math.random() < .7){ const [i, k] = o[Math.floor(Math.random() * o.length)]; upgrade(S, p.uid, i, k); } } }   // 「자동」이면 번 골드로 올리기도 알아서 (난이도가 올리기를 하는 걸로 맞춰져 있어요)
+      autoUp(S, p, dt);
     });
     S.mons = S.mons.filter(m => m.hp > 0);
     if (!S.eggs.some(v => v > 0)){ S.phase = 'over'; S.win = false; return; }
