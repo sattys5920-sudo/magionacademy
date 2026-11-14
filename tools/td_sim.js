@@ -7,7 +7,7 @@ function run(seed){let r=seed;const rnd=()=>(r=(r*16807)%2147483647)/2147483647;
  const S=TD.newState(pl,{hpK:HPK});TD.startWave(S);let tt=0,spent=0;
  while(S.phase!=='over'&&tt<9000){TD.step(S,.1);tt+=.1;
   if((tt*10|0)%20===0)Object.values(S.players).forEach(p=>{const opts=[];for(let i=0;i<2;i++)for(const k of['pow','rng','cd']){const c=TD.upCost(p,i,k);if(c!=null&&p.gold>=c)opts.push([i,k,c])}
-   if(opts.length&&rnd()<.7){const o=opts[rnd()*opts.length|0];TD.upgrade(S,p.uid,o[0],o[1]);spent+=o[2]}})}
+   if(!p.auto&&opts.length&&rnd()<.7){const o=opts[rnd()*opts.length|0];TD.upgrade(S,p.uid,o[0],o[1]);spent+=o[2]}})}
  const earned=Object.values(S.players).reduce((a,p)=>a+p.earned,0)/pl.length;
  return {kz:S.kz,win:S.win?1:0,wave:S.wave,eggs:S.eggs.map(Math.round),earned:Math.round(earned),leaks:S.leaks,t:Math.round(tt)}}
 const R=[];for(let i=1;i<=N;i++)R.push(run(i*7919));

@@ -39,6 +39,9 @@ Object.entries(JOBS).forEach(([u, j]) => { seed.players[u].ex = { job: j, exp: 2
   await ad.waitForTimeout(6000);
   const k1 = await ad.evaluate(() => __T.dfGet().host.S.kz.reduce((a, x) => a + x, 0));
   ok(k1 > 0, '웨이브 중 몬스터를 잡아요 (자동 스킬 · 기본 공격) ' + k1);
+  await ad.evaluate(() => { const S = __T.dfGet().host.S; Object.values(S.players).forEach(p => { p.gold += 2000; }); }); await ad.waitForTimeout(4500);
+  const ups = await ad.evaluate(() => Object.values(__T.dfGet().host.S.players).map(p => p.up.reduce((a, u) => a + u.pow + u.rng + u.cd, 0)));
+  ok(ups.every(n => n > 0), '「자동」이면 번 골드로 올리기도 알아서 ' + ups);
   await st.me1.screenshot({ path: __dirname + '/shot_df_wave.png' });
   // 웨이브 1 을 빨리 끝내고 쉬는 시간 → 아무도 안 눌러도 30 초 뒤 웨이브 2
   await ad.evaluate(() => { const S = __T.dfGet().host.S; for (let i = 0; i < 3000 && S.phase === 'wave'; i++) TD.step(S, .1); });
@@ -61,7 +64,7 @@ Object.entries(JOBS).forEach(([u, j]) => { seed.players[u].ex = { job: j, exp: 2
   await st.me1.evaluate(() => __tw.ev("(dfRes = { id: 1, eggs: [60, 0, 30], win: 1, at: now2() }, 1)"));
   ok((await st.me1.evaluate(() => __tw.ev("World.canEnter('dragon')"))) === true, '알이 남으면 용의 동굴 문이 열려요');
   ok(await st.me1.evaluate(() => __tw.ev("World.reqOk('alive:0') && !World.reqOk('alive:1') && World.reqOk('dead:1')")), '지킨 알의 용만 있고 깨진 알 자리는 껍데기');
-  await st.me1.evaluate(() => __tw.ev('dfDragonOffer(0)')); await st.me1.waitForTimeout(500); await st.me1.evaluate(() => { const o = document.getElementById('cfOk'); if (o) o.click(); }); await st.me1.waitForTimeout(500);
+  await st.me1.evaluate(() => __tw.ev('(setTimeout(() => dfDragonOffer(0), 0), 1)')); await st.me1.waitForTimeout(500); await st.me1.evaluate(() => { const o = document.getElementById('cfOk'); if (o) o.click(); }); await st.me1.waitForTimeout(500);
   ok(await st.me1.evaluate(() => __tw.ev('(me.buffs.dfire || 0) > now2() && me.dfb.n === 1')), '화륵이 가호 2 시간 (오늘 1 / 2 번)');
   ok(!errs.length, '페이지 오류 없음 ' + errs.slice(0, 3));
   console.log(`검사 ${pass + fail}개 · 실패 ${fail}개`); await b.close(); process.exit(fail ? 1 : 0);
