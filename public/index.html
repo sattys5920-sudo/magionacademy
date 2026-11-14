@@ -2576,7 +2576,7 @@ const XJ1 = ORDER_J.slice(0, 12), XJ2 = ORDER_J.slice(12);   // 1차로 고르�
 Object.assign(XW, {"paladin":[28,54,20,31,"melee",1,27,50,19.2],"guardian":[45,51,19,42,"melee",1,44,50,70.5],"darkknight":[32,50,12,44,"melee",0,39,50,78.0],"dancer":[27,51,20,41,"cast",0,27,50,35.0],"sage":[24,53,23,38,"cast",0,23,54,6.0],"shaman":[25,56,26,18,"cast",0,25,49,-1.5],"miko":[25,55,24,21,"cast",0,25,49,1.7],"archer":[23,46,17,32,"bow",0,20,39,23.2],"gunner":[31,52,13,47,"bow",0,30,52,74.5],"elemental":[54,9,30,5,"cast",0,55,10,76.9],"fighter":[24,50,19,45,"melee",0,24,50,45.0],"bladedancer":[30,51,9,41,"melee",0,26,49,64.5]});   // 2차 직업 무기 (tools/newjobs/weapon_new.py)
 // 칼 종류는 칼날이 아니라 자루를 쥐어요: 쥐는 점을 끝(칼끝) 반대쪽으로 조금 옮겨요
 [['knight', 3.5], ['bard', 2.5], ['thief', 1.2]].forEach(([k, d]) => { const w = XW[k], vx = w[6] - w[2], vy = w[7] - w[3], L = Math.hypot(vx, vy) || 1; w[6] += vx / L * d; w[7] += vy / L * d; });
-const XSTAT = [['hp', '체력', '최대 체력'], ['atk', '공격', '물리 피해'], ['mag', '마법', '마법 피해 · 최대 MP'], ['heal', '치유', '회복량'], ['spd', '속도', '행동 게이지 속도']], XSPV = { hp: 8, atk: .8, mag: .8, heal: .8, spd: .15 }, XSTU = { hp: '+8', atk: '+0.8', mag: '+0.8', heal: '+0.8', spd: '+0.15' }, XSRESET = 300;   // 포인트 하나당 오르는 값
+const XSTAT = [['hp', '체력', '최대 체력'], ['atk', '공격', '물리 피해'], ['mag', '마법', '마법 피해 · 최대 MP'], ['heal', '치유', '회복량'], ['spd', '속도', '행동 게이지 속도']], XSPV = { hp: 8, atk: .8, mag: .8, heal: .8, spd: .15 }, XSTU = { hp: '+8', atk: '+0.8', mag: '+0.8', heal: '+0.8', spd: '+0.15' }, XSRESET = 300, XSDOWN = 30;   // 포인트 하나당 오르는 값
 const XMAIN = { warrior: 'atk', black: 'mag', thief: 'atk', bard: 'mag', time: 'mag', alch: 'mag', white: 'heal', druid: 'heal', cleric: 'heal', knight: 'atk', summon: 'mag', gadget: 'atk', paladin: 'atk', guardian: 'atk', darkknight: 'atk', dancer: 'heal', sage: 'mag', shaman: 'heal', miko: 'heal', archer: 'atk', gunner: 'atk', elemental: 'mag', fighter: 'atk', bladedancer: 'atk' };
 const xSpUsed = ex => Object.values(ex.sp || {}).reduce((a, v) => a + v, 0), xSpPts = ex => 3 * (xLv(ex.exp).L - 1) + (+ex.stx || 0) - xSpUsed(ex);   // 레벨 업마다 스탯 포인트 3
 const xAiSp = (job, L) => { const T = 3 * (L - 1); return { hp: Math.round(T * .3), [XMAIN[job]]: Math.round(T * .5), spd: Math.round(T * .2) }; };   // 동료: 체력 30% · 주 스탯 50% · 속도 20%
@@ -2904,11 +2904,13 @@ function renderExplore(){
       .sdet{display:flex;gap:8px}.sdet .btn{flex:1;min-height:44px;font-size:16px;font-weight:800}</style>
       <section class="sec"><div class="stree"><div class="sroot">${job.ic}<span>${esc(me.nick)} Lv ${L}</span></div><div class="sstem"></div><div class="srow">${XSTAT.map(([k, n], i) => `<button class="sn${k === cur ? ' sel' : ''}${(sp[k] || 0) > 0 ? ' has' : ''}" data-ss="${k}"><span class="stic" style="--i:${i}"></span><b>${n}</b><small>${Math.round(xStTot(ex, k))}</small>${(sp[k] || 0) ? `<i>+${sp[k]}</i>` : ''}</button>`).join('')}</div></div></section>
       <section class="sec"><div class="box px" style="padding:10px 12px"><div style="display:flex;gap:10px;align-items:center"><span class="stic" style="--i:${ci}"></span><div style="flex:1"><b>${cn}</b> <span class="s sub">${cd}</span><div class="s">지금 ${Math.round(xStTot(ex, ck))} → 1포인트 더 ${Math.round(xStTot(ex, ck) + XSPV[ck])} <span class="sub">(포인트당 ${XSTU[ck]})</span></div></div></div>
-        <div class="sdet" style="margin-top:10px"><button class="btn" id="sm1" ${cv > 0 && xv.add?.[ck] > 0 ? '' : 'disabled'}>−1</button><button class="btn go" id="sp1" ${pts > 0 ? '' : 'disabled'}>+1</button><button class="btn go" id="sp5" ${pts > 0 ? '' : 'disabled'}>+5</button><button class="btn" id="spa" ${pts > 0 ? '' : 'disabled'}>전부</button></div></div></section>
+        <div class="sdet" style="margin-top:10px"><button class="btn" id="sm1" ${cv > 0 ? '' : 'disabled'}>−1${cv > 0 && !(xv.add?.[ck] > 0) ? `<small style="display:block;font-size:11px;font-weight:400">${XSDOWN}G</small>` : ''}</button><button class="btn go" id="sp1" ${pts > 0 ? '' : 'disabled'}>+1</button><button class="btn go" id="sp5" ${pts > 0 ? '' : 'disabled'}>+5</button><button class="btn" id="spa" ${pts > 0 ? '' : 'disabled'}>전부</button></div></div></section>
       <div style="display:flex;gap:8px"><button class="btn ghost" id="srs" style="flex:1">초기화 (${XSRESET}G)</button><button class="btn" id="sok" style="flex:1">돌아가기</button></div>`);
     const add = n => { n = Math.min(n, xSpPts(ex)); if (n <= 0) return; sp[ck] = (sp[ck] || 0) + n; xv.add = xv.add || {}; xv.add[ck] = (xv.add[ck] || 0) + n; sfx('pop'); save(); renderExplore(); };
     on('[data-ss]', b => { xv.sel = b.dataset.ss; renderExplore(); });
-    $('#sp1').onclick = () => add(1); $('#sp5').onclick = () => add(5); $('#spa').onclick = () => add(99); $('#sm1').onclick = () => { if (!(sp[ck] > 0) || !(xv.add?.[ck] > 0)) return; sp[ck]--; xv.add[ck]--; save(); renderExplore(); };
+    $('#sp1').onclick = () => add(1); $('#sp5').onclick = () => add(5); $('#spa').onclick = () => add(99); $('#sm1').onclick = () => { if (!(sp[ck] > 0)) return; xv.add = xv.add || {};   // 방금 올린 건 그냥 취소 · 예전에 찍은 건 포인트당 XSDOWN 골드
+      if (xv.add[ck] > 0) xv.add[ck]--; else { if (me.coin < XSDOWN) return toast(`골드가 모자라요 (${XSDOWN}G)`); me.coin -= XSDOWN; hud(); }
+      sp[ck]--; sfx('pop'); save(); renderExplore(); };
     $('#srs').onclick = () => confirmBox(`스탯 포인트를 모두 돌려받아요. ${XSRESET}G가 들어요.`, '초기화', '그만둘래요').then(ok => { if (!ok) return; if (xSpUsed(ex) === 0) return toast('찍은 포인트가 없어요'); if (me.coin < XSRESET) return toast('골드가 모자라요'); me.coin -= XSRESET; ex.sp = {}; save(); hud(); renderExplore(); });
     $('#sok').onclick = () => { xv = { view: 'lobby' }; renderExplore(); }; return;
   }
@@ -4797,6 +4799,8 @@ function cookDone(){
 // 다른 곳(솥 말풍선, 홈)에서 ckTab = 'book'으로 열어요 → 'book' = 요리하기 탭
 let ckTab = 'book', ckMsg = '', ckPot = null, ckSel = null, ckPg = 0, ckDexPg = 0, ckBagPg = 0;
 const dishOpen = d => d.hw ? !!me.seed : d.id !== 'd_pmooncake' || !!me.perk?.cake_recipe;   // 비밀 레시피 · 할로윈 요리는 씨앗 대회에 참여한 학생만
+const favOn = (t, k) => !!(me.fav && me.fav[t] && me.fav[t][k]);   // 즐겨찾기: me.fav = { p: { 물약 }, d: { 요리 } } · 목록 맨 위로
+function favTog(t, k){ me.fav = me.fav || {}; me.fav[t] = me.fav[t] || {}; if (me.fav[t][k]) delete me.fav[t][k]; else me.fav[t][k] = 1; save(); sfx('pick'); }
 function renderCook(){
   const have = k => me.inv[k] || 0, needOf = d => { const need = {}; d.r.forEach(k => need[k] = (need[k] || 0) + 1); return need; }, can = d => Object.entries(needOf(d)).every(([k, n]) => have(k) >= n);
   const bag = DISHES.filter(k => have(k) > 0), cdex = me.cdex || {}, nowMs = now2(), buffs = Object.entries(me.buffs || {}).filter(([, t]) => t > nowMs);
@@ -4804,15 +4808,15 @@ function renderCook(){
   const goLab = '<button class="btn go" data-cklab="1" style="flex:1">과자 교실 솥으로</button>';
   let body = '';
   if (ckTab === 'book'){
-    const sorted = DISH.filter(dishOpen).sort((a, b) => (can(b) - can(a)) || a.i - b.i), nCan = sorted.filter(can).length, PER = 10;
+    const sorted = DISH.filter(dishOpen).sort((a, b) => (favOn('d', b.id) - favOn('d', a.id)) || (can(b) - can(a)) || a.i - b.i), nCan = sorted.filter(can).length, PER = 10;
     if (!ckSel || !DISH_INFO[ckSel]) ckSel = sorted[0].id;
     ckPg = pgClamp(ckPg, sorted.length, PER);
     const d = DISH_INFO[ckSel], ok = can(d);
     body = `${hint(ckMsg, '')}
-      <div class="ckcard"><div class="ckh">${ic(d.id, 'transform:scale(1.4);margin:4px 8px')}<div class="main"><span class="t">${esc(d.name)} <span class="fst">${'★'.repeat(d.grade)}</span></span><span class="d">${cdex[d.id] ? `만들어 봄 ${'★'.repeat(cdex[d.id])}` : '아직 안 만들어 봤어요'} · 먹으면 ${EFF[d.e](d.v)}</span></div></div>
+      <div class="ckcard"><div class="ckh">${ic(d.id, 'transform:scale(1.4);margin:4px 8px')}<div class="main"><span class="t">${esc(d.name)} <span class="fst">${'★'.repeat(d.grade)}</span></span><span class="d">${cdex[d.id] ? `만들어 봄 ${'★'.repeat(cdex[d.id])}` : '아직 안 만들어 봤어요'} · 먹으면 ${EFF[d.e](d.v)}</span></div><button class="btn sm${favOn('d', d.id) ? ' go' : ''}" data-ckfav="${d.id}" aria-label="즐겨찾기">${favOn('d', d.id) ? '★ 즐겨찾기' : '☆ 즐겨찾기'}</button></div>
         <div class="ckneed">${Object.entries(needOf(d)).map(([k, n]) => `<span class="${have(k) >= n ? 'ok' : 'no'}">${ic(k, 'transform:scale(.7);margin:-4px -2px -4px -4px')}${esc(ITEM[k] || k)} <span class="num">${have(k)}/${n}</span> ${have(k) >= n ? '✓' : '✗'}</span>`).join('')}</div>
         ${ckPot ? `<button class="btn go" data-ckgo="${d.id}" ${ok ? '' : 'disabled'}>요리 시작${ok ? '' : ' · 재료가 모자라요'}</button>` : ''}</div>
-      <div class="grid" style="grid-template-columns:repeat(5,minmax(0,1fr))">${pgSlice(sorted, ckPg, PER).map(x => `<button class="cell ${ckSel === x.id ? 'sel' : ''} ${can(x) ? 'can' : ''}" data-cksel="${x.id}">${ic(x.id)}<span class="s">${esc(x.name)}</span>${can(x) ? '<span class="n">✓</span>' : ''}</button>`).join('')}</div>${pgNav('ckpg', ckPg, sorted.length, PER)}`;
+      <div class="grid" style="grid-template-columns:repeat(5,minmax(0,1fr))">${pgSlice(sorted, ckPg, PER).map(x => `<button class="cell ${ckSel === x.id ? 'sel' : ''} ${can(x) ? 'can' : ''}" data-cksel="${x.id}">${ic(x.id)}<span class="s">${esc(x.name)}</span>${can(x) ? '<span class="n">✓</span>' : ''}${favOn('d', x.id) ? '<span style="position:absolute;left:4px;top:2px;color:var(--gold);font-size:12px">★</span>' : ''}</button>`).join('')}</div>${pgNav('ckpg', ckPg, sorted.length, PER)}`;
   }
   if (ckTab === 'dex'){
     const PER = 20; ckDexPg = pgClamp(ckDexPg, DISH.length, PER);
@@ -4834,6 +4838,7 @@ function renderCook(){
   on('[data-ckdpg]', b => { ckDexPg = +b.dataset.ckdpg; renderCook(); });
   on('[data-ckbpg]', b => { ckBagPg = +b.dataset.ckbpg; renderCook(); });
   on('[data-cksel]', b => { ckSel = b.dataset.cksel; renderCook(); });
+  on('[data-ckfav]', b => { favTog('d', b.dataset.ckfav); ckPg = 0; renderCook(); });
   on('[data-ckdex]', b => { ckSel = b.dataset.ckdex; ckTab = 'book'; ckMsg = ''; const sorted = [...DISH].sort((a, b) => (can(b) - can(a)) || a.i - b.i); ckPg = Math.floor(sorted.findIndex(x => x.id === ckSel) / 10); renderCook(); });
   on('[data-ckgo]', b => cookStart(b.dataset.ckgo, ckPot));
   on('[data-ckeat]', b => { eatDish(b.dataset.ckeat); renderCook(); });
@@ -7007,7 +7012,7 @@ let labTab = 'brew', recipeOpen = false, brewDone = null, dragK = null;
 function labFill(p){ const r = (POTION_INFO[p] ? POTION_INFO[p].r : COLD.rec(p) || []).slice(); slots = []; const used = {}; r.forEach(k => { used[k] = (used[k] || 0) + 1; if ((me.inv[k] || 0) >= used[k]) slots.push(k); }); brewMsg = slots.length < r.length ? `재료가 모자라요 · ${POTION_INFO[p] ? recipeText(p) : r.map(k => ITEM[k]).join(' + ')}` : null; recipeOpen = false; }
 function labAdd(k){ const left = (me.inv[k] || 0) - slots.filter(s => s === k).length; if (left <= 0 || slots.length >= 5) return; slots.push(k); brewMsg = null; brewDone = null; renderLab(); }
 function renderLab(){
-  const n = me.found.length, sel = dexSel && POTION_INFO[dexSel], known = me.hints.filter(p => POTION_INFO[p]);
+  const n = me.found.length, sel = dexSel && POTION_INFO[dexSel], known = me.hints.filter(p => POTION_INFO[p]).sort((a, b) => favOn('p', b) - favOn('p', a));
   const key = slots.slice().sort().join(','), hit = slots.length >= 3 && RECIPES[key] && me.hints.includes(RECIPES[key]) ? RECIPES[key] : !RECIPES[key] && COLD.recipe(slots) || null;
   const tabs = `<div class="seg" style="grid-template-columns:1fr 1fr"><button class="${labTab === 'brew' ? 'on' : ''}" data-labtab="brew">${ic('cauldron', 'transform:scale(.6);margin:-8px -4px -8px -8px')}제조</button><button class="${labTab === 'dex' ? 'on' : ''}" data-labtab="dex">도감 ${n} / ${POTIONS.length}</button></div>`;
   let body = '';
@@ -7016,10 +7021,10 @@ function renderLab(){
     body = `<div class="labwrap">
       <div class="labmain">
         <div class="labrow">
-          <button class="btn sm" id="recipePick" style="flex:1;justify-content:space-between">${hit ? ITEM[hit] : '레시피 선택'} <span>▼</span></button>
+          <button class="btn sm" id="recipePick" style="flex:1;justify-content:space-between">${hit ? `${favOn('p', hit) ? '★ ' : ''}${ITEM[hit]}` : '레시피 선택'} <span>▼</span></button>${hit && POTION_INFO[hit] ? `<button class="btn sm${favOn('p', hit) ? ' go' : ''}" data-pfav="${hit}" aria-label="즐겨찾기">${favOn('p', hit) ? '★' : '☆'}</button>` : ''}
           <span class="s sub num">마력 ${brewCost()}</span>
         </div>
-        ${recipeOpen ? `<div class="box reclist">${COLD.recipeRows()}${known.length ? known.map(p => `<button class="li" data-recipe="${p}">${ic(p)}<span class="main"><span class="t">${ITEM[p]}</span><span class="d">${recipeText(p)}</span></span>${POTION_INFO[p].time ? houseTag(POTION_INFO[p].time) : ''}</button>`).join('') : '<div class="hint" style="padding:12px">아직 아는 레시피가 없어요. 수업을 듣거나 재료를 섞어 봐요.</div>'}</div>` : ''}
+        ${recipeOpen ? `<div class="box reclist">${COLD.recipeRows()}${known.length ? known.map(p => `<button class="li" data-recipe="${p}">${ic(p)}<span class="main"><span class="t">${favOn('p', p) ? '<b style="color:var(--gold)">★</b> ' : ''}${ITEM[p]}</span><span class="d">${recipeText(p)}</span></span>${POTION_INFO[p].time ? houseTag(POTION_INFO[p].time) : ''}</button>`).join('') : '<div class="hint" style="padding:12px">아직 아는 레시피가 없어요. 수업을 듣거나 재료를 섞어 봐요.</div>'}</div>` : ''}
         <div class="cauldron ${brewDone ? 'done' : slots.length >= 3 ? 'ready' : ''}" id="cauldron">
           <div class="cslots">${[0, 1, 2, 3, 4].map(i => slots[i] ? `<button class="cslot on" data-take="${i}" title="빼기">${ic(slots[i])}</button>` : `<div class="cslot"><span>${i + 1}</span></div>`).join('')}</div>
           <div class="cpot">${ic('cauldron', 'transform:scale(2.4)')}<i class="bub b1"></i><i class="bub b2"></i><i class="bub b3"></i></div>
@@ -7058,6 +7063,7 @@ function renderLab(){
   on('[data-take]', b => { slots.splice(+b.dataset.take, 1); brewDone = null; renderLab(); });
   on('[data-dex]', b => { dexSel = dexSel === b.dataset.dex ? null : b.dataset.dex; renderLab(); });
   on('[data-recipe]', b => { labFill(b.dataset.recipe); brewDone = null; renderLab(); });
+  on('[data-pfav]', b => { favTog('p', b.dataset.pfav); renderLab(); toast(favOn('p', b.dataset.pfav) ? '즐겨찾기에 넣었어요 · 레시피 목록 맨 위에 와요' : '즐겨찾기에서 뺐어요'); });
   on('[data-dexpage]', b => { dexPage = +b.dataset.dexpage; dexSel = null; renderLab(); });
   const ma = $('#matAll'); if (ma) ma.onclick = () => { matAll = !matAll; renderLab(); };
   const rp = $('#recipePick'); if (rp) rp.onclick = () => { recipeOpen = !recipeOpen; renderLab(); };
