@@ -51,6 +51,10 @@ Object.entries(JOBS).forEach(([u, j]) => { seed.players[u].ex = { job: j, exp: 2
   // 난이도 조절
   await ad.evaluate(() => document.querySelector('#adminv [data-dfa="hp-"]').click()); await ad.waitForTimeout(400);
   ok(await ad.evaluate(() => Math.abs(__T.dfGet().host.S.hpK - .9) < 1e-9), '몬스터 체력 −10 % → 90 %');
+  await ad.evaluate(() => { const S = __T.dfGet().host.S; S.hpK = 1.9; document.querySelector('#adminv [data-dfa="hp++"]').click(); }); await ad.waitForTimeout(300);
+  await ad.evaluate(() => document.querySelector('#adminv [data-dfa="hp+"]').click()); await ad.waitForTimeout(300);
+  ok(await ad.evaluate(() => Math.abs(__T.dfGet().host.S.hpK - 2.5) < 1e-9), '200 % 를 넘어 올라가요 (190 % → +50 % → +10 % = 250 %)');
+  await ad.evaluate(() => { __T.dfGet().host.S.hpK = .9; });
   // 웨이브 1 을 빨리 끝내고 쉬는 시간 → 관리자가 누르기 전에는 안 와요
   await ad.evaluate(() => { const S = __T.dfGet().host.S; for (let i = 0; i < 6000 && S.phase === 'wave'; i++){ Object.keys(S.players).forEach(u => { TD.cast(S, u, 0); TD.cast(S, u, 1); }); TD.step(S, .1); } });
   await ad.waitForTimeout(1500);
