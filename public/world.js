@@ -559,6 +559,9 @@ let crowd = {};
 let propsData = {};   // 이벤트 소품: World.setProps(지도 id, [{ id, x, y(칸), img(그림), sw, sh, ax, ay, solid, light, sc(크기 배율: .5면 캐릭터 그림과 같은 크기) }]) — 눌리면 World.onProp(id)
 const propsOf = id => Object.values(propsData[id] || {}).flat();
 function propObjs(){ return propsOf(rmap).map(p => { const [px, py] = P(p.x + .5, p.y + .5); const k = p.sc || 1; return { name: 'prop', pid: p.id, prop: p, low: !!p.low, img: p.img, pxc: p.pxc, box: [p.x, p.y, p.x + 1, p.y + 1], x: px - p.ax * k, y: py - p.ay * k, ...(k !== 1 ? { dw: p.sw * k, dh: p.sh * k } : {}), sx: 0, sy: 0, sw: p.sw, sh: p.sh, solid: p.solid !== false }; }); }
+World.propClient = pid => { const o = objOrder.find(q => q.prop && q.pid === pid); if (!o) return null; const r = cv.getBoundingClientRect(), tw = o.dw || o.sw, th = o.dh || o.sh, px = o.pxc && o.pxc.getImageData(o.sx, o.sy, o.sw, o.sh).data; let X = o.x + tw / 2, Y = o.y + th * .6;
+  if (px){ let n = 0, ax = 0, ay = 0; for (let j = 0; j < o.sh; j++) for (let i = 0; i < o.sw; i++) if (px[(j * o.sw + i) * 4 + 3] > 0){ n++; ax += i; ay += j; } if (n){ X = o.x + ax / n * tw / o.sw; Y = o.y + ay / n * th / o.sh; } }
+  return [r.left + (X - Math.round(camX)) * r.width / VW, r.top + (Y - Math.round(camY)) * r.height / VH]; };   // 소품이 화면 어디에 있는지 (검사용)
 World.setProps = (id, list, layer = '_') => { (propsData[id] = propsData[id] || {})[layer] = list || []; if (M && rmap === id) rebuildObjs(); };   // layer: 기능마다 따로 (유령 열차 · 호박 · 아기 동물이 같은 맵에 함께 놓여요)
 World.propsAt = (id, skip) => Object.entries(propsData[id] || {}).filter(([l]) => l !== skip).flatMap(([, v]) => v || []);   // 그 맵에 놓인 이벤트 소품 (skip 층은 빼고)
 function rebuildObjs(){   // 지도 물건 + (개인 방이면) 놓은 가구 + 이벤트 소품
@@ -851,7 +854,8 @@ cv.addEventListener('pointerdown', e => {
   if (pr && World.onPeer){ World.onPeer(pr.peer); return; }
   const pxHit = (o, th) => { const px = o.pxc || (o.furn ? FURN_PX : MAPS[rmap].px); return px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data[3] > th; };
   { const lp = objOrder.slice().reverse().find(o => o.prop && o.low && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && pxHit(o, 160)); if (lp) low = low || (() => { const r = World.onProp ? World.onProp(lp.pid) : null; if (r) showBubble(lp, typeof r === 'string' ? r : r.text, r.btn, r.fn); }); }   // 흐린 빛은 빼고 몸만
-  const hit = [...objOrder, ...flats.slice().reverse()].reverse().find(o => (o.door || actOf(o) || o.furn || (o.prop && !o.dw && !o.low)) && x >= o.x && y >= o.y && x < o.x + o.sw && y < o.y + o.sh && (() => { const px = o.pxc || (o.furn ? FURN_PX : MAPS[rmap].px); const d = px.getImageData(o.sx + (x - o.x) | 0, o.sy + (y - o.y) | 0, 1, 1).data; return d[3] > 0; })());
+  const hit = [...objOrder, ...flats.slice().reverse()].reverse().find(o => { const tw = o.dw || o.sw, th = o.dh || o.sh, kx = o.sw / tw, ky = o.sh / th;   // 크기를 바꾼 소품(sc)은 눌리게 한 것(tap)만 · 그린 크기대로 판정해요
+    return (o.door || actOf(o) || o.furn || (o.prop && (!o.dw || o.prop.tap) && !o.low)) && x >= o.x && y >= o.y && x < o.x + tw && y < o.y + th && (() => { const px = o.pxc || (o.furn ? FURN_PX : MAPS[rmap].px); const d = px.getImageData(o.sx + (x - o.x) * kx | 0, o.sy + (y - o.y) * ky | 0, 1, 1).data; return d[3] > 0; })(); });
   if (hit && hit.prop){ const r = World.onProp ? World.onProp(hit.pid) : null; if (r) showBubble(hit, typeof r === 'string' ? r : r.text, r.btn, r.fn); return; }
   if (hit && hit.furn){   // 놓은 가구
     const r = World.onFurn ? World.onFurn(hit.fid) : null;

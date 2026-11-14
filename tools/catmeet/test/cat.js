@@ -54,6 +54,10 @@ const res = []; const ok = (c, m) => { res.push([!!c, m]); console.log(c ? '  ok
   await tp(...AT.cheese.slice(0, 2), AT.cheese[2] + 2); await zoom();
   ok((await props()).includes('cat:cheese'), '생선 가게 지붕에 뚱보 치즈');
   await A.screenshot({ path: OUT + '/cheese_roof.png' });
+  { // 화면에서 손가락으로 고양이를 눌러요 (크기를 줄여 그린 소품도 눌려야 해요): 멀면 걸어가고, 닿으면 창이 열려요
+    for (let t = 0; t < 6 && !(await C(() => !!document.getElementById('catv'))); t++){ const xy = await C(() => World.propClient('cat:cheese')); if (xy) await A.touchscreen.tap(xy[0], xy[1]); await A.waitForTimeout(2500); }
+    ok(await C(() => !!document.getElementById('catv')), '화면에서 뚱보 치즈를 누르면 창이 열려요');
+    await A.tap('[data-ctx="close"]').catch(() => {}); await A.waitForTimeout(500); }
   await C(() => { const I = __T.me().inv; Object.keys(I).forEach(k => { if (window.__cat.isFish(k)) I[k] = 0; }); });
   await C(() => window.__cat.tap('cat:cheese')); await A.waitForTimeout(700);
   ok(await C(() => !!document.getElementById('catv') && !document.querySelector('[data-ctf]')), '생선이 없으면 줄 수 없어요');
