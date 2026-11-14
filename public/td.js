@@ -39,7 +39,7 @@
   const upCost = (p, i, k) => p.up[i][k] >= UP_MAX - 1 ? null : UP_COST[p.up[i][k]];
   function seat(S, uid, zone, slot, job){   // 자리 고르기 · 새로 들어오기 · 자리 옮기기 (이미 앉은 사람이 있으면 못 앉아요)
   if (S.phase === 'wave' || S.phase === 'over') return false; if (Object.values(S.players).some(q => q.uid !== uid && q.zone === zone && q.slot === slot)) return false;
-  let p = S.players[uid]; if (!p){ p = S.players[uid] = { uid, gold: 0, earned: 0, up: [{ pow: 0, rng: 0, cd: 0 }, { pow: 0, rng: 0, cd: 0 }], cd: [0, 0], buff: 0, basic: 0, ready: 0, auto: 0 }; }
+  let p = S.players[uid]; if (!p){ p = S.players[uid] = { uid, gold: 0, earned: 0, up: [{ pow: 0, rng: 0, cd: 0 }, { pow: 0, rng: 0, cd: 0 }], cd: [0, 0], buff: 0, basic: 0, ready: 0, auto: 1 }; }   // 스킬 「자동」은 켠 채로 시작해요 (난이도가 모두 스킬을 쓰는 걸로 맞춰져 있어요 · 끄면 직접 눌러요)
   p.zone = zone; p.slot = slot; p.job = job; p.cat = CAT[job] || 'melee'; p.ready = 0; return true; }
 function unseat(S, uid){ if (S.phase !== 'wave') delete S.players[uid]; }
 const setReady = (S, uid, v) => { const p = S.players[uid]; if (p && (S.phase === 'ready' || S.phase === 'rest')) p.ready = v ? 1 : 0; };
@@ -65,7 +65,8 @@ function upgrade(S, uid, i, k){ const p = S.players[uid], c = p && upCost(p, i, 
   }
   function step(S, dt){
     if (S.phase === 'over') return;
-    if (S.phase === 'ready' || S.phase === 'rest'){ if (S.autoReady) Object.values(S.players).forEach(q => { q.ready = 1; }); if (allReady(S)) startWave(S); return; }   // 자리를 정하고 모두가 시작을 누르면 웨이브가 와요
+    if (S.phase === 'ready' || S.phase === 'rest'){ if (S.autoReady) Object.values(S.players).forEach(q => { q.ready = 1; }); if (S.phase === 'rest'){ S.rest -= dt; if (S.rest <= 0) return void startWave(S); }   // 쉬는 시간이 끝나면 다 안 눌러도 다음 웨이브가 와요 (자리를 비운 친구 때문에 멈추지 않게)
+      if (allReady(S)) startWave(S); return; }   // 자리를 정하고 모두가 시작을 누르면 웨이브가 와요
     S.t += dt;
     if (S.phase === 'wave'){ S.wt += dt; while (S.q.length && S.q[0].at <= S.wt){ spawn(S, S.q.shift().type); S.spawned++; } }
     // 몬스터 이동 (막기 중이면 느려져요)

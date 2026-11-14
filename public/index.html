@@ -1168,7 +1168,7 @@ body.gtride #bar,body.gtride #chat,body.gtride #ctx,body.gtride .corner{opacity:
 <script src="xfx2.js"></script>
 <script src="xfx3.js"></script>
 <script src="dream.js"></script>
-<script src="td.js"></script>
+<script src="td.js?v=2"></script>
 <script src="tdmap.js"></script>
 <script type="module">
 import { firebaseConfig } from './firebase-config.js';
@@ -8017,7 +8017,7 @@ function dfUi(){
   $('#dfinfo').textContent = `웨이브 ${w} / 15 · 알 ${eggs.filter(e => e > 0).length}개${mp ? ` · ${mp[3]}G` : ''}`;
   const stale = dfCtl && dfCtl.hb && now2() - dfCtl.hb > 12000 && ph !== 'over';
   const plN = st ? Object.keys(st.p).length : 0, rdN = st ? Object.values(st.p).filter(q => q[8]).length : 0;
-  let txt = ph === 'ready' ? `준비 ${rdN} / ${plN}` : ph === 'wave' ? `남은 몬스터 ${st ? st.m.length + st.left : '-'}마리` : ph === 'rest' ? `준비 ${rdN} / ${plN}` : ph === 'over' ? (st && st.win ? '알을 모두 지켜 냈어요!' : '알이 모두 깨졌어요.......') : '';
+  let txt = ph === 'ready' ? `준비 ${rdN} / ${plN}` : ph === 'wave' ? `남은 몬스터 ${st ? st.m.length + st.left : '-'}마리` : ph === 'rest' ? `준비 ${rdN} / ${plN} · ${st ? st.r : 0}초 뒤 다음 웨이브` : ph === 'over' ? (st && st.win ? '알을 모두 지켜 냈어요!' : '알이 모두 깨졌어요.......') : '';
   if (stale) txt = '진행이 잠시 멈췄어요. 잠깐만 기다려 주세요.';
   if (canSeat && my && !mp){ dfSeatWait = dfSeatWait || now2(); if (now2() - dfSeatWait > 4000){ dfSeatWait = 0; delete dfPick[myId()]; GDB.set('defense/pick/' + myId(), null); toast('다른 친구가 같은 자리를 먼저 골랐어요. 다른 자리를 골라요'); } } else dfSeatWait = 0;   // 같은 자리를 동시에 고르면 한 명은 못 앉아요
   const job = dfJob(), jn = job && XJ[job] ? XJ[job].n : '아직 없어요 (탐사에서 먼저 골라요)';
