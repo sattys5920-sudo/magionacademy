@@ -8017,22 +8017,20 @@ function dfUi(){
   $('#dfinfo').textContent = `웨이브 ${w} / 15 · 알 ${eggs.filter(e => e > 0).length}개${mp ? ` · ${mp[3]}G` : ''}`;
   const stale = dfCtl && dfCtl.hb && now2() - dfCtl.hb > 12000 && ph !== 'over';
   const plN = st ? Object.keys(st.p).length : 0, rdN = st ? Object.values(st.p).filter(q => q[8]).length : 0;
-  let txt = ph === 'ready' ? `준비 ${rdN} / ${plN}` : ph === 'wave' ? `남은 몬스터 ${st ? st.m.length + st.left : '-'}마리` : ph === 'rest' ? `준비 ${rdN} / ${plN} · ${st ? st.r : 0}초 뒤 다음 웨이브` : ph === 'over' ? (st && st.win ? '알을 모두 지켜 냈어요!' : '알이 모두 깨졌어요.......') : '';
+  let txt = ph === 'ready' ? `자리에 앉은 친구 ${plN} 명 · 선생님이 시작하면 웨이브가 와요` : ph === 'wave' ? `남은 몬스터 ${st ? st.m.length + st.left : '-'}마리` : ph === 'rest' ? `쉬는 시간 · 선생님이 시작하면 다음 웨이브가 와요` : ph === 'over' ? (st && st.win ? '알을 모두 지켜 냈어요!' : '알이 모두 깨졌어요.......') : '';
   if (stale) txt = '진행이 잠시 멈췄어요. 잠깐만 기다려 주세요.';
   if (canSeat && my && !mp){ dfSeatWait = dfSeatWait || now2(); if (now2() - dfSeatWait > 4000){ dfSeatWait = 0; delete dfPick[myId()]; GDB.set('defense/pick/' + myId(), null); toast('다른 친구가 같은 자리를 먼저 골랐어요. 다른 자리를 골라요'); } } else dfSeatWait = 0;   // 같은 자리를 동시에 고르면 한 명은 못 앉아요
   const job = dfJob(), jn = job && XJ[job] ? XJ[job].n : '아직 없어요 (탐사에서 먼저 골라요)';
   const upgB = mp ? `<button class="btn sm" id="dfupb">올리기${[0, 1].some(i => ['pow', 'rng', 'cd'].some(k => { const c = TD.upCost(dfPlayerOf(mp), i, k); return c != null && c <= mp[3]; })) ? ' ●' : ''}</button>` : '';
-  let sk = ''; if (mp){ const meta = dfSkillMeta(); sk = `<div class="dfsk">${meta.map((m, i) => `<button data-sk="${i}">${m.ic}<span>${esc(m.n)}</span><i class="cdm"></i><b class="cdt"></b></button>`).join('')}<button id="dfauto" class="${mp[7] ? 'on' : ''}">자동<br>${mp[7] ? '켬' : '끔'}</button>${upgB}</div>`; }
+  let sk = ''; if (mp){ const meta = dfSkillMeta(); sk = `<div class="dfsk">${meta.map((m, i) => `<button data-sk="${i}">${m.ic}<span>${esc(m.n)}</span><i class="cdm"></i><b class="cdt"></b></button>`).join('')}${upgB}</div>`; }
   { let up = $('#dfup'); if (dfUpOpen && mp){ if (!up){ up = document.createElement('div'); up.id = 'dfup'; v.appendChild(up); } if (dfSet(up, dfUpHTML(mp))){ up.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const [i, k] = b.dataset.up.split(','); dfSend({ u: [+i, k] }); sfx('pick'); }); up.querySelectorAll('[data-ut]').forEach(b => b.onclick = () => { dfUpTab = +b.dataset.ut; dfUi(); }); $('#dfupx').onclick = () => { dfUpOpen = false; dfUi(); }; } } else if (up) up.remove(); }
   const tline = `${txt}${my ? ` · 내 자리 ${TD.ZONES[my.z].name} ${my.s + 1}번` : ''}`;
-  const html = `${sk}<div class="dtx" id="dftx"></div>${canSeat && my ? `<div style="display:flex;gap:8px">${mp ? `<button class="btn sm ${mp[8] ? '' : 'go'}" id="dfready" style="flex:1">${mp[8] ? '준비 취소' : '시작'} · ${rdN}/${plN}</button>` : '<span class="s">자리를 확인하고 있어요.......</span>'}<button class="btn sm" id="dfout">자리 빼기</button></div>` : ''}`;
+  const html = `${sk}<div class="dtx" id="dftx"></div>${canSeat && my ? `<div style="display:flex;gap:8px;align-items:center">${mp ? '<span class="s" style="flex:1">스킬은 직접 눌러요. 쉬는 시간에 「올리기」도 해 봐요</span>' : '<span class="s" style="flex:1">자리를 확인하고 있어요.......</span>'}<button class="btn sm" id="dfout">자리 빼기</button></div>` : ''}`;
   const changed = dfSet($('#dfb'), html); { const tx = $('#dftx'); if (tx && tx.textContent !== tline) tx.textContent = tline; }   // 바뀌는 글자는 버튼을 다시 만들지 않고 글자만 바꿔요 (누르던 버튼이 사라지지 않게)
   if (!changed) return;
-  const rb = $('#dfready'); if (rb) rb.onclick = () => { dfSend({ r: mp && mp[8] ? 0 : 1 }); sfx('pick'); };
   const o = $('#dfout'); if (o) o.onclick = () => { delete dfPick[myId()]; GDB.set('defense/pick/' + myId(), null); dfUi(); };
   $('#dfb').querySelectorAll('[data-sk]').forEach(b => b.onpointerdown = e => { e.preventDefault(); dfCast(+b.dataset.sk, b); });
   const ub = $('#dfupb'); if (ub) ub.onclick = () => { dfUpOpen = true; dfUi(); };
-  const au = $('#dfauto'); if (au) au.onclick = () => { dfSend({ a: dfMe() && dfMe()[7] ? 0 : 1 }); };
 }
 let dfLastCmd = 0, dfPend = null, dfUpOpen = false, dfUpTab = 0, dfSeatWait = 0;
 const DF_UPLB = { pow: { hit: '공격력', aoe: '공격력' }, rng: { hit: '사거리', aoe: '범위' } };
@@ -8083,41 +8081,45 @@ function dfUnitDraw(x, uid, job, px, py, flip, now){
 }
 function dfAvatar(u){
   if (u in dfAvc) return dfAvc[u]; dfAvc[u] = null;
-  const who = u === myId() ? { av: me.av, house: me.house } : playersList[u]; if (!who) return null;
+  const who = u === myId() ? { av: me.av, house: me.house } : playersList[u] || (typeof AD !== 'undefined' && AD.players && AD.players[u]); if (!who) return null;
   const av = avOf(who); World.Avatar.need(World.Avatar.fix(av)).then(() => { dfAvc[u] = World.Avatar.compose(av); }).catch(() => { delete dfAvc[u]; }); return null;
 }
 const DF_MON = { n: [0, 3, 6], e: [8, 12, 13], b: [16, 16, 16] }, DF_EGG = ['rgba(255,90,40,.5)', 'rgba(80,170,255,.5)', 'rgba(90,220,110,.5)'];
 function dfEggImg(i){ if (!dfEggImg.c) dfEggImg.c = []; if (dfEggImg.c[i]) return dfEggImg.c[i]; const src = dfImg('art/creatures.png'); if (!src.complete || !src.naturalWidth) return null; const c = document.createElement('canvas'); c.width = 120; c.height = 102; const x = c.getContext('2d'); x.drawImage(src, 1200, 0, 120, 102, 0, 0, 120, 102); x.globalCompositeOperation = 'source-atop'; x.fillStyle = DF_EGG[i]; x.fillRect(0, 0, 120, 102); return (dfEggImg.c[i] = c); }
 const dfMD = {};
-function dfMonS(m, len, now){   // 몬스터는 뒤로 가지 않고 부드럽게 따라가요 (4번/초 받는 값 사이를 이어 줘요)
-  const e = dfMD[m[0]], tg = Math.max(0, Math.min(len, m[3] + m[5] * Math.min(.6, (now - dfStAt) / 1000)));
+function dfMonS(m, len, now, stAt){   // 몬스터는 뒤로 가지 않고 부드럽게 따라가요 (4번/초 받는 값 사이를 이어 줘요)
+  const e = dfMD[m[0]], tg = Math.max(0, Math.min(len, m[3] + m[5] * Math.min(.6, (now - stAt) / 1000)));
   if (!e || e.z !== m[2] || Math.abs(e.s - tg) > 8){ dfMD[m[0]] = { z: m[2], s: tg, t: now }; return tg; }
   const sp = Math.max(m[5], 3) * 1.6 * Math.min(.1, (now - e.t) / 1000); if (tg > e.s) e.s = Math.min(tg, e.s + sp); e.t = now;
   return e.s;
 }
-function dfDraw(){
-  dfRaf = requestAnimationFrame(dfDraw); const c = $('#dfc'); if (!c) return; const x = c.getContext('2d'), K = 3, now = performance.now(), st = dfSt, ph = dfCtl ? dfCtl.ph : 'ready', Z = TD.ZONES[dfZone];
-  x.imageSmoothingEnabled = false; x.drawImage(TDMAP.render(dfZone, Z), 0, 0, 390, 441); dfSkillTick(now);
+function dfDraw(){   // 학생 화면: 고른 구역 하나
+  dfRaf = requestAnimationFrame(dfDraw); const c = $('#dfc'); if (!c) return; dfSkillTick(performance.now());
+  dfPaint(c.getContext('2d'), dfZone, dfSt, dfCtl ? dfCtl.ph : 'ready', dfPick, dfStAt, myId());
+}
+function dfPaint(x, zone, st, ph, pick, stAt, mineId){   // 한 구역 그리기 (학생 화면 · 관리자 관찰 화면 같이 써요)
+  const K = 3, now = performance.now(), Z = TD.ZONES[zone];
+  x.imageSmoothingEnabled = false; x.drawImage(TDMAP.render(zone, Z), 0, 0, 390, 441);
   // 알 (둥지 앞)
-  if (dfZone === 2){ const eg = st ? st.e : [100, 100, 100]; [[50, 120], [64, 122], [78, 120]].forEach(([gx, gy], i) => { const im = dfEggImg(i); if (!im) return; x.globalAlpha = eg[i] > 0 ? 1 : .3; x.drawImage(im, gx * K - 33, gy * K - 28, 66, 56); x.globalAlpha = 1; x.fillStyle = '#000'; x.fillRect(gx * K - 17, gy * K + 30, 34, 5); x.fillStyle = eg[i] > 40 ? '#7ddc5a' : '#ff6a4a'; x.fillRect(gx * K - 16, gy * K + 31, 32 * Math.max(0, eg[i]) / 100, 3); }); }
+  if (zone === 2){ const eg = st ? st.e : [100, 100, 100]; [[50, 120], [64, 122], [78, 120]].forEach(([gx, gy], i) => { const im = dfEggImg(i); if (!im) return; x.globalAlpha = eg[i] > 0 ? 1 : .3; x.drawImage(im, gx * K - 33, gy * K - 28, 66, 56); x.globalAlpha = 1; x.fillStyle = '#000'; x.fillRect(gx * K - 17, gy * K + 30, 34, 5); x.fillStyle = eg[i] > 40 ? '#7ddc5a' : '#ff6a4a'; x.fillRect(gx * K - 16, gy * K + 31, 32 * Math.max(0, eg[i]) / 100, 3); }); }
   // 자리와 학생
-  const seats = {}; if (st) Object.entries(st.p).forEach(([u, p]) => { seats[u] = { z: p[0], s: p[1], job: p[2], ok: 1, buff: p[5] }; }); Object.entries(dfPick).forEach(([u, p]) => { if (!seats[u]) seats[u] = { z: p.z, s: p.s, job: p.job, ok: 0 }; });
-  const canSeat = ph === 'ready' || ph === 'rest', taken = {}; Object.entries(seats).forEach(([u, q]) => { if (q.z === dfZone) taken[q.s] = u; });
-  Z.slots.forEach((q, i) => { const px = q[0] * K, py = q[1] * K, u = taken[i]; x.beginPath(); x.arc(px, py, 22, 0, 7); x.setLineDash([5, 4]); x.lineWidth = 2; x.strokeStyle = u === myId() ? '#ffd866' : canSeat ? 'rgba(255,230,120,.9)' : 'rgba(255,230,120,.25)'; x.fillStyle = u === myId() ? 'rgba(255,230,120,.28)' : 'rgba(255,230,120,.1)'; x.fill(); x.stroke(); x.setLineDash([]);
+  const seats = {}; if (st) Object.entries(st.p).forEach(([u, p]) => { seats[u] = { z: p[0], s: p[1], job: p[2], ok: 1, buff: p[5] }; }); Object.entries(pick).forEach(([u, p]) => { if (!seats[u]) seats[u] = { z: p.z, s: p.s, job: p.job, ok: 0 }; });
+  const canSeat = ph === 'ready' || ph === 'rest', taken = {}; Object.entries(seats).forEach(([u, q]) => { if (q.z === zone) taken[q.s] = u; });
+  Z.slots.forEach((q, i) => { const px = q[0] * K, py = q[1] * K, u = taken[i]; x.beginPath(); x.arc(px, py, 22, 0, 7); x.setLineDash([5, 4]); x.lineWidth = 2; x.strokeStyle = u === mineId ? '#ffd866' : canSeat ? 'rgba(255,230,120,.9)' : 'rgba(255,230,120,.25)'; x.fillStyle = u === mineId ? 'rgba(255,230,120,.28)' : 'rgba(255,230,120,.1)'; x.fill(); x.stroke(); x.setLineDash([]);
     if (!u && canSeat){ x.fillStyle = '#ffe680'; x.font = '16px sans-serif'; x.textAlign = 'center'; x.fillText('+', px, py + 6); } });
-  const heads = Object.entries(seats).filter(([, q]) => q.z === dfZone).sort((a, b) => a[1].s - b[1].s);
-  const mons = st ? st.m.filter(m => m[2] === dfZone).map(m => { const zl = TD.ZONES[m[2]], s = dfMonS(m, zl.len, now), p = TD.posAt(m[2], s), p2 = TD.posAt(m[2], Math.min(zl.len, s + 2)); const e = dfMD[m[0]], dx = p2[0] - p[0]; if (e){ if (dx < -.5) e.fl = true; else if (dx > .5) e.fl = false; } return { m, p, fl: !!(e && e.fl) }; }) : [];
+  const heads = Object.entries(seats).filter(([, q]) => q.z === zone).sort((a, b) => a[1].s - b[1].s);
+  const mons = st ? st.m.filter(m => m[2] === zone).map(m => { const zl = TD.ZONES[m[2]], s = dfMonS(m, zl.len, now, stAt), p = TD.posAt(m[2], s), p2 = TD.posAt(m[2], Math.min(zl.len, s + 2)); const e = dfMD[m[0]], dx = p2[0] - p[0]; if (e){ if (dx < -.5) e.fl = true; else if (dx > .5) e.fl = false; } return { m, p, fl: !!(e && e.fl) }; }) : [];
   heads.forEach(([u, q]) => { const sl = Z.slots[q.s], px = sl[0] * K, py = sl[1] * K; x.globalAlpha = q.ok ? 1 : .55; const tg = mons.length ? mons.reduce((a, b) => Math.hypot(a.p[0] - sl[0], a.p[1] - sl[1]) < Math.hypot(b.p[0] - sl[0], b.p[1] - sl[1]) ? a : b) : null; dfUnitDraw(x, u, q.job, px, py, tg ? tg.p[0] > sl[0] + 1 : false, now); x.globalAlpha = 1;
-    const nm = u === myId() ? me.nick : (playersList[u] && playersList[u].nick) || (dfPick[u] && dfPick[u].n) || ''; x.font = '10px G11, sans-serif'; x.textAlign = 'center'; x.lineWidth = 3; x.strokeStyle = '#000'; x.strokeText(nm, px, py + 30); x.fillStyle = u === myId() ? '#ffd866' : '#fff'; x.fillText(nm, px, py + 30); });
-  { const mp = dfMe(); if (mp && mp[0] === dfZone && ph === 'wave'){ const sl = Z.slots[mp[1]], r0 = TD.skillOf(dfPlayerOf(mp), 0).rng + Z.d0[mp[1]]; x.beginPath(); x.arc(sl[0] * K, sl[1] * K, r0 * K, 0, 7); x.lineWidth = 1; x.strokeStyle = 'rgba(255,230,120,.35)'; x.stroke(); } }
+    const nm = u === mineId ? me.nick : (playersList[u] && playersList[u].nick) || (pick[u] && pick[u].n) || (typeof AD !== 'undefined' && AD.players && AD.players[u] && AD.players[u].nick) || ''; x.font = '10px G11, sans-serif'; x.textAlign = 'center'; x.lineWidth = 3; x.strokeStyle = '#000'; x.strokeText(nm, px, py + 30); x.fillStyle = u === mineId ? '#ffd866' : '#fff'; x.fillText(nm, px, py + 30); });
+  { const mp = mineId && dfMe(); if (mp && mp[0] === zone && ph === 'wave'){ const sl = Z.slots[mp[1]], r0 = TD.skillOf(dfPlayerOf(mp), 0).rng + Z.d0[mp[1]]; x.beginPath(); x.arc(sl[0] * K, sl[1] * K, r0 * K, 0, 7); x.lineWidth = 1; x.strokeStyle = 'rgba(255,230,120,.35)'; x.stroke(); } }
   // 몬스터
   const tier = st ? Math.floor((Math.max(1, st.w) - 1) / 5) : 0, mi = dfImg('art/monsters_lpc.png');
   mons.sort((a, b) => a.p[1] - b.p[1]).forEach(({ m, p, fl }) => { const px = p[0] * K, py = p[1] * K + 14 - (m[5] > 0 ? Math.abs(Math.sin(now / 110 + m[0])) * 3 : 0), sc = m[1] === 'b' ? 1.3 : m[1] === 'e' ? 1 : .8, f = DF_MON[m[1]][tier], hp = m[4];
     if (mi.complete && mi.naturalWidth){ x.save(); x.translate(px, py); x.scale(fl ? -sc : sc, sc); x.drawImage(mi, f * 64, 0, 64, 64, -32, -64, 64, 64); x.restore(); }
     const bw = m[1] === 'b' ? 44 : 28; x.fillStyle = '#000'; x.fillRect(px - bw / 2 - 1, py - 64 * sc - 2, bw + 2, 6); x.fillStyle = hp > 40 ? '#7ddc5a' : '#ff6a4a'; x.fillRect(px - bw / 2, py - 64 * sc - 1, bw * hp / 100, 4); });
   // 공격 효과: 기본 = 작은 베니 · 스킬1 = 굵은 빛줄기와 번쩍 · 스킬2 = 넓게 퍼지는 파동과 번개
-  if (st && now - dfStAt < 420 && st.f){ const el = now - dfStAt, pr = Math.min(1, el / 220), fade = Math.max(0, 1 - el / 420), ringDone = {};
-    st.f.forEach(([u, mid, k]) => { const q = seats[u], mm = st.m.find(m => m[0] === mid); if (!q || !mm || q.z !== dfZone || mm[2] !== dfZone) return; const a = Z.slots[q.s], b = mons.find(o => o.m[0] === mid); if (!b) return;
+  if (st && now - stAt < 420 && st.f){ const el = now - stAt, pr = Math.min(1, el / 220), fade = Math.max(0, 1 - el / 420), ringDone = {};
+    st.f.forEach(([u, mid, k]) => { const q = seats[u], mm = st.m.find(m => m[0] === mid); if (!q || !mm || q.z !== zone || mm[2] !== zone) return; const a = Z.slots[q.s], b = mons.find(o => o.m[0] === mid); if (!b) return;
       const ax = a[0] * K, ay = a[1] * K - 16, bx = b.p[0] * K, by = b.p[1] * K - 8;
       if (k === 0){ const X = ax + (bx - ax) * pr, Y = ay + (by - ay) * pr; x.fillStyle = '#2a2000'; x.beginPath(); x.arc(X, Y, 6, 0, 7); x.fill(); x.fillStyle = '#fff2a0'; x.beginPath(); x.arc(X, Y, 4, 0, 7); x.fill(); if (pr >= 1){ x.strokeStyle = `rgba(255,240,150,${fade})`; x.lineWidth = 2; x.beginPath(); x.arc(bx, by, 6 + (1 - fade) * 10, 0, 7); x.stroke(); } }
       else if (k === 1){ x.lineCap = 'round'; x.lineWidth = 7; x.strokeStyle = `rgba(255,150,40,${fade * .6})`; x.beginPath(); x.moveTo(ax, ay); x.lineTo(bx, by); x.stroke(); x.lineWidth = 3; x.strokeStyle = `rgba(255,248,180,${fade})`; x.beginPath(); x.moveTo(ax, ay); x.lineTo(bx, by); x.stroke();
@@ -8125,7 +8127,7 @@ function dfDraw(){
       else { if (!ringDone[u]){ ringDone[u] = 1; x.lineWidth = 4; x.strokeStyle = `rgba(150,215,255,${fade})`; x.beginPath(); x.arc(a[0] * K, a[1] * K, 30 + el * .5, 0, 7); x.stroke(); x.lineWidth = 2; x.strokeStyle = `rgba(220,240,255,${fade * .8})`; x.beginPath(); x.arc(a[0] * K, a[1] * K, 18 + el * .35, 0, 7); x.stroke(); }
         x.strokeStyle = `rgba(190,230,255,${fade})`; x.lineWidth = 2; x.beginPath(); x.moveTo(bx - 4, by - 34); x.lineTo(bx + 2, by - 18); x.lineTo(bx - 3, by - 14); x.lineTo(bx + 3, by); x.stroke(); x.fillStyle = `rgba(190,230,255,${fade * .8})`; x.beginPath(); x.arc(bx, by, 8, 0, 7); x.fill(); } }); }
   // 알을 때리는 몬스터가 있으면 알이 깜빡여요
-  if (st && st.m.some(m => m[2] === 2 && m[5] === 0) && dfZone === 2){ x.fillStyle = `rgba(255,60,40,${.12 + .1 * Math.sin(now / 90)})`; x.fillRect(0, 300, 390, 141); }
+  if (st && st.m.some(m => m[2] === 2 && m[5] === 0) && zone === 2){ x.fillStyle = `rgba(255,60,40,${.12 + .1 * Math.sin(now / 90)})`; x.fillRect(0, 300, 390, 141); }
 }
 // ----- 용의 동굴: 지켜 낸 용들이 살아요. 말을 걸면 크르릉! 그리고 가호(2시간, 하루 2번) -----
 let dfRes = null;   // defense/res = { id, eggs:[체력 0~100 ×3], win, at } — 이벤트가 끝날 때 관리자 기기가 남겨요
@@ -8227,8 +8229,9 @@ function dfHostResume(){   // 관리자 화면이 새로 고쳐져도 하던 진
 function dfHostStart(rs){
   if (dfHost || !F || !db) return; const S = rs ? rs.S : TD.newState([], { auto: 0 }); if (!rs) S.phase = 'ready';
   dfHost = { S, id: rs ? rs.id : now2(), sv: 0, intro: rs ? rs.intro || 0 : 0, startAt: 0, last: performance.now(), pub: 9, hb: 9, ph: '', w: -1, paused: false, timer: dfTimer(dfHostTick, 100) };
-  dfHost.last = performance.now(); dfHost.seen = {}; dfHost.cmdOff = F.onValue(F.ref(db, 'defense/cmd'), sn => { const v = sn.val() || {}, H = dfHost; if (!H) return; Object.entries(v).forEach(([u, c]) => { if (!c || H.seen[u] === c.n) return; const first = !(u in H.seen); H.seen[u] = c.n; if (first && H.warm !== false && now2() - c.n > 5000) return; const p = H.S.players[u]; if (!p) return; if (c.a !== undefined) p.auto = c.a ? 1 : 0; if (c.r !== undefined) TD.setReady(H.S, u, c.r); if (c.i !== undefined && !H.paused) TD.cast(H.S, u, c.i); if (c.u && (c.u[0] === 0 || c.u[0] === 1) && ['pow', 'rng', 'cd'].includes(c.u[1])) TD.upgrade(H.S, u, c.u[0], c.u[1]); }); });
+  dfHost.last = performance.now(); dfHost.seen = {}; dfHost.cmdOff = F.onValue(F.ref(db, 'defense/cmd'), sn => { const v = sn.val() || {}, H = dfHost; if (!H) return; Object.entries(v).forEach(([u, c]) => { if (!c || H.seen[u] === c.n) return; const first = !(u in H.seen); H.seen[u] = c.n; if (first && H.warm !== false && now2() - c.n > 5000) return; const p = H.S.players[u]; if (!p) return; if (c.i !== undefined && !H.paused) TD.cast(H.S, u, c.i); if (c.u && (c.u[0] === 0 || c.u[0] === 1) && ['pow', 'rng', 'cd'].includes(c.u[1])) TD.upgrade(H.S, u, c.u[0], c.u[1]); }); });
   if (!rs){ F.set(F.ref(db, 'defense/ctl'), { open: true, id: dfHost.id, ph: 'ready', w: 0, win: 0, hb: now2() }); F.set(F.ref(db, 'defense/st'), TD.snap(S)); }
+  AD.evOpen = AD.evOpen || {}; ['실시간 관찰', '이벤트 「용의 알 지키기」'].forEach(k => { if (!(k in AD.evOpen)) AD.evOpen[k] = true; });   // 진행을 맡으면 관찰 화면 · 진행 카드는 펼쳐 둬요
   dfWakeOn(); adminRender();
 }
 function dfHostSeats(S){
@@ -8241,7 +8244,7 @@ function dfHostTick(){
   if (H.startAt && now >= H.startAt) H.startAt = 0;   // 시작 연출이 끝났어요 (웨이브는 학생들이 모두 「시작」을 눌러야 와요)
   if (!H.paused) TD.step(S, dt);
   H.sv += dt; if (H.sv >= 2){ H.sv = 0; try { localStorage.setItem('dfhost', JSON.stringify({ id: H.id, S, intro: H.intro || 0 })); } catch(e){} }
-  H.pub += dt; if (H.pub >= .25){ H.pub = 0; F.set(F.ref(db, 'defense/st'), TD.snap(S)); }
+  H.pub += dt; if (H.pub >= .25){ H.pub = 0; const sn = TD.snap(S); H.snap = sn; H.snapAt = performance.now(); F.set(F.ref(db, 'defense/st'), sn); }
   H.hb += dt; if (H.hb >= 2 || S.phase !== H.ph || S.wave !== H.w){ const ch = S.phase !== H.ph || S.wave !== H.w; H.hb = 0; H.ph = S.phase; H.w = S.wave; F.set(F.ref(db, 'defense/ctl'), { open: true, id: H.id, intro: H.intro || 0, ph: S.phase, w: S.wave, win: S.win ? 1 : 0, hb: now2(), pause: H.paused ? 1 : 0 }); if (ch && S.phase === 'over') F.set(F.ref(db, 'defense/res'), { id: H.id, eggs: S.eggs.map(Math.round), win: S.win ? 1 : 0, at: now2() }); if (ch && AD.tab === 'event') adminRender(); }
 }
 function dfTimer(fn, ms){   // 화면이 가려져도 느려지지 않게 워커 시계를 써요 (안 되면 보통 시계)
@@ -16098,10 +16101,24 @@ function adminEventHTML0(){
   const zl = TD.ZONES.map((z, i) => `${z.name}: ${picks.filter(([, p]) => p.z === i).map(([u, p]) => `${nm(u)}(${XJ[p.job] ? XJ[p.job].n : '?'})`).join(', ') || '비어 있어요'}`);
   return `<div class="adcard"><b>이벤트 「용의 알 지키기」</b> · ${H ? DF_PH[ph] : open ? '열려 있지만 이 화면에서 진행하고 있지 않아요' : '닫혀 있어요'}
     <div class="s">학생에게는 ${open ? '버튼이 보여요' : '아무것도 안 보여요'}${S ? ` · 웨이브 ${S.wave}/15 · 알 ${S.eggs.map(Math.round).join('/')} · 앉은 학생 ${Object.keys(S.players).length}명${S.phase === 'wave' ? ` · 몬스터 ${S.mons.length + S.q.length}마리` : ''}` : ''}</div>
-    <div class="frow">${!H ? '<button class="btn sm go" data-dfa="open">이벤트 열기</button>' : `${ph === 'ready' ? (H.startAt ? '<span class="s">시작 연출이 나오고 있어요</span>' : '<button class="btn sm go" data-dfa="start">시작 송출 (연출)</button>') : ''}${ph === 'ready' || ph === 'rest' ? '<button class="btn sm" data-dfa="force">웨이브 강제 시작</button>' : ''}${ph !== 'ready' && ph !== 'over' ? `<button class="btn sm" data-dfa="pause">${H.paused ? '다시 진행' : '잠깐 멈춤'}</button>` : ''}<button class="btn sm" data-dfa="reset">처음으로</button><button class="btn sm" data-dfa="close">이벤트 닫기</button>`}${open && !H ? '<button class="btn sm" data-dfa="close">이벤트 닫기</button>' : ''}</div>
+    <div class="frow">${!H ? '<button class="btn sm go" data-dfa="open">이벤트 열기</button>' : `${ph === 'ready' ? (H.startAt ? '<span class="s">시작 연출이 나오고 있어요</span>' : '<button class="btn sm go" data-dfa="start">시작 송출 (연출)</button>') : ''}${ph === 'ready' || ph === 'rest' ? `<button class="btn sm go" data-dfa="force">웨이브 ${S.wave + 1} 시작</button>` : ''}${ph !== 'ready' && ph !== 'over' ? `<button class="btn sm" data-dfa="pause">${H.paused ? '다시 진행' : '잠깐 멈춤'}</button>` : ''}<button class="btn sm" data-dfa="reset">처음으로</button><button class="btn sm" data-dfa="close">이벤트 닫기</button>`}${open && !H ? '<button class="btn sm" data-dfa="close">이벤트 닫기</button>' : ''}</div>
+    ${H ? `<div class="frow" style="align-items:center"><span class="s">몬스터 체력 ${Math.round((S.hpK || 1) * 100)} %</span><button class="btn sm" data-dfa="hp-">−10 %</button><button class="btn sm" data-dfa="hp+">+10 %</button><span class="s">다음에 나오는 몬스터부터 바뀌어요</span></div>` : ''}
     ${open && !H ? '<div class="s">이 화면을 새로 열었다면 「이벤트 열기」로 이어서 진행해요. 학생들이 고른 자리는 남아 있어요.</div>' : ''}</div>
-  <div class="adcard"><b>자리</b> (학생이 웨이브 사이에 골라요)${zl.map(t => `<div class="s">${t}</div>`).join('')}</div>`;
+  <div class="adcard"><b>자리</b> (학생이 웨이브 사이에 골라요)${zl.map(t => `<div class="s">${t}</div>`).join('')}</div>
+  ${H ? `<div class="adcard"><b>실시간 관찰</b><div id="dfobsi" class="s"></div><div class="dfobs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:6px">${TD.ZONES.map((z, i) => `<div><div class="s" style="font-weight:700">${z.name}</div><canvas id="dfobs${i}" width="390" height="441" style="width:100%;aspect-ratio:390/441;image-rendering:pixelated;border-radius:8px;background:#000"></canvas></div>`).join('')}</div><div id="dfobsl" style="margin-top:8px"></div></div>` : ''}`;
 }
+// 관리자 실시간 관찰: 세 구역을 한꺼번에 · 학생마다 스킬 쓴 횟수 · 골드 · 올리기 (관리자 기기가 계산한 최신 상태를 그대로 그려요)
+let dfObsRaf = 0, dfObsL = 0;
+function dfObsLoop(){
+  dfObsRaf = 0; const H = dfHost; if (!H || !document.getElementById('dfobs0')) return; dfObsRaf = requestAnimationFrame(dfObsLoop);
+  const sn = H.snap, ph = H.S.phase, pick = AD.dfpick || {}; for (let i = 0; i < 3; i++){ const c = document.getElementById('dfobs' + i); if (c && sn) dfPaint(c.getContext('2d'), i, sn, ph, pick, H.snapAt, null); }
+  // 표 · 상황 줄은 0.5 초마다 (화면을 새로 그렸으면 바로 채워요)
+  const now = performance.now(), inf0 = document.getElementById('dfobsi'); if (now - dfObsL < 500 && inf0 && inf0.textContent) return; dfObsL = now; const S = H.S, nm = u => esc((AD.players[u] && AD.players[u].nick) || (pick[u] && pick[u].n) || u.slice(0, 6));
+  const inf = document.getElementById('dfobsi'); if (inf) inf.textContent = `${DF_PH[ph] || ''} · 웨이브 ${S.wave} / 15 · 알 ${S.eggs.map(Math.round).join(' / ')} · 남은 몬스터 ${S.mons.length + S.q.length} 마리 · 몬스터 체력 ${Math.round((S.hpK || 1) * 100)} %${H.paused ? ' · 멈춤' : ''}`;
+  const L = document.getElementById('dfobsl'); if (!L) return; const P = Object.values(S.players).sort((a, b) => a.zone - b.zone || a.slot - b.slot);
+  L.innerHTML = P.length ? `<table class="twt" style="width:100%"><tr><th>학생</th><th>자리</th><th>스킬 쓴 횟수</th><th>골드</th><th>올리기</th></tr>${P.map(p => `<tr><td>${nm(p.uid)}</td><td>${TD.ZONES[p.zone].name} ${p.slot + 1}</td><td${(p.casts || 0) === 0 && S.wave > 0 ? ' style="color:#c33;font-weight:700"' : ''}>${p.casts || 0}</td><td>${Math.round(p.gold)}</td><td>${p.up.reduce((a, u) => a + u.pow + u.rng + u.cd, 0)}</td></tr>`).join('')}</table>` : '<div class="s">아직 앉은 학생이 없어요</div>';
+}
+setInterval(() => { if (!dfObsRaf && dfHost && document.getElementById('dfobs0')) dfObsLoop(); }, 500);
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-dfa]'); if (!b) return; const a = b.dataset.dfa, H = dfHost;
   if (!DF_LOCAL && !H && F && db){
     if (a === 'local'){ dfHostStart(); return; }
@@ -16114,7 +16131,8 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
   }
   if (a === 'open') dfHostStart(); else if (a === 'close'){ if (confirm('이벤트를 닫을까요? 학생들의 자리와 진행이 지워져요.')) dfHostClose(); }
   else if (a === 'start' && H){ H.intro = now2(); H.startAt = performance.now() + 26000; H.hb = 9; adminRender(); }
-  else if (a === 'force' && H){ TD.startWave(H.S); adminRender(); } else if (a === 'pause' && H){ H.paused = !H.paused; adminRender(); }
+  else if (a === 'force' && H){ TD.startWave(H.S); adminRender(); }
+  else if ((a === 'hp-' || a === 'hp+') && H){ H.S.hpK = Math.max(.5, Math.min(2, Math.round(((H.S.hpK || 1) + (a === 'hp+' ? .1 : -.1)) * 10) / 10)); adminRender(); } else if (a === 'pause' && H){ H.paused = !H.paused; adminRender(); }
   else if (a === 'reset' && H){ if (confirm('처음으로 되돌릴까요? 번 골드와 올린 스킬이 지워져요.')){ const S = TD.newState([], { auto: 0 }); S.phase = 'ready'; H.S = S; H.ph = ''; H.intro = 0; H.startAt = 0; H.id = now2(); H.hb = 9; H.sv = 9; F.set(F.ref(db, 'defense/res'), null); adminRender(); } } });
 // ===== 이벤트 2 「유령 선장의 보물 지도」: 반 전체가 50조각 직소 퍼즐을 드래그로 맞춰요 (하루 이벤트) =====
 // puzzle/ctl = { open, id, rate } · puzzle/own/<조각번호> = 조각을 얻은 사람 · puzzle/board/<조각번호> = 맞춘 사람 (조각번호 = 줄*10 + 칸)

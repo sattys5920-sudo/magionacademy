@@ -1,5 +1,5 @@
 // 「용의 알 지키기」 실제 화면 검사: sh tools/ui_mock.sh /home/user/magionacademy 8822 && node tools/df_qa_test.js
-//   관리자 열기 → 학생 3 명 (기사 · 백마법사 · 흑마법사) 버튼 · 자리 고르기 · 스킬 자동 켬 · 시작 → 웨이브 → 쉬는 시간이 끝나면 저절로 다음 웨이브
+//   관리자 열기 → 학생 3 명 (기사 · 백마법사 · 흑마법사) 버튼 · 자리 고르기 · 자동 없음 → 관리자 「웨이브 시작」 → 손으로 스킬 → 관찰 화면 · 난이도 조절 → 쉬는 시간 (관리자가 시작)
 //   → 빨리 감아 끝까지 → 결과 기록 → 용의 동굴 문 · 용의 가호
 const { chromium, devices } = require('playwright'); const fs = require('fs');
 const seed = eval('(' + fs.readFileSync(__dirname + '/../tests/ui.spec.js', 'utf8').match(/const seed = (\{.*\});\n/)[1] + ')');
@@ -29,30 +29,40 @@ Object.entries(JOBS).forEach(([u, j]) => { seed.players[u].ex = { job: j, exp: 2
   }
   await ad.waitForTimeout(1500);
   const h1 = await H();
-  ok(h1 && h1.pl.length === 3 && h1.pl.every(q => q[5] === 1), '자리 3 명 · 모두 스킬 자동 켬으로 시작 ' + JSON.stringify(h1 && h1.pl));
+  ok(h1 && h1.pl.length === 3 && h1.pl.every(q => q[5] === 0), '자리 3 명 · 자동 없음 (손으로 눌러요) ' + JSON.stringify(h1 && h1.pl));
   ok(h1 && h1.pl.map(q => q[4]).join() === 'melee,heal,ranged', '직업 → 역할 (기사 근접 · 백마법사 치유 · 흑마법사 원거리) ' + (h1 && h1.pl.map(q => q[4])));
+  ok(await st.me1.evaluate(() => !document.getElementById('dfauto') && !document.getElementById('dfready')), '학생 화면에 「자동」 · 「시작」 버튼이 없어요');
   await st.me2.screenshot({ path: __dirname + '/shot_df_seat.png' });
-  // 시작
-  for (const u of ['me1', 'me2', 'me3']) { await st[u].waitForFunction(() => document.getElementById('dfready'), null, { timeout: 10000 }).catch(() => {}); await st[u].evaluate(() => { const r = document.getElementById('dfready'); if (r) r.click(); }); await st[u].waitForTimeout(400); }
-  await ad.waitForTimeout(2500);
-  ok((await H()).ph === 'wave' && (await H()).w === 1, '모두 「시작」 → 웨이브 1 ' + JSON.stringify(await H()));
-  await ad.waitForTimeout(6000);
+  // 관리자만 웨이브를 시작해요
+  await ad.waitForTimeout(3000); ok((await H()).ph === 'ready', '관리자가 누르기 전에는 웨이브가 안 와요');
+  await ad.evaluate(() => [...document.querySelectorAll('#adminv [data-dfa="force"]')].find(b => /웨이브 1 시작/.test(b.textContent)).click()); await ad.waitForTimeout(2000);
+  ok((await H()).ph === 'wave' && (await H()).w === 1, '관리자 「웨이브 1 시작」 → 웨이브 1 ' + JSON.stringify(await H()));
+  // 학생이 스킬을 손으로 눌러요 (몬스터가 사거리에 들어올 때까지 몇 번)
+  for (let t = 0; t < 12; t++){ for (const u of ['me1', 'me2', 'me3']) await st[u].evaluate(() => [...document.querySelectorAll('#dfb [data-sk]')].forEach(b => b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })))); await ad.waitForTimeout(1000); }
+  const casts = await ad.evaluate(() => Object.values(__T.dfGet().host.S.players).map(p => p.casts || 0));
+  ok(casts.some(n => n > 0), '스킬 버튼 → 관리자 기기에서 스킬이 나가요 ' + casts);
   const k1 = await ad.evaluate(() => __T.dfGet().host.S.kz.reduce((a, x) => a + x, 0));
-  ok(k1 > 0, '웨이브 중 몬스터를 잡아요 (자동 스킬 · 기본 공격) ' + k1);
-  await ad.evaluate(() => { const S = __T.dfGet().host.S; Object.values(S.players).forEach(p => { p.gold += 2000; }); }); await ad.waitForTimeout(4500);
-  const ups = await ad.evaluate(() => Object.values(__T.dfGet().host.S.players).map(p => p.up.reduce((a, u) => a + u.pow + u.rng + u.cd, 0)));
-  ok(ups.every(n => n > 0), '「자동」이면 번 골드로 올리기도 알아서 ' + ups);
+  ok(k1 > 0, '몬스터를 잡아요 ' + k1);
   await st.me1.screenshot({ path: __dirname + '/shot_df_wave.png' });
-  // 웨이브 1 을 빨리 끝내고 쉬는 시간 → 아무도 안 눌러도 30 초 뒤 웨이브 2
-  await ad.evaluate(() => { const S = __T.dfGet().host.S; for (let i = 0; i < 3000 && S.phase === 'wave'; i++) TD.step(S, .1); });
+  // 관리자 관찰 화면
+  const obs = await ad.evaluate(() => { const c = document.getElementById('dfobs0'); if (!c) return null; const d = c.getContext('2d').getImageData(195, 220, 1, 1).data; return { n: document.querySelectorAll('[id^="dfobs"] ').length, px: d[3], info: (document.getElementById('dfobsi') || {}).textContent, rows: document.querySelectorAll('#dfobsl tr').length }; });
+  ok(obs && obs.px > 0 && /웨이브 1/.test(obs.info) && obs.rows === 4, '관리자 실시간 관찰: 세 구역 그림 · 상황 · 학생 표 ' + JSON.stringify(obs));
+  { const el = await ad.$('#dfobsi'); if (el) await el.evaluate(e => e.closest('.adcard').scrollIntoView()); await ad.waitForTimeout(600); await ad.screenshot({ path: __dirname + '/shot_df_admin.png' }); }
+  // 난이도 조절
+  await ad.evaluate(() => document.querySelector('#adminv [data-dfa="hp-"]').click()); await ad.waitForTimeout(400);
+  ok(await ad.evaluate(() => Math.abs(__T.dfGet().host.S.hpK - .9) < 1e-9), '몬스터 체력 −10 % → 90 %');
+  // 웨이브 1 을 빨리 끝내고 쉬는 시간 → 관리자가 누르기 전에는 안 와요
+  await ad.evaluate(() => { const S = __T.dfGet().host.S; for (let i = 0; i < 6000 && S.phase === 'wave'; i++){ Object.keys(S.players).forEach(u => { TD.cast(S, u, 0); TD.cast(S, u, 1); }); TD.step(S, .1); } });
   await ad.waitForTimeout(1500);
   const r1 = await H(); ok(r1.ph === 'rest' && r1.w === 1, '웨이브 1 끝 → 쉬는 시간 ' + JSON.stringify(r1));
   const restTxt = await st.me1.evaluate(() => (document.getElementById('dftx') || {}).textContent || '');
-  ok(/초 뒤 다음 웨이브/.test(restTxt), '학생 화면: 「n 초 뒤 다음 웨이브」 ' + restTxt);
-  await ad.evaluate(() => { __T.dfGet().host.S.rest = 1; }); await ad.waitForTimeout(2500);
-  ok((await H()).w === 2 && (await H()).ph === 'wave', '쉬는 시간이 끝나면 저절로 웨이브 2 ' + JSON.stringify(await H()));
-  // 끝까지 빨리 감기 (쉬는 시간 건너뛰기)
-  await ad.evaluate(() => { const S = __T.dfGet().host.S; for (let i = 0; i < 200000 && S.phase !== 'over'; i++){ if (S.phase === 'rest') S.rest = 0; TD.step(S, .1); } });
+  ok(/선생님이 시작하면 다음 웨이브/.test(restTxt), '학생 화면: 「선생님이 시작하면 다음 웨이브가 와요」 ' + restTxt);
+  await ad.evaluate(() => { __T.dfGet().host.S.rest = 0; }); await ad.waitForTimeout(2500);
+  ok((await H()).ph === 'rest', '쉬는 시간이 지나도 관리자가 누르기 전에는 그대로');
+  await ad.evaluate(() => [...document.querySelectorAll('#adminv [data-dfa="force"]')].find(b => /웨이브 2 시작/.test(b.textContent)).click()); await ad.waitForTimeout(1500);
+  ok((await H()).w === 2 && (await H()).ph === 'wave', '관리자 「웨이브 2 시작」 → 웨이브 2');
+  // 끝까지 빨리 감기 (스킬은 쿨타임마다 누른 걸로 · 쉬는 시간은 바로 다음 웨이브)
+  await ad.evaluate(() => { const S = __T.dfGet().host.S; S.hpK = .5; for (let i = 0; i < 200000 && S.phase !== 'over'; i++){ if (S.phase === 'rest') TD.startWave(S); Object.keys(S.players).forEach(u => { TD.cast(S, u, 0); TD.cast(S, u, 1); }); TD.step(S, .1); } });
   await ad.waitForTimeout(3000);
   const end = await H(); ok(end.ph === 'over', '15 웨이브 끝 ' + JSON.stringify(end));
   const res = await st.me1.evaluate(() => __tw.ev('JSON.stringify(dfRes)'));

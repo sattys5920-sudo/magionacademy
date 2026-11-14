@@ -39,7 +39,7 @@
   const upCost = (p, i, k) => p.up[i][k] >= UP_MAX - 1 ? null : UP_COST[p.up[i][k]];
   function seat(S, uid, zone, slot, job){   // 자리 고르기 · 새로 들어오기 · 자리 옮기기 (이미 앉은 사람이 있으면 못 앉아요)
   if (S.phase === 'wave' || S.phase === 'over') return false; if (Object.values(S.players).some(q => q.uid !== uid && q.zone === zone && q.slot === slot)) return false;
-  let p = S.players[uid]; if (!p){ p = S.players[uid] = { uid, gold: 0, earned: 0, up: [{ pow: 0, rng: 0, cd: 0 }, { pow: 0, rng: 0, cd: 0 }], cd: [0, 0], buff: 0, basic: 0, ready: 0, auto: 1 }; }   // 스킬 「자동」은 켠 채로 시작해요 (난이도가 모두 스킬을 쓰는 걸로 맞춰져 있어요 · 끄면 직접 눌러요)
+  let p = S.players[uid]; if (!p){ p = S.players[uid] = { uid, gold: 0, earned: 0, up: [{ pow: 0, rng: 0, cd: 0 }, { pow: 0, rng: 0, cd: 0 }], cd: [0, 0], buff: 0, basic: 0, ready: 0, auto: 0, casts: 0 }; }   // 스킬은 모두 손으로 눌러요 (자동 없음)
   p.zone = zone; p.slot = slot; p.job = job; p.cat = CAT[job] || 'melee'; p.ready = 0; return true; }
 function unseat(S, uid){ if (S.phase !== 'wave') delete S.players[uid]; }
 const setReady = (S, uid, v) => { const p = S.players[uid]; if (p && (S.phase === 'ready' || S.phase === 'rest')) p.ready = v ? 1 : 0; };
@@ -50,7 +50,7 @@ function upgrade(S, uid, i, k){ const p = S.players[uid], c = p && upCost(p, i, 
   const hpAdj = c => HP_ADJ[Math.max(1, Math.min(18, c))];
   function startWave(S){ if (S.phase === 'over' || S.wave >= 15) return false; S.wave++; Object.values(S.players).forEach(q => { q.ready = 0; }); { const c = Object.keys(S.players).length, n = c / 9, base = n >= 1 ? n : Math.max(.3, Math.pow(n, 1.15)); S.hpN = base * hpAdj(c); var cf = .85 + .15 * Math.min(2, Math.max(1, base)); } const d = waveDef(S.wave); S.phase = 'wave'; S.tier = d.tier; S.q = []; let t = 0; d.list.forEach(([type, n0, gap]) => { const n = n0; for (let i = 0; i < n; i++){ S.q.push({ at: t, type }); t += gap; } t += 1.5 * K.gap; }); S.q.sort((a, b) => a.at - b.at); S.wt = 0; S.spawned = 0; S.total = S.q.length; return true; }
   function spawn(S, type){ const m = MON[type], tier = S.tier, wk = 1 + ((S.wave - 1) % 5) * .06, hp = Math.round(m.hp * TIER_HP[tier] * wk * S.hpN * S.hpK * K.hp); S.mons.push({ id: S.nid++, type, zone: 0, s: 0, hp, mhp: hp, spd: m.spd * (1 + tier * .06), egg: m.egg * (1 + tier * .35), slow: 0, slowT: 0, gold: Math.round(TIER_GOLD[tier][type === 'n' ? 0 : type === 'e' ? 1 : 2] * K.gold) }); }
-  const K = { gold: 3, dmg: 1.15, bonus: 30, hp: 1.14, egg: .08, basic: 5, reach: 16, gap: 2.7 };   // gap 2.7: 웨이브 하나 평균 약 2 분 · hp 는 그만큼 몬스터가 드문드문 와서 쉬워진 걸 다시 맞춘 값 (12 명 60 %)   // 균형 조절용
+  const K = { gold: 3, dmg: 1.15, bonus: 30, hp: .93, egg: .08, basic: 5, reach: 16, gap: 2.7 };   // gap 2.7: 웨이브 하나 평균 약 2 분 · hp: 모두 손으로 스킬을 누를 때 12 명 60 % (tools/td_sim_h.js)   // 균형 조절용
   const alive = S => S.mons.filter(m => m.hp > 0);
   function hurt(S, m, dmg, by, kind){ if (m.hp <= 0) return; if (by && S.fx) S.fx.push([by.uid, m.id, kind || 0]); m.hp -= dmg * K.dmg; if (m.hp <= 0 && by){ by.gold += m.gold; by.earned += m.gold; if (S.kz) S.kz[by.zone]++; } }
   const nearOf = (S, p, rng) => { const pos = ZONES[p.zone].slots[p.slot], R = rng + ZONES[p.zone].d0[p.slot]; return alive(S).filter(m => m.zone === p.zone && (m.atk || Math.hypot(posAt(m.zone, m.s)[0] - pos[0], posAt(m.zone, m.s)[1] - pos[1]) <= R)); };   // 알을 때리는 중인 몬스터는 둥지 앞 자리 누구든 때릴 수 있어요 · 사거리는 가장 가까운 길에서부터 재요 (어느 자리든 길 가까이에는 닿아요)
@@ -61,16 +61,11 @@ function upgrade(S, uid, i, k){ const p = S.players[uid], c = p && upCost(p, i, 
     const dist = m => { const q = posAt(m.zone, m.s); return Math.hypot(q[0] - pos[0], q[1] - pos[1]); };
     if (s.t === 'hit') hurt(S, ts.sort((a, b) => dist(a) - dist(b))[0], s.pow, p, 1);   // 가까운 한 명에게 센 공격
     else ts.forEach(m => hurt(S, m, s.pow, p, 2));   // 넓은 범위 모두에게 약한 공격
-    p.cd[i] = s.cd; return true;
+    p.cd[i] = s.cd; p.casts = (p.casts || 0) + 1; return true;
   }
-  function autoUp(S, p, dt){   // 「자동」이면 번 골드로 올리기도 알아서 (난이도가 올리기를 하는 걸로 맞춰져 있어요) · 쉬는 시간에도
-    if (!p.auto) return; p.upT = (p.upT || 0) - dt; if (p.upT > 0) return; p.upT = 2; const o = [];
-    for (let i = 0; i < 2; i++) for (const k of ['pow', 'rng', 'cd']){ const c = upCost(p, i, k); if (c != null && p.gold >= c) o.push([i, k]); }
-    if (o.length && Math.random() < .7){ const [i, k] = o[Math.floor(Math.random() * o.length)]; upgrade(S, p.uid, i, k); } }
   function step(S, dt){
     if (S.phase === 'over') return;
-    if (S.phase === 'ready' || S.phase === 'rest'){ Object.values(S.players).forEach(p => autoUp(S, p, dt)); if (S.autoReady) Object.values(S.players).forEach(q => { q.ready = 1; }); if (S.phase === 'rest'){ S.rest -= dt; if (S.rest <= 0) return void startWave(S); }   // 쉬는 시간이 끝나면 다 안 눌러도 다음 웨이브가 와요 (자리를 비운 친구 때문에 멈추지 않게)
-      if (allReady(S)) startWave(S); return; }   // 자리를 정하고 모두가 시작을 누르면 웨이브가 와요
+    if (S.phase === 'ready' || S.phase === 'rest'){ if (S.autoReady) startWave(S); return; }   // 웨이브는 관리자가 「웨이브 시작」을 눌러야 와요 (시뮬은 autoReady 로 바로)
     S.t += dt;
     if (S.phase === 'wave'){ S.wt += dt; while (S.q.length && S.q[0].at <= S.wt){ spawn(S, S.q.shift().type); S.spawned++; } }
     // 몬스터 이동 (막기 중이면 느려져요)
@@ -84,7 +79,6 @@ function upgrade(S, uid, i, k){ const p = S.players[uid], c = p && upCost(p, i, 
       p.buff = Math.max(0, p.buff - dt); const pos = ZONES[p.zone].slots[p.slot], mult = p.buff > 0 ? 1.25 : 1;
       p.basic -= dt; if (p.basic <= 0){ const t = nearOf(S, p, K.reach).sort((a, b) => b.s - a.s)[0]; if (t){ hurt(S, t, K.basic * mult, p, 0); p.basic = 2; } else p.basic = .2; }   // 직업 상관없이 사거리 같고 2초에 한 번
       for (let i = 0; i < 2; i++){ p.cd[i] -= dt; if (p.auto && p.cd[i] <= 0) cast(S, p.uid, i); }
-      autoUp(S, p, dt);
     });
     S.mons = S.mons.filter(m => m.hp > 0);
     if (!S.eggs.some(v => v > 0)){ S.phase = 'over'; S.win = false; return; }
