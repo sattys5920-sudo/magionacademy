@@ -25,7 +25,7 @@
   const WAVE_TAB = [[20, 0, 0], [40, 0, 0], [20, 20, 0], [30, 20, 0], [30, 30, 1], [30, 0, 0], [40, 0, 0], [30, 20, 0], [30, 30, 0], [30, 40, 1], [40, 0, 0], [50, 0, 0], [40, 30, 0], [40, 40, 0], [50, 50, 2]];   // 웨이브별 [일반, 정예, 보스] 마릿수
   function waveDef(w){   // w: 1~15 → [종류, 마릿수, 간격(초)] 목록
     const tier = Math.floor((w - 1) / 5), [n, e, b] = WAVE_TAB[w - 1], list = [];
-    if (b) list.push(['b', b, 4]); if (n) list.push(['n', n, .5]); if (e) list.push(['e', e, 1.1]);
+    if (b) list.push(['b', b, 4 * K.gap]); if (n) list.push(['n', n, .5 * K.gap]); if (e) list.push(['e', e, 1.1 * K.gap]);   // K.gap: 나오는 간격 (웨이브 길이)
     return { tier, list };
   }
   function newState(players, opt){   // players: [{ uid, zone(0~2), slot, job }]
@@ -48,9 +48,9 @@ function upgrade(S, uid, i, k){ const p = S.players[uid], c = p && upCost(p, i, 
   // 인원별 몬스터 체력 보정: 몇 명이 하든 승률이 60% 안팎이 되게 (tools/td_sim.js로 맞춘 값)
   const HP_ADJ = [1, .2106, .4614, .9763, .9744, .9893, .9905, .9963, .9432, .9343, .9324, .9142, .8993, 0.898, 0.895, 0.8957, 0.8884, 0.883, 0.8786];   // 13~18 명도 60 % 로 다시 맞췄어요 (자리는 3 곳 × 6 = 18 자리)
   const hpAdj = c => HP_ADJ[Math.max(1, Math.min(18, c))];
-  function startWave(S){ if (S.phase === 'over' || S.wave >= 15) return false; S.wave++; Object.values(S.players).forEach(q => { q.ready = 0; }); { const c = Object.keys(S.players).length, n = c / 9, base = n >= 1 ? n : Math.max(.3, Math.pow(n, 1.15)); S.hpN = base * hpAdj(c); var cf = .85 + .15 * Math.min(2, Math.max(1, base)); } const d = waveDef(S.wave); S.phase = 'wave'; S.tier = d.tier; S.q = []; let t = 0; d.list.forEach(([type, n0, gap]) => { const n = n0; for (let i = 0; i < n; i++){ S.q.push({ at: t, type }); t += gap; } t += 1.5; }); S.q.sort((a, b) => a.at - b.at); S.wt = 0; S.spawned = 0; S.total = S.q.length; return true; }
+  function startWave(S){ if (S.phase === 'over' || S.wave >= 15) return false; S.wave++; Object.values(S.players).forEach(q => { q.ready = 0; }); { const c = Object.keys(S.players).length, n = c / 9, base = n >= 1 ? n : Math.max(.3, Math.pow(n, 1.15)); S.hpN = base * hpAdj(c); var cf = .85 + .15 * Math.min(2, Math.max(1, base)); } const d = waveDef(S.wave); S.phase = 'wave'; S.tier = d.tier; S.q = []; let t = 0; d.list.forEach(([type, n0, gap]) => { const n = n0; for (let i = 0; i < n; i++){ S.q.push({ at: t, type }); t += gap; } t += 1.5 * K.gap; }); S.q.sort((a, b) => a.at - b.at); S.wt = 0; S.spawned = 0; S.total = S.q.length; return true; }
   function spawn(S, type){ const m = MON[type], tier = S.tier, wk = 1 + ((S.wave - 1) % 5) * .06, hp = Math.round(m.hp * TIER_HP[tier] * wk * S.hpN * S.hpK * K.hp); S.mons.push({ id: S.nid++, type, zone: 0, s: 0, hp, mhp: hp, spd: m.spd * (1 + tier * .06), egg: m.egg * (1 + tier * .35), slow: 0, slowT: 0, gold: Math.round(TIER_GOLD[tier][type === 'n' ? 0 : type === 'e' ? 1 : 2] * K.gold) }); }
-  const K = { gold: 3, dmg: 1.15, bonus: 30, hp: .71, egg: .08, basic: 5, reach: 16 };   // 균형 조절용
+  const K = { gold: 3, dmg: 1.15, bonus: 30, hp: 1.14, egg: .08, basic: 5, reach: 16, gap: 2.7 };   // gap 2.7: 웨이브 하나 평균 약 2 분 · hp 는 그만큼 몬스터가 드문드문 와서 쉬워진 걸 다시 맞춘 값 (12 명 60 %)   // 균형 조절용
   const alive = S => S.mons.filter(m => m.hp > 0);
   function hurt(S, m, dmg, by, kind){ if (m.hp <= 0) return; if (by && S.fx) S.fx.push([by.uid, m.id, kind || 0]); m.hp -= dmg * K.dmg; if (m.hp <= 0 && by){ by.gold += m.gold; by.earned += m.gold; if (S.kz) S.kz[by.zone]++; } }
   const nearOf = (S, p, rng) => { const pos = ZONES[p.zone].slots[p.slot], R = rng + ZONES[p.zone].d0[p.slot]; return alive(S).filter(m => m.zone === p.zone && (m.atk || Math.hypot(posAt(m.zone, m.s)[0] - pos[0], posAt(m.zone, m.s)[1] - pos[1]) <= R)); };   // 알을 때리는 중인 몬스터는 둥지 앞 자리 누구든 때릴 수 있어요 · 사거리는 가장 가까운 길에서부터 재요 (어느 자리든 길 가까이에는 닿아요)

@@ -1,6 +1,6 @@
 // 디펜스 이벤트 균형 시뮬(전체 인원): node tools/td_sim_n.js <전체 인원> <판 수> <몬스터 체력 배율>  (환경변수 GK 골드·DM 피해·BN 웨이브 보너스로 조절)
 const TD=require('../public/td.js');
-if(process.env.GK)TD.K.gold=+process.env.GK;if(process.env.DM)TD.K.dmg=+process.env.DM;if(process.env.BN)TD.K.bonus=+process.env.BN;const PER=+process.argv[2]||3, N=+process.argv[3]||40, HPK=+process.argv[4]||1;
+if(process.env.GK)TD.K.gold=+process.env.GK;if(process.env.DM)TD.K.dmg=+process.env.DM;if(process.env.BN)TD.K.bonus=+process.env.BN;if(process.env.GAP)TD.K.gap=+process.env.GAP;const PER=+process.argv[2]||3, N=+process.argv[3]||40, HPK=+process.argv[4]||1;
 const JOBS=[['warrior','black','white'],['knight','summon','druid'],['thief','gadget','cleric'],['warrior','alch','bard'],['knight','time','white'],['thief','black','druid']];
 function run(seed){let r=seed;const rnd=()=>(r=(r*16807)%2147483647)/2147483647;
  const pl=[];for(let n=0;n<PER;n++){const z=n%3,i=Math.floor(n/3);pl.push({uid:z+'_'+i,zone:z,slot:i,job:JOBS[(z*3+i+seed)%6][(i+n)%3]})}
