@@ -170,8 +170,8 @@ body.inworld #app.open{opacity:1;pointer-events:auto}
 .say{position:absolute;transform:translate(-50%,-100%);background:#FFFFFF;color:#22183F;padding:4px 7px;font-size:var(--fs-s);line-height:15px;box-shadow:0 0 0 2px #22183F;max-width:180px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;text-align:center;pointer-events:none;z-index:3;margin-top:-16px}
 .say::after{content:'';position:absolute;left:50%;bottom:-6px;margin-left:-3px;border:3px solid transparent;border-top-color:#22183F}
 .say.emo{background:none;box-shadow:none;padding:0;line-height:0}
-.emi{display:inline-block;width:32px;height:32px;background:url(art/emo.png) 0 0/384px 32px no-repeat;image-rendering:pixelated;vertical-align:middle}
-.say.emo .emi{width:48px;height:48px;background-size:576px 48px;background-position-x:calc(var(--i) * -48px)}
+.emi{display:inline-block;width:32px;height:32px;background:url(art/emo.png?v=2) 0 0/416px 32px no-repeat;image-rendering:pixelated;vertical-align:middle}
+.say.emo .emi{width:48px;height:48px;background-size:624px 48px;background-position-x:calc(var(--i) * -48px)}
 .say.emo::after{display:none}
 .bubble .pm{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
 .bubble .pm button{margin:0;padding:5px 6px;font-size:var(--fs-s);white-space:nowrap}
@@ -4848,7 +4848,7 @@ function renderCook(){
 // 호감도 100점 = ♥1, ♥10까지 (예전엔 3점 = ♥1). me.npc[id] = { p 옛 점수, t 대화한 날, g 선물한 날, s 본 장면 [2,5,…] }
 const NPC_ART_V = 9;
 const NPC_ROWS = 17;   // art/npcs 줄 수 (14 도도 · 15 셀린 · 16 본: tools/newnpc/newnpc_sheet.py)
-const NPC_DATA_V = 6;   // data/npc 캐시 버전
+const NPC_DATA_V = 7;   // data/npc 캐시 버전
 // LPC NPC 그림(art/npcs.png: 한 줄 = 한 명, 64칸 20개)에서 얼굴 부분만 크게 (초상화)
 const NPC_FACE = { 0: [13, 14, 31], 1: [18, 12, 29], 2: [20, 16, 28], 3: [17, 18, 31], 4: [19, 23, 32], 5: [12, 9, 39], 13: [14, 20, 35], 14: [21, 27, 21], 15: [18, 15, 27], 16: [16, 15, 30] };   // 동물·허수아비는 사람과 머리 위치가 달라요 (나비·배트리·캇파·아울라·맨디·스트로 얼굴 틀: x, y, 크기)
 const npcFace = (spr, size = 48) => {   // 액자 크기가 CSS로 바뀌어도(관계 화면 40px 등) 얼굴이 가운데에 오도록 그림 크기·위치를 퍼센트로 계산해요
@@ -5292,7 +5292,7 @@ function townTalk(id){
 }
 // ===== 하트 이벤트 무대: 지도를 잘라 온 배경 위에서 인물이 걷고, 대사·선택지·장면 이동 =====
 const EV_W = 320; let EV_H = 180, EV_FLOOR = 166; const POSX = { far_left: 44, left: 100, center: 160, right: 220, far_right: 276, off_left: -50, off_right: 370 };
-const EMO_IX = { heart: 7, tear: 5, angry: 6, sparkle: 9 };
+const EMO_IX = { heart: 7, tear: 5, angry: 6, sparkle: 9, sweat: 12 };
 const STG = { cv: null, g: null, bg: null, actors: {}, fx: [], cam: { z: 1, x: 0, sh: 0 }, flash: 0, fade: 0, wx: null, time: 'night', tint: null, raf: 0, run: 0 };
 const imgCache = {};
 const loadImg = src => imgCache[src] || (imgCache[src] = new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; }));
@@ -5505,7 +5505,7 @@ async function evPlay(n, k, ev, opt){
   const ui = evUI(); ui.innerHTML = `<div class="evwrap"><canvas width="${EV_W}" height="${EV_H}"></canvas><div class="evbox"><div class="evport"></div><div class="evname"></div><div class="evtext"></div><div class="evch"></div><div class="evtap">▼</div></div>${opt.replay ? '<button class="evskip">끝내기</button>' : ''}</div>`;
   ui.classList.add('on');
   STG.cv = ui.querySelector('canvas'); STG.g = STG.cv.getContext('2d'); STG.actors = {}; STG.cam = { z: 1, x: 0, sh: 0 }; STG.fade = 1; STG.flash = 0; STG.speaker = null;
-  NPC_IMG_STAGE = NPC_IMG_STAGE || Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` }); EMO_IMG = EMO_IMG || Object.assign(new Image(), { src: 'art/emo.png' });
+  NPC_IMG_STAGE = NPC_IMG_STAGE || Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` }); EMO_IMG = EMO_IMG || Object.assign(new Image(), { src: 'art/emo.png?v=2' });
   const sc = ev.scene || {};
   await stageBg(ev.conditions?.location === 'any' ? placeNear() : ev.conditions?.location || 'village_square', sc.time || bandNow(), sc.weather || weatherToday());
   await evShow(ctx, n.id, 'center'); await evShow(ctx, 'player', 'left'); evFace();
@@ -12562,13 +12562,12 @@ const NN_ARR = {
         { cmd: 'say', who: 'bau', text: '왈.', ms: 1200 },
         { cmd: 'walk', who: 'nn_owner', x: 32, y: 46, run: true, timeout: 8 }, { cmd: 'despawn', who: 'nn_owner' }, { cmd: 'wait', sec: 1.4 },
         { cmd: 'face', who: 'bau', to: 'player' }, { cmd: 'wait', sec: .4 }, { cmd: 'say', who: 'bau', text: '.......', ms: 1600 },
-        { cmd: 'say', who: 'player', text: '(정문 앞에 강아지 한 마리만 남았다. 한쪽 다리를 살짝 절고 있다.)', ms: 3000 },
-        { cmd: 'walk', who: 'player', x: 41, y: 44, dir: 'left', timeout: 6 }, { cmd: 'emote', who: 'bau', icon: 4 },
-        { cmd: 'say', who: 'bau', text: '....왈. 때리는 사람, 아니지. 그치.', ms: 2600 },
-        { cmd: 'say', who: 'player', text: '안 때려. 누구 기다려?', ms: 1800 },
-        { cmd: 'say', who: 'bau', text: '그 집 사람. 기다리라고 했어. 바우, 착하게 기다리는 중이야.', ms: 3000 },
-        { cmd: 'say', who: 'bau', text: '바우가 아파서 그래. 다리 다 나으면 데리러 올 거야. ....그치.', ms: 3200 },
-        { cmd: 'wait', sec: 1 }, { cmd: 'say', who: 'player', text: '(무슨 대답을 해야 할지 몰랐다.)', ms: 2200 },
+        { cmd: 'say', who: 'player', text: '(정문 앞에 강아지 한 마리만 남았다.)', ms: 2400 },
+        { cmd: 'walk', who: 'player', x: 41, y: 44, dir: 'left', timeout: 6 }, { cmd: 'emote', who: 'bau', icon: 12 }, { cmd: 'wait', sec: .8 },
+        { cmd: 'say', who: 'bau', text: '....왈.', ms: 1600 },
+        { cmd: 'say', who: 'player', text: '괜찮아? 누구 기다려?', ms: 1800 },
+        { cmd: 'say', who: 'bau', text: '응. 기다리라고 했어. 바우, 착하게 기다리는 중이야.', ms: 3000 },
+        { cmd: 'wait', sec: 1 },
         { cmd: 'say', who: 'bau', text: '킁. 킁킁. ....사람 냄새, 나쁜 냄새 아니다.', ms: 2600 },
         { cmd: 'say', who: 'bau', text: '바우는 여기 있을게. 정문 앞. 사람, 또 와도 돼.......', ms: 2800 },
         { cmd: 'emote', who: 'bau', icon: 7 }, { cmd: 'wait', sec: .6 }]);

@@ -1,4 +1,4 @@
-# 말풍선 픽셀 이모티콘 12종 (16×16, 직접 그림). python3 tools/iso/emotes.py → public/art/emo.png
+# 말풍선 픽셀 이모티콘 13종 (16×16, 직접 그림). python3 tools/iso/emotes.py → public/art/emo.png
 from PIL import Image, ImageDraw, ImageFont
 import os, sys
 D = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # tools/
@@ -214,7 +214,22 @@ E['유령'] = grid([
  '..KKpKKpKKK.....',
  '...K.K..........',
 ])
-ORDER = ['손인사', '웃음', '깔깔', '하트눈', '놀람', '눈물', '화남', '하트', '엄지척', '반짝', '호박', '유령']
+E['진땀'] = over(face(), [   # 머쓱 · 긴장: 오른쪽 위 파란 땀방울
+ '',
+ '............b...',
+ '...........bBb..',
+ '...........bBb..',
+ '............b...',
+ '................',
+ '....KK....KK....',
+ '................',
+ '.....K....K.....',
+ '.....K....K.....',
+ '................',
+ '.....K.KK.K.....',
+ '......K..K......',
+])
+ORDER = ['손인사', '웃음', '깔깔', '하트눈', '놀람', '눈물', '화남', '하트', '엄지척', '반짝', '호박', '유령', '진땀']
 def img(g, k=1):
     im = Image.new('RGBA', (16, 16), (0, 0, 0, 0))
     for y in range(16):
@@ -223,7 +238,7 @@ def img(g, k=1):
             if c != '.': im.putpixel((x, y), PAL[c] + (255,))
     return im.resize((16 * k, 16 * k), Image.NEAREST)
 if __name__ == '__main__':
-    # 게임용 한 줄 시트: 16×16 × 12칸 → public/art/emo.png (순서 = ORDER, 게임의 EMOS와 같아요)
+    # 게임용 한 줄 시트: 16×16 × 13칸 → public/art/emo.png (순서 = ORDER, 게임의 EMOS와 같아요)
     out = Image.new('RGBA', (16 * len(ORDER), 16), (0, 0, 0, 0))
     for i, n in enumerate(ORDER): out.alpha_composite(img(E[n]), (i * 16, 0))
     out.save(os.path.join(os.path.dirname(D), 'public', 'art', 'emo.png') if len(sys.argv) < 2 else sys.argv[1])
