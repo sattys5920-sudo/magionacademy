@@ -17,13 +17,16 @@ def block_size(a):
 # 가장자리에서 안 닿는 갇힌 배경(볼트와 목 사이 등): 그 안의 한 점을 (가로, 세로) 비율로 적어 두면 거기서도 지워요
 KEEP_WHITE = {'madeleine', 'leo', 'selin', 'dodo', 'artua', 'kael', 'grego', 'bau'}
 FILL_EYES = {'leo'}
+CLEAN_EDGE = {'artua', 'kael', 'grego', 'bau'}
+INNER_WHITE = {'bau': .45}   # 이 높이 아래에 갇힌 흰 덩어리는 배경 (꼬리와 목도리 사이)
+BOTTOM = {'bau': .8}   # 시트 아래쪽 이만큼만 남겨요
 HEADY = {'artua': .56, 'kael': .56, 'grego': .56}   # 머리카락 사이 흰 조각을 지울 높이 (위쪽 여백이 큰 초상은 머리가 아래에 있어요)
 POCKETS = {'hazel'}
 HOLES = {'frankie': [(.324, .576), (.675, .576)]}
 # 한 표정만 확대돼서 뽑혔을 때: 그 표정을 (배율, 왼쪽, 위)로 줄여 옮기고, 모든 표정을 같이 잘라요 (왼, 위, 오른, 아래)
 FIT = {'boo': {'happy': (.83, 59, 71)}}
 WHITE_MIN = {'artua': 250, 'kael': 250, 'grego': 250, 'bau': 250, 'selin': 250, 'dodo': 250, 'bone': 253, 'mirabel': 253, 'nabi': 250, 'batri': 250, 'kappa': 250, 'aula': 250, 'mandi': 250, 'jipsin': 250, 'sera': 250, 'madeleine': 253, 'stella': 250, 'leo': 250}   # 붕대가 흰색에 가까워서, 배경(순백)만 지워지게 문턱을 높여요
-CROP = {'bau': (0, 64, 336, 480), 'selin': (90, 0, 810, 966), 'dodo': (30, 0, 870, 860), 'bone': (0, 0, 896, 1128), 'boo': (66, 0, 798, 1062), 'mirabel': (41, 0, 837, 1090), 'nabi': (30, 60, 830, 860), 'batri': (30, 70, 870, 970), 'kappa': (40, 100, 860, 900), 'aula': (60, 100, 840, 900), 'mandi': (80, 70, 840, 880), 'jipsin': (130, 80, 800, 840)}
+CROP = {'bau': (0, 40, 336, 480), 'selin': (90, 0, 810, 966), 'dodo': (30, 0, 870, 860), 'bone': (0, 0, 896, 1128), 'boo': (66, 0, 798, 1062), 'mirabel': (41, 0, 837, 1090), 'nabi': (30, 60, 830, 860), 'batri': (30, 70, 870, 970), 'kappa': (40, 100, 860, 900), 'aula': (60, 100, 840, 900), 'mandi': (80, 70, 840, 880), 'jipsin': (130, 80, 800, 840)}
 def fit(a, t):
     s, dx, dy = t; H, W = a.shape[:2]
     im = Image.fromarray(a).resize((round(W * s), round(H * s)), Image.NEAREST)
@@ -123,7 +126,11 @@ def build(pid):
             lab, nl = ndimage.label(pw)
             for i in range(1, nl + 1):
                 ys, xs = np.nonzero(lab == i)
-                if len(ys) <= 400 and ys.max() < h * HEADY.get(pid, .35): small[ys, xs] = 0
+                if len(ys) <= 400 and ys.max() < h * .35: small[ys, xs] = 0
+                elif pid in HEADY and len(ys) <= 400 and ys.max() < h * HEADY[pid]:   # 머리 높이: 둘레에 살색이 없으면 머리카락 사이 배경 (눈 흰자는 둘레에 살색이 있어요)
+                    m = lab == i; ring = ndimage.binary_dilation(m, iterations=2) & ~m & (small[..., 3] > 0); rr = small[..., :3][ring].astype(int)
+                    skin = ((rr[:, 0] - rr[:, 2] > 30) & (rr[:, 0] >= rr[:, 1]) & (rr.mean(-1) > 110)).mean() if len(rr) else 0
+                    if skin < .12: small[ys, xs] = 0
         if pid not in KEEP_WHITE: small[pw] = 0   # 셔츠·이빨·흰자가 순백인 초상(마들렌)은 순백을 지우지 않아요
         for _ in range(3):   # 투명 경계에 남은 밝은 회백색 테두리(안티앨리어스 찌꺼기)도 지워요
             al = small[..., 3] > 0; rgb = small[..., :3].astype(int)
@@ -136,8 +143,29 @@ def build(pid):
                 ys, xs = np.nonzero(lab == i)
                 if len(ys) <= 60 and ys.min() > 0 and xs.min() > 0 and ys.max() < h - 1 and xs.max() < w - 1 and h * .25 < ys.mean() < h * .5:
                     small[ys, xs] = (250, 250, 250, 255)
+        if pid in CLEAN_EDGE:   # 누끼 마무리: 몸에서 떨어진 작은 점 · 머리카락 둘레의 밝은 회색 번짐 · 몸 안에 갇힌 흰 배경 조각
+            from scipy import ndimage
+            for _ in range(3):
+                al = small[..., 3] > 0; rgb = small[..., :3].astype(int); lum = rgb.mean(-1); sat = rgb.max(-1) - rgb.min(-1)
+                edge = al & ndimage.binary_dilation(~al, iterations=1); top = np.arange(h)[:, None] < h * HEADY.get(pid, .5)
+                small[edge & top & (lum > 150) & (sat < 45)] = 0
+            for _ in range(2):   # 둘레에 붙은 실 같은 점 (이웃 불투명 칸이 둘 이하)
+                al = (small[..., 3] > 0).astype(int); nb = ndimage.convolve(al, np.ones((3, 3), int), mode='constant') - al
+                small[(al > 0) & (nb <= 2)] = 0
+            lab, nl = ndimage.label(small[..., 3] > 0)
+            if nl > 1:
+                sz = ndimage.sum(np.ones((h, w)), lab, range(1, nl + 1))
+                for i, z in enumerate(sz, 1):
+                    if z <= 30: small[lab == i] = 0
+            if pid in INNER_WHITE:
+                rgb = small[..., :3].astype(int); wm = (small[..., 3] > 0) & (rgb.min(-1) >= 235) & (rgb.max(-1) - rgb.min(-1) < 20)
+                lab, nl = ndimage.label(wm)
+                for i in range(1, nl + 1):
+                    ys, xs = np.nonzero(lab == i)
+                    if len(ys) > 15 and ys.mean() > h * INNER_WHITE[pid]: small[ys, xs] = 0
         cells.append(small)
     sheet = np.concatenate(cells, 1)
+    if pid in BOTTOM: sheet = sheet[:int(sheet.shape[0] * BOTTOM[pid])]   # 아래쪽을 잘라 대화창에 다리가 가려지게
     Image.fromarray(sheet, 'RGBA').save(os.path.join(OUT, f'{pid}.png'))
     return k, w, h
 if __name__ == '__main__':
