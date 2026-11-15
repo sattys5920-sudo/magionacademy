@@ -6,8 +6,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'
 import josa, npc_context
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 DATA = os.path.join(ROOT, 'public', 'data', 'npc')
-NPCS = ['nabi', 'batri', 'kappa', 'aula', 'mandi', 'jipsin', 'sera', 'madeleine', 'stella', 'leo', 'otumo', 'selin', 'dodo', 'bone']
-HUMAN = ['sera', 'madeleine', 'stella', 'leo']
+NPCS = ['nabi', 'batri', 'kappa', 'aula', 'mandi', 'jipsin', 'sera', 'madeleine', 'stella', 'leo', 'otumo', 'selin', 'dodo', 'bone', 'bau', 'kael', 'artua', 'grego']
+HUMAN = ['sera', 'madeleine', 'stella', 'leo', 'kael', 'artua', 'grego']
+GENDER_OK = {'grego': {'아저씨'}}   # 그레고는 스스로를 「아저씨」라고 불러요 (기획)
 BIG = (5, 8, 10)
 PLACES = {p['id']: p for p in json.load(open(os.path.join(DATA, 'places.json')))}
 CAST = json.load(open(os.path.join(DATA, 'cast.json')))
@@ -30,7 +31,7 @@ UNIT = re.compile(r'\d+(일|번|째|개|마리|년|명|시|분|초|장|권|살|�
 WRONG = ['몇 일', '몇일', '금새', '왠일', '웬지', '어떻해', '할께', '설레임', '바램', '일부로', '오랫만', '구지', '역활', '희안',
          '되요', '돼서는 안 되', '안돼', '됬', '될께', '갈께', '줄께', '볼께', '먹을께', '할려고', '되가', '돼었', '않되', '않돼']
 GENDER = re.compile(r'(?<![가-힣])(그녀|그는|그가|그를|그의|아저씨|아줌마|언니|오빠|누나|형)(?=$|[^가-힣]|[은는이가을를의도한께에님아야])')
-NAMES = ['세라', '루카스', '마들렌', '스텔라', '레오']
+NAMES = ['세라', '루카스', '마들렌', '스텔라', '레오', '카엘', '아르투아', '그레고']
 AUTO = re.compile(r'[a-z]+_(h\d+|was_cold)')
 PERKS = {'cat_furniture', 'bait', 'free_post', 'rod_bonus', 'lord_hint', 'potion_hint', 'know_bonus', 'greenhouse_growth', 'pumpkin_race', 'scarecrow_hat', 'tasty_potion', 'cake_recipe', 'fortune', 'rare_egg'}
 ENGINE_FLAGS = {'otumo_romance'}   # 엔진이 정해 주는 플래그 (이야기 안에서 만들지 않아요)
@@ -59,7 +60,7 @@ def korean(where, t, human_ctx, errs):
     for n in NAMES:
         if n in t: errs.append(f'{where}: 사람 NPC 이름은 변수로 ({{sera.name}} 등) 「{n}」 → {t[:40]}')
     if human_ctx:
-        m = GENDER.search(t)
+        m = next((x for x in GENDER.finditer(t) if x.group(1) not in GENDER_OK.get(where.split(' ')[0], ())), None)
         if m: errs.append(f'{where}: 사람 NPC 이야기에 성별 단정 표현 「{m.group(1)}」 → {t[:40]}')
     for m in VAR.finditer(t):
         a, b = m.group(1), m.group(2)
