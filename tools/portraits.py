@@ -17,6 +17,13 @@ def block_size(a):
 # 가장자리에서 안 닿는 갇힌 배경(볼트와 목 사이 등): 그 안의 한 점을 (가로, 세로) 비율로 적어 두면 거기서도 지워요
 KEEP_WHITE = {'madeleine', 'leo', 'selin', 'dodo', 'artua', 'kael', 'grego', 'bau'}
 FILL_EYES = {'leo'}
+EYEBOX = {'bau': (.2, .52, .12, .88), 'artua': (.36, .56, .46, .755), 'kael': (.36, .54, .46, .74), 'grego': (.36, .56, .44, .73)}   # 눈 상자 (위, 아래, 왼, 오른 비율): 이 안의 흰색(흰자)은 누끼 정리에서 안 건드려요
+def inbox(pid, fy, fx):
+    b = EYEBOX.get(pid); return bool(b) and b[0] <= fy <= b[1] and b[2] <= fx <= b[3]
+def boxmask(pid, h, w):
+    m = np.zeros((h, w), bool); b = EYEBOX.get(pid)
+    if b: m[int(b[0] * h):int(b[1] * h) + 1, int(b[2] * w):int(b[3] * w) + 1] = True
+    return m
 CLEAN_EDGE = {'artua', 'kael', 'grego', 'bau'}
 INNER_WHITE = {'bau': .45}   # 이 높이 아래에 갇힌 흰 덩어리는 배경 (꼬리와 목도리 사이)
 BOTTOM = {'bau': .8}   # 시트 아래쪽 이만큼만 남겨요
@@ -126,11 +133,9 @@ def build(pid):
             lab, nl = ndimage.label(pw)
             for i in range(1, nl + 1):
                 ys, xs = np.nonzero(lab == i)
-                if len(ys) <= 400 and ys.max() < h * .35: small[ys, xs] = 0
-                elif pid in HEADY and len(ys) <= 400 and ys.max() < h * HEADY[pid]:   # 머리 높이: 둘레에 살색이 없으면 머리카락 사이 배경 (눈 흰자는 둘레에 살색이 있어요)
-                    m = lab == i; ring = ndimage.binary_dilation(m, iterations=2) & ~m & (small[..., 3] > 0); rr = small[..., :3][ring].astype(int)
-                    skin = ((rr[:, 0] - rr[:, 2] > 30) & (rr[:, 0] >= rr[:, 1]) & (rr.mean(-1) > 110)).mean() if len(rr) else 0
-                    if skin < .12: small[ys, xs] = 0
+                if len(ys) <= 400 and ys.max() < h * .35 and not inbox(pid, ys.mean() / h, xs.mean() / w): small[ys, xs] = 0
+                elif pid in HEADY and len(ys) <= 400 and ys.max() < h * HEADY[pid] and not inbox(pid, ys.mean() / h, xs.mean() / w):   # 머리 높이의 흰 조각은 머리카락 사이 배경 · 눈 상자 안(흰자)은 절대 안 지워요
+                    small[ys, xs] = 0
         if pid not in KEEP_WHITE: small[pw] = 0   # 셔츠·이빨·흰자가 순백인 초상(마들렌)은 순백을 지우지 않아요
         for _ in range(3):   # 투명 경계에 남은 밝은 회백색 테두리(안티앨리어스 찌꺼기)도 지워요
             al = small[..., 3] > 0; rgb = small[..., :3].astype(int)
@@ -148,15 +153,19 @@ def build(pid):
             for _ in range(3):
                 al = small[..., 3] > 0; rgb = small[..., :3].astype(int); lum = rgb.mean(-1); sat = rgb.max(-1) - rgb.min(-1)
                 edge = al & ndimage.binary_dilation(~al, iterations=1); top = np.arange(h)[:, None] < h * HEADY.get(pid, .5)
-                small[edge & top & (lum > 150) & (sat < 45)] = 0
+                small[edge & top & (lum > 150) & (sat < 45) & ~boxmask(pid, h, w)] = 0
             for _ in range(2):   # 둘레에 붙은 실 같은 점 (이웃 불투명 칸이 둘 이하)
                 al = (small[..., 3] > 0).astype(int); nb = ndimage.convolve(al, np.ones((3, 3), int), mode='constant') - al
-                small[(al > 0) & (nb <= 2)] = 0
+                small[(al > 0) & (nb <= 2) & ~boxmask(pid, h, w)] = 0
+            for _ in range(2):   # 머리카락 둘레의 밝은 회색 점 (이웃 불투명 칸이 넷 이하)
+                al = (small[..., 3] > 0).astype(int); nb = ndimage.convolve(al, np.ones((3, 3), int), mode='constant') - al
+                rgb = small[..., :3].astype(int); pale = (rgb.mean(-1) > 90) & (rgb.max(-1) - rgb.min(-1) < 50)
+                small[(al > 0) & (nb <= 4) & pale & ~boxmask(pid, h, w)] = 0
             lab, nl = ndimage.label(small[..., 3] > 0)
             if nl > 1:
                 sz = ndimage.sum(np.ones((h, w)), lab, range(1, nl + 1))
                 for i, z in enumerate(sz, 1):
-                    if z <= 30: small[lab == i] = 0
+                    if z <= (80 if pid == 'bau' else 30): small[lab == i] = 0
             if pid in INNER_WHITE:
                 rgb = small[..., :3].astype(int); wm = (small[..., 3] > 0) & (rgb.min(-1) >= 235) & (rgb.max(-1) - rgb.min(-1) < 20)
                 lab, nl = ndimage.label(wm)
