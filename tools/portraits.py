@@ -17,7 +17,7 @@ def block_size(a):
 # 가장자리에서 안 닿는 갇힌 배경(볼트와 목 사이 등): 그 안의 한 점을 (가로, 세로) 비율로 적어 두면 거기서도 지워요
 KEEP_WHITE = {'madeleine', 'leo', 'selin', 'dodo', 'artua', 'kael', 'grego', 'bau'}
 FILL_EYES = {'leo'}
-EYEBOX = {'bau': (.2, .52, .12, .88), 'artua': (.36, .56, .46, .715), 'kael': (.36, .54, .46, .74), 'grego': (.36, .56, .44, .73)}   # 눈 상자 (위, 아래, 왼, 오른 비율): 이 안의 흰색(흰자)은 누끼 정리에서 안 건드려요
+EYEBOX = {'bau': (.2, .52, .12, .88), 'artua': (.38, .51, .46, .69), 'kael': (.36, .54, .46, .74), 'grego': (.36, .56, .44, .73)}   # 눈 상자 (위, 아래, 왼, 오른 비율): 이 안의 흰색(흰자)은 누끼 정리에서 안 건드려요
 def inbox(pid, fy, fx):
     b = EYEBOX.get(pid); return bool(b) and b[0] <= fy <= b[1] and b[2] <= fx <= b[3]
 def boxmask(pid, h, w):
@@ -167,18 +167,25 @@ def build(pid):
                 sz = ndimage.sum(np.ones((h, w)), lab, range(1, nl + 1))
                 for i, z in enumerate(sz, 1):
                     if z <= (80 if pid == 'bau' else 30): small[lab == i] = 0
-            # 머리 옆 · 꼬리 사이에 갇힌 밝은 배경 조각 (순백이 아니라 연회색으로 번진 것까지): 눈 상자 밖, 머리 높이, 작은 덩어리만
-            rgb = small[..., :3].astype(int); lt = (small[..., 3] > 0) & (rgb.min(-1) >= LIGHT_MIN.get(pid, 215)) & (rgb.max(-1) - rgb.min(-1) < 30)
-            lab, nl = ndimage.label(lt)
-            for i in range(1, nl + 1):
-                ys, xs = np.nonzero(lab == i)
-                if len(ys) <= 60 and ys.mean() < h * HEADY.get(pid, .9) and not inbox(pid, ys.mean() / h, xs.mean() / w): small[ys, xs] = 0
             if pid in INNER_WHITE:
                 rgb = small[..., :3].astype(int); wm = (small[..., 3] > 0) & (rgb.min(-1) >= 235) & (rgb.max(-1) - rgb.min(-1) < 20)
                 lab, nl = ndimage.label(wm)
                 for i in range(1, nl + 1):
                     ys, xs = np.nonzero(lab == i)
                     if len(ys) > 15 and ys.mean() > h * INNER_WHITE[pid]: small[ys, xs] = 0
+            # 머리 옆 · 꼬리 사이에 갇힌 밝은 배경 조각 (순백이 아니라 연회색으로 번진 것까지): 눈 상자 밖, 머리 높이, 작은 덩어리만
+            rgb = small[..., :3].astype(int); lt = (small[..., 3] > 0) & (rgb.min(-1) >= LIGHT_MIN.get(pid, 215)) & (rgb.max(-1) - rgb.min(-1) < 30)
+            lab, nl = ndimage.label(lt)
+            for i in range(1, nl + 1):
+                ys, xs = np.nonzero(lab == i)
+                if len(ys) <= 60 and ys.mean() < h * HEADY.get(pid, .9) and not inbox(pid, ys.mean() / h, xs.mean() / w): small[ys, xs] = 0
+            for _ in range(3):   # 테두리에 붙은 작은 밝은 점 (투명과 맞닿은 연한 덩어리 8 칸 이하, 높이 상관없이 · 셔츠 같은 큰 덩어리는 그대로)
+                al = small[..., 3] > 0; rgb = small[..., :3].astype(int)
+                pale = al & (rgb.mean(-1) > 140) & (rgb.max(-1) - rgb.min(-1) < 60) & ~boxmask(pid, h, w)
+                lab, nl = ndimage.label(pale, np.ones((3, 3), int)); touch = ndimage.binary_dilation(~al, iterations=2)
+                for i in range(1, nl + 1):
+                    m = lab == i
+                    if m.sum() <= 12 and (m & touch).any(): small[m] = 0
         cells.append(small)
     sheet = np.concatenate(cells, 1)
     if pid in BOTTOM: sheet = sheet[:int(sheet.shape[0] * BOTTOM[pid])]   # 아래쪽을 잘라 대화창에 다리가 가려지게
