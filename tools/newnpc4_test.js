@@ -12,8 +12,12 @@ const R = { bau: { morning: 'main_hall', day: 'main_hall', evening: 'main_hall',
   for (let k = 0; k < 12; k++){ const bb = await p.$('#stnext'); if (!bb) break; await bb.click(); await p.waitForTimeout(100); }
   const ev = s => p.evaluate(s => __tw.ev(s), s);
   ok(await ev(`${JSON.stringify(IDS)}.every(id => !npcGet(id))`), '만나기 전엔 학생에게 안 보여요');
-  ok(await ev(`${JSON.stringify(IDS)}.every(id => !NEWNPC.filter(n => NN_ARR[n]).includes(id))`), '도착 장면이 없으니 관리자 「새 친구 맞이하기」에도 아직 안 나와요');
-  await ev(`(me.nnpc = me.nnpc || {}, ${JSON.stringify(IDS)}.forEach(id => { me.nnpc[id] = { met: 1, at: now2() }; }), npcSig = '', syncNpcs(), 1)`);
+  ok(await ev(`${JSON.stringify(IDS)}.every(id => NEWNPC.filter(n => NN_ARR[n]).includes(id))`), '관리자 「새 친구 맞이하기」에 넷 다 있어요');
+  for (const id of IDS){   // 도착 장면: 끝까지 돌고, 끝나면 만난 걸로 기록
+    const t0 = Date.now(); await ev(`(__nn.intro('${id}'), 1)`); await p.waitForTimeout(6000); await p.screenshot({ path: __dirname + '/shot_nn_' + id + '.png' });
+    await p.waitForFunction(id => __tw.ev(`nnMet('${id}') && !nnOn`), id, { timeout: 90000 }).catch(() => {});
+    ok(await ev(`nnMet('${id}')`), `${id} 도착 장면 끝 → 만남 (${Math.round((Date.now() - t0) / 1000)} 초)`);
+  }
   await p.waitForTimeout(1500);
   ok(await ev(`${JSON.stringify(IDS)}.every(id => !!npcGet(id))`), '만난 뒤엔 보여요');
   await p.waitForFunction(() => __tw.ev("['bau','kael','artua','grego'].every(id => NL.prof[id])"), null, { timeout: 15000 }).catch(() => {});

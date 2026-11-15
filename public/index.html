@@ -12472,6 +12472,10 @@ function nnCart(){   // 본의 작은 수레 (류트 · 보따리 · 꽃 한 송
     nnWheel(R, O, 14, 23, 6);
   });
 }
+function nnScroll(i){   // 아르투아의 둘둘 만 별 지도
+  return nnCv(16, 12, (R, O) => { R(1, 3, 14, 7, NN_OL); R(2, 4, 12, 5, i % 2 ? '#E8DCB8' : '#D8C8A0'); R(2, 4, 12, 1, '#F4ECD0'); O(2, 6, 3, NN_OL); O(2, 6, 2, '#C8B488'); R(6 + i * 2, 5, 1, 1, '#3A4A8A'); R(9, 7, 1, 1, '#3A4A8A'); });
+}
+const nnName = id => (npcOver[id] && npcOver[id].name) || (NPC_DEF.find(n => n.id === id) || {}).name || id;   // 관리자가 바꾼 이름까지 (만나기 전이라 npcGet 은 비어 있어요)
 function nnFrame(spr, col, flipX){   // NPC 그림 한 칸 (64 × 64)
   const I = NPC_IMG_STAGE || (NPC_IMG_STAGE = Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` }));
   return nnCv(64, 64, (R, O, g) => { if (!I.complete || !I.naturalWidth) return; if (flipX){ g.translate(64, 0); g.scale(-1, 1); } g.drawImage(I, col * 64, spr * 64, 64, 64, 0, 0, 64, 64); });
@@ -12548,6 +12552,92 @@ const NN_ARR = {
         { cmd: 'face', who: 'bone', to: 'player' }, { cmd: 'say', who: 'bone', text: '자, 길손. 해 지기 전에 가. 내일 광장에서 봐. 맨 앞줄은 비워 둘게.......', ms: 3200 },
         { cmd: 'wait', sec: .5 }]);
     } },
+  // 바우: 정문 앞에 누군가 강아지를 두고 「여기서 기다려」 한마디만 남기고 가 버려요 (얼굴은 안 보여요) → 남은 강아지와 첫 만남
+  bau: { map: 'campus', pl: [45, 46], toast: '바우는 낮엔 정문 앞에서 기다리고, 밤엔 사육장 처마 밑에서 자요',
+    async play(C){
+      await C.cut([{ cmd: 'player', x: 45, y: 46, dir: 'left' }, { cmd: 'cam', x: 41, y: 43 }, { cmd: 'wait', sec: .8 },
+        { cmd: 'spawn', who: 'nn_owner', name: '', av: World.Avatar.fromLook(427), x: 34, y: 45, dir: 'right' }, C.sp(33, 45, 'right'),
+        { cmd: 'walk', who: 'nn_owner', x: 40, y: 43, wait: false, timeout: 8 }, { cmd: 'walk', who: 'bau', x: 39, y: 43, speed: 1.6, timeout: 9 }, { cmd: 'wait', sec: .6 },
+        { cmd: 'face', who: 'nn_owner', to: 'bau' }, { cmd: 'say', who: 'nn_owner', text: '여기서 기다려.', ms: 1800 },
+        { cmd: 'say', who: 'bau', text: '왈.', ms: 1200 },
+        { cmd: 'walk', who: 'nn_owner', x: 32, y: 46, run: true, timeout: 8 }, { cmd: 'despawn', who: 'nn_owner' }, { cmd: 'wait', sec: 1.4 },
+        { cmd: 'face', who: 'bau', to: 'player' }, { cmd: 'wait', sec: .4 }, { cmd: 'say', who: 'bau', text: '.......', ms: 1600 },
+        { cmd: 'say', who: 'player', text: '(정문 앞에 강아지 한 마리만 남았다. 한쪽 다리를 살짝 절고 있다.)', ms: 3000 },
+        { cmd: 'walk', who: 'player', x: 41, y: 44, dir: 'left', timeout: 6 }, { cmd: 'emote', who: 'bau', icon: 4 },
+        { cmd: 'say', who: 'bau', text: '....왈. 때리는 사람, 아니지. 그치.', ms: 2600 },
+        { cmd: 'say', who: 'player', text: '안 때려. 누구 기다려?', ms: 1800 },
+        { cmd: 'say', who: 'bau', text: '그 집 사람. 기다리라고 했어. 바우, 착하게 기다리는 중이야.', ms: 3000 },
+        { cmd: 'say', who: 'bau', text: '바우가 아파서 그래. 다리 다 나으면 데리러 올 거야. ....그치.', ms: 3200 },
+        { cmd: 'wait', sec: 1 }, { cmd: 'say', who: 'player', text: '(무슨 대답을 해야 할지 몰랐다.)', ms: 2200 },
+        { cmd: 'say', who: 'bau', text: '킁. 킁킁. ....사람 냄새, 나쁜 냄새 아니다.', ms: 2600 },
+        { cmd: 'say', who: 'bau', text: '바우는 여기 있을게. 정문 앞. 사람, 또 와도 돼.......', ms: 2800 },
+        { cmd: 'emote', who: 'bau', icon: 7 }, { cmd: 'wait', sec: .6 }]);
+    } },
+  // 카엘: 해 질 녘 본관 앞 등불이 하나씩 꺼지고, 등불을 든 새 등불지기가 다가와요 → 「원래 이런 얼굴이에요」
+  kael: { map: 'campus', pl: [42, 45], toast: '카엘은 낮엔 도서관 서고에서 졸고, 저녁 · 밤엔 등불을 들고 본관을 돌아요',
+    async play(C){ const nm = nnName('kael');
+      await C.cut([{ cmd: 'player', x: 42, y: 45, dir: 'up' }, { cmd: 'cam', x: 43, y: 43 }, { cmd: 'wait', sec: .6 },
+        { cmd: 'fx', kind: 'dark', v: .35, wait: .6 }, { cmd: 'fx', kind: 'dark', v: .6, wait: .8 },
+        { cmd: 'say', who: 'player', text: '....등불이 다 꺼졌네. 아무것도 안 보여.......', ms: 2400 },
+        C.sp(48, 41, 'left'), { cmd: 'fx', kind: 'dark', v: .3 }, { cmd: 'walk', who: 'kael', x: 44, y: 44, timeout: 8 }, { cmd: 'face', who: 'kael', to: 'player' },
+        { cmd: 'say', who: 'kael', text: '늦었네요. 이 시간엔 등불이 금방 꺼져요.', ms: 2600 },
+        { cmd: 'say', who: 'kael', text: '....같이 가요. 길은 제가 밝힐게요.', ms: 2400 },
+        { cmd: 'say', who: 'player', text: '(표정이 하나도 안 바뀐다. 혹시 화가 난 걸까.)', ms: 2600 },
+        { cmd: 'say', who: 'kael', text: '화난 거 아니에요. 원래 이런 얼굴이에요.', ms: 2600 },
+        { cmd: 'say', who: 'kael', text: `오늘부터 학교 등불을 돌보게 된 ${nm}이에요. 해가 지면 등불을 켜고, 꺼진 데가 있으면 다시 켜요.`, ms: 3800 },
+        { cmd: 'fx', kind: 'light' }, { cmd: 'sfx', id: 'pop' }, { cmd: 'emote', who: 'player', icon: 9 },
+        { cmd: 'say', who: 'player', text: '와. 한 번에 다 켜졌어요.', ms: 2000 },
+        { cmd: 'say', who: 'kael', text: '등불도 사람처럼, 누가 불러 주면 금방 깨어나요.', ms: 2800 },
+        { cmd: 'say', who: 'kael', text: '낮에는 도서관 서고에 있어요. 모르는 게 있으면 물어보세요. 저도 모르면.... 같이 찾아봐요.', ms: 3800 },
+        { cmd: 'say', who: 'kael', text: '그럼, 조심히 들어가요. 오늘 밤은 바람이 차요.......', ms: 2800 },
+        { cmd: 'walk', who: 'kael', x: 50, y: 41, timeout: 8 }, { cmd: 'despawn', who: 'kael' }, { cmd: 'wait', sec: .4 }]);
+    } },
+  // 아르투아: 마차 정류장에서 내리다가 둘둘 만 별 지도를 와르르 떨어뜨려요 → 같이 주워 주고 첫인사
+  artua: { map: 'campus', pl: [20, 43], toast: '아르투아는 낮엔 도서관 서고에서 지도를 고치고, 밤엔 별 보는 언덕에 있어요',
+    async play(C){ const X = 17, Y0 = 31, Y1 = 38, cv = nnCoach(), nm = nnName('artua');
+      await C.cut([{ cmd: 'player', x: 20, y: 43, dir: 'up' }, { cmd: 'cam', x: 18, y: 40 }, { cmd: 'wait', sec: .6 }]);
+      sfx('step'); for (let k = 0; k <= 20 && !C.skip(); k++){ const t = 1 - (1 - k / 20) ** 2; C.PR.coach = nnPr({ id: 'nncoach' }, cv, X, Y0 + (Y1 - Y0) * t, 32, 56); C.put(); await famSleep(70); }
+      C.PR.coach = nnPr(C.PR.coach || { id: 'nncoach' }, cv, X, Y1, 32, 56); C.put();
+      await C.cut([C.sp(18, 39, 'down'), { cmd: 'sfx', id: 'step' }, { cmd: 'wait', sec: .4 }, { cmd: 'sfx', id: 'pop' }]);
+      [[17, 41], [19, 42], [21, 41]].forEach(([x, y], i) => { C.PR['map' + i] = nnPr({ id: 'nnmap' + i }, nnScroll(i), x, y, 8, 6); }); C.put();   // 별 지도가 와르르
+      await C.cut([{ cmd: 'emote', who: 'artua', icon: 4 }, { cmd: 'say', who: 'artua', text: '아, 죄, 죄송해요. 지도가.......', ms: 2200 }]);
+      for (let k = 0; k <= 16 && !C.skip(); k++){ C.PR.coach = nnPr(C.PR.coach, cv, X - k * .7, Y1, 32, 56); C.put(); await famSleep(60); }   // 마차는 떠나요
+      delete C.PR.coach; C.put();
+      await C.cut([{ cmd: 'say', who: 'player', text: '같이 주울게요.', ms: 1600 }, { cmd: 'walk', who: 'player', x: 20, y: 41, dir: 'left', timeout: 6 }]);
+      [0, 1, 2].forEach(i => delete C.PR['map' + i]); C.put(); sfx('pick');
+      await C.cut([{ cmd: 'face', who: 'artua', to: 'player' },
+        { cmd: 'say', who: 'artua', text: '고맙습니다. ....별 지도예요. 이 학교 관측실 지도를 고치러 왔어요.', ms: 3200 },
+        { cmd: 'say', who: 'artua', text: '일이 끝나면 또 다른 데로 가요. 잠깐만 있을 거예요.', ms: 2800 },
+        { cmd: 'say', who: 'player', text: '관측실이면 시계탑 쪽이에요. 저기, 제일 높은 거요.', ms: 2600 },
+        { cmd: 'say', who: 'artua', text: '아. ....저렇게 큰 걸 못 봤네요. 하늘만 보고 와서요.', ms: 2800 },
+        { cmd: 'say', who: 'artua', text: `저는 ${nm}예요. 지도 그리는 사람이요. ....아, 이름을 너무 작게 말했네요. 죄송해요.`, ms: 3600 },
+        { cmd: 'say', who: 'artua', text: '별이 예쁜 밤에는 언덕에 있을 거예요. 혹시 길을 잃으면.... 지도는 많아요.......', ms: 3400 },
+        { cmd: 'walk', who: 'artua', x: 27, y: 41, timeout: 8 }, { cmd: 'despawn', who: 'artua' }, { cmd: 'wait', sec: .4 }]);
+    } },
+  // 그레고: 낡은 풍차 옆 창고 앞 의자에서 자는 사람 → 날개가 멈춘 풍차를 귀찮다며 왼손으로 툭 쳐서 돌려요
+  grego: { map: 'campus', pl: [45, 97], toast: '그레고는 풍차 옆 창고에 살아요. 저녁엔 광장 벤치에서 졸고 있대요',
+    async play(C){ const nm = nnName('grego');
+      await C.cut([{ cmd: 'player', x: 45, y: 97, dir: 'right' }, { cmd: 'cam', x: 47, y: 95 }, C.sp(49, 95, 'down'), { cmd: 'wait', sec: .8 },
+        { cmd: 'say', who: 'grego', text: '....쿨.......', ms: 1800 },
+        { cmd: 'say', who: 'player', text: '(풍차 옆에서 누가 자고 있다. 머리가 새 둥지 같다.)', ms: 2600 },
+        { cmd: 'walk', who: 'player', x: 47, y: 96, dir: 'right', timeout: 6 }, { cmd: 'say', who: 'player', text: '저기요. 여기서 자면 감기 걸려요.', ms: 2200 },
+        { cmd: 'face', who: 'grego', to: 'player' },
+        { cmd: 'say', who: 'grego', text: '어이, 학생. 아저씨 지금 바빠.', ms: 2200 },
+        { cmd: 'say', who: 'grego', text: '....자는 거 아니야. 눈 감고 생각하는 거야.', ms: 2600 },
+        { cmd: 'sfx', id: 'step' }, { cmd: 'say', who: 'player', text: '그런데 풍차 날개가 멈춰 있어요. 아까부터 끽끽 소리가 나요.', ms: 3000 },
+        { cmd: 'say', who: 'grego', text: '....귀찮아.', ms: 1600 }, { cmd: 'wait', sec: 1.4 },
+        { cmd: 'say', who: 'grego', text: '아, 쳐다보지 마. 그 눈으로 쳐다보면 아저씨가 나쁜 사람 같잖아.', ms: 3200 },
+        { cmd: 'walk', who: 'grego', x: 48, y: 93, dir: 'up', timeout: 6 }, { cmd: 'wait', sec: .4 }, { cmd: 'sfx', id: 'pick' }, { cmd: 'sfx', id: 'pop' },
+        { cmd: 'say', who: 'grego', text: '왼손으로 툭.', ms: 1600 }, { cmd: 'emote', who: 'player', icon: 4 },
+        { cmd: 'say', who: 'player', text: '....돌아가요. 진짜 돌아가요.', ms: 2000 },
+        { cmd: 'face', who: 'grego', to: 'player' },
+        { cmd: 'say', who: 'grego', text: '이 녀석은 가끔 툭 쳐 줘야 돌아. 사람도 그렇고.', ms: 2800 },
+        { cmd: 'say', who: 'grego', text: `오늘부터 학교 잡일 맡은 ${nm}. 문고리든 지붕이든 고칠 거 있으면 가져와.`, ms: 3400 },
+        { cmd: 'say', who: 'grego', text: '....내일. 오늘은 바빠.', ms: 2000 },
+        { cmd: 'say', who: 'player', text: '자느라요?', ms: 1400 },
+        { cmd: 'say', who: 'grego', text: '생각하느라. 아까 말했잖아.......', ms: 2400 },
+        { cmd: 'walk', who: 'grego', x: 49, y: 95, dir: 'down', timeout: 6 }, { cmd: 'wait', sec: .6 }]);
+    } },
 };
 async function nnIntro(id){
   const S = NN_ARR[id], d = NPC_DEF.find(n => n.id === id); if (!S || !d || nnOn) return;
@@ -12559,7 +12649,7 @@ async function nnIntro(id){
   const I = NPC_IMG_STAGE || (NPC_IMG_STAGE = Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` }));
   if (!I.complete) await new Promise(r => { I.addEventListener('load', r, { once: true }); setTimeout(r, 3000); });
   let skip = false; const sk = document.createElement('button'); sk.className = 'btn sm mqskip'; sk.textContent = '건너뛰기'; sk.onclick = () => { skip = true; }; $('#stage').appendChild(sk);
-  const PR = {}, C = { PR, put: () => World.setProps(S.map, Object.values(PR), 'nnarr'), skip: () => skip, sp: (x, y, dir) => ({ cmd: 'spawn', who: id, name: d.name, spr: d.spr, x, y, dir }),
+  const PR = {}, C = { PR, put: () => World.setProps(S.map, Object.values(PR), 'nnarr'), skip: () => skip, sp: (x, y, dir) => ({ cmd: 'spawn', who: id, name: nnName(id), ...(d.av ? { av: npcAv({ ...d, ...(npcOver[id] || {}) }) } : { spr: d.spr }), x, y, dir }),   // 사람 친구는 아바타로
     cut: cmds => skip ? Promise.resolve() : World.cut(cmds.flatMap(c => c.cmd === 'spawn' ? [c, { cmd: 'sfx', id: '__keep' }] : [c]), { sfx: k => k === '__keep' ? World.cutKeep(id) : sfx(k), skip: () => skip }) };   // 새 친구는 장면 사이에도 남아 있어요 (끝나면 cutClear)
   try { World.setView(150); await famSleep(300); unc(); await famSleep(500); await S.play(C); }
   catch(e){ errReport('newnpc', `새 친구(${id}) 도착 연출 오류: ` + e.message, e.stack || ''); }
@@ -12587,7 +12677,7 @@ function adminNewNpcHTML(){
       ${not.length && (c.open || c.at) ? `<div class="s" style="width:100%">아직 못 만난 학생: ${not.map(id => esc(P[id].nick)).join(', ')}</div>` : ''}${IN.length ? `<div class="s" style="width:100%">만난 학생: ${IN.map(id => `${esc(P[id].nick)}${P[id].nnpc[n].at ? ' ' + dt(P[id].nnpc[n].at) : ''}`).join(' · ')}</div>` : ''}</div>`; }).join('');
   const on = NEWNPC.filter(n => (C[n] || {}).open).map(n => NPC_DEF.find(x => x.id === n).name);
   return `<div class="adcard sdad"><div class="abhead"><b>새 친구 맞이하기</b><span class="s">${on.length ? '여는 중: ' + on.join(' · ') : '여는 친구 없음'}</span></div>${rows}
-    <div class="s" style="margin-top:6px">한 명씩 따로 시작해요 (도도 → 셀린 → 본). 시작하면 학교 · 마을 · 그림자 골목을 걷던 학생마다 화면이 어두워지며 도착 장면이 한 번 나와요. 도도는 마차 정류장 사과 상자에서, 셀린은 정류장 막차에서, 본은 해 질 녘 묘지 문 앞으로 와요. 장면을 보기 전에는 그 친구가 지도 · 관계 목록에 안 보여요. 끝내기를 눌러도 이미 만난 학생은 그대로예요.</div></div>`;
+    <div class="s" style="margin-top:6px">한 명씩 따로 시작해요 (도도 → 셀린 → 본 → 바우 → 카엘 → 아르투아 → 그레고). 시작하면 학교 · 마을 · 그림자 골목을 걷던 학생마다 화면이 어두워지며 도착 장면이 한 번 나와요. 도도는 마차 정류장 사과 상자에서, 셀린은 정류장 막차에서, 본은 해 질 녘 묘지 문 앞으로 와요. 바우는 정문 앞에 버려지고, 카엘은 등불이 꺼진 본관 앞에 등불을 들고, 아르투아는 정류장 마차에서 별 지도를 떨어뜨리며, 그레고는 풍차 옆에서 자다가 나타나요. 장면을 보기 전에는 그 친구가 지도 · 관계 목록에 안 보여요. 끝내기를 눌러도 이미 만난 학생은 그대로예요.</div></div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-nna]'); if (!b) return; const id = b.dataset.id, d = NPC_DEF.find(x => x.id === id); if (!d || !NEWNPC.includes(id)) return;
   if (b.dataset.nna === 'open'){ if (confirm(`「${d.name}」 맞이하기를 시작할까요? 학생마다 도착 장면이 한 번 나와요.`)) GDB.set('newnpc/' + id, { open: true, id: ((AD.nnctl || {})[id] && AD.nnctl[id].id) || now2(), at: now2() }).then(() => toast(`${d.name} 맞이하기를 시작했어요`)); }
