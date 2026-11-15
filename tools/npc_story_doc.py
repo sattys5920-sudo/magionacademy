@@ -5,14 +5,16 @@ from josa import VAR as JVAR, pick as jpick
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 D = os.path.join(ROOT, 'public', 'data', 'npc')
 NPCS = [('nabi', '나비', '매점 고양이'), ('batri', '배트리', '우체부 박쥐'), ('kappa', '캇파', '낚시꾼 갓파'), ('aula', '아울라', '사서 부엉이'), ('mandi', '맨디', '정원사 맨드레이크'),
-        ('jipsin', '스트로', '꼬마 허수아비'), ('sera', '세라', '양호 선생님'), ('madeleine', '마들렌', '과자 교실 제빵사'), ('stella', '스텔라', '점성술사'), ('leo', '레오', '사육장 관리인'), ('otumo', '오투모', '떨어진 로봇')]
+        ('jipsin', '스트로', '꼬마 허수아비'), ('sera', '세라', '양호 선생님'), ('madeleine', '마들렌', '과자 교실 제빵사'), ('stella', '스텔라', '점성술사'), ('leo', '레오', '사육장 관리인'), ('otumo', '오투모', '떨어진 로봇'),
+        ('bau', '바우', '떠돌이 강아지'), ('kael', '카엘', '밤의 등불지기'), ('artua', '아르투아', '별 지도 그리는 사람'), ('grego', '그레고', '학교 잡일꾼')]
+if os.environ.get('NPC_DOC_ONLY'): NPCS = [x for x in NPCS if x[0] in os.environ['NPC_DOC_ONLY'].split(',')]   # 일부 NPC만
 NAME = {i: n for i, n, _ in NPCS}
 PLACES = {p['id']: p['name'] for p in json.load(open(os.path.join(D, 'places.json')))}
 CAST = json.load(open(os.path.join(D, 'cast.json')))
 ITEMS = json.load(open(os.path.join(ROOT, 'tools', 'npc_items.json')))
 T = {'morning': '아침', 'day': '낮', 'evening': '저녁', 'night': '밤'}
 W = {'clear': '맑음', 'rain': '비', 'fog': '안개', 'snow': '눈', 'storm': '폭풍우'}
-VARS = {'player': '민준', 'sera.name': '세라', 'madeleine.name': '마들렌', 'stella.name': '스텔라', 'leo.name': '레오', 'sera.husband': '루카스', 'npc.husband': '루카스'}
+VARS = {'player': '민준', 'sera.name': '세라', 'madeleine.name': '마들렌', 'stella.name': '스텔라', 'leo.name': '레오', 'kael.name': '카엘', 'artua.name': '아르투아', 'grego.name': '그레고', 'sera.husband': '루카스', 'npc.husband': '루카스'}
 e = lambda s: html.escape(str(s), quote=False)
 BASE = os.environ.get('NPC_DOC_BASE', '1d9de07')   # 이 판과 비교해서 새로 생기거나 바뀐 줄을 노랗게 (빈 값이면 표시 안 함)
 import subprocess
