@@ -1,10 +1,11 @@
 // 하트 이야기를 실제 엔진(evPlay)으로 처음부터 끝까지 자동으로 넘겨서, 중간에 멈추는 이야기를 찾아요
 //   node tools/story_run.js <목업 포트> [동시에 띄울 창 수=5] [선택지: first|last|mix] [NPC 목록 쉼표로 · 비우면 전부] [처음 ♥ 번호=1]
 //   목업: bash tools/ui_mock.sh <저장소> <포트> (window.__T.evPlay · npcGet 손잡이)
-const { chromium } = require('/opt/node-tools/node_modules/playwright'); const fs = require('fs'), path = require('path');
+const { chromium } = (() => { try { return require('/opt/node-tools/node_modules/playwright'); } catch(e){ return require('playwright'); } })(); const fs = require('fs'), path = require('path');
 const PORT = process.argv[2] || 8820, PAR = +(process.argv[3] || 5), MODE = process.argv[4] || 'mix';
 const spec = fs.readFileSync(path.join(__dirname, '../tests/ui.spec.js'), 'utf8'); const seed = eval('(' + spec.match(/const seed = (\{.*\});\n/)[1] + ')');
-const NPCS = ['nabi', 'batri', 'kappa', 'aula', 'mandi', 'jipsin', 'sera', 'madeleine', 'stella', 'leo'];
+const NPCS = ['nabi', 'batri', 'kappa', 'aula', 'mandi', 'jipsin', 'sera', 'madeleine', 'stella', 'leo', 'bau', 'kael', 'artua', 'grego'];
+seed.players.me1.nnpc = Object.assign(seed.players.me1.nnpc || {}, ...['bau', 'kael', 'artua', 'grego'].map(id => ({ [id]: { met: 1, at: 1 } })));   // 새 친구는 만난 걸로
 const ONLY = (process.argv[5] || '').split(',').filter(Boolean), FROM = +(process.argv[6] || 1);
 const jobs = []; NPCS.filter(n => !ONLY.length || ONLY.includes(n)).forEach((n, i) => { for (let k = (i === 0 && ONLY.length ? FROM : 1); k <= 10; k++) jobs.push([n, k]); });
 const res = [];
