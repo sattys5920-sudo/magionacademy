@@ -4846,9 +4846,9 @@ function renderCook(){
 // ===== 서브 NPC 10명: 하루 한 번 대화 ♥, 대화 +30 · 선물(좋아함 +40·보통 +20·싫어함 −30), ♥2·5·8·10마다 이야기 장면과 보상 =====
 // 동물은 art/npcs.png (tools/iso/npc_art.py) 그림, 사람은 아바타. 관리자 페이지에서 고친 내용(npcs/<id>)이 이 기본값 위에 덮여요
 // 호감도 100점 = ♥1, ♥10까지 (예전엔 3점 = ♥1). me.npc[id] = { p 옛 점수, t 대화한 날, g 선물한 날, s 본 장면 [2,5,…] }
-const NPC_ART_V = 8;
+const NPC_ART_V = 9;
 const NPC_ROWS = 17;   // art/npcs 줄 수 (14 도도 · 15 셀린 · 16 본: tools/newnpc/newnpc_sheet.py)
-const NPC_DATA_V = 5;   // data/npc 캐시 버전
+const NPC_DATA_V = 6;   // data/npc 캐시 버전
 // LPC NPC 그림(art/npcs.png: 한 줄 = 한 명, 64칸 20개)에서 얼굴 부분만 크게 (초상화)
 const NPC_FACE = { 0: [13, 14, 31], 1: [18, 12, 29], 2: [20, 16, 28], 3: [17, 18, 31], 4: [19, 23, 32], 5: [12, 9, 39], 13: [14, 20, 35], 14: [21, 27, 21], 15: [18, 15, 27], 16: [16, 15, 30] };   // 동물·허수아비는 사람과 머리 위치가 달라요 (나비·배트리·캇파·아울라·맨디·스트로 얼굴 틀: x, y, 크기)
 const npcFace = (spr, size = 48) => {   // 액자 크기가 CSS로 바뀌어도(관계 화면 40px 등) 얼굴이 가운데에 오도록 그림 크기·위치를 퍼센트로 계산해요
@@ -4914,8 +4914,25 @@ const NPC_DEF = [
     greet: [['「바람 불면 노래하고, 비가 오면 춤을 추네」. 어서 와, 길손.', '오늘은 길손이 와서 축하해.'], ['우리 길손 왔네. 「어제 온 손 오늘도 와」.', '오늘 광장 공연 성적은 웃음 셋, 울음 하나. 이긴 셈이야.'], ['{player}, 오늘 조용히 있기 연습 했어. 12 초.', '단장님 웃음소리가 요즘 자꾸 생각나.'], ['{player}, 첫 관객 자리 비워 뒀어.', '오늘은 넘어져도 되는 날이야. 그래도 옆에 앉아 있을게.']],
     story: { 2: ['「달무리 유랑 극단」 시절 얘기, 해 줄까.'], 5: ['위로하는 노래는.... 어떻게 부르는 걸까.'], 8: ['오늘은 끝까지 앉아 있을게.'], 10: ['「곁에」. 처음으로 웃기지 않는 노래를 지었어.'] },
     reward: { 2: { coin: 40 }, 5: { mana: 10 }, 8: { coin: 150 }, 10: { coin: 300, mana: 20 } } },
+  // 새 친구 넷 (바우 · 카엘 · 아르투아 · 그레고): NEWNPC 에 있어서 도착 장면(NN_ARR)이 생기기 전까지 학생에게는 안 보여요 · 바우 그림 art/npcs 18 번째 줄 · 사람 셋은 avData · 대사와 하트 이야기는 data/npc/<id>
+  { id: 'bau', wander: true, name: '바우', title: '정문 앞 떠돌이 강아지', spr: 17, h: 22, map: 'campus', x: 44, y: 47, likes: ['d_bonesoup', 'd_vampsteak', 'wool', 'g_cotton'], dislikes: ['pt068', 'g_thunder'],
+    greet: [['....왈.', '킁. 킁킁. ....사람 냄새.'], ['왈. 사람 왔다.', '{player}. 맞지? 바우 외웠어.'], ['{player}. 바우 오늘 다리 안 절었어. 봤어?', '쓴 사람, 좋은 사람이야. 약은 쓴데, 손은 따뜻해.'], ['왈. {player} 왔다. 오늘도 와 줬다.', '바우 집, 오늘도 따뜻했어.']],
+    story: { 2: ['손바닥 내밀어 줘. ....킁. 응, 그 손이다.'], 5: ['쓴 사람 약, 사실 엄청 썼어. 비밀이야. 쓴 사람한텐 맛있다고 했어.'], 8: ['다 나은 날, 길 끝에서 아무도 안 왔지. 그런데 바우 옆엔 있었어.'], 10: ['바우 집, 오늘도 좋아. {player}도 놀러 와. 집들이야.'] },
+    reward: { 2: { coin: 40 }, 5: { mana: 10 }, 8: { coin: 150 }, 10: { coin: 300, mana: 20 } } },
+  { id: 'kael', wander: true, name: '카엘', title: '밤의 등불지기', av: true, look: 1, avData: {'body': 1, 'face': 8, 'top': 59, 'legs': 3, 'feet': 4, 'cape': 0, 'neck': 0, 'hat': 0, 'acc': 0, 'skinC': 0, 'hairC': 4, 'eyeC': 3, 'legsC': 3, 'feetC': 0, 'topC': 22, 'lip': 0, 'hair': 72}, map: 'campus', x: 44, y: 47, likes: ['d_cornsoup', 'd_pseedsoup', 'g_evening', 'pt079'], dislikes: ['g_bell', 'pt029'],
+    greet: [['....학생. 무슨 일 있어요?', '늦었네요. 이 시간엔 등불이 금방 꺼져요. ....같이 가요.'], ['{player} 학생, 왔어요.', '오늘은 잘 잤나 봐요. 눈 밑이 밝아요.'], ['작은 불씨. ....아, {player} 학생.', '시험 기간이죠. 빈 교실에 등불 켜 둘게요.'], ['작은 불씨. 기다렸어요.', '오늘 밤 공부방엔 수프도 있어요. 제가 끓였어요. 이번엔 안 짜요.']],
+    story: { 2: ['뿌리는 괜찮아요. ....그 쪽지 쓰는 데 생각보다 오래 걸렸어요.'], 5: ['그날 교실 얘기, 학생한테만 했어요. 그래서 조금 가벼워졌어요.'], 8: ['{grego.name} 씨 창고에 등불 그림 잔이 아직 있어요. 학생 잔도 하나 생겼대요.'], 10: ['밤 공부방, 오늘도 열어요. 작은 불씨가 오면 등불 하나 더 켤게요.'] },
+    reward: { 2: { coin: 40 }, 5: { mana: 10 }, 8: { coin: 150 }, 10: { coin: 300, mana: 20 } } },
+  { id: 'artua', wander: true, name: '아르투아', title: '별 지도 그리는 사람', av: true, look: 1, avData: {'body': 1, 'face': 3, 'top': 53, 'legs': 3, 'feet': 2, 'cape': 0, 'neck': 2, 'neckC': 11, 'hat': 0, 'acc': 2, 'skinC': 0, 'hairC': 23, 'eyeC': 0, 'legsC': 8, 'feetC': 1, 'topC': 0, 'lip': 0, 'hair': 47}, map: 'campus', x: 44, y: 47, likes: ['pt079', 'd_clovertea', 'pt100'], dislikes: ['pt026', 'pt068'],
+    greet: [['아, 안녕하세요. ....아뇨, 아무것도 아니에요. 별이 예뻐서요.', '죄송해요. 제가 길을 막고 있었네요.'], ['{player} 씨, 안녕하세요. 오늘은 인사를 한 번만 할게요. 연습했어요.', '{stella.name} 님이요. ....아, 그냥 이름을 한번 말해 본 거예요. 아무것도 아니에요.'], ['{player} 씨, 오늘 밤은 동쪽 하늘이 좋아요. 같이 보러 가실래요?', '골목마다 별 이름을 붙여 봤어요. 이제 이 마을이 하늘처럼 보여요.'], ['{player}, 왔어요. 오늘은 제가 먼저 인사하려고 기다렸어요.', '이제는 말이 끝까지 나와요. 이상하죠. 예전엔 반도 못 했는데.']],
+    story: { 2: ['그날 아침 떨어뜨린 지도들, 아직도 모서리가 조금 구겨져 있어요.'], 5: ['가방 속 편지들, 다른 사람한테는 비밀이에요. 첫 줄이 다 부끄러워서요.'], 8: ['앞으로 걸어갈 길을 그려 드린다고 했어요. 제가요. 말로요.'], 10: ['정류장에서 마차가 떠나는 걸 처음으로 배웅만 했어요. 타지 않고요.'] },
+    reward: { 2: { coin: 40 }, 5: { mana: 10 }, 8: { coin: 150 }, 10: { coin: 300, mana: 20 } } },
+  { id: 'grego', wander: true, name: '그레고', title: '학교 잡일꾼', av: true, look: 1, avData: {'body': 1, 'hair': 61, 'face': 8, 'top': 24, 'legs': 3, 'feet': 4, 'cape': 0, 'neck': 1, 'neckC': 7, 'hat': 0, 'acc': 0, 'skinC': 1, 'hairC': 17, 'eyeC': 6, 'legsC': 3, 'feetC': 1, 'topC': 4, 'lip': 12}, map: 'campus', x: 44, y: 47, likes: ['d_clovertea', 'g_chamo', 'p_blue'], dislikes: ['p_dawn', 'pt029'],
+    greet: [['어이, 학생. 아저씨 지금 바빠. ....자는 거 아니야. 눈 감고 생각하는 거야.', '....귀찮아.'], ['어이, 학생. 왔냐. 앉아. 의자는 그거 말고 저거. 그건 다리가 짧아.', '또 왔냐. ....앉아. 차 한 잔은 공짜다. 오늘만.'], ['{player}, 왔네. 차 따라 놨어. 식기 전에 마셔.', '오늘은 눈 뜨고 있었어. {player} 올 것 같아서. ....농담이야. 반만.'], ['어, 단골 왔네. 앉아. 네 잔 꺼내 놨어.', '{player}, 오늘은 뭐 고쳐 줄까. 없으면 그냥 앉아 있어. 그것도 괜찮아.']],
+    story: { 2: ['{madeleine.name} 바구니가 오늘도 왔어. 비어서 돌아갔고.'], 5: ['공예 교실 의자들 요즘 얌전하더라. 뛰는 건 학생 의자 하나뿐이야.'], 8: ['비 오는 밤엔 창고 불 켜 둘게. 오고 싶으면 와.'], 10: ['단골 왔네. 앉아.'] },
+    reward: { 2: { coin: 40 }, 5: { mana: 10 }, 8: { coin: 150 }, 10: { coin: 300, mana: 20 } } },
 ];
-const NEWNPC = ['dodo', 'selin', 'bone'];   // 새 친구 맞이하기 순서 (관리자 카드 · 이벤트 연출 차례): 만나기 전엔 지도 · 관계 목록에서 빠져요
+const NEWNPC = ['dodo', 'selin', 'bone', 'bau', 'kael', 'artua', 'grego'];   // 새 친구 맞이하기 순서 (관리자 카드 · 이벤트 연출 차례): 만나기 전엔 지도 · 관계 목록에서 빠져요
 const nnMet = id => !!(typeof me !== 'undefined' && me && me.nnpc && me.nnpc[id] && me.nnpc[id].met);
 const nnHide = id => NEWNPC.includes(id) && otHidden(id);   // 새 친구를 아직 못 만났으면 이벤트 목록(뜨개 인형 · 단골 수첩 · 책갈피 등)에서도 빼요
 const nnMetIn = (p, id) => !NEWNPC.includes(id) || !!(p && p.nnpc && p.nnpc[id] && p.nnpc[id].met);   // 다른 학생 기록(관리자 · 편지 배정)에서 그 학생이 새 친구를 만났는지
@@ -4999,6 +5016,10 @@ const ROUTINE = {
   dodo:      { morning: 'clock_top', day: 'clock_top', evening: 'lantern_market', night: 'clock_top' },   // 시계탑 꼭대기에서 마을 구경 · 저녁엔 등불 시장 경매대
   selin:     { morning: 'market_alley', day: 'tailor_shop', evening: 'tailor_shop', night: 'tailor_shop' },   // 아침엔 시장 뒷골목에서 실과 천을 사고, 나머지는 그림자 골목 수선집
   bone:      { morning: 'pumpkin_field', day: 'village_square', evening: 'cemetery', night: 'cemetery' },   // 아침엔 호박밭 가장자리 · 낮엔 광장 공연 · 저녁 · 밤엔 묘지
+  bau:       { morning: 'main_hall', day: 'main_hall', evening: 'main_hall', night: 'menagerie' },   // 낮엔 학교 정문 앞에서 기다리고, 밤엔 사육장 처마 밑 낡은 상자에서 자요
+  kael:      { morning: 'library_stacks', day: 'library_stacks', evening: 'main_hall', night: 'main_hall' },   // 낮엔 서고에서 책 펴 놓고 졸고, 저녁 · 밤엔 등불 들고 본관을 돌아요
+  artua:     { morning: 'dorm_street', day: 'library_stacks', evening: 'village_square', night: 'hill_top' },   // 숙소 → 서고에서 지도 작업 → 광장 → 밤엔 별 보는 언덕 (스텔라가 보이는 자리)
+  grego:     { morning: 'old_windmill', day: 'old_windmill', evening: 'village_square', night: 'old_windmill' },   // 풍차 옆 창고 앞 의자에서 낮잠 · 저녁엔 광장 벤치
 };
 const NL = { places: {}, cast: {}, prof: {}, evs: {}, ready: null };   // 불러온 데이터
 NL.ready = (async () => {
@@ -5613,7 +5634,7 @@ const KO_UNIT = /\d+(일|번|째|개|마리|년|명|시|분|초|장|권|살|층|
 const KO_WRONG = ['몇 일', '몇일', '금새', '왠일', '웬지', '어떻해', '할께', '설레임', '바램', '일부로', '오랫만', '구지', '역활', '희안', '되요', '안돼', '됬', '될께', '갈께', '줄께', '볼께', '할려고', '않되', '않돼'];
 const KO_GENDER = /(?<![가-힣])(그녀|그는|그가|그를|그의|아저씨|아줌마|언니|오빠|누나|형)(?=$|[^가-힣]|[은는이가을를의도한께에님아야])/;
 const KO_NAMES = ['세라', '루카스', '마들렌', '스텔라', '레오'];
-const HUMAN_NPC = ['sera', 'madeleine', 'stella', 'leo'];
+const HUMAN_NPC = ['sera', 'madeleine', 'stella', 'leo', 'kael', 'artua', 'grego'];
 function koCheck(t, human){
   const w = [], s = String(t || '');
   (s.match(KO_UNIT) || []).forEach(m => w.push(`숫자와 단위를 띄어 써요 「${m}」`));
@@ -12549,7 +12570,7 @@ async function nnIntro(id){
   }
 }
 function nnTick(){
-  if (!me || nnOn || window.__adm) return; const id = NEWNPC.find(k => nnCtl[k] && nnCtl[k].open && !nnMet(k)); if (!id) return;
+  if (!me || nnOn || window.__adm) return; const id = NEWNPC.find(k => NN_ARR[k] && nnCtl[k] && nnCtl[k].open && !nnMet(k)); if (!id) return;   // 도착 장면이 아직 없는 친구는 건너뛰어요
   const t = World.meTile && World.meTile(); if (!t || !['campus', 'town', 'quarter'].includes(t.m) || uiBusy() || !(World.meAt && World.meAt())) return;   // 학교 · 마을 · 그림자 골목을 걷고 있으면
   if (evTurn('nn_' + id)) nnIntro(id);
 }
@@ -12561,7 +12582,7 @@ window.__nn = { intro: id => nnIntro(id), ctl: () => nnCtl, met: id => nnMet(id)
 function adminNewNpcHTML(){
   const C = AD.nnctl || {}, P = AD.players || {}, ids = Object.keys(P).filter(id => P[id]?.nick);
   const dt = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; };
-  const rows = NEWNPC.map(n => { const d = NPC_DEF.find(x => x.id === n), c = C[n] || {}, met = id => !!(P[id].nnpc && P[id].nnpc[n] && P[id].nnpc[n].met), IN = ids.filter(met), not = ids.filter(id => !met(id));
+  const rows = NEWNPC.filter(n => NN_ARR[n]).map(n => { const d = NPC_DEF.find(x => x.id === n), c = C[n] || {}, met = id => !!(P[id].nnpc && P[id].nnpc[n] && P[id].nnpc[n].met), IN = ids.filter(met), not = ids.filter(id => !met(id));
     return `<div class="sdarow" style="display:block"><div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap"><span style="white-space:nowrap"><b>${esc(d.name)}</b> <span class="s">${esc(d.title)}</span></span><span class="abchips" style="align-items:center"><span>${c.open ? '여는 중' : c.at ? '닫힘' : '시작 전'}</span><span>만난 학생 <b>${IN.length}</b> / ${ids.length}</span>${c.open ? `<button class="btn sm" data-nna="close" data-id="${n}">시작 연출 끝내기</button>` : `<button class="btn sm go" data-nna="open" data-id="${n}">시작하기</button>`}</span></div>
       ${not.length && (c.open || c.at) ? `<div class="s" style="width:100%">아직 못 만난 학생: ${not.map(id => esc(P[id].nick)).join(', ')}</div>` : ''}${IN.length ? `<div class="s" style="width:100%">만난 학생: ${IN.map(id => `${esc(P[id].nick)}${P[id].nnpc[n].at ? ' ' + dt(P[id].nnpc[n].at) : ''}`).join(' · ')}</div>` : ''}</div>`; }).join('');
   const on = NEWNPC.filter(n => (C[n] || {}).open).map(n => NPC_DEF.find(x => x.id === n).name);
