@@ -1348,7 +1348,8 @@ let cheers = [], glyphs = [];
 const GLYPH = {   // 작은 도트 그림 (한 글자 = 한 칸)
   heart: ['.XX.XX.', 'XRRXRRX', 'XRRRRRX', '.XRRRX.', '..XRX..', '...X...'], bat: ['X...X...X'.slice(0, 9), 'XX.XXX.XX', 'XXXXXXXXX', '.X.XXX.X.', '...X.X...'],
   star: ['...Y...', '...Y...', 'YYYWYYY', '...Y...', '...Y...'], clap: ['Y..Y..Y', '.Y.Y.Y.', '..YYY..', '.Y.Y.Y.', 'Y..Y..Y'], note: ['..XXXX', '..X..X', '..X..X', 'XXX.XXX', 'XXX.XX.'],
-  pumpkin: ['..G..', '.OOOO', 'OOOOO', 'OKOKO', '.OOO.'], ghost: ['.WWW.', 'WWWWW', 'WKWKW', 'WWWWW', 'W.W.W'], snow: ['..W..', 'W.W.W', '.WWW.', 'W.W.W', '..W..']
+  pumpkin: ['..G..', '.OOOO', 'OOOOO', 'OKOKO', '.OOO.'], ghost: ['.WWW.', 'WWWWW', 'WKWKW', 'WWWWW', 'W.W.W'], snow: ['..W..', 'W.W.W', '.WWW.', 'W.W.W', '..W..'],
+  bone: ['WW...WW', 'WWWWWWW', 'WW...WW'], lamp: ['..X..', '.XXX.', 'XOYOX', 'XYYYX', 'XOYOX', '.XXX.'], cup: ['.W.W...', 'W.W....', 'WWWWWW.', 'WWWWW.W', 'WWWWWW.', '.WWWW..'], letter: ['WWWWWWW', 'WXWWWXW', 'WWXWXWW', 'WWWXWWW', 'WWWWWWW']
 };
 const GLYPH_COL = { X: '#1A1024', R: '#FF5A7A', Y: '#FFE070', W: '#FFFFFF', O: '#FF9A3C', G: '#4FAF6F', K: '#2A1840' };
 const GLYPH_X = { bat: '#2A1840', note: '#C89AFF', heart: '#1A1024' };
