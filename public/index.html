@@ -5613,6 +5613,7 @@ function evFinish(ctx){
   if (r.coin){ me.coin += r.coin; got.push(`${r.coin}G`); } if (r.mana){ me.mana += r.mana; got.push(`마력 +${r.mana}`); } if (r.know){ got.push(`지식 +${r.know}`, ...addKnow(r.know)); }
   Object.entries(r.items || {}).forEach(([it, c]) => { const left = Math.max(0, c - ((ctx.gave || {})[it] || 0)); if (left){ me.inv[it] = (me.inv[it] || 0) + left; got.push(`${ITEM[it] || it} ×${left}`); } });   // 이야기 속에서 이미 받은 것은 두 번 주지 않아요
   (r.flags || []).forEach(f => { me.nflag = me.nflag || {}; me.nflag[f] = 1; });
+  (r.furn || []).forEach(f => { me.fbag = me.fbag || {}; me.fbag[f] = (me.fbag[f] || 0) + 1; got.push(`가구 「${(FURN_BY[f] || {}).name || f}」`); });   // ♥10 방 가구 (새 친구 넷)
   [].concat(r.perk || []).forEach(p => { me.perk = me.perk || {}; me.perk[p] = 1; got.push(PERK_KO[p] || p); });
   [].concat(r.perk || []).forEach(p => {   // 바로 받는 보상
     if (p === 'know_bonus') got.push(...addKnow(5));
