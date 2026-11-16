@@ -923,43 +923,6 @@
     "autocfg": {
       ".read": "auth != null",
       ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'"
-    },
-    "repair": {
-      ".read": "auth != null",
-      ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'",
-      "$wk": {
-        ".validate": "$wk.matches(/^[0-9]{8}$/)",
-        "c": {
-          "$id": {
-            ".validate": "$id.matches(/^[a-z]{2,10}$/)",
-            "$m": {
-              ".write": "auth != null",
-              ".validate": "$m.matches(/^[a-z0-9_]{2,16}$/) && newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 60 && ((!data.exists() && newData.val() <= 10) || (data.exists() && newData.val() >= data.val() && newData.val() <= data.val() + 10) || auth != null && auth.token.email === 'magionadmin@magionacademy.app')"
-            }
-          }
-        },
-        "by": {
-          "$id": {
-            ".validate": "$id.matches(/^[a-z]{2,10}$/)",
-            "$u": {
-              ".write": "auth != null && (auth.uid === $u || auth.token.email === 'magionadmin@magionacademy.app')",
-              ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 500 && ((!data.exists() && newData.val() <= 10) || (data.exists() && newData.val() >= data.val() && newData.val() <= data.val() + 10) || auth != null && auth.token.email === 'magionadmin@magionacademy.app')"
-            }
-          }
-        },
-        "fix": {
-          "$id": {
-            ".write": "auth != null && !data.exists() && newData.exists()",
-            ".validate": "newData.isNumber() && $id.matches(/^[a-z]{2,10}$/)"
-          }
-        },
-        "rid": {
-          ".validate": "newData.isNumber()"
-        },
-        "$other": {
-          ".validate": false
-        }
-      }
     }
   }
 }

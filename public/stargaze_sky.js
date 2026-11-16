@@ -20,7 +20,7 @@ const STARSKY = (() => {
   }
 
   // 언덕에 선 학생들: 플레이어가 만든 캐릭터를 열 맞춰 세워요 (하늘을 보느라 뒷모습). 자기 별을 켠 학생은 손을 들고 흔들어요
-  //   S.crowd = [{ img: 걷기 그림줄(64칸 × 20), lit: 자기 별을 켰는지, mag: 맡은 별 밝기, nostar: 머리 위 별 없음 }]
+  //   S.crowd = [{ img: 걷기 그림줄(64칸 × 20), lit: 자기 별을 켰는지, mag: 맡은 별 밝기 }]
   function skinOf(g2, img){ const c = document.createElement('canvas'); c.width = c.height = 64; const q = c.getContext('2d'); q.drawImage(img, 0, 0, 64, 64, 0, 0, 64, 64); const d = q.getImageData(29, 27, 6, 3).data, px = []; for (let i = 0; i < d.length; i += 4) px.push([d[i], d[i + 1], d[i + 2]]); px.sort((a, b) => (a[0] + a[1] + a[2]) - (b[0] + b[1] + b[2])); return px[px.length >> 1]; }
   function person(img, lit, t, k){
     const c = document.createElement('canvas'); c.width = c.height = 64; const q = c.getContext('2d'); q.drawImage(img, 5 * 64, 0, 64, 64, 0, 0, 64, 64);
@@ -38,7 +38,6 @@ const STARSKY = (() => {
       g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(x - 11 * sc, base - 1, 22 * sc, 3 * sc);
       g.drawImage(cv, x - 32 * sc, y, 64 * sc, 64 * sc);
       const sx = x, sy = y + 4 * sc - 14, col = p.lit ? '#FFF6D0' : '#6C7AA8';   // 머리 위에 맡은 별
-      if (p.nostar) return;   // 맡은 별이 없는 사람 (별 지도를 그리는 아르투아)
       g.globalAlpha = p.lit ? 1 : .6; g.fillStyle = col; g.fillRect(sx - U / 2, sy - U / 2, U, U); for (let k = 1; k <= (p.mag || 1); k++){ g.fillRect(sx - U / 2 + k * U, sy - U / 2, U, U); g.fillRect(sx - U / 2 - k * U, sy - U / 2, U, U); g.fillRect(sx - U / 2, sy - U / 2 + k * U, U, U); g.fillRect(sx - U / 2, sy - U / 2 - k * U, U, U); } g.globalAlpha = 1; });
   }
   // 별자리 그림 윤곽 (얇은 선화) — 별 좌표 기준으로 그려요
