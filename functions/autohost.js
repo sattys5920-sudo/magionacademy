@@ -23,7 +23,8 @@ async function runStargaze(db){
   const ref = p => db.ref('stargaze/' + p);
   const cur = (await ref('ctl').get()).val(); if (cur && cur.open) return 'busy';
   const data = load('constellations.json').constellations, hist = (await ref('hist').get()).val() || {}, cfg = { ...SG_CFG, ...((await ref('cfg').get()).val() || {}) };
-  const pool = data.filter(c => c.id !== hist.last), C = pool[Math.floor(Math.random() * pool.length)] || data[0];
+  const cnt = hist.c || {}, cand = data.filter(c => c.id !== hist.last), low = Math.min(...cand.map(c => cnt[c.id] || 0));
+  const pool = cand.filter(c => (cnt[c.id] || 0) === low), C = pool[Math.floor(Math.random() * pool.length)] || data[0];   // 덜 해 본 별자리부터 무작위로 (바로 전 별자리는 빼고)
   let D = {}; try { D = load(`dialogue/${C.id}.json`); } catch(e){}
   const bm = cfg.buffH * 3600e3, b = C.buff, rep = t => t.replace('{buff}', b.name).replace('{desc}', b.desc).replace('{hours}', hours(bm));
   const doneN = [...(D.done || []), ...(D.story || []), ...(D.buff || []).map(rep)].length;
