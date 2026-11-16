@@ -3,7 +3,6 @@
 const { onValueWritten } = require('firebase-functions/v2/database');
 const admin = require('firebase-admin');
 const { runHost } = require('./dfhost');
-const { runAuto } = require('./autohost');
 
 admin.initializeApp({ databaseURL: 'https://magionacademy-default-rtdb.asia-southeast1.firebasedatabase.app' });
 
@@ -15,11 +14,3 @@ exports.dfrun = onValueWritten({
   await runHost(admin.database(), R);
 });
 
-// 자동 이벤트 (유령 열차 · 별 보는 밤): 학생 화면이 정해진 시각에 autoreq/<키> 를 한 번 쓰면 서버가 열고 진행해요 (autohost.js)
-exports.autorun = onValueWritten({
-  ref: '/autoreq/{key}', instance: 'magionacademy-default-rtdb', region: 'asia-southeast1',
-  timeoutSeconds: 540, memory: '256MiB', maxInstances: 2, cpu: 1,
-}, async ev => {
-  if (ev.data.before.exists() || !ev.data.after.exists()) return;   // 처음 쓰일 때만
-  const r = await runAuto(admin.database(), ev.params.key); console.log('autorun', ev.params.key, r);
-});

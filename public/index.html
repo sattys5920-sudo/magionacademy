@@ -8340,13 +8340,24 @@ function gtProp(k, alpha = 1, dy = 0){
 }
 function gtListen(){
   if (solo || !F || !db || gtOffs.length) return;
-  gtOffs.push(F.onValue(F.ref(db, 'gtrain/ctl'), s => {
-    const v = s.val(), was = gtCtl; gtCtl = v;
-    if (v && v.open && v.id && (!was || was.id !== v.id) && gtPhase(v) === 'board' && !gtSeen['arr' + v.id]){ gtSeen['arr' + v.id] = 1; toast('뿌우— 유령 열차가 왔어요! 다리 남쪽 강가에 열차가 도착했어요'); sfx('pop'); }
-    gtSub(); gtTick();
-  }));
+  gtOffs.push(F.onValue(F.ref(db, 'gtrain/ctl'), s => { gtDb = s.val(); gtChoose(); gtTick(); }));
   const prev = World.onProp; World.onProp = id => id === 'gtgold' ? (gtGoldOpen(), null) : prev ? prev(id) : null;
-  setInterval(gtTick, 1000);
+  setInterval(() => { gtChoose(); gtTick(); }, 1000);
+}
+// 자동 열차: 관리자가 부른 열차가 없으면, 정해진 시각표(autocfg · AUTO_DEF)대로 모든 학생 화면이 같은 열차를 계산해요 (서버 없이 · 번호 = 도착 시각 · 행선지는 번호로 정해져서 모두 같아요)
+let gtDb = null;
+const kstAt = (dayOff, hhmm, t = now2()) => { const d = new Date(t + 9 * 3600e3), m = autoMin(hhmm); return m == null ? null : Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + dayOff) + m * 6e4 - 9 * 3600e3; };
+function gtAuto(t = now2()){
+  const C = autoC(); if (C.gtOff) return null; const run = GT.BOARD + GT.TRAVEL * 2 + GT.STAY + GT.BACK + 60e3, keys = Object.keys(GT.DEST);
+  for (const off of [0, -1]) for (const hm of [].concat(C.gt || [])){ const T = kstAt(off, hm, t); if (T != null && t >= T && t < T + run) return { open: true, id: T, dest: keys[hash32('gt' + T) % keys.length], t0: T, go: T + GT.BOARD, auto: 1 }; }
+  return null;
+}
+function gtChoose(){
+  const live = gtDb && gtDb.open && gtDb.id && !['off', 'done'].includes(gtPhase(gtDb)), v = live ? gtDb : (gtAuto() || gtDb), was = gtCtl;
+  if (v === was || (v && was && v.id === was.id && v.go === was.go && v.open === was.open && v.dest === was.dest)) return;
+  gtCtl = v;
+  if (v && v.open && v.id && (!was || was.id !== v.id) && gtPhase(v) === 'board' && !gtSeen['arr' + v.id]){ gtSeen['arr' + v.id] = 1; toast('뿌우— 유령 열차가 왔어요! 다리 남쪽 강가에 열차가 도착했어요'); sfx('pop'); }
+  gtSub();
 }
 function gtSub(){   // 지금 열차의 승객·금빛 상자만 들어요
   const id = gtCtl && gtCtl.open && gtCtl.id; if (id === gtSubId) return;
@@ -10394,6 +10405,7 @@ const autoKst = t => { const d = new Date(t + 9 * 3600e3), p = n => String(n).pa
 const autoMin = s => /^\d\d:\d\d$/.test(s || '') ? +s.slice(0, 2) * 60 + +s.slice(3) : null;
 const autoC = () => ({ ...AUTO_DEF, ...autoCfg });
 function autoTick(){
+  return;   // 예전엔 서버(functions/autohost.js)에 신호를 남겼어요 · 이제는 학생 화면이 시간표로 직접 계산해요 (gtAuto · sgAutoPlan)
   if (solo || !F || !db || !me) return; const k = autoKst(now2()), C = autoC(), sent = autoTick.sent || (autoTick.sent = {});
   const fire = key => { if (sent[key]) return; sent[key] = 1; F.set(F.ref(db, 'autoreq/' + key), now2()).catch(() => {}); };   // 이미 누가 썼으면 규칙이 막아요 (서버는 한 번만 움직여요)
   if (!C.gtOff && !['board', 'out', 'dest', 'in', 'back'].includes(gtPhase())) [].concat(C.gt || []).forEach(t => { const m = autoMin(t); if (m != null && k.min >= m && k.min < m + 5) fire(`gt_${k.ymd}_${t.replace(':', '')}`); });
@@ -10406,8 +10418,8 @@ function autoListen(){
 }
 function adminAutoHTML(){
   const C = autoC(), row = (k, nm, times) => `<div class="sdarow" style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap"><span><b>${nm}</b> <span class="s">매일 ${times} (한국 시간)</span></span><span class="abchips" style="align-items:center"><span>${C[k + 'Off'] ? '꺼짐' : '켜짐'}</span><button class="btn sm" data-autoa="${k}">${C[k + 'Off'] ? '켜기' : '끄기'}</button></span></div>`;
-  return `<div class="adcard"><div class="abhead"><b>자동 이벤트</b><span class="s">관리자 화면을 켜 두지 않아도 서버가 열고 진행해요</span></div>${row('gt', '유령 열차', [].concat(C.gt || []).join(' · '))}${row('sg', '별 보는 밤', C.sg || '')}
-    <div class="s" style="margin-top:6px">정해진 시각에 접속한 학생이 한 명이라도 있으면 열려요. 이미 열차가 운행 중이거나 별 보는 밤이 열려 있으면 건너뛰어요. 직접 부르기 · 열기도 지금처럼 쓸 수 있어요.</div></div>`;
+  return `<div class="adcard"><div class="abhead"><b>자동 이벤트</b><span class="s">관리자 화면을 켜 두지 않아도 열려요</span></div>${row('gt', '유령 열차', [].concat(C.gt || []).join(' · '))}${row('sg', '별 보는 밤', C.sg || '')}
+    <div class="s" style="margin-top:6px">정해진 시각이 되면 모든 학생 화면이 같은 시간표로 열차와 별 보는 밤을 보여 줘요 (서버 · 관리자 화면 없이). 관리자가 직접 부르거나 연 것이 있으면 그쪽이 먼저예요.</div></div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-autoa]'); if (!b || !F || !db) return; const k = b.dataset.autoa, off = !autoC()[k + 'Off'];
   if (confirm(`${k === 'gt' ? '유령 열차' : '별 보는 밤'} 자동을 ${off ? '끌' : '켤'}까요?`)) F.update(F.ref(db, 'autocfg'), { [k + 'Off']: off }); });
@@ -16792,8 +16804,36 @@ function sgLoadDlg(id){
 function sgListen(){
   if (solo || !F || !db || sgOffs.length) return; sgLoad(); sgPop.t0 = now2() + 4000;   // 들어오자마자는 다른 장면이 먼저 시작할 수 있어서 잠깐 기다려요
   const on = (p, fn) => sgOffs.push(F.onValue(F.ref(db, 'stargaze/' + p), s => { fn(s.val()); sgSync(); }));
-  on('ctl', v => { sgCtl = v; }); on('join', v => { sgJoin = v || {}; }); on('lit', v => { sgLit = v || {}; }); on('cfg', v => { sgCfgV = v || {}; }); on('sched', v => { sgSched = v || {}; }); on('hist', v => { sgHist = v || {}; });
+  on('ctl', v => { sgDb.ctl = v; sgPick(true); }); on('join', v => { sgDb.join = v || {}; sgPick(true); }); on('lit', v => { sgDb.lit = v || {}; sgPick(true); }); on('cfg', v => { sgCfgV = v || {}; }); on('sched', v => { sgSched = v || {}; }); on('hist', v => { sgHist = v || {}; });
   if (sgAdmin()) setInterval(sgAdminTick, 500);
+  setInterval(() => { if (sgPick()) sgSync(); }, 500);
+}
+// 자동 별 보는 밤: 관리자가 연 밤이 없으면, 정해진 시각(autocfg · AUTO_DEF)부터 모든 학생 화면이 같은 시간표로 계산해요 (서버 없이)
+//   번호 = 시작 시각 T · 별자리는 날짜마다 돌아가며 (24 일에 한 번씩 다 나와요) · 모이기 → 별 나눠 주기(T 부터 모이기 끝까지 참가한 순서) → 별 켜기(시간이 다 되면 남은 별은 저절로) → 하늘 → 이야기 → 끝
+//   학생이 켠 별은 stargaze/alit/<T>/<별> 에 남겨요 (자동 밤 전용 · 처음 한 번만 쓸 수 있어요)
+const sgDb = { ctl: null, join: {}, lit: {} }; let sgAlit = {}, sgAlitId = 0, sgAlitOff = null, sgPickSig = '';
+function sgAutoPlan(t = now2()){
+  const A = autoC(); if (A.sgOff || !sgData) return null; const cfg = sgCfg(), gm = cfg.gatherS * 1000, lm = cfg.lightS * 1000;
+  const T = kstAt(0, A.sg, t); if (T == null || t < T) return null;
+  const order = [...sgData].sort((a, b) => hash32('sgo' + a.id) - hash32('sgo' + b.id)), C = order[Math.floor((T + 9 * 3600e3) / 864e5) % order.length];
+  sgLoadDlg(C.id); const dn = sgDoneLines(C).length, a0 = T + gm, l0 = a0 + SG_ASSIGN, s0 = l0 + lm, d0 = s0 + C.order.length * SG_LINE + 4000, e0 = d0 + dn * SG_STORY + 5000;
+  if (t >= e0 + 20000) return null;
+  return { C, T, gm, lm, a0, l0, s0, d0, e0, dn, bm: cfg.buffH * 3600e3 };
+}
+function sgPick(force){
+  const P = sgDb.ctl && sgDb.ctl.open ? null : sgAutoPlan(), t = now2();
+  if (!P){ if (sgAlitOff){ sgAlitOff(); sgAlitOff = null; sgAlitId = 0; }
+    const sig = 'db|' + JSON.stringify(sgDb.ctl || 0).length + '|' + (sgDb.ctl && sgDb.ctl.ph); sgCtl = sgDb.ctl; sgJoin = sgDb.join; sgLit = sgDb.lit; if (sig === sgPickSig && !force) return false; sgPickSig = sig; return true; }
+  if (sgAlitId !== P.T && F && db){ if (sgAlitOff) sgAlitOff(); sgAlitId = P.T; sgAlit = {}; sgAlitOff = F.onValue(F.ref(db, 'stargaze/alit/' + P.T), s => { sgAlit = s.val() || {}; sgPick(true) && sgSync(); }); }
+  const joinAll = Object.entries(sgDb.join || {}).filter(([, j]) => j && j.at >= P.T && j.at <= P.a0), join = Object.fromEntries(joinAll);
+  const ph = t < P.a0 ? 'gather' : t < P.l0 ? 'assign' : t < P.s0 ? 'light' : t < P.d0 ? 'sky' : t < P.e0 ? 'done' : 'end', at = { gather: P.T, assign: P.a0, light: P.l0, sky: P.s0, done: P.d0, end: P.e0 }[ph];
+  const c = { open: ph !== 'end', id: P.T, c: P.C.id, ph, at, gm: P.gm, lm: P.lm, bm: P.bm, sm: SG_STORY, srv: 1, auto: 1, ok: 1 };
+  if (ph !== 'gather'){ const ord = joinAll.sort((a, b) => (a[1].at - b[1].at) || (a[0] < b[0] ? -1 : 1)).map(([u]) => u).slice(0, 12), ids = P.C.stars.map(x => x.id), r = (hash32('sgr' + P.T) % 4) * 3, sr = [...ids.slice(r), ...ids.slice(0, r)], asg = {};
+    sr.forEach((id, i) => { asg[id] = ord[i] || 'stella'; }); Object.assign(c, { asg, ord, full: ord.length >= 12 }); if (ph === 'done' || ph === 'end') c.dn = P.dn; }
+  const lit = {}; if (c.asg && (ph === 'light' || ph === 'sky' || ph === 'done' || ph === 'end')){ const st = Object.keys(c.asg).filter(x => c.asg[x] === 'stella');
+    P.C.stars.forEach(x => { const u = c.asg[x.id]; if (u === 'stella'){ const k = P.l0 + 3000 + st.indexOf(x.id) * 2500; if (t >= k) lit[x.id] = k; } else if (sgAlit[x.id]) lit[x.id] = sgAlit[x.id]; if (!lit[x.id] && t >= P.s0) lit[x.id] = P.s0; }); }   // 스텔라 별은 차례로 · 시간이 다 되면 남은 별도 켜져요
+  sgCtl = c; sgJoin = join; sgLit = lit;
+  const sig = ['auto', P.T, ph, Object.keys(join).length, Object.keys(lit).length].join('|'); if (sig === sgPickSig && !force) return false; sgPickSig = sig; return true;
 }
 // ---- 효과: 별빛 버프의 수치는 별자리 데이터(effects)에서 읽어요 ----
 
@@ -16931,12 +16971,12 @@ function sgUi(M){
     if (M.ph === 'light') M.mine.forEach(id => { if (M.src.lit[id]) return; const s = M.C.stars.find(x => x.id === id), [x, y] = STARSKY.pos(B, s), b = document.createElement('button'); b.className = 'sgstar'; b.style.cssText = `left:${x - 28}px;top:${y - 28}px`; b.setAttribute('aria-label', '내 별 켜기'); b.onclick = () => sgLight(id); hits.appendChild(b); }); }
   const a = $('#sgadm'), asig = sgAdmin() && !M.prev ? M.ph : ''; a.hidden = !asig; if (a.dataset.sig !== asig){ a.dataset.sig = asig; a.innerHTML = asig ? sgAdminBtns(M.c) : ''; }
 }
-function sgLight(id){ if (!sgCtl || sgCtl.ph !== 'light' || sgLit[id]) return; sgLit[id] = now2(); sgSig = ''; sfx('pick'); if (F && db) F.set(F.ref(db, 'stargaze/lit/' + id), now2()).catch(() => { delete sgLit[id]; }); }
+function sgLight(id){ if (!sgCtl || sgCtl.ph !== 'light' || sgLit[id]) return; sgLit[id] = now2(); sgSig = ''; sfx('pick'); if (sgCtl.auto) sgAlit[id] = sgLit[id]; if (F && db) F.set(F.ref(db, (sgCtl.auto ? `stargaze/alit/${sgCtl.id}/` : 'stargaze/lit/') + id), now2()).catch(() => { delete sgLit[id]; delete sgAlit[id]; }); }   // 자동 밤은 alit 에
 // ---- 참가·나중에 ----
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-sg]'); if (!b) return; const a = b.dataset.sg;
   if (a === 'later'){ sgPop.no = now2() + 120000; sgPop(); setTimeout(sgPop, 121000); }   // 2분 뒤에 다시 물어봐요
-  else if (a === 'join'){ if (!F || !db || !me || !sgCtl || sgCtl.ph !== 'gather') return; F.set(F.ref(db, 'stargaze/join/' + myId()), { n: me.nick, at: now2() }).then(() => { sgJoin[myId()] = { n: me.nick, at: now2() }; sgOpen(); }); }
+  else if (a === 'join'){ if (!F || !db || !me || !sgCtl || sgCtl.ph !== 'gather') return; F.set(F.ref(db, 'stargaze/join/' + myId()), { n: me.nick, at: now2() }).then(() => { sgDb.join = { ...sgDb.join, [myId()]: { n: me.nick, at: now2() } }; sgPick(true); sgOpen(); }); }
   else if (a === 'view') sgOpen();
 });
 // ---- 관리자: 진행 ----
