@@ -13061,12 +13061,13 @@ const CK = (() => {
         if (G.lim && !G.done){ const left = G.lim - (now - G.t0) / 1000; bar(q, 100, 50, 54, 5, left / G.lim, left < 3 ? '#FF6B6B' : '#FFD866'); if (left <= 0){ G.miss += 2; finish('아쉬워', '시간 끝'); } } };
     }
     if (step === 1){
-      G.need = [3, 5, 7][s - 1]; G.turn = 0; G.ang = 0; G.prev = null; G.lastSpill = 0; G.drops = []; const cx = 80, cy = 60;
-      G.move = (x, y, now) => { if (G.done) return; const a = Math.atan2(y - cy, (x - cx) * .8); if (G.prev){ let da = a - G.prev.a; if (da > Math.PI) da -= 7; if (da < -Math.PI) da += 7; const dt = Math.max(1, now - G.prev.t) / 1000, sp = Math.abs(da) / dt;
+      G.need = [3, 5, 7][s - 1]; G.turn = 0; G.ang = 0; G.prev = null; G.sp = 0; G.lastSpill = 0; G.drops = []; const cx = 80, cy = 60;
+      G.move = (x, y, now) => { if (G.done) return; if (Math.hypot((x - cx) * .8, y - cy) < 10){ G.prev = null; return; }   // 그릇 한가운데는 각도가 크게 튀어서 세지 않아요
+        const a = Math.atan2(y - cy, (x - cx) * .8); if (G.prev){ let da = a - G.prev.a; if (da > Math.PI) da -= Math.PI * 2; if (da < -Math.PI) da += Math.PI * 2; const dt = Math.max(1, now - G.prev.t) / 1000; G.sp = (G.sp || 0) * .7 + Math.abs(da) / dt * .3; const sp = G.sp;   // 한 바퀴 넘어갈 때 2π 로 맞춰요 (예전엔 7 이라서 왼쪽을 지날 때마다 「빠르다」로 잡혔어요) · 속도는 부드럽게
           if (s === 3 && sp > 16){ if (now - G.lastSpill > 500){ G.lastSpill = now; G.miss++; mgMsg('철퍽! 살살'); for (let i = 0; i < 4; i++) G.drops.push({ x: cx + Math.cos(a) * 40, y: cy + Math.sin(a) * 26, vx: Math.cos(a + i) * 30, vy: -20 - i * 6, t0: now }); } }
           else { G.turn += Math.abs(da) / 6.283; G.ang += da; } }
         G.prev = { a, t: now }; if (G.turn >= G.need) finish(gradeOf(G.miss)); };
-      G.up = () => { G.prev = null; };
+      G.up = () => { G.prev = null; G.sp = 0; };
       G.alt = () => { if (G.done) return; G.turn += .34; G.ang += 2.1; if (G.turn >= G.need) finish(G.miss ? '좋아' : '완벽'); };
       bar$.innerHTML = '<button class="btn" data-ckx="mgalt" style="flex:1">손가락이 어려우면 · 휘휘 젓기 버튼</button>';
       G.draw = now => { board(q); bowlTop(q, cx, cy, 52, 34); const k = Math.min(1, G.turn / G.need), base = mix(hex('#F4EAD8'), hex(dc), k);
