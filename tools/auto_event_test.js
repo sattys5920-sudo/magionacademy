@@ -44,6 +44,9 @@ function fakeDb(init = {}){
   ok(Object.values(end.asg).filter(u => u !== 'stella').length === 3 && end.ord.length === 3, '참가자 셋에게 별이 나눠졌어요');
   ok(db.root.stargaze.hist.total === 4 && db.root.stargaze.hist.c[end.c] === 1, '완성 횟수 기록');
   ok(NOW - t0 < 520e3, '함수 시간 안에 끝나요 (9 분 미만)');
+  { const data = require('../functions/sg/constellations.json').constellations, c = {}; data.forEach((x, i) => { c[x.id] = i === 5 ? 0 : 2; });
+    const d2 = fakeDb({ stargaze: { hist: { last: 'teacup', c } } }); const pr = runAuto(d2, 'sg_20261117'); let first = null; d2.ref('stargaze/ctl').on('value', s => { const v = s.val(); if (v && !first) first = v.c; }); await pr;
+    ok(first === data[5].id, '아직 안 해 본 별자리를 먼저 골라요: ' + first); }
   db = fakeDb({ stargaze: { ctl: { open: true, ph: 'light', id: 1 } } }); ok(await runAuto(db, 'sg_20261116') === 'busy', '이미 열려 있으면 건너뛰어요');
   console.log(`검사 ${pass + fail}개 · 실패 ${fail}개`); process.exit(fail ? 1 : 0);
 })();
