@@ -912,6 +912,17 @@
         ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'magionadmin@magionacademy.app')",
         ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'"
       }
+    },
+    "autoreq": {
+      ".read": "auth != null",
+      "$key": {
+        ".write": "auth != null && !data.exists()",
+        ".validate": "newData.isNumber() && $key.matches(/^(gt_[0-9]{8}_[0-9]{4}|sg_[0-9]{8})$/)"
+      }
+    },
+    "autocfg": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.email === 'magionadmin@magionacademy.app'"
     }
   }
 }

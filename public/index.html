@@ -10386,6 +10386,31 @@ document.addEventListener('click', e => {
   else if (a === 'close'){ if (confirm('유령 열차 이벤트를 닫을까요? 목적지에 있는 학생은 등불 마을로 돌아와요.')) F.set(F.ref(db, 'gtrain/ctl'), { open: false }); }
 });
 setInterval(() => { if (document.body.classList.contains('admin') && AD.tab === 'event' && AD.gtctl && AD.gtctl.open && !adminTyping()) { const el = document.querySelector('[data-gta]')?.closest('.adcard'); if (el){ const t = document.createElement('div'); t.innerHTML = adminGtrainHTML(); const n = t.firstElementChild; el.replaceWith(n); adFold(n); } } }, 1000);
+// ===== 자동 이벤트: 정해진 시각(한국 시간)에 「유령 열차」가 오고 「별 보는 밤」이 열려요 · 관리자 화면 없이 서버(functions/autohost.js)가 열고 끝까지 진행해요 =====
+//   autocfg = { gt: ['20:00', '22:00'], sg: '21:00', gtOff, sgOff } (관리자만 바꿔요) · 정해진 시각부터 잠깐 동안, 접속해 있는 학생 화면이 autoreq/<키> 에 한 번만 쓸 수 있는 신호를 남겨요
+const AUTO_DEF = { gt: ['20:00', '22:00'], sg: '21:00' };
+let autoCfg = {}, autoOn = false;
+const autoKst = t => { const d = new Date(t + 9 * 3600e3), p = n => String(n).padStart(2, '0'); return { ymd: `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}`, min: d.getUTCHours() * 60 + d.getUTCMinutes() }; };
+const autoMin = s => /^\d\d:\d\d$/.test(s || '') ? +s.slice(0, 2) * 60 + +s.slice(3) : null;
+const autoC = () => ({ ...AUTO_DEF, ...autoCfg });
+function autoTick(){
+  if (solo || !F || !db || !me) return; const k = autoKst(now2()), C = autoC(), sent = autoTick.sent || (autoTick.sent = {});
+  const fire = key => { if (sent[key]) return; sent[key] = 1; F.set(F.ref(db, 'autoreq/' + key), now2()).catch(() => {}); };   // 이미 누가 썼으면 규칙이 막아요 (서버는 한 번만 움직여요)
+  if (!C.gtOff && !['board', 'out', 'dest', 'in', 'back'].includes(gtPhase())) [].concat(C.gt || []).forEach(t => { const m = autoMin(t); if (m != null && k.min >= m && k.min < m + 5) fire(`gt_${k.ymd}_${t.replace(':', '')}`); });
+  if (!C.sgOff && !(sgCtl && sgCtl.open)){ const m = autoMin(C.sg); if (m != null && k.min >= m && k.min < m + 30) fire(`sg_${k.ymd}`); }
+}
+function autoListen(){
+  if (autoOn || solo || !F || !db) return; autoOn = true;
+  F.onValue(F.ref(db, 'autocfg'), s => { autoCfg = s.val() || {}; if (document.body.classList.contains('admin') && AD.tab === 'event' && !adminTyping()) adminRender(); });
+  setInterval(() => { try { autoTick(); } catch(e){ errReport('auto', '자동 이벤트 tick 오류: ' + e.message, e.stack || ''); } }, 20000); setTimeout(autoTick, 8000);
+}
+function adminAutoHTML(){
+  const C = autoC(), row = (k, nm, times) => `<div class="sdarow" style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap"><span><b>${nm}</b> <span class="s">매일 ${times} (한국 시간)</span></span><span class="abchips" style="align-items:center"><span>${C[k + 'Off'] ? '꺼짐' : '켜짐'}</span><button class="btn sm" data-autoa="${k}">${C[k + 'Off'] ? '켜기' : '끄기'}</button></span></div>`;
+  return `<div class="adcard"><div class="abhead"><b>자동 이벤트</b><span class="s">관리자 화면을 켜 두지 않아도 서버가 열고 진행해요</span></div>${row('gt', '유령 열차', [].concat(C.gt || []).join(' · '))}${row('sg', '별 보는 밤', C.sg || '')}
+    <div class="s" style="margin-top:6px">정해진 시각에 접속한 학생이 한 명이라도 있으면 열려요. 이미 열차가 운행 중이거나 별 보는 밤이 열려 있으면 건너뛰어요. 직접 부르기 · 열기도 지금처럼 쓸 수 있어요.</div></div>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-autoa]'); if (!b || !F || !db) return; const k = b.dataset.autoa, off = !autoC()[k + 'Off'];
+  if (confirm(`${k === 'gt' ? '유령 열차' : '별 보는 밤'} 자동을 ${off ? '끌' : '켤'}까요?`)) F.update(F.ref(db, 'autocfg'), { [k + 'Off']: off }); });
 // ===== 「창밖 정원」: 관리자가 시작하면 학생마다 내 방에서 맨디(정원사 맨드레이크)가 정원을 시공해 줘요 · 그 뒤로는 끝없이: 먹이 접시에 요리 → 손님(새 · 동물 20 종)이 찾아와 선물 · 사진 · 도감 =====
 //   garden/ctl = { open, id, at } · 내 방 오른쪽 벽 창가 화분을 누르면 정원 창 (그림: art/gd_bg · gd_items · gd_guests — tools/iso/garden_iso.py · garden_animals.py)
 //   me.garden = { ev, at, own { 물건: 1 }, on { 물건: 1 놓음 }, feed { d 요리 id, at }, last 마지막 계산 시각, log [{ g 손님, at, p 사진 자세, d 먹은 요리, seen }], dex { 손님: { n 온 횟수, fd [0/1, 0/1] 밝혀진 요리, ph 찍힌 사진(비트) } }, rw { 5: 1 … } }
@@ -16280,7 +16305,7 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
   const a = b.dataset.sha; if (a === 'off') F.set(F.ref(db, 'shoutctl'), { off: true }).then(() => toast('확성기를 껐어요')); else if (a === 'on') F.set(F.ref(db, 'shoutctl'), null).then(() => toast('확성기를 켰어요')); else if (a === 'clear' && confirm('확성기 기록을 다 지울까요?')) F.set(F.ref(db, 'shout'), null).then(() => toast('기록을 지웠어요')); });
 function adminEventHTML(){
   const G = f => { try { return typeof f === 'function' ? f() || '' : ''; } catch(e){ return ''; } };
-  const REP = [G(() => J2.adminHTML()), G(() => TW.adminHTML()), G(() => EG.adminHTML()), G(() => adminStargazeHTML()), G(() => adminGtrainHTML()), G(() => adminLanternHTML()), G(() => adminEventHTML0()), G(() => adminPuzzleHTML()), G(() => adminPumpkinHTML()), G(() => adminMorphHTML()), G(() => adminFairyHTML()), G(typeof adminGrHTML === 'function' ? adminGrHTML : null), G(typeof adminRaidHTML === 'function' ? adminRaidHTML : null), G(typeof adminDayHTML === 'function' ? adminDayHTML : null)];
+  const REP = [G(() => J2.adminHTML()), G(() => TW.adminHTML()), G(() => EG.adminHTML()), G(() => adminAutoHTML()), G(() => adminStargazeHTML()), G(() => adminGtrainHTML()), G(() => adminLanternHTML()), G(() => adminEventHTML0()), G(() => adminPuzzleHTML()), G(() => adminPumpkinHTML()), G(() => adminMorphHTML()), G(() => adminFairyHTML()), G(typeof adminGrHTML === 'function' ? adminGrHTML : null), G(typeof adminRaidHTML === 'function' ? adminRaidHTML : null), G(typeof adminDayHTML === 'function' ? adminDayHTML : null)];
   const ONCE = [['sports', () => SPT.adminHTML()], ['cat', () => CAT.adminHTML()], ['cold', () => COLD.adminHTML()], ['hib', () => HIB.adminHTML()], ['stick', () => STK.adminHTML()], ['ck', () => CK.adminHTML()], ['bm', () => BM.adminHTML()], ['snow', () => adminSnowHTML()], ['baby', () => adminBabyHTML()], ['fam', () => adminFamHTML()], ['seed', () => adminSeedHTML()], ['tilda', () => adminTildaHTML()],
     ['nubi', () => adminNubiHTML()], ['wish', () => adminWishHTML()], ['garden', () => adminGardenHTML()], ['knit', () => adminKnitHTML()], ['bouquet', () => adminBqHTML()], ['balloon', () => adminBlnHTML()], ['capsule', () => adminCapHTML()], ['ltr', () => adminLtHTML()], ['otumo', () => adminOtumoHTML()], ['newnpc', () => adminNewNpcHTML()]];
   const D = Object.fromEntries(EV_ONCE.map(([k, , d]) => [k, !!d])), card = ([k, f], done) => `<div class="evgrp"><div class="evbar"><span>일회성 · ${done ? '연 적 있어요' : '아직 안 열었어요'}</span><button class="btn sm${done ? '' : ' go'}" data-evd="${k}:${done ? 0 : 1}">${done ? '되돌리기' : '열었음'}</button></div>${G(f)}</div>`;
@@ -16933,6 +16958,7 @@ function sgDoOpen(cid){
   return F.set(F.ref(db, 'stargaze/ctl'), { open: true, id, c: C.id, ph: 'gather', at: now2(), gm: cfg.gatherS * 1000, lm: cfg.lightS * 1000, bm: cfg.buffH * 3600e3, sm: SG_STORY });
 }
 function sgAdminTick(force){
+  if (sgCtl && sgCtl.open && sgCtl.srv && force !== true) return;   // 자동으로 연 별 보는 밤은 서버가 진행해요
   if (!F || !db || !sgCtl || !sgCtl.open || sgPrev || !sgData || (!sgAdmin() && force !== true)) { sgSched && sgAdmin() && sgSchedTick(); return; }
   const c = sgCtl, C = sgConst(c.c); if (!C) return; const el = now2() - c.at, n = C.order.length, asg = c.asg || {};
   if (c.ph === 'gather' && el >= (c.gm || 18e4)) sgDoAssign();
@@ -17620,7 +17646,7 @@ async function boot(){
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       F.onValue(F.ref(db, 'adm/reset/' + uid), s => { const v = +s.val() || 0; if (!v) return; let seen = 0; try { seen = +localStorage.getItem('magion-rs-' + uid) || 0; } catch(e){}
         if (v > seen && v > bootT - 5000){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
-      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); babyListen(); famListen(); fairyListen(); seedListen(); tildaListen(); nubiListen(); wishListen(); gardenListen(); knitListen(); bqListen(); blnListen(); capListen(); letterListen(); try { grListen(); } catch(e){} try { rdListen(); } catch(e){} try { ddListen(); } catch(e){} CK.listen(); STK.listen(); HIB.listen(); COLD.listen(); try { CAT.listen(); } catch(e){} try { J2.listen(); TW.listen(); EG.listen(); } catch(e){} try { SPT.listen(); } catch(e){} BM.listen(); shoutListen(); shoutUi(); otumoListen(); nnListen(); blancListen(); snowListen(); morphListen(); boardListen(); tarotInit(); clockLadderInit(); prankInit();
+      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); autoListen(); babyListen(); famListen(); fairyListen(); seedListen(); tildaListen(); nubiListen(); wishListen(); gardenListen(); knitListen(); bqListen(); blnListen(); capListen(); letterListen(); try { grListen(); } catch(e){} try { rdListen(); } catch(e){} try { ddListen(); } catch(e){} CK.listen(); STK.listen(); HIB.listen(); COLD.listen(); try { CAT.listen(); } catch(e){} try { J2.listen(); TW.listen(); EG.listen(); } catch(e){} try { SPT.listen(); } catch(e){} BM.listen(); shoutListen(); shoutUi(); otumoListen(); nnListen(); blancListen(); snowListen(); morphListen(); boardListen(); tarotInit(); clockLadderInit(); prankInit();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); const sg = Object.entries(gameList).map(([id, r]) => r ? id + r.st + Object.keys(r.p || {}).length : '').join('|'); if (sub === 'games' && sg !== gamesSig) render(); gamesSig = sg; });   // 점수가 오를 때마다가 아니라 방이 열리고 닫히고 사람이 드나들 때만 다시 그려요
       F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       const recWatch = () => { const wk = weekKey(); if (recWatch.wk === wk) return; recWatch.wk = wk; (recWatch.offs || []).forEach(f => f()); recList = {}; recWatch.offs = Object.keys(GAMES).map(g => F.onValue(F.ref(db, `records/${g}/${wk}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); })); };
