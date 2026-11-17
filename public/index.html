@@ -19310,7 +19310,7 @@ const nbBoxCv = () => nbCanvas('box', 16, 14, g => { g.fillStyle = '#2a1a22'; g.
 const nbDustCv = () => nbCanvas('dust', 14, 8, g => { g.fillStyle = '#6e6862'; g.fillRect(2, 3, 10, 4); g.fillStyle = '#8a847c'; g.fillRect(3, 2, 7, 3); g.fillStyle = '#a8a29a'; g.fillRect(5, 2, 3, 1); });
 const nbCotCv = () => nbCanvas('cot', 14, 12, g => { g.fillStyle = '#2a1a22'; g.fillRect(2, 3, 10, 8); g.fillRect(1, 5, 12, 4); g.fillStyle = '#f4f2ec'; g.fillRect(3, 4, 8, 6); g.fillRect(2, 6, 10, 2); g.fillStyle = '#ffffff'; g.fillRect(4, 4, 3, 2); });
 const NB_DUST = [[5, 8], [11, 9], [14, 6]];
-const NB_COT = [['campus', 45, 37], ['campus', 41, 38], ['campus', 44, 39], ['campus', 42, 35]];
+const NB_COT = [['campus', 38, 39], ['campus', 36, 41], ['campus', 39, 42], ['campus', 37, 44]];   // 본관 앞 돌길 왼쪽 (예전 자리는 운세 천막 · 배트리 · 본관 모서리에 가려서 못 찾는 학생이 많았어요)
 const nbHash = s => { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) | 0; return Math.abs(h); };
 function nbProps(){
   const T = nbT(), fk = nbFrame(), sig = JSON.stringify([!!T, fk, T && [T.s, T.hb, T.dust, T.hc, T.cot, T.b7, T.gy, T.fin], NB_SH.complete, NB_FRI.complete]); if (sig === nbPropSig) return; nbPropSig = sig;
@@ -19319,7 +19319,7 @@ function nbProps(){
   World.setProps('warm_infirmary', T && T.fin ? [doll('warm_infirmary', 'fix'), ...(T.gy ? [{ id: 'nbgy', x: 9, y: 1, img: nbFriendCv(), pxc: nbFriendCv().getContext('2d'), sw: 32, sh: 32, ax: 12, ay: 44, solid: false }] : [])] : [], 'nubi');
   World.setProps('craft', T && nbCur(T) === 1 && !T.hb && nbCD() >= 1 ? [{ id: 'nbbtn', x: 13, y: 15, img: nbBoxCv(), pxc: nbBoxCv().getContext('2d'), sw: 16, sh: 14, ax: 8, ay: 11, solid: false }] : [], 'nubi');
   const cs = NB_COT[nbHash(myId()) % NB_COT.length];
-  World.setProps('campus', T && nbCur(T) === 7 && T.b7 && !T.hc && !T.cot ? [{ id: 'nbcot', x: cs[1], y: cs[2], img: nbCotCv(), pxc: nbCotCv().getContext('2d'), sw: 14, sh: 12, ax: 7, ay: 9, solid: false, light: { r: 10, c: [255, 250, 230], a: .45 } }] : [], 'nubi');
+  World.setProps('campus', T && nbCur(T) === 7 && T.b7 && !T.hc && !T.cot ? [{ id: 'nbcot', x: cs[1], y: cs[2], img: nbCotCv(), pxc: nbCotCv().getContext('2d'), sw: 14, sh: 12, ax: 7, ay: 9, sc: 1.5, tap: 1, solid: false, light: { r: 16, c: [255, 250, 230], a: .7 } }] : [], 'nubi');
 }
 // 2 일째: 어깨에 앉은 누비
 function nbOverlay(q, toS, k){ const T = nbT(); if (!T || nbCur(T) !== 2 || !T.ride || !NB_SH.complete) return; const t = World.meTile && World.meTile(); if (!t || t.m === 'old_infirmary') return; const mp = World.meAt(); if (!mp) return;
@@ -19336,7 +19336,7 @@ async function nbTap(){
     if (c === 3){ if (!T.dish){ const dk = Object.keys(me.inv || {}).find(k => DISH_INFO[k] && me.inv[k] > 0); if (!dk){ toast('따뜻한 요리 하나'); return nbSay('....추워.'); } me.inv[dk]--; T.dish = 1; save(); hud(); return nbRun('d3', (X, A) => X.d3dish(A, dk)); } if ((T.dust || 0) < 3) return nbSay('....먼지.'); }
     if (c === 4){ const r = await nbRun('d4', async (X, A) => { await X.sew(A); await X.d4end(A); return 1; }); if (r){ T.sew = 1; T.s = 4; save(); } return; }
     if (c === 6 && T.sr6){ const r = await nbRun('d6', (X, A) => X.d6(A)); if (r){ T.a6 = r.a6; T.s = 6; save(); } return; }
-    if (c === 7 && T.b7){ if (T.hc && !T.cot){ T.cot = now2(); save(); sfx('pop'); toast(`솜을 놓았어요 · 우리 반 ${nbCnt('cot')} / ${nbIds().length}`); return nbSay('....', true); } if (!T.cot) toast('학교 어딘가에 떨어진 솜 하나'); else toast(`우리 반 솜 ${nbCnt('cot')} / ${nbIds().length} · 아직 ${nbIds().length - nbCnt('cot')} 명`); return; }
+    if (c === 7 && T.b7){ if (T.hc && !T.cot){ T.cot = now2(); save(); sfx('pop'); toast(`솜을 놓았어요 · 우리 반 ${nbCnt('cot')} / ${nbIds().length}`); return nbSay('....', true); } if (!T.cot) toast(T.hc ? '주운 솜을 누비에게 주세요' : '본관 앞 돌길에 떨어진 솜 하나'); else toast(`우리 반 솜 ${nbCnt('cot')} / ${nbIds().length} · 아직 ${nbIds().length - nbCnt('cot')} 명`); return; }
     if (c === 8 && T.sr8){ const r = await nbRun('d8', async (X, A) => { await X.d8(A); return 1; }); if (r){ T.s = 8; save(); } return; }
     if (c === 9){ if (!T.un){ const tg = nbTarget(), who = nbNick(tg), lines = nbLines(nbP(tg)); const m = await nbRun('unpick', (X, A) => X.unpick(A, who, lines)); if (m){ T.un = now2(); T.um = { to: tg, m }; save(); toast(`바늘땀이 풀렸어요 · 우리 반 ${nbCnt('un')} / ${nbIds().length}`); } return; }
       toast(`우리 반 바늘땀 ${nbCnt('un')} / ${nbIds().length} · 아직 ${nbIds().length - nbCnt('un')} 명`); }
