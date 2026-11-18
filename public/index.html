@@ -16290,7 +16290,7 @@ const BM = (() => {
   }
   // ---------- 관리자 ----------
   function adminHTML(){
-    const c = AD.bmctl || {}, G = AD.bmgot || {}, PL = AD.bmplace || {}, D = AD.bmdone || null, P = AD.players || {}, ids = Object.keys(P).filter(id => P[id]?.nick).sort((a, b) => P[a].nick.localeCompare(P[b].nick, 'ko'));
+    const c = AD.bmctl || {}, G = AD.bmgot || {}, PL = AD.bmplace || {}, D = AD.bmdone && AD.bmdone.at ? AD.bmdone : null,   /* 비어 있으면 관리자 목록은 {} 를 줘요 → 완성 전으로 */ P = AD.players || {}, ids = Object.keys(P).filter(id => P[id]?.nick).sort((a, b) => P[a].nick.localeCompare(P[b].nick, 'ko'));
     const right = SL.reduce((a, p, pi) => a + p.filter((t, k) => { const o = PL[pi + '_' + k]; return t.w && o && ALL[o.w] === t.w; }).length, 0), pct = Math.floor(right / TOTAL * 100);
     const S = id => P[id].bm || {}, sawS = ids.filter(id => S(id).met), sawE = D ? ids.filter(id => S(id).end === D.at) : [];
     const cnt = id => Object.values(G).filter(v => v && v.u === id).length, pl = id => Object.values(PL).filter(v => v && v.u === id).length;
