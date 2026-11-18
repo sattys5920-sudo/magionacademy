@@ -17,14 +17,15 @@ def block_size(a):
 # 가장자리에서 안 닿는 갇힌 배경(볼트와 목 사이 등): 그 안의 한 점을 (가로, 세로) 비율로 적어 두면 거기서도 지워요
 KEEP_WHITE = {'irma', 'madeleine', 'leo', 'selin', 'dodo', 'artua', 'kael', 'grego', 'bau'}
 FILL_EYES = {'leo'}
-EYEBOX = {'irma': (.30, .45, .48, .75), 'bau': (.2, .52, .12, .88), 'artua': (.38, .51, .46, .69), 'kael': (.36, .54, .46, .74), 'grego': (.36, .56, .44, .73)}   # 눈 상자 (위, 아래, 왼, 오른 비율): 이 안의 흰색(흰자)은 누끼 정리에서 안 건드려요
+EYEBOX = {'irma': (.30, .52, .48, .70), 'bau': (.2, .52, .12, .88), 'artua': (.38, .51, .46, .69), 'kael': (.36, .54, .46, .74), 'grego': (.36, .56, .44, .73)}   # 눈 상자 (위, 아래, 왼, 오른 비율): 이 안의 흰색(흰자)은 누끼 정리에서 안 건드려요
 def inbox(pid, fy, fx):
     b = EYEBOX.get(pid); return bool(b) and b[0] <= fy <= b[1] and b[2] <= fx <= b[3]
 def boxmask(pid, h, w):
     m = np.zeros((h, w), bool); b = EYEBOX.get(pid)
     if b: m[int(b[0] * h):int(b[1] * h) + 1, int(b[2] * w):int(b[3] * w) + 1] = True
     return m
-LIGHT_MIN = {'kael': 238}   # 카엘은 머리카락 하이라이트가 밝은 회색이라 더 하얀 것만
+LIGHT_MAX = {'irma': 900}   # 흰 옷이 없는 초상은 더 큰 밝은 조각도 배경으로 봐요
+LIGHT_MIN = {'irma': 225, 'kael': 238}   # 카엘은 머리카락 하이라이트가 밝은 회색이라 더 하얀 것만
 CLEAN_EDGE = {'irma', 'artua', 'kael', 'grego', 'bau'}
 INNER_WHITE = {'bau': .45}   # 이 높이 아래에 갇힌 흰 덩어리는 배경 (꼬리와 목도리 사이)
 BOTTOM = {'bau': .8}   # 시트 아래쪽 이만큼만 남겨요
@@ -178,7 +179,7 @@ def build(pid):
             lab, nl = ndimage.label(lt)
             for i in range(1, nl + 1):
                 ys, xs = np.nonzero(lab == i)
-                if len(ys) <= 60 and ys.mean() < h * HEADY.get(pid, .9) and not inbox(pid, ys.mean() / h, xs.mean() / w): small[ys, xs] = 0
+                if len(ys) <= LIGHT_MAX.get(pid, 60) and ys.mean() < h * HEADY.get(pid, .9) and not inbox(pid, ys.mean() / h, xs.mean() / w): small[ys, xs] = 0
             for _ in range(3):   # 테두리에 붙은 작은 밝은 점 (투명과 맞닿은 연한 덩어리 8 칸 이하, 높이 상관없이 · 셔츠 같은 큰 덩어리는 그대로)
                 al = small[..., 3] > 0; rgb = small[..., :3].astype(int)
                 pale = al & (rgb.mean(-1) > 140) & (rgb.max(-1) - rgb.min(-1) < 60) & ~boxmask(pid, h, w)
