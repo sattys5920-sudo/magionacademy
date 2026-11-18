@@ -76,11 +76,14 @@ def a10():   # Eon: 은하 소용돌이 + 별빛
         x, y = rs.randint(8, 56), rs.randint(8, 58)
         if f[y, x] > .1: img[y, x, :3] = 255; img[y, x, 3] = 255
     return img
-def a11():   # Nyx: 그림자 날개 + 가시 왕관, 보랏빛 테두리
-    f = np.maximum.reduce([flame(32, 46, 44, 12, 80, 1.6, 2, 3), wings(32, 40, 21, 32, 180)])
-    thorn = np.maximum.reduce([flame(32 + dx, 14, 8, 1.8, 90 + i, .3, dx * .3) for i, dx in enumerate((-9, -5, 0, 5, 9))])
-    img = render(np.maximum(f, thorn), W.VOID, '#7A40E0', 1.5); e = (np.maximum(f, thorn) > .02) & (np.maximum(f, thorn) < .2); img[e, :3] = hx('#B080FF'); img[e, 3] = 220
-    return sparks(img, 211, 14, '#5A30A0', 32, 0, 34, 34, 3)
+def a11():   # Nyx: 망토처럼 넓게 감싼 그림자 날개 + 또렷한 가시 왕관 셋, 보랏빛 테두리 (예전엔 가는 날개 끝이 벌레 다리처럼 보였어요)
+    body = flame(32, 47, 42, 12, 80, 1.2, 2, 3)
+    wl = flame(20, 48, 34, 11, 181, .4, -18, 0, 1, .9, .15); wr = flame(44, 48, 34, 11, 183, .4, 18, 0, 1, .9, .15)
+    crown = np.maximum.reduce([np.clip(flame(32 + dx, 19, h, 3.6, 90 + i, .05, dx * .35, 0, 1, 1.0, 0) * 1.6, 0, 1) for i, (dx, h) in enumerate(((-7, 10), (0, 14), (7, 10)))])
+    f = np.maximum.reduce([body, wl * .8, wr * .8, crown])
+    img = render(f, W.VOID, '#7A40E0', 1.4); e = (f > .02) & (f < .16); img[e, :3] = hx('#B080FF'); img[e, 3] = 220
+    cm = crown > .25; img[cm & (img[..., 3] < 250), :3] = hx('#9A60F0'); img[cm, 3] = 255
+    return sparks(img, 211, 5, '#7A50C8', 32, 4, 30, 26, 2)
 def a12():   # Iris: 오로라 날개 + 무지갯빛 고리
     f = np.maximum(flame(32, 46, 44, 12, 90, 1.3, -3, 4), wings(32, 38, 21, 32, 190) * .9); img = render(f, W.SILV, '#FFFFFF', 1.4)
     cols = [hx(c) for c in ('#FF5A7A', '#FFA040', '#FFE060', '#60E080', '#50B0FF', '#A070FF')]
