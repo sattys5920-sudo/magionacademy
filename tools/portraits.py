@@ -15,9 +15,9 @@ def block_size(a):
     runs = [r for r in runs if 3 <= r <= 16]
     return max(set(runs), key=runs.count) if runs else 8
 # 가장자리에서 안 닿는 갇힌 배경(볼트와 목 사이 등): 그 안의 한 점을 (가로, 세로) 비율로 적어 두면 거기서도 지워요
-KEEP_WHITE = {'madeleine', 'leo', 'selin', 'dodo', 'artua', 'kael', 'grego', 'bau'}
+KEEP_WHITE = {'irma', 'madeleine', 'leo', 'selin', 'dodo', 'artua', 'kael', 'grego', 'bau'}
 FILL_EYES = {'leo'}
-EYEBOX = {'bau': (.2, .52, .12, .88), 'artua': (.38, .51, .46, .69), 'kael': (.36, .54, .46, .74), 'grego': (.36, .56, .44, .73)}   # 눈 상자 (위, 아래, 왼, 오른 비율): 이 안의 흰색(흰자)은 누끼 정리에서 안 건드려요
+EYEBOX = {'irma': (.30, .45, .48, .75), 'bau': (.2, .52, .12, .88), 'artua': (.38, .51, .46, .69), 'kael': (.36, .54, .46, .74), 'grego': (.36, .56, .44, .73)}   # 눈 상자 (위, 아래, 왼, 오른 비율): 이 안의 흰색(흰자)은 누끼 정리에서 안 건드려요
 def inbox(pid, fy, fx):
     b = EYEBOX.get(pid); return bool(b) and b[0] <= fy <= b[1] and b[2] <= fx <= b[3]
 def boxmask(pid, h, w):
@@ -25,15 +25,15 @@ def boxmask(pid, h, w):
     if b: m[int(b[0] * h):int(b[1] * h) + 1, int(b[2] * w):int(b[3] * w) + 1] = True
     return m
 LIGHT_MIN = {'kael': 238}   # 카엘은 머리카락 하이라이트가 밝은 회색이라 더 하얀 것만
-CLEAN_EDGE = {'artua', 'kael', 'grego', 'bau'}
+CLEAN_EDGE = {'irma', 'artua', 'kael', 'grego', 'bau'}
 INNER_WHITE = {'bau': .45}   # 이 높이 아래에 갇힌 흰 덩어리는 배경 (꼬리와 목도리 사이)
 BOTTOM = {'bau': .8}   # 시트 아래쪽 이만큼만 남겨요
-HEADY = {'artua': .56, 'kael': .56, 'grego': .56}   # 머리카락 사이 흰 조각을 지울 높이 (위쪽 여백이 큰 초상은 머리가 아래에 있어요)
+HEADY = {'irma': .75, 'artua': .56, 'kael': .56, 'grego': .56}   # 머리카락 사이 흰 조각을 지울 높이 (위쪽 여백이 큰 초상은 머리가 아래에 있어요)
 POCKETS = {'hazel'}
 HOLES = {'frankie': [(.324, .576), (.675, .576)]}
 # 한 표정만 확대돼서 뽑혔을 때: 그 표정을 (배율, 왼쪽, 위)로 줄여 옮기고, 모든 표정을 같이 잘라요 (왼, 위, 오른, 아래)
 FIT = {'boo': {'happy': (.83, 59, 71)}}
-WHITE_MIN = {'artua': 250, 'kael': 250, 'grego': 250, 'bau': 250, 'selin': 250, 'dodo': 250, 'bone': 253, 'mirabel': 253, 'nabi': 250, 'batri': 250, 'kappa': 250, 'aula': 250, 'mandi': 250, 'jipsin': 250, 'sera': 250, 'madeleine': 253, 'stella': 250, 'leo': 250}   # 붕대가 흰색에 가까워서, 배경(순백)만 지워지게 문턱을 높여요
+WHITE_MIN = {'irma': 250, 'artua': 250, 'kael': 250, 'grego': 250, 'bau': 250, 'selin': 250, 'dodo': 250, 'bone': 253, 'mirabel': 253, 'nabi': 250, 'batri': 250, 'kappa': 250, 'aula': 250, 'mandi': 250, 'jipsin': 250, 'sera': 250, 'madeleine': 253, 'stella': 250, 'leo': 250}   # 붕대가 흰색에 가까워서, 배경(순백)만 지워지게 문턱을 높여요
 CROP = {'bau': (0, 40, 336, 480), 'selin': (90, 0, 810, 966), 'dodo': (30, 0, 870, 860), 'bone': (0, 0, 896, 1128), 'boo': (66, 0, 798, 1062), 'mirabel': (41, 0, 837, 1090), 'nabi': (30, 60, 830, 860), 'batri': (30, 70, 870, 970), 'kappa': (40, 100, 860, 900), 'aula': (60, 100, 840, 900), 'mandi': (80, 70, 840, 880), 'jipsin': (130, 80, 800, 840)}
 def fit(a, t):
     s, dx, dy = t; H, W = a.shape[:2]
