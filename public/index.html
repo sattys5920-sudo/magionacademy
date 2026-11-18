@@ -5285,9 +5285,9 @@ function townList(){
 }
 function townTalk(id){
   const t = TOWNS.find(x => townId(x.id) === id); if (!t) return;
-  const ed = edHook('talk', t.id); if (ed === true) return;   // 녹슨 검의 대장장이: 장면이 나오거나 그날 한마디
+  const ed = edHook('talk', t.id); if (ed === true){ if (typeof mqOnTalk === 'function') mqOnTalk(t.id); return; }   // 녹슨 검의 대장장이: 장면이 나오거나 그날 한마디 (의뢰 「이야기하기」 목표도 함께 세요)
   const c = NL.cast[t.id] || {}, av = townAv(t.id), pic = av ? headImg(av) : `<i class="npcspr" style="width:48px;height:48px;background:url(art/cast_animals.png?v=3) ${-c.pix * 48}px 0/${48 * 16}px 48px no-repeat;image-rendering:pixelated"></i>`;
-  const lines = [...(npcOver.__cast?.[t.id]?.lines || t.lines), ...(typeof mqNpcExtra === 'function' && MQ.ready ? mqNpcExtra(t.id) : [])], ex = typeof mqOnTalk === 'function' ? mqOnTalk(t.id) : null, line = (typeof ed === 'string' && ed) || ex || fillVars(lines[Math.floor(Math.random() * lines.length)], 'sera');   // 의뢰에서 「이야기하기」 목표면 그 대사가 먼저예요
+  const lines = [...(npcOver.__cast?.[t.id]?.lines || t.lines), ...(typeof mqNpcExtra === 'function' && MQ.ready ? mqNpcExtra(t.id) : [])], ex = typeof mqOnTalk === 'function' ? mqOnTalk(t.id) : null, line = ex || (typeof ed === 'string' && ed) || fillVars(lines[Math.floor(Math.random() * lines.length)], 'sera');   // 의뢰에서 「이야기하기」 목표면 그 대사가 먼저예요
   npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${pic}</div><div><b>${esc(townName(t.id))}</b><span class="s sub">마을 사람</span></div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(line)}</div></div>`;
   npcUI().dataset.id = ''; npcUI().classList.add('on');
 }
@@ -19540,7 +19540,7 @@ const EDR = (() => {
   }
   // ---------- 장면 ----------
   const fx = () => edLoad || (edLoad = new Promise((res, rej) => { if (window.EdricFX) return res(); const sc = document.createElement('script'); sc.src = 'edric.js?v=1'; sc.onload = () => res(); sc.onerror = () => { edLoad = null; rej(new Error('edric.js')); }; document.head.appendChild(sc); }));
-  const play = (key, arg) => new Promise(res => { const D = EdricFX.S[key](arg); evPlay({ id: 'edric', name: '에드릭' }, 0, { conditions: { location: D.loc }, scene: { ...(D.time ? { time: D.time } : {}), ...(D.weather ? { weather: D.weather } : {}) }, script: D.script }, { main: true, cast: CAST(), then: ctx => res(ctx) }); });
+  const play = (key, arg) => new Promise(res => { if (evOn) return res(null); const D = EdricFX.S[key](arg); let p; try { p = evPlay({ id: 'edric', name: '에드릭' }, 0, { conditions: { location: D.loc }, scene: { ...(D.time ? { time: D.time } : {}), ...(D.weather ? { weather: D.weather } : {}) }, script: D.script }, { main: true, cast: CAST(), then: ctx => res(ctx) }); } catch(e){ return res(null); } Promise.resolve(p).then(() => { if (!evOn) setTimeout(() => res(null), 0); }, () => res(null)); });   // 다른 장면이 먼저 열려 있거나 오류가 나도 멈춰 있지 않게
   function score(ctx){ const E = S(); if (!E || !ctx || !ctx.pick) return; E.sc = E.sc || { trust: 0, truth: 0, brave: 0 }; E.pick = E.pick || {};
     Object.entries(ctx.pick).forEach(([d, i]) => { if (E.pick['d' + d] != null || i < 0) return; E.pick['d' + d] = i; const k = (SC[d] || [])[i]; if (k) E.sc[k] = (E.sc[k] || 0) + 1; }); }
   const scene = async (key, arg) => { const ctx = await play(key, arg); score(ctx); saveNow(); return ctx; };
@@ -19566,7 +19566,7 @@ const EDR = (() => {
     if (d === 2 && nearForge() && !has('mat')) return hint('d2', '대장간을 눌러 쇠붙이 재료를 건네요 (동글 조약돌 · 찌그러진 깡통)');
     if (d === 3){
       if (!has('play') && atPl('village_square', 2) && evTurn('edric')){ run(async () => { const x = await scene('d3a'); if (x){ mark(E, 'play'); save(); try { syncNpcs(); } catch(e){} setTimeout(() => toast('광장의 마을 어르신에게 말을 걸어 봐요'), 1500); } }); return; }
-      if (has('play') && !has('eld') && atPl('village_square', 4)) return hint('d3', '광장의 ❗마을 어르신에게 말을 걸어 봐요');
+      if (has('play') && !has('eld') && atPl('village_square', 4)) return hint('d3', '광장의 마을 어르신에게 말을 걸어 봐요');
     }
     if (d === 4 && atPl('hill_top', 3)){ if (!night()) return hint('d4', '별 보는 언덕 · 밤에만 열려요 (저녁 7 시부터)'); if (evTurn('edric')) run(async () => { if (await scene('d4')){ mark(E, 'hill'); finishDay(E); } }); return; }
     if (d === 5 && nearForge() && !has('go')){ if (!has('adult')) return hint('d5', '먼저 등불 시장의 마을 어른 셋에게 이야기를 들어 봐요'); if (evTurn('edric')) run(async () => { if (await scene('d5')){ mark(E, 'go'); finishDay(E); } }); return; }
@@ -19623,12 +19623,13 @@ const EDR = (() => {
     return null;
   }
   // ---------- 마을 어른 (3 일째 어르신 · 5 일째 셋) ----------
+  const ED_ADULT = { merchant: '북쪽 봉인이 풀린대. 이십 년 만에.', elder_b: '그때 도망친 그 검사, 요즘 뒷골목에 있다며. 이번에도 도망칠 거야.', elder_a: '쉿. 애들 듣는다.' };   // edric.js 를 받기 전에도 바로 말해요
   function townAt(id){ const E = live(); if (!E) return null; const d = cur(E), at = (TOWN_AT[d] || {})[id]; if (!at || E.gd !== d) return null;
     const want = d === 3 ? cnt(E, 'play') && !cnt(E, 'eld') : !((E.q && E.q.adult) || {})[id];
     if (d === 3 && !cnt(E, 'play')) return null; return { map: at[0], x: at[1], y: at[2], mark: !!want }; }
   function talk(id){ const E = live(); if (!E) return null; const d = cur(E);
     if (d === 3 && id === 'elder_a' && cnt(E, 'play') && !cnt(E, 'eld')){ run(async () => { if (await scene('d3b')){ mark(E, 'eld'); finishDay(E); } }); return true; }
-    if (d === 5 && ADULTS.includes(id) && E.gd === 5){ const L = window.EdricFX && EdricFX.ADULT[id]; if (!L){ fx().catch(() => {}); return null; } E.q = E.q || {}; E.q.adult = E.q.adult || {};
+    if (d === 5 && ADULTS.includes(id) && E.gd === 5){ const L = ED_ADULT[id]; if (!L) return null; E.q = E.q || {}; E.q.adult = E.q.adult || {};
       if (!E.q.adult[id]){ E.q.adult[id] = 1; mark(E, 'adult'); save(); setTimeout(() => { try { syncNpcs(); } catch(e){} }, 300); if (cnt(E, 'adult') >= 3) setTimeout(() => toast('이제 대장간에 가 봐요'), 1800); } return L; }
     return null; }
   // ---------- 재 (5 일째 · 7 일째 바깥) ----------
