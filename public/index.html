@@ -1630,7 +1630,7 @@ let haltSave = false; const SAVE_SID = Math.random().toString(36).slice(2, 10), 
 //   친구 이름 · 기숙사 · 얼굴 · 방 가구 · 직업 · 아기 동물 · 이벤트에서 남의 진행을 보는 몇 가지만 · 방 구경처럼 다 필요할 때는 그때 한 번 받아요 (playersFull)
 const pubOf = p => { if (!p) return null; const nn = p.nnpc && typeof p.nnpc === 'object' ? Object.fromEntries(Object.entries(p.nnpc).map(([k, v]) => [k, { met: (v && v.met) || null, at: (v && v.at) || null }])) : null;
   return { nick: p.nick, look: p.look, house: p.house || null, av: p.av || null, room: p.room || [], bedOff: p.bedOff || null, ex: p.ex ? { job: p.ex.job || null, wp: p.ex.wp || 0, j1: xJob1(p.ex), j2: xJob2(p.ex) } : null, tw: (p.tw && p.tw.best) || null,
-    baby: p.baby ? { adopt: p.baby.adopt || null, follow: p.baby.follow || null, k: p.baby.k ?? null } : null, cat: p.cat ? { ev: p.cat.ev || null, done: p.cat.done ?? null } : null, nubi: p.nubi || null, nnpc: nn }; };
+    baby: p.baby ? { adopt: p.baby.adopt || null, follow: p.baby.follow || null, k: p.baby.k ?? null } : null, cat: p.cat ? { ev: p.cat.ev || null, done: p.cat.done ?? null } : null, nubi: p.nubi || null, edric: p.edric && p.edric.fin ? { ev: p.edric.ev || null, end: p.edric.end || null, fin: p.edric.fin } : null, nnpc: nn }; };
 let pubSig = '', pubDb = {}, pubMiss = {}, pubChecked = false; const playersFull = {};
 function pubSave(){ if (solo || !uid || !me || !F || !db) return; try { const o = fbKeep(fbClean(pubOf(me))), sg = JSON.stringify(o); if (sg === pubSig) return; pubSig = sg; F.set(F.ref(db, 'pub/' + uid), o).catch(() => { pubSig = ''; }); } catch(e){} }
 function pubMerge(){ playersList = { ...pubMiss, ...pubDb }; if (uid && me && !playersList[uid]) playersList[uid] = pubOf(me); }
@@ -4229,7 +4229,7 @@ function showAdmin(){
   AD.offs.forEach(f => f && f()); AD.offs = []; AD.examBd = {}; AD.day = AD.day || todayKey(); sgListen(); if (!noticeOff && F && db) noticeOff = F.onValue(F.ref(db, 'notice/cur'), s => { noticeCur = s.val(); if (AD.tab === 'gift' && !adminTyping()) adminRender(); });
   const L = (p, k, q) => { if (k === 'players') return adPlayersPoll(); AD.offs.push(F.onValue(q || F.ref(db, p), s => { AD[k] = s.val() || {}; if (adminTyping()){ AD.skip = true; return; } adminRender(); })); };
   World.Avatar.preload(World.Avatar.CATS).then(() => adminRender());
-  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('tw/ctl', 'twctl'); L('egg/ctl', 'eggctl'); L('egg/care', 'eggcare'); L('egg/story', 'eggstory'); L('egg/vote', 'eggvote'); L('adm/heart', 'heart'); L('adm/evdone', 'evdone'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('fam/pick', 'fampick'); L('fam/ctl', 'famctl'); L('fairy/ctl', 'fairyctl'); L('seed/ctl', 'seedctl'); L('tilda/ctl', 'tlctl'); L('nubi/ctl', 'nbctl'); L('wish/ctl', 'wsctl'); L('wish/list', 'wslist'); L('wish/cheer', 'wscheer'); L('wish/own', 'wsown'); L('wish/cby', 'wscby'); L('garden/ctl', 'gdctl'); L('knit/ctl', 'knctl'); L('bouquet/ctl', 'bqctl'); L('bouquet/assign', 'bqas'); L('balloon/ctl', 'blnctl'); L('capsule/ctl', 'capctl'); L('promo/ctl', 'grctl'); L('promo/re', 'grre'); L('grfix', 'grfix'); L('raid/ctl', 'rdctl'); L('day/ctl', 'dayctl'); L('sports/ctl', 'sportsctl'); L('j2', 'j2'); L('capsule/who', 'capwho'); L('capsule/letter', 'caplt'); L('ltr/ctl', 'ltctl'); L('ck/ctl', 'ckctl'); L('stick/ctl', 'stkctl'); L('hib/ctl', 'hibctl'); L('cold/ctl', 'coldctl'); L('cat/ctl', 'catctl'); L('cat/names', 'catnames'); L('cat/hide', 'cathide'); L('hib/den', 'hibden'); L('hib/give', 'hibgive'); L('stick/box', 'stkbox'); L('stick/by', 'stkby'); L('stick/mine', 'stkmine'); L('stick/npc', 'stknpc'); L('stick/hold', 'stkhold'); L('shout', 'shout'); L('shoutctl', 'shoutctl'); L('bm/ctl', 'bmctl'); L('bm/got', 'bmgot'); L('bm/place', 'bmplace'); L('bm/done', 'bmdone'); L('ltr/assign', 'ltas'); L('ltr/reply', 'ltrep'); L('otumo/ctl', 'otctl'); L('newnpc', 'nnctl'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('morph/ctl', 'moctl'); L('morph/st', 'most'); L('morph/form', 'moform'); L('board', 'board'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event'){ if (adminTyping()) AD.skip = true; else adminRender(); } })); }
+  if (F && db){ AD.offs.push(F.onValue(F.ref(db, '.info/serverTimeOffset'), s => { srvOff = s.val() || 0; srvOk = true; })); AD.offs.push(F.onValue(F.ref(db, 'npcs'), s => { npcOver = s.val() || {}; adminRender(); })); L('online', 'online'); L('pending', 'pending'); L('school/ctl', 'schoolctl'); L('tw/ctl', 'twctl'); L('egg/ctl', 'eggctl'); L('egg/care', 'eggcare'); L('egg/story', 'eggstory'); L('egg/vote', 'eggvote'); L('adm/heart', 'heart'); L('adm/evdone', 'evdone'); L('errs', 'errs', F.query(F.ref(db, 'errs'), F.limitToLast(300))); L('players', 'players'); L('defense/ctl', 'dfctl'); L('defense/pick', 'dfpick'); L('defense/st', 'dfst'); L('puzzle/ctl', 'pzctl'); L('puzzle/board', 'pzboard'); L('puzzle/own', 'pzown'); L('puzzle/chest', 'pzchest'); L('lantern/ctl', 'lnctl'); L('lantern/cnt', 'lncnt'); L('lantern/color', 'lncolor'); L('pumpkin/ctl', 'pkctl'); L('gtrain/ctl', 'gtctl'); L('gtrain/ride', 'gtride'); L('baby/pick', 'bbpick'); L('fam/pick', 'fampick'); L('fam/ctl', 'famctl'); L('fairy/ctl', 'fairyctl'); L('seed/ctl', 'seedctl'); L('tilda/ctl', 'tlctl'); L('nubi/ctl', 'nbctl'); L('wish/ctl', 'wsctl'); L('wish/list', 'wslist'); L('wish/cheer', 'wscheer'); L('wish/own', 'wsown'); L('wish/cby', 'wscby'); L('garden/ctl', 'gdctl'); L('knit/ctl', 'knctl'); L('bouquet/ctl', 'bqctl'); L('bouquet/assign', 'bqas'); L('balloon/ctl', 'blnctl'); L('capsule/ctl', 'capctl'); L('promo/ctl', 'grctl'); L('promo/re', 'grre'); L('grfix', 'grfix'); L('raid/ctl', 'rdctl'); L('day/ctl', 'dayctl'); L('sports/ctl', 'sportsctl'); L('j2', 'j2'); L('capsule/who', 'capwho'); L('capsule/letter', 'caplt'); L('ltr/ctl', 'ltctl'); L('ck/ctl', 'ckctl'); L('stick/ctl', 'stkctl'); L('hib/ctl', 'hibctl'); L('cold/ctl', 'coldctl'); L('edric/ctl', 'edctl'); L('cat/ctl', 'catctl'); L('cat/names', 'catnames'); L('cat/hide', 'cathide'); L('hib/den', 'hibden'); L('hib/give', 'hibgive'); L('stick/box', 'stkbox'); L('stick/by', 'stkby'); L('stick/mine', 'stkmine'); L('stick/npc', 'stknpc'); L('stick/hold', 'stkhold'); L('shout', 'shout'); L('shoutctl', 'shoutctl'); L('bm/ctl', 'bmctl'); L('bm/got', 'bmgot'); L('bm/place', 'bmplace'); L('bm/done', 'bmdone'); L('ltr/assign', 'ltas'); L('ltr/reply', 'ltrep'); L('otumo/ctl', 'otctl'); L('newnpc', 'nnctl'); L('snow/ctl', 'snowctl'); L('snow/st', 'snowst'); L('snow/who', 'snowwho'); L('morph/ctl', 'moctl'); L('morph/st', 'most'); L('morph/form', 'moform'); L('board', 'board'); L('baby/ctl', 'bbctl'); L('pumpkin/pts', 'pkpts'); L('houses', 'houses'); L('games', 'games'); AD.offs.push(F.onValue(F.ref(db, 'story'), s => { AD.story = s.val() || {}; wxForce = AD.story.wx || null; bandForce = AD.story.band || null; if (!adminTyping()) adminRender(); })); adminChat(); AD.offs.push(F.onValue(F.ref(db, 'defense/pick'), s => { AD.dfpick = s.val() || {}; if (AD.tab === 'event'){ if (adminTyping()) AD.skip = true; else adminRender(); } })); }
   adminRender();
 }
 // 관리자: 고르는 칸(드롭다운)을 펼친 동안은 새로 그리지 않아요 (학생 접속 정보가 자주 바뀌어도 닫히지 않게) · 고르거나 닫으면 밀린 걸 그려요
@@ -5280,13 +5280,14 @@ const townName = id => fillVars(npcOver.__cast?.[id]?.name || NL.cast[id]?.name 
 function townList(){
   if (!NL.cast || !Object.keys(NL.cast).length) return [];
   return TOWNS.filter(t => (!t.when || t.when.includes(bandNow())) && (!t.need || flagOn(t.need))).map(t => {
-    const c = NL.cast[t.id] || {}, av = townAv(t.id);
-    return { id: townId(t.id), name: townName(t.id), map: t.map, x: t.x, y: t.y, r: t.r, wander: true, ...(av ? { av } : c.pix !== undefined ? { pix: c.pix } : {}) }; }).filter(o => o.av || o.pix !== undefined);
+    const c = NL.cast[t.id] || {}, av = townAv(t.id), ed = edHook('townAt', t.id);   // 녹슨 검의 대장장이: 그날 할 일이면 다른 자리에 ❗와 함께 서 있어요
+    return { id: townId(t.id), name: townName(t.id), map: ed ? ed.map : t.map, x: ed ? ed.x : t.x, y: ed ? ed.y : t.y, r: ed ? 0 : t.r, wander: true, ...(ed && ed.mark ? { mark: 1 } : {}), ...(av ? { av } : c.pix !== undefined ? { pix: c.pix } : {}) }; }).filter(o => o.av || o.pix !== undefined);
 }
 function townTalk(id){
   const t = TOWNS.find(x => townId(x.id) === id); if (!t) return;
+  const ed = edHook('talk', t.id); if (ed === true) return;   // 녹슨 검의 대장장이: 장면이 나오거나 그날 한마디
   const c = NL.cast[t.id] || {}, av = townAv(t.id), pic = av ? headImg(av) : `<i class="npcspr" style="width:48px;height:48px;background:url(art/cast_animals.png?v=3) ${-c.pix * 48}px 0/${48 * 16}px 48px no-repeat;image-rendering:pixelated"></i>`;
-  const lines = [...(npcOver.__cast?.[t.id]?.lines || t.lines), ...(typeof mqNpcExtra === 'function' && MQ.ready ? mqNpcExtra(t.id) : [])], ex = typeof mqOnTalk === 'function' ? mqOnTalk(t.id) : null, line = ex || fillVars(lines[Math.floor(Math.random() * lines.length)], 'sera');   // 의뢰에서 「이야기하기」 목표면 그 대사가 먼저예요
+  const lines = [...(npcOver.__cast?.[t.id]?.lines || t.lines), ...(typeof mqNpcExtra === 'function' && MQ.ready ? mqNpcExtra(t.id) : [])], ex = typeof mqOnTalk === 'function' ? mqOnTalk(t.id) : null, line = (typeof ed === 'string' && ed) || ex || fillVars(lines[Math.floor(Math.random() * lines.length)], 'sera');   // 의뢰에서 「이야기하기」 목표면 그 대사가 먼저예요
   npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${pic}</div><div><b>${esc(townName(t.id))}</b><span class="s sub">마을 사람</span></div><button class="sx" data-nx="close">✕</button></div><div class="npct">${esc(line)}</div></div>`;
   npcUI().dataset.id = ''; npcUI().classList.add('on');
 }
@@ -5303,6 +5304,7 @@ async function castSprite(id, ctx){
   const mc = typeof MQ !== 'undefined' && MQ.cast[id]; if (mc && mc.av && !npcOver.__cast?.[id]?.av) return { kind: 'av', av: World.Avatar.fix(mc.av) }; if (mc && mc.spr !== undefined) return { kind: 'spr', spr: mc.spr, float: mc.float };
   const c = { ...(NL.cast[id] || {}), ...((ctx.cast || {})[id] || {}) };
   const ov = npcOver.__cast?.[id];   // 관리자가 꾸민 조연 (npcs/__cast/<id>)
+  if (c.cv) return { kind: 'img', img: typeof c.cv === 'function' ? c.cv() : c.cv, w: c.w || 60, z: c.z ?? -1 };   // 이벤트가 그려서 넘긴 소품 (화로 · 잔 등 · 기본은 인물 뒤)
   if (ov?.av || c.av) return { kind: 'av', av: World.Avatar.fix(ov?.av || c.av) };
   if (c.look !== undefined) return { kind: 'av', av: World.Avatar.fromLook(c.look) };
   if (c.pix !== undefined){ const im = await loadImg('art/cast_animals.webp?v=3'); return im ? { kind: 'img', img: cropCanvas(im, c.pix * 32, 0, 32, 32), w: c.w || 56 } : null; }   // 직접 그린 조연 동물 (tools/iso/cast_animals.py)
@@ -5338,7 +5340,7 @@ async function stageBg(pid, time, weather){
   if (m.indoor){ g.globalCompositeOperation = 'multiply'; g.fillStyle = 'rgb(200,180,210)'; g.fillRect(0, 0, EV_W, EV_H); }
   const Q = { dim: 'rgb(150,140,170)', warm: 'rgb(255,215,170)', green: 'rgb(170,220,160)', cave: 'rgb(70,80,130)', sky: 'rgb(170,180,255)', indoor: 'rgb(220,200,210)' }[p.tint];
   if (Q){ g.globalCompositeOperation = 'multiply'; g.fillStyle = Q; g.fillRect(0, 0, EV_W, EV_H); }
-  if (!m.indoor && (weather === 'rain' || weather === 'storm' || weather === 'fog')){ g.globalCompositeOperation = 'multiply'; g.fillStyle = 'rgb(175,180,205)'; g.fillRect(0, 0, EV_W, EV_H); }
+  if (!m.indoor && (weather === 'rain' || weather === 'storm' || weather === 'fog' || weather === 'ash')){ g.globalCompositeOperation = 'multiply'; g.fillStyle = 'rgb(175,180,205)'; g.fillRect(0, 0, EV_W, EV_H); }
   g.globalCompositeOperation = 'source-over';
   if (p.tint === 'cave' || p.tint === 'sky'){ const gr = g.createRadialGradient(EV_W / 2, EV_H / 2, 40, EV_W / 2, EV_H / 2, 200); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, p.tint === 'cave' ? 'rgba(5,5,20,.75)' : 'rgba(40,30,90,.45)'); g.fillStyle = gr; g.fillRect(0, 0, EV_W, EV_H); }
   STG.bg = c; STG.place = pid; STG.wxBase = weather; STG.wx = m.indoor ? null : weather; STG.time = time; STG.wxp = [];   // 실내는 비·안개를 안 그려요
@@ -5369,6 +5371,9 @@ function stageDraw(now){
     if (W === 'snow'){ g.fillStyle = 'rgba(255,255,255,.9)'; STG.wxp.forEach(d => { d.y += 26 * d.v * dt; d.p += dt; if (d.y > EV_H) d.y -= EV_H; g.fillRect(Math.round(d.x + Math.sin(d.p) * 3), Math.round(d.y), 2, 2); }); }
     else { g.strokeStyle = 'rgba(190,205,255,.5)'; g.lineWidth = 1; g.beginPath(); STG.wxp.forEach(d => { d.y += 300 * d.v * dt; d.x -= 60 * d.v * dt; if (d.y > EV_H){ d.y -= EV_H + 10; d.x = Math.random() * (EV_W + 40); } g.moveTo(Math.round(d.x) + .5, d.y); g.lineTo(Math.round(d.x) - 2.5, d.y + 8); }); g.stroke();
       if (W === 'storm' && Math.random() < dt / 7) STG.flash = .5; } }
+  if (W === 'ash'){ while (STG.wxp.length < 70) STG.wxp.push({ x: Math.random() * EV_W, y: Math.random() * EV_H, v: .5 + Math.random() * .7, p: Math.random() * 6 });
+    STG.wxp.forEach(d => { d.y += 14 * d.v * dt; d.p += dt * 1.3; if (d.y > EV_H){ d.y -= EV_H + 4; d.x = Math.random() * EV_W; } g.fillStyle = d.v > .9 ? 'rgba(120,110,110,.85)' : 'rgba(200,192,188,.75)'; g.fillRect(Math.round(d.x + Math.sin(d.p) * 5), Math.round(d.y), d.v > 1 ? 2 : 1, d.v > 1 ? 2 : 1); }); }   // 재: 천천히 흔들리며 내려요
+  if (STG.tint){ g.fillStyle = STG.tint; g.fillRect(0, 0, EV_W, EV_H); }
   if (W === 'fog'){ const t = now / 1000; g.fillStyle = 'rgba(215,210,232,.18)'; g.fillRect(0, 0, EV_W, EV_H); for (let i = 0; i < 4; i++){ g.fillStyle = 'rgba(225,220,240,.12)'; g.beginPath(); g.ellipse(((i * 97 + t * 8) % (EV_W + 140)) - 70, EV_H * (.25 + i * .18), 110, 16, 0, 0, Math.PI * 2); g.fill(); } }
   g.setTransform(1, 0, 0, 1, 0, 0);
   if (STG.flash > 0){ g.fillStyle = `rgba(255,255,255,${Math.min(1, STG.flash * 2)})`; g.fillRect(0, 0, EV_W, EV_H); STG.flash -= dt; }
@@ -5500,11 +5505,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 function evUI(){ return $('#evstage'); }
 async function evPlay(n, k, ev, opt){
   if (evOn) return; World.hideBubble && World.hideBubble();
-  const ctx = { n, k, ev, opt, sum: 0, cast: npcProf(n.id).cast || {}, cold: false }; evOn = ctx;
+  const ctx = { n, k, ev, opt, sum: 0, cast: { ...(npcProf(n.id).cast || {}), ...(opt.cast || {}) }, cold: false }; evOn = ctx;   // opt.cast: 이벤트가 따로 넘기는 조연 (에드릭 등)
   EV_H = innerHeight > innerWidth * 1.3 ? 270 : 180; EV_FLOOR = EV_H - 14;   // 세로 화면은 무대를 더 높게
   const ui = evUI(); ui.innerHTML = `<div class="evwrap"><canvas width="${EV_W}" height="${EV_H}"></canvas><div class="evbox"><div class="evport"></div><div class="evname"></div><div class="evtext"></div><div class="evch"></div><div class="evtap">▼</div></div>${opt.replay ? '<button class="evskip">끝내기</button>' : ''}</div>`;
   ui.classList.add('on');
-  STG.cv = ui.querySelector('canvas'); STG.g = STG.cv.getContext('2d'); STG.actors = {}; STG.cam = { z: 1, x: 0, sh: 0 }; STG.fade = 1; STG.flash = 0; STG.speaker = null;
+  STG.cv = ui.querySelector('canvas'); STG.g = STG.cv.getContext('2d'); STG.actors = {}; STG.cam = { z: 1, x: 0, sh: 0 }; STG.fade = 1; STG.flash = 0; STG.speaker = null; STG.tint = null;
   NPC_IMG_STAGE = NPC_IMG_STAGE || Object.assign(new Image(), { src: `art/npcs.webp?v=${NPC_ART_V}` }); EMO_IMG = EMO_IMG || Object.assign(new Image(), { src: 'art/emo.png?v=2' });
   const sc = ev.scene || {};
   await stageBg(ev.conditions?.location === 'any' ? placeNear() : ev.conditions?.location || 'village_square', sc.time || bandNow(), sc.weather || weatherToday());
@@ -5560,7 +5565,7 @@ async function evRun(ctx, sc){
     const c = s.cmd; if (!c) continue;
     if (c === 'line'){ if (!STG.actors[s.who] && s.who !== 'voice' && s.who !== 'player') await evShow(ctx, s.who, Object.values(STG.actors).some(a => a.x > 200) ? 'far_left' : 'right'), evFace(); STG.speaker = s.who; await evSay(ctx, castName(ctx, s.who), s.text); }
     else if (c === 'narration'){ STG.speaker = null; await evSay(ctx, '', s.text, true); }
-    else if (c === 'choice'){ const o = await evChoose(ctx, s.options || []); if (o.confirm && !ctx.opt.replay && !(await confirmBox(fillVars(o.confirm, ctx.n.id), o.confirmOk || '그렇게 할래요', '다시 생각할래요'))){ i--; continue; } if (!ctx.opt.replay){ ctx.sum += o.affinity || 0; if (o.flag){ me.nflag = me.nflag || {}; me.nflag[o.flag] = 1; } } if (o.next in lab) i = lab[o.next]; }
+    else if (c === 'choice'){ const o = await evChoose(ctx, s.options || []); if (s.id != null){ ctx.pick = ctx.pick || {}; ctx.pick[s.id] = (s.options || []).indexOf(o); } if (o.confirm && !ctx.opt.replay && !(await confirmBox(fillVars(o.confirm, ctx.n.id), o.confirmOk || '그렇게 할래요', '다시 생각할래요'))){ i--; continue; } if (!ctx.opt.replay){ ctx.sum += o.affinity || 0; if (o.flag){ me.nflag = me.nflag || {}; me.nflag[o.flag] = 1; } } if (o.next in lab) i = lab[o.next]; }
     else if (c === 'goto'){ if (s.to in lab) i = lab[s.to]; }
     else if (c === 'rename'){ if (!ctx.opt.replay && typeof MQ !== 'undefined'){ mqState().named[s.who] = s.name; if (STG.actors[s.who]) STG.actors[s.who].id = s.who; } }
     else if (c === 'input'){ const v = await evInput(ctx, s); if (!ctx.opt.replay && typeof MQ !== 'undefined'){ mqState().named[s.key] = v; } }
@@ -5571,11 +5576,11 @@ async function evRun(ctx, sc){
     else if (c === 'move' || c === 'follow'){
       const fw = s.who === 'player' ? ctx.n && ctx.n.id : s.who;   // 「플레이어를 따라가요」로 적힌 경우: 이야기 주인공 NPC가 따라와요
       if (c === 'follow'){ await Promise.all([evWalk(fw, 'far_right'), sleep(300).then(() => evWalk('player', 'far_right'))]); }   // 둘이 같은 방향으로 걸어가요 (화면 밖으로 나갔다 반대쪽으로 들어오지 않아요)
-      if (s.transition !== 'cut') await evFadeTo(1, 280);
+      if (s.transition !== 'cut' && s.transition !== 'dark') await evFadeTo(1, 280);   // dark: 앞에서 fade_out 한 채로 바꾸고, 뒤의 fade_in 으로 밝혀요
       await stageBg(s.to, s.time || STG.time, s.weather || STG.wxBase);
       if (s.clear) Object.keys(STG.actors).forEach(k => { if (k !== 'player') delete STG.actors[k]; });
       if (c === 'follow'){ const a = STG.actors[fw], p = STG.actors.player; if (a) a.x = POSX.far_left - 24; if (p) p.x = POSX.far_left - 96; }   // 이미 걷던 모양 그대로, 캇파가 앞에 · 서로 겹치지 않게
-      if (s.transition !== 'cut') await evFadeTo(0, 280); else STG.fade = 0;
+      if (s.transition === 'dark'){} else if (s.transition !== 'cut') await evFadeTo(0, 280); else STG.fade = 0;
       if (c === 'follow') await Promise.all([evWalk(fw, 'right'), evWalk('player', 'left')]);
       evFace(); }
     else if (c === 'walk'){ if (!STG.actors[s.who]){ await evShow(ctx, s.who, (POSX[s.to] ?? 160) > 160 ? 'off_right' : 'off_left'); } await evWalk(s.who, s.to); evFace(); }
@@ -5588,6 +5593,8 @@ async function evRun(ctx, sc){
     else if (c === 'bgm') evTrackSet(s.track && /^[a-z0-9_]+$/.test(s.track) ? s.track : null);
     else if (c === 'wait') await sleep(Math.min(5, s.sec || 1) * 1000);
     else if (c === 'fade_in') await evFadeTo(0, 400);
+    else if (c === 'wx'){ STG.wx = s.weather || null; STG.wxp = []; }   // 장면 중간에 날씨만 (ash 재가 내려요)
+    else if (c === 'tint') STG.tint = s.v || null;   // 화면 전체 색 덮개 (붉은 하늘 등)
     else if (c === 'fade_out') await evFadeTo(1, 400);
     else if (!ctx.opt.replay){
       if (c === 'give_item'){ me.inv[s.item] = (me.inv[s.item] || 0) + (s.n || 1); ctx.gave = ctx.gave || {}; ctx.gave[s.item] = (ctx.gave[s.item] || 0) + (s.n || 1); toast(`${ITEM[s.item] || s.item} ×${s.n || 1} 받았어요`); }
@@ -5947,7 +5954,7 @@ function storyReward(c){
 }
 // 메인 주인공 초상화 (public/art/portraits/<id>.png, 5칸: 기본·웃음·화남·놀람·부끄러움 — tools/portraits.py)
 // 서브 NPC 대사창 초상 (art/portraits/<이름>.png, 5표정 한 줄: 기본·웃음·화남·놀람·부끄러움). 아직 그린 애들만 있어요
-const SUB_PORT = { nabi: { portrait: 'nabi', pasp: '266/266' }, batri: { portrait: 'batri', pasp: '280/300' }, kappa: { portrait: 'kappa', pasp: '273/266' }, aula: { portrait: 'aula', pasp: '260/266' }, mandi: { portrait: 'mandi', pasp: '253/270' }, jipsin: { portrait: 'jipsin', pasp: '223/253' }, sera: { portrait: 'sera', pasp: '298/400' }, madeleine: { portrait: 'madeleine', pasp: '298/400' }, stella: { portrait: 'stella', pasp: '298/400' }, leo: { portrait: 'leo', pasp: '298/400' }, otumo: { portrait: 'otumo', pasp: '1/1' }, selin: { portrait: 'selin', pasp: '240/322' }, dodo: { portrait: 'dodo', pasp: '140/143' }, bone: { portrait: 'bone', pasp: '149/188' }, bau: { portrait: 'bau', pasp: '84/88' }, kael: { portrait: 'kael', pasp: '180/242' }, artua: { portrait: 'artua', pasp: '180/242' }, grego: { portrait: 'grego', pasp: '216/290' } };
+const SUB_PORT = { nabi: { portrait: 'nabi', pasp: '266/266' }, batri: { portrait: 'batri', pasp: '280/300' }, kappa: { portrait: 'kappa', pasp: '273/266' }, aula: { portrait: 'aula', pasp: '260/266' }, mandi: { portrait: 'mandi', pasp: '253/270' }, jipsin: { portrait: 'jipsin', pasp: '223/253' }, sera: { portrait: 'sera', pasp: '298/400' }, madeleine: { portrait: 'madeleine', pasp: '298/400' }, stella: { portrait: 'stella', pasp: '298/400' }, leo: { portrait: 'leo', pasp: '298/400' }, otumo: { portrait: 'otumo', pasp: '1/1' }, selin: { portrait: 'selin', pasp: '240/322' }, dodo: { portrait: 'dodo', pasp: '140/143' }, bone: { portrait: 'bone', pasp: '149/188' }, bau: { portrait: 'bau', pasp: '84/88' }, kael: { portrait: 'kael', pasp: '180/242' }, artua: { portrait: 'artua', pasp: '180/242' }, grego: { portrait: 'grego', pasp: '216/290' }, edric: { portrait: 'edric', pasp: '360/484' } };
 const PORTRAITS = { m_jack: ['jack', '128/171'], m_lucian: ['lucian', '224/300'], m_mirabel: ['mirabel', '265/363'], m_frankie: ['frankie', '99/133'], m_wolfgang: ['wolfgang', '99/133'], m_boo: ['boo', '122/177'], m_hazel: ['hazel', '128/171'] }, PORTRAIT_V = 20, PFACE = ['neutral', 'happy', 'angry', 'surprised', 'shy'];
 // 대사 내용으로 표정 고르기 (따로 표시가 없을 때)
 function faceOf(t){
@@ -6584,6 +6591,7 @@ function renderJournal(){
   if (HIB.jnOn()) tabs.push(['hib', '겨울잠']);
   if (COLD.jnOn()) tabs.push(['cold', '감기']);
   if (CAT.jnOn()) tabs.push(['cat', '고양이']);
+  if (EDR.jnOn()) tabs.push(['edric', '대장간']);
   if (jnTab === 'heart') jnTab = 'todo';
   if (jnTab === 'blanc' && !(me.seed && me.seed.note)) jnTab = 'todo';
   if (jnTab === 'tilda' && !(me.tilda && me.tilda.d0)) jnTab = 'todo';
@@ -6592,8 +6600,9 @@ function renderJournal(){
   if (jnTab === 'hib' && !tabs.some(t => t[0] === 'hib')) jnTab = 'todo';
   if (jnTab === 'cold' && !tabs.some(t => t[0] === 'cold')) jnTab = 'todo';
   if (jnTab === 'cat' && !tabs.some(t => t[0] === 'cat')) jnTab = 'todo';
-  const body = jnTab === 'story' ? mqJournalHTML() : jnTab === 'dream' ? dreamJournalHTML() : jnTab === 'blanc' ? blNoteHTML() : jnTab === 'tilda' ? tlNoteHTML() : jnTab === 'wish' ? wsNoteHTML() : jnTab === 'stk' ? STK.jnHTML() : jnTab === 'hib' ? HIB.jnHTML() : jnTab === 'cold' ? COLD.jnHTML() : jnTab === 'cat' ? CAT.jnHTML() : jnTodoHTML();
-  frame(null, '일지', { todo: '오늘의 의뢰', story: '메인 이야기', heart: '오늘 열린 하트 이벤트', dream: '꿈에서 본 것들', blanc: '무슈 블랑이 맛본 요리', tilda: '마틸다와 함께한 닷새', wish: '이름 없는 소원과 응원', stk: '주고받은 막대과자', hib: '숲 동물 겨울잠 준비', cold: '양호실 겨울 감기' }[jnTab], `${typeof BM !== 'undefined' ? BM.pinHTML() : ''}<div class="seg jn-seg" style="grid-template-columns:repeat(${tabs.length},1fr)">${tabs.map(([k, l]) => `<button data-jnt="${k}" class="${jnTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>${body}`);
+  if (jnTab === 'edric' && !tabs.some(t => t[0] === 'edric')) jnTab = 'todo';
+  const body = jnTab === 'story' ? mqJournalHTML() : jnTab === 'dream' ? dreamJournalHTML() : jnTab === 'blanc' ? blNoteHTML() : jnTab === 'tilda' ? tlNoteHTML() : jnTab === 'wish' ? wsNoteHTML() : jnTab === 'stk' ? STK.jnHTML() : jnTab === 'hib' ? HIB.jnHTML() : jnTab === 'cold' ? COLD.jnHTML() : jnTab === 'cat' ? CAT.jnHTML() : jnTab === 'edric' ? EDR.jnHTML() : jnTodoHTML();
+  frame(null, '일지', { todo: '오늘의 의뢰', story: '메인 이야기', heart: '오늘 열린 하트 이벤트', dream: '꿈에서 본 것들', blanc: '무슈 블랑이 맛본 요리', tilda: '마틸다와 함께한 닷새', wish: '이름 없는 소원과 응원', stk: '주고받은 막대과자', hib: '숲 동물 겨울잠 준비', cold: '양호실 겨울 감기', edric: '에드릭의 대장간' }[jnTab], `${typeof BM !== 'undefined' ? BM.pinHTML() : ''}<div class="seg jn-seg" style="grid-template-columns:repeat(${tabs.length},1fr)">${tabs.map(([k, l]) => `<button data-jnt="${k}" class="${jnTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>${body}`);
   on('[data-jnt]', b => { jnTab = b.dataset.jnt; render(); });
   if (jnTab === 'story') mqJournalBind();
   if (jnTab === 'dream') dreamJournalBind();
@@ -6604,6 +6613,7 @@ function renderJournal(){
   if (jnTab === 'hib') HIB.jnBind();
   if (jnTab === 'cold') COLD.jnBind();
   if (jnTab === 'cat') CAT.jnBind();
+  if (jnTab === 'edric') EDR.jnBind();
   on('[data-deliver]', b => {
     const o = me.orders[+b.dataset.deliver]; if (!o || o.done || (me.inv[o.p] || 0) < o.n) return;
     const pay = partyMul(payOf(o)); me.inv[o.p] -= o.n; me.coin += pay; o.done = true; trEv('order'); save();
@@ -8584,7 +8594,7 @@ const FAM = { N: ['Vael', 'Ixi', 'Puck', 'Lotis', 'Sol', 'Lune', 'Ignis', 'Rill'
     ['마지막으로, 너는 무엇이 되고 싶은가?', ['길을 비추는 빛', '곁을 지키는 불', '아무도 모르는 불씨']]] };
 // ===== 처음 온 학생도 덜 정신없게: 이벤트 연출 차례 =====
 //   1 코니 선배 입문이 끝날 때까지 메인 의뢰·이벤트 연출은 기다려요 (공지·우편은 그대로) · 2 입문이 끝나면 메인 의뢰 손님이 먼저 · 3 그 뒤 열린 이벤트를 정한 순서대로 하나씩, 사이에 몇 초 쉬어요
-const EVQ = ['bm', 'day', 'spt', 'stk', 'hib', 'cold', 'cat', 'otumo', 'nn_dodo', 'nn_selin', 'nn_bone', 'nn_bau', 'nn_kael', 'nn_artua', 'nn_grego', 'bq', 'gr', 'bln', 'cap', 'ltr', 'ck', 'snow', 'morph', 'baby', 'fam', 'fairy', 'seed', 'tilda', 'nubi', 'wish', 'garden', 'knit', 'sg'];   // 이벤트 연출 순서: 눈사람 · 마녀 솥 · 아기 동물 · 사역마 불씨 · 요정 시장 · 별 보는 밤
+const EVQ = ['bm', 'day', 'spt', 'stk', 'hib', 'cold', 'cat', 'edric', 'otumo', 'nn_dodo', 'nn_selin', 'nn_bone', 'nn_bau', 'nn_kael', 'nn_artua', 'nn_grego', 'bq', 'gr', 'bln', 'cap', 'ltr', 'ck', 'snow', 'morph', 'baby', 'fam', 'fairy', 'seed', 'tilda', 'nubi', 'wish', 'garden', 'knit', 'sg'];   // 이벤트 연출 순서: 눈사람 · 마녀 솥 · 아기 동물 · 사역마 불씨 · 요정 시장 · 별 보는 밤
 const EVQ_GAP = 6000; let evqWant = {}, evqGapUntil = 0, evqWasBusy = false;
 const mqWaiting = () => typeof MQ !== 'undefined' && MQ.loaded && me && me.mq && me.mq.q && me.mq.ph === 'arrive' && !mqDayFull();
 function evTurn(k){   // 이 이벤트 연출을 지금 띄워도 되는지: 입문 중이 아니고, 메인 의뢰 손님이 기다리지 않고, 쉬는 틈이 지났고, 띄우려는 것 중 가장 앞 차례일 때
@@ -9382,7 +9392,7 @@ function renderMorph(){
 }
 // ---- 장면: 솥 대폭발 (이벤트를 열면) · 원래대로 (다 모으면) ----
 const morphSpawn = (id, x, y, dir = 'up') => { const n = npcGet(id); return n ? { cmd: 'spawn', who: id, name: n.name, ...(n.av ? { av: npcAv(n) } : { spr: n.spr, float: n.float, flap: n.flap }), x, y, dir } : { cmd: 'wait', sec: 0 }; };
-const morphBusy = () => xRunNow() || morphCutOn || snowCutOn || babyCutOn || evOn || sheetOn || mqArriving || (typeof tlOn !== 'undefined' && tlOn) || (typeof wsOn !== 'undefined' && wsOn) || (typeof gdOn !== 'undefined' && gdOn) || (typeof knOn !== 'undefined' && knOn) || (typeof bqOn !== 'undefined' && bqOn) || (typeof ltOn !== 'undefined' && ltOn) || (typeof ckOn !== 'undefined' && ckOn) || (typeof stkOn !== 'undefined' && stkOn) || (typeof hibOn !== 'undefined' && hibOn) || (typeof coldOn !== 'undefined' && coldOn) || (typeof catOn !== 'undefined' && catOn) || (typeof bmOn !== 'undefined' && bmOn) || (typeof otOn !== 'undefined' && otOn) || (typeof nnOn !== 'undefined' && nnOn) || (typeof sdOn !== 'undefined' && sdOn) || (typeof famOn !== 'undefined' && famOn) || (typeof famSayOn !== 'undefined' && famSayOn) || (typeof trCutOn !== 'undefined' && trCutOn) || !!document.getElementById('pk9') || !!document.getElementById('dreamv') || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '');
+const morphBusy = () => xRunNow() || morphCutOn || snowCutOn || babyCutOn || evOn || sheetOn || mqArriving || (typeof tlOn !== 'undefined' && tlOn) || (typeof wsOn !== 'undefined' && wsOn) || (typeof gdOn !== 'undefined' && gdOn) || (typeof knOn !== 'undefined' && knOn) || (typeof bqOn !== 'undefined' && bqOn) || (typeof ltOn !== 'undefined' && ltOn) || (typeof ckOn !== 'undefined' && ckOn) || (typeof stkOn !== 'undefined' && stkOn) || (typeof hibOn !== 'undefined' && hibOn) || (typeof coldOn !== 'undefined' && coldOn) || (typeof catOn !== 'undefined' && catOn) || (typeof bmOn !== 'undefined' && bmOn) || (typeof otOn !== 'undefined' && otOn) || (typeof nnOn !== 'undefined' && nnOn) || !!edHook('busy') || (typeof sdOn !== 'undefined' && sdOn) || (typeof famOn !== 'undefined' && famOn) || (typeof famSayOn !== 'undefined' && famSayOn) || (typeof trCutOn !== 'undefined' && trCutOn) || !!document.getElementById('pk9') || !!document.getElementById('dreamv') || (typeof sgOn !== 'undefined' && sgOn) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || (World.cutBusy && World.cutBusy()) || /^gt_/.test(World.where() || '');
 async function morphPlay(cmds, hooks, mark){
   morphCutOn = true; const [X, Y] = MORPH.LAB;
   try {
@@ -16319,7 +16329,7 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
 function adminEventHTML(){
   const G = f => { try { return typeof f === 'function' ? f() || '' : ''; } catch(e){ return ''; } };
   const REP = [G(() => J2.adminHTML()), G(() => TW.adminHTML()), G(() => EG.adminHTML()), G(() => adminAutoHTML()), G(() => adminStargazeHTML()), G(() => adminGtrainHTML()), G(() => adminLanternHTML()), G(() => adminEventHTML0()), G(() => adminPuzzleHTML()), G(() => adminPumpkinHTML()), G(() => adminMorphHTML()), G(() => adminFairyHTML()), G(typeof adminGrHTML === 'function' ? adminGrHTML : null), G(typeof adminRaidHTML === 'function' ? adminRaidHTML : null), G(typeof adminDayHTML === 'function' ? adminDayHTML : null)];
-  const ONCE = [['sports', () => SPT.adminHTML()], ['cat', () => CAT.adminHTML()], ['cold', () => COLD.adminHTML()], ['hib', () => HIB.adminHTML()], ['stick', () => STK.adminHTML()], ['ck', () => CK.adminHTML()], ['bm', () => BM.adminHTML()], ['snow', () => adminSnowHTML()], ['baby', () => adminBabyHTML()], ['fam', () => adminFamHTML()], ['seed', () => adminSeedHTML()], ['tilda', () => adminTildaHTML()],
+  const ONCE = [['sports', () => SPT.adminHTML()], ['cat', () => CAT.adminHTML()], ['cold', () => COLD.adminHTML()], ['edric', () => EDR.adminHTML()], ['hib', () => HIB.adminHTML()], ['stick', () => STK.adminHTML()], ['ck', () => CK.adminHTML()], ['bm', () => BM.adminHTML()], ['snow', () => adminSnowHTML()], ['baby', () => adminBabyHTML()], ['fam', () => adminFamHTML()], ['seed', () => adminSeedHTML()], ['tilda', () => adminTildaHTML()],
     ['nubi', () => adminNubiHTML()], ['wish', () => adminWishHTML()], ['garden', () => adminGardenHTML()], ['knit', () => adminKnitHTML()], ['bouquet', () => adminBqHTML()], ['balloon', () => adminBlnHTML()], ['capsule', () => adminCapHTML()], ['ltr', () => adminLtHTML()], ['otumo', () => adminOtumoHTML()], ['newnpc', () => adminNewNpcHTML()]];
   const D = Object.fromEntries(EV_ONCE.map(([k, , d]) => [k, !!d])), card = ([k, f], done) => `<div class="evgrp"><div class="evbar"><span>일회성 · ${done ? '연 적 있어요' : '아직 안 열었어요'}</span><button class="btn sm${done ? '' : ' go'}" data-evd="${k}:${done ? 0 : 1}">${done ? '되돌리기' : '열었음'}</button></div>${G(f)}</div>`;
   const done = ONCE.filter(([k]) => evDone(k, D[k])), todo = ONCE.filter(([k]) => !evDone(k, D[k])), H = (t, n) => `<div class="evsec">${t} <small>${n}</small></div>`;
@@ -16339,7 +16349,7 @@ function adminSeen(){
     pkEnd: pk.id ? c(p => p.pk && p.pk.id === pk.id && p.pk.fin) : 0, lnEnd: ln.id ? c(p => p.lnr && p.lnr.id === ln.id) : 0, pzEnd: pz.id ? c(p => p.pz && p.pz.id === pz.id) : 0 };
 }
 // 이벤트 분류: 여러 번 여는 이벤트 · 일회성 (연 적 있음 / 아직 안 엶) · 관리자가 체크하면 adm/evdone/<키> 에 남아요
-const EV_ONCE = [['sports', '동물 운동회'], ['seed', '씨앗 대회 · 무슈 블랑', 1], ['tilda', '수상한 기척 · 마틸다', 1], ['nubi', '낡은 양호실의 누비', 1], ['newnpc', '새 친구 맞이하기', 1], ['ltr', '배트리의 쏟아진 편지', 1], ['cold', '양호실 겨울 감기', 1], ['cat', '달밤 고양이 집회'],
+const EV_ONCE = [['sports', '동물 운동회'], ['edric', '녹슨 검의 대장장이'], ['seed', '씨앗 대회 · 무슈 블랑', 1], ['tilda', '수상한 기척 · 마틸다', 1], ['nubi', '낡은 양호실의 누비', 1], ['newnpc', '새 친구 맞이하기', 1], ['ltr', '배트리의 쏟아진 편지', 1], ['cold', '양호실 겨울 감기', 1], ['cat', '달밤 고양이 집회'],
   ['baby', '길 잃은 아기 동물'], ['snow', '눈사람'], ['fam', '꺼지지 않는 불씨 (사역마)'], ['garden', '창밖 정원'], ['bm', '아울라의 한밤 도서관 · 열두 개의 밤'], ['balloon', '마음 풍선'], ['ck', '마들렌의 쿠키 상자'], ['otumo', '오투모 등장'],
   ['wish', '별빛 소원'], ['capsule', '시간 캡슐'], ['knit', '겨울 뜨개질'], ['bouquet', '꽃말 꽃다발 공방'], ['stick', '막대과자의 날'], ['hib', '겨울잠 준비']];
 const evDone = (k, d) => { const v = (AD.evdone || {})[k]; return v === undefined ? !!d : !!v; };
@@ -16361,6 +16371,7 @@ function adminEventOverview(){
     ${row('유령 열차', !!(AD.gtctl && AD.gtctl.open), AD.gtctl && AD.gtctl.open ? `${GT.DEST[AD.gtctl.dest] || ''} · 탄 학생 ${n((AD.gtride || {})[AD.gtctl.id])}명` : '-')}
     ${(() => { const c = COLD.adminRow(); return row('양호실 겨울 감기', c.open, c.info); })()}
     ${(() => { const c = CAT.adminRow(); return row('달밤 고양이 집회', c.open, c.info); })()}
+    ${(() => { const c = EDR.adminRow(); return row('녹슨 검의 대장장이', c.open, c.info); })()}
     ${row('별 보는 밤', !!sg.open, sg.open ? `${({ gather: '모이는 중', assign: '별 나눠 줌', light: '별 켜는 중', sky: '하늘 보기', done: '이야기 중', end: '끝' })[sg.ph] || ''} · 참가 ${n(sgJoin)}명 · 켜진 별 ${n(sgLit)}/12` : '-')}
   </div></div>`;
 }
@@ -17196,7 +17207,7 @@ function tutNpcs(){
   return [{ id: 'tut:senior', name: TUT.name, map: TUT.map, x: TUT.x, y: TUT.y, r: 1, mark, wander: true, dir: 'down', av: tutAv() }];
 }
 var tutAuto = false;
-const uiBusy = () => !!(xRunNow() || document.getElementById('tr2') || document.getElementById('dreamv') || document.getElementById('pk9') || evOn || sheetOn || mqArriving || fishing || cooking || lesson || (typeof sgOn !== 'undefined' && sgOn) || (typeof tlOn !== 'undefined' && tlOn) || (typeof nbOn !== 'undefined' && nbOn) || (typeof wsOn !== 'undefined' && wsOn) || (typeof knOn !== 'undefined' && knOn) || (typeof bqOn !== 'undefined' && bqOn) || (typeof ltOn !== 'undefined' && ltOn) || (typeof ckOn !== 'undefined' && ckOn) || (typeof stkOn !== 'undefined' && stkOn) || (typeof hibOn !== 'undefined' && hibOn) || (typeof coldOn !== 'undefined' && coldOn) || (typeof catOn !== 'undefined' && catOn) || (typeof bmOn !== 'undefined' && bmOn) || (typeof otOn !== 'undefined' && otOn) || (typeof nnOn !== 'undefined' && nnOn) || (World.cutBusy && World.cutBusy()) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || $('#fishui').classList.contains('on'));   // 장면·미니게임·창이 떠 있으면 다른 알림은 기다려요
+const uiBusy = () => !!(xRunNow() || document.getElementById('tr2') || document.getElementById('dreamv') || document.getElementById('pk9') || evOn || sheetOn || mqArriving || fishing || cooking || lesson || (typeof sgOn !== 'undefined' && sgOn) || (typeof tlOn !== 'undefined' && tlOn) || (typeof nbOn !== 'undefined' && nbOn) || (typeof wsOn !== 'undefined' && wsOn) || (typeof knOn !== 'undefined' && knOn) || (typeof bqOn !== 'undefined' && bqOn) || (typeof ltOn !== 'undefined' && ltOn) || (typeof ckOn !== 'undefined' && ckOn) || (typeof stkOn !== 'undefined' && stkOn) || (typeof hibOn !== 'undefined' && hibOn) || (typeof coldOn !== 'undefined' && coldOn) || (typeof catOn !== 'undefined' && catOn) || (typeof bmOn !== 'undefined' && bmOn) || (typeof otOn !== 'undefined' && otOn) || (typeof nnOn !== 'undefined' && nnOn) || !!edHook('busy') || (World.cutBusy && World.cutBusy()) || $('#storyui').classList.contains('on') || $('#npcui').classList.contains('on') || $('#fishui').classList.contains('on'));   // 장면·미니게임·창이 떠 있으면 다른 알림은 기다려요
 function tutGreet(){   // 들어오면 코니 선배가 먼저 말을 걸어요 (다른 장면이 끝날 때까지 기다렸다가 한 번만)
   if (tutAuto || !tutOn() || !me || !(!me.tut.g || me.tut.ok)) return; tutAuto = true; let n = 0;
   const iv = setInterval(() => { if (!tutOn() || ++n > 90) return clearInterval(iv); if (!uiBusy()){ clearInterval(iv); tutTalk(); } }, 1500);
@@ -17687,7 +17698,7 @@ async function boot(){
         F.set(F.ref(db, 'adm/heart/' + uid), null); if (!msg.length) return; save(); toast('관리자가 하트를 조정했어요: ' + msg.join(' · ')); if (tab === 'home' && sub === 'rel') render(); });
       F.onValue(F.ref(db, 'adm/reset/' + uid), s => { const v = +s.val() || 0; if (!v) return; let seen = 0; try { seen = +localStorage.getItem('magion-rs-' + uid) || 0; } catch(e){}
         if (v > seen && v > bootT - 5000){ try { localStorage.setItem('magion-rs-' + uid, v); } catch(e){} haltSave = true; location.reload(); } });   // 관리자가 데이터를 리셋하면 새로 불러와요
-      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); autoListen(); babyListen(); famListen(); fairyListen(); seedListen(); tildaListen(); nubiListen(); wishListen(); gardenListen(); knitListen(); bqListen(); blnListen(); capListen(); letterListen(); try { grListen(); } catch(e){} try { rdListen(); } catch(e){} try { ddListen(); } catch(e){} CK.listen(); STK.listen(); HIB.listen(); COLD.listen(); try { CAT.listen(); } catch(e){} try { J2.listen(); TW.listen(); EG.listen(); } catch(e){} try { SPT.listen(); } catch(e){} BM.listen(); shoutListen(); shoutUi(); otumoListen(); nnListen(); blancListen(); snowListen(); morphListen(); boardListen(); tarotInit(); clockLadderInit(); prankInit();
+      storyListen(); dfListen(); pzListen(); lnListen(); pkListen(); sgListen(); mailListen(); gtListen(); autoListen(); babyListen(); famListen(); fairyListen(); seedListen(); tildaListen(); nubiListen(); wishListen(); gardenListen(); knitListen(); bqListen(); blnListen(); capListen(); letterListen(); try { grListen(); } catch(e){} try { rdListen(); } catch(e){} try { ddListen(); } catch(e){} CK.listen(); STK.listen(); HIB.listen(); COLD.listen(); try { CAT.listen(); } catch(e){} try { EDR.listen(); } catch(e){} try { J2.listen(); TW.listen(); EG.listen(); } catch(e){} try { SPT.listen(); } catch(e){} BM.listen(); shoutListen(); shoutUi(); otumoListen(); nnListen(); blancListen(); snowListen(); morphListen(); boardListen(); tarotInit(); clockLadderInit(); prankInit();
       F.onValue(F.query(F.ref(db, 'games'), F.limitToLast(30)), s => { gameList = s.val() || {}; syncInvites(); const sg = Object.entries(gameList).map(([id, r]) => r ? id + r.st + Object.keys(r.p || {}).length : '').join('|'); if (sub === 'games' && sg !== gamesSig) render(); gamesSig = sg; });   // 점수가 오를 때마다가 아니라 방이 열리고 닫히고 사람이 드나들 때만 다시 그려요
       F.onValue(F.query(F.ref(db, 'xparty'), F.limitToLast(30)), s => { xpList = s.val() || {}; xpRefresh(); });
       const recWatch = () => { const wk = weekKey(); if (recWatch.wk === wk) return; recWatch.wk = wk; (recWatch.offs || []).forEach(f => f()); recList = {}; recWatch.offs = Object.keys(GAMES).map(g => F.onValue(F.ref(db, `records/${g}/${wk}`), s => { recList[g] = s.val() || {}; if (sub === 'games') render(); })); };
@@ -19419,6 +19430,255 @@ document.addEventListener('click', e => {
   if (a === 'open'){ const P = AD.players || {}, ids = Object.keys(P).filter(id => P[id] && P[id].nick); if (confirm(`「낡은 양호실의 누비」를 시작할까요? 반 학생 ${ids.length} 명이 함께해요.`)) GDB.set('nubi/ctl', { open: true, id: now2(), d0: todayKey(), ids }).then(() => toast('누비 이벤트를 시작했어요')); }
   else if (a === 'close'){ if (confirm('「낡은 양호실의 누비」를 끝낼까요? 이미 시작한 학생은 계속할 수 있어요.')) GDB.upd('nubi/ctl', { open: false }); }
 });
+
+// ===== 「녹슨 검의 대장장이」 (대본 tools/edric/story.md · 장면 대사는 edric.js): 관리자가 열면 학생마다 7 일 · 하루에 한 장면 (날짜가 바뀌어야 다음 날) · 하루 할 일 · 선택지로 믿음 · 진실 · 용기 =====
+//   edric/ctl = { open, id, at } (관리자만 써요) · 장면은 하트 이벤트 무대(evPlay)로 에드릭 초상화와 함께 돌려요
+//   me.edric = { ev, d0 시작한 날, done 마친 날 수 (0 ~ 7), dt 마지막으로 하루를 마친 날짜, gd 할 일이 가리키는 날, g { 할 일: 수 }, q { 할 일: { 열쇠: 1 } }, sc { trust 믿음, truth 진실, brave 용기 }, pick { d1 ~ d7: 고른 번호 }, lt 편지 받음, letter 편지가 열린 날 (6 · 7), end 'A' · 'B' · 'C', fin 끝난 날 }
+//   날: 마친 날 수 + 1 (하루를 마친 날짜에는 다음 날이 안 열려요 · 며칠 쉬어도 건너뛰지 않아요) · 밤 = 19 시 ~ 새벽 4 시 (관리자가 시간대를 밤으로 바꾸면 그때도)
+//   결말: B = 진실 3 이상이고 믿음 · 용기보다 많을 때 · A = (B가 아니고) 믿음 2 이상 · 용기 2 이상 · 둘 합 5 이상 · 둘 다 진실 이상 · C = 그 밖 (점수가 한쪽으로 모이지 않았을 때)
+//   반 전체 기념물 (별 보는 언덕): pub/<uid>.edric.end 를 세서 A가 많으면 「다섯 홈 검」, B가 많으면 「수호대의 종」, 같으면 둘 다 (C는 안 세요) · 내 결말을 봤거나 이벤트를 닫으면 보여요
+let edOn = false, edLoad = null;
+function edHook(f, ...a){ try { return EDR[f](...a); } catch(e){ return null; } }   // 마을 사람 · 바쁨 확인에서 불러요 (EDR이 아직 없어도 괜찮게)
+const EDR = (() => {
+  const FORGE = ['town', 28, 29], MEMO = { sword: ['campus', 20, 7], bell: ['campus', 18, 8] };
+  const SC = { 1: ['trust', 'truth', null], 2: ['trust', 'truth', 'brave'], 3: ['trust', 'brave', 'truth'], 4: ['trust', 'truth', 'brave'], 5: ['trust', 'truth', 'brave'], 6: ['trust', 'truth', 'brave'], 7: ['brave', 'trust', 'truth'] };
+  const SCN = { trust: '믿음', truth: '진실', brave: '용기' }, ENDN = { A: '검을 든 대장장이', B: '검을 녹인 날', C: '떠난 뒷모습' };
+  const DAYN = ['', '대장간의 불', '녹슨 검', '수호대 놀이', '언덕의 세 잔', '다시 오는 재', '이십 년 늦은 편지', '마지막 불'];
+  const MAT = ['g2_pebble', 'j_can'], ADULTS = ['merchant', 'elder_b', 'elder_a'];
+  const GOALS = {
+    1: [{ k: 'go', t: '시장 뒷골목 대장간 찾아가기', at: 1 }, { k: 'lamp', t: '고장 난 등불 맡기기', at: 1 }],
+    2: [{ k: 'mat', t: '대장간에 쇠붙이 재료 가져다주기 (조약돌 · 깡통)', n: 3, at: 1 }, { k: 'bel', t: '대장간 일 돕기 (풀무 누르기)', at: 1 }],
+    3: [{ k: 'play', t: '마을 광장에서 아이들 놀이 보기', pl: 'village_square' }, { k: 'eld', t: '마을 어르신에게 「등불 수호대」 이야기 듣기', pl: 'village_square' }],
+    4: [{ k: 'hill', t: '밤에 별 보는 언덕 가기 (밤에만 열려요)', pl: 'hill_top', night: 1 }],
+    5: [{ k: 'adult', t: '마을 어른 셋에게 이야기 듣기', n: 3, pl: 'lantern_market' }, { k: 'go', t: '대장간 가기', at: 1 }],
+    6: [{ k: 'post', t: '부엉이 우체국 가기', pl: 'owl_post' }, { k: 'give', t: '대장간에 편지 가져가기', at: 1 }],
+    7: [{ k: 'forge', t: '밤에 대장간 가기', at: 1, night: 1 }, { k: 'hill', t: '별 보는 언덕 가기 (밤에만 열려요)', pl: 'hill_top', night: 1 }],
+  };
+  // 5 일째 마을 어른 셋은 등불 시장에 · 3 일째 어르신은 광장에 서 있어요
+  const TOWN_AT = { 3: { elder_a: ['town', 44, 47] }, 5: { merchant: ['town', 34, 44], elder_b: ['town', 30, 44], elder_a: ['town', 32, 41] } };
+  const AV = { body: 1, hair: 24, face: 8, top: 50, legs: 3, feet: 4, cape: 0, neck: 0, hat: 0, acc: 0, skinC: 1, hairC: 15, eyeC: 7, legsC: 3, feetC: 1, topC: 2, lip: 12 };   // 길게 묶은 짙은 갈색 머리 · 갈색 멜빵 앞치마
+  let ctl = null, sig = '', hinted = {}, bel = null; const offs = [];
+  const evId = () => ctl && ctl.id;
+  const S = () => { const E = me && me.edric; return E && E.d0 && (!evId() || E.ev === evId()) ? E : null; };
+  const doneN = E => E.done || 0, cur = E => Math.min(8, doneN(E) + 1), ready = E => doneN(E) < 7 && E.dt !== todayKey();
+  const night = () => bandNow() === 'night' || (bandNow() === 'evening' && kNow().getHours() >= 19);
+  const cnt = (E, k) => (E.gd === cur(E) && E.g && E.g[k]) || 0, gOk = (E, g) => cnt(E, g.k) >= (g.n || 1);
+  const G = (d, k) => (GOALS[d] || []).find(g => g.k === k);
+  const nearForge = (r = 3) => { const t = World.meTile && World.meTile(); return !!t && t.m === FORGE[0] && Math.abs(t.x - FORGE[1]) + Math.abs(t.y - FORGE[2]) <= r; };
+  const live = () => { const E = S(); return E && !E.fin && ready(E) ? E : null; };
+  function ending(sc){ const t = (sc && sc.trust) || 0, r = (sc && sc.truth) || 0, b = (sc && sc.brave) || 0;
+    if (r >= 3 && r > t && r > b) return 'B';
+    if (t >= 2 && b >= 2 && t + b >= 5 && t >= r && b >= r) return 'A';
+    return 'C'; }
+  // ---------- 그림 (소품 · 무대) ----------
+  const CV = {};
+  const cv = (key, w, h, draw) => { if (CV[key]) return CV[key]; const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; draw((x, y, ww, hh, f) => { g.fillStyle = f; g.fillRect(x, y, ww, hh); }, g); return (CV[key] = c); };
+  // 대장간: 낮은 처마 · 돌 화로 · 모루 · 벽에 천으로 감싼 검 (lit: 화로 불)
+  const forgeCv = (lit, sword = 'wrap') => cv(`forge_${lit ? 1 : 0}_${sword}`, 56, 50, (R, g) => {
+    R(4, 14, 48, 30, '#2a1a14'); R(5, 15, 46, 28, '#5a3a26'); for (let y = 18; y < 42; y += 5) R(5, y, 46, 1, '#4a2e1e');   // 판자 벽
+    R(1, 9, 54, 6, '#2a1a14'); R(2, 10, 52, 4, '#7a4a2a'); R(2, 10, 52, 1, '#9a6a3e'); for (let x = 4; x < 54; x += 6) R(x, 11, 1, 3, '#5a341e');   // 처마
+    R(26, 2, 8, 9, '#2a1a14'); R(27, 3, 6, 7, '#6a6a72'); R(27, 3, 6, 1, '#8a8a92');   // 굴뚝
+    if (lit){ R(28, 0, 2, 2, 'rgba(160,150,150,.6)'); R(31, 1, 2, 1, 'rgba(160,150,150,.45)'); }
+    R(6, 26, 18, 18, '#2a1a14'); R(7, 27, 16, 16, '#7a7470'); R(7, 27, 16, 2, '#9a948e'); [[9, 31], [15, 33], [11, 38], [18, 39]].forEach(([x, y]) => R(x, y, 3, 1, '#5e5854'));   // 돌 화로
+    R(10, 33, 10, 7, '#1a0c08'); if (lit){ R(11, 35, 8, 5, '#d8461c'); R(12, 36, 6, 4, '#f08a2a'); R(13, 37, 4, 2, '#ffd25a'); } else { R(11, 38, 8, 2, '#4a3a34'); R(13, 38, 2, 1, '#8a3a1c'); }
+    R(30, 36, 16, 3, '#1a1a1e'); R(31, 36, 14, 2, '#4a4a54'); R(31, 36, 14, 1, '#7a7a86'); R(35, 39, 6, 5, '#2a2a30'); R(33, 43, 10, 2, '#1a1a1e');   // 모루
+    R(43, 33, 2, 4, '#5a3a26'); R(41, 32, 6, 2, '#3a3a40');   // 망치
+    if (sword === 'wrap'){ R(36, 17, 4, 15, '#2a1a14'); R(37, 18, 2, 13, '#d8c8a0'); R(37, 21, 2, 1, '#9a8a6a'); R(37, 26, 2, 1, '#9a8a6a'); R(35, 17, 6, 2, '#6a4a2a'); }   // 천으로 감싼 검
+    if (sword === 'five'){ R(37, 16, 2, 16, '#8a7a6a'); R(37, 16, 1, 16, '#c8c0b8'); R(35, 25, 6, 2, '#6a4a2a'); for (let i = 0; i < 5; i++) R(37, 27 + i, 2, 1, i % 2 ? '#3a2a1a' : '#ffd25a'); }   // 다섯 홈
+  });
+  // 언덕 기념물: 다섯 홈 검 · 수호대의 종
+  const memoSwordCv = () => cv('m_sword', 20, 36, R => {
+    R(3, 30, 14, 6, '#2a2430'); R(4, 31, 12, 4, '#7a7486'); R(4, 31, 12, 1, '#9a94a6');   // 돌 무더기
+    R(9, 6, 3, 25, '#2a2430'); R(10, 7, 1, 23, '#e8e4f0'); R(9, 7, 1, 23, '#a8a4b8');   // 칼날
+    R(5, 4, 11, 3, '#2a2430'); R(6, 5, 9, 1, '#c89a3a'); R(9, 0, 3, 5, '#2a2430'); R(10, 1, 1, 3, '#6a4a2a');   // 손잡이
+    for (let i = 0; i < 5; i++) R(12, 9 + i * 2, 2, 1, '#ffd25a');   // 홈 다섯
+  });
+  const memoBellCv = () => cv('m_bell', 26, 34, R => {
+    R(2, 2, 3, 32, '#2a1a14'); R(21, 2, 3, 32, '#2a1a14'); R(3, 3, 1, 30, '#7a4a2a'); R(22, 3, 1, 30, '#7a4a2a'); R(0, 1, 26, 4, '#2a1a14'); R(1, 2, 24, 2, '#9a6a3e');   // 나무 틀
+    R(12, 5, 2, 3, '#2a1a14'); R(8, 8, 10, 3, '#2a1a14'); R(6, 10, 14, 10, '#2a1a14'); R(5, 19, 16, 3, '#2a1a14');
+    R(9, 9, 8, 2, '#c88a3a'); R(7, 11, 12, 8, '#b8782a'); R(6, 19, 14, 2, '#d89a4a'); R(8, 11, 2, 7, '#e8b46a');   // 종
+    [9, 12, 15].forEach(x => R(x, 14, 2, 1, '#6a3a12')); R(12, 21, 2, 3, '#4a2a12');   // 이름 셋 · 추
+  });
+  // 무대 소품 (evPlay 조연으로 넘겨요)
+  const cupsCv = n => cv('cups' + n, 40, 22, R => { R(2, 12, 36, 10, '#2a2430'); R(3, 13, 34, 8, '#6a6478'); R(3, 13, 34, 1, '#8a84a0');
+    for (let i = 0; i < n; i++){ const x = 6 + i * (n > 3 ? 8 : 10); R(x, 6, 6, 7, '#2a2430'); R(x + 1, 7, 4, 5, i === 3 ? '#c8b89a' : '#d8d4e4'); R(x + 1, 7, 4, 1, i === 1 ? '#c86a4a' : '#8ab4e8'); } });
+  const bagCv = () => cv('bag', 22, 18, R => { R(1, 5, 20, 13, '#2a1a14'); R(2, 6, 18, 11, '#8a5a34'); R(2, 6, 18, 2, '#a87a4a'); R(7, 1, 8, 5, '#2a1a14'); R(8, 2, 6, 3, '#6a4a2a'); R(9, 3, 4, 1, '#2a1a14'); R(10, 10, 2, 3, '#c8a050'); });
+  const swordCv = kind => cv('sw_' + kind, 12, 44, R => { R(4, 0, 4, 44, '#2a1a14');
+    if (kind === 'wrap'){ R(5, 1, 2, 42, '#d8c8a0'); R(5, 8, 2, 1, '#9a8a6a'); R(5, 20, 2, 1, '#9a8a6a'); R(5, 32, 2, 1, '#9a8a6a'); R(2, 10, 8, 2, '#6a4a2a'); return; }
+    R(5, 1, 2, 9, '#6a4a2a'); R(1, 10, 10, 3, '#2a1a14'); R(2, 11, 8, 1, kind === 'glow' ? '#ffe8a0' : '#8a6a3a');
+    R(5, 13, 2, 30, kind === 'glow' ? '#f4f4ff' : '#8a6a52'); if (kind !== 'glow') [[5, 18], [6, 25], [5, 33]].forEach(([x, y]) => R(x, y, 1, 3, '#b86a3a'));
+    for (let i = 0; i < (kind === 'five' ? 5 : 4); i++) R(7, 14 + i * 2, 2, 1, kind === 'glow' ? '#ffffff' : '#ffd25a'); });
+  const glowCv = () => cv('sw_glow2', 30, 54, (R, g) => { const rg = g.createRadialGradient(15, 30, 2, 15, 30, 26); rg.addColorStop(0, 'rgba(255,255,230,.85)'); rg.addColorStop(1, 'rgba(255,255,230,0)'); g.fillStyle = rg; g.fillRect(0, 0, 30, 54); g.drawImage(swordCv('glow'), 9, 6); });
+  const CAST = () => ({
+    edric: { name: '에드릭', av: AV },
+    kid1: { name: '아이 1', look: 311 }, kid2: { name: '아이 2', look: 322 }, kid3: { name: '아이 3', look: 333 }, kid4: { name: '아이 4', look: 344 },
+    kids_v: { name: '아이들', kind: 'voice' }, olga: { name: '올가', kind: 'voice' }, letter: { name: '올가의 편지', kind: 'voice' }, card: { name: '엽서', kind: 'voice' },
+    st1: { name: '학생', look: 401 }, st2: { name: '학생', look: 402 }, st3: { name: '학생', look: 403 },
+    ed_furnace: { cv: () => forgeCv(true, 'none'), w: 104 }, ed_furnace_cold: { cv: () => forgeCv(false, 'none'), w: 104 },
+    ed_sword: { cv: () => swordCv('wrap'), w: 22 }, ed_sword_bare: { cv: () => swordCv('rust'), w: 22 }, ed_sword5: { cv: () => swordCv('five'), w: 22 }, ed_sword_glow: { cv: glowCv, w: 50 },
+    ed_cups: { cv: () => cupsCv(3), w: 70 }, ed_cups4: { cv: () => cupsCv(4), w: 70 }, ed_bell: { cv: memoBellCv, w: 52 }, ed_bag: { cv: bagCv, w: 40, z: 9 },
+  });
+  // 지도 위 에드릭 (아바타 정면 한 칸)
+  let edCv = null;
+  function edricCv(){ if (edCv) return edCv; const A = World.Avatar; let S2 = null; try { S2 = A.compose(AV); } catch(e){} if (!S2) return null;
+    const c = document.createElement('canvas'); c.width = A.FW; c.height = A.FH; const g = c.getContext('2d'); g.drawImage(S2, A.meta.dirs.down * A.FW, 0, A.FW, A.FH, 0, 0, A.FW, A.FH);
+    const px = g.getImageData(0, 0, c.width, c.height).data; for (let i = 3; i < px.length; i += 4) if (px[i]) return (edCv = c); return null; }   // 옷 그림이 다 오기 전엔 비어 있어요
+  // ---------- 반 전체 결말 세기 ----------
+  function tally(){ const c = { A: 0, B: 0, C: 0 }, id = evId(), L = { ...playersList }; if (uid) delete L[uid];
+    [...Object.values(L), me].forEach(p => { const e = p && p.edric; if (e && e.end && (p !== me || e.fin) && (!id || e.ev === id) && c[e.end] != null) c[e.end]++; }); return c; }
+  const memoKinds = c => c.A > c.B ? ['sword'] : c.B > c.A ? ['bell'] : c.A ? ['sword', 'bell'] : [];
+  const memoOn = () => { const E = S(); return !!((E && E.fin) || (ctl && ctl.id && !ctl.open)); };
+  // ---------- 소품 ----------
+  function props(){
+    const E = S(), open = !!(ctl && ctl.open), fin = E && E.fin, showF = !!E || open, ed = showF && !(fin && E.end === 'C'), lit = !(fin && E.end === 'C') && !(E && !fin && cur(E) === 5 && ready(E) && !cnt(E, 'go'));
+    const sword = fin ? (E.end === 'A' ? 'five' : 'none') : 'wrap', memo = memoOn() ? memoKinds(tally()) : [], ec = ed ? edricCv() : null;
+    const s = JSON.stringify([showF, ed, lit, sword, memo, !!ec]); if (s === sig) return; sig = s;
+    const F = forgeCv(lit, sword);
+    World.setProps(FORGE[0], showF ? [{ id: 'edforge', x: FORGE[1], y: FORGE[2], img: F, pxc: F.getContext('2d'), sw: 56, sh: 50, ax: 28, ay: 42, solid: false, ...(lit ? { light: { r: 30, c: [255, 150, 70], a: .55 } } : {}) },
+      ...(ec ? [{ id: 'edman', x: FORGE[1] + 1, y: FORGE[2] + 1, img: ec, pxc: ec.getContext('2d'), sw: ec.width, sh: ec.height, ax: ec.width / 2, ay: ec.height - 4, sc: .5, tap: 1, solid: false }] : [])] : [], 'edric');
+    World.setProps(MEMO.sword[0], memo.map(k => { const im = k === 'sword' ? memoSwordCv() : memoBellCv(), [, x, y] = MEMO[k]; return { id: 'edmemo_' + k, x, y, img: im, pxc: im.getContext('2d'), sw: im.width, sh: im.height, ax: im.width / 2, ay: im.height - 3, solid: false, light: { r: 18, c: k === 'sword' ? [230, 236, 255] : [255, 210, 140], a: .45 } }; }), 'edric');
+  }
+  // ---------- 장면 ----------
+  const fx = () => edLoad || (edLoad = new Promise((res, rej) => { if (window.EdricFX) return res(); const sc = document.createElement('script'); sc.src = 'edric.js?v=1'; sc.onload = () => res(); sc.onerror = () => { edLoad = null; rej(new Error('edric.js')); }; document.head.appendChild(sc); }));
+  const play = (key, arg) => new Promise(res => { const D = EdricFX.S[key](arg); evPlay({ id: 'edric', name: '에드릭' }, 0, { conditions: { location: D.loc }, scene: { ...(D.time ? { time: D.time } : {}), ...(D.weather ? { weather: D.weather } : {}) }, script: D.script }, { main: true, cast: CAST(), then: ctx => res(ctx) }); });
+  function score(ctx){ const E = S(); if (!E || !ctx || !ctx.pick) return; E.sc = E.sc || { trust: 0, truth: 0, brave: 0 }; E.pick = E.pick || {};
+    Object.entries(ctx.pick).forEach(([d, i]) => { if (E.pick['d' + d] != null || i < 0) return; E.pick['d' + d] = i; const k = (SC[d] || [])[i]; if (k) E.sc[k] = (E.sc[k] || 0) + 1; }); }
+  const scene = async (key, arg) => { const ctx = await play(key, arg); score(ctx); saveNow(); return ctx; };
+  async function run(fn){ if (edOn || evOn) return false; edOn = true; npcClose(); World.hideBubble && World.hideBubble();
+    try { await fx(); await fn(); return true; } catch(e){ console.error('edric', e); errReport('edric', '녹슨 검의 대장장이 오류: ' + (e && e.message), (e && e.stack) || ''); return false; } finally { edOn = false; sig = ''; } }
+  function mark(E, k, n = 1){ const d = cur(E); if (E.gd !== d){ E.gd = d; E.g = {}; E.q = {}; } E.g = E.g || {}; E.g[k] = (E.g[k] || 0) + n; const g = G(d, k); if (g) toast(`에드릭 · ${g.t.replace(/ \(.*\)$/, '')}${(g.n || 1) > 1 ? ` ${Math.min(E.g[k], g.n)} / ${g.n}` : ' ✔'}`); }
+  function finishDay(E){ const d = cur(E); E.done = d; E.dt = todayKey(); if (d >= 7) E.fin = todayKey(); saveNow(); sig = ''; try { syncNpcs(); } catch(e){}
+    setTimeout(() => toast(d >= 7 ? `「녹슨 검의 대장장이」 결말 · ${ENDN[E.end] || ''}` : `「녹슨 검의 대장장이」 ${d} 일째를 마쳤어요. 다음 이야기는 내일 열려요`), 900); }
+  const hint = (k, t) => { const key = todayKey() + k; if (hinted[key]) return; hinted[key] = 1; toast(t); };
+  function announce(E, d){ const L = (GOALS[d] || []).map(g => g.t.replace(/ \(.*\)$/, ''));
+    toast(`「녹슨 검의 대장장이」 ${d} 일째 · ${DAYN[d]} · 하루 할 일: ${L.join(' · ')}`);
+    if (d === 5) setTimeout(() => toast('아침부터 하늘에서 회색 재가 내린다. 시장 사람들이 수군거린다.'), 2600); }
+  // ---------- 날마다 (1.5 초마다) ----------
+  function tick(){
+    if (!me) return; props();
+    let E = S(); const c = ctl;
+    if (!E){ if (c && c.open && c.id && !(me.edric && me.edric.ev === c.id) && World.meAt && World.meAt() && !uiBusy() && evTurn('edric')){ me.edric = { ev: c.id, d0: todayKey(), done: 0, sc: { trust: 0, truth: 0, brave: 0 }, pick: {}, g: {}, q: {} }; saveNow(); } return; }
+    if (E.fin || !ready(E) || edOn || uiBusy() || !(World.meAt && World.meAt())) return;
+    const d = cur(E);
+    if (E.gd !== d){ if (!evTurn('edric')) return; E.gd = d; E.g = {}; E.q = {}; save(); try { syncNpcs(); } catch(e){} announce(E, d); return; }
+    const has = k => cnt(E, k) >= (G(d, k).n || 1), atPl = (pl, r = 3) => pkAt(pl, r);
+    if (d === 1 && !has('go') && nearForge()){ mark(E, 'go'); save(); setTimeout(() => toast('대장간을 눌러 고장 난 등불을 맡겨요'), 1500); return; }
+    if (d === 2 && nearForge() && !has('mat')) return hint('d2', '대장간을 눌러 쇠붙이 재료를 건네요 (동글 조약돌 · 찌그러진 깡통)');
+    if (d === 3){
+      if (!has('play') && atPl('village_square', 2) && evTurn('edric')){ run(async () => { const x = await scene('d3a'); if (x){ mark(E, 'play'); save(); try { syncNpcs(); } catch(e){} setTimeout(() => toast('광장의 마을 어르신에게 말을 걸어 봐요'), 1500); } }); return; }
+      if (has('play') && !has('eld') && atPl('village_square', 4)) return hint('d3', '광장의 ❗마을 어르신에게 말을 걸어 봐요');
+    }
+    if (d === 4 && atPl('hill_top', 3)){ if (!night()) return hint('d4', '별 보는 언덕 · 밤에만 열려요 (저녁 7 시부터)'); if (evTurn('edric')) run(async () => { if (await scene('d4')){ mark(E, 'hill'); finishDay(E); } }); return; }
+    if (d === 5 && nearForge() && !has('go')){ if (!has('adult')) return hint('d5', '먼저 등불 시장의 마을 어른 셋에게 이야기를 들어 봐요'); if (evTurn('edric')) run(async () => { if (await scene('d5')){ mark(E, 'go'); finishDay(E); } }); return; }
+    if (d === 6 && !has('post') && atPl('owl_post', 2) && evTurn('edric')){ run(async () => { if (await scene('d6a')){ mark(E, 'post'); E.lt = 1; save(); setTimeout(() => toast('먼지투성이 편지를 받았어요. 대장간에 가져가요'), 1500); } }); return; }
+    if (d === 7){
+      if (!has('forge') && nearForge()){ if (!night()) return hint('d7', '마지막 날 · 밤에 대장간에 가요 (저녁 7 시부터)'); if (evTurn('edric')) run(async () => {
+        const opened = !!E.letter, x = await scene('d7', opened); if (!x) return; if (!E.letter) E.letter = 7; E.end = ending(E.sc); mark(E, 'forge'); saveNow();
+        if (E.end === 'A' || E.end === 'B') await scene('d7' + E.end); setTimeout(() => toast('별 보는 언덕으로'), 1200); }); return; }
+      if (has('forge') && !has('hill') && atPl('hill_top', 3)){ if (!night()) return hint('d7h', '별 보는 언덕 · 밤에만 열려요'); if (evTurn('edric')) run(async () => { if (await scene('end' + E.end)){ mark(E, 'hill'); finishDay(E); } }); return; }
+    }
+  }
+  // ---------- 대장간을 누르면 ----------
+  const face = (i = 0) => `<i class="npcspr" style="width:48px;height:48px;background:url(art/portraits/edric.png?v=${PORTRAIT_V}) ${i * 25}% 0/240px auto no-repeat"></i>`;
+  function panel(){
+    if (edOn || evOn) return; const E = S(), d = E ? cur(E) : 0, on = E && !E.fin && ready(E);
+    let line = '쾅. 쾅. 망치가 멈추지 않는다.', who = '에드릭', f = 0, btn = '';
+    if (E && E.fin){ if (E.end === 'A'){ line = '불 꺼지지 않게 해라.'; f = 1; } else if (E.end === 'B'){ line = '에드릭은 대장간에 남아요. 저녁이면 언덕에 올라 종을 닦아요.'; } else { line = '대장간은 비어 있어요. 가끔 화로가 아주 조금 따뜻해요.'; who = '대장간'; } }
+    else if (on){
+      if (d === 1 && cnt(E, 'go') && !cnt(E, 'lamp')) btn = '<button class="btn sm go" data-edp="lamp">고장 난 등불 맡기기</button>';
+      if (d === 2 && cnt(E, 'mat') < 3){ const have = MAT.reduce((a, k) => a + (me.inv[k] || 0), 0); btn = `<button class="btn sm go" data-edp="mat">재료 건네기 <small>가진 것 ${have}</small></button>`; }
+      if (d === 2 && cnt(E, 'mat') >= 3 && !cnt(E, 'bel')) btn = '<button class="btn sm go" data-edp="bel">풀무 누르기</button>';
+      if (d === 5 && !cnt(E, 'go')){ line = '대장간. 화로가 꺼져 있다.'; who = '대장간'; }
+      if (d === 6 && cnt(E, 'post') && !cnt(E, 'give')) btn = '<button class="btn sm go" data-edp="give">편지 건네기</button>';
+    }
+    const Gs = on ? GOALS[d] || [] : [];
+    npcUI().dataset.id = 'edric'; npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${who === '에드릭' ? face(f) : ''}</div><div><b>${who}</b><span class="s sub">녹슨 검의 대장장이${E && !E.fin ? ` · ${Math.min(7, d)} / 7 일째` : ''}</span></div><button class="sx" data-edp="close">✕</button></div>
+      <div class="npct">${esc(line)}</div>${Gs.length ? `<div class="sdrow" style="flex-direction:column;align-items:stretch;gap:4px">${Gs.map(g => `<span>${gOk(E, g) ? '✔' : '☐'} ${esc(g.t)}${(g.n || 1) > 1 ? ` <small>${Math.min(cnt(E, g.k), g.n)} / ${g.n}</small>` : ''}</span>`).join('')}</div>` : ''}
+      ${E && !E.fin && !ready(E) ? '<div class="s">오늘 이야기는 끝났어요. 다음 이야기는 내일 열려요</div>' : ''}<div class="frow">${btn}<button class="btn sm" data-edp="close">닫기</button></div></div>`;
+    npcUI().classList.add('on');
+  }
+  function giveMat(){ const E = live(); if (!E || cur(E) !== 2) return; const need = 3 - cnt(E, 'mat'); let n = 0;
+    for (const k of MAT){ while (n < need && (me.inv[k] || 0) > 0){ me.inv[k]--; n++; } }
+    if (!n){ toast('동글 조약돌이나 찌그러진 깡통이 필요해요 (채집 · 낚시)'); return; }
+    sfx('pop'); mark(E, 'mat', n); save(); hud(); panel(); }
+  // 풀무 누르기: 눌러서 불을 100 까지 (가만히 있으면 조금씩 식어요)
+  function bellows(){ const E = live(); if (!E || cur(E) !== 2) return; bel = { v: 10, t: 0 };
+    npcUI().dataset.id = 'edric'; npcUI().innerHTML = `<div class="npcp px"><div class="npch"><div class="npcf">${face(0)}</div><div><b>풀무 누르기</b><span class="s sub">불이 확 살아날 때까지</span></div><button class="sx" data-edp="close">✕</button></div>
+      <div class="npct" style="text-align:center"><div style="height:16px;border-radius:8px;background:#2a1a14;overflow:hidden;margin:6px 0"><i id="edbar" style="display:block;height:100%;width:10%;background:linear-gradient(90deg,#d8461c,#ffd25a)"></i></div></div>
+      <div class="frow"><button class="btn go" data-edp="push" style="flex:1">풀무 누르기</button></div></div>`; npcUI().classList.add('on');
+    clearInterval(bel.iv); bel.iv = setInterval(() => { if (!bel || !document.getElementById('edbar')){ clearInterval(bel && bel.iv); bel = null; return; } bel.v = Math.max(0, bel.v - 1.5); document.getElementById('edbar').style.width = bel.v + '%'; }, 100); }
+  function push(){ if (!bel) return; bel.v = Math.min(100, bel.v + 13); sfx('fire'); const b = document.getElementById('edbar'); if (b) b.style.width = bel.v + '%';
+    if (bel.v < 100) return; clearInterval(bel.iv); bel = null; const E = live(); if (!E) return;
+    run(async () => { if (await scene('d2')){ mark(E, 'bel'); finishDay(E); } }); }
+  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-edp]'); if (!b || !npcUI().contains(b)) return; const a = b.dataset.edp, E = live();
+    if (a === 'close'){ if (bel){ clearInterval(bel.iv); bel = null; } return npcClose(); }
+    if (a === 'mat') return giveMat(); if (a === 'bel') return bellows(); if (a === 'push') return push();
+    if (a === 'lamp' && E && cur(E) === 1) return run(async () => { if (await scene('d1')){ mark(E, 'lamp'); finishDay(E); } });
+    if (a === 'give' && E && cur(E) === 6) return run(async () => { const open = ((E.sc && E.sc.trust) || 0) >= 2; if (await scene('d6b', open)){ if (open) E.letter = 6; mark(E, 'give'); finishDay(E); } });
+  });
+  function tap(id){
+    if (id === 'edforge' || id === 'edman'){ const t = World.meTile && World.meTile(); if (!nearForge(3) && t && t.m === FORGE[0]){ World.walkToTile(FORGE[1] + 1, FORGE[2] + 2); return null; } panel(); return null; }
+    if (id === 'edmemo_sword'){ sfx('sparkle'); return '「다섯 홈 검」 · 손잡이 아래에 홈이 다섯 개'; }
+    if (id === 'edmemo_bell'){ sfx('bell'); return '「수호대의 종」 · 올가. 마리엔. 토비.'; }
+    return null;
+  }
+  // ---------- 마을 어른 (3 일째 어르신 · 5 일째 셋) ----------
+  function townAt(id){ const E = live(); if (!E) return null; const d = cur(E), at = (TOWN_AT[d] || {})[id]; if (!at || E.gd !== d) return null;
+    const want = d === 3 ? cnt(E, 'play') && !cnt(E, 'eld') : !((E.q && E.q.adult) || {})[id];
+    if (d === 3 && !cnt(E, 'play')) return null; return { map: at[0], x: at[1], y: at[2], mark: !!want }; }
+  function talk(id){ const E = live(); if (!E) return null; const d = cur(E);
+    if (d === 3 && id === 'elder_a' && cnt(E, 'play') && !cnt(E, 'eld')){ run(async () => { if (await scene('d3b')){ mark(E, 'eld'); finishDay(E); } }); return true; }
+    if (d === 5 && ADULTS.includes(id) && E.gd === 5){ const L = window.EdricFX && EdricFX.ADULT[id]; if (!L){ fx().catch(() => {}); return null; } E.q = E.q || {}; E.q.adult = E.q.adult || {};
+      if (!E.q.adult[id]){ E.q.adult[id] = 1; mark(E, 'adult'); save(); setTimeout(() => { try { syncNpcs(); } catch(e){} }, 300); if (cnt(E, 'adult') >= 3) setTimeout(() => toast('이제 대장간에 가 봐요'), 1800); } return L; }
+    return null; }
+  // ---------- 재 (5 일째 · 7 일째 바깥) ----------
+  const ash = [];
+  function overlay(q){ const E = live(); if (!E) return; const d = cur(E); if (d !== 5 && d !== 7) return; const m = World.where && World.where(), M = m && World.meta(m); if (!M || M.indoor) return;
+    const W = q.canvas.width, H = q.canvas.height, now = performance.now(); while (ash.length < 60) ash.push({ x: Math.random() * W, y: Math.random() * H, v: .5 + Math.random(), p: Math.random() * 6 });
+    if (d === 7 && night()){ q.fillStyle = 'rgba(150,30,20,.13)'; q.fillRect(0, 0, W, H); }
+    const s = Math.max(2, Math.round(W / 300)); ash.forEach(a => { a.y += a.v * s * .6; a.p += .03; if (a.y > H){ a.y = -4; a.x = Math.random() * W; } q.fillStyle = a.v > 1.1 ? 'rgba(110,104,104,.8)' : 'rgba(205,198,194,.7)'; q.fillRect(Math.round(a.x + Math.sin(a.p + now / 900) * 6 * s), Math.round(a.y), s, s); }); }
+  // ---------- 일지 「대장간」 ----------
+  const jnOn = () => !!(me && me.edric && me.edric.d0);
+  function jnHTML(){ const E = me.edric, d = cur(E), fin = !!E.fin, on = !fin && ready(E), Gs = GOALS[Math.min(7, d)] || [];
+    const pl = id => NL.places[id], jump = g => { if (gOk(E, g) || !on) return ''; const p = g.at ? { map: FORGE[0], x: FORGE[1] + 1, y: FORGE[2] + 2 } : pl(g.pl); return p ? `<button class="btn sm go" data-jngo="${p.map},${p.x},${p.y}">여기로</button>` : ''; };
+    const past = Array.from({ length: Math.min(7, doneN(E)) }, (_, i) => `<span class="tag ok">${i + 1} 일째 ${esc(DAYN[i + 1])} ✔</span>`).join('');
+    return `<section class="sec">${secH('녹슨 검의 대장장이', fin ? `결말 · ${ENDN[E.end] || ''}` : `${Math.min(7, d)} / 7 일째`)}
+      <div class="box px">${fin ? `<div class="li"><div class="main"><span class="t">${esc(ENDN[E.end] || '')}</span><span class="d">${E.end === 'C' ? '대장간은 비어 있어요. 가끔 화로가 아주 조금 따뜻해요.' : E.end === 'A' ? '에드릭은 대장간에 남아요. 「불 꺼지지 않게 해라」' : '에드릭은 대장간에 남아요. 저녁이면 언덕에 올라 종을 닦아요.'}</span></div></div>`
+        : `<div class="li"><div class="main"><span class="t">${Math.min(7, d)} 일째 · ${esc(DAYN[Math.min(7, d)])}</span><span class="d">${on ? '하루 할 일' : '오늘 이야기는 끝났어요. 다음 이야기는 내일 열려요'}</span></div></div>
+        ${on ? Gs.map(g => `<div class="li ${gOk(E, g) ? 'done' : ''}"><div class="main"><span class="t">${gOk(E, g) ? '✔' : '☐'} ${esc(g.t)}</span>${(g.n || 1) > 1 ? `<span class="d">${Math.min(cnt(E, g.k), g.n)} / ${g.n}</span>` : ''}</div>${jump(g)}</div>`).join('') : ''}`}</div>
+      ${past ? `<div class="jn-tags">${past}</div>` : ''}${E.lt ? `<div class="hint">${E.letter ? `올가의 편지가 열렸어요 (${E.letter} 일째)` : '먼지투성이 편지 · 아직 열리지 않았어요'}</div>` : ''}</section>`; }
+  function jnBind(){}
+  // ---------- 듣기 ----------
+  function listen(){
+    if (offs.length) return;
+    offs.push(GDB.on('edric/ctl', v => { ctl = v || null; sig = ''; }));
+    const pp = World.onProp; World.onProp = id => String(id).startsWith('ed') && ['edforge', 'edman', 'edmemo_sword', 'edmemo_bell'].includes(id) ? tap(id) : pp ? pp(id) : null;
+    const po = World.onOverlay; World.onOverlay = (q, toS, k) => { try { overlay(q); } catch(e){} if (po) po(q, toS, k); };
+    setInterval(() => { try { tick(); } catch(e){ errReport('edric', '녹슨 검의 대장장이 tick 오류: ' + e.message, e.stack || ''); } }, 1500);
+  }
+  // ---------- 관리자 카드 ----------
+  function adminHTML(){
+    const c = AD.edctl || {}, P = AD.players || {}, nk = u => esc((P[u] && P[u].nick) || '?');
+    const ids = Object.keys(P).filter(id => P[id] && P[id].nick).sort((a, b) => P[a].nick.localeCompare(P[b].nick, 'ko'));
+    const st = id => { const s = P[id].edric; return s && s.d0 && c.id && s.ev === c.id ? s : null; }, IN = ids.filter(st);
+    const T = { A: 0, B: 0, C: 0 }; IN.forEach(id => { const s = st(id); if (s.fin && T[s.end] != null) T[s.end]++; }); const mk = memoKinds(T);
+    const row = id => { const s = st(id); if (!s) return `<div class="sdarow"><span><b>${nk(id)}</b></span><span class="s">아직 시작 전</span></div>`;
+      const d = Math.min(7, (s.done || 0) + 1), Gs = GOALS[d] || [], gd = s.gd === d ? Gs.filter(g => ((s.g || {})[g.k] || 0) >= (g.n || 1)).length : 0, sc = s.sc || {}, pk = s.pick || {};
+      return `<div class="sdarow"><div class="nm"><b>${nk(id)}</b><span>${s.fin ? `끝 · 결말 ${s.end} 「${ENDN[s.end]}」` : `${d} / 7 일째${s.dt === todayKey() ? ' (오늘 마침)' : ''}`}</span></div><div><div class="ln">${s.fin ? '' : `<span>오늘 할 일 ${gd} / ${Gs.length}</span>`}<span>믿음 ${sc.trust || 0} · 진실 ${sc.truth || 0} · 용기 ${sc.brave || 0}</span><span>편지 ${s.letter ? s.letter + ' 일째 열림' : s.lt ? '받음 · 아직' : '-'}</span><span>고른 것 ${[1, 2, 3, 4, 5, 6, 7].map(k => pk['d' + k] != null ? pk['d' + k] + 1 : '·').join(' ')}</span></div></div></div>`; };
+    return `<div class="adcard sdad"><div class="abhead"><b>이벤트 「녹슨 검의 대장장이」</b>${c.open ? '<button class="btn sm" data-eda="close">끄기</button>' : '<button class="btn sm go" data-eda="open">켜기</button>'}<button class="btn sm" data-eda="reset">처음부터</button></div>
+      <div class="abchips"><span>${c.open ? '여는 중' : '닫힘'}</span><span>시작한 학생 <b>${IN.length}</b>/${ids.length}</span><span>결말 A ${T.A} · B ${T.B} · C ${T.C}</span><span>언덕: ${mk.length ? mk.map(k => k === 'sword' ? '「다섯 홈 검」' : '「수호대의 종」').join(' · ') : '아직 없음'}</span></div>
+      ${ids.map(row).join('')}
+      <div class="s" style="margin-top:6px">켜면 학생이 다음에 게임에 있을 때 1 일째가 시작돼요. 하루에 한 장면씩 7 일 (날짜가 바뀌어야 다음 날). 4 · 7 일째는 밤(19 시 ~ 새벽 4 시)에만 열려요. 결말: 진실이 가장 높고 3 이상이면 B, 믿음 · 용기가 2 이상씩 합 5 이상이면 A, 나머지는 C. 끄면 새로 시작하지 않고, 이미 시작한 학생은 끝까지 해요. 「처음부터」는 모두 1 일째부터 다시예요.</div></div>`;
+  }
+  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-eda]'); if (!b || !b.closest('#adminv')) return; const a = b.dataset.eda, c = AD.edctl || {};
+    if (a === 'open'){ if (confirm('「녹슨 검의 대장장이」를 켤까요? 학생마다 1 일째가 시작돼요.')) GDB.set('edric/ctl', { open: true, id: c.id || now2(), at: now2() }).then(() => toast('녹슨 검의 대장장이를 켰어요')); }
+    else if (a === 'close'){ if (confirm('「녹슨 검의 대장장이」를 끌까요? 이미 시작한 학생은 끝까지 할 수 있어요.')) GDB.upd('edric/ctl', { open: false, at: now2() }); }
+    else if (a === 'reset'){ if (confirm('처음부터 다시 할까요? 모든 학생의 진행과 결말이 사라지고 1 일째부터 시작해요.')) GDB.set('edric/ctl', { open: true, id: now2(), at: now2() }).then(() => toast('처음부터 다시 시작했어요')); } });
+  const adminRow = () => { const c = AD.edctl || {}, P = AD.players || {}, ids = Object.keys(P).filter(id => P[id] && P[id].nick), st = id => { const s = P[id].edric; return s && c.id && s.ev === c.id && s.d0 ? s : null; };
+    return { open: !!c.open, info: c.id ? `시작한 학생 ${ids.filter(st).length}/${ids.length} · 결말 본 학생 ${ids.filter(id => st(id) && st(id).fin).length}/${ids.length}` : '-' }; };
+  window.__ed = { S, cur, ready, ending, tally, memoKinds, memoOn, props: () => { sig = ''; props(); }, tick, panel, giveMat, bellows, push, talk, townAt, night, ctl: () => ctl, run, scene, FORGE, MEMO, GOALS, CAST, mark, finishDay, fx, edricCv };   // 시험용
+  return { listen, adminHTML, adminRow, jnOn, jnHTML, jnBind, townAt, talk, busy: () => edOn };
+})();
 
 </script>
 </body>
