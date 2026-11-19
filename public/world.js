@@ -763,7 +763,7 @@ function showBubble(o, text, btn, fn){
 }
 function hideBubble(){ bubble?.el.remove(); bubble = null; }
 const ACTS = {};
-const actOf = o => { const a = o.act || ACTS[o.name]; return a && (!World.actOk || World.actOk(o, a, rmap)) ? a : null; };   // 쓸모 있는 것만 눌러져요 (index.html의 World.actOk)
+const actOf = o => { let a = o.act || ACTS[o.name]; if (a && World.actSwap) a = World.actSwap(o, a, rmap) || a;   /* index.html 이 그때그때 버튼 글자를 바꿔요 (도서관 사서 책상 → 책 맞추기) */ return a && (!World.actOk || World.actOk(o, a, rmap)) ? a : null; };   // 쓸모 있는 것만 눌러져요 (index.html의 World.actOk)
 // 물건을 쓰면 게임에 물어봐요: 글을 돌려주면 말풍선에 보여 주고, 아니면 (화면이 열렸으니) 말풍선을 닫아요
 function useObj(o, a){
   const r = World.onAct ? World.onAct(map, o, a) : null;
