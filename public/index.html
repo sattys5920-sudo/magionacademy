@@ -883,6 +883,7 @@ button.cell:not(:disabled):active{background:var(--line)}
 #wallet{flex:none;padding:0 8px 0 6px;gap:6px;font-size:13px}
 .mtile .main .d{white-space:normal}
 @media (max-width:370px){.hudname{display:none}}
+#bmchip{position:absolute;right:10px;top:66px;z-index:7;min-height:40px;padding:0 14px;border-radius:20px;border:2px solid #2A2040;background:#E8C468;color:#2A2040;font-family:var(--f-pxb);font-size:var(--fs);box-shadow:0 0 14px rgba(232,196,104,.7);animation:bmchipb 1.6s ease-in-out infinite}@keyframes bmchipb{50%{box-shadow:0 0 4px rgba(232,196,104,.3)}}
 #gtbtn{position:absolute;right:10px;top:66px;z-index:7;min-height:40px;padding:0 14px;border-radius:20px;border:2px solid #0e2a2a;background:#7AE0E0;color:#0e2a2a;font-family:var(--f-pxb);font-size:var(--fs);box-shadow:0 0 14px rgba(122,224,224,.7)}
 #gtpanel{position:absolute;left:10px;right:10px;bottom:10px;z-index:8;background:rgba(20,13,30,.95);border:2px solid #7AE0E0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}#gtpanel .gth{display:flex;justify-content:space-between;align-items:center;gap:8px}#gtpanel .gth b{font-family:var(--f-pxb);font-size:17px;color:#7AE0E0}#gtpanel .gth span{font-family:var(--f-pxb);color:var(--gold)}#gtpanel .s{color:var(--sub)}#gtpanel .btn{min-height:44px}
 body.gtride #bar,body.gtride #chat,body.gtride #ctx,body.gtride .corner{opacity:.35;pointer-events:none}
@@ -16054,7 +16055,7 @@ const BM = (() => {
     const i = left[Math.floor(Math.random() * left.length)], w = ALL[i];
     GDB.tx('bm/got/' + i, cur => cur ? undefined : { u: uid, by: me.nick || '친구', at: now2() }).then(r => {
       if (!r || !r.committed) return; got[i] = { u: uid, by: me.nick || '친구', at: now2() }; W.fresh = w;
-      setTimeout(() => { famCard(`<div class="bmfly"><span class="bmwd bmflap bmbob bmnew" style="--wc:${wc(w)}">${esc(w)}</span></div><b>날아간 단어를 찾았어요</b><small>${kind === 'fish' ? '물속' : '덤불'}에서 「${esc(w)}」가 파닥파닥 날아왔어요 · 도서관 사서 책상에 모여요 (반 전체 ${gotN()} / ${ALL.length})</small>`, null, 2600); sfx('sparkle'); }, 1300);
+      setTimeout(() => { famCard(`<div class="bmfly"><span class="bmwd bmflap bmbob bmnew" style="--wc:${wc(w)}">${esc(w)}</span></div><b>날아간 단어를 찾았어요</b><small>${kind === 'fish' ? '물속' : '덤불'}에서 「${esc(w)}」가 파닥파닥 날아왔어요 · 한밤 도서관 독서대에서 책 빈칸에 넣어 주세요 (반 전체 ${gotN()} / ${ALL.length})</small>`, null, 2600); sfx('sparkle'); }, 1300);
     }).catch(() => {});
   }
 
@@ -16273,7 +16274,15 @@ const BM = (() => {
   }
 
   // ---------- 매 순간 ----------
+  const unplaced = () => { const used = new Set(Object.values(place || {}).map(o => o && o.w)); return Object.entries(got || {}).filter(([k, v]) => v && v.u === uid && !used.has(+k)).length; };   // 내가 찾았는데 아직 책에 안 놓인 단어
+  function chip(){   // 화면 오른쪽 위: 「찾은 단어 n 개 · 책에 넣기」 (누르면 한밤 도서관 독서대로)
+    let b = $('#bmchip'); const n = me && met() && live() && !bmOn ? unplaced() : 0;
+    if (!n){ if (b) b.remove(); return; }
+    if (!b){ b = document.createElement('button'); b.id = 'bmchip'; b.onclick = () => { if (World.where() === 'library'){ W.rp = 0; open('read'); } else { World.teleport('library', [13, 12]); toast('독서대에서 「책 맞추기」를 열어 빈칸에 넣어 주세요'); } }; $('#shell').appendChild(b); }
+    b.style.top = $('#gtbtn') ? '112px' : ''; const t = `찾은 단어 ${n} 개 · 책에 넣기`; if (b.textContent !== t) b.textContent = t;
+  }
   function tick(){
+    try { chip(); } catch(e){}
     if (me && done && me.bm && me.bm.end !== done.at && !OV && $('#bmv') && now2() - done.at < 30 * 6e4) close();   // 책상 창을 보던 중에 완성되면 창을 닫고 끝 연출로
     if (!me || bmOn || Date.now() < skipUntil || !(World.meAt && World.meAt())) return;
     const S = me.bm || {}, where = World.where() || '';
