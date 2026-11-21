@@ -5122,8 +5122,10 @@ function npcSpot(n){
   const p = P[pid];
   if (!p) return { map: n.map, x: n.x, y: n.y, r: 2, mark };
   if (p.map === 'myroom') return { map: myRoomId(), x: p.x, y: p.y, r: p.r, mark, own: true, pid };
-  return { map: p.map, x: p.x, y: p.y, r: p.r, mark, pid };
+  const sh = npcShare(n.id, pid), [ox, oy] = [[0, 0], [-4, 2], [2, -4], [-4, 4], [4, -2]][sh % 5];   // 같은 자리(반경 0)에 여럿이 서면 겹쳐서 하나만 눌려요 → 조금씩 비켜 서요
+  return { map: p.map, x: p.x + (p.r ? 0 : ox), y: p.y + (p.r ? 0 : oy), r: p.r, mark, pid };
 }
+function npcShare(id, pid){ const b = bandNow(); return Math.max(0, npcAll().filter(m => (m.routine || ROUTINE[m.id] || {})[b] === pid).map(m => m.id).indexOf(id)); }   // 그 시간에 같은 자리를 쓰는 NPC 중 몇 번째인지 (목록 순서라 늘 같아요)
 let npcSig = '';
 function syncNpcs(){
   if (!me || !World.setNpcs) return;
