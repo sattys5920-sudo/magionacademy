@@ -16074,7 +16074,8 @@ const BM = (() => {
   const tile = (w, cls = '', attr = '') => `<span class="bmwd ${cls}" style="--wc:${wc(w)}" ${attr}>${esc(w)}</span>`;
   const tipHTML = t => `<div class="tip2"><canvas data-bmface="1" width="32" height="32"></canvas><p>${t}</p></div>`;
   function render(){
-    const v = $('#bmv'); if (!v) return; const T = tabsNow(); if (!T.some(t => t[0] === W.tab)){ if (!T.length) return close(); W.tab = T[0][0]; }
+    const v = $('#bmv'); if (!v) return; if (document.activeElement && document.activeElement.id === 'bmq' && v.contains(document.activeElement)){ const t = $('#bmtray'); if (t) t.innerHTML = trayHTML(); W.pend = 1; return; }   // 글자 찾기에 쓰는 중이면 다 쓰고 나서 다시 그려요
+    const T = tabsNow(); if (!T.some(t => t[0] === W.tab)){ if (!T.length) return close(); W.tab = T[0][0]; }
     const keep = $('#bmtray') ? $('#bmtray').scrollLeft : 0, keepB = v.querySelector('.bd') ? v.scrollTop : 0;
     v.innerHTML = `<div class="hd"><b>${W.tab === 'mark' ? '아울라의 책갈피' : '열두 개의 밤'}</b><button data-bmx="close" aria-label="닫기">✕</button></div><div class="tabs">${T.map(([k, n]) => `<button data-bmtab="${k}" class="${W.tab === k ? 'on' : ''}">${n}</button>`).join('')}</div>
       <div class="bd">${W.tab === 'book' ? bookHTML() : W.tab === 'bag' ? bagHTML() : W.tab === 'read' ? readHTML() : markHTML()}</div>`;
@@ -16087,7 +16088,6 @@ const BM = (() => {
     const lines = PAGES[pi].map(line => line.map(t => { const i = k++; if (!t.w) return esc(t.pre + t.post); const o = pv(pi, i), w = o ? ALL[o.w] : '';
       return `${esc(t.pre)}<span class="bmslot ${o ? 'on' : ''} ${o && o.u !== uid ? 'bmfr' : ''}" data-slot="${i}" ${o ? `title="${esc(o.by || '친구')} 님이 놓았어요"` : ''} style="${o ? `--wc:${wc(w)};` : ''}min-width:${Math.max(2.2, [...t.w].length * 1.05)}em">${o ? esc(w) : '　'}</span>${esc(t.post)}`; }).join(' ')).join('<br>');
     const total = SL[pi].filter(t => t.w).length, filled = SL[pi].filter((t, k) => t.w && pv(pi, k)).length;
-    const list = ALL.filter((w, i) => got[i] && (!W.q || w.includes(W.q))).sort((a, b) => a.localeCompare(b, 'ko'));
     const feed = Object.values(place).filter(o => o && o.at).sort((a, b) => b.at - a.at).slice(0, 4);
     const pct = Math.floor(rightN() / TOTAL * 100);
     return `<div class="pnav">${PAGES.map((_, i) => `<button data-bmpg="${i}" class="${i === pi ? 'on' : ''} ${pageOK(i) ? 'ok' : ''}">${i + 1}</button>`).join('')}</div>
@@ -16095,8 +16095,9 @@ const BM = (() => {
       <p class="s">${!ctl || !ctl.open ? '지금은 책을 맞출 수 없어요. 다시 열리면 이어서 맞춰요.' : ok ? '이 쪽은 글자가 다 돌아왔어요. 반짝반짝.' : '반 전체가 같은 책 한 권을 맞춰요. 글자를 끌어다 빈칸에 놓거나, 글자를 누른 다음 칸을 눌러요. 칸을 누르면 빠져요. 맞아야 빛나요.'}</p>
       <div class="bmfeed"><b>책 ${pct} %</b>${feed.map(f => `<span><i>${esc(f.by || '친구')}</i> 「${esc(ALL[f.w] || '')}」</span>`).join('')}</div>
       <div class="bmtray"><div class="bmtrh"><input id="bmq" placeholder="글자 찾기" value="${esc(W.q)}" aria-label="글자 찾기"><span>반 전체 ${gotN()} / ${ALL.length}</span></div>
-        <div class="bmtrw" id="bmtray">${list.map(w => tile(w, `bmflap ${W.sel === w ? 'bmsel' : ''}`, `data-bmw="${esc(w)}"`)).join('') || '<p class="empty">아직 모인 글자가 없어요. 채집 · 낚시를 해 봐요</p>'}</div></div>`;
+        <div class="bmtrw" id="bmtray">${trayHTML()}</div></div>`;
   }
+  function trayHTML(){ const list = ALL.filter((w, i) => got[i] && (!W.q || w.includes(W.q))).sort((a, b) => a.localeCompare(b, 'ko')); return list.map(w => tile(w, `bmflap ${W.sel === w ? 'bmsel' : ''}`, `data-bmw="${esc(w)}"`)).join('') || `<p class="empty">${W.q && gotN() ? '그 글자가 든 단어가 없어요' : '아직 모인 글자가 없어요. 채집 · 낚시를 해 봐요'}</p>`; }
   function bagHTML(){
     const M = mine();
     return sec('내가 찾은 글자', `<div class="bagg">${M.map(w => tile(w, `bmbob bmflap ${W.fresh === w ? 'bmnew' : ''}`)).join('') || '<p class="empty">아직 없어요</p>'}</div>`, `<span class="aside">${M.length} 개</span>`)
@@ -16171,7 +16172,8 @@ const BM = (() => {
     if (D.bmmake) return make(D.bmmake);
     if (D.bmpin) return pin(D.bmpin);
   });
-  document.addEventListener('input', e => { if (e.target.id === 'bmq'){ W.q = e.target.value.trim(); const pos = e.target.selectionStart; render(); const q = $('#bmq'); if (q){ q.focus(); q.setSelectionRange(pos, pos); } } });
+  document.addEventListener('focusout', e => { if (e.target.id === 'bmq' && W.pend){ W.pend = 0; setTimeout(render, 0); } });
+  document.addEventListener('input', e => { if (e.target.id === 'bmq'){ W.q = e.target.value.trim(); const t = $('#bmtray'); if (t) t.innerHTML = trayHTML(); } });   // 글자 목록만 바꿔요 (입력칸을 다시 그리면 한글 받침 조합이 끊겨요)
 
   // ---------- 맵 위 연출 (World.onOverlay): 독서대 책 · 먼지 · 날개 단 단어 ----------
   const BOOKP = [260, 135];
