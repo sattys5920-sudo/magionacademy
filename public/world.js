@@ -839,6 +839,7 @@ cv.addEventListener('pointerdown', e => {
     return;
   }
   hideBubble(); pending = null;
+  { const pp = objOrder.slice().reverse().find(o => o.prop && o.prop.pri && x >= o.x && y >= o.y && x < o.x + (o.dw || o.sw) && y < o.y + (o.dh || o.sh)); if (pp){ const r = World.onProp ? World.onProp(pp.pid) : null; if (r) showBubble(pp, typeof r === 'string' ? r : r.text, r.btn, r.fn); return; } }   // pri 소품(운동회 천막처럼 사람이 모이는 곳)은 그림 네모 안 어디를 눌러도 먼저 잡혀요
   let low = null;   // 나를 따라다니는 것(내 정령 · 따라오는 아기 동물 · 마틸다)은 다른 누를 것(NPC · 친구 · 물건 · 채집 · 표시)이 없을 때만 눌려요
   // 아기 동물을 누르면
   const bb = people.filter(p => p.baby && (() => { const [bx2, by2] = babyXY(p); return Math.abs(x - bx2) <= 9 && y >= by2 - 16 && y <= by2 + 3; })()).sort((a, b) => (b.x + b.y) - (a.x + a.y))[0];
