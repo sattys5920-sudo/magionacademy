@@ -17755,8 +17755,9 @@ boot();
     const v = (await (await fetch('version.json?t=' + now2(), { cache: 'no-store' })).json()).v;
     if (buildV === null){ buildV = BUILD_ID.startsWith('__') ? v : BUILD_ID; }
     if (v === buildV) return;
-    try { if (sessionStorage.getItem('magion-rl') === v) return; sessionStorage.setItem('magion-rl', v); } catch(e){}   // 새로 고쳐도 그대로면 계속 반복하지 않아요
     if (dfHost && dfHost.S.phase !== 'over') return;   // 이벤트를 진행 중인 관리자 화면은 새로 고치지 않아요
+    if (document.getElementById('grx')) return;   // 승급 시험 창이 열려 있으면 시험이 끝나고 창을 닫은 뒤에 새로 고쳐요 (시험 도중 끊기지 않게)
+    try { if (sessionStorage.getItem('magion-rl') === v) return; sessionStorage.setItem('magion-rl', v); } catch(e){}   // 새로 고쳐도 그대로면 계속 반복하지 않아요
     reloading = true; try { saveNow(); } catch(e){} toast('새 버전이 나왔어요. 곧 새로 고쳐요');
     setTimeout(() => location.reload(), 2500);
   } catch(e){} };
